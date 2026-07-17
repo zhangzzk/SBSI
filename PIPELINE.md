@@ -26,11 +26,13 @@ the cont.44 rebuild chain) even though their target scripts are not under `SBSI/
 `detection_classifier.py`. Imported by nearly every script (`load_measurement_model`,
 `source_select_selection`, `DEFAULT_SELECTION_CUTS`, `apply_shear_to_ellipticity`, …).
 
-`scripts/response_ratio_diagnostic.py` [P] is **misnamed** — despite "diagnostic" it is a
-load-bearing shared library exporting `model_mean_proj` and `_shape_target_indices`, imported
-by `validate_constant_with_blend`, `validate_constant_response`, `validate_allpairs_response`,
-`calibrate_blend_residual_split`, `diagnose_additive_origin`, `finetune_additive_mean_head`,
-`apply_g0_mean_bias_shift`, `measure_flow_c`, and (archived) `toy_model_calib`.
+`sbs_shear/response.py` is the load-bearing response library, exporting `model_mean_proj`,
+`_shape_target_indices`, `load_sheared_sample`, and the `flow_response` (±g secant) helper.
+It was promoted (2026-07-17) out of the misnamed `scripts/response_ratio_diagnostic.py`, which
+is now a thin **back-compat shim** re-exporting the same objects (byte-identical) plus its
+original CLI `main()`, so `from scripts.response_ratio_diagnostic import model_mean_proj` still
+works. Imported by `validate_constant_with_blend` [P], `validate_constant_response`,
+`validate_allpairs_response`, `eval_self_response_bins`.
 
 ---
 
@@ -87,7 +89,8 @@ by `validate_constant_with_blend`, `validate_constant_response`, `validate_allpa
         │      ap7/np7/crowd; job_*_ap7, job_validate_crowd*, ...) │
         │  validate_constant_response.py  (pre-blend constant m;   │
         │      job_const_validate_full, job_constgold_lam300)      │
-        │  plot_flow_calibration.py [P] → figures/  (Stage 1-2)    │
+        │  plotting/plot_flow_figures.py → figures/ (5 PNGs;       │
+        │      job_fig2_dump, job_fig5_selfresp)                   │
         │                                                          │
         └──────────────────► (b) PROB_BLENDING ◄───────────────────┘
            forward-model the undetected-neighbour R_blend (see PROB_BLENDING.md)
@@ -151,52 +154,111 @@ Only R_flow is a trained neural model.
 
 ### Certified result
 
-`m = R_sim / (R_flow + R_blend) − 1 = 0.4534 / (0.2919 + 0.1593) − 1 = **+0.51% ± 0.25%** (8-seed CRN ensemble, std/√N)`, fully parameter-free (no empirical scalars). m=0 point is R_flow = R_sim − R_blend = 0.2941; the residual +0.51% is R_flow sitting 0.0022 below it (~2σ). See WORKLOG cont.47.
+`m = R_sim / (R_flow + R_blend) − 1 = 0.4534 / (0.2930 + 0.1593) − 1 = **+0.245% ± 0.268%**`
+(16-seed CRN ensemble, flow-seed 12345), fully parameter-free (no empirical scalars) — consistent
+with zero at 0.9σ, subpercent and under the ≤0.3% aspiration. The m=0 point is
+R_flow = R_sim − R_blend = 0.2941; the residual +0.245% is R_flow sitting 0.0011 below it. Error
+budget (WORKLOG cont.50–51): σ_m = 0.182% (seed, ∝1/√N) ⊕ 0.195% (R_sim finite-case floor,
+irreducible by more seeds) ⊕ 0.017% (R_blend). The earlier N=8 "+0.51%" was a small-N R_flow
+fluctuation (0.2919→0.2930 at N=16). See WORKLOG cont.51.
+
+**Known limitation — tomographic non-closure (WORKLOG cont.52).** The global +0.245% is a
+*cancellation across magnitude*: per magnitude bin, ⟨R_flow⟩+⟨R_blend⟩ vs ⟨r_sim⟩ ranges from
+≈−2.3% (bright) to ≈+8.3% (faint), driven at faint mags by the BlendEMU R_blend term. A
+magnitude-tomographic or faint-weighted (LSST-like) analysis would see up to ~8% response
+miscalibration even though the global mean is subpercent. (Numbers from the s501 low-outlier seed;
+the *structure* is seed-robust, exact magnitudes want a multi-seed per-bin repeat.)
 
 ---
 
-## Current LIVE entrypoints (per WORKLOG cont.44–47, 2026-07-16)
+## Current LIVE entrypoints (per WORKLOG cont.51–52, 2026-07-17)
 - **Train:** `job_pilot_train.sh` → `train_measurement_model.py` (tag `meas_szfl_noz_lam450_fixresp`).
 - **Harvest / m:** `job_pilot_harvest.sh` → `validate_constant_with_blend.py`
   (`CAT=constant_response_catalogue_train.feather`, `MINCASE=40`, `--flow-seed` CRN).
 - **c2-fix rebuild chain:** `job_resp_rebuild_c2fix.sh` → `job_retrain_ho.sh` (blendemu emulator)
   → `job_build_4079.sh` / `job_build_100.sh` → `job_blend_multiplicity_4079.sh` → re-harvest.
-- **Figures:** `plot_flow_calibration.py` → `figures/`.
+- **Figures:** `plotting/plot_flow_figures.py` → `figures/` (5 PNGs; per-object dumps via
+  `job_fig2_dump.sh`, `job_fig5_selfresp.sh` → `eval_self_response_bins.py`).
 - **Posterior inference:** `job_infer_etilde*.sh` → `infer_posterior_shape.py`.
 - **prob_blending:** `probblend_forward.py` / `probblend_characterize.py` (+ calib).
-- **Pending experiment (not launched):** RUN_g02tgt.md — `job_resp_target_g02.sh`,
-  `compare_response_targets.py`, `job_train_conc_g02tgt.sh`, `job_validate_conc_g02tgt.sh`,
-  `job_g0_lookup_0-199.sh`.
+- **Closed experiment (archived):** the g=0.02-response-target check (RUN_g02tgt) ran Stage A
+  2026-07-12 → verdict LINEAR, Stage B never launched; runbook + `compare_response_targets.py`
+  moved to `archive/`. See WORKLOG cont.16–18.
 
-## Superseded-but-kept entrypoints (UNCERTAIN — left in place)
+## Superseded-but-kept entrypoints (kept in `scripts/`)
 - `validate_constant_response.py` — pre-blend constant validator; superseded by
-  `validate_constant_with_blend.py`. Still referenced by `job_const_validate_full.sh`,
-  `job_constgold_lam300.sh`, `job_validate_ap7.sh`.
+  `validate_constant_with_blend.py` but still referenced by `job_const_validate_full.sh`,
+  `job_constgold_lam300.sh`; also a de-dup source for the shared response lib.
 - `validate_allpairs_response.py` — ap7/np7-era self-response validator; still used by the
-  crowd-era validate jobs, so **not** archived.
-- ap7/np7-era job family (`job_*_ap7.sh`, `job_np7_*.sh`, `job_snc_truemag_g0*.sh`,
-  `job_build_allpairs_*.sh`) — predate the crowd/conc/meas_szfl pipeline. Large family; left
-  in place (conservative). See MODULARIZATION_PLAN.md for a proposed batch review.
-- `measure_gold_c.py` — completed additive-c diagnostic, no job/import; sibling
-  `measure_flow_c_train.py` was archived this pass. Left as UNCERTAIN (c2 work is ongoing).
+  crowd-era validate jobs, so kept.
 
 ---
 
-## MOVED this pass (manifest)
-All moves are `mv` into `archive/` or `jobs/archive/` — **nothing deleted**. Each archived
-script is self-contained: no remaining live script or job imports/invokes it (the toy cluster
-imports only within itself; its only job entrypoint moved with it).
+## Repository layout (post-2026-07-17 cleanup)
 
-| old path | new path | reason |
-|---|---|---|
-| scripts/toy_blend_decompose.py | archive/toy_blend_decompose.py | finished single-pair blend-linearity toy investigation; no live importer once cluster moves together |
-| scripts/toy_blend_linearity.py | archive/toy_blend_linearity.py | same toy cluster (base module for the others) |
-| scripts/toy_dilution_scaling.py | archive/toy_dilution_scaling.py | same toy cluster |
-| scripts/toy_faint_neighbour.py | archive/toy_faint_neighbour.py | same toy cluster |
-| scripts/toy_sersic_superpose.py | archive/toy_sersic_superpose.py | same toy cluster |
-| scripts/toy_model_calib.py | archive/toy_model_calib.py | same toy cluster (flow-vs-toy calibration check, complete) |
-| scripts/toy_shear_scan.py | archive/toy_shear_scan.py | same toy cluster; its only entrypoint (job_toy_scan.sh) moved too |
-| scripts/measure_flow_c_train.py | archive/measure_flow_c_train.py | completed one-off (flow mean-head offset consistency) diagnostic; no job, no importer; superseded by measure_flow_c.py |
-| scripts/neighbor_shear_null.py | archive/neighbor_shear_null.py | completed null test; no job, no importer; sibling neighbor_shear_status.py already in archive/ |
-| jobs/job_toy_scan.sh | jobs/archive/job_toy_scan.sh | invokes archived toy_shear_scan.py |
-| jobs/job_recov_blended.sh | jobs/archive/job_recov_blended.sh | invokes validate_heldout_shear_recovery.py, which already lives in archive/ (dead job) |
+```
+sbs_shear/          core library (installable: pip install -e .)
+  measurement_model.py [P]  spline_flow.py [P]  scene_model.py [P]
+  selection_model.py  detection_classifier.py  posterior_shape.py
+  preprocessing.py  shear_map.py  coordinates.py  sim_stream.py
+  response.py               R_flow response lib (model_mean_proj / flow_response / …)
+scripts/            29 live-pipeline + kept-older scripts (build / target / train / harvest / infer / probblend)
+plotting/           plot_flow_figures.py  (the 5 certification figures)
+jobs/               100 Slurm jobs for the above (+ jobs/archive/ for superseded)
+archive/            superseded scripts + closed one-off investigations (git-reversible, still runnable via SBSI_ROOT)
+tests/              pytest unit tests (run in the py31 env: python -m pytest tests/)
+results/, models/   generated artifacts — gitignored; large keepers live under $DATA_DIR/sbsi_caches (symlinked)
+```
+
+## Public API (`sbs_shear`)
+
+Future jobs/scripts should import from the library rather than re-inlining logic:
+
+```python
+from sbs_shear import load_measurement_model          # load the trained R_flow flow bundle
+from sbs_shear.response import flow_response           # R_flow = (m_+g − m_−g)/(2g), optional per-object + CRN reseed
+from sbs_shear.response import model_mean_proj, load_sheared_sample
+from sbs_shear.preprocessing import source_select_selection, DEFAULT_SELECTION_CUTS
+```
+
+- **Train** (R_flow): `job_pilot_train.sh` → `train_measurement_model.py`
+  (tag `meas_szfl_noz_lam450_fixresp`, `--response-target-npz results/response_target_crowd_rblend_snc_c0-99_6x3x5.npz`).
+- **Harvest / m:** `job_pilot_harvest.sh` → `validate_constant_with_blend.py`
+  (`CAT=constant_response_catalogue_train.feather`, `MINCASE=40`, `--flow-seed 12345`).
+- **Infer:** `job_infer_etilde*.sh` → `infer_posterior_shape.py`.
+
+## Background / how we got here (condensed; full history in WORKLOG.md, newest-first)
+
+Shape estimator since 2026-07-01 is **ngmix** `NGMIX_G1/G2` (PSF-corrected reduced shear); earlier
+SExtractor windowed-moment numbers are PSF-diluted and kept only for the record.
+
+1. **Baseline & closure.** Flow-MLE recovery m=+3%; closure test unbiased (<0.2%) → machinery sound.
+2. **Bias = shear-response miscalibration, not g=0 fidelity.** Seven converging diagnostics → m is a
+   response-transfer gap, decoupled from g=0 likelihood quality.
+3. **Direct response calibration → sub-percent (SExtractor era).** First-moment (BFD-like) estimator,
+   responsivity from g=0.05, tested on independent g=0.02 → m=−0.24%±0.63% (28M rows).
+4. **Response-aware flow training.** Sobolev loss `L = NLL + λ‖R_model − R_sim‖²` + MLP mean head +
+   property-resolved (flux×size×blend) supervision → the flow's induced response tracks R_sim.
+5. **Gold constant-shear validation** revealed the flow target and gold measured *different estimators*
+   → triggered the ngmix pivot.
+6. **Estimator pivot to ngmix** (2026-07-01).
+7. **The 0.30-vs-0.39 isolated-response gap = coherent blending** (not a bug): coherent-field shear
+   boosts the ngmix response via aligned neighbour light. **Split of labor** — the SBSI flow models the
+   incoherent self-response (R_flow); the external **BlendEMU** emulator supplies the coherent blend
+   part (R_blend); combined they reproduce constant-shear (→ the decomposition above).
+
+## Refactor status (2026-07-17)
+
+Executed from the former `MODULARIZATION_PLAN.md` (now folded here): response library promoted to
+`sbs_shear/response.py` + shim; `pyproject.toml` added; closed branches (scene / additive / superseded
+selection) + one-off diagnostics archived; markdown set consolidated. **Not done** (deliberately, to keep
+the certified path byte-identical — see the "freeze core" decision): the deeper `sbs_shear/io.py` +
+`lookups.py` extraction that would rewire the protected harvester/trainer, and the physical regroup of
+`scripts/`/`jobs/` into stage subdirs. Those remain available if a future pass re-verifies m end-to-end.
+
+## Cleanup history
+- **2026-07-17** — this cleanup: git-initialised the repo; `sbs_shear/response.py` extraction; 19 scripts
+  + 57 jobs archived; superseded outputs deleted / live keepers relocated to `$DATA_DIR`; docs consolidated
+  (`MODULARIZATION_PLAN.md`, `SUMMARY.md` folded here; `RUN_g02tgt.md` archived). See WORKLOG cont.53.
+- **2026-07-16** — toy-investigation cluster (7 `toy_*`), `measure_flow_c_train.py`, `neighbor_shear_null.py`
+  + their jobs archived (recoverable from git history / `archive/`).
