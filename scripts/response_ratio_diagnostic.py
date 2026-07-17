@@ -1,32 +1,22 @@
-"""Response-ratio gating diagnostic for the response-aware (Sobolev) plan.
+"""Response-ratio gating diagnostic (CLI) + back-compat shim for the response library.
+
+The response-evaluation helpers (``load_sheared_sample``, ``_shape_target_indices``,
+``model_mean_proj``, and the ``flow_response`` secant) now live in
+``sbs_shear/response.py``.  They are re-exported here unchanged so existing
+``from scripts.response_ratio_diagnostic import model_mean_proj, _shape_target_indices``
+imports keep working byte-for-byte.  The CLI ``main()`` below is the original
+response-ratio gating diagnostic for the response-aware (Sobolev) plan
+(``SBI_shear_response.md``).
 
 SBI_shear_response.md proposes supervising the forward model's first-order shear
 response (Jacobian) with paired sims, rather than only its likelihood.  That fixes
 the +3% multiplicative bias m ONLY IF the model-vs-sim response mismatch is a
 shear-INDEPENDENT multiplicative constant: then a response correction calibrated at
-small shear transfers out to finite shear (0.05, 0.2).  If the mismatch varies with
-shear, near-0 supervision will NOT fix finite-shear m, and the heavy retrain is not
-worth launching.
-
-This script measures, at each held-out shear g in {0.05, 0.2}:
-
-  m_sim(g)   = < e_meas . ghat >                 (measured shape projected on the
-                                                  per-object applied-shear direction)
-  R_sim(g)   = m_sim(g) / g                       (sim first-moment shear response)
-
-  m_model(s) = < E[e_hat | S_{s*ghat}(x)] . ghat> (induced flow mean, conditioning
-                                                  truth sheared by the analytic map)
-  R_model(g) = m_model(g) / g                     (model induced response at g)
-  R_local    = m_model(delta) / delta             (model induced response near 0)
-
-Decisive outputs:
-  * R_sim(0.05) vs R_sim(0.2)        -> is the TRUE response linear in shear?
-  * R_model(0.05) vs R_model(0.2)    -> is the model induced response linear?
-  * ratio(g) = R_model(g)/R_sim(g)   -> is the mismatch a shear-independent constant?
-    If ratio(0.05) ~= ratio(0.2) -> response-aware training transfers -> GO heavy.
-    If they differ                -> local supervision won't fix finite-shear m.
-
-No retraining; pure forward evaluation of the existing trained flow.
+small shear transfers out to finite shear (0.05, 0.2).  This script measures, at each
+held-out shear g in {0.05, 0.2}, R_sim(g) and the model induced R_model(g), and the
+ratio(g) = R_model(g)/R_sim(g): if ratio(0.05) ~= ratio(0.2) the mismatch is a
+shear-independent constant and response-aware training transfers.  No retraining;
+pure forward evaluation of the existing trained flow.
 """
 
 from __future__ import annotations
@@ -38,121 +28,23 @@ import time
 
 import numpy as np
 import pandas as pd
-import pyarrow as pa
-import pyarrow.ipc as ipc
 import torch
 
 SBSI_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if SBSI_ROOT not in sys.path:
     sys.path.insert(0, SBSI_ROOT)
 
+# Re-exported for back-compat: these used to be defined in this module.
+from sbs_shear.response import (  # noqa: E402,F401
+    load_sheared_sample,
+    _shape_target_indices,
+    model_mean_proj,
+    flow_response,
+)
 from sbs_shear.measurement_model import (  # noqa: E402
     load_measurement_model,
     add_measurement_target_features,
-    raw_columns_for_measurement_targets,
 )
-from sbs_shear.preprocessing import (  # noqa: E402
-    DEFAULT_SELECTION_CUTS,
-    raw_columns_for_selection_features,
-    rescale,
-    source_select_selection,
-)
-from sbs_shear.shear_map import apply_shear_to_ellipticity  # noqa: E402
-
-
-def load_sheared_sample(catalogue, bundle, max_rows, shear_threshold, seed, max_read_batches=None,
-                        snr_min=None):
-    """Stream a sheared catalogue, apply the standard cuts + detected, and reservoir-
-    sample.  Keep intrinsic shape, applied-shear truth, and the measured targets.
-    snr_min applies a measured-quality cut (measured_flux_auto/fluxerr_auto > snr_min)
-    on the SHEARED measured quantity -- a shear-dependent selection."""
-    rng = np.random.default_rng(seed)
-    condition_features = bundle.condition_preprocessor.feature_names
-    target_features = bundle.target_transform.target_names
-
-    with ipc.open_file(catalogue) as reader:
-        available = set(reader.schema.names)
-        needed = set()
-        needed |= raw_columns_for_selection_features(condition_features, available_columns=available)
-        needed |= raw_columns_for_measurement_targets(target_features)
-        needed |= {"detected", "gamma1_input_p", "gamma2_input_p"}
-        needed |= {"e1_input_rot0_p", "e2_input_rot0_p"}
-        needed |= {"r_input_p", "Re_input_p", "distance", "neighbored"}
-        needed |= {"measured_flux_auto", "measured_fluxerr_auto", "measured_mag_auto"}
-        read_columns = sorted(c for c in needed if c in available)
-
-        reservoir = None
-        raw_rows = 0
-        for bi in range(reader.num_record_batches):
-            if max_read_batches is not None and bi >= max_read_batches:
-                break
-            batch = pa.Table.from_batches([reader.get_batch(bi)]).select(read_columns).to_pandas()
-            raw_rows += len(batch)
-            batch = source_select_selection(batch, cuts=DEFAULT_SELECTION_CUTS)
-            if len(batch) == 0:
-                continue
-            batch = batch[batch["detected"].astype(bool)].reset_index(drop=True)
-            if len(batch) == 0:
-                continue
-            if snr_min is not None and "measured_flux_auto" in batch.columns:
-                snr = batch["measured_flux_auto"].to_numpy(float) / batch["measured_fluxerr_auto"].to_numpy(float)
-                batch = batch[np.isfinite(snr) & (snr > snr_min)].reset_index(drop=True)
-                if len(batch) == 0:
-                    continue
-            gmag = np.hypot(batch["gamma1_input_p"].to_numpy(float), batch["gamma2_input_p"].to_numpy(float))
-            batch = batch[gmag > shear_threshold].reset_index(drop=True)
-            if len(batch) == 0:
-                continue
-            batch = batch.copy()
-            batch["__key"] = rng.random(len(batch))
-            reservoir = batch if reservoir is None else pd.concat([reservoir, batch], ignore_index=True)
-            if len(reservoir) > 2 * max_rows:
-                reservoir = reservoir.nlargest(max_rows, "__key").reset_index(drop=True)
-
-    if reservoir is None:
-        raise SystemExit(f"No sheared rows selected from {catalogue}")
-    if len(reservoir) > max_rows:
-        reservoir = reservoir.nlargest(max_rows, "__key").reset_index(drop=True)
-    reservoir = reservoir.drop(columns="__key").reset_index(drop=True)
-    print(f"  raw scanned={raw_rows:,}  kept (sheared)={len(reservoir):,}")
-    return reservoir
-
-
-def _shape_target_indices(names):
-    """Locate the (e1,e2)-like shape target pair among the flow's target names,
-    supporting both SExtractor (measured_e1_image/e2_image) and ngmix
-    (measured_ngmix_g1/g2) conventions."""
-    for c1, c2 in (("measured_e1_image", "measured_e2_image"),
-                   ("measured_ngmix_g1", "measured_ngmix_g2"),
-                   ("measured_galsim_g1", "measured_galsim_g2")):
-        if c1 in names and c2 in names:
-            return names.index(c1), names.index(c2)
-    raise KeyError(f"No known shape target pair in {names}")
-
-
-def model_mean_proj(bundle, base, s, ghat1, ghat2, intrinsic, rescale_kwargs,
-                    n_samples, batch_size, return_proj=False):
-    """< E[e_hat | S_{s*ghat}(intrinsic)] . ghat >  -- induced flow first moment
-    projected onto the per-object applied-shear direction.
-
-    Returns (global_mean, sem).  With return_proj=True also returns the per-object
-    projection array `proj` (shape N,), letting callers form a per-object response
-    (proj_{+g} - proj_{-g})/(2g).  Because the global mean is exactly np.mean(proj),
-    the scalar response is identical whether taken from the two means or from the
-    per-object array -- so exposing proj never changes the certified global R_flow."""
-    frame = base.copy()
-    e1p, e2p = apply_shear_to_ellipticity(intrinsic[0], intrinsic[1], s * ghat1, s * ghat2)
-    frame["e1_input_rot0_p"] = e1p
-    frame["e2_input_rot0_p"] = e2p
-    frame = rescale(frame, **rescale_kwargs)
-    draws = bundle.sample(frame, n_samples=n_samples, batch_size=batch_size)  # (N, n_samples, dim)
-    mean = draws.mean(axis=1)  # (N, dim) in engineered target units
-    i1, i2 = _shape_target_indices(bundle.target_transform.target_names)
-    proj = mean[:, i1] * ghat1 + mean[:, i2] * ghat2
-    gmean, sem = float(np.mean(proj)), float(np.std(proj) / np.sqrt(len(proj)))
-    if return_proj:
-        return gmean, sem, proj
-    return gmean, sem
 
 
 def main():

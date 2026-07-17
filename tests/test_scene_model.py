@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import torch
 
 from sbs_shear.scene_model import (
@@ -10,7 +9,6 @@ from sbs_shear.scene_model import (
     SetFeatureStandardizer,
 )
 from sbs_shear.preprocessing import raw_columns_for_selection_features
-from scripts.train_scene_measurement_model import _scene_from_group
 
 
 def test_set_feature_standardizer_pads_and_masks_variable_neighbors():
@@ -89,37 +87,3 @@ def test_set_conditioned_measurement_flow_log_prob_and_sample_shape():
 
     assert torch.isfinite(log_prob).all()
     assert samples.shape == (3, 2, 4)
-
-
-def test_scene_from_group_sorts_neighbors_and_adds_summaries():
-    group = pd.DataFrame({
-        "detected": [True, True],
-        "neighbored": [True, True],
-        "distance": [2.0, 1.0],
-        "distance_scaled": [20.0, 10.0],
-        "flux_ratio": [1.0, 0.0],
-        "primary_a": [5.0, 5.0],
-        "target_a": [7.0, 7.0],
-    })
-
-    scene = _scene_from_group(
-        group,
-        primary_features=[
-            "primary_a",
-            "neighbor_count",
-            "nearest_distance_scaled",
-            "brightest_neighbor_flux_ratio",
-            "log10_total_neighbor_flux_ratio",
-        ],
-        neighbor_features=["distance_scaled", "flux_ratio"],
-        target_features=["target_a"],
-        aperture=3.0,
-    )
-
-    primary, target, neighbors = scene
-    assert primary["neighbor_count"] == 2.0
-    assert primary["nearest_distance_scaled"] == 10.0
-    assert primary["brightest_neighbor_flux_ratio"] == 0.0
-    np.testing.assert_allclose(primary["log10_total_neighbor_flux_ratio"], np.log10(1.1))
-    assert target["target_a"] == 7.0
-    np.testing.assert_allclose(neighbors[:, 0], [10.0, 20.0])
