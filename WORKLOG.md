@@ -2,6 +2,30 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-17 (cont.53, REPO CLEANUP + PIPELINE RESTRUCTURE — git-initialised, response library promoted, dead scripts/jobs archived, 22.5 GB of superseded outputs deleted, docs consolidated; certified m untouched)
+
+Milestone housekeeping pass after cont.52. Goal: a clean, navigable repo with a clear train/inference API, no behavior change to the certified `m = R_sim/(R_flow+R_blend)−1`. Scope decided with the owner: **freeze the certified core** (protected trainer/harvester byte-identical, no re-harvest), **hard-delete superseded outputs**, **archive closed branches**.
+
+**Analysis:** 6-agent workflow (dep graph + script/job/output/markdown/redundant-code analyzers) built the keep/delete map, cross-checked against the live entrypoints + WORKLOG top + the PROTECTED-file list.
+
+**Git.** Repo `git init`-ed (was untracked). `.gitignore` excludes `results/ models/ figures/ data/ notebooks/` + `*.pt/*.feather/*.npz/*.png` + caches/logs, so the 27 GB of artifacts stay out. Baseline commit `9439760`; the cleanup is 4 further commits (rollback points).
+
+**Code (git-reversible).**
+- **`sbs_shear/response.py`** — promoted the load-bearing response library (`model_mean_proj`, `_shape_target_indices`, `load_sheared_sample`) out of the misnamed `scripts/response_ratio_diagnostic.py`; added a `flow_response(±g secant, optional per-object + CRN reseed)` public helper. `response_ratio_diagnostic.py` is now a thin back-compat shim re-exporting the **identical objects** (verified `a is b`) + its original CLI `main()`. The protected harvester's `from scripts.response_ratio_diagnostic import model_mean_proj` is byte-identical → certified number untouched.
+- **`pyproject.toml`** added (optional `pip install -e .`); `sbs_shear/__init__.py` now exports the response API. PYTHONPATH contract unchanged.
+- **Archived 19 scripts + 57 jobs** (`git mv` → `archive/`, `jobs/archive/`): scene-coherent, additive-correction, superseded selection branches + closed one-off diagnostics (measure_gold_c/measure_flow_c/ood_rsim_check/map_truth/match_fixed/audit_*_truth/flow_response_by_mag/compare_response_targets) + pre-fixresp job families (ap7/np7/build/constgold/blendlookup/fmval/halfshear/snc). Verified **no kept script imports an archived module, no kept job invokes an archived script**. `scripts/` 48→29, `jobs/` 157→100.
+- **Tests:** fixed `tests/test_scene_model.py` (dropped a dead import of the archived scene trainer that broke collection at baseline). **17 pass** (py31 env, was 12 collectable).
+
+**Docs.** `MODULARIZATION_PLAN.md` + `SUMMARY.md` folded into **`PIPELINE.md`** (now the single authoritative map: DAG + Background/history + Public API + Repository layout + Refactor status + Cleanup history) and removed; `RUN_g02tgt.md` (closed experiment) → `jobs/archive/`. Refreshed stale refs (`plot_flow_calibration.py`→`plotting/plot_flow_figures.py`; 8-seed +0.51% → **16-seed +0.245% ± 0.268%**; added the tomographic non-closure limitation). **Kept `SBI_shear.md` + `SBI_shear_response.md`** — cited by section number inside protected code (`measurement_model.py`, `train_measurement_model.py`, …). Final doc set: CLAUDE, AGENTS, PIPELINE, PROB_BLENDING, SBI_shear, SBI_shear_response, WORKLOG.
+
+**Outputs (irreversible; `$HOME` not git-tracked).** `results/` 27 GB→~0.01 GB local, `models/` 683 MB→166 MB.
+- **Deleted 22.5 GB** superseded: scene-branch outputs (5.8 GB), `resp002_c40-59` (closed RUN_g02tgt), old-convention lookups + already-consolidated shards (verified byte-identical to their `c40-139` finals), pre-c2fix `c0-39` lookups, 2 `.stale_bak`, and 178 pre-fixresp model checkpoints. Verified none are read by the live harvester (`job_pilot_harvest.sh` reads only the `c40-139`/`conc`/`meas_prim`/`mult_c40-79` finals + `constant_response_catalogue_train`).
+- **Relocated 8 live finals (~9.9 GB)** to `$DATA_DIR/sbsi_caches/` + symlink back into `results/` (crowd_flux_conc, meas_prim, ood_split_c40-139, blend_lookup_extnbrho_c40-139, constgold_perobj_raw, g0_lookup_c0-99, blend_multiplicity_c40-79, probblend_char) — every pipeline path still resolves, `$HOME` reclaimed. Kept: fixresp s501-516 + SWA ensemble, 5 small live inputs (response target npz, fig5 npz, truth manifest, etilde prior samples), 7 tiny referenced-default models.
+
+**Validation run:** `pytest tests/` (17 pass); import-identity check on the response shim; import smoke of kept entrypoints (5/6 OK; `train_measurement_model` fails only on the login-node scipy `GLIBCXX_3.4.30` ABI issue — pre-existing, resolves on compute nodes). No GPU harvest re-run needed (certified path byte-identical by construction).
+
+**Limitations / next steps.** Deliberately NOT done (would touch the certified path): the deeper `sbs_shear/io.py` + `lookups.py` extraction and the physical regroup of `scripts/`/`jobs/` into stage subdirs — available for a future pass that re-verifies m end-to-end. `jobs/` still holds ~100 mostly older-convention runs kept as reproducibility refs (could be pruned further). The relocation symlinks may need re-pointing if a future full rebuild rewrites a final via atomic-rename.
+
 ## 2026-07-17 (cont.52, fig2/fig5 reconciliation + per-object R_flow fix) — user Qs on the figures exposed that the +0.24% lives on the certification budget, and surfaced two honest qualifications I under-stated in cont.51
 
 **Two user questions, both correct instincts:**
