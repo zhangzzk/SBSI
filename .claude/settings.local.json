@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//project/ls-gruen/users/zekang.zhang/sbsi_catalogues/**)",
+      "Bash(sinfo -o \"%P %a %l %D %t\")",
+      "Read(//home/z/Zekang.Zhang/.claude/**)",
+      "Read(//home/z/Zekang.Zhang/.claude/projects/**)"
+    ]
+  }
+}

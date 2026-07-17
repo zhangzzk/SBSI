@@ -1,0 +1,31 @@
+# ---- large data / model / output artifacts (live under $DATA_DIR or are regenerable) ----
+results/
+models/
+figures/
+data/
+notebooks/
+
+# binary artifacts anywhere
+*.pt
+*.npz
+*.npy
+*.feather
+*.parquet
+*.h5
+*.hdf5
+*.png
+*.pdf
+*.stale_bak
+
+# ---- python / tooling caches ----
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# ---- job logs (also written outside the repo) ----
+jobs/logs/
+logs/
+*.out
+*.err

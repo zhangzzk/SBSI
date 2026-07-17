@@ -1,0 +1,63 @@
+{
+  "timestamp": "2026-07-06T09:36:25.858060",
+  "os": {
+    "system": "Linux",
+    "release": "5.14.0-611.55.1.el9_7.x86_64",
+    "version": "#1 SMP PREEMPT_DYNAMIC Tue May 19 15:19:29 EDT 2026",
+    "machine": "x86_64",
+    "python_version": "3.9.25"
+  },
+  "cpu": {
+    "physical_cores": 32,
+    "logical_cores": 64,
+    "max_frequency_mhz": 0.0,
+    "architecture": "x86_64",
+    "processor": "x86_64",
+    "current_frequency_mhz": 1651.9098125
+  },
+  "memory": {
+    "total_gb": 376.02,
+    "available_gb": 313.83,
+    "used_gb": 56.54,
+    "percent_used": 16.5,
+    "swap_total_gb": 20.0,
+    "swap_available_gb": 18.65
+  },
+  "disk": {
+    "path": "/home/z/Zekang.Zhang/SBSI",
+    "total_gb": 25940.43,
+    "available_gb": 4364.82,
+    "used_gb": 21575.61,
+    "percent_used": 83.2
+  },
+  "gpu": {
+    "nvidia_gpus": [],
+    "amd_gpus": [],
+    "apple_silicon": null,
+    "total_gpus": 0,
+    "available_backends": []
+  },
+  "recommendations": {
+    "parallel_processing": {
+      "strategy": "high_parallelism",
+      "suggested_workers": 62,
+      "libraries": [
+        "joblib",
+        "multiprocessing",
+        "dask"
+      ]
+    },
+    "memory_strategy": {
+      "strategy": "memory_abundant",
+      "note": "Can load most datasets into memory"
+    },
+    "gpu_acceleration": {
+      "available": false,
+      "note": "No GPU detected, use CPU-based libraries"
+    },
+    "large_data_handling": {
+      "strategy": "disk_abundant",
+      "note": "Sufficient space for large intermediate files"
+    }
+  }
+}
