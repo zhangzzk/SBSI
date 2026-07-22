@@ -1,5 +1,10 @@
 # SBSI Pipeline Map
 
+> **The current project framing is [`GOALS.md`](GOALS.md)** (reframe locked 2026-07-22:
+> joint measurement+detection flow on true-property conditioning). This map documents the
+> **certified pipeline as-built** (shape-only R_flow), which stays the working baseline until
+> the new model is built. Read `GOALS.md` for where we're headed.
+
 Map of the SBSI shear-calibration pipeline, from **response predictions** to the two
 inference directions: **(a) full-Bayesian harvest/inference** and **(b) prob_blending**
 (probabilistic-neighbour forward model). Reconstructed 2026-07-16 from `scripts/`, `jobs/`,
@@ -202,9 +207,9 @@ sbs_shear/          core library (installable: pip install -e .)
   selection_model.py  detection_classifier.py  posterior_shape.py
   preprocessing.py  shear_map.py  coordinates.py  sim_stream.py
   response.py               R_flow response lib (model_mean_proj / flow_response / …)
-scripts/            29 live-pipeline + kept-older scripts (build / target / train / harvest / infer / probblend)
+scripts/            40 live-pipeline + kept-older scripts (build / target / train / harvest / infer / probblend)
 plotting/           plot_flow_figures.py  (the 5 certification figures)
-jobs/               100 Slurm jobs for the above (+ jobs/archive/ for superseded)
+jobs/               131 Slurm jobs for the above (+ jobs/archive/ for superseded)
 archive/            superseded scripts + closed one-off investigations (git-reversible, still runnable via SBSI_ROOT)
 tests/              pytest unit tests (run in the py31 env: python -m pytest tests/)
 results/, models/   generated artifacts — gitignored; large keepers live under $DATA_DIR/sbsi_caches (symlinked)
@@ -257,6 +262,18 @@ the certified path byte-identical — see the "freeze core" decision): the deepe
 `scripts/`/`jobs/` into stage subdirs. Those remain available if a future pass re-verifies m end-to-end.
 
 ## Cleanup history
+- **2026-07-22** — reframe cleanup (cont.111): docs updated to the new framing (`GOALS.md` added;
+  `SBI_shear.md`/`SBI_shear_response.md`/this map banner-pointed at it). Archived **32 one-off
+  diagnostic scripts** (the cont.61–111 selection-bias exploration: all `diag_*`, `ensemble_*`/`reframe_*`
+  closure probes, `decomp_constgold_ensemble`, `goal3_collider_derisk`, `null_rsel_constgold`,
+  `component_resolution_report`, `mag_resolved_components`, `eval_component_measbinned`,
+  `eval_flow_selfresp_grid`, `eval_rblend_pairpred_grid`, `rblend_faintfar_halfshear`, `isolated_*`,
+  `selfresp_true_vs_measured_size`, `step2_pred_response_constgold`, `estimator_compare_constgold`,
+  `variance_decomposition`, `rblend_bias_sizing`) + 27 exclusive jobs. Kept the certified pipeline core,
+  the trainers, catalogue/lookup/response-target builders, validators, inference, probblend, the
+  detection-response + `halfshear_component_labels` tools (reusable for the new build). scripts 72→40,
+  jobs 158→131. Verified no kept file imports an archived one and no live job points at an archived
+  script. All moves reversible (files sit in `archive/`, `jobs/archive/`).
 - **2026-07-17** — this cleanup: git-initialised the repo; `sbs_shear/response.py` extraction; 19 scripts
   + 57 jobs archived; superseded outputs deleted / live keepers relocated to `$DATA_DIR`; docs consolidated
   (`MODULARIZATION_PLAN.md`, `SUMMARY.md` folded here; `RUN_g02tgt.md` archived). See WORKLOG cont.53.

@@ -1,4 +1,10 @@
-"""Blend-aware property-resolved response target R_sim(flux x size x blend) for Phase-2 training.
+"""[STATUS — see SBSI/STATE_OF_PLAY.md] The DEFAULT (forward, g=0.05) mode is CANONICAL: it builds the
+isolated-separated snc self-response target used by the _prod winner (cont.60). The `--antithetic` mode
+(added cont.63; reads the constgold +/-g antithetic render, i.e. the acceptance-harness truth) is
+RETRACTED as train-on-validation circularity (cont.67) — do NOT use it to build an R_flow target; use
+compute_deltaet_target.py (constgold never read) instead.
+
+Blend-aware property-resolved response target R_sim(flux x size x blend) for Phase-2 training.
 
 Extends compute_response_target.py with a THIRD binning axis: blend severity.
   blend bin 0          = ISOLATED (neighbored == False)
@@ -50,6 +56,10 @@ def main():
     ap.add_argument("--nominal-g", type=float, default=0.05)
     ap.add_argument("--n-flux", type=int, default=6)
     ap.add_argument("--n-size", type=int, default=3)
+    ap.add_argument("--size-edges", default=None,
+                    help="comma-separated explicit size-bin edges (overrides --n-size quantile edges). "
+                         "Use to add resolution where the response gradient is steep (e.g. large sizes), "
+                         "which pure quantile spacing under-resolves. A-priori physics choice, not |m|-tuning.")
     ap.add_argument("--n-dist", type=int, default=3, help="distance bins for BLENDED gals (isolated is a separate bin 0)")
     ap.add_argument("--crowd-col", default=None,
                     help="if set (e.g. r_blend / nbr_flux_near), use QUANTILE bins of this crowding "
@@ -74,13 +84,26 @@ def main():
                          "[e(g)-e(0)].ghat/g instead of raw e(g).ghat/g.")
     ap.add_argument("--snc-cols", nargs=2, default=["ngmix0_g1", "ngmix0_g2"],
                     help="Two shape columns in --snc-lookup.")
+    ap.add_argument("--antithetic", action="store_true",
+                    help="METRIC-CONSISTENT mode: read a constant-shear ANTITHETIC (+g/-g) render "
+                         "catalogue and compute R = <(e_+g - e_-g).ghat>/(2g) -- the SAME sample and "
+                         "central-diff scheme as the acceptance metric's r_sim (infer_posterior_shape). "
+                         "Uses applied_g1/g2 for ghat; ignores --target-cols and --snc-lookup; "
+                         "g = --nominal-g (set to the render |g|, e.g. 0.02).")
+    ap.add_argument("--anti-cols", nargs=4,
+                    default=["measured_e1_plus", "measured_e2_plus",
+                             "measured_e1_minus", "measured_e2_minus"],
+                    help="Four +/-g shape columns for --antithetic: e1_plus e2_plus e1_minus e2_minus.")
     ap.add_argument("--output", required=True)
     args = ap.parse_args()
-    snc = load_snc_lookup(args.snc_lookup, args.snc_cols)
+    snc = None if args.antithetic else load_snc_lookup(args.snc_lookup, args.snc_cols)
 
-    need = set(raw_columns_for_measurement_targets(args.target_cols))
-    need |= {"gamma1_input_p", "gamma2_input_p", "r_input_p", "Re_input_p",
-             "detected", "distance", "neighbored", "input_index", "case"}
+    if args.antithetic:
+        need = set(args.anti_cols) | {"applied_g1", "applied_g2"}
+    else:
+        need = set(raw_columns_for_measurement_targets(args.target_cols))
+        need |= {"gamma1_input_p", "gamma2_input_p", "detected"}
+    need |= {"r_input_p", "Re_input_p", "distance", "neighbored", "input_index", "case"}
     if args.crowd_col:
         need.add(args.crowd_col)
     parts = []
@@ -99,10 +122,15 @@ def main():
             b = source_select_selection(b, cuts=DEFAULT_SELECTION_CUTS)
             if len(b) == 0:
                 continue
-            b = b[b["detected"].astype(bool)].reset_index(drop=True)
+            if "detected" in b.columns:                       # constgold antithetic renders have no detected col
+                b = b[b["detected"].astype(bool)]
+            b = b.reset_index(drop=True)
             parts.append(b)
     df = pd.concat(parts, ignore_index=True)
-    g1 = df["gamma1_input_p"].to_numpy(float); g2 = df["gamma2_input_p"].to_numpy(float)
+    if args.antithetic:
+        g1 = df["applied_g1"].to_numpy(float); g2 = df["applied_g2"].to_numpy(float)
+    else:
+        g1 = df["gamma1_input_p"].to_numpy(float); g2 = df["gamma2_input_p"].to_numpy(float)
     gmag = np.hypot(g1, g2); keep = gmag > 1e-6
     df = df[keep].reset_index(drop=True); g1, g2, gmag = g1[keep], g2[keep], gmag[keep]
     gh1, gh2 = g1 / gmag, g2 / gmag
@@ -121,19 +149,26 @@ def main():
         w = (1.0 / _npairs[_inv]).astype(float)
     else:
         w = np.ones(len(df), dtype=float)
-    meas = add_measurement_target_features(df.copy())
-    e1 = meas[args.target_cols[0]].to_numpy(float)
-    e2 = meas[args.target_cols[1]].to_numpy(float)
-    if snc is not None:
-        if not {"case", "input_index"}.issubset(df.columns):
-            raise KeyError("--snc-lookup requires case and input_index in the sheared catalogue")
-        key = df["case"].to_numpy(np.int64) * 1_000_003 + df["input_index"].to_numpy(np.int64)
-        pos = np.clip(np.searchsorted(snc["key"], key), 0, len(snc["key"]) - 1)
-        match = snc["key"][pos] == key
-        e1 = e1 - np.where(match, snc["e1"][pos], np.nan)
-        e2 = e2 - np.where(match, snc["e2"][pos], np.nan)
-        print(f"SNC match after selection: {match.mean():.2%} ({int(match.sum()):,}/{len(match):,})")
-    proj = e1 * gh1 + e2 * gh2
+    if args.antithetic:
+        e1p = df[args.anti_cols[0]].to_numpy(float); e2p = df[args.anti_cols[1]].to_numpy(float)
+        e1m = df[args.anti_cols[2]].to_numpy(float); e2m = df[args.anti_cols[3]].to_numpy(float)
+        # /2 here + /g below => R = <(e_+g - e_-g).ghat> / (2g)  (antithetic cancels intrinsic + noise)
+        proj = ((e1p - e1m) * gh1 + (e2p - e2m) * gh2) / 2.0
+        print(f"ANTITHETIC central-diff response: |g|~{np.median(gmag):.4f} (nominal-g={args.nominal_g})")
+    else:
+        meas = add_measurement_target_features(df.copy())
+        e1 = meas[args.target_cols[0]].to_numpy(float)
+        e2 = meas[args.target_cols[1]].to_numpy(float)
+        if snc is not None:
+            if not {"case", "input_index"}.issubset(df.columns):
+                raise KeyError("--snc-lookup requires case and input_index in the sheared catalogue")
+            key = df["case"].to_numpy(np.int64) * 1_000_003 + df["input_index"].to_numpy(np.int64)
+            pos = np.clip(np.searchsorted(snc["key"], key), 0, len(snc["key"]) - 1)
+            match = snc["key"][pos] == key
+            e1 = e1 - np.where(match, snc["e1"][pos], np.nan)
+            e2 = e2 - np.where(match, snc["e2"][pos], np.nan)
+            print(f"SNC match after selection: {match.mean():.2%} ({int(match.sum()):,}/{len(match):,})")
+        proj = e1 * gh1 + e2 * gh2
     g = args.nominal_g
 
     flux = df["r_input_p"].to_numpy(float); size = df["Re_input_p"].to_numpy(float)
@@ -148,7 +183,13 @@ def main():
         crowd = crowd[fin]
 
     ef = np.quantile(flux, np.linspace(0, 1, args.n_flux + 1)); ef[0] -= 1e-6; ef[-1] += 1e-6
-    es = np.quantile(size, np.linspace(0, 1, args.n_size + 1)); es[0] -= 1e-6; es[-1] += 1e-6
+    if args.size_edges:
+        es = np.array([float(x) for x in args.size_edges.split(",")], dtype=float)
+        es = np.sort(es); es[0] -= 1e-6; es[-1] += 1e-6
+        args.n_size = len(es) - 1
+        print(f"custom size edges ({args.n_size} bins): {np.round(es, 4).tolist()}")
+    else:
+        es = np.quantile(size, np.linspace(0, 1, args.n_size + 1)); es[0] -= 1e-6; es[-1] += 1e-6
     fi = np.clip(np.digitize(flux, ef) - 1, 0, args.n_flux - 1)
     si = np.clip(np.digitize(size, es) - 1, 0, args.n_size - 1)
     if crowd is not None:                              # 3rd axis = crowding QUANTILE bins (equal-count)

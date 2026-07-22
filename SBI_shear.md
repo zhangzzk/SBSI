@@ -1,5 +1,9 @@
 # Unified Differentiable Emulator for Shear Biases
 
+> **Current framing lives in [`GOALS.md`](GOALS.md)** (locked 2026-07-22) — the joint
+> measurement+detection flow, the product-rule response decomposition, and the data/cut
+> rules. This document is the deeper background; where the two differ, `GOALS.md` wins.
+
 A research plan for a learned, autograd-based framework that jointly handles selection bias, measurement bias, and blending response (including redshift-mixing) by learning the conditional density of catalogue entries as a function of true shear.
 
 ---

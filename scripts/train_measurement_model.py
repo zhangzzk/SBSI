@@ -373,6 +373,7 @@ def build_shifted_context(frame, gdir, delta, preprocessor, condition_features, 
 def epoch_response(model, loader, device, target_scales01, delta, bin_targets, lam,
                    response_difference="forward",
                    response_error="absolute", rel_floor=0.05,
+                   bin_weight_power=1.0, bin_min_count=0, global_anchor=0.0,
                    optimizer=None, max_grad_norm=None):
     """NLL + PROPERTY-RESOLVED response loss. Pulls the model's induced first-moment
     response R_model(bin) -> R_sim(bin) in bins of true flux x size (bin_targets is a
@@ -427,6 +428,15 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
         sum_b = torch.zeros(n_bins, device=device).index_add_(0, binid, weight * r_i)
         cnt_b = torch.zeros(n_bins, device=device).index_add_(0, binid, weight)
         mean_b = torch.where(cnt_b > 0, sum_b / cnt_b.clamp_min(1e-8), bt)
+        # Per-bin REDUCTION weight. power=1.0 & min_count<=0 -> bin_w=cnt_b (certified count-weight,
+        # byte-identical). power<1 down-weights populous bins so the rare LARGE/FAINT/ISOLATED cells
+        # are not starved -> conditional (per-cut) calibration; 0.0 = every occupied bin equal.
+        # min_count masks per-batch-sparse (noisy) bins so equal-weighting doesn't chase them.
+        if bin_weight_power == 1.0 and bin_min_count <= 0:
+            bin_w = cnt_b
+        else:
+            occ = (cnt_b >= bin_min_count).float() if bin_min_count > 0 else (cnt_b > 0).float()
+            bin_w = occ * cnt_b.clamp_min(1e-8) ** bin_weight_power
         if response_error == "relative":
             # Penalize the FRACTIONAL response error (R_model/R_sim - 1)^2, i.e. the per-bin
             # multiplicative bias m itself, rather than absolute (R_model - R_sim)^2. Absolute
@@ -436,10 +446,22 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
             # any population reweighting (constant-gold, survey depth). The relative form pulls
             # m -> 0 uniformly per bin. Floor guards small/negative target bins.
             denom = bt.abs().clamp_min(rel_floor)
-            resp = (((mean_b - bt) / denom) ** 2 * cnt_b).sum() / cnt_b.sum().clamp_min(1.0)
+            resp = ((((mean_b - bt) / denom) ** 2) * bin_w).sum() / bin_w.sum().clamp_min(1.0)
         else:
-            resp = ((mean_b - bt) ** 2 * cnt_b).sum() / cnt_b.sum().clamp_min(1.0)
+            resp = (((mean_b - bt) ** 2) * bin_w).sum() / bin_w.sum().clamp_min(1.0)
         loss = nll + lam * resp
+        # GLOBAL-ANCHOR (gated; default 0 -> byte-identical). Bin reweighting (power<1) matches a
+        # reweighted avg of the per-bin targets, so the flow's COUNT-weighted global response drifts
+        # (cont.102: sqrt-wt pushed <R_flow> up -> GLOBAL over-corrected). This pins the count-weighted
+        # global induced response to the count-weighted target, decoupling GLOBAL-centering from the
+        # per-bin conditional shaping: aggressive reweight for the tails AND GLOBAL m~0. Relative form
+        # is scale-robust. Uses the SAME sum_b/cnt_b already computed (count-weighted by construction).
+        if global_anchor > 0:
+            tot_w = cnt_b.sum().clamp_min(1e-8)
+            g_model = sum_b.sum() / tot_w                       # count-weighted mean induced response
+            g_target = (bt * cnt_b).sum() / tot_w               # count-weighted mean target
+            anchor = ((g_model - g_target) / g_target.abs().clamp_min(rel_floor)) ** 2
+            loss = loss + global_anchor * anchor
         if training:
             loss.backward()
             if max_grad_norm and max_grad_norm > 0:
@@ -567,6 +589,20 @@ def parse_args():
     parser.add_argument("--response-rel-floor", type=float, default=0.05,
                         help="Floor on |R_sim| in the relative response-loss denominator; guards "
                              "small/negative target bins from blowing up the fractional error.")
+    parser.add_argument("--response-bin-weight-power", type=float, default=1.0,
+                        help="Exponent on per-bin count in the response-loss reduction: bin_w=cnt_b**p. "
+                             "1.0 (default) = certified count-weighting (populous bright/small bins "
+                             "dominate -> only GLOBAL m~0, rare cells starved). 0.0 = every occupied "
+                             "bin weighted equally = CONDITIONAL (per-cut) calibration in flux x size; "
+                             "0.5 = sqrt(count) middle ground. Pairs with --response-error relative.")
+    parser.add_argument("--response-min-bin-count", type=float, default=0.0,
+                        help="With bin-weight-power<1, ignore bins whose per-batch weighted count is "
+                             "below this, so equal-weighting does not chase per-batch-sparse noisy cells.")
+    parser.add_argument("--response-global-anchor", type=float, default=0.0,
+                        help="Weight on a GLOBAL-mean anchor term (relative squared error of the "
+                             "count-weighted global induced response vs the count-weighted target). "
+                             "Default 0 = off (certified path unchanged). Pair with bin-weight-power<1 "
+                             "to keep GLOBAL m~0 while aggressively reweighting the per-bin conditional.")
     parser.add_argument("--response-target-npz", default=None,
                         help="PROPERTY-RESOLVED target from compute_response_target.py "
                         "(edges_flux, edges_size, Rsim[nf,ns]). Supervises R_model(bin)->R_sim(bin) "
@@ -828,11 +864,15 @@ def main():
                 model, resp_train_loader, device, target_scales01, args.response_delta,
                 bin_targets, args.response_weight, args.response_difference,
                 args.response_error, args.response_rel_floor,
+                args.response_bin_weight_power, args.response_min_bin_count,
+                args.response_global_anchor,
                 optimizer=optimizer, max_grad_norm=args.max_grad_norm)
             val_nll, val_resp, val_R = epoch_response(
                 model, resp_val_loader, device, target_scales01, args.response_delta,
                 bin_targets, args.response_weight, args.response_difference,
-                args.response_error, args.response_rel_floor)
+                args.response_error, args.response_rel_floor,
+                args.response_bin_weight_power, args.response_min_bin_count,
+                args.response_global_anchor)
             history["train_nll"].append(train_nll)
             history["val_nll"].append(val_nll)
             history.setdefault("val_R", []).append(val_R)
