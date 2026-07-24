@@ -374,7 +374,8 @@ def build_shifted_context(frame, gdir, delta, preprocessor, condition_features, 
 def epoch_response(model, loader, device, target_scales01, delta, bin_targets, lam,
                    response_difference="forward",
                    response_error="absolute", rel_floor=0.05,
-                   optimizer=None, max_grad_norm=None):
+                   optimizer=None, max_grad_norm=None,
+                   sc23=None, lam_theta=0.0):
     """NLL + PROPERTY-RESOLVED response loss. Pulls the model's induced first-moment
     response R_model(bin) -> R_sim(bin) in bins of true flux x size (bin_targets is a
     (n_bins,) tensor; n_bins=1 reduces to the old global response loss). R_model is the
@@ -385,15 +386,23 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
     training = optimizer is not None
     model.train(training)
     sc0, sc1 = float(target_scales01[0]), float(target_scales01[1])
+    sc2, sc3 = (float(sc23[0]), float(sc23[1])) if sc23 is not None else (0.0, 0.0)
+    coupling_on = (lam_theta > 0.0) and (sc23 is not None)
     bt = bin_targets.to(device)
     n_bins = bt.numel()
-    tot_nll = tot_resp = n_tot = rmodel_sum = rmodel_n = 0.0
+    tot_nll = tot_resp = n_tot = rmodel_sum = rmodel_n = tot_theta = 0.0
     for batch in loader:
+        coupling = None
         if len(batch) == 7:
             target, context, weight, ctx0, ce1, ce2, binid = batch
             cm1 = cm2 = None
         elif len(batch) == 9:
             target, context, weight, ctx0, ce1, ce2, cm1, cm2, binid = batch
+        elif len(batch) == 13:
+            (target, context, weight, ctx0, ce1, ce2, cm1, cm2, binid,
+             e1i, e2i, bS, bM) = batch
+            coupling = (e1i.to(device, non_blocking=True), e2i.to(device, non_blocking=True),
+                        bS.to(device, non_blocking=True), bM.to(device, non_blocking=True))
         else:
             raise ValueError(f"unexpected response batch length {len(batch)}")
         target = target.to(device, non_blocking=True)
@@ -441,6 +450,20 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
         else:
             resp = ((mean_b - bt) ** 2 * cnt_b).sum() / cnt_b.sum().clamp_min(1.0)
         loss = nll + lam * resp
+        theta_val = 0.0
+        if coupling_on and coupling is not None:
+            # spin-2 orientation-coupling pin on mean-head dims 2,3 (measured mag, log flux-radius):
+            # pin d(mag)/dg, d(log_size)/dg to b(cell)*e_int. central diff reuses cm1/cm2 above.
+            e1i, e2i, bS, bM = coupling
+            inv = 1.0 / (2.0 * delta)
+            dM1 = (mu1[:, 2] - mum1[:, 2]) * sc2 * inv
+            dM2 = (mu2[:, 2] - mum2[:, 2]) * sc2 * inv
+            dS1 = (mu1[:, 3] - mum1[:, 3]) * sc3 * inv
+            dS2 = (mu2[:, 3] - mum2[:, 3]) * sc3 * inv
+            theta = ((dS1 - bS * e1i) ** 2 + (dS2 - bS * e2i) ** 2
+                     + (dM1 - bM * e1i) ** 2 + (dM2 - bM * e2i) ** 2).mean()
+            loss = loss + lam_theta * theta
+            theta_val = float(theta.detach().cpu())
         if training:
             loss.backward()
             if max_grad_norm and max_grad_norm > 0:
@@ -449,11 +472,12 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
         bw = float(wsum.detach().cpu())
         tot_nll += float(nll.detach().cpu()) * bw
         tot_resp += float(resp.detach().cpu()) * bw
+        tot_theta += theta_val * bw
         rmodel_sum += float(r_i.sum().detach().cpu())
         rmodel_n += r_i.numel()
         n_tot += bw
     n = max(n_tot, 1e-8)
-    return tot_nll / n, tot_resp / n, rmodel_sum / max(rmodel_n, 1)
+    return tot_nll / n, tot_resp / n, rmodel_sum / max(rmodel_n, 1), tot_theta / n
 
 
 @torch.no_grad()
@@ -573,6 +597,16 @@ def parse_args():
                         "(edges_flux, edges_size, Rsim[nf,ns]). Supervises R_model(bin)->R_sim(bin) "
                         "in bins of true flux(r_input_p) x size(Re_input_p). Pair with --mean-hidden>0 "
                         "(a linear head cannot resolve a per-bin response). Overrides --response-target.")
+    # --- Flux/size orientation-coupling pin on OUTPUT dims 2,3 (measured mag, log flux-radius) ---
+    parser.add_argument("--coupling-weight", type=float, default=0.0,
+                        help="lambda_theta for the dims-2,3 spin-2 orientation-coupling pin. 0=off. "
+                        "Pins the mean head's d(mag)/dg, d(log_size)/dg to b(cell)*e_int (V2's "
+                        "theta_coupling analog). Requires --response-weight>0, "
+                        "--response-difference central, and --coupling-target-npz.")
+    parser.add_argument("--coupling-target-npz", default=None,
+                        help="per-cell b_size/b_mag from build_theta_coupling_target.py "
+                        "(coupling_size[nf,ns,nb], coupling_mag[...], edges_flux/size/crowd, crowd_col). "
+                        "Has its OWN grid/binid, independent of --response-target-npz.")
     parser.add_argument("--num-bins", type=int, default=8, help="RQ spline bins (spline only).")
     parser.add_argument("--tail-bound", type=float, default=5.0, help="RQ spline tail bound (spline only).")
     parser.add_argument("--hidden-dim", type=int, default=256)
@@ -796,6 +830,42 @@ def main():
                 return np.zeros(len(frame), dtype=np.int64)
             print(f"\nResponse-aware training ON (global): lambda={args.response_weight}, "
                   f"R_sim_target={args.response_target}, delta={d}")
+        # ---- optional flux/size orientation-coupling pin on dims 2,3 (own grid/binid) ----
+        coupling_on = args.coupling_weight > 0
+        coupling_size_flat = coupling_mag_flat = None
+        sc23 = None
+        _coupling_bin_id = None
+        if coupling_on:
+            if not args.coupling_target_npz:
+                raise ValueError("--coupling-weight>0 requires --coupling-target-npz")
+            if args.response_difference != "central":
+                raise ValueError("--coupling-weight requires --response-difference central")
+            if len(scales) < 4:
+                raise ValueError("coupling pin needs >=4 targets (dims 2=mag, 3=log_flux_radius)")
+            ct = np.load(args.coupling_target_npz)
+            cs = np.asarray(ct["coupling_size"], dtype=np.float32)
+            cm = np.asarray(ct["coupling_mag"], dtype=np.float32)
+            coupling_size_flat = cs.reshape(-1)
+            coupling_mag_flat = cm.reshape(-1)
+            sc23 = (float(scales[2]), float(scales[3]))
+            cef, ces = ct["edges_flux"], ct["edges_size"]
+            cccol = ct["crowd_col"].item() if "crowd_col" in ct.files else ""
+            if not (cccol and cs.ndim == 3):
+                raise ValueError("coupling target must be a 3D crowd grid (edges_flux/size/crowd, crowd_col)")
+            cec = ct["edges_crowd"]; cnf, cns, cnb = cs.shape
+
+            def _coupling_bin_id(frame):
+                flux = frame["r_input_p"].to_numpy(float)
+                size = frame["Re_input_p"].to_numpy(float)
+                fi = np.clip(np.digitize(flux, cef) - 1, 0, cnf - 1)
+                si = np.clip(np.digitize(size, ces) - 1, 0, cns - 1)
+                cr = frame[cccol].to_numpy(float)
+                di = np.clip(np.digitize(cr, cec) - 1, 0, cnb - 1)
+                return ((fi * cns + si) * cnb + di).astype(np.int64)
+            print(f"  COUPLING pin ON (dims 2,3): lambda_theta={args.coupling_weight}, "
+                  f"{cnf}x{cns}x{cnb} (flux x size x {cccol}) cells, "
+                  f"b_size {np.nanmin(cs):.3f}..{np.nanmax(cs):.3f}, b_mag~{np.nanmean(cm):.4f}")
+
         print(f"  building shifted conditioning contexts (analytic S_delta along e1 and e2; "
               f"difference={args.response_difference})...")
 
@@ -830,6 +900,16 @@ def main():
                     torch.as_tensor(cm2, dtype=torch.float32),
                 ]
             tensors.append(torch.as_tensor(bid, dtype=torch.long))
+            if coupling_on:
+                e1i = frame["e1_input_rot0_p"].to_numpy(np.float32)   # intrinsic rot0 shape
+                e2i = frame["e2_input_rot0_p"].to_numpy(np.float32)
+                bidc = _coupling_bin_id(frame)
+                tensors += [
+                    torch.as_tensor(e1i, dtype=torch.float32),
+                    torch.as_tensor(e2i, dtype=torch.float32),
+                    torch.as_tensor(coupling_size_flat[bidc], dtype=torch.float32),
+                    torch.as_tensor(coupling_mag_flat[bidc], dtype=torch.float32),
+                ]
             if args.gpu_resident and device.type == "cuda":
                 return GPUBatches(tensors, args.batch_size, shuffle, device)
             ds = torch.utils.data.TensorDataset(*tensors)
@@ -854,22 +934,25 @@ def main():
     print("\n--- Training measurement flow ---")
     for epoch in range(1, args.epochs + 1):
         if response_on:
-            train_nll, train_resp, train_R = epoch_response(
+            train_nll, train_resp, train_R, train_theta = epoch_response(
                 model, resp_train_loader, device, target_scales01, args.response_delta,
                 bin_targets, args.response_weight, args.response_difference,
                 args.response_error, args.response_rel_floor,
-                optimizer=optimizer, max_grad_norm=args.max_grad_norm)
-            val_nll, val_resp, val_R = epoch_response(
+                optimizer=optimizer, max_grad_norm=args.max_grad_norm,
+                sc23=sc23, lam_theta=args.coupling_weight)
+            val_nll, val_resp, val_R, val_theta = epoch_response(
                 model, resp_val_loader, device, target_scales01, args.response_delta,
                 bin_targets, args.response_weight, args.response_difference,
-                args.response_error, args.response_rel_floor)
+                args.response_error, args.response_rel_floor,
+                sc23=sc23, lam_theta=args.coupling_weight)
             history["train_nll"].append(train_nll)
             history["val_nll"].append(val_nll)
             history.setdefault("val_R", []).append(val_R)
             history.setdefault("val_resp", []).append(val_resp)
+            history.setdefault("val_theta", []).append(val_theta)
             print(f"  epoch {epoch:03d}: nll={train_nll:.5f}/{val_nll:.5f}  "
                   f"<R_model>(val)={val_R:+.4f} (target mean {float(bin_targets.mean()):.4f})  "
-                  f"per-bin resp={val_resp:.2e}")
+                  f"per-bin resp={val_resp:.2e}  theta={val_theta:.2e}")
             selector = val_nll + args.response_weight * val_resp  # early-stop on TOTAL objective
         else:
             train_nll = epoch_nll(
