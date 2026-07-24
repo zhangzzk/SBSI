@@ -23,7 +23,7 @@ SEED=$((501 + SLURM_ARRAY_TASK_ID))
 FS=g0_meas_crowd_conc_szfl_noz
 TAG=ablate_s3a_grid6x9
 LAM=450; WD=1e-5; DELTA=0.02; EPOCHS=80
-RESP=/home/z/Zekang.Zhang/SBSI//home/z/Zekang.Zhang/SBSI/results/response_target_crowd_rblend_snc_c0-99_6x9x5.npz
+RESP=/home/z/Zekang.Zhang/SBSI/results/response_target_crowd_rblend_snc_c0-99_6x9x5.npz
 D=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues
 CAT=$D/det_meas_crowd_conc_g0.0_train_full.feather
 OUTDIR=/project/ls-gruen/users/zekang.zhang/sbsi_caches/ablation
