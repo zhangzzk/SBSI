@@ -259,20 +259,20 @@ def main():
         # no-cut truth self-response
         _, _, Rsim_nc = truth_selected_response(base, gh1, gh2, gmed, sel, "measured_flux_radius",
                                                 -1e9, True)
-        print(f"\n  {'cut':>12} {'frac':>6} | {'R_sim':>9} {'R_model':>9} {'m=Rsim/Rmod-1':>15} "
-              f"{'sel/nocut sim':>13}")
-        print(f"  {'NO CUT':>12} {1.0:>6.2f} | {Rsim_nc:+9.4f} {Rm_nc:+9.4f} "
+        print(f"\n  {'cut':>12} {'fracS':>6} {'fracM':>6} | {'R_sim':>9} {'R_model':>9} "
+              f"{'m=Rsim/Rmod-1':>15} {'sel/nocut sim':>13}")
+        print(f"  {'NO CUT':>12} {1.0:>6.2f} {1.0:>6.2f} | {Rsim_nc:+9.4f} {Rm_nc:+9.4f} "
               f"{(Rsim_nc/Rm_nc-1)*100 if Rm_nc else np.nan:+14.2f}% {'--':>13}")
-        rows = [dict(cut="NO CUT", frac=1.0, R_sim=Rsim_nc, R_model=Rm_nc, m=(Rsim_nc/Rm_nc-1))]
+        rows = [dict(cut="NO CUT", frac=1.0, fracM=1.0, R_sim=Rsim_nc, R_model=Rm_nc, m=(Rsim_nc/Rm_nc-1))]
         for c in model_cuts:
             xcol = "measured_flux_radius" if c["kind"] == "size" else "measured_mag_auto"
             R_sim, frac_s, _ = truth_selected_response(base, gh1, gh2, gmed, sel, xcol, c["raw"], c["keep_high"])
             R_mod, frac_m, R_mod_sd = ens(c["name"])
             m = R_sim / R_mod - 1 if R_mod else np.nan
             selratio = R_sim / Rsim_nc if Rsim_nc else np.nan  # how much selection shifts the sim response
-            print(f"  {c['name']:>12} {frac_s:>6.2f} | {R_sim:+9.4f} {R_mod:+9.4f} {m*100:+14.2f}% "
-                  f"{selratio:>13.3f}")
-            rows.append(dict(cut=c["name"], frac=frac_s, R_sim=R_sim, R_model=R_mod, m=m))
+            print(f"  {c['name']:>12} {frac_s:>6.2f} {frac_m:>6.2f} | {R_sim:+9.4f} {R_mod:+9.4f} "
+                  f"{m*100:+14.2f}% {selratio:>13.3f}")
+            rows.append(dict(cut=c["name"], frac=frac_s, fracM=frac_m, R_sim=R_sim, R_model=R_mod, m=m))
 
         # ---- NULL TEST: TRUE-property cuts (selection must ~vanish: R_sim(trueC) == self-resp on subset) ----
         print(f"\n  --- NULL TEST (TRUE-Re cuts: moving-boundary term must vanish) ---")
