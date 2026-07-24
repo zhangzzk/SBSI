@@ -2,6 +2,22 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-24 (apples-to-apples V2-vs-ladder self-response — V2 = −5.24% ISO vs S3a = +4.70% on ONE ruler; the gap is REAL, not a ruler artifact)
+
+**Problem.** V1-ladder ISO numbers (S0–S3b in [+0.27%, +4.70%]) came from `scripts/eval_selfresp_gap.py`; the earlier V2 "−5.1%" came from a DIFFERENT eval (`.claude/jobs/e1915e2b/tmp/eval_ens_halfshear.py`, its own nn-join/population + V2 central readout). Not the same ruler.
+
+**Fix.** Refactored `eval_selfresp_gap.py` to expose `load_ruler()` (matched both-detected g0.05↔g0.0 acceptance base + truth R_hs + nn>7" ISO mask) and `print_size_table()` (pure extraction; V1 path unchanged). New sibling `scripts/eval_selfresp_gap_v2.py` builds the ruler ONCE and scores BOTH: V2 `SetConditionedForwardModel` via the MAIN-checkout `eval_constgold_closure.load_model`/`run_model_on` (native central-secant, delta 0.05 from ckpt) and V1-ladder `ConditionalMeanFlow` via `model_selfresp`. Autodetects kind by ckpt keys (`primary_preprocessor`→V2 / `condition_preprocessor`→V1). `sbs_shear` model modules are byte-identical worktree↔main (verified) so worktree-first import is safe.
+
+**Job 15217379** (`jobs/job_eval_selfresp_gap_v2.sh`, inter/gpu:1/x86-64-v3, ~5min): V2 ensemble (6 seeds `forward_ens_lr250_swa8_seed421-426`) + S3a control (3 seeds `ablate_s3a_grid6x9_s501-503_swaavg`). ISO acceptance set N=1,016,629, cases 0-39.
+
+| model (ISO OVERALL) | R_hs | R_flow | flow/R_hs−1 |
+|---|---|---|---|
+| **V2 ensemble** (central) | 1.0547 | 0.9995 | **−5.24%** |
+| S3a control, forward | 1.0547 | 1.1043 | **+4.70%** |
+| S3a control, central | 1.0547 | 1.1043 | **+4.70%** |
+
+**Findings.** (1) Truth R_hs column byte-identical across V2/V1 tables (OVERALL 1.0547; per-size 0.8896/1.2150/1.1222/0.9771) → same ruler, confirmed by the control reproducing the ladder's +4.70%. (2) Forward vs central stencil = negligible for V1 (+4.70% either way) → V2's central readout IS comparable. (3) **The ~10pp V2↔ladder gap is real**: V2 UNDER-responds (−5.24%, reproducing the old −5.1%), ladder OVER-responds (+4.70%), on identical objects/truth. (4) V2 ISO by size: worst in smallest bin [0.30,0.38) −19.2%, →−6.5%/−0.6%/−2.3% (steep under-response at small true size); V1 ladder flatter (+4.5..+6.8%, small bin −2.6%). npz → `sbsi_caches/ablation/eval/selfresp_gap_v2_vs_s3a.npz`. Next: bisect S3b→V2 (the remaining knobs — DeepSets set trunk, det head, joint loss — are where the −5% opens).
+
 ## 2026-07-24 (ablation ladder V1→V2 scaffolding — Step 0/1 scripts + jobs + comparable self-response eval; NOTHING submitted)
 
 **Goal.** Turn the certified V1 measurement flow (`scripts/train_measurement_model_swa.py`, measured-conditioned, 2D shape output, SWA, certified constgold m=+0.245%) into V2 (`scripts/train_joint_forward.py`, true-property-conditioned, 4D output, DeepSets + detection head + joint loss) ONE knob at a time, to localize the ~5% shape-response gap. Work isolated to worktree `SBSI-ablation` (branch `ablation-v1-to-v2`); main `SBSI/` untouched.

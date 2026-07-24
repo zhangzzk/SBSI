@@ -154,6 +154,68 @@ def model_selfresp(base, bundle, delta, difference, device, chunk=400_000):
     return Rf
 
 
+def load_ruler(g0_leg, gS_leg, max_case, re_min, mag_max, iso_radius, crowd, nn, t0=None, verbose=True):
+    """Build the SHARED ruler used to score EVERY model (V1 ladder or V2) identically:
+    matched both-detected g0.05<->g0.0 acceptance base, truth R_hs, isolation mask, true size.
+    The only thing that varies across models is the model's own response readout, never this.
+    Returns dict(base, R_hs, iso, size, gmed)."""
+    tick = (lambda: (time.time() - t0)) if t0 is not None else (lambda: 0.0)
+    g0 = domain_cut(read_leg(g0_leg,
+                             ["case", "input_index", "detected", "Re_input_p", "r_input_p",
+                              "neighbored", "distance"] + NGMIX, max_case),
+                    re_min, mag_max).drop_duplicates(["case", "input_index"])
+    gS = domain_cut(read_leg(gS_leg, FLOW_COLS + NGMIX + GAMMA, max_case), re_min, mag_max)
+    gp = np.hypot(gS["gamma1_input_p"].to_numpy(float), gS["gamma2_input_p"].to_numpy(float))
+    gS = gS[gp > 1e-6].reset_index(drop=True).drop_duplicates(["case", "input_index"])
+    base = gS.merge(g0[["case", "input_index"] + NGMIX], on=["case", "input_index"], suffixes=("_g", "_0"))
+    if verbose:
+        print(f"matched both-detected true-cut: N={len(base):,}  cases={base['case'].nunique()}  "
+              f"({tick():.1f}s)", flush=True)
+
+    gp = np.hypot(base["gamma1_input_p"].to_numpy(float), base["gamma2_input_p"].to_numpy(float))
+    gmed = float(np.median(gp))
+    gh1 = base["gamma1_input_p"].to_numpy(float) / gp
+    gh2 = base["gamma2_input_p"].to_numpy(float) / gp
+    de1 = base["measured_ngmix_g1_g"].to_numpy(float) - base["measured_ngmix_g1_0"].to_numpy(float)
+    de2 = base["measured_ngmix_g2_g"].to_numpy(float) - base["measured_ngmix_g2_0"].to_numpy(float)
+    R_hs = (de1 * gh1 + de2 * gh2) / gmed
+    if verbose:
+        print(f"g_med={gmed:.4f}  <R_hs@0.05>={np.nanmean(R_hs[np.isfinite(R_hs)]):+.4f}", flush=True)
+
+    keys = base[["case", "input_index"]]
+    nbf = pf.read_table(crowd).to_pandas()[["case", "input_index", "nbr_flux_near",
+                                            "nbr_flux_far", "nbr_flux_max"]]
+    base = base.merge(nbf, on=["case", "input_index"], how="left")
+    nnl = pf.read_table(nn).to_pandas()[["case", "input_index", "nn_dist_bright"]]
+    j = keys.merge(nnl, on=["case", "input_index"], how="left")
+    nnb = j["nn_dist_bright"].to_numpy(float)
+    iso = (~np.isfinite(nnb)) | (nnb > iso_radius)
+    if verbose:
+        print(f"nbr_flux matched {base['nbr_flux_near'].notna().mean():.1%}  "
+              f"nn matched {np.isfinite(nnb).mean():.1%}  isolated frac={iso.mean():.1%}", flush=True)
+    size = base["Re_input_p"].to_numpy(float)
+    return dict(base=base, R_hs=R_hs, iso=iso, size=size, gmed=gmed)
+
+
+def print_size_table(R_hs, Rf, size, sel, good, label, size_edges=SIZE_EDGES):
+    """flow/R_hs-1 table: OVERALL + resolved by true size. Identical format for every model."""
+    print(f"\n[{label}]  N={int((sel & good).sum()):,}")
+    print(f"  {'size-bin':>16} {'R_hs':>9} {'R_flow':>9} {'flow/R_hs-1 %':>14} {'N':>10}")
+    s = sel & good
+    a = float(np.mean(R_hs[s])); b = float(np.mean(Rf[s]))
+    print(f"  {'OVERALL':>16} {a:+9.4f} {b:+9.4f} "
+          f"{(b/a-1)*100 if a else np.nan:+14.2f} {int(s.sum()):>10,}")
+    for i in range(len(size_edges) - 1):
+        lo, hi = size_edges[i], size_edges[i + 1]
+        m = sel & good & (size >= lo) & (size < hi)
+        if m.sum() < 30:
+            print(f"  [{lo:.2f},{hi:.2f}){'':>6} {'-':>9} {'-':>9} {'(N<30)':>14} {int(m.sum()):>10,}")
+            continue
+        a = float(np.mean(R_hs[m])); b = float(np.mean(Rf[m]))
+        print(f"  [{lo:.2f},{hi:.2f}){'':>6} {a:+9.4f} {b:+9.4f} "
+              f"{(b/a-1)*100 if a else np.nan:+14.2f} {int(m.sum()):>10,}")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--ckpt", nargs="+", default=None,
@@ -189,42 +251,12 @@ def main():
     for c in ckpts:
         print("   ", os.path.basename(c))
 
-    # ---- legs, matched both-detected in the acceptance domain ----
-    g0 = domain_cut(read_leg(args.g0_leg,
-                             ["case", "input_index", "detected", "Re_input_p", "r_input_p",
-                              "neighbored", "distance"] + NGMIX, args.max_case),
-                    args.true_re_min, args.true_mag_max).drop_duplicates(["case", "input_index"])
-    gS = domain_cut(read_leg(args.gS_leg, FLOW_COLS + NGMIX + GAMMA, args.max_case),
-                    args.true_re_min, args.true_mag_max)
-    gp = np.hypot(gS["gamma1_input_p"].to_numpy(float), gS["gamma2_input_p"].to_numpy(float))
-    gS = gS[gp > 1e-6].reset_index(drop=True).drop_duplicates(["case", "input_index"])
-    base = gS.merge(g0[["case", "input_index"] + NGMIX], on=["case", "input_index"], suffixes=("_g", "_0"))
-    print(f"matched both-detected true-cut: N={len(base):,}  cases={base['case'].nunique()}  "
-          f"({time.time()-t0:.1f}s)", flush=True)
+    # ---- SHARED ruler (base + truth R_hs + isolation), identical to the V2 sibling ----
+    ru = load_ruler(args.g0_leg, args.gS_leg, args.max_case, args.true_re_min, args.true_mag_max,
+                    args.iso_radius, args.crowd, args.nn, t0=t0)
+    base, R_hs, iso, size, gmed = ru["base"], ru["R_hs"], ru["iso"], ru["size"], ru["gmed"]
 
-    # ---- truth: measured half-shear self-response R_hs (forward diff, ngmix) ----
-    gp = np.hypot(base["gamma1_input_p"].to_numpy(float), base["gamma2_input_p"].to_numpy(float))
-    gmed = float(np.median(gp))
-    gh1 = base["gamma1_input_p"].to_numpy(float) / gp
-    gh2 = base["gamma2_input_p"].to_numpy(float) / gp
-    de1 = base["measured_ngmix_g1_g"].to_numpy(float) - base["measured_ngmix_g1_0"].to_numpy(float)
-    de2 = base["measured_ngmix_g2_g"].to_numpy(float) - base["measured_ngmix_g2_0"].to_numpy(float)
-    R_hs = (de1 * gh1 + de2 * gh2) / gmed
-    print(f"g_med={gmed:.4f}  <R_hs@0.05>={np.nanmean(R_hs[np.isfinite(R_hs)]):+.4f}", flush=True)
-
-    # ---- neighbour-flux conditioners + isolation lookup ----
-    keys = base[["case", "input_index"]]
-    nbf = pf.read_table(args.crowd).to_pandas()[["case", "input_index", "nbr_flux_near",
-                                                 "nbr_flux_far", "nbr_flux_max"]]
-    base = base.merge(nbf, on=["case", "input_index"], how="left")
-    nnl = pf.read_table(args.nn).to_pandas()[["case", "input_index", "nn_dist_bright"]]
-    j = keys.merge(nnl, on=["case", "input_index"], how="left")
-    nnb = j["nn_dist_bright"].to_numpy(float)
-    iso = (~np.isfinite(nnb)) | (nnb > args.iso_radius)
-    print(f"nbr_flux matched {base['nbr_flux_near'].notna().mean():.1%}  "
-          f"nn matched {np.isfinite(nnb).mean():.1%}  isolated frac={iso.mean():.1%}", flush=True)
-
-    # ---- model: ensemble R_flow ----
+    # ---- model: ensemble R_flow (V1 ConditionalMeanFlow mean-head finite diff) ----
     Rf_seeds = []
     for c in ckpts:
         bundle = load_measurement_model(c, device=device)
@@ -236,28 +268,10 @@ def main():
     Rf_ens = np.nanmean(np.stack(Rf_seeds, 0), axis=0)
     print(f"<R_flow ENS>={np.nanmean(Rf_ens[np.isfinite(Rf_ens)]):+.4f}  (N seeds={len(Rf_seeds)})", flush=True)
 
-    size = base["Re_input_p"].to_numpy(float)
     good = np.isfinite(R_hs) & np.isfinite(Rf_ens)
-
-    def table(sel, label):
-        print(f"\n[{label}]  N={int((sel & good).sum()):,}")
-        print(f"  {'size-bin':>16} {'R_hs':>9} {'R_flow':>9} {'flow/R_hs-1 %':>14} {'N':>10}")
-        s = sel & good
-        a = float(np.mean(R_hs[s])); b = float(np.mean(Rf_ens[s]))
-        print(f"  {'OVERALL':>16} {a:+9.4f} {b:+9.4f} "
-              f"{(b/a-1)*100 if a else np.nan:+14.2f} {int(s.sum()):>10,}")
-        for i in range(len(SIZE_EDGES) - 1):
-            lo, hi = SIZE_EDGES[i], SIZE_EDGES[i + 1]
-            m = sel & good & (size >= lo) & (size < hi)
-            if m.sum() < 30:
-                print(f"  [{lo:.2f},{hi:.2f}){'':>6} {'-':>9} {'-':>9} {'(N<30)':>14} {int(m.sum()):>10,}")
-                continue
-            a = float(np.mean(R_hs[m])); b = float(np.mean(Rf_ens[m]))
-            print(f"  [{lo:.2f},{hi:.2f}){'':>6} {a:+9.4f} {b:+9.4f} "
-                  f"{(b/a-1)*100 if a else np.nan:+14.2f} {int(m.sum()):>10,}")
-
-    table(iso, "ISOLATED acceptance set (nn_bright>%.0f\")" % args.iso_radius)
-    table(np.ones(len(base), bool), "ALL objects (diagnostic)")
+    print_size_table(R_hs, Rf_ens, size, iso, good,
+                     "ISOLATED acceptance set (nn_bright>%.0f\")" % args.iso_radius)
+    print_size_table(R_hs, Rf_ens, size, np.ones(len(base), bool), good, "ALL objects (diagnostic)")
 
     if args.output:
         os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
