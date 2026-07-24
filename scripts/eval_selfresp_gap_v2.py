@@ -36,10 +36,17 @@ import torch
 #     across the two trees, so worktree-first is safe for loading V2 state dicts. ---
 SBSI_WT = "/home/z/Zekang.Zhang/SBSI-ablation"
 SBSI_MAIN = "/home/z/Zekang.Zhang/SBSI"
+# Force the WORKTREE copies to win over the main checkout for `eval_constgold_closure`,
+# `scripts.train_joint_forward`, and `sbs_shear.*` -- REMOVE then re-insert so a pre-existing
+# sys.path/PYTHONPATH entry (e.g. the script's own dir, or main/scripts) cannot leave main's
+# unedited loader ahead. Final front order: WT, WT/scripts, MAIN, MAIN/scripts. (The old
+# `if p not in sys.path` guard left WT/scripts behind while MAIN/scripts got inserted first,
+# so the eval loaded main's plain SetConditionedForwardModel and crashed on the skip keys.)
 for p in [os.path.join(SBSI_MAIN, "scripts"), SBSI_MAIN,
           os.path.join(SBSI_WT, "scripts"), SBSI_WT]:
-    if p not in sys.path:
-        sys.path.insert(0, p)
+    while p in sys.path:
+        sys.path.remove(p)
+    sys.path.insert(0, p)
 
 from eval_selfresp_gap import (  # noqa: E402  (worktree/scripts)
     CAT, CROWD, NN, SIZE_EDGES,
