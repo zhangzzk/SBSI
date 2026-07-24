@@ -82,6 +82,9 @@ class SetConditionedForwardModel(nn.Module):
         pooling="sum",
         base_flow="affine",
         scale_limit=3.0,
+        shape_skip_dim=0,
+        shape_skip_idx=None,
+        shape_skip_hidden=0,
     ):
         super().__init__()
         self.target_dim = int(target_dim)
@@ -118,12 +121,46 @@ class SetConditionedForwardModel(nn.Module):
         layers.append(nn.Linear(dim, 1))
         self.det_head = nn.Sequential(*layers)
 
+        # --- ABLATION FIX (worktree-only): optional DIRECT intrinsic-shape skip into the mean.
+        # Gives the mean head an un-smeared path to the primary true shape (e1/e2_input_p),
+        # bypassing the DeepSets trunk that otherwise mediates the shape->response mapping.
+        # `shape_skip_idx` are column indices into the standardized PRIMARY feature vector.
+        # Zero-initialised so at start the model is IDENTICAL to the trunk-only baseline; the
+        # response (and NLL) then learn the direct term. Off (=None) => baseline V2 unchanged.
+        self.shape_skip_dim = int(shape_skip_dim)
+        if self.shape_skip_dim > 0:
+            if shape_skip_idx is None:
+                raise ValueError("shape_skip_dim>0 requires shape_skip_idx")
+            self.register_buffer("shape_skip_idx",
+                                 torch.as_tensor(list(shape_skip_idx), dtype=torch.long))
+            if shape_skip_hidden and shape_skip_hidden > 0:
+                self.shape_skip = nn.Sequential(
+                    nn.Linear(self.shape_skip_dim, shape_skip_hidden), act(),
+                    nn.Linear(shape_skip_hidden, target_dim))
+                _last = self.shape_skip[-1]
+            else:
+                self.shape_skip = nn.Linear(self.shape_skip_dim, target_dim)
+                _last = self.shape_skip
+            nn.init.zeros_(_last.weight)
+            nn.init.zeros_(_last.bias)
+        else:
+            self.shape_skip = None
+
     def context(self, primary, neighbors, neighbor_mask):
         return self.conditioner(primary, neighbors, neighbor_mask)
 
-    def mu(self, context):
-        """Conditional mean of the observables (carries the shape response)."""
-        return self.mean_flow._mu(context)
+    def _shape_skip_term(self, primary):
+        if self.shape_skip is None or primary is None:
+            return None
+        return self.shape_skip(primary.index_select(1, self.shape_skip_idx))
+
+    def mu(self, context, primary=None):
+        """Conditional mean of the observables (carries the shape response). If the shape-skip
+        head is present and `primary` (the standardized primary feature vector) is passed, add
+        the DIRECT intrinsic-shape term so the response has a path bypassing the trunk."""
+        m = self.mean_flow._mu(context)
+        skip = self._shape_skip_term(primary)
+        return m if skip is None else m + skip
 
     def detection_logit(self, context):
         return self.det_head(context).squeeze(-1)
@@ -131,6 +168,12 @@ class SetConditionedForwardModel(nn.Module):
     def detection_prob(self, context):
         return torch.sigmoid(self.detection_logit(context))
 
-    def log_prob_obs(self, target, context):
-        """log p(measured observables | scene, detected) -- detected rows only."""
-        return self.mean_flow.log_prob(target, context)
+    def log_prob_obs(self, target, context, primary=None):
+        """log p(measured observables | scene, detected) -- detected rows only. When the
+        shape-skip head is active, the density mean = trunk mean + skip (SAME mean the response
+        uses), so NLL and response stay consistent."""
+        skip = self._shape_skip_term(primary)
+        if skip is None:
+            return self.mean_flow.log_prob(target, context)
+        resid = target - self.mean_flow._mu(context) - skip
+        return self.mean_flow.flow.log_prob(resid, self.mean_flow._flow_ctx(context))
