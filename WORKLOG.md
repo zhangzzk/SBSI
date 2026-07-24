@@ -2,6 +2,27 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-24 (architecture-fix experiment: direct intrinsic-shape skip into the V2 mean head — does NOT close the gap)
+
+**Decomposition recap (all on the ONE ISO ruler, N=1,016,629):** S3a tabular V1 ladder **+4.70%** → V2 count-weight **−2.69%** → V2 equal-weight **−5.24%**. So architecture ≈7.4 pts, weighting ≈2.5 pts; DeepSets shared-trunk is the dominant cause.
+
+**Hypothesis tested:** V2 under-responds because the intrinsic shape (e1/e2_input_p) reaches the mean head only THROUGH the DeepSets trunk (smearing). Give it a direct path.
+
+**Fix (worktree-isolated; main checkout untouched):** copied `train_joint_forward.py` + `eval_constgold_closure.py` into the worktree and edited worktree `sbs_shear/forward_model.py`. `SetConditionedForwardModel` gains an optional **zero-init `shape_skip` head** (`Linear(2→4)` on standardized e1/e2_input_p, PRIMARY idx [3,4]); `mu(context, primary)` and `log_prob_obs(target, context, primary)` add the direct term (consistent NLL+response). Every mean-head call site passes the shifted primary tensor; `--shape-skip` flag + saved `model_config`; loader reads it. Off ⇒ baseline V2 byte-for-byte. (Also fixed `eval_selfresp_gap_v2.py` sys.path so the worktree skip-aware loader wins over main's plain one — the first eval crashed on unexpected `shape_skip.*` keys because main's `load_model` was imported.)
+
+**Run:** train job **15220122** (3 seeds 501-503, count-weight + `--shape-skip`, 4M rows, P5000/2080Ti); eval **15220204** (re-run after loader fix).
+
+| model (ISO OVERALL, count-weight unless noted) | R_hs | R_flow | flow/R_hs−1 |
+|---|---|---|---|
+| S3a tabular V1 ladder | 1.0547 | 1.1043 | **+4.70%** |
+| V2 count-weight (no skip) | 1.0547 | 1.0263 | **−2.69%** |
+| **V2 + shape-skip (this run)** | 1.0547 | 1.0085 | **−4.37%** |
+| V2 equal-weight (no skip) | 1.0547 | 0.9995 | −5.24% |
+
+By true size (skipfix): [0.30,0.38) −21.8%, [0.38,0.50) −11.6%, [0.50,0.75) +2.0%, [0.75,1.50) +3.4% (vs V2-count −16.4/−9.4/+0.3/+6.3).
+
+**VERDICT — fix does NOT work.** The direct shape→mean-head skip did NOT move ISO toward +: it went −2.69% → **−4.37%** (slightly WORSE, and within the 3-seed R_flow scatter ~±0.03 → ~±3%), staying far from S3a's +4.70%; the small-size deficit even deepened (−16%→−22%). So V2's ~7-pt architecture deficit is NOT primarily "the intrinsic shape lacks a direct path to the mean head" — an additive linear shape skip is the wrong (or insufficient) lever. The DeepSets shared-trunk smearing is deeper: candidates for next probe = the pooled-set context representation itself, or the mean-head capacity/coupling with the trunk, not the shape input channel. npz → `sbsi_caches/ablation/eval/selfresp_gap_v2skipfix_vs_s3a.npz`. S3a control re-printed +4.70% (ruler intact).
+
 ## 2026-07-24 (apples-to-apples V2-vs-ladder self-response — V2 = −5.24% ISO vs S3a = +4.70% on ONE ruler; the gap is REAL, not a ruler artifact)
 
 **Problem.** V1-ladder ISO numbers (S0–S3b in [+0.27%, +4.70%]) came from `scripts/eval_selfresp_gap.py`; the earlier V2 "−5.1%" came from a DIFFERENT eval (`.claude/jobs/e1915e2b/tmp/eval_ens_halfshear.py`, its own nn-join/population + V2 central readout). Not the same ruler.
