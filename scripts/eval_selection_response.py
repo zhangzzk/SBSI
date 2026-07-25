@@ -115,7 +115,8 @@ def build_base(g0_leg, gS_leg, max_case, re_min, mag_max, iso_radius, crowd, nn,
 
 def truth_selected_response(base, gh1, gh2, gmed, sel, xcol, thr, keep_high):
     """R_C from the sim: two-means selected-catalogue response under a measured cut on xcol.
-    keep_high=True keeps x>thr (size), False keeps x<thr (bright mag). Returns (R, frac, R_nocut)."""
+    keep_high=True keeps x>thr (size), False keeps x<thr (bright mag). Returns (R, frac, R_nocut, R_err)
+    where R_err is the analytic standard error of R from the two selected-leg means."""
     e1_0 = base["measured_ngmix_g1_0"].to_numpy(float); e2_0 = base["measured_ngmix_g2_0"].to_numpy(float)
     e1_g = base["measured_ngmix_g1_g"].to_numpy(float); e2_g = base["measured_ngmix_g2_g"].to_numpy(float)
     p0 = e1_0 * gh1 + e2_0 * gh2
@@ -123,14 +124,28 @@ def truth_selected_response(base, gh1, gh2, gmed, sel, xcol, thr, keep_high):
     x0 = base[xcol + "_0"].to_numpy(float); xg = base[xcol + "_g"].to_numpy(float)
     pass0 = sel & (x0 > thr if keep_high else x0 < thr) & np.isfinite(p0)
     passg = sel & (xg > thr if keep_high else xg < thr) & np.isfinite(pg)
-    mbar0 = float(np.mean(p0[pass0])) if pass0.sum() else np.nan
-    mbarg = float(np.mean(pg[passg])) if passg.sum() else np.nan
+    n0 = int(pass0.sum()); ng = int(passg.sum())
+    mbar0 = float(np.mean(p0[pass0])) if n0 else np.nan
+    mbarg = float(np.mean(pg[passg])) if ng else np.nan
     R = (mbarg - mbar0) / gmed
+    # error: the two legs share the SAME intrinsic galaxy, so on the both-pass set the per-object
+    # difference (pg-p0) cancels intrinsic-shape variance -> matched-pair SE (much smaller than the
+    # two-independent-means SE). Objects that switch pass across legs (the moving boundary) add a small
+    # extra term ~ their fraction * <p>; we fold it in via the count mismatch.
+    both = pass0 & passg
+    nb = int(both.sum())
+    if nb:
+        d = pg[both] - p0[both]
+        R_err = float(np.std(d)) / np.sqrt(nb) / gmed
+    else:
+        var0 = float(np.var(p0[pass0])) / n0 if n0 else np.nan
+        varg = float(np.var(pg[passg])) / ng if ng else np.nan
+        R_err = float(np.sqrt(var0 + varg)) / gmed
     frac = 0.5 * (pass0.mean() / max(sel.mean(), 1e-9) + passg.mean() / max(sel.mean(), 1e-9))
     # no-cut baseline on the same sel (per-object == two-means since pass identical)
     good = sel & np.isfinite(p0) & np.isfinite(pg)
     R_nc = (float(np.mean(pg[good])) - float(np.mean(p0[good]))) / gmed
-    return R, frac, R_nc
+    return R, frac, R_nc, R_err
 
 
 @torch.no_grad()
@@ -257,8 +272,8 @@ def main():
 
         # ---- TRUTH: no-cut + each measured cut ----
         # no-cut truth self-response
-        _, _, Rsim_nc = truth_selected_response(base, gh1, gh2, gmed, sel, "measured_flux_radius",
-                                                -1e9, True)
+        _, _, Rsim_nc, Rsim_nc_err = truth_selected_response(base, gh1, gh2, gmed, sel,
+                                                             "measured_flux_radius", -1e9, True)
         # selection SHIFT = R(cut)/R(nocut)-1, i.e. how much the moving cut shifts the response.
         # We report it for BOTH truth and model: if the model reproduces the shift, it recovers the
         # selection bias. m=R_sim/R_model-1 is the residual (absolute recovery of the selected response).
@@ -266,17 +281,20 @@ def main():
               f"{'shift_sim':>9} {'shift_mod':>9} | {'m=Rsim/Rmod-1':>14}")
         print(f"  {'NO CUT':>12} {1.0:>6.2f} {1.0:>6.2f} | {Rsim_nc:+9.4f} {Rm_nc:+9.4f} | "
               f"{'--':>9} {'--':>9} | {(Rsim_nc/Rm_nc-1)*100 if Rm_nc else np.nan:+13.2f}%")
-        rows = [dict(cut="NO CUT", frac=1.0, fracM=1.0, R_sim=Rsim_nc, R_model=Rm_nc, m=(Rsim_nc/Rm_nc-1))]
+        rows = [dict(cut="NO CUT", frac=1.0, fracM=1.0, R_sim=Rsim_nc, R_sim_err=Rsim_nc_err,
+                     R_model=Rm_nc, R_model_sd=Rm_nc_sd, raw=np.nan, kind="nocut", m=(Rsim_nc/Rm_nc-1))]
         for c in model_cuts:
             xcol = "measured_flux_radius" if c["kind"] == "size" else "measured_mag_auto"
-            R_sim, frac_s, _ = truth_selected_response(base, gh1, gh2, gmed, sel, xcol, c["raw"], c["keep_high"])
+            R_sim, frac_s, _, R_sim_err = truth_selected_response(base, gh1, gh2, gmed, sel, xcol,
+                                                                 c["raw"], c["keep_high"])
             R_mod, frac_m, R_mod_sd = ens(c["name"])
             m = R_sim / R_mod - 1 if R_mod else np.nan
             shift_sim = (R_sim / Rsim_nc - 1) if Rsim_nc else np.nan  # truth selection shift
             shift_mod = (R_mod / Rm_nc - 1) if Rm_nc else np.nan      # model selection shift
             print(f"  {c['name']:>12} {frac_s:>6.2f} {frac_m:>6.2f} | {R_sim:+9.4f} {R_mod:+9.4f} | "
                   f"{shift_sim*100:+8.2f}% {shift_mod*100:+8.2f}% | {m*100:+13.2f}%")
-            rows.append(dict(cut=c["name"], frac=frac_s, fracM=frac_m, R_sim=R_sim, R_model=R_mod, m=m,
+            rows.append(dict(cut=c["name"], frac=frac_s, fracM=frac_m, R_sim=R_sim, R_sim_err=R_sim_err,
+                             R_model=R_mod, R_model_sd=R_mod_sd, raw=c["raw"], kind=c["kind"], m=m,
                              shift_sim=shift_sim, shift_mod=shift_mod))
 
         # ---- NULL TEST: TRUE-property cuts (selection must ~vanish: R_sim(trueC) == self-resp on subset) ----
@@ -298,8 +316,18 @@ def main():
 
     if args.output:
         os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
-        np.savez(args.output, gmed=gmed, ckpts=[os.path.basename(c) for c in ckpts],
-                 rows=str(saved))
+        out = dict(gmed=gmed, ckpts=[os.path.basename(c) for c in ckpts],
+                   scope_names=[s[0] for s in scopes], pixel_size=0.2)
+        for si, (scope_name, _) in enumerate(scopes):
+            rows = saved[scope_name]
+            def col(k, default=np.nan):
+                return np.array([r.get(k, default) for r in rows])
+            out[f"s{si}_cut"] = np.array([r["cut"] for r in rows])
+            out[f"s{si}_kind"] = np.array([r.get("kind", "") for r in rows])
+            for k in ("raw", "R_sim", "R_sim_err", "R_model", "R_model_sd",
+                      "shift_sim", "shift_mod", "m", "frac", "fracM"):
+                out[f"s{si}_{k}"] = col(k)
+        np.savez(args.output, **out)
         print(f"\nsaved {args.output}")
     print("SELECTION_RESPONSE_DONE", flush=True)
 
