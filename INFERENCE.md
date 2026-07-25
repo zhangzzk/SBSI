@@ -19,7 +19,11 @@ neither requires a new model.
 3. The **posterior mean cannot calibrate selection bias** — structurally, not just practically — and
    the boundary formula that replaces it factorizes cont.156's `size>4.4` gap into three measurable
    pieces, two of which are already verified, proving a *mean-only* response pin can never close it
-   (§4, §5).
+   (§4, §5A).
+4. **Calibration and inference are not the same computation.** Transport (§5A) consumes true
+   properties and runs on simulations only; the posterior route (§5B) needs only the measurement and
+   is the sole path to real data. Fisher's identity is what separates them, and §5B.2 lists what is
+   still missing before the model can touch a real catalogue.
 
 ---
 
@@ -310,7 +314,27 @@ numbers above cleanly *exclude* detection — correct bookkeeping, not a solutio
 
 ## 5. How we compute it with our models
 
-### 5.1 Level 1 — transport (already implemented)
+Two different jobs, requiring two different amounts of information. They evaluate the **same**
+derivative; they differ in whether the true properties are known:
+
+$$\underbrace{\partial_\gamma\mathbb E_\gamma[f]}_{\textbf{transport}:\ \text{average }f\text{ over KNOWN }\mathbf{x},\ \text{moved by }S_\gamma}
+\;=\;
+\underbrace{\mathrm{Cov}_0(f,s),\qquad s(\hat{\mathbf{x}})=\mathbb E_{p(\mathbf{x}\mid\hat{\mathbf{x}})}\big[u(\mathbf{x})\big]}_{\textbf{posterior}:\ \text{needs only }\hat{\mathbf{x}}}$$
+
+**§5A (transport) is *calibration*, and runs on simulations only** — it requires $\mathbf{x}$, which
+real data does not have. **§5B (posterior) is *inference*, and is the only route that runs on real
+data.**
+
+Fisher's identity (§2.1) is precisely what makes the second possible: it converts a derivative of a
+*population* property into a per-object *posterior expectation* of an analytic function — and a
+per-object posterior is computable from the measurement alone. **You never need true properties,
+because the posterior is your statement about the unknown truth.** Transport is the degenerate case
+where you happen to know $\mathbf{x}$, so the posterior collapses to a delta and the average becomes
+empirical. Same number, different information requirement.
+
+---
+
+### 5A.1 Transport — the calibration recipe (already implemented, **sims only**)
 
 The score form needs $\nabla\log p_0$, which we do not have. **We never need it for calibration**,
 because of the equivalence
@@ -335,7 +359,7 @@ catalogue's true properties *are* an empirical draw from $p_0$:
 math in §2–§4 is therefore not a new pipeline — it is the *theory of the pipeline already running*.
 Its value is diagnostic.
 
-### 5.2 Level 2 — factorize the failure
+### 5A.2 Factorize the failure
 
 cont.156 result: the flow reproduces the truth selection shift on every mag cut and mild size cuts
 (residual $m$ stays at the $\pm0.8$–$1.2\%$ no-cut floor), with **one failure**: `size>4.4`
@@ -351,7 +375,7 @@ inferring it from an end-to-end residual:
 - **truth side:** the same, from `det_meas` $g=0\leftrightarrow g=0.02$ both-detected matched pairs,
   which carry per-leg measured mag and `flux_radius`.
 
-### 5.3 Why a mean-only pin cannot close it
+### 5A.3 Why a mean-only pin cannot close it
 
 Expand the failing correlation using the `ConditionalMeanFlow` structure:
 
@@ -376,7 +400,7 @@ the non-monotonic truth shift cont.156 observed (peaks at `>3.5`, drops at `>4.4
 missed. This independently confirms cont.156's own proposed fix — Direction-A true-size perturbation
 so the size response and the shape-correlation emerge self-consistently, replacing the mean-only pin.
 
-### 5.4 Technical caveat — the location-family shortcut does not extend to size
+### 5A.4 Technical caveat — the location-family shortcut does not extend to size
 
 `flow_drop_indices=[0,1,8,9]` drops **only** shape (`e1_input_p`, `e2_input_p` and their missing
 flags). So:
@@ -388,20 +412,89 @@ flags). So:
 
 Any estimator built on the size axis pays this cost.
 
-### 5.5 Level 3 — what a full Bayesian estimator would additionally need
+### 5B.1 Inference on real data — the per-object algorithm
 
-Only the per-object optimal-weight form $\hat\gamma=\sum_i s_i/\sum_i\mathcal I_i$ (and its Fisher
-error bars) requires $s$ per object, hence $\nabla\log p_0$ — a real intrinsic-property prior over
-shape, size, flux, Sérsic and neighbour configuration. Fitting it to the simulation catalogue is fine
-for closure tests but circular for science; `SBI_shear.md:189` demands an external deep-field prior.
-**This is the genuine cost of Direction B, and it is not needed for anything in §5.1–§5.3.**
+Nothing in §5A applies to real data: it consumes $\mathbf{x}$, and real data has none. The posterior
+route replaces the empirical average over known truth with a posterior average over unknown truth.
+
+For galaxy $i$, given **only** the measured $\hat{\mathbf{x}}_i$, the observed neighbour information
+$\hat{\mathbf{n}}_i$, and the analyst's cut $S$:
+
+```
+for each latent node x_k   (grid on shape; samples on size / flux / Sersic):
+
+    L_k = p_flow( x_hat_i | x_k, n_hat_i )        # one flow log_prob call
+    pi_k = p_0( x_k )                             # the external prior
+    w_k propto L_k * pi_k * P_pass( x_k, n_hat_i) # posterior weights
+                                                  #   (P_pass only if a cut is applied)
+    u_k = -( v . grad log p_0  +  div v )( x_k )  # analytic shear generator, Sec 2.1
+```
+
+then per object, by Fisher (§2.1) and Louis (§2.3),
+
+$$s_i=\sum_k w_k\,u_k,\qquad
+\mathcal I_i=-\sum_k w_k\,\partial_\gamma u_k-\mathrm{Var}_w(u),$$
+
+and over the population, with the selection normalization of §4.7,
+
+$$\boxed{\;\hat\gamma=\frac{\sum_i s_i - N\,\langle s\rangle_{\rm sel}}{\sum_i \mathcal I_i}\;},
+\qquad \langle s\rangle_{\rm sel}=\partial_\gamma\log P(\text{pass}\mid\gamma),$$
+
+the latter evaluated by Monte Carlo from $p_0$ weighted by $P_{\rm pass}$. **No true property appears
+anywhere.** This is the BFD estimator with our learned flow in place of an analytic moment likelihood.
+
+### 5B.2 What we have, and what blocks it
+
+**Have:**
+
+- the flow $p(\hat{\mathbf{x}}\mid\mathbf{x},\mathbf{n})$ — the hard part, done;
+- `sbs_shear/posterior_shape.py::RadialShapePrior` — an isotropic intrinsic-shape prior with an
+  **exact** Möbius pullback (`log_prob`, `sheared_log_prob`), so $\nabla\log p_0$ on the *shape*
+  channel is genuinely available;
+- the per-object shape posterior on an exact grid, cheap via the location family (§5A.4);
+- $P_{\rm pass}$ derivable from the flow itself (§4.7) — no new model;
+- `sbs_shear/selection_model.py` for detection — exists, not wired in.
+
+**Blocked on:**
+
+1. **$p_0$ for everything except shape.** There is no prior over size, flux, Sérsic, or neighbour
+   configuration, and $\nabla\log p_0$ must be tractable. Largest gap. `SBI_shear.md:189` insists it
+   come from external deep fields, not $p_{\rm sim}$ — otherwise the answer is circular.
+2. **Neighbours become latent too.** In simulations `nbr_flux_near/far/max` are built from *true*
+   neighbour fluxes. On real data they must be built from *measured* neighbour fluxes, reintroducing
+   errors-in-variables on the neighbour side — exactly the problem V2 solved for the primary and
+   never solved for neighbours.
+3. **No observing-conditions conditioning.** No `psf`, `seeing`, or `depth` feature appears in any
+   entry of `MEASUREMENT_CONDITION_FEATURE_SETS`. The flow has memorised *one* simulated PSF and
+   *one* depth. Real surveys vary in PSF size and ellipticity, depth, and masking across the
+   footprint, and PSF ellipticity leaks directly into measured shape. Applied to real data as-is the
+   flow is misspecified in the channel that matters most. **Arguably the binding practical blocker,
+   and it is not about the flow's accuracy on sims at all.**
+4. **Detection normalization** — integrating $P(\text{det}\mid\mathbf{x},\mathbf{n})$ against the
+   sheared prior, i.e. over objects that were never observed.
+5. **Cost** — a $\gtrsim5$-D per-object posterior over $\sim10^8$ galaxies.
+
+### 5B.3 Honest scoping
+
+The only piece reachable today is **shape-only** real-data inference: analytic shape prior,
+location-family grid, $s$ from the shape channel alone. But a shape-only score yields $R_{\rm self}$
+and nothing else — no blend (§3: geometry-blind ⇒ that covariance is identically zero) and no
+selection (§4.3: that is the size channel). It therefore reproduces the certified problem rather than
+advancing past it.
+
+**Making the model usable on real data is a different project from making it accurate on simulations.**
+Blockers 1–3 are the substance of it, and none of them is a statement about the flow's accuracy.
 
 ---
 
 ## 6. Honest limits
 
 - **`size>4.4`, $m=-6.71\%$** — open. Marginals correct (kept fraction matches), shape–size copula
-  wrong in the tail. This is the hard part, and §5.2 says which single number to measure.
+  wrong in the tail. This is the hard part, and §5A.2 says which single number to measure.
+- **Nothing here is runnable on real data yet.** Everything validated so far is transport (§5A),
+  which consumes true properties. The posterior route (§5B) is the only real-data path, and it is
+  blocked on an external prior, latent neighbours, and — most sharply — the absence of any
+  PSF/depth conditioning in the flow (§5B.2, blockers 1–3).
 - **The flux/size shear response is supervised, not emergent.** It was *sign-flipped* until the
   theta-coupling pin. Selection calibration is downstream of a quantity NLL training does not learn
   on its own.
