@@ -212,8 +212,26 @@ def main():
     zero = np.zeros_like(ag1)
     sn_inv = true_sn_leg(mag, Re, e1i, e2i, zero, zero, args.psf_fwhm, ref_median=ref_med)
 
+    # NOISE-DILUTION test: add SHAPE-INDEPENDENT, per-leg-INDEPENDENT gaussian noise to the true S/N,
+    # with sigma set so corr(true, true+noise) matches the observed corr(true, measured)~0.941. If this
+    # drops the true-S/N bias down toward the measured value, noise dilution explains the gap; any
+    # residual is my area-model over-weighting the shape vs the real SExtractor S/N.
+    # calibrate the injected noise in the FAINT regime (near the cuts), NOT globally: the true S/N ~ flux
+    # so its global std is dominated by the bright tail -> would dump absurd noise on faint objects. Use
+    # the residual scatter of measured vs true S/N among objects with true S/N in [3,25] (the cut range).
+    band = (snp_t > 3) & (snp_t < 25) & np.isfinite(snp)
+    a, b = np.polyfit(snp_t[band], snp[band], 1)          # measured ~ a*true + b in the faint band
+    resid = snp[band] - (a * snp_t[band] + b)
+    sig_noise = float(np.std(resid))                      # physical S/N scatter near the cut
+    rng = np.random.default_rng(0)
+    snp_tn = snp_t + rng.normal(0.0, sig_noise, size=snp_t.shape)
+    snm_tn = snm_t + rng.normal(0.0, sig_noise, size=snm_t.shape)
+    print(f"noise-dilution test: faint-band measured~{a:.2f}*true+{b:.2f}; residual scatter "
+          f"sigma={sig_noise:.3f} (S/N units) -> injected per-leg indep", flush=True)
+
     sn_sources = [("MEASURED S/N (noisy)", snp, snm),
                   ("TRUE S/N (deterministic: flux + SHEARED-shape area + PSF)", snp_t, snm_t),
+                  ("TRUE S/N + matched shape-indep noise (per-leg indep) -> mimics measured", snp_tn, snm_tn),
                   ("CONTROL: true-S/N from UNSHEARED shape (shear-invariant -> must be 0)", sn_inv, sn_inv)]
 
     scopes = [("ALL objects", np.ones(len(t), bool)),
