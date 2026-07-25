@@ -275,8 +275,11 @@ def main():
 
     if args.output:
         os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
+        mag = base["r_input_p"].to_numpy(float)
+        nbr_flux = (base["nbr_flux_near"].to_numpy(float)
+                    if "nbr_flux_near" in base.columns else np.full(len(base), np.nan))
         np.savez(args.output, R_hs=R_hs, R_flow=Rf_ens, R_flow_seeds=np.stack(Rf_seeds, 0),
-                 size=size, iso=iso, good=good, gmed=gmed,
+                 size=size, mag=mag, nbr_flux=nbr_flux, iso=iso, iso7=iso, good=good, gmed=gmed,
                  case=base["case"].to_numpy(int), input_index=base["input_index"].to_numpy(int),
                  size_edges=SIZE_EDGES, delta=args.response_delta, difference=args.response_difference,
                  nseeds=len(Rf_seeds))
