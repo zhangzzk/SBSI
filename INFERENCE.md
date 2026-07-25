@@ -417,20 +417,63 @@ Any estimator built on the size axis pays this cost.
 Nothing in §5A applies to real data: it consumes $\mathbf{x}$, and real data has none. The posterior
 route replaces the empirical average over known truth with a posterior average over unknown truth.
 
-For galaxy $i$, given **only** the measured $\hat{\mathbf{x}}_i$, the observed neighbour information
-$\hat{\mathbf{n}}_i$, and the analyst's cut $S$:
+The only inputs are the measured $\hat{\mathbf{x}}_i$ and the analyst's cut $S$.
+
+#### The three things that are easy to get wrong
+
+**(i) Neighbours are latent, not data.** The flow was trained as
+$p(\hat{\mathbf{x}}\mid\mathbf{x},\mathbf{n})$ where $\mathbf{n}$ is *true* neighbour properties — in
+the simulation, `nbr_flux_near/far/max` are built from true neighbour fluxes. Real data has no such
+thing, so $\mathbf{n}$ is latent exactly like $\mathbf{x}$ and must be **marginalized over a joint
+scene prior** $p_0(\mathbf{x},\mathbf{n})$, never plugged in from measured neighbour quantities.
+Consequences: the node bank no longer depends on the galaxy, so it is **shared across the whole
+catalogue**; there is no errors-in-variables on the neighbour side; but $p_0$ must now encode
+*clustering* statistics, not just a galaxy population.
+
+**(ii) An analyst cut cancels out of the per-object posterior.** Since the cut is a deterministic
+function of $\hat{\mathbf{x}}$, and $\hat{\mathbf{x}}$ is observed and passed,
+
+$$p(\mathbf{x}\mid\hat{\mathbf{x}},\text{passed})\;\propto\;
+p(\hat{\mathbf{x}}\mid\mathbf{x},\mathbf{n})\;\underbrace{\mathbb 1[\hat{\mathbf{x}}\in S]}_{=\,1}\;p_0
+\;=\;p(\hat{\mathbf{x}}\mid\mathbf{x},\mathbf{n})\,p_0 .$$
+
+The per-object posterior under a cut is **identical** to the one without it — §4.1 arriving from the
+algorithm's side. $P_{\rm pass}$ therefore belongs **only in the population normalization**, never in
+the per-object weights.
+
+**(iii) Detection does *not* cancel.** Detection is not determined by $\hat{\mathbf{x}}$ — undetected
+objects have no $\hat{\mathbf{x}}$ at all — so $P(\text{det}\mid\mathbf{x},\mathbf{n})$ survives in
+the per-object weights *and* appears in the normalization. The general rule: **whatever the selection
+depends on, it drops out of the per-object posterior if it is determined by data you already hold,
+and stays if it is not.**
+
+#### The algorithm
 
 ```
-for each latent node x_k   (grid on shape; samples on size / flux / Sersic):
+node bank -- built ONCE, shared across all galaxies:
 
-    L_k = p_flow( x_hat_i | x_k, n_hat_i )        # one flow log_prob call
-    pi_k = p_0( x_k )                             # the external prior
-    w_k propto L_k * pi_k * P_pass( x_k, n_hat_i) # posterior weights
-                                                  #   (P_pass only if a cut is applied)
-    u_k = -( v . grad log p_0  +  div v )( x_k )  # analytic shear generator, Sec 2.1
+    (x_k, n_k) ~ p_0(x, n)                      # joint SCENE prior; neighbours are latent
+    u_k    = -( v . grad log p_0 + div v )(x_k, n_k)
+                                                # generator on the WHOLE scene  <- R_blend lives here
+    D_k    = P( detected | x_k, n_k )           # classifier; does NOT cancel
+    Wp_k   = Integral_S p_flow( x_hat | x_k, n_k ) d x_hat
+                                                # analyst-cut pass probability (Sec 4.7)
+    dU_k   = d/dgamma u_k                       # for Louis
+
+per galaxy i -- the only galaxy-specific quantity is L:
+
+    L_k    = p_flow( x_hat_i | x_k, n_k )       # one flow log_prob call per node
+    w_k    propto L_k * D_k                     # NO analyst-cut factor -- it cancels
+    s_i    = sum_k w_k u_k
+    I_i    = -sum_k w_k dU_k - Var_w(u)
+
+population:
+
+    <s>_sel = sum_k Wp_k D_k u_k / sum_k Wp_k D_k
+    ghat    = ( sum_i s_i - N <s>_sel ) / sum_i I_i
 ```
 
-then per object, by Fisher (§2.1) and Louis (§2.3),
+In symbols, per object by Fisher (§2.1) and Louis (§2.3),
 
 $$s_i=\sum_k w_k\,u_k,\qquad
 \mathcal I_i=-\sum_k w_k\,\partial_\gamma u_k-\mathrm{Var}_w(u),$$
@@ -438,10 +481,29 @@ $$s_i=\sum_k w_k\,u_k,\qquad
 and over the population, with the selection normalization of §4.7,
 
 $$\boxed{\;\hat\gamma=\frac{\sum_i s_i - N\,\langle s\rangle_{\rm sel}}{\sum_i \mathcal I_i}\;},
-\qquad \langle s\rangle_{\rm sel}=\partial_\gamma\log P(\text{pass}\mid\gamma),$$
+\qquad
+\langle s\rangle_{\rm sel}=\partial_\gamma\log P(\text{pass}\mid\gamma)
+=\frac{\mathbb E_{p_0}\!\big[\Pi\,u\big]}{\mathbb E_{p_0}\!\big[\Pi\big]},
+\qquad \Pi=P_{\rm pass}\,P_{\rm det}.$$
 
-the latter evaluated by Monte Carlo from $p_0$ weighted by $P_{\rm pass}$. **No true property appears
-anywhere.** This is the BFD estimator with our learned flow in place of an analytic moment likelihood.
+**No true property appears anywhere.** This is the BFD estimator with our learned flow in place of an
+analytic moment likelihood.
+
+#### Where $R_{\rm blend}$ enters this algorithm
+
+Because $\mathbf{n}$ is latent and $S_\gamma$ acts on the whole scene, $v$ moves the **separation
+vector**, the **neighbour's shape** and the **neighbour's size** — so $u_k$ carries neighbour
+components and $s_i=\sum_k w_k u_k$ picks up the blend response automatically. No separate term, no
+addition. (At $\kappa=0$ neighbour *flux* does not respond at first order; the separation does, and
+it is spin-2 — pairs aligned with the shear stretch apart, perpendicular ones compress.)
+
+This is §3's requirement made operational. The blend contribution is
+$\sum_k w_k\,u_k^{(\rm nbr)}$ with $w_k\propto L_k$. If $L_k$ does **not** change as the neighbour's
+position angle moves across nodes, the posterior over that angle is just the prior, and the sum
+collapses to the prior average of the generator — **zero by isotropy**. Our certified flow sees only
+scalar `nbr_flux_near/far/max`: moving a neighbour around a circle at fixed flux leaves $L_k$
+untouched, so the term is identically zero. *That* is why $R_{\rm blend}$ must be bolted on from
+BlendEMU. The fix is not a better estimator; it is a likelihood that varies with neighbour geometry.
 
 ### 5B.2 What we have, and what blocks it
 
@@ -460,10 +522,21 @@ anywhere.** This is the BFD estimator with our learned flow in place of an analy
 1. **$p_0$ for everything except shape.** There is no prior over size, flux, Sérsic, or neighbour
    configuration, and $\nabla\log p_0$ must be tractable. Largest gap. `SBI_shear.md:189` insists it
    come from external deep fields, not $p_{\rm sim}$ — otherwise the answer is circular.
-2. **Neighbours become latent too.** In simulations `nbr_flux_near/far/max` are built from *true*
-   neighbour fluxes. On real data they must be built from *measured* neighbour fluxes, reintroducing
-   errors-in-variables on the neighbour side — exactly the problem V2 solved for the primary and
-   never solved for neighbours.
+2. **$p_0$ must be a *scene* prior.** Marginalizing $\mathbf{n}$ (§5B.1(i)) removes any
+   errors-in-variables on the neighbour side, but the price is that $p_0(\mathbf{x},\mathbf{n})$ must
+   encode **clustering** — how often neighbours occur, how close, how bright — not merely a galaxy
+   population. Deep fields give the population; the pair statistics are an additional ingredient.
+   Note also that marginalizing discards the neighbours you can actually *see*. Three treatments,
+   only two of them correct:
+
+   | | treatment | verdict |
+   |---|---|---|
+   | (a) | plug measured neighbour properties in as truth | **wrong** — errors-in-variables |
+   | (b) | marginalize $\mathbf{n}$ over the prior | correct; discards real information |
+   | (c) | neighbour measurements as *extra data*, joint scene inference $p(\hat{\mathbf{x}}_{\rm prim},\hat{\mathbf{x}}_{\rm nbr}\mid\mathbf{x},\mathbf{n})$ | correct and efficient; needs a scene-level flow |
+
+   §5B.1 specifies (b). (c) is where blending ultimately has to go, and it is the same scene-level
+   flow that §3 requires for $R_{\rm blend}$ to be non-zero.
 3. **No observing-conditions conditioning.** No `psf`, `seeing`, or `depth` feature appears in any
    entry of `MEASUREMENT_CONDITION_FEATURE_SETS`. The flow has memorised *one* simulated PSF and
    *one* depth. Real surveys vary in PSF size and ellipticity, depth, and masking across the
