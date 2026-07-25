@@ -204,8 +204,17 @@ def main():
     print(f"true S/N rescaled to measured median={ref_med:.2f}; "
           f"corr(true,measured S/N_plus)={np.corrcoef(snp_t, snp)[0,1]:.3f}", flush=True)
 
+    # shear-INVARIANT CONTROL: the SAME true-S/N model but built from the UNSHEARED intrinsic shape,
+    # so it is identical in both legs -> pass_plus==pass_minus -> the selection term MUST be exactly 0.
+    # This proves the nonzero true-S/N bias comes ENTIRELY from letting S/N depend on the SHEARED shape
+    # (a cut on a genuinely shear-invariant "true property" gives 0), and that random intrinsic shapes
+    # cancel unless the cut is correlated with the shape.
+    zero = np.zeros_like(ag1)
+    sn_inv = true_sn_leg(mag, Re, e1i, e2i, zero, zero, args.psf_fwhm, ref_median=ref_med)
+
     sn_sources = [("MEASURED S/N (noisy)", snp, snm),
-                  ("TRUE S/N (deterministic: flux+sheared-size+PSF)", snp_t, snm_t)]
+                  ("TRUE S/N (deterministic: flux + SHEARED-shape area + PSF)", snp_t, snm_t),
+                  ("CONTROL: true-S/N from UNSHEARED shape (shear-invariant -> must be 0)", sn_inv, sn_inv)]
 
     scopes = [("ALL objects", np.ones(len(t), bool)),
               ("ISOLATED (neighbored=False)", ~nb),
