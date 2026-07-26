@@ -62,8 +62,29 @@ and since $\mathbb E_0[s]=0$,
 
 $$\boxed{\;\partial_\gamma\mathbb E_\gamma[f]\big|_0=\mathrm{Cov}_0\big(f(\hat{\mathbf{x}}),\,s(\hat{\mathbf{x}})\big)\;}\tag{2.3}$$
 
-(the likelihood-ratio / score-function estimator). With $f=\hat e$ this is the shear response as a
-sample covariance — no paired $\pm\gamma$ renders and no finite differences.
+(the likelihood-ratio / score-function estimator). **(2.3) is the spine of this document.** Sections
+3 and 4 are not new derivations; they are choices of $f$:
+
+| choose $f=$ | and (2.3) returns | § |
+|---|---|---|
+| $\hat e$ | $R=\mathrm{Cov}_0(\hat e,s)$, the shear response | 3 |
+| $\hat e$, with $s$ split by channel | $R_{\rm self}+R_{\rm blend}$, combined by covariance rather than by hand | 3.1–3.2 |
+| $\hat e\,W$ | $R_S=\mathrm{Cov}_0(\hat eW,s)/\mathbb E_0[W]$, the selection response | 4.2 |
+| $s$ itself | $\mathcal I=\mathrm{Var}_0[s]$, the self-calibration | 2.3 |
+
+The last row is the outlier, and that is the whole point: for every other $f$ the right-hand side is
+a number that must be supplied from elsewhere, whereas for $f=s$ it is the scatter of the numbers
+already in hand.
+
+**Evaluating it.** Since $\mathbb E_0[s]=0$ the covariance is a bare product average, so every row
+above is one pass over the catalogue:
+
+$$\mathrm{Cov}_0(f,s)\;\approx\;\frac1N\sum_i f_i\,s_i,
+\qquad f_i\equiv f(\hat{\mathbf{x}}_i),\quad s_i\equiv s(\hat{\mathbf{x}}_i).$$
+
+So the shear response is $R\approx N^{-1}\sum_i\hat e_i\,s_i$ — no paired $\pm\gamma$ renders and no
+finite differences. All of the cost sits in producing the per-object $s_i$ (§5B); everything after
+that is arithmetic on those numbers.
 
 ### 2.3 Bartlett and Louis
 
@@ -83,7 +104,13 @@ sheared one estimates $\gamma$, with $\mathcal I$ as the exchange rate.
 
 The second identity in (2.4) is just (2.3) applied to $f=s$: **the score's own shear response is its
 own variance.** Every other statistic needs its response supplied from outside; this one carries its
-calibration in the scatter of the same numbers being summed.
+calibration in the scatter of the same numbers being summed. Concretely, the product average of §2.2
+at $f=s$ is a sum of squares,
+
+$$\mathcal I\;\approx\;\frac1N\sum_i s_i^{\,2},$$
+
+so the estimator below needs no machinery beyond two accumulators over the catalogue:
+$\hat\gamma=\sum_i s_i\big/\sum_i s_i^{\,2}$.
 
 Both expectations in (2.4) are at $\gamma=0$, so $\mathcal I$ is a **population** quantity. Its
 per-object counterpart is the *observed information*
@@ -119,6 +146,11 @@ afterwards and no $R_{\rm self}+R_{\rm blend}$ summed by hand. By Cramér–Rao 
 minimum-variance first-order estimator, and the per-object weight is its own Fisher information
 rather than a tuned quantity.
 
+Both $\sum_i s_i^{\,2}$ and $\sum_i\mathcal I_i$ estimate $N\mathcal I$, so either may serve as the
+denominator of (2.6). They differ in noise: $s_i^{\,2}$ uses only the single realized vote, whereas
+Louis's $\mathcal I_i$ uses the whole posterior spread behind that vote and is generally the quieter
+estimate. Their agreement is a free internal consistency test.
+
 ### 2.4 The generator
 
 Let $v\equiv\partial_\gamma S_\gamma|_0$ be the shear velocity field on truth. Since $p_\gamma$ is the
@@ -134,7 +166,7 @@ The channel velocities, all closed-form:
 |---|---|---|
 | shape (reduced-shear $\varepsilon$, ngmix `g`) | $v_e=\partial_g\!\left[\dfrac{e+g}{1+\bar g e}\right]_0=\big(1-e^2,\;i(1+e^2)\big)$ for $(g_1,g_2)$ | spin-2 |
 | log size (distortion $e$) | $v_{\log T}=2e$ — see §4.5 | spin-2, **no isotropic part** |
-| log flux | $0$ at first order when $\kappa=0$; magnification $\mu=\big[(1-\kappa)^2-|g|^2\big]^{-1}$ otherwise | — |
+| log flux | $0$ at first order when $\kappa=0$; magnification $\mu=\big[(1-\kappa)^2-\lvert g\rvert^2\big]^{-1}$ otherwise | — |
 | neighbour separation | $\delta r_i=\gamma_{ij}r_j$ | spin-2 in the pair position angle |
 | neighbour shape | Möbius, as for the primary | spin-2 |
 
