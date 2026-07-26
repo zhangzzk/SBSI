@@ -7,6 +7,10 @@ Derivations and algorithms only. Measured results, model status and project hist
 **size channel of that same score**, amplified by the cut into a boundary term. The blend response is
 its **neighbour channel**. All three follow from one identity, and none requires a separate model.
 
+New to the score/information machinery? **Appendix A** derives it from scratch on a one-dimensional
+Gaussian, with a dictionary between the statistics names and the lensing ones. §§1–7 do not depend
+on it.
+
 ---
 
 ## 1. Setup and notation
@@ -611,3 +615,176 @@ selection (§4.3, that is the size channel).
   (`ConditionalMeanFlow`, `flow_drop_indices`), `sbs_shear/forward_model.py` +
   `sbs_shear/scene_model.py` (geometry-conditioned scene likelihood),
   `sbs_shear/selection_model.py` (detection classifier).
+
+---
+
+# Appendix A — the Bayesian background
+
+Self-contained and non-lensing. Nothing in §§1–7 depends on it; it exists so those sections read as
+consequences of standard statistics rather than as lensing folklore. Everything here is textbook
+except the last table, which is the dictionary between the textbook names and ours.
+
+## A.1 Four densities
+
+| name | is | here |
+|---|---|---|
+| **likelihood** | $p(\text{data}\mid\text{unknowns})$ — how the data were made | the flow $p(\hat{\mathbf{x}}\mid\mathbf{x},\mathbf{n})$ |
+| **prior** | $p(\text{unknowns})$ — what the unknowns were before you looked | $p_0(\mathbf{x},\mathbf{n})$ |
+| **evidence** | $p(\text{data})=\int$ likelihood $\times$ prior | (1.1) |
+| **posterior** | $p(\text{unknowns}\mid\text{data})=$ likelihood $\times$ prior $/$ evidence | $p(\mathbf{x},\mathbf{n}\mid\hat{\mathbf{x}})$ |
+
+The evidence is the integral that turns the other three into Bayes' theorem. It has two readings,
+and the whole document rests on the second:
+
+1. the **normalizing constant** of the posterior — a nuisance, the thing you divide by;
+2. the **likelihood of whatever the prior depends on** — if the prior carries a parameter, the
+   evidence is a function of that parameter, and a function of a parameter given fixed data is a
+   likelihood.
+
+## A.2 The parameter lives in the prior
+
+$\gamma$ never appears in the flow. It appears only in $p_\gamma=p_0\circ S_{-\gamma}$, because
+lensing acts on galaxies before the atmosphere and the detector do. So (1.1) *is* the likelihood
+function for $\gamma$, with $(\mathbf{x},\mathbf{n})$ integrated out as nuisance parameters. Once
+that sentence is accepted, §2 is just maximum likelihood applied to it, and the only difficulty left
+is that the integral is intractable — which is what §A.5 handles.
+
+## A.3 The score, and its three properties
+
+For any model $p(y\mid\theta)$ the **score** is $s=\partial_\theta\log p(y\mid\theta)$: how strongly
+the data you actually saw argue for raising $\theta$. Every identity in §2 is one line of calculus
+from $\int p\,dy=1$.
+
+**(i) It averages to zero.** Differentiate the normalization:
+
+$$0=\partial_\theta\!\int p\,dy=\int p\;\partial_\theta\log p\,dy=\mathbb E_\theta[s].\tag{A.1}$$
+
+At the true $\theta$ the data have no systematic opinion. Non-zero $\bar s$ means the assumed
+$\theta$ is wrong — that is the measurement.
+
+**(ii) Its variance is the curvature.** Differentiate (A.1) once more:
+
+$$0=\int\big(\partial_\theta p\big)\,s+\int p\,\partial_\theta s
+\quad\Longrightarrow\quad
+\underbrace{\mathbb E[s^2]}_{\text{variance, by (A.1)}}=-\,\mathbb E\big[\partial_\theta s\big]
+\;\equiv\;\mathcal I.\tag{A.2}$$
+
+Two unrelated-sounding things — how much the votes scatter, and how sharply the log-likelihood
+curves — are the same number. This is what lets §2 calibrate itself.
+
+**(iii) Any average moves in proportion to its correlation with the score.** For fixed $f(y)$,
+
+$$\partial_\theta\mathbb E_\theta[f]=\int f\,\partial_\theta p=\int f\,p\,\partial_\theta\log p
+=\mathbb E_\theta[f\,s]\;\overset{\text{(A.1)}}{=}\;\mathrm{Cov}_\theta(f,s).\tag{A.3}$$
+
+Plain words: the score labels which data are *evidence for a larger $\theta$*; a statistic responds
+to $\theta$ exactly insofar as it is large on those same data. (A.3) is (2.3), and (A.2) is (A.3) at
+$f=s$ — the one statistic whose response is its own scatter, so it needs no external calibration.
+
+## A.4 Why the estimator is $s/\mathcal I$
+
+Near the truth every log-likelihood is a parabola. Expanding about $\theta=0$ with $s$ the slope and
+$\mathcal I$ the curvature from (A.2),
+
+$$\log p(y\mid\theta)\approx\text{const}+s\,\theta-\tfrac12\mathcal I\,\theta^2
+\quad\Longrightarrow\quad
+\hat\theta=\frac{s}{\mathcal I}.\tag{A.4}$$
+
+That is one Newton step from zero, and it is all (2.6) says: slope over curvature, accumulated over
+objects. The same statement in the language of (A.3): $\mathbb E_\theta[s]\approx\mathcal I\theta$, so
+dividing the observed $\bar s$ by $\mathcal I$ converts a score back into a parameter. Cramér–Rao
+adds that no first-order estimator beats it, and that the correct weight per object is its own
+$\mathcal I_i$ — noisy objects self-demote, with no tuning.
+
+## A.5 Latent variables: Fisher's identity is the E-step
+
+The obstacle: $p(\hat{\mathbf{x}}\mid\gamma)$ is an integral with no closed form, so
+$\partial_\gamma\log$ of it cannot be written down. The escape: the *joint* $p_\gamma$ is analytic —
+we know exactly how shear moves a galaxy. Differentiating the integral and dividing by it,
+
+$$\partial_\gamma\log p(y\mid\theta)
+=\frac{\int p(y\mid z)\,\partial_\theta p_\theta(z)\,dz}{p(y\mid\theta)}
+=\mathbb E_{p(z\mid y)}\big[\partial_\theta\log p_\theta(z)\big].\tag{A.5}$$
+
+*The score of the intractable marginal is the posterior average of the tractable joint score.* This
+is (2.2), and it is the E-step of EM under another name. Louis (1982), eq. (2.5), is its second
+derivative, with the extra $-\mathrm{Var}_{\rm post}$ term measuring how much the latent variables
+still disagree after seeing the data.
+
+The practical consequence, worth stating on its own: **the flow is never differentiated with respect
+to $\gamma$.** It only supplies weights. All $\gamma$-dependence is analytic, in $u$.
+
+## A.6 Truncation
+
+If you only keep data in a region $S$, the density you are actually sampling is renormalized,
+
+$$p_S(y\mid\theta)=\frac{p(y\mid\theta)\,\mathbb 1[y\in S]}{P(\text{pass}\mid\theta)},
+\qquad P(\text{pass}\mid\theta)=\int_S p(y\mid\theta)\,dy,\tag{A.6}$$
+
+so every kept object's log-likelihood carries $-\log P(\text{pass}\mid\theta)$ and every score becomes
+$s-\partial_\theta\log P(\text{pass}\mid\theta)$. The subtracted piece has no $y$ in it — $y$ was
+integrated away — so it is one number, repeated $N$ times. That is the $N\langle s\rangle_{\rm sel}$
+of (5.3), and by (A.1) applied to $p_S$ it is exactly the mean score of the surviving objects: the
+correction re-centres the score on the population you kept. Keep the two levels distinct:
+
+| | depends on | meaning |
+|---|---|---|
+| $P_{\rm pass}(\mathbf{x},\mathbf{n})$, (4.8) | one true scene | chance *this* galaxy's measurement lands in $S$ |
+| $P(\text{pass}\mid\gamma)=\mathbb E_{p_\gamma}[P_{\rm pass}]$ | nothing, once averaged | population survival fraction; the normalizer in (A.6) |
+
+The second is object-independent only because all objects face the same cut. Position-dependent depth
+or masking gives $P_i(\text{pass}\mid\gamma)$ and the term becomes $\sum_i\langle s\rangle_{{\rm sel},i}$.
+
+## A.7 The whole document in closed form
+
+One toy where every quantity above is elementary. Truth $x\sim\mathcal N(0,\tau^2)$; the parameter
+shifts the prior, $p_\theta(x)=\mathcal N(\theta,\tau^2)$ (the additive stand-in for $S_\gamma$);
+measurement $y=x+\text{noise}$, $p(y\mid x)=\mathcal N(x,\sigma^2)$ — a one-dimensional flow.
+Write $\nu^2=\tau^2+\sigma^2$.
+
+| object | § | value here |
+|---|---|---|
+| evidence (1.1) | 1 | $p(y\mid\theta)=\mathcal N(\theta,\nu^2)$ |
+| score (2.1) | 2 | $s=y/\nu^2$ |
+| generator (2.7) | 2.4 | $u=\partial_\theta\log p_\theta(x)\big\rvert_0=x/\tau^2$ |
+| Fisher's identity (2.2) | 2.1 | posterior mean is $y\tau^2/\nu^2$, so $\mathbb E_{\rm post}[u]=y/\nu^2=s$ ✓ |
+| information (2.4) | 2.3 | $\mathcal I=\mathrm{Var}(s)=\nu^2/\nu^4=1/\nu^2$ |
+| Louis (2.5) | 2.3 | $\underbrace{1/\tau^2}_{\text{complete}}-\underbrace{\sigma^2/\tau^2\nu^2}_{\text{missing}}=1/\nu^2$ ✓ |
+| estimator (2.6) | 2.3 | $\hat\theta=\sum_i s_i/\sum_i\mathcal I_i=\bar y$ — the sample mean, as it must be |
+| response (2.3), $f=y$ | 2.2 | $\mathrm{Cov}(y,s)=\nu^2/\nu^2=1=\partial_\theta\mathbb E_\theta[y]$ ✓ |
+
+Now cut on $y>c$, the toy version of $\hat T>T_c$. Per-scene $P_{\rm pass}(x)=\bar\Phi\big((c-x)/\sigma\big)$
+depends on the truth; the population factor does not:
+
+$$P(\text{pass}\mid\theta)=\bar\Phi\!\left(\frac{c-\theta}{\nu}\right),\qquad
+\langle s\rangle_{\rm sel}=\partial_\theta\log P(\text{pass}\mid\theta)\big\rvert_0
+=\frac{\phi(c/\nu)}{\nu\,\bar\Phi(c/\nu)}
+=\mathbb E\big[s\mid y>c\big],\tag{A.7}$$
+
+the last equality because $\mathbb E[y\mid y>c]=\nu\,\phi/\bar\Phi$. So the correction in (5.3) is
+literally the average score of the objects that survived, and the naive estimator that omits it
+returns the truncated mean $\mathbb E[y\mid y>c]>0$ at $\theta=0$ — a selection bias, in the smallest
+possible model. Everything in §4 is this, with $y\to\hat T$ and a spin-2 shear in place of a shift.
+
+## A.8 Dictionary
+
+| statistics | this document | weak lensing |
+|---|---|---|
+| score $\partial_\theta\log p$ | $s$, (2.1) | — |
+| complete-data score | generator $u$, (2.7) | analytic shear velocity field |
+| Fisher information | $\mathcal I$, (2.4) | inverse squared shear error |
+| observed information | $\mathcal I_i$, (2.5) | per-object weight |
+| $\mathrm{Cov}(f,s)$, (A.3) | (2.3) | **response** $R$; BJ02 responsivity, metacal $R$ |
+| truncated likelihood, (A.6) | (5.3) | selection bias / selection response |
+| E-step of EM | Fisher's identity, (2.2) | — |
+| marginal likelihood | evidence, (1.1) | BFD's per-object likelihood |
+
+## A.9 If you want the textbook version
+
+- **Score, information, Cramér–Rao:** any mathematical-statistics text; Cox & Hinkley, *Theoretical
+  Statistics*, ch. 2, is the compact one.
+- **Latent variables, EM, Louis:** Dempster, Laird & Rubin (1977); Louis (1982) for the information.
+- **Likelihood-ratio / score-function derivative (A.3):** Glynn (1990); the same result is REINFORCE
+  in Williams (1992) and the "policy gradient" of reinforcement learning.
+- **This machinery already applied to shear:** BFD, Bernstein & Armstrong (2014) — (1.1) with an
+  analytic moment likelihood instead of a flow.
