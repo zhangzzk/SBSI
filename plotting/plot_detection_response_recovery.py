@@ -57,7 +57,7 @@ def main():
     axb.set_xticks(x); axb.set_xticklabels(labels)
     axb.set_ylabel(r"detection response  $b/g$  [%]")
     axb.set_title("Per-blend detection response: sim vs classifier")
-    axb.legend(loc="lower left")
+    axb.legend(loc="upper center", ncol=3, bbox_to_anchor=(0.5, -0.09), fontsize=9)
 
     # ---- global observable ----
     gsim = 100 * float(z3["global_b_sim"])
