@@ -67,10 +67,26 @@ sample covariance — no paired $\pm\gamma$ renders and no finite differences.
 
 ### 2.3 Bartlett and Louis
 
-$$\mathbb E[s]=0,\qquad \mathcal I\equiv\mathrm{Var}[s]=-\mathbb E[\partial_\gamma s],\tag{2.4}$$
+$$\mathbb E_0[s]=0,\qquad \mathcal I\equiv\mathrm{Var}_0[s]=-\mathbb E_0[\partial_\gamma s],\tag{2.4}$$
 
-both expectations taken over $p(\hat{\mathbf{x}}\mid\gamma)$ at $\gamma=0$, so $\mathcal I$ is a
-**population** quantity. Its per-object counterpart is the *observed information*
+The subscripts are essential. $s$ is a **fixed function of the data**, defined once at $\gamma=0$ by
+(2.1) and never re-derived; $\mathbb E_0$ versus $\mathbb E_\gamma$ says only which distribution it is
+averaged over. So the two statements
+
+$$\mathbb E_0[s]=0
+\qquad\text{and}\qquad
+\mathbb E_\gamma[s]=\mathcal I\gamma+O(\gamma^2)$$
+
+do not conflict — the second reduces to the first at $\gamma=0$ — and together they *are* the
+measurement: the score averages to zero in an unsheared universe, so its departure from zero in a
+sheared one estimates $\gamma$, with $\mathcal I$ as the exchange rate.
+
+The second identity in (2.4) is just (2.3) applied to $f=s$: **the score's own shear response is its
+own variance.** Every other statistic needs its response supplied from outside; this one carries its
+calibration in the scatter of the same numbers being summed.
+
+Both expectations in (2.4) are at $\gamma=0$, so $\mathcal I$ is a **population** quantity. Its
+per-object counterpart is the *observed information*
 
 $$\mathcal I_i\;\equiv\;-\partial^2_\gamma\log p(\hat{\mathbf{x}}_i\mid\gamma)\big|_0,
 \qquad s_i\equiv s(\hat{\mathbf{x}}_i),$$
@@ -78,7 +94,7 @@ $$\mathcal I_i\;\equiv\;-\partial^2_\gamma\log p(\hat{\mathbf{x}}_i\mid\gamma)\b
 the curvature of the log-likelihood of the single measurement $\hat{\mathbf{x}}_i$. Since
 $\partial_\gamma s=\partial^2_\gamma\log p$, the second identity in (2.4) is precisely the statement
 
-$$\mathcal I=\mathbb E_{\hat{\mathbf{x}}}\big[\mathcal I_i\big]$$
+$$\mathcal I=\mathbb E_0\big[\mathcal I_i\big]$$
 
 — the population Fisher information *is* the average observed information — so $\sum_i\mathcal I_i$
 estimates $N\mathcal I$ without bias. Louis (1982) makes $\mathcal I_i$ computable from the posterior
@@ -96,9 +112,9 @@ $$\hat\gamma=\frac{\sum_i s_i}{\sum_i\mathcal I_i}
 \qquad\Longrightarrow\qquad
 \partial_\gamma\mathbb E[\hat\gamma]=1\ \text{ by construction},\tag{2.6}$$
 
-because $\mathbb E_\gamma[s]=\mathrm{Cov}_0(s,s)\,\gamma+O(\gamma^2)=\mathcal I\gamma+O(\gamma^2)$ by
-(2.3), so the numerator grows as $N\mathcal I\gamma$ while the denominator estimates $N\mathcal I$:
-the same $\mathcal I$ appears above and below and cancels. There is no external responsivity applied
+which is nothing but the inversion of the straight line $\mathbb E_\gamma[s]=\mathcal I\gamma$: the
+numerator grows as $N\mathcal I\gamma$, the denominator estimates $N\mathcal I$, so the same
+$\mathcal I$ appears above and below and cancels. There is no external responsivity applied
 afterwards and no $R_{\rm self}+R_{\rm blend}$ summed by hand. By Cramér–Rao (2.6) is the
 minimum-variance first-order estimator, and the per-object weight is its own Fisher information
 rather than a tuned quantity.
