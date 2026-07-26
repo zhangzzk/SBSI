@@ -20,6 +20,8 @@ Derivations and algorithms only. Measured results, model status and project hist
 | $p_0$ | intrinsic (unsheared) prior over the whole scene |
 | $S_\gamma$ | analytic shear map, acting on **truth** |
 | $W(\hat{\mathbf{x}})$ | cut indicator, e.g. $\mathbb 1[\hat s>s_c]$ |
+| $i=1\ldots N$ | index over **objects** in the catalogue: $\hat{\mathbf{x}}_i$ is one measured galaxy |
+| $k$ | index over **prior nodes** $(\mathbf{x}_k,\mathbf{n}_k)\sim p_0$ (§5B), shared by every object |
 
 Shear appears in exactly one place — it shifts the prior:
 
@@ -67,19 +69,39 @@ sample covariance — no paired $\pm\gamma$ renders and no finite differences.
 
 $$\mathbb E[s]=0,\qquad \mathcal I\equiv\mathrm{Var}[s]=-\mathbb E[\partial_\gamma s],\tag{2.4}$$
 
+both expectations taken over $p(\hat{\mathbf{x}}\mid\gamma)$ at $\gamma=0$, so $\mathcal I$ is a
+**population** quantity. Its per-object counterpart is the *observed information*
+
+$$\mathcal I_i\;\equiv\;-\partial^2_\gamma\log p(\hat{\mathbf{x}}_i\mid\gamma)\big|_0,
+\qquad s_i\equiv s(\hat{\mathbf{x}}_i),$$
+
+the curvature of the log-likelihood of the single measurement $\hat{\mathbf{x}}_i$. Since
+$\partial_\gamma s=\partial^2_\gamma\log p$, the second identity in (2.4) is precisely the statement
+
+$$\mathcal I=\mathbb E_{\hat{\mathbf{x}}}\big[\mathcal I_i\big]$$
+
+— the population Fisher information *is* the average observed information — so $\sum_i\mathcal I_i$
+estimates $N\mathcal I$ without bias. Louis (1982) makes $\mathcal I_i$ computable from the posterior
+of §2.1 alone, with no second set of samples:
+
 $$\partial^2_\gamma\log p(\hat{\mathbf{x}}\mid\gamma)
 =\mathbb E_{\rm post}\big[\partial^2_\gamma\log p_\gamma\big]
 +\mathrm{Var}_{\rm post}\big[\partial_\gamma\log p_\gamma\big].\tag{2.5}$$
 
-(2.5) reads *observed information = complete-data information $-$ missing information*. Hence
+(2.5) reads *observed information = complete-data information $-$ missing information*: the
+subtracted $\mathrm{Var}_{\rm post}[u]$ is the disagreement, among the truths still compatible with
+$\hat{\mathbf{x}}_i$, about which way shear points. Hence, summing over the $N$ objects,
 
 $$\hat\gamma=\frac{\sum_i s_i}{\sum_i\mathcal I_i}
 \qquad\Longrightarrow\qquad
 \partial_\gamma\mathbb E[\hat\gamma]=1\ \text{ by construction},\tag{2.6}$$
 
-with no external responsivity applied afterwards and no $R_{\rm self}+R_{\rm blend}$ summed by hand.
-By Cramér–Rao (2.6) is the minimum-variance first-order estimator, and the per-object weight is its
-own Fisher information rather than a tuned quantity.
+because $\mathbb E_\gamma[s]=\mathrm{Cov}_0(s,s)\,\gamma+O(\gamma^2)=\mathcal I\gamma+O(\gamma^2)$ by
+(2.3), so the numerator grows as $N\mathcal I\gamma$ while the denominator estimates $N\mathcal I$:
+the same $\mathcal I$ appears above and below and cancels. There is no external responsivity applied
+afterwards and no $R_{\rm self}+R_{\rm blend}$ summed by hand. By Cramér–Rao (2.6) is the
+minimum-variance first-order estimator, and the per-object weight is its own Fisher information
+rather than a tuned quantity.
 
 ### 2.4 The generator
 
