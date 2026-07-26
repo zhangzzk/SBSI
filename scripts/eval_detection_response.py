@@ -107,10 +107,13 @@ def main():
     # directly comparable to the target-builder's global_b (= [<s>_det - <s>_parent]/g).  Includes the
     # cross-cell reweighting that the per-cell (binned) numbers remove -- so this, not the per-cell
     # average, is the apples-to-apples match to b_sim/g = -2.01% / constgold -1.86%.
-    def gshift(w, s, w0_, s0):
-        return np.sum(w * s) / np.sum(w) - np.sum(w0_ * s0) / np.sum(w0_)
-    b1g = gshift(w1, se1.astype(float), w0, se1_0)
-    b2g = gshift(w2, se2.astype(float), w0, se2_0)
+    # selection shift = P(det)-weighted mean MINUS the PLAIN (unweighted) mean of the SAME shape
+    # (this cancels the shape's own shear response, leaving only the detection selection); then
+    # centered by the delta=0 baseline, exactly like the per-cell _bin_shift but over all rows.
+    def sel_shift(w, s):
+        return np.sum(w * s) / np.sum(w) - np.mean(s)
+    b1g = sel_shift(w1, se1.astype(float)) - sel_shift(w0, se1_0)
+    b2g = sel_shift(w2, se2.astype(float)) - sel_shift(w0, se2_0)
     gmodel_obs = 0.5 * (b1g + b2g) / delta
     # count-weighted per-cell global (what the training log's <b_model/g> tracks)
     wv = (counts * valid).reshape(-1)
