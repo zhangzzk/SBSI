@@ -193,7 +193,7 @@ The channel velocities, all closed-form:
 ### 2.5 Limits
 
 - **Noiseless measurement.** The posterior collapses to a delta, $s\to u$, and
-  $\mathrm{Cov}(e,s)=\partial_\gamma\langle e\rangle$: the Bernstein & Jarvis responsivity
+  $\mathrm{Cov}(e,s)=\partial_\gamma\langle e\rangle$: the Bernstein & Jarvis
   responsivity $\mathcal R=2(1-e_{\rm rms}^2)$ in the distortion convention, $\mathcal R\to1$ for
   reduced shear (the isotropic average of $v_\varepsilon$ above is exactly $1$).
 - **Low signal-to-noise.** The posterior tends to the prior, so $s\to\mathbb E_{p_0}[u]=0$: the object
@@ -411,6 +411,10 @@ $$\underbrace{\partial_\gamma\mathbb E_\gamma[f]}_{\textbf{transport}:\ \text{av
 per-object *posterior expectation* of an analytic function. Transport is the degenerate case where
 $\mathbf{x}$ is known, the posterior collapses to a delta, and the average becomes empirical.
 
+§5C is not a third job: it is §5B rewritten so that $\gamma$ acts on the prior *samples* instead of on
+the prior *density*. Same estimator, same answer, weaker requirements — and it is where an external
+$R_{\rm blend}$ belongs if the flow cannot generate one.
+
 ### 5A. Transport — calibration (simulations only)
 
 #### 5A.1 Recipe
@@ -580,6 +584,106 @@ A shape-only reduction is possible (analytic shape prior, location-family grid),
 score yields the **shape channel alone** — not even the whole of $R_{\rm self}$, since the size
 channel (3.3) is dropped with it — and neither blend (§3, geometry-blind ⇒ identically zero) nor
 selection (§4.3, that is the size channel).
+
+### 5C. Lagrangian form — shear the samples, not the prior
+
+§5B needs $\nabla\log p_0$ over the whole scene, which is its most demanding requirement (§5B.2, item
+1). That requirement is an artefact of the parametrization, not of the problem, and this section
+removes it. It also gives an external $R_{\rm blend}$ a principled home, for the case where the flow
+is geometry-blind and §3's neighbour channel is therefore identically zero.
+
+#### 5C.1 The same model, reparametrized
+
+Let $\mathbf{z}$ be the **intrinsic** (unsheared) scene and $\mathbf{x}=S_\gamma(\mathbf{z})$ the
+sheared truth the flow sees. Substituting this into (1.1) — a change of variables, nothing more —
+moves $\gamma$ out of the prior and into the likelihood:
+
+$$p(\hat{\mathbf{x}}\mid\gamma)=\int p_{\rm flow}\big(\hat{\mathbf{x}}\mid S_\gamma(\mathbf{z})\big)\;
+p_0(\mathbf{z})\,d\mathbf{z}.\tag{5.4}$$
+
+(1.1) and (5.4) are the same integral. The Jacobian of $S_\gamma$ does not appear in (5.4) because
+pushing samples carries it automatically; in (1.1) it is what becomes the $\nabla\!\cdot\!v$ term of
+(2.7). The two forms are Eulerian and Lagrangian views of one shear flow, exactly as in (4.3) versus
+(4.5).
+
+#### 5C.2 The score without $\nabla\log p_0$
+
+Differentiating (5.4) under the integral and dividing, as in §2.1,
+
+$$s=\mathbb E_{\rm post}\big[\tilde u\big],\qquad
+\tilde u(\mathbf{z};\hat{\mathbf{x}})\;\equiv\;\partial_\gamma\log p_{\rm flow}
+\big(\hat{\mathbf{x}}\mid S_\gamma\mathbf{z}\big)\Big|_0
+=\nabla_{\mathbf{x}}\log p_{\rm flow}(\hat{\mathbf{x}}\mid\mathbf{x})\big|_{\mathbf{z}}\cdot v(\mathbf{z}),\tag{5.5}$$
+
+with $v$ the same velocity field of §2.4 and the posterior weights unchanged from §5B.1,
+$w_k\propto L_kP_{{\rm det},k}$. Louis (2.5) carries over verbatim with $u\to\tilde u$, since
+$\tilde u$ is the $\gamma$-derivative of the complete-data log-likelihood in this parametrization.
+Both (2.2) and (5.5) equal $\partial_\gamma\log p(\hat{\mathbf{x}}\mid\gamma)$, so they agree object
+by object — an exact cross-check, and the identity relating them is the integration by parts that
+produced (2.7).
+
+| | Eulerian, (2.7) | Lagrangian, (5.5) |
+|---|---|---|
+| $\gamma$ acts on | the prior density | the flow's conditioning inputs |
+| requires | $\nabla\log p_0$ and $\nabla\!\cdot\!v$ over the whole scene | $\nabla_{\mathbf{x}}\log p_{\rm flow}$ — autograd |
+| the prior must be | a differentiable density | a sample generator |
+| Jacobian of $S_\gamma$ | explicit, the $\nabla\!\cdot\!v$ term | automatic |
+| amortization | $u_k$ precomputed once per node | $\tilde u$ depends on $\hat{\mathbf{x}}_i$, so per (object, node) |
+
+**This does not remove prior dependence.** $p_0$ still sets the posterior weights and the answer still
+depends on it; §6's bullet stands. What is removed is the requirement that $p_0$ be available in
+differentiable closed form — a modelling obstacle, not a statistical one. The cost is the last row:
+$\tilde u$ cannot be precomputed in the node bank the way $u_k$ can. In practice (5.5) is a
+directional derivative along $v$, so a forward-mode JVP returns $\log p_{\rm flow}$ and $\tilde u$
+together at roughly twice the cost of the §5B.1 evaluation, not the cost of a full gradient.
+
+#### 5C.3 Injecting an external response
+
+If the flow is geometry-blind, $R_{\rm blend}$ must come from outside (§3). Rather than dividing it
+in afterwards, put it in the likelihood, as a shift of the measured shape proportional to the
+shear-induced change in the true shape:
+
+$$p(\hat{\mathbf{x}}\mid\gamma)=\int p_{\rm flow}
+\big(\hat{\mathbf{x}}-R_b(\theta_b)\,\Delta e\;\big|\;S_\gamma\mathbf{z}\big)\,p_0(\mathbf{z})\,d\mathbf{z},
+\qquad \Delta e=\big(S_\gamma\mathbf{z}\big)_e-\mathbf{z}_e,\tag{5.6}$$
+
+where $\theta_b$ are the neighbour scalars the emulator is conditioned on. Since
+$\Delta e=\gamma\,v_\varepsilon(\mathbf{z})+O(\gamma^2)$, the added term **vanishes identically at
+$\gamma=0$**: it cannot disturb the unsheared model, and it is a pure response term by construction.
+The score acquires a second channel,
+
+$$s=\mathbb E_{\rm post}\Big[\underbrace{\nabla_{\mathbf{x}}\log p_{\rm flow}\cdot v}_{\text{as in }(5.5)}
+\;-\;R_b(\theta_b)\,\underbrace{\nabla_{\hat e}\log p_{\rm flow}\cdot v_\varepsilon}_{\text{injected}}\Big].\tag{5.7}$$
+
+**Sign and normalization check.** For a Gaussian flow of mean $\mu$ and variance $\sigma^2$,
+$\nabla_{\hat e}\log p_{\rm flow}=-(\hat e-\mu)/\sigma^2$, so the injected channel contributes
+$\mathrm{Cov}(\hat e,\,R_b(\hat e-\mu)v_\varepsilon/\sigma^2)=R_b\langle v_\varepsilon\rangle=R_b$,
+using the isotropic average of $v_\varepsilon$ from §2.5. The response is $R_b$ with the expected
+sign, and nothing was tuned to make it so.
+
+**Why this is better than dividing.** The blend shift now sits *inside* the density, so $P_{\rm pass}$
+(4.8) integrates the shifted distribution and the cut boundary sees blending. Selection and blending
+compose. The additive form $m=R_{\rm sim}/(R_{\rm self}+R_{\rm blend})-1$ divides after selection has
+already happened, which tacitly assumes the cut does not interact with the blend response — an
+assumption with no support at a $\hat T$ boundary, where §4.4 shows the whole effect is concentrated.
+
+#### 5C.4 What the injection does not buy
+
+- **It is not self-calibrating.** Bartlett (2.4) holds for any properly normalized $\gamma$-family, so
+  (2.6) remains unbiased *for the model as written* — including (5.6). But $R_b$ is external, so an
+  error in it propagates linearly into $m$. This is §6's correct-specification bullet applied to the
+  emulator; the estimator does not repair a wrong $R_b$, it faithfully reports it.
+- **Double counting.** A flow conditioned on `nbr_flux_*` has already learned part of the blending
+  response — the flux-dilution part. $R_b$ must be defined as the **residual the flow misses**, not
+  the total per-pair response. Gold-v1's additive formula makes the same disjointness assumption;
+  conditioning $R_b(\theta_b)$ on the same scalars the flow sees is what keeps the two separable.
+- **Mean-only.** (5.6) shifts the mean of $\hat e$; blending also broadens it. The point estimate is
+  therefore right and $\mathcal I$ is optimistic, so error bars from (2.6) are too small by whatever
+  fraction of the scatter blending contributes.
+- **Not a substitute for §3.** (5.6) supplies a number the model could not generate. A
+  geometry-conditioned scene likelihood generates it, and then $R_b\to0$ by construction. The test of
+  that transition is §3's own diagnostic: compute $\mathrm{Cov}(\hat e,s_{\rm nbr})\approx N^{-1}\sum_i
+  \hat e_is_i^{(\rm nbr)}$ from the node bank and check it against the emulator's $R_{\rm blend}$.
 
 ---
 
