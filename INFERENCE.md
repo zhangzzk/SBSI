@@ -4,8 +4,8 @@ Derivations and algorithms only. Measured results, model status and project hist
 `WORKLOG.md`, `Gold-v1.md` and `Gold-V2.md`; the framework spec is `SBI_shear.md`.
 
 **Summary.** The shear response is a **covariance with the score**. Selection bias is the
-**size/flux channel of that same score**, made visible by the cut. The blend response is its
-**neighbour channel**. All three follow from one identity, and none requires a separate model.
+**size channel of that same score**, amplified by the cut into a boundary term. The blend response is
+its **neighbour channel**. All three follow from one identity, and none requires a separate model.
 
 ---
 
@@ -17,6 +17,8 @@ Derivations and algorithms only. Measured results, model status and project hist
 | $\mathbf{n}$ | true neighbour configuration: separations, position angles, shapes, sizes, fluxes |
 | $\hat{\mathbf{x}}$ | measured catalogue quantities; for a 4D flow $\hat{\mathbf{x}}=(\hat e_1,\hat e_2,\hat m,\hat T)$ |
 | $T$, $\hat T$ | true and measured **size**. The bare letter $s$ is never a size — it is the score |
+| $e$, $\varepsilon$ | **distortion** and **reduced-shear** ellipticity of the true shape, $e=2\varepsilon/(1+\lvert\varepsilon\rvert^2)$; ngmix `g` is $\varepsilon$. They differ by $\approx2$, so every velocity in §2.4 names its convention |
+| $p_\gamma(\mathbf{x},\mathbf{n})$ | the **sheared prior on truth**, $p_\gamma\equiv p_0\circ S_{-\gamma}$ — not to be confused with $p(\hat{\mathbf{x}}\mid\gamma)$, the marginal on the **data** side |
 | $s(\hat{\mathbf{x}})$ | the **score**, (2.1); $s_i\equiv s(\hat{\mathbf{x}}_i)$, and $s_{\rm shape},s_{\rm nbr},\dots$ its channels (3.1) |
 | $u(\mathbf{x},\mathbf{n})$ | the analytic **generator** on the truth side, (2.7); $s=\mathbb E_{\rm post}[u]$ by (2.2) |
 | $p(\hat{\mathbf{x}}\mid\mathbf{x},\mathbf{n})$ | the learned flow — **shear-free** |
@@ -31,13 +33,21 @@ Shear appears in exactly one place — it shifts the prior:
 $$p(\hat{\mathbf{x}}\mid\gamma)=\int p(\hat{\mathbf{x}}\mid\mathbf{x},\mathbf{n})\;
 p_0\big(S_{-\gamma}(\mathbf{x},\mathbf{n})\big)\,d\mathbf{x}\,d\mathbf{n}. \tag{1.1}$$
 
-Everything below follows from this structure alone.
+Write $p_\gamma(\mathbf{x},\mathbf{n})\equiv p_0\big(S_{-\gamma}(\mathbf{x},\mathbf{n})\big)$ for that
+sheared prior. Two densities in this document carry a $\gamma$ and they live on opposite sides of the
+model: $p_\gamma$ is on **truth** and is analytic, while $p(\hat{\mathbf{x}}\mid\gamma)$ is on
+**data** and is the intractable marginal. Everything below follows from this structure alone.
 
 ---
 
 ## 2. The score, and three identities
 
-$$s(\hat{\mathbf{x}})\;\equiv\;\partial_\gamma\log p(\hat{\mathbf{x}}\mid\gamma)\big|_{\gamma=0}. \tag{2.1}$$
+$$s_\gamma(\hat{\mathbf{x}})\;\equiv\;\partial_\gamma\log p(\hat{\mathbf{x}}\mid\gamma),
+\qquad s\;\equiv\;s_0. \tag{2.1}$$
+
+$s$ — no subscript — is the score **at zero shear**, a fixed function of the data used everywhere
+below. The family $s_\gamma$ is needed only when something must be differentiated in $\gamma$ a
+second time, as in (2.4).
 
 ### 2.1 Fisher's identity
 
@@ -59,9 +69,9 @@ The bracketed factor is analytic, because shear enters truth through the closed-
 For any fixed statistic $f(\hat{\mathbf{x}})$ — the function is fixed, only the density moves:
 
 $$\partial_\gamma\mathbb E_\gamma[f]=\int f\,\partial_\gamma p=\int f\,p\,\partial_\gamma\log p
-=\mathbb E_\gamma[f\,s],$$
+=\mathbb E_\gamma[f\,s_\gamma],$$
 
-and since $\mathbb E_0[s]=0$,
+and evaluating at $\gamma=0$, where $s_0=s$ and $\mathbb E_0[s]=0$,
 
 $$\boxed{\;\partial_\gamma\mathbb E_\gamma[f]\big|_0=\mathrm{Cov}_0\big(f(\hat{\mathbf{x}}),\,s(\hat{\mathbf{x}})\big)\;}\tag{2.3}$$
 
@@ -72,7 +82,7 @@ $$\boxed{\;\partial_\gamma\mathbb E_\gamma[f]\big|_0=\mathrm{Cov}_0\big(f(\hat{\
 |---|---|---|
 | $\hat e$ | $R=\mathrm{Cov}_0(\hat e,s)$, the shear response | 3 |
 | $\hat e$, with $s$ split by channel | $R_{\rm self}+R_{\rm blend}$, combined by covariance rather than by hand | 3.1–3.2 |
-| $\hat e\,W$ | $R_S=\mathrm{Cov}_0(\hat eW,s)/\mathbb E_0[W]$, the selection response | 4.2 |
+| $\hat e\,W$ | $R_S=\mathrm{Cov}_0(\hat eW,s)/\mathbb E_0[W]$, the selected-sample response | 4.2 |
 | $s$ itself | $\mathcal I=\mathrm{Var}_0[s]$, the self-calibration | 2.3 |
 
 The last row is the outlier, and that is the whole point: for every other $f$ the right-hand side is
@@ -91,11 +101,13 @@ that is arithmetic on those numbers.
 
 ### 2.3 Bartlett and Louis
 
-$$\mathbb E_0[s]=0,\qquad \mathcal I\equiv\mathrm{Var}_0[s]=-\mathbb E_0[\partial_\gamma s],\tag{2.4}$$
+$$\mathbb E_0[s]=0,\qquad
+\mathcal I\equiv\mathrm{Var}_0[s]=-\mathbb E_0\big[\partial_\gamma s_\gamma\big|_0\big],\tag{2.4}$$
 
-The subscripts are essential. $s$ is a **fixed function of the data**, defined once at $\gamma=0$ by
-(2.1) and never re-derived; $\mathbb E_0$ versus $\mathbb E_\gamma$ says only which distribution it is
-averaged over. So the two statements
+The subscripts are essential, and there are two kinds. $s=s_0$ is a **fixed function of the data**;
+$\mathbb E_0$ versus $\mathbb E_\gamma$ says only which distribution that fixed function is averaged
+over. The $\partial_\gamma s_\gamma$ in the second identity is the *only* place the $\gamma$-family of
+(2.1) is needed — differentiate first, then set $\gamma=0$. So the two statements
 
 $$\mathbb E_0[s]=0
 \qquad\text{and}\qquad
@@ -122,7 +134,8 @@ $$\mathcal I_i\;\equiv\;-\partial^2_\gamma\log p(\hat{\mathbf{x}}_i\mid\gamma)\b
 \qquad s_i\equiv s(\hat{\mathbf{x}}_i),$$
 
 the curvature of the log-likelihood of the single measurement $\hat{\mathbf{x}}_i$. Since
-$\partial_\gamma s=\partial^2_\gamma\log p$, the second identity in (2.4) is precisely the statement
+$\partial_\gamma s_\gamma=\partial^2_\gamma\log p$, the second identity in (2.4) is precisely the
+statement
 
 $$\mathcal I=\mathbb E_0\big[\mathcal I_i\big]$$
 
@@ -167,8 +180,8 @@ The channel velocities, all closed-form:
 
 | channel | velocity $v$ | order |
 |---|---|---|
-| shape (reduced-shear $\varepsilon$, ngmix `g`) | $v_e=\partial_g\!\left[\dfrac{e+g}{1+\bar g e}\right]_0=\big(1-e^2,\;i(1+e^2)\big)$ for $(g_1,g_2)$ | spin-2 |
-| log size (distortion $e$) | $v_{\log T}=2e$ — see §4.5 | spin-2, **no isotropic part** |
+| shape (**reduced-shear** $\varepsilon$, ngmix `g`) | $v_\varepsilon=\partial_g\!\left[\dfrac{\varepsilon+g}{1+\bar g \varepsilon}\right]_0=\big(1-\varepsilon^2,\;i(1+\varepsilon^2)\big)$ for $(g_1,g_2)$ | spin-2 |
+| log size (**distortion** $e$) | $v_{\log T}=2e$ — see §4.5 | spin-2, **no isotropic part** |
 | log flux | $0$ at first order when $\kappa=0$; magnification $\mu=\big[(1-\kappa)^2-\lvert g\rvert^2\big]^{-1}$ otherwise | — |
 | neighbour separation | $\delta r_i=\gamma_{ij}r_j$ | spin-2 in the pair position angle |
 | neighbour shape | Möbius, as for the primary | spin-2 |
@@ -177,12 +190,12 @@ The channel velocities, all closed-form:
 
 - **Noiseless measurement.** The posterior collapses to a delta, $s\to u$, and
   $\mathrm{Cov}(e,s)=\partial_\gamma\langle e\rangle$: the Bernstein & Jarvis responsivity
-  $\mathcal R=2(1-e_{\rm rms}^2)$ in the distortion convention, $\mathcal R\to1$ for reduced shear
-  (the isotropic average of $v_e$ above is exactly $1$).
+  responsivity $\mathcal R=2(1-e_{\rm rms}^2)$ in the distortion convention, $\mathcal R\to1$ for
+  reduced shear (the isotropic average of $v_\varepsilon$ above is exactly $1$).
 - **Low signal-to-noise.** The posterior tends to the prior, so $s\to\mathbb E_{p_0}[u]=0$: the object
   contributes nothing rather than contributing noise.
-- **No cut.** Only $s_{\rm shape}$ correlates with $\hat e$, so the response reduces to $R_{\rm self}$
-  (§3).
+- **No cut.** The neighbour channel drops for a geometry-blind likelihood (§3), leaving
+  $R_{\rm self}$ — the primary's own shape, size and flux channels.
 
 ### 2.6 Literature
 
@@ -205,11 +218,33 @@ $S_\gamma$ acts on the whole scene, so (2.7) splits:
 
 $$s=s_{\rm shape}+s_{\rm size}+s_{\rm flux}+s_{\rm nbr},\tag{3.1}$$
 
-$$R=\underbrace{\mathrm{Cov}(\hat e,\,s_{\rm shape})}_{R_{\rm self}}
-+\underbrace{\mathrm{Cov}(\hat e,\,s_{\rm nbr})}_{R_{\rm blend}}.\tag{3.2}$$
+and (2.3) is linear in $s$, so the response splits with it. Group by **which object** a channel
+belongs to, not by which property:
+
+$$R=\underbrace{\mathrm{Cov}\big(\hat e,\;s_{\rm shape}+s_{\rm size}+s_{\rm flux}\big)}_{R_{\rm self}}
++\underbrace{\mathrm{Cov}\big(\hat e,\;s_{\rm nbr}\big)}_{R_{\rm blend}}.\tag{3.2}$$
 
 **The two combine by covariance, not by hand-summation.** There is no separate additive blend term to
 bolt on; it is the neighbour channel of the same score.
+
+**The size channel does not drop out.** It is tempting to keep only $s_{\rm shape}$ on the grounds
+that $\hat e$ cannot correlate with a dilation, but $v_{\log T}=2e$ is spin-2 with *no* isotropic part
+(§2.4, §4.5), so that argument does not apply. With $\partial_{\log T}v_{\log T}=0$ the size generator
+is $u_{{\rm size},i}=-2e_i\,\psi$, where $\psi\equiv\partial_{\log T}\log p_0$. Let
+$h(T)\equiv\mathbb E[\hat e_ie_i\mid T]$ be the shape-measurement fidelity at fixed size. Then, using
+the tower rule and integrating by parts,
+
+$$\mathrm{Cov}(\hat e_i,s_{{\rm size},i})=-2\,\mathbb E\big[\hat e_ie_i\,\psi\big]
+=-2\!\int\! h\;\partial_{\log T}p_0\;d\log T
+=2\,\mathbb E\!\left[\frac{\partial h}{\partial\log T}\right].\tag{3.3}$$
+
+It vanishes **if and only if shape-measurement fidelity is independent of size**, which no real survey
+satisfies. The physics is ordinary: shear grows aligned galaxies, larger galaxies suffer less noise
+dilution, so they carry more measured shape. This is part of the primary's own response, which is why
+(3.2) groups it into $R_{\rm self}$.
+
+The flux channel *does* vanish, but for a stated reason rather than by symmetry: $v_{\log F}=0$ at
+first order when $\kappa=0$ (§2.4). It returns with convergence.
 
 **Non-degeneracy condition.** $\mathrm{Cov}(\hat e,s_{\rm nbr})\equiv 0$ unless
 $p(\hat{\mathbf{x}}\mid\mathbf{x},\mathbf{n})$ **depends on neighbour geometry** — separation, pair
@@ -219,8 +254,9 @@ flux, so the neighbour score is uncorrelated with $\hat e$ and the term vanishes
 §5B.1 for the same statement at the level of posterior weights.
 
 **Consequence.** Under a geometry-blind likelihood, $R_{\rm blend}$ cannot be recovered from the
-model and must be supplied externally and added, i.e. $m=R_{\rm sim}/(R_{\rm flow}+R_{\rm blend})-1$.
-The additive form is a symptom of the missing conditioning, not a modelling choice.
+model and must be supplied externally and added, i.e. $m=R_{\rm sim}/(R_{\rm self}+R_{\rm blend})-1$
+for the multiplicative bias $m$. The additive form is a symptom of the missing conditioning, not a
+modelling choice.
 
 ---
 
@@ -267,10 +303,11 @@ Substituting (3.1) into (4.3),
 $$R_S\,\mathbb E[W]=\mathbb E[\hat eWs_{\rm shape}]+\mathbb E[\hat eWs_{\rm size}]
 +\mathbb E[\hat eWs_{\rm flux}]+\mathbb E[\hat eWs_{\rm nbr}].\tag{4.4}$$
 
-With $W\equiv1$ the size and flux terms vanish: $\hat e$ is uncorrelated with an isotropic dilation.
-With a cut, $W$ correlates $\hat e$ with size and $\mathbb E[\hat eWs_{\rm size}]\neq0$. **That term
-is the selection response** — not new physics and not a new model, but the size channel of the same
-score, switched on by the cut.
+With $W\equiv1$ the flux term is zero at $\kappa=0$ and the size term is the small population-averaged
+fidelity gradient (3.3). A cut changes the size term's *character*: $W$ correlates $\hat e$ with size
+at the threshold, converting a gradient averaged over the whole population into a **boundary** term
+(§4.4) that can dominate. **That amplified size term is the selection response** — not new physics and
+not a new model, but the size channel of the same score, brought to the surface by the cut.
 
 ### 4.4 Boundary form
 
@@ -278,8 +315,18 @@ Following objects rather than the density,
 $\partial_\gamma W=\nabla_{\hat{\mathbf{x}}}W\cdot\partial_\gamma\hat{\mathbf{x}}$, and for a hard
 threshold $\nabla_{\hat T}W=\delta(\hat T-T_c)$:
 
-$$\boxed{\;R_{\rm sel}=\frac{p(\hat T=T_c)}{P_{\rm pass}}\;
-\big\langle\,\hat e\;\partial_\gamma\hat T\,\big\rangle_{\hat T=T_c}\;}\tag{4.5}$$
+$$\boxed{\;R_{\rm sel}=\frac{p_c}{P_{\rm pass}}\;
+\big\langle\,\hat e\;\partial_\gamma\hat T\,\big\rangle_{\hat T=T_c}\;},
+\qquad p_c\equiv p(\hat T=T_c)\tag{4.5}$$
+
+$R_{\rm sel}$ and $R_S$ are **not** the same object: $R_S$ (4.3) is the total response of the selected
+sample, while $R_{\rm sel}$ is only the piece the cut creates. In the language of (4.4),
+
+$$R_S=R_{\rm self}\big|_S+R_{\rm blend}\big|_S+R_{\rm sel},$$
+
+where $\big|_S$ restricts a channel to the survivors. Note also that (4.3) was derived by holding $f$
+fixed and moving the density, whereas (4.5) follows objects as they cross the threshold; the two
+routes are the Eulerian and Lagrangian forms of one derivative and agree at first order.
 
 The selection response is a **boundary integral**: density at the cut edge times the correlation
 between measured shape and the shear response of the cut variable, evaluated on the edge. Interior
@@ -308,7 +355,11 @@ The response of log-size is thus **twice the ellipticity** — zero isotropic pa
 with $\hat e$. Substituting into (4.5),
 
 $$R_{\rm sel}\approx\frac{p_c}{P_{\rm pass}}\cdot2\big\langle\hat e\,e\big\rangle_{\rm boundary}
-\sim\frac{p_c}{P_{\rm pass}}\cdot2\langle e^2\rangle\,R_{\rm meas}.\tag{4.7}$$
+\sim\frac{p_c}{P_{\rm pass}}\cdot2\langle e^2\rangle\,R_{\rm meas},\tag{4.7}$$
+
+with $e$ the **distortion** of (4.6) — not the reduced-shear $\varepsilon$ of §2.4, a factor of
+$\approx2$ — and $R_{\rm meas}\equiv\partial\langle\hat e\rangle/\partial e$ the measurement's own
+shape response.
 
 ### 4.6 Consequences for cut direction
 
@@ -329,9 +380,9 @@ $$P_{\rm pass}(\mathbf{x},\mathbf{n})=\int_S p(\hat{\mathbf{x}}\mid\mathbf{x},\m
 — Monte Carlo: draw $n_{\rm samples}$ from the flow, count the fraction inside $S$. It enters the
 marginal likelihood's normalization, and in score form is a single centering,
 
-$$s_{\rm sel}=s-\langle s\rangle_{\rm selected}\tag{4.9}$$
+$$s_{\rm sel}=s-\langle s\rangle_{\rm sel}\tag{4.9}$$
 
-(the Sheldon–Huff selection response).
+— the score-space analogue of the Sheldon–Huff selection response, which is stated in $\hat e$.
 
 **Requirement.** (4.8) exists only if the flow **outputs** the cut variables. A model that takes
 measured mag/size as *inputs* and outputs shape alone has no $P_{\rm pass}$: its cut variables never
@@ -356,7 +407,9 @@ $$\underbrace{\partial_\gamma\mathbb E_\gamma[f]}_{\textbf{transport}:\ \text{av
 per-object *posterior expectation* of an analytic function. Transport is the degenerate case where
 $\mathbf{x}$ is known, the posterior collapses to a delta, and the average becomes empirical.
 
-### 5A.1 Transport — calibration (simulations only)
+### 5A. Transport — calibration (simulations only)
+
+#### 5A.1 Recipe
 
 $\mathrm{Cov}_0(\hat eW,s)=\partial_\gamma\mathbb E_\gamma[\hat eW]$, and the right side is evaluated
 by **moving samples, not differentiating a density**, so $\nabla\log p_0$ is never needed: the
@@ -375,7 +428,7 @@ catalogue's true properties are an empirical draw from $p_0$.
 6. compare with R_S(sim) from the paired legs;  m = R_sim / R_model - 1
 ```
 
-### 5A.2 Boundary diagnostic
+#### 5A.2 Boundary diagnostic
 
 (4.5) factorizes $R_{\rm sel}$ into $p_c/P_{\rm pass}$ and
 $\langle\hat e\,\partial_\gamma\hat T\rangle$ at the boundary. The kept fraction tests the first
@@ -390,12 +443,13 @@ the model side from the flow's $\pm$ legs with common random numbers, the truth 
 both-detected matched pairs carrying per-leg measured mag and size. This isolates the boundary
 correlation from the response, the density and the kept fraction.
 
-### 5A.3 A mean-response constraint cannot fix a second moment
+#### 5A.3 A mean-response constraint cannot fix a second moment
 
 For a conditional-mean flow with mean head $\mu$, write
 $c(\mathbf{x})\equiv\partial\mu_{\hat T}/\partial\log T$. Then
 
-$$\partial_\gamma\hat T=c(\mathbf{x})\cdot2e+\frac{\partial\mu_{\hat T}}{\partial e}\cdot v_e
+$$\partial_\gamma\hat T=c(\mathbf{x})\cdot2e
++\frac{\partial\mu_{\hat T}}{\partial\varepsilon}\cdot v_\varepsilon
 +\text{residual reshaping}
 \qquad\Longrightarrow\qquad
 \big\langle\hat e\,\partial_\gamma\hat T\big\rangle\approx2\big\langle\hat e\,e\,c(\mathbf{x})\big\rangle.\tag{5.1}$$
@@ -410,7 +464,7 @@ so matching the first moment leaves the second unconstrained. Diagnostic: compar
 a function of measured size — model side by autograd through the mean head, truth side from matched
 pairs binned by size.
 
-### 5A.4 The location-family shortcut does not extend to size
+#### 5A.4 The location-family shortcut does not extend to size
 
 If the residual flow is blind to shape (shape dropped from its conditioning) while the mean head
 carries it, then $p(\hat{\mathbf{x}}\mid c)=p_{\rm resid}(\hat{\mathbf{x}}-\mu(c))$ is a location
@@ -421,7 +475,9 @@ family in the shape direction:
 - **size axis** — the residual flow *does* see size, so shearing true size reshapes the whole
   conditional density, not just its mean. **No $\mu$-only shortcut**; `log_prob` must be re-evaluated.
 
-### 5B.1 Posterior — inference on real data
+### 5B. Posterior — inference on real data
+
+#### 5B.1 The algorithm
 
 The only inputs are the measured $\hat{\mathbf{x}}_i$ and the cut $S$.
 
@@ -454,19 +510,19 @@ node bank -- built ONCE, shared across all galaxies:
     (x_k, n_k) ~ p_0(x, n)                      # joint SCENE prior; neighbours latent
     u_k    = -( v . grad log p_0 + div v )(x_k, n_k)     # Eq 2.7, WHOLE scene
     dU_k   = d/dgamma u_k                       # for Louis, Eq 2.5
-    D_k    = P( detected | x_k, n_k )           # classifier; does NOT cancel
-    Wp_k   = Integral_S p_flow( x_hat | x_k, n_k ) d x_hat      # Eq 4.8
+    Pdet_k = P( detected | x_k, n_k )           # classifier; does NOT cancel
+    Ppass_k= Integral_S p_flow( x_hat | x_k, n_k ) d x_hat      # Eq 4.8
 
 per galaxy i -- the only galaxy-specific quantity is L:
 
     L_k    = p_flow( x_hat_i | x_k, n_k )       # one flow log_prob call per node
-    w_k    propto L_k * D_k                     # NO cut factor -- it cancels, Eq 5.2
+    w_k    propto L_k * Pdet_k                     # NO cut factor -- it cancels, Eq 5.2
     s_i    = sum_k w_k u_k                                      # Eq 2.2
     I_i    = -sum_k w_k dU_k - Var_w(u)                         # Eq 2.5
 
 population:
 
-    <s>_sel = sum_k Wp_k D_k u_k / sum_k Wp_k D_k
+    <s>_sel = sum_k Ppass_k Pdet_k u_k / sum_k Ppass_k Pdet_k
     ghat    = ( sum_i s_i - N <s>_sel ) / sum_i I_i
 ```
 
@@ -489,7 +545,7 @@ condition at the level of weights: the blend contribution is $\sum_kw_ku_k^{(\rm
 $w_k\propto L_k$, so if $L_k$ does not change as the neighbour's position angle moves across nodes,
 the posterior over that angle equals the prior and the sum vanishes **by isotropy**.
 
-### 5B.2 What (5.3) requires
+#### 5B.2 What (5.3) requires
 
 1. **$\nabla\log p_0$ over the whole scene** — shape, size, flux, Sérsic and neighbour configuration,
    tractable enough to differentiate. An analytic isotropic shape prior with an exact Möbius pullback
@@ -513,18 +569,24 @@ the posterior over that angle equals the prior and the sum vanishes **by isotrop
 4. **$P(\text{det}\mid\mathbf{x},\mathbf{n})$** and its integral against the sheared prior — i.e. over
    objects never observed.
 5. **Cost** — a $\gtrsim5$-dimensional per-object posterior. The node bank amortizes $u_k$,
-   $\partial_\gamma u_k$, $D_k$ and $W\!p_k$ across the catalogue, leaving
+   $\partial_\gamma u_k$, $P_{{\rm det},k}$ and $P_{{\rm pass},k}$ across the catalogue, leaving
    $N_{\rm gal}\times N_{\rm node}$ flow evaluations.
 
 A shape-only reduction is possible (analytic shape prior, location-family grid), but a shape-only
-score yields $R_{\rm self}$ alone: no blend (§3, geometry-blind ⇒ identically zero) and no selection
-(§4.3, that is the size channel).
+score yields the **shape channel alone** — not even the whole of $R_{\rm self}$, since the size
+channel (3.3) is dropped with it — and neither blend (§3, geometry-blind ⇒ identically zero) nor
+selection (§4.3, that is the size channel).
 
 ---
 
 ## 6. Assumptions and conditions of validity
 
-- **First order in $\gamma$.** (2.3), (2.6), (4.3) and (4.5) are leading order in shear.
+- **First order in $\gamma$.** (2.3), (2.6), (4.3) and (4.5) are leading order in shear. Cross-channel
+  terms in (3.1) carry two powers of displacement and so sit in the discarded $O(\gamma^2)$.
+- **$\gamma$ is two-component.** It is written as a scalar throughout for readability. In
+  implementation $s_i$ is a 2-vector, $\mathcal I\equiv\mathbb E_0[ss^{\mathsf T}]$ and $\mathcal I_i$
+  are $2\times2$ matrices, and (2.6) and (5.3) are matrix solves,
+  $\hat\gamma=\big(\sum_i\mathcal I_i\big)^{-1}\sum_i s_i$.
 - **Isotropy at $\gamma=0$, and a rotationally invariant cut** — required for $\mathbb E_0[\hat eW]=0$
   in §4.2. A cut on $\hat e_1$ alone violates it and reinstates the dropped term.
 - **$\kappa=0$** in (4.6) and in the flux row of §2.4. Real surveys carry convergence together with
