@@ -13,13 +13,16 @@ Derivations and algorithms only. Measured results, model status and project hist
 
 | symbol | meaning |
 |---|---|
-| $\mathbf{x}$ | true properties of the primary: shape $e$, size $T$, flux, Sérsic $n$ |
+| $\mathbf{x}$ | true properties of the primary: shape $e$, size $T$, flux, Sérsic index |
 | $\mathbf{n}$ | true neighbour configuration: separations, position angles, shapes, sizes, fluxes |
-| $\hat{\mathbf{x}}$ | measured catalogue quantities; for a 4D flow $\hat{\mathbf{x}}=(\hat e_1,\hat e_2,\hat m,\hat s)$ |
+| $\hat{\mathbf{x}}$ | measured catalogue quantities; for a 4D flow $\hat{\mathbf{x}}=(\hat e_1,\hat e_2,\hat m,\hat T)$ |
+| $T$, $\hat T$ | true and measured **size**. The bare letter $s$ is never a size — it is the score |
+| $s(\hat{\mathbf{x}})$ | the **score**, (2.1); $s_i\equiv s(\hat{\mathbf{x}}_i)$, and $s_{\rm shape},s_{\rm nbr},\dots$ its channels (3.1) |
+| $u(\mathbf{x},\mathbf{n})$ | the analytic **generator** on the truth side, (2.7); $s=\mathbb E_{\rm post}[u]$ by (2.2) |
 | $p(\hat{\mathbf{x}}\mid\mathbf{x},\mathbf{n})$ | the learned flow — **shear-free** |
 | $p_0$ | intrinsic (unsheared) prior over the whole scene |
 | $S_\gamma$ | analytic shear map, acting on **truth** |
-| $W(\hat{\mathbf{x}})$ | cut indicator, e.g. $\mathbb 1[\hat s>s_c]$ |
+| $W(\hat{\mathbf{x}})$ | cut indicator, e.g. $\mathbb 1[\hat T>T_c]$ |
 | $i=1\ldots N$ | index over **objects** in the catalogue: $\hat{\mathbf{x}}_i$ is one measured galaxy |
 | $k$ | index over **prior nodes** $(\mathbf{x}_k,\mathbf{n}_k)\sim p_0$ (§5B), shared by every object |
 
@@ -249,7 +252,7 @@ though $\langle e\rangle$ does. A cut on a genuinely **shear-invariant** quantit
 $$\langle\hat e\rangle_S(\gamma)=\frac{\mathbb E_\gamma[\hat e\,W]}{\mathbb E_\gamma[W]}.$$
 
 Apply the quotient rule at $\gamma=0$. For an isotropic unsheared population and a rotationally
-invariant cut (on $\hat s$, $\hat m$, S/N — **not** on $\hat e_1$ alone) the numerator vanishes,
+invariant cut (on $\hat T$, $\hat m$, S/N — **not** on $\hat e_1$ alone) the numerator vanishes,
 $\mathbb E_0[\hat eW]=0$, killing the second term. What remains is (2.3) with $f=\hat eW$:
 
 $$\boxed{\;R_S=\frac{\mathrm{Cov}_0\big(\hat e\,W(\hat{\mathbf{x}}),\;s(\hat{\mathbf{x}})\big)}{\mathbb E_0[W]}\;}\tag{4.3}$$
@@ -273,17 +276,17 @@ score, switched on by the cut.
 
 Following objects rather than the density,
 $\partial_\gamma W=\nabla_{\hat{\mathbf{x}}}W\cdot\partial_\gamma\hat{\mathbf{x}}$, and for a hard
-threshold $\nabla_{\hat s}W=\delta(\hat s-s_c)$:
+threshold $\nabla_{\hat T}W=\delta(\hat T-T_c)$:
 
-$$\boxed{\;R_{\rm sel}=\frac{p(\hat s=s_c)}{P_{\rm pass}}\;
-\big\langle\,\hat e\;\partial_\gamma\hat s\,\big\rangle_{\hat s=s_c}\;}\tag{4.5}$$
+$$\boxed{\;R_{\rm sel}=\frac{p(\hat T=T_c)}{P_{\rm pass}}\;
+\big\langle\,\hat e\;\partial_\gamma\hat T\,\big\rangle_{\hat T=T_c}\;}\tag{4.5}$$
 
 The selection response is a **boundary integral**: density at the cut edge times the correlation
 between measured shape and the shear response of the cut variable, evaluated on the edge. Interior
 objects contribute nothing.
 
-Any **isotropic** part of $\partial_\gamma\hat s$ contributes
-$\langle\hat e\rangle_{\rm boundary}\times\langle\partial_\gamma\hat s\rangle=0$. **Only the spin-2,
+Any **isotropic** part of $\partial_\gamma\hat T$ contributes
+$\langle\hat e\rangle_{\rm boundary}\times\langle\partial_\gamma\hat T\rangle=0$. **Only the spin-2,
 orientation-correlated part survives.**
 
 ### 4.5 The size response is purely spin-2
@@ -311,9 +314,9 @@ $$R_{\rm sel}\approx\frac{p_c}{P_{\rm pass}}\cdot2\big\langle\hat e\,e\big\rangl
 
 | cut | mechanism | predicted shift |
 |---|---|---|
-| keep large ($\hat s>s_c$) | aligned galaxies grow ⇒ over-represented | $>0$ |
+| keep large ($\hat T>T_c$) | aligned galaxies grow ⇒ over-represented | $>0$ |
 | keep bright ($\hat m<m_c$) | at $\kappa=0$ no first-order flux magnification, but a size-scaled aperture (e.g. Kron) makes $\hat m$ inherit the size response ⇒ also spin-2; aligned galaxies measure brighter ⇒ kept | $>0$ |
-| cut on a shear-invariant true property | $\partial_\gamma\hat s=0$ | $0$ exactly |
+| cut on a shear-invariant true property | $\partial_\gamma\hat T=0$ | $0$ exactly |
 
 ### 4.7 The selection function, and the 4D-output requirement
 
@@ -332,7 +335,7 @@ $$s_{\rm sel}=s-\langle s\rangle_{\rm selected}\tag{4.9}$$
 
 **Requirement.** (4.8) exists only if the flow **outputs** the cut variables. A model that takes
 measured mag/size as *inputs* and outputs shape alone has no $P_{\rm pass}$: its cut variables never
-move with shear. A 4D output $(\hat e_1,\hat e_2,\hat m,\hat s)$ makes them endogenous.
+move with shear. A 4D output $(\hat e_1,\hat e_2,\hat m,\hat T)$ makes them endogenous.
 
 **Detection is not this.** Undetected objects have no $\hat{\mathbf{x}}$, so one cannot integrate the
 flow over a region of output space that does not exist. Detection requires a separate
@@ -375,13 +378,13 @@ catalogue's true properties are an empirical draw from $p_0$.
 ### 5A.2 Boundary diagnostic
 
 (4.5) factorizes $R_{\rm sel}$ into $p_c/P_{\rm pass}$ and
-$\langle\hat e\,\partial_\gamma\hat s\rangle$ at the boundary. The kept fraction tests the first
-factor; the second is tested directly by restricting to a thin shell $|\hat s-s_c|<\delta$ and
+$\langle\hat e\,\partial_\gamma\hat T\rangle$ at the boundary. The kept fraction tests the first
+factor; the second is tested directly by restricting to a thin shell $|\hat T-T_c|<\delta$ and
 comparing
 
-$$\big\langle\hat e\,(\hat s_+-\hat s_-)/2\gamma\big\rangle_{\rm model}
+$$\big\langle\hat e\,(\hat T_+-\hat T_-)/2\gamma\big\rangle_{\rm model}
 \quad\text{versus}\quad
-\big\langle\hat e\,(\hat s_+-\hat s_-)/2\gamma\big\rangle_{\rm truth},$$
+\big\langle\hat e\,(\hat T_+-\hat T_-)/2\gamma\big\rangle_{\rm truth},$$
 
 the model side from the flow's $\pm$ legs with common random numbers, the truth side from
 both-detected matched pairs carrying per-leg measured mag and size. This isolates the boundary
@@ -390,12 +393,12 @@ correlation from the response, the density and the kept fraction.
 ### 5A.3 A mean-response constraint cannot fix a second moment
 
 For a conditional-mean flow with mean head $\mu$, write
-$c(\mathbf{x})\equiv\partial\mu_{\hat s}/\partial\log T$. Then
+$c(\mathbf{x})\equiv\partial\mu_{\hat T}/\partial\log T$. Then
 
-$$\partial_\gamma\hat s=c(\mathbf{x})\cdot2e+\frac{\partial\mu_{\hat s}}{\partial e}\cdot v_e
+$$\partial_\gamma\hat T=c(\mathbf{x})\cdot2e+\frac{\partial\mu_{\hat T}}{\partial e}\cdot v_e
 +\text{residual reshaping}
 \qquad\Longrightarrow\qquad
-\big\langle\hat e\,\partial_\gamma\hat s\big\rangle\approx2\big\langle\hat e\,e\,c(\mathbf{x})\big\rangle.\tag{5.1}$$
+\big\langle\hat e\,\partial_\gamma\hat T\big\rangle\approx2\big\langle\hat e\,e\,c(\mathbf{x})\big\rangle.\tag{5.1}$$
 
 A response pin that supervises the **population mean** $\bar c$ constrains $\langle c\rangle$.
 Selection (4.5) needs $c$ weighted by $\hat e\,e$ **at the boundary**. If $c$ varies across the
