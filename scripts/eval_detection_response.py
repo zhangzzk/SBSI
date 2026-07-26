@@ -83,8 +83,10 @@ def main():
     binid, di = bin_ids(frame, ef, es, ed, nf, ns, nbl)
 
     def pdet(ctx):
+        # ctx is ALREADY the preprocessed (28-dim) tensor from shifted_ctx (= pre.transform_frame),
+        # so call the raw model directly -- logits_from_raw_tensor would transform a second time.
         with torch.no_grad():
-            lg = bundle.logits_from_raw_tensor(torch.as_tensor(ctx))
+            lg = bundle.model(torch.as_tensor(ctx)).reshape(-1) / bundle.temperature
         return torch.sigmoid(lg).numpy().astype(float)
 
     ctx0, _ = shifted_ctx(frame, (1.0, 0.0), 0.0, pre, rk)
