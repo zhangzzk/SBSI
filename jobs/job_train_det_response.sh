@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=det_resp
-#SBATCH --time=01:10:00
+#SBATCH --time=02:00:00
 #SBATCH --mem=128G
 #SBATCH --cpus-per-task=8
 #SBATCH --gres=gpu:1
-#SBATCH --partition=inter
+#SBATCH --partition=cip
 #SBATCH --constraint=x86-64-v3
 #SBATCH --output=/home/z/Zekang.Zhang/logs/det_resp_%j.out
 
@@ -17,13 +17,15 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 cd /home/z/Zekang.Zhang/SBSI-ablation
 LAM=${LAM:-300}
 SEED=${SEED:-7}
+EPOCHS=${EPOCHS:-25}
+MAXROWS=${MAXROWS:-6000000}
 OUT=${OUT:-/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/det_response_mlp_lam${LAM}_s${SEED}.pt}
-echo "### DET RESP job=$SLURM_JOB_ID  LAM=$LAM SEED=$SEED OUT=$OUT ###"; date
+echo "### DET RESP job=$SLURM_JOB_ID  LAM=$LAM SEED=$SEED EPOCHS=$EPOCHS OUT=$OUT ###"; date
 python -u scripts/train_detection_response.py \
   --catalogue /project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_g0.0_train.feather \
   --response-target-npz /project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/det_response_target_g05.npz \
   --feature-set g0_shearfree \
   --response-weight $LAM --response-delta 0.05 \
-  --max-rows 8000000 --epochs 60 --batch-size 32768 --lr 1e-3 --seed $SEED \
+  --max-rows $MAXROWS --epochs $EPOCHS --batch-size 32768 --lr 1e-3 --num-workers 2 --seed $SEED \
   --output $OUT
 echo "DET_RESP_JOB_DONE"; date
