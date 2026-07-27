@@ -120,8 +120,19 @@ def read_case_range(path, min_case, max_case, columns=None):
     return tb.filter(mask).to_pandas()
 
 
-def build_base(min_case, max_case, measured, crowd, t0):
-    """Both-detected +/-0.02 pairs carrying per-leg measured mag/size, intrinsic shape and ghat."""
+def build_base(min_case, max_case, measured, crowd, t0, re_min=0.3, mag_max=26.0):
+    """Both-detected +/-0.02 pairs carrying per-leg measured mag/size, intrinsic shape and ghat.
+
+    re_min / mag_max are the FLOW TRAINING DOMAIN (true Re > 0.3", true mag < 26.0), the same
+    `domain_cut` the Stage-2 selection harness (eval_selection_response.py) applies. It is NOT
+    cosmetic: the spin-2 orientation-coupling target that pins the flow's measured mag/size shear
+    response was MEASURED only in cells with true mag < 26.04 and true Re > 0.30 (140 of 270 cells);
+    the other 130 store a global-constant FILL (b_size=0.490049, b_mag=0.025377) and training clips
+    out-of-range rows into them, so outside this domain the flow is pinned to a constant coupling
+    rather than to anything measured. Note this applies to the mag/size response only -- the SHAPE
+    response pin (6x3x5 npz) is populated over the full mag 18-28, Re 0.1-1.5 range.
+    Pass None to either to disable and evaluate the full population.
+    """
     T = read_leg(PLUS, min_case, max_case, TRUE_COLS, t0, "+leg (true props + measured shape)")
     M = read_leg(MINUS, min_case, max_case,
                  ["case", "input_index", "measured_e1", "measured_e2"], t0, "-leg (measured shape)")
@@ -140,9 +151,23 @@ def build_base(min_case, max_case, measured, crowd, t0):
     print(f"  BOTH-DETECTED pairs: {len(base):,}  ({len(base)/max(len(T),1):.1%} of +leg) "
           f"({time.time()-t0:.0f}s)", flush=True)
 
-    # flow-domain cut (same DEFAULT_SELECTION_CUTS as the certified constgold evaluation)
+    # base selection cuts (same DEFAULT_SELECTION_CUTS as the certified constgold evaluation)
     base = source_select_selection(base, cuts=DEFAULT_SELECTION_CUTS).reset_index(drop=True)
-    print(f"  after flow-domain cut: {len(base):,} ({time.time()-t0:.0f}s)", flush=True)
+    print(f"  after base cuts: {len(base):,} ({time.time()-t0:.0f}s)", flush=True)
+
+    # FLOW TRAINING DOMAIN on TRUE properties -- shear-even, so it cannot itself induce a
+    # selection response (it is identical in both legs) and the nulls stay exactly zero.
+    if re_min is not None or mag_max is not None:
+        n0 = len(base)
+        m = np.ones(n0, bool)
+        if re_min is not None:
+            m &= base["Re_input_p"].to_numpy(float) > re_min
+        if mag_max is not None:
+            m &= base["r_input_p"].to_numpy(float) < mag_max
+        base = base[m].reset_index(drop=True)
+        print(f"  after flow-domain cut (true Re>{re_min}, true mag<{mag_max}): "
+              f"{len(base):,}  ({len(base)/max(n0,1):.1%} of base) ({time.time()-t0:.0f}s)",
+              flush=True)
 
     # neighbour-flux conditioners (the flow's only crowding inputs)
     cf = read_case_range(crowd, min_case, max_case)
@@ -297,6 +322,12 @@ def main():
     ap.add_argument("--ckpt", nargs="+", default=None)
     ap.add_argument("--measured", default=MEASURED)
     ap.add_argument("--crowd", default=CROWD)
+    ap.add_argument("--re-min", type=float, default=0.3,
+                    help="flow training domain: keep TRUE Re > this (matches domain_cut)")
+    ap.add_argument("--mag-max", type=float, default=26.0,
+                    help="flow training domain: keep TRUE mag < this (matches domain_cut)")
+    ap.add_argument("--no-domain-cut", action="store_true",
+                    help="evaluate the full population instead (outside the flow's valid domain)")
     ap.add_argument("--min-case", type=int, default=40, help="held-out constgold split")
     ap.add_argument("--max-case", type=int, default=139)
     ap.add_argument("--mag-cuts", type=float, nargs="+",
@@ -327,8 +358,10 @@ def main():
     for c in ckpts:
         print("   ", os.path.basename(c))
 
+    re_min = None if args.no_domain_cut else args.re_min
+    mag_max = None if args.no_domain_cut else args.mag_max
     base, p_int, r_tot_i, gh1, gh2, g = build_base(args.min_case, args.max_case, args.measured,
-                                                   args.crowd, t0)
+                                                   args.crowd, t0, re_min=re_min, mag_max=mag_max)
     cases = base["case"].to_numpy()
     cuts = make_cuts(args.mag_cuts, args.size_cuts, args.pixel_size)
     nbrd = base["neighbored"].astype(bool).to_numpy()

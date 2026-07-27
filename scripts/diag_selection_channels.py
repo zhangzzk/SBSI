@@ -144,9 +144,16 @@ def coupling_report(tag, dmag, dlsz, p_int, base, cz, g):
     ef, es = cz["edges_flux"], cz["edges_size"]
     cnt = cz["counts"]                       # (nf, ns, nb)
     w = cnt.sum(axis=2)
+    # Empty cells (counts==0 -- Re<0.30 at any mag, and mag>26.04 at any Re: 130 of 270) carry a
+    # global-constant FILL in the npz, not a measurement, and training clips out-of-range rows into
+    # them. Report that fill, flagged, rather than 0/0: the flow really is pinned to it there.
+    gm, gs = float(cz["b_mag_global"]), float(cz["b_size_global"])
     with np.errstate(invalid="ignore", divide="ignore"):
-        tgt_m = (cz["coupling_mag"] * cnt).sum(axis=2) / np.where(w > 0, w, np.nan)
-        tgt_s = (cz["coupling_size"] * cnt).sum(axis=2) / np.where(w > 0, w, np.nan)
+        tgt_m = np.where(w > 0, (cz["coupling_mag"] * cnt).sum(axis=2) / np.where(w > 0, w, 1), gm)
+        tgt_s = np.where(w > 0, (cz["coupling_size"] * cnt).sum(axis=2) / np.where(w > 0, w, 1), gs)
+    filled = w == 0
+    print(f"    [pin marked * = empty target cell, global fill b_mag={gm:+.4f} b_size={gs:+.4f}; "
+          f"{int(filled.sum())} of {filled.size} cells]")
 
     fi = np.clip(np.digitize(base["r_input_p"].to_numpy(float), ef[1:-1]), 0, len(ef) - 2)
     si = np.clip(np.digitize(base["Re_input_p"].to_numpy(float), es[1:-1]), 0, len(es) - 2)
@@ -159,9 +166,10 @@ def coupling_report(tag, dmag, dlsz, p_int, base, cz, g):
                 continue
             bmv, _ = slope((dmag / (2 * g))[m], p_int[m])
             bsv, _ = slope((dlsz / (2 * g))[m], p_int[m])
+            f = "*" if filled[a, b_] else " "
             print(f"    {ef[a]:>7.2f}-{ef[a+1]:<8.2f} {es[b_]:>6.2f}-{es[b_+1]:<7.2f} "
-                  f"{int(m.sum()):>10,} {bmv:>8.4f} {tgt_m[a, b_]:>8.4f} | "
-                  f"{bsv:>8.4f} {tgt_s[a, b_]:>8.4f}")
+                  f"{int(m.sum()):>10,} {bmv:>8.4f} {tgt_m[a, b_]:>7.4f}{f} | "
+                  f"{bsv:>8.4f} {tgt_s[a, b_]:>7.4f}{f}")
     return bm, bs
 
 
@@ -249,8 +257,10 @@ def main():
     print(f"coupling target: {os.path.basename(args.coupling_npz)}  "
           f"nominal_g={float(cz['nominal_g'])}  convention={str(cz['e_convention'])}", flush=True)
 
+    # deliberately NO domain cut here: the point of this diagnostic is to show how the pinned
+    # coupling behaves OUTSIDE the flow's valid domain as well as inside it.
     base, p_int, r_tot_i, gh1, gh2, g = build_base(args.min_case, args.max_case, MEASURED,
-                                                   CROWD, t0)
+                                                   CROWD, t0, re_min=None, mag_max=None)
     print(f"  constgold g={g}", flush=True)
 
     population_check(base, args.train_cat, args.train_max_rows, t0)

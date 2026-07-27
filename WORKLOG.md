@@ -2,6 +2,69 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-27b (figure audit: which pin covers which range; CORRECTS the "nan cells" reading below)
+
+**Question asked.** Were all the new figures made with the actual Gold-V2 flow, and inside its
+training domain?
+
+**Model identity: yes, all five, identical checkpoints.** `measurement_flow_g0_ngmix_ablate_s2c_
+coupling_lt500_s{501,502,503,505,506,507,508,509}_swaavg.pt`. The selection eval globs `_s50*_swaavg.pt`,
+which matches exactly those 8 on disk (no s504) -- checked, not assumed.
+
+**Correction to the entry below.** I reported the coupling-pin target as `nan` outside
+mag<26.04 / Re>0.30. The npz has **zero nans** in all 270 cells. The nan was produced by
+`diag_selection_channels.py:148` itself, which count-weights the crowd axis and divides by
+`counts.sum(axis=2)`; 130 of 270 cells (48%) have `counts == 0`, giving 0/0. What those empty cells
+actually store is the **global constant fill** (`b_size=0.490049`, `b_mag=0.025377`), and
+`_coupling_bin_id` CLIPS out-of-range rows into them. So the flow was not extrapolating an
+unconstrained value there -- it was *actively pinned to a constant*. The practical conclusion
+(restrict measured-cut selection evaluation to mag<26, Re>0.30) is unchanged and now better founded:
+that is exactly where the pin was measured rather than filled.
+
+**The two pins have DIFFERENT coverage; this decides which figures need the cut.**
+
+| pin | governs | grid | coverage |
+|---|---|---|---|
+| `response_target_crowd_rblend_snc_c0-99_6x3x5.npz` | shape response (dims 0,1) -> `R_flow` | 6x3x5 = 90 | **all 90 cells populated**, mag 18-28, Re 0.1-1.5 |
+| `response_target_theta_coupling_rblend_c0-99_6x9x5.npz` | measured mag/size response (dims 2,3) | 6x9x5 = 270 | **140 populated**; empty = Re<0.30 (all mag) and mag>26.04 (all Re) |
+
+The NLL training data itself was NOT range-limited: `train_measurement_model_swa_s1_truecond.py:167`
+applies only `source_select_selection(DEFAULT_SELECTION_CUTS)` = true mag (18,28), true Re (0.1,1.5).
+
+**Per-figure verdict.**
+
+- `fig_selection_bias_intrinsic{,_isolated}.png` -- built from `selection_intrinsic_v1.npz`, **no
+  domain cut**. These ride on the coupling pin, so the cut matters. Being rebuilt (job 15294062 ->
+  `selection_intrinsic_domain.npz`).
+- `figv2_fig1_seed_loss.png` -- per-seed validation NLL on the flow's own val split. Training
+  diagnostic; no population question.
+- `figv2_fig2_response_vs_properties.png`, `figv2_fig3_bias_true_neighbours.png` -- no domain cut,
+  full 26.9M-row constgold population. These ride on the SHAPE pin, which is populated over the whole
+  range, so full-population evaluation is legitimate; fig3's convention also stays comparable to
+  Gold-v1's certified +0.245%.
+
+**Added.** `scripts/eval_v2_indomain_m.py` + `jobs/job_v2_indomain_m.sh` (job 15294051): 8-seed
+constgold m from the existing per-object dumps under four masks, catalogue replayed and row-aligned to
+the dumps by exact (case, input_index) equality.
+
+**Result -- the full-population m is a cancellation across size, not a uniformly small bias.**
+
+| mask | N | m (8 seeds) |
+|---|---|---|
+| certified convention (no cut) | 26,926,617 (100%) | **-0.461 +- 0.353 %** |
+| true mag < 26.0 | 17,963,596 (66.7%) | -1.780 +- 0.359 % |
+| true Re > 0.3 | 14,550,682 (54.0%) | **+3.936 +- 0.261 %** |
+| mag<26 AND Re>0.3 | 11,674,409 (43.4%) | +3.489 +- 0.276 % |
+
+Per-seed scatter is large (sd ~1.0% on the full population), so the 8-seed sem is 0.35%.
+
+**Known limitation.** The size-split disagreement (+3.9% on Re>0.3 vs -0.46% overall) is a real
+per-property failure of the shape response that averages away globally. fig2's Re panel should
+already show it; it has not yet been read off quantitatively in Re bins.
+
+**Next.** Rebuild the two selection figures from `selection_intrinsic_domain.npz`; add an Re-binned m
+breakdown so fig2's residual panel and the table above can be cross-checked.
+
 ## 2026-07-27 (WHY the V2 flow's magnitude-cut selection response is flat -- the coupling pin covers 44% of the sample)
 
 **Question.** The new intrinsic-shape selection figure shows the flow nearly FLAT vs magnitude cut
