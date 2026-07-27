@@ -13,6 +13,6 @@ export PYTHONPATH="/home/z/Zekang.Zhang/SBSI-ablation:/home/z/Zekang.Zhang/blend
 cd /home/z/Zekang.Zhang/SBSI-ablation
 echo "### CG BETASZ job=$SLURM_JOB_ID ###"; date
 python -u scripts/eval_detection_beta_bysize.py --min-case 40 --mag-lo 25.5 --mag-hi 26.5 \
-  --n-size 5 --n-beta 5 \
-  --output /project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/detection_beta_bysize_v2.npz
+  --size-edges 0 0.2 0.5 0.8 1.2 --n-beta 5 \
+  --output /project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/detection_beta_bysize_v3.npz
 echo "CG_BETASZ_JOB_DONE"; date

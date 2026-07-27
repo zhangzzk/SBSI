@@ -14,6 +14,6 @@ export PYTHONPATH="/home/z/Zekang.Zhang/SBSI-ablation:/home/z/Zekang.Zhang/blend
 cd /home/z/Zekang.Zhang/SBSI-ablation
 echo "### CG MDLBSZ job=$SLURM_JOB_ID ###"; date
 python -u scripts/eval_model_beta_bysize.py \
-  --edges-npz /project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/detection_beta_bysize_v2.npz \
-  --output /project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/model_beta_bysize_v2.npz
+  --edges-npz /project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/detection_beta_bysize_v3.npz \
+  --output /project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/model_beta_bysize_v3.npz
 echo "CG_MDLBSZ_JOB_DONE"; date

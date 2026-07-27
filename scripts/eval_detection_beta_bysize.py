@@ -74,6 +74,8 @@ def main():
     ap.add_argument("--mag-lo", type=float, default=25.5, help="SIZE facet: fixed mag band low")
     ap.add_argument("--mag-hi", type=float, default=26.5, help="SIZE facet: fixed mag band high")
     ap.add_argument("--n-size", type=int, default=5)
+    ap.add_argument("--size-edges", type=float, nargs="+", default=None,
+                    help="SIZE facet: fixed true-Re bin edges (overrides --n-size quantile edges)")
     ap.add_argument("--mag-edges", type=float, nargs="+", default=[24.5, 25.0, 25.5, 26.0, 26.5],
                     help="MAG facet: r-mag bin edges (pooling size)")
     ap.add_argument("--n-beta", type=int, default=5)
@@ -110,9 +112,14 @@ def main():
     # ---- SIZE facet (fixed mag band) ----
     lo, hi = args.mag_lo, args.mag_hi
     smp = (dp["mag"] >= lo) & (dp["mag"] < hi); smm = (dm["mag"] >= lo) & (dm["mag"] < hi)
-    spool = np.concatenate([dp["Re"][smp & both_p], dm["Re"][smm & both_m]])
-    sedges = np.quantile(spool, np.linspace(0, 1, args.n_size + 1)); sedges[0] -= 1e-9; sedges[-1] += 1e-9
-    slabels = [f"Re[{sedges[i]:.2f},{sedges[i+1]:.2f})" for i in range(args.n_size)]
+    if args.size_edges is not None:
+        sedges = np.array(args.size_edges, float); sedges[-1] += 1e-9
+        n_size = len(sedges) - 1
+    else:
+        spool = np.concatenate([dp["Re"][smp & both_p], dm["Re"][smm & both_m]])
+        sedges = np.quantile(spool, np.linspace(0, 1, args.n_size + 1)); sedges[0] -= 1e-9; sedges[-1] += 1e-9
+        n_size = args.n_size
+    slabels = [f"Re[{sedges[i]:.2f},{sedges[i+1]:.2f})" for i in range(n_size)]
     sbeta = bpos_edges(smp, smm, args.n_beta)
     out.update(facet("SIZE", dp["Re"], dm["Re"], sedges, smp, smm, slabels, bp_, bm_, sbeta,
                      dp, dm, etp, etm, both_p, both_m, only_p, only_m, g))

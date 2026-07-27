@@ -33,7 +33,7 @@ def set_style():
 
 
 def beta_ticklabels(bedges):
-    lab = ["0\n(iso)"]
+    lab = ["0"]
     for i in range(len(bedges) - 1):
         c = np.sqrt(bedges[i] * bedges[i + 1]) if bedges[i] > 0 else bedges[i + 1] / 2
         lab.append(f"{c:.1e}".replace("e-0", "e-"))
@@ -55,16 +55,15 @@ def plot_facet(ax, zs, zm, name, title, legend_title, prettify):
         ax.plot(x, db_m, color=c, marker=mk, ms=6.5, lw=1.6, ls="--", mfc="white", mec=c, zorder=2)
     ax.axhline(0, color="0.5", lw=0.9)
     ax.set_xticks(x); ax.set_xticklabels(beta_ticklabels(bedges))
-    ax.set_xlabel(r"blendedness $\beta$  (0 = isolated,  $\beta$ increases $\rightarrow$)")
-    ax.set_title(title)
-    ax.add_artist(ax.legend(title=legend_title, loc="lower left"))
+    ax.set_xlabel(r"blendedness $\beta$")
+    ax.add_artist(ax.legend(loc="lower left", fontsize=12))
 
 
 def main():
     ap = argparse.ArgumentParser()
     base = "/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/"
-    ap.add_argument("--sim", default=base + "detection_beta_bysize_v2.npz")
-    ap.add_argument("--model", default=base + "model_beta_bysize_v2.npz")
+    ap.add_argument("--sim", default=base + "detection_beta_bysize_v3.npz")
+    ap.add_argument("--model", default=base + "model_beta_bysize_v3.npz")
     ap.add_argument("--out", default="/home/z/Zekang.Zhang/SBSI-ablation/figures")
     args = ap.parse_args()
     set_style()
@@ -87,11 +86,8 @@ def main():
     sim_h = mlines.Line2D([], [], color="0.3", marker="o", ls="-", label="sim (constgold)")
     mod_h = mlines.Line2D([], [], color="0.3", marker="o", mfc="white", ls="--",
                           label="model (classifier)")
-    axr.legend(handles=[sim_h, mod_h], loc="upper right")
+    axr.legend(handles=[sim_h, mod_h], loc="upper right", fontsize=12)
 
-    fig.suptitle("Stage-3 detection response vs blendedness: SIM vs MODEL "
-                 "(constgold shear-free intrinsic; classifier = cont.160 response-regularized)",
-                 fontsize=13, y=1.02)
     fig.tight_layout()
     p = os.path.join(args.out, "fig_detection_beta_bysize.png")
     fig.savefig(p, dpi=200, bbox_inches="tight"); plt.close(fig)
