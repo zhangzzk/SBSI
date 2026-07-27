@@ -1,0 +1,492 @@
+"""Score-based shear inference -- the executable form of `INFERENCE.md` §5B.
+
+`posterior_shape.py` already answers "what is this galaxy's shape?"  This module answers
+the different question "what is the shear of this catalogue?", from the SAME ingredients
+(the e-grid node bank, the exact Mobius-pullback sheared prior, and the flow's per-node
+log-likelihood) but with a different read-out.
+
+The chain, with `INFERENCE.md` equation tags:
+
+    u_k       = -( v . grad log p_0 + div v )(e_k)        generator on TRUTH        (2.7)
+    w_k       propto L_k pi_0(e_k),  L_k = p_flow(ehat_i | e_k, rest)   posterior weights
+    s_i       = sum_k w_k u_k                             Fisher's identity         (2.2)
+    I_i       = -sum_k w_k du_k - Var_w(u)                Louis                     (2.5)
+    ghat      = sum_i s_i / sum_i I_i                     the estimator             (2.6)
+    R         = Cov_0(ehat, s) ~ (1/N) sum_i ehat_i s_i   the response              (2.3)
+
+Everything here is the SHAPE channel only: the latent is the primary's true (lensed)
+ellipticity, all other conditioning of the flow is held at its catalogue value.  Per
+§5B.2 that is the honest scope of a 2-D shape grid -- it yields `R_self`'s shape part,
+not the size/flux channel (§4.3) and not the blend channel (§3, identically zero for a
+geometry-blind flow).  §5C's external-`R_blend` injection is `blend_injection_term`.
+
+Sign conventions follow `shear_map.py`: `eps' = (eps + g)/(1 + conj(g) eps)`, so
+`v = d eps'/dg|_0` has components `v_1 = 1 - eps^2`, `v_2 = i (1 + eps^2)` and
+`div v_1 = -4 e1`, `div v_2 = -4 e2`.  With an isotropic `p_0` this collapses to the
+closed form used as an independent cross-check of the finite differences:
+
+    u_a(e) = e_a * [ 4 - phi'(r) (1 - r^2) / r ],      phi(r) = log p_0(e) at |e| = r.
+
+Numerically the only delicate ingredient is `phi'`, the radial derivative of an
+EMPIRICAL log-density.  `SmoothRadialPrior` therefore replaces the piecewise-linear
+interpolation of `RadialShapePrior` with a C2 smoothing spline (and a smooth
+exponential tail instead of a hard support edge, which would inject a spurious boundary
+term into the score).
+"""
+
+from __future__ import annotations
+
+import numpy as np
+import torch
+
+from .posterior_shape import RadialShapePrior
+
+
+# --------------------------------------------------------------------------------------
+# prior
+# --------------------------------------------------------------------------------------
+
+class SmoothRadialPrior(RadialShapePrior):
+    """`RadialShapePrior` with a C2 log-density fitted in `t = |eps|^2`.
+
+    Two things are wrong with the parent class for score work, and both are fixed here.
+
+    *Smoothness.*  The parent interpolates `log_dens` linearly between bin centres, so
+    its radial derivative is piecewise constant and its second derivative a comb of
+    deltas.  That is harmless for a posterior MEAN (an integral) and useless for a SCORE
+    (a derivative).  Here the binned log-density is fitted with a weighted cubic
+    smoothing spline (Poisson weights `sqrt(counts)`).
+
+    *The origin.*  The parent bins uniformly in `r` and forms the 2-D density as
+    `f(r) / (2 pi r)`, which divides by a vanishing radius exactly where the counts are
+    scarcest.  The resulting `phi'(0) != 0` puts a spurious `1/r` term into the
+    generator: with `u_a = e_a [4 - phi'(r)(1-r^2)/r]` and `e_a ~ r`, a non-zero
+    `phi'(0)` leaves `u` finite but direction-discontinuous at the origin and `du`
+    divergent, which shows up as a `1/delta` blow-up of the Bartlett curvature.  A
+    genuinely smooth isotropic density is a function of `r^2`, so binning in `t = r^2`
+    -- equal-AREA annuli, no `1/r`, uniform Poisson errors -- imposes `phi'(0) = 0` by
+    construction:
+
+        phi(r) = psi(r^2),      phi'(r) = 2 r psi'(r^2),
+        u_a(e) = e_a [ 4 - 2 psi'(r^2) (1 - r^2) ]      -- manifestly regular at e = 0.
+
+    Beyond the last populated bin `psi` continues with its end slope, i.e. a Gaussian
+    tail in `r`, rather than the parent's hard `-inf` edge.  A hard edge is not merely
+    inconvenient: the sheared prior's support boundary MOVES with gamma, so a truncated
+    density contributes a delta-function boundary term to `u` that the real population
+    does not have.
+
+    `sheared_log_prob` (the exact Mobius pullback) is inherited and picks up the new
+    `log_prob` automatically; `sample` is overridden to draw from the *fitted* density,
+    so a closure test generating shapes from this prior is estimating under exactly the
+    density it drew from.
+    """
+
+    def __init__(self, e1_samples, e2_samples, n_bins=120, min_samples=10_000,
+                 n_knots=8, r_hard=0.999):
+        super().__init__(e1_samples, e2_samples, n_bins=n_bins, min_samples=min_samples)
+        from scipy.interpolate import LSQUnivariateSpline
+
+        r = np.hypot(np.asarray(e1_samples, float), np.asarray(e2_samples, float))
+        r = r[np.isfinite(r) & (r < 1.0)]
+        t = r ** 2
+        self.t_max = float(t.max())
+        t_edges = np.linspace(0.0, self.t_max * (1.0 + 1e-9), n_bins + 1)
+        counts, _ = np.histogram(t, bins=t_edges)
+        dt = np.diff(t_edges)
+        # equal-area annuli: the area between t and t+dt is pi dt, so the 2-D density is
+        # counts / (N pi dt) -- no 1/r anywhere, and uniform Poisson errors.
+        good = counts > 0
+        if good.sum() < 8:
+            raise ValueError(f"only {int(good.sum())} populated bins; need >= 8")
+        x = (0.5 * (t_edges[:-1] + t_edges[1:]))[good]
+        y = np.log(counts[good] / (len(t) * np.pi * dt[good]))
+        w = np.sqrt(counts[good].astype(float))          # sigma(log density) ~ 1/sqrt(N)
+        # Fixed knots at DATA quantiles, not a smoothing penalty.  A smoothing spline
+        # with a per-bin chi^2 target chases Poisson noise in the sparse |eps| tail --
+        # measured, that made psi' swing to +34 near r = 0.9 and blew the Bartlett
+        # curvature up to ~7% of Var(u).  Quantile knots crowd where the data are (99%
+        # of the mass sits at t < 0.5), leaving the sparse tail spanned by a single
+        # cubic, which is both stable and honest about what the data constrain there.
+        knots = np.quantile(t, np.linspace(0.0, 1.0, int(n_knots) + 2)[1:-1])
+        knots = np.unique(np.clip(knots, x[1] + 1e-6, x[-2] - 1e-6))
+        self._spl = LSQUnivariateSpline(x, y, t=knots, w=w, k=3)
+        self._dspl = self._spl.derivative()
+        self.fit_chi2_dof = float(np.sum((w * (y - self._spl(x))) ** 2)
+                                  / max(len(x) - len(knots) - 4, 1))
+        self.n_knots = len(knots)
+        self._t0, self._t1 = float(x[0]), float(x[-1])
+        self._y0, self._d0 = float(self._spl(self._t0)), float(self._dspl(self._t0))
+        self._y1, self._d1 = float(self._spl(self._t1)), float(self._dspl(self._t1))
+        self._d1 = min(self._d1, -1e-3)                  # decaying tail only
+        self.r_hard = float(r_hard)
+        self._build_sampler()
+
+    # -- the fitted density, as a function of t = r^2 ----------------------------------
+
+    def _psi(self, t):
+        t = np.asarray(t, dtype=float)
+        out = np.empty_like(t)
+        lo, hi = t < self._t0, t > self._t1
+        mid = ~(lo | hi)
+        out[mid] = self._spl(t[mid])
+        out[lo] = self._y0 + self._d0 * (t[lo] - self._t0)
+        out[hi] = self._y1 + self._d1 * (t[hi] - self._t1)
+        return out
+
+    def _dpsi(self, t):
+        t = np.asarray(t, dtype=float)
+        out = np.empty_like(t)
+        lo, hi = t < self._t0, t > self._t1
+        mid = ~(lo | hi)
+        out[mid] = self._dspl(t[mid])
+        out[lo] = self._d0
+        out[hi] = self._d1
+        return out
+
+    def _dphi(self, r):
+        """`d log p_0 / dr = 2 r psi'(r^2)` -- what the closed-form generator needs."""
+        r = np.asarray(r, dtype=float)
+        return 2.0 * r * self._dpsi(r ** 2)
+
+    def log_prob(self, e1, e2):
+        """Smooth `log p_0`; `-inf` only at the unphysical `|eps| >= 1`."""
+        t = np.asarray(e1, dtype=float) ** 2 + np.asarray(e2, dtype=float) ** 2
+        return np.where(t < self.r_hard ** 2, self._psi(np.minimum(t, self.r_hard ** 2)),
+                        -np.inf)
+
+    # -- sampling from the FITTED density (so closure tests have no prior mismatch) -----
+
+    def _build_sampler(self, n=4096):
+        t = np.linspace(0.0, self.r_hard ** 2, n)
+        pdf = np.pi * np.exp(self._psi(t))               # d(mass)/dt
+        cdf = np.concatenate([[0.0], np.cumsum(0.5 * (pdf[1:] + pdf[:-1]) * np.diff(t))])
+        self._t_grid, self._t_cdf = t, cdf / cdf[-1]
+        self.norm_error = float(cdf[-1] - 1.0)
+
+    def sample(self, n, rng):
+        u = rng.random(int(n))
+        t = np.interp(u, self._t_cdf, self._t_grid)
+        r = np.sqrt(t)
+        phi = rng.random(int(n)) * 2.0 * np.pi
+        return r * np.cos(phi), r * np.sin(phi)
+
+
+# --------------------------------------------------------------------------------------
+# node bank: the generator u and its gamma-derivative on the shape grid
+# --------------------------------------------------------------------------------------
+
+def generator_closed_form(prior, grid):
+    """`u` from the closed form `u_a = e_a [4 - phi'(r)(1-r^2)/r]` (isotropic `p_0`).
+
+    Independent of `generator_finite_difference`, which differentiates the Mobius
+    pullback numerically; the two agreeing is a real check that the prior, the shear map
+    and the divergence term are mutually consistent."""
+    e1, e2 = grid[:, 0], grid[:, 1]
+    r = np.hypot(e1, e2)
+    rs = np.maximum(r, 1e-9)
+    amp = 4.0 - prior._dphi(rs) * (1.0 - r ** 2) / rs
+    return np.stack([e1 * amp, e2 * amp], axis=1)
+
+
+def generator_finite_difference(prior, grid, delta=0.01, richardson=True):
+    """`u_a = d_a log p_gamma(e)|_0` and `du_ab = d_a d_b log p_gamma(e)|_0`.
+
+    Central differences of `prior.sheared_log_prob`, i.e. of the EXACT Mobius pullback,
+    so the shear map is never linearised by hand.  With `richardson`, `u` is refined by
+    the standard `(4 f(d/2) - f(d))/3` extrapolation, killing the O(delta^2) term.
+
+    Returns `(u (G,2), du (G,2,2))`.  Nodes where any stencil point falls outside the
+    prior's support come back as zeros and are flagged by `~support`.
+    """
+    e1, e2 = grid[:, 0], grid[:, 1]
+
+    def f(g1, g2):
+        return prior.sheared_log_prob(e1, e2, g1, g2)
+
+    def stencil(d):
+        f0 = f(0.0, 0.0)
+        fp1, fm1 = f(+d, 0.0), f(-d, 0.0)
+        fp2, fm2 = f(0.0, +d), f(0.0, -d)
+        u = np.stack([(fp1 - fm1) / (2 * d), (fp2 - fm2) / (2 * d)], axis=1)
+        h11 = (fp1 - 2 * f0 + fm1) / d ** 2
+        h22 = (fp2 - 2 * f0 + fm2) / d ** 2
+        h12 = (f(+d, +d) - f(+d, -d) - f(-d, +d) + f(-d, -d)) / (4 * d ** 2)
+        du = np.stack([np.stack([h11, h12], -1), np.stack([h12, h22], -1)], axis=1)
+        return u, du
+
+    u, du = stencil(delta)
+    if richardson:
+        u_half, du_half = stencil(0.5 * delta)
+        u = (4.0 * u_half - u) / 3.0
+        du = (4.0 * du_half - du) / 3.0
+    support = np.isfinite(u).all(axis=1) & np.isfinite(du).all(axis=(1, 2))
+    u = np.where(support[:, None], np.nan_to_num(u), 0.0)
+    du = np.where(support[:, None, None], np.nan_to_num(du), 0.0)
+    return u, du, support
+
+
+def _nodes_at(prior, grid, gamma, delta, richardson=True):
+    """`(log p_gamma, u_gamma)` on the grid, where `u_gamma = d_g' log p_g'|_{g'=gamma}`.
+
+    The gamma-family of node banks is what turns the information into a finite
+    difference of the score (see `ShapeScoreNodes`), and it costs nothing: the flow's
+    likelihood does not depend on gamma, so the SAME cached `L_k` serves every offset.
+    """
+    e1, e2 = grid[:, 0], grid[:, 1]
+    g1, g2 = float(gamma[0]), float(gamma[1])
+
+    def f(a, b):
+        return prior.sheared_log_prob(e1, e2, g1 + a, g2 + b)
+
+    def grad(d):
+        return np.stack([(f(+d, 0) - f(-d, 0)) / (2 * d),
+                         (f(0, +d) - f(0, -d)) / (2 * d)], axis=1)
+
+    u = grad(delta)
+    if richardson:
+        u = (4.0 * grad(0.5 * delta) - u) / 3.0
+    return f(0.0, 0.0), u
+
+
+class ShapeScoreNodes:
+    """The shared node bank of `INFERENCE.md` §5B: grid, log-prior, `u`, `du`.
+
+    Built once and reused for every galaxy -- nothing here depends on the data.
+
+    Two information estimators are carried, and they are not redundant:
+
+    * `du` gives the ANALYTIC `I = -E_w[du] - Var_w(u)` (Louis, 2.5).  Exact, cheap, and
+      validated by `bartlett()` -- but only for the plain model, because it knows about
+      `gamma` solely through the prior.
+    * `shifted` holds the node bank at `gamma = +-delta_I` along each axis, so the
+      information can instead be read as `I = -d_gamma s_gamma|_0`, a finite difference
+      of the score itself.  That form stays exact when the likelihood ALSO carries a
+      gamma-dependence -- which is exactly what §5C.3's `R_blend` injection introduces,
+      and where the analytic Louis expression would silently drop a term of order
+      `R_blend / (R_flow + R_blend)`.
+
+    The two agreeing on the plain model is the check that the finite-difference route is
+    trustworthy before it is used on the injected one.
+    """
+
+    def __init__(self, grid, prior, delta=0.01, richardson=True, info_delta=0.01):
+        self.grid = np.asarray(grid, dtype=np.float64)
+        self.prior = prior
+        self.log_prior = prior.log_prob(self.grid[:, 0], self.grid[:, 1])
+        u, du, support = generator_finite_difference(prior, self.grid, delta, richardson)
+        self.u, self.du = u, du
+        self.support = support & np.isfinite(self.log_prior)
+        self.log_prior = np.where(self.support, self.log_prior, -np.inf)
+        self.delta = delta
+        self.info_delta = float(info_delta)
+        self.u_closed = (generator_closed_form(prior, self.grid)
+                         if hasattr(prior, "_dphi") else None)
+        d = self.info_delta
+        self.shifted = {}
+        for key, gam in ((("g1", +1), (+d, 0.0)), (("g1", -1), (-d, 0.0)),
+                         (("g2", +1), (0.0, +d)), (("g2", -1), (0.0, -d))):
+            lp, uu = _nodes_at(prior, self.grid, gam, delta, richardson)
+            lp = np.where(np.isfinite(lp) & self.support, lp, -np.inf)
+            self.shifted[key] = (lp, np.where(self.support[:, None],
+                                              np.nan_to_num(uu), 0.0))
+
+    # -- diagnostics -------------------------------------------------------------------
+
+    def prior_weights(self):
+        """Normalised prior weights over the node bank (flat-grid quadrature)."""
+        lp = self.log_prior - np.max(self.log_prior[self.support])
+        w = np.where(self.support, np.exp(lp), 0.0)
+        return w / w.sum()
+
+    def bartlett(self):
+        """The two prior-only identities that must hold for ANY normalised `p_gamma`.
+
+        Because `integral p_gamma = 1` for every gamma, differentiating twice under the
+        integral gives `E_0[u] = 0` and `E_0[du] + Var_0(u) = 0` -- (2.4) with a flat
+        likelihood, where the evidence is constant so its information vanishes.  They
+        test the prior, the generator, the shear map and the grid quadrature at once,
+        with no flow and no data involved.
+        """
+        w = self.prior_weights()
+        mean_u = w @ self.u
+        mean_du = np.einsum("k,kab->ab", w, self.du)
+        cov_u = np.einsum("k,ka,kb->ab", w, self.u, self.u) - np.outer(mean_u, mean_u)
+        return dict(mean_u=mean_u, curvature=mean_du + cov_u,
+                    scale=float(np.sqrt(np.mean(np.diag(cov_u)))))
+
+    def closed_form_residual(self):
+        """max |u_fd - u_closed| / rms(u) over supported nodes (0 if no closed form)."""
+        if self.u_closed is None:
+            return float("nan")
+        m = self.support
+        num = np.abs(self.u[m] - self.u_closed[m]).max()
+        return float(num / np.sqrt(np.mean(self.u[m] ** 2)))
+
+
+# --------------------------------------------------------------------------------------
+# per-object score and information
+# --------------------------------------------------------------------------------------
+
+def _weighted_score(ll_t, log_prior, u, extra, gamma):
+    """`s(gamma) = E_w[u_gamma + extra]` for one node bank, on a slab already on device.
+
+    `extra` (the §5C.3 injection) enters twice, and both are needed.  It is part of the
+    generator, and it is also part of the LIKELIHOOD's gamma-dependence: to first order
+    the injected model has `log L_k(gamma) = log L_k(0) + gamma . extra_k`, since `extra`
+    is by construction that derivative.  Carrying the `gamma . extra` reweighting is what
+    makes the finite-difference information include the blend channel instead of
+    silently dropping it.
+    """
+    ll = ll_t + log_prior
+    if extra is not None:
+        if gamma[0]:
+            ll = ll + float(gamma[0]) * extra[:, :, 0]
+        if gamma[1]:
+            ll = ll + float(gamma[1]) * extra[:, :, 1]
+    mx = ll.max(dim=1, keepdim=True).values
+    w = torch.exp(ll - mx)
+    norm = w.sum(dim=1, keepdim=True)
+    w = w / norm
+    if extra is None:
+        s = w @ u
+    else:
+        s = (w[:, :, None] * (u[None, :, :] + extra)).sum(dim=1)
+    return s, w, torch.log(norm[:, 0]) + mx[:, 0]
+
+
+def scores_from_loglike(loglike, nodes, chunk=65536, device=None, extra=None,
+                        analytic_info=False):
+    """Turn per-node log-likelihoods into `(s_i, I_i)`.
+
+    `loglike`: `(N,G)` array holding `log p_flow(ehat_i | e_k, rest)` up to a per-row
+    constant, which cancels.  `extra`: optional `(N,G,2)` galaxy-dependent addition to
+    the generator -- §5C.3's external-`R_blend` injection.
+
+    Information is `I = -d_gamma s_gamma|_0`, evaluated by re-weighting the SAME
+    likelihood under the node bank at `gamma = +-delta_I` (`nodes.shifted`).  With
+    `analytic_info` the Louis form `-E_w[du] - Var_w(u)` is returned instead; the two
+    agree on the plain model and the finite difference is the one that survives the
+    injection.
+
+    Returns `(s (N,2), info (N,2,2), log_evidence (N,))`.  Individual `info` entries may
+    be negative; only their sum is the Fisher information (2.4), which is why (2.6) sums
+    numerator and denominator separately rather than averaging per-object ratios.
+    """
+    dev = torch.device(device) if device is not None else (
+        torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
+    T = lambda a: torch.as_tensor(np.ascontiguousarray(a), dtype=torch.float32, device=dev)
+    u = T(nodes.u)                                                             # (G,2)
+    du = T(nodes.du.reshape(-1, 4))
+    lp = T(np.where(nodes.support, nodes.log_prior, -np.inf))                  # (G,)
+    sh = {k: (T(v[0]), T(v[1])) for k, v in nodes.shifted.items()}
+    d = nodes.info_delta
+    n = loglike.shape[0]
+    s_out = np.empty((n, 2), dtype=np.float64)
+    i_out = np.empty((n, 2, 2), dtype=np.float64)
+    z_out = np.empty(n, dtype=np.float64)
+    for start in range(0, n, chunk):
+        stop = min(start + chunk, n)
+        arr = np.ascontiguousarray(loglike[start:stop])
+        if not arr.flags.writeable:
+            arr = arr.copy()
+        ll_t = torch.as_tensor(arr, device=dev).float()
+        ex = T(extra[start:stop]) if extra is not None else None
+        s, w, logz = _weighted_score(ll_t, lp, u, ex, (0.0, 0.0))
+        if analytic_info:
+            m2 = ((w[:, :, None] * (u[None] + ex)).transpose(1, 2) @ (u[None] + ex)
+                  if ex is not None else torch.einsum("bk,ka,kc->bac", w, u, u))
+            cov = m2 - s[:, :, None] * s[:, None, :]
+            info = -((w @ du).view(-1, 2, 2) + cov)
+        else:
+            cols = []
+            for axis, gp, gm in (("g1", (+d, 0.0), (-d, 0.0)),
+                                 ("g2", (0.0, +d), (0.0, -d))):
+                lp_p, u_p = sh[(axis, +1)]
+                lp_m, u_m = sh[(axis, -1)]
+                s_p, _, _ = _weighted_score(ll_t, lp_p, u_p, ex, gp)
+                s_m, _, _ = _weighted_score(ll_t, lp_m, u_m, ex, gm)
+                cols.append(-(s_p - s_m) / (2 * d))                            # (B,2)
+            info = torch.stack(cols, dim=2)                                    # I[:,a,b]
+        s_out[start:stop] = s.double().cpu().numpy()
+        i_out[start:stop] = info.double().cpu().numpy()
+        z_out[start:stop] = logz.double().cpu().numpy()
+    return s_out, i_out, z_out
+
+
+# --------------------------------------------------------------------------------------
+# read-outs
+# --------------------------------------------------------------------------------------
+
+def project(s, info, ghat1, ghat2):
+    """Project `(s, I)` onto the per-object applied-shear direction.
+
+    Each constant-shear case has its own shear direction, so the scalar shear along it
+    is the only 1-D parameter with a common meaning across the catalogue.
+    """
+    g = np.stack([np.asarray(ghat1, float), np.asarray(ghat2, float)], axis=1)
+    s_p = np.einsum("na,na->n", s, g)
+    i_p = np.einsum("na,nab,nb->n", g, info, g)
+    return s_p, i_p
+
+
+def shear_estimate(s_proj, i_proj):
+    """`ghat = sum_i s_i / sum_i I_i` -- (2.6), one Newton step at gamma = 0."""
+    den = float(np.sum(i_proj))
+    return float(np.sum(s_proj)) / den, den
+
+
+def response_from_score(ehat_proj, s_proj):
+    """`R = Cov_0(ehat, s)` -- (2.3) with `f = ehat`, the response WITHOUT paired sims.
+
+    The mean subtraction matters when the sample is not exactly at gamma = 0: at applied
+    |gamma| = 0.02 the `<ehat><s>` product is a ~1% contamination of `R`.
+    """
+    ehat_proj = np.asarray(ehat_proj, float)
+    s_proj = np.asarray(s_proj, float)
+    return float(np.mean(ehat_proj * s_proj) - np.mean(ehat_proj) * np.mean(s_proj))
+
+
+def bootstrap_by_case(values, cases, n_boot=200, seed=0, reducer=np.mean):
+    """Per-case bootstrap error, matching `validate_constant_with_blend`'s convention."""
+    cases = np.asarray(cases)
+    uc = np.unique(cases)
+    idx = {c: np.flatnonzero(cases == c) for c in uc}
+    rng = np.random.default_rng(seed)
+    out = []
+    for _ in range(n_boot):
+        pick = rng.choice(uc, size=len(uc), replace=True)
+        sel = np.concatenate([idx[c] for c in pick])
+        out.append(reducer(values[sel]))
+    return float(np.std(out))
+
+
+# --------------------------------------------------------------------------------------
+# §5C.3 -- injecting an external R_blend
+# --------------------------------------------------------------------------------------
+
+def blend_injection_term(mean_grad_ehat, grid, r_blend):
+    """The `- R_b(theta_b) grad_ehat log p_flow . v_eps` term of (5.7).
+
+    A geometry-blind flow -- ours conditions on the scalar `nbr_flux_*` only -- has
+    `Cov(ehat, s_nbr) = 0` identically (§3), so §5B recovers the SELF response and
+    nothing else.  §5C.3 restores the neighbour channel by shifting the likelihood's
+    data argument, `p_flow(ehat - R_b * delta_e | ...)`, whose gamma-derivative is this
+    term.  It is an injection, not a calibration: `R_b` comes from BlendEMU.
+
+    `mean_grad_ehat`: `(N,G,2)` or `(G,2)` gradient of `log p_flow` w.r.t. the measured
+    shape, evaluated at each node.  `grid`: `(G,2)` nodes.  `r_blend`: `(N,)` per-object
+    blend response.  Returns `(N,G,2)` to be passed as `scores_from_loglike(extra=...)`.
+    """
+    e1, e2 = grid[:, 0], grid[:, 1]
+    # v_eps = d eps'/d gamma at gamma = 0: v_1 = 1 - eps^2, v_2 = i (1 + eps^2)
+    v = np.empty((len(grid), 2, 2))
+    v[:, 0, 0] = 1.0 - (e1 ** 2 - e2 ** 2)
+    v[:, 0, 1] = -2.0 * e1 * e2
+    v[:, 1, 0] = -2.0 * e1 * e2
+    v[:, 1, 1] = 1.0 + (e1 ** 2 - e2 ** 2)
+    g = np.asarray(mean_grad_ehat, float)
+    if g.ndim == 2:
+        g = g[None, :, :]
+    term = -np.einsum("n,ngb,gba->nga", np.asarray(r_blend, float), g, v)
+    return term
