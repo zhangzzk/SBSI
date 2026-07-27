@@ -162,7 +162,15 @@ def load_constgold(args):
     df["e2_input_rot0_s"] = e2s
     df["gamma1_input_p"] = 0.0
     df["gamma2_input_p"] = 0.0
-    df = source_select_selection(df, cuts=DEFAULT_SELECTION_CUTS).reset_index(drop=True)
+    if args.no_source_selection:
+        # The cuts are on TRUE properties (mag 18-28, Re 0.1-1.5", sep<5" or isolated),
+        # identical in both legs, so they define the sample rather than select on the
+        # data -- lifting them is a robustness check, not a bias test.  Note the flow was
+        # TRAINED behind the same cuts (train_measurement_model.py), and ~9.6% of rows
+        # come back at true Re > 1.5", outside its training domain.
+        print("source selection: DISABLED (flow is extrapolating past true Re = 1.5\")")
+    else:
+        df = source_select_selection(df, cuts=DEFAULT_SELECTION_CUTS).reset_index(drop=True)
     if args.min_case is not None:
         df = df[df["case"] >= args.min_case].reset_index(drop=True)
         print(f"held-out split: case >= {args.min_case} -> N={len(df):,}")
@@ -743,6 +751,9 @@ def main():
     ap.add_argument("--blend-lookup", default="results/blend_lookup_extnbrho_c40-139.feather")
     ap.add_argument("--inject-blend", action="store_true",
                     help="also run the §5C.3 external-R_blend injection")
+    ap.add_argument("--no-source-selection", action="store_true",
+                    help="constgold: skip the true-property source-selection cuts "
+                         "(see load_constgold) -- robustness check only")
     ap.add_argument("--flow-perobj-only", action="store_true",
                     help="constgold: dump the per-object transport flow response and "
                          "stop, skipping the score passes (minutes, not hours)")
