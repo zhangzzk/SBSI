@@ -2,6 +2,95 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+> NOTE (branch `worktree-inference-5b`): this branch was cut from the last COMMITTED master,
+> which predates the uncommitted cont.112–cont.160 entries in the working copy. The entry below
+> is numbered cont.161 and belongs at the top; expect a trivial conflict there on merge.
+
+## cont.161 (2026-07-27) INFERENCE.md §5B IMPLEMENTED — score/posterior shear inference from data, on constgold
+
+User: "realize what's written in the md into code — 5B. We expect the computed R from data to be
+consistent with what we measured from constantgold." Built the §5B estimator (per-object score
+`s_i`, information `I_i`, `ghat = sum s / sum I`) on top of the existing `posterior_shape.py` node
+bank, and ran it on the certified constant-gold catalogue with the certified Gold-v1 flow
+(`meas_szfl_noz_lam450_fixresp_s501`). Branch `worktree-inference-5b`, worktree
+`.claude/worktrees/inference-5b`.
+
+FILES: `sbs_shear/score_inference.py` (SmoothRadialPrior, generator + its gamma-shifted banks,
+`scores_from_loglike`, `blend_injection_term`); `scripts/eval_score_response.py` (modes
+unit/closure/constgold); `scripts/analyse_score_perobj.py`; `tests/test_score_inference.py`;
+`jobs/job_score_5b.sh`. Jobs 15281079/15281080 (first pair), 15281529/15281530 (controlled test),
+15281531 (constgold + per-object dump), 15281910 (blend injection). ~1000 rows/s/leg on an A40 at
+grid 61 (the cost is `N_gal x N_node` flow `log_prob`s, G = 2765).
+
+**NODE BANK (mode `unit`, no flow, no data).** `E_0[u] = 0` to 1e-15 and `E_0[du] + Var_0(u) =
+-8e-4` = **0.005% of Var(u) = 17.7** at grid 61; finite-difference generator vs the closed form
+`u_a = e_a[4 - 2 psi'(r^2)(1-r^2)]` agrees to 1.8e-4 rms. The two information estimators (Louis
+`-E[du]-Var(u)` vs `-d_gamma s_gamma`) agree to **0.06%** at `info_delta = 0.0025`.
+
+TWO PRIOR-FITTING BUGS found by those diagnostics, both now regression-tested:
+  (a) `RadialShapePrior` bins in `r` and divides by `2 pi r`, so `phi'(0) != 0` and the generator
+      picks up a spurious `1/r`. The Bartlett curvature then DIVERGES as `1/delta` (-2.9, -9.2,
+      -21, -43 at delta = 0.02, 0.01, 0.005, 0.0025), i.e. a fake per-object information ~1.5x
+      Var(u). Fix: fit `psi(t)`, `t = |eps|^2`, in equal-area annuli -> `phi'(0) = 0` by
+      construction. Residual becomes delta-independent.
+  (b) Quantile knots hard against the data boundary leave the first spline span unconstrained. On
+      a GAUSSIAN test prior (`psi'` exactly -8.681) that gave `psi'(0) = -4.5` and a
+      2%-of-Var(u) information floor. Fix: `knot_margin` (10% of bins), shrinking the quantile
+      LEVELS rather than clipping the knots.
+
+**CLOSURE (data drawn FROM the flow at known shear; 1M rows, job 15281079).**
+`ANTITHETIC ghat = +0.02005 +/- 0.00003` against +0.0200 injected -> **+0.24%**; and
+`Cov(ehat,s)/R_transport = 1.0047`. The 250k control with the corrected prior + fp32 gives
+0.9941 +/- 0.0030. So the machinery reproduces the model's OWN response to **~0.5%**, which is the
+systematic floor for everything below (grid quadrature + prior-fit choice + `info_delta`).
+
+**CONSTGOLD (1.5M rows, 32 cases 40-106, held-out).** Transport on exactly these rows:
+`R_sim = 0.4528`, `R_flow = 0.2898`, `R_blend = 0.1595` -> transport `m = +0.80%` (seed 501's
+certified per-seed m is +0.91% — consistent). Score route, SAME rows, SAME flow, NO emulator:
+
+      run                          ghat/g              m_5B
+      15281080 (fp16, prior v1)    1.0029 +/- 0.0035   +0.29%
+      15281531 (fp32, prior v2)    0.9969 +/- 0.0035   -0.31%
+
+**This is NOT the naive prediction.** I expected `ghat/g = R_sim/R_flow = 1.5627` (+56%), on the
+argument that the flow carries only the self response. That argument is wrong, and the reason is
+now §5B.3 of `INFERENCE.md`.
+
+**CONTROLLED TEST that it is not an insensitivity bug (job 15281529 vs 15281530).** Same synthetic
+closure data, but with a known blend-like `c*gamma` (c = 0.1593) added to the measured shape that
+the model does not know about: `ghat/g` moves **0.9941 -> 1.0775**, against the naive 1.5567. So the
+estimator is NOT blind to an added response — it recovers **15%** of a flat one.
+
+**MECHANISM (`analyse_score_perobj.py` on the per-object dump).** For a location-family flow
+`ds/dehat = I/a`, so the antithetic legs give
+
+      score      ghat/g = <I_i r_i/a_i> / <I_i>    = 0.9969    (information-weighted ratio)
+      transport  1 + m  = <r>/<a>                  = 1.5627    (ratio of population means)
+
+with `r_i` the sim's per-object response and `a_i` the flow's. They differ because
+**`corr(I_i, R_blend_i) = -0.283`**: the top information quintile carries most of `sum I`, has
+`<R_blend> = 0.019` and `<mag_auto> = 23.8`, while the bottom has `<R_blend> = 0.262`. The score
+estimator's effective sample is the bright, barely-blended part of the catalogue.
+
+**HONEST CAVEAT — the global -0.31% is a CANCELLATION, not per-bin flatness** (shear-independent
+splits only; splitting on `I_i` or `r_i` is splitting on the data and is not interpretable):
+      isolated +3.82% / blended -2.18%
+      R_blend  <0.02 +0.40% | 0.02-0.05 -5.71% | 0.05-0.13 -6.74% | 0.13-0.38 +1.43% | >0.38 +29.74%
+      mag_auto <23 -1.02% | 23-24 +3.55% | 24-24.5 +3.10% | 24.5-25 -0.79% | 25-25.5 -3.97%
+               | 25.5-26 -2.45% | >26 -15.93%
+So §5B as implemented is globally unbiased on constgold but NOT per-subsample; a tomographic or
+cut-dependent analysis would see the few-percent structure. The fix is to make `a_i = r_i` per
+object, which is what §5C.3's injection is for.
+
+**ADDITIVE OFFSET.** The mean of the two legs is `<s> = -0.0067`, i.e. **-0.0019 in shear units**.
+The antithetic construction removes it, but real data have one leg. It is either prior
+misspecification or the O(gamma^2) term (`s'' ~ -34` would do it); separating them needs a second
+|g|, which constgold does not have.
+
+SCOPE: shape channel only (the latent is the primary's true ellipticity; neighbours are NOT
+marginalized, so §3's blend channel is identically zero, as §5B.2 says). `P_pass`/`P_det` and the
+size/flux channels are not implemented.
+
 ## 2026-07-22 (cont.111, ✅ FRAMING REFRAME LOCKED — canonicalised in `GOALS.md`; supersedes the three-goals split. Plus the measured-binned test (cont.110g) that motivated it.)
 
 **Measured-binned test (`scripts/eval_component_measbinned.py`, `jobs/job_component_measbinned.sh`, job 15198321, V100 3.5min).** Re-binned the R_self label (⟨e_snc·ĝ_p⟩/g) and the flow R_self pred by MEASURED mag/size (size edges quantile-matched to the true-size fracs), side-by-side with true-binned, same 2M half-shear objects. **Confirmed the flow conditions on `measured_mag_auto`+`measured_flux_radius`** (not true). Result: (1) the sharp true-size-transition spike (+0.120) VANISHES / flips sign in measured bins → that part of the true-cut bias is irreducible errors-in-variables (a measured-conditioned model cannot honor a true-size boundary); (2) a REAL flow tilt survives in measured bins (too-steep size slope: resid −0.051 small → +0.047 large; bright-over +0.021 / faint-under −0.032) — a genuine, reducible model error, right sign/scale to drive the deployed measured-cut m (meas Re>0.3 −2.84%, mag<24 −4.88%). npz at `derisk/component_measbinned.npz`. This is pure Term-1 (R_shape); deployed measured-cut m = this tilt + missing R_sel.

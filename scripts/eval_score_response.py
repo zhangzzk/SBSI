@@ -17,6 +17,9 @@ Three modes, in increasing order of exposure to reality:
               `Cov(ehat, s)` must return the flow's own transport response.  This is the
               end-to-end unit test of Fisher's identity (2.2) + the estimator (2.6).
 
+  null        REAL measured shapes from the g = 0 catalogue -> ghat must be zero.  Isolates
+              the ADDITIVE bias, which constgold's antithetic combination hides.
+
   constgold   the certified constant-shear catalogue.  Here model and data DISAGREE, by
               exactly the amount Gold-v1 already quantified: the flow carries the self
               response only, so the score route should over-estimate the shear by
@@ -415,6 +418,46 @@ def mode_closure(args, bundle, prior, grid, rk):
     return dict(ghat=ghat_anti, err=err, R_score=R_score, R_transport=R_transport)
 
 
+def mode_null(args, bundle, prior, grid, rk):
+    """REAL measured shapes at zero shear -> `ghat` must be zero.
+
+    Constgold can only ever report the ANTITHETIC combination, which cancels anything even
+    in gamma.  The mean of its two legs is not zero (`<s> = -0.0067`, i.e. -0.0019 in
+    shear), and that could be either a genuine additive bias from prior misspecification
+    -- which real data, having one leg, could not cancel -- or the O(gamma^2) term, which
+    is harmless.  A g = 0 catalogue separates them: at zero shear the O(gamma^2) term
+    vanishes identically, so whatever `ghat` comes back is the additive bias.
+    """
+    print("\n=== MODE null: real measured shapes from the g=0 catalogue ===")
+    df = load_g0(args.g0_catalogue, args.max_rows)
+    print(f"rows: {len(df):,} detected+selected from {os.path.basename(args.g0_catalogue)}")
+    ehat = df[["measured_ngmix_g1", "measured_ngmix_g2"]].to_numpy(float)
+    good = np.isfinite(ehat).all(axis=1)
+    df, ehat = df[good].reset_index(drop=True), ehat[good]
+    print(f"finite measured shapes: {len(df):,}  <ehat> = "
+          f"[{ehat[:, 0].mean():+.5f}, {ehat[:, 1].mean():+.5f}]")
+
+    est = PosteriorShapeEstimator(bundle, grid, device=args.device)
+    nodes = ShapeScoreNodes(grid, prior, delta=args.fd_delta, info_delta=args.info_delta)
+    print(f"node bank: G={len(grid)}, supported={int(nodes.support.sum())}, "
+          f"|u_fd-u_closed|/rms={nodes.closed_form_residual():.2e}")
+    fr = rescale(df.copy(), **rk)
+    s, info = score_pass(est, nodes, fr, ehat, args.chunk, "null",
+                         slab_mult=args.slab_mult, ll_dtype=LL_DTYPE[args.ll_dtype])
+    n = len(df)
+    for axis in (0, 1):
+        one = np.zeros((n, 2))
+        one[:, axis] = 1.0
+        s_p, i_p = project(s, info, one[:, 0], one[:, 1])
+        ghat, den = shear_estimate(s_p, i_p)
+        err = float(np.std(s_p) * np.sqrt(n) / abs(den))
+        print(f"  gamma{axis + 1}:  <s>={np.mean(s_p):+.5f}  <I>={np.mean(i_p):.3f}  "
+              f"ghat = {ghat:+.6f} +/- {err:.6f}   (truth 0)")
+    print("\n  A non-zero ghat here is an ADDITIVE shear bias that real data cannot cancel;")
+    print("  it is the part of constgold's leg-mean offset that is NOT the O(gamma^2) term.")
+    return dict(n=n)
+
+
 def mode_constgold(args, bundle, prior, grid, rk):
     """The certified catalogue: score route vs the Gold-v1 transport numbers."""
     print("\n=== MODE constgold: score route on the certified catalogue ===")
@@ -513,7 +556,8 @@ def mode_constgold(args, bundle, prior, grid, rk):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--mode", required=True, choices=["unit", "closure", "constgold"])
+    ap.add_argument("--mode", required=True,
+                    choices=["unit", "closure", "constgold", "null"])
     ap.add_argument("--measurement-model",
                     default="models/measurement_flow_g0_ngmix_meas_szfl_noz_lam450_fixresp_s501.pt")
     ap.add_argument("--catalogue", default=GOLD_CAT)
@@ -588,6 +632,8 @@ def main():
     print(f"model: {os.path.basename(args.measurement_model)}")
     if args.mode == "closure":
         res = mode_closure(args, bundle, prior, grid, rk)
+    elif args.mode == "null":
+        res = mode_null(args, bundle, prior, grid, rk)
     else:
         res = mode_constgold(args, bundle, prior, grid, rk)
     if args.dump:
