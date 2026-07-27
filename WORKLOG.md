@@ -2,366 +2,180 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
-> NOTE (branch `worktree-inference-5b`): this branch was cut from the last COMMITTED master,
-> which predates the uncommitted cont.112–cont.160 entries in the working copy. The entry below
-> is numbered cont.161 and belongs at the top; expect a trivial conflict there on merge.
+> NOTE (branch `worktree-inference-5b`, rebased onto `7a82125` "Commit the V2 joint-forward
+> line"): `WORKLOG.md` is still MODIFIED-uncommitted in the main checkout, carrying entries
+> cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
+> belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
-## cont.161 (2026-07-27) INFERENCE.md §5B IMPLEMENTED — score/posterior shear inference from data, on constgold
+## cont.161 (2026-07-27) §5B score inference implemented and VALIDATED-BUT-PARKED; the durable result is a TRANSPORT fact about the acceptance population
 
 User: "realize what's written in the md into code — 5B. We expect the computed R from data to be
-consistent with what we measured from constantgold." Built the §5B estimator (per-object score
-`s_i`, information `I_i`, `ghat = sum s / sum I`) on top of the existing `posterior_shape.py` node
-bank, and ran it on the certified constant-gold catalogue with the certified Gold-v1 flow
-(`meas_szfl_noz_lam450_fixresp_s501`). Branch `worktree-inference-5b`, worktree
-`.claude/worktrees/inference-5b`.
+consistent with what we measured from constantgold." Built §5B (per-object score `s_i`,
+information `I_i`, `ghat = sum s / sum I`) on the existing `posterior_shape.py` node bank and ran
+it on constgold. Branch `worktree-inference-5b`, rebased onto the V2 commit `7a82125`.
 
-FILES: `sbs_shear/score_inference.py` (SmoothRadialPrior, generator + its gamma-shifted banks,
-`scores_from_loglike`, `blend_injection_term`); `scripts/eval_score_response.py` (modes
-unit/closure/constgold); `scripts/analyse_score_perobj.py`; `tests/test_score_inference.py`;
-`jobs/job_score_5b.sh`. Jobs 15281079/15281080 (first pair), 15281529/15281530 (controlled test),
-15281531 (constgold + per-object dump), 15281910 (blend injection). ~1000 rows/s/leg on an A40 at
-grid 61 (the cost is `N_gal x N_node` flow `log_prob`s, G = 2765).
+FILES: `sbs_shear/score_inference.py`; `scripts/eval_score_response.py` (modes
+unit/closure/null/constgold); `scripts/analyse_score_perobj.py`,
+`scripts/analyse_score_acceptance.py`, `scripts/compare_transport_score.py`,
+`scripts/compare_v1_v2_seeds.py`; `tests/test_score_inference.py` (7 tests, all pass);
+`jobs/job_score_5b.sh`. `cip` is often backed up — override with
+`sbatch --partition=inter --gpus-per-node=a40:1`.
 
-**NODE BANK (mode `unit`, no flow, no data).** `E_0[u] = 0` to 5e-16 and `E_0[du] + Var_0(u) =
--2.05e-2` = **0.12% of Var(u) = 17.7** at grid 61 (0.16% at grid 41); finite-difference generator
-vs the closed form `u_a = e_a[4 - 2 psi'(r^2)(1-r^2)]` agrees to 1.8e-4 rms. The two information
-estimators (Louis `-E[du]-Var(u)` vs `-d_gamma s_gamma`) agree to **0.06%** at
-`info_delta = 0.0025`. (The pre-`knot_margin` prior reached 0.005% on Bartlett but FAILED the
-closed-form check at 0.8 rms — a clamped, upturning spline tail that the Bartlett average washes
-out. Both diagnostics are needed; neither alone is sufficient.)
+### THE RESULT THAT MATTERS (transport only; no §5B machinery involved)
 
-TWO PRIOR-FITTING BUGS found by those diagnostics, both now regression-tested:
-  (a) `RadialShapePrior` bins in `r` and divides by `2 pi r`, so `phi'(0) != 0` and the generator
-      picks up a spurious `1/r`. The Bartlett curvature then DIVERGES as `1/delta` (-2.9, -9.2,
-      -21, -43 at delta = 0.02, 0.01, 0.005, 0.0025), i.e. a fake per-object information ~1.5x
-      Var(u). Fix: fit `psi(t)`, `t = |eps|^2`, in equal-area annuli -> `phi'(0) = 0` by
-      construction. Residual becomes delta-independent.
-  (b) Quantile knots hard against the data boundary leave the first spline span unconstrained. On
-      a GAUSSIAN test prior (`psi'` exactly -8.681) that gave `psi'(0) = -4.5` and a
-      2%-of-Var(u) information floor. Fix: `knot_margin` (10% of bins), shrinking the quantile
-      LEVELS rather than clipping the knots.
+`GOALS.md:9` defines the deliverable as **|m| <= 0.3% on the true-property-selected
+population**, and `GOALS.md:54` gives that cut as `Re > 0.3`, `mag < 26`. Only **43.3%** of
+source-selected constgold rows pass it. Transport (V1 certified flow, 4 seeds, 400k rows):
 
-**CLOSURE (data drawn FROM the flow at known shear; 1M rows, job 15281079).**
-`ANTITHETIC ghat = +0.02005 +/- 0.00003` against +0.0200 injected -> **+0.24%**; and
-`Cov(ehat,s)/R_transport = 1.0047`. The 250k control with the corrected prior + fp32 gives
-0.9941 +/- 0.0030. So the machinery reproduces the model's OWN response to **~0.5%**, which is the
-systematic floor for everything below (grid quadrature + prior-fit choice + `info_delta`).
+      sample                          m (4-seed mean +/- seed sd)
+      FULL catalogue                   +1.05% +/- 0.68%
+      ACCEPTANCE mag<26 & Re>0.3       +6.53% +/- 0.78%
+      rejected                        -19.43% +/- 0.54%
 
-**CONSTGOLD (1.5M rows, 32 cases 40-106, held-out).** Transport on exactly these rows:
-`R_sim = 0.4528`, `R_flow = 0.2898`, `R_blend = 0.1595` -> transport `m = +0.80%` (seed 501's
-certified per-seed m is +0.91% — consistent). Score route, SAME rows, SAME flow, NO emulator:
+**The global sub-percent is arithmetically a CANCELLATION.** `m` is a ratio of means, so:
 
-      run                          ghat/g              m_5B
-      15281080 (fp16, prior v1)    1.0029 +/- 0.0035   +0.29%
-      15281531 (fp32, prior v2)    0.9969 +/- 0.0035   -0.31%
+      R_sim   = 0.8773 x 0.4335 + 0.1360 x 0.5665 = 0.4574   (full 0.4573)
+      R_model = 0.8177 x 0.4335 + 0.1672 x 0.5665 = 0.4492   (full 0.4492)
+                   ^acceptance      ^rejected
 
-**This is NOT the naive prediction.** I expected `ghat/g = R_sim/R_flow = 1.5627` (+56%), on the
-argument that the flow carries only the self response. That argument is wrong, and the reason is
-now §5B.3 of `INFERENCE.md`.
+The rejected rows have almost no true response (`R_sim` = 0.136) but a comparable MODELLED one,
+because `R_flow` there is NEGATIVE (-0.009) and `R_blend` (0.176) carries it — so they
+over-predict hard and offset the acceptance rows. Gold-v1's certified +0.245% is the GLOBAL,
+uncut number and was never a claim about the cut population; cont.110c already had deployed
+`true Re>0.3 = +5.49%`. What is new here is measuring it on the `GOALS.md` cut with both
+conditions jointly, and confirming it by transport rather than only by the score route.
 
-**CONTROLLED TEST that it is not an insensitivity bug (job 15281529 vs 15281530).** Same synthetic
-closure data, but with a known blend-like `c*gamma` (c = 0.1593) added to the measured shape that
-the model does not know about: `ghat/g` moves **0.9941 -> 1.0775**, against the naive 1.5567. So the
-estimator is NOT blind to an added response — it recovers **15%** of a flat one.
+### §5B — machinery validated, science value nil
 
-**MECHANISM (`analyse_score_perobj.py` on the per-object dump).** For a location-family flow
-`ds/dehat = I/a`, so the antithetic legs give
+VALIDATION. Node bank (mode `unit`, no flow, no data): `E_0[u] = 0` to 5e-16;
+`E_0[du] + Var_0(u)` = 0.12% of `Var(u)`; FD generator vs the closed form
+`u_a = e_a[4 - 2 psi'(r^2)(1-r^2)]` agrees to 1.8e-4 rms; Louis vs `-d_gamma s_gamma` agree to
+0.06%. Closure (data drawn FROM the flow at known shear, 1M rows) returns the injected shear to
+**+0.24%**. Two prior-fitting bugs found by those diagnostics and regression-tested:
+  (a) binning `|eps|` in `r` and dividing by `2 pi r` puts a spurious `1/r` in the generator —
+      Bartlett curvature DIVERGES as `1/delta`. Fix: fit `psi(t)`, `t = |eps|^2`, in equal-area
+      annuli, so `phi'(0) = 0` by construction.
+  (b) quantile knots hard against the data boundary leave the first spline span unconstrained;
+      on a Gaussian test prior with exact `psi' = -8.681` this read -4.5 and injected a
+      2%-of-Var(u) information floor. Fix: `knot_margin`, shrinking the quantile LEVELS.
 
-      score      ghat/g = <I_i r_i/a_i> / <I_i>    = 0.9969    (information-weighted ratio)
-      transport  1 + m  = <r>/<a>                  = 1.5627    (ratio of population means)
+VERDICT. Put beside transport on the same rows and the same shear-independent bins
+(`compare_transport_score.py`), §5B agrees with transport everywhere honest — acceptance
++6.81 vs +7.30, rejected -21.65 vs -18.68, full -0.30 vs +1.82 — and is WORSE in the
+extreme-blend tail (`R_b 0.379-2.975`: score +55.84% vs transport +1.43%), because information
+weighting drags in exactly the objects whose response the bare flow lacks. So §5B sees nothing
+§5A does not. **Parked.** It is also 2-D-shape-target-only by construction
+(`PosteriorShapeEstimator` rejects anything else), so it does not apply to a 4-D joint model
+without extending the node bank over the extra output dimensions.
 
-with `r_i` the sim's per-object response and `a_i` the flow's. They differ because
-**`corr(I_i, R_blend_i) = -0.283`**: the top information quintile carries most of `sum I`, has
-`<R_blend> = 0.019` and `<mag_auto> = 23.8`, while the bottom has `<R_blend> = 0.262`. The score
-estimator's effective sample is the bright, barely-blended part of the catalogue.
+RETRACTED from an earlier draft of this entry: the story that §5B's global `ghat/g = 0.997` on
+constgold was information weighting legitimately suppressing the blended objects the flow gets
+wrong. It is the same cancellation as above (+6.81% acceptance vs -21.65% rejected), not a
+property of the weighting.
 
-**HONEST CAVEAT — the global -0.31% is a CANCELLATION, not per-bin flatness** (shear-independent
-splits only; splitting on `I_i` or `r_i` is splitting on the data and is not interpretable):
-      isolated +3.82% / blended -2.18%
-      R_blend  <0.02 +0.40% | 0.02-0.05 -5.71% | 0.05-0.13 -6.74% | 0.13-0.38 +1.43% | >0.38 +29.74%
-      mag_auto <23 -1.02% | 23-24 +3.55% | 24-24.5 +3.10% | 24.5-25 -0.79% | 25-25.5 -3.97%
-               | 25.5-26 -2.45% | >26 -15.93%
-So §5B as implemented is globally unbiased on constgold but NOT per-subsample; a tomographic or
-cut-dependent analysis would see the few-percent structure. The fix is to make `a_i = r_i` per
-object, which is what §5C.3's injection is for.
+### §5C.3 blend injection — INCOMPLETE, DO NOT QUOTE
 
-**ADDITIVE BIAS — the real open problem (mode `null`, job 15282206, + discriminators
-15282330/15282331).** Constgold's antithetic combination cancels anything even in gamma, and its
-leg mean is not zero: `<s> = -0.0067`, i.e. **-0.0019 in shear units**. Real data have one leg, so
-that would not cancel. Three runs at ZERO shear separate the causes:
+`blend_stencil_on_grid` returns both terms from one stencil along `w_1`, `w_2`, `w_1+w_2`: the
+score `-w_a . grad log p_flow` and the information `H_ab = w_a^T grad^2 log p_flow w_b` that the
+first implementation dropped. Fixed on the way: the Hessian was stored as float16, whose 65504
+ceiling the `1/delta^2 = 400` times `|w|^2` routinely exceeds, so deep-tail nodes overflowed to
+`inf` and `0 * inf` turned those objects' information into NaN (job 15286662, cancelled).
 
-      data source                                   ghat (truth 0)
-      flow-generated, shapes from the PRIOR         +0.00018 +/- 0.00069   consistent with 0
-      flow-generated, shapes from the CATALOGUE     +0.00064 +/- 0.00072   consistent with 0
-      REAL measured ngmix shapes, g=0 catalogue     gamma1 -0.00183 +/- 0.00072
-                                                    gamma2 +0.00781 +/- 0.00071   <- 11 sigma
-
-Deliberately mismatching the prior (row 2 vs row 1) moves `ghat` by only +0.0005, so **prior
-misspecification is NOT the cause**; the bias is the flow's likelihood not matching the real
-measured shapes. It is component-asymmetric (gamma2 >> gamma1), consistent with the measurement
-anisotropy the flow only partly carries (`std(ngmix_g1) = 0.3339` vs `g2 = 0.3397`). And the
-gamma1 value **-0.00183 +/- 0.00072 reproduces constgold's leg-mean offset of -0.0019** measured
-independently — so that offset is an additive bias, NOT the O(gamma^2) term I had listed as the
-alternative.
-
-TAKEAWAY: §5B's multiplicative behaviour on constgold is good (m = -0.31% +/- 0.35%), but its
-ADDITIVE bias on real data is ~1e-3 in gamma1 and ~8e-3 in gamma2, far above any cosmic-shear
-requirement. That is now the leading item, and it is a FLOW-calibration problem, not an
-inference-machinery or prior problem.
-
-**§5C.3 BLEND INJECTION — implemented, numerator verified, denominator INCOMPLETE (job 15281910).**
-`blend_injection_term` builds `-R_b(theta_b) grad_ehat log p_flow . v_eps` per (galaxy, node) and
-adds it to the generator, exactly (5.9). `grad_ehat log p_flow` is a central difference, not
-autograd — backpropagating through `chunk x G ~ 7e5` simultaneous flow evaluations OOMs a 44 GB A40
-(first attempt, job 15281684). The SCORE behaves as it should: `<s>` rises 0.0665 -> 0.0874 on the
-+g leg, ratio 1.31 against the naive `(R_flow+R_blend)/R_flow = 1.55`, the shortfall being the same
-weighting effect as §5B.3.
-
-The INFORMATION is wrong, and I know why. `scores_from_loglike` treats the injection as
-gamma-independent, so its finite difference captures the reweighting
-`log L(gamma) = log L(0) + gamma . extra` but drops
-
-      d^2_gamma log L |_0 = w^T (grad^2 log p_flow) w,      w = R_b v      [MISSING]
-
-an O(R_b^2) term, negative because the residual density is log-concave. Two symptoms, and the
-second is quantitative:
-  * `<I>` FALLS 3.488 -> 3.186 when the injection is switched on, where adding response to the
-    model must RAISE it;
-  * the injected antithetic reads **`ghat/g = 1.3897 +/- 0.0117` (m = +38.97%)** against the
-    prediction 1.0130 — over-estimated, the direction an under-estimated `<I>` forces.
-Closing the gap needs `<I> = 4.443`, i.e. **1.246 of missing information**. The Gaussian estimate
-of the dropped term is `<R_b^2>/sigma^2 = 0.1107 / 0.334^2 = 0.99` — same size, 25% low, which is
-about right for a Gaussian stand-in. Note `<R_b^2>/<R_b>^2 = 4.34`: the term is driven by the
-heavy `R_b` tail, so `<R_b>` alone badly under-states it. So the injected `ghat` is marked
-PROVISIONAL in the output; do not quote it.
-FIX (next step, cheap): `w^T grad^2 log p_flow w` is a second central difference of the residual
-log-density ALONG `w` — two extra forward passes per component on top of the four
-`grad_ehat_on_grid` already does.
-
-**§5C.3 INJECTION COMPLETED — and it OVERSHOOTS (jobs 15286662 cancelled, 15287258 clean).**
-`blend_stencil_on_grid` returns BOTH terms from ONE stencil along `w_1`, `w_2`, `w_1+w_2`: the
-score `-w_a . grad log p_flow` and the missing information `H_ab = w_a^T grad^2 log p_flow w_b`,
-with the cross term from the polarization identity and steps taken along UNIT directions rescaled
-by `|w|` (`R_b` spans 0..3.5, so a fixed step in `w` is useless at both ends). Seven residual-flow
-evaluations reusing `mu`/`fctx`, against four for the gradient alone. Posterior-weighted correction
-stable to 0.2% over `delta = 0.10..0.01` (the FLAT node average looks wildly unstable in `delta`,
-but that average is dominated by far-tail nodes the weights suppress — a diagnostic artifact, not
-the quantity that enters).
-
-BUG, caught by its own warning: the Hessian was stored as **float16**, whose 65504 ceiling the
-`1/delta^2 = 400` times `|w|^2` routinely exceeds. Deep-tail nodes overflowed to `inf`, and since
-the weight there is ~0, `0 * inf` turned those objects' information into NaN. Job 15286662 hit it
-on every chunk and was cancelled. Now float32 (+725 MB/slab, immaterial), non-finite -> 0 (the
-correct limit: a zero-weight node contributes zero), plus a per-slab non-finite row counter. The
-BARE legs never touch the stencil and were unaffected — 0.9970 +/- 0.0066, the fifth consistent
-reading of that number.
-
-RESULT (400k rows, 9 cases, seed 501; transport on the same rows `R_sim = 0.4573`,
-`R_flow = 0.2897`, `R_blend = 0.1595`, `m = +1.82%`):
-
-      model                            ghat/g              <I>
-      bare flow                        0.9970 +/- 0.0066   3.48
-      injected, Hessian MISSING        1.3897 +/- 0.0117   3.19
-      injected, COMPLETE               0.8528 +/- 0.0051   5.18
-      transport prediction             1.0182               --
-
-So the missing term was real and large — it closed +39% and carried on to **-14.7%**. Per-bin
-(`analyse_score_perobj.py`, shear-independent splits) it is **monotone in `R_blend`**:
-
-      R_blend  <0.02 **+0.90%** | 0.02-0.05 -2.55% | 0.05-0.13 -14.82% | 0.13-0.38 -28.26%
-               | >0.38 **-39.96%**
-      mag_auto <23 -4.04% | 23-24 -1.48% | 24-24.5 -5.39% | 24.5-25 -13.03% | 25-25.5 -21.41%
-               | 25.5-26 -19.92% | >26 -53.21%
-
-The unblended bin (163k rows) reads 1.009, so the base machinery is clean and the whole error is
-proportional to the injected term. Mechanism: injecting a response also inflates that object's OWN
-information (`I ~ a^2`), which drags the heavily-blended objects back into the sum with MORE
-weight — exactly where the model is least trustworthy. Bare under-responds there (+29.74% in the
-top bin); injected over-responds (-39.96%). Note this makes the bare 0.997 non-accidental:
-information concentrates on bright isolated objects, which is where the flow has no blend response
-to be missing.
-
-CANDIDATE CAUSES, in flight (jobs 15289666/15289667 closure controls, 15289872/15291524 transport):
-  (a) FUNCTIONAL FORM. §5C.3 assumes the neighbours push the measured shape along the primary's own
-      shape change, `c*(eps'-eps)`. If the real push is along a fixed direction the population mean
-      is identical but the per-object structure is not, and the estimator weights per object.
-  (b) DOUBLE COUNTING. The flow conditions on `nbr_flux_near/far/max`, so it may already carry part
-      of the blend response; adding BlendEMU on top would over-count worst where blending is worst.
-  (c) BlendEMU's per-object `R_blend` genuinely too large in the tail — right in the mean
-      (transport +1.8%), wrong in its spread.
-Closure mode now takes a per-object extra response and, with `--inject-blend`, hands the estimator
-the SAME `c_i`; under `--closure-extra-form mobius` the injected model IS the generating model, so
-`ghat/g` MUST read 1.000 and any departure is a bug rather than model error. `--closure-extra-form
-flat` shares the population mean but not the per-object structure, so the gap between the two
-prices (a). `--flow-perobj-only` dumps the per-object transport response for a previous run's exact
-rows, so per-bin TRANSPORT can be set beside per-bin SCORE: a model error shows in both, a
-weighting or form error only in the score.
-
-**⚠ RETRACTED IN FULL (owner correction): THE "V2" BELOW IS NOT V2.** I evaluated
-`sbsi_caches/ablation/measurement_flow_g0_ngmix_ablate_s2c_coupling_lt500_*`, which is an
-ABLATION RUNG (measured->true conditioning swap + 4-D output) trained by
-`train_measurement_model.py` on the FULL source-selected population — its training log shows
-`source_cut = 5,798,538 / 6,543,416`, no true-property cut. The actual V2 is
-`sbsi_caches/forward_proto/forward_ens_lr250_swa8_seed42{1..6}_joint.pt`, trained by
-`train_joint_forward.py` with `metadata.true_cut = (0.3, 26.0)` and
-`primary_only_shear = True` — i.e. trained ON the bright population it is meant to be
-evaluated on. Confirmed by reading the checkpoint metadata.
-
-The size of my error, on the SAME true-cut population: real V2 `<R_flow> = 0.7532 +/- 0.0298`
-(6 seeds, `cl250_15215739`) against the ablation model's 0.6814 that I measured — ~10% higher.
-The ablation model under-responds on the bright population precisely BECAUSE it was trained
-on the full, fainter one, so my +6.27% measured that train/eval population mismatch, not V2.
-I also paired it with the wrong emulator: the V2 chain uses `blend_lookup_extnbrho_d7_c0-39`
-(7"-gated, isolation = no brighter true neighbour within 7"), not `extnbrho_c40-139`.
-So "V2 does not close the acceptance deficit" is WITHDRAWN; it is not a statement about V2.
-
-Already on record for the real V2 (`cl250_15215739`, 6-seed ensemble, constgold true-cut,
-N=4,667,164): `<R_sim>=0.8619`, `<R_flow>=0.7532`, isolated band (pure flow test, R_blend=0)
-`m_iso = +5.15%` with 3.63% seed scatter, against the certified measured-conditioned flow's
--8..-18% in the same band. NOTE that is the CONSTGOLD closure; the owner's validation is on
-PAIR-MATCHED half-shear galaxies of that population, which is the cleaner test and the one
-`primary_only_shear=True` training is matched to. Do not conflate them.
-
-BRANCH LIMITATION: these joint checkpoints carry `primary_preprocessor`/`neighbor_
-preprocessor`, `primary_features`/`neighbor_features`, `shape_targets`/`measurement_targets`
-— a scene-conditioned format this branch's loader cannot read, and the loader that can is
-uncommitted in the main checkout. This branch cannot evaluate V2 without that code.
-
-**[RETRACTED] V2 vs V1 TRANSPORT ON THE ACCEPTANCE POPULATION — V2 DOES NOT CLOSE THE DEFICIT
-(`scripts/compare_v1_v2_seeds.py`; jobs 15292699, 15293776-81; 4 seeds each, 501/502/503/505,
-same 400k rows).** V2 = `sbsi_caches/ablation/measurement_flow_g0_ngmix_ablate_s2c_coupling_
-lt500_s50x.pt`: conditions on TRUE `r_input_p`/`Re_input_p`, 4-D output (shape + measured mag
-+ measured log size), lambda_theta = 500 pin.
-
-      sample                  |  V1 mean +/- sd  |  V2 mean +/- sd  |  V2-V1
-      FULL                    |  +1.05% +/-0.68% |  +1.28% +/-1.33% |  +0.24%
-      ACCEPTANCE mag<26&Re>0.3|  +6.53% +/-0.78% |  +6.27% +/-1.22% |  -0.26%
-      rejected                | -19.43% +/-0.54% | -17.72% +/-3.06% |  +1.71%
-      true Re>0.3             |  +7.52% +/-0.65% |  +7.39% +/-1.16% |  -0.13%
-      true Re 0.10-0.24       | -19.53% +/-1.44% | -12.83% +/11.42% |  +6.70%
-      true Re 0.24-0.30       | -56.77% +/-0.58% | -56.90% +/-1.04% |  -0.12%
-      true Re 0.30-0.38       | +19.77% +/-1.27% | +19.97% +/-5.01% |  +0.20%
-      true Re 0.38-0.50       | +17.55% +/-0.80% | +13.47% +/-2.55% |  -4.08%
-      true Re 0.50-0.90       |  -1.12% +/-0.43% |  -0.90% +/-1.39% |  +0.22%
-      true Re 0.90-1.50       |  -0.80% +/-0.59% |  +4.42% +/-3.27% |  +5.22%
-
-**The acceptance deficit is NOT the errors-in-variables floor.** True-property conditioning
-moves it by -0.26% against a seed scatter of ~1%, i.e. not at all. Whatever drives the
-+6.5% on the deliverable population survives making true size an input.
-
-RETRACTION (single-seed over-reading, mine): on seed 501 alone the `Re 0.10-0.24` bin went
--18.93% -> +0.92% and I reported that as V2 removing the EiV floor where measured size is
-least informative. Over 4 seeds that bin is `-12.83% +/- 11.42%` — the scatter is as large as
-the claimed effect, so seed 501 was one draw and the improvement is NOT established.
-
-**V2's one robust signature is 2-8x LARGER seed scatter** — 1.33 vs 0.68 global, 1.22 vs 0.78
-on acceptance, 11.42 vs 1.44 at small size, 3.27 vs 0.59 at large size. That is consistent
-with its ~8x smaller training set (3.4M rows vs V1's 27.8M, both from the checkpoint
-metadata) and is a CONFOUND: V1 and V2 cannot be fairly compared per-bin until V2 is trained
-on matched volume. The acceptance-level conclusion is safe because there the scatter (~1%) is
-well below the deficit (~6.5%); the per-bin ones are not.
-
-NOTE `Re 0.24-0.30` reads -56% in both because `R_sim` crosses zero there (cont.110f) — read
-the residual, not the ratio.
-
-**TRANSPORT vs SCORE, SAME ROWS, SAME BINS (jobs 15292356/15292357, `--flow-perobj-only`;
-`scripts/compare_transport_score.py`). THE HEADLINE: the sub-percent is a CANCELLATION, and
-that is a TRANSPORT-side fact, not an artefact of the score machinery.**
-
-      sample                       N    R_sim  R_flow   R_bl  TRANSPORT  score bare  score inj
-      FULL catalogue         400,000   0.4573  0.2897  0.1595    +1.82%     -0.30%    -14.72%
-      ACCEPTANCE mag<26&Re>0.3 173,399 0.8773  0.6802  0.1375    +7.30%     +6.81%     -1.28%
-      rejected               226,601   0.1360 -0.0092  0.1764   -18.68%    -21.65%    -38.08%
-      true mag < 26          266,955   0.5556  0.4156  0.1373    +0.48%     +1.29%     -7.06%
-      true Re  > 0.3         216,089   0.7814  0.5685  0.1532    +8.27%     +6.27%     -5.17%
-
-**On the population `GOALS.md` defines the deliverable over, TRANSPORT reads +7.30%, not
-sub-percent.** The full-catalogue +1.82% is +7.30% on the acceptance rows cancelling
--18.68% on the rejected ones (where `<R_flow>` is actually NEGATIVE, -0.0092). This
-reproduces cont.110c's deployed `true Re>0.3 +5.49%` and cont.110e's half-shear
-`m_self size>0.3 +7.5%` on a third, independent route.
-
-**And the score route agrees with transport on every honest split** (+6.81 vs +7.30,
--21.65 vs -18.68, +1.29 vs +0.48), so §5B is not seeing anything §5A does not. The one
-place they diverge is the extreme-blend tail, `R_b 0.379-2.975`: transport +1.43%, score
-bare +55.84% — the score route is WORSE there, because information weighting drags in
-exactly the objects whose response the bare flow lacks. VERDICT: §5B is validated as
-machinery and adds nothing as science on this problem; the binding issue is the model's
-self-response on big galaxies, which is a §5A/model question.
-
-NOTE the `--no-source-selection` run (job 15292357, m = +7.44%) is NOT interpretable: the
-BlendEMU lookup was built behind the same cuts, so it matched only 90.4% of rows and the
-unmatched were filled with `R_blend = 0`, dragging `<R_blend>` to 0.1440. Lifting the cut
-needs an emulator lookup that covers the added rows.
-
-**THE ACCEPTANCE POPULATION — every constgold number above was on the wrong sample.**
-`GOALS.md:54` defines the deliverable over a TRUE-property primary cut, `Re > 0.3` and
-`mag < 26`, and only **43.3%** of the source-selected rows pass it. Re-splitting the SAME
-dumps (`scripts/analyse_score_acceptance.py`):
-
-      model                    full catalogue   acceptance (43.3%)   rejected
-      bare flow                    -0.30%        +6.81% +/- 1.26%    -21.65%
-      injected (§5C.3)            -14.72%        -1.28% +/- 1.00%    -38.08%
-
-TWO RETRACTIONS. (1) The bare flow's -0.30% is NOT the flat result it looked like and the
-§5B.3 story told about it above is wrong: it is a CANCELLATION between +6.81% on the
-deliverable population and -21.65% on the rows outside it. On the population that has to
-hit 0.3%, the bare flow UNDER-responds by ~7% — the missing blend response, exactly where
-it should be. (2) The injection is not a -15% overshoot; on the deliverable population it
-does what it is for, +6.81% -> -1.28%. The -14.72% was almost all rejected rows.
-Inside the acceptance cut the unblended bin (`R_blend<0.02`, 84k rows) reads **+4.8%**, and
-injection does not touch it — that is a pure flow SELF-response deficit at large size, no
-blending involved, same sign and scale as cont.110e's `size>0.3` residual (-0.041 on 0.589).
-So: ~+5% self-response deficit PLUS a blend term the injection mostly fixes.
-Caveat: one seed (501), 400k rows, 9 cases — the +/-1.0% is a 9-case bootstrap.
-
-**§5C.3 CLOSURE CONTROL — IT FAILS; THE INJECTED INFORMATION HAS A BUG (jobs 15289666,
-15289667).** With `--closure-extra-perobj --inject-blend`, the injected model IS the
-generating model, so `ghat/g` must read 1.000:
+But the CLOSURE CONTROL FAILS. With `--closure-extra-perobj --inject-blend` the injected model
+IS the generating model, so `ghat/g` must read 1.000:
 
       form      ghat/g    leg +g <I>   leg -g <I>
       mobius    1.6479      1.044        5.566
       flat      1.6008      1.234        5.567
-      required  1.0000      (equal)      (equal)
 
-The two FORMS agree to 3% of a 65% error, so the functional-form hypothesis (a) above is
-DEAD. The diagnostic is the leg asymmetry: two legs differing only by the sign of a 0.02
-shear cannot have information differing by 5x (every bare run has them agreeing to three
-decimals, 3.485 vs 3.483). The MEAN of the two injected legs, 3.31, is close to the bare
-3.41 — so the injection is contributing something ODD in the leg sign, i.e. behaving like a
-term linear in gamma rather than a curvature. **The injected constgold numbers above are
-therefore PROVISIONAL and must not be quoted until this closes**; the BARE numbers are
-unaffected (they never touch the stencil). `scores_from_loglike` now takes a `diag` dict
-splitting I11 into the finite-difference term and the Hessian correction, reported per leg,
-to localise the odd part.
+The two FORMS agreeing to 3% of a 65% error kills the functional-form hypothesis. The diagnostic
+is the leg asymmetry: two legs differing only by the sign of a 0.02 shear cannot have information
+differing by 5x (bare runs agree to three decimals, 3.485 vs 3.483), and the MEAN of the two
+injected legs (3.31) sits on the bare value (3.41) — the injection contributes something ODD in
+the leg sign. At 40k rows it very nearly passes (`ghat/g = 0.9755`) and the legs are symmetric
+(5.52 vs 5.67), so it is a TAIL effect: a few extreme-`R_blend` objects, where `|w| ~ 3 R_b`
+reaches ~11 in standardised units and `H ~ |w|^2`, blow up the curvature term.
+`scores_from_loglike` takes a `diag` dict splitting I11 into the FD and Hessian parts per leg to
+localise it. **All injected numbers are provisional.** Bare numbers are unaffected (they never
+touch the stencil).
 
-**SOURCE SELECTION AND LEG MATCHING (owner question; measured on 1.5M constgold rows).** The
-`DEFAULT_SELECTION_CUTS` applied by `load_constgold` are on TRUE properties — `r_input_p` in
-(18,28), `Re_input_p` in (0.1,1.5), `distance < 5"` or isolated — identical in both legs, so they
-DEFINE the sample rather than select on the data and cannot bias the response. They remove 9.7%,
-almost all of it the true-size cut (9.64%); the mag cut takes 0.1% and the separation cut none.
-Lifting them moves `R_sim` 0.4591 -> 0.4503 (-1.9%), which is a different sample, not a bias; and
-the flow was TRAINED behind the same cuts (`train_measurement_model.py:166`), so the rows that come
-back are all true `Re > 1.5"` and it is extrapolating. `--no-source-selection` added for that
-robustness check.
-The LEGS ARE ALREADY MATCHED row-for-row: one row is one input galaxy carrying `measured_*_plus`
-and `measured_*_minus`, so `r_i` is a per-object difference of the same galaxy, and `R_flow` adds
-common random numbers across legs. **The real unmatched selection is upstream and invisible in this
-file**: the schema has NO per-leg detection flag and ZERO rows with an unmeasured leg, i.e. the
-catalogue is the both-legs-detected INTERSECTION. That intersection IS shear-dependent, it is the
-only genuine cut in the chain, and its size is known from elsewhere (`R_full/R_both - 1` = -0.88%
-all, -0.08% isolated, -1.11% blended). The certified +0.245% excludes it by construction.
+### ADDITIVE BIAS (mode `null`) — owner says already fixed upstream
 
-SCOPE: shape channel only (the latent is the primary's true ellipticity; neighbours are NOT
-marginalized, so §3's blend channel is identically zero, as §5B.2 says). `P_pass`/`P_det` and the
-size/flux channels are not implemented.
+Three zero-shear runs separate the causes:
 
-NEXT: (a) DONE — the O(R_b^2) term is in; the open question is now why the completed injection
-overshoots to -14.7%, which the closure controls above are running to settle;
-(b) the additive bias — chase the flow's residual mis-calibration in `ngmix_g2`, and test a
-conditional prior `p(e | mag, size)` even though the g=0 discriminator says the marginal prior is
-not the cause; (c) per-subsample flatness (the +30% top-R_blend bin) rather than global cancellation;
-(d) a second |g| to confirm the additive/O(gamma^2) split independently.
+      data source                                   ghat (truth 0)
+      flow-generated, shapes from the PRIOR         +0.00018 +/- 0.00069
+      flow-generated, shapes from the CATALOGUE     +0.00064 +/- 0.00072
+      REAL measured ngmix shapes, g=0 catalogue     gamma1 -0.00183 +/- 0.00072
+                                                    gamma2 +0.00781 +/- 0.00071   <- 11 sigma
+
+Deliberately mismatching the prior moves `ghat` by +0.0005, so prior misspecification is NOT the
+cause; it is the flow's likelihood against real measured shapes, and it is component-asymmetric.
+OWNER: this is the known misdefined-centroid additive bias in `g2`, already fixed in a newer
+catalogue and model — which this branch does not have, so the `null` test should be re-run
+against the fixed pair before this is read as a live problem.
+
+### SOURCE SELECTION AND LEG MATCHING (owner question; measured, not assumed)
+
+`DEFAULT_SELECTION_CUTS` are on TRUE properties — `r_input_p` in (18,28), `Re_input_p` in
+(0.1,1.5), `distance < 5"` or isolated — identical in both legs, so they DEFINE the sample
+rather than select on the data and cannot bias the response. They remove 9.7% of constgold,
+almost all of it the true-size cut (9.64%). **They are exactly the cuts the flow was trained
+behind**, proven by replaying today's `source_select_selection` over the first 100 batches of
+the g0 catalogue and reproducing the s501 training log's own counters to the row
+(`raw=6,543,416  source_cut=5,798,538  selected=5,798,538`). The checkpoint does NOT record the
+cuts and the repo has a single snapshot commit, so the replay is the only thing that settles it.
+Also learned: `selected == source_cut` exactly, i.e. the training catalogue is
+detection-pre-filtered and the flow has never seen an undetected object; and only the PRIMARY is
+cut (`source_select_detection` touches `_p` columns only; `cuts[0]`/`cuts[2]` are unreferenced),
+so neighbours are full-population as intended.
+
+LEGS ARE ALREADY MATCHED row-for-row — one row is one input galaxy carrying `measured_*_plus`
+and `measured_*_minus`, and `flow_response` adds common random numbers across legs. The real
+unmatched selection is upstream and invisible in the file: the schema has NO per-leg detection
+flag and ZERO rows with an unmeasured leg, so the catalogue is the both-legs-detected
+INTERSECTION. That IS shear-dependent, it is the only genuine cut in the chain, and its size is
+known (`R_full/R_both - 1` = -0.88% all, -0.08% isolated, -1.11% blended); the certified +0.245%
+excludes it by construction.
+
+`--no-source-selection` was added but its run is NOT interpretable: the BlendEMU lookup was built
+behind the same cuts, matched only 90.4%, and unmatched rows were filled `R_blend = 0`.
+
+### ⚠ RETRACTED IN FULL: the V1-vs-V2 comparison
+
+I evaluated `sbsi_caches/ablation/measurement_flow_g0_ngmix_ablate_s2c_coupling_lt500_*` and
+called it V2. It is an ABLATION RUNG (measured->true conditioning swap + 4-D output) trained by
+`train_measurement_model.py` on the FULL source-selected population — its training log shows
+`source_cut = 5,798,538 / 6,543,416`, no true cut. **The actual V2 is
+`sbsi_caches/forward_proto/forward_ens_lr250_swa8_seed42{1..6}_joint.pt`** from
+`train_joint_forward.py`, `metadata.true_cut = (0.3, 26.0)`, `primary_only_shear = True` —
+trained ON the bright population. On the same true-cut population the real V2 has
+`<R_flow> = 0.7532 +/- 0.0298` against the ablation model's 0.6814 that I measured, ~10% higher:
+the ablation model under-responds there precisely because it was trained on the fainter full
+population, so my "+6.27%" measured a train/eval population mismatch, not V2. I also paired it
+with the wrong emulator (`extnbrho_c40-139` rather than the 7"-gated `extnbrho_d7_c0-39` the V2
+chain uses). Also retracted: a single-seed claim that V2 fixed the `Re 0.10-0.24` bin
+(-18.93% -> +0.92%); over 4 seeds that bin is `-12.83% +/- 11.42%` — scatter as large as the
+effect.
+
+On record for the real V2 (`cl250_15215739`, 6-seed ensemble, constgold true-cut, N=4,667,164):
+`<R_sim> = 0.8619`, `<R_flow> = 0.7532`, isolated band (pure flow test, `R_blend = 0`)
+`m_iso = +5.15%` with 3.63% seed scatter, against the certified measured-conditioned flow's
+-8..-18% in the same band. That is the CONSTGOLD closure; the owner's validation is on
+PAIR-MATCHED half-shear galaxies of that population — the cleaner test, and the one
+`primary_only_shear=True` training is matched to. Do not conflate them.
+
+### NEXT
+
+1. The +6.5% on the deliverable population is explained by NEITHER candidate — not
+   errors-in-variables (V2 conditioning does not move it) and not blending (it is +4.8% on
+   essentially unblended acceptance objects). That is the open model question.
+2. Re-run `mode null` against the centroid-fixed catalogue + model before treating the `g2`
+   additive bias as live.
+3. §5C.3's tail bug, only if §5B is ever un-parked.
+4. Anything V2 in this branch must use `forward_proto/forward_ens_*_joint.pt` and the 7"-gated
+   `blend_lookup_extnbrho_d7_c0-39`, via `eval_constgold_closure.py` / `eval_joint_triad.py` —
+   NOT `eval_score_response.py`, whose loader and node bank are V1-shaped.
 
 ## 2026-07-22 (cont.111, ✅ FRAMING REFRAME LOCKED — canonicalised in `GOALS.md`; supersedes the three-goals split. Plus the measured-binned test (cont.110g) that motivated it.)
 
