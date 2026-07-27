@@ -40,12 +40,14 @@ def beta_ticklabels(bedges):
     return lab
 
 
-def plot_facet(ax, zs, zm, name, title, legend_title, prettify):
+def plot_facet(ax, zs, zm, name, title, legend_title, prettify, drop=()):
     labels = [str(s) for s in zs[f"{name}__labels"]]
     bedges = zs[f"{name}__beta_edges"]
     nb = len(bedges)  # x positions: 0=iso, 1..n_beta
     x = np.arange(nb)
     for i, lab in enumerate(labels):
+        if lab in drop:
+            continue
         c = COLORS[i % len(COLORS)]; mk = MARKERS[i % len(MARKERS)]
         db_s = 100 * zs[f"{name}__{lab}__db"]; se_s = 100 * zs[f"{name}__{lab}__se"]
         mk_key = f"{name}__{lab}__db_model"
@@ -76,17 +78,19 @@ def main():
     plot_facet(axl, zs, zm, "SIZE",
                f"by true SIZE  (fixed mag {lo:g}–{hi:g})",
                "true size bin",
-               lambda s: s.replace("Re", "$R_e$ "))
+               lambda s: s.replace("Re", "$R_e$ "),
+               drop=("Re[0.80,1.20)",))
     plot_facet(axr, zs, zm, "MAG",
                "by true MAGNITUDE  (pooling size)",
                "true r-mag bin",
-               lambda s: s.replace("r", "r "))
+               lambda s: s.replace("r", "r "),
+               drop=("r[24.5,25.0)",))
     axl.set_ylabel(r"detection response  $(\langle e_{\rm int}\rangle_+-\langle e_{\rm int}\rangle_-)/0.04$  [%]")
 
     sim_h = mlines.Line2D([], [], color="0.3", marker="o", ls="-", label="sim (constgold)")
     mod_h = mlines.Line2D([], [], color="0.3", marker="o", mfc="white", ls="--",
                           label="model (classifier)")
-    axr.legend(handles=[sim_h, mod_h], loc="upper right", fontsize=12)
+    axr.legend(handles=[sim_h, mod_h], loc="lower right", fontsize=12)
 
     fig.tight_layout()
     p = os.path.join(args.out, "fig_detection_beta_bysize.png")
