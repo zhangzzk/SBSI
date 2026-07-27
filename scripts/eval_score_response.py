@@ -218,40 +218,48 @@ def build_prior(args):
 """(the old whole-catalogue log-likelihood buffer is gone -- see `score_pass`)"""
 
 
-def grad_ehat_on_grid(est, frame, ehat_raw, chunk=256):
+@torch.no_grad()
+def grad_ehat_on_grid(est, frame, ehat_raw, chunk=256, delta=0.02):
     """`grad_ehat log p_flow(ehat | e_k, rest)` per (galaxy, node) -- §5C.3's injection.
 
     In RAW target units, so the injected `R_blend * delta_e` shift is in the same units
     as the measured shape.  The residual flow is blind to `e`, so the density is a
-    location family and the gradient is just the residual flow's own score at
-    `ehat - mu(e_k)`; autograd handles it without any structural assumption.
+    location family and this gradient is the residual flow's own score at `ehat - mu`.
+
+    Central differences rather than autograd: the natural formulation backpropagates
+    through `chunk x G` flow evaluations at once (~7e5 at the default settings) and the
+    retained graph OOMs a 44 GB A40.  Four extra forward passes of the residual flow cost
+    the same order and hold no graph -- and `mu` and the flow context, which dominate the
+    work, are computed once and reused across all four.
     """
     model = est.bundle.model
     tstd = est.bundle.target_transform
-    scales = torch.as_tensor(tstd.scales, dtype=torch.float32, device=est.device)
+    scales = torch.as_tensor(np.asarray(tstd.scales, dtype=np.float32), device=est.device)
     ehat_std = tstd.transform_array(np.asarray(ehat_raw, dtype=np.float32))
     n = len(frame)
-    out = np.empty((n, est.G, 2), dtype=np.float16)
+    out = np.empty((n, est.G, 2), dtype=np.float32)
     for start in range(0, n, chunk):
         stop = min(start + chunk, n)
         rep = est._grid_tiled_context(frame.iloc[start:stop])
         b = rep.shape[0]
         flat = rep.view(b * est.G, -1)
-        with torch.no_grad():
-            mu = model._mu(flat)
-            fctx = model._flow_ctx(flat)
+        mu = model._mu(flat)
+        fctx = model._flow_ctx(flat)
         xh = torch.as_tensor(ehat_std[start:stop], dtype=torch.float32, device=est.device)
-        x = xh[:, None, :].expand(b, est.G, 2).reshape(b * est.G, 2) - mu
-        x = x.detach().requires_grad_(True)
-        ll = model.flow.log_prob(x, fctx).sum()
-        (gx,) = torch.autograd.grad(ll, x)
+        x0 = xh[:, None, :].expand(b, est.G, 2).reshape(b * est.G, 2) - mu
+        g = torch.empty_like(x0)
+        for a in range(2):
+            step = torch.zeros_like(x0)
+            step[:, a] = delta
+            g[:, a] = (model.flow.log_prob(x0 + step, fctx)
+                       - model.flow.log_prob(x0 - step, fctx)) / (2 * delta)
         # d/d ehat_raw = (d/d ehat_std) / scale
-        out[start:stop] = (gx / scales).view(b, est.G, 2).detach().cpu().numpy().astype(np.float16)
+        out[start:stop] = (g / scales).view(b, est.G, 2).cpu().numpy()
     return out
 
 
 def score_pass(est, nodes, frame, ehat_raw, chunk, tag, r_blend=None, grad_chunk=256,
-               slab_mult=64, analytic_info=False, ll_dtype=np.float32):
+               slab_mult=64, analytic_info=False, ll_dtype=np.float32, grad_delta=0.02):
     """One leg: log-likelihood over the node bank -> `(s_i, I_i)`, slab by slab.
 
     Nothing of size `N x G` is ever held: each slab's likelihood (and, when injecting,
@@ -270,8 +278,9 @@ def score_pass(est, nodes, frame, ehat_raw, chunk, tag, r_blend=None, grad_chunk
                                 row_offset=s0, out_dtype=ll_dtype)
         extra = None
         if r_blend is not None:
-            g = grad_ehat_on_grid(est, frame.iloc[s0:s1], ehat_raw[s0:s1], chunk=grad_chunk)
-            extra = blend_injection_term(g.astype(np.float32), nodes.grid, r_blend[s0:s1])
+            g = grad_ehat_on_grid(est, frame.iloc[s0:s1], ehat_raw[s0:s1],
+                                  chunk=grad_chunk, delta=grad_delta)
+            extra = blend_injection_term(g, nodes.grid, r_blend[s0:s1])
         s_out[s0:s1], i_out[s0:s1], _ = scores_from_loglike(
             ll, nodes, device=est.device, extra=extra, analytic_info=analytic_info)
         el = time.time() - t0
@@ -458,6 +467,7 @@ def mode_constgold(args, bundle, prior, grid, rk):
             s, info = score_pass(est, nodes, fr, ehat, args.chunk, tag,
                                  r_blend=(rb if inject else None),
                                  grad_chunk=args.grad_chunk,
+                                 grad_delta=args.grad_delta,
                                  slab_mult=args.slab_mult,
                                  ll_dtype=LL_DTYPE[args.ll_dtype])
             legs[sign] = report_leg(tag, s, info, ehat, gh1, gh2, sign * g, cases,
@@ -535,6 +545,9 @@ def main():
                          "0.1593 is the certified R_blend")
     ap.add_argument("--chunk", type=int, default=1024)
     ap.add_argument("--grad-chunk", type=int, default=256)
+    ap.add_argument("--grad-delta", type=float, default=0.02,
+                    help="central-difference step (standardised target units) for "
+                         "grad_ehat log p_flow")
     ap.add_argument("--n-samples", type=int, default=128)
     ap.add_argument("--batch-size", type=int, default=16384)
     ap.add_argument("--flow-seed", type=int, default=12345)

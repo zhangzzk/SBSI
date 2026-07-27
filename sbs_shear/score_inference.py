@@ -410,6 +410,8 @@ def scores_from_loglike(loglike, nodes, chunk=65536, device=None, extra=None,
     s_out = np.empty((n, 2), dtype=np.float64)
     i_out = np.empty((n, 2, 2), dtype=np.float64)
     z_out = np.empty(n, dtype=np.float64)
+    if extra is not None:                # (B,G,2) fp32 is 2x the log-likelihood slab
+        chunk = min(chunk, 16384)
     for start in range(0, n, chunk):
         stop = min(start + chunk, n)
         arr = np.ascontiguousarray(loglike[start:stop])
