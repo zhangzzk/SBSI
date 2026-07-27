@@ -461,6 +461,23 @@ def mode_closure(args, bundle, prior, grid, rk):
     print(f"transport R_flow on these rows = {R_transport:.4f}  "
           f"(certified {R_FLOW_CERT:.4f})", flush=True)
 
+    # The extra, model-unmodelled response, per object.  With `--inject-blend` the
+    # estimator is handed the SAME c_i, which turns this mode into the closure test for
+    # §5C.3 itself: under `--closure-extra-form mobius` the data are generated in exactly
+    # the form the injection assumes, so ghat/g must return 1.000 and anything else is a
+    # bug in the stencil, the Hessian term or the weights.
+    if args.closure_extra_perobj:
+        c_vec = df["r_blend"].to_numpy(float)
+    elif args.closure_extra_response:
+        c_vec = np.full(len(df), float(args.closure_extra_response))
+    else:
+        c_vec = None
+    if c_vec is not None:
+        print(f"closure extra response: form={args.closure_extra_form}  "
+              f"<c>={c_vec.mean():.4f}  sd={c_vec.std():.4f}  "
+              + ("estimator INJECTS the same c_i (§5C.3 closure)" if args.inject_blend
+                 else "estimator does NOT model it"), flush=True)
+
     out = {}
     legs = ((+1, "leg +g"),) if g == 0 else ((+1, "leg +g"), (-1, "leg -g"))
     for sign, tag in legs:
@@ -471,21 +488,32 @@ def mode_closure(args, bundle, prior, grid, rk):
         fr = rescale(fr, **rk)
         reseed()                                    # CRN: same latents in both legs
         ehat = bundle.sample(fr, n_samples=1, batch_size=args.batch_size)[:, 0, :]
-        if args.closure_extra_response:
-            # A blend-like response the model does NOT contain: the measured shape picks
-            # up c*gamma on top of whatever the flow produces.  The data response becomes
-            # R_flow + c while the model still believes R_flow, so this is the controlled
-            # version of what constgold does to the estimator.  If ghat/g comes back at
-            # (R_flow + c)/R_flow, the score route tracks an added response; if it comes
-            # back at 1, it is blind to one.
-            c = args.closure_extra_response
-            ehat = ehat + sign * g * c * np.stack([gh1, gh2], axis=1)
+        if c_vec is not None:
+            # A blend-like response on top of whatever the flow produces.  The data
+            # response becomes R_flow + c; whether the MODEL contains it is set by
+            # `--inject-blend`.  Two forms, deliberately sharing a population mean:
+            #   mobius  ehat += c * (eps' - eps)   the primary's own shape change, which
+            #           is exactly what §5C.3's injection assumes -- the machinery test
+            #   flat    ehat += c * gamma          a fixed direction, independent of the
+            #           true shape -- same mean, different per-object structure, so the
+            #           gap between the two prices the injection's functional-form
+            #           assumption rather than any coding error
+            if args.closure_extra_form == "mobius":
+                shift = np.stack([e1l - e1i, e2l - e2i], axis=1)
+            else:
+                shift = sign * g * np.stack([gh1, gh2], axis=1)
+            ehat = ehat + c_vec[:, None] * shift
         s, info = score_pass(est, nodes, fr, ehat, args.chunk, tag,
+                             r_blend=(c_vec if (args.inject_blend and c_vec is not None)
+                                      else None),
+                             grad_chunk=args.grad_chunk, grad_delta=args.grad_delta,
                              slab_mult=args.slab_mult, ll_dtype=LL_DTYPE[args.ll_dtype])
         out[sign] = report_leg(tag, s, info, ehat, gh1, gh2, sign * g, None)
-        if sign > 0:
+        if sign > 0 and not (args.inject_blend and c_vec is not None):
             # the two information estimators must agree on the plain model; only then
-            # is the finite-difference one trustworthy for the injected model (§5C.3)
+            # is the finite-difference one trustworthy for the injected model (§5C.3).
+            # Skipped when injecting: the Louis form here carries `extra` but not its
+            # Hessian, so the comparison would be against a different model.
             _, info_a = score_pass(est, nodes, fr.iloc[:args.info_check_rows],
                                    ehat[:args.info_check_rows], args.chunk,
                                    "I-analytic", slab_mult=args.slab_mult,
@@ -534,11 +562,18 @@ def mode_closure(args, bundle, prior, grid, rk):
           f"(injected {g:+.4f};  ratio {ghat_anti / g:.4f}, m = {ghat_anti / g - 1:+.2%})")
     print(f"  Cov(ehat,s) leg-averaged = {R_score:.4f}   vs transport R_flow = "
           f"{R_transport:.4f}   ratio {R_score / R_transport:.4f}")
-    if args.closure_extra_response:
-        tot = R_transport + args.closure_extra_response
-        print(f"  data response = R_flow + c = {tot:.4f}; model response = {R_transport:.4f}")
-        print(f"  naive prediction ghat/g = (R_flow+c)/R_flow = {tot / R_transport:.4f}, "
+    if c_vec is not None:
+        cbar = float(c_vec.mean())
+        tot = R_transport + cbar
+        model_R = R_transport + (cbar if args.inject_blend else 0.0)
+        print(f"  data response = R_flow + <c> = {tot:.4f};  "
+              f"model response = {model_R:.4f}")
+        print(f"  naive prediction ghat/g = {tot / model_R:.4f}, "
               f"measured {ghat_anti / g:.4f}")
+        if args.inject_blend and args.closure_extra_form == "mobius":
+            print("  MACHINERY TEST: the injected model IS the generating model, so this "
+                  "must read 1.000;\n  a departure is a bug in the stencil, the Hessian "
+                  "term or the weights -- not model error.")
     print("\n  VERDICT: with model == data both lines must read 1.000 up to MC error;")
     print("           a departure is a bug in the generator, the prior or the weights.")
     return dict(ghat=ghat_anti, err=err, R_score=R_score, R_transport=R_transport)
@@ -715,6 +750,18 @@ def main():
     ap.add_argument("--closure-extra-response", type=float, default=0.0,
                     help="add c*gamma to the synthetic measured shape (see mode_closure); "
                          "0.1593 is the certified R_blend")
+    ap.add_argument("--closure-extra-perobj", action="store_true",
+                    help="use the catalogue's per-object R_blend as c_i instead of the "
+                         "flat --closure-extra-response, so the control exercises the "
+                         "SPREAD of the injected response and not only its mean")
+    ap.add_argument("--closure-extra-form", default="mobius", choices=["mobius", "flat"],
+                    help="how the synthetic extra response enters the measured shape.  "
+                         "'mobius' shifts by c_i * (eps' - eps), the exact form §5C.3's "
+                         "injection assumes, so injecting the same c_i MUST return 1.000 "
+                         "and any departure is a bug.  'flat' shifts by c_i * gamma "
+                         "regardless of the true shape -- the same population mean, a "
+                         "different per-object structure -- which measures what the "
+                         "injection's functional-form assumption costs.")
     ap.add_argument("--chunk", type=int, default=1024)
     ap.add_argument("--grad-chunk", type=int, default=256)
     ap.add_argument("--grad-delta", type=float, default=0.05,
@@ -731,7 +778,7 @@ def main():
                          "from the etilde cache (which held the whole catalogue); nothing "
                          "is cached here, so float32 is free and avoids both the overflow "
                          "warning and any question about resolving a first moment that is "
-                         "~1% of the weight scale.")
+                         "~1%% of the weight scale.")
     ap.add_argument("--info-check-rows", type=int, default=20_000)
     ap.add_argument("--info-delta", type=float, default=0.0025)
     ap.add_argument("--device", default=None)
