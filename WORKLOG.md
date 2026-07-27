@@ -2,6 +2,79 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-27 (SELECTION bias with unsheared intrinsic shapes on constgold; Gold-V2 8-seed remakes of fig1-3)
+
+**Missing data recovered.** The constgold per-leg catalogues (`constant_shear_catalogue_{+,-}0.02_train`)
+shipped with `measured_e1/e2` and `S/N` only -- no SExtractor photometry -- so no cut that MOVES with
+shear could be applied there and no selection test was possible on constgold. The raw per-case
+`Shapes/shape_catalogue_detect_position_all_*.feather` do carry `MAG_AUTO` + `FLUX_RADIUS`, and
+`blendemu.response.retrieve_constant_shear` already has an `include_measured=` switch that was never
+enabled for this run. `scripts/build_constgold_measured.py` (+ `jobs/job_constgold_measured.sh`,
+job 15288992) rebuilds them into a slim (case, shear_case, input_index) lookup using the builder's own
+`_load_constant_match` -> row-exact. 84,172,798 rows in 69s; per-leg row count identical to the
+catalogues (42,085,858 on +0.02); 100% finite. Cache:
+`sbsi_caches/derisk/constgold_measured_c0-139.feather`.
+Validation: measured_mag_auto vs -2.5log10(S/N) r=0.980, vs TRUE mag r=0.949 (median |dmag|=0.18);
+measured_flux_radius vs TRUE Re r=0.639 (PSF-convolved, floors near the PSF -- expected).
+
+**Estimator (owner's spec).** `scripts/eval_selection_intrinsic.py` (+ `jobs/job_selection_intrinsic.sh`,
+job 15289250): pair detections between +0.02 and -0.02 on (case,input_index), apply the cut SEPARATELY
+per leg on that leg's own measured observable, average the UNSHEARED INTRINSIC ellipticity, and form
+R_sel = (<e_int>_plus - <e_int>_minus)/0.04. e_int is identical for the same galaxy in both legs
+(verified byte-identical across legs), so R_sel carries NO shape response: it is a pure moving-boundary
+selection term, and no-cut / any true-property cut give EXACTLY 0 (both nulls confirmed at 0.000e+00).
+Shear is exactly (+0.02,0) vs (-0.02,0) so ghat=(1,0) and the 0.04 denominator is exact.
+Model side = the 8-seed Gold-V2 flow (`ablate_s2c_coupling_lt500_s50*_swaavg`): shear the TRUE
+ellipticity by -g and +g, sample measured (shape,mag,logsize) under common random numbers, weight each
+object's e_int by its pass-fraction per leg. N=26,930,102 both-detected pairs, cases 40-139;
+R_total=0.4534 (matches the certified constgold response exactly).
+
+FINDINGS (ALL scope; percentages are R_sel/R_total, i.e. the multiplicative bias the cut induces):
+- MAG axis: sim goes +0.51% (mag<24.5) -> **-1.47%** (mag<26.5), monotonic; the flow is nearly FLAT
+  (-0.29% -> -0.08%) and trends the OPPOSITE way. The faint-end miss (-1.47% vs -0.08%, ~20x) is well
+  outside subsample noise and is the main model failure.
+- SIZE axis: essentially nothing below 0.45" (PSF floor -> measured size cannot respond, boundary
+  cannot move), then a steep climb to **+9.96%** at 0.7". The flow gets the SHAPE right but
+  OVER-predicts by ~44% (+14.37%).
+- ISOLATED scope is stronger on both axes (mag<26.5 -2.35%; size>0.7" +22.19% sim vs +27.35% model).
+- The true-property null is exactly 0 while a measured-size cut at 0.7" costs ~10% -- a concrete
+  quantitative argument for the true-property cut definition in GOALS.md.
+CAVEAT (shown in the figure, not buried): the model runs on a 1.5M subsample while the sim uses all
+26.9M, and the 8-seed band is seed scatter only -- all seeds share that subsample, so the band cannot
+expose subsampling noise. The sim recomputed on the SAME 1.5M objects (`R_sim_sub`) is plotted as a
+third series: it lies on the full-sim curve on the whole size axis and at faint mag, but departs at the
+bright-mag end (mag<24.5: -0.03% vs full +0.51%), so the bright-end gap there is largely sampling, not
+model error. Faint-end and size-axis conclusions are unaffected.
+Outputs: `sbsi_caches/derisk/selection_intrinsic_v1.npz`; `plotting/plot_selection_intrinsic.py` ->
+`figures/fig_selection_bias_intrinsic{,_isolated}.png`.
+
+**Gold-V2 8-seed remakes of fig1-3** (`plotting/plot_v2_flow_figures.py`, NEW `figv2_fig{1,2,3}_*.png`;
+the V1 originals are untouched). fig1 = validation NLL/epoch for all 8 seeds, read straight from the
+per-seed `*_train_curve.npz` (no log scraping); seeds are padded with NaN, not truncated to the
+shortest run (s501 early-stops at ~epoch 69). fig2/fig3 come from per-object constgold dumps produced
+by `jobs/job_v2_constgold_8seed.sh` (array 15289314, 8 tasks) via `validate_constant_with_blend.py
+--dump`; `jobs/job_v2_figs23.sh` builds both.
+- fig3: per-seed m = R_sim/(R_flow^seed + R_blend) - 1 with R_sim=0.4534, R_blend=0.1593 (both
+  seed-independent and both reproducing their certified values). Per seed: s501 +1.18, s502 -1.18,
+  s503 -0.72, s505 -0.10, s506 +0.63, s507 -1.90, s508 -0.61, s509 -0.98 %.
+  **ENSEMBLE m = -0.46 +- 0.35% (per-seed std 1.00%, N=8).** Consistent with 0 and with certified V1
+  (+0.245%), but 8 seeds CANNOT demonstrate the |m|<0.3% target: the error on the mean (0.35%) already
+  exceeds it. Reaching the target needs ~12-15 seeds or a lower-variance R_flow estimator.
+- fig2: model vs truth across primary flux / primary size / neighbour flux, now with a RESIDUAL row
+  (model/truth-1). The V1 design's per-object 16-84% band was dropped: per-object response has
+  sigma~0.3 against a mean of ~0.45, ~100x the model-truth difference being judged, so it hid the
+  comparison; replaced by the standard error on the binned mean. Residual limits are robust-clipped so
+  the smallest-size bins (truth R~0, ratio diverges) cannot squash the range.
+
+Plot style follows the owner default: NO titles, NO gridlines; provenance moved into in-panel
+annotations. Colours Okabe-Ito blue/vermillion, validated (CVD dE 21.9, normal-vision dE 31.2).
+
+**Next.** (1) The faint-magnitude selection miss is the clear open item -- the flow's measured-mag
+response is far too weak at the faint end. (2) Extend the constgold ensemble past 8 seeds if the
+|m|<0.3% claim is to be made. (3) Consider raising `--model-max-rows` so the bright-mag comparison
+stops being subsample-limited.
+
+
 ## 2026-07-24 (architecture-fix experiment: direct intrinsic-shape skip into the V2 mean head — does NOT close the gap)
 
 **Decomposition recap (all on the ONE ISO ruler, N=1,016,629):** S3a tabular V1 ladder **+4.70%** → V2 count-weight **−2.69%** → V2 equal-weight **−5.24%**. So architecture ≈7.4 pts, weighting ≈2.5 pts; DeepSets shared-trunk is the dominant cause.
