@@ -73,6 +73,7 @@ PRIOR_CACHE = "results/etilde_prior_e_samples.feather"
 
 # Gold-v1.md §5, the transport reference this script is checked against.
 R_SIM_CERT, R_FLOW_CERT, R_BLEND_CERT = 0.4534, 0.2930, 0.1593
+LL_DTYPE = {"float16": np.float16, "float32": np.float32}
 
 
 # ------------------------------------------------------------------------------------
@@ -201,7 +202,8 @@ def build_prior(args):
             .reset_index(drop=True).to_feather(args.prior_sample)
     s = pf.read_table(args.prior_sample).to_pandas()
     prior = SmoothRadialPrior(s["e1_input_rot0_p"].to_numpy(), s["e2_input_rot0_p"].to_numpy(),
-                              n_bins=args.prior_bins, n_knots=args.prior_knots)
+                              n_bins=args.prior_bins, n_knots=args.prior_knots,
+                              knot_margin=args.prior_knot_margin)
     print(f"prior: {prior.n_samples:,} shapes, r_max={prior.r_max:.3f}, "
           f"per-comp std={s[['e1_input_rot0_p','e2_input_rot0_p']].std().mean():.4f}, "
           f"{prior.n_knots} knots, chi2/dof={prior.fit_chi2_dof:.2f}, "
@@ -249,7 +251,7 @@ def grad_ehat_on_grid(est, frame, ehat_raw, chunk=256):
 
 
 def score_pass(est, nodes, frame, ehat_raw, chunk, tag, r_blend=None, grad_chunk=256,
-               slab_mult=64, analytic_info=False):
+               slab_mult=64, analytic_info=False, ll_dtype=np.float32):
     """One leg: log-likelihood over the node bank -> `(s_i, I_i)`, slab by slab.
 
     Nothing of size `N x G` is ever held: each slab's likelihood (and, when injecting,
@@ -265,7 +267,7 @@ def score_pass(est, nodes, frame, ehat_raw, chunk, tag, r_blend=None, grad_chunk
     for s0 in range(0, n, slab):
         s1 = min(s0 + slab, n)
         ll = est.log_likelihood(frame.iloc[s0:s1], ehat_raw[s0:s1], chunk=chunk,
-                                row_offset=s0)
+                                row_offset=s0, out_dtype=ll_dtype)
         extra = None
         if r_blend is not None:
             g = grad_ehat_on_grid(est, frame.iloc[s0:s1], ehat_raw[s0:s1], chunk=grad_chunk)
@@ -358,8 +360,17 @@ def mode_closure(args, bundle, prior, grid, rk):
         fr = rescale(fr, **rk)
         reseed()                                    # CRN: same latents in both legs
         ehat = bundle.sample(fr, n_samples=1, batch_size=args.batch_size)[:, 0, :]
+        if args.closure_extra_response:
+            # A blend-like response the model does NOT contain: the measured shape picks
+            # up c*gamma on top of whatever the flow produces.  The data response becomes
+            # R_flow + c while the model still believes R_flow, so this is the controlled
+            # version of what constgold does to the estimator.  If ghat/g comes back at
+            # (R_flow + c)/R_flow, the score route tracks an added response; if it comes
+            # back at 1, it is blind to one.
+            c = args.closure_extra_response
+            ehat = ehat + sign * g * c * np.stack([gh1, gh2], axis=1)
         s, info = score_pass(est, nodes, fr, ehat, args.chunk, tag,
-                             slab_mult=args.slab_mult)
+                             slab_mult=args.slab_mult, ll_dtype=LL_DTYPE[args.ll_dtype])
         out[sign] = report_leg(tag, s, info, ehat, gh1, gh2, sign * g, None)
         if sign > 0:
             # the two information estimators must agree on the plain model; only then
@@ -367,7 +378,8 @@ def mode_closure(args, bundle, prior, grid, rk):
             _, info_a = score_pass(est, nodes, fr.iloc[:args.info_check_rows],
                                    ehat[:args.info_check_rows], args.chunk,
                                    "I-analytic", slab_mult=args.slab_mult,
-                                   analytic_info=True)
+                                   analytic_info=True,
+                                   ll_dtype=LL_DTYPE[args.ll_dtype])
             k = args.info_check_rows
             fd = info[:k, 0, 0].mean()
             an = info_a[:, 0, 0].mean()
@@ -384,6 +396,11 @@ def mode_closure(args, bundle, prior, grid, rk):
           f"(injected {g:+.4f};  ratio {ghat_anti / g:.4f}, m = {ghat_anti / g - 1:+.2%})")
     print(f"  Cov(ehat,s) leg-averaged = {R_score:.4f}   vs transport R_flow = "
           f"{R_transport:.4f}   ratio {R_score / R_transport:.4f}")
+    if args.closure_extra_response:
+        tot = R_transport + args.closure_extra_response
+        print(f"  data response = R_flow + c = {tot:.4f}; model response = {R_transport:.4f}")
+        print(f"  naive prediction ghat/g = (R_flow+c)/R_flow = {tot / R_transport:.4f}, "
+              f"measured {ghat_anti / g:.4f}")
     print("\n  VERDICT: with model == data both lines must read 1.000 up to MC error;")
     print("           a departure is a bug in the generator, the prior or the weights.")
     return dict(ghat=ghat_anti, err=err, R_score=R_score, R_transport=R_transport)
@@ -441,7 +458,8 @@ def mode_constgold(args, bundle, prior, grid, rk):
             s, info = score_pass(est, nodes, fr, ehat, args.chunk, tag,
                                  r_blend=(rb if inject else None),
                                  grad_chunk=args.grad_chunk,
-                                 slab_mult=args.slab_mult)
+                                 slab_mult=args.slab_mult,
+                                 ll_dtype=LL_DTYPE[args.ll_dtype])
             legs[sign] = report_leg(tag, s, info, ehat, gh1, gh2, sign * g, cases,
                                     n_boot=args.n_boot)
         sp = 0.5 * (legs[+1]["s_proj"] - legs[-1]["s_proj"])
@@ -462,6 +480,19 @@ def mode_constgold(args, bundle, prior, grid, rk):
               f"vs R_sim = {R_sim:.4f}")
         print(f"    Cov(ehat,s) leg-averaged = {R_score:.4f}")
         results[inject] = dict(ghat=ghat, err=err, R_score=R_score)
+        if args.perobj_dump:
+            tag2 = "inj" if inject else "bare"
+            np.savez(f"{args.perobj_dump}_{tag2}.npz",
+                     s_plus=legs[+1]["s_proj"], s_minus=legs[-1]["s_proj"],
+                     i_plus=legs[+1]["i_proj"], i_minus=legs[-1]["i_proj"],
+                     e_plus=legs[+1]["e_proj"], e_minus=legs[-1]["e_proj"],
+                     r_sim=r_sim, r_blend=rb, case=cases,
+                     neighbored=df["neighbored"].astype(bool).to_numpy(),
+                     r_input_p=df["r_input_p"].to_numpy(float),
+                     mag_auto=df["measured_mag_auto"].to_numpy(float),
+                     flux_radius=df["measured_flux_radius"].to_numpy(float),
+                     g=g, R_flow=R_flow, R_sim=R_sim, R_blend=R_blend)
+            print(f"  per-object dump -> {args.perobj_dump}_{tag2}.npz", flush=True)
     print(f"\n  transport reference:   R_sim={R_sim:.4f}  R_flow={R_flow:.4f}  "
           f"R_blend={R_blend:.4f}")
     return dict(R_sim=R_sim, R_flow=R_flow, R_blend=R_blend, results=results)
@@ -496,8 +527,12 @@ def main():
     ap.add_argument("--prior-rows", type=int, default=2_000_000)
     ap.add_argument("--prior-bins", type=int, default=120)
     ap.add_argument("--prior-knots", type=int, default=8)
+    ap.add_argument("--prior-knot-margin", type=float, default=0.10)
     # execution
     ap.add_argument("--closure-g", type=float, default=0.02)
+    ap.add_argument("--closure-extra-response", type=float, default=0.0,
+                    help="add c*gamma to the synthetic measured shape (see mode_closure); "
+                         "0.1593 is the certified R_blend")
     ap.add_argument("--chunk", type=int, default=1024)
     ap.add_argument("--grad-chunk", type=int, default=256)
     ap.add_argument("--n-samples", type=int, default=128)
@@ -506,10 +541,19 @@ def main():
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--n-boot", type=int, default=200)
     ap.add_argument("--slab-mult", type=int, default=64)
+    ap.add_argument("--ll-dtype", default="float32", choices=["float16", "float32"],
+                    help="storage for the per-slab log-likelihood.  float16 was inherited "
+                         "from the etilde cache (which held the whole catalogue); nothing "
+                         "is cached here, so float32 is free and avoids both the overflow "
+                         "warning and any question about resolving a first moment that is "
+                         "~1% of the weight scale.")
     ap.add_argument("--info-check-rows", type=int, default=20_000)
     ap.add_argument("--info-delta", type=float, default=0.0025)
     ap.add_argument("--device", default=None)
     ap.add_argument("--dump", default=None)
+    ap.add_argument("--perobj-dump", default=None,
+                    help="write per-object score/information/response arrays for the "
+                         "blending split analysis")
     for k, v in dict(pixel_rms=0.312, pixel_size=0.2, zero_mag=30.0,
                      psf_fwhm=0.73, moffat_beta=2.224).items():
         ap.add_argument(f"--{k.replace('_', '-')}", type=float, default=v)
