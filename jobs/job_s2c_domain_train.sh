@@ -25,9 +25,12 @@ cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 SEED=${SEED:-501}
 LT=500
 FS=g0_meas_crowd_conc_szfl_noz
-TAG=ablate_s2c_coupling_lt${LT}_dom
+TAG=${TAG:-ablate_s2c_coupling_lt${LT}_dom}
 D=/project/ls-gruen/users/zekang.zhang/sbsi_caches/ablation
-RESP=/home/z/Zekang.Zhang/SBSI/results/response_target_crowd_rblend_snc_c0-99_6x3x5.npz
+# The response target MUST be built on the same domain as the training cut -- a full-population
+# target straddles the cut and pins the survivors to a mean that includes rows the trainer never
+# sees (WORKLOG 2026-07-27d: that cost 5% of R_flow in-domain).
+RESP=${RESP:-/home/z/Zekang.Zhang/SBSI/results/response_target_crowd_rblend_snc_c0-99_6x3x5_dom.npz}
 COUP=/home/z/Zekang.Zhang/SBSI/results/response_target_theta_coupling_rblend_c0-99_6x9x5.npz
 CAT=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_crowd_conc_g0.0_train_full.feather
 OUT=$D/measurement_flow_g0_ngmix_${TAG}_s${SEED}.pt

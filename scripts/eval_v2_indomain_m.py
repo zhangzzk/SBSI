@@ -94,6 +94,7 @@ def main():
         print(f"  {k:38s} N={int(v.sum()):>12,}  ({v.mean():6.1%})")
 
     res = {k: [] for k in masks}
+    comps = {k: [] for k in masks}     # (R_sim, R_flow, R_blend) per seed, to separate WHICH term moved
     print(f"\n  {'seed':>6} " + " ".join(f"{k.split('(')[0].strip()[:22]:>24}" for k in masks),
           flush=True)
     for d in dumps:
@@ -111,6 +112,7 @@ def main():
         for k, v in masks.items():
             m = rs[v].mean() / (rf[v].mean() + rb[v].mean()) - 1.0
             res[k].append(m * 100)
+            comps[k].append((rs[v].mean(), rf[v].mean(), rb[v].mean()))
             row.append(f"{m*100:>+24.3f}")
         print(f"  {seed:>6} " + " ".join(row), flush=True)
 
@@ -124,6 +126,11 @@ def main():
         print("\n  NOTE: ONE seed -- no seed-scatter estimate. The 8-seed baseline has per-seed sd "
               "~1.0% (global) / ~0.8% (in-domain), so treat a single-seed m as +-~1% until more "
               "seeds are run.")
+    print(f"\n  components (seed-mean):  {'mask':<38} {'R_sim':>9} {'R_flow':>9} {'R_blend':>9} {'R_tot':>9}")
+    for k in masks:
+        c = np.array(comps[k]).mean(axis=0)
+        print(f"  {'':>24} {k:<38} {c[0]:>9.4f} {c[1]:>9.4f} {c[2]:>9.4f} {c[1]+c[2]:>9.4f}")
+
     for k in masks:
         print(f"\n  {k}:  m = {np.mean(res[k]):+.3f} +- {sd(res[k])/np.sqrt(len(res[k])):.3f} %  "
               f"(seed sd {sd(res[k]):.3f}, N={len(res[k])})")

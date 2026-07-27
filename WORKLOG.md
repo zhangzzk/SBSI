@@ -2,6 +2,68 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-27d (domain-training attempt 1 FAILED -- my setup bug: the response target straddled the cut)
+
+**Result of 2026-07-27c (jobs 15298227 train / 15298229 eval, seed 501).** Domain training made m
+WORSE, not better:
+
+| mask | baseline s501 (full-range training) | domain-trained s501 |
+|---|---|---|
+| in-domain (mag<26 & Re>0.3) | +4.753% | **+9.306%** |
+| true Re > 0.3 | +5.197% | +11.037% |
+| true mag < 26 | -0.332% | +14.091% |
+| global (certified convention) | +1.181% | **+45.556%** |
+
+**Components (job 15299979, same constgold rows, CPU-only re-read of both dumps)** -- R_sim and
+R_blend are identical by construction, so the whole move is R_flow:
+
+| mask | R_sim | R_flow baseline | R_flow domain |
+|---|---|---|---|
+| global | 0.4534 | 0.2888 | **0.1522** |
+| mag<26 | 0.5500 | 0.4149 | 0.3452 |
+| Re>0.3 | 0.7610 | 0.5707 | 0.5327 |
+| in-domain | 0.8605 | 0.6844 | **0.6502** |
+
+**Cause -- a setup bug on my side, not a property of domain training.** I restricted the training
+population but left the shape-response pin defined on the FULL population's bins. That grid has only
+3 size bins, edges `[0.1, 0.241, 0.412, 1.5]`, and the per-bin response climbs steeply across them
+(**-0.0871 / +0.2290 / +0.7017**). `Re > 0.3` therefore:
+
+- **deletes** size bin 0 `[0.100,0.241]` outright -> zero supervision there;
+- **straddles** size bin 1 `[0.241,0.412]` -> only `Re in [0.30,0.412]` survives, yet those rows are
+  still pinned to +0.2290, a mean measured over the whole bin including the smaller galaxies the
+  trainer no longer sees. Their true response is well above +0.2290, so they are pinned too LOW;
+- leaves size bin 2 `[0.412,1.500]` untouched.
+
+Magnitude is the same story: `mag<26` deletes flux bins 4-5 and straddles bin 3 `[25.581,26.042]`.
+Predicted consequence = R_flow under-predicts in-domain -> m positive. Measured: R_flow 0.6844 ->
+0.6502 in-domain (-5.0%), m +4.75% -> +9.31%. Sign, size and location all match. The global +45.6% is
+a separate and expected effect: 57% of the constgold rows are outside the training domain entirely,
+where the model now extrapolates (R_flow 0.2888 -> 0.1522).
+
+Cross-check that the model itself is self-consistent: training-time `<R_model>(val)` was **+0.6360**,
+essentially the deployed in-domain R_flow of **0.6502**. The model faithfully learned the target it
+was given; the TARGET was wrong.
+
+Note the COUPLING pin (dims 2,3) already has 0.30 as a size edge, so it was not straddled on size --
+only the SHAPE pin broke, which is exactly the one that sets m.
+
+**Fix (submitted).** `scripts/compute_response_target_blend.py` gains the same
+`--primary-mag-max` / `--primary-re-min` flags (shared `_selection_cuts` helper, no-op when absent so
+historical targets stay reproducible), and the target is rebuilt on the domain population. The change
+is deliberately MINIMAL -- same 6x3x5 resolution, but edges are now quantiles of the domain sample so
+no bin straddles the cut. Side benefit: the 3 size bins now span [0.3,1.5] instead of [0.1,1.5], i.e.
+finer effective resolution inside the domain for free. The build job asserts the grid starts at 0.3
+and ends at 26.0 and prints per-cell counts, so a straddle cannot pass silently again.
+
+Chain: **15300894** (build target) -> **15300895** (retrain, TAG `..._dom2`) -> **15300896** (eval).
+The first attempt's checkpoint is kept under the `_dom` tag for comparison.
+
+**Known limitation.** The coupling target is NOT rebuilt on the domain; `mag<26` straddles its flux
+bin `[25.581,26.042]` and deletes two more. That affects the measured mag/size response (the
+selection figures), not m, so it is deferred -- but it should be rebuilt before the selection numbers
+are treated as final.
+
 ## 2026-07-27c (train Gold-V2 INSIDE the deliverable domain -- 1 seed, owner-directed)
 
 **Why.** 2026-07-27b established that the lt500 model was neither trained nor certified on the

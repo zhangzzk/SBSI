@@ -36,6 +36,21 @@ from sbs_shear.measurement_model import (  # noqa: E402
 from sbs_shear.preprocessing import DEFAULT_SELECTION_CUTS, source_select_selection  # noqa: E402
 
 
+def _selection_cuts(args):
+    """DEFAULT_SELECTION_CUTS with the PRIMARY domain optionally narrowed (see the trainer's twin).
+
+    `source_select_detection` reads only cuts[1] (primary true mag) and cuts[3] (primary true Re),
+    so this restricts the primary and leaves neighbours full-population. Returns the unmodified
+    defaults when neither flag is given, so the historical targets stay reproducible.
+    """
+    cuts = [list(c) for c in DEFAULT_SELECTION_CUTS]
+    if getattr(args, "primary_mag_max", None) is not None:
+        cuts[1][1] = float(args.primary_mag_max)
+    if getattr(args, "primary_re_min", None) is not None:
+        cuts[3][0] = float(args.primary_re_min)
+    return cuts
+
+
 def load_snc_lookup(path, cols):
     if not path:
         return None
@@ -94,6 +109,14 @@ def main():
                     default=["measured_e1_plus", "measured_e2_plus",
                              "measured_e1_minus", "measured_e2_minus"],
                     help="Four +/-g shape columns for --antithetic: e1_plus e2_plus e1_minus e2_minus.")
+    ap.add_argument("--primary-mag-max", type=float, default=None,
+                    help="build the target on primaries with true mag below this (deliverable "
+                         "domain: 26.0). MUST match the trainer's --primary-mag-max, otherwise the "
+                         "pin supervises the kept rows with a target measured on rows the trainer "
+                         "never sees -- see WORKLOG 2026-07-27d.")
+    ap.add_argument("--primary-re-min", type=float, default=None,
+                    help="build the target on primaries with true Re above this (deliverable "
+                         "domain: 0.3). MUST match the trainer's --primary-re-min.")
     ap.add_argument("--output", required=True)
     args = ap.parse_args()
     snc = None if args.antithetic else load_snc_lookup(args.snc_lookup, args.snc_cols)
@@ -119,7 +142,7 @@ def main():
                 b = b[b["case"] <= args.max_case]
                 if len(b) == 0:
                     continue
-            b = source_select_selection(b, cuts=DEFAULT_SELECTION_CUTS)
+            b = source_select_selection(b, cuts=_selection_cuts(args))
             if len(b) == 0:
                 continue
             if "detected" in b.columns:                       # constgold antithetic renders have no detected col

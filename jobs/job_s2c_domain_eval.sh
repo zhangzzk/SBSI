@@ -20,12 +20,13 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 
 SEED=${SEED:-501}
+TAG=${TAG:-ablate_s2c_coupling_lt500_dom}
 D=/project/ls-gruen/users/zekang.zhang/sbsi_caches/ablation
 CAT=/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/constant_response_catalogue_train.feather
 RES=/home/z/Zekang.Zhang/SBSI/results
 DUMPDIR=/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/v2_domain_dumps
 mkdir -p $DUMPDIR
-CK=$D/measurement_flow_g0_ngmix_ablate_s2c_coupling_lt500_dom_s${SEED}_swaavg.pt
+CK=$D/measurement_flow_g0_ngmix_${TAG}_s${SEED}_swaavg.pt
 
 echo "### S2C-DOMAIN EVAL seed=$SEED job=$SLURM_JOB_ID ###"; nvidia-smi -L; date
 python -u scripts/validate_constant_with_blend.py \
@@ -33,10 +34,10 @@ python -u scripts/validate_constant_with_blend.py \
   --blend-lookup "$RES/blend_lookup_extnbrho_c40-139.feather" \
   --crowd-flux-lookup "$RES/crowd_flux_conc_c0-199.feather" \
   --global-only --flow-seed 12345 --n-samples 64 --max-rows 45000000 --batch-size 16384 \
-  --dump "$DUMPDIR/v2dom_perobj_s${SEED}.feather" || { echo "FAILED eval seed=$SEED"; exit 1; }
+  --dump "$DUMPDIR/${TAG}_perobj_s${SEED}.feather" || { echo "FAILED eval seed=$SEED"; exit 1; }
 
 echo; echo "### m under the four masks (same script as the 8-seed baseline) ###"
 python -u scripts/eval_v2_indomain_m.py \
-  --dump-glob "$DUMPDIR/v2dom_perobj_s${SEED}.feather" \
+  --dump-glob "$DUMPDIR/${TAG}_perobj_s${SEED}.feather" \
   --catalogue "$CAT" --min-case 40 --re-min 0.3 --mag-max 26.0
 echo "S2CDOMEV_DONE seed=$SEED"; date
