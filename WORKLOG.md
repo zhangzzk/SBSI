@@ -2,6 +2,52 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-28b (owner: push in-domain m below 0.82%. Residual is R_FLOW, not R_blend -- and it is grid resolution)
+
+**Method note (important).** Constgold is the EVAL set. Prior "sub-percent" claims in this project
+were retracted for tuning against it (cont.66-67, and the R_blend firewall). So all tuning tonight is
+scored on the **det_meas half-shear** truth via `scripts/eval_selfresp_gap.py`, whose acceptance cut
+(`--true-re-min 0.3 --true-mag-max 26.0`) IS the deliverable domain and which reads no constgold.
+constgold m is a final readout, run once per surviving candidate.
+
+**Split diagnostic (job 15305920).** On the ISOLATED acceptance set (no brighter true neighbour within
+7"), R_blend ~ 0 by construction, so `flow/R_hs - 1` is a pure R_flow verdict:
+
+| set | size bin | baseline (full-range) | domain-trained dom2 |
+|---|---|---|---|
+| ISOLATED | OVERALL | +0.54% | **+4.18%** |
+| | [0.30,0.38) | **-25.24%** | **+10.31%** |
+| | [0.38,0.50) | -0.41% | -1.02% |
+| | [0.50,0.75) | +11.54% | +5.36% |
+| | [0.75,1.50) | +2.49% | +4.28% |
+| ALL | OVERALL | **-5.02%** | **-0.44%** |
+| | [0.30,0.38) | -22.59% | +3.08% |
+| | [0.38,0.50) | -6.46% | **-5.23%** |
+| | [0.50,0.75) | +3.75% | +0.74% |
+| | [0.75,1.50) | -2.33% | +1.04% |
+
+**Verdict: the residual is R_FLOW, not R_blend.** The overshoot survives on a set where R_blend is
+absent, so the earlier R_blend lead (2026-07-28 entry) is **withdrawn** as the primary explanation.
+
+**Two further reads that change the picture.**
+1. The baseline's tidy ISOLATED +0.54% is another CANCELLATION: **-25.24%** in the smallest size bin
+   against **+11.54%** in [0.50,0.75). Domain training removed that catastrophe (-25.24% -> +10.31%)
+   and is far flatter across bins. On the ALL set it is a clear win: -5.02% -> **-0.44%**.
+2. The largest surviving dom2 residual is ALL [0.38,0.50) = **-5.23%**, and **0.419 is a grid edge**
+   of the 3-bin domain target. Same failure mode as attempt 1, one level finer: the response varies
+   steeply inside a cell the pin treats as uniform.
+
+**Action (jobs 15305923 / 15305924, 3 seeds each; scored by 15305927).** Two finer in-domain targets,
+built firewall-clean and asserted to have zero empty cells:
+- `6x6x5_dom`: size edges [0.300,0.355,0.419,0.503,0.629,0.853,1.500], 180 cells, min/cell 1,875
+- `8x8x5_dom`: 8 size bins, 320 cells, min/cell **611** (thin -- noise risk, will be judged not assumed)
+
+Both confirm the mechanism directly: per-size-bin Rsim climbs **0.391 -> 0.632 -> 0.747** across what
+the 3-bin grid averaged into a single value of 0.570.
+
+**Selection criterion:** OVERALL gap AND per-size-bin spread. The baseline is the standing proof that
+a small overall number can hide large cancelling per-bin errors.
+
 ## 2026-07-28 (domain-trained Gold-V2, 8-seed ensemble: in-domain m +3.49% -> -0.82%; big win, still 2.7x off target)
 
 **Jobs.** 15304872 (train array, seeds 502/503/505-509) -> 15304873 (eval array) -> 15305898
