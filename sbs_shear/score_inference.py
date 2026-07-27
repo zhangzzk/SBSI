@@ -504,6 +504,27 @@ def blend_injection_term(mean_grad_ehat, grid, r_blend):
     `mean_grad_ehat`: `(N,G,2)` or `(G,2)` gradient of `log p_flow` w.r.t. the measured
     shape, evaluated at each node.  `grid`: `(G,2)` nodes.  `r_blend`: `(N,)` per-object
     blend response.  Returns `(N,G,2)` to be passed as `scores_from_loglike(extra=...)`.
+
+    KNOWN GAP -- the SCORE is complete, the INFORMATION is not.  `scores_from_loglike`
+    treats this array as gamma-independent, so its finite-difference information picks up
+    the reweighting `log L(gamma) = log L(0) + gamma . extra` but misses the second
+    derivative of the injected likelihood itself.  Writing `w = R_b v`, the exact
+    injection contributes
+
+        d^2_gamma log L |_0 = w^T (grad^2 log p_flow) w                      (missing)
+
+    an O(R_b^2) term, negative because the residual density is log-concave, so the
+    information returned is an UNDER-estimate and the injected `ghat` is correspondingly
+    over-estimated.  On constgold, `<I>` was measured to FALL from 3.49 to 3.19 when the
+    injection was switched on, where adding response to the model should raise it -- that
+    drop is this missing term.  A Gaussian estimate puts it near `R_b^2 / sigma^2 ~ 0.25`,
+    ~8% of `<I>`, but it must be measured, not assumed.
+
+    The fix is cheap and is the next step: `w^T grad^2 log p_flow w` is a second central
+    difference of the residual flow's log-density ALONG `w`, two extra forward passes on
+    top of the four `grad_ehat_on_grid` already does (three components for the full
+    2x2 in gamma).  Until then, treat the injected numerator as verified and the injected
+    `ghat` as provisional.
     """
     e1, e2 = grid[:, 0], grid[:, 1]
     # v_eps = d eps'/d gamma at gamma = 0: v_1 = 1 - eps^2, v_2 = i (1 + eps^2)

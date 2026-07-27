@@ -542,7 +542,8 @@ def mode_constgold(args, bundle, prior, grid, rk):
         per = sp / np.mean(ip)
         err = bootstrap_by_case(per, cases, n_boot=args.n_boot)
         R_score = 0.5 * (legs[+1]["R"] + legs[-1]["R"])
-        label = "WITH R_blend injection (§5C.3)" if inject else "BARE flow (§5B)"
+        label = ("WITH R_blend injection (§5C.3) -- PROVISIONAL, see below"
+                 if inject else "BARE flow (§5B)")
         print(f"\n  --- {label} ---")
         print(f"  ANTITHETIC ghat = {ghat:+.5f} +/- {err:.5f}   g_true = {g:.4f}")
         print(f"    ghat/g          = {ghat / g:.4f} +/- {err / g:.4f}")
@@ -553,6 +554,12 @@ def mode_constgold(args, bundle, prior, grid, rk):
         print(f"    inferred response R_model * ghat/g = {R_model * ghat / g:.4f}  "
               f"vs R_sim = {R_sim:.4f}")
         print(f"    Cov(ehat,s) leg-averaged = {R_score:.4f}")
+        if inject:
+            print("    !! PROVISIONAL: the injected INFORMATION omits "
+                  "d^2_gamma log L = w^T grad^2 log p_flow w (w = R_b v), an O(R_b^2)")
+            print("       term that is negative, so <I> is under-estimated and this ghat "
+                  "is over-estimated.")
+            print("       See blend_injection_term's docstring; the numerator is complete.")
         results[inject] = dict(ghat=ghat, err=err, R_score=R_score)
         if args.perobj_dump:
             tag2 = "inj" if inject else "bare"

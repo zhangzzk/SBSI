@@ -22,10 +22,13 @@ unit/closure/constgold); `scripts/analyse_score_perobj.py`; `tests/test_score_in
 15281531 (constgold + per-object dump), 15281910 (blend injection). ~1000 rows/s/leg on an A40 at
 grid 61 (the cost is `N_gal x N_node` flow `log_prob`s, G = 2765).
 
-**NODE BANK (mode `unit`, no flow, no data).** `E_0[u] = 0` to 1e-15 and `E_0[du] + Var_0(u) =
--8e-4` = **0.005% of Var(u) = 17.7** at grid 61; finite-difference generator vs the closed form
-`u_a = e_a[4 - 2 psi'(r^2)(1-r^2)]` agrees to 1.8e-4 rms. The two information estimators (Louis
-`-E[du]-Var(u)` vs `-d_gamma s_gamma`) agree to **0.06%** at `info_delta = 0.0025`.
+**NODE BANK (mode `unit`, no flow, no data).** `E_0[u] = 0` to 5e-16 and `E_0[du] + Var_0(u) =
+-2.05e-2` = **0.12% of Var(u) = 17.7** at grid 61 (0.16% at grid 41); finite-difference generator
+vs the closed form `u_a = e_a[4 - 2 psi'(r^2)(1-r^2)]` agrees to 1.8e-4 rms. The two information
+estimators (Louis `-E[du]-Var(u)` vs `-d_gamma s_gamma`) agree to **0.06%** at
+`info_delta = 0.0025`. (The pre-`knot_margin` prior reached 0.005% on Bartlett but FAILED the
+closed-form check at 0.8 rms — a clamped, upturning spline tail that the Bartlett average washes
+out. Both diagnostics are needed; neither alone is sufficient.)
 
 TWO PRIOR-FITTING BUGS found by those diagnostics, both now regression-tested:
   (a) `RadialShapePrior` bins in `r` and divides by `2 pi r`, so `phi'(0) != 0` and the generator
