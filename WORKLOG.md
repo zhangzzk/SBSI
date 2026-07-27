@@ -109,9 +109,37 @@ ADDITIVE bias on real data is ~1e-3 in gamma1 and ~8e-3 in gamma2, far above any
 requirement. That is now the leading item, and it is a FLOW-calibration problem, not an
 inference-machinery or prior problem.
 
+**§5C.3 BLEND INJECTION — implemented, numerator verified, denominator INCOMPLETE (job 15281910).**
+`blend_injection_term` builds `-R_b(theta_b) grad_ehat log p_flow . v_eps` per (galaxy, node) and
+adds it to the generator, exactly (5.9). `grad_ehat log p_flow` is a central difference, not
+autograd — backpropagating through `chunk x G ~ 7e5` simultaneous flow evaluations OOMs a 44 GB A40
+(first attempt, job 15281684). The SCORE behaves as it should: `<s>` rises 0.0665 -> 0.0874 on the
++g leg, ratio 1.31 against the naive `(R_flow+R_blend)/R_flow = 1.55`, the shortfall being the same
+weighting effect as §5B.3.
+
+The INFORMATION is wrong, and I know why. `scores_from_loglike` treats the injection as
+gamma-independent, so its finite difference captures the reweighting
+`log L(gamma) = log L(0) + gamma . extra` but drops
+
+      d^2_gamma log L |_0 = w^T (grad^2 log p_flow) w,      w = R_b v      [MISSING]
+
+an O(R_b^2) term, negative because the residual density is log-concave. Symptom: `<I>` FALLS
+3.488 -> 3.186 when the injection is switched on, where adding response to the model must RAISE it.
+A Gaussian estimate puts the missing piece near `R_b^2/sigma^2 ~ 0.25` (~8% of `<I>`). So the
+injected `ghat` is over-estimated and is marked PROVISIONAL in the output; do not quote it.
+FIX (next step, cheap): `w^T grad^2 log p_flow w` is a second central difference of the residual
+log-density ALONG `w` — two extra forward passes per component on top of the four
+`grad_ehat_on_grid` already does.
+
 SCOPE: shape channel only (the latent is the primary's true ellipticity; neighbours are NOT
 marginalized, so §3's blend channel is identically zero, as §5B.2 says). `P_pass`/`P_det` and the
 size/flux channels are not implemented.
+
+NEXT: (a) the missing O(R_b^2) information term above, which is what makes §5C.3 usable;
+(b) the additive bias — chase the flow's residual mis-calibration in `ngmix_g2`, and test a
+conditional prior `p(e | mag, size)` even though the g=0 discriminator says the marginal prior is
+not the cause; (c) per-subsample flatness (the +30% top-R_blend bin) rather than global cancellation;
+(d) a second |g| to confirm the additive/O(gamma^2) split independently.
 
 ## 2026-07-22 (cont.111, ✅ FRAMING REFRAME LOCKED — canonicalised in `GOALS.md`; supersedes the three-goals split. Plus the measured-binned test (cont.110g) that motivated it.)
 
