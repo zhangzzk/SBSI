@@ -7,6 +7,84 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
+## cont.162 (2026-07-27) the acceptance check re-run with the REAL V2: it does NOT close, and constgold + half-shear AGREE on why
+
+User: "rerun that check with the real V2 model" — i.e. cont.161's acceptance-population bias
+check, this time on `forward_ens_lr250_swa8_seed42{1..6}_joint.pt` (`metadata.true_cut =
+(0.3, 26.0)`, `primary_only_shear = True`) rather than the ablation rung cont.161 retracted.
+Job 15294140 (`jobs/job_v2_acceptance_check.sh`), 6-seed ensemble, 7"-gated emulator
+`blend_lookup_extnbrho_d7_c0-39`, 7" isolation, cases 0-39, `bridge = 1.0`.
+
+FILES: `jobs/job_v2_acceptance_check.sh`; `scripts/apply_bridge_closure.py` (new);
+`scripts/eval_constgold_closure.py` (+ACCEPTED/REJECTED bands on identical rows, +per-band seed
+scatter). Dumps `derisk/v2acc_{accept,relaxed}.npz`.
+
+### The answer: no, it does not close
+
+      band                         m          seed sd        N
+      ISOLATED (pure flow)      +4.01%         3.55%     2,033,107
+      BLENDED                   -9.58%         3.48%     2,634,057
+      ALL  <- the deliverable   -2.86%         3.34%     4,667,164
+
+Run 1 reproduces `cl250_15215739` to the digit. Target is |m| < 0.3%; this is ~10x that, and the
+6-seed scatter (3.3%) is itself 11x the target, so an ensemble this size cannot even resolve the
+spec. **The premise that motivated the re-run does not hold**: the pair-matched half-shear
+validation for these exact six checkpoints (`selfresp_v2_15217379`) reads `flow/R_hs - 1 =
+-5.24%` on the ISOLATED acceptance set — that log is where the deficit was FOUND, not a pass.
+It is `Gold-V2.md`'s own "V2 (DeepSets), equal-weight -5.24%" row, attributed there to the
+DeepSets trunk and "resolved" only by dropping DeepSets for the tabular S2 rung.
+
+### The two sims agree — so this is the MODEL, not transport or extraction
+
+Same six checkpoints, two independent sims, same population definition (true cut, 7" isolation):
+
+      constgold  m_iso = +5.15%  (no blend)  <=>  R_flow/R_sim - 1 = -4.90%
+      half-shear                                 R_flow/R_hs  - 1 = -5.24%
+
+Agreement to 0.34 pt. The V2 flow under-responds ~5% on isolated bright galaxies, and both sims
+say so independently. That also settles the estimator BRIDGE, which is worth 8.5% on a 0.3%
+target and flips the sign of the answer: the constgold/half-shear agreement above only holds at
+`bridge = 1.0` (at 1.0853 constgold would read `+3.21%` against half-shear's `-5.24%`, an 8.5 pt
+break). Directly: on the SAME 7"-isolated true-cut set the two sims' responses are
+`R_sim_iso = 1.0479` vs `R_hs_iso = 1.0547`, ratio **0.9936** — there is no 8.5% estimator gap.
+`eval_estimator_match`'s 1.0853 was measured with **3"** `neighbored` isolation and a single-leg
+FORWARD extraction on the ngmix side, i.e. it is the known extraction/isolation artifact, not an
+estimator conversion. `eval_constgold_closure.py`'s `--bridge` default of 1.0853 is therefore
+misleading; `apply_bridge_closure.py` prints all three columns so the choice is never silent.
+
+### The -2.86% is a cancellation of two errors, not a closure
+
+      ISOLATED: R_sim 1.0479 vs R_flow 0.9965  -> flow UNDER-responds  (m > 0)
+      BLENDED : R_sim 0.7184 - R_flow 0.5654 = 0.1530 needed, emulator supplies 0.2291
+
+The 7"-gated emulator over-supplies R_blend by ~50% on this population (`est_match` independently
+implied 0.1704). Under-responding flow (+) and over-supplied blend (-) partially cancel: no-blend
+ALL is +14.44%, with blend -2.86%. Two large errors, not one small one.
+
+### Outside the training domain V2 is invalid — the V1 cancellation does NOT reproduce
+
+Relaxing the load cut and splitting on IDENTICAL rows (10,762,539 source-selected):
+
+      ACCEPTED  -2.86%      REJECTED  -52.06%      ALL  -17.60%
+
+V1's global sub-percent was a cancellation between +6.53% accepted and -19.43% rejected
+(cont.161). V2 does not reproduce that: trained behind `true_cut = (0.3, 26.0)`, it over-predicts
+the response of rejected rows almost 2:1 (`R_flow` 0.2906 vs `R_sim` 0.1393). Expected, not a
+new defect — the deliverable is defined on the accepted population — but it does mean **no V2
+number may be quoted on an uncut catalogue**.
+
+### NEXT
+
+1. The ~5% isolated shape deficit is the single blocking term and is already diagnosed
+   (`Gold-V2.md`: DeepSets trunk). Deciding between the DeepSets joint model and the tabular S2
+   rung is a modelling decision for the owner, not something this check can settle: only
+   `forward_ens_*` is trained on the bright population, only the S2 rung reproduces V1's response.
+2. The emulator's ~50% R_blend over-supply on the 7"-gated acceptance set is a SECOND independent
+   term of the same size. Both must be fixed; fixing either alone makes ALL worse, since they
+   currently cancel.
+3. Seed scatter 3.3% over 6 seeds means a spec-resolving ensemble needs ~O(100) seeds, or a
+   variance reduction. Worth costing before any further 6-seed run is treated as decisive.
+
 ## cont.161 (2026-07-27) §5B score inference implemented and VALIDATED-BUT-PARKED; the durable result is a TRANSPORT fact about the acceptance population
 
 User: "realize what's written in the md into code — 5B. We expect the computed R from data to be
