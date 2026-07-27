@@ -665,11 +665,11 @@ def mode_constgold(args, bundle, prior, grid, rk):
     print(f"R_sim (transport truth, this sample) = {R_sim:.4f}  "
           f"(certified {R_SIM_CERT:.4f})", flush=True)
 
-    est = PosteriorShapeEstimator(bundle, grid, device=args.device)
-    nodes = ShapeScoreNodes(grid, prior, delta=args.fd_delta, info_delta=args.info_delta)
-    print(f"node bank: G={len(grid)}, supported={int(nodes.support.sum())}, "
-          f"|u_fd-u_closed|/rms={nodes.closed_form_residual():.2e}")
-
+    # Transport FIRST, and the node bank only afterwards: `PosteriorShapeEstimator`
+    # demands a pure 2-D shape target, so building it up here would reject a V2 4-D-output
+    # flow (shape + measured mag + measured log size) before transport -- which needs no
+    # node bank at all -- ever got to run.
+    #
     # transport R_flow on exactly these rows (the Gold-v1 harvest, for reference)
     def reseed():
         torch.manual_seed(args.flow_seed)
@@ -698,6 +698,11 @@ def mode_constgold(args, bundle, prior, grid, rk):
                  g=g, R_flow=R_flow, R_sim=R_sim, R_blend=R_blend)
         print(f"  per-object flow response -> {out}")
         return dict(R_flow=R_flow, R_sim=R_sim, R_blend=R_blend)
+
+    est = PosteriorShapeEstimator(bundle, grid, device=args.device)
+    nodes = ShapeScoreNodes(grid, prior, delta=args.fd_delta, info_delta=args.info_delta)
+    print(f"node bank: G={len(grid)}, supported={int(nodes.support.sum())}, "
+          f"|u_fd-u_closed|/rms={nodes.closed_form_residual():.2e}")
 
     fr = rescale(df.copy(), **rk)
     results = {}
