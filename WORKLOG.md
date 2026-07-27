@@ -138,11 +138,88 @@ FIX (next step, cheap): `w^T grad^2 log p_flow w` is a second central difference
 log-density ALONG `w` — two extra forward passes per component on top of the four
 `grad_ehat_on_grid` already does.
 
+**§5C.3 INJECTION COMPLETED — and it OVERSHOOTS (jobs 15286662 cancelled, 15287258 clean).**
+`blend_stencil_on_grid` returns BOTH terms from ONE stencil along `w_1`, `w_2`, `w_1+w_2`: the
+score `-w_a . grad log p_flow` and the missing information `H_ab = w_a^T grad^2 log p_flow w_b`,
+with the cross term from the polarization identity and steps taken along UNIT directions rescaled
+by `|w|` (`R_b` spans 0..3.5, so a fixed step in `w` is useless at both ends). Seven residual-flow
+evaluations reusing `mu`/`fctx`, against four for the gradient alone. Posterior-weighted correction
+stable to 0.2% over `delta = 0.10..0.01` (the FLAT node average looks wildly unstable in `delta`,
+but that average is dominated by far-tail nodes the weights suppress — a diagnostic artifact, not
+the quantity that enters).
+
+BUG, caught by its own warning: the Hessian was stored as **float16**, whose 65504 ceiling the
+`1/delta^2 = 400` times `|w|^2` routinely exceeds. Deep-tail nodes overflowed to `inf`, and since
+the weight there is ~0, `0 * inf` turned those objects' information into NaN. Job 15286662 hit it
+on every chunk and was cancelled. Now float32 (+725 MB/slab, immaterial), non-finite -> 0 (the
+correct limit: a zero-weight node contributes zero), plus a per-slab non-finite row counter. The
+BARE legs never touch the stencil and were unaffected — 0.9970 +/- 0.0066, the fifth consistent
+reading of that number.
+
+RESULT (400k rows, 9 cases, seed 501; transport on the same rows `R_sim = 0.4573`,
+`R_flow = 0.2897`, `R_blend = 0.1595`, `m = +1.82%`):
+
+      model                            ghat/g              <I>
+      bare flow                        0.9970 +/- 0.0066   3.48
+      injected, Hessian MISSING        1.3897 +/- 0.0117   3.19
+      injected, COMPLETE               0.8528 +/- 0.0051   5.18
+      transport prediction             1.0182               --
+
+So the missing term was real and large — it closed +39% and carried on to **-14.7%**. Per-bin
+(`analyse_score_perobj.py`, shear-independent splits) it is **monotone in `R_blend`**:
+
+      R_blend  <0.02 **+0.90%** | 0.02-0.05 -2.55% | 0.05-0.13 -14.82% | 0.13-0.38 -28.26%
+               | >0.38 **-39.96%**
+      mag_auto <23 -4.04% | 23-24 -1.48% | 24-24.5 -5.39% | 24.5-25 -13.03% | 25-25.5 -21.41%
+               | 25.5-26 -19.92% | >26 -53.21%
+
+The unblended bin (163k rows) reads 1.009, so the base machinery is clean and the whole error is
+proportional to the injected term. Mechanism: injecting a response also inflates that object's OWN
+information (`I ~ a^2`), which drags the heavily-blended objects back into the sum with MORE
+weight — exactly where the model is least trustworthy. Bare under-responds there (+29.74% in the
+top bin); injected over-responds (-39.96%). Note this makes the bare 0.997 non-accidental:
+information concentrates on bright isolated objects, which is where the flow has no blend response
+to be missing.
+
+CANDIDATE CAUSES, in flight (jobs 15289666/15289667 closure controls, 15289872/15291524 transport):
+  (a) FUNCTIONAL FORM. §5C.3 assumes the neighbours push the measured shape along the primary's own
+      shape change, `c*(eps'-eps)`. If the real push is along a fixed direction the population mean
+      is identical but the per-object structure is not, and the estimator weights per object.
+  (b) DOUBLE COUNTING. The flow conditions on `nbr_flux_near/far/max`, so it may already carry part
+      of the blend response; adding BlendEMU on top would over-count worst where blending is worst.
+  (c) BlendEMU's per-object `R_blend` genuinely too large in the tail — right in the mean
+      (transport +1.8%), wrong in its spread.
+Closure mode now takes a per-object extra response and, with `--inject-blend`, hands the estimator
+the SAME `c_i`; under `--closure-extra-form mobius` the injected model IS the generating model, so
+`ghat/g` MUST read 1.000 and any departure is a bug rather than model error. `--closure-extra-form
+flat` shares the population mean but not the per-object structure, so the gap between the two
+prices (a). `--flow-perobj-only` dumps the per-object transport response for a previous run's exact
+rows, so per-bin TRANSPORT can be set beside per-bin SCORE: a model error shows in both, a
+weighting or form error only in the score.
+
+**SOURCE SELECTION AND LEG MATCHING (owner question; measured on 1.5M constgold rows).** The
+`DEFAULT_SELECTION_CUTS` applied by `load_constgold` are on TRUE properties — `r_input_p` in
+(18,28), `Re_input_p` in (0.1,1.5), `distance < 5"` or isolated — identical in both legs, so they
+DEFINE the sample rather than select on the data and cannot bias the response. They remove 9.7%,
+almost all of it the true-size cut (9.64%); the mag cut takes 0.1% and the separation cut none.
+Lifting them moves `R_sim` 0.4591 -> 0.4503 (-1.9%), which is a different sample, not a bias; and
+the flow was TRAINED behind the same cuts (`train_measurement_model.py:166`), so the rows that come
+back are all true `Re > 1.5"` and it is extrapolating. `--no-source-selection` added for that
+robustness check.
+The LEGS ARE ALREADY MATCHED row-for-row: one row is one input galaxy carrying `measured_*_plus`
+and `measured_*_minus`, so `r_i` is a per-object difference of the same galaxy, and `R_flow` adds
+common random numbers across legs. **The real unmatched selection is upstream and invisible in this
+file**: the schema has NO per-leg detection flag and ZERO rows with an unmeasured leg, i.e. the
+catalogue is the both-legs-detected INTERSECTION. That intersection IS shear-dependent, it is the
+only genuine cut in the chain, and its size is known from elsewhere (`R_full/R_both - 1` = -0.88%
+all, -0.08% isolated, -1.11% blended). The certified +0.245% excludes it by construction.
+
 SCOPE: shape channel only (the latent is the primary's true ellipticity; neighbours are NOT
 marginalized, so §3's blend channel is identically zero, as §5B.2 says). `P_pass`/`P_det` and the
 size/flux channels are not implemented.
 
-NEXT: (a) the missing O(R_b^2) information term above, which is what makes §5C.3 usable;
+NEXT: (a) DONE — the O(R_b^2) term is in; the open question is now why the completed injection
+overshoots to -14.7%, which the closure controls above are running to settle;
 (b) the additive bias — chase the flow's residual mis-calibration in `ngmix_g2`, and test a
 conditional prior `p(e | mag, size)` even though the g=0 discriminator says the marginal prior is
 not the cause; (c) per-subsample flatness (the +30% top-R_blend bin) rather than global cancellation;
