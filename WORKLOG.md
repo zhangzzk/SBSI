@@ -123,10 +123,17 @@ gamma-independent, so its finite difference captures the reweighting
 
       d^2_gamma log L |_0 = w^T (grad^2 log p_flow) w,      w = R_b v      [MISSING]
 
-an O(R_b^2) term, negative because the residual density is log-concave. Symptom: `<I>` FALLS
-3.488 -> 3.186 when the injection is switched on, where adding response to the model must RAISE it.
-A Gaussian estimate puts the missing piece near `R_b^2/sigma^2 ~ 0.25` (~8% of `<I>`). So the
-injected `ghat` is over-estimated and is marked PROVISIONAL in the output; do not quote it.
+an O(R_b^2) term, negative because the residual density is log-concave. Two symptoms, and the
+second is quantitative:
+  * `<I>` FALLS 3.488 -> 3.186 when the injection is switched on, where adding response to the
+    model must RAISE it;
+  * the injected antithetic reads **`ghat/g = 1.3897 +/- 0.0117` (m = +38.97%)** against the
+    prediction 1.0130 — over-estimated, the direction an under-estimated `<I>` forces.
+Closing the gap needs `<I> = 4.443`, i.e. **1.246 of missing information**. The Gaussian estimate
+of the dropped term is `<R_b^2>/sigma^2 = 0.1107 / 0.334^2 = 0.99` — same size, 25% low, which is
+about right for a Gaussian stand-in. Note `<R_b^2>/<R_b>^2 = 4.34`: the term is driven by the
+heavy `R_b` tail, so `<R_b>` alone badly under-states it. So the injected `ghat` is marked
+PROVISIONAL in the output; do not quote it.
 FIX (next step, cheap): `w^T grad^2 log p_flow w` is a second central difference of the residual
 log-density ALONG `w` — two extra forward passes per component on top of the four
 `grad_ehat_on_grid` already does.
