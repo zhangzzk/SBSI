@@ -197,7 +197,37 @@ prices (a). `--flow-perobj-only` dumps the per-object transport response for a p
 rows, so per-bin TRANSPORT can be set beside per-bin SCORE: a model error shows in both, a
 weighting or form error only in the score.
 
-**V2 vs V1 TRANSPORT ON THE ACCEPTANCE POPULATION — V2 DOES NOT CLOSE THE DEFICIT
+**⚠ RETRACTED IN FULL (owner correction): THE "V2" BELOW IS NOT V2.** I evaluated
+`sbsi_caches/ablation/measurement_flow_g0_ngmix_ablate_s2c_coupling_lt500_*`, which is an
+ABLATION RUNG (measured->true conditioning swap + 4-D output) trained by
+`train_measurement_model.py` on the FULL source-selected population — its training log shows
+`source_cut = 5,798,538 / 6,543,416`, no true-property cut. The actual V2 is
+`sbsi_caches/forward_proto/forward_ens_lr250_swa8_seed42{1..6}_joint.pt`, trained by
+`train_joint_forward.py` with `metadata.true_cut = (0.3, 26.0)` and
+`primary_only_shear = True` — i.e. trained ON the bright population it is meant to be
+evaluated on. Confirmed by reading the checkpoint metadata.
+
+The size of my error, on the SAME true-cut population: real V2 `<R_flow> = 0.7532 +/- 0.0298`
+(6 seeds, `cl250_15215739`) against the ablation model's 0.6814 that I measured — ~10% higher.
+The ablation model under-responds on the bright population precisely BECAUSE it was trained
+on the full, fainter one, so my +6.27% measured that train/eval population mismatch, not V2.
+I also paired it with the wrong emulator: the V2 chain uses `blend_lookup_extnbrho_d7_c0-39`
+(7"-gated, isolation = no brighter true neighbour within 7"), not `extnbrho_c40-139`.
+So "V2 does not close the acceptance deficit" is WITHDRAWN; it is not a statement about V2.
+
+Already on record for the real V2 (`cl250_15215739`, 6-seed ensemble, constgold true-cut,
+N=4,667,164): `<R_sim>=0.8619`, `<R_flow>=0.7532`, isolated band (pure flow test, R_blend=0)
+`m_iso = +5.15%` with 3.63% seed scatter, against the certified measured-conditioned flow's
+-8..-18% in the same band. NOTE that is the CONSTGOLD closure; the owner's validation is on
+PAIR-MATCHED half-shear galaxies of that population, which is the cleaner test and the one
+`primary_only_shear=True` training is matched to. Do not conflate them.
+
+BRANCH LIMITATION: these joint checkpoints carry `primary_preprocessor`/`neighbor_
+preprocessor`, `primary_features`/`neighbor_features`, `shape_targets`/`measurement_targets`
+— a scene-conditioned format this branch's loader cannot read, and the loader that can is
+uncommitted in the main checkout. This branch cannot evaluate V2 without that code.
+
+**[RETRACTED] V2 vs V1 TRANSPORT ON THE ACCEPTANCE POPULATION — V2 DOES NOT CLOSE THE DEFICIT
 (`scripts/compare_v1_v2_seeds.py`; jobs 15292699, 15293776-81; 4 seeds each, 501/502/503/505,
 same 400k rows).** V2 = `sbsi_caches/ablation/measurement_flow_g0_ngmix_ablate_s2c_coupling_
 lt500_s50x.pt`: conditions on TRUE `r_input_p`/`Re_input_p`, 4-D output (shape + measured mag
