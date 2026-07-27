@@ -48,6 +48,39 @@ the 3-bin grid averaged into a single value of 0.570.
 **Selection criterion:** OVERALL gap AND per-size-bin spread. The baseline is the standing proof that
 a small overall number can hide large cancelling per-bin errors.
 
+**Candidate scores (job 15305927, 3 seeds each, half-shear ruler, ALL in-domain set):**
+
+| grid | OVERALL | [0.30,0.38) | [0.38,0.50) | [0.50,0.75) | [0.75,1.50) |
+|---|---|---|---|---|---|
+| dom2 (6x3x5) | -0.44% | +3.08 | **-5.23** | +0.74 | +1.04 |
+| **6x6x5** | -0.35% | -3.14 | **+0.71** | +0.04 | -0.13 |
+| 8x8x5 | -0.19% | -3.27 | +0.91 | +0.21 | +0.18 |
+
+The -5.23% at the bin straddling the old 0.419 edge collapses to +0.71%, and the two largest size
+bins go to ~0. Resolution diagnosis confirmed.
+
+**PRE-REGISTERED PICK: 6x6x5**, chosen BEFORE any constgold number was read, to keep the choice
+non-circular. The two are statistically indistinguishable on the ruler; 6x6 wins on smaller per-bin
+rms and **3x the counts per cell** (1,875 vs 611), so it is less likely to be fitting noise. 8x8's
+marginally better OVERALL was not worth the thinner cells. 8x8 was NOT selected and its constgold
+number is deliberately not being used to revisit that choice.
+
+**Expectation set before measuring:** the gain is concentrated in per-bin STRUCTURE; the OVERALL ALL
+gap barely moved (-0.44% -> -0.35%). Since constgold in-domain m averages over that same population,
+a large improvement on m was NOT expected from this change alone. "Flatter per bin" and "smaller
+mean" are different properties and only the second is the owner's target.
+
+**constgold, 6x6, first 3 seeds:** +0.507, -0.189, -1.556 -> **-0.41 +- 0.61%** (vs dom2 8-seed
+-0.819 +- 0.190%). Central value roughly halved, but 3 seeds cannot settle it and the seed sd looks
+LARGER (1.05 vs 0.538) -- possibly a finer-grid noise cost, possibly a 3-seed artifact. 5 more seeds
+in flight (15305972 train, 15305993 eval, 15305994 aggregate).
+
+**Open issue, common to both grids: an ISOLATED-vs-BLENDED imbalance.** Both over-predict by
++3.6-3.8% on the ISOLATED set while sitting near zero on ALL, i.e. they must under-predict on blended
+objects to compensate. The 5-bin r_blend crowd axis is not resolving it. Note cont.107's caveat that
+`nn_bright>7"` is not the same as blend-free, so part of this may be a definitional mismatch rather
+than a model error. This is the most likely next lever if the grid change alone does not reach 0.3%.
+
 ## 2026-07-28 (domain-trained Gold-V2, 8-seed ensemble: in-domain m +3.49% -> -0.82%; big win, still 2.7x off target)
 
 **Jobs.** 15304872 (train array, seeds 502/503/505-509) -> 15304873 (eval array) -> 15305898
