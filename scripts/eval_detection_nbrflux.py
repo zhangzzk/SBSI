@@ -57,6 +57,8 @@ def main():
     ap.add_argument("--col", default="nbr_flux_near", choices=["nbr_flux_near", "nbr_flux_far", "nbr_flux_max"])
     ap.add_argument("--min-case", type=int, default=40)
     ap.add_argument("--nbins", type=int, default=6)
+    ap.add_argument("--mag-edges", type=float, nargs="+", default=None,
+                    help="consecutive true-r-mag bin edges -> one curve per bin (e.g. 24.5 25 25.5 26 26.5)")
     ap.add_argument("--output", default=None)
     args = ap.parse_args()
 
@@ -86,7 +88,12 @@ def main():
     sh = build_pair(dp, dm, sign) if sign < 0 else sh0
     etp, etm = sh["shint_p"], sh["shint_m"]
 
-    mag_bands = [("all", -np.inf, np.inf), ("bright r<25.5", -np.inf, 25.5), ("faint r>=25.5", 25.5, np.inf)]
+    if args.mag_edges:
+        e = args.mag_edges
+        mag_bands = [(f"r[{e[i]:.1f},{e[i+1]:.1f})", e[i], e[i + 1]) for i in range(len(e) - 1)]
+    else:
+        mag_bands = [("all", -np.inf, np.inf), ("bright r<25.5", -np.inf, 25.5),
+                     ("faint r>=25.5", 25.5, np.inf)]
     # equal-count edges over BLENDED (nf>0) both-detected pooled
     pool = np.concatenate([nf_p[(nf_p > 0) & both_p], nf_m[(nf_m > 0) & both_m]])
     edges = np.quantile(pool, np.linspace(0, 1, args.nbins + 1)); edges[0] -= 1e-9; edges[-1] += 1e-9
