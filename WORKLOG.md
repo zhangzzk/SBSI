@@ -58,9 +58,34 @@ the dumps by exact (case, input_index) equality.
 
 Per-seed scatter is large (sd ~1.0% on the full population), so the 8-seed sem is 0.35%.
 
-**Known limitation.** The size-split disagreement (+3.9% on Re>0.3 vs -0.46% overall) is a real
-per-property failure of the shape response that averages away globally. fig2's Re panel should
-already show it; it has not yet been read off quantitatively in Re bins.
+**Owner question: "V2 should be trained on that domain and be unbiased there -- what's going on?"**
+Checked against the original logs, not re-derived.
+
+- **It was never trained on that domain.** `train_measurement_model_swa_s1_truecond.py:167` applies
+  only `source_select_selection(DEFAULT_SELECTION_CUTS)` = true mag (18,28), true Re (0.1,1.5), and
+  `jobs/job_s2c_lt500_seeds.sh` passes no further restriction. mag<26 / Re>0.3 is (a) the deliverable
+  target in `GOALS.md`, (b) the `eval_selfresp_gap.py` ISO ruler for the SELF response, and (c) where
+  the mag/size coupling pin has real measurements -- but never a training cut.
+- **It was never certified there either.** `jobs/job_s2c_final_eval.sh` runs
+  `validate_constant_with_blend.py --global-only`, i.e. full population. The in-domain constgold m
+  for these checkpoints was measured for the first time today.
+- **My numbers reproduce the original certification exactly**, so the +3.5% is not an evaluation bug:
+  `s2c_final_t1` logged s502 = **-1.18%** (I get -1.176%), `s2c_final_t2` logged s503 = **-0.72%**
+  (I get -0.717%).
+- **The "|m|<0.3% spec" line in cont.149 was a 3-seed mean** (s501/502/503 -> -0.24%) with per-seed
+  sd ~1.2%; the 8-seed value is -0.461 +- 0.353%. Seed scatter always dominated that claim.
+- **The in-domain bias is long-documented, not new.** cont.110c has the *certified V1* pipeline at
+  true Re>0.3 = **+5.49%**; V2 gives +3.94% on the same cut -- ~1.5 pts better, still far from
+  unbiased. The recorded mechanism fits the table exactly: global closure is a bright-over /
+  faint-under cancellation, and each cut unbalances it (mag<26 keeps the over-predicted bright side
+  -> -1.78%; Re>0.3 keeps the under-predicted large side -> +3.94%). The size piece is the R_self
+  transition-smoothing at Re~0.24-0.50 from cont.110f.
+
+**So: sub-percent in-domain is the GOAL (`GOALS.md`), never a demonstrated property of any model in
+this lineage.** Memory `project_fluxsize_response` corrected accordingly.
+
+**Known limitation.** The Re-binned m breakdown has not been read off quantitatively yet, so fig2's
+size-residual panel and the table above are not yet cross-checked against each other.
 
 **Next.** Rebuild the two selection figures from `selection_intrinsic_domain.npz`; add an Re-binned m
 breakdown so fig2's residual panel and the table above can be cross-checked.
