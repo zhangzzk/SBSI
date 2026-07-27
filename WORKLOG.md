@@ -2,6 +2,73 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-27 (WHY the V2 flow's magnitude-cut selection response is flat -- the coupling pin covers 44% of the sample)
+
+**Question.** The new intrinsic-shape selection figure shows the flow nearly FLAT vs magnitude cut
+(-0.29% -> -0.08% across mag<24.5..26.5) where constgold runs +0.51% -> -1.47%, unlike the older
+`fig_selection_bias_sim_vs_flow.png` where sim and flow tracked. Diagnosed, not guessed.
+
+**Added.** `scripts/diag_selection_channels.py` + `jobs/job_diag_selchannels.sh` (job 15292438).
+
+**Two separate things were going on.**
+
+1. *Definitional (not a regression).* The old figure plots `R(cut)/R(nocut)-1` with the MEASURED shape
+   on the det_meas half-shear sim -- ~14% effects dominated by population re-weighting of the shape
+   response, which the flow reproduces well (mag<24.5: sim +13.79% vs flow +11.89%). The intrinsic-shape
+   estimator removes that term algebraically, leaving only the moving-boundary piece, ~60x smaller.
+   The new figure is a zoom into a residual the old one could not resolve; the flow was never
+   demonstrated to get it right.
+
+2. *Architectural -- the real finding.* The flow is never conditioned on g. Its ONLY shear channel into
+   `measured_mag_auto` / `measured_log_flux_radius` is the mean head's shape coupling (the residual flow
+   is blind to shape via `--flow-blind-features e1_input_p e2_input_p`), pinned in training by the spin-2
+   loss to `d(mag)/dg = b_mag * e_int`, `d(log_size)/dg = b_size * e_int` from
+   `response_target_theta_coupling_rblend_c0-99_6x9x5.npz` (lam_theta=500). Measuring the SAME
+   coefficient on constgold as `slope[(x_plus - x_minus)/2g vs e_int.ghat]`:
+
+   - `coupling_size` IS resolved per (flux,size,crowd) cell and TRANSFERS ACROSS SIMS almost exactly
+     (constgold vs pin: 0.3882/0.3915, 0.6043/0.6044, 0.6761/0.6746, and the negative faint-large cells
+     -0.6749/-0.5771). The machinery works.
+   - `coupling_mag` is a SINGLE GLOBAL CONSTANT +0.0254 in every defined cell. constgold's actual b_mag
+     runs **-0.082 .. +1.698** across cells and CHANGES SIGN; globally +0.1175 vs the pinned +0.0254
+     (4.6x too small before any per-cell structure).
+   - The pin target is UNDEFINED (nan) for all true mag > 26.04 and all true Re < 0.30 cells:
+     **55.9% of the 26.9M-row evaluation sample sits in cells the pin never constrained.** The flow
+     extrapolates its constant there -- predicting b_size ~ +0.45 where the truth falls to +0.14 .. -0.55.
+
+**Boundary decomposition (PART D) confirms the mechanism quantitatively.** `R_sel ~= density(T) *
+<p_int*(-dx)>_{x~T} / 2g / keep` reproduces the exact estimator to a few percent (mag 26.5: 0.00639 vs
+0.00664; size 0.7: 0.04582 vs 0.04515). Across the mag axis the boundary DENSITY is flat (0.22-0.33)
+while the local coupling swings +0.0018 -> -0.0253 (sign change, 14x). All the structure in the sim's
+magnitude curve comes from b_mag varying -- exactly what one global constant cannot produce. Model
+bias x keep-fraction is near-constant (-0.077,-0.094,-0.095,-0.086,-0.066), the 1/keep signature of a
+single global dial. This also explains the size panel over-predicting (+14.4% vs sim +10.0%).
+
+**Population check (PART A) -- the flow is NOT extrapolating in true properties.** Training and every
+new plot apply the identical `source_select_selection(DEFAULT_SELECTION_CUTS)` = true mag (18,28),
+true Re (0.1,1.5), distance<5" or ~neighbored. No mag<26 / Re>0.3 restriction anywhere. Distributions
+match closely (median true mag 25.588 train vs 25.536 constgold; Re 0.315 vs 0.320; sersic identical;
+only 0.93%/1.00% of constgold outside the training p0.5-p99.5 range). ONE real composition difference:
+the training catalogue is **99.97% neighboured** (checked across all 480 record batches) vs constgold's
+75%, so `fig_selection_bias_intrinsic_isolated.png` evaluates a population essentially absent from
+training -- treat that panel as the weaker of the two.
+
+**Model confirmed as V2** from checkpoint metadata: `ablate_s2c_coupling_lt500_s{501,502,503,505,506,
+507,508,509}_swaavg`, catalogue `det_meas_crowd_conc_g0.0_train_full.feather`, `shear_case=0.0`,
+`max_rows=4,000,000` (random reservoir, 3.4M train / 0.6M val), SWA epochs 73-80, conditioning on TRUE
+properties `[e1,e2,sersic_n,r_input_p,Re_input_p,nbr_flux_near/far/max]` (the truecond swap).
+
+**Known limitation of the diagnostic.** The PART D `product` column printed with a flipped sign
+convention on this run (magnitudes agree with `R_sel exact` to a few percent, signs do not); fixed in
+the script afterwards. No conclusion depends on it.
+
+**Validation.** Import + argparse check before submit; job 15292438 on `inter` (250G/12c/1 GPU), 8 seeds
+of PART C reproduce their pinned coupling as expected.
+
+**Next.** Rebuild the coupling target with (a) `coupling_mag` resolved per cell like `coupling_size`,
+and (b) grid coverage extended to true mag > 26.04 and true Re < 0.30 -- those two changes are what the
+faint-end selection response needs. Retrain lt500 against it before re-running the selection figure.
+
 ## 2026-07-27 (SELECTION bias with unsheared intrinsic shapes on constgold; Gold-V2 8-seed remakes of fig1-3)
 
 **Missing data recovered.** The constgold per-leg catalogues (`constant_shear_catalogue_{+,-}0.02_train`)
