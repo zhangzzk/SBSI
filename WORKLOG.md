@@ -2,6 +2,68 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-27f (WHY the flow's mag-cut selection curve is flat -- ANSWERED; b_mag is global BY DESIGN, and that design premise is refuted)
+
+Owner-requested subagent investigation; the central claim re-verified by hand before recording.
+
+**The two estimators differ by one term.** With `w_i(g)` the pass indicator and `p_i(g)` the numerator,
+`d/dg[Σw p / Σw] = ⟨dp/dg⟩_S` **(A: response re-weighting)** `+ Cov_S(p, dlnw/dg)` **(B: moving
+boundary)**. The OLD figure (`eval_selection_response.py:120-130`, measured-shape numerator) plots
+**A+B**; the NEW one (`eval_selection_intrinsic.py:192,227-238,254`, intrinsic numerator) forces
+`dp/dg = 0` and plots **B alone**.
+
+**A dominates the OLD MAG panel -- demonstrated inside the old harness itself.**
+`eval_selection_response.py:300-314` (log `s2_selrec2_15264558.out`): a cut on **TRUE** Re>0.40, where
+B is identically zero (printed `boundary` column = +0.0000), still moves R from 1.0510 to 1.0740 --
+**+2.19% of "selection shift" with literally zero selection**. For mag<24.5 the pure-B term is +0.37%
+of R_total against the old figure's +13.79%, so B is ~3% of the old mag number (ratio ~37x, not the
+~60x I previously wrote).
+
+**BUT that is a mag-panel statement only -- correction to 2026-07-27's entry.** On the SIZE axis the
+old figure's shift is ALSO almost entirely moving-boundary (old size>0.7": +9.30%; new pure-B at
+size>0.7" ISOLATED: +10.35%). The old figure is a re-weighting plot on its mag panel and a genuine
+selection plot on its size panel.
+
+**Root cause of the flatness -- and a CORRECTION to 2026-07-27b.** I wrote that 130 of 270 cells hold
+a global-constant fill. True for `coupling_size`, and misleading for `coupling_mag`. Verified by hand:
+
+- `np.unique(coupling_mag)` -> **`[0.0253774]`**: ONE value in **all 270 cells, including all 140
+  POPULATED ones**.
+- `np.unique(coupling_size)` -> 140 distinct values (per-cell measured) + fill in the 130 empty.
+
+This is deliberate, at `SBSI/scripts/build_theta_coupling_target.py:163-164`: *"b_mag stays GLOBAL:
+mag response is orientation-independent ~0 (flux conserved), so per-cell fits are pure noise."* The
+per-cell mag slope is never even stored.
+
+**That premise is refuted.** `selchan_15292438.out` PART B: the per-cell sim `b_mag` is smooth,
+monotone and physically coherent -- **-0.082** (bright/small) to **+1.70** (mag 25.6-26.0, Re 1.1-1.5"),
+with the same sign pattern repeating independently across all four in-domain flux bins at 23k-850k
+objects per cell. Not noise. Flux conservation constrains TOTAL flux, not `mag_auto`'s Kron aperture,
+which is orientation-sensitive exactly where surface brightness is low. By contrast `coupling_size` is
+per-cell and accurate: median |pin - sim| = **1.6%** in-domain.
+
+**Verdict: mathematically forced, not an estimator bug.** A single positive constant makes `R_sel`
+sign-definite and monotone in the threshold, so it structurally CANNOT reproduce the sim's
+zero-crossing near mag 24.9; and at 0.0233 against a boundary-local |b| of 0.04-0.4 the amplitude is
+5-15x too small. Implied `b_eff = b_flow * R_sim/R_mod` reproduces the sim's per-cell values: mag<24.5
+-> **-0.037** (sim -0.04..-0.08 there); mag<26 -> **+0.36** (sim row runs +0.007..+1.70).
+
+Note `b_mag_global` is not even a defensible average for this purpose: the count-weighted in-domain
+sim value is **+0.0046** (bright-negative cancelling faint-positive), constgold's raw global is
+**+0.1175**. A moving-boundary estimator is a boundary-LOCAL integral and never sees the average.
+
+**The estimator is vindicated two independent ways.** (1) The flow's boundary DENSITY matches the sim
+to 0.1% at every mag threshold (dens_mod/dens_sim = 0.999-1.003); only the coupling factor is wrong.
+(2) A/B on the same code: without the domain cut, SIZE goes badly wrong (size>0.5" model +0.01268 vs
+sim +0.00091, 14x) where cells fall back to the `b_size=0.49` fill; with the domain cut it snaps to
+1.04-1.10x. The MAG curve is essentially unchanged between the two runs (-0.00131 -> -0.00136 at
+mag<24.5) precisely because for mag the pin is constant everywhere, in or out of domain.
+
+**Fix path (not yet run).** Re-run `build_theta_coupling_target.py` storing the per-cell `b_mag` fit
+(the slope helper already exists; only the mag slope is discarded), on the firewall-clean det_meas
+half-shear legs, with a finer grid in the faint/large corner where b_mag spans +0.007..+1.70 inside a
+single cell. Then retrain the lt500 seeds. Neither evaluation script needs changing.
+
 ## 2026-07-27e (domain training WORKS once the target is aligned: in-domain m +4.75% -> -0.53%, 1 seed)
 
 **Jobs.** 15300894 (domain response target) -> 15300895 (retrain, TAG `..._lt500_dom2`) ->
