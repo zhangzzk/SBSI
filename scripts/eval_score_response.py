@@ -249,8 +249,13 @@ def blend_stencil_on_grid(est, frame, ehat_raw, jac, r_blend, chunk=256, delta=0
     # w in STANDARDISED target units, where the stencil lives
     jac_t = torch.as_tensor(np.asarray(jac, dtype=np.float32), device=est.device)  # (G,2,2)
     n = len(frame)
-    out_e = np.empty((n, est.G, 2), dtype=np.float16)
-    out_h = np.empty((n, est.G, 2, 2), dtype=np.float16)
+    # float32, NOT the float16 used for the log-likelihood buffer: the second difference
+    # carries a 1/delta^2 = 400 and a |w|^2, so deep-tail nodes routinely exceed float16's
+    # 65504 ceiling.  Overflowing them to `inf` is fatal rather than merely imprecise,
+    # because the posterior weight there is ~0 and `0 * inf` poisons the whole object's
+    # information with a NaN.  The extra 725 MB per slab is not worth the risk.
+    out_e = np.empty((n, est.G, 2), dtype=np.float32)
+    out_h = np.empty((n, est.G, 2, 2), dtype=np.float32)
     for start in range(0, n, chunk):
         stop = min(start + chunk, n)
         rep = est._grid_tiled_context(frame.iloc[start:stop])
@@ -283,11 +288,16 @@ def blend_stencil_on_grid(est, frame, ehat_raw, jac, r_blend, chunk=256, delta=0
         g2, h22 = directional(w[:, :, 1])
         _, hss = directional(w[:, :, 0] + w[:, :, 1])
         h12 = 0.5 * (hss - h11 - h22)
-        out_e[start:stop] = torch.stack([-g1, -g2], dim=1).view(
-            b, est.G, 2).cpu().numpy().astype(np.float16)
-        out_h[start:stop] = torch.stack(
+        # A node where the flow returns log p = -inf has zero posterior weight, so its
+        # correct contribution is 0; left as +/-inf it would come back as NaN instead.
+        def finite(t):
+            return torch.nan_to_num(t, nan=0.0, posinf=0.0, neginf=0.0)
+
+        out_e[start:stop] = finite(torch.stack([-g1, -g2], dim=1)).view(
+            b, est.G, 2).cpu().numpy()
+        out_h[start:stop] = finite(torch.stack(
             [torch.stack([h11, h12], -1), torch.stack([h12, h22], -1)], dim=1
-        ).view(b, est.G, 2, 2).cpu().numpy().astype(np.float16)
+        )).view(b, est.G, 2, 2).cpu().numpy()
     return out_e, out_h
 
 
@@ -358,8 +368,11 @@ def score_pass(est, nodes, frame, ehat_raw, chunk, tag, r_blend=None, grad_chunk
         s_out[s0:s1], i_out[s0:s1], _ = scores_from_loglike(
             ll, nodes, device=est.device, extra=extra, extra_hess=extra_hess,
             analytic_info=analytic_info)
+        bad = int((~np.isfinite(s_out[s0:s1])).any(1).sum()
+                  + (~np.isfinite(i_out[s0:s1])).any((1, 2)).sum())
         el = time.time() - t0
-        print(f"  [{tag}] {s1:,}/{n:,}  {el:.0f}s  ETA {el / s1 * (n - s1):.0f}s", flush=True)
+        print(f"  [{tag}] {s1:,}/{n:,}  {el:.0f}s  ETA {el / s1 * (n - s1):.0f}s"
+              + (f"  !! {bad:,} non-finite rows" if bad else ""), flush=True)
     return s_out, i_out
 
 
