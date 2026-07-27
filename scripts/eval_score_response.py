@@ -60,6 +60,7 @@ from sbs_shear.score_inference import (  # noqa: E402
     ShapeScoreNodes,
     SmoothRadialPrior,
     blend_injection_term,
+    shear_velocity_jacobian,
     bootstrap_by_case,
     project,
     response_from_score,
@@ -128,7 +129,7 @@ def load_g0(path, max_rows):
             "measured_flux_radius", "nbr_flux_near", "nbr_flux_far", "nbr_flux_max",
             "Re_input_p", "Re_input_s", "r_input_p", "r_input_s", "distance",
             "neighbored", "detected", "polarization_angle", "case", "input_index",
-            "measured_ngmix_g1", "measured_ngmix_g2"]
+            "measured_ngmix_g1", "measured_ngmix_g2", "r_blend"]
     df = stream(path, cols, int(max_rows * 1.6) + 10_000)
     df = source_select_selection(df, cuts=DEFAULT_SELECTION_CUTS)
     df = df[df["detected"].astype(bool)].reset_index(drop=True)
@@ -222,6 +223,75 @@ def build_prior(args):
 
 
 @torch.no_grad()
+def blend_stencil_on_grid(est, frame, ehat_raw, jac, r_blend, chunk=256, delta=0.05):
+    """Both §5C.3 injection terms from ONE stencil: `extra` and its second derivative.
+
+    Write `w_a = R_b (d eps'/d gamma_a)`, the shift the injected likelihood applies to the
+    measured shape per unit shear.  Then
+
+        extra_a       = -w_a . grad log p_flow                        (5.9), the score
+        H_ab          = w_a^T grad^2 log p_flow w_b                   the information term
+
+    Both are directional derivatives along the SAME vectors, so one central-difference
+    stencil along `w_1`, `w_2` and `w_1 + w_2` yields both: seven evaluations of the
+    residual flow (`mu` and the flow context computed once and reused), against four for
+    the gradient alone.  The cross term comes from the polarization identity
+    `2 H_12 = D2(w_1 + w_2) - H_11 - H_22`.
+
+    Steps are taken along UNIT directions and rescaled by `|w|` afterwards, because `R_b`
+    spans 0 to 3.5 across the catalogue and a fixed step in `w` would be far too small for
+    the isolated objects and far too large for the crowded ones.
+    """
+    model = est.bundle.model
+    tstd = est.bundle.target_transform
+    scales = torch.as_tensor(np.asarray(tstd.scales, dtype=np.float32), device=est.device)
+    ehat_std = tstd.transform_array(np.asarray(ehat_raw, dtype=np.float32))
+    # w in STANDARDISED target units, where the stencil lives
+    jac_t = torch.as_tensor(np.asarray(jac, dtype=np.float32), device=est.device)  # (G,2,2)
+    n = len(frame)
+    out_e = np.empty((n, est.G, 2), dtype=np.float16)
+    out_h = np.empty((n, est.G, 2, 2), dtype=np.float16)
+    for start in range(0, n, chunk):
+        stop = min(start + chunk, n)
+        rep = est._grid_tiled_context(frame.iloc[start:stop])
+        b = rep.shape[0]
+        flat = rep.view(b * est.G, -1)
+        mu = model._mu(flat)
+        fctx = model._flow_ctx(flat)
+        xh = torch.as_tensor(ehat_std[start:stop], dtype=torch.float32, device=est.device)
+        x0 = xh[:, None, :].expand(b, est.G, 2).reshape(b * est.G, 2) - mu
+        rb = torch.as_tensor(np.asarray(r_blend[start:stop], dtype=np.float32),
+                             device=est.device)
+        # w[.,b,a] = R_b * J[k,b,a] / scale_b   -> standardised units
+        w = (rb[:, None, None, None] * jac_t[None] / scales[None, None, :, None]
+             ).reshape(b * est.G, 2, 2)
+        l0 = model.flow.log_prob(x0, fctx)
+
+        def directional(z):
+            """(z . grad log p, z^T grad^2 log p z) by central differences along z."""
+            norm = torch.linalg.norm(z, dim=1, keepdim=True)
+            unit = z / norm.clamp_min(1e-12)
+            lp = model.flow.log_prob(x0 + delta * unit, fctx)
+            lm = model.flow.log_prob(x0 - delta * unit, fctx)
+            d1 = (lp - lm) / (2 * delta) * norm[:, 0]
+            d2 = (lp - 2 * l0 + lm) / delta ** 2 * norm[:, 0] ** 2
+            zero = norm[:, 0] < 1e-12
+            return torch.where(zero, torch.zeros_like(d1), d1), \
+                torch.where(zero, torch.zeros_like(d2), d2)
+
+        g1, h11 = directional(w[:, :, 0])
+        g2, h22 = directional(w[:, :, 1])
+        _, hss = directional(w[:, :, 0] + w[:, :, 1])
+        h12 = 0.5 * (hss - h11 - h22)
+        out_e[start:stop] = torch.stack([-g1, -g2], dim=1).view(
+            b, est.G, 2).cpu().numpy().astype(np.float16)
+        out_h[start:stop] = torch.stack(
+            [torch.stack([h11, h12], -1), torch.stack([h12, h22], -1)], dim=1
+        ).view(b, est.G, 2, 2).cpu().numpy().astype(np.float16)
+    return out_e, out_h
+
+
+@torch.no_grad()
 def grad_ehat_on_grid(est, frame, ehat_raw, chunk=256, delta=0.02):
     """`grad_ehat log p_flow(ehat | e_k, rest)` per (galaxy, node) -- §5C.3's injection.
 
@@ -262,7 +332,7 @@ def grad_ehat_on_grid(est, frame, ehat_raw, chunk=256, delta=0.02):
 
 
 def score_pass(est, nodes, frame, ehat_raw, chunk, tag, r_blend=None, grad_chunk=256,
-               slab_mult=64, analytic_info=False, ll_dtype=np.float32, grad_delta=0.02):
+               slab_mult=64, analytic_info=False, ll_dtype=np.float32, grad_delta=0.05):
     """One leg: log-likelihood over the node bank -> `(s_i, I_i)`, slab by slab.
 
     Nothing of size `N x G` is ever held: each slab's likelihood (and, when injecting,
@@ -273,19 +343,21 @@ def score_pass(est, nodes, frame, ehat_raw, chunk, tag, r_blend=None, grad_chunk
     n = len(frame)
     s_out = np.empty((n, 2))
     i_out = np.empty((n, 2, 2))
-    slab = chunk * slab_mult
+    jac = shear_velocity_jacobian(nodes.grid) if r_blend is not None else None
+    slab = chunk * (slab_mult if r_blend is None else max(1, slab_mult // 4))
     t0 = time.time()
     for s0 in range(0, n, slab):
         s1 = min(s0 + slab, n)
         ll = est.log_likelihood(frame.iloc[s0:s1], ehat_raw[s0:s1], chunk=chunk,
                                 row_offset=s0, out_dtype=ll_dtype)
-        extra = None
+        extra = extra_hess = None
         if r_blend is not None:
-            g = grad_ehat_on_grid(est, frame.iloc[s0:s1], ehat_raw[s0:s1],
-                                  chunk=grad_chunk, delta=grad_delta)
-            extra = blend_injection_term(g, nodes.grid, r_blend[s0:s1])
+            extra, extra_hess = blend_stencil_on_grid(
+                est, frame.iloc[s0:s1], ehat_raw[s0:s1], jac, r_blend[s0:s1],
+                chunk=grad_chunk, delta=grad_delta)
         s_out[s0:s1], i_out[s0:s1], _ = scores_from_loglike(
-            ll, nodes, device=est.device, extra=extra, analytic_info=analytic_info)
+            ll, nodes, device=est.device, extra=extra, extra_hess=extra_hess,
+            analytic_info=analytic_info)
         el = time.time() - t0
         print(f"  [{tag}] {s1:,}/{n:,}  {el:.0f}s  ETA {el / s1 * (n - s1):.0f}s", flush=True)
     return s_out, i_out
@@ -370,8 +442,9 @@ def mode_closure(args, bundle, prior, grid, rk):
             torch.cuda.manual_seed_all(args.flow_seed)
 
     g_ref = g if g else 0.02          # the transport secant needs a non-zero step
-    R_transport = flow_response(bundle, df, g_ref, gh1, gh2, (e1i, e2i), rk,
-                                args.n_samples, args.batch_size, reseed=reseed)
+    R_transport, r_perobj = flow_response(bundle, df, g_ref, gh1, gh2, (e1i, e2i), rk,
+                                          args.n_samples, args.batch_size, reseed=reseed,
+                                          return_perobj=True)
     print(f"transport R_flow on these rows = {R_transport:.4f}  "
           f"(certified {R_FLOW_CERT:.4f})", flush=True)
 
@@ -425,6 +498,25 @@ def mode_closure(args, bundle, prior, grid, rk):
     ghat_anti = float(np.sum(sp) / np.sum(ip))
     err = float(np.std(sp / np.mean(ip)) / np.sqrt(len(sp)))
     R_score = 0.5 * (out[+1]["R"] + out[-1]["R"])
+    if args.perobj_dump:
+        # Same arrays as the constgold dump so `analyse_score_perobj.py` can split this
+        # run identically.  Here `r_sim` IS the flow's own per-object response: the data
+        # came from the flow, so a_i = r_i by construction and every bin must read 1.0.
+        # `r_blend` is carried only as a SPLIT covariate -- these data have no blend
+        # response at all.
+        np.savez(f"{args.perobj_dump}_closure.npz",
+                 s_plus=out[+1]["s_proj"], s_minus=out[-1]["s_proj"],
+                 i_plus=out[+1]["i_proj"], i_minus=out[-1]["i_proj"],
+                 e_plus=out[+1]["e_proj"], e_minus=out[-1]["e_proj"],
+                 r_sim=r_perobj, r_blend=df["r_blend"].to_numpy(float),
+                 case=(np.arange(len(df)) // 25_000).astype(np.int64),
+                 neighbored=df["neighbored"].astype(bool).to_numpy(),
+                 r_input_p=df["r_input_p"].to_numpy(float),
+                 mag_auto=df["measured_mag_auto"].to_numpy(float),
+                 flux_radius=df["measured_flux_radius"].to_numpy(float),
+                 g=g, R_flow=R_transport, R_sim=R_transport,
+                 R_blend=float(df["r_blend"].mean()))
+        print(f"  per-object dump -> {args.perobj_dump}_closure.npz", flush=True)
     print(f"\n  ANTITHETIC ghat = {ghat_anti:+.5f} +/- {err:.5f}   "
           f"(injected {g:+.4f};  ratio {ghat_anti / g:.4f}, m = {ghat_anti / g - 1:+.2%})")
     print(f"  Cov(ehat,s) leg-averaged = {R_score:.4f}   vs transport R_flow = "
@@ -542,8 +634,7 @@ def mode_constgold(args, bundle, prior, grid, rk):
         per = sp / np.mean(ip)
         err = bootstrap_by_case(per, cases, n_boot=args.n_boot)
         R_score = 0.5 * (legs[+1]["R"] + legs[-1]["R"])
-        label = ("WITH R_blend injection (§5C.3) -- PROVISIONAL, see below"
-                 if inject else "BARE flow (§5B)")
+        label = "WITH R_blend injection (§5C.3)" if inject else "BARE flow (§5B)"
         print(f"\n  --- {label} ---")
         print(f"  ANTITHETIC ghat = {ghat:+.5f} +/- {err:.5f}   g_true = {g:.4f}")
         print(f"    ghat/g          = {ghat / g:.4f} +/- {err / g:.4f}")
@@ -554,12 +645,6 @@ def mode_constgold(args, bundle, prior, grid, rk):
         print(f"    inferred response R_model * ghat/g = {R_model * ghat / g:.4f}  "
               f"vs R_sim = {R_sim:.4f}")
         print(f"    Cov(ehat,s) leg-averaged = {R_score:.4f}")
-        if inject:
-            print("    !! PROVISIONAL: the injected INFORMATION omits "
-                  "d^2_gamma log L = w^T grad^2 log p_flow w (w = R_b v), an O(R_b^2)")
-            print("       term that is negative, so <I> is under-estimated and this ghat "
-                  "is over-estimated.")
-            print("       See blend_injection_term's docstring; the numerator is complete.")
         results[inject] = dict(ghat=ghat, err=err, R_score=R_score)
         if args.perobj_dump:
             tag2 = "inj" if inject else "bare"
@@ -619,7 +704,7 @@ def main():
                          "0.1593 is the certified R_blend")
     ap.add_argument("--chunk", type=int, default=1024)
     ap.add_argument("--grad-chunk", type=int, default=256)
-    ap.add_argument("--grad-delta", type=float, default=0.02,
+    ap.add_argument("--grad-delta", type=float, default=0.05,
                     help="central-difference step (standardised target units) for "
                          "grad_ehat log p_flow")
     ap.add_argument("--n-samples", type=int, default=128)

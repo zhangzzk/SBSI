@@ -381,7 +381,7 @@ def _weighted_score(ll_t, log_prior, u, extra, gamma):
 
 
 def scores_from_loglike(loglike, nodes, chunk=65536, device=None, extra=None,
-                        analytic_info=False):
+                        extra_hess=None, analytic_info=False):
     """Turn per-node log-likelihoods into `(s_i, I_i)`.
 
     `loglike`: `(N,G)` array holding `log p_flow(ehat_i | e_k, rest)` up to a per-row
@@ -419,6 +419,7 @@ def scores_from_loglike(loglike, nodes, chunk=65536, device=None, extra=None,
             arr = arr.copy()
         ll_t = torch.as_tensor(arr, device=dev).float()
         ex = T(extra[start:stop]) if extra is not None else None
+        exh = T(extra_hess[start:stop]) if extra_hess is not None else None
         s, w, logz = _weighted_score(ll_t, lp, u, ex, (0.0, 0.0))
         if analytic_info:
             m2 = ((w[:, :, None] * (u[None] + ex)).transpose(1, 2) @ (u[None] + ex)
@@ -435,6 +436,10 @@ def scores_from_loglike(loglike, nodes, chunk=65536, device=None, extra=None,
                 s_m, _, _ = _weighted_score(ll_t, lp_m, u_m, ex, gm)
                 cols.append(-(s_p - s_m) / (2 * d))                            # (B,2)
             info = torch.stack(cols, dim=2)                                    # I[:,a,b]
+            if exh is not None:
+                # I = -d_gamma s = -(E[d_gamma u] + E[d^2_gamma log L] + Var(u+extra));
+                # the finite difference above supplies every term but the middle one.
+                info = info - torch.einsum("bk,bkac->bac", w, exh)
         s_out[start:stop] = s.double().cpu().numpy()
         i_out[start:stop] = info.double().cpu().numpy()
         z_out[start:stop] = logz.double().cpu().numpy()
@@ -492,6 +497,17 @@ def bootstrap_by_case(values, cases, n_boot=200, seed=0, reducer=np.mean):
 # §5C.3 -- injecting an external R_blend
 # --------------------------------------------------------------------------------------
 
+def shear_velocity_jacobian(grid):
+    """`J[k,b,a] = d eps'_b / d gamma_a` at gamma = 0 on the node grid (Mobius, §2.4)."""
+    e1, e2 = grid[:, 0], grid[:, 1]
+    j = np.empty((len(grid), 2, 2))
+    j[:, 0, 0] = 1.0 - (e1 ** 2 - e2 ** 2)
+    j[:, 0, 1] = -2.0 * e1 * e2
+    j[:, 1, 0] = -2.0 * e1 * e2
+    j[:, 1, 1] = 1.0 + (e1 ** 2 - e2 ** 2)
+    return j
+
+
 def blend_injection_term(mean_grad_ehat, grid, r_blend):
     """The `- R_b(theta_b) grad_ehat log p_flow . v_eps` term of (5.7).
 
@@ -505,26 +521,17 @@ def blend_injection_term(mean_grad_ehat, grid, r_blend):
     shape, evaluated at each node.  `grid`: `(G,2)` nodes.  `r_blend`: `(N,)` per-object
     blend response.  Returns `(N,G,2)` to be passed as `scores_from_loglike(extra=...)`.
 
-    KNOWN GAP -- the SCORE is complete, the INFORMATION is not.  `scores_from_loglike`
-    treats this array as gamma-independent, so its finite-difference information picks up
-    the reweighting `log L(gamma) = log L(0) + gamma . extra` but misses the second
-    derivative of the injected likelihood itself.  Writing `w = R_b v`, the exact
-    injection contributes
+    SUPERSEDED by `eval_score_response.blend_stencil_on_grid`, which returns this term
+    AND its second derivative from one stencil.  Kept because it is the plain reading of
+    (5.9) and the two agree, so it serves as the cross-check.
 
-        d^2_gamma log L |_0 = w^T (grad^2 log p_flow) w                      (missing)
-
-    an O(R_b^2) term, negative because the residual density is log-concave, so the
-    information returned is an UNDER-estimate and the injected `ghat` is correspondingly
-    over-estimated.  On constgold, `<I>` was measured to FALL from 3.49 to 3.19 when the
-    injection was switched on, where adding response to the model should raise it -- that
-    drop is this missing term.  A Gaussian estimate puts it near `R_b^2 / sigma^2 ~ 0.25`,
-    ~8% of `<I>`, but it must be measured, not assumed.
-
-    The fix is cheap and is the next step: `w^T grad^2 log p_flow w` is a second central
-    difference of the residual flow's log-density ALONG `w`, two extra forward passes on
-    top of the four `grad_ehat_on_grid` already does (three components for the full
-    2x2 in gamma).  Until then, treat the injected numerator as verified and the injected
-    `ghat` as provisional.
+    History worth keeping: using this function alone leaves the INFORMATION incomplete.
+    `scores_from_loglike` then treats the injection as gamma-independent, so its finite
+    difference sees the reweighting `log L(gamma) = log L(0) + gamma . extra` but not the
+    curvature of the injected likelihood, `d^2_gamma log L = w^T grad^2 log p_flow w`
+    with `w = R_b v`.  Measured consequence on constgold: `<I>` FELL 3.49 -> 3.19 when
+    the injection was switched on (adding model response must RAISE it) and `ghat/g` read
+    1.390 instead of 1.013.  Pass `extra_hess` to close it.
     """
     e1, e2 = grid[:, 0], grid[:, 1]
     # v_eps = d eps'/d gamma at gamma = 0: v_1 = 1 - eps^2, v_2 = i (1 + eps^2)
