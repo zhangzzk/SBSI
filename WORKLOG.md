@@ -7,6 +7,53 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
+## cont.163 (2026-07-27) `figv2_fig3`'s -0.46% is a CANCELLATION: its own dumps give +3.49% on the acceptance population
+
+User challenged cont.162 — "is this transport? not sure I believe it. check out
+`figv2_fig3_bias_true_neighbours.png`, most of seeds have within 1% m". Both answers are yes and
+no respectively, and the figure settles the more important question against itself.
+
+IS IT TRANSPORT? Yes, both are, and they are the same recipe. The figure's `R_flow` is
+`response.flow_response` — the antithetic +-g secant with shear applied analytically to the
+intrinsic ellipticity via `apply_shear_to_ellipticity`, pushed through the model. cont.162's
+`R_flow` is the mean-head +-delta response in `eval_constgold_closure.py`. Neither is a fit.
+
+WHY THE NUMBERS DIFFER. `figv2_fig3` (`job_v2_constgold_8seed.sh`) is a DIFFERENT measurement on
+all three axes: the coupling-pinned TABULAR family
+`measurement_flow_g0_ngmix_ablate_s2c_coupling_lt500_s50*` (8 seeds, not `forward_ens_*seed42*`),
+`--min-case 40` with NO true cut (its own annotation `R_sim = 0.4534` is the global, uncut
+number), and the `extnbrho_c40-139` emulator rather than the 7"-gated one. So it is not in
+conflict with cont.162's -2.86% — it is not measuring the same thing.
+
+THE TEST. `scripts/split_v2_dumps_acceptance.py` (new) re-reduces the SAME per-object dumps the
+figure is drawn from (`derisk/v2_constgold_dumps/v2_perobj_s*.feather`, 26,926,617 rows x 8
+seeds), joining true size from the catalogue on (case, input_index) — all rows matched, row order
+verified identical across seeds, abort on either failing. Job 15294207.
+
+      band                          m (8 seeds)  seed sd    <R_sim>  <R_flow>  <R_blend>
+      GLOBAL  = published figure       -0.46%     1.00%      0.4534    0.2888    0.1593
+      ACCEPTED  Re>0.3 & mag<26        +3.49%     0.78%      0.8605    0.6844    0.1371
+      REJECTED                        -15.39%     2.59%      0.1419   -0.0139    0.1763
+
+GLOBAL reproduces the figure's annotation exactly (-0.46%, std 1.00%, sem 0.35%, N=8), so this is
+the figure's own arithmetic and not a re-derivation. **The published closure is a cancellation.**
+On the deliverable population the same 8 seeds read **+3.49% +- 0.78%**, ~12x the |m| < 0.3%
+target, and ALL EIGHT are positive (+2.11 to +4.75) — not seed noise. The rejected 57% carries it
+back with a NEGATIVE `R_flow` (-0.0139) propped up by `R_blend` (0.1763): the identical structure
+cont.161 found for V1 (accepted +6.53%, rejected -19.43%, `R_flow` negative on rejected). Three
+model families now show it, so it is a property of the uncut population, not of any one flow.
+
+NET. Both things called V2 miss the deliverable, in OPPOSITE directions: the tabular family
++3.49% (accepted, 8 seeds, `c40-139` emulator), the bright-trained DeepSets ensemble -2.86%
+(accepted, 6 seeds, 7"-gated emulator). Their `R_blend` on the accepted band differs by 67%
+(0.1371 vs 0.2291) and their `R_flow` by 10%, which is why they land either side of zero. The
+`<R_sim>` cross-check is reassuring: 0.8605 (cases >=40) vs 0.8619 (cases 0-39), independent case
+ranges agreeing to 0.16%, so the truth side of both is sound.
+
+CAUTION FOR FUTURE PLOTS: `figv2_fig3` is labelled "Gold-V2, constgold, true neighbours" with no
+indication that it is the uncut population. Any figure quoting `R_sim = 0.4534` is global; the
+deliverable's is 0.861.
+
 ## cont.162 (2026-07-27) the acceptance check re-run with the REAL V2: it does NOT close, and constgold + half-shear AGREE on why
 
 User: "rerun that check with the real V2 model" — i.e. cont.161's acceptance-population bias
