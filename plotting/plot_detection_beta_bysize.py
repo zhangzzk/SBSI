@@ -1,12 +1,11 @@
 #!/usr/bin/env python
-"""Does binning by SIZE rescue the blendedness-beta severity axis?
+"""Detection response vs blendedness BETA: SIM vs MODEL, faceted by SIZE and by MAG (cont.165).
 
-Reads scripts/eval_detection_beta_bysize.py output (fixed mag band, size bins x beta bins).
-Left panel : det-bias vs beta-severity rank (0 = isolated), one curve per true-size bin.
-Right panel: <Re> vs the same rank -- the diagnostic. If size is fully controlled, <Re> is flat
-             along a curve and beta behaves; where <Re> still climbs with beta (the wide large-Re
-             bin), beta is still sorting on size and the confound persists.
+Two panels. Left: curves per true-size bin (fixed mag band). Right: curves per true-mag bin (pool size).
+Solid+filled = constgold SIM ((<e_int>_+ - <e_int>_-)/0.04, with error bars); dashed+open = detection-
+classifier MODEL prediction. beta computed for ALL galaxies (isolated -> beta=0, leftmost bin).
 
+Reads scripts/eval_detection_beta_bysize.py (sim) + scripts/eval_model_beta_bysize.py (model).
 Login-node; PNG only, Okabe-Ito.
 """
 from __future__ import annotations
@@ -16,73 +15,88 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 import numpy as np
 
-COLORS = ["#56B4E9", "#E69F00", "#D55E00"]  # small -> large (light -> dark)
-MARKERS = ["o", "s", "^"]
+COLORS = ["#56B4E9", "#009E73", "#F0E442", "#E69F00", "#D55E00", "#CC79A7"]
+MARKERS = ["o", "s", "D", "^", "v", "P"]
 
 
 def set_style():
     plt.rcParams.update({
-        "figure.dpi": 120, "savefig.dpi": 200, "font.size": 11.5,
-        "axes.titlesize": 12.5, "axes.labelsize": 11.5, "legend.fontsize": 10,
-        "xtick.labelsize": 10.5, "ytick.labelsize": 10.5, "axes.grid": True,
+        "figure.dpi": 120, "savefig.dpi": 200, "font.size": 12,
+        "axes.titlesize": 13, "axes.labelsize": 12, "legend.fontsize": 9,
+        "xtick.labelsize": 10, "ytick.labelsize": 11, "axes.grid": True,
         "grid.alpha": 0.25, "axes.spines.top": False, "axes.spines.right": False,
         "legend.frameon": False,
     })
 
 
+def beta_ticklabels(bedges):
+    lab = ["0\n(iso)"]
+    for i in range(len(bedges) - 1):
+        c = np.sqrt(bedges[i] * bedges[i + 1]) if bedges[i] > 0 else bedges[i + 1] / 2
+        lab.append(f"{c:.1e}".replace("e-0", "e-"))
+    return lab
+
+
+def plot_facet(ax, zs, zm, name, title, legend_title, prettify):
+    labels = [str(s) for s in zs[f"{name}__labels"]]
+    bedges = zs[f"{name}__beta_edges"]
+    nb = len(bedges)  # x positions: 0=iso, 1..n_beta
+    x = np.arange(nb)
+    for i, lab in enumerate(labels):
+        c = COLORS[i % len(COLORS)]; mk = MARKERS[i % len(MARKERS)]
+        db_s = 100 * zs[f"{name}__{lab}__db"]; se_s = 100 * zs[f"{name}__{lab}__se"]
+        mk_key = f"{name}__{lab}__db_model"
+        db_m = 100 * zm[mk_key] if mk_key in zm.files else np.full(nb, np.nan)
+        ax.errorbar(x, db_s, yerr=se_s, color=c, marker=mk, ms=6, lw=1.9, capsize=2.5,
+                    label=prettify(lab), zorder=3)
+        ax.plot(x, db_m, color=c, marker=mk, ms=6.5, lw=1.6, ls="--", mfc="white", mec=c, zorder=2)
+    ax.axhline(0, color="0.5", lw=0.9)
+    ax.set_xticks(x); ax.set_xticklabels(beta_ticklabels(bedges))
+    ax.set_xlabel(r"blendedness $\beta$  (0 = isolated,  $\beta$ increases $\rightarrow$)")
+    ax.set_title(title)
+    ax.add_artist(ax.legend(title=legend_title, loc="lower left"))
+
+
 def main():
     ap = argparse.ArgumentParser()
     base = "/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/"
-    ap.add_argument("--npz", default=base + "detection_beta_bysize_v1.npz")
+    ap.add_argument("--sim", default=base + "detection_beta_bysize_v2.npz")
+    ap.add_argument("--model", default=base + "model_beta_bysize_v2.npz")
     ap.add_argument("--out", default="/home/z/Zekang.Zhang/SBSI-ablation/figures")
     args = ap.parse_args()
     set_style()
     os.makedirs(args.out, exist_ok=True)
-    z = np.load(args.npz, allow_pickle=True)
-    labels = [str(s) for s in z["size_labels"]]
-    lo, hi = float(z["mag_lo"]), float(z["mag_hi"])
+    zs = np.load(args.sim, allow_pickle=True)
+    zm = np.load(args.model, allow_pickle=True)
+    lo, hi = float(zs["mag_lo"]), float(zs["mag_hi"])
 
-    fig, (axb, axr) = plt.subplots(1, 2, figsize=(12.4, 5.4))
-    for i, lab in enumerate(labels):
-        beta = z[f"{lab}__beta"]; db = 100 * z[f"{lab}__db"]; se = 100 * z[f"{lab}__se"]
-        Re = z[f"{lab}__Re"]
-        if beta.size == 0:
-            continue
-        rank = np.arange(beta.size)  # 0 = isolated, 1.. = increasing beta
-        c = COLORS[i % len(COLORS)]; mk = MARKERS[i % len(MARKERS)]
-        reff = Re[1:].mean() if Re.size > 1 else Re[0]
-        lg = lab.replace("Re", "Re ") + f"  ($\\langle R_e\\rangle{{\\approx}}{reff:.2f}''$)"
-        # blended points (rank>=1) solid, isolated (rank 0) open
-        axb.errorbar(rank[1:], db[1:], yerr=se[1:], color=c, marker=mk, ms=6, lw=1.8,
-                     capsize=2.5, label=lg)
-        axb.errorbar(rank[:1], db[:1], yerr=se[:1], color=c, marker=mk, ms=9, mfc="white",
-                     mec=c, mew=1.8, lw=0, capsize=2.5, zorder=5)
-        axb.plot(rank[:2], db[:2], color=c, lw=1.0, ls=":", zorder=1)
-        axr.plot(rank[1:], Re[1:], color=c, marker=mk, ms=6, lw=1.8)
-        axr.plot(rank[:1], Re[:1], color=c, marker=mk, ms=9, mfc="white", mec=c, mew=1.8, lw=0)
-        axr.plot(rank[:2], Re[:2], color=c, lw=1.0, ls=":")
+    fig, (axl, axr) = plt.subplots(1, 2, figsize=(15.0, 6.3), sharey=True)
+    plot_facet(axl, zs, zm, "SIZE",
+               f"by true SIZE  (fixed mag {lo:g}–{hi:g})",
+               "true size bin",
+               lambda s: s.replace("Re", "$R_e$ "))
+    plot_facet(axr, zs, zm, "MAG",
+               "by true MAGNITUDE  (pooling size)",
+               "true r-mag bin",
+               lambda s: s.replace("r", "r "))
+    axl.set_ylabel(r"detection response  $(\langle e_{\rm int}\rangle_+-\langle e_{\rm int}\rangle_-)/0.04$  [%]")
 
-    for a in (axb, axr):
-        a.set_xlabel(r"$\beta$ severity bin   (0 = isolated;  $\beta$ increases $\rightarrow$)")
-    axb.axhline(0, color="0.5", lw=0.9)
-    axb.set_ylabel(r"detection bias  $(\langle e_{\rm int}\rangle_+ - \langle e_{\rm int}\rangle_-)/0.04$  [%]")
-    axb.set_title("det-bias vs $\\beta$, per size bin")
-    axb.legend(title=f"true size bin  (mag {lo}–{hi})", loc="lower left")
-    axr.set_ylabel(r"$\langle R_e\rangle$ in bin  [arcsec]")
-    axr.set_title("size along each curve (the confound check)")
-    axr.text(0.5, 0.96, "flat = size controlled;  rising = $\\beta$ still tracks size",
-             transform=axr.transAxes, ha="center", va="top", fontsize=9, color="0.4")
+    sim_h = mlines.Line2D([], [], color="0.3", marker="o", ls="-", label="sim (constgold)")
+    mod_h = mlines.Line2D([], [], color="0.3", marker="o", mfc="white", ls="--",
+                          label="model (classifier)")
+    axr.legend(handles=[sim_h, mod_h], loc="upper right")
 
-    fig.suptitle("Does binning by size rescue $\\beta$?  (constgold, shear-free intrinsic shapes)  —  "
-                 "clean in narrow bins, but the wide large-$R_e$ bin still sorts on size",
-                 fontsize=12, y=1.02)
+    fig.suptitle("Stage-3 detection response vs blendedness: SIM vs MODEL "
+                 "(constgold shear-free intrinsic; classifier = cont.160 response-regularized)",
+                 fontsize=13, y=1.02)
     fig.tight_layout()
     p = os.path.join(args.out, "fig_detection_beta_bysize.png")
     fig.savefig(p, dpi=200, bbox_inches="tight"); plt.close(fig)
     print("saved:", p)
-    print("DETECTION_BETA_BYSIZE_PLOT_DONE")
+    print("DETECTION_BETA_BYSIZE_SIMVSMODEL_PLOT_DONE")
 
 
 if __name__ == "__main__":
