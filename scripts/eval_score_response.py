@@ -654,13 +654,26 @@ def mode_constgold(args, bundle, prior, grid, rk):
 
     intr = (df["e1_input_rot0_p"].to_numpy(float).copy(),
             df["e2_input_rot0_p"].to_numpy(float).copy())
-    R_flow = flow_response(bundle, df, g, gh1, gh2, intr, rk, args.n_samples,
-                           args.batch_size, reseed=reseed)
+    R_flow, r_flow = flow_response(bundle, df, g, gh1, gh2, intr, rk, args.n_samples,
+                                   args.batch_size, reseed=reseed, return_perobj=True)
     R_blend = float(np.mean(rb))
     print(f"transport R_flow = {R_flow:.4f} (certified {R_FLOW_CERT:.4f}); "
           f"R_blend = {R_blend:.4f} (certified {R_BLEND_CERT:.4f})")
     print(f"transport m = R_sim/(R_flow+R_blend) - 1 = "
           f"{R_sim / (R_flow + R_blend) - 1:+.2%}", flush=True)
+
+    if args.flow_perobj_only:
+        # The per-object flow response alone, on exactly the rows a previous scoring run
+        # used, so per-bin TRANSPORT (<r>/<a> inside a bin) can be put beside the per-bin
+        # SCORE from that run's dump.  Minutes rather than the hours a full rescore costs.
+        out = f"{args.perobj_dump}_rflow.npz"
+        np.savez(out, r_flow=r_flow, r_sim=r_sim, r_blend=rb, case=cases,
+                 neighbored=df["neighbored"].astype(bool).to_numpy(),
+                 mag_auto=df["measured_mag_auto"].to_numpy(float),
+                 flux_radius=df["measured_flux_radius"].to_numpy(float),
+                 g=g, R_flow=R_flow, R_sim=R_sim, R_blend=R_blend)
+        print(f"  per-object flow response -> {out}")
+        return dict(R_flow=R_flow, R_sim=R_sim, R_blend=R_blend)
 
     fr = rescale(df.copy(), **rk)
     results = {}
@@ -700,7 +713,7 @@ def mode_constgold(args, bundle, prior, grid, rk):
                      s_plus=legs[+1]["s_proj"], s_minus=legs[-1]["s_proj"],
                      i_plus=legs[+1]["i_proj"], i_minus=legs[-1]["i_proj"],
                      e_plus=legs[+1]["e_proj"], e_minus=legs[-1]["e_proj"],
-                     r_sim=r_sim, r_blend=rb, case=cases,
+                     r_sim=r_sim, r_flow=r_flow, r_blend=rb, case=cases,
                      neighbored=df["neighbored"].astype(bool).to_numpy(),
                      r_input_p=df["r_input_p"].to_numpy(float),
                      mag_auto=df["measured_mag_auto"].to_numpy(float),
@@ -730,6 +743,9 @@ def main():
     ap.add_argument("--blend-lookup", default="results/blend_lookup_extnbrho_c40-139.feather")
     ap.add_argument("--inject-blend", action="store_true",
                     help="also run the §5C.3 external-R_blend injection")
+    ap.add_argument("--flow-perobj-only", action="store_true",
+                    help="constgold: dump the per-object transport flow response and "
+                         "stop, skipping the score passes (minutes, not hours)")
     # node bank
     ap.add_argument("--grid-n", type=int, default=61)
     ap.add_argument("--grid-emax", type=float, default=0.96)
