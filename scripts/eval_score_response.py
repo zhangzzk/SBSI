@@ -74,6 +74,11 @@ CATBASE = "/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/"
 G0_CAT = CATBASE + "det_meas_crowd_conc_g0.0_train_full.feather"
 GOLD_CAT = CBASE + "constant_response_catalogue_train.feather"
 PRIOR_CACHE = "results/etilde_prior_e_samples.feather"
+# Module-level so anything that re-loads the same rows (analyse_score_acceptance.py) uses
+# the same files rather than a copy of the paths that can silently drift out of step.
+CROWD_FLUX_LOOKUP = "results/crowd_flux_conc_c0-199.feather"
+MEAS_PRIM_LOOKUP = "results/meas_prim_lookup_c0-139.feather"
+BLEND_LOOKUP = "results/blend_lookup_extnbrho_c40-139.feather"
 
 # Gold-v1.md §5, the transport reference this script is checked against.
 R_SIM_CERT, R_FLOW_CERT, R_BLEND_CERT = 0.4534, 0.2930, 0.1593
@@ -724,6 +729,8 @@ def mode_constgold(args, bundle, prior, grid, rk):
                      r_sim=r_sim, r_flow=r_flow, r_blend=rb, case=cases,
                      neighbored=df["neighbored"].astype(bool).to_numpy(),
                      r_input_p=df["r_input_p"].to_numpy(float),
+                     Re_input_p=df["Re_input_p"].to_numpy(float),
+                     input_index=df["input_index"].to_numpy(np.int64),
                      mag_auto=df["measured_mag_auto"].to_numpy(float),
                      flux_radius=df["measured_flux_radius"].to_numpy(float),
                      g=g, R_flow=R_flow, R_sim=R_sim, R_blend=R_blend)
@@ -746,9 +753,9 @@ def main():
     ap.add_argument("--g0-catalogue", default=G0_CAT)
     ap.add_argument("--min-case", type=int, default=40)
     ap.add_argument("--max-rows", type=int, default=200_000)
-    ap.add_argument("--crowd-flux-lookup", default="results/crowd_flux_conc_c0-199.feather")
-    ap.add_argument("--meas-prim-lookup", default="results/meas_prim_lookup_c0-139.feather")
-    ap.add_argument("--blend-lookup", default="results/blend_lookup_extnbrho_c40-139.feather")
+    ap.add_argument("--crowd-flux-lookup", default=CROWD_FLUX_LOOKUP)
+    ap.add_argument("--meas-prim-lookup", default=MEAS_PRIM_LOOKUP)
+    ap.add_argument("--blend-lookup", default=BLEND_LOOKUP)
     ap.add_argument("--inject-blend", action="store_true",
                     help="also run the §5C.3 external-R_blend injection")
     ap.add_argument("--no-source-selection", action="store_true",
