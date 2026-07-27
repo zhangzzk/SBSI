@@ -197,6 +197,36 @@ prices (a). `--flow-perobj-only` dumps the per-object transport response for a p
 rows, so per-bin TRANSPORT can be set beside per-bin SCORE: a model error shows in both, a
 weighting or form error only in the score.
 
+**TRANSPORT vs SCORE, SAME ROWS, SAME BINS (jobs 15292356/15292357, `--flow-perobj-only`;
+`scripts/compare_transport_score.py`). THE HEADLINE: the sub-percent is a CANCELLATION, and
+that is a TRANSPORT-side fact, not an artefact of the score machinery.**
+
+      sample                       N    R_sim  R_flow   R_bl  TRANSPORT  score bare  score inj
+      FULL catalogue         400,000   0.4573  0.2897  0.1595    +1.82%     -0.30%    -14.72%
+      ACCEPTANCE mag<26&Re>0.3 173,399 0.8773  0.6802  0.1375    +7.30%     +6.81%     -1.28%
+      rejected               226,601   0.1360 -0.0092  0.1764   -18.68%    -21.65%    -38.08%
+      true mag < 26          266,955   0.5556  0.4156  0.1373    +0.48%     +1.29%     -7.06%
+      true Re  > 0.3         216,089   0.7814  0.5685  0.1532    +8.27%     +6.27%     -5.17%
+
+**On the population `GOALS.md` defines the deliverable over, TRANSPORT reads +7.30%, not
+sub-percent.** The full-catalogue +1.82% is +7.30% on the acceptance rows cancelling
+-18.68% on the rejected ones (where `<R_flow>` is actually NEGATIVE, -0.0092). This
+reproduces cont.110c's deployed `true Re>0.3 +5.49%` and cont.110e's half-shear
+`m_self size>0.3 +7.5%` on a third, independent route.
+
+**And the score route agrees with transport on every honest split** (+6.81 vs +7.30,
+-21.65 vs -18.68, +1.29 vs +0.48), so §5B is not seeing anything §5A does not. The one
+place they diverge is the extreme-blend tail, `R_b 0.379-2.975`: transport +1.43%, score
+bare +55.84% — the score route is WORSE there, because information weighting drags in
+exactly the objects whose response the bare flow lacks. VERDICT: §5B is validated as
+machinery and adds nothing as science on this problem; the binding issue is the model's
+self-response on big galaxies, which is a §5A/model question.
+
+NOTE the `--no-source-selection` run (job 15292357, m = +7.44%) is NOT interpretable: the
+BlendEMU lookup was built behind the same cuts, so it matched only 90.4% of rows and the
+unmatched were filled with `R_blend = 0`, dragging `<R_blend>` to 0.1440. Lifting the cut
+needs an emulator lookup that covers the added rows.
+
 **THE ACCEPTANCE POPULATION — every constgold number above was on the wrong sample.**
 `GOALS.md:54` defines the deliverable over a TRUE-property primary cut, `Re > 0.3` and
 `mag < 26`, and only **43.3%** of the source-selected rows pass it. Re-splitting the SAME
