@@ -131,8 +131,24 @@ this lineage.** Memory `project_fluxsize_response` corrected accordingly.
 **Known limitation.** The Re-binned m breakdown has not been read off quantitatively yet, so fig2's
 size-residual panel and the table above are not yet cross-checked against each other.
 
-**Next.** Rebuild the two selection figures from `selection_intrinsic_domain.npz`; add an Re-binned m
-breakdown so fig2's residual panel and the table above can be cross-checked.
+**DONE -- selection figures rebuilt in-domain (job 15294062, `selection_intrinsic_domain.npz`,
+N=11,675,469 ALL / 2,808,654 ISOLATED, R_total 0.8605 / 0.9118).** Both figures regenerated and copied
+to `SBSI/figures/`. The domain cut substantially answers the original "the flow is flat" complaint:
+
+- **SIZE axis now tracks well** (ALL): size>0.6 sim +1.520% vs flow +1.458%; >0.65 +3.834 vs +3.497;
+  >0.7 +6.319 vs +5.954. ISOLATED likewise (>0.7 +10.353 vs +9.899). This is the channel where
+  selection actually acts, and the coupling pin carries it.
+- **MAG axis is still qualitatively different but now SMALL on both sides**: sim runs +0.250% ->
+  -0.402% -> -0.139% (non-monotone, dips at mag<26), the flow is monotone -0.158% -> -0.003%. Every
+  value is under 0.5%. Consistent with the documented b_mag being consistent with zero -- the flow has
+  no real magnitude-shear channel to reproduce the sim's dip.
+- Both NULL tests are exactly 0.000, so the estimator is still clean.
+
+Compare the pre-fix (no-domain) run: sim +0.51% -> -1.47% on mag with a flat flow. Restricting to the
+domain shrank the sim's own mag signal by ~3x, which is most of the apparent disagreement.
+
+**Next.** Add an Re-binned m breakdown so fig2's residual panel and the m table above can be
+cross-checked.
 
 ## 2026-07-27 (WHY the V2 flow's magnitude-cut selection response is flat -- the coupling pin covers 44% of the sample)
 
