@@ -19,7 +19,12 @@ export PYTHONPATH="/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot:/hom
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 
-SEED=${SEED:-501}
+SEEDS=(${SEEDS:-501 502 503 505 506 507 508 509})
+if [ -n "$SLURM_ARRAY_TASK_ID" ]; then
+  SEED=${SEEDS[$SLURM_ARRAY_TASK_ID]}
+else
+  SEED=${SEED:-501}
+fi
 TAG=${TAG:-ablate_s2c_coupling_lt500_dom}
 D=/project/ls-gruen/users/zekang.zhang/sbsi_caches/ablation
 CAT=/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/constant_response_catalogue_train.feather

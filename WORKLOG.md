@@ -2,6 +2,46 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-27e (domain training WORKS once the target is aligned: in-domain m +4.75% -> -0.53%, 1 seed)
+
+**Jobs.** 15300894 (domain response target) -> 15300895 (retrain, TAG `..._lt500_dom2`) ->
+15300896 (eval). Seed 501 throughout, so every number below is seed-to-seed comparable.
+
+**Result (same constgold rows, only the model differs):**
+
+| mask | baseline s501 | attempt 1 (straddled target) | **attempt 2 (aligned target)** |
+|---|---|---|---|
+| **in-domain (mag<26 & Re>0.3)** | +4.753% | +9.306% | **-0.532%** |
+| true Re > 0.3 | +5.197% | +11.037% | +2.018% |
+| true mag < 26 | -0.332% | +14.091% | -19.268% |
+| global (certified convention) | +1.181% | +45.556% | -6.753% |
+
+**Components in-domain:** R_sim 0.8605, R_flow 0.6844 (baseline) -> 0.7280 (attempt 2), R_blend
+0.1371. Aligning the target recovered the R_flow the straddle had suppressed and then some.
+
+**Read this correctly.** Only the in-domain column is the deliverable. `mag<26` alone (-19.3%) and
+`global` (-6.8%) both include primaries with true Re<0.3 that this model never trained on, so they
+measure extrapolation, not calibration. The baseline's flattering global number came from a
+bright-over / faint-under cancellation over a population it was trained on; the domain model has no
+such population and should not be judged on it.
+
+**Confidence.** ONE seed. The 8-seed baseline has per-seed sd ~0.78% in-domain, so read this as
+-0.53% +- ~0.8%: consistent with zero and consistent with the |m|<0.3% target, but NOT yet
+demonstrated. 7 more seeds submitted (**15304872** train array 1-7 = seeds 502/503/505-509,
+**15304873** eval array, `aftercorr`) to get an 8-seed ensemble directly comparable to the baseline's
++3.489 +- 0.276%.
+
+**Interpretive caveat.** Two things changed together: the training population was restricted AND the
+response target was re-derived on it (edges [0.300,0.419,0.629,1.500] instead of
+[0.1,0.241,0.412,1.5]). Inside the domain that is also a finer grid, so part of the gain may be
+resolution rather than domain restriction per se. These cannot be cleanly separated -- you cannot
+restrict the domain while keeping a target whose bins straddle the cut, which is precisely what
+attempt 1 proved. Worth an explicit ablation later (full-range training against the finer grid) if
+the distinction matters.
+
+**Still open.** The coupling target is still full-population; `mag<26` straddles its flux bin
+[25.581,26.042]. That governs measured mag/size response (the selection figures), not m.
+
 ## 2026-07-27d (domain-training attempt 1 FAILED -- my setup bug: the response target straddled the cut)
 
 **Result of 2026-07-27c (jobs 15298227 train / 15298229 eval, seed 501).** Domain training made m

@@ -22,7 +22,14 @@ export PYTHONPATH="/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot:/hom
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 
-SEED=${SEED:-501}
+# Seed: explicit $SEED, or picked from the array index when run with --array (SEEDS may be
+# overridden from the submit line, e.g. SEEDS="502 503").
+SEEDS=(${SEEDS:-501 502 503 505 506 507 508 509})
+if [ -n "$SLURM_ARRAY_TASK_ID" ]; then
+  SEED=${SEEDS[$SLURM_ARRAY_TASK_ID]}
+else
+  SEED=${SEED:-501}
+fi
 LT=500
 FS=g0_meas_crowd_conc_szfl_noz
 TAG=${TAG:-ablate_s2c_coupling_lt${LT}_dom}
