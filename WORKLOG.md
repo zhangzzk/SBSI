@@ -2,6 +2,46 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-28 (domain-trained Gold-V2, 8-seed ensemble: in-domain m +3.49% -> -0.82%; big win, still 2.7x off target)
+
+**Jobs.** 15304872 (train array, seeds 502/503/505-509) -> 15304873 (eval array) -> 15305898
+(8-seed aggregate). TAG `ablate_s2c_coupling_lt500_dom2`, response target
+`response_target_crowd_rblend_snc_c0-99_6x3x5_dom.npz`.
+
+**8-seed ensembles, same constgold rows, baseline vs domain-trained:**
+
+| mask | baseline (full-range) | **domain-trained** |
+|---|---|---|
+| **in-domain (mag<26 & Re>0.3)** | +3.489 +- 0.276 % | **-0.819 +- 0.190 %** |
+| true Re > 0.3 | +3.936 +- 0.261 % | +0.854 +- 0.337 % |
+| true mag < 26 | -1.780 +- 0.359 % | -20.991 +- 0.656 % |
+| global (certified convention) | -0.461 +- 0.353 % | -9.241 +- 1.624 % |
+
+Per-seed in-domain: -0.532, -1.248, -0.308, -0.617, -1.875, -0.311, -0.622, -1.036. Seed sd also
+IMPROVED, 0.78% -> **0.538%**.
+
+**Verdict: a real and large win on the deliverable, but it OVERSHOOTS and is not at target.**
+|m| went 3.489% -> 0.819%, a 4.3-point improvement, and the direction flipped: in-domain components
+are R_sim 0.8605 vs R_tot 0.8215 (baseline, 4.5% UNDER) -> 0.8676 (domain, 0.8% OVER). At
+-0.819 +- 0.190% this is ~4 sigma from zero and **2.7x the |m|<0.3% goal** -- better, not solved.
+Do not quote this as sub-percent-achieved: it is sub-percent in magnitude but statistically
+inconsistent with the target.
+
+**Out-of-domain columns are extrapolation, not calibration** (-21.0% at mag<26, -9.2% global): those
+masks admit primaries with true Re<0.3 that this model never trained on. They are recorded for
+completeness, not as regressions to fix. The baseline's flattering global number came from a
+bright-over / faint-under cancellation over a population it WAS trained on.
+
+**Lead for the residual -0.82%.** R_flow is now pinned to a domain-rebuilt response target, but
+`R_blend` still comes from the full-population emulator (`blend_lookup_extnbrho_c40-139.feather`,
+in-domain mean 0.1371) and was NOT re-derived on the domain. Since m = R_sim/(R_flow+R_blend)-1 and
+the sum now overshoots by 0.8%, an R_blend that is slightly too large in-domain would produce exactly
+this. Untested -- next diagnostic should split the residual between R_flow and R_blend in-domain
+before any further retraining.
+
+**Also still open.** The coupling target remains full-population and its `coupling_mag` is a single
+global constant by design (2026-07-27f) -- that governs the selection figures, not m.
+
 ## 2026-07-27f (WHY the flow's mag-cut selection curve is flat -- ANSWERED; b_mag is global BY DESIGN, and that design premise is refuted)
 
 Owner-requested subagent investigation; the central claim re-verified by hand before recording.
