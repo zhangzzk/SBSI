@@ -585,6 +585,44 @@ score yields the **shape channel alone** — not even the whole of $R_{\rm self}
 channel (3.3) is dropped with it — and neither blend (§3, geometry-blind ⇒ identically zero) nor
 selection (§4.3, that is the size channel).
 
+#### 5B.3 What (5.3) weights — it is not the transport ratio
+
+(5.3) and the calibration ratio $m$ of §5A are **different functionals of the same per-object
+responses**, and the difference is not small. Suppose the flow's residual density is blind to the
+true shape, so that $\log p(\hat{\mathbf{x}}\mid e)=\ell(\hat{\mathbf{x}}-\mu(e))$ is a location
+family — the structure §5A.4 relies on. Write $a_i=\partial\mu/\partial\gamma$ for the response the
+model assigns to object $i$. Then differentiating $s$ once through the location argument gives
+
+$$\frac{\partial s}{\partial\hat{\mathbf{x}}}=\frac{\mathcal I_i}{a_i}.\tag{5.4}$$
+
+Now let object $i$'s measured shape actually respond with $r_i$, which the model has no way to know.
+Its two legs differ by $\hat{\mathbf x}_+-\hat{\mathbf x}_-=2\gamma r_i$, so
+$s_i^+-s_i^-=2\gamma\,\mathcal I_i r_i/a_i$ and (2.6) returns
+
+$$\boxed{\;\frac{\hat\gamma}{\gamma}=\frac{\sum_i\mathcal I_i\,(r_i/a_i)}{\sum_i\mathcal I_i}\;}
+\qquad\text{against}\qquad
+1+m=\frac{\langle r\rangle}{\langle a\rangle}\quad\text{(§5A)}.\tag{5.5}$$
+
+An **information-weighted mean of the per-object response ratio**, against a **ratio of population
+means**. They coincide only when $r_i/a_i$ is uncorrelated with $\mathcal I_i$.
+
+The consequence is sharp for the blend channel. Write $r_i=a_i+b_i$ with $b_i$ the response the flow
+does not model. It enters (5.5) with weight $\mathcal I_i/a_i=a_iJ_i$, where $J_i$ is the residual
+flow's information for a location shift — **not** with weight $1$ as in $\langle r\rangle$. That
+weight is largest for bright, well-measured, isolated objects, which are exactly the objects with the
+smallest $b_i$: information and blending are anticorrelated. So the score estimator suppresses a
+missing blend response by roughly $\langle a\rangle\langle aJ\rangle/\langle a^2J\rangle$, which is
+far below one whenever $a_i$ varies across the catalogue.
+
+Two things this is **not**. It is not licence to drop $R_{\rm blend}$: the suppression is a statement
+about *which* objects carry the sum, so a response defect concentrated in HIGH-information objects
+passes through undamped, and the per-subsample biases do not vanish — they cancel. And it is not a
+free lunch in precision: $\hat\gamma$ is a weighted shear, so the weights belong in the source-density
+and $n(z)$ bookkeeping like any other. The honest fix is still to make $a_i=r_i$ per object, which is
+what §5C.3 does.
+
+Measured values of (5.5) and of the subsample cancellation are in `WORKLOG.md`.
+
 ### 5C. Lagrangian form — shear the samples, not the prior
 
 §5B needs $\nabla\log p_0$ over the whole scene, which is its most demanding requirement (§5B.2, item
@@ -599,30 +637,30 @@ sheared truth the flow sees. Substituting this into (1.1) — a change of variab
 moves $\gamma$ out of the prior and into the likelihood:
 
 $$p(\hat{\mathbf{x}}\mid\gamma)=\int p_{\rm flow}\big(\hat{\mathbf{x}}\mid S_\gamma(\mathbf{z})\big)\;
-p_0(\mathbf{z})\,d\mathbf{z}.\tag{5.4}$$
+p_0(\mathbf{z})\,d\mathbf{z}.\tag{5.6}$$
 
-(1.1) and (5.4) are the same integral. The Jacobian of $S_\gamma$ does not appear in (5.4) because
+(1.1) and (5.6) are the same integral. The Jacobian of $S_\gamma$ does not appear in (5.6) because
 pushing samples carries it automatically; in (1.1) it is what becomes the $\nabla\!\cdot\!v$ term of
 (2.7). The two forms are Eulerian and Lagrangian views of one shear flow, exactly as in (4.3) versus
 (4.5).
 
 #### 5C.2 The score without $\nabla\log p_0$
 
-Differentiating (5.4) under the integral and dividing, as in §2.1,
+Differentiating (5.6) under the integral and dividing, as in §2.1,
 
 $$s=\mathbb E_{\rm post}\big[\tilde u\big],\qquad
 \tilde u(\mathbf{z};\hat{\mathbf{x}})\;\equiv\;\partial_\gamma\log p_{\rm flow}
 \big(\hat{\mathbf{x}}\mid S_\gamma\mathbf{z}\big)\Big|_0
-=\nabla_{\mathbf{x}}\log p_{\rm flow}(\hat{\mathbf{x}}\mid\mathbf{x})\big|_{\mathbf{z}}\cdot v(\mathbf{z}),\tag{5.5}$$
+=\nabla_{\mathbf{x}}\log p_{\rm flow}(\hat{\mathbf{x}}\mid\mathbf{x})\big|_{\mathbf{z}}\cdot v(\mathbf{z}),\tag{5.7}$$
 
 with $v$ the same velocity field of §2.4 and the posterior weights unchanged from §5B.1,
 $w_k\propto L_kP_{{\rm det},k}$. Louis (2.5) carries over verbatim with $u\to\tilde u$, since
 $\tilde u$ is the $\gamma$-derivative of the complete-data log-likelihood in this parametrization.
-Both (2.2) and (5.5) equal $\partial_\gamma\log p(\hat{\mathbf{x}}\mid\gamma)$, so they agree object
+Both (2.2) and (5.7) equal $\partial_\gamma\log p(\hat{\mathbf{x}}\mid\gamma)$, so they agree object
 by object — an exact cross-check, and the identity relating them is the integration by parts that
 produced (2.7).
 
-| | Eulerian, (2.7) | Lagrangian, (5.5) |
+| | Eulerian, (2.7) | Lagrangian, (5.7) |
 |---|---|---|
 | $\gamma$ acts on | the prior density | the flow's conditioning inputs |
 | requires | $\nabla\log p_0$ and $\nabla\!\cdot\!v$ over the whole scene | $\nabla_{\mathbf{x}}\log p_{\rm flow}$ — autograd |
@@ -633,7 +671,7 @@ produced (2.7).
 **This does not remove prior dependence.** $p_0$ still sets the posterior weights and the answer still
 depends on it; §6's bullet stands. What is removed is the requirement that $p_0$ be available in
 differentiable closed form — a modelling obstacle, not a statistical one. The cost is the last row:
-$\tilde u$ cannot be precomputed in the node bank the way $u_k$ can. In practice (5.5) is a
+$\tilde u$ cannot be precomputed in the node bank the way $u_k$ can. In practice (5.7) is a
 directional derivative along $v$, so a forward-mode JVP returns $\log p_{\rm flow}$ and $\tilde u$
 together at roughly twice the cost of the §5B.1 evaluation, not the cost of a full gradient.
 
@@ -645,15 +683,15 @@ shear-induced change in the true shape:
 
 $$p(\hat{\mathbf{x}}\mid\gamma)=\int p_{\rm flow}
 \big(\hat{\mathbf{x}}-R_b(\theta_b)\,\Delta e\;\big|\;S_\gamma\mathbf{z}\big)\,p_0(\mathbf{z})\,d\mathbf{z},
-\qquad \Delta e=\big(S_\gamma\mathbf{z}\big)_e-\mathbf{z}_e,\tag{5.6}$$
+\qquad \Delta e=\big(S_\gamma\mathbf{z}\big)_e-\mathbf{z}_e,\tag{5.8}$$
 
 where $\theta_b$ are the neighbour scalars the emulator is conditioned on. Since
 $\Delta e=\gamma\,v_\varepsilon(\mathbf{z})+O(\gamma^2)$, the added term **vanishes identically at
 $\gamma=0$**: it cannot disturb the unsheared model, and it is a pure response term by construction.
 The score acquires a second channel,
 
-$$s=\mathbb E_{\rm post}\Big[\underbrace{\nabla_{\mathbf{x}}\log p_{\rm flow}\cdot v}_{\text{as in }(5.5)}
-\;-\;R_b(\theta_b)\,\underbrace{\nabla_{\hat e}\log p_{\rm flow}\cdot v_\varepsilon}_{\text{injected}}\Big].\tag{5.7}$$
+$$s=\mathbb E_{\rm post}\Big[\underbrace{\nabla_{\mathbf{x}}\log p_{\rm flow}\cdot v}_{\text{as in }(5.7)}
+\;-\;R_b(\theta_b)\,\underbrace{\nabla_{\hat e}\log p_{\rm flow}\cdot v_\varepsilon}_{\text{injected}}\Big].\tag{5.9}$$
 
 **Sign and normalization check.** For a Gaussian flow of mean $\mu$ and variance $\sigma^2$,
 $\nabla_{\hat e}\log p_{\rm flow}=-(\hat e-\mu)/\sigma^2$, so the injected channel contributes
@@ -670,17 +708,17 @@ assumption with no support at a $\hat T$ boundary, where §4.4 shows the whole e
 #### 5C.4 What the injection does not buy
 
 - **It is not self-calibrating.** Bartlett (2.4) holds for any properly normalized $\gamma$-family, so
-  (2.6) remains unbiased *for the model as written* — including (5.6). But $R_b$ is external, so an
+  (2.6) remains unbiased *for the model as written* — including (5.8). But $R_b$ is external, so an
   error in it propagates linearly into $m$. This is §6's correct-specification bullet applied to the
   emulator; the estimator does not repair a wrong $R_b$, it faithfully reports it.
 - **Double counting.** A flow conditioned on `nbr_flux_*` has already learned part of the blending
   response — the flux-dilution part. $R_b$ must be defined as the **residual the flow misses**, not
   the total per-pair response. Gold-v1's additive formula makes the same disjointness assumption;
   conditioning $R_b(\theta_b)$ on the same scalars the flow sees is what keeps the two separable.
-- **Mean-only.** (5.6) shifts the mean of $\hat e$; blending also broadens it. The point estimate is
+- **Mean-only.** (5.8) shifts the mean of $\hat e$; blending also broadens it. The point estimate is
   therefore right and $\mathcal I$ is optimistic, so error bars from (2.6) are too small by whatever
   fraction of the scatter blending contributes.
-- **Not a substitute for §3.** (5.6) supplies a number the model could not generate. A
+- **Not a substitute for §3.** (5.8) supplies a number the model could not generate. A
   geometry-conditioned scene likelihood generates it, and then $R_b\to0$ by construction. The test of
   that transition is §3's own diagnostic: compute $\mathrm{Cov}(\hat e,s_{\rm nbr})\approx N^{-1}\sum_i
   \hat e_is_i^{(\rm nbr)}$ from the node bank and check it against the emulator's $R_{\rm blend}$.
