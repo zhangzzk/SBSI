@@ -131,8 +131,22 @@ def main():
                             (mag > edges[k]) & (mag <= edges[k + 1]))
                            for k in range(len(edges) - 1)], d, args.n_boot)
 
-    table("information", [(f"I quintile {k + 1}", ib == k) for k in range(5)],
+    print("\n  NOTE on the information split below: I_i is a function of ehat_i, so "
+          "cutting on it\n  is cutting on the data, which breaks E[s | selected] = I gamma.  "
+          "Read those rows as\n  the WEIGHTING mechanism (which objects carry the sum), "
+          "not as per-bin biases; quintile 1\n  has <I> < 0, so its ratio is not even "
+          "a shear.  The splits on R_blend, blending and\n  magnitude are the honest "
+          "ones -- those covariates are shear-independent.")
+    table("information (see note)", [(f"I quintile {k + 1}", ib == k) for k in range(5)],
           d, args.n_boot)
+
+    frac = np.cumsum(np.sort(i_anti)[::-1])
+    frac = frac / frac[-1]
+    n20 = int(0.2 * len(i_anti))
+    print(f"\n  the top 20% of objects by information carry {frac[n20]:.1%} of sum(I), "
+          f"and their\n  mean R_blend is {r_blend[ib == 4].mean():.4f} against "
+          f"{r_blend.mean():.4f} for the catalogue -- the score\n  estimator's effective "
+          f"sample is the part of it that is barely blended.")
 
 
 if __name__ == "__main__":
