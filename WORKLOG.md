@@ -197,6 +197,47 @@ prices (a). `--flow-perobj-only` dumps the per-object transport response for a p
 rows, so per-bin TRANSPORT can be set beside per-bin SCORE: a model error shows in both, a
 weighting or form error only in the score.
 
+**THE ACCEPTANCE POPULATION — every constgold number above was on the wrong sample.**
+`GOALS.md:54` defines the deliverable over a TRUE-property primary cut, `Re > 0.3` and
+`mag < 26`, and only **43.3%** of the source-selected rows pass it. Re-splitting the SAME
+dumps (`scripts/analyse_score_acceptance.py`):
+
+      model                    full catalogue   acceptance (43.3%)   rejected
+      bare flow                    -0.30%        +6.81% +/- 1.26%    -21.65%
+      injected (§5C.3)            -14.72%        -1.28% +/- 1.00%    -38.08%
+
+TWO RETRACTIONS. (1) The bare flow's -0.30% is NOT the flat result it looked like and the
+§5B.3 story told about it above is wrong: it is a CANCELLATION between +6.81% on the
+deliverable population and -21.65% on the rows outside it. On the population that has to
+hit 0.3%, the bare flow UNDER-responds by ~7% — the missing blend response, exactly where
+it should be. (2) The injection is not a -15% overshoot; on the deliverable population it
+does what it is for, +6.81% -> -1.28%. The -14.72% was almost all rejected rows.
+Inside the acceptance cut the unblended bin (`R_blend<0.02`, 84k rows) reads **+4.8%**, and
+injection does not touch it — that is a pure flow SELF-response deficit at large size, no
+blending involved, same sign and scale as cont.110e's `size>0.3` residual (-0.041 on 0.589).
+So: ~+5% self-response deficit PLUS a blend term the injection mostly fixes.
+Caveat: one seed (501), 400k rows, 9 cases — the +/-1.0% is a 9-case bootstrap.
+
+**§5C.3 CLOSURE CONTROL — IT FAILS; THE INJECTED INFORMATION HAS A BUG (jobs 15289666,
+15289667).** With `--closure-extra-perobj --inject-blend`, the injected model IS the
+generating model, so `ghat/g` must read 1.000:
+
+      form      ghat/g    leg +g <I>   leg -g <I>
+      mobius    1.6479      1.044        5.566
+      flat      1.6008      1.234        5.567
+      required  1.0000      (equal)      (equal)
+
+The two FORMS agree to 3% of a 65% error, so the functional-form hypothesis (a) above is
+DEAD. The diagnostic is the leg asymmetry: two legs differing only by the sign of a 0.02
+shear cannot have information differing by 5x (every bare run has them agreeing to three
+decimals, 3.485 vs 3.483). The MEAN of the two injected legs, 3.31, is close to the bare
+3.41 — so the injection is contributing something ODD in the leg sign, i.e. behaving like a
+term linear in gamma rather than a curvature. **The injected constgold numbers above are
+therefore PROVISIONAL and must not be quoted until this closes**; the BARE numbers are
+unaffected (they never touch the stencil). `scores_from_loglike` now takes a `diag` dict
+splitting I11 into the finite-difference term and the Hessian correction, reported per leg,
+to localise the odd part.
+
 **SOURCE SELECTION AND LEG MATCHING (owner question; measured on 1.5M constgold rows).** The
 `DEFAULT_SELECTION_CUTS` applied by `load_constgold` are on TRUE properties — `r_input_p` in
 (18,28), `Re_input_p` in (0.1,1.5), `distance < 5"` or isolated — identical in both legs, so they
