@@ -197,6 +197,43 @@ prices (a). `--flow-perobj-only` dumps the per-object transport response for a p
 rows, so per-bin TRANSPORT can be set beside per-bin SCORE: a model error shows in both, a
 weighting or form error only in the score.
 
+**V2 vs V1 TRANSPORT ON THE ACCEPTANCE POPULATION — V2 DOES NOT CLOSE THE DEFICIT
+(`scripts/compare_v1_v2_seeds.py`; jobs 15292699, 15293776-81; 4 seeds each, 501/502/503/505,
+same 400k rows).** V2 = `sbsi_caches/ablation/measurement_flow_g0_ngmix_ablate_s2c_coupling_
+lt500_s50x.pt`: conditions on TRUE `r_input_p`/`Re_input_p`, 4-D output (shape + measured mag
++ measured log size), lambda_theta = 500 pin.
+
+      sample                  |  V1 mean +/- sd  |  V2 mean +/- sd  |  V2-V1
+      FULL                    |  +1.05% +/-0.68% |  +1.28% +/-1.33% |  +0.24%
+      ACCEPTANCE mag<26&Re>0.3|  +6.53% +/-0.78% |  +6.27% +/-1.22% |  -0.26%
+      rejected                | -19.43% +/-0.54% | -17.72% +/-3.06% |  +1.71%
+      true Re>0.3             |  +7.52% +/-0.65% |  +7.39% +/-1.16% |  -0.13%
+      true Re 0.10-0.24       | -19.53% +/-1.44% | -12.83% +/11.42% |  +6.70%
+      true Re 0.24-0.30       | -56.77% +/-0.58% | -56.90% +/-1.04% |  -0.12%
+      true Re 0.30-0.38       | +19.77% +/-1.27% | +19.97% +/-5.01% |  +0.20%
+      true Re 0.38-0.50       | +17.55% +/-0.80% | +13.47% +/-2.55% |  -4.08%
+      true Re 0.50-0.90       |  -1.12% +/-0.43% |  -0.90% +/-1.39% |  +0.22%
+      true Re 0.90-1.50       |  -0.80% +/-0.59% |  +4.42% +/-3.27% |  +5.22%
+
+**The acceptance deficit is NOT the errors-in-variables floor.** True-property conditioning
+moves it by -0.26% against a seed scatter of ~1%, i.e. not at all. Whatever drives the
++6.5% on the deliverable population survives making true size an input.
+
+RETRACTION (single-seed over-reading, mine): on seed 501 alone the `Re 0.10-0.24` bin went
+-18.93% -> +0.92% and I reported that as V2 removing the EiV floor where measured size is
+least informative. Over 4 seeds that bin is `-12.83% +/- 11.42%` — the scatter is as large as
+the claimed effect, so seed 501 was one draw and the improvement is NOT established.
+
+**V2's one robust signature is 2-8x LARGER seed scatter** — 1.33 vs 0.68 global, 1.22 vs 0.78
+on acceptance, 11.42 vs 1.44 at small size, 3.27 vs 0.59 at large size. That is consistent
+with its ~8x smaller training set (3.4M rows vs V1's 27.8M, both from the checkpoint
+metadata) and is a CONFOUND: V1 and V2 cannot be fairly compared per-bin until V2 is trained
+on matched volume. The acceptance-level conclusion is safe because there the scatter (~1%) is
+well below the deficit (~6.5%); the per-bin ones are not.
+
+NOTE `Re 0.24-0.30` reads -56% in both because `R_sim` crosses zero there (cont.110f) — read
+the residual, not the ratio.
+
 **TRANSPORT vs SCORE, SAME ROWS, SAME BINS (jobs 15292356/15292357, `--flow-perobj-only`;
 `scripts/compare_transport_score.py`). THE HEADLINE: the sub-percent is a CANCELLATION, and
 that is a TRANSPORT-side fact, not an artefact of the score machinery.**
