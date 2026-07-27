@@ -101,6 +101,24 @@ def _finalize_priority_sample(reservoir, max_rows):
     return reservoir.reset_index(drop=True)
 
 
+def selection_cuts_from_args(args):
+    """DEFAULT_SELECTION_CUTS with the PRIMARY true-property domain optionally narrowed.
+
+    `source_select_detection` reads only cuts[1] (primary true mag r_input_p), cuts[3] (primary true
+    size Re_input_p) and cuts[4] (pair distance); cuts[0]/cuts[2] are unused. So narrowing [1]/[3]
+    restricts the PRIMARY only and leaves neighbours full-population, which is the deliverable
+    definition in GOALS.md ("cut the primary on TRUE props, neighbours full-population").
+
+    Defaults reproduce DEFAULT_SELECTION_CUTS exactly, so omitting both flags is a no-op.
+    """
+    cuts = [list(c) for c in DEFAULT_SELECTION_CUTS]
+    if getattr(args, "primary_mag_max", None) is not None:
+        cuts[1][1] = float(args.primary_mag_max)
+    if getattr(args, "primary_re_min", None) is not None:
+        cuts[3][0] = float(args.primary_re_min)
+    return cuts
+
+
 def load_measurement_data(args, condition_features, target_features):
     rng = np.random.default_rng(args.seed)
     t0 = time.time()
@@ -164,7 +182,7 @@ def load_measurement_data(args, condition_features, target_features):
                 if len(batch) == 0:
                     continue
 
-            batch = source_select_selection(batch, cuts=DEFAULT_SELECTION_CUTS)
+            batch = source_select_selection(batch, cuts=selection_cuts_from_args(args))
             source_cut_rows += len(batch)
             if len(batch) == 0:
                 continue
@@ -533,6 +551,12 @@ def parse_args():
     parser.add_argument("--max-rows", type=int, default=2_000_000)
     parser.add_argument("--max-cases", type=int, default=None,
                         help="keep only rows with case < this (fast prototype on a case subset)")
+    parser.add_argument("--primary-mag-max", type=float, default=None,
+                        help="restrict TRAINING to primaries with true mag (r_input_p) below this "
+                             "(deliverable domain: 26.0). Neighbours stay full-population.")
+    parser.add_argument("--primary-re-min", type=float, default=None,
+                        help="restrict TRAINING to primaries with true size (Re_input_p) above this "
+                             "(deliverable domain: 0.3). Neighbours stay full-population.")
     parser.add_argument("--noise-photoz", type=float, default=0.0,
                         help="photo-z scatter sigma=this*(1+z) added to redshift_input_p (realistic-structure study)")
     parser.add_argument("--noise-sersic-frac", type=float, default=0.0,
@@ -1023,6 +1047,9 @@ def main():
         "validation_rows": int(len(val_df)),
         "seed": int(args.seed),
         "max_rows": None if args.max_rows is None else int(args.max_rows),
+        "selection_cuts": selection_cuts_from_args(args),
+        "primary_mag_max": None if args.primary_mag_max is None else float(args.primary_mag_max),
+        "primary_re_min": None if args.primary_re_min is None else float(args.primary_re_min),
         "max_read_batches": args.max_read_batches,
         "decorrelate_shape_size": bool(args.decorrelate_shape_size),
     }

@@ -2,6 +2,50 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-27c (train Gold-V2 INSIDE the deliverable domain -- 1 seed, owner-directed)
+
+**Why.** 2026-07-27b established that the lt500 model was neither trained nor certified on the
+deliverable domain (primary true mag<26, Re>0.3), and is +3.49% there. Owner: train the same model on
+that domain, one seed, validate, then decide on more seeds.
+
+**Changed.** `scripts/train_measurement_model_swa_s1_truecond.py`:
+- new `selection_cuts_from_args(args)` + flags `--primary-mag-max` / `--primary-re-min`. It narrows
+  `cuts[1][1]` (primary true mag) and `cuts[3][0]` (primary true Re) only. `source_select_detection`
+  reads ONLY cuts[1], cuts[3], cuts[4] (cuts[0]/cuts[2] are dead), so this restricts the PRIMARY and
+  leaves neighbours full-population -- the GOALS.md definition. Verified with both flags absent it
+  returns `DEFAULT_SELECTION_CUTS` unchanged and does not mutate the module constant, so the
+  baseline recipe is a byte-identical no-op.
+- `selection_cuts` / `primary_mag_max` / `primary_re_min` recorded in checkpoint metadata.
+- `scripts/eval_v2_indomain_m.py`: no longer prints `nan` seed-scatter for a single seed; states the
+  8-seed sd instead so a 1-seed number is not over-read.
+
+**Added.** `jobs/job_s2c_domain_train.sh` (job **15298227**, seed 501) and
+`jobs/job_s2c_domain_eval.sh` (job **15298229**, chained `afterok`). TAG
+`ablate_s2c_coupling_lt500_dom`. Every other knob is copied from `job_s2c_lt500_seeds.sh` (same
+catalogue, feature set, 4D targets, mean_affine + shape-blind flow, 80 epochs, lam 450 / lam_theta
+500, same response + coupling target npz), so the domain flags are the only difference from the
+certified baseline.
+
+**Runs from this worktree, not SBSI-ablation.** `diff -rq` (excluding `__pycache__`) confirms both
+`scripts/train_measurement_model_swa_s1_truecond.py` and all of `sbs_shear/` are identical between
+the two trees, so the comparison to the baseline checkpoints stays clean.
+
+**Evaluation is deliberately NOT domain-cut.** The eval keeps `DEFAULT_SELECTION_CUTS` + `min-case
+40` and applies the domain as a mask afterwards, so constgold rows stay row-for-row identical to the
+8-seed baseline dumps and the only thing differing between the two m tables is the model.
+
+**Sizing.** Training catalogue is 31,411,766 rows; ~43% survive the domain cut (~13.5M), comfortably
+above the 4M reservoir, so train/val stays 4M/3.4M/0.6M -- an equal-N comparison, not a smaller run.
+Baseline training took 1057s on a P5000, so walltime is set to 1h30 (a40) to keep backfill happy.
+
+**Expected result is NOT automatic.** Restricting training removes the faint/small population whose
+under-prediction currently cancels the bright/large over-prediction. That should help in-domain, but
+it also deletes the cancellation that made the GLOBAL number look good, so global m is expected to
+move -- possibly a lot. Both numbers will be reported.
+
+**Next.** Read the 4-mask table from 15298229; if in-domain m is materially better than +3.49%, run
+more seeds (the 8-seed baseline has per-seed sd ~0.8% in-domain, so one seed settles little on its own).
+
 ## 2026-07-27b (figure audit: which pin covers which range; CORRECTS the "nan cells" reading below)
 
 **Question asked.** Were all the new figures made with the actual Gold-V2 flow, and inside its

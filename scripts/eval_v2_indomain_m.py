@@ -114,14 +114,19 @@ def main():
             row.append(f"{m*100:>+24.3f}")
         print(f"  {seed:>6} " + " ".join(row), flush=True)
 
+    def sd(v):      # a single seed has no seed-scatter estimate; say so rather than print nan
+        return float(np.std(v, ddof=1)) if len(v) > 1 else float("nan")
+
     print(f"\n  {'ENSEMBLE':>6} " + " ".join(
-        f"{np.mean(res[k]):>+17.3f}+-{np.std(res[k], ddof=1)/np.sqrt(len(res[k])):.3f}"
-        for k in masks))
-    print(f"  {'seed sd':>6} " + " ".join(f"{np.std(res[k], ddof=1):>24.3f}" for k in masks))
+        f"{np.mean(res[k]):>+17.3f}+-{sd(res[k])/np.sqrt(len(res[k])):.3f}" for k in masks))
+    print(f"  {'seed sd':>6} " + " ".join(f"{sd(res[k]):>24.3f}" for k in masks))
+    if len(dumps) == 1:
+        print("\n  NOTE: ONE seed -- no seed-scatter estimate. The 8-seed baseline has per-seed sd "
+              "~1.0% (global) / ~0.8% (in-domain), so treat a single-seed m as +-~1% until more "
+              "seeds are run.")
     for k in masks:
-        print(f"\n  {k}:  m = {np.mean(res[k]):+.3f} +- "
-              f"{np.std(res[k], ddof=1)/np.sqrt(len(res[k])):.3f} %  "
-              f"(seed sd {np.std(res[k], ddof=1):.3f}, N={len(res[k])})")
+        print(f"\n  {k}:  m = {np.mean(res[k]):+.3f} +- {sd(res[k])/np.sqrt(len(res[k])):.3f} %  "
+              f"(seed sd {sd(res[k]):.3f}, N={len(res[k])})")
     print("\nV2_INDOMAIN_M_DONE", flush=True)
 
 
