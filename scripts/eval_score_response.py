@@ -366,6 +366,10 @@ def score_pass(est, nodes, frame, ehat_raw, chunk, tag, r_blend=None, grad_chunk
     n = len(frame)
     s_out = np.empty((n, 2))
     i_out = np.empty((n, 2, 2))
+    # I11 split into its two pieces so a leg-asymmetric injection is visible directly:
+    # the finite difference (which already carries `extra` through the reweighting) and
+    # the Hessian correction subtracted from it.  Both legs must give the same numbers.
+    diag = {} if r_blend is not None else None
     jac = shear_velocity_jacobian(nodes.grid) if r_blend is not None else None
     slab = chunk * (slab_mult if r_blend is None else max(1, slab_mult // 4))
     t0 = time.time()
@@ -380,12 +384,19 @@ def score_pass(est, nodes, frame, ehat_raw, chunk, tag, r_blend=None, grad_chunk
                 chunk=grad_chunk, delta=grad_delta)
         s_out[s0:s1], i_out[s0:s1], _ = scores_from_loglike(
             ll, nodes, device=est.device, extra=extra, extra_hess=extra_hess,
-            analytic_info=analytic_info)
+            analytic_info=analytic_info, diag=diag)
         bad = int((~np.isfinite(s_out[s0:s1])).any(1).sum()
                   + (~np.isfinite(i_out[s0:s1])).any((1, 2)).sum())
         el = time.time() - t0
         print(f"  [{tag}] {s1:,}/{n:,}  {el:.0f}s  ETA {el / s1 * (n - s1):.0f}s"
               + (f"  !! {bad:,} non-finite rows" if bad else ""), flush=True)
+    if diag:
+        wgt = np.asarray(diag["n"], dtype=float)
+        avg = lambda k: float(np.average(diag[k], weights=wgt))
+        print(f"  [{tag}] I11 breakdown: finite-difference {avg('fd'):+.4f}  "
+              f"Hessian correction {avg('hess'):+.4f}  -> I11 "
+              f"{avg('fd') - avg('hess'):+.4f}   (<extra_1> = {avg('extra'):+.4f})",
+              flush=True)
     return s_out, i_out
 
 

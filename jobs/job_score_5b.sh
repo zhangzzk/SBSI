@@ -16,6 +16,12 @@
 #                   R_sim/R_flow = 1.547, and with the §5C.3 blend injection 1.0025.
 #
 # Submit e.g.:  MODE=closure ROWS=1000000 sbatch jobs/job_score_5b.sh
+#
+# `cip` is often backed up.  Override the partition on the sbatch command line -- CLI
+# flags beat the #SBATCH directives below:
+#   MODE=... sbatch --partition=inter --gpus-per-node=a40:1 jobs/job_score_5b.sh
+# Pin the GPU type on `inter`: it also holds rtx2080ti (11G) and p5000 (16G) nodes, which
+# cannot hold a slab; a40 / a100 / h200nvl are all fine.
 set -o pipefail
 eval "$(conda shell.bash hook)"; conda activate sims1
 export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"

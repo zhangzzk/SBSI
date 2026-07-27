@@ -381,7 +381,7 @@ def _weighted_score(ll_t, log_prior, u, extra, gamma):
 
 
 def scores_from_loglike(loglike, nodes, chunk=65536, device=None, extra=None,
-                        extra_hess=None, analytic_info=False):
+                        extra_hess=None, analytic_info=False, diag=None):
     """Turn per-node log-likelihoods into `(s_i, I_i)`.
 
     `loglike`: `(N,G)` array holding `log p_flow(ehat_i | e_k, rest)` up to a per-row
@@ -439,7 +439,14 @@ def scores_from_loglike(loglike, nodes, chunk=65536, device=None, extra=None,
             if exh is not None:
                 # I = -d_gamma s = -(E[d_gamma u] + E[d^2_gamma log L] + Var(u+extra));
                 # the finite difference above supplies every term but the middle one.
-                info = info - torch.einsum("bk,bkac->bac", w, exh)
+                corr = torch.einsum("bk,bkac->bac", w, exh)
+                if diag is not None:
+                    diag.setdefault("fd", []).append(float(info[:, 0, 0].mean()))
+                    diag.setdefault("hess", []).append(float(corr[:, 0, 0].mean()))
+                    diag.setdefault("extra", []).append(
+                        float((w * ex[:, :, 0]).sum(1).mean()))
+                    diag.setdefault("n", []).append(int(info.shape[0]))
+                info = info - corr
         s_out[start:stop] = s.double().cpu().numpy()
         i_out[start:stop] = info.double().cpu().numpy()
         z_out[start:stop] = logz.double().cpu().numpy()
