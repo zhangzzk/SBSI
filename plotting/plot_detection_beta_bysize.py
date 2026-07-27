@@ -26,8 +26,8 @@ def set_style():
     plt.rcParams.update({
         "figure.dpi": 120, "savefig.dpi": 200, "font.size": 12,
         "axes.titlesize": 13, "axes.labelsize": 12, "legend.fontsize": 9,
-        "xtick.labelsize": 10, "ytick.labelsize": 11, "axes.grid": True,
-        "grid.alpha": 0.25, "axes.spines.top": False, "axes.spines.right": False,
+        "xtick.labelsize": 10, "ytick.labelsize": 11, "axes.grid": False,
+        "axes.spines.top": False, "axes.spines.right": False,
         "legend.frameon": False,
     })
 
