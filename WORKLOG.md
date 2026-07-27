@@ -82,10 +82,29 @@ So §5B as implemented is globally unbiased on constgold but NOT per-subsample; 
 cut-dependent analysis would see the few-percent structure. The fix is to make `a_i = r_i` per
 object, which is what §5C.3's injection is for.
 
-**ADDITIVE OFFSET.** The mean of the two legs is `<s> = -0.0067`, i.e. **-0.0019 in shear units**.
-The antithetic construction removes it, but real data have one leg. It is either prior
-misspecification or the O(gamma^2) term (`s'' ~ -34` would do it); separating them needs a second
-|g|, which constgold does not have.
+**ADDITIVE BIAS — the real open problem (mode `null`, job 15282206, + discriminators
+15282330/15282331).** Constgold's antithetic combination cancels anything even in gamma, and its
+leg mean is not zero: `<s> = -0.0067`, i.e. **-0.0019 in shear units**. Real data have one leg, so
+that would not cancel. Three runs at ZERO shear separate the causes:
+
+      data source                                   ghat (truth 0)
+      flow-generated, shapes from the PRIOR         +0.00018 +/- 0.00069   consistent with 0
+      flow-generated, shapes from the CATALOGUE     +0.00064 +/- 0.00072   consistent with 0
+      REAL measured ngmix shapes, g=0 catalogue     gamma1 -0.00183 +/- 0.00072
+                                                    gamma2 +0.00781 +/- 0.00071   <- 11 sigma
+
+Deliberately mismatching the prior (row 2 vs row 1) moves `ghat` by only +0.0005, so **prior
+misspecification is NOT the cause**; the bias is the flow's likelihood not matching the real
+measured shapes. It is component-asymmetric (gamma2 >> gamma1), consistent with the measurement
+anisotropy the flow only partly carries (`std(ngmix_g1) = 0.3339` vs `g2 = 0.3397`). And the
+gamma1 value **-0.00183 +/- 0.00072 reproduces constgold's leg-mean offset of -0.0019** measured
+independently — so that offset is an additive bias, NOT the O(gamma^2) term I had listed as the
+alternative.
+
+TAKEAWAY: §5B's multiplicative behaviour on constgold is good (m = -0.31% +/- 0.35%), but its
+ADDITIVE bias on real data is ~1e-3 in gamma1 and ~8e-3 in gamma2, far above any cosmic-shear
+requirement. That is now the leading item, and it is a FLOW-calibration problem, not an
+inference-machinery or prior problem.
 
 SCOPE: shape channel only (the latent is the primary's true ellipticity; neighbours are NOT
 marginalized, so §3's blend channel is identically zero, as §5B.2 says). `P_pass`/`P_det` and the

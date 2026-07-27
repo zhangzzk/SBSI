@@ -297,7 +297,8 @@ def report_leg(tag, s, info, ehat, gh1, gh2, g_true, cases, n_boot=200):
     ghat, den = shear_estimate(s_p, i_p)
     R = response_from_score(e_p, s_p)
     per = s_p / (den / len(s_p))          # per-object ghat contribution, for bootstrap
-    err = bootstrap_by_case(per, cases, n_boot=n_boot) if cases is not None else float("nan")
+    err = (bootstrap_by_case(per, cases, n_boot=n_boot) if cases is not None
+           else float(np.std(s_p) * np.sqrt(len(s_p)) / abs(den)))
     print(f"  {tag:>10}:  <s>={np.mean(s_p):+.4f}  <I>={np.mean(i_p):.3f}  "
           f"ghat={ghat:+.5f} +/- {err:.5f}   (g_true={g_true:+.4f})   "
           f"Cov(ehat,s)={R:+.4f}", flush=True)
@@ -342,7 +343,17 @@ def mode_closure(args, bundle, prior, grid, rk):
     df = load_g0(args.g0_catalogue, args.max_rows)
     print(f"rows: {len(df):,} detected+selected from {os.path.basename(args.g0_catalogue)}")
     rng = np.random.default_rng(args.seed)
-    e1i, e2i = prior.sample(len(df), rng)         # generative prior == estimation prior
+    if args.closure_catalogue_shapes:
+        # Data still come FROM the flow, so the LIKELIHOOD is exact, but the true shapes
+        # are the catalogue's rather than draws from the estimation prior.  Run at
+        # gamma = 0 this isolates PRIOR misspecification -- the marginal p(e) is used
+        # where the correct prior is p(e | measured mag, size, nbr flux) -- from any
+        # mismatch between the flow and the data.
+        e1i = df["e1_input_rot0_p"].to_numpy(float).copy()
+        e2i = df["e2_input_rot0_p"].to_numpy(float).copy()
+        print("closure: TRUE shapes taken from the catalogue (prior deliberately mismatched)")
+    else:
+        e1i, e2i = prior.sample(len(df), rng)     # generative prior == estimation prior
     gh1 = np.ones(len(df))
     gh2 = np.zeros(len(df))
     g = args.closure_g
@@ -358,13 +369,15 @@ def mode_closure(args, bundle, prior, grid, rk):
         if torch.cuda.is_available():
             torch.cuda.manual_seed_all(args.flow_seed)
 
-    R_transport = flow_response(bundle, df, g, gh1, gh2, (e1i, e2i), rk,
+    g_ref = g if g else 0.02          # the transport secant needs a non-zero step
+    R_transport = flow_response(bundle, df, g_ref, gh1, gh2, (e1i, e2i), rk,
                                 args.n_samples, args.batch_size, reseed=reseed)
     print(f"transport R_flow on these rows = {R_transport:.4f}  "
           f"(certified {R_FLOW_CERT:.4f})", flush=True)
 
     out = {}
-    for sign, tag in ((+1, "leg +g"), (-1, "leg -g")):
+    legs = ((+1, "leg +g"),) if g == 0 else ((+1, "leg +g"), (-1, "leg -g"))
+    for sign, tag in legs:
         e1l, e2l = apply_shear_to_ellipticity(e1i, e2i, sign * g * gh1, sign * g * gh2)
         fr = df.copy()
         fr["e1_input_rot0_p"] = e1l
@@ -399,6 +412,14 @@ def mode_closure(args, bundle, prior, grid, rk):
                   f"<I11> finite-difference {fd:.4f}  vs  Louis analytic {an:.4f}  "
                   f"(ratio {fd / an:.4f})", flush=True)
 
+    if g == 0:
+        # A single leg IS the whole test: with no shear applied there is nothing for the
+        # antithetic difference to cancel, and the leg's own ghat is the additive bias.
+        print(f"\n  ZERO-SHEAR NULL: ghat = {out[+1]['ghat']:+.6f} "
+              f"+/- {out[+1]['ghat_err']:.6f}  (truth 0)")
+        print(f"  transport R_flow (at a 0.02 reference step) = {R_transport:.4f}")
+        return dict(ghat=out[+1]["ghat"], err=out[+1]["ghat_err"], R_score=out[+1]["R"],
+                    R_transport=R_transport)
     sp = 0.5 * (out[+1]["s_proj"] - out[-1]["s_proj"])
     ip = 0.5 * (out[+1]["i_proj"] + out[-1]["i_proj"])
     ghat_anti = float(np.sum(sp) / np.sum(ip))
@@ -584,6 +605,8 @@ def main():
     ap.add_argument("--prior-knot-margin", type=float, default=0.10)
     # execution
     ap.add_argument("--closure-g", type=float, default=0.02)
+    ap.add_argument("--closure-catalogue-shapes", action="store_true",
+                    help="draw the true shapes from the catalogue instead of the prior")
     ap.add_argument("--closure-extra-response", type=float, default=0.0,
                     help="add c*gamma to the synthetic measured shape (see mode_closure); "
                          "0.1593 is the certified R_blend")
