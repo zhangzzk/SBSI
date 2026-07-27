@@ -29,9 +29,23 @@ closed form used as an independent cross-check of the finite differences:
 
 Numerically the only delicate ingredient is `phi'`, the radial derivative of an
 EMPIRICAL log-density.  `SmoothRadialPrior` therefore replaces the piecewise-linear
-interpolation of `RadialShapePrior` with a C2 smoothing spline (and a smooth
-exponential tail instead of a hard support edge, which would inject a spurious boundary
-term into the score).
+interpolation of `RadialShapePrior` with a C2 quantile-knot spline in `|eps|^2`, and
+continues it smoothly past the last populated bin rather than cutting it off -- a hard
+support edge would inject a spurious boundary term into the score, because the sheared
+prior's support boundary moves with gamma.
+
+Two cheap diagnostics catch every prior-fitting failure seen while building this, and
+both are asserted in `tests/test_score_inference.py`:
+
+  `ShapeScoreNodes.bartlett()`         `E_0[u] = 0` and `E_0[du] + Var_0(u) = 0`; the
+                                       second is the information of a galaxy with a flat
+                                       likelihood, so any residual is a spurious
+                                       information floor biasing `ghat` by
+                                       `residual / <I>`.
+  `ShapeScoreNodes.closed_form_residual()`  finite-difference `u` against the closed
+                                       form; sensitive to kinks in `psi` that the
+                                       Bartlett average washes out (it caught a
+                                       clamped, upturning spline tail).
 """
 
 from __future__ import annotations
@@ -83,7 +97,7 @@ class SmoothRadialPrior(RadialShapePrior):
     """
 
     def __init__(self, e1_samples, e2_samples, n_bins=120, min_samples=10_000,
-                 n_knots=8, r_hard=0.999):
+                 n_knots=8, knot_margin=0.10, r_hard=0.999):
         super().__init__(e1_samples, e2_samples, n_bins=n_bins, min_samples=min_samples)
         from scipy.interpolate import LSQUnivariateSpline
 
@@ -108,8 +122,19 @@ class SmoothRadialPrior(RadialShapePrior):
         # curvature up to ~7% of Var(u).  Quantile knots crowd where the data are (99%
         # of the mass sits at t < 0.5), leaving the sparse tail spanned by a single
         # cubic, which is both stable and honest about what the data constrain there.
-        knots = np.quantile(t, np.linspace(0.0, 1.0, int(n_knots) + 2)[1:-1])
-        knots = np.unique(np.clip(knots, x[1] + 1e-6, x[-2] - 1e-6))
+        #
+        # The knots are kept a `knot_margin` fraction of the bins away from both ends.
+        # A knot hard against the left boundary leaves the first polynomial span with
+        # almost no data: on a Gaussian test prior, whose psi' is exactly constant, that
+        # made psi'(0) read -4.5 instead of -8.68 and put a 2%-of-Var(u) floor into the
+        # Bartlett curvature.  Quantile LEVELS are shrunk to the interior rather than the
+        # knots being clipped, so raising n_knots adds knots instead of piling them up on
+        # the boundary and losing them to `unique`.
+        m = max(2, int(len(x) * knot_margin))
+        q_lo = float(np.mean(t <= x[m]))
+        q_hi = float(np.mean(t <= x[-1 - m]))
+        knots = np.unique(np.quantile(t, np.linspace(q_lo, q_hi, int(n_knots))))
+        knots = knots[(knots > x[0]) & (knots < x[-1])]
         self._spl = LSQUnivariateSpline(x, y, t=knots, w=w, k=3)
         self._dspl = self._spl.derivative()
         self.fit_chi2_dof = float(np.sum((w * (y - self._spl(x))) ** 2)
