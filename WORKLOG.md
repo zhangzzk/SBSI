@@ -167,7 +167,38 @@ matches to -0.48% at 1-2" and -1.66% at 2-3". **Amplitude nonlinearity is theref
 roughly the 2% level over 1-3".** It remains untestable below 0.5", where profile overlap makes
 saturation most plausible -- that caveat stands, but the "uniform 18% offset" reading is dead.
 
-**Next:** score the weighted variants on the ruler; then the constgold m chain via the lookup
+**RESULT 8: the close-pair training imbalance is REAL, and 28l's "saturation" verdict was an
+artefact of the corrupted distance feature.** Retrained in the corrected frame:
+
+| model | OVERALL | <1" | 1-2" | 2-3" | fit to own labels 0-0.5" |
+|---|---|---|---|---|---|
+| `_ho` (certified) | -11.93 | **-41.50** | -5.37 | -1.35 | -25.3 (in-frame) |
+| `_indist` | -8.24 | **-31.11** | -0.48 | -1.66 | -29.4 (-25.5 held out) |
+| `_indist_close` (d<1.5" only) | -7.24 | **-24.52** | -7.76 | n/a (extrapolates) | **-13.4** (-9.0 held out) |
+| `_indist_wc5` (w=1+5exp(-d)) | **-7.00** | **-21.78** | -2.46 | -2.48 | -- |
+
+The specialist halves the inner-bin fit error (-29.4 -> -13.4, held out -25.5 -> -9.0), confirming
+the imbalance diagnosis: pairs below 0.5" are 0.09% of the training rows. `_indist_wc5` captures the
+same gain in a SINGLE deployable model (the specialist predicts a flat 0.0585 beyond its training
+range and cannot be used alone). Close-pair deficit roughly halved end-to-end, no range sacrificed.
+
+**RESULT 9: a genuine label-vs-ruler difference survives at <1", and it is NOT population.** At <1"
+`_indist_close` predicts 0.0391 on the ruler and 0.0393 on the response catalogue -- the same
+features -- yet the ruler measures 0.0518 and the label 0.0423, a 22% gap. Contrast 2-3", where the
+predictions differ by 26% (0.0445 vs 0.0354) and the model is accurate against both: there the
+offset IS population. So the <1" gap is a real measurement difference at matched features.
+
+**This reopens the amplitude hypothesis for the inner bin only** -- exactly where RESULT 7's bound
+(<=2% over 1-3") does not apply, and where saturation of the Dg=0.2 secant is physically expected.
+CORRECTION to RESULT 4: the amplitude test is NOT impossible. It cannot be done by joining the two
+existing catalogues, but the g=0.05 legs exist on disk for all 200 cases, so the response catalogue
+can be REBUILT at Dg=0.05 from existing shape and cross-match files -- same galaxies, same estimator,
+same pairing, same rejection, only the sheared leg changes. Compared per-pair against the Dg=0.2
+catalogue that measures the nonlinearity directly, and if it is real the rebuild IS the fix, since
+the m pipeline needs the small-shear response. In flight: job 15329737,
+`configs/fs2_lsst_r_extnbr_g005.yaml`.
+
+**Next:** score wc20; read the Dg=0.05 rebuild; then the constgold m chain via the lookup
 (job 15329301). NOTE m sums R_blend over all neighbours and the distance error vanishes beyond 3",
 so a large per-pair gain at <1" may move global m only slightly -- and m=+0.245% was reached WITH
 this inconsistency present, so the corrected model may move m either way.
