@@ -2,6 +2,47 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-28f (response-loss probes: INCENTIVE branch refuted on both sides -> the cause is CAPACITY)
+
+**All four probes NEGATIVE.** Paired at seed 501 on the same refined target, so the response loss is
+the only thing that differs; the control is the unmodified absolute lam=450 at that same seed (not the
+8-seed ensemble -- that would confound the loss change with ~0.8% seed scatter in the target bin).
+Half-shear ruler, ALL objects. Truth-noise floors from 2026-07-28d.
+
+| variant | [0.30,0.38) | [0.38,0.50) | [0.50,0.75) | [0.75,1.50) | OVERALL |
+|---|---|---|---|---|---|
+| control, absolute lam=450 | -3.35 | +0.76 | -0.11 | -0.02 | -0.39 |
+| absolute lam=1500 | -3.23 | +0.29 | +0.45 | -0.84 | -0.54 |
+| absolute lam=4500 | -3.65 | +0.16 | +0.73 | -1.04 | -0.61 |
+| relative floor 0.30, lam=100 | **-11.71** | -1.18 | -0.04 | -0.72 | -2.49 |
+| relative floor 0.50, lam=188 | **-8.66** | -0.06 | +0.26 | -0.29 | -1.47 |
+| *(truth noise)* | *+-1.40* | *+-0.78* | *+-0.46* | *+-0.39* | |
+
+1. **Raising a global lambda does not fix the target bin** (-3.35 -> -3.23 -> -3.65, all inside
+   +-1.40) **and degrades the bins that were already right** ([0.75,1.50): -0.02 -> -0.84 -> -1.04,
+   monotone in lambda, 2x its noise floor at 4500). This is the trade recorded at the `lam 300->1000`
+   diagnosis, reproduced on the size axis. **Not an incentive problem.**
+2. **The clamped relative loss is much WORSE, not better** (-11.71% / -8.66% vs -3.35%), and it
+   reproduces the historical regression's *counterintuitive direction*: up-weighting the low-response
+   cells LOWERS the modelled response there. Same effect, different model generation, different axis
+   (crowd then, size now). **My floor-clamp hypothesis (2026-07-28e) is REFUTED** -- the earlier
+   negative result was not an artefact of the 0.05 floor.
+
+**Mechanism this points to.** Even at floor 0.30, cells with `Rsim` as low as 0.040 still carry ~7x a
+typical cell's weight. The model appears unable to separate those extreme cells from the merely-small
+ones nearby, so heavy pull on the extreme tail drags the whole small-size region DOWN past the target.
+That is resolving power, not incentive -- consistent with the flow matching its target to <0.8% in the
+three bins where the target varies slowly, and missing only where it varies by 2.7x across a narrow
+range. Both branches of the 2026-07-28e pre-registered split now land on **CAPACITY**.
+
+**Next (running):** mean-head capacity 128 -> 256 (job 15326850) and 512 (15326851), 1 seed each,
+absolute lam=450, same refined target; `MH` env var added to `jobs/job_s2c_domain_train.sh`. The
+response is produced by the explicit mean head (`--flow-blind-features` forces shape->shape response
+through it), so `--mean-hidden` is the relevant knob. If capacity does not move it either, the next
+lever is FEATURE PARAMETERISATION rather than size: response falls with resolution, so a feature like
+`Re^2/(Re^2 + Re_psf^2)` would linearise the steep region that `Re_input_p` compresses into ~12% of
+its range. **Files:** `jobs/job_loss_probe_score.sh` (paired scoring).
+
 ## 2026-07-28e (low-size grid refinement FAILS its pre-registered test; target is RIGHT, flow cannot reach it)
 
 **Pre-registered acceptance test (stated before training, 2026-07-28d): the [0.30,0.38) gap must
