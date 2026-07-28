@@ -120,13 +120,42 @@ separation and a binned cross-catalogue mean is not like-for-like. **Do not quot
 ratio as an amplitude measurement.** The `_ho` vs `_indist` comparison above is unaffected -- it is
 the same ruler and the same population, with one variable changed.
 
-**Next:** `_indist` vs its OWN labels in a consistent frame (job 15329300) -- if it now fits them at
-<1", the residual -31% is a label-vs-ruler difference (amplitude or an unmodelled selection); if it
-still under-fits, the feature set is genuinely the limit. In parallel, the constgold lookup
-(job 15329301) so the certified m chain can be rerun with the corrected emulator. NOTE m sums
-R_blend over all neighbours, and the distance error vanishes beyond 3", so a large per-pair gain at
-<1" may move global m only slightly -- and m=+0.245% was reached WITH this inconsistency present, so
-the corrected model may move m either way.
+**RESULT 5 (job 15329312): the RULER is cleared at <1".** The 45-degree null test had only ever been
+quoted globally (0.6 sigma), where a bias confined to the 17% of pairs below 1" would be diluted ~6x.
+Per bin it passes everywhere: <0.25" -0.0070+-0.0182 (0.4 sigma), 0.25-0.5" +0.0169+-0.0092 (1.8),
+0.5-0.75" +0.0045+-0.0066 (0.7), 0.75-1" +0.0025+-0.0054 (0.5). LIMITATION, stated rather than
+buried: in the sub-arcsecond bins the null is only precise enough to bound contamination at the ~20%
+level, so this clears a gross error, not a moderate one.
+
+Deblending inconsistency between legs is also refuted, in the informative direction: binning close
+pairs by `match_distance_pixel_cm`, the deficit is WORST on the cleanest matches (-41.7% at centroid
+offsets < 0.05") and nearly gone on the messiest (-7.8% at 0.27-0.5"). Bad matches inflating the
+truth would give the opposite ordering.
+
+**RESULT 6 (job 15329300): the residual splits in two.** `_indist` vs its OWN labels, both sides now
+in the input frame:
+
+| separation | label | `_indist` | err | held-out |
+|---|---|---|---|---|
+| 0.0-0.5" | 0.0689 | 0.0487 | **-29.4%** | -25.5% |
+| 0.5-1.0" | 0.0339 | 0.0325 | -4.1% | -9.2% |
+| 1.5-2.0" | 0.0288 | 0.0293 | +1.7% | +2.0% |
+| 2.0-3.0" | 0.0373 | 0.0354 | -4.9% | +3.8% |
+
+So of the -31.1% remaining against the ruler at <1": the INNERMOST bin is a genuine fit failure
+(-29%, reproduced on held-out cases, so not overfit) while 0.5-1" is now fitted; the rest is the
+~18% label-vs-ruler offset (unresolved -- see the amplitude caveat above).
+
+Why the inner bin fails is quantitative, not mysterious: pairs below 0.5" are **0.09% of the
+training rows** (159,487 of 178.6M), so the loss barely sees them. 28l tried close-pair weighting and
+recorded it as saturating -- but that was measured with the CORRUPTED distance feature, so it is a
+different experiment now. Re-running it in the corrected frame at K=5 and K=20 (jobs 15329337/8,
+`configs/fs2_lsst_r_extnbr_indist_wc{5,20}.yaml`).
+
+**Next:** score the weighted variants on the ruler; then the constgold m chain via the lookup
+(job 15329301). NOTE m sums R_blend over all neighbours and the distance error vanishes beyond 3",
+so a large per-pair gain at <1" may move global m only slightly -- and m=+0.245% was reached WITH
+this inconsistency present, so the corrected model may move m either way.
 
 ## 2026-07-28m (Gold-V3 design converged: TWO flows; pair-angle + position-shear test in flight)
 
