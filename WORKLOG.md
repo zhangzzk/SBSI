@@ -2,6 +2,46 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-28l (close-pair deficit is a REPRESENTATIONAL limit: domain restriction and loss weighting both fail)
+
+**Both training-configuration levers are now exhausted. The close-pair deficit is not fixable by
+retraining, and 28j's population-mixing explanation is REFUTED.** All scored with the same ruler and
+the same passing null test (0.6 sigma), in-domain, 4,811,459 pairs.
+
+| emulator | OVERALL | <1" | 1-2" | 2-3" |
+|---|---|---|---|---|
+| `_ho` (certified) | -11.93 | **-41.50** | -5.37 | -1.35 |
+| `_indom` (primary mag<26, Re>0.3) | -12.66 | **-40.25** | -7.67 | -2.11 |
+| `_indom_wc5` (w=1+5exp(-d)) | -12.21 | **-37.25** | -9.52 | -1.52 |
+| `_indom_wc20` (w=1+20exp(-d)) | -12.04 | **-37.14** | -10.13 | -0.86 |
+
+1. **Domain restriction does nothing** (-41.50 -> -40.25). Training on exactly our domain leaves the
+   deficit intact, so the opposite-signed inside/outside bias measured in 28j was a SYMPTOM, not the
+   cause. That entry's reasoning is retracted; its measurements stand.
+2. **Close-pair weighting saturates immediately.** 4x emphasis at d=0.5 gives -37.25%; 13x gives
+   -37.14% -- no further gain for 3x more weight. Recovering ~4 points and stopping is the signature
+   of a representational limit, not an incentive one. (Same pattern as the flow's response-weight
+   probes in 28f: more pressure, no movement, side-effects elsewhere -- note 1-2" DEGRADES from -5.37
+   to -10.13 as close pairs are up-weighted, i.e. the model trades one separation range for another
+   because it cannot satisfy both.)
+
+**Conclusion by elimination:** with domain and weighting both ruled out, the emulator cannot represent
+the close-pair blending response using its current features
+(`Re_input_p/s`, `r_input_p/s`, `sersic_n_input_p/s`, `distance`).
+
+**UNTESTED hypothesis (flagged as such -- six of mine have failed today):** the feature set carries no
+information about the pair's ORIENTATION, only its separation. At sub-arcsecond separations with PSF
+FWHM 0.73" the two profiles overlap heavily and the induced shape response should depend on the pair
+position angle relative to the primary's major axis / the shear direction. Cheap way to test BEFORE
+any design change: bin the truth-minus-emulator residual by pair position angle (a variable the
+emulator does not see). If the residual is flat in that variable, orientation is NOT the missing
+piece and this hypothesis dies without a retrain.
+
+**Recommendation:** adding a feature is a blendemu design change and is the owner's call. Do not
+adopt `_indom*` -- none beats `_ho` overall, and all three are within ~1% of each other. The certified
+`_ho` remains the R_blend model. Note also 28i's standing caveat: this is all PER-PAIR accuracy, and
+the m pipeline uses a SUM over neighbours, which still has no independent validation.
+
 ## 2026-07-28k (mini-batch label-noise hypothesis CLOSED: accumulator works, and makes things WORSE)
 
 The confound-free test of 2026-07-28g. `--response-bin-ema` accumulates the per-bin response estimate
