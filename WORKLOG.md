@@ -198,8 +198,36 @@ catalogue that measures the nonlinearity directly, and if it is real the rebuild
 the m pipeline needs the small-shear response. In flight: job 15329737,
 `configs/fs2_lsst_r_extnbr_g005.yaml`.
 
-**Next:** score wc20; read the Dg=0.05 rebuild; then the constgold m chain via the lookup
-(job 15329301). NOTE m sums R_blend over all neighbours and the distance error vanishes beyond 3",
+**RESULT 10 (job 15329903): the SHEAR-AMPLITUDE hypothesis is REFUTED outright.** The g=0.05 legs
+exist for cases 0-99 (100-199 have no shape catalogue), so the response catalogue was rebuilt at
+Dg=0.05 (job 15329737, 125.2M rows) and joined to the Dg=0.2 catalogue per pair. Both take their
+geometry from the same g=0 leg, so the join is exact: 4,449,128 matched pairs with
+|distance - distance_b| = 0.00e+00.
+
+| distance | resp(Dg=0.05) | resp(Dg=0.2) | ratio 0.2/0.05 | matched |
+|---|---|---|---|---|
+| 0.00-0.25" | 0.0926 | 0.0994 | 1.074 +- 0.259 | 35,390 |
+| 0.25-0.50" | 0.0505 | 0.0730 | 1.445 +- 0.284 | 121,197 |
+| 0.50-0.75" | 0.0329 | 0.0365 | 1.109 +- 0.259 | 174,563 |
+| 0.75-1.00" | 0.0224 | 0.0151 | 0.676 +- 0.225 | 202,190 |
+| 1.00-1.50" | 0.0236 | 0.0139 | 0.589 +- 0.118 | 552,989 |
+| 1.50-2.00" | 0.0393 | 0.0311 | 0.791 +- 0.079 | 839,534 |
+| 2.00-3.00" | 0.0297 | 0.0340 | 1.147 +- 0.099 | 2,523,265 |
+| **ALL** | **0.0316** | **0.0318** | **1.006** | 4,449,128 |
+
+Linear to ~8% overall, and with NO saturation signature: saturation predicts ratio<1 at small d
+rising to 1, but the two innermost bins are at or ABOVE 1 and the per-bin scatter flips sign between
+adjacent bins -- the same noise pattern flagged for the pair angle in 28m. (Caveat on the quoted
+errors: the two legs share the g=0 reference, so they are correlated and the per-bin sems are not
+exact; the ALL-MATCHED number and the absence of a monotonic trend are the robust content.)
+
+**So the residual <1" deficit is NOT amplitude, not the distance definition, not training imbalance,
+not the bright-neighbour rejection, not pair orientation, and not a ruler artefact. It is
+UNEXPLAINED.** Recording that rather than proposing an eleventh mechanism -- ten have now been
+refuted by measurement in this investigation.
+
+**Next:** the constgold m chain via the lookup (job 15329301) -- the acceptance test that decides
+whether any of this should be adopted. NOTE m sums R_blend over all neighbours and the distance error vanishes beyond 3",
 so a large per-pair gain at <1" may move global m only slightly -- and m=+0.245% was reached WITH
 this inconsistency present, so the corrected model may move m either way.
 
