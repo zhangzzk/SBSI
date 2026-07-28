@@ -5,6 +5,7 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --gres=gpu:a40:1
 #SBATCH --array=0-1
+# LOOKUP=<abs path> overrides the lookup entirely (e.g. the certified one, as a same-seed control)
 #SBATCH --partition=inter
 #SBATCH --constraint=x86-64-v3
 #SBATCH --output=/home/z/Zekang.Zhang/logs/cgindist_s%a_%j.out
@@ -41,7 +42,7 @@ CK=$D/measurement_flow_g0_ngmix_ablate_s2c_coupling_lt500_s${S}_swaavg.pt
 echo "### CONSTGOLD indist seed=$S job=$SLURM_JOB_ID  lookup=${SUFFIX:-indist} ###"; date
 python -u scripts/validate_constant_with_blend.py \
   --measurement-model "$CK" --catalogue "$CAT" --min-case 40 \
-  --blend-lookup "$LOOK/blend_lookup_${SUFFIX:-indist}_c40-139.feather" \
+  --blend-lookup "${LOOKUP:-$LOOK/blend_lookup_${SUFFIX:-indist}_c40-139.feather}" \
   --crowd-flux-lookup "$RES/crowd_flux_conc_c0-199.feather" \
   --global-only --flow-seed 12345 --n-samples 64 --max-rows 45000000 --batch-size 16384 \
   --dump "$DUMPDIR/indist_perobj_s${S}.feather" 2>&1 | grep -v --line-buffered "module command"

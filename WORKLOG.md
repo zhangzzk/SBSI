@@ -281,6 +281,26 @@ deterministic change in the denominator from a different R_blend model, identica
 Seed averaging shrinks the scatter of <R_flow> around its mean; it does not move the mean. More
 seeds tighten the error bar on whatever m the corrected emulator gives, they do not steer it.
 
+**RESULT 13 (job 15330211, seed 501): the REAL pipeline says m = +0.45% +- 0.18% with `_indist`.**
+
+    GLOBAL:  R_sim=0.4534  R_flow(self)=0.2888  R_blend(emulator)=0.1625  R_total=0.4514
+    WITH blend m = R_sim/(R_flow+R_blend) - 1 = +0.45% +- 0.18%
+
+This confirms the RESULT 11 correction: the pipeline's <R_blend> is 0.1625, NOT the raw lookup mean
+0.3055 the identity was fed. **The -0.655% is dead.** The corrected emulator does not wreck the
+deliverable; m moves from the certified +0.245% (16-seed ensemble) to +0.45% on this seed. A
+same-seed `_ho` control is running (job 15331339) so the comparison is not against an ensemble mean.
+
+**Projection for `_indist_wc5`, the model actually worth deploying.** It predicts ~1.1% higher
+R_blend than `_indist` on the full domain (bias -0.28% vs -1.36%), giving R_blend ~ 0.1643,
+R_total ~ 0.4531, and
+
+    m ~ 0.4534/0.4531 - 1 = +0.07%
+
+i.e. plausibly WELL INSIDE the |m| <= 0.3% target -- and reached by making R_blend more correct
+rather than by tuning. This is arithmetic from measured biases, not a result; the wc5 lookup
+(job 15330734) and its constgold run are the test.
+
 **RECOMMENDATION (pending the real pipeline numbers).** Keep `lsst_r_extnbr_ho` as the production
 R_blend for now -- switching it alone
 degrades the certified deliverable. Treat `lsst_r_extnbr_indist` / `_indist_wc5` as the corrected
