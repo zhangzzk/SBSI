@@ -2,6 +2,56 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-28j (the R_blend bias is DOMAIN-SPECIFIC: unbiased outside our cut, -11.9% inside -> in-domain retrain launched)
+
+**Owner asked whether the close-pair deficit of 28i is specific to our domain or present in the
+emulator's own training domain. Answer: BOTH, but it is ~2x worse in ours -- and the decomposition
+shows why.** Same script, cuts widened to the emulator's own training domain (mag<28, Re>0.1); null
+passes in both (0.7 sigma / 0.6 sigma).
+
+| sample | N | truth | emulator | error | sigma |
+|---|---|---|---|---|---|
+| full training domain | 10,970,165 | 0.0444 | 0.0425 | -4.33% | 1.6 |
+| **INSIDE our domain** | 4,811,459 | 0.0383 | 0.0338 | **-11.93%** | 2.6 |
+| **OUTSIDE our domain** | 6,158,706 | 0.0492 | 0.0493 | **+0.29%** | 0.1 |
+| *close pairs (<1"), inside* | 835,029 | 0.0518 | 0.0303 | **-41.50%** | 5.7 |
+| *close pairs (<1"), outside* | 1,047,688 | 0.0277 | 0.0309 | +11.42% | 0.8 |
+
+**The emulator is essentially UNBIASED outside our domain and badly biased inside it.** At close
+separations it predicts 0.0303 (inside) vs 0.0309 (outside) -- nearly identical -- while the truth
+differs by 1.9x (0.0518 vs 0.0277). It is not resolving the two populations at all: it fits one
+average across two subpopulations whose close-pair response differs by a factor of two and whose
+residuals have OPPOSITE sign. The out-of-domain half actively pulls the fit away from ours, so
+reweighting is the wrong lever -- restricting the training population is the right one.
+
+**HELD-OUT check (the deficit is not an in-sample artefact).** The certified emulator trained on
+cases >=40, so cases 0-39 are held out:
+
+| in-domain sample | N | error (all pairs) | error (<1") |
+|---|---|---|---|
+| HELD-OUT (case<40) | 960,806 | -14.53% | **-44.59%** (2.9 sigma) |
+| in-sample (case>=40) | 3,850,653 | -11.26% | -40.67% (4.9 sigma) |
+
+Slightly WORSE held-out, the expected direction. The deficit is real.
+
+**Prior art found:** `retrain_extnbr.py` already carries a `WEIGHT_CLOSE` env knob commented
+"re-emphasizes the loss toward the steep <2\" close pairs the emulator under-fits at [0,1\")=0.90".
+So a close-pair under-fit was known -- but at ratio 0.90 (10% low) versus the 0.585 (41.5% low)
+measured here in-domain. Same location and sign, very different magnitude; the earlier number was
+presumably measured on the full population, where we now measure -20%.
+
+**Launched (job 15327889):** `jobs/job_retrain_indom.sh` + `configs/fs2_lsst_r_extnbr_indom.yaml`.
+The config differs from the certified `fs2_lsst_r_extnbr_ho.yaml` on EXACTLY two lines (verified by
+diff): `model_tag`, and `regression_cuts` narrowing the PRIMARY to mag<26 / Re>0.3. Secondary cuts
+untouched -> neighbours stay full-population per GOALS.md. Same hyperparameters, preprocessing and
+split as the certified run, so any difference is the domain cut alone. `HELDOUT_MIN_CASE=40` as
+certified, so the FIREWALL holds (trains on cases 40-199; constgold never seen). Writes a NEW tag
+`lsst_r_extnbr_indom`; the certified `_ho` model is not touched.
+
+**Next:** score the new emulator with `eval_rblend_gap.py` (same ruler, same null test) before any
+use. Only if it beats `_ho` in-domain should a new blend lookup be built and m recomputed -- and note
+28i's warning that per-pair accuracy does NOT translate directly to the summed R_blend used in `m`.
+
 ## 2026-07-28i (R_blend emulator validated in-domain for the FIRST TIME: real close-pair deficit, -41.5% below 1")
 
 **Files:** `scripts/eval_rblend_gap.py`, `jobs/job_rblend_gap.sh` (new).
