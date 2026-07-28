@@ -226,8 +226,36 @@ not the bright-neighbour rejection, not pair orientation, and not a ruler artefa
 UNEXPLAINED.** Recording that rather than proposing an eleventh mechanism -- ten have now been
 refuted by measurement in this investigation.
 
-**Next:** the constgold m chain via the lookup (job 15329301) -- the acceptance test that decides
-whether any of this should be adopted. NOTE m sums R_blend over all neighbours and the distance error vanishes beyond 3",
+**RESULT 11 (jobs 15329301/15330144): THE FIX MAKES constgold |m| WORSE. Do not adopt it alone.**
+Built the per-object summed-R_blend lookup on constgold cases 40-139 with `_indist` and compared to
+the certified `blend_lookup_extnbrho_c40-139.feather` on the SAME 56,263,412 objects:
+
+| | <R_blend> | constgold m |
+|---|---|---|
+| certified `_ho` | 0.305473 | **+0.245%** |
+| corrected `_indist` | 0.309572 (+1.342%) | **-0.655%** |
+
+(m via the identity `1+m = <R_sim>/(<R_flow>+<R_blend>)` with <R_flow> eliminated using the certified
+numbers; `scripts/estimate_m_shift.py`. Mean-based, so it predicts the shift, not a substitute for
+the GPU chain -- jobs 15330211 seeds 501/502 confirm against the real pipeline.)
+
+So a MORE accurate R_blend moves m from +0.245% to about -0.655%: |m| gets worse by a factor ~2.7.
+The certified number was benefiting from a CANCELLATION -- R_blend under-predicting, something else
+in the chain biased the other way. This is a result about the PIPELINE, not the emulator: the
+emulator improvement is real and measured, and it exposes that `m = R_sim/(R_flow + R_blend) - 1`
+was tuned in the presence of a compensating error. Adopting the corrected emulator therefore
+requires revisiting R_flow (or the additivity of the decomposition) at the same time.
+
+Note the sum is over ALL neighbours to 10" across the full training population, where the distance
+error was already negligible, which is why a -41.5% -> -21.8% per-pair gain at <1" is only +1.34% on
+<R_blend>. Both facts are true simultaneously.
+
+**RECOMMENDATION.** Keep `lsst_r_extnbr_ho` as the production R_blend for now -- switching it alone
+degrades the certified deliverable. Treat `lsst_r_extnbr_indist` / `_indist_wc5` as the corrected
+emulators to adopt TOGETHER with a re-examination of R_flow. The distance-definition bug is real and
+should be fixed permanently in blendemu regardless (make `retrieve_response` measure the separation
+from input positions, or expose the frame as a config knob), because every future emulator trained
+from that builder inherits it. NOTE m sums R_blend over all neighbours and the distance error vanishes beyond 3",
 so a large per-pair gain at <1" may move global m only slightly -- and m=+0.245% was reached WITH
 this inconsistency present, so the corrected model may move m either way.
 
