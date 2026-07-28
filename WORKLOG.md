@@ -2,6 +2,62 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-28c (overnight tuning run: in-domain m 0.819% -> 0.508%, NOT significant; target 0.3% NOT reached)
+
+**Owner goal:** push in-domain |m| below 0.82%. **Outcome: partial. Best is
+-0.508 +- 0.240% (8 seeds), and the improvement over dom2 is NOT statistically significant.**
+
+**Final ensemble comparison (8 seeds each, identical constgold rows, same seed set):**
+
+| ensemble | in-domain m | seed sd |
+|---|---|---|
+| dom2 (6x3x5) | -0.819 +- 0.190 % | 0.538 |
+| **6x6x5 (pre-registered pick)** | **-0.508 +- 0.240 %** | 0.679 |
+
+**PAIRED test across the same 8 seeds: +0.310 +- 0.284%, t = 1.1 -> NOT significant.** The headline
+|m| nearly halved, but this evidence does not support claiming a real effect. It remains 2.1 sigma
+from zero and above the |m|<0.3% target. Checkpoints:
+`measurement_flow_g0_ngmix_ablate_s2c_lt500_dom6x6_s{501,502,503,505,506,507,508,509}_swaavg.pt`.
+
+**What DID genuinely improve: per-bin structure on the half-shear ruler** (-5.23% -> +0.71% in the
+size bin that straddled the old 0.419 grid edge; the two largest size bins to ~0). That is a real
+model improvement. It did not translate into a smaller MEAN, which is what the goal asked for --
+"flatter per bin" and "smaller mean" are different properties. This risk was stated before measuring.
+
+**Two hypotheses tested and REFUTED tonight** (recording these so they are not re-tried):
+
+1. **Crowd-axis contamination.** Premise: the pin's `R_sim` is the TOTAL response (both half-shear
+   legs shear the whole scene), so if the r_blend axis does not cleanly separate blend-free objects,
+   low-crowd cells are pulled up and the flow's SELF response is pinned too high. The crowd axis IS
+   badly under-resolved at 5 bins (per-bin Rsim spans **1.0324 -> 0.1275** over 8 bins), so the
+   premise looked strong. Result: 8 crowd bins moved the ISOLATED gap only **+3.63% -> +3.33%**.
+   Refuted as the primary cause.
+2. **Finite-difference stencil mismatch.** Premise: truth `R_hs` is unavoidably a FORWARD difference
+   at g=0.05 while the flow trained CENTRAL at 0.02, and cont.63 documents forward-diff-at-0.05
+   under-measuring the g->0 slope for high-response galaxies -- which in-domain objects are
+   (R_hs ~ 1.05 isolated). Result: reading the SAME checkpoints four ways gives
+   **+3.77 / +3.78 / +3.77 / +3.78%** -- identical. The flow's response is linear in g over this
+   range. Refuted outright.
+
+**The one robust open finding.** Every variant over-predicts on the ISOLATED in-domain set by
+**+3.3 to +4.2%** while sitting near zero on ALL. It survives grid refinement in size, flux and
+crowd, and is independent of readout stencil. Since it is not resolution and not stencil, the
+remaining candidate is the TARGET DEFINITION: the flow is pinned to a per-cell mean of the TOTAL
+response, and the `nn_bright>7"` isolated slice is not the same population as the low-crowd cells
+(cont.107 already warns that `~neighbored` carries `<R_blend>=0.1155` and is far-neighbour-blended,
+not blend-free). Fixing that means changing what the target measures, not how finely it is binned --
+a design change, not a tuning knob, and not something to attempt without owner input.
+
+**Method discipline.** Every candidate was selected on the half-shear ruler with constgold unread;
+6x6x5 was pre-registered as the pick before any constgold number was seen. 8x8x5 and 6x6x8 were
+trained and scored but NOT promoted, and their constgold m was deliberately never used to revisit the
+choice. This is the discipline whose absence got cont.66 retracted.
+
+**Recommended next step (owner decision):** the per-bin win is real and worth keeping, so 6x6x5 is a
+reasonable new default even though m did not move significantly. Reaching 0.3% likely requires
+addressing the isolated/blended target definition above, or accepting that R_flow+R_blend additivity
+is the floor -- both are program-level questions rather than further tuning.
+
 ## 2026-07-28b (owner: push in-domain m below 0.82%. Residual is R_FLOW, not R_blend -- and it is grid resolution)
 
 **Method note (important).** Constgold is the EVAL set. Prior "sub-percent" claims in this project
