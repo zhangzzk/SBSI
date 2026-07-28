@@ -2,6 +2,68 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-28n (close-pair deficit: the emulator FITS its own labels -- the labels disagree with the ruler)
+
+Files added: `scripts/eval_emu_label_gap.py`, `scripts/eval_contrast_cut.py`,
+`scripts/eval_shear_amplitude.py`, `scripts/rebuild_response_norej.py`, and the matching
+`jobs/job_emu_label_gap.sh`, `jobs/job_contrast_cut.sh`, `jobs/job_shear_amplitude.sh`,
+`jobs/job_rebuild_norej.sh`. Nothing retrained; no model or catalogue changed.
+
+**Reframing.** 28j/28l attacked the -41.5% close-pair deficit three times from the MODEL side
+(domain restriction, close-pair loss weighting, pair angle) and all three failed. None had asked
+whether the emulator's own LABELS agree with the half-shear ruler. They do not, and the model is
+not the problem.
+
+**RESULT 1 (job 15328417, 248.5M rows streamed, 97.8M in-domain).** The emulator reproduces its own
+training labels at close separation. Trained-on cases and held-out cases agree, so this is not
+overfit:
+
+| separation | label | emulator | emu/label-1 | (for comparison) emu/RULER-1 |
+|---|---|---|---|---|
+| 0.0-0.5" | 0.0818 | 0.0663 | **-18.9%** | -39.6% |
+| 0.5-1.0" | 0.0230 | 0.0244 | **+6.2%** | -42.8% |
+| 1.0-1.5" | 0.0132 | 0.0174 | +32.2% | -17.8% |
+| 1.5-2.0" | 0.0319 | 0.0320 | +0.5% | +1.1% |
+| 2.0-3.0" | 0.0374 | 0.0359 | -4.1% | -1.4% |
+
+So `_ho` is a decent fit to its labels and a bad fit to the ruler: the -41.5% is a LABEL-vs-RULER
+disagreement, not a representational limit. 28l's "conclusion by elimination" is therefore
+retracted -- its measurements stand, but the elimination was over the wrong candidate set.
+
+Note the label profile is NON-MONOTONIC in separation (dip at 1-1.5", peak at 2-4") and the ruler
+shows the SAME shape. That structure is real and common to both; it is not the discrepancy.
+
+**RESULT 2 (job 15328418): the bright-neighbour rejection is NOT the explanation -- REFUTED.**
+`retrieve_response` drops every primary with a detected neighbour within 3" more than 5x brighter
+(`remove_detection_w_bright_neighbour`, ratio_max=5). Replicated faithfully on the ruler (KDTree over
+all 62.8M detected objects, 200 cases): it removes 4.20% of detections but only **0.71% of the
+in-domain <1" pairs**, and the deficit does not move (-39.6/-42.8 -> -39.2/-43.2 in the two
+sub-arcsecond bins). Dead. `scripts/rebuild_response_norej.py` was written to act on this and is
+NOT needed; kept because a no-rejection rebuild is cheap (all shape catalogues are on disk, nothing
+is re-simulated) if a later reason to want it appears.
+
+**Two mismatches survive, both read off the label-building code, both under test (job 15328534):**
+
+1. **Shear amplitude.** The label is `(e(0.2)-e(0))/0.2`; the ruler is `(e(0.05)-e(0))/0.05`. Equal
+   only if the blend response is linear in the neighbour's shear out to |g|=0.2.
+2. **Distance definition -- a train/inference mismatch in the emulator's dominant feature.**
+   `retrieve_response` measures the separation from the primary's DETECTED centroid
+   (`pri_pos = scat1[['X_WORLD','Y_WORLD']]`), while `_nearest_neighbor_features` -- which builds
+   the half-shear catalogue used by both the ruler and the m pipeline -- measures it from INPUT
+   positions at both ends (`all_pos = icat[['RA_input','DEC_input']]`). A blended primary's centroid
+   is pulled toward its neighbour, so the training distance is systematically SMALLER than the input
+   separation for exactly these close pairs. Querying at input separation d then returns what the
+   model learned for pairs of larger true separation, i.e. weaker response -- an under-prediction
+   concentrated at small d and vanishing at large d, which is the observed signature.
+
+Both catalogues come from the SAME sim suite, galaxies and ngmix estimator, so job 15328534 joins
+them PAIR BY PAIR on (case, primary input_index, neighbour sky position) and tests both without any
+population argument, including re-querying the emulator with the detected-frame distance it was
+actually trained on.
+
+**Next:** read job 15328534. If the distance definition is the cause, the fix is to make training
+and inference agree on one definition -- not to retrain on more features.
+
 ## 2026-07-28m (Gold-V3 design converged: TWO flows; pair-angle + position-shear test in flight)
 
 **Design discussion only -- no model built, nothing trained.** Files added: `scripts/eval_pair_angle.py`,
