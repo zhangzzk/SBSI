@@ -110,9 +110,31 @@ in the catalogue, so the correct per-row `δd` can always be applied even if φ 
 without φ as a feature the model still cannot orient the resulting shape change. So the feature is
 the binding requirement, not the shift.
 
-**Therefore:** if job 15328296 finds shape-only shear, the neighbour's oriented shape is the whole
-channel, scalar separation is enough, and the pair angle can be dropped. If it finds position shear,
-the pair angle goes in. This is the single question that settles the conditioning set.
+**ANSWERED (job 15328296, 4,811,852 pairs): the sim shears SHAPES ONLY. Positions never move, so
+scalar separation is enough and the pair angle is dropped.**
+
+```
+scalar `distance`  sheared-minus-unsheared: mean=0.000e+00  max|d|=0.000e+00  frac nonzero=0.0000
+RA/DEC separation  sheared-minus-unsheared: mean=0.000e+00  max|d|=0.000e+00  frac nonzero=0.0000
+regression of fractional separation change on cos2(phi_pair - phi_gamma_s): slope=+0.00000
+```
+
+Bit-identical, not merely consistent with zero. And this is **structural, not incidental**: shear is
+applied per object to galaxy shapes, which is why `gamma*_input_p` and `gamma*_input_s` are separate
+columns with independent random directions (mean cos = −0.0000, sd = 0.7071). There is no coherent
+scene shear, so there is nothing that could displace a position — you cannot coherently move
+galaxies when each carries its own random shear direction.
+
+Consequences:
+
+- The neighbour's oriented true shape is the **whole** response channel. `shifted_feature_frame`'s
+  shape-only shift is already exactly faithful to the sim; no position-shear code is needed.
+- Scalar separation suffices. Both cos²/sin² terms above are identically absent.
+- **Inherited limitation, worth recording:** real weak lensing *does* displace positions coherently,
+  so no model trained on this suite can learn the geometric part of the blend response — the sim
+  does not contain it. This is self-consistent for calibration, because the constgold acceptance
+  sim comes from the same renderer and omits it too. It is a property of the simulation suite, not
+  a defect of the model, and it bounds what the pipeline can claim to cover.
 
 (Separate from `r_blend`-as-a-feature, which modulates the primary's *own* response with crowding.
 That lives in `R_self` and works as intended.)
@@ -178,7 +200,7 @@ mean, so no bias — but the label is far noisier than `delta_et1`. Rough arithm
 the bin design is not free. Per-row subtraction across legs is *not* available — each
 (case, input_index) appears in exactly one leg of the sheared file.
 
-## OPEN: does the sim shear positions, or only shapes?
+## CLOSED: the sim shears shapes only (job 15328296)
 
 `shifted_feature_frame` shears intrinsic shapes only; the separation vector is never moved. If the
 sim shears the whole scene, part of the true blend response arrives through geometry, and a loss
@@ -186,11 +208,9 @@ that shifts only shapes would force the entire response through the shape channe
 training bins and generalising wrong. Now load-bearing, because the separation vector is in the
 spec.
 
-Test: `scripts/eval_pair_angle.py` (job `jobs/job_pair_angle.sh`, run 15328296) compares the
-primary→neighbour separation for the same (case, input_index) across legs, as both the scalar
-`distance` and the RA/DEC-derived vector, and regresses the fractional change on
-cos 2(φ_pair − φ_γs). Identical ⇒ shape-only shear, existing machinery is faithful. Different ⇒ the
-loss shift must shear the separation vector too.
+Tested by `scripts/eval_pair_angle.py` (job `jobs/job_pair_angle.sh`, run 15328296). **Result:
+shape-only shear — see "Do we need the pair angle?" above for the numbers and consequences. The
+existing shape-only shift machinery is faithful to the sim and needs no change.**
 
 ## OPEN: multiplicity — training on pairs, applying to scenes
 
@@ -231,6 +251,30 @@ that variable. `E[R|scalars]` *is* the orientation-average. So orientation-blind
 BlendEMU scatter, **not** a biased mean, and cannot by itself explain −41%. (This retracts the
 missing-orientation framing in WORKLOG 2026-07-28l, which overstated the case.)
 
+**MEASURED (job 15328296), and it confirms the caution.** Truth and emulator binned by
+cos 2(φ_pair − φ_γs), where the emulator is flat by construction:
+
+| cos2Δ | <1″ truth | <1″ emu/truth−1 | 1–2″ truth | 1–2″ emu/truth−1 |
+|---|---|---|---|---|
+| ALL | 0.0518 | **−41.50%** | 0.0261 | **−5.37%** |
+| [−1.0,−0.6) | 0.0591 ± 0.0069 | −48.63% | 0.0184 ± 0.0045 | +34.51% |
+| [−0.6,−0.2) | 0.0417 ± 0.0102 | −27.30% | 0.0297 ± 0.0065 | −16.34% |
+| [−0.2, 0.2) | 0.0493 ± 0.0106 | −38.80% | 0.0348 ± 0.0069 | −28.80% |
+| [ 0.2, 0.6) | 0.0356 ± 0.0101 | −14.52% | 0.0302 ± 0.0066 | −18.38% |
+| [ 0.6, 1.0) | 0.0582 ± 0.0069 | −47.94% | 0.0264 ± 0.0045 | −6.69% |
+
+1. **The deficit survives angle-averaging intact** (−41.50% overall), exactly as the caution
+   predicts. Orientation is not the explanation for the close-pair bias. Confirmed, not argued.
+2. **Angle structure itself is NOT established.** Grouping |cos2Δ|>0.6 against the middle gives
+   0.0587±0.0049 vs 0.0420±0.0059 at <1″ (**2.2σ**) and 0.0224±0.0032 vs 0.0315±0.0039 at 1–2″
+   (**1.8σ, opposite sign**). Two marginal effects that disagree in sign across adjacent separation
+   ranges is what noise looks like. Not claimed as signal. The binning is clean — φ_pair is
+   independent of the primary's shear direction, so the projection's leftover self-response term
+   cannot imprint a spurious angle pattern.
+
+Combined with the position-shear result, the pair angle is dropped from the conditioning: it has no
+response channel in this sim and no established accuracy value.
+
 **The live mechanism** is orientation-blindness *combined with* close-pair **detection selection**.
 BlendEMU sees neither the pair angle nor the primary's shape, so the relative orientation of the
 primary to the pair axis is entirely absent from it. Our truth sample at sub-arcsecond separation is
@@ -248,7 +292,9 @@ quadratic and does not — a mean-response emulator cannot supply the cross term
 
 ## Risks
 
-- **Position shear is unmodeled** — now the first open question above, with a test in flight.
+- ~~**Position shear is unmodeled**~~ — CLOSED: the sim does not shear positions, so the model's
+  shape-only shift matches it exactly. Replaced by the weaker inherited limitation that neither the
+  training nor the acceptance sim contains the geometric part of the blend response.
 - **Linearity is BlendEMU's assumption, not a theorem** — breaks once neighbours overlap. Testable
   by adding a second moment and watching NLL.
 - **`I` stays optimistic** unless the flow also learns the blending broadening, not just the mean
@@ -257,15 +303,19 @@ quadratic and does not — a mean-response emulator cannot supply the cross term
 
 ## First tests, in order
 
-1. **Position shear** — job 15328296, in flight. Decides whether the loss shift needs geometry.
-2. **Spin-2 signal in the pair angle** — same job. Does the truth vary with the pair angle relative
-   to ĝ_s, and does the −41% survive averaging over it? Flat residual ⇒ the selection story above,
-   not an omitted-variable story.
-3. **Primary-shape versus pair-axis angle** — the third missing channel; one more column on the same
-   extraction.
-4. **Does one neighbour carry it?** From BlendEMU, the per-galaxy distribution of
+1. ~~**Position shear**~~ — **DONE, job 15328296: shape-only. No geometry needed in the loss shift.**
+2. ~~**Spin-2 signal in the pair angle**~~ — **DONE, same job: the −41% survives angle-averaging
+   intact, and the angle structure itself is only 2σ with inconsistent sign. Pair angle dropped.**
+3. **Close-pair detection selection** — now the leading explanation for the −41% and the only one
+   still standing. Test: compare the emulator's deficit on both-detected pairs against the
+   detection-weighted population, or bin the deficit by a detection-difficulty proxy at fixed
+   (sizes, mags, separation). If the deficit tracks detection difficulty, it is a selection effect
+   and flow #2 inherits the fix by training on our own detected population.
+4. **Primary-shape versus pair-axis angle** — one more column on the same extraction. Lower priority
+   now: with positions unsheared it cannot be a response channel, only an accuracy variable.
+5. **Does one neighbour carry it?** From BlendEMU, the per-galaxy distribution of
    `R_blend,1 / Σ_j R_blend,j`. The tail decides whether the explicit-neighbour spec suffices.
-5. **Multiplicity-binned held-out NLL** — the acceptance test (above).
+6. **Multiplicity-binned held-out NLL** — the acceptance test (above).
 
 Build acceptance is INFERENCE.md §3's diagnostic: `Cov(ê, s_nbr) ≈ N⁻¹Σ_i ê_i s_i^(nbr)`,
 `σ ≈ std(ê·s_nbr)/√N` — consistent with zero today, should climb to BlendEMU's `R_blend` once the

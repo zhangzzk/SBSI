@@ -42,16 +42,29 @@ the primary is unsheared). Use the both-sheared leg projected on the neighbour's
 direction, as in `eval_rblend_gap.py`. Leftover self-response is ~20x the signal per row but has zero
 mean; ~100 bins over 4.8M rows gives S/N ~12 per bin.
 
-**In flight (job 15328296):** does the sim shear POSITIONS or only shapes, and is there spin-2 signal
-in the pair angle? This single result settles the conditioning set. If shape-only, the neighbour's
-oriented shape is the whole response channel and scalar separation suffices. If positions are
-sheared, the pair angle is structurally required -- the geometric contribution enters as cos^2/sin^2,
-NOT cos/sin, so it survives isotropic averaging at half strength and cannot be argued away by
-assuming neighbours are isotropically distributed.
+**RESULT (job 15328296, 4,811,852 pairs, null test 0.6 sigma). Two questions, both answered.**
 
-**Next:** wait for 15328296; then the primary-shape-vs-pair-axis angle (one more column on the same
-extraction), and the `R_blend,1 / sum_j R_blend,j` distribution to test whether one explicit
-neighbour suffices.
+1. **The sim shears SHAPES ONLY -- positions never move.** Separations are BIT-IDENTICAL across
+   legs: `distance` and the RA/DEC-derived vector both give mean=0.000e+00, max|d|=0.000e+00, frac
+   nonzero=0.0000, and the regression on cos2(phi_pair - phi_gamma_s) has slope +0.00000. This is
+   structural: shear is applied per object to shapes, which is why `gamma*_input_p` and
+   `gamma*_input_s` carry independent random directions -- there is no coherent scene shear that
+   could displace anything. So `shifted_feature_frame`'s shape-only shift is already exactly
+   faithful to the sim, the neighbour's oriented true shape is the WHOLE response channel, and
+   **scalar separation suffices -- the pair angle is dropped.** Inherited limitation recorded: real
+   lensing does displace positions, so no model trained on this suite can learn the geometric part
+   of the blend response; constgold comes from the same renderer, so the omission is at least
+   self-consistent between training and acceptance.
+2. **The -41% is NOT an orientation effect -- confirmed by measurement, not argument.** Binned by
+   cos2(phi_pair - phi_gamma_s) the deficit survives angle-averaging intact (-41.50% overall at
+   <1"). The angle structure itself is NOT established: grouping |cos2Delta|>0.6 against the middle
+   gives 0.0587+-0.0049 vs 0.0420+-0.0059 at <1" (2.2 sigma) and 0.0224+-0.0032 vs 0.0315+-0.0039 at
+   1-2" (1.8 sigma, OPPOSITE sign). Two marginal effects disagreeing in sign across adjacent
+   separation ranges is what noise looks like; not claimed as signal.
+
+**Next:** close-pair DETECTION SELECTION is now the only standing explanation for the -41% -- bin the
+deficit by a detection-difficulty proxy at fixed (sizes, mags, separation). Then the
+`R_blend,1 / sum_j R_blend,j` distribution, to test whether one explicit neighbour suffices.
 
 ## 2026-07-28l (close-pair deficit is a REPRESENTATIONAL limit: domain restriction and loss weighting both fail)
 
