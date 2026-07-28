@@ -2,6 +2,37 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-28k (mini-batch label-noise hypothesis CLOSED: accumulator works, and makes things WORSE)
+
+The confound-free test of 2026-07-28g. `--response-bin-ema` accumulates the per-bin response estimate
+across mini-batches; batch size, step count, LR, seed and target are all unchanged, so ONLY label
+precision differs (unlike the batch-size probes of 28f, which lost 4-8x of their gradient steps).
+Both runs confirm the accumulator engaged ("~10 / ~50 batches of history per cell"). Scored on the
+WIDE ruler (cases 0-99), same seed 501 control:
+
+| | OVERALL | [0.30,0.38) | [0.38,0.50) | [0.50,0.75) | [0.75,1.50) |
+|---|---|---|---|---|---|
+| control (per-batch) | **-0.12** | -1.82 | +1.27 | -0.50 | -0.08 |
+| accumulator decay 0.90 | +2.14 | +1.50 | -0.02 | +3.42 | +3.35 |
+| accumulator decay 0.98 | +2.01 | +3.06 | -2.34 | +4.29 | +3.30 |
+
+**Net regression at both decays.** The effect is real and large (the target bin moves 3.3-4.9 pp), so
+this is not a null implementation -- reducing label noise genuinely changes the fit, for the worse.
+**Hypothesis 4 (mini-batch label noise as the limiter) is refuted.** `--response-bin-ema` stays in the
+code, default-off and verified neutral when off, but is NOT recommended.
+
+**The informative part.** Fitting the target MORE tightly moved the model AWAY from truth. That means
+the target and the ruler disagree. Concretely, in [0.30,0.38): the response target says **0.5144**
+while the wide ruler truth is **0.5051** -- the target is ~+1.8% HIGH. The per-batch noise was
+evidently acting as a regulariser that kept the model from committing to a biased target. Note the
+earlier "target correct to 0.02%" claim (28e) was made against the NARROW ruler (0.5145), which 28h
+then showed was itself high by ~1.8%; that claim does not survive the better truth measurement.
+
+Target and ruler are built from DIFFERENT catalogues (`det_meas_crowd_g0.05_val_full` vs
+`det_meas_ngmix_g0.05_val`), so a population or selection difference between them is the obvious
+suspect. Worth checking before any further work on the flow -- but note 28h's conclusion stands
+regardless: R_flow overall is -0.05% and the residual m is not in the flow.
+
 ## 2026-07-28j (the R_blend bias is DOMAIN-SPECIFIC: unbiased outside our cut, -11.9% inside -> in-domain retrain launched)
 
 **Owner asked whether the close-pair deficit of 28i is specific to our domain or present in the
