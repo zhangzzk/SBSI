@@ -2,6 +2,57 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-28m (Gold-V3 design converged: TWO flows; pair-angle + position-shear test in flight)
+
+**Design discussion only -- no model built, nothing trained.** Files added: `scripts/eval_pair_angle.py`,
+`jobs/job_pair_angle.sh`, `Gold-V3.md` (worktree copy; the main checkout still holds the original
+untracked draft). Full spec and open questions live in `Gold-V3.md` -- summary only here.
+
+**Decision: two flows, not one.** Flow #1 = the certified self-response flow, UNTOUCHED. Flow #2 =
+a new blend flow, a firewalled drop-in replacement for BlendEMU inside the existing additive
+`m = R_sim/(R_flow + R_blend) - 1`. Rationale: the certified flow is never at risk; the two response
+loss weights decouple (the blend label is ~20x noisier per pair); and the two targets live on
+different rows. The endpoint is still ONE flow -- `I = Var(s)` needs a cross term two densities
+cannot produce -- but that merge waits for Direction B.
+
+**Flow #2:** `p(measured e | primary true props, ONE true neighbour, separation, flux shells)`.
+Primary true shape KEPT (it is the dominant predictor of measured shape, and carries the
+primary-orientation-vs-pair-axis channel); its shear derivative is unsupervised and must never be
+read. Used only through its neighbours-only derivative.
+
+**Two corrections to my own earlier claims, both retracted:**
+1. The "flow #2's response is R_self + R_blend, so you cannot add it to flow #1" double-count
+   argument was WRONG. The response is whatever you choose to differentiate, and flow #2's catalogue
+   has the primary unsheared.
+2. 28l's missing-orientation explanation for the -41% OVERSTATED the case. A regression that omits a
+   variable still converges to the conditional mean over it, so orientation-blindness costs SCATTER,
+   not a biased mean. The live candidate is now orientation-blindness *combined with* close-pair
+   DETECTION SELECTION: our truth is conditioned on both objects being detected, at separations
+   where detection depends on the relative orientation the emulator cannot see, so the population
+   averaged over is not the emulator's training population.
+
+**Open question flagged, not acted on:** pinning flow #2's self-response to ZERO is not the mirror of
+pinning flow #1's blend response to zero. flow #1 blend->0 misstates ~0.012; flow #2 self->0
+misstates ~0.3 and fights the NLL directly, since that IS the dominant dependence of measured on true
+shape. Since it is never read, pinning buys nothing -- recommend omitting the term (lam_self=0)
+rather than pinning it.
+
+**Blend-response target:** the neighbour-only leg is UNUSABLE (`measured_ngmix_*` 0% finite wherever
+the primary is unsheared). Use the both-sheared leg projected on the neighbour's independent shear
+direction, as in `eval_rblend_gap.py`. Leftover self-response is ~20x the signal per row but has zero
+mean; ~100 bins over 4.8M rows gives S/N ~12 per bin.
+
+**In flight (job 15328296):** does the sim shear POSITIONS or only shapes, and is there spin-2 signal
+in the pair angle? This single result settles the conditioning set. If shape-only, the neighbour's
+oriented shape is the whole response channel and scalar separation suffices. If positions are
+sheared, the pair angle is structurally required -- the geometric contribution enters as cos^2/sin^2,
+NOT cos/sin, so it survives isotropic averaging at half strength and cannot be argued away by
+assuming neighbours are isotropically distributed.
+
+**Next:** wait for 15328296; then the primary-shape-vs-pair-axis angle (one more column on the same
+extraction), and the `R_blend,1 / sum_j R_blend,j` distribution to test whether one explicit
+neighbour suffices.
+
 ## 2026-07-28l (close-pair deficit is a REPRESENTATIONAL limit: domain restriction and loss weighting both fail)
 
 **Both training-configuration levers are now exhausted. The close-pair deficit is not fixable by
