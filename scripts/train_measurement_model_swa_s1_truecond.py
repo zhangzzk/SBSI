@@ -393,7 +393,7 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
                    response_difference="forward",
                    response_error="absolute", rel_floor=0.05,
                    optimizer=None, max_grad_norm=None,
-                   sc23=None, lam_theta=0.0):
+                   sc23=None, lam_theta=0.0, bin_state=None):
     """NLL + PROPERTY-RESOLVED response loss. Pulls the model's induced first-moment
     response R_model(bin) -> R_sim(bin) in bins of true flux x size (bin_targets is a
     (n_bins,) tensor; n_bins=1 reduces to the old global response loss). R_model is the
@@ -454,7 +454,29 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
         # (case,target) counts once, not proportional to neighbour count); absent bins no penalty
         sum_b = torch.zeros(n_bins, device=device).index_add_(0, binid, weight * r_i)
         cnt_b = torch.zeros(n_bins, device=device).index_add_(0, binid, weight)
-        mean_b = torch.where(cnt_b > 0, sum_b / cnt_b.clamp_min(1e-8), bt)
+        wgt_b = cnt_b
+        if bin_state is not None:
+            # VARIANCE-REDUCED per-bin mean. The plain estimator below re-measures each cell's mean
+            # from only the galaxies THIS batch happens to contain -- ~15 in the narrow low-size cells
+            # at batch 8192 across 270 cells -- so a large part of the error signal it feeds back is
+            # sampling noise rather than model error (WORKLOG 2026-07-28g). Blend in a DETACHED
+            # running history of earlier batches: (mean_b - bt) then reflects roughly 1/(1-decay)
+            # batches' worth of galaxies, while gradients still flow only through the current batch.
+            # Unlike raising --batch-size this changes NOTHING about step count, LR or batch memory,
+            # so it isolates label precision from optimisation.
+            hs, hc = bin_state["sum"], bin_state["cnt"]
+            tot_c = hc + cnt_b
+            mean_b = torch.where(tot_c > 0, (hs + sum_b) / tot_c.clamp_min(1e-8), bt)
+            # Restore the plain estimator's per-object gradient coefficient so --response-weight keeps
+            # its meaning: with resp normalised by cnt_b.sum() below, weighting each bin by
+            # cnt_b*(tot_c/cnt_b) makes d(resp)/d(r_i) identical to the no-history case. Only the
+            # NOISE in the error term changes. (The printed resp value is scaled accordingly.)
+            wgt_b = cnt_b * (tot_c / cnt_b.clamp_min(1e-8)).detach()
+            with torch.no_grad():
+                bin_state["sum"] = (hs + sum_b.detach()) * bin_state["decay"]
+                bin_state["cnt"] = (hc + cnt_b.detach()) * bin_state["decay"]
+        else:
+            mean_b = torch.where(cnt_b > 0, sum_b / cnt_b.clamp_min(1e-8), bt)
         if response_error == "relative":
             # Penalize the FRACTIONAL response error (R_model/R_sim - 1)^2, i.e. the per-bin
             # multiplicative bias m itself, rather than absolute (R_model - R_sim)^2. Absolute
@@ -464,9 +486,9 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
             # any population reweighting (constant-gold, survey depth). The relative form pulls
             # m -> 0 uniformly per bin. Floor guards small/negative target bins.
             denom = bt.abs().clamp_min(rel_floor)
-            resp = (((mean_b - bt) / denom) ** 2 * cnt_b).sum() / cnt_b.sum().clamp_min(1.0)
+            resp = (((mean_b - bt) / denom) ** 2 * wgt_b).sum() / cnt_b.sum().clamp_min(1.0)
         else:
-            resp = ((mean_b - bt) ** 2 * cnt_b).sum() / cnt_b.sum().clamp_min(1.0)
+            resp = ((mean_b - bt) ** 2 * wgt_b).sum() / cnt_b.sum().clamp_min(1.0)
         loss = nll + lam * resp
         theta_val = 0.0
         if coupling_on and coupling is not None:
@@ -616,6 +638,13 @@ def parse_args():
     parser.add_argument("--response-rel-floor", type=float, default=0.05,
                         help="Floor on |R_sim| in the relative response-loss denominator; guards "
                              "small/negative target bins from blowing up the fractional error.")
+    parser.add_argument("--response-bin-ema", type=float, default=0.0,
+                        help="If >0 (e.g. 0.9), accumulate per-bin response sums across mini-batches "
+                             "with this decay instead of re-estimating each cell's mean from the "
+                             "current batch alone. Effective sample per cell rises ~1/(1-decay), "
+                             "cutting label noise without touching batch size, step count or LR. "
+                             "Gradient scale is preserved so --response-weight keeps its meaning. "
+                             "0 = off (exact previous behaviour). See WORKLOG 2026-07-28g.")
     parser.add_argument("--response-target-npz", default=None,
                         help="PROPERTY-RESOLVED target from compute_response_target.py "
                         "(edges_flux, edges_size, Rsim[nf,ns]). Supervises R_model(bin)->R_sim(bin) "
@@ -955,6 +984,15 @@ def main():
     swa_snapshots = deque(maxlen=swa_k)
     swa_epochs = deque(maxlen=swa_k)
     t0 = time.time()
+    # Cross-batch per-bin accumulator (TRAIN only -- validation must stay an honest per-batch readout).
+    bin_state = None
+    if response_on and args.response_bin_ema > 0:
+        nb = int(bin_targets.numel())
+        bin_state = {"sum": torch.zeros(nb, device=device), "cnt": torch.zeros(nb, device=device),
+                     "decay": float(args.response_bin_ema)}
+        print(f"Per-bin response accumulator ON: decay={args.response_bin_ema} "
+              f"(~{1.0/(1.0-args.response_bin_ema):.0f} batches of history per cell)")
+
     print("\n--- Training measurement flow ---")
     for epoch in range(1, args.epochs + 1):
         if response_on:
@@ -963,7 +1001,7 @@ def main():
                 bin_targets, args.response_weight, args.response_difference,
                 args.response_error, args.response_rel_floor,
                 optimizer=optimizer, max_grad_norm=args.max_grad_norm,
-                sc23=sc23, lam_theta=args.coupling_weight)
+                sc23=sc23, lam_theta=args.coupling_weight, bin_state=bin_state)
             val_nll, val_resp, val_R, val_theta = epoch_response(
                 model, resp_val_loader, device, target_scales01, args.response_delta,
                 bin_targets, args.response_weight, args.response_difference,

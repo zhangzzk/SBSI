@@ -2,6 +2,65 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-28h (CORRECTS 28d-28g: the small-size gap was ~half TRUTH-SAMPLE NOISE; R_flow is clean, residual m is NOT in the flow)
+
+**Read this before acting on 2026-07-28d/e/f/g -- the premise under all four is partly wrong.**
+
+Every model this evening was scored on ONE truth sample (`--max-case 39`, 2.36M galaxies). All
+variants share it, so their mutual agreement never tested whether the truth VALUE was right, and the
+truth error in [0.30,0.38) is +-1.40% -- making the headline "-3.3%" a ~2.2 sigma reading. Re-measured
+with cases 0-99 (5.91M galaxies, ~1.6x smaller truth error), on the SAME unchanged checkpoints:
+
+| size bin | truth cases 0-39 | truth cases 0-99 |
+|---|---|---|
+| [0.30,0.38) | -3.35 | **-1.81** |
+| [0.38,0.50) | +0.76 | +1.06 |
+| [0.50,0.75) | -0.11 | -0.13 |
+| [0.75,1.50) | -0.02 | -0.31 |
+| OVERALL | -0.39 | **-0.12** |
+
+The truth in that bin moved 0.5145 -> 0.5051 (~1.3 sigma of its old error). **About half the effect
+chased in 28d-28g was a fluctuation in the smaller truth sample.** Method lesson: reproducibility
+across seeds/variants does NOT reduce a shared truth uncertainty; check the ruler's error bar before
+building hypotheses on a bin-level number.
+
+**Grid comparison, re-decided on the better ruler (8 seeds each, same 5.91M galaxies):**
+
+| | OVERALL | [0.30,0.38) | [0.38,0.50) | [0.50,0.75) | [0.75,1.50) |
+|---|---|---|---|---|---|
+| **6x6 (baseline, kept)** | **-0.05** | -1.62 | +1.17 | -0.22 | -0.14 |
+| 6x9lows (refined) | -0.12 | -1.81 | +1.06 | -0.13 | -0.31 |
+
+Refinement gives NO improvement (marginally worse, all within noise). The pre-registered test of
+2026-07-28e fails again -- now on a ruler able to decide it. **`6x6` stays the default; constgold was
+NOT read for 6x9lows.** The residual [0.30,0.38) gap is -1.62% against a ~0.89% truth error = 1.8
+sigma: still not established.
+
+**The load-bearing result: `R_flow` is clean.** The 6x6 baseline's self-response error is **-0.05% over
+5.91M galaxies**. Its in-domain constgold m is **-0.508 +- 0.240%** (2026-07-28c, unchanged tonight).
+Since `m = R_sim/(R_flow + R_blend) - 1` and R_flow is now measured to be essentially exact on the
+half-shear population, **the residual m cannot originate in the flow** -- it is in `R_blend` or in the
+half-shear -> constgold population transfer. That redirects the next work off the flow entirely.
+Note the R_blend firewall (R_blend must NOT train on constgold; validation only).
+
+**Hypotheses tested and REFUTED tonight** (all recorded so they are not retried): target definition
+(28d), size-grid resolution (28e), response-loss incentive both globally and per-cell (28f), mean-head
+capacity (28f), mini-batch label noise as the driver (28g -- the batch-size test was ALSO confounded,
+by step count at fixed epochs). A curvature/"smoothing" signature looked strong at r=+0.769 but
+collapsed to +0.250 +- 0.152 (1.5 sigma) once residual and curvature were measured on INDEPENDENT
+halves -- the naive version is inflated because truth noise enters both terms.
+
+**Code kept (default-off, verified neutral):** `--response-bin-ema` in
+`scripts/train_measurement_model_swa_s1_truecond.py` accumulates per-bin response sums across
+mini-batches. Verified bit-identical to the previous loss when off, and gradient-scale preserving when
+on (so `--response-weight` keeps its meaning). Its motivating hypothesis is not established, so it is
+**not** recommended for use without a clean test. `EMA`/`BS`/`MH`/`RW`/`RERR`/`RFLOOR` env vars added
+to `jobs/job_s2c_domain_train.sh`; new `jobs/job_ruler_wide.sh` (TAG/MC parameterised -- NOTE its
+ISOLATED table is INVALID at max-case>39 because the nn lookup covers 0-39; read only "ALL objects").
+
+**Next:** stop working on the flow. Take the -0.508% in-domain m to `R_blend` and the population
+transfer, with the firewall intact. Re-derive any bin-level claim on the cases-0-99 ruler.
+
 ## 2026-07-28g (root cause found: the per-bin response label is re-estimated PER MINI-BATCH from ~15 galaxies)
 
 **This supersedes the "CAPACITY" conclusion of 2026-07-28f.** Owner asked the right question: the

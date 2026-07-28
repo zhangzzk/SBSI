@@ -23,7 +23,7 @@ D=/project/ls-gruen/users/zekang.zhang/sbsi_caches/ablation
 E=$D/eval; mkdir -p $E
 echo "### LOSS PROBE SCORING job=$SLURM_JOB_ID ###"; nvidia-smi -L; date
 
-for T in lt500_dom6x9lows lows_rw1500 lows_rw4500 lows_rel030 lows_rel050; do
+for T in ${TAGS:-lt500_dom6x9lows lows_rw1500 lows_rw4500 lows_rel030 lows_rel050}; do
   CK=$D/measurement_flow_g0_ngmix_ablate_s2c_${T}_s501_swaavg.pt
   echo; echo "=================== $T (seed 501) ==================="
   [ -f "$CK" ] || { echo "MISSING $CK"; continue; }
