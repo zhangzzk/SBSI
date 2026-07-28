@@ -2,6 +2,58 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-28g (root cause found: the per-bin response label is re-estimated PER MINI-BATCH from ~15 galaxies)
+
+**This supersedes the "CAPACITY" conclusion of 2026-07-28f.** Owner asked the right question: the
+refined target shows a clean monotone rise (0.294 -> 0.457 -> 0.560 -> 0.661 -> 0.746), so why can a
+network not learn it? Because **the model never sees that curve.**
+
+`train_measurement_model_swa_s1_truecond.py:456-458` builds `sum_b`/`cnt_b` with `index_add_` **on the
+current mini-batch**, so `mean_b` -- the quantity compared against the target -- is re-estimated from
+scratch every step from only the batch's galaxies in that cell. With `--batch-size 8192` and 270 cells:
+
+| size bin | gal/cell/batch | noise on cell mean | Rsim there | noise RELATIVE to Rsim |
+|---|---|---|---|---|
+| [0.300,0.318) | 15.2 | 0.052 | 0.294 | **18%** |
+| [0.318,0.336) | 14.9 | 0.056 | 0.457 | 12% |
+| [0.336,0.355) | 15.2 | 0.062 | 0.560 | 11% |
+| [0.853,1.500) | 45.5 | 0.043 | 0.777 | **5.5%** |
+
+The training loss corroborates it: `per-bin resp` plateaus at **5.46e-03** from ~epoch 70 (RMS per-bin
+error **0.074**), the same order as the sampling noise -- the optimiser is sitting on a noise floor,
+not converging toward the target and falling short. `<R_model>(val)` also sits ~3% below `target mean`
+for all 80 epochs and never closes.
+
+**This single mechanism explains all four earlier negatives:**
+
+1. **Finer grid did nothing (2026-07-28e) -- it was self-defeating.** Going 6x6x5 (180 cells) ->
+   6x9x5 (270 cells) cut galaxies-per-cell-per-batch from ~45 to ~15 *in exactly the region being
+   resolved*. Label resolution up, label precision down; net zero. I improved the target and degraded
+   the signal that delivers it, in one move.
+2. **More lambda did not move the broken bin but degraded the good ones (2026-07-28f).** Amplifying a
+   noise-dominated gradient. The well-sampled bins have enough signal to be pushed (and were pushed
+   off target); the starved bin's gradient is mostly noise, so it did not systematically move. This
+   asymmetry was the tell and I misread it as capacity.
+3. **Relative loss was catastrophic (-11.71%), twice, in the same counterintuitive direction.** It
+   up-weights the LOWEST-response cells, which are precisely the most noise-dominated ones, so the fit
+   is dragged by noise. Explains the historical regression without needing the floor-clamp story.
+4. Why the flow matches its target to <0.8% in the three large-size bins: those cells are 3x better
+   sampled AND have ~2.7x larger response, so ~3x better relative signal-to-noise.
+
+**Caveat, stated honestly:** the estimated sampling noise (~0.05) is below the observed plateau
+(0.074), and the estimate is approximate -- within-cell sd was measured in (flux x size) cells without
+the crowd split, which OVERstates sd, while n does account for the crowd split. So the plateau is
+*consistent with* being substantially noise-dominated but is not proven to be entirely noise.
+
+**Decisive test (running):** `--batch-size` 8192 -> 32768 (job 15326935) and 65536 (15326936), 1 seed
+each, everything else at the certified baseline; `BS` env var added to `jobs/job_s2c_domain_train.sh`.
+4x/8x more galaxies per cell per step = 2x/2.8x less label noise. If the small-size bin improves, the
+mechanism is confirmed and the proper fix is to **accumulate `sum_b`/`cnt_b` across batches (EMA)**
+rather than pay for it in batch memory -- that decouples label precision from batch size entirely and
+would also make finer grids actually usable. If batch size does nothing, this explanation is wrong too.
+The `mh256`/`mh512` capacity probes (15326850/15326851) are left running as the control: under this
+mechanism they should NOT help.
+
 ## 2026-07-28f (response-loss probes: INCENTIVE branch refuted on both sides -> the cause is CAPACITY)
 
 **All four probes NEGATIVE.** Paired at seed 501 on the same refined target, so the response loss is
