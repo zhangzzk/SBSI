@@ -47,6 +47,38 @@ problem (the NLL term outcompetes the response pin there) and per-cell response 
 if it does not move, it is CAPACITY and the mean head/conditioning is the thing to change. Score on
 the half-shear ruler only.
 
+**Owner asked whether tuning lambda is worth it. Checked the history first -- BOTH obvious moves are
+already documented failures, but the second failure is explainable and leaves an untried middle.**
+
+1. *Raising a global lambda* (cont. entry at the `lam 300->1000` diagnosis): fixed the crowded bins
+   (q3 `-0.8%`) but OVER-PULLED the already-correct isolated regime (`+1.1%`, constgold ISO `+9.7%`).
+   Recorded conclusion: "a single global lambda on an absolute loss cannot calibrate isolated and
+   crowded simultaneously". The 1500/4500 probes above are expected to reproduce that TRADE.
+2. *Relative per-cell loss*: tried, REGRESSED (lam15 `+2.22%`, lam60 `+4.09%` vs absolute lam300
+   `+1.71%`), crowded R_flow moved the wrong way.
+
+**Why (2) is not a refutation of relative weighting.** The loss clamps the denominator at
+`--response-rel-floor`, default **0.05**, while this target's cells span `Rsim = 0.040 .. 2.154`.
+Effective per-cell weight relative to a typical cell:
+
+| variant | weight on R<0.35 cells | worst single cell |
+|---|---|---|
+| absolute (current) | 1.0x | 1.0x |
+| relative, floor 0.05 (the tried one) | 27.9x | **243.4x** |
+| relative, floor 0.30 | 6.6x | 6.8x |
+| relative, floor 0.50 | 2.4x | 2.4x |
+
+At floor 0.05 the loss is dominated by the noisiest tail cells by up to 243x -- consistent with the
+recorded regression. A floor near 0.3 gives ~7x emphasis exactly where the -3.3% lives with no cell
+running away. Both flags already exist, so this is a zero-code experiment.
+
+**Launched:** `RERR`/`RFLOOR` env vars added to `jobs/job_s2c_domain_train.sh`; 1 seed each at
+floor 0.30 (job 15316771) and floor 0.50 (job 15316772). Lambda RESCALED so the response pull matches
+the certified absolute lam=450: count-weighted mean of `1/max(|R|,floor)^2` is 4.51 and 2.40, giving
+`--response-weight` **100** and **188** respectively. Without that rescale the comparison would
+confound "relative vs absolute" with "more vs less pull" -- which is how (2) was set up.
+Same pre-registered acceptance test as 2026-07-28e; constgold stays sealed.
+
 **Files:** `jobs/job_s2c_domain_train.sh` (RW env var), `jobs/job_iso_ladder_8seed.sh` (TAG/OUT env
 vars so it scores any tag), `jobs/job_resp_target_lowsize.sh`.
 
