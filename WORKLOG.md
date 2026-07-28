@@ -2,6 +2,62 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-28d (isolated-gap was MOSTLY a RULER artefact; residual localises to smallest size bin)
+
+**This partly RETRACTS the framing of 2026-07-28c below.** That entry called the +3.3-4.2% ISOLATED
+over-prediction a target-DEFINITION problem needing an owner design decision. A direct test says the
+larger part of it was manufactured by the RULER's isolation cut, and the fix is a grid knob after all.
+
+**Files:** `jobs/job_iso_ladder_8seed.sh`, `jobs/job_resp_target_lowsize.sh` (new).
+Analysis was local numpy on the existing eval dump (negligible work) -- no retraining, no new sims.
+
+**Test.** `eval_selfresp_gap.py` defines isolated as `nn_dist_bright > 7"` -- no *brighter* neighbour.
+That admits galaxies blended by FAINTER neighbours, whose measured response is suppressed, while the
+flow reads their small `r_blend` and predicts the unsuppressed value. Measured: **only 25.4% of the
+"isolated" set has `nbr_flux_near == 0`.** The dump already stores per-object `nbr_flux`, so the
+strictness ladder is computable offline from `selfresp_ablate_s2c_lt500_dom6x6.npz`.
+
+| isolation rung | N | gap % | mean size | mean mag |
+|---|---|---|---|---|
+| iso7 (current ruler) | 1,016,629 | **+3.63** | 0.666 | 23.85 |
+| iso7 & nbr_flux<1.0 | 753,866 | +2.51 | 0.655 | 23.97 |
+| iso7 & nbr_flux<0.5 | 412,217 | +1.14 | 0.655 | 23.98 |
+| iso7 & nbr_flux==0 | 257,774 | **+0.39** | 0.655 | 23.98 |
+
+Mean size and magnitude are flat across rungs, so this is not a composition shift. Within fixed true-
+size bins the gap also falls (+5.17 -> +2.01, +4.40 -> +1.41, +3.68 -> +1.54), confirming it directly.
+
+**Caveat on the clean rung: +0.39% overall is a CANCELLATION, not a success** (-8.79% smallest bin
+against +1.4..+2.0% larger). Against truth-side noise only `[0.75,1.50) +1.54 +- 0.33%` (4.7 sigma) is
+solid; the headline `-8.79 +- 4.59%` is 1.9 sigma -- suggestive, not established. Seed sd is ~0.9%
+throughout, so the uncertainty is in the truth, not the model.
+
+**What now drives m.** On ALL objects (the population that sets `m`) the error is concentrated in one
+bin; every other bin is consistent with zero:
+
+| size bin | gap % | truth noise | sigma |
+|---|---|---|---|
+| [0.30,0.38) | **-3.14** | +-1.40 | 2.2 |
+| [0.38,0.50) | +0.71 | +-0.78 | 0.9 |
+| [0.50,0.75) | +0.04 | +-0.46 | - |
+| [0.75,1.50) | -0.13 | +-0.39 | - |
+
+Share-weighted these give the -0.35% overall, of which bin 0 alone contributes **-0.53%**. Sign and
+size are consistent with the in-domain constgold `m = -0.508%`.
+
+**Action.** The 6x6 quantile edges place only one boundary (0.355) inside [0.30,0.38), so the flow
+interpolates across the steep small-size response step (limiter documented at cont.110f).
+`compute_response_target_blend.py` already accepts `--size-edges`, so this is a knob. Building
+`response_target_crowd_rblend_snc_c0-99_6x9lows5_dom.npz` with the bottom two quantile bins split into
+five (0.300,0.318,0.336,0.355,0.387,0.419 then upper edges untouched) -- job 15313405.
+
+**Known limitation:** the ladder above used the 3-seed dump (written before the last 5 seeds landed).
+Every rung shares those 3 seeds so the ladder is internally valid, but the absolute numbers are not
+the 8-seed ensemble's. Job 15313404 regenerates the dump with all 8 seeds to confirm.
+
+**Next:** confirm ladder at 8 seeds; if the low-size grid holds up on the half-shear ruler, train 8
+seeds against it and only then read constgold (pre-register the pick, as in 2026-07-28c).
+
 ## 2026-07-28c (overnight tuning run: in-domain m 0.819% -> 0.508%, NOT significant; target 0.3% NOT reached)
 
 **Owner goal:** push in-domain |m| below 0.82%. **Outcome: partial. Best is
