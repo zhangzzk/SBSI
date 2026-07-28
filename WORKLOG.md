@@ -2,6 +2,54 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-28e (low-size grid refinement FAILS its pre-registered test; target is RIGHT, flow cannot reach it)
+
+**Pre-registered acceptance test (stated before training, 2026-07-28d): the [0.30,0.38) gap must
+shrink substantially toward zero AND no other size bin may degrade beyond its noise floor.
+RESULT: FAILED. Not promoted, and constgold was NOT read for this candidate.**
+
+`ablate_s2c_lt500_dom6x9lows`, 8 seeds, trained against the boundary-refined
+`response_target_crowd_rblend_snc_c0-99_6x9lows5_dom.npz` (5 size bins below 0.42 instead of 2):
+
+| size bin | 6x6 (8 seeds) | 6x9lows (8 seeds) | truth noise |
+|---|---|---|---|
+| [0.30,0.38) | -3.14% | **-3.32%** | +-1.40 |
+| [0.38,0.50) | +0.66% | +0.55% | +-0.78 |
+| [0.50,0.75) | +0.16% | +0.25% | +-0.46 |
+| [0.75,1.50) | -0.07% | -0.24% | +-0.39 |
+| OVERALL | -0.32% | -0.39% | |
+
+Five bins through the steep region changed the target bin by **nothing** (-3.14 -> -3.32, well inside
++-1.40). **Hypothesis REFUTED: the smallest-size error is not grid resolution.**
+
+**The failure is informative, and localises the cause precisely.** Aggregating each TARGET's own Rsim
+into the ruler's size bins (count-weighted) and comparing to truth and to the flow:
+
+| grid | TARGET says | TRUTH R_hs | FLOW | flow vs target | flow vs truth |
+|---|---|---|---|---|---|
+| 6x9lows [0.30,0.38) | 0.5144 | 0.5145 | 0.4973 | **-3.32%** | -3.32% |
+
+**The target is correct to 0.02%, and the flow misses it by -3.3%.** The pin is telling the model the
+right answer at adequate resolution and the model does not deliver it. So the remaining error is the
+flow's capacity or incentive to realise the pinned response in the steep small-size region -- NOT the
+target's definition (refuted 2026-07-28d), NOT the crowd axis (refuted 2026-07-28c), NOT the stencil
+(refuted 2026-07-28c), NOT size-grid resolution (refuted here). Four grid/definition explanations are
+now closed.
+
+**Caveat on the 6x6 row of that table:** its size edges do not align with the ruler's, so aggregating
+by bin midpoint mis-assigns its bin 1; the "+13.90% flow vs target" figure for 6x6 is an artefact of
+that aggregation and must not be quoted. Only the aligned 6x9lows row supports the conclusion.
+
+**Next (running):** response-weight probe, 1 seed each at `--response-weight` 1500 and 4500 against
+the same refined target (jobs 15315339 / 15315340; baseline is 450, `RW` env var added to
+`jobs/job_s2c_domain_train.sh`). If the small-size gap closes with more weight it is an INCENTIVE
+problem (the NLL term outcompetes the response pin there) and per-cell response weighting is the fix;
+if it does not move, it is CAPACITY and the mean head/conditioning is the thing to change. Score on
+the half-shear ruler only.
+
+**Files:** `jobs/job_s2c_domain_train.sh` (RW env var), `jobs/job_iso_ladder_8seed.sh` (TAG/OUT env
+vars so it scores any tag), `jobs/job_resp_target_lowsize.sh`.
+
 ## 2026-07-28d (isolated-gap was MOSTLY a RULER artefact; residual localises to smallest size bin)
 
 **This partly RETRACTS the framing of 2026-07-28c below.** That entry called the +3.3-4.2% ISOLATED

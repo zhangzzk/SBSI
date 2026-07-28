@@ -52,7 +52,7 @@ python -u scripts/train_measurement_model_swa_s1_truecond.py \
   --hidden-dim 256 --condition-layers 3 --n-flows 10 --lr 0.0007 --patience 10 --weight-decay 1e-5 \
   --seed "$SEED" --num-workers 8 --gpu-resident \
   --primary-mag-max 26.0 --primary-re-min 0.3 \
-  --response-weight 450 --response-delta 0.02 --response-difference central --response-target-npz "$RESP" \
+  --response-weight ${RW:-450} --response-delta 0.02 --response-difference central --response-target-npz "$RESP" \
   --coupling-weight "$LT" --coupling-target-npz "$COUP" \
   || { echo "FAILED seed=$SEED"; exit 1; }
 echo "S2CDOM_DONE lt=$LT seed=$SEED"; date

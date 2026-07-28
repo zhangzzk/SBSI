@@ -19,9 +19,13 @@ export PYTHONPATH="/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot:/hom
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 D=/project/ls-gruen/users/zekang.zhang/sbsi_caches/ablation
-echo "### ISO LADDER 8-SEED job=$SLURM_JOB_ID ###"; nvidia-smi -L; date
+TAG=${TAG:-ablate_s2c_lt500_dom6x6}
+OUT=${OUT:-$D/eval/selfresp_${TAG}_8seed.npz}
+N=$(ls $D/measurement_flow_g0_ngmix_${TAG}_s*_swaavg.pt 2>/dev/null | wc -l)
+echo "### ISO LADDER 8-SEED tag=$TAG ($N ckpts) job=$SLURM_JOB_ID ###"; nvidia-smi -L; date
+[ "$N" -eq 0 ] && { echo "no checkpoints for $TAG"; exit 1; }
 python -u scripts/eval_selfresp_gap.py \
-  --ckpt-glob "$D/measurement_flow_g0_ngmix_ablate_s2c_lt500_dom6x6_s*_swaavg.pt" \
+  --ckpt-glob "$D/measurement_flow_g0_ngmix_${TAG}_s*_swaavg.pt" \
   --true-re-min 0.3 --true-mag-max 26.0 \
-  --output "$D/eval/selfresp_dom6x6_8seed.npz"
-echo "ISOLAD8_DONE"; date
+  --output "$OUT"
+echo "ISOLAD8_DONE tag=$TAG"; date
