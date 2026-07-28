@@ -2,6 +2,56 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-28i (R_blend emulator validated in-domain for the FIRST TIME: real close-pair deficit, -41.5% below 1")
+
+**Files:** `scripts/eval_rblend_gap.py`, `jobs/job_rblend_gap.sh` (new).
+
+**Context.** R_flow is cleared (28h), so in-domain m = -0.508% must live in R_blend or the population
+transfer. Owner asked whether the BlendEMU emulator is trained on our domain. **It is not** -- from
+`models/emulator_metadata_lsst_r_extnbr_ho.json`, primary mag [18,28] vs our <26 and primary Re
+[0.1,1.5] vs our >0.3, i.e. a SUPERSET. `lsst_r_extnbr_ho` is confirmed the newest model (nothing
+newer on disk; recent commits updated it and made inference honour the trained cuts).
+A superset is defensible for a per-pair CONDITIONAL regression -- unlike the response pin there is no
+population mean to get wrong -- but accuracy INSIDE our domain had never been measured. Now it has.
+
+**CATALOGUE LIMITATION worth knowing (cost one wrong run).** The half-shear set is a 2x2 design over
+(primary sheared, neighbour sheared): neither 30.4% / primary-only 30.4% / neighbour-only 19.6% /
+both 19.6%. **ngmix and galsim shapes exist ONLY where the primary is sheared.** In the neighbour-only
+and neither legs every SExtractor column is populated but `measured_ngmix_g1/g2` and
+`measured_galsim_g1/g2` are 0% finite. The obvious "shear only the neighbour" truth is therefore NOT
+available in ngmix; only superseded SExtractor moments survive there.
+
+**Method used instead.** The BOTH-sheared leg has ngmix, and the primary's and neighbour's shear
+directions are INDEPENDENT there (measured mean cos = -0.0000, sd = 0.7071 = uniform random relative
+angle). So projecting the measured-shape shift on the NEIGHBOUR's direction kills the self-response
+and keeps the blend term. **NULL TEST** (same projection rotated 45 deg, spin-2 orthogonal, must be
+zero): **+0.00103 +- 0.00175, 0.6 sigma -- PASSES.** The script aborts loudly if it does not.
+
+**Result (4,811,459 pairs, in-domain, cases 0-199):** emulator **-11.9%** low overall (2.6 sigma),
+with the deficit concentrated entirely at CLOSE separations:
+
+| pair separation | truth | emulator | error | sigma |
+|---|---|---|---|---|
+| < 1" | 0.0518 | 0.0303 | **-41.5%** | **5.7** |
+| 1-2" | 0.0261 | 0.0247 | -5.4% | 0.6 |
+| 2-3" | 0.0453 | 0.0447 | -1.4% | 0.2 |
+
+By primary mag the sign flips: +12.9% / +7.4% for bright (18-23) vs -18.3% / -6.6% / -15.0% for faint
+(23-26). The close-pair deficit is the robust finding (5.7 sigma); the rest is 1-2 sigma.
+
+**DO NOT convert this into an m shift yet -- it does not transfer directly.** This validates ONE pair
+per primary (the recorded neighbour, all within 3"), whereas the m pipeline SUMS the emulator over
+every neighbour in the field (`build_blend_lookup.py`, regression r_max=10). Scale check: from a
+constgold dump, mean R_flow=0.3270 and mean R_blend=0.1593, so R_blend is ~33% of the denominator --
+a uniform -11.9% would move m by ~4%, an order of magnitude more than the -0.508% observed. That
+tension is itself informative: the per-pair bias evidently does NOT propagate uniformly to the sum,
+so **the summed lookup must be validated on its own terms** before any correction is applied.
+
+**Next:** validate the SUMMED R_blend (not per-pair) against a scene-level half-shear truth, keeping
+the firewall. Then, and only then, ask what the close-pair deficit does to m. Also note the emulator
+warns of extrapolation on 306k/4.8M rows in `Re_input_p_scaled` -- worth checking whether the
+close-pair deficit and the extrapolation region coincide.
+
 ## 2026-07-28h (CORRECTS 28d-28g: the small-size gap was ~half TRUTH-SAMPLE NOISE; R_flow is clean, residual m is NOT in the flow)
 
 **Read this before acting on 2026-07-28d/e/f/g -- the premise under all four is partly wrong.**
