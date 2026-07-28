@@ -20,8 +20,13 @@ export XGB_DEVICE=cpu
 cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 D=/project/ls-gruen/users/zekang.zhang/sbsi_caches/ablation/eval; mkdir -p $D
 echo "### EMU vs OWN LABELS job=$SLURM_JOB_ID ###"; date
+# CAT=<corrected catalogue> rebins the labels by INPUT-frame separation, the same x-axis the
+# ruler is binned in. The first run binned labels in the DETECTED frame and compared them to a
+# ruler binned in the input frame, so the two tables were not on the same axis -- see WORKLOG
+# 2026-07-28n.
 python -u scripts/eval_emu_label_gap.py \
     --tag ${TAG:-lsst_r_extnbr_ho} --stride ${STRIDE:-1} \
+    --cat ${CAT:-/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876/response_catalogue_train.feather} \
     --true-re-min 0.3 --true-mag-max 26.0 \
-    --output "$D/emu_label_gap.npz" 2>&1 | grep -v "module command"
+    --output "$D/${OUT:-emu_label_gap}.npz" 2>&1 | grep -v "module command"
 echo EMULABEL_DONE; date

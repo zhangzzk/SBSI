@@ -69,7 +69,6 @@ from scripts.eval_rblend_gap import (  # noqa: E402
 
 RESP_CAT = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876/response_catalogue_train.feather"
 DIST_EDGES = [0.0, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0]
-POS_ROUND = 9          # degrees; both catalogues copy RA/DEC from the same input catalogue
 
 
 def load_response_pairs(max_dist, re_min, mag_max, stride=1, verbose=True):
@@ -110,11 +109,15 @@ def main():
     ap.add_argument("--true-re-min", type=float, default=0.3)
     ap.add_argument("--true-mag-max", type=float, default=26.0)
     ap.add_argument("--tag", default="lsst_r_extnbr_ho")
+    ap.add_argument("--pos-tol", type=float, default=1e-3,
+                    help="arcsec; how close two named neighbour positions must be to be the same "
+                         "galaxy (they agree to ~1e-6\", and real galaxies are far further apart)")
     ap.add_argument("--output", default=None)
     args = ap.parse_args()
 
     # --- ruler side (Dg = 0.05, INPUT-frame distance) ---
-    base = load_legs(args.gs_leg, args.g0_leg, args.max_case, args.true_re_min, args.true_mag_max)
+    base = load_legs(args.gs_leg, args.g0_leg, args.max_case, args.true_re_min, args.true_mag_max,
+                     extra_cols=["RA_input_s", "DEC_input_s"])
     base = base.copy()
     base["truth"] = blend_truth(base)
     null = blend_truth(base, rotate45=True)
@@ -128,14 +131,22 @@ def main():
     resp = resp.rename(columns={"distance": "distance_det"})
     resp["label"] = resp["delta_et1"].to_numpy(float) / args.label_shear
 
-    # --- join on (case, primary, neighbour sky position) ---
-    for df in (base, resp):
-        df["_ra_s"] = np.round(df["RA_input_s"].to_numpy(float), POS_ROUND)
-        df["_dec_s"] = np.round(df["DEC_input_s"].to_numpy(float), POS_ROUND)
-    keys = ["case", "input_index", "_ra_s", "_dec_s"]
-    left_cols = keys + ["truth"] + [c for c in PAIR_FEATURES if c not in keys]
-    m = base[left_cols].merge(resp[keys + ["distance_det", "label"]], on=keys, how="inner")
-    m = m.drop_duplicates(keys)
+    # --- join on (case, primary), then keep the row naming the SAME neighbour ---
+    # The two files copy RA/DEC from the input catalogues of different shear legs, which agree only
+    # to ~1e-10 deg, so an equality join on rounded positions loses matches at rounding boundaries
+    # (job 15328568 matched zero). Match on the integer keys and select the neighbour by tolerance.
+    keys = ["case", "input_index"]
+    left_cols = keys + ["truth", "RA_input_s", "DEC_input_s"] + \
+        [c for c in PAIR_FEATURES if c not in keys]
+    m = base[left_cols].merge(
+        resp[keys + ["RA_input_s", "DEC_input_s", "distance_det", "label"]],
+        on=keys, how="inner", suffixes=("", "_resp"))
+    print(f"  after (case, primary) join, before neighbour matching: {len(m):,} rows")
+    off = np.hypot(
+        (m["RA_input_s"].to_numpy(float) - m["RA_input_s_resp"].to_numpy(float))
+        * np.cos(np.deg2rad(m["DEC_input_s"].to_numpy(float))),
+        m["DEC_input_s"].to_numpy(float) - m["DEC_input_s_resp"].to_numpy(float)) * 3600.0
+    m = m[off < args.pos_tol].drop_duplicates(keys)
     print(f"\nmatched pairs present in BOTH catalogues: {len(m):,} "
           f"(ruler {len(base):,}, response {len(resp):,})")
     if len(m) < 1000:

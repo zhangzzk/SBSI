@@ -61,8 +61,72 @@ them PAIR BY PAIR on (case, primary input_index, neighbour sky position) and tes
 population argument, including re-querying the emulator with the detected-frame distance it was
 actually trained on.
 
-**Next:** read job 15328534. If the distance definition is the cause, the fix is to make training
-and inference agree on one definition -- not to retrain on more features.
+**RESULT 3 (job 15328617): the distance-definition mismatch is REAL and large.** Measured inside the
+training catalogue itself, which stores both input positions, so no join is needed:
+
+| stored (detected) | <d_det> | <d_input> | <d_det - d_in> | frac biased same way | N |
+|---|---|---|---|---|---|
+| 0.0-0.5" | 0.3344 | 0.4448 | **-0.1104** (-25%) | 0.857 | 847,849 |
+| 0.5-1.0" | 0.7590 | 0.8776 | **-0.1186** (-14%) | 0.860 | 1,639,978 |
+| 1.0-1.5" | 1.2724 | 1.3283 | -0.0558 | 0.758 | 2,538,682 |
+| 2.0-3.0" | 2.5350 | 2.5435 | -0.0085 | 0.561 | 11,645,032 |
+| 5.0-7.0" | 6.0559 | 6.0567 | -0.0008 | 0.503 | 60,152,659 |
+
+Independently confirmed on the 55,703 case-0 pairs where both catalogues happen to name the same
+neighbour (job 15328600): ruler 1.7515" vs response 1.7137", i.e. -0.0378" at <d>~1.75", matching the
+binned number. The INFERENCE side was also verified: `predict_response` -> `icat2reg` ->
+`make_reg_features` builds separations from input-catalogue positions. So the certified pipeline has
+been training on detected-frame separations and querying with input-frame ones throughout.
+
+**THE FIX, and what it bought.** `scripts/fix_response_distance.py` recomputes `distance`
+input-to-input from positions the catalogue already stores (248.5M rows; labels untouched, original
+kept as `distance_detected_frame`); `configs/fs2_lsst_r_extnbr_indist.yaml` differs from the
+certified config on exactly two lines (catalogue path, model_tag); `jobs/job_retrain_indist.sh`
+retrains with the same features, cuts, hyperparameters, split, seed and firewall (job 15328709).
+Scored on the same ruler, same population (job 15329219):
+
+| separation | truth | `_ho` (certified) | `_indist` (corrected) |
+|---|---|---|---|
+| OVERALL | 0.0383 | -11.93% | **-8.24%** |
+| <1" | 0.0518 | -41.50% | **-31.11%** |
+| 1-2" | 0.0261 | -5.37% | **-0.48%** |
+| 2-3" | 0.0453 | -1.35% | -1.66% |
+
+The 1-2" band is closed and <1" recovers 10.4 points -- the first real movement on this deficit after
+three failed attempts. **It is not the whole cause: 31% remains at <1".**
+
+**RESULT 4 (job 15328681/15328717): the ruler and the training catalogue have DISJOINT targets.**
+`_primary_secondary_rows` splits the input catalogue at the midpoint of the input id into "unsheared
+primaries" and "sheared secondaries". In the half-shear sim only the second half ever carries shear,
+so the ruler's both-sheared sample is entirely second-half targets while the response catalogue's
+targets are entirely first-half. Consequences:
+
+* The per-pair join is impossible, and so is the Dg=0.2 vs Dg=0.05 amplitude test: ngmix shapes
+  exist only where the target is sheared, i.e. only on targets the response catalogue never contains.
+  **The amplitude question is UNRESOLVED and cannot be resolved on these catalogues.**
+* The two halves ARE the same population (job 15328717, case 0): magnitude quantiles agree to
+  ~0.01 mag, Re to ~0.001, sersic_n to 4 decimals, same footprint, nearest-neighbour distance median
+  1.7119" vs 1.7067" and frac<1" 0.1990 vs 0.1996. So the split is a random interleave and the
+  emulator transfers across it.
+
+**CORRECTION to RESULT 1 above.** That label-vs-emulator table was binned by the response
+catalogue's DETECTED-frame separation while the ruler is binned input-frame -- the two were not on
+the same x-axis, so the "labels disagree with the ruler" reading was partly the distance mismatch
+seen sideways. Rebinned input-frame (job 15329195), the labels still sit below the ruler at matched
+separation (ratio 0.71-0.92, no clear separation trend), BUT that comparison is confounded: the
+emulator itself predicts differently on the two samples in the same separation bin (0.0447 on the
+ruler vs 0.0357 on the response catalogue at 2-3"), so their feature distributions differ at fixed
+separation and a binned cross-catalogue mean is not like-for-like. **Do not quote the label/ruler
+ratio as an amplitude measurement.** The `_ho` vs `_indist` comparison above is unaffected -- it is
+the same ruler and the same population, with one variable changed.
+
+**Next:** `_indist` vs its OWN labels in a consistent frame (job 15329300) -- if it now fits them at
+<1", the residual -31% is a label-vs-ruler difference (amplitude or an unmodelled selection); if it
+still under-fits, the feature set is genuinely the limit. In parallel, the constgold lookup
+(job 15329301) so the certified m chain can be rerun with the corrected emulator. NOTE m sums
+R_blend over all neighbours, and the distance error vanishes beyond 3", so a large per-pair gain at
+<1" may move global m only slightly -- and m=+0.245% was reached WITH this inconsistency present, so
+the corrected model may move m either way.
 
 ## 2026-07-28m (Gold-V3 design converged: TWO flows; pair-angle + position-shear test in flight)
 

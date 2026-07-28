@@ -127,7 +127,7 @@ def part1(args, predictor):
     n_raw = n_kept = 0
     t0 = time.time()
 
-    with ipc.open_file(RESP_CAT) as r:
+    with ipc.open_file(args.cat) as r:
         nb = r.num_record_batches
         for bi in range(0, nb, args.stride):
             b = pa.Table.from_batches([r.get_batch(bi)]).select(NEED).to_pandas()
@@ -207,7 +207,7 @@ def part2(args):
 
     hist = np.zeros(len(CONTRAST_EDGES) - 1)
     tot = 0
-    with ipc.open_file(RESP_CAT) as r:
+    with ipc.open_file(args.cat) as r:
         for bi in range(0, r.num_record_batches, args.stride):
             b = pa.Table.from_batches([r.get_batch(bi)]).select(
                 ["distance", "r_input_p", "r_input_s", "Re_input_p"]).to_pandas()
@@ -236,6 +236,11 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--tag", default="lsst_r_extnbr_ho")
+    ap.add_argument("--cat", default=RESP_CAT,
+                    help="response catalogue to read. Point at the corrected copy from "
+                         "fix_response_distance.py to bin the labels by INPUT-frame separation, "
+                         "which is the frame the ruler is binned in -- the original binning is in "
+                         "the detected frame, so the two tables were not on the same x-axis.")
     ap.add_argument("--shear", type=float, default=0.2, help="label finite-difference step")
     ap.add_argument("--stride", type=int, default=1, help="read every Nth record batch")
     ap.add_argument("--heldout-min", type=int, default=40)

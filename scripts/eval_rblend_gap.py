@@ -64,12 +64,19 @@ NGMIX = ["measured_ngmix_g1", "measured_ngmix_g2"]
 GAMMA = ["gamma1_input_p", "gamma2_input_p", "gamma1_input_s", "gamma2_input_s"]
 
 
-def load_legs(gs_leg, g0_leg, max_case, re_min, mag_max, verbose=True):
+def load_legs(gs_leg, g0_leg, max_case, re_min, mag_max, verbose=True, extra_cols=None):
     """BOTH-sheared rows of the sheared leg, matched to the unsheared leg (see module docstring:
     the neighbour-only leg has no ngmix shapes, so the blend response is recovered from the
-    both-sheared leg by projecting on the neighbour's independent shear direction)."""
+    both-sheared leg by projecting on the neighbour's independent shear direction).
+
+    `extra_cols` pulls additional columns from the sheared leg -- e.g. the neighbour's sky position,
+    needed to key a join against blendemu's response catalogue.
+    """
     t0 = time.time()
     cols = ["case", "input_index", "detected", "neighbored"] + PAIR_FEATURES + NGMIX + GAMMA
+    for c in (extra_cols or []):
+        if c not in cols:
+            cols.append(c)
     d = pf.read_table(gs_leg, columns=cols).to_pandas()
     if max_case is not None:
         d = d[d["case"] < max_case]
