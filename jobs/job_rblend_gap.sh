@@ -20,7 +20,7 @@ cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 D=/project/ls-gruen/users/zekang.zhang/sbsi_caches/ablation/eval; mkdir -p $D
 echo "### R_BLEND GAP job=$SLURM_JOB_ID ###"; date
 python -u scripts/eval_rblend_gap.py \
-  --true-re-min 0.3 --true-mag-max 26.0 \
+  --true-re-min ${REMIN:-0.3} --true-mag-max ${MAGMAX:-26.0} \
   --tag ${TAG:-lsst_r_extnbr_ho} \
-  --output "$D/rblend_gap_${TAG:-lsst_r_extnbr_ho}.npz"
+  --output "$D/rblend_gap_${TAG:-lsst_r_extnbr_ho}${OUTSUF:-}.npz"
 echo "RBLENDGAP_DONE"; date

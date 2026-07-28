@@ -250,7 +250,39 @@ Note the sum is over ALL neighbours to 10" across the full training population, 
 error was already negligible, which is why a -41.5% -> -21.8% per-pair gain at <1" is only +1.34% on
 <R_blend>. Both facts are true simultaneously.
 
-**RECOMMENDATION.** Keep `lsst_r_extnbr_ho` as the production R_blend for now -- switching it alone
+**RESULT 12: both corrected models ARE more accurate, verified on the FULL emulator domain**
+(primary mag 18-28, Re 0.1-1.5 -- the population the m sum actually runs over, and the one the
+certified constgold convention selects), 10,970,165 pairs:
+
+| model | OVERALL | <1" | 1-2" | 2-3" |
+|---|---|---|---|---|
+| `_ho` (certified) | -4.33 | -20.26 | -0.95 | -1.94 |
+| `_indist` | -1.36 | -8.47 | +2.27 | -1.63 |
+| `_indist_wc5` | **-0.28** | **-2.17** | +1.89 | -1.11 |
+
+So the improvement is real everywhere, and LARGER here than on the deliverable subset: `_indist_wc5`
+is near-unbiased overall and essentially closes the close-pair deficit (-20.3% -> -2.2%). Note the
+implication for the residual: the model is -7.00%/-21.78% on the deliverable subset but -0.28%/-2.17%
+on the superset, so it must OVER-predict for the faint/small primaries in the complement. The
+unexplained residual is therefore a primary-property-dependent bias, not a pure close-pair effect --
+that is a new and more specific handle than "unexplained at <1"".
+
+**CORRECTION to RESULT 11: the -0.655% figure is UNRELIABLE and is withdrawn.**
+`estimate_m_shift.py` used the RAW lookup mean <R_blend>=0.3055, which implies R_flow=0.1468 -- but
+the certified <R_flow> is 0.2932, which puts the pipeline's <R_blend> near 0.159, about half the raw
+lookup mean. The pipeline applies selection cuts the raw lookup does not, so the identity was fed the
+wrong absolute R_blend. Rescaling the same +1.34% RELATIVE change onto 0.159 gives a shift of about
+-0.47 points, i.e. m ~ -0.22% -- |m| essentially unchanged, possibly slightly improved, NOT 2.7x
+worse. The relative change in <R_blend> is the robust part; the absolute normalisation was not.
+Jobs 15330211 (seeds 501/502) run the real pipeline and supersede both estimates.
+
+**On reaching |m| <= 0.3% by adding SEEDS: it cannot work.** Whatever the true shift is, it is a
+deterministic change in the denominator from a different R_blend model, identical for every seed.
+Seed averaging shrinks the scatter of <R_flow> around its mean; it does not move the mean. More
+seeds tighten the error bar on whatever m the corrected emulator gives, they do not steer it.
+
+**RECOMMENDATION (pending the real pipeline numbers).** Keep `lsst_r_extnbr_ho` as the production
+R_blend for now -- switching it alone
 degrades the certified deliverable. Treat `lsst_r_extnbr_indist` / `_indist_wc5` as the corrected
 emulators to adopt TOGETHER with a re-examination of R_flow. The distance-definition bug is real and
 should be fixed permanently in blendemu regardless (make `retrieve_response` measure the separation
