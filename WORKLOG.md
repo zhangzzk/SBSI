@@ -152,6 +152,21 @@ recorded it as saturating -- but that was measured with the CORRUPTED distance f
 different experiment now. Re-running it in the corrected frame at K=5 and K=20 (jobs 15329337/8,
 `configs/fs2_lsst_r_extnbr_indist_wc{5,20}.yaml`).
 
+**RESULT 7 (inference, no new job): the SHEAR-AMPLITUDE hypothesis is bounded small, and the "18%
+label offset" is a population effect the emulator already handles.** The per-pair test is impossible
+(RESULT 4), but the question can be settled indirectly. At 2-3" the SAME `_indist` model predicts
+0.0445 on the ruler sample and 0.0354 on the response-catalogue sample -- a 26% gap from feature
+distributions differing at fixed separation (the ruler's row is the NEAREST neighbour, so its primary
+has nothing closer; the response catalogue's pair at 2-3" often coexists with closer neighbours, and
+detection then biases its primaries brighter). The model is accurate against BOTH: -1.66% vs the
+ruler, -4.89% vs its own labels. So the offset is population, not calibration.
+
+That also kills the amplitude reading. If the Dg=0.2 labels were uniformly ~18% below the Dg=0.05
+response, a model trained on them would under-predict the ruler by ~18% at EVERY separation. It
+matches to -0.48% at 1-2" and -1.66% at 2-3". **Amplitude nonlinearity is therefore bounded at
+roughly the 2% level over 1-3".** It remains untestable below 0.5", where profile overlap makes
+saturation most plausible -- that caveat stands, but the "uniform 18% offset" reading is dead.
+
 **Next:** score the weighted variants on the ruler; then the constgold m chain via the lookup
 (job 15329301). NOTE m sums R_blend over all neighbours and the distance error vanishes beyond 3",
 so a large per-pair gain at <1" may move global m only slightly -- and m=+0.245% was reached WITH
