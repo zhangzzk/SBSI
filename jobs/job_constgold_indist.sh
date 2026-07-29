@@ -41,13 +41,17 @@ mkdir -p $DUMPDIR
 
 SEEDS=(${SEEDS:-501 502 503 505 506 507 508 509})   # override from the submit line for the 510-517 half
 S=${SEEDS[$SLURM_ARRAY_TASK_ID]}
-CK=$D/measurement_flow_g0_ngmix_ablate_s2c_coupling_lt500_s${S}_swaavg.pt
+# TAG selects the flow. Default = the full-population V2. Override for the CUT-POPULATION V2, whose
+# checkpoints are ablate_s2c_lt500_dom6x6 (trained with --primary-mag-max 26 --primary-re-min 0.3).
+TAG=${TAG:-ablate_s2c_coupling_lt500}
+CK=$D/measurement_flow_g0_ngmix_${TAG}_s${S}_swaavg.pt
+if [ ! -f "$CK" ]; then echo "MISSING checkpoint $CK"; exit 1; fi
 
-echo "### CONSTGOLD indist seed=$S job=$SLURM_JOB_ID  lookup=${SUFFIX:-indist} ###"; date
+echo "### CONSTGOLD seed=$S tag=$TAG job=$SLURM_JOB_ID  lookup=${SUFFIX:-indist} ###"; date
 python -u scripts/validate_constant_with_blend.py \
   --measurement-model "$CK" --catalogue "$CAT" --min-case 40 \
   --blend-lookup "${LOOKUP:-$LOOK/blend_lookup_${SUFFIX:-indist}_c40-139.feather}" \
   --crowd-flux-lookup "$RES/crowd_flux_conc_c0-199.feather" \
-  --global-only --flow-seed 12345 --n-samples 64 --max-rows 45000000 --batch-size 16384 \
-  --dump "$DUMPDIR/${SUFFIX:-indist}_perobj_s${S}.feather" 2>&1 | grep -v --line-buffered "module command"
+  --global-only --flow-seed 12345 --n-samples 64 --max-rows 45000000 --batch-size 16384 ${EXTRA_ARGS} \
+  --dump "$DUMPDIR/${DUMPTAG:-${SUFFIX:-indist}}_perobj_s${S}.feather" 2>&1 | grep -v --line-buffered "module command"
 echo "CGINDIST_DONE seed=$S"; date

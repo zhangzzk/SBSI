@@ -2,6 +2,95 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30 (16-seed ensembles land; the flow x emulator x POPULATION grid; wide m does not predict cut m)
+
+Files added: `scripts/eval_swap_lookup.py`, `jobs/job_swap_lookup.sh`,
+`jobs/job_s2c_lt500_more_seeds.sh`. Changed: `jobs/job_constgold_indist.sh` (TAG/DUMPTAG/EXTRA_ARGS
+parameters; time+mem sized from `sacct`; dump name carries the lookup). No emulator or flow retrained
+except 8 extra seeds of existing recipes.
+
+**RESULT 18 -- the 16-seed ensembles (V2 full-population flow, WIDE certified convention).** 8 new
+checkpoints trained (seeds 510-517, job 15339149, byte-identical recipe to the original 8) and
+evaluated against both emulators (jobs 15339655/15339656):
+
+| emulator | m | seed sd | seed sem | sim (common-mode) | TOTAL |
+|---|---|---|---|---|---|
+| `_ho` (certified) | **-0.862%** | 0.919 | 0.230% | 0.188% | **0.297%** |
+| `_indist_wc5` (corrected) | **-1.642%** | 0.904 | 0.226% | 0.188% | **0.294%** |
+
+**Paired Dm = -0.780 +- 0.015 on all 16 common seeds** -- it read -0.787 at n=8, -0.784 at n=11 and
+-0.780 at n=16, i.e. the emulator comparison was pinned from the start (R_flow cancels), while the
+ABSOLUTE m needed the full ensemble. At n=8 `_ho` read -0.460 +- 0.353% and looked consistent with
+zero; at n=16 it is -0.862 +- 0.297%, about 2.9 sigma from zero. The V2 flow carries a real ~0.9%
+offset on the wide convention. Doubling the seeds moved the mean 0.4 points, exactly the wobble a
++-0.35% error bar predicts -- see [[2026-07-29]] for why the floor is 0.188% regardless of n.
+
+**RESULT 19 -- the grid, from per-object dumps with NO reruns.** `validate_constant_with_blend` uses
+the lookup R_blend unmodified (`rb_add = rb_i`, line 265) and `r_sim`/`R_flow` are
+emulator-independent, so swapping emulators is a JOIN on the existing dumps. Control: recomputing
+Gold-v1 with its own lookup gives **+0.261%** against the certified **+0.245%** on record (16 seeds,
+sem 0.182%) -- the method is validated, not assumed.
+
+m (%), both flows trained on the FULL population, +- is seed-only unless stated:
+
+| flow | emulator | WIDE (mag 18-28, Re 0.1-1.5) | CUT (mag<26, Re>0.3) |
+|---|---|---|---|
+| Gold-v1 (certified) | `_ho` | **+0.261 +- 0.266** | **+4.811 +- 0.227** |
+| Gold-v1 | `_wc5` | -0.536 +- 0.263 | +4.583 +- 0.226 |
+| Gold-V2 | `_ho` | -0.862 +- 0.297 | **+3.284 +- 0.231** (12 seeds) |
+| Gold-V2 | `_wc5` | -1.642 +- 0.294 | +3.063 +- 0.230 (12 seeds) |
+
+Population responses differ enormously: R_flow 0.2930 -> ~0.69, `<R_blend>` 0.1593 -> 0.1371,
+43.4% of rows survive. The cut is on TRUE input properties, so it cannot induce selection bias --
+this is a clean population restriction.
+
+**THE HEADLINE: the wide m does not predict the cut m.** The certified pipeline reads +0.26% on the
+convention it was certified against and **+4.81%** on the population the deliverable is defined on
+(GOALS.md / [[project_realistic_cuts]]). Both flows are an order of magnitude out of spec there. A
+number inside 0.3% on the wide convention is not evidence about the deliverable.
+
+**RESULT 20 -- ranking the levers on the CUT population.** Train the FLOW on the cut population:
+**~4 points** (dom6x6 -0.508 +- 0.240% / dom2 -0.819 +- 0.190%, 8 seeds each, WORKLOG 2026-07-28c,
+vs +3.284% for the full-trained V2). Gold-v1 -> Gold-V2 coupling pin: 1.5 points. Old -> corrected
+emulator: **0.2 points** (paired shift -0.228 on v1, -0.221 on V2, agreeing across flows as it must).
+So the distance fix -- real and verified per pair -- cannot close a 3% gap, and the flow's training
+population is the dominant term by 20x.
+
+**RESULT 21 -- adopting the distance fix alone would BREAK the certified pipeline** on the wide
+convention: +0.261% -> -0.536%, ~2 sigma from zero. On the cut population it helps slightly
+(+4.811 -> +4.583). The verdict therefore FLIPS SIGN with the population, which means the wide-
+population agreement was a cancellation between two population-dependent errors, not evidence that
+the pieces are individually right. Confirms and quantifies the 28n compensating-error result on the
+pipeline that matters.
+
+**Also now measured for the first time: the certified result's error bar.** +0.261 +- 0.266% (wide).
+The point estimate is in spec but the uncertainty is the SAME SIZE as the 0.3% spec, so the certified
+pipeline has never been *demonstrated* to meet 0.3% -- it has a central value that sits inside it.
+
+**In flight (all chained on `--dependency`, nothing reads a dump mid-write):** 8 extra dom6x6 seeds
+(15348200) -> constgold + dumps (15348202) -> 16-seed in-domain/wide grids (15348203/4); the 8-seed
+dom6x6 grid (15348178 -> 15348180/1); the clean 16-seed V2-full grid (15348109/10, replacing a
+truncated pair -- see gotcha below); `blend_lookup_indom_c40-139` build (15348241) -> dom6x6 m with
+the IN-DOMAIN-TRAINED emulator (15348242), to close the "emulator trained on the cut population"
+question. Note `_indom`'s regression cuts are mag 18-26 / Re 0.3-1.5, so that lookup is valid for the
+IN-DOMAIN m only and is not a general `_ho` replacement.
+
+**Gotchas found and fixed.** (1) `job_constgold_indist.sh` wrote the same dump filename for both
+lookups, so the hoctrl and wc5 runs of a seed overwrote each other; the name now carries the lookup.
+Use `--old-lookup` in `eval_swap_lookup.py` for dumps written before the fix -- their R_blend column
+is a MIX. (2) The job piped python into `grep`, so a python crash exited 0 and reported COMPLETED
+with a truncated result; `set -o pipefail` added. (3) Scheduling: the job declared 3h/180G against a
+measured 25min/87GB. On a GPU-saturated partition the oversized WALL CLOCK is what blocks backfill;
+cutting to 1h moved the second array from 05:10 next-day to 21:00 same-day. GPUs were 100%
+allocated (nv01 9/9 a40, nv02 8/8 a40 + 2/2 a100, nv03 4/4 h200) while RAM and CPU were abundant.
+Two attempts to dodge the GPU queue both FAILED by measurement: a TitanXP node (I/O-stalled in
+`cl_sync_io_wait`, killed at 2.5h) and CPU-only (genuinely computing, ~60 CPU-hours, still unfinished
+at 3h). The a40 is genuinely required; an earlier "GPU is only 0-5% utilized" reading was taken from
+the I/O-stalled process and is RETRACTED.
+
+Next: read the chained grids; then the open question is R_flow, not R_blend -- m=0 on the wide
+convention needs R_flow ~2% lower than the ensemble's 0.2963 with the corrected emulator.
+
 ## 2026-07-29 (error budget on the constgold m: sim-side floor is 0.19%, and it does not shrink with seeds)
 
 Files added: `scripts/eval_error_budget.py`, `jobs/job_error_budget.sh`. Nothing retrained; no model
