@@ -301,6 +301,34 @@ i.e. plausibly WELL INSIDE the |m| <= 0.3% target -- and reached by making R_ble
 rather than by tuning. This is arithmetic from measured biases, not a result; the wc5 lookup
 (job 15330734) and its constgold run are the test.
 
+**RESULT 14: per-seed m scatter is HUGE, and R_blend is deterministic. Both matter.**
+
+| seed | R_flow | R_blend (`_indist`) | R_total | m |
+|---|---|---|---|---|
+| 501 | 0.2888 | 0.1625 | 0.4514 | **+0.45% +- 0.18%** |
+| 502 | 0.2995 | 0.1625 | 0.4621 | **-1.87% +- 0.17%** |
+
+R_blend is IDENTICAL across seeds -- it must be, the emulator does not depend on the flow seed. ALL
+the scatter is R_flow: 0.2888 vs 0.2995, 3.7% apart, giving a 2.3 percentage-point spread in m.
+
+**This corrects my own dismissal of "more seeds".** I argued seed averaging cannot move a
+deterministic shift in the denominator -- true, but beside the point: the per-seed scatter in m is
+~2 points, far larger than the 0.3% target, so a one- or two-seed number cannot MEASURE whether a
+new R_blend helps. Comparing single-seed +0.45% against the certified 16-seed ensemble mean
+(+0.245%) was not a valid comparison and should not have been presented as one.
+
+**But it also means the 16-seed rerun is unnecessary.** Only R_flow is seed-dependent, and no part
+of this work changes it. The certified ensemble therefore pins
+
+    <R_flow>_16seed + R_blend_ho = R_sim / (1 + 0.00245) = 0.452292
+
+so for any new emulator, with R_blend measured under the PIPELINE's selection (not the raw lookup):
+
+    m_new = R_sim / (0.452292 - R_blend_ho + R_blend_new) - 1
+
+That needs one single-seed run per emulator to read off its R_blend, not an ensemble each. Control
+(`_ho`, job 15331339) and `_indist_wc5` (job 15332128) are running to supply the two numbers.
+
 **RECOMMENDATION (pending the real pipeline numbers).** Keep `lsst_r_extnbr_ho` as the production
 R_blend for now -- switching it alone
 degrades the certified deliverable. Treat `lsst_r_extnbr_indist` / `_indist_wc5` as the corrected
