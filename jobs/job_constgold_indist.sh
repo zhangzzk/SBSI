@@ -1,8 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=cgindist
-#SBATCH --time=03:00:00
-#SBATCH --mem=180G
+#SBATCH --time=01:00:00
+#SBATCH --mem=120G
 #SBATCH --cpus-per-task=16
+# time/mem sized from measured usage, NOT padded: sacct on the completed runs gives 25 min elapsed
+# and MaxRSS 87 GB. The old 3h/180G request was ~7x/2x over, and on a GPU-saturated partition the
+# oversized WALL CLOCK is what hurts -- backfill can only slot a job into a gap at least as long as
+# its declared limit, so asking for 3h to do 25 min of work made us un-backfillable.
 #SBATCH --gres=gpu:a40:1
 #SBATCH --array=0-7%4
 # LOOKUP=<abs path> overrides the lookup entirely (e.g. the certified one, as a same-seed control)
@@ -35,7 +39,7 @@ LOOK=/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot/results
 DUMPDIR=/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/indist_constgold_dumps
 mkdir -p $DUMPDIR
 
-SEEDS=(501 502 503 505 506 507 508 509)   # the certified V2 8-seed set
+SEEDS=(${SEEDS:-501 502 503 505 506 507 508 509})   # override from the submit line for the 510-517 half
 S=${SEEDS[$SLURM_ARRAY_TASK_ID]}
 CK=$D/measurement_flow_g0_ngmix_ablate_s2c_coupling_lt500_s${S}_swaavg.pt
 
@@ -45,5 +49,5 @@ python -u scripts/validate_constant_with_blend.py \
   --blend-lookup "${LOOKUP:-$LOOK/blend_lookup_${SUFFIX:-indist}_c40-139.feather}" \
   --crowd-flux-lookup "$RES/crowd_flux_conc_c0-199.feather" \
   --global-only --flow-seed 12345 --n-samples 64 --max-rows 45000000 --batch-size 16384 \
-  --dump "$DUMPDIR/indist_perobj_s${S}.feather" 2>&1 | grep -v --line-buffered "module command"
+  --dump "$DUMPDIR/${SUFFIX:-indist}_perobj_s${S}.feather" 2>&1 | grep -v --line-buffered "module command"
 echo "CGINDIST_DONE seed=$S"; date
