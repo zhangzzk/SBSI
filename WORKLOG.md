@@ -362,7 +362,33 @@ reach |m| <= 0.3%": not via R_blend (which moves m away from zero), and not via 
 needs ~20+ seeds (sem 0.15%) or ~46 (sem 0.1%). But the emulator COMPARISON needs none, because
 R_flow cancels in Dm -- which is why two seeds sufficed above.
 
-**RECOMMENDATION (pending the real pipeline numbers).** Keep `lsst_r_extnbr_ho` as the production
+**RESULT 16 (job 15332128): final matrix, all three emulators on both seeds.**
+
+| seed | R_flow | `_ho` (R_b=0.1593) | `_indist` (0.1625) | `_indist_wc5` (0.1629) |
+|---|---|---|---|---|
+| 501 | 0.2888 | +1.18% | +0.45% | +0.37% |
+| 502 | 0.2995 | -1.18% | -1.87% | -1.95% |
+| **Dm vs `_ho`** | | -- | **-0.71** | **-0.79** |
+
+Dm reproduces to within 0.04 points across two very different seeds, confirming R_flow cancels
+exactly as argued. Ensemble projections against the certified +0.245%:
+**`_indist` -> m ~ -0.47%; `_indist_wc5` -> m ~ -0.55%.**
+
+My -0.87% projection for wc5 was too pessimistic (true ~-0.55%). It assumed R_blend would rise ~1.1%
+from the two models' RULER biases, but it rose only 0.25% (0.1625 -> 0.1629): the ruler scores ONE
+nearest-neighbour pair per galaxy while the lookup sums ALL neighbours to 10", where the two models
+barely differ. Ruler bias does not carry over proportionally to the summed R_blend -- worth
+remembering before projecting from ruler scores again.
+
+**ON SEEDS, final.** Per-seed sd 0.679% -> sem 0.240% (8), 0.170% (16), 0.152% (20), 0.100% (46).
+More seeds genuinely help: if the shipped estimator is the seed ensemble, averaging reduces the
+DELIVERED variance, not merely our knowledge of it. Note also that the +-0.17% quoted per run is a
+bootstrap error WITHIN a seed; the between-seed spread is ~4x larger, so the flow seed produces a
+genuinely different model (R_flow 0.2888 vs 0.2995), which is what makes ensembling legitimate. But
+averaging removes variance, not bias: with the corrected emulator the centre sits at ~-0.5%, so no
+seed count reaches |m| <= 0.3%.
+
+**RECOMMENDATION (final for this investigation).** Keep `lsst_r_extnbr_ho` as the production
 R_blend for now -- switching it alone
 degrades the certified deliverable. Treat `lsst_r_extnbr_indist` / `_indist_wc5` as the corrected
 emulators to adopt TOGETHER with a re-examination of R_flow. The distance-definition bug is real and
