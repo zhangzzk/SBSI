@@ -388,6 +388,40 @@ genuinely different model (R_flow 0.2888 vs 0.2995), which is what makes ensembl
 averaging removes variance, not bias: with the corrected emulator the centre sits at ~-0.5%, so no
 seed count reaches |m| <= 0.3%.
 
+**RESULT 17 (jobs 15334283/15334284): 8-SEED ENSEMBLES, both emulators, same flow, same seeds.**
+
+| emulator | n | m | sem | per-seed sd |
+|---|---|---|---|---|
+| `_ho` (certified) | 8 | **-0.460%** | +-0.353% | 0.997 |
+| `_indist_wc5` (corrected) | 8 | **-1.248%** | +-0.347% | 0.982 |
+| **paired Dm on 8 common seeds** | 8 | **-0.787%** | **sd 0.016** | -- |
+
+The Dm = -0.79 predicted in advance from two seeds is confirmed at -0.787 +- 0.016 over eight: the
+R_flow-cancellation argument is exact.
+
+**TWO CORRECTIONS TO EARLIER ENTRIES IN THIS SAME LOG, both mine:**
+
+1. **The +0.245% baseline was the WRONG reference and every projection built on it is void.** That
+   number belongs to the Gold-v1 flow (`meas_szfl_noz_lam450_fixresp`). These runs use the Gold-V2
+   coupling-pinned flow, whose m with the CERTIFIED emulator is **-0.460% +- 0.353%**. So the framing
+   "the fix takes a good number and makes it bad" was false: this flow's m was already ~-0.5% before
+   any change here. RESULT 13's "+0.45%" and RESULT 15/16's "ensemble projections" are superseded by
+   the direct measurements above.
+2. **Single- and two-seed m values should never have been quoted.** Per-seed sd is ~1.0%, so n=2
+   carries +-1.2%. The absolute m was not measurable until now; only the paired difference ever was.
+
+**FINAL ANSWER on |m| <= 0.3%.** Not reachable on this flow by either route:
+* The corrected emulator gives -1.248% +- 0.347% -- 3.6 sigma from zero and far outside the target.
+* MORE SEEDS cannot rescue it. Seeds shrink the sem (sd 1.0% -> +-0.35% at n=8, +-0.15% at n~45,
+  +-0.10% at n~100) but the centre stays at -1.25%. They are still REQUIRED to demonstrate any 0.3%
+  claim -- at n=8 the error bar alone is comparable to the target -- but they cannot move a bias.
+* Even the CERTIFIED emulator on this flow (-0.460% +- 0.353%) is outside 0.3% at the central value.
+
+So the target is limited by the pipeline, not by R_blend: R_blend is now the most accurate component
+(-0.28% overall on the full domain) and making it accurate moves m FURTHER from zero by a measured
+0.787. The compensating term is ~0.8 points and lives in R_flow or the decomposition. Quantified:
+with R_blend=0.1629, m=0 needs R_flow=0.2905; the flow ensemble sits near 0.2934.
+
 **RECOMMENDATION (final for this investigation).** Keep `lsst_r_extnbr_ho` as the production
 R_blend for now -- switching it alone
 degrades the certified deliverable. Treat `lsst_r_extnbr_indist` / `_indist_wc5` as the corrected

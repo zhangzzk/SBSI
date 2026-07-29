@@ -4,7 +4,7 @@
 #SBATCH --mem=180G
 #SBATCH --cpus-per-task=16
 #SBATCH --gres=gpu:a40:1
-#SBATCH --array=0-1
+#SBATCH --array=0-7%4
 # LOOKUP=<abs path> overrides the lookup entirely (e.g. the certified one, as a same-seed control)
 #SBATCH --partition=inter
 #SBATCH --constraint=x86-64-v3
@@ -35,7 +35,7 @@ LOOK=/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot/results
 DUMPDIR=/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/indist_constgold_dumps
 mkdir -p $DUMPDIR
 
-SEEDS=(501 502)
+SEEDS=(501 502 503 505 506 507 508 509)   # the certified V2 8-seed set
 S=${SEEDS[$SLURM_ARRAY_TASK_ID]}
 CK=$D/measurement_flow_g0_ngmix_ablate_s2c_coupling_lt500_s${S}_swaavg.pt
 
