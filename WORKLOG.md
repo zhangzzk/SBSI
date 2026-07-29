@@ -329,6 +329,39 @@ so for any new emulator, with R_blend measured under the PIPELINE's selection (n
 That needs one single-seed run per emulator to read off its R_blend, not an ensemble each. Control
 (`_ho`, job 15331339) and `_indist_wc5` (job 15332128) are running to supply the two numbers.
 
+**RESULT 15 (jobs 15331339/15332112, same-seed control): Dm is EXACT and seed-free. R_blend accuracy
+and constgold m are ANTI-CORRELATED.**
+
+| seed | R_flow | m with `_ho` (R_blend=0.1593) | m with `_indist` (R_blend=0.1625) | Dm |
+|---|---|---|---|---|
+| 501 | 0.2888 | +1.18% | +0.45% | **-0.73** |
+| 502 | 0.2995 | -1.18% | -1.87% | **-0.69** |
+
+R_flow cancels in the difference, so Dm = **-0.71 points** is reproducible and needs no ensemble.
+Applied to the certified 16-seed ensemble (+0.245%): **m ~ -0.47% with `_indist`**. |m| gets worse,
+0.245% -> 0.47%.
+
+Two corrections to my own reporting, both material:
+1. Withdrawing the RESULT 11 estimate was an OVER-correction. Its -0.90 points was directionally
+   right and only 27% too large (it used the raw-lookup DR_blend=0.0041 instead of the pipeline's
+   0.0032). The reasoning was still wrong and worth flagging -- but "the -0.655% is dead" overstated
+   it; the true ensemble figure is ~-0.47%.
+2. The "`_indist_wc5` projects to m ~ +0.07%" claim was WRONG. It was computed from seed 501, whose
+   R_flow (0.2888) is well below the ensemble (~0.2930), so its m runs high. Against the ensemble,
+   wc5 -- which predicts ~1.1% MORE R_blend than `_indist` -- projects to **m ~ -0.87%**, i.e. worse
+   still. Job 15332128 tests this.
+
+**So the pattern is: the more accurate R_blend becomes, the further constgold m runs from zero.** The
+certified +0.245% depends on R_blend being ~2% low. Quantifying the compensating term: with
+R_blend=0.1625, m=0 requires R_flow=0.2909 against the certified ~0.2930 -- **R_flow is high by
+~0.7%**. That is the size and location of what has to be found, and it is the answer to "can we
+reach |m| <= 0.3%": not via R_blend (which moves m away from zero), and not via seeds.
+
+**Seeds, precisely.** The certified in-domain -0.508 +- 0.240% was 8 seeds with a per-seed sd of
+0.679%; the certified +0.245% is 16 seeds on the certified convention. Absolute m at 0.3% precision
+needs ~20+ seeds (sem 0.15%) or ~46 (sem 0.1%). But the emulator COMPARISON needs none, because
+R_flow cancels in Dm -- which is why two seeds sufficed above.
+
 **RECOMMENDATION (pending the real pipeline numbers).** Keep `lsst_r_extnbr_ho` as the production
 R_blend for now -- switching it alone
 degrades the certified deliverable. Treat `lsst_r_extnbr_indist` / `_indist_wc5` as the corrected
