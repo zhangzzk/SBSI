@@ -2,6 +2,62 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-29 (error budget on the constgold m: sim-side floor is 0.19%, and it does not shrink with seeds)
+
+Files added: `scripts/eval_error_budget.py`, `jobs/job_error_budget.sh`. Nothing retrained; no model
+or catalogue changed. Reads the per-object dumps already written by `job_constgold_indist.sh`.
+
+**Why.** Every quoted `m +/- x%` in 28n was the SEED scatter only (sd across flow checkpoints /
+sqrt(n)). The sim response carries its own uncertainty and it had never been combined with that.
+Separately, `validate_constant_with_blend.py::boot_m_err` resamples cases while holding R_flow at
+its full-sample value, documented as "R_flow held deterministic". That is true for a fixed set of
+galaxies but the bootstrap changes which galaxies, and R_flow is a mean over exactly those objects
+-- so the denominator should move with the draw. Freezing it discards a cancellation in the ratio
+and should inflate the sim-side error.
+
+**RESULT 1 (job 15340107, 8 dumps x 26,926,617 objects, 100 cases, 20k resamples).** Verified first
+that `r_sim` and `R_blend` are byte-identical across all 8 seeds, i.e. only R_flow varies -- the
+assumption all the seed-ensemble arithmetic rests on.
+
+Two independent terms on the ensemble m, for `_indist_wc5`:
+
+| term | value | behaviour |
+|---|---|---|
+| (B) flow training seed | sd 0.982% per seed -> 0.347% on the mean of 8 | shrinks as 1/sqrt(n_seed) |
+| (A) which 100 fields were simulated | 0.188% | COMMON-MODE across seeds; never shrinks |
+
+They are independent (the training seed knows nothing about which fields were drawn), so the total
+is the quadrature sum, **0.395% at n=8** and a projected **0.309% at n=16**. Linear addition
+(0.535%) is wrong.
+
+**RESULT 2 -- the frozen-R_flow correction is real but negligible.** Re-averaging R_flow with each
+bootstrap draw moves the sim-side error 0.190% -> 0.188%, a 1% shrink, uniform across all 8 seeds
+(0.99x each). The mechanism exists but is weak: the per-case correlation between `<r_sim>` and
+`<R_flow>` is only **+0.171** (and `<r_sim>` vs `<R_blend>` +0.062). Interpretation: case-to-case
+scatter in the measured response is dominated by measurement noise on the paired +-g difference,
+which the flow cannot track, not by population differences it would follow. So the cancellation
+that would have shrunk the error bar mostly is not available. **`boot_m_err` is left as-is** -- the
+bias is well below the precision of the number it reports.
+
+Note the logs' printed `+/- 0.17-0.18%` uses `--n-boot 200`; 0.188-0.190% here is the converged
+value at 20k draws. The difference is bootstrap noise, not a discrepancy.
+
+**RESULT 3 -- the seed ladder, with the floor included.** n=8: 0.395%. n=16: 0.309%. n=32: 0.256%.
+n=64: 0.225%. n=128: 0.207%. Floor at infinite seeds: **0.188%**. Consequence for the |m| <= 0.3%
+target: 16 seeds buys an error bar the same size as the target itself, 32 seeds is the first point
+where the measurement is meaningfully tighter than the thing being tested, and no number of seeds
+gets below 0.19% -- that requires more constgold cases, not more checkpoints.
+
+**Known gap, unmeasured.** The R_blend emulator's own training-seed scatter is in no error bar.
+There is one emulator per config and every flow seed reads an identical lookup, so its case-to-case
+sampling noise is inside (A) but its training variability is absent. Same class of term as the
+flow's 0.982%; would need several emulator seeds per config to bound. This does NOT affect the
+paired Delta_m between emulators being quoted at +-0.016, which cancels R_flow by construction and
+is near-immune to R_sim (a common factor in both terms of the difference).
+
+Next: fold (A) into the 16-seed ensembles from jobs 15339655/15339656 when they land, and decide
+whether bounding the emulator-seed term is worth the training cost.
+
 ## 2026-07-28n (close-pair deficit: the emulator FITS its own labels -- the labels disagree with the ruler)
 
 Files added: `scripts/eval_emu_label_gap.py`, `scripts/eval_contrast_cut.py`,
