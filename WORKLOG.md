@@ -361,6 +361,50 @@ reason to do it. Three things must be handled: (i) that catalogue annotates only
 detected, so the detection selection has to be applied to match what the flow trains on; (iii) it has
 no `r_blend` column, so the crowd axis must be recomputed or replaced.
 
+**RESULT 11 -- the diagnosis CLOSES: an all-galaxy target independently reproduces what constgold
+requires, to 0.14%.** (`scripts/eval_isolated_target_gap.py`, `jobs/job_isolated_target_gap.sh`,
+job 15349014, ruler cases 0-9, detected only, raw `<e.ghat>/|g|`, binned on the pin's own (mag,size)
+edges.) Splitting the ONE catalogue that contains both classes:
+
+| quantity | value |
+|---|---|
+| `R` neighboured-only -- **what the pin's target measures** | 0.6669 |
+| `R` isolated | 0.8967 |
+| `R` ALL, this catalogue's weights | 0.7216 |
+| **`R` ALL, reweighted to the DELIVERABLE (mag,size) occupancy** | **0.7244** |
+| **what constgold's identity requires (`<r_sim>` - `<R_blend>`)** | **0.7234** |
+
+**Those last two agree to +0.14%.** A neighboured-only target is LOW by **-0.0547 (-7.6%)**, sign
+matching (B) and about **2x** the -0.027 actually needed -- the current target npz transfers to 0.6957
+rather than 0.6669 because the `r_blend` crowd axis already absorbs roughly half the missing blend
+dependence. So the ordering is
+`neighboured-only 0.6669 < current target 0.6957 << all-galaxy 0.7244 ~= requirement 0.7234`, and
+**(B) is quantitatively explained by the target's missing isolated class**, from half-shear data alone,
+with no constgold response used to derive it.
+
+**The roadmap is now fully specified and both halves are firewall-clean:**
+
+| scenario | `<R_flow>` | `<R_blend>` | m |
+|---|---|---|---|
+| today | 0.7274 | 0.1371 | **-0.51%** |
+| fix the TARGET only (flow keeps its +0.032 overshoot) | 0.7564 | 0.1371 | **-3.7%** |
+| fix the PIN only (flow reaches today's wrong target) | 0.6957 | 0.1371 | **+3.3%** |
+| **fix BOTH: all-galaxy target AND the flow reaching it** | **0.7244** | 0.1371 | **-0.17%** |
+
+i.e. (i) rebuild the response target on a sample that CONTAINS isolated galaxies, and (ii) enforce the
+pin so the flow actually attains it -- the `--response-global-anchor` /`--response-pop-weight-npz`
+machinery added tonight is exactly the tool for (ii), and the arm-2 run in flight is its test. Doing
+either alone is a 3-4 point regression, which is why every one-lever attempt in this project's history
+failed.
+
+**Caveats on RESULT 11, stated plainly.** The 0.7244 is a RAW (non-SNC) response over cases 0-9, while
+the pin target is SNC over cases 0-99, so the 0.14% agreement should not be read as exact -- it needs
+redoing with the SNC estimator on the full case range before anything is built on it. The ruler
+catalogue annotates neighbours only to 3", so its `neighbored=False` class still contains 3-7"
+neighbours and is not strictly isolated (it may nonetheless be the RIGHT convention to match, which has
+to be checked against how the constgold dumps define `neighbored`). And it is 44.87% detected, so the
+detection selection must be applied consistently, as it was here.
+
 **Gotchas found and fixed.** (1) **The `cip` partition has ~12 idle a40 vGPU slices** while `inter` is
 100% GPU-allocated -- but `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` needs the CUDA
 virtual-memory APIs, which the A40-16Q vGPU profile does NOT support: `.to(device)` dies with "CUDA
