@@ -45,6 +45,12 @@ never saw one, and the entire "reweight to deliverable occupancy gives 0.7244 vs
 inference built on it, are withdrawn. Comparing a 7"-convention flag against a 3"-convention flag was
 the error; both catalogues carry a column of the same name meaning different things.
 
+Verified directly on the two files (cases 0-1): the ruler's neighbour distance maxes at **3.0000"**
+and np7's at **6.9928"**, and in BOTH `neighbored` equals "distance is finite" on **100.00%** of rows.
+So the flag is definitionally "a companion was found inside this build's search radius" -- it carries
+no information about blending severity that survives a change of radius, and it must never be compared
+across catalogues built with different `--r-max`.
+
 **RESULT 3 -- the g=0 SNC lookup is restricted the same way, and for the same reason** (job 15354117).
 Coverage is 99.65% on np7 rows and 0.00% on the dropped ones -- which initially looked like the lookup
 inheriting np7's geometry. It does not: cross-tabbed against shape usability instead of np7
