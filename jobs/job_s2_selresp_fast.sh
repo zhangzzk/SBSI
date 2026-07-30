@@ -52,10 +52,13 @@ echo "### S2 SELECTION RESPONSE -- FAST (dom6x6, ${N} seeds, n=32, ISO only, TF3
 nvidia-smi -L; date
 [ "$N" -eq 4 ] || echo "WARNING: expected 4 seeds, found $N"
 
+# NOTE: new filename on purpose -- the 16-seed npz stays put.
+# NEVER put a comment BETWEEN continued lines: bash ends the command at the comment and then tries to
+# run the next line as its own command. Run 15361313 died exactly this way ("--output: command not
+# found") AFTER the science had already finished -- the table printed, only the .npz save was lost.
 python -u scripts/eval_selection_response.py \
   --ckpt $GLOB --tf32 \
   --max-case 39 --n-samples 32 --batch-size 16384 \
-  # NOTE: new filename on purpose -- the 16-seed npz stays put.
   --output "$D/selection_response_v2base_dom6x6_4seed_n32.npz" \
   || { echo "SELRESP_FAST_FAILED"; exit 1; }
 echo "SELRESP_FAST_DONE"; date

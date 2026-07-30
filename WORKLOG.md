@@ -2,6 +2,51 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30l (new selection defaults 4 seeds x n=32 CONFIRMED against 1 seed x n=128)
+
+Owner set `n_samples=32, seeds=4` for all selection work. Ran both harnesses at the new defaults and
+compared against the 1-seed/n=128 run they replace. Jobs 15361308 (attribution, A40, 5m11s) and
+15361313 (fast gate, A40+TF32, 2m23s) -- down from ~30 min at the old settings.
+
+**m_flow agrees to <= 0.08 points** across every cut, despite different seeds, different n, different
+GPU (A40 vs V100) and different precision. (The 1-seed table printed the old `m_intrinsic` column,
+which is `R_sim/R_mod-1`; `m_flow` is its reciprocal form, so compare with the sign flipped.)
+
+| cut | m_sel (data) | m_flow, 4s/n32 | m_flow implied by 1s/n128 | delta |
+|---|---|---|---|---|
+| size>2.9 | +0.55% | -0.04% | -0.07% | 0.03 |
+| size>3.5 | +5.40% | -0.70% | -0.72% | 0.02 |
+| **size>4.4** | **+13.85%** | **-0.60%** | -0.52% | 0.08 |
+| mag<24 | +0.45% | -0.55% | -0.55% | 0.00 |
+| mag<24.5 | +0.17% | -0.26% | -0.26% | 0.00 |
+| mag<25 | -0.04% | -0.02% | -0.02% | 0.00 |
+
+Intrinsic-mode correctness check PASSED (rel dev 0.00000%): no-cut `R_sim = R_model = +1.00005334`.
+
+**Do not read the `m_sel` column as a cross-run agreement.** It never touches the flow -- it is
+`R_sim(cut)/R_sim(nocut)-1` on exact catalogue shapes -- so it is bit-identical between the two runs
+BY CONSTRUCTION and confirms nothing about the new settings. Only the `m_flow` column is a test.
+
+**What DID move: the no-cut shape m, -3.07% (1 seed) -> -3.63% (4 seeds), 0.56 points.** This is the
+documented seed behaviour (30g: seeds move the response NORMALISATION, seed sd 0.607 -> sem ~0.30% at
+n=4), and it is precisely why the m_sel/m_flow split was built -- the normalisation divides out of
+`m_flow`, which is why that column is stable while the end-to-end column is not. Corollary: the
+end-to-end `m_measured` column is NOT quotable at 4 seeds; only ratios within a run are.
+
+Science conclusion is unchanged from 30j: selection bias is a **size-axis effect only** (+13.85% at
+size>4.4, +5.40% at size>3.5, <= 0.45% anywhere on the magnitude axis), and the flow reproduces it
+to within 0.7%.
+
+**Two shell bugs fixed in `jobs/job_s2_selresp_fast.sh` and `jobs/job_selection_attribution.sh`.**
+Both are the same trap: bash ends a `\`-continued command at a `#` comment.
+- fast job: a comment sat BETWEEN continued lines, so `--output ...` ran as its own command
+  (`--output: command not found`). The run had already printed the full table -- only the .npz was
+  lost. Re-submitted as 15361395.
+- attribution job: the `|| { echo FAILED; exit 1; }` guard sat AFTER a trailing comment, so the
+  failure check was dead code. It never fired because the run succeeded.
+Both now put comments above the command. `bash -n` on both passes. **Always `bash -n` a job script in
+the same command as the `sbatch`, not a separate one** -- a prior slip submitted an unchecked script.
+
 ## 2026-07-30k (VERIFIED from the checkpoints: the -0.271% is V2, not V1; and a naming trap)
 
 Owner asked to confirm whether the 16-seed -0.271% +- 0.217% is the certified V1 number or the new

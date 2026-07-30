@@ -45,8 +45,11 @@ SEEDS="${SEEDS:-501 502 503 505}"   # 4 seeds; s504 absent from the dom6x6 set
 CK=""; for sd in $SEEDS; do CK="$CK $D/measurement_flow_g0_ngmix_ablate_s2c_lt500_dom6x6_s${sd}_swaavg.pt"; done
 echo "### SELECTION ATTRIBUTION (4 seeds, n=32, ISO)  job=$SLURM_JOB_ID ###"; nvidia-smi -L; date
 
+# Output name is NOT _s501: that file backs WORKLOG 30h/30j and must not be clobbered.
+# The `|| { ...; exit 1; }` guard MUST NOT sit after a trailing `#` comment -- it becomes part of the
+# comment and the failure check silently disappears. That is what happened here before the fix.
 python -u scripts/eval_selection_attribution.py --ckpt $CK \
   --max-case 39 --n-samples 32 --batch-size 16384 \
   --size-cuts 2.5 2.9 3.5 4.4 --mag-cuts 24.0 24.5 25.0 \
-  --output "$D/selection_attribution_4seed_n32.npz"   # NOT _s501: that file backs WORKLOG 30h/30j || { echo SEL_ATTRIB_FAILED; exit 1; }
+  --output "$D/selection_attribution_4seed_n32.npz" || { echo SEL_ATTRIB_FAILED; exit 1; }
 echo SEL_ATTRIB_DONE; date
