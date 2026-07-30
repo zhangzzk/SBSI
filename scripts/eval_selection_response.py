@@ -239,13 +239,26 @@ def main():
     if not ckpts:
         ap.error("give --ckpt and/or --ckpt-glob")
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    tf32_effective = False
     if args.tf32:
         torch.set_float32_matmul_precision("high")
         torch.backends.cuda.matmul.allow_tf32 = True
         torch.backends.cudnn.allow_tf32 = True
+        # TF32 is Ampere+ (compute capability >= 8.0). On a V100 (7.0) these flags are a silent
+        # NO-OP: results come out bit-identical to fp32 and nothing runs faster. Say so loudly --
+        # a TF32-vs-fp32 comparison run on a V100 "passes" for the trivial reason that both legs
+        # are fp32, which is a vacuous pass, not a validation.
+        if torch.cuda.is_available():
+            cap = torch.cuda.get_device_capability()
+            tf32_effective = cap[0] >= 8
+            if not tf32_effective:
+                print(f"!! --tf32 requested but device is compute capability {cap[0]}.{cap[1]} "
+                      f"({torch.cuda.get_device_name()}); TF32 needs >= 8.0 (Ampere). "
+                      f"THE FLAG IS A NO-OP HERE -- this run is plain fp32.", flush=True)
     t0 = time.time()
     print(f"device={device}  ckpts={len(ckpts)}  n_samples={args.n_samples}  "
-          f"tf32={'ON' if args.tf32 else 'off'}", flush=True)
+          f"tf32={'ON (effective)' if tf32_effective else ('ON (NO-OP)' if args.tf32 else 'off')}",
+          flush=True)
     for c in ckpts:
         print("   ", os.path.basename(c))
 

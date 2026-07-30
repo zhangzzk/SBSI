@@ -3,7 +3,7 @@
 #SBATCH --time=01:30:00
 #SBATCH --mem=150G
 #SBATCH --cpus-per-task=16
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:a40:1
 #SBATCH --partition=inter
 #SBATCH --constraint=x86-64-v3
 #SBATCH --output=/home/z/Zekang.Zhang/logs/selresp_fast_%j.out

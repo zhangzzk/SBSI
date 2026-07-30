@@ -3,7 +3,7 @@
 #SBATCH --time=01:30:00
 #SBATCH --mem=150G
 #SBATCH --cpus-per-task=16
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:a40:1
 #SBATCH --partition=inter
 #SBATCH --constraint=x86-64-v3
 #SBATCH --output=/home/z/Zekang.Zhang/logs/selresp_tf32_%j.out
@@ -31,6 +31,23 @@ cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 D=/project/ls-gruen/users/zekang.zhang/sbsi_caches/ablation
 CK=$D/measurement_flow_g0_ngmix_ablate_s2c_lt500_dom6x6_s501_swaavg.pt
 echo "### TF32 GATE (1 ckpt, fp32 vs tf32)  job=$SLURM_JOB_ID ###"; nvidia-smi -L; date
+
+# HARD PRECONDITION. TF32 exists only on Ampere+ (compute capability >= 8.0). Run 15358925 landed on
+# a Tesla V100 (7.0), where the TF32 flags are a silent no-op: both legs ran fp32, every cut agreed
+# to 0.0000%, and the gate reported ADOPTED having tested NOTHING. A gate that cannot fail is worse
+# than no gate, so refuse to produce a verdict unless the hardware can actually differ.
+python -u -c "
+import sys, torch
+if not torch.cuda.is_available():
+    print('!! no CUDA device -- TF32 cannot be tested'); sys.exit(2)
+cap = torch.cuda.get_device_capability(); name = torch.cuda.get_device_name()
+print(f'device: {name}  compute capability {cap[0]}.{cap[1]}')
+if cap[0] < 8:
+    print(f'!! {name} is pre-Ampere: TF32 is a NO-OP here, so an fp32-vs-TF32 comparison is VACUOUS.')
+    print('   VERDICT: INCONCLUSIVE -- resubmit on an a40/a100. Not adopting TF32.')
+    sys.exit(2)
+print('TF32-capable: the comparison below is meaningful.')
+" || { echo "TF32CHECK_INCONCLUSIVE (wrong GPU class)"; date; exit 1; }
 
 echo; echo "======================= RUN A: fp32 (reference) ======================="
 python -u scripts/eval_selection_response.py --ckpt "$CK" \
