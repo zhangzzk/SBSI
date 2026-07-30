@@ -2,6 +2,132 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30b (the in-domain m is a CANCELLATION: pin residual -3.72% against target defect +3.21%)
+
+Owner goal: get the V2 flow to |m| <= 0.3% in-domain. **Outcome: not reached, and the reason is now
+measured rather than guessed.** The -0.5% is not a small error; it is the residue of two ~3.5% errors
+of opposite sign, so every single-lever fix is expected to make m worse -- which is exactly what the
+whole history of one-knob attempts produced.
+
+Files added: `scripts/eval_m_decomposition.py`, `scripts/eval_population_reweight.py`,
+`scripts/eval_target_vs_constgold.py`, `jobs/job_m_decomposition.sh`,
+`jobs/job_population_reweight.sh`, `jobs/job_target_vs_constgold.sh`, `jobs/job_dom6_grid.sh`,
+`jobs/job_resp_target_g002.sh`. Changed: `scripts/train_measurement_model_swa_s1_truecond.py` (new
+`--response-global-anchor` and `--response-pop-weight-npz`, both default-off and byte-identical to the
+certified path when off), `jobs/job_s2c_domain_train.sh` (ANCHOR/POPW env vars; vGPU fix below).
+
+**RESULT 1 -- THE HEADLINE. The in-domain m splits exactly into two large opposing terms**
+(job 15348680, dom6x6, 8 seeds, 180/180 cells occupied):
+
+| term | value |
+|---|---|
+| (A) pin residual, `<R_flow> - target` | **-3.724%** |
+| (B) target defect, `target + <R_blend> - <r_sim>` | **+3.212%** |
+| total (= the published m) | **-0.512%** |
+
+Both terms are nearly UNIFORM across all six mag bins, all six size bins and all five crowd bins --
+(A) sits at +0.018..+0.053 in absolute response units and (B) at -0.012..-0.049 -- so this is not a
+localised defect but a near-constant offset on each side. The flow overshoots its target by ~+4%
+everywhere, the target sits ~-3.5% below what the constgold identity `r_sim - R_blend` requires, and
+they cancel to -0.5%. **Consequence: fixing one side alone moves m to roughly the other side's value.**
+This retro-explains 28k, where tightening the pin with the bin accumulator (removing A) moved the ruler
+OVERALL to **+2.14%** -- the sign and rough size that removing (A) predicts, and which was recorded
+there as an unexplained regression.
+
+**RESULT 2 -- where the total excess sits** (job 15348636, exact additive split, columns sum to m):
+
+| slice | w | R_flow excess vs `r_sim - R_blend` | contribution to m |
+|---|---|---|---|
+| true size [0.30,0.356) | 0.167 | **+9.22%** | -0.731% |
+| isolated | 0.241 | **+3.41%** | -0.771% |
+| two brightest mag bins | 0.333 | +1.30 / +1.65% | -0.635% |
+| bright x smallest cells | 0.026 | **+15.7 / +21.1%** | -0.577% |
+| three largest size bins | 0.500 | -0.90..-1.70% | +0.648% |
+
+The isolated +3.41% independently reproduces the +3.3..+4.2% isolated over-prediction that 28c called
+its one robust open finding. Arithmetic that frames the problem: the target's count-weighted mean is
+**0.7149**, the flow delivers **0.7280**, and m=0 needs **0.7236** -- the m=0 point lies BETWEEN the
+target and the achieved value, so this is a trade-off along one axis, not a hard floor.
+
+**RESULT 3 -- population reweighting is RETIRED** (job 15348640). WORKLOG line ~1894 named
+"importance-reweight training to the constgold TRUE (mag,size) distribution" as the recommended next
+framework, and the trainer's own comment says the absolute loss "drives global m~0 only for the
+TRAINING population weighting". Both are now measured. m recomputed from the same dumps under both
+weightings:
+
+| flow | m (constgold wt) | m (training wt) | paired shift |
+|---|---|---|---|
+| dom6x6 | -0.508% | -0.467% | **+0.041 +- 0.033** |
+| dom2 | -0.819% | -0.665% | +0.153 +- 0.025 |
+| v2full | +3.039% | +3.071% | +0.032 +- 0.015 |
+
+Max available gain 0.15 points against a 0.5-0.8 point gap. **The control also fails the mechanism:**
+v2full's training population is the FURTHEST from the in-domain evaluation population (crowd-bin ratio
+up to 1.56 vs dom6x6's 1.11) yet has the SMALLEST shift. The true-property marginals are near-identical
+(mag and size ratios 0.98-1.01) because both populations come from the same input catalogue. The
+`--response-pop-weight-npz` plumbing was built before this landed and is kept default-off; it should
+not be used on these grounds.
+
+**RESULT 4 -- dom6x6 x emulator, 8 seeds, in-domain** (job 15348599, CPU-only from existing dumps):
+
+| emulator | `<R_blend>` | m | TOTAL err |
+|---|---|---|---|
+| `_ho` (certified) | 0.1371 | **-0.508%** | 0.285% |
+| `_indist_wc5` | 0.1389 | -0.713% | 0.284% |
+| `_indom` (cut-population-trained) | 0.1358 | **-0.367%** | 0.286% |
+
+Paired shifts -0.205 and +0.141 points. `_indom` gives the best in-domain m on record, but it is
+**NOT adopted**: it loses to `_ho` on the per-pair ruler (-12.66% vs -11.93%, 28i/28j), so promoting it
+would be selecting a component on constgold m, which the firewall forbids. Recorded as a measurement
+only. Also confirms the emulator swap is worth only ~0.2 points on this population, so R_blend
+normalisation is not the lever.
+
+**Why 0.3% is out of reach without a two-sided fix.** (B) is partly the emulator: 28j measured the
+in-domain per-pair R_blend bias at **-11.93%** (+0.29% outside our domain, -41.50% for close pairs
+inside). Correcting `<R_blend>` from 0.1371 to its implied 0.1557 moves in-domain m to about **-2.6%**
+on its own. So the -0.5% currently on record depends on the emulator under-counting blend response by
+~12% and the flow over-shooting its pin by ~4%. Both must be fixed together; either alone is a
+regression. This is the same compensating-error pattern as RESULT 21 of 2026-07-30, now quantified on
+the deliverable population.
+
+**PRE-REGISTERED PREDICTIONS, recorded before the runs finish.** (1) Enforcing the pin with the new
+global anchor (jobs 15348711 at weight 2000, 15348712 at 10000, 3 seeds each, tag
+`ablate_s2c_lt500_dom6x6_anch*`) removes (A), so in-domain m should move -0.51% -> **about +3.2%,
+inside [+2.5,+3.6]**. If it lands there the decomposition is confirmed end to end; if it does not,
+RESULT 1 is wrong. (2) The forward-difference curvature test (job 15348695): the target uses the SNC
+forward estimator `[e(g)-e(0)].ghat/g` at g=0.05 while constgold's r_sim is antithetic at +-0.02, and
+`R_snc(g) = R_0 + c*g`, so for curvature to explain the target's deficit **R_snc(0.02) must exceed
+R_snc(0.05) by about +0.7%** count-weighted.
+
+**Gotchas found and fixed.** (1) **The `cip` partition has ~12 idle a40 vGPU slices** while `inter` is
+100% GPU-allocated -- but `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` needs the CUDA
+virtual-memory APIs, which the A40-16Q vGPU profile does NOT support: `.to(device)` dies with "CUDA
+driver error: operation not supported". Verified by srun 15348619 (identical allocation fails with the
+flag, succeeds without, same device). `NO_EXPANDABLE_SEGMENTS=1` added to the train job. Training is
+~35 min on a vGPU slice vs ~12 min on a full a40, and 24G/8 CPU fits every cip GPU node. (2)
+`compute_response_target_blend.py --antithetic` is **FIREWALL POISON** for training: its help says it
+reads "a constant-shear ANTITHETIC (+g/-g) render catalogue ... the SAME sample as the acceptance
+metric's r_sim", i.e. constgold. It is the metric-consistent target and must never supervise a flow.
+The clean route to the same information is the g=0.02 half-shear leg
+(`det_meas_crowd_g0.02_test_full.feather`). (3) The 8-seed dom6x6 and dom2 constgold **per-object dumps
+already existed** in `v2_domain_dumps/`, so the queued GPU array to regenerate them (15348178) was
+redundant and was cancelled; the whole emulator grid and every decomposition above are CPU joins.
+(4) `eval_m_decomposition.py` initially summed per-seed DataFrames including the string `bin` column,
+and `eval_population_reweight.py` collided on `r_input_p` present in both dump and catalogue; both
+fixed. Python 3.9 f-strings cannot contain backslashes.
+
+**Retired tonight, do not retry:** population reweighting of the pin (RESULT 3, 0.04 points, control
+fails). Already retired earlier and re-confirmed as unavailable: `--response-error relative`
+(catastrophic, 3x), `--response-bin-ema` (28k, regression), low-size grid refinement (28e), crowd-axis
+resolution (28c), finite-difference stencil on the flow side (28c).
+
+**Next.** The two-sided fix is the only route to 0.3%: (i) close the +4% pin overshoot, and (ii) fix
+the -12% in-domain per-pair R_blend bias (28j's `_indom` retrain did NOT fix it: -12.66%). 28k's own
+flagged blocker is still open and is now clearly load-bearing -- the response target and the ruler are
+built from DIFFERENT catalogues (`det_meas_crowd_g0.05_val_full` vs `det_meas_ngmix_g0.05_val`) and
+disagree by ~1.8% in the boundary bin; reconciling them is a prerequisite for trusting either side of
+the cancellation.
+
 ## 2026-07-30 (16-seed ensembles land; the flow x emulator x POPULATION grid; wide m does not predict cut m)
 
 Files added: `scripts/eval_swap_lookup.py`, `jobs/job_swap_lookup.sh`,

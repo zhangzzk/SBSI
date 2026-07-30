@@ -393,7 +393,8 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
                    response_difference="forward",
                    response_error="absolute", rel_floor=0.05,
                    optimizer=None, max_grad_norm=None,
-                   sc23=None, lam_theta=0.0, bin_state=None):
+                   sc23=None, lam_theta=0.0, bin_state=None,
+                   pop_w=None, global_anchor=0.0):
     """NLL + PROPERTY-RESOLVED response loss. Pulls the model's induced first-moment
     response R_model(bin) -> R_sim(bin) in bins of true flux x size (bin_targets is a
     (n_bins,) tensor; n_bins=1 reduces to the old global response loss). R_model is the
@@ -407,8 +408,9 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
     sc2, sc3 = (float(sc23[0]), float(sc23[1])) if sc23 is not None else (0.0, 0.0)
     coupling_on = (lam_theta > 0.0) and (sc23 is not None)
     bt = bin_targets.to(device)
+    pop_w = None if pop_w is None else pop_w.to(device)
     n_bins = bt.numel()
-    tot_nll = tot_resp = n_tot = rmodel_sum = rmodel_n = tot_theta = 0.0
+    tot_nll = tot_resp = n_tot = rmodel_sum = rmodel_n = tot_theta = tot_anchor = 0.0
     for batch in loader:
         coupling = None
         if len(batch) == 7:
@@ -490,6 +492,28 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
         else:
             resp = ((mean_b - bt) ** 2 * wgt_b).sum() / cnt_b.sum().clamp_min(1.0)
         loss = nll + lam * resp
+        # POPULATION-WEIGHTED GLOBAL ANCHOR (gated; default 0 -> byte-identical to the certified path).
+        # The per-cell term above penalises SQUARED errors, so nothing in the loss controls the SIGNED
+        # aggregate  sum_b w_b (Rmodel_b - Rsim_b)  -- which is, up to the additive R_blend, exactly the
+        # m we are graded on. Worse, every weighting implicit in the loss is the TRAINING population's
+        # (cnt_b), while m is evaluated on the deliverable population, and R_sim spans 1.02..0.22 across
+        # the five crowd bins, so a small crowd-distribution mismatch is leveraged ~4.5x. This term pins
+        # the DELIVERABLE-population-weighted mean induced response to the same weighted mean of the
+        # half-shear target.
+        # FIREWALL: pop_w carries only the deliverable population's TRUE-PROPERTY cell occupancy
+        # (mag x size x r_blend). The values being matched, bt, are the half-shear sim's response. No
+        # constgold response, and no m, enters training.
+        anchor_val = 0.0
+        if global_anchor > 0:
+            pw = cnt_b if pop_w is None else pop_w
+            tw = pw.sum().clamp_min(1e-8)
+            # cells absent from this batch have mean_b == bt by construction above, so they contribute
+            # exactly zero to the difference rather than injecting noise
+            g_model = (mean_b * pw).sum() / tw
+            g_target = (bt * pw).sum() / tw
+            anchor = ((g_model - g_target) / g_target.abs().clamp_min(rel_floor)) ** 2
+            loss = loss + global_anchor * anchor
+            anchor_val = float(anchor.detach().cpu())
         theta_val = 0.0
         if coupling_on and coupling is not None:
             # spin-2 orientation-coupling pin on mean-head dims 2,3 (measured mag, log flux-radius):
@@ -513,11 +537,13 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
         tot_nll += float(nll.detach().cpu()) * bw
         tot_resp += float(resp.detach().cpu()) * bw
         tot_theta += theta_val * bw
+        tot_anchor += anchor_val * bw
         rmodel_sum += float(r_i.sum().detach().cpu())
         rmodel_n += r_i.numel()
         n_tot += bw
     n = max(n_tot, 1e-8)
-    return tot_nll / n, tot_resp / n, rmodel_sum / max(rmodel_n, 1), tot_theta / n
+    return (tot_nll / n, tot_resp / n, rmodel_sum / max(rmodel_n, 1), tot_theta / n,
+            tot_anchor / n)
 
 
 @torch.no_grad()
@@ -645,6 +671,21 @@ def parse_args():
                              "cutting label noise without touching batch size, step count or LR. "
                              "Gradient scale is preserved so --response-weight keeps its meaning. "
                              "0 = off (exact previous behaviour). See WORKLOG 2026-07-28g.")
+    parser.add_argument("--response-global-anchor", type=float, default=0.0,
+                        help="Weight on a GLOBAL anchor pinning the POPULATION-WEIGHTED MEAN induced "
+                             "response to the same weighted mean of the target (relative squared "
+                             "error, scale-robust). The per-cell term only penalises SQUARED errors, "
+                             "so the SIGNED aggregate -- which is what m measures -- is uncontrolled. "
+                             "Weights come from --response-pop-weight-npz if given, else the training "
+                             "counts (which reproduces the v1 trainer's --response-global-anchor). "
+                             "0 = off (byte-identical to the certified path).")
+    parser.add_argument("--response-pop-weight-npz", default=None,
+                        help="npz with `pop_w` giving the DELIVERABLE population's cell occupancy on "
+                             "the SAME grid as --response-target-npz. Used by the global anchor (and "
+                             "nothing else) so the anchor centres m on the population it is graded "
+                             "on rather than on the training population. Built by "
+                             "scripts/eval_population_reweight.py --save-weights. FIREWALL: this is "
+                             "true-property occupancy only -- no measured response, no m.")
     parser.add_argument("--response-target-npz", default=None,
                         help="PROPERTY-RESOLVED target from compute_response_target.py "
                         "(edges_flux, edges_size, Rsim[nf,ns]). Supervises R_model(bin)->R_sim(bin) "
@@ -828,6 +869,7 @@ def main():
                               zero_mag=args.zero_mag, psf_fwhm=args.psf_fwhm,
                               moffat_beta=args.moffat_beta)
         d = args.response_delta
+        pop_w_t = None      # deliverable-population cell weights for the global anchor; None = use counts
         # property-resolved target (bins of true flux x size) or single global scalar
         if args.response_target_npz:
             tt = np.load(args.response_target_npz)
@@ -876,6 +918,23 @@ def main():
                     return (fi * ns + si).astype(np.int64)
                 print(f"\nResponse-aware training ON (PROPERTY-RESOLVED): lambda={args.response_weight}, "
                       f"{nf}x{ns} bins, R_sim {Rsim.min():.3f}..{Rsim.max():.3f}, delta={d}")
+            # deliverable-population cell weights for the global anchor (see epoch_response)
+            if args.response_pop_weight_npz:
+                pw = np.load(args.response_pop_weight_npz)["pop_w"].astype(np.float64).reshape(-1)
+                if pw.size != bin_targets.numel():
+                    raise ValueError(
+                        f"pop_w has {pw.size} cells but the response target has "
+                        f"{bin_targets.numel()} -- they must be built on the SAME grid")
+                pop_w_t = torch.as_tensor(pw / max(pw.sum(), 1e-12), dtype=torch.float32)
+                tr_w = np.asarray(tt["counts"], dtype=np.float64).reshape(-1)
+                tr_w = tr_w / max(tr_w.sum(), 1e-12)
+                rs = np.asarray(Rsim, dtype=np.float64).reshape(-1)
+                print(f"Global anchor ON: weight={args.response_global_anchor}, "
+                      f"pop weights from {os.path.basename(args.response_pop_weight_npz)}\n"
+                      f"  target mean response under TRAINING weights   = {(rs * tr_w).sum():.4f}\n"
+                      f"  target mean response under DELIVERABLE weights = "
+                      f"{(rs * pw / max(pw.sum(), 1e-12)).sum():.4f}\n"
+                      f"  (the gap between these two is what the anchor moves)")
         else:
             bin_targets = torch.as_tensor([args.response_target], dtype=torch.float32)
 
@@ -996,17 +1055,20 @@ def main():
     print("\n--- Training measurement flow ---")
     for epoch in range(1, args.epochs + 1):
         if response_on:
-            train_nll, train_resp, train_R, train_theta = epoch_response(
+            train_nll, train_resp, train_R, train_theta, train_anchor = epoch_response(
                 model, resp_train_loader, device, target_scales01, args.response_delta,
                 bin_targets, args.response_weight, args.response_difference,
                 args.response_error, args.response_rel_floor,
                 optimizer=optimizer, max_grad_norm=args.max_grad_norm,
-                sc23=sc23, lam_theta=args.coupling_weight, bin_state=bin_state)
-            val_nll, val_resp, val_R, val_theta = epoch_response(
+                sc23=sc23, lam_theta=args.coupling_weight, bin_state=bin_state,
+                pop_w=pop_w_t, global_anchor=args.response_global_anchor)
+            val_nll, val_resp, val_R, val_theta, val_anchor = epoch_response(
                 model, resp_val_loader, device, target_scales01, args.response_delta,
                 bin_targets, args.response_weight, args.response_difference,
                 args.response_error, args.response_rel_floor,
-                sc23=sc23, lam_theta=args.coupling_weight)
+                sc23=sc23, lam_theta=args.coupling_weight,
+                pop_w=pop_w_t, global_anchor=args.response_global_anchor)
+            history.setdefault("val_anchor", []).append(val_anchor)
             history["train_nll"].append(train_nll)
             history["val_nll"].append(val_nll)
             history.setdefault("val_R", []).append(val_R)

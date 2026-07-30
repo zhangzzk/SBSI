@@ -19,7 +19,16 @@
 # so the only difference from the baseline run is the two domain flags.
 eval "$(conda shell.bash hook)"; conda activate sims1
 export PYTHONPATH="/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+# expandable_segments needs the CUDA virtual-memory APIs, which the vGPU/MIG slices on the `cip`
+# partition (A40-16Q etc.) do NOT support: `.to(device)` dies with "CUDA driver error: operation not
+# supported". Verified by srun 15348619 -- identical allocation fails with the flag and succeeds
+# without it on the same device. Set NO_EXPANDABLE_SEGMENTS=1 when submitting to those nodes; the
+# full-a40 path on `inter` keeps the flag and stays byte-identical.
+if [ "${NO_EXPANDABLE_SEGMENTS:-0}" = "1" ]; then
+  unset PYTORCH_CUDA_ALLOC_CONF
+else
+  export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+fi
 cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 
 # Seed: explicit $SEED, or picked from the array index when run with --array (SEEDS may be
@@ -53,6 +62,7 @@ python -u scripts/train_measurement_model_swa_s1_truecond.py \
   --seed "$SEED" --num-workers 8 --gpu-resident \
   --primary-mag-max 26.0 --primary-re-min 0.3 \
   --response-weight ${RW:-450} --response-delta 0.02 --response-difference central --response-target-npz "$RESP" \
+  --response-global-anchor ${ANCHOR:-0} ${POPW:+--response-pop-weight-npz $POPW} \
   --response-error ${RERR:-absolute} --response-rel-floor ${RFLOOR:-0.05} --response-bin-ema ${EMA:-0.0} \
   --coupling-weight "$LT" --coupling-target-npz "$COUP" \
   || { echo "FAILED seed=$SEED"; exit 1; }
