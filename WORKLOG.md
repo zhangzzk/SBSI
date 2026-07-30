@@ -2,6 +2,71 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30d (NO blend emulator was ever hyperparameter-tuned; Optuna search on `_indom` queued)
+
+Files added: `configs/fs2_lsst_r_extnbr_indom_tuned.yaml` (differs from `_indom` on `model_tag`
+ALONE), `scripts/tune_emulator_indom.py`, `jobs/job_tune_indom.sh`. Jobs 15355997 (2-trial smoke)
+-> 15355998 (100 trials, `afterok`). Nothing retrained or promoted yet.
+
+**RESULT 1 -- `_indom` is the certified `_ho` with the training POPULATION narrowed, and nothing
+else.** Owner asked for this confirmation before spending compute. Verified by diff, not from memory:
+`fs2_lsst_r_extnbr_ho.yaml` vs `fs2_lsst_r_extnbr_indom.yaml` differ on **exactly two lines** --
+`model_tag`, and `regression_cuts` narrowing the PRIMARY (mag 28->26, Re 0.1->0.3). Secondary
+(neighbour) cuts and the distance range are byte-identical, so neighbours stay full-population.
+`job_retrain_indom.sh` vs `job_retrain_ho.sh` differ only in CONFIG_PATH, echo strings and output tag
+names; **`WEIGHT_CLOSE` is never set**, so `retrain_extnbr.py`'s reweighting lever defaults to K=0 and
+no sample weights are applied. Same preprocessing, same fixed-seed split (`test_size` 0.2,
+`random_state` 321), same `HELDOUT_MIN_CASE=40`. **No reweighting, no correction, no architecture
+change anywhere in production -> `_ho` -> `_indom`; every difference is which ROWS enter training.**
+
+**RESULT 2 -- and none of the three was ever tuned.** The saved metadata carries BYTE-IDENTICAL
+regression hyperparameters across `lsst_r`, `lsst_r_extnbr_ho` and `lsst_r_extnbr_indom`
+(`max_depth` 8, `min_child_weight` 154, `gamma` 3.19, `learning_rate` 0.0384, `subsample` 0.970,
+`colsample_bytree` 0.869; only `device`/`tree_method` differ, CPU vs CUDA plumbing). They come from a
+single Optuna search on the ORIGINAL full-population fit: `retrain_extnbr.py`'s own docstring says it
+reuses "the EXACT production hyperparameters ... any difference vs production is the domain
+extension, not tuning", and `models/studies/` contains studies for `regression_lsst_r` and
+`regression_lsst_r_extdom` only -- **none for any `_extnbr*` tag**. The `n_trials: 100` in the configs
+is **inert** on that code path (`retrain_extnbr.py` never reads it).
+
+**Why this is load-bearing.** 28l called the -41.5% close-pair deficit a **REPRESENTATIONAL limit** --
+a claim about capacity -- on a population whose capacity knobs had never been re-searched.
+**Partial cover, stated so this is not oversold:** XGBoost's `min_child_weight` and `gamma` both scale
+with sample weight, so 28l's `WEIGHT_CLOSE`=5/20 sweep DID indirectly relax them (154 -> ~8 effective
+at K=20) and bought nothing past the first ~4 points -- real evidence those two are not binding.
+**`max_depth` is the exception: weight-INVARIANT, so no reweighting experiment has ever probed it.**
+Depth 8 was chosen to fit the full population; here the model must carve out a regime holding 0.09%
+of the rows with those same 8 levels. Depth, learning rate and the sampling fractions are the
+genuinely untested axes.
+
+**PRE-REGISTERED EXPECTATION** (in the script header too). The search objective is blendemu's own --
+global R2 penalized by the train/eval gap -- and close pairs are 0.09% of rows, so it is nearly blind
+to them. Expect a **small global-R2 gain and little or no close-pair movement**. If that holds,
+"representational limit" survives with the depth loophole closed and the next lever is a close-pair
+weighted OBJECTIVE (not merely weighted samples). If the deficit moves materially, 28l needs revising
+and hyperparameter inheritance was the confound.
+
+**FIREWALL.** `HELDOUT_MIN_CASE=40` restricts training AND the Optuna validation split to cases
+40-199; constgold is never read, so no hyperparameter is selected on constgold m. Output goes to a
+NEW tag `lsst_r_extnbr_indom_tuned` (the script refuses to run if `model_tag` lacks "tuned"), leaving
+`_ho` and `_indom` untouched. **Promotion, if any, must still be argued on the per-pair ruler
+(`eval_rblend_gap.py`), never on constgold m.** Study persists to SQLite -> a timeout can be
+resubmitted to continue. Sizing: 62.6M training rows, ~8 min per CPU fit (so ~14 h for 100 trials on
+CPU) -> a40 GPU, 140G, 12 h.
+
+**Also corrected in this session's record (2026-07-30, RESULT 4):** the `_indom`-vs-`_ho` ruler
+comparison was cited to 28i/28j; the table is **28l**, and both numbers are on the SAME in-domain
+sample of 4,811,459 pairs, so the comparison is population-valid. But the 0.73-point gap
+(-12.66% vs -11.93%) is **inside the noise** -- each is ~2.6 sigma from zero, so the one-sigma error
+is ~4-5 points -- and `_indom` is actually BETTER in the close bin (-40.25 vs -41.50) and worse at
+1-2"/2-3". **The ruler is near-silent between the two; the firewall is the whole reason `_indom` is
+not adopted.** Do not cite that gap as the ruler rejecting `_indom`.
+
+**Also clarified for the owner:** the -0.51% in-domain m is the **shape stage only** (R_flow +
+R_blend on both-detected pairs, true-property cuts). It excludes detection (measured separately at
+-0.88% overall / -1.11% blended) and any measured-property selection cut. There is no end-to-end
+certified number yet, and the three stages compose by product rule, not by addition.
+
 ## 2026-07-30c (RETRACTION: the target is NOT missing isolated galaxies; np7 drops ngmix failures)
 
 Owner asked two things: (1) what happened to the extra dom6x6 seeds, and (2) the isolated primaries
