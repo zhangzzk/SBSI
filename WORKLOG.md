@@ -2,6 +2,50 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30q (**RETIRE THE SHIFT-RATIO ESTIMATOR** -- its error is exactly the shape term's cut-dependence)
+
+Owner pointed out that the shift-ratio version of the selection m "exists and I was using it -- and it
+is wrong where it matters", with a table comparing it to the intrinsic-shape measurement. Verified,
+and the failure now has an exact, checkable mechanism.
+
+**The estimator.** `shift = (1 + m_meas(cut)) / (1 + m_meas(nocut)) - 1`, i.e. the end-to-end m
+divided by its own no-cut baseline. The intent is that the shape-response error, being common to
+both, cancels and leaves the selection term.
+
+**It does not cancel, because the shape error is CUT-DEPENDENT.** Measured on the 4-seed data
+(`selection_attribution_4seed_n32_err.npz`), the shape+cross term goes -3.63% at no cut to **-6.57%**
+at size>4.4 and **-2.28%** at size>3.5. Whatever that term CHANGES by, the shift-ratio silently
+hands to "selection":
+
+| cut | shift-ratio | m_intrinsic (correct) | disagreement | change in shape+cross |
+|---|---|---|---|---|
+| size>2.5 | -0.02% | -0.03% | +0.01 | +0.01 |
+| size>2.9 | -0.08% | +0.04% | -0.13 | -0.12 |
+| size>3.5 | +2.12% | +0.70% | **+1.42** | **+1.34** |
+| size>4.4 | -2.44% | +0.60% | **-3.03** | **-2.94** |
+| mag<24 | +1.14% | +0.56% | +0.59 | +0.54 |
+| mag<24.5 | +0.49% | +0.26% | +0.23 | +0.21 |
+| mag<25 | +0.22% | +0.01% | +0.21 | +0.20 |
+
+**Correlation between the disagreement and the shape-term change: 1.0000; max deviation 0.088 pts.**
+The identity is not approximate -- the shift-ratio's error IS the cut-to-cut change of the shape
+term, and nothing else.
+
+Worst case is size>4.4, where the shift-ratio reports **-2.44%** and the truth is **+0.60%** -- wrong
+magnitude AND wrong SIGN. Anything previously concluded from a shift-ratio number in the deep size
+tail should be re-derived.
+
+**Second, independent failure: the shift-ratio is seed-unstable, because it divides by the
+seed-dependent no-cut baseline** (which moved -3.07% at 1 seed to -3.63% at 4 seeds, per 30l).
+Comparing the owner's 1-seed table to the 4-seed rerun, `m_intrinsic` moves by <= 0.08 pts on every
+cut, while the shift-ratio moves by up to 0.36 pts (mag<24: +0.78% -> +1.14%). The correct estimator
+is the stable one.
+
+**Rule going forward: do not use `shift_sim` / `shift_mod` or their ratio to attribute selection
+bias.** They remain fine as a DESCRIPTION of how a cut moves each leg's response, which is what
+`eval_selection_response.py` prints them for. For attribution use the intrinsic-shape construction in
+`eval_selection_attribution.py` (`m_sel` for how much bias exists, `m_flow` for what the model leaves).
+
 ## 2026-07-30p (selection-bias figure remade as 2x2; error bars added; two path mistakes)
 
 Owner asked to remake `figures/fig_selection_bias_sim_vs_flow.png` with panels split by QUANTITY
