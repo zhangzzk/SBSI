@@ -2,6 +2,68 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30v (NEAR-DOMAIN selection: the flow predicts it to <0.13%; realistic joint cuts ~0.05-0.09%)
+
+Owner's reframing of 30u: the flow is trained on mag<26 / Re>0.3" and is KNOWN to be under-resolved
+outside that box, so keep-0.30 S/N cuts are not the regime that matters. Real cuts sit around the
+training edge. Tested exactly that (`scripts/eval_selection_neardomain.py`, job 15365969, half-shear,
+isolated + both-detected, 4 seeds s501/502/503/505, n_samples=32).
+
+**INTRINSIC SHAPES ON BOTH SIDES, deliberately.** Sim and model project the SAME exact sheared
+intrinsic shape, so the only thing that can differ is WHICH OBJECTS PASS. That isolates selection AND
+removes the blend confound of 30u -- there is no R_blend to be missing when the shape is identical on
+both sides. `m_flow` here is therefore a clean model bias, unlike the constgold model column.
+Confirmed by the no-cut row: R_sim = R_model = +1.00005 exactly.
+
+| cut | keep | m_sel | **m_flow** |
+|---|---|---|---|
+| mag<26 (domain edge) | 0.991 | -0.135% | **+0.127 +- 0.000** |
+| mag<25.5 | 0.947 | -0.069% | **+0.044 +- 0.000** |
+| mag<25 | 0.853 | -0.041% | **-0.016 +- 0.000** |
+| R>0.50" | 1.000 | -0.001% | **+0.027 +- 0.002** |
+| R>0.55" | 0.997 | +0.202% | **-0.015 +- 0.006** |
+| R>0.60" | 0.979 | +1.132% | **-0.223 +- 0.009** |
+| R>0.70" (anchor) | 0.810 | +5.375% | **-0.673 +- 0.026** |
+| SNproxy k0.98 | 0.980 | -0.385% | **+0.123 +- 0.001** |
+| SNproxy k0.95 | 0.950 | -0.575% | **+0.060 +- 0.002** |
+| SNproxy k0.90 | 0.900 | -0.917% | **-0.059 +- 0.004** |
+| mag<26.0 & R>0.55" | 0.989 | +0.052% | **+0.093 +- 0.005** |
+| mag<25.5 & R>0.55" | 0.947 | +0.012% | **+0.057 +- 0.003** |
+| SNproxy k0.95 & R>0.55" | 0.949 | -0.430% | **+0.050 +- 0.004** |
+
+**FINDING 1 -- inside the domain the flow predicts selection well within spec.** Every near-domain
+row has |m_flow| <= 0.13%, and the three REALISTIC JOINT cuts (what an analysis actually applies) are
++0.093 / +0.057 / +0.050% -- comfortably inside the |m| < 0.3% deliverable.
+
+**FINDING 2 -- the degradation is smooth and size-driven, and it is a CUT-AGGRESSIVENESS effect, not
+a cliff.** On the size axis m_flow runs +0.027 -> -0.015 -> -0.223 -> -0.673% for R > 0.50 / 0.55 /
+0.60 / 0.70". It first breaks 0.3% between 0.60" and 0.70" (keep 0.98 -> 0.81). This supports the
+owner's reading of 30u directly: the constgold overshoot lives at aggressive cuts, not realistic ones.
+
+**FINDING 3 -- for S/N cuts the PROXY error DOMINATES the model bias, so do not quote m_flow alone.**
+Sim-only, real S/N vs proxy at the same mild keep-fractions: -0.156 / -0.256 / -0.244 pts at keep
+0.98 / 0.95 / 0.90. m_flow on those rows is +0.123 / +0.060 / -0.059%. Both sides use the proxy, so
+m_flow is internally clean -- but predicting a REAL S/N cut carries the proxy gap ON TOP, and that
+gap is 2-4x larger than the flow's own bias. The S/N rows' honest total is ~0.3 pts, proxy-dominated.
+Closing it needs flux_auto/fluxerr_auto as extra flow outputs (a retrain, not post-processing).
+
+REGRESSION ANCHOR PASSED: this run edits SHARED harness code, so `R>0.70"` was included to reproduce
+the published dense-grid value. Got +5.375% vs +5.40% published -- the single-cut path is intact.
+
+Files: `scripts/eval_selection_neardomain.py`, `jobs/job_selection_neardomain.sh` (new);
+`scripts/eval_selection_response.py` -- `truth_selected_response` gained a LIST branch and
+`model_selected_response` a `conds` branch, both implementing an AND of several conditions for JOINT
+cuts. Single-variable callers take the original path unchanged. Jobs: 15365939 (crashed), 15365969.
+
+TWO BUGS FOUND AND FIXED, both mine, both worth recording:
+1. The joint mask was built in-place from `fin`, which in intrinsic mode is (n,1) (proj is
+   deterministic per object) while cut variables are (n,n_samples); `&=` cannot broadcast into the
+   smaller operand. Fixed by ANDing the conditions first and combining with `fin` last.
+2. **`jobs/job_selection_neardomain.sh` printed NEARDOMAIN_ALL_DONE despite a python traceback.** The
+   pattern `python ... 2>&1 | grep -v ... || { echo FAILED; exit 1; }` tests GREP's exit status, not
+   python's. Fixed here with `set -o pipefail`. **75 other scripts in `jobs/` share this pattern** and
+   were left alone (pre-existing; a crash still shows as a missing results table). Worth a sweep.
+
 ## 2026-07-30u (constgold model column: the +17.7-pt gap is a MISSING BLEND TERM, not a flow defect)
 
 Closes the question left open by 30t. The constgold table's model column (4) overshot the measured

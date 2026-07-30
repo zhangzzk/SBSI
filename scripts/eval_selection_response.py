@@ -132,20 +132,34 @@ def truth_selected_response(base, gh1, gh2, gmed, sel, xcol, thr, keep_high, int
         e1_g = base["measured_ngmix_g1_g"].to_numpy(float); e2_g = base["measured_ngmix_g2_g"].to_numpy(float)
     p0 = e1_0 * gh1 + e2_0 * gh2
     pg = e1_g * gh1 + e2_g * gh2
-    if isinstance(xcol, tuple):
-        # ("lin", a, b) -> cut on a*mag + b*log10(flux_radius), i.e. a PROXY S/N built from the two
-        # quantities the flow actually outputs. Added for the S/N-cut prediction test; plain string
-        # xcol keeps the original single-column behaviour untouched.
-        _, a_, b_ = xcol
-        def _lin(leg):
-            m = base["measured_mag_auto_" + leg].to_numpy(float)
-            r = base["measured_flux_radius_" + leg].to_numpy(float)
-            return a_ * m + b_ * np.log10(np.maximum(r, 1e-6))
-        x0, xg = _lin("0"), _lin("g")
+    def _xvals(spec):
+        """(x0, xg) for one cut variable. spec is a column name or ("lin", a, b)."""
+        if isinstance(spec, tuple):
+            # ("lin", a, b) -> cut on a*mag + b*log10(flux_radius), i.e. a PROXY S/N built from the
+            # two quantities the flow actually outputs. Added for the S/N-cut prediction test; plain
+            # string spec keeps the original single-column behaviour untouched.
+            _, a_, b_ = spec
+            def _lin(leg):
+                m = base["measured_mag_auto_" + leg].to_numpy(float)
+                r = base["measured_flux_radius_" + leg].to_numpy(float)
+                return a_ * m + b_ * np.log10(np.maximum(r, 1e-6))
+            return _lin("0"), _lin("g")
+        return base[spec + "_0"].to_numpy(float), base[spec + "_g"].to_numpy(float)
+
+    if isinstance(xcol, list):
+        # AND of several conditions, each {var, thr, keep_high}. Used for JOINT cuts (e.g. S/N AND
+        # size), which is what a real analysis applies. `thr`/`keep_high` are ignored in this branch.
+        # Single-spec callers take the `else` and are bit-for-bit unchanged.
+        pass0 = sel & np.isfinite(p0)
+        passg = sel & np.isfinite(pg)
+        for sc in xcol:
+            a0, ag = _xvals(sc["var"])
+            pass0 &= (a0 > sc["thr"]) if sc["keep_high"] else (a0 < sc["thr"])
+            passg &= (ag > sc["thr"]) if sc["keep_high"] else (ag < sc["thr"])
     else:
-        x0 = base[xcol + "_0"].to_numpy(float); xg = base[xcol + "_g"].to_numpy(float)
-    pass0 = sel & (x0 > thr if keep_high else x0 < thr) & np.isfinite(p0)
-    passg = sel & (xg > thr if keep_high else xg < thr) & np.isfinite(pg)
+        x0, xg = _xvals(xcol)
+        pass0 = sel & (x0 > thr if keep_high else x0 < thr) & np.isfinite(p0)
+        passg = sel & (xg > thr if keep_high else xg < thr) & np.isfinite(pg)
     n0 = int(pass0.sum()); ng = int(passg.sum())
     mbar0 = float(np.mean(p0[pass0])) if n0 else np.nan
     mbarg = float(np.mean(pg[passg])) if ng else np.nan
@@ -223,6 +237,27 @@ def model_selected_response(bundle, base, gh1, gh2, gmed, sel, cuts, n_samples, 
             acc["__nocut__"][leg][0] += float(np.where(fin, proj, 0.0).sum())
             acc["__nocut__"][leg][1] += int(fin.sum())
             for c in cuts:
+                if c.get("conds") is not None:
+                    # JOINT cut: AND of several conditions. Mirrors the list branch of
+                    # truth_selected_response so sim and model apply the same logic.
+                    # Build the AND of the conditions FIRST, then combine with `fin`. Not in-place on
+                    # a copy of `fin`: in intrinsic mode `fin` is (n,1) (proj is deterministic per
+                    # object) while the cut variables are (n,n_samples), and `&=` cannot broadcast
+                    # into the smaller operand. The single-cut path below is safe because `fin & ...`
+                    # allocates a new array at the broadcast shape.
+                    pm = None
+                    for sc in c["conds"]:
+                        if sc.get("lin") is not None:
+                            a_, b_ = sc["lin"]
+                            xvs = a_ * mag + b_ * (logsz / np.log(10.0))
+                        else:
+                            xvs = logsz if sc["dim"] == 3 else mag
+                        cond = (xvs > sc["thr"]) if sc["keep_high"] else (xvs < sc["thr"])
+                        pm = cond if pm is None else (pm & cond)
+                    pm = fin & pm
+                    acc[c["name"]][leg][0] += float(np.where(pm, proj, 0.0).sum())
+                    acc[c["name"]][leg][1] += int(pm.sum())
+                    continue
                 if c.get("lin") is not None:
                     # Proxy S/N = a*mag + b*log10(R). The sampled size dim is the NATURAL log of
                     # flux_radius, so convert: log10(R) = logsz / ln(10). Matches the truth-side
