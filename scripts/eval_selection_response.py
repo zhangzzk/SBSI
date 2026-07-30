@@ -224,6 +224,13 @@ def main():
     ap.add_argument("--flow-seed", type=int, default=12345)
     ap.add_argument("--all-too", action="store_true", help="also print the ALL-objects (diagnostic) table")
     ap.add_argument("--output", default=None)
+    ap.add_argument("--tf32", action="store_true",
+                    help="enable TF32 matmuls (Ampere+; no-op on v100/cpu). The flow is 10 coupling "
+                         "layers x 3 conditioner layers x hidden 256 -- i.e. almost pure GEMM -- so "
+                         "this is the single biggest GPU lever here. OPT-IN, not default: TF32 keeps "
+                         "10 mantissa bits vs fp32's 23, and although the effect on a 128-draw mean "
+                         "should be ~1e-3 relative, that must be MEASURED against an fp32 run before "
+                         "any science number relies on it (jobs/job_selresp_tf32_check.sh).")
     args = ap.parse_args()
 
     ckpts = list(args.ckpt or [])
@@ -232,8 +239,13 @@ def main():
     if not ckpts:
         ap.error("give --ckpt and/or --ckpt-glob")
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    if args.tf32:
+        torch.set_float32_matmul_precision("high")
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
     t0 = time.time()
-    print(f"device={device}  ckpts={len(ckpts)}  n_samples={args.n_samples}", flush=True)
+    print(f"device={device}  ckpts={len(ckpts)}  n_samples={args.n_samples}  "
+          f"tf32={'ON' if args.tf32 else 'off'}", flush=True)
     for c in ckpts:
         print("   ", os.path.basename(c))
 
