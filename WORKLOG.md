@@ -2,6 +2,93 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30c (RETRACTION: the target is NOT missing isolated galaxies; np7 drops ngmix failures)
+
+Owner asked two things: (1) what happened to the extra dom6x6 seeds, and (2) the isolated primaries
+that np7 gives no row to -- "we definitely need to put them in, set nbr flux to zero". Answer to (2):
+**the premise does not hold, and RESULT 10/11 of 2026-07-30b is RETRACTED.** Answer to (1) below.
+
+Files added: `scripts/eval_iso_rows_target.py`, `scripts/eval_np7_dropcause.py`,
+`scripts/build_iso_union_catalogue.py` (written before the retraction; NOT used -- kept only because
+the union machinery is correct and may serve a different purpose), `jobs/job_iso_rows_target.sh`,
+`jobs/job_np7_dropcause.sh`.
+
+**RESULT 1 -- np7 drops ngmix FAILURES, not isolated galaxies** (job 15354167, cases 0-4, 3,497,839
+unique primaries). The np7 key set is EXACTLY `detected AND usable ngmix shape`:
+
+| detected, in-domain | in np7 | not in np7 |
+|---|---|---|
+| usable ngmix shape | 316,423 | **0** |
+| no usable shape (sentinel/non-finite) | **0** | 316,125 |
+
+Agreement 100.00%, zero exceptions in either direction. Every one of the 316,125 dropped rows carries
+the `-1.0` / `(0,0)` ngmix-failure sentinel. Geometry is ruled out independently: the kept and dropped
+rows have the SAME neighbour distributions (finite distance 76.21% vs 76.32%, median 1.795" vs 1.790",
+`neighbored` 76.21% vs 76.32%). A 7" distance cut would have left the dropped rows systematically
+farther or unpaired; it did not.
+
+So there is no isolated population to add back. **A galaxy with no measured shape cannot enter a
+shape-response target**, and its exclusion is correct, not a defect. The proposed fix (add the rows
+with `nbr_flux = 0`) has nothing to operate on -- `augment_crowding.py` would indeed zero-fill them
+correctly, but the rows carry no shape to average.
+
+**RESULT 2 -- why 2026-07-30b RESULT 10/11 read "99.97% neighboured", and why that was wrong.**
+That number came from the crowd catalogue's OWN `neighbored` column. np7 was built with `r_max=7"`, so
+in THAT catalogue `neighbored` means "a companion was found within 7 arcsec" -- true for essentially
+every galaxy in a field this dense, by construction. It is a build-convention flag, not a blending
+statement. Read on the SAME rows through the ruler's 3" convention, the target catalogue is
+**76.21% neighboured / 23.79% isolated** -- which is the deliverable population's ~24% isolated,
+matching it rather than contradicting it.
+
+**The pin HAS been supervised on isolated galaxies, at the right rate all along.** The claim that it
+never saw one, and the entire "reweight to deliverable occupancy gives 0.7244 vs constgold's 0.7234"
+inference built on it, are withdrawn. Comparing a 7"-convention flag against a 3"-convention flag was
+the error; both catalogues carry a column of the same name meaning different things.
+
+**RESULT 3 -- the g=0 SNC lookup is restricted the same way, and for the same reason** (job 15354117).
+Coverage is 99.65% on np7 rows and 0.00% on the dropped ones -- which initially looked like the lookup
+inheriting np7's geometry. It does not: cross-tabbed against shape usability instead of np7
+membership, coverage is 99.64% on rows with a usable shape and 0.00% on rows without. `build_g0_lookup.py`
+applies exactly one filter (`a == -1.0 or (a == 0 and b == 0)` -> skip), i.e. ngmix convergence, and
+that filter alone reproduces the pattern. Both selections are the same measurement cut, independently
+applied. No lookup rebuild is available or needed.
+
+**Note on the first run of `eval_iso_rows_target.py`:** its steps (3)/(4) reported "the target moves by
++0.0000, sign OPPOSITE, the omission is not (B)'s cause". That verdict is VACUOUS, not a refutation --
+every candidate row had zero g0 coverage, so the comparison ran on an empty set. It is recorded here
+only so the printed conclusion is not later mistaken for a measurement.
+
+**RESULT 4 -- two follow-on candidates for (B), both measured, both small.**
+(a) *Crowd-axis mismatch.* The target's 3rd axis is equal-count quintiles of the half-shear
+catalogue's `r_blend`, but constgold rows are assigned to those bins by the EMULATOR's `R_blend`.
+Measured occupancy of the five bins on constgold (mag<26, 17,963,596 rows): 21.10 / 15.72 / 19.56 /
+21.42 / 22.20% against 20% intended, and the two quantile sets nearly coincide
+(target `[-2.2373, -0.0046, 0.0069, 0.0364, 0.1660, 4.2473]` vs constgold
+`[-2.6042, -0.0054, 0.0099, 0.0470, 0.1978, 4.5789]`). Real but far too small for +3.2%.
+(b) *Weighting sensitivity.* The target npz's mean is 0.7149 count-weighted but 0.7465 unweighted over
+occupied cells -- a 0.032 swing from weighting alone, the same size as (B). Which cells carry weight
+matters as much as their values, so any (B) hunt must fix the weighting convention explicitly.
+
+**RESULT 5 -- the extra dom6x6 seeds: found, and both halves resubmitted.** Seeds 510-513 were
+TRAINED on 29 Jul (checkpoints present in `sbsi_caches/ablation`) but never evaluated: the constgold
+job that turns a checkpoint into a per-object dump was cancelled during 2026-07-30b's cleanup, because
+its default `DUMPTAG` would have overwritten the 16-seed V2-full dumps. Seeds 514-517 never trained --
+array tasks 1-7 of job 15348200 were cancelled (task 0 completed). Resubmitted: **15353964** (dumps for
+510-513 via `job_s2c_domain_eval.sh` with `TAG=ablate_s2c_lt500_dom6x6`, no name collision, certified
+`_ho` lookup) and **15353975** (training 514-517 via `job_s2c_domain_train.sh` with the 6x6x5_dom
+target). That takes the ensemble from 8 to 16 seeds.
+
+Expectation, stated in advance: more seeds shrink the error bar (0.285% -> ~0.20%) and do NOT move the
+central value. At m = -0.508% the 16-seed ensemble is still expected to miss 0.3%. The reason to spend
+them is that the current bar cannot distinguish -0.3% from -0.7%.
+
+**Where this leaves (B).** The +3.21% target defect is unchanged and now has no candidate mechanism.
+Retired tonight: isolated-galaxy absence (no such population), g0-lookup geometry (not geometric),
+crowd-axis mismatch (too small). The weighting-convention sensitivity in RESULT 4(b) is the one live
+thread. Next recommended measurement: compare the npz's stored per-cell target against a direct SNC
+recomputation on its own catalogue in the same cells, which separates "the builder writes the wrong
+number in a cell" from "the cells are weighted differently on constgold than in training".
+
 ## 2026-07-30b (the in-domain m is a CANCELLATION: pin residual -3.72% against target defect +3.21%)
 
 Owner goal: get the V2 flow to |m| <= 0.3% in-domain. **Outcome: not reached, and the reason is now
