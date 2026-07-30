@@ -34,6 +34,20 @@ This retro-explains 28k, where tightening the pin with the bin accumulator (remo
 OVERALL to **+2.14%** -- the sign and rough size that removing (A) predicts, and which was recorded
 there as an unexplained regression.
 
+**CAVEAT on RESULT 1, and why the anchor test now adjudicates it.** The TOTAL excess
+`dR = <R_flow> + <R_blend> - <r_sim>` and everything in RESULT 2 involve no cells and are robust. The
+**(A)/(B) SPLIT does depend on how constgold rows are mapped onto the target's cells**, because
+`target` is a per-cell lookup, and the mapping uses the dump's SUMMED `R_blend` as a stand-in for the
+training catalogue's `r_blend` column (the target's third axis). Two facts show the stand-in is not
+exact: the target's aggregate is **0.7149 under training weights but 0.6952 under constgold weights**,
+and the anchored training runs report `<R_model>(val)` ~ 0.72 against a count-weighted target of
+0.7149, i.e. only **+0.7%** on the training population versus the **+4.6%** that (A) implies on
+constgold. So part of (A) may be population transfer / cell mis-assignment rather than a training-side
+pin failure. **The anchor test discriminates:** if in-domain m moves to ~+3.3%, (A) is a real pin
+residual and RESULT 1 stands as written; if m barely moves, (A) is largely a mapping artefact and the
+split must be redone using the exact training `r_blend` definition rather than the summed lookup value.
+Recorded before the result is known.
+
 **RESULT 2 -- where the total excess sits** (job 15348636, exact additive split, columns sum to m):
 
 | slice | w | R_flow excess vs `r_sim - R_blend` | contribution to m |
