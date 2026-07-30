@@ -99,6 +99,107 @@ forward estimator `[e(g)-e(0)].ghat/g` at g=0.05 while constgold's r_sim is anti
 `R_snc(g) = R_0 + c*g`, so for curvature to explain the target's deficit **R_snc(0.02) must exceed
 R_snc(0.05) by about +0.7%** count-weighted.
 
+**RESULT 5 -- prediction (2) FALSIFIED: the target defect is NOT a forward-difference artifact**
+(job 15348695). Rebuilt the 6x6x5 dom target on the g=0.02 half-shear leg, everything else identical;
+the quantile edges agree to <=0.0011 so the comparison is cell-valid.
+
+| | count-weighted mean R |
+|---|---|
+| `R_snc(0.02)` | 0.7128 |
+| `R_snc(0.05)` (the target in use) | 0.7149 |
+| difference | **-0.0021 (-0.29%)** |
+| Richardson to g->0 | 0.7114 |
+
+Predicted **+0.7%**; measured **-0.29%**, i.e. small and the WRONG SIGN, and the g->0 extrapolation moves
+the target FURTHER from what the identity needs. Per-crowd differences are -1.2%..+0.4% and per-size
+<=1% except the boundary bin (-3.1%). **The O(g) curvature of the SNC forward estimator is not the
+cause of (B); the antithetic-vs-forward extraction convention is exonerated for the target.**
+
+**RESULT 6 -- (B) is a CONSTANT ADDITIVE offset of -0.027, NOT the emulator's multiplicative bias.**
+My first reading attributed (B) to 28j's -11.93% in-domain per-pair R_blend bias. **That attribution is
+wrong and is retracted.** A multiplicative R_blend error would make (B) proportional to R_blend --
+scaling 20x and changing sign as R_blend does. It does not:
+
+| crowd bin | `<R_blend>` | `<r_sim>` | target | (B) | (B)/R_blend |
+|---|---|---|---|---|---|
+| q0 | -0.0280 | 1.0165 | 1.0068 | -0.0377 | +1.35 |
+| q1 | +0.0009 | 0.9515 | 0.9297 | -0.0209 | -- |
+| q2 | +0.0189 | 0.8517 | 0.8088 | -0.0240 | -1.27 |
+| q3 | +0.0849 | 0.6968 | 0.5848 | -0.0271 | -0.32 |
+| q4 | +0.5480 | 0.8068 | 0.2319 | -0.0269 | -0.05 |
+
+R_blend spans -0.028..+0.548; (B) stays inside -0.038..-0.021. So (B) is a near-CONSTANT ADDITIVE
+deficit of about **-0.027 in absolute response units**, flat in blend severity, and the same flatness
+holds across mag and size. Multiplicative mis-calibration of the emulator is excluded as its cause.
+
+**Two hypotheses survive, and m alone cannot separate them** (both produce a flat -0.027):
+1. **The target is uniformly ~3% low.** This is 28k's own flagged, still-unresolved blocker: the target
+   and the ruler are built from DIFFERENT catalogues (`det_meas_crowd_g0.05_val_full` vs
+   `det_meas_ngmix_g0.05_val`) and disagree by ~1.8% in the boundary bin. RESULT 5 rules out the
+   forward-vs-antithetic extraction convention as the mechanism, which makes a genuine
+   population/selection difference between the two sims the leading candidate.
+2. **The summed R_blend is missing a roughly constant far-field contribution.** Read from
+   `emulator_metadata_lsst_r_extnbr_ho.json`, the regression task sums at most **k=20** neighbours
+   inside **r_max=10"** (distance cut `[0,10]`). (Correction to my earlier note: the aperture is 10",
+   not 7" -- the "7" in `det_meas_ngmix_ap7` is the ngmix PHOTOMETRIC aperture, an unrelated quantity.)
+   Neighbours beyond 10", or past the 20th, still respond and are simply not counted. A missed
+   far-field term is additive and does NOT scale with the near-neighbour crowd axis, so it reproduces
+   the observed flatness exactly. It is also not obviously small: 28i's per-pair label profile is
+   non-monotonic and does not decay with separation over the measured range (0.0818 at 0-0.5" but
+   0.0374 at 2-3"), so distant neighbours contribute comparably per pair and there are many more of
+   them.
+
+Whichever it is, the identity fixes the arithmetic. With
+`<r_sim>=0.8600`, `<R_flow>=0.7274`, `target=0.6952`, `<R_blend>=0.1371` on constgold in-domain
+weights, and `m = <r_sim>/(<R_flow>+<R_blend>) - 1`:
+
+| scenario | `<R_flow>` | `<R_blend>` | resulting m |
+|---|---|---|---|
+| as measured today | 0.7274 | 0.1371 | **-0.51%** |
+| fix (A) only: flow achieves its target | 0.6952 | 0.1371 | **+3.33%** |
+| fix (B) only: close the 0.027 deficit | 0.7274 | 0.1648 | **-3.61%** |
+| **fix both** | 0.6952 | 0.1648 | **0.00%** |
+
+**m=0 is an identity here, not a tuning outcome** -- it follows automatically once both sides are
+right, and neither half is a tuning knob. The sharpest next test, cheap and firewall-clean, is
+hypothesis 2: rebuild the blend lookup at a LARGER aperture (10-15" vs the current 7") and see whether
+`<R_blend>` rises by the missing ~0.027. Aperture variants already exist in `results/`
+(`blend_lookup_const_d3_*`, `blend_lookup_extnbrho_d7_*`), so the machinery is in place.
+
+**RESULT 7 -- hypothesis 2 tested: inside the trained aperture NOTHING is missing; the far field can
+supply the right order but only from extrapolation** (`scripts/eval_blend_aperture.py`,
+`jobs/job_blend_aperture.sh`, job 15348774, 3 constgold cases, ~563k primaries each, in-domain mean):
+
+| k | r_max | `<R_blend>` in-domain | delta vs certified | status |
+|---|---|---|---|---|
+| 20 | 10" | 0.2159 | -- | **certified** |
+| 40 | 10" | 0.2161 | **+0.0002** | inside trained aperture |
+| 60 | 10" | 0.2161 | **+0.0002** | inside trained aperture (saturated) |
+| 20 | 15" | 0.2175 | +0.0016 | extrapolation (k=20 caps it) |
+| 40 | 15" | 0.2339 | +0.0180 | extrapolation |
+| 60 | 20" | 0.2706 | +0.0547 | extrapolation |
+
+**The k=20 neighbour cap is NOT binding at r_max=10": raising it to 60 moves `<R_blend>` by +0.0002.**
+So there is no cheap, in-domain, trustworthy fix here -- the certified summation is not losing
+neighbours it was trained to see. The needed +0.0277 only appears by pushing r_max to ~15-20", where
+the emulator is outside its `[0,10]` training cut and where 28j already measured **+300%** per-pair bias
+by 8.7". Those rows are upper bounds, not measurements.
+
+**A structural red flag worth recording:** `<R_blend>` keeps GROWING with r_max and shows no sign of
+saturating (+0.0180 by 15", +0.0547 by 20"). A blending response should fall off with separation fast
+enough for the neighbour sum to converge; if the emulator instead contributes a roughly constant
+per-pair response at ever-larger separation, the sum grows with area and **the aperture choice is
+itself setting the value of `<R_blend>`**. That would make the certified r_max=10" a tuning parameter
+in disguise. Consistent with 28i's non-monotonic per-pair label profile (0.0818 at 0-0.5" but 0.0374 at
+2-3"). This needs an emulator trained to larger separations, or a direct sim measurement of far-field
+blend response, before hypothesis 2 can be settled either way.
+
+*Normalisation caveat:* this script's `<R_blend>`=0.2159 is averaged over emulator-scored primaries
+selected on input-catalogue columns, whereas the lookup's in-domain `<R_blend>`=0.1371 is averaged over
+the constgold dump population with unscored primaries counted as zero. Only the DELTAS transfer, and
+they need rescaling by roughly 0.1371/0.2159 = 0.63 to sit in lookup units (so r_max=15/k=40 is worth
+about +0.011, and r_max=20/k=60 about +0.035, against the +0.0277 required).
+
 **Gotchas found and fixed.** (1) **The `cip` partition has ~12 idle a40 vGPU slices** while `inter` is
 100% GPU-allocated -- but `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` needs the CUDA
 virtual-memory APIs, which the A40-16Q vGPU profile does NOT support: `.to(device)` dies with "CUDA
