@@ -132,7 +132,18 @@ def truth_selected_response(base, gh1, gh2, gmed, sel, xcol, thr, keep_high, int
         e1_g = base["measured_ngmix_g1_g"].to_numpy(float); e2_g = base["measured_ngmix_g2_g"].to_numpy(float)
     p0 = e1_0 * gh1 + e2_0 * gh2
     pg = e1_g * gh1 + e2_g * gh2
-    x0 = base[xcol + "_0"].to_numpy(float); xg = base[xcol + "_g"].to_numpy(float)
+    if isinstance(xcol, tuple):
+        # ("lin", a, b) -> cut on a*mag + b*log10(flux_radius), i.e. a PROXY S/N built from the two
+        # quantities the flow actually outputs. Added for the S/N-cut prediction test; plain string
+        # xcol keeps the original single-column behaviour untouched.
+        _, a_, b_ = xcol
+        def _lin(leg):
+            m = base["measured_mag_auto_" + leg].to_numpy(float)
+            r = base["measured_flux_radius_" + leg].to_numpy(float)
+            return a_ * m + b_ * np.log10(np.maximum(r, 1e-6))
+        x0, xg = _lin("0"), _lin("g")
+    else:
+        x0 = base[xcol + "_0"].to_numpy(float); xg = base[xcol + "_g"].to_numpy(float)
     pass0 = sel & (x0 > thr if keep_high else x0 < thr) & np.isfinite(p0)
     passg = sel & (xg > thr if keep_high else xg < thr) & np.isfinite(pg)
     n0 = int(pass0.sum()); ng = int(passg.sum())
@@ -212,7 +223,14 @@ def model_selected_response(bundle, base, gh1, gh2, gmed, sel, cuts, n_samples, 
             acc["__nocut__"][leg][0] += float(np.where(fin, proj, 0.0).sum())
             acc["__nocut__"][leg][1] += int(fin.sum())
             for c in cuts:
-                xv = logsz if c["dim"] == 3 else mag
+                if c.get("lin") is not None:
+                    # Proxy S/N = a*mag + b*log10(R). The sampled size dim is the NATURAL log of
+                    # flux_radius, so convert: log10(R) = logsz / ln(10). Matches the truth-side
+                    # ("lin", a, b) branch of truth_selected_response exactly.
+                    a_, b_ = c["lin"]
+                    xv = a_ * mag + b_ * (logsz / np.log(10.0))
+                else:
+                    xv = logsz if c["dim"] == 3 else mag
                 pm = fin & ((xv > c["thr"]) if c["keep_high"] else (xv < c["thr"]))
                 acc[c["name"]][leg][0] += float(np.where(pm, proj, 0.0).sum())
                 acc[c["name"]][leg][1] += int(pm.sum())
