@@ -21,6 +21,6 @@ SEEDS="${SEEDS:-501 502 503 505}"
 CK=""; for sd in $SEEDS; do CK="$CK $D/measurement_flow_g0_ngmix_ablate_s2c_lt500_dom6x6_s${sd}_swaavg.pt"; done
 echo "### CONSTGOLD MODEL SELECTION job=$SLURM_JOB_ID ###"; nvidia-smi -L; date
 python -u scripts/eval_selection_constgold_model.py --ckpt $CK \
-  --n-samples "${NS:-32}" --batch-size 16384 --max-rows "${MAXROWS:-6000000}" \
+  --n-samples "${NS:-32}" --batch-size 16384 --max-rows "${MAXROWS:-4000000}" \
   2>&1 | grep -v "module command" || { echo CGMODEL_FAILED; exit 1; }
 echo CGMODEL_ALL_DONE; date
