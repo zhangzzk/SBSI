@@ -2,6 +2,79 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30w (constgold gains measured mag+size; builder fix; near-domain constgold table)
+
+**CATALOGUE CHANGE -- constgold now carries per-leg measured magnitude and size, and is PROMOTED.**
+Owner asked whether these could be added; they could, and it removes the S/N proxy from the constgold
+selection test. `MAG_AUTO` and `FLUX_RADIUS` were already in the shape catalogue the builder loads --
+`blendemu/blendemu/response.py::retrieve_constant_response` simply never wrote them out. Added
+`measured_mag_auto_{plus,minus}` and `measured_flux_radius_{plus,minus}`; nothing new is computed.
+
+Rebuilt via `blendemu/scripts/rebuild_constant_response_meas.py` + `jobs/job_rebuild_constgold_meas.sh`
+(job 15366166, 140 cases, 51s). NOT via `run_pipeline.py step_constant_catalogs`, which calls
+`_remove_outputs` on the response catalogue BEFORE rebuilding -- it would have deleted the certified
+evaluation file first. Built to a separate path, verified, then promoted by RENAME (filesystem was
+93% full, so no copy):
+  - old certified file -> `constant_response_catalogue_train.feather.pre_meas_bak` (8.6 GB, KEEP)
+  - new file           -> `constant_response_catalogue_train.feather`  (44 cols, 41,724,739 rows)
+VERIFICATION PASSED: all 40 pre-existing columns identical **including NaN placement**, row count
+unchanged, exactly the 4 expected columns added. So every existing consumer reads identical values;
+the 58 files referencing the canonical path needed no edit.
+
+**BUILDER BUG FOUND AND FIXED -- the current code did NOT reproduce the certified catalogue.**
+The first rebuild came out **+5,313 rows (+0.013%, ~38 per case, nothing missing in the other
+direction)**. Cause: `retrieve_constant_response` MARKED ngmix shape failures NaN but KEPT the rows,
+while the certified file contains ZERO such rows -- the drop had been lost from the code path, so a
+fresh pipeline run silently produced a different evaluation population carrying NaN shapes. The
+dropped rows are faint/small/low-S/N (input mag median 26.2, Re median 0.25", S/N median 10.3), i.e.
+where ngmix legitimately fails. **Fixed in the builder at owner's instruction** (`R_df.loc[~fail_mask]`).
+Verified: case 0 now returns **297,823 rows, 0 NaN-shape** = the certified count exactly (was 297,881).
+The other two `fail_mask` blocks in `response.py` (lines ~317, ~606) feed DIFFERENT catalogues and
+were deliberately left alone -- no evidence they are wrong.
+
+**THE TABLE** (`scripts/eval_selection_constgold_neardomain.py`, `jobs/job_constgold_neardomain.sh`,
+job 15367094; owner's spec -- old column (2) dropped, m_flow added; ALL only, no ISOLATED block).
+Rows without (*) cut sim and model on the SAME real measured quantity at the SAME absolute threshold:
+no proxy, no quantile matching. (*) rows are real S/N, which the flow cannot form.
+
+sim R(no cut): unsheared +0.00000  sheared +1.00000  measured +0.85824;  model R(no cut) +0.72675
+
+| cut | keep | (1) pure sel | (3) measured | (4) MODEL m | m_flow |
+|---|---|---|---|---|---|
+| mag<26 | 0.975 | -0.311% | +1.427% | +1.401 +- 0.546 | -15.342% |
+| mag<25.5 | 0.863 | -0.275% | +7.525% | +8.390 +- 0.554 | -14.640% |
+| mag<25 | 0.683 | -0.116% | +16.593% | +20.487 +- 0.483 | -12.492% |
+| R>0.50" | 0.999 | +0.002% | +0.060% | +0.181 +- 0.521 | -15.218% |
+| R>0.55" | 0.993 | +0.216% | +0.684% | +0.790 +- 0.531 | -15.232% |
+| R>0.60" | 0.967 | +1.324% | +3.154% | +2.601 +- 0.525 | -15.774% |
+| R>0.70" | 0.792 | +5.474% | +12.171% | +6.559 +- 0.402 | -19.557% |
+| mag<26 & R>0.55" | 0.973 | -0.120% | +1.675% | +1.857 +- 0.554 | -15.169% |
+| mag<25.5 & R>0.55" | 0.863 | -0.220% | +7.516% | +8.597 +- 0.559 | -14.469% |
+| S/N>7.9 (*) | 0.980 | -0.370% | +0.999% | +0.947 +- 0.539 | -15.364% |
+| S/N>8.8 (*) | 0.950 | -0.561% | +2.599% | +2.616 +- 0.560 | -15.306% |
+| S/N>9.9 (*) | 0.900 | -0.759% | +5.098% | +5.730 +- 0.568 | -14.811% |
+
+**HOW TO READ m_flow: as a DEVIATION FROM -15.32%, not as an absolute error.** On the full population
+column (3) carries the neighbour response while the flow's R is self-response only, so the flat
+offset IS that missing term: R_model/R_meas - 1 = 0.72675/0.85824 - 1 = **-15.32%** at no cut (the
+certified pipeline supplies it from a separate blend emulator). Deviations from it:
+mag<26 **-0.02**, R>0.55" +0.09, mag<26 & R>0.55" **+0.15**, mild S/N +-0.05 -- i.e. essentially zero
+at the training edge -- versus mag<25 **+2.83** and R>0.70" **-4.24** once cuts get aggressive. With
++-0.5 seed errors on (4), only the aggressive rows are resolved. **This reproduces 30v's conclusion on
+an independent dataset** (half-shear there, constgold here).
+
+Column (1) again localises selection to the SIZE axis: magnitude cuts give <=0.31% pure selection,
+size cuts switch on past the PSF (R>0.60" +1.32%, R>0.70" +5.47%).
+
+BUG FOUND, FIXED, AND CONFIRMED HARMLESS: the model's size cut did `np.exp(log_radius)` first, which
+OVERFLOWED to +inf on extreme flow draws -- and `inf > thr` is True, so those draws were KEPT by every
+size cut (model side only; sim unaffected). Fixed by comparing in log space. Rerun (15367094) has
+**zero** overflow warnings and numbers IDENTICAL to the buggy run (15366642) to 3 decimals -- the
+extreme draws were too rare to matter. Recorded because the failure mode is silent, not because it bit.
+
+NEXT: the near-domain m_flow deviations are at or below the seed noise, so tightening them needs more
+seeds, not a better model.
+
 ## 2026-07-30v (NEAR-DOMAIN selection: the flow predicts it to <0.13%; realistic joint cuts ~0.05-0.09%)
 
 Owner's reframing of 30u: the flow is trained on mag<26 / Re>0.3" and is KNOWN to be under-resolved
