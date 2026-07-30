@@ -51,5 +51,5 @@ echo "### SELECTION ATTRIBUTION (4 seeds, n=32, ISO)  job=$SLURM_JOB_ID ###"; nv
 python -u scripts/eval_selection_attribution.py --ckpt $CK \
   --max-case 39 --n-samples 32 --batch-size 16384 \
   --size-cuts 2.5 2.9 3.5 4.4 --mag-cuts 24.0 24.5 25.0 \
-  --output "$D/selection_attribution_4seed_n32.npz" || { echo SEL_ATTRIB_FAILED; exit 1; }
+  --output "$D/selection_attribution_4seed_n32_err.npz" || { echo SEL_ATTRIB_FAILED; exit 1; }
 echo SEL_ATTRIB_DONE; date

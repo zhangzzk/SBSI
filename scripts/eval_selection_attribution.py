@@ -100,14 +100,16 @@ def main():
     for mode in ("measured", "intrinsic"):
         intr = (mode == "intrinsic")
         # --- truth ---
-        sim = {}
-        R_nc, _, _, _ = truth_selected_response(base, gh1, gh2, gmed, iso,
-                                                "measured_flux_radius", -1e9, True, intrinsic=intr)
-        sim["__nocut__"] = R_nc
+        # Keep the 4th return value (R_err): without it the figure has no uncertainty on m_sel and
+        # "is this consistent with zero?" cannot be answered from the saved product.
+        sim, sim_err = {}, {}
+        R_nc, _, _, E_nc = truth_selected_response(base, gh1, gh2, gmed, iso,
+                                                   "measured_flux_radius", -1e9, True, intrinsic=intr)
+        sim["__nocut__"], sim_err["__nocut__"] = R_nc, E_nc
         for c in cuts:
             xcol = "measured_flux_radius" if c["kind"] == "size" else "measured_mag_auto"
-            sim[c["name"]], _, _, _ = truth_selected_response(base, gh1, gh2, gmed, iso, xcol,
-                                                              c["raw"], c["keep_high"], intrinsic=intr)
+            sim[c["name"]], _, _, sim_err[c["name"]] = truth_selected_response(
+                base, gh1, gh2, gmed, iso, xcol, c["raw"], c["keep_high"], intrinsic=intr)
         # --- model (ensemble over ckpts) ---
         per = []
         for b in bundles:
@@ -115,8 +117,12 @@ def main():
                                                args.batch_size, args.flow_seed, device,
                                                qmc=args.qmc, intrinsic=intr))
         mod = {k: float(np.mean([p[k][0] for p in per])) for k in names}
+        # Per-seed SPREAD, kept so m_flow gets an error bar. sem = sd/sqrt(n_ckpt); with 4 seeds the
+        # sd is itself uncertain by ~40%, so treat these as indicative, not precise.
+        mod_sem = {k: (float(np.std([p[k][0] for p in per], ddof=1) / np.sqrt(len(per)))
+                       if len(per) > 1 else np.nan) for k in names}
         frac = {k: float(np.mean([p[k][1] for p in per])) for k in names}
-        out[mode] = dict(sim=sim, mod=mod, frac=frac)
+        out[mode] = dict(sim=sim, mod=mod, frac=frac, sim_err=sim_err, mod_sem=mod_sem)
         print(f"  [{mode}] done ({time.time()-t0:.0f}s)  nocut: R_sim={sim['__nocut__']:+.5f} "
               f"R_model={mod['__nocut__']:+.5f}", flush=True)
 
@@ -164,7 +170,8 @@ def main():
                  m_measured=np.array([r[1] for r in rows]),
                  m_intrinsic=np.array([r[2] for r in rows]),
                  **{f"{m}_{w}": np.array([out[m][w][k] for k in names])
-                    for m in ("measured", "intrinsic") for w in ("sim", "mod", "frac")})
+                    for m in ("measured", "intrinsic")
+                    for w in ("sim", "mod", "frac", "sim_err", "mod_sem")})
         print(f"\nsaved {args.output}")
     print("SELECTION_ATTRIBUTION_DONE", flush=True)
 
