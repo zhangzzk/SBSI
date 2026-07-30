@@ -2,6 +2,39 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## FUTURE TASK (owner, 2026-07-30 -- RECORDED ONLY, DO NOT ACT YET)
+
+**Lower the primary size cut to `Re > 0.25"`, in BOTH the flow and the blend emulator.**
+
+*Rationale (owner's).* The deliverable cut must be an apples-to-apples size comparison: our galaxy
+size is a half-light (effective) radius, so the resolution limit should be referred to the PSF's
+half-light radius, not its FWHM. For the sim PSF -- Moffat, FWHM 0.73", beta 2.224 -->
+alpha = FWHM / (2*sqrt(2^(1/beta) - 1)) = 0.6036", and R_50 = alpha * sqrt(0.5^(1/(1-beta)) - 1)
+= **0.527"**. Half of that is **0.263"**, rounded to a clean **0.25"**. (For contrast, 0.5 x PSF FWHM
+= 0.365" is the number that would land in the flat zone of the size scan -- but it compares a
+half-light radius against a FWHM, which is not the right comparison.)
+
+*What must change together* -- three places, or the run repeats 2026-07-27d's failure, where a
+full-population response target straddling the training cut cost 5% of R_flow:
+1. flow trainer: `--primary-re-min 0.30 -> 0.25` (`jobs/job_s2c_domain_train.sh`);
+2. response pin target: REBUILD on the same 0.25" domain
+   (`compute_response_target_blend.py`, the `*_dom.npz` grid) -- do not reuse the 0.3" npz;
+3. emulator: `regression_cuts` primary lower bound `0.3 -> 0.25`
+   (`configs/fs2_lsst_r_extnbr_indom*.yaml`), retrained, secondary cuts untouched;
+4. evaluation mask in `eval_v2_indomain_m.py` / `eval_cut_scan.py`: `--re-min 0.25`.
+
+*Honest note on direction, so this is not misread later.* 0.25" is BELOW the current 0.3" cut, so it
+admits MORE PSF-marginal galaxies and moves further INTO the regime where the required response
+collapses (0.697 -> 0.413 across the boundary bin). The justification is CONSISTENCY of the size
+comparison, not avoidance of the fragile zone. The plausible mechanism by which it could still help
+is that the turnover would then sit INTERIOR to the population, sampled on both sides, instead of
+sitting exactly at the population edge where the boundary bin is a partial average -- and RESULT 1
+showed that edge bin is the one place where (A) and (B) share a sign and ADD. Whether that helps or
+hurts is genuinely open; treat it as a test, not a fix, and pre-register before running.
+
+*Firewall unchanged:* `HELDOUT_MIN_CASE=40`, new tags, constgold never trained on. Do not select the
+cut on constgold m -- the 2026-07-30 size scan is a fragility WARNING, not a menu.
+
 ## 2026-07-30d (NO blend emulator was ever hyperparameter-tuned; Optuna search on `_indom` queued)
 
 Files added: `configs/fs2_lsst_r_extnbr_indom_tuned.yaml` (differs from `_indom` on `model_tag`
