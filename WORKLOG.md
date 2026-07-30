@@ -2,6 +2,74 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30g (BASELINE V2 selection gate: mag axis good, deep size tail FAILS as pre-registered)
+
+Owner named **baseline V2 = dom6x6 flow (16 seeds) + old `_ho` emulator** and asked to test it on
+selection bias. Job 15358926 (`jobs/job_s2_selresp_fast.sh`), ISOLATED N=1,016,635, 16 seeds.
+
+**NULL TEST EXACT -- read this first.** True-Re cuts give boundary term **+0.0000** at both 0.50 and
+0.65 (two-means and per-object agree to 4 dp). For a true-property cut pass(g0)==pass(gS), so the
+moving-boundary term MUST vanish; it does. The harness is sound and the measured-cut rows below mean
+something.
+
+| cut | fracS/fracM | shift_sim | shift_mod | **shift err** | m |
+|---|---|---|---|---|---|
+| NO CUT | 1.00/1.00 | -- | -- | -- | **-3.58%** |
+| size>2.5 | 1.00/1.00 | +0.04% | +0.06% | +0.02 | -3.60% |
+| size>2.9 | 0.99/0.98 | +0.99% | +1.09% | +0.10 | -3.67% |
+| size>3.5 | 0.81/0.80 | +8.40% | +6.17% | **-2.23** | -1.55% |
+| size>4.4 | 0.43/0.43 | +3.70% | +6.33% | **+2.63** | **-5.97%** |
+| mag<24 | 0.52/0.52 | +18.57% | +17.14% | -1.43 | -2.41% |
+| mag<24.5 | 0.70/0.70 | +12.95% | +12.36% | -0.59 | -3.07% |
+| mag<25 | 0.85/0.85 | +7.28% | +7.04% | -0.24 | -3.36% |
+
+**READ THE SHIFT COLUMN, NOT m.** There is a **-3.58% offset at NO CUT**, i.e. before any selection
+exists -- the flow over-predicts the baseline isolated response. It contaminates every m in the
+table. The selection question is whether the flow reproduces the SHIFT the cut induces.
+
+**RESULT 1 -- magnitude axis: selection is reproduced.** Shifts up to +18.57% tracked to within
+0.24-1.43 points. The m values near -3% are the baseline offset carried through, not a selection
+failure.
+
+**RESULT 2 -- deep size tail FAILS, and it is not seed noise.** PRE-REGISTERED in
+`jobs/job_s2_selresp_v2base.sh`: "the deep-size-tail gap is expected to SURVIVE" at 16 seeds.
+**Confirmed.** At size>4.4 the sim TURNS OVER (R_sim 1.1433 -> 1.0937) while the model keeps climbing
+(1.1613 -> 1.1631). Flow over-shifts +2.63 points there and UNDER-shifts -2.23 at size>3.5 --
+**opposite signs, so this is a wrong response SHAPE across the tail, not a uniform bias.** 8 seeds
+read -6.6%, 16 seeds -5.97%.
+
+**RESULT 3 -- the cut placement is right; the response is wrong.** Selection fractions match almost
+exactly (0.43/0.43 at size>4.4, 0.81/0.80 at size>3.5, 0.52/0.52 at mag<24). The flow puts the RIGHT
+OBJECTS in the selected sample and then assigns them the wrong response. That points at the response
+model rather than at the joint misplacing the cut.
+
+**RESULT 4 -- first INDEPENDENT sighting of the (A) pin residual?** The -3.58% no-cut offset is very
+close to the **-3.495%** constgold pin residual (A) from 2026-07-30e. This is a completely different
+dataset -- isolated half-shear, firewall-clean, no emulator, no constgold -- so (A) may be a real
+transferable property of the flow rather than a constgold artifact. **NOT asserted**: two numbers
+agreeing to 0.09 points is suggestive, not a measurement. Needs its own test before it is used.
+
+**Speed (2026-07-30 optimization work).** 37m32s vs the full ISO+ALL job's ~2h15m projection.
+Per-checkpoint cost was UNCHANGED (~120-150s), so the whole saving came from dropping `--all-too`
+(~72%, as estimated). TF32 contributed NOTHING here -- see the vacuous-gate note below.
+
+**TF32 GATE WAS VACUOUS (job 15358925) -- corrected.** It reported "TF32 ADOPTED" with 0.0000%
+difference on all 8 cuts. That validated nothing: both jobs asked for `--gres=gpu:1` and landed on a
+**Tesla V100 (capability 7.0)**, where TF32 does not exist, so the flags were a silent no-op and both
+legs ran plain fp32. Identical results because it was the SAME computation. Fixed: both jobs now
+request `--gres=gpu:a40:1`; the gate hard-fails **INCONCLUSIVE** below capability 8.0 so it can never
+again pass by being unable to test; `eval_selection_response.py` prints `tf32=ON (NO-OP)` plus a
+warning on hardware that ignores it. Re-gated as 15359072. **The `--all-too` saving is independent of
+all this and stands.** Same failure mode as the 2026-07-30c isolated-row verdict: a check that passed
+because it could not fail.
+
+**Also checked and NOT done:** the 128x context expansion in `ConditionalAffineFlow.sample` is **not**
+redundant -- these are COUPLING layers and `_shift_log_scale` takes `cat([masked_x, context])`, so the
+conditioner genuinely depends on each drawn z. "Optimising" it would silently corrupt the numbers.
+
+**Next.** The deep size tail is the standing Stage-2 defect. Since fractions match and only the
+response is wrong, the lever is the response model at large measured size, not the cut or the joint.
+
 ## 2026-07-30f (CLEANUP: keep-set reduced to certified V1 + dom6x6 + old emulator; 39G quarantined)
 
 Owner-requested cleanup. **Nothing was deleted** -- artifacts are GPU-hours and are not in git, so
