@@ -1,12 +1,27 @@
 #!/bin/bash
 #SBATCH --job-name=tune_par
 #SBATCH --time=05:00:00
-#SBATCH --mem=160G
+#SBATCH --mem=220G
 #SBATCH --cpus-per-task=16
 #SBATCH --gres=gpu:a40:1
 #SBATCH --partition=inter
 #SBATCH --constraint=x86-64-v3
 #SBATCH --output=/home/z/Zekang.Zhang/logs/tune_par_%j.out
+
+# SEVERAL WORKERS SHARE ONE GPU HERE, DELIBERATELY. Nothing about CUDA prevents it: each process
+# gets its own context, and a worker needs only ~5.4 GB of the a40's 46 GB. The GPU also idles ~half
+# the time (sampled 0/51/0/40/0/71 %), so packing workers onto one card raises utilisation instead of
+# contending for it. One job + one GPU also sidesteps the per-user GPU caps entirely
+# (`cip` allows 3, `inter` 8).
+#
+# MEMORY IS THE REAL CONSTRAINT, NOT THE GPU -- learned by OOM-killing 3 workers (15361610_[0-2]).
+# Those asked for 30G because the serial job's STEADY-STATE RSS was 18 GB. But
+# `load_regression_data_lowmem` spikes well above that while building the DMatrix from the 62.6M-row
+# table, and sacct's periodic sampling never caught the spike (it reported 3.5/15.4/3.6 GB for runs
+# that died at 30 GB -- i.e. MaxRSS UNDER-REPORTS a short peak; do not size from it).
+# 220G is provisioned so that all K workers could peak SIMULTANEOUSLY and still fit. This also rules
+# out the `cip` partition for this job: those nodes have 41 GB total, which is not enough for even
+# one worker's peak with margin.
 
 # PARALLEL + PRUNED continuation of the in-domain emulator search (owner asked for both, 2026-07-30).
 #
@@ -29,7 +44,8 @@
 # CPU BUDGET: 4 workers x XGB_NJOBS=4 = 16 = cpus-per-task. Do not raise K without lowering NJOBS;
 # the node already showed load ~46 when one worker ran with n_jobs=-1.
 # GPU BUDGET: ~5.4 GB per worker, 4 workers ~22 GB, a40 has 46 GB.
-# RAM BUDGET: ~18 GB resident per worker (measured), 4 workers ~72 GB against the 160 G requested.
+# RAM BUDGET: ~18 GB resident per worker in STEADY STATE, but the data-load PEAK is higher and was
+#   never measured cleanly (it killed the 30G workers). 220 G is sized for K simultaneous peaks.
 #
 # FIREWALL unchanged: HELDOUT_MIN_CASE=40 keeps constgold (cases 0-39) out of training AND out of the
 # Optuna validation split, so no hyperparameter is selected on constgold m.
@@ -63,7 +79,9 @@ for i in $(seq 0 $((K-1))); do
   python -u scripts/tune_emulator_worker.py --worker-id "$i" --target-trials "$TARGET" \
       --n-jobs "$XGB_NJOBS" > "/home/z/Zekang.Zhang/logs/tune_par_${SLURM_JOB_ID}_w${i}.log" 2>&1 &
   PIDS="$PIDS $!"
-  sleep 20   # stagger: SQLite study creation and the 18 GB data load both dislike a thundering herd
+  # Stagger by 3 min so each worker is PAST its data-load memory spike before the next one starts.
+  # 20 s was not enough: the load takes minutes, so all K spikes would have overlapped.
+  sleep 180
 done
 echo "  launched K=$K workers, pids:$PIDS"
 

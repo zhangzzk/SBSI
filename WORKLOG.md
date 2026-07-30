@@ -2,6 +2,39 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30o (MY SIZING ERROR: 3 workers OOM-killed on cip; memory, not the GPU, is the constraint)
+
+Owner asked whether several workers could share ONE GPU. Yes -- and that is now the design again.
+Recording the failed detour first, because the lesson is reusable.
+
+**What broke.** The `cip` array (15361610_[0-2]) requested `--mem=30G` and all three were OOM-killed
+within 1-2 minutes, before adding a single trial. I sized 30G from the serial job's steady-state
+`MaxRSS` of 18 GB. That was the error: `load_regression_data_lowmem` SPIKES well above steady state
+while building the DMatrix from the 62.6M-row table.
+
+**`sacct MaxRSS` UNDER-REPORTS short peaks -- do not size a job from it.** The three killed jobs
+report MaxRSS of 3.5 / 15.4 / 3.6 GB despite dying against a 30 GB cap: the sampler simply never hit
+the spike. The true peak is still unmeasured; it is only known to exceed 30 GB.
+
+**Consequence: `cip` cannot host this job at all.** Those nodes have 41 GB total, which cannot cover
+one worker's peak with any margin -- never mind several.
+
+**Answer to the question that prompted this.** Several workers on ONE GPU is not just possible, it is
+the right shape here:
+  - a worker needs ~5.4 GB of GPU memory; an a40 has 46 GB, so K=4 uses under half;
+  - the GPU idles ~half the time anyway, so co-locating workers RAISES utilisation;
+  - one job + one GPU sidesteps the per-user GPU caps entirely (`sacctmgr`: cip gres/gpu=3,
+    inter gres/gpu=8) -- the cap is what stranded the 4th cip task in `QOSMaxGRESPerUser`;
+  - the binding resource is HOST RAM, and only on the big `inter` nodes is there enough.
+
+Resubmitted `jobs/job_tune_indom_parallel.sh` with `--mem=220G` (sized so all K workers could peak
+simultaneously) and the worker stagger raised 20 s -> 180 s, so each is past its load spike before
+the next starts. Jobs 15361651 -> 15361652 (finalize, afterok).
+
+**Nothing was lost in any of this.** The study is SQLite-backed: still 39 COMPLETE, best 0.0040656,
+unchanged across the cancel, the OOMs and both resubmissions. Cost of the detour was queue time, not
+trials.
+
 ## 2026-07-30n (emulator search made PARALLEL + PRUNED at owner's request)
 
 Owner asked whether the tuning could be accelerated, then approved both proposed fixes and
