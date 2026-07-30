@@ -2,6 +2,49 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30s (three-shape-column ladder: S/N cuts DO bias; measured-shape shift m is ~96% subpopulation)
+
+Owner asked for the shift m on constgold in three shape columns. Built the same ladder for constgold
+(`eval_selection_constgold_3col.py`, job 15364031, N=29,807,343, g=0.02) and for the half-shear legs
+(`eval_selection_halfshear_3col.py`, job 15364041). Each column adds ONE ingredient:
+  (1) UNSHEARED INTRINSIC -- same raw shape both legs -> shape response identically 0, R(nocut)=0,
+      R at a FIXED boundary = 0 => whatever survives is the PURE MOVING-BOUNDARY (selection) term.
+  (2) SHEARED INTRINSIC -- analytic shear => selection + subpopulation. This is what the figure plots.
+  (3) MEASURED -- stored ngmix shapes => adds measurement error and its shear response.
+
+**FINDING 1 -- S/N cuts DO produce selection bias, and nothing else we tested does.** 30r predicted
+this (S/N inherits the size mechanism) and it is now measured. constgold, column (1), pure selection:
+
+| S/N cut | frac | pure selection |
+|---|---|---|
+| >5 | 0.97 | -0.182% |
+| >10 | 0.62 | -0.683% |
+| >20 | 0.30 | -1.534% |
+| >30 | 0.18 | **-1.990%** |
+
+So "no selection bias" in the half-shear table was an artefact of the CUT VARIABLE, not a property of
+the sample: magnitude is shear-blind, S/N is not. constgold carries no per-leg measured SIZE, so S/N
+is the only measured cut testable there -- which is exactly the axis real analyses use.
+
+**FINDING 2 -- my subpopulation caveat does NOT bite; the figure stands as read.** I had flagged that
+`m_sel = R(cut)/R(nocut)-1` sums SUBPOPULATION + SELECTION. Measured on both datasets, the
+subpopulation term of the intrinsic columns is <= 0.01%:
+  - constgold col (2) subpop: +0.000% / -0.001% / -0.005% / -0.007% / -0.006% / -0.010%
+  - half-shear col (1) vs col (2), agree to ~0.02 pts everywhere (R>0.90": +14.995% vs +14.979%)
+Reason: intrinsic orientations are isotropic, so <e^2>=0 and the response stays 1 under any
+orientation-blind selection. Concern raised, tested, and closed -- the delivered figure is pure
+selection.
+
+**FINDING 3 -- the MEASURED-shape shift m is a trap: on constgold it is ~96% subpopulation.**
+At S/N>30 the measured column's shift m is **+93.6%**, of which **+95.8% is subpopulation** and only
+**-1.1%** is selection. Cutting on S/N keeps galaxies whose measured shapes are far better determined
+(R_measured climbs 0.446 -> 0.863); that is not a bias. Reading the measured column as selection bias
+overstates it by ~90x. The half-shear legs show the same trap on the magnitude axis: measured shift m
+= **+12.95%** at mag<24.5 against **+0.18%** actual selection. **This retro-explains the 2026-07-25
+figure**, whose large flux-axis signal was measured-shape subpopulation, not selection.
+
+NULL passes exactly in both: a TRUE-Re cut gives column (1) = 0.000e+00.
+
 ## 2026-07-30r (why m_sel ~ 0: REAL PHYSICS, verified by mechanism -- and the flow INVENTS mag-axis bias)
 
 Owner found the near-zero m_sel surprising and asked for a review. `scripts/eval_selection_why_small.py`
