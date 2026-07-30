@@ -70,6 +70,35 @@ conditioner genuinely depends on each drawn z. "Optimising" it would silently co
 **Next.** The deep size tail is the standing Stage-2 defect. Since fractions match and only the
 response is wrong, the lever is the response model at large measured size, not the cut or the joint.
 
+**RESULT 5 -- the `--all-too` optimisation is VERIFIED, not just argued** (job 15358705, 2h19m47s,
+32 evals). Its ISOLATED table reproduces the fast run's to ~1e-4 in R_model: NO CUT -3.58/-3.58,
+size>3.5 -1.55/-1.56, size>4.4 -5.97/-5.96, mag<24 -2.41/-2.41. Different jobs, different GPUs
+(V100 vs RTX 2080 Ti), one with `--all-too` and one without. **Dropping the ALL scope provably
+changes no ISOLATED number, so the ~72% saving is free.**
+
+**RESULT 6 -- the ALL scope (N=2,364,527, blended included).**
+
+| cut | shift_sim | shift_mod | m |
+|---|---|---|---|
+| NO CUT | -- | -- | **+0.46%** |
+| size>2.9 | +1.96% | +1.72% | +0.69% |
+| size>3.5 | +9.27% | +6.35% | +3.22% |
+| size>4.4 | +1.03% | +3.57% | -2.00% |
+| mag<24 | +51.33% | +52.66% | -0.42% |
+| mag<24.5 | +35.68% | +36.70% | -0.29% |
+| mag<25 | +20.34% | +20.86% | +0.02% |
+
+Magnitude axis excellent: shifts to +51% reproduced within 1.3 points, |m| <= 0.42%. **The size-tail
+pathology reproduces on this independent population** -- sim collapses +9.27% -> +1.03% across
+size>3.5 -> size>4.4 while the model only eases +6.35% -> +3.57%. Same signature as ISOLATED.
+
+**CORRECTION to this entry's own framing.** I claimed the ALL scope's m would be badly contaminated
+(~15%) because "the flow carries no blend response". **Measured no-cut m on ALL is +0.46%, BETTER
+than ISOLATED's -3.58%, not worse.** That reasoning was wrong: the flow IS conditioned on crowding
+(`nbr_flux_near/far/max`), which the claim ignored. **Why ALL comes out better than ISOLATED is
+UNEXPLAINED** -- do not build on either the original claim or a post-hoc story for the reversal. The
+shift columns were always the safe read and they behave consistently across both scopes.
+
 ## 2026-07-30f (CLEANUP: keep-set reduced to certified V1 + dom6x6 + old emulator; 39G quarantined)
 
 Owner-requested cleanup. **Nothing was deleted** -- artifacts are GPU-hours and are not in git, so
