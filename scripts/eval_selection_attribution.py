@@ -135,18 +135,29 @@ def main():
     print("\n" + "=" * 100)
     print("ATTRIBUTION -- m = R_sim/R_model - 1  (ISOLATED)")
     print("=" * 100)
-    print(f"  {'cut':>10} {'fracM':>6} | {'m_measured':>11} {'m_intrinsic':>12} | {'difference':>11}")
-    print(f"  {'':>10} {'':>6} | {'end-to-end':>11} {'SELECTION only':>12} | {'shape+cross':>11}")
+    print(f"  {'cut':>10} {'fracM':>6} | {'m_sel':>8} {'m_flow':>8} | {'m_measured':>11} {'difference':>11}")
+    print(f"  {'':>10} {'':>6} | {'REAL sel':>8} {'model':>8} | {'end-to-end':>11} {'shape+cross':>11}")
     rows = []
+    a, b = out["measured"], out["intrinsic"]
+    nc = "__nocut__"
     for k in names:
-        a, b = out["measured"], out["intrinsic"]
         m_meas = a["sim"][k] / a["mod"][k] - 1.0 if a["mod"][k] else np.nan
         m_intr = b["sim"][k] / b["mod"][k] - 1.0 if b["mod"][k] else np.nan
-        print(f"  {k:>10} {a['frac'][k]:>6.2f} | {m_meas*100:>+10.2f}% {m_intr*100:>+11.2f}% | "
-              f"{(m_meas-m_intr)*100:>+10.2f}%")
+        # m_sel: how much selection bias EXISTS in the sim, with exact shapes (a DATA property).
+        # m_flow: whether the flow reproduces that selected response (a MODEL property).
+        # Reporting m_flow ALONE is misleading -- a small m_flow where m_sel ~ 0 means "nothing was
+        # being tested", not "the model works". See WORKLOG 2026-07-30j.
+        m_sel = b["sim"][k] / b["sim"][nc] - 1.0 if b["sim"][nc] else np.nan
+        m_flow = b["mod"][k] / b["sim"][k] - 1.0 if b["sim"][k] else np.nan
+        print(f"  {k:>10} {a['frac'][k]:>6.2f} | {m_sel*100:>+7.2f}% {m_flow*100:>+7.2f}% | "
+              f"{m_meas*100:>+10.2f}% {(m_meas-m_intr)*100:>+10.2f}%")
         rows.append((k, m_meas, m_intr))
-    print("\n  The last column is shape-response error PLUS the shape-selection cross term -- it is")
-    print("  NOT 'the shape term'. The middle column is the clean selection-bias number.")
+    print("\n  m_sel  = R_sim(cut)/R_sim(nocut)-1 with EXACT shapes: the selection bias that really")
+    print("           exists in the sim. If this is ~0, that cut has NO selection bias to test.")
+    print("  m_flow = R_flow(cut)/R_sim(cut)-1: whether the flow reproduces it. Judge the model on")
+    print("           this ONLY where m_sel is non-negligible.")
+    print("  The last column is shape-response error PLUS the shape-selection cross term -- it is")
+    print("  NOT 'the shape term'.")
 
     if args.output:
         np.savez(args.output, names=np.array(names),
