@@ -224,6 +224,46 @@ the constgold dump population with unscored primaries counted as zero. Only the 
 they need rescaling by roughly 0.1371/0.2159 = 0.63 to sit in lookup units (so r_max=15/k=40 is worth
 about +0.011, and r_max=20/k=60 about +0.035, against the +0.0277 required).
 
+**RESULT 8 -- the deliverable's lower SIZE CUT sits exactly on the response turnover, and that
+placement is worth ~0.67 points of m** (`scripts/eval_cut_scan.py`, `jobs/job_cut_scan.sh`,
+job 15348889, dom6x6, 8 seeds, all cuts re-averaged from dumps). RESULT 1's per-axis table shows why
+the boundary bin is special: it is the ONE cell block where (A) and (B) have the SAME sign
+(+0.0250 and +0.0136) and therefore ADD, while everywhere else they oppose.
+
+in-domain m (%), +- = seed sem and per-case term in quadrature:
+
+| Re > | kept | mag<26.0 | mag<25.5 | mag<25.0 | mag<24.5 |
+|---|---|---|---|---|---|
+| **0.300 (current)** | 43.4% | **-0.508 +- 0.286** | -0.659 +- 0.271 | -0.810 +- 0.242 | -1.143 +- 0.255 |
+| 0.320 | 40.7% | +0.157 +- 0.246 | +0.230 +- 0.239 | +0.248 +- 0.220 | -0.091 +- 0.230 |
+| 0.340 | 38.1% | +0.315 +- 0.222 | +0.438 +- 0.221 | +0.441 +- 0.217 | +0.093 +- 0.229 |
+| 0.356 | 36.1% | +0.256 +- 0.217 | +0.367 +- 0.217 | +0.344 +- 0.214 | **+0.029 +- 0.222** |
+| 0.380 | 33.2% | +0.104 +- 0.247 | +0.197 +- 0.234 | +0.107 +- 0.224 | -0.155 +- 0.219 |
+| 0.420 | 28.9% | +0.474 +- 0.352 | +0.455 +- 0.318 | +0.343 +- 0.292 | +0.169 +- 0.259 |
+| 0.450 | 26.0% | +0.819 +- 0.419 | +0.810 +- 0.381 | +0.742 +- 0.346 | +0.635 +- 0.298 |
+| 0.500 | 22.0% | +1.208 +- 0.448 | +1.338 +- 0.419 | +1.420 +- 0.386 | +1.433 +- 0.331 |
+
+**Re>0.300 -> Re>0.320 flips m from -0.508% to +0.157% while dropping only 2.7% of the sample.** The
+currently specified cut is the WORST value in the whole scanned range on the mag<26 column, and it is
+worst because it is placed precisely where the required response turns over (0.413 in the boundary bin
+vs 0.697 in the next). Between 0.32 and 0.42 the central value is inside +-0.3% for every magnitude
+cut; beyond 0.45 it degrades again (+0.82, +1.21), so there is a genuine sweet spot rather than a
+monotonic trend.
+
+**Read the STRUCTURE, not the best cell.** This is a 32-cell table at 8 seeds; picking the single
+`PASS` cell (Re>0.356, mag<24.5, +0.029 +- 0.222) would be multiple-comparisons shopping and I am not
+claiming it. What is robust is the shape: a steep rise from 0.30 to 0.32, a broad near-zero plateau
+0.32-0.42, degradation past 0.45. Note also that almost every plateau cell is "central value in spec,
+error bar not" -- the same state the certified wide-convention result is in (+0.261 +- 0.266%), which
+at 8 seeds is a statement about precision, not about the model.
+
+**This is NOT a proposed fix.** Moving the deliverable's cut changes the deliverable and is an owner /
+physics decision; reporting it as a calibration success would be selecting the acceptance definition
+on the metric. The honest statement is: **the -0.5% currently on record is substantially an artefact of
+knife-edge cut placement**, and the same pipeline reads inside spec a few hundredths of an arcsecond
+away. Whether Re>0.3 is the right physical cut is a separate question from whether the calibration is
+good, and this table separates them for the first time.
+
 **Gotchas found and fixed.** (1) **The `cip` partition has ~12 idle a40 vGPU slices** while `inter` is
 100% GPU-allocated -- but `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` needs the CUDA
 virtual-memory APIs, which the A40-16Q vGPU profile does NOT support: `.to(device)` dies with "CUDA

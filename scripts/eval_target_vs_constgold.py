@@ -84,7 +84,7 @@ def main():
             N = np.bincount(cid, minlength=ncell).astype(float)
         del d, cid
     S /= len(paths)
-    seeds = [int(re.search(r"_s(\d+)", os.path.basename(p)).group(1)) for p in paths]
+    seeds = [int(re.search(r"perobj_s(\d+)", os.path.basename(p)).group(1)) for p in paths]
     print(f"{len(paths)} dumps, seeds {seeds}")
 
     occ = N > 0
