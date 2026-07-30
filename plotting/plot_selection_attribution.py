@@ -124,11 +124,14 @@ def main():
     axes[0][1].annotate("PSF $R_{50}$\n%.2f\"" % PSF_R50, (PSF_R50, axes[0][1].get_ylim()[1]),
                         xytext=(-4, -30), textcoords="offset points", ha="right", va="top",
                         fontsize=8.5, color="#666666")
-    axes[1][0].annotate("|m| < %.1f%%" % args.target, (axes[1][0].get_xlim()[1], args.target),
-                        xytext=(4, 2), textcoords="offset points", ha="left", va="bottom",
-                        fontsize=8.5, color="#666666")
+    # AXES coordinates, not data. In data coords this label chased the inverted magnitude x-axis and
+    # rendered over the neighbouring panel.
+    axes[1][0].text(0.015, 0.03, "shaded: |m| < %.1f%% target" % args.target,
+                    transform=axes[1][0].transAxes, ha="left", va="bottom",
+                    fontsize=8.5, color="#666666")
 
-    fig.tight_layout()
+    # No tight_layout(): the shared-y row + inverted axis combination is not compatible with it and
+    # it warns. hspace/wspace are set explicitly in gridspec_kw instead.
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
     fig.savefig(args.out, bbox_inches="tight")
     print("saved %s" % args.out)
