@@ -116,17 +116,26 @@ def main():
             print(f"  {n:>5} | {a.mean():>+10.5f} {sa:>9.5f} | {b.mean():>+10.5f} {sb:>9.5f} | "
                   f"{ratio:>8.2f}x {shift:>+11.5f}")
 
-    # headline: how far can n be cut before QMC's scatter exceeds plain MC at the largest n?
+    # Headline. NOTE: the no-cut row is USELESS as a reference -- common random numbers across the
+    # two legs make it deterministic (sd = 0 at every n), so any "does QMC beat it" test is vacuous.
+    # The question that matters is whether the sampling noise is small COMPARED TO THE EFFECT, so
+    # report it in the units the result is quoted in: percentage points of m.
     nmax = max(args.n_list)
     print("\n" + "=" * 96)
-    ref = np.array(res[("mc", nmax)]["__nocut__"]).std(ddof=1)
-    print(f"reference: plain MC at n={nmax} has nocut sd = {ref:.5f}")
-    ok = [n for n in args.n_list if np.array(res[("qmc", n)]["__nocut__"]).std(ddof=1) <= ref]
-    if ok:
-        print(f"QMC matches or beats that from n={min(ok)} upward  ->  potential {nmax/min(ok):.0f}x "
-              f"cut in n_samples (nocut row).")
-    else:
-        print("QMC does NOT reach that scatter at any n tested -- no n_samples reduction justified.")
+    tight = names[-1] if len(names) > 1 else "__nocut__"
+    for k in names:
+        if k == "__nocut__":
+            continue
+        Rs = sim[k]
+        print(f"  {k}: sampling noise as points of m  (effect here = "
+              f"{abs(Rs/np.mean(res[('mc', nmax)][k]) - 1)*100:.2f} pts)")
+        for n in args.n_list:
+            a = np.array(res[("mc", n)][k]); b = np.array(res[("qmc", n)][k])
+            f = lambda sd, R: 100.0 * Rs * sd / R**2
+            print(f"      n={n:>4}: MC {f(a.std(ddof=1), a.mean()):.4f} pts   "
+                  f"QMC {f(b.std(ddof=1), b.mean()):.4f} pts")
+    print("  -> if these are orders of magnitude below the effect, n_samples is OVERKILL and the")
+    print("     right move is to CUT n, regardless of which sampler wins.")
     print("CAVEAT: with only %d repeats each sd is itself uncertain by ~%.0f%%; treat a ratio near 1 "
           "as 'no difference'." % (args.repeats, 100.0 / np.sqrt(2 * (args.repeats - 1))))
 

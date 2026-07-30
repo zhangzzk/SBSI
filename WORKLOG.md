@@ -2,6 +2,47 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30i (QMC works, is unbiased -- and is MOOT: n_samples=128 is 8x overkill)
+
+Owner asked to try QMC and 1 seed. Files: `_qmc_normal` (randomly-shifted scrambled Sobol) in
+`sbs_shear/measurement_model.py` with an opt-in `qmc` flag threaded through
+`ConditionalAffineFlow.sample` / `ConditionalMeanFlow.sample` / `MeasurementModelBundle.sample` /
+`model_selected_response`; `scripts/eval_qmc_convergence.py`; `jobs/job_qmc_convergence.sh`.
+Job 15360655, 1 seed (s501), ISOLATED, n in {16,32,64,128}, 3 repeats per (mode, n).
+
+**RESULT 1 -- THE HEADLINE FINDING IS NOT ABOUT QMC. `n_samples` can drop 128 -> 16.** Expressed in
+the units the result is quoted in (points of m), at size>4.4 where the effect is **5.48 points**:
+
+| n | MC sampling noise | QMC sampling noise |
+|---|---|---|
+| 16 | 0.025 pts | 0.021 pts |
+| 32 | 0.047 pts | 0.023 pts |
+| 64 | 0.028 pts | 0.014 pts |
+| 128 | 0.026 pts | 0.012 pts |
+
+At n=16 the sampling noise is **224x smaller than the effect**. Raw MC sd across an 8x change in n is
+0.00030 / 0.00058 / 0.00034 / 0.00032 -- **no 1/sqrt(n) trend at all**, so the residual scatter is not
+sampling-dominated and extra draws buy nothing. **8x saving, bigger than `--all-too` (3.5x) and TF32
+(1.29x), and it needs no new machinery.**
+
+**RESULT 2 -- QMC is CORRECT but moot.** Mean shift <= 0.0003 everywhere, so the per-object random
+shift keeps it unbiased exactly as designed -- that was the thing that could have gone wrong (shared
+Sobol points would have correlated quadrature errors across objects and turned variance into BIAS).
+It does reduce scatter at the tight cut, ~2x and consistently (sd ratios 1.16 / 2.07 / 1.94 / 2.16 at
+size>4.4). But that is a 2x cut in something already 224x below the signal. **Keep the code (opt-in,
+default off); do not bother enabling it.**
+
+**MY HEADLINE LOGIC WAS VACUOUS -- fixed.** The script printed "QMC does NOT reach that scatter at
+any n tested" because it compared against the NO-CUT row, whose sd is 0.00000 at every n (common
+random numbers across the two legs make that row deterministic). Nothing can beat zero, so the test
+could not pass. Third vacuous check this session, same root cause each time: **a comparison whose
+reference makes the outcome predetermined.** Rewritten to report noise in points of m against the
+effect size.
+
+**CAVEAT.** 3 repeats -> each sd is itself uncertain by ~50%, so individual ratios near 1 mean "no
+difference". The ORDER OF MAGNITUDE (noise ~100x below effect) is what the conclusion rests on, and
+that is robust to a factor of 2.
+
 ## 2026-07-30h (ATTRIBUTION: the size-tail defect is NOT selection -- it is SHAPE response)
 
 Owner's point: projecting the flow's SAMPLED MEASURED shape while also cutting on its SAMPLED
