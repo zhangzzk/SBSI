@@ -351,6 +351,25 @@ isolated response is therefore pure extrapolation from a neighboured-only target
    (3" annotation). So "isolated" is not even a common definition across the two instruments -- the
    flavour difference the grounding pass flagged, now measured.
 
+**The causal chain, fully traced -- it is a CONSTRUCTION property, not a physics choice.**
+`jobs/job_resp_rebuild_c2fix.sh` builds the target catalogue from
+**`det_meas_ngmix_np7_g0.05_val.feather`**, and that file has **exactly 784,066 rows for cases 0-4 --
+identical to the crowd catalogue's count** -- with 0 duplicate keys, 99.97% neighboured, max distance
+**6.998"**, 100% detected. So `np7` is a **NEAREST-PAIR** catalogue: one row per (primary, nearest
+neighbour within 7"), detected only, and **a primary with no neighbour inside 7" simply has no row.**
+`scripts/augment_crowding.py` is a streaming column-add that drops nothing (missing keys -> 0), so it
+passes that selection straight through:
+
+    det_meas_ngmix_np7_g0.05_val   (nearest-pair <=7", detected, 99.97% neighboured)
+      -> augment_crowding.py       (adds nbr_flux_*, r_blend; drops no rows)
+      -> det_meas_crowd_g0.05_val_full
+      -> compute_response_target_blend.py
+      -> the pin target the flow's response is trained against
+
+The pin therefore inherits "must have a neighbour within 7 arcsec" from **which pair catalogue was
+used**, not from any decision about the deliverable population. That is the whole origin of (B), and of
+the isolated over-prediction that has resisted every fix attempted since 2026-07-28.
+
 **Indicated fix, firewall-clean (half-shear only):** rebuild the response target on a catalogue that
 CONTAINS isolated galaxies -- the ruler's `det_meas_ngmix_g0.05_val` is 21.75% isolated -- with the
 neighbour-annotation radius and the `neighbored` definition matched to the evaluation convention, then
