@@ -55,6 +55,7 @@ nvidia-smi -L; date
 python -u scripts/eval_selection_response.py \
   --ckpt $GLOB --tf32 \
   --max-case 39 --n-samples 32 --batch-size 16384 \
-  --output "$D/selection_response_v2base_dom6x6_4seed_n32.npz"   # 16-seed file preserved \
+  # NOTE: new filename on purpose -- the 16-seed npz stays put.
+  --output "$D/selection_response_v2base_dom6x6_4seed_n32.npz" \
   || { echo "SELRESP_FAST_FAILED"; exit 1; }
 echo "SELRESP_FAST_DONE"; date
