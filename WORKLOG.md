@@ -2,6 +2,46 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30j (owner's m_sel / m_flow split: selection bias is a SIZE-axis effect, and the flow gets it)
+
+Owner's refinement of 30h: split the one `m_intrinsic` column into two questions that it conflates --
+**m_sel** = `R_sim(cut)/R_sim(nocut) - 1` with EXACT INTRINSIC shapes = how much selection bias
+actually EXISTS in the sim (a property of the DATA); and **m_flow** = `R_flow(cut)/R_sim(cut) - 1` =
+whether the flow reproduces it (a property of the MODEL). Computed from the existing
+`selection_attribution_s501.npz`; no new job.
+
+| cut | **m_sel** (real, sim) | **m_flow** (model err) | m_sel with MEASURED shapes (contaminated) |
+|---|---|---|---|
+| size>2.5 | -0.00% | +0.02% | +0.05% |
+| size>2.9 | +0.55% | -0.07% | +1.00% |
+| size>3.5 | +5.40% | -0.73% | +8.40% |
+| **size>4.4** | **+13.85%** | **-0.51%** | +3.70% |
+| **mag<24** | **+0.45%** | -0.55% | **+18.57%** |
+| mag<24.5 | +0.17% | -0.26% | +12.95% |
+| mag<25 | -0.04% | -0.02% | +7.28% |
+
+**RESULT 1 -- SELECTION BIAS IS A SIZE-AXIS EFFECT ONLY.** +13.85% at size>4.4 and +5.40% at
+size>3.5; on the magnitude axis it is **<= 0.45%, i.e. absent**. Physically right: measured size
+responds strongly to shear (it is a coupling-pin dimension), so a measured-SIZE cut genuinely makes
+selection shear-correlated and objects cross the boundary. Magnitude barely responds, so a
+magnitude cut does not.
+
+**RESULT 2 -- THE FLOW CAPTURES IT.** |m_flow| <= **0.73%** on every cut, including **-0.51% against
+a real +13.85%** at size>4.4. The selection model works.
+
+**RESULT 3 -- the measured-shape column was WRONG IN BOTH DIRECTIONS, and this corrects 30g/30h.**
+On the mag axis it reported **+18.57%** of "selection bias" that DOES NOT EXIST -- that number is
+brighter galaxies having a different MEASURED-SHAPE response, a measurement sub-population effect,
+not selection. On the size axis it **UNDERSTATED** the real bias ~4x (+3.70% vs the true +13.85%),
+because the shape sub-population effect partly cancelled it. **30g's "magnitude axis excellent --
+shifts up to 18.6% reproduced within 1.3 points" was measuring the wrong quantity: there was never
+18.6% of selection bias on that axis.** The real achievement is the size axis.
+
+**Why owner's split beats 30h's single column.** 30h's `m_intrinsic` answered only "does the model
+reproduce the selected response" and could not say whether there was any selection bias to reproduce.
+Reading it alone, a small `m_intrinsic` on the mag axis looks like a model success when in fact
+nothing was being tested there. **Always report m_sel beside m_flow.**
+
 ## 2026-07-30i (QMC works, is unbiased -- and is MOOT: n_samples=128 is 8x overkill)
 
 Owner asked to try QMC and 1 seed. Files: `_qmc_normal` (randomly-shifted scrambled Sobol) in
