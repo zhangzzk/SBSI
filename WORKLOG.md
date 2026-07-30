@@ -35,6 +35,44 @@ hurts is genuinely open; treat it as a test, not a fix, and pre-register before 
 *Firewall unchanged:* `HELDOUT_MIN_CASE=40`, new tags, constgold never trained on. Do not select the
 cut on constgold m -- the 2026-07-30 size scan is a fragility WARNING, not a menu.
 
+## 2026-07-30e (16-seed dom6x6 in-domain m: -0.271%; prediction held, and this is NOT the target met)
+
+Job 15354208, from 16 per-object dumps (seeds 501-503, 505-517; seeds 510-513 recovered from
+checkpoints trained 29 Jul but never evaluated, 514-517 newly trained). 180/180 pin cells occupied.
+
+| | 8 seeds (baseline) | **16 seeds** |
+|---|---|---|
+| in-domain m | -0.508% | **-0.271%** |
+| seed sd | 0.679 | 0.607 |
+| seed sem | 0.240 | **0.152** |
+| + per-case term (~0.155, seed-INDEPENDENT) | 0.285 | **0.217** |
+
+**Read the error bar correctly:** `eval_v2_indomain_m.py` prints the SEED sem only (`sd/sqrt(n)`),
+whereas the 8-seed `-0.508 +- 0.285` from `eval_cut_scan.py` was seed sem AND per-case in quadrature.
+Comparing 0.152 against 0.285 is apples-to-oranges. Like for like, **m = -0.271 +- 0.217%.**
+
+**PRE-REGISTERED PREDICTION (job header, 2026-07-30): "the CENTRAL value does not move; only the bar
+shrinks to about +-0.20%." Bar: CORRECT (0.217% total). Central value: it DID move, by +0.237 points
+-- and that move is seed noise.** Old 8 mean -0.508%, new 8 mean -0.034%, difference 0.474 +- 0.303 =
+**1.56 sigma**. Unremarkable. The real lesson is the size of the noise floor that was always there:
+8 seeds carry +-0.24% of pure seed scatter, so "-0.51%" was never a precise number and should not
+have been quoted to three digits.
+
+**DO NOT read -0.271% as the 0.3% target being met.** Four reasons, all previously established:
+1. **Still a cancellation.** (A) pin residual = **-3.495%**, (B) target defect = **+3.220%**. (B) is
+   unmoved from the 8-seed value (+3.212%), confirming again it is target-side and model-independent;
+   (A) moved with the seeds. Fixing one alone still lands m near the other's value.
+2. **The interval is [-0.49, -0.05]%** -- the central value is inside spec, the bar is not. Same
+   "central in spec, error bar not" state as the certified wide result (+0.261 +- 0.266%).
+3. **Shape stage only.** Excludes detection (measured -0.88% overall, -1.11% blended) and any
+   measured-property selection cut. No end-to-end number exists; the stages compose by product rule.
+4. **Fragile to the size cut** -- 0.02" at the Re>0.3 boundary is worth 0.67 (dom6x6) to 1.58 (dom2)
+   points, because the cut sits on the response turnover (RESULT 8, 2026-07-30).
+
+**Next.** Nothing here changes the two-sided-fix conclusion: close the pin residual AND the
+target/R_blend identity together. More seeds are now a poor investment -- the per-case term (0.155)
+dominates the seed term (0.152) at n=16, so n=32 would only reach ~0.19%.
+
 ## 2026-07-30d (NO blend emulator was ever hyperparameter-tuned; Optuna search on `_indom` queued)
 
 Files added: `configs/fs2_lsst_r_extnbr_indom_tuned.yaml` (differs from `_indom` on `model_tag`
