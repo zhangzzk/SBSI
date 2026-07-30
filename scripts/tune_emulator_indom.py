@@ -111,7 +111,26 @@ def main():
 
     # The search itself: blendemu's own space and objective (R2 penalized by the train/eval gap),
     # unchanged, so this is "the same recipe, tuned" and not a different recipe.
-    study = TE.tune_regression(cfg, DMtrain, DMtest, n_trials)
+    #
+    # FINALIZE_ONLY=1 skips the search and refits/saves from the trials already in the study. That is
+    # how the parallel `tune_emulator_worker.py` fan-out terminates: K workers fill the shared study
+    # and save nothing, then exactly ONE finalizer writes the model, so there is no race on
+    # models/regression_model_*.json.
+    if os.environ.get("FINALIZE_ONLY") == "1":
+        study = TE._load_or_create_study("regression", cfg, direction="maximize")
+        n_done = len([t for t in study.get_trials(deepcopy=False)
+                      if t.state.name in ("COMPLETE", "PRUNED")])
+        n_complete = len([t for t in study.get_trials(deepcopy=False)
+                          if t.state.name == "COMPLETE"])
+        print(f"\n  FINALIZE-ONLY: reusing the existing study, adding no trials "
+              f"({n_complete} complete, {n_done - n_complete} pruned)")
+        if n_complete < 10:
+            raise SystemExit(f"  REFUSING to finalize: only {n_complete} completed trials -- that is "
+                             "not a search. Run the workers first.")
+        n_trials = n_complete   # what gets recorded in the metadata, and what the promotion
+                                # provenance guard reads. Must be the REAL count, never the request.
+    else:
+        study = TE.tune_regression(cfg, DMtrain, DMtest, n_trials)
 
     best = dict(base)
     best.update(study.best_params)

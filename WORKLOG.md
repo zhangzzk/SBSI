@@ -2,6 +2,56 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30n (emulator search made PARALLEL + PRUNED at owner's request)
+
+Owner asked whether the tuning could be accelerated, then approved both proposed fixes and
+explicitly allowed editing blendemu for this.
+
+**Diagnosis first (measured, not guessed).**
+- The GPU idles ~half the time: sampled 0/51/0/40/0/71 % on the running job. Cause is blendemu's
+  objective computing R2 in Python via sklearn on BOTH train and eval after EVERY boosting round
+  (up to 1000). The GPU was never the bottleneck, so several workers can share one a40.
+- Trial durations are bimodal: ~1-5 min or ~11-13 min. The long ones are low-learning-rate trials,
+  and they mostly scored badly (0.0006-0.0026 vs best 0.0041). Nothing was pruned because the
+  objective never reported intermediate values -- the default pruner was never consulted.
+- Resource headroom per worker (measured): 18 GB RAM, 5.4 GB GPU. So K=4 fits 160 G / 46 GB easily.
+
+**Changes.** `blendemu/scripts/train_emulator.py` (file was CLEAN in git; the repo's other
+uncommitted changes were not touched):
+- `_load_or_create_study(..., pruner=None)` -- new optional arg.
+- new `_OptunaPruneCallback` -- reports eval-R2 every 10 rounds after a warmup and raises `TrialPruned`.
+- `tune_regression(..., pruner=None, n_jobs=-1, optimize_callbacks=None, warmup_rounds=150,
+  show_progress_bar=True)` -- all keyword-only additions with historical defaults.
+Verified every default reproduces the old signature behaviour, and that the only other caller
+(line 819) passes 4 positional args, and `self_response`/`classification` studies still get
+`pruner=None`. **This edit is left UNCOMMITTED in blendemu** -- that repo has unrelated uncommitted
+work on `main` and committing would mix the two.
+
+SBSI side: `scripts/tune_emulator_worker.py` (search-only worker, saves nothing),
+`FINALIZE_ONLY=1` path in `scripts/tune_emulator_indom.py` (single writer; refuses on <10 completed
+trials; records the REAL completed count into metadata), `jobs/job_tune_indom_parallel.sh` (K=4,
+XGB_NJOBS=4 so 4x4=16=cpus-per-task), `jobs/job_tune_indom_finalize.sh` (`--dependency=afterok`).
+
+**An earlier draft of the worker COPIED blendemu's objective** into SBSI to avoid editing blendemu.
+That was discarded once the edit was allowed, and it is worth recording why: the study already held
+39 trials scored by blendemu's objective, so a private copy that drifted even slightly would have
+silently mixed two objectives in one study and made `best_params` meaningless. There is now exactly
+one objective.
+
+**Serial job 15355998 cancelled at 39 completed trials** (DB backed up first). It had to go rather
+than run alongside: `study.optimize(n_trials=N)` counts THIS PROCESS's trials, not the study's, so it
+would have run its own full 100 regardless of any helpers. Its killed trial was left `RUNNING` in the
+DB and was explicitly set to `FAIL` -- TPE's `constant_liar` treats RUNNING trials as pending points
+and would have steered away from that region permanently.
+
+Now: 15361587 (4 workers, target 100 finished trials) -> 15361588 (finalize, afterok).
+Best value entering the parallel phase: **0.004066**.
+
+**How to judge the result, pre-registered:** the pruning compares trials at a fixed BOOSTING ROUND,
+which is systematically unfair to small learning rates -- a real bias, mitigated but not removed by
+`warmup_rounds=150`. So the test is whether the best value IMPROVES on 0.004066. A high pruned
+fraction together with a stagnant best value means over-pruning, and the fix is a larger warmup.
+
 ## 2026-07-30m (NEAR-MISS: the `_indom_tuned` emulator on disk is a 2-TRIAL SMOKE TEST)
 
 **Do not promote `lsst_r_extnbr_indom_tuned` yet -- the files at that path are not the tuned model.**
