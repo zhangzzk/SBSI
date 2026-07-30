@@ -18,6 +18,20 @@ eval "$(conda shell.bash hook)"; conda activate sims1
 export PYTHONPATH="/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
 cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 echo "### SWAP LOOKUP job=$SLURM_JOB_ID ###"; date
+
+# PROVENANCE GUARD (added 2026-07-30 after a near-miss). A 2-trial SMOKE TEST (job 15355997) wrote
+# real files at models/*_lsst_r_extnbr_indom_tuned.*, and the 100-trial search (15355998) only
+# overwrites them when it FINISHES. So between those two events the path named "_indom_tuned" holds
+# an essentially UNTUNED model (global R2 +0.000009 over inherited) -- promoting it would look like
+# "tuning bought nothing" when tuning had not actually been run.
+#
+# The metadata records its own provenance in metrics.n_trials, so check it. Set TUNED_TAG to the tag
+# being promoted; unset (the default) skips the guard for non-tuned lookups.
+if [ -n "${TUNED_TAG}" ]; then
+  python -u scripts/check_emulator_provenance.py --tag "${TUNED_TAG}" \
+    || { echo "SWAPLOOK_ABORTED (provenance guard)"; exit 1; }
+fi
+
 python -u scripts/eval_swap_lookup.py \
     --lookup "${LOOKUP:-/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot/results/blend_lookup_wc5_c40-139.feather}" \
     --new-label "${NEWLABEL:-wc5}" ${EXTRA} 2>&1 | grep -v --line-buffered "module command"

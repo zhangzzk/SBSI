@@ -2,6 +2,41 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30m (NEAR-MISS: the `_indom_tuned` emulator on disk is a 2-TRIAL SMOKE TEST)
+
+**Do not promote `lsst_r_extnbr_indom_tuned` yet -- the files at that path are not the tuned model.**
+
+The Optuna search was smoke-tested with `n_trials: 2` (job 15355997). That smoke test COMPLETED, and
+on completion it wrote real files to the production-looking paths
+`blendemu/models/{regression_model,emulator_metadata}_lsst_r_extnbr_indom_tuned.*` (13:41). The real
+100-trial search (15355998) writes to the SAME paths but only when it FINISHES. So for ~11 hours a
+path named "_indom_tuned" holds an essentially untuned model:
+
+| | inherited (production params) | 2-trial "tuned" | delta |
+|---|---|---|---|
+| global R2 | 0.004310 | 0.004319 | **+0.000009** |
+| close-pair R2 (closest 20%) | 0.020289 | 0.020653 | +0.000365 |
+
+Promoting that and reading "tuning bought nothing" would be a false negative about the TUNING, not a
+measurement of it. Added `scripts/check_emulator_provenance.py` + a `TUNED_TAG` guard in
+`jobs/job_swap_lookup.sh` that reads `metrics.n_trials` from the metadata and REFUSES below 50.
+Verified it refuses the current artifacts (n_trials=2) and a tag with no n_trials at all.
+
+**Search status: 38/100 trials at 4h16m** (read from the study DB, not the log -- the log is silent
+because blendemu's tqdm only flushes at the end). ~6.7 min/trial => ~11.3h projected against a 12h
+wall, so it may not finish. Not fatal: `_load_or_create_study(..., load_if_exists=True)` is
+storage-backed at `models/studies/regression_lsst_r_extnbr_indom_tuned.db`, so a resubmit RESUMES
+rather than restarting.
+
+**Do NOT delete the metadata json to "clear" the smoke artifacts.** `_update_metadata` MERGES into
+the existing file; the sidecar carries `classification` and `self_response` alongside `regression`,
+and deleting it would leave the tuned run writing a regression-only sidecar and an unusable emulator.
+The provenance guard is the right fix, not removal.
+
+Reminder for when it lands: promotion is argued on the per-pair ruler (`scripts/eval_rblend_gap.py`),
+NEVER on constgold m. Global R2 here is ~0.004 -- it is dominated by the ~99.9% of rows that are not
+close pairs, so it is a weak discriminator for exactly the regime we care about.
+
 ## 2026-07-30l (new selection defaults 4 seeds x n=32 CONFIRMED against 1 seed x n=128)
 
 Owner set `n_samples=32, seeds=4` for all selection work. Ran both harnesses at the new defaults and
