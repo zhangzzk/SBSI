@@ -312,6 +312,55 @@ two sims genuinely disagree about the same response** -- the target is built on
 already measured in the boundary bin -- and/or the g=0 SNC reference render carries its own bias. That
 is now a narrow, well-posed question rather than an open search.
 
+**RESULT 10 -- ROOT CAUSE OF (B): the response target contains essentially NO ISOLATED GALAXIES.**
+28k's blocker is closed (`scripts/eval_two_sims_agree.py`, `jobs/job_two_sims_agree.sh`, job 15348976,
+cases 0-4). The two catalogues are joined on `(case, input_index)`:
+
+- **`TARGET-only keys = 0`** -- the target's catalogue is a strict SUBSET of the ruler's, keeping
+  784,066 of 3,497,839 rows (**22.4%**).
+- Where they overlap, `measured_ngmix_g1/g2` are **bit-identical** (max|diff| = 0), as are the truth
+  columns. Same sim, same measurement.
+
+So 28k's ~1.8% target-vs-ruler discrepancy is **pure SELECTION**, not measurement. And the selection is:
+
+| | TARGET catalogue (supervises the pin) | RULER catalogue |
+|---|---|---|
+| `neighbored` True | **99.97%** | 78.25% |
+| isolated | **0.03%** | **21.75%** |
+| neighbour annotation radius | out to **7"** | out to **3"** |
+| `detected` True | **100%** | 44.87% |
+
+**The pin has never been supervised on an isolated galaxy.** The deliverable population is **24.1%**
+isolated (`neighbored=False`, measured in RESULT 2), and the required response differs enormously
+between the two classes there: 0.8157 isolated vs 0.6942 neighboured, a **17%** gap. The flow's
+isolated response is therefore pure extrapolation from a neighboured-only target.
+
+**This explains the pattern that has resisted everything for a week:**
+1. It is precisely why the ISOLATED subset over-predicts by **+3.41%** (RESULT 2) and by +3.3..+4.2% in
+   every variant 28c tested -- and why grid refinement never fixed it. **Refining a grid cannot add
+   data the sample does not contain.** 28e's "five bins through the steep region changed the target bin
+   by nothing" is the expected result, not a puzzle.
+2. It is invisible to every reweighting and transfer test run today (my +0.041 points; the workflow's
+   +0.0015 pp within-cell), because those reweight WITHIN the target's support. No weighting can
+   correct a region of scene space where the target has **no data at all**.
+3. It naturally produces an offset that is roughly FLAT in `r_blend` (RESULT 6), because the missing
+   direction is "has a neighbour at all", which is not a coordinate the crowd axis spans. Consistent
+   with (B) being largest in the lowest-crowd bin (-0.0377 in q0 vs -0.0269 in q4).
+4. The two catalogues also disagree on what `neighbored` MEANS: a galaxy with its nearest neighbour at
+   5" is `neighbored=True` in the target catalogue (7" annotation) and `neighbored=False` in the ruler
+   (3" annotation). So "isolated" is not even a common definition across the two instruments -- the
+   flavour difference the grounding pass flagged, now measured.
+
+**Indicated fix, firewall-clean (half-shear only):** rebuild the response target on a catalogue that
+CONTAINS isolated galaxies -- the ruler's `det_meas_ngmix_g0.05_val` is 21.75% isolated -- with the
+neighbour-annotation radius and the `neighbored` definition matched to the evaluation convention, then
+retrain. This is exactly the "change what the target measures, not how finely it is binned ... a design
+change, not a tuning knob" that 28c pre-registered as needing owner input; there is now a measured
+reason to do it. Three things must be handled: (i) that catalogue annotates only to 3", so its
+`neighbored=False` still includes 3-7" neighbours and is not truly isolated; (ii) it is only 44.87%
+detected, so the detection selection has to be applied to match what the flow trains on; (iii) it has
+no `r_blend` column, so the crowd axis must be recomputed or replaced.
+
 **Gotchas found and fixed.** (1) **The `cip` partition has ~12 idle a40 vGPU slices** while `inter` is
 100% GPU-allocated -- but `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` needs the CUDA
 virtual-memory APIs, which the A40-16Q vGPU profile does NOT support: `.to(device)` dies with "CUDA
