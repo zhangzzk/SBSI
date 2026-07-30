@@ -123,6 +123,21 @@ agreeing to 0.09 points is suggestive, not a measurement. Needs its own test bef
 Per-checkpoint cost was UNCHANGED (~120-150s), so the whole saving came from dropping `--all-too`
 (~72%, as estimated). TF32 contributed NOTHING here -- see the vacuous-gate note below.
 
+**TF32 RE-GATED ON AN A40 (job 15360703): ADOPTED, and the speedup is 1.29x, NOT the 2-3x I
+estimated.** Device NVIDIA A40, capability 8.6, so the comparison is real this time -- and the
+differences are NON-ZERO (-0.0155% to -0.0287%), which is what an actual precision change looks
+like, against the V100 run's exactly-0.0000% signature of having tested nothing. Worst |rel diff|
+**0.0287%** vs the 0.1% criterion; largest at size>4.4 where fewest draws survive, as expected.
+Measured on the sampling work alone (excluding data load): fp32 111s -> TF32 86s = **1.29x**.
+
+**What the shortfall tells us.** TF32 accelerates only matmuls, so 1.29x implies GEMM is roughly
+HALF the runtime, not the ~70% my FLOP arithmetic implied. The remainder is the overhead I chose not
+to fix: the ~205MB per-leg-chunk GPU->CPU transfer, the numpy cut evaluation over 12.8M-element
+arrays, the pandas frame rebuild in `leg_draws`, and the non-GEMM elementwise ops (tanh/exp) inside
+each coupling layer. **So the two un-implemented optimisations are worth MORE than the 20-30% I
+guessed** -- they attack what is now the larger half. Selection-harness speed to date:
+`--all-too` drop ~3.5x (verified identical), TF32 1.29x, loop-reorder + GPU-side cuts untouched.
+
 **TF32 GATE WAS VACUOUS (job 15358925) -- corrected.** It reported "TF32 ADOPTED" with 0.0000%
 difference on all 8 cuts. That validated nothing: both jobs asked for `--gres=gpu:1` and landed on a
 **Tesla V100 (capability 7.0)**, where TF32 does not exist, so the flags were a silent no-op and both
