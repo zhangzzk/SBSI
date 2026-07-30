@@ -34,19 +34,29 @@ This retro-explains 28k, where tightening the pin with the bin accumulator (remo
 OVERALL to **+2.14%** -- the sign and rough size that removing (A) predicts, and which was recorded
 there as an unexplained regression.
 
-**CAVEAT on RESULT 1, and why the anchor test now adjudicates it.** The TOTAL excess
-`dR = <R_flow> + <R_blend> - <r_sim>` and everything in RESULT 2 involve no cells and are robust. The
-**(A)/(B) SPLIT does depend on how constgold rows are mapped onto the target's cells**, because
-`target` is a per-cell lookup, and the mapping uses the dump's SUMMED `R_blend` as a stand-in for the
-training catalogue's `r_blend` column (the target's third axis). Two facts show the stand-in is not
-exact: the target's aggregate is **0.7149 under training weights but 0.6952 under constgold weights**,
-and the anchored training runs report `<R_model>(val)` ~ 0.72 against a count-weighted target of
-0.7149, i.e. only **+0.7%** on the training population versus the **+4.6%** that (A) implies on
-constgold. So part of (A) may be population transfer / cell mis-assignment rather than a training-side
-pin failure. **The anchor test discriminates:** if in-domain m moves to ~+3.3%, (A) is a real pin
-residual and RESULT 1 stands as written; if m barely moves, (A) is largely a mapping artefact and the
-split must be redone using the exact training `r_blend` definition rather than the summed lookup value.
-Recorded before the result is known.
+**Cell mapping VERIFIED sound** (an earlier worry, now retracted). I suspected the target's crowd axis
+was a PER-PAIR `r_blend` while constgold rows were binned by a SUMMED `R_blend`, which would invalidate
+the (A)/(B) split. Checked directly on `det_meas_crowd_g0.05_val_full`: it has **exactly one row per
+(case, input_index)** (mean 1.00, max 1), and its `r_blend` quantiles
+`[-1.99, 0, 0.0101, 0.0472, 0.2045, 3.45]` match the target's `edges_crowd`
+`[-2.24, -0.0046, 0.0068, 0.0364, 0.166, 4.25]`. Training mean 0.1493 vs constgold in-domain 0.1371.
+Same quantity, comparable scale -- the mapping is apples-to-apples and the split stands.
+
+**PREDICTION (1) CORRECTED before the runs land -- the anchor's WEIGHTING sets which m it produces.**
+The target aggregates to **0.7149 under TRAINING cell counts** but **0.6952 under CONSTGOLD cell
+occupancy**; that ~0.020 gap is a real population difference in which cells each sample occupies, not
+an artefact. The anchor pins `<R_model>` to whichever aggregate its weights select, so:
+
+| anchor weighting | pins `<R_flow>` to | predicted in-domain m |
+|---|---|---|
+| TRAINING counts (the runs in flight, no `--response-pop-weight-npz`) | 0.7149 | **+0.94%** |
+| CONSTGOLD occupancy (`--response-pop-weight-npz`) | 0.6952 | **+3.33%** |
+
+So my first pre-registration of "+3.2% for the in-flight runs" was **wrong**: those use training counts
+and should give **+0.94%** (window [+0.4,+1.5]), not +3.3%. This also gives the `--response-pop-weight-npz`
+plumbing a real purpose -- not the RESULT-3 reweighting of m (dead), but making the anchor target the
+aggregate the metric is graded on. Running BOTH weightings is a sharper test than either: two
+weightings, two distinct predicted m values, both derived from the same decomposition.
 
 **RESULT 2 -- where the total excess sits** (job 15348636, exact additive split, columns sum to m):
 
