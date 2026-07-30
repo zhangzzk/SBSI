@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=selresp_fast
-#SBATCH --time=01:30:00
+#SBATCH --time=00:30:00
 #SBATCH --mem=150G
 #SBATCH --cpus-per-task=16
 #SBATCH --gres=gpu:a40:1
@@ -19,7 +19,18 @@
 #     GEMM, so TF32 is the single biggest GPU lever. GATED on jobs/job_selresp_tf32_check.sh:
 #     do NOT trust output from this job unless that gate printed "TF32 ADOPTED".
 #
-# NOT changed, deliberately: --n-samples 128. It sets the Monte Carlo noise on R_model, and the
+#
+# DEFAULTS: n_samples=32, 4 seeds (owner, 2026-07-30). Both are evidence-backed, not guesses:
+#   n_samples=32 -- WORKLOG 30i measured the sampling noise in the units the result is quoted in.
+#     At size>4.4 it is 0.025 points of m at n=16 against a 5.48-point effect (224x below), and the
+#     raw sd shows NO 1/sqrt(n) trend across 16->128, so extra draws buy nothing. 32 is a 2x margin
+#     on the smallest tested value.
+#   4 seeds -- WORKLOG 30g showed the selection SHIFT is seed-INDEPENDENT (+6.34% at 1 seed vs
+#     +6.33% at 16, size>4.4). Seeds move the response NORMALISATION (seed sd 0.607 -> sem 0.30% at
+#     n=4), which the m_sel/m_flow split largely removes anyway.
+# Together this is 16x less sampling work than 16 seeds x 128 draws.
+#
+# SUPERSEDED NOTE (kept for history): --n-samples 128 was previously held fixed on the grounds that It sets the Monte Carlo noise on R_model, and the
 # effects under study are percent-level, so buying speed there would spend the precision we need.
 #
 # NOT attempted here: the 16x redundant conditioning-frame rebuild in leg_draws (the frame depends
@@ -33,15 +44,17 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 
 D=/project/ls-gruen/users/zekang.zhang/sbsi_caches/ablation
-GLOB="$D/measurement_flow_g0_ngmix_ablate_s2c_lt500_dom6x6_s*_swaavg.pt"
+# 4 seeds, explicit (s504 does not exist in the dom6x6 set) -- see header rationale.
+SEEDS="${SEEDS:-501 502 503 505}"
+GLOB=""; for sd in $SEEDS; do GLOB="$GLOB $D/measurement_flow_g0_ngmix_ablate_s2c_lt500_dom6x6_s${sd}_swaavg.pt"; done
 N=$(ls $GLOB 2>/dev/null | wc -l)
-echo "### S2 SELECTION RESPONSE -- FAST (dom6x6, ${N} seeds, ISO only, TF32)  job=$SLURM_JOB_ID ###"
+echo "### S2 SELECTION RESPONSE -- FAST (dom6x6, ${N} seeds, n=32, ISO only, TF32)  job=$SLURM_JOB_ID ###"
 nvidia-smi -L; date
-[ "$N" -eq 16 ] || echo "WARNING: expected 16 seeds, found $N"
+[ "$N" -eq 4 ] || echo "WARNING: expected 4 seeds, found $N"
 
 python -u scripts/eval_selection_response.py \
-  --ckpt-glob "$GLOB" --tf32 \
-  --max-case 39 --n-samples 128 --batch-size 16384 \
-  --output "$D/selection_response_v2base_dom6x6_16seed_fast.npz" \
+  --ckpt $GLOB --tf32 \
+  --max-case 39 --n-samples 32 --batch-size 16384 \
+  --output "$D/selection_response_v2base_dom6x6_4seed_n32.npz"   # 16-seed file preserved \
   || { echo "SELRESP_FAST_FAILED"; exit 1; }
 echo "SELRESP_FAST_DONE"; date
