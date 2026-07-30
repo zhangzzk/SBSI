@@ -2,6 +2,70 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-31a (FIDUCIAL = dom6x6 flow + tuned emulator: selection table, |m_flow| <= 0.56% near domain)
+
+Owner set the fiducial model to **dom6x6 flow + tuned in-domain emulator** and asked for the 30w
+selection table under it. Job **15368656**. The model column is now `R_flow + R_blend` instead of flow
+alone, with the emulator's per-object R_blend weighted by the SAME per-draw pass mask as the shapes,
+so the blend term is averaged over exactly the objects the model selects.
+
+**FIRST: WHY 30x's +4.97% WAS NOT A CONTRADICTION.** Owner flagged that the untuned `_indom` row
+showed ~+5% m where previous in-domain results were good. Correct instinct, and the cause is the
+FLOW, not the emulator: every block of job 15366950 used the **Gold-v1** flow ("16 Gold-v1 dumps"),
+which was certified on the WIDE population. Same R_blend=0.1358 on the same cut population:
+  Gold-v1 flow   R_flow=0.6836 -> R_flow+R_blend=0.8194 -> m=+4.74%
+  V2 dom6x6 flow R_flow=0.7268 -> R_flow+R_blend=0.8626 -> m=-0.50%
+The cut population needs R_flow = R_sim - R_blend = 0.7224; dom6x6 sits on it, Gold-v1 is ~6% under
+and that shortfall IS the +5%. So +4.8-5.0% describes Gold-v1 OUT OF ITS DOMAIN and must not be read
+as an in-domain result. What survives from 30x unchanged: the tuning null (+0.010 pts, sd 0.000 --
+a paired difference at fixed flow, so flow choice cancels) and the 43.4% wide-population coverage limit.
+
+**THE TABLE.** blend lookup matched **100.00%**, <R_blend>=+0.13573.
+model R(no cut) = R_flow +0.72675 + R_blend +0.13573 = **+0.86249** vs sim measured +0.85824
+-> **m at no cut = -0.492%** (m_flow = +0.495%).
+
+| cut | keep | (1) pure sel | (3) measured | (4) MODEL m | m_flow | change vs no-cut |
+|---|---|---|---|---|---|---|
+| mag<26 | 0.975 | -0.311% | +1.427% | +1.137 +- 0.459 | +0.208% | -0.287 |
+| mag<25.5 | 0.863 | -0.275% | +7.525% | +6.811 +- 0.462 | -0.172% | -0.667 |
+| mag<25 | 0.683 | -0.116% | +16.593% | +15.998 +- 0.398 | -0.018% | -0.513 |
+| R>0.50" | 0.999 | +0.002% | +0.060% | +0.123 +- 0.439 | +0.558% | +0.063 |
+| R>0.55" | 0.993 | +0.216% | +0.684% | +0.655 +- 0.448 | +0.465% | -0.030 |
+| R>0.60" | 0.967 | +1.324% | +3.154% | +2.348 +- 0.442 | -0.291% | -0.786 |
+| R>0.70" | 0.792 | +5.474% | +12.171% | +7.020 +- 0.324 | **-4.121%** | **-4.616** |
+| mag<26 & R>0.55" | 0.973 | -0.120% | +1.675% | +1.513 +- 0.465 | +0.335% | -0.160 |
+| mag<25.5 & R>0.55" | 0.863 | -0.220% | +7.516% | +6.967 +- 0.466 | -0.018% | -0.513 |
+| S/N>7.9 (*) | 0.980 | -0.370% | +0.999% | +0.683 +- 0.452 | +0.181% | -0.314 |
+| S/N>8.8 (*) | 0.950 | -0.561% | +2.599% | +1.968 +- 0.469 | -0.123% | -0.618 |
+| S/N>9.9 (*) | 0.900 | -0.759% | +5.098% | +4.328 +- 0.476 | -0.241% | -0.736 |
+
+**FINDING 1 -- m_flow is now a REAL residual bias and it is small.** Every near-domain cut is within
+**+-0.56%**, most under 0.35%, and the two realistic joint cuts give +0.335% / -0.018%. The flow-only
+version of this same table (30w) had that column pinned at a flat -15.3%, which was the missing blend
+term. Adding the emulator also improved column (4) itself: at mag<25 it went +20.487 -> +15.998
+against the sim's +16.593.
+
+**FINDING 2 -- but there is a SYSTEMATIC one-sided trend: the model UNDER-predicts the shift.** The
+cut-induced change (row minus no-cut) is negative in 11 of 12 rows and grows monotonically with
+aggressiveness: -0.03 (R>0.55") -> -0.29 (mag<26) -> -0.79 (R>0.60") -> -4.62 (R>0.70"). All rows
+share the same 4 seeds, so differencing against no-cut cancels the common-mode seed offset and a
+consistent sign across 12 rows is NOT scatter. Per-row errors (+-0.44-0.47 on column 4) mean
+individual mild rows are consistent with zero; the TREND is the signal, not any single row.
+
+**FINDING 3 -- R>0.70" fails at -4.12%**, far outside errors, and it is the aggressive size cut. Same
+threshold and same failure mode the half-shear test found in 30v. Not a near-domain cut.
+
+Guards added, both motivated by the 30x coverage artifact: the script REFUSES to run below
+`--min-blend-match` (default 0.99), and restricts BOTH sim and model to rows carrying an R_blend, so
+unmatched rows can never silently default to R_blend=0 (that is what collapsed <R_blend> 0.159->0.059
+and manufactured a spurious +28.9% m on the wide population).
+
+Files: `scripts/eval_selection_constgold_neardomain.py` (emulator wired into the model column,
+`--blend-lookup`/`--min-blend-match`), `jobs/job_constgold_neardomain.sh`.
+
+NEXT: the one-sided under-prediction trend is the thing to chase; it is a model property, not noise.
+More seeds will tighten the per-row errors but will not remove it.
+
 ## 2026-07-30x (tuned emulator vs certified constgold m: TUNING MOVES m BY +0.008 pts, ~20x below noise)
 
 NO-SELECTION test asked for by the owner: does the newly Optuna-tuned blend emulator

@@ -20,11 +20,18 @@ COLUMNS (owner's spec: the old (2) sheared-intrinsic column dropped, m_flow adde
   (4) MODEL m   R_model(cut)/R_model(no cut) - 1, the flow's counterpart of (3).
   m_flow        R_model(cut)/R_meas(cut) - 1, the residual bias.
 
-READ m_flow WITH THE BLEND CAVEAT (see WORKLOG 30u). This reports the FULL population, where column
-(3) contains the neighbour response while the flow's R is self-response only. So m_flow here is NOT a
-pure model error -- it inherits a missing term worth ~15% of R at no cut, which the certified
-pipeline supplies from a separate blend emulator. Judge the flow on how m_flow VARIES with the cut,
-not on its absolute value.
+THE FIDUCIAL MODEL IS FLOW + EMULATOR BLEND. Earlier runs of this script used the flow alone, whose R
+is self-response only, while sim column (3) contains the neighbour response too -- so m_flow carried a
+constant -15.32% offset that was the MISSING BLEND TERM, not a model error. The model column now adds
+the per-object R_blend from the tuned in-domain emulator (`--blend-lookup`), weighted by the SAME
+per-draw pass mask as the shapes, so the blend term is averaged over exactly the objects the model
+selects. m_flow is now a real residual bias and should be read at face value.
+
+COVERAGE IS ENFORCED, NOT ASSUMED. An emulator applies its stored training cuts at inference; rows
+outside them return nothing and would silently fall back to R_blend=0. On the WIDE population that
+collapsed <R_blend> from 0.159 to 0.059 and produced a spurious +28.9% m (job 15366950). This script
+refuses to run below `--min-blend-match` and restricts BOTH sim and model to rows carrying an
+R_blend, so the two sides always share one population.
 
 FIREWALL: constgold is EVALUATION only. Nothing is trained, fitted or selected here.
 """
@@ -74,7 +81,7 @@ def leg_avg(ap, am, g):
 
 @torch.no_grad()
 def model_selected(bundle, df, g, gh1, gh2, intr, cuts, groups, n_samples, batch_size,
-                   seed, device, sign=1.0, chunk=200_000):
+                   seed, device, sign=1.0, chunk=200_000, rblend=None):
     """Score the flow once; accumulate selected means for every (group, cut) pair.
 
     Cuts are given as ABSOLUTE thresholds on the flow's own sampled measured magnitude and size --
@@ -88,6 +95,9 @@ def model_selected(bundle, df, g, gh1, gh2, intr, cuts, groups, n_samples, batch
     n = len(df)
     keys = ["__nocut__"] + [c["name"] for c in cuts]
     acc = {gname: {k: [[0.0, 0], [0.0, 0]] for k in keys} for gname in groups}
+    # Parallel accumulator for the emulator's per-object R_blend, weighted by the SAME per-draw pass
+    # mask as the shapes, so the blend term is averaged over exactly the objects the model selects.
+    accb = {gname: {k: [0.0, 0.0] for k in keys} for gname in groups}
 
     for li, s in ((0, +g), (1, -g)):
         for lo in range(0, n, chunk):
@@ -102,6 +112,7 @@ def model_selected(bundle, df, g, gh1, gh2, intr, cuts, groups, n_samples, batch
                 torch.cuda.manual_seed_all(seed)
             d = bundle.sample(fr, n_samples=n_samples, batch_size=batch_size)
             proj = sign * (d[:, :, i1] * gh1[lo:hi, None] + d[:, :, i2] * gh2[lo:hi, None])
+            rbc = rblend[lo:hi][:, None] if rblend is not None else None
             mag = d[:, :, imag]
             # Compare size in LOG space. Exponentiating first overflowed to +inf on extreme flow
             # draws, and `inf > thr` is True, so those draws were KEPT by every size cut -- inflating
@@ -114,6 +125,8 @@ def model_selected(bundle, df, g, gh1, gh2, intr, cuts, groups, n_samples, batch
                 base = fin & gm
                 acc[gname]["__nocut__"][li][0] += float(np.where(base, proj, 0.0).sum())
                 acc[gname]["__nocut__"][li][1] += int(base.sum())
+                if rbc is not None:
+                    accb[gname]["__nocut__"][li] += float(np.where(base, rbc, 0.0).sum())
                 for c in cuts:
                     pm = base
                     for sc in c["conds"]:
@@ -126,16 +139,26 @@ def model_selected(bundle, df, g, gh1, gh2, intr, cuts, groups, n_samples, batch
                         pm = pm & ((xv > sc["thr"]) if sc["keep_high"] else (xv < sc["thr"]))
                     acc[gname][c["name"]][li][0] += float(np.where(pm, proj, 0.0).sum())
                     acc[gname][c["name"]][li][1] += int(pm.sum())
+                    if rbc is not None:
+                        accb[gname][c["name"]][li] += float(np.where(pm, rbc, 0.0).sum())
 
-    out = {}
+    out, outb = {}, {}
     for gname in groups:
-        out[gname] = {}
+        out[gname], outb[gname] = {}, {}
         for k in keys:
             a = acc[gname][k]
             mp = a[0][0] / a[0][1] if a[0][1] else np.nan
             mm = a[1][0] / a[1][1] if a[1][1] else np.nan
-            out[gname][k] = leg_avg(mp, mm, g)
-    return out
+            out[gname][k] = leg_avg(mp, mm, g)          # R_flow (self-response) alone
+            if rblend is not None:
+                # R_blend has no leg dependence, but the SELECTION does, so average the two legs'
+                # selected means -- the same convention leg_avg uses for the shapes.
+                bp = accb[gname][k][0] / a[0][1] if a[0][1] else np.nan
+                bm = accb[gname][k][1] / a[1][1] if a[1][1] else np.nan
+                outb[gname][k] = 0.5 * (bp + bm)
+            else:
+                outb[gname][k] = 0.0
+    return out, outb
 
 
 def main():
@@ -153,6 +176,11 @@ def main():
     ap.add_argument("--n-samples", type=int, default=32)
     ap.add_argument("--batch-size", type=int, default=16384)
     ap.add_argument("--flow-seed", type=int, default=12345)
+    ap.add_argument("--blend-lookup",
+                    default="results/blend_lookup_indomtuned_c40-139.feather",
+                    help="per-object emulator R_blend; '' disables (flow-only model)")
+    ap.add_argument("--min-blend-match", type=float, default=0.99,
+                    help="refuse if fewer than this fraction of rows get an R_blend")
     ap.add_argument("--dom-mag-max", type=float, default=26.0)
     ap.add_argument("--dom-re-min", type=float, default=0.3)
     args = ap.parse_args()
@@ -183,6 +211,22 @@ def main():
         sel.sort()
         df = df.iloc[sel].reset_index(drop=True)
         print(f"  subsampled to {len(df):,} (seed 0)", flush=True)
+
+    # ---- emulator R_blend: the fiducial model is flow + blend, not flow alone ------------------
+    rblend = None
+    if args.blend_lookup:
+        lk = pf.read_table(args.blend_lookup, memory_map=True).to_pandas()
+        j = df[["case", "input_index"]].merge(lk, on=["case", "input_index"], how="left")
+        rblend = j["R_blend"].to_numpy(float)
+        matched = np.isfinite(rblend)
+        print(f"blend lookup {os.path.basename(args.blend_lookup)}: matched "
+              f"{100*matched.mean():.2f}%  <R_blend>={np.nanmean(rblend):+.5f}", flush=True)
+        if matched.mean() < args.min_blend_match:
+            raise SystemExit(
+                f"REFUSING: only {100*matched.mean():.1f}% of rows have an emulator R_blend. "
+                "Unmatched rows would silently fall back to R_blend=0 and collapse the blend term "
+                "-- exactly the coverage artifact that produced a spurious +28.9% m on the wide "
+                "population (job 15366950). Use a lookup that covers this population.")
 
     cf = pf.read_table(args.crowd).to_pandas()
     fcols = [c for c in ("nbr_flux_near", "nbr_flux_far", "nbr_flux_max") if c in cf.columns]
@@ -218,6 +262,11 @@ def main():
         & np.isfinite(szp) & np.isfinite(szm)
     for _, a, b in kinds:
         fin &= np.isfinite(a) & np.isfinite(b)
+    if rblend is not None:
+        # Restrict BOTH sim and model to rows carrying an emulator R_blend. Keeping unmatched rows
+        # and letting them default to 0 is exactly the silent-coverage failure mode found in job
+        # 15366950; dropping them keeps the two sides on one population.
+        fin &= np.isfinite(rblend)
     print(f"finite: {int(fin.sum()):,}   g={g:.4f}", flush=True)
     groups = {"ALL": fin}
 
@@ -266,14 +315,20 @@ def main():
     per = []
     for ck in args.ckpt:
         bundle = load_measurement_model(ck, device=device)
-        per.append(model_selected(bundle, df, g, gh1, gh2, (i1, i2), cuts, groups,
-                                  args.n_samples, args.batch_size, args.flow_seed, device,
-                                  sign=sign))
+        rf, rb = model_selected(bundle, df, g, gh1, gh2, (i1, i2), cuts, groups,
+                                args.n_samples, args.batch_size, args.flow_seed, device,
+                                sign=sign, rblend=rblend)
+        per.append((rf, rb))
         print(f"  scored {os.path.basename(ck)} ({time.time()-t0:.0f}s)", flush=True)
     keys = ["__nocut__"] + [c["name"] for c in cuts]
-    mod = {gn: {k: float(np.mean([p[gn][k] for p in per])) for k in keys} for gn in groups}
-    sem = {gn: {k: (float(np.std([p[gn][k] for p in per], ddof=1) / np.sqrt(len(per)))
+    # FIDUCIAL MODEL = flow + emulator blend. `flowonly` is kept and printed alongside so the
+    # effect of adding the emulator is visible rather than asserted.
+    tot = [{gn: {k: p[0][gn][k] + p[1][gn][k] for k in keys} for gn in groups} for p in per]
+    mod = {gn: {k: float(np.mean([t[gn][k] for t in tot])) for k in keys} for gn in groups}
+    sem = {gn: {k: (float(np.std([t[gn][k] for t in tot], ddof=1) / np.sqrt(len(per)))
                     if len(per) > 1 else np.nan) for k in keys} for gn in groups}
+    flowonly = {gn: {k: float(np.mean([p[0][gn][k] for p in per])) for k in keys} for gn in groups}
+    blendonly = {gn: {k: float(np.mean([p[1][gn][k] for p in per])) for k in keys} for gn in groups}
 
     for gn in groups:
         R0 = sim[gn]["__nocut__"]
@@ -282,7 +337,10 @@ def main():
         print(f"CONSTGOLD SELECTION, NEAR-DOMAIN CUTS -- {gn}")
         print("=" * 104)
         print(f"  sim R(no cut): unsheared={R0['unsheared']:+.5f} sheared={R0['sheared']:+.5f} "
-              f"measured={R0['measured']:+.5f}   model R(no cut)={M0:+.5f}")
+              f"measured={R0['measured']:+.5f}")
+        print(f"  model R(no cut) = R_flow {flowonly[gn]['__nocut__']:+.5f} + R_blend "
+              f"{blendonly[gn]['__nocut__']:+.5f} = {M0:+.5f}   "
+              f"[m at no cut = {100*(R0['measured']/M0 - 1):+.3f}%]")
         print(f"\n  {'cut':>22} {'keep':>6} | {'(1) pure sel':>13} {'(3) measured':>13} "
               f"{'(4) MODEL m':>16} | {'m_flow':>10}")
         for c in cuts:
