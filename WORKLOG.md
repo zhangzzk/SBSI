@@ -250,19 +250,34 @@ vs 0.697 in the next). Between 0.32 and 0.42 the central value is inside +-0.3% 
 cut; beyond 0.45 it degrades again (+0.82, +1.21), so there is a genuine sweet spot rather than a
 monotonic trend.
 
-**Read the STRUCTURE, not the best cell.** This is a 32-cell table at 8 seeds; picking the single
-`PASS` cell (Re>0.356, mag<24.5, +0.029 +- 0.222) would be multiple-comparisons shopping and I am not
-claiming it. What is robust is the shape: a steep rise from 0.30 to 0.32, a broad near-zero plateau
-0.32-0.42, degradation past 0.45. Note also that almost every plateau cell is "central value in spec,
-error bar not" -- the same state the certified wide-convention result is in (+0.261 +- 0.266%), which
-at 8 seeds is a statement about precision, not about the model.
+**CROSS-CHECK on dom2 corrects the interpretation -- the plateau is NOT generic.** Same scan on the
+other cut-trained flow (`ablate_s2c_coupling_lt500_dom2`, 8 seeds, identical rows):
+
+| Re > | dom6x6 | dom2 |
+|---|---|---|
+| 0.300 | -0.508% | -0.819% |
+| 0.320 | **+0.157%** | **+0.759%** |
+| 0.340 | +0.315% | +1.373% |
+
+Both flows swing hard across the boundary (+0.67 and **+1.58** points for a 0.02" move), so **the
+turnover sensitivity is real and flow-independent**. But where m LANDS after the swing is
+flow-dependent: dom6x6 happens to land near zero, dom2 overshoots to +0.76% and keeps climbing. So
+dom6x6's near-zero plateau at 0.32-0.42 is an accident of that flow, not a property of the pipeline.
+My first reading of this table over-generalised and is corrected here.
+
+**What is actually established, and it is a warning rather than a win:** m on the deliverable
+population is **extremely sensitive to the lower size cut -- 0.7 to 1.6 points for a 0.02 arcsec
+move** -- because the cut is placed exactly on the response turnover. That makes the acceptance number
+fragile: it is not a stable property of the calibration, and ANY claim of |m|<=0.3% evaluated at or
+just above Re=0.3 inherits that fragility, whichever flow produces it. Note also this is a 32-cell
+table at 8 seeds, so the single `PASS` cell (Re>0.356, mag<24.5, +0.029 +- 0.222) is
+multiple-comparisons shopping and is NOT claimed; and most plateau cells are "central value in spec,
+error bar not" -- the same state the certified wide result is in (+0.261 +- 0.266%).
 
 **This is NOT a proposed fix.** Moving the deliverable's cut changes the deliverable and is an owner /
 physics decision; reporting it as a calibration success would be selecting the acceptance definition
-on the metric. The honest statement is: **the -0.5% currently on record is substantially an artefact of
-knife-edge cut placement**, and the same pipeline reads inside spec a few hundredths of an arcsecond
-away. Whether Re>0.3 is the right physical cut is a separate question from whether the calibration is
-good, and this table separates them for the first time.
+on the metric. The useful output is that the cut placement and the calibration quality are now
+separable, and that the specified cut sits at the least stable point available.
 
 **Gotchas found and fixed.** (1) **The `cip` partition has ~12 idle a40 vGPU slices** while `inter` is
 100% GPU-allocated -- but `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` needs the CUDA
