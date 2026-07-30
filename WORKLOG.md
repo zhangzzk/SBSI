@@ -2,6 +2,56 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30h (ATTRIBUTION: the size-tail defect is NOT selection -- it is SHAPE response)
+
+Owner's point: projecting the flow's SAMPLED MEASURED shape while also cutting on its SAMPLED
+MEASURED size/mag couples shape bias and selection bias, so 30g's residual could not be attributed.
+Fix (owner's design): project the EXACT sheared INTRINSIC shape on BOTH sides, still SELECT on
+measured size/mag -> both sides average identical noise-free shapes, so any residual is purely WHICH
+objects were selected. Files: `scripts/eval_selection_attribution.py`,
+`jobs/job_selection_attribution.sh`, plus `intrinsic=` on `truth_selected_response` /
+`model_selected_response`. Job 15360976, 1 seed (s501), ISOLATED.
+
+**CORRECTNESS CHECK PASSED EXACTLY.** Intrinsic-mode no-cut must give m=0 (same shapes, same
+objects, no cut): `R_sim=+1.00005334`, `R_model=+1.00005334`, rel dev **0.00000%**. And the measured
+column reproduces the known 1-seed numbers (-3.07% no-cut, -5.48% size>4.4) -- so the new mode is
+wired right AND the old path is unchanged.
+
+| cut | fracM | m_measured (end-to-end) | **m_intrinsic (SELECTION only)** | difference (shape+cross) |
+|---|---|---|---|---|
+| NO CUT | 1.00 | -3.07% | **+0.00%** | -3.07% |
+| size>2.5 | 1.00 | -3.08% | **-0.02%** | -3.06% |
+| size>2.9 | 0.98 | -3.10% | **+0.07%** | -3.17% |
+| size>3.5 | 0.80 | -0.88% | **+0.73%** | -1.61% |
+| **size>4.4** | 0.43 | **-5.48%** | **+0.52%** | **-5.99%** |
+| mag<24 | 0.52 | -2.31% | **+0.55%** | -2.87% |
+| mag<24.5 | 0.70 | -2.82% | **+0.26%** | -3.09% |
+| mag<25 | 0.85 | -2.93% | **+0.02%** | -2.95% |
+
+**RESULT 1 -- SELECTION RESPONSE IS ESSENTIALLY CORRECT.** |m_intrinsic| <= **0.73%** on every cut,
+and only **+0.52%** at size>4.4. The flow selects nearly the right objects and their intrinsic
+response matches the sim's.
+
+**RESULT 2 -- THIS REVISES 2026-07-30g's HEADLINE.** 30g reported the deep size tail as a SELECTION
+failure (-5.97% at 16 seeds / -5.48% at 1 seed). **It is not.** With shapes held exact the selection
+error there is +0.52%; the -5.48% is shape-response error. **The entanglement was hiding the real
+defect.** 30g's RESULT 2 should be read as "the size tail fails", not "selection fails".
+
+**RESULT 3 -- the shape error is SIZE-DEPENDENT.** The difference column sits near the -3.07% no-cut
+baseline for most cuts but reaches **-5.99% at size>4.4**. So the shape response is not uniformly
+biased; it DEGRADES with measured size. That relocates the Stage-2 lever from "handle selection
+better" to "fix the shape response at large measured size", and is consistent with the size-tail
+signature reproducing on the independent ALL population (30g RESULT 6).
+
+**LIMIT ON THAT READING, stated so it is not over-quoted.** The difference column is shape PLUS the
+shape-selection cross term, not "the shape term". Selection and shape are correlated in the flow's
+joint and the intrinsic mode deliberately breaks that correlation. Because the selection column is
+small the cross term is probably small too, but that is an inference, not a measurement.
+
+**Free bonus.** In intrinsic mode the projection is deterministic per object, so the sampled-shape
+noise (per-draw sd ~0.3) leaves the estimator entirely -- only the pass/fail indicator stays
+stochastic. The intrinsic column is far better converged at equal `n_samples`.
+
 ## 2026-07-30g (BASELINE V2 selection gate: mag axis good, deep size tail FAILS as pre-registered)
 
 Owner named **baseline V2 = dom6x6 flow (16 seeds) + old `_ho` emulator** and asked to test it on
