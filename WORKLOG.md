@@ -424,6 +424,43 @@ neighbours and is not strictly isolated (it may nonetheless be the RIGHT convent
 to be checked against how the constgold dumps define `neighbored`). And it is 44.87% detected, so the
 detection selection must be applied consistently, as it was here.
 
+**RESULT 12 -- PREDICTION (1) FALSIFIED for arm 1, and it re-specifies what (A) actually is**
+(job 15349025 -> 15349255, `anch2000` seed 501, 1 seed, certified `_ho` lookup):
+
+| term | baseline dom6x6 | anch2000 (training-count anchor) | predicted |
+|---|---|---|---|
+| in-domain m | -0.508% | **-0.814%** | +0.94% [+0.4,+1.5] |
+| (A) pin residual | -3.724% | **-4.016%** | ~0 |
+| (B) target defect | +3.212% | **+3.203%** | +3.2% (unchanged) |
+
+**The anchor did not reduce (A) at all -- it moved slightly the wrong way.** Strictly, at 1 seed
+against 0.68% per-seed scatter neither the m change (0.31 points) nor the (A) change is significant,
+so the correct statement is that a global anchor at weight 2000 produced **no detectable effect**,
+where the prediction required a 1.45-point move.
+
+**Why, and what it means.** The training logs show `<R_model>(val)` settling at ~0.7165 against a
+training-count-weighted target of **0.7149** -- the anchor had essentially nothing left to do ON THE
+TRAINING POPULATION, so pushing on it changes nothing. But constgold's `<R_flow>` is **0.7274**. The
++0.032 I labelled "pin residual" is therefore **NOT pin slack; it is a POPULATION-TRANSFER gap**, and a
+training-weighted anchor cannot reach it. It splits as
+
+    target aggregate differing between the two populations   0.7149 - 0.6952 = +0.0197
+    model response differing between the two populations     0.7274 - 0.7165 = +0.0109
+
+i.e. BOTH halves of (A) are population transfer, not optimisation. So the roadmap's "enforce the pin"
+half is **mis-specified**: no amount of pin weight fixes it, and RESULT 11's arithmetic line "fix the
+pin -> the flow reaches 0.6957" is not achievable by anchoring on the training population.
+
+**(B) is confirmed as a pure target property.** It read +3.212% for the baseline flow and +3.203% for a
+differently-trained flow -- stable to 0.01 points while the model changed. That is exactly what a
+target-side defect must do, and it corroborates RESULTS 10/11 independently of any flow.
+
+**Still in flight and now the more informative arm:** `anchpw` (job 15348881 -> analysis), whose anchor
+is weighted by CONSTGOLD cell occupancy and therefore pins to **0.6957**, a value the model does NOT
+currently sit at -- unlike arm 1's 0.7149. And `anch10000` at 5x the weight, which discriminates
+"anchor too weak" from "anchor pushing on the wrong quantity": if a 5x stronger anchor also leaves (A)
+untouched, pin strength is definitively not the lever.
+
 **Gotchas found and fixed.** (1) **The `cip` partition has ~12 idle a40 vGPU slices** while `inter` is
 100% GPU-allocated -- but `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` needs the CUDA
 virtual-memory APIs, which the A40-16Q vGPU profile does NOT support: `.to(device)` dies with "CUDA

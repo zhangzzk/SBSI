@@ -20,9 +20,9 @@ cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 T=/home/z/Zekang.Zhang/SBSI/results/response_target_crowd_rblend_snc_c0-99_6x6x5_dom.npz
 DUMPS=/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/indist_constgold_dumps
 echo "### ANCHOR VERDICT job=$SLURM_JOB_ID ###"; date
-echo "PRE-REGISTERED: in-domain m should move -0.51% -> about +3.3% (window [+2.5,+3.6]),"
+echo "PRE-REGISTERED: anch2000/anch10000 use TRAINING-count weights -> pin <R_flow> to 0.7149 -> m about +0.94% (window [+0.4,+1.5]).  anchpw uses CONSTGOLD-occupancy weights -> pin to 0.6957 -> m about +3.27%."
 echo "and term (A) should collapse from -3.72% toward 0."
-for TAG in anch2000 anch10000; do
+for TAG in anch2000 anch10000 anchpw; do
   n=$(ls $DUMPS/${TAG}_perobj_s*.feather 2>/dev/null | wc -l)
   echo; echo "############ $TAG  ($n dumps) ############"
   [ "$n" -ge 1 ] || { echo "no dumps for $TAG -- skipping"; continue; }
