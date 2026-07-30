@@ -455,11 +455,33 @@ pin -> the flow reaches 0.6957" is not achievable by anchoring on the training p
 differently-trained flow -- stable to 0.01 points while the model changed. That is exactly what a
 target-side defect must do, and it corroborates RESULTS 10/11 independently of any flow.
 
-**Still in flight and now the more informative arm:** `anchpw` (job 15348881 -> analysis), whose anchor
-is weighted by CONSTGOLD cell occupancy and therefore pins to **0.6957**, a value the model does NOT
-currently sit at -- unlike arm 1's 0.7149. And `anch10000` at 5x the weight, which discriminates
-"anchor too weak" from "anchor pushing on the wrong quantity": if a 5x stronger anchor also leaves (A)
-untouched, pin strength is definitively not the lever.
+**RESULT 13 -- the 5x weight settles it: PIN STRENGTH IS NOT THE LEVER, and it is actively harmful**
+(job 15348830 -> 15349445, `anch10000` seed 501):
+
+| arm | anchor weight | in-domain m | (A) pin residual | (B) target defect | wide `<R_flow>` |
+|---|---|---|---|---|---|
+| baseline dom6x6 | 0 | -0.508% | -3.724% | +3.212% | 0.1757 |
+| `anch2000` | 2,000 | -0.814% | -4.016% | +3.203% | 0.2714 |
+| `anch10000` | 10,000 | **-0.984%** | **-4.182%** | **+3.197%** | 0.3502 |
+
+**(A) gets MONOTONICALLY WORSE with anchor strength** (-3.72 -> -4.02 -> -4.18) while m moves
+monotonically away from zero. The anchor is demonstrably an effective lever on the model -- wide
+`<R_flow>` doubles from 0.1757 to 0.3502 -- so this is not a null implementation; it is the lever
+pushing the wrong way. Mechanism: the anchor pins the model to the TRAINING-count-weighted target
+(0.7149), while (A) is measured against the CONSTGOLD-cell-weighted target (0.6952); driving the model
+up toward 0.7149 pushes its constgold response FURTHER above 0.6952. **RESULT 11's "enforce the pin so
+the flow attains it" recommendation is therefore RETRACTED** -- no pin weight achieves it, and larger
+weights are a regression.
+
+**(B) is now confirmed to be a pure target-side property to 0.015 points across three flows**
+(+3.212 / +3.203 / +3.197) whose wide `<R_flow>` DOUBLED. Nothing about the model moves it. That is
+about as clean a separation of a data defect from a model defect as this project has produced, and it
+means RESULTS 10/11 stand independently of anything the flow does.
+
+**Still in flight:** `anchpw` (job 15348881), whose anchor is weighted by CONSTGOLD cell occupancy and
+so pins to 0.6957 -- a value the model does NOT sit at, unlike arm 1's 0.7149. Given RESULT 13 the
+expectation is now that it will also fail to fix (A), but in the opposite direction (pinning DOWN toward
+0.6957 should lower R_flow and drive m POSITIVE); recorded before it lands.
 
 **Gotchas found and fixed.** (1) **The `cip` partition has ~12 idle a40 vGPU slices** while `inter` is
 100% GPU-allocated -- but `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` needs the CUDA
