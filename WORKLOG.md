@@ -412,7 +412,7 @@ with no constgold response used to derive it.
 
 i.e. (i) rebuild the response target on a sample that CONTAINS isolated galaxies, and (ii) enforce the
 pin so the flow actually attains it -- the `--response-global-anchor` /`--response-pop-weight-npz`
-machinery added tonight is exactly the tool for (ii), and the arm-2 run in flight is its test. Doing
+machinery added tonight was built for (ii) but RESULTS 13/14 show it does NOT achieve it -- see the retraction there. Doing
 either alone is a 3-4 point regression, which is why every one-lever attempt in this project's history
 failed.
 
@@ -478,10 +478,42 @@ weights are a regression.
 about as clean a separation of a data defect from a model defect as this project has produced, and it
 means RESULTS 10/11 stand independently of anything the flow does.
 
-**Still in flight:** `anchpw` (job 15348881), whose anchor is weighted by CONSTGOLD cell occupancy and
-so pins to 0.6957 -- a value the model does NOT sit at, unlike arm 1's 0.7149. Given RESULT 13 the
-expectation is now that it will also fail to fix (A), but in the opposite direction (pinning DOWN toward
-0.6957 should lower R_flow and drive m POSITIVE); recorded before it lands.
+**RESULT 14 -- FINAL: both pre-registered predictions falsified, and (B) is stable to 0.015 points
+across four independently trained flows.** `anchpw` (constgold-occupancy weights, job 15348881 ->
+15349615) closes the test:
+
+| arm | anchor weight | anchor weighting | in-domain m | (A) | (B) |
+|---|---|---|---|---|---|
+| baseline dom6x6 | 0 | -- | -0.508% | -3.724% | **+3.212%** |
+| `anchpw` | 2,000 | CONSTGOLD occupancy | **-0.674%** | -3.881% | **+3.207%** |
+| `anch2000` | 2,000 | training counts | -0.814% | -4.016% | **+3.203%** |
+| `anch10000` | 10,000 | training counts | -0.984% | -4.182% | **+3.197%** |
+
+Prediction for arm 2 was **+3.27%**; measured **-0.674%**. My revised expectation in RESULT 13 -- that
+the occupancy-weighted anchor would at least push m POSITIVE by pinning R_flow down toward 0.6957 --
+is **also falsified**: m moved slightly further negative. Both pre-registrations are wrong and are
+recorded as wrong.
+
+**What survives, and it is the load-bearing result of the night:**
+1. **(B) = +3.20% with a total spread of 0.015 points across four flows** trained with different loss
+   terms, different anchor weightings and different anchor strengths, whose wide `<R_flow>` ranges
+   0.1757 to 0.3502 (a factor of 2). No property of the model moves it. Combined with RESULTS 10/11 --
+   the target catalogue is a 22.4% nearest-pair subset that is 99.97% neighboured, and an all-galaxy
+   response reproduces constgold's requirement to 0.14% -- **(B) is established as a target-side data
+   defect with an identified cause.**
+2. **(A) sits at -3.7 to -4.2% in every arm** and is monotonic in anchor strength in the WRONG
+   direction. It is not optimisation slack and no pin-side knob built tonight reaches it. It is a
+   population-transfer gap between the training population's response and constgold's.
+3. The cancellation structure itself reproduces in all four arms.
+
+**Honest bottom line for the night's goal.** |m| <= 0.3% was NOT reached; the best in-domain number
+remains the 8-seed baseline **-0.508 +- 0.285%**. Two of the three levers built tonight
+(pin population-reweighting, global anchor at either weighting) are measured dead, and the third
+(target rebuild) is diagnosed, quantified and specified but deliberately not executed -- it requires
+choosing a crowd-axis substitute and a neighbour-radius convention that change what the deliverable
+means, which 28c reserved for owner input. The one-line summary of the state: **the -0.5% is a residue
+of a +3.2% target defect with a now-known cause against a -3.7% population-transfer gap, and closing
+only the half we understand would move m to about -3.7%.**
 
 **Gotchas found and fixed.** (1) **The `cip` partition has ~12 idle a40 vGPU slices** while `inter` is
 100% GPU-allocated -- but `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` needs the CUDA
