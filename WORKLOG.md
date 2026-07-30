@@ -2,6 +2,35 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30k (VERIFIED from the checkpoints: the -0.271% is V2, not V1; and a naming trap)
+
+Owner asked to confirm whether the 16-seed -0.271% +- 0.217% is the certified V1 number or the new
+V2. **Read off the checkpoint metadata, not the tags:**
+
+| | `ablate_s2c_lt500_dom6x6` (the -0.271% model) | certified V1 `meas_szfl_noz_lam450_fixresp` |
+|---|---|---|
+| targets | `ngmix_g1, g2, mag_auto, log_flux_radius` | `ngmix_g1, g2` |
+| **target_dim** | **4** | **2** |
+| domain | trained inside mag<26, Re>0.3 | none |
+| flow_type | mean_affine | mean_affine |
+| feature_set string | `g0_meas_crowd_conc_szfl_noz` | **identical string** |
+
+**It is V2**: the 4D joint (shape + mag + size), true-conditioned, domain-trained. V1 is shape-only
+(2D). Different models; +0.245% (V1, full constgold convention) and -0.271% (V2, in-domain) are
+different measurements on different populations and must not be compared directly.
+
+**NAMING TRAP, recorded so it does not mislead again.** Both checkpoints carry the SAME
+`feature_set` string `g0_meas_crowd_conc_szfl_noz`, whose name says "meas" -- which looks like V2
+conditions on MEASURED mag/size while also predicting them (a self-reference / errors-in-variables
+leak). **It does not.** The actual stored conditioners are
+
+  `['e1_input_p','e2_input_p','sersic_n_input_p','r_input_p','Re_input_p','nbr_flux_near','nbr_flux_far','nbr_flux_max']`
+
+i.e. `r_input_p` and `Re_input_p` -- **TRUE** magnitude and size. `train_measurement_model_swa_s1_truecond.py`
+substitutes true for measured (that is what `truecond` means), so the feature-set string is inherited
+from V1 and does NOT describe what V2 receives. **Always read `metadata['condition_features']`, never
+the feature_set name.** Measured mag/size are outputs only, as the design intended.
+
 ## 2026-07-30j (owner's m_sel / m_flow split: selection bias is a SIZE-axis effect, and the flow gets it)
 
 Owner's refinement of 30h: split the one `m_intrinsic` column into two questions that it conflates --
