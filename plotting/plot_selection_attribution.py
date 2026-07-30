@@ -61,6 +61,12 @@ def main():
     ap.add_argument("--pixel-size", type=float, default=0.2)
     ap.add_argument("--target", type=float, default=0.3,
                     help="project |m| target in %%, shaded in the bottom row for context")
+    # The +15% point at 0.9" compresses the whole top row, which then hides the fact that the
+    # magnitude axis is flat (y is shared within a row). Cropping the size axis to <=0.6" keeps the
+    # ONSET -- the only part where the two rows are both informative -- and lets the row breathe.
+    # This crops the VIEW only; the dropped cuts are still measured and still printed below.
+    ap.add_argument("--size-min", type=float, default=0.2, help="lowest size cut to SHOW [arcsec]")
+    ap.add_argument("--size-max", type=float, default=0.6, help="highest size cut to SHOW [arcsec]")
     args = ap.parse_args()
     set_style()
 
@@ -91,6 +97,17 @@ def main():
         # by ~40%, so these bars are indicative, not precise.
         ef = np.abs(mod_sem[idx] / sim[idx]) * 100.0 if have_err else None
         fam[kind] = dict(thr=thr, m_sel=ms, m_flow=mf, e_sel=es, e_flow=ef)
+
+    # Crop the size axis for DISPLAY only. `fam_full` is kept so the table printed at the end still
+    # covers every measured cut -- the figure is cropped, the measurement is not.
+    fam_full = {k: dict(v) for k, v in fam.items()}
+    d = fam["size"]
+    show = (d["thr"] >= args.size_min - 1e-9) & (d["thr"] <= args.size_max + 1e-9)
+    dropped = d["thr"][~show]
+    fam["size"] = {k: (v[show] if isinstance(v, np.ndarray) else v) for k, v in d.items()}
+    if dropped.size:
+        print("  size cuts measured but NOT SHOWN (view cropped to %.2f-%.2f\"): %s"
+              % (args.size_min, args.size_max, ", ".join('%.2f"' % t for t in dropped)))
 
     fig, axes = plt.subplots(2, 2, figsize=(11.4, 7.0), sharey="row",
                              gridspec_kw=dict(hspace=0.32, wspace=0.10))
@@ -139,7 +156,7 @@ def main():
     if not have_err:
         print("  NOTE: npz stores no errors -> no error bars drawn.")
     for kind in ("size", "mag"):
-        d = fam[kind]
+        d = fam_full[kind]          # full table, including cuts cropped out of the figure
         print("\n  --- %s axis ---" % kind)
         print("  %10s %18s %18s" % ("cut", "m_sel [%]", "m_flow [%]"))
         for i, t in enumerate(d["thr"]):
