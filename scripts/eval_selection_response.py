@@ -113,12 +113,23 @@ def build_base(g0_leg, gS_leg, max_case, re_min, mag_max, iso_radius, crowd, nn,
     return dict(base=base, gh1=gh1, gh2=gh2, gmed=gmed, iso=iso)
 
 
-def truth_selected_response(base, gh1, gh2, gmed, sel, xcol, thr, keep_high):
+def truth_selected_response(base, gh1, gh2, gmed, sel, xcol, thr, keep_high, intrinsic=False):
     """R_C from the sim: two-means selected-catalogue response under a measured cut on xcol.
     keep_high=True keeps x>thr (size), False keeps x<thr (bright mag). Returns (R, frac, R_nocut, R_err)
-    where R_err is the analytic standard error of R from the two selected-leg means."""
-    e1_0 = base["measured_ngmix_g1_0"].to_numpy(float); e2_0 = base["measured_ngmix_g2_0"].to_numpy(float)
-    e1_g = base["measured_ngmix_g1_g"].to_numpy(float); e2_g = base["measured_ngmix_g2_g"].to_numpy(float)
+    where R_err is the analytic standard error of R from the two selected-leg means.
+
+    intrinsic=True projects the EXACT sheared INTRINSIC shape instead of the measured ngmix shape,
+    while still SELECTING on the measured column. That is the attribution mode: the shape carries no
+    measurement error on either side, so a sim-vs-model difference can only come from WHICH objects
+    were selected. See the module docstring of scripts/eval_selection_attribution.py."""
+    if intrinsic:
+        # leg 0 is g=0 -> the shape is the unsheared intrinsic one; leg g is sheared by gmed*ghat.
+        i1 = base["e1_input_rot0_p"].to_numpy(float); i2 = base["e2_input_rot0_p"].to_numpy(float)
+        e1_0, e2_0 = i1, i2
+        e1_g, e2_g = apply_shear_to_ellipticity(i1, i2, gmed * gh1, gmed * gh2)
+    else:
+        e1_0 = base["measured_ngmix_g1_0"].to_numpy(float); e2_0 = base["measured_ngmix_g2_0"].to_numpy(float)
+        e1_g = base["measured_ngmix_g1_g"].to_numpy(float); e2_g = base["measured_ngmix_g2_g"].to_numpy(float)
     p0 = e1_0 * gh1 + e2_0 * gh2
     pg = e1_g * gh1 + e2_g * gh2
     x0 = base[xcol + "_0"].to_numpy(float); xg = base[xcol + "_g"].to_numpy(float)
@@ -150,7 +161,7 @@ def truth_selected_response(base, gh1, gh2, gmed, sel, xcol, thr, keep_high):
 
 @torch.no_grad()
 def model_selected_response(bundle, base, gh1, gh2, gmed, sel, cuts, n_samples, batch_size,
-                            flow_seed, device, chunk=100_000, qmc=False):
+                            flow_seed, device, chunk=100_000, qmc=False, intrinsic=False):
     """R_C from the flow: sample joint (shape,mag,logsize) at s=0 and s=+gmed (CRN, per-object ghat),
     apply each cut to the samples, accumulate the selected-catalogue mean per leg.
 
@@ -175,22 +186,36 @@ def model_selected_response(bundle, base, gh1, gh2, gmed, sel, cuts, n_samples, 
         torch.manual_seed(seed)
         if torch.cuda.is_available():
             torch.cuda.manual_seed_all(seed)
-        return bundle.sample(fr, n_samples=n_samples, batch_size=batch_size, qmc=qmc)  # (n, ns, 4)
+        # e1s/e2s = the EXACT sheared intrinsic shape for these rows; returned so the caller can
+        # project it instead of the sampled measured shape (attribution mode).
+        return bundle.sample(fr, n_samples=n_samples, batch_size=batch_size, qmc=qmc), e1s, e2s
 
     for cs in range(0, len(idx_all), chunk):
         ci = idx_all[cs:cs + chunk]
         g1c = gh1[ci][:, None]; g2c = gh2[ci][:, None]
         seed = flow_seed + cs  # same seed for both legs of this chunk (CRN); varies across chunks
         for leg, s in ((0, 0.0), (1, +gmed)):
-            d = leg_draws(ci, s, seed)                       # (n, ns, 4)
-            proj = d[:, :, 0] * g1c + d[:, :, 1] * g2c       # (n, ns)
+            d, e1s, e2s = leg_draws(ci, s, seed)             # (n, ns, 4) + exact sheared intrinsic
             mag = d[:, :, 2]; logsz = d[:, :, 3]
+            if intrinsic:
+                # (n,1): deterministic per object, broadcasts over draws. No sampled shape noise.
+                proj = (e1s * gh1[ci] + e2s * gh2[ci])[:, None]
+            else:
+                proj = d[:, :, 0] * g1c + d[:, :, 1] * g2c   # (n, ns)
+            # Keep this EXACTLY as it was before intrinsic mode existed: fin = isfinite(proj) only.
+            # Widening it to also require finite mag/logsz would change the measured-mode no-cut
+            # DENOMINATOR and silently break comparability with every number already recorded.
+            # A non-finite cut variable fails the `xv > thr` comparison anyway, so it is excluded
+            # from the cut rows without touching the no-cut row.
             fin = np.isfinite(proj)
-            acc["__nocut__"][leg][0] += float(proj[fin].sum()); acc["__nocut__"][leg][1] += int(fin.sum())
+            # np.where, not proj*mask: NaN*False is NaN, which would poison the sums.
+            acc["__nocut__"][leg][0] += float(np.where(fin, proj, 0.0).sum())
+            acc["__nocut__"][leg][1] += int(fin.sum())
             for c in cuts:
                 xv = logsz if c["dim"] == 3 else mag
                 pm = fin & ((xv > c["thr"]) if c["keep_high"] else (xv < c["thr"]))
-                acc[c["name"]][leg][0] += float(proj[pm].sum()); acc[c["name"]][leg][1] += int(pm.sum())
+                acc[c["name"]][leg][0] += float(np.where(pm, proj, 0.0).sum())
+                acc[c["name"]][leg][1] += int(pm.sum())
 
     out = {}
     n_all = acc["__nocut__"][0][1] / max(len(idx_all), 1)  # ~n_samples
