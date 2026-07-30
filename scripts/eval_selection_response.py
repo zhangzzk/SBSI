@@ -150,7 +150,7 @@ def truth_selected_response(base, gh1, gh2, gmed, sel, xcol, thr, keep_high):
 
 @torch.no_grad()
 def model_selected_response(bundle, base, gh1, gh2, gmed, sel, cuts, n_samples, batch_size,
-                            flow_seed, device, chunk=100_000):
+                            flow_seed, device, chunk=100_000, qmc=False):
     """R_C from the flow: sample joint (shape,mag,logsize) at s=0 and s=+gmed (CRN, per-object ghat),
     apply each cut to the samples, accumulate the selected-catalogue mean per leg.
 
@@ -175,7 +175,7 @@ def model_selected_response(bundle, base, gh1, gh2, gmed, sel, cuts, n_samples, 
         torch.manual_seed(seed)
         if torch.cuda.is_available():
             torch.cuda.manual_seed_all(seed)
-        return bundle.sample(fr, n_samples=n_samples, batch_size=batch_size)  # (n, ns, 4)
+        return bundle.sample(fr, n_samples=n_samples, batch_size=batch_size, qmc=qmc)  # (n, ns, 4)
 
     for cs in range(0, len(idx_all), chunk):
         ci = idx_all[cs:cs + chunk]

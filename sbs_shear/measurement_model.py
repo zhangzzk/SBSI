@@ -348,6 +348,37 @@ class ConditionalAffineCoupling(nn.Module):
         return z, logdet
 
 
+def _qmc_normal(batch, n_samples, dim, dtype, device):
+    """Randomized-QMC standard normals, shape (batch*n_samples, dim), row-major (obj, sample).
+
+    The per-object integral we need is E[f(x)] over the flow's predictive distribution, estimated
+    from n_samples draws. Plain `torch.randn` converges as 1/sqrt(n); a low-discrepancy (Sobol) set
+    covers the unit cube far more evenly and converges nearer 1/n on smooth integrands, so the same
+    accuracy needs far fewer draws.
+
+    THE RANDOM SHIFT IS NOT OPTIONAL. If every object reused the SAME Sobol points, their quadrature
+    errors would be perfectly correlated and would NOT average away over the ~1e6 objects -- that
+    turns a variance into a BIAS, which is exactly the failure mode this estimator cannot tolerate.
+    Giving each object its own uniform shift mod 1 (a randomly-shifted digital net) keeps the
+    low-discrepancy structure WITHIN an object's n_samples while decorrelating objects, so the
+    estimator stays unbiased and the object-average still converges.
+
+    n_samples should be a power of two: Sobol's equidistribution guarantees hold on 2^k points and
+    degrade for other counts.
+    """
+    eng = torch.quasirandom.SobolEngine(dimension=dim, scramble=True, seed=_QMC_SEED)
+    u = eng.draw(n_samples).to(device=device, dtype=torch.float32)        # (n_samples, dim)
+    shift = torch.rand(batch, 1, dim, device=device, dtype=torch.float32)  # per-object shift
+    u = torch.remainder(u[None, :, :] + shift, 1.0)                       # (batch, n_samples, dim)
+    # ndtri(0)= -inf, ndtri(1)=+inf; clamp just inside the open interval.
+    u = u.clamp_(1e-7, 1.0 - 1e-7)
+    z = torch.special.ndtri(u)
+    return z.reshape(batch * n_samples, dim).to(dtype)
+
+
+_QMC_SEED = 0
+
+
 class ConditionalAffineFlow(nn.Module):
     def __init__(
         self,
@@ -405,7 +436,7 @@ class ConditionalAffineFlow(nn.Module):
         log_base = -0.5 * (z.pow(2) + np.log(2.0 * np.pi)).sum(dim=-1)
         return log_base + logdet
 
-    def sample(self, context, n_samples=1):
+    def sample(self, context, n_samples=1, qmc=False):
         if n_samples < 1:
             raise ValueError("n_samples must be >= 1")
         if context.ndim != 2:
@@ -413,7 +444,11 @@ class ConditionalAffineFlow(nn.Module):
         batch = context.shape[0]
         expanded_context = context[:, None, :].expand(batch, n_samples, self.context_dim)
         flat_context = expanded_context.reshape(batch * n_samples, self.context_dim)
-        z = torch.randn(batch * n_samples, self.target_dim, dtype=context.dtype, device=context.device)
+        if qmc:
+            z = _qmc_normal(batch, n_samples, self.target_dim, context.dtype, context.device)
+        else:
+            z = torch.randn(batch * n_samples, self.target_dim,
+                            dtype=context.dtype, device=context.device)
         flat_x, _ = self.forward(z, flat_context)
         return flat_x.reshape(batch, n_samples, self.target_dim)
 
@@ -460,12 +495,12 @@ class MeasurementModelBundle:
         return np.concatenate(values) if values else np.array([], dtype=np.float32)
 
     @torch.no_grad()
-    def sample(self, condition_frame, n_samples=1, batch_size=65536):
+    def sample(self, condition_frame, n_samples=1, batch_size=65536, qmc=False):
         samples = []
         for start in range(0, len(condition_frame), batch_size):
             batch = condition_frame.iloc[start:start + batch_size]
             context = self._context_from_frame(batch)
-            draw = self.model.sample(context, n_samples=n_samples).cpu().numpy()
+            draw = self.model.sample(context, n_samples=n_samples, qmc=qmc).cpu().numpy()
             flat = draw.reshape(-1, self.target_transform.dim)
             raw = self.target_transform.inverse_transform_array(flat)
             samples.append(raw.reshape(len(batch), n_samples, self.target_transform.dim))
@@ -612,8 +647,8 @@ class ConditionalMeanFlow(nn.Module):
     def log_prob(self, x, context):
         return self.flow.log_prob(x - self._mu(context), self._flow_ctx(context))
 
-    def sample(self, context, n_samples=1):
-        s = self.flow.sample(self._flow_ctx(context), n_samples=n_samples)
+    def sample(self, context, n_samples=1, qmc=False):
+        s = self.flow.sample(self._flow_ctx(context), n_samples=n_samples, qmc=qmc)
         return s + self._mu(context)[:, None, :]
 
 
