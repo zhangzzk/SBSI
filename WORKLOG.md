@@ -2,6 +2,64 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30f (CLEANUP: keep-set reduced to certified V1 + dom6x6 + old emulator; 39G quarantined)
+
+Owner-requested cleanup. **Nothing was deleted** -- artifacts are GPU-hours and are not in git, so
+they were MOVED to `/project/ls-gruen/users/zekang.zhang/sbsi_caches/_QUARANTINE_2026-07-30/`
+(**39G**, with a `README.md` giving the restore path for every item and the one-line `rm -rf` to
+reclaim it). Script removals used `git mv` into `archive/` and `jobs/archive/`, so they are
+recoverable from git.
+
+**Keep-set (owner's items 1+2).**
+
+| kept | where | note |
+|---|---|---|
+| certified **V1**, 16 seeds `meas_szfl_noz_lam450_fixresp_s501..516` | `/home/z/Zekang.Zhang/SBSI/models/` | **not touched** -- lives outside the ablation cache entirely |
+| **dom6x6**, 16 seeds | `sbsi_caches/ablation/` -- 48 files, 7.3G -> **170M** | the current in-domain model |
+| **dom6x6 constgold dumps**, 16 seeds | `derisk/v2_domain_dumps/` -- 25 -> 16 files | the -0.271 +- 0.217% result rests on these |
+| **old emulator** `lsst_r_extnbr_ho` + production + `_indom` + `_indom_tuned` | `blendemu/models/` | see below |
+
+**`blendemu/models/` was left ENTIRELY untouched, deliberately.** That tree has uncommitted work on
+`main`, and the emulator files are a few MB each, so there is no space argument for disturbing it.
+Dead variants (`_extnbr`, `_extnbr_cw`, `_indist*`, `_indom_wc*`) still sit there, superseded but
+harmless. Recorded here so the inconsistency is intentional, not an oversight.
+
+**Moved to quarantine:** 269 flow-checkpoint files (all variants except dom6x6 -- V2 full-range
+`coupling_lt500`, `s2_true4d`, `dom6x9lows`, `dom2`, the three `dom6x6_anch*`, `dom8x8`, `dom6x6c8`,
+`s0/s1/s3a/s3b`, and the `s2c_lows_*` probes); 9 dom2/`v2dom` dumps; and the `indist_constgold_dumps`
+(15G), `v2_constgold_dumps` (6.3G) and `_archive_superseded` (3.2G) directories.
+
+**Checks run BEFORE moving anything, all three of which changed the outcome:**
+1. The keep-glob `..._ablate_s2c_lt500_dom6x6_s*` matches **0** `_anch*`/`_dom6x6c8` files -- they
+   share the `dom6x6` prefix but differ before `_s<seed>`, so a naive `*dom6x6*` glob would have
+   wrongly KEPT four dead variants.
+2. Neither constgold dump directory holds V1 (`v2_constgold_dumps` = tag `v2` only;
+   `indist_constgold_dumps` = `indist`/`anch*`), and a `fixresp` search across `sbsi_caches` returns
+   **0** -- no cached V1 dumps existed, so "keep V1 as it is" is intact.
+3. The running Optuna job (15355998) reads `emulator_metadata_lsst_r.json` and `_ho`'s
+   classification/self_response models and writes only `_indom_tuned` -- none in scope.
+
+**Scripts (item 5).** No byte-identical duplicates exist among the 228 job scripts or 87 python
+scripts. Archived 7 job scripts tied to now-quarantined variants (`job_anch_one`,
+`job_anchor_verdict`, `job_build_lookup_indist`, `job_constgold_indist`, `job_retrain_indist`,
+`job_retrain_cw`, `job_retrain_wc`) and 3 unreferenced python scripts (`build_iso_union_catalogue`
+-- written this session and never used once its premise was falsified; `blend_scene_closure_test` --
+tied to the retracted circular scene-R_blend line; `build_halfsim_flow_catalogue` -- a catalogue
+builder, which AGENTS.md places in blendemu, not here).
+
+**NEAR MISS worth recording:** `response_ratio_diagnostic.py` and `eval_constgold_closure.py` are
+referenced by **no job script** and looked like dead code, but are imported as MODULES -- the former
+by **9** files including `train_measurement_model_swa_s1_truecond.py` and
+`validate_constant_with_blend.py`. Archiving on the "unreferenced by jobs" signal alone would have
+broken training and constgold validation. **Check module imports, not just job references.**
+Verified after the move: 0 syntax errors across `scripts/` + `sbs_shear/`, and no job references an
+archived file.
+
+**Deliberately KEPT for item 3:** `scripts/eval_swap_lookup.py` + `jobs/job_swap_lookup.sh` -- these
+are what will swap `_ho` for `_indom_tuned` in the existing 16 dumps without retraining.
+
+**Item 4** (`Re > 0.25"` plan) is recorded in the FUTURE TASK block below and remains unexecuted.
+
 ## FUTURE TASK (owner, 2026-07-30 -- RECORDED ONLY, DO NOT ACT YET)
 
 **Lower the primary size cut to `Re > 0.25"`, in BOTH the flow and the blend emulator.**
