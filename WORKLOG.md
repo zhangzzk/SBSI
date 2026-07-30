@@ -279,6 +279,39 @@ physics decision; reporting it as a calibration success would be selecting the a
 on the metric. The useful output is that the cut placement and the calibration quality are now
 separable, and that the specified cut sits at the least stable point available.
 
+**RESULT 9 -- independent code-side confirmation, and the candidate space for (B) is now nearly
+empty.** A 17-agent grounding + adversarial pass over the trainer, target builder, evaluator and log
+history reproduced the decomposition from the code side with matching numbers: label transferred onto
+the eval population **0.6957** (I measured 0.6957), constgold's requirement `r_sim - R_blend`
+**0.7234** (0.7236), flow **0.7279** (0.7274), and independently characterised it as "the label is
+3.84% too LOW and the flow overshoots its label by +4.6%, so m=-0.5% is a cancellation".
+
+Nine candidate fixes were proposed and **all nine were refuted**, several by measurement rather than
+argument. The load-bearing eliminations:
+
+| candidate | why it died |
+|---|---|
+| multiplicative `<R_blend>` rescale | in crowd q0 `<R_blend>` is NEGATIVE (-0.028), so scaling moves it the WRONG way in the bin where (B) is largest. Confirms RESULT 6's retraction. |
+| g->0 intercept of the two forward chords | **my extrapolation used the wrong functional form.** The SNC chord is exactly EVEN in g (population-mean shape is odd in g, so `R(g)=R_0+c*g^2`, no linear term). The correct correction is ~0.0004, smaller than my linear Richardson gave. Also flagged FIREWALL VIOLATION for deriving the rescale against constgold. |
+| isotropy pin (metric reads `R_11`, pin controls `trace/2`) | the mismatch is real but `r11-r22 = -2*A*a` per object with rms 27.6% of R; it vanishes only in the population average, so forcing it to zero per object suppresses correct physics. |
+| pin the 3rd axis on the model's own crowding coordinate | reweighting the ruler to constgold's `nbr_flux_near` occupancy moves `<R_flow>` +0.442% **and** `<R_hs>` +0.470% -- they move together, residual unchanged. |
+| validate the SUMMED R_blend (28i's standing caveat) | **answered algebraically:** `E[S] = sum_j R_j` exactly under independent neighbour directions (measured mean cos = -0.0000), and the summed sem equals the pair-weighted per-pair sem. The summed estimator carries NO information the per-pair one does not. 28i's caveat is closed, not open. |
+| better separation coordinate | within-cell conditional crowd distributions agree to L1=0.0199; transferring per-cell ruler errors to constgold weights moves `<R_flow>` by -0.000013 +- 0.000055 => **dm = +0.0015 pp**, 300-500x below the gap. |
+| coupling-pin competition | already swept 2026-07-24 at lam_theta 0/20/100/500, seed 501: per-bin resp 1.16e-3/1.16e-3/1.21e-3 and `<R_model>` 0.2751/0.2781/0.2751. A 25x change does nothing. Absent. |
+
+**Free measurement worth keeping (SWA).** Reading the 12 dom6x6 `train_curve.npz` files, the best-val
+epoch's `val_R` sits **+0.240 +- 0.216%** ABOVE the 8-epoch SWA average (positive in 8 of 12 seeds).
+With `dm/d<R_flow> = -0.841`, shipping the best-val checkpoint instead of the SWA average would move m
+from -0.508% to about **-0.71%**. So SWA is helping, and `--swa-last-k 1` is not a knob to reach for.
+
+**What this leaves.** Every population-transfer route is bounded at <=0.02 pp, the estimator amplitude
+at ~0.3%, aperture k-truncation at +0.0002, and multiplicative emulator error is excluded. None of
+these can supply (B) = +3.2%. The surviving explanation is the one 28k flagged and never closed: **the
+two sims genuinely disagree about the same response** -- the target is built on
+`det_meas_crowd_g0.05_val_full` and the ruler on `det_meas_ngmix_g0.05_val`, with a ~1.8% discrepancy
+already measured in the boundary bin -- and/or the g=0 SNC reference render carries its own bias. That
+is now a narrow, well-posed question rather than an open search.
+
 **Gotchas found and fixed.** (1) **The `cip` partition has ~12 idle a40 vGPU slices** while `inter` is
 100% GPU-allocated -- but `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` needs the CUDA
 virtual-memory APIs, which the A40-16Q vGPU profile does NOT support: `.to(device)` dies with "CUDA
