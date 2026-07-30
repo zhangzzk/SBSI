@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=cg_nd
-#SBATCH --time=01:30:00
+#SBATCH --time=04:00:00
 #SBATCH --mem=200G
 #SBATCH --cpus-per-task=16
 #SBATCH --gres=gpu:1

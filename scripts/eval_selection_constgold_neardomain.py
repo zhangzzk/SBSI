@@ -181,6 +181,8 @@ def main():
                     help="per-object emulator R_blend; '' disables (flow-only model)")
     ap.add_argument("--min-blend-match", type=float, default=0.99,
                     help="refuse if fewer than this fraction of rows get an R_blend")
+    ap.add_argument("--save-npz", default="results/constgold_neardomain_table.npz",
+                    help="persist the ALL table so figures read data, not a log")
     ap.add_argument("--dom-mag-max", type=float, default=26.0)
     ap.add_argument("--dom-re-min", type=float, default=0.3)
     args = ap.parse_args()
@@ -338,11 +340,17 @@ def main():
         print("=" * 104)
         print(f"  sim R(no cut): unsheared={R0['unsheared']:+.5f} sheared={R0['sheared']:+.5f} "
               f"measured={R0['measured']:+.5f}")
+        m_nc = R0["measured"] / M0 - 1.0
+        # Seed error on the no-cut m. m = R_sim/M0 - 1, so dm = (R_sim/M0^2) dM0 = (1+m) dM0/M0.
+        e_nc = abs(1.0 + m_nc) * sem[gn]["__nocut__"] / abs(M0) if np.isfinite(
+            sem[gn]["__nocut__"]) else np.nan
         print(f"  model R(no cut) = R_flow {flowonly[gn]['__nocut__']:+.5f} + R_blend "
-              f"{blendonly[gn]['__nocut__']:+.5f} = {M0:+.5f}   "
-              f"[m at no cut = {100*(R0['measured']/M0 - 1):+.3f}%]")
+              f"{blendonly[gn]['__nocut__']:+.5f} = {M0:+.5f}")
+        print(f"  m at no cut = {100*m_nc:+.3f}% +- {100*e_nc:.3f}%   "
+              f"({len(per)} seeds)")
         print(f"\n  {'cut':>22} {'keep':>6} | {'(1) pure sel':>13} {'(3) measured':>13} "
               f"{'(4) MODEL m':>16} | {'m_flow':>10}")
+        rows = []
         for c in cuts:
             k = c["name"]
             s = sim[gn][k]
@@ -353,6 +361,22 @@ def main():
             e = sem[gn][k] / abs(M0) * 100.0 if np.isfinite(sem[gn][k]) else np.nan
             print(f"  {k:>22} {s['keep']:>6.3f} | {c1:>+12.3f}% {c3:>+12.3f}% "
                   f"{c4:>+11.3f} +- {e:<.3f} | {mf:>+9.3f}%")
+            rows.append((k, s["keep"], c1, c3, c4, e, mf, bool(c.get("proxy"))))
+        # Persist the table so figures read DATA, never a parsed log or a transcribed number.
+        if args.save_npz and gn == "ALL":
+            np.savez(args.save_npz,
+                     name=np.array([r[0] for r in rows]),
+                     keep=np.array([r[1] for r in rows], float),
+                     pure_sel=np.array([r[2] for r in rows], float),
+                     measured=np.array([r[3] for r in rows], float),
+                     model_m=np.array([r[4] for r in rows], float),
+                     model_sem=np.array([r[5] for r in rows], float),
+                     m_flow=np.array([r[6] for r in rows], float),
+                     is_proxy=np.array([r[7] for r in rows], bool),
+                     R_sim_meas=R0["measured"], R_model=M0,
+                     R_flow=flowonly[gn]["__nocut__"], R_blend=blendonly[gn]["__nocut__"],
+                     m_nocut=100 * m_nc, m_nocut_err=100 * e_nc, n_seeds=len(per))
+            print(f"\n  saved table -> {args.save_npz}")
 
     print("\n  (1) pure sel = R_unsheared(cut)/R_sheared(no cut): same raw shape both legs, so the")
     print("      shape response is 0 and this is the pure moving-boundary term.")
