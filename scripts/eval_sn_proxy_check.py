@@ -124,27 +124,45 @@ def main():
     s1, s2 = apply_shear_to_ellipticity(i1, i2, gmed * gh1, gmed * gh2)
     p_int = i1 * gh1 + i2 * gh2
     p_shr = s1 * gh1 + s2 * gh2
-    fin &= np.isfinite(p_int) & np.isfinite(p_shr)
+    # MEASURED shapes too. The intrinsic pair isolates PURE SELECTION; the measured pair carries the
+    # SUBPOPULATION term as well, and that is the quantity the constgold model column (4) is compared
+    # against. The proxy's effect on the two is NOT the same size, so the 0.27-pt intrinsic gap does
+    # not bound the measured one -- which is exactly what this block measures.
+    m1_0 = base["measured_ngmix_g1_0"].to_numpy(float)
+    m2_0 = base["measured_ngmix_g2_0"].to_numpy(float)
+    m1_g = base["measured_ngmix_g1_g"].to_numpy(float)
+    m2_g = base["measured_ngmix_g2_g"].to_numpy(float)
+    q_0 = m1_0 * gh1 + m2_0 * gh2
+    q_g = m1_g * gh1 + m2_g * gh2
+    fin &= np.isfinite(p_int) & np.isfinite(p_shr) & np.isfinite(q_0) & np.isfinite(q_g)
     R_nocut = two_means(p_int, p_shr, gmed, fin, fin)
-    print(f"\n  R(no cut, sheared intrinsic) = {R_nocut:+.5f}")
+    Q_nocut = two_means(q_0, q_g, gmed, fin, fin)
+    print(f"\n  R(no cut, sheared intrinsic) = {R_nocut:+.5f}"
+          f"   R(no cut, MEASURED) = {Q_nocut:+.5f}")
 
     print("\n" + "=" * 96)
     print("Q2  m_sel from cutting on REAL S/N vs on the mag+size PROXY, at MATCHED keep-fraction")
     print("    (exact intrinsic shapes -> pure selection; detection excluded: both-detected only)")
     print("=" * 96)
-    print(f"  {'keep':>6} | {'thr real':>10} {'m_sel real':>12} | {'thr proxy':>10} "
-          f"{'m_sel proxy':>12} | {'difference':>11}")
+    print(f"  {'keep':>6} | {'INTRINSIC (pure selection)':^34} | "
+          f"{'MEASURED (selection + subpopulation)':^38}")
+    print(f"  {'':>6} | {'real':>10} {'proxy':>10} {'gap':>10} | "
+          f"{'real':>11} {'proxy':>11} {'gap':>11}")
     for kf in args.keep_fracs:
-        row = []
+        vals = {}
         for which in ("real", "proxy"):
             v0, vg = out[(which, "0")], out[(which, "g")]
             thr = float(np.quantile(v0[fin], 1.0 - kf))
-            p0 = fin & (v0 > thr)
-            pg = fin & (vg > thr)
-            R = two_means(p_int, p_shr, gmed, p0, pg)
-            row.append((thr, (R / R_nocut - 1.0) * 100.0))
-        print(f"  {kf:>6.2f} | {row[0][0]:>10.2f} {row[0][1]:>+11.3f}% | {row[1][0]:>10.2f} "
-              f"{row[1][1]:>+11.3f}% | {row[1][1]-row[0][1]:>+10.3f}")
+            p0, pg = fin & (v0 > thr), fin & (vg > thr)
+            vals[(which, "int")] = (two_means(p_int, p_shr, gmed, p0, pg) / R_nocut - 1.0) * 100.0
+            vals[(which, "meas")] = (two_means(q_0, q_g, gmed, p0, pg) / Q_nocut - 1.0) * 100.0
+        gi = vals[("proxy", "int")] - vals[("real", "int")]
+        gm = vals[("proxy", "meas")] - vals[("real", "meas")]
+        print(f"  {kf:>6.2f} | {vals[('real','int')]:>+9.3f}% {vals[('proxy','int')]:>+9.3f}% "
+              f"{gi:>+10.3f} | {vals[('real','meas')]:>+10.3f}% {vals[('proxy','meas')]:>+10.3f}% "
+              f"{gm:>+11.3f}")
+    print("\n  The MEASURED 'gap' is the number that matters for the constgold model column: it is")
+    print("  how much of that overshoot the PROXY alone can explain, with no model involved.")
     print("\n  If the two m_sel columns track each other, the flow's mag+size CAN stand in for an")
     print("  S/N cut and the prediction test is meaningful. If they diverge, the proxy misses the")
     print("  shear-correlated part of S/N and the flow would be predicting the wrong cut.")

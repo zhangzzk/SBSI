@@ -9,9 +9,22 @@ are S/N, et, ex, measured_e1/e2). So:
     SIM   cuts on the REAL stored SExtractor S/N
     MODEL cuts on the M2 PROXY built from its sampled mag, size and |e|
 These are different variables, so thresholds are matched by KEEP-FRACTION (quantile), not by value.
-The proxy-vs-real gap measured on the half-shear legs (RMS 0.27 pts for M2, job 15365211) is
-therefore INSIDE this comparison and cannot be separated here. Read the model column as
-"flow + proxy", not "flow".
+The proxy-vs-real gap is therefore INSIDE this comparison. It was MEASURED on the half-shear legs
+for exactly this quantity (measured-shape shift m, job 15365815): -0.17 / -0.24 / -0.06 / -0.08 /
+-0.60 / -1.05 pts at keep 0.95 ... 0.20 -- small, and NEGATIVE (the proxy UNDERSTATES the shift).
+Do not quote the 0.27-pt figure here: that was the gap for the PURE-SELECTION (exact intrinsic
+shape) quantity, which is a different number and does not bound this one.
+
+THE MODEL COLUMN HAS NO BLEND TERM -- read the gap with this in mind. Sim column (3) is the full
+measured constgold response, which includes what NEIGHBOURS contribute; the flow's R is SELF-response
+only (the certified pipeline supplies R_blend from a separate emulator, by design). At no cut that
+missing term is R_sim - R_model = 0.858 - 0.727 = 0.131, i.e. 15.3% of the total, and subtracting it
+cut-by-cut implies it falls to 0.39x its no-cut value by keep 0.30 while the self-response rises
+1.55x -- which is the physically expected direction (a tight S/N cut keeps bright, big galaxies,
+where neighbour contamination matters relatively less). That accounts for the whole (4)-vs-(3) gap
+BY SUBTRACTION, which is an inference, not a measurement: to confirm it, run the blend emulator on
+these same S/N-selected populations and check R_blend(cut)/R_blend(no cut) against 1.03 / 0.98 /
+0.88 / 0.69 / 0.39. Until that is done, the gap is NOT evidence that the flow is wrong.
 
 MODEL COLUMN DEFINITION. The flow predicts MEASURED shapes, so its natural counterpart is sim
 column (3): the same shift m,
@@ -262,7 +275,9 @@ def main():
               f"{100*cells[2]:>+12.3f}% | {100*mm_:>+10.3f} +- {e:<.3f}")
     print("\n  Column (4) is the flow's counterpart of column (3) -- both are MEASURED-shape shift m.")
     print("  Compare (4) vs (3). Columns (1)/(2) are intrinsic-shape references, not model targets.")
-    print("  The proxy-vs-real gap (RMS 0.27 pts, job 15365211) is INSIDE column (4).")
+    print("  (4) minus (3) is NOT a flow error: column (3) contains the neighbour (blend) response,")
+    print("  column (4) is self-response only. That missing term is 15.3% of R at no cut. The proxy")
+    print("  contributes <=1 pt to the gap and with the OPPOSITE sign (job 15365815).")
     print("CONSTGOLD_MODEL_DONE", flush=True)
 
 

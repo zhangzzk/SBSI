@@ -2,6 +2,90 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30u (constgold model column: the +17.7-pt gap is a MISSING BLEND TERM, not a flow defect)
+
+Closes the question left open by 30t. The constgold table's model column (4) overshot the measured
+sim column (3) by up to +17.7 pts at keep 0.30, and 30t attributed it -- by assumption -- to the
+flow. Two things were checked; both say that attribution was wrong.
+
+**(a) THE PROXY EXPLAINS NONE OF IT.** `eval_sn_proxy_check.py` extended to project MEASURED shapes
+alongside intrinsic ones (job 15365815, half-shear, N=1,016,635 isolated both-detected), giving
+real-S/N vs proxy for exactly the quantity column (3) measures:
+
+| keep | intrinsic real | proxy | gap | measured real | proxy | gap |
+|---|---|---|---|---|---|---|
+| 0.95 | -0.319% | -0.575% | -0.256 | +2.588% | +2.420% | **-0.168** |
+| 0.85 | -0.806% | -1.242% | -0.435 | +6.852% | +6.616% | **-0.236** |
+| 0.70 | -1.398% | -1.923% | -0.525 | +12.155% | +12.096% | **-0.059** |
+| 0.50 | -2.050% | -2.426% | -0.376 | +19.108% | +19.027% | **-0.080** |
+| 0.30 | -2.414% | -2.816% | -0.402 | +25.836% | +25.237% | **-0.599** |
+| 0.20 | -2.301% | -2.692% | -0.391 | +28.431% | +27.383% | **-1.048** |
+
+The measured gap is <= 1.05 pts and NEGATIVE -- the proxy UNDERSTATES the measured shift. It cannot
+produce a +17.7-pt overshoot, and it makes the flow's raw gap marginally wider, not narrower. Note
+the measured gap is SMALLER than the intrinsic one at 4 of 6 keep-fractions: the 0.27-pt figure
+quoted for the pure-selection quantity neither bounds nor predicts this one.
+
+**(b) THE COMPARISON WAS APPLES-TO-ORANGES.** Sim column (3) is the full measured constgold
+response, which includes what NEIGHBOURS contribute; the flow's R is SELF-response only (by design --
+the certified pipeline gets R_blend from a separate emulator). Subtracting cut-by-cut:
+
+| keep | R_sim(cut) | R_model(cut) | implied R_blend | blend / no-cut | self / no-cut |
+|---|---|---|---|---|---|
+| no cut | 0.85824 | 0.72675 | **0.13149** (15.3% of R) | 1.000 | 1.000 |
+| 0.95 | 0.88055 | 0.74532 | 0.13523 | 1.028 | 1.026 |
+| 0.85 | 0.92174 | 0.79238 | 0.12937 | 0.984 | 1.090 |
+| 0.70 | 0.98371 | 0.86780 | 0.11591 | 0.882 | 1.194 |
+| 0.50 | 1.07221 | 0.98126 | 0.09095 | 0.692 | 1.350 |
+| 0.30 | 1.17823 | 1.12640 | 0.05183 | **0.394** | 1.550 |
+
+The implied blend response falls smoothly and monotonically to 0.39x while the self-response rises
+1.55x -- the physically expected direction (a tight S/N cut keeps bright, big galaxies, where
+neighbour contamination matters relatively less). That accounts for the entire gap.
+
+**LIMITATION, STATED PLAINLY: (b) is inference BY SUBTRACTION, not a measurement.** It is consistent
+and smooth, but it was obtained by assuming the gap is blend and reading off what blend would have to
+be. NEXT STEP to make it a result: run the blend emulator on these same S/N-selected populations and
+test R_blend(cut)/R_blend(no cut) against 1.03 / 0.98 / 0.88 / 0.69 / 0.39. Until then the gap is not
+evidence the flow is wrong, and equally not proof that it is right.
+
+Files: `scripts/eval_sn_proxy_check.py` (measured-shape columns added),
+`scripts/eval_selection_constgold_model.py` (docstring + footer corrected -- the old text claimed the
+0.27-pt proxy gap was "INSIDE column (4)", which mis-stated both the size and the sign, and it never
+mentioned the missing blend term). Jobs: 15365815. No model or hyperparameter touched.
+
+## 2026-07-30t-emulator (in-domain Optuna search: parallel workers + pruning; best 0.0040656 -> 0.004097)
+
+Owner asked to accelerate the tuning ("do 1 and 2" = parallel workers + pruning), and permitted
+editing blendemu "on this matter". Delivered and run to completion (job 15361651, 4 workers on one
+a40, 37 min). Study verified as a genuine RESUME, not a fresh start:
+
+- 73 COMPLETE, 30 PRUNED (29%), 1 FAIL. Trials 0-39 serial (from 13:28), 40-103 parallel (from 20:34).
+- best BEFORE parallel = 0.0040656 (39 completed trials); best AFTER = **0.004097** (trial 74).
+  Direction is **maximize** (objective = eval R^2 - 0.6*|train-eval|), so this is a +0.76% relative
+  improvement. 4 of the top 5 trials now come from the parallel phase -- the search had not saturated.
+- Throughput: serial 40 trials / 4h48m = 7.2 min/trial; parallel 64 trials / 35.5 min = 0.55
+  min/trial, ~13x. That is MORE than the 4x from workers alone; pruning plus TPE settling into
+  cheaper regions accounts for the rest, and those two were NOT separated.
+- The single FAIL is trial 39, the serial job's in-flight trial when it was killed (required: Optuna's
+  `n_trials` counts per-process, so the serial job would have run its own full budget regardless).
+
+Files: `scripts/tune_emulator_worker.py`, `jobs/job_tune_indom_parallel.sh`,
+`jobs/job_tune_indom_finalize.sh`, `scripts/check_emulator_provenance.py` (refuses promotion if
+`metrics.n_trials < 50`, added after 2-trial smoke-test artifacts were left at the `_indom_tuned`
+path and would have read as "tuning bought nothing").
+`blendemu/scripts/train_emulator.py`: `_load_or_create_study(..., pruner=None)`, new
+`_OptunaPruneCallback`, `tune_regression(..., pruner, n_jobs, optimize_callbacks, warmup_rounds,
+show_progress_bar)`. All opt-in; defaults reproduce the previous behaviour exactly (the objectives
+never call `trial.report()` unless a pruner is wired in). **Left UNCOMMITTED** -- that repo has
+unrelated uncommitted work on `main`.
+
+PENDING: finalizer 15361652 (refit + save at best_params) queued. **Promotion must be argued on the
+per-pair ruler (`scripts/eval_rblend_gap.py`), NEVER on constgold m** (firewall). PRUNING CAVEAT:
+progress is compared at a fixed boosting round, which is unfair to small learning rates; if a future
+run shows a high pruned fraction with a flat best value, that is over-pruning and the fix is a larger
+`--warmup-rounds`.
+
 ## 2026-07-30s (three-shape-column ladder: S/N cuts DO bias; measured-shape shift m is ~96% subpopulation)
 
 Owner asked for the shift m on constgold in three shape columns. Built the same ladder for constgold
