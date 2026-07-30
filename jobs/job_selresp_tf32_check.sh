@@ -1,6 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=selresp_tf32
-#SBATCH --time=01:30:00
+#SBATCH --time=00:25:00   # measured: 7m09s for both legs. Kept tight ON PURPOSE -- a 90-min
+#                          # request would not backfill into the short a40 gaps this job waits for.
 #SBATCH --mem=150G
 #SBATCH --cpus-per-task=16
 #SBATCH --gres=gpu:a40:1
