@@ -45,6 +45,32 @@ figure**, whose large flux-axis signal was measured-shape subpopulation, not sel
 
 NULL passes exactly in both: a TRUE-Re cut gives column (1) = 0.000e+00.
 
+**FINDING 4 -- direct two-leg m and c** (`scripts/eval_constgold_mc.py`, job 15364153), using
+`m = (<e>_+ - <e>_-)/2g - 1` and `c = (<e>_+ + <e>_-)/2` with matched-pair errors:
+
+| cut | (1) 1+m = pure selection | (2) m sheared intr | (3) m measured | c (cols 1,2) |
+|---|---|---|---|---|
+| NO CUT | 0 (exact) | **+0.005 +- 0.002%** | -55.430 +- 0.088% | -1.17e-4 +- 4e-5 |
+| S/N>10 | -0.683% | -0.683 +- 0.003% | -41.653 +- 0.112% | -1.36e-4 +- 6e-5 |
+| S/N>30 | -1.990% | -1.994 +- 0.005% | -13.703 +- 0.236% | -2.40e-4 +- 1e-4 |
+
+Sanity checks all pass: column (2) m = +0.005 +- 0.002% at no cut (unit response on isotropic
+intrinsic orientations); column (1) m = -100.000 +- 0.000% exactly; sky-frame c1,c2 ~ 1e-4 (~0 for
+random shear angles). Column (1) 1+m reproduces the shift-ratio column of FINDING 1 exactly.
+
+`c` is ~ -1.2e-4 at no cut, rising only to ~ -2.4e-4 at the tightest cut, i.e. the additive bias is
+at the 1e-4 level and barely moves with selection. Note c(col 1) == c(col 2) to printed precision --
+that is expected, not a copy/paste: averaging the +g and -g sheared shapes returns the intrinsic one
+times (1 - |g|^2), a 0.04% difference on g=0.02. Minor open point: c = -1.17e-4 +- 4e-5 at no cut is
+~2.9 sigma from zero, which for isotropic intrinsic orientations should be 0; small, but not obviously
+just noise.
+
+**THE NULL ROW IS THE CLEAREST STATEMENT OF THE FINDING-3 TRAP.** A cut on TRUE Re has PROVABLY zero
+selection bias (column 1 = -100.000% exactly), yet the measured-shape m moves from **-55.4%** (no cut)
+to **-23.3%** (Re>0.30) to **-10.0%** (Re>0.50). Thirty-two percentage points of pure subpopulation on
+a cut that cannot possibly bias anything. Never read measured-shape m differences across cuts as
+selection.
+
 ## 2026-07-30r (why m_sel ~ 0: REAL PHYSICS, verified by mechanism -- and the flow INVENTS mag-axis bias)
 
 Owner found the near-zero m_sel surprising and asked for a review. `scripts/eval_selection_why_small.py`
