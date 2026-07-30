@@ -2,6 +2,69 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30x (tuned emulator vs certified constgold m: TUNING MOVES m BY +0.008 pts, ~20x below noise)
+
+NO-SELECTION test asked for by the owner: does the newly Optuna-tuned blend emulator
+(`lsst_r_extnbr_indom_tuned`, 73 trials, finalized 21:43) change the certified GLOBAL constgold m?
+No measured cuts anywhere. Done by JOIN, not rerun -- the 16 certified Gold-v1 dumps
+(`sbsi_dumps/fig2_perobj_s50{1..16}_fixresp.feather`, flow `meas_szfl_noz_lam450_fixresp`,
+`--min-case 40`) carry per-object r_sim/R_flow/R_blend and `validate_constant_with_blend.py` uses the
+lookup R_blend unmodified, so m = <r_sim>/(<R_flow>+<R_blend>)-1 with a swapped lookup.
+
+**CONTROL PASSED, and it is the first thing to read.** With the dump's own `_ho` R_blend the 16-seed
+wide ensemble = **+0.261%** -- byte-identical to job 15348008 and 0.016 pts from the certified record
++0.245%. The configuration being measured is therefore the certified one.
+
+| population | emulator | <R_blend> | m (16 seeds) | sem(seed) | case | TOTAL |
+|---|---|---|---|---|---|---|
+| WIDE (certified convention) | **`_ho` (baseline)** | 0.1593 | **+0.261%** | 0.182 | 0.194 | **0.266** |
+| WIDE | `_indom` | 0.0589 | +28.873% | 0.301 | 0.250 | 0.392 |
+| WIDE | `_indom_tuned` | 0.0589 | +28.883% | 0.302 | 0.251 | 0.392 |
+| CUT (true mag<26, Re>0.3) | `_ho` | 0.1371 | +4.811% | 0.160 | 0.161 | 0.227 |
+| CUT | `_indom` | 0.1358 | +4.967% | 0.160 | 0.162 | 0.228 |
+| CUT | **`_indom_tuned`** | 0.1358 | **+4.975%** | 0.160 | 0.162 | 0.228 |
+
+Paired shifts on the SAME 16 seeds: `_indom`->`_indom_tuned` = **+0.008 pts (CUT) / +0.010 pts
+(WIDE), sd 0.000**; `_ho`->`_indom_tuned` = +0.164 pts (CUT).
+
+**RESULT 1 -- tuning is a null on constgold m.** `_indom` and `_indom_tuned` share a config that
+differs on `model_tag` ALONE (verified by diff) and metadata `params` confirms `_ho`/`_indom` carry
+IDENTICAL inherited hyperparameters while `_indom_tuned`'s differ. So `_indom`->`_indom_tuned` is a
+pure hyperparameter effect: **+0.008 pts, against a 0.160% seed sem and a 0.228% total error -- ~20x
+below the noise floor.** It is deterministic (paired sd 0.000 across seeds), not noise, but it is far
+below anything the pipeline can resolve. Consistent with the tuned model's own metrics: global R2
+0.004319 vs inherited 0.004310, close-pair R2 0.020326 vs 0.020289.
+
+**RESULT 2 -- the `_ho` -> `_indom_tuned` difference is almost entirely the DOMAIN NARROWING, not
+tuning.** Of the +0.164-pt CUT shift, +0.156 is `_ho`->`_indom` and +0.008 is tuning.
+
+**RESULT 3 -- the WIDE `_indom*` column (+28.9%) is a COVERAGE ARTIFACT and must not be quoted as an
+m.** `BlendingPredictor` applies the stored training cuts at inference, and `_indom*` was trained
+with primary mag 18-26 / Re 0.3-1.5, so it scores 13,384,211 of the 56,263,412 rows `_ho` scores and
+only **43.4%** of the dump rows match; the rest fall back to R_blend=0, collapsing <R_blend> 0.1593
+-> 0.0589. On the CUT population the match is 100.0% and the comparison is like-for-like. The tuned
+lookup has EXACTLY the same 13,384,211 rows as `_indom`, as it must.
+
+**NO DISCREPANCY with the published figures.** +0.261% reproduces the certified +0.245%. The
+-0.271% figure is the V2 dom6x6 flow's IN-DOMAIN m -- a different flow and a different population --
+and was correctly not used as the reference here.
+
+**FIREWALL HELD:** nothing trained, fitted or hyperparameter-selected on constgold; constgold was
+read only for positions/true properties (as the certified lookup build does) and for m. **These
+numbers must NOT be used to argue promotion of the tuned emulator** -- that verdict belongs to the
+per-pair ruler (`scripts/eval_rblend_gap.py`), which has not been run on `_indom_tuned` yet.
+
+Files added: `jobs/job_build_lookup_indomtuned.sh` (builds
+`results/blend_lookup_indomtuned_c40-139.feather`, 100 cases, tag-only change from the certified
+build; provenance-guarded), `jobs/job_tuned_emu_constgold.sh` (4 `eval_swap_lookup.py` runs).
+Jobs: **15366949** (lookup build, 11 min), **15366950** (eval, 23 min). No model, checkpoint or
+catalogue modified. Both scripts use `set -o pipefail`.
+
+Note: the constgold catalogue's rebuild to 44 columns was transparent -- the only columns read here
+(`case`, `input_index`, `r_input_p`, `Re_input_p`) are pre-existing and the row count is unchanged.
+
+Next: run the per-pair ruler on `_indom_tuned` if promotion is to be considered.
+
 ## 2026-07-30w (constgold gains measured mag+size; builder fix; near-domain constgold table)
 
 **CATALOGUE CHANGE -- constgold now carries per-leg measured magnitude and size, and is PROMOTED.**
