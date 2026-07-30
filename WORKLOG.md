@@ -2,6 +2,60 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30p (selection-bias figure remade as 2x2; error bars added; two path mistakes)
+
+Owner asked to remake `figures/fig_selection_bias_sim_vs_flow.png` with panels split by QUANTITY
+(sim shift, model-corrected) rather than by cut axis.
+
+**TWO MISTAKES, recorded so the next session does not repeat them.**
+1. I listed only the WORKTREE's `figures/` and concluded the target figure "does not exist yet". It
+   does: `/home/z/Zekang.Zhang/SBSI/figures/fig_selection_bias_sim_vs_flow.png`, dated 2026-07-25.
+   **`SBSI/figures/` is UNTRACKED scratch output**, so worktree checkouts do NOT contain it and
+   `ls` inside a worktree is not evidence about it. Always check the main path explicitly.
+2. I remade a figure without first LOOKING at the one being replaced, so the first attempt lost the
+   original's dense cut sampling (7 points vs the original's 12) -- and a 7-point grid cannot show
+   the turnover, only assert that one exists.
+Because that file is untracked, git could not recover it; the original was copied to
+`fig_selection_bias_sim_vs_flow_2026-07-25_ORIGINAL.png` before anything overwrote it.
+
+**Layout: 2x2, chosen by the owner** from three options. Rows = the two requested quantities,
+columns = flux axis | size axis (kept from the original, because the two cut families have different
+units and cannot honestly share one x-axis). y is shared within each row on purpose -- that is what
+makes the headline legible.
+
+**Error bars now saved.** `eval_selection_attribution.py` was discarding the 4th return value of
+`truth_selected_response` (the analytic SE) and averaging over checkpoints before saving. It now
+stores `sim_err` and per-seed `mod_sem`. Without them the figure implied a precision it had not
+measured.
+
+**The bars are far SMALLER than I predicted.** I expected the 4-seed term to be "a few tenths of a
+percent", which would have made the misses marginal. Measured (sparse grid, job 15361696):
+
+| cut | m_sel [%] | m_flow [%] |
+|---|---|---|
+| R>0.70" | +5.40 +- 0.01 | **-0.70 +- 0.03** |
+| R>0.88" | +13.85 +- 0.02 | **-0.59 +- 0.06** |
+| mag<24 | +0.45 +- 0.02 | **-0.55 +- 0.00** |
+| mag<24.5 | +0.17 +- 0.01 | -0.26 +- 0.00 |
+
+So the size-axis misses are REAL, not noise -- ~10-20x their seed error. Caveat: with 4 seeds the sd
+is itself uncertain by ~40%, and this captures seed scatter only, not systematic error; but even a
+3x inflation leaves them significant.
+
+**Worth flagging: at `mag<24` the model is off by MORE than the selection bias it is predicting**
+(-0.55% against a +0.45% effect). On the magnitude axis there is almost nothing to predict, so this
+is not a selection-prediction failure so much as a residual that the intrinsic construction does not
+remove. Not yet explained -- do not quote it as a selection result.
+
+Dense grid (size 0.20-0.90", mag 24.5-26.5) run as job 15362161 to match the original's sampling.
+
+**A separate real bug, NOT affecting any result:** in intrinsic mode the diagnostic `frac` column of
+`model_selected_response` is ~n_samples too large (~32x). The no-cut denominator counts per-OBJECT
+(`proj` is (n,1) there) while the cut numerator counts per-DRAW (n, n_samples). R and m are means, so
+the normalisation cancels and every response number is unaffected -- the intrinsic no-cut check still
+passes exactly. Only the printed/saved `frac` is wrong. Left unfixed for now; fix separately so it
+cannot be confused with a change to the science numbers.
+
 ## 2026-07-30o (MY SIZING ERROR: 3 workers OOM-killed on cip; memory, not the GPU, is the constraint)
 
 Owner asked whether several workers could share ONE GPU. Yes -- and that is now the design again.
