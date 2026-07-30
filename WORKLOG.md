@@ -52,6 +52,26 @@ small the cross term is probably small too, but that is an inference, not a meas
 noise (per-draw sd ~0.3) leaves the estimator entirely -- only the pass/fail indicator stays
 stochastic. The intrinsic column is far better converged at equal `n_samples`.
 
+**RESULT 4 -- THE `shift` COLUMNS ARE NOT A VALID ATTRIBUTION. Do not use them as one.** There is an
+exact identity `(1+m_cut)/(1+m_nocut) = (1+shift_sim)/(1+shift_mod)`, so the shift comparison IS the
+baseline-divided m -- which is what 30g leaned on before the intrinsic mode existed. Measured against
+the real thing it fails where it matters:
+
+| cut | shift-ratio m | m_intrinsic (true) | disagreement |
+|---|---|---|---|
+| size>2.5 | -0.01% | -0.02% | +0.01 |
+| size>2.9 | -0.02% | +0.07% | -0.09 |
+| size>3.5 | +2.26% | +0.73% | **+1.53** |
+| **size>4.4** | **-2.49%** | **+0.52%** | **-3.01** |
+| mag<24 | +0.78% | +0.55% | +0.23 |
+| mag<25 | +0.15% | +0.02% | +0.13 |
+
+Fine on the mag axis (<=0.23 points), but **1.5-3 points off on the size axis, and the WRONG SIGN at
+size>4.4** (-2.49% vs the true +0.52%). Cause: dividing by the no-cut baseline assumes the shape
+error is cut-INDEPENDENT. RESULT 3 shows it is not (-3% -> -6% with measured size), so the division
+leaves an un-removed shape residual that masquerades as selection error -- worst precisely in the
+tail we were investigating. **Only the intrinsic-shape construction attributes correctly.**
+
 ## 2026-07-30g (BASELINE V2 selection gate: mag axis good, deep size tail FAILS as pre-registered)
 
 Owner named **baseline V2 = dom6x6 flow (16 seeds) + old `_ho` emulator** and asked to test it on
