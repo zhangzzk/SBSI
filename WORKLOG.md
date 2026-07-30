@@ -2,6 +2,55 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-30r (why m_sel ~ 0: REAL PHYSICS, verified by mechanism -- and the flow INVENTS mag-axis bias)
+
+Owner found the near-zero m_sel surprising and asked for a review. `scripts/eval_selection_why_small.py`
+(job 15363940, CPU) measures the MECHANISM instead of re-measuring the answer. Selection bias needs
+BOTH (a) a boundary that moves under shear and (b) movers that are shape-biased. Both were measured.
+
+**Verdict: the estimator is alive and the zeros are physics.** It is not structurally zero -- it
+returns +14.98% at R>0.90".
+
+**(a) The size boundary moves and its movers ARE shape-biased -- the engine works exactly as
+predicted.** Aligned galaxies grow into the cut, anti-aligned ones shrink out of it:
+
+| size cut | kept | enter | leave | <e.ghat> enter | <e.ghat> leave |
+|---|---|---|---|---|---|
+| R>0.50" | 1,016,069 | 82 | 76 | +0.008 | +0.013 (same sign -> no bias) |
+| R>0.58" | 1,004,932 | 1,081 | 1,126 | **+0.115** | **-0.136** |
+| R>0.90" | 395,750 | 9,204 | 7,767 | **+0.177** | **-0.181** |
+
+Below the PSF BOTH ingredients are absent: only ~80 of 1,016,635 objects cross the boundary, and
+those few are not shape-biased. The two switch on together at ~0.52-0.58".
+
+**The PSF dilution is confirmed directly.** cov(dR, e.ghat) split by measured size grows
++3.76e-4 (0.50-0.53") -> +7.12e-4 -> +8.61e-4 -> +1.15e-3 -> **+2.44e-3** (>0.8"), a 6.5x rise. This
+is the predicted `T_gal/(T_gal + T_psf)`: a measured size far below the PSF barely responds to shear.
+
+**(b) The MAGNITUDE boundary moves just as much, but its movers carry NO shape bias.** mag<24.5 has
+2,359 enter / 2,182 leave -- MORE movers than R>0.58" -- yet <e.ghat> is +0.011 / -0.017 against
+size's +0.115 / -0.136. Globally `cov(dmag, e.ghat) = -8.45e-5` versus `cov(dsize, e.ghat) = +9.15e-3`:
+**108x weaker.** Shear conserves flux (area x surface brightness), so magnitude moves by NOISE, not by
+shear. The magnitude boundary is busy but shear-blind. Correct physics, not a dead estimator.
+
+**SCOPE -- do not quote "no selection bias" unqualified.** The sample is already both-detected,
+ISOLATED (43.0% of 2,364,527 -> 1,016,635) and pre-cut on TRUE Re>0.3", mag<26. Detection selection
+(~-2%, 30-Stage-3) and blend-driven selection are excluded BY CONSTRUCTION. The honest claim is:
+*once detection and blending are already handled, a measured-size or measured-magnitude cut adds
+little further selection bias until the size cut rises above the PSF.* **Untested: S/N and resolution
+cuts**, which is what real analyses actually use; S/N inherits the size mechanism and bites at the
+faint end where far more objects sit near the boundary. Expect a real effect there.
+
+**NEW FINDING -- and a correction to my earlier guidance.** I had written that a small m_flow where
+m_sel ~ 0 means "nothing was being tested". That is right for m_flow ~ 0 but WRONG for m_flow != 0:
+on the magnitude axis the truth has essentially no shape-biased selection (above), yet the model
+shows m_flow = **-0.26% at mag<24.5** and **-0.55% at mag<24**. Since both sides average IDENTICAL
+intrinsic shapes, a non-zero m_flow there means the FLOW'S SAMPLED MAGNITUDES SELECT A
+SHAPE-BIASED SUBSET WHEN THE REAL ONES DO NOT -- i.e. a spurious shape-magnitude correlation inside
+the flow's joint. That is a genuine model defect and the cleanest diagnostic of it we have, not a
+null test. It also explains the previously "unexplained" mag<24 case where the residual exceeded the
+effect.
+
 ## 2026-07-30q (**RETIRE THE SHIFT-RATIO ESTIMATOR** -- its error is exactly the shape term's cut-dependence)
 
 Owner pointed out that the shift-ratio version of the selection m "exists and I was using it -- and it
