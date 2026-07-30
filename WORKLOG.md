@@ -194,9 +194,13 @@ not be used on these grounds.
 | `_indom` (cut-population-trained) | 0.1358 | **-0.367%** | 0.286% |
 
 Paired shifts -0.205 and +0.141 points. `_indom` gives the best in-domain m on record, but it is
-**NOT adopted**: it loses to `_ho` on the per-pair ruler (-12.66% vs -11.93%, 28i/28j), so promoting it
-would be selecting a component on constgold m, which the firewall forbids. Recorded as a measurement
-only. Also confirms the emulator swap is worth only ~0.2 points on this population, so R_blend
+**NOT adopted**: it is no better than `_ho` on the per-pair ruler (-12.66% vs -11.93% overall, SAME
+in-domain sample of 4,811,459 pairs, same ruler and null test -- 28l, not 28i/28j as first cited), so
+promoting it would be selecting a component on constgold m, which the firewall forbids. **Do not read
+that 0.73-point gap as the ruler rejecting `_indom`**: at 2.6 sigma from zero the one-sigma error on
+each is ~4-5 points, and `_indom` is actually BETTER in the close bin (-40.25 vs -41.50) and worse at
+1-2"/2-3". The ruler is near-silent between the two; the firewall is the whole reason. Recorded as a
+measurement only. Also confirms the emulator swap is worth only ~0.2 points on this population, so R_blend
 normalisation is not the lever.
 
 **Why 0.3% is out of reach without a two-sided fix.** (B) is partly the emulator: 28j measured the
