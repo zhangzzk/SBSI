@@ -111,13 +111,41 @@ location-family flow, where the two forms agree at corr = 1.000000 with rms conv
 6e-3 -> 1.7e-4 under refinement, under every prior degradation tried (knots 6-30, bins
 120-600, 10x fewer samples).
 
-A SEPARATE FINDING, ABOUT EXISTING CODE. In that same toy the EULERIAN Louis information is
-the unreliable one: `<I>` swings +2.44, +1.02, -0.38, -3.46, -64.64 across those prior
-variations while the Lagrangian sits at 1.90 in every one. Brute-forcing
-`-d2/dg2 log p(xhat|g)` by direct quadrature gives 1.9108 — the Lagrangian value to 5
-digits. So `score_inference.py`'s information, which is the DENOMINATOR of `ghat`, is not
-trustworthy; its error tracks the node bank's own printed Bartlett residual. This is
-independent of §5C and worth acting on regardless.
+A SEPARATE FINDING, ABOUT EXISTING CODE: THE EULERIAN INFORMATION IS WRONG, INCLUDING THE
+PRODUCTION ROUTE. `I_i` is the DENOMINATOR of `ghat = sum s / sum I`, so an error in it
+scales the recovered shear one-for-one. `scripts/toy_information_routes.py` (new) measures
+all three routes against brute-force `-d2/dg2 log p(xhat|g)` by direct quadrature, in the
+2-D Mobius toy that uses the same grid, prior class and `ShapeScoreNodes` as the real run:
+
+      prior config              TRUTH    Eul-analytic   Eul-FD (default)   Lagrangian
+      healthy                  +1.9026      +1.021          +0.696          +1.9026
+      fewer knots k=6          +1.9025      -0.382          -0.492          +1.9025
+      10x fewer samples        +1.9024      +2.442          +1.896          +1.9024
+      overfit k=24 b=400       +1.9007      -3.461          -5.633          +1.9007
+      very overfit k=30 b=600  +1.9003     -64.641         -47.009          +1.9003
+
+The Lagrangian value is exact to 4-5 decimals in every row. Both Eulerian routes are wrong,
+and the FINITE-DIFFERENCE one -- which is `score_pass`'s default (`analytic_info=False`),
+i.e. what `mode_null` and `mode_constgold` actually use -- is no better than the analytic
+Louis and is sometimes worse. It is wrong by 2.7x on the HEALTHY prior, the configuration
+closest to the real one (928,900 shapes, 12 knots, 120 bins). Two Eulerian routes agreeing
+would not have caught this; they fail together.
+
+Why the Lagrangian is the correct one, not merely different: it is stable under refinement
+(1.9024 at grid-n 41, 81 and 161, and at rmax 0.95 and 0.99) while the Eulerian wanders
+(0.755, 6.95, 6.85, 2.86). The mechanism is the one `score_inference.py`'s own docstring
+warns about -- with nodes fixed in the LENSED variable, the sheared prior's support edge
+moves across a fixed truncated grid, so prior mass is not conserved as gamma varies. In the
+Lagrangian form the nodes and their prior weights are fixed by construction and the mass is
+exactly conserved; that is §5C.1's "pushing samples carries the Jacobian automatically".
+
+SCOPE. This does NOT touch the certified Gold-v1 `m`, which is the TRANSPORT route (§5A,
+`m = R_sim/(R_flow+R_blend)-1`) and never forms `I_i`. It affects `ghat` from the score
+route in `eval_score_response.py` (§5B). Caveat: measured in the toy, where truth is
+computable; there is no ground truth for `I_i` on the real flow, so the real-run magnitude
+is inferred from the toy plus the refinement-stability argument, not measured directly.
+`mode_closure`'s existing information cross-check WOULD flag it (healthy ratio 0.696/1.021
+= 0.68), so the warning signal is already in the code and worth reading.
 
 LIMITATIONS. The shape channel is the only place both forms are computable, so cross-check
 (i) validates the reparametrization, not the full (5.8) estimator. `P_det` and the
