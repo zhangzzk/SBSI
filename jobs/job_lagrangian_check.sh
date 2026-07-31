@@ -20,11 +20,24 @@
 # `inter` also holds rtx2080ti (11G) and p5000 (16G) nodes, which cannot hold a slab.
 # Pin the GPU type if the scheduler lands you on one:
 #   sbatch --gpus-per-node=a40:1 jobs/job_lagrangian_check.sh
+#
+# On the `cip` vGPU slices set NO_EXPANDABLE_SEGMENTS=1 and resize -- those nodes have
+# only 12 CPUs and 26-41 GB RAM, so the 128G above can never be satisfied there:
+#   ROWS=20000 SLAB=5000 NO_EXPANDABLE_SEGMENTS=1 sbatch --partition=cip \
+#     --gres=gpu:a40-16gb:1 --mem=24G --cpus-per-task=8 jobs/job_lagrangian_check.sh
 set -o pipefail
 eval "$(conda shell.bash hook)"; conda activate sims1
 REPO=${REPO:-/home/z/Zekang.Zhang/SBSI/.claude/worktrees/inference-5b}
 cd "$REPO" || exit 1
 export PYTHONPATH="$REPO:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+
+# expandable_segments needs the CUDA virtual-memory APIs, which the vGPU profiles
+# (device reports as "NVIDIA A40-16Q") do not support -- any .to("cuda") then dies with
+# `CUDA driver error: operation not supported`.
+if [ "${NO_EXPANDABLE_SEGMENTS:-0}" = "1" ]; then
+  unset PYTORCH_CUDA_ALLOC_CONF
+  echo "NO_EXPANDABLE_SEGMENTS=1 -> PYTORCH_CUDA_ALLOC_CONF unset (cip vGPU)"
+fi
 
 ROWS=${ROWS:-100000}
 GRID=${GRID:-61}
