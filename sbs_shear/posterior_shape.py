@@ -272,6 +272,72 @@ class PosteriorShapeEstimator:
             out[start:stop] = ll.cpu().numpy().astype(out_dtype)
         return out
 
+    def log_likelihood_shear_derivatives(self, frame, ehat_raw, axis, chunk=128):
+        """`(phi, phi', phi'')` along one shear axis, by autograd -- `INFERENCE.md` (5.5b).
+
+        The §5C curve is `phi_k(gamma) = log p_flow(ehat_i | S_gamma e_k)`, with the grid
+        point carrying the shear.  §5C.5 point 1 offers a choice of finite differences or a
+        forward-mode derivative along `v`; on this flow the differences do NOT converge
+        (the scatter of `phi''` grows as delta shrinks, so the curve is not smooth at the
+        scale a stencil probes), and Richardson makes it worse because it assumes exactly
+        the smoothness that is missing.  This is the analytic route, and it has no delta.
+
+        `t` is carried as a `(B, G)` tensor rather than a scalar, so plain reverse-mode
+        autograd returns the derivative ELEMENTWISE: `phi_ij` depends only on `t_ij`, hence
+        `d(sum phi)/dt_ij = d phi_ij / d t_ij`.  Two passes with `create_graph` give both
+        derivatives off the same curve, which is the §5C.5 "one curve, two derivatives"
+        property; no Hessian of `log p_flow` is ever formed.
+
+        Returns three `(N, G)` float64 arrays.  Unshifted -- the row-max trick of
+        `log_likelihood` is invalid here for the reason given in its docstring.  Double
+        backward through a `(B*G, D)` forward pass is memory-hungry, so `chunk` is small.
+        """
+        model = self.bundle.model
+        pre = self.bundle.condition_preprocessor
+        tstd = self.bundle.target_transform
+        ehat_std = tstd.transform_array(np.asarray(ehat_raw, dtype=np.float32))
+        e1g = self.grid_raw[:, 0]
+        e2g = self.grid_raw[:, 1]
+        m1, s1 = float(pre.means[self.i1]), float(pre.scales[self.i1])
+        m2, s2 = float(pre.means[self.i2]), float(pre.scales[self.i2])
+        n = len(frame)
+        out = [np.empty((n, self.G), dtype=np.float64) for _ in range(3)]
+
+        for start in range(0, n, chunk):
+            stop = min(start + chunk, n)
+            with torch.no_grad():
+                base = self._grid_tiled_context(frame.iloc[start:stop])      # (B,G,D)
+            b = base.shape[0]
+            t = torch.zeros((b, self.G), dtype=torch.float32,
+                            device=self.device, requires_grad=True)
+
+            # Mobius eps' = (eps + g)/(1 + conj(g) eps), g real on axis 0, imaginary on 1.
+            if axis == 0:
+                nr, ni = e1g[None, :] + t, e2g[None, :].expand(b, self.G)
+                dr, di = 1.0 + t * e1g[None, :], t * e2g[None, :]
+            else:
+                nr, ni = e1g[None, :].expand(b, self.G), e2g[None, :] + t
+                dr, di = 1.0 + t * e2g[None, :], -t * e1g[None, :]
+            den = dr * dr + di * di
+            e1s = (nr * dr + ni * di) / den
+            e2s = (ni * dr - nr * di) / den
+
+            rep = base.clone()
+            rep[:, :, self.i1] = (e1s - m1) / s1
+            rep[:, :, self.i2] = (e2s - m2) / s2
+            flat = rep.view(b * self.G, -1)
+            mu = model._mu(flat)
+            xh = torch.as_tensor(ehat_std[start:stop], dtype=torch.float32,
+                                 device=self.device)
+            x = xh[:, None, :].expand(b, self.G, 2).reshape(b * self.G, 2) - mu
+            ll = model.flow.log_prob(x, model._flow_ctx(flat)).view(b, self.G)
+
+            d1, = torch.autograd.grad(ll.sum(), t, create_graph=True)
+            d2, = torch.autograd.grad(d1.sum(), t)
+            for arr, v in zip(out, (ll, d1, d2)):
+                arr[start:stop] = v.detach().double().cpu().numpy()
+        return out
+
     @torch.no_grad()
     def log_likelihood_marginal(self, frame, ehat_raw, pool, sample_idx,
                                 feature_names=("nbr_flux_near", "nbr_flux_far",

@@ -78,15 +78,27 @@ class ShearedGridBank:
         return self._cache[key]
 
 
-def lagrangian_slab(bank, frame, ehat, log_prior, delta, richardson, chunk):
-    """`(s, I)` along one shear axis for one slab of rows, from the curve (5.5b)."""
-    def f(t):
-        # shift_rows=False is mandatory: the per-row max moves with gamma, and
-        # differencing shifted rows would put -dM/dgamma straight into s_i.
-        return bank(t).log_likelihood(frame, ehat, chunk=chunk,
-                                      out_dtype=np.float32, shift_rows=False)
+def lagrangian_slab(bank, frame, ehat, log_prior, args, axis):
+    """`(s, I)` along one shear axis for one slab of rows, from the curve (5.5b).
 
-    p0, d1, d2 = curve_derivatives(f, delta=delta, richardson=richardson)
+    Two routes, and they are not equivalent on this flow.  `autograd` differentiates the
+    curve analytically and is the default; `fd` uses the central stencil of §5C.5 point 1,
+    which is exact in the A.7 toy but does NOT converge here -- the scatter of `phi''` grows
+    as delta shrinks, so the curve is not smooth at the scale a stencil probes.  Keep `fd`
+    only as the cross-check that made that visible.
+    """
+    if args.deriv == "autograd":
+        p0, d1, d2 = bank(0.0).log_likelihood_shear_derivatives(
+            frame, ehat, axis, chunk=args.deriv_chunk)
+    else:
+        def f(t):
+            # shift_rows=False is mandatory: the per-row max moves with gamma, and
+            # differencing shifted rows would put -dM/dgamma straight into s_i.
+            return bank(t).log_likelihood(frame, ehat, chunk=args.chunk,
+                                          out_dtype=np.float32, shift_rows=False)
+
+        p0, d1, d2 = curve_derivatives(f, delta=args.lag_delta,
+                                       richardson=not args.no_richardson)
     return score_and_information(p0, d1, d2, log_prior=log_prior)
 
 
@@ -131,6 +143,12 @@ def main():
                     help="stencil half-width for the Lagrangian curve (5.5b)")
     ap.add_argument("--no-richardson", action="store_true",
                     help="3 flow passes per axis instead of 5; coarser but cheaper")
+    ap.add_argument("--deriv", default="autograd", choices=["autograd", "fd"],
+                    help="how to get phi', phi''. autograd is analytic and has no delta; "
+                         "fd is the 5C.5 stencil, which does not converge on this flow")
+    ap.add_argument("--deriv-chunk", type=int, default=64,
+                    help="rows per autograd pass; double backward through (chunk*G, D) is "
+                         "memory-hungry, so this is much smaller than --chunk")
     ap.add_argument("--slab", type=int, default=20_000)
     ap.add_argument("--chunk", type=int, default=1024)
     ap.add_argument("--tol", type=float, default=1e-2,
@@ -173,9 +191,13 @@ def main():
 
     s_e = np.empty((n, 2)); i_e = np.empty((n, 2, 2))
     s_l = np.empty((n, 2)); i_l = np.empty((n, 2))
-    n_pass = 3 if args.no_richardson else 5
-    print(f"\nLagrangian stencil: delta={args.lag_delta}, "
-          f"{'no ' if args.no_richardson else ''}richardson -> {n_pass} flow passes/axis")
+    if args.deriv == "autograd":
+        print(f"\nLagrangian derivatives: autograd (no delta), "
+              f"deriv-chunk={args.deriv_chunk}")
+    else:
+        n_pass = 3 if args.no_richardson else 5
+        print(f"\nLagrangian stencil: delta={args.lag_delta}, "
+              f"{'no ' if args.no_richardson else ''}richardson -> {n_pass} flow passes/axis")
 
     for start in range(0, n, args.slab):
         stop = min(start + args.slab, n)
@@ -189,8 +211,7 @@ def main():
         del ll
 
         for a in (0, 1):
-            s, info = lagrangian_slab(banks[a], sl_fr, sl_e, log_prior,
-                                      args.lag_delta, not args.no_richardson, args.chunk)
+            s, info = lagrangian_slab(banks[a], sl_fr, sl_e, log_prior, args, a)
             s_l[start:stop, a], i_l[start:stop, a] = s, info
         print(f"  rows {start:,}-{stop:,} done", flush=True)
 
