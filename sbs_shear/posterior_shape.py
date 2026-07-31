@@ -224,7 +224,7 @@ class PosteriorShapeEstimator:
 
     @torch.no_grad()
     def log_likelihood(self, frame, ehat_raw, chunk=1024, out_dtype=np.float16,
-                       row_offset=0):
+                       row_offset=0, shift_rows=True):
         """log p(ehat | e_grid, rest) for every (galaxy, grid point).
 
         frame: rescale()d dataframe carrying all conditioning columns (the e columns
@@ -233,7 +233,18 @@ class PosteriorShapeEstimator:
         so the gold run can hold both signs in RAM and reweight under many priors
         without re-evaluating the flow).  row_offset: index of frame's first row in
         the full-run row order -- needed to look up armed per-object state (the
-        mu-correction cells) when the caller slabs the frame."""
+        mu-correction cells) when the caller slabs the frame.
+
+        shift_rows subtracts the per-row maximum, which is exact for anything that
+        reweights over the grid (softmax is shift-invariant) and is what keeps fp16 in
+        range.  It must be turned OFF for `INFERENCE.md` §5C, where the same rows are
+        compared ACROSS a family of sheared grids: there the row maximum itself moves
+        with gamma, so differencing shifted rows contaminates `phi'` with `-dM/dgamma`,
+        a per-row constant that lands directly in `s_i`.  Unshifted output needs the
+        fp16 guard's headroom, so float32 is required."""
+        if not shift_rows and np.dtype(out_dtype) == np.float16:
+            raise ValueError("shift_rows=False needs out_dtype=float32: the fp16 range "
+                             "guard is exactly the row shift being disabled")
         model = self.bundle.model
         tstd = self.bundle.target_transform
         ehat_std = tstd.transform_array(np.asarray(ehat_raw, dtype=np.float32))
@@ -256,7 +267,8 @@ class PosteriorShapeEstimator:
             # fp16 range guard (same as log_likelihood_marginal): softmax over the grid
             # is shift-invariant per row, so store row-max-shifted values.  Stored rows
             # are only meaningful up to a per-row constant (log_evidence too).
-            ll = ll - ll.max(dim=1, keepdim=True).values
+            if shift_rows:
+                ll = ll - ll.max(dim=1, keepdim=True).values
             out[start:stop] = ll.cpu().numpy().astype(out_dtype)
         return out
 
