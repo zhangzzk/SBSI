@@ -7,6 +7,59 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
+## cont.165 (2026-07-31) §5C closure on Gold-V2 FAILS: the estimator recovers no shear signal
+
+Switched from the V1 shape flow to the Gold-V2 joint forward model at the owner's
+instruction. New: `scripts/closure_v2_lagrangian.py`, `jobs/job_closure_v2_5c.sh`.
+
+WHY V2 IS THE RIGHT TARGET. `forward_ens_lr250_swa8_seed421_joint.pt` carries
+`detection_prob` in the SAME network as `log_prob_obs`, conditions on TRUE properties, and
+has `target_dim=4` (measured e1,e2,mag_auto,log_flux_radius as OUTPUTS). That supplies all
+three things §5C needs and V1 could not give: the `P_det` channel, a true-scene latent, and
+a `P_pass` that can see a measured cut. It is NOT loadable by `PosteriorShapeEstimator`
+(which hard-requires a 2-D target and the ConditionalMeanFlow location-family structure),
+so the V1 grid path does not transfer; `lagrangian_score.py` is model-agnostic and does.
+
+THE TEST. Draw the measured vector FROM the flow at known gamma, draw detection from the
+model's own head, then ask (5.8)/(5.9) to return gamma. Model and data agree by
+construction, so this cannot be quadrature-limited the way cross-check (i) was.
+`S_gamma` uses `primary_only=True`, matching the checkpoint's `primary_only_shear`
+metadata. `P_pass = 1` (no measured cut yet), so the population term is detection alone.
+
+RESULT: IT FAILS. gamma sweep at n_node=10000, delta=0.01, 4000 galaxy scenes:
+
+      gamma_true    0.00      0.02      0.05      0.10      0.20
+      ghat (5.9)  -0.0002   +0.0032   +0.0029   +0.0106   +0.0096
+      <I>          +2.15     +5.12     +7.12     +4.27     -6.26
+
+The NULL PASSES (-0.0002), so there is no additive bias. But ghat is ~0.01 regardless of
+gamma -- flat, non-monotonic, and at the noise level sqrt(1/(N<I>)) ~ 0.014. **The
+estimator recovers essentially no shear signal.** (5.8) is worse: its Louis denominator is
+unstable and changes sign (<I> swings +2.2 to -6.3), which for a MEAN information is
+impossible for the true model.
+
+WHAT IS RULED OUT. Not the derivatives: (5.9) is stable to 3 digits across delta
+0.02/0.01/0.005. Not the physics: model and data agree by construction. Not the node-bank
+size: sweeping n_node 400/2000/10000/40000 does not converge it, and ESS stays at 2-4% of
+N at every size. Not the proposal: a `--self-bank` run, where each galaxy's OWN true scene
+is in the bank, fails the same way (<I> = -76). Not out-of-domain evaluation on its own:
+applying the checkpoint's `true_cut` (Re>0.3, mag<26 -- which removes 61% of catalogue rows,
+so the earlier banks were mostly out of domain) changes the numbers but not the verdict.
+
+LEADING HYPOTHESIS, NOT YET TESTED. A numerator of ~0 means `E[s_i] ~ <s>_sel` whatever the
+data's gamma, which is what happens if the posterior weights `w_k propto p(xhat_i|ctx_k)
+Pdet_k` barely track `xhat_i`. If the flow's predicted SCATTER varies strongly across
+scenes, `w_k` is dominated by which node predicts most tightly rather than by which node
+predicts `xhat_i`, the posterior is near galaxy-independent, and `s_i` collapses to a
+constant. NEXT DIAGNOSTIC: measure how much `w_k` varies across galaxies -- e.g. the mean
+pairwise distance between rows of `w`, or `sd_i(s_i)` against the spread predicted from the
+likelihood alone. If the weights are near-constant across `i`, the fix is in the weighting,
+not in the derivatives.
+
+STATUS. §5C's machinery is validated exactly on A.7 (cont.164) and reproduces brute-force
+curvature; what is NOT working is the full-scene, prior-sampled node bank on the real V2
+model. Do not read any V2 §5C number as a science result yet.
+
 ## cont.164 (2026-07-31) INFERENCE.md §5C implemented: the Lagrangian score, exact against A.7's closed forms
 
 User: "we can try to implement 5C now. can you read it again -- also MATH.md and form a plan".
