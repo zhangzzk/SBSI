@@ -169,8 +169,10 @@ def main():
     ap.add_argument("--min-case", type=int, default=40)
     ap.add_argument("--max-rows", type=int, default=4_000_000)
     ap.add_argument("--mag-cuts", type=float, nargs="+", default=[26.0, 25.5, 25.0])
-    ap.add_argument("--size-cuts", type=float, nargs="+", default=[0.50, 0.55, 0.60, 0.70])
-    ap.add_argument("--sn-keeps", type=float, nargs="+", default=[0.98, 0.95, 0.90])
+    ap.add_argument("--size-cuts", type=float, nargs="+", default=[0.30, 0.40, 0.60, 0.70],
+                    help="MEASURED flux_radius cuts, arcsec. NOTE: measured size is floored\n                          by the PSF (R50=0.527\"), so cuts below ~0.5\" keep ~100% and are\n                          no-ops by construction -- kept because that IS the finding. 0.70\n                          is retained from the previous list: it is the one row that showed\n                          a real failure (-4.12%), and dropping it would hide a known problem.")
+    ap.add_argument("--sn-cuts", type=float, nargs="+", default=[8.0, 9.0, 10.0],
+                    help="cuts on the real MEASURED S/N (absolute, not keep-fractions)")
     ap.add_argument("--sn-a", type=float, default=-0.3676)
     ap.add_argument("--sn-b", type=float, default=-0.7736)
     ap.add_argument("--n-samples", type=int, default=32)
@@ -284,18 +286,20 @@ def main():
         cuts.append(dict(name=f'R>{a:.2f}"', proxy=False,
                          sim=[(szp, szm, px, True)],
                          conds=[dict(var="size", thr=float(np.log(px)), keep_high=True)]))
-    for mc, sc_ in ((26.0, 0.55), (25.5, 0.55)):
+    for mc, sc_ in ((26.0, 0.30), (25.0, 0.40)):
         cuts.append(dict(name=f'mag<{mc:g} & R>{sc_:.2f}"', proxy=False,
                          sim=[(magp, magm, mc, False), (szp, szm, sc_ / PX, True)],
                          conds=[dict(var="mag", thr=float(mc), keep_high=False),
                                 dict(var="size", thr=float(np.log(sc_ / PX)), keep_high=True)]))
-    for kf in args.sn_keeps:
-        thr = float(np.quantile(snp[fin], 1.0 - kf))
-        # (*) real S/N on the sim; the flow cannot form it, so the MODEL uses the mag+size proxy at
-        # the matching quantile of its own proxy distribution -- the only proxy left in this table.
+    for thr in args.sn_cuts:
+        # (*) real S/N on the sim; the flow cannot form it (no FLUX_AUTO/FLUXERR_AUTO output), so the
+        # MODEL cuts the mag+size proxy at the quantile that keeps the SAME fraction -- the only
+        # proxy left in this table. Matching by keep-fraction is required because the proxy is a
+        # different variable, so the same numeric threshold would not select a comparable set.
+        kf = float(np.mean(snp[fin] > thr))
         pthr = float(np.quantile(up[fin], 1.0 - kf))
-        cuts.append(dict(name=f"S/N>{thr:.1f} (*)", proxy=True,
-                         sim=[(snp, snm, thr, True)],
+        cuts.append(dict(name=f"S/N>{thr:g} (*)", proxy=True,
+                         sim=[(snp, snm, float(thr), True)],
                          conds=[dict(var="proxy", a=args.sn_a, b=args.sn_b, thr=pthr,
                                      keep_high=True)]))
 

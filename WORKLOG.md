@@ -2,6 +2,78 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-07-31b (fig1-5 under the fiducial model; fig4 cut list revised; fig5 = SELF response)
+
+**FIGURE SET** `plotting/plot_fid_flow_figures.py`, `jobs/job_fid_figures.sh` (job 15372843).
+Model = dom6x6 flow + tuned in-domain emulator. The dumps' own `R_blend` is IGNORED and replaced by
+a join against the tuned lookup; unmatched rows are DROPPED (never zero-filled) and `ref`/`R_flow`
+masked together. Coverage 43.36% -> 11,674,408 rows, so fig1-3 are on the IN-DOMAIN population and
+are NOT directly comparable to the wide-population V1 originals.
+
+**fig4 REPLACED THE OLD ONE, WHICH WAS DELETED.** V1's `fig4_bias_prob_neighbours` applied a
+hardcoded `R_blend + 0.0017` inherited from a 2026-07-09 forward-model residual. Regenerating it
+under a new fiducial model would have relabelled a stale constant as a current result. Owner's call:
+delete, do not caption. See the new AGENTS.md "Numerical Integrity" section. fig4 is now the
+SELECTION result, read from `results/constgold_neardomain_table.npz` (`--save-npz`, added so the
+figure reads data and not a parsed log). 4 seeds, per the seed convention.
+
+**fig5 IS NEW AND IS A STRICTER TEST THAN fig2.** fig2 plots `R_flow + R_blend` against the total
+constgold response, so a flow error and an emulator error can cancel and still land on the truth.
+fig5 removes that freedom: model = FLOW ONLY, truth = half-shear self-response isolated by projecting
+on the primary's own shear direction ghat_p (neighbours carry independent random directions and
+average away). `scripts/dump_halfshear_selfresp.py`, `jobs/job_halfshear_selfresp.sh`, job 15372186,
+N=2,364,527, 16 seeds.
+
+  **sim <R_self> = +0.72023   vs   ensemble <R_flow> = +0.71696  ->  the flow under-predicts its own
+  self-response by 0.45%.** Binned residuals: within ~+-3% across most of the range, degrading to
+  -5% at the faint end and -7% at the bright end of the flux axis, and +5% at large Re.
+
+  EXTRACTION IS MATCHED ON BOTH SIDES BY CONSTRUCTION. The half-shear sim is FORWARD (leg 0 = g=0,
+  leg g = g=0.05), so the flow is scored FORWARD too (s=0 -> s=+gmed), never antithetic. This is the
+  recorded 0.49-vs-0.60 trap: that gap was pure extraction convention on image-identical sims.
+
+**fig4 CUT LIST REVISED, and FOUR OF THE REQUESTED ROWS ARE DEGENERATE** (job 15371815). Owner asked
+for size cuts 0.3/0.4/0.6 and joints 26+0.3, 25+0.4. Measured `flux_radius` is floored by the PSF
+(R50=0.527"), so:
+
+| cut | keep | (1) pure sel | (3) measured | (4) MODEL m | m_flow |
+|---|---|---|---|---|---|
+| mag<26 | 0.975 | -0.311% | +1.427% | +1.137 +- 0.459 | +0.208% |
+| mag<25.5 | 0.863 | -0.275% | +7.525% | +6.811 +- 0.462 | -0.172% |
+| mag<25 | 0.683 | -0.116% | +16.593% | +15.998 +- 0.398 | -0.018% |
+| **R>0.30"** | **1.000** | -0.000% | +0.000% | +0.001 +- 0.434 | +0.496% |
+| **R>0.40"** | **1.000** | -0.005% | -0.001% | +0.007 +- 0.434 | +0.502% |
+| R>0.60" | 0.967 | +1.324% | +3.154% | +2.348 +- 0.442 | -0.291% |
+| R>0.70" | 0.792 | +5.474% | +12.171% | +7.020 +- 0.324 | **-4.121%** |
+| **mag<26 & R>0.30"** | 0.975 | -0.311% | +1.427% | +1.137 +- 0.459 | +0.208% |
+| **mag<25 & R>0.40"** | 0.683 | -0.116% | +16.595% | +15.999 +- 0.398 | -0.019% |
+| S/N>8 (*) | 0.979 | -0.378% | +1.056% | +0.741 +- 0.454 | +0.181% |
+| S/N>9 (*) | 0.943 | -0.587% | +2.899% | +2.285 +- 0.472 | -0.105% |
+| S/N>10 (*) | 0.897 | -0.774% | +5.238% | +4.466 +- 0.474 | -0.242% |
+
+`R>0.30"` and `R>0.40"` keep 1.000 and return the no-cut value (+0.496/+0.502 vs +0.495 at no cut) --
+they are exact no-ops, and consequently the joints reproduce their MAGNITUDE half to every digit.
+Measured-size cuts only bite above ~0.55". `R>0.70"` was retained from the previous list because it
+is the only row with a real failure (-4.12%) and dropping it would hide a known problem.
+
+**SELECTION IS ALWAYS A MEASURED-CUT QUESTION** (owner, explicit). A true property does not change
+with shear, so the boundary cannot move and the selection term is 0 by construction. A true-cut
+variant of this table was written and CANCELLED before producing output (job 15371807, reverted); it
+would have been a null test mislabelled as a selection result. Every table and figure delivered in
+this project uses MEASURED cuts.
+
+TWO BUGS FOUND AND FIXED:
+1. `dump_halfshear_selfresp.py` parsed the seed by splitting the filename on `_s`, which also matches
+   `_swaavg` -- so all 16 checkpoints resolved to one column name and overwrote each other, leaving a
+   dump with 1 seed. Values were correct; only the labelling was wrong. Fixed with an anchored regex
+   plus a guard that REFUSES to save when the seed-column count != checkpoint count.
+2. Duplicate `figure4` call in `main()` rendered it twice.
+
+AGENTS.md CORRECTION: the no-cut 16-seed m was recorded as -0.123 +- 0.152% (dumps path). The table
+path gives **-0.376 +- 0.152%** on its own population (4M subsample after `source_select_selection`,
+R_sim=0.8582 vs 0.8605). ~1.2 sigma apart, purely population construction. Both are now recorded with
+their populations and neither is presented as *the* number.
+
 ## 2026-07-31a (FIDUCIAL = dom6x6 flow + tuned emulator: selection table, |m_flow| <= 0.56% near domain)
 
 Owner set the fiducial model to **dom6x6 flow + tuned in-domain emulator** and asked for the 30w

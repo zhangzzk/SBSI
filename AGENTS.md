@@ -20,9 +20,16 @@ This directory is a standalone SBI/shear-calibration project.
   505–517 (**504 does not exist**). Trained domain: primary true `mag < 26`, `Re > 0.3`.
 - **Emulator:** blendemu tag `lsst_r_extnbr_indom_tuned` (73-trial Optuna search). Per-object lookup:
   `SBSI/results/blend_lookup_indomtuned_c40-139.feather` (`case`, `input_index`, `R_blend`).
-- **constgold, in-domain, no cut, 16 seeds:** `m = -0.123 +- 0.152%` (std 0.608%),
-  `R_sim = 0.8605`, `R_blend = 0.1358`, N = 11,674,408. This is the shape-standard number; a 4-seed
-  subset gives ~-0.5% because s503 is a -1.4% outlier, which is exactly why shape numbers use 16.
+- **constgold, in-domain, no cut, 16 seeds — TWO code paths, quote the range:**
+  - per-object dumps, N = 11,674,408, `R_sim = 0.8605`: **`m = -0.123 +- 0.152%`** (std 0.608%)
+  - near-domain table, 4M subsample after `source_select_selection`, `R_sim = 0.8582`:
+    **`m = -0.376 +- 0.152%`**
+
+  They differ by 0.25 pts (~1.2 sigma) purely through population construction — the table path
+  applies `source_select_selection` and subsamples, the dump path does not. Neither is wrong; do NOT
+  quote either as *the* number without saying which population it is on. A 4-seed subset of the table
+  path gives -0.492 +- 0.431%, consistent with both, and reads low because s503 is a -1.4% outlier —
+  which is exactly why shape numbers use 16 seeds.
 
 ### Two traps — both fail SILENTLY, neither raises
 

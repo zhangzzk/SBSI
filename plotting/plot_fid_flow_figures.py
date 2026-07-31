@@ -6,6 +6,8 @@
   figures/fid_fig3_bias_true_neighbours.png   -- per-seed multiplicative bias m
   figures/fid_fig4_selection_near_domain.png  -- selection bias at near-domain measured cuts,
                                                  sim vs model, and the residual bias m_flow
+  figures/fid_fig5_selfresp_halfshear.png     -- SELF response only: flow alone vs half-shear
+                                                 R_self (fig2 without the emulator's freedom)
 
 WHAT MAKES THESE THE FIDUCIAL SET (owner, 2026-07-30): the flow is the V2 dom6x6 ensemble and
 R_blend comes from the TUNED in-domain emulator (`lsst_r_extnbr_indom_tuned`), NOT the value stored
@@ -72,6 +74,7 @@ CONST_CAT = ("/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/
              "constant_response_catalogue_train.feather")
 CROWD = "/home/z/Zekang.Zhang/SBSI/results/crowd_flux_conc_c0-199.feather"
 TABLE_NPZ = "results/constgold_neardomain_table.npz"
+SELFRESP = "results/halfshear_selfresp.feather"
 CURVE_GLOB = "measurement_flow_g0_ngmix_ablate_s2c_lt500_dom6x6_s*_train_curve.npz"
 TAG = "ablate_s2c_lt500_dom6x6"
 
@@ -507,10 +510,97 @@ def figure4(out_dir):
     return save(fig, out_dir, "fid_fig4_selection_near_domain")
 
 
+def figure5(out_dir):
+    """Figure 2's question restricted to the SELF response: flow alone vs half-shear R_self.
+
+    Figure 2 plots `R_flow + R_blend` against the constgold total response, so a flow error and an
+    emulator error can trade off against each other and still land on the truth. This figure removes
+    that freedom: the model curve is the FLOW ONLY, and the truth is the half-shear self-response,
+    isolated by projecting on the primary's own shear direction. Same three axes and same binning as
+    figure 2, so the two are read the same way.
+
+    Data: `results/halfshear_selfresp.feather` from `scripts/dump_halfshear_selfresp.py` (forward
+    extraction on both sides). Nothing here is hardcoded.
+    """
+    if not os.path.exists(SELFRESP):
+        print(f"[fid_fig5] {SELFRESP} not found -> SKIPPED "
+              "(run jobs/job_halfshear_selfresp.sh first)")
+        return None
+    df = pf.read_table(SELFRESP, memory_map=True).to_pandas()
+    scols = sorted([c for c in df.columns if c.startswith("R_flow_s")])
+    ysim = df["r_sim_self"].to_numpy(float)
+    ymods = [df[c].to_numpy(float) for c in scols]
+    R_glob = float(np.nanmean(ysim))
+    print(f"[fid_fig5] {len(df):,} rows x {len(scols)} seeds   "
+          f"<R_self>sim={R_glob:+.4f}  <R_flow>={np.nanmean([np.nanmean(y) for y in ymods]):+.4f}")
+
+    panels = [("SN", r"primary flux  (S/N)", True, None),
+              ("Re_input_p", r"primary size  $R_e$  [arcsec]", False, None),
+              ("nbr_flux_near", "neighbour / blend flux  (near shell)", True, 1e-3)]
+    fig, axes = plt.subplots(2, 3, figsize=(15, 7.2), sharex="col",
+                             gridspec_kw=dict(height_ratios=[2.4, 1]))
+    all_res = []
+    for j, (col, xlabel, logx, xmin) in enumerate(panels):
+        top, bot = axes[0, j], axes[1, j]
+        x = df[col].to_numpy(float)
+        ys, yms = ysim, ymods
+        if xmin is not None:
+            keep = np.isfinite(x) & (x > xmin)
+            x, ys, yms = x[keep], ysim[keep], [ym[keep] for ym in ymods]
+        cx, sm, se, mm = _binned(x, ys, yms, nb=12, logx=logx)
+        mmean = mm.mean(1)
+        top.axhline(R_glob, color="#cccccc", lw=1.0, zorder=0)
+        top.fill_between(cx, sm - se, sm + se, color=BLUE, alpha=0.30, lw=0, zorder=1)
+        top.plot(cx, sm, "-o", color=BLUE, ms=7, lw=1.8, zorder=4)
+        top.fill_between(cx, mm.min(1), mm.max(1), color=VERM, alpha=0.25, lw=0, zorder=2)
+        top.plot(cx, mmean, "--s", color=VERM, ms=7, lw=1.8, mfc="white", mew=1.6, zorder=3)
+        res = (mmean / sm - 1.0) * 100.0
+        rlo = (mm.min(1) / sm - 1.0) * 100.0
+        rhi = (mm.max(1) / sm - 1.0) * 100.0
+        rse = np.abs(se / sm) * 100.0
+        all_res.append(res)
+        bot.axhline(0.0, color="#cccccc", lw=1.0, zorder=0)
+        bot.fill_between(cx, -rse, rse, color=BLUE, alpha=0.25, lw=0, zorder=1)
+        bot.fill_between(cx, rlo, rhi, color=VERM, alpha=0.25, lw=0, zorder=2)
+        bot.plot(cx, res, "--s", color=VERM, ms=6, lw=1.6, mfc="white", mew=1.4, zorder=3)
+        bot.set_xlabel(xlabel)
+        if logx:
+            top.set_xscale("log"); bot.set_xscale("log")
+            bot.xaxis.set_minor_formatter(NullFormatter())
+            bot.xaxis.set_major_formatter(ScalarFormatter())
+            bot.ticklabel_format(axis="x", style="plain")
+        if j:
+            top.tick_params(labelleft=False); bot.tick_params(labelleft=False)
+    ymin = min(a.get_ylim()[0] for a in axes[0])
+    ymax = max(a.get_ylim()[1] for a in axes[0])
+    flat = np.concatenate(all_res); flat = flat[np.isfinite(flat)]
+    lim = max(8.0, float(np.nanpercentile(np.abs(flat), 90)) * 1.6)
+    n_clip = int(np.sum(np.abs(flat) > lim))
+    for a in axes[0]:
+        a.set_ylim(ymin, ymax)
+    for a in axes[1]:
+        a.set_ylim(-lim, lim)
+    axes[0, 0].set_ylabel(r"mean SELF response  $R_{\rm self}$")
+    axes[1, 0].set_ylabel(r"model / truth $-$ 1  [%]")
+    axes[0, 0].legend(handles=[
+        Line2D([], [], color=BLUE, marker="o", ms=7, lw=1.8, label=r"half-shear truth  $R_{\rm self}$"),
+        Patch(fc=BLUE, alpha=0.30, label="truth s.e. on mean"),
+        Line2D([], [], color=VERM, marker="s", ms=7, lw=1.8, ls="--", mfc="white",
+               label=r"flow ONLY  $R_{\rm flow}$  (no $R_{\rm blend}$)"),
+        Patch(fc=VERM, alpha=0.25, label=f"{len(scols)}-seed range")], loc="best")
+    axes[0, 0].annotate("half-shear legs, self-response isolated on $\\hat{g}_p$\n"
+                        f"N={len(df):,} objects" + (f"\n{n_clip} residual bins clipped"
+                                                    if n_clip else ""),
+                        xy=(0.02, 0.02), xycoords="axes fraction", fontsize=8, color=MUTED,
+                        bbox=dict(fc="white", ec="none", alpha=0.85, pad=1.5))
+    fig.tight_layout()
+    return save(fig, out_dir, "fid_fig5_selfresp_halfshear")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=None, help="output directory (default: <repo>/figures)")
-    ap.add_argument("--only", default=None, choices=["1", "2", "3", "4"])
+    ap.add_argument("--only", default=None, choices=["1", "2", "3", "4", "5"])
     args = ap.parse_args()
     set_style()
     here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -527,8 +617,10 @@ def main():
         if args.only in (None, "3"):
             figure3(loaded, out_dir)
     if args.only in (None, "4"):
-        # fig4 reads the saved selection table, not the dumps, so it needs no `loaded`.
+        # fig4/fig5 read saved tables, not the dumps, so they need no `loaded`.
         figure4(out_dir)
+    if args.only in (None, "5"):
+        figure5(out_dir)
     print("PLOT_FID_FLOW_FIGURES_DONE")
 
 
