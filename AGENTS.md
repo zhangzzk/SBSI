@@ -20,16 +20,25 @@ This directory is a standalone SBI/shear-calibration project.
   505–517 (**504 does not exist**). Trained domain: primary true `mag < 26`, `Re > 0.3`.
 - **Emulator:** blendemu tag `lsst_r_extnbr_indom_tuned` (73-trial Optuna search). Per-object lookup:
   `SBSI/results/blend_lookup_indomtuned_c40-139.feather` (`case`, `input_index`, `R_blend`).
-- **constgold, in-domain, no cut, 16 seeds — TWO code paths, quote the range:**
-  - per-object dumps, N = 11,674,408, `R_sim = 0.8605`: **`m = -0.123 +- 0.152%`** (std 0.608%)
-  - near-domain table, 4M subsample after `source_select_selection`, `R_sim = 0.8582`:
-    **`m = -0.376 +- 0.152%`**
+- **constgold, in-domain, no cut, 16 seeds: `m = -0.123 +- 0.152%`** (std 0.608%),
+  `R_sim = 0.8605`, `R_blend = 0.1358`, N = 11,674,408. **This is the number to quote** — it uses the
+  whole in-domain population and carries seed error only.
 
-  They differ by 0.25 pts (~1.2 sigma) purely through population construction — the table path
-  applies `source_select_selection` and subsamples, the dump path does not. Neither is wrong; do NOT
-  quote either as *the* number without saying which population it is on. A 4-seed subset of the table
-  path gives -0.492 +- 0.431%, consistent with both, and reads low because s503 is a -1.4% outlier —
-  which is exactly why shape numbers use 16 seeds.
+  The near-domain table script reports `-0.376 +- 0.152%` for the same quantity. That is NOT a second
+  population: both paths land on the same galaxies (11,674,408 vs 11,674,409 rows — a one-row
+  difference), and `source_select_selection` removes nothing in-domain (0.00% fail its distance
+  condition; its mag/Re ranges are already subsumed by the emulator's own training cuts). The gap is
+  the table's `--max-rows 4000000` SUBSAMPLE. Per-object response scatter is std 5.06 against a mean
+  of 0.86, so drawing 4M from 11.67M moves `R_sim` by an expected 0.00205 (observed 0.00226) = 0.24%,
+  which is the whole 0.25-pt gap.
+
+  **So the table's no-cut row carries a ~0.24% subsample error ON TOP of its quoted seed error** —
+  `-0.38% +- 0.15%(seed) +- 0.24%(subsample)`, consistent with -0.123%. Do not quote the table's
+  no-cut m as a shape result; either raise `--max-rows` or take it from the dumps. The CUT rows are
+  unaffected in the same way, being ratios evaluated on the same draws.
+
+  A 4-seed subset gives -0.492 +- 0.431% (table) / -0.239 +- 0.430% (dumps), both consistent, reading
+  low because s503 is a -1.41% outlier — exactly why shape numbers use 16 seeds.
 
 ### Two traps — both fail SILENTLY, neither raises
 

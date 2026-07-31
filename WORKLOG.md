@@ -69,10 +69,25 @@ TWO BUGS FOUND AND FIXED:
    plus a guard that REFUSES to save when the seed-column count != checkpoint count.
 2. Duplicate `figure4` call in `main()` rendered it twice.
 
-AGENTS.md CORRECTION: the no-cut 16-seed m was recorded as -0.123 +- 0.152% (dumps path). The table
-path gives **-0.376 +- 0.152%** on its own population (4M subsample after `source_select_selection`,
-R_sim=0.8582 vs 0.8605). ~1.2 sigma apart, purely population construction. Both are now recorded with
-their populations and neither is presented as *the* number.
+**THE THREE no-cut m VALUES, RESOLVED (-0.123 / -0.376 / -0.492).** One quantity, two knobs.
+NOT three populations -- an earlier reading of this WORKLOG said "population construction" and was
+WRONG, twice. Verified:
+  * the dumps span true mag 18-28, but the emulator-lookup join cuts them to exactly 18-26 (0.0000%
+    above 26): the emulator's stored training cuts ARE a domain cut;
+  * `source_select_selection` removes NOTHING in-domain (0.00% fail its distance<5" condition, and
+    its mag 18-28 / Re 0.1-1.5 ranges are subsumed by the emulator cuts);
+  * both paths therefore land on the SAME galaxies: 11,674,409 (table) vs 11,674,408 (dumps).
+The whole gap is the table's 4M SUBSAMPLE. Per-object response std is 5.06 against a mean 0.86, so a
+4M draw from 11.67M moves R_sim by an expected 0.00205 -- observed 0.00226, i.e. 0.24% expected vs
+0.26% observed, which is the entire 0.25-pt difference.
+  | | 4 seeds | 16 seeds |
+  |---|---|---|
+  | dumps (all 11.67M) | -0.239 +- 0.430% | **-0.123 +- 0.152%** |
+  | table (4M subsample) | -0.492 +- 0.431% | -0.376 +- 0.152% |
+Rows differ by seeds only (s503 is a -1.41% outlier in the 4-seed set); columns by subsample only.
+**CONSEQUENCE: the +-0.152% quoted on the table path is SEED error only and understates its true
+uncertainty by ~2x** -- it needs +- 0.24% for the subsample. AGENTS.md now names the dumps value as
+the one to quote and records the subsample caveat. Fix: raise `--max-rows` for no-cut work.
 
 ## 2026-07-31a (FIDUCIAL = dom6x6 flow + tuned emulator: selection table, |m_flow| <= 0.56% near domain)
 
