@@ -79,14 +79,55 @@ COMMANDS. `python -m pytest tests/ -q` (34 passed, 93 s, `py31` — note `sims1`
 pytest installed despite CLAUDE.md; worth fixing). Job 15390873 =
 `ROWS=100000 sbatch --gpus-per-node=a40:1 jobs/job_lagrangian_check.sh`.
 
-LIMITATIONS. Validated on the A.7 Gaussian toy only. Nothing here has yet touched the real
-flow: §5C.5 cross-check (i) — the object-by-object Eulerian/Lagrangian agreement — is job
-15390873 and its result is NOT in this entry. The shape channel is the only place both
-forms are computable, so a pass validates the reparametrization, not the full (5.8)
-estimator. `P_det` and the population terms are stage 4; the multi-dimensional latent that
-is §5C's actual payoff is stage 5 and needs an owner decision on the scene sampler.
+CROSS-CHECK (i) ON THE REAL FLOW: QUADRATURE-LIMITED, AND CONVERGING. Jobs 15390873
+(finite differences, grid-n 61) and 15394036/15394748 (autograd) all report per-object
+disagreement far above the 1e-2 tolerance I set. It is not a bug in either side. The
+Eulerian/Lagrangian identity is an integration by parts: exact for the integrals, but on a
+finite grid only as good as the node bank, and the Eulerian side must resolve
+`grad log p_0` there. Refining the grid converges it (job 15394748, 2000 rows):
 
-NEXT. (1) Read job 15390873. (2) Stage 4: wire the trained selection model in as `P_det`
+      grid-n   G      ESS    corr g1  corr g2   worst rms |Ds|/sd(s)
+      41       1225    256    0.546    0.426     1.94
+      61       2765    575    0.605    0.770     1.40
+      81       4921   1023    0.874    0.893     0.58
+
+ESS is ~21% of G at every resolution, so the posterior is not collapsing onto a few nodes
+— this is resolution, not weight starvation. grid-n 121 OOMed (the Eulerian `--chunk` was
+not lowered along with `--deriv-chunk`; only the latter is sized in the sweep script).
+
+Two things I got wrong along the way, both corrected here. (a) I read
+`|u_fd-u_closed|/rms = 8.02e-01` as a defect in the prior's spline; a HEALTHY toy prior
+gives 8.18e-01 at the same grid-n 61 and 1.3e-2 at n=41, so it is a resolution artifact of
+a max-over-nodes metric. (b) I reported that autograd made the disagreement worse than
+finite differences (0.40 vs 0.60) — that comparison was confounded, since the two runs
+also differed in grid-n. At the SAME grid-n 61 autograd is better on both axes
+(0.605/0.770 vs 0.595/0.602). Finite differences do still fail to converge on this flow
+(sd(phi'') grows 174 -> 906 as delta shrinks 0.04 -> 0.0025), so autograd remains the
+right default, but it was not the cause of the disagreement.
+
+WHAT IS ACTUALLY VALIDATED. The machinery, exactly: A.7's closed forms (above), and a 2-D
+Mobius toy using the SAME grid, prior and `ShapeScoreNodes` as the real run but an analytic
+location-family flow, where the two forms agree at corr = 1.000000 with rms converging
+6e-3 -> 1.7e-4 under refinement, under every prior degradation tried (knots 6-30, bins
+120-600, 10x fewer samples).
+
+A SEPARATE FINDING, ABOUT EXISTING CODE. In that same toy the EULERIAN Louis information is
+the unreliable one: `<I>` swings +2.44, +1.02, -0.38, -3.46, -64.64 across those prior
+variations while the Lagrangian sits at 1.90 in every one. Brute-forcing
+`-d2/dg2 log p(xhat|g)` by direct quadrature gives 1.9108 — the Lagrangian value to 5
+digits. So `score_inference.py`'s information, which is the DENOMINATOR of `ghat`, is not
+trustworthy; its error tracks the node bank's own printed Bartlett residual. This is
+independent of §5C and worth acting on regardless.
+
+LIMITATIONS. The shape channel is the only place both forms are computable, so cross-check
+(i) validates the reparametrization, not the full (5.8) estimator. `P_det` and the
+population terms are stage 4; the multi-dimensional latent that is §5C's actual payoff is
+stage 5 and needs an owner decision on the scene sampler. Autograd memory scales with
+`deriv-chunk * G` (measured: 32 x 2765 = 88k rows needs >14 GB), so large grids need small
+chunks.
+
+NEXT. (1) Decide whether the Eulerian Louis information matters enough to fix or to
+retire in favour of the Lagrangian one. (2) Stage 4: wire the trained selection model in as `P_det`
 inside the curve, add `<s>_sel`/`I_sel` from the same node bank pushed through `S_gamma`,
 and re-run `null`/`constgold` — this is where the missing `I_sel` becomes a number.
 (3) Stage 5: prior-as-sampler over intrinsic (shape, size, flux, sersic, neighbour scalars),
