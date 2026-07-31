@@ -289,8 +289,13 @@ class PosteriorShapeEstimator:
         property; no Hessian of `log p_flow` is ever formed.
 
         Returns three `(N, G)` float64 arrays.  Unshifted -- the row-max trick of
-        `log_likelihood` is invalid here for the reason given in its docstring.  Double
-        backward through a `(B*G, D)` forward pass is memory-hungry, so `chunk` is small.
+        `log_likelihood` is invalid here for the reason given in its docstring.
+
+        MEMORY.  `create_graph=True` retains the whole double-backward graph over
+        `chunk * G` rows, and that is the binding constraint, not `chunk` alone: measured,
+        `chunk=32` at `G=2765` (88k rows) needs >14 GB and OOMs a 16 GB vGPU slice.  Size
+        on the PRODUCT.  Roughly 10k rows per pass fits comfortably in 16 GB, so pick
+        `chunk ~ 10000/G` -- e.g. 8 at `G=1225`, 4 at `G=2765`.
         """
         model = self.bundle.model
         pre = self.bundle.condition_preprocessor
