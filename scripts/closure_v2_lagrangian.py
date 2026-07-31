@@ -46,6 +46,7 @@ for _p in (SBSI_ROOT, os.path.join(SBSI_ROOT, "scripts")):
 
 from sbs_shear.forward_model import SetConditionedForwardModel  # noqa: E402
 from sbs_shear.lagrangian_score import (  # noqa: E402
+    denominator_consistency,
     posterior_weights,
     score_and_information,
     selection_terms,
@@ -168,6 +169,44 @@ def weight_diagnostics(p0, self_idx=None):
     return out
 
 
+def tail_diagnostics(p0, d1, d2, clip_pct=None):
+    """How much of `s_i` and of `Var_w(phi')` comes from a handful of nodes.
+
+    If self-normalised IS is in the heavy-tailed regime, a few nodes carry most of the
+    second moment while the first moment is comparatively well behaved -- which is exactly
+    the asymmetry that breaks `Var(s) = dE[s]/dgamma`.  `clip_pct` winsorises `phi'` and
+    `phi''` at symmetric per-galaxy percentiles across nodes; if the information equality
+    is restored by clipping, the tail is the cause.
+    """
+    if clip_pct is not None:
+        lo1, hi1 = np.percentile(d1, [clip_pct, 100 - clip_pct], axis=1, keepdims=True)
+        lo2, hi2 = np.percentile(d2, [clip_pct, 100 - clip_pct], axis=1, keepdims=True)
+        d1, d2 = np.clip(d1, lo1, hi1), np.clip(d2, lo2, hi2)
+    w = posterior_weights(p0)
+    s = np.sum(w * d1, axis=1)
+    var_terms = w * (d1 - s[:, None]) ** 2                       # per-node share of Var_w
+    order = np.argsort(-w, axis=1)
+    def share(arr, k):
+        """Top-`k` share of the total MAGNITUDE.
+
+        The denominator must be sum|.|, not sum(.).  `w*phi'` is signed and sums to `s_i`,
+        which passes through zero for individual galaxies -- normalising by it produced
+        1e31% "shares" in the first run of this diagnostic (2026-07-31).  Magnitude share
+        is the well-defined question anyway: how much of the arithmetic is a few nodes.
+        """
+        idx = order[:, :k]
+        a = np.abs(arr)
+        top = np.take_along_axis(a, idx, axis=1).sum(axis=1)
+        return float(np.mean(top / np.maximum(a.sum(axis=1), 1e-30)))
+    s_contrib = w * d1
+    return dict(d1=d1, d2=d2,
+                s_top1=share(s_contrib, 1), s_top10=share(s_contrib, 10),
+                v_top1=share(var_terms, 1), v_top10=share(var_terms, 10),
+                d1_p50=float(np.percentile(np.abs(d1), 50)),
+                d1_p999=float(np.percentile(np.abs(d1), 99.9)),
+                d1_max=float(np.abs(d1).max()))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -180,6 +219,11 @@ def main():
                     help="stencil half-widths to sweep; stability across them is the evidence")
     ap.add_argument("--chunk", type=int, default=256)
     ap.add_argument("--seed", type=int, default=11)
+    ap.add_argument("--gal-offset", type=int, default=None,
+                    help="take the galaxies from this fixed row offset instead of from just "
+                         "after the bank.  Without it the galaxy sample MOVES when --n-node "
+                         "changes, so an n_node ladder is confounded by a different sample "
+                         "(this bit the first ladder, 2026-07-31).  Must be >= --n-node.")
     ap.add_argument("--self-bank", action="store_true",
                     help="DIAGNOSTIC: use the galaxies' OWN true scenes as the node bank, so "
                          "every galaxy has exact support.  Not a deployable configuration -- "
@@ -196,7 +240,8 @@ def main():
     print(f"  metadata: {meta}")
     print(f"  target_dim={model.target_dim}  context_dim={model.context_dim}")
 
-    rows = load_rows(args.catalogue, (args.n_gal + args.n_node) * 4)
+    span = max(args.n_gal + args.n_node, (args.gal_offset or 0) + args.n_gal)
+    rows = load_rows(args.catalogue, span * 4)
     # The checkpoint's own metadata carries `true_cut`: the model was TRAINED only on rows
     # passing it, so evaluating the density outside it is out of domain, where log_prob and
     # its gamma-derivatives are unconstrained.  Applying it is not tuning -- it is staying
@@ -209,7 +254,10 @@ def main():
         print(f"true_cut Re>{re_min} & mag<{mag_max}: "
               f"{int(keep_true.sum()):,}/{len(rows):,} = {keep_true.mean():.1%} kept")
         rows = rows[keep_true].reset_index(drop=True)
-    need = args.n_gal + (0 if args.self_bank else args.n_node)
+    off = args.gal_offset if args.gal_offset is not None else args.n_node
+    if args.gal_offset is not None and args.gal_offset < args.n_node:
+        raise SystemExit("--gal-offset must be >= --n-node or the bank overlaps the galaxies")
+    need = args.n_gal + (0 if args.self_bank else off)
     if len(rows) < need:
         raise SystemExit(f"only {len(rows):,} in-domain rows, need {need:,}")
     if args.self_bank:
@@ -217,7 +265,7 @@ def main():
         node_df = gal_df.copy()
     else:
         node_df = rows.iloc[:args.n_node].reset_index(drop=True)
-        gal_df = rows.iloc[args.n_node:args.n_node + args.n_gal].reset_index(drop=True)
+        gal_df = rows.iloc[off:off + args.n_gal].reset_index(drop=True)
     print(f"rows: {len(node_df):,} node scenes + {len(gal_df):,} galaxy scenes")
     print("  NOTE: the latent is the FULL true scene, so the node bank is importance")
     print("  sampling in ~18 dimensions.  Watch ESS, not n_node (5B.3 item 5).")
@@ -276,14 +324,28 @@ def main():
               f"   rms|ds|/sd={np.sqrt(np.mean((s - s_direct) ** 2)) / np.std(s):.2e}")
         print(f"   Louis check : <I>_Louis={np.mean(info):+.4f} vs "
               f"<I>_direct={np.mean(i_direct):+.4f}")
-
-
         lp = {t: np.log(v) for t, v in pdets.items()}         # P(g) = mean_k Pdet(S_g z_k)
         s_sel, i_sel = selection_terms(lp[0.0], (lp[+d] - lp[-d]) / (2 * d),
                                        (lp[+d] - 2 * lp[0.0] + lp[-d]) / d ** 2)
         print(f"   ghat from DIRECT evidence derivatives: (5.8) "
               f"{shear_estimate_louis(s_direct, i_direct, s_sel, i_sel):+.6f}   (5.9) "
               f"{shear_estimate_bartlett(s_direct, s_sel):+.6f}")
+        # Bartlett at ANY gamma: Var(s^keep) must equal E[I^keep].  Needs no truth, so it
+        # is the quantity to iterate against -- it is what is actually failing.
+        bd, ld, ratio = denominator_consistency(s, info, s_sel, i_sel)
+        print(f"   INFORMATION EQUALITY: Var(s-<s>_sel)={bd:.3f}  vs  <I>-I_sel={ld:.3f}"
+              f"   ratio={ratio:+.3f}   (must be 1)")
+        for cp in (None, 1.0, 0.1):
+            td = tail_diagnostics(p0, d1, d2, clip_pct=cp)
+            sc, ic = score_and_information(p0, td["d1"], td["d2"])
+            _, _, r2 = denominator_consistency(sc, ic, s_sel, i_sel)
+            tag = "no clip" if cp is None else f"clip {cp}%"
+            print(f"     {tag:>9}: |phi'| p50={td['d1_p50']:.2f} p99.9={td['d1_p999']:.1f} "
+                  f"max={td['d1_max']:.1f} | top1 share s={td['s_top1']:.1%} "
+                  f"Var={td['v_top1']:.1%} | top10 s={td['s_top10']:.1%} "
+                  f"Var={td['v_top10']:.1%} | eq ratio={r2:+.3f}")
+
+
         louis = shear_estimate_louis(s, info, s_sel, i_sel)
         bart = shear_estimate_bartlett(s, s_sel)
         ess = float(np.mean(1.0 / np.sum(posterior_weights(p0) ** 2, axis=1)))
@@ -297,8 +359,10 @@ def main():
             if "self_rank_med" in wd:
                 print(f"            own-scene rank: median {wd['self_rank_med']:.0f}, "
                       f"top-1 {wd['self_top1']:.1%}, top-1% {wd['self_top1pct']:.1%}")
-        print(f"{d:>8.4f}  {louis:>12.6f} {louis / args.gamma - 1:>+8.2%}  "
-              f"{bart:>12.6f} {bart / args.gamma - 1:>+8.2%}  "
+        # `m` is undefined at gamma=0 (that run is a NULL test on ghat itself, not on m).
+        mfrac = (lambda g: f"{g / args.gamma - 1:+8.2%}") if args.gamma else (lambda g: f"{'--':>8}")
+        print(f"{d:>8.4f}  {louis:>12.6f} {mfrac(louis)}  "
+              f"{bart:>12.6f} {mfrac(bart)}  "
               f"{s_sel:>10.5f} {i_sel:>9.4f} {float(np.mean(info)):>9.4f} {ess:>7.1f}")
 
     print("\n  Read the SPREAD across delta, not any single row: on the V1 flow finite")
