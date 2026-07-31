@@ -46,15 +46,46 @@ is in the bank, fails the same way (<I> = -76). Not out-of-domain evaluation on 
 applying the checkpoint's `true_cut` (Re>0.3, mag<26 -- which removes 61% of catalogue rows,
 so the earlier banks were mostly out of domain) changes the numbers but not the verdict.
 
-LEADING HYPOTHESIS, NOT YET TESTED. A numerator of ~0 means `E[s_i] ~ <s>_sel` whatever the
-data's gamma, which is what happens if the posterior weights `w_k propto p(xhat_i|ctx_k)
-Pdet_k` barely track `xhat_i`. If the flow's predicted SCATTER varies strongly across
-scenes, `w_k` is dominated by which node predicts most tightly rather than by which node
-predicts `xhat_i`, the posterior is near galaxy-independent, and `s_i` collapses to a
-constant. NEXT DIAGNOSTIC: measure how much `w_k` varies across galaxies -- e.g. the mean
-pairwise distance between rows of `w`, or `sd_i(s_i)` against the spread predicted from the
-likelihood alone. If the weights are near-constant across `i`, the fix is in the weighting,
-not in the derivatives.
+HYPOTHESIS TESTED AND REFUTED. I proposed that the posterior weights barely track `xhat_i`,
+so `s_i` collapses to a constant. Measured (self-bank, n_node=2000): total-variation
+distance of each galaxy's weight row from the population mean row is **0.911** (median
+0.925) on a 0-1 scale, ESS 42 per galaxy against 1371 for the mean row, and each galaxy's
+OWN true scene ranks **median 9 of 2000** by weight (top-1% 64.9%). The weights are
+strongly galaxy-specific and the likelihood discriminates well. The hypothesis was wrong.
+
+WHERE THE FAILURE ACTUALLY IS: THE INFORMATION EQUALITY, NOT THE SCORE. A direct check of
+Fisher's identity -- differencing the EVIDENCE `log Z_i(g) = log mean_k exp(phi_k(g))`,
+which shares no arithmetic with `score_and_information` beyond `phi` -- agrees with the
+weighted form:
+
+      <s>_Ew = +10.811   vs   <s>_direct = +10.863     corr 0.9993,  rms|ds|/sd = 3.8e-2
+      <I>_Louis = -123.5 vs   <I>_direct = -132.2
+
+So the estimator computes the model's score faithfully; there is no weighting or derivative
+bug. But at gamma_true = 0.1 the two moments are inconsistent:
+
+      dE[s]/dgamma ~ 10.8/0.1 = 108        Var(s) ~ 729        ratio 6.7
+
+Bartlett requires these to be EQUAL. `ghat(5.9) = E[s]/E[s^2]` therefore comes back
+attenuated by exactly that ratio: measured 0.0146/0.1 = 0.146 = 1/6.85. The estimator is
+not broken; it is being fed a second moment that is ~7x too large.
+
+WHY THE SECOND MOMENT IS INFLATED (leading explanation, partially supported). `s_i` has
+sd ~27 where a physically sensible per-object score is O(1-10), so it is dominated by rare
+nodes with extreme `phi'` -- self-normalised importance sampling in the heavy-tailed regime,
+where the estimator's variance converges slowly or not at all. Support: ESS is 2-4% of N at
+every bank size. Against: raising n_node 2000 -> 10000 lifts ESS 42 -> 101 but moves
+`ghat(5.9)` 0.0105 -> 0.0092, i.e. slightly the WRONG way, which simple MC noise would not
+do. So heavy tails are indicated but not established, and the ESS-only story is incomplete.
+`<I>` is positive at small gamma (+2.2 at 0, +5.1 at 0.02, +7.1 at 0.05) and goes negative
+by gamma=0.2 (-6.3); the attenuation is already -84% at gamma=0.02 where `<I>` is healthy,
+so a negative information is a second symptom, not the cause.
+
+NEXT DIAGNOSTIC. Measure the tail directly: the distribution of `phi'` across nodes, the
+weighted contribution of the top-1/top-10 nodes to `s_i` and to `Var_w(phi')`, and whether
+a defensive proposal (prior mixed with a per-galaxy component) or clipping restores the
+information equality. The test to satisfy is `Var(s) = dE[s]/dgamma`, not `ghat` itself --
+that is the quantity that is failing and it is measurable without knowing the answer.
 
 STATUS. §5C's machinery is validated exactly on A.7 (cont.164) and reproduces brute-force
 curvature; what is NOT working is the full-scene, prior-sampled node bank on the real V2

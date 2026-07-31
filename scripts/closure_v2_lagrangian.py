@@ -139,6 +139,35 @@ def phi_block(model, xhat_std, ctx, log_pdet, chunk, max_pairs=500_000):
     return out
 
 
+def weight_diagnostics(p0, self_idx=None):
+    """Do the posterior weights actually TRACK the galaxy, or are they the same for all?
+
+    A numerator of ~0 in (5.8) means `E[s_i] ~ <s>_sel` whatever the data's gamma, and the
+    simplest way that happens is `w_k` barely depending on `i`: then `s_i = E_w[phi']` is
+    the same constant for every galaxy and the shear signal cancels in the centring.
+
+    `tv` is the total-variation distance of each galaxy's weight row from the population
+    mean row, in [0, 1].  tv ~ 0 means the posterior is galaxy-INDEPENDENT (the failure);
+    tv ~ 1 means each galaxy picks out its own scenes.  `self_rank` is available only when
+    the bank contains each galaxy's own scene: the rank of that scene by weight, which
+    should be at or very near 0 if the likelihood discriminates at all.
+    """
+    w = posterior_weights(p0)
+    wbar = w.mean(axis=0)
+    tv = 0.5 * np.abs(w - wbar[None, :]).sum(axis=1)
+    out = dict(tv_mean=float(tv.mean()), tv_med=float(np.median(tv)),
+               ess_mean=float(np.mean(1.0 / np.sum(w ** 2, axis=1))),
+               ess_pop=float(1.0 / np.sum(wbar ** 2)))
+    if self_idx is not None:
+        order = np.argsort(-w, axis=1)
+        rank = np.array([int(np.flatnonzero(order[j] == self_idx[j])[0])
+                         for j in range(len(self_idx))])
+        out["self_rank_med"] = float(np.median(rank))
+        out["self_top1"] = float(np.mean(rank == 0))
+        out["self_top1pct"] = float(np.mean(rank < max(1, w.shape[1] // 100)))
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -210,6 +239,7 @@ def main():
             xhat = xhat[:, 0, :]
     gen = torch.Generator(device="cpu").manual_seed(args.seed)
     keep = (torch.rand(len(gal_df), generator=gen).to(dev) < pdet_g)
+    kept_idx = torch.nonzero(keep).squeeze(-1).cpu().numpy()
     xhat, n_keep = xhat[keep], int(keep.sum())
     print(f"detection: kept {n_keep:,}/{len(gal_df):,} = {n_keep / len(gal_df):.1%}  "
           f"(<Pdet> = {float(pdet_g.mean()):.4f})")
@@ -231,12 +261,42 @@ def main():
         d2 = (pp - 2 * p0 + pm) / d ** 2
         s, info = score_and_information(p0, d1, d2)          # sampled bank: no log_prior
 
+        # DIRECT check of Fisher's identity (2.2): s_i must equal d_gamma log Z_i, where
+        # Z_i(g) = mean_k exp(phi_k(g)) is the evidence.  This differences the EVIDENCE
+        # rather than averaging the per-node derivative, so it shares no arithmetic with
+        # `score_and_information` beyond phi itself.  Agreement => the estimator faithfully
+        # computes the model's score and any failure is the model/bank; disagreement => an
+        # implementation bug in the weighting or the derivative.
+        from scipy.special import logsumexp as _lse
+        lz = {t: _lse(v, axis=1) for t, v in (("0", p0), ("+", pp), ("-", pm))}
+        s_direct = (lz["+"] - lz["-"]) / (2 * d)
+        i_direct = -(lz["+"] - 2 * lz["0"] + lz["-"]) / d ** 2
+        print(f"   Fisher check: <s>_Ew={np.mean(s):+.5f} vs <s>_direct={np.mean(s_direct):+.5f}"
+              f"   corr={np.corrcoef(s, s_direct)[0, 1]:.6f}"
+              f"   rms|ds|/sd={np.sqrt(np.mean((s - s_direct) ** 2)) / np.std(s):.2e}")
+        print(f"   Louis check : <I>_Louis={np.mean(info):+.4f} vs "
+              f"<I>_direct={np.mean(i_direct):+.4f}")
+
+
         lp = {t: np.log(v) for t, v in pdets.items()}         # P(g) = mean_k Pdet(S_g z_k)
         s_sel, i_sel = selection_terms(lp[0.0], (lp[+d] - lp[-d]) / (2 * d),
                                        (lp[+d] - 2 * lp[0.0] + lp[-d]) / d ** 2)
+        print(f"   ghat from DIRECT evidence derivatives: (5.8) "
+              f"{shear_estimate_louis(s_direct, i_direct, s_sel, i_sel):+.6f}   (5.9) "
+              f"{shear_estimate_bartlett(s_direct, s_sel):+.6f}")
         louis = shear_estimate_louis(s, info, s_sel, i_sel)
         bart = shear_estimate_bartlett(s, s_sel)
         ess = float(np.mean(1.0 / np.sum(posterior_weights(p0) ** 2, axis=1)))
+        if d == float(args.deltas.split(",")[0]):
+            wd = weight_diagnostics(p0, kept_idx if args.self_bank else None)
+            print("   weights: TV from population mean row: mean "
+                  f"{wd['tv_mean']:.4f}, median {wd['tv_med']:.4f}   "
+                  f"(0 = galaxy-INDEPENDENT posterior, 1 = fully galaxy-specific)")
+            print(f"            ESS per galaxy {wd['ess_mean']:.1f}, "
+                  f"ESS of the mean row {wd['ess_pop']:.1f}")
+            if "self_rank_med" in wd:
+                print(f"            own-scene rank: median {wd['self_rank_med']:.0f}, "
+                      f"top-1 {wd['self_top1']:.1%}, top-1% {wd['self_top1pct']:.1%}")
         print(f"{d:>8.4f}  {louis:>12.6f} {louis / args.gamma - 1:>+8.2%}  "
               f"{bart:>12.6f} {bart / args.gamma - 1:>+8.2%}  "
               f"{s_sel:>10.5f} {i_sel:>9.4f} {float(np.mean(info)):>9.4f} {ess:>7.1f}")
