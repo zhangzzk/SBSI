@@ -7,6 +7,134 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
+## cont.166 (2026-07-31) §5C on Gold-V2: seven mechanisms ruled out, cause NOT settled, and the headline diagnostic itself is unreliable
+
+Nine-agent diagnostic round on the cont.165 failure (`Var(s) >> E[I]`; `ghat` flat at ~0.01
+whatever the true shear). Added `scripts/diag5c_{analytic_control,anactl_audit,splitbank,
+phianatomy,detablation,galbins}.py` and a `jobs/job_diag5c_*.sh` for each; the sub-entries
+below carry the per-probe detail. Shared files untouched except two fixes to
+`closure_v2_lagrangian.py` (top-k share normalised by `sum|.|` after it printed `-4.9e31%`;
+new `--gal-offset` to pin the galaxy sample, which the old K ladder silently varied).
+
+MEASURED.
+- Assembly is arithmetically correct: Fisher identity corr 0.9993–0.99995; ~50 exact-mixture
+  one-node "oracle" configurations return the Bartlett ratio 0.92–1.01; a float64 CPU control
+  moves `s_i` by rms 1.7e-4 and the ratio not at all; δ swept 8× changes nothing.
+- NOT the detection channel or the population terms (controlled ablation; `<s>_sel`=0.0452
+  converged over five stencil widths at 200k scenes, `I_sel`~0.001).
+- NOT a node-level heavy tail: the extreme `|phi'|` (to 3e5) hold ~4e-7 of the posterior
+  weight; winsorising and weight-truncation both leave the ratio put.
+- The failure IS concentrated across GALAXIES: top 1% carry 39–46% of the denominator sum;
+  score variance falls 35–50× bright→faint and ~110× across ESS quintiles.
+- Single-bank `s_i` is 82–99% bank Monte-Carlo noise (independent half-bank corr 0.02–0.24);
+  per-galaxy `I_i` has no reproducible content at all (corr −0.10 to +0.14).
+- The whole signature reproduces with NO FLOW: a 2-D Gaussian emission in the same code path
+  gives ratio 7–30 and `ghat` pinned near 0.005, purely by narrowing the emission against the
+  bank spacing. Reproduces also on a second seed and a second architecture.
+- Denominator-free statement of the failure: `ghat(0.05) - ghat(0)` = +0.00138 ± 0.00183 over
+  six bank sizes 500–20000, i.e. 2.8% of truth; `m` = −90.7% ± 2.5% at N=20,000. The
+  NUMERATOR is sound (0.13σ from zero at g=0 with 10,301 detected; 3.7σ signal at g=0.05).
+
+RETRACTED under cross-examination, within this round: "the reproducible part of `s` also
+fails the identity" (it agrees at 0.6–1.6σ once se(`<I>`) is propagated) and "more nodes will
+never fix this" (a variance-exponent-vs-sd-law slip; signal grows K^0.87–1.14 against noise
+K^0.26–0.33, and 500–20000 is entirely pre-asymptotic). The "de-duplicate the bank"
+prescription is refuted at realistic emission dimension.
+
+LIMITATION THAT INVALIDATES THE HEADLINE DIAGNOSTIC. `<I>` is a cancellation of two O(75–135)
+terms differing by a few percent, is consistent with zero at K>=4000, and its standard error
+GROWS with K. The Bartlett ratio is therefore 1/(an unmeasured quantity): across five runs at
+the same checkpoint and g=0 it read +7.5, +16.3, −26.3, −20.0, +11.1. Do not compare ratios
+across runs, and do not read their K-dependence as physics. Also: `closure_v2_lagrangian.py`
+and `diag5c_detablation.py` never seed the `xhat` draw, so their cross-K rows redrew the data;
+`drift_5_9b` has never been applied here, so every g=0.05 comparison to 1 is uncorrected.
+
+VERDICT. Cause NOT settled — seven mechanisms ruled out cumulatively (add detection/population
+terms and precision to the five from cont.165). The mixture/bank-coverage hypothesis is
+consistent with everything and tested by nothing. A second, untested hypothesis is now on the
+table: the flow's log-density is evaluated far off its training manifold (mismatched
+galaxy/scene pairs, log-weight deficits to −707, top-weight nodes still 4.65σ out) and its
+shear response is supervised only through the mean head, so the density's *shape* response is
+unsupervised. The Gaussian control has a shear-independent covariance and is structurally
+incapable of testing that, so "the flow is innocent" over-reaches; the supported statement is
+"a bank effect alone suffices in a model with no such channel".
+
+SCIENCE IMPACT: none on certified numbers. Gold-v1 (+0.245%) and fiducial Gold-V2
+(−0.123 ± 0.152%) come from the §5A transport route, which forms no score, no `I_i`, no node
+bank, and never evaluates the flow at a mismatched (galaxy, scene) pair. Confined to §5C.
+
+NEXT. (1) Decisive, one-line change: draw the test data FROM the estimator's own K-component
+mixture, where the identity must hold EXACTLY at g=0 for any K/ESS/tail. (2) Split
+`dphi/dgamma` into mean-shift vs density-shape channels. (3) Only if the bank is confirmed:
+a per-galaxy localised proposal, accepted on whether half-to-half noise falls like 1/K.
+
+## cont.166-phi-anatomy (2026-07-31) the §5C failure is NOT round-off and NOT the phi' tail
+
+Added `scripts/diag5c_phianatomy.py`, `jobs/job_diag5c_phianatomy.sh` (job 15413756).
+Four runs on `forward_ens_lr250_swa8_seed421_joint.pt`, g_true=0, delta swept
+0.02/0.01/0.005/0.0025: K=2000 at `--gal-offset 2000` (reference sample) plus a K ladder
+500/2000/6000 with galaxies PINNED at `--gal-offset 10000`.
+
+- `<I>` is a CANCELLATION, not a small number. At K=2000 (pinned) `-E_w[phi'']`=+74.45 and
+  `Var_w(phi')`=+77.37, so `<I>` = -2.92, a 4% residual of two O(75) terms. The Bartlett
+  ratio is meaningless as a relative error while the denominator is a near-zero difference;
+  its swings (+7.5 in job 15412224 vs -26.3 here on the same configuration but a different
+  xhat draw) are that cancellation moving, not the components moving.
+- Everything DIVERGES with K, pinned galaxies: `-E_w[phi'']` 27.96 -> 74.45 -> 120.21 and
+  `Var_w(phi')` 38.73 -> 77.37 -> 134.75 for K = 500 -> 2000 -> 6000, with `Var(s)` 54.8 ->
+  73.3 -> 97.2 and ESS 16.5 -> 34.9 -> 69.4. Nothing has converged; the bank is nowhere
+  near enough scenes.
+- WHERE THE VARIANCE LIVES: the nodes holding the top 90% of posterior weight (76 of 2000)
+  carry 79.9% of the `Var_w(phi')` terms and the top-99%-weight nodes carry 97.0%. The
+  variance tracks weight. The extreme phi' really are weightless (top-20 |phi'| nodes hold
+  mean weight 4e-7 at K=6000; weighted p99 of |phi'| is 47 against 482 unweighted), which
+  is why winsorising did nothing -- but that also kills the tail as an explanation.
+  Weight-truncation confirms it: keeping only the top-99.9%/99% weight leaves the ratio at
+  -26.2/-47.5.
+- NOT NUMERICAL. float64 CPU control (50 galaxies x K nodes, both f32-quantized and f64
+  inputs): measured float32 error in phi is rms 2.7e-4 (~100x the 1-ulp estimate), and it
+  changes `s_i` by 1.7e-4 rms, `Var_w(phi')` by 0.08 of 162, `E_w[phi'']` by 0.14 of 109 --
+  the Bartlett ratio is identical to 4 digits (-2.093 vs -2.093; -9.515 vs -9.481 at
+  K=6000). Across the delta sweep the high-weight-node medians move by 1e-3 (phi') and
+  3e-2 (phi''), and `Var_w`/`E_w[phi'']` move ~1%. TF32 is off for matmul.
+- WHAT MAKES phi' BIG: per-galaxy corr(log10|phi'|, log-weight deficit) median -0.45 to
+  -0.55; the |phi'|>200 population sits at deficit < -100 and carries total weight 0.0000.
+  corr with `||xhat - mu(ctx)||` is weaker (+0.17 to +0.21). Huge phi' = "this node is a
+  terrible explanation of this datum", harmless by itself.
+
+INFERRED (not measured): the excess is genuine structure of the K-component mixture score,
+consistent with the curse-of-dimensionality hypothesis. Next measurement: whether the
+components converge in K at all (extend the ladder to 3e4-1e5 nodes with pinned galaxies)
+and whether an analytic/AD phi' changes the picture (it should not, per the delta sweep).
+
+## cont.166-det-ablation (2026-07-31) the §5C failure is NOT the detection channel
+
+Added `scripts/diag5c_detablation.py`, `jobs/job_diag5c_detabl_main.sh`,
+`jobs/job_diag5c_detabl_null.sh` (jobs 15413463, 15413464). Four configurations of the same
+closure on `forward_ens_lr250_swa8_seed421_joint.pt`, delta=0.01, `--gal-offset 40000`:
+full (flow+Pdet, detected data, population terms), meas (flow only, ALL galaxies, no
+population terms), meas+ and full0 (the two half-controls).
+
+- The Bartlett ratio Var(s-<s>_sel)/(<I>-I_sel) is far from 1 in ALL FOUR, including the
+  clean measurement-only sub-problem: K=2000 g=0 gives 16.3 (full) / 26.6 (meas);
+  K=10000 g=0 gives 3.50 / 5.32. Detection is not the story; if anything it makes the
+  ratio smaller by adding curvature.
+- Population terms recomputed on 200,000 scenes and swept over delta 0.04-0.0025:
+  <s>_sel = +0.045211 (6 digits stable), I_sel = +0.00096. The K=2000 value 0.0442 was
+  already converged to 0.001. Dropping them (full0) moves the ratio only in the 4th digit.
+  They are ~20% of the numerator's standard error and cannot fix anything.
+- NULL at N_detected = 10,301: <s> - <s>_sel = +0.010 +- 0.079, i.e. UNBIASED at g=0.
+  The numerator is not the defect.
+- At g_true = 0.05, N = 10,320: numerator +0.291 +- 0.078, so d<s>/dg = 5.6 +- 2.2, while
+  Var(s) = 62.5. ghat(5.9) = 0.00466 +- 0.00124 => m = -90.7% +- 2.5%: a significant,
+  reproducible ~11x deficit, not noise.
+- d log Pdet/dg across nodes: mean +0.044, sd 0.019, range [0.001, 0.187] -- perfectly
+  behaved. d log p_flow/dg across pairs: sd 250-400, |.| p50 = 3.6, max up to 6.9e5.
+  The pathology is entirely in the flow's log-density derivative.
+
+Next: the remaining suspect is the K-component mixture score (ESS 38 at K=2000, 127 at
+K=10000) in an ~18-dim latent, not the detection head.
+
 ## cont.165 (2026-07-31) §5C closure on Gold-V2 FAILS: the estimator recovers no shear signal
 
 Switched from the V1 shape flow to the Gold-V2 joint forward model at the owner's
