@@ -7,6 +7,93 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
+## cont.164 (2026-07-31) INFERENCE.md §5C implemented: the Lagrangian score, exact against A.7's closed forms
+
+User: "we can try to implement 5C now. can you read it again -- also MATH.md and form a plan".
+
+WHAT §5C IS, AND WHY IT IS NOT OPTIONAL. §5C is not an alternative estimator — §5C.1 is
+titled "The same model, reparametrized" and states that (1.1) and (5.4) are the same
+integral. Shear acts on the prior SAMPLES rather than on the prior DENSITY, so `p_0` is
+needed only as a sampler. What that buys is concrete, and two of the three items are live
+defects in the existing §5B code rather than refinements:
+
+  1. `score_inference.py` has NO detection channel. `MATH.md` §7(a) measures the omitted
+     channel at 17–760% of the score, reversing its sign at one of four test points.
+  2. It has NO `I_sel`. A.7 gives the closed form: at a cut on the median `I_sel/I = 2/pi`,
+     so "an estimator that centres the score but leaves the denominator alone reports
+     m = -64%". For a spin-2 shear the NUMERATOR term `<s>_sel` averages away by
+     orientation and `I_sel` is the only selection term left (§5B.2) — i.e. the one we are
+     missing is precisely the one that survives for us.
+  3. Its latent is capped at a 2-D isotropic shape grid, because the Eulerian generator
+     needs `grad log p_0` in closed differentiable form. That is the requirement §5C removes.
+
+FILES. New `sbs_shear/lagrangian_score.py` (assembly of (5.8)/(5.9) from one scalar curve
+per (object, node) plus one for the population), new `tests/test_lagrangian_score.py`
+(10 tests), new `scripts/check_lagrangian_agreement.py` + `jobs/job_lagrangian_check.sh`.
+`sbs_shear/posterior_shape.py` gains `log_likelihood(..., shift_rows=)`. `INFERENCE.md` and
+`MATH.md` synced into the branch from the main working tree (the branch copy predated
+§5C.5, so the equation tags the code cites did not resolve here).
+
+DESIGN CALL: finite differences, not autograd. §5C.5 point 1 blesses "a central second
+difference in gamma at fixed node", because holding the node fixed IS common random
+numbers. So v1 needs no JVP through the flow — 3 `log_prob` evaluations per axis (5 with
+Richardson) — and `grad^2 log p_flow` is never formed. Posterior weights are just
+`softmax(phi_k(0))`, since `phi_k(0) = log L_k + log Pdet_k`.
+
+VALIDATION (login node, `py31`; the whole suite is 34 passed). Everything is asserted
+against A.7's closed forms, so these are exact statements, not regression values:
+
+      s_i = y/nu^2 and I_i = 1/nu^2                            to 1e-6
+      <s>_sel = lambda/nu, I_sel = lambda(lambda-a)/nu^2       to 1e-5
+      A.7b's own check  I - I_sel = Var[y|y>c]/nu^4            to 1e-5
+      full estimator == the one built from analytic ingredients to 1e-5
+
+  m = +1.224% for (5.8) and -1.303% for (5.9) at gamma = 0.05 is the exact value of the
+  single Newton step (`MATH.md` A2), converged: node count 601->2401, span 8->10, delta
+  0.01->0.002, n 20k->200k all move it by <0.03%.
+
+  Centring, both moments: uncentred m = +1773%; numerator-only centring gives exactly
+  `-I_sel/I = -68.7%`. (5.9b) predicts the gap between the two estimators to 2%.
+
+  `P_det`: including it in the curve reproduces direct `d_gamma log A` to 1e-6; keeping
+  `P_det` in the WEIGHTS but dropping its derivative — the §5C.2 transcription trap — is an
+  O(1) error that flips a sign.
+
+TWO NOTES ON `MATH.md` §7, both minor and neither affecting the maths. §7(a)'s exact digits
+need a sigmoid whose parameters the document does not state, so the test reproduces the
+claim with a stated sigmoid rather than the digits; the structure is confirmed, including
+that "without P_det" means keeping it in the weights and dropping its derivative. §7(b)'s
+central values (-0.8% / -3.3%) sit about 2.5 sigma of their own quoted error from the
+converged +1.224% / -1.303%; their DIFFERENCE (-2.5%) agrees with (5.9b) on both sides, so
+this looks like Monte-Carlo scatter in the quoted run rather than a discrepancy.
+
+ONE REAL TRAP FOUND IN EXISTING CODE. `posterior_shape.log_likelihood` row-max-shifts its
+output. That is exact for anything reweighting over the grid (softmax is shift-invariant)
+and is what keeps fp16 in range — but it is wrong for §5C, where the same rows are compared
+across a family of sheared grids: the row maximum itself moves with gamma, so differencing
+shifted rows puts `-dM/dgamma`, a nonzero per-row constant, straight into `s_i`. Now
+opt-out via `shift_rows=False`, which refuses fp16 because the guard being disabled is
+exactly the shift.
+
+COMMANDS. `python -m pytest tests/ -q` (34 passed, 93 s, `py31` — note `sims1` has no
+pytest installed despite CLAUDE.md; worth fixing). Job 15390873 =
+`ROWS=100000 sbatch --gpus-per-node=a40:1 jobs/job_lagrangian_check.sh`.
+
+LIMITATIONS. Validated on the A.7 Gaussian toy only. Nothing here has yet touched the real
+flow: §5C.5 cross-check (i) — the object-by-object Eulerian/Lagrangian agreement — is job
+15390873 and its result is NOT in this entry. The shape channel is the only place both
+forms are computable, so a pass validates the reparametrization, not the full (5.8)
+estimator. `P_det` and the population terms are stage 4; the multi-dimensional latent that
+is §5C's actual payoff is stage 5 and needs an owner decision on the scene sampler.
+
+NEXT. (1) Read job 15390873. (2) Stage 4: wire the trained selection model in as `P_det`
+inside the curve, add `<s>_sel`/`I_sel` from the same node bank pushed through `S_gamma`,
+and re-run `null`/`constgold` — this is where the missing `I_sel` becomes a number.
+(3) Stage 5: prior-as-sampler over intrinsic (shape, size, flux, sersic, neighbour scalars),
+which is the structural reason to have done any of this. (4) §5C.3's injection already
+exists in the Eulerian code (`blend_stencil_on_grid`); once the population terms exist it
+must ALSO shift `P_pass` (§5C.5 point 3), or selection and blending do not compose.
+
 ## cont.163 (2026-07-27) `figv2_fig3`'s -0.46% is a CANCELLATION: its own dumps give +3.49% on the acceptance population
 
 User challenged cont.162 — "is this transport? not sure I believe it. check out
