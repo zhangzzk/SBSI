@@ -281,6 +281,13 @@ def main():
     # ---- generate synthetic data FROM the model at the true shear ---------------------
     g_true = (0.0, float(args.gamma))
     ctx_g, pdet_g = scene_context(model, gal_df, gal_intr, g_true, pre, nbr_std, dev)
+    # SEED THE DATA DRAW.  Without this every rung of a bank-size ladder run as a separate
+    # process also redrew xhat, so K and the data realisation moved together and no ladder
+    # was interpretable (found in the cont.166 audit).  The Bernoulli below already had its
+    # own generator; the flow sample did not.
+    torch.manual_seed(args.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(args.seed)
     with torch.no_grad():
         xhat = model.mean_flow.sample(ctx_g, n_samples=1)
         if xhat.dim() == 3:
