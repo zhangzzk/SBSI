@@ -381,7 +381,7 @@ def _weighted_score(ll_t, log_prior, u, extra, gamma):
 
 
 def scores_from_loglike(loglike, nodes, chunk=65536, device=None, extra=None,
-                        extra_hess=None, analytic_info=False, diag=None):
+                        extra_hess=None, analytic_info=False, diag=None, log_det=None):
     """Turn per-node log-likelihoods into `(s_i, I_i)`.
 
     `loglike`: `(N,G)` array holding `log p_flow(ehat_i | e_k, rest)` up to a per-row
@@ -394,6 +394,15 @@ def scores_from_loglike(loglike, nodes, chunk=65536, device=None, extra=None,
     agree on the plain model and the finite difference is the one that survives the
     injection.
 
+    `log_det`: optional `(G,)` or `(N,G)` log detection probability at each node --
+    §5B.1(iii).  Detection is NOT determined by `xhat`, so unlike the cut it does NOT
+    cancel from the per-object posterior and must multiply the weights.  It is a function
+    of the node's TRUE properties, which do not move with gamma in the Eulerian picture
+    (the nodes are fixed and the density slides over them), so the same vector is added to
+    the base AND the shifted log-priors.  Omitting it was the first of the three defects
+    `WORKLOG.md` cont.164 lists against this module; `MATH.md` §7(a) measures the missing
+    channel at 17-760% of the score, with a sign reversal at one of four test points.
+
     Returns `(s (N,2), info (N,2,2), log_evidence (N,))`.  Individual `info` entries may
     be negative; only their sum is the Fisher information (2.4), which is why (2.6) sums
     numerator and denominator separately rather than averaging per-object ratios.
@@ -405,6 +414,18 @@ def scores_from_loglike(loglike, nodes, chunk=65536, device=None, extra=None,
     du = T(nodes.du.reshape(-1, 4))
     lp = T(np.where(nodes.support, nodes.log_prior, -np.inf))                  # (G,)
     sh = {k: (T(v[0]), T(v[1])) for k, v in nodes.shifted.items()}
+    # detection multiplies the weights everywhere the prior does, and is gamma-independent
+    ld_rows = None
+    if log_det is not None:
+        ld = np.asarray(log_det, dtype=np.float64)
+        if ld.ndim == 1:
+            ldt = T(ld)
+            lp = lp + ldt
+            sh = {k: (v[0] + ldt, v[1]) for k, v in sh.items()}
+        elif ld.ndim == 2:
+            ld_rows = ld                                   # (N,G): folded in per chunk
+        else:
+            raise ValueError("log_det must be (G,) or (N,G)")
     d = nodes.info_delta
     n = loglike.shape[0]
     s_out = np.empty((n, 2), dtype=np.float64)
@@ -418,6 +439,11 @@ def scores_from_loglike(loglike, nodes, chunk=65536, device=None, extra=None,
         if not arr.flags.writeable:
             arr = arr.copy()
         ll_t = torch.as_tensor(arr, device=dev).float()
+        if ld_rows is not None:
+            # a per-(galaxy, node) constant shifts the log-weight identically whether it
+            # is carried on the likelihood or the prior side, and this way the SAME shift
+            # is seen by all four shifted-bank evaluations below.
+            ll_t = ll_t + T(ld_rows[start:stop])
         ex = T(extra[start:stop]) if extra is not None else None
         exh = T(extra_hess[start:stop]) if extra_hess is not None else None
         s, w, logz = _weighted_score(ll_t, lp, u, ex, (0.0, 0.0))
@@ -454,8 +480,86 @@ def scores_from_loglike(loglike, nodes, chunk=65536, device=None, extra=None,
 
 
 # --------------------------------------------------------------------------------------
+# the population block -- (5.3)'s second half
+# --------------------------------------------------------------------------------------
+
+def population_terms(nodes, log_pi, **kw):
+    """`(<s>_sel, I_sel)` -- the selection corrections subtracted from EVERY galaxy.
+
+    `log_pi`: `(G,)` log `Pi_k = P_pass * P_det` on the node bank, a function of the
+    node's TRUE properties only.  Returns `(s_sel (2,), i_sel (2,2))`.
+
+    The whole point is that this needs no new machinery.  The population survival factor
+    is
+
+        P(keep | gamma) = Integral p_gamma(x) Pi(x) dx,
+
+    which is the SAME shape of object as a galaxy's evidence with `Pi` playing the part of
+    the likelihood -- so Fisher's identity and Louis's identity apply verbatim,
+
+        <s>_sel = E_Pi[u],      I_sel = -E_Pi[d_gamma u] - Var_Pi(u),
+
+    with `E_Pi` the average under weights proportional to `p_0 * Pi`.  Both are therefore
+    `scores_from_loglike` evaluated on a SINGLE pseudo-galaxy whose log-likelihood is
+    `log Pi`, which also inherits its finite-difference information route and its
+    validated chunking for free.  `A.7` gives the closed forms this is tested against.
+
+    WHY IT MATTERS FOR US.  For a spin-2 shear the numerator term `<s>_sel` averages away
+    by orientation, so `I_sel` is the ONLY selection term that survives -- and it is the
+    one the previous implementation lacked.  A.7 puts it at `I_sel / I = 2/pi` for a cut on
+    the median, i.e. an estimator that centres the score but leaves the denominator alone
+    reports `m = -64%`.  Nothing about that is a small correction.
+    """
+    lp = np.asarray(log_pi, dtype=np.float64)
+    if lp.ndim != 1 or lp.shape[0] != nodes.grid.shape[0]:
+        raise ValueError(f"log_pi must be (G,) with G={nodes.grid.shape[0]}, "
+                         f"got {lp.shape}")
+    s, info, _ = scores_from_loglike(lp[None, :], nodes, **kw)
+    return s[0], info[0]
+
+
+def population_log_pi(pi_per_galaxy):
+    """Collapse a `(N,G)` per-galaxy `Pi` to the `(G,)` the population block wants.
+
+    Needed because this implementation tiles the shape grid against each galaxy's OWN
+    non-shape true properties, so `Pi` is per `(galaxy, node)` rather than per node.  The
+    scene prior is then (shape prior) x (empirical distribution of the other true
+    properties across the catalogue), and marginalising that empirical factor is the plain
+    mean over galaxies at fixed shape node:
+
+        Pi_k^eff = (1/N) sum_i Pi_ik,     P(keep | gamma) = Integral p_gamma(e) Pi^eff(e) de.
+
+    Note this is exactly where §5B.1(i)'s "the node bank is shared across the catalogue"
+    is violated by the V1-shaped bank: with a genuinely shared bank there would be nothing
+    to average.  See `WORKLOG.md` cont.164 defect 3.
+    """
+    pi = np.asarray(pi_per_galaxy, dtype=np.float64)
+    if pi.ndim != 2:
+        raise ValueError("pi_per_galaxy must be (N,G)")
+    return np.log(np.maximum(pi.mean(axis=0), 1e-300))
+
+
+# --------------------------------------------------------------------------------------
 # read-outs
 # --------------------------------------------------------------------------------------
+
+def full_shear_estimate(s, info, s_sel=None, i_sel=None):
+    """(5.3) in full: `ghat = (sum_i s_i - N <s>_sel) . (sum_i I_i - N I_sel)^-1`.
+
+    The 2-D solve, for a shear whose direction is not known per object.  `s` is `(N,2)`,
+    `info` `(N,2,2)`; `s_sel` `(2,)` and `i_sel` `(2,2)` come from `population_terms` and
+    default to zero, which reproduces the previous uncorrected `sum s / sum I`.
+
+    Returns `(ghat (2,), num (2,), den (2,2))` so the caller can report the pieces --
+    which is worth doing, because the selection correction lands almost entirely in `den`.
+    """
+    s = np.asarray(s, dtype=np.float64)
+    info = np.asarray(info, dtype=np.float64)
+    n = s.shape[0]
+    num = s.sum(axis=0) - (n * np.asarray(s_sel, float) if s_sel is not None else 0.0)
+    den = info.sum(axis=0) - (n * np.asarray(i_sel, float) if i_sel is not None else 0.0)
+    return np.linalg.solve(den, num), num, den
+
 
 def project(s, info, ghat1, ghat2):
     """Project `(s, I)` onto the per-object applied-shear direction.
