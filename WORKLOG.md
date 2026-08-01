@@ -7,6 +7,64 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
+## cont.168 (2026-08-01) shape-direction coverage does NOT fix §5C — the last bank idea fails too
+
+Added `scripts/diag5c_shapegrid.py` + `jobs/job_diag5c_shapegrid.sh`. Jobs 15449461/15449462
+(fixed-budget ladder, superseded by its own confound) and 15451498–15451501 (fixed-base
+ladder x marginal/conditional strata). N_gal = 20,000 (~9.9k detected), delta 0.01, 400
+bootstrap resamples over galaxies, seed 11.
+
+MOTIVE. Under `primary_only=True`, `S_g` moves exactly TWO of the ~18 scene coordinates (the
+primary intrinsic e1,e2), so `d/dg log p_hat` is a directional derivative along the shape
+axes alone. If the mixture's lumpiness ALONG THOSE AXES is what the derivative picks up,
+covering them systematically should help. Arm B replaces each base scene's shape with a
+STRATIFIED set of nodes (radii at equal-probability quantiles of empirical |e|, angles
+uniform in the (e1,e2) plane), so every node keeps equal prior weight and `log_prior` stays
+None — no p(e) density to model wrong.
+
+FIRST LADDER WAS CONFOUNDED (15449461/2), recorded because the confound is the lesson. At
+FIXED K the base count M and the shape count nr*na move oppositely, so "more shape nodes"
+and "fewer base scenes" cannot be separated. The gamma=0 null offset tracked BASE COUNT
+(+0.0138 / +0.0125 / +0.0068 / +0.0045 at 100 / 200 / 1000 / 2000 base), not shape count.
+The eye-catching m = -35.7% at the top rung is 1.1σ from baseline once the null is
+subtracted. Do not quote it.
+
+SECOND LADDER, base pinned at 200, shape grid alone growing (jobs 15451498-15451501).
+Null-corrected signal = ghat(0.05) - ghat(0); perfect recovery would be +0.0500.
+
+    shape nodes        4         20         50         98      baseline(20k scenes)
+    marginal      +0.0029    -0.0004    +0.0138    +0.0152        +0.0023
+      +-          0.0041     0.0050     0.0049     0.0062         0.0027
+    conditional   -0.0020    +0.0101    +0.0049    -0.0008        (same baseline)
+      +-          0.0057     0.0047     0.0048     0.0053
+
+VERDICT: NO. Three reasons, strongest first.
+(i) The gamma=0 NULL is broken in EVERY arm-B configuration (+0.002 to +0.017) and
+    conditioning the strata on the base scene's own (Re, mag) bin does NOT close it — with
+    `--cond-bins 4` the top rung's null is WORSE (+0.01736 +- 0.00320, 5.4σ). The predicted
+    cause (broken shape-size correlation from replacing the shape) is therefore REFUTED.
+    The baseline passes its null (+0.00271 +- 0.00194).
+(ii) The apparent win does not reproduce. Marginal top rung +0.0152 +- 0.0062 (2.5σ from
+    zero, 1.9σ above baseline); the SAME rung with conditional strata gives -0.0008 +-
+    0.0053, no signal. A second-order change flips the result.
+(iii) Best case is still m = -70% against truth 0.05. Baseline is -90%.
+
+WHAT IS GENUINELY IN ITS FAVOUR, stated so it is not lost: the RAW gamma=0.05 ghat rises
+monotonically with shape resolution in BOTH variants (marginal 0.0062/0.0161/0.0241,
+conditional 0.0120/0.0134/0.0165 at 20/50/98 nodes), and arm B raises ESS (437 -> 740 at
+equal K). Finer shape coverage does do something mechanically. But in the conditional
+variant the null rises at the same rate, which is a growing additive offset, not signal.
+
+SCOPE. No certified number is touched: Gold-v1 (+0.245%) and fiducial Gold-V2
+(-0.123 +- 0.152%) use the §5A transport route, which forms no score, no `I_i` and no node
+bank. This is §5C only.
+
+CUMULATIVE: four ways of buying a better bank have now failed — bigger (cont.167), self-
+(cont.161), localised proposal (cont.167), and shape-stratified (here). RECOMMENDATION: park
+§5C with the diagnosis written down rather than attempt a fifth. If it is revisited, the
+binding constraint is the arm-B null offset, which is NOT explained by the shape-size
+approximation and is currently unattributed — that is the thing to explain first.
+
 ## cont.167-SETTLED (2026-08-01) the §5C failure is BANK COVERAGE, proved by a forced-answer test; the estimator is correct
 
 Added `scripts/diag5c_{selfmix,chansplit,signalreach,slope,slope_post,localprop,exactpool,

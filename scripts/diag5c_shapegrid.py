@@ -84,7 +84,7 @@ def parse_splits(text):
     return out
 
 
-def shape_grid(e_abs_pool, n_base, n_rad, n_ang, rng, jitter=True):
+def shape_grid(pools, bin_of_base, n_base, n_rad, n_ang, rng, jitter=True):
     """Stratified (e1, e2) nodes for `n_base` base scenes, index = g * n_base + m.
 
     Radii: equal-probability strata of the empirical |e| distribution, so each ring holds
@@ -92,6 +92,11 @@ def shape_grid(e_abs_pool, n_base, n_rad, n_ang, rng, jitter=True):
     per (ring, sector) cell => every node carries weight 1/(n_rad*n_ang), i.e. equal weight.
     With `jitter` the point is drawn uniformly inside its cell (stratified sampling,
     unbiased); without it, the cell centre (a deterministic grid).
+
+    `pools[b]` is the |e| sample defining the strata for base scenes with `bin_of_base == b`.
+    One pool (all base scenes in bin 0) is the marginal p(e); several pools, keyed on the
+    base scene's own (Re, mag) bin, is p(e | size, mag) and keeps the shape-size correlation
+    that the marginal version throws away.
     """
     n_grid = n_rad * n_ang
     total = n_grid * n_base
@@ -103,10 +108,41 @@ def shape_grid(e_abs_pool, n_base, n_rad, n_ang, rng, jitter=True):
     else:
         ur = np.full(total, 0.5)
         ua = np.full(total, 0.5)
-    q = (j + ur) / n_rad                                   # uniform inside the ring's stratum
-    radius = np.quantile(e_abs_pool, np.clip(q, 1e-6, 1 - 1e-6))
+    q = np.clip((j + ur) / n_rad, 1e-6, 1 - 1e-6)          # uniform inside the ring's stratum
+    which = np.tile(np.asarray(bin_of_base, int), n_grid)  # index = g*n_base + m  -> base m
+    radius = np.empty(total, dtype=float)
+    for b, pool in enumerate(pools):
+        sel = which == b
+        if sel.any():
+            radius[sel] = np.quantile(pool, q[sel])
     theta = 2.0 * np.pi * (l + ua) / n_ang
     return radius * np.cos(theta), radius * np.sin(theta)
+
+
+def conditional_pools(pool_df, e_abs, n_bins):
+    """(pools, bin_index_per_pool_row) keyed on quantile bins of (Re_input_p, r_input_p).
+
+    `n_bins <= 1` collapses to the single marginal pool, i.e. p(e|rest) = p(e).
+    """
+    n = len(e_abs)
+    if n_bins <= 1:
+        return [e_abs], np.zeros(n, dtype=int)
+    def qbin(col):
+        v = np.asarray(pool_df[col].to_numpy(float))
+        edges = np.quantile(v[np.isfinite(v)], np.linspace(0, 1, n_bins + 1)[1:-1])
+        return np.clip(np.searchsorted(edges, v), 0, n_bins - 1)
+    idx = qbin("Re_input_p") * n_bins + qbin("r_input_p")
+    pools, remap = [], {}
+    for b in range(n_bins * n_bins):
+        sel = idx == b
+        if sel.sum() >= 50:                # too few to define quantiles -> fall back
+            remap[b] = len(pools)
+            pools.append(e_abs[sel])
+    if not pools:
+        return [e_abs], np.zeros(n, dtype=int)
+    fallback = len(pools)
+    pools.append(e_abs)
+    return pools, np.array([remap.get(int(b), fallback) for b in idx], dtype=int)
 
 
 def arm_numbers(model, xhat, node_df, node_intr, pre, nbr_std, dev, deltas, chunk, n_boot, seed):
@@ -174,13 +210,24 @@ def main():
     ap.add_argument("--no-jitter", action="store_true",
                     help="deterministic cell centres instead of stratified-random points")
     ap.add_argument("--skip-baseline", action="store_true")
+    ap.add_argument("--free-k", action="store_true",
+                    help="allow M*nr*na != --k.  The FIXED-BUDGET ladder confounds shape "
+                         "resolution with base-scene diversity, because at fixed K the two "
+                         "move oppositely -- and the measured gamma=0 null offset tracks BASE "
+                         "COUNT (0.0138/0.0125/0.0068/0.0045 for 100/200/1000/2000 base, job "
+                         "15449461).  Hold M fixed and grow nr*na alone to separate them.")
+    ap.add_argument("--cond-bins", type=int, default=0,
+                    help="draw each base scene's |e| strata from the empirical |e| WITHIN its "
+                         "own (Re, mag) bin, using this many quantile bins per axis.  0 = the "
+                         "marginal |e| (assumes p(e|rest)=p(e)).  This is the direct test of "
+                         "whether that assumption is what breaks arm B's null.")
     args = ap.parse_args()
 
     splits = parse_splits(args.splits)
     for (m, nr, na) in splits:
-        if m * nr * na != args.k:
+        if m * nr * na != args.k and not args.free_k:
             raise SystemExit(f"split {m}x{nr}x{na} = {m * nr * na} != --k {args.k}; "
-                             "the whole point is a FIXED budget")
+                             "pass --free-k for the fixed-base ladder")
 
     dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model, pre, nbr_std, tgt_std, meta = rebuild(args.checkpoint, dev)
@@ -234,16 +281,21 @@ def main():
     # empirical intrinsic |e| for the strata, from the node pool
     e1p, e2p = intrinsic_shape(pool, "p")
     e_abs = np.hypot(np.asarray(e1p, float), np.asarray(e2p, float))
-    e_abs = e_abs[np.isfinite(e_abs)]
+    finite = np.isfinite(e_abs)
+    e_abs, pool_f = e_abs[finite], pool.loc[finite].reset_index(drop=True)
+    pools, bin_of_row = conditional_pools(pool_f, e_abs, args.cond_bins)
     print(f"\n  intrinsic |e| pool: n={len(e_abs):,} median={np.median(e_abs):.4f} "
-          f"p90={np.quantile(e_abs, 0.9):.4f}\n", flush=True)
+          f"p90={np.quantile(e_abs, 0.9):.4f}   strata pools={len(pools)} "
+          f"(cond_bins={args.cond_bins}: {'p(e|Re,mag)' if args.cond_bins > 1 else 'marginal p(e)'})\n",
+          flush=True)
 
     rng = np.random.default_rng(args.seed + 1)
     for (m, nr, na) in splits:
-        base = pool.iloc[:m].reset_index(drop=True)
+        base = pool_f.iloc[:m].reset_index(drop=True)
         n_grid = nr * na
         frame = pd.concat([base] * n_grid, ignore_index=True)   # index = g*m + row
-        ge1, ge2 = shape_grid(e_abs, m, nr, na, rng, jitter=not args.no_jitter)
+        ge1, ge2 = shape_grid(pools, bin_of_row[:m], m, nr, na, rng,
+                              jitter=not args.no_jitter)
         b1s, b2s = intrinsic_shape(base, "s")
         intr = {"e1p": ge1, "e2p": ge2,
                 "e1s": np.tile(np.asarray(b1s, float), n_grid),
@@ -253,11 +305,15 @@ def main():
         report(f"B {m}base x {nr}x{na}shape", res, args.gamma)
         del frame, intr
 
-    print("\n  Read the TREND across the ladder, not any single row.  Arm B trades scene")
-    print("  diversity for shape resolution at fixed cost.  Ratio moving toward 1 as the")
-    print("  shape grid grows => the shear-direction lumpiness is the lever.  Flat => it is")
-    print("  not, and no proposal that only reorganises WHERE the nodes sit will fix (5.9).")
-    print("  Arm B additionally assumes p(e|rest) = p(e); a LOSS is confounded with that.")
+    print("\n  Read the TREND across the ladder, and read it against the gamma=0 NULL run.")
+    print("  Job 15449461/15449462 (fixed-budget ladder) showed every arm-B rung failing the")
+    print("  null by an offset that tracks BASE COUNT, not shape count, so a fixed-budget")
+    print("  ladder cannot attribute a change to shape resolution: M and nr*na move")
+    print("  oppositely.  With --free-k and M held fixed, base diversity is constant and the")
+    print("  null offset should be too; only then does a trend in ghat mean shape coverage.")
+    print("  --cond-bins > 1 tests the other half: whether p(e|rest)=p(e) is what broke the")
+    print("  null.  Null closes AND signal survives => real; both collapse => it was the")
+    print("  approximation all along.")
     return 0
 
 
