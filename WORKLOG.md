@@ -7,6 +7,86 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
+## cont.173 (2026-08-01) §5B inference COMPLETED and certified against A.7; end-to-end run confirms §5B.2's isotropy prediction but does NOT close (residual −13.2% ± 5.3%)
+
+User: "keep going until the full inference is done". Closes two of the three cont.164 defects.
+
+### Machinery (certified)
+
+`sbs_shear/score_inference.py`:
+- `scores_from_loglike(..., log_det=)` — the DETECTION channel, `(G,)` or `(N,G)`. Detection
+  is not determined by `xhat` so it does not cancel from the per-object posterior
+  (§5B.1(iii)); it is gamma-independent in the Eulerian picture, so the same vector enters
+  the base and all four shifted banks.
+- `population_terms` — `<s>_sel = E_Pi[u]`, `I_sel = -E_Pi[d_gamma u] - Var_Pi(u)`.
+  `P(keep|gamma) = Int p_gamma Pi` is the same shape of object as a galaxy's evidence with
+  `Pi` in place of the likelihood, so this is `scores_from_loglike` on ONE pseudo-row and
+  inherits the validated finite-difference information route unchanged.
+- `population_log_pi`, `full_shear_estimate` (the 2-D solve).
+
+`tests/test_population_terms.py` (12 tests) drives the PRODUCTION functions through a node
+bank carrying A.7's shift family — a reimplementation would test nothing. All exact against
+A.7: `s_i = y/nu^2`, `I_i = 1/nu^2`, `<s>_sel = lambda/nu`, `I_sel = lambda(lambda-a)/nu^2`
+at four cut positions, A.7b's `I - I_sel = Var[y|y>c]/nu^4`, `I_sel/I = 2/pi` at the median,
+the detection channel's exact conjugate shift, unbiasedness under a cut, and the headline
+`m = -64%` penalty for centring the numerator but not the denominator — cont.164 defect 2
+reproduced from production code. Whole suite: 46 passed.
+
+### End-to-end run (job 15474218, a40-16gb, 14 min)
+
+`scripts/eval_score_select.py` + `jobs/job_score_select.sh`. Closure at `g = +0.02` on the
+certified V1 flow, 400k rows, G=2765. Cut `|xhat| < 0.6` keeps 76.6%. The cut is on a flow
+OUTPUT because otherwise `P_pass` does not exist (§4.7) — and being isotropic it is exactly
+the case §5B.2 makes a prediction about. `Pi_k` from 256 rows x 2765 nodes x 8 draws x 4
+reps = 22.7M draws.
+
+      UNCUT CONTROL           m = +2.98% +/- 4.28%     <- the baseline; read the rest against
+                                                          THIS, not against zero
+      cut, no correction      m = -25.50% +/- 4.69%
+      cut, numerator only     m = -30.94% +/- 4.69%
+      cut, FULL (5.3)         m = -13.23% +/- 5.26%
+
+      <s>_sel = [+0.0041 +/- 0.0054, +0.0076 +/- 0.0047]   -> 0.8 and 1.6 sigma from ZERO
+      I_sel   = diag(0.757, 0.767), off-diagonal/diagonal = 0.022
+      I_sel / <I> = 0.204
+
+WHAT IS ESTABLISHED. §5B.2's central claim about spin-2 selection is CONFIRMED on the real
+flow: for an isotropic cut the numerator correction is consistent with zero in both
+components, and `I_sel` — isotropic to 2% — carries the effect. The correction is large
+(20% of `<I>`) and moves `ghat` by exactly the predicted arithmetic factor `1/(1-0.204) =
+1.256` (measured 0.01381 -> 0.01735, ratio 1.256). The estimator does what the algebra says.
+
+WHAT IS NOT. **It does not close.** The corrected cut answer is −13.2% ± 5.3% against an
+uncut baseline of +2.98% ± 4.28% — a residual gap of ~16%, about 2.4 sigma. The full
+correction recovers roughly half of the −25.5% the cut introduces, not all of it. Do not
+read this as a working selection calibration.
+
+LEADING SUSPECT, and it is concrete: `Pi`'s own normalisation is inconsistent. Its
+prior-weighted mean is 0.743 while the cut actually keeps 0.766 — a 2.3% mismatch, and
+`I_sel` is a second derivative of `log` of that quantity. The likely cause is that `Pi` is
+averaged over only 256 catalogue rows for the non-shape true properties, while the closure
+data draw shapes from the prior over all 400k. Next step is to raise `--pi-rows` and check
+whether the mismatch and the residual shrink together.
+
+### Two Pi-estimator traps found and fixed (both would have silently corrupted the answer)
+
+1. INDEPENDENT Bernoulli noise per node does NOT average out of `<s>_sel`, because that
+   quantity is a near-cancelling ratio of integrals. A 16-draw pilot produced a spurious
+   `<s>_sel = 0.049` that removed two thirds of the estimator's numerator. Fixed with
+   common random numbers across nodes (same latents at every node).
+2. The split-half-over-ROWS error bar that CRN then invites cannot see the shared-latent
+   realisation error — both halves carry the same latents. It reported 34 sigma for a
+   quantity that is zero by symmetry. This is the same trap §5B.4 records for nested
+   ladders, met one level down. Error bars now come from independent replicates.
+
+### Still open
+
+cont.164 defect 3 is untouched: the node bank is a 2-D isotropic SHAPE grid, so this does
+not reach the 4-D V2 model, and a measured size/mag cut remains impossible here because
+those are the V1 flow's inputs rather than its outputs (§4.7). The detection channel is
+implemented and unit-tested but is NOT exercised by this run (closure data have no
+detection step, and `detection_classifier.py` is still a stub).
+
 ## cont.172 (2026-08-01) §5C archived; §5B gate PASSES for the shape channel — and cont.171's own existence condition (5.3d) was wrong
 
 User: "now archive the 5C work and start working on 5B".
