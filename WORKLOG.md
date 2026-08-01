@@ -7,6 +7,221 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
+## cont.170 (2026-08-01) §5C IS STRUCTURALLY DEAD as written: fact (b) survives removing BOTH setup defects; the pathology is phi' itself, not the bank
+
+Multi-agent round (3 probes + 3 adversarial verifiers + synthesis) followed by one decisive
+control. Added `scripts/diag5c_bankctl.py` + `jobs/job_diag5c_bankctl.sh` and the probe/verify
+scripts `diag5c_{probeA_spread,probeA2_tail,probeA3_delta,probeB_integrand,probeB2_tail,
+probeB3_response,tailC,verifyR_snis,verifyR2_scene,verifyV_tailcheck}.py`. Jobs 15460992,
+15461010, 15461075, 15461552, 15462216, 15462371, 15462550, 15463165, 15463374, 15463435,
+15463611, 15463970, 15464605, 15465523. Detail entries: cont.169-probeA, cont.169-verifyR.
+
+### TWO DEFECTS IN MY OWN SCRIPTS, FOUND AND NOW CONTROLLED
+
+D1 BANK DUPLICATION. The catalogue is pair-annotated: 8.19 rows share each `input_index` and
+   within a group the PRIMARY IS BYTE-IDENTICAL (within-group sd of `Re_input_p`,
+   `axis_ratio_input_p`, `sersic_n_input_p`, `measured_x_image` all exactly 0) -- only the
+   annotated neighbour differs. A 20,000-ROW bank is 2,456 DISTINCT SCENES. ESS overcounts by
+   r_eff = 4.27-4.47, flat in K.
+D2 NO `true_cut`. `closure_v2_lagrangian.py:246-255` filters rows by the checkpoint's own
+   `true_cut` (Re>0.3 & mag<26, keeps 40.4%) because the model was TRAINED only on passing
+   rows. `diag5c_repro.py` and `diag5c_shapegrid.py` DO NOT. cont.168 and cont.169 therefore
+   evaluated the flow OUT OF DOMAIN throughout. Both are now controlled, not just noted.
+
+### THE CONTROL (job 15465523): disjoint-equal-block ladder, 3 legs, outcome map fixed in advance
+
+Pool 10,000 nodes, N_gal 20,000, delta 0.01, seed 11. `noise(B) = <(s_m - s_m')^2>/2` over
+DISJOINT blocks and galaxies -- assumption-light, and it carries realisation error bars, which
+the retired nested ladder could not.
+
+    leg                          ESS    Hill    noise B=250 -> B=5000        exponent   tame
+    L0 as-is (dup, no cut)      233.2   0.908   5699+-23070 -> 242            -0.843    -0.382
+    L1 deduplicated             309.1   1.324   19.9+-3.1  -> 36.8            +0.204    -0.452
+    L2 dedup + true_cut         107.3   1.379   57.0+-4.6  -> 118.0           +0.243    -0.440
+
+Monte Carlo would be -1. L0's -0.843 is an ARTEFACT of its B=250 rung, whose sd (23,070) is
+four times its mean -- a handful of catastrophic galaxies. Do not quote it. L1 and L2 are
+clean, monotone and tight: the noise RISES by 85% (L1) and 107% (L2) across a 20x range in
+bank size, far outside the +-3-5 error bars.
+
+VERDICT against the pre-registered outcome map: this is the second branch. Removing bank
+duplication changes the LEVEL (L0's chaotic 122-242 -> L1's orderly 20-37) and cleans up the
+statistics, but the EXPONENT STAYS FIRMLY POSITIVE and the Hill index stays ~1.3-1.4, well
+below the alpha=2 needed for a finite second moment. Applying `true_cut` on top makes the
+level WORSE (57-118) and the exponent slightly more positive, and lowers ESS 309 -> 107.
+**Staying inside the model's training domain does not help.**
+
+THE CONTRAST THAT CARRIES THE VERDICT. Same bank, same weights, same galaxies: a tame
+integrand (the node's own true `e1_p`) averages DOWN at exponent -0.44 to -0.45 in every leg,
+while phi' averages UP. The weights are fine; the integrand is not.
+
+### CONCLUSION
+
+`Var_w(phi')` has no population limit (Hill alpha ~ 1.3 < 2), so the self-normalising
+denominator of (5.9) has nothing to converge to. This is now measured deduplicated, in-domain,
+with realisation error bars, and it is NOT a finite-difference artefact (O(delta^2)
+convergence; Richardson delta->0 gives 35.23 vs 34.75 at delta=0.01, +1.4%; an 8x delta sweep
+moves the Hill index 0.959/0.958/0.957). **Bank engineering is closed as a lever** -- bigger
+(cont.167), self- (cont.161), localised (cont.167), shape-stratified (cont.168), deduplicated
+and in-domain (here) have all failed. §5C in its current form is not repairable by choosing
+better nodes.
+
+### ALSO ESTABLISHED THIS ROUND
+
+- FACT (a) EXPLAINED, and my "92-94% bank-specific" reading RETRACTED as an average hiding a
+  split. By ESS quartile at K=20,000: <ESS> 17.5/112.4/441.6/1189.1, Var(phi') 132.2/5.55/
+  0.935/0.225, corr_AB 0.064/0.265/0.762/0.919. The best three quarters are 76-92%
+  reproducible; the worst quarter carries 95.2% of the variance and drags the global number to
+  0.084. Variance-weighted mean correlation 0.079 vs global 0.084.
+- THE FLOW'S OFF-SUPPORT TAIL IS EXONERATED, by arithmetic not sampling: `w_k <= exp(deficit_k)`
+  verified with 0 violations in 198,360,000 pairs; deleting every node with deficit < -10 moves
+  Var(s) 34.7496 -> 34.7478 (0.005%); per-galaxy max weight in the two worst deficit bins is
+  exactly 0. "More nodes -> more tail -> more spread" is dead.
+- THE WEIGHTS CARRY THE SHEAR SIGNAL: `d<E_w[e2_p]>/dgamma = +0.1189 +- 0.0284` (4.2σ,
+  own-mask like-for-like) at K=20,000, against a shrinkage-implied ~0.15. phi's own
+  information is I = 5.01 +- 1.72 (2.9σ). So the information is there; phi' is what destroys
+  it, via Var(s)=34.75 against I=5.01.
+- The DETECTION channel remains negligible (cont.169), now at every leg.
+
+### REFUTED BY THE VERIFIERS -- recorded because the failures are informative
+
+- Probe A's headline "p-q = -0.51 so spread-growth-cancels-averaging is refuted": p-q is the
+  exponent of mean(Var_w)/mean(ESS), not the mean of ratios that actually enters Var(s). The
+  right statistic gives +0.208-0.224 against a measured +0.238. DO NOT QUOTE p, q or p-q.
+- Probe A's "ESS is not the effective sample size": refuted -- the 6-10x offset is D1, a
+  measured K-independent factor 4.4, not a wrong model.
+- Probe A's batch-means "disagreement": circular (the 10x IS the M=10 it divides by).
+- Probe B's "one object explains both facts": an artefact of which average is taken; the exact
+  per-galaxy plug-in RISES x2.03.
+- Probe B's "27σ": a paired-vs-unpaired comparison; like-for-like it is 4.2σ vs 2.9σ.
+- Probe C's quintile variance shares FLIP DIRECTION with K -- do not use them.
+
+### WHAT MUST STILL BE RE-MEASURED BEFORE ANY OF THIS IS A SCIENCE RESULT
+
+No probe ran a gamma != 0 leg: every number here is a gamma=0 variance, and `m ~ -86%` is
+inherited from cont.169, which ran with both defects. Single seed (11), single checkpoint,
+primary-only shear, data drawn from the model itself so there is no misspecification by
+construction. A shape bias needs 16 seeds (AGENTS.md); none of these diagnostics satisfies
+that. Retire `sigma^2_half = Var(s_A) - Cov` (asymmetric: 15.38 vs 7.70 on the two halves).
+
+### NEXT, IF RESUMED
+
+Two options, both giving up self-calibration in exchange for a working estimator:
+(i) a different DENOMINATOR -- trimmed/robust or ESS-gated, since the plain second moment does
+    not exist; note clipping at per-galaxy p95 removes 65% of Var(s) but leaves the exponent at
+    +0.015, so a naive clip is not enough and this needs thought;
+(ii) a different READOUT -- `E_w[e2_p]`, which is a tame integrand (averages down, reproducible,
+    4.2σ shear response) with its response calibrated externally. That reintroduces exactly the
+    external calibration §5C was designed to avoid, and should be presented as such.
+
+SCOPE unchanged. Gold-v1 (+0.245%) and fiducial Gold-V2 (-0.123 +- 0.152%) use the §5A
+transport route, which forms no score and no node bank. Nothing here touches them.
+
+## cont.169-verifyR (2026-08-01) §5C: adversarial check of cont.169-probeA — its numbers reproduce, but "ESS is not the effective sample size" is refuted: the offset is the node bank's 8.14 rows/scene (ESS overcounts by r_eff=4.3, flat in K)
+
+Adversarial verification of the entry below. Added `scripts/diag5c_verifyR_snis.py` +
+`jobs/job_diag5c_verifyR.sh` (job 15463435) and `scripts/diag5c_verifyR2_scene.py` +
+`jobs/job_diag5c_verifyR2.sh` (job 15463611); same bank/galaxies/seed/delta as 15459872.
+Nothing else touched.
+
+WHAT REPRODUCES. Every number quoted by cont.169-probeA appears unrounded in its logs; the
+K=2000/6000/20000 validity check does match job 15459872.
+
+WHAT DOES NOT SURVIVE.
+1. `p-q = -0.51` is the exponent of mean(Var_w)/mean(ESS), not of the predicted noise.
+   Aggregated as it enters Var(s), mean_i[Var_w/ESS] ~ B^+0.208 against a directly measured
+   B^+0.238 — i.e. probe A's own proposed mechanism reproduces the non-averaging it was
+   declared to have failed to explain. Median galaxy: surrogate B^-0.572 vs measured B^-0.576.
+2. The 6-10x level offset is the BANK, not the formula. The pool holds 8.14 rows per
+   `input_index` with byte-identical primaries (within-group sd of Re/axis-ratio/sersic_n
+   = 0), so nodes are not i.i.d. rows: ESS_row/ESS_scene = 4.27/4.31/4.35/4.47 (flat in K).
+   Recomputing the surrogate on the scene as the sampling unit moves pred/meas from
+   0.156-0.202 to 0.384-0.542, with exponent B^+0.224 vs measured B^+0.238.
+3. The "third route disagrees by another ~10x" is the factor M=10 it divides by. Undoing it,
+   Var_block = 21.3/19.1/16.7/20.6 at block sizes 100/200/600/2000 against 18.4/18.3/22.9
+   measured at 500/1000/2500 — agreement to 10-20%. Batch means was fact (b) restated.
+4. No error bar was carried on any measured sigma^2_half, and `Var(sA)-Cov` is asymmetric:
+   15.377 from the A half, 7.700 from the B half at K=1000 (exponent r +0.197 vs +0.306).
+
+FACT (b) STANDS AND IS NOW ERROR-BARRED (this is new): on 40/20/8/4/2 equal-size DISJOINT
+column blocks, noise = 18.37+-1.31, 18.29+-0.76, 22.86+-1.71, 24.50+-2.07, 27.32 at bank
+size 500/1000/2500/5000/10000 (exponent +0.144); per-block Var(s) max/min 1.3-2.0, which is
+what made the nested ladder look non-monotonic. Also unchanged: the heavy |phi'| tail, its
+delta-independence, and the argmax concentration (540 nodes, 6 cover 50%).
+
+OPEN. The scene-level surrogate still under-predicts by ~2x, and it is in tension with
+probe A's p95 clip test (r stayed +0.015 where a bounded integrand should give ~K^-0.87);
+the surrogate was never recomputed under clipping. Next: rebuild the node bank with one row
+per `input_index` and repeat the ladder before drawing any further conclusion about (b).
+
+## cont.169-probeA (2026-08-01) §5C: the ESS/delta-method description of the score is INVALID (7x off); phi' is a genuine derivative with a Hill tail index ~1; the extreme is 6 shared node scenes; clipping does NOT restore 1/K
+
+Addendum to cont.169, answering its open puzzle (a)+(b). Added
+`scripts/diag5c_probeA_spread.py` + `jobs/job_diag5c_probeA.sh` (job 15461075),
+`scripts/diag5c_probeA2_tail.py` + `jobs/job_diag5c_probeA2.sh` (job 15461552),
+`scripts/diag5c_probeA3_delta.py` + `jobs/job_diag5c_probeA3.sh` (job 15462371).
+gamma = 0, N_gal = 20,000 (9,918 detected), delta 0.01, seed 11, nested K ladder
+1000/2000/6000/20000 as column slices of one phi array; two disjoint node pools.
+
+VALIDITY CHECK PASSES. Bank 0 reproduces job 15459872 to the printed digits: ESS
+54.24/147.01/440.07, corr(sA,sB) 0.0627/0.0415/0.0844, Var(s) 26.71/20.95/34.75,
+sigma^2_half 21.21/19.21/30.97. Var_w(K=20k)=53.18 reproduces across jobs 15461075/15462371.
+
+TESTED HYPOTHESIS -- REFUTED. "Var_w(phi') grows as fast as ESS, so the extra spread eats
+the extra averaging" requires p-q = 0. Measured p = +0.388+-0.027 / q = +0.897+-0.002 (bank
+0) and +0.345+-0.016 / +0.865+-0.002 (bank 1), so p-q = -0.509+-0.027 and -0.520+-0.016;
+medians give -0.53/-0.57. The spread does grow (mean Var_w 16.7 -> 53.2 over 20x in K) but
+only fast enough to cancel HALF the averaging gain in log-log.
+
+ESTABLISHED, and this is the real finding. THE WEIGHTED-MEAN VARIANCE FORMULA DOES NOT
+APPLY. Predicted noise mean_i[Var_w/ESS] against the directly measured half-bank noise is
+0.10-0.23 (typical 0.15) at every rung of both banks -- the formula UNDER-predicts the
+actual bank noise by 6-10x, with a stable ratio. Two independent measurements of the noise
+agree with each other (cov route Var(sA)-Cov(sA,sB) and the assumption-light per-galaxy
+route <(sA-sB)^2>/2 agree to <20%) and both are flat in K: exponents +0.20/-0.06 (cov) and
++0.24/+0.07 (pair) over a 20x range, against -1 for pure Monte Carlo. A third route,
+batch means over 10 disjoint blocks, disagrees with the half-bank routes by ~10x, i.e. the
+variance does not decompose over disjoint node blocks either. So the ESS bookkeeping is not
+merely mis-scaled, it is the wrong description.
+
+WHY: phi' IS HEAVY-TAILED, AND THE TAIL IS REAL. Unweighted |phi'| over nodes has p50/p99/
+p99.9 stationary in K (4.07/620/5949 at K=20k vs 4.12/675/4975 at K=1k) while the per-galaxy
+MAX grows 9,298 -> 35,530 (~K^0.45) and the pooled max reaches 7.4e6. Hill index per galaxy
+(top 1%) 2.04/1.64/1.41/1.26 down the ladder, pooled 0.94-1.05 and stable: alpha < 2, so
+phi' has no finite second moment under the node distribution and Var_w(phi') cannot
+converge at any bank size. NOT a stencil artefact: over delta = 0.02 -> 0.0025 (factor 8)
+every column moves <=17% and most 1-3%, where a jump inside the stencil would have scaled
+like 1/delta. Magnitude share of sum|w phi'|: top-1 20.4% -> 8.8% and top-10 63.8% -> 31.1%
+across the ladder -- concentration falls with K, but 10 nodes of 20,000 still carry a third.
+
+THE EXTREME IS A FEW SHARED SCENES, NOT PER-PAIR NOISE. At K=20,000 the argmax of |phi'|
+lands on only 540 distinct nodes for 9,918 galaxies; ONE node is the argmax for 11.4% of
+galaxies, the top 10 for 59.3%, and 6 nodes cover 50%. A per-(galaxy,node) pathology would
+need ~9,918 distinct nodes.
+
+CLIP TEST -- A CLEAN NULL, and it is why (b) is still open. Winsorising |phi'| at a
+per-galaxy threshold FIXED at the K=1000 percentile (diagnostic only; the clipped statistic
+is not the score) removes most of the DENOMINATOR but not the flatness: at p99.9 the noise
+exponent is unchanged (+0.239 vs +0.238); at p95 Var(s) at K=20k falls 34.75 -> 12.19 (-65%)
+yet the exponent only reaches +0.015. A bounded integrand averaged over 20x more i.i.d.
+nodes still does not average down. So the heavy tail explains the LEVEL of Var(s) and fact
+(a), but NOT fact (b).
+
+CONFOUNDS CHECKED. Node-pool ordering: `case`/`shear_case` constant over the first 40k rows
+and no drift of true properties with row index (|corr| <= 0.03), so the A/B halves sample
+the same population and the flat noise is not a between-block bias. Node clustering IS real
+and unquantified in its effect: 8.13 rows share each `input_index`, so a K-node bank holds
+only ~K/8 distinct input objects (K=1000 -> 117); this is a constant factor at every rung
+and cannot produce a K-scaling change, but it inflates the level. Galaxy bootstrap does not
+capture bank-to-bank scatter; the two disjoint banks agree on p-q to 0.011, within the
+quoted errors.
+
+NEXT if resumed: fact (b) is now isolated from the tail. The remaining suspect is the
+WEIGHTS -- ESS grows as K^0.88 yet the implied effective sample size behind the clipped
+noise is flat at ~200. Measure the K-scaling of the noise on a de-clustered bank (one row
+per `input_index`) before anything else, since that is the one confound with a measured
+factor of 8 attached to it.
+
 ## cont.169 (2026-08-01) Var(s) decomposition FAILS its validity check; detection channel is definitively negligible; a 3-way split from cont.168 discussion is RETRACTED
 
 Added `scripts/diag5c_repro.py` + `jobs/job_diag5c_repro.sh`. Job 15459872. N_gal = 20,000
