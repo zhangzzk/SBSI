@@ -7,6 +7,178 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
+## cont.167-SETTLED (2026-08-01) the §5C failure is BANK COVERAGE, proved by a forced-answer test; the estimator is correct
+
+Added `scripts/diag5c_{selfmix,chansplit,signalreach,slope,slope_post,localprop,exactpool,
+poolsize}.py` + `jobs/job_diag5c_*.sh`. Jobs 15417628, 15417710, 15417711, 15417750,
+15417764, 15418898, 15420202.
+
+THE DECISIVE TEST (`diag5c_selfmix.py`, jobs 15417750 / 15417764). Draw the data from the
+estimator's OWN K-component mixture — node index uniform over the same bank, `xhat ~
+p(.|S_g z_k)`, detection Bernoulli at that node's `Pdet` — so the mixture IS the
+data-generating density by construction and Bartlett must hold EXACTLY at g=0 for any K.
+Run side by side with the ordinary marginal draw at identical K, seed, and galaxy count;
+N_gal = 40,000 (~20.6k detected), delta 0.01, bootstrap over galaxies.
+
+    g_true=0     K:       500          2000          6000         20000
+    MIXTURE  ratio   1.009+-0.027  1.000+-0.027  0.981+-0.025  0.965+-0.027
+             ghat   -0.00002       -0.00007      +0.00009      -0.00012   (+-0.0003)
+    MARGINAL ratio 105.3          17.1          17.7          16.9
+
+The identity holds under the mixture draw and fails under the marginal draw with the same
+code, same bank, same seed. **Hypothesis (A) is CONFIRMED and the estimator is arithmetically
+correct**: the K-component mixture is not the true marginal, and that gap is the entire
+failure. Eight rounds of suspicion of the estimator, the flow, the derivatives, the
+detection head and the precision are all now positively excluded rather than merely untested.
+
+HYPOTHESIS (B) REFUTED INDEPENDENTLY (`diag5c_chansplit.py`). Freezing the unsupervised
+density-shape channel out entirely leaves m = -95.2% +- 5.4% against the full estimator's
+-93.3% +- 6.5%; the supervised mean channel alone reproduces the deficit. The weight-carrying
+nodes are ON-manifold in the flow's own conditional scale: ||z|| = 1.959+-0.017 at the
+top-weight node vs 1.881 for matched pairs and 2.00 for a perfect fit. Nodes with log-weight
+deficit < -100 are 4.05% of the bank and carry 0.0000 of the posterior weight.
+**RETRACTED from cont.166**: the "top-weight nodes sit 4.65 sigma from the conditional mean"
+was computed in standardised marginal target units, in which MATCHED pairs read 4.096 — it
+never indicated an anomaly.
+
+POSITIVE CONTROL ON THE MODEL (`diag5c_signalreach.py`). The shear signal is present and
+large: `dmu[e2]/dgamma2 = +1.0525 +- 0.0251`, `<R> = +1.1200 +- 0.0186`, delta-independent
+0.01-0.05. **RETRACTED framing**: the certified `<R_flow> = 0.2930` is a FULL-population mean
+and is not what the true-cut population should return; on the true-cut val population the
+checkpoint's own training logs give `<R_model>` 0.703-0.716 vs `<R_sim>` 0.712-0.713, i.e.
+-1.3%..+0.4%. `keep_indices` covers all 128 context dims, so no shear-carrying direction is
+dropped before the flow. Confirmed exactly: 2 of 16 primary inputs move with gamma, 0 of 10
+neighbour inputs.
+
+THE FAILURE, STATED WITHOUT A DENOMINATOR (`diag5c_slope.py`). d<s>/dg = 5.834 +- 0.399
+against Var(s-<s>_sel) = 62.04 +- 2.39, i.e. m = -90.60% +- 0.68%. Linear over a 20x range in
+gamma; the paired per-gamma m is FLAT at about -89% from g=0.01 to 0.20, which bounds the
+entire (5.9b)-type drift contribution at 0.5-2.5% of the failure and refutes cont.166's
+"drift is a second sufficient explanation". K 2000->10000 doubles the slope (5.8->12) AND
+Var(s) (62->113), leaving m unchanged. RETIRE the Louis form (5.8): its denominator is never
+determined better than ~30%, is 1.7 sigma from zero, changes sign across resamples, and
+propagates to ghat errors of +-500 in shear units.
+
+THE OBVIOUS FIX DOES NOT WORK (`diag5c_localprop.py`, jobs 15418898/15420202). A per-galaxy
+localised proposal with a defensive uniform mixture (alpha=0.2) and exact discrete
+`p0/q` weights makes the score far more reproducible — half-bank corr(A,B) 0.417 -> 0.744 at
+K=20000, noise exponent +0.00 -> -0.28 +- 0.02 — but the denominator-free response is
+UNCHANGED: d ghat(0.05)-ghat(0) = +0.0021 +- 0.0010 against a truth of 0.05, the same few
+percent as the uniform bank. Reducing bank NOISE does not restore the response. Caveat: with
+a data-dependent proposal the two half-banks share the data dependence, so corr(A,B) bounds
+variance, not bias.
+
+LIMITATIONS. The mixture-draw cells at g=0.05 are NOT a test of the identity (the score is
+evaluated at 0 while the data are at 0.05) and their per-galaxy information is ~680 vs ~5 for
+the marginal draw, because the estimator can nearly identify the generating node — that
+regime is artificially easy and its ghat undershoot is a Newton-step artefact, not a defect.
+The localised-proposal agent died on a session limit before writing up; its numbers here are
+read directly from the job logs, unaudited. The round-2 verification and synthesis agents
+never ran.
+
+NEXT. (1) The question is now sharp and quantitative: how does the mixture-vs-marginal score
+gap scale, and what proposal or Rao-Blackwellisation closes it? Coverage in ~18 dims is the
+target, and noise reduction alone is proven insufficient. (2) Consider marginalising the
+shear-carrying directions analytically (only e1,e2 of the primary move) instead of sampling
+them, which converts the hard part of the integral from Monte Carlo to quadrature.
+(3) Honest fallback: keep the numerator, take the exchange rate from simulations — that
+converts 5C into a calibrated summary statistic and gives up self-calibration.
+
+## cont.167 (2026-07-31) §5C channel split: the shape channel is NOT the culprit, and the "off-manifold" leg of hypothesis (B) is refuted
+
+Added `scripts/diag5c_chansplit.py` + `jobs/job_diag5c_chansplit.sh` (Slurm 15418212, cip
+a40-16gb, 90 s). Splits `phi_k(g)` into the MEAN channel (`mu(ctx(S_g z))` moving the
+residual), the SHAPE channel (`flow_ctx(ctx(S_g z))` changing the residual density), and the
+DET channel, by evaluating all nine `(a,b)` blocks
+`L[a][b] = flow.log_prob(xhat_i - mu(ctx(S_a z_k)), flow_ctx(ctx(S_b z_k)))`; the 4-point
+mixed stencil closes the second-order accounting. K=2000, N_det≈2050, g_true = 0 and 0.05,
+delta = 0.01 and 0.005, galaxy-bootstrap errors (200 resamples). Shared modules untouched.
+
+MEASURED (g=0, delta=0.01).
+- Neither channel dominates. Posterior-weighted rms ratio SHAPE/MEAN = 0.859 ± 0.007;
+  weighted |dphi/dg| p50/p90/p99 = 3.05/13.76/30.83 (MEAN) vs 3.63/12.20/27.26 (SHAPE).
+  DET is 2 orders down (0.039). Same on MATCHED pairs: ratio 0.785 ± 0.022.
+- Both O(75–85) terms are residues of O(275) cancellations that need the cross term:
+  -E_w[phi''] = 85.7 ± 5.8 = MEAN 209.8 + SHAPE 150.6 + CROSS −274.7;
+  Var_w(phi') = 74.9 ± 4.2 = Var(M) 180.4 + Var(S) 147.6 + 2Cov(M,S) −253.1; <I> = 10.8 ± 5.3.
+  Per-channel partial I: MEAN 29.4 ± 11.7, SHAPE 3.0 ± 6.8, DET −0.0009. Var of `s_i` over
+  galaxies is likewise a cancellation: MEAN 165.3 + SHAPE 75.6, corr(M,S) = −0.69 → FULL 86.7.
+- corr(s_MEAN, s_FULL) = +0.739; corr(s_SHAPE, s_FULL) = −0.026.
+- OFF-MANIFOLD, in the flow's OWN scale (latent norm ||z||, ideal 2.00 at target_dim 4): top-1
+  weight node 1.959 ± 0.017, top-10 2.266, top-100 2.799, matched pairs 1.881 ± 0.016. The
+  weight-carrying nodes are effectively ON-manifold. Deficits reach −8125 but the bin below
+  −100 carries 4.05% of nodes and 0.0000 of the weight. This CORRECTS the cont.166 "4.65
+  sigma" reading, which used the marginal target sd — matched pairs give 4.096 in those units.
+- COUNTERFACTUAL (freeze a channel, denominator-free ghat(5.9) at 0.05 minus at 0):
+  FULL m = −93.3 ± 6.5%; MEAN+DET −95.2 ± 5.4%; SHAPE+DET −105.9 ± 6.7%. Freezing the
+  unsupervised shape channel does NOT restore the exchange rate.
+
+INFERRED. Hypothesis (B) as "the unsupervised shape channel or off-manifold flow tails break
+the estimator" is disfavoured: the failure survives removal of the shape channel, and the
+nodes carrying the weight are as on-manifold as the training pairs. Hypothesis (A) (mixture /
+bank coverage in the ~18-dim latent) is strengthened by elimination. NOT established: that the
+flow is innocent in general — the shape channel is a same-size, unsupervised contributor and
+the cross term is the largest single entry in both O(275) sums.
+
+CONFOUNDS. Errors are galaxy-bootstrap only and exclude bank Monte-Carlo error, which cont.166
+showed dominates per-galaxy `s`; the g=0 null reads ghat = 0.0064 ± 0.0020 here (N=2051), so
+the quoted `se` understates. The phi'' decomposition residual is O(1–5) at these deltas —
+small vs the 275-size constituents, comparable to <I> = 10.8. Single checkpoint, single seed,
+one bank size.
+
+NEXT. Test (A) directly: the same channel split as a function of bank size / ESS, or an
+exact-mixture bank in the full ~18-dim latent.
+
+## cont.167-slope (2026-07-31) the §5C failure is a GAMMA-INDEPENDENT ~11x response deficit; the (5.9b) drift explains ≤2.5% of it; retire the Louis form
+
+Added `scripts/diag5c_slope.py`, `scripts/diag5c_slope_post.py`, `jobs/job_diag5c_slope.sh`
+(jobs 15417710, 15417711). Denominator-free scoreboard replacing the Bartlett ratio: galaxies
+pinned (`--gal-offset 10000`), data seed fixed, node bank and its ±δ stencil built ONCE and
+shared across every `g_true` (common random numbers), `g_true` = 0/0.01/0.02/0.05/0.10/0.20,
+K = 2000 and 10000, N_gal = 20k and 40k, paired galaxy bootstrap B=400.
+
+MEASURED (paired, so much tighter than cont.166's independently-drawn two-point estimate).
+- NULL at `g_true`=0 holds on the large sample: `<s>-<s>_sel` = −0.0068 ± 0.0517 (0.13σ,
+  N=40k). The N=20k subsample reads +0.198 ± 0.079 (2.5σ) — the catalogue is row-ordered by
+  case, so galaxy blocks are not iid; treat any single block's offset as a sample property.
+- Response slope `d<s>/dg`, K=2000/N=40k: 5.83 ± 0.40 (all g), 5.68 ± 1.16 (g ≤ 0.05) — LINEAR,
+  no saturation. K=10000/N=20k: small-g slope ≈ 12–13, saturating above g ≈ 0.05.
+- DENOMINATOR-FREE headline, K=2000/N=40k: slope / Var(s−<s>_sel) = 0.0940 ± 0.0068, i.e.
+  m_Bartlett = **−90.6% ± 0.68%** (cont.166 had −90.7 ± 2.5%, confirmed and 4× tighter).
+  K=10000: −96.4% ± 0.76% on the all-g slope. Raising K raises BOTH slope (5.8→12) and
+  Var(s) (62→113), so m does not improve: the g=0-subtracted small-g m is −88.7 ± 2.9% at
+  K=10000 vs −88.2 ± 2.2% at K=2000.
+- PAIRED per-gamma m (g=0 row subtracted; removes any common galaxy/bank offset) is FLAT:
+  K=2000/N=40k gives −88.2, −89.6, −90.7, −89.8, −90.6% at g = 0.01…0.20.
+
+PART 2, (5.9b)/M.12 drift, applied here for the first time. As written it divides by
+`I_keep = <I>−I_sel`, the near-zero cancellation, so its own error bar is 10²–10⁵ % and it is
+unusable that way. Two conditioned forms: substituting `Var(s)` (its theoretical equal at
+γ=0) gives −3.7% ± 5.4% at γ=0.01 and is itself unstable at large γ; the model-free bound —
+fitting m(γ) = m0 + cγ over a 20× range in γ — gives, on the paired m,
+m0 = −89.1 ± 1.9% (K2000/N40k), −88.0 ± 2.5% (K10000), −87.7 ± 2.9% (K2000/N20k), with
+c = −0.08 ± 0.11, −0.44 ± 0.15, −0.28 ± 0.16 per unit γ. So ANY γ-linear drift accounts for
+−0.4% to −2.2% of m at γ=0.05, i.e. **0.5–2.5% of the failure**. The drift is identically zero
+at γ=0 and cannot touch the g=0 failure; the two must not be conflated. The cont.166 "drift
+alone could explain the away-from-zero behaviour" alternative is REFUTED for the real model.
+
+PART 3, RETIREMENT. `<I>−I_sel` is never determined better than ~30%: 2.78 ± 1.68 (K2000/
+N40k, 1.7σ from zero), 6.21 ± 2.56 (K2000/N20k), 13.81 ± 4.25 (K10000/N20k) — while
+`Var(s−<s>_sel)` on the SAME rows is 62.0 ± 2.4 (3.8%), 64.4 ± 2.5, 112.7 ± 11.6 (10.3%).
+Across the six near-identical `g_true` cells at K=10000, `<I>` scatters 13.8/12.8/14.6/6.1/
+3.8/−3.3 (sign change) while Var(s) scatters 5%. `ghat(5.8)` per-cell bootstrap errors reach
+±554 and ±623 in shear units. RECOMMENDATION: retire (5.8) from this project's diagnostics;
+report only the Bartlett form and denominator-free statements (slope, Var(s), paired m).
+
+VALIDATION: smoke run (K=400, N=1000, 2 γ) then the two Slurm jobs above; post-processing
+`diag5c_slope_post.py` on the saved `.npz` (login node, arrays only).
+LIMITATIONS: single checkpoint, single δ=0.01 (round 1 swept δ 8× with no effect), primary-
+only shear, no measured cut (P_pass=1). Bootstrap is over galaxies only — bank Monte-Carlo
+error is NOT in these bars. Arrays: `/home/z/Zekang.Zhang/.claude/jobs/be56a7ad/tmp/slope_*.npz`.
+NEXT: the surviving hypotheses are unchanged (bank/mixture coverage, off-manifold flow
+evaluation); the K=2000→10000 doubling of the slope against a doubling of Var(s) is a new
+constraint on both.
+
 ## cont.166 (2026-07-31) §5C on Gold-V2: seven mechanisms ruled out, cause NOT settled, and the headline diagnostic itself is unreliable
 
 Nine-agent diagnostic round on the cont.165 failure (`Var(s) >> E[I]`; `ghat` flat at ~0.01
