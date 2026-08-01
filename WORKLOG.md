@@ -7,6 +7,84 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
+## cont.171 (2026-08-01) §5B math review: core algebra verified, 3 imprecisions fixed, 4 missing pieces added (incl. the positional blend channel vanishes for an unclustered field)
+
+Document-only change to `INFERENCE.md` (§3, §5B.1–5B.4 new, §6). No code, no jobs. Prompted by
+the question of whether §5B avoids the §5C pathology and whether `R_blend` fits in it.
+
+### VERIFIED CORRECT by re-derivation (no change needed)
+
+- Louis (2.5): `d2/dg2 log p = E_post[u'] + Var_post(u)` — rederived from the ratio rule.
+- `I_i = -E_w[du] - Var_w(u)`, and (5.3) numerator AND denominator, by differentiating
+  `log p_keep = log[∫ p_flow Pdet p_g] - log P(keep|g)` twice.
+- (5.3b) `I_sel = -E_Pi[du] - Var_Pi(u)`.
+- (5.3c) `iota = 4<e1^2> p'(Tc)/P_pass` — including the sign, and the rising/falling-side
+  discussion (iota>0 destroys information, iota<0 adds it).
+- (5.2) the measured cut cancels from the per-object posterior; detection does not.
+
+### IMPRECISIONS FIXED
+
+1. "a smooth function of |g| has zero gradient at the origin" — |g| is a cone, not
+   differentiable at 0. Corrected: isotropy forces dependence on |g|^2. Conclusion unchanged.
+2. (5.3c) used `d/dg log That = 2e`, the TRUE-size response. The measured size carries the
+   dilution factor `c(x)` of (5.1), which §5A.3 makes a whole point of being != 1 and varying.
+   Now `D = 4<c^2 e1^2>`; `c=1` flagged as the noiseless limit.
+3. §5B.3 item 5 "the bias is common across objects" — overstated. Now "systematic rather than
+   zero-mean", which is what actually prevents it averaging away.
+
+### ADDED
+
+4. **The positional blend channel (5.3a).** §2.4 gives the velocity `dr = Gamma r` but the doc
+   never formed `u` for it. Shear is traceless so `div v = 0` and only advection survives:
+   `u_pos = -r (rhat^T Gamma rhat) dlog(1+xi)/dr`. **For an unclustered (uniform Poisson)
+   neighbour field this is identically zero, node by node** — shear is area-preserving, so a
+   Poisson field is statistically invariant under it. The positional blend response is sourced
+   ENTIRELY by clustering and by the aperture edge; the neighbour-shape and neighbour-size
+   channels survive for any field. Derived here, not measured.
+5. **The aperture is not closed under S_gamma.** (2.7) holds sector-by-sector in neighbour
+   count (shear preserves multiplicity), so variable scene dimension is not an obstacle. But at
+   fixed APERTURE shear carries neighbours across the edge, leaving a surface term in the
+   separation channel — same species as §4.3. Consistent with cont.108's aperture sensitivity.
+6. **New §5B.4, existence of the information (5.3d).** The §5C failure asked of §5B. §5B's
+   integrand `u` is analytic: for `p0 ~ (1-|eps|^2)^a`, `u ~ a/(1-|eps|^2)` and
+   `E[u^2] ~ int t^(a-2) dt` converges iff **a > 1**. So finiteness is a one-line check on a
+   prior you write down, vs a property of a trained net discoverable only by measurement. Framed
+   as a condition to VERIFY (run the same Hill + disjoint-block tests on `u`), not a guarantee.
+   Also: the shared node bank correlates the `s_i`, so `sum s_i^2` understates Var(ghat); bank
+   error bars need independent banks. Duplicate-scene and nested-ladder traps recorded.
+
+### MODEL STATUS CORRECTION (§3)
+
+Verified against source, not assumed. The V2 model is **not** geometry-blind:
+`NEIGHBOR_FEATURES` (`train_joint_forward.py:76`) carries `distance_scaled`,
+`relative_position_angle_cos2/sin2`, `e1_input_s`, `e2_input_s`. So §3's non-degeneracy
+condition IS satisfied and `Cov(ehat, s_nbr)` is not identically zero for it — unlike the
+Gold-v1 flow (scalar `nbr_flux` only), which is why Gold-v1 must bolt on BlendEMU R_blend=0.1593.
+
+BUT the implemented shear map does not exercise it. `shifted_feature_frame`
+(`train_joint_forward.py:227-247`) Mobius-transforms the primary ellipticity and, under
+`--shear-both`, the neighbour's — and nothing else. `distance_scaled` rebuilds from untouched
+`distance`/`Re_input_p`; `relative_position_angle_*` from untouched `polarization_angle`
+(`preprocessing.py:166-179` via `rescale`). True size is not sheared either. `scene_context`
+(`closure_v2_lagrangian.py:112`) hardcodes `primary_only=True`. So the positional velocity is
+zero **by omission in code**, not by degeneracy — a `shifted_feature_frame` change, not an
+architecture change. Matches the measured "only e1/e2_input_p move with shear, all others 0".
+
+### VALIDATION
+
+`pytest tests/ -q` → 34 passed (85s; pytest lives in the 3.11 module, not in `sims1`).
+LaTeX delimiters balanced (146 display, inline even); tags renumbered to 5.3a/b/c/d in order.
+`R_blend=0.1593` traced to `Gold-v1.md:44,95`; all cited file:line anchors read directly.
+
+### LIMITATIONS / NEXT
+
+- 4 and 5 are derivations, NOT measurements. The uniform-field cancellation predicts the
+  positional blend response tracks `dlog(1+xi)/dr`; untested.
+- No claim that §5B works — only that its integrand's tail is checkable by construction where
+  §5C's was not. The Hill + disjoint-block test on `u` has NOT been run.
+- Science results untouched: Gold-v1 (+0.245%) and fiducial Gold-V2 (-0.123+-0.152%) use the
+  §5A transport route and never evaluate a score.
+
 ## cont.170 (2026-08-01) §5C IS STRUCTURALLY DEAD as written: fact (b) survives removing BOTH setup defects; the pathology is phi' itself, not the bank
 
 Multi-agent round (3 probes + 3 adversarial verifiers + synthesis) followed by one decisive

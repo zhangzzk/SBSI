@@ -266,6 +266,31 @@ model and must be supplied externally and added, i.e. $m=R_{\rm sim}/(R_{\rm sel
 for the multiplicative bias $m$. The additive form is a symptom of the missing conditioning, not a
 modelling choice.
 
+**Model status — the condition is met, the implementation does not use it.** The two are separate
+and it is worth stating which is which.
+
+*Conditioning.* The Gold-v1 flow sees scalar neighbour fluxes only, so for it the term above vanishes
+identically and the external $R_{\rm blend}=0.1593$ is forced. The V2 model is not that model:
+`NEIGHBOR_FEATURES` (`scripts/train_joint_forward.py:76`) carries `distance_scaled`,
+`relative_position_angle_cos2`/`sin2` and the neighbour shape `e1_input_s`/`e2_input_s`. Separation,
+spin-2 pair orientation and neighbour shape are all present, so the non-degeneracy condition is
+satisfied and $\mathrm{Cov}(\hat e,s_{\rm nbr})$ has somewhere to come from.
+
+*Shear map.* The implemented map does not exercise it. `shifted_feature_frame`
+(`scripts/train_joint_forward.py:227-247`) applies the Möbius transform to the primary's ellipticity
+and — under `--shear-both` — the neighbour's, and to nothing else. `distance_scaled` is rebuilt from
+the untouched `distance` and `Re_input_p`; `relative_position_angle_*` from the untouched
+`polarization_angle` (`sbs_shear/preprocessing.py:166-179`, reached via `rescale`). True size is not
+sheared either, so the $v_{\log T}=2e$ row of §2.4 is absent from this path. `scene_context`
+(`scripts/closure_v2_lagrangian.py:112`) hardcodes `primary_only=True`, so the §5C closure runs with
+the primary shape as the *only* moving input.
+
+So the positional velocity of §2.4 is zero **by omission in code**, not by the degeneracy above. The
+neighbour-shape channel is reachable today through the existing `--shear-both`; the positional
+channel needs the separation vector sheared, which is a change to `shifted_feature_frame` rather than
+to the architecture. §5B.1 shows the two channels are not interchangeable — they have different
+sources and one of them nearly vanishes.
+
 ---
 
 ## 4. Selection
@@ -602,6 +627,48 @@ condition at the level of weights: the blend contribution is $\sum_kw_ku_k^{(\rm
 $w_k\propto L_k$, so if $L_k$ does not change as the neighbour's position angle moves across nodes,
 the posterior over that angle equals the prior and the sum vanishes **by isotropy**.
 
+**The neighbour channel is not one channel.** Split it by what shear actually moves,
+
+$$u^{(\rm nbr)}=u_{\rm nbr\;shape}+u_{\rm nbr\;size}+u_{\rm pos}.$$
+
+The first two are the Möbius map and $2e_s$ applied to the neighbour's own shape and size — the same
+generators as the primary's, evaluated one object over — and they are nonzero for any non-uniform
+shape and size prior. The third behaves completely differently.
+
+Write the pair separation as $\mathbf r$ with $p_0(\mathbf r)\propto1+\xi(r)$, and let
+$\Gamma$ be the (traceless, symmetric) shear matrix so that $v=\Gamma\mathbf r$. Then
+$\nabla\!\cdot\!v=\mathrm{tr}\,\Gamma=0$, the divergence term of (2.7) drops, and only advection
+survives:
+
+$$u_{\rm pos}=-\,v\cdot\nabla\log p_0
+=-\,r\,\big(\hat r^{\mathsf T}\Gamma\hat r\big)\,\frac{d\log\big(1+\xi(r)\big)}{dr},
+\qquad \hat r^{\mathsf T}\Gamma\hat r=\gamma_1\cos2\phi+\gamma_2\sin2\phi,\tag{5.3a}$$
+
+the spin-2 projection onto the pair position angle promised in §2.4.
+
+**For an unclustered field the positional channel is identically zero** — node by node, not merely in
+expectation. The reason is geometric rather than statistical: shear is area-preserving at
+$O(\gamma)$, so a uniform Poisson neighbour field is *statistically invariant* under it, and a
+distribution that does not move has no generator. Everything the positional channel contributes is
+therefore sourced by departures from uniformity: the clustering slope in (5.3a), and the aperture
+boundary below.
+
+This is worth knowing before building a scene prior. Getting $\xi$ wrong at small separation *is* the
+entire positional blend response, whereas getting the neighbour **shape** prior wrong corrupts a
+channel that would be present even for a Poisson field. The two failure modes have different cures.
+
+**The aperture is not closed under shear.** (2.7) is an ordinary gradient identity only if $S_\gamma$
+maps the scene space to itself. At fixed multiplicity it does — shear moves objects, it does not
+create or destroy them — so (2.7) holds sector by sector in the number of neighbours, and the
+variable dimension of a scene is not by itself an obstacle. But a scene defined by an **aperture** is
+not closed: shear carries neighbours across the edge, changing multiplicity at fixed aperture. What
+is left over is a surface term in the separation channel, of the same species as the boundary terms
+of §4.3 and with the same structure — a density at the edge times a spin-2 correlation. It is
+negligible only if the aperture is wide enough that edge neighbours do not affect
+$\hat{\mathbf{x}}$, which is an assumption about the catalogue's build radius rather than a theorem,
+and one the recorded aperture sensitivity of the summed $R_{\rm blend}$ (WORKLOG cont.108) argues
+against taking for granted.
+
 #### 5B.2 Selection corrects both moments, not just the first
 
 A kept object is not drawn from $p(\hat{\mathbf{x}}\mid\gamma)$. It is drawn from that density
@@ -644,7 +711,9 @@ $$P(\text{keep}\mid\gamma)=P\big(\text{keep}\mid\gamma e^{2i\alpha}\big)\ \ \for
 \qquad\Longrightarrow\qquad
 P(\text{keep}\mid\gamma)=P\big(|\gamma|\big),$$
 
-and a smooth function of $|\gamma|$ has **zero gradient at the origin**. Hence
+and a function of the *components* $(\gamma_1,\gamma_2)$ that depends only on $|\gamma|$ must in fact
+be a function of $|\gamma|^2$ — the cone $|\gamma|$ itself is not differentiable at the origin, so
+twice-differentiability forces the square — and such a function has **zero gradient there**. Hence
 
 $$\langle s\rangle_{\rm sel}=0\ \ \text{exactly},
 \qquad
@@ -667,13 +736,19 @@ Keep $\langle s\rangle_{\rm sel}$ in (5.3) regardless: the symmetry is broken by
 cut that touches $\hat e$, and by position-dependent depth or masking (A.6), and then it is not zero.
 
 **Magnitude and sign of $\iota$.** The vanishing of $\langle s\rangle_{\rm sel}$ says shear does not
-*shift* the measured-size distribution; what it does at leading order is **diffuse** it, since
-$\partial_\gamma\log\hat T=2e$ has zero mean and variance $D\equiv4\langle e_1^2\rangle$ per unit
-$\gamma^2$ (distortion convention, §4.5). Diffusing a density by $D\gamma^2$ moves the kept fraction by
-$-\tfrac12D\gamma^2\,p'(T_c)$, so for $e$ uncorrelated with size
+*shift* the measured-size distribution; what it does at leading order is **diffuse** it. The *true*
+size responds as $\partial_\gamma\log T=2e$ (§4.5), and the *measured* size inherits that only
+through the dilution factor $c(\mathbf{x})\equiv\partial\mu_{\hat T}/\partial\log T$ of (5.1), so
+$\partial_\gamma\log\hat T=2c\,e$ has zero mean and variance $D\equiv4\langle c^2e_1^2\rangle$ per
+unit $\gamma^2$ (distortion convention). Diffusing a density by $D\gamma^2$ moves the kept fraction by
+$-\tfrac12D\gamma^2\,p'(T_c)$, so for $ce$ uncorrelated with size
 
-$$\iota\;\simeq\;\frac{4\langle e_1^2\rangle}{P_{\rm pass}}\;
+$$\iota\;\simeq\;\frac{4\langle c^2e_1^2\rangle}{P_{\rm pass}}\;
 \frac{\partial p}{\partial\hat T}\bigg|_{\hat T=T_c}.\tag{5.3c}$$
+
+Carrying $c$ matters here for the same reason §5A.3 gives: it is not $1$, it was measured to be
+sign-flipped before the coupling pin, and it *varies*. Setting $c\equiv1$ recovers the bare
+$4\langle e_1^2\rangle$ and is the noiseless-measurement limit, not the survey case.
 
 Set beside (4.7) this is a tidy pairing: **$R_{\rm sel}$ sees the density at the cut edge, $\iota$ sees
 its slope**, and both carry one factor of $\langle e^2\rangle$. So $\iota$ changes sign at the **peak**
@@ -684,8 +759,8 @@ of $p(\hat T)$ — a mild cut on the rising side keeps most of the sample and de
 A.7 gives the analogous term in closed form for a *shift* parameter, where it is enormous: a cut at the
 median destroys $2/\pi\approx64\%$ of the information. That toy overstates the lensing case exactly as
 the symmetry argument predicts — a shift acts at $O(1)$, where spin-2 leaves only the
-$O(\langle e^2\rangle)$ diffusion of (5.3c). Suppressed, then, but not small: with $\langle e_1^2\rangle
-\approx0.2$ in the distortion convention, $\iota/\mathcal I$ at the percent level is easy to reach,
+$O(\langle e^2\rangle)$ diffusion of (5.3c). Suppressed, then, but not small: with $c\approx1$ and
+$\langle e_1^2\rangle\approx0.2$ in the distortion convention, $\iota/\mathcal I$ at the percent level is easy to reach,
 which is orders of magnitude above a Stage-IV requirement on $m$. Use (5.3c) to decide how much it
 matters; evaluate (5.3b) on the node bank for the number that goes into (5.3).
 
@@ -735,14 +810,62 @@ from $\sum_i\mathcal I_i$ before the matrix solve of §6.
    that count but the **ESS per object**: $w_k\propto L_kP_{{\rm det},k}$ is importance sampling from
    $p_0$, and in $\gtrsim5$ dimensions the likelihood is far narrower than the prior, so a handful of
    nodes can carry all the weight. $s_i=\mathbb E_{w_i}[u]$ is a ratio of weighted sums, hence
-   **biased, not merely noisy, at small ESS** — and the bias is common across objects, so averaging
-   over the catalogue does not remove it. $N_{\rm node}$ must be set by a measured ESS, not by budget;
-   the same caveat is what forced large template banks in BFD.
+   **biased, not merely noisy, at small ESS** — and the bias is systematic rather than zero-mean: it
+   tracks each object's own posterior concentration without a sign that alternates between objects,
+   so averaging over the catalogue does not remove it. $N_{\rm node}$ must be set by a measured ESS,
+   not by budget; the same caveat is what forced large template banks in BFD. §5B.4 gives the
+   separate — and prior condition — under which the denominator of (5.3) exists at all.
+
+Note that the *dimensionality* of requirement 1 is set by the support of $v$, not by the dimension of
+the scene. A primary-only shear moves the primary's shape and nothing else, so it needs
+$\nabla\log p_0$ in the two-dimensional shape plane alone — a smooth, densely sampled marginal, not a
+full population model. Shearing the whole scene extends the requirement to neighbour shape, neighbour
+size and pair separation, roughly six dimensions per neighbour. The cheap version of §5B is therefore
+genuinely cheap; it is the blend channel that carries the modelling cost.
 
 A shape-only reduction is possible (analytic shape prior, location-family grid), but a shape-only
 score yields the **shape channel alone** — not even the whole of $R_{\rm self}$, since the size
-channel (3.3) is dropped with it — and neither blend (§3, geometry-blind ⇒ identically zero) nor
-selection (§4.3: the boundary term is built mostly from the size channel).
+channel (3.3) is dropped with it — and neither blend (dropped with the neighbour channel by
+construction, whatever the likelihood conditions on) nor selection (§4.3: the boundary term is built
+mostly from the size channel).
+
+#### 5B.4 Conditions for the estimator to exist
+
+(5.3) divides by $\sum_i\mathcal I_i-N\mathcal I_{\rm sel}$, and $\mathcal I_i$ contains
+$\mathrm{Var}_{w_i}(u)$. A denominator built out of a variance is only as good as that variance's
+existence, and existence is not automatic. The §5C form of this same estimator was measured to fail
+exactly here: its integrand $\partial_\gamma\log p_{\rm flow}$ carries a Hill tail index near $1.3$
+— below $2$, so no finite second moment — and its denominator *grows* with bank size (fitted
+exponent $+0.20$ against $-1$ for honest Monte Carlo) while a tame integrand on the identical weights
+averages down. The weights were not at fault; the integrand was. WORKLOG cont.170 has the numbers.
+
+The corresponding question for (5.3) has a clean answer, and this is the structural reason to prefer
+it: §5B's integrand is analytic, so its tail is a property of a prior **you write down**. Take an
+isotropic shape prior vanishing at the edge as $p_0\propto(1-|\varepsilon|^2)^a$. There
+$v_\varepsilon=O(1)$ while $\nabla\log p_0$ diverges, giving $u\sim a/(1-|\varepsilon|^2)$; with
+$t\equiv1-|\varepsilon|^2$ the measure supplies $t^a$ and
+
+$$\mathbb E_0\big[u^2\big]\;\sim\;\int_0 t^{a}\,t^{-2}\,dt\;=\;\int_0 t^{a-2}\,dt
+\qquad\Longrightarrow\qquad
+\mathcal I<\infty\iff a>1.\tag{5.3d}$$
+
+So the Fisher information exists **iff the shape prior vanishes faster than linearly at
+$|\varepsilon|=1$** — a one-line check on an analytic choice, against a property of a trained network
+that could only be discovered by measurement. Note what (5.3d) is not: it is a condition to
+*verify*, not a guarantee. The same two diagnostics that exposed §5C — the Hill index of the
+integrand, and the noise-versus-bank-size exponent on **disjoint** blocks — should be run on $u$
+before (5.3) is trusted, and the analogous edges in the size, flux and separation channels checked
+the same way.
+
+**The shared node bank correlates the $s_i$.** Every galaxy is scored on the same
+$(\mathbf{x}_k,\mathbf{n}_k)$, so bank realisation error is common-mode across the catalogue: it does
+not average down with $N_{\rm gal}$, and $\sum_is_i^{\,2}$ therefore *understates* the variance of
+$\hat\gamma$. Honest error bars come from re-running on independent banks, not from the Fisher form.
+Two practical traps follow. Duplicate scenes inside a bank inflate the apparent ESS by exactly their
+multiplicity — a live hazard for pair-annotated catalogues, where one physical scene appears once per
+annotated neighbour and the primary is byte-identical across the group. And nested ladders, whose
+rungs are column prefixes of one another, cannot see bank-realisation scatter at all; only disjoint
+equal blocks can.
 
 ### 5C. Lagrangian form — shear the samples, not the prior
 
@@ -1081,7 +1204,17 @@ and free by comparison. Node-bank size is set by the effective sample size cavea
   prior must be external to the simulation or the result is circular. Selection is a boundary effect
   (4.5), which amplifies prior sensitivity there.
 - **Cuts on modelled outputs only.** (4.8) requires the cut variable to be an output of the flow.
-- **Non-degeneracy for blending** — §3: the likelihood must depend on neighbour geometry.
+- **Non-degeneracy for blending** — §3: the likelihood must depend on neighbour geometry. The V2
+  model satisfies this (separation, pair angle, neighbour shape are all conditioned on); the
+  implemented shear map does not exercise it, moving ellipticities only. §3, model status.
+- **The scene space must be closed under $S_\gamma$.** True at fixed multiplicity, so (2.7) holds
+  sector by sector in the neighbour count. Not true at fixed **aperture**, where shear carries
+  neighbours across the edge and leaves a surface term in the separation channel (§5B.1). Assuming it
+  away is an assumption about the catalogue's build radius.
+- **The information must exist.** (5.3) divides by a variance, and heavy-tailed integrands can leave
+  it without a finite population value — the measured failure mode of §5C. For §5B this reduces to a
+  checkable condition on the analytic prior's edge behaviour, (5.3d), but it is a condition to verify
+  rather than a property to assume (§5B.4).
 
 ---
 
