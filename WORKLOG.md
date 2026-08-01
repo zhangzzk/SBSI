@@ -7,6 +7,60 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
+## cont.169 (2026-08-01) Var(s) decomposition FAILS its validity check; detection channel is definitively negligible; a 3-way split from cont.168 discussion is RETRACTED
+
+Added `scripts/diag5c_repro.py` + `jobs/job_diag5c_repro.sh`. Job 15459872. N_gal = 20,000
+(9,918 detected at g=0, 9,935 at g=0.05), delta 0.01, 400 bootstrap resamples, seed 11,
+K ladder 2000/6000/20000.
+
+MOTIVE. §5C attenuation is `m = I/Var(s) - 1` with `I = d<s>/dgamma` denominator-free and the
+numerator measured sound. So the question is which part of the inflated denominator is
+removable: BANK NOISE (falls with K) or REPRODUCIBLE-BUT-SHEAR-BLIND (same for any bank).
+Two disjoint half-banks are column slices of one phi array, so `Cov(s_A,s_B)` isolates the
+reproducible part at no extra cost.
+
+    K       ESS   corr(sA,sB)   Var(s)   sigma^2_half      I              m
+    2,000    54     0.063        26.71     21.21      -0.64 +- 1.40    -102.4%
+    6,000   147     0.042        20.95     19.21      +1.14 +- 1.32     -94.6%
+    20,000  440     0.084        34.75     30.97      +5.01 +- 1.72     -85.6%
+
+THE SPLIT IS NOT VALID AND ITS NUMBERS ARE NOT REPORTED. `sigma^2_full = sigma^2_half/2`
+assumes noise ~ 1/K. Measured `sigma^2_half` is 21.2 / 19.2 / 31.0 over a 10x range in K --
+flat, then rising. The script prints this check by design; it fails, so the `blind` and
+`noise` columns it computes are not quoted here.
+
+RETRACTED. The three-way split floated in the cont.168 discussion (I 5.8 / blind 30.7 /
+noise 25.5, "a perfect bank still leaves m = -84%") combined the half-bank correlation 0.417
+from the cont.167 `diag5c_localprop` job with the slope and variance from `diag5c_slope`, at
+different settings. Measured at ONE setting here, `corr(sA,sB)` is 0.04-0.08, not 0.417. The
+numbers were not comparable and the split is withdrawn.
+
+ESTABLISHED, and this one is clean. THE DETECTION CHANNEL IS NEGLIGIBLE. `log Pdet` enters
+phi as a per-NODE constant, so its gamma-derivative is galaxy-independent and `s` splits
+exactly at fixed posterior weights. At K=20,000: `Var(s_flow) = 34.75295` vs
+`Var(s_det) = 0.00010`, cross-channel `Cov = -0.00173`, `rms(d1_det) = 0.0386`. Five orders
+of magnitude, stable at every K. The entire score is the flow density channel. This upgrades
+cont.166's detection-ablation result from "not the cause" to "contributes nothing".
+
+THE OPEN PUZZLE, model-free, no assumed scaling. Two facts that no simple story satisfies:
+(a) independent half-banks agree only 6-8% per galaxy -- the score is almost entirely
+    bank-SPECIFIC, which reads as noise;
+(b) doubling the bank 10,000 -> 20,000 moves Var(s) 33.8 -> 34.8, i.e. NOT AT ALL, and over
+    the full ladder it is non-monotonic 26.7 / 21.0 / 34.8.
+Monte-Carlo noise shrinks when averaged; a fixed model bias reproduces across banks. This
+does neither. That is now the sharp question, and it is better posed than "the mixture is
+not the marginal".
+
+WEAK AND NOT A TREND: `m` reads -102% / -95% / -86% with K. `I` is at most 2.9 sigma from
+zero and Var(s) is non-monotonic, so this is suggestive only. Do not quote it as convergence.
+
+SCOPE unchanged: §5C only. Gold-v1 (+0.245%) and fiducial Gold-V2 (-0.123 +- 0.152%) use the
+§5A transport route, which forms no score and no node bank.
+
+NEXT if resumed: explain (a)+(b) together. The obvious probe is whether the bank-specific
+component is carried by the same nodes across galaxies (a shared systematic in the weights)
+or by different ones (per-galaxy), which `weight_diagnostics`' TV statistic already measures.
+
 ## cont.168 (2026-08-01) shape-direction coverage does NOT fix §5C — the last bank idea fails too
 
 Added `scripts/diag5c_shapegrid.py` + `jobs/job_diag5c_shapegrid.sh`. Jobs 15449461/15449462
