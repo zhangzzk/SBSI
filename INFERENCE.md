@@ -840,22 +840,55 @@ exponent $+0.20$ against $-1$ for honest Monte Carlo) while a tame integrand on 
 averages down. The weights were not at fault; the integrand was. WORKLOG cont.170 has the numbers.
 
 The corresponding question for (5.3) has a clean answer, and this is the structural reason to prefer
-it: §5B's integrand is analytic, so its tail is a property of a prior **you write down**. Take an
-isotropic shape prior vanishing at the edge as $p_0\propto(1-|\varepsilon|^2)^a$. There
-$v_\varepsilon=O(1)$ while $\nabla\log p_0$ diverges, giving $u\sim a/(1-|\varepsilon|^2)$; with
-$t\equiv1-|\varepsilon|^2$ the measure supplies $t^a$ and
+it: §5B's integrand is analytic, so its tail is a property of a prior **you write down** — checkable
+before any training, rather than discoverable only by measuring a network.
 
-$$\mathbb E_0\big[u^2\big]\;\sim\;\int_0 t^{a}\,t^{-2}\,dt\;=\;\int_0 t^{a-2}\,dt
-\qquad\Longrightarrow\qquad
-\mathcal I<\infty\iff a>1.\tag{5.3d}$$
+Carrying that check out settles it more favourably than expected. The naive worry is that
+$\nabla\log p_0$ diverges at the edge of the ellipticity disc, so a prior that does not vanish there
+fast enough would have no finite $\mathrm{Var}_0(u)$. That worry is **misplaced**, for a geometric
+reason. The Möbius map preserves the unit disc, so the shear velocity field is *tangent to the
+boundary*: its normal component vanishes like $1-|\varepsilon|^2$, exactly cancelling the divergence
+of $\nabla\log p_0$. Writing $t\equiv|\varepsilon|^2$ and $\psi(t)\equiv\log p_0$, the generator is
 
-So the Fisher information exists **iff the shape prior vanishes faster than linearly at
-$|\varepsilon|=1$** — a one-line check on an analytic choice, against a property of a trained network
-that could only be discovered by measurement. Note what (5.3d) is not: it is a condition to
-*verify*, not a guarantee. The same two diagnostics that exposed §5C — the Hill index of the
-integrand, and the noise-versus-bank-size exponent on **disjoint** blocks — should be run on $u$
-before (5.3) is trusted, and the analogous edges in the size, flux and separation channels checked
-the same way.
+$$u_a=e_a\Big[\,4-2\,\psi'(t)\,(1-t)\,\Big],\tag{5.3d}$$
+
+so the prior enters **only** through the product $(1-t)\,\psi'(t)$, and
+
+$$\mathbb E_0\big[u^2\big]<\infty\iff (1-t)\,\psi'(t)\in L^2(p_0),$$
+
+i.e. the log-density's slope may not blow up *faster* than $1/(1-t)$. For the power-law family
+$p_0\propto(1-t)^a$ that product is the **constant** $-a$, giving the bounded generator
+$u_a=e_a(4+2a)$ and
+
+$$\mathbb E_0\big[u^2\big]=4\,(a+2)\qquad\text{finite for every }a>-1,$$
+
+the condition $a>-1$ being nothing but normalizability. The information exists for the *entire*
+power-law family — including $a=0$, a prior that does not vanish at the edge at all.
+
+This is verified numerically, not merely asserted. `scripts/diag5b_gate.py` differentiates the exact
+Möbius pullback on a ray running into the edge and recovers $u_a/[e_a(4+2a)]=1.000000$ at edge
+distances down to $10^{-7}$ for $a=0,1,2$. On the prior actually fitted
+(`SmoothRadialPrior`, whose $\psi$ continues linearly in $t$ so that $(1-t)\psi'\to0$) it measures,
+against §5C's numbers on the identical diagnostics:
+
+| | §5C ($\partial_\gamma\log p_{\rm flow}$) | §5B ($u$) |
+|---|---|---|
+| Hill index of the integrand | $1.32-1.38$ | $9.4$ / $41.5$ / $544$ (top $5\%$/$1\%$/$0.2\%$) |
+| integrand bounded? | no | yes, $\max|u|=12.27$ |
+| denominator vs bank size | *grows*, exponent $+0.20$ | flat: $\mathrm{Var}_0(u)$ stable to $0.005\%$ over a $25\times$ node refinement |
+| sensitivity to the truncation | — | $0.03\%$ over $r_{\max}=0.85\to0.995$ |
+
+Two independent routes agree on the value: grid quadrature gives $\mathrm{Var}_0(u)=35.379$, and
+$2\times10^6$ draws from the prior give $35.410$. Bartlett's $\mathbb E_0[u]=0$ holds to $10^{-15}$
+and the curvature residual falls to $2\times10^{-5}$ of $\mathrm{Var}_0(u)$ under refinement.
+**§5C's variance non-existence does not arise in §5B's shape channel**, and the default
+$r_{\max}=0.95$ truncation — which never visits the edge — is not load-bearing.
+
+Note carefully what this does *not* cover. It is the **shape channel only**. The disc-tangency
+argument is special to the Möbius action on the unit disc; size and flux live on a half-line under a
+dilation, and separation on the plane, so each needs its own edge analysis before its contribution to
+$u$ is trusted. A bounded generator also says nothing about whether the *posterior weights* $w_i$
+concentrate — that is a separate question about the flow, and the one §5B.3 item 5 is about.
 
 **The shared node bank correlates the $s_i$.** Every galaxy is scored on the same
 $(\mathbf{x}_k,\mathbf{n}_k)$, so bank realisation error is common-mode across the catalogue: it does
@@ -1212,9 +1245,13 @@ and free by comparison. Node-bank size is set by the effective sample size cavea
   neighbours across the edge and leaves a surface term in the separation channel (§5B.1). Assuming it
   away is an assumption about the catalogue's build radius.
 - **The information must exist.** (5.3) divides by a variance, and heavy-tailed integrands can leave
-  it without a finite population value — the measured failure mode of §5C. For §5B this reduces to a
-  checkable condition on the analytic prior's edge behaviour, (5.3d), but it is a condition to verify
-  rather than a property to assume (§5B.4).
+  it without a finite population value — the measured failure mode of §5C. For §5B's **shape**
+  channel this is now settled rather than assumed: the shear velocity is tangent to the ellipticity
+  disc, so the generator (5.3d) depends on the prior only through $(1-t)\psi'(t)$ and stays bounded
+  for the whole power-law family. Verified analytically and measured on the fitted prior — Hill index
+  $9.4$ against §5C's $1.3$, $\mathrm{Var}_0(u)$ flat under both refinement and reach (§5B.4). The
+  **size, flux and separation channels are not covered** by that argument and still need their own
+  edge analysis.
 
 ---
 

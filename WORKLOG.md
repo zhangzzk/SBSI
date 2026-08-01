@@ -7,6 +7,96 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
+## cont.172 (2026-08-01) §5C archived; §5B gate PASSES for the shape channel — and cont.171's own existence condition (5.3d) was wrong
+
+User: "now archive the 5C work and start working on 5B".
+
+### Archived §5C
+
+27 `scripts/diag5c_*.py` -> `archive/`; 30 `jobs/job_diag5c_*.sh` + `job_lag5c_sweep.sh` ->
+`jobs/archive/`. `archive/README.md` gains a section stating the verdict (integrand tail index
+~1.3, denominator grows with bank size, survives removing both cont.170 setup defects) and
+pointing at `diag5c_bankctl.py`'s docstring for the protocol.
+
+KEPT in the active tree, deliberately: `scripts/closure_v2_lagrangian.py` (it is the §5C driver
+but also the shared V2 plumbing -- `rebuild`, `load_rows`, `scene_context`, `phi_block` -- that
+V2-side §5B work needs, and the archived probes import it from there) and
+`sbs_shear/lagrangian_score.py` (tested module, 10 tests). Verified the archived scripts still
+resolve `SBSI_ROOT = dirname(dirname(__file__))` to the repo root from `archive/`.
+
+### The correction: (5.3d) as written in cont.171 was WRONG
+
+cont.171 added an existence condition claiming that with `p_0 ~ (1-|eps|^2)^a` the generator
+behaves as `u ~ a/(1-|eps|^2)`, so the Fisher information exists only for `a > 1`. It assumed
+the shear velocity is `O(1)` at the edge of the ellipticity disc. **It is not.** The Mobius map
+preserves the unit disc, so the velocity is TANGENT to the boundary and its normal component
+vanishes like `1-|eps|^2`, exactly cancelling the divergence of `grad log p_0`. This was already
+visible in `score_inference.py`'s own closed form `u_a = e_a[4 - 2 psi'(t)(1-t)]`, where the
+prior enters only through `(1-t) psi'(t)`; cont.171 did not check the doc against it.
+
+Corrected statement: `E_0[u^2] < inf  <=>  (1-t) psi'(t)` is square-integrable against `p_0`,
+i.e. the log-density's slope may not blow up faster than `1/(1-t)`. For the power law that
+product is the constant `-a`, so `u_a = e_a(4+2a)` is BOUNDED and `E_0[u^2] = 4(a+2)` is finite
+for every `a > -1` (mere normalizability) -- including `a = 0`, a prior that does not vanish at
+the edge at all. The general PRINCIPLE cont.171 asserted (§5B's integrand is analytic, so its
+tail is a property of a prior you write down) survives intact and is now demonstrated rather
+than asserted; only the specific condition was wrong, and it was wrong in the restrictive
+direction.
+
+### New: `scripts/diag5b_gate.py` (login node, 16 s, no Slurm -- 11 MB prior cache + numpy)
+
+The gate §5B.4 asked for, run before trusting (5.3). What transfers from §5C and what does not
+is stated in the docstring: §5C's node bank is a Monte Carlo SAMPLE so disjoint blocks measure
+its realisation noise, whereas §5B's is a deterministic GRID with flat quadrature and has no
+realisation scatter at all -- two runs agree bit for bit. The failure mode is non-convergence,
+not noise, so the bank ladder is replaced by two grid ladders (refinement, and reach toward the
+edge). A disjoint-block ladder here would have been theatre.
+
+RESULTS (fitted `SmoothRadialPrior`, 2M-shape cache; §5C's numbers alongside):
+
+      diagnostic                      §5C (phi')        §5B (u)
+      Hill index, top 5/1/0.2%        1.32-1.38         9.42 / 41.5 / 544
+      integrand bounded               no                yes, max|u| = 12.27
+      denominator vs bank size        grows, +0.20      flat: Var_0(u) 35.3771->35.3788
+                                                        over a 25x node refinement (0.005%)
+      reach sensitivity               --                0.03% over rmax 0.85 -> 0.995
+
+  Var_0(u) = 35.379 by grid quadrature vs 35.410 from 2e6 prior draws -- two independent routes,
+  0.09% apart. Bartlett `E_0[u] = 0` to 1e-15; curvature residual falls to 2e-5 of Var_0(u).
+  Analytic control reproduces `u_a/[e_a(4+2a)] = 1.000000` at edge distances down to 1e-7 for
+  a = 0, 1, 2, differentiating the EXACT Mobius pullback.
+
+VERDICT: **§5C's variance non-existence does not arise in §5B's shape channel.** The default
+`rmax = 0.95` truncation, which never visits the edge, is not load-bearing.
+
+A confound I introduced and then removed: the first reach ladder held `n` fixed while widening
+`emax`, which silently coarsens the spacing (G moved only 11,065 -> 11,069, so the top rungs
+were the same grid). Rerun with the grid STEP held fixed and `n` scaled with `emax`, so reach
+varies alone; the conclusion is unchanged.
+
+### Limitations, stated plainly
+
+- SHAPE CHANNEL ONLY. The disc-tangency argument is special to the Mobius action on the unit
+  disc. Size and flux live on a half-line under a dilation, separation on the plane; each needs
+  its own edge analysis. The gate script says so in its own closing lines.
+- A bounded generator says nothing about whether the POSTERIOR WEIGHTS concentrate. That is a
+  property of the flow, not the prior, and is the separate worry in §5B.3 item 5.
+- This does not revive §5B as a science route. cont.161's verdict stands: §5B agrees with
+  transport everywhere honest and is worse in the extreme-blend tail, and its three live defects
+  (no detection channel; no `I_sel`, which is precisely the term that survives for a spin-2
+  shear; 2-D-shape-only node bank, so it does not reach the 4-D V2 model) are all untouched.
+  What changed is only that the estimator's denominator is now known to be a real number.
+
+FILES: `scripts/diag5b_gate.py` (new); `INFERENCE.md` §5B.4 rewritten + §6 bullet; 27+31 files
+moved to archive; `archive/README.md`. VALIDATION: `pytest tests/ -q` -> 34 passed; LaTeX
+delimiters balanced (150 display, 1416 inline, both even); tags 5.3/a/b/c/d in order.
+
+NEXT (not started, needs a green light): the same edge analysis for the size/flux channel
+(half-line under dilation) and the separation channel (plane, where §5B.1 already predicts the
+positional generator vanishes for an unclustered field); or, if §5B is to be revived as science
+rather than as machinery, the cont.164 defect list -- detection channel, `I_sel`, and a node
+bank over the 4-D V2 output.
+
 ## cont.171 (2026-08-01) §5B math review: core algebra verified, 3 imprecisions fixed, 4 missing pieces added (incl. the positional blend channel vanishes for an unclustered field)
 
 Document-only change to `INFERENCE.md` (§3, §5B.1–5B.4 new, §6). No code, no jobs. Prompted by
