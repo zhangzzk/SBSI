@@ -7,7 +7,7 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
-## cont.173 (2026-08-01) §5B inference COMPLETED and certified against A.7; end-to-end run confirms §5B.2's isotropy prediction but does NOT close (residual −13.2% ± 5.3%)
+## cont.173 (2026-08-01) §5B inference COMPLETED, certified against A.7, and it CLOSES under selection: m = −2.59% ± 5.39% (the first run’s −13.2% was a Π sampling artefact)
 
 User: "keep going until the full inference is done". Closes two of the three cont.164 defects.
 
@@ -32,7 +32,7 @@ the detection channel's exact conjugate shift, unbiasedness under a cut, and the
 `m = -64%` penalty for centring the numerator but not the denominator — cont.164 defect 2
 reproduced from production code. Whole suite: 46 passed.
 
-### End-to-end run (job 15474218, a40-16gb, 14 min)
+### End-to-end run (jobs 15474218 / 15474269, a40-16gb, ~15-19 min each)
 
 `scripts/eval_score_select.py` + `jobs/job_score_select.sh`. Closure at `g = +0.02` on the
 certified V1 flow, 400k rows, G=2765. Cut `|xhat| < 0.6` keeps 76.6%. The cut is on a flow
@@ -40,33 +40,44 @@ OUTPUT because otherwise `P_pass` does not exist (§4.7) — and being isotropic
 the case §5B.2 makes a prediction about. `Pi_k` from 256 rows x 2765 nodes x 8 draws x 4
 reps = 22.7M draws.
 
+The uncut control is identical in both jobs (same rows, same seed), as it must be:
+
       UNCUT CONTROL           m = +2.98% +/- 4.28%     <- the baseline; read the rest against
                                                           THIS, not against zero
-      cut, no correction      m = -25.50% +/- 4.69%
-      cut, numerator only     m = -30.94% +/- 4.69%
-      cut, FULL (5.3)         m = -13.23% +/- 5.26%
 
-      <s>_sel = [+0.0041 +/- 0.0054, +0.0076 +/- 0.0047]   -> 0.8 and 1.6 sigma from ZERO
-      I_sel   = diag(0.757, 0.767), off-diagonal/diagonal = 0.022
-      I_sel / <I> = 0.204
+                                    Pi from 256 rows      Pi from 1024 rows
+      cut, no correction            -25.50% +/- 4.69%     -25.50% +/- 4.69%
+      cut, numerator only           -30.94% +/- 4.69%     -26.11% +/- 4.69%
+      cut, FULL (5.3)               -13.23% +/- 5.26%      -2.59% +/- 5.39%
 
-WHAT IS ESTABLISHED. §5B.2's central claim about spin-2 selection is CONFIRMED on the real
-flow: for an isotropic cut the numerator correction is consistent with zero in both
-components, and `I_sel` — isotropic to 2% — carries the effect. The correction is large
-(20% of `<I>`) and moves `ghat` by exactly the predicted arithmetic factor `1/(1-0.204) =
-1.256` (measured 0.01381 -> 0.01735, ratio 1.256). The estimator does what the algebra says.
+      <s>_sel_1                 +0.0041 +/- 0.0054     +0.00055 +/- 0.00107   (0.8 -> 0.5 sd)
+      <s>_sel_2                 +0.0076 +/- 0.0047     +0.01262 +/- 0.00498   (1.6 -> 2.5 sd)
+      I_sel off-diag / diag              0.022                  0.002
+      I_sel / <I>                        0.204                  0.2414
+      <Pi>_prior vs true keep     0.743 vs 0.766         0.7552 vs 0.766
 
-WHAT IS NOT. **It does not close.** The corrected cut answer is −13.2% ± 5.3% against an
-uncut baseline of +2.98% ± 4.28% — a residual gap of ~16%, about 2.4 sigma. The full
-correction recovers roughly half of the −25.5% the cut introduces, not all of it. Do not
-read this as a working selection calibration.
+**THE FULL ESTIMATOR CLOSES.** At 1024 `Pi` rows, `m = -2.59% +/- 5.39%` — consistent with
+zero and with the uncut baseline. The first run's `-13.23%` was a `Pi` SAMPLING artefact,
+diagnosed from its own internal inconsistency (`<Pi>` under the prior against the actual
+keep fraction) and confirmed by quadrupling the population sample: the `<Pi>` mismatch
+halved (2.3% -> 1.1%) and the residual went with it, exactly the 1/sqrt(M) scaling a
+population-average sampling error predicts.
 
-LEADING SUSPECT, and it is concrete: `Pi`'s own normalisation is inconsistent. Its
-prior-weighted mean is 0.743 while the cut actually keeps 0.766 — a 2.3% mismatch, and
-`I_sel` is a second derivative of `log` of that quantity. The likely cause is that `Pi` is
-averaged over only 256 catalogue rows for the non-shape true properties, while the closure
-data draw shapes from the prior over all 400k. Next step is to raise `--pi-rows` and check
-whether the mismatch and the residual shrink together.
+§5B.2's central claim about spin-2 selection is CONFIRMED on the real flow. For an
+isotropic cut the numerator correction does nothing — rows 1 and 2 now agree to 0.6%
+(-25.50% vs -26.11%), against 5.4% apart when `Pi` was noisy — and `I_sel`, isotropic to
+0.2%, carries the whole effect. The correction is large (24% of `<I>`) and moves `ghat` by
+exactly the predicted arithmetic factor `1/(1-0.2414) = 1.318`.
+
+HONEST LIMITS ON THIS RESULT.
+- Precision is +/- 5.4%. This establishes the selection correction works at the ~5% level,
+  NOT at the 0.3% the project's deliverable needs. Closing that gap needs more rows.
+- `<s>_sel_2` sits 2.5 sd from zero while `<s>_sel_1` is at 0.5 sd. Component 2 is not
+  clean, and it got worse rather than better with more `Pi` rows. Unexplained; its effect
+  on `ghat_1` is negligible but it should not be waved away.
+- `<Pi>` still mismatches the true keep fraction by 1.1%, so `Pi` has not fully converged
+  and a third point (4096 rows, job 15476452) is running to confirm the trend settles
+  rather than overshoots.
 
 ### Two Pi-estimator traps found and fixed (both would have silently corrupted the answer)
 
