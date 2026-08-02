@@ -724,9 +724,24 @@ the stated assumptions the estimator's **entire** selection correction sits in t
 is a single number $\iota$ rather than a matrix. Of the two corrections, the familiar first-order one
 is the one that vanishes; keeping only it would be keeping only the term that does nothing.
 
+**Measured, the exact zero is false — and that is informative.** On the certified V1 flow at
+`|\hat{\mathbf x}|<0.6` (WORKLOG cont.174, 4–8M objects),
+
+$$\langle s\rangle_{\rm sel}=(-0.00201\pm0.00055,\;+0.01039\pm0.00052),$$
+
+i.e. $20\sigma$ from zero in the second component, growing to $+0.01935\pm0.00075$ when the cut is
+tightened to $0.4$. The derivation above is not wrong; its **premise** is. The argument needs the
+population isotropic and the cut rotation-invariant *as the model sees them*, and a trained flow is
+not exactly equivariant — so $\langle s\rangle_{\rm sel}$ is a direct, calibrated measure of that
+non-equivariance, available for free from a bank that has to be built anyway. Read it as a diagnostic,
+not as noise. The *qualitative* claim survives intact: $\mathcal I_{\rm sel}$ moves $m$ by $+27.5\%$
+against the numerator term's $+2.80\%$, so the denominator still carries $\sim\!91\%$ of the
+correction, and keeping only the first-order term would still be keeping almost the wrong one.
+
 That is §4 restated in the estimator's own language. An isotropic population under an isotropic cut
 cannot acquire a preferred direction, so selection cannot produce an **additive** bias — only a
-**multiplicative** one. $\langle s\rangle_{\rm sel}$ is the additive channel, and it is zero;
+**multiplicative** one. $\langle s\rangle_{\rm sel}$ is the additive channel, and it is zero *to the
+extent the flow is equivariant*;
 $\mathcal I_{\rm sel}$ is the multiplicative channel, and it is $R_{\rm sel}$ (4.5) viewed from the
 score side. Both are boundary-concentrated and both are driven by the same $\partial_\gamma\log T=2e$
 of (4.6) — (4.5) through the first-order correlation $\langle\hat e\,e\rangle$ at the threshold,

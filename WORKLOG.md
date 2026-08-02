@@ -7,7 +7,122 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
-## cont.173 (2026-08-01) §5B inference COMPLETED, certified against A.7, and it CLOSES under selection: m = +2.14% ± 5.44% vs an uncut baseline of +2.98% ± 4.28%, on a clean 3-point Π convergence
+## cont.174 (2026-08-02) §5B at 20x the precision: the estimator itself is unbiased to **+0.034% ± 0.252%** uncut, the selection correction turns −28% into **+0.78% ± 0.27%** — and cont.173's Π ladder was a nested-prefix artefact
+
+User: "the forward differentiating approach gives certified m within 3%. push forward towards
+that. work autonomously tonight."
+
+### RETRACTION FIRST: cont.173's +2.14% and its "clean 3-point Π convergence"
+
+`Pi`'s population rows were `df.iloc[:M]` — a PREFIX of a catalogue ordered by case — so the
+three ladder rungs were NESTED inside one another. They were one correlated draw relaxing
+toward the truth, not three independent measurements. That is the nested-ladder trap §5B.4
+records, for the third time in this project. Diagnosis and proof:
+
+- the prefix runs 1.3–1.7 sigma faint in `measured_mag_auto`; fainter galaxies have noisier
+  measured shapes and so a lower pass fraction,
+- so `<Pi>` came out biased LOW at every rung with a sign that NEVER FLIPPED
+  (−3.0/−1.4/−0.5% in cont.173; −3.6/−2.1% reproduced here at the same M),
+- switching to RANDOM rows without replacement, fresh per replicate: the mismatch drops to
+  −0.65%/+0.52% at the same M **and changes sign**, and `I_sel/<I>` moves from the prefix's
+  0.24–0.26 to 0.27.
+
+cont.173's `m = +2.14%` was therefore biased by a `Pi` that was never converged, only nested.
+Superseded by the table below. The three §5B.4 traps are now: nested error ladders,
+split-half-over-rows under CRN, and nested population subsamples — all the same mistake.
+
+### Five runs (all: certified V1 flow, closure at known `g`, cut on a flow OUTPUT, G=2765, 200-block jackknife, `Pi` = M random rows x 2765 nodes x 8 draws x 6 independent replicates, ladder M = 1024/4096/16384)
+
+`d(m)` is the PAIRED cut-minus-uncut difference, jackknifed block by block. It is the actual
+question — does the correction put the cut sample back where the uncut one is — and the two
+share their galaxies, so it is better determined than either estimate alone.
+
+      job        cut     g   objects   keep    uncut m         no correction        FULL (5.3)
+      15481003   0.6  0.02   4M ring  76.5%  −0.047 ±0.829%  −29.609 ±0.696%   **+0.700 ±0.892%**
+      15481004   0.4  0.02   4M ring  56.0%  −0.047 ±0.829%  −44.345 ±0.897%   **−1.433 ±1.602%**
+      15481005   0.6  0.02   4M NONE  76.5%  +0.942 ±1.289%  −30.366 ±0.863%   **+0.038 ±1.062%**
+      15477364   0.6  0     8M ring  76.5%  (2.1±12.5)e−5   (−5.4±0.9)e−4 6σ  **(+4±11)e−5**
+      15477365   0.6  0.05   8M ring  76.4%  +0.034 ±0.252%  −28.018 ±0.210%   **+0.780 ±0.270%**
+
+**1. THE ESTIMATOR ITSELF IS UNBIASED TO A QUARTER PERCENT.** The uncut control — §5B with no
+selection at all, where both population terms vanish by construction — gives `m = +0.034% ±
+0.252%` at `g = 0.05` and `−0.047% ± 0.829%` at `g = 0.02`, with an additive null at `g = 0` of
+`(2.1 ± 12.5)e−5`. cont.173 knew this number only to ±4.28%. This is the direct answer to the
+user's framing: the forward-differentiating route reproduces the injected shear to **±0.25%**,
+not ±3%.
+
+**2. THE SELECTION CORRECTION WORKS, AND A RESIDUAL SURVIVES.** Uncorrected, the cut biases
+`m` by −29.6% (keep 76.5%) and −44.3% (keep 56.0%). The full (5.3) removes ~97% of it. But at
+the most precise configuration the residual is `+0.780% ± 0.270%` — **2.9 sigma, not zero**.
+The `g = 0.02` run gives `+0.700% ± 0.892%`, the same central value, so the residual is
+MULTIPLICATIVE (~+0.75%) rather than additive, consistent with the `g = 0` null being clean.
+It is not `Pi`: at this cut the ladder is flat to 0.15% (rung moves 3.92%, then 0.004%).
+Candidates not yet separated: grid quadrature at G=2765, the flow's non-equivariance (item 4),
+and higher-order terms in the linearised estimator. Do not attribute it without a test.
+
+**3. NULL TEST AT g = 0 (new).** With no shear, the cut ALONE manufactures a spurious additive
+shear of `−5.4e−4` at 6 sigma; the full correction removes it to `(4 ± 11)e−5`. Selection bias
+is real at `g = 0` and the correction kills it.
+
+**4. §5B.2's "`<s>_sel = 0` EXACTLY" IS FALSIFIED AT 20 SIGMA — and is a useful diagnostic.**
+Measured `<s>_sel = (−0.00201 ± 0.00055, +0.01039 ± 0.00052)` at cut 0.6, growing to
+`(+0.00301 ± 0.00078, +0.01935 ± 0.00075)` at cut 0.4. The proof in §5B.2 is correct; its
+PREMISE (isotropic population, rotation-invariant cut) fails because the trained flow is not
+exactly equivariant, so `<s>_sel` is a direct, calibrated measure of that non-equivariance.
+The qualitative claim survives: `I_sel` carries +27.5% of the correction against the
+numerator's +2.80%, i.e. ~91%. cont.173's "rows 1–2 agree to 1.5%" was a statistics artefact;
+with 8x the sample they differ significantly.
+
+**5. AN ADDITIVE `c_2` IN THE ESTIMATOR.** The uncut `ghat_2` is `+5.4e−4` (g=0.02), `+4.2e−4`
+(g=0.05) and `+4.9e−4` (g=0) — the same value at three shears INCLUDING zero, 3–4 sigma each,
+so a pure additive bias, not multiplicative. Same sign and scale as item 4's `<s>_sel_2`.
+
+**6. ERROR-BAR MACHINERY VALIDATED AT SCALE.** Ring pairs: jackknife 0.829% against a Fisher
+bar of 1.352%, x1.6. No-ring control at matched object count: 1.289% against 1.353%, x1.0 —
+the jackknife reproduces Cramer-Rao exactly where Cramer-Rao is the right answer, and beats it
+only where the pairing earned it. The two configurations agree on the answer (+0.700 ± 0.892%
+vs +0.038 ± 1.062%), so the variance reduction did not buy precision by moving the estimate.
+
+**7. Pi CONVERGENCE IS NOW MEASURED, NOT ASSUMED**, and it is cut-dependent. At keep 76.5% the
+ladder is flat (moves 3.92%, then 0.004%). At keep 56.0% it is NOT (12.24%, then 2.26% against
+a 1.60% error bar), so **the −1.433% for the harder cut is provisional** — the rungs are still
+marching toward zero (−15.9 → −3.7 → −1.4) and it needs more `Pi` rows. `I_sel/<I>` rises from
+0.273 to 0.473 as the cut tightens, as expected.
+
+### Code (all committed; 57 tests pass, 11 new)
+
+- `sbs_shear/score_inference.py`: `blocked_sums`, `jackknife_shear`, `jackknife_sigma`. Once
+  objects are ring-paired, `1/sqrt(sum I)` overstates the error by exactly the reduction the
+  pairing bought — it would hide the thing the pairing was for.
+- `tests/test_jackknife_shear.py`: reproduces the Fisher bar on unpaired rows, beats it by the
+  predicted `nu/sigma` on ring pairs, matches the scatter of 40 independent realisations for
+  both pairings, hits the analytic `sqrt(1/f − 1)` for a paired difference.
+- `scripts/eval_score_select.py`: `--ring rot90` (90-degree pairs on the same catalogue row;
+  x1.6, and `--share-latents` measured WORSE at x1.2, so off), `--shape-reps`, `--pi-rows` as a
+  comma list (one score pass yields the whole ladder), `--closure-g 0` as a null test, random
+  `Pi` rows, and each leg scored ONCE — `(s_i, I_i)` know nothing about the cut, so the cut
+  estimate is a subset, not a second pass. Verified bit-for-bit against job 15477257.
+
+### Known limits
+
+- The +0.78% residual is unexplained (item 2). It is the thing to chase next.
+- Harder cut not converged in `Pi` (item 7).
+- Shape channel and the V1 flow only. cont.164 defect 3 (a node bank beyond the 2-D isotropic
+  shape grid, hence the 4-D V2 model and measured size/mag cuts) is still untouched.
+- The detection channel is implemented and unit-tested but still unexercised: the closure data
+  have no detection step and `detection_classifier.py` is a stub.
+- `--shape-reps` re-draws shapes on the same ~2M catalogue rows, so it buys precision on the
+  estimator's bias FOR THIS POPULATION, not a wider population average.
+- First three full-size jobs (15477358/59/60) hit the 8h wall: `load_g0` returns the full 2M
+  rows (the ~929k assumed was the PRIOR CACHE's size), and five concurrent jobs on shared a40
+  vGPU slices ran at 3.9 ms/object against 1.08 solo. Re-run at 2 legs with a 16h limit.
+
+### Next
+
+Chase the +0.78%: grid refinement (G) is the cheapest discriminator, then an equivariance
+ablation against item 4, then the linearisation. Push `Pi` for the harder cut.
+
+## cont.173 (2026-08-01) [SUPERSEDED by cont.174 — the Π ladder below was nested, and +2.14% with it] §5B inference COMPLETED, certified against A.7, and it CLOSES under selection: m = +2.14% ± 5.44% vs an uncut baseline of +2.98% ± 4.28%, on a clean 3-point Π convergence
 
 User: "keep going until the full inference is done". Closes two of the three cont.164 defects.
 
