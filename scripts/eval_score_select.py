@@ -385,14 +385,35 @@ def main():
         print(f"  I_sel/<I> = {i_sel[0,0]/mean_i[0,0]:+.4f} (A.7's 2/pi analogue);  "
               f"off-diag/diag = {off/max(abs(dia),1e-12):.3f} (0 if the cut is isotropic)")
 
+        # Pi's OWN UNCERTAINTY MUST REACH THE ANSWER.  The jackknife bars galaxies; it says
+        # nothing about how well `Pi` -- hence `<s>_sel` and `I_sel` -- is known.  Those are
+        # measured from a finite population sample, they enter only the CUT estimate, and so
+        # they land undiluted on the cut-minus-uncut difference.  Left out, a 0.63% error on
+        # `I_sel` (which is +/-0.24% on m at this cut) silently vanished and turned a 2.2
+        # sigma residual into an apparent 2.9 sigma one.  Re-solve the estimator once per Pi
+        # replicate and add the scatter of the mean in quadrature.  Cheap: the catalogue sums
+        # are already formed, so each replicate is one 2x2 solve.
+        sum_s, sum_i, n_keep_rows = s.sum(axis=0), info.sum(axis=0), len(s)
+
+        def ghat_with(ss_, ii_):
+            zs = np.zeros(2) if ss_ is None else np.asarray(ss_, float)
+            zi = np.zeros((2, 2)) if ii_ is None else np.asarray(ii_, float)
+            return np.linalg.solve(sum_i - n_keep_rows * zi, sum_s - n_keep_rows * zs)
+
         rows = (("none      (sum s / sum I)", None, None),
                 ("numerator only", s_sel, None),
                 ("FULL (5.3)", s_sel, i_sel))
         print(f"  {'correction':<24} {'ghat_1':>10} {'ghat_2':>10} {'m = ghat/g - 1':>14}"
-              + (f" {'d(m) vs uncut':>16} {'sigma':>9} {'nsig':>6}" if reps_u is not None
-                 else ""))
+              + (f" {'d(m) vs uncut':>16} {'sig_gal':>8} {'sig_Pi':>8} {'sigma':>8} {'nsig':>6}"
+                 if reps_u is not None else ""))
         for name, ss, ii in rows:
             gh, sig, reps = jackknife_shear(s, info, block_keep, args.jk_blocks, ss, ii)
+            if ss is None and ii is None:
+                sig_pi = 0.0                       # no population term, nothing to propagate
+            else:
+                gj = [ghat_with(q[0] if ss is not None else None,
+                                q[1] if ii is not None else None)[0] for q in per_rep]
+                sig_pi = float(np.std(gj, ddof=1) / np.sqrt(len(gj)))
             line = (f"  {name:<24} {gh[0]:>10.6f} {gh[1]:>10.6f} "
                     f"{gh[0]/gn - (0 if is_null else 1):>18.3%} +/- {sig[0]/abs(gn):.3%}")
             if reps_u is not None:
@@ -403,14 +424,17 @@ def main():
                 # block by block.  Adding the two bars in quadrature throws that away.
                 dm = float(gh[0] - gh_u[0]) / gn
                 d = (reps[:, 0] - reps_u[:, 0]) / gn
-                sd = float(jackknife_sigma(d[:, None])[0])
-                line += f" {dm:>15.3%} {sd:>8.3%} {abs(dm)/max(sd,1e-12):>6.1f}"
+                sd_gal = float(jackknife_sigma(d[:, None])[0])
+                sd_pi = sig_pi / abs(gn)
+                sd = float(np.hypot(sd_gal, sd_pi))
+                line += (f" {dm:>15.3%} {sd_gal:>7.3%} {sd_pi:>7.3%} {sd:>7.3%} "
+                         f"{abs(dm)/max(sd,1e-12):>6.1f}")
                 if name.startswith("FULL"):
                     summary.append((m_pi, float(w @ pi), i_sel[0, 0] / mean_i[0, 0],
                                     gh[0] / gn - (0 if is_null else 1), dm, sd))
             print(line)
 
-    print(f"\n  truth g = {g:+.6f}   (error bars: {args.jk_blocks}-block jackknife)")
+    print(f"\n  truth g = {g:+.6f}   (sigma = galaxy {args.jk_blocks}-block jackknife\n  and Pi replicate scatter, in quadrature -- Pi enters only the CUT estimate, so\n  its error lands undiluted on the difference)")
     print("  §5B.2 predicts the numerator correction does nothing for an isotropic cut")
     print("  and that I_sel carries the whole effect.  Compare rows 1-2 (should agree)")
     print("  against row 3 (should move, and toward the truth).")
