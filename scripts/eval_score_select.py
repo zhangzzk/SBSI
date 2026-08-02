@@ -195,6 +195,9 @@ def main():
         ap.add_argument(f"--{k.replace('_', '-')}", type=float, default=v)
     args = ap.parse_args()
 
+    gn = float(args.closure_g) or 1.0   # g=0 is the null test: quote c = ghat, not m
+    is_null = float(args.closure_g) == 0.0
+    lab = "c = ghat (truth 0)" if is_null else "m = ghat/g - 1"
     rk = dict(pixel_rms=args.pixel_rms, pixel_size=args.pixel_size, zero_mag=args.zero_mag,
               psf_fwhm=args.psf_fwhm, moffat_beta=args.moffat_beta)
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
@@ -274,18 +277,31 @@ def main():
         kl = np.hypot(ehl[:, 0], ehl[:, 1]) < c
         n_keep += int(kl.sum())
         n_tot += len(kl)
-        sk, ik = score_pass(est, nodes, frl.iloc[np.flatnonzero(kl)].reset_index(drop=True),
-                            ehl[kl], args.chunk, f"kept L{li+1}/{n_legs}",
-                            grad_chunk=args.grad_chunk, grad_delta=args.grad_delta,
-                            slab_mult=args.slab_mult, ll_dtype=LL_DTYPE[args.ll_dtype])
-        for dst, v in zip(acc["kept"], (sk, ik, blk[kl])):
-            dst.append(v)
+        # SCORE EACH LEG ONCE.  `(s_i, I_i)` are per-object -- they depend on that row's
+        # own conditioning and its own `xhat`, and on nothing about the cut, which enters
+        # only by choosing WHICH rows join the sums.  So the cut estimate is a subset of
+        # the uncut one, and scoring the kept rows a second time was pure waste (43% of
+        # the run at this cut).  The one thing that could couple a row to its position in
+        # the frame is the armed mu-correction, which `log_likelihood` indexes by
+        # `row_offset`; assert it is absent rather than assume it, and fall back to two
+        # independent passes if it is ever armed.
         if args.uncut_control:
-            su, iu = score_pass(est, nodes, frl, ehl, args.chunk, f"uncut L{li+1}/{n_legs}",
+            assert getattr(est, "_mu_corr", None) is None, \
+                "mu-correction is armed: rows are position-dependent, score legs separately"
+            su, iu = score_pass(est, nodes, frl, ehl, args.chunk, f"leg {li+1}/{n_legs}",
                                 grad_chunk=args.grad_chunk, grad_delta=args.grad_delta,
                                 slab_mult=args.slab_mult, ll_dtype=LL_DTYPE[args.ll_dtype])
+            sk, ik = su[kl], iu[kl]
             for dst, v in zip(acc["uncut"], (su, iu, blk)):
                 dst.append(v)
+        else:
+            sk, ik = score_pass(
+                est, nodes, frl.iloc[np.flatnonzero(kl)].reset_index(drop=True),
+                ehl[kl], args.chunk, f"kept L{li+1}/{n_legs}",
+                grad_chunk=args.grad_chunk, grad_delta=args.grad_delta,
+                slab_mult=args.slab_mult, ll_dtype=LL_DTYPE[args.ll_dtype])
+        for dst, v in zip(acc["kept"], (sk, ik, blk[kl])):
+            dst.append(v)
         del frl, ehl
     del est
     keep_frac = n_keep / max(n_tot, 1)
@@ -303,9 +319,9 @@ def main():
         print(f"\nUNCUT CONTROL (Pi == 1, so both population terms vanish by construction):")
         print(f"  ghat = [{gh_u[0]:+.6f} +/- {sig_u[0]:.6f}, "
               f"{gh_u[1]:+.6f} +/- {sig_u[1]:.6f}]   "
-              f"m = {gh_u[0]/g - 1:+.3%} +/- {sig_u[0]/abs(g):.3%}")
+              f"{lab} = {gh_u[0]/gn - (0 if is_null else 1):+.3%} +/- {sig_u[0]/abs(gn):.3%}")
         print(f"  error bar is a {args.jk_blocks}-block JACKKNIFE.  The Cramer-Rao/Fisher "
-              f"bar would say {fisher_u/abs(g):.3%};")
+              f"bar would say {fisher_u/abs(gn):.3%};")
         print(f"  ring pairing beats it by x{fisher_u/max(sig_u[0], 1e-30):.1f} "
               f"(x1 means no variance reduction, which is correct for --ring none).")
         print(f"  Any bias here is the BASELINE estimator's, not the cut's.  The cut rows")
@@ -378,20 +394,20 @@ def main():
         for name, ss, ii in rows:
             gh, sig, reps = jackknife_shear(s, info, block_keep, args.jk_blocks, ss, ii)
             line = (f"  {name:<24} {gh[0]:>10.6f} {gh[1]:>10.6f} "
-                    f"{gh[0]/g - 1:>13.3%} +/- {sig[0]/abs(g):.3%}")
+                    f"{gh[0]/gn - (0 if is_null else 1):>18.3%} +/- {sig[0]/abs(gn):.3%}")
             if reps_u is not None:
                 # THE PAIRED COMPARISON IS THE ACTUAL QUESTION: does the correction put
                 # the cut sample back where the uncut one is?  Both run on the same rows
                 # and share most of their shape noise, so the DIFFERENCE is much better
                 # determined than either -- but only when jackknifed AS a difference,
                 # block by block.  Adding the two bars in quadrature throws that away.
-                dm = float(gh[0] - gh_u[0]) / g
-                d = (reps[:, 0] - reps_u[:, 0]) / g
+                dm = float(gh[0] - gh_u[0]) / gn
+                d = (reps[:, 0] - reps_u[:, 0]) / gn
                 sd = float(jackknife_sigma(d[:, None])[0])
                 line += f" {dm:>15.3%} {sd:>8.3%} {abs(dm)/max(sd,1e-12):>6.1f}"
                 if name.startswith("FULL"):
                     summary.append((m_pi, float(w @ pi), i_sel[0, 0] / mean_i[0, 0],
-                                    gh[0] / g - 1, dm, sd))
+                                    gh[0] / gn - (0 if is_null else 1), dm, sd))
             print(line)
 
     print(f"\n  truth g = {g:+.6f}   (error bars: {args.jk_blocks}-block jackknife)")
