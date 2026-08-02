@@ -25,12 +25,15 @@ export PYTHONPATH="$REPO:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
 G=${G:-0.02}
 CUT=${CUT:-0.6}
 ROWS=${ROWS:-400000}
-PIROWS=${PIROWS:-256}
+PIROWS=${PIROWS:-4096}          # comma list sweeps the population sample off ONE score pass
 PISAMP=${PISAMP:-8}
+RING=${RING:-rot90}             # 90-degree ring pairs: the shape-noise variance reduction
 
 date; nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>/dev/null
 stdbuf -oL -eL python -u scripts/eval_score_select.py \
   --closure-g "$G" --cut-abs-ehat "$CUT" --max-rows "$ROWS" \
-  --pi-rows "$PIROWS" --pi-samples "$PISAMP" --pi-reps "${PIREPS:-4}" --uncut-control ${EXTRA:-} 2>&1 \
+  --pi-rows "$PIROWS" --pi-samples "$PISAMP" --pi-reps "${PIREPS:-4}" \
+  --ring "$RING" --shape-reps "${SHAPEREPS:-1}" \
+  --jk-blocks "${JKBLOCKS:-200}" --uncut-control ${EXTRA:-} 2>&1 \
   | grep --line-buffered -vE "module command"
 STATUS=$?; date; echo "### DONE (exit $STATUS) ###"; exit $STATUS

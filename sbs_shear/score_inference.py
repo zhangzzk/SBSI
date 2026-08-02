@@ -561,6 +561,77 @@ def full_shear_estimate(s, info, s_sel=None, i_sel=None):
     return np.linalg.solve(den, num), num, den
 
 
+def blocked_sums(s, info, block, n_blocks):
+    """Partial sums of `(count, sum s, sum I)` within each block.  `O(N)`, one pass.
+
+    Everything (5.3) needs from the catalogue is a SUM, so a delete-one-block jackknife
+    costs one subtraction per block once these are in hand -- no re-scan of the rows.
+    """
+    b = np.asarray(block, dtype=np.int64)
+    if b.ndim != 1 or b.shape[0] != s.shape[0]:
+        raise ValueError("block must be (N,) matching s")
+    if b.size and (b.min() < 0 or b.max() >= n_blocks):
+        raise ValueError("block ids must lie in [0, n_blocks)")
+    cnt = np.bincount(b, minlength=n_blocks).astype(np.float64)
+    ns = np.stack([np.bincount(b, weights=s[:, a], minlength=n_blocks) for a in range(2)],
+                  axis=1)
+    ni = np.stack([np.stack([np.bincount(b, weights=info[:, a, c], minlength=n_blocks)
+                             for c in range(2)], axis=1) for a in range(2)], axis=1)
+    return cnt, ns, ni
+
+
+def jackknife_shear(s, info, block, n_blocks, s_sel=None, i_sel=None):
+    """(5.3) plus a delete-one-block jackknife covariance.
+
+    WHY NOT THE FISHER ERROR BAR.  `1/sqrt(sum_i I_i)` is the Cramer-Rao bound for a
+    sample of INDEPENDENT objects.  The moment the catalogue contains ring pairs -- two
+    orientations of the same galaxy, deliberately anticorrelated so the intrinsic shape
+    noise cancels -- that bound is no longer the estimator's variance, and it overstates
+    it by whatever the variance reduction achieved.  Reporting it would hide the very
+    thing the pairing was for.  The jackknife measures the realised scatter instead, and
+    is correct either way; with unpaired rows it simply reproduces the Fisher bar.
+
+    Blocks must respect the pairing: both members of a ring pair belong to the SAME
+    block, or deleting one member while keeping the other breaks the cancellation and
+    the jackknife reports the unpaired variance again.
+
+    `s_sel` / `i_sel` are treated as FIXED (their own uncertainty is reported separately
+    by the population block's replicates); the jackknife here is over the catalogue only.
+
+    Returns `(ghat (2,), sigma (2,), reps (n_blocks, 2))`.  `reps` is returned so a
+    caller can jackknife a DIFFERENCE of two estimates that share a blocking -- e.g. cut
+    versus uncut on the same rows, where the difference is far better determined than
+    either estimate, because the two share their shape noise.
+    """
+    s = np.asarray(s, dtype=np.float64)
+    info = np.asarray(info, dtype=np.float64)
+    cnt, ns, ni = blocked_sums(s, info, block, n_blocks)
+    zs = np.zeros(2) if s_sel is None else np.asarray(s_sel, float)
+    zi = np.zeros((2, 2)) if i_sel is None else np.asarray(i_sel, float)
+
+    def est(n, sum_s, sum_i):
+        return np.linalg.solve(sum_i - n * zi, sum_s - n * zs)
+
+    full = est(cnt.sum(), ns.sum(axis=0), ni.sum(axis=0))
+    # One replicate per block ALWAYS, including any empty ones (which simply reproduce
+    # `full` and contribute nothing to the scatter).  Length `n_blocks` regardless of
+    # occupancy is what lets a caller subtract two runs' replicates block by block; a
+    # ragged array silently misaligns the pairing it is there to exploit.
+    reps = np.stack([est(cnt.sum() - cnt[b], ns.sum(axis=0) - ns[b], ni.sum(axis=0) - ni[b])
+                     for b in range(n_blocks)])
+    return full, jackknife_sigma(reps), reps
+
+
+def jackknife_sigma(reps):
+    """Delete-one jackknife standard error from the leave-one-out replicates."""
+    reps = np.asarray(reps, dtype=np.float64)
+    b = len(reps)
+    if b < 2:
+        return np.full(reps.shape[1:], np.nan)
+    d = reps - reps.mean(axis=0)
+    return np.sqrt((b - 1) / b * np.sum(d ** 2, axis=0))
+
+
 def project(s, info, ghat1, ghat2):
     """Project `(s, I)` onto the per-object applied-shear direction.
 
