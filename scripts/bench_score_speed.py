@@ -75,8 +75,8 @@ def main():
                     help="rows for the score-pass timing; big enough that the fixed "
                          "start-up cost is not what is being measured")
     ap.add_argument("--grid-n", type=int, default=61)
-    ap.add_argument("--grid-emax", type=float, default=0.99)
-    ap.add_argument("--grid-rmax", type=float, default=0.99)
+    ap.add_argument("--grid-emax", type=float, default=0.96)
+    ap.add_argument("--grid-rmax", type=float, default=0.95)
     ap.add_argument("--fd-delta", type=float, default=0.01)
     ap.add_argument("--info-delta", type=float, default=0.02)
     ap.add_argument("--grad-delta", type=float, default=0.05)
@@ -117,8 +117,6 @@ def main():
     # ---- one leg's worth of data, drawn exactly the way the driver draws it -------------
     rng = np.random.default_rng(args.seed)
     sub = df.iloc[:args.rows].copy()
-    ang = rng.uniform(0, 2 * np.pi, len(sub))
-    del ang
     e1, e2 = prior.sample(len(sub), rng)
     sub["e1_input_rot0_p"], sub["e2_input_rot0_p"] = apply_shear_to_ellipticity(
         e1, e2, args.closure_g * np.ones(len(sub)), np.zeros(len(sub)))

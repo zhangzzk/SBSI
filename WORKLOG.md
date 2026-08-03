@@ -28,12 +28,24 @@ population `Pi` 6 reps × ~27 min = **2.7 h**.
    the GPU (`cut` now takes a torch tensor); only the `(n_ladder,)` rung values come back.
    This is the same structure `PosteriorShapeEstimator` already asserts for the *scoring* side;
    it was never exploited on the sampling side.
-2. **Verified, not argued.** `scripts/check_pi_fastpath.py` transcribes the old loop literally
-   and compares. Job 15490047: `max |fast − ref| = 0.000e+00` over 12 nodes × 4096 rows × 8
-   draws × 2 reps, against `1/(rows·draws) = 6.1e-05` for a single flipped draw. Bit-identical,
-   so no `Pi`-dependent result changes. Guards added inside the function itself (residual flow
-   must not see the shape dims; no e-derived features) so a future checkpoint cannot silently
-   invalidate the reuse.
+2. **Verified at the level that matters, after a first attempt that tested the wrong thing.**
+   `scripts/check_pi_fastpath.py` transcribes the old loop literally and compares.
+   - At 4096 rows / 12 nodes: `max |fast − ref| = 0.000e+00` (job 15490047).
+   - At 65 536 rows / 64 nodes it is **not** zero: `max = 3.8e-06`, exactly **one flipped
+     draw in 67 million**, mean `|dPi| = 6e-08`. The two paths reach the same sample by
+     different arithmetic (`(resid+mu)*scale+mean` in torch vs `flow.sample()+mu` then
+     `inverse_transform_array` in numpy), so a draw sitting within float rounding of the cut
+     can land on the other side. That is rounding; my original tolerance (literal zero)
+     was wrong, not the code.
+   - **The decisive test**: `Pi` is not the number that matters — `<s>_sel` is a
+     near-cancellation and amplifies whatever survives in `Pi`, so a small `dPi` does not
+     imply a small `d<s>_sel`. On the FULL 2765-node bank, 6 replicates, 16 384 rows
+     (job 15490596): `d<s>_sel = [+1.7e-08, +3.7e-09]` and `dI_sel00 = −4.8e-07`, against a
+     replicate error of ~3e-04. **Four orders of magnitude below anything observable.**
+   - **Deterministic**: jobs 15490217 and 15496629, same config, are digit-identical on every
+     reported value.
+   Guards added inside the function itself (residual flow must not see the shape dims; no
+   e-derived features) so a future checkpoint cannot silently invalidate the reuse.
 3. **The score pass is honest work, run in the wrong precision on a third of a card.** Per leg
    it is 2M rows × 2765 nodes = 2.2e10 flow evaluations; from the checkpoint's shapes (10 ×
    [14→256→256→256→4]) one evaluation is 2.71 MFLOP, so ~60 PFLOP/leg. 5147 s ⇒ ~12 TFLOP/s
@@ -42,12 +54,23 @@ population `Pi` 6 reps × ~27 min = **2.7 h**.
    no half precision anywhere in the repo: the most tensor-core-shaped workload here has only
    ever run in the one precision that cannot use them.
 4. **`--precision {fp32,tf32,bf16,fp16}`** added (`sbs_shear/precision.py`), wrapping both the
-   score pass and `Pi`. **Default is still `fp32`** — unchanged behaviour — pending the
-   accuracy measurement. TF32 has a 10-bit mantissa, the same as the fp16 the log-likelihoods
-   are *already* stored to, and everything downstream is a softmax over the node bank, so it
-   has good reason to be below the noise floor; bf16 (8-bit) does not. The acceptance metric is
-   the shift in `ghat`, not `max |dlogL|`: the definitive runs' statistical error is 2.5e-4 in
-   `ghat`, so ≲1e-5 is irrelevant and ~1e-4 is not.
+   score pass and `Pi`. The acceptance metric is the shift in `ghat`, not `max |dlogL|`: the
+   definitive runs' statistical error is 2.5e-4 in `ghat`. Measured on the `a40-16gb` slice,
+   40 000 rows × 2765 nodes (job 15490165):
+
+   | mode | speedup | d ghat1 | verdict |
+   |---|---|---|---|
+   | fp32 | 1.00× | ref | — |
+   | tf32 | **1.31×** | **+9.0e-06** | safe, 25× below the statistical error |
+   | bf16 | 3.34× | +6.9e-03 | **reject** — 27× the statistical error |
+   | fp16 | 2.55× | −1.9e-03 | **reject** — 7.6× the error |
+
+   **Default left at `fp32`** pending the H200 numbers. The interesting part is the *shape*
+   of that table: bf16 buying 3.3× while TF32 buys only 1.3× says this workload is
+   **memory-bandwidth-bound, not FLOP-bound** — the intermediate activations are ~3 GB per
+   layer at this batch size. TF32 shrinks the multiplier but not the bytes; bf16 halves the
+   bytes, and pays for it exactly where we cannot afford to. That reframes the hardware
+   lever: the H200's ~4.8 TB/s against the A40's ~0.7 TB/s may matter far more than FLOPs.
 5. **Not yet tested: a coarser grid.** Cost is exactly linear in `G = 2765` (`--grid-n 61`).
    cont.175 showed *refining* the grid is null; nobody has checked *coarsening* it.
    `--grid-n 45` would be 1.7× cheaper.
@@ -65,18 +88,52 @@ population `Pi` 6 reps × ~27 min = **2.7 h**.
 neither flag) rather than teaching the loader to accept absent keys; a missing key stays a
 hard error.
 
-**Validation.** 58/58 tests pass. `check_pi_fastpath` exact (job 15490047).
-Precision/hardware benchmarks queued: 15490048 (cip a40-16gb, the old baseline), 15490081
-(inter a40), 15490052 (inter h200nvl).
+7. **A separate bug, pre-existing and fatal to the whole overnight queue.** `keep_frac` was
+   dropped by cont.175's cache refactor — it was the last thing still referencing the kept row
+   mask — so **every run since commit `6d68b65` died with a `NameError`** at the `Pi`
+   consistency check, after doing all the work. The cache smoke test passed that broken code
+   because it only diffs the two runs' output: both crashed identically, and identical
+   failures read as agreement. The smoke test now requires both runs to exit zero *before* the
+   diff is consulted. Fixed in `2ed4d47`.
+8. **Grid defaults had silently diverged.** The driver builds `G = 2765` (`emax 0.96`,
+   `rmax 0.95`); the new bench/check scripts had been written with `0.99/0.99` → `G = 2817`,
+   which is a different node bank and makes `population_terms` incomparable. Aligned to the
+   driver.
 
-**Limitation.** The projected 8.4 h → ~1.2 h is a projection, not a measurement: only the `Pi`
-half (2.7 h → seconds) is established. The precision and full-GPU factors are unmeasured until
-those three jobs land.
+**Wall-clock, measured.** The `Pi` half: the full definitive configuration (6 reps × 65 536
+rows × 2765 nodes × 8 draws = 8.7 billion draws) now runs in **under 50 s**; the whole
+cache-loaded job is 18 s wall (15490217). It was ~2.7 h. The score half is unchanged so far
+(TF32 not yet default, hardware test pending).
 
-**Next.** Read the benchmarks; if TF32 moves `ghat` by ≲1e-5, make it the default. Then
-re-submit the pending `pi_deep6`/`pi_deep4`/`repro6` ladder jobs against the cached score sums
-(`--load-scores`) instead of re-scoring — with `Pi` nearly free they become minutes, not 8 h.
-Then test `--grid-n 45`.
+**Validation.** 58/58 tests pass. `Pi` fast path exact at the `<s>_sel` level (15490596),
+deterministic (15490217 = 15496629), and `Pi` itself agrees to mean `8.2e-08` across the full
+bank. Precision table measured (15490165). Still queued: 15490081 (inter a40), 15490052
+(inter h200nvl).
+
+**OPEN — not caused by this change, but unexplained and worth chasing.** Today's reruns do not
+reproduce the definitive run 15484614's `Pi`, on what should be the same configuration:
+
+| | `<s>_sel,1` | `<s>_sel,2` | `I_sel/<I>` |
+|---|---|---|---|
+| 15484614 | −0.002077 ± 0.000365 | +0.010968 ± 0.000342 | +0.2736 |
+| 15490217 / 15496629 | −0.001760 ± 0.000210 | +0.010944 ± 0.000235 | +0.2734 |
+
+The rewrite is ruled out as the cause (it moves `<s>_sel` by 1.7e-08, and today's runs are
+deterministic). The **error bars differ by 1.5×**, which rounding cannot do — so the two jobs
+genuinely had different `Pi` realisations, i.e. different rows or different latents, despite
+identical printed headers, the same GPU model, and a `--load-scores` key match. Most likely a
+`--seed`/env difference between the definitive run and the later cache-builder job, but that
+is a guess and it is not verified. This matters: cont.175 found `<s>_sel` *dominates* the
+population error budget, so a 15% ambiguity in it is not cosmetic. Note also a general
+reproducibility hazard found while chasing this — PyTorch's CUDA RNG execution policy reads
+`multiProcessorCount`, so `torch.randn` streams are **not** portable across GPU models.
+
+**Next.** Read the H200/full-A40 benchmarks and decide the precision default (flipping it
+invalidates the two 5.7 h score caches for future runs — the key enforces this, loudly, so
+either choice is safe, but it is a real cost). Then re-run the ladder jobs
+(`pi_deep6`/`pi_deep4`) against the cached score sums — with `Pi` nearly free they are minutes,
+not 8 h. Then test `--grid-n 45` (cost is exactly linear in `G`). And settle the `Pi`
+irreproducibility above before quoting `<s>_sel` again.
 
 ## cont.175 (2026-08-03) Both cuts now consistent with zero — the residual was `Pi`, not the estimator; and the population error is dominated by the ONE term §5B.2 says should vanish
 
