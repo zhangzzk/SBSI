@@ -439,8 +439,12 @@ def main():
                         dict(cnt_u=blk_u[0], ns_u=blk_u[1], ni_u=blk_u[2])))
             print(f"score sums cached -> {args.save_scores}", flush=True)
 
-    print(f"cut |xhat| < {c}: keeps {n_keep:,}/{n_tot:,} = "
-          f"{n_keep / max(n_tot, 1):.2%}", flush=True)
+    # `Pi`'s cheap internal consistency check compares the prior-weighted <Pi> against this.
+    # It used to be computed from the kept mask directly; caching the score pass replaced the
+    # rows with block sums and dropped it, so every run that got as far as the `Pi` report
+    # died on a NameError there -- which is to say every run since that refactor.
+    keep_frac = n_keep / max(n_tot, 1)
+    print(f"cut |xhat| < {c}: keeps {n_keep:,}/{n_tot:,} = {keep_frac:.2%}", flush=True)
 
     # ---- uncut control: the same estimator, same rows, no selection at all --------
     reps_u = None

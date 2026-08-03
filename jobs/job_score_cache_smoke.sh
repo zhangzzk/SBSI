@@ -30,8 +30,21 @@ COMMON="--closure-g 0.05 --cut-abs-ehat 0.6 --max-rows 20000 --grid-n 21
 date
 python -u scripts/eval_score_select.py $COMMON --save-scores "$NPZ" 2>&1 \
   | grep -vE "module command" > /home/z/Zekang.Zhang/logs/cache_smoke_A.txt
+RCA=$?
 python -u scripts/eval_score_select.py $COMMON --load-scores "$NPZ" 2>&1 \
   | grep -vE "module command" > /home/z/Zekang.Zhang/logs/cache_smoke_B.txt
+RCB=$?
+
+# BOTH RUNS MUST SUCCEED, checked before the diff.  A diff of two outputs is a test of
+# agreement, not of correctness: when a later refactor dropped `keep_frac`, both runs
+# crashed at the same line and produced identical truncated reports, and this script duly
+# reported CACHE OK.  Two identical failures are not a pass.
+if [ "$RCA" -ne 0 ] || [ "$RCB" -ne 0 ]; then
+  echo "SMOKE FAILED: run exited non-zero (save=$RCA load=$RCB); tails follow"
+  tail -20 /home/z/Zekang.Zhang/logs/cache_smoke_A.txt
+  tail -20 /home/z/Zekang.Zhang/logs/cache_smoke_B.txt
+  date; echo "### DONE (exit 1) ###"; exit 1
+fi
 
 # Strip only what MUST differ: the progress lines, the two cache banners, and the
 # timestamped filename.  Everything else is a number and must match exactly.
