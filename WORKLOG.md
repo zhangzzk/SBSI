@@ -7,6 +7,93 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
+## cont.177 (2026-08-04) §5B closure was a QUADRATURE artefact: the population block and the per-galaxy block are different integrals sharing one grid, and only the first was unconverged
+
+**Result.** At cut 0.6, `d(m)` goes from **+0.640 ± 0.280%** (2.3σ, failing the 0.3%
+deliverable) to **−0.097 ± 0.278%** (0.3σ, inside it) with no change to the flow, the data, the
+prior or the estimator — only the node bank used for the population terms.
+
+**How it was found.** The closure test draws `xhat` FROM the flow and inverts it with that same
+flow, so the model is exact by construction and `d(m)` must be zero up to numerics. That leaves
+four candidates: grid quadrature, finite-difference truncation, ratio bias in `sum s / sum I`,
+and evaluating a `gamma = 0` estimator at finite `gamma`. The first two need no flow at all, so
+`scripts/check_quadrature.py` (new, job 15504948, CPU, 26 s) measures them with an ANALYTIC
+`Pi` — no Monte Carlo anywhere, which is what makes it sharp:
+
+| grid_n | G | Bartlett identities → m | **`Pi`-weighted `I_sel` error → m** |
+|---|---|---|---|
+| **61 (production)** | 2 765 | +0.044% | **−0.896%** |
+| 81 | 4 921 | +0.019% | −0.339% |
+| 101 | 7 693 | +0.009% | +0.098% |
+| 141 | 15 069 | +0.001% | −0.087% |
+
+Finite differences are clean: both steps converge quadratically (`info_delta` residuals
++6.4e-3, +1.5e-3 for successive halvings, ratio 4.2 ≈ 4), leaving 0.017% on `m` at the
+production values. The **per-galaxy** machinery is clean too — Bartlett's `E_0[u] = 0` and
+`E_0[du] + Var_0(u) = 0` hold to 1.2e-3 at `grid_n=61`. What is NOT clean is the same
+quadrature weighted by `Pi`: **2.4% on `I_sel`, i.e. 0.90% on `m`**, larger than the whole
+residual and 3× the target. The two integrals simply converge at different rates — `Pi` carries
+angular structure (the m=2/m=4 terms of cont.176) that the smooth prior does not — and they had
+been sharing a grid for no reason other than convenience.
+
+**Conversion used throughout:** `ghat = (Σs − N⟨s⟩_sel)/(ΣI − N I_sel)`, so a relative error
+`ε` on `I_sel` moves `m` by `−ε·I_sel/(⟨I⟩ − I_sel)` = `−0.377 ε` at cut 0.6. A 1% `I_sel`
+error is 0.38% on `m`; the 0.3% deliverable therefore needs `I_sel` to ~0.8%.
+
+**The fix is nearly free and leaves the score caches valid.** `--pi-grid-n` gives the population
+block its own, finer bank. Legitimate because they are different integrals, and because the
+per-galaxy quadrature error largely CANCELS in the paired cut-minus-uncut difference (both
+sides carry it) while `I_sel` enters the cut estimate alone and so lands undiluted — it is
+exactly the uncancelled part. Cheap because the `Pi` fast path made the population block
+minutes: the whole 8-point ladder below took 95 min, against ~16 h to redo the score pass at
+`G = 7693`. `pi_grid_n` is deliberately absent from `cache_key`, since the cached per-block
+sums depend on the score-pass grid and not on this one.
+
+**Measured (15504975, `cip` a40-16gb, off the existing `c06`/`c04` caches):**
+
+| pi_grid_n | G | `I_sel/⟨I⟩` (cut 0.6) | `d(m)` cut 0.6 | `d(m)` cut 0.4 |
+|---|---|---|---|---|
+| 61 | 2 765 | 0.2742 | +0.640 ± 0.280% | +0.447 ± 0.520% |
+| 81 | 4 921 | 0.2708 | +0.169 ± 0.278% | −0.160 ± 0.516% |
+| 101 | 7 693 | 0.2679 | −0.227 ± 0.277% | −0.647 ± 0.513% |
+| 141 | 15 069 | 0.2688 | **−0.097 ± 0.278%** | **−0.475 ± 0.514%** |
+
+The analytic prediction is confirmed quantitatively: `I_sel/⟨I⟩` moves 0.2742 → ~0.2688, a
+**2.0%** shift against the predicted 2.4%, and `d(m)` moves 0.74% (cut 0.6) and 0.92% (cut 0.4)
+against the predicted ~0.9%.
+
+**`<s>_sel` is untouched by the grid** — −0.001878 ± 0.000095 at every rung, to six digits. So
+cont.176's anisotropy signal is grid-independent and is not a quadrature artefact, which is a
+useful independent confirmation of that entry.
+
+**What is NOT established.** (1) The ladder is converging but not yet flat: the 101→141 moves
+are +0.130% and +0.172%, about half the target, so `pi_grid_n = 181, 221` is running (15505527)
+before 141 is treated as the answer. (2) The error bars (0.278%, 0.514%) are comparable to the
+0.3% target, so cut 0.6 is *consistent with* the deliverable, not yet a demonstration of it —
+that still needs the statistics below. (3) Cut 0.4's central value (−0.475%) is outside 0.3%,
+though 0.9σ from zero; its bar is too wide to decide.
+
+**This also rehabilitates cont.175's "GRID REFINEMENT: NULL".** That test doubled the bank
+against a *Monte-Carlo* `Pi` and got −0.349% ± 0.71%, recorded as a 0.5σ null that "removes one
+candidate". The effect is real and ~0.9%; the test simply had a bar 2× coarser than the thing
+it was looking for, and saw roughly the right size without being able to resolve it. I had been
+treating the grid as cleared. It was not. A null at a precision coarser than the target is not
+a null — see [[feedback_chi2_below_one_is_unresolved]] for the same mistake in another guise.
+
+**Also running.** `g = 0` (15504833) and `g = 0.10` (15504834) full score passes, to separate a
+multiplicative bias from curvature. Note the null is now expected to pass trivially: an `I_sel`
+error is multiplicative, so it biases `m` but not `ghat` at zero shear. The `g = 0.10` run still
+discriminates, and the quadrature explanation predicts `d(m)` there is unchanged.
+
+**Next.** (1) Finish the grid ladder; adopt the converged `pi_grid_n` as the default. (2) Buy
+statistics — σ_gal is now the only wall at 0.270%/0.503%, and the catalogue holds **31.4M rows
+against the 2M being used** (cont.176), which takes σ to 0.068%/0.127%. Needs a `--row-offset`
+to split the score pass across GPUs; the cached per-block sums are additive by construction.
+(3) Re-check cut 0.4 once (1) and (2) are in.
+
+**Files.** `scripts/check_quadrature.py`, `jobs/job_quadrature.sh`, `jobs/job_pi_grid_ladder.sh`
+(new); `scripts/eval_score_select.py` (`--pi-grid-n`).
+
 ## cont.176 (2026-08-03) The `Pi` sweep was re-running a flow that cannot see the node — removed, bit-for-bit; and the score pass has never used a tensor core
 
 A cost pass, prompted by every definitive run taking 8+ hours. Neither half was slow for an

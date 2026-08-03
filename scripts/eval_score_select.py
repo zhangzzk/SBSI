@@ -338,6 +338,8 @@ def main():
                     help="reuse a --save-scores cache instead of re-scoring.  Refuses to "
                          "load one built with different settings; a mismatch would pair "
                          "one run's galaxies with another run's Pi")
+    ap.add_argument("--pi-grid-n", type=int, default=None,
+                    help="node count for the POPULATION block only (<s>_sel, I_sel, Pi); defaults to --grid-n.  The Pi-weighted integral converges much more slowly than the per-galaxy one -- see scripts/check_quadrature.py -- and refining it does NOT invalidate a score cache")
     ap.add_argument("--pi-azimuthal-average", action="store_true",
                     help="DIAGNOSTIC: replace Pi by its mean over each ring of constant |e| "
                          "before forming <s>_sel.  Decides whether the measured flow "
@@ -378,6 +380,35 @@ def main():
     nodes = ShapeScoreNodes(grid, prior, delta=args.fd_delta, info_delta=args.info_delta)
     print(f"grid: G={len(grid)} nodes, cell {cell:.3e}, "
           f"|u_fd-u_closed|/rms={nodes.closed_form_residual():.2e}", flush=True)
+
+    # A SEPARATE, FINER NODE BANK FOR THE POPULATION BLOCK.  The per-galaxy scores and the
+    # population terms are DIFFERENT integrals that merely happen to have been evaluated on
+    # the same grid, and they do not converge at the same rate.  Measured flow-free by
+    # `scripts/check_quadrature.py`: at the production `grid_n=61` the prior-only Bartlett
+    # identities are already good to 1.2e-3 (0.04% on `m`), but the `Pi`-WEIGHTED integral
+    # that gives `I_sel` is off by 2.4%, which is 0.90% on `m` -- larger than the whole
+    # measured residual and 3x the 0.3% deliverable.  `Pi` adds angular structure (the m=2
+    # and m=4 terms) on top of the smooth prior, and the grid has to resolve that too.
+    #
+    # Refining ONLY the population block is both correct and nearly free.  Correct, because
+    # the per-galaxy quadrature error largely cancels in the cut-minus-uncut difference
+    # (both sides use it) while `I_sel` enters the cut estimate ALONE and so lands undiluted
+    # -- which is exactly the uncancelled part.  Nearly free, because since the `Pi` fast
+    # path the population block is minutes: a full ladder at G=2765 is ~3 min, so G=7693 is
+    # ~8, against ~16 h to redo the score pass at the finer grid.
+    #
+    # It also leaves the score caches VALID.  `pi_grid_n` is deliberately absent from
+    # `cache_key` below: the cached per-block sums depend on the score-pass grid and not on
+    # this one, so refining here must not invalidate 5.7 h of scoring.
+    if args.pi_grid_n and args.pi_grid_n != args.grid_n:
+        pi_grid, pi_cell = make_e_grid(n=args.pi_grid_n, emax=args.grid_emax,
+                                       rmax=args.grid_rmax)
+        pi_nodes = ShapeScoreNodes(pi_grid, prior, delta=args.fd_delta,
+                                   info_delta=args.info_delta)
+        print(f"population block on a FINER bank: G={len(pi_grid)} nodes, "
+              f"cell {pi_cell:.3e} (score pass stays at G={len(grid)})", flush=True)
+    else:
+        pi_grid, pi_nodes = grid, nodes
 
     bundle = load_measurement_model(args.measurement_model, device=args.device)
     df = load_g0(args.g0_catalogue, args.max_rows)
@@ -516,13 +547,13 @@ def main():
           flush=True)
     with precision_region(args.precision, args.device):
         pi_ladder = pass_fraction_by_node(
-            bundle, df, grid, rk,
+            bundle, df, pi_grid, rk,
             cut=lambda x: torch.hypot(x[..., 0], x[..., 1]) < c,
             n_samples=args.pi_samples, batch_size=args.batch_size, seeds=seeds,
             ladder=ladder, rng=np.random.default_rng(args.seed + 77))
 
     if args.pi_azimuthal_average:
-        pi_ladder = np.stack([azimuthally_average(grid, pi_ladder[t],
+        pi_ladder = np.stack([azimuthally_average(pi_grid, pi_ladder[t],
                                                   args.pi_azimuthal_bins)
                               for t in range(pi_ladder.shape[0])])
         print(f"\n*** DIAGNOSTIC: Pi azimuthally averaged in {args.pi_azimuthal_bins} radial "
@@ -534,11 +565,11 @@ def main():
               f"--load-scores cache.", flush=True)
 
     def terms(p):
-        return population_terms(nodes, np.log(np.maximum(p, 1e-12)))
+        return population_terms(pi_nodes, np.log(np.maximum(p, 1e-12)))
 
     n = int(blk_k[0].sum())
     mean_i = blk_k[2].sum(axis=0) / n
-    w = nodes.prior_weights()
+    w = pi_nodes.prior_weights()
     print(f"\nper-object: N={n:,}  <I> = [[{mean_i[0,0]:+.5f}, {mean_i[0,1]:+.5f}], "
           f"[{mean_i[1,0]:+.5f}, {mean_i[1,1]:+.5f}]]")
     print(f"  {len(seeds)} independent Pi realisations; scatter across them is the error")
