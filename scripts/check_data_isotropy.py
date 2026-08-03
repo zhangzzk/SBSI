@@ -15,10 +15,15 @@ the 0.3% deliverable -- and the question is no longer "is it there" but "IS IT R
 THE TEST.  `Pi` is a statement about the simulation: the fraction of galaxies with a given
 TRUE shape whose MEASURED shape passes the cut.  The catalogue has both, so the same quantity
 can be measured directly from the data with no flow involved, and the two compared harmonic by
-harmonic.  m=4 is expected in both -- square pixels and square postage stamps genuinely give
-the measurement C4 rather than full SO(2) symmetry.  m=2 is the discriminating one: a square
-grid cannot produce it, so if the flow has m=2 and the data do not, the flow has learned an
-asymmetry that is not in the simulation, and it is biasing `m` at the percent level.
+harmonic.  BOTH harmonics are expected.  A square pixel grid has D4 symmetry, not SO(2), and D4 only
+flips the signs of e1 and e2 -- it does NOT force their variances equal, which would need
+invariance under a 45-degree rotation that a square does not have.  (An earlier draft claimed
+m=2 was impossible from a square grid and therefore convicted the flow; that was wrong.)  The
+same catalogue settles it directly: true shapes are isotropic to sigma2/sigma1 = 1.000002 +/-
+0.000500, while the ngmix measurements give 1.017811 +/- 0.000509 -- 35 sigma, from zero
+applied shear.  The measurement manufactures the asymmetry; the flow's target standardisation
+carries 1.0173, matching to 0.05%.  So this test measures how big the angular structure is,
+and whether the flow has it RIGHT -- not whether it should be there at all.
 
 WHAT THIS CANNOT DO, stated plainly.  The flow's `Pi` substitutes one shape into every row and
 marginalises over the rest of the scene, so its population is identical at every angle by
@@ -45,7 +50,9 @@ for _p in (SBSI_ROOT, os.path.join(SBSI_ROOT, "scripts")):
 from eval_score_response import G0_CAT, load_g0  # noqa: E402
 
 TRUE1, TRUE2 = "e1_input_rot0_p", "e2_input_rot0_p"
-MEAS1, MEAS2 = "NGMIX_G1", "NGMIX_G2"
+# Lower case in this catalogue.  The upper-case `NGMIX_G1/G2` spelling belongs to the
+# blendemu-side detection catalogues, not to `det_meas_crowd_conc_g0.0_train_full`.
+MEAS1, MEAS2 = "measured_ngmix_g1", "measured_ngmix_g2"
 
 
 def harmonic(pass_flag, phi, m):
@@ -108,12 +115,18 @@ def main():
     print("\n  Compare against the FLOW's amplitudes from check_flow_isotropy.py at the same")
     print("  |e| (cut 0.6): A2 ~ 3.9e-4 (|e|=0.30), 2.2e-3 (0.45), 6.5e-4 (0.60), 1.9e-3")
     print("  (0.75), 4.5e-3 (0.90);  A4 ~ 6.5e-4, 2.2e-4, 4.8e-3, 1.4e-2, 2.4e-2.")
-    print("  m=4 present in BOTH is expected -- square pixels and square stamps really do")
-    print("  give the measurement C4 symmetry.  m=2 in the flow but NOT in the data would")
-    print("  mean the flow learned an asymmetry the simulation does not have.")
+    print("  BOTH harmonics are expected.  A square pixel grid has D4 symmetry, which flips")
+    print("  the signs of e1 and e2 but does NOT force their variances equal -- that would")
+    print("  need a 45-degree rotation symmetry a square does not have.  On this catalogue")
+    print("  the true shapes are isotropic to 1.000002 +/- 0.000500 while the ngmix")
+    print("  measurements give 1.017811 +/- 0.000509, 35 sigma, at zero applied shear: the")
+    print("  MEASUREMENT makes the asymmetry, and the flow's target standardisation carries")
+    print("  1.0173, matching to 0.05%.  So the question is whether the flow has the angular")
+    print("  structure RIGHT, not whether it should be there.")
     print("  CAVEAT: at fixed (|e|, phi) the real rows differ in magnitude, size and")
-    print("  neighbours, so a data m=2 detection could be astrophysical alignment rather")
-    print("  than measurement anisotropy.  A data NULL is the stronger inference.")
+    print("  neighbours, so part of any data signal can be astrophysical alignment rather")
+    print("  than measurement anisotropy.  These bars are also comparable to the flow's own")
+    print("  amplitudes, so an agreement here is weak evidence -- it is not a validation.")
     return 0
 
 

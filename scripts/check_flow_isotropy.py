@@ -29,15 +29,29 @@ Carlo error on a single ring point, `sqrt(Pi(1-Pi)/(M*n_samples))`.  Flat to wit
 consistent with isotropy.  We also report the two lowest angular harmonics, since they say
 WHICH symmetry is broken and are what `<s>_sel` actually integrates:
 
-  m=2 (cos/sin 2phi)  -- a genuine e1-vs-e2 axis asymmetry, the spin-2 symmetry itself.
-  m=4 (cos/sin 4phi)  -- a FOUR-FOLD pattern.  Do not read this as "network bug" by reflex:
-                         the simulation is rendered on SQUARE PIXELS and measured in square
-                         postage stamps, so the measurement genuinely has C4 symmetry rather
-                         than full SO(2), and an m=4 term in `Pi` may be the flow correctly
-                         reproducing pixelisation.  m=2 has no such excuse -- a square grid
-                         cannot produce it -- so an m=2 term is either a learned-symmetry
-                         failure or a real e1-vs-e2 asymmetry in the sim (an elliptical PSF
-                         would do it; the Moffat used here is parameterised round).
+  m=2 (cos/sin 2phi)  -- an e1-vs-e2 axis asymmetry.
+  m=4 (cos/sin 4phi)  -- a four-fold pattern.
+
+DO NOT READ EITHER AS A NETWORK BUG BY REFLEX.  The simulation is rendered on SQUARE PIXELS
+and measured in square postage stamps, so the measurement has the symmetry of a square (D4),
+not full SO(2).
+
+An earlier version of this file asserted that "a square grid cannot produce m=2, so m=2 is a
+learned-symmetry failure".  THAT IS WRONG, and the correction matters because it inverts the
+conclusion.  Forcing `sigma(e1) = sigma(e2)` requires invariance under a 45-degree rotation
+(which maps e1 -> e2, e2 -> -e1).  A square is NOT invariant under 45 degrees -- rotate it and
+you get a diamond.  D4's elements only flip the SIGNS of e1 and e2 separately, which leaves
+their variances free to differ.  So a square pixel grid can and does produce an e1-vs-e2
+asymmetry: pixelisation couples differently to the axis-aligned quadrupole (e1) and the
+diagonal one (e2).
+
+MEASURED, on this catalogue (4M rows, zero applied shear): the TRUE shapes are isotropic to
+`sigma2/sigma1 = 1.000002 +/- 0.000500` (0.0 sigma), while the ngmix MEASUREMENTS come out at
+`1.017811 +/- 0.000509` -- **35 sigma**.  The measurement process manufactures a 1.8%
+e1-vs-e2 asymmetry from a perfectly symmetric input.  The flow's own target standardisation
+carries `1.0173`, matching the data to 0.05%, i.e. it is reproducing the sim faithfully rather
+than inventing an asymmetry.  So m=2 in `Pi` is expected here, and this test's job is to
+measure its size, not to convict the model.
 
 WHICH HARMONIC MATTERS IS NOT OBVIOUS, and this script does not decide it.  `<s>_sel` is
 `E_Pi[u]` with `u` the analytic prior score, and `u` is NOT purely spin-2: the shear map is
@@ -154,11 +168,12 @@ def main():
         if ratio > 3:
             flagged.append((r, ratio, a2, a4))
 
-    print("\n  A2 = |cos2phi, sin2phi| -- an e1-vs-e2 axis asymmetry.  A square pixel grid")
-    print("       CANNOT make this, so it is a learned-symmetry failure or a real sim")
-    print("       asymmetry (e.g. an elliptical PSF).")
-    print("  A4 = |cos4phi, sin4phi| -- a four-fold pattern, which square pixels and square")
-    print("       postage stamps genuinely do have; may be the flow reproducing the sim.")
+    print("\n  A2 and A4 are both EXPECTED here.  Square pixels have the symmetry of a")
+    print("       square (D4), not full SO(2): D4 only flips the signs of e1 and e2, so it")
+    print("       leaves their variances free to differ.  Measured on this catalogue, true")
+    print("       shapes are isotropic to 1.000002 +/- 0.000500 while ngmix measurements come")
+    print("       out at 1.017811 +/- 0.000509 -- 35 sigma.  The asymmetry is in the")
+    print("       MEASUREMENT, and the flow reproduces it to 0.05%.")
     print("  'spread/err' compares the ring's variation to the error on one ring point;")
     print("  isotropy predicts ~1.  Rings share rows within a replicate, so the error bar")
     print("  is the scatter ACROSS replicates, not the binomial formula.")

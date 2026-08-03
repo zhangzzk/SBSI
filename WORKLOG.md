@@ -356,13 +356,55 @@ construction and the data cannot, so a data m=2 *detection* could be astrophysic
 rather than measurement anisotropy. A data m=2 **null** against the flow's clear m=2 is the
 strong inference, and would mean the flow learned an asymmetry the simulation does not have.
 
-**Next.** (1) Read 15504658; if the data lack m=2, symmetrise the flow (rotational augmentation,
-or an explicitly spin-2 parameterisation) — that is then a percent-level bias on `m`, the
-largest single item between here and 0.3%. (2) Only after the angular structure is validated,
-buy statistics: σ_gal is the wall at 0.270%/0.503% and needs ~7×/~25× more objects for σ ≈
-0.1%, parallelisable three ways on `cip` because the cached per-block sums are additive.
-(3) Test `--grid-n 45` (cost is exactly linear in `G`, ~1.8× if null) before spending (2).
-The `Pi` ladders need no further rungs — both cuts are converged and σ_Pi is now 0.07–0.13%.
+**The anisotropy is REAL, it is in the ngmix measurement, and the flow reproduces it. A claim
+of mine is withdrawn.** I asserted that a square pixel grid "cannot produce m=2, so an m=2 term
+is a learned-symmetry failure", and built the data test around that. **It is wrong, and the
+error inverts the conclusion.** Forcing `σ(e1) = σ(e2)` requires invariance under a 45° rotation
+(which maps `e1 → e2`, `e2 → −e1`). A square is not invariant under 45° — rotate it and you get
+a diamond. The square's symmetry group D4 only flips the *signs* of `e1` and `e2` separately,
+leaving their variances free to differ. Pixelisation couples differently to the axis-aligned
+quadrupole (`e1`) and the diagonal one (`e2`), so a square grid can and does make an m=2 term.
+
+Measured directly, 4M rows, **zero applied shear** (job 15504687):
+
+| | σ2/σ1 | |
+|---|---|---|
+| TRUE input shapes | 1.000002 ± 0.000500 | 0.0σ — exactly isotropic |
+| ngmix MEASUREMENTS | **1.017811 ± 0.000509** | **35σ** |
+| flow's target standardisation | 1.017254 | matches the data to **0.05%** |
+
+The measurement manufactures a 1.8% `e1`-vs-`e2` asymmetry out of a perfectly symmetric input,
+and the flow carries it to within 0.05%. So the flow is not broken — it is reproducing the
+simulation faithfully. §5B.2's isotropy hypothesis fails for a *physical* reason, `<s>_sel ≠ 0`
+is the correct behaviour, and there is nothing here to fix. This also explains the 1.5%
+diagonal asymmetry in `I_sel` (1.011 vs 1.026) that had been visible in every report.
+
+**The data ring test (15504661/2) is consistent but underpowered — not a validation.** m=4 is
+detected in the catalogue at 2.0–2.7σ in the outer rings for both cuts (4.9e-3, 5.6e-3, 1.8e-2
+at cut 0.6), tracking the flow's amplitudes and growth with `|e|`. m=2 is *not resolved*: the
+data's bars (±1.4–2.3e-3 in the populated rings) are comparable to the flow's own m=2
+amplitudes (0.4–4.5e-3), so every ring is consistent with the flow and none is a detection.
+That is an inconclusive test, not a null, and it should not be quoted as agreement. The
+`(case, input_index)` pairing that would have controlled the population exactly does not exist
+in this catalogue — every group has exactly one row (2 000 000 groups / 2 000 000 rows) and
+`polarization_angle` is continuous with 1 993 789 distinct values, i.e. each galaxy's own
+position angle rather than a controlled ring rotation.
+
+**A large statistics reserve was found while checking this: the catalogue holds 31 411 766
+rows and the runs load 2 000 000** (`--max-rows`). That is **15.7×** untapped, and real rows
+are strictly better than `--shape-reps`, which re-draws shapes on the same rows and therefore
+buys precision on *this* population rather than a wider one. σ_gal ∝ 1/√N, so the full
+catalogue takes σ_gal from 0.270% → **0.068%** at cut 0.6 and 0.503% → **0.127%** at cut 0.4 —
+which is exactly the ~0.1% needed to resolve the 0.3% target, without any change to the model.
+
+**Next.** (1) Score the full 31.4M rows. Cost scales linearly, so this is the expensive item;
+split it three ways across `cip`'s per-user GPU allowance into three caches and add the
+per-block sums, which are additive by construction. Drop `--shape-reps` to 1 and spend the
+budget on real rows instead. (2) Test `--grid-n 45` first — cost is exactly linear in `G`, so a
+null there is a free ~1.8× on (1). (3) The angular structure needs no fix; if it is ever
+revisited, the target is whether the flow has it *right* to better than ~10% of its own size,
+since `d(m)` moves 1.3–3.0% when it is removed entirely. The `Pi` ladders are done — both cuts
+converged, σ_Pi now 0.07–0.13%.
 
 **Method note worth keeping.** Three ladder rungs give two moves, and two moves cannot separate
 a drift from scatter — the cut-0.4 sequence looked cleanly monotonic on three points and was
