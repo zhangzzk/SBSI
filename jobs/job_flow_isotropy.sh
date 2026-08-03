@@ -4,7 +4,7 @@
 #SBATCH --mem=24G
 #SBATCH --cpus-per-task=8
 #SBATCH --gpus-per-node=1
-#SBATCH --partition=inter
+#SBATCH --partition=cip
 #SBATCH --output=/home/z/Zekang.Zhang/logs/flow_iso_%j.out
 #SBATCH --error=/home/z/Zekang.Zhang/logs/flow_iso_%j.err
 #

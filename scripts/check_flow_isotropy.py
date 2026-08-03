@@ -30,8 +30,22 @@ consistent with isotropy.  We also report the two lowest angular harmonics, sinc
 WHICH symmetry is broken and are what `<s>_sel` actually integrates:
 
   m=2 (cos/sin 2phi)  -- a genuine e1-vs-e2 axis asymmetry, the spin-2 symmetry itself.
-  m=4 (cos/sin 4phi)  -- the signature of a CARTESIAN artefact: preprocessing, or a network
-                         that has learned the (e1, e2) axes rather than the rotation group.
+  m=4 (cos/sin 4phi)  -- a FOUR-FOLD pattern.  Do not read this as "network bug" by reflex:
+                         the simulation is rendered on SQUARE PIXELS and measured in square
+                         postage stamps, so the measurement genuinely has C4 symmetry rather
+                         than full SO(2), and an m=4 term in `Pi` may be the flow correctly
+                         reproducing pixelisation.  m=2 has no such excuse -- a square grid
+                         cannot produce it -- so an m=2 term is either a learned-symmetry
+                         failure or a real e1-vs-e2 asymmetry in the sim (an elliptical PSF
+                         would do it; the Moffat used here is parameterised round).
+
+WHICH HARMONIC MATTERS IS NOT OBVIOUS, and this script does not decide it.  `<s>_sel` is
+`E_Pi[u]` with `u` the analytic prior score, and `u` is NOT purely spin-2: the shear map is
+nonlinear in `e`, so `u` carries m=0, m=2 and m=4 content and `Pi`'s m=4 term can couple to
+it. Deciding the question needs the harmonic decomposition of `u` -- or, more directly, one
+cheap numerical experiment: recompute `<s>_sel` with `Pi` replaced by its azimuthal average,
+so that `Pi` depends on `|e|` alone by construction. If the anomaly vanishes the anisotropy
+is the cause; if it survives, it is not.
 
 A NULL IS INFORMATIVE HERE.  If the rings come out flat, then (c) is ruled out too and the
 `<s>_sel` anomaly lives in the score/prior machinery -- `ShapeScoreNodes`, `population_terms`
@@ -140,20 +154,26 @@ def main():
         if ratio > 3:
             flagged.append((r, ratio, a2, a4))
 
-    print("\n  A2 = |cos2phi, sin2phi| amplitude -- a real e1-vs-e2 axis asymmetry.")
-    print("  A4 = |cos4phi, sin4phi| amplitude -- the signature of a Cartesian artefact.")
+    print("\n  A2 = |cos2phi, sin2phi| -- an e1-vs-e2 axis asymmetry.  A square pixel grid")
+    print("       CANNOT make this, so it is a learned-symmetry failure or a real sim")
+    print("       asymmetry (e.g. an elliptical PSF).")
+    print("  A4 = |cos4phi, sin4phi| -- a four-fold pattern, which square pixels and square")
+    print("       postage stamps genuinely do have; may be the flow reproducing the sim.")
     print("  'spread/err' compares the ring's variation to the error on one ring point;")
     print("  isotropy predicts ~1.  Rings share rows within a replicate, so the error bar")
     print("  is the scatter ACROSS replicates, not the binomial formula.")
+    print("  Which harmonic drives <s>_sel is NOT settled here -- u is not purely spin-2.")
     if flagged:
         worst = max(flagged, key=lambda t: t[1])
-        kind = "m=2 (spin-2 symmetry broken)" if worst[2] > worst[3] else \
-               "m=4 (Cartesian/preprocessing artefact)"
+        kind = "m=2" if worst[2] > worst[3] else "m=4"
         print(f"\n### FLOW ANISOTROPIC: {len(flagged)}/{len(radii)} rings exceed 3x; "
-              f"worst |e|={worst[0]:.2f} at {worst[1]:.0f}x, dominated by {kind} ###")
-        return 1
-    print("\n### FLOW ISOTROPIC on every ring: the <s>_sel anomaly is NOT the model. "
-          "Look at ShapeScoreNodes / population_terms / the grid quadrature. ###")
+              f"worst |e|={worst[0]:.2f} at {worst[1]:.0f}x, largest harmonic {kind} ###")
+    else:
+        print("\n### FLOW ISOTROPIC on every ring: the <s>_sel anomaly is NOT the model. "
+              "Look at ShapeScoreNodes / population_terms / the grid quadrature. ###")
+    # Exit 0 for EITHER verdict.  This is a diagnostic, not an acceptance test: both answers
+    # are results, and returning non-zero on a finding makes `sacct` report FAILED, which
+    # reads as a crash.  A genuine error still raises and exits non-zero on its own.
     return 0
 
 

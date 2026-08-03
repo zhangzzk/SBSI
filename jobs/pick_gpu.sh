@@ -23,7 +23,14 @@
 # specific published number, pin the card instead of calling this.
 set -o pipefail
 
-PREF=${PREF:-"inter:h200nvl inter:a100 inter:a40 cip:a40 cip:a40-24gb cip:a40-16gb inter:v100 cip:a40-8gb inter:rtx2080ti"}
+# ORDER IS cip-FIRST (user, 2026-08-03: "keep using cip").  This is deliberately NOT the
+# throughput order -- an H200 on `inter` is 4.1x a whole A40 -- but throughput you cannot get
+# is worth nothing.  Through 2026-08-03 every `inter` submission from this account sat in
+# PENDING (Priority) behind other users' higher-priority work, while `cip` started within
+# seconds: the ladder jobs waited ~2 h on `inter` and then ran in 3 min on a `cip` a40-16gb.
+# The script cannot see other users' priorities, so this encodes what was measured instead.
+# Revert by putting the `inter` entries first, or override per-call: PREF="inter:h200nvl ..."
+PREF=${PREF:-"cip:a40 cip:a40-24gb cip:a40-16gb cip:a40-8gb inter:h200nvl inter:a100 inter:a40 inter:v100 inter:rtx2080ti"}
 WHY=0; [ "$1" = "--why" ] && WHY=1
 
 # Free units per (partition, type): total GRES minus GresUsed, summed over nodes that could

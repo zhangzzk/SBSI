@@ -255,12 +255,49 @@ pass while the job still sits in `(Priority)` behind another user's higher-prior
 Free + permitted is not the same as schedulable. Not worth modelling; just do not read a
 `(Priority)` pend as "that partition is broken".
 
-**Next.** Read 15503468/9 and act on whichever branch they select: if the rings are anisotropic
-the fix is in the model (symmetrise the flow, by augmentation or by an explicitly spin-2
-parameterisation), and if they are flat the fix is in the score/quadrature path. Either way
-`<s>_sel,2` at 138–169σ is now the single largest unexplained term in §5B and should be settled
-before the `d(m)` numbers above are quoted as final. Then test `--grid-n 45` (cost is exactly
-linear in `G`). The `Pi` ladders themselves need no further rungs — both cuts are converged.
+**RESULT: the flow is anisotropic, and strongly so** (15504172 cut 0.6, 15504173 cut 0.4, `cip`
+a40-16gb, 20–27 s each). `Pi` on rings of constant `|e|`, 7 rings × 32 angles, M = 262 144 × 8
+draws × 4 reps; `spread/err` is the ring's variation over the replicate-to-replicate error, and
+isotropy predicts ~1:
+
+| `|e|` | spread/err (cut 0.6) | A2 | A4 | spread/err (cut 0.4) | A2 | A4 |
+|---|---|---|---|---|---|---|
+| 0.10 | 0.5 | 7.3e-06 | 1.0e-05 | 1.5 | 7.8e-05 | 2.5e-05 |
+| 0.20 | 1.4 | 7.4e-05 | 1.2e-04 | 4.4 | 6.0e-04 | 4.2e-04 |
+| 0.30 | 4.1 | 3.9e-04 | 6.5e-04 | 12.1 | 1.6e-03 | 1.2e-03 |
+| 0.45 | 17.3 | **2.2e-03** | 2.2e-04 | 20.7 | **1.8e-03** | 5.2e-04 |
+| 0.60 | 36.6 | 6.5e-04 | **4.8e-03** | 34.2 | 1.2e-03 | **5.9e-03** |
+| 0.75 | 50.9 | 1.9e-03 | **1.4e-02** | 76.1 | 1.1e-03 | **1.8e-02** |
+| 0.90 | 65.0 | 4.5e-03 | **2.4e-02** | 79.2 | 4.7e-03 | **2.3e-02** |
+
+Both cuts give the same picture. Near-round galaxies are clean (`|e| = 0.1` is flat at 0.5–1.5×);
+the anisotropy then grows monotonically and steeply with `|e|`, reaching **65–79×** the noise.
+The harmonic content changes with radius: **m=2 dominates at `|e| ≈ 0.3–0.45`, m=4 from `|e| ≳
+0.6`.**
+
+**Do not read m=4 as a bug by reflex.** The sim is rendered on square pixels and measured in
+square postage stamps, so the measurement genuinely has C4 symmetry rather than full SO(2) — an
+m=4 term in `Pi` may be the flow correctly reproducing pixelisation. **m=2 has no such excuse**:
+a square grid cannot produce it. So the m=2 amplitude (1.6–4.7e-3, present at every radius above
+0.2 and peaking at both ends) is the part that is either a learned-symmetry failure or a real
+e1-vs-e2 asymmetry in the simulation — an elliptical PSF would do it, though the Moffat used
+here is parameterised round (`psf_fwhm=0.73, moffat_beta=2.224`, no ellipticity).
+
+**Which harmonic actually drives `<s>_sel` is NOT settled by this.** I initially reasoned that
+only m=2 can couple, since `u` is spin-2 and `∫cos4φ·cos2φ dφ = 0` — that is wrong. The shear
+map is nonlinear in `e`, so `u` carries m=0, m=2 *and* m=4 content, and `Pi`'s m=4 term can
+couple to it. The decisive experiment is cheap and does not need the harmonic algebra:
+**recompute `<s>_sel` with `Pi` replaced by its azimuthal average**, so `Pi` depends on `|e|`
+alone by construction. If the 138σ anomaly vanishes, the anisotropy is the cause; if it
+survives, it is not, and the problem is in `ShapeScoreNodes` / `population_terms` / the
+quadrature. That is the next thing to run.
+
+**Next.** Run the azimuthal-average experiment above. Then, depending on it, either symmetrise
+the flow (augmentation, or an explicitly spin-2 parameterisation) or audit the score path.
+`<s>_sel,2` at 138–169σ remains the single largest unexplained term in §5B and should be settled
+before the `d(m)` numbers above are quoted as final. Separately, test `--grid-n 45` (cost is
+exactly linear in `G`). The `Pi` ladders themselves need no further rungs — both cuts are
+converged.
 
 **Method note worth keeping.** Three ladder rungs give two moves, and two moves cannot separate
 a drift from scatter — the cut-0.4 sequence looked cleanly monotonic on three points and was
