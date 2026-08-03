@@ -209,10 +209,32 @@ cut 0.6 gives +0.570 ± 0.302% and +0.640 ± 0.280%; cut 0.4 gives +0.413 ± 0.5
 +0.447 ± 0.520%. (They share the score cache, so the galaxy half of σ is common to both and
 they are not independent measurements of the same thing — only the `Pi` half is fresh.)
 
-**Where that leaves §5B with selection:** `d(m)` = **+0.640 ± 0.280%** at cut 0.6 (2.3σ) and
-**+0.447 ± 0.520%** at cut 0.4 (0.9σ). Cut 0.4 is consistent with zero; cut 0.6 is a mild
-positive residual that two draws now agree on. Both are inside the 3% the forward-differencing
-route was aiming at, and cut 0.4 is at the 0.5% level.
+**Where that leaves §5B with selection, measured against the real target.** The deliverable is
+`|m| ≤ 0.3%` (owner, restated 2026-08-03; the canonical framing in `GOALS.md` and
+`Gold-V2.md`). An earlier draft of this entry called +0.64% "inside the 3% the
+forward-differencing route was aiming at" — that was the wrong yardstick and is withdrawn.
+Against 0.3%:
+
+| cut | `d(m)` | σ_gal | σ_Pi | σ_total | vs the 0.3% target |
+|---|---|---|---|---|---|
+| 0.6 | +0.640% | 0.270% | 0.072% | 0.280% | **fails** — the 1σ lower edge is +0.360%, still above 0.3% |
+| 0.4 | +0.447% | 0.503% | 0.131% | 0.520% | **cannot tell** — σ exceeds the target itself |
+
+So **neither cut demonstrates 0.3%**, and cut 0.6 is in mild tension with it (1.2σ *above* the
+boundary, and two independent `Pi` draws agree on the central value). Cut 0.4 is consistent with
+0.3% but equally consistent with 0 and with 1%; its error bar is larger than the quantity being
+tested, so it carries no information about the target either way.
+
+**The error budget says exactly what to do.** `Pi` is now essentially free of error — 0.072% and
+0.131%, down from 0.515% before the fast path — so the ladder work is done and further `Pi`
+rungs buy nothing. **σ_gal is the wall**: 0.270% at cut 0.6, 0.503% at cut 0.4. It scales as
+`1/sqrt(N_objects)` on the 8M objects currently scored (2M rows × 2 shape reps × 2 ring legs).
+To resolve 0.3% at 3σ, σ_total must reach ~0.10%, which needs **~7× more objects at cut 0.6**
+(58M) and **~25× at cut 0.4** (200M, because the tighter cut keeps fewer). That is score-pass
+cost, the expensive half — but it parallelises exactly, since the cache stores per-block partial
+sums and those are additive across jobs. Three `cip` GPUs scoring disjoint row ranges into three
+caches would cut the wall clock by 3. The untested `--grid-n 45` lever multiplies into this
+directly (cost is linear in `G`, so ~1.8× if it is null).
 
 **`<s>_sel` is converged and it is NOT zero — the sharpest open problem in §5B.** The deep
 ladders resolve it far better than anything before:
@@ -292,12 +314,55 @@ alone by construction. If the 138σ anomaly vanishes, the anisotropy is the caus
 survives, it is not, and the problem is in `ShapeScoreNodes` / `population_terms` / the
 quadrature. That is the next thing to run.
 
-**Next.** Run the azimuthal-average experiment above. Then, depending on it, either symmetrise
-the flow (augmentation, or an explicitly spin-2 parameterisation) or audit the score path.
-`<s>_sel,2` at 138–169σ remains the single largest unexplained term in §5B and should be settled
-before the `d(m)` numbers above are quoted as final. Separately, test `--grid-n 45` (cost is
-exactly linear in `G`). The `Pi` ladders themselves need no further rungs — both cuts are
-converged.
+**RESOLVED: the flow's angular structure is the entire cause of the `<s>_sel` anomaly — but it
+must NOT be removed.** The azimuthal-average experiment (15504625/6, off the same score caches,
+so the pair differs in `Pi` and nothing else) settles the cause exactly and then overturns the
+plan that motivated it:
+
+| | `<s>_sel` | off-diag/diag | `d(m)` cut 0.6 | `d(m)` cut 0.4 | `ghat_2` (0.6 / 0.4) |
+|---|---|---|---|---|---|
+| raw `Pi` | +0.0108 / +0.0179 (138σ / 169σ) | 0.007 | **+0.640 ± 0.280%** | **+0.447 ± 0.520%** | 0.00066 / 0.00060 |
+| `Pi` azimuthally averaged | **0.000000 ± 0.000000** | 0.000 | −0.635 ± 0.271% | +3.446 ± 0.511% | 0.00452 / 0.00889 |
+
+Force `Pi` to depend on `|e|` alone and `<s>_sel` collapses to **machine zero**, with the
+"numerator only" row becoming bit-identical to "none" — precisely what §5B.2 says must happen.
+So §5B.2's theorem is fine; what violates its hypothesis is the **model**, not a bug. The
+prediction assumed an isotropic likelihood, and the flow is not one. In that sense there was
+never an anomaly, only a wrong expectation — and the earlier framing of this as "the single
+largest unexplained term in §5B" is withdrawn.
+
+**The important part is what happens to `d(m)`.** Removing the angular structure makes the
+answer much *worse*: cut 0.6 flips sign to −0.635% and cut 0.4 blows up to +3.446% (6.7σ),
+while `ghat_2` leakage grows 7–15×. The estimator is *using* that structure, and using it
+roughly correctly. Azimuthal averaging is therefore a diagnostic only, never a correction —
+the code says so at the call site.
+
+**What this means for the 0.3% deliverable, and it is the main result of the night.** `d(m)`
+moves by **1.3% (cut 0.6) and 3.0% (cut 0.4)** when the flow's angular structure changes. That
+is a 4–10× larger lever on `m` than the entire target. So reaching 0.3% is no longer only a
+question of shrinking σ_gal: **the flow's angular structure has to be right, not merely
+present.** Buying 7–25× more objects to reach σ ≈ 0.1% would be wasted if that structure is
+wrong at even a fraction of its own size.
+
+**Which makes the next test the priority, ahead of the statistics.** The m=4 part is plausibly
+physical — square pixels and square postage stamps genuinely give the measurement C4 rather
+than SO(2) symmetry, so the flow may be reproducing the simulation faithfully. **m=2 cannot come
+from a square grid**, so it is the discriminating harmonic. `scripts/check_data_isotropy.py`
+(new, job 15504658) measures the same quantity straight from the catalogue with no flow
+involved — the fraction of rows with a given TRUE shape whose ngmix measurement passes the cut,
+decomposed into m=2 and m=4 — and compares harmonic by harmonic. Its own caveat is recorded in
+the docstring and matters: the flow's `Pi` holds the population fixed across angle by
+construction and the data cannot, so a data m=2 *detection* could be astrophysical alignment
+rather than measurement anisotropy. A data m=2 **null** against the flow's clear m=2 is the
+strong inference, and would mean the flow learned an asymmetry the simulation does not have.
+
+**Next.** (1) Read 15504658; if the data lack m=2, symmetrise the flow (rotational augmentation,
+or an explicitly spin-2 parameterisation) — that is then a percent-level bias on `m`, the
+largest single item between here and 0.3%. (2) Only after the angular structure is validated,
+buy statistics: σ_gal is the wall at 0.270%/0.503% and needs ~7×/~25× more objects for σ ≈
+0.1%, parallelisable three ways on `cip` because the cached per-block sums are additive.
+(3) Test `--grid-n 45` (cost is exactly linear in `G`, ~1.8× if null) before spending (2).
+The `Pi` ladders need no further rungs — both cuts are converged and σ_Pi is now 0.07–0.13%.
 
 **Method note worth keeping.** Three ladder rungs give two moves, and two moves cannot separate
 a drift from scatter — the cut-0.4 sequence looked cleanly monotonic on three points and was

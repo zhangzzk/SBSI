@@ -65,6 +65,44 @@ from eval_score_response import (  # noqa: E402
 MODEL = "models/measurement_flow_g0_ngmix_meas_szfl_noz_lam450_fixresp_s501.pt"
 
 
+def azimuthally_average(grid, pi, n_bins):
+    """Replace `Pi_k` by the mean over all nodes at the same `|e|`, killing angular structure.
+
+    THE TEST THIS EXISTS FOR.  §5B.2 predicts `<s>_sel = 0` for an isotropic cut, and the
+    measured value is 138-169 sigma from zero (cont.176).  `scripts/check_flow_isotropy.py`
+    then showed the flow is not isotropic in shape: `Pi` on rings of constant `|e|` varies by
+    65-79x its own noise at large `|e|`.  Those two facts are consistent but not causally
+    linked by anything yet -- deciding needs the harmonic content of the prior score `u`,
+    which is NOT purely spin-2 (the shear map is nonlinear in `e`, so `u` carries m=0, m=2 and
+    m=4, and `Pi`'s m=4 term can couple to it too).
+
+    Rather than do that algebra, do the experiment: force `Pi` to depend on `|e|` alone and
+    see whether `<s>_sel` survives.  If it collapses toward zero, the anisotropy IS the cause
+    and the fix is in the model.  If it survives, the anisotropy is a red herring for this
+    term and the fault is in `ShapeScoreNodes` / `population_terms` / the grid quadrature.
+
+    WHAT THIS IS NOT.  It is a diagnostic, never a correction: it discards real structure the
+    model predicts, so a `d(m)` computed from an averaged `Pi` is not a calibration result and
+    must not be quoted as one.  Compare it only against the raw run off the SAME score cache,
+    which makes the pair differ in `Pi` and nothing else.
+
+    Radial structure is preserved by interpolating the binned means back to each node's own
+    `|e|`, so the only thing removed is variation AT FIXED radius.
+    """
+    r = np.hypot(np.asarray(grid, float)[:, 0], np.asarray(grid, float)[:, 1])
+    edges = np.linspace(r.min(), r.max() + 1e-12, n_bins + 1)
+    idx = np.clip(np.digitize(r, edges) - 1, 0, n_bins - 1)
+    out = np.empty_like(pi)
+    for j in range(pi.shape[-1]):
+        col = pi[..., j]
+        tot = np.bincount(idx, weights=col, minlength=n_bins)
+        cnt = np.bincount(idx, minlength=n_bins).astype(float)
+        ok = cnt > 0
+        centres = 0.5 * (edges[:-1] + edges[1:])
+        out[..., j] = np.interp(r, centres[ok], (tot[ok] / cnt[ok]))
+    return out
+
+
 def pass_fraction_by_node(bundle, df, grid, rk, cut, n_samples, batch_size, seeds,
                           ladder, rng):
     """`Pi_k = P(xhat in S | true shape = e_k)`, averaged over the population.
@@ -300,6 +338,12 @@ def main():
                     help="reuse a --save-scores cache instead of re-scoring.  Refuses to "
                          "load one built with different settings; a mismatch would pair "
                          "one run's galaxies with another run's Pi")
+    ap.add_argument("--pi-azimuthal-average", action="store_true",
+                    help="DIAGNOSTIC: replace Pi by its mean over each ring of constant |e| "
+                         "before forming <s>_sel.  Decides whether the measured flow "
+                         "anisotropy causes the <s>_sel anomaly.  Not a correction -- see "
+                         "azimuthally_average()")
+    ap.add_argument("--pi-azimuthal-bins", type=int, default=80)
     ap.add_argument("--chunk", type=int, default=1024)
     ap.add_argument("--grad-chunk", type=int, default=256)
     ap.add_argument("--grad-delta", type=float, default=0.05)
@@ -476,6 +520,18 @@ def main():
             cut=lambda x: torch.hypot(x[..., 0], x[..., 1]) < c,
             n_samples=args.pi_samples, batch_size=args.batch_size, seeds=seeds,
             ladder=ladder, rng=np.random.default_rng(args.seed + 77))
+
+    if args.pi_azimuthal_average:
+        pi_ladder = np.stack([azimuthally_average(grid, pi_ladder[t],
+                                                  args.pi_azimuthal_bins)
+                              for t in range(pi_ladder.shape[0])])
+        print(f"\n*** DIAGNOSTIC: Pi azimuthally averaged in {args.pi_azimuthal_bins} radial "
+              f"bins ***\n    Pi now depends on |e| alone, so any angular structure the flow "
+              f"has is gone.\n    <s>_sel collapsing toward zero => the flow anisotropy "
+              f"causes it; surviving => it\n    does not, and the fault is in the score / "
+              f"quadrature path.  This is NOT a\n    correction: d(m) from an averaged Pi is "
+              f"not a calibration result.  Compare only\n    against the raw run off the SAME "
+              f"--load-scores cache.", flush=True)
 
     def terms(p):
         return population_terms(nodes, np.log(np.maximum(p, 1e-12)))
