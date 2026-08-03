@@ -9,20 +9,25 @@
 #SBATCH --error=/home/z/Zekang.Zhang/logs/bench_speed_%j.err
 #
 # Cost profile for `eval_score_select.py`, run at a size that finishes in minutes, plus the
-# `Pi` fast-path exactness check.  Override the GRES to separate "our arithmetic is
-# inefficient" from "our GPU is a third of a card":
+# `Pi` fast-path exactness check.  Pin the GRES to compare cards; the results are worth
+# re-measuring whenever a new card appears, because precision safety is NOT portable across
+# them (tf32 is fine on an A40 and biases an H200 by 7x the statistical error):
 #
-#   sbatch jobs/job_bench_score_speed.sh                                 # inter, any GPU
-#   sbatch --gres=gpu:h200nvl:1 jobs/job_bench_score_speed.sh            # inter, H200
-#   sbatch -p cip --gres=gpu:a40-16gb:1 --export=ALL,NO_EXPANDABLE_SEGMENTS=1 \
-#          jobs/job_bench_score_speed.sh                                 # the old vGPU slice
+#   sbatch $(jobs/pick_gpu.sh) jobs/job_bench_score_speed.sh             # fastest card free
+#   sbatch --partition=inter --gpus-per-node=h200nvl:1 jobs/job_bench_score_speed.sh
+#   sbatch --partition=cip --gpus-per-node=a40-16gb:1 jobs/job_bench_score_speed.sh
 set -o pipefail
 eval "$(conda shell.bash hook)"; conda activate sims1
 REPO=${REPO:-/home/z/Zekang.Zhang/SBSI/.claude/worktrees/inference-5b}
 cd "$REPO" || exit 1
 export PYTHONPATH="$REPO:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-# The A40-16Q vGPU slices lack the CUDA VMM APIs the expandable allocator needs.
-[ "${NO_EXPANDABLE_SEGMENTS:-0}" = "1" ] && unset PYTORCH_CUDA_ALLOC_CONF
+# vGPU slices (their names end in a profile letter, e.g. "NVIDIA A40-16Q") lack the CUDA VMM
+# APIs the expandable allocator needs.  Detected from the card we actually got, rather than
+# passed in as a flag, so that picking the card dynamically -- jobs/pick_gpu.sh -- cannot
+# leave a stale setting behind or need the caller to remember one.
+case "$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1)" in
+  *[0-9]Q|*[0-9]A|*[0-9]B) unset PYTORCH_CUDA_ALLOC_CONF ;;
+esac
 
 date
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader

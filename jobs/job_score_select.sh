@@ -13,14 +13,25 @@
 # The cut is |xhat| < c -- isotropic, so §5B.2 predicts <s>_sel ~ 0 and I_sel carries all.
 #
 # Submit:
-#   NO_EXPANDABLE_SEGMENTS=1 sbatch --partition=cip --gpus-per-node=a40-16gb:1 \
-#       jobs/job_score_select.sh
+#   sbatch $(jobs/pick_gpu.sh) jobs/job_score_select.sh
+#
+# `pick_gpu.sh` takes the fastest card with a free unit.  That is the single biggest lever on
+# this script: an H200 does the score pass 4.8x faster than a `cip` A40-16Q slice in plain
+# fp32, with no numerical change -- more than any precision setting buys, and safely.  To
+# reproduce a specific published number, pin the card instead: the CUDA RNG stream depends on
+# the SM count, so a different card draws a different (equally valid) random realisation.
 set -o pipefail
 eval "$(conda shell.bash hook)"; conda activate sims1
 REPO=${REPO:-/home/z/Zekang.Zhang/SBSI/.claude/worktrees/inference-5b}
 cd "$REPO" || exit 1
 export PYTHONPATH="$REPO:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-[ "${NO_EXPANDABLE_SEGMENTS:-0}" = "1" ] && unset PYTORCH_CUDA_ALLOC_CONF
+# vGPU slices (their names end in a profile letter, e.g. "NVIDIA A40-16Q") lack the CUDA VMM
+# APIs the expandable allocator needs.  Detected from the card we actually got, rather than
+# passed in as a flag, so that picking the card dynamically -- jobs/pick_gpu.sh -- cannot
+# leave a stale setting behind or need the caller to remember one.
+case "$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1)" in
+  *[0-9]Q|*[0-9]A|*[0-9]B) unset PYTORCH_CUDA_ALLOC_CONF ;;
+esac
 
 G=${G:-0.02}
 CUT=${CUT:-0.6}
