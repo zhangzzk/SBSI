@@ -65,12 +65,32 @@ population `Pi` 6 reps × ~27 min = **2.7 h**.
    | bf16 | 3.34× | +6.9e-03 | **reject** — 27× the statistical error |
    | fp16 | 2.55× | −1.9e-03 | **reject** — 7.6× the error |
 
-   **Default left at `fp32`** pending the H200 numbers. The interesting part is the *shape*
-   of that table: bf16 buying 3.3× while TF32 buys only 1.3× says this workload is
-   **memory-bandwidth-bound, not FLOP-bound** — the intermediate activations are ~3 GB per
-   layer at this batch size. TF32 shrinks the multiplier but not the bytes; bf16 halves the
-   bytes, and pays for it exactly where we cannot afford to. That reframes the hardware
-   lever: the H200's ~4.8 TB/s against the A40's ~0.7 TB/s may matter far more than FLOPs.
+   **Default stays `fp32`.** On the H200 the same table comes out differently (15490052 at
+   40k rows, 15499879 at 200k rows — stable across both):
+
+   | mode | H200 speedup | d ghat1 (40k) | d ghat1 (200k) | verdict |
+   |---|---|---|---|---|
+   | fp32 | 1.00× | ref | ref | — |
+   | tf32 | 2.30× | −1.82e-03 | **−1.87e-03** | **reject** — 7.5× the statistical error |
+   | fp16 | 3.03× | −1.90e-03 | −1.95e-03 | reject |
+
+   **TF32's accuracy cost is hardware-dependent**: `+9.0e-06` on an A40, `−1.9e-03` on an
+   H200 — a 200× difference in the same code on the same work. The tell is that on Hopper
+   TF32's error equals **fp16's** (−1.87 vs −1.95e-03), and fp16's own error agrees across
+   both machines (−1.91 vs −1.95e-03) despite entirely different data, so permitting TF32
+   there appears to let cuBLAS serve it from an fp16-like path. Flipping the default on the
+   A40 evidence alone — which I nearly did — would have silently biased every H200 run by
+   7× the statistical error. Any reduced precision must be re-validated per card, against
+   `ghat`, never against `max |dlogL|`.
+5b. **The speed is available without touching precision at all.** H200 fp32 does the score
+   pass in 10.4 s where the `a40-16gb` slice takes 50.1 s — **4.8×, bit-for-bit unchanged**.
+   That is more than TF32 buys and it is free of numerical risk. So the lever is hardware:
+   `jobs/pick_gpu.sh` now takes the fastest card with a free unit (preferring `inter`'s whole
+   cards, skipping drain/down nodes so "best available" cannot hang in PENDING), and the job
+   scripts detect vGPU slices from the card they actually got rather than needing
+   `NO_EXPANDABLE_SEGMENTS=1` passed in. Caveat recorded in the script: the CUDA RNG stream
+   depends on SM count, so a dynamically chosen card draws a *different* (equally valid)
+   random realisation — pin the card to reproduce a specific number.
 5. **Not yet tested: a coarser grid.** Cost is exactly linear in `G = 2765` (`--grid-n 61`).
    cont.175 showed *refining* the grid is null; nobody has checked *coarsening* it.
    `--grid-n 45` would be 1.7× cheaper.
@@ -110,30 +130,66 @@ deterministic (15490217 = 15496629), and `Pi` itself agrees to mean `8.2e-08` ac
 bank. Precision table measured (15490165). Still queued: 15490081 (inter a40), 15490052
 (inter h200nvl).
 
-**OPEN — not caused by this change, but unexplained and worth chasing.** Today's reruns do not
-reproduce the definitive run 15484614's `Pi`, on what should be the same configuration:
+**The `Pi` "irreproducibility" was mine, not the code's — withdrawn.** I flagged the definitive
+run 15484614 as unreproduced by today's reruns. On the numbers as compared, that reading was
+wrong twice over.
 
-| | `<s>_sel,1` | `<s>_sel,2` | `I_sel/<I>` |
-|---|---|---|---|
-| 15484614 | −0.002077 ± 0.000365 | +0.010968 ± 0.000342 | +0.2736 |
-| 15490217 / 15496629 | −0.001760 ± 0.000210 | +0.010944 ± 0.000235 | +0.2734 |
+| | `<s>_sel,1` at M=65 536 | node |
+|---|---|---|
+| 15484614 (pre-rewrite, live score pass) | −0.002077 ± 0.000365 | `cip-cl-h01g04n2` |
+| 15490217 (fast path, cache) | −0.001760 ± 0.000210 | `cip-cl-h01g04n1` |
+| 15496629 (repeat of 15490217) | −0.001760 ± 0.000210 | — |
+| **15500676** (15490217's config **pinned to `…n2`**) | **−0.001760 ± 0.000210** | `cip-cl-h01g04n2` |
+| 15499910 (deep ladder, H200) | −0.001814 ± 0.000262 | `kng-cl-nv03` |
 
-The rewrite is ruled out as the cause (it moves `<s>_sel` by 1.7e-08, and today's runs are
-deterministic). The **error bars differ by 1.5×**, which rounding cannot do — so the two jobs
-genuinely had different `Pi` realisations, i.e. different rows or different latents, despite
-identical printed headers, the same GPU model, and a `--load-scores` key match. Most likely a
-`--seed`/env difference between the definitive run and the later cache-builder job, but that
-is a guess and it is not verified. This matters: cont.175 found `<s>_sel` *dominates* the
-population error budget, so a 15% ambiguity in it is not cosmetic. Note also a general
-reproducibility hazard found while chasing this — PyTorch's CUDA RNG execution policy reads
-`multiProcessorCount`, so `torch.randn` streams are **not** portable across GPU models.
+1. **The node/RNG hypothesis is dead.** 15500676 pins the run to 15484614's own node and comes
+   back digit-identical to the run on the *other* node. Same code + same config reproduces
+   across nodes exactly; it also reproduces on an H200 to 0.2σ.
+2. **There was no discrepancy to explain.** −0.002077 ± 0.000365 against −0.001760 ± 0.000210
+   is **0.75σ**. The "error bars differ by 1.5×, which rounding cannot do" argument was
+   worthless: with 6 replicates the error on the error is ~30%, so 0.000365 vs 0.000210 is an
+   ordinary fluctuation, not evidence of a different realisation.
 
-**Next.** Read the H200/full-A40 benchmarks and decide the precision default (flipping it
-invalidates the two 5.7 h score caches for future runs — the key enforces this, loudly, so
-either choice is safe, but it is a real cost). Then re-run the ladder jobs
-(`pi_deep6`/`pi_deep4`) against the cached score sums — with `Pi` nearly free they are minutes,
-not 8 h. Then test `--grid-n 45` (cost is exactly linear in `G`). And settle the `Pi`
-irreproducibility above before quoting `<s>_sel` again.
+What is real, and small: the `Pi` arrays do differ between the Aug-2 job and today's, at the
+1–3e-4 level (`Pi_k` range 0.3992/0.8046 → 0.3990/0.8043 at M=16 384; the prior-weighted mean
+at M=65 536 is *identical*, 0.7649). That is well inside `Pi`'s own per-node Monte-Carlo error,
+`sqrt(0.764·0.236/(65536·8)) = 5.9e-4`. `<s>_sel` amplifies it ~3× because it is a
+near-cancellation — the expected behaviour, not a fault. Leading unverified candidate: the two
+jobs took different row draws because `--load-scores` and a live score pass do not hand
+`pass_fraction_by_node` the frame in the same order, so `rng.choice` picks different rows. Not
+worth chasing at this size. The genuine reproducibility hazard found while chasing it stands:
+PyTorch's CUDA RNG execution policy reads `multiProcessorCount`, so `torch.randn` streams are
+**not** portable across GPU models — pin the card to reproduce a published number.
+
+**Ladder results off the fast path (the first §5B science it produced).** Both re-run against
+cached score sums, on H200s chosen by `jobs/pick_gpu.sh`; 16 s and 26 s wall respectively,
+against 8 h before.
+
+| cut | job | M | `I_sel/<I>` | `d(m)` vs uncut | σ | rung-to-rung move |
+|---|---|---|---|---|---|---|
+| 0.6 | 15499910 | 16 384 | 0.2761 | +1.616% | 0.461% | — |
+| | | 65 536 | 0.2750 | +0.710% | 0.347% | 0.906% |
+| | | **262 144** | 0.2739 | **+0.570%** | **0.302%** | 0.140% |
+| 0.4 | 15500674 | 16 384 | 0.4786 | +0.810% | 0.841% | — |
+| | | 65 536 | 0.4760 | +0.614% | 0.543% | 0.197% |
+| | | **262 144** | 0.4737 | **+0.413%** | **0.546%** | 0.201% |
+
+Read against the script's own rubric: **cut 0.6 is converged** — its last move (0.140%) is well
+inside σ = 0.302% — so `d(m) = +0.570% ± 0.302%` (1.9σ) is the answer. **Cut 0.4 is not** — its
+moves are 0.197% then 0.201%, not decaying, still monotonically downward — so `+0.413% ± 0.546%`
+is an upper bound on the accuracy, not the accuracy. Note cut 0.4 moved from cont.175's
+**−0.239%** to **+0.413%**, a sign flip in the direction cont.175 predicted when it identified
+`Pi` under-sampling as the residual; both cuts now sit positive at +0.4–0.6%, where before they
+straddled zero with much wider bars. `<s>_sel,2 = +0.0107` remains ~45σ from zero, which §5B.2
+says an isotropic cut should not produce — unexplained, and now the largest single anomaly in
+the population block.
+
+**Next.** Push the cut-0.4 ladder past M = 262 144 until its rung-to-rung move decays (it is
+seconds now, so this is free). Chase `<s>_sel,2`'s 45σ departure from the isotropic-cut
+prediction. Read the full-A40 benchmark (15502740, moved to `cip` after the `inter` a40 queue
+would not clear) and decide the precision default — currently `fp32`, and hardware selection
+already buys 4.8×, more than TF32 does and without TF32's H200 bias. Then test `--grid-n 45`
+(cost is exactly linear in `G`).
 
 ## cont.175 (2026-08-03) Both cuts now consistent with zero — the residual was `Pi`, not the estimator; and the population error is dominated by the ONE term §5B.2 says should vanish
 

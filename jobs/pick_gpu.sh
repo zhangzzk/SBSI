@@ -52,13 +52,38 @@ avail() {
     }' | sort | awk '{f[$1]+=$2} END {for (k in f) print k, f[k]}'
 }
 
+# A FREE GPU IS NOT THE SAME AS A GPU WE MAY USE.  Each partition's QOS caps GPUs PER USER
+# -- cip at 3, inter at 8 -- and that budget is shared across every session and every job
+# this account is running, including ones submitted from other worktrees.  Picking on node
+# availability alone lands the job in PENDING (QOSMaxGRESPerUser) behind work we cannot see
+# from here, which looks exactly like "that partition is down".  So subtract what we already
+# hold.  Pending jobs do not consume the budget; only running allocations do.
+headroom() {
+  local part=$1
+  local cap used
+  cap=$(sacctmgr -n -P show qos where name="$part" format=maxtresperuser 2>/dev/null \
+        | tr ',' '\n' | awk -F= '$1=="gres/gpu"{print $2; exit}')
+  [ -n "$cap" ] || { echo 999; return; }     # no cap configured for this QOS
+  used=$(squeue -h -u "$USER" -t R -p "$part" -O "tres-per-node:40" 2>/dev/null \
+         | awk -F'gpu:' 'NF>1{n=$NF; sub(/[^0-9].*/,"",n); s += (n==""?1:n)} END{print s+0}')
+  echo $((cap - used))
+}
+
 TABLE=$(avail)
-[ "$WHY" = 1 ] && { echo "free GPU units by partition:type"; echo "$TABLE" | sort -k2 -rn; echo "---"; }
+if [ "$WHY" = 1 ]; then
+  echo "free GPU units by partition:type"; echo "$TABLE" | sort -k2 -rn
+  for p in inter cip; do echo "per-user headroom in $p: $(headroom $p)"; done
+  echo "---"
+fi
 
 for want in $PREF; do
   free=$(echo "$TABLE" | awk -v w="$want" '$1==w {print $2}')
   [ -n "$free" ] && [ "$free" -gt 0 ] || continue
   part=${want%%:*}; type=${want##*:}
+  [ "$(headroom "$part")" -gt 0 ] || {
+    [ "$WHY" = 1 ] && echo "skip $want: free hardware but no per-user QOS headroom" >&2
+    continue
+  }
   [ "$WHY" = 1 ] && echo "chose $want ($free free)" >&2
   # Only partition and GRES are printed.  The vGPU allocator workaround is NOT emitted here:
   # it would have to ride on `--export`, and would then silently clobber whatever `--export`
