@@ -34,6 +34,7 @@ Usage (Slurm, GPU):
 """
 
 import argparse
+import json
 import os
 import sys
 
@@ -49,7 +50,7 @@ from sbs_shear.measurement_model import load_measurement_model  # noqa: E402
 from sbs_shear.posterior_shape import PosteriorShapeEstimator, make_e_grid  # noqa: E402
 from sbs_shear.preprocessing import rescale  # noqa: E402
 from sbs_shear.score_inference import (  # noqa: E402
-    ShapeScoreNodes, full_shear_estimate, jackknife_shear, jackknife_sigma,
+    ShapeScoreNodes, blocked_sums, jackknife_blocks, jackknife_sigma,
     population_terms,
 )
 from sbs_shear.shear_map import apply_shear_to_ellipticity  # noqa: E402
@@ -136,6 +137,57 @@ def pass_fraction_by_node(bundle, df, grid, rk, cut, n_samples, batch_size, seed
     return out
 
 
+def score_catalogue(args, nodes, bundle, grid, legs, c, n_legs):
+    """The expensive half: `(s_i, I_i)` for every object, reduced to per-block sums.
+
+    Returns `(blk_kept, blk_uncut_or_None, n_keep, n_tot)`, each `blk` being the
+    `(cnt, ns, ni)` triple of `blocked_sums`.  Nothing here depends on the population
+    block, which is exactly why it can be cached.
+    """
+    est = PosteriorShapeEstimator(bundle, grid, device=args.device)
+    acc = {"kept": [[], [], []], "uncut": [[], [], []]}
+    n_keep = n_tot = 0
+    for li, (frl, ehl, prl) in enumerate(legs()):
+        blk = prl % args.jk_blocks          # ring partners and repeats share a block
+        kl = np.hypot(ehl[:, 0], ehl[:, 1]) < c
+        n_keep += int(kl.sum())
+        n_tot += len(kl)
+        # SCORE EACH LEG ONCE.  `(s_i, I_i)` are per-object -- they depend on that row's
+        # own conditioning and its own `xhat`, and on nothing about the cut, which enters
+        # only by choosing WHICH rows join the sums.  So the cut estimate is a subset of
+        # the uncut one, and scoring the kept rows a second time was pure waste (43% of
+        # the run at this cut).  The one thing that could couple a row to its position in
+        # the frame is the armed mu-correction, which `log_likelihood` indexes by
+        # `row_offset`; assert it is absent rather than assume it, and fall back to two
+        # independent passes if it is ever armed.
+        if args.uncut_control:
+            assert getattr(est, "_mu_corr", None) is None, \
+                "mu-correction is armed: rows are position-dependent, score legs separately"
+            su, iu = score_pass(est, nodes, frl, ehl, args.chunk, f"leg {li+1}/{n_legs}",
+                                grad_chunk=args.grad_chunk, grad_delta=args.grad_delta,
+                                slab_mult=args.slab_mult, ll_dtype=LL_DTYPE[args.ll_dtype])
+            sk, ik = su[kl], iu[kl]
+            for dst, v in zip(acc["uncut"], (su, iu, blk)):
+                dst.append(v)
+        else:
+            sk, ik = score_pass(
+                est, nodes, frl.iloc[np.flatnonzero(kl)].reset_index(drop=True),
+                ehl[kl], args.chunk, f"kept L{li+1}/{n_legs}",
+                grad_chunk=args.grad_chunk, grad_delta=args.grad_delta,
+                slab_mult=args.slab_mult, ll_dtype=LL_DTYPE[args.ll_dtype])
+        for dst, v in zip(acc["kept"], (sk, ik, blk[kl])):
+            dst.append(v)
+        del frl, ehl
+    del est
+
+    def reduce_(which):
+        s, info, block = (np.concatenate(v) for v in acc[which])
+        return blocked_sums(s, info, block, args.jk_blocks)
+
+    return (reduce_("kept"), reduce_("uncut") if args.uncut_control else None,
+            n_keep, n_tot)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--measurement-model", default=MODEL)
@@ -179,6 +231,14 @@ def main():
                          "the dominant shape-noise term past that cap")
     ap.add_argument("--jk-blocks", type=int, default=200,
                     help="delete-one-block jackknife blocks; pairs are kept together")
+    ap.add_argument("--save-scores", default=None,
+                    help="cache the catalogue half of (5.3) -- the per-block partial sums "
+                         "-- to this .npz.  The score pass is hours and depends on nothing "
+                         "about the population block")
+    ap.add_argument("--load-scores", default=None,
+                    help="reuse a --save-scores cache instead of re-scoring.  Refuses to "
+                         "load one built with different settings; a mismatch would pair "
+                         "one run's galaxies with another run's Pi")
     ap.add_argument("--chunk", type=int, default=1024)
     ap.add_argument("--grad-chunk", type=int, default=256)
     ap.add_argument("--grad-delta", type=float, default=0.05)
@@ -269,53 +329,56 @@ def main():
           f"{'ring pair (rot90)' if args.ring == 'rot90' else 'single'} on {len(df):,} rows "
           f"-> {n_legs * len(df):,} objects, {args.jk_blocks} jackknife blocks", flush=True)
 
-    est = PosteriorShapeEstimator(bundle, grid, device=args.device)
-    acc = {"kept": [[], [], []], "uncut": [[], [], []]}
-    n_keep = n_tot = 0
-    for li, (frl, ehl, prl) in enumerate(legs()):
-        blk = prl % args.jk_blocks          # ring partners and repeats share a block
-        kl = np.hypot(ehl[:, 0], ehl[:, 1]) < c
-        n_keep += int(kl.sum())
-        n_tot += len(kl)
-        # SCORE EACH LEG ONCE.  `(s_i, I_i)` are per-object -- they depend on that row's
-        # own conditioning and its own `xhat`, and on nothing about the cut, which enters
-        # only by choosing WHICH rows join the sums.  So the cut estimate is a subset of
-        # the uncut one, and scoring the kept rows a second time was pure waste (43% of
-        # the run at this cut).  The one thing that could couple a row to its position in
-        # the frame is the armed mu-correction, which `log_likelihood` indexes by
-        # `row_offset`; assert it is absent rather than assume it, and fall back to two
-        # independent passes if it is ever armed.
-        if args.uncut_control:
-            assert getattr(est, "_mu_corr", None) is None, \
-                "mu-correction is armed: rows are position-dependent, score legs separately"
-            su, iu = score_pass(est, nodes, frl, ehl, args.chunk, f"leg {li+1}/{n_legs}",
-                                grad_chunk=args.grad_chunk, grad_delta=args.grad_delta,
-                                slab_mult=args.slab_mult, ll_dtype=LL_DTYPE[args.ll_dtype])
-            sk, ik = su[kl], iu[kl]
-            for dst, v in zip(acc["uncut"], (su, iu, blk)):
-                dst.append(v)
-        else:
-            sk, ik = score_pass(
-                est, nodes, frl.iloc[np.flatnonzero(kl)].reset_index(drop=True),
-                ehl[kl], args.chunk, f"kept L{li+1}/{n_legs}",
-                grad_chunk=args.grad_chunk, grad_delta=args.grad_delta,
-                slab_mult=args.slab_mult, ll_dtype=LL_DTYPE[args.ll_dtype])
-        for dst, v in zip(acc["kept"], (sk, ik, blk[kl])):
-            dst.append(v)
-        del frl, ehl
-    del est
-    keep_frac = n_keep / max(n_tot, 1)
-    print(f"cut |xhat| < {c}: keeps {n_keep:,}/{n_tot:,} = {keep_frac:.2%}", flush=True)
+    # CACHE THE CATALOGUE HALF.  `(s_i, I_i)` know nothing about the population block, and
+    # everything (5.3) needs from them is a per-block partial sum.  Scoring is hours;
+    # `<s>_sel` and `I_sel` are minutes and are the term still converging.  Caching lets
+    # the population block be re-estimated against a FIXED catalogue, which also makes
+    # those re-runs paired -- a change in `Pi` is then not confounded with a change in the
+    # galaxies.  The key covers everything that moves the sums; loading across a mismatch
+    # would silently pair one run's galaxies with another run's `Pi`.
+    cache_key = dict(cut=c, closure_g=g, rows=len(df), ring=args.ring,
+                     shape_reps=args.shape_reps, share_latents=int(args.share_latents),
+                     jk_blocks=args.jk_blocks, grid_n=args.grid_n,
+                     grid_emax=args.grid_emax, grid_rmax=args.grid_rmax,
+                     fd_delta=args.fd_delta, info_delta=args.info_delta,
+                     grad_delta=args.grad_delta, uncut=int(args.uncut_control),
+                     flow_seed=args.flow_seed, seed=args.seed,
+                     model=os.path.basename(args.measurement_model),
+                     catalogue=os.path.basename(args.g0_catalogue))
 
-    s, info, block_keep = (np.concatenate(v) for v in acc["kept"])
+    if args.load_scores:
+        z = np.load(args.load_scores, allow_pickle=False)
+        got = json.loads(str(z["key"]))
+        bad = {k: (v, got.get(k)) for k, v in cache_key.items() if got.get(k) != v}
+        if bad:
+            raise SystemExit(f"--load-scores {args.load_scores} was built with different "
+                             f"settings (want, got): {bad}")
+        blk_k = (z["cnt_k"], z["ns_k"], z["ni_k"])
+        blk_u = (z["cnt_u"], z["ns_u"], z["ni_u"]) if args.uncut_control else None
+        n_keep, n_tot = int(z["n_keep"]), int(z["n_tot"])
+        print(f"cached scores loaded from {args.load_scores}; no score pass this run",
+              flush=True)
+    else:
+        blk_k, blk_u, n_keep, n_tot = score_catalogue(args, nodes, bundle, grid,
+                                                      legs, c, n_legs)
+        if args.save_scores:
+            d = os.path.dirname(os.path.abspath(args.save_scores))
+            os.makedirs(d, exist_ok=True)
+            np.savez(args.save_scores, key=json.dumps(cache_key, sort_keys=True),
+                     n_keep=n_keep, n_tot=n_tot,
+                     cnt_k=blk_k[0], ns_k=blk_k[1], ni_k=blk_k[2],
+                     **({} if blk_u is None else
+                        dict(cnt_u=blk_u[0], ns_u=blk_u[1], ni_u=blk_u[2])))
+            print(f"score sums cached -> {args.save_scores}", flush=True)
+
+    print(f"cut |xhat| < {c}: keeps {n_keep:,}/{n_tot:,} = "
+          f"{n_keep / max(n_tot, 1):.2%}", flush=True)
 
     # ---- uncut control: the same estimator, same rows, no selection at all --------
     reps_u = None
     if args.uncut_control:
-        s_u, info_u, block_all = (np.concatenate(v) for v in acc["uncut"])
-        gh_u, sig_u, reps_u = jackknife_shear(s_u, info_u, block_all, args.jk_blocks)
-        _, _, den_u = full_shear_estimate(s_u, info_u)
-        fisher_u = 1.0 / np.sqrt(max(den_u[0, 0], 1e-30))
+        gh_u, sig_u, reps_u = jackknife_blocks(*blk_u)
+        fisher_u = 1.0 / np.sqrt(max(blk_u[2].sum(axis=0)[0, 0], 1e-30))
         print(f"\nUNCUT CONTROL (Pi == 1, so both population terms vanish by construction):")
         print(f"  ghat = [{gh_u[0]:+.6f} +/- {sig_u[0]:.6f}, "
               f"{gh_u[1]:+.6f} +/- {sig_u[1]:.6f}]   "
@@ -344,8 +407,8 @@ def main():
     def terms(p):
         return population_terms(nodes, np.log(np.maximum(p, 1e-12)))
 
-    n = len(s)
-    mean_i = info.sum(axis=0) / n
+    n = int(blk_k[0].sum())
+    mean_i = blk_k[2].sum(axis=0) / n
     w = nodes.prior_weights()
     print(f"\nper-object: N={n:,}  <I> = [[{mean_i[0,0]:+.5f}, {mean_i[0,1]:+.5f}], "
           f"[{mean_i[1,0]:+.5f}, {mean_i[1,1]:+.5f}]]")
@@ -393,7 +456,7 @@ def main():
         # sigma residual into an apparent 2.9 sigma one.  Re-solve the estimator once per Pi
         # replicate and add the scatter of the mean in quadrature.  Cheap: the catalogue sums
         # are already formed, so each replicate is one 2x2 solve.
-        sum_s, sum_i, n_keep_rows = s.sum(axis=0), info.sum(axis=0), len(s)
+        sum_s, sum_i, n_keep_rows = blk_k[1].sum(axis=0), blk_k[2].sum(axis=0), n
 
         def ghat_with(ss_, ii_):
             zs = np.zeros(2) if ss_ is None else np.asarray(ss_, float)
@@ -407,7 +470,7 @@ def main():
               + (f" {'d(m) vs uncut':>16} {'sig_gal':>8} {'sig_Pi':>8} {'sigma':>8} {'nsig':>6}"
                  if reps_u is not None else ""))
         for name, ss, ii in rows:
-            gh, sig, reps = jackknife_shear(s, info, block_keep, args.jk_blocks, ss, ii)
+            gh, sig, reps = jackknife_blocks(*blk_k, ss, ii)
             if ss is None and ii is None:
                 sig_pi = 0.0                       # no population term, nothing to propagate
             else:

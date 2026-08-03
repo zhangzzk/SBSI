@@ -7,7 +7,94 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
-## cont.174 (2026-08-02) §5B at 20x the precision: the estimator itself is unbiased to **+0.034% ± 0.252%** uncut, the selection correction turns −28% into **+0.78% ± 0.27%** — and cont.173's Π ladder was a nested-prefix artefact
+## cont.175 (2026-08-03) Both cuts now consistent with zero — the residual was `Pi`, not the estimator; and the population error is dominated by the ONE term §5B.2 says should vanish
+
+Three definitive runs (15484614/15/16) plus a code change that makes the remaining question
+cheap to answer. All three completed; all use the certified V1 flow, closure at `g = 0.05`, a
+cut on the flow OUTPUT `|xhat| < c`, 200-block jackknife, ring pairs, and `Pi` = M random rows
+x G nodes x 8 draws x R independent replicates (the reps are POOLED for the central value, so
+the reported rung M is an effective `R*M` rows).
+
+      job        cut   keep   G      objects  no correction     FULL (5.3), d(m) vs uncut
+      15484614   0.6  76.4%  2765   8M       −28.018 ±0.210%   **+0.712 ± 0.451%**  (1.6 sigma)
+      15484615   0.4  55.9%  2765   8M       −46.028 ±0.260%   **−0.239 ± 0.817%**  (0.3 sigma)
+      15484616   0.6  76.4%  5417   4M       −28.123 ±0.295%   **+0.756 ± 0.673%**  (1.1 sigma)
+
+**1. CORRECTION TO cont.174 ITEM 2: the +0.780% was 2.2 sigma, not 2.9.** The quoted ±0.270%
+was the GALAXY jackknife alone; `Pi`'s own uncertainty enters only the cut estimate and so
+lands undiluted on the difference. Propagating it (now reported as separate `sig_gal` /
+`sig_Pi` columns) gives ±0.36%. The claim of a significant residual did not survive its own
+error bar.
+
+**2. CORRECTION TO cont.174 ITEM 2: "it is not `Pi`" was wrong.** cont.174 read the ladder as
+flat at M = 4096 -> 16384 (a 0.004% move) and concluded `Pi` had converged. Deepening to
+M = 65536 moved `d(m)` by −0.394%. The flatness was noise at a depth where `Pi`'s own error is
+±0.35%, i.e. the size of the effect being chased. Reading a ladder as converged requires the
+rung-to-rung move to be small COMPARED TO ITS OWN ERROR BAR, which was never checked.
+
+**3. THE HARDER CUT CONVERGED, AND IT IS CLEAN.** cont.174 item 7 flagged −1.433% as
+provisional because the rungs were still marching. At M = 65536 the harder cut gives
+`d(m) = −0.239% ± 0.817%` — consistent with zero. Uncorrected it is −46.0%, so the correction
+removes 99.5% of a bias that halves the sample.
+
+**4. BOTH CUTS ARE NOW CONSISTENT WITH ZERO**, at 1.6 and 0.3 sigma. What is NOT established
+is that the residual IS zero: both rungs still drift toward zero as `Pi` deepens (+1.105 ->
++0.712 at cut 0.6; −0.582 -> −0.239 at cut 0.4), and two rungs cannot establish the form of
+that drift. If it were `1/M` the limits would be about +0.58% and −0.13%; that extrapolation
+is quoted only to show the drift is not obviously heading to zero, and a third rung is needed
+before believing either number. Do not quote +0.58% as a result.
+
+**5. GRID REFINEMENT: NULL.** Doubling the node bank (G = 2765 -> 5417) moves `d(m)` by
+−0.349%. The galaxy halves are paired (the 4M run is exactly the first two legs of the 8M
+one), but the `Pi` estimates are independent, giving ±0.71% on the difference — 0.5 sigma. The
+grid is not detectable as a systematic at the current precision. cont.174's "cheapest
+discriminator" came back empty, which is the useful outcome: it removes one candidate.
+
+**6. THE POPULATION ERROR IS DOMINATED BY `<s>_sel_1`, AND THAT TERM IS NOT CONVERGING IN M.**
+Going 4x deeper in population rows should halve every `Pi` error. `I_sel` obeys this exactly
+(0.00909 -> 0.00408 = 2.23x at cut 0.6; 0.01798 -> 0.00708 = 2.54x at cut 0.4). `<s>_sel` does
+not (1.20x and 1.50x; 1.62x and 1.21x). Propagating each term's error separately at cut 0.6,
+M = 65536: `<s>_sel_1` contributes 0.272% of the 0.361% total and `I_sel` 0.153%. So the
+budget is dominated by the component that §5B.2 says should be identically zero and that
+cont.174 item 4 measured at 20 sigma from it. More population ROWS is therefore the wrong
+lever, which is why the two `Pi` rungs above cost hours and bought almost nothing.
+
+### Code: cache the catalogue half of (5.3)
+
+`(s_i, I_i)` depend on the cut only through WHICH rows join the sums, and on the population
+block not at all — yet every `Pi` experiment so far dragged a 2.4-hour GPU score pass behind
+it. Everything (5.3) needs from the catalogue is a per-block partial sum, so those are now
+cacheable and the population block can be re-estimated in minutes. It also makes such re-runs
+PAIRED: a change in `Pi` is no longer confounded with a change in the galaxies.
+
+- `sbs_shear/score_inference.py`: `jackknife_blocks(cnt, ns, ni, s_sel, i_sel)`, the same
+  estimator taking `blocked_sums` output instead of rows; `jackknife_shear` now delegates to
+  it, so the two paths cannot drift apart.
+- `scripts/eval_score_select.py`: `--save-scores` / `--load-scores`, the score pass factored
+  out into `score_catalogue()`, and a cache key covering everything that moves the sums (cut,
+  `g`, rows, ring, shape-reps, grid, deltas, seeds, model, catalogue). A mismatch is a hard
+  error — loading across one would pair one run's galaxies with another run's `Pi`.
+- `tests/test_jackknife_shear.py`: cached and row paths must agree EXACTLY (central value,
+  error bar, and every per-block replicate), with and without a population correction.
+- `jobs/job_score_cache_smoke.sh`: end-to-end regression — the same small configuration run
+  scored and cached must produce character-identical reports, and a deliberately mismatched
+  key must be refused.
+
+Validation: 58 tests pass. Cache smoke job (15486019) — scored vs cached reports identical,
+mismatched key refused.
+
+### Next
+
+The experiment item 6 sets up, all off ONE cached score pass and therefore all paired: at
+FIXED total draws, compare deepening rows (M = 65536, R = 6), adding independent replicates
+(M = 16384, R = 24 — same effective row depth, 4x the independent latent seeds), and adding
+draws per row (M = 16384, R = 6, 32 draws). Whichever shrinks `sig_Pi` is the lever; if none
+does, `<s>_sel_1` is not a sampling error at all but the flow's non-equivariance, and item 4
+becomes the story rather than a nuisance. Separately, a third rung at M = 262144 to test the
+drift in item 4. Still untouched: cont.164 defect 3 (4-D node bank), the detection channel,
+and the closure-to-data gap (no neighbour channel, prior fit to the same catalogue).
+
+## cont.174 (2026-08-02) [items 2 and 7 CORRECTED by cont.175 — the +0.78% was quoted with a galaxies-only error bar, and "it is not Pi" was wrong] §5B at 20x the precision: the estimator itself is unbiased to **+0.034% ± 0.252%** uncut, the selection correction turns −28% into **+0.78% ± 0.27%** — and cont.173's Π ladder was a nested-prefix artefact
 
 User: "the forward differentiating approach gives certified m within 3%. push forward towards
 that. work autonomously tonight."

@@ -605,7 +605,23 @@ def jackknife_shear(s, info, block, n_blocks, s_sel=None, i_sel=None):
     """
     s = np.asarray(s, dtype=np.float64)
     info = np.asarray(info, dtype=np.float64)
-    cnt, ns, ni = blocked_sums(s, info, block, n_blocks)
+    return jackknife_blocks(*blocked_sums(s, info, block, n_blocks), s_sel, i_sel)
+
+
+def jackknife_blocks(cnt, ns, ni, s_sel=None, i_sel=None):
+    """`jackknife_shear` straight from `blocked_sums` output, without the rows.
+
+    Same contract and same numbers; the split exists because the two halves of (5.3) cost
+    wildly different amounts.  Scoring the catalogue is hours on a GPU and depends on
+    nothing about the population block; `<s>_sel` and `I_sel` are minutes and are the
+    term whose convergence is actually in question.  Caching `(cnt, ns, ni)` lets the
+    population term be re-estimated as often as needed against a FIXED catalogue -- which
+    also makes those re-runs paired, so a change in `Pi` is not confounded with a change
+    in the galaxies.
+    """
+    cnt = np.asarray(cnt, dtype=np.float64)
+    ns = np.asarray(ns, dtype=np.float64)
+    ni = np.asarray(ni, dtype=np.float64)
     zs = np.zeros(2) if s_sel is None else np.asarray(s_sel, float)
     zi = np.zeros((2, 2)) if i_sel is None else np.asarray(i_sel, float)
 
@@ -618,7 +634,7 @@ def jackknife_shear(s, info, block, n_blocks, s_sel=None, i_sel=None):
     # occupancy is what lets a caller subtract two runs' replicates block by block; a
     # ragged array silently misaligns the pairing it is there to exploit.
     reps = np.stack([est(cnt.sum() - cnt[b], ns.sum(axis=0) - ns[b], ni.sum(axis=0) - ni[b])
-                     for b in range(n_blocks)])
+                     for b in range(len(cnt))])
     return full, jackknife_sigma(reps), reps
 
 

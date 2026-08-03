@@ -20,7 +20,8 @@ import numpy as np
 import pytest
 
 from sbs_shear.score_inference import (
-    blocked_sums, full_shear_estimate, jackknife_shear, jackknife_sigma,
+    blocked_sums, full_shear_estimate, jackknife_blocks, jackknife_shear,
+    jackknife_sigma,
 )
 
 TAU, SIGMA = 0.30, 0.10          # intrinsic shape scatter and measurement noise
@@ -47,6 +48,25 @@ def draw(n_pair, g, rng, ring):
     s = y / NU2
     info = np.tile((np.eye(2) / NU2)[None], (len(y), 1, 1))
     return s, info, pair % NBLOCK
+
+
+def test_jackknife_from_cached_block_sums_is_the_same_estimator():
+    """The cached path must be the row path, exactly -- not merely close.
+
+    `eval_score_select.py` now caches `blocked_sums` so the population block can be
+    re-estimated without a fresh multi-hour score pass.  That is only safe if dropping the
+    rows changes nothing, so compare central value, error bar AND the per-block
+    replicates, with and without a population correction.
+    """
+    rng = np.random.default_rng(11)
+    s, info, block = draw(4000, 0.02, rng, ring=True)
+    s_sel = np.array([-0.002, 0.011])
+    i_sel = np.array([[1.01, 0.008], [0.008, 1.02]])
+    for ss, ii in ((None, None), (s_sel, None), (s_sel, i_sel)):
+        rows = jackknife_shear(s, info, block, NBLOCK, ss, ii)
+        cached = jackknife_blocks(*blocked_sums(s, info, block, NBLOCK), ss, ii)
+        for a, b in zip(rows, cached):
+            assert np.array_equal(a, b)
 
 
 def test_blocked_sums_reproduce_the_totals():
