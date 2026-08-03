@@ -192,15 +192,55 @@ against 8 h before.
 | | | 65 536 | 0.4760 | +0.614% | 0.543% | 0.197% |
 | | | **262 144** | 0.4737 | **+0.413%** | **0.546%** | 0.201% |
 
-Read against the script's own rubric: **cut 0.6 is converged** — its last move (0.140%) is well
-inside σ = 0.302% — so `d(m) = +0.570% ± 0.302%` (1.9σ) is the answer. **Cut 0.4 is not** — its
-moves are 0.197% then 0.201%, not decaying, still monotonically downward — so `+0.413% ± 0.546%`
-is an upper bound on the accuracy, not the accuracy. Note cut 0.4 moved from cont.175's
-**−0.239%** to **+0.413%**, a sign flip in the direction cont.175 predicted when it identified
-`Pi` under-sampling as the residual; both cuts now sit positive at +0.4–0.6%, where before they
-straddled zero with much wider bars. `<s>_sel,2 = +0.0107` remains ~45σ from zero, which §5B.2
-says an isotropic cut should not produce — unexplained, and now the largest single anomaly in
-the population block.
+**A fourth rung (M = 1 048 576) — and it withdraws the "cut 0.4 is not converged" reading.**
+Jobs 15503425/6, `cip` a40-16gb, ~3 min each. The ladder's `m_max` sets the row draw, so these
+are an *independent* population sample at every rung, not an extension of the runs above:
+
+| cut | 16 384 | 65 536 | 262 144 | 1 048 576 | moves |
+|---|---|---|---|---|---|
+| 0.4 | +1.909 ± 1.033% | +0.159 ± 0.573% | +0.785 ± 0.541% | **+0.447 ± 0.520%** | 1.751, 0.626, 0.338 |
+| 0.6 | +0.984 ± 0.472% | +0.699 ± 0.335% | +0.755 ± 0.312% | **+0.640 ± 0.280%** | 0.285, 0.056, 0.116 |
+
+Both sequences are **non-monotonic** (down, up, down), so the "still moving monotonically
+downward, therefore an upper bound" reading of the 3-rung cut-0.4 ladder was reading noise as a
+trend — three points and two moves were never enough to tell a drift from scatter. Every move
+past M = 65 536 is inside σ. Both cuts are converged, and the two independent draws agree:
+cut 0.6 gives +0.570 ± 0.302% and +0.640 ± 0.280%; cut 0.4 gives +0.413 ± 0.546% and
++0.447 ± 0.520%. (They share the score cache, so the galaxy half of σ is common to both and
+they are not independent measurements of the same thing — only the `Pi` half is fresh.)
+
+**Where that leaves §5B with selection:** `d(m)` = **+0.640 ± 0.280%** at cut 0.6 (2.3σ) and
+**+0.447 ± 0.520%** at cut 0.4 (0.9σ). Cut 0.4 is consistent with zero; cut 0.6 is a mild
+positive residual that two draws now agree on. Both are inside the 3% the forward-differencing
+route was aiming at, and cut 0.4 is at the 0.5% level.
+
+**`<s>_sel` is converged and it is NOT zero — the sharpest open problem in §5B.** The deep
+ladders resolve it far better than anything before:
+
+| cut | `<s>_sel,1` at M = 1 048 576 | `<s>_sel,2` | |
+|---|---|---|---|
+| 0.6 | −0.001878 ± 0.000095 (19.9σ) | **+0.010809 ± 0.000078** | **138σ** |
+| 0.4 | +0.002394 ± 0.000113 (21.1σ) | **+0.017873 ± 0.000106** | **169σ** |
+
+§5B.2 predicts `<s>_sel = 0` for an isotropic cut. Component 2 is ~6× component 1, has the same
+sign at both cuts, and *grows* as the cut tightens; component 1 **flips sign** between cuts.
+This is stable across rungs (0.6: +0.01056, +0.01091, +0.01098, +0.01081), so it is not a
+sampling artefact. Ruled out already: the **prior is isotropic** — its 928 900-shape sample has
+`<e1> = +0.000356 ± 0.000248` and `<e2> = +0.000363 ± 0.000247` (both ~1.4σ, and equal), with
+per-component widths 0.23858 vs 0.23838, matched to 0.1%; it is also fitted as a radial spline
+in `|e|`, hence isotropic by construction. So the asymmetry is in the flow or in the score
+machinery. The supporting tell for the flow is already in every report: `I_sel` has diag 1.011
+(e1) vs 1.026 (e2), a 1.5% asymmetry, with off-diag/diag = 0.007. Nothing in the architecture or
+the loss imposes spin-2 rotational symmetry — it is only ever learned.
+
+**New diagnostic** `scripts/check_flow_isotropy.py` + `jobs/job_flow_isotropy.sh` (15503468/9)
+tests that directly and separates it from a grid bug by construction: `Pi_k` depends on `|e|`
+alone if the model is isotropic, so `Pi` on rings of constant `|e|` must be flat. It reuses the
+estimator's own `pass_fraction_by_node`, reports each ring's spread against the replicate-to-
+replicate error, and splits the variation into `m=2` (a genuine e1-vs-e2 axis asymmetry) and
+`m=4` (the signature of a Cartesian/preprocessing artefact rather than a learned-symmetry
+failure). A null is equally informative: flat rings would move the anomaly to `ShapeScoreNodes`
+/ `population_terms` / the grid quadrature.
 
 **Precision default: settled at `fp32`, on all three cards.** With the whole-A40 table above the
 set is complete. Nothing below fp32 is safe everywhere: TF32 is safe on both A40s and biased by
@@ -215,10 +255,17 @@ pass while the job still sits in `(Priority)` behind another user's higher-prior
 Free + permitted is not the same as schedulable. Not worth modelling; just do not read a
 `(Priority)` pend as "that partition is broken".
 
-**Next.** Push the cut-0.4 ladder past M = 262 144 until its rung-to-rung move decays — jobs
-15502747 (cut 0.4) and 15502748 (cut 0.6) add an M = 1 048 576 rung and are queued. Chase
-`<s>_sel,2`'s 45σ departure from the isotropic-cut prediction; it is now the largest unexplained
-term in the population block. Then test `--grid-n 45` (cost is exactly linear in `G`).
+**Next.** Read 15503468/9 and act on whichever branch they select: if the rings are anisotropic
+the fix is in the model (symmetrise the flow, by augmentation or by an explicitly spin-2
+parameterisation), and if they are flat the fix is in the score/quadrature path. Either way
+`<s>_sel,2` at 138–169σ is now the single largest unexplained term in §5B and should be settled
+before the `d(m)` numbers above are quoted as final. Then test `--grid-n 45` (cost is exactly
+linear in `G`). The `Pi` ladders themselves need no further rungs — both cuts are converged.
+
+**Method note worth keeping.** Three ladder rungs give two moves, and two moves cannot separate
+a drift from scatter — the cut-0.4 sequence looked cleanly monotonic on three points and was
+not. Read convergence off four rungs or off two independent draws, never off a short monotone
+run.
 
 ## cont.175 (2026-08-03) Both cuts now consistent with zero — the residual was `Pi`, not the estimator; and the population error is dominated by the ONE term §5B.2 says should vanish
 
