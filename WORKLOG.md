@@ -82,6 +82,24 @@ population `Pi` 6 reps × ~27 min = **2.7 h**.
    A40 evidence alone — which I nearly did — would have silently biased every H200 run by
    7× the statistical error. Any reduced precision must be re-validated per card, against
    `ghat`, never against `max |dlogL|`.
+
+   **Third card, closing the set: a whole A40** (15502740, `cip-cl-nv01`, same 40k×2765 work):
+
+   | mode | speedup | s | TFLOP/s | d ghat1 | verdict |
+   |---|---|---|---|---|---|
+   | fp32 | 1.00× | 42.3 | 7.10 | ref | — |
+   | tf32 | 1.34× | 31.5 | 9.53 | **+5.4e-06** | safe, 46× below the statistical error |
+   | bf16 | 2.71× | 15.6 | 19.23 | +6.2e-03 | **reject** — 25× the error |
+   | fp16 | 2.17× | 19.5 | 15.39 | −1.9e-03 | **reject** |
+
+   Two things worth keeping. (i) TF32 is safe on the **whole** A40 as well as the slice
+   (+5.4e-06 vs +9.0e-06), so the hardware split is Ampere-vs-Hopper, not slice-vs-card — and
+   fp16's error is again −1.9e-03 on *all three* machines, the constant that identifies what
+   Hopper is serving TF32 from. (ii) The vGPU slice is **not** a third of a card on this
+   workload: whole A40 42.3 s vs `a40-16gb` 50.1 s is only **1.19×**, so item 3's "run in the
+   wrong precision on a third of a card" framing overstated the slice's cost. The real gap is
+   Ampere→Hopper: **H200 10.4 s vs whole A40 42.3 s = 4.1×**, still larger than any precision
+   setting buys, and free of numerical risk. `PI FASTPATH OK` again here, at exactly 0.000e+00.
 5b. **The speed is available without touching precision at all.** H200 fp32 does the score
    pass in 10.4 s where the `a40-16gb` slice takes 50.1 s — **4.8×, bit-for-bit unchanged**.
    That is more than TF32 buys and it is free of numerical risk. So the lever is hardware:
@@ -184,12 +202,23 @@ straddled zero with much wider bars. `<s>_sel,2 = +0.0107` remains ~45σ from ze
 says an isotropic cut should not produce — unexplained, and now the largest single anomaly in
 the population block.
 
-**Next.** Push the cut-0.4 ladder past M = 262 144 until its rung-to-rung move decays (it is
-seconds now, so this is free). Chase `<s>_sel,2`'s 45σ departure from the isotropic-cut
-prediction. Read the full-A40 benchmark (15502740, moved to `cip` after the `inter` a40 queue
-would not clear) and decide the precision default — currently `fp32`, and hardware selection
-already buys 4.8×, more than TF32 does and without TF32's H200 bias. Then test `--grid-n 45`
-(cost is exactly linear in `G`).
+**Precision default: settled at `fp32`, on all three cards.** With the whole-A40 table above the
+set is complete. Nothing below fp32 is safe everywhere: TF32 is safe on both A40s and biased by
+7.5× the statistical error on the H200; bf16 and fp16 are rejected on every card. Choosing the
+card instead is worth 4.1× (H200 vs whole A40), beats TF32's best (1.34×), and changes no digit.
+So `--precision` stays available for measurement and stays `fp32` in production, and the speed
+comes from `jobs/pick_gpu.sh`. This also means the two 5.7 h score caches remain valid.
+
+**Known gap in `pick_gpu.sh`.** It checks free hardware *and* per-user QOS headroom, and both can
+pass while the job still sits in `(Priority)` behind another user's higher-priority pending work
+— which is what happened to 15490081 on `inter`'s a40s and to 15502747/8 on `inter`'s h200nvl.
+Free + permitted is not the same as schedulable. Not worth modelling; just do not read a
+`(Priority)` pend as "that partition is broken".
+
+**Next.** Push the cut-0.4 ladder past M = 262 144 until its rung-to-rung move decays — jobs
+15502747 (cut 0.4) and 15502748 (cut 0.6) add an M = 1 048 576 rung and are queued. Chase
+`<s>_sel,2`'s 45σ departure from the isotropic-cut prediction; it is now the largest unexplained
+term in the population block. Then test `--grid-n 45` (cost is exactly linear in `G`).
 
 ## cont.175 (2026-08-03) Both cuts now consistent with zero — the residual was `Pi`, not the estimator; and the population error is dominated by the ONE term §5B.2 says should vanish
 
