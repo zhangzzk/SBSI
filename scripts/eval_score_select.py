@@ -338,6 +338,13 @@ def main():
                     help="reuse a --save-scores cache instead of re-scoring.  Refuses to "
                          "load one built with different settings; a mismatch would pair "
                          "one run's galaxies with another run's Pi")
+    ap.add_argument("--row-shard", type=int, default=0,
+                    help="which disjoint slice of the catalogue to score (0-based)")
+    ap.add_argument("--row-shards", type=int, default=1,
+                    help="how many slices to cut the catalogue into.  Shards scored in "
+                         "parallel jobs merge by passing every cache to --load-scores as a "
+                         "comma list; the per-block sums are additive, so the merged "
+                         "jackknife is exact rather than approximate")
     ap.add_argument("--pi-grid-n", type=int, default=None,
                     help="node count for the POPULATION block only (<s>_sel, I_sel, Pi); defaults to --grid-n.  The Pi-weighted integral converges much more slowly than the per-galaxy one -- see scripts/check_quadrature.py -- and refining it does NOT invalidate a score cache")
     ap.add_argument("--pi-azimuthal-average", action="store_true",
@@ -411,7 +418,8 @@ def main():
         pi_grid, pi_nodes = grid, nodes
 
     bundle = load_measurement_model(args.measurement_model, device=args.device)
-    df = load_g0(args.g0_catalogue, args.max_rows)
+    df = load_g0(args.g0_catalogue, args.max_rows,
+                 shard=args.row_shard, n_shards=args.row_shards)
     print(f"rows: {len(df):,} from {os.path.basename(args.g0_catalogue)}", flush=True)
 
     # ---- data: draw true shapes from the prior, shear, push through the flow ----------
@@ -486,20 +494,45 @@ def main():
                      flow_seed=args.flow_seed, seed=args.seed,
                      model=os.path.basename(args.measurement_model),
                      catalogue=os.path.basename(args.g0_catalogue),
-                     precision=args.precision, ll_dtype=args.ll_dtype)
+                     precision=args.precision, ll_dtype=args.ll_dtype,
+                     row_shard=args.row_shard, row_shards=args.row_shards)
 
     if args.load_scores:
-        z = np.load(args.load_scores, allow_pickle=False)
-        got = json.loads(str(z["key"]))
-        bad = {k: (v, got.get(k)) for k, v in cache_key.items() if got.get(k) != v}
-        if bad:
-            raise SystemExit(f"--load-scores {args.load_scores} was built with different "
-                             f"settings (want, got): {bad}")
-        blk_k = (z["cnt_k"], z["ns_k"], z["ni_k"])
-        blk_u = (z["cnt_u"], z["ns_u"], z["ni_u"]) if args.uncut_control else None
-        n_keep, n_tot = int(z["n_keep"]), int(z["n_tot"])
-        print(f"cached scores loaded from {args.load_scores}; no score pass this run",
-              flush=True)
+        # MERGING SHARDS.  A comma list concatenates several caches' per-block sums.  That is
+        # exact, not an approximation: (5.3) needs only `sum s`, `sum I` and a count, all
+        # additive, and the jackknife is defined over BLOCKS -- so three 200-block shards
+        # simply give a 600-block jackknife over the union.  The keys must agree on
+        # everything that shapes a score EXCEPT `row_offset`, and the offsets must be
+        # DISTINCT, or the same galaxies would be counted twice and the error bar would
+        # shrink by sqrt(2) with no new information behind it.
+        paths = [p for p in str(args.load_scores).split(",") if p]
+        blk_k, blk_u, n_keep, n_tot, seen = None, None, 0, 0, {}
+        for path in paths:
+            z = np.load(path, allow_pickle=False)
+            got = json.loads(str(z["key"]))
+            bad = {k: (v, got.get(k)) for k, v in cache_key.items()
+                   if k != "row_shard" and got.get(k) != v}
+            if bad:
+                raise SystemExit(f"--load-scores {path} was built with different settings "
+                                 f"(want, got): {bad}")
+            off = got.get("row_shard", 0)
+            if off in seen:
+                raise SystemExit(f"--load-scores {path} repeats row_shard={off} (already "
+                                 f"from {seen[off]}); merging it would double-count rows")
+            seen[off] = path
+            k = (z["cnt_k"], z["ns_k"], z["ni_k"])
+            u = (z["cnt_u"], z["ns_u"], z["ni_u"]) if args.uncut_control else None
+            if blk_k is None:
+                blk_k, blk_u = k, u
+            else:
+                blk_k = tuple(np.concatenate([a, b], axis=0) for a, b in zip(blk_k, k))
+                blk_u = (None if u is None else
+                         tuple(np.concatenate([a, b], axis=0) for a, b in zip(blk_u, u)))
+            n_keep += int(z["n_keep"])
+            n_tot += int(z["n_tot"])
+        print(f"cached scores loaded from {len(paths)} shard(s) "
+              f"(row shards {sorted(seen)}), {len(blk_k[0])} jackknife blocks, "
+              f"{n_tot:,} objects; no score pass this run", flush=True)
     else:
         with precision_region(args.precision, args.device):
             blk_k, blk_u, n_keep, n_tot = score_catalogue(args, nodes, bundle, grid,

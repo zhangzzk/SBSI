@@ -127,19 +127,51 @@ def case_batch_plan(path, min_case, max_rows, oversample=1.6):
     return lo, max(1, (nb - lo) // need)
 
 
-def load_g0(path, max_rows):
-    """Detected + source-selected rows of the g=0 training catalogue."""
+def load_g0(path, max_rows, shard=0, n_shards=1):
+    """Detected + source-selected rows of the g=0 training catalogue.
+
+    `shard`/`n_shards` cut the file into disjoint RECORD-BATCH ranges so several jobs can
+    score different galaxies in parallel and have their per-block sums added afterwards
+    (the sums are additive by construction).
+
+    WHY BATCH RANGES AND NOT A ROW OFFSET.  A "skip the first N selected rows" offset has to
+    read and select everything before N, so the last shard streams the whole catalogue --
+    about 25M raw rows x 24 columns for the sizes we need.  `cip`'s GPU nodes carry 40 GB of
+    host RAM, so that shard simply cannot run there.  Seeking to a batch index instead makes
+    each shard's cost depend on its OWN size and not on its position, which is what allows
+    them to run side by side on the small nodes.  Shards are then disjoint by construction
+    rather than by arithmetic, and the guard below refuses the case where one would run past
+    its neighbour's start.
+    """
     cols = ["e1_input_rot0_p", "e2_input_rot0_p", "e1_input_rot0_s", "e2_input_rot0_s",
             "sersic_n_input_p", "sersic_n_input_s", "measured_mag_auto",
             "measured_flux_radius", "nbr_flux_near", "nbr_flux_far", "nbr_flux_max",
             "Re_input_p", "Re_input_s", "r_input_p", "r_input_s", "distance",
             "neighbored", "detected", "polarization_angle", "case", "input_index",
             "measured_ngmix_g1", "measured_ngmix_g2", "r_blend"]
-    df = stream(path, cols, int(max_rows * 1.6) + 10_000)
+    n_shards, shard = max(1, int(n_shards)), int(shard)
+    start = 0
+    if n_shards > 1:
+        with ipc.open_file(path) as r:
+            nb, per = r.num_record_batches, r.get_batch(0).num_rows
+        span = nb // n_shards                       # batches this shard may consume
+        start = shard * span
+        need = int(max_rows * 1.6) + 10_000
+        if need > span * per:
+            raise ValueError(
+                f"shard {shard}/{n_shards} would read ~{need:,} raw rows but its batch span "
+                f"holds only ~{span * per:,}; shards would overlap and double-count. "
+                f"Use fewer shards or a smaller --max-rows.")
+        print(f"load_g0: shard {shard}/{n_shards}, batches [{start}, {start + span}) "
+              f"of {nb}", flush=True)
+    df = stream(path, cols, int(max_rows * 1.6) + 10_000, start=start)
     df = source_select_selection(df, cuts=DEFAULT_SELECTION_CUTS)
     df = df[df["detected"].astype(bool)].reset_index(drop=True)
     df["gamma1_input_p"] = 0.0
     df["gamma2_input_p"] = 0.0
+    if len(df) < max_rows:
+        print(f"load_g0: shard {shard} yielded {len(df):,} selected rows, short of the "
+              f"{max_rows:,} asked for", flush=True)
     return df.iloc[:max_rows].reset_index(drop=True)
 
 
