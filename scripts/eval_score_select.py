@@ -47,7 +47,10 @@ for _p in (SBSI_ROOT, os.path.join(SBSI_ROOT, "scripts")):
         sys.path.insert(0, _p)
 
 from sbs_shear.measurement_model import load_measurement_model  # noqa: E402
-from sbs_shear.posterior_shape import PosteriorShapeEstimator, make_e_grid  # noqa: E402
+from sbs_shear.posterior_shape import (  # noqa: E402
+    _E_DERIVED_FEATURES, PosteriorShapeEstimator, make_e_grid,
+)
+from sbs_shear.precision import MODES, precision_region  # noqa: E402
 from sbs_shear.preprocessing import rescale  # noqa: E402
 from sbs_shear.score_inference import (  # noqa: E402
     ShapeScoreNodes, blocked_sums, jackknife_blocks, jackknife_sigma,
@@ -108,32 +111,90 @@ def pass_fraction_by_node(bundle, df, grid, rk, cut, n_samples, batch_size, seed
     one sweep.  That matters because the expensive part of this script is the per-object
     pass, not `Pi`, while `Pi`'s convergence is the leading systematic.
 
-    Returns `Pi (n_ladder, G, n_rep)`.
+    THE RESIDUAL FLOW CANNOT SEE THE NODE, SO IT IS DRAWN ONCE.  This loop used to rebuild
+    the whole conditioning frame per node -- `sub.copy()`, `rescale()`, and the
+    preprocessor's `transform_frame` inside `bundle.sample` -- 2765 times per replicate on
+    tens of thousands of rows, to change two columns.  Worse, it re-ran the flow each time.
+    But the model is a location family in the shape:
+
+        ConditionalMeanFlow.sample(c) = flow.sample(flow_ctx(c)) + mu(c),
+
+    and `flow_ctx` index-selects away exactly `flow_drop_indices = [0, 1, 8, 9]` -- `e1`,
+    `e2` and their missing indicators.  The 10-layer coupling stack is therefore BLIND to
+    which node we are at, and the common random numbers this docstring already insists on
+    mean its draws at node `k` are not merely similar to its draws at node `k'`, they are
+    the same draws.  So the whole sweep is one flow pass plus `G` evaluations of the
+    16->128->2 mean head, about 590x less arithmetic, with the node entering only through
+    `mu`.  This is the same structure `PosteriorShapeEstimator` asserts for the scoring
+    side; it was simply never exploited on the sampling side.
+
+    It also makes the CRN exact rather than seed-dependent: the latents are now literally
+    one array reused, instead of two reseedings that happen to coincide.
+
+    `cut` takes RAW `(m, n_samples, 2)` samples as a torch tensor and returns a `(m,
+    n_samples)` mask, so the per-node reduction never leaves the GPU; only the `(n_ladder,)`
+    rung values come back.  Returns `Pi (n_ladder, G, n_rep)`.
     """
     g = np.asarray(grid, float)
     ladder = list(ladder)
     m_max = max(ladder)
     if m_max > len(df):
         raise ValueError(f"ladder rung {m_max} exceeds the {len(df)} rows available")
+
+    model, pre, tstd = bundle.model, bundle.condition_preprocessor, bundle.target_transform
+    dev = bundle.device
+    i1, i2 = pre.feature_names.index("e1_input_p"), pre.feature_names.index("e2_input_p")
+    n_feat = len(pre.feature_names)
+    # The reuse is exact only if the residual flow really is blind to the shape columns.
+    # Assert it here rather than inherit it from `PosteriorShapeEstimator`, because this
+    # function does not construct one and a future checkpoint could keep `e` in the flow.
+    e_dims = {i1, i2}
+    if pre.add_missing_indicators:
+        e_dims |= {n_feat + i1, n_feat + i2}
+    seen = e_dims & set(int(v) for v in model.keep_indices.tolist())
+    if seen:
+        raise ValueError(f"residual flow sees shape context dims {sorted(seen)}; its draws "
+                         "would depend on the node and cannot be reused across the bank")
+    bad = _E_DERIVED_FEATURES & set(pre.feature_names)
+    if bad:
+        raise ValueError(f"feature set contains e-derived features {sorted(bad)}; setting "
+                         "e1/e2_input_p alone would leave the context inconsistent")
+
+    gs = torch.as_tensor(
+        np.stack([(g[:, 0] - pre.means[i1]) / pre.scales[i1],
+                  (g[:, 1] - pre.means[i2]) / pre.scales[i2]], axis=1),
+        dtype=torch.float32, device=dev)
+    sc = torch.as_tensor(np.asarray(tstd.scales, dtype=np.float32), device=dev)
+    mn = torch.as_tensor(np.asarray(tstd.means, dtype=np.float32), device=dev)
+    rungs = torch.as_tensor([mm - 1 for mm in ladder], dtype=torch.long, device=dev)
+    norm = torch.as_tensor([float(mm) for mm in ladder], dtype=torch.float32, device=dev)
+
     subs = [df.iloc[rng.choice(len(df), m_max, replace=False)].reset_index(drop=True)
             for _ in seeds]
     out = np.empty((len(ladder), len(g), len(seeds)), dtype=np.float64)
     for j, (sd, sub) in enumerate(zip(seeds, subs)):
-        for k in range(len(g)):
-            f = sub.copy()
-            f["e1_input_rot0_p"] = g[k, 0]
-            f["e2_input_rot0_p"] = g[k, 1]
-            fr = rescale(f, **rk)
-            torch.manual_seed(sd)                  # SAME latents at every node -> CRN
-            if torch.cuda.is_available():
-                torch.cuda.manual_seed_all(sd)
-            xh = bundle.sample(fr, n_samples=n_samples, batch_size=batch_size)  # (m,ns,2)
-            cs = np.cumsum(cut(xh).mean(axis=1))                                # (m,)
-            for t, mm in enumerate(ladder):
-                out[t, k, j] = cs[mm - 1] / mm
-            if k % 500 == 0:
-                print(f"    Pi rep {j+1}/{len(seeds)} node {k:>6,}/{len(g):,}  "
-                      f"<Pi>={out[-1, :k+1, j].mean():.4f}", flush=True)
+        ctx0 = torch.as_tensor(pre.transform_frame(rescale(sub.copy(), **rk)),
+                               dtype=torch.float32, device=dev)
+        torch.manual_seed(sd)                      # SAME latents at every node -> CRN
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(sd)
+        with torch.no_grad():
+            # batched in the SAME order and size `bundle.sample` used, so the latent stream
+            # -- and hence every number this function returns -- is unchanged by the rewrite
+            resid = torch.cat([model.flow.sample(model._flow_ctx(ctx0[s:s + batch_size]),
+                                                 n_samples=n_samples)
+                               for s in range(0, len(ctx0), batch_size)], dim=0)
+            ctx = ctx0.clone()                     # scratch: only the shape columns move
+            if pre.add_missing_indicators:
+                ctx[:, n_feat + i1] = ctx[:, n_feat + i2] = 0.0   # grid e is never missing
+            for k in range(len(g)):
+                ctx[:, i1], ctx[:, i2] = gs[k, 0], gs[k, 1]
+                xh = (resid + model._mu(ctx)[:, None, :]) * sc + mn        # (m, ns, 2) raw
+                cs = torch.cumsum(cut(xh).to(torch.float32).mean(dim=1), dim=0)
+                out[:, k, j] = (cs[rungs] / norm).double().cpu().numpy()
+                if k % 500 == 0:
+                    print(f"    Pi rep {j+1}/{len(seeds)} node {k:>6,}/{len(g):,}  "
+                          f"<Pi>={out[-1, :k+1, j].mean():.4f}", flush=True)
     return out
 
 
@@ -250,6 +311,11 @@ def main():
     ap.add_argument("--flow-seed", type=int, default=12345)
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--device", default=None)
+    ap.add_argument("--precision", default="fp32", choices=list(MODES),
+                    help="arithmetic for the flow's forward passes.  The score pass is "
+                         "~60 PFLOP of 256x256 matmul per leg and fp32 cannot touch the "
+                         "tensor cores; see sbs_shear/precision.py and validate any change "
+                         "with scripts/bench_score_speed.py before trusting a result")
     for k, v in dict(pixel_rms=0.312, pixel_size=0.2, zero_mag=30.0,
                      psf_fwhm=0.73, moffat_beta=2.224).items():
         ap.add_argument(f"--{k.replace('_', '-')}", type=float, default=v)
@@ -344,7 +410,8 @@ def main():
                      grad_delta=args.grad_delta, uncut=int(args.uncut_control),
                      flow_seed=args.flow_seed, seed=args.seed,
                      model=os.path.basename(args.measurement_model),
-                     catalogue=os.path.basename(args.g0_catalogue))
+                     catalogue=os.path.basename(args.g0_catalogue),
+                     precision=args.precision, ll_dtype=args.ll_dtype)
 
     if args.load_scores:
         z = np.load(args.load_scores, allow_pickle=False)
@@ -359,8 +426,9 @@ def main():
         print(f"cached scores loaded from {args.load_scores}; no score pass this run",
               flush=True)
     else:
-        blk_k, blk_u, n_keep, n_tot = score_catalogue(args, nodes, bundle, grid,
-                                                      legs, c, n_legs)
+        with precision_region(args.precision, args.device):
+            blk_k, blk_u, n_keep, n_tot = score_catalogue(args, nodes, bundle, grid,
+                                                          legs, c, n_legs)
         if args.save_scores:
             d = os.path.dirname(os.path.abspath(args.save_scores))
             os.makedirs(d, exist_ok=True)
@@ -398,11 +466,12 @@ def main():
           f"{max(ladder)*len(grid)*args.pi_samples*args.pi_reps:,} draws"
           f"{'  (ladder ' + ','.join(map(str, ladder)) + ')' if len(ladder) > 1 else ''}",
           flush=True)
-    pi_ladder = pass_fraction_by_node(
-        bundle, df, grid, rk,
-        cut=lambda x: np.hypot(x[:, :, 0], x[:, :, 1]) < c,
-        n_samples=args.pi_samples, batch_size=args.batch_size, seeds=seeds,
-        ladder=ladder, rng=np.random.default_rng(args.seed + 77))
+    with precision_region(args.precision, args.device):
+        pi_ladder = pass_fraction_by_node(
+            bundle, df, grid, rk,
+            cut=lambda x: torch.hypot(x[..., 0], x[..., 1]) < c,
+            n_samples=args.pi_samples, batch_size=args.batch_size, seeds=seeds,
+            ladder=ladder, rng=np.random.default_rng(args.seed + 77))
 
     def terms(p):
         return population_terms(nodes, np.log(np.maximum(p, 1e-12)))

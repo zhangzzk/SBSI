@@ -4,7 +4,7 @@
 #SBATCH --mem=24G
 #SBATCH --cpus-per-task=8
 #SBATCH --gpus-per-node=1
-#SBATCH --partition=cip
+#SBATCH --partition=inter
 #SBATCH --output=/home/z/Zekang.Zhang/logs/cache_smoke_%j.out
 #SBATCH --error=/home/z/Zekang.Zhang/logs/cache_smoke_%j.err
 #

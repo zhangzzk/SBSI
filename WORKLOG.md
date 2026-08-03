@@ -7,6 +7,77 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
+## cont.176 (2026-08-03) The `Pi` sweep was re-running a flow that cannot see the node — removed, bit-for-bit; and the score pass has never used a tensor core
+
+A cost pass, prompted by every definitive run taking 8+ hours. Neither half was slow for an
+interesting reason, and one half was doing work that is provably unnecessary.
+
+**Where the 8.4 h went** (measured, job 15486026): scoring 4 legs × 5147 s = **5.7 h**;
+population `Pi` 6 reps × ~27 min = **2.7 h**.
+
+1. **The `Pi` fast path — exact, and now verified at zero difference.** `pass_fraction_by_node`
+   rebuilt the whole conditioning frame inside its node loop (`sub.copy()` → `rescale()` →
+   `transform_frame` inside `bundle.sample`) — 2765 times per replicate on up to 262 144 rows,
+   to change two columns — and re-ran the flow each time. But the model is a location family
+   in the shape: `ConditionalMeanFlow.sample(c) = flow.sample(flow_ctx(c)) + mu(c)`, and
+   `flow_ctx` index-selects away exactly `flow_drop_indices = [0,1,8,9]` = `e1`, `e2` and their
+   missing indicators. The 10-layer coupling stack is **blind to the node**, so under the common
+   random numbers the loop already imposed, its draws at every node are the *same draws*. The
+   sweep is now one flow pass plus `G` evaluations of the 16→128→2 mean head — ~590× less
+   arithmetic — with the node entering only through `mu`. The per-node reduction also stays on
+   the GPU (`cut` now takes a torch tensor); only the `(n_ladder,)` rung values come back.
+   This is the same structure `PosteriorShapeEstimator` already asserts for the *scoring* side;
+   it was never exploited on the sampling side.
+2. **Verified, not argued.** `scripts/check_pi_fastpath.py` transcribes the old loop literally
+   and compares. Job 15490047: `max |fast − ref| = 0.000e+00` over 12 nodes × 4096 rows × 8
+   draws × 2 reps, against `1/(rows·draws) = 6.1e-05` for a single flipped draw. Bit-identical,
+   so no `Pi`-dependent result changes. Guards added inside the function itself (residual flow
+   must not see the shape dims; no e-derived features) so a future checkpoint cannot silently
+   invalidate the reuse.
+3. **The score pass is honest work, run in the wrong precision on a third of a card.** Per leg
+   it is 2M rows × 2765 nodes = 2.2e10 flow evaluations; from the checkpoint's shapes (10 ×
+   [14→256→256→256→4]) one evaluation is 2.71 MFLOP, so ~60 PFLOP/leg. 5147 s ⇒ ~12 TFLOP/s
+   (~19 solo). A full A40 is 37 TFLOP/s in fp32 — and these ran on an `a40-16gb` **vGPU slice**.
+   So we are near peak *for what was requested*. `grep` found no `allow_tf32`, no `autocast`,
+   no half precision anywhere in the repo: the most tensor-core-shaped workload here has only
+   ever run in the one precision that cannot use them.
+4. **`--precision {fp32,tf32,bf16,fp16}`** added (`sbs_shear/precision.py`), wrapping both the
+   score pass and `Pi`. **Default is still `fp32`** — unchanged behaviour — pending the
+   accuracy measurement. TF32 has a 10-bit mantissa, the same as the fp16 the log-likelihoods
+   are *already* stored to, and everything downstream is a softmax over the node bank, so it
+   has good reason to be below the noise floor; bf16 (8-bit) does not. The acceptance metric is
+   the shift in `ghat`, not `max |dlogL|`: the definitive runs' statistical error is 2.5e-4 in
+   `ghat`, so ≲1e-5 is irrelevant and ~1e-4 is not.
+5. **Not yet tested: a coarser grid.** Cost is exactly linear in `G = 2765` (`--grid-n 61`).
+   cont.175 showed *refining* the grid is null; nobody has checked *coarsening* it.
+   `--grid-n 45` would be 1.7× cheaper.
+6. **`inter` is the default GPU partition** (user, 2026-08-03) — whole cards (h200nvl/a40/
+   a100/v100) rather than `cip`'s vGPU slices. Job scripts switched; use `cip` only when
+   `inter` has nothing free. Note `inter`'s untyped default can land on an RTX 2080 Ti, which
+   is Turing and has **no TF32** — request `--gpus-per-node=a40:1` or `h200nvl:1` for that test.
+
+**Code.** `scripts/eval_score_select.py` (`pass_fraction_by_node` rewritten; `--precision`;
+`precision` and `ll_dtype` added to the score-cache key), new `sbs_shear/precision.py`, new
+`scripts/check_pi_fastpath.py`, new `scripts/bench_score_speed.py` +
+`jobs/job_bench_score_speed.sh`, `jobs/job_score_select.sh` and `jobs/job_score_cache_smoke.sh`
+→ `--partition=inter`. The four existing `.npz` score caches had their stored keys migrated
+(`+precision=fp32`, `+ll_dtype=float32` — their true provenance, since the job script passes
+neither flag) rather than teaching the loader to accept absent keys; a missing key stays a
+hard error.
+
+**Validation.** 58/58 tests pass. `check_pi_fastpath` exact (job 15490047).
+Precision/hardware benchmarks queued: 15490048 (cip a40-16gb, the old baseline), 15490081
+(inter a40), 15490052 (inter h200nvl).
+
+**Limitation.** The projected 8.4 h → ~1.2 h is a projection, not a measurement: only the `Pi`
+half (2.7 h → seconds) is established. The precision and full-GPU factors are unmeasured until
+those three jobs land.
+
+**Next.** Read the benchmarks; if TF32 moves `ghat` by ≲1e-5, make it the default. Then
+re-submit the pending `pi_deep6`/`pi_deep4`/`repro6` ladder jobs against the cached score sums
+(`--load-scores`) instead of re-scoring — with `Pi` nearly free they become minutes, not 8 h.
+Then test `--grid-n 45`.
+
 ## cont.175 (2026-08-03) Both cuts now consistent with zero — the residual was `Pi`, not the estimator; and the population error is dominated by the ONE term §5B.2 says should vanish
 
 Three definitive runs (15484614/15/16) plus a code change that makes the remaining question
