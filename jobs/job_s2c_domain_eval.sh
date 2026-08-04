@@ -32,6 +32,11 @@ RES=/home/z/Zekang.Zhang/SBSI/results
 DUMPDIR=/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/v2_domain_dumps
 mkdir -p $DUMPDIR
 CK=$D/measurement_flow_g0_ngmix_${TAG}_s${SEED}_swaavg.pt
+# DUMPNAME lets a re-score of an EXISTING tag write somewhere else. Without it a control run (e.g.
+# re-scoring the fiducial checkpoint on different GPU hardware) would silently OVERWRITE the real
+# fiducial dump, destroying the baseline it is meant to be compared against. Defaults to TAG, so
+# every existing invocation is byte-identical.
+DUMPNAME=${DUMPNAME:-$TAG}
 
 echo "### S2C-DOMAIN EVAL seed=$SEED job=$SLURM_JOB_ID ###"; nvidia-smi -L; date
 python -u scripts/validate_constant_with_blend.py \
@@ -39,10 +44,10 @@ python -u scripts/validate_constant_with_blend.py \
   --blend-lookup "$RES/blend_lookup_extnbrho_c40-139.feather" \
   --crowd-flux-lookup "$RES/crowd_flux_conc_c0-199.feather" \
   --global-only --flow-seed 12345 --n-samples 64 --max-rows 45000000 --batch-size 16384 \
-  --dump "$DUMPDIR/${TAG}_perobj_s${SEED}.feather" || { echo "FAILED eval seed=$SEED"; exit 1; }
+  --dump "$DUMPDIR/${DUMPNAME}_perobj_s${SEED}.feather" || { echo "FAILED eval seed=$SEED"; exit 1; }
 
 echo; echo "### m under the four masks (same script as the 8-seed baseline) ###"
 python -u scripts/eval_v2_indomain_m.py \
-  --dump-glob "$DUMPDIR/${TAG}_perobj_s${SEED}.feather" \
+  --dump-glob "$DUMPDIR/${DUMPNAME}_perobj_s${SEED}.feather" \
   --catalogue "$CAT" --min-case 40 --re-min 0.3 --mag-max 26.0
 echo "S2CDOMEV_DONE seed=$SEED"; date

@@ -2,6 +2,69 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-04b (**FIG 2 REVERSES THE VERDICT: the label fix that closes half-shear small size makes constgold WORSE by +2.57 pt there and +1.09 pt overall. The two evaluation sets disagree, and the leading suspect is now the EMULATOR at small size.** Jobs 15515379 / 15515386 / 15515582.)
+
+**Files.** `plotting/plot_fig2_labelfix.py` (new), `jobs/job_fig2_labelfix.sh` (new),
+`jobs/job_s2c_domain_eval.sh` (+`DUMPNAME`). Output `figures/fig2_labelfix_with_emulator.png`.
+
+**What was run.** The relabelled flow (`perobj_DUMPLBL_rw450`, seeds 501/502/503) scored on constgold
+via the standard `job_s2c_domain_eval.sh` path, then plotted on the fig2 axes against the fiducial on
+IDENTICAL rows with the SAME per-object tuned `R_blend`. Model = `R_flow + R_blend`. In-domain
+population reproduces the fiducial exactly: N=11,674,408, `R_sim`=0.86050, `R_blend`=0.13578.
+
+| region | fiducial | relabelled | change |
+|---|---|---|---|
+| ALL | +0.27 +- 0.11 | +1.36 +- 0.12 | **+1.09 +- 0.16 (resolved)** |
+| **small size Re <= 0.386** | **+2.43 +- 0.52** | **+5.00 +- 0.49** | **+2.57 +- 0.72 (resolved)** |
+| faint TRUE mag > 25.0 | -0.67 +- 0.26 | +1.51 +- 0.26 | +2.18 +- 0.37 (resolved) |
+
+(model/truth - 1; `<R_flow>` 0.72707 -> 0.73642.) **NOT an `m`** -- 3 seeds, and the per-seed offset
+does not cancel in a model-vs-sim ratio.
+
+### THE DIRECTION IS OPPOSITE TO FIG 5, ON THE SAME REGION
+
+Half-shear small size: model reads -3.74% (LOW), the fix raises it to -0.08%.
+Constgold small size: model reads +2.43% (HIGH), the same fix raises it to +5.00%.
+
+Both moves are the same physical change -- the relabelled flow puts MORE response at small size. One
+truth wanted it, the other did not. **So it is not enough to say the two g=0 measurements disagree in
+scale; the two evaluation targets disagree about the sign of the correction at small size.**
+
+### THE LEADING SUSPECT IS NOW THE EMULATOR, NOT THE FLOW
+
+Fig 5 is FLOW-ONLY. Fig 2 is `R_flow + R_blend`. If the flow was genuinely 3.7% LOW at small size
+(fig 5) and the TOTAL was nevertheless 2.4% HIGH there (fig 2), then `R_blend` must be OVER-predicting
+at small size by enough to more than cover the flow's deficit -- and the fiducial flow's deficit was
+MASKING it. Removing the mask exposes the emulator: +5.00%. This is the cancellation pattern AGENTS.md
+already flags for the fiducial constgold `m`, appearing again one level down.
+
+**This is a HYPOTHESIS, not a measurement.** Fig 5 and fig 2 live on different populations (2.36M
+half-shear rows vs 11.67M constgold), different extractions and different response definitions;
+`scripts/eval_size_budget.py` exists precisely because pasting the two columns together is invalid.
+The hypothesis has to be tested on the per-pair `R_blend` ruler (`scripts/eval_rblend_gap.py`), which
+is also the only ground AGENTS.md permits for judging the emulator -- constgold is evaluation-only.
+
+### The Re ~ 0.31 EDGE BIN is bad in BOTH sets and BOTH models
+
+fig 5: +6.94 / +7.12 (ruler / scored). fig 2: **+16.40 / +15.45**, against a truth that collapses to
+0.4354 from ~0.92 one bin up. The label fix does not touch it in either set. This is a separate,
+still-open defect sitting exactly at the domain edge (`Re > 0.3`), and at 6% of the in-domain
+population it is large enough to matter.
+
+**At LARGE size the relabelled flow is BETTER on constgold** (Re~0.86: -3.03 -> -0.56; Re~1.01:
+-3.79 -> -1.00), so the +1.09 pt overall loss is not uniform -- it is bought at the small end.
+
+**GPU-hardware control (job 15515386).** These constgold dumps ran on V100 (the `inter` a40 queue was
+long); the fiducial dumps are A40. Re-scoring the FIDUCIAL s501 checkpoint on V100 gives
+`<R_flow>` = **0.17569 vs the A40 dump's 0.17569** -- identical to 5 decimals, as expected for a CRN
+antithetic estimator. Hardware is exonerated; the curve difference is the label. `DUMPNAME` was added
+to the eval job first, because the control would otherwise have OVERWRITTEN the real fiducial dump.
+
+**NEXT.** (a) Test the emulator hypothesis on the per-pair ruler at small size -- this now outranks
+the g=0 question, because it can be settled without deciding which g=0 measurement is unbiased.
+(b) The `Re ~ 0.31` edge bin. (c) 16 seeds before any of this is an `m`. Nothing is promoted; the
+fiducial model is unchanged.
+
 ## 2026-08-04a (**FIG 5 WITH BOTH FLOWS ON IT. The size fix is REAL but LOCALISED, and the -0.08% region average is itself a CANCELLATION: the smallest bin is +7% in BOTH models and is not touched by the label fix.** Job 15515209.)
 
 **Files.** `plotting/plot_selfresp_labelfix.py` (new), `jobs/job_selfresp_labelfix_fig.sh` (new).
