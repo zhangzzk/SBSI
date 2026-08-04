@@ -33,10 +33,27 @@ cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 D=/project/ls-gruen/users/zekang.zhang/sbsi_caches/ablation/eval; mkdir -p $D
 TAG=${TAG:-lsst_r_extnbr_ho}
 if [ "${V21:-0}" = "1" ]; then DOM="--v21-domain"; SUF="${OUTSUF:-_v21dom}"; else DOM=""; SUF="${OUTSUF:-}"; fi
+
+# LEG OVERRIDES. Defaults are the script's own (non-ap7 g0.05 val vs g0.0 train). Set GS_LEG/G0_LEG
+# to raise precision off the g=0.2 leg, which carries 4x the shear signal at similar shape noise.
+# BOTH LEGS MUST COME FROM THE SAME APERTURE FAMILY, and a cross-family comparison is invalid: the
+# ap7 catalogues are 7"-capped, and AGENTS.md's pair-list rule says restricting the pair list
+# handicaps whichever model relies on the excluded pairs -- so an ap7 number may only be read
+# against an ap7 control, never against the non-ap7 default above. Run ap7 g=0.05 as that control.
+LEGS=""
+[ -n "$GS_LEG" ] && LEGS="$LEGS --gs-leg $GS_LEG"
+[ -n "$G0_LEG" ] && LEGS="$LEGS --g0-leg $G0_LEG"
+if { [ -n "$GS_LEG" ] && [ -z "$G0_LEG" ]; } || { [ -z "$GS_LEG" ] && [ -n "$G0_LEG" ]; }; then
+  echo "REFUSING: set BOTH GS_LEG and G0_LEG or neither -- mixing an overridden sheared leg with the"
+  echo "default g=0 reference silently crosses aperture families and invalidates the comparison."
+  exit 1
+fi
+
 echo "### R_BLEND GAP job=$SLURM_JOB_ID ###"; date
 echo "tag=$TAG   domain=${DOM:-rectangle REMIN=${REMIN:-0.3} MAGMAX=${MAGMAX:-26.0}}"
+echo "legs=${LEGS:-<script defaults: non-ap7 g0.05 val / g0.0 train>}"
 python -u scripts/eval_rblend_gap.py \
-  --true-re-min ${REMIN:-0.3} --true-mag-max ${MAGMAX:-26.0} $DOM \
+  --true-re-min ${REMIN:-0.3} --true-mag-max ${MAGMAX:-26.0} $DOM $LEGS \
   --tag "$TAG" \
   --output "$D/rblend_gap_${TAG}${SUF}.npz"
 echo "RBLENDGAP_DONE"; date

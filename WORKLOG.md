@@ -2,6 +2,55 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05b — EMULATOR UNDER-PREDICTION IS NOW ESTABLISHED (3.6 sigma), BUT THE TRANSFER TO m IS NOT
+
+Follow-up to 2026-08-05a, which could not decide the emulator at +-6.2%. The g=0.2 leg carries 4x the
+shear signal, and it works. Jobs 15531794-97 (4 x 8.4 min) + 15531872.
+
+Files: `scripts/summarize_rblend_ruler.py` (new), `jobs/job_rblend_gap.sh` (+GS_LEG/G0_LEG overrides
+with a both-or-neither guard).
+
+**THE g=0.2 LEG IS LEGITIMATE -- LINEARITY CHECKED FIRST, NOT ASSUMED.** On the 5,855,157 rows both
+legs contain, `<truth>` is 0.0233 at g=0.05 and 0.0238 at g=0.2, difference **+0.00049 +- 0.00088
+(0.6 sigma)**. Blend response is linear out to g=0.2, so the extra signal is free. Checking this
+first mattered: 0.2 is a large shear and a nonlinearity would have invalidated the whole run.
+
+**MEASURED (ap7 family throughout, paired sems, V2.1 domain):**
+
+| leg | emulator | truth | pred | rel error | +- | significance |
+|---|---|---|---|---|---|---|
+| g=0.05 | V2.1 | 0.0239 | 0.0229 | -4.38% | 4.26% | 1.0 sigma |
+| g=0.05 | fiducial | 0.0239 | 0.0234 | -2.30% | 4.26% | 0.5 sigma |
+| **g=0.20** | **V2.1** | 0.0239 | 0.0224 | **-6.15%** | **1.73%** | **3.6 sigma** |
+| g=0.20 | fiducial | 0.0239 | 0.0229 | -4.05% | 1.73% | 2.3 sigma |
+
+Precision improved 2.5x as predicted. **The emulator DOES under-predict blend response.** Matched-row
+numbers are identical to the full-sample ones, so the shear-dependent detection difference between
+legs (42,103 / 6,031 rows) is not driving it.
+
+**THE V2.1 EMULATOR RETRAIN IS A REGRESSION -- now confirmed on two independent legs.** Head-to-head
+on identical rows, where truth cancels exactly: **-0.00050 +- 0.00001 at BOTH g=0.05 and g=0.2.** The
+retrain predicts less blend response than the fiducial `lsst_r_extnbr_indom_tuned`, moving away from a
+truth that already sat above both. Reverting is arguable on this evidence (the sanctioned ruler),
+never on the m it would produce.
+
+**WHAT IT WOULD DO TO m -- ILLUSTRATIVE ONLY, DO NOT QUOTE AS A RESULT.** Scaling `R_blend` by the
+g=0.2 ratio gives `R_blend` 0.11786 -> 0.12558 and **m +0.785% -> -0.001%**, with +-1 sigma spanning
+[-0.239%, +0.229%] -- inside the +-0.3% target. That is a tempting number and it is NOT yet earned:
+
+**THE PAIR-LIST TRANSFER IS UNVERIFIED, AND THIS RUN PROVES IT MATTERS.** At the SAME g=0.05 the
+ap7 (7"-capped) list gives -4.38% and the non-ap7 list gave -8.89% (2026-08-05a) -- a factor 2 from
+the pair list alone, exactly AGENTS.md's rule. And `R_blend` in `m` uses NEITHER: `build_blend_lookup.py`
+calls `predict_response(t, t)` on the FULL field, i.e. the emulator's NATIVE r_max=10", k=20 list.
+So the measured per-pair ratio may not be the ratio that applies to the summed `R_blend`, and the
+error is separation-dependent (concentrated below 1"), which is precisely the regime where the three
+lists differ most. **The under-prediction is established; its size on `R_blend` is not.**
+
+Next, to earn the m number: the ruler npz stores per-row `truth`, `pred` and `distance`, and the
+lookup stores the native pairs. Re-weighting the measured per-pair error by each separation's actual
+share of the summed native `R_blend` would give a properly-weighted correction instead of assuming a
+flat ratio. That is the honest way to close it, and it needs no new sim.
+
 ## 2026-08-05a — THE EMULATOR CANNOT BE CONVICTED **OR** EXONERATED: its own error bar is +-0.7% on m
 
 Owner asked, after the flow was cleared against its target, whether the emulator is the problem. Run
