@@ -2,6 +2,71 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-04p — TUNING THE TRAINING CANNOT FIX V2.1: the flow is on its target and the TARGET is 2.53% low
+
+Owner asked whether training could be tuned to improve V2.1's +0.790%. **It cannot, and the
+arithmetic says tuning would make it WORSE.** Recorded so nobody spends GPU time on the knobs.
+
+**THE FLOW IS NOT UNDERTRAINED.** It sits on its own response target to 0.13% (2026-08-04j). The
+numbers on the V2.1 domain:
+
+| quantity | value |
+|---|---|
+| half-shear response target, population-weighted | **0.8509** |
+| what the flow actually delivers on constgold | 0.8647 |
+| what constgold DEMANDS (`R_sim - R_blend` = 0.99027 - 0.11786) | **0.8724** |
+
+The target is **2.53% BELOW** the acceptance metric. A flow that reproduced its target exactly on
+constgold would give `m = 0.99027/(0.8509+0.11786) - 1 = +2.22%`, against the +0.790% we measure.
+**The current result depends on the flow NOT matching its target** — it lands 1.6% above it on
+constgold, and that generalization gap is the only reason `m` is under 1%. Training harder, longer,
+or with a heavier response weight walks the flow TOWARD 0.8509 and AWAY from 0.8724.
+
+Consistent with the knobs already being measured nulls on V2.1: `--response-global-anchor` at
+300/1000/3000 and `RW=2000` all landed on the ANCHOR=0 baseline (jobs 15526057-60, 2026-08-04j).
+They were nulls because there was no signed error against the target to remove. **Do not retry them.**
+
+**HYPOTHESIS TESTED AND REFUTED: it is not forward-difference truncation.** The target uses a
+FORWARD difference `(e(g) - e_snc(0))/g` at g = 0.05; constgold uses a CENTRAL difference
+`(e(+g) - e(-g))/(2g)` at g = 0.02. Forward carries an O(g) second-derivative error, central cancels
+it — so halving the step should recover most of the gap. Job 15529258 rebuilt the identical target
+(same script, same 5x4x5 grid, same `--v21-domain`, same snc reference, same `--max-case 99`) off
+`det_meas_crowd_g0.02_test_full.feather`, which is directly comparable to the g=0.05 file (both
+cases 0-99, 15,704,454 vs 15,697,220 rows):
+
+| target | population-weighted self-response |
+|---|---|
+| g = 0.05 (in use) | 0.8509 |
+| g = 0.02 | **0.8481** |
+| predicted if pure truncation | 0.8638 |
+| constgold demands | 0.8724 |
+
+It moved **-0.32%**, the WRONG DIRECTION, against a predicted +1.5%. Two-point extrapolation to
+g -> 0 gives 0.8463, *further* from constgold. **Truncation is not the mechanism; the step size is
+not worth changing.** Clean falsification — the prediction was written into the job before it ran.
+
+**REMAINING CANDIDATES for the 2.53%, none yet tested:**
+1. **The `snc` g=0 reference.** Both forward builds subtract `g0_lookup_c0-99.feather`; the
+   antithetic estimator uses no g=0 reference at all. My test varied `g` but NOT the reference, so
+   the reference survives untested and is now the leading suspect.
+2. **The R_blend subtraction differs on the two sides.** The target reaches self-response by binning
+   on `crowd_col = r_blend`; constgold subtracts the emulator's 0.11786. Different estimates of the
+   same quantity.
+3. **Population / sim.** Target is cases 0-99 of the half-shear render; constgold is cases 40-139 of
+   the antithetic render. Rebuilding the target on cases 40-99 is a cheap firewall-safe test.
+
+**FIREWALL NOTE.** The builder has an `--antithetic` mode that reads the constgold render — its
+docstring calls it "the acceptance-harness truth". Running it as a DIAGNOSTIC to size the estimator
+gap is legitimate (constgold is evaluation-only). Feeding its output to the trainer is NOT, and
+would make the certified number circular. Any fix must be argued from estimator theory or from
+half-shear, never from which choice makes `m` smaller.
+
+- Files: `jobs/job_resp_target_v21_g002.sh` (new), `WORKLOG.md`;
+  `results/response_target_crowd_rblend_snc_c0-99_5x4x5_v21_g002.npz` (diagnostic, NOT for training).
+- Cost: 74 s, CPU, 869 M.
+- Next: test candidate 1 (the snc reference) and candidate 3 (case overlap) — both cheap. Do NOT
+  touch training hyperparameters until the target gap is understood.
+
 ## 2026-08-04n — V2.1 at 8 seeds: m = +0.790 +- 0.144%; 8 SWA-32 seeds now BEAT 16 SWA-8 seeds
 
 Job 15528062, seeds 501/502/503/505/506/507/508/509, `results/constgold_neardomain_v21_table.npz`
