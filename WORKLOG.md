@@ -2,6 +2,50 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-04q — THE 4M TRAINING CAP IS NOT V2.1's PROBLEM: it bites the FIDUCIAL 2.3x harder
+
+Owner asked how different the capped 4M training set is from the full in-domain population. Answered
+from the existing training logs; no job needed.
+
+**THE SAMPLE IS UNIFORM RANDOM, NOT A HEAD SLICE.** `--max-rows` runs a priority-sample reservoir
+(`_append_to_priority_sample`, trainer:68): every surviving row is tagged with a uniform key and the
+top-N by key are kept, which is a uniform sample without replacement. The cut is applied AFTER the
+source cuts and the domain mask, so the 4M is drawn from the in-domain population itself. **There is
+no population shift to find** — the training set is a statistically identical 77% of the deliverable
+population, not a different one.
+
+**THE CAP IS FAR LESS BINDING ON V2.1 THAN ON THE FIDUCIAL:**
+
+| model | in-domain rows available | used | fraction |
+|---|---|---|---|
+| V2 fiducial (`s2cdom_15505072`) | 11,683,495 | 4,000,000 | **34.2%** |
+| V2.1 (`flow_v21_s3_15527870`) | 5,195,709 | 4,000,000 | **77.0%** |
+
+The V2.1 domain keeps 44.5% of the rows, so the same absolute cap discards only 23% of them against
+the fiducial's 66%. **V2.1 sees more than twice the FRACTION of its own population that the fiducial
+does.** Whatever the cap costs, it cannot explain V2.1 being worse than the fiducial — it is the
+fiducial that is more truncated. Confirmed identical (5,195,709) across seeds 505-509, so the
+available count is deterministic and only the draw varies.
+
+**WHAT LIFTING IT WOULD BUY: ~14%, ON NOISE ONLY.** Uniform sampling is unbiased, so the cap
+contributes variance, not bias. Response error scales as `1/sqrt(N)`, and `sqrt(5,195,709/4,000,000)
+= 1.14`. Best case the per-seed sd moves 0.407% -> ~0.36%. The no-cut `m` is +0.790% +- 0.144%, i.e.
+5.5 sigma; a 14% noise reduction does not touch a systematic of that size. **Do not run a full-data
+V2.1 seed expecting `m` to move.**
+
+**SIDE NOTE, NOT A DEFECT.** `rng = np.random.default_rng(args.seed)` (trainer:132), so each seed
+draws a DIFFERENT 4M. That is bagging: it adds per-seed variance while making the ensemble mean more
+robust. Removing the cap would make every seed see byte-identical data, leaving only init and batch
+order as scatter sources — the seed sd could move either way, so it is not a clean lever either.
+Cell occupancy is unaffected in kind: the trainer's response cells inherit the same 77%, and the
+5x4x5 grid was sized against the 611-row floor with margin (min 2,791 at build time).
+
+Files: none changed. Sources: `/home/z/Zekang.Zhang/logs/s2cdom_15505072.out`,
+`flow_v21_s{0,1,2,3}_1552787*.out`, `scripts/train_measurement_model_swa_s1_truecond.py:68-132`.
+
+Next: the 2026-08-04p candidates stand unchanged — the `snc` g=0 reference (leading suspect) and a
+cases-40-99 rebuild to isolate the population difference. Both are ~74 s CPU jobs.
+
 ## 2026-08-04p — TUNING THE TRAINING CANNOT FIX V2.1: the flow is on its target and the TARGET is 2.53% low
 
 Owner asked whether training could be tuned to improve V2.1's +0.790%. **It cannot, and the
