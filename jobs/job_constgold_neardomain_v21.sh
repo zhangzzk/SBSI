@@ -1,7 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=cgnd_v21
 #SBATCH --time=10:00:00
-#SBATCH --mem=200G
+#SBATCH --mem=64G          # MEASURED peak: 20.8G (v21 4-seed, job 15527267), 19.6-26.3G on the
+                           # fiducial table (15385639/15389640). Memory is dominated by the ONE
+                           # catalogue load, not by seed count, so 8 or 16 seeds cost no more
+                           # than 4. The old 200G request was ~8x the peak and made the job pend
+                           # on Resources for 14h behind FREE GPUs -- cip-cl-nv01 had 3 a40 idle
+                           # and only 67G RAM left. Over-requesting memory costs queue time.
 #SBATCH --cpus-per-task=16
 #SBATCH --gres=gpu:a40:1
 #SBATCH --partition=cip
