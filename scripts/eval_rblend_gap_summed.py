@@ -58,6 +58,19 @@ def main():
                                      "ablation/eval/rblend_gap_measured_ap7.npz")
     ap.add_argument("--sep-max", type=float, default=None,
                     help="restrict the sum to neighbours closer than this (arcsec)")
+    # WHY A BOX OPTION. The ruler's domain and the domain `m` is scored on are NOT the same set.
+    # `eval_v2_indomain_m.py` refuses to report `m` unless every evaluated row lies inside the
+    # emulator's own stored inference box, so the m-eval population is capped at that box (V2.1:
+    # true mag < 25.72, Re in 0.5-1.5) while the ruler's V2.1 sample runs well past it. Quoting a
+    # ruler deficit against an `m` without matching the two is comparing different populations --
+    # the same mistake AGENTS.md records for pair lists. These flags restrict the ruler to the box.
+    # They cut on PRIMARY true properties, so they remove whole primaries, never single neighbours.
+    ap.add_argument("--box-mag-max", type=float, default=None,
+                    help="keep primaries with true mag < this (the emulator's inference box)")
+    ap.add_argument("--box-re-min", type=float, default=None,
+                    help="keep primaries with true Re > this")
+    ap.add_argument("--box-re-max", type=float, default=None,
+                    help="keep primaries with true Re < this")
     args = ap.parse_args()
 
     d = np.load(args.npz, allow_pickle=True)
@@ -69,9 +82,24 @@ def main():
         ok &= np.isfinite(p)
     if args.sep_max is not None:
         ok &= d["dist"] <= args.sep_max
+    box = []
+    if args.box_mag_max is not None:
+        ok &= d["tmag"] < args.box_mag_max
+        box.append(f"true mag < {args.box_mag_max}")
+    if args.box_re_min is not None:
+        ok &= d["tre"] > args.box_re_min
+        box.append(f"true Re > {args.box_re_min}")
+    if args.box_re_max is not None:
+        ok &= d["tre"] < args.box_re_max
+        box.append(f"true Re < {args.box_re_max}")
     npid = int(pid.max()) + 1
     print(f"rows={ok.sum():,} of {len(truth):,}   primaries={npid:,}"
-          + (f"   [neighbours within {args.sep_max}\" only]" if args.sep_max else ""))
+          + (f"   [neighbours within {args.sep_max}\" only]" if args.sep_max else "")
+          + (f"   [PRIMARY BOX: {', '.join(box)}]" if box else ""))
+    if box:
+        kept = len(np.unique(pid[ok]))
+        print(f"  box keeps {kept:,} of {npid:,} primaries ({kept/max(npid,1):.2%}) -- this is the "
+              f"population `m` is scored on, not the full ruler domain")
 
     pidk = pid[ok]
     k = per_primary(pidk, npid, np.ones(ok.sum()))

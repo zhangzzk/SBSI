@@ -2,6 +2,44 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05g  CORRECTION to 2026-08-05f: the ruler and the `m` eval score DIFFERENT populations
+
+Files: `scripts/eval_rblend_gap_summed.py` (`--box-mag-max/--box-re-min/--box-re-max`),
+`jobs/job_rblend_summed_box.sh` (new). Job 15535057.
+
+2026-08-05f quoted the ruler's V2.1 deficit (-37%) next to V2.1's `m` as though both described the
+same galaxies. **They do not, and the entry overstated the link.** `eval_v2_indomain_m.py` refuses to
+report `m` unless every evaluated row lies inside the emulator's own stored inference box, so the
+population `m` is scored on is capped at true `mag < 25.72`, `Re` in (0.5, 1.5) -- confirmed in job
+15523254: `domain rows outside that box: 0 / 5,226,377 (0.0000%)`. The ruler's V2.1 sample is not
+capped: its true-mag bins account for only 484,306 of 766,882 primaries, so ~37% sit beyond mag 26,
+and the emulator's box covers just 38.3% of it.
+
+So the -37% is measured largely on galaxies `m` never sees. This is the same error AGENTS.md records
+for pair lists -- comparing numbers built on different row sets -- committed on populations instead.
+
+WHAT SURVIVES 2026-08-05f UNCHANGED (all measured on matched row sets, independent of this):
+
+- the fiducial emulator is EXACT on the fiducial domain, -0.02% +- 1.04 (0.02 sigma, 12.3M primaries);
+- `lsst_r` is convicted on the fiducial domain, +5.47% +- 1.10 (5.0 sigma);
+- `lsst_r_extnbr_v21` is low on every population tested -- **-14.60% +- 0.89 (16.4 sigma) on the
+  FIDUCIAL domain**, which is inside every box in play and needs no population caveat;
+- narrowing the PRIMARY training cuts is what causes it, with the deficit growing toward faint.
+
+WHAT IS WITHDRAWN pending job 15535057: the specific claim that the emulator is 37% low "on the very
+population feeding V2.1's m". The sign argument still holds -- an under-predicted `R_blend` makes
+`R_model` too small and `m` too positive -- and the V2.1 emulator is low on every set measured so
+far, so the DIRECTION of the V2.1 diagnosis is not in question. Only its size on the m population is,
+and that is exactly what the box-restricted run measures.
+
+No number anywhere was corrected, scaled, or substituted; the withdrawal is of an interpretation.
+
+Also recorded: `results/blend_lookup_extnbrho_c40-139.feather` ALREADY EXISTED in `sbsi_caches`
+(built 2026-07-16) before job 15534171 was launched to rebuild it. The rebuild was left to finish
+deliberately, so the fresh artifact can be diffed against the three-week-old one rather than a stale
+build convention being trusted silently.
+
+
 ## 2026-08-05f  RESOLVED: the fiducial emulator is EXACT on its own domain; V2.1's domain is the fault
 
 Files: `jobs/job_rblend_summed_fid.sh` (new). Job 15534165.
