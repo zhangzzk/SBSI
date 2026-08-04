@@ -198,7 +198,10 @@ def main():
 
     if args.output:
         os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
-        np.savez(args.output, truth=truth, pred=pred, distance=dist, size=size, mag=mag,
+        # `null` is saved per row, not just summarised, so the 45-degree control can be re-checked
+        # WITHIN any later slice. A global null pass does not license a per-bin claim: an artefact
+        # confined to one separation band averages away globally and would go unnoticed.
+        np.savez(args.output, truth=truth, pred=pred, null=null, distance=dist, size=size, mag=mag,
                  case=base["case"].to_numpy(int), input_index=base["input_index"].to_numpy(int))
         print(f"\nsaved {args.output}")
     print("RBLEND_GAP_DONE", flush=True)

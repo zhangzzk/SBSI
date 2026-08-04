@@ -48,6 +48,7 @@ for _p in (SBSI_ROOT, SCRIPTS_DIR):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
+from sbs_shear import domain as sbs_domain  # noqa: E402
 from eval_rblend_gap import (BLEND_MODELS, CAT, COND, GAMMA, NGMIX,  # noqa: E402
                              PAIR_FEATURES, blend_truth)
 
@@ -79,19 +80,27 @@ def _stream(path, cols, max_case, keep_fn, label):
     return out
 
 
-def load_legs_measured(gs_leg, g0_leg, max_case, re_min, mag_max, all_neighbours=False):
+def load_legs_measured(gs_leg, g0_leg, max_case, re_min, mag_max, all_neighbours=False,
+                       v21_domain=False):
     """Both-sheared rows of the sheared leg matched to the g=0 leg, carrying BOTH legs' SExtractor
     measurements of the primary. Row selection is identical to eval_rblend_gap.load_legs."""
     gcols = (["case", "input_index", "detected", "neighbored"] + PAIR_FEATURES + NGMIX + GAMMA
              + MEAS)
+
+    def _domain_mask(b):
+        """V2.1 is a CURVE in (mag, Re) -- true Re > 0.5" AND true S/N > 10 -- which the
+        re_min/mag_max rectangle cannot express. sbs_shear.domain owns the single definition."""
+        if v21_domain:
+            return b.index.isin(sbs_domain.select_frame(b).index)
+        return ((b["Re_input_p"].to_numpy(float) > re_min)
+                & (b["r_input_p"].to_numpy(float) < mag_max))
 
     def keep_g(b):
         gp = np.hypot(b["gamma1_input_p"].to_numpy(float), b["gamma2_input_p"].to_numpy(float))
         gs = np.hypot(b["gamma1_input_s"].to_numpy(float), b["gamma2_input_s"].to_numpy(float))
         m = ((gp > 1e-6) & (gs > 1e-6)                       # the BOTH-sheared leg
              & b["detected"].astype(bool).to_numpy()
-             & (b["Re_input_p"].to_numpy(float) > re_min)
-             & (b["r_input_p"].to_numpy(float) < mag_max)
+             & _domain_mask(b)
              # ngmix was only run where the PRIMARY is sheared; NaN rows are dropped by every
              # table anyway, so drop them here and save the memory
              & np.isfinite(b["measured_ngmix_g1"].to_numpy(float)))
@@ -103,8 +112,7 @@ def load_legs_measured(gs_leg, g0_leg, max_case, re_min, mag_max, all_neighbours
         # true properties are identical per (case,input_index) across legs, so the same domain cut
         # is safe here and keeps the reference leg small
         m = (b["detected"].astype(bool).to_numpy()
-             & (b["Re_input_p"].to_numpy(float) > re_min)
-             & (b["r_input_p"].to_numpy(float) < mag_max)
+             & _domain_mask(b)
              & np.isfinite(b["measured_ngmix_g1"].to_numpy(float)))
         return b[m]
 
@@ -199,6 +207,9 @@ def main():
     ap.add_argument("--max-case", type=int, default=None)
     ap.add_argument("--true-re-min", type=float, default=0.3)
     ap.add_argument("--true-mag-max", type=float, default=26.0)
+    ap.add_argument("--v21-domain", action="store_true",
+                    help="score on the V2.1 domain (true Re > 0.5\" AND true S/N > 10) instead of "
+                         "the --true-re-min/--true-mag-max rectangle.")
     ap.add_argument("--tags", nargs="+",
                     default=["lsst_r_extnbr_indom_tuned", "lsst_r_extnbr_ho"],
                     help="BlendEMU tags to score (first = fiducial)")
@@ -213,7 +224,8 @@ def main():
     global _PID, _NPID
     t0 = time.time()
     base = load_legs_measured(args.gs_leg, args.g0_leg, args.max_case,
-                              args.true_re_min, args.true_mag_max, args.all_neighbours)
+                              args.true_re_min, args.true_mag_max, args.all_neighbours,
+                              v21_domain=args.v21_domain)
     key = (base["case"].to_numpy(np.int64) << 32) + base["input_index"].to_numpy(np.int64)
     codes, _ = pd.factorize(key)
     _PID = codes.astype(np.int64)
