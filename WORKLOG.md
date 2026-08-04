@@ -2,6 +2,43 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-04c (**LINE CLOSED on the owner's call: the per-object / SNC-label work does NOT improve flow #1. Scripts archived, ~9 GB of pilot artifacts deleted. The fiducial model is untouched.**)
+
+**The verdict.** The label-consistent retrain closed half-shear small size (-3.74% -> -0.08%) and
+moved constgold the wrong way (+2.43% -> +5.00% at small size, +0.27% -> +1.36% overall). Net: no
+improvement to flow #1, so nothing is promoted and the fiducial model stands exactly as it was.
+
+**Archived** (git-tracked, so nothing is lost): `build_perobj_target.py`, `build_perobj_oracle.py`,
+`diag_perobj_conditional.py`, `diag_perobj_train_residual.py`, `diag_snc_estimator_gap.py`,
+`diag_snc_source_decomp.py`, `score_pin_pilot.py`, `plot_selfresp_labelfix.py`,
+`plot_fig2_labelfix.py` -> `archive/`; ten `job_*.sh` -> `jobs/archive/`. `archive/README.md` records
+what the line established and what survives it.
+
+**Deleted** (regenerable): 81 pilot checkpoints (`perobj_*`, `domB6`; ~293 MB), the relabelled
+constgold dumps and the V100 control (~3.2 GB), 15 pilot half-shear dumps (~912 MB) and six
+per-object `oracle_*.npz` (~682 MB each, hardlinked). Kept: the small grid / pin-profile / tgt-scan
+npz summaries (390 KB total) whose numbers are cited in 2026-08-03 entries.
+
+**Verified surviving:** the 16 fiducial `dom6x6` checkpoints, the 16 fiducial constgold dumps, and
+`results/halfshear_selfresp.feather` (the fiducial fig5 data). Checked by count before and after.
+
+**KEPT DELIBERATELY -- these are shared improvements, not dead-end code:** `intrinsic_e_abs` in
+`sbs_shear/preprocessing.py`; `--response-target-perobj` in the trainer (defaults off);
+`--extraction` in `dump_halfshear_selfresp.py`; `--shape-suffix` in `build_g0_lookup.py`; and
+`DUMPNAME` in `jobs/job_s2c_domain_eval.sh` (the guard that stops a re-score overwriting the
+fiducial dump).
+
+**WHAT SURVIVES THE CLOSURE -- do not lose these with the code:**
+1. The two SNC estimators genuinely disagree, most at small/faint (WORKLOG 2026-08-03v/w). Any label
+   and its score must use the SAME estimator. **Not retracted.**
+2. The FAINT defect was a MEASURED-S/N selection artefact; under a TRUE-mag cut the flow is
+   -0.53 +- 0.57%. **Not retracted.**
+3. **OPEN, and now the best lead:** the emulator may over-predict `R_blend` at small size with the
+   flow's deficit masking it. Test on the per-pair ruler (`scripts/eval_rblend_gap.py`), never on
+   constgold.
+4. **OPEN:** the `Re ~ 0.31` domain-edge bin is wrong in BOTH evaluation sets and BOTH models
+   (+16% constgold, +7% half-shear), and is 6% of the in-domain population.
+
 ## 2026-08-04b (**FIG 2 REVERSES THE VERDICT: the label fix that closes half-shear small size makes constgold WORSE by +2.57 pt there and +1.09 pt overall. The two evaluation sets disagree, and the leading suspect is now the EMULATOR at small size.** Jobs 15515379 / 15515386 / 15515582.)
 
 **Files.** `plotting/plot_fig2_labelfix.py` (new), `jobs/job_fig2_labelfix.sh` (new),
