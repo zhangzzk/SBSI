@@ -2,6 +2,263 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-04g (**V2.1: new deliverable domain (true Re > 2.5 px AND true S/N > 10), flow + emulator retrained on it. Owner request. One seed first.** Jobs 15519546 / 15519854 / 15519919 / 15520060 / 15520081.)
+
+Owner: "retrain the models, including flow and emulator on a new domain: true size > 2.5" (resolution
+factor roughly 0.5), true S/N > 10 (use proxy on true properties). Let's call it V2.1. Let's do one
+seed first." Plus: should training run longer past convergence with a wider SWA window, to need
+fewer seeds later?
+
+**"2.5" IS PIXELS, NOT ARCSEC**, and the owner's own "resolution factor roughly 0.5" is what fixes
+it. `Re_input_p` is a half-light radius in ARCSEC; the Moffat PSF (FWHM 0.73", beta 2.224) has
+`Re_psf` = 0.5268" = 2.634 px, so `R = Re^2/(Re^2 + Re_psf^2)` is 0.474 at Re = 0.50" = 2.5 px and
+only 0.245 at the V2 cut of 0.30". 2.5 ARCSEC is impossible -- the catalogue's size cut tops out at
+1.5" -- and would be R = 0.96. Recorded because every consumer inherits this reading.
+
+**Files (all NEW unless marked).** `sbs_shear/domain.py` -- the single definition of the V2.1
+domain and the true-property S/N proxy; `tests/test_domain.py` (10 tests);
+`scripts/eval_domain_v21.py` -- fits the proxy's constants and reports the population;
+`scripts/retrain_emulator_v21.py` -- emulator retrain driver;
+`configs/fs2_lsst_r_extnbr_v21.yaml`; jobs `job_domain_v21.sh`, `job_resp_target_v21.sh`,
+`job_resp_target_v21_grids.sh`, `job_retrain_emu_v21.sh`, `job_flow_v21.sh`,
+`job_build_lookup_v21.sh`. MODIFIED: `scripts/train_measurement_model_swa_s1_truecond.py` and
+`scripts/compute_response_target_blend.py` (`--v21-domain` flag, domain stamped into the
+checkpoint/npz), `scripts/eval_v2_indomain_m.py` (V2.1 mask + emulator-coverage guard),
+`sbs_shear/training.py` (`torch.no_grad()` fix, below).
+
+### 1. THE S/N PROXY: the sky-limited form was WRONG, and the slope check caught it
+
+The domain must be a function of TRUE properties only -- a cut on a measured quantity moves its own
+boundary with shear and manufactures the very selection bias being measured. First attempt was a
+sky-limited aperture S/N, `flux / (PIXEL_RMS sqrt(N_pix))`. Regressed against the catalogue's own
+measured S/N it gave **slope 0.826, not 1** -- the wrong SHAPE, which no multiplicative constant can
+repair -- with the residual sliding monotonically from +0.12 dex at the faint end to -0.08 at the
+bright end. That is bright objects carrying their own shot noise. Adding the source term (the
+standard CCD noise equation) moved the slope to **1.0035**, offset -0.0045 dex:
+
+    S/N = flux / sqrt(SN_SKY_VAR * N_pix + flux / SN_GAIN)
+
+Fitted on the whole g=0 training catalogue (31,411,766 rows; 4,771,152 in the calibration sample --
+detected, nearest neighbour > 3", 8 < measured S/N < 200), job 15519546:
+
+| constant | value | interpretation |
+|---|---|---|
+| `SN_SKY_VAR` | 0.52699 | = **5.414 x PIXEL_RMS^2** -- the Kron-vs-half-light aperture AREA ratio |
+| `SN_GAIN` | 10.7036 | effective gain for the source shot-noise term |
+| residual sd | 0.0967 dex (24.9%) | irreducible: profile shape, ellipticity, neighbours, noise |
+
+Both are FITTED and reported with their scatter (AGENTS.md "Numerical Integrity" allows exactly
+this: derived-and-reported here). `sn_true()` RAISES while they are unset rather than defaulting.
+Stable: an 8-batch smoke fit gave 0.52303 / 10.5848, both moving <1% when the sample grew 60x.
+
+The 24.9% scatter does NOT make the cut fuzzy -- the cut is on the proxy, which is exact and
+shear-independent. It means "S/N > 10" is "EXPECTED S/N > 10", and is why the cut must never be
+re-expressed as a cut on measured S/N.
+
+Source noise is large, not a detail: at Re = 0.6" it is 6.5% of the S/N at mag 26, 28% at mag 24,
+84% at mag 20. A test pins this so it cannot be silently dropped again.
+
+### 2. THE V2.1 POPULATION (job 15519546, whole catalogue)
+
+| population | N | fraction |
+|---|---|---|
+| finite true props | 31,411,766 | 100.00% |
+| Re > 0.5" only | 7,396,307 | 23.55% |
+| sn_true > 10 only | 17,921,650 | 57.05% |
+| **V2.1 (both)** | **6,017,059** | **19.16%** |
+| V2 (mag<26, Re>0.3) | 12,673,701 | 40.35% |
+| in BOTH | 6,017,059 | 19.16% |
+
+**V2.1 is 47.5% the size of V2 and lies 100.00% INSIDE it**, so the two are directly comparable
+row-for-row. The S/N cut as a magnitude limit: mag < 25.72 at Re=0.5", 25.28 at 1.0", 24.93 at 1.5".
+
+### 3. RESPONSE TARGET: the fiducial 6x6x5 grid does NOT survive the smaller population
+
+Rebuilt on the V2.1 domain (jobs 15519854, 15519919). The V2 grid copied over lands at min-cell
+N_eff = **521** -- below the 611 at which an earlier grid was already REJECTED, and far below the
+1,875 floor `job_resp_target_domB6.sh` asserts. Cause is the population, not the grid: half the rows
+in the same 180 cells. Scan:
+
+| grid | cells | min N_eff/cell | verdict |
+|---|---|---|---|
+| 6x6x5 | 180 | 521 | below the floor |
+| 6x4x5 | 120 | 1,662 | below the floor |
+| **5x4x5** | **100** | **2,791** | **PASSES -- adopted (finest that clears it)** |
+| 4x4x5 | 80 | 4,751 | passes, coarser than needed |
+| 5x3x5 | 75 | 5,675 | passes, loses a size bin |
+
+Chosen on cell occupancy, NEVER on constgold m (the R_blend firewall).
+
+**Side effect worth noting:** the size-response step largely disappears. The V2 6x3x5 grid jumps
++0.570 -> +0.790 between its first two size bins (a 39% step the flow is documented to SMOOTH, WORKLOG
+cont.110f); the V2.1 grid runs 0.8799 / 0.8588 / 0.8387 / 0.8260 -- a 6% span. If the smoothing of
+that step was a real limiter, V2.1 removes it. NOT yet demonstrated to help `m`.
+
+### 4. THE SWA QUESTION: yes, worth ~a factor 2 in seeds, and no more
+
+Answered from the 16 fiducial `*_train_curve.npz` rather than by assumption. Decomposing the
+across-seed spread in validation response into epoch wobble (averageable) vs genuinely different
+solutions (not):
+
+| SWA window | 1 ep | 8 ep (fiducial) | 16 ep | 32 ep |
+|---|---|---|---|---|
+| spread across seeds | 0.81% | 0.29% | 0.25% | 0.20% |
+
+Fit implies an **irreducible floor near 0.17%**. So SWA-32 is worth roughly **a factor 2 in seed
+count** (16 -> ~8 for the same ensemble error) and cannot go below the floor. Training longer is
+separately justified: validation NLL was still falling at epoch 80 (1.4447 -> 1.4377 between the
+60-70 and 70-80 bands). The LR is CONSTANT (no schedule), which is the regime where weight averaging
+pays -- the weights are still wandering at the end.
+
+Adopted for V2.1: **120 epochs, swa-last-k 32**, patience 10 -> 20. Patience is a GUARD, not a lever:
+early stopping never fired in the fiducial (all 16 seeds ran the full 80), but a stop at epoch 45
+would make SWA-32 average back to epoch 13 and quietly poison the checkpoint with under-converged
+weights. **Caveat: the 0.20%/0.17% numbers are measured on the V2 population and on validation
+response, not on constgold `m` (per-seed sd 0.608%). They are indicative of the trend, not a
+prediction of the V2.1 ensemble error.** Confirm on the V2.1 seeds before cutting the seed count.
+
+### 5. HOW THE DOMAIN IS APPLIED (and why it is one function, not four numbers)
+
+Half the domain is a box (Re > 0.5") and half is a CURVE in (mag, Re) that box cuts cannot express.
+Four consumers need it -- flow trainer, response target, emulator retrain, constgold evaluator -- so
+all four call `sbs_shear.domain.select_frame()` and none carries its own copy of "0.5" and "10".
+`--v21-domain` is a FLAG, not thresholds on a command line, for the same reason. The domain is
+stamped into the flow checkpoint, the target npz and the emulator metadata.
+
+The emulator cannot take the curve at all (blendemu selects by five [min,max] pairs), so
+`scripts/retrain_emulator_v21.py` wraps blendemu's own row selection and ASSERTS that the YAML box
+is exactly the V2.1 BOUNDING box (Re > 0.5, mag < 25.72) -- looser lets it extrapolate at inference,
+tighter drops domain rows. It also refuses to run if the curve removed no rows.
+
+**Guard added to `eval_v2_indomain_m.py`:** `validate_constant_with_blend.py` zero-fills unmatched
+R_blend rows, so a galaxy the emulator never scored is indistinguishable from a genuinely isolated
+one. That is AGENTS.md "Two traps" #1, worth +28.9% of spurious m. The new check is STRUCTURAL and
+runs before any m is printed: every evaluated row must lie inside the emulator's stored inference
+box, else it exits. For V2.1 that holds by construction -- the box IS the bounding box -- so a
+failure means the two have drifted.
+
+### 6. A LATENT BUG FIXED (`sbs_shear/training.py`)
+
+`summarize_log_prob` had no `torch.no_grad()`, so it built an autograd graph over the ENTIRE train
+set (4M rows) purely to take a mean. Newer torch refuses the `.numpy()` outright ("Can't call
+numpy() on Tensor that requires grad"); the torch in `sims1` allows it and silently pays the memory,
+which is why the fiducial runs never showed it. **Predates the 93b6eef merge (verified against
+93b6eef~1), so not a regression from it.** Numerically a no-op.
+
+### 7. STATE, and what is NOT yet known
+
+* DONE: domain calibrated (15519546); response target + grid scan (15519854, 15519919); test suite
+  54 -> 64 tests, all passing.
+* RUNNING: emulator retrain (15520060) -- box cuts give 37,067,067 rows, the S/N curve takes it to
+  35,084,344 (94.65% kept); hyperparameters inherited from `lsst_r_extnbr_indom_tuned`.
+* QUEUED: flow seed 501 (15520081), waiting on `QOSMaxGRESPerUser` -- the account's 3 cip GPUs are
+  held by another session's jobs. ~20 min once it starts (fiducial runs: MaxRSS 3-4.6 G, 12 min for
+  80 epochs; the 180 G request in the old job script was ~40x oversized).
+* NOT RUN: the R_blend lookup (`job_build_lookup_v21.sh`, ready) and the constgold m evaluation.
+  **No V2.1 `m` exists yet. Nothing here says V2.1 is better than V2 -- only that it is a
+  well-defined, strictly smaller domain with a properly calibrated cut.**
+* KNOWN INCONSISTENCY, inherited not introduced: the theta-coupling target
+  (`response_target_theta_coupling_rblend_c0-99_6x9x5.npz`) is built on the FULL population and is
+  carried over unchanged, exactly as `job_s2c_domain_train.sh` already did with the in-domain
+  response target. There is no builder for it in `scripts/`; rebuilding it on V2.1 is separate work.
+
+### 8. NEXT
+
+1. Emulator finishes -> `sbatch jobs/job_build_lookup_v21.sh`.
+2. Flow seed 501 finishes -> dump on constgold and run `eval_v2_indomain_m.py --v21-domain`.
+3. Compare V2.1 vs the fiducial -0.123 +- 0.152% ON THE SAME ROWS (V2.1 is a strict subset of V2, so
+   the fiducial dumps can be re-masked to the V2.1 domain -- that isolates the MODEL change from the
+   POPULATION change, which is the decomposition AGENTS.md insists on).
+4. Only then decide the seed count, using the measured V2.1 seed spread rather than the V2 estimate.
+
+## 2026-08-04f (**THE MEAN HEAD IS NOT THE CONDITIONAL MEAN: `<mu(g2)>` = +5.01 standardized, cancelled by a -5.00 mean in the residual flow. Its LEVEL is unidentified by construction. Only DIFFERENCES of `mu` are interpretable.** Analysis only, no model or number changes. Login-node CPU, no job.)
+
+Owner question: "is it true that the mean head learns the mean and the residual learns the recentred
+likelihood?" **No.** Measured directly on the fiducial checkpoint (s501) with 24,622 real in-domain
+rows from the training catalogue. Nothing here changes the fiducial model, any published number, or
+any code path -- but the docstring reading that provoked the question is genuinely misleading and is
+now corrected in `measurement_model.py`.
+
+**Files.** `scripts/diag_meanhead_identifiability.py` (NEW, runnable, login-node safe ~10 s);
+`sbs_shear/measurement_model.py` (`ConditionalMeanFlow` docstring: the "mu carries the conditional
+mean" wording replaced with what is actually true).
+
+### 1. THE MEASUREMENT (standardized target units, N = 24,622)
+
+| target | `<mu>` | `<data>` | `<resid>` | SEM | sd(resid) | sd(data) |
+|---|---|---|---|---|---|---|
+| `measured_ngmix_g1` | **+1.8724** | -0.0109 | **-1.8834** | 0.0176 | 2.7607 | 0.9992 |
+| `measured_ngmix_g2` | **+5.0116** | +0.0124 | **-4.9992** | 0.0228 | 3.5778 | 0.9968 |
+| `measured_mag_auto` | +0.0469 | +0.0119 | -0.0350 | 0.0040 | 0.6260 | 0.9938 |
+| `measured_log_flux_radius` | -0.2828 | -0.0151 | +0.2678 | 0.0137 | 2.1510 | 1.0003 |
+
+`<mu(g2)>` = +5.01 is **+1.79 in raw ellipticity** -- outside the physical range of an ellipticity.
+The residual flow carries an almost exactly equal and opposite mean and the SUM lands on the data
+(~200 sigma on the residual offset, so this is not noise). The photometry channel is the exception
+and behaves as the docstring implies (`mu` ~ data, and sd(resid) 0.626 < sd(data) 0.994, so there
+`mu` genuinely explains variance).
+
+### 2. THE CAUSE IS IDENTIFIABILITY, NOT A BUG
+
+Nothing in training pins the LEVEL of `mu`:
+- the response pin constrains only DIFFERENCES `mu(c+) - mu(c-)` -- a derivative; any constant cancels;
+- the NLL constrains only the SUM `mu + residual`.
+
+So the level is free to drift and the flow absorbs it. This is the SAME identifiability argument
+that motivated `--flow-blind-features` in the first place (see the 2026-07 arc: a sighted residual
+flow re-absorbed the mean and left `M_model` stuck at 0.205), now showing up in the other direction.
+
+**It does not touch the graded number**, because the residual flow is blind to the shape features:
+
+      d<x>/d(shape)  ==  d mu/d(shape)      EXACTLY, whatever mu's level
+
+Verified in the script: perturbing intrinsic `e1` by +0.5 sigma moves `mu(g1)` by +0.263 and moves
+the residual log-density by **exactly 0.00000** (`e1` is not among the flow's 12 inputs).
+
+**CONSEQUENCE, and the reason this is worth an entry: never read `mu` -- or any per-object mean-head
+output -- as a predicted mean, and never plot it as one.** Only differences are meaningful. Checked
+the one place that needs a real model mean: `MeasurementModelBundle.target_mean_and_gradient` samples
+the FULL model (`model.sample` = flow draw + `mu`), so it is correct and needs no change. No other
+live consumer of bare `mu` was found.
+
+### 3. THE RESIDUAL FLOW DID LEARN REAL CONDITIONAL STRUCTURE (three checks)
+
+- **Base-space calibration** -- push the REAL data residuals back through the flow: `z` has
+  sd 0.971 / 0.987 / 0.978 / 1.010 and excess kurtosis +0.01 / +0.11 / +0.08 / +0.13 across the four
+  dims. Essentially a perfect N(0,1) on all four at once.
+- **Held-out density** -- mean log-density **-1.3691** on these rows against the checkpoint's own
+  recorded `val_log_prob` **-1.4066**, reproduced without reference to it.
+- **Context-shuffle** -- re-score the same residuals under permuted contexts: -1.3691 -> **-12842**.
+  The density is strongly conditional, not a fixed noise blob. `log|det J|` = +4.254 +- 2.307, so the
+  flow is doing large, context-varying volume change and is nowhere near the identity.
+
+NOT quoted as evidence: an intermediate "flow beats a context-free Gaussian by +8.1 nats/object"
+figure. It is inflated -- much of that gain is the flow undoing `mu`'s offset, not density structure.
+The three checks above are the clean ones.
+
+### 4. A TRAP THIS COST ME, now guarded in the script
+
+Rebuilding the training contexts outside the trainer FAILS SILENTLY. Dropping the upper `Re < 1.5`
+selection cut (keeping only `Re > 0.3`) left every array the right shape and every column present,
+but moved the mean log-density from -1.37 to **-1.3e5** and produced `<mu(g2)>` = +5.9 with a
+residual sd of 5.2 -- i.e. a plausible-looking table of pure out-of-distribution extrapolation.
+`diag_meanhead_identifiability.py` therefore REFUSES to print anything until every reconstructed
+feature reproduces the checkpoint's stored mean and scale. *Verified the guard fires* on exactly this
+case (relax the `Re` cut -> `REFUSING ... ['Re_input_p']`). The eight features currently match to
+better than 0.02 in mean and 2% in scale.
+
+**Validation.** `python -u scripts/diag_meanhead_identifiability.py` (py31, PYTHONPATH set, login
+node, ~10 s); guard-fires test as above; `pytest tests/ -q` **54 passed**.
+
+**Limitations.** One seed (s501) of 16; rows are the first record batch of the TRAINING catalogue cut
+to the fiducial domain, so an unknown fraction were in the 4M actually trained on -- the checkpoint's
+own train/val gap is 0.008 nats, so this does not distort the conclusion either way. The residual
+distribution is heavy-tailed, so its plain mean is a fragile statistic (quoted with SEM; the effect
+is ~200 sigma regardless).
+
+**NEXT.** Nothing blocking. If the mean head is ever re-used for anything other than differencing --
+plotting, initialising, transferring between runs, or the OLS-freeze path -- re-read section 2 first.
+
 ## 2026-08-04e (**shared cores merged into `sbs_shear/`: trainer core + data paths. Every moved symbol verified identical to HEAD; no science number changes.**)
 
 Follow-on to 2026-08-04d, on the owner's instruction to merge the code that was being rewritten

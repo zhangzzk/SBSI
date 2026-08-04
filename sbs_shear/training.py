@@ -210,12 +210,22 @@ def epoch_nll(model, loader, device, optimizer=None, max_grad_norm=None):
 
 
 def summarize_log_prob(model, loader, device):
+    """Mean/std log-probability over a loader. Diagnostic only -- never backpropagated.
+
+    `torch.no_grad()` is required, not cosmetic. Without it every batch's log-prob keeps its
+    autograd graph alive, so this builds a graph over the ENTIRE train set (4M rows in the real
+    runs) purely to take a mean. Newer torch then refuses the `.numpy()` outright with "Can't call
+    numpy() on Tensor that requires grad"; the torch in `sims1` allows it and silently pays the
+    memory. Numerically this changes nothing -- it only stops gradients being tracked.
+    """
     model.eval()
     values = []
-    for batch in loader:
-        target, context = batch[0], batch[1]
-        lp = model.log_prob(target.to(device, non_blocking=True), context.to(device, non_blocking=True))
-        values.append(lp.cpu().numpy())
+    with torch.no_grad():
+        for batch in loader:
+            target, context = batch[0], batch[1]
+            lp = model.log_prob(target.to(device, non_blocking=True),
+                                context.to(device, non_blocking=True))
+            values.append(lp.cpu().numpy())
     if not values:
         return {"mean_log_prob": np.nan, "std_log_prob": np.nan}
     arr = np.concatenate(values)

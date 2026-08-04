@@ -58,6 +58,42 @@ def catalogue_true_props(cat, min_case, t0):
     return df
 
 
+def check_emulator_covers_domain(tag, mag, re_, domain_mask):
+    """Refuse to report m if the emulator cannot score the whole evaluated domain.
+
+    THE FAILURE THIS CATCHES IS SILENT AND EXPENSIVE. `validate_constant_with_blend.py` joins the
+    R_blend lookup and then `.fillna(0.0)`, so a galaxy the emulator never scored is indistinguish-
+    able in the dump from a genuinely isolated one -- both read R_blend = 0. AGENTS.md "Two traps"
+    #1 is precisely this: the in-domain emulator covers 43.4% of the wide population, which
+    collapsed <R_blend> from 0.1593 to 0.0589 and manufactured a spurious +28.9% m.
+
+    Zero-fill cannot be detected after the fact, so the check is STRUCTURAL and runs before any m
+    is printed: every row of the evaluated domain must lie inside the emulator's own stored
+    inference box. For V2.1 that should hold by construction -- the emulator's box IS the V2.1
+    bounding box -- so a failure here means the two have drifted apart, which is exactly the thing
+    that must not pass quietly.
+    """
+    meta_path = f"/home/z/Zekang.Zhang/blendemu/models/emulator_metadata_{tag}.json"
+    if not os.path.exists(meta_path):
+        raise SystemExit(f"emulator metadata not found: {meta_path}")
+    import json
+    cuts = json.load(open(meta_path))["tasks"]["regression"]["cuts"]
+    mag_lo, mag_hi = float(cuts[1][0]), float(cuts[1][1])     # PRIMARY magnitude
+    re_lo, re_hi = float(cuts[3][0]), float(cuts[3][1])       # PRIMARY size
+    print(f"  emulator {tag!r} inference box: mag ({mag_lo}, {mag_hi}), Re ({re_lo}, {re_hi})")
+    inside = (mag > mag_lo) & (mag < mag_hi) & (re_ > re_lo) & (re_ < re_hi)
+    uncovered = int((domain_mask & ~inside).sum())
+    n = int(domain_mask.sum())
+    frac = uncovered / max(n, 1)
+    print(f"  domain rows outside that box: {uncovered:,} / {n:,} ({frac:.4%})")
+    if uncovered:
+        raise SystemExit(
+            f"REFUSING to report m: {uncovered:,} of {n:,} evaluated rows ({frac:.2%}) lie outside "
+            f"the emulator's inference box, so their R_blend was zero-filled rather than predicted. "
+            f"Fix the box or narrow the domain -- do not average over zeros.")
+    print("  OK: the emulator covers the whole evaluated domain (unmatched rows are isolated only)")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -66,6 +102,11 @@ def main():
     ap.add_argument("--min-case", type=int, default=40)
     ap.add_argument("--re-min", type=float, default=0.3)
     ap.add_argument("--mag-max", type=float, default=26.0)
+    ap.add_argument("--v21-domain", action="store_true",
+                    help="add the V2.1 domain (primary true Re > 0.5\" AND true S/N > 10) as a "
+                         "mask, and check that the emulator behind the dump actually covers it.")
+    ap.add_argument("--emulator-tag", default="lsst_r_extnbr_v21",
+                    help="emulator whose stored inference box is checked against the V2.1 mask.")
     args = ap.parse_args()
     t0 = time.time()
 
@@ -90,6 +131,12 @@ def main():
         f"true Re > {args.re_min}": re_ > args.re_min,
         "FLOW TRAINING DOMAIN (both)": (mag < args.mag_max) & (re_ > args.re_min),
     }
+    if args.v21_domain:
+        from sbs_shear import domain as sbs_domain
+        v21 = sbs_domain.in_domain(mag, re_)
+        masks["V2.1 DOMAIN (Re>0.5 & S/N>10)"] = v21
+        print(f"\n  {sbs_domain.describe()}")
+        check_emulator_covers_domain(args.emulator_tag, mag, re_, v21)
     for k, v in masks.items():
         print(f"  {k:38s} N={int(v.sum()):>12,}  ({v.mean():6.1%})")
 

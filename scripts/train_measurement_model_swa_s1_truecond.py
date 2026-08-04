@@ -49,6 +49,7 @@ from sbs_shear.preprocessing import (  # noqa: E402
     rescale,
     source_select_selection,
 )
+from sbs_shear import domain as sbs_domain  # noqa: E402
 from sbs_shear.selection_model import TabularPreprocessor  # noqa: E402
 from sbs_shear.training import (  # noqa: E402
     GPUBatches,
@@ -132,6 +133,10 @@ def load_measurement_data(args, condition_features, target_features):
     t0 = time.time()
 
     print(f"Loading measurement sample: {args.catalogue}")
+    if getattr(args, "v21_domain", False):
+        # Printed, not merely recorded: a domain mismatch between the flow and its response target
+        # is the single most expensive mistake in this pipeline, and it is invisible in `m`.
+        print(f"  {sbs_domain.describe()}")
     print(f"  Selection target column: {args.target_column}")
     print(f"  Requested max selected rows: {args.max_rows:,}" if args.max_rows else "  Requested max selected rows: all")
 
@@ -199,6 +204,9 @@ def load_measurement_data(args, condition_features, target_features):
                     continue
 
             batch = source_select_selection(batch, cuts=selection_cuts_from_args(args))
+            if getattr(args, "v21_domain", False):
+                # V2.1 narrows further, on a CURVE the box cuts above cannot express.
+                batch = sbs_domain.select_frame(batch)
             source_cut_rows += len(batch)
             if len(batch) == 0:
                 continue
@@ -584,6 +592,14 @@ def parse_args():
     parser.add_argument("--primary-re-min", type=float, default=None,
                         help="restrict TRAINING to primaries with true size (Re_input_p) above this "
                              "(deliverable domain: 0.3). Neighbours stay full-population.")
+    parser.add_argument("--v21-domain", action="store_true",
+                        help="train on the V2.1 deliverable domain: primary true Re > 0.5\" "
+                             "(2.5 px, resolution 0.474) AND true S/N > 10. Thresholds come from "
+                             "sbs_shear.domain, NOT from this command line, so the trainer, the "
+                             "response target, the emulator and the evaluators cannot drift apart "
+                             "-- the S/N half is a curve in (mag, Re) and would not survive being "
+                             "retyped. Do not combine with --primary-mag-max: that is the V2 "
+                             "magnitude box the S/N cut REPLACES.")
     parser.add_argument("--noise-photoz", type=float, default=0.0,
                         help="photo-z scatter sigma=this*(1+z) added to redshift_input_p (realistic-structure study)")
     parser.add_argument("--noise-sersic-frac", type=float, default=0.0,
@@ -1428,6 +1444,10 @@ def main():
         "selection_cuts": selection_cuts_from_args(args),
         "primary_mag_max": None if args.primary_mag_max is None else float(args.primary_mag_max),
         "primary_re_min": None if args.primary_re_min is None else float(args.primary_re_min),
+        # The V2.1 domain is a CURVE, so the two box keys above cannot record it. Stamp the whole
+        # definition (thresholds AND the fitted S/N constants) so a later reader can tell which
+        # population this checkpoint was trained on without inferring it from the filename.
+        "v21_domain": (sbs_domain.metadata() if getattr(args, "v21_domain", False) else None),
         "max_read_batches": args.max_read_batches,
         "decorrelate_shape_size": bool(args.decorrelate_shape_size),
         # RA training knobs live in METADATA, not model_config: build_flow() would pass an unknown

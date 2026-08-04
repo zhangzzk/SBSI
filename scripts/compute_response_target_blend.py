@@ -33,6 +33,7 @@ if SBSI_ROOT not in sys.path:
 
 from sbs_shear.measurement_model import (  # noqa: E402
     add_measurement_target_features, raw_columns_for_measurement_targets)
+from sbs_shear import domain as sbs_domain  # noqa: E402
 from sbs_shear.preprocessing import DEFAULT_SELECTION_CUTS, source_select_selection  # noqa: E402
 
 
@@ -124,6 +125,12 @@ def main():
     ap.add_argument("--primary-re-min", type=float, default=None,
                     help="build the target on primaries with true Re above this (deliverable "
                          "domain: 0.3). MUST match the trainer's --primary-re-min.")
+    ap.add_argument("--v21-domain", action="store_true",
+                    help="build the target on the V2.1 domain (primary true Re > 0.5\" AND true "
+                         "S/N > 10), taking the thresholds from sbs_shear.domain. Pass this "
+                         "whenever the flow is trained with --v21-domain: a target built on a "
+                         "different population pins the kept rows to a mean that includes rows the "
+                         "trainer never sees, which cost 5% of R_flow in WORKLOG 2026-07-27d.")
     ap.add_argument("--output", required=True)
     args = ap.parse_args()
     snc = None if args.antithetic else load_snc_lookup(args.snc_lookup, args.snc_cols)
@@ -150,6 +157,8 @@ def main():
                 if len(b) == 0:
                     continue
             b = source_select_selection(b, cuts=_selection_cuts(args))
+            if getattr(args, "v21_domain", False):
+                b = sbs_domain.select_frame(b)
             if len(b) == 0:
                 continue
             if "detected" in b.columns:                       # constgold antithetic renders have no detected col
@@ -256,7 +265,10 @@ def main():
              counts=cnt, raw_counts=rawcnt, nominal_g=g, global_R=gm, n_dist=args.n_dist,
              crowd_col=(args.crowd_col or ""), edges_crowd=ed,
              response_estimator=("snc" if snc is not None else "raw"),
-             snc_lookup=(args.snc_lookup or ""), max_case=(-1 if args.max_case is None else args.max_case))
+             snc_lookup=(args.snc_lookup or ""), max_case=(-1 if args.max_case is None else args.max_case),
+             # Which POPULATION this target was measured on. Stamped because the flow and its
+             # target must agree, and a mismatch is silent -- it shows up only as a wrong R_flow.
+             domain=(sbs_domain.describe() if getattr(args, "v21_domain", False) else "default"))
     axis = f"crowd[{args.crowd_col}]" if args.crowd_col else "blend"
     print(f"R_sim(flux x size x {axis}) target, g={g}, N_pairs={len(proj):,}, N_eff(unique-target)={w.sum():.0f}, global R={gm:.4f}")
     print(f"grid {args.n_flux}x{args.n_size}x{nblend}" + ("" if args.crowd_col else " (blend bin 0=isolated, by distance)"))
