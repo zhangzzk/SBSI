@@ -29,6 +29,12 @@
 #         spread        0.81%       0.29%          0.25%    0.20%
 #     -> an irreducible floor near 0.17%. So SWA-32 is worth roughly a FACTOR 2 IN SEED COUNT
 #     (16 -> ~8 for the same ensemble error) and no more; it cannot go below the floor. Training
+#
+#     MEASURED OUTCOME (job 15527267, 4 V2.1 seeds): per-seed sd on constgold no-cut m = 0.467%,
+#     against the fiducial SWA-8's 0.606% on its own domain -- a factor 1.3, in the ballpark of the
+#     1.45 predicted above. Do NOT compare it instead to the 1.014% figure quoted elsewhere: that
+#     is the fiducial SWA-8 dumps re-masked onto the V2.1 population, a different measurement.
+#     The 0.467% has 3 dof (~+-40%); re-measure once more seeds exist.
 #     longer is separately justified: validation NLL was still falling at epoch 80 (1.4447 ->
 #     1.4377 between the 60-70 and 70-80 bands), i.e. the fiducial stopped while still improving.
 #     The LR is constant (no schedule), which is exactly the regime where weight averaging pays --

@@ -23,12 +23,18 @@
 # WHY 16 SEEDS. This table reports `m`, a bias on the SHAPE (e) response, and AGENTS.md sets the
 # e-response standard at 16 regardless of what the CUTS are on. The cuts here are measured
 # flux/size, which is the 4-seed standard, but they only decide WHICH objects enter the average --
-# the number reported is the shape response of that subset. V2.1 is also noisier per seed than the
-# fiducial (sd 1.014% vs 0.606%), so 16 is the floor here, not a luxury. Do not quote m from fewer.
+# the number reported is the shape response of that subset. Do not quote m from fewer.
+#
+# PER-SEED SD IS 0.467% (MEASURED, job 15527267, 4 seeds -> sem 0.233% x sqrt(4)). An earlier
+# version of this comment said 1.014% "vs the fiducial's 0.606%", i.e. that V2.1 is NOISIER. That
+# was wrong: 1.014% came from the V2 fiducial 16-seed dumps re-masked onto the V2.1 population, and
+# those dumps are SWA-8 while V2.1 is SWA-32 (swa_last_k 32, epochs 89-120 vs 8, epochs 73-80). V2.1
+# is QUIETER than the fiducial, not noisier. The 4-seed sd estimate has 3 dof (~+-40%, range
+# 0.3-0.7%), so re-measure it once more seeds exist.
 #
 # READ `dm`, NOT ONLY `m`. The per-seed offset cancels in model-vs-model ratios (column 4) and in
 # dm = m(cut) - m(no cut), but NOT in the absolute m at a cut, which is model-vs-SIM and inherits
-# the full no-cut seed error. On V2.1 that no-cut error is ~+-0.25% at 16 seeds.
+# the full no-cut seed error -- ~+-0.12% at 16 seeds, ~+-0.23% at 4.
 #
 # CUT CHOICE. Measured flux_radius is in ARCSEC and is floored by the PSF (R50 = 0.527"), so size
 # cuts below ~0.5" keep ~100% and are no-ops BY CONSTRUCTION -- the list therefore starts at 0.55"
@@ -86,7 +92,8 @@ if [ "$NCK" -lt 16 ]; then
 ##  AGENTS.md: "Do not quote any m from 4 seeds." The absolute m at a cut is
 ##  model-vs-SIM; the sim side has no seed dependence, so each seed's own offset
 ##  survives in full and m inherits the whole no-cut seed error. On V2.1 the
-##  per-seed sd is 1.014%, so at $NCK seeds that is roughly +-$(awk -v n=$NCK 'BEGIN{printf "%.2f", 1.014/sqrt(n)}')%.
+##  MEASURED per-seed sd is 0.467% (job 15527267), so at $NCK seeds that is
+##  roughly +-$(awk -v n=$NCK 'BEGIN{printf "%.2f", 0.467/sqrt(n)}')%. The run below prints its own, which is authoritative.
 ##
 ##  READ dm = m(cut) - m(no cut), AND column (4) (model-vs-model). Both terms
 ##  move together seed to seed, so the offset cancels and these ARE valid here.

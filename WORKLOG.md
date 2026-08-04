@@ -2,6 +2,71 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-04k — V2.1 selection table (4 seeds): SWA-32 per-seed sd MEASURED at 0.467%; measured size cuts break above 0.60"
+
+First V2.1 selection table, job 15527267, `results/constgold_neardomain_v21_table.npz`. Seeds
+501/502/503/505 (owner capped training at "3 more"), so this is a **dm-only** run — the job printed
+the banner and the absolute `m` column is under-powered by the AGENTS.md e-response standard.
+
+**PER-SEED SCATTER, MEASURED FOR THE FIRST TIME ON V2.1.** The 4-seed sem on the no-cut `m` is
+0.233%, so per-seed **sd = 0.467%** (sem x sqrt(4)). Every earlier V2.1 error bar quoted in this
+work — including the `+-0.51%` in this job's own banner and the `sd 1.014%` in the job comment —
+came from the **V2 fiducial 16-seed dumps re-masked onto the V2.1 population**. Those dumps are
+**SWA-8**; V2.1 is **SWA-32** (`swa_last_k` in the checkpoint metadata: 32, epochs 89-120, vs the
+fiducial's 8, epochs 73-80). The proxy was 2.2x too pessimistic. V2.1's 0.467% also sits below the
+fiducial's own 0.606%. Caveat: 4 seeds = 3 dof, so the sd estimate itself carries roughly +-40%
+(range ~0.3-0.7%). Implied 16-seed sem would be **0.117%**, comparable to the fiducial's 0.152%.
+Fix the banner and the job comment to quote 0.467%.
+
+**NO-CUT m = +0.841% +- 0.233%.** Under-powered by convention, but 3.6x its own error and outside
+the +-0.3% target, so it is very unlikely to be seed noise alone. `R_sim = 0.9903`,
+`R_flow = 0.8642`, `R_blend = 0.1179` on 5,226,376 rows; blend lookup matched **100.00%**.
+Do not quote it as a result until 16 seeds exist; do treat it as a flag that V2.1's absolute
+calibration is worse than the fiducial's -0.123%, on a population that should be easier.
+
+**THE [T] TRUE-CUT CONTROL PASSES.** All six true-property rows give `dm` within +-0.27% of zero
+(-0.039, -0.058, -0.016, +0.026, -0.264, -0.070), and the leg-split block is exactly 0 as it must
+be. So when both sides select identical objects the model has no selection error, and any failure
+below is **selection modelling (the moving measured boundary), not the response**.
+
+**MEASURED CUTS: magnitude is fine, size breaks above 0.60".** `dm` (valid at 4 seeds):
+
+| cut | keep | dm | | cut | keep | dm |
+|---|---|---|---|---|---|---|
+| mag<26 | 1.000 | -0.007 | | R>0.55" | 1.000 | -0.077 |
+| mag<25.5 | 0.983 | +0.053 | | R>0.60" | 0.999 | -0.153 |
+| mag<25 | 0.887 | +0.218 | | R>0.70" | 0.974 | **+1.210** |
+| mag<24.5 | 0.705 | +0.570 | | R>0.80" | 0.828 | **+3.080** |
+| mag<24 | 0.510 | +0.263 | | R>1.00" | 0.411 | +0.109 +-0.251 |
+
+Combos follow the size leg: `mag<25.5 & R>0.55"` +0.004, `mag<25 & R>0.60"` +0.135,
+`mag<24.5 & R>0.70"` +1.359, `mag<24 & R>0.80"` +2.426. Real-S/N proxy rows: +0.099 / +0.519 /
++1.017 at S/N > 10 / 15 / 20.
+
+**MECHANISM: the flow under-moves the measured-size boundary.** Column (1) is the pure
+moving-boundary term; at `R>0.80"` the sim gives +9.132% and the model +7.075%, a **-2.06 pt**
+shortfall, and at `R>0.70"` +2.576% vs +1.977% (-0.60 pt). Model response too low -> `m` too high,
+matching the sign of `dm`. The full gap is larger than the boundary part alone (column (3) +7.355%
+vs column (4) +4.174% = 3.19 pt at `R>0.80"` against dm +3.08), so roughly two thirds is the
+boundary and one third is population re-weighting the model gets wrong.
+
+**`R>1.00"` recovering to +0.109% is NOT evidence the model is fine there** — it carries the largest
+boundary term in the table (+22.1% sim vs +20.5% model) and the largest error (+-0.251); it keeps
+only 41% of the domain and sits well clear of the PSF floor, where the size distribution is easier.
+Do not read the non-monotonic 0.80" -> 1.00" pattern as a trend without more seeds.
+
+Measured `flux_radius` is in ARCSEC and PSF-floored at R50 = 0.527", which is why the size list
+starts at 0.55" and why the first two size rows are near-no-ops by construction.
+
+- Files: `WORKLOG.md` only. No code change; `jobs/job_constgold_neardomain_v21.sh` and
+  `jobs/job_flow_v21.sh` still quote the stale 1.014% and need the number above.
+- Validation: blend lookup 100.00% matched; [T] control rows exactly 0 in the leg-split block;
+  `mag<26` (a no-op inside the domain) returns dm = -0.007%.
+- Cost: 4 x ~250 s scoring on one A40, ~20 min wall.
+- Next: decide whether to train the remaining 12 seeds. At sd 0.467% that buys sem 0.233% -> 0.117%
+  and would let the +0.841% no-cut `m` be quoted. Separately, the size-boundary shortfall is a
+  `measured_log_flux_radius` modelling issue and is the thing to fix if aggressive size cuts matter.
+
 ## 2026-08-04j — RETRACTS 2026-08-04i. There is no training deficit; the readout was misleading.
 
 **2026-08-04i IS WRONG. Do not use it.** It claimed the V2.1 flow misses its own response target by
