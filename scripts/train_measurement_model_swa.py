@@ -77,7 +77,15 @@ def _finite_target_mask(frame, targets):
 
 def _append_to_priority_sample(reservoir, batch, max_rows, rng):
     if max_rows is None or max_rows <= 0:
-        return pd.concat([reservoir, batch], ignore_index=True) if reservoir is not None else batch
+        # Unbounded: keep the parts and concatenate ONCE in _finalize_priority_sample.
+        # Folding `pd.concat` per record batch re-materialised the whole reservoir every
+        # time -- O(N*B/2) row copies, ~1.3 TB moved over the 27.8M-row / 480-batch
+        # production load (`--max-rows 0`), against a single ~5.6 GB pass. Concatenating
+        # the parts in order is value-identical to folding them one at a time.
+        if reservoir is None:
+            reservoir = []
+        reservoir.append(batch)
+        return reservoir
 
     batch = batch.copy()
     batch["__sample_key"] = rng.random(len(batch))
@@ -91,9 +99,20 @@ def _append_to_priority_sample(reservoir, batch, max_rows, rng):
     return reservoir
 
 
-def _finalize_priority_sample(reservoir, max_rows):
+def _priority_sample_rows(reservoir):
+    """Row count of a reservoir in either form (list of parts, or a single frame)."""
     if reservoir is None:
+        return 0
+    if isinstance(reservoir, list):
+        return sum(len(p) for p in reservoir)
+    return len(reservoir)
+
+
+def _finalize_priority_sample(reservoir, max_rows):
+    if reservoir is None or (isinstance(reservoir, list) and not reservoir):
         raise RuntimeError("No selected finite measured rows were loaded from the catalogue")
+    if isinstance(reservoir, list):
+        reservoir = pd.concat(reservoir, ignore_index=True)
     if max_rows is not None and max_rows > 0 and len(reservoir) > max_rows:
         reservoir = reservoir.nlargest(max_rows, "__sample_key").reset_index(drop=True)
     if "__sample_key" in reservoir.columns:
@@ -208,7 +227,7 @@ def load_measurement_data(args, condition_features, target_features):
             reservoir = _append_to_priority_sample(reservoir, batch[keep_columns], args.max_rows, rng)
             batches_seen += 1
             if args.progress_every and batches_seen % args.progress_every == 0:
-                kept = 0 if reservoir is None else len(reservoir)
+                kept = _priority_sample_rows(reservoir)
                 print(
                     f"  batches={batches_seen:,}, raw={raw_rows:,}, "
                     f"source_cut={source_cut_rows:,}, selected={selected_rows:,}, "

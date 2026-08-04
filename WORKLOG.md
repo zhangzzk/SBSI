@@ -2,6 +2,86 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-04d (**repo-wide cleanup pass: a LIVE fudge factor deleted, the fiducial blend join hardened, an O(N^2) load fixed. No science number changes.**)
+
+Four independent review passes over the whole tree (reuse / simplification / efficiency / altitude).
+Everything applied below is behaviour-preserving and was verified as such; the items that were NOT
+safe are listed at the bottom rather than done.
+
+**1. Integrity: a fudge factor AGENTS.md says was deleted was still live.**
+`plotting/plot_flow_figures.py` still applied `R_blend = R_BLEND_TRUE + 0.0017` -- the exact constant
+AGENTS.md "Numerical Integrity" names as the trigger case for the no-silent-corrections rule, pasted
+from a 2026-07-09 forward-model residual under the OLD convention and never re-derived. It was deleted
+from the fiducial plotter on 2026-07-31; this V1 plotter kept its copy, complete with a "CAVEAT"
+comment, which the rule explicitly rejects ("a caveat ... is NOT licence to ship the fudge").
+Deleted `figure4`, `PROBBLEND_DM`, `R_BLEND_PROB` and their report block. `figure5` (which has a live
+consumer in `jobs/job_fig5_selfresp.sh`) is untouched.
+
+**2. The fiducial blend-lookup join was the WEAKEST of four copies.** New `sbs_shear/blend_lookup.py`
+holds one strict `join_blend()` with every guard: missing column, duplicate `(case,input_index)` keys,
+row-count-changed-by-merge, and coverage floor. Previously `plotting/plot_fig2_flow2.py` had all four
+while `plot_fid_flow_figures.py` -- the script producing the FIDUCIAL figures -- had only the coverage
+check, so a duplicated key would have silently multiplied rows there. Adopted in
+`plot_fid_flow_figures.py` (floor `MIN_MATCH=0.20` unchanged) and `scripts/eval_m_with_blendflow.py`
+(structural guards only; its report-only coverage policy is deliberate and preserved via
+`min_match=None`).
+*Verified*: today's `blend_lookup_indomtuned_c40-139.feather` has 13,384,211 rows and ZERO duplicate
+keys, so the new guards cannot fire on current data; and on a 250k-row sample of the real lookup the
+shared join reproduces the old inline merge bit-identically, NaN placement included.
+
+**3. O(N^2) reservoir build in the trainers.** `_append_to_priority_sample` folded `pd.concat` per
+record batch on the `--max-rows 0` path -- the one the 250G / 36-hour production jobs use -- so the
+whole reservoir was re-materialised on every batch: ~6.7e9 row-copies (~1.3 TB moved) over the
+27.8M-row / 480-batch load, against a single ~5.6 GB pass. Now accumulates parts and concatenates once.
+Applied to `train_measurement_model.py`, `_swa.py`, `_swa_s1_truecond.py`.
+*Verified value-identical* in all three (frame equality + dtypes), bounded `max_rows>0` path untouched,
+and both empty-reservoir `RuntimeError`s preserved. `scripts/_headref_trainer_tmp.py` deliberately NOT
+patched: it is a frozen byte-identity snapshot of an old HEAD for the 2026-08-01b audit.
+
+**4. Smaller items.** `_activation` was byte-identical in three `sbs_shear` modules -> one
+`sbs_shear/nn_utils.py:activation_class` (fiducial checkpoint s501 re-loads fine).
+`jobs/job_const_validate_full.sh` set `OMP_NUM_THREADS=8` against `--cpus-per-task=4` (2x oversubscribed
+inside the cgroup) -> now tracks `SLURM_CPUS_PER_TASK`. Dead `pyarrow.feather` import dropped.
+
+**5. `CLAUDE.md` documented a test command that does not work.** `sims1` has no pytest, so the stated
+`python -m pytest tests/` fails outright. Corrected to the `py31` interpreter, and recorded that
+`sims1`'s scipy will not import on the LOGIN node (`GLIBCXX_3.4.30 not found`, via sklearn) though it
+is fine on compute nodes.
+
+**Tests.** `tests/test_blend_lookup.py` added -- 6 tests pinning the documented failure modes
+(unmatched rows must be NaN and never zero-filled, duplicate keys refuse, coverage floor refuses,
+row order preserved for positional alignment, equivalence with the plain left merge). Suite 43 -> 49,
+all passing, ~8 s.
+
+**Three review findings REJECTED after checking them.**
+(a) "The emulator-tuning jobs hold a GPU idle" -- FALSE: `scripts/tune_emulator_indom.py:98` reads
+`XGB_DEVICE` (default `cuda`) and passes it to XGBoost as its device. Dropping `--gres` would have
+pushed them onto CPU. (b) "Push `columns=` down into the feather reads" -- the reviewer measured it and
+retracted: column projection is ~4x SLOWER here (9.1 s -> 36.0 s, cold 8 GB file) because it turns one
+sequential scan into thousands of strided reads. Noted in `blend_lookup.py` so it is not re-attempted.
+(c) "Archive `SBI_shear.md` / `SBI_shear_response.md`" -- they are cited BY SECTION NUMBER inside live
+library code (`measurement_model.py`, `response.py`, `selection_model.py`, `shear_map.py`).
+
+**NOT done -- needs an owner decision (each changes behaviour or a published number).**
+- **131 committed `jobs/*.sh` hardcode `.claude/worktrees/selbias-plot`** in both `cd` and `PYTHONPATH`,
+  and none of them exist on `main`. They break when this worktree is removed. Repointing them at the
+  main checkout changes WHICH TREE they run, so it is not a mechanical fix. Job roots are currently
+  split 192 main / 144 worktree / 43 `SBSI-ablation` / 9 `blendemu`, with 9 different PYTHONPATH
+  spellings and no shared preamble.
+- **Two different bootstrap conventions ship for the same error bar**: `eval_error_budget.py:72` and
+  `eval_swap_lookup.py:89` re-average `R_flow` per resample, `validate_constant_with_blend.py:88`
+  freezes it. Which error bar you get depends on which script you run. Genuine convention question.
+- `plotting/plot_fid_flow_figures.py` reads its blend lookup by RELATIVE path (this worktree) but
+  `CROWD` by ABSOLUTE path into the MAIN tree, which has no copy here -- the fiducial figure script
+  reads inputs from two trees.
+- ~9,500 LOC is archivable (99 never-logged jobs, 12 zero-reference scripts, the superseded
+  `eval_selection_constgold*` family, `scripts/_headref_trainer_tmp.py`, 5 unused configs); the four
+  trainer forks share ~863 byte-identical lines; `sbs_shear/spline_flow.py` (241 L) has zero users
+  (`--flow-type spline` appears in no job, live or archived).
+- `CONVENTIONS.md` is referenced by ZERO lines of code, and `m = R_sim/(R_flow+R_blend)-1` is
+  re-implemented in 13 files. Consolidating touches every published number, so it needs to be done
+  file-by-file with a before/after value diff, not as a refactor.
+
 ## 2026-08-04c (**LINE CLOSED on the owner's call: the per-object / SNC-label work does NOT improve flow #1. Scripts archived, ~9 GB of pilot artifacts deleted. The fiducial model is untouched.**)
 
 **The verdict.** The label-consistent retrain closed half-shear small size (-3.74% -> -0.08%) and

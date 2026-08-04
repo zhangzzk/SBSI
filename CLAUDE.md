@@ -13,7 +13,16 @@ The project overview, scope boundaries (SBSI consumes finished `blendemu` catalo
 - Login node has no GPU (32c/376G); all training/GPU work must go through Slurm.
 
 ## Tests
-- `python -m pytest tests/` from repo root (env active, PYTHONPATH set). No pytest config.
+- **`sims1` has no pytest** — the obvious `conda activate sims1 && python -m pytest` fails with
+  `No module named pytest`. Run the suite with the `py31` interpreter instead (pytest 9 + torch),
+  from the repo root with PYTHONPATH set:
+  `/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python -m pytest tests/ -q`
+- Whole suite is ~8 s, pure CPU, no catalogue access — fine on the login node, and worth running
+  after any edit to `sbs_shear/`.
+- No pytest config; `tests/` covers `sbs_shear/` only, never `scripts/`.
+- Note `sims1`'s scipy fails to import on the LOGIN node (`GLIBCXX_3.4.30 not found`, via
+  `sklearn`); it is fine on compute nodes. So login-node smoke tests of the trainers must use
+  `py31`, or avoid importing sklearn.
 
 ## Jobs
 - Submit with `sbatch jobs/job_*.sh`. Never run nontrivial work directly on the login node.

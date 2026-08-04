@@ -11,6 +11,8 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
+from .nn_utils import activation_class as _activation
+
 
 DEFAULT_SELECTION_FEATURES = [
     "Re_input_p_scaled",
@@ -104,15 +106,6 @@ class SelectionMLP(nn.Module):
         return self.net(x).squeeze(-1)
 
 
-def _activation(name):
-    name = name.lower()
-    if name == "silu":
-        return nn.SiLU
-    if name == "gelu":
-        return nn.GELU
-    if name == "tanh":
-        return nn.Tanh
-    raise ValueError(f"Unsupported activation {name!r}")
 
 
 @dataclass

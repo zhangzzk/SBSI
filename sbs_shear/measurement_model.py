@@ -19,6 +19,7 @@ import pandas as pd
 import torch
 from torch import nn
 
+from .nn_utils import activation_class as _activation
 from .coordinates import angle_to_radians
 from .selection_model import (
     DEFAULT_SELECTION_FEATURES,
@@ -453,15 +454,6 @@ class ConditionalAffineFlow(nn.Module):
         return flat_x.reshape(batch, n_samples, self.target_dim)
 
 
-def _activation(name):
-    name = name.lower()
-    if name == "silu":
-        return nn.SiLU
-    if name == "gelu":
-        return nn.GELU
-    if name == "tanh":
-        return nn.Tanh
-    raise ValueError(f"Unsupported activation {name!r}")
 
 
 class MeasurementModelBundle:

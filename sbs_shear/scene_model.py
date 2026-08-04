@@ -10,6 +10,7 @@ import pandas as pd
 import torch
 from torch import nn
 
+from .nn_utils import activation_class as _activation
 from .measurement_model import ConditionalAffineFlow, TargetStandardizer
 from .selection_model import TabularPreprocessor
 
@@ -151,15 +152,6 @@ class SetFeatureStandardizer:
         )
 
 
-def _activation(name):
-    name = name.lower()
-    if name == "silu":
-        return nn.SiLU
-    if name == "gelu":
-        return nn.GELU
-    if name == "tanh":
-        return nn.Tanh
-    raise ValueError(f"Unsupported activation {name!r}")
 
 
 def _mlp(input_dim, output_dim, hidden_dim, n_layers, activation):

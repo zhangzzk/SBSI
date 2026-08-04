@@ -25,13 +25,13 @@ import os
 import sys
 
 import numpy as np
-import pyarrow.feather as pf
 
 SBSI_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if SBSI_ROOT not in sys.path:
     sys.path.insert(0, SBSI_ROOT)
 
 from plotting.plot_fid_flow_figures import BLEND_LOOKUP, load_dumps  # noqa: E402
+from sbs_shear.blend_lookup import join_blend  # noqa: E402
 
 
 def m_per_seed(rsim, rf, rb, mask):
@@ -71,13 +71,11 @@ def main():
     rf = flows.astype(np.float64)
 
     def joined(path, col="R_blend", extra=None):
-        lk = pf.read_table(path, memory_map=True).to_pandas()
-        cols = key + [col] + (extra or [])
-        j = ref[key].merge(lk[cols], on=key, how="left")
-        v = j[col].to_numpy(float)
-        ok = np.isfinite(v)
-        print(f"  {os.path.basename(path):<48} matched {100*ok.mean():6.2f}%  "
-              f"<{col}> = {np.nanmean(v):.4f}")
+        # `min_match=None` keeps this script's REPORT-ONLY coverage policy: it deliberately
+        # compares models on restricted subsets, so low coverage is a diagnostic here rather
+        # than an error (the hard floor lives in the figure scripts). The structural guards
+        # -- missing column, duplicate keys, merge changing the row count -- always apply.
+        v, ok, _frac, j = join_blend(ref, path, col, min_match=None, extra_cols=(extra or ()))
         return v, ok, j
 
     print("\nlookups:")

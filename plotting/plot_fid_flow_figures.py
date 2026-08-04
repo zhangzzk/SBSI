@@ -82,6 +82,8 @@ from matplotlib.lines import Line2D  # noqa: E402
 from matplotlib.patches import Patch  # noqa: E402
 from matplotlib.ticker import NullFormatter, ScalarFormatter  # noqa: E402
 
+from sbs_shear.blend_lookup import join_blend  # noqa: E402
+
 BLUE, VERM, GREEN = "#0072B2", "#D55E00", "#009E73"
 INK, MUTED = "#1a1a1a", "#6b6b6b"
 
@@ -243,18 +245,10 @@ def load_dumps():
     # Rows outside the tuned emulator's training box get no prediction. Zero-filling them is the
     # documented failure mode (spurious +28.9% m, job 15366950), so they are dropped instead and
     # both `ref` and the positional `flows` are masked together so they cannot drift apart.
-    lk = pf.read_table(BLEND_LOOKUP, memory_map=True).to_pandas()
-    j = ref[["case", "input_index"]].merge(lk, on=["case", "input_index"], how="left",
-                                           suffixes=("", "_tuned"))
-    rb_new = j["R_blend"].to_numpy(float)
-    keep = np.isfinite(rb_new)
-    frac = float(keep.mean())
-    print(f"tuned R_blend matched {100*frac:.2f}% of dump rows "
-          f"(<R_blend> old {ref['R_blend'].mean():.4f} -> new {np.nanmean(rb_new):.4f})")
-    if frac < MIN_MATCH:
-        raise SystemExit(
-            f"REFUSING: tuned emulator covers only {100*frac:.1f}% of dump rows. Zero-filling the "
-            "rest is what produced a spurious +28.9% m (job 15366950).")
+    rb_old_mean = ref["R_blend"].mean()
+    rb_new, keep, _frac, _j = join_blend(ref, BLEND_LOOKUP, "R_blend", min_match=MIN_MATCH,
+                                         label="tuned emulator lookup")
+    print(f"  <R_blend> old {rb_old_mean:.4f} -> new {np.nanmean(rb_new):.4f}")
     ref = ref.loc[keep].reset_index(drop=True)
     ref["R_blend"] = rb_new[keep]
     flows = flows[:, keep]

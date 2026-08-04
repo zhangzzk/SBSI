@@ -55,21 +55,16 @@ R_BLEND_TRUE = 0.1593    # BlendEMU true-neighbour blend response (seed-independ
 G_SHEAR = 0.02
 R_FLOW_M0 = 0.2941       # R_flow that gives m=0  (= R_SIM - R_BLEND_TRUE)
 
-# --- Figure-4 probabilistic-neighbour R_blend --------------------------------
-# The probabilistic construction draws each detection's neighbours from the
-# population prior (probblend_forward.py Level B, "Poisson population draw, no
-# true neighbour positions") and emulates R_blend on the drawn field.  The
-# forward model reconstructs the truth-fed (true-neighbour) blend response to a
-# residual multiplicative bias dm = -0.37% (PROB_BLENDING.md / WORKLOG cont.13,
-# OLD 2026-07-09 convention, tag lsst_r_extnbr_ho).  That residual corresponds
-# to the forward model slightly OVER-estimating the undetected-neighbour term,
-# i.e. an additive dR_blend ~ +0.0017 relative to true neighbours.  We apply
-# that documented offset to the current true-neighbour value:
-#   R_blend_prob = R_BLEND_TRUE + 0.0017 = 0.1610
-# CAVEAT: the forward-model residual is OLD-convention and was NOT re-derived on
-# the current constant catalogue -> see report / figure annotation.
-PROBBLEND_DM = -0.0037           # forward-model residual multiplicative bias
-R_BLEND_PROB = round(R_BLEND_TRUE + 0.0017, 4)   # = 0.1610
+# --- Figure 4 (probabilistic neighbours) was REMOVED -------------------------
+# It applied `R_blend = R_BLEND_TRUE + 0.0017`, an offset pasted from a
+# 2026-07-09 forward-model residual under the OLD convention and never
+# re-derived on the current constant catalogue.  AGENTS.md "Numerical Integrity"
+# names this exact constant as the trigger case for the no-silent-corrections
+# rule, and records that it was DELETED rather than regenerated -- a caveat in a
+# comment or figure caption is explicitly NOT licence to ship it.  The deletion
+# was applied to the fiducial plotter on 2026-07-31; this V1 plotter kept its
+# copy until 2026-08-04.  A probabilistic-neighbour figure needs a faithful
+# current-convention Level-B run, not an offset.
 
 # Okabe-Ito colorblind-safe palette (from plot_flow_calibration.py), cycled for
 # an arbitrary number of seeds.
@@ -311,22 +306,6 @@ def figure3(harv: dict):
         + "\n" + r"$m = R_{\rm sim}/(R_{\rm flow}^{\rm seed}+R_{\rm blend})-1$")
 
 
-def figure4(harv: dict):
-    caveat = (
-        "INTERIM -- a faithful current-convention forward-model run is BLOCKED: "
-        "probblend_forward.py Level-B is hardcoded to the main set (needs an aggregated "
-        "detection_catalogue + g=0 field catalogues);\nthe constant set has neither "
-        "(no detection catalogue, only +/-0.02 renders).  "
-        r"Shown: $R_{\rm blend}^{\rm prob}=R_{\rm blend}^{\rm true}+0.0017$, the OLD 2026-07-09 "
-        r"forward-model residual $\Delta m=-0.37\%$ (PROB_BLENDING cont.13) applied to the current seeds.")
-    return _bias_figure(
-        harv, R_BLEND_PROB, "fig4_bias_prob_neighbours",
-        "Per-seed multiplicative bias -- probabilistic (forward-modelled) neighbours",
-        rf"$R_{{\rm sim}}={R_SIM:.4f}$,  $R_{{\rm blend}}^{{\rm prob}}={R_BLEND_PROB:.4f}$"
-        + "\n" + r"$m = R_{\rm sim}/(R_{\rm flow}^{\rm seed}+R_{\rm blend}^{\rm prob})-1$",
-        caveat=caveat)
-
-
 # --------------------------------------------------------------------------
 # FIGURE 2 -- flow-predicted vs true response across galaxy properties
 # --------------------------------------------------------------------------
@@ -543,7 +522,6 @@ def main() -> None:
 
     p1 = figure1(train)
     p3, s3 = figure3(harv)
-    p4, s4 = figure4(harv)
     p2 = figure2(status)
     p5 = figure5(status)
 
@@ -568,14 +546,11 @@ def main() -> None:
               f"std/sqrt(N={len(stats['seeds'])})={stats['sem']:.3f}%")
 
     _bias_report("FIGURE 3 -- per-seed m (TRUE neighbours)", s3, R_BLEND_TRUE)
-    _bias_report("FIGURE 4 -- per-seed m (PROBABILISTIC neighbours)", s4, R_BLEND_PROB)
-    print(f"  [fig4] R_blend_prob provenance: R_blend_true {R_BLEND_TRUE:.4f} "
-          f"+ 0.0017 (forward-model residual dm={PROBBLEND_DM:+.2%}, OLD 07-09 conv)")
 
     print("\n" + "=" * 70)
     print("OUTPUTS")
     print("=" * 70)
-    for p in (p1, p2, p3, p4, p5):
+    for p in (p1, p2, p3, p5):
         print("  ", p if p else "(pending -- see status)")
     print("  status:", status)
 
