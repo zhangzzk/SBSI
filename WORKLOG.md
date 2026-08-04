@@ -2,6 +2,59 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05f  RESOLVED: the fiducial emulator is EXACT on its own domain; V2.1's domain is the fault
+
+Files: `jobs/job_rblend_summed_fid.sh` (new). Job 15534165.
+
+2026-08-05d left a tension: the summed ruler said the fiducial emulator under-predicts blend response
+by 15.6%, yet correcting that would make constgold `m` worse. **The tension was an artefact of running
+the ruler on the V2.1 domain only.** Re-run on the FIDUCIAL domain -- 12,327,203 primaries, 51,260,174
+rows, all 200 cases, 16x the V2.1 sample and 4x tighter -- the ordering inverts:
+
+| emulator | fiducial domain | V2.1 domain |
+|---|---|---|
+| `lsst_r_extnbr_indom_tuned` (FIDUCIAL) | **-0.02% +- 1.04  (0.02 sigma)** | -15.56% +- 2.78 (5.6) |
+| `lsst_r_extnbr_ho` | +1.48% +- 1.06 (1.4) | +1.18% +- 3.33 (0.35) |
+| `lsst_r` (production) | +5.47% +- 1.10 (5.0) | +7.10% +- 3.52 (2.0) |
+| `lsst_r_extnbr_v21` (V2.1) | -14.60% +- 0.89 (16.4) | -37.05% +- 2.07 (17.9) |
+| half-shear TRUTH | 0.07082 +- 0.00074 | 0.08636 +- 0.00284 |
+
+Null passes on both (+0.0001 +- 0.0007 fiducial; -0.0021 +- 0.0028 V2.1).
+
+**The fiducial emulator is exact on the population it is actually used on. No swap is warranted, and
+2026-08-05d's "fiducial has a real 15.6% deficit" must be read as domain-specific, not general.**
+`lsst_r` is now the one convicted on the fiducial domain (+5.5%, 5.0 sigma) -- the opposite of the
+per-pair ladder's verdict, and a direct instance of the AGENTS.md pair-list rule: score each model on
+the list it is used for.
+
+**WHY V2.1 IS DIFFERENT, measured.** The V2.1 domain (`Re > 0.5" AND sn_true > 10`) has no magnitude
+ceiling, where the fiducial domain has an explicit true `mag < 26`. The S/N curve therefore admits
+faint-but-large primaries the fiducial never reaches:
+
+- faint shell (measured mag >= 26): **2.1% of the fiducial sample, 27.6% of the V2.1 sample**
+- the emulator's own stored primary cuts (mag[18,26], Re[0.3,1.5]) cover **93.7% of the fiducial
+  sample but only 38.3% of the V2.1 sample**
+
+Every in-domain-trained emulator is extrapolating on most of the V2.1 population, and it
+under-predicts there -- monotonically worse toward faint (2026-08-05d).
+
+**WHAT THIS SAYS ABOUT V2.1's +0.790% m.** The quoted inputs reproduce it exactly
+(`R_sim=0.99027, R_flow=0.8647, R_blend=0.11786 -> m=+0.785%`), so the `R_blend` feeding it is the
+v21 lookup -- the emulator measured 37% low on that very population. An under-predicted `R_blend`
+makes `R_model` too small and `m` too POSITIVE, which is the observed sign. **Sign and mechanism are
+established at 17.9 sigma; MAGNITUDE IS NOT CLOSED.** Naive scaling would give -5.9%, badly
+overshooting, and it is not legitimate: the ruler is a 7" aperture while the lookup sums the
+emulator's native 10"/k=20. The deficit also GROWS with aperture (V2.1 domain: -24.5% at 3" ->
+-37.1% at 7"), so 10" would be larger still, not smaller. **No scaling has been applied to any
+reported quantity.**
+
+The clean test avoids scaling entirely: rebuild the V2.1 `R_blend` lookup with an emulator that
+covers the V2.1 domain and re-score `m` end to end. `lsst_r_extnbr_ho` is the candidate -- unbiased
+on the V2.1 domain at both apertures (+1.18% +- 3.33 at 7", +0.22% +- 3.61 at 3"). Its lookup is
+building now (job 15534171). Its match fraction on the V2.1 population MUST be asserted before use
+(AGENTS.md trap #1); unmatched rows get dropped, never zero-filled.
+
+
 ## 2026-08-05c  Emulator LADDER on the per-pair ruler: production `lsst_r` is unbiased
 
 Files: `scripts/summarize_rblend_ruler.py`, `scripts/map_rblend_error.py`,
