@@ -2,6 +2,50 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-04i — REFINES 2026-08-04h: the V2.1 retrain did not reach its own training target
+
+No code change. Re-reading the existing training logs (no new compute, no constgold involved).
+
+Entry 2026-08-04h called the V2.1 retrain "a null" and attributed the +1.6% entirely to the
+population. That is incomplete and reads as "there was nothing to gain", which is not supported.
+
+**Fact, from the flow training logs alone:**
+
+| run | lambda | own target mean | reached (val) | gap |
+|---|---|---|---|---|
+| dom6x6 s503 (15505072) | 450 | 0.7166 | 0.7161-0.7201 | ~0% |
+| dom6x6 (15503582) | 5000 | 0.7128 | 0.7170 | +0.6% |
+| **V2.1 s501 (15520081)** | 450 | 0.8753 | 0.8498 (mean of the 32 SWA epochs) | **-2.91%** |
+
+The fiducial flow lands on its response target; the V2.1 flow sits ~3% under it. It was at 0.8470 at
+epoch 001 and 0.8453 at epoch 120 -- **the mean response never moved across the whole run**, while
+the per-bin response loss fell 10x (1.5e-2 -> 1.4e-3). Per-bin SHAPE was learned; the overall LEVEL
+was not.
+
+SWA-32 is confirmed as requested: 120 epochs, no early stop, average over epochs 89-120.
+
+**Interpretation, stated at the strength the evidence supports.** The constgold shortfall (+1.6%)
+and the training shortfall (-2.9%) share sign and order of magnitude, which is CONSISTENT with one
+cause rather than two. It is NOT a demonstration that they are the same number: they are different
+sims and the mapping is not one-to-one -- on V2 the flow hit a target of 0.7166 yet read R_flow =
+0.7258 on constgold. Do not quote "if it had hit target, m would be -0.3%"; that arithmetic works
+only under an identity mapping that V2 already falsifies.
+
+**Near-one-lever caveat.** vs 15505072: same lambda=450, same architecture, same `--max-rows
+4000000`. Genuinely different: the domain, the response grid (5x4x5 vs 6x6x5, coarsened in
+2026-08-04g because the smaller population would not fill the finer grid), and the population.
+
+**Suspects, in check order.** (1) the coarser 5x4x5 grid -- wider cells satisfy the per-bin loss
+without pinning the mean, matching the observed signature exactly; (2) the theta-coupling target,
+carried over UNCHANGED from the full population (6x9x5 cells, log line 33) and flagged as an
+inherited inconsistency in 2026-08-04g -- now a live suspect for fighting the response loss;
+(3) lambda=450, tuned where the target mean was 0.717, may be too weak at 0.875 with a wider spread.
+
+**Next (NOT yet run, awaiting owner):** cheapest test is (3) -- one seed at higher lambda, checking
+whether val `<R_model>` climbs toward 0.8753. Training-side only, so the constgold firewall is not
+touched. Do not tune lambda against constgold m.
+
+
 ## 2026-08-04h (**How much of the training set does the fiducial actually use? 4M of 11.68M eligible rows (34%), but ALL 200 cases. Retraining on every row, 3 seeds, WITH a code-matched 4M control.** Jobs 15521186 (all-rows) / 15521451 (4M control). RESULTS PENDING.)
 
 Owner: "back to the training data: not all cases are used? how many are used? why not all?" then "let's
