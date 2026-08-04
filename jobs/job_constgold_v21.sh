@@ -1,13 +1,18 @@
 #!/bin/bash
 #SBATCH --job-name=cg_v21
 #SBATCH --time=03:00:00
-#SBATCH --mem=34G
-#SBATCH --cpus-per-task=8
-#SBATCH --gres=gpu:a40-24gb:1
+#SBATCH --mem=110G
+#SBATCH --cpus-per-task=16
+#SBATCH --gres=gpu:a40:1
 #SBATCH --partition=cip
-#SBATCH --output=/home/z/Zekang.Zhang/logs/cg_v21_s%a_%j.out
+#SBATCH --output=/home/z/Zekang.Zhang/logs/cg_v21_%j.out
 
 # STEP 6 of V2.1: score the V2.1 flow on constgold and report m inside the V2.1 domain.
+#
+# RESOURCES: this needs a FULL a40 (`gpu:a40:1`), not one of cip's a40-NNgb vGPU slices. Those
+# slices sit on 12-core/40 GB nodes, and the constgold pass loads ~45M rows -- the fiducial eval
+# peaked at MaxRSS 79.65 G. Asking for a slice killed run 15523041 with OUT_OF_MEMORY in 42 s.
+# `gpu:a40:1` on cip resolves to cip-cl-nv01 (112 cores, 1 TB, 9x a40), which has the headroom.
 #
 # ONE LEVER vs jobs/job_s2c_domain_eval.sh (which produced the fiducial dumps): the checkpoint and
 # the R_blend lookup are the V2.1 ones. Same script, same catalogue, same --min-case 40, same
@@ -43,7 +48,14 @@ RES=/home/z/Zekang.Zhang/SBSI/results
 DUMPDIR=/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/v21_domain_dumps
 mkdir -p $DUMPDIR
 CK=$D/measurement_flow_g0_ngmix_${TAG}_s${SEED}_swaavg.pt
-LOOKUP=$RES/blend_lookup_v21_c40-139.feather
+# TWO DIFFERENT results/ DIRECTORIES, and they are not interchangeable. `results/` is gitignored,
+# so this WORKTREE has its own, separate from the main checkout's (the split is recorded in
+# sbs_shear/paths.py). The blend lookups are written here by job_build_lookup_v21.sh -- as the
+# fiducial blend_lookup_indomtuned_c40-139.feather also is -- while the response targets and
+# crowd_flux_conc live in the MAIN checkout's. The fiducial eval job gets away with $RES for its
+# lookup only because blend_lookup_extnbrho_c40-139.feather is a symlink into sbsi_caches.
+# Pointing this at $RES cost one failed run (15522857).
+LOOKUP=/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot/results/blend_lookup_v21_c40-139.feather
 for f in "$CK" "$LOOKUP"; do
   [ -f "$f" ] || { echo "MISSING PREREQUISITE: $f"; exit 1; }
 done

@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=emu_v21
 #SBATCH --time=04:00:00
-#SBATCH --mem=110G
-#SBATCH --cpus-per-task=16
+#SBATCH --mem=24G          # measured run 15520060: MaxRSS 9.13G
+#SBATCH --cpus-per-task=8  # measured run 15520060: 7.2 of 16 cores busy (xgboost hist)
 #SBATCH --partition=cluster
 #SBATCH --output=/home/z/Zekang.Zhang/logs/emu_v21_%j.out
 

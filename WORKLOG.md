@@ -2,6 +2,175 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-04h (**How much of the training set does the fiducial actually use? 4M of 11.68M eligible rows (34%), but ALL 200 cases. Retraining on every row, 3 seeds, WITH a code-matched 4M control.** Jobs 15521186 (all-rows) / 15521451 (4M control). RESULTS PENDING.)
+
+Owner: "back to the training data: not all cases are used? how many are used? why not all?" then "let's
+retrain with all and see how much the model is affected. three seeds first."
+
+**The premise needed splitting: cases vs rows.** Measured directly off the catalogues, not inferred.
+
+| leg | file | cases | rows |
+|---|---|---|---|
+| g=0 train | `det_meas_crowd_conc_g0.0_train_full` | **200** (0-199) | 31,411,766 |
+| g=0.05 val | `det_meas_crowd_g0.05_val_full` | **100** (0-99) | 15,697,220 |
+| g=0.02 test | `det_meas_crowd_g0.02_test_full` | **100** (0-99) | 15,704,454 |
+
+- **All 200 cases ARE used.** `--max-cases` (the only case-dropping lever) defaults to `None` and is
+  never set by `jobs/job_s2c_domain_train.sh`. Cases are near-uniform in size, 157,058 +- 339 rows.
+- **Only 34% of eligible ROWS are used.** Funnel from the fiducial run's own log: 31,411,766 raw ->
+  **11,683,495** after the domain cuts (true mag < 26, Re 0.3-1.5, `detected`) -> **4,000,000** by
+  `--max-rows` -> 3.4M train / 0.6M val. That is 34% of eligible, 13% of raw.
+- **The 4M draw is unbiased.** `_append_to_priority_sample` assigns each row an iid uniform key and
+  keeps the global top-`max_rows`, i.e. exact uniform sampling without replacement. All 200 cases
+  survive at ~20,000 rows each. It is NOT a head truncation.
+- One row = one galaxy here: `input_index` has **no duplicates** within a case (checked batch 0,
+  65,536/65,536 unique), so this catalogue is not all-pairs and the cap is simply 4M galaxies.
+- **Why 4M: compute, not statistics.** No recorded argument that 4M suffices. The sampler has an OOM
+  history and the unbounded path was later optimised (single concat), after which 18 job scripts moved
+  to `--max-rows 0` while 10 still carry 4M.
+- **The same cap already cost a real number once, on the EVALUATION side** (AGENTS.md, jobs 15385639 /
+  15389640): `R_sim` on a 4M draw was 0.85824 vs 0.86050 on the full 11.67M, 0.26% low, shifting every
+  absolute `m` by ~+0.25 pt. Fixed there by defaulting `--max-rows` to 0. **Training is still capped**,
+  and WORKLOG 2026-07-24 already flagged "consider raising `--model-max-rows`".
+
+**Changed.** `jobs/job_s2c_domain_train.sh`: `--max-rows 4000000` -> `--max-rows ${MAXROWS:-4000000}`.
+Unset MAXROWS reproduces the certified dom6x6 run byte-identically; `MAXROWS=0` takes the trainer's
+unbounded load path. Header comment records the caveat below.
+
+**A CONFOUND WAS FOUND AND CONTROLLED FOR -- do not skip this.** The obvious comparison is the new
+all-rows runs against the existing `dom6x6_s{501,502,503}` checkpoints. That would be **invalid**:
+those were trained 2026-07-28, and `scripts/train_measurement_model_swa_s1_truecond.py` +
+`sbs_shear/training.py` + `sbs_shear/measurement_model.py` have since changed by **+1050 / -240 lines**
+across `25135ed` (cleanup), `93b6eef` (core merge) and `47128c0` (V2.1). Reusing them would conflate
+the row count with three commits of code drift. So a **4M control was retrained on current code** with
+the same seeds instead. The two arrays differ ONLY in `--max-rows`:
+
+| arm | tag | rows | job |
+|---|---|---|---|
+| all rows | `ablate_s2c_lt500_dom6x6_allrows_s{501,502,503}` | 11,683,495 | 15521186_[0-2] |
+| control | `ablate_s2c_lt500_dom6x6_ctl4m_s{501,502,503}` | 4,000,000 | 15521451_[0-2] |
+
+Seeds 501/502/503 in both, so every comparison is **paired by seed** and the seed offset cancels in
+the model-vs-model direction (AGENTS.md "Ensemble Seed Convention").
+
+**Two limitations, both binding on how the result may be quoted.**
+1. **This is not a clean data-volume experiment.** At fixed `--epochs 80`, 2.9x the rows is also 2.9x
+   the gradient steps. It measures *the recipe run on all rows*, which is the deployable question, not
+   the effect of data volume alone. Separating them needs a step-matched arm (~27 epochs).
+2. **3 seeds cannot support any `m`.** AGENTS.md requires 16 seeds for any e-response/`m` number.
+   These 3 seeds are a scouting run: read training-side diagnostics (val NLL, `<R_model>`, per-bin
+   response and coupling residuals) and paired model-vs-model deltas only. **Do not quote `m` from
+   this.** If the effect looks real, promote to 16 seeds before any `m` claim.
+
+**Scheduling: the job script over-requests resources by ~50x.** Measured on the certified 4M runs
+(`sacct 15348624_[0-2]`): **MaxRSS 2.9-3.6 GB on 8 CPUs, 29:53 wall** — against a `#SBATCH` header of
+`180G / 16 CPUs`. Both arrays were resized in place (`scontrol update` — note `MinMemoryNode` takes MB,
+not `48G`) to 8 CPUs / 48G / 3h (all-rows) and 8 CPUs / 24G / 1.5h (control), which moved them off
+`Reason=Priority` to schedulable. Suggested overrides are now recorded in the job-script header; the
+`#SBATCH` defaults were left alone since they are the certified fiducial values.
+**But the binding constraint is the GPU, not CPU/memory:** every a40 on `inter` is allocated, and the
+idle GPUs on `cip` are unreachable because that partition's QoS caps this user at 3 GPUs, all three
+already held by other running jobs (including the V2.1 line). Right-sizing only helps once a GPU frees.
+**A CPU fallback is viable if the queue stays saturated:** benchmarked at 45k rows/s on 16 threads /
+48k on 32 (fwd+bwd, batch 8192, fiducial architecture) vs ~164k rows/s train-equivalent on the A40 —
+only **~3.6x slower**, because the model (4-dim target, 256 hidden) leaves the GPU latency-bound. That
+puts the all-rows arm at roughly 5-6 h on a 32-core CPU node, on far less contended hardware.
+
+**Validation so far.** `bash -n` on the job script; verified unset MAXROWS still emits
+`--max-rows 4000000` and `MAXROWS=0` emits `--max-rows 0`; verified array indices 0-2 map to seeds
+501/502/503; row/case/uniqueness counts read directly off the feather files with pyarrow.
+
+**Next.** Compare the two arms seed-paired once both arrays land; if the shift is material, rerun at
+16 seeds and re-examine whether `--max-rows` should default to 0 in the trainer as it already does in
+the evaluation path. Note the V2.1 domain work (2026-08-04g) may change the eligible-row count, so
+re-ask this question on that domain rather than porting the answer across.
+
+## 2026-08-04h (**V2.1 RESULT: retraining on the new domain is a NULL. m = +1.47% (V2.1 model) vs +1.64 +- 0.25% (fiducial V2 model on the SAME galaxies). The +1.6% is the POPULATION, not the model.** Jobs 15523254 / 15522857 / 15523041.)
+
+First V2.1 `m`, and the answer is a clean negative. Retraining BOTH the flow and the emulator on the
+V2.1 domain moved essentially nothing; the bias that appears when you restrict to V2.1 galaxies was
+already there in the fiducial model and survives the retrain.
+
+### 1. THE NUMBERS (constgold, cases 40-139, N = 5,226,377 in the V2.1 domain)
+
+| model | seeds | R_sim | R_flow | R_blend | R_tot | **m** |
+|---|---|---|---|---|---|---|
+| **V2.1** (new flow + new emulator) | 1 (s501) | 0.9903 | 0.8581 | 0.1179 | 0.9760 | **+1.469%** |
+| **V2 fiducial**, re-masked to V2.1 | 16 | 0.9903 | 0.8574 | 0.1170 | 0.9744 | **+1.639 +- 0.253%** |
+
+Indistinguishable: the gap is 0.17 pt against a single-seed uncertainty of ~1%. The components say
+the same thing more sharply -- **R_flow moved 0.08% and R_blend moved 0.77%**. Retraining the flow
+on the V2.1 population changed its response by under a tenth of a percent, and retraining the
+emulator changed its blend term by under one percent.
+
+### 2. WHAT THE +1.6% ACTUALLY IS -- the population, not a model defect
+
+The SAME fiducial checkpoints, same dumps, only the mask changes:
+
+| mask | N | R_sim | R_flow | R_blend | m (16 seeds) | seed sd |
+|---|---|---|---|---|---|---|
+| certified (no domain cut) | 26,926,617 | 0.4534 | 0.1526 | 0.1593 | +48.365 +- 5.621% | 22.483 |
+| true mag < 26 | 17,963,596 | 0.5500 | 0.3648 | 0.1368 | +10.174 +- 2.015% | 8.059 |
+| true Re > 0.3 | 14,550,682 | 0.7610 | 0.5994 | 0.1526 | +1.190 +- 0.236% | 0.945 |
+| **V2 FLOW TRAINING DOMAIN** | 11,674,409 | 0.8605 | 0.7258 | 0.1371 | **-0.271 +- 0.152%** | 0.606 |
+| **V2.1 DOMAIN** | 5,226,377 | 0.9903 | 0.8574 | 0.1170 | **+1.639 +- 0.253%** | 1.014 |
+
+(The V2 row reproduces the fiducial -0.123 +- 0.152% to within its own seed error; the small offset
+is that this path forms the ratio from ensemble-mean components rather than per seed. The RANKING
+and the V2 -> V2.1 move are unaffected.)
+
+**So restricting to bigger, brighter galaxies moves `m` from -0.27% to +1.64% with the model held
+fixed.** V2.1 galaxies have a much higher true response (R_sim 0.9903 vs 0.8605) and the model
+under-predicts it by 1.6%. That deficit is NOT fixed by training on those galaxies -- which is the
+whole content of section 1.
+
+**Do not read this as "V2.1 is worse than V2".** They are different populations; `m` is not
+comparable across them any more than across the mag<26 and Re>0.3 rows above. What IS comparable is
+the two models ON THE SAME ROWS, and there they agree.
+
+### 3. SEED SCATTER IS WORSE ON V2.1, which partly cancels the SWA-32 gain
+
+Per-seed sd of the FIDUCIAL ensemble: **0.606% on V2, 1.014% on V2.1** -- 1.67x larger, on 45% as
+many galaxies. At 16 seeds the error is +-0.152% on V2 but +-0.253% on V2.1.
+
+This is a REAL caveat to WORKLOG 2026-08-04g section 4. That analysis (SWA-32 worth ~a factor 2 in
+seed count) was measured on the V2 population and on validation response. The V2.1 evaluation is
+intrinsically noisier, so the two effects push in opposite directions and the net seed requirement
+is NOT yet known. **Do not cut the seed count on the strength of the SWA argument alone.** The V2.1
+seed sd with SWA-32 is unmeasured -- it needs more than one seed.
+
+### 4. GUARDS THAT FIRED, AND ONE THAT DID ITS JOB
+
+* The emulator-coverage guard passed for BOTH models: 0 of 5,226,377 evaluated rows outside the
+  inference box (V2.1 box mag<25.72/Re>0.5; fiducial box mag<26/Re>0.3). So no R_blend was
+  zero-filled inside the evaluated domain, and AGENTS.md "Two traps" #1 is not in play here.
+* The V2.1 flow's OUT-OF-DOMAIN numbers are meaningless and must not be quoted: -42.6% on the
+  certified convention, R_flow 0.7645 where the fiducial reads 0.1526. It was trained only on V2.1
+  and extrapolates a constant outside it. Only the V2.1 row is interpretable for that model.
+* Two failed runs before the good one, both harness not science: 15522857 pointed at the MAIN
+  checkout's `results/` for the blend lookup (it is in the WORKTREE's -- `results/` is gitignored;
+  the fiducial job only works because its lookup is a symlink), and 15523041 died OUT_OF_MEMORY in
+  42 s on a cip vGPU slice (40 G cap; the pass peaks at MaxRSS 86 G). Both fixed in
+  `jobs/job_constgold_v21.sh`, which now takes a full `gpu:a40:1` on cip-cl-nv01.
+
+### 5. WHAT THIS MEANS
+
+The V2.1 domain is well-defined, properly calibrated, and cleanly implemented -- and it exposes a
+**1.6% response deficit that retraining does not touch**. Since neither the flow (0.08%) nor the
+emulator (0.77%) responded to being retrained on the population, the missing response is unlikely to
+be a fitting or sample-coverage problem. It is more likely structural: something the model class
+cannot represent for large, bright, well-resolved galaxies, or a term absent from
+`R_model = R_flow + R_blend` altogether.
+
+### 6. NEXT
+
+1. **More V2.1 seeds** (the 8-seed set 501-509 is already the job's default array). One seed cannot
+   distinguish +1.47% from +1.64%, and it cannot measure whether SWA-32 lowered the seed scatter.
+2. **Locate the 1.6%.** Split the V2.1 domain by size, magnitude and blend density and ask which
+   cells carry the deficit -- the fiducial dumps are enough for this and need no new GPU time.
+3. Do NOT tune anything against constgold `m` (the R_blend firewall). If the deficit turns out to be
+   structural, the fix is a model-class change argued on its own ruler.
+
 ## 2026-08-04g (**V2.1: new deliverable domain (true Re > 2.5 px AND true S/N > 10), flow + emulator retrained on it. Owner request. One seed first.** Jobs 15519546 / 15519854 / 15519919 / 15520060 / 15520081.)
 
 Owner: "retrain the models, including flow and emulator on a new domain: true size > 2.5" (resolution

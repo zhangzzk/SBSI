@@ -1,8 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=lk_v21
 #SBATCH --time=06:00:00
-#SBATCH --mem=64G
-#SBATCH --cpus-per-task=16
+#SBATCH --mem=16G          # measured run 15521284: MaxRSS 4.81G
+#SBATCH --cpus-per-task=4  # measured run 15521284: 2.9 of 16 cores busy. Right-sized so it
+                           # backfills: the cip GPU cap (QOSMaxGRESPerUser=3) is what makes
+                           # jobs queue here, but a small CPU job slots into leftover cores.
 #SBATCH --partition=cluster
 #SBATCH --output=/home/z/Zekang.Zhang/logs/lk_v21_%j.out
 
