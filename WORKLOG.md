@@ -2,6 +2,66 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-04n — V2.1 at 8 seeds: m = +0.790 +- 0.144%; 8 SWA-32 seeds now BEAT 16 SWA-8 seeds
+
+Job 15528062, seeds 501/502/503/505/506/507/508/509, `results/constgold_neardomain_v21_table.npz`
+(overwrites the 4-seed version). Blend lookup matched 100.00%; 5,226,376 rows; `R_sim = 0.9903`,
+`R_flow = 0.86466`, `R_blend = 0.11786`.
+
+**NO-CUT `m` = +0.790 +- 0.144%**, against +0.841 +- 0.233% at 4 seeds — the central value moved
+0.05 pt, comfortably inside the errors, so the 4-seed number was not misleading, just loose.
+
+**PER-SEED SD REFINED TO 0.407%** (0.144 x sqrt(8)), from 0.467% at 4 seeds. Both estimates agree
+within the ~40% uncertainty a 3-dof estimate carries. Implied 16-seed error: **0.102%**.
+
+**THE 8-SEED ERROR (+-0.144%) IS ALREADY TIGHTER THAN THE FIDUCIAL'S 16-SEED +-0.152%.** This
+CONFIRMS the pre-registered prediction in `jobs/job_flow_v21.sh` — written before any V2.1 seed was
+trained — that SWA-32 is "worth roughly a FACTOR 2 IN SEED COUNT (16 -> ~8 for the same ensemble
+error)". It is now measured, not projected.
+
+**THE RETRAIN IMPROVEMENT STRENGTHENS TO 3.0 SIGMA.** Fiducial on the same population: +1.664 +-
+0.254% (16 seeds, job 15527869). Gap 0.874 pt against a combined error of 0.292 pt — up from 2.4
+sigma at 4 seeds.
+
+**STILL OUT OF SPEC.** +0.790% is 5.5 sigma from zero and well outside the +-0.3% target. The
+population needs `R_flow = R_sim - R_blend = 0.8724`; V2.1 delivers 0.8647, 0.89% short.
+
+**SELECTION PICTURE UNCHANGED AND TIGHTER.** `dm` (4-seed -> 8-seed):
+
+| cut | dm | | cut | dm |
+|---|---|---|---|---|
+| mag<26 | -0.007 -> **-0.006** | | R>0.55" | -0.077 -> **-0.077** |
+| mag<25.5 | +0.053 -> **+0.036** | | R>0.60" | -0.153 -> **-0.152** |
+| mag<25 | +0.218 -> **+0.134** | | R>0.70" | +1.210 -> **+1.193** |
+| mag<24.5 | +0.570 -> **+0.438** | | R>0.80" | +3.080 -> **+3.023** |
+| mag<24 | +0.263 -> **+0.132** | | R>1.00" | +0.109 -> **+0.069 +-0.135** |
+
+Magnitude cuts hold to |dm| <= 0.44% out to mag<24 (51% keep); measured SIZE cuts break above 0.60".
+The magnitude rows all came DOWN with more seeds, so 4 seeds had overstated them. Combos follow the
+size leg (`mag<24 & R>0.80"` +2.304). Real-S/N proxy rows: +0.087 / +0.436 / +0.890.
+
+**THE [T] TRUE-CUT CONTROL IS NO LONGER EXACTLY NULL — report this honestly.** At 8 seeds
+`tmag<25` gives dm = -0.145 +- 0.053 (2.7 sigma) and `tRe>0.8` gives -0.251 +- 0.160. At 4 seeds
+these read -0.058 and -0.264. So there IS a small genuine RESPONSE error under true-property cuts,
+of order 0.1-0.25%, on top of which the measured-cut failures sit. It does not change the earlier
+conclusion — measured `R>0.80"` is +3.023 against a true-size analogue of -0.251, so ~3.3 pt of that
+row is still selection modelling, not response — but "the control passes exactly" (2026-08-04k) was
+a 4-seed statement and is now superseded by "the control has a ~0.15% floor".
+
+**SEED-COUNT CAVEAT.** AGENTS.md requires 16 seeds to quote `m`, and this is 8. The precision
+argument above (8 SWA-32 beats 16 SWA-8) is a reason to consider amending that rule for SWA-32
+checkpoints, but the rule has NOT been amended and this number has not been blessed as final.
+
+- Files: `WORKLOG.md`; `results/constgold_neardomain_v21_table.npz` regenerated at 8 seeds.
+- Validation: 100.00% blend-lookup match; `mag<26` (a no-op inside the domain) returns dm = -0.006%;
+  row count and `R_sim` identical to the 4-seed run and to the independent diag path.
+- Cost: 2096 s scoring on one A40, ~37 min wall.
+- Also fixed: both table jobs requested 200G against a measured 20.8G peak, which parked this run
+  behind 3 IDLE a40 cards for an estimated 14 h. Dropped to 64G; it started in seconds.
+- Next: the residual +0.790% is a pre-existing population bias (2026-08-04m), not a retrain
+  artifact. Attacking it means the response, not the selection model. Separately, the measured-size
+  moving boundary above 0.60" remains the largest selection failure.
+
 ## 2026-08-04m — The V2.1 retrain HALVES the bias on its own population; the fiducial -0.123% is a cancellation
 
 Job 15527869, `scripts/diag_v21_domain_subset.py`. The fiducial V2 model (dom6x6 flow + tuned
