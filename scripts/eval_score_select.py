@@ -510,8 +510,12 @@ def main():
         for path in paths:
             z = np.load(path, allow_pickle=False)
             got = json.loads(str(z["key"]))
+            # Caches written before sharding existed carry no `row_shard`/`row_shards`; they
+            # are whole-catalogue passes, so read a missing key as the unsharded value rather
+            # than rejecting a cache that is in fact compatible.
+            pre_shard = {"row_shard": 0, "row_shards": 1}
             bad = {k: (v, got.get(k)) for k, v in cache_key.items()
-                   if k != "row_shard" and got.get(k) != v}
+                   if k != "row_shard" and got.get(k, pre_shard.get(k)) != v}
             if bad:
                 raise SystemExit(f"--load-scores {path} was built with different settings "
                                  f"(want, got): {bad}")

@@ -7,6 +7,111 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
+## cont.178 (2026-08-04) The grid fix holds, but `g = 0.10` has HALF the error bar and shows a −0.49% residual that `g = 0.05` could not resolve — plus three silent-failure bugs in the job plumbing
+
+**The headline is not good news.** cont.177 closed cut 0.6 to −0.097 ± 0.278% at `g = 0.05`.
+Re-running the same ladder at `g = 0.10` (15518742, off the `c06_g10` cache):
+
+| pi_grid_n | `I_sel/⟨I⟩` | `d(m)` at `g=0.10` | `d(m)` at `g=0.05` (cont.177) |
+|---|---|---|---|
+| 61 | 0.2782 | +0.267 ± 0.148% | +0.640 ± 0.280% |
+| 101 | 0.2718 | −0.623 ± 0.146% | −0.227 ± 0.277% |
+| 141 | 0.2728 | **−0.489 ± 0.147%** (3.3σ) | **−0.097 ± 0.278%** (0.3σ) |
+
+The grid fix reproduces at `g = 0.10` (the ladder moves by 0.76%, matching the 0.74% at
+`g = 0.05`), so cont.177's diagnosis stands. What is new is that after the fix there is still
+something there.
+
+**Why `g = 0.10` is the sharper probe, and why this was hiding.** `m = ghat/g − 1`, so
+`σ_m = σ_ghat/g` while `σ_ghat` is shape-noise dominated and nearly independent of `g`.
+Doubling the injected shear therefore HALVES the error on `m` at fixed catalogue size —
+measured 0.278% → 0.147%, almost exactly ×2 (`σ_ghat` = 1.39e-4 and 1.47e-4 at the two shears,
+i.e. constant as claimed). The corollary is that the `g = 0.05` closure was never precise
+enough to see a −0.5% effect, and "consistent with 0.3%" there was a statement about the bar,
+not about the bias.
+
+**This is EXPECTED, not a defect (owner, 2026-08-04).** The estimator learns only the
+FIRST-ORDER response, so a bias at large shear is built in; the leading truncation term goes as
+`g²` and appears in `m` as `∝ g²`. That reading is quantitatively consistent with both points:
+`−0.097 × 4 = −0.39%` against a measured `−0.489%`.
+
+**Correction to the "free factor 2".** An earlier draft of this entry recommended adopting
+`g = 0.10` as the default closure shear for its tighter bar. That is WRONG: the noise falls as
+`1/g` but the truncation bias grows as `g²`, which is faster, so raising `g` buys precision on
+a number that is increasingly not the one wanted. With `k = −48.9 %/g²` fitted from the
+`g = 0.10` point:
+
+| g | predicted bias | stat error | bias/noise |
+|---|---|---|---|
+| 0.02 | −0.020% | 0.715% | 0.0 |
+| 0.05 | −0.122% | 0.286% | 0.4 |
+| 0.10 | −0.489% | 0.143% | 3.4 |
+| 0.20 | −1.956% | 0.072% | 27.4 |
+
+**The right use of large `g` is to MEASURE the quadratic term, not to hide inside it.** `g = 0.20`
+predicts `−1.96 ± 0.07%`, a ~27σ handle on the curvature — a decisive test of the `g²` form
+rather than a two-point plausibility argument. With `b` pinned there, the `g = 0.05` and
+`g = 0.10` points become estimates of the `g → 0` INTERCEPT, which is the closure number that
+matters (survey shears are `g ~ 0.02`, where the term is −0.02% and irrelevant). Note this is a
+fit of a functional form PREDICTED BY THE DERIVATION, not a curve chosen to fit the residual;
+the 4-point scan leaves 2 dof to check it (a surviving `g⁴` term would show up there). It must
+be reported as a fitted extrapolation, never applied silently — see
+[[feedback_no_silent_fudge]]. Runs: `g = 0.02` and `g = 0.20` (15525091/15525092, `inter`).
+
+**Three plumbing bugs, all of which failed SILENTLY (exit 0, plausible-looking output).**
+
+1. **Cache-key regression.** Adding `row_shard`/`row_shards` to `cache_key` (cont.177) made
+   every pre-existing cache mismatch on `want 1, got None`. Cost: the `pi_grid_n = 181, 221`
+   convergence ladder (15505527) "COMPLETED" in 53 s having printed four headers and zero
+   results, and I had been reporting it as pending. Fixed by reading a missing key as the
+   unsharded value (`row_shard=0`, `row_shards=1`) rather than as a mismatch.
+2. **`sbatch --export` splits its own argument on commas.** `--export=ALL,PGRIDS=61,101,141`
+   delivers `PGRIDS=61` and silently discards the rest; the job runs one rung and exits 0.
+   Two ladder submissions were truncated this way. Job scripts now accept colon-separated
+   lists and convert internally.
+3. **Hardcoded `--closure-g 0.05`** in both `job_pi_grid_ladder.sh` and `job_score_shard.sh`,
+   with `_g05_` baked into the cache path. A "g = 0.10" job would have re-reported the
+   `g = 0.05` numbers under a g=0.10 job name, and a g-scan would have overwritten one cache
+   repeatedly. Both now derive the flag AND the filename from one `CLOSURE_G` variable.
+
+**Scheduling: the wall is a GPU-count cap, not CPU or memory.** The `cip` QOS is
+`cpu=64, gres/gpu=3, MaxJobsPU=4`; measured usage while three shards sat in
+`QOSMaxGRESPerUser` was 32 of 64 cores, so trimming `--cpus-per-task` frees nothing. Note a
+16 GB vGPU slice counts the SAME as a whole A40 against `gres/gpu`, so requesting a smaller
+card does not buy a slot either. Headroom lives elsewhere: `inter` is a separate QOS
+(`gres/gpu=8`) and `cluster` is `cpu=3000, MaxJobsPU=50` with GPUs uncapped.
+`jobs/job_score_bench.sh` (new) measures whether the score pass is CPU-viable on `cluster`;
+CPU jobs there started immediately while GPU jobs queued.
+
+**Files.** `scripts/eval_score_select.py` (cache-key back-compat); `jobs/job_pi_grid_ladder.sh`,
+`jobs/job_score_shard.sh` (parameterised `CLOSURE_G`, colon-separated lists);
+`jobs/job_score_bench.sh` (new).
+
+**GRID CONVERGENCE: SETTLED (15518743).** With the cache bug fixed the ladder finally ran, and
+`pi_grid_n = 141` is converged — cut 0.6 gives `d(m)` = −0.097 / −0.129 / −0.107 / −0.108% at
+141 / 181 / 221 / 281, i.e. flat to 0.04% on `m`, with `I_sel/⟨I⟩` stable at 0.2687 to four
+digits. Adopt 141 as the default. (The job hit its 2 h wall on the last cut-0.4 rung; 141→181
+was already flat there, −0.475 → −0.513%.) cont.177's quadrature diagnosis is therefore
+complete: the grid is no longer a candidate for anything.
+
+**The `g` scan was cut to ONE point, deliberately.** The `g → 0` intercept does not need
+fitting: at `g = 0.05` the predicted truncation is −0.122% against a measured −0.108 ± 0.278%,
+so the intercept is already ~+0.01% and a curve fit would refine a correction nobody applies.
+What the scan is still for is discriminating the EXPECTED `g²` truncation from an UNEXPLAINED
+constant multiplicative error — which currently sits at only ~1.4σ, and which would be −0.49%
+at survey shear too and so would blow the 0.3% budget outright. `g = 0.20` separates the two
+by ~20σ (−1.96% vs −0.49%) for one job; `g = 0.02` separates nothing (bar 0.72%, wider than
+either prediction) and was cancelled. Caveat to check when it lands: at `g = 0.20` the `g⁴`
+term is no longer obviously negligible, so a deviation there is not automatically evidence
+against `g²`.
+
+**Next.** (1) Read `g = 0.20` (15525092) — a value near −1.96% confirms the expected truncation
+and closes the question; near −0.49% means a real multiplicative residual.
+(2) Finish the six `g = 0.05` shards for σ_gal 0.270% → ~0.13%; note
+σ_Pi = 0.072% does NOT shrink with rows and sets the floor. (4) Quote closure as the `g → 0`
+intercept of the `g²` fit, keeping `g = 0.05` as the default working shear — NOT `g = 0.10`,
+whose tighter bar is bought with a bias 3.4× its own noise.
+
 ## cont.177 (2026-08-04) §5B closure was a QUADRATURE artefact: the population block and the per-galaxy block are different integrals sharing one grid, and only the first was unconverged
 
 **Result.** At cut 0.6, `d(m)` goes from **+0.640 ± 0.280%** (2.3σ, failing the 0.3%

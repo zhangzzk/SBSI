@@ -24,13 +24,18 @@ case "$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1)
 esac
 SC=/project/ls-gruen/users/zekang.zhang/sbsi_scores
 TAG=$(echo "${CUT:-0.6}" | tr -d '.' | sed 's/^0//')
+# The injected shear must drive BOTH the estimator flag and the cache filename, or a g-scan
+# writes every leg to the same `_g05_` path and they overwrite each other silently.
+CG=${CLOSURE_G:-0.05}
+GTAG="g$(printf '%02d' "$(python -c "print(round(float('$CG')*100))")")"
 date; nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null
+echo "closure_g=$CG  cache tag=$GTAG"
 python -u scripts/eval_score_select.py \
-  --closure-g 0.05 --cut-abs-ehat "${CUT:-0.6}" \
+  --closure-g "$CG" --cut-abs-ehat "${CUT:-0.6}" \
   --max-rows "${ROWS:-4000000}" --row-shard "${SHARD:-0}" --row-shards "${NSHARDS:-1}" \
   --pi-rows 1048576 --pi-samples 8 --pi-reps 6 \
   --ring rot90 --shape-reps 2 --jk-blocks 200 --uncut-control \
   --pi-grid-n "${PGRID:-141}" \
-  --save-scores "$SC/c0${TAG}_g05_r${ROWS:-4000000}_s${SHARD:-0}of${NSHARDS:-1}_G2765.npz" 2>&1 \
+  --save-scores "$SC/c0${TAG}_${GTAG}_r${ROWS:-4000000}_s${SHARD:-0}of${NSHARDS:-1}_G2765.npz" 2>&1 \
   | grep --line-buffered -vE "module command|Pi rep "
 STATUS=$?; date; echo "### DONE (exit $STATUS) ###"; exit $STATUS
