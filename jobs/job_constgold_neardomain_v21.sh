@@ -58,6 +58,7 @@ D=/project/ls-gruen/users/zekang.zhang/sbsi_caches/ablation
 # (sbs_shear/paths.py records the split). Pointing at $HOME/SBSI/results cost a failed run (15522857).
 LOOKUP=/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot/results/blend_lookup_v21_c40-139.feather
 
+SEEDS_EXPLICIT=${SEEDS:+yes}   # capture BEFORE defaulting: an explicit SEEDS is the opt-out signal
 SEEDS="${SEEDS:-501 502 503 505 506 507 508 509 510 511 512 513 514 515 516 517}"
 CK=""; MISSING=""
 for sd in $SEEDS; do
@@ -69,11 +70,30 @@ echo "### CONSTGOLD NEAR-DOMAIN V2.1 job=$SLURM_JOB_ID ###"; nvidia-smi -L; date
 echo "checkpoints found: $NCK   missing:${MISSING:- none}"
 echo "blend lookup: $LOOKUP"
 [ -f "$LOOKUP" ] || { echo "MISSING PREREQUISITE: $LOOKUP"; exit 1; }
-# Refuse rather than quietly produce an under-seeded m. 16 is the e-response standard.
+# Never QUIETLY produce an under-seeded m. 16 is the e-response standard; fewer is allowed only as a
+# deliberate, explicit choice (set SEEDS), and then the run is banner-marked as dm-only.
 if [ "$NCK" -lt 16 ]; then
-  echo "REFUSING: only $NCK checkpoints; this table reports m, which needs 16 seeds (AGENTS.md)."
-  echo "Set SEEDS explicitly if you deliberately want a smaller, dm-only run."
-  exit 1
+  if [ -z "$SEEDS_EXPLICIT" ]; then
+    echo "REFUSING: only $NCK checkpoints and SEEDS was not set explicitly. This table reports m,"
+    echo "which needs 16 seeds (AGENTS.md). Pass SEEDS=... to opt into a smaller, dm-only run."
+    exit 1
+  fi
+  cat <<BANNER
+
+################################################################################
+##  DM-ONLY RUN -- $NCK SEEDS. DO NOT QUOTE THE ABSOLUTE m COLUMN FROM THIS RUN.
+##
+##  AGENTS.md: "Do not quote any m from 4 seeds." The absolute m at a cut is
+##  model-vs-SIM; the sim side has no seed dependence, so each seed's own offset
+##  survives in full and m inherits the whole no-cut seed error. On V2.1 the
+##  per-seed sd is 1.014%, so at $NCK seeds that is roughly +-$(awk -v n=$NCK 'BEGIN{printf "%.2f", 1.014/sqrt(n)}')%.
+##
+##  READ dm = m(cut) - m(no cut), AND column (4) (model-vs-model). Both terms
+##  move together seed to seed, so the offset cancels and these ARE valid here.
+##  The [T] true-cut rows remain a valid control for the same reason.
+################################################################################
+
+BANNER
 fi
 
 python -u scripts/eval_selection_constgold_neardomain.py \
