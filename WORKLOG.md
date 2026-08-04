@@ -2,6 +2,55 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-04r — THE TARGET'S 0.8509 IS DETERMINED TO +-0.16%: the 2.53% gap is 15.8 sigma, not noise
+
+Owner asked for the sample variance of the training-data response, by bootstrap. 2026-08-04p pinned
+all of V2.1's +0.790% on a 2.53% gap between the target (0.8509) and what constgold demands (0.8724)
+but quoted NO ERROR on it. Closed. Job 15530545, 39 s CPU.
+
+Files: `scripts/bootstrap_response_target.py` (new), `jobs/job_bootstrap_resp_target.sh` (new).
+
+**THE ESTIMATOR IS PROVEN, NOT TRUSTED.** The script replicates the builder rather than importing it
+(the builder produced the certified targets; not worth refactoring for a diagnostic), so it
+recomputes `global_R` and REFUSES unless it matches the stored value to 1e-9. Measured delta:
+**6.66e-16**. The error bar therefore belongs to the number actually in the npz.
+
+**MEASURED, on 2,588,040 rows (`det_meas_crowd_g0.05_val_full`, V2.1 domain, snc match 99.72%):**
+
+| quantity | value |
+|---|---|
+| weighted mean response R | 0.8509 |
+| per-object response scatter (weighted sd) | **2.526** (3.0x the mean) |
+| sem, rows independent | 0.00157 (0.185%) |
+| sem, clustered by (case, input_index) | 0.00157 (0.185%) |
+| sem, clustered by input_index (349,632 galaxies) | 0.00157 (0.185%) |
+| sem, clustered by case (100 renders) | **0.00136 (0.160%)** |
+| case-level bootstrap, 4,000 resamples | **0.00136** |
+
+**gap = +0.0215 = +2.53% = 15.8 sigma** on the target's error alone.
+
+**THERE IS NO CLUSTERING PENALTY, AND THAT ITSELF IS A RESULT.** Every level lands on the same
+0.00157, and the case level comes in slightly LOWER (0.00136) rather than higher. So the nesting
+that would normally inflate this error -- pair < noise realisation < intrinsic galaxy < render --
+carries no correlation worth the name. The docstring predicted the intrinsic-galaxy level would be
+quiet because `proj` differences each galaxy against its OWN g=0 shape, cancelling intrinsic
+ellipticity; 349,632 galaxy clusters returning the row-level number confirms it. The bootstrap
+reproduces the case-level sandwich to the digit, so 100 clusters is enough for the asymptotics.
+(`n_pairs = 1` throughout here -- rows = effective N exactly -- so this catalogue is nearest-pair
+and the 1/n_pairs weighting is inert; on an all-pairs catalogue it would not be.)
+
+**CONSTGOLD'S OWN ERROR DOES NOT RESCUE THE GAP EITHER.** Not measured here, but bounded: at
+AGENTS.md's constgold per-object scatter of 5.06 over 5,226,376 rows its sem is ~0.0022, giving a
+combined ~0.0026 and still **8.3 sigma**. Even doubling that scatter leaves it past 5 sigma. The
+2.53% gap is real and the 2026-08-04p candidates (snc g=0 reference; cases-40-99 population) stay
+live.
+
+**REFINES 2026-08-04q's "14%".** That figure assumed ALL per-seed scatter comes from the 4M draw,
+which was an upper bound, not an estimate. With the scatter now measured at 2.526, the data-draw
+term on a response mean is ~2.526/sqrt(4e6) = 0.13%, a minority of the 0.407% per-seed sd. So
+lifting the cap buys LESS than 14% -- the 2026-08-04q conclusion (do not spend a seed on it) holds
+more strongly, not less.
+
 ## 2026-08-04q — THE 4M TRAINING CAP IS NOT V2.1's PROBLEM: it bites the FIDUCIAL 2.3x harder
 
 Owner asked how different the capped 4M training set is from the full in-domain population. Answered
