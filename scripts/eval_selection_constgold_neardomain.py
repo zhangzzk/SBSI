@@ -99,6 +99,7 @@ from sbs_shear.preprocessing import (  # noqa: E402
     DEFAULT_SELECTION_CUTS, rescale, source_select_selection,
 )
 from sbs_shear.coordinates import ellipticity_from_axis_ratio_angle  # noqa: E402
+from sbs_shear import domain as sbs_domain  # noqa: E402
 from sbs_shear.shear_map import apply_shear_to_ellipticity  # noqa: E402
 from sbs_shear.paths import CROWD_LOOKUP as CROWD
 
@@ -287,7 +288,7 @@ def _fp_equal(a, b, tol=1e-9):
     return True
 
 
-def report(sim, per, group_rows, cuts, save_npz, dom_mag_max, dom_re_min):
+def report(sim, per, group_rows, cuts, save_npz, dom_mag_max, dom_re_min, domain_desc=""):
     """Aggregate per-seed accumulators into the printed table and the npz.
 
     Shared verbatim by the single-process path and the array-merge path, so the two cannot drift.
@@ -443,7 +444,8 @@ def report(sim, per, group_rows, cuts, save_npz, dom_mag_max, dom_re_min):
                      R_flow=flowonly[gn]["__nocut__"], R_blend=blendonly[gn]["__nocut__"],
                      m_nocut=m_nc, m_nocut_err=e_nc, n_seeds=len(per),
                      n_rows=int(group_rows[gn]),
-                     dom_mag_max=dom_mag_max, dom_re_min=dom_re_min)
+                     dom_mag_max=dom_mag_max, dom_re_min=dom_re_min,
+                     domain=domain_desc)
             print(f"\n  saved table -> {save_npz}")
     print_footer()
 
@@ -539,6 +541,16 @@ def main():
                     help="persist the ALL table so figures read data, not a log")
     ap.add_argument("--dom-mag-max", type=float, default=26.0)
     ap.add_argument("--dom-re-min", type=float, default=0.3)
+    ap.add_argument("--v21-domain", action="store_true",
+                    help="Score inside the V2.1 domain (sbs_shear.domain: true Re > 0.5\" AND true\n"
+                         "                          S/N > 10) instead of the --dom-mag-max/--dom-re-min\n"
+                         "                          box. REQUIRED when --ckpt are V2.1 flows: the box\n"
+                         "                          the V2.1 flow was trained on is a CURVE in\n"
+                         "                          (mag, Re), not a rectangle, and scoring a flow\n"
+                         "                          outside its training domain is what put the\n"
+                         "                          certified-convention m at -42.6%% (job 15523254).\n"
+                         "                          Pair it with the V2.1 blend lookup -- the fiducial\n"
+                         "                          one is built from a different emulator.")
     ap.add_argument("--dump-per-seed", default=None,
                     help="ARRAY MODE: score exactly ONE --ckpt and write its accumulators (plus the "
                          "sim side and a population fingerprint) to this JSON, instead of building "
@@ -565,8 +577,17 @@ def main():
     # DOMAIN CUT is mandatory: the dom6x6 flow was trained with primary_mag_max=26.0 /
     # primary_re_min=0.3, and scoring it outside that box put R_model(no cut) at +0.173 vs ~0.29,
     # inflating every model entry ~4x (run 15365425). Sim and model must share one population.
-    dom = (df["r_input_p"].to_numpy(float) < args.dom_mag_max) & \
-          (df["Re_input_p"].to_numpy(float) > args.dom_re_min)
+    if args.v21_domain:
+        # V2.1 is a CURVE (true S/N > 10), not a rectangle, so it cannot be expressed as
+        # --dom-mag-max/--dom-re-min. Single definition lives in sbs_shear.domain.
+        # in_domain (not select_frame) because we need the MASK here, and select_frame's four
+        # existing callers all want the filtered frame. Same constants either way -- one definition.
+        dom = sbs_domain.in_domain(df[sbs_domain.MAG_COLUMN].to_numpy(float),
+                                   df[sbs_domain.RE_COLUMN].to_numpy(float))
+        print(f"  {sbs_domain.describe()}", flush=True)
+    else:
+        dom = (df["r_input_p"].to_numpy(float) < args.dom_mag_max) & \
+              (df["Re_input_p"].to_numpy(float) > args.dom_re_min)
     df = df[dom].reset_index(drop=True)
     print(f"  after selection + DOMAIN cut: {len(df):,}", flush=True)
     if args.max_rows and len(df) > args.max_rows:
@@ -806,7 +827,8 @@ def main():
         os.makedirs(os.path.dirname(os.path.abspath(args.dump_per_seed)), exist_ok=True)
         payload = dict(rf=rf, rb=rb, rk=rk, rx=rx, ckpt=os.path.basename(ck), fingerprint=fp,
                        sim=sim, cuts=cuts_meta, group_rows=group_rows,
-                       dom_mag_max=args.dom_mag_max, dom_re_min=args.dom_re_min)
+                       dom_mag_max=args.dom_mag_max, dom_re_min=args.dom_re_min,
+                       domain=(sbs_domain.describe() if args.v21_domain else "V2 box"))
         with open(args.dump_per_seed, "w") as fh:
             json.dump(payload, fh)
         print(f"  scored {os.path.basename(ck)} ({time.time()-t0:.0f}s)", flush=True)
@@ -824,7 +846,8 @@ def main():
                                         sel_weight=selw)
         per.append((rf, rb, rk, rx))
         print(f"  scored {os.path.basename(ck)} ({time.time()-t0:.0f}s)", flush=True)
-    report(sim, per, group_rows, cuts_meta, args.save_npz, args.dom_mag_max, args.dom_re_min)
+    report(sim, per, group_rows, cuts_meta, args.save_npz, args.dom_mag_max, args.dom_re_min,
+           domain_desc=(sbs_domain.describe() if args.v21_domain else "V2 box"))
 
 
 
