@@ -120,7 +120,16 @@ def main():
 
     n_in = int(indom.sum())
     w = n_in / len(ref)
-    print(f"\nweight check: {w:.3f} x m(IN) + {1-w:.3f} x m(OUT) should reproduce m(ALL).")
+    # R_sim / R_flow / R_blend DO combine as population-weighted means; `m` does NOT, because it is
+    # a RATIO of them. Checking the ingredients is the valid test -- a weighted mean of the two `m`
+    # values will miss m(ALL) (here: -0.32% against the true -0.12%) and that gap is arithmetic,
+    # not a bug. Do not "fix" a decomposition to make the m column add up.
+    print(f"\nweight check ({w:.3f} IN / {1-w:.3f} OUT), on the INGREDIENTS, which do combine:")
+    for col in ("r_sim", "R_blend"):
+        a = ref[col].to_numpy(float)
+        print(f"  {col:>9}: {w*a[indom].mean() + (1-w)*a[~indom].mean():.4f} vs {a.mean():.4f} ALL")
+    print(f"  {'R_flow':>9}: "
+          f"{w*flows[:, indom].mean() + (1-w)*flows[:, ~indom].mean():.4f} vs {flows.mean():.4f} ALL")
     print("\nCOMPARE m(IN) AGAINST THE V2.1 MODEL'S OWN +0.841% +- 0.233% (job 15527267, 4 seeds,")
     print("SWA-32). Same population, same catalogue, same estimator -- only the model differs.")
     print("  m(IN) ~ +0.8%  -> the bias is the POPULATION's; the V2.1 retrain did not cause it, and")

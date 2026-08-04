@@ -2,6 +2,88 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-04m — The V2.1 retrain HALVES the bias on its own population; the fiducial -0.123% is a cancellation
+
+Job 15527869, `scripts/diag_v21_domain_subset.py`. The fiducial V2 model (dom6x6 flow + tuned
+in-domain emulator, 16 seeds) scored on the V2.1 population — the SAME dump rows, split by the V2.1
+domain. Valid because V2.1 nests strictly inside V2 (Re > 0.5" inside Re > 0.3"; the S/N > 10
+limiting magnitude peaks at 25.72, under V2's 26.0), so the fiducial flow is in-domain throughout.
+
+| group | N | share | R_sim | R_flow | R_blend | m |
+|---|---|---|---|---|---|---|
+| ALL (fiducial) | 11,674,408 | 100% | 0.8605 | 0.7258 | 0.1358 | **-0.123 +- 0.152%** |
+| V2.1 domain: IN | 5,226,376 | 44.8% | 0.9903 | 0.8574 | 0.1168 | **+1.664 +- 0.254%** |
+| V2.1 domain: OUT | 6,448,032 | 55.2% | 0.7553 | 0.6192 | 0.1512 | **-1.934 +- 0.333%** |
+
+**TWO CONCLUSIONS, and the second reverses the working assumption.**
+
+1. **The fiducial -0.123% IS a cancellation, now shown on the V2.1 partition specifically.** +1.664%
+   on 44.8% of the population against -1.934% on the other 55.2%. This is a DIFFERENT and stronger
+   demonstration than the emulator-pair-cut split already in AGENTS.md, which partitions a different
+   population a different way. The fiducial model over-predicts response for the small/faint half
+   (R_model 0.7704 vs R_sim 0.7553) and under-predicts for the large/bright half (0.9742 vs 0.9903)
+   — a size/brightness-dependent tilt that the full-population average hides.
+
+2. **The V2.1 retrain is an IMPROVEMENT, not a regression.** On the identical population the
+   fiducial gives +1.664% and V2.1 gives +0.841% (job 15527267): the retrain roughly HALVED the
+   bias, via R_flow 0.8574 -> 0.8642 (+0.8%). So V2.1's "large" no-cut m is inherited from the
+   population, not introduced by the retrain — reading (b) in the script docstring. **The carried-
+   over full-population coupling target is therefore NOT indicted by this test** and drops down the
+   suspect list; it remains a real inherited inconsistency, but it is not what makes m large.
+
+**Cross-checks that make this a clean comparison.** Both paths land on 5,226,376 rows and both
+report R_sim = 0.9903 — identical galaxies, identical simulated response, only the model differs.
+R_blend agrees to 0.9% (0.1168 fiducial emulator vs 0.1179 V2.1 emulator), so the emulator cannot
+drive the gap. Separately, on 6,208,896 identical galaxies the two emulators agree to 1.8%
+(corr 0.989) with V2.1 slightly HIGHER, which pushes m DOWN.
+
+**CAVEATS.** The gap is +1.664 - 0.841 = 0.82 pt against a combined error of 0.35 pt = 2.4 sigma —
+real but not overwhelming, and the V2.1 side is still only 4 seeds. The 8-seed table (array 15527870
+-> queued table) will tighten it. And `m` remains outside the +-0.3% target: on this population the
+model needs R_flow = R_sim - R_blend = 0.8724 and V2.1 delivers 0.8642, still 0.94% short.
+
+**ARITHMETIC TRAP, now guarded in the script.** R_sim / R_flow / R_blend combine as
+population-weighted means (all three reproduce the ALL row exactly); `m` does NOT, because it is a
+RATIO of them. The naive 0.448 x (+1.664) + 0.552 x (-1.934) = -0.32% misses the true -0.123%. That
+gap is arithmetic, not a bug — do not "fix" a decomposition to make the m column add up. The script
+now checks the ingredients instead.
+
+- Files: `scripts/diag_v21_domain_subset.py`, `jobs/job_diag_v21_domain.sh` (both new), `WORKLOG.md`.
+- Validation: 0 unmatched rows on the catalogue size join (asserted, not zero-filled); row count
+  and R_sim both match the independent selection-table path exactly.
+- Cost: ~3 min, CPU only (read-and-print over existing dumps).
+- Next: the 8-seed V2.1 table; then attack the residual +0.84%, which is now known to be a
+  pre-existing population bias the retrain only partly removed, not a retrain artifact.
+
+## 2026-08-04l — Resolution convention: the V2.1 size cut is HSC-style, and a DES-equivalent is not a single Re
+
+Owner asked whether `Re > 0.5"` should have been 0.25", and how the resolution factor is defined.
+Cut KEPT at 0.5" for now (owner). Findings, recorded because a wrong conversion was quoted:
+
+- **`domain.py` uses `R = Re^2/(Re^2 + Re_psf^2)`**, half-light radius on BOTH sides (galaxy Re from
+  the catalogue, `Re_psf = 0.5268"` from the Moffat FWHM via `moffat_fwhm2Re`). Internally
+  consistent. This is the **HSC** convention (`R2 = 1 - T_psf/T_convolved`, algebraically the same);
+  HSC's catalogue cut is R2 >= 0.3. Current cut -> R = 0.474; R = 0.5 exactly at Re = 0.527".
+- **DES uses a DIFFERENT quantity**: `T/T_PSF > 0.5` (Y3, Gatti et al. 2021, arXiv:2011.03408;
+  carried over from Y1), where `T = I_xx + I_yy` is the sum of second moments **of the Gaussian-model
+  surface brightness profile** — a model fit, applied the same way to galaxy and PSF.
+- **A "DES-equivalent Re" of 0.3725" WAS QUOTED IN CONVERSATION AND IS WRONG.** It came from setting
+  `T/T_psf = Re^2/Re_psf^2 = 0.5`, which assumes `T ∝ Re^2` with the SAME constant for galaxy and
+  PSF — true only if they share a profile shape. Moffat beta = 2.224 vs Sersic n does not. Never
+  used in code; discard the number.
+- **`T/T_psf` is not a cut on Re at all.** At fixed Re, unweighted `T_gal/Re^2` runs 1.44 (n=0.5),
+  2.13 (n=1), 4.62 (n=2), 21.68 (n=4) — a factor 15 — and our primaries span it (median n = 1.17,
+  65% below 1.5, 12% above 2.5). A DES-style cut maps to an n-DEPENDENT CURVE in Re. A Gaussian-fit
+  T compresses this relative to unweighted moments, so treat 15x as an upper bound on the spread.
+- **Unweighted moments are the wrong tool for this PSF anyway**: Moffat `T = alpha^2/(beta-2)` with
+  beta = 2.224 gives 1.626 arcsec^2, **8.5x** the Gaussian-equivalent 0.192 — almost all wings, and
+  convergent only because beta > 2 barely holds. DES's Gaussian-model definition avoids exactly this.
+- **Neither catalogue carries ngmix `T` or PSF moments** (checked: 44 columns in constgold, none
+  size-moment). Computing a real `T/T_psf` needs new measurement output, not a conversion.
+
+No code changed. If the cut is ever revisited, set it from a stated convention and record that in
+`domain.py`, not from a raw arcsec number.
+
 ## 2026-08-04k — V2.1 selection table (4 seeds): SWA-32 per-seed sd MEASURED at 0.467%; measured size cuts break above 0.60"
 
 First V2.1 selection table, job 15527267, `results/constgold_neardomain_v21_table.npz`. Seeds
