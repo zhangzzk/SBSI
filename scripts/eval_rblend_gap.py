@@ -52,6 +52,7 @@ import time
 import numpy as np
 import pandas as pd
 import pyarrow.feather as pf
+from sbs_shear import domain as sbs_domain
 from sbs_shear.paths import CATALOGUES as CAT
 
 BLEND_MODELS = "/home/z/Zekang.Zhang/blendemu/models"
@@ -64,7 +65,8 @@ NGMIX = ["measured_ngmix_g1", "measured_ngmix_g2"]
 GAMMA = ["gamma1_input_p", "gamma2_input_p", "gamma1_input_s", "gamma2_input_s"]
 
 
-def load_legs(gs_leg, g0_leg, max_case, re_min, mag_max, verbose=True, extra_cols=None):
+def load_legs(gs_leg, g0_leg, max_case, re_min, mag_max, verbose=True, extra_cols=None,
+              v21_domain=False):
     """BOTH-sheared rows of the sheared leg, matched to the unsheared leg (see module docstring:
     the neighbour-only leg has no ngmix shapes, so the blend response is recovered from the
     both-sheared leg by projecting on the neighbour's independent shear direction).
@@ -88,8 +90,15 @@ def load_legs(gs_leg, g0_leg, max_case, re_min, mag_max, verbose=True, extra_col
               flush=True)
 
     # deliverable domain: cut the PRIMARY on true properties; neighbours stay full-population
-    nb = nb[(nb["Re_input_p"].to_numpy(float) > re_min)
-            & (nb["r_input_p"].to_numpy(float) < mag_max)]
+    if v21_domain:
+        # V2.1 is true Re > 0.5" AND true S/N > 10, and the S/N half is a CURVE in (mag, Re) that
+        # the re_min/mag_max rectangle cannot express. sbs_shear.domain owns the single definition.
+        nb = sbs_domain.select_frame(nb)
+        if verbose:
+            print(f"  V2.1 domain: {sbs_domain.describe()}", flush=True)
+    else:
+        nb = nb[(nb["Re_input_p"].to_numpy(float) > re_min)
+                & (nb["r_input_p"].to_numpy(float) < mag_max)]
     nb = nb[nb["detected"].astype(bool)].drop_duplicates(["case", "input_index"])
 
     ref = pf.read_table(g0_leg, columns=["case", "input_index", "detected"] + NGMIX).to_pandas()
@@ -148,12 +157,16 @@ def main():
     ap.add_argument("--max-case", type=int, default=None, help="cap cases (default: all)")
     ap.add_argument("--true-re-min", type=float, default=0.3)
     ap.add_argument("--true-mag-max", type=float, default=26.0)
+    ap.add_argument("--v21-domain", action="store_true",
+                    help="score on the V2.1 domain (true Re > 0.5\" AND true S/N > 10) instead of "
+                         "the --true-re-min/--true-mag-max rectangle. Pass this to ask what the "
+                         "emulator's error is where the V2.1 flow actually lives.")
     ap.add_argument("--tag", default="lsst_r_extnbr_ho", help="BlendEMU emulator tag")
     ap.add_argument("--output", default=None)
     args = ap.parse_args()
 
     base = load_legs(args.gs_leg, args.g0_leg, args.max_case,
-                     args.true_re_min, args.true_mag_max)
+                     args.true_re_min, args.true_mag_max, v21_domain=args.v21_domain)
     truth = blend_truth(base)
     null = blend_truth(base, rotate45=True)
     g = np.isfinite(null)
@@ -175,7 +188,12 @@ def main():
     size = base["Re_input_p"].to_numpy(float)
     mag = base["r_input_p"].to_numpy(float)
     table(truth, pred, dist, [0, 1, 2, 3, 4, 5, 7, 10], "by PAIR SEPARATION (arcsec)", "distance")
-    table(truth, pred, size, [0.30, 0.38, 0.50, 0.75, 1.50], "by PRIMARY TRUE SIZE", "Re_input_p")
+    # The default edges start at 0.30 and spend two of their four bins below 0.50, which the V2.1
+    # domain excludes entirely -- `table` would silently drop them and leave a 2-bin size axis.
+    # Re-spend the resolution above the V2.1 floor instead of reporting a coarser table.
+    size_edges = ([0.50, 0.60, 0.75, 1.00, 1.50] if args.v21_domain
+                  else [0.30, 0.38, 0.50, 0.75, 1.50])
+    table(truth, pred, size, size_edges, "by PRIMARY TRUE SIZE", "Re_input_p")
     table(truth, pred, mag, [18, 22, 23, 24, 25, 26], "by PRIMARY TRUE MAG", "r_input_p")
 
     if args.output:

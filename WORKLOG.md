@@ -2,6 +2,58 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05a — THE EMULATOR CANNOT BE CONVICTED **OR** EXONERATED: its own error bar is +-0.7% on m
+
+Owner asked, after the flow was cleared against its target, whether the emulator is the problem. Run
+on the ONLY legitimate ruler (`scripts/eval_rblend_gap.py`; AGENTS.md forbids arguing the emulator on
+constgold m). Jobs 15531009 / 15531010, 7 min each, N=2,298,394 in-domain both-sheared pairs.
+**Null test passes at 0.2 sigma**, so the self-response really is projecting out.
+
+Files: `scripts/eval_rblend_gap.py` (+`--v21-domain`, V2.1 size-table edges),
+`jobs/job_rblend_gap.sh` (+`V21=1` switch; mem 200G -> 64G, measured peak 41.9G).
+
+**MEASURED on the V2.1 domain, paired sems (same rows both sides, so truth noise does NOT double):**
+
+| emulator | truth | pred | diff | rel | significance |
+|---|---|---|---|---|---|
+| `lsst_r_extnbr_v21` (V2.1 retrain) | 0.0260 | 0.0237 | -0.0023 | **-8.89%** | **1.4 sigma** |
+| `lsst_r_extnbr_indom_tuned` (fiducial) | 0.0260 | 0.0246 | -0.0013 | -5.16% | 0.8 sigma |
+| ...same, close pairs < 1" only | 0.0356 | 0.0247 | -0.0109 | -30.7% | **3.3 sigma** |
+
+**THE HEADLINE IS THE ERROR BAR, NOT THE CENTRAL VALUE.** The overall deficit is the right SIGN and
+more than large enough to explain V2.1's +0.790% -- if -8.89% mapped onto `R_blend`, m would go
++0.785% -> **-0.375%**; the fiducial's -5.16% would give **+0.101%**. But at 1.4 sigma neither is
+established. The ruler determines the blend response to +-6.2% relative, which propagates to
+**+-0.7% on m** -- as large as the entire bias being chased. **Do not quote "the emulator
+under-predicts by 9%" as a finding.** What IS established is the close-pair deficit at 3.3 sigma.
+
+Contrast with 2026-08-04r deliberately: the flow's target is pinned to 0.16% and its gap is 15.8
+sigma; the emulator's is pinned to 6.2% and its gap is 1.4 sigma. Same question, 40x different
+measurement precision. The flow was cleared because the measurement COULD clear it.
+
+**THE V2.1 EMULATOR RETRAIN IS A REGRESSION ON THIS RULER, AND THAT COMPARISON IS EXACT.** Both
+emulators are scored on IDENTICAL rows, so truth cancels completely from the head-to-head:
+**V2.1 - fiducial = -0.00097 +- 0.00001**. The retrain moved predictions DOWN, i.e. further from a
+truth that already sat above both. It is better at the bright end (mag 18-22: +0.0054 vs +0.0083
+absolute over-prediction, 12% of rows) and worse everywhere else. This is the legitimate ruler for
+that argument, so reverting V2.1 to `lsst_r_extnbr_indom_tuned` is arguable ON THIS EVIDENCE -- not
+on the m it would produce.
+
+**UNVERIFIED STEP IN THE ABOVE.** The ruler is a PER-PAIR quantity (one neighbour per primary);
+`R_blend` in `m` is a SUM over neighbours in the aperture. Scaling `R_blend` by the per-pair relative
+error assumes the error is uniform across the summed neighbours. Untested. The deficit being
+concentrated below 1" is a reason to doubt it, since close neighbours are not a fixed share of the
+sum.
+
+Next, to make this decidable: the ruler is noise-limited, and the `g=0.2` leg
+(`det_meas_ngmix_ap7_g0.2_val.feather`) carries 4x the shear signal at similar noise, which would cut
+the +-6.2% to roughly +-1.6% and settle it. **TRAP: that leg exists only in the `ap7` (7"-capped)
+family.** Per AGENTS.md's pair-list rule, an ap7 number is not comparable to the non-ap7 g=0.05 run
+above -- a 7" cap changes which pairs exist and handicaps whichever model relies on the excluded
+ones. A clean design needs ap7 g=0.05 as its OWN control (`det_meas_ngmix_ap7_g0.05_val.feather`
+exists), scoring ap7-g0.05 vs ap7-g0.2 against ap7-g0.0. Do not compare an ap7 g=0.2 number directly
+to the -8.89% above.
+
 ## 2026-08-04r — THE TARGET'S 0.8509 IS DETERMINED TO +-0.16%: the 2.53% gap is 15.8 sigma, not noise
 
 Owner asked for the sample variance of the training-data response, by bootstrap. 2026-08-04p pinned
