@@ -105,9 +105,35 @@ either prediction) and was cancelled. Caveat to check when it lands: at `g = 0.2
 term is no longer obviously negligible, so a deviation there is not automatically evidence
 against `g²`.
 
-**Next.** (1) Read `g = 0.20` (15525092) — a value near −1.96% confirms the expected truncation
+**QUEUE CLEARED (owner request, 2026-08-04).** All pending closure jobs cancelled so the
+`flow_v21` array is not pushed back behind them — the `cip` cap is 3 GPUs and `flow_v21` was
+holding all three with a fourth waiting. Nothing is lost: shards 1, 3 and 5 had already
+COMPLETED and their caches are on disk
+(`c06_g05_r2000000_s{1,3,5}of6_G2765.npz`, 2M rows each). Resume with:
+
+```
+# the three missing shards (2M rows each, ~2.5-3.5 h on an a40-16gb slice)
+for SH in 0 2 4; do sbatch --partition=cip --gpus-per-node=a40-16gb:1 --mem=24G \
+  --export=ALL,CUT=0.6,ROWS=2000000,SHARD=$SH,NSHARDS=6,PGRID=141,CLOSURE_G=0.05 \
+  --job-name="sh6_$SH" jobs/job_score_shard.sh; done
+# the g^2-vs-constant discriminator
+sbatch --partition=inter --gpus-per-node=a40:1 --mem=48G --time=08:00:00 \
+  --export=ALL,CUT=0.6,ROWS=2000000,SHARD=0,NSHARDS=1,PGRID=141,CLOSURE_G=0.20 \
+  --job-name=gscan_0.20 jobs/job_score_shard.sh
+```
+
+Pin one slice per DISTINCT physical card (`cip-cl-h01g0{2,3,4,5}n1`) — three slices of one A40
+give no parallelism and ~3.6× slowdown — and note `h01g02` slices cap at 26 G host RAM.
+
+**Cashing in the banked 6M rows costs no GPU (15527903).** Merging the three finished shards
+needs no score pass, only the `Pi` block, which is small enough for CPU — so it runs on
+`cluster` (separate QOS, 50 job slots) and contends with nothing. Expected σ_gal
+0.270% → 0.270/√3 = 0.156%, total σ → sqrt(0.156² + 0.072²) = 0.172%.
+
+**Next.** (1) Read the 6M merge (15527903): cut 0.6 at ±0.17% instead of ±0.28%.
+(2) Run `g = 0.20` when GPUs are free — a value near −1.96% confirms the expected truncation
 and closes the question; near −0.49% means a real multiplicative residual.
-(2) Finish the six `g = 0.05` shards for σ_gal 0.270% → ~0.13%; note
+(3) Finish shards 0/2/4 for σ_gal → ~0.13%; note
 σ_Pi = 0.072% does NOT shrink with rows and sets the floor. (4) Quote closure as the `g → 0`
 intercept of the `g²` fit, keeping `g = 0.05` as the default working shear — NOT `g = 0.10`,
 whose tighter bar is bought with a bias 3.4× its own noise.
