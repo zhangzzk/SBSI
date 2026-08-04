@@ -2,6 +2,100 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05c  Emulator LADDER on the per-pair ruler: production `lsst_r` is unbiased
+
+Files: `scripts/summarize_rblend_ruler.py`, `scripts/map_rblend_error.py`,
+`scripts/check_rblend_null_bins.py` (new), `scripts/eval_rblend_gap.py` (per-row `null` in the npz).
+
+Seven emulator tags scored on IDENTICAL rows (ap7 g=0.2 leg, V2.1 domain, N=5,861,188). Coverage was
+asserted per tag before use (AGENTS.md trap #1): **100.00% for all seven**, so nothing is zero-filled
+and the ranking is not a coverage artifact. Paired errors (scatter of `pred - truth`), so truth
+cancels in every tag-to-tag comparison.
+
+| tag | rel. error | sigma |
+|---|---|---|
+| `lsst_r` (production) | **-0.52% +- 1.73%** | **0.3** |
+| `lsst_r_extnbr_ho` (Gold-v1 certified) | -3.28% | 1.9 |
+| `lsst_r_extnbr_indom_tuned` (FIDUCIAL) | -4.05% | 2.3 |
+| `lsst_r_extnbr_indom_wc5` | -4.82% | 2.8 |
+| `lsst_r_extnbr_indom_wc20` | -5.35% | 3.1 |
+| `lsst_r_extnbr_v21` (V2.1) | -6.15% | 3.6 |
+| `lsst_r_indist_close` | +45.24% | 26 (broken) |
+
+Two independent levers, each costing response: relaxing the SECONDARY cuts (`lsst_r` -> `extnbr_ho`,
+same primary cuts) costs 2.76 pts; narrowing the PRIMARY cuts (`ho` -> `indom` -> `v21`) costs a
+further 2.87 pts. **The retrains have been monotonically walking away from an emulator that was
+already unbiased.**
+
+PER-BIN NULL (new `check_rblend_null_bins.py`). A clean GLOBAL 45-degree null does not certify the
+bins -- opposite-sign artifacts cancel in the mean -- so the null was rerun per separation bin. **All
+11 bins pass (max 2.1 sigma).** The non-monotonic truth profile found in the error map (0.0503 close
+in, dipping to 0.0102 at 1.25-1.5", rising again to 0.0371 at 2.5-3") is therefore a real property of
+the blend response, not an estimator artifact, and the 2.5-4" region that carries 57% of the deficit
+is safe to optimise against.
+
+## 2026-08-05d  SUMMED ruler: the fiducial emulator has a real 15.6% deficit; `_ho` does not
+
+Files: `jobs/job_rblend_summed_ladder.sh` (new), `scripts/eval_rblend_gap_measured.py` (`--v21-domain`).
+
+The per-pair ruler scores ONE pair. `R_blend` as it enters `m` is a SUM over the aperture
+(`build_blend_lookup.py`: `groupby(index_input_p)['response'].sum()`), so the summed quantity is what
+promotion must be argued on. Measured directly: 766,882 primaries, 4.151 neighbours each, 3,183,152
+rows, cluster-robust errors on the primary.
+
+VALIDITY CHECK FIRST. Summing per-neighbour projections is only legitimate if each secondary carries
+its OWN shear direction -- if a scene shared one direction, the projection would return the primary's
+TOTAL response on every row and the sum would overcount by ~4.15x. Measured: median 4 distinct
+secondary directions per primary, **0.00% of multi-neighbour primaries share a single direction**.
+The sum is a valid total. Global 45-degree null passes (-0.0021 +- 0.0028, 0.7 sigma).
+
+| emulator | <S_blend> | rel. error | sigma |
+|---|---|---|---|
+| half-shear TRUTH | 0.08636 +- 0.00284 | -- | -- |
+| `lsst_r_extnbr_ho` (Gold-v1) | 0.08738 | **+1.18% +- 3.33** | **0.35** |
+| `lsst_r` (production) | 0.09249 | +7.10% +- 3.52 | 2.0 |
+| `lsst_r_extnbr_indom_tuned` (FIDUCIAL) | 0.07292 | **-15.56% +- 2.78** | **5.6** |
+| `lsst_r_extnbr_v21` (V2.1) | 0.05437 | **-37.05% +- 2.07** | **17.9** |
+
+**The mechanism is the faint end, and it is visible as a monotonic trend.** `_ho` is flat across
+magnitude (every bin consistent with zero). `indom_tuned` degrades steadily with faintness --
+-9.4% (24-25) -> -15.7% -> -22.1% -> -26.9% -> -46.2% (mag>27) -- and `_v21` runs -28% to -65% over
+the same range. Narrowing the PRIMARY training cuts leaves the emulator extrapolating on the faint
+primaries it was never shown, and it under-predicts there. 27.6% of the ruler sample is fainter than
+measured mag 26. This is the same root cause as AGENTS.md trap #1 (indom_tuned covering only 43.4% of
+the wide population), showing up as a bias rather than as a coverage hole.
+
+CAUTION -- do not read three rows of that table. Rows with `S_truth` near zero (S/N>50: -0.0014;
+true mag 18-23: -0.0043) print relative errors of thousands of percent with errors to match. They are
+noise, not measurements.
+
+SCOPE. Two limits, neither resolved: (a) the ruler is a 7" aperture, the lookup that feeds `m` is the
+emulator's native 10"/k=20, so the relative deficit must NOT be scaled onto `R_blend` without
+checking -- no such scaling has been applied anywhere; (b) the matched sample spans 72 of the 200
+cases, because the SExtractor `measured_*` columns the binning needs are not populated in every case.
+No row cap and no `--max-case` was in play (verified: both legs carry all 200 cases and overlap
+fully). The 72-case sample is a valid subsample with proper cluster errors, not a truncation.
+
+TENSION TO RESOLVE, STATED PLAINLY. The ruler says the fiducial emulator under-predicts by 15.6%
+while `_ho` is unbiased. But raising `R_blend` by ~15% would move the fiducial constgold `m` from
+-0.123% to roughly -2.5%, i.e. WORSE. The two criteria disagree. Per the firewall the ruler is the
+sanctioned criterion and constgold is evaluation-only, and AGENTS.md already records that the
+fiducial -0.123% is a CANCELLATION between an under-predicting blended majority and an
+over-predicting weakly-blended remainder -- so a more accurate emulator making `m` worse is
+consistent with that picture rather than contradicting it. NOT resolved here; the ruler has so far
+only been run on the V2.1 domain, and the comparison is only apples-to-apples once it is also run on
+the FIDUCIAL domain. That job is next.
+
+## 2026-08-05e  Cases 40-99 response target: clean NULL (pre-registered)
+
+Files: `scripts/compute_response_target_blend.py` (`--min-case`), `jobs/job_resp_target_v21_c40_99.sh`.
+
+Pre-registered before running: if the case window mattered, `global_R` would move by more than its
+0.16% error. Result: **0.85095 on cases 40-99 vs 0.85088 on the full set, +0.01%** against a +-0.16%
+error. The population/case-window explanation for the V2.1 gap is exonerated, and the 15.8-sigma gap
+between the response target and constgold is not a case-selection effect.
+
+
 ## 2026-08-05b — EMULATOR UNDER-PREDICTION IS NOW ESTABLISHED (3.6 sigma), BUT THE TRANSFER TO m IS NOT
 
 Follow-up to 2026-08-05a, which could not decide the emulator at +-6.2%. The g=0.2 leg carries 4x the

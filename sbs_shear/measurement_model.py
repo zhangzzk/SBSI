@@ -567,11 +567,27 @@ class MeasurementModelBundle:
 class ConditionalMeanFlow(nn.Module):
     """Explicit-conditional-mean density: p(x|c) = p_resid(x - mu(c) | c).
 
-    A direct mean head mu(c) carries the conditional-mean response (so it is NOT shrunk
-    toward the marginal the way a pure flow's mean is), and the base flow models only the
-    residual scatter.  This fixes the measured-shape response under-fit (M_model -> M_data)
-    that drives the multiplicative shear bias.  mu is linear by default (the OLS conditional
-    mean is already an excellent fit); set mean_hidden>0 for an MLP head.
+    A direct mean head mu(c) carries the conditional-mean RESPONSE (so it is NOT shrunk
+    toward the marginal the way a pure flow's mean is).  This fixes the measured-shape
+    response under-fit (M_model -> M_data) that drives the multiplicative shear bias.
+    mu is linear by default (the OLS conditional mean is already an excellent fit); set
+    mean_hidden>0 for an MLP head.
+
+    *** mu IS NOT THE CONDITIONAL MEAN, AND p_resid IS NOT ZERO-CENTRED. ***  Only mu's
+    SHAPE-DEPENDENCE is pinned; its LEVEL is unidentified, because the response loss
+    constrains only DIFFERENCES mu(c+) - mu(c-) (any constant cancels) and the NLL
+    constrains only the SUM mu + residual.  Neither constrains mu alone, so it drifts and
+    the residual flow absorbs the offset.  Measured on the fiducial dom6x6 s501 checkpoint
+    (WORKLOG 2026-08-04f, `scripts/diag_meanhead_identifiability.py`): <mu(g2)> = +5.01 in
+    standardized units -- +1.79 in raw ellipticity, outside the physical range -- against a
+    data mean of +0.01, cancelled by <resid> = -5.00.
+
+    This is harmless for the response ONLY because the residual flow is blind to the shape
+    features (`flow_drop_indices`), which makes d<x>/d(shape) == d mu/d(shape) exactly,
+    whatever the level.  But it means: DO NOT read mu, or any per-object mean-head output,
+    as a predicted mean, and do not plot it as one -- only differences of mu are meaningful.
+    Code needing the actual model mean must sample the full model (as
+    `MeasurementModelBundle.target_mean_and_gradient` does).
     """
 
     def __init__(self, target_dim, context_dim, base_flow="affine", mean_hidden=0,

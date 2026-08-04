@@ -100,6 +100,11 @@ def main():
     ap.add_argument("--max-rows", type=int, default=0,
                     help="Read at most this many raw rows (0=all). For huge all-pairs catalogues "
                          "the target is computed on a memory-fitting case subset (still ample stats).")
+    ap.add_argument("--min-case", type=int, default=None,
+                    help="Keep only case >= min-case. With --max-case this isolates a case WINDOW, "
+                         "which is how the target's population (half-shear cases 0-99) is tested "
+                         "against constgold's (cases 40-139): rebuild on the 40-99 overlap and see "
+                         "whether the target moves.")
     ap.add_argument("--max-case", type=int, default=None,
                     help="Keep only case <= max-case. Useful when an SNC lookup covers a case subset.")
     ap.add_argument("--snc-lookup", default=None,
@@ -152,8 +157,11 @@ def main():
                 break                       # memory cap: target on a case subset is plenty
             b = pa.Table.from_batches([r.get_batch(bi)]).select(cols).to_pandas()
             nread += len(b)
-            if args.max_case is not None and "case" in b.columns:
-                b = b[b["case"] <= args.max_case]
+            if "case" in b.columns:
+                if args.max_case is not None:
+                    b = b[b["case"] <= args.max_case]
+                if args.min_case is not None:
+                    b = b[b["case"] >= args.min_case]
                 if len(b) == 0:
                     continue
             b = source_select_selection(b, cuts=_selection_cuts(args))

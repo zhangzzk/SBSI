@@ -14,6 +14,18 @@
 # same catalogue, feature set, targets, architecture, epochs, lambda, response + coupling targets.
 # ONE seed first -- validate in-domain, then decide whether to spend more seeds.
 #
+# RESOURCES ARE OVER-REQUESTED ABOVE -- override them at submit. Measured on the certified 4M runs
+# (sacct 15348624_[0-2]): MaxRSS 2.9-3.6 GB on 8 CPUs, 29:53 wall. The 180G/16c header is ~50x the
+# real memory need and demonstrably delays scheduling (jobs 15521186/15521451 sat in Reason=Priority
+# until resized to 8c/48G/3h, after which they became schedulable). Suggested:
+#   4M  arm: sbatch --cpus-per-task=8 --mem=24G --time=01:30:00
+#   all-rows: sbatch --cpus-per-task=8 --mem=48G --time=03:00:00     (2.9x rows -> ~10 GB, ~87 min)
+#
+# MAXROWS overrides the training subsample; it defaults to 4000000, so an unset MAXROWS reproduces
+# the certified dom6x6 run byte-identically. MAXROWS=0 means "use every eligible row" (11,683,495
+# after the domain cuts, vs the 4M reservoir draw) and takes the trainer's unbounded load path.
+# Note 0 is ~2.9x the data, hence ~2.9x the per-epoch cost AND 2.9x the gradient steps at fixed
+# --epochs: it measures the RECIPE with all rows, not the effect of data volume alone.
 # Runs from THIS worktree, not SBSI-ablation: `scripts/train_measurement_model_swa_s1_truecond.py`
 # and `sbs_shear/` were verified identical between the two trees (diff -rq, excluding __pycache__),
 # so the only difference from the baseline run is the two domain flags.
@@ -57,7 +69,7 @@ python -u scripts/train_measurement_model_swa_s1_truecond.py \
   --target-column detected --selection-name sextractor_detected --feature-set "$FS" \
   --target-features measured_ngmix_g1 measured_ngmix_g2 measured_mag_auto measured_log_flux_radius \
   --flow-type mean_affine --mean-hidden ${MH:-128} --flow-blind-features e1_input_p e2_input_p \
-  --shear-case 0.0 --max-rows 4000000 --epochs ${EPOCHS:-80} --batch-size ${BS:-8192} \
+  --shear-case 0.0 --max-rows ${MAXROWS:-4000000} --epochs ${EPOCHS:-80} --batch-size ${BS:-8192} \
   --hidden-dim 256 --condition-layers 3 --n-flows 10 --lr 0.0007 --patience 10 --weight-decay 1e-5 \
   ${PEROBJ:+--response-target-perobj $PEROBJ} \
   --seed "$SEED" --num-workers 8 --gpu-resident \
