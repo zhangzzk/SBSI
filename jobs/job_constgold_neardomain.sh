@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=cg_nd
-#SBATCH --time=04:00:00
+#SBATCH --time=10:00:00
 #SBATCH --mem=200G
 #SBATCH --cpus-per-task=16
 #SBATCH --gres=gpu:1
@@ -18,9 +18,13 @@ export PYTHONPATH="/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot:/hom
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 D=/project/ls-gruen/users/zekang.zhang/sbsi_caches/ablation
-SEEDS="${SEEDS:-501 502 503 505}"
+# 16 seeds: fig4 reports `m`, a bias on the SHAPE (e) response, and the convention sets the
+# e-response standard at 16 regardless of what the CUTS are on. The cuts here are flux/size (4-seed
+# standard) but they only decide WHICH objects enter the average; the number reported is the shape
+# response of that subset. At 4 seeds the m column carried +-0.43%, too coarse for the +-0.3% target.
+SEEDS="${SEEDS:-501 502 503 505 506 507 508 509 510 511 512 513 514 515 516 517}"
 CK=""; for sd in $SEEDS; do CK="$CK $D/measurement_flow_g0_ngmix_ablate_s2c_lt500_dom6x6_s${sd}_swaavg.pt"; done
 echo "### CONSTGOLD NEAR-DOMAIN job=$SLURM_JOB_ID ###"; nvidia-smi -L; date
-python -u scripts/eval_selection_constgold_neardomain.py --ckpt $CK --n-samples 32 --batch-size 16384 \
-  2>&1 | grep -v "module command" || { echo CG_ND_FAILED; exit 1; }
+python -u scripts/eval_selection_constgold_neardomain.py --ckpt $CK --n-samples 32 --batch-size 16384 --max-rows 0 \
+  2>&1 | grep -v --line-buffered "module command" || { echo CG_ND_FAILED; exit 1; }
 echo CG_ND_ALL_DONE; date

@@ -2,6 +2,5068 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-04a (**FIG 5 WITH BOTH FLOWS ON IT. The size fix is REAL but LOCALISED, and the -0.08% region average is itself a CANCELLATION: the smallest bin is +7% in BOTH models and is not touched by the label fix.** Job 15515209.)
+
+**Files.** `plotting/plot_selfresp_labelfix.py` (new), `jobs/job_selfresp_labelfix_fig.sh` (new).
+Output `figures/fig5_selfresp_labelfix.png`. Fiducial fig5 and its script are untouched.
+
+**What it is.** The fiducial fig5 axes (flow ALONE vs half-shear self-response, no `R_blend`) with two
+model curves on them: the flow trained on the ruler's `R_snc` label and the flow trained on the
+`r_sim_self` label it is actually graded against. Identical rows (2,364,527), same truth column, same
+3 seeds, same FORWARD extraction, verified by refusing on any row/truth mismatch. The three region
+numbers reproduce 03x to the last digit on a third independent run.
+
+**Two deliberate departures from fiducial fig5, both to make the claim checkable:**
+- **Equal-count bins.** `Re` piles up at the small end, so under fig5's LINEAR edges the whole
+  `Re <= 0.386` region falls in the SINGLE leftmost bin -- a one-bin region cannot show whether a
+  defect flattened across it. 16 equal-count bins put 4 bins inside the region.
+- **A per-bin numeric table is printed** for every panel, so the plotted curve and the bootstrapped
+  region statistic can be checked against each other rather than eyeballed.
+
+### The size panel, per bin (model/truth - 1, %)
+
+| Re centre | truth | ruler label | scored label |
+|---|---|---|---|
+| 0.3131 | 0.3460 | **+6.94** | **+7.12** |
+| 0.3331 | 0.5166 | -7.34 | -2.12 |
+| 0.3540 | 0.6165 | -6.28 | -0.81 |
+| 0.3759 | 0.7097 | -6.99 | -3.65 |
+| 0.3993 | 0.7345 | -0.69 | +0.16 |
+| >= 0.42 | ~0.78 | within ~2.5 | within ~2.7 |
+
+**The fix is real and it is localised.** Bins 2-4 -- the bulk of the small-size region -- go from a
+flat ~-7% to -2.1/-0.8/-3.7. Above 0.40" both models were already fine, and neither is disturbed.
+
+**But the first bin is NOT fixed, and it matters.** At `Re ~ 0.313` (the domain edge, `Re > 0.3`)
+BOTH models sit at +7%, and the truth there collapses to 0.346 against 0.72 globally. Weighting by
+truth, that +7% bin cancels a large part of bins 2-4, so the region average of **-0.08%** is a
+CANCELLATION between a +7% edge bin and a still-negative -3.7% bin, not a uniformly-closed region.
+**Do not read -0.08% as "the small end is now flat".** This is the same trap AGENTS.md flags for the
+fiducial constgold `m`, and it is the reason the per-bin table is printed at all.
+
+### The other two panels
+
+- **Measured S/N.** The scored-label curve sits ~+0.8 to +1.2 pt above the ruler-label curve across
+  nearly every bin -- a LEVEL shift, not a change of shape. The faint end stays at ~-5% in both
+  (-5.67 -> -5.15 in the first bin), which is what the measured-selection ceiling of 03w requires.
+- **Neighbour / blend flux.** The largest un-advertised improvement is here, in the heavily-blended
+  tail: the last four bins go from +10.58 / +8.05 / -16.80 (ruler) to +3.92 / +3.97 / +0.82 (scored).
+  Consistent with 03w's finding that the two g=0 measurements diverge most where measurement is hard.
+
+**Scope, unchanged from 03x.** SELF-CONSISTENCY between a label and a score. It is NOT evidence that
+either g=0 measurement is physically unbiased, and that choice sets the absolute response scale. No
+`m` anywhere (3 seeds; 16 required), constgold never read.
+
+**NEXT is unchanged** -- (a) decide which g=0 measurement is unbiased, (b) rebuild the fiducial grid
+pin on the consistent estimator before any `m` is requoted, (c) 16 seeds. **Added by this figure:**
+(d) the `Re ~ 0.31` edge bin is a separate, still-open defect that the label fix does not address.
+
+## 2026-08-03x (**CONFIRMED: making the label and the score use the SAME estimator closes small size to -0.08 +- 0.84%.** From the fiducial's -3.74%, a change of +3.65 +- 1.16 = 3.1 sigma, RESOLVED. Faint under the MEASURED S/N cut is unmoved, exactly as predicted. Jobs 15505072 / 15505599.)
+
+**What was run.** The per-object target rebuilt with `--label-source dump` (fit to `r_sim_self`, the
+quantity every score is graded on) instead of the ruler's `R_snc`; flow retrained on it, 3 seeds
+(501/502/503), rw450, everything else fiducial. Scored on identical rows against the same truth.
+
+| region | fiducial | label-consistent retrain | change |
+|---|---|---|---|
+| ALL | -0.32 +- 0.19 | +0.17 +- 0.19 | +0.49 +- 0.27 (not resolved) |
+| **small size Re <= 0.386** | **-3.74 +- 0.80** | **-0.08 +- 0.84** | **+3.65 +- 1.16 (RESOLVED)** |
+| faint, MEASURED S/N <= 13.09 | -3.80 +- 0.85 | -3.11 +- 0.84 | +0.69 +- 1.20 (not resolved) |
+| within-cell ramp | -32.28 +- 5.17 | -18.25 +- 4.91 | |
+
+**The predicted pattern holds on both counts.** Small size collapses to zero once the supervision and
+the score use the same g=0 partner -- the -3.06% label gap of 03u was the whole defect. And the
+measured-S/N faint region does NOT move, which is what 03w's diagnosis requires: that region is
+selected on a measured quantity the flow is not conditioned on, so a label fix cannot touch it (and
+under a TRUE-mag cut there was never a defect to fix, -0.53 +- 0.57%).
+
+**WHAT THIS DOES AND DOES NOT ESTABLISH.**
+- It DOES establish that the flow can match the ruler's self-response at small size to within
+  1 sigma of zero, and that the -3.74% attributed to the flow since 03k was an artefact of comparing
+  a model trained on one SNC estimator against another.
+- It does NOT establish that the flow is physically more correct. It establishes SELF-CONSISTENCY.
+  Which of the two g=0 measurements is unbiased is still open (03w: they are independent measurements,
+  0.094% agree exactly, disagreement largest at low S/N), and that choice moves the ABSOLUTE response
+  scale -- so it propagates straight into `m`. **Nothing here should be read as an improvement to `m`.**
+- 3 seeds, half-shear only, constgold never read. No `m` is quoted and nothing is promoted.
+
+**NEXT.** (a) Decide which g=0 measurement is unbiased -- this is now the highest-value open question,
+because it sets the absolute scale. (b) If the dump-side estimator is adopted, the FIDUCIAL grid pin
+(`compute_response_target_blend`, built from the `g0_lookup` family) inherits the same -3% small-size
+label bias and should be rebuilt on the consistent estimator before any `m` is requoted. (c) 16 seeds
+before any of this is quoted as a result.
+
+## 2026-08-03w (**BOTH HALVES OF THE "SMALL/FAINT DEFECT" ARE ARTEFACTS OF THE COMPARISON, NOT FLOW FAILURES.** Small size = a label disagreement between two g=0 measurements. FAINT ONLY EXISTS UNDER A *MEASURED* S/N CUT: under a TRUE-magnitude cut the flow is **-0.53 +- 0.57%**. Jobs 15505046 / 15505198 / 15505224 / 15505298.)
+
+**Files.** `scripts/build_g0_lookup.py` (+`--shape-suffix`), `scripts/build_perobj_target.py`
+(+`--label-source ruler|dump`), `scripts/build_perobj_oracle.py` (+`EXTRA_FEATS`),
+`scripts/diag_perobj_conditional.py` (+D8 arm, `nbr_flux_max` crowd merge, TRUE-mag faint region),
+`jobs/job_build_perobj_target.sh` (`LABELSRC`, `OUT`).
+
+### 1. The g=0 provenance question from 03v is ANSWERED -- and it is NOT a wrong-file bug
+
+blendemu writes two shape catalogues per case at the same detections: no suffix measures the
+**primaries** (first-half input ids), `_secondaries` the **secondaries** (second half). They are
+different objects and correlate **-0.80** on matched `NUMBER`, so using the wrong one would be
+catastrophic. I hypothesised `build_g0_lookup.py` had picked the wrong file. **That hypothesis is
+REFUTED, by direct test:**
+
+- PRIMARY lookup covers `input_index` 0..349,783; SECONDARY covers 349,783..699,567 -- **disjoint**.
+- `det_meas_ngmix_g0.0_train` has **zero finite** `measured_ngmix` on first-half ids.
+
+So the half-shear catalogue's `_p` object IS the second-half (secondary) object, and `_secondaries`
+is the correct file. `--shape-suffix` was added anyway (default unchanged) so this stays testable.
+
+**What the two g=0 sources actually are: independent MEASUREMENTS of the same objects.** On matched
+rows only **0.094% agree exactly**; 60.5% agree to 0.01, 88.1% to 0.1; the disagreement is continuous,
+not a mismatched subset, and it grows toward small galaxies:
+
+| true Re | mean abs shape difference |
+|---|---|
+| <= 0.386 | **0.1075** |
+| 0.386-0.5 | 0.1117 |
+| 0.5-0.75 | 0.0558 |
+| > 0.75 | 0.0247 |
+
+Largest exactly where S/N is lowest -- consistent with two renderings/measurement passes differing by
+noise, with ngmix's noise response amplifying it for marginal objects. **Which one is "correct" is
+therefore not the useful question; CONSISTENCY is.** The scoring truth is `r_sim_self`, so the label
+must be built from the same estimator. Done: `--label-source dump` builds the per-object target from
+`r_sim_self` instead of `R_snc`. Its out-of-fold quality against the scoring truth is **+0.08 +- 0.19%
+overall and +0.33 +- 0.92% at small size**. The retrain against it is queued (job 15505072).
+
+### 2. FAINT IS A MEASURED-SELECTION ARTEFACT -- the headline result of the night
+
+`SN` in the dump is `measured_flux_auto / measured_fluxerr_auto` -- a **MEASURED** quantity -- while
+every oracle feature, and the flow's whole response readout, is conditioned on **TRUE** properties.
+Cutting on measured S/N selects on the noise realisation, which a true-property model cannot reproduce
+by construction. That predicts an IRREDUCIBLE ceiling, and there is one: adding crowding information
+does nothing (D7 -2.52, **D8 = D7 + nbr_flux_max -2.45**), against D2's -10.88.
+
+**The control settles it.** Same rows, same models, faint defined by TRUE magnitude > 25.0 instead:
+
+| region | flow #1 (16 seeds) |
+|---|---|
+| faint, MEASURED S/N <= 13.09 | **-4.35 +- 0.85%** |
+| faint, TRUE mag > 25.0 (N = 982,943) | **-0.53 +- 0.57%** |
+
+**The flow has no faint defect under a true-property cut.** The -4.35% exists only when the region is
+selected on a measured quantity the model is not conditioned on. This retires the "faint is
+crowding-conditioning-limited" reading of 03q: the D2 -> D3 jump (-10.88 -> -3.48) is real, but it is
+the model recovering measured-S/N selection through crowding proxies, not a missing physical channel.
+
+Note the oracles go the OTHER way under the true-mag cut (+1.87 to +3.65, worse than the flow). They
+are fit on `r_sim_self` per object and are not optimised for that region's mean; this is a reminder
+that an oracle is a ceiling for the region it was scored in, not a universally better model.
+
+### Where this leaves the stated goal
+
+The goal was "fix flow #1's small/faint response defect". Under the project's own deliverable
+convention -- **TRUE-property cuts** ([[project_realistic_cuts]], GOALS.md) -- and with label and score
+on the same estimator, **there may be no defect to fix**:
+- faint (true mag): **-0.53 +- 0.57%**, consistent with zero, measured tonight;
+- small size (true Re, a true-property cut already): the -3.74% was a label artefact of -3.06%; the
+  retrain on the consistent label is queued and is the outstanding confirmation.
+
+**CAVEATS.** The faint result is 16 seeds but a single true-mag threshold. The small-size confirmation
+is not yet in. Nothing here touches constgold or `m` (firewall intact), and nothing has been promoted.
+**Do NOT read this as "the flow is fine" globally** -- it says the two specific defects that motivated
+03k-03v were artefacts of the label and of a measured-quantity region cut.
+
+**NEXT.** Confirm with the queued retrain that the small-size residual collapses when label and score
+use the same estimator. Then the open question becomes which g=0 measurement is physically right,
+which matters for the ABSOLUTE response scale (and hence `m`) even though it cancels in a
+label-consistent comparison.
+
+## 2026-08-03v (**ROOT CAUSE LOCALISED: the two g=0 shape sources are NOT the same measurement.** corr = 0.855 overall and **0.695 at small size**. The sheared legs are byte-identical (d_eS == 0.00000), so 100% of the label gap enters through the UNSHEARED leg. Which source is correct is now the single blocking question. Jobs 15504690 / 15504804 / 15504845.)
+
+**Files.** `scripts/diag_snc_source_decomp.py` (new), `jobs/job_snc_source_decomp.sh` (new).
+
+**THE DECOMPOSITION.** Each SNC estimator is a difference of two ngmix measurements, so the 03u label
+gap splits exactly into a sheared-leg and an unsheared-leg disagreement, and the two must add back to
+the measured gap. In-domain (Re > 0.3, mag < 26), 2,523,850 rows finite in all four sources:
+
+| | ALL | small size Re <= 0.386 |
+|---|---|---|
+| `<R_snc>` (pin's label) | +0.72308 | +0.51527 |
+| `<r_sim_self>` (scoring truth) | +0.72526 | +0.53035 |
+| gap | -0.00218 (-0.30%) | **-0.01507 (-2.84%)** |
+| **d_eS** sheared sources disagree | **+0.00000 +- 0.00000** | **+0.00000 +- 0.00000** |
+| **d_e0** unsheared sources disagree | +0.00218 +- 0.00157 | **+0.01507 +- 0.00465** |
+| d_eS - d_e0 (must equal the gap) | -0.00218 | -0.01507 |
+
+**The identity closes exactly at both rows.** The two SHEARED catalogues
+(`det_meas_crowd_g0.05_val_full` vs `det_meas_ngmix_g0.05_val`) return IDENTICAL ngmix shapes -- a
+useful fact in its own right, since it means those two are interchangeable. **Every bit of the label
+gap enters through the UNSHEARED leg.**
+
+**AND THE TWO g=0 SOURCES ARE NOT THE SAME MEASUREMENT:**
+
+| | N | corr | mean(diff) | std(diff) | std(lookup) | std(train) |
+|---|---|---|---|---|---|---|
+| ALL | 2,523,850 | **0.855** | +1.09e-04 | 0.193 | 0.357 | 0.358 |
+| small size | 594,510 | **0.695** | +7.54e-04 | 0.265 | 0.338 | 0.340 |
+
+`g0_lookup` (built from the raw `shape_catalogue_detect_position_secondaries` catalogues) and the
+`det_meas_ngmix_g0.0_train` leg disagree per object with a scatter of 0.19-0.27 against per-source
+scatters of ~0.35. They are not the same realisation or not the same estimator. **This also explains
+03q's corr(R_snc, r_sim_self) = 0.525 in full**: with d_eS identically zero, the g=0 sources are the
+only thing that can decorrelate the two response estimators.
+
+**SNC REQUIRES SUBTRACTING THE SAME GALAXY'S OWN UNSHEARED MEASUREMENT.** With corr 0.695 at small
+size, at least one of these two is not the SNC partner it is being used as. That is a defect in the
+LABEL CONSTRUCTION, upstream of the flow, the pin, the architecture and every lever tried in 03l-03s.
+
+**PROCESS NOTE -- an integrity check fired and was fixed, not narrated around.** The first in-domain
+run reported `*** DECOMPOSITION DOES NOT ADD UP ***` at small size (-0.01507 vs -0.01521, 0.9%).
+Cause: each quantity dropped its OWN non-finite rows, so the four means described four slightly
+different row sets. Fixed with a single shared finite mask across all four sources (76 rows of
+2,523,926); the identity then closes to all printed digits. The earlier numbers in this entry are
+from the corrected run only.
+
+**WHAT IS NOW BLOCKING.** Which g=0 source is correct. Until that is settled:
+- the fiducial flow's small-size deficit (-3.74%) has no established meaning -- its cell-pin target
+  comes from the same SNC lookup family;
+- 03r's per-object gain (+0.95) and 03s's ramp result were closing a gap to the label, not the truth;
+- 03k's "recoverable headroom" compared a fit trained on `r_sim_self` against a flow trained on the
+  `R_snc` family and was never like-for-like.
+**FAINT is untouched by all of this** (estimators agree to -0.70 +- 0.88%) and remains the one
+confirmed real self-response defect.
+
+**NEXT.** Identify what actually differs between the two g=0 catalogues -- realisation/`real` index,
+centroid convention (the lookup measures at DETECTED positions), PSF, or ngmix configuration. That is
+a provenance question about how each file was built, answerable by inspecting the builders and the
+sim directories, and it should be settled BEFORE any further flow work. A concrete first check: whether
+the two agree object-by-object on a quantity that should be identical regardless of shape estimator
+(e.g. true-property columns and detection flags), which separates "different realisation" from
+"different measurement of the same image".
+
+## 2026-08-03u (**THE SMALL-SIZE DEFECT IS A LABEL DISAGREEMENT, NOT A FLOW FAILURE.** The pin's label sits -3.06 +- 0.84% BELOW the scoring truth at small size (3.6 sigma) while agreeing to -0.35% overall. The flow matches its label to +0.33%; the arithmetic closes to 0.06 pt. FAINT is NOT explained by this and remains real. Jobs 15504622-3, 15504640.)
+
+**Files.** `scripts/diag_snc_estimator_gap.py` (new), `jobs/job_snc_estimator_gap.sh` (new),
+`scripts/diag_perobj_train_residual.py` (+`--rows train|gs|ruler` population ladder),
+`jobs/job_perobj_train_residual.sh` (`ROWS`).
+
+**THE CHAIN THAT COULD NOT ALL BE TRUE.** On small size (true Re <= 0.386):
+(1) the flow matches ITS OWN TARGET to **+0.33 +- 0.10%** -- and 03t's population ladder shows this
+holds on the TRAINING rows (+0.39%), the gS leg without both-detected matching (+0.18%), AND the
+ruler itself (+0.33%). So 03t's "population gap" reading was WRONG and is retracted: there is no
+population dependence at all.
+(2) the flow misses the DUMP TRUTH by **-2.68%** (03s, central extraction).
+(3) an oracle on the SAME features fit against that dump truth REACHES it, **+0.29 +- 0.82%** (03q).
+
+The only way all three hold is if the flow's TARGET disagrees with the dump truth at small size.
+
+**IT DOES.** Two SNC estimators of the same self-response exist in this project and the target and the
+score use DIFFERENT ones:
+
+| | small size | ALL | faint |
+|---|---|---|---|
+| ruler `R_snc` (the pin's label) | +0.51749 | +0.71569 | +0.37039 |
+| dump `r_sim_self` (the scoring truth) | +0.53383 | +0.71821 | +0.37300 |
+| **label/truth - 1** | **-3.06 +- 0.84% (DISAGREE)** | -0.35 +- 0.22% | -0.70 +- 0.88% |
+
+**THE ARITHMETIC CLOSES:** (1 + 0.0033)(1 - 0.0306) - 1 = **-2.74%** against the measured **-2.68%**.
+The flow faithfully reproduces a label that is 3% low at small size, and reads 2.7% low against the
+truth as a direct consequence.
+
+**03q'S GUARD SAW THIS AND MISSED IT.** It compared the two estimators, found means agreeing to 0.351%
+with correlation 0.525, and concluded "same quantity, independent measurement noise". That was an
+AGGREGATE comparison; the disagreement is region-dependent and cancels globally (-0.35%) while
+reaching -3.06% at small size. **A global mean cannot certify a label for regional use.**
+
+**WHAT THIS RETRACTS OR REFRAMES.** Every "the flow fails at small size" number in 03k-03t is, to
+first order, a statement about the LABEL:
+- 03k's headroom result (flow -3.42% where a 3-feature fit sits at +0.26%) -- the fit was trained on
+  `r_sim_self`, the flow on the `R_snc` family, so it was never a like-for-like comparison.
+- The fiducial cell-pin target is built by `compute_response_target_blend` from the SAME SNC lookup
+  family, so **the fiducial flow's -3.74% at small size has the same origin**. This is the defect the
+  owner pointed at in fig 5.
+- 03r's per-object gain (+0.95) and 03s's ramp result (-32.3 -> -10.9) stand as measured, but they
+  were closing a gap to a label, not to the truth.
+
+**WHAT SURVIVES UNTOUCHED.** **FAINT.** The two estimators agree there (-0.70 +- 0.88%, consistent),
+so the flow's ~-4.4% faint deficit is NOT a label artefact. 03q's finding that faint is
+crowding-conditioning-limited (D2 -10.88 -> D3 -3.48 via `nbr_flux_near`, D7 ceiling still -2.52,
+2.7 sigma from zero) is unaffected and is now the only confirmed real self-response defect.
+
+**WHICH ESTIMATOR IS RIGHT IS OPEN -- DO NOT ASSUME.** They differ in two ways, either of which could
+bias small objects:
+- **the g=0 measurement source**: `g0_lookup` is built from the RAW secondaries Shapes catalogues
+  (`shape_catalogue_detect_position_secondaries`), while the dump subtracts the `g0.0_train` leg;
+- **the selection**: the dump keeps only BOTH-DETECTED matched pairs, which at small size is exactly
+  where detection is marginal, so it plausibly retains the better-measured small objects and reads
+  HIGH -- the direction observed. `R_snc` requires only an SNC match (99.68%).
+
+**NEXT, and nothing downstream should move until this is settled.** Resolve which estimator is
+unbiased at small size, by (a) recomputing `R_snc` on the both-detected subset only -- if the -3.06%
+collapses, the both-detected cut is the whole effect and the dump truth is the selected quantity, not
+the population one; and (b) checking the two g=0 shape sources against each other directly on matched
+objects. Only then is it meaningful to ask whether the flow has a small-size defect at all.
+
+## 2026-08-03t (THE BINDING GAP IS A POPULATION GAP, NOT AN OPTIMISATION ONE. Model-vs-its-own-target reads +0.39 +- 0.11% at small size on the TRAINING rows and -2.8% on the RULER. The flow complies with its pin exactly where the pin was applied. STOP TUNING THE TRAINING OBJECTIVE. Job 15504568.)
+
+**Files.** `scripts/diag_perobj_train_residual.py` (new), `jobs/job_perobj_train_residual.sh` (new).
+
+**WHAT WAS ASKED.** 03s left two explanations for the ~2.8 pt small-size non-compliance:
+OPTIMISATION (the pin was applied to these rows and not minimised) or GENERALISATION (the model fits
+its target where trained and drifts on the ruler). Everything up to now had been measured on the
+RULER. This measures on the TRAINING catalogue, with the TRAINING readout (`model_selfresp` ==
+`build_shifted_context` + `model._mu`, central difference at delta = 0.02), against the TRAINING
+target -- model vs its OWN target, no sim truth anywhere, so nothing is left to blame but the fit.
+
+**RESULT** (3 seeds, per-object rw450, 800,000 training rows under the trainer's own cuts):
+
+| region | <r_i> | <t_i> | r/t - 1 |
+|---|---|---|---|
+| ALL | +0.7138 | +0.7128 | **+0.14 +- 0.02 %** |
+| small size Re <= 0.386 | +0.5156 | +0.5135 | **+0.39 +- 0.11 %** |
+| faint true mag > 25.0 | +0.3748 | +0.3742 | **+0.17 +- 0.02 %** |
+
+**THE SAME QUANTITY, TWO POPULATIONS: +0.39% on the training rows, -2.8% on the ruler.** The optimiser
+did its job. The response pin is minimised essentially exactly, at small size included. **The
+non-compliance of 03r/03s is not an optimisation failure and not a parameterisation failure**, and the
+"direct derivative head" proposed as the next step in 03s would have been built to fix a problem that
+does not exist. That proposal is WITHDRAWN.
+
+**WHY THE TWO CAN DIFFER, and where to look next.** The target is a function of SIX true properties.
+The model conditions on MORE than that -- `e1_input_p, e2_input_p, nbr_flux_max` on top of D6, and
+`rescale`/`build_shifted_context` additionally touch the SECONDARY columns. So the model's response is
+not a pure function of the D6 features, and its mean at fixed D6 can move with the distribution of
+everything else. Two populations differing in those extra conditioners will therefore disagree even
+with the pin perfectly satisfied on both. Known differences between the two row sets:
+
+- **catalogue**: `det_meas_crowd_conc_g0.0_train_full` (training) vs the g=0.05 val leg (ruler);
+- **selection**: training keeps rows detected in the g=0 leg; the ruler keeps only BOTH-DETECTED
+  matched pairs, which is a shear-dependent cut and removes ngmix failures;
+- **shear**: training rows are g=0, ruler rows carry |gamma| = 0.05.
+
+**CAVEATS.**
+- The 800k training rows are read as the FIRST record batches until the row budget is met, so they
+  are an early-CASE slice, not a random draw over cases. The trainer itself uses a priority reservoir
+  over the whole catalogue. This is fine for "does the model match its target on training-like rows"
+  but is NOT a held-out measurement -- these rows are largely INSIDE the training sample. A smooth
+  128-unit head over 4M rows is an implausible memoriser, but the number is in-sample and should be
+  read as such.
+- Errors here are bootstrapped over ROWS, not cases, so they are optimistic relative to every
+  ruler-side number in 03p-03s. The +0.39% is far from -2.8% either way, which is what carries the
+  conclusion; do not compare its error bar directly against the ruler errors.
+- 3 seeds, per-object rw450 only. No `m`, no constgold (firewall intact).
+
+**NEXT.** The question is now "which population difference moves the response", not "why will the flow
+not fit". The cheap decisive test is to run this SAME diagnostic on the RULER rows (model vs target,
+no truth): it must reproduce ~-2.8%, and then the three differences above can be switched on one at a
+time -- the both-detected cut is the prime suspect, since it is shear-dependent and is exactly the
+kind of selection that AGENTS.md already flags as silently removing objects.
+
+## 2026-08-03s (BINDING GAP: FIVE causes ruled out, none explains it. The flow misses ITS OWN verified target by ~2.8 pt at small size despite having the features, the capacity and the weight. Extraction mismatch REFUTED (central 0.02 == forward 0.05). Jobs 15503139-40 (capacity), 15503423-4/15503446-7 (SWA), 15503522-3 (extraction).)
+
+**Files.** `scripts/dump_halfshear_selfresp.py` (`--extraction`, `--extraction-delta`; seed regex now
+also matches raw `_s<seed>.pt`), `jobs/job_hs_selfresp_pilot.sh` (`SWA`, `EXTRACT`, `EXTDELTA`).
+All new switches DEFAULT to the previous behaviour, so every earlier dump is reproducible unchanged.
+
+**THE QUESTION.** 03r built a per-object target, verified correct to +0.12 +- 0.58% at small size, and
+the flow captured only ~24% of the 4.03 pt it opened up. Since `m` is not the issue and the target is
+right, the remaining ~3 pt is the flow failing to comply. This entry tries to find out why.
+
+**WHERE THE FAILURE IS, stated exactly.** Two independently measured numbers on the same rows and
+region (small size Re <= 0.386): the TARGET sits at **+0.12%** against the ruler truth (03r, OOF), and
+the trained flow sits at **-2.68 to -2.78%**. So the flow misses ITS OWN TARGET by ~2.8 pt. This is
+not a supervision error and not a truth error; it is non-compliance.
+
+**FIVE CANDIDATE CAUSES, ALL RULED OUT.**
+
+1. **INFORMATION -- ruled out by code, no job needed.** After the `[ABLATION S1]` measured->true swap
+   the mean head conditions on `e1_input_p, e2_input_p, sersic_n_input_p, r_input_p, Re_input_p,
+   nbr_flux_near, nbr_flux_far, nbr_flux_max`. The D6 target needs `r_input_p, Re_input_p,
+   sersic_n_input_p, e_abs, nbr_flux_near, nbr_flux_far` -- a strict SUBSET (|e| is recoverable from
+   e1,e2; the flow additionally has nbr_flux_max). **`--flow-blind-features e1_input_p e2_input_p`
+   blinds only the RESIDUAL FLOW, not the mean head that generates the response** -- worth stating
+   because the flag name reads as though the response channel were blinded.
+2. **CAPACITY -- null, now tested against a CORRECT target.** small size: mean_hidden 128 -> **-2.78**,
+   256 -> **-2.82**, 512 -> **-2.96**; ramp -14.5 / -14.4 / -16.8. Quadrupling the head does nothing.
+   03o already found capacity null, but that was against the CELL pin whose target could not express
+   within-cell structure at all, so the null did not transfer; it does now.
+3. **PIN WEIGHT -- null, and CLOSED at per-object scale (job 15503582).** small size: rw100
+   **-2.80**, rw450 **-2.78**, rw5000 **-3.14**. An 11x weight increase makes it slightly WORSE, so
+   the gap is NOT a tradeoff being lost on weight.
+
+   **But the ramp keeps responding, monotonically: -32.28 (cell pin) -> -14.48 (rw450) -> -10.90
+   (rw5000).** That dissociation is the sharpest clue in this entry. **The pin controls the SHAPE of
+   the response across the cell and does so better the harder it is driven, while the region MEAN
+   stays ~2.7-3.1% low regardless.** The model is not mis-shaped in the small-size region; it is
+   offset. Whatever sets that level is not reachable by the response pin at any weight.
+4. **SWA BLUNTING THE DERIVATIVE -- REFUTED, and it runs the other way.** The response is a derivative
+   and weight-averaging preserves levels, not slopes, so SWA was a natural suspect. Removing it makes
+   the per-object model WORSE at small size (**-4.11** vs -2.78) while the ramp is unchanged
+   (-13.68 vs -14.48). SWA is carrying about 1.3 pt of the benefit. The fiducial control is flat
+   (-3.53 vs -3.74, ramp -32.10 vs -32.28), so this is specific to the per-object arm. **The ramp
+   reduction is robust to SWA**, which strengthens 03r's mechanism result.
+5. **TRAIN/SCORE EXTRACTION MISMATCH -- REFUTED.** Training pins the MEAN HEAD's CENTRAL difference at
+   `--response-delta 0.02`; the dump grades the FULL FLOW's FORWARD chord 0 -> gmed=0.05, and the
+   target is itself a forward-0.05 quantity. Different functionals if R is nonlinear in g, and this
+   project has recorded the two extractions disagreeing before (+0.49 vs +0.60 faint). It would also
+   have explained weight-insensitivity perfectly. It does not survive measurement: scoring both models
+   with `--extraction central --extraction-delta 0.02` reproduces the forward numbers to 0.1 pt --
+   per-object **-2.68** vs -2.78, fiducial **-3.75** vs -3.74, ramps -14.41 vs -14.48 and -32.22 vs
+   -32.28. **R is linear in g over 0..0.05 here, and mean-head-vs-sampled-flow does not bite.**
+
+**WHAT THIS LEAVES.** The response is a DERIVATIVE of a mean head whose other, vastly better-determined
+job is fitting measured shapes under the NLL. The flow has the inputs, the capacity and the weight to
+comply, and complies only to ~24% -- in LEVEL. In SHAPE it complies well and improves with weight. The surviving hypotheses are OPTIMISATION
+(the derivative is a second-order property; 80 epochs at lr 7e-4 may simply not converge it) and
+PARAMETERISATION (r_i is reachable only through d(mu)/d(e), so nothing supervises the derivative
+directly -- it is always inferred from a function fitted for its values).
+
+**SCOPE.** 3 seeds throughout; no `m`, no constgold (firewall intact). Every "null" here means "under
+3-seed noise", not "exactly zero". The ~2.8 pt non-compliance is far above that noise and is the one
+resolved statement.
+
+**NEXT.** The shape/level dissociation reframes the question: stop asking why the flow will not fit
+the target, and ask **what sets the LEVEL of its response at small size**, since the pin demonstrably
+does not, at any weight. Two live options: a DIRECT derivative parameterisation (a head that outputs
+the response itself, so the level is supervised rather than inferred from a values-fitted function),
+and a diagnostic that decomposes the small-size level offset -- per-object r_i vs t_i at TRAIN time,
+region-resolved -- to see whether the offset is already present in the training objective or appears
+only in evaluation. The diagnostic is cheap and should come first; it decides whether this is an
+optimisation failure or a parameterisation one.
+
+## 2026-08-03r (PER-OBJECT PIN BUILT AND PILOTED. The MECHANISM IS CONFIRMED -- the within-cell ramp halves, -32.3 -> -14.5 %/cell (2.5 sigma), the first lever ever to move it resolvably. But the small-size REGION gain is +0.95 +- 1.15 (0.8 sigma, NOT resolved) and the flow captures only ~24% of its own measured ceiling. Jobs 15501602/15501654 (target), 15501629/15501679/15501690/15501713 (smoke), 15501735-6 (train), 15502802-3 (dump).)
+
+**Files.** `scripts/build_perobj_target.py` (new), `jobs/job_build_perobj_target.sh` (new),
+`sbs_shear/preprocessing.py` (+`intrinsic_e_abs`), `scripts/train_measurement_model_swa_s1_truecond.py`
+(`--response-target-perobj`, per-object branch in `epoch_response`, two extra read columns),
+`jobs/job_s2c_domain_train.sh` (`PEROBJ`, `EPOCHS` pass-through).
+
+**WHAT WAS BUILT.** The per-CELL MEAN pin is replaced by a per-OBJECT target: E[R | 6 shear-free true
+properties], fit on the SAME half-shear ruler label, under the SAME domain cuts (mag < 26, Re > 0.3)
+and the same 1/n_pairs weighting as the grid target it replaces. **No new information enters** -- it is
+the existing supervision signal, unbinned. D6 not D7 because 03q measured them equal at small size
+(+0.29 vs +0.31) and `e_dot_ghat` needs a shear direction the g=0 training catalogue does not have.
+
+Implementation: `bin_targets` holds one target per training row and `binid` is the row's own index, so
+the loss is a GATHER, O(batch), never the O(catalogue) scatter. The grid path is untouched -- a
+whitespace-ignoring diff shows only an added `else:` -- and the flag defaults off. `--response-bin-ema`
+and `--response-global-anchor` are REFUSED in this mode; both are per-cell constructions.
+
+**TWO SILENT FAILURES CAUGHT BY EXPLICIT REFUSALS, both worth keeping.**
+1. `e_abs` is DERIVED, not a raw column. The trainer refused rather than guessing. The formula now
+   lives ONCE in `sbs_shear.preprocessing.intrinsic_e_abs` (|e| = (1-q)/(1+q); the position angle
+   cancels), verified against the oracle path to 1.1e-16, and the target DECLARES how it is built.
+   Two private copies drifting apart would have corrupted the supervision signal with nothing raising.
+2. `axis_ratio_input_p` and `sersic_n_input_p` were never READ from the catalogue. Same refusal caught
+   it; both are now in the read set.
+
+**TARGET QUALITY.** Out-of-fold (grouped 5-fold over cases) it reproduces the ruler label to
+**+0.03 +- 0.15%** overall and **+0.12 +- 0.58%** at small size. Its spread is broad -- 3.42% of
+training rows fall outside [0, 2], 1st/99th percentiles -0.03/+2.15 against a mean of 0.713 -- because
+it is a noisy conditional-mean estimate (per-object label std 4.10). That inflates variance but does
+NOT bias region means, and it is already baked into the measured ceiling, since the D6 oracle IS this
+regressor. Percentiles are now printed at train time so this stays visible.
+
+**RESULT** (3 seeds 501/502/503, identical rows and truth, bootstrapped over cases; two response
+weights because per-object errors are ~20-100x larger than per-cell ones, so 450 is a far harder pull
+than it was):
+
+| quantity | fiducial | per-obj rw450 | per-obj rw100 |
+|---|---|---|---|
+| ALL | -0.32 +- 0.19 | -0.34 (-0.02 +- 0.27) | -0.12 (+0.20 +- 0.27) |
+| small size Re <= 0.386 | -3.74 +- 0.80 | **-2.78 (+0.95 +- 1.15)** | **-2.80 (+0.94 +- 1.15)** |
+| faint S/N <= 13.09 | -3.80 +- 0.85 | -4.50 (-0.71 +- 1.19) | -4.45 (-0.65 +- 1.19) |
+| within-cell ramp | -32.28 +- 5.17 | **-14.48 +- 4.90** | **-13.98 +- 4.93** |
+| val NLL (s501/2/3) | 1.443/1.411/1.403 | 1.426/1.488/1.396 | 1.368/1.324/1.471 |
+
+**THE MECHANISM IS CONFIRMED.** The ramp inside the fiducial's first size cell halves: -32.28 ->
+-14.48 %/cell, a change of 17.8 +- 7.1 = **2.5 sigma**. Every previous lever failed to move it
+resolvably (pin resolution -19%, 0.8 sigma; log-Re -39%, 1.8 sigma; response weight -30%, ~1.8 sigma).
+This is exactly what 03p predicted removing the binning would do, and it is the first direct
+confirmation that the within-cell ramp was a SUPERVISION-GRANULARITY artefact.
+
+**BUT THE REGION GAIN IS NOT RESOLVED, AND THE CEILING IS NOT REACHED.** +0.95 +- 1.15 is 0.8 sigma.
+The two weights agreeing to 0.01 pt shows the lever is INSENSITIVE TO WEIGHT -- it is saturated, not
+under-driven -- but they share seeds, target and rows, so that agreement is NOT independent
+statistical evidence and must not be read as significance. And the achieved -2.78% sits far from the
++0.29% ceiling 03q measured for this exact target: of 4.03 pt available the flow captures **0.95 pt,
+~24%**. That is the same BINDING failure every pin probe showed -- the flow does not reach its target
+-- now isolated on a target we know is right to +0.12 +- 0.58% at small size.
+
+**Faint got slightly worse** (-0.71 / -0.65, not resolved), consistent with D6's own faint ceiling
+being poor (-3.17%); faint was never expected to close here.
+
+**SCOPE.** 3 seeds, so no `m`, and the firewall holds (half-shear self-response only, constgold never
+read). "Not resolved" means the change is under the 3-seed noise, not that it is zero.
+
+**NEXT.** Two materially different options, and the choice matters:
+(a) 13 more seeds at rw450 to resolve +0.95 (16-seed error ~ +-0.5), which turns a 0.8-sigma hint into
+    a result or a null -- but cannot exceed ~1 pt of the 4 available whatever it returns;
+(b) attack the BINDING gap instead: the target is right and the flow reaches a quarter of it, so the
+    remaining 3 pt is the flow's own capacity/optimisation, not its supervision. (a) is launched;
+    (b) is the larger prize and is untouched.
+
+## 2026-08-03q (PER-OBJECT SUPERVISION, SCORED ON THE CONDITIONAL: it CAN close SMALL SIZE (D7 +0.31 +- 0.92 vs flow -4.28, 3.2 sigma) but CANNOT close FAINT (ceiling itself -2.52 +- 0.94, 2.7 sigma from zero). Jobs 15501436 (refused) / 15501465.)
+
+**Files.** `scripts/diag_perobj_conditional.py` (new), `jobs/job_perobj_conditional.sh` (new).
+
+**WHY, given 03n already priced this lever.** 03n scored per-object supervision on aggregate `m` and
+read it as a null -- but it also found flow #1 already matches the D7 oracle in AGGREGATE. The
+aggregate therefore cannot see this lever at all, whatever it does to the tails. This run confirms
+that directly: on ALL rows the flow is -0.49% and every oracle is +0.06 to +0.08%, a spread of
+0.4 pt. **The defect lives in the tails, so the ceiling has to be read in the tails.**
+
+**THE FIRST ATTEMPT REFUSED, AND THE GUARD WAS RIGHT TO FIRE (job 15501436).** It fit the arms on the
+ruler's per-object `R_snc` and scored them against the dump's `r_sim_self`. On 2,326,997 overlapping
+rows those two agree in MEAN to 0.351% but correlate only **0.525**. They are two different
+ESTIMATORS of the same response: the dump forms e(g)-e(0) from a both-detected merge against the
+`g0.0_train` leg, the ruler subtracts `g0_lookup` built from the raw secondaries Shapes catalogues --
+different g=0 measurement, hence independent measurement noise. Worth recording on its own:
+**per-object response labels in this project are far noisier than their means suggest.**
+
+For a mean-based region residual, fitting on a noisy-but-unbiased label is legitimate, so that
+refusal was CONSERVATIVE, not a real blocker. It was not reinstated; instead the arms now fit on the
+**dump's OWN `r_sim_self`** and take only FEATURES from the ruler (per-object true properties, no
+measurement noise). Fit and score are then the same quantity by construction, and this becomes a
+direct extension of the 3-feature fit of 03k, which also fit on `r_sim_self`.
+
+**SETUP.** Grouped 5-fold over CASES, so every row gets an OUT-OF-FOLD prediction and oracles and
+flow are scored on identical rows; the script refuses if a case lands on both sides of a fold. The
+feature merge keeps **98.42%** (2,327,071 / 2,364,527); unmatched rows are DROPPED, never zero-filled,
+and the flow is re-scored on the same subset. Shared features (`Re_input_p`, `nbr_flux_near`) were
+verified identical between the two sources (0.000% disagree, max |diff| 1.2e-07) before the dump's
+copies were kept.
+
+**RESULT** (residual = model/truth - 1, bootstrapped over cases; flow = 16 seeds):
+
+| region | flow #1 | D2 (mag,Re) | D3 (+nbr_flux_near) | D7 (all 7) |
+|---|---|---|---|---|
+| ALL (N=2,326,997) | -0.49 +- 0.19 | +0.08 +- 0.20 | +0.08 +- 0.21 | +0.06 +- 0.21 |
+| small size Re <= 0.386 (N=585,223) | -4.28 +- 0.82 | +1.72 +- 1.01 | +1.18 +- 0.96 | **+0.31 +- 0.92** |
+| faint S/N <= 13.09 (N=577,620) | -4.35 +- 0.89 | **-10.88 +- 0.82** | -3.48 +- 0.84 | **-2.52 +- 0.94** |
+
+**SMALL SIZE: THE LEVER IS LIVE.** D7 reaches +0.31 +- 0.92, statistically indistinguishable from
+zero, against the flow's -4.28 -- closer to zero by 3.97 +- 1.23 (**3.2 sigma**). And most of that is
+bought by D2, which carries ONLY the grid's own information (mag, Re) with the binning removed and
+still reaches +1.72. **So the small-size defect is primarily a BINNING problem, which is exactly the
+mechanism 03p proposed** (a per-cell MEAN cannot see a ramp inside its own cell) and exactly what the
+five pin-configuration probes could not fix, because none of them removed the binning.
+
+**FAINT: THE LEVER IS NOT ENOUGH.** D7 sits at -2.52 +- 0.94, still **2.7 sigma from zero**, and only
+1.83 +- 1.30 (1.4 sigma) better than the flow -- not resolved. Per-object supervision would not close
+faint. The D2 -> D3 step is the informative one: **-10.88 -> -3.48, i.e. 7.4 pt bought by
+`nbr_flux_near` alone.** Mag+Re is catastrophically insufficient at faint, so faint is
+CONDITIONING-limited (crowding), where small size is BINNING-limited. They are different failures and
+should stop being quoted as one "small/faint defect".
+
+**CAVEATS, all of which cut against over-reading this.**
+- The oracles are OUT-OF-FOLD REGRESSORS = a CEILING, not an achievable flow result. Every pin probe
+  showed the flow does not reach its target, so a per-object retrain lands somewhere short of +0.31.
+- The oracle is fit on the same `r_sim_self` it is scored against, so it is unbiased against THIS
+  truth by construction. The test answers "do the features carry the information", NOT "is the truth
+  right". A region-dependent bias in `r_sim_self` would be reproduced, not exposed, here.
+- The 98.42% subset shifts the flow's small-size residual: -3.82% on the full dump vs -4.28% on the
+  subset (16 seeds). All arms in the table share the subset, so the COMPARISON is like-for-like, but
+  the absolute flow number is not the full-population one.
+- One threshold per region, not a profile.
+
+**NEXT.** A per-object-supervised retrain is now justified ON SMALL SIZE and only there; it needs new
+plumbing (a per-object target replacing the grid pin in
+`train_measurement_model_swa_s1_truecond.py`), so it is a build, not a parameter change. It should be
+scored on this same conditional harness and NOT on aggregate `m`, which is blind to it. Faint needs a
+different answer -- the D2 -> D3 jump says the direction is crowding conditioning, not supervision
+granularity. Neither is a `m` claim: 16 seeds and a constgold pass would be required for that, and
+the firewall holds here (half-shear self-response only, constgold never read).
+
+## 2026-08-03p (PROBE 2 RESULT: RESPONSE-WEIGHT IS NULL ON THE DEFECT AND NEGATIVE ON FAINT. The pin residual SATURATES: 4.4x the weight buys 12%, 18x buys 16%, and the NLL blows up. Fifth and last pin lever. Jobs 15500660-1 / 15501294-5.)
+
+**Files.** No code change; `jobs/job_s2c_domain_train.sh` was already parameterised by `RW`.
+Two arms bracketing the fiducial `--response-weight 450`, everything else fiducial (mean_hidden 128,
+no log transform, fiducial `response_target_crowd_rblend_snc_c0-99_6x6x5_dom.npz`), seeds 501/502/503:
+`ablate_s2c_lt500_rw2000` (RW=2000) and `ablate_s2c_lt500_rw8000` (RW=8000). Dumps at
+`$CACHE/pin_realloc/halfshear_selfresp_rw{2000,8000}.feather`.
+
+**THE LEVER ENGAGED — that is not in doubt.** Final validation pin residual (`val_resp`, mean over
+the three seeds):
+
+| arm | val_resp | val NLL (s501/502/503) |
+|---|---|---|
+| fiducial RW=450 | 0.00353 | 1.443 / 1.411 / 1.403 |
+| RW=2000 | 0.00312 (-12%) | 1.487 / 1.465 / 1.462 |
+| RW=8000 | 0.00295 (-16%) | 1.788 / 1.539 / 1.773 |
+
+**It SATURATES.** A 4.4x weight increase buys 12%; a further 4x buys only 4 more points, while the
+NLL degrades badly and becomes seed-unstable (1.79 / 1.54 / 1.77). The flow cannot match the
+per-cell targets better than ~0.0029 at any weight. That floor is representational, not a matter of
+the pin being under-weighted.
+
+**SCORED against the fiducial on IDENTICAL rows, same 3 seeds, same truth** (`score_pin_pilot.py`;
+2,364,527 rows aligned, truth `<R_self>` = 0.72023), bootstrapped over cases:
+
+| region | fiducial | RW=2000 | RW=8000 |
+|---|---|---|---|
+| ALL | -0.32 +- 0.19% | -0.68 (change -0.36 +- 0.27) | -0.52 (-0.20 +- 0.27) |
+| small size Re <= 0.386 | -3.74 +- 0.80% | -3.97 (**-0.23 +- 1.14**) | -3.56 (**+0.18 +- 1.14**) |
+| faint S/N <= 13.09 | -3.80 +- 0.85% | -5.46 (**-1.66 +- 1.18**) | -5.31 (**-1.51 +- 1.18**) |
+
+**NULL on small size** — the two arms straddle zero (-0.23, +0.18) with an error four times the
+change. **The faint region gets WORSE**, and this is the one line worth taking seriously: each arm
+alone is only ~1.4 sigma, but TWO INDEPENDENT ARMS agree in sign and magnitude (-1.66, -1.51). It is
+recorded as suggestive, NOT resolved.
+
+The within-cell ramp shrinks in both arms (-32.28 -> -23.19 / -22.46 %/cell, ~1.8 sigma) — the same
+partial, unresolved ramp reduction the log-Re arm produced in 03o, and again it buys NOTHING in the
+region residuals. A shrinking ramp that does not move the conditional has now appeared twice.
+
+**WHY MORE PIN WEIGHT CANNOT FIX THIS (the mechanism, stated as an interpretation).** The pin
+constrains a per-cell MEAN. The defect is a ramp of -23 to -32 %/cell *inside* the very first size
+cell. A mean constraint is blind to structure within its own cell, so raising its weight forces the
+cell mean to match harder while leaving the within-cell shape free — which is exactly the observed
+pattern (val_resp falls, region conditional does not move). Making cells finer was tested separately
+(mf08, 03m) and was also null, because the finer cells still only constrain means and the ramp
+persists inside them.
+
+**THE PIN LEVER IS NOW EXHAUSTED — five independent attempts, all null on the target defect:**
+
+| lever | entry | small-size change |
+|---|---|---|
+| edge allocation (4 grids) | 03l | null, `m` spread 0.019 pt |
+| cell resolution (real retrain, mf08) | 03m | -0.05 +- 1.14 |
+| mean-head capacity 128 -> 512 | 03o | null, faint trends worse |
+| log-Re input transform | 03o | null; ramp -39%, unresolved |
+| response weight 450 -> 2000 -> 8000 | **03p** | -0.23 / +0.18 +- 1.14 |
+
+Against this, a handicapped 3-feature pin-free `HistGradientBoostingRegressor` on the SAME truth
+sits at **+0.26 +- 1.14%** (small) and **+1.32 +- 1.49%** (faint) where the flow is at -3.7/-3.8
+(03k, job 15494037). **The information is present in the features; the flow's response extraction is
+not reaching it, and no configuration of the per-cell mean pin changes that.**
+
+**CONCLUSION, per the pass/fail criterion recorded in 03o before this run.** The small/faint
+self-response defect is NOT reachable by re-weighting or re-parameterising the current flow. Closing
+it needs a different response estimator or a supervision signal with within-cell resolution, not a
+better-tuned pin.
+
+**SCOPE / WHAT THIS IS NOT.** 3 seeds, so NO `m` is quoted and none of this touches constgold (the
+firewall holds — half-shear self-response only). "Null" here means "not resolved at 3-seed
+precision, with the change four times smaller than its error", not "proved exactly zero". The
+levers are individually exhausted; a combination was not tested.
+
+**NEXT.** Two candidates, both untested: (1) supervision with within-cell resolution — the per-object
+oracle path (D7) rather than a per-cell mean; note 03n priced per-object conditioning as worth
+1.05 pt in aggregate but found flow #1 already matches D7's `<R_flow>`, so this must be scored on the
+CONDITIONAL, not the aggregate, to be informative. (2) The user's deferred domain change
+(Re > 0.25", S/N > 10) — flagged as WIDENING the domain into the 0.25-0.30" band where the flow is
+worst, so it should be scored, not assumed neutral, and kept separable from any estimator change.
+
+## 2026-08-03o (PROBE 1 RESULT: BOTH ARMS NULL. Neither mean-head capacity (128->512) nor a log-Re input transform resolvably moves the small/faint defect. One suggestive-but-UNRESOLVED signal: log-Re cuts the within-cell ramp 39% (-32.3 -> -19.6 %/cell, 1.8 sigma) without improving the region residual. Jobs 15499886 / 15499919 / 15500528-9.)
+
+**Files.** `sbs_shear/selection_model.py` (`TabularPreprocessor` gains optional `log_features`),
+`scripts/train_measurement_model_swa_s1_truecond.py` (`--log-condition-features`),
+`jobs/job_s2c_domain_train.sh` (optional `LOGCOND` pass-through). All default to EMPTY, so every
+prior run and checkpoint is byte-identical; the fiducial checkpoint was verified to load with
+`log_features = ()` and 19/19 tests pass.
+
+**WHY 1b EXISTS.** Code inspection: `Re_input_p` reaches the mean head RAW and linearly standardised
+(mean 0.593, scale 0.271). The response rise 0.244 -> 0.586 across Re 0.300-0.355 therefore occupies
+**4.6%** of the standardised input range, and a smooth network must produce a near-step across that
+sliver. Under `log` it becomes **10.5%**. That is a REPRESENTATION fix, distinct from capacity, and
+closer to what the tree regressor does with sharp splits.
+
+**THE TRANSFORM IS STORED IN THE PREPROCESSOR STATE, not applied trainer-side**, so inference cannot
+forget it. A train/inference mismatch here would be silent and would corrupt every response. Verified
+per checkpoint that exactly one lever moved: fiducial `mean_hidden=128, log_features=()`;
+mh512 `512, ()`; logre `128, ('Re_input_p',)`.
+
+**Scored exactly as 2026-08-03n**: identical rows, identical truth, same three seeds both sides.
+
+| region | fiducial | 1a mh512 | change | 1b logre | change |
+|---|---|---|---|---|---|
+| ALL | -0.32 +- 0.19 | -0.54 +- 0.19 | -0.22 +- 0.27 | -0.36 +- 0.19 | -0.04 +- 0.27 |
+| small Re <= 0.386" | -3.74 +- 0.80 | -3.89 +- 0.81 | -0.16 +- 1.14 | -3.33 +- 0.82 | +0.40 +- 1.14 |
+| faint S/N <= 13.09 | -3.80 +- 0.85 | -4.67 +- 0.82 | -0.88 +- 1.18 | -4.25 +- 0.83 | -0.45 +- 1.19 |
+
+**NOT ONE CHANGE IS RESOLVED.** Probe 1 is a null on the quantity it was run to move.
+
+**1a trends WORSE, consistent with the standing record.** Capacity 128 -> 512 moves ALL to -0.54 and
+faint to -4.67, both negative-trending though unresolved. This matches the memory note that a capacity
+increase did not help a related size issue. **Capacity is not the lever; stop trying it.**
+
+**THE ONE SIGNAL WORTH RECORDING, EXPLICITLY UNRESOLVED.** log-Re cuts the within-cell ramp from
+**-32.28 +- 5.17** to **-19.64 +- 4.92 %/cell** -- a 39% reduction, change +12.6 +- 7.1, **1.8 sigma**.
+That is the largest movement any lever has produced on the ramp (the edges pilot managed +6.1 +- 7.1)
+and it is in the direction the representation argument predicts. **It is NOT resolved at 2 sigma and
+must not be quoted as a result.**
+
+**AND THE CAUTION THAT MATTERS MORE:** the ramp reduction did NOT buy a better region residual
+(small-size +0.40 +- 1.14, unresolved). **So even if the ramp effect is real, it does not follow that
+it fixes the defect we care about.** Reducing the within-cell ramp and closing the small-size bias are
+evidently not the same thing, which weakens the mechanism story in 2026-08-03l: the ramp may be a
+symptom that can be treated without touching the cause.
+
+**Next.** The remaining untested suspect from 2026-08-03n is NLL dominance: the pin is a per-CELL
+squared error while the NLL is per-ROW, and small/faint rows are numerous with broad distributions, so
+the NLL gradient there may simply outweigh the pin. Direct test: raise `--response-weight` from 450.
+Cheap, one lever, same scoring harness. If that is also null, the defect is not reachable by
+re-weighting or re-parameterising the current flow and the honest conclusion is that closing it needs
+a different response estimator, not a better-tuned flow.
+
+## 2026-08-03n (PILOT RESULT: NULL. The prediction FAILED and the pin's cell resolution is EXONERATED -- halving the first size cell did not move the small-size defect (-3.74 -> -3.79%) and barely touched the within-cell ramp (-32.3 -> -26.2 %/cell, change not resolved). The flow's own smoothness, not the pin, is the cause. Jobs 15499621 / 15499746 / 15499792.)
+
+**Files.** `jobs/job_hs_selfresp_pilot.sh` (NEW), `scripts/score_pin_pilot.py` (NEW),
+`jobs/job_score_pilot.sh` (NEW). Ran on `cip` a40-16gb vGPU slices (`inter` was saturated) with
+`NO_EXPANDABLE_SEGMENTS=1` and 34G/8c; 14-21 min per seed against the 90-min wall.
+
+**Scoring design.** Fiducial dom6x6 vs pilot domB6 on IDENTICAL rows (2,364,527, asserted equal
+`case`/`input_index` and an identical truth column), same half-shear self-response truth, and **the
+same three seeds 501/502/503 on both sides** -- the fiducial dump has 16, so taking the common three
+removes seed count as a confound and leaves the pin's size edges as the only difference.
+
+| region | fiducial | pilot | change |
+|---|---|---|---|
+| ALL (2,364,324) | -0.32 +- 0.19 % | -0.34 +- 0.19 % | -0.02 +- 0.27 **not resolved** |
+| small size Re <= 0.386" (594,540) | -3.74 +- 0.80 % | -3.79 +- 0.82 % | -0.05 +- 1.14 **not resolved** |
+| faint S/N <= 13.09 (589,839) | -3.80 +- 0.85 % | -3.70 +- 0.83 % | +0.10 +- 1.19 **not resolved** |
+
+**Within-cell ramp, measured on the FIDUCIAL cell [0.300, 0.3552] for both** (the pilot's own edges
+differ, so its own cells would be a different question): fiducial **-32.28 +- 5.17 %/cell**, pilot
+**-26.23 +- 4.90 %/cell**, change +6.05 +- 7.12 -- **not resolved. The ramp SURVIVES even though the
+pilot's pin now splits that range into two cells.**
+
+**VERDICT -- prediction 3 of 2026-08-03m fires.** Predictions 1 and 2 both failed: the small-size
+conditional did not improve and the ramp did not shrink resolvably. Per the pre-registered reading,
+**pin cell resolution is EXONERATED as the cause of the flow's small/faint defect.** If the pin's
+piecewise-constant cell were imposing the flattening, halving the cell that spans a 2.4x rise in the
+truth would have visibly reduced the ramp. It did not. **The over-smoothing is intrinsic to the flow.**
+
+**This retires the whole grid-edge line.** Across four independent probes -- aggregate `m` (0.003 pt,
+job 15489783), the small-size oracle conditional, the within-cell ramp, and now a real retrain -- the
+pin's binning is not what limits flow #1. **Do not spend further effort on pin edges.** The one
+surviving caveat is that the pilot is a PARTIAL version of arm B (alpha 0.75, forced by the 1,875
+cell floor), so a more aggressive re-binning is not strictly excluded -- but arm B's own ORACLE, which
+is the ceiling of any such grid, was already null on aggregate `m`, so there is no headroom hiding
+behind the partial implementation.
+
+**WHAT THE PILOT BOUGHT.** ~1 GPU-hour to kill a hypothesis that would otherwise have consumed a
+16-seed run (~20 GPU-hours), and it did so on a firewall-clean ruler with the prediction recorded in
+advance.
+
+**REMAINING SUSPECTS, in order.** (1) The flow's MEAN HEAD is a smooth network of `Re`, while the true
+`R(Re)` rises 0.244 -> 0.586 over 0.055"; the tree regressor that closes this gap makes SHARP splits
+and the flow structurally cannot. A basis expansion or `log Re` input, or more `--mean-hidden`
+capacity, is the natural next probe -- **but note the memory record that a capacity increase did not
+help a related size issue, so capacity alone is the weaker of the two.** (2) NLL dominance at
+small/faint, testable by raising `--response-weight` from 450. Neither is tested here.
+
+**Next.** Probe (1) with a cheap 1-2 seed run before anything larger. The domain change (Re > 0.25",
+S/N > 10) is still pending and is now MORE relevant, since it widens into the 0.25-0.30" band where
+this unfixed defect is worst.
+
+## 2026-08-03m (3-SEED PILOT LAUNCHED, edges-only, one lever. PREDICTION RECORDED BEFORE RESULTS. A cell-count assertion caught the first candidate target and killed it before any GPU spend. Jobs 15499440 / 15499460 / 15499473.)
+
+**Files.** `jobs/job_resp_target_domB6.sh` (NEW), `jobs/job_resp_target_scan.sh` (NEW). NO trainer or
+job-script change was needed: `jobs/job_s2c_domain_train.sh` is already parameterised by
+`TAG`/`RESP`/`SEEDS`, so the pilot is byte-identical to the fiducial training except the response
+target.
+
+**THE FIRST CANDIDATE WAS REJECTED BY ITS OWN ASSERTION.** Arm B's size edges (alpha 0.40) gave a 3-D
+min cell of **956** -- below the fiducial's 1,875 and near the **611** that got the 8x8 grid rejected.
+`make_response_edges.py --min-frac` guards the 1-D MARGINAL, but the binding constraint is the 3-D
+CELL and the axes are correlated (small galaxies concentrate in particular mag/crowd cells), so the
+marginal estimate was ~10x optimistic. **This is a defect in `make_response_edges.py`'s guard, not
+just in this run** -- its `alpha` is honest about the marginal and silent about the joint.
+
+Occupancy scan (job 15499460), choosing on cell counts alone with no m and no constgold in evidence:
+
+| candidate | alpha | 3-D min cell |
+|---|---|---|
+| arm B | 0.40 | 956 FAIL |
+| mf06 | 0.60 | 1,579 FAIL |
+| **mf08 (selected)** | **0.75** | **1,940 PASS** |
+| mf10 | 0.85 | 2,463 PASS |
+
+**PILOT TARGET:** `response_target_crowd_rblend_snc_c0-99_6xB6mf08x5_dom.npz`. Flux and crowd edges
+asserted BIT-IDENTICAL to the fiducial; only the size edges move,
+[0.300, 0.3259, 0.3655, 0.4348, 0.5513, 0.7752, 1.500] against the fiducial
+[0.300, 0.3552, 0.4191, 0.5025, 0.6287, 0.8530, 1.500]. **The first cell narrows 0.0552 -> 0.0259, a
+2.1x cut in the width of exactly the cell where the flow's residual ramps +17% -> -5%.** The
+response-driven FLUX edges are deliberately NOT used (they scored slightly worse on the magnitude
+conditional, job 15489783); one lever only.
+
+**TEMPERED EXPECTATION.** alpha 0.75 means the edges retreated 75% toward equal-count to respect the
+floor, so this is a PARTIAL version of arm B. Arm B's oracle cut the smallest-size bin +30.8% ->
++10.3%; mf08 should deliver noticeably less than that. Going further needs either more cells (crowd
+5 -> 3, a second lever) or accepting cells below the floor -- neither is in this pilot.
+
+**PREDICTION, RECORDED BEFORE THE RUN.**
+1. Aggregate constgold `m`: UNCHANGED within error. The grid-allocation lever was measured null at
+   0.003 pt (job 15489783) and nothing here should move it.
+2. Small-size SELF-response conditional: IMPROVED. The fiducial is -3.42 +- 1.10% on Re <= 0.386";
+   partial closure toward zero is the pass. The within-cell ramp in the first pin cell
+   (-24.9 +- 6.6 %/cell) should shrink.
+3. If BOTH are null, the pin's cell resolution is exonerated as the cause and the remaining suspects
+   are the flow's own smoothness prior and NLL dominance at small/faint.
+**3 seeds cannot report an `m`** (the convention needs 16); the pilot is scored on the half-shear
+SELF-response conditional, which is firewall-clean and is where the defect was measured.
+
+## 2026-08-03l (WHERE THE FLOW'S SMALL-SIZE DEFECT LIVES: it is OVER-SMOOTHING across the steep response transition at Re 0.30-0.42, detected at 3.3-3.8 sigma and ABSENT in a pin-free control on the same rows. The pin's first size cell -- across which the truth rises 2.4x -- is the leading suspect. And this reframes 2026-08-03i's "null": the re-allocated edges were null on AGGREGATE m but cut the small-size conditional 3x, which is the number that matters here. Job 15498469.)
+
+**Files.** `scripts/diag_pin_imprint.py` (NEW), `jobs/job_pin_imprint.sh` (NEW).
+
+**Design.** Residual vs position INSIDE each fiducial pin size cell, held out by case, bootstrapped
+over cases, with the pin-free 3-feature regressor scored identically as a CONTROL -- it never saw the
+edges so it cannot imprint them. Predicted sign stated before measuring: a pin flattening a rising
+truth makes the model too HIGH at the bottom of a cell and too LOW at the top, i.e. a NEGATIVE slope.
+
+| pin size cell | truth across it | flow #1 slope | pin-free fit slope |
+|---|---|---|---|
+| 0: [0.300, 0.355] | 0.244 -> 0.586 (**2.4x**) | **-24.90 +- 6.63 %/cell** | +8.11 +- 7.68 (none) |
+| 1: [0.355, 0.419] | 0.667 -> 0.741 | +9.33 +- 3.70 %/cell | -6.97 +- 3.83 (none) |
+| 2: [0.419, 0.502] | 0.790 -> 0.833 | -0.51 +- 3.11 (none) | +2.86 +- 3.17 (none) |
+| COMBINED | | +0.31 +- 2.24 (null) | -0.29 +- 2.33 (null) |
+
+**WHAT IS ESTABLISHED.** In cell 0 the flow's residual runs **+16.99 -> -5.05%** across a single cell
+(slope -24.9 +- 6.6, the predicted sign) while the control is flat; flow-minus-control is -33 +- 10.1,
+**3.3 sigma**. In cell 1 the two also differ, +16.3 +- 5.3 (3.1 sigma), but with the OPPOSITE sign.
+**So there is real, resolved structure in the flow's residual that the pin-free model does not have,
+concentrated at the steep transition -- but it is NOT a per-cell sawtooth.** The combined slope is
+null precisely because cells 0 and 1 cancel.
+
+**THE SHAPE IS OVER-SMOOTHING, NOT EDGE-KEYED FLATTENING.** Too high below the steep rise, too low
+above it, recovering through cell 1 -- the signature of a smooth model lagging a sharp step, not of a
+value resetting at each boundary. The pin's first cell is the leading suspect because it is where the
+flattening force is largest (2.4x truth variation inside one pinned value), but **the sawtooth test
+did not confirm the pin as a general mechanism and the claim is limited to cell 0 accordingly.**
+Alternative causes not excluded: the flow's own smoothness prior, or the NLL term dominating there.
+
+**THIS REFRAMES 2026-08-03i.** That entry reported the response-driven edges as a null. It was a null
+**on aggregate `m`** (0.019 pt across all four grids) -- and that is expected, because the steep region
+is a small share of the population. On the quantity the owner actually cares about, the SMALL-SIZE
+CONDITIONAL, arm B cut the smallest-size bin from **+30.78% to +10.32%** and halved the size rms. Arm
+B's edges put 4 of 6 bins inside 0.30-0.42, i.e. exactly across the transition where the flow is now
+measured to over-smooth. **I under-sold that result by reading the aggregate; the two findings agree
+and point at the same fix.**
+
+**Next.** Retrain flow #1 with arm B's size edges. Expected: aggregate `m` unchanged (already measured
+null, 0.003 pt), small-size conditional substantially improved. The prediction is on record BEFORE the
+retrain so it can be scored honestly, and the retrain is the only way to convert an oracle result into
+a model result.
+
+## 2026-08-03k (OWNER WAS RIGHT, I WAS WRONG: flow #1 HAS a real and RECOVERABLE small/faint defect -- -3.42 +- 1.10% at small size and -3.63 +- 1.34% at faint, where a 3-feature regressor on the same data lands at ZERO. 2026-08-03j's "it's an R_blend problem, flow #1 is at its limit" is RETRACTED as unestablished. Jobs 15493198 / 15494037.)
+
+**Files.** `scripts/diag_selfresp_headroom.py` (NEW), `jobs/job_selfresp_headroom.sh` (NEW).
+
+**The owner's challenge.** Fig 5 shows flow #1 alone failing at small/faint against the half-shear
+SELF-response, with no blend term anywhere in the comparison. Confirmed on the full fig-5 sample:
++6.94% at Re ~ 0.31", -6.16% / -6.73% in the next two size bins, and -3.4 / -5.1 / -4.4% in the three
+faintest S/N bins, all above the truth s.e.
+
+**MY ERROR IN 2026-08-03j.** I argued the small-size residual was a floor belonging to R_blend or
+additivity because four self-response models (coarse grid, fine grid, 2-feature trees, 7-feature
+trees) converged to +9..+11% there. **All four were fitted to the SAME SNC label. Models fitted to a
+common label converge whether or not that label is correct -- convergence is not correctness.** The
+inference was invalid, and the conclusion "not possible to improve flow #1 at the small end" was not
+established by it.
+
+**THE TEST THAT SETTLES IT.** Same rows, same truth (`r_sim_self`), fit a gradient-boosted regressor
+on the 3 features fig 5 carries (S/N, Re, nbr_flux_near), held out BY CASE, and compare to the flow.
+Squared-error regression converges to `E[truth | features]`, so it is the best any model of those
+features can do. Region averages, bootstrapped over cases (200 resamples), because individual
+small/faint bins carry a 2-5% truth s.e. and no single bin decides anything:
+
+| region | flow #1 | fit (3 features) |
+|---|---|---|
+| small size, Re <= 0.386" (295,526 rows) | **-3.42 +- 1.10 %** | **+0.26 +- 1.14 %** |
+| faint, S/N <= 13.1 (295,539 rows) | **-3.63 +- 1.34 %** | **+1.32 +- 1.49 %** |
+
+**The flow is 3.1 sigma and 2.7 sigma LOW in those regions and a HANDICAPPED model -- 3 features against
+the flow's 8, held out by case, trained on far less data -- sits at zero in both.** That is recoverable
+headroom, not an information limit. A better-trained flow #1 can take it.
+
+**WHY THE PER-BIN VIEW HID THIS.** Halving the sample for the held-out split doubled the truth s.e.
+(3.36% -> 4.59% in the smallest size bin), dropping most individual bins below resolution and making
+the per-bin rms comparison a tie (flow 2.75% vs fit 2.93% on size). The signal is in the REGION mean,
+where the flow's error is systematic and one-signed while the fit's is not: the flow is negative in
+all 6 faintest S/N bins, which alone is a ~3% chance under a no-bias null.
+
+**THE LEVERAGE ARGUMENT ALSO FAVOURS THE FLOW, and explains why the emulator "looks good".**
+`R_self ~ 0.72` against `R_blend ~ 0.136`, so the SAME relative error costs **5.3x more** in `m` on the
+flow side. The flow's -3.42% at small size is **-0.0180 in absolute response units** -- to match it the
+emulator would need to be ~13% wrong on its whole blend term. Judging the two models on relative
+per-bin residuals flatters the emulator by a factor of five; absolute response error is the common
+footing and it is printed alongside the relative number now.
+
+**ONE STRUCTURAL OBSERVATION, FLAGGED AS AN INFERENCE NOT A RESULT.** The signs are OPPOSITE: on the
+ruler the flow UNDER-predicts the self response at small size (-3.4%), while on constgold the total
+`R_flow + R_blend` OVER-predicts at Re ~ 0.31" (+14.7%). For both to hold, `R_blend` must be
+substantially too LARGE at small size. A rough back-of-envelope on the fig-5 numbers puts the needed
+blend term near 0.06 where ~0.136 is supplied. **This mixes a ruler self-response with a constgold
+total across two estimators and two sims, so it is a hypothesis to test, not a measurement** -- but it
+means the small-size story is TWO defects of opposite sign, partially masking each other in the total,
+and neither one is explained by the other.
+
+**Next.** Two separable items, both now evidenced: (1) retrain flow #1 to take the ~3.4-3.6% small/faint
+headroom -- the fit shows it is reachable from features the flow already has; (2) test the small-size
+`R_blend` overshoot hypothesis directly on the per-pair ruler rather than by subtraction.
+
+## 2026-08-03j (PER-OBJECT SUPERVISION PRICED, NO GPU: the lever is a NULL because flow #1 has ALREADY converged to the conditional mean of its own inputs. And the +14.7% small-size defect is mostly a FLOOR that every self-response model shares -- so at the small end the binding term is R_blend or additivity, NOT flow #1. Job 15490131.)
+
+**Files.** `scripts/build_perobj_oracle.py` (NEW), `jobs/job_perobj_oracle.sh` (NEW). Scored through
+the same `eval_pin_ceiling.py` and the same 11,674,408 rows as 2026-08-03i, so all arms are directly
+comparable.
+
+**Method.** Per-object supervision under a squared-error pull converges to `E[R | features]`, so a
+gradient-boosted regressor on the per-object SNC label is what a perfectly per-object-supervised flow
+would be pulled toward. Two arms differing ONLY in feature list: **D2** = (true mag, true Re), the
+grid's own information and a CONTROL; **D7** = all 7 true properties available on both catalogues
+(+ sersic n, |e|, e.ghat, nbr_flux_near, nbr_flux_far). Fit on ruler cases 0-79, held out 80-99;
+held-out predicted mean matches truth to -0.27% against a 0.53% truth sem, so the fit is honest.
+constgold supplies prediction coordinates and scoring `r_sim` only. `distance`/`neighbored` are
+excluded because the ruler is ALL-PAIRS (per-pair) while constgold is per-object; dropping 2 of the
+flow's 8 inputs makes D7 a LOWER bound on the headroom.
+
+**CONTROL PASSES:** D2 lands on the fine-grid arm C (+0.891% vs +0.840%; per-bin mag rms 2.788% vs
+2.736%). The regressor is a fair stand-in for a grid, so D7 is readable.
+
+| arm | <R_flow> | m | mag rms | size rms |
+|---|---|---|---|---|
+| fiducial flow (16 seeds) | 0.7258 | **-0.123 +- 0.152 %** | **1.448%** | 4.586% |
+| A eq-count 6x6 | 0.7175 | +0.843 % | 6.318% | 10.008% |
+| C eq-count 20x20 | 0.7176 | +0.840 % | 2.736% | 3.620% |
+| D2 trees, 2 feats | 0.7171 | +0.891 % | 2.788% | 3.250% |
+| **D7 trees, 7 feats** | **0.7261** | **-0.157 %** | 1.707% | 3.341% |
+
+**RESULT 1 -- CONDITIONING is worth ~1.05 pt where RESOLUTION was worth 0.02.** D2 -> D7 moves `m`
+from +0.891% to -0.157% on identical rows and an identical R_blend, purely by adding 5 features.
+Against 2026-08-03i's finding that 36 -> 400 cells moves `m` by 0.003 pt, this settles what the pin's
+binning actually costs: **not resolution, conditioning.** A 2-3 axis grid cannot represent the
+response however finely it is cut.
+
+**RESULT 2 -- BUT THE LEVER IS A NULL, because flow #1 is ALREADY THERE.** D7 reproduces the
+fiducial flow almost exactly: `<R_flow>` 0.7261 vs 0.7258, `m` -0.157% vs -0.123%. Neither dominates
+per-bin (flow better on magnitude 1.448 vs 1.707, D7 better on size 3.341 vs 4.586). **The flow has
+already extracted essentially all the response information its conditioning carries**, so replacing
+the binned pin with per-object supervision has nothing left to recover. The 2026-07-07 lever is
+priced and it is closed. This also explains RESULT 2 of 2026-08-03i without needing the crowd-axis
+confound: the flow beats a binned lookup of its target because the binning, not the flow, is what
+loses conditioning.
+
+**RESULT 3 -- RETRACTED 2026-08-03k, see that entry. The reasoning below is INVALID: all four models
+were fitted to the SAME SNC label, and models sharing a label converge whether or not the label is
+right. The direct test (job 15494037) found flow #1 is -3.42 +- 1.10% at small size where a
+3-feature regressor is +0.26 +- 1.14%, i.e. the headroom IS recoverable and the "floor" attribution
+was never established. Kept for the record; do not cite.** ~~the +14.7% at Re ~ 0.31" is MOSTLY A
+FLOOR SHARED BY EVERY SELF-RESPONSE MODEL.~~ Smallest-size bin: flow +14.73%, grid A +30.78%, fine grid C +10.77%,
+D2 +9.26%, **D7 +10.04%**. Four independent model classes -- coarse grid, fine grid, 2-feature trees,
+7-feature trees -- converge to **+9 to +11%** there. Every arm shares the same `R_blend` and the same
+`r_sim`, so once the self-response term has converged the remaining common residual is NOT in it.
+**At the small-size end the binding term is the blend model or the `R_flow + R_blend` additivity
+assumption, not flow #1.** Decomposition at that bin: ~10 pt floor (blend/additivity) + ~4.7 pt of
+genuine flow #1 excess over the achievable conditional mean.
+
+This is a direct answer to the owner's redirection ("improve flow #1 instead of the emulator"): on
+MAGNITUDE the flow is already better than every oracle including D7 and has nothing to gain; on SIZE
+it has ~4.7 pt to gain at the smallest bin, on top of a ~10 pt floor it cannot touch. **Stated as a
+measurement, not an argument, and it points back at the blend side for the small end.**
+
+**RESULT 4 -- the "low-noise SNC" premise behind the 2026-07-07 lever is weaker than advertised.**
+Measured per-object SNC label: mean 0.7149, **std 4.0975 = 5.7x the mean**, against the raw
+per-object response's 5.06/0.86 = 5.9x recorded in AGENTS.md. Different sims and estimators so not a
+like-for-like comparison, but shape-noise cancellation does NOT make the per-object response
+low-noise in the sense that phrasing implies. It is not a blocker (the regression averages it out --
+held-out mean good to 0.27%), but the wording should not be reused.
+
+**Next.** The small-size floor is the largest measured defect and it is NOT a flow #1 defect. Test
+whether it is the emulator or the additivity assumption before spending anything further on flow #1
+at that end. Separately, the proposed domain change (below) would remove that region entirely, which
+makes settling the intended cut worth doing first.
+
+## 2026-08-03i (PIN RE-ALLOCATION PRICED, NO GPU: re-binning the flux x size pin is a NULL on aggregate m (<=0.02 pt across a full re-allocation AND an 11x cell increase). Two real findings survive: response-driven SIZE edges halve the target's own small-size error, and the flow's error at the smallest true sizes is +14.7%, 4x what fig 2's coarser binning showed. Jobs 15489742 / 15489783.)
+
+**Owner's question.** Improve flow #1 rather than the emulator, specifically at the faint/small end
+"because that is where we make cuts". Owner proposed binning the response pin by sample number to
+get more bins there.
+
+**FIRST ANSWER: the pin is ALREADY equal-count** -- every flux bin holds 970,05x galaxies and every
+size bin the same, so it already gives 0.39-0.40 mag bins at faint against a single 5.47-mag bin at
+bright, and 0.055" at small against 0.647" at large. That lever is spent. But equal-count equalises
+the ABSOLUTE response step per cell (0.25, 0.23, 0.21, 0.17, 0.15 across true mag) and `m` is a
+RATIO, so the cost of a cell is its RELATIVE response variation, which climbs 20% -> 37% toward
+faint. In size it is far starker: R rises 0.4375 -> 0.7016 across the FIRST cell alone (+60%,
+0.055" wide) and is flat to within 3% above Re = 0.42. **Five of six size bins sit in a flat region
+while the one steep bin lands directly on the Re > 0.3 acceptance cut.**
+
+**Files.** `scripts/make_response_edges.py` (NEW: places edges on equal cumulative |d log R| with a
+reported count-floor blend `alpha`), `scripts/eval_pin_ceiling.py` (NEW), `jobs/job_pin_profile.sh`
+(NEW), `jobs/job_pin_ceiling.sh` (NEW), and `--flux-edges` added to
+`scripts/compute_response_target_blend.py` (optional, default None, existing behaviour byte-identical).
+
+**Method.** 60-bin marginal ruler profiles from the CERTIFIED builder (same catalogue, estimator,
+SNC lookup, nominal g, domain cuts -- `global R = 0.7149` reproduces the fiducial target exactly),
+then four grids scored as per-object R_flow oracles on the same 11,674,408 constgold rows: A 6x6
+equal-count (control), B 6x6 response-driven conservative (`--min-frac 0.04`, size alpha 0.40),
+B2 6x6 response-driven pure (`--min-frac 0.02`, alpha 0), C 20x20 equal-count (resolution bound).
+**Edges were fixed on the ruler before any m existed; firewall intact.**
+
+**SCOPE -- all four oracles are flux x size with ONE crowd bin**, because `harvest_grid_perobj.py`
+assigns the 3rd axis from distance/neighbored while the fiducial grid's 3rd axis is `r_blend`, which
+constgold does not carry. So these are NOT the fiducial 6x6x5 pin's ceiling. A/B/B2/C is a controlled
+comparison; the absolute value is not an estimate of the fiducial grid's ceiling.
+
+**RESULT 1 -- RE-ALLOCATION AND REFINEMENT ARE BOTH NULL ON AGGREGATE `m`.**
+
+| arm | <R_flow> | m |
+|---|---|---|
+| fiducial flow (16 seeds) | 0.7258 | **-0.123 +- 0.152 %** |
+| CEILING A eq-count 6x6 | 0.7175 | +0.843 % |
+| CEILING B resp-driven 6x6 | 0.7175 | +0.846 % |
+| CEILING B2 resp-pure 6x6 | 0.7177 | +0.827 % |
+| CEILING C eq-count 20x20 | 0.7176 | +0.840 % |
+
+A full re-allocation moves `m` by **0.003 pt**; going from 36 to 400 cells moves it by **0.003 pt**;
+the widest spread across all four is **0.019 pt**. Against a 16-seed error of 0.152 pt this is a
+clean null. **Re-binning the flux x size pin cannot move the headline number and does not justify a
+retrain on its own.**
+
+**RESULT 2 -- THE CEILING FRAMING DID NOT HOLD, AND THE PROJECT'S STATED PREMISE NEEDS QUALIFYING.**
+`jobs/job_rflow_oracle.sh` asserts "a trained flow can only approach, never beat, its response
+target". The flow scores **-0.123%** against every oracle's **+0.83%**, and per-bin on true magnitude
+its rms is **1.45%** against A's 6.32%. A piecewise-constant lookup of the target is NOT an upper
+bound on a smooth flow trained with NLL + a response pin: the flow has sub-cell resolution the grid
+cannot have, and the pin is a regulariser rather than the whole loss. **CONFOUND, stated not
+hidden:** these oracles lack the crowd axis the flow's own target had (5 bins), so part of the gap
+may be that axis rather than smoothness. What is NOT confounded is that inside the flux x size
+family, resolution and allocation are both null (RESULT 1) -- so whatever the flow's advantage is,
+it is not flux x size resolution.
+
+**RESULT 3 -- the response-driven SIZE edges do exactly what they were designed to do, as a model of
+the target.** Per-bin residual vs TRUE size, smallest bin and rms over 12 equal-count bins:
+
+| arm | smallest-size bin (0.31") | rms | worst |
+|---|---|---|---|
+| A eq-count 6x6 | **+30.78%** | 10.01% | 30.78% |
+| **B resp-driven 6x6** | **+10.32%** | **5.57%** | 10.43% |
+| B2 resp-pure 6x6 | +10.01% | 10.64% | 21.23% |
+| C eq-count 20x20 | +10.77% | 3.62% | 10.78% |
+
+B cuts the worst cell from +30.8% to +10.3% and halves the rms. **On MAGNITUDE the same criterion is
+null-to-negative** (A 6.32%, B 6.78% WORSE, B2 5.76%); only refinement helps there (C 2.74%). So the
+allocation win is specific to the size axis, which is where the geometry argument said it would be.
+
+**RESULT 4 -- the statistical guard was LOAD-BEARING, and running only the pure variant would have
+given the wrong answer.** B2 (alpha = 0) is **2x worse** than B on size rms (10.64% vs 5.57%) because
+it starves the large end (+21.2% in the last bin). The `alpha` blend toward equal-count is reported
+by `make_response_edges.py` precisely so this retreat is a measured quantity, not a silent knob.
+
+**RESULT 5 (NEW, and the one that matters for the owner's question) -- the flow's own error at the
+smallest true sizes is +14.73%, on an equal-count bin centred at 0.31".** This is the largest single
+conditional defect measured on flow #1 and it sits directly on the Re > 0.3 cut. **Fig 2 reported
++1.64% for its small-size end and that is not a contradiction:** `_binned` in
+`plot_fid_flow_figures.py:297` uses equal-WIDTH bins over the 1-99 percentile range, so its first bin
+averages the steep 0.30-0.40 region into one number, while the equal-count binning here resolves it.
+**Two different binnings of the same rows, and the coarser one hides a 4x larger defect.** Any future
+per-bin claim about the small-size end should say which binning it used.
+
+**What this leaves.** Re-binning the pin is not worth a retrain for `m`. B's size edges are a free
+improvement to bundle into any retrain that happens for another reason, but they do not justify one.
+The +14.7% at 0.31" is NOT explained by grid resolution -- the grid's own representation there is
+worse (+30.8%) and refining it is null on aggregate -- so it points at per-object supervision (the
+2026-07-07 lever, no cells at all, hence no allocation problem) or at the domain-edge fragility of a
+cell that has training data on one side only.
+
+**Next.** Price the per-object SNC supervision lever before any further grid work: it is the only
+remaining route that does not inherit the binning question, and RESULT 2 is an argument for it (the
+trained flow already beats every binned representation of its own target).
+
+## 2026-08-03h (FIGURE 2 REMADE WITH FLOW #2 AS THE BLEND TERM. The per-bin swing is +/-7% on BOTH curves while the aggregate m is -0.1%, and it is SHARED -- so it belongs to flow #1, not to the blend term. Flow #2 is resolvably worse only at the BRIGHT END of primary flux. Jobs 15489429 / 15489473.)
+
+**Files.** `plotting/plot_fig2_flow2.py` (NEW), `jobs/job_fig2_flow2.sh` (NEW) ->
+`figures/fid_fig2_response_vs_properties_flow2.png`. `plot_fid_flow_figures.py` was **not modified by
+this change** (mtime 07-31 18:07, unchanged through this task; it does carry earlier uncommitted edits
+vs HEAD, which are not from here) and `fid_fig2_response_vs_properties.png` remains the fiducial
+artifact, regenerated by nothing in this entry. This is an
+additional COMPARISON figure: both curves share the same rows, the same truth `r_sim` and the same
+16-seed `R_flow` (flow #1, V2 dom6x6), and differ ONLY in the blend term.
+
+**Each model keeps the pair list it was trained for** (the AGENTS.md "Two traps" rule): BlendEMU its
+native 10" whole-field prediction, flow #2 all pairs inside 7". The row POPULATION is intersected
+(11,670,874, 99.97% of the fiducial 11,674,408) so both describe the same galaxies; the pair lists
+behind each `R_blend` are deliberately left different and that is stated on the figure.
+
+**WIRING CHECK PASSED -- the figure recomputes both aggregates from scratch and reproduces
+2026-08-03g:** BlendEMU `m = -0.126 +- 0.152%` (published -0.126), flow #2 `m = -0.200 +- 0.254%`
+(published -0.206). `R_sim` 0.8605, `<R_flow>` 0.7258, `<R_blend>` 0.1358 / 0.1365. The wider error on
+the flow #2 arm is real: both of its terms carry seed noise, so the band pairs flow #1 seed s with
+flow #2 seed s (seeds are independent and exchangeable, so the pairing is arbitrary and the 16
+pairings sample the COMBINED spread).
+
+**RESULT 1 -- the per-bin non-closure belongs to flow #1, not to the blend term.** Both models swing
+from **-7% to +4%** across primary flux while their aggregate `m` sits at -0.1%. The swing is common
+to both curves, so swapping BlendEMU for flow #2 barely moves it -- it is a property of the shared
+self-response term. **This is the project's recurring cancellation, now drawn rather than asserted**
+(same lesson as 2026-08-02o and the in-domain cancellation). Do not read either aggregate `m` as
+per-bin correctness.
+
+**RESULT 2 -- flow #2 is resolvably worse ONLY at the bright end of primary flux.** Residual rms and,
+more importantly, the count of bins where the two models differ by more than the TRUTH s.e.:
+
+| panel | BlendEMU rms | flow #2 rms | bins resolved above truth s.e. |
+|---|---|---|---|
+| primary flux (S/N) | 3.16% | **3.82%** | **5/12** |
+| primary size | 2.61% | 2.35% | 3/12 |
+| neighbour / blend flux | 1.45% | 1.32% | 2/12 |
+
+The flux effect is at the BRIGHT end and grows monotonically: the two brightest bins differ by 1.34
+and 1.91 pt against s.e. of 1.17 and 1.35, with flow #2 going -6.69 -> **-8.60%** in the last bin.
+Direction and location agree with the independent per-bin ruler (flow/emu chi2 ratio **4.30** on
+primary magnitude, 2026-08-03f), which is a second method reaching the same conclusion.
+
+**RESULT 3 -- the size and neighbour-flux "wins" are NOT resolved and must not be quoted.** 3/12 and
+2/12 bins above the truth s.e. is what chance alone gives (~3.8/12 expected at 1 sigma), and the
+largest differences (1.10 and 1.59 pt) sit barely above s.e. in single bins. **The lower rms for flow
+#2 in those two panels is not a measured improvement** -- this is the chi2/dof < 1 trap from
+2026-08-03f in a different costume, and the s.e. row is printed in the log precisely so the rms line
+can never be read without it.
+
+**Curvature caveat travels with the figure, uncorrected.** Flow #2's labels are measured at g = 0.2,
+where the blend response carries ~+1.46% contamination vs the g -> 0 limit = **~0.23 pt of m**,
+independently consistent with the 0.22 +- 0.44 pt of 2026-08-03g. It is printed in the log and noted
+on the figure, NOT subtracted (AGENTS.md "Numerical Integrity").
+
+**Two defects found and fixed in the first run (15489429) before the figure was accepted.** (a) The
+curvature line printed **23.16 pt** of m instead of 0.23 -- `CURV_PCT` is already a percentage of
+`R_blend`, so the `*100` double-counted the conversion. (b) `legend(loc="best")` landed the legend on
+top of the population annotation, because the response curve leaves the upper-left of panel 1 empty
+and the lower-left occupied; both are now pinned. Rerun 15489473 (2:19).
+
+**Next.** Unchanged from 2026-08-03g: the primary-magnitude conditional is the sharpest resolved
+defect and the only tuning target measured above the noise floor. This figure localises it further --
+it is the BRIGHT end, not the faint end, and it rides on a much larger shared flow #1 swing that no
+blend-term change will fix.
+
+## 2026-08-03g (g=0.2 FLOW #2 REACHES m = -0.206%, INSIDE THE |m| < 0.3% TARGET AND 0.08 pt FROM BlendEMU -- the gap was 0.698 pt at g=0.05. But the conditional deficiencies are UNCHANGED, so this is another aggregate that hides them. Job 15485941.)
+
+**Files.** `jobs/job_blendflow_allpairs_m_g02.sh` (1:09:15). Same all-pairs-7" configuration as
+2026-08-03a, so this is directly comparable to the g=0.05 number.
+
+| R_blend source | rows | R_blend | m |
+|---|---|---|---|
+| BlendEMU native 10" | 11,670,851 (99.97%) | 0.1358 | **-0.126 +- 0.152** |
+| flow #2 @ g=0.05, 16-seed | 11,670,851 | 0.1298 | +0.572 +- 0.154 +- 0.194 |
+| **flow #2 @ g=0.2, 16-seed** | 11,670,851 | **0.1365** | **-0.206 +- 0.152 +- 0.141** |
+
+Per seed at g=0.2: mean -0.203, sd 0.565, sem 0.141, range -1.363..+0.554 -- tighter than g=0.05's
+sd 0.777 / sem 0.194, as the 4.45% -> 3.24% response-scatter drop predicted.
+
+**GAP TO BlendEMU: 0.080 pt, from a blend term 0.5% apart** -- against 0.698 pt and 4.4% at g=0.05.
+`|m| = 0.206%` is INSIDE the |m| < 0.3% deliverable target.
+
+**NO CIRCULARITY: g=0.2 was chosen by the owner before any `m` existed**, on the noise argument and
+the ruler. constgold remains evaluation-only and nothing here selected a configuration. This `m` is a
+report, not the basis of the choice.
+
+**WHY THE TWO MODELS NOW AGREE -- state this, do not let it read as independent confirmation.**
+BlendEMU ALSO trains at g=0.2 (`response_catalogue_train.feather`, 2026-08-03b). The flow and the
+emulator are now trained on the SAME label at the SAME amplitude, so they share the same `c g^2`
+label bias. Their agreement to 0.5% is therefore partly a shared-systematic effect, and the curvature
+error largely CANCELS in the comparison while remaining in the ABSOLUTE `m`.
+
+**CURVATURE SYSTEMATIC ON THE ABSOLUTE NUMBER.** The blend label at g=0.2 sits **+1.46%** above the
+`g -> 0` limit (R(0.2) = 0.071945 vs R_0 = 0.070913), +-2.8% at 1 sigma. On `R_blend = 0.1365` that is
++0.0020, i.e. `m` is biased LOW by ~0.22 pt with a ~0.44 pt 1-sigma uncertainty. **Curvature-corrected
+`m` ~ +0.02% +- 0.44 (syst) +- 0.21 (stat).** Still inside target, but the systematic now DOMINATES
+the statistical error -- so quote `-0.206 +- 0.21 (stat) +- 0.44 (curvature syst)`, never the bare
+number.
+
+**THE CONDITIONALS DID NOT IMPROVE.** 2026-08-03f measured, at resolved noise, flow/emu chi2/dof
+ratios of 4.30 on primary magnitude, 1.13 on primary size, 1.24 on k, 0.91 on separation. **A good
+aggregate `m` on top of a 4.3x-worse magnitude conditional is exactly the cancellation this project
+keeps rediscovering** (fiducial -0.123% = +0.830/-3.358 across populations, 2026-08-02o; all-pairs
++0.572% = -15.5%/+52.6% per pair, 2026-08-03a). **Do not read -0.206% as per-population correctness.**
+
+**Honest status of flow #2.** It now reaches the deliverable target on the aggregate and ties BlendEMU
+there, which the g=0.05 version did not. It remains the worse model on every resolved conditional
+except separation, where they tie. Both statements are true and neither replaces the other.
+
+**Next.** The primary-magnitude conditional (ratio 4.30) is the sharpest resolved defect in the
+project and the only tuning target so far that sits ABOVE the noise floor rather than under it.
+
+## 2026-08-03f (g=0.2 RETRAIN DELIVERED, AND IT DID WHAT IT WAS FOR: the "6-sigma separation win" was largely a NOISE FLOOR and evaporates at resolved noise, while a large flow deficiency on PRIMARY MAGNITUDE -- 4.3x worse than BlendEMU -- becomes visible for the first time. Jobs 15485367 / 15485930.)
+
+**Files.** Added `jobs/job_blendflow_agg_g02.sh`, `jobs/job_blendflow_allpairs_m_g02.sh` (job 15485941,
+running). Stage 4 array: all 16 COMPLETED, ~20 min each, 16 checkpoints + 16 eval npz.
+
+**BLENDEMU IS THE CONTROL THAT MAKES THIS READABLE.** chi2/dof is NOT comparable across shears -- it
+measures model-vs-anchor in units of the ANCHOR's noise, so 4x less label noise inflates it ~16x for
+an UNCHANGED model error. BlendEMU is the same deterministic model scored on both label sets, so its
+shift isolates the noise-floor change and the flow/emu RATIO is the shear-invariant quantity:
+
+| axis | flow g0.05 | emu g0.05 | ratio | flow g0.2 | emu g0.2 | ratio |
+|---|---|---|---|---|---|---|
+| separation | 0.198 | 0.658 | **0.30** | 2.274 | 2.504 | **0.91** |
+| primary magnitude | 0.652 | 0.584 | 1.12 | 1.680 | 0.391 | **4.30** |
+| primary size | 2.041 | 1.349 | 1.51 | 2.327 | 2.059 | 1.13 |
+| k | 0.659 | 0.587 | 1.12 | 1.017 | 0.820 | 1.24 |
+| summed bias % | -2.379 +- 1.087 | -1.581 | | **-0.906 +- 0.804** | -2.011 | |
+
+**RESULT 1 -- the separation win was a noise floor, as suspected when proposing g=0.2.** At g=0.05
+both models sat at chi2/dof < 1 on separation (0.198, 0.658): both errors were BELOW the anchor noise
+and neither was resolved. I nevertheless reported that gap as a "~6 sd win" for flow #2
+(2026-08-02m). At g=0.2 both are resolved (2.274, 2.504) and the ratio moves 0.30 -> 0.91: **a tie.**
+The single-seed sd is 0.976, so the 0.23 difference is ~0.2 sd. **RETRACT the separation win.**
+
+**RESULT 2 -- a real flow deficiency was hidden underneath it.** On primary magnitude the emulator
+IMPROVES with better labels (0.584 -> 0.391) while the flow DEGRADES (0.652 -> 1.680): the ratio goes
+1.12 -> **4.30**. Two models on identical rows moving in opposite directions is not a noise effect.
+**The flow's magnitude conditional is genuinely wrong and was invisible at g=0.05.** This is a new,
+resolved defect, and it is consistent with the -15.5% / +52.6% per-pair split (2026-08-03a): the flow
+gets the TOTAL roughly right and the CONDITIONALS wrong.
+
+**RESULT 3 -- the flow's summed bias improves** (-2.379 -> -0.906) and now beats BlendEMU's -2.011 by
+1.1 pt at ~1.4 sd. Not significant, but it is the one axis where the flow leads.
+
+**RESULT 4 -- the ensemble tightens.** Seed sd of the POPULATION-mean response falls **4.45% -> 3.24%**.
+That is the part that survives into `m`: ~0.51 pt per seed and **~0.13 pt over 16**, against 0.222 pt
+at g=0.05. The 4x noise cut is real and it propagates.
+
+**NET VERDICT AT RESOLVED NOISE: BlendEMU is better than flow #2 on every conditional axis except
+separation, where they tie; flow #2 leads only on the aggregate.** That is a coherent and unflattering
+picture, and it is the opposite of what the g=0.05 ruler suggested.
+
+**Caveat carried forward, not dropped.** The g=0.2 blend label's curvature is bounded at 6.08%
+(2 sigma, 2026-08-03e), which propagates to ~0.9 pt of `m`. Central value ~1% (~0.15 pt). **Any `m`
+from this ensemble must be quoted with that bound.** Job 15485941 is computing it on the flow's own
+all-pairs-7" configuration, the same footing as 2026-08-03a.
+
+**Next.** The magnitude conditional is now the sharpest, best-resolved target in the project -- and
+unlike every earlier tuning attempt (crowding null, size-grid null), this one is measured above the
+noise rather than inferred from a chi2/dof < 1 axis.
+
+## 2026-08-03e (CURVATURE GATE PASSED, BUT ONLY FOR THE CHANNEL BEING TRAINED. The BLEND label -- what the retrain supervises -- moves 1.4% +- 2.8% between g=0.05 and g=0.2, consistent with zero. The SELF label does NOT: it is biased 2.43% low at g=0.2, detected at 16.5 sigma. Jobs 15485365 / 15485366 / 15485386.)
+
+**Chain status.** Stage 1 COMPLETED 2:40:45, exactly 200 secondary catalogues. Stage 2 COMPLETED
+20:26 -> `det_meas_ngmix_ap7_g0.2_val.feather`, **131.5 GB / 254,998,453 rows** against the g=0.05
+leg's 132.3 GB, all 29 measured columns present including ngmix, detected and neighboured rates
+1.0000. (The archived 8h wall was an allowance, not a usage; actual build 1210s.) Stage 3 COMPLETED
+8:00 -> g=0.2 pair set, **51,260,174 pairs / 12,327,203 primaries, `<k>` = 4.16** -- against g=0.05's
+51,656,702 / 12,414,460 / 4.16. 0.8% fewer pairs, consistent with slightly different detection at 4x
+the shear. Stage 4 (16-seed retrain) RUNNING.
+
+**RESULT -- two independent lever arms, and they agree.**
+
+| pair | label | R(low) | R(high) | difference | c | contamination at g=0.2 |
+|---|---|---|---|---|---|---|
+| 0.05 / 0.2 | **BLEND** | +0.070977 | +0.071945 | +0.000967 +- 0.002022 (0.5 sd) | +0.026 +- 0.054 | <= **6.08%** (2 sd bound) |
+| 0.02 / 0.2 | BLEND | +0.077533 | +0.072451 | -0.005082 +- 0.007468 (0.7 sd) | -0.128 +- 0.189 | <= 19.4% (2 sd bound) |
+| 0.05 / 0.2 | **SELF** | +0.720953 | +0.704521 | **-0.016432 +- 0.000995 (16.5 sd)** | **-0.4382 +- 0.0265** | **2.43% (MEASURED)** |
+| 0.02 / 0.2 | SELF | +0.718999 | +0.703733 | -0.015266 +- 0.003658 (4.2 sd) | -0.386 +- 0.092 | 2.14% (measured) |
+
+The two SELF determinations agree within 0.6 sigma (-0.438 vs -0.386) from independent lever arms --
+this is a real detection, not a fluctuation.
+
+**VERDICT: the retrain is justified, because it supervises the BLEND channel only** (verified:
+`job_blendflow_ensemble_g02.sh` passes `--response-weight` and no `--self-response-weight`). The
+assumption-free statement is the direct one, not the fitted `c`: **the blend label at g=0.2 differs
+from the g=0.05 label by 1.4% +- 2.8%**, and from the `g -> 0` limit by ~1.4%. The earlier vacuous
+327% bound (2026-08-03d) is now **6.08%** -- a 54x improvement from the longer lever arm, exactly as
+predicted.
+
+**Residual risk, stated rather than buried.** 6.08% is a BOUND, not a measurement, and 6% on
+`R_blend ~ 0.135` propagates to ~0.9 pt of `m` -- above the |m| < 0.3% target. The central value is
+~1%, i.e. ~0.15 pt, but the retrain's `m` cannot be quoted to better than that bound without a
+tighter curvature measurement. **Quote the g=0.2 `m` with this attached.**
+
+**THE SELF RESULT IS THE MORE IMPORTANT FINDING, and it is a warning for the PARKED MERGE.** Flow #1
+and the merged flow both supervise the self response. At g=0.2 that label is **2.43% low**, which on
+`R_flow ~ 0.72` is 0.0175 -- about **2 pt of `m`**. **Any future self-response training at g=0.2 must
+correct for `c = -0.438 +- 0.027` or stay at g=0.05.** This is now measured, not assumed.
+
+**Free corroboration of the fiducial.** The self `g -> 0` limit comes out **R_0 = 0.72205** (0.05/0.2)
+and 0.71915 (0.02/0.2), against AGENTS.md's `R_flow = R_sim - R_blend = 0.7224`. Three independent
+routes, agreeing to ~0.3%.
+
+**Next.** Read stage 4's ruler evals when the array finishes; the headline test is whether the
+`chi2/dof < 1` axes (separation 0.198, primary magnitude 0.652 at g=0.05) become resolved at 4x lower
+label noise. That was the real argument for g=0.2 and it is now testable.
+
+## 2026-08-03d (CURVATURE: a clean NULL with a USELESS bound. `c` is consistent with zero at g=0.02 vs g=0.05, but the lever arm is so short that the 2-sigma limit still permits 327% contamination at g=0.2. The test cannot answer the question it was built for -- the g=0.2 pair set can, and stage 5 is chained to do it. Job 15485364.)
+
+**Files.** Added `jobs/job_response_curvature_g02.sh` (job 15485386, chained `afterok:15485366`).
+
+**RESULT (job 15485364, 8:34).** Pair sets: g=0.02 -> 25,884,911 pairs / 6,217,994 primaries (cases
+0-99); g=0.05 -> 51,656,702 / 12,414,460 (cases 0-199); `<k>` = 4.16 in BOTH, and 6,203,308 primaries
+(99.8%) shared, so the comparison is paired.
+
+| label | R(0.02) | R(0.05) | difference | c | R_0 |
+|---|---|---|---|---|---|
+| BLEND (summed/primary) | +0.077533 | +0.071288 | -0.006246 +- 0.006763 (0.9 sd) | **-2.97 +- 3.22** | +0.0787 |
+| SELF (1/k-weighted) | +0.718999 | +0.720396 | +0.001398 +- 0.003317 (0.4 sd) | **+0.67 +- 1.58** | +0.7187 |
+
+**Both consistent with zero.** Independent corroboration in passing: the self `R_0` = **0.71873**
+against AGENTS.md's `R_flow = R_sim - R_blend = 0.7224`, a third route to the same number.
+
+**BUT THE BOUND IS VACUOUS WHERE IT MATTERS, and saying "curvature is a null" would be the wrong
+readout.** The lever arm `0.05^2 - 0.02^2 = 0.0021` amplifies the response difference 476x into `c`,
+so the 2-sigma limits translate to:
+
+| | g=0.02 (eval) | g=0.05 (today) | **g=0.2 (proposed)** |
+|---|---|---|---|
+| BLEND upper bound | 3.3% | 20.5% | **327%** |
+| SELF upper bound | 0.18% | 1.1% | **17.6%** |
+
+A bound of 327% excludes nothing. Worse, the blend central value has the unhelpful sign: taken at face
+value `c = -2.97` puts `R(0.2)` at **-0.040**, i.e. NEGATIVE. That is not a measurement -- it is 0.9
+sigma -- but it is the opposite of reassurance, and **the honest statement is that this test cannot
+constrain the g=0.2 labels at all.**
+
+**WHY THIS DOES NOT BLOCK THE CHAIN -- the answer arrives with it.** Stage 3 produces the g=0.2 pair
+set, which turns the extrapolation into a DIRECT measurement at the amplitude in question:
+
+    0.02 vs 0.2  ->  lever arm 0.0396   (19x longer)
+    0.05 vs 0.2  ->  lever arm 0.0375   (18x longer)
+
+Same script, same labels, ~18x the constraining power. Stage 5 (15485386) runs both the moment the
+pair set exists, ahead of any `m` from the retrain.
+
+**Decision rule, fixed in advance so the result cannot be rationalised after the fact:** if `R(0.2)`
+lands on the `R_0` implied by the low-g pair, curvature is negligible and the g=0.2 retrain is a clean
+4x noise reduction. If it does not, the g=0.2 LABELS carry a `c g^2` bias, the 16-seed retrain
+inherits it, and the correct response is **g=0.05 with more seeds, not more shear**. No g=0.2 `m` may
+be quoted before stage 5 is read.
+
+**Method note worth keeping.** `measure_response_curvature.py` refuses to quote `c` as a measurement
+when it is consistent with zero and reports a 2-sigma upper bound instead. That is the only reason
+this entry says "cannot constrain" rather than "curvature is negligible" -- the null and the bound are
+different statements, and the second is the one that matters here.
+
+## 2026-08-03c (OVERNIGHT: g=0.2 retrain chained end-to-end via Slurm dependencies, plus the curvature measurement that decides whether the g=0.2 labels can be trusted at all.)
+
+**Files.** Added `scripts/measure_response_curvature.py`, `jobs/job_response_curvature.sh`,
+`jobs/job_build_ap7_g02.sh`, `jobs/job_blend_pairset_g02.sh`, `jobs/job_blendflow_ensemble_g02.sh`.
+
+**The chain, submitted with `--dependency=afterok` so a failure stops it rather than feeding garbage
+forward:**
+
+| stage | job | what | gate |
+|---|---|---|---|
+| 1 | **15485354** | sheared-half (`secondaries`) shapes at g=0.2, 200 cases | running, ~20h |
+| 2 | 15485365 | ap7 catalogue at g=0.2 (7", k=20, flow-only) | afterok 15485354 |
+| 3 | 15485366 | pair set at g=0.2 | afterok 15485365 |
+| 4 | 15485367 | 16-seed retrain (array 0-15) + ruler eval | afterok 15485366 |
+
+Stage 2 additionally **refuses at runtime** unless it finds exactly 200 g0.2 secondary shape
+catalogues, so a partially-complete stage 1 that still exits 0 cannot silently produce a thin
+catalogue. Stage 3 refuses if stage 2's output is missing.
+
+**Stage 4 is byte-identical to `job_blendflow_ensemble.sh` apart from the pair set, the output tag
+and the log names** (diffed, 4 hunks, all intended). Every hyperparameter is frozen at the round-2
+configuration so the ONLY difference from the g=0.05 ensemble is the shear amplitude the labels were
+measured at -- which is what makes the two comparable. Checkpoints land as
+`blendflow_ens_g02_s<seed>.pt`, distinct from the g=0.05 `blendflow_ens_s<seed>.pt`, so both
+ensembles survive side by side.
+
+**IN PARALLEL -- the measurement that gates interpretation (job 15485364).** I flagged when proposing
+g=0.2 that `c` in `R(g) = R_0 + c g^2` is unmeasured, and that g=0.2 carries 16x the curvature of
+g=0.05 while `m` is evaluated at +-0.02. That is now being measured from legs that ALREADY exist:
+build the pair set at g=0.02 with the same builder and the same g=0 reference leg, then solve `R_0`
+and `c` from the g=0.02 / g=0.05 pair. `scripts/measure_response_curvature.py` pairs per primary on
+shared `(case, input_index)` to cancel scene variance, reports the matched fraction, falls back to a
+clearly-labelled unpaired comparison otherwise, and **refuses to quote `c` as a measurement when it is
+consistent with zero** -- reporting a 2-sigma upper bound instead. The lever arm
+`0.05^2 - 0.02^2 = 0.0021` amplifies the response difference ~476x into `c`, so the error is
+propagated through that amplification rather than quoted on the difference.
+
+**Why this matters more than the retrain itself.** If `c g^2 / R_0` at g=0.2 is small, the retrain is
+a clean 4x noise reduction and the `chi2/dof < 1` axes (separation 0.198, primary magnitude 0.652)
+become measurable for the first time. If it is large, the g=0.2 labels are biased and any `m` built on
+them inherits it -- in which case the right answer is g=0.05 with more seeds, not more shear. **The
+retrain is running either way; this decides how to read it.**
+
+**Not addressed by any of this:** the per-pair -15.5% / +52.6% split (2026-08-03a). Cleaner labels
+make it measurable, not smaller.
+
+## 2026-08-03b (RETRAIN FLOW #2 ON g=0.2 -- owner decision. Prerequisite launched: the SHEARED-HALF shapes have never been measured at g=0.2, because that sim set exists for the EMULATOR, which only needs unsheared primaries. Job 15485354.)
+
+**Owner question + decision.** "Do you use 0.2 shear sims or 0.05 to regularize the flow? I believe we
+should use 0.2, which has less noisy signal, and also that's what emulator uses." Both beliefs are
+CORRECT, verified:
+
+- **flow #2 trains on g = 0.05** -- `build_blend_pairset.py:157` defaults `--gs-leg` to
+  `det_meas_ngmix_ap7_g0.05_val.feather`; `job_blend_pairset_dual.sh` does not override it.
+- **BlendEMU trains on g = 0.2** -- `response_catalogue_train.feather` is built from paired
+  g0.0 -> g0.2 primaries computing `delta_et1/delta_et2` (`job_resp_cat_rebuild_c2fix.sh`).
+
+So the two models we have been comparing all session are calibrated at DIFFERENT shear amplitudes.
+
+**The noise argument is right, and there is a stronger version of it.** The per-pair estimator is
+`de/g`, so its noise scales as `sigma_e/g`: 0.05 -> 0.2 cuts per-pair label noise 4x. Beyond that,
+three of the four ruler axes already sit at **chi2/dof < 1** (separation 0.198, primary magnitude
+0.652; only primary size 2.041 is resolved), meaning the model-truth differences are SMALLER than the
+anchor noise and we cannot see them. **The "6-sd separation win" may be substantially a noise floor.**
+4x less label noise raises chi2/dof ~16x where noise-dominated, turning invisible axes into
+measurable ones. Counter-consideration, not resolved: the response is even in `g`
+(`R = R_0 + c g^2`), so g=0.2 carries **16x** the curvature contamination of g=0.05, and `m` is
+evaluated on constgold at +-0.02. The emulator accepts that trade and certifies at -0.126%, so it is
+workable; `c` for the shape response is unmeasured.
+
+**MY FIRST BLOCKER STATEMENT WAS WRONG.** I told the owner "there is no ngmix + ap7 leg at g=0.2",
+implying a large blendemu catalogue project. Wrong at the source level: the g=0.2 sim tree has all
+200 cases and its shape catalogues DO carry `NGMIX_G1/NGMIX_G2`. What is actually missing is
+narrower.
+
+**THE REAL BLOCKER.** g=0.2 belongs to the `response` sim set
+(`configs/fs2_lsst_r.yaml`: `response.shear_values = [0.0, 0.2]`), which feeds the EMULATOR. The
+emulator's label is the UNSHEARED primary's shape change from a sheared neighbour, so **only
+PRIMARIES were ever shape-measured at g=0.2**. Flow #2's pair set requires BOTH objects sheared
+(`build_blend_pairset.py` keeps `gp > 0 AND gs > 0`), i.e. the SHEARED half -- `secondaries` in
+run_shape terms. Verified: `case*_0.05/.../Shapes/` holds both
+`shape_catalogue_detect_position_tile*` and `..._secondaries_tile*`; `case*_0.2/` holds only the
+former, for all of cases 0, 50, 199.
+
+**Files.** Added `blendemu/jobs/job_fs2_lsst_r_shape_sec_g02.sh` (job 15485354, 20h/500G/100 tasks,
+partition `cluster`). It calls `run_shape.py` DIRECTLY with `--shear_case=0.2 --targets secondaries`
+rather than `run_pipeline.py --steps 3b`, because 3b is hardwired to `sim_set_name='self_response'`
+([0.0, 0.05]) and reaching 0.2 through it would mean editing a config shared with the emulator
+pipeline. All other arguments are read from that same config so the result is consistent with how the
+g=0.05 secondaries were made (stamp 48, pixel 0.2, use_pos detect, tile180.0_-0.5, realizations
+d,0,1).
+
+**Safety, checked not assumed.** `run_shape.py` writes `..._secondaries_<tile>.feather`, a DISTINCT
+filename from the g=0.2 primaries catalogue, so nothing is overwritten; it skips cases whose output
+exists (`run_shape.py:162`), so the job is idempotent and safe to resubmit after a timeout; and
+`--targets secondaries` measures input indices `[N/2, N)` (`run_shape.py:185`), the sheared half.
+
+**Comparability verified BEFORE committing 20h.** `gals_info_tile180.0_-0.5.feather` has the identical
+**699,568** galaxies at g0.0 / g0.05 / g0.2, with `Re_input`, `r_input`, `RA/DEC_input` and
+`sersic_n_input` identical across g0.05 and g0.2. Same scenes, different shear -- so a g=0.2 retrain
+is comparable to the g=0.05 one.
+
+**Remaining chain after 15485354.** (2) ap7 catalogue build at g=0.2 --
+`jobs/archive/job_build_allpairs_full.sh 0.2 val` pattern, `build_detection_measurement_catalogue.py
+--r-max 7 --k 20 --flow-only --include-shapes`, ~132 GB output. (3) pair set
+(`build_blend_pairset.py --gs-leg <new g0.2 leg>`, ~15 min). (4) 16-seed retrain. Multi-day.
+
+**Known open item, NOT resolved by this work.** Nothing here addresses the per-pair -15.5% / +52.6%
+split (2026-08-03a) -- less noisy labels make it MEASURABLE, not smaller.
+
+## 2026-08-03a (RETRACTION OF THE FLOW-#2 VERDICT. Run on ITS OWN configuration -- all pairs inside 7" -- flow #2 gives m = +0.572% against BlendEMU's -0.126%, a gap of 0.698 pt, not 6.208. Nearly the whole gap was an artifact of scoring the flow on a pair list defined by the EMULATOR's neighbour cuts. Job 15485170.)
+
+**Files.** Added `jobs/job_blendflow_allpairs_m.sh`; lookup
+`$DATA_DIR/sbsi_caches/blendflow/blend_lookup_ens16_allpairs7_c40-139.feather`. 1:09:36, 16 seeds.
+
+**RESULT.** Same dumps, same 16 flow-#1 seeds, `m` per seed:
+
+| configuration | rows | R_blend | m |
+|---|---|---|---|
+| BlendEMU NATIVE 10" | 11,670,851 (99.97%) | 0.1358 | **-0.126 +- 0.152** |
+| BlendEMU at 7", all pairs *(EXTRAPOLATED -- diagnostic only)* | 11,670,851 | 0.1323 | +0.279 |
+| **flow #2, 16-seed, ALL pairs inside 7"** | 11,670,851 | 0.1298 | **+0.572 +- 0.154 +- 0.194** |
+| flow #2 on the emulator's cut list (2026-08-02p) | 9,107,497 | 0.1154 | +7.038 |
+
+Per seed: mean +0.578, sd 0.777, sem 0.194, range -0.716..+2.048; `R_blend` 0.1298 +- 0.0066 (5.10%).
+
+**DECOMPOSITION on the full population.** What the population needs is `R_sim - R_flow` =
+0.8605 - 0.7258 = **0.1347**. Against that, BlendEMU native 0.1358 is **+0.8%** over and flow #2
+0.1298 is **-3.6%** short. The 0.698-pt gap splits as **0.41 pt aperture** (7" vs 10" costs the
+emulator 0.1358 -> 0.1323) + **0.29 pt model** (0.1323 -> 0.1298, only **1.9%** apart on identical
+all-pairs-7" lists).
+
+**WHAT I GOT WRONG.** 2026-08-02n/p scored flow #2 on a pair list built from the EMULATOR's stored
+neighbour cuts, to remove pair-set confounds from the MODEL comparison. That was right for the ruler
+and wrong for `m`: those cuts remove exactly the faint/small neighbours the flow relies on, so the
+restriction handicaps the FLOW far more than the emulator. On the restricted list the flow was 33%
+short of what that subpopulation needed; on its own list it is 3.6% short. **The "+6.208 pt" and the
+"13.6% low on identical pairs" are both properties of the emulator's sublist, not of flow #2.**
+Note the direction of my error reversed twice -- 2026-08-02o said the cap flattered the flow, which
+was true of the emulator-vs-emulator term but false of the overall verdict.
+
+**BUT DO NOT READ +0.572% AS PER-PAIR ACCURACY.** The 2026-08-02n per-pair decomposition still
+stands: on the emulator-KEPT pairs the flow is **-15.5%**, on the DROPPED pairs **+52.6%**. Summed
+over the full 7" list those opposite-signed errors largely cancel, which is WHY 0.1298 lands close to
+0.1347. **The good `m` here is a cancellation, exactly like the fiducial -0.123% (2026-08-02o).** The
+ruler verdict (2026-08-02m: wins separation, loses primary size, ties summed bias and primary
+magnitude) is unaffected and remains the basis for model decisions -- constgold is evaluation-only.
+
+**Status, corrected.** "Flow #2 does not replace BlendEMU" was asserted at a strength the evidence
+did not support. Accurate statement: **on the deliverable population flow #2 reaches +0.572% against
+BlendEMU's -0.126%, i.e. 0.70 pt behind and outside the |m| < 0.3% target, while the emulator is
+inside it.** It is much closer than 2026-08-02p claimed, and its remaining shortfall is a
+per-pair-cancellation, not an aggregate that can be trusted per-population.
+
+**Next.** (1) The per-pair -15.5%/+52.6% split is now the whole story and the only thing worth
+fixing; the aggregate `m` cannot diagnose it. (2) Requote any flow-#2 comparison on the flow's own
+pair list, not the emulator's.
+
+## 2026-08-02p (REQUOTED AGAINST A HEALTHY EMULATOR: the flow-#2 gap is +6.208 pt, not +2.372. The 7" cap was FLATTERING flow #2 -- it hid nearly two thirds of the deficit. Job 15485141.)
+
+**Files.** Added `jobs/job_blendflow_native_m.sh`. No new scoring: both lookups already existed, so
+this is a re-join and re-average, CPU-only.
+
+**Why.** 2026-08-02o showed the 7" cap costs BlendEMU 19% of its own blend response. 2026-08-02n's
+`+2.372 pt` gap was therefore measured against a weakened baseline. Requoted with the emulator in its
+NATIVE configuration (`r_max = 10"`, `k = 20`, the fiducial lookup), same 9,107,497 primaries:
+
+| R_blend source | R_blend | m | note |
+|---|---|---|---|
+| BlendEMU NATIVE 10"/k=20 | 0.1649 | **+0.830 +- 0.141** | what the emulator actually does |
+| BlendEMU capped at 7" | 0.1336 | +4.666 +- 0.152 | the handicapped baseline used in 2026-08-02n |
+| flow #2, 16-seed, 7" | 0.1154 | **+7.038 +- 0.159 +- 0.222** | unchanged |
+
+**GAP = +6.208 pt, not +2.372 pt.** *(SUPERSEDED by 2026-08-03a: this is the gap on the EMULATOR's cut list, which handicaps the flow far more than the emulator. On the flow's own all-pairs-7" list the gap is +0.698 pt.)* The correction runs AGAINST flow #2. I framed the handicap in
+2026-08-02o as something that made the comparison unfair; it did, but in the direction that FLATTERED
+the flow. Crippling the emulator moved it from +0.830% to +4.666%, closing 3.84 of the 6.21 points --
+**62% of the real deficit was hidden by the cap.**
+
+**Consistency check passed.** The flow side is unchanged to the digit -- per-seed mean +7.045, sd
+0.888, sem 0.222, range +5.342..+8.378, `R_blend` 0.1154 +- 0.0067 (5.80%) -- exactly as in
+2026-08-02n. Only the baseline moved, which is what should happen when only the baseline is changed.
+
+**What the population needs is `R_sim - R_flow` = 0.8605 - 0.6886 = 0.1719.** Against that:
+BlendEMU native 0.1649 is **-4.1%** short; flow #2 0.1154 is **-32.9%** short. The emulator is close;
+flow #2 is a third short. (Part of flow #2's shortfall is structural -- it cannot see pairs beyond 7"
+and those pairs are really there in `R_sim` -- but that limitation is a property of flow #2, not a
+bookkeeping artifact, so it belongs in the deliverable number.)
+
+**Both framings, and they are not interchangeable.** (a) DELIVERABLE -- best `m` each model can
+actually produce: +0.830 vs +7.038, gap +6.208 pt. THIS run. (b) MODEL -- accuracy on identical pairs:
+2026-08-02n / the per-pair ruler. (b) is the right question for model development; (a) is the right
+question for the pipeline. Quoting (b) where (a) is meant understates flow #2 by 3.84 pt.
+
+**Status unchanged in direction, strengthened in size: flow #2 does not replace BlendEMU.**
+
+**Next.** Unchanged from 2026-08-02o: the stratum penalty optimises the MEAN per-cell error while `m`
+depends on the SUMMED response. The 2026-08-02n decomposition (-15.5% on the 81% of response that
+drives `m`) is now consistent with a -32.9% total shortfall once the aperture loss is included.
+
+## 2026-08-02o (THE +4.666% BASELINE IS A HANDICAPPED EMULATOR, NOT A DIFFERENT POPULATION. Only 0.95 of the 4.79 points is the pair set; 3.84 is BlendEMU denied 19% of its own blend response. And the fiducial -0.123% turns out to be a cancellation between two populations that are +0.83% and -3.36%.)
+
+**Trigger.** The owner asked why `m` was "strangely high, for emulator as well" in 2026-08-02n, since
+the emulator normally delivers sub-percent. My first answer was wrong twice over and both errors were
+corrected by the owner in four words ("NOT V1, but V2"):
+
+- I read the +4.666% as the AGENTS.md "Gold-v1 out of its domain" signature. **The dumps are the
+  correct V2 dom6x6 ensemble** -- `plotting/plot_fid_flow_figures.py:206` globs
+  `ablate_s2c_lt500_dom6x6_perobj_s*.feather`. The right flow produced +4.666%.
+- I had cited AGENTS.md for `-0.126% -> +4.666%`. **AGENTS.md does not contain that number.** It was
+  measured HERE, in 2026-08-02f RESULT 3. I then called the match with AGENTS.md's +4.74% "a good
+  wiring check", which was circular -- a different phenomenon, and a coincidence confirms nothing.
+  Corrected in `jobs/job_blendflow_fiducial_m.sh` and in the 2026-08-02n text, marked as corrections
+  rather than silently edited.
+
+**Files.** Added `scripts/diag_emudomain_subset.py` + `jobs/job_diag_emudomain.sh`. Edited `AGENTS.md`
+(trap 2 rewritten), `WORKLOG.md`. Job 15485110 failed on a column bug (`load_dumps` returns only
+case/input_index/r_sim/R_blend, so `r_input_p` was absent); 15485116 is the good run.
+
+**RESULT -- the decomposition.** Identical dump rows throughout, `m` formed per seed:
+
+| population | N | R_sim | R_flow | R_blend | m |
+|---|---|---|---|---|---|
+| ALL (fiducial) | 11,674,408 | 0.8605 | 0.7258 | 0.1358 native | **-0.123%** |
+| KEPT by the emulator's pair cuts | 9,107,497 (78.0%) | 0.8605 | 0.6886 | 0.1649 native | **+0.830%** |
+| KEPT, emulator ALSO capped at 7" | 9,107,497 | 0.8605 | 0.6886 | 0.1336 | **+4.666%** |
+| DROPPED | 2,566,911 (22.0%) | 0.8604 | 0.8579 | 0.0325 native | **-3.358%** |
+
+**Only +0.95 pt of the 4.79-pt move is the population. +3.84 pt is the emulator losing 19% of its own
+blend response** (0.1649 -> 0.1336) to a 7"/neighbour-cut restriction it was never meant to run under
+(native `r_max = 10"`, `k = 20`). This REFRAMES 2026-08-02f RESULT 3: "same model, same galaxies, 4.8
+points purely from which pairs are summed" is arithmetically true but reads as bookkeeping. It is not
+bookkeeping -- **4/5 of it is amputation.** Every flow-#2-vs-BlendEMU comparison run at a 7" cap
+(2026-08-02f, 2026-08-02n) is therefore against a deliberately weakened baseline, and must say so.
+
+**RESULT -- the fiducial `m` is a cancellation.** 0.780 x (+0.830) + 0.220 x (-3.358) = **-0.09%**,
+reproducing the fiducial -0.123%. The blended majority UNDER-predicts and the weakly-blended remainder
+OVER-predicts. On the dropped group the flow alone nearly closes it unaided (`R_flow` 0.8579 vs
+`R_sim` 0.8604) and the emulator's extra 0.0325 overshoots. Same shape as the in-domain cancellation:
+**the small fiducial `m` is not evidence of per-population correctness.**
+
+**`R_sim` is a useless tell.** 0.8605 / 0.8605 / 0.8604 across all three groups. An unchanged `R_sim`
+does NOT mean an unchanged population -- that is exactly what misled me into suspecting a wrong flow.
+
+**Validation.** Merge safety asserted, not assumed: the lookup is 55,639,849 rows all unique on
+(case,input_index), and the merge is refused if it changes the row count, since `flows` is positional.
+`in_domain` removes only 16 of 9,107,513 matched rows.
+
+**Limitation.** This says nothing about which model is better -- it is a decomposition of a known
+number. The flow-#2 conclusion in 2026-08-02n (does not replace BlendEMU) is unaffected on the ruler,
+but its `m` gap of +2.372 pt was measured against the handicapped baseline and should be requoted
+against a native-configuration emulator before being cited as a model difference.
+
+**Next.** (1) Re-run the flow-#2 vs BlendEMU `m` comparison with the emulator in its NATIVE 10"/k=20
+configuration, accepting that flow #2 cannot follow it there, and quote the handicap explicitly.
+(2) The two-population cancellation is a better target than any aggregate: the blended 78% is where
+the deliverable lives.
+
+## 2026-08-02n (THE RULER TIE WAS A CANCELLATION. Flow #2 is -15.5% on the pairs that drive `m` and +52.6% on the ones that don't; the two nearly cancel in the aggregate. It is NOT ready to replace BlendEMU.)
+
+Files: `jobs/job_blendflow_fiducial_m.sh` (new). Job **15483389** (COMPLETED).
+
+**FIRST, A CORRECTION TO THIS JOB'S OWN HEADER.** It called the restricted pair set "the fiducial
+configuration". It is not. The fiducial is the FULL in-domain population — 11,674,408 primaries,
+`R_blend = 0.1358`, `m = -0.123%` — built from the emulator's NATIVE lookup at `r_max = 10`, `k = 20`.
+This run caps both models at 7" (flow #2 has never seen a wider pair) and applies the emulator's
+neighbour cuts to both, leaving **9,107,497 primaries = 78.01%**. On that set the EMULATOR reads
+**+4.666%**, matching **2026-08-02f RESULT 3** — the same pair list, measured earlier in this session.
+*(Correction, appended 2026-08-02: this sentence originally credited AGENTS.md with that number and
+called reproducing it "a good wiring check". AGENTS.md does not contain it. Its nearest value, +4.74%,
+is a DIFFERENT phenomenon — Gold-v1 used outside its domain — and the near-coincidence is not a
+confirmation of anything. The real cross-check is 2026-08-02f, which is a genuine self-consistency
+check because it is the same configuration.)* **A fiducial `m` for flow #2 has NOT been produced**, and cannot
+be without extrapolating the flow to 10" or dropping the 22% of primaries whose only neighbours lie
+outside its aperture.
+
+**THE SEED BUDGET, PREDICTED AND THEN MEASURED.** From the 4.45% population-mean scatter
+(2026-08-02m) I predicted ~0.70 pt of `m` per seed draw and ~0.18 pt after averaging 16.
+
+| | predicted | measured |
+|---|---|---|
+| single-seed sd of `m` | 0.70 pt | **0.888 pt** |
+| 16-seed ensemble sem | 0.18 pt | **0.222 pt** |
+
+Per-seed `m` runs 5.342 to 8.378. The error-budget reasoning holds; a single-checkpoint flow-#2 `m`
+would indeed have been uninterpretable.
+
+**THE RESULT ON MATCHED PAIRS:**
+
+| R_blend source | m % | R_blend | N |
+|---|---|---|---|
+| BlendEMU | +4.666 +- 0.152 | 0.1336 | 9,107,497 |
+| flow #2, 16-seed mean | +7.038 +- 0.159 (flow-1) +- 0.222 (flow-2) | 0.1154 | 9,107,497 |
+
+**+2.372 pt *(SUPERSEDED by 2026-08-02p: measured against a 7"-capped emulator; against a NATIVE emulator the gap is +6.208 pt)* of `m`, from a blend term 13.6% lower.** Identical pairs, so this is attributable to the
+models alone.
+
+**WHY THAT CONTRADICTS THE RULER — AND WHICH MODEL IS WRONG.** On the ruler the two TIE (summed bias
+-2.379 +- 1.087 vs -1.581). Splitting the held-out pairs by the emulator's own cut, over all 16 seeds:
+
+| group | pairs | truth | flow/truth | share of summed truth |
+|---|---|---|---|---|
+| **KEPT by the emulator** | 1,926,632 | 0.0764 | **0.845 +- 0.048 (-15.5%)** | **80.7%** |
+| DROPPED by the emulator | 8,405,095 | 0.0042 | **1.526 +- 0.284 (+52.6%)** | 19.3% |
+
+Recombining: `0.807 x 0.845 + 0.193 x 1.526 = 0.977`, i.e. **-2.32% implied against -2.38% measured**
+— the aggregate closes to 0.06 pt. **The ruler's headline agreement is a CANCELLATION of two large
+opposite-signed conditional errors, not accuracy.** And it cancels in the wrong direction for `m`,
+because `m` is driven by the emulator-domain pairs, which is precisely where the flow is 15.5% low.
+
+**THE ANCHORING TRADED ONE ERROR FOR THE OTHER.** Pre-round-1 (2026-08-02e) the flow was ~2.5x over on
+DROPPED and 0.89 on KEPT. Now: DROPPED 1.53 (much better), KEPT 0.845 (WORSE). Rounds 1-2 bought the
+faint-pair fix partly by deepening the bright-pair deficit — and the bright pairs carry 81% of the
+summed response. That trade was invisible to every metric used to judge those rounds, all of which
+were aggregates or chi2/dof over bins that mix the two groups.
+
+**STATUS: flow #2 does not replace BlendEMU.** It wins on separation (0.093 ensemble vs 0.658) and it
+is the better model on the wide/faint pairs the emulator discards entirely — but on the pairs that
+determine `R_blend` for `m` it is 15.5% low, worth +2.4 pt.
+
+**Next, and it follows directly from the decomposition rather than from a guess.** The stratum penalty
+weights cells by `1/sem^2`, so it optimises the MEAN of the per-cell errors while `m` depends on the
+SUMMED response, to which cells contribute in wildly unequal shares (81% / 19% across a split the
+grids never name). Weighting the penalty by each cell's share of the summed response — or simply
+adding the emulator-domain split as an explicit anchor axis — targets exactly the trade measured
+above. Neither is a new mechanism; both are the existing machinery pointed at the right quantity.
+
+## 2026-08-02m (16-SEED ENSEMBLE. The seed error is LARGE, several earlier single-checkpoint claims do not survive it, and the ensemble average is a genuinely better predictor.)
+
+Files: `scripts/agg_blendflow_ensemble.py` (new), `scripts/build_blend_lookup_both.py`
+(`--checkpoint` now `nargs="+"`, per-seed `R_blend_flow_s<seed>` columns),
+`scripts/eval_blend_flow.py` (k table), `tests/test_blend_flow.py` (+1, 19/19),
+`jobs/job_blendflow_ensemble.sh`, `jobs/job_blendflow_agg.sh` (new). Jobs **15483157** (16/16
+COMPLETED), **15483379** (aggregate).
+
+Seeds 501 502 503 505..517 (**504 does not exist**), round-2 configuration frozen.
+
+**(1) PER-SEED SPREAD — the error bar that belonged on every flow-#2 number quoted before today.**
+
+| metric | mean | sd | sem |
+|---|---|---|---|
+| summed bias % | -2.379 | **4.347** | 1.087 |
+| sep chi2/dof | 0.198 | 0.075 | 0.019 |
+| Re_p | 2.041 | 0.282 | 0.070 |
+| r_p | 0.652 | 0.139 | 0.035 |
+| k | 0.659 | 0.087 | 0.022 |
+
+**The summed-bias seed sd is 4.35 points.** Individual seeds run from **-9.84% to +4.62%**. Every
+summed bias quoted in rounds 1-2 and in 2026-08-02j/l was a single draw from that distribution.
+
+**CLAIMS THAT DO NOT SURVIVE — correcting this file, not re-litigating it:**
+
+- **"Flow #2 beats BlendEMU on summed bias" (2026-08-02h, `-1.14%` vs `-1.58%`) is NOT established.**
+  The 16-seed mean is -2.379 +- 1.087 against the emulator's -1.581: a tie. The round-1-vs-round-2
+  move (+1.95 -> -1.14) is well inside a 4.35 sd and was never resolved either. What DOES survive is
+  control-vs-round-2 (+11.03 -> -2.38), which is far outside the spread.
+- **"Flow #2 beats BlendEMU on primary magnitude" (0.4 vs 0.6) is NOT established** — it was a lucky
+  seed. The 16-seed mean is 0.652 +- 0.139 against 0.584, i.e. slightly WORSE, within noise.
+- **Separation SURVIVES decisively**: 0.198 +- 0.075 against 0.658, better by ~6 sd.
+- **Primary size survives as a genuine emulator win**: 2.041 +- 0.282 against 1.349, ~2.5 sd. So
+  2026-08-02l's reading — that the axis is real but weak — holds, and both attempts to close it were
+  correctly judged nulls.
+
+Corrected scoreboard: flow #2 beats the emulator on SEPARATION, ties on summed bias / primary
+magnitude / crowding, and loses on primary size. Not "three of four".
+
+**(2) THE SEED-AVERAGED RESPONSE IS BETTER THAN ANY SINGLE SEED.**
+
+| model | summed% | sep | Re_p | r_p | k |
+|---|---|---|---|---|---|
+| **ensemble mean** | -2.379 | **0.093** | 1.870 | **0.560** | 0.597 |
+| mean of single seeds | -2.379 | 0.198 | 2.041 | 0.652 | 0.659 |
+| BlendEMU | -1.581 | 0.658 | 1.349 | 0.584 | 0.587 |
+
+Every chi2/dof improves on the single-seed mean, because those are quadratic in the error and
+averaging cancels its seed-random part. Summed bias is IDENTICAL (-2.379 both ways) — it is linear in
+the prediction, so it cannot improve, and that identity is a useful internal check that the averaging
+is doing what it claims. The ensemble beats the emulator on separation by 7x and now edges it on
+primary magnitude and crowding; primary size remains the emulator's.
+
+**(3) THE OPERATIONAL RESULT: a single flow-#2 checkpoint CANNOT be used for `m`.**
+
+    per-pair seed sd of R_blend      0.03324  (93.4% of the mean response)
+    seed sd of the POPULATION mean   0.000767 on 0.01721  = 4.45%
+
+The first averages away over 10M pairs; the second does NOT. It is coherent across pairs and flows
+straight into `m`. With `R_blend/R_sim = 0.1358/0.8605 = 15.8%`, a 4.45% error on `R_blend` moves
+`R_model` by 0.70%, i.e. **`m` by ~0.70 percentage points per seed draw** — about 4.6x the fiducial
+`+-0.152%`, and far larger than any effect chased in the last three days.
+
+Using the 16-seed AVERAGE instead leaves 4.45%/sqrt(16) = 1.11% on `R_blend`, i.e. **~0.18 pt on
+`m`** — now comparable to the flow-#1 seed error, giving roughly `sqrt(0.152^2 + 0.176^2) ~ 0.23%`
+total. That is the honest error budget for a flow-#2-based `m`, and it is why the fiducial run must
+use `--checkpoint <all 16>` and per-seed columns rather than one file.
+
+(The 4.45% is measured on held-out half-shear pairs; transferring it to constgold is an assumption,
+but it is the same model and the best estimate available.)
+
+**Method note.** `cluster_sem` re-derived the primary index with a sort on every call, which made the
+16 x 5 x ~6 aggregate intractable (it timed out). `cluster_sem_fast` takes the index precomputed.
+That changes how the ERROR BARS are computed and would silently rescale every chi2 here, so the
+equivalence is pinned by `test_cluster_sem_fast_matches_the_original` on non-contiguous, non-zero-based
+primary ids across random masks (matches to 1e-12), not assumed.
+
+## 2026-08-02l (NULL: the size x neighbour-brightness grid does NOT fix primary size. And on inspection the "defect" is much weaker than the chi2/dof ranking implied.)
+
+Files: `scripts/train_blend_flow.py` (`prisize_x_nbrmag` grid), `jobs/job_blendflow_sizegrid.sh`
+(new, array 0-5). Job **15482995** (all 6 COMPLETED, 21-43 min).
+
+**PAIRED RESULT (g4 = the four-grid arm, g3 = the round-2 three-grid arm; same seed run both ways, so
+the seed cancels):**
+
+| seed | Re_p g3 | Re_p g4 | diff | sep diff | r_p diff |
+|---|---|---|---|---|---|
+| 501 | 2.1 | 2.1 | 0.0 | 0.0 | +0.3 |
+| 502 | 2.1 | 1.7 | -0.4 | +0.2 | -0.2 |
+| 503 | 2.0 | 1.9 | -0.1 | +0.1 | 0.0 |
+| **mean** | | | **-0.17 +- 0.12** | **+0.10 +- 0.06** | +0.03 +- 0.15 |
+
+**The primary-size term does not move** (-0.17 +- 0.12, consistent with zero, and nowhere near the
+0.8 needed to reach the emulator's 1.3). Separation degrades slightly (+0.10 +- 0.06) — which is the
+grid-dilution effect flagged in the job script BEFORE the run, since the penalty averages chi2/dof
+across grids and a fourth grid cuts each other grid's share to 3/4. Hypothesis rejected.
+
+The g3 arm reproduces at Re_p **2.1 / 2.1 / 2.0** across three seeds, so the defect itself is a stable
+property of the model, not a lucky draw.
+
+**MORE USEFUL THAN THE NULL: what the per-bin table shows (which the chi2/dof summary hid).**
+
+| Re_p | truth | sem | flow | emu | flow sigma | emu sigma |
+|---|---|---|---|---|---|---|
+| 0.30-0.38 | 0.02497 | 0.00351 | 0.01808 | 0.01811 | **-1.96** | **-1.96** |
+| 0.38-0.50 | 0.01644 | 0.00292 | 0.01946 | 0.01860 | +1.03 | +0.74 |
+| 0.50-0.75 | 0.01530 | 0.00192 | 0.01865 | 0.01722 | +1.74 | +1.00 |
+| 0.75-1.50 | 0.01531 | 0.00163 | 0.01403 | 0.01553 | -0.79 | +0.13 |
+
+1. **EVERY bin reads `tie`.** No single bin resolves flow from emulator. The 2.1-vs-1.3 ranking is an
+   accumulation of 1-2 sigma terms, not a visible failure anywhere.
+2. **The largest chi2 term for BOTH models is the SMALLEST-size bin, where they agree with each other
+   to 0.2% and both fall 27% short of the label** (3.84 of the flow's 8.55 total, and of the
+   emulator's 5.41). That is a SHARED blind spot, not a flow deficiency — the same signature as the
+   2026-08-02k crowding null: two models with completely different feature sets agreeing with each
+   other and disagreeing with the label.
+3. What actually separates them is mid-to-large primaries: the flow over-predicts at 0.50-0.75
+   (+1.74 vs +1.00 sigma) and under-predicts at 0.75-1.50 (-0.79 vs +0.13).
+4. **The flow's absolute agreement is only MARGINALLY poor**: chi2 = 8.55 on 4 dof is p ~ 0.07. The
+   emulator's 5.41 is p ~ 0.25. Neither is decisively failing the label.
+
+**READ THE EARLIER FRAMING DOWN ACCORDINGLY.** "Primary size is the axis where the emulator wins" is
+true as a ranking and reproducible, but it is not a demonstrated defect at 2 sigma in any bin, and its
+dominant term is a bin where the flow matches the emulator exactly. Two independent attempts to move
+it (a fourth anchor grid here; the crowding block in 2026-08-02k) have both returned nulls. Further
+tuning against this axis looks low-yield, and the remaining real work on flow #2 is the 16-seed
+ensemble and `m` in the fiducial configuration — not another grid.
+
+## 2026-08-02k (NULL: no crowding dependence to fix on the blend channel. The precondition check killed the sweep before it ran.)
+
+Files: `scripts/eval_blend_flow.py` (k-binned table), `jobs/job_blendflow_kcheck.sh` (new),
+`jobs/job_blendflow_crowd.sh` (new, written but **NOT RUN** — kept as the design if the question
+returns). Job **15482981** (COMPLETED, 47s).
+
+**The proposal.** Give flow #2 the crowding block so it knows a third galaxy shares the aperture. The
+physical argument is the owner's own: a third galaxy competes for the same light and should reduce a
+pair's `R_blend`. Neither model can currently see it — flow #2 conditions on one neighbour at a time,
+and BlendEMU's seven features are all pair-level.
+
+**The check, run BEFORE building anything.** Score the EXISTING round-2 checkpoint, unchanged, and bin
+the per-pair blend response by the primary's neighbour count.
+
+| k | N | truth | sem | flow | flow/tr-1% | emu/tr-1% |
+|---|---|---|---|---|---|---|
+| ALL | 10,331,727 | 0.01763 | 0.00122 | 0.01743 | -1.14 | -1.58 |
+| 1 | 173,072 | 0.01703 | 0.00941 | 0.01838 | +7.94 | +6.40 |
+| 2 | 710,066 | 0.02369 | 0.00468 | 0.01788 | -24.55 | -25.35 |
+| 3 | 1,441,236 | 0.01859 | 0.00327 | 0.01765 | -5.07 | -5.12 |
+| 4-5 | 3,990,783 | 0.01530 | 0.00196 | 0.01755 | +14.70 | +13.90 |
+| 6-8 | 3,434,540 | 0.01874 | 0.00211 | 0.01714 | -8.52 | -8.65 |
+| 9+ | 582,030 | 0.01753 | 0.00536 | 0.01699 | -3.10 | -3.45 |
+
+**chi2/dof = 0.6 for the flow across the six bins — BELOW 1, i.e. the residuals are consistent with
+the label noise.** Every bin reads `tie` against the emulator. The large-looking percentages are
+1.1-1.3 sigma once the cluster-robust sem is used.
+
+**The decisive detail is that the flow and the emulator agree with each other in every bin** to within
+a few tenths of a percent (-24.55 vs -25.35, +14.70 vs +13.90, -8.52 vs -8.65). Two models with
+completely different feature sets — one with both galaxies' oriented shapes, one with seven pair-level
+scalars, NEITHER with any crowding input — reproduce the same k-dependence. That means the wiggles
+live in the LABEL, not in the models, and a crowding feature has nothing model-side to correct.
+
+The TRUTH itself is flat in k (0.0170, 0.0237, 0.0186, 0.0153, 0.0187, 0.0175 — no monotonic trend),
+so the expected suppression is not visible in the per-pair response at this precision either.
+
+**SCOPE OF THE NULL, stated honestly.** Per-bin sems run 11%-55% of the signal, so an effect would
+have to exceed roughly 15-20% across the k range to show here. This is "no crowding dependence
+detectable above the label noise", NOT "no crowding dependence exists". It does not speak to the
+SUMMED response, only the per-pair one.
+
+**DECISION: the 6-task paired sweep (`job_blendflow_crowd.sh`) was NOT submitted.** Writing the
+precondition check cost one 47-second job and avoided six ~25-minute GPU jobs measuring nothing.
+
+## 2026-08-02j (MERGE PARKED by the owner — back to SEPARATE models. Plus an accidental replicate that measures this training's reproducibility floor.)
+
+**DIRECTION CHANGE.** The owner decided to stick with separate models, so the flow-#1/flow-#2 merge
+(2026-08-02i) is parked, not deleted. Array **15482854** (step 2b) was CANCELLED — every task in it
+trained a dual model. Nothing was lost: no dual checkpoint is used by anything, and the entry below
+records what was learned so it can be resumed rather than rediscovered.
+
+**WHAT THE MERGE WORK LEFT BEHIND THAT IS STILL USEFUL FOR FLOW #2 ALONE:**
+
+- `--crowding` (`nbr_flux_near/far/max`, `log_k` in `sbs_shear/blend_flow.py:crowding_columns`),
+  computed from the pair set's own neighbour rows with the same shells / zero point / noise
+  normalisation as `scripts/build_crowding_lookup.py`, unit-tested against hand-computed values.
+  **Directly relevant to the BLEND channel**: a third galaxy in the aperture changes a pair's
+  `R_blend`, and flow #2 currently has no input that knows about one. Untested on the blend channel.
+- The non-finite-criterion guard: a `nan` criterion used to mean no checkpoint was ever saved while
+  the closing tables announced they described one. Applies to blend-only runs too.
+- Pair set `blend_pairset_ap7_dual.feather` — a strict SUPERSET of `blend_pairset_ap7.feather` (same
+  51,656,702 rows, extra `self_truth`/`self_null`/`k` columns). Blend-only training on it is
+  unaffected; `k` is what makes the crowding block possible without another 130 GB pass.
+- **Deployment gap if crowding is ever adopted:** `build_blend_lookup_flow.py` and
+  `build_blend_lookup_both.py` now REFUSE a crowding checkpoint, because their per-case pair frames
+  carry no `pid`/`k` and rebuilding the features from whatever rows are present would report a
+  systematically under-crowded galaxy. Threading `pid`/`k` through those two scripts is the work item.
+
+**AN ACCIDENTAL REPLICATE — and the reproducibility floor it measures.** Task 0 of the dual sweep
+(15482586_0, self weight 0) is the round-2 configuration exactly: verified identical pair set
+(51,656,702 rows), identical held-out cases, identical 13 features, identical model config, same
+seed 501, same label statistics. It is therefore an unintended repeat of 15482220_1.
+
+| run | summed bias | sep | Re_p | r_p |
+|---|---|---|---|---|
+| round 2 (15482220_1) | -1.14% | 0.1 | 2.2 | 0.4 |
+| replicate (15482586_0) | -0.86% | 0.3 | 2.0 | 0.3 |
+| spread | **0.28 pt** | 0.2 | 0.2 | 0.1 |
+
+Same seed, so this is not seed scatter: it is CUDA nondeterminism (the stratum penalty uses
+`index_add_`, which is not deterministic on GPU). **Read single-run comparisons against this floor.**
+Round 2's conclusions survive it — sep 0.1/0.3 vs the emulator's 0.7, r_p 0.4/0.3 vs 0.6, Re_p
+2.2/2.0 vs 1.3 (emulator still wins) — but the summed-bias claim (`|-1.14| < |-1.58|`) has a margin
+comparable to the spread and should not be leaned on alone. That column already carries a 6.9% label
+error as well, so it was never the column to rank models by; the chi2/dof columns are.
+
+## 2026-08-02i (MERGING FLOWS #1 AND #2 — steps 1 and 2. PARKED 2026-08-02j, see above. The self-response label turns out to be free, and the merge is now a feasibility question rather than a data question. RESULTS PENDING.)
+
+Files: `scripts/build_blend_pairset.py` (`self_truth()`, `self_null`, `k`, dual null tests),
+`sbs_shear/blend_flow.py` (`SHAPE_P`/`SHAPE_COLUMNS`, `which=` on `shape_column_indices` and
+`shifted_shape_columns`, `blind_flow_to_primary_shape` in `build_model`),
+`scripts/train_blend_flow.py` (`--self-response-weight`, `--no-self-weight-by-k`,
+`collapse_to_primaries()`, `bias_table()`, dual criterion, non-finite-criterion guard),
+`tests/test_blend_flow.py` (+6 tests, 14/14 pass), `jobs/job_blend_pairset_dual.sh` (new),
+`jobs/job_blendflow_dual.sh` (new, array 0-3). Job **15482547** (pairset rebuild).
+
+**WHY.** The fiducial is `R_model = R_flow + R_blend` — two separately trained models added. The sum
+is an assumption. One flow that sees the primary and its neighbours together produces the total
+response as a single derivative, and additivity becomes measurable instead of assumed.
+
+**THE SELF LABEL IS FREE.** The blend label projects the primary's measured-shape shift on the
+NEIGHBOUR's shear direction. The same both-sheared rows carry the PRIMARY's shear direction
+independently, so projecting the IDENTICAL difference on that gives the self response — no new leg,
+no new join, no new read. The decorrelation argument is symmetric: it was already invoked to say the
+self term averages out of the blend label, and the same independence makes the blend term average out
+of the self label. Both 45-degree nulls are now built and tested; if either fails, neither label is
+usable. `self_truth = ((e_both - e_0) . ghat_p)/|g_p|`.
+
+**TWO ASYMMETRIES THAT ARE NOT SYMMETRIC.** (1) Scale: self ~0.86 vs blend ~0.14, same per-pair label
+scatter, so one response weight cannot serve both — there is now one per channel. (2) Sampling unit:
+a primary with k neighbours contributes k rows, which is correct for the blend label (k distinct
+pairs) and wrong for the self label (one quantity repeated k times). Since crowding SUPPRESSES the
+self response, an unweighted row average is a bias, not just an inefficiency. `k` is written per row,
+the self term is weighted 1/k, and evaluation collapses to one row per primary. `k` is counted AFTER
+the finite filter, so the weights actually equalise primaries — an earlier version counted before it
+and was resubmitted rather than argued to be close enough (15482530 cancelled, 15482547 is the build).
+
+**THE PRIMARY'S SHAPE MUST NOW BE BLINDED TO THE RESIDUAL FLOW.** Flow #2 deliberately left it
+visible because it was not a response channel. Once the self response is supervised, the argument
+that blinds the neighbour's shape applies to the primary's with MORE force: it is the stronger
+channel and therefore the one the density term would absorb. Verified that `flow_drop_indices`
+restricts only the residual flow (`_flow_ctx`) while `mean_net` still takes the full context, so the
+channel is live. Blend-only runs keep the old behaviour exactly.
+
+**BOTH CHANNELS ARE THE SAME KIND OF NUMBER, PROVED NOT ASSUMED.** The trace/2 of the Mobius Jacobian
+at g=0 is identically 1: `d(e1')/dg1 = 1 - e1^2 + e2^2` and `d(e2')/dg2 = 1 + e1^2 - e2^2` average to
+1 for every shape. So a linear mean head with coefficient `a` on a channel returns exactly `a`, with
+no leftover shape dependence — which is what makes adding `R_self` and `R_blend` meaningful. This is
+now a unit test (`test_each_channel_reads_its_own_coefficient`), as is the check that the two channels
+are disjoint and that a shift on one leaves every other feature, derived ones included, untouched.
+
+**PRE-EXISTING SILENT FAILURE FOUND AND FIXED.** A non-finite held-out criterion never satisfies
+`crit < best`, so no checkpoint is ever saved, and the closing tables then describe the FINAL EPOCH
+while announcing that they describe the checkpoint — the same confusion 2026-08-02h fixed from the
+other direction. It never bit because the value was always finite on real data; dual mode gives it two
+chances instead of one. Non-finite components are now dropped with a warning, the run refuses if none
+survive, and it refuses at the end if nothing was ever saved. Caught by the synthetic smoke test,
+where sparse anchors legitimately produce a nan.
+
+**WHAT STEP 2 CAN AND CANNOT SETTLE.** It asks ONE question: can a single network hold a ~0.86 self
+response and a ~0.14 blend response at once, or does the strong channel crowd out the weak one? That
+is not hypothetical — the NLL-only run measured exactly that crowding (blend response 70-85% low and
+flat, because ML spends capacity on the primary's shape at correlation ~0.8 and under-fits the
+neighbour's at ~0.035). It is NOT a replacement for flow #1: this pair set has no isolated primaries
+at all (~a quarter of the population), a pair model has no unique `R_self` per primary (k contexts, k
+answers, averaged), and it has fewer inputs and 2 outputs instead of 4. Its `R_self` is therefore NOT
+comparable to the fiducial `R_flow` and must not be substituted for it.
+
+**STEP 1 RESULT (job 15482547, COMPLETED, 840s): 51,656,702 pairs, 200 cases, 100.00% of rows finite
+on all features and BOTH labels.** `k` mean 5.09, median 5, max 18.
+
+| quantity | value |
+|---|---|
+| `blend_truth`, row mean | +0.01706 (std 3.9146, sem 0.000545) |
+| `self_truth`, row mean | +0.69856 |
+| `self_truth`, **1/k-weighted (per-PRIMARY, the physical one)** | **+0.72095** |
+| row minus per-primary | **-0.02239, i.e. 3.1%** |
+
+**The crowding bias predicted before the build is REAL and material: 3.1%.** Row-averaging the self
+label under-reports the per-primary self response by that much, because crowded primaries contribute
+more rows and crowding suppresses the self response. This is why the self term is weighted 1/k and
+why evaluation collapses to one row per primary. Had this been left alone it would have entered as a
+3% error on the LARGER of the two responses, silently.
+
+**Supportive consistency check, not a validation.** AGENTS.md records that the cut population needs
+`R_flow = R_sim - R_blend = 0.7224`. The per-primary self label here is **0.72095** — 0.2% away. The
+populations and estimators are not identical (half-shear neighboured-only in-domain pairs here vs
+constgold there), so this is not proof the label is right; it is a strong indication that it is
+measuring the quantity intended, arrived at by a completely independent route.
+
+**THE SELF NULL IS AT 3.0 SIGMA AND IS RECORDED, NOT WAVED THROUGH.** Blend null +0.00023 +- 0.00054
+(0.4 sigma, clean). Self null **+0.00160 +- 0.00054 (3.0 sigma)** — just under the builder's own
+3-sigma trip, so no failure was printed. In relative terms it is **0.23% of the 0.699 self signal**.
+
+A single mechanism reconciles both nulls: a ~0.23% leakage of each galaxy's OWN response into the
+orthogonal (45-degree) projection. It predicts a self null of 0.0023 x 0.699 = 0.0016 (observed
+0.00160) and a blend null of 0.0023 x 0.017 = 0.00004, which at sem 0.00054 is 0.07 sigma and
+therefore invisible (observed 0.00023 +- 0.00054, consistent). The self null is resolved not because
+the self label is dirtier but because its signal is 41x larger against the same noise floor.
+
+Impact on the labels: a cross-leakage is an ORTHOGONAL component and does not bias the parallel
+projection at first order, so `self_truth` is sound at the 0.23% level — an order of magnitude below
+anything step 2 decides (it asks whether the model returns ~0.7 or ~0.02). Worth understanding before
+any number from this path is quoted; not a blocker for the feasibility test. Candidate causes not yet
+separated: pixel-grid anisotropy, ngmix estimator nonlinearity, or a 3-sigma fluctuation across two
+tests. NOT yet investigated.
+
+**Sweep.** `job_blendflow_dual.sh`, self weights 0 / 300 / 1000 / 3000 on top of the round-2 winner
+(response 1000, strata 100, three grids). Task 0 is a blend-only control retrained on THIS pair set so
+no comparison is confounded by the data changing underneath it. Blend side decided by
+`eval_blend_flow.py` on identical held-out rows as in rounds 1 and 2; self side by the new per-PRIMARY
+tables (magnitude, size, crowding) read against the label's own sem.
+
+**STEP 2 RESULT (job 15482586_0..3, all COMPLETED, 21-25 min each).**
+
+**VERDICT: the two channels DO coexist globally — and the pair structure, not the optimisation, is
+what limits the self channel. No weight fixes it.**
+
+BLEND side, `eval_blend_flow.py`, identical held-out rows (2,483,935 primaries, `<k>` 4.16):
+
+| self weight | summed bias | sep | Re_p | r_p |
+|---|---|---|---|---|
+| **0 (control, retrained on THIS pair set)** | **-0.86%** | 0.3 | 2.0 | **0.3** |
+| 300 | +7.41% | 0.2 | 2.8 | 0.6 |
+| **1000 (best dual)** | +1.99% | **0.1** | 2.3 | 1.2 |
+| 3000 | -8.92% | 0.3 | 2.7 | 1.3 |
+| BlendEMU | -1.58% | 0.7 | 1.3 | 0.6 |
+
+SELF side, per PRIMARY, global: sw300 **-5.78%**, sw1000 **-0.60%**, sw3000 **-0.90%**.
+
+**Read the summed-bias column against its own error before calling anything a degradation.**
+`S_truth = 0.07335 +- 0.00508`, i.e. the label knows this quantity to **6.9%**. Every summed bias in
+the table, control included, is inside ~1.3 sigma of truth and none is resolved against another
+*relative to truth*. Model-vs-model differences ARE exact (same rows, deterministic), so the control's
+-0.86% and sw1000's +1.99% genuinely differ by 2.85 points — but which is closer to truth is not
+something this column can decide. The chi2/dof columns are per-bin against the label's sem and ARE
+informative; they say sw1000 IMPROVED separation (0.3 -> 0.1, the best of any model yet) and WORSENED
+the primary-magnitude conditional bias (0.3 -> 1.2), with primary size roughly unchanged (2.0 -> 2.3).
+
+**THE SELF CHANNEL IS RECOVERED IN THE MEAN AND TOO FLAT IN EVERY CONDITIONAL.** At sw1000 the global
+self response is -0.60% — but the model compresses the dynamic range badly:
+
+| axis | truth range | model range (sw1000) | worst bin |
+|---|---|---|---|
+| primary mag | 1.181 -> 0.283 (factor 4.2) | 0.945 -> 0.524 (factor 1.8) | mag>25.5: **+85.5%** |
+| primary size | 0.425 -> 0.783 | 0.629 -> 0.857 | Re<0.35: **+47.8%** |
+| crowding `k` | 0.788 -> 0.667 (**falls 15%**) | 0.715 -> 0.722 (**rises 1%**) | k 6-9: **+8.2%** |
+
+**The crowding row is the finding.** The truth falls 15% from k=1 to k=6-9; the model RISES 1%. It has
+the trend backwards, not merely muted. That is exactly the failure predicted before the run, for
+exactly the predicted reason: a pair model reads `R_self` from a context naming ONE neighbour and has
+no input that counts them. Sweeping the weight 300 -> 1000 -> 3000 moves the magnitude chi2/dof
+1338 -> 791 -> 510 and leaves the model still hugely flat, so this is not an optimisation shortfall.
+
+**TWO DISTINCT CAUSES, WITH DIFFERENT FIXES — do not conflate them.**
+
+1. *Flatness on the primary's own axes (mag, size).* This is the SAME symptom the blend channel had in
+   rounds 1-2: a conditional bias invisible to a per-pair MSE whose surface is dominated by label noise
+   (std 3.9 against signal 0.7). The proven remedy is already in this file — stratum anchors on the
+   per-cell mean. It was deliberately scoped OUT of step 2 to keep the feasibility test clean; the
+   data now says to put it in.
+2. *Crowding.* Anchoring cannot fix this one: the model has no crowding FEATURE to condition on, so an
+   anchor on `k` would force the marginal to match while the network fits it through whatever happens
+   to correlate. Flow #1 solved precisely this by conditioning on crowding SCALARS
+   (`nbr_flux_near/far/max`) after both NP7 and AP7 pair flows mis-predicted the self response by +13%
+   to -66% across crowding. The same scalars are the cheap fix here — and they are already a
+   fixed-size set summary, i.e. a step toward the scene model rather than a detour from it.
+
+**Next.** (a) STEP 2b: add the crowding scalars to flow #2's context AND stratum anchors on the self
+channel over primary mag x size. Both are targeted at measured defects, not speculative. (b) Then
+step 3, scene-level, with the neighbour branch gated so an isolated primary reduces exactly to flow
+#1's tabular trunk (a plain DeepSets trunk is what caused the -5.24% self-response gap in V2, so the
+set part must enter as a correction, not as the trunk). (c) Only at step 3 does additivity become
+testable, by shearing everything at once and comparing against the sum of the two channels.
+(d) Unresolved from step 1: the 3.0-sigma self null (0.23% of signal) is still uninvestigated.
+
+Chosen checkpoint if one is needed before 2b:
+`blendflow_dual_sw1000.0_s501.pt` (best dual on both sides). NOT a replacement for flow #1 — see the
+three structural limits above.
+
+FIREWALL held throughout: half-shear legs only, constgold never opened.
+
+## 2026-08-02h (ROUND 2 — PRIMARY AXES ANCHORED. Flow #2 now beats BlendEMU on THREE of the four held-out measures, and the result is nearly independent of the penalty weight, where round 1 swung wildly. One axis left: primary size.)
+
+Files: `scripts/train_blend_flow.py` (`PRIMAG_EDGES`, `PRISIZE_EDGES`, `GRIDS`, `grid_ids()`,
+`--grids`; multi-grid penalty and selection; checkpoint-reload fix),
+`jobs/job_blendflow_retrain_grids.sh` (new, array 0-2), `jobs/job_blendflow_constgold_grids.sh`
+(new). Jobs **15482216** (smoke), **15482220_0..2** (all COMPLETED, ~20 min), **15482306**
+(constgold).
+
+**MARGINAL grids, not a joint one.** Crossing separation x neighbour-mag x primary-mag x primary-size
+is ~1700 cells; with the realised anchor S/N already median ~1.7 on 48 cells, splitting the same pairs
+that far would leave nearly every anchor consistent with zero — the penalty would report a large chi2
+while pulling toward noise. Three 2-D grids, each marginalised over the axes it does not name, keep
+~300-430k pairs per cell and constrain all four axes. Their chi2/dof are AVERAGED, not pooled, so an
+axis gains no weight merely by having more bins. Edges from the pair set's own quantiles.
+
+The new grids are BETTER anchored than the original: `sep_x_primag` median S/N **3.5**, `sep_x_prisize`
+**4.5**, against `sep_x_nbrmag`'s **1.7**, with 48/48 cells usable in each. Round 1 was leaning on a
+strong minority inside a mostly-noisy grid.
+
+**RESULT — `eval_blend_flow.py`, identical held-out rows:**
+
+| model | summed bias | sep | Re_p | r_p |
+|---|---|---|---|---|
+| control (`rw1k`) | +11.03% | 1.0 | 3.6 | 2.0 |
+| round 1 (nbr-mag grid, w100) | +1.95% | 0.2 | 4.0 | 2.7 |
+| **round 2, w100 (chosen)** | **-1.14%** | **0.1** | **2.2** | **0.4** |
+| round 2, w30 | +3.10% | 0.1 | 2.3 | 0.5 |
+| round 2, w300 | +1.78% | 0.1 | 2.3 | 0.4 |
+| BlendEMU | -1.58% | 0.7 | 1.3 | 0.6 |
+
+**Flow #2 now beats the emulator on summed bias (|-1.14| < |-1.58|), separation (0.1 vs 0.7) and
+primary magnitude (0.4 vs 0.6).** It loses only on primary SIZE (2.2 vs 1.3) — still a large
+improvement on the control's 3.6 and on round 1's 4.0.
+
+**Round 1's regression is repaired, not merely offset.** Round 1 bought separation and aggregate
+accuracy by making both primary axes worse than the control. Round 2 keeps separation at 0.1 AND
+takes both primary axes below the control. That is the distinction between a fix and a redistribution,
+and it was the stated acceptance test before the run.
+
+**The weight-insensitivity is itself a result.** Round 1 across 10/100/1000 gave Re_p 9.1 / 4.0 / 5.9 —
+violent, and 1000 over-corrected past the control. Round 2 across 30/100/300 gives 2.3 / 2.2 / 2.3 and
+r_p 0.5 / 0.4 / 0.4. With every axis anchored the solution is well determined instead of trading one
+axis against another, so the choice of weight stops mattering much. Only the summed bias still moves
+(+3.10 / -1.14 / +1.78), and w100 is picked on that.
+
+**Reporting flaw (a) from 2026-08-02g FIXED.** The trainer now stores the saved weights and reloads
+them before its final tables, so the in-training faint/bright and separation tables describe the
+CHECKPOINT ON DISK rather than whatever epoch the loop ended on. Round-2 faint/bright ratios are
+therefore comparable across runs for the first time: KEPT/DROPPED = 0.87/1.70 (w30), 0.83/1.63 (w100),
+0.86/1.68 (w300). Flaw (b) — the 2-D selection chi2 being too blunt to RANK — is unchanged; ranking
+above is on the `eval_blend_flow.py` axes, not on it.
+
+`grid_ids()` is verified to reproduce the previous single-grid `stratum_ids()` exactly, so round 2 is a
+strict generalisation of round 1 rather than a rewrite.
+
+**CONSTGOLD CONSEQUENCE (job 15482306, COMPLETED 19 min).** Same script, same 11,670,851 rows, same
+all-pairs 7" list, only the checkpoint changed:
+
+| flow #2 checkpoint | `R_blend` flow | flow/emu in-domain | `m %` flow | gap to emu |
+|---|---|---|---|---|
+| control | 0.1551 | 1.100 | -2.308 +- 0.146 | 2.587 pt |
+| round 1 | 0.1390 | 1.049 | -0.495 +- 0.151 | 0.775 pt |
+| **round 2, w100** | **0.1297** | **1.025** | **+0.586 +- 0.154** | **0.307 pt** |
+| BlendEMU | 0.1323 | 1.000 | +0.279 +- 0.153 | — |
+
+**State the constgold outcome carefully — it is NOT an improvement over round 1.** `|m|` goes
+`0.495 -> 0.586`, i.e. marginally WORSE in absolute value, though it crosses zero. The change is
+0.09 pt against a `+-0.15` error on each, so the honest reading is **round 1 and round 2 are tied on
+constgold `m`**. Do not quote round 2 as a better `m`.
+
+What DID improve monotonically is agreement with the emulator: the flow-vs-emulator gap falls
+`2.587 -> 0.775 -> 0.307` pt and the summed `R_blend` ratio `1.100 -> 1.049 -> 1.025`. And the RULER —
+the only thing permitted to decide — clearly prefers round 2 (three of four axes better than the
+emulator, both primary axes repaired below the control). Round 2 is adopted on that basis, not on `m`.
+
+Caveats unchanged and none retired: ONE checkpoint, so the `+-` is the flow-#1 seed spread alone and
+is a LOWER BOUND; **not quotable**; this is the all-pairs 7" configuration, so `+0.279%` is the
+comparator, NOT the fiducial `-0.126%`.
+
+**Next.** (a) Primary SIZE is the last axis where the emulator wins (2.2 vs 1.3) — try a
+`prisize x nbrmag` grid, since size may interact with neighbour brightness in a way no
+separation-crossed grid captures; (b) 16-seed ensemble, now defensible: the known conditional biases
+are down to one axis, so an ensemble would measure seed scatter rather than a systematic; (c) re-check
+`m` in the FIDUCIAL configuration, not just all-pairs 7", before any number is quoted.
+
+## 2026-08-02g (STRATA-ANCHORED RETRAIN. The summed held-out bias drops +11.03% -> +1.95% and the separation chi2/dof 1.0 -> 0.2, beating the emulator on both. It is NOT free: every variant is worse than the control on the PRIMARY-property axes, a second conditional bias the grid does not cover.)
+
+Files: `scripts/train_blend_flow.py` (`MAG_EDGES`, `stratum_ids()`, `stratum_targets()`,
+`strata_chi2()`, `--strata-weight`, `--select-on`, a held-out faint/bright diagnostic),
+`jobs/job_blendflow_retrain_strata.sh` (new, array 0-2), `jobs/job_blendflow_constgold_sw100.sh`
+(new). Jobs **15481432** (smoke), **15481440_0..2** (retrain, all COMPLETED, 14-18 min),
+**15481586** (control eval), **15481591** (constgold).
+
+**The defect and why the old setup could not see it.** Held-out, the control flow was 2.5x OVER on the
+neighbours the emulator discards and ~11% UNDER on the ones it keeps — **opposite signs**, so the two
+largely cancel in any separation-binned average. Both the response loss and the checkpoint criterion
+binned by SEPARATION only, and a separation bin mixes bright and faint neighbours freely. The model
+was never told about the neighbour-brightness axis and neither was the thing choosing its checkpoint.
+
+**Why more per-pair MSE cannot fix it.** The label carries std ~3.9 against a signal ~0.02, so the
+squared-error surface is dominated by irreducible noise and is nearly flat with respect to a
+systematic offset INSIDE a stratum. Pooling ~1M pairs drops the error to ~0.004 and turns the same
+offset into a 10-sigma effect. The fix is an ANCHOR on stratum means, not a reweighting.
+
+**Implementation.** `--strata-weight` adds chi2/dof of the per-stratum MEAN prediction against anchors
+measured on the TRAIN split over an 8 x 6 separation x neighbour-magnitude grid (41-48 of 48 strata
+usable, min 2000 pairs). Each stratum is weighted by `1/sem^2` of its own anchor, so weak anchors
+self-attenuate — necessary, because the realised anchor S/N is **median 1.7, range 0.1-64.2**: the
+constraint rests on a strong minority. `--select-on strata` extends the held-out criterion to the same
+grid using VAL-split anchors (training anchors would measure how hard the penalty pulled, not
+generalisation). Anchors are derived and reported in the same run — the line AGENTS.md draws.
+
+**RESULT — all four checkpoints scored by `eval_blend_flow.py` on identical held-out rows:**
+
+| model | summed bias | sep chi2/dof | Re_p chi2/dof | r_p chi2/dof |
+|---|---|---|---|---|
+| control (`rw1k`, weight 0) | **+11.03%** | 1.0 | **3.6** | **2.0** |
+| weight 10 | **+0.42%** | **0.1** | 9.1 | 4.0 |
+| **weight 100 (chosen)** | +1.95% | 0.2 | 4.0 | 2.7 |
+| weight 1000 | -9.43% | 0.3 | 5.9 | 9.1 |
+| BlendEMU | -1.58% | 0.7 | 1.3 | 0.6 |
+
+The targeted axis responded: separation chi2/dof **1.0 -> 0.2**, now better than the emulator's 0.7,
+and the summed bias — the quantity that propagates straight into constgold `m`, and which matched the
++17.2% excess measured there in 2026-08-02f — falls by a factor of ~5.
+
+**The cost, stated plainly.** Every penalty variant is WORSE than the control on the primary-property
+axes (Re_p 3.6 -> 4.0, r_p 2.0 -> 2.7 at weight 100). An earlier reading of the 9.1 -> 4.0 move
+between weights 10 and 100 as "the anchoring helps there too" was **wrong**: it compared two penalised
+models to each other rather than to the control. The flow remains 3-4x worse than the emulator on
+those axes, which is a SECOND conditional bias the sep x neighbour-mag grid does not cover, and it is
+why this is still not a drop-in replacement.
+
+**Weight 1000 over-corrects** — worse than the control on both primary axes and -9.43% overall. The
+penalty has a usable range, not a monotone one.
+
+**Two reporting flaws found, one fixed.** (a) The in-training faint/bright diagnostic evaluates the
+FINAL-epoch model, not the checkpoint that was saved, so its ratios describe a different model from
+the one on disk; `eval_blend_flow.py` (which loads the checkpoint) is authoritative and the in-training
+table should be read as indicative only. (b) The 2-D selection criterion can SEE the defect but is too
+blunt to RANK by it — weight 10 scores 0.83 and weight 100 scores 0.86 while their faint-group ratios
+are 2.41 and 1.39. With median anchor S/N 1.7, most strata contribute ~1 regardless and dilute the few
+that carry signal. Rank on the two-group aggregate, not on this chi2.
+
+**Firewall.** Model choice was made entirely on the ruler. constgold (15481591) is used only to report
+the consequence.
+
+**CONSTGOLD CONSEQUENCE (job 15481591, COMPLETED 17 min).** Same script, same 11,670,851 rows, same
+all-pairs 7" list, both models on one pair list — only the checkpoint changed:
+
+| flow #2 checkpoint | `R_blend` flow | `R_blend` emu | `m %` flow | `m %` emu |
+|---|---|---|---|---|
+| control (2026-08-02f) | 0.1551 | 0.1323 | **-2.308 +- 0.146** | +0.279 +- 0.153 |
+| **strata-anchored, weight 100** | 0.1390 | 0.1323 | **-0.495 +- 0.151** | +0.279 +- 0.153 |
+
+`m` improves **-2.308% -> -0.495%**, and the flow-vs-emulator gap closes from 2.59 pt to 0.78 pt
+(`R_blend` excess +17.2% -> +5.0%). The ruler fix transferred, which is the point: it was chosen there
+and constgold merely reported it.
+
+Read with the same three caveats as before, none of them retired: (1) ONE flow-#2 checkpoint, so the
+`+-` is the flow-#1 seed spread alone and is a LOWER BOUND — **not quotable**; (2) this is the
+all-pairs 7" configuration, NOT the fiducial one, and the emulator's own `m` in ITS native
+configuration is `-0.126%`, so `+0.279%` here is the right comparator and `-0.126%` is not; (3) the
+primary-axis bias above is untouched and is the obvious next target.
+
+Note the transfer is partial and the reason is already on record: the in-domain `R_blend` excess fell
+10.0% -> 4.9% on constgold against 11.03% -> 1.95% on the ruler. constgold's in-domain rows are a
+bright, large subset — exactly the population where the primary-axis chi2/dof got WORSE — so part of
+the aggregate gain is handed back there. The two numbers are consistent, not in conflict.
+
+**Next.** (a) Add the PRIMARY's size and magnitude to the stratum grid — it is the one axis where the
+flow is still 3-4x worse than the emulator, and it is now the binding constraint on both `m` and the
+ruler; (b) fix the in-training diagnostic to score the saved checkpoint rather than the final epoch;
+(c) 16-seed ensemble only after (a), since ensembling a model with a known conditional bias measures
+that bias 16 times.
+
+## 2026-08-02f (ONE PAIR LIST, BOTH MODELS. With every bookkeeping confound removed the two models are 4.2% apart on identical pairs — not the 3.4x that started this. The entire remaining difference is the FAINT-PAIR increment, and the ruler says the emulator under-counts it while flow #2 over-counts it.)
+
+Files: `scripts/build_blend_lookup_both.py` (new), `scripts/eval_m_with_blendflow.py`
+(`--flow-col` / `--emu-col`, so one file can supply both columns; confound caveat now switches on
+whether the pair lists are shared), `jobs/job_blendflow_matched.sh` (new). Job **15481144**,
+COMPLETED, 28 min, 2-case smoke first.
+
+**Method.** `blendemu.inference.BlendingPredictor.predict_on_pairs` scores exactly the rows it is
+handed instead of re-deriving its own neighbour list, so both models can be run pair-for-pair on ONE
+KD-tree list and summed per primary. The emulator's selection is read back from
+`emulator_metadata_{tag}.json` at run time, never retyped — a pasted constant is how the two lookups
+drifted apart in the first place.
+
+**Aperture: the emulator is brought DOWN to 7", not the flow up to 10".** The flow trained on the ap7
+legs and has never seen a wider pair, so matching at 10" would extrapolate it in separation; matching
+at 7" evaluates the emulator on a subset of a range it already covers. The 7-10" annulus is then
+outside the comparison for BOTH, rather than credited to either.
+
+**RESULT 1 — on identical pairs the models nearly agree.** In-domain, 100 cases:
+
+| pair set | flow #2 | BlendEMU | flow / emu |
+|---|---|---|---|
+| emulator's own cuts ("restricted") | 0.1936 | 0.2101 | **0.922** |
+| all pairs inside 7" | 0.2388 | 0.2172 | **1.100** |
+
+and on the scored dump rows, `m` with only `R_blend` differing:
+
+| pair set | rows | `R_blend` emu | `m %` emu | `R_blend` flow | `m %` flow | gap |
+|---|---|---|---|---|---|---|
+| restricted | 9,107,497 | 0.1336 | **+4.666** | 0.1280 | **+5.379** | -4.2% in `R_blend` |
+| all pairs 7" | 11,670,851 | 0.1323 | **+0.279** | 0.1551 | **-2.308** | +17.2% in `R_blend` |
+
+The confounded comparisons in 2026-08-02e swung from 1.76x to 0.78x; the true model difference is
+**4.2%** on the pairs both models are calibrated for. The 3.4x that opened this investigation was
+entirely bookkeeping.
+
+**RESULT 2 — the whole remaining difference is the faint-pair increment, and it is now bracketed.**
+Going from the restricted list to all pairs inside 7":
+
+    flow #2   0.1936 -> 0.2388   (+23.3%)
+    BlendEMU  0.2101 -> 0.2172   (+3.4%)
+    ruler TRUTH (2026-08-02e)    (+18.7%: kept 0.0598 -> total 0.0710)
+
+So when the emulator IS asked about the pairs it normally discards it says they are worth almost
+nothing, agreeing with its own cut; the flow says they are worth a great deal. **The measured answer
+is in between and much nearer the flow.** Caveat, stated not absorbed: the ruler increment is measured
+on the half-shear both-sheared population and the other two on constgold in-domain primaries, so the
+three percentages are indicative of direction and rough size, not a like-for-like subtraction. The
+clean per-pair statement remains 2026-08-02e's: on the DROPPED group the flow predicts 0.0283 per
+primary against a measured 0.0112 (2.5x over), while the emulator assigns exactly 0.
+
+**RESULT 3 — `m` at a restricted aperture is not a model statement.** The emulator's own `m` moves
+`-0.126% -> +4.666%` between its native configuration and the restricted 7" list: same model, same
+galaxies, **4.8 points of `m`** purely from which pairs are summed. Any `m` quoted without its pair
+set is meaningless. This also explains 2026-08-02e's `+5.379%`, which was read there as a flow
+failure and is mostly this.
+
+**Where flow #2 actually stands.** On constgold it is NOT competitive: `-2.308%` against the
+emulator's `+0.279%` on the same pairs (fiducial `-0.126%`). But the deficit is now attributed rather
+than mysterious — it is a ~17% over-prediction of the total, driven by the faint-pair increment, on a
+model that is 4.2% from the emulator everywhere else. Unchanged caveats: ONE flow-#2 checkpoint, so
+the `+-` is the flow-#1 seed spread only and is a LOWER BOUND; nothing here is quotable; and **no
+choice between the models may be made from any of these `m` values** — that is the R_blend firewall,
+which is why RESULT 2 is measured on the ruler.
+
+**Next.** (a) Re-train flow #2 with the faint-neighbour group down-weighted or its response
+regularised toward the measured 0.0033 per pair — that group is 81.4% of pairs and drives the whole
+remaining gap; (b) re-check `m` on the all-pairs list afterwards; (c) 16-seed flow-#2 ensemble only
+after (a), since ensembling a model with a known systematic just measures the systematic 16 times.
+
+## 2026-08-02e (FLOW #2 ON CONSTGOLD. The "constgold is twice as dense" reading in 2026-08-02d is WRONG and is retracted here: the gap was the emulator's NEIGHBOUR SELECTION. Flow #2's constgold `m` is far out of spec either way — but the ruler now says both models are wrong about faint neighbours, in opposite directions.)
+
+Files: `scripts/eval_faint_neighbour_contribution.py` (new), `scripts/build_blend_lookup_flow.py`
+(added `--neighbour-mag-range`, `--neighbour-re-range`, `--max-neighbours` + `select_neighbours()`),
+`jobs/job_blendflow_constgold.sh` (new). Job 15481033, COMPLETED, 21 min.
+
+**The 3.4x `<R_blend>` gap was a bookkeeping confound, not density.** The fiducial emulator's stored
+regression config is `cuts = [mag_p 13-29, mag_s 18-26, Re_p 0-10, Re_s 0.3-1.5, dist 0-10]`,
+`r_max = 10`, `k = 20`. It counts a neighbour ONLY if that NEIGHBOUR is itself brighter than 26 and
+larger than 0.3", assigning everything else exactly zero. Flow #2's checkpoint metadata records
+training on neighbours down to `mag 29`, `Re 0.0105`, so its unrestricted sum is faithful to its own
+training but is not summed over the emulator's pair set. **2026-08-02d's provisional reading —
+"constgold has 8.30 neighbours per primary against training's 4.16" — is retracted as the explanation
+of the gap.** The `<k>` observation itself stands (the both-sheared leg does retain ~half the
+blenders); it is simply not what drove 0.468 vs 0.136.
+
+**STEP 1 — the ruler settles the faint-neighbour question (the only firewall-legal way to settle it).**
+The half-shear pair set carries a per-pair label for exactly the pairs the emulator discards.
+Cluster-robust on the primary, 51.66M pairs / 12.4M primaries:
+
+| group | pairs | `<truth>` | sem | sig | sum/primary | `<flow>` | flow sum/prim |
+|---|---|---|---|---|---|---|---|
+| KEPT by emulator | 9,617,896 | 0.0772 | 0.0013 | 59.9 | 0.0598 | 0.0687 | 0.0533 |
+| DROPPED by emulator | 42,038,806 | 0.0033 | 0.0006 | 5.5 | 0.0112 | 0.0083 | 0.0283 |
+| all | 51,656,702 | — | — | — | 0.0710 | — | — |
+
+The emulator drops **81.4%** of pairs. Those pairs **do** blend, at **5.5 sigma**, contributing
+`0.0112 +- 0.0020` per primary — about **16% of the total 0.0710**. So the emulator's summed
+`R_blend` is biased LOW by construction on this population. **But flow #2 over-predicts that same
+group by ~2.5x** (0.0283 vs 0.0112 per primary), i.e. its wider sum is not free signal, it is largely
+confident extrapolation. On the KEPT pairs the flow reads 11% low (0.0533 vs 0.0598), consistent with
+the ruler sweep. **Neither model is right about the faint tail: one zeroes a real 16%, the other
+inflates it 2.5x.**
+
+**STEPS 2-3 — constgold `m`, one checkpoint (`blendflow_rw1k_s501`), 16 flow-#1 seeds, in-domain only.**
+
+| sum | rows | `R_flow` | `R_blend` | `m %` | +- |
+|---|---|---|---|---|---|
+| BlendEMU (fiducial) | 11,670,851 | 0.7258 | 0.1358 | **-0.126** | 0.152 |
+| flow #2, NATIVE (all nbrs, 7") | 11,670,851 | 0.7258 | 0.1551 | **-2.308** | 0.146 |
+| BlendEMU on 3b's subset | 9,107,497 | 0.6886 | 0.1649 | **+0.830** | 0.141 |
+| flow #2, EMULATOR-MATCHED | 9,107,497 | 0.6886 | 0.1280 | **+5.379** | 0.154 |
+
+**Flow #2 is far out of spec on constgold either way** — `-2.31%` summing everything, `+5.38%` summing
+the matched set — against the emulator's `-0.126%`. Read the two rows as bracketing, not as a range:
+neither is a clean like-for-like, for reasons stated rather than absorbed:
+
+1. **The "matched" sum is not actually matched.** It restricts neighbour mag/Re/k to the emulator's
+   values but keeps flow #2's **7" aperture**, where the emulator uses **r_max = 10"**. The missing
+   7-10" annulus is one reason the matched flow sum (0.1280) falls BELOW the emulator's (0.1649) on
+   the same rows, having sat ABOVE it (0.1936 vs 0.1358) at lookup level.
+2. **The 3b row set is a different population.** The matched selection leaves 22% of primaries with no
+   surviving neighbour at all, so they drop out; the emulator's own `m` on the remaining 9.1M is
+   `+0.830%`, not `-0.126%`. Comparisons are valid WITHIN each block, never across blocks.
+3. **Only 20.7% of constgold primaries are inside flow #2's training domain** (primary `mag < 26`,
+   `Re > 0.3`). Out-of-domain rows read `<R_blend> = 0.576` — extrapolation, carried flagged via
+   `in_domain` and cut by `--in-domain-only`, never zero-filled.
+4. **One checkpoint.** The quoted `+-` is the flow-#1 seed spread ONLY. Flow #2's own seed variance is
+   absent, so every `m` here is a LOWER BOUND on the error and **none of it is quotable** until flow #2
+   is ensembled over 16 seeds (AGENTS.md e-response standard).
+
+**No `m` from this entry may be used to choose between the models** — that is the R_blend firewall, and
+it is why step 1 exists. The honest state: on the per-pair ruler flow #2 is at parity (chi2/dof 0.99 vs
+0.70) and better on close pairs; summed onto constgold it is not usable, and the summation path — not
+the per-pair model — is where the failure lives.
+
+**Next.** (a) Rebuild the matched lookup at 10" with `k = 20` so the aperture confound is removed;
+(b) re-train or re-weight flow #2 so its faint-neighbour prediction matches the 0.0033 the ruler
+measures, since that group is 81% of pairs and currently drives the native sum; (c) only then consider
+a 16-seed flow-#2 ensemble, which is the precondition for quoting any `m`.
+
+## 2026-08-02d (GOLD-V3 FLOW #2 BUILT AND TRAINED. It reaches emulator-comparable per-pair accuracy on the ruler and closes the close-pair deficit, but the end-to-end constgold `m` is BLOCKED by a population mismatch — which turned out to be a real error in a recorded explanation.)
+
+Built the blend-response flow specified in `Gold-V3.md` ("flow #2"), a firewalled drop-in for
+BlendEMU. Added: `sbs_shear/blend_flow.py`, `scripts/build_blend_pairset.py`,
+`scripts/train_blend_flow.py`, `scripts/eval_blend_flow.py`, `scripts/build_blend_lookup_flow.py`,
+`scripts/eval_m_with_blendflow.py`, `scripts/eval_neighbour_shear_independence.py`,
+`scripts/eval_pair_population_match.py`, `scripts/eval_ap7_pair_symmetry.py`,
+`tests/test_blend_flow.py` (7 tests, all pass), and jobs `job_blend_pairset.sh`,
+`job_train_blend_flow.sh`, `job_blend_lookup_flow.sh`. Jobs 15478066/15478123 (pair set),
+15478139 (smoke), 15478186/15478188/15478388/15478389/15478390 (training sweep), 15478397
+(neighbour-shear null), 15478515 (lookup, CANCELLED), 15478529/15478542/15478548/15478553
+(population diagnosis).
+
+### The training set
+
+`blend_pairset_ap7.feather`: **51,656,702 pairs over 200 cases**, one row per (primary, annotated
+neighbour), carrying both galaxies' oriented intrinsic shapes, the scalar separation, the primary's
+g=0 measured ngmix shape (NLL target) and the per-pair half-shear blending label. Null test
+**+0.00023 ± 0.00054 (0.4σ)**. The row count reproduces the existing ruler npz (51,656,702) exactly
+— an independent extraction landing on the same sample.
+
+### Two corrections to `Gold-V3.md`, both from measurement
+
+1. **Its blend-target S/N estimate is wrong by >10x, in the optimistic direction.** It claimed
+   "~100 bins ⇒ S/N ≈ 12 per bin" from a per-bin error of 5e-5 against a 6e-4 signal. The measured
+   per-pair label scatter is **std 3.91** in response units (0.196 in `de` units), so 48k rows/bin
+   give 8.9e-4 and the true per-bin S/N is **~0.7**. The leftover self-response is NOT the dominant
+   cost either (~0.011 of 0.196, under 0.3% of the variance) — the label is dominated by ordinary
+   ngmix noise that does not cancel between legs. **The binned target was dropped**: the label
+   exists per pair and is unbiased, so squared-error regression converges to the conditional mean
+   with no bin design at all.
+2. **A chain-rule argument I introduced the same night, then refuted.** `R_blend =
+   [dμ_p/de_s]·[de_s/dg_s]`, and I argued the first factor is a g=0 density property measurable at
+   high SNR, so the NLL would supply the response and the label floor would not bind. **Job 15478188
+   (`--response-weight 0`) says no**: the density-only response is **70–85% low in every separation
+   bin and essentially flat** (0.0132 → 0.0049 from <0.5" to 7", against a truth running 0.0721 →
+   0.0042). Cause is signal-to-SIGNAL: dμ_p/de_s ≈ 0.04 is a ~0.035 correlation against ~0.8 for the
+   primary's own shape, and maximum likelihood under-fits the weak direction. **The response weight
+   is the load-bearing knob, and the label floor does bind.** Both documents corrected.
+
+### Response-weight sweep (16 flow-#1-independent; held-out = 40 unseen cases, 10.3M pairs)
+
+| variant | resp weight | NLL weight | held-out χ²/dof | <0.5" | 0.5–1" | ALL |
+|---|---|---|---|---|---|---|
+| `nll0` | 0 | 1.0 | ~34 | −81.7% | −75.4% | −70.5% |
+| `v1` | 10 | 1.0 | 13.9 | +5.6% | +12.2% | −39.0% |
+| `rw100` | 100 | 1.0 | (10.3, **not converged** — early stopping kept its epoch-1 checkpoint) | — | — | — |
+| `rw1k_nll01` | 1000 | 0.1 | 1.08 | +10.5% | −28.1% | −3.9% |
+| **`rw1k`** | **1000** | **1.0** | **0.99** | **−9.1%** | **−25.2%** | **+11.0%** |
+| BlendEMU `_indom_tuned` | — | — | **0.70** | −25.1% | −36.2% | −1.6% |
+
+Read honestly: **the emulator is still marginally closer overall (0.70 vs 0.99)**, and on 40 held-out
+cases every separation bin is a statistical tie except 5–7", where the flow is worse. The close-pair
+improvement is consistent in sign and size across variants but is **not yet demonstrated** — the
+held-out sem below 0.5" is ±26%, so −25% vs −9% is about 1σ. `v1` (weight 10) made exactly the trade
+the test was built to catch: it fixed the close pairs (+5.6%) and broke 2–5" (−59%).
+
+Errors are now **clustered by primary**. That turned out not to matter (rows of one primary use the
+same `de` but independent `ĝ_j`, so their labels are uncorrelated) — but it was worth checking, and
+the estimator now reports that rather than assuming it.
+
+### New validation, and it underwrites the whole per-pair ruler
+
+`eval_neighbour_shear_independence.py`. Every per-pair number in this project — the −41.5% close-pair
+deficit, the emulator's accuracy at 2–4", flow #2's labels — rests on different neighbours of one
+primary carrying INDEPENDENT shear directions. **The 45° null test cannot check this** (alignment is
+symmetric under θ→−θ, so it cancels in the sine channel), and it had never been checked. Measured
+over **20,973,712 ordered neighbour pairs**: mean `cos 2(θ_j − θ_k)` = **+0.00028 ± 0.00036, 0.8σ**,
+flat across multiplicity k=2..8. **The assumption holds.**
+
+### The blocker, and a correction to `AGENTS.md`
+
+The constgold lookup was **cancelled, and no `m` was computed** (AGENTS.md: if a quantity cannot be
+computed properly, do not substitute a number). Cause: the constgold field gives **⟨k⟩ = 8.30**
+neighbours per primary within 7" against **4.16** in the training set, and `<R_blend>` came out
+**0.468** against the fiducial 0.136.
+
+**[CORRECTED 2026-08-02e: the ⟨k⟩ ratio is NOT what drove 0.468 vs 0.136.** The fiducial emulator
+counts a neighbour only if that neighbour has `18 <= mag < 26` and `0.3 <= Re <= 1.5` (`r_max` 10,
+`k` 20), so it discards **81.4%** of the pairs a 7" KD-tree returns and the two sums were never over
+the same pair set. Matching the selection moves the lookup-level flow sum 0.2388 -> 0.1936 against the
+emulator's 0.1358, and on the scored in-domain rows the flow sits at 0.1551 vs 0.1358 (+14.2%), not
+3.4x. The ⟨k⟩ = 8.30-vs-4.16 observation below is correct in itself — the both-sheared leg does retain
+~half the blenders — but it is not the explanation of this gap. See 2026-08-02e.**]**
+
+Diagnosed rather than patched:
+
+- Neighbour magnitude, size and separation distributions are **essentially identical** between the
+  two populations, and the count ratio is **exactly 2.00 at every magnitude cut** — so it is not
+  depth or density.
+- First hypothesis (ap7 annotates each pair once) — **REFUTED**: where both galaxies are primaries,
+  **100.00%** of pairs have their reverse row annotated.
+- Actual cause, **measured**: the raw ap7 catalogue carries **8.19** neighbours per primary; the
+  **both-sheared leg** carries **4.159**. A pair survives that leg only if the primary AND that
+  specific neighbour are both sheared, so it retains ~half of each primary's blenders.
+
+**Consequence for the existing pipeline.** The entry immediately below (2026-08-02c, mine) explains
+the ~1.85x gap between the ruler's summed truth (0.071–0.073) and constgold's `R_blend` (0.1358) as
+"ruler and constgold are different sims with different neighbour densities (⟨k⟩=4.16 in ap7)".
+**That explanation is wrong: the densities are the same** — 8.19 vs constgold's 8.30 —
+and 4.16 is the both-sheared subsample, not the ap7 density. Doubling the ruler's summed truth gives
+~0.147, near constgold's 0.136. So the summed ruler may be comparable to constgold in ABSOLUTE terms,
+which the project currently believes it is not. Flagged, not yet acted on: `eval_rblend_gap_summed.py`
+was not changed, and the factor of two has NOT been applied anywhere.
+
+### Next
+
+1. Fix the lookup's neighbour population before any `m`: sum over all geometric neighbours (correct
+   per-pair) but establish why `<R_blend>` is 3.4x the emulator's when only ~2x is neighbour count —
+   the rest is the flow extrapolating on faint neighbours.
+2. Cross-fit (5 models on complementary 160-case subsets) so the comparison uses all 200 cases at
+   full precision; on 40 held-out cases the close-pair test is only ~1σ.
+3. Flow #2 needs its own 16-seed ensemble before any `m` is quoted (e-response standard).
+
+## 2026-08-02c (PHASE 0 EXECUTED. Two of its four gates fire, and together they **overturn Phase 2's premise**: the emulator's true-size flatness is not visible on the firewall-clean ruler.)
+
+Ran Phase 0 of `PLAN_resolution.md` autonomously. Files added: `scripts/eval_additivity_isolated.py`
++ `jobs/job_additivity_isolated.sh`, `scripts/eval_extraction_gdep.py` +
+`jobs/job_extraction_gdep.sh`, `scripts/eval_detection_perbin.py` + `jobs/job_detection_perbin.sh`.
+Changed: `scripts/eval_rblend_gap_summed.py` (added a TRUE-SIZE binning; existing tables untouched).
+Jobs 15477290/15477340/15477385 (0a), 15477321/15477342 (0b), 15477341/15477386 (0d), 15477392
+(per-pair ruler at the fiducial tag), 15477420 (summed ruler).
+
+### 0a — **BLOCKED**, and the first version of it was WRONG (recorded so the trap is not re-entered)
+
+First run used `neighbored = False` as "isolated" and reported the flow 7.8% low with a 9.21 pt
+size-axis rms — a headline "the attribution is invalid" result. **That was an artefact of the flag.**
+`neighbored` marks only an annotated PAIR SECONDARY within 3" (`distance` maxes at exactly 3.000"),
+while `build_crowding_lookup.py` sets `NEAR, FAR = 3.0, 7.0` arcsec and `build_blend_lookup.py` sums
+the emulator over neighbours "drawn from the FULL FIELD". Those rows carry `<nbr_flux_far> = 1.71` and
+a real blend response, so the emulator's `<R_blend> = +0.095` on them is correct, not a bug. Same trap
+as the np7 7"-vs-3" retraction.
+
+Rewritten as an **isolation ladder**. Rows with no neighbour flux within 7": **3,534 of 11,674,408
+(0.03%)**; also requiring the emulator to see nothing: **1,855 (0.016%)**. Per-object response scatter
+is std 4.84 against a mean of 1.009, so that set carries **±11.1% on its mean alone** — it cannot
+adjudicate a 2-3 pt per-bin effect, let alone in 12 bins. The script now REFUSES and prints BLOCKED
+rather than reporting the number. **Phase 0a as written in the plan is not executable on constgold:
+its premise ("for isolated galaxies R_blend = 0 by construction") has no workable sample.** This does
+NOT show additivity fails, and does NOT clear the flow.
+
+### 0b — no size-dependence detected in the extraction gap, but a WEAK bound
+
+Forward-vs-antithetic differ only through the even term: `R_fwd(g) - R_anti(g) = R2 g + O(g^3)`, and
+`R2` is measurable from two forward legs without any `-g` leg. Used `g0.02_test` and `g0.05_val`
+against the shared `g0.0_train` leg (cases 0-19, the g0.02 leg's coverage). The two sheared legs apply
+the **identical** shear direction per object (median |dθ| = 0.00°, 100% within 1°), so the difference
+is differential. Flatness χ²/dof = **2.2/5 own-set, 2.3/5 common-set — consistent with flat**;
+own-vs-common slopes agree (−0.025 vs −0.053), so what little there is, is not selection.
+**Read as a non-detection with a weak bound, not a clearance** — per-bin errors are not small against
+the 0.089 required-blend range. My first version quoted `spread × 0.05 = 0.070` as a measured size
+variation; that spread is noise (every bin ≤1σ) and the line was replaced with a 1σ upper bound.
+
+### 0d — the leg-matching bias is REAL and structured, but too small and too smooth to forge the size trend
+
+In-domain (`mag<26, 0.3<Re<1.5`, `case>=40`), `R_full/R_both - 1` = **−1.044% ALL, −0.151% ISOLATED,
+−1.342% BLENDED** — same sign, ordering and blend-dominance as the recorded wide-population −0.88 /
+−0.08 / −1.11%, so the estimator reproduces.
+
+- **True size:** monotonic −0.843% → −1.717% (errors ~0.06-0.08%, so highly significant), but it is
+  mostly a near-CONSTANT offset: bin-to-bin **span only 0.929 pt against the residual's ~10.6 pt
+  span, ~9%**. A constant offset shifts all bins together and cannot manufacture a trend. **Gate does
+  not fire on the size axis.** (I first reported this as "40% of the 2.82 pt rms" — comparing rms to
+  rms conflates the offset with the variation; spans are the right comparison.)
+- **Neighbour flux:** −0.151% → **−3.119% ± 0.086%**, span 3.06 pt — *larger than the 1.51 pt total
+  residual on that axis*. The blend-axis "cancellation" Phase 4 guards is happening against a target
+  that itself carries ~3 pt of structure there. A 5th bin read −19.45% but has **861 objects and
+  ±10.41%**; it is excluded from the summary and the exclusion is printed (it had inflated the rms to
+  8.8 pt).
+- **Separation (= Gold-V3 test 3):** −1.761% ± 0.218% below 0.5", peaking −2.866% at 1-1.5", against
+  −0.337% at 2-3". **Sign and structure support Gold-V3's close-pair-detection-selection explanation;
+  magnitude does not acquit it** — ~2.9% against a −41.5% deficit. Do not record it as explained.
+
+### THE MAIN RESULT — Phase 2's premise fails on the firewall-clean instrument
+
+Phase 2 exists because the emulator's summed `R_blend` looked **3.1× too flat in true size** (spans
+0.116-0.145 where constgold's `required_blend = r_sim − R_flow` spans 0.071-0.160). That inference
+assumes additivity, charges 100% of the flow's own size error to the blend term, and uses a target
+that 0d now shows carries a size-structured leg-matching bias. The **per-pair ruler**
+(`eval_rblend_gap.py`, half-shear, matched extraction, no additivity assumed, no flow involved) tests
+it directly. Run at the FIDUCIAL tag `lsst_r_extnbr_indom_tuned` (the default is the older `_ho`):
+
+- **by true size, summed** (`eval_rblend_gap_summed.py`, ap7): per-bin emulator-vs-truth
+  **+1.7%, −7.9%, +6.3%, +2.0%, −2.0%, +15.2%, −5.9% with errors ±5.7 to ±9.8** — every bin within
+  ~1.9σ, overall **+1.73% ± 3.25**. At the 3" aperture every bin is within ~1σ (overall −2.74% ±
+  3.26). Truth shows no significant size trend either (0.0819→0.0670, non-monotonic, sem ~0.005).
+- **The constgold inference implies the required blend varies by 0.089 across size bins, ≈77% of the
+  emulator's mean prediction.** A relative size-variation defect of that magnitude is excluded by the
+  ruler at many σ. This argument is normalization-free — it compares relative spans, not the
+  absolute levels, which differ between sims (ruler summed truth 0.071 vs constgold 0.136).
+- **What the ruler DOES confirm is the close-pair deficit: −40.89% ± (sem 0.0038 on −0.0212) below
+  1"**, reproducing the recorded −41.5% at the tuned tag. −8.71% at 1-2", −2.13% at 2-3".
+
+**Consequence.** The emulator's measurable defect is **separation, not true size**. The size-axis
+residual that 2026-08-01s attributed to the emulator is therefore most likely the FLOW's own size
+error re-labelled by the `r_sim − R_flow` construction (plus ~0.9 pt of leg-matching offset). Phase 2b
+(size-stratified retune) is aimed at a defect the firewall-clean instrument does not see, and
+Gold-V3 already records that the close-pair deficit resists retuning. **Phase 2 should be dropped as
+written**; see the amended `PLAN_resolution.md`.
+
+Limitations, stated: the ruler's per-bin power is ±6-10%, so it excludes a 77% defect comfortably but
+not a small one; ruler and constgold are different sims with different neighbour densities (⟨k⟩=4.16
+in ap7), so only relative spans are compared **[CORRECTED 2026-08-02d: the two fields have the SAME density — 8.19 vs 8.30 neighbours per galaxy within 7". The 4.16 is the BOTH-SHEARED subsample, which retains only the neighbours that were themselves sheared. See the 2026-08-02d entry.]**; 0d uses SExtractor shapes, not ngmix.
+
+### Follow-on: does the size-axis budget CLOSE once the emulator is exonerated? — **PARTLY**
+
+New `scripts/eval_size_budget.py` (pure arithmetic on existing npz, run locally — negligible). If the
+emulator is right, the emulator terms cancel in `R_model − r_sim` and the model residual IS the flow's
+error, which fig5 measures independently. Test: `implied flow error − fig5 flow error − 0d
+leg-matching`.
+
+First, a **binning fix that turned out not to matter**: `fig5_residuals` derived its own bin edges
+from the half-shear x-distribution while the caller paired the two tables BY BIN INDEX, so bin *i*
+need not have covered the same Re range on both sides. Now constgold's edges are passed in.
+Re-run (job 15477448): size axis **2.08 / 2.42, corr +0.557** against the previous 2.07 / 2.41,
++0.56 — the edges were near-identical, so the misalignment was immaterial. Fix kept anyway (it was
+wrong in principle), and it rules the artefact out as an explanation for what follows.
+
+Result over the 12 true-size bins:
+
+| quantity | rms | span |
+|---|---|---|
+| model residual | 2.82 pt | 9.77 pt |
+| implied flow error (if the emulator is right) | 3.27 pt | 11.12 pt |
+| fig5 measured flow error | 2.45 pt | 8.48 pt |
+| unexplained (implied − fig5) | 2.91 pt | 11.45 pt |
+| closure (after the 0d leg-matching term) | 2.72 pt | 10.78 pt |
+
+`corr(implied, fig5) = +0.546`, so the constgold size residual and the independently measured
+half-shear flow error are **related but not the same size**.
+
+The rms hides the informative structure. Splitting offset from scatter, and isolating the
+smallest-size bin:
+
+- **the 0d leg-matching term removes the OFFSET almost exactly** — excluding the smallest-size bin,
+  the unexplained mean is **−1.55 pt** and after the correction it is **+0.02 pt**. That is the
+  correction doing precisely what it should (it is nearly a constant in size), and it is a genuine,
+  if partial, success.
+- what survives is **1.64 pt of bin-to-bin scatter** with essentially zero mean, plus
+- **one large outlier: the smallest-size bin (Re ≈ 0.35) at +7.7 pt after correction.** That bin is
+  the flow's TRAINING-DOMAIN EDGE (trained on `Re > 0.3`), so a boundary effect is expected there —
+  expected is not explained, and it alone lifts the all-bin rms from 1.64 to 2.72 pt.
+
+**So: the size axis is consistent with being the flow's, but the flow as measured on half-shear does
+not account for its full magnitude.** Honest statement of where this lands: offset explained, ~1.6 pt
+of scatter and a domain-edge outlier unexplained. Still assumed throughout and NOT established:
+additivity (Phase 0a blocked), the emulator's residual per-bin error (±6-10% on the ruler, not zero),
+and a size-independent extraction gap (0b non-detection, weak bound).
+
+### 0c — matched keep fraction (owed since 2026-08-01m): **the true-vs-measured gap is real and large**
+
+New `scripts/eval_keepfrac_matched.py` + `jobs/job_keepfrac_matched.sh` (job 15477483). No GPU: every
+cut is FROZEN (leg-averaged measured size, read off the catalogue), so the dumps already carry
+`r_sim`, per-seed `R_flow` and the tuned `R_blend`. 16 seeds; ratios formed per seed then spread
+across seeds.
+
+Population check first: measured size median 0.833" against true-Re median 0.504", and only **0.32%**
+of rows fall below the PSF R50 floor of 0.527" — so measured cuts under ~0.53" really are structural
+no-ops, as recorded.
+
+At MATCHED keep fraction (no-cut reference `m = −0.123 ± 0.152%`):
+
+| reference | keep | m | matched cut on the other variable | keep | m | dm |
+|---|---|---|---|---|---|---|
+| TRUE Re > 0.5" | 50.66% | +1.434 ± 0.260 | MEASURED > 0.830" | 50.66% | −1.166 ± 0.165 | **−2.60** |
+| TRUE Re > 0.6" | 36.69% | +1.486 ± 0.203 | MEASURED > 0.911" | 36.68% | −2.904 ± 0.176 | **−4.39** |
+| TRUE Re > 0.7" | 26.96% | +1.745 ± 0.264 | MEASURED > 0.984" | 26.95% | −4.315 ± 0.204 | **−6.06** |
+| MEASURED > 0.6" | 96.70% | +1.756 ± 0.139 | TRUE Re > 0.311" | 96.70% | +0.229 ± 0.133 | −1.53 |
+| MEASURED > 0.7" | 79.24% | +2.482 ± 0.115 | TRUE Re > 0.370" | 79.24% | +0.341 ± 0.118 | −2.14 |
+| MEASURED > 0.8" | 56.62% | −0.272 ± 0.161 | TRUE Re > 0.467" | 56.62% | +1.182 ± 0.255 | +1.45 |
+
+- **The caveat this closes was a real one.** `TRUE Re > 0.6"` and `MEASURED > 0.60"` had been read
+  against each other (+1.49 vs +1.76, apparently close) while removing **36.69% and 96.70%** of the
+  population respectively. Their similarity was a coincidence of severity.
+- **At matched severity the two diverge sharply and monotonically:** true-size cuts sit mildly
+  positive and nearly flat (+1.43 → +1.75), measured-size cuts run negative and steepen
+  (−1.17 → −4.32). **dm reaches −6.06 pt at 27% keep**, ~24σ on these errors.
+- **These masks are FROZEN, so there is no selection-boundary term at all.** The entire difference is
+  the response of the retained population and the model's ability to predict it — independent
+  confirmation of 2026-08-01r: the model gets *which* objects are selected right and the *response of
+  those objects* wrong.
+- A measured cut keeping 96.7% still moves `m` from −0.123 to +1.756, so 3.3% of objects carry a
+  1.9 pt swing. Note the measured column is not monotonic in severity (+1.76, +2.48, −0.27, −1.17,
+  −2.90, −4.32 as the cut tightens) — it rises before it falls, which is not explained here.
+
+**Supports Phase 3b** (cut on TRUE properties, recorded as a stated limitation): at matched severity
+true-property cuts are ~3-6 pt better behaved and much flatter.
+
+Next: Phase 0 is now complete (0a BLOCKED, 0b non-detection, 0c done, 0d done). Phase 1 (per-bin
+acceptance metric) is unblocked and unaffected. Phase 3a (flow, derivative supervision) is the main
+line — the size axis now points at the flow too, not only the flux axis, and the domain-edge bin
+(Re ≈ 0.35, +7.7 pt after correction) is a concrete first target.
+
+## 2026-08-02b (PLAN drafted for the resolution problem: new `PLAN_resolution.md`. **Proposal, not agreed — nothing started.**)
+
+Owner asked for a plan of action on the per-bin/global cancellation. Added `PLAN_resolution.md`.
+Structure and the reasoning behind it:
+
+- **Phase 0 gates everything** — two open gaps could invalidate the 2026-08-01s attribution that
+  Phases 2-3 are built on. (0a) test sim additivity on ISOLATED rows, where `R_blend = 0` by
+  construction so `R_sim` must equal `R_flow` with no emulator involved; this also probes the negative
+  required-blend at S/N~121 and gives a flow-only measurement on constgold's OWN extraction. (0b)
+  measure the forward-vs-antithetic extraction difference **as a function of true size** — size
+  dependence there would contaminate the size-axis attribution specifically. (0c) the owed
+  keep-fraction-matched size comparison.
+- **Phase 1** promotes per-bin residuals to the acceptance metric and states an honest interim target
+  (current size-axis rms is 2.82 pt against a 0.3 pt budget, ~10x). Explicitly does NOT invent a
+  grouping-loss number — that object is undefined for responses (`LITERATURE_resolution.md` §2.9).
+- **Phase 2 (emulator, size axis)** — diagnose representativeness FIRST (Kannawadi 2019 precedent),
+  then retune with a size-stratified objective **on the per-pair ruler, never on constgold** (firewall).
+- **Phase 3a (flow, flux axis)** — derivative supervision. Both halves already exist here: the targets
+  are the finite difference between shear legs, and the **`lam_theta=500` coupling pin that fixed the
+  flux/size response is derivative supervision in all but name**. Extending it to the shape response's
+  size/SN dependence is a continuation, not a new technique.
+- **Phase 3b (the realisation defect)** — recommends NOT attacking it architecturally again (RA head
+  failed, third re-gate forbidden, literature has no method) and instead cutting on TRUE properties,
+  recorded as a stated limitation rather than adopted quietly.
+- **Phase 4 is non-negotiable and its own phase** because the blend-axis errors are ANTI-correlated:
+  fixing the flow alone takes that axis 1.51 -> ~5.08 pt, the emulator alone -> ~4.15. No promotion on
+  a single axis; every candidate evaluated on all three.
+- **Phase 5** — LOCAL diagnostics (SBC/expected coverage would pass while we are wrong) plus a
+  multiaccuracy audit over the cut sets.
+
+Includes an explicit NOT-DOING table with reasons (per-bin recalibration, more seeds, a third RA
+re-gate, more conditioning features, tuning the emulator on constgold, importance weighting) and a
+"what would make me abandon this plan" section keyed to the Phase 0 gates.
+
+**Amended same day — Phase 0d added, and a provenance table.** Owner asked what the literature review
+actually contributed. Auditing that surfaced an omission: Sheldon et al. 2020 §4.3 warn that matching
+detection lists across sheared images "would introduce the very shear-dependent object detection
+biases we wish to calibrate", and SBSI's both-detected requirement IS that operation. The project had
+already measured it — `R_full/R_both - 1` = `-0.88%` ALL / `-0.08%` ISO / `-1.11%` BLENDED — but
+**globally**, and this plan exists precisely because a global number is not enough. The ISO-vs-BLENDED
+split already hints it is strongly property-dependent. **Phase 0d recomputes it PER BIN**, because if
+it is size-structured then part of what 2026-08-01s attributed to the emulator is a selection artefact
+of how `R_sim` is built, and Phase 2 would be chasing the wrong target.
+
+**Amended again — Phase 6 added (owner's proposal: learn `R_blend` with a flow).** **This already
+exists as a design: `Gold-V3.md`, "Folding R_blend into the flow", 2026-07-28, nothing built.** Not
+re-derived. Four findings from 2026-08-01/02 bear on it, recorded both in `PLAN_resolution.md` Phase 6
+and as an UPDATE block at the top of `Gold-V3.md`:
+
+- **6a** a SECOND independent failure axis for BlendEMU — besides its `-41.5%` close-pair deficit
+  below 1", `R_blend` is 3.1x too flat in TRUE SIZE while right to 0.8% globally. Two unrelated axes
+  strengthen the representational-limit case.
+- **6b — CHANGES GOLD-V3's CENTRAL DECISION.** It chose "two flows, not one, for now" and deferred the
+  merge to Direction B. But **two flows still assume `R_total = R_self + R_blend`** — they only swap
+  what supplies the second term. Gold-V3 itself lists linearity as an untested assumption, and Phase
+  0a tests it (live hint: required `R_blend` goes NEGATIVE at S/N~121). **If additivity fails, only an
+  integrated model escapes it, so Phase 0a should DECIDE two-vs-one rather than deferring it.**
+- **6c** the blend-axis anti-correlation is an independent argument for integration — but the cost is
+  losing the flow-vs-emulator diagnostic that produced nearly every result of 2026-08-01/02. That
+  RAISES the priority of Phases 1 and 5, which would become the only instruments left.
+- **6d** flow #2 would INHERIT the realisation defect. Gold-V3 predates 2026-08-01r, and its spec
+  ("used only through its mean-head shift") is precisely the construction with no realisation
+  structure. Must be designed against, not discovered after training.
+- **6e** Phase 0d and Gold-V3's outstanding test 3 are the SAME investigation (close-pair detection
+  selection = leg-matching bias). Run once, binned by separation AND true size; serves both.
+
+**Also downgraded Phase 2b on evidence from Gold-V3:** BlendEMU's close-pair deficit resisted
+in-domain retraining (`-40.3%`) and close-pair loss weighting (`-37.3%` at 4x, `-37.1%` at 13x,
+saturating while degrading 1-2"), diagnosed there as a representational limit. A size-stratified
+retune is the same class of intervention on the same model. Different axis, so a warning not a
+verdict — but 2b is now explicitly **time-boxed**, with Phase 6 as the real answer.
+
+A **provenance table** now records the origin of every phase. Summary: the load-bearing gates (Phase 0
+attribution checks, Phase 4 blend-axis joint gate) are OURS — the literature has no analogue and
+MacCrann et al. concede the field cannot decouple these either. The literature supplied four
+additions (0d, 2a's ordering, 3a's derivative supervision, 5a/5b's diagnostics) and two rule-outs
+(per-bin recalibration via Lemma C.5, importance weighting), inside a structure it did not provide.
+
+---
+
+## 2026-08-02a (LITERATURE review of the "resolution problem": global `m` fine because per-bin errors cancel. New `LITERATURE_resolution.md`. Weak-lensing half done, stats/ML half pending.)
+
+Owner asked for a literature review of the failure mode SBSI is in: population-mean `m` excellent
+while per-bin `m` is large and alternating in sign. **This is a well-established problem with a clear
+citation chain — the field abandoned global `m` as a deliverable some years ago.**
+
+**Added `LITERATURE_resolution.md`** (weak-lensing part complete, stats/ML part pending). Compiled by
+literature agents that fetched arXiv abstract pages and PDFs directly and quote them verbatim.
+**Second-hand to this repo — verify any number before it enters a paper.** The agent's own UNVERIFIED
+list is preserved in §1.9.
+
+Four anchors most relevant here:
+- **MacCrann et al. 2022** (arXiv:2012.08567, DES Y3) — the formal argument that `m` is not a number.
+  Under blending the response is a FUNCTION: "the two are expected to disagree, not just in their
+  normalization (i.e. as an overall multiplicative bias), but also in their shape." Global `m` is
+  exactly the normalisation of `n_gamma(z) = dg_obs/dg_true(z)`; all shape information is discarded.
+  Per-bin `m` runs `-1.25%` to `-3.60%` across four tomographic bins.
+- **Cragg et al. 2022** (arXiv:2203.01460) — a **ZERO-MEAN** spatially varying `m` still biases
+  cosmology: rms 0.01 -> ~10% of the statistical error; rms 0.02-0.03 -> >30%. "Requirements should be
+  placed on the rms of spatial variations of the m-bias, in addition to any requirement on the mean."
+- **Kannawadi et al. 2019** (arXiv:1812.03983, KiDS) — redshift-agnostic calibration is measurably
+  wrong; the with-z vs no-z gap reaches `0.023` in bin B1, exceeding their whole 0.02/bin budget.
+  Reweighting a property-agnostic simulation does NOT recover it.
+- **Samuroff et al. 2018** (arXiv:1708.01534) — marginalising does not save it: "**Even marginalising
+  over m with a prior of N(0, 0.035)**" a realistic per-bin residual pattern shifts cosmology "**more
+  than 1 sigma**" low.
+
+**Two findings that bear on SBSI conventions:**
+1. **Leg matching may re-inject the bias being measured.** Sheldon et al. 2020 (arXiv:1911.02505) on
+   why per-object responses are unusable: matching detections across sheared images "would introduce
+   the very shear-dependent object detection biases we wish to calibrate." SBSI's both-detected leg
+   matching is that operation. Independent published support for treating it as a bias source.
+2. **Cut on TRUE properties.** Euclid/Congedo et al. 2024 (arXiv:2405.00669): "defining true input
+   bins is also essential to minimise the impact of selection bias and not to misinterpret results."
+   Corroborates `CONVENTIONS.md`, and this repo's own 2026-08-01p/r result that a MEASURED magnitude
+   cut is substantially a blending cut.
+
+Also: Sheldon et al. 2020's controlled test is the cleanest "detection, not blending" evidence --
+`-0.0011 +- 0.0012` with true detections vs `-0.058 +- 0.001` with SExtractor detections, same
+measurement otherwise. And MacCrann et al. 2022 concede they "cannot fully decouple" detection bias
+from neighbour contamination -- **the decomposition SBSI attempted in 2026-08-01s is not one the field
+has cleanly achieved either**, which is context for how hard to push on the flow-vs-emulator split.
+
+**STATS/ML HALF NOW COMPLETE** (`LITERATURE_resolution.md` §2-3). The formal match is exact:
+
+- **"Resolution problem" is the correct technical term, and the identity is EXACT.** Murphy (1973)
+  partitions Brier as `reliability - RESOLUTION + uncertainty`. Combining Kull & Flach's `RL = UNC -
+  RES` with `RL = GL + IL` gives `GL = Var(Q) - Var(C)` -- the law of total variance. **Maximum
+  achievable resolution is `Var(Q)`, the total signal; grouping loss is exactly the part the model
+  failed to resolve.** Verified numerically by the agent (MC, N=4e6, machine precision).
+- **The four-term decomposition names our situation:** `Loss = AL + PCL + GL + IL`. Adjustment fixes
+  the global mean, calibration fixes the score->probability map, **neither touches GL**. Population
+  mean right + property-dependence wrong = `AL ~ 0`, `GL` large. That is the fiducial model.
+- **A per-bin recalibration provably CANNOT fix it.** Perez-Lebel et al. Lemma C.5:
+  `GL(S') = GL(S) + E[V_h[C|S']] >= GL(S)`, equality iff the map is perfect or invertible -- **a
+  non-injective map strictly INCREASES grouping loss.** Platt/temperature/isotonic never look at the
+  inputs. Independently supports AGENTS.md's no-silent-corrections rule on technical grounds.
+- **The cheap target is MULTIACCURACY over the cut sets, not multicalibration.** A cut on `Z` reports
+  `E[Y-S | Z in A]`, non-zero exactly when the residual correlates with the indicator -- the
+  multiaccuracy condition, not full calibration. Continuous-case entry point: Globus-Harris et al.
+  2023 (arXiv:2301.13767), needs only a squared-error regression oracle.
+- **SBC and expected coverage are exactly the tests that pass while we are wrong per-bin.** Use LOCAL
+  tests: LCT/ALP (arXiv:2102.10473) or L-C2ST (arXiv:2306.03580). SBC's blind spot is documented in
+  Modrak et al. 2023 (arXiv:2211.02383).
+- **Best-matched remedy: Sobolev training** (arXiv:1706.04859) -- supervise the DERIVATIVE. Our target
+  IS a derivative, our loss trains on values, and the loss is nearly flat along directions that change
+  the response while preserving the marginal fit. **We already have derivative targets: the finite
+  difference between shear legs.** No published application to conditional normalizing flows.
+- **TWO OF THE LITERATURE'S OPEN GAPS ARE OUR PROBLEM.** (i) No documented "conditioning collapse" for
+  conditional flows -- established for VAEs and GANs, absent for flows, and since flows train by exact
+  likelihood the mechanism would differ, so it may be genuinely unstudied. That is 2026-08-01r's
+  diagnosis. (ii) Grouping loss is defined only for CLASSIFICATION and only on predicted VALUES; a
+  grouping loss on a RESPONSE/derivative "does not appear to be defined anywhere". If this work is
+  written up, that is where the novelty sits.
+- Closest existing framings: Wiese et al. 2019 (arXiv:1907.03361, "marginals right, dependence wrong"
+  in flows -- the only such work found) and Cremer et al. 2018 (amortization gap).
+
+**Process note:** both top-level agents and three children died on an API session limit; two later
+completed. Sceptical companions are recorded alongside every remedy (Hansen et al. 2024 on
+multicalibration; Byrd & Lipton 2019 on importance weighting; Gulrajani & Lopez-Paz 2021 and Idrissi
+et al. 2022 on group DRO) -- the negative results here are as well-established as the positive ones.
+An earlier version of §2.3 said recalibration "leaves GL essentially unchanged"; corrected to the
+theorem.
+
+---
+
+## 2026-08-01s (FLOW vs EMULATOR per-bin attribution. **The answer differs by axis**, and on the blend axis the two errors CANCEL -- fixing either alone makes the total worse. Jobs 15474196 / 15474256.)
+
+Owner's hypothesis from reading fig2 against fig5: "self response is quite consistent in most bins
+while total response is not, so it's more like the emulator." **Supported on SIZE, refuted on FLUX,
+and neither on the blend axis.**
+
+**Change:** new `scripts/eval_blend_vs_flow_perbin.py` + `jobs/job_blend_vs_flow_perbin.sh` (CPU only,
+200G, ~3.5 min). Per bin on constgold it prints `<r_sim>`, `<R_flow>`, `<R_blend_emulator>`, the
+REQUIRED blend `<r_sim> - <R_flow>`, and splits the total-model residual into the part the flow's own
+measured error accounts for (`fig5` residual x the flow's share `R_flow/R_model`) and the REMAINDER.
+
+**THE RESOLUTION PATHOLOGY, in one line:** globally `<R_blend>` = 0.1358 vs required 0.1347 -- the
+emulator is right to **0.8%**. Per bin in true size the required value spans 0.0709-0.1598 while the
+emulator spans 0.1160-0.1447: **3.1x too flat**, 24% too LOW at Re~0.93 and 71% too HIGH at Re~1.41,
+cancelling to 0.8% in the mean.
+
+| axis | total resid rms | explained by FLOW | REMAINDER (emulator) | corr(total, flow) | emulator structure vs required | verdict |
+|---|---|---|---|---|---|---|
+| primary flux S/N | 3.39 pt | **3.79** | 1.80 | **+0.931** | 1.2x | **FLOW** |
+| primary size Re | 2.82 pt | 2.07 | **2.41** | +0.560 | **3.1x too flat** | **EMULATOR** (mixed) |
+| neighbour flux | **1.51 pt** | 4.15 | 5.08 | **-0.436** | 1.0x | **BOTH -- they CANCEL** |
+
+- **FLUX axis: the flow.** `corr = +0.931`; the total residual tracks the flow's own self-response
+  error almost exactly. The emulator remainder is the smallest of the three axes.
+- **SIZE axis: the emulator, and this is the axis that drives the size-cut bias.** Cleanest single
+  bin is Re~0.93: total residual `-4.12%` while the flow is accurate to `-0.23%` there, leaving
+  `-3.92%` with nowhere else to go.
+- **NEIGHBOUR-FLUX axis: a component-level cancellation.** The total residual is the SMALLEST of the
+  three (1.51) while BOTH components are the LARGEST (4.15 and 5.08) and ANTI-correlated (`-0.436`).
+  The flow's blend-regime error and the emulator's error currently offset each other. **Under the
+  additivity assumption, fixing the flow alone would take the total residual from 1.51 to ~5.08 rms,
+  and fixing the emulator alone from 1.51 to ~4.15. On this axis they must be fixed together.**
+
+**Owner's argument, scored:** correct on size (the axis that matters for the size-cut bias), wrong on
+flux, and inapplicable on the blend axis. A defensible read of the specific problem, not a general
+verdict on the emulator.
+
+**ANOMALY worth chasing:** at S/N~121 the REQUIRED blend is NEGATIVE (`-0.0079`), i.e. the flow alone
+already over-predicts the constgold total. That either breaks sim additivity or indicates a flow
+error larger than the whole blend term there.
+
+**TWO DEFECTS IN THE FIRST VERSION, both fixed (15474256 rerun reproduces the hand-paired numbers
+exactly: 2.07 / 2.41 / +0.560):**
+1. The printed `GAP = req - bl` is identically `sim - model`, i.e. the residual restated. It carried
+   no information beyond `resid%`. Replaced with the attribution columns.
+2. `fig5_residuals` masked non-finite values on the x axis but not on the truth, so 8 of 12 bins
+   returned NaN and the correlation printed over the surviving 4 was meaningless. The mask is now
+   applied to the truth as well, deliberately NOT inside `edges_for` so bin EDGES stay defined by the
+   x distribution alone and remain comparable with the constgold side (verified: the size-axis edges
+   agree to 4 decimals between the two datasets, which is what makes the pairing legitimate).
+
+**CAVEATS, unresolved.** The flow column is half-shear FORWARD extraction; everything else is
+constgold ANTITHETIC, and that extraction difference is a known real effect -- if it is
+size-dependent it contaminates the split. The decomposition also assumes `R_total = R_self + R_blend`
+in the simulation, which is not tested here.
+
+---
+
+## 2026-08-01r (**RETRACTION of 2026-08-01p/q's "selection not response" conclusion. The owner was right: the SELECTION is modelled correctly; the RESPONSE of the selected objects is not.** Analysis only.)
+
+Owner pushed back on "for magnitude it is not a shape-response problem", proposing the direct test:
+check whether the flow predicts the right SELECTION by comparing moments of SHEAR-INDEPENDENT labels
+over the selected set. **The pushback is correct on both counts and 2026-08-01p/q are retracted in
+part.**
+
+**Error 1 -- 2026-08-01q over-read the count and blend channels.** `bnd_keep` and `bnd_blend` do NOT
+enter `m`. The script's own docstring: the blend term reaches the measured shape as `+R_blend*g` /
+`-R_blend*g`, so the leg difference defining a response turns the two selected means into their SUM,
+and `R_model` is built from `0.5*(bp+bm)`. The leg DIFFERENCE (`b_resp`, `keep_resp`) is a diagnostic
+of boundary motion that is never folded into `out`/`outb`/`outk`. Only `bnd_shape` is an actual
+contribution to the bias. "The model is inert in 2 of 3 channels" was therefore not evidence about
+the bias at all -- **the owner's column is the relevant one, and the model passes it.**
+
+**Error 2 -- the frozen test proves less than 2026-08-01p claimed.** It shows the MEAN response on a
+FIXED population is right. It cannot see any correlation between response and measured magnitude,
+because freezing the selection removes that correlation by construction.
+
+**The decisive measurement.** Both channels put on ONE scale (absolute change in `R`, / `R0_sheared`,
+x100), comparing the frozen row against the reported row:
+
+| cut | intrinsic-SHAPE channel: sim / model | measured-RESPONSE channel: sim / model |
+|---|---|---|
+| `mag<25` | `-0.077` / `-0.102` (**mismatch -0.025**) | `+0.444` / `-0.702` (**mismatch -1.146**) |
+| `mag<25.5` | `-0.273` / `-0.061` (**mismatch +0.212**) | `+0.195` / `-0.389` (**mismatch -0.585**) |
+
+**The model reproduces the boundary's effect on WHICH OBJECTS are selected (mismatch 0.02-0.21 pt)
+and gets the RESPONSE of those objects wrong by the full size of the bias, with the WRONG SIGN.** The
+measured-response mismatch (`-1.146`, `-0.585`) IS the selection contribution reported in
+2026-08-01p (`+1.145`, `+0.636`, opposite sign by construction of `m = R_sim/R_model - 1`).
+
+**Mechanism, consistent with this session's RA work.** In the sim, whether an object passes a measured
+magnitude cut correlates with its shear response -- both depend on the same measurement realisation.
+The flow's shear response is added IDENTICALLY TO EVERY DRAW (the residual flow is blind to shape
+features; the response lives entirely in the mean head `_mu(c)`), so its draws carry no
+response-realisation structure for a measured cut to select on. **Marginals right, joint wrong** --
+which is exactly what the 2026-08-01i re-gate was built to test, and that gate FAILED its effect-size
+floor (`F_bar` = `-0.201` / `+0.084` against a 0.50 floor). The diagnosis stands; the RA fix did not
+work.
+
+**Corrected conclusion.** The magnitude-cut bias is a SHAPE-RESPONSE defect after all -- specifically
+in the response's CORRELATION WITH MEASURED MAGNITUDE, not in its population mean. It is a different
+aspect of the response than the size defect (which is a mean-response error under a true cut), but
+both are response, not selection. **The owner's original reading -- "the shape response is the bigger
+problem, they're not resolved" (2026-08-01n) -- holds for BOTH axes.**
+
+**CAVEAT, open sub-question.** On the SIM side, frozen-vs-reported is purely the moving boundary (both
+use catalogue magnitudes). On the MODEL side it mixes the moving boundary with the static difference
+between catalogue-mag selection and sampled-mag selection. The conclusion does not depend on splitting
+these -- the intrinsic-shape channel already shows object SELECTION is fine on a shear-independent
+label -- but the split is not measured.
+
+**NOT RUN (owner's fuller suggestion):** the same moment test on additional shear-independent labels
+(keep fraction, mean TRUE mag, mean TRUE size) over each leg's selected set, sim vs model. Only the
+intrinsic-shape label is currently instrumented (`sel_weight`). Generalising it to several labels
+would confirm "the model selects the right objects" beyond the single moment now tested.
+
+---
+
+## 2026-08-01q (RECONCILING "the model predicts selection well" with 2026-08-01p: the boundary has THREE channels, the quoted column is ONE, and the model is INERT in the other two. Analysis only.)
+
+Owner: the boundary table shows the flow recovering 70-133% of the selection term -- so how can
+2026-08-01p call the magnitude bias a selection defect? **Both are correct; the quoted column is a
+partial test.**
+
+**The npz already stores three boundary channels. The commonly quoted table shows only `bnd_shape`.**
+
+| channel | `mag<25` | `R>0.60"` | `mag<25 & R>0.60"` | model significant vs 0? |
+|---|---|---|---|---|
+| (1) `bnd_shape` mean intrinsic SHAPE (**the quoted column**) | 133% | 86% | 70% | YES -- 209 / 149 / 69 sigma |
+| (2) `bnd_keep` COUNT of selected objects | 9% | -48% | -0% | **NO -- 1.2 / 1.1 / 0.0 sigma** |
+| (3) `bnd_blend` mean `R_blend` of selected objects | -0% | -23% | 3% | **NO -- 0.1 / 0.9 / 0.8 sigma** |
+
+The model reproduces the boundary's effect on mean intrinsic shape at high significance, but **its
+boundary is essentially INERT**: in the count and blend channels its value is statistically
+indistinguishable from zero while the sim's is not. **"Flow recovers 70-133%" is a verdict on one
+channel, not on selection modelling as a whole.**
+
+**Why `pure_sel` structurally cannot see the 2026-08-01p failure** -- two reasons, both by design:
+- it is a LEG DIFFERENCE, so any offset identical in the + and - legs cancels; a model whose selected
+  set is wrong AT FIXED SHEAR looks clean;
+- it projects a SHEAR-INDEPENDENT shape label (`sel_weight`), zeroing the response by construction, so
+  it cannot test how the selection changes the RESPONSE being averaged.
+
+**The static offset is present and measured.** At essentially identical keep fraction (model 0.683402
+vs frozen 0.683442) the model's self-selected set carries response **-0.698%** vs the true set at
+`mag<25`, and **-0.422%** at `mag<25.5`. The boundary barely moves; it sits in the wrong place.
+
+**CORRECTION to 2026-08-01p's framing.** That entry described the `+1.145` as "the model selects a
+different set". More precisely it is two effects: the sim's leg-dependent boundary RAISES its measured
+response by `+0.444%` while the model's LOWERS its own by `-0.698%`; the gap is the `+1.15`. Both are
+selection-side so the entry's conclusion stands unchanged, but the term decomposes into an INERT
+boundary PLUS a statically displaced one, not a single effect.
+
+**CRN verified**: `torch.manual_seed(seed)` is called before sampling in BOTH legs (identical latents),
+so the model's leg-to-leg set difference is genuine shear response, not sampling noise. The inert
+count/blend channels are therefore a real modelling failure, not a noise artifact.
+
+**INFERRED common cause (NOT measured -- flagged as hypothesis).** The script's own comment names the
+mechanism: a too-broad predictive distribution blurs the model's boundary. A single mis-calibrated
+measured-magnitude distribution would produce BOTH symptoms -- a blurred boundary that will not move
+with shear (channels 2, 3 inert) and a selected set that is a smeared version of the true one (wrong
+average response at fixed shear) -- and would be worst exactly where 2026-08-01o found the damage, on
+the blend-brightened newcomers. **Not tested.** The clean test is comparing the flow's sampled
+measured-mag distribution against the catalogue's, conditioned on neighbour proximity.
+
+**Unchanged conclusion:** for MAGNITUDE the defect is selection, not shape response (freeze the
+selection and the response is right, `+0.066%` at `mag<25.5`); for SIZE it is genuinely response.
+
+---
+
+## 2026-08-01p (**MAGNITUDE-cut bias is a SELECTION-MODELLING defect, NOT a shape-response one.** Response-vs-selection split measured directly. Jobs 15469140 / 15471437.)
+
+Owner: "and it's still a shape response issue instead of a model selection issue?" **Answer: NO for
+magnitude, YES for size. They are two different defects needing two different repairs.**
+
+**How the split is made.** A measured cut is applied to the flow's OWN SAMPLED measured mag, so the
+model selects a different set than the sim -- response and selection are entangled. A FROZEN mask
+(`[F]`) is taken from the catalogue and handed to both sides identically, so the model does no
+selecting and `m` is pure response. Reconstructing the measured-cut population as `both + newcomer`
+under frozen masks gives the SAME population with the selection handed over; the gap against the
+reported row is the selection-modelling contribution.
+
+**Sanity check passes**: the frozen `both + dropout` reconstruction reproduces the `[T]` row to three
+decimals (`-0.406` vs `-0.406`; `-0.324` vs `-0.325`).
+
+| | `mag<25` | `mag<25.5` |
+|---|---|---|
+| same population, SELECTION FROZEN (response only) | **-0.511 +-0.158** | **+0.066 +-0.151** |
+| as reported, model selects for itself | +0.633 +-0.168 | +0.703 +-0.160 |
+| **SELECTION-MODELLING contribution** | **+1.145 +-0.016** | **+0.636 +-0.015** |
+
+At `mag<25.5` the model's response on the measured-cut population is `+0.066%` -- essentially exact.
+The whole `+0.703%` appears only when the model picks the objects itself. At `mag<25` selection
+contributes `+1.145` and response `-0.511`; they partially cancel to the reported `+0.633`, so
+**selection is LARGER than the total bias**, not merely dominant.
+
+The selection term's error is ~10x tighter than the rows it comes from (`+-0.016` / `+-0.015`, i.e.
+72 sigma / 42 sigma) because it is a model-vs-model difference in which the seed offset cancels --
+the behaviour AGENTS.md predicts, and an independent check that the decomposition is formed per seed
+rather than from ensemble means.
+
+**Per-subpopulation frozen rows** (each boundary exactly 0):
+
+| row | keep | m |
+|---|---|---|
+| `both mag<25` [F] | 0.5744 | -0.314 +-0.174 |
+| `newcomer mag<25` [F] | 0.1091 | **-2.142 +-0.392** |
+| `dropout mag<25` [F] | 0.0060 | -11.610 +-0.263 |
+| `both mag<25.5` [F] | 0.7772 | -0.154 +-0.166 |
+| `newcomer mag<25.5` [F] | 0.0862 | **+3.710 +-0.692** |
+| `dropout mag<25.5` [F] | 0.0110 | -18.752 +-0.429 |
+
+Keep fractions reconstitute exactly: `0.5744 + 0.1091 = 0.6835` = measured keep `0.6834`;
+`0.5744 + 0.0060 = 0.5804` = true keep `0.5804`.
+
+**PREDICTION RECORDED AND REFUTED.** Before the run I predicted "mostly (a), a response error on the
+blended newcomers", estimating newcomer `m ~ +7%` from a count-weighted argument. The measured value
+is `-2.142` at `mag<25` (wrong sign AND wrong size) and `+3.710` at `mag<25.5`, and the response term
+is not the driver at either threshold. The count-weighted estimate was the flawed step: `m` of a union
+is not a count-weighted mean of its parts' `m`.
+
+**Mechanism.** Newcomers are blend-brightened (90.1% neighboured, `+0.507` mag, 2026-08-01o). The flow
+does not reproduce that neighbour-flux brightening in its sampled measured magnitude, so it sorts the
+wrong galaxies across the threshold. **The defect is in the flow's measured-magnitude distribution,
+not its response.** This CORRECTS 2026-08-01o's closing line ("the same blending axis as the size
+problem"): blending creates the newcomer population, but what it exposes is a measurement-model
+defect, distinct from the size response defect.
+
+**Two problems, two repairs:**
+- **SIZE** -> shape-response defect. `[T]` rows carry zero selection by construction and still read
+  `+1.486` at 7.3 sigma. Selection-modelling fixes cannot touch it.
+- **MAGNITUDE** -> selection-modelling defect. Response is already right; the measured-mag
+  distribution is wrong for blended objects. Response fixes cannot touch it.
+
+**Change:** `--newcomer-cuts` added (see 2026-08-01o). **Merge gotcha:** `DUMPS` is a GLOB, not a
+directory -- passing `results/nd_seeds_newcomer` gave `IsADirectoryError` and the first merge
+(15469141) failed with all 16 array dumps intact; re-ran as `results/nd_seeds_newcomer/s*.json`.
+
+**KNOWN GAP:** the equivalent response-vs-selection split for SIZE is NOT run. The `[T]` size rows
+prove a response defect exists but do not apportion the MEASURED size-cut bias, and per 2026-08-01m
+the pre/post-PSF mismatch forbids inferring it. Needs a newcomer-style split on measured vs true size.
+
+---
+
+## 2026-08-01o (WHY the MEASURED and TRUE magnitude cuts DISAGREE IN SIGN: a measured mag cut is substantially a BLENDING cut. Job 15469140 / 15469141.)
+
+Owner: "for size cuts the shape bias explains the total bias well, but for mag cuts the sign is
+opposite?" **Premise confirmed and systematic** -- the flip is at both thresholds, not one:
+
+| measured | m | keep | | true | m | keep |
+|---|---|---|---|---|---|---|
+| `mag<25` | **+0.633** | 0.683 | vs | `tmag<25` | **-0.406** | 0.580 |
+| `mag<25.5` | **+0.703** | 0.863 | vs | `tmag<25.5` | **-0.325** | 0.788 |
+| `R>0.60"` | +0.643 | 0.967 | vs | `tRe>0.6` | +1.486 | 0.367 |
+
+**Not the boundary term.** `mag<25` carries `pure_sel = -0.077` with the model at `-0.102`; a residual
+of that size cannot move `m` by 1.04 pt. The two cuts must select different galaxies.
+
+**They do, and the driver is blending.** Direct measurement on the constgold catalogue (`case>=40`,
+domain `mag<26 & Re>0.3`, N = 12,467,513; the table's 11,674,408 additionally requires an emulator
+lookup match): **70.9% of objects measure BRIGHTER than truth**, median `meas - true = -0.090` mag.
+At `mag<25` the measured cut admits **1,279,171 "newcomers"** (true mag fainter than 25, measured
+brighter) and drops only **79,116** -- **16.2x asymmetric**.
+
+| subset | n | neighboured | median nbr sep | brightening |
+|---|---|---|---|---|
+| whole in-domain population | 12,467,513 | 0.7598 | 1.790" | +0.090 mag |
+| kept by BOTH cuts | 7,455,538 | 0.7724 | 1.755" | +0.068 mag |
+| **NEWCOMERS** | **1,279,171** | **0.9010** | **1.516"** | **+0.507 mag** |
+| dropouts | 79,116 | 0.4078 | 2.388" | -0.113 mag |
+
+Newcomers are close-blended objects whose neighbour flux entered `MAG_AUTO`; dropouts are the mirror
+(isolated, far-separated, dimmed). **A measured magnitude cut is substantially a blending cut.**
+
+**`R_blend` fingerprint agrees exactly** (from 2026-08-01n): a TRUE `mag<25` cut drops `R_blend` to
+**0.718** of population -- it strips blends out. The MEASURED cut drops it only to **0.920** -- it
+keeps them, because being blended is how they got bright.
+
+**Rough estimate:** for `m` to run -0.41 -> +0.63 with newcomers at ~15% weight, they must carry
+`m ~ +7%`. **Count-weighted, not response-weighted -- order of magnitude only.**
+
+**Change (measures it directly):** `--newcomer-cuts MAG ...` (empty by default, so unset behaviour is
+byte-identical) splits the population into three disjoint FROZEN masks per threshold --
+`both` / `newcomer` / `dropout` by whether measured and true magnitude each pass. Frozen means
+identical on both legs, so each row's boundary is exactly 0 and its `m` is that subpopulation's pure
+shape-response bias. `both + newcomer` reconstitutes the measured cut, `both + true dropout` the true
+one. Submitted at 25.0 and 25.5, 16 seeds -> `results/constgold_neardomain_newcomer.npz`.
+
+**CAUTION on the size half of the owner's reading.** "The shape bias explains the size total well" is
+weaker than it looks: measured `R>0.60"` keeps 96.7% and is boundary-dominated, true `tRe>0.6` keeps
+36.7% with zero boundary, and per 2026-08-01m they are pre- vs post-PSF and NOT the same galaxies.
+Same sign, different populations, different mechanisms.
+
+**Upshot:** the flow's TRUE-magnitude response is already fine (-0.31% correction). The
+measured-magnitude bias is not a magnitude defect -- it is the blend-selected subpopulation a measured
+cut drags in, i.e. the same blending axis as the size problem rather than a separate one.
+
+---
+
+## 2026-08-01n (RESPONSE-vs-BLEND decomposition of the true-cut shape bias: constgold CANNOT separate the two; the flow needs ~+2%, R_blend would need ~+12-19%. Analysis only, no job.)
+
+Owner's reading: "the shape bias is the major source, which means the flow+R_blend shape response is
+the bigger problem -- they're not resolved." **Both clauses confirmed; the attribution to a component
+is NOT resolvable from constgold.**
+
+**Why the first clause is decisive without any cross-table comparison.** On a true cut both legs
+select identical objects, so `pure_sel` and `keep_offset` are EXACTLY `0.0000` (verified on every [T]
+row). There is no moving boundary at all, and the bias is still 5-6x the 0.30% budget:
+`tRe>0.5` +1.43 +-0.26 (5.5 sigma), `tRe>0.6` +1.49 +-0.20 (7.3 sigma),
+`tmag<25 & tRe>0.6` +1.77 +-0.20 (**9.0 sigma**). This argument needs no normalisation bridge between
+column (1) and `m`, which is what made the earlier size comparison unsafe (see 2026-08-01m).
+
+**"Not resolved" quantified.** On `tmag<25 & tRe>0.6` the sim puts the subset's response **+17.6%**
+above the population; the model says **+15.4%** -- right direction, 88% of the magnitude, under-shoots
+the gradient. The population mean is essentially exact (-0.12%). A slope error, not a normalisation
+error.
+
+**Per-cut `R_flow` / `R_blend` pulled from the per-seed dumps (`results/nd_seeds_truecombo/s*.json`,
+keys `rf` / `rb` / `sim[..]["measured"]`), ratios formed inside each seed then averaged over 16:**
+
+| true cut | R_flow ratio | R_blend ratio | blend share of net | closes if R_flow | or if R_blend |
+|---|---|---|---|---|---|
+| `tmag<25` | 1.3357 | 0.7177 | -18.7% | **-0.31%** | -3.1% |
+| `tRe>0.4` | 1.1019 | 0.9901 | -1.9% | +0.67% | +4.0% |
+| `tRe>0.5` | 1.1019 | 0.9589 | -8.3% | **+1.82%** | +11.1% |
+| `tRe>0.6` | 1.0938 | 0.9330 | -15.6% | **+1.87%** | +11.7% |
+| `tmag<25 & tRe>0.6` | 1.2351 | 0.7212 | -28.6% | **+2.10%** | +19.2% |
+
+The two components pull OPPOSITE ways: on large true sizes `R_flow` rises ~9% while `R_blend` falls
+~7%, so the blend term drags the model ratio down (it supplies -29% of the net change on the joint
+cut). Because `R_blend` is only 15.8% of `R_model` (0.1358 / 0.8616), the same absolute gap closes
+with a ~2% correction to the flow or a ~12-19% correction to R_blend. **Constgold measures the sum
+only and cannot split it.**
+
+**What does implicate the flow specifically:** the half-shear diagnostic (2026-08-01j) uses `R_flow`
+with NO `R_blend`, and its smallest measured-size bin is wrong by 4.5x (sim `-0.0788` vs model
+`+0.342..+0.361` on every one of 16 seeds). So the flow's size response is independently established
+as broken. That does NOT clear R_blend -- it means R_blend does not have to be wrong for the observed
+bias to exist.
+
+**Narrowing the target: it is SIZE, not magnitude.** The true-magnitude response is already fine
+(`tmag<25` needs `-0.31%`, `tmag<25.5` needs `-0.23%`). Meanwhile MEASURED `mag<25` reads `+0.633%`
+against true `tmag<25` at `-0.406%` -- same galaxies, same response, opposite verdict. That gap is the
+flow's truth->measured-magnitude mapping, a measurement-model problem, NOT a response problem. Two
+distinct defects that sit in adjacent table rows. The response target is **the flow's response as a
+function of TRUE size**, worst where the galaxy is both bright and large.
+
+**Provenance:** read-only analysis over existing 16-seed dumps; no new job, no script change, no
+result file rewritten. `bnd_shape_sim` == `pure_sel` and the boundary "model" column is
+`bnd_shape_model` (verified), so the earlier "flow recovers 133% / 86% / 70% of the boundary" figures
+are `bnd_shape_model / bnd_shape_sim`.
+
+---
+
+## 2026-08-01m (CORRECTION to 2026-08-01l: the measured and true "0.6 inch" cuts are PRE- vs POST-PSF and are NOT the same cut. The "same population, same cuts" claim is withdrawn.)
+
+Owner asked whether the `tRe>0.6` threshold is pre-PSF. It is. `tRe` is `Re_input_p`, the intrinsic
+half-light radius; the measured cut is SExtractor `FLUX_RADIUS` on the observed image, which the
+seeing floors at R50 = 0.5268" (Moffat FWHM 0.73", beta 2.224). Measured on 9,466,878 rows of
+`hs_selfresp_c40-199/base_c40-199.feather`:
+
+| | pre-PSF (`Re_input_p`) | post-PSF (`measured_flux_radius`) |
+|---|---|---|
+| median | 0.503" | 0.832" |
+| range | 0.300-1.500" | 0.230-30.09" |
+| **fraction > 0.6"** | **36.5%** | **96.6%** |
+
+The smallest galaxies in the sample (true `Re` = 0.30", the domain floor) already have median measured
+size **0.699"**. Only 0.40% of rows fall below the PSF R50 floor at all. So measured `size > 0.60"` is
+close to a no-op that removes only the 3.3% whose measurement scattered low, while true `Re > 0.6"`
+removes the majority.
+
+**What this costs.** 2026-08-01l's headline -- "the two mechanisms combine in opposite directions ...
+on the same population" -- is **withdrawn on both counts**. The sub-additive boundary result is on
+measured cuts keeping 67.9%; the super-additive shape result is on true cuts keeping 28.3%. Different
+cuts, different populations; "opposite directions" is not established by that pair.
+
+**What survives untouched** (each internally consistent, no pre/post-PSF mixing):
+- shape bias super-additive on true cuts, `+1.891` vs naive `+1.326` -- entirely within truth
+- boundary sub-additive on measured cuts, `+0.482` vs naive `+1.231` -- entirely within measured
+- the magnitude cut flipping sign in truth space
+- model over-predicts small / under-predicts large -- reached independently from both spaces
+- 2026-08-01i (gate), 2026-08-01j (seeds), and the true-vs-measured magnitude split
+
+Also explains a loose end: measured `size > 0.60"` shows `+0.643%` while removing only 3.3% of
+galaxies, because those 3.3% are exactly the pathological tail whose measured size fell below where
+the PSF should have put it (sim `-0.079` vs model `+0.35`).
+
+**To make the selection-vs-response comparison honest** the two must be matched on KEEP FRACTION, not
+threshold: roughly true `Re > 0.31"` to match measured `0.60"`, or a measured cut near `0.92"` to
+match true `Re > 0.6"`. Not run.
+
+---
+
+## 2026-08-01l (SHAPE bias isolated on JOINT TRUE cuts: **SUPER-additive (+43%)**, the exact opposite of the boundary term. Jobs 15459991 / 15459992.)
+
+Owner: measure the shape bias on the same cuts as 2026-08-01k but on TRUE properties. On a true cut
+both sides select IDENTICAL objects, so column (1) is identically 0 (confirmed: `0.000%` on every [T]
+row) and `m` is the pure SHAPE-response bias with no selection contamination.
+
+**Change:** true cuts were single-variable only. Added `--true-combo-cuts MAG:RE` (empty by default,
+so unset behaviour is unchanged) building a joint fixed mask `(tmag < mc) & (tre > sc)`. Also ran
+`tRe>0.6` so the true size threshold matches the measured table's 0.60". 16 seeds, full 11,674,408.
+Output `results/constgold_neardomain_truecombo.npz`; canonical table not touched.
+
+| cut | keep | (1) bndry | (3) sim | (4) model | m = shape bias | dm |
+|---|---|---|---|---|---|---|
+| `tmag<25` [T] | 0.5804 | 0.000% | +23.473% | +23.826% | **-0.406%** | -0.283 +-0.137 |
+| `tRe>0.6` [T] | 0.3669 | 0.000% | +8.560% | +6.843% | **+1.486%** | +1.609 +-0.173 |
+| naive sum | -- | -- | -- | -- | -- | **+1.326** |
+| `tmag<25 & tRe>0.6` [T] | 0.2833 | 0.000% | +17.593% | +15.412% | **+1.769%** | **+1.891 +-0.185** |
+
+**~~THE TWO MECHANISMS COMBINE IN OPPOSITE DIRECTIONS.~~ WITHDRAWN -- see 2026-08-01m.** The two
+comparisons below are on DIFFERENT cuts and DIFFERENT populations (measured `0.60"` keeps 96.7%,
+true `0.6"` keeps 36.7% -- post- vs pre-PSF), so "opposite directions" does not follow. Each bullet
+remains valid on its own; only the juxtaposition is retracted. Original text:
+
+- **boundary / selection** (measured cuts, 2026-08-01k): `+0.482` vs naive `+1.231` -- **61% BELOW**
+- **shape / response** (true cuts, here): `+1.891` vs naive `+1.326` -- **43% ABOVE**
+
+Selection is sub-additive because the two measured cuts remove the SAME faint-and-small galaxies. The
+response error does the reverse: it compounds. Cross-check on `m` via columns (3)/(4):
+0.99877 x 1.17593/1.15412 - 1 = +1.765%, matching the printed +1.769%.
+
+**The magnitude cut FLIPS SIGN depending on the size selection.** Alone it contributes `-0.283`; on
+top of `tRe>0.6` its marginal contribution is `1.891 - 1.609 = +0.282`. Same threshold, same
+population, opposite sign. So the response error is NOT separable into a true-mag term plus a
+true-Re term -- there is a genuine interaction, and the model is worst for galaxies that are bright
+AND large in truth.
+
+**Direction is consistent with the measured-space finding.** `m > 0` means the model UNDER-predicts
+the response. Keeping large true galaxies gives `m = +1.49`, so by the mediant relation the discarded
+small ones carry `m` below the no-cut `-0.123` -- the model OVER-predicts small and UNDER-predicts
+large. That is the same slope error seen in measured space (2026-08-01j: smallest measured-size bin,
+sim `-0.0788` vs model `+0.3505` on every one of 16 seeds), reached here from true properties.
+
+**True-size trend:** `tRe>0.4` +0.450, `tRe>0.5` +1.434, `tRe>0.6` +1.486 -- rises steeply to 0.5"
+then plateaus.
+
+**Keep fractions are positively correlated in truth too**: 0.5804 x 0.3669 = 0.2129 if independent,
+actual **0.2833**. So the super-additivity is NOT explained by the cuts being independent; they
+overlap, and the response error still compounds.
+
+**SIGNIFICANCE CAVEAT.** The `+0.566` pt super-additivity is ~2 sigma under a naive error combination
+(0.566 / sqrt(0.221^2 + 0.185^2) = 2.0). The three `dm` values share seeds AND most of their
+population, so a PAIRED per-seed comparison would be substantially tighter -- but it was not formed
+here (the npz stores ensemble values only). **Stated as suggestive, not established.** The
+sub-additivity of the boundary term is on firmer ground: its sim side carries no seed error at all.
+A per-seed paired version of this comparison is the obvious next step if the number matters.
+
+---
+
+## 2026-08-01k (FIRST GENUINE TWO-AXIS CUT `mag<25 & R>0.60"`: the magnitude and size boundary terms are strongly SUB-ADDITIVE, because the two cuts remove the SAME galaxies. Jobs 15458258 / 15458259.)
+
+Owner asked why the negative magnitude boundary term and the positive size one do not cancel, and to
+run the combination. **The premise needed fixing first: no genuine two-axis cut had ever been run.**
+The two combined rows in the table (`mag<26 & R>0.30"`, `mag<25 & R>0.40"`) pair a real magnitude cut
+with a size threshold that is a NO-OP -- the PSF floors measured `flux_radius` at R50 = 0.527", so
+`R>0.30"`/`R>0.40"` keep ~100% and remove nothing. Both rows therefore reproduce the magnitude cut
+alone to the last digit (`-0.3460` = `mag<26`; `-0.0767` vs `-0.0770` = `mag<25`).
+
+**Change:** the combined pairs were hardcoded `((26.0, 0.30), (25.0, 0.40))` in
+`scripts/eval_selection_constgold_neardomain.py`; now `--combo-cuts MAG:SIZE ...`, default
+`26.0:0.30 25.0:0.40` -- byte-identical behaviour when unset (verified: default parse ->
+`[(26.0, 0.3), (25.0, 0.4)]`). 16 seeds, full 11,674,408 population, `--true-cuts` also on.
+Output `results/constgold_neardomain_combo.npz`. Canonical
+`results/constgold_neardomain_table.npz` NOT overwritten (separate DUMPDIR `results/nd_seeds_combo`).
+
+**RESULT -- the boundary terms do not add, they overlap.** Column (1), the pure moving-boundary term
+from unsheared intrinsic shapes (SIM side carries no seed error, so this is exact arithmetic):
+
+| cut | keep | (1) sim | (1) model | m | dm |
+|---|---|---|---|---|---|
+| `mag<25` | 0.6834 | **-0.0770%** | -0.1024 +-0.0005 | +0.633% | +0.756 +-0.108 |
+| `R>0.60"` | 0.9668 | **+1.3084%** | +1.1311 +-0.0076 | +0.643% | +0.766 +-0.018 |
+| naive sum | -- | **+1.2314%** | +1.0287 | -- | -- |
+| `mag<25 & R>0.60"` | 0.6791 | **+0.4818%** | +0.3360 +-0.0048 | **+0.465%** | +0.587 +-0.108 |
+
+The combination is **61% below the naive sum** (+0.482 vs +1.231). The model is sub-additive by a
+similar factor (+0.336 vs +1.029, 67% below), so it reproduces the effect qualitatively.
+
+**MECHANISM, measured from the keep fractions.** Under independence the combined cut would keep
+0.6834 x 0.9668 = 0.6607; it actually keeps **0.6791**, i.e. MORE than independent -- the two cuts
+target overlapping galaxies. Quantitatively: `R>0.60"` removes 3.32% of the whole population but only
+0.43 pt of the `mag<25` survivors (0.6834 -> 0.6791), which is 0.63% of them -- **5.3x fewer**. So
+~81% of the galaxies the size cut would remove have ALREADY been removed by the magnitude cut. Small
+MEASURED size and faint MEASURED magnitude are the same galaxies, which is exactly what the PSF-floor
+picture predicts: a faint object's measured size is pulled to the seeing floor.
+
+**Consequence: the bias at the combined cut is LOWER than at either cut alone** (+0.465% vs +0.633%
+and +0.643%). Confirmed independently from columns (3)/(4): 0.99877 x 1.17153/1.16469 - 1 = +0.464%.
+The response-tracking gap also shrinks (sim-model = 0.68 pt combined vs 0.88 pt for `mag<25` alone).
+Reading: the model's error is concentrated in ONE corner of parameter space -- faint AND small --
+not spread independently over two axes. Cutting on either axis removes most of that corner; cutting
+on both does not remove twice as much because it is the same corner.
+
+**Caveat on significance.** The sub-additivity of column (1) is decisive (sim side is seed-free, and
++0.482 vs +1.231 dwarfs the model-side +-0.005). The claim that the combined `m` is genuinely LOWER
+than either single cut is weaker: those numbers share seeds and most of their population, so the
+difference needs a per-seed paired comparison that was not formed here. Stated as suggestive.
+
+**Flow recovery of the boundary term** (model/sim): `mag<26` 6.6%, `mag<25.5` 22.5%, `mag<25` 133%,
+`R>0.60"` 86.4%, **combined 69.7%**.
+
+**REGRESSION CHECK vs the canonical table.** Same population (11,674,408, identical `m_nocut`
+-0.1226) and same 16 seeds, so every shared row must reproduce. All do to < 0.002 pt except
+`R>0.70"`: 4.4624 (canonical) vs 4.4658 (this run), a 0.0034 pt difference = 2.5% of that row's own
++-0.136 error. The array landed on a mix of V100 and RTX 2080 Ti nodes, so this is flow-sampling
+nondeterminism across GPU architectures, not a configuration difference. Recorded rather than
+ignored; it bounds run-to-run reproducibility at the few-1e-3 pt level.
+
+---
+
+## 2026-08-01j (DIAGNOSTIC, owner question: would MORE FLOW SEEDS remove the measured-size bias? **NO** -- measured. Job 15452388.)
+
+`scripts/eval_seed_scaling_sizebias.py` + `jobs/job_seed_scaling_sizebias.sh` (new). Not a gate, no
+criterion, no threshold; it cannot alter the 2026-08-01i FAIL. Half-shear cases 40-199, 9,465,987
+good rows, model side `R_flow` alone, `dm` formed INSIDE each seed and the spread taken across seeds
+(never from ensemble means -- AGENTS.md).
+
+**Answer: no, and not marginally.** Extra seeds shrink the spread across checkpoints as 1/sqrt(N);
+they do not move its mean. The mean is the entire problem.
+
+| cut | per-seed `dm` range | mean | std | sem | mean/std |
+|---|---|---|---|---|---|
+| A2 size > 3.0 px (0.60") | +2.0539 .. +2.1446 | **+2.1018** | 0.0274 | 0.0068 | **77** |
+| A4 size > 3.5 px (0.70") | +1.1894 .. +1.4695 | **+1.3209** | 0.0794 | 0.0198 | 17 |
+| A1 mag < 26.0 | +0.1773 .. +0.2585 | **+0.2099** | 0.0220 | 0.0055 | 10 |
+
+All 16 seeds carry the SAME SIGN on every cut. The per-seed mean reproduces the gate's ensemble-mean
+value to 4 decimals (+2.1018 vs +2.1017; +1.3209 vs +1.3208; +0.2099 vs +0.2099), confirming the two
+constructions agree and that no ratio-of-means artifact is in play. On A2 the seed error is
+`+-0.0068` pt against a `+2.10` pt effect -- **307:1**. Driving the seed error to zero with infinite
+checkpoints leaves +2.1018 pt, which is 1.80 pt outside the 0.30 pt budget.
+
+**The mechanism is a systematic and the sign is wrong, not just the size.** In the smallest measured-
+size bin (`<= 3.0 px = 0.60"`, 3.44% of rows, N = 325,592) the SIMULATION response is **-0.0788** --
+slightly negative -- against a population mean of +0.7168. Every one of the 16 checkpoints predicts
+**+0.342 to +0.361**. Model/sim = -4.46x, std 0.069 across seeds. The checkpoints agree with each
+other to ~1.5% while disagreeing with the simulation about the SIGN of the response. That is the
+signature of a shared structural defect (all seeds share the architecture and the PSF-floor
+violation, 2026-07-31h), not of initialisation noise, and averaging more of them converges TO it.
+
+**Note on the earlier figure.** 2026-07-31i quoted this bin as sim +0.0743 vs model +0.3982 (5.4x) on
+CONSTGOLD with a `< 0.60"` bin. This diagnostic measures half-shear cases 40-199 with a `<= 3.0 px`
+bin: sim **-0.0788** vs model +0.3505 (-4.46x). Different sim family and different population, so the
+two are not the same number; the sim-side SIGN differs and that difference is not yet explained. The
+qualitative conclusion (large, seed-stable over-prediction of the response for the smallest measured
+sizes) holds in both. Flagged, not reconciled.
+
+---
+
+## 2026-08-01i (CORRECTED P0 RE-GATE EXECUTED on the fresh cases 40-199 -> **FAIL**. The realisation-aware head `A(c,u)` is NOT the fix. Job 15452042.)
+
+**VERDICT: FAIL, 15 of 30 criteria.** `results/regate_result_h.json`,
+`sbsi_caches/ra/regate_umod_h_c40-199.npz`. RA-P0-REGATE-2026-08-01h executed verbatim on
+N = 9,466,878 fresh rows, cases 40-199, 16 seeds. The RA build STOPS: no target built, no warm-start
+screen, no checkpoint trained, no `m` quoted. Fiducial model unchanged at `m = -0.123 +- 0.152%`.
+
+**THE FAIL IS INFORMATIVE, AND IT IS THE OUTCOME THE PRE-REGISTRATION NAMED IN ADVANCE.**
+2026-08-01e/h `fail_action.permitted_on_failure` states: *"a small F with a large dm is positive
+evidence that the excess is a TRUE-property response error, and the indicated work is then the
+true-property response, not A(c,u)."* That is exactly what came back.
+
+| quantity | A1 `mag < 26` | A2 `flux_radius > 3.0 px` (= 0.60") |
+|---|---|---|
+| selection excess `dm` | **+0.2099 +- 0.0306 pt** | **+2.1017 +- 0.0348 pt** |
+| recovery fraction `F_bar` | **-0.2011** | **+0.0843** |
+| C2a threshold | >= 0.50 -> FAIL | >= 0.50 -> FAIL |
+
+The excess is real, large and firewall-clean (C2f passes at 6.9 and 60 sigma). The u-dependence
+accounts for **none** of it: 8.4% on the size axis, and *negative* on the magnitude axis -- correcting
+for the drawn photometry residual makes `dm(A1)` WORSE (+0.171 -> +0.208 and +0.249 -> +0.295 in the
+two cross-fit directions). Verified independently: `F = 1 - dm_hat/dm` recomputed by hand from the
+printed dm pairs gives -0.2013 / +0.0843, matching the script.
+
+**SIGNIFICANCE WITHOUT RELEVANCE -- the effect-size floor is what caught it.** The u-dependence is
+overwhelmingly detected: `chi2_sig/dof = 65.4` on ALL (33.4 / 35.7 per half), `max|z| = 23.7`, and
+C3b per-bin reproducibility across halves is `corr = 0.952`. A significance-only gate would have
+passed enormously and licensed an architecture change that removes ~8% of the bias it targets. This
+is precisely why C2 was made mandatory and binding (2026-08-01e "why_this_exists": *"the fresh sample
+is ~4x larger, so a pure significance criterion would pass on a physically irrelevant modulation"*).
+
+**THE PLACEBO CORROBORATES THE DIAGNOSIS.** C3d bins on TRUE-property residuals inside the same cell
+-- no realisation information at all. On A1 the placebo recovers as much as `u` does (ratio -0.2011
+vs a threshold of 2x placebo = 0.0613; gap -0.2317 vs >= 0.25). So what the coarse cells fail to
+hold fixed is true-property structure, not measurement realisation. Same conclusion from the other
+direction as the small `F`.
+
+**Retention bookkeeping (required report, and it attenuates F):** 137 of 420 cell-bins retained,
+98.13% of weight. Every `u_lsz` extreme bin (`|u_lsz| > 0.30`, index 0 and 4) is dropped in all but
+one column; `|u_mag| > 1.0` carries 2.84% of weight and 18 retained cell-bins. Dropped bins take
+`s_hat = 0`, which is conservative and can only LOWER `F` -- so `F` is a lower bound. It is not a
+tight enough bound to rescue 0.084 to 0.50.
+
+**Caveat, recorded not corrected: the contamination null is not clean.** C1b `chi2_cont/dof = 1.3739`
+(threshold 1.30) and C4b fails on both anchors: `|dm_cont|` = 0.0644 pt on A1 against `dm` = 0.2099
+(31%) and 0.1218 pt on A2 against 2.1017 (5.8%). The 45-degree null is clean (C4a passes on both,
+0.0015 and -0.00002 pt). So a non-trivial part of the *small* A1 excess may be contamination; the
+large A2 excess is not materially affected. This does not touch the verdict -- `F` is a ratio
+measuring how much of `dm` the correction removes, and it removes ~8%.
+
+**SELF-CONSISTENCY CHECK vs the BLOCKED run 2026-08-01g (the unit fix cannot touch the u-grid,
+because `u_lsz` is a log difference from a within-cell median and a constant factor cancels).**
+Identical to the last recorded digit: N 9,466,878; N_good 9,465,987; 160 cases; 16 seeds; merge frac
+1.0; coverage 0.9813 / 0.9668 / 0.9738 / 0.9945; median 4.1610; grid `decision`; both u weight-fraction
+vectors; `keep_frac_A1` 0.9750285944825405. The size anchors are the one thing that had to move and
+did: `A2` 1.000000 -> **0.965604**, `A4` 1.000000 -> **0.790918**. Those land on the constgold priors
+(96.7% / 79.2%) to ~0.1 pt, an independent confirmation that 3.0 px really is 0.60".
+
+**PROVENANCE OF THE DOCUMENT THAT WAS RUN.** 2026-08-01h was written blind, then INDEPENDENTLY
+AUDITED before execution. The audit returned **FAIL** on one unauthorised difference: the child had
+rewritten `implementation.outputs` / `implementation.new_script` (output paths, so the parent's
+BLOCKED record would survive). Declared and non-statistical, but outside the two authorised changes,
+and the gate agent correctly REFUSED to run rather than spend the last clean sample on a document
+that failed its audit. Resolved by reverting `implementation.*` to byte-identical with the parent and
+supplying the distinct output paths on the COMMAND LINE (`--out-json` / `--out-npz`) -- strict
+conformance rather than widening the authorised set. Re-classified diff after the fix: 73 AUTH-C2E,
+70 BOOKKEEPING, 10 AUTH-UNITS, **0 UNAUTHORISED**; C1, C3, C4 and every C2 sub-criterion except C2e
+byte-identical to the parent; 16 forbidden regions identical.
+
+Also corrected in the document (text only, no threshold moved): C2e's `type_I_rate` claimed the new
+permutation test was CONSERVATIVE (author's generator: 0/40 nulls pass, median p 0.596). The
+auditor's independent generator found the opposite (2/40 pass = 5.0% at nominal 1%, median p 0.306).
+Two synthetic geometries disagreeing on SIGN means neither is authoritative, so the directional claim
+was withdrawn and both ensembles are now recorded. It does not affect this verdict: the disagreement
+is about how PERMISSIVE C2e is on a null, whereas the defect being repaired was the opposite
+(rejecting genuine effects), and a null fails C2a regardless. Audit independently reproduced the
+parent C2e bug (`mean|F_perm|` 0.108-0.308 against its 0.10 bound on every genuine effect tested) and
+confirmed the re-derived form separates a genuine effect from a genuine null.
+
+**Files:** `results/regate_result_h.json` (new), `sbsi_caches/ra/regate_umod_h_c40-199.npz` (new).
+`results/regate_result.json` (the BLOCKED parent record) NOT overwritten; `results/regate_prereg.json`
+NOT modified.
+
+**Next steps.** Per `fail_action`, cases 0-39 AND 40-199 are now both burned for this question and a
+third re-run is forbidden. Only a change of PHYSICS INPUT is permitted, each needing a NEW blind
+pre-registration: (i) the `g = 0.2` half-shear leg, which raises response S/N directly rather than by
+root-N; (ii) **the indicated work -- the TRUE-property response itself**, which both the small `F` and
+the placebo point at. The known second mechanism (the flow's measured-size distribution error /
+PSF-floor violation, 2026-07-31h) is separately actionable and untouched by this result.
+
+---
+
+## 2026-08-01h (**PRE-REGISTRATION**: units corrected in pixels, C2e re-derived as a permutation p-value -- written BLIND)
+
+**THIS ENTRY IS A PRE-REGISTRATION, NOT A RESULT.** Machine-readable twin and binding version:
+`results/regate_prereg_h.json`, id `RA-P0-REGATE-2026-08-01h`. It is the parent
+`RA-P0-REGATE-2026-08-01e` (`results/regate_prereg.json`, frozen `2026-08-01T08:38:38Z`) with
+**exactly two owner-authorised corrections** applied; everything else is carried over verbatim.
+Nothing was trained, fitted, tuned or selected, and no constgold file was opened.
+
+**Blindness.** The parent's execution blocked on its own units check before any criterion was
+evaluated, so no `rho`, `s`, `chi2`, `dm` or `F` exists for cases 40-199 and the fresh cases are
+**not burned**. To keep it that way this entry was written without opening
+`results/regate_result.json`, without opening the gate log
+`/home/z/Zekang.Zhang/logs/regate_15449736.out`, and without reading WORKLOG entry `2026-08-01g`
+(nor the entry between it and `2026-08-01e`). Read instead: the parent JSON in full,
+`scripts/eval_regate_umod.py` in full, `AGENTS.md`, `CONVENTIONS.md`, the `2026-08-01e` entry, the
+unit conventions in `build_constgold_measured.py` / `eval_realisation_response.py` /
+`eval_selection_intrinsic.py`, and `jobs/job_regate_umod.sh`. No fresh-case number was seen.
+
+### Change 1 -- UNITS. `measured_flux_radius_0` is in PIXELS, not arcsec
+
+`measured_flux_radius_0` is SExtractor `FLUX_RADIUS` in **pixels at 0.2 arcsec/px**. This is fixed
+repo-wide and independently of any fresh data: `build_constgold_measured.py:21` documents
+`FLUX_RADIUS [pixels; x pixel_size -> arcsec]`, `eval_realisation_response.py:117` sets `PIX = 0.2`
+and multiplies this same column by it, and `eval_selection_intrinsic.py:221` divides an arcsec
+threshold *by* `pixel_size` before comparing. The parent wrote its size anchors as arcsec thresholds
+and applied them directly to the pixel column, where `radius > 0.60` keeps essentially everything --
+the anchor is a no-op. Every absolute measured size is now stated in the column's native units, with
+the arcsec value kept alongside, and the physical intent is unchanged:
+
+| what | parent (arcsec) | corrected (px) | arithmetic |
+|---|---|---|---|
+| anchor A2 (PRIMARY, size axis) | `> 0.60` | `> 3.0` | 0.60 / 0.2 |
+| anchor A4 (report only) | `> 0.70` | `> 3.5` | 0.70 / 0.2 |
+| `units_check` admissible median | `[0.4, 2.0]` | `[2.0, 10.0]` | 0.4 / 0.2, 2.0 / 0.2 |
+| PSF floor `R50` | `0.5268"` | `2.634 px` | 0.5268 / 0.2 |
+
+**`u_lsz` is invariant and was NOT touched.** `u_lsz = log10 r - median_fine(log10 r)`, and
+`log10(r/0.2) - median(log10(r/0.2)) = log10 r - median(log10 r)`: the constant `log10 0.2` cancels
+between the value and its fine-cell median. So the `u`-grid, its 0.10/0.30 dex edges, the fallback
+grid, the placebo and the whole magnitude axis are unaffected, and none of them was changed. The
+`prior_anchors` block is on the forbidden-to-change list and was left **byte for byte**; a single
+added sibling note records that its `R>0.60` / `R>0.70` labels are arcsec and gives their pixel
+equivalents. Its inputs (`q = 0.033`, `rho_sim = 0.086`, `rho_model = 0.46220`) and its result
+(`+1.261%`) are dimensionless and unaffected in any case.
+
+### Change 2 -- C2e re-derived: compare `F_bar` to the permutation DISTRIBUTION
+
+**The parent's C2e was mis-calibrated.** It required `mean|F_perm| <= 0.10` and `max|F_perm| <= 0.20`
+over 10 permutations, justified by "under permutation the correction is uncorrelated with the
+response so `E[F_perm] = 0`". Two things are wrong. (i) It bounds the **spread** of the permuted
+statistic and **never references the observed `F_bar` at all**, so its verdict is a statement about
+`||s_hat||` and `1/|dm|`. A permuted `s_hat` still reweights bins whose cut membership differs, so
+the spread grows with the size of the genuine correction and shrinks as `|dm|` grows. (ii)
+`E[F_perm]` is not zero either: to first order `F = (<s_hat>_S - <s_hat>_all)/dm`, and a within-cell
+permutation gives `E[F_perm] = sum_c [A_c(S) - A_c(all)] sbar_c / dm`, nonzero whenever the cut
+changes the **cell** mix -- measured on the synthetic effect set, `mean(F_perm) = -0.1625`.
+
+**The re-derived criterion.** `p_perm = (1 + #{F_perm_bar >= F_bar}) / (n+1) <= 0.01` for A1 and A2,
+over **n = 999** permutations, **seeds 2001-2999** fixed in the document, permutation `k` of variant
+`v` driven by `default_rng([seed_k, v_code])`. Both permutation supports (retained-only, full-vector)
+are computed and the **larger `p`** decides. The smallest resolvable one-sided `p` is
+`1/(n+1) = 0.001`; the threshold `0.01` is 10x that floor, so a pass means at most 9 of 999
+permutations reached `F_bar` and the criterion is **not floor-limited**. (At the parent's `n = 10`
+the floor is `1/11 = 0.0909`, nine times above the threshold -- the count had to change with the
+statistic.) The permutation distribution is generated by the same `s_hat`, weights, `dm` and cut, so
+it carries the correct centre **and** the correct scale automatically and no constant is guessed.
+
+**Calibration -- SYNTHETIC ONLY** (8M rows, 160 cases, 12 cells x 35 `u`-bins, response noise 4.0,
+the gate's own `accumulate`/`sample_table`/`recovery`; two worlds differing in exactly one parameter,
+the within-cell `u`-dependence amplitude):
+
+- **genuine NULL** (no `u`-dependence, but a real cell-level response error and a cell-dependent cut
+  so `dm = +1.24 pt` is genuine): `F_bar = +0.011`, perm mean `-0.018`, sd `0.164`, q99 `+0.358`,
+  427/999 permutations reach `F_bar`, **`p = 0.429` -> FAIL**, as required.
+- **genuine EFFECT**: `F_bar = +0.718`, `dm = +5.98 pt`, perm mean `-0.163`, sd `0.216`, q99 `+0.279`,
+  0/999 reach `F_bar`, **`p = 0.0010` -> PASS**, as required.
+- **power**: rejects a genuine `F_bar = 0.204` (`p = 0.043`) and passes `F_bar = 0.328`
+  (`p = 0.0010`); the bar sits near `F ~ 0.24-0.29`, i.e. about **half** the unchanged C2a floor of
+  0.50, so nothing that could pass C2a is at risk from C2e (at `F_bar = 0.540`, `z = +4.06`).
+- **type-I**: 0 of **40** independent genuine nulls pass; median `p = 0.596`, min `0.202`. The null
+  `p`-distribution is **conservative**, not uniform (5% below 0.25 against a nominal 25%), because
+  bins are not exchangeable -- they carry very different `N_eff` and model weight, so shuffling a
+  noisy tail bin into a heavily weighted slot over-disperses `F_perm`. The bias is in the safe
+  direction. 0/40 bounds the true type-I rate at `<= 7.2%` (95%; `1 - 0.05^(1/40)`); it does not
+  verify the nominal 1%.
+- **stricter or looser than the parent, on a genuine null?** STRICTER. Holding `amp = 0`
+  (`F_bar ~ 0`) and varying only the cell-level error, which sets `|dm|`: `dm +1.24 pt` ->
+  `mean|F_perm| 0.1305`, OLD FAIL / NEW FAIL; `dm +5.17 pt` -> `mean|F_perm| 0.0313`,
+  **OLD PASS** / NEW FAIL; `dm +7.80 pt` -> `0.0219`, **OLD PASS** / NEW FAIL. There is a whole
+  regime -- large `|dm|`, exactly what C2c demands -- where the parent's bound certifies an *exact
+  null*, and its verdict on a fixed null flips purely by changing a nuisance scale. On the genuine
+  effect the parent fails (`mean|F_perm| = 0.2101 > 0.10`). The new form is not a relaxation.
+- The synthetic generator scripts were written outside the repo, run once, and **deleted**.
+
+### Files
+
+- **added** `results/regate_prereg_h.json` -- the corrected pre-registration. `results/regate_prereg.json`
+  is untouched and remains executable for the audit diff. Structural diff parent vs child: 23 changed
+  leaves, 135 added, **0 removed**.
+- **changed** `scripts/eval_regate_umod.py` -- executes **either** document, selected by `--prereg`.
+  Size thresholds and the units band are now read from the document (`anchor_cuts[*].expr`,
+  `blocking_conditions.units_check`) instead of hardcoded; the C2e branch is chosen by the presence
+  of `n_permutations` in the document's C2e block, and the legacy branch is byte-for-byte the
+  parent's code **including its random-stream order**, so the parent reproduces exactly. Added
+  `recovery_vec` / `perm_shat_stacks` / `permutation_pvalue` (the permuted `F` uses the identical
+  algebra in vectorised form and is asserted equal to the scalar routine to 1e-10). Fixed the
+  cosmetic bug where the units check printed the value labelled "arcsec" for a pixel column. New
+  `--overwrite` guard refuses to clobber an existing `--out-json`.
+- **changed** `jobs/job_regate_umod.sh` -- points at `regate_prereg_h.json` and writes
+  `results/regate_result_h.json` + `sbsi_caches/ra/regate_umod_h_c40-199.npz`, so the parent's
+  BLOCKED record survives.
+
+### Validation (all local, all synthetic or metadata -- no catalogue read, no Slurm job)
+
+- C2e calibration as above (two required sets, 5-point power curve, 40 null draws).
+- Full end-to-end run of the gate on a **synthetic** 3M-row base cache + selfresp dump under `/tmp`,
+  for the child (runs to a verdict, exercises the new C2e branch and the npz edge-length asserts),
+  for the parent (correctly **BLOCKS** on its own units check: median 4.455 px outside `[0.4, 2.0]`),
+  and for a `/tmp`-only probe of the parent with only the band widened, which reaches and executes
+  the legacy C2e branch. All synthetic inputs deleted.
+- Anchor/units parsing on both documents: `A2 -> 3.0`, `A4 -> 3.5`, band `[2.0, 10.0]`, C2e form
+  `NEW` for the child and `LEGACY` for the parent.
+- Repo tests: 24 test functions run directly (pytest is not installed in `sims1`), 24 pass, 0 fail.
+
+### Flagged, NOT changed (out of the authorised scope; recorded for the owner)
+
+1. **C4a/C4b are unreachable when `dm` is small.** The test is
+   `|dm_null| <= 0.25|dm|` **and** `<= 0.10 pt`. If the fresh `dm(A1)` lands near the bottom of its
+   own predicted range, `0.25|dm|` can fall below the null's own jackknife error, so the criterion
+   can fail on noise alone. It has no floor of the form "or `<= k * sem_jk(dm_null)`".
+2. **C3c compares to `0.70 x F_bar(12 cells)` with no sign guard.** If the 12-cell `F_bar` is
+   negative the threshold is negative and the criterion passes automatically; if it is near zero the
+   test is vacuous. Seen live on the synthetic smoke run.
+3. **`sem_jk(F_bar)` in C2d is a delete-one-case jackknife with `s_hat` held FIXED**, so it captures
+   the evaluation half's noise but not the estimation half's. C2d is therefore optimistic by an
+   unquantified amount.
+4. **C2c's threshold is stated in "percentage points" while `dm` is returned in per-cent-of-response
+   units.** The two agree only because `m` is quoted in per cent; worth an explicit units line.
+5. The parent's `expected_N` (~9.5e6) and the `min_N_eff = 2000` derivation both come from burned
+   cases 0-39; if the fresh sample is much smaller, retention will bite harder than the document
+   assumes. Bookkeeping is already a required report, so this is visible rather than silent.
+
+### Next
+
+Submit `jobs/job_regate_umod.sh` (unchanged resources: CPU only, 64G / 8 CPU). On FAIL the RA build
+stops exactly as the parent specifies; on PASS, P1 and P2 may proceed and no `m` may be quoted.
+
+## 2026-08-01g (CORRECTED P0 RE-GATE RUN on the fresh cases 40-199 -> **BLOCKED**, by the pre-registration's own units check. Not FAIL. Nothing was burned.)
+
+The 2026-08-01e pre-registration (`results/regate_prereg.json`, id `RA-P0-REGATE-2026-08-01e`) was
+executed verbatim on the fresh half-shear cases 40-199. Job **15449736**, 1:17 wall, 4.03 GB peak of
+64 G, CPU only as pre-registered. It stopped at the pre-registered blocking condition `units_check`
+and **no criterion was evaluated** (`criteria: {}` in `results/regate_result.json`).
+
+**THE BLOCK.** `median(measured_flux_radius_0) = 4.1610`, outside the pre-registered admissible range
+`[0.4, 2.0]`. The column is in **PIXELS**, not arcsec: 4.1610 px x 0.2 arcsec/px = **0.8322 arcsec**,
+comfortably inside the range. So this is a pure unit mismatch in the pre-registration's anchor
+expressions, and it is exactly the circumstance the blocking condition was written to catch
+("A median outside this range means the column is not in arcsec and the 0.60\"/0.70\" anchors are
+meaningless").
+
+**CONFIRMED INDEPENDENTLY BY THE KEEP FRACTIONS**, which the run printed before stopping:
+`A2 (measured_flux_radius_0 > 0.60) keeps 1.000000` and `A4 (> 0.70) keeps 1.000000` -- both size
+anchors are exact no-ops selecting the whole population, so `dm(A2) = 0` identically and `F(A2)` is
+`1 - 0/0`. The size axis of the gate is dead as written. The magnitude anchors are fine:
+`A1 (mag < 26.0)` keeps 0.975029, `A3 (mag < 25.5)` keeps 0.861995.
+
+The pixel convention is established repo-wide and was not discovered from the fresh data:
+`build_constgold_measured.py:21` ("FLUX_RADIUS [pixels; x pixel_size -> arcsec]"),
+`eval_realisation_response.py:117,427` (`PIX = 0.2`, `rad0 = ...measured_flux_radius_0... * PIX`,
+same column from the same `ESR.build_base`), `eval_rblend_gap_measured.py:54`,
+`eval_selection_response.py:305` ("measured_flux_radius (px) lower cuts"). The constgold
+near-domain table that supplied the `R>0.60"` / `R>0.70"` priors takes its `--size-cuts` in arcsec
+and converts internally, which is why the prior keep fractions (96.7% / 79.2%) look sane while the
+raw-threshold version keeps 100%.
+
+**WHAT WOULD UNBLOCK IT.** A new blind pre-registration (or an owner ruling) that states the size
+anchors in the column's native units: `A2 = measured_flux_radius_0 > 3.0` px and
+`A4 = > 3.5` px (= 0.60" and 0.70" at 0.2 arcsec/px; the quoted PSF floor R50 = 0.5268" = 2.634 px).
+Equivalently, multiply the column by 0.2 before the cut. **I did not do this and did not re-run.**
+Converting a threshold after a fresh number has been seen is an anchor substitution, and the
+pre-registration's response to a units failure is BLOCK, not "convert and continue".
+
+**THE FRESH DATA IS NOT BURNED.** BLOCKED is defined in the pre-registration as "not FAILED ...
+changes nothing". Concretely: no response statistic exists anywhere from this run. Nothing printed
+or written contains `s`, `chi2_sig`, `chi2_null`, `chi2_cont`, `F`, `dm`, `rho_sim`, `rho_model` or
+any per-bin table; the npz was never written (the block returns first); `results/regate_result.json`
+holds only counts, coverage, keep fractions, edge diagnostics and the block reason. A corrected
+pre-registration can therefore still use cases 40-199.
+
+**WHAT THE RUN DID ESTABLISH** (all count/coverage diagnostics, no response content):
+N = 9,466,878 base rows, 160 cases [40,199], g_med = 0.050000, selfresp merge **1.000000** (keys
+elementwise identical to the base cache -- no join needed), 16 seeds exactly as required,
+`max|r_sim - r_sim_self_dumped| = 1.9e-06`, all-finite rows 9,465,987 (99.9906%). Retained weight
+coverage on the decision u-grid ALL 0.9813 / A 0.9668 / B 0.9738 (fallback grid 0.9945), so the
+`coverage_below_0.90` block would NOT have fired and the decision grid was in force. Retained
+`|u_mag| > 1.0` cell-bins: 16 on the decision grid, so `extreme_u_bins_all_dropped` would NOT have
+fired either. u weight fractions: u_mag [0.0274, 0.0693, 0.1613, 0.5446, 0.1726, 0.0238, 0.00096],
+u_lsz [0.00029, 0.0369, 0.8310, 0.1156, 0.0162]. **These are distributional facts printed as the
+pre-registered retention bookkeeping; a corrected pre-registration must NOT redraw the u-grid from
+them** -- the edges were fixed blind and re-deriving them now would be exactly the selection the
+design exists to prevent.
+
+**UNIT-SAFETY OF THE REST OF THE DESIGN.** `u_lsz = log10(r) - fine-cell median(log10 r)` is
+invariant under a constant multiplicative unit change, so the u-grid, its 0.10/0.30 dex edges, the
+placebo, C1, C3b and the whole magnitude axis are untouched by this bug. Only the two size ANCHOR
+cuts (A2, A4) and the reported absolute "measured size < 0.60\"" bin are affected.
+
+**FILES.** New `scripts/eval_regate_umod.py` (the gate; `eval_realisation_modulation.py` was NOT
+modified and its burned npz were not overwritten -- mtimes still Aug 1 09:38-09:44), new
+`jobs/job_regate_umod.sh`, new `results/regate_result.json` (verdict BLOCKED). Untouched:
+`results/halfshear_selfresp.feather` (mtime still Jul 31 02:21), `results/constgold_neardomain_*.npz`,
+`results/nd_seeds*/`, every checkpoint under `sbsi_caches/ablation/`. No constgold file was opened;
+nothing was trained, fitted, tuned or selected.
+
+**PRE-REGISTRATION AMBIGUITIES resolved in the script before any fresh number was read** (recorded
+in `results/regate_result.json -> ambiguities`, and they should be inherited by a corrected re-run):
+(i) the coarse-cell quantile sample is the all-finite `good` mask (max edge shift vs the burned
+script's per-column-finite convention: 7.6e-05 mag, 1.9e-06 arcsec -- immaterial); (ii) the coverage
+trigger is evaluated on ALL, with the halves reported; (iii) on the fallback u-grid the outermost
+`|u_mag| > 0.5` bins count as the "extreme" bins, since that grid has no 1.0 edge; (iv) `sem_jk(F_bar)`
+uses the stricter fully-correlated combination `(sem_A + sem_B)/2`, with the independent combination
+reported; (v) C2e permutes the `b -> s_hat` map both over retained bins only and over the full
+vector, and the LARGER `|F_perm|` decides; (vi) C3b correlates bins retained in BOTH halves, weighted
+by `W_A + W_B`.
+
+**ADVERSARIAL NOTE ON A CRITERION I COULD NOT TEST.** C2e's stated justification -- "under
+permutation the correction is uncorrelated with the response so `E[F_perm] = 0`" -- does not follow.
+A permuted `s_hat` still reweights bins whose cut membership differs, so `dm_hat` moves and `F_perm`
+is not centred on zero. On a purely synthetic smoke set with a strong built-in u-dependence
+(genuine `F_bar = 0.83`) the permutation null returned `mean|F_perm| = 0.147` against the 0.10
+threshold. That is synthetic and proves nothing about the real data, but it is a reason to expect
+C2e may be structurally hard, and it should be re-derived (not relaxed) in any corrected
+pre-registration.
+
+**NEXT.** Owner decision required: authorise a corrected blind pre-registration that fixes A2/A4 in
+pixels (3.0 / 3.5 px) and re-derives C2e, then re-run `jobs/job_regate_umod.sh`. The RA build stays
+stopped in the meantime; `jobs/job_ra_target.sh`, `jobs/job_ra_screen.sh`, P1/P2/P3 were not run.
+The fiducial model is unchanged: `m = -0.123 +- 0.152%`.
+
+## 2026-08-01f (FRESH DATA RENDERED for the re-gate: per-object `R_flow` on half-shear cases 40-199, 16 seeds. **No response was computed, printed or looked at.**)
+
+Produces the fresh dump the 2026-08-01e pre-registration asks for and nothing else. Jobs **15448400**
+(smoke), **15448465** (base cache), **15448470** (16-task array), **15448471** (merge). Wall clock
+19 min end to end; array tasks 4:29-5:33 each, 8 concurrent (QOS cap).
+
+**BLIND DISCIPLINE.** `dump_halfshear_selfresp.py` gained a `--blind` flag and every stage ran with
+it: `<R_self>` and `<R_flow>` prints are replaced by finite-fraction prints, so no response number
+for a case >= 40 exists in any log. The merge prints counts, fractions and key checks only. Nothing
+was binned, averaged, fitted, trained or selected; no constgold file was opened. The burned dump
+`results/halfshear_selfresp.feather` (cases 0-39) was not touched -- mtime still Jul 31 02:21.
+
+**OUTPUT** (project filesystem; ~787 MB, too large for `results/`):
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/hs_selfresp_c40-199/halfshear_selfresp_c40-199.feather`
+plus `_meta.json`. Columns `case, input_index, r_sim_self, SN, Re_input_p, nbr_flux_near,
+R_flow_s{501,502,503,505..517}` -- the same schema as the burned dump, so
+`eval_realisation_modulation.py --selfresp <path>` consumes it unchanged.
+
+**INTEGRITY (all measured, independently of the merge script).** N = **9,466,878** rows
+(the pre-registration expected ~9.5e6; the burned dump is 2,364,527, ratio 4.004). Cases 40-199, all
+160 present, none missing, **no case <= 39**, zero overlap with the burned dump, zero duplicate
+`(case, input_index)`. `g_med = 0.050000` in both build windows and in all 16 part sidecars.
+Finite fraction **1.000000 for all 16 `R_flow` columns**; `r_sim_self` 0.999906 (891 rows, ngmix
+non-finite on a leg -- the burned dump has the same feature at 0.999916). No two seed columns are
+bit-identical (the historic `_swaavg` seed-label collision would show as 16 equal columns), and each
+part's sidecar ties its column to a checkpoint whose filename carries the matching `_s{seed}_`.
+
+**HOW IT WAS FANNED OUT, and why not one-checkpoint-per-task on raw data.** The population build is
+CPU/IO-bound (~115 GB across the two legs); scoring is GPU and linear in checkpoints. A naive
+16-task array re-reads those 115 GB sixteen times. Split into three stages instead:
+`jobs/job_hs_selfresp_c40_199_base.sh` builds the population ONCE into a 2.0 GB cache (5:13),
+`jobs/job_hs_selfresp_c40_199_array.sh` runs 16 tasks that load the cache and score one checkpoint
+each, `jobs/job_hs_selfresp_c40_199_merge.sh` merges. All 16 tasks therefore score byte-identical
+rows in byte-identical order by construction, and the merge re-verifies it rather than assuming it.
+
+**Files changed.** `scripts/eval_selfresp_gap.py`: `read_leg` gained `min_case=None` (batches below
+the window are skipped on the arrow column before `to_pandas`); `None` reproduces the old path
+exactly and was checked to return a frame `.equals()` the legacy one. `scripts/eval_selection_response.py`:
+`build_base` gained trailing `min_case=None` -- every existing positional caller is unaffected.
+`scripts/dump_halfshear_selfresp.py`: `--min-case`, `--blind`, `--base-cache`, `--build-base-only`,
+`--case-chunk`, plus a per-output `_meta.json` sidecar. New:
+`scripts/merge_halfshear_selfresp_parts.py`, the three job scripts above, `jobs/job_hs_selfresp_smoke.sh`.
+
+**Validation.** Smoke job 15448400 ran the whole path on case 40 with two checkpoints and passed,
+including a NEGATIVE control: the merge must refuse a dump whose case range reaches into the burned
+0-39, and it did. The 24 repo tests still pass (run directly; pytest is not installed in sims1).
+
+**TWO THINGS THE NEXT AGENT MUST KNOW.**
+1. `eval_realisation_modulation.py` still calls `ESR.build_base(..., args.max_case, ...)` with no
+   lower bound. Run as-is against `--max-case 199` it would rebuild the BURNED cases 0-39 together
+   with the fresh ones. `build_base` now takes `min_case`; the gate run must pass **40**.
+2. `iso frac=100.0%` in the build logs is an artifact, not a population statement. `build_base`
+   reads `NN = sbsi_caches/derisk/nn_dist_c0-39.feather`, which has no rows for case >= 40, so the
+   left join yields NaN and every fresh row is labelled isolated. **This dump never uses `iso`**, so
+   nothing in the output is affected -- but any future analysis that wants an isolation mask on
+   cases 40-199 needs an extended `nn_dist` file first.
+
+**Cost control note.** The base cache was built with `--case-chunk 80`, i.e. `[40,119]` then
+`[120,199]` concatenated, purely to bound peak memory. This is exact: the legs are matched within a
+case and every cut is per-object. The one non-per-object quantity, `gmed`, is asserted equal across
+chunks by the script (it was 0.050000 in both) and the run would have aborted otherwise.
+
+NEXT: run the 2026-08-01e gate against this file with `min_case=40`. Reminder from that entry --
+after the gate runs, cases 40-199 are burned for this question too.
+
+## 2026-08-01e (**PRE-REGISTRATION** of the CORRECTED P0 re-gate -- written BLIND, before any case >= 40 was inspected)
+
+**THIS ENTRY IS A PRE-REGISTRATION, NOT A RESULT. At the time it is written no fresh number exists
+and the fresh dump has never been opened.** Machine-readable twin: `results/regate_prereg.json`
+(frozen `2026-08-01T08:38:38Z`), which is the binding version -- this text is its explanation.
+Nothing was computed, trained, fitted, tuned or selected. No constgold file was opened.
+
+### Why a re-run is legitimate at all, and what makes it not p-hacking
+
+2026-08-01c FAILED its own pre-registered gate. The signal was there (`chi2/dof = 11.63` on 120 bins,
+`|z|max = 12.9`, noise-corrected modulation rms stable at 0.1368-0.159 across independent halves) but
+the gate compared an rms to a noise floor and the floor sat at 0.055-0.094 against a real modulation
+of 0.144. The previous agent correctly refused to swap in a statistic that would have passed. The
+owner has authorised a re-run **on fresh data**, which is legitimate only if (i) the new statistic is
+fixed in writing before anyone looks at the fresh cases and (ii) those cases have never been examined
+for this question. Both hold: **cases 0-39 are BURNED and are not used; cases 40-199 are rendered,
+have never been looked at for realisation dependence, and are the only data this gate may touch.**
+
+What was read to write this: WORKLOG 2026-08-01/a/b/c/d and 2026-07-31f/g/h/i,
+`scripts/eval_realisation_modulation.py`, `scripts/eval_selection_response.py` (signature only),
+`scripts/compute_response_target_measbin.py` (docstring only), and the burned
+`sbsi_caches/ra/realmod_probe_{6x2,6x6,3x1}.npz` (edges and rms scalars only). No row with case >= 40
+was read.
+
+### The question the gate must ask -- restated, because the burned gate asked a blunter one
+
+`A(c,u)` conditions on `u = (x - mu(c))[dims 2,3]`, the drawn photometry MINUS what the true
+properties predict. So the gate must ask: **inside a cell of TRUE properties, does the shear response
+depend on `u`?** Not "does it depend on the absolute measured mag/size" -- that conflates true-property
+variation with realisation variation, and is why the 2026-08-01c corroboration (`-1.392` at measured
+size < 0.5") is context and not evidence.
+
+The burned gate's diagnosed defect is one thing only: **5x2 QUANTILE sub-bins**. Its faintest
+magnitude quintile was `u_mag > +0.26` holding 20% of rows, and its only size split was the cell
+MEDIAN (50/50) -- while the effect lives in the absolute faint/small tail (measured size < 0.60" is
+3.3% of rows). ABSOLUTE residual edges are the repair, and they are the ONLY axis of the design that
+changes; the coarse-cell axis is held at the burned 6 x 2 deliberately, so the re-gate introduces
+exactly one new degree of freedom.
+
+### 1. Cells, `u`, edges, minimum N
+
+- **Coarse cells (decision): 6 true-mag x 2 true-size = 12**, quantile edges of `r_input_p` /
+  `Re_input_p`. Identical in structure to the burned decision grid, for the reason just given.
+- **`u` is defined on a FINER grid: 12 true-mag x 6 true-size = 72 fine cells.**
+  `u_mag = measured_mag_auto_0 - median_fine(measured_mag_auto_0)` [mag];
+  `u_lsz = log10(measured_flux_radius_0) - median_fine(log10 ...)` [dex, **log10 not np.log**].
+  Reason: `mu(c)` is the flow's TRUE-property conditional mean, and the fine-cell median is the
+  closest firewall-clean, model-free estimator of it. Defining `u` on a fine grid while binning the
+  response on the coarse grid is what stops within-coarse-cell true-property variation being absorbed
+  into `u` -- the single largest circularity risk in this statistic.
+- **`u_mag` edges (7 bins): -inf, -1.0, -0.5, -0.2, +0.2, +0.5, +1.0, +inf.** Physics, not quantiles:
+  `sigma_mag = 1.086/(S/N)`, so **0.20 mag = the 1-sigma photometric error of an S/N ~ 5.4 object**
+  (the detection-limit scale); **0.50 mag = a 2-3 sigma excursion** for an S/N 5-10 object, reachable
+  only near the limit or through blending; **1.00 mag = a factor-2.5 flux error**, essentially only
+  reachable through deblending failure or neighbour flux mis-assignment.
+- **`u_lsz` edges (5 bins): -inf, -0.30, -0.10, +0.10, +0.30, +inf dex.** **0.10 dex = 26%**, the
+  typical `flux_radius` error at S/N ~ 10; **0.30 dex = a factor of 2** -- a galaxy measured at twice
+  the PSF half-light radius that scatters down by 0.30 dex lands ON the PSF, where the response
+  collapses. That is the physical boundary the head must resolve and the burned grid could not see
+  it at all.
+- **Both edge sets are SYMMETRIC about zero.** Neither tail was singled out, so the grid cannot have
+  been shaped to favour the faint/small side where the effect is expected.
+- 35 `u`-bins x 12 cells = **420 bins**; at the expected ~9.5M fresh rows that is ~23k/bin.
+- **Minimum `N_eff` = 2000 per bin, DERIVED:** `sem(rho_sim) = std(R_sim)/(<R> sqrt(N)) =
+  4.0223/(0.72023 sqrt(N)) = 5.5847/sqrt(N)`, so N = 2000 gives **0.125** -- every retained bin
+  resolves a 30% modulation at >= 2.4 sigma on its own. A bin is also dropped unless the RELATIVE sem
+  of `rho_model` is <= 2% (capping the ratio-of-means bias at 4e-4, three orders below the signal).
+  This repairs 2026-08-01c's own caveat that the 6x6 sensitivity grid had `min cell-bin N_eff = 21`,
+  where a ratio of noisy means is biased upward. Dropped bins get `s = 0` in the recovery statistic,
+  which can only LOWER it.
+- **A pre-declared FALLBACK `u`-grid** (5 x 3 = 15 `u`-bins, edges -0.5/-0.2/+0.2/+0.5 and
+  -0.15/+0.15) takes over **automatically and deterministically** if retained weight coverage on the
+  decision grid is < 90%. Below 90% on the fallback too, the run is BLOCKED, not failed. No agent
+  chooses.
+
+### 2. Test statistic
+
+`s(c,b) = rho_sim/rho_model - 1` with `rho = <R>_b / <R>_cell` per side, sems by the existing
+delta-method (`rho_and_sem`). **`chi2_sig = sum s^2/sigma_s^2` over retained bins, `dof = K - C`**
+(K retained bins, C retained cells: within each cell `sum_b f_b rho = 1` identically on BOTH sides,
+which removes exactly one dof per cell). Evaluated on each half separately.
+
+### 3. THE EFFECT-SIZE FLOOR -- the binding criterion, and the main trap
+
+At ~4x the rows a pure significance test is worthless: `chi2/dof >= 3` is a ~29-sigma demand at
+dof ~ 400 and the burned quarter-sample already reached 11.63. **So significance is kept only as a
+sanity check and the gate is decided on effect size.** This is stated up front so nobody can later
+present the chi2 as the result.
+
+**The identity that makes "how much does it matter" computable.** Inside a cell, with the cell-level
+response already pinned, `R_sim(S)/R_model(S) - 1` for a cut `S` equals the selection-weighted mean of
+`s(c,b)`. So the selection-induced excess `dm(S) = m(S) - m(no cut)` IS the `u`-dependence, integrated
+over whatever the cut keeps. Therefore: build the corrected model `R_hat = R_model (1 + s_hat)` with
+`s_hat` estimated on the OTHER half, and measure
+
+    F(S) = 1 - dm_hat(S)/dm(S)
+
+= the fraction of the selection excess a perfect `A(c,u)` at this resolution could remove.
+
+**What `F` cleanly is on half-shear.** 2026-07-31i split the constgold `dm` into a response-error
+channel (identical objects) and a flow's-own-draw selection channel. `A` writes only dims 0,1 and
+leaves the drawn mag/size UNCHANGED, so it can only touch the first. On half-shear `R_model` is a
+per-object dumped number and the cut is one hard mask applied to both sides, so **there is no
+own-draw channel at all and half-shear `dm` IS the response-error channel** -- exactly and only what
+`A` can address.
+
+**Anchor cuts, declared now.** PRIMARY: **A1 `measured mag < 26.0`** and **A2 `measured flux_radius >
+0.60"`** -- one per `u` coordinate, so a pass cannot be carried by a single axis. Report-only: A3
+`mag < 25.5`, A4 `R > 0.70"`.
+*Why A1 and not the deeper mag cuts:* the response-error channel is `+0.311 +- 0.011` of the `+0.325`
+total at `mag<26` (96%), but only `+0.189 +- 0.058` of `+0.826` at `mag<25.5` (23%) and NEGATIVE
+(`-0.388 +- 0.107`) at `mag<25`. `mag<26` is the only magnitude cut where the head's own target
+dominates -- if the mechanism fails there it fails everywhere.
+*Why A2 and not A4:* `R>0.60"` keeps 96.7% and isolates the 3.3% sub-0.60" bin where the 5.4x
+over-prediction was measured; `R>0.70"` is the more keep-fraction-contaminated row (`-1.32%` vs
+`-0.90%`, 2026-07-31h).
+
+**The floor, DERIVED (not asserted).** The constgold size rows are keep-fraction contaminated so no
+identical-objects `dm` was ever published for them; reconstruct it from the sub-0.60" bin:
+`q = 0.033`, `rho_sim = 0.086`, `rho_model = 0.3982/0.86156 = 0.46220` (with
+`R_model = R_sim/(1+m) = 0.8605/0.99877`), giving
+
+    dm = (1 - q rho_sim)/(1 - q rho_model) - 1 = 0.997162/0.984747 - 1 = **+1.261%**
+
+against a deliverable budget of **0.30%**. Bringing that inside budget needs `F >= 1 - 0.30/1.261 =
+**0.762**`. **The adopted floor is `F >= 0.50`, deliberately BELOW the spec-derived 0.762**, for two
+stated reasons: the head is one of two known mechanisms (the second -- the flow's measured-size
+distribution error and PSF-floor violation, 2026-07-31h -- is separately actionable), and the
+constgold absolute level need not transfer to half-shear (`R_blend` is on the constgold model side
+and not on the half-shear one). **Below 0.50 the `u`-dependence is a MINORITY term and `A(c,u)`
+cannot be argued to be the fix, whatever its significance.** On the magnitude axis the prior
+response-error excess is only `+0.311%`, so there 0.50 is a dominance requirement, not a spec one --
+said plainly so it is not misread.
+
+The full C2 block: `F_bar >= 0.50` on **both** A1 and A2; `min` over the two cross-fit directions
+`>= 0.35`; **`F_bar(A2) * |dm(A2)| >= 0.30 percentage points`** (absolute relevance -- 0.30 pt is the
+whole budget, and at the prior it is met at `F = 0.24`, so this criterion exists purely to kill a
+statistically overwhelming but irrelevant modulation); `F_bar - 2 sem_jk > 0`; permutation null
+`mean|F_perm| <= 0.10`, `max <= 0.20` over 10 fixed permutation seeds; and `|dm|` itself `>= 3
+sem_jk` on both anchors (if the excess does not reproduce firewall-clean there is nothing to remove).
+
+**A small `F` with a large `dm` is a real, informative FAIL**, not a null: it says the excess is a
+TRUE-property response error and the indicated work is a better true-property response, not `A(c,u)`.
+
+### 4. Nulls and their thresholds
+
+- **45-degree spin-2 orthogonal** (`ghat -> (-ghat2, ghat1)`): `chi2_null/dof <= 1.30` and
+  `max|z| <= 5.0`. Derivation: under the null `chi2/dof = 1 +- sqrt(2/dof) = 1 +- 0.070` at dof ~ 400,
+  so 1.30 is a 4.3-sigma bound; expected `max|z|` over 420 bins is ~3.2. No LOWER bound -- a value
+  below 1 means conservative errors, which only makes the signal test harder (burned: 0.75, 2.6).
+- **Contamination `<e_0.ghat>/g`: treated as a NULL**, `chi2_cont/dof <= 1.30`, `max|z| <= 5.0`, using
+  its OWN sem. **This is a deliberate change from burned criterion (c) and it is flagged as such.**
+  The old form compared the signal rms to the contamination rms, which is not a null test: `e_0` alone
+  is 1.79x noisier per object than `(e_g - e_0)` precisely BECAUSE the legs share pixel noise
+  (`corr 0.843`), so "signal > 3x cont" silently demanded "signal > 5.4x its own noise" and penalised
+  the probe for the property that makes the estimator good. The change is justified on the mathematics
+  of the estimator, written before the fresh data is seen, and it makes the criterion sharper: a
+  genuinely tilted contamination now fails outright instead of being diluted into an rms ratio.
+- **Both nulls must also fail to manufacture the effect:** `|dm_null(S)|` and `|dm_cont(S)|` each
+  `<= 0.25 |dm(S)|` **and** `<= 0.10 pt` on A1 and A2 (0.10 pt = one third of the budget, so a large
+  `dm` cannot license a large null).
+- **Anti-leakage block (C3), because 2026-08-01c's own caveat demands it:** refined-cell stability
+  (24 x 4 cells must give `F >= 0.70x` the 12-cell value on the same fallback `u`-grid -- leakage
+  predicts a collapse of ~2x, realisation dependence predicts none), and a **TRUE-RESIDUAL PLACEBO**:
+  the identical machinery binned on true-property residuals about the coarse-cell median with
+  power-matched quantile edges, requiring `F(u) >= 2 F(placebo)` and `F(u) - F(placebo) >= 0.25`.
+- Reported, not criteria: leg noise sharing, the migration term (sheared-leg binning shift), the
+  absolute measured-bin ratios (the 2026-07-31i acceptance question -- context only, since an absolute
+  bin is not what `A` conditions on), `F` for A3/A4, and `rms(rho_model - 1)` as the leakage scale.
+
+### 5. Out-of-sample split inside the fresh cases
+
+**HALF A = even case numbers in [40,199]; HALF B = odd.** Parity, not a contiguous block: a
+contiguous split confounds the halves with any render-order or batch drift, while parity makes them
+exchangeable by construction, which is what the agreement test assumes. Cross-fitted both ways.
+Required agreement: `|F_AtoB - F_BtoA| <= 3 sigma` of the difference (delete-one-case jackknife), and
+count-weighted `corr(s_A, s_B) >= 0.50` over retained bins (expected ~0.87 at per-bin SNR ~ 2.6, so
+the floor is set well below expectation). `chi2_sig/dof >= 3 max(1, chi2_null/dof)` must hold on each
+half independently.
+
+### 6. FAIL action -- exact
+
+Any criterion failing, or any ambiguity, is a **FAIL**. **The RA build STOPS.**
+`jobs/job_ra_target.sh`, `jobs/job_ra_screen.sh`, P1, P2 and P3 are not run; no RA checkpoint is
+trained; no `m` is quoted from the run. Forbidden on failure: a constgold-derived target; substituting
+any statistic, threshold, grid, edge set or anchor after seeing a fresh number; **a third re-run on
+cases 200+ or any other data -- after this run cases 0-39 AND 40-199 are both burned for this
+question**; re-weighting or "reinterpreting" any criterion above. Permitted only: steps that change
+the PHYSICS INPUT, each needing a NEW pre-registration written before any look -- (i) the `g=0.2`
+half-shear leg, which raises response signal-to-noise directly rather than by root-N; (ii) a different
+mechanism, which a small-`F`/large-`dm` outcome would positively indicate. On failure the fiducial
+model is unchanged: `m = -0.123 +- 0.152%`.
+
+**On PASS:** P1 and P2 may proceed under the gates already recorded in 2026-08-01. No `m` may be
+quoted from this gate or from P2.
+
+### Pre-registered prediction (recorded so a surprise is visible, NOT a criterion)
+
+`dm(A1) = +0.2 to +0.4%` (constgold identical-objects prior `+0.311`); `dm(A2) = +0.8 to +1.5%`
+(derived prior `+1.261`). Not a criterion because the constgold -> half-shear transfer of an ABSOLUTE
+level is not guaranteed: different sim family, and `R_blend` sits on the constgold model side only.
+
+### Known limitations, stated now rather than discovered later
+
+1. **The half-shear model side is `R_flow` alone.** Any part of the constgold measured-cut excess that
+   lives in `R_blend` is invisible here. `R_blend` is one scalar per object with no draw dependence so
+   it cannot carry `u`-dependence, but its LEVEL error can still put excess into a constgold `dm` that
+   this gate will not reproduce.
+2. **`F` is bounded above by the binning resolution.** An absolute measured cut mixes "truly small"
+   with "small realisation"; only the second is `A`'s to remove, so `F < 1` is expected and the
+   shortfall is informative rather than a defect.
+3. **The fine-grid `u` definition is only as good as 12 x 6.** Residual true-size variation inside a
+   fine cell still leaks into `u_lsz`. C3c and C3d are the falsifiers for exactly that, and they are
+   criteria, not commentary.
+4. **Dropped tail bins attenuate `F`.** The retention rule removes exactly the sparse extreme bins the
+   absolute edges exist to expose, and dropped bins enter the correction as `s = 0`. Retention
+   bookkeeping (bins and weight per `u`-index, and the weight in `|u_mag| > 1.0` / `|u_lsz| > 0.30`)
+   is therefore a required report, and if EVERY `|u_mag| > 1.0` bin is dropped on both `u`-grids the
+   run is **BLOCKED, not failed** -- the grid would be structurally blind to the regime it was built
+   for and a FAIL could not be interpreted. That condition blocks; it never passes anything.
+5. **C3d can fail a real effect.** If the flow has a genuine true-property response error inside the
+   coarse cell, the placebo will recover part of `dm` and C3d can fail even where real `u`-dependence
+   exists. That is a conservative bias, chosen deliberately: this gate authorises an architecture
+   change, so it should err toward not authorising one.
+6. **A bug in the burned script must not be inherited:** `eval_realisation_modulation.py:354` rebinds
+   `ef` (`sf, ef = ...`) after `ef` held the true-magnitude cell edges, so line 368's `edges_flux=ef`
+   wrote the FIT extreme-bin sem (0.0163) into every burned npz instead of the edges. The new script
+   must use distinct names and assert the length of every saved edge array.
+
+### Files
+
+- `results/regate_prereg.json` (NEW) -- the binding, machine-readable pre-registration.
+- To be written by the running agent, both NEW paths: `scripts/eval_regate_umod.py` and
+  `jobs/job_regate_umod.sh` (CPU only, 64G / 8 CPU, no `--gres`), writing
+  `results/regate_result.json` and `sbsi_caches/ra/regate_*.npz`.
+  `scripts/eval_realisation_modulation.py` and every burned output are READ-ONLY.
+
+### Next
+
+Run the gate once, on cases 40-199, against `results/regate_prereg.json` verbatim.
+
+## 2026-08-01d (FLOW vs EMULATOR, re-run independently: verdict CONFIRMED, and its coverage MEASURED)
+
+Independent re-run of the 2026-07-31j per-pair `R_blend` ruler binned by the primary's MEASURED
+magnitude, plus two NEW coverage probes that convert 31j's headline caveat from prose into numbers.
+Jobs **15446418** (ruler, ap7, all neighbours), **15446419** (radial coverage), **15446620** (pair
+coverage). Nothing existing was modified. **FIREWALL: half-shear legs + half-shear input fields only;
+constgold is never opened. Nothing trained, fitted, selected or tuned.**
+
+New files: `scripts/eval_rblend_ruler_coverage.py`, `scripts/eval_ruler_pair_coverage.py`,
+`jobs/job_rblend_verdict.sh`, `jobs/job_rblend_coverage.sh`, `jobs/job_ruler_pair_coverage.sh`.
+Dumps under `/project/ls-gruen/users/zekang.zhang/sbsi_caches/rblend_verdict/`.
+
+**REPRODUCTION IS EXACT.** N = 51,656,702 pairs / 12,414,460 primaries, `<truth>` = +0.01706,
+`<pred>` = +0.01735, global 45-deg null +0.00023 +- 0.00054 (0.4 sigma), and every summed CELL matches
+31j to the printed digit. The 31j numbers stand as run.
+
+**THE TEST (summed per-primary `R_blend`, `_indom_tuned`, g=0 leg binning).** measured mag < 26:
+truth 0.07116 +- 0.00230, model 0.07236, **+1.7% +- 3.3**. Measured mag >= 26 (the SHELL): truth
+0.06365 +- 0.01403, model 0.06598, **+3.7% +- 22.9**, null +0.0020 +- 0.0139. Shell minus bright
+**+2.0% +- 23.1**. No S/N trend (+7.6 +- 12.0 at S/N 5-10 through -11.1 +- 15.4 at S/N 50-100), and
+no trend in the measurement residual `dmag = measured - true` either: the scattered-FAINT rows run
++21 +- 33 / +70 +- 58 / -14 +- 17 / +81 +- 109, non-monotonic and every one consistent with zero.
+**The emulator does NOT over-predict for primaries whose measurement scattered faint.**
+
+**NEW -- RADIAL COVERAGE MEASURED** (`eval_rblend_ruler_coverage.py`, 3 half-shear input fields,
+k=60 non-binding, all radii inside the trained `[0,10]` cut so nothing is extrapolated). Fraction of
+the deployed `r_max=10"` sum lying inside the ruler's 7" annotation: **97.7% for the whole in-domain
+population, 91.6% for the measured-faint shell** (1" 7.0%, 3" 47.0%, 5" 86.4%, 7" 97.7%). The sum is
+saturating well inside 10". This does NOT contradict 2026-07-30 RESULT 7 ("`<R_blend>` keeps growing
+with `r_max`") -- that growth is entirely BEYOND 10", i.e. pure extrapolation; inside the trained
+aperture the emulator's own profile converges.
+
+**A CANDIDATE SECOND HOLE WAS FOUND AND THEN DISSOLVED -- record it so nobody re-finds it.** The
+ruler carries 4.16 annotated neighbours per primary while the input field holds 8.25 inside 7",
+which looks like AGENTS.md's "was `k` large enough" trap and would have halved the coverage.
+It is not that. `eval_ruler_pair_coverage.py` (job 15446620) shows the g=0 leg annotates 8.20-8.36
+per primary -- essentially the full field -- and a direct read of the g=0.05 ap7 leg shows the
+both-sheared filter keeps exactly **50.0%** of the primary-sheared rows, with the surviving half
+UNBIASED in neighbour magnitude (bin ratios 0.995-1.032 over mag 22-29) and in separation
+(0.982-1.032 over 0-7"). The missing half is the half whose neighbour was randomly left unsheared and
+therefore carries no measurable blend signal. It costs statistical power only -- which is already in
+the error bars -- not accuracy.
+
+**VERDICT, with the coverage folded in.** Shell excess `E = 0.44900 - 0.34088 = 0.10812`;
+deployed shell `R_blend = 0.11276`, of which 91.6% (0.10329) is ruler-covered and 8.4% (0.00947) is
+the untested 7-10" annulus. Emulator share of `E` at fractional bias `b` on the covered part:
+
+| `b` | emulator share of `E` | + annulus 100% spurious |
+|---|---|---|
+| +3.7% (measured) | 3.4% | 12.2% |
+| +26.6% (1 sigma) | 20.1% | **28.8%** |
+| +49.5% (2 sigma) | 31.6% | 40.4% |
+
+On the covered part `b` would have to be **+110% (4.6 sigma)** to own half of `E` and **+35%
+(1.4 sigma)** to own a quarter; it cannot reach 100% at ANY finite `b`, because the whole covered
+`R_blend` (0.10329) is only 95.5% of `E`. Stated instead as a bias on the FULL deployed `R_blend` --
+31j's framing, which does not separate covered from annulus -- owning 100% of `E` needs `b = +2332%`
+(**102 sigma**). **So >=71% of the faint-shell excess is the FLOW at 1 sigma even when the entire
+untested annulus is assumed fabricated** (>=60% at 2 sigma). 31j's ">=78%" was the same conclusion
+without the annulus term; the corrected figure is 71%.
+
+**Consequence for the flow (unchanged in substance).** If the deployed `R_blend` is right, the sim's
+SELF response in the shell is `0.34088 - 0.11276 = 0.22812` against `R_flow = 0.33624`: the flow is
+**+47.4%** too high there. At the 1-sigma most-emulator-favourable bound it is still **+29.7%**.
+
+**The measured-size < 0.60" cell is unchanged and still only SUGGESTIVE.** Summed truth 0.01599 +-
+0.01213 vs model 0.05031, absolute excess 0.0343 +- 0.0121 (2.8 sigma) -- but the 45-deg null in that
+same cell is +0.0119 +- 0.0121, comparable to the truth itself, and the 3"-restricted subset (a
+different primary set) gives +15.4% +- 22.4%. Against the constgold measured-size<0.60" total excess
+(sim 0.0743 vs model 0.3982, excess 0.3239) an absolute 0.034-0.038 is ~12%, so that cell is also
+flow-dominated. Do not promote this to a defect on this evidence.
+
+**WHAT THE RULER CANNOT SETTLE** (superseding 31j's list; (iii) is now quantified, and 31j's
+implicit "the annotated pairs represent the whole sum" is now VERIFIED rather than assumed):
+1. The **7-10" annulus** -- 8.4% of the deployed shell `R_blend`, 2.3% of the in-domain population.
+   Unblocked by an ap7-style neighbour annotation out to 10".
+2. **Absolute normalisation does not transfer** -- only the fractional model/truth ratio does. The
+   fields are comparable (half-shear shell all-neighbour 10" model sum 0.1208 vs constgold's deployed
+   0.11276, 7% apart) but that is a consistency check, not a proof.
+3. **The deployed call is not the ruler's call.** The ruler scores with `predict_on_pairs` (stored
+   cuts NOT applied); `build_blend_lookup` uses `predict_response` (cuts applied), which is ~14%
+   LOWER on the same pairs. Direction favours the emulator, so it cannot rescue an emulator-blame
+   reading. The stored primary cuts cover 93.7% of the ruler sample, 95.8% of the shell.
+4. **Only the 26.0-26.5 bin has a clean null.** It is 89% of the shell pairs (null +0.0024 +- 0.0039
+   against truth 0.0155), but 26.5-27 has null -0.0221 +- 0.0128 against truth 0.0274 and 27+ is
+   worse. The shell verdict rests on 26.0-26.5.
+5. **It measures `R_blend`, not the flow.** "It is the flow" is an inference from the constgold sum
+   and inherits whatever is wrong with `R_sim`, `R_flow` or the population transfer.
+6. **`_indom_tuned` predates the 07-29 distance fix** (trains detected-frame, queries input-frame),
+   biasing it LOW at small separation -- the `-37.5%` at sep<1" here. Wrong direction to explain
+   constgold. 6.3% of ruler rows are flagged by the emulator as `Re_input_p` extrapolation.
+
+NEXT: nothing further is owed on the emulator side for the faint shell -- the remaining lever is the
+flow's realisation-blind self response. (Note 2026-08-01c independently FAILED the RA design's P0
+gate, so that particular fix is not the route.)
+
+## 2026-08-01c (STAGE P0 RESULT: **FAIL** on the pre-registered gate. The RA build does NOT proceed.)
+
+Runs the gate pre-registered in 2026-08-01a. **Jobs 15446244** (all three grids) and **15446480**
+(decision grid re-run after a control-error-bar fix; every criterion number identical).
+Logs `/home/z/Zekang.Zhang/logs/realmod_15446244.out`, `.../realmod_nullsem_15446480.out`.
+Outputs `/project/ls-gruen/users/zekang.zhang/sbsi_caches/ra/realmod_probe_{6x2,6x6,3x1}.npz` and
+`realmod_probe_6x2_nullsem.npz`. CPU only, 64G/8 CPU, ~70-85 s per grid. No constgold file was
+opened; nothing was trained, fitted or tuned.
+
+Base N = 2,364,527 matched both-detected in-domain rows, cases 0-39, `g_med = 0.0500`; selfresp merge
+99.9914%, 16 seeds; `max|r_sim - r_sim_self| = 1.9e-06`; `<r_sim> = +0.72023`,
+`<r_model> = +0.71696`.
+
+### VERDICT: FAIL on the 6x2 decision grid, and on both sensitivity grids.
+
+| criterion (ALL / HELD OUT) | 6x2 decision | 6x6 | 3x1 |
+|---|---|---|---|
+| rms signal | 0.1538 / 0.1573 | 0.2573 / 0.2788 | 0.1167 / 0.1106 |
+| (a) > 5x own sem (0.0553 / 0.0778) | **FAIL** 2.8x / 2.0x | FAIL 2.5x / 1.9x | FAIL 4.5x / 3.1x |
+| (b) > 3x 45-deg null (0.0423 / 0.0578) | PASS 3.6x / **FAIL** 2.7x | FAIL 2.5x / 1.9x | PASS 5.3x / 3.8x |
+| (c) > 3x contamination (0.0938 / 0.1236) | **FAIL** 1.6x / 1.3x | FAIL 1.4x / 1.2x | FAIL 2.5x / 1.8x |
+| (d) faint/small bin depressed >3s | PASS -4.0s / -3.2s | PASS -6.3s / -5.3s | FAIL -1.0s / -1.5s |
+| (e) FIT vs HELD OUT agree on that bin | PASS +0.5s | PASS +1.2s | PASS +1.0s |
+
+**Per the pre-registration this is a FAIL and the RA build stops here. No constgold-derived target is
+substituted. `jobs/job_ra_target.sh`, `jobs/job_ra_screen.sh` and P3 are NOT run.**
+
+### The three controls, all clean -- the failure is NOT a systematic
+
+1. **Leg noise sharing (decides whether g=0-leg binning is safe): the legs SHARE pixel noise, hard.**
+   measured mag `std(leg diff) = 0.04490` against a single-leg scatter of `0.48275` about the cell
+   median (ratio 0.093), `corr(leg0, legG) = +0.99568`; measured log size `0.03625` vs `0.22886`
+   (ratio 0.158), `corr = +0.98747`. Independent noise would give ratio ~ sqrt(2), corr ~ 0. So
+   g=0-leg binning is safe, and the migration term is correspondingly small: sheared-leg-binned rho
+   differs from g=0-leg-binned by rms **0.0273** (6x2 ALL), ~5x below the signal.
+2. **45-degree null: consistent with zero.** All ten sub-bin aggregates within 1.1 sigma of zero
+   (largest `-0.0187 +- 0.0185`); over the 120 bins `chi2/dof = 0.75`, `|z|max = 2.6`. The error
+   model is validated (mildly conservative), so the signal's errors can be trusted.
+3. **Contamination `<e_0.ghat>/g`: no systematic tilt.** Per-sub-bin aggregates |.| <= 0.061 against
+   a signal reaching 0.230; `chi2/dof = 1.52`, `|z|max = 3.9` on a noise proxy. It is a NOISE FLOOR,
+   not a tilt -- `ghat` is an independent random direction per object, so it must vanish in
+   expectation for any g=0-based binning.
+
+### Why it failed, precisely -- a POWER failure, not an absence of signal
+
+Diagnostics, **NOT criteria; they do NOT overturn the FAIL**:
+
+- The modulation is overwhelmingly detected: 6x2 ALL `chi2 = 1396.1` on 120 bins
+  (`chi2/dof = 11.63`), `|z|max = 12.9`; HELD OUT `773.8/120 = 6.45`. Largest bins:
+  bright-and-large `-0.2303 +- 0.0200` (-11.5s); small-size `+0.1067 +- 0.0174` and
+  `+0.0966 +- 0.0140`. Noise-corrected modulation rms `sqrt(rms^2 - sem^2)` = **0.1436** (ALL),
+  0.1368 (HELD OUT), 0.159 (FIT) -- stable across independent halves.
+- Criteria (a) and (c) are the SAME statement: both compare an rms to a NOISE FLOOR, and at this
+  volume the floor (0.0553-0.0938) sits against a real modulation of 0.144, i.e. 2.6x where (a)
+  demands 5x. (c) is strictly HARDER than (a): `e_0` alone is 1.79x noisier per object than
+  `(e_g - e_0)` **because** the legs share noise so well (corr 0.843), so `signal > 3x cont` is
+  really `signal > 5.4x` the signal's own noise. Criterion (c) was mis-calibrated in the
+  pre-registration -- it penalises the probe for the very property (control 1) that makes the
+  estimator good.
+- Volume needed to flip (a) and (c) at fixed modulation (INFERRED projection, not measured):
+  x3.6 (a) / x3.7 (c) on ALL; x7.8 (a) / x7.0 (c) on HELD OUT. **Binding: ~8x the held-out half.**
+
+### What the probe does NOT establish, and it matters
+
+A nonzero `rho_sim/rho_model - 1` inside a coarse true-property cell is not by itself proof of
+REALISATION dependence: the measured sub-bin also proxies for true structure the flow does see but
+the cell does not hold fixed. The noise-corrected modulation GROWS as cells get finer (0.1138 at 3
+cells -> 0.1436 at 12 -> 0.2351 at 36), the opposite of what true-property leakage predicts -- but
+the 36-cell grid has `min cell-bin N_eff = 21`, where a ratio of noisy means is biased upward, so the
+trend is suggestive, not decisive. A clean separation needs a control holding the FULL flow
+conditioning vector fixed, not a 2-D cell.
+
+### Independent corroboration that already existed and was never written up
+
+`results/realisation_response_dom6x6_16seed.npz` (`scripts/eval_realisation_response.py`,
+`jobs/job_realisation_response.sh`, 16 checkpoints, the same 2,364,324 half-shear rows,
+firewall-clean) measures the same ratio with a GLOBAL normalisation and ABSOLUTE measured bins
+instead of per-cell quantiles. MODE B (self-binned, its acceptance mode) `rho_sim/rho_model - 1`:
+`-1.392 +- 0.006` at measured size < 0.5" (N=4,341), `-1.152 +- 0.001` at 0.5-0.6" (N=76,077),
+`-0.609 +- 0.002` at > 1.5" (N=67,329), `-0.337 +- 0.003` at measured mag 26.25-26.5 (N=10,465);
+global `R_sim = 0.7202 +- 0.0026` vs `R_model = 0.7170`; its own null and contamination consistent
+with zero; `corr(e1_0, e1_g) = 0.8433`. The half-shear analogue of the constgold symptom is therefore
+present at ~100-1000 sigma **in the absolute tails** -- exactly what the pre-registered 5x2 QUANTILE
+sub-binning cannot isolate, since measured size < 0.6" is 3.3% of rows while the smallest
+pre-registered log-size sub-bin is 50% of each cell wide. The gate used too blunt an instrument for
+the effect it was designed to detect.
+
+### What would unblock -- for the OWNER to choose, not to be chosen here
+
+1. **More half-shear volume.** Both legs cover cases **0-199** (verified from the feather record
+   batches); the probe used 0-39, so ~5x more is already rendered. The blocker is
+   `results/halfshear_selfresp.feather`, which carries `R_flow` for cases 0-39 only -- extending it
+   is a GPU re-run of `scripts/dump_halfshear_selfresp.py` over the 16 dom6x6 checkpoints on 5x the
+   rows. At 200 cases the projection passes (a) and (c) on ALL (x5 vs x3.7 needed) but needs an
+   uneven fit/held-out split to pass on HELD OUT (x8 needed).
+2. **A second sheared amplitude** (the g=0.2 leg) -- raises response signal-to-noise directly rather
+   than by root-N.
+3. **Re-pre-registration in significance form** (chi2 of the signal against the 45-degree null, the
+   statistic the data actually supports) instead of rms-versus-noise-floor ratios.
+
+**(1) and (3) are protocol deviations from 2026-08-01a and must be authorised explicitly before being
+run. Re-running the same gate at larger N immediately after a FAIL, or swapping in the statistic that
+happens to pass, is exactly the selection the pre-registration exists to prevent.** Neither was done.
+
+### Files
+
+- `scripts/eval_realisation_modulation.py` -- additive: per-sub-bin aggregate sem, the explicit
+  extreme-bin test (criterion d), FIT/HELD-OUT agreement (criterion e), held-out evaluation of
+  (a)-(c), and a single machine-readable `P0 VERDICT` line. Bug fixed after the first run: the
+  printed error column for the null and contamination divided their sem by their OWN cell mean, which
+  is ~0 by construction, giving error bars of order 1e2-1e6. Values, rms controls and every criterion
+  were unaffected (15446480 reproduces 15446244 exactly); the `null +- sem` column in the 15446244
+  log is unusable -- use the 15446480 log.
+- `jobs/job_realmod_probe.sh` -- unchanged, run with `--time=02:00:00`.
+
+### Next
+
+Nothing in the RA chain proceeds. The decision is the owner's: authorise the extended-case
+`dump_halfshear_selfresp.py` re-run (option 1), the g=0.2 leg (option 2), or a re-pre-registration
+(option 3). Until then the fiducial model is unchanged and `m = -0.123 +- 0.152%` stands.
+
+## 2026-08-01b (INDEPENDENT AUDIT of the realisation-aware head -- 3 silent-failure fixes)
+
+Adversarial re-verification of the already-landed RA head (`ConditionalMeanFlowRA`), by running code
+rather than reading it. Audit drivers under `.scratch/audit_ra/` (`audit_ra_head.py`,
+`audit_trainer.py`, `audit_sites.py`), written from scratch and not reusing `tests/`.
+
+**Verified (all by execution).** Zero-init exact reduction to `ConditionalMeanFlow` -- log_prob AND
+sample bitwise identical in float32 and float64, `mean_hidden` 0 and 8, incl. the qmc path, and a
+`strict=False` warm start from a plain checkpoint is exact. Full 4x4 autograd Jacobian of the
+log_prob map: `|det - 1| <= 1.1e-16`, exactly triangular (only the `dz_{0,1}/dx_{2,3}` block is
+non-zero, and it IS non-zero, so the test is not vacuous). Normalisation: `log_prob(x)` equals
+`flow.log_prob(z)` to 0 ulp (no log-det needed) and importance sampling in the full 4D gives
+`Z = 1.005 +- 0.004`. SWA: no BatchNorm/LayerNorm/Dropout anywhere, RA buffers are int64 (copied,
+not averaged), the average of `ra_net` is the elementwise mean and reloads. Checkpoint
+save -> `build_flow(model_config)` -> `load_state_dict` round-trips exactly. Fiducial byte-identity
+re-verified independently of job 15423995 by running HEAD's `epoch_response`
+(`scripts/_headref_trainer_tmp.py`, `diff`-identical to `git show HEAD:...`) and the edited one on the
+same synthetic loader/model/seed: identical scalars to 17 significant digits, identical parameters
+after an Adam step, identical `bin_state`, for batch dispatch lengths 7/9/13; the only difference is
+the extra returned diag dict.
+
+**Why the companion `_shift` change is load-bearing (measured).** On a small RA model trained for 12
+iterations against a synthetic rho target, the trainer's `_shift` response is `+0.6285` while the
+`_mu`-only response is `+0.2963` -- i.e. **~50% of the response would have been left unsupervised**
+had the response terms not been moved to `_shift`. The `_shift` response also agrees with the
+CRN-sampled response (the scoring path) to 0.43%.
+
+**Three silent-failure sites fixed (all additive).**
+1. `sbs_shear/measurement_model.py` -- the double `**kwargs` chain swallowed typo'd RA keys:
+   `ra_hiden=32` silently built the DEFAULT width, `ra_target=[2,3]` silently kept `ra_targets=(0,1)`.
+   `ConditionalMeanFlowRA.__init__` now rejects any stray `ra*` kwarg, and `build_flow` rejects
+   `ra*` keys on a non-`_ra` flow_type (which would have built no A at all).
+2. `scripts/eval_selfresp_gap.py` -- reports `R_flow` from `model._mu` on dims 0,1 with no RA guard;
+   for an RA checkpoint that is the wrong number silently (mu-only vs sampled: `+0.3813` vs `+0.2028`,
+   an 88% error, in the audit model). Now raises.
+3. `scripts/eval_fluxsize_response.py` -- its fence only asserted `ra_targets == [0,1]`, which is
+   enough for `R_mag`/`R_size` (A is exactly zero on dims 2,3, confirmed numerically, so the coupling
+   pin is also unaffected) but NOT for the `Rshape` control, which reads dims 0,1 and is printed as
+   `flow/truth-1`. Now raises. `scripts/build_mu_correction.py` likewise fenced (it subtracts `mu` as
+   the conditional mean, which for an RA head is `mu + E_u[A]`).
+
+**Known residuals, deliberately not changed.** (a) Generic non-RA unknown config keys are still
+swallowed by `ConditionalAffineFlow(**kwargs)` -- pre-existing and intentional (one config dict serves
+affine and spline); only the RA namespace was made strict. (b) `--flow-type mean_affine_ra
+--ra-hidden 0` demotes to plain `mean_affine` with a print, not a raise, so a job that forgets
+`--ra-hidden` trains the fiducial model under an RA-looking name. (c) The `forward_model.py` fence is
+unreachable by construction (the constructor hard-codes `ConditionalMeanFlow`) -- harmless but it is
+not what protects `mu()`/`log_prob_obs()`. (d) `_ra_bin_id` maps non-finite measured mag/size to
+sub-bin 0 via `nan_to_num` whereas the target script drops those rows; harmless only while the
+training frame has no non-finite dims 2,3.
+
+Validation: 11/11 shipped tests pass unchanged; 29/30 + 19/19 + 6/6 audit checks pass (the single
+remaining failure is residual (a) above). No job submitted; all checks are seconds of CPU.
+
+## 2026-08-01a (STAGE P0 PRE-REGISTRATION -- written BEFORE the run, nothing measured yet)
+
+Locks the P0 gate for the realisation-aware (RA) head down to arithmetic, so no threshold, grid or
+sub-bin definition can be chosen after seeing a number. **At the time this entry is written the probe
+has NOT been run and no P0 number exists.** Job submitted immediately after this commit of the file.
+
+**Why the gate exists.** Every symptom motivating the RA head is a CONSTGOLD number (model
+over-predicts the response 5.4x at measured size < 0.60"; +35.1% / +46.2% in the measured-mag
+26-26.25 / 26.25-26.5 shells). The firewall makes constgold evaluation-only, so the same realisation
+dependence must be demonstrable on the HALF-SHEAR legs or the design is dead. No fallback to a
+constgold-derived target is permitted on failure.
+
+**Data (firewall-clean).** `det_meas_ngmix_g0.0_train.feather` (leg 0) x
+`det_meas_ngmix_g0.05_val.feather` (leg g), matched both-detected, true-property domain cut
+(`Re > 0.3`, `mag < 26`), cases 0-39, via `eval_selection_response.build_base`; merged on
+`(case, input_index)` with `results/halfshear_selfresp.feather` (2,364,527 rows, cases 0-39,
+`r_sim_self` + `R_flow_s501..s517`, 16 seeds). FIT = cases <= 19, HELD OUT = cases 20-39.
+
+**Quantity.** Inside a coarse TRUE-property cell (true mag `r_input_p` x true size `Re_input_p`),
+sub-bin on the **g=0 leg's** measured mag and measured log size as residuals about that cell's own
+median (5 dmag x 2 dlogsize quantile sub-bins), and form `rho(cell,b) = <R>_b / <R>_cell` for
+  - `rho_sim` from `R_sim = ((e_g - e_0).ghat)/g` (measured ngmix, forward legs), and
+  - `rho_model` from the 16-seed mean of `R_flow` (a pure TRUE-property function).
+Signal = `rho_sim/rho_model - 1`, count-weighted rms over cell x sub-bin.
+
+**DECISION GRID (pre-registered): 6 true-mag x 2 true-size cells x 5 dmag x 2 dlogsize sub-bins
+= 120 bins**, ~20k rows/bin. `6x6` and `3x1` run in the same job as granularity SENSITIVITY only and
+cannot promote a failing `6x2` to a pass.
+
+**PASS requires ALL of:**
+1. rms signal > 5x its own count-weighted propagated sem, on ALL **and** on HELD OUT;
+2. rms signal > 3x the 45-degree (spin-2 orthogonal, `ghat -> (-ghat2, ghat1)`) null rms, on ALL
+   and HELD OUT;
+3. rms signal > 3x the contamination rms, contamination = per-bin `<e_0.ghat>/g` deviation from its
+   cell mean divided by the cell's sim response (the exact spurious tilt g=0-leg binning induces if
+   the legs do not share noise), on ALL and HELD OUT;
+4. the EXTREME sub-bin -- faintest dmag quintile x smallest dlogsize half, index
+   `(n_dmag-1)*n_dlogsize` -- **depressed**: aggregate signal < -3x its aggregate sem, on ALL and
+   HELD OUT;
+5. FIT and HELD OUT agree on that extreme bin within 3 sigma of their difference.
+
+Reported beside the verdict, not part of it: (1) leg noise sharing --
+`std(mag_g - mag_0)` and `std(log r_g - log r_0)` against the single-leg scatter about the cell
+median plus `corr(leg0, legG)`; (6) the sheared-leg-binned `rho` and its shift from the g=0-leg one
+(the migration term). The target is binned on the g=0 leg because the flow's training catalogue is
+g=0-only: each training row's own measured mag/size IS a valid draw of the label axis, and no
+sheared-leg counterpart exists in training data at all.
+
+**Sanity arithmetic fixed in advance:** `std(r_sim_self) = 4.0223`, 120 bins over 2.36M rows =>
+sem ~ 0.028 per bin = 3.9% of the ~0.72 cell mean, so a modulation of the constgold size (factor ~5)
+would be a ~100-sigma effect. Ambiguity is itself a FAIL.
+
+**On FAIL: STOP, report blocked, name what would unblock (a deeper half-shear leg, a second sheared
+amplitude). Do NOT build the target from constgold.**
+
+Files: `scripts/eval_realisation_modulation.py` (criteria 4 and 5 made explicit -- per-sub-bin
+aggregate sem, extreme-bin test, held-out evaluation of 1-3 -- additive, the rho/control machinery
+is unchanged), `jobs/job_realmod_probe.sh` (CPU-only, 64G/8 CPU, no `--gres`).
+
+## 2026-08-01 (REALISATION-AWARE head `mean_affine_ra`: code IMPLEMENTED, nothing certified)
+
+Implements the chosen design for the root cause recorded in 2026-07-31: `ConditionalMeanFlow.sample`
+adds `_mu(context)` identically to every draw and the residual flow is blind to the shape features,
+so within one object every draw carries the SAME response, fixed by its TRUE properties. The model
+cannot represent a measurement realisation that came out faint/small and therefore barely responds.
+
+**This entry records code and a smoke test only. No `m`, no closure number, no certification.**
+
+### The mechanism
+
+`sbs_shear/measurement_model.py` gains `ConditionalMeanFlow._shift(context, u=None)` (base class
+returns exactly `_mu(context)`, so every existing path is unchanged) and a new subclass
+`ConditionalMeanFlowRA`:
+
+    p(x|c) = p_resid( x - mu(c) - A(c, u) | c ),   u = (x - mu(c))[ra_indices]
+
+`ra_indices = (2,3)` are the measured mag / log-size output channels the shift READS; `ra_targets =
+(0,1)` are the shape channels it WRITES. Disjoint, so the map is triangular with unit diagonal:
+`|det J| = 1`, no log-det term, and the sampling inverse is closed form (the drawn residual's
+channels 2,3 are already final). `ra_net`'s output layer is ZERO-INITIALISED, so at construction the
+model is bit-identical to its `mean_affine` parent -- which is what makes a warm start from the 16
+certified dom6x6 checkpoints exact. `build_flow` dispatches a NEW `flow_type` string
+`mean_affine_ra` (not a flag on `mean_affine`: the double `**kwargs` swallows unknown config keys
+silently, whereas an unknown flow_type raises).
+
+`MeasurementModelBundle.sample` is the single choke point, so `sbs_shear/response.py`, the constgold
+and half-shear evaluators all become realisation-aware with zero changes.
+
+**Scope, stated up front:** `A` is zero on channels 2,3 by construction, so the drawn mag and size --
+and hence any moving measured-cut boundary -- are UNCHANGED. This design targets the response VALUE.
+It does NOT address the 2026-07-31j leg-split result (the model reproduces 86-89% of the sim's
+measured-SIZE boundary but only 6.5% of the measured-MAGNITUDE one). Claiming otherwise would be
+false.
+
+### Files
+
+- `sbs_shear/measurement_model.py` -- `_shift`, `ConditionalMeanFlowRA`, `build_flow` branch.
+- `scripts/train_measurement_model_swa_s1_truecond.py` -- ALL default-off. `epoch_response` now
+  builds the response from `model._shift(ctx, u)` at all five sites instead of `model._mu(ctx)`
+  (**the mandatory companion change**: with `_mu` alone the pin would supervise `mu` while `A` added
+  an unsupervised response on top and nothing would raise). New flags `--ra-hidden` (0 DEMOTES
+  `mean_affine_ra` back to `mean_affine`, byte-identical), `--ra-target-npz`, `--ra-weight`,
+  `--ra-rel-floor`, `--ra-activation`, `--ra-warm-start`. New scale-invariant loss term
+  `ra = sum_b w_b (rho_model - rho_sim)^2`, `rho(cell,b) = mean_b(w r)/mean_cell(w r)` with the
+  denominator NOT detached -- orthogonal to the certified per-cell pin because it constrains only
+  the SHAPE of the response across sub-bins, never the level. The RA bin rides as the LAST tensor of
+  each response batch and is popped before the existing length-based dispatch. Per-epoch print of
+  `|A|`, `std(r_ra)`, `val_ra` against the closed-form `rho==1` baseline, epoch-level `rho_rms`, and
+  `rho_model/rho_sim` at the extreme sub-bins. `ra_weight` goes in METADATA, not `model_config`.
+- `scripts/compute_response_target_measbin.py` (NEW) -- builds `rho(cell, sub-bin)` from the
+  half-shear g=0.05 leg + its g=0 SNC lookup. Coarse cells are a strict MERGE of the certified
+  `6x6x5_dom` grid (emits `cell_group_map`; the trainer validates the nesting and raises).
+- `scripts/build_g0_lookup.py` -- `--extra-cols SRC:DST` (default empty => byte-identical output).
+- `scripts/eval_realisation_modulation.py` (NEW) -- the Stage-P0 probe, CPU only.
+- `tests/test_measurement_model.py` -- 7 new tests (exact reduction, unit Jacobian, closed-form
+  inverse round trip, per-draw response variance, CRN blindness, guard rails, build_flow dispatch).
+- Fences at the sites that hand-roll `x - mu(c)` and would go WRONG rather than stale:
+  `sbs_shear/posterior_shape.py` (PosteriorShapeEstimator raises), `sbs_shear/forward_model.py`
+  (constructor raises), `scripts/eval_fluxsize_response.py` (asserts `ra_targets == [0,1]`, under
+  which its mu-only dims-2,3 read stays exact).
+- Jobs: `jobs/job_realmod_probe.sh` (P0), `jobs/job_ra_target.sh` (P1-C), `jobs/job_ra_screen.sh`
+  (P2 warm-start screen), `jobs/job_ra_smoke.sh` (the end-to-end smoke test).
+
+New checkpoints go to `/project/ls-gruen/users/zekang.zhang/sbsi_caches/ra/`, tag `ra_dom6x6_v1` --
+NOT `ablation/`, so they cannot collide with the certified dom6x6 set.
+
+### PRE-REGISTERED gates (recorded BEFORE the runs, so nothing can be chosen after seeing a number)
+
+**P0 (`jobs/job_realmod_probe.sh`) -- the design dies here if it fails.** Every symptom motivating
+this build is a CONSTGOLD number and the firewall forbids training on constgold, so the modulation
+must be visible on the half-shear legs. PASS = count-weighted rms of `|rho_sim/rho_model - 1|`
+exceeds (a) 5x its own propagated sem, (b) 3x the 45-degree (spin-2 orthogonal) null, (c) 3x the
+`<e_0.ghat>/g` contamination term; AND the faint/small extreme sub-bin is depressed by >3 sigma; AND
+FIT (cases <= 19) and HELD OUT (cases > 19) agree. **On failure: STOP and report blocked. Do not
+fall back to a constgold-derived target.**
+
+**P2 (`jobs/job_ra_screen.sh`).** Held-out `rho_model/rho_sim - 1` rms falls >=2x versus the
+`--ra-hidden 0 --ra-weight 0` reference measured in the SAME job; AND g=0 val NLL does not degrade by
+more than 0.01 nats; AND `|A| > 0` with per-draw response std > 0. **No `m` may be quoted from P2** --
+warm-started seeds are correlated with their parents.
+
+**P3** (16-seed from-scratch, then half-shear closure, then `eval_qmc_convergence.py`, then constgold
+ONCE as a report). Nothing -- `lam_ra`, `ra_hidden`, the grid, the sub-bin edges, the seed set -- may
+be chosen after seeing a constgold number.
+
+**Pre-registered prediction, so a correction is not misread as a regression:** the headline
+`m = -0.123 +- 0.152%` is documented as partly a cancellation (fixing only the mag>26 shell, 2.46% of
+rows where the model reads +31.7% high, moves it to +0.183%). This design targets exactly that shell,
+so a SUCCESSFUL build is expected to move the no-cut `m` by roughly +0.3 pts, toward or past the
++0.3% edge of spec. A larger `|m|` after P0 and P2 pass is NOT an abandonment criterion -- reverting
+on it would convert evaluation into selection and break the firewall.
+
+### Known limitation of the case split (measured, not assumed)
+
+The design asked for a held-out range of cases 100-139. `det_meas_crowd_g0.05_val_full.feather` ends
+at case 99 (verified: last record batch is case 99), so the RA target's fit/held-out split is
+0-79 / 80-99. Extending it needs a g=0.05 render of cases 100+, not just a bigger g0 lookup.
+
+### Validation runs
+
+11/11 unit tests pass (no pytest in `sims1`; driven with a bare-python runner over the test
+functions). A CPU exercise of `epoch_response` on fabricated tensors confirms both batch-length
+branches (forward and central+coupling) accept the appended RA bin, that gradients reach `ra_net`
+(`|A|` moves under an optimizer step), and that `std(r_ra)` is exactly 0 while `A` is zero-init.
+
+End-to-end smoke, `jobs/job_ra_smoke.sh`, **job 15423571**, real data throughout
+(`/home/z/Zekang.Zhang/logs/ra_smoke_15423571.out`):
+extended g0 lookup on cases 0-2 (471,025 rows, `MAG_AUTO`/`FLUX_RADIUS` carried through) ->
+`rho` target on the same 3 cases (174,241 rows, SNC match 99.68%, 24/24 sub-bins usable, rho
+0.405..1.815) -> 2 epochs of the FULL fiducial loss stack (response pin 450 + coupling pin 500) with
+`--ra-hidden 32 --ra-weight 1.0` warm-started from the certified `..._dom6x6_s501_swaavg.pt`
+(`strict=False`, only the six `ra_*` keys missing) -> reload + assertions -> the `--ra-hidden 0`
+demotion path. `|A|` 0 -> 4.90e-3 -> 5.77e-3; `val_ra` 1.746e-2 -> 1.632e-2 against the closed-form
+flat baseline 9.047e-2; per-draw response std within an object 1.2e-7..3.5e-7 (non-zero, as required);
+closed-form-inverse max error exactly 0; the demoted checkpoint reloads as `ConditionalMeanFlow`.
+
+Fiducial regression with NO RA flags at all, `jobs/job_ra_regress.sh`, **job 15423842** (both the
+central+coupling and the forward/no-coupling response branches).
+
+**None of these numbers is a result.** 2 epochs, 40k rows, a 3-case target.
+
+### The one real free parameter, exposed by the smoke run
+
+Cell granularity. At merge 3/3/5 (4 coarse cells) the `--ra-hidden 0` reference -- the fiducial,
+realisation-BLIND architecture -- already gave `rho_model` 1.44 / 0.70 against `rho_sim` 1.48 / 0.65
+at the extreme sub-bins, i.e. `rho_rms` 0.14. That is NOT realisation awareness: with a coarse cell
+the measured sub-bin proxies for TRUE properties the model does see. The coarser the cell, the more
+of `rho` is already-satisfied true-property structure and the smaller the learnable residual. Hence
+the signal is `rho_sim/rho_model - 1`, never `rho_sim - 1`; `jobs/job_realmod_probe.sh` runs P0 at
+three granularities and `jobs/job_ra_target.sh` builds both a fine (45-cell, default) and a coarse
+(4-cell) target. **Pick the granularity on half-shear only.** Picking it on a constgold number would
+break the firewall.
+
+### Next
+
+1. Run P0. It is CPU-only and decides whether any of this is worth a GPU slot.
+2. Only if P0 passes: `jobs/job_ra_target.sh`, then `jobs/job_ra_screen.sh` (2 seeds, 20 epochs).
+3. P3 only after P0 and P2 both pass.
+
+## 2026-07-31j (LEG-SPLIT boundary diagnostic: the model's own moving-boundary term, measured)
+
+The near-domain script collapsed the two legs before reporting (`0.5*(bp+bm)` for the blend term,
+`0.5*(keep+ + keep-)` for the model keep fraction), which destroyed the leg DIFFERENCE -- the
+model's own moving-boundary / selection-response signal, and the only thing comparable to sim
+column (1) `pure_sel`. Now emitted separately.
+
+Files: `scripts/eval_selection_constgold_neardomain.py` -- `model_selected` gains `sel_weight=` and
+returns a 4th dict `outx` with `keep_plus/keep_minus`, `b_plus/b_minus`, `sel_plus/sel_minus`,
+`m_plus/m_minus` and their `leg_avg`s per (group, cut); the sim dict gains the matching
+`keep_plus/keep_minus/keep_resp` and `b_plus/b_minus/b_resp`; `report()` accepts 3- OR 4-tuples and
+prints a LEG-SPLIT BOUNDARY block; the npz gains `bnd_{shape,blend,keep}_{sim,model}` +
+`{sim,model}_keep_{plus,minus}`. `scripts/merge_neardomain_seeds.py` reads `rx` with `.get` (already
+backward-compatible for `rk`). `jobs/job_constgold_neardomain_merge.sh` gains an `EXPECT` override
+(default 16, unchanged). All additive: the fiducial `R_model = R_flow + R_blend` path is untouched
+-- `0.5*(bp+bm)` is the CORRECT blend combination (the blend enters as +/-R_blend*g, so the leg
+difference of the response turns the two selected means into their SUM), and the leg difference is a
+diagnostic only.
+
+Three boundary weights, identical construction on both sides (average a shear-INDEPENDENT
+per-object label over each leg's own selected set, then `leg_avg`): shape (= the unsheared intrinsic
+projection, i.e. column (1)'s own definition), blend (the emulator's per-object `R_blend`), count.
+
+Run: jobs 15418969 (array 0-3, 4 seeds 501/502/503/505, `--true-cuts --complements`) + 15418970
+(merge). Dumps `results/nd_seeds_legsplit/`, table `results/constgold_neardomain_legsplit.npz`,
+log `/home/z/Zekang.Zhang/logs/cg_nd_m_15418970.out`. 4 seeds is legitimate here: every reported
+quantity is model-vs-model or a difference. Population identical to the canonical set (11,674,408).
+
+**RESULT -- the model reproduces the sim's boundary term on SIZE and almost not at all on MAG.**
+Boundary, % of R_sheared(no cut), model/sim ratio in brackets:
+`mag<26` sim -0.346 / model -0.023 [**0.065**]; `mag<25.5` -0.274 / -0.062 [0.226];
+`mag<25` -0.077 / -0.102 [1.33]; `R>0.60"` +1.308 / +1.120 [0.856]; `R>0.70"` +5.438 / +4.813
+[**0.885**]. Complements agree: `mag>26` +13.72 / +0.88 [0.064], `R<0.70"` -20.72 / -17.27 [0.833].
+Blend- and count-weighted boundaries are null on BOTH sides at every interpretable cut
+(|b_resp| < 5e-4 vs R_blend 0.1358; |dK/dg| < 1.2e-3), so the boundary is not an emulator effect and
+not a net keep-fraction change -- near-equal numbers cross in each leg carrying opposite shapes.
+
+Validation built into the same run: `[T]` true-property rows are identically 0.000e+00 on both
+sides with `keep_plus == keep_minus` to 12 decimals (the null control), and the complement sum rule
+`keep*B(cut) + keep_c*B(comp) = 0` closes to <0.003 on both sides for all 7 pairs.
+
+**Do NOT read the boundary gap as a dm budget.** Column (1)'s weight is the INTRINSIC shape, a true
+property, so this measures the TRUE-PROPERTY channel of the boundary only. Converting to dm at
+factor 1 gives -0.376 pts at `mag<26` (dm is +0.308, so it would make dm worse if fixed) and +0.741
+at `R>0.70"` (dm +4.565), but that conversion contradicts 2026-07-31i's independent split, which
+found the flow's own-draw selection worth only +0.014 at `mag<26`. The missing piece is the
+NOISE-weighted boundary, which an intrinsic weight cannot see. Next step: accumulate the model's
+boundary in its OWN drawn-shape weight by holding both legs' pass masks in one chunk (swap the
+leg/chunk loop order) -- CRN makes the draws bit-identical, so it is a pure restructure.
+Caveat: `R<0.30"`/`R<0.40"` complements keep 23 and 630 objects; ignore those two rows.
+
+## 2026-07-31j (FLOW vs EMULATOR on the faint shell: the RULER CLEARS THE EMULATOR — it is the FLOW)
+
+Answers 31i's "NEXT (1)". Files added: `scripts/eval_rblend_gap_measured.py` (the per-pair ruler binned
+by the primary's MEASURED mag / S/N / size / measurement residual, with the 45-deg null reported PER
+BIN), `scripts/eval_rblend_gap_summed.py` (per-pair -> per-PRIMARY summed `R_blend`, the quantity `m`
+actually uses), `jobs/job_rblend_gap_measured.sh`, `jobs/job_rblend_gap_summed.sh`. Nothing existing
+was modified; `eval_rblend_gap.py` is imported, not edited. Jobs 15419222 (nn3), 15419223 (ap7),
+15419853 (summed). Dumps: `sbsi_caches/ablation/eval/rblend_gap_measured_{nn3,ap7}.npz`.
+**FIREWALL: half-shear legs only, nothing trained or tuned.**
+
+**Both legs carry the full SExtractor block, so binning the ruler by MEASURED magnitude is possible.**
+The g=0 leg is used as the binning leg: its neighbour is unsheared, so conditioning on it cannot
+induce a spurious `<de . ghat_s>`. Sheared-leg binning is reported as a robustness row.
+
+**VALIDATION.** The nn3 run reproduces the published ruler exactly — `N = 4,811,459`, `_ho` overall
+`-11.93%`, `<1"` `-41.50%` — so the added binning changed nothing about the measurement.
+
+**POWER.** Per-pair scatter is sd = 3.85 against a mean of 0.038, so the 3" nearest-neighbour ruler
+gives the faint shell only `+-60%`. Fixed by using `det_meas_ngmix_ap7_*` (7" annotation, 4.16
+neighbour rows per primary): each neighbour has its own independent shear direction, so these are
+~4x more weakly-correlated measurements. Errors are CLUSTER-ROBUST with the primary as the cluster
+(verified: inflation 1.001x when there is one row per primary, i.e. it reduces to the ordinary sem).
+N = 51,656,702 pairs over 12,414,460 primaries; shell error `+-60%` -> `+-23%`.
+
+**THE ANSWER — the emulator is NOT over-predicting in the faint shell** (summed `R_blend` within 7",
+`_indom_tuned`, null clean at 0.1 sigma):
+
+| primary measured mag (g=0 leg) | S_truth | model | model/truth-1 | null | N primaries |
+|---|---|---|---|---|---|
+| < 26 | 0.07116 +- 0.00230 | 0.07236 | **+1.7% +- 3.3** | +0.0009 +- 0.0023 | 12,114,907 |
+| **>= 26 (the SHELL)** | 0.06365 +- 0.01403 | 0.06598 | **+3.7% +- 22.9** | +0.0020 +- 0.0139 | 299,553 |
+
+Shell minus bright = `+2.0 +- 23%`. No S/N trend either (`+7.4 +- 12.0` at S/N<10 through
+`+0.2 +- 18.0` at S/N>50). **The true blend response does not collapse for noise-scattered-faint
+primaries** (0.0637 vs 0.0712) — unlike the self response, which does.
+
+**TRANSFER (stated with its assumption).** Assuming the fractional bias measured inside 7" carries to
+constgold's summed `R_blend`: to remove the shell excess `E = 0.44900 - 0.34088 = 0.10812` the
+emulator would have to be high by `b` with `R_blend*b/(1+b) = fE`. Removing 100% needs `b = +2330%`
+(102 sigma), 50% needs `+92%` (3.9 sigma), 25% needs `+31.5%` (1.2 sigma). At the measured `+3.7%` the
+emulator owns **3.7% of the excess**; the 1-sigma bound is **<=22%**, the 2-sigma bound **<=35%**.
+**So >=78% of the faint-shell excess is the FLOW (1 sigma).**
+
+**AND IT CORRECTS 31i's "R_flow is within 1.4% of the sim" IN THE SHELL.** That compared `R_flow`
+(self only) with `R_sim` (self + blend). With the ruler saying the emulator is right, the sim's SELF
+part in the shell is `0.34088 - 0.1088 = 0.2321` against the flow's `0.33624`: **the flow's self
+response is ~+45% too high there** (+33.5% even at the 1-sigma most-favourable emulator bias).
+
+**ONE REAL EMULATOR DEFECT FOUND, on the other axis.** Primaries with MEASURED size < 0.60" (397,062
+primaries, 7" sum): truth 0.0160 +- 0.0121 vs model 0.0503 — an absolute excess of 0.0343 +- 0.0121
+(2.8 sigma). Do not over-read it: the 45-deg null in that same cell is +0.0119 +- 0.0121, comparable
+to the truth itself, and the 3"-restricted subset (different primaries: only those with a neighbour
+inside 3") shows +15.4% +- 22.4%. Suggestive, not established.
+
+**WHAT THE RULER CANNOT SETTLE.** (i) separations beyond 7" — constgold's lookup sums to `r_max=10`,
+and the 5-7" bin already hints at over-prediction (+44% +- 29%, 1.5 sigma); (ii) the sheared-leg
+binning null fails at 2.6 sigma in the 26-26.5 bin of the 3" run, which is why the g=0 leg is the
+default; (iii) `predict_on_pairs` does not apply the emulator's stored cuts, while constgold's
+`build_blend_lookup` path does — 95.0% of shell rows are inside them, the other 5% would be zero-filled
+there (which lowers, not raises, the model); (iv) `_indom`/`_indom_tuned` predate the 07-29 distance
+fix, so the fiducial emulator still trains detected-frame and queries input-frame — that biases it
+LOW at small separation (the -37.5% at <1" here), the wrong direction to explain constgold.
+
+NEXT: the faint-shell work is now a FLOW problem — the self-response must be allowed to depend on the
+measurement realisation (31i's item (3)). The measured-size < 0.60" emulator cell is a separate,
+smaller lead and needs the null understood before it is acted on.
+
+## 2026-07-31i (ROOT CAUSE of the near-domain dm: the model's response ignores the MEASUREMENT REALISATION)
+
+Owner asked whether the mag-cut bias is a flow or an emulator problem, and whether the size-cut bias
+is a size-response failure. Multi-agent run (9 agents) + a new TRUE-property-cut control. Files:
+`scripts/eval_selection_constgold_neardomain.py` gains `--true-cuts` / `--true-mag-cuts` /
+`--true-re-cuts` and a `var="fixed"` condition type (cuts on a conditioning INPUT, so both sides
+select byte-identical objects -- `keep_offset` comes out exactly 0.0000, which is the point).
+Results: `results/constgold_neardomain_truecuts.npz` (array 15413354 + merge 15413355),
+`/home/z/Zekang.Zhang/logs/identobj3_15416283.out`.
+
+**ONE MECHANISM, VERIFIED IN CODE.** `sbs_shear/measurement_model.py:650-652`:
+`sample() = flow.sample(_flow_ctx(context)) + _mu(context)[:, None, :]`, and `_flow_ctx` keeps only
+`keep_indices` -- the residual flow is deliberately blind to the shape features, so the whole shear
+response sits in the linear `mean_net` and is added IDENTICALLY to every draw of an object. Within
+one object, every draw therefore carries the same response, fixed by its TRUE properties. It cannot
+know that a particular realisation was measured badly. `R_blend` has the same flaw by construction
+(one scalar per object, no draw or leg dependence).
+
+The sim disagrees sharply. Galaxies with MEASURED size < 0.60" (3.3% of rows) have sim response
+**0.0743** -- 8.6% of the population mean -- while the model gives them **0.3982**, a **5.4x**
+over-prediction. In fine measured-mag bins at identical objects the model is within -3.6%..+2.5%
+everywhere below mag 26, then **+35.1%** at 26-26.25 and **+46.2%** at 26.25-26.5: the noise-scattered
+faint tail, exactly what a `mag<26` cut removes.
+
+**dm SPLITS INTO TWO CHANNELS, and the mix flips with cut depth** (section A of identobj3 applies the
+sim's measured mag as one hard mask to BOTH sides, so the flow's own sampling cannot select):
+
+| measured cut | table dm | response error (identical objects) | flow's own-draw selection |
+|---|---|---|---|
+| `mag<26`   | +0.325 | **+0.311** +-0.011 | +0.014 |
+| `mag<25.5` | +0.826 | +0.189 +-0.058 | **+0.637** |
+| `mag<25`   | +0.756 | -0.388 +-0.107 | **+1.144** |
+
+So the owner's "mostly a response failure" holds at `mag<26` (~96%) and INVERTS by `mag<25`, where the
+response term is negative and the whole bias is the flow selecting the wrong objects.
+
+**TRUE-property rows (both sides select identical objects, `keep_offset` = 0.0000 exactly):**
+`tmag<25.5 -0.202 +-0.086`, `tmag<25 -0.283 +-0.137`, `tRe>0.4 +0.572 +-0.189`, `tRe>0.5 +1.556
++-0.259`. A real response error against true properties exists -- small and NEGATIVE on magnitude,
+positive and growing on size -- and it does not explain the magnitude rows.
+
+**SIZE: correct the wording.** Not `d(size)/dg` (that was pinned via the theta coupling and is fine),
+and not mainly the predictive WIDTH either. It is the ASSOCIATION between a draw's measured size and
+that draw's response -- which the architecture above makes structurally impossible to represent.
+Clean interpolation-free proof: measured `R>0.70"` keeps 79.2% and buys the sim +11.93%, while true
+`Re>0.4` keeps only 71.5% (harsher) and buys +9.05%. Measured size carries response information that
+no true-property model can see.
+
+**FLOW vs EMULATOR: NOT SEPARABLE from constgold, stated as such.** In the `mag>26` shell
+(N=286,822) sim R = 0.34088 while the model gives 0.44900 -- but `R_flow` alone is 0.33624 (within
+1.4% of the sim) and `R_blend` adds 0.11276. Constgold measures only the sum, and the firewall forbids
+fitting either side to it. An independent half-shear self-response check in the matching band found
+the flow within -0.75% (consistent with zero), which POINTS at the emulator, with three caveats
+(different sim family cases 0-39 vs the lookup's 40-139 so no join; the ruler's faint tail is 53%
+neighboured vs 76% population-wide; the S/N<->mag mapping was approximate). Settle it with
+`scripts/eval_rblend_gap.py` binned by the primary's MEASURED mag/S/N on the half-shear legs --
+non-circular, no constgold, no training.
+
+**The headline -0.123% is partly a CANCELLATION.** Correcting the model on the `mag>26` shell alone
+(2.46% of rows) moves no-cut `m` from `-0.126%` to `+0.183%`. Sub-0.3% at no cut is not evidence of
+an absence of error.
+
+NEXT (cheapest decisive first): (1) `eval_rblend_gap.py` binned by measured mag/S/N -- answers
+flow-vs-emulator outright; (2) free: `eval_selection_constgold_neardomain.py` collapses the legs at
+`0.5*(bp+bm)` and in the keep fraction -- emit `bp`/`bm`/`keep+`/`keep-` separately to expose the
+model's own boundary term; (3) architecture: factor as `p(meas mag, meas logR | truth)` then
+`p(meas e | truth, drawn mag, drawn logR)` so response can depend on the realisation. Acceptance on
+the half-shear catalogue (does `R_model` collapse in the sub-0.60" measured-size bin as `R_sim` does,
+0.074 vs the model's 0.398?), NEVER on constgold m.
+
+## 2026-07-31h (RETRACTION: "one-sided positive dm" was three over-claims; mag and size rows have DIFFERENT causes)
+
+Owner challenged the phrase "one-sided-positive selection excess that the old sign convention was
+hiding". It does not survive. Three separate over-claims, and the corrected picture splits the table
+in two. Files: `scripts/eval_selection_constgold_neardomain.py` (added `--complements` and the
+model-side keep fraction, previously computed and discarded), `scripts/merge_neardomain_seeds.py`,
+`jobs/job_constgold_neardomain_array.sh` + `_merge.sh` (DUMPDIR/EXTRA/DUMPS overridable).
+Validation: array 15408927 (16 tasks) + merge 15408929 -> `results/constgold_neardomain_complements.npz`.
+
+**Over-claim 1 — the positive sign is FORCED, not observed.** `R(no cut)` is the keep-weighted blend
+of any cut and its complement, on both the sim and the model side, so `1+m(no cut)` is a weighted
+mediant of `1+m(cut)` and `1+m(complement)` and lies strictly between them. `sign(dm(cut)) =
+-sign(dm(complement))` ALWAYS. Every default row keeps the bright/large corner, so they were never
+able to disagree. Measured, 7/7 complements flip: `mag<26 +0.325 -> mag>26 -23.93`;
+`mag<25.5 +0.825 -> -9.89`; `mag<25 +0.756 -> -3.04`; `R>0.60" +0.766 -> -81.21`;
+`R>0.70" +4.589 -> -27.13`. Never quote the common sign of same-side cuts as evidence.
+
+**Over-claim 2 — ~2 independent cuts, not 10.** Of 12 rows: `R>0.30"`/`R>0.40"` are NULL (PSF floors
+measured `flux_radius` at 0.5268", so they keep ~100%); `mag<26 & R>0.30"` and `mag<25 & R>0.40"` are
+EXACT duplicates of the bare mag rows (matching to 0.001) because the size half is a no-op; the three
+`S/N` rows cut a mag+size PROXY on the model side. What remains is one nested mag family and one
+nested size family.
+
+**Over-claim 3 — the errors are seed-only.** The sim side has no seed dependence, so its shot noise
+never enters the quoted `dm` error, and it does not cancel either (a cut and its complement are
+disjoint draws). Estimating `(sigma/R)*sqrt((1-f)/(N f))` with the documented `sigma=5.06`:
+`mag<26 +-0.027`, `mag<25.5 +-0.068`, `mag<25 +-0.117`, `R>0.60" +-0.032`, `R>0.70" +-0.088` — of the
+same order as the seed error, roughly doubling it on the aggressive rows. Still 4.7-43 sigma, so the
+effect is real; the error bars were just understated.
+
+**THE ACTUAL FINDING — the model-side keep fraction splits the table.** The counts were already in
+`model_selected` and were being thrown away. Printing them (`mkeep`, `d%`) shows the two cut
+directions are not the same phenomenon:
+
+| direction | sim keep | model keep | rel d% | verdict |
+|---|---|---|---|---|
+| `mag<26` | 0.975353 | 0.975092 | -0.03% | same population; `dm` IS a response error |
+| `mag<25.5` | 0.863311 | 0.862917 | -0.05% | same population |
+| `mag<25` | 0.683402 | 0.682563 | -0.12% | same population |
+| `R>0.60"` | 0.966796 | 0.958066 | **-0.90%** | different population; `dm` CONTAMINATED |
+| `R>0.70"` | 0.792119 | 0.781667 | **-1.32%** | different population; `dm` CONTAMINATED |
+| `S/N>*` | — | — | -0.06..-0.10% | uninformative: keep-fraction-MATCHED by construction |
+
+**The flow violates the PSF floor.** Measured `flux_radius` cannot fall below `R50 = 0.5268"`, and the
+sim respects it: `2.5e-06` of rows below 0.30", `5.4e-05` below 0.40". The flow puts `4.9e-05` and
+`2.75e-04` there — **19.7x and 5.1x** the sim. Its predicted measured-size distribution has a low tail
+that physically cannot exist.
+
+**Direction check rules out the naive reading.** At `R>0.70"` the model keeps FEWER objects (0.7817 vs
+0.7921) yet its response shift is SMALLER (+7.02% vs +11.93%). A sharper cut cannot give a smaller
+shift, so "the model cuts too hard" does not explain it. What does: the flow's measured size is a
+noisy draw, so the model's boundary is FUZZY, and a fuzzy cut selects a less extreme subpopulation
+than a sharp one and under-delivers the shift. The excess sub-floor tail is direct evidence of that
+extra scatter.
+
+**Corrected statement.** Not "a one-sided positive selection excess at every real cut". Instead:
+(a) on the MAGNITUDE direction the two sides select the same population to 0.13%, so `dm = +0.33` to
+`+0.83%` is a genuine shape-response error on the surviving galaxies; (b) on the SIZE direction the
+keep fractions differ by ~1% and the flow's measured-size distribution is too broad, so
+`dm = +0.77 / +4.59%` mixes a response error with a measured-size distribution error and must NOT be
+read as a shape bias; (c) the `S/N` rows are the weakest evidence (proxy + keep-matched).
+
+NEXT: the size-direction defect is the concrete lead — fix the flow's measured-`flux_radius` tail
+(it should respect the PSF floor) and re-run, then re-read the size rows. The magnitude-direction
+`dm` is the separate, clean response-error item.
+
+## 2026-07-31g (why every cut row in fig4 moved: sign fix + subsample removal, NOT new bias)
+
+Owner: "all cuts in the new fig4 are biased now, different from previous results." Investigated; no
+new defect. The excess was always there — the old print put it on the wrong side of zero and shifted
+the zero point. Two deliberate fixes stack, each isolated against a job pair on disk.
+
+**(1) Sign fix, the larger term.** The old cut column printed `m_flow = R_model/R_sim - 1` while its
+own no-cut reference line and fig3 printed `R_sim/R_model - 1`. Jobs 15385639 -> 15389640 are the
+SAME configuration (full 11.67M, 4 seeds) differing only by this fix, so they isolate it: every row
+is the exact negation, residual `+0.005 +- 0.003` pt, and that residual is itself the
+ratio-of-means -> mean-of-per-seed-ratios change that landed alongside (no-cut `-0.245 -> -0.239`).
+
+**(2) Subsample removal, ~+0.25 pt on every row.** The old 16-seed table (15369209) ran
+`--max-rows 4000000` of 11.67M. `R_sim` on that draw was `0.85824` vs `0.86050` on the full
+population — 0.26% low, straight into every absolute `m`. Note this is NOT confined to the no-cut
+row as an earlier AGENTS.md sentence implies: it is common-mode across rows (`+0.03` to `+0.40`,
+no-cut `+0.25`), cancelling only in `dm` and column (4).
+
+Composition, old 16-seed (15369209) -> new 16-seed (15393338), `m` in %:
+
+| cut | old print | un-inverted | + subsample | new | old dm | new dm |
+|---|---|---|---|---|---|---|
+| mag<26   | +0.074 | -0.074 | +0.276 | +0.202 | +0.302 | +0.325 |
+| mag<25.5 | -0.354 | +0.355 | +0.347 | +0.703 | +0.731 | +0.825 |
+| mag<25   | -0.237 | +0.238 | +0.396 | +0.634 | +0.614 | +0.756 |
+| R>0.60"  | -0.403 | +0.405 | +0.239 | +0.643 | +0.781 | +0.766 |
+| R>0.70"  | -4.246 | +4.434 | +0.028 | +4.462 | +4.810 | +4.585 |
+| no cut   | -0.376 | -0.376 | +0.253 | -0.123 | 0 | 0 |
+
+**The physics did not change:** `dm`, the selection-induced excess, was already `+0.30` to `+4.81`
+under the old numbers and is `+0.33` to `+4.59` now. Residual differences are the 4M draw changing
+which galaxies enter, not a change of result.
+
+**Decisive check that the OLD sign was wrong.** `R>0.30"` keeps 99.99975% of the population — it IS
+the no-cut case. New: `m = -0.124` against no-cut `-0.123`, `dm = -0.001`. Old: `+0.440` against
+no-cut `-0.376`, i.e. `dm = +0.816`. A cut removing ~3 galaxies per million cannot bias `m` by 0.8 pt.
+`R>0.30"` and `R>0.40"` remain the standing null controls: `dm = -0.001` / `-0.009` shows the
+machinery does not manufacture bias, so the `+0.33` at `mag<26` (keeps 97.5%) is signal.
+
+Standing conclusion: the no-cut baseline `-0.123 +- 0.152%` is inside the `+-0.3%` target; the cut
+rows fail it because of the selection excess `dm`, not because the baseline drifted. **For the
+correct reading of that excess — and a retraction of "one-sided positive at every real cut" — see
+2026-07-31h below, which supersedes this paragraph.**
+
+No code or data changed — analysis only, from `results/constgold_neardomain_table.npz` and the job
+logs.
+
+## 2026-07-31f (near-domain table fanned out one seed per task: ~2h20 -> ~16 min wall clock)
+
+Owner asked why the 16-seed table takes ~2h20 when an earlier run was ~20 min. **Nothing regressed** —
+the 20 min was a different configuration. Measured history:
+
+| job | rows | seeds | setup | per seed | total |
+|---|---|---|---|---|---|
+| 15366642 | 4M | 4 | 351s | 288s | **20:21** <- the remembered run |
+| 15371815 | 4M | 4 | 356s | 296s | 20:49 |
+| 15369209 | 4M | **16** | 372s | 299s | 1:20:51 |
+| 15389640 | **11.67M** | 4 | 494s | 500s | 32:05 |
+| 15393338 | **11.67M** | **16** | 473s | 495s | ~2:20 (projected) |
+
+Two deliberate scope increases account for all of it: dropping the 4M subsample (2.9x rows -> 1.7x
+per-seed time) and going to 16 seeds (4x). ~7x total.
+
+**PROFILED, NOT GUESSED.** Reproduced the CPU inner loop of `model_selected` with synthetic arrays of
+the real shape (200k x 32, 12 cuts): the cut-masking is **67s of the 495s per seed, ~14%**. The other
+~430s is GPU flow sampling — 11.67M rows x 32 samples x 2 legs = 747M draws at ~1.7M/s, linear in
+rows x seeds x n_samples with no algorithmic slack. A `sum(where=)` rewrite of the masking measured
+SLOWER, so there is no win in that 14% either. **Conclusion: the lever is parallelism, not
+optimisation.**
+
+**ADDED — array mode.** Seeds are independent given the prepared population, so they fan out
+perfectly.
+- `scripts/eval_selection_constgold_neardomain.py --dump-per-seed <json>`: score exactly ONE `--ckpt`
+  and dump its accumulators + the sim side + a population fingerprint, instead of building the table.
+- `scripts/merge_neardomain_seeds.py`: combine the dumps and emit the same table and npz.
+- `jobs/job_constgold_neardomain_array.sh` (`--array=0-15`) and
+  `jobs/job_constgold_neardomain_merge.sh`. Chain with
+  `A=$(sbatch --parsable ...array.sh); sbatch --dependency=afterok:$A ...merge.sh`.
+
+Wall clock becomes setup + one seed, **~16 min**. The price is rebuilding the population in all 16
+tasks — duplicated CPU, no correctness cost.
+
+**THE AGGREGATION IS NOT REIMPLEMENTED.** The reporting block was extracted into `report()` and both
+the single-process path and the merge call it, so the two cannot drift.
+
+**REFUSALS (the reason fanning out is safe).** Fanning out is only sound if every task built the same
+population. That is true today — the build is deterministic, the only RNG being the seeded
+`--max-rows` subsample — but that is an assumption about code that changes. So every dump carries a
+fingerprint (row count, case/index checksums, g, R_blend sum) and the merge REFUSES on: fingerprint
+mismatch, a repeated checkpoint (would double-weight a seed and shrink the spread), or fewer than 16
+dumps (a silently failed array task; `--expect-seeds 0` overrides deliberately). All four paths
+tested offline with synthetic dumps and verified to exit non-zero; happy path exits 0. `set -o
+pipefail` is present in both new job scripts.
+
+**VALIDATION DONE — the array path reproduces the sequential result** (array 15399078, merge 15399080
+vs sequential 15393338, same 16 seeds and same 11,674,408-row population). All 22 npz fields
+compared; **worst difference over every numeric field = 4.2e-3 percentage points**, against a 0.15 pt
+seed error — 37x smaller and scientifically irrelevant.
+
+The residual is GPU NONDETERMINISM, not a fan-out bug, and the pattern proves it. The sequential job
+ran all 16 seeds on ONE V100; the array scattered over FOUR architectures (4x A100, 2x A40, 6x 2080
+Ti, 4x V100). Different architectures use different kernels, so per-sample results differ at ~1e-7.
+The differences then order themselves exactly as that mechanism predicts:
+
+| quantity | diff | why |
+|---|---|---|
+| no-cut `m` | 1.6e-9 | averages ~747M samples; noise cancels |
+| `R>0.30"` / `R>0.40"` (no-ops) | ~1e-5 | almost no draws near the threshold |
+| `R>0.70"` (most aggressive) | 4.0e-3 | most boundary-crossing draws |
+
+A draw sitting within float noise of a cut threshold can flip sides between architectures, and each
+flip moves a whole sample's contribution in or out — so the discrepancy scales with how many draws
+sit near the boundary, and the no-cut row (no boundary) is exact. **Implication for future runs: a
+cut-row number is reproducible to ~5e-3 pt across mixed hardware, not to machine precision. Do not
+chase a sub-0.01 pt difference between two runs on different GPUs.**
+
+**FIRST ATTEMPT FAILED AND IS WORTH RECORDING.** Array 15398771 lost all 16 tasks in ~90s each:
+the job script was missing `conda activate sims1` (copied the sequential script's opening but dropped
+the two env lines), so it fell through to the system python 3.11 torch, whose allocator rejects
+`expandable_segments`. Fixed, and an explicit interpreter check now runs before the work so this
+fails in one readable line instead of a torch traceback. This is the argument for the validation run:
+the array path had never actually executed, and it failed on config rather than producing
+plausible-but-wrong numbers.
+
+Kept `results/constgold_neardomain_table_array16.npz` (5 KB) as the validation record; the sequential
+backup was byte-identical to the canonical table and was deleted. Per-seed dumps in
+`results/nd_seeds/` (81 KB) are the array's raw output and are regenerated by any rerun.
+
+## 2026-07-31e (CONVENTIONS.md added — definitions/setups fixed in one place)
+
+**ADDED `CONVENTIONS.md`** (owner's request) so future tests are consistent. It fixes the vocabulary
+and the setup, and is referenced from `AGENTS.md` and `CLAUDE.md`. Contents:
+
+- **Model** — `R_model = R_flow + R_blend`; `R_flow` is SELF-response only and is never the whole
+  model; `R_blend` must be re-averaged over the passing set under a cut.
+- **Catalogues** — constgold (ANTITHETIC `+g`/`-g`, same noise, both-detected by construction, cases
+  40-139, evaluation-only firewall) vs half-shear legs (FORWARD `0 -> +g`, random shear direction per
+  galaxy, cases <=39). Explicitly: do not call the half-shear legs "constant-shear".
+- **Population order** — case cut -> `source_select_selection` -> domain cut -> emulator join ->
+  finiteness, with the exact `DEFAULT_CUTS` values quoted from
+  `sbs_shear/preprocessing.py:108-118` (`18<r_input_p<28`, `0.1<Re_input_p<1.5`, `0<distance<5` OR
+  `not neighbored`). Standard in-domain N = 11,674,408.
+- **Shapes** — `unsheared` / `sheared` / `measured`: what each is and which question it answers.
+  `unsheared` has response identically 0 with no cut, which is what makes it the pure-boundary probe.
+- **TRUE vs MEASURED cuts** — true cuts cannot move with shear so their selection term is zero BY
+  CONSTRUCTION; all selection results need measured cuts, applied PER LEG. Includes the two traps:
+  measured `mag<26` is not a no-op (2.5% scatter across the boundary), while measured size cuts below
+  ~0.5" are structurally empty (PSF R50=0.5268", verified numerically from FWHM 0.73"/beta 2.224).
+- **Estimators** — two-means `leg_avg`; self-response isolation on `ghat_p`; extraction must match the
+  catalogue (forward vs antithetic; the recorded 0.49-vs-0.60 trap); CRN; and the rule that the model
+  must RE-SELECT on its own sampled measurements rather than inherit the sim's mask.
+- **Leg matching** — both-detected is the default and REMOVES the detection selection effect by
+  construction (~-0.9% global, ~-1.1% blended), so detection work must not restrict to it. The
+  detection estimator itself is deliberately NOT restated; the file points at the stage-3 record
+  instead, to avoid a second drifting definition.
+- **`m` and relatives** — one sign convention `m = R_sim/R_model - 1`; the table of (1) pure
+  selection / (3) measured shift / (4) model shift / `dm`; the two-term decomposition of (3)
+  (population re-weighting vs moving boundary) with the worked `mag<25` and `R>0.70"` examples; the
+  retracted (1)-vs-(3) normalisation claim recorded as a caveat, not a correction; per-seed error
+  formation; and the mean-of-ratios vs ratio-of-means note (-0.239 vs -0.245).
+- **Checklist** of 12 items for a new test.
+
+All cited line numbers and the PSF R50 were verified against the source before writing, not recalled.
+
+## 2026-07-31d (SEED CONVENTION clarified: fig4 is a 16-seed table; third panel removed)
+
+Owner clarified the seed convention and it changes what fig4 is. **The split is by which FLOW OUTPUT
+drives the reported number, not by shape-vs-selection:**
+
+- **e (`measured_ngmix_g1/g2`) response -> 16 seeds** — any `m`, any absolute shear response.
+- **flux / size outputs -> 4 seeds** — flux/size-response validation, proxies, threshold calibration.
+
+**This makes fig4 a 16-seed figure, not a 4-seed one.** My earlier "shape 16 / selection 4" wording
+was too loose and is what led to a 4-seed table. A selection table CUTS on measured flux and size, so
+it looks like a 4-seed job — but the flux/size outputs only decide WHICH objects enter the average;
+the number reported is `m`, a bias on the SHAPE response of that subset. The e-response standard
+binds. Rule of thumb now recorded: **ask what the reported number IS, not what the cut is on.**
+
+Cost of having got this wrong: the 4-seed table carried `+-0.43%` on its `m` column, ~3x the 16-seed
+error and too coarse to test the `+-0.3%` target that is the table's whole purpose. Its no-cut row
+read `-0.239 +- 0.430%` against the 16-seed `-0.123 +- 0.152%` — the SAME quantity on the SAME
+11,674,408 galaxies, the gap driven almost entirely by s503 (a `-1.41%` outlier carrying 1/4 of the
+weight instead of 1/16). Verified: the mean of fig3's first four per-seed values (+0.658, -0.040,
+-1.411, -0.163) is exactly -0.239%.
+
+**CHANGED**
+- `jobs/job_constgold_neardomain.sh`: `SEEDS` default 4 -> all 16; `--time` 06:00 -> 10:00;
+  `--line-buffered` on the grep so progress is visible mid-run. Job 15393338.
+- `plotting/plot_fid_flow_figures.py`: fig4's THIRD PANEL REMOVED (owner's call) — back to two
+  panels, the shift and the residual bias `m`. `dm` is still computed, stored in the npz and printed
+  by the table script; it is just no longer plotted. It only existed to work around 4-seed noise in
+  the absolute `m` column, and at 16 seeds `m` is precise enough on its own.
+- `AGENTS.md`: "Ensemble Seed Convention" rewritten around the output-based split, with the worked
+  example; the seed setup is now also named in the "Fiducial Model" section as part of the fiducial
+  setup, per owner's request.
+- Workspace memory `feedback_seed_convention.md` + `MEMORY.md` index updated to match.
+
+**NOTE ON THE PREVIOUS ENTRY (2026-07-31c).** Its result table and its "read dm, not absolute m"
+recommendation were written under the 4-seed run. The NUMBERS there are correct for 4 seeds, but the
+recommendation is superseded: at 16 seeds the absolute `m` column is the thing to read. The 16-seed
+table replaces it; entry 2026-07-31c is kept for the sign-convention and per-seed-error fixes, which
+stand unchanged.
+
+**NEXT:** re-render fig1-5 from the 16-seed npz once 15393338 lands and check whether the one-sided
+`+0.31 to +0.77%` excess seen at 4 seeds survives at 16-seed precision.
+
+## 2026-07-31c (fig1-5 review: SIGN BUG in fig4 fixed, per-seed errors, full-population table)
+
+Owner asked for a full review of how fig1-5 were made (plotting, model/catalogue consistency), and
+specifically what "no cut" means given that the mag<26 and R>0.3" rows barely differ from it.
+
+**WHAT "NO CUT" MEANS.** The population is already restricted on TRUE properties to the emulator's
+in-domain box (mag<26, 0.3<Re<1.5). "No cut" = no further MEASURED cut, NOT an unselected catalogue.
+The two rows differ from no-cut for different reasons and must not be lumped together:
+- measured `mag<26` keeps 97.5% and IS a real cut -- measurement scatter pushes 2.5% of a true-mag<26
+  population past measured 26, and it carries a genuine +0.308% selection excess.
+- measured `R>0.30"` keeps 99.99975% and is a NO-OP, but not because of the true size cut: the PSF
+  floors measured `flux_radius` at R50=0.527", so nothing lands below 0.30" whatever its true size.
+  Same for `R>0.40"`. These two rows are structurally empty cuts.
+
+**BUG FOUND AND FIXED -- TWO OPPOSITE SIGN CONVENTIONS IN ONE FIGURE.** `m at no cut` was
+`R_sim/R_model - 1` (the project convention, AGENTS.md and fig3) while the `m_flow` column was
+`R_model/R_sim - 1`. Mirrored. The `R>0.30"` row keeps 99.99975% of the population and so IS the
+no-cut case, yet plotted at +0.247% against a no-cut reference line at -0.245% -- an exact null
+rendered as a 0.49-pt disagreement. Everything is now `sim/model - 1`. AGENTS.md gained a "Sign
+convention" subsection recording this so it cannot be reintroduced.
+
+**BUG FOUND AND FIXED -- ERRORS BUILT FROM ENSEMBLE MEANS, NOT PER-SEED RATIOS.** Column (4)'s error
+was `sem(R_model(cut))/R_model(no cut)`: the numerator's seed scatter propagated alone, ignoring that
+numerator and denominator move together seed to seed. The tell was a flat +-0.43% on every row
+regardless of cut severity. Ratios are now formed INSIDE each seed and the spread taken across seeds.
+Confirmed by the rerun -- column (4) errors collapsed from a flat ~+-0.43 to +-0.000 to +-0.190.
+
+  This also sharpens the seed convention, and AGENTS.md now says which column the cancellation
+  covers. `dm` and column (4) are model-vs-model / difference-of-m, so the common-mode seed offset
+  cancels (+-0.02 to +-0.16) and 4 seeds is genuinely enough. Absolute `m` AT a cut is model-vs-SIM
+  and the sim side has no seed dependence, so it keeps the full +-0.43 no-cut seed error. **Read
+  `dm`; take absolute m from the 16-seed dumps.**
+
+**FULL-POPULATION TABLE (job 15385639 then 15389640).** `--max-rows` now defaults to 0. The earlier
+4M subsample was confirmed by direct test to be the whole source of the -0.376 vs -0.123 confusion:
+on the full 11,674,408 the 4-seed table gives **-0.239 +- 0.430%**, matching the 4-seed dumps value
+-0.239% exactly (was off by 0.25 pt when subsampled). AGENTS.md updated from inference to confirmed.
+
+**RESULT TABLE** (constgold, in-domain, N=11,674,408, 4 seeds, job 15389640):
+
+| cut | keep | (1) pure sel | (3) measured | (4) MODEL | m | **dm** |
+|---|---|---|---|---|---|---|
+| mag<26 | 0.975 | -0.346% | +1.454% | +1.143 +-0.021 | +0.069 +-0.451 | **+0.308 +-0.022** |
+| mag<25.5 | 0.863 | -0.273% | +7.633% | +6.823 +-0.073 | +0.518 +-0.433 | **+0.757 +-0.069** |
+| mag<25 | 0.683 | -0.077% | +16.753% | +15.996 +-0.190 | +0.411 +-0.344 | **+0.650 +-0.163** |
+| R>0.30" | 1.000 | -0.000% | -0.000% | +0.001 +-0.000 | -0.240 +-0.430 | **-0.001 +-0.000** |
+| R>0.40" | 1.000 | -0.004% | -0.003% | +0.007 +-0.000 | -0.249 +-0.431 | **-0.010 +-0.000** |
+| R>0.60" | 0.967 | +1.308% | +3.138% | +2.352 +-0.012 | +0.527 +-0.432 | **+0.766 +-0.012** |
+| R>0.70" | 0.792 | +5.438% | +11.933% | +7.040 +-0.167 | +4.320 +-0.309 | **+4.559 +-0.145** |
+| mag<26 & R>0.30" | 0.975 | -0.346% | +1.454% | +1.143 +-0.021 | +0.069 +-0.451 | **+0.308 +-0.022** |
+| mag<25 & R>0.40" | 0.683 | -0.077% | +16.754% | +15.997 +-0.190 | +0.412 +-0.344 | **+0.651 +-0.163** |
+| S/N>8 (*) | 0.979 | -0.384% | +1.105% | +0.742 +-0.019 | +0.120 +-0.449 | **+0.359 +-0.020** |
+| S/N>9 (*) | 0.943 | -0.603% | +2.938% | +2.298 +-0.035 | +0.386 +-0.460 | **+0.625 +-0.037** |
+| S/N>10 (*) | 0.897 | -0.758% | +5.245% | +4.479 +-0.051 | +0.493 +-0.455 | **+0.732 +-0.050** |
+
+The two no-op rows returning dm = -0.001 and -0.010 is a clean null and validates the machinery.
+Every real near-domain cut sits at dm = +0.31 to +0.77%, i.e. just OUTSIDE the +-0.3% target and
+one-sided positive. `R>0.70"` remains the known failure at +4.56%.
+
+**WHAT COLUMN (3) ACTUALLY CONTAINS (owner's question).** It mixes two things: (a) POPULATION
+RE-WEIGHTING -- a fixed shear-independent cut changes which galaxies are averaged and R varies
+strongly with brightness/size; not a bias, but the model must reproduce it (that is figure 2); and
+(b) MOVING-BOUNDARY selection -- the cut is on MEASURED quantities so the boundary moves with shear.
+Column (1) isolates (b): it feeds the SAME intrinsic shape to both legs (verified in `leg_avg`), so a
+shear-independent population change cancels exactly and a cut keeping identical objects gives 0.
+(3) minus (1) is roughly the (a) part. `mag<25` is +16.75% total of which only -0.08% is boundary
+(nearly all re-weighting -- bright galaxies have high R); `R>0.70"` is +11.93% with a +5.44% boundary
+term. Documented in the script docstring.
+
+**A CLAIM I MADE AND THEN RETRACTED.** I first reported column (1)'s denominator as wrong (it uses
+R_sheared ~ 1.00 while (3)/(4) use R_meas ~ 0.86, so ~14% small on a shared axis). That was
+over-confident: (1) averages INTRINSIC shapes and (3) MEASURED ones, and measured shapes are diluted
+relative to intrinsic, so the scale change needs that dilution factor too and the two corrections
+oppose. The factor is unmeasured, so neither normalisation can be asserted correct. Column (1) is
+left AS DEFINED and the figure plots it; `pure_sel_meas` is saved beside it as a diagnostic only.
+
+**FIGURE CHANGES** (`plotting/plot_fid_flow_figures.py`):
+- fig4 is now THREE panels: the shift (sim vs model vs pure selection), absolute `m` at the cut, and
+  the new `dm` excess panel -- the quantity 4 seeds actually measures well.
+- keep fraction printed on every fig4 tick label, so a structurally-empty cut cannot pass for a real
+  one.
+- fig4's `suptitle` REMOVED (figs 1/2/3/5 have none; owner's plotting default is no titles).
+- `_robust_xlim`: fig4's m/dm panels scale to the 85th percentile, not to the worst row. `R>0.70"`
+  alone squashed every sub-1% row onto zero and hid the +-0.3% band. Off-scale rows are drawn as edge
+  arrows WITH their value printed, so nothing is hidden.
+- fig4 caption numbers are read from the npz (`n_rows`, `dom_mag_max`, `dom_re_min`) and fig3's
+  16-seed m is PASSED IN from its own computation. I had briefly hardcoded both; that is exactly the
+  pasted-constant failure mode in AGENTS.md "Numerical Integrity" and was removed before rendering.
+- fig4 REFUSES to plot an npz predating this fix (no `dm` key) rather than silently mixing schemas.
+- fig1: the ensemble-mean line goes dotted where seeds have early-stopped and the plateau is read off
+  the all-seeds-alive region, so a survivor-only tail cannot masquerade as the ensemble. All 16
+  dom6x6 seeds ran the full 80 epochs, so nothing changes visually here.
+
+**CONSISTENCY CHECKS THAT PASSED.** fig2/3 (dumps -> tuned-lookup join) and fig4 (catalogue -> domain
+cut -> lookup) land on the SAME 11,674,408 galaxies by two independent paths, with R_sim 0.86050 vs
+0.8605 and R_blend 0.13578 vs 0.1358. Both paths DROP lookup-unmatched rows rather than zero-filling,
+so the +28.9% coverage trap is guarded in both. fig5's 16 seed columns are all distinct (the earlier
+`split("_s")` collision is fixed) and its population box is identical to fig2's (mag<26, 0.3<Re<1.5),
+differing only in sim and case range (half-shear 0-39 vs constgold 40-139). Seed convention respected
+throughout: 16/16/16/4/16. No hardcoded constants anywhere.
+
+**ALSO:** `scripts/eval_selection_neardomain.py` (half-shear sibling) uses the same inverted `m_flow`
+= model/sim - 1. It is INTERNALLY consistent so the mirroring bug does not occur there, and its
+definitions were left as the owner set them -- but a SIGN WARNING was added to its docstring so its
+numbers are not placed beside a project `m` without negating.
+
+**KNOWN WART:** job 15389640's log footer text is stale relative to the script (the job started
+before the docstring/footer edits landed, so it still prints the retracted "(1b) reads ~14% small"
+line and refers to `m_flow`). The npz and the numbers are correct; only that log's explanatory text
+is out of date.
+
+**COMMANDS:** `sbatch jobs/job_constgold_neardomain.sh` (15385639 full-population, 15389640 with
+per-seed errors + sign fix); `sbatch jobs/job_fid_figures.sh` (15391041). Added `--line-buffered` to
+the latter's grep so progress is visible mid-run; the other job scripts still block-buffer.
+
+**NEXT:** every real near-domain cut sits at dm = +0.31 to +0.77%, one-sided positive and just
+outside the +-0.3% target. That one-sidedness is now measured with ~+-0.02-0.16 errors, so it is a
+real signal and not seed noise -- it is the next thing to chase.
+
 ## 2026-07-31b (fig1-5 under the fiducial model; fig4 cut list revised; fig5 = SELF response)
 
 **FIGURE SET** `plotting/plot_fid_flow_figures.py`, `jobs/job_fid_figures.sh` (job 15372843).

@@ -18,6 +18,15 @@ THE TWO NUMBERS (owner's definitions, unchanged):
     m_sel  = R_sim(cut)   / R_sim(no cut) - 1      the shift the SIM has
     m_flow = R_model(cut) / R_sim(cut)   - 1       the bias the MODEL has predicting it
 
+SIGN WARNING -- `m_flow` HERE IS THE INVERSE OF THE PROJECT `m`. The project convention (AGENTS.md,
+fig3, `scripts/eval_selection_constgold_neardomain.py`) is `m = R_sim/R_model - 1`; this script's
+`m_flow` is `R_model/R_sim - 1`, so its sign is flipped relative to every `m` quoted elsewhere. It is
+internally consistent -- both numbers above and the no-cut reference use the same convention, so the
+mirroring bug that hit the constgold table (an inverted cut column read against a no-cut line in the
+project convention) does not occur here. But do NOT put a number from this script beside a project
+`m` without negating it first. The definitions are left as the owner set them; this note exists so
+the difference is visible at the point of use.
+
 CUT AXES. All on MEASURED quantities, which is what an analysis actually cuts on:
   * magnitude   -- at and just inside the training edge (26.0, 25.5, 25.0)
   * size        -- around the PSF half-light radius R50 = 0.527", which is where the size-axis

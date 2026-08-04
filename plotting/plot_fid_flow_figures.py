@@ -4,8 +4,9 @@
   figures/fid_fig2_response_vs_properties.png -- model vs true response across primary flux,
                                                  primary size and neighbour/blend flux
   figures/fid_fig3_bias_true_neighbours.png   -- per-seed multiplicative bias m
-  figures/fid_fig4_selection_near_domain.png  -- selection bias at near-domain measured cuts,
-                                                 sim vs model, and the residual bias m_flow
+  figures/fid_fig4_selection_near_domain.png  -- selection bias at near-domain MEASURED cuts:
+                                                 the shift, the residual bias m at the cut, and the
+                                                 selection-induced excess dm over no-cut
   figures/fid_fig5_selfresp_halfshear.png     -- SELF response only: flow alone vs half-shear
                                                  R_self (fig2 without the emulator's freedom)
 
@@ -34,8 +35,26 @@ Sources
   fig2-3: per-object dom6x6 constgold dumps in `derisk/v2_domain_dumps`, one per seed. R_sim is
           seed-independent and R_blend now comes from the tuned lookup, so the 16-seed spread IS
           the model uncertainty.
-  fig4:   `results/constgold_neardomain_table.npz`, written by the near-domain selection job. Per
-          the seed convention that is a 4-seed run (selection), while fig1-3 use all 16 (shape).
+  fig4:   `results/constgold_neardomain_table.npz`, written by the near-domain selection job. It is a
+          16-SEED run like fig1-3. The seed convention splits by which FLOW OUTPUT drives the number
+          (e/shape -> 16, flux/size -> 4), and although fig4's CUTS are on flux and size, the
+          quantity it reports is `m` -- a bias on the SHAPE response. So the e-response standard
+          binds and 16 seeds are required. An earlier 4-seed version of this table carried +-0.43% on
+          the m column, nearly 3x the 16-seed error and too coarse to test the +-0.3% target.
+
+WHAT "NO CUT" MEANS IN FIG 4. The population is already restricted on TRUE properties to the
+emulator's in-domain box (mag<26, 0.3<Re<1.5); "no cut" means no further MEASURED cut, not an
+unselected catalogue. The two are not the same thing, and the rows behave differently for different
+reasons: measured `mag<26` still removes 2.5% (measurement scatter across a boundary the true cut
+already applied) and carries a real selection excess, whereas measured `R>0.30"` removes nothing --
+not because of the true size cut but because the PSF floors measured flux_radius at R50=0.527", so
+no object can land below 0.30" whatever its true size. Keep fractions are printed on the tick labels
+precisely so a structurally-empty cut cannot be mistaken for a passing one.
+
+SIGN CONVENTION IS UNIFORM: every m here is sim/model - 1, matching fig3 and AGENTS.md. The previous
+fig4 plotted the residual as model/sim - 1 against a no-cut line at sim/model - 1, which mirrored the
+two: the `R>0.30"` no-op row sat at +0.247% against a no-cut line at -0.245%, making an exact null
+look like a 0.49-pt disagreement.
 
   m = R_sim / (R_flow^seed + R_blend) - 1, the same parameter-free estimator as V1/V2.
 
@@ -134,9 +153,23 @@ def figure1(out_dir):
 
     for i in range(len(seeds)):           # replicates: one hue, no per-seed legend entries
         ax.plot(ep, stack[i], color=BLUE, lw=1.0, alpha=0.40, zorder=2)
-    ax.plot(ep, np.nanmean(stack, axis=0), color=BLUE, lw=2.4, zorder=4)
 
-    plateau = float(np.nanmedian(stack[:, -12:]))
+    # Seeds early-stop at different epochs, so past the shortest run the "ensemble mean" is a mean
+    # over a SHRINKING subset -- its meaning changes along x, and a survivor-only tail can drift
+    # simply because the seeds that ran longer were the ones still improving. Draw it solid only
+    # where every seed is alive, dotted where it is a partial mean, and read the plateau off the
+    # all-alive region.
+    alive = np.isfinite(stack).sum(axis=0)
+    full = alive == len(seeds)
+    mean = np.nanmean(stack, axis=0)
+    ax.plot(np.where(full, ep, np.nan), np.where(full, mean, np.nan),
+            color=BLUE, lw=2.4, zorder=4)
+    if not full.all():
+        ax.plot(np.where(~full, ep, np.nan), np.where(~full, mean, np.nan),
+                color=BLUE, lw=2.4, ls=":", zorder=4)
+
+    last_full = int(np.max(np.flatnonzero(full))) if full.any() else len(ep) - 1
+    plateau = float(np.nanmedian(stack[:, max(0, last_full - 11):last_full + 1]))
     ax.axhline(plateau, color=MUTED, lw=1.0, ls=":", zorder=1)
 
     lo = float(np.nanmin(stack))
@@ -153,10 +186,13 @@ def figure1(out_dir):
                     ha="center", va="bottom", fontsize=8.5, color="#0b6b52")
     ax.annotate(f"plateau {plateau:.3f}", xy=(0.03, plateau), xycoords=("axes fraction", "data"),
                 ha="left", va="bottom", fontsize=8.5, color=MUTED)
-    ax.legend(handles=[Line2D([], [], color=BLUE, lw=2.4, label="ensemble mean"),
-                       Line2D([], [], color=BLUE, lw=1.0, alpha=0.40,
-                              label=f"individual seeds ({len(seeds)})")],
-              loc="upper right")
+    handles = [Line2D([], [], color=BLUE, lw=2.4, label=f"ensemble mean (all {len(seeds)} seeds)"),
+               Line2D([], [], color=BLUE, lw=1.0, alpha=0.40,
+                      label=f"individual seeds ({len(seeds)})")]
+    if not full.all():
+        handles.insert(1, Line2D([], [], color=BLUE, lw=2.4, ls=":",
+                                 label="partial mean (some seeds stopped)"))
+    ax.legend(handles=handles, loc="upper right")
     fig.text(0.5, -0.01, f"fiducial: {TAG}  |  seeds: " + ", ".join(f"s{s}" for s in seeds),
              ha="center", va="top", fontsize=8, color=MUTED)
     return save(fig, out_dir, "fid_fig1_seed_loss")
@@ -383,7 +419,7 @@ def _bias_figure(loaded, out_dir, stem):
     seeds, ref, flows = loaded
     if not seeds:
         print("[fid_fig3] no per-object dumps yet -> SKIPPED")
-        return None
+        return None, None
     R_sim = float(np.mean(ref["r_sim"].to_numpy(float)))
     R_blend = float(np.mean(ref["R_blend"].to_numpy(float)))
     R_flow = np.array([float(np.mean(flows[i].astype(float))) for i in range(len(seeds))])
@@ -427,15 +463,44 @@ def _bias_figure(loaded, out_dir, stem):
     for s, rf_, mi in zip(seeds, R_flow, m):
         print(f"    s{s}  R_flow={rf_:.4f}  R_total={rf_+R_blend:.4f}  m={mi:+.3f}%")
     print(f"  ENSEMBLE m = {m_mean:+.3f} +- {m_sem:.3f}%  (std {m_std:.3f}%, N={len(m)})")
-    return p
+    return p, (m_mean, m_sem, len(m))
 
 
 def figure3(loaded, out_dir):
     return _bias_figure(loaded, out_dir, "fid_fig3_bias_true_neighbours")
 
 
-def figure4(out_dir):
+def _robust_xlim(ax, vals, y, floor=1.0):
+    """Scale to the BULK and label whatever falls outside, rather than to the worst row.
+
+    One known-bad cut (R>0.70") is several times the size of every other row, so scaling to it
+    squashes the sub-1% rows -- the ones the +-0.3% target is about -- onto the zero line and makes
+    the target band invisible. Out-of-range points are drawn at the edge as arrows WITH their value
+    printed, so nothing is hidden: the reader sees both that the row is off-scale and by how much.
+    """
+    v = np.asarray(vals, float)
+    fin = v[np.isfinite(v)]
+    if not len(fin):
+        return
+    lim = max(floor, float(np.percentile(np.abs(fin), 85)) * 1.35)
+    ax.set_xlim(-lim, lim)
+    for vi, yi in zip(v, y):
+        if np.isfinite(vi) and abs(vi) > lim:
+            s = np.sign(vi)
+            ax.plot(s * lim * 0.965, yi, marker=">" if s > 0 else "<", ms=9,
+                    color=INK, clip_on=False, zorder=6)
+            ax.annotate(f"{vi:+.2f}%", xy=(s * lim * 0.93, yi), ha="right" if s > 0 else "left",
+                        va="center", fontsize=8, color=INK,
+                        bbox=dict(fc="white", ec="none", alpha=0.85, pad=1.0), zorder=7)
+
+
+def figure4(out_dir, shape16=None):
     """Selection bias under near-domain measured cuts -- sim vs the fiducial model.
+
+    `shape16` is (m, sem, nseed) computed by figure 3 from the 16-seed dumps in THIS run, passed in
+    so the caption's shape reference is a live number rather than a transcribed one. It is the same
+    population as this table (both land on the emulator's in-domain box), so the two are directly
+    comparable: the table's no-cut m is the 4-seed selection-run counterpart of it.
 
     Replaces V1's `fig4_bias_prob_neighbours`, which was DELETED rather than regenerated: it applied
     a hardcoded R_blend + 0.0017 inherited from a 2026-07-09 forward-model residual, so remaking it
@@ -449,62 +514,100 @@ def figure4(out_dir):
               "(run jobs/job_constgold_neardomain.sh first)")
         return None
     z = np.load(TABLE_NPZ, allow_pickle=True)
+    if "dm" not in z.files:
+        raise SystemExit(
+            f"{TABLE_NPZ} predates the sign/error fix (no `dm`). Its `m_flow` column was "
+            "model/sim-1 while the no-cut line was sim/model-1, so the two were mirrored, and its "
+            "errors came from ensemble means rather than per-seed ratios. Re-run "
+            "jobs/job_constgold_neardomain.sh.")
     name = [str(x) for x in z["name"]]
+    keep = z["keep"]
+    # Column (1) AS DEFINED (denominator = sheared-intrinsic R ~ 1.00), not the /R_meas variant.
+    # It is tempting to renormalise it by R_meas (~0.86) so it shares (3)'s denominator, but that is
+    # only half the conversion: (1) averages INTRINSIC shapes while (3) averages MEASURED ones, and
+    # measured shapes are diluted relative to intrinsic. Putting (1) on (3)'s scale needs that
+    # dilution factor as well, and the two corrections work in opposite directions and largely
+    # cancel. The factor has not been measured, so neither normalisation can be asserted as correct
+    # and the defined one is kept. `pure_sel_meas` is saved alongside as a diagnostic. Read the
+    # green ticks as "how much of this shift is the moving boundary", qualitatively -- they are not
+    # an exact term-by-term decomposition of (3).
     c1, c3, c4 = z["pure_sel"], z["measured"], z["model_m"]
-    err, mflow, prox = z["model_sem"], z["m_flow"], z["is_proxy"]
+    e4 = z["model_sem"]
+    mcut, emcut, dm, edm, prox = z["m_cut"], z["m_cut_err"], z["dm"], z["dm_err"], z["is_proxy"]
     m_nc, e_nc = float(z["m_nocut"]), float(z["m_nocut_err"])
     y = np.arange(len(name))[::-1]          # first row at the top
+    # keep fraction on the tick label: without it a reader cannot tell that the sub-PSF size rows
+    # are structurally empty cuts (measured flux_radius is floored at R50=0.527").
+    ylab = [f"{n}   ({100*k:.1f}%)" for n, k in zip(name, keep)]
 
-    fig, axes = plt.subplots(1, 2, figsize=(12.6, 0.46 * len(name) + 2.9),
-                             gridspec_kw={"width_ratios": [1.35, 1.0]})
+    fig, axes = plt.subplots(1, 2, figsize=(12.8, 0.46 * len(name) + 3.0),
+                             gridspec_kw={"width_ratios": [1.32, 1.0]})
 
     # -- left: the shift itself, sim vs model ------------------------------------------------
     ax = axes[0]
     ax.axvline(0.0, color=MUTED, lw=1.1, ls="--", zorder=1)
-    ax.errorbar(c4, y + 0.16, xerr=err, fmt="s", ms=7, color=VERM, mfc="white", mew=1.6,
+    ax.errorbar(c4, y + 0.16, xerr=e4, fmt="s", ms=7, color=VERM, mfc="white", mew=1.6,
                 lw=1.4, capsize=3, zorder=4, label=r"model  $R_{\rm flow}+R_{\rm blend}$")
     ax.plot(c3, y - 0.16, "o", ms=8, color=BLUE, mec="white", mew=1.0, zorder=4,
             label="sim (measured shapes)")
     ax.plot(c1, y, "|", ms=11, color=GREEN, mew=2.0, zorder=3, label="pure selection")
     ax.set_yticks(y)
-    ax.set_yticklabels(name, fontsize=9)
+    ax.set_yticklabels(ylab, fontsize=9)
     ax.set_ylim(-0.8, len(name) - 0.2)
     ax.set_xlabel(r"shift in response under the cut  [%]")
     ax.legend(loc="lower right", fontsize=9)
 
-    # -- right: the residual bias, which is the number that matters --------------------------
+    # -- middle: residual bias AT the cut, project sign convention (sim/model - 1) -------------
     ax = axes[1]
     ax.axvspan(-0.3, 0.3, color=GREEN, alpha=0.12, lw=0, zorder=0)
     ax.axvline(0.0, color=MUTED, lw=1.1, ls="--", zorder=1)
     ax.axvline(m_nc, color=INK, lw=1.3, ls=":", zorder=2)
-    ax.errorbar(mflow, y, xerr=err, fmt="D", ms=6.5, color=INK, mfc="white", mew=1.5,
+    ax.errorbar(mcut, y, xerr=emcut, fmt="D", ms=6.5, color=INK, mfc="white", mew=1.5,
                 lw=1.3, capsize=3, zorder=4)
     for i, p_ in enumerate(prox):           # proxy rows are not a like-for-like cut
         if p_:
-            ax.plot(mflow[i], y[i], "*", ms=13, color=VERM, zorder=5)
+            ax.plot(mcut[i], y[i], "*", ms=13, color=VERM, zorder=5)
     ax.set_yticks(y)
     ax.set_yticklabels([])
     ax.set_ylim(-0.8, len(name) - 0.2)
-    lim = max(1.0, float(np.nanmax(np.abs(mflow))) * 1.15)
-    ax.set_xlim(-lim, lim)
-    ax.set_xlabel(r"residual bias  $m_{\rm flow}$  [%]")
+    _robust_xlim(ax, mcut, y)
+    ax.set_xlabel(r"residual bias at the cut  $m$  [%]")
     ax.legend(handles=[
         Line2D([], [], color=INK, marker="D", ms=6.5, mfc="white", mew=1.5, ls="none",
-               label=r"$R_{\rm model}/R_{\rm sim}-1$"),
+               label=r"$R_{\rm sim}/R_{\rm model}-1$"),
         Line2D([], [], color=INK, lw=1.3, ls=":", label=f"no cut ({m_nc:+.2f}%)"),
         Patch(fc=GREEN, alpha=0.18, label=r"$\pm0.3\%$ target"),
-        Line2D([], [], color=VERM, marker="*", ms=13, ls="none",
-               label="model cuts a proxy, not this variable")],
+        Line2D([], [], color=VERM, marker="*", ms=13, ls="none", label="model cuts a proxy")],
         loc="lower left", fontsize=8.5)
 
-    fig.suptitle("Selection bias at near-domain cuts -- fiducial model (dom6x6 + tuned emulator)",
-                 fontsize=12, y=0.995)
+    # The selection-induced excess `dm = m(cut) - m(no cut)` is still computed and stored in the npz
+    # (columns `dm` / `dm_err`) and printed by the table script, but is no longer plotted: owner's
+    # call, 2026-07-31. It was added when this table ran at 4 seeds, where the absolute `m` column
+    # was too noisy (+-0.43%) to test against the +-0.3% target and only the seed-cancelling
+    # difference was readable. At 16 seeds the absolute `m` is itself precise enough, so the extra
+    # panel no longer earns its space.
+
+    # Caption numbers are read from the npz or passed in from figure 3's own 16-seed computation --
+    # never transcribed. A stale pasted constant in a caption is the failure mode that got V1's
+    # fig4 deleted.
+    # The table path and the per-object dumps compute the same no-cut m by different routes
+    # (accumulators over the catalogue vs a per-object dump). When they agree, say so once as a
+    # CROSS-CHECK -- printing the identical number twice reads as a copy-paste error and throws away
+    # the fact that two independent paths landed on it. When they disagree, print both, because then
+    # the disagreement is the interesting thing.
+    shape_txt = ""
+    if shape16 is not None:
+        agree = (abs(shape16[0] - m_nc) < 0.002) and (abs(shape16[1] - e_nc) < 0.002)
+        shape_txt = ("  (table and " + str(shape16[2]) + "-seed per-object dumps agree)" if agree
+                     else f"; {shape16[2]}-seed dumps give {shape16[0]:+.3f} $\\pm$ {shape16[1]:.3f}%")
     fig.text(0.5, -0.02,
-             f"constgold, in-domain, {int(z['n_seeds'])} seeds  |  "
+             f"constgold, in-domain (true mag<{float(z['dom_mag_max']):g}, "
+             f"$R_e$>{float(z['dom_re_min']):g}), N={int(z['n_rows']):,} -- cuts are on MEASURED "
+             f"quantities  |  {int(z['n_seeds'])} flow seeds  |  "
              f"$R_{{\\rm sim}}$={float(z['R_sim_meas']):.4f},  "
              f"$R_{{\\rm flow}}$={float(z['R_flow']):.4f} + "
              f"$R_{{\\rm blend}}$={float(z['R_blend']):.4f}  |  "
-             f"no-cut $m$ = {m_nc:+.3f} $\\pm$ {e_nc:.3f}%",
+             f"no-cut $m$ = {m_nc:+.3f} $\\pm$ {e_nc:.3f}%{shape_txt}",
              ha="center", va="top", fontsize=8.5, color=MUTED)
     fig.tight_layout()
     return save(fig, out_dir, "fid_fig4_selection_near_domain")
@@ -609,16 +712,19 @@ def main():
 
     if args.only in (None, "1"):
         figure1(out_dir)
+    shape16 = None
     if args.only in (None, "2", "3"):
         loaded = load_dumps()
         print(f"per-object dumps found: {loaded[0]}")
         if args.only in (None, "2"):
             figure2(loaded, out_dir)
         if args.only in (None, "3"):
-            figure3(loaded, out_dir)
+            _, shape16 = figure3(loaded, out_dir)
     if args.only in (None, "4"):
-        # fig4/fig5 read saved tables, not the dumps, so they need no `loaded`.
-        figure4(out_dir)
+        # fig4/fig5 read saved tables, not the dumps, so they need no `loaded`. `shape16` is the
+        # 16-seed m figure 3 just computed; with `--only 4` it is None and the caption omits it
+        # rather than falling back to a transcribed value.
+        figure4(out_dir, shape16=shape16)
     if args.only in (None, "5"):
         figure5(out_dir)
     print("PLOT_FID_FLOW_FIGURES_DONE")

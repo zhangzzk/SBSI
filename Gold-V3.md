@@ -4,6 +4,29 @@
 2026-07-28 IDEA draft (kept below where still correct, marked where retracted). Builds on
 `Gold-V2.md` (R_blend deliberately external) and `INFERENCE.md` (§3, §5B, §5C.3).
 
+> **UPDATE 2026-08-02 — four findings bear on this design; one changes its central decision.**
+> Detail in `PLAN_resolution.md` Phase 6; evidence in `WORKLOG.md` 2026-08-01i/r/s.
+>
+> 1. **A second, independent failure axis for BlendEMU.** Besides the −41.5% close-pair deficit below
+>    1″, `R_blend` is **3.1× too flat in TRUE SIZE** (spans 0.116–0.145 where the required value spans
+>    0.071–0.160; 24% low at Re≈0.93, 71% high at Re≈1.41) — while being right to **0.8% globally**.
+>    Two unrelated failure axes strengthen the "representational limit" case for replacement.
+> 2. **The two-flows-vs-one decision should now be made by a measurement, not deferred.** The risk
+>    listed below as "linearity is BlendEMU's assumption, not a theorem" is testable, and there is a
+>    live hint it fails (required `R_blend` goes NEGATIVE at S/N≈121). **Two flows still assume
+>    `R_total = R_self + R_blend`** — they only change what supplies the second term. If additivity
+>    fails, two flows inherit the failure and only an integrated model escapes it.
+> 3. **Flow #2 would INHERIT the realisation defect.** This document predates 2026-08-01r: the shear
+>    response lives entirely in the mean head `_mu(c)` and is added identically to every draw, so a
+>    measured cut cannot select on it. That is an architecture property, and the spec below — "used
+>    only through its mean-head shift" — is exactly the construction that has no realisation
+>    structure. **Design against it explicitly rather than discovering it after training.**
+> 4. **Outstanding test 3 (close-pair detection selection) now has independent support and a wider
+>    scope.** Sheldon et al. 2020 §4.3 warn that matching detection lists across sheared images
+>    "would introduce the very shear-dependent object detection biases we wish to calibrate" — the
+>    same mechanism. Run it binned by separation **and by true size**; it then also serves
+>    `PLAN_resolution.md` Phase 0d.
+
 ## The idea
 
 Make the flow generate its own blend response, so the external BlendEMU term disappears and the
@@ -195,10 +218,51 @@ Same projection `build_halfsim_flow_catalogue.py` already does for `delta_et1`, 
 ĝ_p. The 45° rotated null test passes at 0.6σ.
 
 **Cost:** the leftover self-response term is `R_self·g_p·cos2Δ`, ~20× the blend signal per row. Zero
-mean, so no bias — but the label is far noisier than `delta_et1`. Rough arithmetic on 4.8M rows:
-~100 bins ⇒ ~48k rows/bin ⇒ noise sem ≈ 5e-5 against a signal ≈ 6e-4, so S/N ≈ 12 per bin. Workable;
-the bin design is not free. Per-row subtraction across legs is *not* available — each
-(case, input_index) appears in exactly one leg of the sheared file.
+mean, so no bias — but the label is far noisier than `delta_et1`. Per-row subtraction across legs is
+*not* available — each (case, input_index) appears in exactly one leg of the sheared file.
+
+> **CORRECTED 2026-08-02 by measurement (job 15478066, then the full ap7 build).** The paragraph here
+> used to end: *"~100 bins ⇒ ~48k rows/bin ⇒ noise sem ≈ 5e-5 against a signal ≈ 6e-4, so S/N ≈ 12
+> per bin. Workable; the bin design is not free."* **That is wrong by more than an order of
+> magnitude, and it was wrong in the optimistic direction.**
+>
+> 1. **The noise was mis-estimated.** The measured per-pair label scatter is `std = 3.93` in response
+>    units — `0.197` in `de` units, not the `1e-3`-scale the `5e-5` implies. 48k rows/bin give
+>    `8.9e-4`, not `5e-5`, so the true per-bin S/N at that design is **~0.7**, not 12. The leftover
+>    self-response is not the dominant cost either: it contributes `R_self·g_p·<cos2Δ> ≈ 0.011` in
+>    `de` units against a total scatter of `0.197`, i.e. under 0.3% of the variance. **The label is
+>    dominated by ordinary ngmix measurement noise that does not cancel between the two legs.**
+> 2. **The binning is unnecessary anyway.** Flow #1 needs a cell grid because its target is a
+>    population mean that only exists per cell. The blend label exists PER PAIR and is unbiased, so a
+>    squared-error regression converges to `E[truth | features]` directly, with the network's
+>    smoothness pooling across the feature space instead of a hand-drawn grid. **Implemented that
+>    way** (`sbs_shear/blend_flow.py`); the bin-design problem is removed rather than solved.
+>
+> **A chain-rule argument that looked like an escape from this floor — TESTED AND REFUTED the same
+> night.** The response factorises:
+>
+> ```
+> R_blend = d(mu_p)/d(g_s) = [ d(mu_p)/d(e_s) ] · [ d(e_s)/d(g_s) ]
+> ```
+>
+> The second factor is the analytic Möbius Jacobian; the first is a property of the **g=0 density
+> alone**, measurable on tens of millions of g=0 rows without any `de/|g|` inflation. I argued from
+> that the NLL would supply the response's dominant channel and the noisy labels would merely
+> calibrate it, so the label floor would not bind.
+>
+> **Job 15478188 (`--response-weight 0`, NLL only) says otherwise.** The density-derived response is
+> **70–85% too low in every separation bin and essentially flat** — 0.0132, 0.0087, 0.0069, 0.0062,
+> 0.0056, 0.0052, 0.0050, 0.0049 from <0.5″ to 7″ — against a truth running 0.0721 → 0.0042 with a
+> bump at 2–3″. The algebra is right; the inference about training was not.
+>
+> The cause is signal-to-SIGNAL, not signal-to-noise: `d(mu_p)/d(e_s) ≈ 0.04` is a ~0.035 correlation
+> between the neighbour's shape and the primary's measured shape, against ~0.8 for the primary's own
+> shape. Maximum likelihood under-fits the weak direction. **So the response supervision carries the
+> load and `--response-weight` is the load-bearing knob; the label floor does bind.**
+>
+> What survives is the structural argument for flow #2 over BlendEMU: **the emulator has no shape
+> information at all**, so that channel is closed to it entirely. What does not survive is the claim
+> that the channel comes for free from the density.
 
 ## CLOSED: the sim shears shapes only (job 15328296)
 

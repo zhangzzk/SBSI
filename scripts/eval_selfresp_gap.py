@@ -35,6 +35,7 @@ import time
 import numpy as np
 import pandas as pd
 import pyarrow as pa
+import pyarrow.compute as pc
 import pyarrow.ipc as ipc
 import pyarrow.feather as pf
 import torch
@@ -43,7 +44,8 @@ SBSI_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if SBSI_ROOT not in sys.path:
     sys.path.insert(0, SBSI_ROOT)
 
-from sbs_shear.measurement_model import load_measurement_model  # noqa: E402
+from sbs_shear.measurement_model import (  # noqa: E402
+    ConditionalMeanFlowRA, load_measurement_model)
 from sbs_shear.preprocessing import (  # noqa: E402
     DEFAULT_SELECTION_CUTS,
     rescale,
@@ -72,17 +74,36 @@ FLOW_COLS = [
 SIZE_EDGES = np.array([0.30, 0.38, 0.50, 0.75, 1.50])
 
 
-def read_leg(path, cols, max_case):
+def read_leg(path, cols, max_case, min_case=None):
+    """Read the needed columns of one half-shear leg, restricted to a CASE RANGE.
+
+    `min_case` is optional and defaults to None, which reproduces the original
+    `case <= max_case` behaviour byte-for-byte (the batch is only touched by the
+    max_case branch). When given, batches that end below `min_case` are skipped
+    without materialising them, so a high case window costs no more IO than a low one.
+    Cases are stored in ascending order, which is what both early exits rely on.
+    """
     parts = []
     with ipc.open_file(path) as r:
         av = set(r.schema.names)
         use = [c for c in cols if c in av]
         for bi in range(r.num_record_batches):
-            b = pa.Table.from_batches([r.get_batch(bi)]).select(use).to_pandas()
+            tbl = pa.Table.from_batches([r.get_batch(bi)])
+            if min_case is not None:
+                # Decide on the ARROW column, before the expensive to_pandas(), so a batch outside
+                # the window costs a min/max instead of a full column conversion.
+                mm = pc.min_max(tbl.column("case")).as_py()
+                if mm["max"] < min_case:
+                    continue
+                if max_case is not None and mm["min"] > max_case:
+                    break
+            b = tbl.select(use).to_pandas()
             if max_case is not None:
                 if int(b["case"].min()) > max_case:
                     break
                 b = b[b["case"] <= max_case]
+            if min_case is not None:
+                b = b[b["case"] >= min_case]
             if len(b):
                 parts.append(b)
     return pd.concat(parts, ignore_index=True) if parts else pd.DataFrame(columns=cols)
@@ -124,6 +145,17 @@ def model_selfresp(base, bundle, delta, difference, device, chunk=400_000):
     """Per-object flow self-response R_flow in ngmix units (mean-head finite difference)."""
     model = bundle.model.to(device)
     model.eval()
+    # FENCE (realisation-aware head). This reads the SHAPE dims (0,1) of the mean head only. For a
+    # ConditionalMeanFlowRA the model's shape response is d/dg [mu + A(c,u)], and A carries a large
+    # part of it, so the mu-only finite difference is simply the WRONG number -- silently. Raise
+    # rather than report it. To unblock, read the response from CRN draws of model.sample (the
+    # scoring path in eval_selection_constgold_neardomain.py) instead of the mean head.
+    if isinstance(model, ConditionalMeanFlowRA):
+        raise NotImplementedError(
+            "eval_selfresp_gap reads R_flow from the MEAN HEAD only (model._mu on dims 0,1) and "
+            "is therefore invalid for a realisation-aware checkpoint: its shape response is "
+            "d/dg[mu(c) + A(c,u)]. Use a 'mean_affine' checkpoint, or extend this readout to "
+            "common-random-number draws of model.sample.")
     pp = bundle.condition_preprocessor
     cond = list(bundle.metadata.get("condition_features", pp.feature_names))
     sc0 = float(bundle.target_transform.scales[0])

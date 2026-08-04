@@ -29,7 +29,7 @@ from __future__ import annotations
 import torch
 from torch import nn
 
-from .measurement_model import ConditionalMeanFlow
+from .measurement_model import ConditionalMeanFlow, ConditionalMeanFlowRA
 from .scene_model import DeepSetsConditioner
 
 
@@ -110,6 +110,15 @@ class SetConditionedForwardModel(nn.Module):
             scale_limit=scale_limit,
             activation=activation,
         )
+        # FENCE (realisation-aware head). `mu()` and `log_prob_obs()` below hand-roll
+        # `target - mean_flow._mu(context)`. For a ConditionalMeanFlowRA the residual is
+        # `x - mu(c) - A(c, u)`, so those two would be WRONG rather than stale, and silently so.
+        # The constructor only ever builds a plain ConditionalMeanFlow today; this assertion makes
+        # a future swap fail loudly instead.
+        if isinstance(self.mean_flow, ConditionalMeanFlowRA):
+            raise NotImplementedError(
+                "SetConditionedForwardModel hand-rolls x - mu(c) and does not support "
+                "ConditionalMeanFlowRA (residual is x - mu(c) - A(c, u)).")
         if det_layers < 1:
             raise ValueError("det_layers must be >= 1")
         act = _act(activation)

@@ -33,7 +33,8 @@ for p in (SBSI_ROOT, SCRIPTS):
         sys.path.insert(0, p)
 
 import infer_posterior_shape as ips  # noqa: E402
-from sbs_shear.measurement_model import load_measurement_model  # noqa: E402
+from sbs_shear.measurement_model import (  # noqa: E402
+    ConditionalMeanFlowRA, load_measurement_model)
 from sbs_shear.preprocessing import (  # noqa: E402
     DEFAULT_SELECTION_CUTS,
     rescale,
@@ -69,6 +70,16 @@ def main():
     device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
     print(f"device={device}  model={os.path.basename(args.measurement_model)}")
     bundle = load_measurement_model(args.measurement_model, device=device)
+    # FENCE (realisation-aware head). U is defined as < ehat - mu_flow >, i.e. it assumes the
+    # model's conditional mean IS mu(c). For a ConditionalMeanFlowRA it is mu(c) + E_u[A(c,u)],
+    # so every residual below -- and the polynomial fitted to them -- would be biased by the
+    # A term with nothing raising. It is also consumed by infer_posterior_shape, which itself
+    # refuses RA models (PosteriorShapeEstimator fence).
+    if isinstance(bundle.model, ConditionalMeanFlowRA):
+        raise NotImplementedError(
+            "build_mu_correction subtracts model._mu as the conditional mean; for a "
+            "realisation-aware checkpoint the conditional mean is mu(c) + E_u[A(c,u)] and the "
+            "fitted U would be biased. Use a 'mean_affine' checkpoint.")
     rk = {k: getattr(args, k) for k in optics}
 
     tnames = bundle.target_transform.target_names

@@ -616,6 +616,18 @@ class ConditionalMeanFlow(nn.Module):
     def _flow_ctx(self, context):
         return context.index_select(1, self.keep_indices)
 
+    def _shift(self, context, u=None):
+        """Additive shift applied to the residual-flow draw / subtracted in log_prob.
+
+        The BASE class ignores `u` and returns exactly mu(context), so every existing call
+        site (and the fiducial arithmetic) is unchanged.  Subclasses that make the shift
+        REALISATION-AWARE (ConditionalMeanFlowRA) use `u`, the per-draw residual on the
+        `ra_indices` channels.  Callers that build a response by differencing mu across
+        shifted contexts MUST go through `_shift(ctx, u)` -- see the trainer -- or the
+        realisation-aware part of the response is silently left unsupervised.
+        """
+        return self._mu(context)
+
     @torch.no_grad()
     def set_ols_mean_and_freeze(self, context_std, target_std):
         """Fit the linear mean head by OLS on standardized (context, target) and freeze it.
@@ -652,6 +664,120 @@ class ConditionalMeanFlow(nn.Module):
         return s + self._mu(context)[:, None, :]
 
 
+class ConditionalMeanFlowRA(ConditionalMeanFlow):
+    """REALISATION-AWARE mean head (design `mean_affine_ra`).
+
+        p(x|c) = p_resid( x - mu(c) - A(c, u) | c ),      u = (x - mu(c))[ra_indices]
+
+    THE DEFECT IT TARGETS.  In `ConditionalMeanFlow` the residual flow is deliberately blind to
+    the shape features, so the WHOLE shear response lives in the linear/MLP mean head mu(c) and
+    is added IDENTICALLY to every draw of an object.  Within one object every draw therefore
+    carries the same response, fixed by its TRUE properties: the model cannot represent the fact
+    that a particular measurement realisation came out faint/small and so has a collapsed
+    response.  A(c, u) restores exactly that: an additive shift on the SHAPE channels whose value
+    depends on the drawn photometry residual u (measured mag and log-size, target dims 2 and 3).
+
+    TRIANGULAR BY CONSTRUCTION.  `ra_targets` (shape channels 0,1) and `ra_indices` (photometry
+    channels 2,3) are disjoint, so A never moves the channels it reads.  The map
+    r -> r - A(c, r[ra_indices]) is therefore triangular with unit diagonal: |det J| = 1 and the
+    density needs NO log-det term.  The same disjointness makes the sampling inverse closed-form
+    (the drawn residual's ra_indices channels are already the final ones), so `sample` costs one
+    extra MLP pass and no iteration.
+
+    EXACT REDUCTION.  `ra_net`'s output layer is zero-initialised, so A == 0 at init and both
+    `log_prob` and `sample` are bit-identical to the parent class.  That makes a warm start from
+    an existing `mean_affine` checkpoint exact (`load_state_dict(..., strict=False)`).
+
+    SCOPE.  A is zero on channels 2,3 by construction, so the drawn mag and size -- and hence any
+    moving measured-cut boundary -- are UNCHANGED.  This design addresses the response VALUE, not
+    the selection/boundary channel.
+    """
+
+    def __init__(self, target_dim, context_dim, base_flow="affine", mean_hidden=0,
+                 mean_activation="silu", flow_drop_indices=None,
+                 ra_hidden=64, ra_activation="silu",
+                 ra_indices=(2, 3), ra_targets=(0, 1), **kwargs):
+        # SWALLOW TRAP. Both ConditionalMeanFlow and ConditionalAffineFlow end in a bare **kwargs,
+        # so an unknown key reaches neither an error nor an effect: `ra_hiden=32` silently builds
+        # the DEFAULT width, `ra_target=[2,3]` silently keeps ra_targets=(0,1). Nothing in the RA
+        # namespace may be swallowed -- no legitimate flow kwarg starts with "ra".
+        stray = sorted(k for k in kwargs if k.startswith("ra"))
+        if stray:
+            raise ValueError(
+                f"unknown realisation-aware key(s) {stray} would be silently swallowed by the "
+                "flow's **kwargs; valid RA keys are ra_hidden, ra_activation, ra_indices, "
+                "ra_targets")
+        super().__init__(target_dim=target_dim, context_dim=context_dim, base_flow=base_flow,
+                         mean_hidden=mean_hidden, mean_activation=mean_activation,
+                         flow_drop_indices=flow_drop_indices, **kwargs)
+        ridx = [int(i) for i in ra_indices]
+        rtgt = [int(i) for i in ra_targets]
+        if not ridx or not rtgt:
+            raise ValueError("ra_indices and ra_targets must be non-empty")
+        if set(ridx) & set(rtgt):
+            raise ValueError(
+                f"ra_indices {ridx} and ra_targets {rtgt} must be DISJOINT -- the unit-Jacobian "
+                "triangular argument fails if A moves a channel it reads")
+        bad = [i for i in ridx + rtgt if i < 0 or i >= self.target_dim]
+        if bad:
+            raise ValueError(f"ra index/target out of range for target_dim={self.target_dim}: {bad}")
+        if int(ra_hidden) <= 0:
+            raise ValueError(
+                "ra_hidden must be > 0 for flow_type='mean_affine_ra'; use flow_type='mean_affine' "
+                "for the plain (realisation-blind) head")
+        self.register_buffer("ra_indices", torch.as_tensor(ridx, dtype=torch.long))
+        self.register_buffer("ra_targets", torch.as_tensor(rtgt, dtype=torch.long))
+        self.ra_hidden = int(ra_hidden)
+        act = _activation(ra_activation)
+        self.ra_net = nn.Sequential(
+            nn.Linear(context_dim + len(ridx), self.ra_hidden), act(),
+            nn.Linear(self.ra_hidden, len(rtgt)))
+        # ZERO-INIT the output layer: A == 0 at construction => exact reduction to the parent.
+        nn.init.zeros_(self.ra_net[-1].weight)
+        nn.init.zeros_(self.ra_net[-1].bias)
+
+    def _A(self, context, u):
+        """(batch, target_dim) additive shift, non-zero only on `ra_targets`.
+
+        `u` is the realisation residual on `ra_indices` -- fed together with the context and
+        NOTHING else.  Feeding the absolute drawn photometry mu(c)+u instead would make A's
+        argument leg-dependent (mu moves between legs through the b_mag * e_int coupling) and
+        break the "u is shear-independent" statement the common-random-number response rests on.
+        """
+        if u is None:
+            raise ValueError(
+                "ConditionalMeanFlowRA needs the realisation residual u on the ra_indices "
+                "channels; a caller reached _A/_shift without one")
+        raw = self.ra_net(torch.cat([context, u], dim=-1))
+        zeros = torch.zeros(raw.shape[:-1] + (self.target_dim,), dtype=raw.dtype, device=raw.device)
+        return zeros.index_add(-1, self.ra_targets, raw)
+
+    def _shift(self, context, u=None):
+        return self._mu(context) + self._A(context, u)
+
+    @torch.no_grad()
+    def set_ols_mean_and_freeze(self, context_std, target_std):
+        raise NotImplementedError(
+            "OLS mean-freeze is not defined for the realisation-aware head: freezing mu alone "
+            "leaves A trainable and unsupervised. Use flow_type='mean_affine' for that path.")
+
+    def log_prob(self, x, context):
+        resid = x - self._mu(context)
+        u = resid.index_select(-1, self.ra_indices)
+        # unit Jacobian (triangular, ra_targets disjoint from ra_indices) -> no log-det term
+        return self.flow.log_prob(resid - self._A(context, u), self._flow_ctx(context))
+
+    def sample(self, context, n_samples=1, qmc=False):
+        z = self.flow.sample(self._flow_ctx(context), n_samples=n_samples, qmc=qmc)
+        batch, n, dim = z.shape
+        # closed-form inverse: A does not touch ra_indices, so the drawn residual's ra_indices
+        # channels ARE the final ones and u is read straight off z.
+        u = z.index_select(-1, self.ra_indices).reshape(batch * n, -1)
+        cflat = context[:, None, :].expand(batch, n, self.context_dim).reshape(batch * n, self.context_dim)
+        a = self._A(cflat, u).view(batch, n, dim)
+        return z + a + self._mu(context)[:, None, :]
+
+
 def build_flow(model_config):
     """Construct the conditional flow from a config dict (dispatch on flow_type)."""
     cfg = dict(model_config)
@@ -660,6 +786,16 @@ def build_flow(model_config):
     # It does not affect the density architecture.
     cfg.pop("response_difference", None)
     cfg.pop("response_error", None)
+    # The OTHER half of the swallow trap: RA keys on a NON-RA flow_type. Those would be eaten by
+    # the same **kwargs chain and the model would be built with NO realisation-aware head at all
+    # -- the failure mode this whole design is trying to make impossible.
+    if not flow_type.endswith("_ra"):
+        stray = sorted(k for k in cfg if k.startswith("ra"))
+        if stray:
+            raise ValueError(
+                f"flow_type={flow_type!r} does not build a realisation-aware head, but the config "
+                f"carries {stray}; those keys would be silently ignored. Use flow_type "
+                "'mean_affine_ra' / 'mean_spline_ra', or drop the keys.")
     if flow_type == "affine":
         return ConditionalAffineFlow(**cfg)
     if flow_type == "spline":
@@ -668,6 +804,13 @@ def build_flow(model_config):
     if flow_type in ("mean_affine", "mean_spline"):
         cfg["base_flow"] = "affine" if flow_type == "mean_affine" else "spline"
         return ConditionalMeanFlow(**cfg)
+    # REALISATION-AWARE head. A distinct flow_type string, NOT a flag on mean_affine: the
+    # double **kwargs (ConditionalMeanFlow -> ConditionalAffineFlow) silently swallows unknown
+    # config keys, so a flag would be ignored by an older code copy instead of failing. With a
+    # new string the `raise` below makes an older copy fail loudly.
+    if flow_type in ("mean_affine_ra", "mean_spline_ra"):
+        cfg["base_flow"] = "affine" if flow_type == "mean_affine_ra" else "spline"
+        return ConditionalMeanFlowRA(**cfg)
     raise ValueError(f"Unknown flow_type {flow_type!r}")
 
 

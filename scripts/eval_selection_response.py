@@ -73,15 +73,25 @@ FLOW_COLS = [
 RK = dict(pixel_rms=0.312, pixel_size=0.2, zero_mag=30.0, psf_fwhm=0.73, moffat_beta=2.224)
 
 
-def build_base(g0_leg, gS_leg, max_case, re_min, mag_max, iso_radius, crowd, nn, t0):
+def build_base(g0_leg, gS_leg, max_case, re_min, mag_max, iso_radius, crowd, nn, t0,
+               min_case=None):
     """Matched both-detected, true-cut base carrying measured (shape,mag,size) at BOTH legs,
-    plus per-object ghat, gmed, isolation mask, and the flow conditioners (from the gS leg)."""
+    plus per-object ghat, gmed, isolation mask, and the flow conditioners (from the gS leg).
+
+    `min_case` is optional and defaults to None (= no lower bound), so every existing positional
+    caller is unchanged. It exists so a case WINDOW can be built -- the legs are matched
+    within a case, every cut is per-object, and the objects of one case never touch another,
+    so building [a,b] and [b+1,c] separately and concatenating is identical to building [a,c].
+    The one quantity that is NOT per-object is `gmed` (a median over the window); the half-shear
+    legs carry a constant |gamma| so it is the same in every window, and callers that split
+    should assert that rather than assume it."""
     tick = lambda: time.time() - t0
     g0 = domain_cut(read_leg(g0_leg,
                              ["case", "input_index", "detected", "Re_input_p", "r_input_p",
-                              "neighbored", "distance"] + NGMIX + MEAS, max_case),
+                              "neighbored", "distance"] + NGMIX + MEAS, max_case, min_case),
                     re_min, mag_max).drop_duplicates(["case", "input_index"])
-    gS = domain_cut(read_leg(gS_leg, FLOW_COLS + NGMIX + MEAS + GAMMA, max_case), re_min, mag_max)
+    gS = domain_cut(read_leg(gS_leg, FLOW_COLS + NGMIX + MEAS + GAMMA, max_case, min_case),
+                    re_min, mag_max)
     gp = np.hypot(gS["gamma1_input_p"].to_numpy(float), gS["gamma2_input_p"].to_numpy(float))
     gS = gS[gp > 1e-6].reset_index(drop=True).drop_duplicates(["case", "input_index"])
     base = gS.merge(g0[["case", "input_index"] + NGMIX + MEAS], on=["case", "input_index"],

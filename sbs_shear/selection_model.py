@@ -122,14 +122,42 @@ class TabularPreprocessor:
     means: np.ndarray
     scales: np.ndarray
     add_missing_indicators: bool = True
+    # Features to log-transform BEFORE fill/standardise. Empty tuple reproduces the historical
+    # behaviour exactly, and `from_state` defaults to empty, so every existing checkpoint loads
+    # unchanged. The transform is stored WITH the preprocessor so inference cannot forget to apply
+    # it -- a train/inference mismatch here would be silent and would corrupt every response.
+    log_features: tuple[str, ...] = ()
+
+    def _log_cols(self):
+        want = set(self.log_features)
+        return np.array([n in want for n in self.feature_names], dtype=bool)
+
+    @staticmethod
+    def _safe_log_np(values, mask):
+        if not mask.any():
+            return values
+        out = values.astype(np.float32, copy=True)
+        sub = out[:, mask]
+        # non-positive -> NaN so the existing missing-value machinery handles it, rather than
+        # -inf silently poisoning the mean/scale fit
+        sub = np.where(sub > 0.0, sub, np.nan)
+        with np.errstate(invalid="ignore"):
+            out[:, mask] = np.log(sub)
+        return out
 
     @classmethod
-    def fit(cls, frame: pd.DataFrame, feature_names: Sequence[str], add_missing_indicators=True):
+    def fit(cls, frame: pd.DataFrame, feature_names: Sequence[str], add_missing_indicators=True,
+            log_features: Sequence[str] = ()):
         missing = [name for name in feature_names if name not in frame.columns]
         if missing:
             raise KeyError(f"Missing feature columns: {missing}")
+        unknown = [n for n in log_features if n not in list(feature_names)]
+        if unknown:
+            raise KeyError(f"log_features not in feature_names: {unknown}")
 
         values = frame[list(feature_names)].to_numpy(dtype=np.float32, copy=True)
+        _mask = np.array([n in set(log_features) for n in feature_names], dtype=bool)
+        values = cls._safe_log_np(values, _mask)
         finite = np.isfinite(values)
         fill_values = np.zeros(values.shape[1], dtype=np.float32)
         for j in range(values.shape[1]):
@@ -140,7 +168,8 @@ class TabularPreprocessor:
         means = filled.mean(axis=0, dtype=np.float64).astype(np.float32)
         scales = filled.std(axis=0, ddof=1).astype(np.float32)
         scales[~np.isfinite(scales) | (scales < 1e-6)] = 1.0
-        return cls(list(feature_names), fill_values, means, scales, add_missing_indicators)
+        return cls(list(feature_names), fill_values, means, scales, add_missing_indicators,
+                   tuple(log_features))
 
     @property
     def output_dim(self):
@@ -156,6 +185,7 @@ class TabularPreprocessor:
 
     def transform_frame(self, frame):
         raw = frame[self.feature_names].to_numpy(dtype=np.float32, copy=True)
+        raw = self._safe_log_np(raw, self._log_cols())
         finite = np.isfinite(raw)
         filled = np.where(finite, raw, self.fill_values)
         scaled = (filled - self.means) / self.scales
@@ -164,6 +194,13 @@ class TabularPreprocessor:
         return scaled.astype(np.float32, copy=False)
 
     def transform_tensor(self, raw):
+        mask = self._log_cols()
+        if mask.any():
+            # differentiable and monotone; non-positive -> NaN, same rule as the numpy path so the
+            # gradient route and the frame route cannot disagree
+            m = torch.as_tensor(mask, device=raw.device)
+            safe = torch.where(raw > 0, raw, torch.full_like(raw, float("nan")))
+            raw = torch.where(m, torch.log(safe), raw)
         fill = torch.as_tensor(self.fill_values, dtype=raw.dtype, device=raw.device)
         means = torch.as_tensor(self.means, dtype=raw.dtype, device=raw.device)
         scales = torch.as_tensor(self.scales, dtype=raw.dtype, device=raw.device)
@@ -187,6 +224,7 @@ class TabularPreprocessor:
             "means": self.means,
             "scales": self.scales,
             "add_missing_indicators": self.add_missing_indicators,
+            "log_features": list(self.log_features),
         }
 
     @classmethod
@@ -197,6 +235,7 @@ class TabularPreprocessor:
             np.asarray(state["means"], dtype=np.float32),
             np.asarray(state["scales"], dtype=np.float32),
             bool(state.get("add_missing_indicators", True)),
+            tuple(state.get("log_features", ())),
         )
 
 

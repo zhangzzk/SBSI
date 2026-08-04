@@ -75,6 +75,13 @@ def main():
                     help="comma-separated explicit size-bin edges (overrides --n-size quantile edges). "
                          "Use to add resolution where the response gradient is steep (e.g. large sizes), "
                          "which pure quantile spacing under-resolves. A-priori physics choice, not |m|-tuning.")
+    ap.add_argument("--flux-edges", default=None,
+                    help="comma-separated explicit flux(true-mag)-bin edges (overrides --n-flux quantile "
+                         "edges). Same rationale as --size-edges: equal-COUNT spacing equalises the "
+                         "absolute response step per cell, but `m` is a RATIO, and the relative step "
+                         "d(log R) grows toward faint. Placing edges on equal d(log R) instead puts "
+                         "resolution where the response changes fastest in the units the metric uses. "
+                         "A-priori choice made on the half-shear ruler, NOT |m|-tuning.")
     ap.add_argument("--n-dist", type=int, default=3, help="distance bins for BLENDED gals (isolated is a separate bin 0)")
     ap.add_argument("--crowd-col", default=None,
                     help="if set (e.g. r_blend / nbr_flux_near), use QUANTILE bins of this crowding "
@@ -205,7 +212,13 @@ def main():
     if crowd is not None:
         crowd = crowd[fin]
 
-    ef = np.quantile(flux, np.linspace(0, 1, args.n_flux + 1)); ef[0] -= 1e-6; ef[-1] += 1e-6
+    if args.flux_edges:
+        ef = np.array([float(x) for x in args.flux_edges.split(",")], dtype=float)
+        ef = np.sort(ef); ef[0] -= 1e-6; ef[-1] += 1e-6
+        args.n_flux = len(ef) - 1
+        print(f"custom flux edges ({args.n_flux} bins): {np.round(ef, 4).tolist()}")
+    else:
+        ef = np.quantile(flux, np.linspace(0, 1, args.n_flux + 1)); ef[0] -= 1e-6; ef[-1] += 1e-6
     if args.size_edges:
         es = np.array([float(x) for x in args.size_edges.split(",")], dtype=float)
         es = np.sort(es); es[0] -= 1e-6; es[-1] += 1e-6

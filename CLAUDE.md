@@ -4,6 +4,8 @@
 
 The project overview, scope boundaries (SBSI consumes finished `blendemu` catalogues; don't move classifier/flow/inference code into blendemu), the `WORKLOG.md` requirement, the Slurm resource policy, and model-specific development notes all live in `AGENTS.md` above. Only Claude-Code-specific setup that AGENTS.md omits is below.
 
+**Before building any new number, read `CONVENTIONS.md`** — it fixes which catalogue, the population-cut order, true vs measured cuts, unsheared/sheared/measured shapes, leg matching, the response estimators, and the single definition of `m`. Update it when a convention changes.
+
 ## Environment
 - Conda env: `conda activate sims1` (Python 3.9). Repo is NOT pip-installed.
 - Imports rely on PYTHONPATH — always set both repos:

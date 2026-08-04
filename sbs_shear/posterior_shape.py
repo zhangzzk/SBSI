@@ -29,7 +29,7 @@ from __future__ import annotations
 import numpy as np
 import torch
 
-from .measurement_model import ConditionalMeanFlow, MeasurementModelBundle
+from .measurement_model import ConditionalMeanFlow, ConditionalMeanFlowRA, MeasurementModelBundle
 from .shear_map import inverse_shear_to_ellipticity
 
 
@@ -152,6 +152,16 @@ class PosteriorShapeEstimator:
             raise TypeError("PosteriorShapeEstimator requires a ConditionalMeanFlow "
                             f"(got {type(model).__name__}); the grid trick needs the "
                             "location-family structure p(x|c)=p_resid(x-mu(c)|flow_ctx)")
+        # FENCE (realisation-aware head). This class hand-rolls `x - mu(c)` in log_likelihood and
+        # log_likelihood_marginal instead of calling model.log_prob. For ConditionalMeanFlowRA the
+        # residual is `x - mu(c) - A(c, u)`, so the hand-rolled form would be WRONG (not merely
+        # stale) and would fail SILENTLY. Raise instead; porting the grid trick to the RA head
+        # needs A evaluated per grid point.
+        if isinstance(model, ConditionalMeanFlowRA):
+            raise NotImplementedError(
+                "PosteriorShapeEstimator does not support ConditionalMeanFlowRA: its residual is "
+                "x - mu(c) - A(c, u) and this class hand-rolls x - mu(c). Use a 'mean_affine' "
+                "checkpoint, or extend the grid trick to evaluate A per grid point.")
         pre = bundle.condition_preprocessor
         feats = pre.feature_names
         for name in ("e1_input_p", "e2_input_p"):

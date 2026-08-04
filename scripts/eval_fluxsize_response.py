@@ -97,6 +97,22 @@ def model_fluxsize_resp(base, gh1, gh2, bundle, delta, difference, device, chunk
     """Per-object flow R_mag, R_size from mean-head dims 2,3, shearing each object along its ghat."""
     model = bundle.model.to(device)
     model.eval()
+    # FENCE (realisation-aware head). The R_mag / R_size readout uses the MEAN head on dims 2,3
+    # only, and the RA shift A is zero on those channels by construction, so mu-only stays exact
+    # for them -- but only while ra_targets == [0, 1]. Assert that.
+    if hasattr(model, "ra_targets"):
+        _rt = [int(i) for i in model.ra_targets.tolist()]
+        if _rt != [0, 1]:
+            raise NotImplementedError(
+                f"realisation-aware head has ra_targets={_rt}; this script reads mu only on dims "
+                "2,3 and is exact only when A leaves those channels untouched (ra_targets=[0,1])")
+        # ... but `Rshape` below reads dims 0,1, which A DOES write. mu-only is the wrong shape
+        # response for an RA checkpoint (silently: the caller prints flow/truth-1 from it). Refuse.
+        raise NotImplementedError(
+            "eval_fluxsize_response also computes the Rshape CONTROL from the mean head (dims 0,1), "
+            "which a realisation-aware head modifies through A(c,u); mu-only would report a wrong "
+            "shape response with no warning. R_mag/R_size themselves stay exact -- to unblock, drop "
+            "the Rshape control or read it from common-random-number draws of model.sample.")
     pp = bundle.condition_preprocessor
     cond = list(bundle.metadata.get("condition_features", pp.feature_names))
     scales = bundle.target_transform.scales

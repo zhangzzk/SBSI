@@ -57,10 +57,12 @@ python -u scripts/train_measurement_model_swa_s1_truecond.py \
   --target-column detected --selection-name sextractor_detected --feature-set "$FS" \
   --target-features measured_ngmix_g1 measured_ngmix_g2 measured_mag_auto measured_log_flux_radius \
   --flow-type mean_affine --mean-hidden ${MH:-128} --flow-blind-features e1_input_p e2_input_p \
-  --shear-case 0.0 --max-rows 4000000 --epochs 80 --batch-size ${BS:-8192} \
+  --shear-case 0.0 --max-rows 4000000 --epochs ${EPOCHS:-80} --batch-size ${BS:-8192} \
   --hidden-dim 256 --condition-layers 3 --n-flows 10 --lr 0.0007 --patience 10 --weight-decay 1e-5 \
+  ${PEROBJ:+--response-target-perobj $PEROBJ} \
   --seed "$SEED" --num-workers 8 --gpu-resident \
   --primary-mag-max 26.0 --primary-re-min 0.3 \
+  ${LOGCOND:+--log-condition-features $LOGCOND} \
   --response-weight ${RW:-450} --response-delta 0.02 --response-difference central --response-target-npz "$RESP" \
   --response-global-anchor ${ANCHOR:-0} ${POPW:+--response-pop-weight-npz $POPW} \
   --response-error ${RERR:-absolute} --response-rel-floor ${RFLOOR:-0.05} --response-bin-ema ${EMA:-0.0} \
