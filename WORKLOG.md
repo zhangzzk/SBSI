@@ -2,7 +2,66 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
-## 2026-08-04i — REFINES 2026-08-04h: the V2.1 retrain did not reach its own training target
+## 2026-08-04j — RETRACTS 2026-08-04i. There is no training deficit; the readout was misleading.
+
+**2026-08-04i IS WRONG. Do not use it.** It claimed the V2.1 flow misses its own response target by
+2.91%. It does not. It is on target to 0.13%.
+
+**The artifact.** The per-epoch line printed
+`<R_model>(val)=... (target mean {bin_targets.mean()})`. `bin_targets.mean()` is the **cells-
+UNWEIGHTED** mean over grid cells; `<R_model>(val)` is a **POPULATION** mean over galaxies. Those are
+different quantities and the gap between them is pure grid geometry:
+
+| target grid | cells-unweighted | count-weighted | difference |
+|---|---|---|---|
+| V2.1 `5x4x5_v21` | 0.8753 | **0.8509** | -2.79% |
+| dom `6x3x5_dom` | 0.7460 | **0.7149** | -4.17% |
+
+The V2.1 flow reached **0.8498** on val. Against the correct population-weighted target 0.8509 that
+is **-0.13%**, not -2.91%. The entire "deficit" was the 2.79% grid artifact. The dom6x6 flow
+"landing on its target" was the same coincidence in the other direction, not evidence of control.
+
+**Measured refutation before the cause was found** (all seed 501, one lever each, ~14 min/run):
+
+| arm | job | `<R_model>`(val) | vs baseline |
+|---|---|---|---|
+| baseline ANCHOR=0 RW=450 | 15520081 | 0.8498 | -- |
+| ANCHOR=300 | 15526057 | 0.8509 | +0.13% |
+| ANCHOR=1000 | 15526058 | 0.8505 | +0.08% |
+| ANCHOR=3000 | 15526059 | 0.8499 | +0.01% |
+| RW=2000, anchor off (control) | 15526060 | 0.8506 | +0.09% |
+
+At ANCHOR=3000 the anchor term is ~2.5 against an NLL of ~0.44 -- the largest term in the loss --
+and it moved nothing. That is not the anchor failing; it is the anchor correctly finding no signed
+error to remove. The control (RW=2000) behaving identically says the same thing.
+
+**A dominant loss term that changes nothing is a measurement artifact until proven otherwise.** That
+is the general lesson; it is what pointed at the readout rather than at the optimiser.
+
+**Files changed.**
+- `scripts/train_measurement_model_swa_s1_truecond.py` -- the epoch readout now prints
+  `target <pop-weighted> pop-wtd / <cell-avg> cell-avg` when the npz carries `counts`, and labels the
+  unweighted number explicitly when it does not. New `bin_counts_t`, initialised None beside
+  `pop_w_t` so the non-npz paths are unaffected. No change to any loss or gradient.
+- `jobs/job_flow_v21.sh` -- `--response-global-anchor ${ANCHOR:-0}` retained (default 0 =
+  byte-identical to the certified path and to job 15520081) with its comment rewritten to record the
+  null above, so the next reader does not re-run these arms.
+
+**Validation.** `py31 -m pytest tests/ -q` -> 64 passed. The count-weighted vs unweighted target
+means were computed directly from the two npz files.
+
+**Net effect on the science.** None -- and that is the point. 2026-08-04h stands unchanged: the V2.1
+retrain is a null, the +1.6% on constgold is a POPULATION effect, and the flow trains correctly.
+The three suspects listed in 2026-08-04i (coarse 5x4x5 grid, carried-over theta target, lambda too
+weak) were motivated by a deficit that does not exist; none is supported by evidence and none should
+be pursued on that basis. The carried-over theta-coupling target remains a genuine inherited
+inconsistency (2026-08-04g) but is unrelated to this.
+
+**Cost of the error:** 5 GPU training runs (~70 min) plus 4 that died on an unrelated cip vGPU
+allocator fault (`CUDA driver error: operation not supported` -- needs `NO_EXPANDABLE_SEGMENTS=1`;
+node-dependent, g07n1/g08n1 fail where g06n2 works).
+
+## 2026-08-04i — [RETRACTED by 2026-08-04j — the 2.91% gap is a readout artifact, not a deficit]
 
 No code change. Re-reading the existing training logs (no new compute, no constgold involved).
 

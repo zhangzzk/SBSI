@@ -1035,6 +1035,7 @@ def main():
                               moffat_beta=args.moffat_beta)
         d = args.response_delta
         pop_w_t = None      # deliverable-population cell weights for the global anchor; None = use counts
+        bin_counts_t = None  # normalised training cell occupancy; used only for the epoch readout
         # property-resolved target (bins of true flux x size) or single global scalar
         if perobj_target is not None:
             # PER-OBJECT: `bin_targets` holds one target per training ROW and `_bin_id` returns the
@@ -1058,6 +1059,18 @@ def main():
             tt = np.load(args.response_target_npz)
             ef, es, Rsim = tt["edges_flux"], tt["edges_size"], tt["Rsim"]
             bin_targets = torch.as_tensor(np.asarray(Rsim).reshape(-1), dtype=torch.float32)
+            # COUNT-WEIGHTED target mean, for the per-epoch readout. The epoch line compares this to
+            # <R_model>(val), which is a POPULATION mean over galaxies; the cells-unweighted
+            # bin_targets.mean() is NOT the same quantity and must not be put next to it. On the V2.1
+            # 5x4x5 grid the two differ by 2.79% (0.8753 unweighted vs 0.8509 count-weighted) and on
+            # the dom 6x3x5 grid by 4.17% -- large enough that reading the unweighted number as the
+            # target makes an on-target flow look like it is failing by ~3%. That misreading cost a
+            # full round of anchor/lambda training arms (WORKLOG 2026-08-04j).
+            bin_counts_t = None
+            if "counts" in tt.files:
+                _c = np.asarray(tt["counts"], dtype=np.float64).reshape(-1)
+                if _c.size == bin_targets.numel() and _c.sum() > 0:
+                    bin_counts_t = torch.as_tensor(_c / _c.sum(), dtype=torch.float32)
             ccol = tt["crowd_col"].item() if "crowd_col" in tt.files else ""
             if ccol and np.asarray(Rsim).ndim == 3:
                 ec = tt["edges_crowd"]; nf, ns, nb = Rsim.shape  # 3rd axis = crowding quantile bins
@@ -1347,8 +1360,16 @@ def main():
             history.setdefault("val_R", []).append(val_R)
             history.setdefault("val_resp", []).append(val_resp)
             history.setdefault("val_theta", []).append(val_theta)
+            # Report the COUNT-WEIGHTED target when we have occupancy: that is the like-for-like
+            # comparison against <R_model>(val), which is a population mean. The cells-unweighted
+            # mean is kept but LABELLED, never presented as "the target".
+            if bin_counts_t is not None:
+                _tgt = f"target {float((bin_targets * bin_counts_t).sum()):.4f} pop-wtd" \
+                       f" / {float(bin_targets.mean()):.4f} cell-avg"
+            else:
+                _tgt = f"target mean {float(bin_targets.mean()):.4f} (cell-avg; NOT pop-weighted)"
             print(f"  epoch {epoch:03d}: nll={train_nll:.5f}/{val_nll:.5f}  "
-                  f"<R_model>(val)={val_R:+.4f} (target mean {float(bin_targets.mean()):.4f})  "
+                  f"<R_model>(val)={val_R:+.4f} ({_tgt})  "
                   f"per-bin resp={val_resp:.2e}  theta={val_theta:.2e}")
             if ra_spec is not None:
                 # NON-NEGOTIABLE per-epoch RA readout. Without it, "A stayed at zero and everything

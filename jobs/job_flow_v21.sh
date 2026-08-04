@@ -71,7 +71,35 @@ CAT=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_crowd_conc_g0.
 OUT=$D/measurement_flow_g0_ngmix_${TAG}_s${SEED}.pt
 if [ -f "$OUT" ]; then echo "REFUSING to overwrite existing $OUT"; exit 1; fi
 
+# ANCHOR (--response-global-anchor). DEFAULT 0 = byte-identical to the certified path and to the
+# original seed-501 run (job 15520081), so this addition does not silently change anything already
+# produced. Set ANCHOR>0 to switch it on.
+#
+# WHAT IT DOES. The per-cell response term penalises SQUARED per-bin errors, so the SIGNED aggregate
+# sum_b w_b (Rmodel_b - Rsim_b) is not directly controlled (trainer comment at
+# scripts/train_measurement_model_swa_s1_truecond.py:419). The anchor pins that signed aggregate.
+#
+# ON V2.1 IT IS A MEASURED NULL -- DO NOT REACH FOR IT HERE. Arms at ANCHOR=300/1000/3000 (jobs
+# 15526057-59) and a control at RW=2000 (15526060) all landed on the ANCHOR=0 baseline:
+# <R_model>(val) = 0.8509 / 0.8505 / 0.8499 / 0.8506 vs baseline 0.8498. At ANCHOR=3000 the anchor
+# term is ~2.5 against an NLL of ~0.44 -- the largest term in the loss -- and it still moved nothing.
+# The reason is simply that there was no signed error to remove: the flow was ALREADY on its
+# population-weighted target (0.8509), so the anchor correctly found ~nothing to fix.
+#
+# The "2.9% deficit" that motivated these arms WAS AN ARTIFACT of the old epoch readout, which
+# printed the cells-UNWEIGHTED bin_targets.mean() (0.8753) next to the POPULATION mean
+# <R_model>(val). Those are different quantities; on this grid they differ by 2.79%. The readout now
+# prints both, labelled. WORKLOG 2026-08-04j retracts 2026-08-04i.
+#
+# Weights default to TRAINING cell counts (--response-pop-weight-npz unset). That is right here
+# because the training population and the deliverable population are the same V2.1 domain. It is
+# still an approximation -- training is half-shear, the deliverable is constgold, so cell occupancy
+# can differ between the two sims -- and a pop-weight npz would remove it if it ever matters.
+#
+# FIREWALL: the anchor matches the HALF-SHEAR target's weighted mean. No constgold response and no m
+# enters training. Do not tune ANCHOR against constgold m.
 echo "### V2.1 FLOW lt=$LT seed=$SEED job=$SLURM_JOB_ID ###"; nvidia-smi -L; date
+echo "anchor: ${ANCHOR:-0}   response-weight: ${RW:-450}"
 echo "resp target: $RESP"
 python -u scripts/train_measurement_model_swa_s1_truecond.py \
   --catalogue $CAT --output $OUT \
@@ -86,6 +114,7 @@ python -u scripts/train_measurement_model_swa_s1_truecond.py \
   --response-weight ${RW:-450} --response-delta 0.02 --response-difference central \
   --response-target-npz "$RESP" \
   --response-error ${RERR:-absolute} --response-rel-floor ${RFLOOR:-0.05} \
+  --response-global-anchor ${ANCHOR:-0} \
   --coupling-weight "$LT" --coupling-target-npz "$COUP" \
   || { echo "FAILED seed=$SEED"; exit 1; }
 echo "V21_FLOW_DONE lt=$LT seed=$SEED"; date
