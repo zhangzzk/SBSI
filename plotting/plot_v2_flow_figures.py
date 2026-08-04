@@ -42,6 +42,7 @@ import pyarrow.ipc as ipc  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
 from matplotlib.patches import Patch  # noqa: E402
 from matplotlib.ticker import NullFormatter, ScalarFormatter  # noqa: E402
+from sbs_shear.paths import CROWD_LOOKUP as CROWD
 
 BLUE, VERM, GREEN = "#0072B2", "#D55E00", "#009E73"
 INK, MUTED = "#1a1a1a", "#6b6b6b"
@@ -50,7 +51,6 @@ ABL = Path("/project/ls-gruen/users/zekang.zhang/sbsi_caches/ablation")
 DUMPDIR = Path("/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/v2_constgold_dumps")
 CONST_CAT = ("/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/"
              "constant_response_catalogue_train.feather")
-CROWD = "/home/z/Zekang.Zhang/SBSI/results/crowd_flux_conc_c0-199.feather"
 CURVE_GLOB = "measurement_flow_g0_ngmix_ablate_s2c_coupling_lt500_s*_train_curve.npz"
 TAG = "ablate_s2c_coupling_lt500"
 

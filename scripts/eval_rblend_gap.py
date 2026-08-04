@@ -52,8 +52,8 @@ import time
 import numpy as np
 import pandas as pd
 import pyarrow.feather as pf
+from sbs_shear.paths import CATALOGUES as CAT
 
-CAT = "/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/"
 BLEND_MODELS = "/home/z/Zekang.Zhang/blendemu/models"
 # Rendering conditions of this sim set; the emulator rescales its features with these.
 COND = dict(pixel_size=0.2, zero_point=30.0, psf_fwhm=0.73, moffat_beta=2.224, pixel_rms=0.312)

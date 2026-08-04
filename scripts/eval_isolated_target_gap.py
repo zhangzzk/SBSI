@@ -38,15 +38,15 @@ import numpy as np
 import pandas as pd
 import pyarrow.dataset as ds
 import pyarrow.feather as pf
+from sbs_shear.paths import catalogue
 
-CAT = "/project/ls-gruen/users/zekang.zhang/sbsi_catalogues"
 CONSTCAT = ("/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/"
             "constant_response_catalogue_train.feather")
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--ruler-cat", default=f"{CAT}/det_meas_ngmix_g0.05_val.feather")
+    ap.add_argument("--ruler-cat", default=catalogue("det_meas_ngmix_g0.05_val.feather"))
     ap.add_argument("--max-case", type=int, default=9)
     ap.add_argument("--true-mag-max", type=float, default=26.0)
     ap.add_argument("--true-re-min", type=float, default=0.3)

@@ -69,12 +69,12 @@ from sbs_shear.preprocessing import (  # noqa: E402
     rescale, source_select_selection, DEFAULT_SELECTION_CUTS,
 )
 from sbs_shear.shear_map import apply_shear_to_ellipticity  # noqa: E402
+from sbs_shear.paths import CROWD_LOOKUP as CROWD
 
 CDIR = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/"
 PLUS = CDIR + "constant_shear_catalogue_0.02_train.feather"
 MINUS = CDIR + "constant_shear_catalogue_-0.02_train.feather"
 MEASURED = "/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/constgold_measured_c0-139.feather"
-CROWD = "/home/z/Zekang.Zhang/SBSI/results/crowd_flux_conc_c0-199.feather"
 RK = dict(pixel_rms=0.312, pixel_size=0.2, zero_mag=30.0, psf_fwhm=0.73, moffat_beta=2.224)
 
 # true-property columns needed for flow conditioning + rescale()'s derived features, plus the

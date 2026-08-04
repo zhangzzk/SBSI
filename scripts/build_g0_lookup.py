@@ -9,8 +9,8 @@ import argparse, os
 import numpy as np
 import pandas as pd
 import pyarrow.feather as f
+from sbs_shear.paths import SIM_BASE as BASE
 
-BASE = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876"
 TILE = "tile180.0_-0.5"
 
 

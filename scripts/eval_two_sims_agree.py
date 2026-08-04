@@ -47,8 +47,8 @@ import argparse
 import numpy as np
 import pandas as pd
 import pyarrow.dataset as ds
+from sbs_shear.paths import catalogue
 
-CAT = "/project/ls-gruen/users/zekang.zhang/sbsi_catalogues"
 KEY = ["case", "input_index"]
 COLS = ["case", "input_index", "r_input_p", "Re_input_p", "detected",
         "measured_ngmix_g1", "measured_ngmix_g2", "applied_g1", "applied_g2"]
@@ -76,8 +76,8 @@ def raw_response(df, g1c="applied_g1", g2c="applied_g2"):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--target-cat", default=f"{CAT}/det_meas_crowd_g0.05_val_full.feather")
-    ap.add_argument("--ruler-cat", default=f"{CAT}/det_meas_ngmix_g0.05_val.feather")
+    ap.add_argument("--target-cat", default=catalogue("det_meas_crowd_g0.05_val_full.feather"))
+    ap.add_argument("--ruler-cat", default=catalogue("det_meas_ngmix_g0.05_val.feather"))
     ap.add_argument("--max-case", type=int, default=4,
                     help="a few cases is ample: this is a systematic offset, not a noise question")
     ap.add_argument("--true-mag-max", type=float, default=26.0)

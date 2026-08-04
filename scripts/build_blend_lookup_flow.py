@@ -74,8 +74,8 @@ if SBSI_ROOT not in sys.path:
 
 from sbs_shear.blend_flow import (  # noqa: E402
     build_features, load_blend_flow, response_from_contexts, shifted_shape_columns)
+from sbs_shear.paths import CONST_SIM_DIR as CBASE
 
-CBASE = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant"
 TILE = "tile180.0_-0.5"
 
 

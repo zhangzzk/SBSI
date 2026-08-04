@@ -2,6 +2,54 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-04e (**shared cores merged into `sbs_shear/`: trainer core + data paths. Every moved symbol verified identical to HEAD; no science number changes.**)
+
+Follow-on to 2026-08-04d, on the owner's instruction to merge the code that was being rewritten
+in every script. Net **-527 lines across 36 files**. Nothing was merged on the strength of a name:
+each candidate was AST-hashed across its copies first, and only byte-identical ones were moved.
+
+**`sbs_shear/training.py` (NEW) -- the trainer core, 522 duplicated lines -> 225.**
+Ten symbols (`GPUBatches`, `make_loader`, `split_data`, `_finite_target_mask`,
+`_add_legacy_missing_shear`, `build_shifted_context`, `compute_decorrelation_weights`,
+`per_target_weights`, `epoch_nll`, `summarize_log_prob`) were byte-identical in ALL FOUR
+`train_measurement_model*.py` forks -- maintained four times over, with nothing in `tests/`
+covering `scripts/` to catch a drift. Moved verbatim; the three live trainers now import them.
+`scripts/_headref_trainer_tmp.py` deliberately keeps its own copies (frozen byte-identity snapshot
+for the 2026-08-01b audit). `sklearn` is imported lazily inside `split_data` so `sbs_shear` stays
+importable on the login node, where sims1's sklearn -> scipy chain fails on GLIBCXX.
+*Verified*: each moved helper reconstructed from `git show HEAD:` and compared against the library
+version on synthetic data -- `compute_decorrelation_weights`, `per_target_weights`,
+`_finite_target_mask`, `split_data` and `make_loader` batches all identical; all three trainers
+import and resolve all ten symbols.
+
+**`sbs_shear/paths.py` (NEW) -- 33 path constants across 28 files -> one definition each.**
+`CAT` had 12 definitions in two spellings, `CROWD` 7, `BASE`/`CBASE` 16 across four spellings.
+**They were not interchangeable**: 7 `CAT`s carried a trailing slash (used as `CAT + "name"`) and
+4 did not (used as `f"{CAT}/name"`), the two groups corresponding EXACTLY. The four f-string sites
+were converted to a `catalogue()` joiner; the concatenation sites import the trailing-slash
+constant. `CONST_SIM_DIR` is DERIVED from `CONST_SIM_BASE` rather than written out again, so the
+two required spellings still have one literal.
+*Verified*: 31 resolved constants re-checked against `git show HEAD:` -- every path resolves to the
+byte-identical string; the 17 scripts that import these names from each other still resolve them.
+
+Two constants were deliberately NOT merged, because their literals genuinely differ:
+`halfshear_component_labels.py`'s `CAT` is a full FILE path, not the directory; and
+`validate_constant_response.py`'s `BASE` holds the CONSTANT tree, not the half-shear one -- it is
+now `CONST_SIM_BASE as BASE` with a comment, so the misleading name is at least visible.
+`FLOW_COLS` is likewise NOT merged: the `eval_selfresp_gap` version carries two extra measured
+columns, so the two copies are different column sets that happen to share a name.
+
+**Tests** 49 -> 54. `tests/test_paths.py` pins the slash contract (the trap that made these
+constants un-mergeable), that the two constant-tree spellings are one location, and that the
+half-shear and constant trees stay distinct.
+
+**Checked and left alone -- these LOOK duplicated but have drifted into different code**, so
+merging them would silently change results: `leg_avg` (4 copies, 4 versions), `m_of` (3/3),
+`set_style` (12/9), `load` (7/7), `apply_shear` (5/3), `boot` (2 copies, and the two implement
+DIFFERENT error-bar conventions -- see the open item in 2026-08-04d), `binned` (3/3),
+`_binned`/`_read_key_table` (2 versions each), `load_measurement_data` (4/3). The AST hashes are
+reproducible; anything merged here must be diffed first, not matched by name.
+
 ## 2026-08-04d (**repo-wide cleanup pass: a LIVE fudge factor deleted, the fiducial blend join hardened, an O(N^2) load fixed. No science number changes.**)
 
 Four independent review passes over the whole tree (reuse / simplification / efficiency / altitude).

@@ -65,8 +65,8 @@ for _p in (SBSI_ROOT, os.path.join(SBSI_ROOT, "scripts")):
 
 from eval_detection_constgold import (  # noqa: E402
     MINUS, PLUS, build_shapes, leg_means, load_leg)
+from sbs_shear.paths import CROWD_LOOKUP as CROWD
 
-CROWD = "/home/z/Zekang.Zhang/SBSI/results/crowd_flux_conc_c0-199.feather"
 
 
 def join_nbr_flux(d):

@@ -47,8 +47,8 @@ import numpy as np
 import pandas as pd
 import pyarrow as pa
 import pyarrow.ipc as ipc
+from sbs_shear.paths import SIM_BASE as BASE
 
-BASE = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876"
 CAT_G02 = os.path.join(BASE, "response_catalogue_train.feather")
 CAT_G005 = os.path.join(BASE, "response_catalogue_g005_train.feather")
 DIST_EDGES = [0.0, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0]

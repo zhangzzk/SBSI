@@ -83,6 +83,7 @@ from matplotlib.patches import Patch  # noqa: E402
 from matplotlib.ticker import NullFormatter, ScalarFormatter  # noqa: E402
 
 from sbs_shear.blend_lookup import join_blend  # noqa: E402
+from sbs_shear.paths import CROWD_LOOKUP as CROWD
 
 BLUE, VERM, GREEN = "#0072B2", "#D55E00", "#009E73"
 INK, MUTED = "#1a1a1a", "#6b6b6b"
@@ -93,7 +94,6 @@ BLEND_LOOKUP = "results/blend_lookup_indomtuned_c40-139.feather"
 MIN_MATCH = 0.20     # in-domain lookup vs WIDE dumps: expect ~0.43; refuse far below
 CONST_CAT = ("/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/"
              "constant_response_catalogue_train.feather")
-CROWD = "/home/z/Zekang.Zhang/SBSI/results/crowd_flux_conc_c0-199.feather"
 TABLE_NPZ = "results/constgold_neardomain_table.npz"
 SELFRESP = "results/halfshear_selfresp.feather"
 CURVE_GLOB = "measurement_flow_g0_ngmix_ablate_s2c_lt500_dom6x6_s*_train_curve.npz"

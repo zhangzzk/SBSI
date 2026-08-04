@@ -62,6 +62,7 @@ from sbs_shear.preprocessing import (  # noqa: E402
 )
 from sbs_shear.coordinates import ellipticity_from_axis_ratio_angle  # noqa: E402
 from sbs_shear.shear_map import apply_shear_to_ellipticity  # noqa: E402
+from sbs_shear.paths import CROWD_LOOKUP as CROWD
 
 # Columns needed for BOTH the flow conditioning and the sim's per-leg columns. They are read in ONE
 # pass and kept in ONE frame: `validate_constant_with_blend.load` cannot be reused here because it
@@ -78,7 +79,6 @@ NEED = ["case", "input_index", "neighbored", "distance", "polarization_angle",
 
 CG = ("/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/"
       "constant_response_catalogue_train.feather")
-CROWD = "/home/z/Zekang.Zhang/SBSI/results/crowd_flux_conc_c0-199.feather"
 RK = dict(pixel_rms=0.312, pixel_size=0.2, zero_mag=30.0, psf_fwhm=0.73, moffat_beta=2.224)
 
 

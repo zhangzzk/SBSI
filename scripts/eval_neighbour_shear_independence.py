@@ -48,12 +48,12 @@ import numpy as np
 import pandas as pd
 import pyarrow as pa
 import pyarrow.ipc as ipc
+from sbs_shear.paths import CATALOGUES as CAT
 
 SBSI_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if SBSI_ROOT not in sys.path:
     sys.path.insert(0, SBSI_ROOT)
 
-CAT = "/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/"
 COLS = ["case", "input_index", "detected", "distance",
         "gamma1_input_p", "gamma2_input_p", "gamma1_input_s", "gamma2_input_s"]
 

@@ -24,8 +24,8 @@ import pyarrow as pa
 import pyarrow.feather as pf
 import pyarrow.ipc as ipc
 from scipy.spatial import cKDTree
+from sbs_shear.paths import SIM_BASE as BASE
 
-BASE = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876"
 DET = f"{BASE}/detection_catalogue_train.feather"
 MEAS = "/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_crowd_g0.0_train_full.feather"
 TILE = "tile180.0_-0.5"

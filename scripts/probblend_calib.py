@@ -14,8 +14,8 @@ re-measure the response-weighted soft census with the calibrated p_det vs the ha
 import sys
 import numpy as np, pandas as pd, pyarrow.feather as pf
 from sklearn.isotonic import IsotonicRegression
+from sbs_shear.paths import SIM_BASE as BASE
 
-BASE = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876"
 DET = f"{BASE}/detection_catalogue_train.feather"
 BLEND_MODELS = "/home/z/Zekang.Zhang/blendemu/models"
 COND = dict(pixel_size=0.2, zero_point=30.0, psf_fwhm=0.73, moffat_beta=2.224, pixel_rms=0.312)

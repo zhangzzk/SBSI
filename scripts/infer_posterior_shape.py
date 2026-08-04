@@ -79,9 +79,9 @@ from sbs_shear.posterior_shape import (  # noqa: E402
     make_e_grid,
     shear_prior_matrix,
 )
+from sbs_shear.paths import CONST_SIM_BASE as CBASE
 
 CATBASE = "/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/"
-CBASE = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/"
 G0_CAT = CATBASE + "det_meas_crowd_conc_g0.0_train_full.feather"
 GOLD_CAT = CBASE + "constant_response_catalogue_c40-139.feather"
 CROWD_LOOKUP = "results/crowd_flux_conc_c0-199.feather"

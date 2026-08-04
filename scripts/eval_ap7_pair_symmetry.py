@@ -39,12 +39,12 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.ipc as ipc
 from scipy.spatial import cKDTree
+from sbs_shear.paths import CATALOGUES as CAT
 
 SBSI_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if SBSI_ROOT not in sys.path:
     sys.path.insert(0, SBSI_ROOT)
 
-CAT = "/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/"
 COLS = ["case", "input_index", "RA_input_p", "DEC_input_p", "RA_input_s", "DEC_input_s",
         "distance", "r_input_p", "r_input_s"]
 

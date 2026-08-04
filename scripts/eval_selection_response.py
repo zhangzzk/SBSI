@@ -56,8 +56,8 @@ from sbs_shear.shear_map import apply_shear_to_ellipticity  # noqa: E402
 from eval_selfresp_gap import (  # noqa: E402
     CROWD, NN, read_leg, domain_cut,
 )
+from sbs_shear.paths import CATALOGUES as CAT
 
-CAT = "/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/"
 NGMIX = ["measured_ngmix_g1", "measured_ngmix_g2"]
 GAMMA = ["gamma1_input_p", "gamma2_input_p"]
 MEAS = ["measured_mag_auto", "measured_flux_radius"]

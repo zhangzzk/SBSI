@@ -52,12 +52,12 @@ from sbs_shear.preprocessing import (  # noqa: E402
     source_select_selection,
 )
 from sbs_shear.shear_map import apply_shear_to_ellipticity  # noqa: E402
+from sbs_shear.paths import CATALOGUES as CAT
+from sbs_shear.paths import CROWD_LOOKUP as CROWD
+from sbs_shear.paths import NN_LOOKUP as NN
 
-CAT = "/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/"
 # per-(case,input_index) neighbour-flux lookup (nbr_flux_near/far/max), cases 0-199
-CROWD = "/home/z/Zekang.Zhang/SBSI/results/crowd_flux_conc_c0-199.feather"
 # per-(case,input_index) nearest-brighter-neighbour distance, cases 0-39
-NN = "/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/nn_dist_c0-39.feather"
 
 NGMIX = ["measured_ngmix_g1", "measured_ngmix_g2"]
 GAMMA = ["gamma1_input_p", "gamma2_input_p"]

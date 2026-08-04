@@ -42,8 +42,8 @@ from sbs_shear.preprocessing import (  # noqa
 )
 from sbs_shear.coordinates import ellipticity_from_axis_ratio_angle  # noqa
 from scripts.response_ratio_diagnostic import model_mean_proj  # noqa
+from sbs_shear.paths import CONST_SIM_BASE as CBASE
 
-CBASE = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/"
 BLEND_MODELS = "/home/z/Zekang.Zhang/blendemu/models"
 COND = dict(pixel_size=0.2, zero_point=30.0, psf_fwhm=0.73, moffat_beta=2.224, pixel_rms=0.312)
 

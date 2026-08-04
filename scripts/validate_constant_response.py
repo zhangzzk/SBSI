@@ -40,8 +40,9 @@ from sbs_shear.measurement_model import load_measurement_model  # noqa: E402
 from sbs_shear.preprocessing import DEFAULT_SELECTION_CUTS, source_select_selection  # noqa: E402
 from sbs_shear.coordinates import ellipticity_from_axis_ratio_angle  # noqa: E402
 from scripts.response_ratio_diagnostic import model_mean_proj  # noqa: E402
+# NOTE: this `BASE` is the CONSTANT (constgold) tree, not the half-shear `SIM_BASE`.
+from sbs_shear.paths import CONST_SIM_BASE as BASE
 
-BASE = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/"
 
 
 def load(cat, max_rows):

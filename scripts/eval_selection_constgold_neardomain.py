@@ -100,6 +100,7 @@ from sbs_shear.preprocessing import (  # noqa: E402
 )
 from sbs_shear.coordinates import ellipticity_from_axis_ratio_angle  # noqa: E402
 from sbs_shear.shear_map import apply_shear_to_ellipticity  # noqa: E402
+from sbs_shear.paths import CROWD_LOOKUP as CROWD
 
 NEED = ["case", "input_index", "neighbored", "distance", "polarization_angle",
         "Re_input_p", "Re_input_s", "axis_ratio_input_p", "axis_ratio_input_s",
@@ -113,7 +114,6 @@ NEED = ["case", "input_index", "neighbored", "distance", "polarization_angle",
 
 CG = ("/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/"
       "constant_response_catalogue_train.feather")
-CROWD = "/home/z/Zekang.Zhang/SBSI/results/crowd_flux_conc_c0-199.feather"
 RK = dict(pixel_rms=0.312, pixel_size=0.2, zero_mag=30.0, psf_fwhm=0.73, moffat_beta=2.224)
 PX = 0.2
 

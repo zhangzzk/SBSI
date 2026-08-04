@@ -68,8 +68,8 @@ for _p in (SBSI_ROOT, os.path.join(SBSI_ROOT, "scripts")):
         sys.path.insert(0, _p)
 
 from eval_selfresp_gap import NGMIX, GAMMA, domain_cut, read_leg  # noqa: E402
+from sbs_shear.paths import CATALOGUES as CAT
 
-CAT = "/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/"
 LEG0 = CAT + "det_meas_ngmix_g0.0_train.feather"
 LEGS = [(0.02, CAT + "det_meas_ngmix_g0.02_test.feather"),
         (0.05, CAT + "det_meas_ngmix_g0.05_val.feather")]

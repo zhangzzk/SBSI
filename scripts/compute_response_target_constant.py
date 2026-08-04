@@ -18,8 +18,8 @@ if SBSI_ROOT not in sys.path:
     sys.path.insert(0, SBSI_ROOT)
 from sbs_shear.preprocessing import DEFAULT_SELECTION_CUTS, source_select_selection  # noqa
 from sbs_shear.coordinates import ellipticity_from_axis_ratio_angle  # noqa
+from sbs_shear.paths import CONST_SIM_BASE as CBASE
 
-CBASE = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/"
 
 
 def main():

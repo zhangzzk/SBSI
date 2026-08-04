@@ -34,15 +34,15 @@ import numpy as np
 import pandas as pd
 import pyarrow.dataset as ds
 import pyarrow.feather as pf
+from sbs_shear.paths import catalogue
 
-CAT = "/project/ls-gruen/users/zekang.zhang/sbsi_catalogues"
 KEY = ["case", "input_index"]
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--ruler-cat", default=f"{CAT}/det_meas_ngmix_g0.05_val.feather")
-    ap.add_argument("--np7-cat", default=f"{CAT}/det_meas_ngmix_np7_g0.05_val.feather")
+    ap.add_argument("--ruler-cat", default=catalogue("det_meas_ngmix_g0.05_val.feather"))
+    ap.add_argument("--np7-cat", default=catalogue("det_meas_ngmix_np7_g0.05_val.feather"))
     ap.add_argument("--g0-lookup", default="/home/z/Zekang.Zhang/SBSI/results/g0_lookup_c0-99.feather")
     ap.add_argument("--max-case", type=int, default=4)
     ap.add_argument("--true-mag-max", type=float, default=26.0)

@@ -33,8 +33,8 @@ import sys
 import numpy as np
 import pandas as pd
 import pyarrow.feather as pf
+from sbs_shear.paths import CONST_SIM_DIR as CBASE
 
-CBASE = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant"
 BLEND_MODELS = "/home/z/Zekang.Zhang/blendemu/models"
 COND = dict(pixel_size=0.2, zero_point=30.0, psf_fwhm=0.73, moffat_beta=2.224, pixel_rms=0.312)
 TILE = "tile180.0_-0.5"
