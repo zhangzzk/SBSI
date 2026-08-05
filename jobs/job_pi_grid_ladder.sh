@@ -37,6 +37,9 @@ echo "closure_g=$CG  cache tag=$GTAG"
 # which reads as success.  Use COLONS when exporting; both separators are accepted here so an
 # interactive `PGRIDS="61 101 141"` still works.
 split_list() { echo "$1" | tr ':,' '  '; }
+# `grep` block-buffers at 4 kB when its stdout is a file, so a job killed at its time limit
+# loses whatever is still in the buffer -- which is how a 3 h merge left a log holding nothing
+# but its two header lines.  `--line-buffered` costs nothing and makes partial ladders readable.
 for CUT in $(split_list "${CUTS:-0.6 0.4}"); do
   TAG=$(echo "$CUT" | tr -d '.' | sed 's/^0//')
   for PG in $(split_list "${PGRIDS:-61 81 101 141}"); do
@@ -47,7 +50,7 @@ for CUT in $(split_list "${CUTS:-0.6 0.4}"); do
       --ring rot90 --shape-reps 2 --jk-blocks 200 --uncut-control \
       --pi-grid-n "$PG" \
       --load-scores "$SC/c0${TAG}_${GTAG}_8M_G2765.npz" 2>&1 \
-      | grep -vE "module command|Pi rep "
+      | grep --line-buffered -vE "module command|Pi rep "
   done
 done
 date; echo "### DONE ###"

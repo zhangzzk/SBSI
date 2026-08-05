@@ -130,7 +130,24 @@ needs no score pass, only the `Pi` block, which is small enough for CPU — so i
 `cluster` (separate QOS, 50 job slots) and contends with nothing. Expected σ_gal
 0.270% → 0.270/√3 = 0.156%, total σ → sqrt(0.156² + 0.072²) = 0.172%.
 
-**Next.** (1) Read the 6M merge (15527903): cut 0.6 at ±0.17% instead of ±0.28%.
+**The merge TIMED OUT and returned nothing (15527903), for two compounding reasons.** It asked
+for 3 h on `cluster` and was killed at the wall. The sizing was simply wrong: the `Pi` block at
+`pi_grid_n=141` costs ~10-15 min on an a40-16gb slice, and the measured CPU:GPU ratio on this
+pass is ~13×, which lands at 2-3.5 h — straddling a 3 h limit. Resubmitted as **15540801** with
+a 12 h wall (`jobs/job_shard_merge.sh`, new; the old wrapper lived in scratch). It started
+running on `cluster` immediately while all three `cip` GPUs were held by `flow_v21`/`cg_v21`,
+which is the intended confirmation that the two QOS pools are independent.
+
+**Silent-failure bug #4: `grep` block-buffers, so a killed job loses its log.** The merge's
+`.out` held nothing but the two header lines printed before the pipe opened — not because no
+work happened, but because `grep` buffers ~4 kB when stdout is a file and a SIGKILL at the time
+limit discards it. `jobs/job_score_shard.sh` already used `--line-buffered`;
+`jobs/job_pi_grid_ladder.sh` did not, so the earlier `grid_fine` TIMEOUT lost its last partial
+rung the same way. Both are now `--line-buffered`. This is the fourth member of the family in
+this entry (comma-split `--export`, hardcoded `--closure-g`, the cache-key regression): every
+one of them turns a failure into something that *reads* like a clean result or a clean log.
+
+**Next.** (1) Read the 6M merge (**15540801**, was 15527903): cut 0.6 at ±0.17% instead of ±0.28%.
 (2) Run `g = 0.20` when GPUs are free — a value near −1.96% confirms the expected truncation
 and closes the question; near −0.49% means a real multiplicative residual.
 (3) Finish shards 0/2/4 for σ_gal → ~0.13%; note
