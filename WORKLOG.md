@@ -2,6 +2,57 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05s  The fiducial emulator is CONVICTED on V2.1 -- and I called the fix futile on the wrong population
+
+New: `scripts/eval_m_swap_emulator.py`, `jobs/job_m_swap_emulator.sh` (job 15542390).
+
+**Retracting a call I made earlier tonight.** After 05h I wrote that a re-score of V2.1 `m` with
+`lsst_r_extnbr_ho` was "futile", because inside the emulator's inference box all four emulators
+predict the summed `R_blend` to within 0.06% of each other. That is true and it is beside the point:
+that box holds 138,017 primaries, **18% of the V2.1 ruler sample**. The same run's UNRESTRICTED V2.1
+table -- 766,882 primaries, the population V2.1 `m` is actually about -- says something else
+entirely:
+
+    summed R_blend, FULL V2.1 sample      truth = 0.08636 +- 0.00284
+      lsst_r_extnbr_ho             0.08738    +1.18% +- 3.33     consistent with truth (0.35 sigma)
+      lsst_r_extnbr_indom_tuned    0.07292   -15.56% +- 2.78     5.6 sigma LOW
+      lsst_r_extnbr_v21            0.05437   -37.05% +- 2.07
+      lsst_r                       0.09249    +7.10% +- 3.52
+
+This is **the fifth appearance tonight of the same population-mismatch trap** (pair lists,
+ruler-vs-`m`, emulator boxes, target domains, and now box-vs-full-V2.1), and the first time I walked
+into it myself rather than diagnosing it in someone else's number. Both figures were in the same log,
+20 lines apart. The rule has to be applied to my own conclusions: **state which population a number
+came from, every time, including when it is a null.**
+
+**The mechanism is AGENTS.md trap #1, exactly as written.** The fiducial emulator's regression box is
+primary mag 18-26. The V2.1 domain is an S/N CURVE with NO magnitude ceiling, so it admits primaries
+past mag 26 that the fiducial emulator simply does not cover. `_ho`'s regression box is mag 18-28,
+Re 0.1-1.5 and covers V2.1 outright. So the emulator that is EXACT on the fiducial domain (-0.02% +-
+1.04, 05e) is 5.6 sigma low on V2.1, and there is no contradiction between those two facts.
+
+**This puts the V2.1 diagnosis in question.** Job 15536811 measured `R_blend = 0.1179` on V2.1 and
+concluded `R_flow` is 1.66% short of closure. That `R_blend` came from a convicted emulator. If the
+ruler's ratio carries over, `R_blend` is nearer 0.141, closure needs `R_flow = 0.849` against an
+actual 0.858, and **the flow would be ~1% HIGH rather than 1.6% low -- a sign change, not a shift.**
+Whether it does carry over is what job 15542390 measures; the arithmetic above is a motivation, not a
+result, and no number from it is quoted anywhere.
+
+**Cheap because the dumps were already right.** A dump stores `r_sim`, `R_flow` and `R_blend` as
+separate columns and only `R_blend` depends on the emulator, so the swap is a join on
+`(case, input_index)` -- CPU, minutes -- not a 16-seed GPU re-score. The expensive path had been
+assumed, and that assumption is part of why this sat unexamined.
+
+The script enforces what AGENTS.md requires rather than trusting the caller: >=16 dumps or it
+refuses; the ratio formed inside each seed; the lookup match fraction asserted with unmatched rows
+DROPPED, never zero-filled, and a hard refusal below 98% coverage. `R_flow` is identical between the
+two rows by construction, so the entire move is attributable to the emulator.
+
+Promotion stays on the ruler, per the firewall: `_ho` is preferred for V2.1 because
+`eval_rblend_gap_summed` clears it and convicts the fiducial on that population. No constgold number
+selects the emulator.
+
+
 ## 2026-08-05p  Estimators DO match -- and my own pass criterion for that test was wrong
 
 Job 15540936, the prerequisite for the revised decisive test (05n). It asked whether constgold's
