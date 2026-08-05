@@ -2,6 +2,57 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05h  V2.1: the EMULATOR IS EXONERATED. The deficit is in the FLOW.
+
+Job 15535057, `scripts/eval_rblend_gap_summed.py --box-*`.
+
+Scored inside the emulator's inference box -- true `mag < 25.72`, `Re` in (0.5, 1.5), i.e. **the
+population `m` is actually scored on** (138,017 primaries, 18.00% of the V2.1 ruler sample):
+
+| emulator | <S_blend> | rel. error |
+|---|---|---|
+| half-shear TRUTH | 0.06230 +- 0.00573 | -- |
+| `lsst_r_extnbr_v21` (V2.1) | 0.06271 | **+0.66% +- 9.26** |
+| `lsst_r_extnbr_indom_tuned` | 0.06271 | +0.66% +- 9.26 |
+| `lsst_r_extnbr_ho` | 0.06273 | +0.70% +- 9.26 |
+| `lsst_r` | 0.06396 | +2.66% +- 9.44 |
+
+**All four emulators predict the same thing to within 0.06% of each other, and none is distinguishable
+from truth.** Unrestricted, the same four spread over 44 points (+7.10% to -37.05%). The entire spread
+lives OUTSIDE the box -- on galaxies `m` never sees, because the guard in `eval_v2_indomain_m.py`
+forbids evaluating there. Inside the box every emulator is interpolating on trained ground, so they
+agree; that is the expected behaviour, and it is what the m population gets.
+
+**Therefore the emulator cannot be the cause of V2.1's `+0.790%` m, and swapping it cannot fix it.**
+The emulator-to-emulator comparison is the robust part of this: truth and the null cancel exactly in
+it, so it does not depend on the caveat below.
+
+**PLANNED WORK CANCELLED.** Task #14 -- rebuild the V2.1 `R_blend` lookup with `lsst_r_extnbr_ho` and
+re-score `m` at 16 seeds -- is futile and was not submitted. A 16-seed GPU run would have moved
+`R_blend` by 0.06% and `m` by well under a hundredth of a point. (The `_ho` lookup build 15534171 was
+still allowed to finish: it is cheap, and it settles whether the 2026-07-16 artifact in `sbsi_caches`
+was built under today's conventions.)
+
+**WHERE THE DEFICIT ACTUALLY IS.** From the V2.1 component decomposition (job 15523254, seed 501):
+
+    V2.1 DOMAIN (Re>0.5 & S/N>10):   R_sim = 0.9903   R_flow = 0.8581   R_blend = 0.1179
+
+Closure needs `R_flow + R_blend = R_sim`. The ruler now certifies `R_blend = 0.1179` on this exact
+population, so the residual is carried entirely by the flow: it needs 0.8724 and delivers 0.8581,
+i.e. **`R_flow` is 1.66% low on the V2.1 domain.** That, not the blend model, is what the V2.1
+investigation should now be aimed at.
+
+**CAVEAT, STATED NOT BURIED.** The box-restricted 45-degree null is `-0.0172 +- 0.0057` (3.0 sigma)
+against a truth of 0.0623 -- an artifact worth 28% of the signal. The unrestricted null on the same
+npz is clean (-0.0021 +- 0.0028, 0.7 sigma) and every separation bin passed (2026-08-05c), so this
+appears when the primary box is imposed. A primary-property cut cannot correlate with the NEIGHBOUR's
+shear direction, so there is no mechanism for it and a 3-sigma fluctuation is possible after this many
+null checks -- but it is not dismissed, and it means the absolute `<S_truth>` inside the box carries
+an unquantified systematic. **The conclusion above deliberately does not rest on it**: it rests on the
+four emulators agreeing with EACH OTHER, where truth and null drop out. Diagnosing the box null is the
+next ruler task.
+
+
 ## 2026-08-05g  CORRECTION to 2026-08-05f: the ruler and the `m` eval score DIFFERENT populations
 
 Files: `scripts/eval_rblend_gap_summed.py` (`--box-mag-max/--box-re-min/--box-re-max`),
