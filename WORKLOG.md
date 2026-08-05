@@ -49,7 +49,30 @@ independent of magnitude/size BY CONSTRUCTION and the factorisation
 where shape correlates with size and magnitude. Worth rewording so the warning fires at the point
 it actually bites.
 
-**Finding 4 (cosmetic):** `shear_velocity_jacobian` and the inline `v` in
+**Findings 2 and 3 are now FIXED (owner request, same day).** Tests: **72 passed** (15542331),
+up from 58; the 14 new ones are all the merge path.
+
+*Finding 2.* The merge logic was inline in `main()`, which is why it had no test -- reaching it
+meant importing the whole driver. Extracted verbatim to
+`score_inference.merge_block_sum_caches` (next to `blocked_sums`/`jackknife_blocks`, whose
+output it concatenates) with a `ScoreCacheMismatch` exception; `eval_score_select.py` calls it
+and converts the exception to a clean `SystemExit` so job logs keep a one-line message instead
+of a traceback. No behaviour change -- verified by importing the driver and by the suite.
+`tests/test_score_cache_merge.py` covers: the exactness claim (merged block sums equal a single
+pass over the union, `ghat` AND its error bar to 1e-12); the uncut control travelling block-for-
+block with the kept sums; and -- the part that actually broke -- eight REFUSALS, since both
+historical failures were failures to refuse. Includes a direct regression test for the
+53-second silent no-op (a pre-sharding cache must read as a whole-catalogue pass, but must
+still be refused as a shard of a multi-shard run) and one asserting that the fallback did NOT
+become a general "absent key is fine" rule.
+
+*Finding 3.* `population_log_pi`'s docstring now splits the two regimes instead of flatly
+calling itself a defect: the factorisation is EXACT for the closure test (shapes are drawn
+i.i.d. and pasted onto rows, so shape is independent of the rest by construction) and a REAL
+error on data (shape correlates with size and magnitude). cont.164 defect 3 is corrected, not
+withdrawn -- the term still has to be priced before this is pointed at a real catalogue.
+
+**Finding 4 (cosmetic, NOT done):** `shear_velocity_jacobian` and the inline `v` in
 `blend_injection_term` are identical 6-line blocks; one should call the other. And the `_d1`
 clamp should print when it fires, since a silent activation would be exactly the class of thing
 [[feedback_no_silent_fudge]] forbids.

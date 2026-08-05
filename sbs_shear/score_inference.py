@@ -529,9 +529,23 @@ def population_log_pi(pi_per_galaxy):
 
         Pi_k^eff = (1/N) sum_i Pi_ik,     P(keep | gamma) = Integral p_gamma(e) Pi^eff(e) de.
 
-    Note this is exactly where §5B.1(i)'s "the node bank is shared across the catalogue"
-    is violated by the V1-shaped bank: with a genuinely shared bank there would be nothing
-    to average.  See `WORKLOG.md` cont.164 defect 3.
+    WHEN THIS AVERAGE IS EXACT, AND WHEN IT IS NOT.  Replacing the joint scene prior by
+    (shape prior) x (empirical distribution of the rest) is exact only if the true shape is
+    INDEPENDENT of the other true properties.  The two regimes differ, and conflating them
+    has cost time in both directions:
+
+    * **Closure tests: exact.**  `eval_score_select.py` draws true shapes i.i.d. from the
+      prior and pastes them onto catalogue rows, so shape is independent of magnitude, size
+      and neighbours BY CONSTRUCTION.  Nothing is approximated and no correction is owed.
+    * **Real catalogues: a real error.**  There, shape correlates with size and magnitude
+      (rounder objects are small and faint), the factorisation fails, and `Pi^eff` misweights
+      the population by that correlation.  This is the term to price before the estimator is
+      pointed at data.
+
+    Structurally the average exists at all only because this bank is per-galaxy in its
+    non-shape conditioning -- §5B.1(i)'s "the node bank is shared across the catalogue"
+    describes a bank with nothing to average.  `WORKLOG.md` cont.164 defect 3 records that
+    as a defect without the split above; cont.179 corrects it.
     """
     pi = np.asarray(pi_per_galaxy, dtype=np.float64)
     if pi.ndim != 2:
@@ -636,6 +650,68 @@ def jackknife_blocks(cnt, ns, ni, s_sel=None, i_sel=None):
     reps = np.stack([est(cnt.sum() - cnt[b], ns.sum(axis=0) - ns[b], ni.sum(axis=0) - ni[b])
                      for b in range(len(cnt))])
     return full, jackknife_sigma(reps), reps
+
+
+class ScoreCacheMismatch(ValueError):
+    """A cached score pass cannot be merged with the run asking for it."""
+
+
+def merge_block_sum_caches(paths, cache_key, want_uncut=False):
+    """Concatenate several cached score passes into one set of block sums.
+
+    Sharding the score pass is exact rather than approximate: (5.3) needs only `sum s`,
+    `sum I` and a count, all additive, and the jackknife is defined over BLOCKS -- so three
+    200-block shards simply give a 600-block jackknife over their union.  All the care here
+    is in refusing the merges that are NOT exact.
+
+    Two ways this goes wrong silently, both of which have actually happened:
+
+    * **Merging incompatible passes.**  Every key that shapes a score must agree, or one
+      run's galaxies get paired with another run's `Pi`.  `row_shard` is the sole exemption
+      -- it is what distinguishes the shards -- while `row_shards` is checked, so a
+      whole-catalogue cache cannot be merged into a 6-way sharded run.
+    * **Merging the same shard twice.**  Nothing in the sums complains; the error bar just
+      shrinks by `sqrt(2)` with no new information behind it.  Hence the `row_shard`
+      registry, which is a correctness guard and not a convenience.
+
+    Caches written before sharding existed carry no `row_shard`/`row_shards` at all.  Those
+    are whole-catalogue passes, so a MISSING key reads as the unsharded value rather than
+    rejecting a cache that is in fact compatible; every other missing key stays a mismatch.
+
+    Returns `(blk_kept, blk_uncut_or_None, n_keep, n_tot, shards)`.
+    """
+    import json
+
+    paths = [p for p in paths if p]
+    if not paths:
+        raise ScoreCacheMismatch("no cache paths given")
+    pre_shard = {"row_shard": 0, "row_shards": 1}
+    blk_k, blk_u, n_keep, n_tot, seen = None, None, 0, 0, {}
+    for path in paths:
+        z = np.load(path, allow_pickle=False)
+        got = json.loads(str(z["key"]))
+        bad = {k: (v, got.get(k)) for k, v in cache_key.items()
+               if k != "row_shard" and got.get(k, pre_shard.get(k)) != v}
+        if bad:
+            raise ScoreCacheMismatch(
+                f"{path} was built with different settings (want, got): {bad}")
+        off = got.get("row_shard", 0)
+        if off in seen:
+            raise ScoreCacheMismatch(
+                f"{path} repeats row_shard={off} (already from {seen[off]}); "
+                f"merging it would double-count rows")
+        seen[off] = path
+        k = (z["cnt_k"], z["ns_k"], z["ni_k"])
+        u = (z["cnt_u"], z["ns_u"], z["ni_u"]) if want_uncut else None
+        if blk_k is None:
+            blk_k, blk_u = k, u
+        else:
+            blk_k = tuple(np.concatenate([a, b], axis=0) for a, b in zip(blk_k, k))
+            blk_u = (None if u is None else
+                     tuple(np.concatenate([a, b], axis=0) for a, b in zip(blk_u, u)))
+        n_keep += int(z["n_keep"])
+        n_tot += int(z["n_tot"])
+    return blk_k, blk_u, n_keep, n_tot, sorted(seen)
 
 
 def jackknife_sigma(reps):

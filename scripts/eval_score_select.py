@@ -53,8 +53,8 @@ from sbs_shear.posterior_shape import (  # noqa: E402
 from sbs_shear.precision import MODES, precision_region  # noqa: E402
 from sbs_shear.preprocessing import rescale  # noqa: E402
 from sbs_shear.score_inference import (  # noqa: E402
-    ShapeScoreNodes, blocked_sums, jackknife_blocks, jackknife_sigma,
-    population_terms,
+    ScoreCacheMismatch, ShapeScoreNodes, blocked_sums, jackknife_blocks,
+    jackknife_sigma, merge_block_sum_caches, population_terms,
 )
 from sbs_shear.shear_map import apply_shear_to_ellipticity  # noqa: E402
 
@@ -498,44 +498,20 @@ def main():
                      row_shard=args.row_shard, row_shards=args.row_shards)
 
     if args.load_scores:
-        # MERGING SHARDS.  A comma list concatenates several caches' per-block sums.  That is
-        # exact, not an approximation: (5.3) needs only `sum s`, `sum I` and a count, all
-        # additive, and the jackknife is defined over BLOCKS -- so three 200-block shards
-        # simply give a 600-block jackknife over the union.  The keys must agree on
-        # everything that shapes a score EXCEPT `row_offset`, and the offsets must be
-        # DISTINCT, or the same galaxies would be counted twice and the error bar would
-        # shrink by sqrt(2) with no new information behind it.
+        # MERGING SHARDS.  A comma list concatenates several caches' per-block sums; the
+        # exactness argument and the two guards live in `merge_block_sum_caches`, which is
+        # in the library precisely so `tests/test_score_cache_merge.py` can reach it.  This
+        # bookkeeping has produced two silent failures (a key regression that made jobs
+        # "COMPLETE" in 53 s with no results, and the double-count guard) while every
+        # identity around it was tested, so it is the last place to leave untested.
         paths = [p for p in str(args.load_scores).split(",") if p]
-        blk_k, blk_u, n_keep, n_tot, seen = None, None, 0, 0, {}
-        for path in paths:
-            z = np.load(path, allow_pickle=False)
-            got = json.loads(str(z["key"]))
-            # Caches written before sharding existed carry no `row_shard`/`row_shards`; they
-            # are whole-catalogue passes, so read a missing key as the unsharded value rather
-            # than rejecting a cache that is in fact compatible.
-            pre_shard = {"row_shard": 0, "row_shards": 1}
-            bad = {k: (v, got.get(k)) for k, v in cache_key.items()
-                   if k != "row_shard" and got.get(k, pre_shard.get(k)) != v}
-            if bad:
-                raise SystemExit(f"--load-scores {path} was built with different settings "
-                                 f"(want, got): {bad}")
-            off = got.get("row_shard", 0)
-            if off in seen:
-                raise SystemExit(f"--load-scores {path} repeats row_shard={off} (already "
-                                 f"from {seen[off]}); merging it would double-count rows")
-            seen[off] = path
-            k = (z["cnt_k"], z["ns_k"], z["ni_k"])
-            u = (z["cnt_u"], z["ns_u"], z["ni_u"]) if args.uncut_control else None
-            if blk_k is None:
-                blk_k, blk_u = k, u
-            else:
-                blk_k = tuple(np.concatenate([a, b], axis=0) for a, b in zip(blk_k, k))
-                blk_u = (None if u is None else
-                         tuple(np.concatenate([a, b], axis=0) for a, b in zip(blk_u, u)))
-            n_keep += int(z["n_keep"])
-            n_tot += int(z["n_tot"])
+        try:
+            blk_k, blk_u, n_keep, n_tot, seen = merge_block_sum_caches(
+                paths, cache_key, want_uncut=args.uncut_control)
+        except ScoreCacheMismatch as e:                 # a clean job log beats a traceback
+            raise SystemExit(f"--load-scores {e}")
         print(f"cached scores loaded from {len(paths)} shard(s) "
-              f"(row shards {sorted(seen)}), {len(blk_k[0])} jackknife blocks, "
+              f"(row shards {seen}), {len(blk_k[0])} jackknife blocks, "
               f"{n_tot:,} objects; no score pass this run", flush=True)
     else:
         with precision_region(args.precision, args.device):
