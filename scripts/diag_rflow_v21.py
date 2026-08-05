@@ -39,6 +39,7 @@ import numpy as np
 import pyarrow.feather as pf
 
 from sbs_shear import domain as sbs_domain
+from scripts.eval_m_swap_emulator import key64, load_lookup
 from scripts.eval_v2_indomain_m import catalogue_true_props
 
 
@@ -175,6 +176,12 @@ def main():
     ap.add_argument("--min-case", type=int, default=40)
     ap.add_argument("--mag-max", type=float, default=26.0, help="flow training box, upper mag")
     ap.add_argument("--re-min", type=float, default=0.3, help="flow training box, lower Re")
+    ap.add_argument("--blend-lookup", default=None,
+                    help="Replace the dump's own R_blend with this per-object lookup. REQUIRED when "
+                         "comparing two flows whose dumps were built with DIFFERENT emulators -- the "
+                         "V2.1 dumps carry lsst_r_extnbr_v21, which the ruler convicts at -37% on "
+                         "the V2.1 sample, so without this a flow-vs-flow comparison is really a "
+                         "flow-and-emulator comparison. Unmatched rows are DROPPED, never zero-filled.")
     ap.add_argument("--scope", choices=("v21", "train"), default="v21",
                     help="which population to bin over. 'v21' is the deliverable domain; 'train' is "
                          "the flow's whole training box, which SPANS the V2.1 boundary and is the "
@@ -193,19 +200,35 @@ def main():
     re_ = tp["Re_input_p"].to_numpy(float)
     v21 = sbs_domain.in_domain(mag, re_)
 
+    rb_override, matched = None, np.ones(len(tp), bool)
+    if args.blend_lookup:
+        lk = load_lookup(args.blend_lookup, t0)
+        kk = key64(lk["case"], lk["input_index"])
+        o = np.argsort(kk)
+        kk, vals = kk[o], lk["R_blend"][o]
+        ck = key64(tp["case"].to_numpy(np.int64), tp["input_index"].to_numpy(np.int64))
+        pos = np.clip(np.searchsorted(kk, ck), 0, len(kk) - 1)
+        matched = kk[pos] == ck
+        rb_override = np.where(matched, vals[pos], np.nan)
+        print(f"R_blend REPLACED from {args.blend_lookup.split('/')[-1]}: "
+              f"{matched.mean():.4%} matched; {int((~matched).sum()):,} unmatched rows DROPPED "
+              f"(not zero-filled).")
+        v21 &= matched
+
     acc = None
     for d in dumps:
-        t = pf.read_table(d, columns=["case", "input_index", "r_sim", "R_flow", "R_blend"])
+        t = pf.read_table(d, columns=["r_sim", "R_flow", "R_blend"])
         if len(t) != len(tp):
             raise RuntimeError(f"{d}: {len(t):,} rows vs catalogue {len(tp):,}; cannot stack")
+        rbc = (rb_override if rb_override is not None
+               else t["R_blend"].to_numpy(zero_copy_only=False).astype(float))
         cur = np.column_stack([t["r_sim"].to_numpy(zero_copy_only=False).astype(float),
-                               t["R_flow"].to_numpy(zero_copy_only=False).astype(float),
-                               t["R_blend"].to_numpy(zero_copy_only=False).astype(float)])
+                               t["R_flow"].to_numpy(zero_copy_only=False).astype(float), rbc])
         acc = cur if acc is None else acc + cur
     acc /= len(dumps)
     rsim, rflow, rblend = acc[:, 0], acc[:, 1], acc[:, 2]
 
-    intrain = (mag < args.mag_max) & (re_ > args.re_min)
+    intrain = (mag < args.mag_max) & (re_ > args.re_min) & matched
     print(f"\n{'='*104}\nV2.1 CLOSURE RESIDUAL   residual = R_flow - (R_sim - R_blend)\n{'='*104}")
     print(f"V2.1 domain: {int(v21.sum()):,} rows.  Of those, INSIDE the flow's training box "
           f"(mag < {args.mag_max}, Re > {args.re_min}): {int((v21 & intrain).sum()):,} "
@@ -266,8 +289,10 @@ def main():
     ]
     for d in dumps:
         t = pf.read_table(d, columns=["r_sim", "R_flow", "R_blend"])
-        cols = [t[c].to_numpy(zero_copy_only=False).astype(float)
-                for c in ("r_sim", "R_flow", "R_blend")]
+        cols = [t["r_sim"].to_numpy(zero_copy_only=False).astype(float),
+                t["R_flow"].to_numpy(zero_copy_only=False).astype(float),
+                rb_override if rb_override is not None
+                else t["R_blend"].to_numpy(zero_copy_only=False).astype(float)]
         for tb in tables:
             tb.add(*cols)
     print("\n'+-seed' is the spread of the per-seed residual (R_flow moves with seed; R_sim and")

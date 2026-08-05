@@ -2,6 +2,69 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05z  THE V2.1 ANSWER: the cut slices a linear SIZE TILT almost exactly at its zero crossing
+
+Job 15545111 (case-blocked errors) plus a weighted fit. **This is the explanation the whole night was
+after, so the reasoning is spelled out rather than summarised.**
+
+**First, the error check came back negative -- and that is what makes the rest readable.** Blocking
+the `R_sim` error on `case` changed it by under 15% in every bin (e.g. 1.39 -> 1.40, 0.30 -> 0.24,
+0.43 -> 0.43). So the within-scene response correlation is negligible at the bin-mean level, the
+naive `std/sqrt(N)` was NOT understated, and the fine-bin structure in 05w is real rather than
+manufactured by an optimistic error bar. Worth stating plainly because the check was set up expecting
+the opposite.
+
+**Second, it is not a patchwork -- it is a straight line with two edge outliers.** Read in order, the
+interior bins fall monotonically:
+
+    Re [0.35,0.40)  -1.32 +- 1.15        Re [0.70,0.80)  -1.63 +- 0.51
+    Re [0.40,0.45)  +3.76 +- 0.79        Re [0.80,1.00)  -3.71 +- 0.54
+    Re [0.45,0.50)  +1.35 +- 0.74        Re [1.00,1.20)  -3.73 +- 0.52
+    Re [0.50,0.55)  -0.82 +- 0.94
+    Re [0.55,0.60)  -1.89 +- 0.98        EDGE  Re [0.30,0.35)  +9.32 +- 2.08
+    Re [0.60,0.70)  -0.62 +- 0.79        EDGE  Re [1.20,1.50)  +3.25 +- 0.68
+
+Weighted straight-line fit to the INTERIOR only (the two dropped bins each touch a boundary of the
+flow's training range -- Re > 0.3 below, the catalogue's 1.5 size cut above -- so they are exactly
+where an under-coverage artifact would sit):
+
+    residual = +4.49  -  8.10 * Re   [% per arcsec]
+    slope         = -8.10 +- 1.94    (4.2 sigma)
+    zero crossing = Re  0.555 +- 0.072 arcsec
+    the V2.1 cut sits at Re = 0.500  ->  0.8 sigma from the crossing
+
+Errors are inflated by `sqrt(chi2/dof) = 1.98`: the line fits far better than a constant
+(chi2/dof 3.94 vs 12.09) but 3.94 is still not a good fit, so the straight line is an INCOMPLETE
+description and its parameter errors are quoted conservatively. There is real curvature left over.
+
+**What this says.** The flow's shape-response error is a smooth tilt in TRUE SIZE that changes sign at
+Re ~ 0.55, and **the V2.1 resolution cut at Re = 0.5 lands within 0.8 sigma of that crossing.** So:
+
+  * V2.1 (Re > 0.5) keeps mostly the negative side and reads **-1.82% +- 0.31** (5.9 sigma);
+  * its complement (Re < 0.5, sn > 10) keeps the positive side and reads **+2.90% +- 0.65** (4.4 sigma);
+  * the union has them cancel, which is why the fiducial number is small.
+
+**The V2.1 cut did not create a bias. It stopped a pre-existing one from cancelling.** That is the
+same structure AGENTS.md already records for the fiducial `-0.123%` ("itself a CANCELLATION between
+two populations"), found independently on a different axis, and it is why a single-lever change
+evaluated against the fiducial `m` alone can look like a null while moving both halves.
+
+**Corollary for where to aim.** V2.1's -1.82% is not uniform inside V2.1: it runs from -0.82% at
+Re 0.50-0.55 to -3.73% at Re 1.00-1.20. The deficit is concentrated in LARGE galaxies, not spread
+across the domain.
+
+**Both confounds are already bounded**, so this is attributed to the flow rather than assumed onto it:
+the emulator can carry at most ~0.8 pt of a +-3.7 pt swing (05x), and the extraction convention is
+consistent with zero and does not track resolution (05u).
+
+**Next, and it is decisive:** does a flow TRAINED on V2.1 still carry the tilt? All 16 V2.1
+checkpoints now exist; the dump array (15536012) has produced 7 so far. Job 15545793 runs the same map
+on them -- **with `--blend-lookup` forcing the `_ho` R_blend**, because the V2.1 dumps were built with
+`blend_lookup_v21`, the emulator the ruler convicts at -37.05% +- 2.07 on that very sample. Without
+that swap the comparison would be flow-and-emulator, not flow. `diag_rflow_v21.py` gained the option;
+unmatched rows are dropped, never zero-filled. Preliminary at 7 seeds, to be repeated at 16.
+
+
 ## 2026-08-05x  Bounding caveat 1: the emulator can carry at most ~1 pt of the fine-bin oscillation
 
 No new job -- this reads the FIDUCIAL-box section of job 15535057, which already scored the ruler on
