@@ -79,12 +79,13 @@ class Table:
     Reporting the residual without both is how a noise pattern gets read as a physical trend.
     """
 
-    def __init__(self, title, header, labels, ids, nrow):
+    def __init__(self, title, header, labels, ids, nrow, case_idx=None, ncase=0):
         self.title, self.header, self.labels = title, header, labels
         self.ids, self.nrow = ids, nrow
         self.n = np.bincount(ids[ids >= 0], minlength=nrow)
         self.per_seed = []          # one (nrow, 3) array of [rs, rf, rb] means per seed
-        self.sim_sem = None         # sampling sem of R_sim per row, filled from the first dump
+        self.sim_sem = None         # CASE-BLOCKED sem of R_sim per row, from the first dump
+        self.case_idx, self.ncase = case_idx, ncase
 
     def add(self, rs, rf, rb):
         ok = self.ids >= 0
@@ -94,10 +95,39 @@ class Table:
                                  for c in (rs, rf, rb)])
         self.per_seed.append(means)
         if self.sim_sem is None:
-            # var(R_sim) per row, from the same pass: E[x^2] - E[x]^2, then sem
-            sq = np.bincount(i, weights=rs[ok] ** 2, minlength=nb) / cnt
-            var = np.maximum(sq - means[:, 0] ** 2, 0.0)
-            self.sim_sem = np.sqrt(var / cnt)
+            self.sim_sem = self._case_blocked_sem(rs, ok, i)
+
+    def _case_blocked_sem(self, rs, ok, i):
+        """Sem of R_sim per row, blocked by CASE rather than treating rows as independent.
+
+        WHY BLOCKED. A naive `std/sqrt(N)` assumes every galaxy's response is an independent draw.
+        They are not: objects sharing a scene share pixels and a noise realisation, so a blend's
+        members have correlated responses and the naive sem is too SMALL. That matters here because
+        the fine bins came out as a significant-looking oscillation, and an understated error is
+        exactly how an oscillation gets manufactured. Blocking on `case` -- each case being a
+        separately rendered field of ~562k galaxies -- absorbs any correlation inside a scene,
+        because whole scenes live inside one case.
+
+        The blocked estimate is the scatter of the per-case bin means, over the number of cases
+        contributing. It is larger than the naive one whenever the within-case correlation is real,
+        and converges to it when it is not, so it is the safe default rather than a tuning choice.
+        """
+        if self.case_idx is None or self.ncase < 3:
+            sq = np.bincount(i, weights=rs[ok] ** 2, minlength=self.nrow) / np.maximum(self.n, 1)
+            mu = np.bincount(i, weights=rs[ok], minlength=self.nrow) / np.maximum(self.n, 1)
+            return np.sqrt(np.maximum(sq - mu ** 2, 0.0) / np.maximum(self.n, 1))
+        flat = i * self.ncase + self.case_idx[ok]
+        size = self.nrow * self.ncase
+        s = np.bincount(flat, weights=rs[ok], minlength=size).reshape(self.nrow, self.ncase)
+        k = np.bincount(flat, minlength=size).reshape(self.nrow, self.ncase)
+        out = np.zeros(self.nrow)
+        for r in range(self.nrow):
+            have = k[r] > 0
+            if have.sum() < 3:
+                continue
+            mu = s[r][have] / k[r][have]
+            out[r] = mu.std(ddof=1) / np.sqrt(have.sum())
+        return out
 
     def report(self, min_n=2000):
         a = np.stack(self.per_seed)                     # (nseed, nrow, 3)
@@ -122,20 +152,20 @@ class Table:
                   f"{rel:>+9.2f}{e_seed:>8.2f}{e_sim:>8.2f}{abs(rel)/tot:>6.1f}s{self.n[r]:>12,}")
 
 
-def edge_table(title, header, key, edges, mask, fmt="{:.2f}"):
+def edge_table(title, header, key, edges, mask, fmt="{:.2f}", blocks=(None, 0)):
     idx = np.digitize(key, edges) - 1
     nrow = len(edges) - 1
     ids = np.where(mask & (idx >= 0) & (idx < nrow), idx, -1).astype(np.int64)
     labels = [f"[{fmt.format(edges[i])},{fmt.format(edges[i+1])})" for i in range(nrow)]
-    return Table(title, header, labels, ids, nrow)
+    return Table(title, header, labels, ids, nrow, *blocks)
 
 
-def cell_table(title, header, cells):
+def cell_table(title, header, cells, blocks=(None, 0)):
     """cells: list of (label, boolean mask). Masks must be disjoint."""
     ids = np.full(len(cells[0][1]), -1, np.int64)
     for r, (_, m) in enumerate(cells):
         ids[m] = r
-    return Table(title, header, [c[0] for c in cells], ids, len(cells))
+    return Table(title, header, [c[0] for c in cells], ids, len(cells), *blocks)
 
 
 def main():
@@ -212,21 +242,27 @@ def main():
     print("the cut splitting one smooth trend; a residual that crosses somewhere else is not.")
     big, bright = re_ > sbs_domain.V21_RE_MIN, sn > sbs_domain.V21_SN_MIN
     R, S = sbs_domain.V21_RE_MIN, sbs_domain.V21_SN_MIN
+    # Block the R_sim error on `case`: whole scenes live inside one case, so blocking there absorbs
+    # the within-scene response correlation that a naive std/sqrt(N) ignores.
+    cases = tp["case"].to_numpy(np.int64)
+    uniq = np.unique(cases)
+    blocks = (np.searchsorted(uniq, cases), len(uniq))
+    print(f"R_sim errors are blocked on {len(uniq)} cases (not naive std/sqrt(N)).")
     tables = [
         edge_table("by PRIMARY TRUE SIZE, fine, spanning the Re = 0.5 cut", "Re_input_p", re_,
                    [0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.70, 0.80, 1.00, 1.20, 1.50],
-                   intrain),
+                   intrain, blocks=blocks),
         edge_table("by PRIMARY TRUE S/N, spanning the sn_true = 10 cut", "sn_true", sn,
-                   [0, 5, 7.5, 10, 15, 20, 30, 50, 100, 1e6], intrain, fmt="{:.1f}"),
+                   [0, 5, 7.5, 10, 15, 20, 30, 50, 100, 1e6], intrain, fmt="{:.1f}", blocks=blocks),
         edge_table("by PRIMARY TRUE MAG", "r_input_p", mag,
-                   [18, 22, 23, 24, 24.5, 25, 25.5, 26], intrain, fmt="{:.1f}"),
+                   [18, 22, 23, 24, 24.5, 25, 25.5, 26], intrain, fmt="{:.1f}", blocks=blocks),
         # Which of the two V2.1 conditions carries the split? They overlap heavily, so the marginal
         # tables above cannot separate them; these four disjoint cells can.
         cell_table("the V2.1 cut is TWO conditions -- which one carries the split?", "cell",
                    [(f"Re>{R} AND sn>{S} (=V2.1)", intrain & big & bright),
                     (f"Re>{R} but sn<{S}", intrain & big & ~bright),
                     (f"Re<{R} but sn>{S}", intrain & ~big & bright),
-                    (f"Re<{R} AND sn<{S}", intrain & ~big & ~bright)]),
+                    (f"Re<{R} AND sn<{S}", intrain & ~big & ~bright)], blocks=blocks),
     ]
     for d in dumps:
         t = pf.read_table(d, columns=["r_sim", "R_flow", "R_blend"])

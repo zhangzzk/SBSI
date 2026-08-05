@@ -2,6 +2,49 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05w  With errors: the SIZE split is real; the fine bins oscillate, so the errors get blocked
+
+Job 15543906, the error-carrying rerun. The 2x2 survives cleanly:
+
+    cell                          rel %   +-seed   +-sim   sigma          N
+    Re>0.5 AND sn>10  (= V2.1)    -1.82     0.28    0.15    5.8s   5,226,377
+    Re>0.5 but sn<10              +4.36     1.01    1.55    2.4s     688,298
+    Re<0.5 but sn>10              +2.90     0.50    0.44    4.3s   5,109,061
+    Re<0.5 AND sn<10              -0.76     2.02    2.42    0.2s     650,673
+
+**The size split is established at 5.8 and 4.3 sigma**, and the two low-S/N cells are weak (2.4 and
+0.2 sigma) on ~0.65M rows each. So the flow's response is ~1.8% LOW for well-resolved primaries and
+~2.9% HIGH for small ones, and S/N is not what separates them. `residual = R_flow - (R_sim -
+R_blend)`, so positive means `R_flow` too high.
+
+**What I did NOT conclude, and why.** With errors attached, the fine size bins are not a smooth trend
+either -- they ALTERNATE, and several alternations are individually significant: +9.32 (4.5s), -1.32,
++3.76 (4.4s), +1.35, -0.82, -1.89, -0.62, -1.63 (3.0s), -3.71 (6.6s), -3.73 (7.3s), +3.25 (4.8s). The
+mag and S/N tables oscillate the same way at the BRIGHT/high-S/N end while being flat and null at the
+faint end (mag 24-26 all under 1.3 sigma). An oscillation that significant is either a real
+structure in the flow's size conditioning -- plausible, since a coarse-size-binning artifact has bitten
+this project before -- or an understated error bar.
+
+**Before reading it as structure, I checked the error.** `+-sim` was a naive `std/sqrt(N)`, which
+assumes every galaxy's response is an independent draw. It is not: objects sharing a scene share
+pixels and a noise realisation, so responses are correlated within a scene and the naive sem is too
+SMALL -- exactly the way an oscillation gets manufactured. `Table._case_blocked_sem` now blocks on
+`case` (each a separately rendered field of ~562k galaxies, so whole scenes sit inside one block) and
+reports the scatter of per-case bin means. Validated on synthetic data with a deliberate per-case
+offset: the implementation reproduces the direct case-mean scatter to 1e-9 and inflates 3.85x over
+the naive estimate, while converging to naive when no correlation is present. Rerunning as job
+15545111.
+
+**Two caveats to carry forward regardless of what the blocked errors say.**
+
+1. The residual is `R_flow` error PLUS `R_blend` error. The emulator has been cleared at the level of
+   the two halves (05m) and on the full V2.1 sample by the ruler, but NOT per fine size bin, and
+   `R_blend` swings from 0.012 to 0.33 across these bins. A per-bin emulator error would show up here
+   as a flow oscillation.
+2. The bright end is where the oscillation lives and where `R_blend` is smallest (0.0122 at mag
+   18-22), so at least the brightest bins are close to pure flow.
+
+
 ## 2026-08-05t  RETRACTING most of 05s: the fiducial dumps ALREADY use `_ho`
 
 Job 15542390 returned an exact no-op: `R_blend` 0.1170 -> 0.1170, `m` +1.639% -> +1.639%, swap moves
