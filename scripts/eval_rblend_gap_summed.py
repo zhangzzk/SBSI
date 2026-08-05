@@ -71,6 +71,14 @@ def main():
                     help="keep primaries with true Re > this")
     ap.add_argument("--box-re-max", type=float, default=None,
                     help="keep primaries with true Re < this")
+    # WHY A V2.1 SPLIT. 2026-08-05j found the fiducial `m` is a cancellation across the V2.1 cut:
+    # +1.64% on the well-resolved half, -2.21% on the rest. Charging that to the flow assumes the
+    # EMULATOR is right on BOTH halves -- but the emulator's own exactness on the fiducial domain
+    # (-0.02%) is an average over the same two halves, and could be a cancellation too. This option
+    # scores each half separately so that assumption is tested rather than inherited. The V2.1 cut
+    # is an S/N CURVE, not a box, so it cannot be expressed with the --box-* flags above.
+    ap.add_argument("--v21-split", action="store_true",
+                    help="report the emulator error separately on the V2.1 subset and its complement")
     args = ap.parse_args()
 
     d = np.load(args.npz, allow_pickle=True)
@@ -125,6 +133,30 @@ def main():
           f"<neighbours per primary>={k.mean():.3f}")
     print(f"<S_truth>={S.mean():.5f} +- {S.std(ddof=1)/np.sqrt(len(S)):.5f}   "
           + "   ".join(f"<S_{t}>={p.mean():.5f}" for t, p in zip(tags, Sp)))
+
+    if args.v21_split:
+        from sbs_shear import domain as sbs_domain
+        v21 = sbs_domain.in_domain(tmag, tre)
+        print(f"\n{'='*104}\nV2.1 SPLIT -- is the emulator's accuracy ALSO a cancellation?"
+              f"\n{'='*104}")
+        print("  2026-08-05j: the fiducial m is +1.64% on the V2.1 half and -2.21% on the rest.")
+        print("  Charging that to the flow assumes the emulator is right on BOTH halves. Test it.")
+        print(f"  {'half':<34}{'S_truth':>10}{'+-':>9}"
+              + "".join(f"{t[-14:]:>16}{'rel %':>9}{'sig':>7}" for t in tags) + f"{'null':>10}{'N':>11}")
+        for nm, m in (("V2.1 (Re>0.5 & S/N>10)", v21), ("COMPLEMENT", ~v21), ("BOTH", np.ones(len(v21), bool))):
+            n = int(m.sum())
+            if n < 500:
+                continue
+            t_, ts = S[m].mean(), S[m].std(ddof=1) / np.sqrt(n)
+            cells = ""
+            for p in Sp:
+                dif = p[m] - S[m]                      # PAIRED: truth cancels row-for-row
+                ds = dif.std(ddof=1) / np.sqrt(n)
+                cells += (f"{p[m].mean():>16.5f}{100*(p[m].mean()/t_-1) if t_ else np.nan:>+9.2f}"
+                          f"{abs(dif.mean())/ds:>6.1f}s")
+            print(f"  {nm:<34}{t_:>10.5f}{ts:>9.5f}{cells}{Sn[m].mean():>+10.5f}{n:>11,}")
+        print("  If the emulator is unbiased on BOTH halves, the resolution split is the FLOW's.")
+        print("  If it flips sign across the halves, the split cannot be charged to the flow yet.")
 
     show("SUMMED R_blend by PRIMARY MEASURED MAG (g=0 leg)", "measured_mag_auto(0)", mag0,
          [18, 24, 25, 25.5, 26, 26.5, 27, 32], S, Sp, Sn, k, tags=tags)
