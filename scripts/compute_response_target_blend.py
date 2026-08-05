@@ -135,9 +135,19 @@ def main():
                          "S/N > 10), taking the thresholds from sbs_shear.domain. Pass this "
                          "whenever the flow is trained with --v21-domain: a target built on a "
                          "different population pins the kept rows to a mean that includes rows the "
-                         "trainer never sees, which cost 5% of R_flow in WORKLOG 2026-07-27d.")
+                         "trainer never sees, which cost 5%% of R_flow in WORKLOG 2026-07-27d.")
+    # WHY A COMPLEMENT. 2026-08-05j/k showed the fiducial `m` is a CANCELLATION across the V2.1
+    # resolution cut (+1.64% well-resolved, -2.21% on the rest) and that the emulator is unbiased on
+    # BOTH halves, so the split is the flow's. The flow is trained against THIS target, so the next
+    # question is whether the target carries the same sign flip. Answering it needs the target built
+    # on the complement as well as on V2.1, under otherwise identical settings.
+    ap.add_argument("--v21-complement", action="store_true",
+                    help="build the target on the COMPLEMENT of the V2.1 domain (within whatever "
+                         "--primary-* cuts are given). Mutually exclusive with --v21-domain.")
     ap.add_argument("--output", required=True)
     args = ap.parse_args()
+    if getattr(args, "v21_domain", False) and getattr(args, "v21_complement", False):
+        raise SystemExit("--v21-domain and --v21-complement are mutually exclusive")
     snc = None if args.antithetic else load_snc_lookup(args.snc_lookup, args.snc_cols)
 
     if args.antithetic:
@@ -167,6 +177,8 @@ def main():
             b = source_select_selection(b, cuts=_selection_cuts(args))
             if getattr(args, "v21_domain", False):
                 b = sbs_domain.select_frame(b)
+            elif getattr(args, "v21_complement", False):
+                b = b.drop(index=sbs_domain.select_frame(b).index)
             if len(b) == 0:
                 continue
             if "detected" in b.columns:                       # constgold antithetic renders have no detected col
@@ -276,7 +288,10 @@ def main():
              snc_lookup=(args.snc_lookup or ""), max_case=(-1 if args.max_case is None else args.max_case),
              # Which POPULATION this target was measured on. Stamped because the flow and its
              # target must agree, and a mismatch is silent -- it shows up only as a wrong R_flow.
-             domain=(sbs_domain.describe() if getattr(args, "v21_domain", False) else "default"))
+             domain=("COMPLEMENT of " + sbs_domain.describe()
+                     if getattr(args, "v21_complement", False)
+                     else sbs_domain.describe() if getattr(args, "v21_domain", False)
+                     else "default"))
     axis = f"crowd[{args.crowd_col}]" if args.crowd_col else "blend"
     print(f"R_sim(flux x size x {axis}) target, g={g}, N_pairs={len(proj):,}, N_eff(unique-target)={w.sum():.0f}, global R={gm:.4f}")
     print(f"grid {args.n_flux}x{args.n_size}x{nblend}" + ("" if args.crowd_col else " (blend bin 0=isolated, by distance)"))
