@@ -89,7 +89,7 @@
       "depth": 2,
       "status": "merged",
       "hypothesis": "After the method passes its anchor holdout gates, refitting the unchanged isotonic estimator on all 100 anchor cases will use the validation data efficiently and close the remaining 0.128 point without constgold tuning",
-      "insight": "Using all validated anchor information recovers 94 percent of the response required to reach the +0.3 percent boundary, but the last 0.000854 has no independent central-value support.",
+      "insight": "Using all validated anchor information recovers about 87 percent of the response increase required to reach the +0.3 percent boundary, but the last 0.000854 has no independent central-value support.",
       "metadata": {
         "dev_score": 0.000515,
         "test_score": 0.389,
@@ -97,7 +97,7 @@
         "branch_ref": "worktree-selbias-plot@30a00d7"
       },
       "created_at": 1785973636,
-      "updated_at": 1785973891
+      "updated_at": 1785973945
     }
   }
 }
