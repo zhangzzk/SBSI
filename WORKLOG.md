@@ -7,6 +7,53 @@ This file records substantive changes to the standalone SBSI shear-calibration p
 > cont.112–cont.160 that this branch has never seen. The entry below is numbered cont.161 and
 > belongs at the top; expect a conflict there on merge, and resolve it by keeping both.
 
+## cont.179 (2026-08-05) Code review of the §5B inference implementation: one real coverage gap, one untested shear direction, and five suspicions checked and cleared
+
+Review of `sbs_shear/score_inference.py`, `posterior_shape.py`, `scripts/eval_score_select.py`
+and `eval_score_response.py`. Tests: **58 passed** (15540902, `py31` — `sims1` has no pytest).
+No code changed by the review itself.
+
+**Cleared — checked, measured, and NOT problems.** Recorded so they are not re-chased:
+
+| suspicion | verdict |
+|---|---|
+| fp32 `cumsum` in `pass_fraction_by_node` over 1M rows | ≤2.5e-8 relative (torch sums pairwise); ≤0.00001% on `m`. Non-issue at any `--pi-samples`. |
+| grid truncation at `grid_rmax=0.95` discarding prior tail | empirical prior maxes at \|e\|=0.9036 (0 rows above 0.95); the FITTED prior's draws exceed 0.95 at 9.5e-6, so ≤0.01% on `m`. |
+| `_d1 = min(_d1, -1e-3)` tail-slope clamp (a possible silent fudge) | DORMANT: fitted slope is −15.98, nowhere near the floor. A guard, never an applied correction. |
+| jackknife blocks assigned `row_index % n_blocks` splitting correlated scenes | void — every catalogue row is its own `(case, input_index)`, 0 adjacent same-scene pairs in 200k. |
+| Louis analytic info dropping the injection Hessian | correctly fenced: `analytic_info=True` is used only when NOT injecting (`eval_score_response.py:568`). |
+
+**Finding 1 (real, and the sharpest one): the closure test only ever shears along `+g1`, which
+is a GRID AXIS.** `shear_and_sample` hardcodes `(g, 0)`. The square node lattice's leading
+quadrature error is its m=4 (45°) anisotropy — exactly the component an axis-aligned shear
+cannot excite. The `ghat_2 ≈ 0` null does NOT cover it: with the shear along an axis, the
+lattice and the cut are both symmetric under reflection about that axis, so `ghat_2` vanishes by
+symmetry whatever the quadrature is doing. It looks like a check and carries no information
+about this mode. This matters because cont.176 established `Pi` has genuine angular structure.
+Fix: add `--closure-g2` and run `g1 = g2 = g/sqrt(2)`. Costs a fresh score pass (the cache is
+keyed on `closure_g`, and the direction is not even a parameter yet). Until then, the grid
+convergence claim of cont.177/178 is established for one shear direction only — the `n`-ladder
+tests RESOLUTION, not isotropy.
+
+**Finding 2: the shard-merge path has no unit test**, and it is where the two worst bugs of this
+whole line lived (the cache-key regression that made jobs "COMPLETE" in 53 s with zero results,
+and the double-count guard). Every identity in the module is tested; this pure-bookkeeping path
+is exercised only by a Slurm smoke job. Cheap fix: synthesise two `npz` caches, assert the merge
+is additive, and assert a repeated `row_shard` and a mismatched key both raise.
+
+**Finding 3: `population_log_pi`'s docstring over-warns for the closure test and under-warns for
+real data.** It calls the per-galaxy average a violation of §5B.1(i) (cont.164 defect 3). But the
+closure test draws shapes i.i.d. from the prior and pastes them onto catalogue rows, so shape is
+independent of magnitude/size BY CONSTRUCTION and the factorisation
+`Pi^eff(e) = E_rest[Pi(e, rest)]` is exact. It becomes a real error only on a real catalogue,
+where shape correlates with size and magnitude. Worth rewording so the warning fires at the point
+it actually bites.
+
+**Finding 4 (cosmetic):** `shear_velocity_jacobian` and the inline `v` in
+`blend_injection_term` are identical 6-line blocks; one should call the other. And the `_d1`
+clamp should print when it fires, since a silent activation would be exactly the class of thing
+[[feedback_no_silent_fudge]] forbids.
+
 ## cont.178 (2026-08-04) The grid fix holds, but `g = 0.10` has HALF the error bar and shows a −0.49% residual that `g = 0.05` could not resolve — plus three silent-failure bugs in the job plumbing
 
 **The headline is not good news.** cont.177 closed cut 0.6 to −0.097 ± 0.278% at `g = 0.05`.
