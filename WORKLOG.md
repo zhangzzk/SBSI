@@ -2,6 +2,87 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05p  Estimators DO match -- and my own pass criterion for that test was wrong
+
+Job 15540936, the prerequisite for the revised decisive test (05n). It asked whether constgold's
+`measured_e1/e2_plus/_minus` and the g=0 lookup's `ngmix0_g1/g2` are the same shape estimator, by
+correlating the antithetic midpoint `0.5*(e+ + e-)` against `ngmix0_g1`. Result:
+
+    corr = 0.87510    slope (ngmix0 on midpoint) = 0.91418
+    sd(ngmix0) = 0.32972   sd(midpoint) = 0.31563
+
+**The criterion printed by that job -- "corr > 0.9 and slope ~ 1" -- is WRONG, and by it the test
+would have been failed.** It ignores that the regressor is itself noisy. Both quantities measure the
+same intrinsic shape through independent noise, so:
+
+  * `corr = sig_int^2 / (sd_mid * sd_0)`, which is BELOW 1 by construction;
+  * `slope = sig_int^2 / var(mid)`, which is regression dilution -- also below 1 by construction.
+
+Solve the two-parameter noise model (`sd_0^2 = sig_int^2 + sig_n^2`, `sd_mid^2 = sig_int^2 +
+sig_n^2/2`, the midpoint averaging two legs) from the two variances alone, with nothing tuned:
+
+    sig_noise = 0.1349   sig_intrinsic = 0.3009
+    predicted corr  = 0.86989   observed 0.87510   (+0.60%)
+    predicted slope = 0.90873   observed 0.91418   (+0.60%)
+
+Two independent numbers reproduced to 0.6% by a model with zero free parameters. **The estimators
+match.** (The residual +0.6% is the right sign for the antithetic legs sharing a little noise, which
+the model assumed away.) The midpoint being NARROWER than the single g=0 leg, 0.3156 vs 0.3297, is
+the same evidence read directly -- averaging two legs cancels noise.
+
+Recording the bad criterion rather than quietly deleting it: it would have thrown away a valid
+prerequisite and blocked the decisive test, and "the regressor is noisy too" is exactly the kind of
+thing that looks obvious only after it bites.
+
+The join matches 49.94% of constgold cases 40-99 (8,932,190 of 17,886,534). That is a population
+question, not an estimator one, so the test script checks it directly rather than assuming.
+
+## 2026-08-05q  The decisive test, and the identity that makes it sharp
+
+New: `scripts/diag_extraction_convention.py`, `jobs/job_diag_extraction_convention.sh` (job 15542220).
+
+Per 05n the question "do half-shear and constgold agree on total response?" cannot be answered by
+comparing the two sims, because that comparison crosses the forward/antithetic extraction boundary
+CONVENTIONS.md 6c says manufactures a spurious gap. So measure BOTH conventions on ONE sim, identical
+rows, identical estimator, split by resolution -- no sim difference in play at all.
+
+**Writing it down produced an exact identity that sharpens the whole question.** With `p`, `z`, `m`
+the shapes at `+g`, `0`, `-g`:
+
+    R_fwd = (p - z)/g     R_bwd = (z - m)/g     R_anti = (p - m)/(2g)
+    =>  R_anti == (R_fwd + R_bwd)/2      EXACTLY, row by row
+
+So on identical rows the two conventions cannot differ by anything except the ASYMMETRY of the two
+forward legs -- which IS the quadratic term in the response. There is no third possibility. Either
+the quadratic term is large enough to explain the recorded 0.49-vs-0.60 gap (22% of the smaller
+value), or that gap was never a convention effect on identical rows and something else -- different
+sims, populations, or estimators -- was carrying it. The script reports `fwd - anti` with its sigma,
+binned by true size and true mag, and scales the measured coefficient to |g| = 0.05 and 0.2 (it goes
+as g^2; constgold is at 0.02, so the half-shear legs carry 6.2x and 100x more).
+
+Also checks that the 50% join is not population-selective, by forming `R_anti` -- which needs no g=0
+leg -- on the full set and on the matched subset and differencing. Same trap as the pair lists, the
+ruler-vs-m populations, the emulator boxes and the target domains; four repeats is enough to check by
+default.
+
+## 2026-08-05r  Where does the flow residual change sign?
+
+Changed: `scripts/diag_rflow_v21.py` gains `--scope train`. New: `jobs/job_diag_rflow_signflip.sh`
+(job 15542288).
+
+The V2.1 half of the flow's training box closes at -1.82% and its complement at +2.86% (05l), so the
+residual passes through zero somewhere between them. The existing map (job 15536811) could never show
+that: it bins INSIDE V2.1, and the crossing lives at the boundary. `--scope train` bins the whole
+training box on both axes the V2.1 cut is built from -- fine Re steps across 0.5, sn_true steps across
+10 -- and adds the 2x2 of the cut's two conditions, since they overlap too much for the marginal
+tables to separate. Run on the 16 FIDUCIAL dom6x6 dumps, not the 8 V2.1 ones.
+
+What the answer distinguishes: a residual crossing zero AT Re = 0.5 / sn = 10 means the cut is
+splitting one smooth trend and the "+1.64% vs -2.21%" split is a property of the cut placement; a
+crossing somewhere else means the two halves differ for a reason the cut only happens to correlate
+with. Residuals only -- no m.
+
+
 ## 2026-08-05o  Box-null CLOSED: leakage refuted by ~130x, so it is a fluctuation
 
 Job 15540909. The box-restricted summed ruler's 45-degree null read `-0.0172 +- 0.0057` (3.0 sigma)

@@ -65,6 +65,10 @@ def main():
     ap.add_argument("--min-case", type=int, default=40)
     ap.add_argument("--mag-max", type=float, default=26.0, help="flow training box, upper mag")
     ap.add_argument("--re-min", type=float, default=0.3, help="flow training box, lower Re")
+    ap.add_argument("--scope", choices=("v21", "train"), default="v21",
+                    help="which population to bin over. 'v21' is the deliverable domain; 'train' is "
+                         "the flow's whole training box, which SPANS the V2.1 boundary and is the "
+                         "only scope that can show where the residual changes sign.")
     args = ap.parse_args()
     t0 = time.time()
 
@@ -109,10 +113,49 @@ def main():
     print("\nIf the residual concentrates OUTSIDE the flow's training box, V2.1's problem is that its")
     print("S/N curve admits primaries the flow never trained on. If it is flat, the domain is not it.")
 
-    binned("by PRIMARY TRUE MAG (the axis V2.1 opened up)", "r_input_p", mag,
-           [18, 23, 24, 25, 25.5, 26, 26.5, 27, 28], rsim, rflow, rblend, v21)
-    binned("by PRIMARY TRUE SIZE", "Re_input_p", re_,
-           [0.5, 0.6, 0.7, 0.8, 1.0, 1.2, 1.5, 3.0], rsim, rflow, rblend, v21)
+    if args.scope == "v21":
+        binned("by PRIMARY TRUE MAG (the axis V2.1 opened up)", "r_input_p", mag,
+               [18, 23, 24, 25, 25.5, 26, 26.5, 27, 28], rsim, rflow, rblend, v21)
+        binned("by PRIMARY TRUE SIZE", "Re_input_p", re_,
+               [0.5, 0.6, 0.7, 0.8, 1.0, 1.2, 1.5, 3.0], rsim, rflow, rblend, v21)
+        print("\nDIAG_RFLOW_V21_DONE", flush=True)
+        return
+
+    # 2026-08-05: the V2.1 half of the flow training box closes at -1.82% and its complement at
+    # +2.86%, so somewhere between them the residual passes through zero. Binning INSIDE V2.1 can
+    # never show that crossing -- it lives at the boundary. Bin the whole training box instead, on
+    # both axes the V2.1 cut is built from, and let the sign change locate itself.
+    sn = sbs_domain.sn_true(mag, re_)
+    print(f"\n{'='*104}\nWHERE THE RESIDUAL CHANGES SIGN   (scope: the flow's whole training box, "
+          f"mag < {args.mag_max}, Re > {args.re_min})\n{'='*104}")
+    print("The V2.1 cut is Re > 0.5 AND sn_true > 10. A residual that crosses zero AT those values is")
+    print("the cut splitting one smooth trend; a residual that crosses somewhere else is not.")
+    binned("by PRIMARY TRUE SIZE, fine, spanning the Re = 0.5 cut", "Re_input_p", re_,
+           [0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.70, 0.80, 1.00, 1.20, 1.50],
+           rsim, rflow, rblend, intrain)
+    binned("by PRIMARY TRUE S/N, spanning the sn_true = 10 cut", "sn_true", sn,
+           [0, 5, 7.5, 10, 15, 20, 30, 50, 100, 1e6], rsim, rflow, rblend, intrain)
+    binned("by PRIMARY TRUE MAG", "r_input_p", mag,
+           [18, 22, 23, 24, 24.5, 25, 25.5, 26], rsim, rflow, rblend, intrain)
+
+    # Which of the two V2.1 conditions actually carries the split? They overlap heavily, so the
+    # marginal tables above cannot separate them; these four cells can.
+    print(f"\n[the V2.1 cut is TWO conditions -- which one carries the split?]")
+    print(f"  {'cell':>34}{'R_sim':>9}{'R_flow':>9}{'R_blend':>9}{'needed':>9}"
+          f"{'residual':>10}{'rel %':>9}{'N':>12}")
+    big, bright = re_ > sbs_domain.V21_RE_MIN, sn > sbs_domain.V21_SN_MIN
+    for nm, m in ((f"Re>{sbs_domain.V21_RE_MIN} AND sn>{sbs_domain.V21_SN_MIN}  (= V2.1)",
+                   intrain & big & bright),
+                  (f"Re>{sbs_domain.V21_RE_MIN} but sn<{sbs_domain.V21_SN_MIN}", intrain & big & ~bright),
+                  (f"Re<{sbs_domain.V21_RE_MIN} but sn>{sbs_domain.V21_SN_MIN}", intrain & ~big & bright),
+                  (f"Re<{sbs_domain.V21_RE_MIN} AND sn<{sbs_domain.V21_SN_MIN}", intrain & ~big & ~bright)):
+        n = int(m.sum())
+        if n < 2000:
+            continue
+        rs, rf, rb = rsim[m].mean(), rflow[m].mean(), rblend[m].mean()
+        need = rs - rb
+        print(f"  {nm:>34}{rs:>9.4f}{rf:>9.4f}{rb:>9.4f}{need:>9.4f}"
+              f"{rf-need:>+10.4f}{100*(rf/need-1):>+9.2f}{n:>12,}")
     print("\nDIAG_RFLOW_V21_DONE", flush=True)
 
 
