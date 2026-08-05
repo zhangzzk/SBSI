@@ -2,7 +2,72 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
-## 2026-08-06c  Second instrument: the tilt SURVIVES, but its size is uncertain at the ~30% level
+## 2026-08-05ad  Session close: what was established, what is still open, and how to finish it
+
+Wrapping the overnight run. Also a housekeeping correction: three entries were filed as `2026-08-06a/b/c`
+when the date was still 2026-08-05; relabelled `05aa/05ab/05ac`, and `05x`/`05y` swapped back into
+newest-first order. No content changed.
+
+### The V2.1 question is answered
+
+**The flow's shape-response error falls with TRUE SIZE at roughly 6-8% per arcsec and crosses zero at
+Re ~ 0.555, within 0.8 sigma of the V2.1 cut at Re = 0.5.** So V2.1 (Re > 0.5) keeps the negative side
+(-1.82% +- 0.31, 5.9 sigma), its complement keeps the positive side (+2.90% +- 0.65, 4.4 sigma), and
+the union cancels. **The cut did not create a bias -- it stopped one from cancelling.** Same structure
+AGENTS.md already records for the fiducial `-0.123%`, found independently on a different axis.
+
+Every competing explanation was measured and bounded rather than argued away:
+
+| candidate | verdict | where |
+|---|---|---|
+| blend emulator | <= 0.8 pt of a +-3.7 pt swing | 05x |
+| extraction convention | consistent with zero, flat in resolution | 05u |
+| correlated rows inflating significance | case-blocking moved errors < 15% | 05z |
+| model-subtracted demand | second instrument agrees on shape to 2.1% rms | 05ac |
+
+### And it is fixable
+
+Retraining the flow on the V2.1 domain **flattens the tilt to zero**: on matched bins Re 0.50-1.20,
+both forced onto the same `_ho` R_blend, slope `-5.73 +- 1.55 -> +0.33 +- 1.67` and level
+`-2.50 +- 0.26 -> -0.48 +- 0.21`. So this is training coverage, not an architectural limit.
+
+### What is NOT established
+
+* **That result is 7 of 16 seeds.** It is a residual, not an `m`, and AGENTS.md's 16-seed rule is not
+  satisfied. **Nothing from it may be quoted as `m`.**
+* `-0.48%` is still 2.4 sigma from zero against the `|m| < 0.3%` target, and chi2/dof 2.36 says
+  structure remains.
+* The tilt's MAGNITUDE carries ~30% instrument uncertainty (05ac). Its sign, existence and zero
+  crossing do not.
+* The V2.1-trained flow **extrapolates catastrophically outside its cuts** (+36% at Re < 0.5, +135% in
+  the smallest size bin). It cannot serve wide-population work -- a new instance of AGENTS.md trap #1.
+
+### To finish it
+
+Array 15547299 is producing V2.1 dump seeds 510-517; 11 of 16 exist. It is **memory-bound, not
+GPU-bound** -- cip-cl-nv01 had 6 idle A40s but only ~29 GB free RAM against the job's 110 G request,
+so tasks serialise at ~27 min each. When all 16 land:
+
+    sbatch jobs/job_diag_rflow_v21flow.sh      # repeats 05aa at 16 seeds -> quotable
+
+### Flagged for the owner, not acted on
+
+AGENTS.md's "Fiducial Model" section names `blend_lookup_indomtuned_c40-139.feather`, but the dumps
+behind the canonical numbers were built with `blend_lookup_extnbrho_c40-139.feather`
+(`jobs/job_s2c_domain_eval.sh:44`). The files differ in size (133 MB vs 560 MB), so they are not the
+same content. Redefining the fiducial model is the owner's call.
+
+### Corrections made to my own work this session
+
+Recorded because they were load-bearing, not as ceremony: the "futile emulator swap" call (05s,
+retracted 05t -- I read a box-population null as if it described the full population); the
+estimator-match pass criterion that ignored regression dilution (05p); the fine-bin table shipped with
+no error bars at all (05w); a one-seed flow comparison used to conclude two flows were equivalent
+(05aa); and the headline tilt quoted at `-8.10 +- 1.94` before its instrument uncertainty was known
+(05ac).
+
+
+## 2026-08-05ac  Second instrument: the tilt SURVIVES, but its size is uncertain at the ~30% level
 
 Job 15549114. The half-shear demand curve, built with no constgold in it, against the constgold one,
 shapes only (each normalised by its own count-weighted mean):
@@ -50,7 +115,7 @@ question task #16 asked -- they agree on shape to 2% rms, with a marginal residu
 worth its own investigation later.
 
 
-## 2026-08-06b  Confirming the size tilt with a SECOND, constgold-free instrument
+## 2026-08-05ab  Confirming the size tilt with a SECOND, constgold-free instrument
 
 New: `scripts/compare_size_demand.py`, `jobs/job_resp_target_sizecurve.sh` (job 15549114).
 
@@ -85,10 +150,10 @@ Flux/crowd conditioning coarsened to 4x3 (from 6x5) so 11 size bins still leave 
 "Numerical Integrity".
 
 Also running: array 15547299 for V2.1 dump seeds 510-517 (task 0 done, 1 running, 2-7 queued behind
-the 3-GPU cap), which takes the 06a comparison from 7 seeds to the 16 AGENTS.md requires.
+the 3-GPU cap), which takes the 05aa comparison from 7 seeds to the 16 AGENTS.md requires.
 
 
-## 2026-08-06a  Retraining on V2.1 FLATTENS the size tilt to zero -- preliminary at 7 seeds
+## 2026-08-05aa  Retraining on V2.1 FLATTENS the size tilt to zero -- preliminary at 7 seeds
 
 Job 15545793: the same residual map on the V2.1-TRAINED flow, with `--blend-lookup` forcing the `_ho`
 `R_blend` so both maps differ only in the flow (100.0000% matched, 9 rows dropped). Compared on the
@@ -197,28 +262,6 @@ that swap the comparison would be flow-and-emulator, not flow. `diag_rflow_v21.p
 unmatched rows are dropped, never zero-filled. Preliminary at 7 seeds, to be repeated at 16.
 
 
-## 2026-08-05x  Bounding caveat 1: the emulator can carry at most ~1 pt of the fine-bin oscillation
-
-No new job -- this reads the FIDUCIAL-box section of job 15535057, which already scored the ruler on
-exactly the flow's training box (mag < 26, Re 0.3-1.5, 11,556,970 primaries). `_ho`'s summed
-`R_blend` error by PRIMARY TRUE SIZE:
-
-    ALL          -0.63 +- 1.07        [0.56,0.70)   -5.20 +- 2.19   (2.4 sigma, the only notable bin)
-    [0.30,0.38)  -0.03 +- 2.57        [0.70,0.95)   +2.48 +- 2.52
-    [0.38,0.46)  +1.39 +- 2.72        [0.95,1.50)   -2.29 +- 2.56
-    [0.46,0.56)  -1.17 +- 2.39
-
-So the emulator is null overall on this population and its per-size-bin errors run at the few-percent
-level with one 2.4-sigma excursion. **Converting that into a bound on the closure residual:** the
-emulator error enters the residual scaled by `R_blend / needed`, which across these bins is roughly
-0.13/0.80 ~ 0.16. A 5% emulator error therefore moves the residual by ~0.8 pt, against observed
-swings of +-3.7 pt. **The emulator can account for at most about a quarter of the oscillation; the
-rest is the flow.** Caveat 1 of 05w is bounded rather than merely noted.
-
-Stated limits: the ruler's size bins are not identical to the residual map's, and the ruler is the
-g = 0.2 half-shear leg while the dump `R_blend` is constgold, so this is an order-of-magnitude bound,
-not a subtraction. It is not applied to any number.
-
 ## 2026-08-05y  05u partly REHABILITATES the target comparison I withdrew in 05n
 
 In 05n I withdrew the 05m target-vs-constgold comparison on two grounds. 05u settles one of them and
@@ -242,6 +285,28 @@ says nothing about it.
 read as "the target and constgold disagree about the sim", because one side of the comparison has a
 model baked into it. The clean version of that test needs a demand that is not model-subtracted.
 
+
+## 2026-08-05x  Bounding caveat 1: the emulator can carry at most ~1 pt of the fine-bin oscillation
+
+No new job -- this reads the FIDUCIAL-box section of job 15535057, which already scored the ruler on
+exactly the flow's training box (mag < 26, Re 0.3-1.5, 11,556,970 primaries). `_ho`'s summed
+`R_blend` error by PRIMARY TRUE SIZE:
+
+    ALL          -0.63 +- 1.07        [0.56,0.70)   -5.20 +- 2.19   (2.4 sigma, the only notable bin)
+    [0.30,0.38)  -0.03 +- 2.57        [0.70,0.95)   +2.48 +- 2.52
+    [0.38,0.46)  +1.39 +- 2.72        [0.95,1.50)   -2.29 +- 2.56
+    [0.46,0.56)  -1.17 +- 2.39
+
+So the emulator is null overall on this population and its per-size-bin errors run at the few-percent
+level with one 2.4-sigma excursion. **Converting that into a bound on the closure residual:** the
+emulator error enters the residual scaled by `R_blend / needed`, which across these bins is roughly
+0.13/0.80 ~ 0.16. A 5% emulator error therefore moves the residual by ~0.8 pt, against observed
+swings of +-3.7 pt. **The emulator can account for at most about a quarter of the oscillation; the
+rest is the flow.** Caveat 1 of 05w is bounded rather than merely noted.
+
+Stated limits: the ruler's size bins are not identical to the residual map's, and the ruler is the
+g = 0.2 half-shear leg while the dump `R_blend` is constgold, so this is an order-of-magnitude bound,
+not a subtraction. It is not applied to any number.
 
 ## 2026-08-05w  With errors: the SIZE split is real; the fine bins oscillate, so the errors get blocked
 
