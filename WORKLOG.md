@@ -2,6 +2,56 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05i  V2.1: not the flow model either. Any flow gives +1.6% on that domain.
+
+Files: `scripts/diag_rflow_v21.py`, `jobs/job_diag_rflow_v21.sh` (new). Job 15536811.
+
+Two hypotheses tested and BOTH KILLED.
+
+**(a) "V2.1's S/N curve feeds the flow primaries it never trained on."** FALSE, and not marginally:
+**100.00% of the V2.1 domain (5,226,377 rows) already sits inside the flow's training box**
+(true mag < 26, Re > 0.3). V2.1 requires `Re > 0.5`, stricter than the flow's 0.3, and its S/N > 10
+condition implies a magnitude limit below 26 throughout, so the V2.1 domain is a strict SUBSET of the
+flow's training domain. The out-of-domain mechanism that explained the emulator's behaviour outside
+its box has no analogue here.
+
+**(b) "The residual is concentrated somewhere."** FALSE. The closure residual
+`R_flow - (R_sim - R_blend)` is flat at -1% to -3.8% across every bin of true magnitude and true
+size. There is a mild drift toward faint (-1.08% at mag 18-23 to -3.76% at 25.5-26) and no size
+structure worth naming. **A single per-seed offset shifts every bin equally, so the FLATNESS is
+robust at one seed even though the LEVEL is not** -- and the level is quoted nowhere as a result.
+
+**(c) THE DECISIVE ONE, from data already on disk (job 15523254).** The same scoring job also
+evaluated the FIDUCIAL dom6x6 flow at 16 seeds on the V2.1 domain:
+
+| flow | domain | R_flow | R_blend | m |
+|---|---|---|---|---|
+| V2.1 (`ablate_s2c_lt500_v21`, 1 seed) | V2.1 | 0.8581 | 0.1179 | +1.469% |
+| FIDUCIAL (`dom6x6`, **16 seeds**) | V2.1 | 0.8574 | 0.1170 | **+1.639 +- 0.253%** (seed sd 1.014) |
+| FIDUCIAL (`dom6x6`, 16 seeds) | its own training domain | 0.7258 | 0.1371 | -0.271 +- 0.152% |
+
+**The two flows differ by 0.08% in `R_flow` on the V2.1 domain and both land near +1.6%.** The
+fiducial flow -- which reaches -0.271% on its own domain -- is just as biased on V2.1. So V2.1's `m`
+is not a defect of the V2.1 flow, and retraining a flow for V2.1 cannot fix it. `+1.639 +- 0.253%`
+is a 16-seed number and may be quoted; the V2.1 flow's own value may not (8 checkpoints).
+
+**WHERE THIS LEAVES THE V2.1 INVESTIGATION.** Emulator: cleared. Flow domain: cleared. Flow model:
+cleared. What is left is the DOMAIN itself, and it joins up with work already in this log:
+2026-08-04p pinned V2.1's `+0.790%` on a 2.53% gap between the flow's response target (0.8509) and
+what constgold demands, and **that demand is 0.8724 -- exactly the `needed = R_sim - R_blend` this
+diagnostic computes independently.** 2026-08-04r then showed the target's 0.8509 is determined to
++-0.16%, making the gap 15.8 sigma. So the open question is a SIM-vs-SIM disagreement: half-shear and
+constgold do not agree on the total response of this population. That is task #16, and tonight's work
+has converged on it from three directions.
+
+**NEXT TEST, RUNNING (job 15538220).** AGENTS.md records that the fiducial `m` is a cancellation
+between an under-predicting and an over-predicting population. V2.1 keeps 44.8% of the flow-training
+domain -- the well-resolved half. If it selects the under-predicting side, then **V2.1 invented no
+bias: it removed the population that was hiding one.** `scripts/diag_v21_cancellation.py` splits the
+training domain into the V2.1 subset and its complement and forms `m` in each, per seed, on the 16
+fiducial dumps.
+
+
 ## 2026-08-05h  V2.1: the EMULATOR IS EXONERATED. The deficit is in the FLOW.
 
 Job 15535057, `scripts/eval_rblend_gap_summed.py --box-*`.
