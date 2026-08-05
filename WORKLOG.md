@@ -2,6 +2,56 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05m  ROOT CAUSE: the sign flip is already in the TARGET. It is a half-shear vs constgold gap.
+
+Job 15540905, population-matched (`--primary-mag-max 26.0 --primary-re-min 0.3` on BOTH halves).
+**Matching verified by its own null check: the V2.1 half returned `global_R = 0.8509`, unchanged from
+the unmatched build and from the historical value, so only the complement moved.**
+
+| half | TARGET (half-shear) | FLOW delivers | constgold DEMANDS | target error | flow error |
+|---|---|---|---|---|---|
+| V2.1 (well-resolved) | 0.8509 | 0.8574 | 0.8733 | **-2.56%** | -1.82% |
+| COMPLEMENT (poorly-resolved) | 0.7134 | 0.6192 | 0.6020 | **+18.50%** | +2.86% |
+
+**The response target carries the resolution sign flip, and carries it MORE STRONGLY than the flow
+does.** In both halves the flow sits BETWEEN its own target and what constgold demands, with the
+target further out -- so the flow is not merely echoing the target, it is partially correcting toward
+constgold while inheriting the direction. `-2.56% / +18.50%` is a far bigger swing than the flow's
+`-1.82% / +2.86%`.
+
+**This routes the whole problem to task #16.** The chain is now complete and every link is measured on
+matched rows:
+
+    emulator      -- unbiased on BOTH halves (+0.84% / -0.60%)          [2026-08-05k]
+    flow domain   -- 100.00% of V2.1 already inside the training box    [2026-08-05i]
+    flow model    -- fiducial flow as biased on V2.1 as the V2.1 flow   [2026-08-05i]
+    flow vs m     -- +1.64% / -2.21%, a cancellation                    [2026-08-05j]
+    TARGET        -- -2.56% / +18.50% vs constgold                      <- HERE
+
+There is no model defect left to find. **Half-shear and constgold disagree about the SELF response of
+the same galaxies, and the disagreement flips sign with resolution.** One of the two sims -- or one of
+the two response-extraction conventions -- is wrong about resolution dependence.
+
+**A STRONG PRIOR ON WHICH.** WORKLOG/memory already record a Stage-1 result: a faint self-response gap
+of +0.49 vs +0.60 was traced to response EXTRACTION, not to the simulations, because the two sims are
+image-identical (byte-identical `noise_info`). Constgold extracts antithetically (+-g) while the
+half-shear target extracts forward (0 -> +g). **The present result is plausibly that same extraction
+difference, now resolved as a function of resolution rather than magnitude.** That is a hypothesis
+with a named mechanism and prior evidence, not a guess -- but it is NOT yet tested here, and the
++18.50% is far larger than the Stage-1 gap, so it must not be assumed.
+
+**CAVEATS, none of them corrected for.** The target is built on the g=0.05 half-shear crowd catalogue
+cases 0-99, while constgold uses cases 40-139; 2026-08-05e showed the case window is a null for the
+target (+0.01% vs +-0.16%), which covers this but was measured on the V2.1 half only. The `+18.50%` is
+on the poorly-resolved half (`Re` 0.3-0.5 and/or low S/N), where measurement is hardest and where the
+two extraction conventions would be expected to diverge most -- so its size is suggestive of the
+mechanism above but is not evidence for it. No number here has been scaled, offset, or adjusted.
+
+**NEXT.** Measure the self response on both sims with the SAME extraction convention on matched rows,
+split by resolution. That isolates sim-vs-sim from extraction-vs-extraction and is the decisive test
+for task #16.
+
+
 ## 2026-08-05l  Target resolution-split: first build was NOT population-matched; caught before use
 
 Files: `scripts/compute_response_target_blend.py` (`--v21-complement`, plus a pre-existing `--help`
