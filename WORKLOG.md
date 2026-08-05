@@ -2,6 +2,176 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05ag  Common cuts do NOT explain V2.1; they expose a larger population cancellation
+
+Owner clarified the three populations to compare: the half-shear used for `R_blend`, the half-shear
+used for the flow, and constgold. Audit found that only the primary V2.1 domain was common. The flow
+and constgold replay used the historical `(<5 arcsec OR isolated)` cut without secondary-quality
+cuts, while the V2.1 blend emulator used extended secondary cuts and a 10-arcsec pair aperture.
+
+Added `sbs_shear/population.py`, which owns a measurement-free truth mask: the primary support box
+intersected with `Re_input_p > 0.5 arcsec` and primary intrinsic S/N > 10, plus one explicit
+secondary/separation support. Two common arms were tested so the conclusion does not depend on
+which secondary convention is preferred:
+
+1. standard LSST: `18<r_s<28`, `0.1<Re_s<1.5 arcsec`, `0<distance<10 arcsec`;
+2. current extended-neighbour: `13<r_s<29`, `0<Re_s<10 arcsec`, `0<distance<10 arcsec`.
+
+`scripts/eval_consistent_population_closure.py` applies each arm identically to all three simulation
+catalogues on their common case window 40--99. Population masks use intrinsic columns only;
+detection/ngmix availability is counted afterwards. It then re-masks the existing 16 V2.1
+constgold per-object dumps onto the exact retained `(case,input_index)` keys, so the reported `m`
+uses `R_sim`, `R_flow`, and `R_blend` on one identical object set.
+
+**End-to-end result (job 15575599):**
+
+| population | N constgold | R_sim | R_flow | R_blend | m (16 seeds) |
+|---|---:|---:|---:|---:|---:|
+| current mismatched construction | 3,135,401 | 0.989849 | 0.862373 | 0.118082 | **+0.960 +- 0.123%** |
+| common standard-LSST 10 arcsec | 1,918,475 | 0.934600 | 0.783901 | 0.130956 | **+2.161 +- 0.153%** |
+| common extended-neighbour 10 arcsec | 2,399,193 | 0.949490 | 0.798871 | 0.128005 | **+2.443 +- 0.149%** |
+
+All lookup/dump coverage was exactly 100%. Paired across the same 16 seeds, enforcing common cuts
+moves `m` by **+1.201 +- 0.088 points** (standard) or **+1.483 +- 0.080 points** (extended). Thus the
+cut inconsistency is real but has the opposite role from the hypothesis: the current mixture hides
+a substantially larger positive bias through population cancellation. It does not explain the
+approximately +1% discrepancy and cannot reach the `|m| <= 0.3%` goal.
+
+The simulation truths tell the same story independently of the model. Common extended cuts give
+half-shear flow response 0.854906 and constgold coherent total response 0.949490, leaving 0.094584
+for coherent neighbour response. The direct sum using the R_blend training catalogue is printed
+only as a diagnostic, not accepted as closure, because that simulation has a half-density secondary
+pool; job 15575585 exposed this normalization issue and the final evaluator labels it explicitly.
+
+No retrain was launched: both exact re-masks fail in the wrong direction, so spending GPU time to
+promote either population would not test a promising explanation. Production cuts/models were not
+silently changed. Outputs: `results/consistent_population_closure_model_v2_c40-99.npz`; Slurm
+15575584 failed before work on a relative SNC path, 15575585 completed the two-arm precursor, and
+15575599 is the final three-arm result. Focused domain/population tests: 16 passed; full suite:
+74 passed (one pre-existing torch warning).
+
+## 2026-08-05af  Antithetic check: the half-shear target is not the missing 1% response
+
+Follow-up to 05ae and the owner's question whether the V2.1 deficit is visible in training. It is
+not: V2.1 fits its half-shear target. The unresolved discrepancy is between the forward half-shear
+ruler and constgold's central-difference acceptance ruler. Directly using fixed-direction constgold
+as an `R_flow` target is invalid because it measures coherent SELF + neighbour response and would
+double-count `R_blend`.
+
+The clean diagnostic rendered the missing `-0.02` partner of the existing
+random-direction half-shear `+0.02` cases 0--99. The same case seed gives identical galaxies,
+positions, shear axes and noise, while the secondary half's shear is exactly negated and the primary
+half stays unsheared. On exact matched rows the new evaluator measures
+
+    forward  = (e(+g) - e(0)) . ghat / g
+    backward = (e(0) - e(-g)) . ghat / g
+    central  = (e(+g) - e(-g)) . ghat / (2g)
+
+Random target directions make neighbours average away, so central remains a SELF-response target
+compatible with `R_model = R_flow + R_blend`. Constgold is never opened. The central grid reuses the
+pre-registered V2.1 5x4x5 flux x size x `r_blend` edges rather than choosing new bins from any `m`.
+
+**Guards already passed.** Case 0 has 699,568 rows; latent IDs/positions are byte-identical across
+the generated +/- input catalogues, target shear vectors sum to exactly zero, and the unsheared half
+is exactly zero. The two simulation INIs differ only in output paths and the signed input-catalogue
+path. `scripts/compute_response_target_antithetic_self.py` enforces unique packed-key joins, >=98%
+minus/SNC coverage, latent-property identity, opposite-shear identity, and
+`central == (forward + backward)/2` before writing anything. Unmatched rows are dropped, never
+zero-filled.
+
+**Extraction provenance caught before measurement.** The existing +0.02 secondary shapes predate
+the sub-pixel-centre correction (mtime 2026-07-01); measuring only the negative leg with today's
+default would cross extraction conventions. `blendemu/scripts/run_shape.py` therefore gained a
+default-preserving `--centering {subpixel,geometric}` option, and this diagnostic explicitly uses
+`geometric` to reproduce the positive leg. No existing positive shape or catalogue is overwritten.
+
+**Result: the one-sided half-shear estimator is clean.** On 2,588,948 exact matched, finite rows,
+with case-level SEMs over cases 0--99:
+
+    forward  (0 -> +g)   0.849178 +- 0.003625
+    backward (-g -> 0)   0.849259 +- 0.003683
+    central  (-g -> +g)  0.849218 +- 0.001812
+    central - forward   +0.000041 +- 0.003173
+
+The +/- shear-vector sum is exactly zero and the algebraic central/forward/backward identity passes.
+The existing V2.1 forward target is 0.850883, only 0.001665 above the new central result and well
+within its case uncertainty. Thus neither finite-difference asymmetry nor ordinary flow underfit
+explains the approximately 0.010 response required by constgold. The flow fits the response present
+in random-direction half-shear simulations; the remaining evidence points to the estimand/construction
+difference between random-direction SELF response and fixed coherent-shear constgold SELF+neighbour
+closure. A retrain on this central target was deliberately not launched because its global response
+is statistically unchanged.
+
+**Slurm.** Initial catalogue job 15563234 exited before work because the batch activation helper
+failed; its pending descendants were cancelled. The jobs now use the explicit sims1 path.
+Corrected catalogue 15563251, render 15563252, extraction-matched shape 15563288, and catalogue
+15563290 all completed. Target 15563292 reached the final calculation but correctly refused one
+zero-shear row: the new evaluator had omitted the canonical builder's `|g_target| > 1e-6` population
+filter. After adding that same filter (2,595,909/2,595,910 rows retained), target job 15569967
+completed in 2:55 with 2.85 GB MaxRSS and wrote
+`results/response_target_crowd_rblend_antithetic_self_c0-99_5x4x5_v21.npz`.
+
+**Files.** Added `configs/fs2_lsst_r_antithetic_self_gm002.yaml`,
+`scripts/compute_response_target_antithetic_self.py`, its unit test, five stage jobs and the guarded
+submit wrapper. The wrapper refuses any partial `case*_-0.02` tree or existing output, so recovery
+must be audited rather than silently mixed.
+
+**Validation.** Focused tests 4 passed before and after the canonical shear-filter correction; full
+`py31 -m pytest tests -q` -> 68 passed; new Python and shell syntax checks passed. The external
+blendemu centering option compiles; its default remains the current `subpixel` behavior.
+
+## 2026-08-05ae  V2.1 constgold confirmation and independent blend-flow trial
+
+The completed 16-seed V2.1 constgold evaluation confirms that the model is outside the target:
+
+    current V2.1 m = +1.007 +- 0.123%   (seed SD 0.493%; median +0.890%)
+
+The direct mean of the 16 per-seed logs is `+1.008%`; the `0.001` point difference above comes from
+the common-row subset used for the paired trial below. Thus the informal `0.9%` number is the seed
+median/rounding, while the ensemble estimate is approximately `+1.01%`. Its response components on
+the paired subset are `R_sim = 0.990224`, `R_flow = 0.862485`, and `R_blend = 0.117892`. Holding the
+measured `R_sim` and `R_blend` fixed would require `R_flow ~= 0.87233`, about `0.00985` above V2.1.
+
+### Firewall-clean candidate: independent half-shear blend flow
+
+Added `scripts/eval_v21_blendflow.py` and `jobs/job_eval_v21_blendflow.sh` to test the existing
+16-seed, independently half-shear-trained g=0.2 blend-flow lookup as the only substituted response
+component. The evaluator enforces the exact 16 seeds, canonical V2.1 cuts, unique exact key joins,
+per-seed pairing, and stored-ensemble identity; uncovered objects are dropped rather than zero-filled.
+
+Job 15561961 completed successfully. Coverage was 5,224,828 / 5,226,377 V2.1 objects (99.9704%):
+
+    current V2.1             +1.007 +- 0.123%   (seed SD 0.493%)
+    V2.1 + half-shear flow2  +0.927 +- 0.197%   (seed SD 0.787%)
+    paired change            -0.080 +- 0.125 percentage points
+
+This is a clean negative result: the point estimate improves slightly, but insignificantly, remains
+well outside `|m| < 0.3%`, and has larger seed scatter. It is not promoted. The candidate uses the
+flow2 lookup's native all-pairs/7-arcsec configuration, so the comparison is of deployable R_blend
+components rather than a pure architecture ablation.
+
+### Why finer V2.1 target binning was not pursued
+
+The current 4-size-bin half-shear target and the existing 6-size-bin target have the same global
+response, `0.850883`. The finer target decreases from `0.88099` in the smallest V2.1 size bin to
+`0.82716` in the largest; it does not reveal a hidden large-size rise that could repair the remaining
+level. Its sparsest cell has only 521 objects versus the fiducial floor of 1,875. Finer binning would
+therefore add target noise without supplying the missing global response.
+
+The remaining shortfall is a global flow-response level mismatch after the size tilt was flattened.
+Existing half-shear targets and firewall-clean emulator substitutions do not close it. The next
+scientifically defensible route is a fresh independent antithetic training instrument that matches
+the V2.1 accepted population. Reusing constgold cases for training, even with a held-out case split,
+would change the project's explicit evaluation-only policy and is not done here without owner approval.
+
+The first wrapper submission (15561923) exited before evaluation because `conda` was unavailable in
+the batch environment; the wrapper now uses the explicit sims1 Python interpreter. No scientific data
+were modified by that failed submission.
+
+**Validation.** Job 15561961 ended successfully (`EVAL_V21_BLENDFLOW_DONE`, 17.9 GB MaxRSS);
+`py31 -m pytest tests -q` -> 64 passed; evaluator `--help` and `py_compile` passed; wrapper `bash -n`
+passed.
+
 ## 2026-08-05ad  Session close: what was established, what is still open, and how to finish it
 
 Wrapping the overnight run. Also a housekeeping correction: three entries were filed as `2026-08-06a/b/c`
