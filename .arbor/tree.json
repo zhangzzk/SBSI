@@ -106,17 +106,17 @@
       "id": "n6",
       "parent": "n1",
       "depth": 2,
-      "status": "executed",
+      "status": "merged",
       "hypothesis": "A direct sparse-anchor coherent-neighbour simulation can calibrate the deployed V2.1 R_blend estimand more faithfully than pairwise half-shear emulator swaps",
       "insight": "The dominant correctable deficit is R_blend population/estimand transfer, not half-shear flow training; direct coherent-neighbour calibration removes 0.619 of the 0.708 point needed for the target.",
       "metadata": {
         "dev_score": 0.000515,
-        "test_score": null,
+        "test_score": 0.389,
         "result": "100 independent 0.25 deg2 anchor scenes validate an isotonic per-primary correction; all-case refit changes 16-seed constgold m from +1.008 to +0.389+/-0.122 percent and R_blend 0.117858 to 0.123906.",
-        "branch_ref": "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot"
+        "branch_ref": "worktree-selbias-plot@30a00d7"
       },
       "created_at": 1785973710,
-      "updated_at": 1785973710
+      "updated_at": 1785973891
     }
   }
 }

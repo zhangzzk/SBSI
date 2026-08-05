@@ -8,8 +8,8 @@
   "max_depth": 2,
   "budget_cycles": 4,
   "cycles_used": 4,
-  "best_node": null,
-  "best_test_score": null,
-  "best_branch_ref": null,
+  "best_node": "n5",
+  "best_test_score": 0.389,
+  "best_branch_ref": "worktree-selbias-plot@30a00d7",
   "created_at": 1785963592
 }
