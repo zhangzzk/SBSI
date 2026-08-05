@@ -2,6 +2,55 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05j  ANSWER: V2.1 did not create a bias. It removed the population that was cancelling one.
+
+Files: `scripts/diag_v21_cancellation.py`, `jobs/job_diag_v21_cancellation.sh` (new). Job 15538220.
+**16 fiducial seeds, ratio formed inside each seed.** Quotable.
+
+| population | N | share | m | sem | seed sd | R_sim | R_flow | R_blend |
+|---|---|---|---|---|---|---|---|---|
+| FLOW TRAINING DOMAIN (the fiducial) | 11,674,409 | 100% | **-0.271%** | 0.152 | 0.606 | 0.8605 | 0.7258 | 0.1371 |
+| of which V2.1 (`Re>0.5 & S/N>10`) | 5,226,377 | 44.8% | **+1.639%** | 0.253 | 1.014 | 0.9903 | 0.8574 | 0.1170 |
+| of which the COMPLEMENT | 6,448,032 | 55.2% | **-2.205%** | 0.332 | 1.327 | 0.7553 | 0.6192 | 0.1533 |
+
+**The two halves carry opposite signs and both are large. The fiducial's -0.271% is the average of a
++1.64% and a -2.21%.** V2.1's positive `m` is not a defect V2.1 introduced -- it is the model's
+pre-existing bias on well-resolved galaxies, exposed once the compensating half is cut away.
+
+This closes the V2.1 investigation as originally framed. Over 2026-08-05h/i/j the candidates were
+eliminated one at a time, each on matched row sets: the blend emulator (every emulator agrees to
+0.06% on the population `m` is scored on, and none differs from half-shear truth), the flow's
+training domain (100.00% of V2.1 already lies inside it), and the flow model itself (the FIDUCIAL
+flow gives +1.639% on V2.1 against the V2.1 flow's +1.469%, differing by 0.08% in `R_flow`).
+**Nothing about V2.1 is broken. The domain is a magnifying glass, not a cause.**
+
+**WHY THIS MATTERS MORE THAN THE V2.1 QUESTION DID.** The V2.1 domain is `Re > 0.5` and `S/N > 10` --
+the well-resolved, well-measured half, i.e. close to what a real analysis would actually keep. The
+model carries **+1.64 +- 0.25%** there against a deliverable target of `|m| < 0.3%`. The headline
+`-0.271%` on the full training domain is achieved by averaging that against a `-2.21%` on the half a
+real analysis would mostly cut. **The fiducial number is not evidence the model is right; it is
+evidence the two errors are currently similar in size and opposite in sign.**
+
+AGENTS.md already warns against reading the small fiducial `m` as per-population correctness, and
+records a cancellation on the emulator's pair-cut split (+0.830% on 78% vs -3.358% on 22%). This is
+the same phenomenon on a different and more physically meaningful partition -- resolution -- measured
+at 16 seeds. The two splits agree qualitatively; neither is a re-derivation of the other.
+
+CAVEAT ON THE ARITHMETIC. The population-weighted mean of the parts is -0.484% against -0.271% for
+the whole. These are not required to match: `m` is a ratio of means, not a mean, so weighting `m`
+values is only a consistency check on signs and rough sizes. The script says so in its own output
+rather than presenting the two as an identity.
+
+INFRASTRUCTURE NOTE. The first attempt to train V2.1 seeds 510-517 (job 15536201) failed on all 8
+with `CUDA driver error: operation not supported` at `t.to(device)`. Cause: `jobs/job_flow_v21.sh`
+carries a `NO_EXPANDABLE_SEGMENTS` switch but defaults it OFF, so it requests
+`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` on a `a40-24gb` vGPU slice, which lacks the CUDA
+VMM APIs that needs. Resubmitted as 15538226 with the switch on. **This is no longer on the critical
+path** -- 2026-08-05i showed any flow gives ~+1.6% on the V2.1 domain and the 16-seed value already
+comes from the fiducial dumps -- it only removes a standing "cannot quote the V2.1 flow's own m at
+spec" limitation.
+
+
 ## 2026-08-05i  V2.1: not the flow model either. Any flow gives +1.6% on that domain.
 
 Files: `scripts/diag_rflow_v21.py`, `jobs/job_diag_rflow_v21.sh` (new). Job 15536811.
