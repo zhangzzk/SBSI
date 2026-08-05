@@ -2,6 +2,44 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05l  Target resolution-split: first build was NOT population-matched; caught before use
+
+Files: `scripts/compute_response_target_blend.py` (`--v21-complement`, plus a pre-existing `--help`
+crash fixed), `jobs/job_resp_target_v21_split.sh`, `jobs/job_resp_target_v21_split_matched.sh` (new).
+Jobs 15538256, 15540905.
+
+The question: 2026-08-05j/k localised the +1.64% / -2.21% resolution split to the FLOW (the emulator
+is unbiased on both halves separately). The flow is trained against the response target, so does the
+TARGET carry the same sign flip?
+
+First build (15538256) returned V2.1 `global_R = 0.8509` -- reproducing the known value exactly, a
+good sign -- and complement `global_R = 0.2809` against a constgold demand of 0.6020. **That 53% gap
+is NOT a result and is not reported as one.** The job passed no `--primary-*` cuts, so its complement
+was the complement of V2.1 within the DEFAULT selection cuts: 11.2M pairs against V2.1's 2.6M, a
+1:4.3 split where constgold's is 1:1.23. Constgold's complement is the complement WITHIN the flow
+training domain (true mag < 26, Re > 0.3). Different galaxies, so the comparison is void.
+
+This is the third time tonight the same trap has appeared -- ruler-vs-`m` populations (2026-08-05g),
+emulator boxes (2026-08-05h), and now target domains. **The V2.1 half is immune to it by construction
+(V2.1 lies wholly inside mag < 26, Re > 0.3, per 2026-08-05i), which makes its `global_R` a built-in
+null check on the matching**: the rebuild must return 0.8509 again on that half, and only the
+complement may move.
+
+Rebuild 15540905 passes `--primary-mag-max 26.0 --primary-re-min 0.3` on BOTH halves. Nothing from
+the unmatched complement build is carried forward.
+
+Also fixed: an unescaped `5%` in this script's `--primary-re-min` help text made argparse raise
+`TypeError` on `--help`. Confirmed present at HEAD before tonight's edits, so pre-existing.
+
+WHAT THE ANSWER WILL MEAN. On V2.1 the target says 0.8509, constgold demands 0.8733, and the flow
+delivers 0.8574 -- so the flow sits slightly ABOVE its own target rather than merely echoing it. On
+the complement constgold demands 0.6020 and the flow delivers 0.6192. If the matched complement
+target lands near 0.62-0.63, the target carries the sign flip and the flow is faithfully reproducing
+a flaw it inherited, which routes the whole problem to the half-shear-vs-constgold disagreement
+(task #16). If it lands near 0.6020, the target is fine on that half and the flow is adding the error
+itself.
+
+
 ## 2026-08-05k  The emulator is unbiased on BOTH halves -- the resolution split is the FLOW's
 
 Files: `scripts/eval_rblend_gap_summed.py` (`--v21-split`), `jobs/job_rblend_v21split.sh` (new).
