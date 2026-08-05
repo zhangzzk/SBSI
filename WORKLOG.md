@@ -2,6 +2,51 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05n  SHARPENING 2026-08-05m: that comparison CROSSES extraction conventions
+
+Re-read of `CONVENTIONS.md` 6b/6c after writing 2026-08-05m. Two things in it bear directly on the
+`-2.56% / +18.50%` and neither was accounted for. Recording before the number travels.
+
+**(1) The constgold side is not a MEASUREMENT of self response.** 6b: *"constgold cannot do this:
+every object's response there contains its neighbours' contribution."* What I called constgold's
+"demand" is `R_sim - R_blend`, with `R_blend` supplied by the EMULATOR -- a model-subtracted
+quantity, not an independent measurement. It is still the right thing for the flow to be judged
+against, because it is exactly what the flow must deliver for closure, but it must not be described
+as "constgold's self response". There is also a mild circularity: that `R_blend` is certified against
+HALF-SHEAR truth (2026-08-05k), so a half-shear-derived quantity sits inside the constgold budget
+being compared to half-shear. The certification is strong (+0.84% / -0.60% on the two halves) and I
+do not think this drives the result, but it is not a clean independence.
+
+**(2) The comparison crosses extraction conventions, which 6c says manufactures a gap.** The target
+is half-shear FORWARD (`0 -> +g`); constgold is ANTITHETIC (`+-g`). 6c: *"Mixing them reintroduces a
+recorded 0.49-vs-0.60 self-response gap that is pure extraction convention on image-identical sims --
+not physics."* **The 2026-08-05m comparison is precisely such a mix.** So `-2.56% / +18.50%` cannot be
+read as evidence that one SIM is wrong about resolution; part or all of it may be the documented
+convention artifact.
+
+**WHAT SURVIVES, AND WHAT DOES NOT.**
+
+- SURVIVES: the elimination chain. The emulator (unbiased on both halves), the flow's training domain
+  (100% inside), the flow model (fiducial flow as biased on V2.1 as the V2.1 flow), and the fact that
+  the fiducial `m` is a +1.64% / -2.21% cancellation. None of those compare across conventions -- the
+  ruler work is half-shear throughout, and the `m` split is constgold throughout.
+- SURVIVES: that the target and constgold disagree about this population in a resolution-dependent
+  way, and that the flow sits between them. That is a real property of the PIPELINE as built, because
+  the pipeline genuinely trains on a forward target and is scored in an antithetic budget.
+- DOES NOT SURVIVE: reading it as "half-shear and constgold disagree about the same galaxies' physics".
+  The right statement is weaker and more useful: **the pipeline crosses an extraction convention that
+  CONVENTIONS.md already records as worth ~0.1 in absolute self response, and the size of the crossing
+  error has never been measured as a function of RESOLUTION.**
+
+**REVISED DECISIVE TEST.** Not sim-vs-sim. Measure the SAME sim under BOTH extractions, split by
+resolution -- that isolates the convention with no sim difference in play at all. constgold carries
+`measured_e1/e2_plus` and `_minus` (antithetic) and a `g0_lookup` supplies the `g=0` leg, so both
+extractions are available on identical rows IF the estimators match; that has to be checked first,
+because the lookup is ngmix (`ngmix0_g1/g2`) and the constgold columns are named `measured_e*`.
+If the 0.49-vs-0.60 gap grows toward small sizes, the resolution sign flip is the convention and not
+the models -- and per 6c the fix is to stop mixing, not to adjust any number.
+
+
 ## 2026-08-05m  ROOT CAUSE: the sign flip is already in the TARGET. It is a half-shear vs constgold gap.
 
 Job 15540905, population-matched (`--primary-mag-max 26.0 --primary-re-min 0.3` on BOTH halves).
