@@ -2,6 +2,44 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-06b  Confirming the size tilt with a SECOND, constgold-free instrument
+
+New: `scripts/compare_size_demand.py`, `jobs/job_resp_target_sizecurve.sh` (job 15549114).
+
+The tilt in 05z is `R_flow - (R_sim - R_blend)` measured on constgold, so the "demand" it is measured
+against has a MODEL subtracted out of it. That is the half of the 05n objection which 05u did NOT
+dispose of, and it matters here: CONVENTIONS.md 6b says constgold cannot isolate a self response at
+all, so if the demand curve is wrong in SHAPE across size, the tilt belongs to the instrument rather
+than to the flow. Attributing an 8-sigma result to the flow without checking that would be exactly
+the kind of unexamined attribution this project keeps having to retract.
+
+So the demand curve gets built a second way: from HALF-SHEAR only, with the residual map's own true-size
+edges (0.30 ... 1.50), over the flow's whole training box (`--primary-mag-max 26.0 --primary-re-min
+0.3`). The `Rsim` grid is marginalised over the flux and crowding axes with cell counts as weights,
+giving demand-vs-size from an instrument with no constgold in it anywhere.
+
+**Why a SHAPE comparison is legitimate across conventions, when an absolute one is not.** The target
+is forward at |g| = 0.05 and constgold is antithetic, which 6c forbids mixing. 05u measured that term
+at that leg: `-3.41% +- 3.82`, consistent with zero, AND flat in resolution (V2.1 -0.33%, complement
+-0.71%, fine Re bins all under 2 sigma). **A size-independent offset cannot manufacture a slope across
+size bins.** So the script normalises each curve by its own count-weighted mean and compares only the
+shapes; it never differences the levels. The two curves also live on different catalogues, so the
+galaxy mix inside a bin is not identical even at matched true size -- another reason this is a shape
+check and is stated as one.
+
+The read is the slope of (half-shear - constgold) across size: near zero means both instruments agree
+about how demand varies with size and the flow's tilt is real; a large slope means they disagree and
+the tilt cannot be attributed to the flow until that is resolved.
+
+Flux/crowd conditioning coarsened to 4x3 (from 6x5) so 11 size bins still leave every cell above
+`--min-count 500`. The constgold demands are pasted in as a labelled, provenance-stamped COMPARISON
+(job 15545111, 16 seeds, `_ho` R_blend) and never combined into a corrected number, per AGENTS.md
+"Numerical Integrity".
+
+Also running: array 15547299 for V2.1 dump seeds 510-517 (task 0 done, 1 running, 2-7 queued behind
+the 3-GPU cap), which takes the 06a comparison from 7 seeds to the 16 AGENTS.md requires.
+
+
 ## 2026-08-06a  Retraining on V2.1 FLATTENS the size tilt to zero -- preliminary at 7 seeds
 
 Job 15545793: the same residual map on the V2.1-TRAINED flow, with `--blend-lookup` forcing the `_ho`
