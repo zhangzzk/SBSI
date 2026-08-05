@@ -2,6 +2,52 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-06a  Retraining on V2.1 FLATTENS the size tilt to zero -- preliminary at 7 seeds
+
+Job 15545793: the same residual map on the V2.1-TRAINED flow, with `--blend-lookup` forcing the `_ho`
+`R_blend` so both maps differ only in the flow (100.0000% matched, 9 rows dropped). Compared on the
+SAME size bins, Re 0.50-1.20:
+
+    fiducial dom6x6 (16 seeds)      slope  -5.73 +- 1.55 %/arcsec (3.7s)   level -2.50 +- 0.26 (9.6s)
+    V2.1-trained    (7 seeds)       slope  +0.33 +- 1.67 %/arcsec (0.2s)   level -0.48 +- 0.21 (2.4s)
+    ---------------------------------------------------------------------------------------------
+    tilt reduced by  -6.06 +- 2.28 %/arcsec  (2.7 sigma)
+    level moved by   -2.01 +- 0.33 pt        (6.1 sigma)
+
+**The tilt is gone -- the retrained slope is consistent with zero -- and the level improves from
+-2.50% to -0.48%.** The large-galaxy end is where it shows: Re 0.80-1.00 goes -3.71% -> +0.14%, and
+Re 1.00-1.20 goes -3.73% -> -0.49%. Whole-V2.1 residual: **-1.82% -> -0.91% +- 0.22**. So the size
+tilt is largely a TRAINING-COVERAGE effect, not an irreducible limit of the architecture, which is
+the useful thing to know: it is fixable by where the model is trained.
+
+**Not yet at spec, and not yet quotable.** -0.48% +- 0.21 is still 2.4 sigma from zero against a
+|m| < 0.3% target, the retrained fit still has chi2/dof = 2.36 (residual structure remains), and the
+top bin Re 1.20-1.50 sits at -2.06% +- 0.60. **This is 7 of 16 seeds and it is a RESIDUAL, not an
+`m`** -- AGENTS.md's 16-seed rule is not satisfied and nothing here may be quoted as `m`.
+
+**A NEW instance of AGENTS.md trap #1, and it is severe.** Outside its training domain the V2.1 flow
+is not merely worse, it is unusable:
+
+    Re<0.5 but sn>10   +36.36% +- 1.91   (5,109,061 rows)
+    Re<0.5 AND sn<10   +96.48% +- 5.48
+    Re [0.30,0.35)    +134.62% +- 5.58
+    sn [7.5,10.0)      +45.83% +- 2.29
+
+It extrapolates catastrophically below its Re > 0.5 and sn > 10 training cuts. **It cannot replace the
+fiducial flow for wide-population work**, exactly as the in-domain emulator cannot replace `_ho`. Its
+faint-magnitude rows are dominated by these out-of-domain galaxies, so its mag table (+64% at
+mag 25.5-26) is reading the extrapolation, not a magnitude trend -- do not read that column.
+
+**Superseding an earlier reading.** A previous note put the two flows "0.08% apart" on the V2.1 domain
+(fiducial R_flow 0.8574 vs V2.1 flow 0.8581). That V2.1 number came from a ONE-seed dump; at 7 seeds
+the same quantity is 0.8653, a 0.9% move, which is the order of the per-seed scatter. The one-seed
+comparison should not have been used to conclude the flows were equivalent, and it is superseded here.
+
+**Next:** all 16 V2.1 checkpoints exist but only 8 dumps did (array 15536012 covered seeds 502-509 and
+COMPLETED cleanly). Submitted array 15547299 for seeds 510-517; at 16 dumps this map repeats and the
+comparison becomes quotable.
+
+
 ## 2026-08-05z  THE V2.1 ANSWER: the cut slices a linear SIZE TILT almost exactly at its zero crossing
 
 Job 15545111 (case-blocked errors) plus a weighted fit. **This is the explanation the whole night was
