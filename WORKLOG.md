@@ -2,6 +2,89 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-06a  Direct coherent-neighbour calibration reaches +0.389%, but not the 0.3% central-value goal
+
+Autonomous Arbor search started from the confirmed 16-seed V2.1 constgold baseline
+`m=+1.008+-0.123%` (`R_sim=0.990273`, `R_flow=0.862551`, `R_blend=0.117858`).  Constgold remained an
+acceptance-only set: calibration methods, parameters, and validation gates were fixed on new
+half-shear simulations before each constgold merge gate.  No constgold `m` was used as a training
+target or to choose a numerical correction.
+
+### Existing-emulator and flow directions remain negative constraints
+
+The full-population half-shear ruler selected BlendEMU `_ho` over V2.1 (relative summed-response
+errors `+1.18%` and `-37.05%`, respectively), but the frozen 16-seed swap did not transfer: job
+15575630 changed constgold from `+1.008+-0.123%` to `+1.093+-0.123%`.  `_ho` actually lowered the
+deployed mean `R_blend` by 0.70%.  This demonstrates that the old pairwise ruler measures a different
+population/estimand from coherent constgold and must not be used to select another emulator swap.
+The existing V2.1 flow-target variants are also exhausted: their largest independent response gain
+is only 0.001085, and the `ANCHOR=300/1000/3000` training arms are already documented nulls against
+their actual target.  They were not combined post hoc with the blend correction.
+
+### New direct `R_blend` instrument
+
+Added a sparse-anchor, neighbour-only coherent-shear simulation.  Each case renders identical
+galaxies and noise at `g1=+0.05` and `-0.05`; deterministic primary anchors are unsheared in both
+legs, are separated by more than 20 arcsec, and therefore have no other anchor inside the 10-arcsec
+response aperture.  The anchor central difference directly measures scene-level `R_blend`, while
+all neighbours receive the antithetic shear.  Exact guards cover full latent-column identity,
+opposite non-anchor shear, zero anchor shear, spacing, unique IDs, both-leg shape coverage, and
+finite responses.
+
+The same intrinsic primary population is reapplied at construction and measurement: the ordinary
+`18<r<28`, `Re<1.5 arcsec` support intersected with V2.1's `Re>0.5 arcsec` and intrinsic S/N>10
+domain.  The rendered source pool uses extended secondary support `13<r<29`, `0<Re<10 arcsec`;
+anchors with any unsupported source within 10 arcsec are excluded.  Thus the simulation does not
+cut primaries on measured S/N, detection, blending, or measured size.  A two-case smoke DAG
+(15575653--15575656) passed every guard but, as expected from only 1,152 matches, was too noisy.
+
+The full 100 x 0.25 deg2 DAG completed: catalogue 15575684, render 15575685, ngmix shape 15575686,
+and response 15575687.  All 200 shape files were present and the second full latent audit passed.
+On 310,080 exact matched anchors, case-mean results are:
+
+| response | mean +- case SEM |
+|---|---:|
+| direct scene truth | `0.103376 +- 0.002272` |
+| V2.1 BlendEMU | `0.098321 +- 0.000399` |
+| `_ho` BlendEMU | `0.097510 +- 0.000375` |
+
+This directly confirms a V2.1 blend-response deficit and independently rejects `_ho` for this
+estimand.  A predeclared 50/50 case split gave development scale `1.047614+-0.032930`; held-out cases
+implied `1.055235+-0.030229`, with corrected residual `+0.000748+-0.004351`.  The frozen global scale
+then improved constgold to `+0.433+-0.122%` (job 15575807), moving `R_blend` to 0.123470, but missed
+the goal.
+
+### Conditional calibration and final result
+
+The development half also fixed a parameter-free monotonic mapping from per-primary V2.1
+`R_blend` to direct anchor truth.  Before constgold was opened, the held-out global residual was
+`+0.000515+-0.002991`.  In the two response-dominant raw-prediction quintiles it changed residuals
+from `-0.01232` to `+0.00355` and from `+0.03484` to `+0.00386`, both statistically consistent with
+zero.  The development-only artifact produced `m=+0.428+-0.122%` (job 15575818).  After that method
+passed its fixed anchor gates, standard deployment refit the unchanged isotonic estimator on all
+100 anchor cases; it did not change model class or tune a parameter.  The final job 15575822 gives:
+
+| model | R_blend | m (16 seeds) | paired change |
+|---|---:|---:|---:|
+| current V2.1 | 0.117858 | `+1.008 +- 0.123%` | -- |
+| direct-anchor isotonic refit | 0.123906 | **`+0.389 +- 0.122%`** | `-0.619 +- 0.002 point` |
+
+The central value is a 61% reduction in bias and the new best tested artifact, but it does **not**
+meet `|m|<=0.3%`.  At the measured `R_sim` and `R_flow`, the +0.3% boundary requires
+`R_blend=0.124760`, another 0.000854 (0.69%) above the independently calibrated value.  That gap is
+smaller than the direct-anchor statistical uncertainty, so 0.3% is not statistically excluded;
+nevertheless, adding it to the central correction would be constgold tuning and is not justified.
+A low-complexity magnitude/size residual model was checked only on anchor data and did not improve
+the global or high-response held-out residuals, so it was not taken to another constgold gate.
+
+Files added include the anchor construction/response/calibration scripts, two guarded configs,
+Slurm DAGs, focused tests, and persistent Arbor trees.  Acceptance artifacts are
+`results/anchorblend_g005_isotonic_refit.{npz,json}`.  Two early acceptance wrappers (15575798 and
+15575800) were non-scientific failures: the first used an empty dump glob and the second omitted the
+canonical domain replay; neither produced an accepted result.  The corrected evaluator verifies
+all 16 seeds, exact catalogue row identity/order, the canonical 5,226,377-row V2.1 mask, complete
+finite coverage, and held-out calibration metadata before scoring.
+
 ## 2026-08-05ag  Common cuts do NOT explain V2.1; they expose a larger population cancellation
 
 Owner clarified the three populations to compare: the half-shear used for `R_blend`, the half-shear

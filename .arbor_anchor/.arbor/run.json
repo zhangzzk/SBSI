@@ -1,0 +1,15 @@
+{
+  "objective": "Measure and correct V2.1 blend response with an independent neighbour-only coherent-shear simulation",
+  "metric_direction": "min",
+  "dev_eval": "sbatch jobs/submit_anchorblend_smoke.sh, then train/validate a correction on disjoint anchorblend cases",
+  "test_eval": "16-seed V2.1 constgold m after freezing the anchorblend-derived correction",
+  "material": "arbor/v21-best@f326e9f",
+  "branching": 2,
+  "max_depth": 2,
+  "budget_cycles": 4,
+  "cycles_used": 4,
+  "best_node": null,
+  "best_test_score": null,
+  "best_branch_ref": null,
+  "created_at": 1785963592
+}

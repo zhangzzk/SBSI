@@ -1,0 +1,54 @@
+{
+  "deployment_fit_cases": 100,
+  "deployment_n_thresholds": 173,
+  "method": "isotonic",
+  "n_dev_cases": 50,
+  "n_test_cases": 50,
+  "n_thresholds": 138,
+  "split_case": 50,
+  "tag": "lsst_r_extnbr_v21",
+  "test_bins": [
+    {
+      "bin": 0,
+      "calibrated_residual": 0.006111068973468862,
+      "calibrated_residual_se": 0.004974205629888836,
+      "n": 31272,
+      "raw_residual": 0.008732507880198722,
+      "raw_residual_se": 0.004945708171214247
+    },
+    {
+      "bin": 1,
+      "calibrated_residual": -0.0026900527539746137,
+      "calibrated_residual_se": 0.004882469423849314,
+      "n": 30966,
+      "raw_residual": 0.001750719399462977,
+      "raw_residual_se": 0.004887148417838719
+    },
+    {
+      "bin": 2,
+      "calibrated_residual": -0.00878099254964399,
+      "calibrated_residual_se": 0.004904615362317406,
+      "n": 31153,
+      "raw_residual": -0.006396106848412321,
+      "raw_residual_se": 0.004902687047388491
+    },
+    {
+      "bin": 3,
+      "calibrated_residual": 0.0035456282907514003,
+      "calibrated_residual_se": 0.007426021725666544,
+      "n": 30831,
+      "raw_residual": -0.012317027073664784,
+      "raw_residual_se": 0.0074335511952916865
+    },
+    {
+      "bin": 4,
+      "calibrated_residual": 0.0038588207159141706,
+      "calibrated_residual_se": 0.011384840335324851,
+      "n": 30869,
+      "raw_residual": 0.034838067445135075,
+      "raw_residual_se": 0.01134754487908942
+    }
+  ],
+  "test_residual": 0.0005145210275952985,
+  "test_residual_se": 0.002991431892161339
+}
