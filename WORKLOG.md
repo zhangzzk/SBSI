@@ -2,6 +2,103 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05t  RETRACTING most of 05s: the fiducial dumps ALREADY use `_ho`
+
+Job 15542390 returned an exact no-op: `R_blend` 0.1170 -> 0.1170, `m` +1.639% -> +1.639%, swap moves
+`m` by +0.000 +- 0.000 pt, on a 100.0000% lookup match.
+
+The reason is provenance, not a bug. `jobs/job_s2c_domain_eval.sh:44`, which produced the fiducial
+`ablate_s2c_lt500_dom6x6_perobj_s*.feather` dumps, passes
+`--blend-lookup blend_lookup_extnbrho_c40-139.feather`. **The fiducial dumps were already built with
+`_ho`.** The swap replaced `_ho` with `_ho`.
+
+**So the alarming part of 05s is withdrawn.** V2.1's `m` was never scored against the convicted
+emulator; it was already using the one the ruler CLEARS on that population (+1.18% +- 3.33). The
++1.639% stands, and stands on a better footing than 05s feared -- the diagnosis is not in question and
+the "sign change" arithmetic in 05s describes a swap that had already happened.
+
+**What survives from 05s, unchanged:** the ruler numbers themselves (the fiducial-tagged emulator IS
+15.56% low on the full V2.1 sample, 5.6 sigma), and the lesson that I read a box-population null as
+if it described the full population. Both stay on the record.
+
+**What the no-op is genuinely worth:** it is an exact end-to-end validation of the join. Reproducing
+a stored 26.9M-row column to the printed precision through digitised keys, a sort, and a
+`searchsorted` is a strong test that `eval_m_swap_emulator.py` is correct, so the tool can now be
+pointed at a genuinely different lookup and believed.
+
+**One provenance discrepancy to flag for the owner, NOT resolved here.** AGENTS.md's "Fiducial Model"
+section names the per-object lookup as `blend_lookup_indomtuned_c40-139.feather` (tag
+`lsst_r_extnbr_indom_tuned`), but the dumps that produce the canonical numbers were built with
+`blend_lookup_extnbrho_c40-139.feather`. Both files exist and differ in size (133 MB vs 560 MB), so
+they are not the same content. Either AGENTS.md's lookup name is stale or these are not the dumps
+behind the canonical `-0.123%`. Changing the definition of the fiducial model is the owner's call, so
+this is recorded and not edited.
+
+## 2026-08-05u  Extraction convention REFUTED as the explanation -- it is consistent with zero
+
+Job 15542220, `scripts/diag_extraction_convention.py`. One sim, identical rows, identical estimator,
+both extractions, 8,932,190 rows at |g| = 0.0200.
+
+    R_fwd  (0 -> +g) = 0.44064 +- 0.00315
+    R_bwd  (0 -> -g) = 0.44547 +- 0.00315
+    R_anti (+-g)     = 0.44305 +- 0.00161
+    fwd - anti       = -0.00241 +- 0.00271   (0.9 sigma)  = -0.55% +- 0.61 of R
+
+The join is representative, checked directly rather than assumed: `R_anti` needs no g=0 leg, so it
+exists on both sets, and it reads 0.44434 +- 0.00114 on all 17.9M constgold rows against 0.44305 +-
+0.00161 on the matched 8.9M -- a 0.00128 difference, inside the errors.
+
+**The quadratic term is consistent with zero, and it does not track resolution:** V2.1 -0.33% +-
+0.37, complement -0.71% +- 1.05, and the fine Re bins from 0.1 to 1.5 are all under 2 sigma with no
+monotonic trend. So the resolution SIGN FLIP in the flow's closure residual is NOT an extraction
+artifact.
+
+**On the recorded 0.49-vs-0.60 gap.** By the identity in 05q the two conventions can differ on
+identical rows ONLY by this term. Scaling it as g^2:
+
+    |g| = 0.02   -0.55% +- 0.61      (measured here)
+    |g| = 0.05   -3.41% +- 3.82      22% is 6.7 sigma away -- EXCLUDED
+    |g| = 0.20  -54.51% +- 61.11     error too large to say anything
+
+So at the |g| = 0.05 leg the convention cannot produce a 22% gap, assuming the quadratic scaling.
+**Scope, stated plainly: this measures constgold at |g| = 0.02 and extrapolates. It does not measure
+the g = 0.2 leg, where the extrapolated error swamps the signal.** Within that scope, CONVENTIONS.md
+6c's reading -- that the same rows extracted two ways differ by 22% -- does not survive, and the
+recorded gap needs a different explanation (different rows, populations, or sims). I am not editing
+6c: it is a canonical convention file, the refutation is bounded to |g| <= 0.05, and the operational
+advice it gives (do not mix conventions) remains right regardless of the size of the effect.
+
+## 2026-08-05v  The sign flip is carried by SIZE, not S/N -- and the first table had no error bars
+
+Job 15542288, `--scope train` on the 16 fiducial dumps. The 2x2 of the V2.1 cut's two conditions:
+
+    Re>0.5 AND sn>10  (= V2.1)     -1.82%    5,226,377
+    Re>0.5 but sn<10               +4.36%      688,298
+    Re<0.5 but sn>10               +2.90%    5,109,061
+    Re<0.5 AND sn<10               -0.76%      650,673
+
+The complement is dominated by `Re<0.5 but sn>10` -- 5.1M of its 5.76M rows -- so **the split is a
+SIZE split, not an S/N split**: the flow's response is ~1.8% LOW for well-resolved primaries and
+~2.9% HIGH for small ones. `residual = R_flow - (R_sim - R_blend)`, so positive means R_flow too high.
+That is a resolution-dependent tilt in the flow's shape response, which is a nameable failure mode
+rather than a global offset.
+
+**But the fine marginal tables must not be read yet, and I nearly did.** They came out as a
+non-monotonic patchwork -- by size +9.32, -1.32, +3.76, +1.35, -0.82, -1.89, -0.62, -1.63, -3.71,
+-3.73, +3.25 -- with **no error bars of any kind**, so there was nothing to distinguish a trend from
+noise. Fixed rather than interpreted: `diag_rflow_v21.py` now carries a `Table` class that keeps
+PER-SEED per-bin means and reports two independent errors,
+
+  * `+-seed`, the spread of the per-seed residual (`R_flow` moves with seed, `R_sim`/`R_blend` do
+    not, and AGENTS.md records that this offset does NOT cancel in an absolute residual at a cut);
+  * `+-sim`, the sampling error on `R_sim` itself, whose per-object scatter is std ~5 against a mean
+    ~0.86, so a few-hundred-thousand-row bin carries a real error on the target.
+
+Validated against direct numpy on synthetic data before use: per-seed means, counts and the sim sem
+all match to 1e-6. Rerunning as job 15543906. The 2x2 above is on 0.65M-5.2M-row cells and is the
+part likely to survive; the fine bins are the part that needed the errors.
+
+
 ## 2026-08-05s  The fiducial emulator is CONVICTED on V2.1 -- and I called the fix futile on the wrong population
 
 New: `scripts/eval_m_swap_emulator.py`, `jobs/job_m_swap_emulator.sh` (job 15542390).
