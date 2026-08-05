@@ -2,6 +2,54 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-06c  Second instrument: the tilt SURVIVES, but its size is uncertain at the ~30% level
+
+Job 15549114. The half-shear demand curve, built with no constgold in it, against the constgold one,
+shapes only (each normalised by its own count-weighted mean):
+
+    Re bin        HS/mean   CG/mean    diff        Re bin        HS/mean   CG/mean    diff
+    [0.30,0.35)    0.5895    0.5431   +0.0465      [0.60,0.70)    1.1122    1.1368   -0.0246
+    [0.35,0.40)    0.9410    0.9330   +0.0080      [0.70,0.80)    1.1142    1.1264   -0.0122
+    [0.40,0.45)    1.0625    1.0474   +0.0150      [0.80,1.00)    1.0861    1.1066   -0.0205
+    [0.45,0.50)    1.1000    1.1152   -0.0152      [1.00,1.20)    1.0893    1.1084   -0.0191
+    [0.50,0.55)    1.1267    1.1372   -0.0105      [1.20,1.50)    1.0859    1.0843   +0.0015
+    [0.55,0.60)    1.1259    1.1489   -0.0230
+
+**The two instruments agree on the shape of demand-vs-size to 2.1% rms** across a curve that itself
+spans a factor of two. That is the good news, and it is a real independent check: nothing in the
+half-shear build touches constgold.
+
+**But they do not agree perfectly, and the disagreement is not negligible against the effect being
+attributed.** The shape difference carries a slope of `-0.0441 +- 0.0191 /arcsec` over the interior
+bins (2.3 sigma; `-0.0472 +- 0.0241` over all 11). Since the flow's tilt is measured AGAINST this
+demand, a sloped disagreement propagates straight into it. Sensitivity, holding the constgold LEVEL
+(levels are not comparable across conventions) and substituting only the half-shear SHAPE:
+
+    flow tilt vs CONSTGOLD demand           -8.09 +- 1.93 %/arcsec    (4.2 sigma)
+    flow tilt vs HALF-SHEAR-SHAPED demand   -5.60 +- 1.78 %/arcsec    (3.1 sigma)   SENSITIVITY ONLY
+
+**So the tilt is confirmed in sign and existence by both instruments -- 4.2 and 3.1 sigma -- but its
+MAGNITUDE is uncertain by about 31%.** The honest statement of 05z's headline is therefore "the flow's
+response error falls with true size at roughly 6-8% per arcsec", not "-8.10 +- 1.94". The zero
+crossing near the V2.1 cut, and hence the whole cancellation story, is unaffected: both readings cross
+in the same place because the level is common to them.
+
+**The -5.60 figure is a SENSITIVITY, not a corrected number, and is not adopted anywhere.** Per
+AGENTS.md "Numerical Integrity" it is derived and reported in the same breath as its provenance, and
+no reported quantity is rescaled by it. If a corrected tilt is ever wanted, the instrument
+disagreement has to be understood first, not divided out.
+
+**A caveat that limits how hard this can be pushed.** The two curves live on different catalogues, so
+a bin's galaxy mix is not identical even at matched true size; part of the 2.3-sigma slope may be
+population rather than instrument. That is a plausible explanation but NOT a demonstrated one, so the
+31% uncertainty stands as stated rather than being argued away.
+
+**And a finding in its own right:** the constgold and half-shear instruments disagree about the
+size-dependence of the response at ~2.3 sigma. That is a sharper and more useful version of the
+question task #16 asked -- they agree on shape to 2% rms, with a marginal residual slope -- and it is
+worth its own investigation later.
+
+
 ## 2026-08-06b  Confirming the size tilt with a SECOND, constgold-free instrument
 
 New: `scripts/compare_size_demand.py`, `jobs/job_resp_target_sizecurve.sh` (job 15549114).
