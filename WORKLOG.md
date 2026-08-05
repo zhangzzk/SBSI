@@ -2,6 +2,37 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05k  The emulator is unbiased on BOTH halves -- the resolution split is the FLOW's
+
+Files: `scripts/eval_rblend_gap_summed.py` (`--v21-split`), `jobs/job_rblend_v21split.sh` (new).
+Job 15538241. Fiducial-domain ruler, 12,327,203 primaries, paired errors, null clean on both halves
+(+0.00003 / +0.00008).
+
+2026-08-05j charged the +1.64% / -2.21% resolution split to the flow. That assumed the emulator is
+right on BOTH halves -- and its headline exactness on the fiducial domain (-0.02%) is itself an
+average over exactly those two halves, so it could have been the same kind of cancellation. Tested:
+
+| emulator | V2.1 half (Re>0.5 & S/N>10) | COMPLEMENT | BOTH |
+|---|---|---|---|
+| `lsst_r_extnbr_indom_tuned` (FIDUCIAL) | **+0.84% (0.6 sigma)** | **-0.60% (0.4 sigma)** | -0.02% (0.0) |
+| `lsst_r_extnbr_ho` | +1.34% (0.9) | +1.56% (1.1) | +1.48% (1.4) |
+| `lsst_r` | +2.76% (1.9) | +7.25% (5.0) | +5.47% (5.3) |
+| `lsst_r_extnbr_v21` | -0.82% (0.6) | **-23.68% (16.4)** | -14.60% (14.0) |
+
+**The fiducial emulator is unbiased on each half separately, not just on their average.** Its -0.02%
+is genuine, not a cancellation. **So the +1.64% / -2.21% split belongs to the flow, and the
+attribution in 2026-08-05j stands.** With `R_blend` certified on both halves, the flow's closure
+residual is `-1.82%` on the well-resolved half and `+2.86%` on the rest: **the flow's response error
+CHANGES SIGN with resolution**, under-predicting where galaxies are well resolved and over-predicting
+where they are not.
+
+Two side results worth keeping. `lsst_r_extnbr_v21` is fine on the V2.1 half (-0.82%, 0.6 sigma --
+it is trained there) and catastrophic on the complement (-23.68%, 16.4 sigma), which is the
+out-of-box mechanism of 2026-08-05d/h seen cleanly on one split: the complement contains `Re < 0.5`,
+outside its box. And `lsst_r`'s bias is worse on the poorly-resolved half (+7.25% vs +2.76%), so its
+conviction on the fiducial domain is driven by small galaxies.
+
+
 ## 2026-08-05j  ANSWER: V2.1 did not create a bias. It removed the population that was cancelling one.
 
 Files: `scripts/diag_v21_cancellation.py`, `jobs/job_diag_v21_cancellation.sh` (new). Job 15538220.
