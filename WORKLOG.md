@@ -2,6 +2,52 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05x  Bounding caveat 1: the emulator can carry at most ~1 pt of the fine-bin oscillation
+
+No new job -- this reads the FIDUCIAL-box section of job 15535057, which already scored the ruler on
+exactly the flow's training box (mag < 26, Re 0.3-1.5, 11,556,970 primaries). `_ho`'s summed
+`R_blend` error by PRIMARY TRUE SIZE:
+
+    ALL          -0.63 +- 1.07        [0.56,0.70)   -5.20 +- 2.19   (2.4 sigma, the only notable bin)
+    [0.30,0.38)  -0.03 +- 2.57        [0.70,0.95)   +2.48 +- 2.52
+    [0.38,0.46)  +1.39 +- 2.72        [0.95,1.50)   -2.29 +- 2.56
+    [0.46,0.56)  -1.17 +- 2.39
+
+So the emulator is null overall on this population and its per-size-bin errors run at the few-percent
+level with one 2.4-sigma excursion. **Converting that into a bound on the closure residual:** the
+emulator error enters the residual scaled by `R_blend / needed`, which across these bins is roughly
+0.13/0.80 ~ 0.16. A 5% emulator error therefore moves the residual by ~0.8 pt, against observed
+swings of +-3.7 pt. **The emulator can account for at most about a quarter of the oscillation; the
+rest is the flow.** Caveat 1 of 05w is bounded rather than merely noted.
+
+Stated limits: the ruler's size bins are not identical to the residual map's, and the ruler is the
+g = 0.2 half-shear leg while the dump `R_blend` is constgold, so this is an order-of-magnitude bound,
+not a subtraction. It is not applied to any number.
+
+## 2026-08-05y  05u partly REHABILITATES the target comparison I withdrew in 05n
+
+In 05n I withdrew the 05m target-vs-constgold comparison on two grounds. 05u settles one of them and
+leaves the other standing, so the withdrawal needs splitting rather than keeping wholesale.
+
+**Ground 1 -- crossing extraction conventions -- is now bounded and does not explain the gap.** The
+response target is built on the |g| = 0.05 half-shear leg (`jobs/job_resp_target_v21_split_matched.sh:35,37`:
+`det_meas_crowd_g0.05_val_full.feather`, `--nominal-g 0.05`). 05u measured the forward-vs-antithetic
+term directly and, scaled to that leg, it is **-3.41% +- 3.82 -- consistent with zero**. The gap it
+was invoked to explain is the complement's target-vs-demand of **+18.50%**. A few percent, consistent
+with zero, cannot produce eighteen. So the convention is not what makes that comparison unreadable.
+
+**Ground 2 stands, unchanged.** CONVENTIONS.md 6b: constgold cannot isolate a SELF response, because
+every object's response there contains its neighbours' contribution. The "demand" is
+`R_sim - R_blend` with `R_blend` supplied by the emulator -- a MODEL-SUBTRACTED quantity, not a
+measurement. A mis-specified `R_blend` moves the demand directly, and on the complement `R_blend` is
+large (0.20-0.33 in the low-S/N cells). That objection is independent of extraction convention and 05u
+says nothing about it.
+
+**Net:** the +18.50% is not a convention artifact and is worth explaining, but it still may not be
+read as "the target and constgold disagree about the sim", because one side of the comparison has a
+model baked into it. The clean version of that test needs a demand that is not model-subtracted.
+
+
 ## 2026-08-05w  With errors: the SIZE split is real; the fine bins oscillate, so the errors get blocked
 
 Job 15543906, the error-carrying rerun. The 2x2 survives cleanly:
