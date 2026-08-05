@@ -2,6 +2,27 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-05o  Box-null CLOSED: leakage refuted by ~130x, so it is a fluctuation
+
+Job 15540909. The box-restricted summed ruler's 45-degree null read `-0.0172 +- 0.0057` (3.0 sigma)
+where the unrestricted null is clean. Two candidate mechanisms, both now refuted:
+
+1. **Masking bug** -- refuted 2026-08-05n: `tmag`/`tre` vary across a primary's neighbour rows in
+   **0 of 766,882** primaries, so the box removes whole primaries as intended.
+2. **Self-response leakage** -- the ruler uses the BOTH-sheared leg, where the primary carries its own
+   shear and its self response (~0.86) is ~14x the blend signal. The projection isolates the blend
+   term only if the primary and secondary shear directions are uncorrelated; a residual correlation
+   in the 18% box subsample would leak. Explaining `-0.0172` needs `<sin 2dtheta> ~ -0.020`.
+   **Measured inside the box: `-0.00015 +- 0.00015`** -- about **130x too small**, and consistent with
+   zero. Over the full sample it is `-0.00004 +- 0.00006`. Refuted.
+
+So the 3-sigma excursion is a fluctuation, unremarkable given how many nulls were checked tonight.
+Recorded rather than waved away because the check was cheap and the alternative was a standing
+unexplained artifact on a tool carrying tonight's main results. **No conclusion rested on it in any
+case**: emulator-to-emulator comparisons cancel truth and null exactly, and the fiducial-domain
+ruler's own nulls are clean (+0.00003 / +0.00008).
+
+
 ## 2026-08-05n  SHARPENING 2026-08-05m: that comparison CROSSES extraction conventions
 
 Re-read of `CONVENTIONS.md` 6b/6c after writing 2026-08-05m. Two things in it bear directly on the
