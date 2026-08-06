@@ -18,7 +18,7 @@ export PYTHONPATH="/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot:/hom
 unset PYTORCH_CUDA_ALLOC_CONF
 cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 
-SEEDS=(${SEEDS:-501 502})
+IFS=: read -r -a SEEDS <<< "${V22_SEEDS:-501:502}"
 if [ -n "${SLURM_ARRAY_TASK_ID:-}" ]; then SEED=${SEEDS[$SLURM_ARRAY_TASK_ID]}; else SEED=${SEED:-501}; fi
 TAG=${TAG:-ablate_s2c_lt500_v22}
 CACHE=/project/ls-gruen/users/zekang.zhang/sbsi_caches/ablation

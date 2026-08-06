@@ -34,6 +34,14 @@ to two V2.2 seeds.  On the matching 501/502 seeds V2 averages `+0.969%`, so V2.2
 change is only `-0.284 +- 0.913` percentage points and is inconclusive at two seeds.  The redundant
 pending inter backup chain 15581398--15581399 was cancelled after the CIP products passed all checks.
 
+Owner requested four additional pilot seeds.  Generalized the V2.2 flow, shard and concatenation
+wrappers to accept a colon-delimited `V22_SEEDS` override while preserving 501/502 as the default;
+the aggregator already discovers every completed full dump.  Submitted seeds 503, 505, 506 and 507
+(504 is intentionally absent under the repository seed convention): flow array 15581991, dependent
+40-task constgold shard array 15581992, concatenation 15581993 and six-seed aggregation 15581995.
+The first three flow tasks started immediately on CIP and their logs confirm the intended seed map;
+the fourth is waiting only on the per-user three-GPU QOS limit.
+
 ## 2026-08-06f  V2.2 rectangular-domain two-seed experiment pre-registered
 
 Owner specified V2.2 as the V2 recipe with only the intrinsic-primary box changed to

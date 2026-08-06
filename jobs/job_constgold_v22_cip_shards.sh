@@ -14,7 +14,7 @@ export LD_LIBRARY_PATH="/project/ls-gruen/users/zekang.zhang/envs/sims1/lib:${LD
 export PYTHONPATH="/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot:/home/z/Zekang.Zhang/blendemu:${PYTHONPATH:-}"
 cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 
-SEEDS=(501 502)
+IFS=: read -r -a SEEDS <<< "${V22_SEEDS:-501:502}"
 NCHUNK=10
 TASK=${SLURM_ARRAY_TASK_ID:?array task required}
 SEED=${SEEDS[$((TASK / NCHUNK))]}

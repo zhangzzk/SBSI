@@ -15,7 +15,7 @@ CAT=/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/constant_r
 V22=/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/v22_cip_domain_dumps
 V2=/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/v2_domain_dumps
 
-echo "### V2.2 TWO-SEED CIP-SHARDED RESULT ###"; date
+echo "### V2.2 CIP-SHARDED SEED-ENSEMBLE RESULT ###"; date
 "$PY" -u scripts/eval_v2_indomain_m.py \
   --dump-glob "$V22/ablate_s2c_lt500_v22_perobj_s*.feather" \
   --catalogue "$CAT" --min-case 40 --re-min 0.5 --mag-max 25.8 \
