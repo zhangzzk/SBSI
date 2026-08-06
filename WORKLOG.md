@@ -2,6 +2,58 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-06c  True isolation cannot clear V2.1 flow; toy rejects coherent pair non-additivity
+
+Owner asked whether the direct-anchor result implies the flow is good, to be checked on isolated
+constgold galaxies, and whether the coherent-versus-pair difference appears in the existing toy
+simulation framework.  Added two diagnostics that use no constgold response for fitting or model
+selection.
+
+**Intrinsic isolation ladder (job 15579094).**  `eval_v21_constgold_isolation.py` replays the exact
+canonical 5,226,377-row V2.1 population and all 16 flow seeds.  For every primary it reads the raw
+constgold input field and uses a KD tree to find the nearest *other rendered source*.  This replaces
+the invalid historical shorthand `neighbored=False`, which only means no annotated pair inside 3
+arcsec and leaves real farther neighbours.  The flow-only result is:
+
+| nearest other rendered source | N | `<R_sim>` | `<R_flow>` | `<R_blend>` | `m_flow=R_sim/R_flow-1` |
+|---|---:|---:|---:|---:|---:|
+| >3 arcsec | 1,228,220 | 1.12109 | 1.06928 | 0.08565 | `+4.855 +- 0.355%` |
+| >5 arcsec | 82,927 | 1.14427 | 1.08674 | 0.02205 | `+5.302 +- 0.815%` |
+| >7 arcsec | 1,545 | 1.16832 | 1.08040 | 0.00446 | `+8.315 +- 3.674%` |
+| >10 arcsec | 1 | 1.06580 | 1.06188 | 0 | statistically unusable |
+
+Errors combine 16-seed SEM and a 100-case bootstrap.  Therefore constgold contains effectively no
+strictly isolated V2.1 population: only one object survives 10 arcsec.  The requested clean
+flow-only confirmation is **not available**.  The radius ladder points in the opposite direction
+from "flow is good" (flow under-response persists as the native blend term falls), but the strict
+7-arcsec result is only about 2.3 sigma and cannot certify a precision claim.  Artifact:
+`results/v21_constgold_isolation.json`.
+
+**Matched toy decomposition (corrected job 15579131).**  `eval_anchorblend_toy.py` uses the archived
+ngmix postage-stamp machinery with current LSST conditions and the V2.1 emulator.  The target stays
+unsheared; all neighbours are coherently antithetic-sheared for one measurement, then each
+neighbour is sheared alone while every other source remains present.  The coherent-minus-summed
+individual truth is only `+0.000088 +- 0.000022` (0.025% of coherent truth) for four mixed
+neighbours and `+0.000033 +- 0.000042` (0.045%) for eight close faint neighbours.  A three-neighbour
+5/7/9-arcsec scene gives `-0.000125 +- 0.000092`, also consistent with zero in absolute response.
+This reproduces the archived toy conclusion: **coherent neighbour response is the linear sum of
+individual-neighbour derivatives; multi-neighbour non-additivity cannot explain the 5.94% anchor
+deficit.**
+
+The V2.1 emulator error is instead strongly pair-population dependent in these deliberately chosen,
+non-representative toys: `-37.6%` for one close equal pair, `-73.8%` for one typical fainter pair,
+`+3.7%` for four mixed neighbours, `+24.6%` for eight close faint neighbours, and `+23.2%` where
+the far-scene truth is nearly zero.  Thus the 300-scene `-5.94%` is a population-weighted per-pair
+calibration/coverage result, not a universal coherent-transfer factor or a failure of summation.
+The global anchor correction remains empirically measured, but its earlier interpretation as a
+coherent-versus-pair aggregation deficit is narrowed accordingly.  Artifact:
+`results/anchorblend_toy_v21.json`.  Job 15579095 produced no artifact: it stopped on an irrelevant
+GalSim Sersic-truncation solve error; removing explicit profile truncation gave the completed rerun.
+
+Files added: the two diagnostic scripts, their Slurm wrappers, one focused isolation-helper test,
+and the two JSON artifacts.  Validation: both science jobs completed exit 0; synthetic nearest-self
+exclusion and exact-ratio bootstrap checks passed; focused suite 13 passed; full suite 91 passed.
+
 ## 2026-08-06b  Goal reached: replicated direct-anchor scale gives constgold m=+0.247%
 
 Entry 06a stopped at `m=+0.389+-0.122%` because its 100-case anchor experiment could not resolve

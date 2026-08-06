@@ -1,0 +1,126 @@
+{
+  "g": 0.05,
+  "model": "lsst_r_extnbr_v21",
+  "nreal": 400,
+  "scenarios": {
+    "eight_faint_close": {
+      "coherent_minus_individual_sum": 3.29545206810546e-05,
+      "coherent_minus_individual_sum_sem": 4.215632078325401e-05,
+      "coherent_truth": 0.07405086672236066,
+      "coherent_truth_sem": 0.00013374613629490002,
+      "emulator_over_coherent_minus_one": 0.2458310580720846,
+      "emulator_pair_predictions": [
+        0.011531858704984188,
+        0.011531858704984188,
+        0.011531858704984188,
+        0.011531858704984188,
+        0.011531858704984188,
+        0.011531858704984188,
+        0.011531858704984188,
+        0.011531858704984188
+      ],
+      "emulator_sum": 0.0922548696398735,
+      "individual_sum_over_coherent_minus_one": -0.0004450254553347577,
+      "individual_truth_means": [
+        0.01095545618074536,
+        0.007566285115291247,
+        0.010964333784574709,
+        0.007597795160271682,
+        0.010960809205311318,
+        0.007518243379865132,
+        0.01089691185916482,
+        0.007558077516455334
+      ],
+      "individual_truth_sum": 0.07401791220167961,
+      "individual_truth_sum_sem": 0.00013561880256954164,
+      "n_neighbours": 8,
+      "n_success": 400
+    },
+    "four_mixed": {
+      "coherent_minus_individual_sum": 8.771239898612255e-05,
+      "coherent_minus_individual_sum_sem": 2.214055292200399e-05,
+      "coherent_truth": 0.3460010080277731,
+      "coherent_truth_sem": 0.0005085822786958483,
+      "emulator_over_coherent_minus_one": 0.03653915320626622,
+      "emulator_pair_predictions": [
+        0.2934567928314209,
+        0.05549198016524315,
+        0.009118776768445969,
+        0.0005760421045124531
+      ],
+      "emulator_sum": 0.35864359186962247,
+      "individual_sum_over_coherent_minus_one": -0.0002535033047621482,
+      "individual_truth_means": [
+        0.30355189164718366,
+        0.05680902395092314,
+        -0.014457850820320712,
+        1.0230851000948924e-05
+      ],
+      "individual_truth_sum": 0.34591329562878703,
+      "individual_truth_sum_sem": 0.0005085210874120952,
+      "n_neighbours": 4,
+      "n_success": 400
+    },
+    "one_close_equal": {
+      "coherent_minus_individual_sum": 0.0,
+      "coherent_minus_individual_sum_sem": 0.0,
+      "coherent_truth": 0.47694930854150125,
+      "coherent_truth_sem": 0.0011325272597171876,
+      "emulator_over_coherent_minus_one": -0.37624020599964614,
+      "emulator_pair_predictions": [
+        0.297501802444458
+      ],
+      "emulator_sum": 0.297501802444458,
+      "individual_sum_over_coherent_minus_one": 0.0,
+      "individual_truth_means": [
+        0.47694930854150125
+      ],
+      "individual_truth_sum": 0.47694930854150125,
+      "individual_truth_sum_sem": 0.0011325272597171876,
+      "n_neighbours": 1,
+      "n_success": 400
+    },
+    "one_typical_fainter": {
+      "coherent_minus_individual_sum": 0.0,
+      "coherent_minus_individual_sum_sem": 0.0,
+      "coherent_truth": 0.09360395201506283,
+      "coherent_truth_sem": 0.0005727440431220057,
+      "emulator_over_coherent_minus_one": -0.7378953030731659,
+      "emulator_pair_predictions": [
+        0.024534035474061966
+      ],
+      "emulator_sum": 0.024534035474061966,
+      "individual_sum_over_coherent_minus_one": 0.0,
+      "individual_truth_means": [
+        0.09360395201506283
+      ],
+      "individual_truth_sum": 0.09360395201506283,
+      "individual_truth_sum_sem": 0.0005727440431220057,
+      "n_neighbours": 1,
+      "n_success": 400
+    },
+    "three_far": {
+      "coherent_minus_individual_sum": -0.00012452497574759144,
+      "coherent_minus_individual_sum_sem": 9.169726075985922e-05,
+      "coherent_truth": 0.007378934688954555,
+      "coherent_truth_sem": 0.00013288453011999,
+      "emulator_over_coherent_minus_one": 0.2320139193681252,
+      "emulator_pair_predictions": [
+        0.005221659317612648,
+        0.0019773165695369244,
+        0.0018919743597507477
+      ],
+      "emulator_sum": 0.00909095024690032,
+      "individual_sum_over_coherent_minus_one": 0.01687573897814687,
+      "individual_truth_means": [
+        0.007432639253346906,
+        -0.00010553875377176886,
+        0.0001763591651270096
+      ],
+      "individual_truth_sum": 0.007503459664702145,
+      "individual_truth_sum_sem": 0.00011976283174128617,
+      "n_neighbours": 3,
+      "n_success": 400
+    }
+  }
+}
