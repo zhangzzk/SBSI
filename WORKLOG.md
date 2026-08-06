@@ -2,6 +2,65 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-07a  V2.2 16-seed result: the six-seed pilot was LOW, and V2.2 does not beat V2
+
+Chain 15584001 -> 15584005 -> 15584006 -> 15584045 completed.  All ten flows trained (9--29 min
+each), 100 shards ran, and every one of the 16 concatenated dumps verified at 26,926,617 rows with
+exact catalogue alignment and 100% structural emulator coverage.  Hardware was consistent
+throughout: pilot and extension shards both ran on the same `NVIDIA A40-16Q` (same UUID), so the
+CUDA-RNG/SM-count concern that argued against moving to `inter` mid-ensemble does not apply here.
+
+**The headline moved well outside the pilot's error bar.**  Flow training domain:
+
+| | m | +-seed | +-sim | seed sd |
+|---|---|---|---|---|
+| V2.2, 6-seed pilot | `+0.683 +- 0.206%` | 0.162 | 0.127 | 0.398 |
+| **V2.2, 16 seeds** | **`+1.081 +- 0.179%`** | 0.126 | 0.128 | 0.503 |
+| V2, 16 seeds | `+1.409 +- 0.279%` | 0.248 | 0.128 | 0.992 |
+
+The pilot sat 1.9 sigma below the final value on its own error bar -- a near-miss rather than an
+absurdity, but it changes the conclusions.  Note the seed sd also rose 0.398 -> 0.503, inside the
+`[0.248, 0.976]` CI the previous entry gave it.
+
+**Three conclusions, revised from 2026-08-06h.**
+
+1. **V2.2 misses the 0.3% objective decisively.**  Gap `+0.780 +- 0.180` pt = **4.35 sigma**;
+   P(true `m` < 0.3%) = 0.03%.  The pilot had this at 1.86 sigma / 4.3%.  The miss is now settled.
+2. **V2.2 does NOT significantly beat V2 on the central value.**  Paired across all 16 seed IDs the
+   change is `+0.328 +- 0.230` pt, **1.43 sigma, p=0.17** -- consistent with zero.  The pilot's
+   `+0.798 +- 0.457` pt (1.7 sigma) pointed the same way but at twice the size.  The owner's earlier
+   question "so it's not improved at all?" is, on the central value, essentially correct.
+3. **V2.2 IS genuinely more seed-stable, and this survives.**  Seed sd `0.503` vs V2's `0.992`,
+   `F=3.88`, **p=0.006** on 15/15 dof.  This is the one robust win and it is now established rather
+   than suggested.
+
+**An unexplained batch difference, flagged not resolved.**  The six pilot seeds average `+0.683` and
+the ten extension seeds `+1.319`; on the pre-specified batch split that is `+0.636` pt, Welch
+`t=-3.07`, `p=0.011`.  Nothing in the training curves explains it: mean epochs 72.8 (pilot) vs 76.6
+(extension), `corr(epochs, m) = +0.14`, and hardware was identical.  `corr(val_R, m) = -0.40` is
+mechanical (higher `R_flow` gives lower `m`), not a defect.  Most likely chance at one pre-specified
+split, but it is nominally significant and should be watched if a third batch is ever added.  Do NOT
+quote the subset-percentile framing used in conversation ("the pilot sits at the 0.6th percentile of
+6-seed subsets") -- it is circular, since those subsets are drawn from a distribution that already
+contains the ten higher values, and it overstates the case.  The honest statistic is the 1.9-sigma
+near-miss against the pilot's own error bar, plus the batch test above.
+
+**The error floor from 2026-08-06h is now reached.**  With `sd=0.503` at 16 seeds the seed term is
+`+-0.126` and the sim term `+-0.128`: they are equal, so sim sampling is now half the variance and
+further seeds cannot move the total below about `+-0.128`.  More seeds are no longer the lever;
+more constgold cases would be.
+
+Resource note for future runs.  The `cip` QOS caps this account at `gres/gpu=3`, which is why a
+100-task array with `%8` only ever ran 3 at a time; the fine sharding is not the bottleneck.
+`inter` has an independent cap of `gres/gpu=8` (`h100nvl` limited to 2) and would run the same
+100-shard pass in ~1.7 h instead of ~4.4 h.  Shards request 36G but peak at 6.1G.  Any move to
+`inter` should be made for a WHOLE ensemble, never mid-run, and H100/H200 cards need fp32 confirmed
+per the recorded TF32 result.
+
+Files changed: `WORKLOG.md`.  Next: V2.2 is not a route to 0.3% on the central value, so the lever
+has to change rather than be re-seeded; and `lsst_r_extnbr_v22` still needs a per-pair ruler score
+before it can be promoted on anything.
+
 ## 2026-08-06h  V2.2 extended to 16 seeds; evaluator gains the missing sim-sampling error
 
 Owner asked for a review of the six-seed V2.2 run, specifically the seeds.  Three findings, then a
