@@ -2,6 +2,25 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-06e  Intrinsic S/N cut removes the faint 20% of the fixed V2.1-size population
+
+Owner requested a direct histogram of true input magnitude before and after the V2.1 proxy
+`sn_true > 10` cut.  Added `plot_true_mag_sn_cut.py` and its small Slurm wrapper.  The comparison
+holds every other cut fixed at `18 < r_input_p < 28` and
+`0.5 < Re_input_p < 1.5 arcsec`; it reads only the two intrinsic input columns, never detection,
+measured S/N, or a blending quantity.  Therefore the difference between the two histograms is
+exactly the intrinsic proxy S/N cut, not the simultaneous V2-to-V2.1 size-domain change.
+
+Job 15580390 streamed all 31,411,766 rows and completed in 78 seconds (MaxRSS 351 MB).  The fixed
+pre-S/N population contains 6,589,842 input galaxies; 5,277,118 survive, a keep fraction of
+80.080%.  The 1,312,724 rejected objects have mean true magnitude 25.983.  Retention is 100% through
+roughly r=24.5, 99.1% near 24.98, 90.3% near 25.23, 71.7% near 25.48, 24.0% near 25.68, and zero
+above the faintest possible boundary near 25.72.  The boundary is curved in size: S/N=10 occurs at
+r=24.93 for Re=1.5 arcsec, 25.28 for Re=1.0 arcsec, and 25.72 for Re=0.5 arcsec.  The figure shows
+both the count histogram and the per-magnitude retention fraction, with these boundaries marked.
+
+Artifacts: `results/true_mag_before_after_sn10.{png,pdf,json}`.
+
 ## 2026-08-06d  A 7-arcsec anchor aperture worsens, rather than explains, the deficit
 
 Owner asked whether the older ruler's 7-arcsec aperture could explain the 5.94% discrepancy measured
