@@ -47,6 +47,13 @@ therefore moved from `inter` to `cip:a40-16gb`; `PYTORCH_CUDA_ALLOC_CONF` is uns
 profile does not support `expandable_segments`. This is an allocation/bootstrap change only.
 Replacement flow tasks 15581397_0/_1 (seeds 501/502) started immediately on
 cip-cl-h01g02n3/h01g03n2; dependent constgold array 15581398 and aggregate job 15581399 are armed.
+Both flow tasks completed cleanly in 10:02/10:47 (MaxRSS 2.67/2.76 GB). Seed 501 early-stopped at
+epoch 73 after a one-epoch train-NLL spike; its validation quantities remained finite and normal.
+Seed 502 completed all 80 epochs. Across the actual last-eight SWA snapshot windows, mean validation
+responses were 0.816841 and 0.817587 against the population-weighted half-shear target 0.8157
+(+0.140% and +0.231% relative), with mean per-cell response losses 0.002336 and 0.002372. This
+confirms half-shear target closure but is not a constgold bias result. Constgold array 15581398 is
+currently pending `inter` priority; aggregation 15581399 remains dependency-armed.
 
 ## 2026-08-06e  Intrinsic S/N cut removes the faint 20% of the fixed V2.1-size population
 
