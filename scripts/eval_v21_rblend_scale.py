@@ -35,7 +35,10 @@ def seed_from_path(path: str) -> int:
 def validate_calibration(cal: dict, max_residual: float, max_z: float) -> float:
     if cal.get("tag") != "lsst_r_extnbr_v21":
         raise RuntimeError(f"wrong calibration tag: {cal.get('tag')!r}")
-    scale = float(cal["dev_scale"])
+    # After the development estimator passes its held-out gate, an unchanged
+    # global-scale method may be refit on all independent anchor cases.  Older
+    # artifacts contain only dev_scale and remain backward compatible.
+    scale = float(cal.get("deployment_scale", cal["dev_scale"]))
     residual = abs(float(cal["test_residual"]))
     residual_se = float(cal["test_residual_se"])
     if not 0.5 < scale < 2.0:

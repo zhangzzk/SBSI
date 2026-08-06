@@ -13,6 +13,8 @@ import json
 import numpy as np
 import pandas as pd
 
+from scripts.fit_anchorblend_isotonic import read_disjoint_inputs
+
 
 def case_table(frame: pd.DataFrame, truth: str, prediction: str) -> pd.DataFrame:
     finite = np.isfinite(frame[[truth, prediction]].to_numpy(float)).all(axis=1)
@@ -38,9 +40,22 @@ def bootstrap(dev: np.ndarray, test: np.ndarray, n: int, seed: int) -> np.ndarra
     return result
 
 
+def bootstrap_scale(data: np.ndarray, n: int, seed: int) -> np.ndarray:
+    """Case-bootstrap the all-case deployment scale."""
+    rng = np.random.default_rng(seed)
+    result = np.empty(n, dtype=float)
+    for i in range(n):
+        sample = data[rng.integers(0, len(data), len(data))]
+        result[i] = sample[:, 0].mean() / sample[:, 1].mean()
+    return result
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("input")
+    ap.add_argument(
+        "input", nargs="+",
+        help="one or more disjoint anchor-response feather files",
+    )
     ap.add_argument("--tag", default="lsst_r_extnbr_v21")
     ap.add_argument("--split-case", type=int, default=50)
     ap.add_argument("--bootstrap", type=int, default=20_000)
@@ -50,7 +65,7 @@ def main() -> None:
 
     truth = "R_blend_truth"
     prediction = f"R_blend_{args.tag}"
-    table = case_table(pd.read_feather(args.input), truth, prediction)
+    table = case_table(read_disjoint_inputs(args.input), truth, prediction)
     dev = table.loc[table.index < args.split_case].to_numpy(float)
     test = table.loc[table.index >= args.split_case].to_numpy(float)
     if len(dev) < 10 or len(test) < 10:
@@ -60,6 +75,10 @@ def main() -> None:
     draws = bootstrap(dev, test, args.bootstrap, args.seed)
     errors = draws.std(axis=0, ddof=1)
     test_truth, test_pred = test.mean(axis=0)
+    deployment_scale = float(table[truth].mean() / table[prediction].mean())
+    deployment_scale_se = float(
+        bootstrap_scale(table.to_numpy(float), args.bootstrap, args.seed + 1).std(ddof=1)
+    )
     result = {
         "tag": args.tag,
         "split_case": args.split_case,
@@ -76,6 +95,9 @@ def main() -> None:
         "test_residual_se": float(errors[1]),
         "test_implied_scale": test_scale,
         "test_implied_scale_se": float(errors[2]),
+        "deployment_scale": deployment_scale,
+        "deployment_scale_se": deployment_scale_se,
+        "deployment_fit_cases": len(table),
     }
     print(json.dumps(result, indent=2, sort_keys=True))
     if args.output_json:

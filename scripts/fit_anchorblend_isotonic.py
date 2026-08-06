@@ -21,9 +21,29 @@ def case_residual(frame, truth, prediction):
     return float(values.mean()), float(values.std(ddof=1) / np.sqrt(len(values)))
 
 
+def read_disjoint_inputs(paths):
+    """Read response files while proving that their simulation cases are disjoint."""
+    frames = []
+    seen = set()
+    for path in paths:
+        frame = pd.read_feather(path)
+        cases = set(frame["case"].unique())
+        overlap = seen & cases
+        if overlap:
+            raise RuntimeError(
+                f"anchor-response inputs overlap in case IDs: {sorted(overlap)[:5]}"
+            )
+        seen.update(cases)
+        frames.append(frame)
+    return pd.concat(frames, ignore_index=True)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("input")
+    ap.add_argument(
+        "input", nargs="+",
+        help="one or more disjoint anchor-response feather files",
+    )
     ap.add_argument("--tag", default="lsst_r_extnbr_v21")
     ap.add_argument("--split-case", type=int, default=50)
     ap.add_argument("--output-npz", required=True)
@@ -32,7 +52,7 @@ def main():
 
     truth = "R_blend_truth"
     raw = f"R_blend_{args.tag}"
-    data = pd.read_feather(args.input)
+    data = read_disjoint_inputs(args.input)
     finite = np.isfinite(data[[truth, raw]].to_numpy(float)).all(axis=1)
     data = data.loc[finite, ["case", truth, raw]].copy()
     dev = data[data["case"] < args.split_case].copy()

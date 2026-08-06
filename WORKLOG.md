@@ -2,6 +2,66 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-06b  Goal reached: replicated direct-anchor scale gives constgold m=+0.247%
+
+Entry 06a stopped at `m=+0.389+-0.122%` because its 100-case anchor experiment could not resolve
+the final 0.000854 of response.  Rather than add that amount from constgold, the direct
+neighbour-only simulation was extended with 200 entirely fresh 0.25 deg2 cases (IDs 100--299).
+The construction is byte-for-byte the same experiment: intrinsic V2.1 primary cuts
+(`18<r<28`, `0.5<Re<1.5 arcsec`, intrinsic S/N>10), extended secondary support, 20-arcsec sparse
+unsheared anchors, all non-anchors at antithetic `g1=+-0.05`, a 10-arcsec response aperture, and
+exact latent/shear/spacing/shape guards.  No constgold quantity entered construction, calibration,
+model choice, or a numerical parameter.
+
+**Fresh simulation DAG.** Catalogue/anchor job 15575836 completed in 4m19s and produced 200 audited
+manifests.  Rendering job 15575837 completed four 100-rank batches in 52m31s.  Ngmix job 15575838
+completed four batches in 2h30m04s with exactly 400 shape catalogues.  Response job 15575839
+completed in 23m09s with 679,434 exact both-leg matches; every case passed >=80% anchor coverage,
+shared intrinsic-population replay, unsupported-neighbour exclusion, and <1% non-finite guards.
+The independent case-mean result is:
+
+| response | cases 0--99 | fresh cases 100--299 |
+|---|---:|---:|
+| direct scene truth | `0.103376 +- 0.002272` | `0.109169 +- 0.001572` |
+| V2.1 BlendEMU | `0.098321 +- 0.000399` | `0.102136 +- 0.000304` |
+| `_ho` BlendEMU | `0.097510 +- 0.000375` | `0.101343 +- 0.000295` |
+
+**The flexible candidate was rejected before constgold.**  The cases-0--99 isotonic mapping failed
+its predeclared fresh conditional gate (job 15576163): in raw-response quintile 3, the uncalibrated
+fresh residual was already `-0.002383+-0.003372`, while isotonic changed it to
+`+0.011694+-0.003374`.  No 300-case isotonic artifact was written and no constgold evaluation was
+run.  This is evidence that the earlier conditional curve overfit shape noise despite its original
+50-case holdout success.
+
+**The one-parameter global method replicated.**  Fitting the global scale on old cases 0--99 gives
+`1.051416+-0.022338`.  On the untouched 200 fresh cases the independently implied scale is
+`1.068854+-0.014706`; the old scale leaves response residual `+0.001781+-0.002730`, consistent with
+zero and well inside the frozen 0.006 / 2-sigma gate.  After that pass, the unchanged estimator was
+refit on all 300 cases:
+
+    deployment R_blend scale = 1.063188 +- 0.012305
+
+Fit job 15576170 wrote the initial accepted JSON; 15576191 reproduced it with the deployment-scale
+bootstrap uncertainty.  Job 15576161 was a pre-read batch-runtime failure (`GLIBCXX` path), and
+duplicate job 15576171 correctly refused to overwrite an existing artifact.  Neither changed a
+scientific result.
+
+**Frozen constgold merge gate (job 15576176):** exact replay found the canonical 5,226,377 V2.1
+rows in all 16 seeds and completed successfully:
+
+| model | R_blend | m (seed SEM) | paired change |
+|---|---:|---:|---:|
+| current V2.1 | 0.117858 | `+1.008 +- 0.123%` | -- |
+| 300-case direct-anchor global scale | 0.125306 | **`+0.247 +- 0.121%`** | `-0.762 +- 0.002 point` |
+
+The central value now satisfies `|m|<=0.3%`.  Propagating the independently bootstrapped scale
+uncertainty contributes about 0.147 point to `m`; combined in quadrature with constgold seed noise,
+the result is approximately `+0.247+-0.191%`.  Thus the central calibration goal is reached, while
+precision on the corrected bias remains limited by finite anchor area.  The promoted artifact is
+`results/anchorblend_g005_global_300_final.json`; the isotonic artifact from 06a is retained only as
+the superseded audit baseline.  The final method changes only `R_blend`; the V2.1 flow and primary
+population are unchanged.
+
 ## 2026-08-06a  Direct coherent-neighbour calibration reaches +0.389%, but not the 0.3% central-value goal
 
 Autonomous Arbor search started from the confirmed 16-seed V2.1 constgold baseline

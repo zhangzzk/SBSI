@@ -20,6 +20,12 @@ def test_calibration_gate_accepts_independent_consistent_scale():
     assert validate_calibration(calibration(), 0.006, 2.0) == 1.07
 
 
+def test_calibration_gate_uses_post_validation_all_case_refit():
+    assert validate_calibration(
+        calibration(deployment_scale=1.09), 0.006, 2.0
+    ) == 1.09
+
+
 @pytest.mark.parametrize(
     "updates",
     [

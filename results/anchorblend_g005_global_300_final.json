@@ -1,0 +1,20 @@
+{
+  "deployment_fit_cases": 300,
+  "deployment_scale": 1.0631881881120318,
+  "deployment_scale_se": 0.012304794315083818,
+  "dev_prediction_mean": 0.0983206773762691,
+  "dev_scale": 1.0514159868408595,
+  "dev_scale_se": 0.022338289845475954,
+  "dev_truth_mean": 0.10337593203043173,
+  "n_dev_cases": 100,
+  "n_test_cases": 200,
+  "split_case": 100,
+  "tag": "lsst_r_extnbr_v21",
+  "test_corrected_mean": 0.10738774776299118,
+  "test_implied_scale": 1.068854394470802,
+  "test_implied_scale_se": 0.014706233014122822,
+  "test_prediction_mean": 0.10213630866090798,
+  "test_residual": 0.001781094584246537,
+  "test_residual_se": 0.0027302044919806636,
+  "test_truth_mean": 0.10916884234723771
+}
