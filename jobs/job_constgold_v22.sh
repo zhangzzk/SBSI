@@ -10,7 +10,8 @@ set -euo pipefail
 
 # Evaluation only: constgold is never read by target construction, emulator training or flow
 # training. Each task writes one seed dump; the dependent CPU aggregation forms the 2-seed result.
-eval "$(conda shell.bash hook)"; conda activate sims1
+PY=/project/ls-gruen/users/zekang.zhang/envs/sims1/bin/python
+export LD_LIBRARY_PATH="/project/ls-gruen/users/zekang.zhang/envs/sims1/lib:${LD_LIBRARY_PATH:-}"
 export PYTHONPATH="/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot:/home/z/Zekang.Zhang/blendemu:${PYTHONPATH:-}"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
@@ -30,7 +31,7 @@ OUT="$DUMPDIR/${TAG}_perobj_s${SEED}.feather"
 [ ! -e "$OUT" ] || { echo "REFUSING to overwrite $OUT"; exit 1; }
 
 echo "### V2.2 CONSTGOLD seed=$SEED job=$SLURM_JOB_ID ###"; nvidia-smi -L; date
-python -u scripts/validate_constant_with_blend.py \
+"$PY" -u scripts/validate_constant_with_blend.py \
   --measurement-model "$CK" --catalogue "$CAT" --min-case 40 \
   --blend-lookup "$LOOKUP" --crowd-flux-lookup "$CROWD" \
   --global-only --flow-seed 12345 --n-samples 64 --max-rows 45000000 --batch-size 16384 \

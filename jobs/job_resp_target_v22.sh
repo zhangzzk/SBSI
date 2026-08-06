@@ -9,7 +9,8 @@ set -euo pipefail
 
 # V2.2 changes only the rectangular intrinsic-primary domain relative to V2. The estimator,
 # half-shear catalogue, 6x6x5 grid, SNC construction and case range are unchanged.
-eval "$(conda shell.bash hook)"; conda activate sims1
+PY=/project/ls-gruen/users/zekang.zhang/envs/sims1/bin/python
+export LD_LIBRARY_PATH="/project/ls-gruen/users/zekang.zhang/envs/sims1/lib:${LD_LIBRARY_PATH:-}"
 export PYTHONPATH="/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot:/home/z/Zekang.Zhang/blendemu:${PYTHONPATH:-}"
 cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 
@@ -19,7 +20,7 @@ OUT=results/response_target_crowd_rblend_snc_c0-99_6x6x5_v22.npz
 [ ! -e "$OUT" ] || { echo "REFUSING to overwrite $OUT"; exit 1; }
 echo "### V2.2 RESPONSE TARGET: true r<25.8, Re>0.5 arcsec job=$SLURM_JOB_ID ###"; date
 
-python -u scripts/compute_response_target_blend.py \
+"$PY" -u scripts/compute_response_target_blend.py \
   --catalogue "$D/det_meas_crowd_g0.05_val_full.feather" \
   --target-cols measured_ngmix_g1 measured_ngmix_g2 \
   --nominal-g 0.05 --crowd-col r_blend \
@@ -28,7 +29,7 @@ python -u scripts/compute_response_target_blend.py \
   --snc-lookup "$MAIN_RESULTS/g0_lookup_c0-99.feather" \
   --output "$OUT" 2>&1 | grep -v --line-buffered "module command"
 
-python - "$OUT" <<'PY'
+"$PY" - "$OUT" <<'PY'
 import sys
 import numpy as np
 

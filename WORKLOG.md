@@ -22,6 +22,11 @@ differs from V2 only in `model_tag` and `regression_cuts`, whose primary entries
 checks pass. The experiment is tracked separately in `.arbor_v22`; the two-seed result is a
 preliminary stability screen, while a fresh 16-seed constgold run remains the held-out merge gate.
 
+Initial jobs 15580561/15580562 failed at time zero with exit 127 because `conda` is no longer on the
+compute-node shell path; no data or model artifact was created. All new V2.2 wrappers now invoke the
+absolute `sims1` Python interpreter and prepend its library directory explicitly, matching the
+working local import check and avoiding dependence on shell activation.
+
 ## 2026-08-06e  Intrinsic S/N cut removes the faint 20% of the fixed V2.1-size population
 
 Owner requested a direct histogram of true input magnitude before and after the V2.1 proxy

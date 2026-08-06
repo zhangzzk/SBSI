@@ -11,7 +11,8 @@ set -euo pipefail
 # Exact V2 flow recipe with one scientific lever: primary true r<25.8 and Re>0.5 arcsec.
 # This deliberately keeps V2's 4M cap, 80 epochs, patience 10 and default SWA-8; it does not
 # inherit V2.1's longer 120-epoch/SWA-32 recipe.
-eval "$(conda shell.bash hook)"; conda activate sims1
+PY=/project/ls-gruen/users/zekang.zhang/envs/sims1/bin/python
+export LD_LIBRARY_PATH="/project/ls-gruen/users/zekang.zhang/envs/sims1/lib:${LD_LIBRARY_PATH:-}"
 export PYTHONPATH="/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot:/home/z/Zekang.Zhang/blendemu:${PYTHONPATH:-}"
 unset PYTORCH_CUDA_ALLOC_CONF
 cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
@@ -28,7 +29,7 @@ for f in "$RESP" "$COUP" "$CAT"; do [ -f "$f" ] || { echo "MISSING $f"; exit 1; 
 [ ! -e "$OUT" ] && [ ! -e "${OUT%.pt}_swaavg.pt" ] || { echo "REFUSING to overwrite seed $SEED"; exit 1; }
 
 echo "### V2.2 FLOW seed=$SEED job=$SLURM_JOB_ID ###"; nvidia-smi -L; date
-python -u scripts/train_measurement_model_swa_s1_truecond.py \
+"$PY" -u scripts/train_measurement_model_swa_s1_truecond.py \
   --catalogue "$CAT" --output "$OUT" \
   --target-column detected --selection-name sextractor_detected \
   --feature-set g0_meas_crowd_conc_szfl_noz \

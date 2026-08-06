@@ -9,7 +9,8 @@ set -euo pipefail
 
 # V2.2 BlendEMU: same V2 inputs/features/split/secondary support and inherited tuned-V2
 # hyperparameters; only the primary box changes to true r<25.8 and Re>0.5 arcsec.
-eval "$(conda shell.bash hook)"; conda activate sims1
+PY=/project/ls-gruen/users/zekang.zhang/envs/sims1/bin/python
+export LD_LIBRARY_PATH="/project/ls-gruen/users/zekang.zhang/envs/sims1/lib:${LD_LIBRARY_PATH:-}"
 export PYTHONPATH="/home/z/Zekang.Zhang/blendemu:/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot:${PYTHONPATH:-}"
 export XGB_DEVICE=cpu
 export CONFIG_PATH=/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot/configs/fs2_lsst_r_extnbr_v22.yaml
@@ -19,9 +20,9 @@ cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 META=/home/z/Zekang.Zhang/blendemu/models/emulator_metadata_lsst_r_extnbr_v22.json
 [ ! -e "$META" ] || { echo "REFUSING to overwrite $META"; exit 1; }
 echo "### V2.2 EMULATOR job=$SLURM_JOB_ID ###"; date
-python -u scripts/retrain_emulator_v22.py 2>&1 | grep -v --line-buffered "module command"
+"$PY" -u scripts/retrain_emulator_v22.py 2>&1 | grep -v --line-buffered "module command"
 
-python -u -c "
+"$PY" -u -c "
 import json
 prod=json.load(open('/home/z/Zekang.Zhang/blendemu/models/emulator_metadata_lsst_r.json'))
 p='$META'
