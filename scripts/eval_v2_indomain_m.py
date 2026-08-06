@@ -94,6 +94,36 @@ def check_emulator_covers_domain(tag, mag, re_, domain_mask):
     print("  OK: the emulator covers the whole evaluated domain (unmatched rows are isolated only)")
 
 
+def case_blocked_sim_sem(rs, case, mask):
+    """Sem of <R_sim> over `mask`, blocked by CASE rather than treating rows as independent.
+
+    WHY THIS TERM EXISTS AT ALL. `m = <R_sim>/(<R_flow>+<R_blend>) - 1` is model-vs-SIM. `R_sim` is
+    byte-identical in every seed dump, so it contributes NOTHING to the seed scatter -- yet it is a
+    finite-sample mean of a per-object response whose scatter is std ~5 against a mean ~0.86, so it
+    carries a sampling error of its own. Quoting the seed sem alone therefore UNDERSTATES the error
+    on an absolute `m`, which is exactly the comparison made against the 0.3% objective.
+
+    It is correctly ABSENT from a model-vs-model difference (V2 minus V2.2 on the same rows): the
+    same `R_sim` sits on both sides and cancels exactly. This is the same seed/sim split AGENTS.md
+    draws for `dm` versus the absolute `m` at a cut, and the reason both are reported separately
+    here rather than pre-combined.
+
+    WHY BLOCKED. A naive std/sqrt(N) assumes every galaxy's response is an independent draw. They
+    are not: objects sharing a scene share pixels and a noise realisation, so their responses are
+    correlated and the naive sem is too SMALL. Blocking on `case` -- each case being a separately
+    rendered field -- absorbs that correlation, and matches the convention already used by
+    `diag_rflow_v21.py`. Cases are near-equal in size here, so the unweighted mean of per-case means
+    is used, as there.
+    """
+    c = case[mask]
+    x = rs[mask]
+    uc, inv = np.unique(c, return_inverse=True)
+    if len(uc) < 3:
+        return float("nan")
+    mu = np.bincount(inv, weights=x, minlength=len(uc)) / np.bincount(inv, minlength=len(uc))
+    return float(mu.std(ddof=1) / np.sqrt(len(uc)))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -148,6 +178,7 @@ def main():
 
     res = {k: [] for k in masks}
     comps = {k: [] for k in masks}     # (R_sim, R_flow, R_blend) per seed, to separate WHICH term moved
+    rs_ref = None                      # R_sim must be seed-INDEPENDENT; the error split assumes it
     print(f"\n  {'seed':>6} " + " ".join(f"{k.split('(')[0].strip()[:22]:>24}" for k in masks),
           flush=True)
     for d in dumps:
@@ -161,6 +192,15 @@ def main():
         rf = t["R_flow"].to_numpy(zero_copy_only=False).astype(float)
         rb = t["R_blend"].to_numpy(zero_copy_only=False).astype(float)
         seed = os.path.basename(d).split("_s")[-1].split(".")[0]
+        # The seed/sim error split below rests on R_sim being identical across seeds. Check it
+        # rather than assume it: if a dump were ever built from a different catalogue read, the
+        # sim error would be neither common nor cancelling and the split would be wrong.
+        if rs_ref is None:
+            rs_ref = rs
+        elif not np.array_equal(rs, rs_ref):
+            raise RuntimeError(
+                f"{os.path.basename(d)} has a different r_sim from {os.path.basename(dumps[0])}; "
+                f"R_sim must be seed-independent for the seed/sim error split to hold")
         row = []
         for k, v in masks.items():
             m = rs[v].mean() / (rf[v].mean() + rb[v].mean()) - 1.0
@@ -172,9 +212,20 @@ def main():
     def sd(v):      # a single seed has no seed-scatter estimate; say so rather than print nan
         return float(np.std(v, ddof=1)) if len(v) > 1 else float("nan")
 
+    # Two INDEPENDENT error terms; see case_blocked_sim_sem for why they are reported separately.
+    case_arr = ref["case"].to_numpy()
+    e_seed = {k: sd(res[k]) / np.sqrt(len(res[k])) for k in masks}
+    e_sim = {}
+    for k, v in masks.items():
+        r_tot = np.array(comps[k]).mean(axis=0)[1:].sum()      # <R_flow> + <R_blend>, seed-mean
+        e_sim[k] = 100.0 * case_blocked_sim_sem(rs_ref, case_arr, v) / r_tot
+    e_tot = {k: float(np.hypot(e_seed[k], e_sim[k])) for k in masks}
+
     print(f"\n  {'ENSEMBLE':>6} " + " ".join(
-        f"{np.mean(res[k]):>+17.3f}+-{sd(res[k])/np.sqrt(len(res[k])):.3f}" for k in masks))
+        f"{np.mean(res[k]):>+17.3f}+-{e_tot[k]:.3f}" for k in masks))
     print(f"  {'seed sd':>6} " + " ".join(f"{sd(res[k]):>24.3f}" for k in masks))
+    print(f"  {'+-seed':>6} " + " ".join(f"{e_seed[k]:>24.3f}" for k in masks))
+    print(f"  {'+-sim':>6} " + " ".join(f"{e_sim[k]:>24.3f}" for k in masks))
     if len(dumps) == 1:
         print("\n  NOTE: ONE seed -- no seed-scatter estimate. The 8-seed baseline has per-seed sd "
               "~1.0% (global) / ~0.8% (in-domain), so treat a single-seed m as +-~1% until more "
@@ -185,8 +236,16 @@ def main():
         print(f"  {'':>24} {k:<38} {c[0]:>9.4f} {c[1]:>9.4f} {c[2]:>9.4f} {c[1]+c[2]:>9.4f}")
 
     for k in masks:
-        print(f"\n  {k}:  m = {np.mean(res[k]):+.3f} +- {sd(res[k])/np.sqrt(len(res[k])):.3f} %  "
-              f"(seed sd {sd(res[k]):.3f}, N={len(res[k])})")
+        print(f"\n  {k}:  m = {np.mean(res[k]):+.3f} +- {e_tot[k]:.3f} %  "
+              f"(+-{e_seed[k]:.3f} seed, +-{e_sim[k]:.3f} sim; seed sd {sd(res[k]):.3f}, "
+              f"N={len(res[k])})")
+    print("\n  The quoted error is seed and sim added in quadrature. Use the SEED term alone when "
+          "differencing two models on these same rows -- the sim term is common and cancels. Use "
+          "the TOTAL when comparing an absolute m against a target.")
+    if len(dumps) < 16:
+        print(f"  WARNING: {len(dumps)} seeds. AGENTS.md requires 16 for a reported m (an e-response "
+              f"quantity); treat this as a pilot. The seed sd itself is poorly determined here: on "
+              f"{len(dumps)-1} dof its own 95% range spans roughly a factor of 4.")
     print("\nV2_INDOMAIN_M_DONE", flush=True)
 
 

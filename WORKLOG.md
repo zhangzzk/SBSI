@@ -2,6 +2,75 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-06h  V2.2 extended to 16 seeds; evaluator gains the missing sim-sampling error
+
+Owner asked for a review of the six-seed V2.2 run, specifically the seeds.  Three findings, then a
+correction to the error bar itself.
+
+**The six-seed error bar is unreliable, in both directions.**  Using V2's 16 seeds as ground truth,
+all `C(16,6)=8008` subsets give a sem spanning `0.92x` to `2.19x` the true 16-seed value (5--95%).
+The particular first six sit at the **87th percentile** of scatter, which is why V2 restricted to
+those seeds reads `+1.481 +- 0.503%` against its own 16-seed `+1.409 +- 0.248%`.  That is an unlucky
+draw, not evidence V2 is noisier than reported.  The same doubt applies to V2.2: its `sd=0.398` on
+5 dof has a 95% CI of `[0.248, 0.976]`, whose upper end is essentially V2's own `0.991`.  So the
+"seed scatter halved" reading is not established at six seeds, though the two-sample variance test
+(`F=6.21`, `p=0.03`) does favour it.
+
+**The V2.2-vs-V2 comparison as printed is unbalanced** (6 seeds vs 16, unpaired).  Paired on the
+same six seed IDs the change is `+0.798 +- 0.457` pt (**1.7 sigma**); unpaired it is
+`+0.726 +- 0.296` pt (2.45 sigma).  Both agree on ~0.7--0.8 pt, neither establishes it.  V2.2
+improves the central value; the improvement is suggestive, not established.
+
+**`eval_v2_indomain_m.py` reported seed scatter ONLY** -- a real omission, not a presentation
+choice.  `R_sim` is identical in every seed dump, so it contributes nothing to seed scatter, yet it
+is a finite-sample mean of a per-object response with scatter std ~5 against mean ~0.86 and carries
+its own sampling error.  Added `case_blocked_sim_sem`, blocking on `case` exactly as
+`diag_rflow_v21.py` already does (galaxies sharing a rendered field have correlated responses, so a
+naive `std/sqrt(N)` is too small).  The script now prints `+-seed` and `+-sim` separately, quotes the
+quadrature total, states which to use when (seed alone for model-vs-model on the same rows, where the
+sim term cancels; total for an absolute `m` against a target), and warns below 16 seeds.  Also added
+a hard assertion that `r_sim` is byte-identical across dumps -- the entire seed/sim split rests on
+that and it had never been checked.
+
+Validation job 15584044 re-ran both models on the existing dumps.  All checks passed, including the
+new `r_sim` assertion on 6 V2.2 and 16 V2 dumps.  Internal cross-check: the sim error on the flow
+training domain comes out `+-0.127` for V2.2 and `+-0.128` for V2 -- necessarily near-equal, since it
+is the same rows and the same `R_sim`, which is also why it cancels in the difference.
+
+Revised numbers (flow training domain).  V2.2 six seeds: **`m = +0.683 +- 0.206%`**
+(`+-0.162` seed, `+-0.127` sim), previously quoted as `+-0.162`.  V2 sixteen seeds on the same
+population: `+1.409 +- 0.279%` (`+-0.248` seed, `+-0.128` sim).  The gap to the 0.3% objective is
+`0.383 +- 0.206` pt = **1.86 sigma**; P(true `m` < 0.3%) is ~4.3% at an effective 13 dof, against the
+~1% a normal approximation on seed error alone had suggested.  Still a likely miss, no longer a
+foregone one.
+
+**An error floor follows, and it bounds how much seeding is worth.**  At 16 seeds with `sd=0.398`
+the seed term falls to `+-0.100` while the sim term stays at `+-0.127`, so sim sampling becomes
+DOMINANT and the total bottoms out near `+-0.161`.  Past 16 seeds the return is negligible and the
+floor is `+-0.127` regardless.  Even with unlimited seeds a 0.383-pt gap remains a ~3 sigma miss.
+Tightening below that needs more constgold cases, not more seeds.  16 seeds is worth running; 32 is
+not.
+
+Two training-side observations not previously noted.  Seed 501's final-epoch `train_nll` is `5.34`
+against ~0.65 for every other seed, and that epoch (73) lies INSIDE its SWA-8 window (66--73); its
+validation metrics at that epoch are normal, so this looks like one bad batch rather than divergence,
+but one of eight averaged snapshots came from a spike.  And the seeds did not train equal lengths --
+505 early-stopped at 52 epochs, 507 at 72, 501 at 73, while 502/503/506 ran the full 80 -- so their
+SWA windows sit at very different points on the trajectory and part of the "seed" scatter is really
+training length.
+
+Emulator note, unresolved: `lsst_r_extnbr_v22` has never been scored on the per-pair ruler
+(`eval_rblend_gap.py`); its only evaluation is constgold `m`, which the R_blend firewall forbids as a
+promotion basis.  It is numerically inert in this comparison (`R_blend` 0.1257 vs `indom_tuned`'s
+0.1262, ~0.05 pt of the 0.73-pt gap), so the flow carries the difference -- but it must not be
+promoted on this evidence.
+
+Submitted the ten missing seeds 508--517 (504 absent by convention): flow array 15584001, dependent
+100-task constgold shard array 15584005, concatenation 15584006, 16-seed aggregation 15584045.  Seed
+mapping verified from the running logs (array tasks 0/1/2 -> seeds 508/509/510).  Files changed:
+`scripts/eval_v2_indomain_m.py`.  Next: read 15584045 for the 16-seed `m`, and ruler-score the v22
+emulator before any promotion.
+
 ## 2026-08-06g  V2.2 constgold evaluation also routed through case-sharded CIP jobs
 
 The monolithic two-seed constgold array 15581398 remains pending `inter` priority.  The full CIP
