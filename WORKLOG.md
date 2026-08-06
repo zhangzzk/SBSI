@@ -2,6 +2,29 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-06d  A 7-arcsec anchor aperture worsens, rather than explains, the deficit
+
+Owner asked whether the older ruler's 7-arcsec aperture could explain the 5.94% discrepancy measured
+by the 10-arcsec direct-anchor experiment.  `eval_anchorblend_aperture.py` re-evaluates the V2.1
+emulator on the exact 989,514 retained anchors in all 300 response cases.  It calls the native
+10-arcsec/k=20 predictor once per input field, verifies the resulting per-anchor sum reproduces the
+stored prediction exactly (maximum absolute replay error 0), and then removes pairs at 7--10 arcsec
+before re-summing.  No constgold input or response is read, and nothing is fitted.
+
+| pair aperture | coherent truth | V2.1 prediction | prediction/truth - 1 |
+|---|---:|---:|---:|
+| native 10 arcsec | 0.1072379 | 0.1008644 | `-5.943 +- 1.086%` |
+| restricted 7 arcsec | 0.1072379 | 0.0979133 | `-8.695 +- 1.057%` |
+
+The 7--10 arcsec shell contributes a positive `0.0029511 +- 0.0000331` to the emulator prediction;
+7 arcsec retains 97.074% of the 10-arcsec sum.  Removing that shell therefore increases the deficit
+by `2.752 +- 0.044` percentage points.  **Changing 10 to 7 cannot explain or close the anchor
+discrepancy; it makes it materially worse.**  This also shows that aperture mismatch is not the
+reason the old 7-arcsec ruler and the 10-arcsec anchor happen to report similar relative deficits.
+Job 15579525 completed the 300-case replay and wrote
+`results/anchorblend_g005_aperture_300.json`.  Added its Slurm wrapper
+`jobs/job_anchorblend_aperture.sh`.
+
 ## 2026-08-06c  True isolation cannot clear V2.1 flow; toy rejects coherent pair non-additivity
 
 Owner asked whether the direct-anchor result implies the flow is good, to be checked on isolated
