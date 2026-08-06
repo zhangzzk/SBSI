@@ -33,6 +33,15 @@ jobs (`gpu:a40:1`, `x86-64-v3`); no command-line model or data parameter changed
 The wall-time requests were also restored to V2's 1:30 training / 2:00 evaluation values rather
 than the initial V2.2 wrappers' looser 2:00 / 3:00 requests, improving scheduler backfill only.
 
+Completed prerequisites: response-target job 15580578 selected 2,805,434 half-shear rows and
+matched 2,795,896 (99.66%) to the g=0 SNC lookup, measured global `R=0.8157`, and produced 180/180
+occupied cells with minimum effective count 1,436. Emulator job 15580579 selected 37,852,393 pair
+rows, split 30,281,914/7,570,479, and finished at held-out `R2=0.009376` (271 trees); its stored
+domain and cuts pass the exact V2.2 assertions. Lookup job 15580581 wrote 6,376,256 scored primaries
+over constgold cases 40--139. Final two-seed flow array 15580739 (501/502) is queued on `inter` by
+priority; dependent constgold array 15580740 and aggregate job 15580741 are armed. No V2.2 bias is
+available until those GPU jobs finish.
+
 ## 2026-08-06e  Intrinsic S/N cut removes the faint 20% of the fixed V2.1-size population
 
 Owner requested a direct histogram of true input magnitude before and after the V2.1 proxy
