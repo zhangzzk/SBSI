@@ -3,8 +3,9 @@
 #SBATCH --time=02:00:00
 #SBATCH --mem=24G
 #SBATCH --cpus-per-task=8
-#SBATCH --gres=gpu:a40-24gb:1
-#SBATCH --partition=cip
+#SBATCH --gres=gpu:a40:1
+#SBATCH --partition=inter
+#SBATCH --constraint=x86-64-v3
 #SBATCH --output=/home/z/Zekang.Zhang/logs/flow_v22_s%a_%j.out
 set -euo pipefail
 
@@ -14,7 +15,7 @@ set -euo pipefail
 PY=/project/ls-gruen/users/zekang.zhang/envs/sims1/bin/python
 export LD_LIBRARY_PATH="/project/ls-gruen/users/zekang.zhang/envs/sims1/lib:${LD_LIBRARY_PATH:-}"
 export PYTHONPATH="/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot:/home/z/Zekang.Zhang/blendemu:${PYTHONPATH:-}"
-unset PYTORCH_CUDA_ALLOC_CONF
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 
 SEEDS=(${SEEDS:-501 502})

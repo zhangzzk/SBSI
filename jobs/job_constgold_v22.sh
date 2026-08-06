@@ -1,10 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=cg_v22
 #SBATCH --time=03:00:00
-#SBATCH --mem=110G
+#SBATCH --mem=180G
 #SBATCH --cpus-per-task=16
 #SBATCH --gres=gpu:a40:1
-#SBATCH --partition=cip
+#SBATCH --partition=inter
+#SBATCH --constraint=x86-64-v3
 #SBATCH --output=/home/z/Zekang.Zhang/logs/cg_v22_s%a_%j.out
 set -euo pipefail
 

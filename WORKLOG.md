@@ -27,6 +27,10 @@ compute-node shell path; no data or model artifact was created. All new V2.2 wra
 absolute `sims1` Python interpreter and prepend its library directory explicitly, matching the
 working local import check and avoiding dependence on shell activation.
 
+The first corrected flow array was eligible but blocked on saturated `cip` A40 vGPU slices. Its
+resource request was changed to the full-A40 `inter` request used by the original V2 train/eval
+jobs (`gpu:a40:1`, `x86-64-v3`); no command-line model or data parameter changed.
+
 ## 2026-08-06e  Intrinsic S/N cut removes the faint 20% of the fixed V2.1-size population
 
 Owner requested a direct histogram of true input magnitude before and after the V2.1 proxy
