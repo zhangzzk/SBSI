@@ -38,14 +38,15 @@ matched 2,795,896 (99.66%) to the g=0 SNC lookup, measured global `R=0.8157`, an
 occupied cells with minimum effective count 1,436. Emulator job 15580579 selected 37,852,393 pair
 rows, split 30,281,914/7,570,479, and finished at held-out `R2=0.009376` (271 trees); its stored
 domain and cuts pass the exact V2.2 assertions. Lookup job 15580581 wrote 6,376,256 scored primaries
-over constgold cases 40--139. Final two-seed flow array 15580739 (501/502) is queued on `inter` by
-priority; dependent constgold array 15580740 and aggregate job 15580741 are armed. No V2.2 bias is
-available until those GPU jobs finish.
+over constgold cases 40--139. The superseded `inter` chain was 15580739--15580741. No V2.2 bias is
+available until the replacement GPU jobs and their evaluation finish.
 
 Live follow-up found multiple idle `cip` A40-16GB slices. This profile is proven for the exact V2
 dom6x6 recipe: jobs 15348624_[0-2] completed in 29:53 with `24G/8c`. The pending V2.2 flow array was
 therefore moved from `inter` to `cip:a40-16gb`; `PYTORCH_CUDA_ALLOC_CONF` is unset because the vGPU
 profile does not support `expandable_segments`. This is an allocation/bootstrap change only.
+Replacement flow tasks 15581397_0/_1 (seeds 501/502) started immediately on
+cip-cl-h01g02n3/h01g03n2; dependent constgold array 15581398 and aggregate job 15581399 are armed.
 
 ## 2026-08-06e  Intrinsic S/N cut removes the faint 20% of the fixed V2.1-size population
 
