@@ -23,6 +23,17 @@ smoke test pass; pytest itself is absent from the compute environment.  Submitte
 15581625 and aggregation 15581628.  The original inter chain 15581398--15581399 is retained as a
 backup and writes to a separate dump directory, so the two routes cannot race or overwrite.
 
+All 20 shard tasks completed, as did concatenation and aggregation.  Each seed's full dump contains
+26,926,617 identically ordered rows; the V2.2 domain contains 5,642,350 rows and the stored emulator
+box covers 100.0000% of it.  The preliminary two-seed result is
+`m=+0.685 +- 0.221%` (s501 `+0.464%`, s502 `+0.907%`), with seed-mean components
+`R_sim=0.9626`, `R_flow=0.8303`, `R_blend=0.1257`, `R_total=0.9560`.  It improves the central value
+but does not meet the 0.3% objective.  The existing 16-seed V2 model on exactly the same V2.2
+population gives `+1.409 +- 0.248%`; that is useful population context but is not a paired comparison
+to two V2.2 seeds.  On the matching 501/502 seeds V2 averages `+0.969%`, so V2.2's apparent paired
+change is only `-0.284 +- 0.913` percentage points and is inconclusive at two seeds.  The redundant
+pending inter backup chain 15581398--15581399 was cancelled after the CIP products passed all checks.
+
 ## 2026-08-06f  V2.2 rectangular-domain two-seed experiment pre-registered
 
 Owner specified V2.2 as the V2 recipe with only the intrinsic-primary box changed to
