@@ -3,9 +3,8 @@
 #SBATCH --time=01:30:00
 #SBATCH --mem=24G
 #SBATCH --cpus-per-task=8
-#SBATCH --gres=gpu:a40:1
-#SBATCH --partition=inter
-#SBATCH --constraint=x86-64-v3
+#SBATCH --gres=gpu:a40-16gb:1
+#SBATCH --partition=cip
 #SBATCH --output=/home/z/Zekang.Zhang/logs/flow_v22_s%a_%j.out
 set -euo pipefail
 
@@ -15,7 +14,8 @@ set -euo pipefail
 PY=/project/ls-gruen/users/zekang.zhang/envs/sims1/bin/python
 export LD_LIBRARY_PATH="/project/ls-gruen/users/zekang.zhang/envs/sims1/lib:${LD_LIBRARY_PATH:-}"
 export PYTHONPATH="/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot:/home/z/Zekang.Zhang/blendemu:${PYTHONPATH:-}"
-export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+# cip A40-*Q vGPU profiles do not expose the CUDA virtual-memory API used by expandable_segments.
+unset PYTORCH_CUDA_ALLOC_CONF
 cd /home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot
 
 SEEDS=(${SEEDS:-501 502})
