@@ -40,13 +40,17 @@ This reproduces the archived toy conclusion: **coherent neighbour response is th
 individual-neighbour derivatives; multi-neighbour non-additivity cannot explain the 5.94% anchor
 deficit.**
 
-The V2.1 emulator error is instead strongly pair-population dependent in these deliberately chosen,
+The V2.1 emulator residual is strongly pair dependent in these deliberately chosen,
 non-representative toys: `-37.6%` for one close equal pair, `-73.8%` for one typical fainter pair,
 `+3.7%` for four mixed neighbours, `+24.6%` for eight close faint neighbours, and `+23.2%` where
-the far-scene truth is nearly zero.  Thus the 300-scene `-5.94%` is a population-weighted per-pair
-calibration/coverage result, not a universal coherent-transfer factor or a failure of summation.
-The global anchor correction remains empirically measured, but its earlier interpretation as a
-coherent-versus-pair aggregation deficit is narrowed accordingly.  Artifact:
+the far-scene truth is nearly zero.  These examples do **not** identify the origin of the 300-scene
+`-5.94%` result or show that it is a population-weighted per-pair calibration error.  They establish
+only that coherent-versus-individual response construction and multi-neighbour summation are not
+the cause.  The older ap7 per-pair ruler's `-6.15 +- 1.73%` is numerically suggestive but uses a
+different pair population, aperture, and shear setup, so it is a hypothesis rather than an
+explanation.  The anchor discrepancy therefore remains unexplained pending a pair-population- and
+aperture-matched decomposition.  The global anchor correction remains empirically measured, but
+its physical interpretation is open.  Artifact:
 `results/anchorblend_toy_v21.json`.  Job 15579095 produced no artifact: it stopped on an irrelevant
 GalSim Sersic-truncation solve error; removing explicit profile truncation gave the completed rerun.
 
