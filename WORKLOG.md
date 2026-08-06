@@ -42,6 +42,19 @@ the aggregator already discovers every completed full dump.  Submitted seeds 503
 The first three flow tasks started immediately on CIP and their logs confirm the intended seed map;
 the fourth is waiting only on the per-user three-GPU QOS limit.
 
+The entire extension completed cleanly.  Seeds 503/506 ran 80 epochs; 505/507 early-stopped at
+52/72 and saved their actual last-eight trajectories.  All 40 new case shards, four streamed full
+dumps and the six-seed aggregation completed with exact catalogue/dump alignment and 100% structural
+emulator coverage of the 5,642,350-row V2.2 domain.  Individual in-domain biases for seeds
+501/502/503/505/506/507 are `+0.464, +0.907, +1.301, +0.432, +0.197, +0.796%`; the ensemble is
+**`m=+0.683 +- 0.162%`** (seed sd 0.398%).  This is essentially unchanged from the initial two-seed
+`+0.685%`, and its central value misses the +0.3% boundary by `0.383 +- 0.162` percentage points.
+Seed-mean components remain `R_sim=0.9626`, `R_flow=0.8304`, `R_blend=0.1257`, `R_total=0.9560`.
+On the same six seed IDs, V2 gives `+1.481 +- 0.503%`; the paired V2.2-minus-V2 change is
+`-0.798 +- 0.457` percentage points.  Thus the matched-domain recipe improves the central response
+but does not achieve the 0.3% objective, and six seeds remain below the 16-seed certification
+standard for a shape-response `m`.
+
 ## 2026-08-06f  V2.2 rectangular-domain two-seed experiment pre-registered
 
 Owner specified V2.2 as the V2 recipe with only the intrinsic-primary box changed to
