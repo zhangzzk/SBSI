@@ -8,7 +8,7 @@
       "depth": 0,
       "status": "root",
       "hypothesis": "Measure and correct V2.1 blend response with an independent neighbour-only coherent-shear simulation",
-      "insight": "[from n5] Direct coherent-neighbour calibration establishes most of the missing response, but its independently supported central correction stops at m=+0.389 percent; forcing the last 0.000854 would tune to constgold.",
+      "insight": "[from n5] Direct coherent-neighbour calibration establishes most of the missing response, but its independently supported central correction stops at m=+0.389 percent; forcing the last 0.000854 would tune to constgold.\n[from n3] Fresh scenes validate the simple global R_blend scale but reject the isotonic curve; all 300 cases support scale 1.063188 and constgold m=+0.247 percent.",
       "metadata": {
         "dev_score": null,
         "test_score": null,
@@ -16,7 +16,7 @@
         "branch_ref": null
       },
       "created_at": 1785963592,
-      "updated_at": 1785973697
+      "updated_at": 1785988593
     },
     "n1": {
       "id": "n1",
@@ -24,7 +24,7 @@
       "depth": 1,
       "status": "pending",
       "hypothesis": "A sparse unsheared-anchor simulation can directly measure the coherent scene R_blend estimand without constgold",
-      "insight": "[from n2] Sparse unsheared anchors are a valid direct R_blend experiment; adequate area and shear amplitude are required because per-object shape noise dominates.\n[from n3] Direct coherent-scene calibration recovers over half the V2.1 bias, but a single global scale cannot close the remaining response without exceeding its half-shear measurement.",
+      "insight": "[from n2] Sparse unsheared anchors are a valid direct R_blend experiment; adequate area and shear amplitude are required because per-object shape noise dominates.\n[from n3] Direct coherent-scene calibration recovers over half the V2.1 bias, but a single global scale cannot close the remaining response without exceeding its half-shear measurement.\n[from n3] Fresh scenes validate the simple global R_blend scale but reject the isotonic curve; all 300 cases support scale 1.063188 and constgold m=+0.247 percent.",
       "metadata": {
         "dev_score": null,
         "test_score": null,
@@ -32,7 +32,7 @@
         "branch_ref": null
       },
       "created_at": 1785963592,
-      "updated_at": 1785973064
+      "updated_at": 1785988593
     },
     "n2": {
       "id": "n2",
@@ -54,17 +54,17 @@
       "id": "n3",
       "parent": "n1",
       "depth": 2,
-      "status": "executed",
+      "status": "merged",
       "hypothesis": "One hundred independent 0.25 deg2 cases at |g|=0.05 will measure truth-minus-V2.1 R_blend to about 0.004 and determine whether a stable correction is warranted",
-      "insight": "A global R_blend under-response is real and transfers, but its independently measured 4.8% scale is smaller than the >=5.84% required for the target.",
+      "insight": "The global coherent-neighbour correction replicates on 200 fresh scenes and reaches the 0.3 percent target after all-case refit; flexible isotonic conditioning fails fresh upper-quintile transfer and must not be promoted.",
       "metadata": {
-        "dev_score": 0.0007475,
-        "test_score": null,
-        "result": "100x0.25 deg2 anchor run: 310080 matched. Truth 0.103376+/-0.002272, V2.1 0.098321+/-0.000399. Dev scale 1.047614; heldout implied 1.055235+/-0.030229; heldout corrected residual +0.000748+/-0.004351. One-shot constgold +0.433+/-0.122%, improving baseline by -0.575 pt but missing 0.3%.",
-        "branch_ref": null
+        "dev_score": 0.001781,
+        "test_score": 0.247,
+        "result": "Extended direct-anchor experiment to 300 independent cases. Old 100-case global scale leaves +0.001781+/-0.002730 on fresh cases 100-299; all-case scale 1.063188+/-0.012305 changes constgold m from +1.008 to +0.247+/-0.121 percent.",
+        "branch_ref": "worktree-selbias-plot@83c229e"
       },
       "created_at": 1785965100,
-      "updated_at": 1785973064
+      "updated_at": 1785988712
     },
     "n4": {
       "id": "n4",

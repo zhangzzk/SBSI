@@ -7,9 +7,9 @@
   "branching": 3,
   "max_depth": 2,
   "budget_cycles": 8,
-  "cycles_used": 4,
+  "cycles_used": 5,
   "best_node": "n6",
-  "best_test_score": 0.389,
-  "best_branch_ref": "worktree-selbias-plot@30a00d7",
+  "best_test_score": 0.247,
+  "best_branch_ref": "worktree-selbias-plot@83c229e",
   "created_at": 1785962807
 }

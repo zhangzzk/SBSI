@@ -8,7 +8,7 @@
       "depth": 0,
       "status": "root",
       "hypothesis": "Minimize absolute V2.1 constgold multiplicative bias to at most 0.3 percent while preserving the constgold evaluation firewall",
-      "insight": "[from n3] Corrected toy evidence disfavors coherent multi-neighbour non-additivity; prioritize population-transfer or flow-target mechanisms\n[from n2] Do not spend an ensemble training budget on existing flow-target variants: their best independent response gain is only about 0.0011\n[from n4] Half-shear R_blend ruler accuracy does not transfer monotonically to constgold; _ho is ruler-clean but worsens held-out m\n[from n6] Direct scene-level R_blend calibration is the only tested mechanism with a large constgold transfer; it improves m by 0.619 point but independently supported response remains 0.000854 short of the +0.3 percent boundary.",
+      "insight": "[from n3] Corrected toy evidence disfavors coherent multi-neighbour non-additivity; prioritize population-transfer or flow-target mechanisms\n[from n2] Do not spend an ensemble training budget on existing flow-target variants: their best independent response gain is only about 0.0011\n[from n4] Half-shear R_blend ruler accuracy does not transfer monotonically to constgold; _ho is ruler-clean but worsens held-out m\n[from n6] Direct scene-level R_blend calibration is the only tested mechanism with a large constgold transfer; it improves m by 0.619 point but independently supported response remains 0.000854 short of the +0.3 percent boundary.\n[from n6] The 0.3 percent goal is met only after fresh direct-scene replication: global R_blend scale transfers, while pairwise emulator swaps, flow tuning, and isotonic conditioning do not.",
       "metadata": {
         "dev_score": null,
         "test_score": null,
@@ -16,7 +16,7 @@
         "branch_ref": null
       },
       "created_at": 1785962807,
-      "updated_at": 1785973710
+      "updated_at": 1785988594
     },
     "n1": {
       "id": "n1",
@@ -24,7 +24,7 @@
       "depth": 1,
       "status": "pruned",
       "hypothesis": "R_blend population transfer is the limiting error: use a blend emulator selected by the full-population summed half-shear ruler",
-      "insight": "Existing pairwise R_blend emulators optimize a different population/estimand from coherent constgold; swapping among them cannot be assumed to close V2.1\n[from n6] Direct scene-level R_blend calibration is the only tested mechanism with a large constgold transfer; it improves m by 0.619 point but independently supported response remains 0.000854 short of the +0.3 percent boundary.",
+      "insight": "Existing pairwise R_blend emulators optimize a different population/estimand from coherent constgold; swapping among them cannot be assumed to close V2.1\n[from n6] Direct scene-level R_blend calibration is the only tested mechanism with a large constgold transfer; it improves m by 0.619 point but independently supported response remains 0.000854 short of the +0.3 percent boundary.\n[from n6] The 0.3 percent goal is met only after fresh direct-scene replication: global R_blend scale transfers, while pairwise emulator swaps, flow tuning, and isotonic conditioning do not.",
       "metadata": {
         "dev_score": 1.18,
         "test_score": null,
@@ -33,7 +33,7 @@
         "prune_reason": "The independently preferred existing emulator worsens the final metric, and other ruler candidates have larger component error"
       },
       "created_at": 1785962807,
-      "updated_at": 1785973710
+      "updated_at": 1785988594
     },
     "n2": {
       "id": "n2",
@@ -108,15 +108,15 @@
       "depth": 2,
       "status": "merged",
       "hypothesis": "A direct sparse-anchor coherent-neighbour simulation can calibrate the deployed V2.1 R_blend estimand more faithfully than pairwise half-shear emulator swaps",
-      "insight": "The dominant correctable deficit is R_blend population/estimand transfer, not half-shear flow training; direct coherent-neighbour calibration removes 0.619 of the 0.708 point needed for the target.",
+      "insight": "A replicated one-parameter scene-level R_blend calibration closes the target; higher-flexibility isotonic calibration is rejected by fresh conditional data.",
       "metadata": {
-        "dev_score": 0.000515,
-        "test_score": 0.389,
-        "result": "100 independent 0.25 deg2 anchor scenes validate an isotonic per-primary correction; all-case refit changes 16-seed constgold m from +1.008 to +0.389+/-0.122 percent and R_blend 0.117858 to 0.123906.",
-        "branch_ref": "worktree-selbias-plot@30a00d7"
+        "dev_score": 0.001781,
+        "test_score": 0.247,
+        "result": "300 direct anchor cases: old scale fresh residual +0.001781+/-0.002730; all-case scale 1.063188+/-0.012305. Exact 16-seed constgold m=+0.247+/-0.121 percent, paired -0.762+/-0.002 point, R_blend 0.117858 -> 0.125306.",
+        "branch_ref": "worktree-selbias-plot@83c229e"
       },
       "created_at": 1785973710,
-      "updated_at": 1785973891
+      "updated_at": 1785988713
     }
   }
 }
