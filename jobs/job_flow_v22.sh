@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=flow_v22
-#SBATCH --time=02:00:00
+#SBATCH --time=01:30:00
 #SBATCH --mem=24G
 #SBATCH --cpus-per-task=8
 #SBATCH --gres=gpu:a40:1

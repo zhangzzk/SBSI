@@ -30,6 +30,8 @@ working local import check and avoiding dependence on shell activation.
 The first corrected flow array was eligible but blocked on saturated `cip` A40 vGPU slices. Its
 resource request was changed to the full-A40 `inter` request used by the original V2 train/eval
 jobs (`gpu:a40:1`, `x86-64-v3`); no command-line model or data parameter changed.
+The wall-time requests were also restored to V2's 1:30 training / 2:00 evaluation values rather
+than the initial V2.2 wrappers' looser 2:00 / 3:00 requests, improving scheduler backfill only.
 
 ## 2026-08-06e  Intrinsic S/N cut removes the faint 20% of the fixed V2.1-size population
 
