@@ -27,6 +27,7 @@ def _seed_flow(seed):
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
 import pyarrow as pa
+import pyarrow.compute as pc
 import pyarrow.ipc as ipc
 import pyarrow.feather as pf
 
@@ -62,21 +63,60 @@ def r_blend_lookup(input_feather):
     return rb.to_dict()                                     # {index_input: R_blend}
 
 
-def load(cat, max_rows):
+def _case_filtered_table(path, columns, min_case=None, max_case=None, max_rows=0):
+    """Read selected IPC columns while retaining only a bounded case range.
+
+    Constgold is stored in case order.  Filtering each Arrow batch before conversion to pandas
+    keeps case-sharded evaluations below the host-memory limit of the CIP GPU slices.  With no
+    case bounds this is equivalent to the former whole-file reader.  ``max_rows=0`` means all
+    matching rows; a positive limit is applied *after* the case filter.
+    """
+    parts = []
+    n = 0
+    with ipc.open_file(pa.memory_map(path)) as reader:
+        available = set(reader.schema.names)
+        use = [c for c in columns if c in available]
+        if (min_case is not None or max_case is not None) and "case" not in use:
+            raise ValueError(f"case filtering requested but {path} has no 'case' column")
+        for bi in range(reader.num_record_batches):
+            table = pa.Table.from_batches([reader.get_batch(bi)]).select(use)
+            if min_case is not None:
+                table = table.filter(pc.greater_equal(table["case"], pa.scalar(min_case)))
+            if max_case is not None:
+                table = table.filter(pc.less(table["case"], pa.scalar(max_case)))
+            if not table.num_rows:
+                continue
+            if max_rows > 0:
+                remaining = max_rows - n
+                if remaining <= 0:
+                    break
+                table = table.slice(0, remaining)
+            parts.append(table)
+            n += table.num_rows
+            if max_rows > 0 and n >= max_rows:
+                break
+    if not parts:
+        return pa.table({c: pa.array([]) for c in use})
+    return pa.concat_tables(parts)
+
+
+def _ipc_schema_names(path):
+    """Inspect an Arrow/Feather schema without materialising the file."""
+    with ipc.open_file(pa.memory_map(path)) as reader:
+        return set(reader.schema.names)
+
+
+def load(cat, max_rows, min_case=None, max_case=None):
     need = ["measured_e1_plus", "measured_e2_plus", "measured_e1_minus", "measured_e2_minus",
             "applied_g1", "applied_g2", "neighbored", "distance", "input_index", "case", "polarization_angle",
             "Re_input_p", "Re_input_s", "axis_ratio_input_p", "axis_ratio_input_s",
             "position_angle_input_p", "position_angle_input_s", "r_input_p", "r_input_s",
             "redshift_input_p", "redshift_input_s", "sersic_n_input_p", "sersic_n_input_s"]
-    with ipc.open_file(cat) as r:
-        avail = set(r.schema.names); cols = [c for c in need if c in avail]
-        parts = []; n = 0
-        for bi in range(r.num_record_batches):
-            b = pa.Table.from_batches([r.get_batch(bi)]).select(cols).to_pandas()
-            parts.append(b); n += len(b)
-            if n >= max_rows:
-                break
-    df = pd.concat(parts, ignore_index=True)
+    df = _case_filtered_table(
+        cat, need, min_case=min_case, max_case=max_case, max_rows=max_rows
+    ).to_pandas()
+    if not len(df):
+        raise ValueError(f"no catalogue rows in requested case range [{min_case}, {max_case})")
     e1i, e2i = ellipticity_from_axis_ratio_angle(df["axis_ratio_input_p"].to_numpy(float),
                                                  df["position_angle_input_p"].to_numpy(float))
     df["e1_input_rot0_p"] = e1i; df["e2_input_rot0_p"] = e2i
@@ -170,18 +210,14 @@ def main():
     rk = dict(pixel_rms=args.pixel_rms, pixel_size=args.pixel_size, zero_mag=args.zero_mag,
               psf_fwhm=args.psf_fwhm, moffat_beta=args.moffat_beta)
 
-    df = load(args.catalogue, args.max_rows)
+    df = load(args.catalogue, args.max_rows, min_case=args.min_case, max_case=args.max_case)
     if args.noise_photoz or args.noise_sersic_frac:
         # feed the flow the SAME noisy structure channel it was trained on (seed fixed for reproducibility)
         apply_structure_measurement_noise(
             df, photoz_sigma=args.noise_photoz, sersic_frac=args.noise_sersic_frac, seed=12345)
         print(f"structure noise: photoz_sigma={args.noise_photoz} sersic_frac={args.noise_sersic_frac}")
-    if args.min_case is not None:
-        df = df[df["case"] >= args.min_case].reset_index(drop=True)
-        print(f"held-out split: case >= {args.min_case} -> N={len(df):,}")
-    if args.max_case is not None:
-        df = df[df["case"] < args.max_case].reset_index(drop=True)
-        print(f"fit split: case < {args.max_case} -> N={len(df):,}")
+    if args.min_case is not None or args.max_case is not None:
+        print(f"case range [{args.min_case}, {args.max_case}) -> N={len(df):,}")
     g = float(np.median(np.hypot(df["applied_g1"], df["applied_g2"])))
     gh1 = df["applied_g1"].to_numpy(float) / np.hypot(df["applied_g1"], df["applied_g2"])
     gh2 = df["applied_g2"].to_numpy(float) / np.hypot(df["applied_g1"], df["applied_g2"])
@@ -190,7 +226,10 @@ def main():
     r_sim_i = ((e1p - e1m) * gh1 + (e2p - e2m) * gh2) / (2 * g)
     # per-galaxy R_blend matched by (case, input_index); 0 where absent (r>26 / isolated / not scored)
     if os.path.exists(args.blend_lookup):
-        rbdf = pf.read_table(args.blend_lookup).to_pandas()[["case", "input_index", "R_blend"]]
+        rbdf = _case_filtered_table(
+            args.blend_lookup, ["case", "input_index", "R_blend"],
+            min_case=args.min_case, max_case=args.max_case,
+        ).to_pandas()
         merged = df[["case", "input_index"]].merge(rbdf, on=["case", "input_index"], how="left")
         rb_i = merged["R_blend"].fillna(0.0).to_numpy(float)
         print(f"R_blend lookup: {args.blend_lookup}  matched {np.mean(merged['R_blend'].notna()):.1%} of rows, "
@@ -204,9 +243,12 @@ def main():
     df["r_blend"] = rb_i
     if args.crowd_flux_lookup and os.path.exists(args.crowd_flux_lookup):
         fcols = ["nbr_flux_near", "nbr_flux_far"]
-        if "nbr_flux_max" in pf.read_table(args.crowd_flux_lookup).schema.names:
+        if "nbr_flux_max" in _ipc_schema_names(args.crowd_flux_lookup):
             fcols = fcols + ["nbr_flux_max"]   # flux-concentration feature for the conc flow
-        cf = pf.read_table(args.crowd_flux_lookup).to_pandas()[["case", "input_index", *fcols]]
+        cf = _case_filtered_table(
+            args.crowd_flux_lookup, ["case", "input_index", *fcols],
+            min_case=args.min_case, max_case=args.max_case,
+        ).to_pandas()
         cm = df[["case", "input_index"]].merge(cf, on=["case", "input_index"], how="left")
         for fc in fcols:
             df[fc] = cm[fc].fillna(0.0).to_numpy(float)

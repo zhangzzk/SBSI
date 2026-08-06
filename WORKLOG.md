@@ -2,6 +2,27 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-06g  V2.2 constgold evaluation also routed through case-sharded CIP jobs
+
+The monolithic two-seed constgold array 15581398 remains pending `inter` priority.  The full CIP
+node is not an immediate alternative: all nine of its A40s and 984/1003 GB of schedulable memory
+are allocated, while the idle CIP vGPU nodes expose only 26--41 GB RAM.  Added an independent,
+scientifically identical sharded route so the 41 GB A40-16GB slices can be used.  Cases 40--139 are
+split into ten disjoint 10-case shards for each of seeds 501/502; shards retain the same source cut,
+lookup joins, 64 CRN samples, flow checkpoints and response formula as the monolithic job.  Only
+Arrow loading changes: catalogue and lookup tables are case-filtered batch by batch before pandas
+materialisation, and a schema-only lookup inspection avoids accidentally loading the 3.5 GB crowd
+table just to discover its columns.
+
+Added `scripts/concat_response_shards.py`, which requires all expected case intervals exactly once,
+checks schemas and per-shard case bounds, streams batches in case order, refuses overwrite, and
+re-opens each completed full dump to verify its row count.  Added the CIP shard, concatenation and
+aggregation wrappers.  Python compilation, Bash syntax checks and a synthetic filter/concatenation
+smoke test pass; pytest itself is absent from the compute environment.  Submitted shard array
+15581623 (maximum eight requested, currently three concurrent due the user's GPU QOS), concatenation
+15581625 and aggregation 15581628.  The original inter chain 15581398--15581399 is retained as a
+backup and writes to a separate dump directory, so the two routes cannot race or overwrite.
+
 ## 2026-08-06f  V2.2 rectangular-domain two-seed experiment pre-registered
 
 Owner specified V2.2 as the V2 recipe with only the intrinsic-primary box changed to
