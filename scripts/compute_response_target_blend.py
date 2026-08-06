@@ -52,6 +52,21 @@ def _selection_cuts(args):
     return cuts
 
 
+def _domain_description(args):
+    """Machine-readable-enough population stamp for target/trainer consistency checks."""
+    if getattr(args, "v21_complement", False):
+        return "COMPLEMENT of " + sbs_domain.describe()
+    if getattr(args, "v21_domain", False):
+        return sbs_domain.describe()
+    mag_max = getattr(args, "primary_mag_max", None)
+    re_min = getattr(args, "primary_re_min", None)
+    if mag_max is not None or re_min is not None:
+        return ("box: primary true "
+                f"mag < {mag_max if mag_max is not None else DEFAULT_SELECTION_CUTS[1][1]:g}, "
+                f"Re > {re_min if re_min is not None else DEFAULT_SELECTION_CUTS[3][0]:g} arcsec")
+    return "default"
+
+
 def load_snc_lookup(path, cols):
     if not path:
         return None
@@ -288,10 +303,9 @@ def main():
              snc_lookup=(args.snc_lookup or ""), max_case=(-1 if args.max_case is None else args.max_case),
              # Which POPULATION this target was measured on. Stamped because the flow and its
              # target must agree, and a mismatch is silent -- it shows up only as a wrong R_flow.
-             domain=("COMPLEMENT of " + sbs_domain.describe()
-                     if getattr(args, "v21_complement", False)
-                     else sbs_domain.describe() if getattr(args, "v21_domain", False)
-                     else "default"))
+             domain=_domain_description(args),
+             primary_mag_max=(np.nan if args.primary_mag_max is None else args.primary_mag_max),
+             primary_re_min=(np.nan if args.primary_re_min is None else args.primary_re_min))
     axis = f"crowd[{args.crowd_col}]" if args.crowd_col else "blend"
     print(f"R_sim(flux x size x {axis}) target, g={g}, N_pairs={len(proj):,}, N_eff(unique-target)={w.sum():.0f}, global R={gm:.4f}")
     print(f"grid {args.n_flux}x{args.n_size}x{nblend}" + ("" if args.crowd_col else " (blend bin 0=isolated, by distance)"))

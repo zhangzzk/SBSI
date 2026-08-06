@@ -1,0 +1,38 @@
+{
+  "_counter": 1,
+  "root": "n0",
+  "nodes": {
+    "n0": {
+      "id": "n0",
+      "parent": null,
+      "depth": 0,
+      "status": "root",
+      "hypothesis": "Reduce absolute V2.2 constgold multiplicative bias to at most 0.3 percent without empirical response corrections or constgold-trained parameters",
+      "insight": "",
+      "metadata": {
+        "dev_score": null,
+        "test_score": null,
+        "result": "",
+        "branch_ref": null
+      },
+      "created_at": 1786014621,
+      "updated_at": 1786014621
+    },
+    "n1": {
+      "id": "n1",
+      "parent": "n0",
+      "depth": 1,
+      "status": "running",
+      "hypothesis": "Replacing the V2 domain by the user-specified intrinsic box r<25.8 and Re>0.5 removes the population cancellation while the unchanged V2 recipe learns both response components on that same box",
+      "insight": "",
+      "metadata": {
+        "dev_score": null,
+        "test_score": null,
+        "result": "",
+        "branch_ref": null
+      },
+      "created_at": 1786014623,
+      "updated_at": 1786014624
+    }
+  }
+}

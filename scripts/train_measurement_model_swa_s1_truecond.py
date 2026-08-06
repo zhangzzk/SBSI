@@ -1057,6 +1057,20 @@ def main():
                   f"R_target {perobj_target.min():.3f}..{perobj_target.max():.3f}, delta={d}")
         elif args.response_target_npz:
             tt = np.load(args.response_target_npz)
+            # New response targets stamp their exact rectangular primary domain.  Refuse a silent
+            # target/trainer population mismatch; legacy targets lack these keys and retain their
+            # historical behaviour.  V2.1 uses its structured curve definition instead.
+            if not getattr(args, "v21_domain", False):
+                for key, requested in (("primary_mag_max", args.primary_mag_max),
+                                       ("primary_re_min", args.primary_re_min)):
+                    if key not in tt.files:
+                        continue
+                    stored = float(tt[key])
+                    stored = None if np.isnan(stored) else stored
+                    if stored != requested:
+                        raise ValueError(
+                            f"response target {key}={stored} but trainer requests {requested}; "
+                            "the target and flow must use the same primary population")
             ef, es, Rsim = tt["edges_flux"], tt["edges_size"], tt["Rsim"]
             bin_targets = torch.as_tensor(np.asarray(Rsim).reshape(-1), dtype=torch.float32)
             # COUNT-WEIGHTED target mean, for the per-epoch readout. The epoch line compares this to

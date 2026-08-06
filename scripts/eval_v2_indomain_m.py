@@ -106,7 +106,10 @@ def main():
                     help="add the V2.1 domain (primary true Re > 0.5\" AND true S/N > 10) as a "
                          "mask, and check that the emulator behind the dump actually covers it.")
     ap.add_argument("--emulator-tag", default="lsst_r_extnbr_v21",
-                    help="emulator whose stored inference box is checked against the V2.1 mask.")
+                    help="emulator whose stored inference box is checked against the evaluated mask.")
+    ap.add_argument("--check-emulator-coverage", action="store_true",
+                    help="verify that the emulator's stored inference box covers the rectangular "
+                         "--re-min/--mag-max FLOW TRAINING DOMAIN before reporting m.")
     args = ap.parse_args()
     t0 = time.time()
 
@@ -131,6 +134,9 @@ def main():
         f"true Re > {args.re_min}": re_ > args.re_min,
         "FLOW TRAINING DOMAIN (both)": (mag < args.mag_max) & (re_ > args.re_min),
     }
+    if args.check_emulator_coverage:
+        check_emulator_covers_domain(
+            args.emulator_tag, mag, re_, masks["FLOW TRAINING DOMAIN (both)"])
     if args.v21_domain:
         from sbs_shear import domain as sbs_domain
         v21 = sbs_domain.in_domain(mag, re_)

@@ -2,6 +2,26 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-06f  V2.2 rectangular-domain two-seed experiment pre-registered
+
+Owner specified V2.2 as the V2 recipe with only the intrinsic-primary box changed to
+`r_input_p < 25.8` and `Re_input_p > 0.5 arcsec`, initially at seeds 501/502. Added a dependency-safe
+Slurm chain for the 6x6x5 half-shear response target, BlendEMU regression, two V2 flow runs,
+constgold lookup/evaluation and final aggregation. The flow retains V2's 4M-row cap, 80 epochs,
+SWA-8, architecture, feature set, response/coupling losses and targets; it deliberately does not
+inherit V2.1's 120-epoch/SWA-32 schedule or proxy-S/N curve. The emulator retains V2's catalogue,
+features, fixed split, 10-arcsec/k=20 extended-secondary support and hyperparameters inherited from
+`lsst_r_extnbr_indom_tuned`; only its primary box changes. No global scale, empirical response
+adjustment, or constgold-trained/fitted parameter is present.
+
+Added response-target domain stamps and a trainer-side equality guard so a future box mismatch
+fails before training. Added a generic evaluator coverage guard so the new emulator's stored box
+must cover every scored V2.2 primary. Resolved-config comparison confirms the V2.2 BlendEMU YAML
+differs from V2 only in `model_tag` and `regression_cuts`, whose primary entries change
+`mag 18--26, Re 0.3--1.5` to `mag 18--25.8, Re 0.5--1.5`; all static Python, Bash and whitespace
+checks pass. The experiment is tracked separately in `.arbor_v22`; the two-seed result is a
+preliminary stability screen, while a fresh 16-seed constgold run remains the held-out merge gate.
+
 ## 2026-08-06e  Intrinsic S/N cut removes the faint 20% of the fixed V2.1-size population
 
 Owner requested a direct histogram of true input magnitude before and after the V2.1 proxy
