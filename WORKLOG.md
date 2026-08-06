@@ -54,6 +54,20 @@ its physical interpretation is open.  Artifact:
 `results/anchorblend_toy_v21.json`.  Job 15579095 produced no artifact: it stopped on an irrelevant
 GalSim Sersic-truncation solve error; removing explicit profile truncation gave the completed rerun.
 
+**Exact provenance check on the older `-6.15%` ruler.**  The intended V2.1 lower-domain cut is the
+same in both instruments (`Re_p>0.5` arcsec and intrinsic S/N>10), but their actual scored
+populations and pair apertures are not identical.  The ruler catalogue was explicitly built by
+`jobs/archive/job_build_allpairs_full.sh` / `jobs/job_build_ap7_g02.sh` with `--r-max 7 --k 20`;
+the saved ruler has maximum separation 6.99999 arcsec.  The anchor truth calls
+`retrieve_constant_shear(..., r_max=10, k=20)`, and its emulator sum reads V2.1 metadata with
+`r_max=10, k=20`.  Moreover, `eval_rblend_gap.py --v21-domain` applies only the curved lower V2.1
+domain at evaluation, whereas anchor selection uses `primary_mask`, which also enforces the normal
+`18<r_p<28`, `Re_p<1.5` support.  Consequently 714,856 / 5,861,188 ruler rows (12.20%) have
+`Re_p>=1.5`, and 14,686 (0.25%) have `r_p<=18`; the anchor excludes them.  Restricting the stored
+ruler to the anchor primary box changes `-6.15 +- 1.73%` to `-6.78 +- 1.77%`.  Thus the primary-box
+difference does not explain the numerical agreement, but neither does that agreement make the
+7-arcsec per-pair forward ruler equivalent to the 10-arcsec coherent anchor instrument.
+
 Files added: the two diagnostic scripts, their Slurm wrappers, one focused isolation-helper test,
 and the two JSON artifacts.  Validation: both science jobs completed exit 0; synthetic nearest-self
 exclusion and exact-ratio bootstrap checks passed; focused suite 13 passed; full suite 91 passed.
