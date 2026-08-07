@@ -60,7 +60,10 @@ input galaxy, detected or not, at BlendEMU's native aperture -- while the number
 What IS comparable is `R_self`, because it is an average over rows that all carry the same value and
 so is pair-list-free (0.81456 on the nearest-neighbour `crowd` build vs 0.81654 here). Combined with
 constgold's `R_sim = 0.9626` it says constgold requires a TOTAL blend response of 0.1480 against the
-emulator's 0.1257 -- an 18% shortfall, and the whole V2.2 deficit. Use this script for `R_self` and
+emulator's 0.1257 -- a gap of 0.0223, and the whole V2.2 deficit. **The arithmetic does not say which
+side is wrong**: the emulator may under-deliver the summed total, the two sims may differ in
+self-response for reasons unrelated to crowding, or the unapplied forward-vs-antithetic term
+(-0.55% +- 0.61, about a fifth of the gap) may absorb part of it. Use this script for `R_self` and
 for the SHAPE of the blend-vs-separation curve; do not use its blend TOTAL against a differently
 built number.
 

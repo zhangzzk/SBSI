@@ -132,17 +132,44 @@ response and let the pair list cancel:
 | constgold `R_sim` | `0.9626` |
 | **total blend response constgold requires** | **`0.1480`** |
 | emulator (`v22`, full input field) delivers | `0.1257` |
-| **shortfall** | **`0.0223`, i.e. 18%** |
+| **gap** | **`0.0223`, i.e. 18% of what the emulator delivers** |
 
 This is the same `-2.67%` self-response gap of 07d seen from the other side, and it is the whole V2.2
-deficit.  It rests on ONE assumption -- that the two sims share a self-response -- which the crowding
-match supports (0.92 at 1", equal neighbour magnitudes) but does not prove.
+deficit.
 
-**Next step is therefore NOT another sim measurement** but an emulator question: does BlendEMU
-under-deliver ~18% of the summed blend response when run over a full input field, as opposed to
-per-pair where the ruler already clears it?  A per-pair-accurate emulator can still lose a summed
-total through its neighbour search (aperture, `k` cap, faint-end coverage).  That is testable against
-the sim on a MATCHED pair list, which is what neither number above used.
+**STATE IT NEUTRALLY: the arithmetic gives ONE gap and does NOT say which side is wrong.**  An
+earlier version of this entry called it "an 18% shortfall in the emulator" and set the next step as
+"NOT another sim measurement but an emulator question."  **That attribution is retracted** -- it was
+asserted without a positive test.  The crowding result ELIMINATED one competing explanation (that
+constgold is a more-blended population, which would have made 0.1480 unremarkable and the gap a
+retargeting problem); eliminating one alternative is not evidence for a preferred one.  This is the
+same error pattern already recorded under the "a ~+5% m is not diagnostic of its cause" retraction in
+AGENTS.md.
+
+Live after the crowding check, in no particular order:
+
+1. BlendEMU under-delivers the SUMMED blend over a full input field despite clearing the per-pair
+   ruler -- a per-pair-accurate emulator can still lose a total through its neighbour search
+   (aperture, `k` cap, faint-end coverage);
+2. the two sims differ in self-response for reasons unrelated to crowding (PSF, noise level, ngmix
+   configuration), which no emulator change would fix;
+3. the forward-vs-antithetic convention term, `-0.55% +- 0.61` on `R_self` -- about `0.0045`, up to a
+   fifth of the gap -- which is NOT applied anywhere above.
+
+**And the crowding evidence is thinner than it was made to sound.**  constgold's build truncates at
+3" AND at one neighbour, so the only radius where both curves are still rising is 1", where just 14%
+of objects have a neighbour at all.  That is ONE informative bin, ratio `0.92`, **with no error bar
+computed** -- it was reported as "equally dense" on the strength of a single point estimate.  A
+case-blocked error on that ratio is cheap and should be obtained before the point is leaned on again.
+
+**A fact that cuts AGAINST reading (1), which the earlier version failed to weigh:** half-shear's own
+measured blend inside 7" is `0.0865`.  If the scenes really are equally crowded, constgold needing
+`0.1480` looks HIGH relative to what half-shear scenes produce, which points toward (2) or (3) rather
+than (1).  Not decisive -- `0.0865` is a 7"-capped, detected-primary lower bound -- but it is not
+support for the emulator being low either.
+
+Discriminating test, for whenever this is picked up: score sim and emulator on a MATCHED pair list,
+which is what neither number in the table did.
 
 Nothing was corrected, offset, or reweighted anywhere in 07d-07f; every gap is reported as measured.
 
