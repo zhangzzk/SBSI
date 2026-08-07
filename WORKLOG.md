@@ -109,17 +109,40 @@ At 1", where neither build truncates, the two agree to 8%, and mean neighbour ma
 throughout (26.7 vs 26.7).  **The scenes are similarly crowded, so constgold is NOT a more-blended
 population** and the comfortable explanation for 07e's `-6.2%` is ruled out.
 
-**THREE STATEMENTS THAT CANNOT ALL BE TRUE -- the open question.**
+**RESOLVED SAME DAY, and 07e's `-6.19%` is RETRACTED as a pair-list artefact.**  An apparent
+three-way contradiction -- the ruler says the emulator matches half-shear truth (`-9.78%`, n.s.), the
+sim delivers only `0.0865` inside 7", yet the emulator reports `0.1257` on equally-crowded constgold
+-- dissolves on reading `scripts/build_blend_lookup.py`.  It calls
+`pred.predict_response(t, t)` with **primary = secondary = the FULL INPUT FIELD**
+(`gals_info_*.feather`), so the lookup sums over BlendEMU's own neighbour search across ALL input
+galaxies, detected or not, at the emulator's native aperture.  That is a far richer list than the
+7"-capped, detected-primary pairs the `ap7` catalogue annotates.  **The two numbers were never
+comparable, and `0.9030` vs `0.9626` must not be quoted as a sim disagreement.**  Third pair-list
+trap of the day; the lesson is now unambiguous.
 
-1. the per-pair ruler says the v22 emulator matches half-shear truth to `-9.78%` (not significant);
-2. the half-shear sim delivers `R_blend = 0.0865 +- 0.0166` summed over ALL pairs inside 7";
-3. the same emulator reports `R_blend = 0.1257` on constgold, whose own scenes are no more crowded.
+**WHAT SURVIVES, and why this one is pair-list-free.**  `R_self` is an AVERAGE over an object's rows,
+which all carry the same value, so it does not depend on pair-list depth at all -- confirmed by
+`0.81456` (crowd, nearest-neighbour, 100 cases) vs `0.81654` (ap7, all-pairs, 20 cases).  `R_blend`
+is a SUM and is entirely pair-list dependent.  So state the result as a demand on the TOTAL blend
+response and let the pair list cancel:
 
-Note the constgold `R_blend` cannot be coming from that catalogue's pair list (0.76 nearest
-neighbours inside 3"); `blend_lookup_v22_c40-139.feather` is a separate product built on its own,
-richer pair list.  **Which pair list that lookup was built on is the next thing to establish**, since
-(3) is otherwise unreconcilable with (1) and (2), and it is the term standing between the sim total
-`0.9030` and constgold's `0.9626`.
+| | |
+|---|---|
+| half-shear `R_self` | `0.8146 +- 0.0035` |
+| constgold `R_sim` | `0.9626` |
+| **total blend response constgold requires** | **`0.1480`** |
+| emulator (`v22`, full input field) delivers | `0.1257` |
+| **shortfall** | **`0.0223`, i.e. 18%** |
+
+This is the same `-2.67%` self-response gap of 07d seen from the other side, and it is the whole V2.2
+deficit.  It rests on ONE assumption -- that the two sims share a self-response -- which the crowding
+match supports (0.92 at 1", equal neighbour magnitudes) but does not prove.
+
+**Next step is therefore NOT another sim measurement** but an emulator question: does BlendEMU
+under-deliver ~18% of the summed blend response when run over a full input field, as opposed to
+per-pair where the ruler already clears it?  A per-pair-accurate emulator can still lose a summed
+total through its neighbour search (aperture, `k` cap, faint-end coverage).  That is testable against
+the sim on a MATCHED pair list, which is what neither number above used.
 
 Nothing was corrected, offset, or reweighted anywhere in 07d-07f; every gap is reported as measured.
 

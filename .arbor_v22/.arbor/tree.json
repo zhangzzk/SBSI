@@ -8,7 +8,7 @@
       "depth": 0,
       "status": "root",
       "hypothesis": "Reduce absolute V2.2 constgold multiplicative bias to at most 0.3 percent without empirical response corrections or constgold-trained parameters",
-      "insight": "",
+      "insight": "[from n1] Consistent V2.2 primary domains reduce but do not eliminate constgold bias: six seeds stabilize at +0.683+-0.162%, so the next hypothesis must address a response-component transfer deficit rather than further relying on population consistency alone.",
       "metadata": {
         "dev_score": null,
         "test_score": null,
@@ -16,23 +16,23 @@
         "branch_ref": null
       },
       "created_at": 1786014621,
-      "updated_at": 1786014621
+      "updated_at": 1786037900
     },
     "n1": {
       "id": "n1",
       "parent": "n0",
       "depth": 1,
-      "status": "running",
+      "status": "executed",
       "hypothesis": "Replacing the V2 domain by the user-specified intrinsic box r<25.8 and Re>0.5 removes the population cancellation while the unchanged V2 recipe learns both response components on that same box",
-      "insight": "",
+      "insight": "Matching the intrinsic primary box across flow and emulator improves the V2 central bias on this population but leaves a stable positive ~0.68% total-response deficit, so population-cut consistency alone is insufficient for the 0.3% objective.",
       "metadata": {
         "dev_score": null,
         "test_score": null,
-        "result": "",
-        "branch_ref": null
+        "result": "V2.2 six-seed constgold m=+0.683+-0.162% (seed sd 0.398%); components R_sim=0.9626, R_flow=0.8304, R_blend=0.1257. Exact population/coverage checks passed; no empirical adjustment.",
+        "branch_ref": "worktree-selbias-plot@f00354c"
       },
       "created_at": 1786014623,
-      "updated_at": 1786014624
+      "updated_at": 1786037900
     }
   }
 }

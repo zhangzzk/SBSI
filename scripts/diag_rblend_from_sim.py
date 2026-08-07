@@ -50,6 +50,20 @@ R_sim crosses both catalogues AND conventions (half-shear is forward, constgold 
 CONVENTIONS.md 6c). That step is a flag, not a proof, and the known convention term
 (-0.55% +- 0.61, 2026-08-05u) is printed beside it rather than applied. Nothing here is corrected.
 
+RESULT, AND THE LIMIT OF IT (2026-08-07f, job 15596684). The run gave `R_self = 0.8165 +- 0.0080`
+and `R_blend = 0.0865 +- 0.0166` inside 7", a total of 0.9030 against constgold's 0.9626. **Do NOT
+read that -6.19% as a sim disagreement.** The emulator's constgold `R_blend` comes from
+`build_blend_lookup.py`, which calls `predict_response(t, t)` over the FULL INPUT FIELD -- every
+input galaxy, detected or not, at BlendEMU's native aperture -- while the number here sums the
+`ap7` catalogue's 7"-capped, detected-primary pairs. Different lists, not comparable.
+
+What IS comparable is `R_self`, because it is an average over rows that all carry the same value and
+so is pair-list-free (0.81456 on the nearest-neighbour `crowd` build vs 0.81654 here). Combined with
+constgold's `R_sim = 0.9626` it says constgold requires a TOTAL blend response of 0.1480 against the
+emulator's 0.1257 -- an 18% shortfall, and the whole V2.2 deficit. Use this script for `R_self` and
+for the SHAPE of the blend-vs-separation curve; do not use its blend TOTAL against a differently
+built number.
+
 FIREWALL / SEEDS. Half-shear only; no model, no training, no tuning. The constgold reference numbers
 are seed-independent (R_sim) or read from one dump. No `m` is reported.
 """
