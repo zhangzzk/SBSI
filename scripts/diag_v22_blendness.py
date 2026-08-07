@@ -42,7 +42,7 @@ def report_total_m(table):
     a = np.stack(table.per_seed)  # seed, bin, (R_sim, R_flow, R_blend)
     nseed = a.shape[0]
     print("  direct total-model bias: m = R_sim/(R_flow+R_blend)-1")
-    print(f"  {'blendness':>22}{'m %':>10}{'+-seed':>10}{'+-sim':>10}{'+-total':>10}{'N':>12}")
+    print(f"  {table.header:>22}{'m %':>10}{'+-seed':>10}{'+-sim':>10}{'+-total':>10}{'N':>12}")
     for i, label in enumerate(table.labels):
         if table.n[i] < 2000:
             continue

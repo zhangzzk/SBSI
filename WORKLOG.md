@@ -2,6 +2,44 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-07h  Intrinsic neighbour flux localises V2.2 failure to close/mid scene context
+
+Owner noted the distinction left by the toy additivity test: each individual-neighbour derivative
+was measured with all other galaxies still present, whereas BlendEMU predicts a pair without
+features describing those third-and-later galaxies.  Added `scripts/build_neighbor_flux_shells.py`,
+`scripts/diag_v22_neighbor_flux.py`, `jobs/job_diag_v22_neighbor_flux.sh`, and accumulator tests.
+The lookup uses all intrinsic input-field galaxies and no measurement/model quantity.  For each
+primary it stores `log10(1 + sum(F_neighbour)/F_primary)` in predeclared 0--1, 1--3, and 3--10 arcsec
+shells, plus total 0--10 arcsec flux and the flux remaining after the two brightest neighbours.
+
+Job 15597621 completed in 18m51s (MaxRSS 11.9 GB): 69,956,785 input galaxies over 100 constgold
+fields, mean 16.92 neighbours inside 10 arcsec, and 99.999% with at least three.  The exact guarded
+join evaluates 5,642,350 V2.2-domain rows and all 16 seed dumps.  Direct total-model `m`, by positive
+intrinsic-flux quartile (with a separate zero class when it exists):
+
+| intrinsic neighbour flux | zero | q1 | q2 | q3 | q4 |
+|---|---:|---:|---:|---:|---:|
+| near 0--1" | `+0.93+-0.19` | `+0.10+-0.42` | `-0.68+-0.67` | `+0.11+-0.91` | **`+11.68+-0.94%`** |
+| mid 1--3" | `-1.00+-0.31` | `+0.44+-0.23` | `+1.38+-0.36` | `+3.60+-0.53` | **`+4.53+-0.98%`** |
+| far 3--10" | -- | `-0.15+-0.16` | `+0.65+-0.22` | **`+4.26+-0.42`** | `+0.08+-0.51%` |
+| all 0--10" | -- | `-0.09+-0.16` | `+0.31+-0.23` | **`+4.41+-0.42`** | `+0.36+-0.52%` |
+| third-brightest and later | -- | `+0.84+-0.18` | `+0.45+-0.21` | **`+2.37+-0.40`** | `+0.86+-0.62%` |
+
+Thus the old predicted-`R_blend`/nearest-neighbour view hid a strong physical scene axis.  Mid-range
+flux gives a clean dose-response and the highest close-flux class fails catastrophically.  But the
+third-plus and total-flux axes turn back down in q4, so the evidence does NOT support a single
+monotonic "more additional flux means more missing response" correction.  It supports missing
+radially structured scene context, with cancellation at the global level.  This remains an
+observational localisation: neighbour flux also changes the true scene and correlates with primary
+properties, so it does not by itself assign the error to flow versus emulator.  The discriminating
+next test is residual versus third-plus shell flux conditional on primary mag/size and the leading
+pair information, using half-shear only for any emulator retraining; no constgold-derived correction
+was fitted or applied.
+
+Validation: `py_compile`, Bash syntax, `git diff --check`, and direct execution of both accumulator
+unit assertions pass; pytest is unavailable in the `sims1` environment.  Also changed the shared
+direct-`m` table header to use the table's actual axis rather than always printing `blendness`.
+
 ## 2026-08-07g  V2.2 is flat in primary properties but strongly sign-changing in blendness
 
 Owner asked whether 07c's approximately flat V2.2 residual across true magnitude, size and S/N also
