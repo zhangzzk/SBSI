@@ -2,6 +2,36 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-07g  V2.2 is flat in primary properties but strongly sign-changing in blendness
+
+Owner asked whether 07c's approximately flat V2.2 residual across true magnitude, size and S/N also
+holds versus blendness.  Added `scripts/diag_v22_blendness.py` and
+`jobs/job_diag_v22_blendness.sh`; jobs 15597393/15597424 read all 16 dumps, assert exact catalogue
+keys and seed-independent `R_blend`, and report both the flow-demand residual and the actual
+`m=R_sim/(R_flow+R_blend)-1`.  Errors carry seed SEM and case-blocked `R_sim` sampling SEM separately;
+all predeclared bins are reported.
+
+**It does not hold.**  By emulator-total `R_blend`, the low-response class and four equal-count
+positive-response quartiles give respectively
+`m = +1.22+-0.15, +2.33+-0.38, +3.17+-0.66, +4.97+-0.75, -4.95+-0.62%`.
+The positive quartile edges are `0.0200, 0.0455, 0.1026, 0.3127, 4.5699`; the low class has
+2,774,482 rows and each quartile 716,967.  Thus the model increasingly under-responds through
+moderate blends, then strongly over-responds in the highest predicted-blend quartile.  The global
+`+1.081%` is a cancellation, not one uniform scene-level error.  The highest quartile's small
+`R_sim-R_blend` makes the flow-demand percentage ill-conditioned, but the direct total-model
+`m=-4.95+-0.62%` confirms the sign reversal independently of that denominator.
+
+The independent catalogue-close-neighbour view also changes sign: no annotated neighbour gives
+`-1.09+-0.36%`, while flagged within 3 arcsec gives `+1.91+-0.25%`.  By annotated nearest distance:
+not flagged `-1.09+-0.36%`, 0--1 arcsec `+2.10+-0.40%`, 1--2 arcsec `-3.19+-0.31%`, and
+2--3.01 arcsec `+7.05+-0.37%`; the trend is highly non-monotonic.  **Do not call the unflagged class
+isolated:** constgold is a nearest-neighbour, 3-arcsec-capped build, whereas emulator `R_blend` uses
+its full input-field neighbour search.  Likewise `R_blend<0.02` is low *predicted* response (its mean
+is slightly negative), not physical isolation.  These are one-dimensional localization tables, so
+they establish structure and cancellation but not whether flow, emulator, or correlated scene
+properties cause it.  They qualify 07c/07d: the global half-shear-target versus constgold-demand gap
+still exists, but a single uniform response offset cannot explain the per-blendness pattern.
+
 ## 2026-08-07d  The flow is NOT the culprit -- its TARGET disagrees with constgold by 2.4%
 
 Continuing the "why is the V2.2 residual a flat ~1%" line from 07c.  Added `sbs_shear/halfshear.py`
