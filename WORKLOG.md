@@ -2,6 +2,84 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-07c  V2.2 residual LOCALIZED to a flat ~1% FLOW deficit -- and a global R_blend boost is a TRAP
+
+Owner asked whether 0.3% is reachable on the V2.2 domain and whether the discrepancy is localized.
+Added `jobs/job_diag_rflow_v22.sh` (binned closure residual, job 15595422) and ran the per-pair ruler
+on the V2.2 domain for both emulators (jobs 15595420 `v22`, 15595421 `_ho`).
+
+**The residual is FLAT across the whole V2.2 domain.**  Binned by true size (0.5--1.5"), magnitude
+(18--26) and S/N, every bin sits near `-1%` with the same sign and no trend.  That flatness is the
+discriminator, because the two candidate causes predict very different SHAPES.  Fitting each as a
+single uniform fractional error, on the magnitude axis where `R_blend/needed` runs 0.010 to 0.501:
+
+| hypothesis | amplitude | predicted spread across mag bins | chi2/dof |
+|---|---|---|---|
+| `R_flow` uniformly low | **1.00%** | **1.45 pt** | **8.2 / 6** |
+| `R_blend` uniformly low | 7.62% | 49.16 pt | 16.0 / 6 |
+| OBSERVED | | **1.44 pt** | |
+
+The flow hypothesis reproduces the observed spread to two decimals; the blend hypothesis is off by a
+factor of 34.  **The bright end alone nearly settles it independent of any fit:** in `18 < r < 22`,
+`R_blend = 0.0113` against `needed = 1.1805`, so blending is 1% of the budget there -- even a
+100%-wrong emulator could move that bin by only 0.96%, yet the measured deficit is
+`0.85 +- 0.28%`.  Meanwhile `R_flow = 1.1704` against 1.1805 needed, i.e. 0.86% low, right on the
+global value.  **The deficit is in the flow's SELF-response, uniformly ~1% across the population.**
+
+**Ruler result, and why it does NOT overturn this.**  On the V2.2 domain, firewall-clean against
+half-shear truth (null tests pass at 0.5 sigma, `+0.00085 +- 0.00163`):
+
+| emulator | per-pair `emu/truth-1` | significance |
+|---|---|---|
+| `lsst_r_extnbr_v22` | `-9.78%` (diff `-0.0028 +- 0.0016`) | 1.75 sigma |
+| `lsst_r_extnbr_ho` | `-6.89%` (diff `-0.0019 +- 0.0016`) | 1.19 sigma |
+
+Neither is significant, and they are indistinguishable from each other (difference 0.0009 against a
+per-emulator sem of 0.0016), so **there is no ruler case for promoting `v22` over `_ho`** -- which is
+the only legitimate basis for promoting it at all.  Both also extrapolate: 302,947 / 2,475,683 rows
+(12.2%) fall outside the stored `Re` training range.
+
+**THE TRAP, recorded so nobody walks into it.**  Applied GLOBALLY, the ruler's own magnitude appears
+to solve everything: `R_blend 0.1257 -> 0.1393` (the `v22` `-9.78%`) moves `m` from `+1.082%` to
+`-0.344%`, and the `_ho` `-6.89%` moves it to `+0.104%` -- apparently inside spec.  **This is a
+coincidence of the global average and must not be acted on.**  Applying the ruler's own PER-BIN
+errors instead reproduces the constgold residual catastrophically badly, `chi2 = 191.4` on 7 bins,
+turning the faint bins from `-1.38%` into `+7.24%`:
+
+| mag bin | R_blend now | R_blend "fixed" | observed | ruler-implied |
+|---|---|---|---|---|
+| 18.0-22.0 | 0.0113 | 0.0013 | `-0.85` | `-1.68` |
+| 23.0-24.0 | 0.0878 | 0.1014 | `-0.67` | `+0.67` |
+| 25.0-25.5 | 0.1965 | 0.2281 | `-2.11` | `+3.90` |
+| 25.5-26.0 | 0.2073 | 0.2406 | `-1.38` | `+7.24` |
+
+Observed spread 1.44 pt; ruler-implied spread 8.91 pt.  Note also that the ruler finds the emulator
+HIGH at the bright end (`+745%` for `v22`, `+1179%` for `_ho`, against a tiny truth of 0.0009), so the
+correction makes the bright-end deficit WORSE, not better.  A global `R_blend` multiplier that lands
+`m` near zero while breaking per-bin agreement is exactly the "multiplier that makes a number land
+where it is expected" that the Numerical Integrity section forbids.  Do not apply one.
+
+**Answers to the two questions asked.**  (1) *Localized?*  Yes: a uniform ~1% shortfall in `R_flow`,
+flat in size, magnitude and S/N -- not a corner, not a faint-end tail, not the emulator.  (2)
+*Is 0.3% reachable?*  Not by the levers tried.  It needs `R_flow` about `+1.25%` uniformly, and
+retraining a flow specifically for this domain -- which is what V2.2 IS -- delivered
+`+0.328 +- 0.230` pt of the required 1.68, consistent with zero (2026-08-07b).  A uniform
+multiplicative deficit is a simpler defect than a structured one and may yet have a single cause, but
+it will not come from more seeds or another pass of the same recipe.
+
+Honest limits.  The flat-flow fit is good but not perfect (`chi2 8.2/6`): bright bins sit near
+`-0.8%` and the 24--25.5 range near `-1.6` to `-2.1%`, so a subdominant faint-end term probably does
+exist.  The ruler and constgold genuinely disagree about what `R_blend` should be on this
+population; that disagreement is longstanding (see the ruler-vs-`m` entries above) and is NOT
+resolved here.  What is established is that the DOMINANT term is the flow, on an argument that does
+not depend on trusting either emulator.
+
+Files added: `jobs/job_diag_rflow_v22.sh`.  Files changed: `WORKLOG.md`.  Next: the open question is
+why the flow's self-response is uniformly ~1% low on a restricted-population subset when it is
+correct on its own wider domain (2026-08-07b: `-0.271 +- 0.217%`).  A uniform deficit that appears
+only under population restriction points at the response TARGET the flow is pinned to, not at
+capacity.
+
 ## 2026-08-07b  The V2.2 DOMAIN costs 1.68 pt to any model; V2 meets spec on its own domain
 
 Owner asked what V2 does on this domain.  Added `jobs/job_v2_own_domain.sh`, which scores V2 on ITS
