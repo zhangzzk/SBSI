@@ -2,6 +2,127 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-07d  The flow is NOT the culprit -- its TARGET disagrees with constgold by 2.4%
+
+Continuing the "why is the V2.2 residual a flat ~1%" line from 07c.  Added `sbs_shear/halfshear.py`
+(SNC forward self-response measured on the half-shear legs -- the sim-side counterpart to
+`response.py`), `scripts/diag_response_nonlinearity.py` + `jobs/job_diag_response_nonlinearity.sh`
+(jobs 15595564, 15596166), and `scripts/diag_target_vs_demand.py` +
+`jobs/job_diag_target_vs_demand.sh` (job 15596152).
+
+**Shear nonlinearity is EXCLUDED as the carrier.**  The V2.2 target is built at `|g| = 0.05` and the
+flow is judged against constgold at `|g| = 0.02`, so a nonlinear response would offset the target's
+level.  05u only bounded this by `g^2` EXTRAPOLATION (`-3.41% +- 3.82`), ~4x too loose for a 1%
+effect.  Measured directly instead, on the same objects in both legs (paired, 3,236,399 objects,
+errors blocked on 100 cases):
+
+| | |
+|---|---|
+| `R_fwd(|g|=0.02)` | `0.81612 +- 0.00355` |
+| `R_fwd(|g|=0.05)` | `0.81742 +- 0.00120` |
+| paired difference | `+0.16% +- 0.39` (0.4 sigma), 95% CI `[-0.62%, +0.94%]` |
+
+The `+1.25%` needed to close V2.2 lies outside that interval.  Independent confirmation that the
+reconstruction is faithful: this gives `0.8161` at `|g| = 0.02` against the stored target's
+`global_R = 0.8157` built at `|g| = 0.05` -- agreement to 0.05%.
+
+**THE REFRAMING.  The flow reproduces its target; the TARGET is what disagrees with constgold.**
+On the V2.2 box:
+
+| quantity | value |
+|---|---|
+| half-shear self-response = the target's own level | `0.81456 +- 0.00352` |
+| ensemble `R_flow` (16 seeds) | `0.8266` |
+| constgold demand `R_sim - R_blend` | `0.83689 +- 0.00123` |
+
+The flow sits ~1.5% **above** the target it was pinned to and still lands ~1.2% below the demand,
+because the target itself is `-2.67%` below it (~6 sigma on the quadrature error).  07c's "the
+deficit is in the flow's SELF-response" is right as a DESCRIPTION relative to constgold but wrong
+about the cause: it is not flow capacity, and more capacity or more training will not fix it.
+
+**The (mag, size) population mix is NOT the explanation.**  Re-averaging the half-shear
+self-response under constgold's own cell counts -- an internal reweighting that crosses no
+convention -- moves it by only `+0.28%`, leaving `-2.39%` of level.  Per-cell the survivor is mostly
+within `+-2%` (count-weighted mean `-2.88%`, spread 3.34 pt), with the largest-size column running
+~`-6%`, so it is not perfectly flat and a residual size axis remains.
+
+**Verified rather than assumed:** the `ghat_p` projection gives a SELF response only because each
+galaxy carries an independent random shear direction.  Measured within-case direction concentration
+`0.0048`, primary-vs-neighbour alignment `0.0012`.  `verify_independent_shear_directions` now checks
+this in every run.
+
+## 2026-08-07e  R_blend measured straight from the sim -- and the pair-list trap, walked into and recorded
+
+Added `scripts/diag_rblend_from_sim.py` + `jobs/job_diag_rblend_from_sim.sh`.  The half-shear legs
+give every galaxy an independent shear direction, so the same rows yield the self response under a
+`ghat_p` projection and the BLEND response under a `ghat_s` projection onto the neighbour's
+direction -- a sim-measured `R_blend` with no emulator in the loop.  Self is AVERAGED over an
+object's rows (one detection, identical values); blend is SUMMED over pairs (additive).
+
+**FIRST ATTEMPT WAS AN ARTEFACT AND IS DISCARDED (job 15596566).**  It ran on `det_meas_crowd_*`,
+which annotates only the NEAREST neighbour -- 15,704,454 rows for 15,704,454 objects -- so the sum
+ran over exactly one neighbour and returned `R_blend = 0.0145` against a needed `0.148`, ~10x low.
+This is precisely the pair-list trap AGENTS.md warns about.  The script now prints rows-per-object
+and prints a refusal banner below 1.2.  **Check the pair-list depth before quoting any summed
+`R_blend`.**
+
+**Re-run on the all-pairs build** `det_meas_ngmix_ap7_g0.02_test` (5,329,980 pair-rows, 650,050
+objects, 8.20 rows/object, cases 0-19, 7" cap; job 15596684):
+
+| quantity | value |
+|---|---|
+| `R_self` (`ghat_p`) | `0.81654 +- 0.00804` |
+| `R_blend` (`ghat_s`, summed inside 7") | `0.08645 +- 0.01658` |
+| sim total | `0.90299` |
+| constgold `R_sim` | `0.96256` |
+| gap | **`-6.19%`** (~3.6 sigma) |
+| blend needed to close it from `R_self` | `0.14602` |
+
+`R_self` agrees across two independent catalogue builds (`0.81456` on `crowd`/100 cases vs
+`0.81654` on `ap7`/20 cases), which is a real cross-check of the estimator.  The needed blend is 69%
+above what the sim delivers inside 7", and the per-pair increments collapse with distance
+(`0.0128 -> 0.0294 -> 0.0159 -> 0.0022` per pair over 1-2 / 2-3 / 3-5 / 5-7"), so **extending the
+aperture does not plausibly bridge it.**
+
+## 2026-08-07f  Constgold and half-shear are equally crowded -- and constgold's catalogue is nearest-neighbour, 3"-capped
+
+Added `scripts/diag_crowding_compare.py` + `jobs/job_diag_crowding_compare.sh` (job 15596761) to
+separate "constgold scenes are more blended" (a population difference, fixable by retargeting) from
+"the sims disagree about the response itself" (nothing about the emulator or target fixes V2.2).
+Both catalogues are pair-annotated with `distance`, so crowding compares like for like.
+
+**BUILD FACT worth knowing independently: `constant_response_catalogue_train` is a NEAREST-NEIGHBOUR,
+3"-CAPPED build** -- 6,434,141 pair-rows over 6,434,141 objects, exactly 1.00 rows per object, flat
+past 3".  It cannot support an all-neighbour sum at all.
+
+Pairs per object, cumulative; only the range where BOTH curves are still rising says anything about
+the sky:
+
+| r | constgold | half-shear (ap7) | ratio |
+|---|---|---|---|
+| 1" | 0.14 | 0.15 | **0.92** |
+| 2" | 0.46 | 0.61 | 0.75 |
+| 3" | 0.76 | 1.44 | 0.53 |
+| 7" | 0.76 *(capped)* | 8.20 | 0.09 *(build, not sky)* |
+
+At 1", where neither build truncates, the two agree to 8%, and mean neighbour magnitude matches
+throughout (26.7 vs 26.7).  **The scenes are similarly crowded, so constgold is NOT a more-blended
+population** and the comfortable explanation for 07e's `-6.2%` is ruled out.
+
+**THREE STATEMENTS THAT CANNOT ALL BE TRUE -- the open question.**
+
+1. the per-pair ruler says the v22 emulator matches half-shear truth to `-9.78%` (not significant);
+2. the half-shear sim delivers `R_blend = 0.0865 +- 0.0166` summed over ALL pairs inside 7";
+3. the same emulator reports `R_blend = 0.1257` on constgold, whose own scenes are no more crowded.
+
+Note the constgold `R_blend` cannot be coming from that catalogue's pair list (0.76 nearest
+neighbours inside 3"); `blend_lookup_v22_c40-139.feather` is a separate product built on its own,
+richer pair list.  **Which pair list that lookup was built on is the next thing to establish**, since
+(3) is otherwise unreconcilable with (1) and (2), and it is the term standing between the sim total
+`0.9030` and constgold's `0.9626`.
+
+Nothing was corrected, offset, or reweighted anywhere in 07d-07f; every gap is reported as measured.
+
 ## 2026-08-07c  V2.2 residual LOCALIZED to a flat ~1% FLOW deficit -- and a global R_blend boost is a TRAP
 
 Owner asked whether 0.3% is reachable on the V2.2 domain and whether the discrepancy is localized.
