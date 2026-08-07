@@ -2,6 +2,60 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-07b  The V2.2 DOMAIN costs 1.68 pt to any model; V2 meets spec on its own domain
+
+Owner asked what V2 does on this domain.  Added `jobs/job_v2_own_domain.sh`, which scores V2 on ITS
+OWN domain (true mag < 26, Re > 0.3) from the SAME 16 dumps that gave `+1.409%` on the V2.2 domain --
+same model, same seeds, same emulator, same catalogue, so only the evaluated population differs.
+Jobs 15595358 / 15595377.
+
+| population | N | R_sim | R_flow | R_blend | m |
+|---|---|---|---|---|---|
+| V2 model, V2 domain (mag<26, Re>0.3) | 11,674,409 | 0.8605 | 0.7258 | 0.1371 | **-0.271 +- 0.217%** |
+| V2 model, V2.2 domain (mag<25.8, Re>0.5) | 5,642,350 | 0.9626 | 0.8231 | 0.1262 | **+1.409 +- 0.279%** |
+| V2.2 model, V2.2 domain | 5,642,350 | 0.9626 | 0.8266 | 0.1257 | +1.081 +- 0.179% |
+
+**The population, not the model, is what moves `m` here.**  Paired across the same 16 seed IDs:
+
+- **DOMAIN** effect (V2 -> V2, own domain -> V2.2's): **`+1.680 +- 0.246` pt, 6.8 sigma, p=6e-06**
+- **MODEL** effect (V2 -> V2.2, both on V2.2's domain): `+0.328 +- 0.230` pt, 1.4 sigma, p=0.17
+
+The domain is **5.1x** the model change.  So V2.2 is not a weak model aimed at a fair target; it is a
+model aimed at a target that costs 1.68 pt to stand on, and purpose-training recovered a statistically
+insignificant fraction of that.  This explains 2026-08-07a's puzzle directly.  **V2 on its own domain
+is INSIDE the |m| < 0.3% requirement** (`0.271 +- 0.217`); it is the V2.2 domain that is not met, by
+4.35 sigma.
+
+Restricting the population also RAISES V2's seed scatter, `0.607 -> 0.991` (`F=2.67`, `p=0.033`), and
+V2.2 pulls it back to `0.503` on that same population.  So V2.2's real contribution is seed stability
+on a hard population, not accuracy -- consistent with 2026-08-07a, where stability was the only claim
+that survived to 16 seeds.
+
+**Independent validation of the whole evaluation path, and the `indomtuned`/`extnbrho` question
+RESOLVED.**  This run reproduces the AGENTS.md fiducial path near-exactly: `R_sim` 0.8605 (identical),
+`R_flow` 0.7258 (identical), seed sd 0.606 vs the recorded 0.608, N 11,674,409 vs 11,674,408.  The
+remaining difference -- `-0.271%` here vs the recorded `-0.123%` -- is **entirely the blend emulator**:
+these dumps carry `R_blend = 0.1371` from `_ho`, while AGENTS.md's number uses `indom_tuned` at
+0.1358.  Arithmetically `0.8605/(0.7258+0.1358)-1 = -0.128%` and `0.8605/(0.7258+0.1371)-1 = -0.278%`,
+so the 0.0013 gap accounts for the 0.150 pt difference in full.  The mismatch flagged earlier between
+AGENTS.md's named lookup and the one `job_s2c_domain_eval.sh:44` actually uses is therefore CONFIRMED
+and quantified, not merely suspected.  AGENTS.md should say which lookup its `-0.123%` belongs to.
+
+**Bug fixed: `--emulator-tag` was naming the wrong emulator.**  Both this job and the V2 control in
+`job_aggregate_v22_cip.sh` passed `lsst_r_extnbr_indom_tuned` for dumps whose `R_blend` comes from
+`_ho`.  The coverage check was therefore validating a box belonging to an emulator that produced none
+of the numbers; it passed only because that box is narrower (18-26, 0.3-1.5) than `_ho`'s
+(18-28, 0.1-1.5), i.e. conservatively and by luck.  **No reported `m` was ever affected** -- the tag
+drives the coverage check alone, and `R_blend` is read from the dump -- and re-running under the
+corrected tag returns `m = -0.271 +- 0.217%`, bit-identical, with coverage still 0/11,674,409 outside.
+Fixed in both scripts with a comment stating the rule: the tag must name the emulator whose `R_blend`
+is baked into the dump.
+
+Files added: `jobs/job_v2_own_domain.sh`.  Files changed: `jobs/job_aggregate_v22_cip.sh`,
+`WORKLOG.md`.  Next: the lever for the V2.2 domain is not the flow -- a model change bought 0.33 pt
+against a 1.68 pt population penalty -- so the question is why that population is 1.68 pt harder, and
+the `R_flow` jump 0.7258 -> 0.8231 against `R_sim` 0.8605 -> 0.9626 is where to look.
+
 ## 2026-08-07a  V2.2 16-seed result: the six-seed pilot was LOW, and V2.2 does not beat V2
 
 Chain 15584001 -> 15584005 -> 15584006 -> 15584045 completed.  All ten flows trained (9--29 min

@@ -21,9 +21,14 @@ echo "### V2.2 CIP-SHARDED SEED-ENSEMBLE RESULT ###"; date
   --catalogue "$CAT" --min-case 40 --re-min 0.5 --mag-max 25.8 \
   --emulator-tag lsst_r_extnbr_v22 --check-emulator-coverage
 
+# The tag must name the emulator whose R_blend is IN the dump: v2_domain_dumps are built with
+# blend_lookup_extnbrho (job_s2c_domain_eval.sh), so it is `_ho`, not indom_tuned. The earlier
+# indom_tuned label checked a box belonging to an emulator that produced none of these numbers.
+# It passed only because that box is narrower; the reported m was never affected, since the tag
+# drives the coverage check alone and R_blend is read from the dump.
 echo "### V2 MODEL ON THE SAME V2.2 POPULATION (population-only control) ###"
 "$PY" -u scripts/eval_v2_indomain_m.py \
   --dump-glob "$V2/ablate_s2c_lt500_dom6x6_perobj_s*.feather" \
   --catalogue "$CAT" --min-case 40 --re-min 0.5 --mag-max 25.8 \
-  --emulator-tag lsst_r_extnbr_indom_tuned --check-emulator-coverage
+  --emulator-tag lsst_r_extnbr_ho --check-emulator-coverage
 echo AGG_V22_CIP_DONE; date
