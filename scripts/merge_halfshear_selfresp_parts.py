@@ -32,7 +32,7 @@ import pandas as pd
 import pyarrow.feather as pf
 
 EXPECTED_SEEDS = ["501", "502", "503"] + [str(s) for s in range(505, 518)]
-SIM_COLS = ["r_sim_self", "SN", "Re_input_p", "nbr_flux_near"]
+SIM_COLS = ["r_sim_self", "SN", "r_input_p", "Re_input_p", "nbr_flux_near"]
 KEYS = ["case", "input_index"]
 
 

@@ -19,9 +19,9 @@ s=+gmed, never +/-gmed. Changing this silently reintroduces that gap.
 COMMON RANDOM NUMBERS: both legs are reseeded identically, so flow sampling noise cancels in the
 difference instead of being amplified by 1/g ~ 20x.
 
-Output: one feather with per-object `r_sim_self`, `R_flow_s{seed}` for every seed, and the three
-figure-2 axes (primary S/N, primary true Re, neighbour flux). No model is trained; no constgold is
-touched.
+Output: one feather with per-object `r_sim_self`, `R_flow_s{seed}` for every seed, and the
+diagnostic axes (primary S/N, primary true magnitude/Re, neighbour flux). No model is trained; no
+constgold is touched.
 """
 from __future__ import annotations
 
@@ -231,6 +231,7 @@ def main():
         "input_index": base["input_index"].to_numpy(),
         "r_sim_self": r_sim_self.astype(np.float32),
         "SN": sn.astype(np.float32),
+        "r_input_p": base["r_input_p"].to_numpy(np.float32),
         "Re_input_p": base["Re_input_p"].to_numpy(np.float32),
         "nbr_flux_near": base["nbr_flux_near"].to_numpy(np.float32),
     })

@@ -2,6 +2,48 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-07i  Third-plus scene structure is primarily a conditional FLOW failure
+
+Added `scripts/diag_v22_thirdplus_conditional.py` and a Slurm wrapper to rank intrinsic
+third-and-later-neighbour flux within joint control cells rather than read the confounded marginal
+quartiles from 07h.  The accepted construction uses 32 primary-magnitude quantile bins and eight
+bins each in primary true size and top-two intrinsic neighbour flux; a second specification also
+controls the deployed predicted `R_blend`.  Coarser 4-bin (job 15597847, primary-mag SMD 0.42) and
+8-bin (15597882, SMD 0.176) balance probes were rejected before interpreting their response.  The
+fixed 32/8-bin run 15597902 retains 99.91% of 5,642,350 V2.2-domain rows and passes balance with max
+SMD 0.046; adding predicted `R_blend` retains 96.88% and passes every axis at max SMD 0.038.
+
+The constgold total-model residual is strongly ordered at fixed primary/top-two context:
+`m(q1..q4) = +2.45, +1.95, +1.08, -1.28%`, with `q4-q1 = -3.730 +- 0.454` percentage points.
+Even after fixing predicted `R_blend`, it is `+2.66, +1.76, +0.59, -0.69%`, with
+`q4-q1 = -3.347 +- 0.461` points.  Thus the sign change is not a primary-population effect and is
+not represented by the deployed pairwise emulator total.  No correction was fitted.
+
+To assign that structure, extended the established half-shear self-response dump with primary true
+magnitude, scored all 16 V2.2 checkpoints on the identical cached 9,466,878-row population, and added
+`scripts/diag_v22_halfshear_thirdplus.py` plus build/array/merge/diagnostic jobs and balance tests.
+Jobs 15597983/15597985/15597986 built a pure-input 10-arcsec lookup for 111,930,851 galaxies over
+cases 40--199, scored 32 CRN samples per object, and strictly merged 16 finite seed columns with no
+duplicate keys.  Job 15598515 passes the same primary-mag/size/top-two balance gate (max SMD 0.046)
+and measures half-shear SELF closure
+`m_self(q1..q4) = +1.143, -0.061, -0.479, -1.079%`; the conditional contrast is
+**`q4-q1 = -2.221 +- 0.463` points**.  It repeats independently on response-target-overlap cases
+40--99 (`-2.483 +- 0.768`) and target-held-out cases 100--199 (`-2.105 +- 0.578`).
+
+This corrects 07d's unqualified "flow is not the culprit": the V2.2 flow matches the half-shear
+target only after global averaging.  Within a controlled third-plus scene direction it fails in the
+same direction as constgold, nominally accounting for about 60--66% of the constgold q4--q1
+contrast.  The remaining contrast is not yet uniquely assigned.  Because the failure exists in both
+target-overlap and held-out cases, it is not merely generalization to new scenes; the current
+6x6x5 `(primary mag, primary size, r_blend)` pin permits cancellation along scene concentration.
+The next non-empirical lever is to test closure conditional on the flow's actual
+`nbr_flux_near/far/max` inputs, then add only the missing half-shear scene axis to the response
+target/conditioning.  Constgold remained evaluation-only throughout.
+
+Validation: `py_compile`, Bash syntax, `git diff --check`, and direct execution of the four focused
+unit assertions pass.  `pytest` is not installed in the `sims1` environment.  Slurm jobs
+15597902, 15597983, 15597985, 15597986, 15597987 and 15598515 completed successfully.
+
 ## 2026-08-07h  Intrinsic neighbour flux localises V2.2 failure to close/mid scene context
 
 Owner noted the distinction left by the toy additivity test: each individual-neighbour derivative
