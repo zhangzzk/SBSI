@@ -20,7 +20,7 @@ residual flow is BLIND to e and only the mean head mu(context) moves with e:
 softmax(log pi + log p) over grid points, then a weighted sum.  The observed vector may
 contain shape only or shape plus photometry; current four-output flows use
 ``(g1, g2, magnitude, log radius)`` in the likelihood. The estimator asserts the
-e-flow-blind structure at load time. See ``INFERENCE.md`` for the supported boundary.
+e-flow-blind structure at load time. See ``doc/INFERENCE.md`` for the supported boundary.
 """
 
 from __future__ import annotations

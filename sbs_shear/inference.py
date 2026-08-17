@@ -3,7 +3,7 @@
 This module performs grid-based latent-shape inference and an empirical-Bayes
 fixed-point shear estimate.  It conditions on the detected/selected population used
 to train the flow.  A future scene-prior implementation can add the full selection
-normalization derived in ``INFERENCE.md`` without changing this public interface.
+normalization derived in ``doc/INFERENCE.md`` without changing this public interface.
 """
 
 from __future__ import annotations

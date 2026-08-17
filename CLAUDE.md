@@ -2,9 +2,9 @@
 
 @AGENTS.md
 
-The project overview, scope boundaries (SBSI consumes finished `blendemu` catalogues; don't move classifier/flow/inference code into blendemu), the `WORKLOG.md` requirement, the Slurm resource policy, and model-specific development notes all live in `AGENTS.md` above. Only Claude-Code-specific setup that AGENTS.md omits is below.
+The project overview, scope boundaries (SBSI consumes finished `blendemu` catalogues; don't move classifier/flow/inference code into blendemu), the `doc/WORKLOG.md` requirement, the Slurm resource policy, and model-specific development notes all live in `AGENTS.md` above. Only Claude-Code-specific setup that AGENTS.md omits is below.
 
-**Before building any new number, read `CONVENTIONS.md`** — it fixes which catalogue, the population-cut order, true vs measured cuts, unsheared/sheared/measured shapes, leg matching, the response estimators, and the single definition of `m`. Update it when a convention changes.
+**Before building any new number, read `doc/CONVENTIONS.md`** — it fixes which catalogue, the population-cut order, true vs measured cuts, unsheared/sheared/measured shapes, leg matching, the response estimators, and the single definition of `m`. Update it when a convention changes.
 
 ## Environment
 - Conda env: `conda activate sims1` (Python 3.9). Repo is NOT pip-installed.
@@ -40,6 +40,6 @@ The project overview, scope boundaries (SBSI consumes finished `blendemu` catalo
   Do not add a project catalogue path as an API default.
 
 ## Gotchas
-- `WORKLOG.md` is large and newest-first — read only the top.
+- `doc/WORKLOG.md` is large and newest-first — read only the top.
 - Current shape estimator is ngmix (`NGMIX_G1/G2`), superseding SExtractor moments.
 - `archive/` holds superseded scripts; don't resurrect without checking WORKLOG.

@@ -4,7 +4,12 @@
       "Read(//project/ls-gruen/users/zekang.zhang/sbsi_catalogues/**)",
       "Bash(sinfo -o \"%P %a %l %D %t\")",
       "Read(//home/z/Zekang.Zhang/.claude/**)",
-      "Read(//home/z/Zekang.Zhang/.claude/projects/**)"
+      "Read(//home/z/Zekang.Zhang/.claude/projects/**)",
+      "Bash(/opt/slurm/bin/squeue -u zekang.zhang -o \"%.10i %.20j %.8T %.10M %.6D %R\")",
+      "Bash(grep -c '^\\\\$\\\\$\\\\|\\\\$\\\\$$' INFERENCE.md)"
     ]
+  },
+  "worktree": {
+    "bgIsolation": "none"
   }
 }

@@ -3,7 +3,7 @@
 #
 # Submit from the SBSI repository with explicit paths, for example:
 #   sbatch --export=ALL,BLENDEMU_CONFIG=/path/to/config.yaml,BLENDEMU_SIM_RUN=/path/to/Run.py \
-#       examples/job_generate_catalogues.sh
+#       examples/job_blendemu.sh
 #
 # The YAML owns the input population catalogue and every output path.  See
 # blendemu/configs/fs2_lsst_r.example.yaml for the complete schema.

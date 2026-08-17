@@ -2,6 +2,125 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-17k  Moved project documentation into `doc/`
+
+Per the owner: all root-level markdown moves to `doc/`, except `README.md` and the two agent
+instruction files.
+
+**Moved with `git mv`** (history preserved): `CONVENTIONS.md`, `Gold-V1.md`, `Gold-V2.md`,
+`Gold-V3.md`, `INFERENCE.md`, `MATH.md`, `MILESTONE.md`, `WORKLOG.md` -> `doc/`.
+
+**Left at the repository root:** `README.md`, `AGENTS.md`, `CLAUDE.md`.
+
+**Left alone:** `archive/README.md`, `archive/pre-v3/README.md`, `archive/pre-v3/docs/*.md` and
+`archive/pre-v3/jobs/archive/RUN_g02tgt.md`. `archive/` is declared provenance in `AGENTS.md`, it
+already has its own `docs/` layout, and moving it would churn a tree nobody reads for current
+work. `examples/README.md` is deleted in the working tree (owner's edit) and was not resurrected.
+
+**Reference updates.** No moved file contained markdown link syntax -- every cross-reference is a
+backticked bare filename -- so the many references *between* the moved documents stay correct now
+that they are siblings inside `doc/`. Only references from files that stayed behind needed
+repointing:
+
+- `AGENTS.md`: `CONVENTIONS.md` -> `doc/CONVENTIONS.md` (x2), `WORKLOG.md` -> `doc/WORKLOG.md`.
+  Added a sentence under the intro stating that documentation lives in `doc/` and only these
+  three files stay at the root.
+- `CLAUDE.md`: same three pointers (lines 5, 7, 43).
+- `sbs_shear/inference.py:6` and `sbs_shear/posterior_shape.py:23`: docstring references
+  ``INFERENCE.md`` -> ``doc/INFERENCE.md``. These are the only two mentions of a moved document
+  in shipped library code; neither is a load-time path, so nothing executable changed.
+
+`README.md` needed no change -- it references only `examples/`. Packaging needed no change:
+`pyproject.toml` mentions no markdown file, there is no `MANIFEST.in`, and no CI directory.
+
+**Validation.**
+
+```
+grep -rn -E '(CONVENTIONS|WORKLOG|MILESTONE|INFERENCE|MATH|Gold-V[123])\.md' \
+  --include='*.py' --include='*.md' --include='*.sh' --include='*.yaml' --include='*.toml' \
+  --include='*.ipynb' . | grep -v '^./doc/' | grep -v '^./archive/'
+```
+
+returns only the eight deliberately-repointed `doc/`-prefixed lines above.
+
+```
+PYTHONPATH="$PWD" /project/.../envs/py31/bin/python -m pytest tests/ -q
+45 passed, 1 skipped, 1 warning in 14.58s
+```
+
+**Limitations.**
+
+- Prose inside the moved documents still spells repo paths root-relative (`scripts/...`,
+  `sbs_shear/...`, `results/...`, and `doc/INFERENCE.md:5`'s `archive/pre-v3/docs/SBI_shear.md`).
+  They are descriptive backticked text, not links, and root-relative is the convention used
+  throughout the repo, so they were left as they read.
+- `archive/pre-v3/docs/SBI_shear.md` and `SBI_shear_response.md` carry a real markdown link
+  `[`INFERENCE.md`](INFERENCE.md)`. It was already broken before this move (there is no
+  `INFERENCE.md` beside them) and is still broken; not touched, since `archive/` is provenance.
+
+**Next.** If a `doc/` index is wanted, `doc/README.md` is the natural place -- not added, because
+the request was a move and not new documentation.
+
+## 2026-08-17j  Reviewed `examples/`; rewrote the tutorial notebook prose for users
+
+**Review of `examples/`.** Checked every public name the tutorial calls against the shipped
+API with `inspect.signature`: `prepare_forward_catalogue`, `predict_blend_response`,
+`load_catalogue`, `load_emulator`, `get_model`, `EmulatorPairingConfig.from_emulator`,
+`ResponsePredictor.load/predict`, `predictor.condition_features/target_features/domain`,
+`ResponsePrediction.flow/blend/total/total_mean/summary/multiplicative_bias`, and the
+`emulator_pairs` columns `primary_row`/`secondary_row`/`distance`. All exist and match. The
+bundled `examples/data/example_catalog.feather` has the 12 columns the notebook describes
+(111,210 rows). `examples/flow_training.yaml` matches `python -m sbs_shear flow --help`
+(`--config`, `--mode {train,tune}`).
+
+One stale reference found and fixed: `AGENTS.md` still named `examples/job_generate_catalogues.sh`,
+which the working tree had renamed to `examples/job_blendemu.sh`. The notebook carried the same
+stale name and now names `job_blendemu.sh`. (`WORKLOG.md:329` also mentions the old name; left
+alone as historical record.)
+
+**Notebook prose rewrite.** Rewrote all 10 markdown cells of `examples/sbsi_api_tutorial.ipynb`
+in a plain, user-facing voice: what each step is for and why, rather than contract language.
+Code cells were left byte-identical (verified by comparing cell sources against a pre-edit copy);
+`nbformat.validate` passes, 15 cells.
+
+Three points of substance were added rather than just rephrased:
+
+- `strict_domain`: `predict` raises by default when rows fall outside the flow's trained
+  domain (`response.py:394`). The tutorial previously did not mention this, so a first-time
+  user would hit the error with no context. It is now explained, together with the
+  `strict_domain=False` escape and the caveat that dropping rows changes the sample.
+- `summary()` returns `R_flow_seed_sem`, the seed-to-seed scatter; the notebook now points at
+  it as the flow's own uncertainty.
+- The `m` section now says that one comparison gives one number with no error bar, and that an
+  uncertainty means computing the ratio per simulation seed and taking the scatter across
+  seeds — matching the `AGENTS.md` "derive ratios per seed and then summarize" rule.
+
+**Validation.**
+
+```
+PYTHONPATH="$PWD" /project/ls-gruen/users/zekang.zhang/envs/py31/bin/python -m pytest tests/ -q
+45 passed, 1 skipped, 1 warning in 9.03s
+```
+
+`nbformat.validate` clean; zero code cells changed.
+
+**Limitations.** The notebook was not executed. It needs a GPU (the flow prediction cell uses
+`device="cuda"`) and the frozen V3 artifacts, so it cannot run on the login node; the API
+checks above are static. `device="cuda"` is left hardcoded rather than made conditional, since
+that is a deliberate signal that prediction belongs on a GPU node — but it does mean a user
+running the notebook on a CPU box gets a torch error at that cell.
+
+**Also observed, not acted on.** `examples/README.md` was deleted in the working tree; the
+SHA-256 provenance note for `example_catalog.feather` (byte-for-byte copy of
+`blendemu/data/example_catalog.feather`, `382adcac...dbbd68`) existed only there and now
+survives only in this log. The rewritten top-level `README.md` documents the environment as
+`conda activate sims1` + `python -m pytest`, which cannot work — `sims1` has no pytest; see
+`CLAUDE.md` for the `py31` route.
+
+**Next steps.** Run the notebook end to end on a GPU allocation to confirm the code cells the
+user uncommented actually execute, and decide whether the catalogue's provenance hash should
+live in the top-level `README.md`.
+
 ## 2026-08-17i  Merged the V3 restructure into `master`
 
 `master` and `worktree-selbias-plot` had diverged at `e972073` (2026-07-22) and run in

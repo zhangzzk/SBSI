@@ -2,7 +2,10 @@
 
 SBSI is a general shear-calibration library. It has one workflow; scientific
 release names such as V3 and V3b are only convenience references to external
-model paths. Read `CONVENTIONS.md` before producing a science number.
+model paths. Read `doc/CONVENTIONS.md` before producing a science number.
+
+All project documentation lives in `doc/`. Only this file, `CLAUDE.md`, and
+`README.md` stay at the repository root.
 
 ## Scope
 
@@ -29,7 +32,7 @@ model paths. Read `CONVENTIONS.md` before producing a science number.
   those names.
 - Model support is read from checkpoint metadata or supplied explicitly. Never
   infer a domain from a filename.
-- Reusable behavior belongs in `sbs_shear/`. `examples/job_generate_catalogues.sh`
+- Reusable behavior belongs in `sbs_shear/`. `examples/job_blendemu.sh`
   is a deployment example that calls BlendEMU; it is not part of the workflow
   or imported by the library.
 - `archive/pre-v3/` is provenance, not supported code.
@@ -63,11 +66,11 @@ rows are dropped or rejected, never assigned `R_blend = 0`.
 - Use all flow checkpoints selected by the user for a shape-response result.
 - Use common random numbers when differencing stochastic flow evaluations.
 - Apply the same forward or antithetic extraction convention to simulation and
-  model sides. See `CONVENTIONS.md`.
+  model sides. See `doc/CONVENTIONS.md`.
 
 ## Work log
 
-After every substantive change, prepend a dated entry to `WORKLOG.md` covering
+After every substantive change, prepend a dated entry to `doc/WORKLOG.md` covering
 files and behavior changed, validation commands and outputs, limitations, and
 next steps.
 
