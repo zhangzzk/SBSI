@@ -25,14 +25,14 @@
 set -o pipefail
 eval "$(conda shell.bash hook)"; conda activate sims1
 export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-REPO=${REPO:-/home/z/Zekang.Zhang/SBSI/.claude/worktrees/inference-5b}
+REPO=${REPO:-/home/z/Zekang.Zhang/SBSI}
 cd "$REPO" || exit 1
 export PYTHONPATH="$REPO:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
 
 MODE=${MODE:-closure}
 ROWS=${ROWS:-1000000}
 GRID=${GRID:-61}
-MODEL=${MODEL:-models/measurement_flow_g0_ngmix_meas_szfl_noz_lam450_fixresp_s501.pt}
+MODEL=${MODEL:-/project/ls-gruen/users/zekang.zhang/sbsi_caches/ablation/measurement_flow_g0_ngmix_ablate_s2c_lt500_v22_s501_swaavg.pt}
 CHUNK=${CHUNK:-1024}
 EXTRA=${EXTRA:-}
 CACHE_DIR=${CACHE_DIR:-/project/ls-gruen/users/zekang.zhang/sbsi_caches/score5b}

@@ -16,7 +16,7 @@
 #   sbatch $(jobs/pick_gpu.sh) jobs/job_flow_isotropy.sh
 set -o pipefail
 eval "$(conda shell.bash hook)"; conda activate sims1
-REPO=${REPO:-/home/z/Zekang.Zhang/SBSI/.claude/worktrees/inference-5b}
+REPO=${REPO:-/home/z/Zekang.Zhang/SBSI}
 cd "$REPO" || exit 1
 export PYTHONPATH="$REPO:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
 case "$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1)" in

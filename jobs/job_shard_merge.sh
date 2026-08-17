@@ -23,7 +23,7 @@
 # only queue longer for less throughput.
 set -o pipefail
 eval "$(conda shell.bash hook)"; conda activate sims1
-REPO=${REPO:-/home/z/Zekang.Zhang/SBSI/.claude/worktrees/inference-5b}
+REPO=${REPO:-/home/z/Zekang.Zhang/SBSI}
 cd "$REPO" || exit 1
 export PYTHONPATH="$REPO:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
 NT=${SLURM_CPUS_PER_TASK:-32}

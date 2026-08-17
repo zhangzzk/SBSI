@@ -2,6 +2,111 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-17x  cont.180 — the §5B selection closure moved onto the V3 4D-output flow (user)
+
+User: "Go on. Use V3." The §5B selection driver now runs on the V3 measurement flow, and with it
+the cut that §4.7 has been asking for since the section was written: a cut on **measured magnitude
+or measured size**, which the V1-shaped flow could not express because those were its *inputs*.
+
+**Why this was the blocking item, in one line.** (4.8) defines `P_pass` as an integral of the flow's
+own density over a region of its OUTPUT space. A model whose only output is the measured shape has
+exactly one expressible cut, `|xhat| < c`; a measured mag/size cut on it has no `P_pass` at all, so
+`Pi_k`, `<s>_sel` and `I_sel` — the whole population block of (5.3) — are undefined. V3's output is
+`(g1, g2, mag_auto, log flux_radius)`, which makes them endogenous. §4.7's "Requirement" paragraph is
+now met in code rather than only on paper.
+
+**Files.**
+
+- `sbsi/score_inference.py` — new `OutputCut`: the selection `W(xhat)` as one object, built against
+  the checkpoint's target names. It refuses a `--cut-bound` naming a column the flow does not
+  predict, which turns §4.7 from a convention into a checked property. It is applied by the score
+  pass (NumPy `(N,D)`) and by the population block (torch `(M,S,D)`) — the same object both times,
+  which is the point: a NumPy/torch drift would leave `Pi` describing a different sample from the one
+  being scored, with nothing raising. Only comparisons and `&` are used, and `|xhat|` is written
+  `x1^2+x2^2 < c^2` rather than through a `hypot` that is a different function in each library.
+  `key()` deliberately stays the bare float for a plain `|xhat|` cut so the score caches banked
+  before this existed still load.
+- `tests/test_output_cut.py` — 15 tests, headline `test_numpy_and_torch_agree_exactly`. Suite is now
+  **116 passed, 1 skipped** (was 101/1).
+- `scripts/eval_score_select.py` — `--cut-bound NAME:LO:HI` (repeatable), `--cut-abs-ehat none`,
+  `--primary-domain`, `--load-oversample`; default model is now `get_model("V3").flow_checkpoints[0]`.
+  `--pi-grid-n` now defaults to **141** instead of silently reusing `--grid-n=61`, which cont.177
+  measured as a 0.7% bias on `m`; 141 was converged for the `|xhat|<0.6` cut only, and the help says so.
+- `scripts/eval_score_response.py` — same V3 default; `load_g0` and `build_prior` take `cuts` and
+  `oversample`.
+- `jobs/*.sh` — `REPO` default repointed from the deleted `.claude/worktrees/inference-5b` to the
+  merged repo; `job_score_shard.sh` and `job_pi_grid_ladder.sh` carry `BOUND`, and the shard cache
+  name now encodes the cut (`c06_…` unchanged, `mag245_…`, `logfluxradius145_…` new).
+
+**Two defects found and fixed on the way, both from the merge.**
+
+1. *The V1 checkpoint default was dangling.* `models/measurement_flow_g0_…_fixresp_s501.pt` was
+   retired into `sbsi_caches/retired_models_2026-08-17/` on the morning of the merge. No test caught
+   it because the tests build synthetic flows.
+2. *`results` was a self-referential symlink.* In the inference worktree `results` was a symlink at
+   the main checkout's copy; merging it into the main checkout made it point at itself, so every
+   default path under it was broken (`FileExistsError: 'results'` out of `os.makedirs(..., exist_ok=True)`
+   — which does raise when the path exists and is not a directory). The tracked symlink is removed and
+   the four cache defaults are now absolute under `$DATA_DIR/sbsi_caches/`, where CLAUDE.md says
+   multi-GB derived caches belong. Nothing was lost: the three lookup tables and every banked score
+   cache were already on the project filesystem, and the prior sample rebuilds in 33 s.
+
+**The domain now matches the checkpoint.** V3 was trained on a narrowed primary domain (true
+`mag < 25.8`, `Re > 0.5"`) where the old runs used the wide default (`mag < 28`, `Re > 0.1"`). That is
+not cosmetic: the wide domain keeps 88.6% of raw catalogue rows and the V3 domain 17.8% of them, and
+the two have genuinely different shape populations — the wide-domain prior has per-component
+`std(e) = 0.2385`, the V3-domain one `0.2956`. The latter reproduces the V3 preprocessor's own
+`e1_input_p` scale of 0.2956 to four digits, which is the check that the right prior is now being
+used. `primary_domain_cuts()` reads the bound from `bundle.metadata`, never from the filename
+(AGENTS.md), and the prior cache is tagged by domain so two domains can never share one file.
+
+**Pilot results (20k rows x ring pair = 40k objects, `Pi` at only 512 rows x 2 reps, `g = 0.05`).**
+These are a plumbing check, NOT a measurement — `sigma_Pi` alone is 9.5% on the first row. Production
+runs at the cont.177 scale (2M rows x 2 shape realisations = 8M objects, `Pi` at 1,048,576 rows x 6
+reps) are in flight as jobs 15814616/17/18.
+
+| cut | keep | `I_sel/<I>` | d(m) uncorrected | d(m) FULL (5.3) |
+|---|---|---|---|---|
+| `\|xhat\| < 0.6` | 72.6% | +0.415 | −36.3% | +3.6 ± 10.2% |
+| `mag_auto < 24.5` | 65.8% | +0.0019 | −1.00 ± 1.22% | −0.64 ± 1.22% |
+| `log flux_radius >= 1.45` | 70.8% | **−0.172** | +16.0 ± 1.9% (8.6σ) | −0.55 ± 1.72% |
+
+Read across the rows, not down them: the keep fraction is matched to ~70% on purpose so the three
+differ by cut CHANNEL and not by sample size. Three things are worth carrying forward.
+
+*The magnitude cut is nearly inert.* `Pi` runs from 0.6584 to 0.6667 across the whole shape grid — a
+1.3% range — so the flow's measured magnitude barely knows about the true shape, `I_sel/<I>` is
+0.0019, and the uncorrected estimator is already consistent with the uncut control. That is a real
+result about this model and not a null result about the machinery.
+
+*The size cut is the strong test, and it works.* `Pi` runs 0.61 to 0.99, the uncorrected bias is
++16.0% at 8.6 sigma, and the full (5.3) correction takes it to −0.55 ± 1.72%. This is the first time
+the population block has been exercised against a cut an analysis would actually apply.
+
+*`I_sel` came out NEGATIVE for the size cut, and (5.3c) says it should not have.* §5B.2's sign rule is
+that `iota` changes sign at the peak of `p(That)`: a cut on the rising side destroys information
+(`iota > 0`), one on the falling side adds it (`iota < 0`). `log r >= 1.45` keeps 70.6%, i.e. it sits
+near the 29th percentile — the rising side — so the rule predicts positive and the pilot measures
+−0.172 ± 0.055. Either (5.3c)'s "`ce` uncorrelated with size" assumption is doing real work here, or
+the strong `|e|`-dependence of `Pi` enters by a route the diffusion argument does not carry. NOT
+resolved, and not to be quoted until the production `Pi` confirms the sign at its own precision.
+
+**One number that changes how much `Pi` precision costs.** On V3 the `|xhat| < 0.6` cut has
+`I_sel/<I> = 0.415` against V1's 0.269, so the lever `dm/d eps(I_sel) = -I_sel/(<I> - I_sel)` is
+−0.71 rather than −0.38: a 1% error on `I_sel` is now 0.71% on `m`. The `--pi-grid-n` ladder
+(`jobs/job_pi_grid_ladder.sh`, which now takes `BOUNDS`) has to be re-run per cut before any of
+these numbers is quoted — 141 was converged for the V1 `|xhat|` cut and nothing more.
+
+**Limitations.** (i) Everything above is pilot precision. (ii) The closure shears the true SHAPE only,
+so it tests the estimator and not the completeness of the shear model — magnification is absent by
+construction on both sides, which is what keeps it a closure test. (iii) The cut is still applied to
+one flow seed, not the 16-seed ensemble: a closure test must generate and estimate with the same
+density. (iv) Review Finding 1 stands — the closure still shears along `+g1` only, so the square
+lattice's leading m=4 error is invisible; `--closure-g2` does not exist yet.
+
+**Next.** Read out 15814616/17/18; re-run the `pi-grid-n` ladder for the mag and size cuts off those
+banked caches (minutes, no score pass); then settle the `I_sel` sign question against (5.3c).
+
 ## 2026-08-17w  The §5B score-inference branch merged into dev (user)
 
 User: "merge to dev but not master and sync it back to this branch. then we'll continue on

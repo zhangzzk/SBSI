@@ -17,7 +17,7 @@
 # artefact and this is the fix.
 set -o pipefail
 eval "$(conda shell.bash hook)"; conda activate sims1
-REPO=${REPO:-/home/z/Zekang.Zhang/SBSI/.claude/worktrees/inference-5b}
+REPO=${REPO:-/home/z/Zekang.Zhang/SBSI}
 cd "$REPO" || exit 1
 export PYTHONPATH="$REPO:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
 case "$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1)" in
@@ -40,16 +40,35 @@ split_list() { echo "$1" | tr ':,' '  '; }
 # `grep` block-buffers at 4 kB when its stdout is a file, so a job killed at its time limit
 # loses whatever is still in the buffer -- which is how a 3 h merge left a log holding nothing
 # but its two header lines.  `--line-buffered` costs nothing and makes partial ladders readable.
+# CUTS holds |xhat| radii; BOUNDS holds --cut-bound specs, whose ':' separators mean they
+# must be split on commas/spaces only.  CACHE names the banked score pass to sweep, and it
+# has to be the one built with THIS cut -- eval_score_select refuses the mismatch, so the
+# failure is loud, but naming it per cut is what keeps the sweep honest.
 for CUT in $(split_list "${CUTS:-0.6 0.4}"); do
   TAG=$(echo "$CUT" | tr -d '.' | sed 's/^0//')
-  for PG in $(split_list "${PGRIDS:-61 81 101 141}"); do
+  for PG in $(split_list "${PGRIDS:-61 81 101 141 181}"); do
     echo ""; echo "######## cut=$CUT  closure_g=$CG  pi_grid_n=$PG ########"
     python -u scripts/eval_score_select.py \
-      --closure-g "$CG" --cut-abs-ehat "$CUT" --max-rows 2000000 \
-      --pi-rows 1048576 --pi-samples 8 --pi-reps 6 \
+      --closure-g "$CG" --cut-abs-ehat "$CUT" --max-rows "${ROWS:-2000000}" \
+      --pi-rows "${PIROWS:-1048576}" --pi-samples 8 --pi-reps 6 \
       --ring rot90 --shape-reps 2 --jk-blocks 200 --uncut-control \
       --pi-grid-n "$PG" \
-      --load-scores "$SC/c0${TAG}_${GTAG}_8M_G2765.npz" 2>&1 \
+      --load-scores "${CACHE:-$SC/c0${TAG}_${GTAG}_8M_G2765.npz}" 2>&1 \
+      | grep --line-buffered -vE "module command|Pi rep "
+  done
+done
+# The same ladder for an output-column cut (V3 only).  BOUNDS entries are separated by
+# spaces or commas; each is one NAME:LO:HI passed straight through.
+for B in ${BOUNDS:-}; do
+  for PG in $(split_list "${PGRIDS:-61 81 101 141 181}"); do
+    echo ""; echo "######## cut=$B  closure_g=$CG  pi_grid_n=$PG ########"
+    python -u scripts/eval_score_select.py \
+      --closure-g "$CG" --cut-abs-ehat "${ABSCUT:-none}" --cut-bound "$B" \
+      --max-rows "${ROWS:-2000000}" \
+      --pi-rows "${PIROWS:-1048576}" --pi-samples 8 --pi-reps 6 \
+      --ring rot90 --shape-reps 2 --jk-blocks 200 --uncut-control \
+      --pi-grid-n "$PG" \
+      --load-scores "${CACHE:?BOUNDS needs CACHE=<banked score pass for this cut>}" 2>&1 \
       | grep --line-buffered -vE "module command|Pi rep "
   done
 done

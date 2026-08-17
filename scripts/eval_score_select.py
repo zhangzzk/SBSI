@@ -7,16 +7,28 @@ script exercises the fix for the second and most consequential one: the estimato
 A.7 prices that at `m = -64%` for a cut on the median, and `tests/test_population_terms.py`
 now reproduces that number from the production code.  Here it runs on the real flow.
 
-THE CUT.  It must be a function of the flow's OUTPUT, or `P_pass` does not exist (§4.7) -- the
-reason a measured size/mag cut is unavailable on this V1-shaped model, whose only output is the
-measured shape.  So the cut is `|xhat| < c`, which is not a workaround but the interesting
-case: it is ISOTROPIC, and §5B.2 predicts that for a spin-2 shear an isotropic cut kills the
-numerator term by orientation averaging and leaves `I_sel` as the only surviving selection
-correction.  This run therefore tests the document's central claim about selection directly:
+THE CUT.  It must be a function of the flow's OUTPUT, or `P_pass` does not exist (§4.7).  On a
+V1-shaped model, whose only output is the measured shape, that left exactly one expressible
+cut, `|xhat| < c`.  On the V3 flow the output is `(g1, g2, mag_auto, log flux_radius)`, so a
+measured MAGNITUDE or SIZE cut is available too -- the cut an analysis would actually apply,
+and the reason this script was moved onto V3.  `--cut-bound NAME:LO:HI` names any output
+column; `OutputCut` refuses a name the flow does not predict rather than let §4.7 be violated
+quietly.
+
+All three are ISOTROPIC in the shape angle, so §5B.2's prediction applies to each: for a
+spin-2 shear an isotropic cut kills the numerator term by orientation averaging and leaves
+`I_sel` as the only surviving selection correction.
 
     <s>_sel  ~ 0     (both components, by isotropy)
     I_sel    ~ isotropic, and NOT small
     ghat with both corrections -> the injected g;  without I_sel -> biased low.
+
+They are NOT the same test, though, because `Pi(e)` reaches the shape grid by a different
+route in each: through the measurement noise of the shape itself for `|xhat|`, and through
+whatever correlation the flow carries between true shape and measured flux/size for the other
+two.  A cut that is weakly shape-dependent has a small `I_sel` and is a weak test; the keep
+FRACTION is matched across the three (about 70% each, measured on the V3 domain) so that the
+comparison is between cut channels and not between sample sizes.
 
 CLOSURE, SO THERE IS A TRUTH.  Data are drawn FROM the flow at a known shear, exactly as
 `eval_score_response.py --mode closure` does, so the likelihood is exact and any departure of
@@ -30,7 +42,9 @@ shape into a subsample of real rows, sample, and count what passes.  With a few 
 and a few samples each that is a few million draws.
 
 Usage (Slurm, GPU):
-    python scripts/eval_score_select.py --closure-g 0.02 --cut-abs-ehat 0.6
+    python scripts/eval_score_select.py --closure-g 0.05 --cut-abs-ehat 0.6
+    python scripts/eval_score_select.py --closure-g 0.05 --cut-abs-ehat none \
+        --cut-bound measured_mag_auto::24.5
 """
 
 import argparse
@@ -47,13 +61,14 @@ for _p in (SBSI_ROOT, os.path.join(SBSI_ROOT, "scripts")):
         sys.path.insert(0, _p)
 
 from sbsi.measurement_model import load_measurement_model  # noqa: E402
+from sbsi.models import get_model  # noqa: E402
 from sbsi.posterior_shape import (  # noqa: E402
     _E_DERIVED_FEATURES, PosteriorShapeEstimator, make_e_grid,
 )
 from sbsi.precision import MODES, precision_region  # noqa: E402
-from sbsi.preprocessing import rescale  # noqa: E402
+from sbsi.preprocessing import DEFAULT_SELECTION_CUTS, rescale  # noqa: E402
 from sbsi.score_inference import (  # noqa: E402
-    ScoreCacheMismatch, ShapeScoreNodes, blocked_sums, jackknife_blocks,
+    OutputCut, ScoreCacheMismatch, ShapeScoreNodes, blocked_sums, jackknife_blocks,
     jackknife_sigma, merge_block_sum_caches, population_terms,
 )
 from sbsi.shear_map import apply_shear_to_ellipticity  # noqa: E402
@@ -62,7 +77,30 @@ from eval_score_response import (  # noqa: E402
     G0_CAT, LL_DTYPE, PRIOR_CACHE, build_prior, load_g0, score_pass,
 )
 
-MODEL = "models/measurement_flow_g0_ngmix_meas_szfl_noz_lam450_fixresp_s501.pt"
+# One seed of the V3 ensemble.  A closure test needs ONE flow, not the ensemble mean: the
+# data are drawn from this flow and inverted with this flow, so the model is exact by
+# construction and the residual is the estimator's own.  Averaging 16 seeds would generate
+# from a different density than it estimates with and quietly stop being a closure test.
+MODEL = str(get_model("V3").flow_checkpoints[0])
+
+
+def primary_domain_cuts(metadata):
+    """`DEFAULT_SELECTION_CUTS` narrowed to the primary domain THIS checkpoint was trained on.
+
+    Read from metadata, never inferred from the filename (AGENTS.md).  The V3 flows carry
+    `primary_mag_max=25.8` and `primary_re_min=0.5`; a checkpoint that carries neither gets
+    the default domain back unchanged, which is what the V1 runs used.
+    """
+    cuts = [list(c) for c in DEFAULT_SELECTION_CUTS]
+    mag, re_min = metadata.get("primary_mag_max"), metadata.get("primary_re_min")
+    if mag is not None:
+        cuts[1][1] = float(mag)
+    if re_min is not None:
+        cuts[3][0] = float(re_min)
+    if cuts == [list(c) for c in DEFAULT_SELECTION_CUTS]:
+        return None, (mag, re_min), ""          # nothing narrowed: the default domain
+    tag = "dom" + "".join(f"{v:g}".replace(".", "") for v in (cuts[1][1], cuts[3][0]))
+    return cuts, (mag, re_min), tag
 
 
 def azimuthally_average(grid, pi, n_bins):
@@ -169,9 +207,11 @@ def pass_fraction_by_node(bundle, df, grid, rk, cut, n_samples, batch_size, seed
     It also makes the CRN exact rather than seed-dependent: the latents are now literally
     one array reused, instead of two reseedings that happen to coincide.
 
-    `cut` takes RAW `(m, n_samples, 2)` samples as a torch tensor and returns a `(m,
-    n_samples)` mask, so the per-node reduction never leaves the GPU; only the `(n_ladder,)`
-    rung values come back.  Returns `Pi (n_ladder, G, n_rep)`.
+    `cut` is the `OutputCut`, applied to RAW `(m, n_samples, D)` samples as a torch tensor
+    and returning a `(m, n_samples)` mask, so the per-node reduction never leaves the GPU;
+    only the `(n_ladder,)` rung values come back.  It is the SAME object the score pass
+    uses on its NumPy draws, which is what keeps `Pi` describing the sample being scored.
+    Returns `Pi (n_ladder, G, n_rep)`.
     """
     g = np.asarray(grid, float)
     ladder = list(ladder)
@@ -227,7 +267,7 @@ def pass_fraction_by_node(bundle, df, grid, rk, cut, n_samples, batch_size, seed
                 ctx[:, n_feat + i1] = ctx[:, n_feat + i2] = 0.0   # grid e is never missing
             for k in range(len(g)):
                 ctx[:, i1], ctx[:, i2] = gs[k, 0], gs[k, 1]
-                xh = (resid + model._mu(ctx)[:, None, :]) * sc + mn        # (m, ns, 2) raw
+                xh = (resid + model._mu(ctx)[:, None, :]) * sc + mn        # (m, ns, D) raw
                 cs = torch.cumsum(cut(xh).to(torch.float32).mean(dim=1), dim=0)
                 out[:, k, j] = (cs[rungs] / norm).double().cpu().numpy()
                 if k % 500 == 0:
@@ -236,7 +276,12 @@ def pass_fraction_by_node(bundle, df, grid, rk, cut, n_samples, batch_size, seed
     return out
 
 
-def score_catalogue(args, nodes, bundle, grid, legs, c, n_legs):
+def _opt_float(text):
+    """argparse type: a float, or `none`/`off` for "this cut component is absent"."""
+    return None if str(text).strip().lower() in ("none", "off", "") else float(text)
+
+
+def score_catalogue(args, nodes, bundle, grid, legs, cut, n_legs):
     """The expensive half: `(s_i, I_i)` for every object, reduced to per-block sums.
 
     Returns `(blk_kept, blk_uncut_or_None, n_keep, n_tot)`, each `blk` being the
@@ -248,7 +293,7 @@ def score_catalogue(args, nodes, bundle, grid, legs, c, n_legs):
     n_keep = n_tot = 0
     for li, (frl, ehl, prl) in enumerate(legs()):
         blk = prl % args.jk_blocks          # ring partners and repeats share a block
-        kl = np.hypot(ehl[:, 0], ehl[:, 1]) < c
+        kl = cut(ehl)
         n_keep += int(kl.sum())
         n_tot += len(kl)
         # SCORE EACH LEG ONCE.  `(s_i, I_i)` are per-object -- they depend on that row's
@@ -301,9 +346,25 @@ def main():
     ap.add_argument("--grid-emax", type=float, default=0.96)
     ap.add_argument("--grid-rmax", type=float, default=0.95)
     ap.add_argument("--max-rows", type=int, default=400_000)
+    ap.add_argument("--load-oversample", type=float, default=1.6,
+                    help="raw rows read per selected row wanted.  A flow trained on a "
+                         "narrowed primary domain (V3: mag<25.8, Re>0.5) keeps ~18%% of "
+                         "raw rows, so it needs ~7 here; load_g0 prints the value to use "
+                         "when it comes up short")
+    ap.add_argument("--primary-domain", choices=["checkpoint", "default"],
+                    default="checkpoint",
+                    help="checkpoint: restrict the rows to the primary true-property "
+                         "domain THIS flow was trained on, read from its metadata.  "
+                         "default: the wide DEFAULT_SELECTION_CUTS domain, which for a V3 "
+                         "flow means scoring rows it never saw")
     ap.add_argument("--closure-g", type=float, default=0.02)
-    ap.add_argument("--cut-abs-ehat", type=float, default=0.6,
-                    help="keep |xhat| < this.  Isotropic on purpose (see module docstring)")
+    ap.add_argument("--cut-abs-ehat", type=_opt_float, default=0.6,
+                    help="keep |xhat| < this, or 'none' for no shape cut.  Isotropic on "
+                         "purpose (see module docstring)")
+    ap.add_argument("--cut-bound", action="append", default=[], metavar="NAME:LO:HI",
+                    help="keep LO <= NAME < HI, with NAME one of the flow's OUTPUT columns "
+                         "and an empty LO or HI meaning unbounded.  Repeatable, ANDed with "
+                         "--cut-abs-ehat.  e.g. measured_mag_auto::24.5")
     ap.add_argument("--pi-rows", default="4096",
                     help="subsample for Pi_k.  A COMMA LIST sweeps several sizes off the "
                          "one (expensive) per-object pass, which is how the convergence "
@@ -345,8 +406,14 @@ def main():
                          "parallel jobs merge by passing every cache to --load-scores as a "
                          "comma list; the per-block sums are additive, so the merged "
                          "jackknife is exact rather than approximate")
-    ap.add_argument("--pi-grid-n", type=int, default=None,
-                    help="node count for the POPULATION block only (<s>_sel, I_sel, Pi); defaults to --grid-n.  The Pi-weighted integral converges much more slowly than the per-galaxy one -- see scripts/check_quadrature.py -- and refining it does NOT invalidate a score cache")
+    ap.add_argument("--pi-grid-n", type=int, default=141,
+                    help="node count for the POPULATION block only (<s>_sel, I_sel, Pi); 0 "
+                         "means reuse --grid-n.  The Pi-weighted integral converges much "
+                         "more slowly than the per-galaxy one -- see check_quadrature.py -- "
+                         "and refining it does NOT invalidate a score cache.  The default is "
+                         "141 because reusing --grid-n=61 is a KNOWN 0.7%% bias on m for the "
+                         "|xhat|<0.6 cut (cont.177); 141 was converged for THAT cut, so "
+                         "re-run the ladder when the cut changes")
     ap.add_argument("--pi-azimuthal-average", action="store_true",
                     help="DIAGNOSTIC: replace Pi by its mean over each ring of constant |e| "
                          "before forming <s>_sel.  Decides whether the measured flow "
@@ -382,7 +449,36 @@ def main():
     args.device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
     print(f"device={args.device}  torch={torch.__version__}", flush=True)
 
-    prior = build_prior(args)
+    # The prior's domain must be decided BEFORE the prior is built, which is why the model
+    # is loaded first: the checkpoint is what says which primary domain this run is about.
+    bundle = load_measurement_model(args.measurement_model, device=args.device)
+    tnames = list(bundle.target_transform.target_names)
+    print(f"\nmodel: {os.path.basename(args.measurement_model)}\n"
+          f"  outputs   {tnames}\n"
+          f"  conditions {list(bundle.condition_preprocessor.feature_names)}", flush=True)
+
+    # THE CUT, BUILT AGAINST THIS FLOW'S OUTPUT NAMES.  `OutputCut` rejects a --cut-bound
+    # naming anything the flow does not predict, which is §4.7 enforced rather than assumed.
+    try:
+        cut = OutputCut.from_specs(tnames, abs_shape=args.cut_abs_ehat,
+                                   specs=args.cut_bound)
+    except (KeyError, ValueError) as e:
+        raise SystemExit(f"--cut-bound/--cut-abs-ehat: {e}")
+    print(f"  cut       keep {cut.describe()}", flush=True)
+
+    cuts, (dmag, dre), domain_tag = primary_domain_cuts(bundle.metadata)
+    if args.primary_domain == "default":
+        cuts, domain_tag = None, ""
+        print("  domain    DEFAULT (wide).  This flow's own training domain is NOT applied, "
+              "so some rows are outside it", flush=True)
+    elif cuts is None:
+        print("  domain    DEFAULT (wide) -- this checkpoint records no narrowed primary "
+              "domain, so there is nothing to match", flush=True)
+    else:
+        print(f"  domain    from checkpoint metadata: primary true mag < {dmag}, "
+              f"Re > {dre}  (prior cache tag {domain_tag})", flush=True)
+    prior = build_prior(args, cuts=cuts, tag=domain_tag,
+                        oversample=args.load_oversample)
     grid, cell = make_e_grid(n=args.grid_n, emax=args.grid_emax, rmax=args.grid_rmax)
     nodes = ShapeScoreNodes(grid, prior, delta=args.fd_delta, info_delta=args.info_delta)
     print(f"grid: G={len(grid)} nodes, cell {cell:.3e}, "
@@ -417,9 +513,9 @@ def main():
     else:
         pi_grid, pi_nodes = grid, nodes
 
-    bundle = load_measurement_model(args.measurement_model, device=args.device)
     df = load_g0(args.g0_catalogue, args.max_rows,
-                 shard=args.row_shard, n_shards=args.row_shards)
+                 shard=args.row_shard, n_shards=args.row_shards, cuts=cuts,
+                 oversample=args.load_oversample)
     print(f"rows: {len(df):,} from {os.path.basename(args.g0_catalogue)}", flush=True)
 
     # ---- data: draw true shapes from the prior, shear, push through the flow ----------
@@ -456,7 +552,6 @@ def main():
     # those other properties, which stays fixed at 929k rows -- so this buys precision on
     # the estimator's bias FOR THIS POPULATION, not a wider population average.  All
     # repeats of a row share a jackknife block, so the reuse is handled honestly.
-    c = float(args.cut_abs_ehat)
 
     def legs():
         """`(frame, ehat, pair_id)` per shape realisation; ring members are separate legs."""
@@ -485,7 +580,11 @@ def main():
     # those re-runs paired -- a change in `Pi` is then not confounded with a change in the
     # galaxies.  The key covers everything that moves the sums; loading across a mismatch
     # would silently pair one run's galaxies with another run's `Pi`.
-    cache_key = dict(cut=c, closure_g=g, rows=len(df), ring=args.ring,
+    # `cut` is the bare `|xhat|` radius when that is the whole selection, so the caches
+    # written before --cut-bound existed still load; `cut_bounds` appears only when there
+    # ARE bounds, because merge_block_sum_caches treats a key missing from a cache as a
+    # mismatch and adding one unconditionally would strand every earlier shard.
+    cache_key = dict(cut=cut.abs_shape, closure_g=g, rows=len(df), ring=args.ring,
                      shape_reps=args.shape_reps, share_latents=int(args.share_latents),
                      jk_blocks=args.jk_blocks, grid_n=args.grid_n,
                      grid_emax=args.grid_emax, grid_rmax=args.grid_rmax,
@@ -496,6 +595,10 @@ def main():
                      catalogue=os.path.basename(args.g0_catalogue),
                      precision=args.precision, ll_dtype=args.ll_dtype,
                      row_shard=args.row_shard, row_shards=args.row_shards)
+    if cut.bounds:
+        cache_key["cut_bounds"] = cut.key()
+    if cuts is not None and cuts != [list(c) for c in DEFAULT_SELECTION_CUTS]:
+        cache_key["primary_domain"] = json.dumps(cuts)
 
     if args.load_scores:
         # MERGING SHARDS.  A comma list concatenates several caches' per-block sums; the
@@ -516,7 +619,7 @@ def main():
     else:
         with precision_region(args.precision, args.device):
             blk_k, blk_u, n_keep, n_tot = score_catalogue(args, nodes, bundle, grid,
-                                                          legs, c, n_legs)
+                                                          legs, cut, n_legs)
         if args.save_scores:
             d = os.path.dirname(os.path.abspath(args.save_scores))
             os.makedirs(d, exist_ok=True)
@@ -532,7 +635,8 @@ def main():
     # rows with block sums and dropped it, so every run that got as far as the `Pi` report
     # died on a NameError there -- which is to say every run since that refactor.
     keep_frac = n_keep / max(n_tot, 1)
-    print(f"cut |xhat| < {c}: keeps {n_keep:,}/{n_tot:,} = {keep_frac:.2%}", flush=True)
+    print(f"cut [{cut.describe()}]: keeps {n_keep:,}/{n_tot:,} = {keep_frac:.2%}",
+          flush=True)
 
     # ---- uncut control: the same estimator, same rows, no selection at all --------
     reps_u = None
@@ -561,7 +665,7 @@ def main():
     with precision_region(args.precision, args.device):
         pi_ladder = pass_fraction_by_node(
             bundle, df, pi_grid, rk,
-            cut=lambda x: torch.hypot(x[..., 0], x[..., 1]) < c,
+            cut=cut,
             n_samples=args.pi_samples, batch_size=args.batch_size, seeds=seeds,
             ladder=ladder, rng=np.random.default_rng(args.seed + 77))
 

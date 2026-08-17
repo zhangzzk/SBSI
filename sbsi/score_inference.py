@@ -53,7 +53,7 @@ from __future__ import annotations
 import numpy as np
 import torch
 
-from .posterior_shape import RadialShapePrior
+from .posterior_shape import RadialShapePrior, shape_target_indices
 
 
 # --------------------------------------------------------------------------------------
@@ -551,6 +551,100 @@ def population_log_pi(pi_per_galaxy):
     if pi.ndim != 2:
         raise ValueError("pi_per_galaxy must be (N,G)")
     return np.log(np.maximum(pi.mean(axis=0), 1e-300))
+
+
+class OutputCut:
+    """A selection `W(xhat)` written on the flow's OUTPUT vector.
+
+    §4.7: the cut must be a function of what the flow PREDICTS.  Otherwise `P(keep|gamma)`
+    is not a functional of `p_gamma`, and `Pi_k`, `<s>_sel` and `I_sel` -- the entire
+    population block of (5.3) -- are undefined.  A four-output flow
+    `(g1, g2, mag, log radius)` therefore admits a measured magnitude or size cut that a
+    shape-only flow simply cannot express; the class exists to make that boundary a
+    checked property of the target names rather than a convention in a driver script.
+
+    ONE PREDICATE, TWO BACKENDS.  The score pass applies the cut to a NumPy `(N, D)` array
+    of raw draws to decide which galaxies enter the sums; the population block applies it
+    to a torch `(M, S, D)` tensor of draws on the node bank to build `Pi`.  Those must be
+    the SAME predicate to the last decimal -- if they drift, `Pi` describes a different
+    sample from the one being scored and the correction is subtracted from the wrong
+    population, with nothing raising.  So only comparisons and `&` are used here, which
+    NumPy and torch spell identically, and `|xhat|` is written `x1^2 + x2^2 < c^2` rather
+    than through a `hypot` that is a different function in each library.
+
+    Bounds are half-open `lo <= x < hi` with `None` meaning unbounded, and are combined
+    with the optional shape-magnitude cut by AND.
+
+    `key()` is what goes in a score cache's identity.  It stays the bare float for a plain
+    `|xhat| < c` cut so caches written before this class remain loadable.
+    """
+
+    def __init__(self, target_names, abs_shape=None, bounds=()):
+        self.target_names = list(target_names)
+        self.abs_shape = None if abs_shape is None else float(abs_shape)
+        if self.abs_shape is not None and self.abs_shape <= 0.0:
+            raise ValueError(f"abs_shape must be positive, got {self.abs_shape}")
+        self.bounds = []
+        for name, lo, hi in bounds:
+            if name not in self.target_names:
+                raise KeyError(
+                    f"cut column {name!r} is not a flow output; this flow predicts "
+                    f"{self.target_names}.  A cut on anything else has no P_pass (§4.7)")
+            lo = None if lo is None else float(lo)
+            hi = None if hi is None else float(hi)
+            if lo is not None and hi is not None and not lo < hi:
+                raise ValueError(f"empty bound on {name}: [{lo}, {hi})")
+            self.bounds.append((name, self.target_names.index(name), lo, hi))
+        if self.abs_shape is None and not self.bounds:
+            raise ValueError("an OutputCut with no shape cut and no bounds keeps "
+                             "everything; use None for the uncut case instead")
+        self.j1, self.j2 = (shape_target_indices(self.target_names)
+                            if self.abs_shape is not None else (None, None))
+
+    def __call__(self, x):
+        """Boolean keep-mask over the leading axes of `x`, whose last axis is the output."""
+        keep = None
+        if self.abs_shape is not None:
+            keep = (x[..., self.j1] ** 2 + x[..., self.j2] ** 2) < self.abs_shape ** 2
+        for _, j, lo, hi in self.bounds:
+            for m in ((x[..., j] >= lo) if lo is not None else None,
+                      (x[..., j] < hi) if hi is not None else None):
+                if m is not None:
+                    keep = m if keep is None else (keep & m)
+        return keep
+
+    def key(self):
+        """Canonical identity for a score cache (see the class docstring)."""
+        if not self.bounds:
+            return self.abs_shape
+        parts = [] if self.abs_shape is None else [f"|xhat|<{self.abs_shape!r}"]
+        parts += [f"{name}:{lo!r}:{hi!r}" for name, _, lo, hi in self.bounds]
+        return ";".join(parts)
+
+    def describe(self):
+        parts = [] if self.abs_shape is None else [f"|xhat| < {self.abs_shape:g}"]
+        for name, _, lo, hi in self.bounds:
+            if lo is None:
+                parts.append(f"{name} < {hi:g}")
+            elif hi is None:
+                parts.append(f"{name} >= {lo:g}")
+            else:
+                parts.append(f"{lo:g} <= {name} < {hi:g}")
+        return " and ".join(parts)
+
+    @classmethod
+    def from_specs(cls, target_names, abs_shape=None, specs=()):
+        """Build from command-line strings `NAME:LO:HI`; an empty LO or HI is unbounded."""
+        bounds = []
+        for spec in specs or ():
+            fields = str(spec).split(":")
+            if len(fields) != 3:
+                raise ValueError(f"cut spec {spec!r} is not NAME:LO:HI")
+            name, lo, hi = (f.strip() for f in fields)
+            bounds.append((name,
+                           None if lo in ("", "none", "-inf") else lo,
+                           None if hi in ("", "none", "inf") else hi))
+        return cls(target_names, abs_shape=abs_shape, bounds=bounds)
 
 
 # --------------------------------------------------------------------------------------

@@ -67,20 +67,32 @@ from sbsi.score_inference import (  # noqa: E402
     scores_from_loglike,
     shear_estimate,
 )
+from sbsi.models import get_model  # noqa: E402
 from sbsi.shear_map import apply_shear_to_ellipticity  # noqa: E402
 
-CBASE = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/"
-CATBASE = "/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/"
+DATA_DIR = os.environ.get("DATA_DIR", "/project/ls-gruen/users/zekang.zhang/")
+CBASE = DATA_DIR + "lsst_sims_fs2_25876_constant/"
+CATBASE = DATA_DIR + "sbsi_catalogues/"
+# These are multi-GB derived caches, so they live on the project filesystem and not in $HOME
+# (CLAUDE.md).  They used to be named relative to a `results/` directory, which worked only
+# because the inference worktree symlinked `results` at the main checkout's copy; merging
+# that symlink into the main checkout made it point at itself and every default broke.
+CACHE_DIR = os.environ.get("SBSI_SCORE_CACHE_DIR", DATA_DIR + "sbsi_caches/")
 G0_CAT = CATBASE + "det_meas_crowd_conc_g0.0_train_full.feather"
 GOLD_CAT = CBASE + "constant_response_catalogue_train.feather"
-PRIOR_CACHE = "results/etilde_prior_e_samples.feather"
+# Derived from G0_CAT by build_prior() on first use, so a missing file costs one rebuild
+# rather than a lost result.
+PRIOR_CACHE = CACHE_DIR + "etilde_prior_e_samples.feather"
 # Module-level so anything that re-loads the same rows (analyse_score_acceptance.py) uses
 # the same files rather than a copy of the paths that can silently drift out of step.
-CROWD_FLUX_LOOKUP = "results/crowd_flux_conc_c0-199.feather"
-MEAS_PRIM_LOOKUP = "results/meas_prim_lookup_c0-139.feather"
-BLEND_LOOKUP = "results/blend_lookup_extnbrho_c40-139.feather"
+CROWD_FLUX_LOOKUP = CACHE_DIR + "crowd_flux_conc_c0-199.feather"
+MEAS_PRIM_LOOKUP = CACHE_DIR + "meas_prim_lookup_c0-139.feather"
+BLEND_LOOKUP = CACHE_DIR + "blend_lookup_extnbrho_c40-139.feather"
 
-# Gold-v1.md §5, the transport reference this script is checked against.
+# Gold-v1.md §5, the transport reference this script is checked against.  These belong to
+# the V1 flow that certified Gold-v1, NOT to whatever --measurement-model is passed, so a
+# run on a V3 checkpoint prints them as context and not as a target: agreement would be a
+# coincidence and disagreement is not a defect.  Re-certify before quoting a difference.
 R_SIM_CERT, R_FLOW_CERT, R_BLEND_CERT = 0.4534, 0.2930, 0.1593
 LL_DTYPE = {"float16": np.float16, "float32": np.float32}
 
@@ -127,8 +139,18 @@ def case_batch_plan(path, min_case, max_rows, oversample=1.6):
     return lo, max(1, (nb - lo) // need)
 
 
-def load_g0(path, max_rows, shard=0, n_shards=1):
+def load_g0(path, max_rows, shard=0, n_shards=1, cuts=None, oversample=1.6):
     """Detected + source-selected rows of the g=0 training catalogue.
+
+    `cuts` overrides `DEFAULT_SELECTION_CUTS`, which is how a run matches the PRIMARY true-
+    property domain a particular flow was trained on (`selection_cuts_from_args` narrows
+    `cuts[1][1]` = true mag and `cuts[3][0]` = true size).  Read it from the checkpoint's
+    metadata rather than assuming it: the V3 flows were trained at mag < 25.8 and
+    Re > 0.5", where the default admits mag < 28 and Re > 0.1", so the default keeps 88.6%
+    of raw rows and the V3 domain keeps 17.8% of them -- which is also why `oversample`
+    exists.  `stream` reads `max_rows * oversample` RAW rows and the selection then throws
+    most of them away, so a narrowed domain needs the factor raised to roughly the
+    reciprocal of its yield or the run silently returns far fewer rows than asked for.
 
     `shard`/`n_shards` cut the file into disjoint RECORD-BATCH ranges so several jobs can
     score different galaxies in parallel and have their per-block sums added afterwards
@@ -156,7 +178,7 @@ def load_g0(path, max_rows, shard=0, n_shards=1):
             nb, per = r.num_record_batches, r.get_batch(0).num_rows
         span = nb // n_shards                       # batches this shard may consume
         start = shard * span
-        need = int(max_rows * 1.6) + 10_000
+        need = int(max_rows * oversample) + 10_000
         if need > span * per:
             raise ValueError(
                 f"shard {shard}/{n_shards} would read ~{need:,} raw rows but its batch span "
@@ -164,14 +186,16 @@ def load_g0(path, max_rows, shard=0, n_shards=1):
                 f"Use fewer shards or a smaller --max-rows.")
         print(f"load_g0: shard {shard}/{n_shards}, batches [{start}, {start + span}) "
               f"of {nb}", flush=True)
-    df = stream(path, cols, int(max_rows * 1.6) + 10_000, start=start)
-    df = source_select_selection(df, cuts=DEFAULT_SELECTION_CUTS)
+    raw = stream(path, cols, int(max_rows * oversample) + 10_000, start=start)
+    df = source_select_selection(raw, cuts=cuts or DEFAULT_SELECTION_CUTS)
     df = df[df["detected"].astype(bool)].reset_index(drop=True)
     df["gamma1_input_p"] = 0.0
     df["gamma2_input_p"] = 0.0
     if len(df) < max_rows:
-        print(f"load_g0: shard {shard} yielded {len(df):,} selected rows, short of the "
-              f"{max_rows:,} asked for", flush=True)
+        print(f"load_g0: shard {shard} yielded {len(df):,} selected rows from {len(raw):,} "
+              f"raw ({len(df)/max(len(raw),1):.1%}), short of the {max_rows:,} asked for -- "
+              f"raise --load-oversample to about {max_rows/max(len(df),1)*oversample:.1f}",
+              flush=True)
     return df.iloc[:max_rows].reset_index(drop=True)
 
 
@@ -240,12 +264,28 @@ def load_constgold(args):
     return df
 
 
-def build_prior(args):
-    """Smooth isotropic prior over the intrinsic ellipticity (the g=0 population)."""
+def build_prior(args, cuts=None, tag="", oversample=1.6):
+    """Smooth isotropic prior over the intrinsic ellipticity (the g=0 population).
+
+    `cuts` and `tag` build the prior from a NARROWED primary domain and cache it under its
+    own name.  A closure test is exact for any prior -- it draws the truth from the same
+    prior it estimates with -- so this changes nothing about validity.  What it changes is
+    what the test is a statement ABOUT: shape correlates with true size and magnitude
+    (rounder objects are small and faint), so the wide-domain prior and a V3-domain prior
+    are genuinely different shape populations, and only the latter is the one the V3 flow
+    is asked to work on.  The tag is mandatory when `cuts` is given, so two domains can
+    never share one cache file.
+    """
+    if cuts is not None and not tag:
+        raise ValueError("a narrowed prior domain needs its own cache tag")
+    if tag:
+        stem, ext = os.path.splitext(args.prior_sample)
+        args.prior_sample = f"{stem}_{tag}{ext}"
     if not os.path.exists(args.prior_sample):
-        print(f"prior cache missing -> building from {os.path.basename(args.prior_catalogue)}",
-              flush=True)
-        s = load_g0(args.prior_catalogue, args.prior_rows)
+        print(f"prior cache missing -> building from "
+              f"{os.path.basename(args.prior_catalogue)} into "
+              f"{os.path.basename(args.prior_sample)}", flush=True)
+        s = load_g0(args.prior_catalogue, args.prior_rows, cuts=cuts, oversample=oversample)
         os.makedirs(os.path.dirname(args.prior_sample) or ".", exist_ok=True)
         s[["e1_input_rot0_p", "e2_input_rot0_p", "r_input_p"]].astype(np.float32) \
             .reset_index(drop=True).to_feather(args.prior_sample)
@@ -795,8 +835,11 @@ def main():
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--mode", required=True,
                     choices=["unit", "closure", "constgold", "null"])
-    ap.add_argument("--measurement-model",
-                    default="models/measurement_flow_g0_ngmix_meas_szfl_noz_lam450_fixresp_s501.pt")
+    # One seed of the V3 ensemble.  The V1 checkpoint this used to name was retired on
+    # 2026-08-17 into sbsi_caches/retired_models_2026-08-17/, leaving the default dangling;
+    # pass --measurement-model explicitly to score a retired flow.  A closure test wants ONE
+    # flow, not the ensemble mean -- it generates and estimates with the same density.
+    ap.add_argument("--measurement-model", default=str(get_model("V3").flow_checkpoints[0]))
     ap.add_argument("--catalogue", default=GOLD_CAT)
     ap.add_argument("--g0-catalogue", default=G0_CAT)
     ap.add_argument("--min-case", type=int, default=40)

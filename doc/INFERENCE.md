@@ -491,6 +491,17 @@ cut removes.
 measured mag/size as *inputs* and outputs shape alone has no $P_{\rm pass}$: its cut variables never
 move with shear. A 4D output $(\hat e_1,\hat e_2,\hat m,\hat T)$ makes them endogenous.
 
+**Status (2026-08-17).** Met in code. The V3 checkpoint outputs
+$(\hat e_1,\hat e_2,\hat m_{\rm auto},\log\hat r)$, and `sbsi.score_inference.OutputCut` builds the
+selection $W(\hat{\mathbf{x}})$ against the checkpoint's own target names, so a cut naming a column
+the flow does not predict raises rather than silently producing a $P_{\rm pass}$ that does not exist.
+The same object is applied by the score pass and by the population block, in NumPy and in torch
+respectively, because a divergence between those two would leave $\Pi$ describing a different sample
+from the one being scored with nothing to catch it. First runs are recorded in `doc/WORKLOG.md`
+(cont.180); at pilot precision a measured-magnitude cut turns out to be nearly inert
+($\Pi$ varies by 1.3% across the whole shape grid, $\iota/\mathcal I=0.002$) while a measured-size cut
+is the strong case ($\Pi$ from 0.61 to 0.99, +16% uncorrected bias at 8.6$\sigma$).
+
 **Detection is not this.** Undetected objects have no $\hat{\mathbf{x}}$, so one cannot integrate the
 flow over a region of output space that does not exist. Detection requires a separate
 $P(\text{det}\mid\mathbf{x},\mathbf{n})$; see §5B.1(iii) for where it enters.
@@ -805,6 +816,17 @@ its slope**, and both carry one factor of $\langle e^2\rangle$. So $\iota$ chang
 of $p(\hat T)$ — a mild cut on the rising side keeps most of the sample and destroys information
 ($\iota>0$); an aggressive cut on the falling side keeps the responsive tail and *adds* information
 ($\iota<0$), growing like $1/P_{\rm pass}$.
+
+**Open: the measured sign disagrees with this rule.** The first size-cut run (cont.180, V3, cut
+$\log\hat r\ge1.45$, keeping 70.8%) gives $\iota/\mathcal I=-0.172\pm0.055$. That cut sits near the
+29th percentile of $p(\log\hat r)$ — the **rising** side — where the paragraph above predicts
+$\iota>0$. Two ways out, not yet separated: (i) the "$ce$ uncorrelated with size" step in (5.3c) is
+doing real work, since $\Pi$ for this cut runs 0.61 to 0.99 across the shape grid and so $c\,e$ is
+strongly size-dependent by construction; or (ii) $p(\log\hat r)$ near the cut is not
+single-peaked-and-rising in the way percentile position suggests. The measurement is at pilot
+precision with 2 $\Pi$ replicates, so it is not yet a refutation of (5.3c) — production
+$\Pi$ has to confirm the sign at its own precision first. Do not quote either the number or the rule
+for a size cut until that is settled.
 
 A.7 gives the analogous term in closed form for a *shift* parameter, where it is enormous: a cut at the
 median destroys $2/\pi\approx64\%$ of the information. That toy overstates the lensing case exactly as
