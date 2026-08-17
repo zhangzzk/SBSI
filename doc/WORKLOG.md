@@ -2,6 +2,24 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-17s  Renamed the package sbs_shear -> sbsi
+
+Owner approved.  `git mv sbs_shear sbsi` plus a mechanical rename of every live
+reference: module imports, tests, tutorial notebook, `examples/flow_training.yaml`,
+`pyproject.toml` (name `sbsi`, packages, `sbsi.cli:main`), README, `models/README.md`,
+AGENTS.md, CLAUDE.md, `doc/*.md`, and master's whitelist `.gitignore`
+(`!/sbsi/`, publish command updated).  `archive/` and past WORKLOG entries keep
+the historical name on purpose; no `sbs_shear` compatibility shim (zero external
+importers at rename time; BlendEMU has no SBSI references, and `import sbsi` was
+free).  No README content was taken from dev -- master's owner-trimmed README was
+sed'ed in place to preserve the trims.  Validation: suite on dev 45 passed +
+1 skipped BEFORE commit, suite on master 45 passed + 1 skipped after publish;
+tutorial re-executed under the new name (job 15806465, A100, 43 s, eight cells,
+zero errors; identical physics to float rounding: R_flow 0.8696, R_blend 0.2497,
+R_total 1.1193; warning prefix normalized to `sbsi/response.py`; zero identity
+strings in the shipped file).  Published as `afbcc5b` (rename) + `7f504bc`
+(re-executed tutorial); executed notebook synced back to dev.
+
 ## 2026-08-17r  Synced the master publishes back into dev
 
 File-level checkout from `master` (the branches keep unrelated histories, so the
