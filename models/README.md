@@ -9,11 +9,16 @@ models/
   ablation/   measurement_flow_g0_ngmix_ablate_s2c_lt500_v22_s{seed}_swaavg.pt   x16
   derisk/     v22_reweighted_vector_optuna30_all40_v1/best_weighted_model.json
   blendemu/   emulator_metadata_lsst_r_extnbr_v22.json
+              classification_model_lsst_r_extnbr_ho.json
   SHA256SUMS
 ```
 
 The 16 seeds are `SHAPE_SEEDS` in `sbs_shear/models.py`: 501, 502, 503 and 505–517.
-Total about 87 MB.
+Total about 93 MB.  The classification booster is the per-pair detection model named
+by the metadata's `classification` task; `BlendingPredictor` loads it unconditionally,
+so it must sit next to the metadata file.  Through it the emulator also answers
+`predict_on_pairs(pairs, task="detection")`, the detection probability of each
+paired galaxy.
 
 ## Using these files
 

@@ -150,7 +150,9 @@ def load_emulator(
     return BlendingPredictor.load(
         model_dir=str(models.emulator_metadata.parent),
         metadata_file=models.emulator_metadata.name,
-        reg_file=str(models.emulator_model),
+        # BlendEMU joins reg_file onto model_dir; resolve so a relative preset
+        # root (SBSI_CACHE_DIR=models) is not concatenated onto model_dir.
+        reg_file=str(models.emulator_model.resolve()),
         conditions=dict(conditions),
         device=device,
         load_self=False,
