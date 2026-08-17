@@ -1,6 +1,6 @@
 # Simulation-Based Shear Inference (SBSI)
 
-SBSI is an integrated weak gravitational lensing (shear) calibration framework, acounting for detection and selection bias,
+SBSI is an integrated weak gravitational lensing (shear) calibration framework, accounting for detection and selection bias,
 as well as blending.
 
 SBSI provides one model-name-agnostic workflow with three API areas:
@@ -45,11 +45,47 @@ $R_{\rm blend}$ Emulator training and tuning remain in BlendEMU.
 
 ## Environment
 
+SBSI is not installed in production; it runs from the checkout with `PYTHONPATH`
+set. From the repository root:
+
 ```bash
-conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-python -m pytest tests/
+export PYTHONPATH="$PWD:$PYTHONPATH"
+```
+
+BlendEMU is needed only for the emulator step (`sbs_shear.models.load_emulator`).
+Add it when you need it, and point the model roots at your own copies:
+
+```bash
+export BLENDEMU_ROOT=/path/to/blendemu
+export PYTHONPATH="$BLENDEMU_ROOT:$PYTHONPATH"
 ```
 
 The package can also be installed with `pip install -e .` without changing the
-catalogue or model-path contract.
+catalogue or model-path contract; that also provides the `sbsi` console script.
+
+### Models
+
+The frozen V3 artifacts — the 16-seed flow ensemble and the blending emulator —
+ship in [`models/`](models/). To make `get_model("V3")` resolve against them
+rather than the original cluster paths:
+
+```bash
+export SBSI_CACHE_DIR="$PWD/models"
+export BLENDEMU_MODELS="$PWD/models/blendemu"
+```
+
+See [`models/README.md`](models/README.md) for the layout and checksums.
+
+### Tests
+
+```bash
+PYTHONPATH="$PWD" python -m pytest tests/ -q
+```
+
+The suite is CPU-only, takes a few seconds, and needs no catalogue access. It must
+pass on a checkout that has SBSI alone; the single BlendEMU cross-check skips when
+BlendEMU is absent.
+
+Use an interpreter that actually has pytest installed — on the LMU cluster the
+`sims1` conda environment does **not**, so run the suite with the `py31`
+environment instead.

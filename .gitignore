@@ -6,9 +6,8 @@
 # .gitignore. Do not merge dev into master; see doc/BRANCHES.md.
 # ---------------------------------------------------------------------------
 
-# ---- large data / model / output artifacts (live under $DATA_DIR, or regenerable) ----
+# ---- large data / output artifacts (live under $DATA_DIR, or regenerable) ----
 results/
-models/
 figures/
 data/
 !examples/data/
@@ -26,6 +25,10 @@ data/
 *.png
 *.pdf
 *.stale_bak
+
+# ---- exception: the frozen V3 release artifacts ARE tracked (see models/README.md) ----
+!models/
+!models/**
 
 # ---- python / tooling caches ----
 __pycache__/
