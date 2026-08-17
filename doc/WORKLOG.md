@@ -2,6 +2,37 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-17t  Diagnosed the tutorial detection-cell extrapolation warning
+
+Diagnostic record only; no code or notebook changed.  The executed tutorial's
+detection cell warns `distance_scaled: 81885/109874 outside [0.000782, 5.59]`.
+Root cause: the cell scores `task="detection"` on the regression-matched pair
+table (`EmulatorPairingConfig.from_emulator` defaults to task="regression":
+r_max=10", k=20), but the classifier was trained with r_max=3", k=2 on the
+single nearest neighbour, with NaN secondaries for neighbours beyond 3"
+(blendemu `nz_utils.icat2cla`; blendemu's own entry point is
+`BlendingPredictor.predict_detection`).
+
+Measured on the example catalogue (`jobs/diag_detection_domain.py`,
+`jobs/diag_detection_convention.py`, sims1 on the login node, seconds):
+
+- 74.5% of pairs lie beyond the classifier's scaled-distance boundary and
+  90.9% are raw >3"; extrapolated far-bin `detection_prob` minima reach
+  ~0.005-0.007, unphysical for a 6-10" neighbour.
+- The per-primary `min` reduction lets out-of-domain pairs set `p_detect` for
+  42.4% of primaries; mean p_detect 0.8229 (notebook) vs 0.9027 under
+  blendemu's nearest/3"/NaN-isolated convention.  The published
+  detection-weighted mean R_total 0.9414 is biased low; first-order corrected
+  value ~1.01.
+- R_blend is unaffected: the response call is in-domain in distance; only
+  1.6%/0.7% of rows sit marginally outside the Sersic boundary (0.513-5.85
+  trained vs 0.5-6 in the catalogue).
+
+Next step (owner decision): replace the detection cell with
+`emulator.predict_detection(input_catalogue)` (or a
+`from_emulator(task="detection")` pairing), tighten the caveat markdown,
+re-execute via slurm, republish master.
+
 ## 2026-08-17s  Renamed the package sbs_shear -> sbsi
 
 Owner approved.  `git mv sbs_shear sbsi` plus a mechanical rename of every live
