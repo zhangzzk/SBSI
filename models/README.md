@@ -14,11 +14,15 @@ models/
 ```
 
 The 16 seeds are `SHAPE_SEEDS` in `sbsi/models.py`: 501, 502, 503 and 505–517.
-Total about 93 MB.  The classification booster is the per-pair detection model named
+Total about 93 MB.  The classification booster is the per-galaxy detection model named
 by the metadata's `classification` task; `BlendingPredictor` loads it unconditionally,
-so it must sit next to the metadata file.  Through it the emulator also answers
-`predict_on_pairs(pairs, task="detection")`, the detection probability of each
-paired galaxy.
+so it must sit next to the metadata file.  Through it the emulator answers
+`predict_detection(catalogue)`: the detection probability of each galaxy from its own
+properties and its single nearest neighbour, considering neighbours only within the
+classifier's 3-arcsec training aperture (galaxies with no such neighbour take the
+isolated-galaxy branch).  The pair-level form is
+`predict_on_pairs(pairs, task="detection")` — note that pair tables built for the
+response emulator's 10-arcsec aperture are outside the classifier's training domain.
 
 ## Using these files
 
