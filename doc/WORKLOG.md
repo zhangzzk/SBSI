@@ -2,6 +2,67 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-17n  Completed the requested full-V2 coherent-anchor supplement
+
+Finished the quarantined, frozen-model V2 validation requested before the API
+reorganization.  The historical coherent anchors were retained as their own stratum;
+only the missing `18<r<26`, `0.3<Re<1.5` complement was rendered, measured, and scored.
+Within each of 500 cases, the two strata were expanded by their inverse sparse-anchor
+sampling weights and then combined, with no anchor-truth fitting, tuning, or model
+selection.  All recovery, shape, response, score, and analysis jobs completed cleanly
+(15791985, 15792140--15792143); the 500 original and 500 complement score products are
+present and finite.
+
+The full-V2 mean blending-response gap, defined as `prediction - truth`, is
+`+0.000663 +- 0.002941` (case SEM), with model prediction `0.130650` versus truth
+`0.129988`.  This small pooled gap is a cancellation: the retained original stratum
+under-predicts by `-0.011699 +- 0.002264`, while the added complement over-predicts by
+`+0.010784 +- 0.005003`.  The product is therefore a population-weighted transfer
+diagnostic, not evidence that the model is accurate in both strata.  Final artifacts
+remain quarantined in the legacy worktree at
+`.claude/worktrees/selbias-plot/archive/pre-v3/results/anchorblend_v2_reweighted_vector_fixed_fullv2_supplement_c400-899.{json,cases.csv}`;
+they do not alter any public API or V3/V3b preset.
+
+Validation: all Slurm stages exited zero; 500 cases cover c400--899 exactly; all numeric
+case-table fields are finite; `git diff --check` is clean.  The one-case archive recovery
+smoke also completed before production scoring.  No further action is implied unless a
+stratum-specific repair is requested.
+
+## 2026-08-17n  Published `master` to github.com/zhangzzk/SBSI
+
+Owner request: push `master` to `git@github.com:zhangzzk/SBSI.git`.
+
+**Pre-flight.** Scanned the whole `master` tree for credentials/keys/tokens -- none.
+The only personal strings are env-overridable defaults that are documented as such:
+`sbs_shear/models.py:82,85` (`SBSI_CACHE_DIR`, `BLENDEMU_ROOT`),
+`examples/job_blendemu.sh:26`, and two lines of `models/README.md`. They expose a
+cluster directory layout and the username, not access to anything.
+
+**Remote state before the push:** the repo existed and had ZERO refs, so nothing could
+be overwritten and no force was needed.
+
+**Pushed:** `master` only, as `master:master`, with upstream tracking set. Neither
+`dev` nor any tag was pushed -- important, because both recovery tags
+(`pre-branch-split-2026-08-17`, `master-with-history-2026-08-17`) point into the
+internal history that the orphan rebuild deliberately removed.
+
+**Verified by cloning back from GitHub** (not from the local path):
+
+```
+refs on remote:   refs/heads/master only, a6be2096
+commits:          1        tags: 0        branches: master only
+contents:         .gitignore README.md pyproject.toml examples/ models/ sbs_shear/ tests/
+models integrity: 18/18 OK via sha256sum -c
+pytest tests/ -q: 45 passed, 1 skipped
+```
+
+**Repository is PUBLIC** (unauthenticated `api.github.com/repos/zhangzzk/SBSI`
+returns 200, `visibility: public`). The tree is world-readable as of now.
+
+**Note for future work.** `origin` is now configured in this checkout, so a bare
+`git push` while on `dev` would publish the internal branch. `dev` has no upstream,
+so git will refuse without an explicit `git push origin dev` -- but do not run that.
+
 ## 2026-08-17m  V3 models tracked; `master` rebuilt with clean history; README fixed
 
 Three owner requests: (1) track `models/` on both branches, replacing the old
