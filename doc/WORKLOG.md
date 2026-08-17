@@ -2,6 +2,18 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+**Detection-classifier cells added** (owner approved the same-session follow-up).
+Three cells after the response histograms: markdown (classifier ships in the
+BlendEMU suite, `task="detection"` on the existing `emulator_pairs`; per-primary
+reduction = min over pairs; extrapolation caveat — the classifier trained on
+pairs within ~3 arcsec while most example pairs are further), the
+`p_detect.describe()` cell, and the owner-requested brief closing cell forming
+the per-primary table `R_flow + R_blend` weighted by `P_detect`.  Executed
+(job 15806251, 30 s, eight cells, zero errors): mean P_detect 0.823 (median
+0.982); mean R_total 1.119 vs detection-weighted 0.941.  Same warning-prefix
+normalization applied; zero identity strings in the shipped file.  Pushed as
+`c8a18a4`.
+
 ## 2026-08-17p  Executed tutorial published; repo-relative emulator loading fixed
 
 Owner follow-ups: publish the executed notebook, and assess adding the detection
