@@ -2,6 +2,18 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-17r  Synced the master publishes back into dev
+
+File-level checkout from `master` (the branches keep unrelated histories, so the
+publish flow runs in reverse): executed tutorial notebook with the detection
+cells, `models/blendemu/classification_model_lsst_r_extnbr_ho.json` +
+`SHA256SUMS`/`models/README.md` updates, and the `load_emulator` `reg_file`
+resolve fix in `sbs_shear/models.py`.  Verified dev matched master's pre-change
+base on every touched file before copying, so nothing dev-side was clobbered.
+Suite after the sync: 45 passed, 1 skipped.  Committed as `599c682`.
+
+## 2026-08-17q  Detection-probability tutorial cells (published as `c8a18a4`)
+
 **Detection-classifier cells added** (owner approved the same-session follow-up).
 Three cells after the response histograms: markdown (classifier ships in the
 BlendEMU suite, `task="detection"` on the existing `emulator_pairs`; per-primary
