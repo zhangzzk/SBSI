@@ -1,0 +1,40 @@
+# ---------------------------------------------------------------------------
+# master -- the PUBLIC branch.
+#
+# It tracks only the shipped library, the runnable examples, the test suite, the
+# frozen V3 model artifacts and packaging. Working material (doc/, archive/,
+# notebooks/, slides/, agent instruction files) is tracked on the `dev` branch.
+#
+# This branch has its OWN history, unrelated to dev's, so that publishing it does
+# not expose the internal working history. Do not merge between the two branches
+# in either direction. Publish with:
+#     git checkout dev -- sbs_shear examples tests models README.md pyproject.toml
+# See doc/BRANCHES.md on the dev branch.
+#
+# This is a WHITELIST: every top-level entry is ignored, then the public tree is
+# re-admitted below. To publish a new top-level directory, add a `!` line for it.
+# ---------------------------------------------------------------------------
+
+/*
+
+!/.gitignore
+!/README.md
+!/pyproject.toml
+!/sbs_shear/
+!/examples/
+!/tests/
+!/models/
+
+# ---- caches and build junk, anywhere in the public tree ----
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# ---- editor / agent scratch ----
+*.orig
+*.swp
+*.rblendbak
+*.swabak
+*.stale_bak
