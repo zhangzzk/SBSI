@@ -2,6 +2,93 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-17m  V3 models tracked; `master` rebuilt with clean history; README fixed
+
+Three owner requests: (1) track `models/` on both branches, replacing the old
+checkpoints with the V3 flow + emulator; (2) give the public branch a clean history;
+(3) fix the broken README test command.
+
+### 1. `models/` now holds exactly the V3 release artifacts
+
+Installed, mirroring the preset roots in `sbs_shear/models.py`:
+
+```
+models/ablation/  measurement_flow_g0_ngmix_ablate_s2c_lt500_v22_s{501,502,503,505..517}_swaavg.pt
+models/derisk/    v22_reweighted_vector_optuna30_all40_v1/best_weighted_model.json
+models/blendemu/  emulator_metadata_lsst_r_extnbr_v22.json
+models/SHA256SUMS, models/README.md
+```
+
+18 artifacts, 87.2 MB. Because the layout mirrors `_FLOW_ROOT` / `_EMU_ROOT` /
+`_BLENDEMU_MODELS`, setting `SBSI_CACHE_DIR=$PWD/models` and
+`BLENDEMU_MODELS=$PWD/models/blendemu` makes V3 resolve entirely inside the
+repository; unset, the presets still fall back to the frozen cluster paths.
+
+**Integrity.** Every one of the 16 flows was SHA-256 compared against its source in
+`$DATA_DIR/sbsi_caches/ablation/` before commit -- all identical. The emulator's hash
+matches the `emulator_sha256` pin already in `models.py`
+(`01decd13...33c21f`). `get_model("V3").validate()` passes with all paths inside the
+repo. `models/SHA256SUMS` records all 18 and self-verifies with `sha256sum -c`.
+
+**The 77 old checkpoints were MOVED, not deleted**, to
+`$DATA_DIR/sbsi_caches/retired_models_2026-08-17/` (233.2 MB). A search of
+`$DATA_DIR` and `$WORK_DIR` found no other copy of them, so deleting would have been
+the only-copy loss of 233 MB; no shipped code path referenced any of them. Delete
+that directory when you are satisfied.
+
+Note `du` under-reports badly on the project filesystem (it showed 64K for the
+233 MB retired set); byte totals here come from `stat`, not `du`.
+
+**V3b is NOT included** -- it names a different ensemble (`..._dom6x6_...`) and a
+different emulator, so it still resolves only against the original cluster paths.
+
+### 2. `master` rebuilt as an orphan -- clean public history
+
+The previous `master` (`621e6f4`, tagged `master-with-history-2026-08-17`) still had
+163 commits touching `WORKLOG.md` and 9 touching `archive/` reachable in its history,
+plus several 1.4-1.9 MB WORKLOG blobs. Untracking had changed the index, not the past.
+
+`master` is now a single root commit `a6be209` with no parents, built from dev's tree
+via `git checkout --orphan`. 56 tracked files. Its whitelist `.gitignore` gained
+`!/models/`.
+
+Verified on a genuine `--no-local` clone of `master` alone:
+
+```
+contents:        .gitignore README.md pyproject.toml examples/ models/ sbs_shear/ tests/
+history:         1 commit
+transfer size:   58 MB   (was 122 MB, and now it is all model artifacts)
+archive/ commits in history: 0      doc/+WORKLOG commits in history: 0
+models integrity:            18/18 OK via sha256sum -c
+get_model("V3").validate():  OK, 16 flows + emulator
+pytest tests/ -q:            45 passed, 1 skipped
+```
+
+**Consequence recorded in `doc/BRANCHES.md`:** the branches now share no commit, so
+merging is wrong in BOTH directions -- previously only dev->master was unsafe. Publish
+by copying paths (`git checkout dev -- sbs_shear examples tests models README.md
+pyproject.toml`), never by merging.
+
+### 3. README fixed
+
+- The documented `conda activate sims1 && python -m pytest tests/` cannot work
+  (`sims1` has no pytest). Replaced with a working command and an explicit note to
+  use an interpreter that has pytest -- on this cluster, `py31`.
+- The environment block hardcoded `/home/z/Zekang.Zhang/SBSI` and
+  `/home/z/Zekang.Zhang/blendemu`. Now uses `$PWD` and `BLENDEMU_ROOT`; it is a public
+  file.
+- Added a Models section documenting `SBSI_CACHE_DIR` / `BLENDEMU_MODELS`.
+- Typo "acounting" -> "accounting".
+
+Both documented commands were run as written and pass.
+
+**Limitations.** `master`'s single commit has no authorship history, so per-file
+provenance for the public tree lives only on `dev`. Tracking 87 MB of checkpoints
+means every future model refresh adds a further ~87 MB that cannot be removed without
+another orphan rebuild -- cheap to redo, but plan refreshes rather than iterating.
+
+**Next.** Nothing outstanding. There is still no git remote; nothing has been pushed.
+
 ## 2026-08-17l  Split the repo into a public `master` and a full `dev` branch
 
 Per the owner: two long-lived branches. `master` is the public view and tracks only
