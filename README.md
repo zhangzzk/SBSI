@@ -75,17 +75,3 @@ export BLENDEMU_MODELS="$PWD/models/blendemu"
 ```
 
 See [`models/README.md`](models/README.md) for the layout and checksums.
-
-### Tests
-
-```bash
-PYTHONPATH="$PWD" python -m pytest tests/ -q
-```
-
-The suite is CPU-only, takes a few seconds, and needs no catalogue access. It must
-pass on a checkout that has SBSI alone; the single BlendEMU cross-check skips when
-BlendEMU is absent.
-
-Use an interpreter that actually has pytest installed — on the LMU cluster the
-`sims1` conda environment does **not**, so run the suite with the `py31`
-environment instead.
