@@ -26,7 +26,13 @@ from .models import (
     load_emulator,
     validate_models,
 )
-from .response import ResponsePrediction, ResponsePredictor, predict_blend_response
+from .response import (
+    MeasurementSample,
+    ResponsePrediction,
+    ResponsePredictor,
+    predict_blend_response,
+    sample_measurement,
+)
 
 __version__ = "3.0.0"
 
@@ -39,6 +45,7 @@ __all__ = [
     "EmulatorPairingConfig",
     "INPUT_CATALOGUE_COLUMNS",
     "MODEL_PRESETS",
+    "MeasurementSample",
     "ModelPaths",
     "PosteriorResult",
     "PreparedForwardCatalogue",
@@ -62,6 +69,7 @@ __all__ = [
     "train_flow",
     "tune_flow",
     "predict_blend_response",
+    "sample_measurement",
     "validate_models",
     "validate_input_catalogue",
 ]
