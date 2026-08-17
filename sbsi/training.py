@@ -78,7 +78,7 @@ def make_loader(targets, context, batch_size, shuffle=False, num_workers=0, pin_
 
 
 def split_data(frame, seed, validation_size):
-    # sklearn is imported lazily so that `import sbs_shear.training` keeps working on the
+    # sklearn is imported lazily so that `import sbsi.training` keeps working on the
     # login node, where sims1's sklearn -> scipy chain fails with `GLIBCXX_3.4.30 not found`.
     # Only the trainers (which run on compute nodes) ever reach this call.
     from sklearn.model_selection import train_test_split

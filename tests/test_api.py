@@ -3,25 +3,25 @@ import pandas as pd
 import pytest
 import torch
 
-from sbs_shear.catalogue import load_catalogue
-from sbs_shear.domain import Domain
-from sbs_shear.flow import FlowTrainingConfig
-from sbs_shear.flow_training import parse_args as parse_training_args
-from sbs_shear.measurement_model import (
+from sbsi.catalogue import load_catalogue
+from sbsi.domain import Domain
+from sbsi.flow import FlowTrainingConfig
+from sbsi.flow_training import parse_args as parse_training_args
+from sbsi.measurement_model import (
     ConditionalMeanFlow,
     MeasurementModelBundle,
     TargetStandardizer,
 )
-from sbs_shear.models import ModelPaths, SHAPE_SEEDS, get_model
-from sbs_shear.forward_catalogue import (
+from sbsi.models import ModelPaths, SHAPE_SEEDS, get_model
+from sbsi.forward_catalogue import (
     EmulatorPairingConfig,
     make_pair_catalogue,
     prepare_emulator_pairs,
     prepare_forward_catalogue,
 )
-from sbs_shear.posterior_shape import PosteriorShapeEstimator, make_e_grid
-from sbs_shear.response import ResponsePrediction, predict_blend_response
-from sbs_shear.selection_model import TabularPreprocessor
+from sbsi.posterior_shape import PosteriorShapeEstimator, make_e_grid
+from sbsi.response import ResponsePrediction, predict_blend_response
+from sbsi.selection_model import TabularPreprocessor
 
 
 def test_named_models_are_path_presets_not_pipeline_configuration():

@@ -1,4 +1,4 @@
-# User-owned configuration for `python -m sbs_shear flow --mode train|tune`.
+# User-owned configuration for `python -m sbsi flow --mode train|tune`.
 # Replace every /path/to entry; SBSI never chooses catalogues or output paths.
 training:
   catalogue: /path/to/flow_train.feather

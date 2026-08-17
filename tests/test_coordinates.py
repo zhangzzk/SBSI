@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from sbs_shear.coordinates import (
+from sbsi.coordinates import (
     SKY_SHEAR_CONVENTION,
     add_shear_aligned_gradients,
     blendemu_shear_to_sky,

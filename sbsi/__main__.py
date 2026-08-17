@@ -1,4 +1,4 @@
-"""Allow ``python -m sbs_shear`` to invoke the installed ``sbsi`` CLI."""
+"""Allow ``python -m sbsi`` to invoke the installed ``sbsi`` CLI."""
 
 from .cli import main
 

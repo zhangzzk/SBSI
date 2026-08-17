@@ -2,7 +2,7 @@
 
 These cuts define which simulated scenes belong to the data domain.  They do
 not inspect detection state or any measured quantity.  Keeping this separate
-from :func:`sbs_shear.preprocessing.source_select_selection` is deliberate:
+from :func:`sbsi.preprocessing.source_select_selection` is deliberate:
 that function carries the historical 5-arcsec selection-model convention,
 whereas a comparison of the flow half-shear, R_blend half-shear, and constgold
 must apply one identical intrinsic mask to all three catalogues.

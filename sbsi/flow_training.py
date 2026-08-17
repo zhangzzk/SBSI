@@ -7,7 +7,7 @@ This model learns the normalized density
 on rows that satisfy the current source cuts and the selected-object target
 column.  The Bernoulli selection probability remains in the separate selection
 classifier and should be multiplied in only when constructing p_cat.
-The public interface is :mod:`sbs_shear.flow`; this module owns the detailed
+The public interface is :mod:`sbsi.flow`; this module owns the detailed
 response-aware objective and CLI argument translation. Keeping it in the package
 prevents the implementation from drifting across scheduler or one-off scripts.
 """
@@ -793,7 +793,7 @@ def main(argv=None):
         pay = joblib.load(args.response_target_perobj)
         feats, model = pay["features"], pay["model"]
         # DERIVED features: rebuilt here through the SAME library helper the target was fit with,
-        # never a local re-implementation (see sbs_shear.preprocessing.intrinsic_e_abs).
+        # never a local re-implementation (see sbsi.preprocessing.intrinsic_e_abs).
         for name, how in (pay.get("derived") or {}).items():
             if name in frame.columns:
                 continue

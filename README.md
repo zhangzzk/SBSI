@@ -5,9 +5,9 @@ as well as blending.
 
 SBSI provides one model-name-agnostic workflow with three API areas:
 
-1. `sbs_shear.flow` — train and tune a conditional measurement flow.
-2. `sbs_shear.response` — combine flow self-response and emulator blending response.
-3. `sbs_shear.inference` — simulation-based shear inference (under development).
+1. `sbsi.flow` — train and tune a conditional measurement flow.
+2. `sbsi.response` — combine flow self-response and emulator blending response.
+3. `sbsi.inference` — simulation-based shear inference (under development).
 
 The [inference tutorial notebook](examples/sbsi_api_tutorial.ipynb) is the main
 user-facing prediction walkthrough. Training and tuning use the CLI described
@@ -28,8 +28,8 @@ Flow training is config-driven, like BlendEMU. Copy
 catalogue and artifact path, and run inside an appropriate compute allocation:
 
 ```bash
-python -m sbs_shear flow --config my_flow.yaml --mode train
-python -m sbs_shear flow --config my_flow.yaml --mode tune
+python -m sbsi flow --config my_flow.yaml --mode train
+python -m sbsi flow --config my_flow.yaml --mode tune
 ```
 
 An editable/package install provides the equivalent `sbsi` command.
@@ -52,7 +52,7 @@ set. From the repository root:
 export PYTHONPATH="$PWD:$PYTHONPATH"
 ```
 
-BlendEMU is needed only for the emulator step (`sbs_shear.models.load_emulator`).
+BlendEMU is needed only for the emulator step (`sbsi.models.load_emulator`).
 Add it when you need it, and point the model roots at your own copies:
 
 ```bash

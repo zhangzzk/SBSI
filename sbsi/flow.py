@@ -1,6 +1,6 @@
 """Training implementation behind the SBSI measurement-flow CLI.
 
-The detailed response-aware objective lives in :mod:`sbs_shear.flow_training`.
+The detailed response-aware objective lives in :mod:`sbsi.flow_training`.
 This module exposes the typed configuration and reusable operations consumed by
 ``sbsi flow``. All catalogue and calibration paths are supplied by the user;
 model release names never alter the training behavior.

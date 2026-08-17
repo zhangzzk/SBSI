@@ -3,9 +3,9 @@ from dataclasses import replace
 
 import pytest
 
-from sbs_shear import cli
-from sbs_shear import flow
-from sbs_shear.flow import FlowTrainingConfig, FlowTrial
+from sbsi import cli
+from sbsi import flow
+from sbsi.flow import FlowTrainingConfig, FlowTrial
 
 
 def _training_yaml(tmp_path):
