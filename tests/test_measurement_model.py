@@ -6,11 +6,19 @@ from sbs_shear.measurement_model import (
     ConditionalAffineFlow,
     ConditionalMeanFlow,
     ConditionalMeanFlowRA,
+    MEASUREMENT_CONDITION_FEATURE_SETS,
     TargetStandardizer,
     add_measurement_target_features,
     build_flow,
     raw_columns_for_measurement_targets,
 )
+
+
+def test_rblend_ablation_appends_one_condition_feature():
+    baseline = MEASUREMENT_CONDITION_FEATURE_SETS["g0_meas_crowd_conc_szfl_noz"]
+    candidate = MEASUREMENT_CONDITION_FEATURE_SETS["g0_meas_crowd_conc_szfl_noz_rblend"]
+
+    assert candidate == [*baseline, "r_blend"]
 
 
 def test_measurement_target_features_are_finite_spin2_shape():

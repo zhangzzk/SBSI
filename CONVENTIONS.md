@@ -3,19 +3,22 @@
 Purpose: make any two SBSI tests comparable by fixing the vocabulary and the setup. If a number in a
 figure, table or WORKLOG entry does not say which of these it used, it is under-specified.
 
-**Scope.** This file defines *how quantities are built*. It does not restate the fiducial MODEL, the
+**Scope.** This file defines *how quantities are built*. It does not restate the milestone MODEL, the
 seed convention, or the numerical-integrity rules — those live in `AGENTS.md` and are referenced from
 here. Where the two disagree, `AGENTS.md` wins and this file is the bug.
 
-**Status of each claim below.** Everything is stated from the code as of 2026-07-31 and the file/line
-is given where it is short enough to check. Section 7 (detection) is the one area where this file
-deliberately points elsewhere rather than restating an estimator — see the note there.
+**Status of each claim below.** The model and population rules were updated for
+the V3 milestone on 2026-08-17. Historical implementation paths mentioned in
+this document now live under `archive/pre-v3/`; they are provenance, not API.
 
 ---
 
 ## 1. The model
 
-Fiducial = **V2 dom6x6 flow + tuned in-domain blend emulator**, and the prediction is always
+For the frozen scientific comparison, V3 is V2.2 flow plus the latest
+narrow-domain emulator and V3b is the named broad-domain comparison. These are
+model-path presets, not separate software pipelines. For every model choice,
+the prediction is always
 
 ```
 R_model = R_flow + R_blend
@@ -28,7 +31,10 @@ R_model = R_flow + R_blend
   shapes**. Under a cut it must be re-averaged over the objects that pass, not carried over from the
   no-cut population.
 
-Checkpoints, emulator tag, lookup path and the two silent traps: `AGENTS.md` → "Fiducial Model".
+Exact checkpoint and emulator paths are exposed by the optional
+`sbs_shear.models` presets; see `MILESTONE.md` for the frozen result record.
+User-selected catalogues and emulator-response products remain external API
+inputs.
 
 ---
 
@@ -72,7 +78,7 @@ det_meas_ngmix_g0.05_val.feather      (leg g: |g| = 0.05)          cases <= 39
 
 ## 3. Building the population — order matters
 
-The standard order, as in `scripts/eval_selection_constgold_neardomain.py`:
+The standard order implemented by `ResponsePredictor` is:
 
 1. **Case cut** — `case >= 40` (constgold) or `case <= 39` (half-shear).
 2. **Quality / selection cut** — `source_select_selection(df, cuts=DEFAULT_SELECTION_CUTS)`.
@@ -80,19 +86,21 @@ The standard order, as in `scripts/eval_selection_constgold_neardomain.py`:
    - `18 < r_input_p < 28`
    - `0.1 < Re_input_p < 1.5`
    - `(0 < distance < 5)` **OR** `not neighbored`
-3. **Domain cut** — `r_input_p < 26` **and** `Re_input_p > 0.3`, on TRUE properties. **Mandatory**
-   whenever a dom6x6 flow is scored: the flow was trained in this box, and scoring outside it put
-   `R_model(no cut)` at +0.173 against ~0.29 and inflated every model entry ~4x (run 15365425).
+3. **Registered domain cut** — on TRUE properties and mandatory. V3 uses
+   `18 < r_input_p < 25.8` and `0.5 < Re_input_p < 1.5`; V3b uses
+   `18 < r_input_p < 26` and `0.3 < Re_input_p < 1.5`. Never infer these cuts
+   from a filename or substitute one model's domain for another.
 4. **Emulator-lookup join** — inner join on `(case, input_index)`. Rows with no `R_blend` are
    **DROPPED, never zero-filled**, and the match fraction is asserted. Zero-filling collapsed
    `<R_blend>` 0.159 → 0.059 and produced a spurious +28.9% m (job 15366950).
 5. **Finiteness mask** — every per-leg quantity used must be finite in BOTH legs.
 
-Steps 2–4 overlap on purpose: after step 4 the emulator's own box (mag 18–26, Re 0.3–1.5) already
-subsumes step 2's ranges, so step 2 removes nothing in-domain (measured: 0.00%). That is a
-consistency check, not redundancy to delete.
+Steps 2–4 overlap on purpose. The registered flow and emulator must be scored
+on their common named domain; overlap is a consistency check, not redundancy
+to remove.
 
-The resulting standard in-domain population is **N = 11,674,408**.
+The frozen populations are **N = 5,642,349 for V3** and **N = 11,674,408 for
+V3b**.
 
 **Steps 1–4 are TRUE-property cuts. They define the population.** They are NOT the selection effect
 being measured — see §5.
@@ -152,7 +160,7 @@ Two traps this creates, both real:
 R = ( mean(x[pass_plus]) − mean(x[pass_minus]) ) / (2g)
 ```
 
-(`leg_avg`, `scripts/eval_selection_constgold.py:64`.) For forward legs the denominator is `g`, not
+The archived pre-V3 implementation called this helper `leg_avg`. For forward legs the denominator is `g`, not
 `2g` — see 6b.
 
 ### 6b. Isolating the SELF response (half-shear only)
@@ -305,7 +313,7 @@ Full statement, rationale and the worked example: `AGENTS.md` → "Ensemble Seed
 ## 10. Checklist for a new test
 
 1. Which catalogue — constgold (antithetic) or half-shear (forward)? Extraction must match it (§6c).
-2. Population built in the §3 order, with the domain cut present if a dom6x6 flow is scored?
+2. Population built in the §3 order with the selected model's checkpoint domain?
 3. Emulator match fraction asserted, unmatched rows dropped not zero-filled?
 4. Cuts on MEASURED quantities, applied per leg (§5)?
 5. Keep fraction reported, so an empty cut is visible?
@@ -321,9 +329,8 @@ Full statement, rationale and the worked example: `AGENTS.md` → "Ensemble Seed
 
 ## 11. Provenance
 
-Written 2026-07-31 after a fig1–5 review turned up two convention bugs (mirrored sign, ensemble-mean
-errors) and two clarifications (what "no cut" means; the seed split is by flow output). See
-`WORKLOG.md` 2026-07-31c and 2026-07-31d.
+Written 2026-07-31 after a fig1–5 review and updated 2026-08-17 for V3/V3b.
+See `WORKLOG.md` for the corresponding provenance.
 
 When a convention changes, edit this file **and** say so in `WORKLOG.md`. A convention that lives only
 in a script docstring will drift.

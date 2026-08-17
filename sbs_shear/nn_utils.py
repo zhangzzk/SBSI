@@ -1,6 +1,6 @@
 """Small building blocks shared by the library's torch models.
 
-Kept deliberately tiny: anything here is imported by modules that load the fiducial
+Kept deliberately tiny: anything here is imported by modules that load the frozen V3
 checkpoints, so it must stay free of side effects and free of anything version-dependent.
 """
 

@@ -1,4 +1,4 @@
-"""Per-galaxy posterior-mean shape estimator (the deployment object, WORKLOG cont.22/23).
+"""Grid-based latent-shape posterior for an intrinsic-shape-blind flow.
 
 Computes, per detected galaxy, the posterior-mean corrected shape
 
@@ -6,11 +6,9 @@ Computes, per detected galaxy, the posterior-mean corrected shape
            = [ integral de  e * p(ehat | e, theta_hat, theta_b) * pi(e) ]
            / [ integral de      p(ehat | e, theta_hat, theta_b) * pi(e) ]
 
-for the TRUE-NEIGHBOUR conditional case (theta_b plugged in, NOT marginalized -- the
-integral over dtheta_b is the probabilistic-blending stage and is explicitly out of
-scope here).  Downstream analyses consume etilde like ordinary ellipticities; by the
-tower rule E[etilde] = E[e] = the shear signal, PROVIDED pi is the true lensed-e
-population (prior misspecification -> residual m; see ShapePrior below).
+for the flow's supplied neighbour context. Downstream analyses consume ``etilde``
+like ordinary ellipticities. By the tower rule its expectation recovers the shear
+signal when the lensed-shape prior and likelihood are correctly specified.
 
 Why this is cheap (no MCMC): the accepted measurement flows are ConditionalMeanFlow
 with the intrinsic-shape features e1/e2_input_p in `flow_drop_indices`, i.e. the
@@ -19,9 +17,10 @@ residual flow is BLIND to e and only the mean head mu(context) moves with e:
     log p(ehat | e, rest) = flow.log_prob(ehat_std - mu(ctx(e)), flow_ctx_fixed)
 
 -- a location family in e.  The posterior is evaluated exactly on a 2-D e-grid:
-softmax(log pi + log p) over grid points, then a weighted sum.  The estimator asserts
-this structure at load time, so it works unchanged for any future flow that keeps the
-e-flow-blind design (all g0_meas_* realistic variants do).
+softmax(log pi + log p) over grid points, then a weighted sum.  The observed vector may
+contain shape only or shape plus photometry; current four-output flows use
+``(g1, g2, magnitude, log radius)`` in the likelihood. The estimator asserts the
+e-flow-blind structure at load time. See ``INFERENCE.md`` for the supported boundary.
 """
 
 from __future__ import annotations
@@ -184,9 +183,12 @@ class PosteriorShapeEstimator:
             raise ValueError(f"Feature set contains e-derived features {sorted(bad)}; "
                              "grid injection of e1/e2_input_p alone would be inconsistent")
         self.j1, self.j2 = shape_target_indices(bundle.target_transform.target_names)
-        if bundle.target_transform.dim != 2 or {self.j1, self.j2} != {0, 1}:
-            raise ValueError("Expected a pure 2-D shape target flow "
-                             f"(targets={bundle.target_transform.target_names})")
+        self.target_dim = int(bundle.target_transform.dim)
+        if self.target_dim < 2:
+            raise ValueError(
+                f"Expected at least two measured outputs; got "
+                f"{bundle.target_transform.target_names}"
+            )
 
         grid = np.asarray(grid, dtype=np.float64)
         self.grid_raw = torch.as_tensor(grid, dtype=torch.float32, device=self.device)
@@ -228,7 +230,8 @@ class PosteriorShapeEstimator:
         if t.ndim != 3 or t.shape[1] != self.G or t.shape[2] != 2:
             raise ValueError(f"mu-correction table shape {t.shape} != (K, {self.G}, 2)")
         scales = self.bundle.target_transform.scales
-        self._mu_corr = torch.as_tensor(t / scales[None, None, :],
+        shape_scales = np.asarray(scales)[[self.j1, self.j2]]
+        self._mu_corr = torch.as_tensor(t / shape_scales[None, None, :],
                                         dtype=torch.float32, device=self.device)
         self._mu_corr_cells = np.asarray(cell_idx, dtype=np.int64)
 
@@ -239,7 +242,7 @@ class PosteriorShapeEstimator:
 
         frame: rescale()d dataframe carrying all conditioning columns (the e columns
         are placeholders -- they are overwritten by grid values).  ehat_raw: (N,2)
-        measured shapes in raw target units.  Returns an (N,G) array (fp16 by default
+        measured outputs in raw target units.  Returns an (N,G) array (fp16 by default
         so the gold run can hold both signs in RAM and reweight under many priors
         without re-evaluating the flow).  row_offset: index of frame's first row in
         the full-run row order -- needed to look up armed per-object state (the
@@ -258,10 +261,15 @@ class PosteriorShapeEstimator:
             mu = model._mu(flat)                                        # (B*G,2)
             if corr is not None:
                 cells = self._mu_corr_cells[row_offset + start:row_offset + stop]
-                mu = mu + corr[torch.as_tensor(cells, device=self.device)].view(b * self.G, 2)
+                delta = corr[torch.as_tensor(cells, device=self.device)].view(b * self.G, 2)
+                mu = mu.clone()
+                mu[:, self.j1] += delta[:, 0]
+                mu[:, self.j2] += delta[:, 1]
             xh = torch.as_tensor(ehat_std[start:stop], dtype=torch.float32,
                                  device=self.device)
-            x = xh[:, None, :].expand(b, self.G, 2).reshape(b * self.G, 2) - mu
+            x = xh[:, None, :].expand(b, self.G, self.target_dim).reshape(
+                b * self.G, self.target_dim
+            ) - mu
             ll = model.flow.log_prob(x, model._flow_ctx(flat)).view(b, self.G)
             # fp16 range guard (same as log_likelihood_marginal): softmax over the grid
             # is shift-invariant per row, so store row-max-shifted values.  Stored rows
@@ -312,7 +320,9 @@ class PosteriorShapeEstimator:
             b = base.shape[0]
             xh = torch.as_tensor(ehat_std[start:stop], dtype=torch.float32,
                                  device=self.device)
-            x = xh[:, None, :].expand(b, self.G, 2).reshape(b * self.G, 2)
+            x = xh[:, None, :].expand(b, self.G, self.target_dim).reshape(
+                b * self.G, self.target_dim
+            )
             acc = torch.full((b, self.G), float("-inf"), device=self.device)
             for k in range(m):
                 rep = base.clone()

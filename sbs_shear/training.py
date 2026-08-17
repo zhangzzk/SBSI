@@ -1,16 +1,8 @@
-"""Training-loop core shared by the measurement-flow trainers.
+"""Training-loop primitives for the measurement-flow trainer.
 
-These helpers were byte-identical in all four `scripts/train_measurement_model*.py` forks
-(verified by AST hash before the move, 2026-08-04), so they were maintained four times over
-and could drift apart silently -- a real hazard, since these forks produce the fiducial
-checkpoints and nothing in `tests/` covers `scripts/`.
-
-Moved here VERBATIM. Nothing in this module may be "tidied" in place: a change here changes
-every trainer at once, and the checkpoints they produce are the certified pipeline.
-
-`scripts/_headref_trainer_tmp.py` deliberately keeps its own copies -- it is a frozen
-byte-identity snapshot of an old HEAD for the 2026-08-01b audit, so it must not follow this
-module.
+These functions were consolidated from the pre-V3 trainer forks. Changes here alter
+the frozen training recipe and therefore require focused tests and a WORKLOG entry.
+Historical byte-identity snapshots remain under ``archive/pre-v3/``.
 """
 
 from __future__ import annotations

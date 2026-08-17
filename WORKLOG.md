@@ -2,6 +2,6316 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-17h  Review pass on the V3 restructure; BlendEMU boundary made testable and relocatable
+
+Review + cleanup pass over the uncommitted V3 restructure, at the owner's request, before
+committing it and merging to `master`. No science change; no API rename.
+
+Findings and fixes:
+
+* `tests/test_api.py::test_prepared_pairs_match_blendemu_catalogue_conversion` did a bare
+  `from blendemu import nz_utils` in the test body, so the suite FAILED (not skipped) on a
+  checkout without BlendEMU -- contradicting the stated contract that SBSI runs standalone.
+  Now `pytest.importorskip("blendemu.nz_utils")`. Verified both ways: 45 passed / 1 skipped
+  without BlendEMU, and the cross-check itself still passes with BlendEMU on PYTHONPATH, so
+  the skip is not hiding a regression.
+* `sbs_shear/models.py` hardcoded `_FLOW_ROOT`, `_EMU_ROOT` and
+  `_BLENDEMU_MODELS = /home/z/Zekang.Zhang/blendemu/models`, so the presets only resolved on
+  this machine. Now read `SBSI_CACHE_DIR`, `BLENDEMU_ROOT`, `BLENDEMU_MODELS`, with the frozen
+  locations as defaults -- an unset environment reproduces the V3/V3b milestone byte-for-byte
+  (checked), and the emulator SHA-256 still pins identity.
+* `AGENTS.md` told agents to run `conda activate sims1 && python -m pytest tests/`, which
+  cannot work (`sims1` has no pytest) and contradicted `CLAUDE.md` on the same branch.
+  Corrected to the `py31` invocation, and the stale "always set both repos" PYTHONPATH advice
+  in `CLAUDE.md` was replaced: BlendEMU is needed only for `load_emulator`.
+* `.gitignore` now covers `.claude/worktrees/`, `.claude_resources.json` and editor backups.
+
+Checked and found clean: no unreferenced module in `sbs_shear/` (every one is imported by
+another module, a test, or the notebook); no remaining hardcoded absolute path in the package;
+the only BlendEMU import in the library is `sbs_shear/models.py:load_emulator`, everything else
+matching /blendemu/ is prose or a naming convention.
+
+Validation: `PYTHONPATH=$PWD py31/bin/python -m pytest tests/ -q` -> 45 passed, 1 skipped.
+With BlendEMU on PYTHONPATH the two BlendEMU tests pass. `python -m compileall sbs_shear tests
+examples` clean; `python -m sbs_shear --help` works; `import sbs_shear` exposes 33 names with no
+broken export.
+
+Known limitation: `master` separately received an older, superseded cleanup (its own
+`sbs_shear/paths.py` and `emulator.py` over the pre-V3 `scripts/`+`jobs/` layout). This branch
+supersedes it, so the merge to `master` resolves in favour of this branch throughout.
+
+Next: commit this branch and merge it into `master`.
+
+## 2026-08-17g  Moved flow training and tuning to a config-driven CLI
+
+Added the single config-driven training entry point
+`python -m sbs_shear flow --config CONFIG --mode train|tune` (also installed as
+`sbsi flow`). The CLI reads an explicit user-owned YAML `training` section and delegates to the
+existing `FlowTrainingConfig`/`train_flow` implementation. Tune mode requires a separate validation
+catalogue, a user scorer named as `package.module:function`, an explicit candidate list with unique
+output paths, and an explicit results path; it writes the ranked scores, full trial configurations,
+and best checkpoint to a JSON manifest and refuses to overwrite existing results. Model preset
+inspection and validation remain separate CLI commands. The old argument-by-argument `train-flow`
+surface was removed so there is one flow-training command.
+
+Added `examples/flow_training.yaml` and rewrote the README/examples index around the CLI. Reduced
+`examples/sbsi_api_tutorial.ipynb` from 22 to 15 cells: it no longer imports, configures, or discusses
+Python training/tuning calls and now covers inference only—external input catalogue loading, arbitrary
+or preset model paths, aligned object/pair preparation, combined flow+emulator response prediction,
+and the explicitly unfinished catalogue-level shear-likelihood boundary. The earlier requirement to
+mention BlendEMU catalogue production remains as one short inference-input note. Emulator
+training/tuning remains owned by BlendEMU and is still deferred until its planned update.
+
+Validation: the full active suite passes (`46 passed`); focused Ruff and `sims1` compilation pass;
+both CLI help surfaces run; the notebook passes JSON and strict nbformat validation and all five code
+cells execute while loading the 111,210-row example catalogue; `git diff --check` passes. No training,
+tuning, simulation, full-catalogue prediction, or shear inference was run.
+
+## 2026-08-17f  Unified response preparation and made blend prediction pair-level
+
+Corrected the response API exposed in the tutorial. `predict_blend_response` now accepts only an
+already prepared pair table, calls BlendEMU's `predict_on_pairs`, and returns the summed response as
+a `primary_row`-indexed Series. It no longer accepts the original input catalogue or silently
+repeats neighbour finding and pair preparation. `ResponsePredictor.predict` aligns such a Series by
+index, so object alignment is keyed rather than inferred from row order.
+
+Added `PreparedForwardCatalogue`, `prepare_flow_inputs`, and `prepare_forward_catalogue`. One user
+truth catalogue now produces two aligned model views: `flow_inputs`, with one row per retained
+primary, and `emulator_pairs`, with one row per accepted primary-neighbour pair. The flow view derives
+intrinsic spin-2 components, nearest-neighbour fields, and V3's all-neighbour 0--3/3--7 arcsec
+`nbr_flux_near/far/max` summaries before emulator pair cuts; the object population is then restricted
+to primaries represented in the pair view. The views remain separate because evaluating the flow on
+the pair table would weight each primary by its neighbour multiplicity. The crowding radii are public
+keyword defaults because historical V3 checkpoints do not store them in metadata.
+
+Rewrote the README, examples README, inference boundary, agent scope, and tutorial accordingly. The
+tutorial no longer defines or loads a separate `FLOW_CATALOGUE` for response prediction. It shows
+`prepared = prepare_forward_catalogue(...)`, pair-only emulator evaluation, and direct evaluation of
+`prepared.flow_inputs`. Measured BlendEMU catalogues remain required for flow training and the future
+measurement-likelihood API, not for the V3 response calculation itself.
+
+Validation: 42 tests pass, including exact SBSI/BlendEMU pair conversion, group-aware pairing,
+object/pair view alignment, crowding-feature construction, and pair-response aggregation. Focused
+Ruff and `sims1` compilation pass; the notebook passes strict nbformat validation and all seven safe
+cells execute while loading 111,210 example rows; shell syntax, JSON, `git diff --check`, and a real
+V3 CPU smoke pass. The real smoke prepared 208 retained primaries and 263 pairs from a 5,000-row
+slice, produced finite keyed BlendEMU responses, and fed those inputs through one V3 flow checkpoint
+with output shapes `(1, 208)` and `(208,)`. No simulation, training, full-catalogue response, or shear
+inference was run. Joint catalogue-level shear inference remains TODO.
+
+## 2026-08-17e  Added examples and made forward catalogue preparation SBSI-owned
+
+Moved the public tutorial to `examples/sbsi_api_tutorial.ipynb`, copied BlendEMU's 111,210-row
+tutorial input catalogue byte-for-byte to `examples/data/example_catalog.feather` (SHA-256
+`382adc...bd68`), and added `examples/job_generate_catalogues.sh`. The job is explicitly an optional
+Slurm deployment wrapper: it calls BlendEMU's supported `run_pipeline.py` for steps 1, 2, 3, 3b, 4,
+and 4b. SBSI still does not contain rendering, image measurement, or simulation-catalogue assembly.
+
+Added `sbs_shear.forward_catalogue` by adapting BlendEMU's inference-time catalogue algorithms into
+the SBSI API. `validate_input_catalogue`, `find_neighbours`, `make_pair_catalogue`,
+`select_response_pairs`, `rescale_emulator_pairs`, and `prepare_emulator_pairs` now own validation,
+KDTree neighbour search, primary/secondary pairing, training-matched cuts, observing-condition
+rescaling, grouping, and stable primary-row alignment. `EmulatorPairingConfig.from_emulator` reads
+the cuts/aperture/k stored in model metadata. `predict_blend_response` now calls BlendEMU only via
+its pair-level `predict_on_pairs` evaluator and sums the returned predictions using SBSI's explicit
+`primary_row`; the prior opaque call to BlendEMU's catalogue-level `predict_response` is gone.
+
+Reworked the tutorial and README around the actual data boundary. The bundled truth catalogue can
+be used directly for emulator pairing/response. It cannot by itself feed V3's measurement flow:
+the flow also requires measured image quantities and intrinsic orientation, which must come from
+the corresponding BlendEMU simulation/measurement product or the user's reduction. The notebook
+keeps emulator training and the unvalidated joint shear likelihood as TODOs.
+
+Validation: 41 focused tests pass. A regression test compares SBSI's prepared pair catalogue to
+BlendEMU's original `icat2reg` transformation at `1e-12` absolute tolerance; group isolation,
+alignment, and summed pair responses are also tested. The actual V3 emulator loaded on CPU and
+evaluated six SBSI-prepared pairs for three primaries. The 22-cell notebook passes strict nbformat
+validation and all seven safe code cells execute while loading the copied 111,210-row catalogue.
+The copied Feather hash matches its BlendEMU source; focused Ruff, `sims1` compilation, shell syntax,
+source scans, and `git diff --check` pass. No simulation, training, full-catalogue response, or shear
+inference was run.
+
+## 2026-08-17d  Made SBSI one general workflow with external data and model paths
+
+Removed release-specific behavior from the supported API. Added `ModelPaths` and path-only
+V3/V3b convenience presets in `sbs_shear/models.py`; those presets now contain only the external
+flow ensemble, emulator model, emulator metadata, and integrity hash. Training, population
+selection, response prediction, and inference no longer branch on a V3/V3b name. Flow support is
+read from checkpoint metadata through the new general `Domain` type. Deleted the old milestone
+registry module from active source.
+
+Made every catalogue an explicit user input. Added `load_catalogue` for DataFrames and external
+Feather/Parquet/CSV/pickle paths; removed the hardcoded training-catalogue and output defaults;
+made `FlowTrainingConfig` require user paths; and made `tune_flow` require a separate validation
+catalogue. `ResponsePredictor.load` now accepts arbitrary flow paths, inspects their features and
+domain, and accepts emulator response as an aligned column/array or separate external catalogue.
+Added `load_emulator` plus `predict_blend_response`, which apply a completed BlendEMU model to a
+user catalogue, optionally pair within independent field/case groups, sum pair responses per
+primary, and reject missing predictions rather than zero-filling them. `BayesianInference` now
+loads an explicit checkpoint and user catalogue instead of a named release.
+
+Removed all supported scheduler scripts: the flow wrapper was deleted and the six requested
+legacy-recovery wrappers were moved under `archive/pre-v3/jobs/`. The scheduling environment is
+now wholly caller-owned; training logic remains in `sbs_shear.flow_training` and the Python/CLI
+APIs. Rewrote `README.md`, `AGENTS.md`, `INFERENCE.md`, relevant convention/milestone text, and the
+21-cell tutorial. The tutorial follows BlendEMU's load-inspect-predict style and demonstrates the
+actual two-model response composition while leaving emulator training and the unvalidated joint
+simulation-based shear likelihood as TODOs.
+
+Validation: 39 focused tests pass; all active modules/tests compile under `sims1`; the tutorial
+passes strict `nbformat` validation and every code cell executes in its safe documentation mode;
+both named releases validate all flow/emulator/metadata paths and emulator hashes; the actual V3
+BlendEMU regression artifact loads with its seven expected features; an actual V3 flow checkpoint
+loads, recovers its domain from metadata, and completes a two-object response smoke; CLI model
+show/validation, source scans for stale pipeline APIs or active shell scripts, and
+focused Ruff checks plus `git diff --check` pass. No training, full-catalogue prediction, or
+shear inference was run.
+
+## 2026-08-17c  Added the minimal V3 API tutorial notebook
+
+Added `notebooks/sbsi_api_tutorial.ipynb` as the user-facing walkthrough of the three-part
+API.  The notebook shows how to select V3/V3b from the registry, configure and submit flow
+training, express an explicit held-out tuning sweep, and combine the registered flow ensemble
+with the frozen emulator response through `ResponsePredictor`.  It states the required input
+columns, domain and Slurm constraints, strict no-zero-fill rule for missing emulator responses,
+and the canonical `R_model=R_flow+R_blend` and `m=R_sim/R_model-1` definitions.  BlendEMU
+training/tuning and catalogue-level simulation-based shear inference are visibly reserved as
+TODOs rather than documenting unfinished interfaces.  Linked the notebook from `README.md`.
+
+Validation: the notebook passes strict `nbformat` validation, all code cells compile and execute
+under the `sims1` environment, the focused suite passes all 36 tests, and `git diff --check` is
+clean.  No training, catalogue scan, response production, or inference computation was run.
+
+## 2026-08-17b  Quarantined recovery of the requested pre-V3 full-V2 anchor check
+
+The owner asked to finish the already-launched full-V2 coherent-anchor supplement after the V3
+reorganization interrupted it.  Kept the frozen V2 broad refit
+(`weighted_model.json`, SHA-256 `3cf70b...553`) and its original/complement stratified design
+unchanged: retain the historical V2.1-anchor stratum, render only `V2 minus V2.1`, and combine
+within case with each stratum's inverse sparse-anchor sampling weight.  Added six thin
+`jobs/job_legacy_v2_anchor_*.sh` wrappers which invoke the exact pre-V3 response/scoring code
+under `archive/pre-v3/`; outputs remain under that archive or the existing V2 cache, so none are
+promoted into the V3/V3b milestone products.  Restored the historical `population.py` module and
+package marker inside the archive, which the reorganization had omitted and which are needed to
+reproduce the original V2.1 domain exactly.
+
+The initial production array rendered c400--799, but c800--899 failed before rendering because
+its now-archived config path was no longer live; its post-render smoke similarly failed only
+because the response script had been archived.  The repaired archived smoke (job 15792097) passes:
+case 400 complement has 3,395 matched anchors, truth `+0.082165`, historical baseline `+0.141007`,
+and frozen-model prediction `+0.151494`.  This is an implementation/provenance smoke only, not
+used to choose or refit the model.  Recovery render job 15791985 and its dependency-linked shape,
+response, score, and analysis jobs 15792140--15792143 are submitted.  The final full-V2 result is
+pending those jobs and will be written to
+`archive/pre-v3/results/anchorblend_v2_reweighted_vector_fixed_fullv2_supplement_c400-899.json`.
+
+Validation: `bash -n` passes for all six wrappers; the archived response/scorer/analyzer and
+restored population module compile with `sims1`; a legacy-CWD import check resolves
+`sbs_shear.population` from the archive; the recovered smoke emitted both response and frozen-hash
+score products.  The V3/V3b API and frozen milestone outputs were not changed.
+
+## 2026-08-17a  Freeze V3/V3b and reduce SBSI to a three-part API
+
+Named the milestone compositions and made them machine-readable in
+`sbs_shear/milestones.py`: V3 is the 16-seed V2.2 flow plus the latest narrow-domain
+emulator (`18<r<25.8`, `0.5<Re<1.5`), and V3b is the 16-seed V2 dom6x6 flow plus the
+latest broad-domain refit (`18<r<26`, `0.3<Re<1.5`). The registry fixes all checkpoint
+paths, emulator paths and SHA-256 hashes, domains, lookup products, and evaluation
+products. Renamed the retained products to `results/v3_*` and `results/v3b_*`; V3 remains
+the headline at `m=+0.348825%` on 5,642,349 rows, while V3b is the broad comparison at
+`m=-0.959930%` on 11,674,408 rows.
+
+Reorganized the supported code around `sbs_shear.flow`, `sbs_shear.response`, and
+`sbs_shear.inference`. Integrated the exact V2/V2.2 response-aware trainer into the
+package behind `FlowTrainingConfig`, `train_flow`, and explicit `tune_flow`; added a
+single thin Slurm wrapper. Added guarded ensemble response prediction with registered
+domain enforcement, common random numbers, strict blend joins, and the fixed
+`R_flow+R_blend`/`m=R_sim/R_model-1` convention. Generalized posterior likelihoods to
+the four V3 outputs and added detected-population posterior and empirical-Bayes shear
+interfaces. Emulator training/tuning remains deferred to BlendEMU.
+
+Moved all exploratory scripts, old job wrappers, configs, figures, scratch material,
+historical package modules/tests/docs, and 1,084 non-milestone result products into
+`archive/pre-v3/`. Deleted only obvious junk: accidental scalar files, editor `.orig`
+copies, and Python/test caches. The active tree now has one job wrapper, six focused
+test modules, three calibration targets, and five milestone result products. Rewrote
+`README.md`, `AGENTS.md`, and the model/population sections of `CONVENTIONS.md`; added
+`MILESTONE.md`, `INFERENCE.md`, and archive/result/calibration manifests.
+
+Validation: `python -m pytest -q tests/` passes 36 focused tests; the `sims1` interpreter
+compiles all active package/test modules; both real seed-501 checkpoints load as
+four-output flows; `python -m sbs_shear validate V3 V3b` verifies all 32 flow files and
+both emulator hashes; the CLI refuses training outside Slurm; `bash -n` passes for the
+wrapper; `git diff --check` is clean. No training or full-catalogue computation was run.
+Known limitation: Bayesian inference is presently single-checkpoint and conditions on
+the detected population; detection/selection normalization, latent-scene
+marginalization, hierarchical priors, and ensemble uncertainty remain future work.
+
+## 2026-08-16n  Larger-domain V2 model half-shear vector score
+
+Measured the requested tuning-style score of the already-frozen V2 weighted model on half-shear
+cases c0--39 using the exact larger V2 support (`r_primary < 26.0`, `Re_primary > 0.3 arcsec`).
+The metric is the same case-balanced projection slope beta used by the V2.2 search, with score
+`abs(beta - 1)`.  Across 19,556,330 supported pairs, 2,330,604 primaries, and all 40 cases, the new
+weighted model has `beta=1.007695 +- 0.003974` and score `0.007695`.  Its fresh unweighted base is
+`1.095732 +- 0.004288` (score 0.095732), while the historical V2 `indom_tuned` model on the
+identical rows is `1.080815 +- 0.004338` (score 0.080815).  Thus response weighting removes about
+92% of the base model's beta excess on this half-shear diagnostic even though the already-run
+ConstGold transfer overshoots in the opposite direction.
+
+This is a retrospective transfer diagnostic, not an untouched confirmation block: the same case
+IDs c0--39 selected the source V2.2 hyperparameter recipe, although this evaluation uses the
+larger V2 row population and performs no fitting or selection.  Added
+`scripts/score_v2_reweighted_vector_fixed.py` and its Slurm wrapper.  Job 15786432 completed with
+exit 0 in 1m06s; its only stderr is the pre-existing, irrelevant classification-cut warning from
+loading the shared configuration.  Canonical output is
+`results/v2_reweighted_vector_fixed_halfshear_score_c0-39.json` (SHA-256
+`061e21a540d5958cb28c2b19123cc06566a62ad2cb30822daaa225737dbef629`).  Exact model/metadata
+hashes, 40-case row closure, feature/cut/standardization guards, strict JSON, Python/Bash syntax,
+and a standalone synthetic beta-recovery check pass.  The system pytest runner lacks Optuna, so
+the equivalent existing two-test module cannot collect in that interpreter.
+
+## 2026-08-16m  Fixed V2.2 winner overshoots on the larger V2 domain
+
+Transferred the already-selected V2.2 trial-15 recipe without a new search to the older, larger
+V2 rectangular domain (`r_primary < 26.0`, `Re_primary > 0.3 arcsec`).  Both the ordinary base and
+positive-response-weighted model were trained from scratch on half-shear cases c40--199 with the
+same alpha `0.0305735`, cap 50, 998 trees, eight XGBoost parameters, random seed 20260816, V2
+features/cuts/standardization, and official random-row 80/20 split.  The V2-cut population has
+78,242,807 rows (62,594,245 train and 15,648,562 validation).  Ordinary validation R2 changes only
+slightly from 0.00370649 for the fresh base to 0.00377168 for the weighted refit.  The frozen
+weighted-model SHA-256 is
+`3cf70b6e74ad382f3ec59c6e8a2d0a5b9b0615d4c4677c7a71dd2344cbf35553`; training job 15786254
+completed with exit 0 in 3m26s.  ConstGold and coherent-anchor truth were not opened before the
+candidate was fixed.
+
+Built the candidate lookup on all 100 ConstGold cases c40--139, then performed the one-shot swap
+against the existing 16 V2 `dom6x6` flow dumps.  The merged lookup has 13,384,211 rows; on the
+11,674,408-row V2 evaluation domain its coverage is 99.9999914%.  The existing flow conditioner
+was feature-verified and remains unchanged at `R_flow=0.72580883`, with `R_sim=0.86050231`.
+The stored dump baseline is the legacy `_ho` BlendEMU response, not the V2 `indom_tuned` model
+used only to define this candidate's domain and standardization.  Candidate `R_blend` rises from
+0.13706365 to 0.14306355 (+4.37745%).  This overshoots: baseline
+`m=-0.27122 +- 0.21707%` becomes `m=-0.95993 +- 0.21485%`, where the absolute uncertainties
+combine 16-flow-seed and 100-case simulation SEMs in quadrature.  The paired shift is
+`-0.68871 +- 0.00208` percentage points from flow-seed variation.  Therefore the fixed V2.2
+winner does not transfer favorably to the larger V2 domain and should not replace its baseline.
+
+Added the fixed-transfer trainer, parallel lookup/guarded merge, evaluator domain controls, and
+Slurm wrappers.  Lookup array 15786333, merge 15786334, and corrected final evaluation 15786403
+all completed with exit 0; canonical outputs are
+`results/blend_lookup_v2_reweighted_vector_fixed_c40-139.feather` and
+`results/constgold_m_swap_v2_reweighted_vector_fixed_16seed.json`.  A sequential lookup was
+canceled before emitting an artifact after the ten-way array made it unnecessary.  The original
+evaluation 15786335 was scientifically correct but used a stale V2.2 phrase in one metadata
+string; it is preserved as a clearly named backup.  Corrected rerun 15786396 safely refused to
+overwrite it before that backup move.  Python/Bash syntax, exact fixed-recipe and metadata guards,
+model/lookup/result hashes, 16-seed and 100-case coverage, invariant-flow and selection-firewall
+checks, empty canonical stderr, diff whitespace, and the focused evaluator test pass (2 tests).
+
+## 2026-08-16l  All-case vector tuning transfers to ConstGold at +0.349% m
+
+Completed the 30-trial Optuna search for a fresh V2.2 base followed by a positive-response-
+weighted refit.  Every trial trained on half-shear cases c40--199 with the official random-row
+80/20 split and was ranked by `abs(case-balanced vector slope - 1)` on all case-disjoint
+half-shear cases c0--39.  Trial 15 won with alpha `0.0305735`, 998 trees, and eight independently
+tuned XGBoost parameters.  The saved final refit has measured/predicted vector slope
+`1.002209 +- 0.006295` across 40 cases, versus `1.082246 +- 0.007167` for its fresh ordinary base.
+The final weighted-model SHA-256 is
+`01decd1335ce1c23aac1ef6ba055ae01c3950e47c4046345dcb6a1813033c21f`; tuning job 15785633
+completed all 30 trials with exit 0 in 43m01s.  Coherent anchors and ConstGold were not opened by
+training or model selection.  Because all available c0--39 half-shear cases entered tuning, there
+is no remaining internal half-shear confirmation block.
+
+At the owner's explicit request, then ran that already-fixed best model through the established
+ConstGold c40--139 additive-swap evaluation.  The model used the original V2.2 feature scaling,
+selection cuts, 10-arcsec/20-neighbour rule, and target standardization; only the regression-model
+JSON was overridden, under the fixed hash above.  The generated lookup contains 6,376,256 rows
+over all 100 cases.  On the exact 5,642,349-row V2.2 rectangular domain, lookup coverage is
+99.9999823%, and the frozen components remain `R_sim=0.96255892` and `R_flow=0.82662669`.
+Mean `R_blend` rises from `0.12566564` to `0.13260828` (+5.5247%).  Consequently
+`m=R_sim/(R_flow+R_blend)-1` improves from `+1.08045 +- 0.17920%` to
+`+0.34883 +- 0.17727%`, where each uncertainty combines the 16-flow-seed SEM and 100-case
+simulation SEM in quadrature.  The paired shift is `-0.73162 +- 0.00181` percentage points from
+flow-seed variation: the independently tuned model removes 67.7% of the baseline point bias and
+lands below 0.5%, but does not center the ConstGold point estimate exactly at zero.
+
+Added an optional regression-model override to `scripts/build_blend_lookup.py` and dedicated
+lookup/evaluation/submission wrappers.  Jobs 15785996 and 15785997 completed with exit 0 in
+23m18s and 2m54s; both stderr files are empty.  Canonical outputs are
+`results/blend_lookup_v22_reweighted_vector_optuna30_best_c40-139.feather` and
+`results/constgold_m_swap_v22_reweighted_vector_optuna30_best_16seed.json`.  Python/Bash syntax,
+model feature/tree-count/selection/standardization/hash guards, strict JSON parsing, exact
+baseline-component identity, lookup coverage, firewall checks, and artifact hashes pass.  The
+configured `sims1` interpreter lacks pytest, but the pre-existing focused evaluator test passes
+under the available system test runner (2 tests).
+
+## 2026-08-16k  Pair MSE plus pooled-across-cases scene moments
+
+Tested the proposed repair while keeping the exact frozen c0--99 base.  Candidate corrections fit
+half-shear cases 100--159 and were selected only on cases 160--199; after lambda was frozen, a
+lambda=0 physical-feature control and the selected model were refit on all cases 100--199.  The
+13-feature correction adds the validated physical coordinate
+`log10 Q_d2`, `Q_d2=sum_j(F_s/F_p)/d_j^2`, to the old pair-plus-full-scene feature set.  Its loss is
+ordinary pair MSE plus lambda times the mean of two normalized 20-bin scene-curve MSEs, one binned
+by the frozen full-neighbour base sum and one by log10 Q_d2.  Crucially, each scene residual is
+first averaged within case/bin and then across cases before squaring, so case noise can cancel.
+
+The initial exact-diagonal Hessian was numerically unstable at the first nonzero lambda.  That run
+was stopped before a nonzero model was written.  Replacing it with the case-bin block-curvature
+approximation (exact for a common leaf spanning a complete pooled bin) removed the overflow.  The
+analytic gradient passes finite differences to 4.03e-8 and the synthetic block Hessian is positive
+(1.125--1.157).  One partial lambda=0 artifact from the stopped run was deleted before the clean
+sweep.  Clean training job 15785246 completed in 25m54s with MaxRSS 8.18 GiB.
+
+On held-out half-shear selection cases c160--199, raw pair MSE is 0.48095055.  The pair-only+Q
+control gives 0.48065884 (-0.0606%) and normalized two-axis scene score 0.8184.  Lambda=0.001 is
+selected: pair MSE 0.48093946 (-0.00231%), P_s curve RMS 0.009753 versus 0.015371 raw, Q curve RMS
+0.007418 versus 0.007926 raw, and combined normalized score 0.7995.  All larger strengths are
+slightly worse and almost flat, so the useful scene term is only a light regularizer.  The selected
+global summed-scene residual is -0.001239 +- 0.002055 versus +0.001082 +- 0.002050 raw.
+
+Truth-blind scoring then covered all 500 coherent-anchor cases (array 15785326; 500 feather plus
+500 clean sidecars).  On held-out anchors c700--899, global truth-minus-prediction is +0.015413 +-
+0.003617 raw, +0.010295 +- 0.003615 for the prior ordinary correction, +0.010559 +- 0.003616 for
+pair-only+Q, and +0.012258 +- 0.003617 for pair+pooled-scene.  In the rightmost raw-base P_s bin,
+the gaps are +0.053435 raw, +0.043697 ordinary, +0.041633 pair-only+Q, and +0.053408 pooled: the
+pooled loss gives no tail repair.  In the rightmost Q bin it actively worsens +0.015141 raw to
++0.036415, versus +0.022671 ordinary and +0.027065 pair-only+Q.  P_s-axis curve RMS is 0.02884,
+0.01653, 0.01621, and 0.01938 respectively; Q-axis RMS is 0.02223, 0.01700, 0.01651, and 0.01816.
+Thus averaging before squaring fixes the noisy-objective formulation but not transfer: explicitly
+forcing the half-shear Q residual curve is counterproductive for coherent anchors.  The ordinary
+pair objective remains best globally, while adding Q as a feature without a Q-moment constraint is
+slightly best in the high-P_s tail.
+
+Added the training, half-shear plotting, truth-blind anchor scoring, and transfer plotting scripts
+plus four SLURM wrappers.  Canonical figures are
+`results/case100_100_pair_pooled_scene_selection_c160-199.{png,pdf}` and
+`results/anchor_pair_pooled_scene_moment_c700-899.{csv,json,png,pdf}`; models and detailed tables
+are under
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/v22_newbase_pair_pooled_scene_moment_case100_100_v1/`.
+The first transfer plot job 15785328 exposed only a duplicate-column presentation bug and wrote no
+outputs; corrected job 15785440 completed in 9s.  Syntax, finite-difference, hash, exact coverage,
+truth-firewall, strict JSON, 120-row anchor-curve table, empty canonical stderr, PDF/300-dpi PNG,
+and visual inspections pass.  ConstGold was not opened.
+
+## 2026-08-16j  Half-shear residuals versus measured pair and scene response
+
+Made the requested two-panel comparison on half-shear cases 100--199, overlaying V2.2, the raw
+100/100 base, its ordinary pair-MSE correction, and its new pure binned-scene-MSE correction.  Panel
+A bins the 23,640,716 labelled pairs by their measured pair response; Panel B bins the 2,814,713
+primaries by the measured sum over their labelled/sheared neighbours.  Both use 12 common
+label-defined quantile bins and one SEM across per-case conditional means.  The scene measurement
+is not doubled and excludes the unsheared neighbour half (mean labelled count 8.399 versus 16.004
+full-context neighbours).
+
+As expected, both figures are dominated by mechanical correlation because the noisy measurement
+appears in both x and `measurement - prediction` on y.  The pair extreme-bin residuals are about
+-0.958 and +0.971; the scene extremes are about -2.330 and +2.501, and all model curves nearly
+overlap.  Relative to the raw base, the largest ordinary-correction shift is -0.00332 per pair and
+-0.01299 per scene, both in the rightmost bin; the pure scene-loss correction shifts any bin by at
+most 0.000414 per pair and 0.00317 per scene, with the rightmost scene shift in the wrong direction.
+Global case-balanced pair residuals are +0.000112 (V2.2), +0.000222 (raw), -0.0000158 (ordinary),
+and +0.00000431 (binned-scene); scene residuals are +0.000944, +0.001866, -0.000130, and +0.0000391.
+
+Added `scripts/plot_halfshear_case100_100_residual_vs_measurements.py` and
+`jobs/job_plot_halfshear_case100_100_measurements.sh`.  Job 15784630 completed in 4m17s.  Outputs
+are `results/halfshear_case100_100_residual_vs_measurements_c100-199.{csv,json,pdf,png}`.  Python
+and shell syntax, diff whitespace, exact row/scene/case coverage, 96 curve rows, model hashes,
+shared-base identity, empty stderr, PDF/300-dpi PNG export, and visual inspection pass.  Coherent
+anchor truth and ConstGold were not opened.
+
+## 2026-08-16i  Pure binned sheared-scene-MSE correction
+
+Reused the exact frozen c0--99 base from the controlled 100/100 stack and changed only the
+correction objective on c100--199.  The new pure loss is the equal-weight MSE of the mean summed
+scene residual in each of 100 cases by 20 label-free scene bins.  Bins use the frozen base sum over
+all deployed neighbours; the supervised target and corrected response sum include only the
+labelled/sheared neighbours.  There is no ordinary pair-MSE term.  The custom gradient was checked
+by finite differences, and its case-bin block-Hessian approximation is normalized to mean row
+Hessian one.  Subsampling is disabled so every grouped loss evaluation retains complete scenes.
+
+On the correction-fit c100--199 block, the exact case-bin objective MSE decreases from 0.00359913
+to 0.00331157 (RMSE 0.059993 to 0.057546).  The much smaller reduction in the literal target than
+in the across-case mean curve shows that the objective is dominated by case-level response noise.
+The 20-bin across-case curve RMS nevertheless falls from 0.016813 to 0.000410.  Global pair MSE is
+essentially unchanged, 0.48233173 to 0.48232767, while the case-balanced pair residual moves from
++0.0002219 +- 0.0001444 to +0.0000043 +- 0.0001446.
+
+Truth-blind scoring on coherent anchors c400--899 was followed by a transfer diagnostic on the
+held-out c700--899 block.  The global anchor gap changes from +0.015413 +- 0.003617 for the raw base
+to +0.011451 +- 0.003618 after correction, compared with +0.012689 +- 0.003615 for V2.2.  However,
+the rightmost raw-base scene bin worsens from +0.05343 +- 0.02138 to +0.06172 +- 0.02138; the prior
+ordinary pair-MSE correction gave +0.04370 +- 0.02128.  Anchor curve RMS is 0.02114 for the new
+correction, versus 0.02884 raw, 0.02454 V2.2, and 0.01653 for the prior ordinary correction.  Thus
+the pure binned-scene loss fixes the raw model's negative-response failure and improves its global
+gap, but transfers less well than the ordinary correction and degrades the positive tail.
+
+Added `scripts/train_case100_100_binned_sheared_scene_mse.py` and three SLURM wrappers for training,
+truth-blind anchor scoring, and transfer plotting.  Training job 15783028 completed in 7m07s
+(MaxRSS 6.97 GB); all 100 tasks of array 15783509 and plot job 15783510 completed successfully.
+The frozen model is under
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/v22_newbase_case100_100_binned_sheared_scene_mse_v1/`.
+Anchor artifacts are
+`results/anchor_case100_100_binned_scene_mse_residual_vs_raw_scene_c700-899.{csv,json,pdf,png}`.
+Syntax, synthetic gradient/Hessian, scheduler dry-run, strict JSON, hashes, exact catalogue and
+scene coverage, 500 score shards plus truth-firewall sidecars, 36-row curve coverage, empty stderr,
+and visual inspection pass.  ConstGold was not opened.
+
+## 2026-08-16h  Half-shear pair residual versus each model's own prediction
+
+Made the pair-level analogue of the preceding measured-scene-response plot on half-shear cases
+100--199.  The figure overlays V2.2, the raw 100/100 base, and the 100/100 base plus correction.
+Each model is placed into 12 equal-count quantile bins of its own final pair prediction, and the
+y coordinate is the matching labelled-pair response minus that prediction.  The coordinate is
+therefore label-free, unlike the mechanically correlated measured-scene-response diagnostic.
+Uncertainties are one SEM across the 100 per-case conditional pair means.  The population contains
+23,640,716 labelled pairs; the raw base is case-out-of-sample, while the correction is in-sample on
+its c100--199 fit block.
+
+The global case-balanced pair residual is +0.0001120 +- 0.0001445 for V2.2, +0.0002219 +-
+0.0001444 for the raw base, and -0.0000158 +- 0.0001439 after correction.  The raw base has a
+strong sign-reversing calibration curve: residual +0.01351 in its most-negative-prediction bin and
+-0.01016 in its most-positive bin.  The correction removes that reversal but leaves a V2.2-like
+underprediction trend at positive predictions: its rightmost-bin residual is +0.01134 +-
+0.00080, versus +0.00930 +- 0.00071 for V2.2.  Across the 12 own-prediction bins, mean absolute
+residual is 0.00375, 0.00352, and 0.00348 for V2.2, raw, and corrected respectively; curve RMS is
+0.00568, 0.00546, and 0.00602 because the corrected curve has slightly larger extreme-bin errors.
+
+Added `scripts/plot_halfshear_case100_100_residual_vs_pair_prediction.py` and
+`jobs/job_plot_halfshear_case100_100_pair_prediction.sh`.  Job 15781984 completed with exit 0 in
+4m24s (MaxRSS 2.61 GB).  Canonical artifacts are
+`results/halfshear_case100_100_pair_residual_vs_own_prediction_c100-199.{csv,json,pdf,png}`.
+Python/Bash syntax, synthetic bin/SEM logic, SLURM dry-run, exact 100-case/23,640,716-pair coverage,
+36-row curve coverage, strict JSON, frozen model/source hash guards, empty stderr, PDF/300-dpi PNG
+export, and color plus grayscale inspection pass.  Coherent-anchor truth and ConstGold were not
+opened.
+
+## 2026-08-16g  Half-shear residual conditioned on measured scene response
+
+Remade the three-model scene-residual curve on half-shear cases 100--199, using the measured
+half-shear scene response as the common x coordinate.  Per primary, that coordinate is the sum of
+the labelled/sheared-neighbour pair responses; it is not doubled and excludes the unsheared
+neighbour half.  The y coordinate sums labels minus predictions over exactly the same labelled
+pairs.  Twelve measured-response quantile bins contain 2,814,713 primaries, and uncertainties are
+one SEM across the 100 per-case conditional means.  The curves overlay V2.2, the raw 100/100 base,
+and the 100/100 base plus correction.
+
+The resulting curve is dominated by a mechanical correlation: the noisy measured response enters
+both x and `truth - prediction` on y.  The outer bins have median measured responses -0.471 and
++1.063 and V2.2 residuals -2.330 and +2.501, respectively; all three curves consequently lie almost
+on top of one another.  This is not a clean model-transfer diagnostic.  The global case-balanced
+residuals remain +0.000944 +- 0.001214 (V2.2), +0.001866 +- 0.001214 (raw base), and
+-0.000130 +- 0.001209 (corrected), with the correction evaluated in sample on its c100--199 fit
+block.  The catalogue has mean 8.399 labelled/sheared neighbours and 16.004 full-context neighbours
+per primary.
+
+Added `scripts/plot_halfshear_case100_100_residual_vs_measured_scene.py` and
+`jobs/job_plot_halfshear_case100_100_measured_scene.sh`.  Job 15781387 completed with exit 0 in
+3m51s (MaxRSS 0.80 GB).  Canonical artifacts are
+`results/halfshear_case100_100_residual_vs_measured_scene_c100-199.{csv,json,pdf,png}`.  Python/Bash
+syntax, synthetic bin/SEM logic, SLURM dry-run, 100-case/36-row table coverage, frozen-model hash
+guards, exact saved-summary replay, strict JSON, empty stderr, and PDF/300-dpi PNG export pass.
+
+## 2026-08-16f  Panel E remade for the case-disjoint 100/100 stack
+
+Scored the frozen 100/100 stack on all coherent anchors c400--899 without opening response truth,
+then remade Panel E on the original held-out c700--899 block.  The common x coordinate is the raw
+100/100-base full-neighbour scene sum.  Twelve quantile bins are fixed label-free on c400--699;
+V2.2, raw-base, and corrected residuals share those bins.  Errors are one SEM across per-case
+conditional means.  The figure uses colorblind-safe colors, redundant line/marker styles, and
+300-dpi PNG plus vector PDF export.
+
+On 681,384 held-out anchors in 200 cases, the global case-balanced residual is
++0.012689 +- 0.003615 for V2.2, +0.015413 +- 0.003617 for the raw 100/100 base, and
++0.010295 +- 0.003615 after correction.  In the rightmost raw-base bin (median 0.75197; 56,691
+anchors), the gaps are +0.07852 +- 0.02136, +0.05343 +- 0.02138, and
++0.04370 +- 0.02128, respectively.  In the leftmost bin (median -0.04747), the raw base's
++0.07613 +- 0.01457 error is repaired to +0.00188 +- 0.01457.  Mean absolute residual across
+the 12 curve points is 0.01340, 0.01929, and 0.01115.  Thus the correction materially repairs the
+raw model's negative-response failure and improves the positive tail, but it does not close the
+rightmost coherent-anchor gap.
+
+Added `jobs/job_score_anchor_newbase_case100_100.sh`,
+`scripts/plot_anchor_case100_100_panel_e.py`, and
+`jobs/job_plot_anchor_case100_100_panel_e.sh`.  Scoring array 15780316 completed all 100 tasks
+with exit 0 and wrote 500 score shards plus 500 truth-blind sidecars; plot job 15780959 completed
+with exit 0 in 14 seconds.  Canonical artifacts are
+`results/anchor_case100_100_residual_vs_raw_scene_c700-899.{csv,json,pdf,png}`.
+Python/Bash syntax, synthetic bin/SEM logic, exact case/row coverage, V2.2 replay, score firewall,
+strict JSON/CSV, empty stderr, PDF/300-dpi PNG export, original-resolution inspection, and grayscale
+inspection pass.
+
+
+## 2026-08-16e  Trained the requested case-disjoint 100/100 sequential stack
+
+Trained a strict two-stage split using all 200 half-shear cases: every labelled pair in cases 0--99
+fits the base (23,669,498 rows), and every labelled pair in cases 100--199 fits the correction
+(23,640,716 rows).  The base is frozen before correction targets are formed, the two stages share
+no cases or rows, and there is no final base refit.  The correction keeps the full-neighbour scene
+sum, the same 12 inputs, ordinary pair-residual MSE, and the untuned 180-tree recipe.  Coherent
+anchors and ConstGold were not opened.
+
+On the correction's own c100--199 block, where the base prediction is case-out-of-sample but the
+combined prediction is correction-fit in-sample, pair MSE changes from 0.482332 to 0.481923
+(-0.0847%).  In shared bins of the raw full-neighbour base sum, scene-curve RMS changes from
+0.01681 to 0.00460; the global scene residual changes from +0.00187 +- 0.00121 to
+-0.00013 +- 0.00121; and the P_s>0.1 residual changes from -0.00534 +- 0.00323 to
+-0.00003 +- 0.00323.  These are encouraging fit diagnostics but are not validation: all 200
+half-shear cases now contribute to one of the two fitted stages.
+
+Added `scripts/train_newbase_oldway_fullneighbour_case100_100.py` and
+`jobs/job_train_newbase_oldway_fullneighbour_case100_100.sh`.  Job 15779465 completed with exit
+0 in 1m57s (MaxRSS 6.91 GB).  The frozen compatible deployment stack and summary are under
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/v22_newbase_oldway_fullneighbour_case100_100_v1/`.
+Python/Bash syntax, CLI, a synthetic exact-partition test, SLURM dry-run, case/row coverage,
+stage-disjointness, model hashes/artifacts, empty stderr, and strict summary checks pass.
+
+
+## 2026-08-16d  Same-80% correction strongly overfits and fails held-out half-shear
+
+At the owner's request, kept the original-case new base fixed and changed only the correction's
+supervised rows: both base and correction now fit the same deterministic 80% random-row split in
+half-shear cases 40--199.  The correction still uses the full-neighbour scene sum, the same 12
+features, ordinary pair-residual MSE, and the untuned 180-tree recipe.  Cases 0--39 remain
+case-disjoint final half-shear validation; coherent anchors and ConstGold were not opened.
+
+The correction sees 30,281,914 in-sample rows instead of the current model's 7,570,479 disjoint
+validation rows.  Its fit MSE improves from 0.480118 to 0.475811, but this reverses out of sample:
+on c0--39, pair MSE worsens from the unchanged base's 0.477570 to 0.481047 (+0.728%), whereas the
+current disjoint-20% correction gives 0.477331 (-0.050%).  In bins of the shared raw full-scene base
+sum, the held-out scene-curve RMS is 0.05190 for same-80%, versus 0.01178 for the base and 0.00764
+for the disjoint-20% correction.  The P_s>0.1 residual moves from -0.00184 +- 0.00593 for the base
+to -0.03682 +- 0.00611, compared with -0.00668 +- 0.00591 for the disjoint-20% correction.  Thus
+the same-row correction learns in-sample base residual structure that does not transfer and should
+be rejected.
+
+Added the `--correction-split {validation,base}` option to
+`scripts/train_newbase_oldway_fullneighbour_160_40.py` and the dedicated
+`jobs/job_train_newbase_oldway_fullneighbour_same80_40_199.sh` wrapper.  Job 15778919 completed
+with exit 0 in 2m54s (MaxRSS 8.32 GB).  The new artifact is under
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/v22_newbase_oldway_fullneighbour_same80_40_199_v1/`.
+The base hash is exactly unchanged.  Python/Bash syntax, CLI, whitespace, SLURM dry-run, summary
+protocol flags, model artifacts, empty stderr, and held-out metric comparisons pass.
+
+
+## 2026-08-16c  Raw new base does not close the coherent-anchor gap
+
+Extended the coherent-anchor diagnostic to distinguish the raw original-split new base from its
+full-neighbour correction, as requested.  The 4x4 figure now overlays V2.2, the raw base, and the
+corrected stack in the same original c400--699-defined bins, evaluated on held-out c700--899.  A
+second Panel E uses the raw new-base summed scene response as the shared coordinate for all three
+residual curves.  Coherent-anchor truth remains evaluation-only.
+
+On 681,384 held-out anchors, the case-balanced global residual is
++0.012689 +- 0.003615 for V2.2, +0.013106 +- 0.003613 for the raw new base, and
++0.009488 +- 0.003614 after correction.  Mean absolute residual across the 4x4 curve cells is
+0.015730, 0.015848, and 0.012199, respectively.  Thus the raw base is essentially unchanged from
+V2.2 globally and conditionally; the earlier apparent improvement comes from the correction.
+
+In Panel E's rightmost raw-new-base scene-response bin (median 0.75598; 56,655 anchors), the gap is
++0.08043 +- 0.02200 for V2.2, +0.05654 +- 0.02200 for the raw base, and
++0.03648 +- 0.02194 after correction.  In the leftmost bin (median -0.03746), the raw base worsens
+to +0.05723 +- 0.01485 versus V2.2's +0.01464 +- 0.01485; the correction restores it to
++0.01725 +- 0.01487.  The correction therefore helps both raw-base extremes, not just the positive
+prediction tail.
+
+Updated scripts/plot_anchor_newbase_original_cases_4x4.py and its Slurm wrapper.  Canonical figures
+are results/anchor_newbase_raw_corrected_residual_1d_all_c700-899.* and
+results/anchor_newbase_raw_corrected_residual_vs_newbase_scene_c700-899.*; both have matching curve
+CSVs and the 4x4 stem has the audit JSON.  Job 15778033 completed with exit 0.  The original V2.2
+curve replays exactly and the score replay maximum is 2.09e-7.  Python/Bash syntax, whitespace,
+coverage and case-window guards, vector/300-dpi export, and visual inspection pass.  Job 15777984
+stopped before reading data because the new CLI argument was initially declared after parsing; this
+was fixed before the canonical run.
+
+## 2026-08-16b  Original 4x4 coherent-anchor residual plot remade for the new base
+
+Remade the original all-anchor 4x4 conditional-residual diagnostic for the
+v22_newbase_oldway_fullneighbour_40_199_v1 stack.  The comparison keeps the original 16 panel
+coordinates and their order, recomputes the original development-fixed quantile edges from cases
+400--699, and evaluates only the original held-out coherent anchors in cases 700--899.  It overlays
+V2.2 and the new-base/full-neighbour-correction residuals; no bias emulator is fit or plotted and
+coherent-anchor truth is not used for training or selection.
+
+Across 681,384 held-out anchors (200 cases), the case-balanced global residual changes from
++0.012689 +- 0.003615 for V2.2 to +0.009488 +- 0.003614 for the new stack.  Mean absolute
+conditional residual across plotted cells falls from 0.01573 to 0.01220.  The rightmost bins improve
+strongly for V2.2 scene response (+0.07739 -> +0.04142), dominant-pair response
+(+0.07017 -> +0.03217), dominant absolute-response fraction (+0.07774 -> +0.02084), and
+dominant/runner-up response ratio (+0.06886 -> +0.01838).  The 2--3 arcsec response tail improves
+less (+0.06103 -> +0.04897), and the other-pair absolute-response tail moves from -0.00711 to
++0.01662, so the change is helpful but not uniformly better on every coordinate.
+
+Added scripts/plot_anchor_newbase_original_cases_4x4.py and
+jobs/job_plot_anchor_newbase_original_cases_4x4.sh.  Canonical PNG/PDF, long-form curves, and audit
+JSON are results/anchor_newbase_oldway_fullneighbour_40-199_residual_1d_all_c700-899.*.  Job
+15777662 completed with exit 0.  The V2.2 score replay differs by at most 1.99e-7, and every old
+V2.2 curve point/error bar replays exactly.  Python compilation, Bash syntax, whitespace checks,
+strict coverage guards, vector/300-dpi export, and visual inspection pass.  Jobs 15777467 and
+15777541 failed before writing outputs while exposing duplicate-column and serialized-edge/tie
+handling issues; both were fixed before the canonical run.
+
+## 2026-08-16a  Physical full-scene Q correction transfers partially but is weaker than P_s
+
+Trained the early frozen-V2.2 pair-residual correction recipe with its scene-response input replaced
+by the physical coordinate `log10 Q_d2`, where
+`Q_d2 = sum_j (F_s,j/F_p)/d_j^2`. The proxy uses all deployed neighbours around each half-shear
+primary (mean 16.005, including the unsheared half), while only the sheared pair rows carry labels
+and enter the loss. The V2.2 pair prediction remains the additive base and a pair-level feature.
+No hyperparameter was tuned: as in the early good correction, the fit used the 7,570,479 official
+V2.2 validation rows in cases 40--199, 180 depth-5 trees, and zero explicit grouped-loss strength.
+Proxy quantile edges were fixed label-free on cases 40--159. ConstGold was not opened.
+
+The fit improves in-sample pair MSE by 0.1003% and reduces the Q-bin residual-mean RMS from
+0.001249 to 0.000670. On held-out half-shear cases 20--39, pair MSE improves by 0.04334% versus
+V2.2 (the old P_s correction improves it by 0.03094%), but the already negative global scene gap
+moves from `-0.004890 +- 0.002451` to `-0.007359 +- 0.002456`. Thus ordinary pair validation
+slightly prefers Q, while the noisy accumulated scene mean still overcorrects.
+
+On coherent anchors c400--899, the Q correction is real but partial. The global gap changes from
+`+0.010482 +- 0.002264` to `+0.007839 +- 0.002262` (25% closed). In the upper-Q population
+fixed from training it changes from `+0.029154 +- 0.006104` to `+0.005008 +- 0.006100` (83%
+closed; the training threshold selects 418,685 anchors, 24.6%). On the original learned-response
+tails it changes `P_s>0.1` from `+0.038466 +- 0.006959` to
+`+0.015934 +- 0.006954` and `P_s>0.2` from `+0.050745 +- 0.009552` to
+`+0.015114 +- 0.009539`. The old P_s correction remains stronger on those targets
+(`-0.005237` and `+0.000127`, respectively) but overcorrects globally. Conclusion: Q_d2
+contains transferable physical bias information and calibrates its own localized high-Q group, but
+it is not a complete replacement for the learned signed scene response; a combined Q + P_s
+coordinate is the better next test.
+
+Added the physical-proxy common/training/anchor-scoring/transfer scripts, four Slurm wrappers, and
+two focused proxy tests. Canonical artifacts are
+`results/v22_proxy_qd2_correction_transfer_c20-39_anchor_c400-899_v2.*`; the model and 500
+truth-blind anchor score shards are under
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/v22_proxy_qd2_correction_v1/`.
+Training job 15776596, anchor array 15776597, and corrected evaluation 15776972 completed with exit
+0. Job 15776598 had already written all numerical tables before a presentation-only pandas
+`sem` name collision stopped figure creation; the fix was smoke-tested and the v2 rerun completed
+cleanly. Python/Bash syntax, two focused tests, hash/replay/population guards, whitespace checks,
+strict JSON, PDF/300-dpi PNG export, and visual figure inspection pass.
+
+## 2026-08-15m  A global correction gain is too weak and unstable to promote
+
+Continued the half-shear-only tuning of the depth-3 scene-informed pair correction from
+2026-08-15l by testing one explicit post-fit gain.  The scan covered gains 0.00--1.50 in steps of
+0.01 and used exactly the same two selection populations as the tree search: internal c160--199
+official-validation pairs and external development c0--19.  For every gain, pair MSE was evaluated
+exactly from row-level residual/correction moments; the bias objective was the previous equal-weight
+pair-curve/scene-curve RMS score, minimized in the worse of the two populations.  All aggregation
+and the 2,000-repetition bootstrap used whole rendered cases.  Cases c20--39, coherent anchors, and
+ConstGold remained unopened until the gain was frozen.
+
+Simple damping is rejected: both selection blocks continue improving past unit gain.  Their
+population-specific optima are 1.18 (c160--199) and 1.13 (c0--19), and the guarded minimax scan
+selects 1.18.  Relative to unit gain, the calibration scores change only from `0.7417` to `0.7345`
+and from `0.5939` to `0.5877`.  Pair MSE remains better than V2.2 in both populations
+(`-0.01966%` and `-0.02524%`), but the apparent gain is not case-stable: the bootstrap selected-gain
+interval is 0.79--1.38, and gain 1.18 beats gain 1.00 on the worst-population score in only 51.0% of
+draws.  It also pushes the already negative global and tail scene residuals farther below zero.
+
+Applied the frozen 1.18 gain once to the final c40--199-trained model on search-held-out half-shear
+c20--39.  It fails the transfer check.  The conditional score degrades from `0.8372` at unit gain to
+`0.9353`; the global scene gap moves from `-0.006797 +- 0.002466` to
+`-0.007141 +- 0.002469`, and the `P_s>0.1` gap from `-0.025988 +- 0.016062` to
+`-0.030748 +- 0.016074`.  Pair MSE changes only from `-0.02624%` to `-0.02639%` relative to V2.2.
+Conclusion: do not promote the 1.18 gain.  Keep the unit-gain depth-3 correction as the tuned
+variant, while retaining the broader conclusion that half-shear case-block instability, not tree
+capacity or a single global amplitude, limits this correction.
+
+Added `scripts/evaluate_v22_grouped_rscene_strength.py`, four focused tests across the new gain
+logic and final-evaluation firewall, two Slurm wrappers, and an optional audited gain path in
+`scripts/evaluate_v22_grouped_rscene_hparam_final.py`.  Canonical artifacts are
+`results/v22_grouped_rscene_strength_tuning_v1_sel160-199_dev0-19.*` and
+`results/v22_grouped_rscene_strength_final_half_shear_c20-39.*`.  Jobs 15763083 and 15763090
+completed with exit 0 and empty stderr.  Nine focused/shared tests, Python compilation, Bash
+syntax, strict hashes/firewalls, exact reference closure, targeted whitespace checks, and visual
+inspection pass.  Neither selection nor final evaluation read coherent anchors or ConstGold.
+
+## 2026-08-15l  Half-shear-only tuning mildly improves the scene-informed correction
+
+Audited the loss of the 2026-08-15i correction before tuning.  The comparable fixed-recipe
+candidate (depth 5, 180 trees) has pair MSE `0.479352` on its c40--159 fit rows versus `0.479887`
+before correction, and `0.480925` on held-out c160--199 versus `0.481030` before correction
+(RMSE `0.69235` train and `0.69349` validation).  Thus the direct row loss generalizes, but its
+gain is tiny because the half-shear pair labels are dominated by irreducible scatter; conditional
+mean loss is the scientifically relevant discriminator.
+
+Ran a deterministic 18-candidate search around the conservative XGBoost recipe without reading
+coherent anchors or ConstGold.  Candidates fit only official V2.2 validation rows in c40--139,
+used c140--159 only for early stopping, and were selected on c160--199 plus external c0--19.
+Ordinary pair MSE had to be non-worse than V2.2 in both selection populations.  Among eligible
+models, selection minimized the worse of the two populations' conditional-calibration scores:
+the equal-weight mean of the pair-residual-curve RMS and accumulated-scene-gap-curve RMS, each
+normalized to V2.2.  Cases c20--39 were excluded until the recipe was frozen.
+
+The selected recipe is the smoother depth-3 model with `min_child_weight=2000`, `reg_lambda=10`,
+`eta=0.05`, and 283 early-stopped trees.  Its c40--139 fit MSE/RMSE are
+`0.478591`/`0.691803`; c140--159 early-stop MSE/RMSE are `0.484689`/`0.696196`.  On c160--199 it
+gives MSE `0.480929` versus V2.2 `0.481030` (`-0.02066%`) and calibration score `0.7417`; on c0--19
+it gives `0.479591` versus `0.479712` (`-0.02538%`) and score `0.5939`.  The early-stopped depth-5
+baseline scores `0.7606` and `0.5929`, so depth 3 improves the predeclared worst-population score
+from `0.7606` to `0.7417` while retaining the pair-MSE guardrail.  The small spread across all 18
+models shows that tree hyperparameters are a secondary lever, not the source of the large transfer
+effect.
+
+Retrained the frozen recipe on all 7,570,479 c40--199 fit rows and evaluated it only on half-shear
+c20--39.  This block was not used by the search, although it had been inspected in earlier work and
+is therefore not a never-seen experiment.  Relative to the current correction, the tuned model
+improves the c20--39 conditional score from `0.8591` to `0.8372`, moves global pair residual from
+`-0.000868 +- 0.000293` to `-0.000810 +- 0.000294`, and reduces the global scene overcorrection
+from `-0.007283 +- 0.002457` to `-0.006797 +- 0.002466`.  The `P_s>0.1` tail is essentially
+unchanged (`-0.026247 +- 0.016021` to `-0.025988 +- 0.016062`).  Ordinary pair-MSE improvement is
+slightly smaller, `-0.03094%` to `-0.02624%`, as expected for the smoother bias-focused model.
+Conclusion: this is a real but modest tuning improvement; capacity tuning does not solve the
+case-block instability of the accumulated tail.  A next round should target case-robust/cross-fit
+calibration strength rather than deeper trees.
+
+Added `scripts/v22_grouped_rscene_hparam_common.py`, candidate/final training and evaluation
+scripts, one focused test module, and five Slurm wrappers/submitters.  Canonical artifacts are
+`results/v22_grouped_rscene_hparam_tuning_v1_c40-139_es140-159_sel160-199_dev0-19.*` and
+`results/v22_grouped_rscene_hparam_final_half_shear_c20-39.*`; models remain under
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/v22_grouped_rscene_tune_v1/run/`.
+Candidate array 15762949, clean tuning export 15763016, final retrain 15763004, and clean c20--39
+evaluation 15763012 completed with exit 0 and empty stderr.  Two earlier export attempts and the
+first c20--39 export wrote complete scientific artifacts but exited at the final stdout pretty-print
+on NumPy types; serializer fixes were applied and the clean reruns reproduce the metrics exactly.
+Fourteen focused/shared tests, Python compilation, Bash syntax, strict model/selection hashes,
+exact CSV row counts, reference closure, original-resolution and grayscale figure inspection, and
+targeted whitespace checks pass.  Neither model selection nor final evaluation opened coherent
+anchors or ConstGold.
+
+## 2026-08-15k  Pair-prediction residual curve shows where the scene-informed correction acts
+
+Remade the pair residual diagnostic for the frozen 2026-08-15i correction on independent
+half-shear validation cases c20--39.  Both V2.2 and corrected curves use the same 20 pooled
+quantile bins of frozen V2.2 pair prediction, so labels do not define bins and horizontal movement
+cannot masquerade as a correction.  The plot includes the V2.2 prediction density and uses
+colorblind-safe colors plus redundant marker/linestyle encoding; errors are one rendered-case SEM.
+
+Across 4,727,805 pairs, the global `label-prediction` residual changes only from
+`-0.000583 +- 0.000292` to `-0.000868 +- 0.000293`.  The conditional changes are much larger.  In
+the lowest-prediction 5% (`<p>=-0.00956`) the residual moves from
+`+0.00482 +- 0.00178` to `-0.00169 +- 0.00179`.  Around `<p>=+0.00939`, the prominent
+`-0.00671 +- 0.00210` V2.2 dip is removed (`-0.00014 +- 0.00210`).  In the highest-prediction 5%
+(`<p>=+0.15248`) the already small negative residual becomes slightly more negative,
+`-0.00229 +- 0.00162` to `-0.00332 +- 0.00159`.  Thus the near-zero global shift hides a useful
+conditional repair plus modest overcorrection in some negative-prediction bins.
+
+Added `scripts/plot_v22_grouped_rscene_pair_residual_validation.py`, two focused tests, and
+`jobs/job_plot_v22_grouped_rscene_pair_residual_validation.sh`.  Canonical artifacts are
+`results/v22_grouped_rscene_pair_residual_vs_prediction_validation_c20-39.{json,csv,md,pdf,png}`.
+Job 15762884 completed in 32 s with exit 0, 656 MB MaxRSS, and empty stderr.  Seven focused/shared
+tests, Python/Bash syntax, scheduler dry-run, strict closure to the final-transfer global metrics,
+strict JSON/CSV checks, targeted whitespace checks, original-resolution inspection, and grayscale
+inspection pass.  This plotting run reads neither ConstGold nor coherent-anchor truth.
+
+## 2026-08-15j  Scene-informed pair correction transfers to ConstGold but overfills the global gap
+
+Applied the already-frozen 2026-08-15i pair residual model to the established V2.2 ConstGold
+evaluation cases c40--139.  Each deployed V2.2 pair was scored with its own physical features and
+prediction plus the full primary-scene V2.2 sum and supported-pair multiplicity; corrected pairs
+were then summed per primary.  No ConstGold response entered training, tuning, thresholding, or
+model selection.  The replay covers 102,543,852 supported pairs and 6,376,256 supported primaries;
+the baseline lookup closes case by case to maximum/mean-absolute differences
+`3.07e-7`/`5.33e-9`.
+
+On the exact 5,642,349-row V2.2 rectangular domain, with 99.9999823% lookup coverage and the
+unchanged 16-seed flow ensemble, the correction raises mean `R_blend` from `0.12566564` to
+`0.14259242` (`+13.47%`, additive `+0.01692678`).  The original response gap is only
+`R_sim-R_model=+0.01026659`, so the correction supplies 164.9% of it and leaves
+`R_sim-R_model=-0.00666018`.  With `m=R_sim/R_model-1`, V2.2 changes from
+`+1.08045 +- 0.17920%` to `-0.68494 +- 0.17456%`, where the quoted uncertainty combines the
+16-flow-seed SEM and 100-case simulation SEM in quadrature.  The paired shift is
+`-1.76538 +- 0.00435` percentage points from flow-seed variation.  Thus the frozen correction
+improves the absolute global bias but crosses zero significantly; its mild global overcorrection on
+coherent anchors transfers in the same direction to ConstGold.
+
+Added `scripts/build_v22_grouped_rscene_constgold_lookup.py`, two focused tests, and the lookup,
+evaluation, and submission Slurm wrappers.  Canonical outputs are
+`results/v22_grouped_rscene_constgold_lookup_c40-139.json`,
+`results/constgold_m_swap_v22_grouped_rscene_16seed.json`, and the 175 MB lookup under
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/v22_grouped_rscene_v1/constgold_c40-139/`.
+Jobs 15762809 and 15762810 completed with exit 0 and empty stderr.  Seven shared/focused tests,
+Python compilation, Bash syntax, scheduler dry-runs, strict JSON parsing, exact-key/coverage/model-
+hash/firewall guards, and targeted whitespace checks pass.  The first submission 15762803 stopped
+before reading any case at a missing default-path argument; it produced no output, its dependency
+15762804 was cancelled, and the argument path was fixed before the completed run.
+
+## 2026-08-15i  Pair-aware scene-conditioned residual model repairs the coherent tail but overcorrects globally
+
+Tested the pair-aware alternative to the scalar `c(P_s)` lookup from 2026-08-15h.  The deployed
+V2.2 prediction remains frozen and the learned quantity is an additive pair correction
+`g(x_pair,p_pair,P_s,log(1+n_s))`.  Its 12 label-free inputs are the seven original scaled pair
+features, frozen pair prediction, physical flux and size ratios, full frozen scene sum `P_s`, and
+supported-pair multiplicity.  The target is the held-out half-shear pair residual.  The loss keeps
+ordinary row MSE and adds `lambda` times the equal-weight mean squared residual of 20 frozen
+`P_s` bins; its XGBoost custom gradient and positive block-curvature approximation were checked
+against finite differences.  The scene cache replays all 4,506,407 c40--199 scenes to `2.4e-7`
+maximum absolute response difference and zero pair-count difference.
+
+The protocol kept outcome use separated.  Candidate corrections used only the official V2.2
+random-row validation pairs in c40--159 (5,681,431 pairs).  Strengths `lambda=0,1,3,10,30` were
+selected using internal official-validation pairs in c160--199 plus external development cases
+c0--19; c20--39 and coherent-anchor truth remained unopened.  Every candidate closed the
+development `P_s>0.1` gap and improved ordinary pair MSE.  The predeclared minimum summed
+absolute-tail-gap rule selected `lambda=0`: c160--199 changes from
+`+0.026953 +- 0.022249` to `-0.000027 +- 0.022172`, and c0--19 changes from
+`+0.023906 +- 0.009989` to `-0.002623 +- 0.009956`; pair MSE improves by
+`0.02149%` and `0.03135%`, respectively.  Explicit grouped penalties are statistically
+indistinguishable and slightly worse under that rule (for example `lambda=3` gives tail gaps
+`-0.000055` and `-0.002612`).  Thus the useful ingredient is the pair-aware residual coordinate,
+including `P_s` and multiplicity, rather than extra bin-mean weighting.
+
+Retrained the selected model once on all 7,570,479 official-validation pairs in c40--199, then
+froze 500 model-only coherent-anchor score shards before reading truth.  The final coherent-tail
+transfer is strong: c400--899 `P_s>0.1` moves from `+0.038466 +- 0.006959` to
+`-0.005237 +- 0.006966`, and `P_s>0.2` from `+0.050745 +- 0.009552` to
+`+0.000127 +- 0.009542`.  Unlike the scalar lookup, the pair-aware model therefore lands the
+high-response anchor tail near zero without choosing a post-hoc strength from anchor truth.
+
+It is not a clean global calibration.  All anchors move from `+0.010482 +- 0.002264` to
+`-0.005282 +- 0.002266`; the `P_s<=0.1` complement moves from `+0.002885 +- 0.002068` to
+`-0.005283 +- 0.002067`.  On the sealed half-shear c20--39 block, whose noisy measured tail gap
+is only `+0.000459 +- 0.016005`, the frozen correction overshoots it to
+`-0.026247 +- 0.016021`; the global scene gap changes from `-0.004890 +- 0.002451` to
+`-0.007283 +- 0.002457`.  Ordinary sealed pair MSE nevertheless improves by
+`0.030940 +- 0.003562%`.  The defensible conclusion is that half-shear pair residuals transfer
+well enough to identify and repair the coherent high-`P_s` tail, but their scene-level conditional
+mean is not stable enough across 20-case half-shear blocks to certify a universal correction, and
+the learned layer overcorrects the outside-tail/global anchor population.
+
+Added the grouped-cache/common/training/candidate-selection/anchor-scoring/final-transfer scripts,
+five focused tests, and the corresponding SLURM wrappers and submitters.  Canonical artifacts are
+`results/v22_grouped_rscene_candidates_v1_c40-159_dev0-19_val160-199.*` and
+`results/v22_grouped_rscene_final_transfer_v1_c20-39_anchor_c400-899.*`; large cache, models, and
+500 anchor score shards remain under
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/v22_grouped_rscene_v1/`.
+Jobs `15762596`--`15762598` and `15762625`--`15762627` completed with exit 0 and empty stderr.
+Five focused tests, Python compilation, Bash syntax, strict JSON reads, exact population/replay
+checks, figure inspection, and targeted whitespace checks pass.  ConstGold was not opened.
+
+## 2026-08-15h  Scene-axis pair-mean calibration cross-fits internally but fails a stable transfer gate
+
+At the owner's request, tested a two-stage calibration that directly targets accumulated pair bias
+along the predicted scene-response axis.  Frozen V2.2 predictions are summed over every supported
+pair of a primary to define `P_s`; labels never enter this coordinate or its bins.  The additive
+per-pair lookup in bin `b` is the exact bin-mean-loss solution
+`c_b = sum(label - V2.2) / N_validation_pairs`.  It was fitted only on the official random-row 20%
+validation subset of half-shear cases c40--199 (7,570,479 pairs in 4,506,407 supported scenes),
+with 20 scene-quantile bins and fixed 0.05/0.1/0.2 boundaries replacing their nearest quantile
+edges.  The lookup itself was also cross-fitted over four rendered-case folds before external
+evaluation.  V2.2 remained frozen and ConstGold was not opened.
+
+The layer learns the internal effect cleanly.  In the frozen `P_s>0.1` tail, the case-OOF estimated
+scene gap moves from `+0.026866 +- 0.010480` to `-0.000260 +- 0.010511` at literal strength one.
+The ordinary validation-pair MSE changes by only `-0.000082 +- 0.000280%`; the correction therefore
+targets a conditional mean without paying a meaningful global row-loss cost.  The fitted high-tail
+scene shift is `+0.02713` for the half-shear mean multiplicity of 9.368 pairs.
+
+Transfer is not stable enough to promote the calibration.  On all external half-shear c0--39, the
+tail gap is `+0.012182 +- 0.009499` before and `-0.014923 +- 0.009489` after.  This average hides a
+predeclared split disagreement: c0--19 moves from `+0.023906 +- 0.009989` to
+`-0.003227 +- 0.010012`, whereas the untouched c20--39 half moves from
+`+0.000459 +- 0.016005` to `-0.026620 +- 0.015970`.  External c20--39 ordinary pair MSE changes by
+only `+0.000206 +- 0.000412%`, so row MSE is not the blocker; the learned conditional mean itself
+does not replicate in the designated validation half.
+
+On coherent c400--899 anchors, literal strength one changes the global gap from
+`+0.010482 +- 0.002264` to `+0.001479 +- 0.002262`, but overshoots the frozen tail from
+`+0.038466 +- 0.006959` to `-0.009764 +- 0.006956`; the c700--899 tail similarly moves from
+`+0.028024 +- 0.010731` to `-0.020206 +- 0.010726`.  Strength 0.75 happens to put the all-anchor
+tail at `+0.002294 +- 0.006957`, but coherent truth was not a selection set and cannot justify that
+choice; the same strength gives `-0.019850 +- 0.015978` on external c20--39.  The mechanism is
+explicit: coherent tail scenes contain 16.43 supported pairs, versus 9.37 in half-shear, so the
+same learned per-pair correction produces a `+0.04823` coherent scene shift instead of `+0.02708`.
+This simple `c(P_s)` lookup therefore confounds the desired scene correction with pair multiplicity.
+A next experiment should compare a once-per-scene `C(P_s)` correction or a constrained grouped-loss
+model using pair features plus `P_s`; neither should be selected from the already-opened anchors.
+
+Added `scripts/fit_v22_rscene_pair_mean_calibration.py`, four focused tests, and
+`jobs/job_fit_v22_rscene_pair_mean_calibration.sh`.  Canonical artifacts are
+`results/v22_rscene_pair_mean_calibration_v2_c0-39_anchor_c400-899.{json,model.json,md,png,pdf,fit_bins.csv,external_bins.csv,anchor_bins.csv,strengths.csv}`.
+Job 15762535 completed in 1:10 with exit 0, 1.19 GB MaxRSS, and empty stderr.  Four focused tests,
+Python/Bash syntax, scheduler dry-run, exact population/count/residual identities, strict JSON,
+bin-mean closure below `4.2e-17`, figure inspection, and whitespace checks pass.  The preserved
+first-pass artifacts without `_v2` (job 15762519) are superseded because inserting rather than
+replacing the 0.05 edge created a narrow 0.0500--0.050226 diagnostic bin; headline tail conclusions
+are unchanged.
+
+## 2026-08-15g  Exact matched-domain split reveals a tail generalization failure
+
+At the owner's request, isolated the only remaining difference between the old all-c40--199
+calibration plot and the new validation-only plot.  Built a two-panel, shared-axis comparison of
+the official random 80% fitting rows and 20% validation rows for V2.2 / alpha=0.035 / 0.05 / 0.10,
+holding cases, V2.1 primary domain, four frozen checkpoints, residual sign, 20 own-prediction
+quantile bins, and case-SEM definition fixed.  No model was retrained.  Fitting and validation use
+the same sklearn `random_state=321` mask actually used by all four trainers.
+
+An exact-population guard caught a ten-row discrepancy before accepting the plot.  The OOF cache's
+raw truth columns are float32, whereas the old calibration plot cut the original Feather float64
+columns.  Streaming all 37,852,393 fitting-window rows from the original catalogue and checking
+case, input index, and every cached raw feature row-for-row found exactly 10 float32 false
+exclusions and zero false inclusions.  All ten have true `Re=0.50000001399` arcsec rounded to
+float32 `0.5`, so the strict `Re>0.5` boundary rejects them; seven belong to fitting and three to
+validation.  The canonical exact mask retains 28,067,637 fitting plus 7,016,707 validation pairs,
+which sums exactly to the old plot's 35,084,344 rows.  The preceding cached-float32 training result
+from job 15762302 is superseded; its curves differ only below printed precision.
+
+The global means transfer, but the tails do not.  V2.2 global `label-prediction` is
+`-0.000006 +- 0.000132` on fitting and `+0.000210 +- 0.000223` on validation.  In its lowest own-
+prediction 5% bin it flips from `-0.022063 +- 0.000698` fitting to
+`+0.007615 +- 0.001255` validation; in its highest bin it flips from
+`+0.011242 +- 0.000799` to `-0.001309 +- 0.001586`.  The split prediction-bin means themselves
+match closely (V2.2 low `-0.008593/-0.008622`, high `0.144676/0.143678`), so the reversal is not a
+different x population.  This is a direct tail-generalization failure: the old curve's apparent
+need to amplify extreme V2.2 predictions is carried by fitting rows and does not transfer to held-
+out rows.
+
+The old all-row V2.2 curve is quantitatively the 80/20 mixture: exact-count weighting of the two
+split point estimates gives global/low/high `+0.0000370/-0.0161278/+0.0087319`, versus the old
+plot's `+0.0000372/-0.0161343/+0.0087266` (differences <=`6.6e-6`).  Thus its visual appearance is
+training-dominated, not a V2.1-domain effect.  Response weighting reduces or reverses the fitting
+tail residuals but progressively overshoots validation: alpha=0.035/0.05/0.10 validation low/high
+are `+0.010559/-0.013342`, `+0.012582/-0.016613`, and `+0.016838/-0.022875`.  The near-zero global
+means hide cancellation between the two tails.
+
+Added the exact float64-mask builder, generalized the official-split plotter, and added the paired
+comparison plotter, canonical Slurm wrapper, and split/population guards.  Job 15762328 completed
+in 6:35 with exit 0 and 2.75 GB MaxRSS; stderr is empty.  The exact mask lives at
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/v22_official_exact_v21_domain_v1/`.
+Canonical comparison artifacts are
+`results/v22_pair_residual_vs_prediction_weight_scan_official_train_vs_validation_v21domain_c40-199`
+`.{json,csv,md,png,pdf}`; exact one-panel split artifacts use the `official_training_exactv21` and
+`official_validation_exactv21` stems.  Eighteen focused/shared tests, Python/Bash syntax, scheduler
+dry-run, source/cache row alignment, exact partition closure, strict JSON/CSV checks, whitespace
+checks, original-resolution inspection, and grayscale inspection pass.  Color plus redundant line
+style/marker encoding remains legible without color.  ConstGold and coherent-anchor truth were not
+opened.
+
+## 2026-08-15f  V2.1-cut internal-validation overlay isolates the split effect
+
+At the owner's request, applied the old calibration figure's exact V2.1 primary-domain cut to the
+four-model official-validation overlay: primary true `Re > 0.5` arcsec and deterministic expected
+true `S/N > 10`, with no secondary cut.  The cut is evaluated from the cached raw primary columns
+only after selecting the exact stored `official_train=False` rows, so the official random split is
+unchanged.  It retains 7,016,704 of 7,570,479 validation pairs (92.685%; 553,775 removed) across all
+160 cases, or 42,963--44,719 pairs per case.  This is the clean population match to the old
+35,084,344-pair all-c40--199 V2.2 calibration plot.
+
+The cut barely changes the official-validation result.  Global case-balanced `label - prediction`
+residuals for V2.2 / alpha=0.035 / 0.05 / 0.10 are respectively
+`+0.000210 +- 0.000223`, `-0.000154 +- 0.000223`, `-0.000215 +- 0.000223`, and
+`-0.000343 +- 0.000223`.  Their lowest-own-prediction 5% residuals are `+0.007615`, `+0.010559`,
+`+0.012582`, and `+0.016838`; their highest-own-prediction 5% residuals are `-0.001309`,
+`-0.013342`, `-0.016613`, and `-0.022875`.  The corresponding full-V2.2-domain values in 15e were
+within about 0.0008--0.0015 in every quoted tail and within 0.00008 globally.  Thus the V2.1
+population restriction does not explain the old/new curve reversal: after matching population, the
+remaining material distinction is that the old plot mixes the 80% fitting rows into its curve,
+whereas this plot contains only the official 20% validation rows.
+
+Added an optional `--v21-primary-domain` path to
+`scripts/plot_positive_weighted_pair_residual_official_validation_overlay.py`, a dedicated Slurm
+wrapper, and focused named-column guards.  Job 15762243 completed in 1:39 with exit 0 and 734 MB
+MaxRSS; stderr is empty.  Canonical artifacts are
+`results/v22_pair_residual_vs_prediction_weight_scan_official_validation_v21domain_c40-199_overlay`
+`.{json,csv,md,png,pdf}`.  Fourteen focused/shared tests, Python/Bash syntax, scheduler dry-run,
+exact pre/post-cut counts, strict metadata/JSON checks, whitespace checks, and original-resolution
+figure inspection pass.  ConstGold and coherent-anchor truth were not opened.
+
+## 2026-08-15e  Four-model curve on the exact internal training-validation split
+
+At the owner's clarification, remade the one-panel V2.2 / alpha=0.035 / 0.05 / 0.10 pair-residual
+overlay on the emulators' exact official random validation split inside half-shear cases c40--199,
+rather than on the external c20--39 cases.  The selection is `official_train=False` after restricting
+to the fitting window: 7,570,479 validation pairs and 30,281,914 training pairs from 37,852,393
+supported rows, using the stored sklearn `test_size=0.2, random_state=321` split.  Every validation
+case contributes 46,351--48,054 rows.  Each model retains 20 equal-population bins of its own frozen
+prediction; labels do not enter the binning and errors are paired SEMs across all 160 rendered cases.
+
+The internal-validation global `label - prediction` residuals for V2.2 / alpha=0.035 / 0.05 / 0.10
+are `+0.000235 +- 0.000229`, `-0.000194 +- 0.000229`, `-0.000264 +- 0.000229`, and
+`-0.000422 +- 0.000230`.  Their lowest-prediction 5% residuals are `+0.006817`, `+0.009775`,
+`+0.012151`, and `+0.016459`; their highest-prediction 5% residuals are `+0.000191`, `-0.013249`,
+`-0.017643`, and `-0.024211`.  Thus V2.2 is consistent with zero in its highest own-prediction bin,
+while response weighting progressively overshoots it.  The V2.2 global value independently matches
+the earlier exact-split pooled residual `+0.000237295`; the small difference is case balancing.
+
+This figure is not population-identical to the old all-c40--199 V2.2 calibration image: that image's
+saved metadata has `v21_primary_domain=true`, whereas the official training split uses V2.2's full
+rectangular regression support (`v21_primary_domain=false`).  Therefore the tail-sign comparison
+between the two figures changes both split and population and must not be read as pure overfitting.
+
+Generalized `scripts/plot_positive_weighted_pair_residual_validation_overlay.py` to accept an
+explicit title and optional reference closure, and added
+`scripts/plot_positive_weighted_pair_residual_official_validation_overlay.py` plus
+`jobs/job_plot_positive_weighted_pair_residual_official_validation_overlay.sh`.  Job 15762200
+completed in 1:48 with exit 0 and 733 MB MaxRSS; stderr is empty.  Canonical artifacts are
+`results/v22_pair_residual_vs_prediction_weight_scan_official_validation_c40-199_overlay.{json,csv,md,png,pdf}`.
+Python/Bash syntax, five shared calibration tests, scheduler dry-run, exact split/count checks,
+independent closure to the prior V2.2 validation audit, strict JSON/CSV recomputation, provenance
+hashes, whitespace checks, and full-resolution figure inspection pass.  ConstGold and coherent-anchor
+truth were not opened.
+
+## 2026-08-15d  One-panel validation overlay includes V2.2 and alpha=0.035
+
+Combined the prediction-binned half-shear validation residual curves into one shared axis, taking
+the requested old model to mean the frozen V2.2 baseline and adding alpha=0.035 to the existing
+alpha=0.05 and 0.10 comparison.  All four curves use the exact same 4,727,805 supported pairs in
+external cases c20--39; each curve retains 20 equal-population bins of its own frozen prediction,
+with label-independent binning and paired rendered-case SEMs.  The single gray backdrop is the
+V2.2 prediction density; four nearly identical histograms were deliberately not overplotted.
+
+The global `label - prediction` residuals for V2.2 / alpha=0.035 / 0.05 / 0.10 are respectively
+`-0.000583 +- 0.000292`, `-0.001023 +- 0.000290`, `-0.001086 +- 0.000290`, and
+`-0.001244 +- 0.000291`.  Their lowest-prediction 5% residuals are `+0.004816`, `+0.011684`,
+`+0.010450`, and `+0.016849`; their highest-prediction 5% residuals are `-0.002285`, `-0.016775`,
+`-0.019520`, and `-0.026527`.  Thus the overlay makes the progression visible: V2.2 is closest to
+zero at both extremes; all three weighted models overshoot more strongly, alpha=0.10 is strongest,
+and the positive-prediction extreme worsens monotonically with alpha.  The negative extreme is not
+strictly ordered between alpha=0.035 and 0.05.  This own-prediction calibration curve is distinct
+from the earlier frozen-V2.2 response-bin tail diagnostic.
+
+Added `scripts/plot_positive_weighted_pair_residual_validation_overlay.py` and
+`jobs/job_plot_positive_weighted_pair_residual_validation_overlay.sh`.  Job 15762158 completed in
+1:15 with exit 0 and 421 MB MaxRSS; stderr is empty.  Canonical artifacts are
+`results/v22_pair_residual_vs_prediction_weight_scan_validation_c20-39_overlay.{json,csv,md,png,pdf}`.
+Python/Bash syntax, five shared calibration tests, scheduler dry-run, strict closure of every model
+to the earlier independent-validation summary, JSON/CSV recomputation, model provenance hashes,
+whitespace checks, and full-resolution figure inspection pass.  ConstGold and coherent-anchor truth
+were not opened.
+
+## 2026-08-15c  Prediction-binned validation curves show alpha=0.10 overshoots both tails
+
+Remade the earlier pair `label - prediction` panel for the frozen positive-response-weighted
+alpha=0.05 and alpha=0.10 BlendEMU models on the independent half-shear validation cases c20--39.
+The common population has 4,727,805 supported pairs across 20 rendered cases; both models were
+trained on c40--199.  Each panel uses 20 equal-population quantile bins of that model's own frozen
+prediction, with no label-dependent selection or binning, and paired one-case SEMs.  ConstGold and
+coherent-anchor truth were not opened.
+
+The common case-balanced global label is `+0.00698189`.  Alpha=0.05 predicts `+0.00806824`, giving
+`label - prediction = -0.00108635 +- 0.00029039`; alpha=0.10 predicts `+0.00822626`, giving
+`-0.00124437 +- 0.00029086`.  On the same cases the alpha=0.10 minus alpha=0.05 residual shift is
+`-0.00015802 +- 0.00000487` paired.  The middle prediction bins remain close to zero, but both
+extremes overshoot and alpha=0.10 amplifies the effect: in the leftmost/rightmost 5% bins,
+alpha=0.05 has residuals `+0.010450 +- 0.001050` / `-0.019520 +- 0.001977`, while alpha=0.10 has
+`+0.016849 +- 0.001040` / `-0.026527 +- 0.001761`.  These are each model's own prediction
+quantiles, not the frozen-V2.2 high-response bins used in the earlier loss-strength scan.
+
+Added `scripts/plot_positive_weighted_pair_residual_validation.py` and
+`jobs/job_plot_positive_weighted_pair_residual_validation.sh`.  Job 15762132 completed in 50 s
+with exit 0 and 421 MB MaxRSS; stderr is empty.  Canonical artifacts are
+`results/v22_pair_residual_vs_prediction_positive_weighted_validation_c20-39.{json,csv,md,png,pdf}`.
+Python/Bash syntax, five focused/shared calibration tests, scheduler dry-run, exact closure to the
+earlier independent-validation summary, strict JSON/CSV recomputation, model hashes, whitespace
+checks, and full-resolution figure inspection pass.  The superseded first attempt, job 15762124,
+stopped before writing outputs because its reference guard was evaluated before the local
+case-window metadata was attached; the initialization order was fixed before the completed run.
+
+## 2026-08-15b  Alpha=0.10 additive swap closes the established ConstGold mean
+
+At the owner's explicit request, evaluated the already-fixed positive-response alpha=0.10
+BlendEMU model on the established ConstGold cases c40--139.  This is an evaluation-only replay
+after the alpha scan was fixed outside ConstGold.  The exact existing 16 V2.2 flow-seed dumps were
+reused: the evaluator verified that the flow checkpoint's conditioners exclude `r_blend`, so only
+the additive per-object `R_blend` lookup had to be rebuilt.  No flow inference, training, fitting,
+or post-result candidate selection was performed.
+
+On the exact 5,642,349-row V2.2 rectangular domain, with 99.9999823% lookup coverage, the unchanged
+components are `R_sim=0.96255892` and `R_flow=0.82662669`.  Alpha=0.10 raises mean `R_blend` from
+`0.12566564` to `0.13649477` (`+8.6174%`) and changes
+`m=R_sim/(R_flow+R_blend)-1` from `+1.08045%` to `-0.05613%`.  The candidate uncertainty is
+`+-0.12305%` from the 16 flow seeds and `+-0.12612%` from the 100 rendered cases, or
+`+-0.17620%` in quadrature.  The paired change from V2.2 is
+`-1.13658 +- 0.00281` percentage points using the flow-seed spread.  Thus alpha=0.10 closes the
+ConstGold global mean and slightly crosses zero in point estimate; it remains fully consistent
+with zero.  This ConstGold result is not an alpha-selection gate: the external half-shear aggregate
+closure still supplies the non-ConstGold reason not to promote alpha=0.10 over the weaker
+alpha=0.035--0.05 region.
+
+Added `jobs/job_build_lookup_v22_positive010.sh`,
+`jobs/job_eval_m_swap_v22_positive010.sh`, and
+`jobs/submit_constgold_m_swap_v22_positive010.sh`.  Jobs 15757046 and 15757047 completed with exit
+0 in 19:35 and 2:27; both stderr files are empty.  Outputs are
+`results/blend_lookup_v22_rpowposa010_c40-139.feather` and
+`results/constgold_m_swap_v22_rpowposa010_16seed.json`.  Two focused tests, Python/Bash syntax,
+scheduler dry-runs, exact baseline/component identity, population/firewall/coverage guards,
+sentinels, artifact hashes, and whitespace checks pass.  This run covers the established
+`|g|=0.02` c40--139 set only; a fresh-realization c140--239 replay would be a separate confirmation
+if requested.  Do not scan further alpha values on ConstGold; assess any operating choice from the
+external half-shear validation instead.
+
+## 2026-08-15a  High-alpha scan exposes coherent cancellation
+
+Extended the positive-response squared-loss scan to alpha=0.10 and 0.20.  Alpha=0.10 reuses the
+existing matching model; alpha=0.20 was newly trained with the same half-shear c40--199 recipe as
+the lower-alpha models.  Both were scored on the exact 1,703,884 coherent-neighbour anchors in
+g=0.02 cases c400--899, using the frozen raw-V2.2 `R_scene > 0.1` tail.  Constgold was not opened.
+
+Across all c400--899 anchors, the truth-minus-prediction gap changes from
+`+0.010482 +- 0.002264` for frozen V2.2 to `+0.004110 +- 0.002262` at alpha=0.05,
+`+0.002069 +- 0.002262` at alpha=0.10, and `-0.000384 +- 0.002262` at alpha=0.20.  In the frozen
+high-response tail it changes from `+0.038466 +- 0.006959` to
+`+0.007700 +- 0.006962`, `-0.001584 +- 0.006966`, and `-0.010777 +- 0.006964`, respectively.
+The outside-tail gap is essentially unchanged.  On the previously emphasized c700--899 tail,
+alpha=0.05/0.10/0.20 give `-0.002794`, `-0.011895`, and `-0.021043`; alpha=0.20 therefore closes
+the whole-population mean by cancellation between a negatively overcorrected tail and the
+remaining positive gap, rather than by uniform calibration.
+
+The independent half-shear c20--39 check confirms the trade-off.  Alpha=0.05/0.10/0.20 give
+response-vector measured/model slopes `0.993069 +- 0.007259`, `0.970300 +- 0.006838`, and
+`0.947443 +- 0.006974`, while their common unweighted row-MSE changes are
+`-0.004134% +- 0.003890%`, `+0.006505% +- 0.004218%`, and
+`+0.021520% +- 0.005290%`.  The scalar high-pair residual continues toward zero, but aggregate
+response and global loss worsen above alpha about 0.05.  Thus alpha=0.10 is a useful tail-centering
+diagnostic, alpha=0.20 is too strong, and alpha=0.035--0.05 remains the robust operating region.
+
+Generalized `scripts/analyze_anchor_response_weak_weight_transfer.py` and its wrappers to compare
+an arbitrary model list; added the alpha=0.20 trainer, high-alpha coherent scoring/analysis chain,
+and extended half-shear evaluator.  Jobs 15756065--15756068 and 15756617 completed with exit 0.
+Canonical artifacts are
+`results/anchorblend_response_alpha_scan_transfer_v22_g002_c400-899.{json,csv,cases.csv,md,pdf,png}`
+and `results/v22_oof_conditional_learning_alpha020_c0-39.{json,csv,pair_bins.csv,scene_tail.csv,variance.csv,md,pdf,png}`.
+All 500 score parts per high-alpha model and all 100 array-task sentinels are present with empty
+scoring stderr.  Nine focused tests, Python/Bash syntax, strict population/firewall/metric checks,
+artifact checks, figure inspection, and whitespace checks pass; the alpha=0.20 trainer emitted
+only the already-known classification-magnitude coverage warning.
+
+## 2026-08-14p  Weak half-shear response weighting closes the coherent high-response tail
+
+Transferred the already-fixed alpha=0.035 and 0.05 positive-response loss models to the exact
+1,703,884 anchors in the coherent-neighbour `g=0.02` cases c400--899.  Neither model was trained or
+selected on coherent truth, and the tail remains the previously-fixed raw V2.2 scene-prediction
+cut `R_blend,V2.2 > 0.1`; all errors are one SEM across rendered cases.  These anchor cases had
+already been inspected in preceding diagnostics, so this is a direct transfer check, not a newly
+blind validation population.  Constgold was not opened.
+
+The coherent tail closes.  Across all 500 cases, its truth-minus-prediction gap changes from
+`+0.038466 +- 0.006959` for frozen V2.2 to `+0.012650 +- 0.006959` at alpha=0.035 and
+`+0.007700 +- 0.006962` at alpha=0.05, removing 67% and 80% of the point gap and leaving both
+consistent with zero at two case SEM.  On the previously emphasized c700--899 tail, the exact old
+`+0.028024 +- 0.010731` result becomes `+0.002225 +- 0.010740` and
+`-0.002794 +- 0.010746`, respectively: both are essentially closed without a sign-significant
+overshoot.
+
+The whole-anchor gap improves but does not vanish in point estimate.  On c400--899 it falls from
+`+0.010482 +- 0.002264` to `+0.005005 +- 0.002262` and `+0.004110 +- 0.002262`, a 52%/61%
+reduction; alpha=0.05 is consistent with zero at two SEM.  On c700--899 it falls from
+`+0.012689 +- 0.003615` to `+0.007211 +- 0.003611` and `+0.006280 +- 0.003611`.  The reason is
+localized: the c700--899 outside-tail gap is unchanged (`+0.008579` baseline,
+`+0.008621/+0.008804` for the two models).  Thus response-amplitude reweighting fixes the
+high-response tail learned from half-shear pairs, while a separate outside-tail component remains.
+
+Added `scripts/analyze_anchor_response_weak_weight_transfer.py`, its three focused tests, the
+200-task scoring wrapper, dependent analyzer, and submitter.  Jobs 15755396 (all 200 array tasks)
+and 15755397 completed with exit 0; all 200 scoring sentinels are present and every scoring stderr
+is empty.  Canonical artifacts are
+`results/anchorblend_response_weak_weight_transfer_v22_g002_c400-899.{json,csv,cases.csv,md,pdf,png}`;
+the 1,000 per-model/per-case score parts are under
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/anchor_weak_weight_transfer_g002_c400-899/`.
+Model hashes, exact key/truth/baseline identity, case coverage, Python/Bash syntax, scheduler
+dry-run, three tests, strict output checks, figure inspection, and whitespace checks pass.
+
+## 2026-08-14o  Case-OOF residual learning and weak response-loss scan
+
+Tested three ways to improve the frozen V2.2 half-shear pair model without opening constgold or
+coherent-anchor truth.  The cache exactly reproduces the 47,310,214 supported rows from cases
+c0--199; c40--199 (37,852,393 rows) supply the official fitting population and c0--39 remain
+external to every fitted model.  Base and residual predictions on c40--199 are cross-fitted over
+four interleaved rendered-case folds, so neither the conditional bias nor variance target sees an
+in-sample base prediction.  The primary report uses cases c20--39, with c0--19 retained as a
+development replication; response bins and scene selections were fixed from prior frozen-V2.2
+diagnostics and do not use response labels.
+
+Weak positive-response loss weighting has a real Pareto region.  On c20--39 the frozen model's
+response-vector closure is `1.06070 +- 0.00730`.  Strengths alpha=0.02, 0.035, 0.05, and 0.065 give
+`1.01982 +- 0.00684`, `1.00276 +- 0.00703`, `0.99307 +- 0.00726`, and
+`0.98623 +- 0.00715`, respectively.  Their common unweighted row MSE changes are all consistent
+with a small improvement, not a degradation; alpha=0.02 gives the largest change
+(`-0.00624% +- 0.00192%`).  Alpha=0.035 reduces the two highest frozen-response-bin deficits from
+`+0.0553/+0.0641` to `+0.0300/+0.0290`; alpha=0.05 reduces them further to
+`+0.0229/+0.0271`.  The development half follows the same progression, with vector slopes
+1.02165 and 1.01078 for alpha=0.035 and 0.05, so 0.035--0.05 is the robust compromise.  Stronger
+alpha>=0.10 starts to worsen common unweighted MSE and overcorrects the aggregate response.
+
+The conditional bias stack succeeds globally but is too aggressive in the extreme pair tail.  It
+improves external unweighted row MSE by `0.03286% +- 0.00210%` and changes vector closure to
+`0.99736 +- 0.00638`, but flips the combined top-two-bin deficit from
+`+0.05805 +- 0.01515` to `-0.05104 +- 0.01508`.  A constant mean alignment is negligible, so the
+problem is conditional shape rather than a global offset; the raw correction should not be
+deployed without shrinkage or a more constrained second stage.  The variance model itself tracks
+mean squared residual reasonably by validation decile, but its stabilized inverse-variance
+retrain is harmful: row MSE changes by `+0.03804% +- 0.00280%`, vector closure becomes
+`1.15507 +- 0.00853`, and the top-two-bin deficit grows to `+0.16206 +- 0.01522`.  It downweights
+precisely the noisy, high-leverage blended rows, so it is useful for uncertainty description but
+not as the mean-model loss by itself.
+
+Added `scripts/prepare_v22_oof_learning_cache.py`, `scripts/train_v22_oof_learning.py`,
+`scripts/evaluate_v22_oof_learning.py`, the dependency-chain cluster wrappers, and six focused
+tests.  Jobs 15754546--15754554 all completed with exit 0.  Canonical outputs are
+`results/v22_oof_conditional_learning_c0-39.{json,csv,pair_bins.csv,scene_tail.csv,variance.csv,md,pdf,png}`;
+large models and cross-fitted arrays are under
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/v22_oof_learning_v1/`.  Cache identities,
+fold coverage, strict JSON, Python/Bash syntax, scheduler dry-run, six tests, figure inspection,
+and whitespace checks pass.
+
+## 2026-08-14n  Held-out half-shear pairs reproduce the coherent high-response tail gap
+
+Grouped the frozen V2.2 emulator's exact internal validation rows into their complete half-shear
+primary scenes.  The validation population is the established sklearn 80/20 row-random split
+(`random_state=321`) on cases c40--199: 7,570,479 held-out pairs among 37,852,393 supported rows,
+covering 4,506,407 primaries.  Scene membership and the main cut use the full supported-pair sum
+of frozen V2.2 predictions; no response label enters selection.  The direct coherent-anchor
+analogue reuses the already-fixed `R_scene > 0.1` threshold, with predeclared primary-magnitude
+ladders to localize the descriptive faint-primary association.  Held-out label-minus-prediction
+sums are scaled by the exact inverse validation fraction and errors are one SEM across the 160
+rendered cases.
+
+The tail has a real conditional pair-model deficit.  For `R_scene > 0.1`, 603,697 scenes and
+1,130,481 validation pairs give label `0.441992 +- 0.010679`, V2.2
+`0.415126 +- 0.001355`, and residual `+0.026866 +- 0.010480` per selected primary.  This is
+numerically identical to the independent coherent-anchor c700--899 tail gap
+`+0.028024 +- 0.010731`: half-shear minus coherent is `-0.00116 +- 0.01500`.  The raw held-out
+pair residual is only `+0.002894` (case-balanced `+0.002886 +- 0.001121`), but there are
+`9.368` supported pairs per selected scene, so the small conditional error accumulates to the
+scene-scale deficit.  Adding `r_p >= 24` leaves it unchanged at
+`+0.027076 +- 0.012187`; `r_p >= 24.5` strengthens it to
+`+0.041514 +- 0.013579`.  The corresponding cross-component nulls are all consistent with zero.
+These scenes are genuinely tail-like: mean `r_p=24.565`, total neighbour/primary flux ratio
+`18.19`, maximum single-neighbour ratio `14.04`, and nearest supported pair distance `2.51` arcsec.
+
+The preceding global validation null was a cancellation.  The tail contributes
+`+0.003613 +- 0.001403` to the residual per all eligible primaries, while `R_scene <= 0.1`
+contributes `-0.001632 +- 0.001518`; their means close to the known global
+`+0.001980 +- 0.001928` exactly.  Tail-minus-outside is
+`+0.028751 +- 0.010848` case-paired.  Thus the held-out pair residual transfers strongly enough
+to explain the coherent high-response tail itself, but it does not explain the coherent outside-
+tail gap (`+0.00858` there versus `-0.00189` in half-shear validation).  This remains an internal
+row-random validation, not a case-held-out dataset, and the grouped labels are still one-neighbour
+half-shear measurements rather than coherent scene measurements.
+
+Artifacts are `results/v22_validation_tail_scene_residual_c40-199.{csv,cases.csv,json,md,pdf,png}`;
+the reusable 4.5-million-row scene table is under
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/v22_validation_tail_scenes_c40-199.feather`.
+Added `scripts/analyze_v22_validation_tail_scenes.py`, its cluster wrapper, and two focused tests.
+Job `15752432` completed in 4m46s with exit 0, 1.8 GB MaxRSS, and empty stderr.  The analysis
+replays the prior validation row counts, eligible-primary count, target moments, stored R2, and
+global label/prediction/residual/null means (maximum mean difference `1.4e-17`); both algebraic
+identities, Python/Bash syntax, scheduler dry-run, two tests, JSON/CSV outputs, raster/vector
+exports, full-resolution figure inspection, and whitespace checks pass.
+
+## 2026-08-14m  Exact legacy toys fail strongly when per-neighbour context is removed
+
+Repeated both reliable July 8 Gaussian-toy suites with the exact archived renderer, ngmix fitter,
+configuration grids, noise maps/seeds, `g=0.05`, 96-pixel stamp, 0.2-arcsec pixels, and 300/400
+technical repetitions.  The only new measurement replaces each contextual neighbour response
+(one neighbour sheared while every other galaxy remains present) with the response of an isolated
+primary--neighbour pair.  The old contextual primary response is retained for the direct requested
+contrast; a second closure also measures the primary alone.  The original contextual decomposition
+is rerun beside both as a control.  These are 38 fixed idealized configurations of circular
+HLR=0.4-arcsec Gaussians, not catalogue draws or independent population samples.
+
+The old result replays: contextual excess remains approximately zero.  All 26 close-pair controls
+match the rounded historical log to 0.001.  In the older 12-row flux sweep, all quoted uncertainty
+values replay within 0.00044; five low-S/N means differ in the last logged digit across cluster CPU
+models, with maximum absolute difference 0.00266 = 0.089 of the old quoted SEM.  This difference is
+preserved in the audit rather than hidden by calling it bitwise identical.
+
+Removing the other neighbours changes the conclusion decisively for ordinary/equal-flux crowded
+scenes.  For the brighter equal-flux 1.2-arcsec ring, old contextual excess is
+`+0.0002 +- 0.0006`, but using isolated neighbour pairs with the same contextual primary gives
+`-2.5745 +- 0.0131` for four neighbours; isolating the primary too gives
+`-3.5165 +- 0.0361`.  The isolated neighbour-pair sum is `3.4916`, versus only `0.9170` when the
+same neighbour responses are measured with all galaxies present.  For the controlled faint-
+neighbour 1.0-arcsec multiplicity ladder, the direct pair-neighbour closure changes from
+`-0.0453 +- 0.0206` at N=2, to `-0.1351 +- 0.0266` at N=4, and
+`-0.7908 +- 0.0471` at N=8, while the contextual closure stays near zero.  Thus isolated pairs
+strongly over-add: each ordinary neighbour has more measurement leverage when competing galaxies
+are absent.  This is context/dilution, not a simultaneous-shear failure.  The effect is not
+universal: for very-faint neighbours (flux 0.12 of the primary) at 0.8 arcsec, the direct pair-only
+excess is `+0.0147 +- 0.0217`, `+0.0564 +- 0.0269`, and `+0.0476 +- 0.0386` for N=2/4/8, so their
+pair/context difference remains small.  Error terms are matched-noise technical SEMs within each
+fixed configuration.
+
+Canonical artifacts are `results/legacy_toy_no_context_exact_v1.{csv,json,md}`; raw matched draws
+and audits are under
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/legacy_toy_no_context_exact_v1/`.
+Added `scripts/run_legacy_toy_no_context.py`, `scripts/analyze_legacy_toy_no_context.py`, two array
+wrappers, one analysis wrapper, and two focused tests.  Hardest-scene pilot `15750938`, 12-task
+sweep array `15750956`, and 26-task close-pair array `15750957` completed successfully with empty
+stderr.  The first analysis job `15751043` failed closed before writing artifacts because a strict
+0.001 printed-log equality gate exposed the low-S/N CPU sensitivity above; no simulations were
+rerun.  The audited 0.1-old-SEM replay gate passed in analysis job `15751191`.  All 14,000 matched
+configuration/noise blocks are present, both closure identities close below `1.8e-15`, and Python,
+Bash, focused tests, scheduler dry-runs, JSON/CSV coverage, and whitespace validation pass.
+
+## 2026-08-14l  Three-leg Gaussian toys isolate a sparse context-dependent tail
+
+Ran the requested old-style controlled additivity experiment on catalogue-informed versions of
+the held-out high-response coherent anchors.  The frozen sample contains 48 distinct c700--899
+cases with raw V2.2 scene prediction above 0.2 and faint primaries
+(`24.5 <= primary_mag < 25.8`): 16 templates each with the 2, 4, or 8 response-leading close
+neighbours.  A pre-outcome feasibility run found only 12 distinct cases with eight neighbours
+inside 3 arcsec, so the close-neighbour radius was widened once to 4 arcsec before freezing the
+manifest; no measurement label or residual was used in selection.  Exact catalogue flux ratios,
+circularized sizes, separations, and angles are retained, but every source is rendered as a round
+Gaussian with the established Moffat PSF and ngmix Gaussian fitter.
+
+For every template at nominal primary S/N 12, 20, and 35, the primary remains unsheared and three
+matched legs measure: all selected neighbours sheared coherently; one neighbour sheared at a time
+with all other selected neighbours present, summed; and each primary-neighbour pair rendered in
+isolation, summed.  Central `g1/g2` responses use `g=0.02`.  Each cell has 200 technical noise
+repetitions with the identical noise image and fit seed in every counterfactual plus one noiseless
+control.  The independent statistical unit is the catalogue geometry, so repetitions are averaged
+before forming between-template SEMs and bootstrap intervals.  A frozen 12-template subset was
+also repeated at `g=0.01` with matched seeds.
+
+At S/N 20, the equal-template pooled responses are `0.33519 +- 0.09202` for coherent shear,
+`0.32639 +- 0.09102` for the contextual one-at-a-time sum, and `0.27418 +- 0.08493` for the
+isolated-pair sum.  The corresponding planned contrasts are coherent minus contextual
+`+0.00880 +- 0.01043`, contextual minus pair `+0.05221 +- 0.03715`, and coherent minus pair
+`+0.06101 +- 0.03926`; all pooled 95% t and template-bootstrap intervals cross zero.  There is no
+consistent monotonic neighbour-count trend.  The mean total discrepancy is sparse rather than
+population-wide: 36/48 geometries have absolute discrepancy below 0.1, the median is `+0.00491`,
+and removing the three largest absolute values changes the diagnostic mean to `+0.00023` (the
+analogous contextual-minus-pair mean becomes `-0.00505`).  Those three discrepancies
+(`+0.529`, `+1.057`, `+1.332`) have technical SEMs `0.188`, `0.127`, and `0.174`, respectively,
+so they are repeatable catastrophic configurations rather than ordinary Monte Carlo scatter.
+Single-seed noiseless controls are even more extreme for a few blends, consistent with ngmix
+mode switching in ambiguous geometries.  Thus this experiment supports approximate simultaneous-
+shear additivity for most scenes and localizes any isolated-pair failure to a small context-sensitive
+tail; it does not establish a nonzero population-average failure.  The `g=0.01 - g=0.02` total-
+contrast shift at S/N 20 is `-0.03557 +- 0.02103` on 12 templates, with its 95% t and bootstrap
+intervals including zero.
+
+Canonical artifacts are
+`results/anchor_highp_threeleg_gaussian_v22_g002_r200.{feather,pairs.feather,summary.csv,gcheck.csv,json,md,pdf,png}`;
+the frozen manifest is
+`results/anchor_highp_threeleg_gaussian_manifest_v22_c700-899.{feather,sources.feather,json}`.
+Added preparation, per-template runner, analysis, four SLURM wrappers, and four focused tests.
+Manifest job `15748601`, 48-task main array `15748691`, 12-task finite-shear array `15748692`, and
+analysis job `15748693` completed successfully; the deliberately fail-closed 3-arcsec feasibility
+attempt was job `15748575`.  All 28,800 noisy blocks and 144 noiseless controls succeeded, both
+explicit pair sums and the three-contrast identity close below `7.2e-15`, stderr is empty, and the
+full simulation arrays completed in under 28 minutes.  Python/Bash syntax, scheduler dry-runs,
+focused tests, raster/vector export, and full-resolution figure inspection pass.
+
+## 2026-08-14k  Raw V2.2 coherent residual has no centroid-offset trend
+
+Plotted the original V2.2 `R_blend` residual on the same held-out coherent-anchor cases c700--899
+against detection-centroid offset.  This diagnostic does not load or apply the later bias emulator:
+the y coordinate is exactly `R_blend_truth - R_blend_lsst_r_extnbr_v22`.  The x coordinate is
+`0.2 arcsec/pixel * max(distance_pixel_CM(+0.02), distance_pixel_CM(-0.02))`, avoiding an arbitrary
+choice of shear leg.  All 681,384 response anchors close one-to-one against both unique crossmatch
+catalogues.  Twelve equal-count offset bins are defined without using the response, with one-case
+SEM error bars; a lower histogram shows the strongly right-skewed offset distribution.
+
+There is no monotonic residual dependence on centroid offset.  The maximum offset has median
+`0.05181` arcsec, 84th percentile `0.12713` arcsec, 95th percentile `0.23519` arcsec, and maximum
+`0.49999` arcsec.  The case-balanced global residual is `+0.012689 +- 0.003615`.  The highest-minus-
+lowest offset-bin contrast is `-0.002236 +- 0.014608`; the within-case linear slope is
+`+0.000765 +- 0.002808` residual per global offset IQR (`0.06761` arcsec), and the 12 bin means have
+Spearman rho `0.357` (`p=0.255`).  A localized bin near `0.069` arcsec is high, but the curve is
+non-monotonic and the predeclared endpoint/slope summaries are null.  Centroid offset remains a
+post-render localization coordinate, not a causal or deployable correction variable.
+
+Canonical artifacts are
+`results/anchorblend_g002_v22_residual_vs_centroid_offset_c700-899.{csv,json,md,pdf,png}`.
+Added `scripts/plot_coherent_residual_vs_centroid_offset.py`, its one-CPU cluster wrapper, and two
+focused tests for the raw residual identity, both-leg maximum offset, case-balanced binning and
+paired endpoint contrast.  Job `15747208` completed in 50 s with exit 0 and 266,952 KB MaxRSS.
+Python/Bash syntax, scheduler dry-run, two tests, exact 200-case/681,384-key closure, per-bin
+truth-minus-prediction identity to `1.3e-16`, normalized histogram/bin fractions, empty stderr,
+vector/raster exports and full-resolution visual inspection pass.  ConstGold was not opened.
+
+## 2026-08-14j  Expanded high-response anchor gallery overlays measured centroids
+
+Expanded the held-out c700--899 high-response coherent-anchor gallery to 8x8.  The 64 stamps are
+again deterministic, equally spaced quantile representatives from the 145,539 anchors with raw
+V2.2 `R_scene > 0.1`, with one distinct rendered case per panel.  Selected predictions span
+`0.101285--1.604361`.  Every panel now overlays the input truth centroid as a cyan plus and the
+retained SExtractor centroid used by the actual `+0.02` coherent-response measurement as an
+orange cross; panel text gives their separation `Delta` in arcseconds.
+
+The detection overlay exactly replays the measurement's bright-neighbour rejection and input
+crossmatch before reading `X_IMAGE/Y_IMAGE`.  Across the 64 examples, truth-to-detection offsets
+have median `0.0743` arcsec, 84th percentile `0.2085` arcsec, 95th percentile `0.3366` arcsec,
+and maximum `0.4441` arcsec.  Direct pixel-coordinate offsets agree with the stored crossmatch
+distances to within `0.00044` pixel, and all measured centroids lie inside their truth-centered
+48x48-pixel cutouts.
+
+Canonical artifacts are
+`results/anchorblend_g002_high_response_gt0p1_stamps64_centroids_c700-899.{csv,json,md,npz,pdf,png}`.
+The NPZ includes raw/display stamps and both local centroids.  Added the 64-panel cluster wrapper
+and generalized the gallery script from a fixed 6x6 layout to any square sample size, with focused
+tests for 8x8 layout and global-to-local centroid offsets.  Job `15746833` completed in 1m35s with
+exit 0 and 387,940 KB MaxRSS.  Four tests, Python/Bash syntax, scheduler dry-run, exact selection
+and crossmatch guards, empty stderr, raster/vector exports, and full-resolution visual inspection
+pass.
+
+## 2026-08-14i  Rendered gallery shows 36 representative high-response anchor scenes
+
+Made a 6x6 postage-stamp gallery for the held-out coherent-anchor subset with raw V2.2 scene
+prediction `R_scene > 0.1` on cases c700--899.  The 36 examples are deterministic, equally
+spaced response-quantile representatives from all 145,539 qualifying anchors, with one distinct
+rendered case per stamp; they are not the 36 most extreme objects.  Sorted scene predictions span
+`0.102314--1.460850`, and primary magnitudes span `20.637--25.601`.
+
+Each panel is a real noisy 48x48-pixel (9.6-arcsec) truth-centered cutout from the `+0.02`
+coherent simulation FITS image.  The cyan plus marks the WCS-transformed input anchor.  All panels
+subtract their border median and use one shared asinh scale, from `-2.5` to `+42.96` times the
+median border MAD noise, so brightness remains comparable across scenes.  Panel text gives case
+and anchor ID, raw V2.2 scene prediction (`p`), noisy per-anchor coherent response label (`t`),
+primary magnitude (`r`) and deployed-neighbour count (`N`).  The visual sample is heterogeneous,
+but many panels place a faint primary amid one or more much brighter/extended nearby sources;
+this is descriptive evidence, not a causal isolation test.
+
+Canonical artifacts are
+`results/anchorblend_g002_high_response_gt0p1_stamps36_c700-899.{csv,json,md,npz,pdf,png}`.
+The compressed NPZ preserves both raw and display-centered stamps.  Added
+`scripts/plot_anchor_high_response_stamps.py`, its one-CPU cluster wrapper, and two focused
+quantile-selection/cutout-convention tests.  Job `15746559` completed in 33 s with exit 0 and
+281,276 KB MaxRSS.  Python/Bash syntax, scheduler dry-run, two tests, distinct-case/threshold
+guards, exact 48x48 coverage, maximum WCS round-trip error below `1.1e-7` mas, clean job logs,
+shared-scale raster/vector exports, and full-resolution visual inspection pass.  ConstGold was
+not opened.
+
+## 2026-08-14h  Exact V2.2 validation rows show no significant summed-response gap
+
+Reconstructed V2.2's exact internal validation population rather than drawing a new subset.
+The model used sklearn `train_test_split(test_size=0.2, random_state=321)` after its rectangular
+pair cuts, giving 7,570,479 validation rows out of 37,852,393 selected rows on half-shear cases
+c40--199.  The reconstruction replays all selected/validation row counts, the stored full-target
+mean and sample standard deviation, and the model's pooled validation R2 (`0.009375933` versus
+stored `0.009376`).  This plot uses V2.2's full rectangular primary domain (4,506,407 eligible
+primaries), not the narrower V2.1-domain intersection used in the preceding all-row audit.
+
+For a response-scale comparison, each bin sums only exact validation rows, multiplies by the
+inverse validation sampling fraction (`4.99999974`), and divides by all eligible primaries in
+each case.  The three feature partitions therefore add exactly to the same validation-estimated
+full-pair response.  Labels give `+0.06500074 +- 0.00194887`, V2.2 gives
+`+0.06302033 +- 0.00019900`, and label minus V2.2 is
+`+0.00198040 +- 0.00192769`, consistent with zero.  The pooled per-row means are
+`0.007739875` for the labels and `0.007502580` for V2.2.  The largest absolute additive bins are
+`+0.0010781 +- 0.0008155` at primary magnitude `[25.5,25.8)`,
+`-0.0014794 +- 0.0008602` at secondary magnitude `[27.0,27.5)`, and
+`+0.0013880 +- 0.0006337` at `log10(F_s/F_p)=[-0.2,0.1)`.  Signed conditional fluctuations
+cancel in the global sum.
+
+Canonical artifacts are
+`results/v22_validation_cumulative_response_mag_fluxratio_c40-199.{csv,json,md,pdf,png}`.
+Added `scripts/plot_v22_validation_cumulative_response.py`, its eight-CPU cluster wrapper, and
+two focused exact-split/statistics tests.  Job `15746298` completed in 1m54s with exit 0 and
+868,496 KB MaxRSS.  Python/Bash syntax, scheduler dry-run, two tests, seven independent
+reproduction checks, exact three-axis closure, clean job logs, vector/raster export, and
+full-resolution visual inspection pass.  This is an internal random pair-row validation split,
+not a case-held-out test: validation rows share rendered cases and often primaries with training
+rows.  Coherent-anchor and ConstGold labels were not opened.
+
+## 2026-08-14g  V2.2 training labels close after summing responses by pair properties
+
+Made the requested in-sample cumulative-response profiles for the frozen V2.2 BlendEMU on its
+established half-shear training-case audit population (c40--199).  The sample is the exact
+summed-label-closure selection: 35,084,344 supported pairs attached to 4,173,826 eligible
+primaries, including the established V2.1 primary-domain intersection.  It does not contain
+coherent-anchor or ConstGold labels.  Within each rendered case, every plotted bin sums pair
+responses and divides by the number of all eligible primaries; bins therefore add exactly to
+the global scene-summed response.  One-case SEM bands retain the half-shear case as the
+uncertainty unit.
+
+Across the three alternative partitions (primary magnitude, secondary magnitude, and
+`log10(F_s/F_p)`), every profile sums to the same label response
+`+0.05996957 +- 0.00100571`, V2.2 response `+0.05965701 +- 0.00009025`, and residual
+`+0.00031256 +- 0.00099335`.  Thus the global in-sample additive residual is consistent with
+zero.  The curves track closely where most of the response accumulates.  The largest absolute
+single-bin residuals are `+0.0003468 +- 0.0002008` for primary magnitude `[25.5,25.8)`,
+`-0.0004700 +- 0.0000523` for secondary magnitude `[20.5,21.0)`, and
+`-0.0005736 +- 0.0003555` for flux ratio `[-1.4,-1.1)`.  The secondary-magnitude feature is
+the sharpest localized discrepancy but that bright-secondary bin contains only 0.158% of the
+selected pairs; signed residuals cancel in the global sum.
+
+Canonical artifacts are
+`results/v22_training_cumulative_response_mag_fluxratio_c40-199.{csv,json,md,pdf,png}`.
+Added `scripts/plot_v22_training_cumulative_response.py`, its eight-CPU cluster wrapper, and two
+focused accumulation/range tests.  Job `15745998` completed in 3m11s with exit 0 and all seven
+reference-closure checks true.  The first attempt, job `15745940`, produced no artifacts because
+an unused conditional pair-mean diagnostic demanded two cases in a one-case extreme tail bin;
+removing only that unrequested diagnostic fixed the failure without changing selections or the
+plotted additive statistic.  Python/Bash syntax, scheduler dry-run, two tests, exact three-axis
+sum closure, reference replay, job logs, raster/vector exports, and full-resolution visual
+inspection pass.
+
+## 2026-08-14f  The high-scene-response fifth carries 99% of the bias-emulator shift
+
+Split the untouched coherent-anchor final-test population (c700--899) at raw V2.2 scene
+prediction `R_scene > 0.1`, as suggested by the corrected panel C.  The high-response subset is
+145,539/681,384 anchors (`21.359%`).  It supplies an additive
+`+0.008968 +- 0.000114` of the global bias-emulator correction
+`+0.009050 +- 0.000121`, or `99.10%`; the other 78.6% of anchors supply only
+`+0.000081 +- 0.000045`.  This confirms that essentially all of the *applied correction shift*
+is above 0.1.  It must not be confused with all of the measured raw gap: conditionally, the
+high group has raw gap `+0.02802 +- 0.01073` and is overcorrected to
+`-0.01396 +- 0.01073`, while the outside group remains nearly unchanged from
+`+0.00858 +- 0.00330` to `+0.00848 +- 0.00330`.
+
+Made a nine-panel population comparison in which both groups appear in every panel with
+one-case SEM bands.  Primary panels weight anchors equally.  All-neighbour panels weight each
+deployed pair by `1/n_pairs`, so each anchor contributes total weight one and the neighbour-count
+effect is isolated in its own panel.  Compared with the outside group, high-response anchors have
+more neighbours (`16.420` versus `15.549`), fainter primaries (`r_p=24.422` versus `23.787`),
+slightly smaller primaries (`0.778` versus `0.799` arcsec), brighter neighbours (`r_s=26.264`
+versus `26.526`), larger neighbours (`0.425` versus `0.372` arcsec), and closer neighbours
+(`6.397` versus `6.639` arcsec).  Their mean `log10(F_s/F_p)` is `-0.737` versus `-1.096`, a
+`+0.359 dex` shift (about 2.28 times larger neighbour/primary flux ratio).  Primary and neighbour
+Sérsic-index shifts are comparatively small.  These are descriptive correlates of a cut on the
+model response, not causal drivers.
+
+Canonical artifacts are
+`results/anchorblend_g002_high_response_gt0p1_population_c700-899_v2.{csv,json,md,pdf,png}`.
+The unsuffixed output from job `15745239` is numerically identical and was superseded only to add
+white backgrounds behind curve annotations; final job `15745317` completed in 73 s with 342 MB
+MaxRSS.  Added `scripts/plot_anchor_high_response_population.py`, its two-CPU cluster wrapper,
+and three focused weighting/statistics tests; refreshed `.claude_resources.json`.  Python/Bash
+syntax, scheduler dry-run, all 18 distribution normalizations, exact correction decomposition,
+three tests, targeted whitespace checks, job logs, vector/raster exports, line-style redundancy,
+and full-resolution visual inspection pass.
+
+## 2026-08-14e  Held-out panel C shows tail closure but conditional overcorrection
+
+Made the requested panel-C-only view of the frozen coherent-anchor bias emulator.  The plot
+uses only final-test cases 700--899; its 12 raw V2.2 scene-response bins were frozen on
+development cases 400--699.  The blue curve is the directly measured coherent gap
+`R_truth-R_V2.2`, and the orange curve is the actual post-correction gap
+`R_truth-(R_V2.2+b_hat)`.  Error bars are one SEM across the 200 rendered test cases.  No model
+was refit and no bin boundary was selected on the final-test residual.
+
+The correction removes the conspicuous rightmost tail: its gap changes from
+`+0.077394 +- 0.021218` to `+0.009748 +- 0.021094`.  Across all 12 plotted bins, unweighted
+conditional RMS falls from `0.025483` to `0.015260` (40.1% lower), and the maximum absolute
+bin gap falls from `0.077394` to `0.028646`.  It does not flatten the curve uniformly: the two
+preceding high-response bins are overcorrected from `-0.011535` to `-0.028646` and from
+`+0.009526` to `-0.018438`.  This agrees with the existing verdict that the model is a useful
+tail ranker/localizer but not a well-calibrated per-anchor correction, despite reducing the
+global held-out gap from `+0.01269 +- 0.00362` to `+0.00364 +- 0.00361`.
+
+Artifact: `results/anchorblend_g002_bias_emulator_panelC_c700-899.{csv,pdf,png}`.
+Added `scripts/plot_anchor_bias_emulator_panel_c.py` and
+`jobs/job_plot_anchor_bias_emulator_panel_c.sh`.  Cluster job `15742538` completed in 15 s
+with exit 0.  Python/Bash syntax, scheduler dry-run, strict input validation, job logs, and
+full-resolution visual inspection passed.
+
+## 2026-08-14d  Frozen V2.2 submitted on fresh g=0.05 ConstGold realizations
+
+The recovery of the independent ConstGold cases 140--239 completed in job `15722028`, after the
+original `th-cl-crick2` node failure recorded on 2026-08-13l.  The completed catalogue is
+`/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant_g005_c140-239/constant_response_catalogue_train.feather`
+with 29,569,324 paired-response rows.  Under the certified open-interval selection it contains
+26,710,586 rows and gives the case-weighted direct response
+`R_sim=0.45488598 +- 0.00036352`; the frozen V2.2 rectangular domain
+(`r_input_p < 25.8`, `Re_input_p > 0.5`) contains 5,620,791 rows and gives
+`R_sim=0.96396052 +- 0.00059058`.  These are independent galaxy realizations at
+`|g|=0.05`, not an extension of the old cases 40--139.
+
+At the owner's request, submitted an evaluation-only replay of the frozen V2.2 recipe on this
+new catalogue.  No model was trained, selected, or fitted to ConstGold.  The run uses all 16
+established checkpoints for seeds `501,502,503,505,...,517` (504 absent by convention), flow tag
+`ablate_s2c_lt500_v22`, additive BlendEMU tag `lsst_r_extnbr_v22`, 64 common-random-number samples
+with flow seed 12345, and the standard `m=R_sim/(R_flow+R_blend)-1` convention.  Fresh BlendEMU
+and near/far/MAX crowding lookups are built from the new +0.05 input fields rather than reusing
+case-keyed products from the old galaxy realizations.  The GPU pass is split into 160 disjoint
+seed-by-10-case shards and pinned to the same CIP A40-16GB profile as the original V2.2 ensemble,
+with a three-task throttle matching the account GPU QOS.
+
+Submitted dependency chain: BlendEMU lookup `15740456` and crowding lookup `15740457` in parallel;
+after both, GPU shard array `15740458[0-159%3]`; then exact shard concatenation `15740459`; then
+the 16-seed result `15740460`.  At submission the two lookup jobs were pending cluster priority and
+all downstream jobs had the intended unfulfilled dependencies.  Products are isolated under
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/v22_g005_c140-239/`; the final report will
+be `results/v22_constgold_g005_c140-239.txt` (now completed).
+
+The full chain completed cleanly.  Both lookups cover exactly 100 cases: 6,375,896 scored
+BlendEMU primaries and 69,956,775 intrinsic crowding rows.  All 160 GPU shards completed, and
+concatenation verified each of the 16 seed dumps at exactly 26,710,586 rows.  The final evaluator
+then verified exact row alignment, all 16 seed IDs, and zero V2.2-domain rows outside the stored
+BlendEMU inference box.
+
+**Fresh-realization V2.2 result, on its declared domain:**
+
+| sample | N | R_sim | R_flow | R_blend | m | seed sd | +-seed | +-sim |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| old c40--139, `|g|=0.02` | 5,642,350 | 0.9626 | 0.8266 | 0.1257 | `+1.080 +- 0.179%` | 0.503 | 0.126 | 0.128 |
+| **new c140--239, `|g|=0.05`** | **5,620,791** | **0.9640** | **0.8288** | **0.1246** | **`+1.105 +- 0.141%`** | **0.505** | **0.126** | **0.062** |
+
+The new-minus-old central shift is only `+0.025` percentage points.  Pairing the same 16 model
+seeds leaves a rounded seed-difference SEM of `0.0013` point; combining that with the independent
+old/new simulation terms gives about `+-0.142` point, so the shift is only `0.18 sigma`.  Thus the
+fresh galaxy population at the larger shear amplitude reproduces the old V2.2 result; it does not
+explain or remove the bias.  The seed scatter is also unchanged (`0.505` vs `0.503`).  The smaller
+new total uncertainty comes from the larger finite-difference shear reducing the case-sampling
+term, not from better model stability.
+
+V2.2 still misses the `|m| < 0.3%` objective: the new central value is `0.805 +- 0.141` percentage
+points above the positive boundary, or `5.7 sigma` under the evaluator's absolute-error convention.
+The wide certified-selection number printed by the generic evaluator is not a V2.2 performance
+claim because most of that population lies outside V2.2's declared rectangular flow/emulator
+domain; the domain result above is the valid headline.
+
+Files added: `jobs/job_v22_g005_c140-239_blend_lookup.sh`,
+`jobs/job_v22_g005_c140-239_crowd_lookup.sh`, `jobs/job_v22_g005_c140-239_shards.sh`,
+`jobs/job_v22_g005_c140-239_concat.sh`, and `jobs/job_v22_g005_c140-239_aggregate.sh`.
+Files changed: `WORKLOG.md`.  Bash syntax, whitespace, collision checks, all 16 checkpoint names,
+and scheduler dry-runs passed before submission.  Final job `15740460` and every prerequisite
+completed with exit code zero.  Result: the original V2.2 bias replicates on the fresh set.
+
+## 2026-08-14c  Doubled eight-azimuth pair sample confirms the response distribution
+
+Doubled the corrected noiseless pair experiment from 10,000 to 20,000 sampled pairs, or
+160,000 requested pair orientations.  Reused the already frozen 20,000-pair iid-priority
+manifest (seed 20260813) rather than rescanning the 248,515,320-row source catalogue.  Its
+first 10,000 sample identities exactly replay the preliminary corrected sample and all 20,000
+come from the same exact 37,852,393-row V2.2 half-shear training support.  The rendering design
+is unchanged: move the secondary displacement through eight 45-degree offsets while fixing
+both source position angles, shear only the secondary antithetically at `g=0.05`, and average
+the eight response matrices per pair.
+
+Two deterministic ngmix missing-`g` branches occurred (`sample_id=155` and `12294`), so both
+entire pairs were removed; 19,998 complete eight-angle pairs remain (99.99% coverage).  Every
+successful pair has exactly eight angle rows, and its stored response matrix and scalar exactly
+replay their angle-level means.  The final toy mean is `+0.009497 +- 0.000847`, median
+`+0.000005`, and case-balanced mean `+0.009415 +- 0.000848` across all 160 cases.  The two
+equal sample halves independently give `+0.010034 +- 0.001201` and
+`+0.008960 +- 0.001194`, confirming their consistency while the combined pair-sampling error
+drops by the expected factor of about sqrt(2).
+
+Negative azimuth-averaged responses remain common: `42.07%` (Wilson 95% CI
+`41.39--42.75%`) are below zero, `14.41%` are below `-0.001`, and `3.33%` are below `-0.01`.
+The worst-case 95% sampling half-width on a fraction is now 0.69 percentage points.  Negative
+and positive signed contributions to the mean are `-0.002118` and `+0.011615`; the 1--99%
+interval is `[-0.026332,+0.207940]`.  The native-position-only mean on these same complete
+pairs is `+0.008898 +- 0.001538`; the paired azimuth-minus-native difference is
+`+0.000599 +- 0.001337`, consistent with no mean change.  Azimuth averaging nevertheless
+reduces material negative tails: the native-position fraction below `-0.01` is `4.66%`.
+
+The frozen V2.2 prediction has mean `+0.007683`, versus the toy's `+0.009497`; the paired
+toy-minus-emulator difference is `+0.001814 +- 0.000701`.  V2.2 predicts `60.58%` negative
+versus `42.07%` in the toy, with only `+0.1073` Spearman correlation and `51.10%` sign
+agreement.  Thus the doubled sample confirms the earlier conclusion: isolated noiseless pair
+responses can be negative, but the emulator's per-pair signs transfer poorly.
+
+A cross-run reproducibility audit matched the original 9,999 complete pairs by exact sample
+identity.  The seeded ngmix optimization is not bitwise invariant across cluster nodes: 204
+averaged responses differ on rerender, with maximum absolute difference `0.004343` and 99.9th
+percentile absolute difference `0.000113`.  Their mean difference is only
+`-0.000000073 +- 0.000000572`, so this fit-branch sensitivity has no aggregate effect.  This is
+separate from the strict within-run angle/matrix replay, which passes exactly.
+
+Array job `15736488[0-39]` completed the 160,000 renders in at most 12m48s; analysis job
+`15736489` completed in 19s.  Canonical artifacts are
+`results/halfshear_noiseless_pair_toy_manifest_v22_n20000.{feather,json}` and
+`results/halfshear_noiseless_pair_toy_rblend_v22_n20000_az8_central99.{feather,rotations.feather,json,md,pdf,png}`;
+raw shards remain under
+`$DATA_DIR/sbsi_caches/derisk/halfshear_noiseless_pair_toy_v22_n20000_az8/`.  Resource-aware
+40-way CPU execution, Python/Bash checks, seven focused tests, manifest-prefix identity,
+strict coverage/key/provenance/angle-grid/matrix-mean checks, Slurm exit states, cross-run
+aggregate comparison, and final PNG inspection pass.  ConstGold was not opened.
+
+## 2026-08-14b  Preliminary 10k eight-azimuth sample (superseded by 2026-08-14c)
+
+Corrected the random half-shear pair toy so that each sampled neighbour is moved around its
+primary in eight 45-degree steps (native angle plus 45, ..., plus 315 degrees).  Only the
+secondary displacement rotates: both galaxies' intrinsic position angles remain fixed.  At
+each position the primary remains unsheared and the secondary is antithetically sheared along
+g1 and g2 at `g=0.05`; each pair's stored response matrix is the equal-weight mean of its eight
+matrices.  This is the intended azimuth-averaged estimand and supersedes the native-angle-only
+2026-08-14a distribution below.
+
+To limit runtime while retaining percent-level precision on a fraction, drew 10,000 uniform
+iid-priority pairs (seed 20260813) from the same exact 37,852,393-row V2.2 half-shear support.
+The 40-way array completed 80,000 requested orientations in about seven minutes.  One pair
+(`sample_id=155`) hit the deterministic ngmix missing-`g` fit branch, so it and all of its
+partial angles were excluded; 9,999 complete eight-angle pairs remain (99.99% coverage).
+Every successful pair has exactly offsets 0, 45, ..., 315 degrees, and every stored scalar and
+pair matrix replays the angle-level traces and matrix averages.
+
+The corrected noiseless toy mean is `+0.010034 +- 0.001201` from pair sampling, with median
+`+0.000005` and case-balanced mean `+0.009939 +- 0.001223` across all 160 cases.  On the exact
+same 9,999 pairs, the native-position mean is `+0.009571 +- 0.002243`; their paired difference
+is `+0.000464 +- 0.001905`.  Thus azimuth averaging leaves the mean unchanged within error but
+nearly halves its pair-sampling uncertainty.  The median within-pair azimuth standard deviation
+is `0.000634`.
+
+Negative averaged responses remain common: `41.81%` (Wilson 95% CI `40.85--42.78%`) are below
+zero, `14.20%` are below `-0.001`, and `3.20%` are below `-0.01`.  Relative to the native
+position on these same pairs (`43.19%`, `13.60%`, and `4.79%`, respectively), averaging mainly
+suppresses the material negative tail rather than imposing positivity.  Negative and positive
+signed contributions to the corrected mean are `-0.001885` and `+0.011920`; the 1--99%
+interval is `[-0.024414,+0.223287]`.
+
+The frozen V2.2 prediction on these pairs has mean `+0.007792`, is negative for `60.67%`, and
+has only `+0.1156` Spearman correlation with the corrected toy.  The paired mean toy-minus-V2.2
+difference is `+0.002242 +- 0.000898`, but this isolated noiseless central-`g=0.05` toy is not
+the production forward-`g=0.2` half-shear label.  It still omits the full scene, pixel noise,
+detection/matching, and centroid motion.  The scientific conclusion from 2026-08-14a therefore
+survives the geometry correction: negative measured isolated-pair responses exist, while the
+emulator's individual signs remain weakly transferable.
+
+Updated the renderer, analyzer, focused tests, and Slurm wrappers.  Jobs `15736346`,
+`15736347[0-39]`, and `15736348` completed the sampling, renders, and first analysis; job
+`15736429` regenerated the visually inspected non-overlapping final plot.  Canonical artifacts
+are `results/halfshear_noiseless_pair_toy_manifest_v22_n10000.{feather,json}` and
+`results/halfshear_noiseless_pair_toy_rblend_v22_n10000_az8_central99.{feather,rotations.feather,json,md,pdf,png}`;
+raw shards remain under
+`$DATA_DIR/sbsi_caches/derisk/halfshear_noiseless_pair_toy_v22_n10000_az8/`.  Python compilation,
+seven focused tests, Bash syntax, strict coverage/key/provenance checks, angle-grid and matrix-mean
+replays, Slurm exit states, and final PNG inspection pass.  ConstGold was not opened.
+
+## 2026-08-14a  Native-angle-only pair toy (superseded by 2026-08-14b)
+
+Drew an exactly uniform iid-priority sample of 20,000 pair rows from the 37,852,393-row
+V2.2 half-shear training support (cases 40--199, frozen regression cuts; seed 20260813).
+The streaming sampler audited 248,515,320 catalogue rows and retained all 160 cases.  Each
+sampled primary and secondary was then re-rendered alone in a 112-pixel noiseless Sersic +
+Moffat stamp.  The primary and latent positions stayed fixed, only the secondary was sheared
+antithetically along both component axes at `g=0.05`, and the scalar response was
+`R_blend = 0.5 * trace(R)`.  The ngmix initialization was fixed at seed 42, matching the old
+clean-toy convention.  All 20,000 fits completed and every stored trace replays its response
+matrix.
+
+The noiseless measured distribution has mean `+0.009019 +- 0.001541` from pair sampling,
+median `+0.000001`, and case-balanced mean `+0.008855 +- 0.001332` over 160 cases.  Strictly
+negative values are common (`43.05%`, pair-sampling Wilson 95% CI `42.37--43.74%`), but much
+of that sign count is extremely close to zero: `13.44%` lie below `-0.001` and `4.66%` below
+`-0.01`.  Negative and positive signed contributions to the mean are `-0.005176` and
+`+0.014194`; the 1--99% interval is `[-0.052786,+0.191358]`.  Therefore a nonnegative pair
+response is not an exact constraint on this measurement procedure.
+
+The frozen V2.2 emulator is negative on `60.58%` of the same pairs, versus `43.05%` in the
+toy.  More importantly, the pairwise signs are almost unrelated: overall sign agreement is
+`49.91%`, only `44.19%` of emulator-negative pairs are toy-negative, and toy/emulator
+Spearman correlation is `+0.0914`.  Thus the coherent success of flooring negative V2.2
+predictions remains an empirical mean correction; this toy does not turn it into a physical
+positivity rule.  Conversely, the toy rules out the claim that every negative measured pair
+response must be impossible.
+
+Scope is deliberately narrower than the production half-shear label: two objects only,
+no pixel noise, true-centered measurement, fixed latent positions, central `g=0.05`, no
+detection/matching, and no forward `g=0.2` convention.  Rare ngmix fit-branch tails reach
+well beyond the central interval even without pixel noise, so extreme values are measurement
+behavior rather than proof of a smooth physical kernel.  The final plot displays the central
+98.76% while the feather/JSON retain every tail.
+
+Added the sampler, shard renderer, analyzer/plotter, five focused tests, and four Slurm
+wrappers.  Jobs `15736120` and `15736121[0-39]` completed the sample and renders.  The first
+analysis `15736122` exposed a Python-3.9-only compatibility issue without writing outputs;
+after removing `zip(strict=True)`, `15736184` produced the full-tail audit and `15736247`
+produced the final central plot.  Canonical artifacts are
+`results/halfshear_noiseless_pair_toy_manifest_v22_n20000.{feather,json}` and
+`results/halfshear_noiseless_pair_toy_rblend_v22_n20000_central99.{feather,json,md,pdf,png}`;
+raw shards remain under `$DATA_DIR/sbsi_caches/derisk/halfshear_noiseless_pair_toy_v22_n20000/`.
+Python compilation in the actual sims1 interpreter, five py31 focused tests, Bash syntax,
+Slurm dry-runs, strict output reads, exact coverage/trace/provenance replays, visual inspection,
+and targeted whitespace checks pass.  Constgold was not opened.
+
+## 2026-08-13ag  Zeroing negative V2.2 pair responses closes the coherent mean gap
+
+Performed the owner's direct nonlinear test on all exact deployed coherent
+pairs: replace each V2.2 pair response `p` by `max(p,0)` before summing the
+scene.  The raw pair sum first replays the stored V2.2 scene response to
+`2.09e-7`.  Of 26,822,261 scored pairs, 61.07% are negative; 99.95% of anchors
+have at least one negative pair and the mean count is 9.614.  Their gross mean
+contribution is `-0.011722` per anchor, while positive pairs sum to `+0.114453`;
+the raw signed sum is `+0.102731`.
+
+The zero floor closes the coherent mean discrepancy.  Across c400--899,
+measured response is `+0.113213 +- 0.002275`; raw prediction is `+0.102731`,
+whereas the nonnegative-pair prediction is `+0.114453`.  Truth minus prediction
+changes from `+0.010482 +- 0.002264` to `-0.001239 +- 0.002263` (`p=0.584`).
+The result is not driven by the anomalous c600--699 truth block: c400--599
+changes from `+0.012843 +- 0.003695` to `+0.001103 +- 0.003692`, and c700--899
+changes from `+0.012689 +- 0.003615` to `+0.000977 +- 0.003615`.  As expected,
+the low-truth c600--699 block is overcorrected to
+`-0.010356 +- 0.004546`.
+
+This is a strong carrier result, not yet a deployable correction or proof that
+physical pair responses cannot be negative.  The zero threshold was proposed
+after the coherent discrepancy was known, all reported coherent blocks have
+already been inspected, and the half-shear conditional curve does not motivate
+discarding negative labels.  A genuinely fresh coherent block or a physical
+sign argument is needed for confirmation.
+
+Added `scripts/analyze_v22_nonnegative_pairs_coherent.py`, a focused algebra
+test, and `jobs/job_analyze_v22_nonnegative_pairs_coherent.sh`.  Job 15736025
+completed in 27 s with exit 0.  Canonical artifacts are
+`results/v22_nonnegative_pairs_coherent_c400-899.{json,md}` and `_cases.csv`.
+Python/Bash syntax, focused tests, exact raw replay, signed component closure,
+strict JSON/CSV recomputation, and whitespace checks pass.  ConstGold was not
+opened.
+
+## 2026-08-13af  Conditional gap panel versus measured anchor-scene response
+
+Added the requested variant of the earlier conditional coherent-gap panel.  Its
+x coordinate and ten equal-count bins are now the directly measured coherent
+anchor response `R_blend_truth`, rather than the raw V2.2 scene prediction.  A
+gray lower-axis histogram shows the mean within-case-normalized distribution of
+the 1,703,884 anchor measurements; its band is one SEM across 500 cases.  The
+same five half-shear pair-residual corrections are replayed exactly and merely
+re-binned—none is refit using these measured-response bins.
+
+The measurement distribution is sharply concentrated with extreme tails:
+median `+0.00571`, 5--95% `[-0.2371,+1.0756]`, 1--99%
+`[-6.8718,+8.7053]`, and full range approximately `[-48.73,+49.48]`.  In the
+lowest and highest truth deciles, mean measured response is `-2.242` and
+`+3.096`, while raw truth-minus-prediction is `-2.350` and `+2.557`.
+Consequently all correction curves nearly overlap in the extreme bins.  This
+is primarily mathematical coupling and measurement noise—`R_blend_truth`
+appears in both x and `truth - prediction`—so the panel is explicitly labelled
+descriptive and is not used as a calibration diagnostic.
+
+Added `scripts/plot_v22_coherent_gap_vs_measured_response.py`, two focused
+tests, and `jobs/job_plot_v22_coherent_gap_vs_measured_response.sh`.  Job
+15735945 completed in 51 s with exit 0 and 545 MB MaxRSS.  Canonical artifacts
+are `results/v22_coherent_gap_vs_measured_response_c400-899.{png,pdf,json,md}`
+and `_deciles.csv`.  Python/Bash syntax, focused tests, exact source replay,
+strict JSON/CSV checks, whitespace checks, and full-resolution figure
+inspection pass.  ConstGold was not opened.
+
+## 2026-08-13ae  Single-active-neighbour measured-response histogram
+
+Added a reproducible histogram of the measured per-neighbour response
+`R_one_pair=(R_u+R_v)/2` in the completed c400--499 one-active orthogonal test.
+All 340,022 common anchors have a selected measured pair.  Because selection is
+uniform within anchor, the filled distribution uses inverse-selection weight
+`n_pairs` to estimate the deployed pair population; the raw one-selected-pair
+sample is retained as an orange outline.  Bin fractions are normalized within
+case before averaging, and the blue band is one SEM across the 100 rendered
+cases.
+
+The distribution has a sharp core and very heavy measurement tails.  Its
+pair-population case-balanced mean is `+0.005645 +- 0.001347`, weighted median
+is `+0.000046`, and 5--95% interval is `[-0.0631,+0.0796]`; nevertheless the
+1--99% interval is `[-2.948,+3.013]`, the full range is approximately
+`[-13.13,+12.94]`, and weighted SD is `0.809`.  The positive fraction is
+51.50%.  Thus rare tail measurements, rather than the near-zero core, explain
+the high variance of the one-active Horvitz--Thompson scene-sum estimator.
+
+Added `scripts/plot_anchorblend_oneactive_rblend_hist.py`, focused tests, and
+`jobs/job_plot_anchorblend_oneactive_rblend_hist.sh`.  Job 15735911 completed in
+5 s with exit 0.  Canonical artifacts are
+`results/anchorblend_oneactive_rblend_hist_c400-499.{png,pdf,json,md}`.  Python
+and Bash syntax, two focused tests, inverse-selection closure, strict JSON
+parsing, whitespace checks, and full-resolution figure inspection pass.
+
+## 2026-08-13ad  Plotted panel-B curve removes 20--24% without closing the gap
+
+Resolved the second literal meaning of using the original curve without a fit:
+straight-line interpolation through the 20 plotted panel-B bin means in raw
+prediction coordinates, with the endpoint residual held constant beyond the
+outer bin centers.  This is distinct from the piecewise-constant original-bin
+lookup recorded below, and has no optimized parameters.
+
+Across c400--899, the direct linear curve adds
+`+0.002561 +- 0.000020`, changing the coherent truth-minus-prediction gap from
+`+0.010482 +- 0.002264` to `+0.007922 +- 0.002265`; it removes 24.4%, but does
+not close the gap.  On c700--899, `+0.012689 +- 0.003615` becomes
+`+0.010135 +- 0.003616`, or 20.1% removed.  Its equal-count scene-decile RMSE
+slightly worsens from `0.023080` to `0.023742` (2.9%), although the maximum
+absolute decile gap improves from `0.06555` to `0.05080`.  As with the bin
+lookup, a large negative-prediction contribution (`-0.019716`) nearly cancels
+a large positive-prediction contribution (`+0.022276`), leaving only the small
+net scene correction.
+
+Added and tested the direct linear curve in
+`scripts/apply_v22_pair_residual_calibration_coherent.py`; added
+`jobs/job_apply_v22_pair_residual_direct_curve_coherent.sh`.  Job 15735802
+completed in 50 s with exit 0 and 581 MB MaxRSS.  Canonical artifacts are
+`results/v22_pair_residual_direct_curve_transfer_anchor_g002_c400-899.{json,md,png,pdf}`
+plus the case, calibration-bin, and anchor-decile CSV tables.  Python/Bash
+syntax, focused tests, exact knot reproduction and endpoint-clamp tests, strict
+JSON/CSV recomputation, component closure, whitespace checks, and
+full-resolution figure inspection pass.  ConstGold was not opened.
+
+## 2026-08-13ac  Direct panel-B bin lookup transfers only 6--8% of the gap
+
+Applied the saved half-shear panel-B curve directly, without a parametric fit
+or interpolation.  Each deployed coherent pair receives the measured mean
+`label - prediction` of its original one of 20 prediction-quantile bins.  The
+original bin boundaries and bin residuals are frozen before coherent truth is
+opened.  The coherent pair range `[-1.6848,+1.8834]` lies within the half-shear
+outer edges `[-1.8168,+1.9147]`, so no pair invokes the declared outer-bin
+fallback.
+
+Across c400--899, the lookup adds `+0.000819 +- 0.000024` to the scene
+prediction.  The raw truth-minus-prediction gap changes from
+`+0.010482 +- 0.002264` to `+0.009663 +- 0.002265`: only 7.8% is removed.  On
+the previously designated c700--899 block, `+0.012689 +- 0.003615` becomes
+`+0.011862 +- 0.003617`, or 6.5% removed.  The small net move is a cancellation
+between `-0.023641` from negative-prediction pairs and `+0.024460` from
+positive-prediction pairs.  Equal-count coherent scene-decile RMSE worsens by
+12.6%, from `0.023080` to `0.025983`, although the maximum absolute decile gap
+drops from `0.06555` to `0.05159`.  Thus using the observed curve verbatim does
+not close either the pooled or conditional coherent gap.
+
+Extended `scripts/apply_v22_pair_residual_calibration_coherent.py` and focused
+tests with the fit-free lookup, and added
+`jobs/job_apply_v22_pair_residual_binned_lookup_coherent.sh`.  Job 15735768
+completed in 42 s with exit 0 and 650 MB MaxRSS.  Canonical artifacts are
+`results/v22_pair_residual_binned_lookup_transfer_anchor_g002_c400-899.{json,md,png,pdf}`
+plus the case, calibration-bin, and anchor-decile CSV tables.  Python/Bash
+syntax, focused tests, exact bin reproduction, strict JSON/CSV recomputation,
+component closure, whitespace checks, and full-resolution figure inspection
+pass.  ConstGold was not opened.
+
+## 2026-08-13ab  Exact natural cubic interpolation strongly worsens coherent transfer
+
+Added a natural cubic spline sensitivity to the panel-B residual calibration.  It
+interpolates the 20 saved half-shear prediction-bin residual means exactly in raw
+prediction coordinates, uses zero second derivative at both ends, and clamps
+predictions outside the two outer knot centers.  The spline has effectively zero
+error at the knots, but the highly uneven knot spacing makes it oscillate between
+them: its dense between-knot range is `[-0.029161,+0.008727]`, compared with the
+observed bin-mean range `[-0.016134,+0.008727]` (maximum overshoot `0.013027`).
+
+The frozen spline fails the coherent-anchor transfer decisively.  Across c400--899,
+the raw truth-minus-prediction gap is `+0.010482 +- 0.002264`; the spline adds
+`-0.013075 +- 0.000025`, leaving `+0.023557 +- 0.002265`.  It therefore worsens the
+mean gap by 124.7%, rather than closing it.  The previously designated c700--899
+block is consistent: `+0.012689 +- 0.003615` raw becomes
+`+0.025748 +- 0.003614`, a 102.9% worsening.  Equal-count coherent scene-decile
+RMSE rises from `0.023080` to `0.033733` (46.2%).  This exact interpolant is thus
+over-responsive to bin noise and sparse tail spacing; zero training error at the
+plotted bin means is not evidence of a transferable calibration.
+
+Extended `scripts/apply_v22_pair_residual_calibration_coherent.py`, its tests, and
+the panel-B renderer/tests; added
+`jobs/job_apply_v22_pair_residual_cubic_spline_coherent.sh`.  Job 15735709 completed
+in 51 s with exit 0 and 467 MB MaxRSS.  Canonical transfer artifacts are
+`results/v22_pair_residual_cubic_spline_transfer_anchor_g002_c400-899.{json,md,png,pdf}`
+plus the CSV tables.  The original panel-B PNG/PDF/MD now also show the spline as a
+purple dotted curve.  Python/Bash syntax, focused tests, exact interpolation and
+component-closure checks, strict output recomputation, whitespace checks, and
+full-resolution figure inspection pass.  ConstGold was not opened.
+
+## 2026-08-13aa  Panel-B parametric pair correction does not close the coherent-anchor gap
+
+Fit the saved V2.2 half-shear panel-B curve before opening coherent-anchor truth,
+then applied the frozen correction to every exact deployed pair in the 500-case
+`g=0.02` coherent block.  The primary three-parameter model is
+`delta(p) = a + b_neg min(p,0) + b_pos max(p,0)`, with
+`(a,b_neg,b_pos)=(+0.00117883,2.22681,0.05518)`.  Its reduced chi-square is
+14.73/point-dof (`chi2=250.39` for 17 dof), so it is intentionally read as a
+crude simple fit.  A predeclared four-parameter shared-scale saturating hinge
+fits substantially better (`chi2/dof=3.68`) and is carried as a sensitivity
+check; neither model uses anchor labels for fitting or selection.
+
+On all c400--899 anchors, raw `truth - V2.2` is
+`+0.010482 +- 0.002264`.  The simple hinge adds `-0.001230 +- 0.000047`,
+leaving `+0.011713 +- 0.002268`: it worsens the gap by 11.7%.  The better-fitting
+saturating hinge adds only `+0.001814 +- 0.000021`, leaving
+`+0.008669 +- 0.002265` (17.3% removed).  The previously designated final
+c700--899 block says the same: raw `+0.012689 +- 0.003615`, simple-hinge
+remaining `+0.013915 +- 0.003617`, saturating remaining
+`+0.010880 +- 0.003616` (14.3% removed).  Thus the result is not a closure and
+is not sensitive to the anomalously low-gap c600--699 block.
+
+The apparent per-neighbour accumulation cancels internally.  For the simple
+hinge, the pooled per-anchor terms are count/intercept `+0.018557`, negative
+branch `-0.026102`, and positive branch `+0.006315`, summing to the net
+`-0.001230`; 61.07% of the 26,822,261 scored pairs have negative prediction.
+The equal-count coherent scene-decile RMSE worsens from `0.02308` raw to
+`0.02756` (hinge) or `0.02501` (saturating), so the modest saturating global
+move is not conditional recovery either.  Exact raw scene replay closes below
+`2.10e-7` on 1,703,884 anchors; mean scored pairs per anchor is 15.742.
+ConstGold was not opened.
+
+Added `scripts/apply_v22_pair_residual_calibration_coherent.py`, its cluster
+wrapper, and focused tests.  Canonical artifacts are
+`results/v22_pair_residual_parametric_transfer_anchor_g002_c400-899.{json,md,png,pdf}`
+plus `_cases.csv`, `_calibration_bins.csv`, and `_anchor_deciles.csv`.  Job
+15735608 completed in 26 s; 15735602 produced correct tables but stopped in a
+plot-only sensitivity-series lookup and is superseded.  Python/Bash syntax,
+focused tests, strict JSON/CSV recomputation, exact replay/component closure,
+whitespace checks, and full-resolution figure inspection pass.
+
+The original panel-B calibration figure now also overlays these two frozen
+fits: solid blue for the three-parameter hinge and dashed charcoal for the
+saturating sensitivity.  The orange binned residuals and their case SEMs stay
+in front, while the enlarged gray prediction histogram remains on the lower
+axis.  `plot_v22_emulator_label_calibration.py` accepts an optional
+`--fit-json` and validates the calibration case window and pair count before
+rendering.  The canonical PNG/PDF/MD were regenerated from the saved JSONs
+without rescanning a catalogue or refitting either curve; five focused tests,
+Python compilation, whitespace checks, and full-resolution inspection pass.
+
+## 2026-08-13z  Prediction-binned emulator/label curves expose conditional shrinkage
+
+Added a direct calibration curve for the deployed V2.2 pair-response emulator on the exact
+half-shear c40--199 population used by the secondary-size audit.  The raw pair labels are too noisy
+for a useful scatter plot, so `35,084,344` supported pairs are split into 20 equal-population bins by
+the frozen emulator prediction.  Curve means and uncertainties are case-balanced, with rendered case
+as the uncertainty unit.  Job `15735286` completed in 5m59s with exit 0 and 1.09 GB MaxRSS.  Exact
+closure to the earlier audit passes: the global pair label is
+`+0.00713430 +- 0.00011966`, prediction is `+0.00709714 +- 0.00001078`, and label minus prediction is
+`+0.00003716 +- 0.00011819`.
+
+The near-zero global residual hides strong conditional shrinkage.  In the lowest prediction bin,
+prediction/label/residual are `-0.008598/-0.024733/-0.016134 +- 0.000589`; in the highest they are
+`+0.144474/+0.153200/+0.008727 +- 0.000733`.  Negative-label bins are generally predicted too close
+to zero and positive-label bins are likewise predicted too close to zero, so positive and negative
+conditional errors cancel in the mean.  This remains an in-sample half-shear training audit, not a
+ConstGold or coherent-anchor result.  Signed-log axes make the central 18 bins readable without
+hiding the response tails.
+
+Panel B now overlays a larger translucent histogram of the V2.2 prediction distribution, rising
+from the lower axis and occupying up to 56% of the panel height.  Because the curve bins are
+equal-count quantiles with unequal widths, histogram height is relative pair density per displayed
+signed-log interval, rather than the uninformative near-constant raw bin count.  It uses the
+already-saved exact quantile edges and pair fractions, so no catalogue rescan or new scientific
+estimate is introduced.
+
+Also added a presentation-only curve for the already-frozen anchor-bias emulator transfer to the
+existing V2.2 ConstGold c40--139 block.  It consumes the previously saved ten anchor-development
+prediction bins and introduces no ConstGold fit or new binning.  The curve makes the recorded
+conditional-transfer failure visible: the bin-mean label-on-prediction slope is `0.095`, despite
+pooled mean closure.  The newly rendering independent ConstGold c140--239 block is not used here and
+can repeat this frozen-bin curve after its catalogues finish.
+
+Artifacts are
+`results/v22_halfshear_rblend_emulator_label_calibration_training_c40-199.{png,pdf,json,md,csv}` and
+`results/anchor_bias_emulator_transfer_constgold_v22_c40-139_final_s16_calibration.{png,pdf}`.
+Added the two plotting scripts, one cluster wrapper, and four focused tests.  Python compilation,
+Bash syntax, Slurm dry-run, the focused tests, strict reference-population closure, targeted
+whitespace checks, and full-resolution visual inspection pass.
+
+## 2026-08-13y  Fifty-case phys2 constgold residual is +0.962%
+
+Extended the frozen `lsst_r_extnbr_v22_phys2` constgold evaluation from ten
+cases to cases 40--89, with no model change or post-constgold tuning.  Reused
+the completed c40--49 lookup, predicted c50--89 in job `15730866`, and assembled
+the two disjoint files with duplicate-key and exact-case guards.  The combined
+lookup has 3,187,255 unique `(case,input_index)` rows and matches deployed V2.2
+exactly, with zero baseline-only or phys2-only keys.  Across this broad lookup
+population, the case-balanced mean `R_blend` is `0.1489842`, versus `0.1953804`
+for V2.2 (`-23.747%`).
+
+The downstream exact additive swap uses the established V2.2 true-primary
+domain (`r_p < 25.8`, `Re_p > 0.5 arcsec`), 2,820,489 objects, and all 16 saved
+flow seeds.  Coverage is 100%; shared components are `R_sim=0.9600033` and
+`R_flow=0.8262032`.  On this score population, phys2 lowers mean `R_blend` from
+`0.1259457` to `0.1246783` (`-1.0063%`).  Baseline V2.2 has
+`m=+0.82727 +- 0.21933%`, while phys2 has `m=+0.96167 +- 0.21972%`, where the
+phys2 total combines `+-0.12596%` flow-seed SEM and `+-0.18003%` case-blocked
+simulation SEM.  The same-row phys2-minus-V2.2 shift is `+0.13440` percentage
+points, so the two-coordinate model makes the residual worse.  This direction
+agrees with the ten-case shift (`+0.11294` points); the larger case set reduces
+the absolute case term from `0.509%` to `0.180%`.
+
+Artifacts are `results/blend_lookup_v22_phys2_c{50-89,40-89}.feather`,
+`results/v22_phys2_constgold_pilot_c40-89.json`, and
+`results/constgold_m_swap_v22_phys2_16seed_c40-89.json`.  Jobs `15730867` and
+`15730868` performed the exact-key comparison and residual swap.  Added a
+strict lookup concatenator and the three cluster wrappers.  The swap evaluator
+now filters full seed dumps by the requested exclusive `--max-case` before
+materialization; focused tests cover bounded and empty reads.  Python/Bash
+syntax, focused tests, strict JSON reads, exact-key guards, job logs, and
+targeted whitespace checks pass.
+
+## 2026-08-13x  Anchor bias emulator closes pooled ConstGold mean but fails conditional transfer
+
+Applied the frozen coherent-anchor bias emulator to V2.2 ConstGold as an
+evaluation-only transfer test. Nothing was fit, tuned, thresholded, or selected
+on ConstGold. The population is exactly the earlier paired rectangular gap
+sample: cases 40--139, true primary `r < 25.8`, `Re > 0.5 arcsec`, and a
+deployed V2.2 pair, totaling 5,642,349 rows. Extended the exact frozen V2.2 pair
+replay with the six one-arcsec signed/absolute response shells needed by the
+emulator's unchanged 50-feature schema. All 6,376,256 supported pair-feature
+rows replay the stored `R_blend` exactly; the final gap join has zero missing
+feature cells, zero infinities, and additive closure below `3.6e-15`.
+
+**Pooled mean recovery is numerically exact.** The raw total response gap is
+`R_sim - R_model = +0.010265 +- 0.001223`. The frozen full emulator predicts
+`+0.010430 +- 0.000049`, leaving `-0.000165 +- 0.001209`, or
+`101.6 +- 12.0%` recovery. Mean `m` correspondingly changes from
+`+1.080 +- 0.126%` to `-0.015 +- 0.123%`, using the required 16
+flow seeds. The paired shift is `-1.0951 +- 0.0027` percentage points.
+
+**This is not a validated conditional correction.** A frozen constant equal to
+the anchor-development mean already recovers 87.8% of the pooled gap. The full
+model overcorrects c40--89 (`-0.002587 +- 0.001724` remaining) and undercorrects
+c90--139 (`+0.002258 +- 0.001642`). The observed raw block shift is
+`+0.004812 +- 0.002411`, while the predicted correction changes by only
+`-0.000033 +- 0.000099`; the emulator does not track the shift. Across ten
+prediction bins frozen from anchor c400--699, it predicts a top-minus-bottom
+span of `+0.312336` where ConstGold measures `+0.046515 +- 0.007714` (6.7x too
+large), with bin-mean Spearman `-0.079` and slope `0.095`. Applying it worsens
+row-weighted conditional RMSE from `0.02774` to `0.07393` (2.67x). The correct
+verdict is therefore **pooled mean yes, conditional transfer no**. Also, its
+target is a blend-only coherent-anchor residual while the ConstGold outcome is
+the total residual including flow, so global closure can be cancellation.
+
+Added `scripts/apply_anchor_bias_emulator_constgold.py`, two cluster wrappers,
+focused transfer tests, and exact shell features/tests in
+`scripts/build_v22_constgold_pair_features.py`. Twelve related tests pass,
+along with Python/Bash syntax, strict JSON, CSV recomputation, closure,
+provenance, and whitespace checks. Feature job 15729036 completed in 40m00s
+with 7.63 GB MaxRSS; final 16-seed scoring job 15730842 completed in 2m53s with
+9.87 GB MaxRSS. Job 15728941 stopped before output on an intentionally strict `1e-12`
+shell regrouping check; the tolerance was aligned with the existing frozen
+replay guard (`1e-6`) and the maximum final shell difference is `2.51e-7`.
+Canonical artifacts are
+`results/anchor_bias_emulator_transfer_constgold_v22_c40-139_final_s16.{json,md}`
+plus `_cases.csv`, `_deciles.csv`, and `_support.csv`; the unsuffixed transfer
+and non-s16 `final` artifacts are preliminary reports superseded by the
+expanded conditional diagnostics and convention-compliant 16-seed `m`.
+
+## 2026-08-13w  Two-coordinate V2.2 constgold pilot slightly worsens residual
+
+Ran the frozen `lsst_r_extnbr_v22_phys2` emulator on constgold cases 40--49 as
+an evaluation-only pilot; constgold was not used to train, tune, or select the
+model.  Job `15730288` completed in 2m08s and produced 637,386 per-primary
+predictions.  Candidate and deployed V2.2 lookups agree exactly on all
+`(case,input_index)` keys.  Across every scored lookup row, the case-balanced
+mean `R_blend` is `0.1486912`, versus `0.1948085` for V2.2, a `-23.673%`
+change.  This lookup-wide population is broader than the downstream constgold
+score population and is therefore descriptive, not the calibration result.
+
+The exact additive swap into the existing 16 flow-seed case shards uses the
+unchanged V2.2 true-primary domain (`r_p < 25.8`, `Re_p > 0.5 arcsec`) and
+564,075 objects.  Coverage is 100%; `R_sim=0.9557099` and
+`R_flow=0.8259438` are identical for both emulators.  On these selected rows,
+mean `R_blend` changes only from `0.1253442` to `0.1242761` (`-0.8521%`).
+The resulting multiplicative residual changes from baseline
+`m=+0.46716%` to phys2 `m=+0.58010%`, a paired worsening of `+0.11294`
+percentage points.  The phys2 absolute error is `+-0.12511%` from the 16
+flow seeds and `+-0.50876%` from the ten rendered cases, or `+-0.52392%` in
+quadrature.  Thus the pilot is consistent with zero at 1.11 total SEM and is
+too case-limited for a promotion decision.
+
+Artifacts are `results/blend_lookup_v22_phys2_c40-49.feather`,
+`results/v22_phys2_constgold_pilot_c40-49.json`, and
+`results/constgold_m_swap_v22_phys2_16seed_c40-49.json`.  Added the lookup,
+comparison, and swap cluster wrappers plus `scripts/compare_blend_lookups.py`;
+the swap evaluator now accepts an exclusive `--max-case`, backed by an
+optional upper bound in `catalogue_true_props` with unchanged default behavior.
+Jobs `15730412` and `15730504` completed successfully.  Python compilation,
+Bash syntax, strict JSON reads, exact-key guards, and targeted whitespace
+checks pass.
+
+## 2026-08-13v  Two-coordinate V2.2 underpredicts its summed training estimand by 5.57%
+
+Scored `lsst_r_extnbr_v22_phys2` with the established training summed-label
+closure: cases 40--199, the V2.1/V2.2 primary-domain intersection, supported
+V2.2 neighbours, pair predictions and labels summed per primary, and cases as
+the uncertainty unit.  Job `15729847` completed with exit 0 in 3m34s and
+920 MB MaxRSS.  It exactly replays the baseline population: 160 cases,
+4,173,826 primaries, 35,084,344 pairs (8.406 per primary), label mean
+`0.0599696 +- 0.0010057`, and null `0.0001530 +- 0.0009447`.
+
+The phys2 prediction is `0.0566292 +- 0.0000513`, so prediction minus label is
+`-0.0033404 +- 0.0010032`, or `-5.570%` relative to the label (3.33 case SEM).
+Equivalently, label minus prediction is `+0.0033404`.  The deployed seven-input
+V2.2 result on the identical rows is `-0.0003126 +- 0.0009934` (`-0.521%`), so
+the phys2 prediction moves lower by `0.0030278`.  This is the random-half
+training-case summed estimand, not constgold or coherent-anchor performance;
+constgold was not opened.  One of 35.1 million supported pairs lay just beyond
+the model's train-split flux-ratio boundary and triggered the standard
+extrapolation warning; it is numerically negligible.
+
+Artifact: `results/v22_phys2_summed_label_closure_c40-199.json`.  The summary
+was independently recomputed from its 160 case rows and matches the stored
+mean and SEM to machine precision.
+
+## 2026-08-13u  Trained V2.2 R_blend on two physical pair coordinates
+
+Added a feature-only V2.2 ablation, tag `lsst_r_extnbr_v22_phys2`, whose
+regression inputs are exactly `log10[(Re_p+Re_s)/distance]` and
+`log10(F_s/F_p)`.  The raw magnitude, size, and distance columns still define
+the unchanged V2.2 source cuts, but neither they nor the two Sersic indices are
+model inputs.  `blendemu.data_utils.rescale` now derives the two coordinates
+for both training and ordinary BlendEMU inference, mapping invalid/isolated
+overlap inputs to NaN instead of infinity.
+
+The comparison holds fixed the V2.2 response catalogue, cases 40--199, labels,
+row split, standardization, cuts, neighbour support, and XGBoost parameters.
+Job `15729485` completed with exit 0 in 6m44s and 7.8 GB MaxRSS.  It selected
+the same 37,852,393 rows as V2.2 (30,281,914 train; 7,570,479 validation) and
+the standardization matches exactly (`mean=0.0076055871`, `std=0.69726461997`).
+Early stopping selected 263 trees with validation R2 `0.002114`, versus V2.2's
+271 trees and `0.009376`.  Thus the two coordinates retain only about 23% of
+the already-small row-level R2; this is a training-ruler result, not yet a
+coherent-scene or constgold verdict.  Constgold was not opened.
+
+Added `configs/fs2_lsst_r_extnbr_v22_phys2.yaml`,
+`scripts/retrain_emulator_v22_phys2.py`,
+`jobs/job_retrain_emu_v22_phys2.sh`, and a focused config-guard test; changed
+`blendemu/blendemu/data_utils.py` and added its ratio-feature tests.  Six
+focused tests pass, along with `py_compile`, Bash syntax, Slurm `--test-only`,
+whitespace checks, metadata parity checks, and a successful end-to-end
+one-pair prediction after loading all three emulator tasks.  Artifacts are
+`blendemu/models/{regression_model,emulator_metadata,regression_train_curve}_lsst_r_extnbr_v22_phys2.*`.
+The next scientific step, if requested, is a frozen held-out summed-label and
+coherent-anchor comparison against V2.2 before any constgold evaluation.
+
+## 2026-08-13t  Compact secondaries explain half, not all, of panel E's rightmost-point gap
+
+Owner correctly identified that the first global removal test pooled compact
+anchors inside and outside the high-scene-response tail, so it did not directly
+test the visual claim from panel A. Added
+`scripts/decompose_anchor_tail_secondary_size.py`, two focused tests, and a
+cluster wrapper. Five related tests pass. Job 15728238 completed in 39 s with
+exit 0 and 322 MB MaxRSS. It reproduces the original panel-E tail's 56,691 rows,
+mean, and case SEM exactly; four-cell global and two-cell tail contributions
+close case by case below `1.2e-16`.
+
+On the same post-hoc c700--899 rows, removing tail anchors whose response-dominant
+secondary has `Re_s < 0.4 arcsec` lowers the rightmost-point gap from
+`+0.077394 +- 0.021218` to `+0.041142 +- 0.018866`. The paired change is
+`-0.036252 +- 0.012724`. Thus the visual lead is real but does **not** close the
+tail: 53.2% remains. Compact anchors are 13.08% of the tail, have conditional
+gap `+0.314665 +- 0.099032`, and carry 54.1% of the tail's additive gap. The
+remaining 86.92% carry the other 45.9%.
+
+The full-denominator accounting explains the earlier global result:
+
+| cell | all-anchor fraction | conditional gap | additive contribution | global-gap share |
+|---|---:|---:|---:|---:|
+| tail, compact | 1.09% | +0.314665 | +0.003463 | 27.3% |
+| tail, kept | 7.23% | +0.041142 | +0.003000 | 23.6% |
+| outside tail, compact | 34.33% | +0.004638 | +0.001583 | 12.5% |
+| outside tail, kept | 57.35% | +0.008044 | +0.004642 | 36.6% |
+
+Removing only compact-tail anchors changes the global conditional gap from
+`+0.012689 +- 0.003615` to `+0.009339 +- 0.003483`; it cannot close globally
+because that 1.09% cell supplies only 27.3% of the global additive gap. Removing
+all compact anchors gives `+0.011805 +- 0.004246`: the numerous outside-tail
+compact anchors have only a small `+0.00464` conditional gap, so dropping them
+also shrinks the denominator and raises the retained conditional mean relative
+to the tail-only cut. Equivalently, on the original denominator all compact
+anchors supply 39.8% and retained anchors supply 60.2% of the gap.
+
+Artifact:
+`results/anchorblend_panelE_tail_secondary_size_cut0p4_c700-899.{json,md,csv}`.
+The threshold remains explicitly post-hoc and the result is not an independent
+replication.
+
+## 2026-08-13s  Compact dominant secondaries do not explain or close the coherent-anchor gap
+
+Per owner, tested the apparent `Re_s < 0.4 arcsec` lead in the two relevant
+instruments. Added `scripts/diag_v22_secondary_size_gap.py`, a cluster wrapper,
+and three focused tests; 8 related tests pass. Job 15728021 completed in 3m12s
+with exit 0 and 0.95 GB MaxRSS. The half-shear scan reproduces the earlier exact
+c40--199 closure counts and means (all five reference checks pass), and every
+size/cut decomposition closes case by case to floating-point precision.
+
+**Half-shear training audit.** On the same 4,173,826 eligible primaries and
+35,084,344 active V2.2 training pairs, the global summed label-minus-V2.2
+residual is `+0.000313 +- 0.000993`. Secondaries below 0.4 arcsec are 73.36% of
+active pairs, but contribute `-0.000064 +- 0.000878` per primary (label
+`0.009179`, V2.2 `0.009243`): no compact-secondary underprediction is visible
+in-sample. The `Re_s >= 0.4` pairs contribute
+`+0.000376 +- 0.000517`. The publication-style three-panel figure shows the
+label/prediction curve, paired residual, and population-weighted additive
+residual; all are case-blocked and the 0.4 arcsec boundary is explicit.
+
+**Coherent-anchor removal test.** On final c700--899, removing every anchor
+whose response-dominant deployed neighbour has `Re_s < 0.4` removes
+241,338/681,384 = 35.42% of anchors. The original gap is
+`+0.012689 +- 0.003615`; after the cut it is
+`+0.011805 +- 0.004246` (93.0% of the original conditional mean, descriptive
+`t=2.78`, `p=0.00595`). The paired change is only
+`-0.000883 +- 0.002687` (`p=0.743`). On the original full-population
+denominator, removed anchors carry `+0.005047` = 39.8% of the gap, while kept
+anchors carry `+0.007642` = 60.2%. Thus the cut neither removes most of the gap
+nor closes it. Train c400--599 also fails (the retained gap is 109.5% of the
+original); pooled c400--899 retains 106.8%. The threshold is explicitly marked
+post-hoc because it was proposed after opening the final-test curve.
+
+The earlier panel-E-tail result was therefore an interaction/localization:
+compact dominant secondaries identify a high-bias corner *conditional on high
+scene response*. A large within-tail contrast does not imply that compact
+secondaries supply most of the population-integrated gap.
+
+Artifacts:
+`results/v22_halfshear_rblend_vs_secondary_size_training_c40-199.{png,pdf,json,md,csv}`
+and
+`results/anchorblend_dominant_secondary_size_cut0p4_c400-899.{json,md,csv}`.
+The PNG was inspected at original resolution; labels, logarithmic size axis,
+case-SEM bars, cut line, color/marker redundancy, and PDF export are clean.
+
+## 2026-08-13r  Panel-E tail resolves into compact single-pair spikes, not the largest scene responses
+
+Per owner, localized the frozen rightmost point of the all-anchor panel E. Added
+`scripts/plot_anchor_bias_scene_tail_curves.py`, a cluster wrapper, and three
+focused tests (11 relevant tests pass in total). The subset replays the original
+development-defined rule exactly: `scene_prediction >= 0.406729974`, selecting
+85,209 development and 56,691 final-test anchors (8.32%). Fresh 12-bin
+coordinates are defined only on the development tail and applied to the held-out
+tail. The globally trained full bias emulator is unchanged and is **not refit**
+on this subset. Job 15727047 completed in 36 s with exit 0.
+
+The tail's measured bias is `+0.077394 +- 0.021218`; the emulator predicts
+`+0.067646 +- 0.001244`, leaving `+0.009748 +- 0.021094`. The strongest
+exploratory held-out extreme-bin contrasts are small-to-large dominant-secondary
+size (`high-low = -0.5514 +- 0.1275`), low-to-high runner-up response
+(`-0.4495 +- 0.1095`), low-to-high overlap (`-0.4384 +- 0.1153`), and
+low-to-high other-pair absolute response (`-0.3473 +- 0.1076`). The explicit
+dominant/runner-up ratio rises by `+0.3619 +- 0.1165`. Thus the positive gap
+within panel E is largest for a compact dominant secondary with weak competing
+pair responses: the single-pair-spike interpretation sharpens.
+
+The effect is not a monotonic response-amplitude failure. Within the tail,
+measured bias peaks near scene response 0.93 at `+0.2150 +- 0.0684`, then flips
+to `-0.3200 +- 0.1045` in the most extreme `scene_prediction >= 1.2696` bin.
+The 2--3 arcsec shell high-minus-low contrast is only
+`+0.1214 +- 0.1082`; dominant signed response is
+`-0.0645 +- 0.1393`, and flux ratio is `-0.1294 +- 0.0941`. These opened-test
+contrasts are localization, not new confirmatory tests or causal estimates.
+
+Artifacts:
+`results/anchorblend_g002_bias_emulator_v22_c400-899_final_scene_tail.{png,pdf,json,md}`
+and matching `_curves.csv`. The PNG was inspected at full resolution; labels,
+error bars, common y-scale, and color/marker redundancy are clean.
+
+## 2026-08-13q  Half-shear 2--3 arcsec residual is null on the anchor's distance coordinate
+
+Split V2.2's exact summed-label closure on its own half-shear training cases
+40--199 into pair separations 2--3 arcsec and the complementary supported
+0--2 plus 3--10 arcsec range. Extended
+`scripts/diag_v22_summed_label_closure.py` with an additive distance split,
+all-primary denominators, exact component-to-total closure assertions, and a
+choice of stored training distance or input-to-input great-circle distance.
+Three focused tests pass. Jobs 15725766 and 15726042 completed with exit 0.
+
+The input-distance result is the comparison matching coherent-anchor panel C.
+With residual defined as label minus V2.2, the 2--3 arcsec contribution per
+eligible primary is `+0.000178 +- 0.000211` (label `0.012670`, prediction
+`0.012492`; 0.413 active pairs per primary). Outside it is
+`+0.000135 +- 0.000962` (label `0.047299`, prediction `0.047165`; 7.993 active
+pairs per primary). Both are consistent with zero and add exactly to the known
+global `+0.000313` residual. Per active pair the corresponding case-balanced
+means are `+0.000436 +- 0.000511` and
+`+0.000017 +- 0.000120`.
+
+Using the old stored detected-centroid distance instead gives 2--3 arcsec
+`+0.000381 +- 0.000211` and outside `-0.000068 +- 0.000960`. Thus the weak
+1.8-sigma apparent shell concentration is coordinate-sensitive and must not be
+used to explain input-distance anchor panel C. Artifacts:
+`results/v22_summed_label_{distance,input_distance}_split_c40-199.json`.
+
+## 2026-08-13p  Per-anchor bias emulator orders the gap but fails the predictive gate; no 2D maps
+
+Implemented the owner's proposed diagnosis: fit boosted trees to the direct
+per-primary residual
+`R_blend_truth - R_blend_lsst_r_extnbr_v22`, then read held-out 1D conditional
+bias curves before considering 2D maps. Added
+`scripts/build_anchor_bias_features.py`, `scripts/train_anchor_bias_emulator.py`,
+`scripts/diagnose_anchor_bias_subgroup_models.py`, three cluster wrappers, and
+focused tests (10/10 pass). Constgold is not opened and all saved models are
+marked diagnostic-only.
+
+**Leakage/provenance design.** c400--599 train, c600--699 select capacity and
+display coordinates, and c700--899 are the final test; rendered case is the
+uncertainty unit and receives equal total training weight. The 50 features cover
+primary/dominant-pair latents, scene geometry/counts in fixed distance shells,
+and frozen V2.2 response structure. No measured truth enters a feature.
+
+The first feature build exposed two rare but real provenance differences in the
+old generated-catalogue pair manifests. In case 813 one source was clipped from
+the renderer input catalogue, changing one pair list; a different anchor crossed
+an XGBoost split because the generated catalogue's rescaled magnitude was
+float32 while the renderer copy was float64. Added explicit
+`--catalogue-source rendered` / `--pair-prefix` support and rebuilt all 500 cases
+from the exact catalogue used by `build_anchorblend_response.py`. The final
+feature table has **1,703,884 anchors**, zero duplicate keys, zero infinities,
+one explicit no-pair anchor (13 NaN dominant cells), and pair-to-stored-scene
+replay **exactly 0.0 on every row**. Jobs 15724209 and 15724210 completed.
+
+**Main held-out result (job 15724478).** The conservative HistGradientBoosting
+capacity wins on tuning cases. On c700--899 the measured bias is
+`+0.01269 +- 0.00362`; the full model predicts `+0.00905 +- 0.00012`, leaving
+`+0.00364 +- 0.00361`. It has only **+0.0288% row-MSE skill** and a case-paired
+MSE reduction `+0.00245 +- 0.00154` (1.60 sigma), so the predeclared >2-SEM
+predictive gate FAILS. But its conditional ordering is real: measured
+top-minus-bottom predicted decile is `+0.1940 +- 0.0264`, decile rho `0.976`,
+and calibration slope `0.637`. Four of five gates pass. The correct reading is
+**useful bias ranker/localizer, not a good per-anchor bias emulator**.
+
+Feature-family ablation locates the small learnable part in model-output
+structure: response-only skill `+0.0204%` (MSE reduction
+`+0.00174 +- 0.00113`), physical-scene skill `-0.0039%`, and primary-only
+`-0.0320%`. Held-out 1D curves reproduce the response carrier: the highest
+dominant/runner-up bins have `+0.0643` / `+0.0689` bias, the highest dominant
+absolute-fraction bin `+0.0777`, highest scene-response bin `+0.0774`, and
+highest signed dominant-response bin `+0.0702`.
+
+**Physical-root answer.** Flux ratio is not monotonic: held-out bias is
+`+0.0430 +- 0.0151` around `log10(Fs/Fp)=0.48`,
+`-0.0148 +- 0.0161` around 0.77, then `+0.0278 +- 0.0152` around 1.30.
+Size ratio and overlap are likewise unordered. Surface-brightness ratio is the
+best marginal lead (bin-order rho 0.62 overall, 0.80 inside the frozen
+`ratio>5 AND positive` carrier), but cannot be promoted: exploratory subgroup
+job 15724526 refit inside that carrier and found physical-scene skill
+`-0.018%` with MSE reduction `-0.00206 +- 0.00405`; dominant-pair physics is
+`-0.035%`. Even the full carrier model gains only
+`+0.00017 +- 0.00495`. Thus surface brightness is a correlated descriptor, not
+an identified mechanism, and the earlier compact/high-SB/overlap result remains
+only a hint.
+
+Because the good-model gate failed, the predeclared pipeline **did not generate
+or interpret 2D maps**. It stopped after the clean 1D curves as requested. Main
+artifacts:
+`results/anchorblend_g002_bias_features_v22_c400-899_eda.{json,md}`,
+`results/anchorblend_g002_bias_emulator_v22_c400-899_final.{json,md,joblib}`,
+the matching `_curves.csv`, calibration/importance/1D figures,
+`results/anchorblend_g002_bias_emulator_v22_c400-899_subgroups.{json,md}`, and
+`results/anchorblend_g002_bias_emulator_v22_conclusion.md`.
+
+Audit trail: 15724016/15724111 exposed the no-pair and pair-provenance guards;
+15724189 failed before output on a suffix-rename ordering bug; 15724211/15724344
+failed only in curve export on single-case/constant bins; 15724401 completed but
+its sparse zero-spike fallback produced an oversized curve CSV and is
+superseded. The capped-12-bin final job 15724478 and subgroup job 15724526 both
+completed; strict JSON reads, plot inspection, and targeted whitespace checks
+pass.
+
+## 2026-08-13o  Physical-root test: flux ratio is NOT the cause; compact/high-SB overlap is only a candidate
+
+Owner's correction accepted: "dominant neighbour" sounds causal but is actually
+a model-output carrier, so test the latent physics *inside* it. Added
+`scripts/diagnose_v22_dominant_physics.py`,
+`tests/test_diagnose_v22_dominant_physics.py`, and
+`jobs/job_diagnose_v22_dominant_physics.sh`. Synthetic checks pass (4/4).
+SLURM jobs 15723658 (baseline 4x4 dominant-pair-amplitude controls), 15723696
+(6x6 controls), and 15723697 (4x4 total-scene-amplitude controls) all COMPLETED.
+
+Design: primary frozen carrier `ratio>5 AND dominant_response>=0`, with
+`top_fraction>0.7 AND dominant_response>=0` as a fixed sensitivity. Tested
+`F_s/F_p`, `Re_s/Re_p`, `(Re_p+Re_s)/d`, and
+`(F_s/F_p)/(Re_s/Re_p)^2`. Development blocks c400-599 / c40-89 supply only
+covariate quantiles and scales; no development outcome chooses a sign or cut.
+All effects are on c600-899 anchors and c90-139 constgold, blocked by case and by
+predicted-amplitude x dominance-strength cells. Holm covers the four coordinates.
+
+**Direct answer: dominant/primary flux ratio is rejected as the underlying
+BlendEMU cause.** In the primary carrier, controlled upper-minus-lower flux-ratio
+contrasts are `-0.00908 +- 0.01661` (anchors, Holm p=1) and
+`-0.01412 +- 0.01808` (constgold neighbour proxy, p=1). The sign is negative in
+both instruments and all robustness specifications: a larger flux ratio does
+not create a larger deficit. This agrees with the earlier result that the tail
+is worse when the dominant-response pair is *not* the brightest neighbour.
+
+No single tested physical coordinate passes the shared anchor-plus-constgold
+criterion:
+
+| coordinate, primary carrier | anchor controlled high-low | Holm p | constgold neighbour high-low | Holm p |
+|---|---:|---:|---:|---:|
+| flux ratio | -0.00908 +- 0.01661 | 1.000 | -0.01412 +- 0.01808 | 1.000 |
+| size ratio | -0.02577 +- 0.01964 | 0.571 | -0.04802 +- 0.02022 | 0.086 |
+| overlap | +0.00712 +- 0.01914 | 1.000 | +0.01262 +- 0.01998 | 1.000 |
+| surface brightness | +0.03814 +- 0.01909 | 0.186 | +0.02214 +- 0.02498 | 1.000 |
+
+There is a coherent **multidimensional hint**: at fixed response amplitude and
+dominance, the deficit leans toward compact, high-surface-brightness, overlapping
+secondaries. Baseline joint anchor slopes per development SD are flux
+`+0.02413 +- 0.01031`, size `-0.01738 +- 0.00783`, overlap
+`+0.01842 +- 0.00698` (Holm p=0.040, 0.040, 0.026); constgold has the same three
+signs and compatible amplitudes but none passes (all Holm p=0.27). This cannot be
+promoted to root: the primary-carrier anchor p-values weaken to 0.11-0.15 with
+6x6 controls and 0.064-0.098 with scene-amplitude controls. Under the second
+carrier compactness/overlap are somewhat more stable (scene-control p=0.033,
+6x6 p=0.051), but constgold still does not confirm them.
+
+**Flow branch is different and decisive.** In the `top_fraction>0.7` carrier,
+high-overlap objects have `self truth - flow = -0.08582 +- 0.00519`; low-overlap
+objects have `+0.07719 +- 0.01233`; high-low is
+`-0.16302 +- 0.01301`, Holm p=2.7e-16. It remains -0.149 to -0.166 across both
+rules, grids, and amplitude controls. This is the physical expression of the
+already-proven 3"/7" shell discontinuity, not a new BlendEMU root.
+
+Standing blend-side diagnosis therefore stays at the response-estimand level:
+rare strong positive per-pair responses are under-calibrated when one pair
+controls the scene. None of these four simple physical cuts uniquely explains
+that tail. Consolidated interpretation:
+`results/v22_dominant_physics_conclusion.md`; full baseline and robustness JSONs
+share the stem `results/v22_dominant_physics_anchor_c400-899_constgold_c40-139`.
+
+## 2026-08-13n  "Dominant neighbours" is NOT the same claim as "large R_blend" -- tested, and they separate
+
+Added `scripts/analyze_anchor_gap_by_amplitude.py` +
+`jobs/job_analyze_anchor_gap_by_amplitude.sh` (15722844, and 15722851 after the
+occupancy guard below), plus `jobs/job_flow_selfterm_vs_rblend.sh` (15722679).
+Question from the owner: does "the gap is carried by dominant neighbours" mean
+the model mostly fails at large `R_blend`?
+
+The carrier rule is a CONCENTRATION statistic -- one pair supplies most of the
+predicted response -- and says nothing about amplitude. A large total `R_blend`
+built from several comparable neighbours is explicitly NOT selected by it. So the
+two readings are distinct and imply different fixes. Both were measured.
+
+**Blend side (coherent anchors, direct truth, no constgold).**
+`gap = prediction - truth`, binned by the model's own `|prediction|` in deciles,
+edges frozen on cases 400-499 and applied unchanged to 500-899:
+
+| amplitude decile | median `|pred|` | mean truth | gap | fractional gap | share of total gap |
+|---|---:|---:|---:|---:|---:|
+| q7 | 0.080 | +0.076 | -0.0021 | -2.7% +- 10.5% | 2.0% |
+| q8 | 0.181 | +0.200 | -0.0153 | -7.6% +- 4.3% | 14.6% |
+| **q9** | **0.664** | **+0.782** | **-0.0612 +- 0.0121** | **-7.8% +- 1.5%** | **58.1%** |
+
+* **In ABSOLUTE terms, yes**: the top decile carries 58.1% of the whole anchor
+  gap and the top two carry 72.8%.
+* **In FRACTIONAL terms, no**: the under-prediction is ~-7.8% and is
+  statistically indistinguishable across the top bins. Large-`R_blend` objects
+  dominate the total because their numbers are larger, NOT because the model
+  degrades there. Below q6 the mean truth is ~0 so the ratio is undefined -- those
+  `frac_gap` entries (-101%, +252%) are denominator noise and must not be read.
+
+**Dominance is not a repackaging of amplitude.** Holding amplitude fixed, 76.8%
+of the dominance contrast survives. But the two are strongly correlated: tail
+occupancy climbs monotonically 0.0% -> 56.0% across the amplitude deciles, so
+dominant-neighbour anchors mostly LIVE at large `R_blend`.
+
+**The sharpest number is inside the top decile, and it is another cancellation.**
+At the SAME large predicted response, the two subsets miss in OPPOSITE directions:
+
+| top amplitude decile (q9) | gap |
+|---|---:|
+| dominance tail (56.0% of the bin) | **-0.15104** |
+| non-dominant remainder (44.0%) | **+0.05328** |
+
+So amplitude alone does not identify where the model fails -- at large `R_blend`
+the model is badly LOW when one neighbour carries the response and somewhat HIGH
+when several share it. In bins q6-q8 the dominance contrast is small
+(-0.033, -0.006, +0.006); essentially all of the surviving contrast lives in q9.
+
+**Flow side, same question.** `self_term` split by `R_blend` deciles: the top
+decile is `-0.10445` (flow over-predicts self response most where blend response
+is largest), and 64.6% of the carrier contrast survives at fixed `R_blend`. Same
+conclusion as the blend side -- correlated with amplitude, not explained by it.
+
+**Artefact caveat, recorded because the first JSON is affected.** The
+within-amplitude aggregate in
+`results/anchorblend_g002_gap_by_amplitude_v22_c400-899.json` reads
+`surviving = -72.8%` (sign-reversed) purely because bin q0 contributes a contrast
+of `+0.79` computed from **27 tail anchors**. A `--min-tail-fraction 0.05` guard
+was added and the run repeated to
+`..._c400-899_guarded.json`, which aggregates only q6-q9 and gives
+`surviving = +76.8%`. **Use the guarded file; the unguarded aggregate field is
+superseded.** The per-bin numbers are identical in both.
+
+Two fixed bugs, both mine, both caught by the job failing loudly: the response
+tables key on `input_index` while the dominance tables key on `anchor_index`
+(the published analyzer renames one to the other), and a column named `tail`
+shadows `DataFrame.tail`.
+
+## 2026-08-13m  ROOT CAUSE of the flow-side error: the flow has NO neighbour-distance resolution inside a crowding shell
+
+Added `scripts/diag_selfterm_shell_step.py` with jobs
+`job_selfterm_shell_step.sh` (15721765), `job_selfterm_shell_truthcontrol.sh`
+(15721897), `job_selfterm_shell_profiles.sh` (15721987) -- all COMPLETED. This
+executes the step named at the end of 08-13l, and it passes its predeclared test.
+
+**Design guard.** Two-window testing at 3" and 7" would have been cheating, since
+the 08-13l profile also reverses at 4.5-5.3" where no shell edge exists. So the
+WHOLE 0.5-10" range was fine-binned at a uniform 0.25" and every interior edge
+was treated identically, giving the candidate edges a real null to compete
+against. Jumps are paired by case (per-case above-minus-below, then averaged), so
+case-level common modes cancel. Predeclared: the hypothesis passes only if 3.00"
+and 7.00" rank among the largest |t| of all edges. Both case halves are reported
+independently.
+
+**Result: passes.** Ranks of the shell edges among all interior edges:
+
+| distance | edges | 3.00" rank | 7.00" rank | halves agree |
+|---|---:|---:|---:|---|
+| `dominant_distance` | 37 | **2** | **1** | yes, both halves |
+| `closest_pair_distance` | 29 | **1** | 27 / 26 | yes at 3" |
+
+`|t|` at 3.00" is 14.9/16.1 (`dominant`) and 11.1/9.9 (`closest`) against a median
+edge of 1.3-1.8 and a next-largest non-shell edge of ~6. The 7.00" miss on
+`closest_pair_distance` is NOT a counter-example: almost nothing has its NEAREST
+neighbour beyond 7", so that bin has ~370 rows and a SEM 10-20x larger than
+elsewhere -- the test has no power there, it does not fail there.
+
+**Decisive control: the truth is smooth, the model steps.** Step-testing `S_h` and
+`R_flow^h` separately at the same edges:
+
+| edge | quantity | jump | `|t|` | rank |
+|---|---|---:|---:|---:|
+| 3.00" `dominant` | **`R_flow^h`** | **+0.348** | **124 / 138** | **1 / 1** |
+| 3.00" `dominant` | `S_h` (truth) | +0.058 / +0.030 | 2.9 / 1.5 | 6 / 13 |
+| 7.00" `dominant` | **`R_flow^h`** | **+0.303** | **105 / 83** | **2 / 2** |
+| 7.00" `dominant` | `S_h` (truth) | +0.041 / +0.013 | 2.3 / 0.8 | 8 / 26 |
+| 3.00" `closest` | **`R_flow^h`** | **+0.189** | **84 / 85** | **1 / 1** |
+| 3.00" `closest` | `S_h` (truth) | +0.047 | 3.5 / 3.1 | 4 / 4 |
+
+The model's discontinuity is **6-25x the truth's**, and the truth's edge is not an
+outlier among its own edges while the model's is rank 1 in every case.
+
+**The bin means show the mechanism outright** (`dominant_distance`, all cases):
+
+| bin centre | `S_h` (truth) | `R_flow^h` (model) |
+|---:|---:|---:|
+| 2.625" | +0.604 | +0.554 |
+| 2.875" | +0.689 | +0.545 |
+| **3.125"** | +0.733 | **+0.893** |
+| 3.375" | +0.750 | +0.873 |
+| 6.875" | +0.959 | +0.735 |
+| **7.125"** | +0.986 | **+1.037** |
+
+Truth rises smoothly and monotonically with neighbour distance. The model is
+**flat inside each shell and jumps at the edge**, snapping to roughly the
+isolated-galaxy value (~1.0) the moment the neighbour leaves the aperture.
+
+**Why: the flow has no distance feature at all.** Its crowding inputs are
+`nbr_flux_near` (0-3" flux sum), `nbr_flux_far` (3-7" flux sum) and `log_k`
+(`tests/test_blend_flow.py::test_crowding_columns_match_the_flow1_definition`).
+Neighbour distance enters ONLY through which shell a neighbour is counted in. A
+piecewise-constant model is therefore being fitted to a continuously varying
+truth, which necessarily leaves an error of one sign at the inner edge of a shell
+and the other sign at the outer edge -- exactly the sign-flipping profile of
+08-13l, with the discontinuity as its visible signature.
+
+**This closes 08-13l's null.** Conditioning on `nbr_flux_near` removed none of the
+carrier contrast (121% surviving) because the missing information is not neighbour
+FLUX -- which the flow already has -- but neighbour DISTANCE WITHIN the shell,
+which is orthogonal to it and which the flow does not have at all.
+
+**Scope, stated plainly.** This establishes a large, replicated, mechanistically
+explained discretisation artefact in the flow's crowding conditioning. It does
+NOT yet establish that this artefact accounts quantitatively for the -0.034
+carrier-group self term, for the +0.009 complement, or for their near-cancellation
+in the pooled `m`. That attribution is the next step and is not claimed here.
+
+Next concrete step, no rendering needed: quantify the population-level cost by
+predicting each object's self-term error from its within-shell distance alone
+(no fitting to `m`, no constgold), and check whether integrating that over the
+population reproduces the -0.034 / +0.009 split. If it does, the fix is a
+distance-resolved crowding feature rather than hard shells -- a flow change, on
+the self side, with the `R_blend` firewall untouched.
+
+## 2026-08-13l  NULL: neighbour-flux contamination does NOT explain the carrier split -- but the self term steps at the flow's own shell radii
+
+Added `scripts/diag_flow_selfterm_vs_nbrflux.py` and jobs
+`job_flow_selfterm_vs_nbrflux.sh` (15721311), `job_flow_selfterm_vs_domdistance.sh`
+(15721381), `job_flow_selfterm_domdist_replication.sh` (15721435) -- all COMPLETED.
+This executes the step named at the end of 08-13k.
+
+**Hypothesis tested and REJECTED.** 08-13k left mechanism (a): the flow conditions
+on MEASURED inputs, so a bright close neighbour contaminates them and the flow
+returns too large a self response. If that were the mechanism, holding neighbour
+flux fixed should largely collapse the carrier contrast. It does not. Bin edges
+are development-window deciles applied unchanged to validation, so the binning
+could not be tuned on the reported number:
+
+| held fixed | within-bin contrast | unconditional | surviving |
+|---|---:|---:|---:|
+| `nbr_flux_near` | -0.05260 | -0.04334 | **121.4%** |
+| `SN` (control) | -0.04208 | -0.04334 | 97.1% |
+| `Re_input_p` (control) | -0.04312 | -0.04334 | 99.5% |
+
+Conditioning on the flow's own crowding feature removes **none** of the split; if
+anything it sharpens it. The two controls confirm the split is also not a generic
+faint-end or small-size trend. **Mechanism (a) is dead as the explanation.**
+
+The largest single contrast is in the group where `nbr_flux_near == 0`
+(-0.08436, t=-6.5, 335,365 rows, 23.6%). That is not "isolated": `nbr_flux_near`
+is the 0-3" shell sum and `nbr_flux_far` the 3-7" shell
+(`tests/test_blend_flow.py::test_crowding_columns_match_the_flow1_definition`),
+whereas the carrier rule's dominant pair runs out to the deployed `r_max=10"`.
+So the flow's error is LARGEST where its own near-shell feature reads zero -- it
+is blind, by aperture, to the neighbour the rule is selecting on.
+
+**New structure, replicated.** Splitting `self_term` by `dominant_distance`
+(pair-table geometry only -- still no constgold `R_sim`, no `R_blend`) gives a
+large, sharply non-monotonic, sign-flipping profile. Because the sign flips
+looked like they could be noise, the whole profile was re-run on **disjoint**
+cases (edges from 40-64, reported on 65-89) against the original (edges 40-89,
+reported on 90-139):
+
+| decile median | 0.96" | 2.11" | 2.74" | **3.27"** | 3.83" | 4.48" | 5.32" | **6.44"** | 7.83" | 9.29" |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `self_term` cases 90-139 | -0.062 | -0.054 | +0.086 | -0.140 | -0.079 | +0.008 | +0.105 | +0.178 | -0.048 | -0.020 |
+| `self_term` cases 65-89 | -0.060 | -0.048 | +0.076 | -0.128 | -0.058 | +0.006 | +0.110 | +0.175 | -0.036 | -0.026 |
+
+**All ten signs match and the amplitudes agree to ~15%**, per-bin |t| up to 13.
+This is real structure, not noise. Two of the three largest sign reversals
+straddle **3.0"** and **7.0"** -- exactly the edges of the flow's near and far
+crowding shells, i.e. the radii at which a neighbour discontinuously changes the
+flow's input while the true response varies smoothly across them. The reversal
+between 4.48" and 5.32" does NOT sit on a shell edge, so the shell-boundary
+reading is a HYPOTHESIS, not established.
+
+Next concrete step, no rendering needed: bin `dominant_distance` finely
+(~0.25" bins) across 2.5-3.5" and 6.5-7.5" and test for a STEP at exactly 3.0"
+and 7.0". A step at the boundary confirms the shell-aperture mechanism; a smooth
+crossing kills it and points at a real physical scale instead.
+
+Note on this iteration's cron prompt: it still describes the extension gate as
+FAILED and forbids rendering. Both conditions were already discharged -- the gate
+passes at exactly 0.000e+00 (15716216) and the owner explicitly accepted the
+render, which completed.
+
+Unrelated failure, reported plainly: job 15716980 (`cg005_c140_239`, constgold
+g=0.05 cases 140-239) FAILED after 3h08 with Bus errors on ~30 of 100 ranks on
+node `th-cl-crick2`, killing the -0.05 leg; those cases have no negative-shear
+shapes. Node fault, not a code defect; `th-cl-crick2` is not in the anchor jobs'
+exclude list. Not resubmitted pending a decision on whether the cases are wanted.
+
+## 2026-08-13k  CONFIRMED directly: the flow's self-response error is structured by the carrier rule
+
+Added `scripts/diag_flow_selfterm_by_carrier.py` +
+`jobs/job_flow_selfterm_by_carrier.sh` (job 15718278, COMPLETED in 41 s).
+
+08-13j read the flow/self term off a DIFFERENCE of two constgold estimands
+(`deficit_total - deficit_proxy`), which inherits the shared-gap report's own
+caveat that the neighbour proxy "also contains selection-estimand differences and
+possible non-additivity". This measures the same quantity directly as
+`self_term = S_h - R_flow^h` on half-shear truth with the 16-seed ensemble.
+**It opens no constgold `R_sim` and no `R_blend`** -- the constgold pair table is
+read only to evaluate the frozen rule's three input columns, so it supplies the
+SPLIT and never the measured quantity. Neither the blend estimand nor additivity
+can enter.
+
+Validation window, `top_fraction:>0.7 AND dominant_response:positive` (26.5%):
+
+| group | direct `S_h - R_flow^h` | 08-13j via proxy difference | rows |
+|---|---:|---:|---:|
+| selected | **-0.03445 +- 0.00596** | -0.03762 | 376,734 |
+| complement | **+0.00889 +- 0.00248** | +0.00910 | 1,045,367 |
+| global | -0.00255 +- 0.00222 | -0.00302 | 1,422,101 |
+
+Both groups agree with the indirect values inside their case SEM, so **the
+structure is real and is not a proxy artefact.** The pilot-frozen
+`ratio:>5 AND dominant_response:positive` rule (30.4%) reproduces it: selected
+-0.02802 +- 0.00496, complement +0.00853 +- 0.00248.
+
+Seed robustness: the selected-minus-complement contrast is -0.04334 with a spread
+ACROSS THE 16 SEEDS of only +-0.00039, and **16/16 seeds agree on its sign**
+(pilot rule: -0.03655, +-0.00038, 16/16). Note that +-0.00039 is seed scatter, not
+the population uncertainty -- the case SEMs quoted in the table are the relevant
+error bars for the group means.
+
+The global value -0.00255 +- 0.00222 (t = -1.15) independently re-confirms
+08-13c's "flow term is globally null", now with the explanation attached: it is
+null only because a -0.034 error on a quarter of the population is cancelled by a
++0.009 error on the other three quarters.
+
+### Standing picture
+
+The V2.2 constgold gap is now localized into two structured, anti-correlated
+errors sitting on the same objects, both confirmed by instruments that do not
+share an estimand:
+
+| population | BlendEMU (blend) | flow (self) |
+|---|---:|---:|
+| dominant close neighbour, ~26% | under-supplies **+0.057** | over-supplies **-0.034** |
+| bulk, ~74% | ~exact **+0.002** | under-supplies **+0.009** |
+
+The coherent-anchor instrument sees only the first column, which is why 08-13i
+found the anchor gap ~100% carried by the dominance tail while constgold's total
+is bulk-heavy: the constgold bulk deficit is flow-side, and anchors are blind to
+it by construction.
+
+Reminder for whoever acts on this: the pooled `m` is a cancellation of these two,
+so a single-lever fix to either component alone should be expected to make the
+pooled number worse before better, and must be judged on the split.
+
+Next concrete step: the two candidate levers are now separable -- (a) why the flow
+over-predicts self response when a bright dominant neighbour is present (the
+measured inputs it conditions on are contaminated by that neighbour), and (b) why
+BlendEMU under-supplies on the same objects. (a) is testable without any new
+rendering by splitting `self_term` against `nbr_flux_near`, which is already a
+column in the half-shear dump.
+
+## 2026-08-13j  The 93%-vs-31% split is ESTIMAND, not population -- and it reconciles 08-13c
+
+Added `scripts/diag_sharedgap_population_vs_estimand.py` +
+`jobs/job_sharedgap_population_vs_estimand.sh` (job 15717861, COMPLETED in 39 s).
+
+**A hypothesis I proposed was rejected by the data, and is recorded as rejected.**
+08-13i flagged the shared-carrier rule's 92.9% (constgold neighbour proxy) vs
+31.2% (constgold total) contrast as an open puzzle. On inspecting the payload the
+two rows turned out to sit on different populations -- proxy on the half-shear
+MATCHED frame (366,559 rows), total on the FULL frame (735,237),
+`constgold_shared_fraction` = 0.4988 -- so the obvious reading was that the
+contrast is a population artefact of the kind AGENTS.md warns about. **It is not.**
+The matched frame already carries `deficit_total`, so the same frozen rule was
+evaluated three ways on the validation window:
+
+| | frac | selected | complement | global | share | n_rows |
+|---|---:|---:|---:|---:|---:|---:|
+| A proxy on MATCHED | 0.2603 | +0.05668 | +0.00153 | +0.01585 | 92.9% | 366,559 |
+| B total on MATCHED | 0.2603 | +0.01906 | +0.01063 | +0.01283 | **38.7%** | 366,559 |
+| C total on FULL | 0.2605 | +0.01519 | +0.01179 | +0.01267 | 31.2% | 735,237 |
+
+Population effect (B-C) = **+7.5%** share; estimand effect (A-B) = **+54.2%**.
+The pilot-frozen `ratio:>5 AND dominant_response:positive` rule agrees and is even
+cleaner: population +0.9%, estimand +48.1%. A reproduces the published 92.9% and C
+the published 31.2%, so the harness is faithful.
+
+### The reconciliation with 08-13c
+
+`deficit_total - deficit_proxy = S_h - R_flow` = exactly the 08-13c `self_term`.
+Reading it off the table above, on identical rows:
+
+| group | self/flow term |
+|---|---:|
+| selected (dominant positive close neighbour, 26%) | **-0.03762** |
+| complement (74%) | **+0.00910** |
+| global | -0.00302 |
+
+08-13c measured the flow term as globally null (-0.00174 +- 0.00140) and assigned
+the whole constgold deficit to blend. That is confirmed in the MEAN and is
+**strongly violated locally**: the flow term is large and opposite-signed across
+the carrier split, and nearly cancels only when pooled. This is the same object as
+08-13c's own "10 sigma +-4% oscillation vs nearest-neighbour distance that
+cancels" -- now shown to be aligned with the blend carrier rather than merely with
+distance.
+
+So the two effects are anti-correlated, and the constgold total is their partial
+cancellation:
+
+* where a dominant close neighbour sits, **BlendEMU under-supplies** blend response
+  (+0.0567) while the **flow over-supplies** self response (-0.0376);
+* across the bulk, blend is nearly exact (+0.0015) while the **flow
+  under-supplies** (+0.0091).
+
+**Consequence for 08-13i, which is hereby sharpened rather than retracted.** The
+constgold total's complement deficit (+0.01063 on matched rows, ~5 sigma) is real
+and is NOT carried by the blend rule -- but it is now identified: it is a
+flow/self-response term in the bulk, not an unexplained uniform residual. The
+anchor instrument cannot see it because anchors measure neighbour response only.
+
+**Consequence for the fiducial model.** The small pooled `m` is again a
+cancellation between two structured, opposite-signed errors -- the same trap
+AGENTS.md records for the in-domain `m`. Any single-lever fix to either BlendEMU or
+the flow alone should be expected to make the pooled number WORSE before better,
+and must be judged on the split, not the pooled value.
+
+Next concrete step: test the flow-side claim directly against half-shear truth,
+splitting `S_h - R_flow` by the frozen carrier rule with the 16-seed ensemble --
+i.e. confirm the -0.0376 / +0.0091 structure is a genuine flow error and not an
+artefact of the proxy's "selection-estimand differences and non-additivity" caveat.
+
+## 2026-08-13i  RESULT: 500-case g=0.02 anchor block -- the bulk is NULL, the gap is entirely the dominance tail
+
+Whole chain COMPLETED, no failures. Combined analysis 15716244 on **500 cases /
+1,703,883 anchors**:
+
+| group | fraction | gap | t | carrier share |
+|---|---:|---:|---:|---:|
+| all | 1.0000 | -0.01048 +- 0.00226 | -4.63 | -- |
+| tail (ratio>20) | 0.1187 | **-0.07833 +- 0.00848** | -9.24 | **88.7%** |
+| bulk | 0.8813 | **-0.00123 +- 0.00224** | -0.55 | 10.3% |
+
+**The predeclared reading fires on the "tail_dominated" branch:** the bulk gap is
+within two case SEM of zero. The SEM shrank as predicted (0.00494 -> 0.00224,
+ratio 2.2 against the forecast sqrt(5) = 2.24).
+
+**The 100-case bulk was noise.** At c400--499 the bulk read -0.00678 +- 0.00494
+(t = -1.40, 36.1% share) and 08-13d treated that as a possible second carrier.
+With 400 more cases it collapses to -0.00123 +- 0.00224. Because the 500-case
+number contains c400--499, that agreement is not independent, so the 400 NEW cases
+were scored alone (job 15717504, no data shared with the earlier block):
+
+| group | fraction | gap | t | carrier share |
+|---|---:|---:|---:|---:|
+| all | 1.0000 | -0.00893 +- 0.00254 | -3.52 | -- |
+| tail | 0.1186 | -0.07557 +- 0.00957 | -7.89 | **100.3%** |
+| bulk | 0.8814 | **+0.00016 +- 0.00252** | **+0.06** | -1.5% |
+
+On untouched data the bulk is exactly null and the tail carries the entire anchor
+gap. Added `jobs/job_analyze_anchor_g002_newcases.sh` for this.
+
+### What this settles, and what it does not
+
+At constgold's own amplitude the coherent-anchor gap is **11.9% of anchors
+carrying ~100% of the deficit**. Constgold's split is 22% tail / 78% bulk. On the
+`ratio>20` selector the two remain opposite, so that particular selector does not
+transfer -- confirming 08-13d rather than overturning it.
+
+**But `ratio>20` is not the best selector, and the comparison target matters.**
+The separately-queued `v22_sharedgap` job (15717010, COMPLETED, script authored
+outside this chain -- report read, not re-derived here) searched for a rule shared
+by both instruments and reports `top_fraction:>0.7 AND dominant_response:positive`
+(24.6% of anchors), with all four of its validation gates passing:
+
+| target | fraction | conditional deficit | rest deficit | carrier share |
+|---|---:|---:|---:|---:|
+| anchors, g=0.02 | 24.6% | +0.04184 +- 0.00673 | -0.00187 +- 0.00302 | 115.9% |
+| constgold neighbour proxy | 26.0% | +0.05668 +- 0.00902 | +0.00153 +- 0.00330 | **92.9%** |
+| constgold total | 26.1% | +0.01519 +- 0.00418 | +0.01179 +- 0.00199 | 31.2% |
+
+and a pilot-frozen `ratio:>5 AND dominant_response:positive` rule reproduces this
+on the previously untouched c600--899 anchors (anchors 118.0%, proxy 93.7%,
+total 44.7%).
+
+So the shared carrier is real **once blend estimand is compared against blend
+estimand**: the constgold "neighbour proxy" is constgold truth minus matched
+half-shear self truth, which is the blend side, and there the same rule carries
+~93% on both instruments and holds out of sample.
+
+**The open question is now sharper.** The same rule carries only **31--45% of the
+constgold TOTAL**, whose complement deficit stays firmly non-zero
+(+0.01179 +- 0.00199, ~6 sigma). So beyond the shared tail carrier there is a
+second, roughly uniform component present in the constgold total and invisible to
+the anchor instrument. Note this sits in tension with 08-13c, which measured the
+flow term as globally null and assigned the entire constgold deficit to blend;
+reconciling that decomposition with this residual is the next concrete step, and
+it should be done before any of the above is treated as settled.
+
+Caveat carried forward: the report's own note that the neighbour proxy "also
+contains selection-estimand differences and non-additivity, so this is
+localization rather than a literal emulator label."
+
+## 2026-08-13h  Render nearly complete; downstream shared-gap job pre-validated
+
+Chain status: **25 of 25 COMPLETED except the c800-899 leg** -- its `shape` array
+(15716240_0/_1) is ~25 min into a 2 h step, with `resp_c800-899` (15716241) and the
+combined analysis (15716244) waiting on it. Response feathers for c400-499,
+c500-599, c600-699 and c700-799 are all on disk (~25 MB each). No failures at any
+point in the chain. Disk 5.9 T free (96%); the four renders cost ~300 G as
+estimated.
+
+Note the `shape` job now runs at `--mem=128G` rather than the 500 G it was written
+with, which lets it onto the 256 GB nodes. Both array tasks are running fine at
+that request.
+
+**Pre-validated the downstream job rather than waiting for it to fail.**
+`v22_sharedgap` (15717010) was queued outside this chain with
+`--dependency=afterok:15716244`, so it fires the moment the combined analysis
+lands and consumes all five anchor response + dominance blocks alongside the
+constgold pair features and the half-shear self-response. Checked ahead of time:
+
+* `scripts/localize_v22_shared_gap.py` exists and passes `py_compile`;
+* all three declared inputs exist (971 M pair features, 724 M half-shear
+  self-response, 583 M constgold gap features);
+* both outputs are clear, so its refuse-to-overwrite guard will not trip;
+* argparse interface matches the job exactly -- nothing passed-but-undeclared,
+  nothing required-but-unpassed;
+* **`--anchor-shear` defaults to 0.02**, matching the `g=0.02` anchors it is being
+  fed, and it is used only for labelling (payload field and a report header),
+  never in a computation -- so there is no silent amplitude mismatch of the kind
+  that would have been easy to introduce here.
+
+This is a readiness check, not a result. It establishes only that the shared-gap
+localization will run rather than crash on arrival; it says nothing about what it
+will find.
+
+Next: c800-899 shape -> response -> combined analysis (15716244) -> shared-gap
+localization (15717010).
+
+## 2026-08-13g  Extension render in flight; the four new blocks are a homogeneous population (NULL)
+
+Chain status at first check-in: all four `catalog` jobs COMPLETED (~1.3 min each),
+all four `pairs` COMPLETED (~40 s), all four `dominance` COMPLETED (~47 s). Three
+`sim` jobs RUNNING, the fourth PENDING on Resources. No failures anywhere. Disk
+6.1 T free.
+
+The pairs/dominance branch does not depend on rendering, so half the combined
+analysis inputs already exist. Used them for a pre-check that would otherwise only
+surface after all four renders finished: **are the extension blocks the same
+anchor population as c400--499?**
+
+| block | anchors/case | tail frac (ratio>20) | mean n_pairs | median dominant abs R | median sum abs R |
+|---|---|---|---|---|---|
+| c400-499 | 3730.62 | 0.1436 | 15.812 | 0.0196 | 0.0413 |
+| c500-599 | 3726.83 | 0.1434 | 15.810 | 0.0194 | 0.0411 |
+| c600-699 | 3727.62 | 0.1431 | 15.814 | 0.0193 | 0.0409 |
+| c700-799 | 3730.11 | 0.1430 | 15.804 | 0.0194 | 0.0410 |
+| c800-899 | 3729.69 | 0.1438 | 15.800 | 0.0195 | 0.0411 |
+
+Every extension block's tail fraction is within **0.73 case SEM** of c400--499
+(z = -0.29, -0.70, -0.73, +0.13). Anchors per case, mean pair count, dominant
+`|R_pair|` and `sum |R_pair|` all agree to the third decimal.
+
+**This is a null and is reported as one:** it establishes only that pooling
+c400--899 into a single 500-case number is legitimate and needs no block
+reweighting. It says nothing about the gap itself, which is still waiting on the
+rendered `g=0.02` truth.
+
+Next: the four `sim` -> `shape` -> `response` legs, then the combined analysis
+(15716244).
+
+## 2026-08-13f  Extension gate: the new pair-response path is EXACT; the first gate failure was the gate's own bug
+
+Ran the 08-13e replication gate (job 15716206). It FAILED its 1e-4 tolerance:
+worst group-gap move 4.09e-4 in the tail, and the tail fraction shifted 0.1185 ->
+0.1190, so the two paths did not cover the same anchor set.
+
+**Diagnosed, and the new path is exonerated.** The two dominance tables are
+bit-for-bit identical: 373,062 anchors each, zero keys in one and not the other,
+`dominant_to_runner_up_abs_response` max abs difference exactly 0.0, `n_pairs`
+identical on every anchor. So `build_anchorblend_pair_responses.py` reproduces the
+one-active derisk manifest exactly, which is what the gate was supposed to test.
+
+The discrepancy was entirely a POPULATION difference the gate created itself. The
+published analysis (`analyze_anchor_amplitude_by_dominance.py`) inner-joins the
+`g=0.02` and `g=0.05` response tables, which silently drops the **958 anchors
+(0.28%)** the `g=0.02` render has and the `g=0.05` render does not (340,969 ->
+340,011). The extension analyser is deliberately unpaired and keeps them. Scoring
+one against the other compares different populations:
+
+| group | published | new path, PAIRED | new path, unpaired |
+|---|---|---|---|
+| all | -0.016778 | **-0.016778** | -0.016678 |
+| tail | -0.089761 | **-0.089761** | -0.089352 |
+| rest | -0.006876 | **-0.006876** | -0.006775 |
+
+Restricted to the same anchor set the new path reproduces the published numbers to
+six decimals. This was a gate design error, not a data or code defect, and it is
+worth noting that 0.28% of the anchors carry a 4.1e-4 shift in the tail gap --
+about 0.5% of that gap -- so the paired/unpaired distinction is not negligible and
+must be stated whenever the extension number is compared to the 08-13d one.
+
+Changed:
+
+* `scripts/analyze_anchor_g002_gap_by_dominance.py` gained `--restrict-keys`
+  (gate-only; the production run must not set it), plus `restrict_keys` and
+  `restricted_fraction` in the payload.
+* `jobs/job_anchorblend_g002_ext_gate.sh` now grades on the RESTRICTED comparison
+  at a 1e-6 tolerance and reports the unpaired value beside it, with the
+  paired->unpaired population shift printed in its own column so it can never
+  again be read as a path error.
+* `jobs/submit_anchorblend_g002_extension.sh` guards on the new paired artifact.
+
+Resubmitted as job 15716216 (pairs and dominance artifacts reused, not rebuilt).
+**GATE PASSED**, worst same-population group-gap difference **exactly 0.000e+00**
+on all three groups, 99.7190% of anchors kept by the restriction. The extension
+tooling is validated end to end and the render is unblocked on technical grounds.
+
+Standing state of the question the extension exists to answer, from the same run
+(cases 400--499, `g=0.02`, unpaired): tail `-0.08935 +- 0.01838` (t = -4.88,
+11.9% of anchors, carrying **63.4%** of the total gap) vs bulk `-0.00678 +-
+0.00494` (t = -1.40, **36.1%**). Constgold's split is 22% tail / 78% bulk. So at
+matched amplitude the anchor instrument is still tail-dominated, but the bulk term
+is not resolved -- which is exactly the 1.4-sigma ambiguity the 400 extra cases
+are meant to remove.
+
+**Owner approved `render` 2026-08-13.** Submitted the full chain: 25 jobs,
+15716220--15716244. Per block (c500-599, c600-699, c700-799, c800-899):
+catalog -> sim -> shape(2-task array) -> response, with pairs -> dominance
+branching off the catalogue job; the combined c400--899 analysis (15716244)
+depends on all four response and all four dominance jobs. Blocks are independent
+and run concurrently as nodes free. Disk at submission: 6.2 T free on
+`/project/ls-gruen` (95% full) against an expected ~292 G.
+
+## 2026-08-13e  Extension chain for a 500-case g=0.02 coherent-anchor block (WRITTEN, NOT SUBMITTED)
+
+**Nothing has been rendered or submitted.** This entry records the code only.
+
+Motivation, from 08-13d: the paired amplitude test resolved the TAIL at `g=0.02`
+(the predeclared "amplitude artefact" gate failed — the tail deficit does not
+shrink) but left the BULK at `-0.00688 +- 0.00492`, only 1.4 sigma. The bulk is
+the quantity that decides the question, because 78% of the constgold deficit sits
+outside the response-dominance tail. Response noise scales like `1/g` (observed
+paired SEM ratio 0.00492/0.00230 = 2.1), so 500 `g=0.02` cases bring the bulk SEM
+to ~0.0022, matching the `g=0.05` precision.
+
+**No `g=0.05` partners are rendered for the new cases.** The measured quantity is
+`gap = V2.2 prediction - g=0.02 truth`; the prediction side is a deterministic
+function of the input field, so unpaired `g=0.02` cases buy SEM directly. The
+existing 400--499 block keeps its partners and doubles as the replication control.
+
+Added:
+
+* `configs/fs2_lsst_r_anchorblend_g002_c{500-599,600-699,700-799,800-899}.yaml` —
+  four 100-case blocks, generated from the c400-499 config with only
+  `output_path`, `case_offset` and `model_tag` changed.
+* `jobs/job_anchorblend_g002_ext_{catalog,sim,shape,response}.sh` — mirrors of the
+  existing four-job chain, parameterised by `AB_START`/`AB_STOP`. Same node
+  `--exclude` list, same `module load sextractor` -> re-export `LD_LIBRARY_PATH`
+  ordering. The catalogue job's paired-manifest identity audit now runs only on
+  cases that HAVE a `g=0.05` partner (the g005 tree stops at 599) and prints
+  "unpaired block, audit skipped" otherwise.
+* `scripts/build_anchorblend_pair_responses.py` + `jobs/job_anchorblend_g002_ext_pairs.sh`
+  — the dominance table needs a deployed per-pair response manifest. For 400--499
+  that came from the one-active derisk manifest, which requires two extra rendered
+  roots. This extracts only the pair list + predicted responses from a single
+  anchor tree, keeping the same predictor call and the same `r_max=10`/`k=20`
+  deployed-configuration assertion.
+* `jobs/job_anchorblend_g002_ext_dominance.sh` — per-block dominance table, reusing
+  the frozen threshold `0.7752772106835227` (it only sets `is_response_dominant_tail`
+  and does not enter the `dominant_to_runner_up_abs_response` ratio the analysis
+  splits on).
+* `scripts/analyze_anchor_g002_gap_by_dominance.py` +
+  `jobs/job_analyze_anchor_g002_gap_by_dominance.sh` — unpaired analyser for the
+  combined c400--899 block, with the predeclared reading fixed before rendering:
+  bulk gap within 2 case SEM of zero = the anchor instrument stays tail-dominated
+  at constgold's amplitude and is NOT a proxy for the constgold gap; bulk gap below
+  -2 SEM and carrying the majority of the contribution = it does reproduce
+  constgold's bulk carrier and the earlier divergence was a `g=0.05` artefact.
+* `jobs/job_anchorblend_g002_ext_gate.sh` — cheap replication gate to run FIRST.
+  Rebuilds cases 400--499 through the new pair-response path and requires it to
+  reproduce the published tail/bulk gaps to 1e-4; fails loudly otherwise.
+* `jobs/submit_anchorblend_g002_extension.sh {gate|render}` — chains everything
+  with `--dependency=afterok:` and `test ! -e` guards; `render` refuses to run
+  until the gate artifact exists.
+
+Changed: `scripts/localize_anchorblend_response_dominance.py` gained
+`--reference-shear` (default `0.05`, so existing invocations are unaffected)
+because the extension reads latents from a `g=0.02` tree.
+
+Validation: `bash -n` on all 8 job scripts, `py_compile` on all 3 Python files,
+`sbatch --test-only` accepted for all 8 (partition `cluster`, `x86-64-v3`).
+
+Cost, for the owner's decision: the existing 100-case `g=0.02` tree is **73 G**, so
+four blocks is **~292 G** against 6.2 T free on a 95%-full `/project/ls-gruen`.
+Wall time per block is ~1 h catalogue + ~3 h sim + ~2 h shape (2-task array) +
+~1 h response; blocks are independent and can run concurrently.
+
+Next: run the gate, read it, then decide on `render`.
+
+## 2026-08-13d  Why the anchor localization does not transfer: the amplitude splits the two carriers
+
+Owner question: the coherent-anchor sims reproduce the gap and 08-12o localizes it there, but
+08-13a shows that localization does not carry the constgold gap.  Two tests, one rejected
+hypothesis and one unresolved lead.
+
+### The "constgold's tail is a milder population" escape is closed
+
+Compared the frozen dominance tables directly (`anchorblend_response_dominance_v22_c400-499` vs
+`v22_constgold_response_dominance_c40-139`).  The two tails are the same population in every
+emulator-side coordinate: tail fraction `14.36%` vs `14.71%`; dominant `|R_pair|` in the tail
+median `0.416` vs `0.478`, p10 `0.060` vs `0.069`, p90 `1.010` vs `1.027`; share of total
+`sum|R_pair|` carried by the tail `41.3%` vs `36.2%`.  Yet the tail's conditional deficit is
+`-0.083` per anchor and only `+0.018` per constgold object.  **A factor of 4.5 on populations that
+are indistinguishable in the model's own coordinates**, so the divergence is not a composition
+difference and the two gaps are not established as one effect.  The 08-13c framing "two
+instruments, one number" was too strong: the global sizes agree (`6.4 +- 1.2%` vs `8.4 +- 1.7%`)
+but the internal composition does not, and that is weak evidence for a single mechanism.
+
+### Predeclared amplitude test: REJECTED in the tail
+
+The remaining structural difference between the two experiments is shear amplitude -- constgold is
+antithetic at `|g|=0.02`, the anchor block coherent at `|g|=0.05`.  Added
+`scripts/analyze_anchor_amplitude_by_dominance.py` and its wrapper; job `15716145` reruns the
+already-rendered 08-12h paired amplitude comparison inside the frozen dominance groups on exact
+`(case, input_index)` keys.  340,011 common anchors, dominance join coverage `100.00%`, paired V2.2
+prediction replay exactly `0`.  Reading fixed before the numbers were seen: a tail gap at `g=0.02`
+below half its `g=0.05` value would mark the anchor localization as a finite-difference artefact of
+measuring a dominant close companion across `+-0.05`.
+
+| group | fraction | gap at `g=0.05` | gap at `g=0.02` | paired difference |
+|---|---:|---:|---:|---:|
+| all | 1.0000 | `-0.00845 +- 0.00224` | `-0.01678 +- 0.00498` | `-0.00832 +- 0.00557` |
+| tail (ratio > 20) | 0.1185 | `-0.07325 +- 0.00750` | `-0.08976 +- 0.01838` | `-0.01651 +- 0.01930` |
+| rest | 0.8815 | `+0.00024 +- 0.00230` | `-0.00688 +- 0.00492` | `-0.00712 +- 0.00543` |
+
+**The gate fails: the tail deficit does not shrink at constgold's amplitude, it is if anything
+larger.**  The anchor localization is real at `|g|=0.02` and is not a `g=0.05` artefact.  Hypothesis
+rejected.  Artifact: `results/anchorblend_amplitude_by_dominance_v22_c400-499.json`.
+
+### What the test did surface: the BULK is the amplitude-sensitive part
+
+The complement carries the change.  The non-tail 88% is an exact null at `g=0.05`
+(`+0.00024 +- 0.00230`, reproducing 08-12o) and drifts to `-0.00688 +- 0.00492` at `g=0.02`.  That
+is `1.4` SEM and **not resolved**, but it is the entire reason the global gap doubles, and it moves
+the carrier split toward constgold:
+
+| | tail share of gap | bulk share |
+|---|---:|---:|
+| anchors, `g=0.05` | 103% | -2% |
+| anchors, `g=0.02` | 63% | 36% |
+| constgold, `g=0.02` (08-13a) | 22% | 78% |
+
+The threshold scan repeats it at every cut: kept-gap is `+0.0032/+0.0022/+0.0002/-0.0021/-0.0054`
+at `g=0.05` for thresholds `5/10/20/40/100`, and uniformly negative
+(`-0.0039/-0.0052/-0.0069/-0.0091/-0.0120`) at `g=0.02`.  The sim's own coherent neighbour truth is
+also higher at the lower amplitude -- `0.11873` vs `0.11041` overall (`+7.5%`), and `0.06921` vs
+`0.06209` in the bulk -- against a V2.2 prediction of `0.10195`.  This is the same paired quantity
+as the gap difference, not independent evidence, and at `1.5` SEM it is suggestive only.
+
+Note this is a different question from the one 08-12h's gate asked.  That gate tested whether finite
+amplitude *creates* the gap (would require it to shrink at low shear) and correctly failed.  Whether
+the gap *grows* toward `g=0.02`, which is what constgold needs, was never posed, and the existing
+data mildly supports it.
+
+### Why this cannot be settled with what is rendered
+
+The `g=0.02` block is noise-limited by construction: response noise scales as `1/g`, and the
+observed per-case SEM ratio is `0.00492/0.00230 = 2.1`, matching `0.05/0.02` up to the pairing.  On
+100 cases the bulk gap at `g=0.02` cannot be separated from zero.  Matching the `g=0.05` block's
+`0.0023` precision -- enough to test the bulk deficit at ~3 sigma and compare its share against
+constgold's 78% -- needs about `(0.00492/0.0023)^2 x 100 ~ 450` cases at `g=0.02`.  The existing
+chain ran 100 cases at roughly 25 min render plus 35 min shape per arm, so that is a feasible array
+rather than a new instrument.  **Recommended next step: extend the coherent anchor block at
+`|g|=0.02` to ~450--500 cases and re-run this exact split.**  No correction, retrain or selection is
+proposed, and constgold was not opened by either test here.
+
+`py_compile`, `bash -n` and a Slurm `--test-only` dry run passed before submission; job `15716135`
+failed in 7 s on the known login/compute `GLIBCXX` mismatch before the wrapper exported the conda
+`LD_LIBRARY_PATH`, and produced no artifact.
+
+## 2026-08-13c  Same-object decomposition: the V2.2 constgold gap is 100% the blend term; the distance oscillation belongs to the FLOW
+
+Closed the caveat 08-13b left open ("case-paired but not same-object; detection-conditioned
+populations differ") by repeating the comparison on exact `(case, input_index)` keys.  Added
+`scripts/diag_v22_sameobject_distance_decomposition.py` and its cluster wrapper; job `15716073`
+completed in 20 s.  It intersects the V2.2 constgold domain table with the fresh half-shear
+self-response dump (2,814,132 rows, 49.9% of constgold / 47.6% of half-shear) and splits the
+truth-minus-model residual exactly into the three terms of the 08-11a identity inside the frozen
+nearest-annotated-distance bins.  The per-row identity closes to `<1e-9`.  Nothing was fitted and
+no correction was applied.  Artifact:
+`results/v22_sameobject_distance_decomposition_c40-139_s16.json`.
+
+Global, truth minus model (positive = model too low), case-level SEM:
+
+| term | development c40--89 | validation c90--139 |
+|---|---:|---:|
+| `S_h - R_flow^h` (flow vs direct half-shear self truth) | `-0.00044 +- 0.00177` | `-0.00305 +- 0.00217` |
+| `R_flow^h - R_flow^c` (forward vs antithetic extraction) | -- | `+0.00003 +- 0.00014` |
+| `(R_sim - S_h) - R_blend` (blend estimand vs emulator) | `+0.00511 +- 0.00285` | `+0.01585 +- 0.00299` |
+| total `R_sim - (R_flow^c + R_blend)` | `+0.00500 +- 0.00236` | `+0.01283 +- 0.00277` |
+
+**The extraction-convention term is dead**: `+3e-5 +- 1.4e-4`, three orders of magnitude below the
+gap.  The 07f "forward-vs-antithetic, up to a fifth of the gap" live item can be closed on the model
+side.  **The flow term is globally null** but carries a huge sign-changing profile in nearest
+annotated distance -- `-0.0123 / +0.0136 / -0.0442 / +0.0403` on validation for
+not-flagged / 0--1" / 1--2" / 2--3.01" -- which cancels to within 1.4 SEM in the mean.  **The whole
+global deficit is the blend term.**  Pooling the two halves gives `+0.0105 +- 0.0021`, reproducing
+08-11a's `-0.010498 +- 0.002127` on the same objects, i.e. `8.4% +- 1.7%` of `<R_blend> = 0.1252`.
+That agrees with the independent, constgold-free coherent-anchor instrument at `6.4% +- 1.2%`
+(08-11a).  Two instruments, one number.
+
+**08-13b's "the gap concentrates at 2--3 arcsec" weakens once the populations are the same
+objects.**  The blend term by distance bin on validation is `+0.0040 / +0.0169 / +0.0121 / +0.0286`
+and on development `-0.0049 / -0.0037 / +0.0035 / +0.0185`; the 2--3 minus 1--2 paired contrast is
+`+0.0165 +- 0.0097` (`p=0.094`) and `+0.0150 +- 0.0092` (`p=0.109`).  It is the same sign in both
+halves but does not survive as a resolved localization.  The strongly replicating distance
+oscillation (10+ sigma) is the FLOW term, not the blend deficit, and it cancels globally.
+
+**The development/validation split is constgold `R_sim` case noise, not a build difference.**
+Per case block: `R_sim` moves `+0.00851 +- 0.00356` (t=2.39) while `S_h` moves
+`-0.00192 +- 0.00285` and `R_blend` `-0.00030 +- 0.00031`.  Per-case `corr(blend term, R_sim)=0.755`.
+Quote the pooled 100-case number, not either half.
+
+### Three structural causes tested and rejected
+
+1. **k=20 neighbour-search saturation.**  New build fact: the deployed pair list caps at exactly 19
+   neighbours, and `32.8%` of constgold primaries and `30.8%` of coherent anchors sit at that cap,
+   against `8.406` pairs per primary in V2.2's own training population -- the emulator is summed in
+   a regime twice as rich as the one it was fit on.  But the deficit does not track it: capped minus
+   uncapped blend term is `+0.00386 +- 0.00861` (dev) and `+0.00272 +- 0.00727` (val), t=0.4.  If
+   truncation carried the gap the contrast would have to be about `+0.032`.  **Rejected.**
+2. **Faint-neighbour coverage** (07f live item 1).  Checked the deployed metadata directly:
+   `lsst_r_extnbr_v22` selects on `r_s in (13, 29)`, `Re_s in (0, 10)`, `r_p in (18, 25.8)`,
+   `Re_p in (0.5, 1.5)`, `r_max=10"`, `k=20`.  On case 40's input field, 68.2% of galaxies are
+   fainter than `r=26` and only 29.5% would pass the *legacy* `source_select_reg` default -- but the
+   `extnbr` support already covers them: mean neighbours within 10" is `16.92` and the secondary
+   magnitude/size cut drops `0.00` of them.  The scored population reaches `r_s = 29.0`.
+   **Rejected; this is what "extnbr" bought.**  Residual aperture loss to the `k` cap is `~0.8`
+   neighbours per primary, all at the 10" edge (scored-pair distance median `6.89"`, p99 `9.93"`).
+3. **Population mix in the distance profile.**  The constgold and half-shear nearest-distance
+   fractions are `0.2376/0.1361/0.3218/0.3045` and `0.2358/0.1361/0.3222/0.3059` -- identical -- so
+   the large flow oscillation cannot be converting into a level shift through a population
+   difference.  **Rejected.**
+
+### Where this leaves the mechanism
+
+The attribution is now firm and the mechanism is still open.  What is established: the pairwise
+summed BlendEMU delivers about 8% less neighbour response than the simulation, this is the entire
+constgold `m`, and it is confirmed without constgold by the anchor instrument.  What every test so
+far says it is *not*: aperture (10--15" shell null, 08-11c), `k` cap (above), faint-end support
+(above), coherence (coherent minus random-10 `+0.001374 +- 0.002967`, 08-11c), finite shear
+amplitude (08-12h), detected-centroid/matching motion (08-12a, 08-12g), covariate shift in the seven
+inputs or in morphology/orientation (08-12g), third-plus flux (08-11d), response-vector tail
+structure (08-12g), and ordinary row-MSE underfit (V2.2 closes its own summed training estimand to
+`-0.000313 +- 0.000993`, 08-12h).
+
+The sharpest remaining statement is the one 08-11c reached and this entry confirms from the
+constgold side: **V2.2 reproduces the summed per-pair LABEL and undersupplies the SCENE truth.**
+Those are two different estimands and the summed-label closure cannot certify the scene sum.  Note
+also that the deficit measured here is flat in `n_pairs` (`<=12` through `19`) and roughly flat in
+nearest-neighbour distance, i.e. a per-OBJECT constant of about `+0.010`, whereas the anchor closure
+in 08-12g needed a per-PAIR constant of `+0.00056`; on 16 pairs those coincide numerically but they
+are different shapes, and no test has yet separated them with adequate power.
+
+Diagnostics were run under `srun` on `cluster`; `py_compile`, `bash -n` and a Slurm `--test-only`
+dry run passed before submission.  Constgold was read for evaluation only; no model, target or
+correction was fitted or written.
+
+## 2026-08-12a  The V2.2 gap localizes to rare response-tail underfit and a frozen loss repair closes anchor and constgold tests
+
+Continued the V2.2 coherent-neighbour investigation without opening constgold.  All
+uncertainties below use rendered cases, and all fitted diagnostic choices use a
+development/validation case split where applicable.
+
+First measured the uncertainty that had been missing from the anchor comparison:
+finite sampling of V2.2's 160 training scenes.  Sixteen whole-case bootstrap
+retrainings preserve the exact 37,852,393 selected rows, row split, preprocessing,
+XGBoost parameters and early stopping.  The nominal bootstrap recipe reproduces the
+deployed model exactly.  On unseen coherent anchor cases 200--299, V2.2 has gap
+`-0.007528 +- 0.002134` from anchor-case scatter.  Training-case resampling adds
+prediction SD `0.001634`; all 16 gaps remain negative, spanning
+`[-0.011701,-0.004125]`, and the combined quadrature uncertainty is `0.002687`.
+Thus training-scene sampling is material but does not plausibly carry the whole
+deficit in this bootstrap.  Jobs `15665479[0-16]` and corrected scorer `15665620`;
+artifact `results/anchorblend_v22_training_bootstrap_c200-299.json`.
+
+A catalogue-only audit then reproduced the exact per-leg bright-neighbour rejection
+and crossmatch for the coherent anchors.  On validation cases 250--299, residuals
+become sharply more negative with centroid shift, match-distance change, isophotal
+area change and flux change.  After matching inside frozen 10 V2.2-prediction x 4
+primary-mag x 4 primary-size cells, the high-minus-low residual contrasts are
+`-0.03531 +- 0.00589` for centroid shift and `-0.02895 +- 0.00677` for match-distance
+change.  The same pattern is independently present in held-out half-shear cases
+20--39: `-0.01871 +- 0.00299` and `-0.01242 +- 0.00341`.  These are strong
+localization results, but the coordinates are post-shear and therefore cannot be
+used as causal or deployable predictors.  Jobs `15665537`, `15665595`, and
+`15665661`; artifacts `results/anchorblend_detection_boundary_v22_c200-299.json`,
+`results/anchorblend_detection_conditional_v22_c200-299.json`, and
+`results/halfshear_detection_boundary_v22_c0-39.json`.
+
+The direct causal centroid test failed.  Refit ngmix on the same coherent-anchor
+pixels with a deterministic common initializer at (a) each leg's detected centroid
+and (b) the fixed input truth position.  The detected-position rerun is consistent
+with the stored response, but on untouched cases 250--299 the fixed-position shift
+is `+0.001666 +- 0.002412`, the wrong sign, and the gap worsens rather than closes.
+Therefore centroid placement itself is not the missing response; the instability
+metrics mark a broader shear-sensitive scene/detection regime.  An initial launch
+`15665577` was cancelled after all singleton mpi4py worlds reported rank zero;
+using `SLURM_PROCID` fixed the task mapping.  Accepted jobs `15665638/15665639`;
+artifact `results/anchorblend_fixed_position_v22_c200-299.json`.
+
+Extended the same fixed-truth-position measurement from the selected response rows
+to all 372,595 intrinsic anchor-manifest objects, including those absent after the
+both-leg detection/match/bright-neighbour selection.  Full finite coverage is
+99.984%.  Selection removes only 8.9% of anchors but they are exceptionally blended:
+the all-object V2.2 mean is `0.15555`, versus `0.10186` on selected objects.  On all
+100 cases, including them improves the deterministic gap from
+`-0.004659 +- 0.002222` to `-0.003023 +- 0.002221`, a paired change
+`+0.001637 +- 0.000737`.  But the predeclared validation half improves by only
+`+0.000685 +- 0.001056` and remains `-0.006169 +- 0.002722`.  Selection contributes
+in the combined sample but is not a stable full explanation.  The first launch
+`15665893` was stopped before output after stalling on a known problematic old node;
+accepted jobs `15665940/15665941`.  Artifact:
+`results/anchorblend_full_truth_population_v22_c200-299.json`.
+
+A half-shear shear-direction-coherence diagnostic exposed an important estimator
+trap.  Naively comparing `sum(R_i)` to the summed projected label conditional on
+`|mean exp(2 i theta_i)|` manufactures large cross-terms because the same measured
+primary shape difference is projected once along every neighbour direction.  The
+first artifact `results/halfshear_shear_coherence_v22_c0-39.json` is explicitly
+**superseded and must not be interpreted**.  Transforming the model into the same
+label coordinate, `[sum R_i u_i] dot [sum u_i]`, removes the trend: on cases 20--39
+the matched high-minus-low coherence contrast is `+0.000589 +- 0.004602`.  Corrected
+job `15665920`; artifact
+`results/halfshear_shear_coherence_corrected_v22_c0-39.json`.
+
+Applied the same projected-label correction to the half-shear detection audit,
+matching additionally on exact supported-pair count.  The primary result survives:
+on cases 20--39, high-minus-low centroid motion gives
+`-0.022489 +- 0.003524` in projected-prediction-minus-label residual.  Match-distance
+change (`-0.015513 +- 0.004521`) and isophotal-area change
+(`-0.016644 +- 0.005004`) also survive Holm correction.  Thus the instability
+localization is not a projection-cross-term artifact, although it remains a
+post-shear association rather than a causal feature.  Job `15666050`; artifact
+`results/halfshear_detection_projected_v22_c0-39.json`.
+
+A post-hoc transfer of the half-shear centroid table confirms a distribution shift
+but not closure: coherent anchors occupy the highest half-shear-defined
+centroid-motion-rate quartile 34.6% of the time rather than 25%.  The original
+naive-label transfer is preserved at
+`results/halfshear_centroid_gap_transfer_to_anchor.json`, but the corrected
+projected-label transfer supersedes it for interpretation.  The corrected table
+assigns the centroid-composition shift an incremental `-0.00131` gap and predicts
+`-0.00358` in total versus observed `-0.00753`.  It is diagnostic only because
+centroid motion is post-shear and because the held-out half-shear global level is
+noisy.  Job `15666086`; artifact:
+`results/halfshear_centroid_projected_gap_transfer_to_anchor.json`.
+
+A predeclared angular-scene audit tested whether omitted, truth-level asymmetry is
+the upstream variable behind that instability.  Thresholds were frozen on cases
+200--249 and evaluated on 250--299 inside the same V2.2-prediction x primary-mag x
+primary-size cells.  Flux-weighted dipole and quadrupole summaries do predict
+centroid motion very strongly, but none of the six response-gap contrasts survives
+Holm correction.  The smallest unadjusted validation result is the overlap-dipole
+fraction at `-0.01448 +- 0.00605` (`p=0.0207`, Holm `p=0.124`), and it does not
+replicate its development contrast (`-0.00594 +- 0.00631`).  Angular asymmetry is
+therefore another useful marker of unstable blends, not established as the missing
+response variable.  No correction was fitted.  Job `15666131`; artifact
+`results/anchor_scene_multipoles_v22_c200-299.json`.
+
+One fixed improvement attempt now gives a substantially better simulation-only
+candidate.  The exact scalar scene features and HGB recipe from the earlier failed
+random-local correction were frozen, but the five case-blocked models were trained
+directly on coherent neighbour-response cases 0--199.  On cases 200--299 the raw
+gap `-0.007528 +- 0.002134` becomes `-0.002018 +- 0.002109`; the worst absolute
+V2.2-prediction-quintile residual falls from `0.03156` to `0.00764`.  A case-weighted
+constant trained on the same cases is slightly better globally (`-0.001723`) but
+leaves the crowded-tail residual at `-0.02575`, whereas the scene model reduces it
+to `-0.00276`.  Ensemble mean stability is `0.000712` and all four exploratory
+gates pass.  This is encouraging but not confirmation because cases 200--299 have
+already been inspected many times.  Job `15666295`; artifact
+`results/anchorblend_coherent_scene_correction_v22_c0-299.json`.  The first attempt
+`15666289` safely stopped without an artifact when it reached the separate case
+100--299 input root; the accepted rerun maps each response shard explicitly.
+
+The candidate is frozen for a genuinely fresh test.  A new coherent anchor block
+at cases 300--399 will be rendered, with the two antithetic shape legs extracted in
+parallel.  The final job retrains the identical deterministic recipe using only
+cases 0--199, excludes the repeatedly viewed cases 200--299, and applies it once to
+300--399.  Submitted catalogue/render/shape-array/response/validation chain:
+`15666348--15666352`.  Constgold remains unopened and no deployable correction is
+written before this gate.
+
+A fixed feature ablation (`15666389`) clarifies what the candidate learned.  On
+cases 200--299, an `R_v22`-only HGB gives global gap `-0.001916` and worst
+prediction-quintile residual `0.00730`; adding only primary magnitude, size and
+Sersic index gives `-0.002024` and the smallest worst residual, `0.00537`.  The
+full 16-feature scene model gives `-0.002018` and `0.00764`, while scene summaries
+without the global `R_v22` give `-0.002069` and `0.00677` because their shell
+response sums encode much of the same quantity.  Thus the current evidence favors
+a nonlinear calibration of summed response, mildly conditioned on primary
+properties, rather than a uniquely informative high-dimensional third-neighbour
+coordinate.  Artifact:
+`results/anchorblend_coherent_scene_correction_ablation_v22_c0-299.json`.
+Before opening fresh cases, both the original full model (primary candidate) and
+the compact four-feature model (secondary candidate) were frozen for 300--399.
+
+The first fresh-render launch `15666349` failed before creating any render tree
+because `module load sextractor` placed an old `libstdc++` ahead of the sims1
+environment.  Reordering the environment exactly as in the accepted independent
+render fixed setup; dead dependents `15666350--15666352` were cancelled.  The
+catalogue result `15666348` remains valid and guarded.  Corrected fresh chain is
+render `15666397`, two-leg shape array `15666398`, response `15666399`, and dual
+frozen validation `15666400`.
+
+The remaining decisive experiment is now running on the exact anchor latent scenes
+and noise: within 10 arcsec, every neighbour receives its own deterministic
+independent antithetic shear direction, with anchors and outside sources unsheared.
+It will compare the summed random-direction projected labels with V2.2 and with the
+existing coherent response on exact common keys, including the real detection and
+matching pipeline and the same both-detected conditioning.  It does not measure the
+separate detection-selection response excluded by that conditioning.  This directly separates pair-label supervision from coherent
+scene demand without constgold.  Preparation `15666009` completed; dependent render,
+shape, response and analysis jobs are `15666011--15666014`.
+
+A second, orthogonal control reuses the already-rendered negative-shear partner of
+the original random-direction half-shear simulations.  Only the missing primary
+shape catalogues are being extracted, using the historical geometric-centre
+convention shared by the existing zero and positive legs.  Exact common V2.2-domain
+pairs will then compare the deployed one-sided label `(e(+g)-e(0))/g` with the
+central label `(e(+g)-e(-g))/(2g)` at `g=0.02`, including both pair means and
+per-primary summed responses.  This isolates finite-difference construction from
+shear-direction coherence without new rendering.  Shape job `15666205`, dependent
+case array `15666244`, and analysis `15666245`; no result is claimed while they run.
+
+The first per-case attempt exposed a false geometry guard: separation is measured
+from the first-leg detection centroid, so zero-start and negative-start
+catalogues need not have identical stored distances even for the same truth
+pair.  The corrected diagnostic scores each leg using its own geometry and
+reports the distance change.  On 100 cases, central-minus-forward is
+`+0.00045 +- 0.00118` per pair and `+0.00379 +- 0.00995` after summing per
+primary.  V2.2-minus-central is `-0.00031 +- 0.00062` per pair and
+`-0.00263 +- 0.00524` per primary.  Thus no material one-sided finite-difference
+effect is established.  Corrected jobs `15669596/15669597`; artifact:
+`results/rblend_forward_vs_central_g002_v22_c0-99.json`.
+
+The independent-scene render completed, and a fast anchor-only deterministic-ngmix
+extraction was added while the authoritative all-source shape catalogues run.  It
+uses the production SExtractor catalogues, exact bright-neighbour rejection,
+crossmatch, both-leg detection conditioning, and frozen V2.2 predictions.  The
+lower-variance endpoint fits the measured two-component anchor response vector to
+`sum_i R_i u_i` case by case; the usual projected trace is retained but has much
+larger random-direction cross-term noise.  All 100 case shards from `15666500`
+completed; frozen combination/analysis job `15666501` is pending.  These fast
+measurements are an early cross-check, not a substitute for jobs
+`15666271/15666275/15666012--15666014` using the full production shape pipeline.
+The corrected frozen analysis (`15667880`; the first attempt exposed only a
+Pandas column/method name collision) gives a response-vector slope
+`measured/V2.2 = 1.09588 +- 0.01970` over all 100 cases.  The predeclared halves
+agree: `1.09073 +- 0.02591` on 200--249 and `1.10104 +- 0.02994` on 250--299.
+The orthogonal slope is `0.00919 +- 0.01635`, consistent with its null.  Thus an
+approximately ten-percent response deficit is present even when every neighbour
+has an independent direction; coherent shear is not required.  The noisy trace
+gap remains consistent with zero and is not used in place of this case-level
+vector closure.  Artifact:
+`results/anchorblend_independent_vs_coherent_fast_v22_c200-299.json`.
+
+The authoritative production-shape pipeline subsequently completed.  Case 244
+reproduced its known legacy reset-index schema, so the reader fills missing
+`input_index` values from the identical `index` column before uniqueness checks;
+no measurement or ID value is altered.  The production result agrees with the
+fast extractor: all-case vector slope `1.09037 +- 0.01710`, with halves
+`1.06976 +- 0.02404` and `1.11098 +- 0.02423`.  Its orthogonal null is
+`-0.00614 +- 0.01713`.  Artifact:
+`results/anchorblend_independent_vs_coherent_v22_c200-299.json` (corrected
+analysis job `15669063`; the first analysis stopped safely on the schema guard).
+
+The code audit exposed a concrete pair-enumeration mismatch that predates any
+scene-level model: V2.2 persists `k=20`, but inference compares a catalogue with
+itself, so the zero-separation self match consumes one KD-tree slot and at most 19
+actual neighbours can be scored.  The all-active independent anchors already have
+mean scored count 15.7, with a visibly populated 19-neighbour ceiling; their
+rendered images include every source inside 10 arcsec.  Two frozen, no-rerender
+tests now isolate this.  Jobs `15667524/15667525` reapply the unchanged V2.2 trees
+to a `k=64` enumeration on the independent images and reuse the measured shapes.
+Jobs `15667669/15667670` replay the exact coherent `k=20` result, then widen only
+the enumeration and compare directly with coherent truth.  If widening closes the
+gap, the mechanism is omitted 20th-plus neighbours rather than shear coherence;
+if not, the hypothesis is rejected or only partial.
+Both tests completed after a single case-244 schema edge was normalized without
+changing its data.  On coherent anchors, 22.35% have at least one omitted pair,
+but widening raises the mean prediction by only
+`+0.0001358 +- 0.0000092`.  The gap changes negligibly from
+`-0.007528 +- 0.002134` to `-0.007392 +- 0.002133`.  Even anchors with more than
+24 neighbours gain only `+0.001436 +- 0.000172`.  On independent scenes, the
+response-vector slope is likewise unchanged, `1.09588 +- 0.01970` at `k=20`
+versus `1.09581 +- 0.01973` at `k=64`.  Pair truncation is real but is therefore
+rejected as the main gap mechanism.  Artifacts:
+`results/anchorblend_coherent_paircap64_v22_c200-299.json` and
+`results/anchorblend_independent_paircap64_v22_c200-299.json`.
+
+Because the original half-shear training construction activates only the second
+input-catalogue half, a matched-density control was also prepared: on the same
+anchor latent scenes, only upper-half local neighbours receive independent
+antithetic directions (about 31,000 active of 61,000 local sources per case).
+Preparation `15666599` passed all guards; render/fast-extraction/paired analysis
+jobs are `15666633--15666635`.  This distinguishes a genuine simultaneous-active-
+neighbour interaction from the simpler `k=20` truncation, since both effects are
+suppressed in the half-active scenes.  The original analysis dependency was
+replaced after it fired before the render was complete; the active chain is
+`15666633`, `15666634`, and `15667913`.
+
+The control completed.  All-active and half-active slopes are respectively
+`1.09588 +- 0.01970` and `1.09873 +- 0.02296`; on 339,425 exact common anchors,
+the paired all-minus-half change is `-0.00643 +- 0.01745`.  Halving the active
+neighbour density therefore does not move closure toward one.  The half-active
+orthogonal slope is mildly positive but not significant
+(`0.03673 +- 0.02236`).  This rejects simultaneous-active-neighbour density as
+the main deficit mechanism.  Artifact:
+`results/anchorblend_independent_active_density_v22_c200-299.json` (corrected
+analysis job `15669206`; the first attempt exposed only a Pandas column/method
+name collision).
+
+The same low-variance vector endpoint can be reconstructed exactly from the
+existing half-shear aggregate label/null coordinates.  This reveals that most of
+the apparent anchor-specific effect is already present in the emulator's own
+training design.  On held-out g=0.2 cases 20--39,
+`measured/V2.2 = 1.06070 +- 0.00730`, with orthogonal null
+`-0.00332 +- 0.00738`; cases 0--19 give `1.08123 +- 0.01069`.  Artifact:
+`results/halfshear_vector_closure_v22_c0-39.json` (job `15667952`).  A new streamed
+g=0.05 build gives `1.09263 +- 0.02874` on cases 20--39, statistically
+indistinguishable from the independent-anchor validation slope
+`1.10104 +- 0.02994`.  Its orthogonal null is noisier and mildly positive
+(`0.03011 +- 0.02156`), so this is compatibility rather than proof of equality.
+On 1,125,819 exact common primaries with identical supported-pair count and model
+vector, the paired g=0.05-minus-g=0.2 slope difference is
+`+0.01349 +- 0.02044`; no shear-amplitude shift is established.  Jobs
+`15668015/15668108`; artifacts
+`results/halfshear_vector_closure_v22_g005_c0-39.json` and
+`results/halfshear_vector_amplitude_g005_vs_g020_v22_c0-39.json`.
+
+The vector error is a rare/strong-response calibration problem, not a monotone
+neighbour-count effect.  Equal-occupancy bins frozen on c0--19 show that the top
+model-vector-magnitude quintile carries 99.5% of all model power and has held-out
+slope `1.0634 +- 0.0074`; lower quintiles are too low-power to constrain a slope.
+Splitting that tail into equal-power bins shows held-out slopes
+`1.020, 1.133, 1.118, 1.083, 0.946`: the broad strong-response shoulder is
+underpredicted, while the most extreme approximately 2,100 primaries are slightly
+overpredicted.  Thus a single global scale is not an adequate mechanism.  Job
+`15668094`; artifact
+`results/halfshear_vector_closure_stratified_v3_v22_c0-39.json`.
+
+As an explicit simulation-only improvement test, a six-bin rotation-equivariant
+pair calibration was fitted on half-shear cases 0--19.  Bins carry equal squared
+pair-prediction weight; six jointly fitted coefficients range 0.975--1.141 and the
+regularized Gram condition number is 1.006.  On untouched half-shear cases 20--39
+it moves the vector slope from `1.06070 +- 0.00730` to
+`0.98098 +- 0.00690`.  It overshoots slightly but cuts the absolute amplitude
+error from 6.1% to 1.9%.  No anchor or constgold truth entered the fit.  Job
+`15668190`; artifact `results/halfshear_pair_vector_calibration_v22_c0-39.json`.
+On the already-inspected coherent anchors this frozen calibration raises the
+prediction by `0.004393 +- 0.000039`, improving the all-case gap from
+`-0.007528 +- 0.002134` to `-0.003135 +- 0.002129`.  On cases 250--299 the gap
+moves `-0.002909 +- 0.003007 -> +0.001485 +- 0.003006`, and the worst prediction-
+quintile residual improves `0.01778 -> 0.01144`; both exploratory gates pass.
+This is not a fresh confirmation and no deployable model is written.  Jobs
+`15668249/15668250`; artifact
+`results/anchorblend_pair_vector_calibration_v22_c200-299.json`.  The candidate
+was frozen before fresh truth was available.
+
+A direct pair-level audit rules out aggregate-vector algebra as the source of
+this pattern.  Six signed-response bins were frozen on cases 0--19 with equal
+model-prediction-squared weight.  In held-out cases 20--39, only about 0.54% of
+pairs occupy the five high-response bins, but their measured/predicted label
+ratios are `1.072, 1.119, 1.100, 1.052, 1.050`; the corresponding
+prediction-minus-label differences are negative in every bin.  The millions of
+near-zero pairs dominate the ordinary row count but contribute almost none of
+the response power.  Artifact:
+`results/halfshear_pair_calibration_bin_audit_v22_c0-39.json`.
+
+The same c0--19 calibration was then applied to the independently directed
+anchor measurement.  Its all-case response-vector slope changes from
+`1.09588 +- 0.01970` to `1.01294 +- 0.01838`; the predeclared second half changes
+from `1.10104 +- 0.02994` to `1.01787 +- 0.02788`, while the orthogonal null is
+unchanged.  This geometry-free validation strongly supports a response-tail
+calibration deficit in V2.2 itself, rather than a special coherent-shear term.
+Artifact: `results/anchorblend_independent_paircal_v22_c200-299.json`.
+
+For the truly fresh c300--399 test, the recipe (six equal-power signed-response
+bins and rotation-equivariant case-balanced vector regression) was fixed, then
+refitted using all available half-shear cases 0--39.  The coefficients are
+`[0.9685, 1.0692, 1.1335, 1.1002, 1.0809, 1.0722]`; their maximum half-to-half
+change is 0.051, so fresh validation remains essential.  This all-case fit has no
+anchor or constgold input and no deployable model is written.  Artifact:
+`results/halfshear_pair_vector_calibration_refitall_v22_c0-39.json`; the corrected
+fresh jobs are `15668454/15668455`, dependent on fresh response job `15666399`.
+
+The training-code audit provides a plausible finite-model mechanism for this
+pattern.  `retrieve_response` measures one primary shape change while many
+secondaries are sheared, then repeats that total change once per secondary after
+projecting it along that secondary's direction.  Other active neighbours are
+therefore large, approximately zero-mean noise in an individual row label.  The
+official trainer nevertheless uses an ordinary random row split, unweighted
+`reg:squarederror`, and row-level R2 early stopping.  V2.2 has 37.85 million
+selected rows but only R2 `0.00938`; the near-zero rows dominate count while the
+approximately 0.54% high-response rows dominate the downstream vector response.
+This makes finite-capacity/regularized tail shrinkage the leading explanation,
+though the fresh controls below are still required before treating it as settled.
+
+Two tests were fixed before opening fresh c300--399 truth.  First, job `15668660`
+audits the same six response-power bins on V2.2's own training cases 40--199; a
+high-bin deficit there would distinguish model underfit from held-out population
+drift.  Second, a three-member retraining family changes only a feature-only
+sample weight derived from the frozen V2.2 prediction,
+`1 + alpha*min(R_v22^2/<R_v22^2>,50)`, with alpha `0.3,1,3`; labels never enter
+the weight and the tree count is fixed to V2.2's 271.  Training/held-out
+half-shear scoring jobs are `15668559/15668560`.  All three members were also
+queued as a fixed family for fresh anchors, jobs `15668637/15668638`, dependent
+on both training and fresh response.  They are exploratory models, not a
+constgold-selected or deployable correction.
+
+The training-catalogue audit completed and makes that distinction.  Cases
+40--119 and 120--199 independently give measured/predicted ratios in the five
+high-response bins of respectively
+`[1.073,1.133,1.100,1.113,1.171]` and
+`[1.086,1.138,1.104,1.100,1.159]`.  Every high-bin prediction-minus-label
+residual is negative; the extreme-bin deficits are
+`-0.2212 +- 0.0228` and `-0.2007 +- 0.0261`.  Since the official split is random
+by row, these are the model's own fitting-catalogue cases (with most rows used in
+training), not a shifted held-out population.  Artifact:
+`results/halfshear_pair_calibration_bin_audit_v22_training_c40-199.json`.  Job
+`15668841` now computes the complementary case-level aggregate-vector slope on
+the same fitting catalogue; its large table is kept under the project filesystem.
+
+That aggregate check completed: on all 160 fitting-catalogue cases the
+case-balanced measured/model vector slope is `1.11095 +- 0.00378`.  The two
+80-case halves independently give `1.11199 +- 0.00519` and
+`1.10991 +- 0.00554`.  The orthogonal slope is small but mildly negative,
+`-0.00745 +- 0.00287`, and cannot explain the approximately 0.111 parallel
+deficit.  This establishes that the ten-percent response calibration failure is
+already present in the data V2.2 was optimized on; coherence and anchor
+population are downstream ways of exposing it.  Artifact:
+`results/halfshear_vector_closure_v22_training_c40-199.json`; the 4.5-million-
+primary table is stored at
+`$DATA_DIR/sbsi_gap_halfshear_vector_closure_v22_training_c40-199.feather`.
+
+The objective mismatch is quantitatively severe.  In each independent 80-case
+half, high-response pairs are only 0.538--0.539% of selected rows.  Replacing
+their observed conditional mean biases by zero would reduce total row MSE by
+only `4.94--5.16e-5`, about `0.010%` of the measured label variance
+(`0.6973^2`).  Those same rows dominate aggregate response-vector power.  Thus
+row R2 can appear converged while being almost blind to a ten-percent error in
+the scientific endpoint.
+
+The first response-power-weighted family moved the intended endpoint but was
+too aggressive.  On untouched half-shear cases 20--39, measured/model slopes
+are `0.93609 +- 0.00683`, `0.87925 +- 0.00648`, and
+`0.81686 +- 0.00624` for alpha `0.3,1,3`, versus V2.2's
+`1.06070 +- 0.00730`.  The development half agrees and the orthogonal nulls
+remain near zero.  Thus loss allocation is demonstrably causal, but none of
+these models is acceptable.  The three fixed fresh-anchor scores remain useful
+as an honestly reported failed family (`15668637/15668638`).  Before fresh
+anchor truth was available, interpolation from alpha zero to 0.3 motivated a
+refined fixed grid alpha `0.10,0.15,0.20`; training and untouched-half-shear
+jobs are `15669172/15669173`, and fresh-family jobs are
+`15669174/15669175`.  This grid is still exploratory and does not use constgold.
+
+The refined grid also overcorrects, but tightly brackets the useful regime:
+held-out slopes are `0.97160 +- 0.00681`, `0.95943 +- 0.00704`, and
+`0.94870 +- 0.00690` for alpha `0.10,0.15,0.20`; development cases agree and
+orthogonal nulls remain consistent with zero.  Linear interpolation between
+unweighted and alpha 0.10 places closure near alpha 0.065.  Before reading any
+fresh anchor result, a final bracket alpha `0.05,0.065,0.08` was frozen, with
+0.065 predeclared as primary.  Training/half-shear jobs are
+`15669893/15669894`; fresh-family jobs are `15669895/15669896`.
+
+The final half-shear bracket succeeds: on untouched cases 20--39, slopes are
+`0.99400 +- 0.00731`, `0.98451 +- 0.00709`, and
+`0.98124 +- 0.00728` for alpha `0.05,0.065,0.08`; cases 0--19 give
+`1.01028,1.00210,0.99467`.  Alpha 0.05 is the most stable across halves, while
+the predeclared alpha 0.065 remains within about 1.6% of closure.  Orthogonal
+nulls stay consistent with zero.
+
+Fresh coherent cases 300--399 have a larger raw gap,
+`-0.010351 +- 0.002103`.  No candidate completely closes this fresh global
+mean, so none is declared deployable.  The frozen coherent-scene HGB adds
+`+0.005335 +- 0.000101`, leaving `-0.005016 +- 0.002088`, while reducing the
+worst prediction-quintile residual `0.03866 -> 0.01395`; it fails the
+predeclared within-two-SEM global gate.  The all-40 half-shear six-bin pair
+calibration adds `+0.003618 +- 0.000035`, leaving
+`-0.006733 +- 0.002099` and improving the worst quintile
+`0.03884 -> 0.01907`.  Artifacts:
+`results/anchorblend_coherent_scene_correction_v22_fresh_c300-399.json` and
+`results/anchorblend_pair_vector_calibration_v22_fresh_c300-399.json`.
+
+The response-weighted family shows the expected global/conditional trade-off.
+For alpha `0.05,0.065,0.08`, fresh gaps are respectively
+`-0.004820, -0.004331, -0.004048` (case SEM about 0.00211), and worst
+prediction-quintile residuals are `0.02566,0.02695,0.02821`.  Stronger alpha
+`0.10,0.15,0.20` moves the global gaps to
+`-0.003613,-0.002757,-0.002320` but progressively worsens the lowest-response
+conditional bin; alpha 0.3 leaves `-0.001857` globally but fails to improve the
+worst conditional residual.  Thus mild loss reweighting causally repairs much
+of the emulator deficit, but selecting strength from fresh global closure would
+be invalid.  The final fixed family is in
+`results/anchorblend_response_weighted_final_v22_fresh_c300-399.json`; earlier
+families are retained as reported sensitivity tests.  Fixed final models are
+being rescored on the authoritative independent-direction shapes
+(`15670601/15670602`) and the earlier coherent block (`15670631/15670632`).
+
+Those rescores completed.  On coherent cases 200--299, alpha
+`0.05,0.065,0.08` leave gaps `-0.002099,-0.001665,-0.001381` with case SEM
+about 0.00213; their prediction changes (`+0.005429,+0.005863,+0.006147`) are
+very stable against fresh c300--399 (`+0.005531,+0.006020,+0.006304`).  The
+larger fresh residual is therefore driven primarily by the rendered block's
+truth level, not an unstable learned correction.  Artifact:
+`results/anchorblend_response_weighted_final_v22_c200-299.json`.
+
+Most importantly, the authoritative independently directed shapes close after
+the fixed mild weighting.  All-case measured/model vector slopes are
+`1.01713 +- 0.01599`, `1.00838 +- 0.01590`, and
+`1.00385 +- 0.01553` for alpha `0.05,0.065,0.08`, with orthogonal nulls
+consistent with zero.  This is a direct geometry-free confirmation that the
+weighted retraining repairs the emulator response endpoint.  Artifacts:
+`results/anchorblend_independent_lsst_r_extnbr_v22_rpowa005_c200-299.json`,
+`...rpowa0065...json`, and `...rpowa008...json`.  The remaining coherent scalar
+offset is kept separate: current evidence cannot yet distinguish a smaller
+coherent/non-additive term from rendered-block sample fluctuation.
+
+Before generating another truth block, froze one larger coherent replication at
+cases 400--599.  The primary response-weighted candidate remains alpha `0.065`;
+neither its model nor any analysis bin or feature is refitted.  Its predeclared
+gates are: (1) absolute global gap smaller than raw V2.2, (2) worst absolute
+V2.2-prediction-quintile gap smaller than raw, (3) corrected global gap within
+two rendered-case SEM, and (4) prediction change compatible with the prior
+`+0.00594` scale within three combined case SEM.  The already-frozen full-scene
+and primary-plus HGB recipes are run as secondary sensitivity checks with their
+existing global and conditional gates.  Cases remain the uncertainty units,
+constgold remains unopened, and none of these models may be selected or tuned
+using cases 400--599.
+The submitted catalogue/render/four-way shape/response/weighted-score/analysis
+chain is `15670910--15670915`; frozen full-scene and primary-plus validation is
+`15670916` after the same response build.
+
+A second candidate is also frozen before cases 400--599 are measured.  It stacks
+the fixed alpha `0.065` pair model with the unchanged full-scene HGB recipe,
+fitting only `coherent truth - alpha065 prediction` on cases 0--199.  The HGB
+features, hyperparameters, five case-block folds and baseline-V2.2 scene feature
+definitions remain unchanged.  Its gates compare against alpha `0.065` alone:
+smaller absolute global and worst-quintile gaps, final global within two case SEM,
+and ensemble stability below `0.003`.  This tests whether a distinct coherent
+scene residual remains after repairing pair-response-tail loss; it is not a
+deployable model and is not allowed to change after cases 400--599 are opened.
+Development alpha `0.065` scoring is job `15670973`; the frozen composite
+validation is `15670974`, dependent on both that job and the replication score.
+The same already-frozen composite is also being reported retrospectively on the
+previously inspected cases 200--399 as a sensitivity check; that result cannot
+alter the c400--599 recipe or count as confirmation.
+The first retrospective wrapper `15671090` stopped before analysis on a wrong
+c300 response path.  The corrected, otherwise identical job is `15671119`.
+That retrospective composite fails globally.  Alpha `0.065` alone has gap
+`-0.002998 +- 0.001496` on cases 200--399; the stacked scene model applies
+`-0.000693 +- 0.000067` and worsens it to `-0.003691 +- 0.001484`.
+It does transfer conditional information, lowering the worst absolute quintile
+from `0.02853` to `0.01809`, but the global and within-two-SEM gates fail.
+Development OOF alpha gap was instead `+0.000152`, explaining the wrong-sign
+mean correction.  This disfavors a stable scalar coherent term after pair-tail
+repair, while leaving a smaller conditional scene-shape defect plausible.
+Artifact `results/anchorblend_weighted_scene_correction_v22_retrospective_c200-399.json`.
+
+Finally, because alpha was selected on the reserved cases 0--39 while the model
+itself was fitted only on cases 40--199, a production-style refit is frozen at
+alpha `0.065` using all 200 half-shear cases
+0--199 rather than the 160-case fitting subset.  The weighting formula, cap,
+V2.2-derived weights, features, hyperparameters and 271-tree count are identical;
+only the training-case count changes.  (Alpha was chosen using the reserved
+cases 0--39, so these cases may enter the final refit only because cases 400--599
+remain untouched validation.)  Its predeclared tests are vector closure and null
+on the existing independent-direction anchors, plus smaller absolute raw-V2.2
+gap and a final gap within two case SEM on cases 400--599.  It is compared with,
+not selected over, the 160-case alpha model after truth is opened.
+The all-200 refit is job `15671067`; fixed independent-direction build/analysis
+are `15671068/15671069`, and replication score/analysis are `15671070/15671071`.
+Retrospective coherent c200--399 score/analysis are `15671359/15671360`.
+That comparison is effectively null.  The all-200 refit adds `+0.005804` and
+leaves `-0.003135 +- 0.001496` on c200--399, versus `+0.005942` and
+`-0.002998 +- 0.001496` for the 160-case model.  The `-0.000137` prediction
+change is tiny and slightly worsens closure.  Restoring the 40 model-choice
+cases therefore does not explain the residual; loss allocation is much more
+important than this 25% increase in fitting scenes.  Artifact
+`results/anchorblend_response_weighted_all200_v22_retrospective_c200-399.json`.
+The independent-direction endpoint agrees: the all-200 control has all-case
+measured/model vector slope `1.01777 +- 0.01626` and orthogonal null
+`-0.00801 +- 0.01582`, compared with `1.00838 +- 0.01590` for the 160-case
+alpha `0.065` model.  Both close; the extra cases do not improve the central
+value.  Artifact
+`results/anchorblend_independent_lsst_r_extnbr_v22_rpowa0065_all200_c200-299.json`.
+The first all-200 control converted frozen V2.2 outputs for feature-only weights
+with the refit's `(mean,std)=(0.007569,0.696700)` rather than V2.2's stored
+`(0.007606,0.697265)`.  This approximately 0.08% scale difference is far too
+small to explain its result but is methodologically avoidable.  The trainer now
+always uses the source model's stored standardization; an exact new-tag all-200
+rerun is job `15671529`.  Existing 160-case models were already exact because
+their standardization equals V2.2's.
+The exact rerun was frozen for one combined coherent c200--599 score/analysis
+before replication truth, jobs `15671901/15671902`.
+
+A descriptive case-order audit on all existing coherent cases 0--399 finds no
+obvious serial artifact.  Case SD is `0.02244` for rendered truth but only
+`0.00446` for V2.2 prediction, so case gap is almost perfectly anticorrelated
+with truth (`r=-0.980`) and only weakly correlated with prediction (`r=-0.111`).
+Detrended lag-1 autocorrelation is `0.004`; none of lags 1--25 exceeds `|0.089|`.
+The SD of 25-case gap means is `0.00543`, modestly above the iid expectation
+`0.00430`, rather than evidence for a strong periodic seed effect.  This supports
+the rendered case as the uncertainty unit and makes the 200-case replication
+important; it does not prove the remaining coherent offset is sampling noise.
+Artifact `results/anchorblend_case_structure_v22_c0-399.json`, job `15671144`.
+
+For scale only, the combined 400 already-available coherent cases give raw V2.2
+gap `-0.007372 +- 0.001075`.  Fixed alpha `0.065` adds
+`+0.005949 +- 0.000043` and leaves `-0.001423 +- 0.001074`; its worst absolute
+prediction-quintile gap falls `0.03406 -> 0.01997`.  Thus symmetric response-
+power reweighting accounts for about 81% of the combined mean discrepancy.
+This is not a fresh validation because cases 0--199 participated in fitting or
+model choice; the honest c200--399 residual remains
+`-0.002998 +- 0.001496`.  Artifact
+`results/anchorblend_response_weighted_primary_v22_c0-399.json`, job `15671288`.
+
+The alpha `0.065` conditional tables reveal a correctable loss-design side
+effect: symmetric squared-response weights repair the high positive response
+tail but also emphasize negative V2.2 pair predictions.  The lowest summed-V2.2
+quintile worsens from `-0.01038 -> -0.01898` on c200--299 and
+`-0.01835 -> -0.02695` on c300--399.  Before c400--599 truth is measured, a
+feature-only positive-tail family is frozen: weights replace `R_v22^2` with
+`max(R_v22,0)^2`, with alpha `0.065,0.10,0.15`, the same cap, 160 fitting cases
+and 271 trees.  It is first selected/report-compared on half-shear cases 0--39;
+all three will be retained as sensitivity tests, with no constgold input.
+Training and half-shear scoring jobs are `15671212/15671213`.
+All three candidates were queued before replication truth: independent-direction
+build/analysis `15671243/15671244`, and c400--599 score/analysis
+`15671245/15671246`.
+Retrospective c200--399 conditional scoring is `15671264/15671265`; it is
+reported only to understand the negative-tail tradeoff.
+That retrospective result supports the preselected positive alpha `0.065`.
+It adds `+0.007058 +- 0.000063` and leaves coherent gap
+`-0.001881 +- 0.001497` on c200--399, with worst absolute prediction-quintile
+gap `0.03489 -> 0.01941`.  Symmetric alpha `0.065` left `-0.002998` and worst
+`0.01997`.  Positive alpha `0.10/0.15` move the global gap to
+`-0.000640/+0.000639` but worsen the low-response quintile to
+`-0.02075/-0.02210`; they are not selected.  This evidence was already
+inspected and does not replace the fixed c400--599 gate.  Artifact
+`results/anchorblend_response_positive_weighted_v22_retrospective_c200-399.json`.
+Corrected those retrospective artifacts' provenance fields from a stale generic
+`fresh_validation=true` string to `false`; no score, uncertainty, or data value
+was changed.  The analyzer now takes an explicit `--previously-inspected` flag.
+
+The positive-tail half-shear gate selects alpha `0.065` before c400--599 truth.
+Its vector slopes are `1.00342 +- 0.01029` on c0--19 and
+`0.98623 +- 0.00715` on untouched c20--39, with validation orthogonal null
+`-0.00042 +- 0.00700`.  Alpha `0.10` and `0.15` overcorrect the held-out slope
+to `0.97030` and `0.95690`.  Positive alpha `0.065` is therefore the fixed
+primary asymmetric candidate; all family members remain reported.  Artifacts
+`results/halfshear_vector_closure_lsst_r_extnbr_v22_rpowposa*_c0-39.json`.
+The authoritative independent-direction endpoint independently agrees.
+Positive-tail alpha `0.065,0.10,0.15` give all-case slopes
+`1.00525 +- 0.01582`, `0.99132 +- 0.01548`, and
+`0.97286 +- 0.01549`; alpha `0.065` has orthogonal null
+`-0.00687 +- 0.01586`.  Thus excluding negative predictions from feature-only
+weighting preserves geometry-free closure.  Artifacts
+`results/anchorblend_independent_lsst_r_extnbr_v22_rpowposa*_c200-299.json`.
+
+A simpler analytic sign-split calibration is also predeclared before replication
+truth: jointly fit one multiplier for negative V2.2 pair responses and one for
+nonnegative responses using case-balanced aggregate vectors on c0--19, then
+gate once on c20--39.  This preserves rotation equivariance and directly tests
+whether sign asymmetry, rather than new tree features, is sufficient.  Job
+`15671657`; anchor scoring is withheld until the half-shear gate is known.
+The gate improves amplitude but does not identify a sign asymmetry.  Fitted
+negative/positive multipliers are `1.0693` and `1.0811`; development slope is
+`1.00023 +- 0.00989`, while held-out c20--39 slope is
+`0.98125 +- 0.00675` (raw `1.06070`).  The two-column Gram condition number is
+`85.3` because negative-response power is scarce.  This is no better than the
+mild weighted models, so it is not promoted to anchor scoring.  Artifact
+`results/halfshear_pair_sign_calibration_v22_c0-39.json`.
+
+A post-response truth-tail decomposition explains the large rendered-case
+variance but is not a causal or deployable diagnostic.  On held-out c200--399,
+only 7.44% of anchors have `|R_truth|>1`; they contribute `-0.03616` to V2.2's
+case-balanced global gap while the remaining 92.56% contribute `+0.02722`,
+leaving `-0.00894`.  After alpha `0.065`, the same terms are approximately
+`-0.03324` and `+0.03024`, leaving `-0.002998`.  The more extreme 1.61% with
+`|R_truth|>5` alone contribute about `-0.0150` after correction.  Because bins
+are defined by measured truth, these sign-separated residuals are partly
+mechanical and do not identify an input-space mechanism.  They do establish
+that the remaining mean is a cancellation of much larger, heavy-tailed terms,
+consistent with the observed case SD and the need for more independent cases.
+Artifact `results/anchorblend_truth_tail_v22_alpha0065_c200-399.json`, job
+`15671314`.
+Checked whether the `--realizations d,0,1` shape argument left an unused rotated
+shape-noise partner.  It does not: `run_shape.py` interprets this as
+`range(0,1)`, producing only `real0`; no `real1` images/catalogues exist in the
+anchor trees.  Thus no free ring-pair averaging is available.
+
+Before c400--599 truth, fixed 400-case out-of-training syntheses were queued:
+the 160-case alpha `0.065` model (`15671441`), the all-200 refit
+(`15671442`), and the three positive-tail models (`15671443`).  These combine
+only coherent cases 200--599 and retain case-level uncertainty.
+For the preselected positive-tail alpha `0.065` candidate, a separate no-refit
+stability analysis was also frozen before replication truth.  It reports each
+non-overlapping 100-case block c200--299, c300--399, c400--499 and c500--599,
+the fresh 200-case result, the full 400 cases outside training, and the paired
+candidate correction in every block.  Job `15672862`, dependent only on the
+already-fixed positive-family scores; this is heterogeneity reporting, not
+blockwise selection.
+
+The genuinely fresh 200-case coherent gate c400--599 passes for the preselected
+positive-tail alpha `0.065`.  Raw V2.2 gap is
+`-0.008305 +- 0.001496`; the candidate adds
+`+0.007157 +- 0.000060` and leaves `-0.001148 +- 0.001503`, within two case
+SEMs.  The worst absolute frozen-V2.2-prediction-quintile residual falls
+`0.03952 -> 0.01548`.  The correction replicates the previously inspected
+c200--399 value `+0.007058 +- 0.000063`: fresh minus previous is only about
+`+0.000099`, roughly 1.1 combined SEM.  Both predeclared primary gates—smaller
+absolute global gap and smaller worst conditional gap—pass.  The unselected
+alpha `0.10/0.15` sensitivity members also reduce the raw gap but overcorrect
+globally to `+0.000154/+0.001409` and have worse conditional maxima
+`0.01724/0.01962`; they are retained, not selected.  Artifact
+`results/anchorblend_response_positive_weighted_v22_c400-599.json`, jobs
+`15670910--15670913` and `15671245/15671246`.
+
+All frozen controls were retained, and they sharpen the interpretation.  On
+c400--599, the unweighted 1000-tree model changes the coherent gap by only
+`-0.000014 +- 0.000003`; gamma-zero and gamma-zero/min-child-20 move it in the
+wrong direction by `-0.000269` and `-0.000227`.  The group-vector and group-
+vector/gamma-zero controls add only `+0.000945` and `+0.000671`, with the first
+worsening the conditional maximum.  Symmetric alpha `0.065` adds
+`+0.005982 +- 0.000055`, leaving `-0.002323 +- 0.001502`; the approximate
+all-200 refit adds `+0.005907`, slightly less.  Across c200--599 the exact
+all-200 bookkeeping-correct refit adds `+0.006056 +- 0.000042`, versus the
+160-case symmetric candidate's `+0.005962 +- 0.000042`; adding 40 cases is not
+a material improvement.  Artifacts
+`results/anchorblend_response_{unweighted_1000,regularization_controls,group_vector,group_vector_g0,weighted_primary,weighted_all200}*_c400-599.json` and
+`results/anchorblend_response_weighted_all200exact_v22_validation_c200-599.json`.
+
+The earlier coherent-scene HGB controls are less stable mechanistically.  On
+fresh c400--599 the full/primary-plus models now pass their gates, adding
+`+0.005354/+0.005498` and leaving `-0.002951/-0.002807`, with conditional maxima
+`0.01004/0.01117`.  But the same frozen full model failed the previous fresh
+c300--399 global gate, and it is trained directly on coherent response rather
+than closing independent pair supervision.  Stacking the full scene correction
+on symmetric alpha `0.065` again fails its global-improvement gate, changing
+`-0.002323` to `-0.003122` despite conditional improvement.  These are useful
+sensitivity results, not reasons to replace the independently selected and
+four-block-stable positive-tail pair model.  Artifacts
+`results/anchorblend_{coherent_scene,coherent_primaryplus,weighted_scene}_correction_v22_rep2_c400-599.json`.
+
+Only after that simulation-only gate passed, prepared the one-shot V2.2-domain
+constgold evaluation.  It reuses the existing 16 flow-seed dumps and exact-key
+joins a new frozen-candidate lookup, preserving identical rows, `R_sim` and
+`R_flow`; only additive `R_blend` changes.  The evaluator reports exact lookup
+coverage, refuses material missing coverage or non-finite/zero-filled predictions,
+and inspects the stored
+flow checkpoint to refuse the shortcut if `r_blend` is a continuous flow
+conditioner.  The V2.2 checkpoint's eight conditioners exclude `r_blend`, so the
+swap is exact.  This final evaluation is not a selection or tuning gate.
+
+The guarded one-shot evaluation passed (`15674291/15674292`).  On 5,642,349
+V2.2-domain objects (all but one of the 5,642,350 reference rows; lookup coverage
+`99.9999823%`), baseline constgold is `m=+1.08045%`, while the preselected
+positive-tail alpha `0.065` emulator gives `m=+0.11072%`.  Because the rows,
+`R_sim`, and all 16 `R_flow` seed draws are identical, their paired change is
+measured especially precisely: `-0.96972 +- 0.00240%` from flow-seed scatter.
+The candidate's absolute uncertainty is `+-0.12346%` from flow seeds and
+`+-0.12633%` from rendered cases, or `+-0.17664%` in quadrature, so the remaining
+`+0.11072%` is only `0.63` total SEM from zero.  The candidate raises mean
+`R_blend` from `0.125666` to `0.134890` (`+7.340%`), while shared
+`R_flow=0.826627` and `R_sim=0.962559` are unchanged.  Constgold was not used to
+choose alpha or any other model detail, and no post-result candidate selection or
+tuning was performed.  Artifact
+`results/constgold_m_swap_v22_rpowposa0065_16seed.json`; lookup
+`results/blend_lookup_v22_rpowposa0065_c40-139.feather`.
+
+At the owner's request, the successful loss recipe was reduced to one fixed
+training experiment rather than another sweep.  The fixed choices are one
+reweighting iteration from frozen V2.2 predictions, positive predictions only,
+power 2, cap 50, 271 inherited V2.2 trees, and alpha 0.065; labels do not enter
+the weights.  A production-style refit on all 200 half-shear cases (37,848,171
+training and 9,462,043 validation rows) is tag
+`lsst_r_extnbr_v22_rpowposa0065_all200`, job `15680209`.  It completed in
+15:28 with normalized weights p50 0.9731, p99 1.6092 and maximum 4.1358.
+On the already-inspected coherent c400--599 smoke check, the raw V2.2 gap
+`-0.008305 +- 0.001496` becomes `-0.001828 +- 0.001503`; the worst absolute
+baseline-prediction-quintile gap falls `0.03952 -> 0.01308`.  This confirms the
+one-pass recipe works, but it is not an improvement over the prior 160-case
+candidate's `-0.001148 +- 0.001503`; no choice is made from this retrospective
+comparison and no production tag is changed.  Artifact
+`results/anchorblend_response_positive_weighted_all200_v22_c400-599.json`,
+jobs `15680355/15680356`.
+
+To distinguish early-stopping/capacity from loss allocation, froze an unweighted
+1000-tree control using the same cases 40--199 and all other V2.2 parameters.
+It is evaluated first on untouched half-shear cases 0--39.  If it closes vector
+response, 271-tree early stopping is sufficient as a mechanism; if it retains
+the deficit while mild weighting closes it, objective mismatch is more specific.
+Training/scoring jobs are `15671461/15671462`; neither anchor nor constgold truth
+enters this gate.
+Before replication truth, the same fixed 1000-tree control was queued on
+independent directions (`15671789/15671790`) and c400--599
+(`15671791/15671792`) so its full sensitivity result is retained regardless of
+the half-shear outcome.
+
+A primary-level neighbour-count stratification rejects a simpler row-multiplicity
+explanation.  In fitting cases 40--199 the raw V2.2 aggregate-vector slopes are
+`1.1515`, `1.1328`, `1.1143`, and `1.1004` for respectively 3, 4--5, 6--10,
+and 11--19 supported neighbours.  The last two groups carry 91.9% of model
+vector power; their case-balanced slopes are `1.1141 +- 0.0048` and
+`1.1006 +- 0.0067`, only a modest difference compared with their common large
+deficit.  The two 80-case halves reproduce both main-bin slopes.  The
+positive-tail alpha `0.065` model
+brings both independently to about `0.986` on held-out c20--39.  Thus unequal
+numbers of repeated rows per primary do not explain the common approximately
+ten-percent shrinkage.  Artifact
+`results/halfshear_neighbour_count_slope_v22_training_c40-199.json`; accepted job
+`15672458` (the first launch `15672400` failed only in output assembly due to a
+DataFrame method/name collision and wrote no artifact).
+
+The unweighted 1000-tree learning curve is already flat by tree 250: validation
+RMSE is `0.99381` at tree 250 and remains `0.99381` through at least tree 900.
+The completed endpoint confirms that this is not merely an insensitive row
+metric: on untouched half-shear c20--39 the 1000-tree aggregate-vector slope is
+`1.05781 +- 0.00726`, versus `1.06070 +- 0.00730` for 271-tree V2.2.  The extra
+729 trees recover only `0.00289` of the `0.06070` slope deficit.  Artifact
+`results/halfshear_vector_closure_lsst_r_extnbr_v22_rpowunwt1000_c0-39.json`.
+The serialized tree structure explains the plateau: trees 0--270 have median
+371 nodes and median maximum absolute leaf weight `0.0180`, whereas trees
+271--999 have median one node (a constant stump) and median maximum leaf weight
+only about `3.2e-5`.  A few later trees are nontrivial, but their mean size is
+only 4--10 nodes.  Continuing boosting under the same regularization therefore
+mostly adds negligible constants.
+The independent-direction scene endpoint agrees: the 1000-tree all-case slope is
+`1.08713 +- 0.01703`, statistically unchanged from V2.2's
+`1.09037 +- 0.01710`, with orthogonal null `-0.00597 +- 0.01709`.  Artifact
+`results/anchorblend_independent_lsst_r_extnbr_v22_rpowunwt1000_c200-299.json`.
+Because the original tree recipe includes split penalty `gamma=3.998` and
+`min_child_weight=181`, two additional controls were fixed before c400--599
+truth: 271 trees with gamma zero, and 271 trees with gamma zero plus minimum
+child weight 20.  Both otherwise preserve V2.2's cases 40--199, row objective,
+preprocessing, features and parameters.  Training/half-shear jobs are
+`15672071/15672072`, independent-direction jobs `15672073/15672074`, and blind
+c400--599 score/analysis jobs `15672075/15672076`.  These distinguish ordinary
+tree regularization from the demonstrated benefit of response-aware loss
+allocation; neither constgold nor replication truth enters their definition.
+The half-shear results show a real but secondary regularization contribution.
+Gamma zero changes the untouched c20--39 slope from V2.2's
+`1.06070 +- 0.00730` to `1.04618 +- 0.00723`; additionally reducing minimum
+child weight from 181 to 20 gives `1.04535 +- 0.00738`.  Orthogonal nulls remain
+small (`-0.00329` and `-0.00383`).  Removing those constraints therefore recovers
+only 1.45--1.54 percentage points, about one quarter of the original 6.07-point
+deficit.  It cannot reproduce the near-closure from mild response-aware
+weighting, so ordinary tree shrinkage amplifies but does not dominate the loss-
+allocation failure.  Artifacts
+`results/halfshear_vector_closure_lsst_r_extnbr_v22_rpowunwtg0*_c0-39.json`.
+Independent-direction scenes repeat the ordering: all-case slopes are
+`1.07680 +- 0.01687` for gamma zero and `1.07447 +- 0.01694` after also lowering
+minimum child weight, versus `1.09037 +- 0.01710` for V2.2 and
+`1.00525 +- 0.01582` for positive-tail alpha `0.065`.  Orthogonal nulls remain
+consistent with zero.  Artifacts
+`results/anchorblend_independent_lsst_r_extnbr_v22_rpowunwtg0*_c200-299.json`.
+Tree size makes the distinction sharper.  Gamma zero grows a mean 430 nodes per
+tree (355 over the last 50), comparable to positive-tail alpha `0.065` at mean
+416 (266 over the last 50), versus V2.2 at mean 312 (74 over the last 50).
+Despite similar realized capacity, gamma zero leaves a 4.6% half-shear slope
+deficit while positive-tail weighting is within about 1.4% on both case halves.
+The benefit therefore depends on directing splits toward response-carrying rows,
+not merely permitting more splits globally.
+
+A direct untouched-pair audit on c20--39 confirms that mechanism in the six
+V2.2-prediction bins frozen on c0--19.  Gamma zero raises the five rare-bin mean
+predictions by only `0.0076--0.0191`; positive-tail alpha `0.065` raises them by
+`0.0326--0.0489`.  In the two highest bins the measured/predicted ratios improve
+from V2.2's `1.0521,1.0498` to `1.0144,1.0140`; gamma zero leaves
+`1.0372,1.0342`.  Meanwhile the 4.70-million-row near-zero bin changes by only
+about `+0.0003` in absolute prediction under positive weighting.  This is direct
+evidence that the successful loss moves the response-leverage tail rather than
+applying a global scale.  Artifacts
+`results/halfshear_pair_bins_{baseline,gamma0,positive0065}_in_v22_bins_c0-39.json`,
+job `15672775`.
+
+A more direct objective-level candidate was also frozen before opening c400--599
+truth.  The half-shear catalogue contains one two-component measured response
+per primary, represented repeatedly in each neighbour's random shear frame.
+V2.2 minimizes independent scalar row errors.  The new `groupvec` control instead
+uses the exact differentiable primary loss
+`0.5*|sum_j R(x_ij) u_ij - Delta e_i/g|^2`, with groups rather than rows assigned
+to the 80/20 validation split.  It retains cases 40--199, all seven V2.2 pair
+features, cuts, rescaling, tree parameters and 271-tree count; its only scientific
+change is matching the loss to the deployed aggregate vector.  The custom
+Hessian is the positive diagonal of the exact group Hessian, while gradients are
+exact.  Training/half-shear jobs are `15672193/15672194`, independent-direction
+jobs `15672195/15672196`, and blind c400--599 score/analysis jobs
+`15672197/15672198`.  This is an experimental training objective, not a deployed
+calibration, and no constgold or replication response entered its definition.
+The unchanged-regularization group-vector control is a clean failure.  Its
+group-preserving validation vector RMSE decreases only from `1.38948` to
+`1.36079` in standardized units, and on untouched half-shear c20--39 the slope
+is `1.06826 +- 0.00758`, slightly worse than V2.2's `1.06070`.  The orthogonal
+null remains small, `-0.00254 +- 0.00716`.  Thus simply substituting the
+scientific aggregate objective into the inherited 271-tree recipe is not a fix.
+The independent-direction replication is equally null: its all-case slope is
+`1.09100 +- 0.01686`, versus V2.2's `1.09037 +- 0.01710`, with orthogonal null
+`-0.00540 +- 0.01724`.  Artifact
+`results/anchorblend_independent_lsst_r_extnbr_v22_groupvec_c200-299.json`.
+Its last 50 trees average only 44.9 nodes, even fewer than V2.2's 73.8, so the
+inherited gamma may be especially restrictive under the new gradients.  A final
+mechanistic combination, group-vector loss with gamma zero and otherwise the
+same recipe, was frozen before replication truth: training/half-shear
+`15672434/15672435`, independent directions `15672436/15672437`, and blind
+c400--599 `15672438/15672439`.  This is a single prespecified optimization
+control, not a grid selected on anchors.
+That combination also fails to add value.  Gamma zero lowers the group-vector
+validation RMSE only marginally further (`1.36079 -> 1.36066`) and gives
+untouched half-shear slope `1.04955 +- 0.00745`, statistically indistinguishable
+from ordinary gamma-zero row training at `1.04618 +- 0.00723`; its orthogonal
+null is `-0.00325 +- 0.00705`.  Therefore the current group-objective
+implementation neither fixes closure nor improves on generic de-regularization.
+Artifact
+`results/halfshear_vector_closure_lsst_r_extnbr_v22_groupvecg0_c0-39.json`.
+Independent-direction scenes agree: group-vector plus gamma zero gives
+`1.07355 +- 0.01654`, versus ordinary gamma zero `1.07680 +- 0.01687`, with
+orthogonal null `-0.00531 +- 0.01698`.  Artifact
+`results/anchorblend_independent_lsst_r_extnbr_v22_groupvecg0_c200-299.json`.
+
+## 2026-08-11g  Exact g=0.05 versus g=0.2 labels are globally compatible; 200-case low-shear rebuild started
+
+The first low-shear V2.2 retrain used only 60 training cases (40--99), not 200.
+Before spending more compute, compared the two response labels on the exact same
+primary--secondary pairs in shared cases 0--99.  The streaming comparison uses
+the exact V2.2 domain, matches on stable primary ID plus rounded secondary sky
+position, verifies identical pair geometry, averages within rendered case first,
+and treats the 100 cases as the uncertainty units.  Constgold is never opened.
+
+There are 23,650,061 exact matched pairs.  The case means are
+`R(g=0.05)=0.007855 +- 0.000563` and
+`R(g=0.2)=0.007459 +- 0.000148`.  Their paired difference is
+`R05-R20=+0.000395 +- 0.000501`, with normal 95% interval
+`[-0.000586,+0.001377]`.  The 45-degree null difference is
+`-0.000598 +- 0.000480`, also consistent with zero, and the two per-case
+responses have correlation 0.529.  The approximately `+0.0009` per-pair shift
+that would be needed to account for a 0.75-point summed-response deficit lies
+inside the interval but is not measured; the point estimate is less than half
+that scale.  Fixed separation, primary magnitude/size, secondary magnitude and
+contrast bins are mostly consistent with zero and are mixed in sign.  A few
+small/conditional cells depart from zero (notably 0.75--1.0 arcsec positive and
+secondary-primary contrast -1--0 negative), so the result does not establish
+perfect shear-linearity in every corner.  It does show no coherent label-amplitude
+shift of the required global size.  Artifact:
+`results/rblend_labels_g005_vs_g020_v22_c0-99.json` plus case and bin CSVs; job
+`15663283` completed in 1m56s with exit 0 and 1.19 GB maximum RSS.
+
+After completing the missing low-shear primary shapes, repeated the identical
+exact-pair comparison on all 200 cases (47,273,873 matched pairs).  This
+supersedes the 100-case amplitude estimate.  The second half alone gives
+`R05-R20=-0.001157 +- 0.000427`, versus the first half's
+`+0.000395 +- 0.000501`.  Combined, `R05=0.007165 +- 0.000359`,
+`R20=0.007546 +- 0.000104`, and
+`R05-R20=-0.000381 +- 0.000333`, with 95% interval
+`[-0.001033,+0.000272]`.  Equivalently, `R20/R05-1=+5.31% +- 4.91%` by
+delete-one-case jackknife.  Thus the amplitudes remain statistically compatible,
+but the point estimate no longer suggests mitigation and the approximately
+`+0.0009` per-pair shift needed for the constgold gap lies above the 95%
+interval.  The null difference is similarly consistent with zero at
+`-0.000411 +- 0.000335`.  Job `15665203` completed with exit 0; artifact:
+`results/rblend_labels_g005_vs_g020_v22_c0-199.json` plus case and bin CSVs.
+
+The raw situation is better than the first catalogue suggested: g=0.05 images,
+detections and secondary shapes already exist for all cases 0--199.  Only the
+primary shape catalogues for cases 100--199 were missing.  Therefore no new
+images need be rendered to reach a 200-case low-shear response set.  Added a
+case-offset option to the existing primary-measurement driver and a safe,
+non-overwriting response-window builder that calls BlendEMU's production
+`retrieve_response`.  Submitted primary measurement `15663366`, dependent
+response shard build `15663367`, and dependent all-200-case fixed-recipe fit
+`15663392`.  The new isolated tag is `lsst_r_extnbr_v22_g005_c200`; it will use
+all cases 0--199 because the owner explicitly requested at least 200 training
+cases.  Consequently it has no independent g=0.05 case holdout; it must be
+screened first on the already independent coherent/random anchor simulations,
+and constgold remains unopened unless that gate improves.  The failed setup-only
+attempt `15663356` used zero compute and wrote no product; its dead dependent
+`15663359` was cancelled before the clean resubmission.
+
+All three jobs completed with exit 0.  Cases 100--199 produced 100 primary
+shape catalogues and a 125,130,652-row low-shear response shard.  The isolated
+200-case fit used 250,368,296 raw pair rows and 47,463,348 V2.2-selected rows;
+its label mean/scatter are `0.007308/2.4674`, it stops at 202 trees, and its
+row-validation R2 is only `0.000759`.  This is essentially unchanged from the
+60-case fit's `0.000775`: more cases reduce sampling instability but do not make
+the intrinsically noisy per-pair low-shear regression easy.
+
+Independent anchor replay jobs `15665025[0-3]` and case-blocked analysis
+`15665026` also completed with exit 0.  On coherent validation cases 250--299,
+truth is `0.105028 +- 0.003073`.  V2.2 predicts `0.102119`, gap
+`-0.002909 +- 0.003007`; the 200-case low-shear fit predicts `0.095811`, gap
+`-0.009217 +- 0.002981`.  Its precisely paired shift from V2.2 is therefore
+`-0.006308 +- 0.000157`, the wrong sign.  Random-direction validation agrees:
+gap `-0.005059 +- 0.003310 -> -0.011394 +- 0.003322`, paired shift
+`-0.006335 +- 0.000160`.  The 200-case fit is materially less damaging than
+the 60-case fit (whose coherent paired shift was `-0.015641`), but it still
+fails all predeclared gates.  The largest coherent conditional gap worsens
+`0.017776 -> 0.047928`; in the highest baseline-prediction quintile the model
+shift alone is `-0.030152 +- 0.000589`.  Other quintiles move by only about
+`-0.0012` to `-0.0015`, except the lowest, which moves `+0.00253`.  Thus the
+remaining failure is concentrated in the rare strong-response tail.  This is
+consistent with low-shear label noise driving shrinkage, but does not uniquely
+prove that mechanism.  The candidate is rejected, constgold remains unopened,
+and no `m` is quoted.  Artifact:
+`results/anchorblend_emu_g005_c200fit_v22_c200-299.json`.
+
+## 2026-08-11f  Direct V2.2 retrain on g=0.05 labels collapses the crowded tail and fails both independent gates
+
+Retrained only the V2.2 pairwise `R_blend` regression on the existing forward
+`g=0 -> 0.05` response catalogue.  The candidate
+`lsst_r_extnbr_v22_g005` keeps V2.2's seven inputs, rectangular primary and
+extended-secondary cuts, inherited XGBoost parameters, preprocessing and
+row-level early-stopping split.  Cases 40--99 are the training pool; cases
+0--39 are reserved for summed half-shear closure.  The self-response and
+classification tasks are copied unchanged from V2.2.  Constgold is not read.
+The uncertainty unit is the rendered simulation case, never a pair row.
+
+The available low-shear catalogue has only cases 0--99.  Training therefore
+uses 14,254,917 selected rows from 60 cases, versus 37,852,393 rows from 160
+cases in V2.2.  Per-pair target scatter is `2.4768` at `g=0.05`, 3.55 times
+V2.2's `0.6973` at `g=0.2`; inherited random-validation R2 falls from
+`0.009376` to `0.000775`.  The fit completed at 161 trees.  Thus this is the
+practical lower-shear retrain with the data that exist, not a pure
+amplitude-only comparison at matched training volume.
+
+The held-out cases 0--39 contain 9,489,699 supported pairs for 1,129,977
+primaries.  After summing pairs before case aggregation, truth is
+`0.074554 +- 0.007584` (10.17% fractional case uncertainty) and the cross
+component is `+0.006769 +- 0.005095` (1.33 sigma, null).  V2.2 predicts
+`0.064585`, giving prediction-minus-truth `-0.009969 +- 0.007580`; the new
+model predicts only `0.055051`, worsening the gap to
+`-0.019503 +- 0.007580`.  Although truth is noisy, the paired prediction shift
+on identical scenes is resolved: `candidate - V2.2 = -0.009534 +- 0.000076`.
+The predeclared summed-ruler gate fails.  Artifact:
+`results/v22_g005_summed_comparison_c0-39.json` and its two case tables.
+
+Fresh coherent-anchor validation cases 250--299 independently give truth
+`0.105028 +- 0.003073`.  V2.2/new predictions are `0.102119/0.086478`, so the
+gap changes from `-0.002909 +- 0.003007` to
+`-0.018550 +- 0.003035`; the paired model shift is
+`-0.015641 +- 0.000272`.  The disjoint random-local10 layers give the same
+direction: gap `-0.005059 +- 0.003310 -> -0.020735 +- 0.003327`, paired shift
+`-0.015675 +- 0.000292`.  Conditional closure also fails sharply.  Across
+V2.2-prediction quintiles, worst absolute residual grows
+`0.017776 -> 0.085173` on coherent validation and
+`0.027133 -> 0.094397` on random validation.  Nearly all of the damage is in
+the highest predicted-`R_blend` quintile, consistent with strong shrinkage of
+the crowded tail under the much noisier labels; this is an interpretation,
+not a demonstrated unique cause.
+
+All predeclared gates fail, so the candidate is not promoted and constgold
+remains unopened.  This result does **not** establish that the physical
+small-shear response is lower: the earlier exact matched-pair measurement gave
+mean responses `0.0316` at `g=0.05` and `0.0318` at `g=0.2` (ratio 1.006).
+It shows that simply feeding the lower-signal labels into the inherited V2.2
+training recipe makes the deployed estimator substantially worse.  Jobs
+`15662339` (train), `15662340` (summed closure), `15662341[0-3]` (anchor
+replays) and `15662342` (case-blocked analysis) all completed with exit 0.
+Model artifact:
+`blendemu/models/emulator_metadata_lsst_r_extnbr_v22_g005.json`; anchor
+artifact: `results/anchorblend_emu_g005_v22_c200-299.json`.  Python compilation,
+Bash syntax, focused estimator assertions, model reload, strict-JSON parsing
+and `git diff --check` pass.
+
+## 2026-08-11d  Correct pair-specific third-plus flux helps modestly but does not close anchors
+
+Started the missing controlled emulator experiment.  The candidate
+`lsst_r_extnbr_v22_other3abs` keeps V2.2's response labels, cases 40--199,
+support cuts, random split, target standardization and inherited XGBoost
+parameters.  Its only added inputs are
+`log10(1 + F_other)` in intrinsic simulation-count units for 0--1, 1--3 and
+3--10 arcsec shells.  `F_other` is recomputed separately for every response
+row by excluding both the primary and that row's designated secondary; it is
+therefore the pair-specific context that the earlier `scene3` model did not
+test.  Constgold remains outside catalogue construction, training, model
+selection and this experiment's submitted DAG.
+
+Predeclared simulation-only gates are: reduced absolute summed-response gap on
+the held-out half-shear pair ruler (cases 0--39), reduced equal-bin RMS and
+worst absolute residual across all three other-flux profiles, and reduced
+global/worst-conditional gaps on cases 250--299 in both coherent and disjoint
+local-random anchor responses.  Case is the uncertainty unit.  Anchor cases
+200--249 are reported as development and 250--299 as validation; because the
+baseline anchor truths have already been examined, this remains mechanism
+evidence rather than a new blinded certification.  All planned non-significant
+and adverse profiles will be retained.
+
+Added the absolute-flux transform and tests in `blendemu`, the streaming
+pair-specific training-catalogue builder, SBSI frozen retrainer, held-out ruler
+comparison, coherent/local-random anchor rescorer and case-blocked analysis,
+plus their Slurm wrappers and configuration.  Eight focused tests pass in
+`py31`; `sims1` import/config validation, Python compilation, Bash syntax and
+`git diff --check` pass.  The inherited classification faint-limit warning is
+irrelevant here because classification is copied unchanged.  Submitted jobs:
+catalogue `15660886`, training `15660887`, held-out ruler `15660888`, anchor
+scene lookup `15660889`, four-arm anchor score `15660890`, and analysis
+`15660891`.
+
+Catalogue attempt `15660886` failed before writing a batch because it assigned
+the designated secondary to a flux shell using the deployed response
+`distance` (primary detected-centroid to secondary input) rather than the
+intrinsic input-to-input RA/Dec distance used to build the shell lookup.  The
+strict secondary-subtraction check caught material negative shell flux.  The
+builder now computes Euclidean intrinsic separation from the response row's
+input coordinates; an intrinsically >=10-arcsec designated secondary is left
+untouched because it was never part of the cached 0--10-arcsec sum.  A focused
+outside-aperture test was added; seven relevant tests pass.  Dead dependent
+jobs `15660887/15660888/15660890/15660891` were cancelled without running.
+Corrected chain: catalogue `15660904`, training `15660905`, held-out ruler
+`15660906`, still-valid lookup `15660889`, score `15660907`, analysis
+`15660908`.
+
+The corrected catalogue retains all 248,515,320 source response rows; 1,460,146
+(0.59%) have their designated secondary intrinsically outside 10 arcsec and
+therefore require no subtraction.  Training uses exactly V2.2's 37,852,393
+post-cut rows, 30,281,914/7,570,479 fixed train/random-validation split and
+target mean/std `0.007606/0.6973`.  The candidate stops at 313 trees and raises
+random-validation R2 from V2.2's `0.009376` to `0.009723`.  This is a small
+conditional-prediction improvement, not a closure result.
+
+The independent half-shear ruler contains 4,649,917 supported pairs for
+1,116,565 primaries in cases 0--39.  V2.2/candidate summed predictions are
+`0.065322/0.065075` against truth `0.063070 +- 0.004489`; prediction-minus-truth
+changes from `+0.002252 +- 0.004496` to `+0.002005 +- 0.004499`.  Across the 14
+predeclared other-flux bins, equal-bin residual RMS improves
+`0.004185 -> 0.003585`, mean absolute residual `0.002904 -> 0.002653`, and worst
+absolute residual `0.010684 -> 0.009382`.  Thus all half-shear gates pass, but
+the global improvement (`-0.000247`) is tiny compared with ruler uncertainty.
+Artifact: `results/rblend_other3abs_halfshear_c0-39.{json,csv,png,pdf}`.
+
+On all coherent cases 200--299, the candidate raises predicted neighbour
+response by `+0.000790 +- 0.000072` and changes the direct gap from
+`-0.007528 +- 0.002134` to `-0.006738 +- 0.002130`: only 10.5% of the missing
+mean.  On the combined disjoint random-local10 layers it raises response by
+`+0.000763 +- 0.000073` and changes the gap from
+`-0.005797 +- 0.002279` to `-0.005034 +- 0.002293`, or 13.2% of the deficit.
+The held-out cases 250--299 independently move in the same global direction:
+coherent `-0.002909 -> -0.002061`, random-local
+`-0.005059 -> -0.004267`.
+
+Both predeclared conditional anchor gates fail.  In coherent validation the
+worst V2.2-prediction-quintile residual worsens `0.017776 -> 0.019352`; in
+random-local validation it worsens `0.027133 -> 0.028932`.  The redistribution
+is systematic: the lowest prediction quintile improves by about `+0.00456`
+response, while the highest/crowded quintile moves downward by
+`-0.00158` (coherent) or `-0.00180` (random-local), making its existing negative
+gap larger.  Development cases show the same conditional direction.  Hence
+correct third-plus flux is a real but secondary omitted coordinate; it does not
+explain the remaining approximately 0.8% calibration scale and the apparent
+global improvement is still cancellation across environments.  The overall
+gate fails, the candidate is not promoted, and constgold remains unopened.
+Artifact: `results/anchorblend_other3abs_v22_c200-299.json` plus the four
+`results/anchorblend_*other3abs*c200-299.feather` replay tables.
+
+Final reproducibility audit: all accepted jobs above completed with exit 0;
+nine focused tests pass, all new Python files compile, all job wrappers pass
+`bash -n`, accepted JSON artifacts parse strictly, both repositories pass
+`git diff --check`, and every anchor arm replays stored V2.2 to approximately
+`1e-7`.  Failed attempt `15660886` is superseded only by the explicitly
+documented intrinsic-distance fix; it is not an accepted result.
+
+## 2026-08-11c  Random-direction radius control retracts the first aperture claim; population-complete extension running
+
+The first ``local10`` experiment in 11b was found to have a design flaw: it
+sheared the union of all 10-arcsec anchor discs in one coherent direction.  The
+discs did not overlap, but other discs remained coherently sheared sources
+beyond 10 arcsec for any given anchor.  Therefore its all-minus-local difference
+was not an exact outside-10 response.  The causal/aperture interpretation was
+explicitly retracted above while preserving the numbers as audit history.
+
+The replacement assigns an independent deterministic spin-2 direction to each
+non-overlapping anchor neighbourhood, projects each anchor response on its own
+direction, and records the orthogonal component as a null.  Radius-10 and
+radius-15 arms use identical anchors, directions, latent catalogues and noise.
+An exact pre-render audit over cases 200--299 verified 166,088 anchors,
+2,755,065/6,184,284 sheared sources at 10/15 arcsec, antithetic shear legs,
+strict radius boundaries, nested masks, zero direction error, and minimum
+anchor separation 30.01 arcsec.  Render jobs `15653064`, shape jobs `15653065`,
+response jobs `15653066`, and blinded analysis `15653067` all completed.
+
+The clean layer-0 result does **not** support a 10--15 arcsec omitted-response
+correction.  On 150,591 common measured anchors, the shell is
+`+0.001141 +- 0.004496`; development cases 200--249 give
+`-0.004314 +- 0.006665`, while validation cases 250--299 give
+`+0.006596 +- 0.006003`.  The development offset worsens the held-out V2.2 gap
+from `-0.005156 +- 0.004782` to `-0.009469 +- 0.004782` (with an additional
+development uncertainty).  The shell-detection and improved-validation gates
+fail.  Random-direction nulls are clean, the radius arms have 99.921% exact-key
+coverage, and constgold was not opened.  Artifact:
+`results/anchorblend_random_radii_v22_c200-299.json`.
+
+An exact-key comparison against the existing coherent responses shows that the
+same retained population does not exhibit a significant direction contrast:
+coherent minus random-10 is `+0.001646 +- 0.004566`, and coherent minus
+random-15 is `+0.000220 +- 0.004700`.  The V2.2-minus-coherent gap is
+`-0.004353 +- 0.003453` on the triple-common subset.  The apparent improvement
+relative to the full coherent gap therefore cannot be assigned to aperture or
+direction from layer 0.  Re-sparsification is an important population change:
+the original coherent rows retained by 30.01-arcsec spacing have gap
+`-0.004530 +- 0.003419`, while excluded rows have
+`-0.009985 +- 0.002749`; their paired case difference is only 1.2 SEM, so this
+is suggestive, not established.  Artifact:
+`results/anchorblend_random_vs_coherent_v22_c200-299.json`.
+
+Existing intrinsic outer-scene summaries confirm that excluded anchors are a
+different environment.  They have 1.92 more 10--30 arcsec sources on average
+(46 case-SEM), higher 20--30 arcsec flux (35 case-SEM), and higher
+profile-extent-weighted outer flux (7.6 case-SEM).  The coherent gap is not
+monotonic across quartiles of these simple summaries, consistent with the
+previous held-out failure of an outer-feature HGB correction.  No new empirical
+correction was fit.  Artifact:
+`results/anchorblend_resparsification_v22_c200-299.json`.
+
+To restore population coverage without overlapping random-direction discs, the
+original 372,595 anchors were deterministically partitioned into 30.01-arcsec
+layers containing 166,088, 129,797, 65,970, 10,533 and 207 anchors.  Layers 1
+and 2 recover about 95% of anchors omitted from layer 0; layers 3--4 are too
+small to justify four more full image arms.  Their four layer/radius catalogues
+passed exact pre-render audits: 195,767 anchors total, matching radius manifests,
+antithetic legs, nested masks, strict boundaries and zero direction error.
+Support `15655571`, render `15655572`, shape `15655573`, response `15655574`,
+and combined layer-0--2 blinded analysis `15655575` all completed.  The four
+shape tasks took 68--78 minutes and the response tasks 9--12 minutes, all with
+exit code zero and explicit completion markers.
+
+Combining the three disjoint layers before case averaging leaves 329,608 exact
+radius-common measured anchors (99.93%/99.97% radius coverage).  The decisive
+result is:
+
+| quantity, cases 200--299 | response | case SEM |
+|---|---:|---:|
+| V2.2 prediction | `0.102237` | `0.000461` |
+| random-direction truth, local 10 arcsec | `0.108180` | `0.002323` |
+| random-direction truth, local 15 arcsec | `0.107511` | `0.002002` |
+| V2.2 minus local-10 truth | **`-0.005943`** | `0.002281` |
+| V2.2 minus local-15 truth | **`-0.005274`** | `0.001979` |
+| 10--15 arcsec shell | `-0.000669` | `0.003056` |
+
+Thus the increased-statistics control restores an in-aperture deficit at about
+2.6 case-SEM, but finds no 10--15 arcsec response.  Development cases fixed a
+shell offset of `-0.001998 +- 0.004385`; validation independently gives
+`+0.000660 +- 0.004295`.  Applying the fixed development offset worsens the
+held-out V2.2-minus-local15 gap from `-0.005735 +- 0.002447` to
+`-0.007733 +- 0.002447` (plus development uncertainty).  The shell-detection,
+local-10-closure and improved-validation gates fail; nulls remain clean.  No
+aperture correction is supported and no 15-arcsec training/deployment extension
+is justified.  Artifact:
+`results/anchorblend_random_layers012_radii_v22_c200-299.json`.
+
+An exact-key coherent comparison (`15655992`, detailed rerun `15656723`) retains
+328,981 common anchors.  On them the coherent V2.2 gap is
+`-0.007125 +- 0.002103`, while coherent minus random-10 is
+`+0.001374 +- 0.002967` and coherent minus random-15 is
+`+0.002000 +- 0.002732`.  Therefore neither shear-direction construction nor
+the 10--15 arcsec shell is detected as the carrier.  The layer-0/1/2 random-10
+gaps become more negative (`-0.00271`, `-0.00763`, `-0.00976` on exact coherent-
+common rows), but paired differences between layers are only 0.3--1.2 SEM and
+do not establish a usable environmental coordinate.  Recovering the crowded
+anchors also removes the earlier re-sparsification ambiguity: the combined
+retained coherent gap is `-0.007300 +- 0.002102`, close to the full
+`-0.007528 +- 0.002134` gap.  Artifacts:
+`results/anchorblend_random_layers012_vs_coherent{,_detail}_v22_c200-299.json`.
+
+The narrow mechanistic conclusion is that ordinary response outside 10 arcsec
+is not supported as the explanation.  V2.2 reproduces its own held-out random-
+direction pair-label sum, yet undersupplies this support-clean local-10 scene
+estimand.  That leaves a mismatch in pair-label versus scene/population
+conditioning as the leading hypothesis, not a demonstrated scalar-regression
+underfit.  Simple outer-scene features, layer identity and a constant shell
+offset do not yet make that mismatch predictable.  No correction or retrain was
+selected, and constgold remained closed.
+
+Added `scripts/analyze_anchorblend_multilayer_vs_coherent.py`, its focused test,
+and `jobs/job_analyze_anchorblend_random_layers012_vs_coherent.sh`; the combined
+multilayer analysis and layer planners/preparation scripts remain as described
+above.  Focused tests, Python compilation, Bash syntax, strict JSON reads and
+`git diff --check` pass.
+
+### Exact pair-input reweight rejects ordinary feature-space covariate shift
+
+The next diagnostic reweighted the held-out cases 0--39 pair-label residual
+into the exact anchor occupancy of all seven V2.2 inputs: primary/secondary true
+magnitude, size and Sersic index plus separation.  The anchor score was replayed
+from 5,187,428 exact deployed pairs for the 329,608 common anchors, with maximum
+absolute prediction error `1.64e-7`.  The held-out label side contains 8,765,454
+pairs for 1,043,333 primaries.  Its 8.40 supported pairs per primary versus
+15.74 in anchor deployment is the expected response-simulation half split, but
+it exposes scene/pair-count context as an omitted variable candidate rather
+than proving a factor-of-two error.
+
+The pair-feature populations have excellent overlap: held-out domain AUC
+`0.5235`, cap-10/raw weights identical because the maximum weight is only 1.34,
+ESS `99.12%`, and maximum post-weight |SMD| `0.00243`.  Nevertheless, reweighting
+predicts V2.2-minus-label `+0.004456 +- 0.003505`, opposite the observed local-10
+anchor gap `-0.005943 +- 0.002281`.  Their difference is
+`+0.010399 +- 0.004182` (2.49 combined case-SEM), failing the predeclared 2-SEM
+match gate.  A cases 0--19 to 20--39 transfer control passes at 1.2 combined
+SEM, though it is not precise enough to be strong positive validation.
+
+The first run (`15656797`) computed the same response estimates but accumulated
+millions of float32 feature values in float32 when printing SMDs, creating
+spurious balance diagnostics; do not use its SMD fields.  The accepted rerun
+`15656852` promotes those accumulations to float64 and is recorded in
+`results/v22_pair_domain_reweight_v2_c0-39_to_anchor_c200-299.json`.  Thus
+ordinary occupancy in variables V2.2 already sees is not supported as the
+cause.  Remaining candidates are variables it does not see (multi-neighbour
+scene context) and the independent-neighbour pair-label versus locally coherent
+scene estimand itself.
+
+### One scene-level correction improves conditional closure but fails global coherent transfer
+
+Made one fixed improvement attempt using only anchor data.  A case-blocked HGB
+predicts `truth_local10 - V2.2` from primary magnitude/size/Sersic index and
+intrinsic deployed-pair scene summaries (pair counts, response and flux-ratio
+sums in 0--1/1--3/3--10 arcsec shells).  Five development models use cases
+200--249; cases 250--299 are untouched validation.  The same correction is then
+tested on the exact-key coherent-shear responses.  No correction is fitted to
+either validation arm.
+
+On random-local10 validation the candidate changes the global gap from
+`-0.005075 +- 0.003310` to `+0.001882 +- 0.003319` and reduces the largest
+absolute V2.2-prediction-quintile residual from `0.02705` to `0.01016`.
+Training stability is `0.000588`.  On the coherent validation arm it also
+flattens the largest conditional residual from `0.01963` to `0.00636`, but the
+global gap moves from `-0.003361 +- 0.002979` to
+`+0.003570 +- 0.002973`: a small absolute worsening.  The predeclared coherent-
+global-improvement gate therefore fails.  The development constant correction
+(`+0.006795`) similarly gives `+0.003434` on coherent validation, showing that
+the failure is global transfer rather than a special HGB excursion.
+
+No deployable scene model was written and constgold remained closed.  Result:
+`results/anchorblend_scene_correction_v22_c200-299.json`, accepted job
+`15656949`.  Job `15656939` completed the computation but failed JSON writing on
+open-ended `+-inf` bin edges; its partial JSON is preserved with an explicit
+`_failed15656939.json.partial` suffix and is not a result.  Added
+`scripts/diag_v22_pair_domain_reweight.py`,
+`scripts/fit_anchorblend_scene_correction.py`, their cluster wrappers and
+focused tests.  The statistical design keeps cases as the uncertainty unit,
+reports ESS/balance and includes the nonsignificant controls rather than
+selecting only favorable bins.
+
+## 2026-08-11b  V2.2 coherent-neighbour deficit: simple causes rejected; explicit anchor calibration improves only the global mean
+
+Continued autonomously from the exact-key closure in 11a.  Constgold remained an
+evaluation-only acceptance set: every candidate number was fixed and checked on
+half-shear or sparse coherent-anchor simulations first.  No constgold response was
+used to fit a parameter.
+
+### Provenance and inexpensive mechanism checks
+
+Audited the V2.2 regression end to end.  It was trained on 30.28 million rows from
+cases 40--199 with a very noisy per-pair target (`std=0.6973`, mean `0.007606`;
+held-out row R2 `0.00938`).  Its seven inputs are primary/secondary true magnitude,
+size and Sersic index plus separation.  The response catalogue uses the primary's
+detected centroid for separation, while deployment uses input--input separation.
+That mismatch is real at sub-arcsecond distance, but rescoring the unchanged
+coherent-anchor fields with the corrected-distance `_indist`, `_indist_wc5` and
+`_indist_wc20` models rejects it as the global cause.  On the clean unseen latent
+cases 200--299, prediction-minus-truth is:
+
+| model | coherent-anchor gap | case SEM |
+|---|---:|---:|
+| V2.2 | `-0.007528` | `0.002134` |
+| input-distance | `-0.007458` | `0.002143` |
+| input-distance wc5 | `-0.008448` | `0.002147` |
+| input-distance wc20 | `-0.008902` | `0.002139` |
+
+Thus the corrected coordinate is a genuine per-pair improvement but does not close
+this coherent estimand; close-pair weighting makes its mean worse.  The broad-primary
+`_ho` control is also lower (`-0.008342 +- 0.002143`) than V2.2 on those same cases,
+so narrowing the primary training box alone is not the cause.
+
+The anchor catalogue is not a fully independent galaxy draw.  It uses exactly the
+same intrinsic FS2 prefix (`cata_idx`, morphologies and position angles) as the
+response simulations, with rerandomized geometry.  Cases 40--199 therefore reuse
+latent galaxy draws from model training; cases 0--39 are held out from V2.2 training,
+and cases 200--299 have no corresponding training field and are the cleanest
+``unseen latent`` subset.  This qualification is now recorded in
+`results/anchorblend_training_overlap_audit_v2*.json`.
+
+Increasing the deployed neighbour cap is numerically irrelevant.  Although 22.35%
+of unseen anchors have at least 20 raw neighbours inside 10 arcsec, changing k=20 to
+k=32/48/64 shifts the mean by only `+0.000135/+0.000136/+0.000136`; k=64 closes
+1.8% of the `-0.007528` deficit and saturates by k=32.  Output:
+`results/anchorblend_g005_k_ladder_c0-299.json`.
+
+A new exact held-out training-label closure also rejects ordinary regression
+shrinkage.  `scripts/diag_v22_summed_label_closure.py` sums every supported random-
+direction pair label and V2.2 prediction per eligible primary in cases 0--39, which
+were excluded from V2.2 training.  On the exact anchor primary domain the model is,
+if anything, slightly high: label sum `0.058072`, prediction `0.059699`, difference
+`+0.001628 +- 0.001806` by case; the summed cross-component null is
+`+0.001449 +- 0.002094`.  The wider V2.2 box gives the same conclusion
+(`+0.001274 +- 0.001870`).  Therefore the negative coherent-anchor gap is not a
+simple failure to reproduce the model's own random-direction labels.  Together with
+the previously measured shear-amplitude null and exact first-order additivity toy,
+the remaining mismatch is specifically between random-direction pair supervision
+and coherent scene demand, not a demonstrated scalar XGBoost underfit.
+
+### Transparent anchor calibration: global success, conditional failure
+
+As an explicit empirical fallback, refit the pre-existing one-parameter coherent-
+anchor calibration to V2.2.  Cases 0--99 fixed the scale; cases 100--299 were then
+opened once.  The development scale is `1.05144 +- 0.02225`; on the 200 held-out
+cases its corrected residual is `+0.001787 +- 0.002724`, and their independently
+implied scale is `1.06893 +- 0.01474`.  After this gate, the unchanged global method
+was refit on all 300 cases, giving `1.063248 +- 0.012306`.  Artifact:
+`results/anchorblend_g005_global_v22_c0-299.json`.
+
+The frozen 16-seed constgold acceptance changes:
+
+| arm | m | seed SEM |
+|---|---:|---:|
+| raw V2.2 | `+1.080%` | `0.126%` |
+| anchor-scaled R_blend | `+0.244%` | `0.124%` |
+| paired change | `-0.837` percentage point | `0.002` point |
+
+Mean components are `R_sim=0.962559`, `R_flow=0.826627`, and
+`R_blend=0.125666 -> 0.133614`.  The central value is inside 0.3%, but combining
+the seed term, the established approximately 0.128-point constgold simulation
+floor, and the approximately 0.161-point propagated anchor-scale uncertainty gives
+about `+-0.240%` total.  It does not establish that the true bias is below 0.3%.
+Output: `results/v22_anchorblend_global_constgold_c40-139_s16.json`.
+
+More importantly, the correction is not conditionally satisfactory.  In the frozen
+raw-R_blend low/q1/q2/q3/q4 bins, direct total m changes from
+`+1.22,+2.33,+3.17,+4.97,-4.95%` to
+`+1.24,+2.10,+2.57,+3.23,-9.26%`.  It improves the middle but nearly doubles the
+top-quartile negative residual; the good global mean is a stronger cancellation,
+not flatter closure.  Keep this as a transparent global calibration result, not a
+claim that V2.2 is repaired.  The pre-existing isotonic alternative failed its
+anchor-only gate before constgold: in held-out raw-prediction q4 (zero-indexed bin
+3) it changed `-0.001662 +- 0.003177` to `+0.012644 +- 0.003176`.  No V2.2 isotonic
+artifact was written and its dependent constgold job was cancelled.
+
+### Controlled 10-arcsec truth arm
+
+**INTERPRETATION RETRACTED 2026-08-11c.**  The catalogue preparation below shears
+the union of 10-arcsec discs around all approximately 3,700 anchors in a field,
+using the same coherent direction.  Minimum anchor separation of 20 arcsec makes
+the discs non-overlapping, but it does **not** make the scene around one anchor
+free of sheared sources beyond 10 arcsec: every other anchor disc is still
+coherently sheared.  That is exactly the channel this experiment intended to
+remove.  Therefore the all-minus-``local10`` difference below is not an exact
+outside-10 response, and ``local10`` is not a strictly aperture-matched truth.
+The numbers and failed gates remain useful audit evidence, but the causal/aperture
+wording below is superseded.  A replacement design assigns an independent stable
+spin-2 direction to each non-overlapping anchor neighbourhood and projects each
+anchor on its own direction, making other neighbourhoods a mean-zero null rather
+than a coherent far-field bias.  Matched radius-10 and radius-15 arms are required
+before revisiting the mechanism.
+
+The original coherent-anchor render shears every non-anchor in the field, while
+BlendEMU scores only sources inside 10 arcsec.  A controlled paired arm on unseen
+cases 200--299 keeps identical galaxies, positions, anchors and noise, but sets all
+sources beyond 10 arcsec of an anchor to zero shear.  This directly measures whether
+the missing coherent response is outside the deployed aperture.  Preparation
+verified about 3,710 anchors, 61,500 local sheared sources and 109,500 outside
+unsheared sources per case, maximum local distance below 10 arcsec and minimum
+anchor separation at least 20 arcsec.
+
+The first render submission (`15650347`) exposed a false-success path: only the
+guarded feather catalogues had been cloned, so every MultiBand_ImSim child failed on
+a missing INI (`KeyError: Paths`), while `run_sim.py` logged child failures but
+returned zero.  Cancelled the invalid shape/dependent jobs, added redirected config
+and noise materialization plus explicit per-leg image/detection/shape completeness
+guards, and resubmitted support/render/shape/response/analysis as
+`15650395--15650399` (replacement render `15650396`).  The invalid run produced no
+images or analysis result.  The replacement chain completed cleanly: render 27m28s,
+shape measurement 1h22m03s, response extraction 9m26s, with 99.959% exact-key
+coverage against the original all-field response table.
+
+The result points toward aperture leakage, but not strongly enough to establish it:
+
+| quantity, unseen cases 200--299 | mean response | case SEM |
+|---|---:|---:|
+| original all-field coherent truth | `0.109295` | `0.002220` |
+| controlled within-10-arcsec truth | `0.103342` | `0.002240` |
+| frozen V2.2 prediction | `0.101718` | `0.000446` |
+| V2.2 minus all-field truth | `-0.007577` | `0.002120` |
+| V2.2 minus within-10 truth | `-0.001624` | `0.002159` |
+| all-field minus within-10 truth | `+0.005953` | `0.002941` |
+
+Thus matching the truth aperture reduces the observed model gap by about 79%, and
+the residual inside 10 arcsec is consistent with zero.  However, the matched
+outside term itself is only about 2.0 case-SEM from zero, not the predeclared 3-SEM
+threshold.  Treat the 79% fraction as a noisy ratio, not a precise attribution.
+
+The predeclared additive correction also failed transfer.  Cases 200--249 fixed an
+outside-response offset of `+0.008620 +- 0.003999`; cases 250--299 directly implied
+only `+0.003285 +- 0.004321`.  Applying the fixed development offset changed the
+validation V2.2-minus-truth residual from `-0.003056 +- 0.002967` to
+`+0.005564 +- 0.002967` (plus development-offset uncertainty), so the absolute
+residual became larger.  Its gate failed and constgold was not opened.
+
+One final cheap anchor-only test asked whether that split followed deterministic
+outer-scene composition.  `scripts/compute_anchorblend_outer_features.py` sums true
+flux in 10--15, 15--20 and 20--30 arcsec shells and adds simple profile-extent
+proxies, without rendering.  A single fixed HGB regressor trained on cases 200--249
+used these plus primary magnitude/size and frozen V2.2 response.  On 250--299 it
+predicted an outside term of `0.009866`, yielding a worse total gap
+`+0.006810 +- 0.002968`; its case-level and row-level MSEs were both slightly worse
+than the constant offset.  All four held-out gates failed, no deployment model was
+written, and constgold remained closed.  The failed first fit submissions
+`15650909/15650915` were bookkeeping-only guard failures (case-window and merge
+suffix); accepted feature/fit jobs were `15650908/15650928`.
+
+The narrow conclusion is therefore: omitted response beyond the hard 10-arcsec
+centre cut is a plausible leading explanation and makes the in-aperture closure
+look substantially better, but this experiment does not prove it at the chosen
+threshold and does not supply a transferable correction.  The transparent global
+anchor scale still improves the aggregate constgold mean, but its conditional q4
+failure prevents production promotion.  No tested physical correction passed both
+anchor-only validation and conditional safeguards.
+
+New or focused files include:
+
+- `scripts/{rescore_anchorblend_distance_models,analyze_anchorblend_distance_models,rescore_anchorblend_k_ladder,analyze_anchorblend_k_ladder}.py`;
+- `scripts/{audit_anchorblend_training_overlap,diag_v22_summed_label_closure,prepare_anchorblend_guarded_catalogues,analyze_anchorblend_local10}.py`;
+- `scripts/{compute_anchorblend_outer_features,fit_anchorblend_outer_correction}.py`;
+- the corresponding `jobs/job_anchorblend_*`, `jobs/job_diag_v22_summed_label_closure.sh`,
+  V2.2 calibration/evaluation wrappers, and focused tests.
+
+Focused tests, Python compilation, Bash syntax, strict JSON reads and
+`git diff --check` pass.  No model checkpoint or production lookup was overwritten.
+
+## 2026-08-11a  Global V2.2 closure localizes to the coherent-neighbour / blend estimand
+
+Stopped grid tuning and performed two direct, evaluation-only closure tests.  No
+model was trained, no response correction was fit or applied, and constgold
+remained evaluation-only.
+
+First audited a lingering provenance ambiguity in the stored constgold response
+catalogue.  In cases 40--49, the exact BlendEMU rejection rule (drop a detected
+primary when a detected neighbour within 3 arcsec has `FLUX_AUTO` more than 5x
+larger, separately in each shear leg) rejects 146,130 unique case/object IDs.
+Zero of them occur among the 2,982,817 stored response rows.  The bright-neighbour
+cut is therefore empirically baked into the current constgold artifact; it is not
+an unmodelled training-versus-evaluation asymmetry.
+
+### Exact-key 16-seed closure
+
+Added `scripts/diag_v22_same_object_closure.py` and
+`jobs/job_v22_same_object_closure.sh`.  The test intersects the current constgold
+population with the existing 16-seed direct half-shear self-response dump on
+exact `(case,input_index)` keys.  It retains 2,814,110 rows over cases 40--139:
+49.87% of constgold and 99.00% of the eligible half-shear rows after removing 209
+non-finite response rows.  The shared subset preserves the closure problem:
+
+- full current population: **`m = +1.0804 +- 0.1259%`** (16-seed SEM);
+- shared exact-key population: **`m = +0.9375 +- 0.1256%`**.
+
+Thus the recent `+0.7760 +- 0.2059%` number was the explicitly directional
+four-seed subset, not the e-response-standard result.  The 16-seed value is the
+one to use for this V2.2 experiment.
+
+On the shared rows the identity
+
+`Rc + Rb - Rs = (Rh - Sh) + (Rc - Rh) + [Rb - (Rs - Sh)]`
+
+closes per row to `7.1e-15`.  Here `Rc`/`Rh` are constgold-antithetic and
+half-shear-forward flow extractions, `Sh` is direct half-shear self truth, `Rb`
+is the deployed constgold blend lookup, and `Rs` is direct constgold total truth.
+
+| model-minus-truth term | mean response | seed SEM | case SEM |
+|---|---:|---:|---:|
+| half-shear flow minus direct self, `Rh-Sh` | `+0.001756` | `0.000556` | `0.001399` |
+| flow extraction, `Rc-Rh` | `-0.000177` | `0.000986` | `0.000116` |
+| blend/estimand gap, `Rb-(Rs-Sh)` | **`-0.010498`** | `0` | **`0.002127`** |
+| directly closed total, `Rc+Rb-Rs` | `-0.008919` | `0.001187` | `0.001852` |
+
+The flow terms are individually consistent with zero.  The blend/estimand gap is
+about 4.9 case-SEM from zero and carries the global sign.  Replacing only the
+flow with direct half-shear self truth still gives `m=+1.1035%`; replacing the
+neighbour contribution with the direct `Rs-Sh` difference gives
+`m=-0.1624 +- 0.1229%` (seed SEM; direct-truth case uncertainty is additional),
+consistent with closure.  Primary magnitude/size and all three deployed crowd
+flux summaries are exactly equal row by row.  Per-object `R_blend` is not equal
+between the random-direction forward and coherent antithetic experiments, so
+`Rs-Sh` is a matched-population estimand difference, not a literal noiseless
+per-object neighbour label.  This is why the `-0.010498` term is not by itself
+called an emulator error.
+
+### Independent coherent-neighbour instrument
+
+Rescored the unchanged 300-case sparse-anchor simulations with both
+`lsst_r_extnbr_v21` and the deployed `lsst_r_extnbr_v22`.  In these renders the
+anchor primary is unsheared and all neighbours are antithetically, coherently
+sheared, so the central difference directly measures scene-level neighbour
+response.  Added `scripts/analyze_anchorblend_v22_diagnostic.py` and
+`jobs/job_anchorblend_v22_{response,analyze}.sh`.
+
+The reproducibility control is exact: all 989,514 keys, direct truths, and V2.1
+predictions match the archived response files bit-for-bit.  Every retained
+anchor is also inside the current V2.2 `r_p<25.8`, `Re_p>0.5` primary box,
+although the anchor construction remains the narrower V2.1 S/N-selected subset.
+
+| cases | direct coherent-neighbour truth | V2.2 prediction | prediction minus truth |
+|---|---:|---:|---:|
+| development 0--99 | `0.103376` | `0.098319` | `-0.005057 +- 0.002199` |
+| independent extension 100--299 | `0.109169` | `0.102129` | **`-0.007040 +- 0.001516`** |
+| all 300 | `0.107238` | `0.100859` | **`-0.006379 +- 0.001247`** |
+
+The all-case deficit is 5.1 sigma by independent-case SEM.  V2.2 is essentially
+identical to V2.1 on this estimand (`0.100859` versus `0.100864`); the extended
+support retrain did not repair coherent-neighbour response.  The diagnostic
+truth/prediction ratio is 1.06325, but it is reported only as an amplitude check
+and is **not** applied as a calibration.
+
+Conclusion, stated narrowly: the survey-wide V2.2 closure residual is not a
+global flow deficit.  Its arithmetic localizes to the coherent-neighbour / blend
+estimand, and an independent primary-unsheared instrument confirms that the
+deployed pairwise-summed BlendEMU underpredicts coherent-neighbour response on a
+relevant subset.  This is strong evidence for a substantial real emulator-side
+component, but it does not prove that all `0.01050` response units share one
+cause; population differences, the cross-estimator definition, and residual
+non-additivity can occupy the remainder.  The q3 flow failure remains a real
+conditional effect and should not be promoted to the explanation of the global
+level.
+
+Outputs:
+
+- `results/constgold_bright_neighbour_cut_audit_c40-49.json`
+- `results/v22_same_object_closure_c40-139_s16.json`
+- `results/anchorblend_g005_response_v22_c{0-99,100-299}.feather`
+- `results/anchorblend_g005_v22_diagnostic_c0-299.json`
+
+Accepted jobs: bright-cut audit `15650011`; exact-key closure `15650073`;
+anchor rescore/analyse `15650067/15650068`.  The first exact-key submission
+`15650001` failed before analysis on a wrong worktree-local lookup path; a later
+partial run was stopped when undefined half-shear truth correctly propagated to
+NaN.  The accepted run uses one common finite mask over all 16 response columns.
+Focused tests, Python compilation, Bash syntax, strict JSON output and
+`git diff --check` pass.
+
+## 2026-08-10r  Paired constgold rerender with every source inside deployed pair support
+
+**RETRACTED BEFORE THE RENDERS PROGRESSED (2026-08-10).**  The domain statement
+below applies to the legacy `lsst_r` emulator, but the current V2.2 closure uses
+`blend_lookup_v22_c40-139.feather`, built explicitly with
+`lsst_r_extnbr_v22`.  Its actual secondary box is `13<r_s<29`,
+`0<Re_s<10 arcsec`; the rendered FS2 loader has `0<r<29` and
+`0.01<Re<10 arcsec`.  Thus all of the previously enumerated faint
+`28<r<29`, small, and large sources, plus bright sources down to r=13, ARE
+included in the current V2.2 R_blend.  Only any ultra-bright `r<=13` sources,
+neighbours beyond 10 arcsec, and neighbours beyond the nearest-20 cap remain
+unscored.  The proposed strict 18--28 / 0.1--1.5 rerender therefore tests the
+wrong (legacy) support and is not a diagnostic of the persistent V2.2 +0.8%.
+
+Stopped render jobs `15649696/697` after 7m07s and cancelled every never-started
+dependent `15649698--704`.  They had produced only partial simulation output;
+no shape, merged catalogue, lookup, GPU evaluation, or result was produced.
+The separate partial output tree is retained (4.2 GiB) pending owner approval
+to remove it; original constgold is untouched.  Do not restart this chain for
+the V2.2 question.
+
+The deployed legacy `lsst_r` BlendEMU regression drops a pair unless both
+primary and secondary satisfy `18<r<28`, `0.1<Re<1.5 arcsec`, and separation
+`<10 arcsec`; inference also keeps at most 20 neighbours.  This is not the
+render domain.  The certified constant config renders `0<r<29`, while the FS2
+loader admits `0.01<Re<10 arcsec`, `0.5<n<6`, and the base ImSim config has no
+tighter size cut.  Therefore constgold truth contains source light that the
+deployed pair emulator can omit.  Sérsic n has only a small soft tree-boundary
+mismatch (render loader 0.5--6 versus observed training extrema
+0.513--5.851); it is scored rather than dropped.  Axis ratio, angle and
+redshift are marginalized variables, not pair-emulator coordinates.
+
+Prepared a clean paired removal test on cases 40--89.  Crucially, it filters
+the already-generated +/-0.02 case catalogues, rather than resampling from a
+filtered FS2 parent, so all surviving object IDs, properties, positions,
+shears and noise remain paired with the original render.  It removes every
+input-field object outside strict `18<r<28`, `0.1<Re<1.5`, not merely
+neighbours attached to selected primaries.  The original output tree is never
+modified.  New files:
+
+- `scripts/prepare_constgold_indomain.py`
+- `configs/fs2_lsst_r_constant_indomain_c40-89.yaml`
+- `jobs/job_constgold_indomain_{prepare,sim,shape,catalog,blend_lookup,crowd_lookup,eval,analyze}.sh`
+- `scripts/analyze_constgold_indomain.py`
+
+Preparation job `15649679` completed in 62 s.  Per case, the original input has
+699,568 objects and the strict box keeps on average 562,626 (`80.425%`).  Mean
+raw OOD counts per field (categories overlap) are: bright `r<=18`: 148; faint
+`r>=28`: 58,282; small `Re<=0.1`: 74,143; large `Re>=1.5`: 19,318.  Although
+bright OOD objects are rare, total input flux is bright-tail dominated: the
+removed objects carry 51.46% of raw catalogue flux on average.  This is not
+their local flux contribution around selected primaries, so do not interpret
+51% as the expected response change.
+
+Fifty cases are the correct first-stage budget.  The existing 100-case
+constgold uncertainty is about 0.20%, implying about 0.28% for an independent
+50-case result.  This experiment is paired at catalogue/noise level, so the
+uncertainty on the old-new difference should be smaller.  Fifty cases can
+resolve a 0.8 percentage-point shift at roughly 3 sigma even without the
+pairing gain; extend to 100 only if the shift lands near zero or the paired
+error remains above about 0.25%.
+
+Launched the complete chain on `cluster` for simulation/non-GPU work and
+`inter` for the four V2.2 GPU evaluations (seeds 501/502/503/505):
+
+- render shards `15649696` (40--64), `15649697` (65--89);
+- shape shards `15649698`, `15649699`;
+- merged constant catalogue `15649700`;
+- legacy `lsst_r` blend lookup `15649701`, crowd lookup `15649702`;
+- four-seed V2.2 evaluation array `15649703`;
+- paired-budget aggregation and original cases 40--89 comparison `15649704`.
+
+The first render submission inherited an activation helper that is unsafe
+under `set -u` and exited before running (`15649680/681`; zero output, no
+render products).  Replaced it with the explicit sims1 environment used by the
+decomposition jobs, cancelled only the never-started dependents, and submitted
+the clean chain above.  Both replacement render shards reached RUNNING state.
+
+## 2026-08-10q  Full deployed-conditioner transfer rejects flow-input population shift
+
+Followed the 3D grid reweight with the next cheap diagnostic requested by the
+user: case-cross-fitted density-ratio reweighting in the exact deployed flow
+conditioner space.  Checkpoint metadata was audited first.  Despite the legacy
+feature-set name, `train_measurement_model_swa_s1_truecond.py` swaps the nominal
+measured magnitude/radius to TRUE `r_input_p`/`Re_input_p`.  The exact eight
+checkpoint inputs are:
+
+`e1_input_p, e2_input_p, sersic_n_input_p, r_input_p, Re_input_p,
+nbr_flux_near, nbr_flux_far, nbr_flux_max`.
+
+Added:
+
+- `scripts/diag_full_conditioner_reweight.py`
+- `jobs/job_v30_full_conditioner_reweight.sh`
+
+Method: five-fold case-cross-fitted balanced histogram-gradient-boosting domain
+classifier, 350k training rows per domain per fold.  Its held-out odds estimate
+`p_constgold(x)/p_halfshear(x)`.  Evaluated caps 5/10/20/50 and raw odds,
+effective sample size, marginal SMD/TV balance, V2.2 and both V3.0 arms over
+seeds 501/502/503/505.  Repeated with deployed `R_blend` appended as a ninth
+axis because it is a response-grid axis, although it is not a conditioner of
+these checkpoints.
+
+Job `15649037` completed in 9m03s on `cluster`, MaxRSS 10.73 GiB.  Output:
+
+- `results/v30_full_conditioner_population_reweight.json`
+- `/home/z/Zekang.Zhang/logs/v30_fullrw_15649037.out`
+
+### Exact deployed flow8 result
+
+The populations are already almost indistinguishable in the exact inputs:
+
+- held-out domain AUC `0.50290`;
+- unweighted maximum |SMD| `0.0160`, maximum marginal TV `0.00577`;
+- raw odds p99 `1.066`, max `1.475`;
+- cap-10 ESS `99.68%`, weighted max |SMD| `0.00161`, max TV `0.00144`.
+
+Cap-10 reweighted half-shear `R_flow-R_self,true`, absolute response:
+
+| model | reweighted half-shear residual | actual constgold total closure |
+|---|---:|---:|
+| V2.2 | +0.003076 | -0.007400 |
+| 10x1x16 | +0.003800 | -0.007054 |
+| 12x1x16 | +0.003803 | -0.007834 |
+
+All caps and raw odds give the same values to displayed precision.  Thus the
+complete deployed flow-input distribution does not reproduce the closure
+deficit; the sign is opposite and an unexplained `-0.0105..-0.0116` absolute
+response remains.
+
+### Flow8 plus R_blend sensitivity
+
+Appending `R_blend` exposes a real domain difference (AUC `0.6521`) but overlap
+remains good (cap-10 ESS `81.5%`).  Weighting balances every marginal well
+(max |SMD| `0.0057`, max TV `0.0064`) and makes the residual still more positive:
+V2.2 `+0.00832`, m10 `+0.00913`, m12 `+0.00900`.  Caps 5--50 and raw odds are
+stable.  The exact amplitude differs from the earlier target-cell histogram,
+as expected for a finite-capacity high-dimensional density-ratio model, but
+both methods robustly give the same, wrong sign for explaining constgold.
+
+Conclusion: the persistent `m ~= +0.8%` is not an occupancy shift in either the
+response-grid axes or the complete flow conditioner vector.  Stop population
+and grid tuning as explanations for the global level.  The remaining ambiguity
+is in the response ruler/decomposition itself: half-shear self truth versus
+coherent constgold demand, the additive `R_blend` mean, and/or their extraction
+conventions.  A same-object primary-only response measurement is the decisive
+next separator.
+
+## 2026-08-10p  Constgold population reweighting does not reproduce the persistent closure offset
+
+User suspected that the repeated constgold `m ~= +0.8%` was not primarily an
+`R_blend`-axis-resolution problem.  Tested that directly before any further
+training.
+
+Added:
+
+- `scripts/diag_halfshear_constgold_reweight.py`
+- `jobs/job_v30_halfshear_constgold_reweight.sh`
+
+The diagnostic uses only existing score dumps.  It reweights both the
+half-shear self-response truth and `R_flow - R_self,true` to the exact current
+constgold occupancy.  Six nested grids were tested, from magnitude-only to a
+fine 12x4x16 magnitude x size x deployed-`R_blend` grid.  The fine hybrid grids
+reuse audited target edges; no response or constgold-derived correction is fit.
+
+Job `15648962` completed in 2m59s on `cluster` (MaxRSS 2.60 GiB).  Output:
+
+- `results/v30_halfshear_constgold_population_reweight.json`
+- `/home/z/Zekang.Zhang/logs/v30_reweight_15648962.out`
+
+All cells have support in both samples.  Even the finest grid has mild density
+ratios (p95 1.57, max 2.00), so the result is not an empty-cell/extrapolation
+artifact.
+
+Key fine-grid result (12x4x16), absolute response units:
+
+| quantity | half-shear own | reweighted to constgold | actual constgold closure |
+|---|---:|---:|---:|
+| V2.2 `R_flow-R_self,true` | +0.001794 | +0.004174 | -0.007400 |
+| 10x1x16 `R_flow-R_self,true` | +0.001342 | +0.003425 | -0.007054 |
+| 12x1x16 `R_flow-R_self,true` | +0.001450 | +0.003739 | -0.007834 |
+
+Thus measured population shift in `(magnitude,size,R_blend)` moves the
+half-shear flow residual **positive**, the opposite sign from the constgold
+total closure deficit.  The unexplained difference is about -0.0105 to
+-0.0116 absolute response for all three models.  Finer grids are converged:
+6x6x5, 6x4x8, 10x4x16 and 12x4x16 give reweighted V2.2 residuals
+`+0.00406`, `+0.00419`, `+0.00414`, `+0.00417`.
+
+The self-response target level itself moves from `0.819115` to `0.787767`
+after matching all three axes.  Meanwhile the actual constgold mean flow is
+about `0.829`, and its demand `R_sim-R_blend` is `0.836893`.  Therefore large
+transfer effects outside these three axes compensate each other and leave the
+familiar ~-0.0074 net closure.  This explains why changing only response-grid
+resolution reshapes conditional residuals without moving global `m`.
+
+Interpretation: stop tuning the regularization grid as a route to the +0.8%
+offset.  The constgold quantity `R_flow + R_blend - R_sim` is total closure, not
+a flow-only residual.  Separating the remaining cause requires either
+(a) reweighting/balancing the complete deployed flow conditioner vector, or
+(b) the decisive same-object primary-only response truth, which decomposes the
+closure into flow and blend terms without attribution ambiguity.
+
+## 2026-08-10o  Four matched seeds reject the no-size designs
+
+Per owner, extended both no-size arms from seed 501 to four matched seeds.  Used additions 502,
+503, and 505 rather than 502--504 because the frozen V2.2 constgold baseline has no seed-504
+shards; this preserves pairing.  Job 15648261 trained six models on V100s, job 15648262 scored the
+six new models plus missing V2.2 controls 503/505 on direct half-shear, job 15648263 completed all
+60 new constgold shards, and cluster job 15648264 formed the four-seed result.  Every task
+completed successfully.  Constgold remained validation-only throughout.
+
+For half-shear, `10x1x16` gives `R_flow/R_self-1 = +0.1639 +/- 0.1002%` and `12x1x16` gives
+`+0.1770 +/- 0.0918%` (mean +/- seed SEM).  Their matched raw response changes versus V2.2 are
+`-0.0451 +/- 0.0919%` and `-0.0344 +/- 0.0793%`, consistent with zero.  Both refine magnitude and
+blend profiles: magnitude absolute-residual RMS changes from V2.2 `0.395%` to `0.302/0.312%`, and
+`r_blend` RMS from `1.204%` to `0.752/0.809%`.  But size RMS again explodes from `0.522%` to
+`4.252/4.484%`, with extrema reaching about `-6.63%` and `+4.65%`.
+
+For constgold, the matched V2.2 baseline is `m=+0.7760 +/- 0.2059%`.  `10x1x16` gives
+`m=+0.7414 +/- 0.3256%`, paired `delta m=-0.0346 +/- 0.2895%`; `12x1x16` gives
+`m=+0.8213 +/- 0.1659%`, paired `delta m=+0.0454 +/- 0.0901%`.  Neither differs significantly from
+V2.2.  The seed-501 `10x1x16` value `-0.146%` was not representative: seeds 502/503/505 give
+`+1.422,+0.849,+0.841%`.  Constgold `r_blend` RMS improves from `1.624%` to `1.068/1.026%`, while
+size RMS worsens from `0.787%` to `4.855/4.917%` (minimum approximately `-8.14%`).  Thus finer
+blend regularization helps the blend profile, but removing the size response pin is decisively
+rejected; the global results contain large cancellation and no robust improvement in `m`.
+
+Outputs: four new Slurm wrappers
+`jobs/job_{flow_v30_nosize_grid_moreseeds,v30_nosize_halfshear_moreseeds,v30_nosize_constgold_moreseeds,v30_nosize_fourseed_analyze}.sh`,
+new checkpoints/scores under
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/v30_nosize_grid/`, and
+`results/v30_nosize_grid_fourseed_screen.json`.
+
+## 2026-08-10n  Constgold confirms that no-size global m is cancellation-prone
+
+Per owner, ran the validation-only constgold screen for both no-size models at the already trained
+seed 501.  Jobs 15647995_0--19 scored ten disjoint case shards (40--139) per arm on V100s; all
+twenty completed and cover 5,642,350 objects per arm.  Job 15647996 compared them to the frozen
+V2.2 seed-501 shards and completed.  The deployed V2.2 `R_blend` lookup is unchanged, no constgold
+quantity enters training or target construction, and no constgold retraining was run.
+
+The matched V2.2 seed-501 constgold baseline is `m=+0.4643%`.  `10x1x16` gives `m=-0.1461%`
+(`delta m=-0.6103%`), while `12x1x16` gives `m=+0.4196%` (`delta m=-0.0446%`).  These are
+single-seed directional values; there is no across-seed SEM.  The near-zero `10x1x16` global value
+is not a clean solution: its five-bin flow-minus-demand RMS improves over magnitude from `0.591%`
+to `0.236%`, but worsens over `r_blend` from `1.395%` to `1.715%`, and its omitted-size RMS explodes
+from `0.463%` to `5.035%` (range `-7.453%` to `+5.146%`).  Its total-model blend bins are also
+strongly signed: low/q1/q2/q3/q4 `m = +0.737,+1.496,+0.167,-0.528,-5.463%`.
+
+`12x1x16` is structurally better over blendness: magnitude RMS is `0.520%`, `r_blend` RMS improves
+to `0.766%`, and total-model low/q1/q2/q3/q4 `m = +0.636,+1.027,+0.569,+1.931,-2.367%` versus
+V2.2 `+0.705,+1.146,+1.964,+4.175,-5.001%`.  But its size RMS is still `4.536%` (range
+`-7.361%` to `+3.753%`).  Together with the analogous half-shear failure, constgold rejects removal
+of the size response pin: the attractive global values are cancellation across size and blending,
+not a uniformly resolved response.
+
+Outputs: `jobs/job_v30_nosize_constgold{,_analyze}.sh`, twenty score shards under
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/v30_nosize_grid/constgold_scores/`, and
+`results/v30_nosize_grid_constgold_seed501_screen.json`.
+
+## 2026-08-10m  No-size grids flatten blend residuals but fail the held-out size check
+
+Per owner, trained one matched seed (`501`, all eligible rows) for both audited no-size response
+grids, then scored direct half-shear only; constgold was not run.  The `10x1x16` training ran on a
+virtualized A40-24Q (job 15646773_0, 1615 s training), while `12x1x16` ran on a physical V100
+(job 15646783_1, 919 s).  Both used the same architecture, conditions, 80 epochs, SWA, and seed.
+For this plain-FP32 flow workload the V100 was therefore about 1.7x faster in wall-clock time, so
+V100 is a useful first-class resource rather than a degraded fallback.
+
+Matched V100 half-shear scoring jobs 15647593_0/1 completed on all 4,549,952 rows in 2m43s/2m42s;
+the cluster analysis job 15647595 completed.  For seed 501, the V2.2 matched baseline has global
+`R_flow/R_self-1 = +0.4358%`.  The `10x1x16` and `12x1x16` variants give `+0.4550%` and `+0.4273%`,
+or paired response changes of `+0.0157%` and `-0.0070%` before division by truth.  These are a
+directional single-seed screen, not an absolute-bias certification.
+
+Both finer grids improve the five-bin absolute-residual RMS over primary magnitude from `0.497%`
+to `0.455%/0.453%`, and over `r_blend` from `1.219%` to `0.827%/0.865%`.  However, the required
+four-bin held-out size check fails decisively: size-profile RMS grows from `0.573%` for V2.2 to
+`4.431%/4.570%`.  The no-size variants range from `-6.321%` to `+4.716%` and from `-6.562%` to
+`+4.865%` across size.  Thus their acceptable global means come from cancellation and they should
+not replace the size-pinned model.  The result supports retaining at least a coarse size axis while
+using the released statistics, if desired, to refine magnitude and `r_blend` less aggressively.
+
+Outputs: checkpoints under
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/v30_nosize_grid/`, full half-shear score files in
+its `halfshear_scores/` subdirectory, and
+`results/v30_nosize_grid_halfshear_seed501_screen.json`.
+
+## 2026-08-10l  Removing the size pin enables stable 10x1x16 and 12x1x16 grids
+
+Per owner, tested whether removing size only from the response-regularization grid releases enough
+statistical power to refine both primary magnitude and conditional `r_blend`.  Size remains an
+explicit flow conditioner; this does not make the measurement model size-blind.  Built equal-count
+`10 mag x 1 size x 16 r_blend` and `12x1x16` targets using direct half-shear only.  Jobs 15646125
+and 15646132 completed successfully; no training or constgold was run.  Both grids use sixteen
+equal conditional `r_blend` quantiles separately within every magnitude bin.
+
+Both designs pass every predeclared count and frozen case-stability criterion, unlike the current
+6x4x8 grid.  For current 6x4x8, 10x1x16, and 12x1x16 respectively, target minimum cell count is
+`6574,17474,14561`; p95 case SEM is `0.0427,0.0317,0.0358`; and median/p95/max absolute split
+difference is `0.0195/0.1127/0.2921`, `0.0227/0.0824/0.1445`, and
+`0.0247/0.0857/0.1562`.  Neither new grid has a Holm-corrected rejection, every cell occurs in all
+100 cases, and both meet the p95<0.10 and max<0.25 practical gates.  Thus aggregating over size
+more than compensates for refining magnitude and doubling the blend resolution.
+
+The 10x1x16 design is preferred: it has 160 total cells versus 192 for both current 6x4x8 and
+12x1x16, the best stability, all-data expected training-cell minimum 29,285, and minimum expected
+per-batch occupancy 50.25.  Its magnitude edges are
+`[18.0021,22.2799,23.0773,23.5890,23.9765,24.3057,24.5962,24.8633,25.1232,25.4357,25.8000]`;
+its `r_blend` probabilities are exact sixteenths.  Median conditional boundaries are
+`[-1.1354,-0.01609,-0.00890,-0.00503,-0.00221,+0.00021,+0.00280,+0.00605,+0.01076,
++0.01816,+0.03031,+0.05154,+0.08844,+0.15211,+0.28863,+0.63725,+3.23090]`; all exact
+magnitude-specific edges are stored in the NPZ/JSON.  This candidate is statistically safer to
+train than either tailq10/tailq12.  Its required post-training half-shear gate must explicitly
+check the four-bin size residual, because the response pin no longer directly constrains that
+axis.
+
+Outputs: `results/v30_rblend_mag{10,12}_nosize_c16_target.npz`,
+`results/v30_rblend_nosize_grid_counts.{json,csv}`, and
+`results/v30_rblend_nosize_grid_stability.{json,csv}`.  Bash syntax, exact row accounting,
+completed Slurm states, strict JSON, and `git diff --check` pass.
+
+## 2026-08-10k  Tail-refined 6x4x10/12 R_blend grids are too noisy to train as proposed
+
+Per owner, held magnitude at six bins, size at four bins, and the future flow population at all
+eligible rows while auditing nonuniform conditional-`r_blend` schedules before any retraining.
+Added reproducible `--crowd-quantiles` support to `compute_response_target_blend.py`, a generalized
+conditional flow-count audit, focused tests, and Slurm wrappers.  Jobs 15645639 and 15645640
+completed successfully.  No flow was trained and no constgold quantity sets an edge or enters the
+audit.  The schedules are `tailq10=[0,.05,.125,.25,.375,.5,.625,.75,.875,.95,1]` and
+`tailq12=[0,.035,.07,.125,.25,.375,.5,.625,.75,.875,.93,.965,1]`, applied separately inside each
+of the 24 magnitude-size cells.
+
+Counts alone permit ten bins but reject twelve.  Tailq10 target joint-cell min/p10/median is
+`2630/5441/11256`, all-data expected training-cell minimum is 4361, and minimum expected
+per-batch occupancy is 7.48.  Tailq12 is `1841/3236/7442`, all-data training minimum 3032, and
+per-batch minimum 5.20; it violates the predeclared 2000-target minimum.  Boundary medians for
+tailq10 are `[-0.92989,-0.02263,-0.00996,-0.00282,+0.00263,+0.01139,+0.03295,+0.09114,
++0.29445,+0.76040,+3.04806]`; tailq12 inserts lower-tail boundaries `-0.02978,-0.01783` and
+upper-tail boundaries `+0.59436,+0.90026`.  Every cell-specific exact edge is stored in the NPZ
+and count JSON.
+
+Frozen case-split stability disfavors both refinements, especially the extreme high-response tail.
+For current 6x4x8 versus tailq10 versus tailq12, median/p95/max absolute split differences are
+`0.0195/0.1127/0.2921`, `0.0238/0.1532/0.4420`, and `0.0269/0.2038/0.7408`; p95 case SEM rises
+`0.0427 -> 0.0617 -> 0.0794`.  None has a Holm-corrected rejection, but both refinements worsen the
+practical stability metrics.  Tailq10's four largest split failures are all its highest crowd bin
+in large-size cells, precisely where extra q4 resolution was intended; its target reaches
+`Rsim=-0.062`.  Tailq12 reaches `-0.161` and fails the count floor.  Therefore neither schedule
+should be trained as written.  A safer follow-up is at most one added high-tail boundary with a
+wider terminal bin, while keeping the low/near-zero region broad enough to avoid teaching case
+noise; that candidate needs the same frozen audit before training.
+
+Outputs: `results/v30_rblend_tailq{10,12}_6x4_target.npz`,
+`results/v30_rblend_tail_grid_counts.{json,csv}`, and
+`results/v30_rblend_tail_grid_stability.{json,csv}`.  Seven focused tests, Python/Bash syntax, exact
+row accounting, completed Slurm states, and `git diff --check` pass.
+
+## 2026-08-10j  The 6x4x8/all half-shear winner does not improve two-seed constgold
+
+Per owner, promoted only the directional half-shear structural winner `rbc8_s4_all` to a matched
+two-seed constgold screen.  All twenty case-sharded scoring tasks completed successfully in job
+15645229; no other V2.9 arm was evaluated.  Analysis job 15645324 produced
+`results/v29_rbc8_s4_all_constgold_two_seed_screen.json`.  The analyzer now correctly reuses the
+scorer's exact deployed `R_blend`, including the explicit zero for the one accepted object absent
+from the sparse 5,642,349-key emulator lookup, while retaining all 5,642,350 constgold objects.
+
+The candidate gives mean constgold `m=+0.794 +/- 0.376%` across seeds 501/502, versus the matched
+V2.2 mean `+0.685%`.  Its paired change is `+0.108 +/- 0.155` percentage point, nominally worse but
+not resolved by two seeds.  Seed-level candidate values are `+0.417%` and `+1.170%`, compared with
+V2.2 `+0.464%` and `+0.907%`; the candidate improves seed 501 slightly and degrades seed 502.
+
+The established low/q1/q2/q3/q4 additive residuals change from V2.2
+`[-0.00826,-0.01262,-0.01761,-0.03230,+0.04297]` to
+`[-0.01342,-0.01589,-0.00812,-0.01364,+0.03004]`.  Thus the candidate substantially improves q2
+and q3 and reduces q4 over-response, but worsens the low and q1 deficits.  Because the low bin holds
+49.17% of all objects while each positive quartile holds 12.71%, weighted response changes from
+low/q1/q2/q3/q4 are `[-0.00254,-0.00042,+0.00121,+0.00237,-0.00164]`, summing to a net
+`Delta R_flow=-0.001020` and hence the worse global `m`.  This constgold gate therefore does not
+support promoting the model on global bias, despite its more physical reduction of the q2--q4
+extremes.  It is a directional two-seed result, not a 16-seed certification.
+
+## 2026-08-10i  Four size bins plus all rows best flattens the half-shear conditional-grid residual
+
+Completed the owner's two-seed directional screen of response-grid resolution and training-row
+count.  All ten training tasks in job 15643877 and all twelve matched half-shear scoring tasks in
+job 15643878 completed successfully.  Constgold job 15643879 and the original combined analyzer
+were canceled before any constgold output was produced, per owner; no constgold response enters
+this selection.  Added a half-shear-only analyzer mode and completed job 15645138, producing
+`results/v29_conditional_grid_halfshear_two_seed_screen.json`.  Seven focused tests pass.
+
+The matched V2.2 control has global `R_flow/R_self-1 = +0.464%`.  Candidate two-seed means (seed
+SEM) are: current 6x6x5 grid with all rows `+0.055 +/- 0.218%`; conditional 6x6x8 with 4M/all rows
+`+0.352 +/- 0.090%` / `+0.305 +/- 0.192%`; conditional 6x4x8 with 4M/all rows
+`+0.453 +/- 0.106%` / `+0.113 +/- 0.135%`.  Thus uncapping is useful only after coarsening size in
+this screen, while refining `r_blend` to eight bins does not nominally beat the five-bin/all-row
+global result.  These are only two matched seeds, so neither small global ordering is certified.
+
+The 6x4x8/all-row arm is nevertheless the best structural candidate.  Its RMS absolute residual
+across evaluation bins is `0.00925` in `r_blend`, `0.00286` in primary magnitude, and `0.00389` in
+size, compared with V2.2's `0.01201`, `0.00519`, and `0.00618`.  In five equal-population
+`r_blend` evaluation bins its additive residuals are
+`[-0.01668,+0.00757,+0.00046,+0.00809,+0.00519]`, versus V2.2
+`[-0.01665,+0.00925,+0.00457,+0.00387,+0.01794]`.  The high-blend over-response is substantially
+reduced, but the lowest/negative-`r_blend` deficit is unchanged and a q4-like middle-high bump
+remains.  The five-bin/all-row arm has the smallest nominal global residual but a larger blend-axis
+RMS (`0.01012`) and range (`0.02951`) than 6x4x8/all (`0.02477` range).  The conditional redesign
+therefore improves, but does not resolve, blend-dependent flow structure on half-shear.
+
+## 2026-08-10h  Pre-training R_blend grid audit favors eight primary-cell-conditional quantiles
+
+Per owner, designed candidate `r_blend` grids and counted both supervision and flow-training rows
+before authorizing any retraining.  Added `scripts/analyze_v22_rblend_bin_design.py`, focused tests,
+and two Slurm wrappers.  Edges are derived only from the direct half-shear target population;
+constgold does not set or merge an edge.  Jobs 15643551 and 15643582 completed in 53s and 60s.
+They replay the exact V2.2 target cuts (2,795,896 SNC-matched objects) and stream the exact V2.2
+flow cuts (5,616,766 eligible g=0 rows).  The historical 4M uniform reservoir retains 71.22%, then
+the 85/15 split leaves 3.400M training rows; using all data would leave 4.774M training rows, a
+40.4% increase.
+
+Naively refining global bins is rejected on sample grounds.  Splitting current positive-`r_blend`
+bins 3--5 at their half-shear medians gives global edges
+`[-2.08771,-0.008220,0.002023,0.009721,0.025039,0.058158,0.137133,0.404416,4.247325]`,
+but the sparsest 6x6x8 target cell has only 497 objects, below the existing 500-object fallback;
+its expected occupancy is just 1.42 objects per 8192-row training batch.  The 9-bin and decile
+designs inherit the same tail problem.  More total flow rows do not repair a noisy half-shear label
+or its per-batch occupancy.
+
+The recommended candidate is **eight `r_blend` quantiles computed separately inside each of the 36
+primary magnitude-size cells**.  Its median boundary vector is
+`[-0.873871,-0.010652,-0.002462,+0.003565,+0.011955,+0.031635,+0.088576,+0.282946,+2.884079]`;
+the JSON stores all 36 exact edge vectors and their ranges.  Every ordinal bin has approximately
+349.5k half-shear targets and 700--706k eligible flow rows.  Across all 288 response cells, target
+counts have min/p10/median/max `4117/5453/9769/19534`; expected capped-training counts are
+`4911/6686/11935/23886`, and all-data training raises the floor to 6896.  Expected per-batch cell
+occupancy is `11.83/16.11/28.76/57.55`, substantially safer than both the global refinement and the
+current grid's 4.16-object minimum.
+
+No retraining has run.  Before it does, the conditional target needs a frozen-edge case-split or
+case-bootstrap stability gate: its finest grid contains one point estimate at `Rsim=-0.014`, so
+raw count alone is not proof of a stable response label.  If that passes, use a minimal 2x2 design
+to separate the effects: current5/4M (existing control), current5/all rows, conditional8/4M, and
+conditional8/all rows, with identical recipe/seeds.  Raising the cap adds epoch exposures but does
+not change the within-batch cell occupancy, so binning and sample size must remain separate levers.
+
+Outputs: `results/v22_rblend_bin_design_with_conditional.{json,csv}` plus the analysis-only decile
+and conditional target NPZs.  Validation passes exact row accounting, reproduction of accepted
+five-bin edges/counts, strict JSON, Python/Bash compilation, completed Slurm states,
+`git diff --check`, and all 135 tests.
+
+## 2026-08-10g  Additive residual exposes constgold-wide deficit plus blend-bin cancellation
+
+Per owner, re-expressed the accepted V2.2 constgold and direct half-shear profiles on the same
+additive response scale.  For half-shear this is `DeltaR_HS = R_flow - R_self`; for constgold it is
+`DeltaR_CG = R_flow - (R_sim-R_blend) = R_flow+R_blend-R_sim`.  Negative values mean missing model
+response.  Unlike the earlier relative residual, this quantity is directly comparable across bins,
+and population-weighted bin contributions sum to the global response error.  No new per-object
+replay was needed: this combines the accepted 16-seed constgold localization summaries with the
+exact 16-seed half-shear property profile.
+
+The primary-magnitude view separates the failures cleanly.  Half-shear `DeltaR` fluctuates around
+zero (`-0.0023,+0.0029,+0.0038,-0.0014,-0.0024,+0.0020,+0.0011`) and averages `+0.000723`.
+Constgold is negative in every magnitude bin (`-0.0100,-0.0105,-0.0069,-0.0140,-0.0119,-0.0115,
+-0.0057`) and averages about `-0.01026`; the largest weighted contributions come from the populous
+24--25 bins, not the faint boundary.  Size has somewhat more structure, but constgold is again
+negative throughout except for a final bin consistent with zero, while half-shear changes sign and
+remains globally closed.
+
+In the shared frozen low/q1/q2/q3/q4 `R_blend` bins, half-shear additive residuals are
+`[-0.00453,+0.00455,-0.00202,-0.02358,+0.04816]`; constgold residuals are approximately
+`[-0.01332,-0.02034,-0.02369,-0.03346,+0.04804]`.  The q4 over-response is therefore the same
+absolute `+0.048` on both populations, and most of q3's deficit is already present on half-shear.
+The extra constgold deficit is concentrated in low through q3, especially q1/q2.  Population
+weighting makes the mechanism explicit: constgold low/q1/q2/q3 contribute approximately
+`[-0.00655,-0.00258,-0.00301,-0.00425]`, while q4 contributes `+0.00610`, leaving the global
+`DeltaR_CG ~= -0.01029`.  Thus the global positive `m` is a broad constgold deficit partially
+cancelled by the high-blend flow over-response, not a q4-driven bias.  Constgold values inherit the
+accepted log's four-decimal component and 0.01-percent residual precision; this is ample for the
+bin-level attribution but should not be treated as a new higher-precision certification.
+
+## 2026-08-10f  R_self remains strongly structured inside four of five V2.2 R_blend bins
+
+Per owner, measured direct half-shear `R_self` slopes inside the five exact V2.2 response-target
+`r_blend` bins.  Added `scripts/analyze_v22_rblend_within_bin_slopes.py`, its Slurm wrapper, and
+focused tests.  The main OLS slope removes separate intercepts in all 36 target magnitude-size
+cells, so changing primary-property mixtures cannot manufacture the trend.  Slope errors are
+leave-one-case-out jackknife SEMs.  As a non-linear cross-check, `r_blend` quintiles are assigned
+separately inside each primary cell and the case-blocked top-minus-bottom `R_self` change is also
+reported.  The analysis uses direct half-shear SELF truth only; it has no flow-seed dependence.
+
+For bins `[-2.087708,-0.008220)`, `[-0.008220,0.002023)`, `[0.002023,0.025039)`,
+`[0.025039,0.137133)`, and `[0.137133,4.247325)`, the controlled
+`dR_self/dr_blend` slopes are respectively
+`+1.5035 +/- 0.0753`, `-1.5321 +/- 0.6508`, `-6.6832 +/- 0.3635`,
+`-2.5591 +/- 0.0983`, and `-0.38592 +/- 0.01293`.  Corresponding within-primary-cell
+top-minus-bottom quintile changes in `R_self` are
+`+0.10010 +/- 0.00677`, `-0.01386 +/- 0.00553`, `-0.12302 +/- 0.00740`,
+`-0.21760 +/- 0.00892`, and `-0.41836 +/- 0.01315`.  Thus bin 2 is weak/noisy, but bins 1 and
+3--5 retain highly significant internal structure despite `r_blend` already being a regularization
+axis.  The signs and scales reproduce in the target-overlap cases 40--99 and held-out cases
+100--199.  This favors coarse/noisy proxy binning over a rare-cell explanation: the grid bins are
+well populated, yet broad bins, especially the fifth, mix very different SELF responses.
+
+Job 15643164 completed in 30s.  Outputs:
+`results/v22_rblend_within_target_bin_slopes.{json,csv}`.  Validation passes: 4,549,605 of
+4,549,687 domain rows match (`99.998198%`), 4,549,604 enter the exact grid, strict JSON loading,
+Python/Bash compilation, `git diff --check`, and all 132 tests.
+
+## 2026-08-10e  V2.2 is globally closed on half-shear but already strongly structured in blendness
+
+Per owner, profiled the deployed V2.2 flow against direct half-shear SELF truth before making any
+further constgold attribution claim.  Added `scripts/analyze_v22_halfshear_properties.py`, its
+Slurm wrapper and focused tests.  The analysis uses the exact 16 V2.2 shape-response seeds, forward
+half-shear extraction on cases 40--199, the V2.2 true domain, unique `(case,input_index)` keys, and
+the continuous `r_blend` lookup assembled for V2.8.  After finite/domain cuts, 4,549,605 of
+4,549,687 rows match (`99.998198%`); 82 unmatched rows are explicitly dropped rather than
+zero-filled.  Errors separate checkpoint-seed SEM from case-blocked half-shear sampling SEM and a
+full-covariance GLS test asks whether each `R_flow/R_self-1` profile is constant.  Cases 40--99,
+which overlap response-target construction, and cases 100--199 are also reported separately.
+
+**The global half-shear mean closes.**  Over cases 40--199,
+`R_flow/R_self-1 = +0.0883% +/- 0.1606%`; target-overlap cases give
+`-0.0703% +/- 0.2268%` and target-held-out cases `+0.1834% +/- 0.2053%`.  This is a cancellation,
+not uniform conditional accuracy.  Primary true magnitude is consistent with a constant profile
+(range 0.742 points, chi2/dof 8.06/6, p=0.234), as is the true S/N proxy (p=0.626).  True size has
+a mild 1.410-point structure (15.78/6, p=0.015).  The unsheared measured-S/N axis is strongly
+structured (p=1.3e-15), running from `-8.02%` below S/N 10 through `+1.62%` at S/N 30--50; this is
+a measured-condition diagnostic and is not the same axis as the constgold true-S/N profile.
+
+**Blendness is decisively non-flat on the half-shear side itself.**  In the five actual V2.2
+response-target `r_blend` intervals (edges
+`[-2.088,-0.008,0.002,0.025,0.137,4.247]`), `R_flow/R_self-1` is
+`[-1.837,+0.534,+0.159,+0.122,+5.238]%`; the constant-profile test is 96.95/4
+(p=4.4e-20).  In the frozen constgold low/q1/q2/q3/q4 bins it is
+`[-0.435,+0.569,-0.303,-4.832,+26.598]%` (74.78/4, p=2.2e-15).  The relative q4 number is
+amplified by its small self-response, but the additive errors also reverse significantly:
+q3 `R_flow-R_self=-0.02358 +/- 0.00470`, q4 `+0.04816 +/- 0.00572`.  The q3/q4 pattern repeats in
+target-overlap cases (`-5.094,+23.813%`) and held-out cases (`-4.675,+28.335%`), so it is neither a
+new-scene generalization effect nor constgold-only transfer structure.
+
+For direct comparison, constgold's flow-demand residual in the same frozen bins is
+`[-1.20,-2.35,-3.36,-6.33,+24.88]%`.  Thus the extreme constgold q3 deficit and q4 over-response
+are already present with nearly the same sign and scale against direct half-shear SELF truth;
+constgold adds further low-to-q2 deficit.  The evidence now separates two failures: (1) the GLOBAL
+level mismatch remains a half-shear-to-constgold target/demand problem, because half-shear closes
+globally while certified constgold is `+1.081%`; (2) the scene-dependent cancellation is already a
+flow/response-supervision problem on the half-shear distribution.  Calling the whole constgold
+number simply "flow underfit" remains wrong, but calling the blendness structure transfer-only is
+also wrong.
+
+Final job 15643029 completed in 1m04s with MaxRSS 2.19 GB.  Job 15642999 stopped safely before
+output because an empty lowest true-S/N bin was initially treated as an error; the accepted code
+records undersized bins as omitted, matching the established constgold profiler.  Job 15643008 was
+the successful frozen-bin precursor; 15643029 adds the actual response-target bins.  Outputs:
+`results/v22_halfshear_property_profiles_targetgrid.{json,csv}`.  Strict JSON/finite checks, exact
+seed and row accounting, Python/Bash compilation, `git diff --check`, and all 129 tests pass (one
+existing tensor warning).
+
+## 2026-08-10d  Continuous predicted R_blend conditioner passes half-shear but fails constgold
+
+Per owner, ran a two-seed directional ablation that appends continuous predicted `r_blend` to the
+exact V2.2 conditioner while retaining near/far/max neighbour flux.  The V2.2
+`(mag,size,r_blend)` response target, coupling target, loss weights, four-million-row sample,
+80 epochs, SWA-8, population, additive `R_blend`, and seeds 501/502 are unchanged.  Added feature
+set `g0_meas_crowd_conc_szfl_noz_rblend`, reusable strict feature compaction, an explicit
+inner-join mode for model/emulator features, the `rblend` analysis arm, and five V2.8 Slurm
+wrappers.  The half-shear scoring cache takes `r_blend` from the union of the existing g=0 and +g
+conditioner catalogues; 122/4,550,074 anchors absent from both were dropped rather than zero-filled,
+giving 99.997319% coverage.  Candidate and matched V2.2 scores use the identical surviving keys.
+
+Accepted prep job 15642325 completed in 12s, both flow tasks 15642289 in 19m56s, all 20 constgold
+tasks 15642291 in 1m20s--3m03s, both half-shear tasks 15642326 in 4m25s--4m56s, and accepted
+analysis 15642470 in 1m16s.  Strict predecessor prep attempts correctly exposed the sparse
+half-shear lookup coverage before the explicit inner-join policy was added.  The first aggregate
+correctly stopped when it rejoined that sparse constgold lookup; the accepted analyzer instead
+uses the exact `R_blend` value already written by the scorer, which is also the candidate flow's
+actual input.
+
+The controlled half-shear result improves strongly.  V2.2 `R_flow/R_self-1` is
+`+0.4637% +/- 0.0279%` over the two matched seeds; the continuous-`r_blend` candidate is
+`+0.0860% +/- 0.0891%`.  Its additive residual range over `r_blend` quintiles contracts from
+3.46 to 1.22 response points.  The paired absolute response change is
+`-0.003094 +/- 0.000502`, moving the baseline over-response toward self truth.
+
+Transfer to constgold fails decisively in both seeds.  Candidate direct `m` is `+3.6205%` and
+`+3.0995%` for seeds 501/502, versus matched V2.2 `+0.4643%` and `+0.9065%`.  The two-seed mean is
+`+3.3600% +/- 0.2605%` seed SEM and the paired worsening is
+`+2.6746 +/- 0.4816` percentage points.  In the frozen low/q1/q2/q3/q4 `R_blend` bins, V2.2
+`m` is `+0.753,+1.428,+2.327,+4.779,-4.462%`; the candidate becomes
+`+3.722,+4.534,+4.546,+13.611,-6.564%`.  The q3 paired worsening is
+`+8.833 +/- 0.062` points and the curve range expands from 9.24 to 20.18 points.  The candidate
+learns the half-shear self target more faithfully but amplifies its population/target mismatch:
+constgold requires `R_sim-R_blend=0.83689`, while candidate constgold `R_flow` falls to
+0.80326/0.80796 from V2.2's 0.83245/0.82825.  Therefore this scalar is rejected without spending
+more seeds; the absolute two-seed `m` remains directional rather than a certification.
+
+Output: `results/v28_rblend_two_seed_screen.json`.  Validation passes: exact one-feature checkpoint
+metadata, strict JSON, exact score-file counts, lookup provenance/coverage, completed accepted Slurm
+states, Python/Bash compilation, `git diff --check`, and all 126 tests.  Also fixed the existing
+`Path` compatibility test in `_case_filtered_table` using `os.fspath`.
+
+## 2026-08-10c  Six-shell four-seed residual remains sign-changing over predicted blendness
+
+Per owner, evaluated the completed four-seed V2.7 six-shell scores in the exact established V2.2
+emulator-total `R_blend` bins: one `R_blend<0.02` class followed by equal-count positive-response
+quartiles with edges `0.0200, 0.0455, 0.1026, 0.3127, 4.5699`.  Extended
+`analyze_v27_scene_arms.py` to report direct total-model `m`, the same-seed paired change from V2.2,
+the additive flow-demand residual, seed SEM, and case-blocked simulation SEM.  Accepted read-only
+analysis job 15642196 completed in 3m07s.  Precursor 15642183 stopped safely after 59s because the
+comma-separated seed value had been passed directly through Slurm's comma-delimited `--export`, so
+only seed 501 reached the job; resubmission exported the already-set environment variable by name.
+
+The blendness curve is **not flattened**.  In low/q1/q2/q3/q4 order, matched V2.2 direct `m` is
+`+1.057, +1.518, +2.342, +4.697, -5.066%`; six-shell V2.7 is
+`+2.030, +3.370, +3.958, +0.642, -7.549%`, with total seed-plus-case errors
+`0.234, 0.508, 0.826, 0.858, 0.544%`.  Paired V2.7-minus-V2.2 changes are
+`+0.973 +/- 0.209, +1.853 +/- 0.486, +1.616 +/- 0.861, -4.055 +/- 1.097,
+-2.483 +/- 0.448` percentage points (paired seed SEM).  Thus the added shells repair the old q3
+peak but move missing flow response into the low through q2 bins and strengthen over-response in
+q4.  The range slightly expands from 9.76 to 11.51 percentage points, so the global
+`m=+0.975%` is still cancellation across scenes and the no-promotion conclusion is stronger.
+
+Output: `results/v27_sixshell_four_seed_blendness.json`.  Strict JSON loading, Python compilation,
+four-seed identity, exact historical edges, `git diff --check`, and completed Slurm status pass.
+
+## 2026-08-10b  V2.7 six-shell screen extended from two to four matched seeds
+
+Per owner, trained and scored two additional six-shell flows to resolve the large two-seed
+constgold scatter.  Used seeds 503 and 505: the certified matched V2.2 baseline set contains 503
+but deliberately has no 504 artifacts, making 505 the next available paired seed.  Generalized the
+six-shell training, half-shear, constgold and analysis wrappers to accept a comma-separated
+`V27_SEEDS` environment setting while retaining 501/502 as the default.  The analyzer now accepts
+an explicit unique `--seeds` list.  Existing seed-501/502 models and scores were reused unchanged.
+
+Both new four-million-row, 80-epoch, SWA-8 flows completed cleanly in 20m38s (job 15641828).
+Half-shear scores completed in 5m56s (15641829), all 20 constgold shards completed in 50s--3m50s
+(15641830), and four-seed analysis completed in 3m10s (15641831).  No jobs failed or retried.
+
+Separated constgold `m` values for seeds 501, 502, 503 and 505 are respectively `+1.1626%`,
+`+0.3536%`, `+1.4731%` and `+0.9118%`.  The four-seed mean is
+`+0.9753% +/- 0.2369%` seed SEM.  Matched V2.2 baselines are `+0.4643%`, `+0.9065%`,
+`+1.3013%` and `+0.4317%`, with mean `+0.7760% +/- 0.2059%`.  The paired six-shell minus V2.2
+changes are `+0.6983%`, `-0.5529%`, `+0.1718%` and `+0.4801%`, averaging
+`+0.1993% +/- 0.2730%`.  Thus the apparent half-shear improvement from seeds 501/502 also does not
+persist: four-seed `R_flow/R_self-1` is `+0.2386% +/- 0.0668%`, while the paired absolute response
+change versus V2.2 is `+0.0145% +/- 0.0719%`, consistent with zero.  The expanded screen therefore
+strengthens the no-promotion conclusion: six shells resolve radial diagnostic structure but do not
+improve either matched global gate, and constgold shifts nominally in the worse direction.
+
+Final output is `results/v27_sixshell_four_seed_screen.json`.  Strict JSON loading, Python and Bash
+syntax, artifact/dependency/collision checks and `git diff --check` pass.  This remains a directional
+four-seed screen rather than a final absolute-bias certification.
+
+## 2026-08-10a  V2.7 split: purity stopped; catalogue-only six-shell screen complete
+
+Per owner, stopped the expensive Eq. 17 purity direction and promoted the six absolute radial-shell
+arm to an independent first screen.  The combined feature implementation had coupled the cheap
+catalogue shell sums to a GalSim render for every anchor and neighbour.  It also failed safely on
+many very extended half-shear anchors even after the adaptive maximum was raised from 384 to 768
+pixels: by 01:05, 18/20 half-shear tasks had failed at the maximum edge while two half-shear and all
+ten constgold tasks were still consuming CPU.  Cancelled only the superseded V2.7 chain
+15636858/15636859/15636888--15636892; the unrelated Y3 job was untouched.  Existing purity files
+were preserved and no truncated purity value was accepted.
+
+Added `scripts/compute_shell_features_v27.py`, which uses truth-catalogue positions, magnitudes and
+a per-case KD-tree to sum absolute intrinsic r-band flux in disjoint 0--0.5, 0.5--1, 1--2, 2--3,
+3--5 and 5--10 arcsec annuli, encoded as `log10(1+F_shell)`.  It imports no GalSim and renders no
+images.  The 20 half-shear and ten constgold array tasks (15637165/15637166) each finished in only
+15--22 seconds and produced exact manifest-key tables with 6,520,572 and 6,434,141 anchors.  Added
+seven `job_v27_sixshell_*.sh` wrappers with shell-specific artifacts and dependencies, so purity can
+no longer block catalogue augmentation, response-target fitting, the matched seed-501/502 flows,
+half-shear/constgold scoring, or analysis.
+
+Two safe guards needed correction during assembly.  Feather key dtypes differed (`int32` versus
+`int64`) even though all values matched, so compaction now compares integer keys exactly by value.
+The half-shear SNC lookup covers 2,795,896/2,805,434 selected rows (99.6600%), exactly as in the
+certified V2.2 target construction; missing lookup rows now receive NaN and are removed by the
+existing finite cut, while a 99% gross-mismatch guard remains.  The accepted target has 2,795,896
+unique rows over 100 cases and five case-held-out HGB folds; its OOF target-minus-label mean is
+`+0.0044% +/- 0.1686%` by case SEM.  The accepted assembly/target job was 15637225.  Both matched
+four-million-row, 80-epoch SWA-8 flows (15637226) completed cleanly in 20m19s; their final validation
+responses track their targets (`0.8141/0.8140` for seed 501 and `0.8154/0.8141` for seed 502).
+
+Half-shear scoring 15637227 and all 20 constgold shards 15637228 completed.  Analysis exposed two
+previously latent assumptions and now tests them explicitly: seed 501 uses the same flow-column name
+in variant and baseline files, and sparse inner-shell fluxes have real tied point masses at zero.
+Matched columns are renamed before merging, and quantile profiles keep identical zero values together
+instead of splitting them arbitrarily.  The analyzer also removes the 386/4,550,074 rows (0.0085%)
+with undefined half-shear truth before taking means, records the finite fraction, and forbids NaN in
+JSON.  The first two analysis attempts 15637229/15637346 failed safely or produced an explicitly
+preserved `invalid_nan` audit file; accepted analysis 15637349 completed.
+
+The directional two-seed result is mixed.  Half-shear `R_flow/R_self-1` improves from the V2.2
+seed values `+0.4377%, +0.4934%` to `+0.3261%, +0.3437%`, giving `+0.3349% +/- 0.0088%` seed SEM;
+the paired response change is `-0.1070% +/- 0.0156%`.  The six coordinates strongly flatten the
+large V2.2 shell-dependent excursions in the half-shear diagnostic: new bin residuals are only
+about `+0.005%` to `+0.705%` while the old residuals reached roughly `-6.93%` to `+6.59%`.
+However, constgold gives `m=+1.1626%` and `+0.3536%` in the two seeds, or
+`+0.7581% +/- 0.4045%`; the paired changes versus V2.2 have opposite signs (`+0.6983%`,
+`-0.5529%`), averaging `+0.0727% +/- 0.6256%`.  Thus the shells clearly resolve radial response
+structure but this two-seed screen supplies no evidence of an improved global constgold bias and is
+not sufficient for promotion.  Final machine-readable output is
+`results/v27_sixshell_two_seed_screen.json`.
+
+Local validation covers Python compilation, seven-job Bash syntax, `git diff --check`, annulus
+boundaries and empty-neighbour behavior, exact key comparison, SNC missing-row handling, matched
+same-name flow columns, tied-zero profile binning and finite half-shear filtering.  Purity remains
+stopped and preserved.  This is a two-seed directional screen, not a final absolute-`m`
+certification.
+
+## 2026-08-09g  Two-arm V2.7 flow screen: six radial shells versus Eq. 17 purity (running)
+
+Started the owner's requested matched two-seed screen in both proposed directions.  The six-shell
+arm uses absolute intrinsic neighbour flux in disjoint 0--0.5, 0.5--1, 1--2, 2--3, 3--5 and
+5--10 arcsec annuli, encoded as `log10(1+F_shell)`.  The purity arm uses the validated Eq. 17 true
+blendedness `1-rho`.  Both append their coordinates to the exact V2.2 conditioner and otherwise keep
+V2.2's architecture, four-million-row cap, optimiser, 80 epochs, SWA-8, coupling loss, domain and
+the identical seeds 501/502.
+
+Response supervision is deliberately resolved along the tested scene direction rather than leaving
+the V2.2 target averaged over it (the condition-only failure already demonstrated by V2.3).  A
+fixed-capacity histogram-gradient regressor estimates the conditional mean of the noisy per-object
+SNC response from half-shear cases 0--99 only, on `(true mag,true Re)+six shells` or
+`(true mag,true Re)+purity`; five-fold splits hold out entire cases before the final refit.  Constgold
+is not read by target construction.  Domain-filtered training, target, half-shear-score and
+constgold manifests contain 6,520,572 and 6,434,141 unique anchors over 200 and 100 cases.
+
+Added `scripts/{filter_v22_domain_catalogue,build_scene_anchor_manifest,
+compute_scene_features_v27,compact_scene_feature_shards,build_scene_response_target_v27,
+analyze_v27_scene_arms}.py`, eight `jobs/job_v27_*.sh` wrappers, two feature sets in
+`sbs_shear/measurement_model.py`, and a strict generic feature-lookup plus optional true-domain
+score cut in `validate_constant_with_blend.py`.  The first constgold filtering attempt correctly
+failed before producing usable output because an excluded empty first batch inferred an Arrow schema
+different from later non-empty batches; writer creation now waits for the first surviving batch and
+the retry completed.  The first purity array correctly refused one bright/high-Sersic source whose
+Eq. 17 mask reached the old 384-pixel maximum.  A direct rerun shows it is enclosed at 768 pixels
+(`rho=0.9994023`), so replacement arrays use an adaptive 96--768 pixel range; no truncated value is
+accepted.  Superseded jobs were cancelled and fresh artifacts use an `r2` suffix.
+
+Current accepted chain: manifests 15636746/15636782 complete; feature arrays 15636858/15636859;
+assembly/targets 15636888; four trainings 15636889; half-shear and constgold gates
+15636890/15636891; final analysis 15636892.  Local validation: six-script Python compilation,
+eight-job Bash syntax, `git diff --check`, five focused purity/shell tests, and one-object plus
+extended-object rendering smoke tests pass.  Two seeds are a directional paired screen only, not a
+final absolute-`m` certification; no promotion decision will be based on an absolute two-seed bias.
+
+## 2026-08-09f  Eq. 17 image-overlap purity is a promising one-number scene coordinate
+
+Implemented the owner's proposed true, low-noise blend-severity scalar from Eq. 17 of Nourbakhsh
+et al. (2022, arXiv:2112.07659),
+`rho_i = sum_p(s_i,p^2) / sum_p[s_i,p sum_j(s_j,p)]`.  For each of the 135,670 common q3 anchors,
+`s` is the unsheared intrinsic single-Sersic r-band model convolved with the exact simulation Moffat
+PSF (`FWHM=0.73`, `beta=2.224068`) on the 0.2 arcsec grid.  The Eq. 17 pixel mask retains primary
+model pixels above 5% of the sky RMS (`0.311519`), and the denominator includes every retained
+local-scene source plus the primary.  This is deterministic simulation truth: it contains no noisy
+shape response, detection measurement or predicted `R_blend`.  `1-rho` is the reported true
+blendedness.  Synthetic checks give rho=1 for isolation, 0.5 for two identical co-centred sources,
+and the correct asymmetry for unequal-flux pairs.
+
+Two numerical QA issues were resolved before interpretation.  Negative GalSim FFT ringing in very
+faint distant wings was clipped to zero per source because true surface brightness is non-negative;
+this prevents unphysical rho values a few times `1e-5` above one.  Stamps begin at 96 pixels and
+double until the primary threshold mask is enclosed: 134,854 anchors use 96 pixels, 793 use 192,
+and 23 use 384; **zero final masks touch an edge**.  A 96-vs-128 check on enclosed objects agrees
+exactly for thresholded Eq. 17 purity.  The final distribution is mean rho=0.88388, median 0.91988,
+range 0.05114--0.999995.
+
+Purity is physically different from the deployed response label: Spearman correlation with
+`R_blend_model` is only 0.079.  Its correlations with absolute near/mid/far shell flux are
+`+0.458`, `+0.408`, and `-0.172`, respectively, so it compresses flux, separation, size, ellipticity
+and profile overlap rather than reproducing any one shell.  The marginal q3 flow residual is very
+strong but **non-monotonic** across increasing true-blendedness quintiles:
+`-0.2137 +- 0.0229`, `-0.0557 +- 0.0299`, `+0.0439 +- 0.0227`,
+`+0.0951 +- 0.0199`, `+0.0184 +- 0.0149`.  All corresponding 45-degree self nulls are compatible
+with zero.  Therefore purity is informative, but a linear or monotonic "more blend = larger
+correction" rule is wrong in this q3 population.
+
+The fair feature comparison uses fixed-capacity histogram gradient boosting and five-fold splits
+that hold out entire simulation cases.  It predicts both the direct per-object
+`R_flow-R_self,true` residual and, as a model-independent cross-check, `R_self,true`.  Raw
+per-object truth has variance about 13.8, so all MSE fractions are numerically small; the quoted
+errors are paired independent-case SEMs.  For the flow residual **alone**, the three shell fluxes
+reduce held-out MSE by `+0.0376 +- 0.0228%`, purity by `-0.0197 +- 0.0215%`, and the shells outperform
+purity by `+0.0573 +- 0.0297%` (about 1.9 sigma).  For true self response alone, purity and shells are
+equally informative: `+0.3109 +- 0.0357%` versus `+0.2865 +- 0.0361%`, difference consistent with
+zero.
+
+The model-relevant result reverses the standalone ordering.  **Beyond the exact current V2.2 inputs**
+(measured primary magnitude/size, intrinsic Sersic/e1/e2, and near/far/max neighbour flux), adding
+purity improves held-out flow-residual MSE by `+0.0755 +- 0.0301%` (2.5 sigma); adding all three
+shells gives only `+0.0255 +- 0.0195%` (1.3 sigma), and adding predicted `R_blend` gives
+`+0.0356 +- 0.0194%` (1.8 sigma).  Purity plus shells gives `+0.0673 +- 0.0358%`; critically, the
+shells add `-0.0082 +- 0.0190%` after purity, fully consistent with no remaining information.  Thus
+the best current read is: the shells are somewhat better as a standalone physical map, but Eq. 17
+purity is the better **single complementary coordinate for V2.2** and appears to compress the shell
+information relevant after its existing conditioners.  This is an initial fixed-model information
+test, not yet proof that adding purity to the flow will improve calibrated response.
+
+Next clean experiment: append true blendedness `1-rho` to the flow conditioner **and explicitly
+resolve it in the response-supervision target/grid**, using half-shear training cases only; keep the
+three shells as an ablation, not necessarily as production inputs.  A flexible (non-monotonic)
+mapping is required.  Constgold remains evaluation-only and no correction was fitted.
+
+Added `scripts/{compute_v22_q3_purity,analyze_v22_q3_purity}.py`, two SLURM wrappers, and three
+focused tests.  Final compute array 15636174 and analyses 15636187/15636479 completed; tests, Python
+and Bash syntax, visual inspection and `git diff --check` pass.  Final outputs are
+`results/v22_constgold_q3_purity_informativeness_final_c40-139.{json,csv,pdf,png}` and
+`$DATA_DIR/sbsi_caches/derisk/v22_constgold_q3_purity_{adaptive_c*,cv_predictions_final_c40-139}.feather`.
+
+## 2026-08-09e  True shell flux exposes a radially structured V2.2 flow failure inside q3
+
+Reused the completed 100-case constgold-q3 decomposition to test the owner's preferred physical
+scene coordinate directly, without additional rendering.  The truth table already contains the
+intrinsic r-band simulation-count flux of **every rendered source except the anchor**, summed in
+disjoint 0--1, 1--3 and 3--10 arcsec shells.  These quantities are defined before detection, are not
+divided by primary flux, and contain neither predicted `R_blend` nor any response measurement.  The
+diagnostic merges all 135,670 unique anchors to the same 16 V2.2 flow seeds and plots both
+`R_self,true` and `R_flow`, followed by their difference.  Exact zero flux is kept separate and the
+positive population is split into quartiles; the far shell, which has no zeros, uses ordinary
+quartiles.  Errors use independent-case SEM and add flow-seed SEM in quadrature where applicable.
+
+The global flow deficit is reproduced exactly at `-0.022405 +- 0.008927`, but it is strongly and
+non-monotonically structured in physical flux.  In the near shell the zero-flux class is consistent
+with closure (`-0.00728 +- 0.01047`), while positive Q3 reaches
+`-0.12683 +- 0.03508` and Q4 remains at `-0.08093 +- 0.02336`; Q4-minus-zero is
+`-0.07365 +- 0.02677`.  In the far shell the residual moves from
+`+0.05600 +- 0.01683` in Q1 to `-0.12140 +- 0.01931` in Q3 and returns to
+`+0.00488 +- 0.01539` in Q4.  The mid 1--3 arcsec profile is much better: its largest point estimate
+is `-0.04040 +- 0.02300`, and the highest positive-flux quartile closes at
+`+0.00140 +- 0.02402`.  The self 45-degree nulls are compatible with zero throughout (largest
+absolute bin significance about 1.4 sigma), so the large near/far structure is not mirrored by the
+null channel.
+
+This resolves the apparent paradox that V2.2 already conditions on neighbour flux.  On these rows,
+the old `nbr_flux_near` is a lossless monotonic encoding of the **combined 0--3 arcsec** absolute
+flux (Spearman rho exactly 1.000), and correlates 0.919 with the 1--3 shell, but only 0.229 with the
+0--1 shell.  It therefore cannot distinguish how the same close flux is radially partitioned.  The
+old 3--7 arcsec `nbr_flux_far` and brightest-within-7 arcsec `nbr_flux_max` correlate only 0.415 and
+0.309 with total 3--10 arcsec flux.  V2.2 contains total crowding information, but not the radial
+scene structure exposed here.  The non-monotonic turnarounds also argue against expecting one noisy
+`R_blend` scalar, or one total-flux scalar, to repair the flow.  The appropriate next model test is
+to add the three true shell coordinates to the flow conditioner **and to the response-supervision
+grid/target**, then score on held-out cases; merely appending them to the likelihood conditioner may
+again leave the response head unsupervised along this direction.
+
+These are marginal q3 profiles, so they demonstrate where the deployed flow disagrees with direct
+self truth but do not alone prove that shell flux is the causal omitted variable; primary/scene
+composition also changes across the bins.  The earlier half-shear balance test, which retained the
+third-plus contrast after balancing every actual V2.2 flow input, supplies the complementary
+conditional evidence.  Added `scripts/diag_v22_q3_flow_trueflux.py` and three focused tests.  Tests,
+Python compilation and `git diff --check` pass.  Outputs are
+`results/v22_constgold_q3_flow_trueflux_c40-139.{json,csv,pdf,png}`.
+
+## 2026-08-09d  One hundred constgold q3 cases reproduce the residual and point first to the flow
+
+Expanded the exact V2.2 constgold-q3 local-scene decomposition from the eight-case pilot to cases
+40--139.  The completed pilot cases 40--47 are reused, and 92 new cases were rendered in sequential
+chunks of 20, 20, 20, 20, and 12 to bound disk use.  The four common-noise, antithetic +/-0.02
+treatments are unchanged: shear all local sources (`total`), only the anchor (`self`), only exact
+deployed V2.2 neighbours (`deployed`), or all other local sources (`other`).  Exact intersection
+over all eight treatment/sign legs retains 135,670 unique anchors in 100 cases; there are no
+duplicate keys or non-finite rows.  Truth and 16-seed flow catalogues have identical
+`(case,input_index)` keys, and the component identity closes to `2.13e-14`.
+
+Independent-case SEMs (including the flow-seed SEM in quadrature for flow and total) are:
+
+| contribution to model minus truth | mean | SEM | mean / SEM |
+|---|---:|---:|---:|
+| flow, `R_flow - R_self,true` | `-0.02240` | `0.00893` | `-2.51` |
+| emulator, `R_blend - R_deployed,true` | `-0.01314` | `0.00974` | `-1.35` |
+| omitted local sources, `-R_other,true` | `-0.01184` | `0.00881` | `-1.34` |
+| non-additivity | `+0.01519` | `0.01944` | `+0.78` |
+| directly closed total | `-0.03222` | `0.01037` | `-3.11` |
+
+The q3 residual is therefore reproduced at 3.1 sigma and gives
+`m = R_total/(R_flow+R_blend)-1 = +4.77% +- 1.53%`, consistent with the original pair-weighted q3
+localization (`~+4.97%`, response model-minus-truth `~-0.0334`).  The flow is the largest and most
+significant single term, supplying about 0.022 of the 0.032 mean response deficit.  This is real
+evidence that the flow is the leading problem in q3, but it is not a unique attribution: the
+deployed emulator and omitted local sources have the same sign and remain individually uncertain,
+while non-additivity is consistent with zero and nominally cancels part of them.  The eight-case
+pilot's opposite component signs were sampling noise, as its large errors implied.  Relevant truth
+means are `R_total=0.70979`, `R_self=0.52019`, `R_deployed=0.19295`, `R_other=0.01184`, and
+`R_blend,model=0.17981`.  The four 45-degree nulls are all compatible with zero; the largest is the
+total null, `+0.01732 +- 0.01139`.
+
+This resolves the large conditional q3 effect, not the survey-wide 0.8% bias.  With 100 cases the
+80%-power minimum detectable response is about 0.0244 for flow and 0.0285 for the total.  At the
+global-bias response scale of 0.0067, empirical projections are 1,329 cases for flow, 1,659 for the
+emulator, 1,356 for omitted sources, 6,602 for non-additivity, and 1,815 for the total.  Also, cases
+40--139 lie inside V2.2's own simulation/training domain and q3 was selected from the constgold
+evaluation dump, so this is a mechanism-localization experiment rather than independent model
+validation.
+
+Preparation initially exposed a boundary reproducibility issue: replaying the response lookup from
+the pre-render generated feather changed one neighbour at exactly 10 arcsec because of coordinate
+rounding.  The final preparation loads the original post-render `gals_info` used by V2.2; all 92
+new cases then reproduce stored lookup responses with maximum and mean absolute differences exactly
+zero.  The two stopped catalogue attempts are retained under explicit `_failed15634821` and
+`_failed15634854` suffixes.  The accepted chain is jobs 15634913 and 15634916--15634940.  Five
+guarded cleanups ran only after truth extraction and removed exactly 736 intermediate image
+directories (906.3 GiB); these pixels are recoverable only by rerendering, while generated/input
+catalogues, SExtractor products, Shapes, truth tables, manifests, and cleanup receipts remain.
+
+Added the 92-case config, merge and verified-cleanup scripts, eight C100 SLURM wrappers, and merge /
+cleanup regression tests.  Five targeted tests pass; Python and Bash syntax and `git diff --check`
+pass.  Final outputs are `results/v22_constgold_q3_decomp_c40-139.{json,pdf,png}` and
+`$DATA_DIR/sbsi_caches/derisk/v22_constgold_q3_decomp_c40-139_{truth,flow}.feather`.
+
+## 2026-08-09c  Constgold q3 local-scene decomposition reproduces the sign but is noise-limited
+
+Implemented and completed the owner's proposed constgold-bin experiment on cases 40--47.  The
+frozen V2.2 high-positive-residual blendness bin is q3,
+`0.1025923490524292 <= R_blend < 0.31271257996559143`.  A deterministic sparse selection gives
+33,510 unique anchors separated by at least 30.010 arcsec.  Each retained 15 arcsec local scene is
+disjoint and keeps every input source, including sources omitted by the deployed emulator.  The
+rendered union contains 1,320,039 sources: 33,510 anchors, 552,102 exact deployed V2.2 neighbours,
+and 734,427 other local sources.  Replaying `lsst_r_extnbr_v22` on every selected scene reproduces
+the stored constgold `R_blend` exactly (maximum absolute difference zero).
+
+Four common-noise, antithetic +/-0.02 treatments were rendered and measured: shear all local
+sources (`total`), only anchors (`self`), only exact deployed neighbours (`deployed`), or only
+other local sources (`other`).  All 64 render/detection legs and 64 ngmix legs completed.  Final
+extraction uses only unique `(case,input_index)` keys in the frozen s501 V2.2 constgold evaluation
+dump; the rendered lookup-q3 population is a safe disjoint superset.  The eight-leg intersection
+retains 10,836 anchors.  An initial all-lookup extraction is preserved explicitly as
+`v22_constgold_q3_decomp_pilot_truth_alllookup.{feather,json}` and is not used for the quoted
+result.
+
+The exact per-object identity is
+`R_flow + R_blend - R_total = (R_flow-R_self) + (R_blend-R_deployed)
+- R_other - (R_total-R_self-R_deployed-R_other)` and closes to `1.54e-14`.  All 16 deployed V2.2
+flow seeds were scored.  Independent-case SEMs (flow-seed SEM included in quadrature where
+relevant) are:
+
+| contribution to model minus truth | mean | SEM |
+|---|---:|---:|
+| flow, `R_flow - R_self,true` | `+0.01972` | `0.03683` |
+| emulator, `R_blend - R_deployed,true` | `+0.02261` | `0.03487` |
+| omitted local sources, `-R_other,true` | `-0.03986` | `0.03466` |
+| non-additivity | `-0.02541` | `0.05126` |
+| directly closed total | `-0.02204` | `0.03044` |
+
+Thus the direct total has the constgold q3 direction and corresponds to
+`m = R_total/(R_flow+R_blend)-1 = +3.25% +- 4.47%`, compatible with the original pair-weighted q3
+localization (`~+4.97%`, response model-minus-truth `~-0.0334`) but not significant.  No component
+is identified: nominally, flow and the deployed emulator overpredict by about +0.02 each, while
+omitted local sources and non-additivity contribute about -0.04 and -0.025, but every term is at
+most about 1.2 sigma and cancellation is unconstrained.  The g1-to-e2 total null is also noisy,
+`+0.0643 +- 0.0202`, so the point estimates must not be interpreted as a detection.
+
+The pilot answers the case-count question unfavourably for noisy +/-0.02 constgold renders.  For a
+0.03 response component, the empirical 80%-power projections are 95 cases (flow), 85 (emulator),
+84 (omitted sources), 184 (non-additivity), and 65 for the correlated total.  At the global
+0.8%-bias response scale (~0.0067), the corresponding counts are O(1,300--3,700).  Therefore do
+not blindly expand this exact noisy design.  The next precision-oriented version should use
+noiseless renders and/or 90-degree ring rotations (and possibly a larger finite-difference shear
+after a linearity check) before buying more cases.
+
+Added `scripts/{prepare,extract,analyze}_v22_constgold_bin_decomposition.py`, the pilot config, six
+SLURM stages, and `tests/test_v22_constgold_bin_decomposition.py`.  Six targeted tests pass; Python
+and Bash syntax checks pass.  Jobs 15632693--15632698 performed preparation and the first chain;
+corrected evaluation-key extraction/flow/analysis used 15632762--15632764, and the final m-summary
+plot refresh used 15632774.  Outputs:
+`results/v22_constgold_q3_decomp_pilot.{json,pdf,png}` and
+`$DATA_DIR/sbsi_caches/derisk/v22_constgold_q3_decomp_pilot_{truth,flow}.feather`.
+
+## 2026-08-09b  Exact neighbour-rank extension removes pair-probe cross terms
+
+Replaced the underpowered two-probe pair-sum measurement from the four-case matched-scene pilot
+with a staged exact partition over the deployed V2.2 neighbour list.  The existing cases 300--303
+and their already-rendered coherent `total`, `self`, and `neighbour` controls are unchanged.  The
+new manifest stably sorts each anchor's exact deployed pairs by `(distance, secondary_index)` and
+assigns ranks 0--18.  Each `rankN` mode shears at most that one neighbour per anchor along a
+deterministic random spin-2 direction; all other rendered sources remain present and unsheared.
+The analysis sums the 19 per-rank projections rather than averaging them.  This retains the
+individual-pair directional projection noise but eliminates the much larger cross-neighbour terms
+in the former all-neighbour Hutchinson probes.
+
+Added `scripts/prepare_v22_matched_rank_extension.py`, extended
+`scripts/extract_v22_matched_decomposition.py` and
+`scripts/analyze_v22_matched_decomposition.py` to support mutually exclusive `pairN` or `rankN`
+estimators, and added the seven `jobs/job_v22_matched_rankpilot_*.sh` stages plus
+`tests/test_v22_matched_rank_extension.py`.  The final analysis reuses the original pilot's fixed
+near/mid/far flux-bin edges and still scores all 16 V2.2 flow seeds.  Preparation verified
+byte-identical latent scenes, preserved all 240,563 deployed pairs, found exactly 19 ranks in every
+case, enforced one neighbour per anchor/rank, and checked unit directions to machine precision.
+
+Python compilation and Bash syntax checks pass; the three targeted rank-assignment tests pass in
+the py31 environment.  Jobs 15630489 (catalogue array), 15630496 (manifest), 15630499 (render
+array), 15630500 (shape array), 15630502 (extraction), 15630508 (16-seed flow), and 15630509
+(analysis) all completed.  The 44-mode/sign intersection retains 13,581 anchors (88.6--89.8% by
+case) with no non-finite rows.  Results (response units) are:
+
+| contribution to model minus truth | mean | SEM |
+|---|---:|---:|
+| flow, `R_flow - R_self,true` | `-0.00322` | `0.01366` |
+| pair emulator, `sum R_pair,model - sum R_pair,true` | `-0.00807` | `0.03523` |
+| additivity contribution, `-(R_total,true-R_self,true-sum R_pair,true)` | `+0.02000` | `0.03598` |
+| directly closed total | `+0.00861` | `0.00805` |
+
+The direct total is identical to the original pilot (`+0.00853 +- 0.00798`), as it should be on
+the reused broad controls.  The rank estimator did **not** reduce pair attribution variance:
+`R_pair,true = +0.11450 +- 0.03401` and its 45-degree null is
+`-0.03093 +- 0.02685`.  No single neighbour rank dominates; many rank-level case fluctuations add
+in quadrature.  Removing cross-neighbour Hutchinson terms was therefore insufficient because one
+input direction still observes only one column of each pair's 2x2 response Jacobian.  A genuinely
+direction-exact trace needs a second, orthogonal shear direction for each rank (38 rank modes), or
+a substantially larger set of fresh independent cases.  This four-case run still cannot assign the
+known V2.2 0.8% excess to flow, emulator, or the linear construction, and its directly closed total
+has the opposite nominal sign from constgold at only about 1.1 sigma from zero.  Outputs:
+`results/v22_matched_decomp_rankpilot.{json,pdf,png}`.  Do not train or select V2.7 on constgold
+before attribution.  The lower-variance broad identity also remains null: flow
+`-0.00322 +- 0.01366`, emulator minus coherent-neighbour truth `+0.00116 +- 0.02158`, and the
+self--coherent-neighbour interaction contribution `+0.01067 +- 0.01298`.  Because this matched
+anchor population does not reproduce the constgold-direction total error, do not spend immediately
+on 38 orthogonal rank modes; first redesign or enrich the matched anchors so the target residual is
+present, then use two orthogonal directions per rank only on that signal-bearing population.
+
+## 2026-08-09a  Exact matched-scene V2.2 decomposition pilot works; two pair probes are underpowered
+
+Built and completed the first same-scene attribution experiment requested by the owner.  Four fresh
+FS2 cases (300--303; outside V2.2's cases 40--199) use sparse V2.2-domain anchors separated by more
+than 20.01 arcsec.  The deployed V2.2 predictor itself registers the exact 10 arcsec, k=20 pair
+manifest before rendering.  Every shear treatment starts from byte-identical latent catalogues and
+uses the same image-noise realization.  Direct pixel checks show treatment-image differences far
+below the 0.44 RMS expected for independent 0.312-RMS noise.  All non-anchor sources remain rendered.
+Antithetic treatments measure: coherent anchor+neighbour response, anchor-only response, coherent
+neighbour-only response, and two independent random-direction probes of the individual-pair sum.
+The V2.2 pair emulator and all 16 deployed V2.2 flow checkpoints are then scored on those exact
+anchors.  No constgold quantity enters construction or scoring.
+
+All five render and shape arrays completed, and the all-mode/sign intersection retains 13,580 of
+15,227 registered anchors (88.6--89.8% by case); three non-finite ngmix responses are removed before
+analysis, leaving 13,577.  The exact identity
+`model - total truth = Delta_flow + Delta_emu - Delta_add` closes per row to a maximum float32 error
+of 1.19e-7.  Global pilot terms (response units; independent-case SEM, with flow seed SEM added in
+quadrature) are:
+
+| contribution to model minus truth | mean | SEM |
+|---|---:|---:|
+| flow, `R_flow - R_self,true` | `-0.00346` | `0.01376` |
+| pair emulator, `sum R_pair,model - sum R_pair,true` | `+0.00353` | `0.02574` |
+| additivity contribution, `-(R_total,true-R_self,true-sum R_pair,true)` | `+0.00856` | `0.03998` |
+| directly closed total | `+0.00853` | `0.00798` |
+
+Therefore this pilot does **not** yet assign the known approximately 0.8% V2.2 bias: every component
+is consistent with zero and even the direct total has the opposite nominal sign at only 1.1 sigma.
+Its useful result is the variance diagnosis.  The two randomized individual-pair probes differ by
+`-0.06430 +- 0.03184`, while the pair-null is `+0.02701 +- 0.03328`; consequently emulator and
+multi-neighbour additivity estimates are much noisier than their correlated total.  Scaling only
+the current two-probe recipe would be inefficient.  The next design must increase orthogonal pair
+probes and fresh cases (or replace the probe estimator with a lower-variance exact partition) before
+claiming flow-versus-emulator-versus-construction attribution.
+
+Absolute intrinsic neighbour flux is stored in 0--1, 1--3 and 3--10 arcsec shells.  Pilot-fixed bins
+are zero plus positive-flux tertiles for the 0--1 arcsec shell (86.6% exact zeros), and valid
+quartile-style bins for the mid/far shells.  These curves are diagnostic only because there are four
+independent cases.  Outputs: `results/v22_matched_decomp_pilot.{json,pdf,png}`.  Accepted jobs:
+15616510--15616513 (catalogue/render/shape/extract), corrected flow 15630393, and analysis 15630408.
+The first flow attempt exposed missing inert pair-preprocessor columns; the scorer now supplies
+placeholders and asserts that the V2.2 conditioner uses only its exact primary/crowding feature set.
+Python compilation, Bash syntax, synthetic binned-plot tests and diff checks pass.
+
+## 2026-08-08b  Two hundred-case absolute other-flux check resolves far-shell suppression
+
+Expanded the pair-specific absolute-other-flux diagnostic from 40 to all 200 available half-shear
+cases.  The full V2.2-support sample contains 23,285,666 pair rows and 5,590,230 primaries.  The
+three coordinates still use intrinsic simulation flux only and, separately for every pair row,
+exclude both the primary and that row's designated secondary.  No model was trained or adjusted.
+Error bars remain delete-one-simulation-case jackknife SEMs rather than invalid pair-level errors.
+
+V2.2 was trained on simulations in cases 40--199, so the extra cases reduce uncertainty on the
+physical mechanism but are not independent model validation.  Results are consequently reported
+as the original independent held-out cases 0--39, the 160 training-overlap cases 40--199, and their
+mixed 200-case aggregate:
+
+| cases | role | pairs | shell | truth high-minus-low | V2.2 high-minus-low | change in V2.2-minus-truth |
+|---|---|---:|---|---:|---:|---:|
+| 0--39 | independent heldout | 4,649,917 | 0--1 arcsec | `-0.00810 +- 0.00415` | `-0.00242` | `+0.00568 +- 0.00413` |
+|  |  |  | 1--3 arcsec | `-0.00636 +- 0.00497` | `-0.00048` | `+0.00588 +- 0.00497` |
+|  |  |  | 3--10 arcsec | `-0.00531 +- 0.00313` | `-0.00097` | `+0.00434 +- 0.00314` |
+| 40--199 | training overlap | 18,635,749 | 0--1 arcsec | `-0.00338 +- 0.00231` | `-0.00264` | `+0.00074 +- 0.00230` |
+|  |  |  | 1--3 arcsec | `-0.00344 +- 0.00191` | `-0.00056` | `+0.00287 +- 0.00190` |
+|  |  |  | 3--10 arcsec | `-0.00788 +- 0.00177` | `-0.00119` | `+0.00669 +- 0.00177` |
+| 0--199 | mixed aggregate | 23,285,666 | 0--1 arcsec | `-0.00432 +- 0.00202` | `-0.00260` | `+0.00172 +- 0.00201` |
+|  |  |  | 1--3 arcsec | `-0.00401 +- 0.00182` | `-0.00055` | `+0.00347 +- 0.00181` |
+|  |  |  | 3--10 arcsec | `-0.00734 +- 0.00155` | `-0.00115` | `+0.00620 +- 0.00155` |
+
+The expanded simulations therefore confirm the expected response suppression most clearly for
+third-or-later flux at 3--10 arcsec: V2.2 misses `0.00620 +- 0.00155` from lowest to highest flux
+quartile (4.00 sigma in the mixed aggregate; 3.78 sigma even within the 160-case mechanism check).
+The independent 40-case result has the same sign and compatible size, but only 1.38 sigma.  Near
+and mid shells remain weaker in the aggregate (0.86 and 1.91 sigma residual trends).  All three
+45-degree-null contrasts are consistent with zero (largest 0.65 sigma), so the far trend is not
+mirrored by the null projection.  The global V2.2-minus-truth mean is also consistent with zero,
+`+0.000366 +- 0.000530`; this is a conditional scene-context failure, not a global half-shear
+normalisation failure.
+
+Accepted jobs 15616171 (cases 0--199, 8m48s, 19.7 GB) and 15616172 (cases 40--199, 4m35s,
+14.7 GB).  Replaced the contrast jackknife's repeated full-array scans with algebraically identical
+per-case sums/counts; a synthetic comparison agrees to `6.94e-18`.  Also made figure subtitles use
+the requested case range rather than the former hard-coded 0--39 label.  Outputs:
+`results/rblend_otherflux_absolute_halfshear_c0-199.{png,pdf,csv,json}` and
+`results/rblend_otherflux_absolute_halfshear_c40-199.{png,pdf,csv,json}`.  Python compilation,
+Bash syntax and diff checks pass.
+
+## 2026-08-08a  Pair-specific ABSOLUTE other flux restores the expected suppression direction
+
+At the owner's direction, repeated the 07m held-out pair-ruler diagnostic without normalising scene
+flux by primary flux.  Extended `scripts/diag_rblend_otherflux_halfshear.py` with an explicit
+`--flux-mode absolute`: after excluding the response row's designated secondary, it reconstructs
+intrinsic flux in simulation count units as
+`F_other = (F_other/F_p) * 10**[-0.4(r_p-30)]` and bins only after the dynamic-range transform
+`log10(1+F_other)`.  The transform is not a normalisation; the primary flux is absent from the final
+coordinate.  The original relative-flux mode and outputs remain reproducible.  Added a dedicated
+Slurm wrapper and colorblind-safe PNG/PDF output.
+
+Accepted job 15615751 uses the identical 4,649,917 V2.2-support pairs in held-out half-shear cases
+0--39, the exact pair-specific primary/secondary exclusion, baseline V2.2, case-jackknife errors and
+45-degree nulls.  No training or constgold quantity enters.  Unlike the primary-normalised plot,
+the measured high-minus-low response now falls coherently in every shell:
+
+| absolute other-flux shell | truth high-minus-low | V2.2 high-minus-low | change in V2.2-minus-truth |
+|---|---:|---:|---:|
+| 0--1 arcsec | `-0.00810 +- 0.00415` | `-0.00242 +- 0.00027` | `+0.00568 +- 0.00413` |
+| 1--3 arcsec | `-0.00636 +- 0.00497` | `-0.00048 +- 0.00013` | `+0.00588 +- 0.00497` |
+| 3--10 arcsec | `-0.00531 +- 0.00313` | `-0.00097 +- 0.00013` | `+0.00434 +- 0.00314` |
+
+Thus the earlier rise was induced by dividing by `F_p`: high `F_other/F_p` selected different,
+especially faint-primary, pair populations.  Absolute flux exposes the Zhang et al. mechanism:
+more third-or-later light suppresses the named secondary's response, while V2.2 captures only a
+small part of that decline through correlated pair inputs.  Each shell contrast is still only
+1.2--2.0 sigma and the shells share rows, so they are not combined as independent evidence.  The
+strongest individual residual bin is 1.85 sigma and the strongest null bin 1.14 sigma.  The coherent
+physics direction motivates using these three pair-specific absolute shell fluxes in the next
+emulator, with no fitted offset.
+
+Outputs: `results/rblend_otherflux_absolute_halfshear_c0-39.{png,pdf,csv,json}`.  Static Python,
+Bash and diff checks pass; peak job RSS was 4.3 GB.
+
+## 2026-08-07m  Correct pair-specific other-galaxy flux: marginal ruler gate is noise-limited
+
+Implemented the scene coordinate intended by the owner and Zhang et al. Appendix A.  New
+`blendemu.scene_features.pair_other_flux_ratios` starts from the intrinsic full-scene 0--1, 1--3
+and 3--10 arcsec flux sums and, for each response row, subtracts the named secondary's exact
+`F_s/F_p` from its shell.  Thus both pair members are excluded and every other rendered input
+galaxy remains, independently of detection and rank.  It rejects a materially absent secondary
+rather than clipping it silently; only float32 inverse-transform roundoff is tolerated.  Added
+synthetic tests showing that two rows sharing one primary exclude different secondaries and that a
+missing designated secondary fails.  All four scene-feature tests pass by direct invocation (the
+`sims1` environment has no pytest executable), compilation and diff checks pass.
+
+Added `scripts/diag_rblend_otherflux_halfshear.py` and its Slurm wrapper.  Accepted job 15613180
+uses the same 4,649,917 V2.2-support pair rows and 1,116,565 primaries in held-out cases 0--39 as
+the 07k ruler gate, with exact scene-key coverage.  It evaluates only baseline V2.2 and bins the
+per-pair half-shear truth, 45-degree null, prediction and paired residual against the corrected
+other-galaxy shell flux.  Errors and high-minus-low contrasts are delete-one-case jackknife SEMs.
+No model is trained, no constgold quantity is read, and no response adjustment is fitted.  Four
+rare exact-zero far-shell rows are correctly folded into the lowest quartile rather than reported
+as a standalone mean.  Only 168/540 rows lie within the independently measured maximum 4.548e-4
+arcsec coordinate-versus-stored-distance discrepancy of the 1/3 arcsec shell boundaries.
+
+The global per-pair truth/V2.2/residual are `0.015145 +- 0.001078`, `0.015685`, and
+`+0.000541 +- 0.001080`; the null is `+0.000712 +- 0.001386`.  The marginal profiles do not yet
+resolve the expected third-plus suppression.  High-minus-low truth changes are
+`+0.00334 +- 0.00615` (near), `-0.00107 +- 0.00622` (mid), and
+`+0.01845 +- 0.00400` (far).  V2.2-minus-truth changes are respectively
+`+0.00108 +- 0.00611`, `+0.00647 +- 0.00623`, and `-0.00372 +- 0.00401`; the mid-shell direction
+is the expected overprediction at high other flux but is only 1.04 sigma.  No individual residual
+bin exceeds 1.43 sigma and no null bin exceeds 1.30 sigma.  The significant far-shell increase in
+truth is largely reproduced by V2.2 and is therefore pair-population correlation, not evidence
+that distant other light raises the conditional response.  The next discriminating step, before
+any retraining, is a controlled bright-third comparison at fixed primary/secondary pair properties;
+the marginal curves alone cannot separate suppression from changing pair populations.
+
+Outputs: `results/rblend_otherflux_halfshear_c0-39.{png,pdf,csv,json}`.  Job 15613162 was a fully
+successful precursor whose only defect was treating four far-shell zeros as a separate low group;
+15613180 supersedes it.
+
+## 2026-08-07l  Scene3 semantic audit: current shell flux includes the designated pair secondary
+
+Owner clarified that scene context for a BlendEMU pair must mean the flux of the *other* galaxies
+in the scene: for a primary--secondary response row it must exclude both that primary and that
+row's designated secondary.  This is the quantity expected to suppress the designated secondary's
+marginal response.  The current `blendemu.scene_features.scene_flux_ratios` instead excludes only
+the primary and sums every other input source.  Consequently the three features used by
+`lsst_r_extnbr_v22_scene3` include the designated secondary and are primary-level rather than
+pair-specific.  The 07k scene3 result therefore does not test the intended third-plus hypothesis
+and must not be used to reject it.
+
+This interpretation is confirmed independently by Zhang et al. (2025, arXiv:2507.19130): each
+catalogue row designates one secondary whose shear response is projected along that secondary's
+random shear direction, while additional neighbours remain in the rendered scene; the paper
+explicitly states that third-or-later galaxies reduce a single secondary's influence and Appendix A
+finds the response slopes decline especially for a bright third galaxy.  It is also confirmed
+directly in the 26 GB V2.2 response catalogue.  For example `(case,input_index)=(0,0)` appears seven
+times in the first record batch with one common primary and identical measured scene-shape change,
+but seven distinct secondary coordinates/shear directions and hence seven pair projections.
+
+The corrected pair-specific shell coordinate can be computed exactly from the existing intrinsic
+full-scene shell sum and the row's pair properties.  In linear primary-flux units, subtract
+`F_s/F_p = 10**[-0.4(r_s-r_p)]` from the one shell containing the pair separation, then transform
+back with `log10(1+ratio)`.  This retains every other rendered input galaxy regardless of detection
+or half-shear assignment and introduces no measured quantity.  Before retraining, the next gate is
+to plot held-out half-shear pair truth and V2.2 residuals directly against these corrected
+near/mid/far other-galaxy fluxes, with pair-property conditioning to separate the suppression from
+population correlations.
+
+## 2026-08-07k  Scene-aware pair emulator: held-out half-shear first gate is mostly neutral
+
+Owner redirected the scene-aware emulator work to a simulation-only first gate before any constgold
+interpretation.  The new BlendEMU `lsst_r_extnbr_v22_scene3` regression keeps the exact V2.2
+response catalogue, cases >=40 training window, cuts, split, target, XGBoost parameters and loss,
+and adds only three intrinsic full-input-scene coordinates per primary:
+`log10(1+F_shell/F_primary)` in 0--1, 1--3 and 3--10 arcsec.  The strict catalogue build (job
+15611716) matched all 248,515,320 response rows to cached half-shear scene keys; training job
+15611717 used the same 37,852,393 post-cut rows as V2.2.  Random-validation R2 moves only
+`0.009376 -> 0.009724`.  No constgold quantity entered catalogue construction, training, early
+stopping or model selection, and no empirical offset was fitted.
+
+Added `scripts/diag_rblend_scene3_halfshear.py` and its Slurm wrapper.  The accepted run 15612847
+uses the independent ap7 half-shear pair ruler on cases 0--39, which neither emulator trained on,
+and applies the exact V2.2 primary/secondary regression support.  It retains 4,649,917 annotated
+pairs over 1,116,565 primaries (`<k>=4.1645`) and attaches the three scene features at 100% exact
+key coverage.  Per-pair ruler responses and predictions are summed per primary; errors are
+delete-one-case jackknife SEMs.  Binning is on the baseline prediction or physical input features,
+never on noisy ruler truth.  The global 45-degree null is clean, `+0.00297 +- 0.00577`; no reported
+bin null exceeds 3 sigma (three of the many bins lie at 2.16--2.39 sigma, consistent with the
+look-elsewhere count).  The key close, high-blend and bright-neighbour bins have nulls below 1.1
+sigma.
+
+The global ruler is noise-limited and does not distinguish the models:
+
+| held-out summed response | mean | model minus truth | relative residual |
+|---|---:|---:|---:|
+| simulation truth | `0.063070 +- 0.004489` | -- | -- |
+| V2.2 | `0.065322` | `+0.002252 +- 0.004496` | `+3.57 +- 7.13%` |
+| scene3 | `0.065186` | `+0.002116 +- 0.004496` | `+3.35 +- 7.13%` |
+
+Scene3 changes the model mean by only `-0.000136 +- 0.000035`, or
+`-0.209 +- 0.053%` relative to V2.2.  The conditional movement is real but mixed, not a general
+repair.  At separation <1 arcsec, truth/V2.2/scene3 are `0.03614/0.02660/0.02723`: the deficit moves
+from -26.4% to -24.7%, recovering only 6.5% of the missing response.  For the rare very bright
+neighbours (`r_s-r_p` in -8 to -4), they are `0.62387/0.52300/0.55580`: the deficit moves from
+-16.2% to -10.9%, recovering 32.5% of the missing amount.  In the highest old blendness bin
+(`sum R_blend > 0.3127`), they are `0.76180/0.71345/0.72298`, moving -6.35% to -5.10%.  Moderate
+blendness bins move in both directions, and the primary magnitude, size, separation, secondary
+magnitude and secondary-size profiles remain visually almost unchanged.  Thus scene context is
+used by the regression, especially for extreme bright neighbours, but these three marginal shell
+sums do not by themselves resolve the established response structure.
+
+Outputs: `results/rblend_scene3_halfshear_c0-39.{png,pdf,csv,json}`.  The CSV records truth, null,
+both predictions, both paired residuals and the paired scene3-minus-V2.2 change with case-jackknife
+errors for every bin.  Static Python/Bash/diff checks pass.  One inference warning affects one row
+at the floating-point upper primary-size boundary; it is retained and documented rather than
+clipped, and is immaterial at 1/4,649,917 pairs.  The next clean step is the analogous held-out
+half-shear residual versus the three scene-flux coordinates themselves; constgold remains outside
+this gate.
+
+## 2026-08-07j  Exact flow-input control and third-plus response-target pilots
+
+The 07i conditional half-shear failure is not an omitted-primary-variable artefact.  Added
+`scripts/diag_v22_halfshear_flowinputs.py` and a Slurm wrapper to balance third-plus quartiles on
+every actual V2.2 flow input (primary true magnitude/size/Sersic/e1/e2, intrinsic near/far/max
+neighbour flux), plus top-two neighbour flux.  The accepted job 15598563 retains 4,352,264 of
+4,549,687 V2.2-domain rows and passes every balance axis (largest SMD 0.092; magnitude 0.034,
+top-two 0.045, near/far 0.062/0.060).  The true half-shear self response still falls from 0.82637
+to 0.80767 across third-plus quartiles while the flow is flat (0.81297 to 0.81260), giving
+`q4-q1 = -2.255 +- 0.459` percentage points.  Thus the deployed conditioners cannot represent
+this scene direction.
+
+V2.3 tested the smallest physics-only repair: append intrinsic
+`nbr_flux_thirdplus = log10(1 + F_{third+}/F_primary)` to the conditioner, changing no population,
+target, loss, coupling target, optimiser, or epoch schedule.  Added strict streaming lookup
+compaction/augmentation utilities and four-seed train/score jobs.  Jobs 15598595--15598759 built
+139,913,563-key half-shear and 69,956,785-key constgold lookups, augmented 31,411,766 training rows
+and the 9,466,878-row scoring base at 100% match, trained seeds 501/502/503/505 for 80 epochs, and
+scored identical cases 40--199.  The feature alone makes the conditional failure worse:
+`q4-q1 = -3.254 +- 0.514` points overall, `-3.484 +- 0.800` on target-overlap cases 40--99, and
+`-3.150 +- 0.617` on held-out cases 100--199.  A direct same-row/same-seed comparison (job
+15599898) gives V2.3 minus V2.2 `delta(q4-q1) = -0.843 +- 0.334` points overall, with the same sign
+in both windows.  Therefore adding a coordinate while retaining a target averaged over that
+coordinate is not a repair.
+
+V2.4 tested the next non-empirical implication: retain the new conditioner and split each
+established V2.2 `(mag,size,r_blend)` half-shear response cell into low/high intrinsic third-plus
+flux.  `compute_response_target_blend.py` and the S1 trainer now support a second, optionally
+parent-cell-conditional crowding axis.  A rejected global-quartile build had 207/720 cells at or
+below the original 500-object floor because third-plus flux and `r_blend` are correlated; it was
+not trained.  The accepted conditional-median target (job 15600143) has 360/360 occupied cells,
+minimum/median effective counts 718/7,479, exactly the V2.2 global response 0.815667, and no
+fallback cells.  Four-seed half-shear screening jobs 15600157 and 15600779--15600784 find no
+repair: overall `q4-q1 = -2.357 +- 0.469` points and paired V2.4-minus-V2.2 change
+`+0.054 +- 0.175` points; overlap and held-out changes are likewise consistent with zero
+(`+0.059 +- 0.189`, `+0.046 +- 0.167`).  The final per-cell response loss is about 0.0039: the
+highly correlated `r_blend x third-plus` target is difficult for this flow to learn.
+
+V2.5 then replaced `r_blend` by directly conditional-binned third-plus flux.  Its accepted 180-cell
+target (job 15601132) has minimum/median/max effective counts 6,588/15,630/31,253 and a strong
+simulation response sequence `[0.970145, 0.890217, 0.830966, 0.758123, 0.628888]`; the flow learns
+it well (response loss about 0.0006).  But it grossly overcorrects the controlled half-shear
+contrast: overall `q4-q1 = +9.809 +- 0.465` points, a paired change of `+12.220 +- 0.196` points
+relative to V2.2, repeated on overlap and held-out cases.  Thus a marginal third-plus target
+double-counts leading-neighbour response already represented by near/far/max context, while fixing
+predicted `r_blend` (V2.4) leaves too much degeneracy.
+
+V2.6 tests the resulting joint, pure-input scene decomposition: flux in the two brightest
+neighbours within 10 arcsec and flux in the third and later neighbours, each relative to the
+primary.  Both axes enter the conditioner and a 6x6x5x4 response target, with top-two quantiles
+conditional on primary mag/size and third-plus quantiles conditional on all parent cells.  During
+preflight, inspection caught that the trainer's 4-D reader applied conditional edges only to its
+second crowd axis; this is now fixed for both axes before any V2.6 model was trained.  Local
+transform, compilation, shell, collision, and diff checks pass.  Preparation job 15601685 built
+139,913,563-row half-shear and 69,956,785-row constgold lookups and augmented the 31,411,766-row
+training catalogue, 15,697,220-row g=0.05 target catalogue, and 9,466,878-row scoring base with
+strict 100% matches and preserved source metadata.  Target job 15601686 passes: 720/720 cells,
+minimum/median/max effective counts 1,647/3,908/7,814, global response 0.815667, and count-weighted
+response `[0.892533, 0.842971, 0.800159, 0.727017]` over conditional third-plus quartiles.  Jobs
+15601687--15601690 run the four-seed train/score, merge, and paired overlap/held-out diagnostic.
+All V2.3--V2.6 targets use half-shear simulations only; constgold remains unread by training and no
+empirical offset or validation-derived calibration is applied.
+
+The blind four-seed V2.6 promotion screen (jobs 15601687--15601690) completed successfully.  On
+cases 40--199 the controlled third-plus contrast is reduced from V2.2's
+`q4-q1 = -2.221 +- 0.463` points to **`-0.060 +- 0.456` points**; the same-row/same-seed paired
+change is `+2.352 +- 0.182` points.  Crucially, this is not confined to response-target cases:
+cases 40--99 give `-0.260 +- 0.767` and held-out cases 100--199 give
+**`+0.009 +- 0.573`**, with paired repairs `+2.416 +- 0.178` and `+2.305 +- 0.183`, respectively.
+Balance passes in every window (largest control SMD 0.046).  Thus the joint top-two x third-plus
+target removes the pre-registered conditional half-shear failure without an empirical adjustment.
+
+Promoted V2.6 to the required 16-seed constgold gate.  Added a strict constgold scene-lookup path to
+`validate_constant_with_blend.py`: top-two/third-plus features are key-joined separately from the
+legacy near/far/max lookup and require exact coverage rather than silent zero-fill.  Added jobs for
+the twelve missing seeds 506--517, 160 ten-case constgold shards, exact concatenation, and 16-seed
+aggregation.  The additive emulator remains the unchanged V2.2 lookup and constgold remains
+evaluation-only.  Python compilation, Bash syntax, `git diff --check`, checkpoint/output collision,
+and lookup-schema checks pass before submission.  Preflight shard 15602023 then completed on
+constgold cases 40--49: 2,694,436 rows, 100.0000% legacy crowd-feature coverage, 100.0000% joint
+scene-feature coverage, and a valid per-object dump.  The initially armed chain was training array
+15602060, remaining-shard array 15602061, concatenation 15602062, and aggregation 15602063.  At the
+owner's request it was narrowed before scoring to a six-seed pilot: retain the four screen seeds,
+finish only 506/507, cancel training tasks 508--517 and the untouched downstream jobs, then score
+seeds 501/502/503/505/506/507.  This can decide whether the full gate is promising, but it is not a
+final quotable absolute `m` under the established 16-seed rule.  Because Slurm cannot attach a new
+dependency cleanly to the surviving elements of a partially cancelled array, gate job 15602229
+polls for exactly the six immutable SWA checkpoints; it releases the 59 remaining shards in
+15602230, followed by concatenation 15602233 and six-seed aggregation 15602234.  Duplicate pending
+arrays created while probing Slurm's array-dependency syntax were cancelled before they ran.
+
+The six-seed constgold pilot completed and **rejects V2.6**.  All 60 shards succeeded, each of the
+six concatenated dumps has exactly 26,926,617 rows, row alignment is exact, and the 5,642,350-row
+V2.2 domain is fully inside the unchanged V2.2 emulator box.  On that domain V2.6 gives
+**`m = +1.683 +- 0.200%`** (`+-0.154` seed, `+-0.128` sim; seed sd 0.377), versus the matched
+six-seed V2.2 pilot's `+0.683 +- 0.206%`.  Per-seed V2.6 values for
+501/502/503/505/506/507 are `+1.495,+2.022,+1.890,+1.714,+1.020,+1.959%`; subtracting the matched
+V2.2 values gives a paired mean worsening of approximately **`+1.001 +- 0.103` points**.  `R_sim`
+and `R_blend` are unchanged at 0.9626 and 0.1257; the failure is the flow mean moving down from
+0.8304 to 0.8210.  Therefore fixing the controlled half-shear third-plus contrast did not transfer
+to coherent constgold's global population weighting and moved the absolute response in the wrong
+direction.  Do not spend the remaining ten seeds: the pilot misses 0.3% by about 1.38 points and is
+worse than V2.2 in every matched seed.
+
+The matched six-seed blendness curve (job 15609312) shows that this is **not** a uniform global
+shift and that V2.6 does not improve V2.2's structured residual.  With V2.2's fixed emulator-total
+`R_blend` bins, direct total-model `m` changes as follows (V2.2 -> V2.6; paired delta): low-response
+class `+0.961 -> +12.849%` (`+11.887 +- 0.179` points), q1
+`+1.529 -> +10.447` (`+8.919 +- 0.194`), q2 `+2.274 -> +1.065`
+(`-1.209 +- 0.400`), q3 `+4.397 -> -12.685` (`-17.083 +- 0.519`), and q4
+`-5.132 -> -27.655` (`-22.523 +- 0.267`).  Thus the range expands from roughly ten points to
+forty points and reverses much more sharply.  The independent constgold close-neighbour split agrees:
+the unflagged class moves `-1.367 -> +17.429%`, while the flagged class moves
+`+1.463 -> -3.087%`.  V2.6 therefore flattened only the specifically controlled half-shear
+third-plus contrast; its joint response target catastrophically redistributes flow response across
+the different emulator-blendness direction on coherent constgold.  The global `+1.683%` is an even
+more severe cancellation than V2.2's `+1.081%`, not evidence of nearly uniform under-response.
+
+The matched intrinsic-neighbour-flux comparison (job 15609641) reaches the same conclusion without
+binning on any model output.  It uses the identical six seeds and 5,642,350 constgold rows, with
+fixed bins built only from intrinsic input galaxies inside 10 arcsec.  On the two V2.6 training
+axes, top-two quartiles change from V2.2
+`[-0.864,-0.408,+3.906,+0.995]%` to V2.6
+`[+1.057,+1.526,+2.358,+2.076]%`: the marginal curve is flatter but every bin remains biased
+positive.  Third-plus quartiles change from `[+0.664,+0.145,+1.702,+0.284]%` to
+`[+1.029,+1.278,+3.035,+1.728]%`; all four paired changes are positive, so that marginal curve is
+not repaired.  More decisively, the radial-shell structure is catastrophically redistributed.  In
+the highest intrinsic-flux quartile, near 0--1 arcsec moves `+10.639 -> -13.144%`
+(`-23.783 +- 0.392` points) and mid 1--3 arcsec moves `+3.343 -> -37.004%`
+(`-40.347 +- 0.663` points).  Hence the controlled half-shear third-plus closure does not transfer
+even to physically defined constgold neighbour-flux axes: V2.6 fixes one conditional contrast while
+inducing much larger radial/scene-dependent errors.  The earlier predicted-`R_blend` table was kept
+only as an apples-to-apples reproduction of the established "blendness" diagnostic; it was not the
+feature used by V2.6.
+
+Validation so far: Python compilation, Bash syntax, `git diff --check`, strict key coverage and
+metadata preservation checks.  The first V2.3 score attempt exposed an augmented-sidecar metadata
+replacement (`gmed` missing); `augment_catalogue_lookup.py` now merges the source metadata, and the
+repaired sidecar was verified before successful rescoring.  `pytest` is unavailable in `sims1`.
+
 ## 2026-08-07i  Third-plus scene structure is primarily a conditional FLOW failure
 
 Added `scripts/diag_v22_thirdplus_conditional.py` and a Slurm wrapper to rank intrinsic
@@ -18053,3 +24363,880 @@ Added:
 - Train the detection classifier on the blendemu multi-shear detection catalogue.
 - Add finite-difference validation against matched case/shear configurations.
 - Decide whether the detection model should predict response to primary shear, neighbour shear, or both as separate reported quantities.
+## 2026-08-11e  Random-half response-label tomography: measurement cross-talk fails the carrier gate
+
+Before attempting another full BlendEMU retrain, built an emulator-free postage-stamp
+toy that reproduces the response-label construction itself.  Each fixed scene has an
+unsheared primary and one, four, six or eight neighbours.  The same GalSim Sersic +
+Moffat rendering and ngmix Gaussian measurement used by the earlier anchor toy compare:
+
+1. coherent, antithetic, direction-averaged neighbour truth;
+2. the summed one-neighbour-at-a-time antithetic truth;
+3. the production-style forward `g=0 -> 0.2` label with a random half of the
+   neighbours active in independent spin-2 directions;
+4. a central-difference version of the same random-half draws; and
+5. an all-active random-direction control.
+
+Positions remain fixed under shear, matching the response simulations.  A per-neighbour
+2x2 central response matrix supplies an exact mean-zero control variate: it removes the
+large linear cross-projection variance but leaves finite-shear/nonlinear random-half
+effects.  For example, in the four-neighbour scene the raw bootstrap SEM is `0.0279`
+but the controlled SEM is `0.00223`; the central `g=0.05` estimate agrees with the exact
+coherent truth at approximately `1e-4`.  This is variance reduction, not a correction to
+the reported mean.
+
+The predeclared carrier required the production-label estimate to be at least `0.005`
+response units *below* the low-shear coherent truth at more than three bootstrap SEM in
+at least two crowded scenes.  The noiseless contrasts are instead:
+
+| scene | production random-half `g=0.2` minus coherent `g=0.05` |
+|---|---:|
+| one-neighbour control | `-0.001015 +- 0.001079` |
+| four mixed neighbours | `+0.002090 +- 0.002233` |
+| eight faint close neighbours | `+0.002052 +- 0.000935` |
+| six asymmetric neighbours | `+0.002549 +- 0.001546` |
+
+The prior additivity result is reproduced: coherent-minus-summed-individual at
+`g=0.05` is only `0`, `+0.000150`, `+0.000040`, and `+0.000246` respectively.
+At `g=0.2`, random-half central labels are slightly below coherent truth
+(`-0.00028`, `-0.00098`, `-0.00122` in the crowded scenes), but coherent amplitude
+and forward-difference terms have the opposite sign, leaving the production-versus-
+anchor contrast positive rather than the required negative approximately `-0.0075`.
+
+Repeated the full design over eight independent common-noise fields with the production
+pixel RMS `0.312`.  Using noise-seed scatter as the uncertainty, the crowded-scene
+production-minus-anchor contrasts are `+0.001662 +- 0.000349`,
+`+0.002351 +- 0.000311`, and `+0.002540 +- 0.000080`; all fail the carrier gate and
+retain the wrong sign.  Thus simultaneous random-half shear, the forward `g=0.2`
+convention, common pixel noise and ngmix fitting do **not** reproduce the coherent-anchor
+deficit in these controlled scenes.  This falsifies that mechanism at the measurement-only
+toy level; it does not test SExtractor detection, cross-match conditioning, the detected
+bright-neighbour rejection, or population prevalence.
+
+The next targeted toy should therefore add the missing selection boundary: render a
+small magnitude/SNR ladder, run the actual detection + target matching in every leg,
+and compare the `g0 & g0.2` forward-selected population with the `+/-0.05`
+antithetic-selected population on common latent scenes/noise.  That is a cleaner next
+step than another scene-feature retrain because all feature-free response algebra now
+closes until detection is introduced.
+
+Artifacts: `scripts/toy_random_half_response.py`,
+`scripts/analyze_toy_random_half_noise.py`, focused estimator tests and three SLURM
+wrappers; `results/toy_random_half_response_noiseless_cv.json`, eight
+`results/toy_random_half_response_noise_s17*.json` replicas, and
+`results/toy_random_half_response_noise_summary.json`.  Accepted jobs:
+`15661180` (noiseless controlled toy), `15661251[0-7]` (noise replicas), and
+`15661252` (aggregate).  The earlier `15661155` raw-projection pilot completed but is
+superseded for inference by the controlled run.  Python compilation, Bash syntax,
+direct estimator assertions, strict JSON reads and `git diff --check` pass; the sims1
+environment lacks pytest, so the focused pytest file was not run there.
+
+## 2026-08-12f  Old-domain bridge test for the fixed V3 emulator loss
+
+Before naming a V3 model, started a direct bridge to the historical constgold selection
+tests.  The test changes only the blending-response emulator and holds fixed the old
+true-property domain (`r_input_p < 26`, `Re_input_p > 0.3 arcsec`), the 16 `dom6x6`
+flow checkpoints (seeds 501--517, excluding 504), the full 11,674,408-row constgold
+population, the measured per-leg cuts, 32 flow draws, and the model-side reselection.
+
+The replacement emulator uses all 200 half-shear response cases and the already fixed
+one-pass recipe: feature-only weights from the frozen
+`lsst_r_extnbr_indom_tuned` prediction, positive prediction squared, alpha 0.065,
+cap 50, 271 trees, and no label in the weights.  No hyperparameter is selected on
+constgold.  The output tag is
+`lsst_r_extnbr_indom_tuned_rpowposa0065_all200`.
+
+Generalized `scripts/retrain_emulator_v22_response_weighted.py` so source and output
+tags can be supplied explicitly while requiring the configuration cuts to equal the
+frozen source metadata.  Added a strict recipe/provenance check and a paired comparison
+that refuses unless the old and new runs have the same checkpoints, population, cuts,
+simulation response, and flow contributions within `1e-4` absolute response.  The
+tolerance is needed because historical and replacement seeds may land on different GPU
+architectures; observed repeat drift in the first four pairs is `7e-10`--`6.9e-5`.
+This is small compared with the selection residuals, but it is not bitwise isolation.
+
+Submitted dependency chain: training `15683001` -> lookup `15683002` -> 16-seed GPU
+array `15683003` -> merge `15683004`.  The lookup covers constgold cases 40--139 and
+the merged output is `results/constgold_neardomain_table_indom_v3bridge.npz`.
+
+All jobs completed successfully.  Training used 78,239,309 rows with 19,559,828 in
+the fixed validation split; final weighted RMSE was 1.00541 train / 1.00631 validation.
+The replacement lookup has exactly the old lookup's 13,384,211 rows, so coverage did
+not change.  Its lookup-wide mean response rose 6.11%, from 0.213695 to 0.226759.
+On the exact 11,674,408-row selection population, mean `R_blend` rose from 0.135779 to
+0.145759.
+
+The pre-V3 bridge gate fails.  With the same 16 old flow checkpoints, no-cut constgold
+`m` changes from `-0.123 +- 0.152%` to `-1.266 +- 0.149%`: the transferred loss
+overshoots the old-domain total response rather than merely closing a +0.8% deficit.
+More importantly, the selection-induced excess `dm = m(cut)-m(no cut)` is not removed:
+
+| cut | old dm (%) | replacement dm (%) |
+|---|---:|---:|
+| mag < 26 | +0.325 | +0.345 |
+| mag < 25.5 | +0.826 | +0.981 |
+| mag < 25 | +0.756 | +1.114 |
+| R > 0.60 arcsec | +0.766 | +0.782 |
+| R > 0.70 arcsec | +4.589 | +4.571 |
+| S/N > 10 proxy | +0.779 | +0.914 |
+
+The reason is visible without a mechanism claim: the replacement adds an almost global
+response offset.  The no-cut population gains +0.009980 `R_blend`, while mag<25 gains
+only +0.007848 and R>0.70 gains +0.010354.  Such nearly common shifts move every
+absolute `m` by about -1.1 points but cancel in `dm`; where a cut gains less than no-cut,
+`dm` worsens.  Therefore the earlier selection residuals cannot be dismissed as only
+the same global emulator underprediction.
+
+The historical and replacement runs were made at different times on heterogeneous
+GPUs.  Repeated flow contributions differ by at most `1.24e-4` response (about 0.014
+percentage points in m), so the exact tiny R>0.70 improvement (-0.018 points) is near
+the repeat floor and should not be emphasized.  The unchanged multi-percent residual,
+the 1.14-point global overshoot, and the 0.14--0.36-point worsening of stronger
+magnitude/S/N `dm` are robust to that caveat.  Paired details are saved in
+`results/constgold_selection_indom_v3bridge_paired.json`.
+
+### Row-wise global mean check
+
+Job `15684288[0-1]` reconstructed the exact all-200 fixed train/validation splits and
+measured unweighted physical-response means for the frozen source and new emulators.
+This uses half-shear labels only, not constgold:
+
+| domain | rows | label mean | source prediction | new prediction | new - label |
+|---|---:|---:|---:|---:|---:|
+| V2.2 (`r<25.8`, `Re>0.5`) | 47,310,214 | 0.00756932 | 0.00756142 | 0.00810475 | +0.00053543 |
+| old (`r<26`, `Re>0.3`) | 97,799,137 | 0.00827601 | 0.00815995 | 0.00877169 | +0.00049568 |
+
+Thus the response-weighted retraining shifts the global per-pair mean upward in both
+domains, by 7.07% and 5.99% of the respective label means.  Mean-one normalization of
+the sample weights does not constrain the finite-capacity regressor's unweighted mean.
+The per-pair offsets are much smaller than the approximately +0.010 constgold scene
+shift because each primary sums response predictions over many neighbours.  Split-level
+values and provenance are in `results/emulator_global_mean_v22_rpowposa0065_all200.json`
+and `results/emulator_global_mean_indom_rpowposa0065_all200.json`.
+
+## 2026-08-12g  Weighted-emulator correction decomposed into its mean and structure
+
+The apparent success of the positive-tail weighted emulator on coherent anchors was
+confounded by an unweighted global prediction shift.  Reconstructed the exact fitting
+population for the selected 160-case candidate `lsst_r_extnbr_v22_rpowposa0065`
+(cases 40--199): 37,852,393 selected rows, with 30,281,914 training and 7,570,479
+validation rows.  The physical-response means are label `0.0076055871`, baseline V2.2
+prediction `0.0075578658`, and candidate prediction `0.0081153722`.  Hence the candidate
+minus baseline correction has mean
+
+```text
+mu = +0.00055750646 per pair
+```
+
+This is not a small bookkeeping detail: a coherent anchor has about 15.74 scored
+neighbours, so the constant component sums to about `+0.00878` per primary.
+
+For every stored pair, decomposed the candidate correction exactly as
+`delta f = mu + (delta f - mu)`, then replayed four arms without rerendering or opening
+constgold: baseline, constant only, zero-mean structural correction only, and the full
+candidate.  All shared-label and additive-replay identity checks are exact.
+
+The zero-mean structural component is the part that repairs independent-direction
+response vectors.  On the held-out half-shear cases 20--39, the case-level vector slope
+changes from `1.06070 +- 0.00730` to `0.98722 +- 0.00717`; the constant-only arm remains
+`1.05939 +- 0.00728`.  On independent-direction anchors 250--299, it changes from
+`1.11098 +- 0.02423` to `1.02206 +- 0.02245`; constant only remains
+`1.10944 +- 0.02419`.  Thus the weighted loss did find a real correction to the
+response-vector tail underfit.
+
+The coherent scalar gap behaves oppositely.  On cases 200--399, baseline is
+`-0.008940 +- 0.001498`; constant only closes it to
+`-0.000165 +- 0.001497`, while the zero-mean structural component slightly worsens it
+to `-0.010656 +- 0.001497`.  The independent fresh coherent block 400--599 repeats this:
+baseline `-0.008305 +- 0.001496`, constant only `+0.000472 +- 0.001496`, and zero-mean
+structure `-0.009925 +- 0.001503`.  The full candidate looks improved only because the
+constant and structural pieces are added together (`-0.001881` and `-0.001148` in the
+two blocks).
+
+Equivalently, the constant per-pair offsets needed to close the two coherent blocks are
+`0.00056798` and `0.00052750`; the weighted model's `mu=0.00055751` happens to fall
+between them.  This repeatability makes the coherent deficit real, but it does **not**
+identify its mechanism.  The correct revised conclusion is therefore two separate
+facts:
+
+1. V2.2 has a genuine structural response-vector error exposed by half-shear and
+   independent neighbour directions; the weighted loss largely fixes that error.
+2. The approximately `-0.0085` coherent-scene scalar deficit is not fixed by that
+   structural correction.  The weighted model's success on it is an accidental mean
+   shift and must not be used as evidence that the mechanism was found.
+
+Artifacts: `scripts/score_emulator_global_mean.py` now supports an explicit minimum
+case; `scripts/analyze_weighted_correction_decomposition.py`; SLURM jobs `15684738` and
+`15685283`; `results/emulator_global_mean_v22_rpowposa0065_c40-199.json`; and
+`results/weighted_correction_decomposition_v22_rpowposa0065.json`.  Job `15685219`
+was a failed analysis attempt caused by a Pandas column/method name collision and
+produced no scientific artifact.
+
+The next discriminator uses already-rendered independent-direction images: repeat the
+same deterministic ngmix fit at detected and fixed truth positions, then compare its
+response-vector change with the already measured coherent fixed-position result.  This
+tests centroid/matching motion without a new render and without treating the candidate's
+mean shift as a correction.
+
+### Fixed-position independent-direction result
+
+Completed that discriminator on all 100 independent-direction cases.  The same 339,694
+finite anchors were fit at the detected centroid and fixed input truth position with a
+common deterministic ngmix initialization.  On held-out cases 250--299, the baseline
+V2.2 response-vector slope is `1.10825 +- 0.03027` at detected positions and
+`1.11928 +- 0.02572` at truth positions.  The paired position shift is only
+`+0.01102 +- 0.02519`, much smaller than the `+0.10825` baseline slope residual and
+consistent with zero.  The weighted candidate is `1.02989 +- 0.02822` detected and
+`1.04287 +- 0.02452` truth-position.  Across all 100 cases the same conclusion holds:
+the baseline slopes are `1.10072` and `1.10724`, while the position shift is
+`+0.00652 +- 0.01675`.
+
+Together with the earlier coherent fixed-position validation (where the held-out gap
+moved from `-0.00518 +- 0.00313` to `-0.00685 +- 0.00277`, the wrong direction), this
+rejects ordinary detected-centroid/matching motion as the carrier at current precision.
+It also confirms that the candidate's independent-vector improvement is present in the
+pixels rather than being an accident of detected centroids.
+
+Artifacts: `scripts/analyze_anchor_independent_fixed_positions.py`, two SLURM wrappers,
+and `results/anchorblend_independent_fixed_position_v22_rpowposa0065_c200-299.json`.
+Measurement job `15685567` and analysis job `15685747` completed.  Job `15685559`
+failed before writing measurements because legacy case 244 stored its key in `index`
+with null `input_index`; `measure_anchor_fixed_positions.py` now normalizes that known
+schema exactly, matching the existing response analyzer.
+
+### Omitted morphology/orientation population test
+
+Extended the predeclared half-shear-to-locally-coherent-anchor density-ratio diagnostic
+beyond the seven deployed V2.2 inputs.  The richer coordinate contains both galaxies'
+axis ratios and redshifts; each intrinsic orientation relative to the separation; their
+mutual alignment; and the shear direction relative to the separation and both galaxy
+orientations.  Angles enter only through spin-2 sine/cosine pairs.  No anchor response
+truth is used to fit the density ratio.
+
+The anchor/half-shear domain AUC remains only `0.52340`; capped weights retain 99.20% of
+the source effective sample and match every feature mean to absolute standardized
+difference below `0.00354`.  Yet the reweighted half-shear prediction-minus-label sum is
+`+0.00420 +- 0.00350`, while the observed locally coherent anchor gap is
+`-0.00594 +- 0.00228`.  The sign is wrong and the difference is
+`+0.01014 +- 0.00418`, so the predeclared two-combined-SEM gate fails.  Ordinary
+population shift in the deployed inputs plus these omitted morphology/orientation
+variables is therefore not supported as the carrier.  This does not rule out an
+unmeasured scene variable or a training-label/coherence mismatch.
+
+The already-run pair-specific third-neighbour-flux model is also too small to explain
+the gap.  On locally coherent held-out cases its mean correction is only
+`+0.000792 +- 0.000105`, changing the gap from `-0.00506 +- 0.00331` to
+`-0.00427 +- 0.00333`, while the worst conditional residual grows.  Thus the tested
+third+ absolute flux summaries are not a coherent closure.
+
+Artifact: `results/v22_pair_domain_reweight_morphology_c0-39_to_anchor_c200-299.json`;
+job `15685801` completed.  The default seven-feature behavior of
+`scripts/diag_v22_pair_domain_reweight.py` remains unchanged; `--feature-set morphology`
+activates the richer diagnostic.
+
+### Paired coherent shear-amplitude test (running)
+
+The remaining clean fork is a finite-amplitude/shared-shear interaction versus a
+persistent first-order mismatch in the half-shear pair-label estimand.  Started a paired
+neighbour-only coherent anchor run at `g=0.02` for cases 400--499.  Catalogue generation
+must reproduce the existing `g=0.05` anchor manifests exactly before rendering.  The
+final analysis uses exact common object keys and requires V2.2 predictions to replay
+within `2e-7`.  Before seeing the result, the finite-amplitude carrier gate was fixed as
+`abs(gap_g002) < 0.5 abs(gap_g005)`; consistency within two paired case SEM supports a
+persistent gap instead.
+
+Dependency chain: catalogue `15685858` -> simulation `15685859` -> two-leg shape array
+`15685860` -> response `15685861` -> paired analysis `15685862`.  Expected final artifact:
+`results/anchorblend_shear_amplitude_v22_c400-499.json`.  Constgold is not opened by any
+stage.
+
+## 2026-08-12h  Coherent gap persists at low shear; exact training sum closes
+
+The paired amplitude chain completed.  On 340,011 common anchors from cases 400--499,
+the V2.2 coherent prediction-minus-truth gap is `-0.008454 +- 0.002239` at `g=0.05`
+and `-0.016778 +- 0.004976` at `g=0.02`.  Their paired difference is
+`-0.008324 +- 0.005571`: the low-shear central value is noisier and more negative, but
+is consistent with the `g=0.05` value within two case SEM.  The predeclared
+finite-amplitude gate fails.  Thus the gap does not disappear at realistic shear and
+finite-shear nonlinearity is disfavoured; the data do not establish that the gap grows
+at low shear.  Artifact: `results/anchorblend_shear_amplitude_v22_c400-499.json`.
+
+Separately reconstructed the exact V2.2 training population and summed predictions and
+labels over the deployed neighbours of each primary.  Across cases 40--199 there are
+4,173,826 primaries and 35,084,344 pairs (`8.406` pairs per primary).  The mean summed
+label is `0.059970 +- 0.001006`, the V2.2 prediction is
+`0.059657 +- 0.000090`, and prediction minus label is
+`-0.000313 +- 0.000993`.  Therefore V2.2 closes its actual random-half training
+estimand after summation; ordinary row-MSE underfit and training-case sample variance do
+not explain the approximately `-0.0085` locally coherent gap.  Artifact:
+`results/v22_summed_label_closure_c40-199.json`; job `15687278` completed.
+
+### One-active-neighbour orthogonal anchor test (running)
+
+Started the direct individual-pair discriminator on the same cases 400--499 and exact
+anchor manifests as the coherent repeat.  For each anchor, one deployed V2.2 neighbour
+is selected uniformly by a stable hash.  Only that neighbour is sheared antithetically
+at `g=0.05`; the primary and every other rendered source remain present and unsheared.
+Two roots use orthogonal spin-2 directions (`45 deg` apart in physical shear angle), so
+the average of the two projected central differences estimates the scalar isotropic
+per-pair response without random-direction projection noise.  Multiplying the selected
+pair by its anchor's deployed pair count is the predeclared Horvitz--Thompson estimator
+of the full per-anchor neighbour sum.  The analysis also reports its model-side
+sampling balance against the exact all-pair V2.2 sum and compares on common object keys
+with the existing coherent response catalogue.
+
+Files added: `configs/fs2_lsst_r_anchorblend_oneactive_orthogonal_c400-499.yaml`,
+`scripts/prepare_anchorblend_oneactive_orthogonal.py`,
+`scripts/analyze_anchorblend_oneactive_orthogonal.py`, focused assignment tests, and six
+SLURM wrappers.  Direct invariance checks, `py_compile`, shell syntax checks, Slurm
+`--test-only`, and `git diff --check` passed.  The `sims1` environment lacks pytest, so
+the two focused test functions were also executed directly.  Initial simulation array
+`15687853` failed before creating render trees because SExtractor's module load
+overrode the conda C++ runtime; the wrapper now restores the conda library path after
+loading SExtractor, matching the existing working anchor jobs.  Catalogue `15687851`
+and preparation `15687852` completed; the corrected concurrent render array is
+`15687908`, followed by shape array `15687909` and analysis `15687910`.  Constgold is
+not opened.
+
+## 2026-08-12n  “One-neighbour domination” is a single-pair response spike
+
+Unpacked the frozen `max(|R_pair|)/sum(|R_pair|) > 0.775277` tail on the exact
+coherent-common population.  The name is now clarified as **single-pair predicted-
+response dominance**, not neighbour-light dominance.  In held-out c450--499, the
+tail's median maximum absolute pair prediction is `0.20518`, the runner-up is only
+`0.00641`, and all other pairs together sum to `0.01689` in absolute response.  The
+median maximum/runner-up ratio is `24.88` (outside-tail `2.02`), and 85.7% of tail
+anchors have exactly one pair above 10% of the maximum (outside 3.3%).  Thus the
+tail is mathematically a single emulator-output spike among roughly 16 deployed
+pairs.
+
+It is correlated with bright/large secondaries but is not equivalent to a bright-
+neighbour cut.  In validation, the response-dominant pair is the brightest deployed
+neighbour for 76.6%, but carries a majority of total deployed-neighbour flux for only
+47.9%, has `F_s/F_p > 5` for only 35.1%, and is the closest neighbour for only 25.6%.
+Median flux ratio is `2.884`, secondary size `0.729"`, and separation `3.782"`.
+All seven scaled model inputs are within the recorded training min/max envelope for
+every coherent-common tail row; a sparse interior training region remains possible.
+
+The coherent gap is if anything stronger where response dominance is not light
+dominance.  The tail with a non-brightest dominant-response pair has conditional gap
+`-0.07887 +- 0.01832` versus `-0.04722 +- 0.00884` when it is brightest.  The tail
+where that pair carries no majority of neighbour flux has `-0.06962 +- 0.01079` and
+contributes `-0.00729` globally, versus `-0.03887 +- 0.01130` and `-0.00365` for the
+majority-flux subset.  This reinforces that the carrier is the emulator's nonlinear
+pair-response spike, not simply one neighbour owning the light budget.
+
+Added `scripts/localize_anchorblend_response_dominance.py`, a focused algebra test,
+and cluster wrappers.  `py_compile`, pytest, Bash syntax, Slurm `--test-only`, and
+targeted whitespace checks passed.  Initial job `15715857` completed the 373,062-row
+per-anchor table then failed in summary only because `tail` collided with a pandas
+method; guarded reuse was added and recovery `15715866` completed without rebuilding.
+The coherent-common restriction and gap-subgroup summary completed as job `15715878`.
+Artifacts: `results/anchorblend_response_dominance_v22_c400-499.feather` and
+`results/anchorblend_response_dominance_common_v22_c400-499.{json,md}`.  Constgold
+was not opened.
+
+## 2026-08-12o  Maximum/runner-up response ratio >20 isolates the gap
+
+Applied the user-proposed cut `max(|R_pair|)/runner_up(|R_pair|) > 20` to the exact
+coherent-common population.  On held-out c450--499 it removes
+`11.96% +- 0.09%` of anchors and leaves emulator-minus-coherent
+`+0.000216 +- 0.003180` (`p=0.946`), compared with baseline
+`-0.009778 +- 0.003170`.  The removed subset has gap
+`-0.083183 +- 0.0130` and contributes `-0.009981` to the global gap.  The result
+replicates in c400--449: 11.79% removed, remaining gap
+`+0.000042 +- 0.003408` (`p=0.990`), versus baseline `-0.007390`.
+
+An explicitly exploratory threshold scan at 5, 10, 15, 20, 25, 30, 40, 50, 75,
+and 100 shows a stable continuum rather than a unique magic cut: validation kept
+gaps run `+0.00342, +0.00148, +0.00075, +0.00022, -0.00117, -0.00192,
+-0.00254, -0.00387, -0.00519, -0.00595`.  Threshold 20 is therefore a useful
+pre-specified diagnostic boundary, not a newly tuned model parameter.  It rejects
+only ~12%, substantially less than threshold 5 (~32%), while removing essentially
+the entire global contribution.  Do not treat this post-hoc population cut as an
+approved correction or V3 selection without an independent scientific justification.
+
+Added `scripts/scan_anchorblend_response_ratio_cut.py` and a read-only cluster
+wrapper.  `py_compile`, the existing cut-summary algebra test, Bash syntax, Slurm
+`--test-only`, and targeted whitespace checks passed.  Job `15715902` completed in
+8 seconds.  Artifact: `results/anchorblend_response_ratio_cut_scan_v22_c400-499.json`.
+Constgold was not opened.
+
+### One-active-neighbour result: clean execution, insufficient scene-sum precision
+
+The corrected render array completed both direction roots in 23--24 minutes and the
+four shape legs completed in 34--37 minutes.  All 400 case/sign image, detection and
+shape catalogues are present.  The final common population contains 340,022 anchors
+over 100 cases, 91.14% mean four-leg-plus-coherent coverage (minimum 89.68%).  The
+coherent endpoint on this exact population reproduces the known gap:
+`prediction - truth = -0.008466 +- 0.002238`.
+
+The predeclared one-active Horvitz--Thompson reconstruction is instead
+`prediction - truth = +0.013019 +- 0.021222`.  The selected-pair model-side sampling
+balance against the exact all-pair coherent prediction is
+`-0.001095 +- 0.001473`, consistent with zero.  The individual-pair and
+multi-neighbour gates both fail: the result is underpowered, not evidence for either
+mechanism.  Orthogonal directions remove the random orientation projection, but
+multiplying one noisy pair measurement by the mean deployed multiplicity (`15.812`)
+also multiplies its measurement noise.  At the observed variance, matching the
+coherent test's `0.00224` SEM would require approximately 9,000 cases; a 3-sigma test
+of a `0.00847` scene gap would require approximately 5,650 cases.  Therefore scaling
+this exact design is not a practical next step.
+
+For scale only, the directly selected pair has model `0.006405 +- 0.000093`, truth
+`0.005184 +- 0.001316`, and model-minus-truth
+`+0.001221 +- 0.001305`.  The coherent deficit divided by mean multiplicity would need
+about `-0.000535` per pair.  The measured sign is opposite, but differs from that
+heuristic target by only 1.34 combined sigma and the weighting is not identical, so it
+is suggestive rather than decisive.
+
+An exploratory two-fold cross-fitted control-variate analysis used only two
+zero-expectation quantities already generated: the orthogonal null and the `u-v`
+response difference.  A 2,000-bootstrap SEM remains `0.02064--0.02121` versus raw
+`0.02122`; it does not recover useful precision and no corrected number is promoted.
+Artifacts: `results/anchorblend_oneactive_orthogonal_v22_c400-499.{feather,json}` and
+`results/anchorblend_oneactive_control_variates_v22_c400-499.json`; final jobs
+`15698131` and `15698800` completed.
+
+The exact pair manifest replays the previously stored coherent prediction exactly in
+94/100 cases.  Six cases contain rare hard pair-boundary differences: the largest
+individual-anchor difference is `0.00196`, while every affected case mean is below
+`5.76e-7`.  The analysis therefore keeps the stored coherent prediction as the endpoint
+and records the fresh manifest replay only as an audit/sampling control.  Earlier
+analysis attempts `15687910` and `15697679` stopped before writing results because
+their maximum-row replay guards were unnecessarily bitwise; no response threshold or
+mean gate was changed.
+
+## 2026-08-12i  Exact per-neighbour g1 decomposition pilot prepared
+
+The earlier four-case exact-rank pilot already implemented one-neighbour-at-a-time
+measurement, but used one random direction per pair.  It found emulator-minus-pair-sum
+`-0.00807 +- 0.03523` and coherent-minus-pair-sum `-0.00938 +- 0.03537`; neither term
+was resolved.  The documented limitation was directional projection variance.
+
+Prepared a cleaner sequential pilot on the signal-bearing coherent-anchor cases
+400--409.  The frozen deployed V2.2 pair list is partitioned into 19 stable ranks,
+keeping the completed one-active selection as rank zero.  Each rank arm shears at most
+one neighbour per anchor antithetically along g1, the exact direction of the existing
+coherent measurement; every other rendered source remains present and unsheared.  This
+requires 19 arms rather than 38 orthogonal random-direction arms and makes the exact
+identity
+`model-coherent = (model-sum individual) - (coherent-sum individual)` hold without an
+isotropy assumption.  Analysis reports the emulator, additivity and ordinary coherent
+terms on one all-rank/coherent common population, individual-pair residuals, rank-local
+detection-conditioned residuals, and the shift from the ordinary coherent population.
+Constgold is not opened.
+
+### Ten-case result: exact identity closes, but the individual sum is underpowered
+
+Jobs `15699438`--`15699442` completed successfully.  The all-rank/coherent
+intersection retains 33,975 anchors and 535,242 deployed pairs, with 90.1--91.7%
+coverage by case.  On this common population, emulator sum, individual-neighbour
+g1 sum, and coherent-neighbour g1 truth are respectively
+`0.10306 +- 0.00126`, `0.05704 +- 0.02758`, and `0.10393 +- 0.00848`.
+Therefore emulator-minus-individual is `+0.04602 +- 0.02723` (1.69 case SEM),
+coherent-minus-individual is `+0.04689 +- 0.03006` (1.56 SEM), and their
+difference exactly reproduces emulator-minus-coherent
+`-0.00087 +- 0.00831`.  The off-component null is
+`+0.01584 +- 0.03009`, confirming the scale of directional/measurement scatter.
+The conditioning shift from requiring every rank and the coherent legs is small,
+`+0.00064 +- 0.00053`.
+
+This pilot does not distinguish emulator error from additivity: both apparent
+terms are below two case SEM and nearly cancel.  Moreover, cases 400--409 happen
+to have ordinary coherent gap `-0.00151 +- 0.00828`, so this ten-case block does
+not itself resolve the known 100-case `-0.00847` endpoint.  Naive scaling predicts
+100 cases would still leave about `0.0086--0.0095` SEM on the two decomposition
+terms.  Do not scale this same single-component design directly; an orthogonal
+component pair or another variance-reduction design should be tested first.
+Artifacts: `results/anchorblend_eachpair_g1_v22_pilot_c400-409.{feather,json}` and
+`results/anchorblend_eachpair_g1_pairs_v22_pilot_c400-409.feather`.
+
+Added the pilot config, preparation/analysis scripts, a focused three-test file and six
+Slurm wrappers.  `sims1` `py_compile`, direct focused tests, Bash syntax, Slurm
+`--test-only`, and targeted `git diff --check` pass.  Resource audit found about 6.5 TB
+free on project storage; the ten-case pilot is expected to retain about 140 GB before
+any separately authorized cleanup.  The pilot is intended to measure variance and
+coverage before any 100-case expansion.
+## 2026-08-12j  Random-direction individual-neighbour toy prepared
+
+Added a direct toy counterpart to the running exact-rank anchor experiment.  In
+each draw every neighbour receives an independent random spin-2 direction, but
+neighbours are rendered one at a time with the primary and all other sources
+unsheared.  Their matching projected central responses are summed and compared
+with the direction-averaged coherent response.  A second, orthogonal-paired
+estimator separates raw random-projection scatter from finite-amplitude or
+direction-dependent measurement effects.  The fixed-g1 coherent component and
+the deterministic direction-quadrature individual sum are retained as audits;
+the random projection is compared to the isotropic coherent reference so scene
+anisotropy is not mislabelled as non-additivity.  The independent uncertainty
+unit in this mechanism toy is a random direction assignment, conditional on the
+fixed scene and noise realization.
+
+Files: `scripts/toy_random_individual_projection.py`, its focused test, and
+`jobs/job_toy_random_individual_projection.sh`.  `py_compile`, two direct focused
+tests, Bash syntax, Slurm `--test-only`, and targeted `git diff --check` passed.
+The noiseless 256-direction-draw run is job `15707340`; expected output is
+`results/toy_random_individual_projection_noiseless.json`.  Constgold is not opened.
+
+Job `15707340` completed in 12m25s.  Raw random one-direction-per-neighbour sums
+minus coherent isotropic truth are `-0.000194 +- 0.001352`,
+`+0.001673 +- 0.002281`, `+0.000141 +- 0.000815`, and
+`+0.001670 +- 0.001420` for the one-, four-, eight-, and six-neighbour scenes.
+All are within 1.2 direction-assignment SEM of zero.  Orthogonal pairing removes
+the projection scatter and gives individual-sum minus coherent values
+`+0.000009`, `-0.000151`, `-0.000035`, and `-0.000225`, reproducing the earlier
+fixed-direction additivity result.  The fixed-g1 coherent component differs
+substantially from the isotropic response in individual asymmetric scenes, so a
+random trace projection must not be compared directly with one fixed component
+without an isotropic scene ensemble.  This toy therefore supports additivity but
+also confirms that raw random projections are intrinsically noisy.  Artifact JSON
+was strictly read and the final targeted `git diff --check` passed.
+
+## 2026-08-12k  Coherent-gap localization and fixed-g2 trace extension
+
+Localized the existing 100-case coherent V2.2 gap before allocating another render.
+Cases 400--449 freeze all quintile edges; cases 450--499 are held-out validation; the
+case remains the uncertainty unit.  The validation global prediction-minus-coherent
+gap is `-0.009778 +- 0.003170`.  Its clearest replicated marker is the fraction of the
+total absolute predicted response carried by the strongest deployed pair.  Above the
+frozen top-quintile edge `0.775277`, the conditional gap is
+`-0.054394 +- 0.007680` and its contribution to the global gap is
+`-0.010946 +- 0.001530`; the top-minus-bottom contrast is
+`-0.045722 +- 0.008646` (Holm-adjusted `p=3.72e-5`).  The development half has the
+same sign and scale: top-quintile gap `-0.044826` and top-minus-bottom
+`-0.038314 +- 0.010459`.  Other bins partly cancel this tail.
+
+High total predicted response, response power, and maximum absolute pair response also
+mark negative validation tails, while pair count, primary size, and near/far absolute
+response sums do not provide comparably stable localization.  This identifies where
+the discrepancy is concentrated—anchors dominated by one strong predicted pair—not a
+causal mechanism.  Coordinates are correlated and this audit does not establish
+whether the carrier is emulator error, non-additivity, or measurement conditioning.
+Artifacts: `results/anchorblend_coherent_localization_v22_c400-499.{json,csv,md}`;
+job `15714930` completed; constgold was not opened.
+
+Frozen a matched orthogonal extension of the exact c400--409 rank pilot.  Nineteen new
+arms reuse the immutable g1 ranks and shear exactly one frozen neighbour rank per
+anchor along fixed g2.  A twentieth arm shears every non-anchor coherently along g2,
+matching the old coherent-g1 construction.  Generated latent galaxies, positions, and
+noise seeds must match the original coherent scenes before any shear column is changed.
+The analysis intersects all g1/g2 rank and coherent legs and compares the emulator
+scalar with `0.5*(R11+R22)` for both the individual-pair sum and coherent response.
+It retains both off-diagonal components and separately reports the previously frozen
+dominant-pair tail.  This is a variance/projection diagnostic; the ten-case block is
+still not expected to resolve a population-level `0.008` gap by itself.
+
+Added the g2 config, catalog preparation, trace analysis, three focused tests, and the
+five-stage Slurm chain.  `py_compile`, nine focused tests, Bash syntax, Slurm
+`--test-only`, and targeted whitespace checks passed.  All scientific work is assigned
+to the `cluster` partition.
+
+Submitted the dependency chain as catalogue `15715230`, preparation `15715231`,
+render `15715232`, shapes `15715233`, and analysis `15715234`.  All 20 catalogue
+tasks completed.  Preparation then validated the latent-scene identity and assigned
+the frozen shears for all ten cases (37,311 anchors and 590,425 pair rows in the
+immutable manifest) before completing successfully.  The render array is queued;
+later stages remain protected by `afterok` dependencies.
+
+## 2026-08-12l  Dominant-pair tail contains the coherent gap
+
+Characterized the maximum-absolute-response deployed pair for every coherent-common
+anchor, retaining the previously frozen `top_abs_fraction > 0.775277` definition and
+the c400--449 development / c450--499 validation split.  On held-out validation, the
+tail conditional emulator-minus-coherent gap is `-0.054394 +- 0.007679`, while its
+complement is `+0.001442 +- 0.003134`, consistent with zero (`p=0.647`).  The paired
+tail-minus-complement contrast is `-0.055836 +- 0.007741` (`p=3.11e-9`).  The tail
+contributes `-0.010946 +- 0.001531` to the global gap and the complement contributes
+`+0.001167 +- 0.002498`.  Development gives the same split: tail
+`-0.044826 +- 0.008899`, complement `+0.001904 +- 0.003163`.
+
+The dominant-pair tail is a bright-secondary corner rather than a one-pair-count
+artifact.  In validation its secondary/primary true-flux ratio has median `2.884`
+(outside `0.400`); 77.8% have a secondary brighter than the primary (outside 31.2%),
+60.7% exceed twice the primary flux (outside 19.6%), and 21.5% exceed ten times the
+primary flux (outside 4.6%).  Tail/outside median secondary magnitudes are
+`23.061/24.934`, sizes `0.729/0.475` arcsec, and separations `3.782/4.290` arcsec;
+primary magnitude and size differ only mildly.  All dominant pairs pass the deployed
+V2.2 regression cuts `[r_s 13--29, r_p 18--25.8, Re_s 0--10, Re_p 0.5--1.5,
+d 0--10]`, so this is not formal cut extrapolation, but it may be a sparsely trained
+relative-brightness regime.  No correction or causal claim is made.
+
+Added `scripts/characterize_anchorblend_dominant_pairs.py`, two focused tests, and the
+read-only cluster wrapper.  `py_compile`, tests, Bash syntax, Slurm `--test-only`, and
+targeted whitespace checks passed.  Job `15715799` completed in 29 seconds.  Artifacts:
+`results/anchorblend_dominant_pair_domain_v22_c400-499.{feather,json,md}`.  Constgold
+and post-shear detection properties were not opened.
+
+## 2026-08-12m  True flux-ratio >5 removal does not reduce the gap
+
+Applied two true-input bright-secondary cuts to the coherent-common anchor population,
+with c400--449 development and c450--499 held-out validation and case-level errors.
+Removing every anchor whose maximum-response pair has `F_s/F_p > 5` removes
+`14.09% +- 0.09%` of validation anchors but leaves emulator-minus-coherent
+`-0.010143 +- 0.003090`, compared with baseline `-0.009778 +- 0.003170`.
+Removing every anchor having **any deployed pair** with `F_s/F_p > 5` is more
+aggressive (`20.18% +- 0.09%` removed) and leaves
+`-0.009906 +- 0.002852`.  Neither improves the gap; development gives the same
+direction (`-0.009148` and `-0.008317`, versus baseline `-0.007390`).
+
+The reason is that true flux ratio and response dominance are not interchangeable.
+On validation, the response-dominant tail with `F_s/F_p <= 5` is 13.07% of anchors,
+has gap `-0.06103 +- 0.00877`, and contributes `-0.00797 +- 0.00116` globally.
+The response-dominant `>5` subset is only 7.07%, with gap
+`-0.04430 +- 0.01558` and contribution `-0.00298 +- 0.00109`; outside the
+response-dominant tail, the `>5` subset instead has a positive central gap
+`+0.02809 +- 0.01482`.  Cutting solely on `F_s/F_p` therefore removes populations
+whose effects partly cancel and misses most of the carrier below ratio 5.
+
+Added `scripts/diagnose_anchorblend_bright_secondary_cut.py`, its focused algebra
+test, and a read-only cluster wrapper.  `py_compile`, focused pytest, Bash syntax,
+Slurm `--test-only`, and targeted whitespace checks passed.  Job `15715836`
+completed successfully.  Artifact:
+`results/anchorblend_true_bright_secondary_cut5_v22_c400-499.json`.  Constgold was
+not opened.
+
+## 2026-08-13a  Response-ratio >20 removal barely changes V2.2 constgold
+
+Replayed the exact frozen `lsst_r_extnbr_v22` pair inference on all constgold cases
+40--139 and retained, per primary, the largest and runner-up absolute pair responses.
+Every replayed per-object total agrees with the original V2.2 lookup key-for-key to a
+few `1e-7`; the small difference is float32 reduction order.  The diagnostic then
+removed detections satisfying the anchor-fixed coordinate
+`max|R_pair| / runner-up|R_pair| > 20` and applied that identical mask to `R_sim`,
+`R_flow`, and `R_blend` in all 16 frozen flow-seed dumps.  No model was refit or
+corrected.
+
+On the true `r_p < 25.8`, `Re_p > 0.5` V2.2 constgold domain, the cut removes
+`12.226% +- 0.014%` by case (`689,828 / 5,642,349`).  The absolute calibration moves
+only from `m = +1.080 +- 0.179%` to `+0.961 +- 0.183%`, where each total error combines
+the 16-seed SEM and case-blocked simulation SEM.  The paired seed-only shift is
+`-0.119 +- 0.026` percentage points; this is not a complete uncertainty for the shift
+because population-changing cuts also carry simulation sampling noise.  The retained
+response components are `R_sim=0.96177`, `R_flow=0.86885`, `R_blend=0.08378`, leaving
+an absolute response deficit of `0.00914`, versus `0.01027` before the cut.  The
+removed tail itself has `m=+1.944 +- 0.588%`, but contributes only `0.00225` (21.9%)
+of the global response deficit; 78.1% remains in the retained population.
+
+Therefore the anchor-localized ratio cut does **not** close the V2.2 constgold gap.
+It weakly localizes a worse subset, but the large constgold discrepancy is not confined
+to the same response-dominant carrier seen in coherent-anchor validation.  This is an
+evaluation diagnostic, not a proposed production selection.  Jobs `15715924` and
+`15715925` completed.  Artifacts:
+`results/v22_constgold_response_dominance_c40-139.feather` and
+`results/v22_constgold_response_ratio_cut20_c40-139_s16.json`.  Added the two scripts,
+two cluster wrappers, and two focused algebra tests; `py_compile`, focused pytest,
+Bash syntax, Slurm dry-runs, and targeted `git diff --check` passed.
+
+## 2026-08-13b  V2.2 constgold gap localizes to an oscillating nearest-distance profile
+
+Built an outcome-leakage-safe per-object localization table for the exact V2.2
+constgold domain.  The absolute response residual is
+`Delta R = R_sim - (mean_seed R_flow + R_blend)`.  Cases 40--89 define all
+feature quintiles and select one highest-deficit bin per feature; cases 90--139
+validate those frozen bins.  `R_sim` is excluded from the features, rendered cases
+are the uncertainty unit, and the 14 planned feature contrasts use Holm correction.
+The split global gaps are `+0.00786 +- 0.00174` and `+0.01267 +- 0.00167` response.
+Primary magnitude and size do not validate as strong carriers.  Low model/flow
+response and several absolute pair-response summaries do, but those are correlated
+model coordinates rather than a mechanism.
+
+The fixed catalogue nearest-neighbour distance bins give the sharpest physical
+localization and replicate almost exactly across the split.  On held-out c90--139:
+
+| nearest annotated distance | population | conditional `Delta R` | contribution |
+|---|---:|---:|---:|
+| not flagged within 3 arcsec | 23.76% | `-0.01029 +- 0.00314` | `-0.00245 +- 0.00075` |
+| 0--1 arcsec | 13.61% | `+0.02532 +- 0.00449` | `+0.00344 +- 0.00061` |
+| 1--2 arcsec | 32.18% | `-0.02551 +- 0.00310` | `-0.00822 +- 0.00100` |
+| 2--3.01 arcsec | 30.45% | `+0.06536 +- 0.00409` | `+0.01990 +- 0.00124` |
+
+Thus the 2--3 arcsec group contributes 157% of the positive held-out global gap;
+the total is smaller because the 1--2 arcsec and unflagged populations cancel it.
+Development gives the same conditional 1--2/2--3 values (`-0.03140`/`+0.06406`).
+This reproduces the earlier all-case distance result in WORKLOG 2026-08-07g but now
+with a clean development/validation split and contribution accounting.  It also
+explains why removing the response-ratio >20 tail barely moved global `m`: response
+dominance is not the main carrier of this distance oscillation.
+
+Tested attribution with the already-rendered fresh half-shear c40--139 self-response
+set and the same 16 V2.2 flow seeds, with no emulator term.  The sign flip repeats
+decisively on held-out cases: `R_self-R_flow=-0.04272 +- 0.00367` at 1--2 arcsec and
+`+0.04067 +- 0.00448` at 2--3 arcsec; their paired contrast is
+`+0.08339 +- 0.00496` (`p=5.3e-22`).  Therefore the oscillating distance *shape* is
+already in the flow/self branch and is not manufactured by emulator summation.
+
+However, that half-shear profile nearly cancels globally: half-shear
+`R_self-R_flow=-0.00255 +- 0.00222` on validation, whereas constgold remains
+`+0.01267 +- 0.00167`.  Their case-paired, not same-object, difference is
+`+0.01522 +- 0.00247` (`p=1.29e-7`); development independently gives
+`+0.00742 +- 0.00257` (`p=0.0058`).  The global V2.2 constgold gap therefore appears
+to superpose two effects: a large sign-changing distance profile in the flow/self
+branch that mostly cancels in the mean, plus a positive constgold-versus-half-shear
+level that does not.  The latter remains compatible with coherent-scene neighbour
+response or detection/population conditioning; this comparison does not distinguish
+them because the two catalogues are not same-object matched after detection.
+
+Jobs `15715994`, `15716019`, and `15716037` completed.  Artifacts:
+`results/v22_constgold_gap_features_c40-139.feather`,
+`results/v22_constgold_gap_localization_c40-139.{json,md}`,
+`results/v22_halfshear_distance_c40-139_s16.json`, and
+`results/v22_constgold_vs_halfshear_distance_c40-139_s16.json`.  Added two analysis
+scripts, two cluster wrappers, and three focused tests; `py_compile`, focused pytest,
+Bash syntax, Slurm dry-runs, and targeted `git diff --check` passed.
+
+## 2026-08-13c  Common anchor/constgold gap is a positive single-pair response spike
+
+Localized the component shared by coherent anchors and constgold without mixing it
+with the known self/flow distance profile.  Replayed every deployed V2.2 constgold
+pair for cases 40--139, keeping the signed dominant response, runner-up, separation,
+latent pair properties, response sums, and stable flux/distance ranks.  All 100
+case-level `R_blend` lookups replayed exactly; the table contains 6,376,256 primaries.
+
+Searched a fixed 710-rule interpretable grid.  The primary target was positive
+truth-minus-model deficit in both direct coherent-neighbour anchors and the exact-key
+constgold proxy `(R_sim-r_sim_self)-R_blend`.  The latter is not a literal emulator
+label: it also permits selection-estimand differences and non-additivity.  Cases are
+the uncertainty unit.  Anchor c400--599 and constgold c40--89 were development;
+previously untouched anchor c600--899 and constgold c90--139 were validation.
+
+The selected rule, `top_abs_fraction > 0.7` with positive dominant response, validates
+on both targets.  It selects 24.6% of anchors with deficit
+`+0.04184 +- 0.00673`, versus `-0.00187 +- 0.00302` outside, and carries 115.9% of
+the global anchor deficit.  It selects 26.0% of the constgold proxy with deficit
+`+0.05668 +- 0.00902`, versus `+0.00153 +- 0.00330` outside, and carries 92.9%.
+All four predeclared gates pass: positive selected deficit and selected-minus-rest
+contrast above two case SEM in both datasets, at least half the deficit carried in
+both, and both complements within two SEM of zero.
+
+More importantly, the pilot-frozen `dominant/runner-up >5 AND positive` rule was not
+retuned after its c400--449/c40--89 discovery or c450--499/c90--139 replication.  On
+the new c600--899 anchors it selects 28.8%, has deficit `+0.03638 +- 0.00587`, leaves
+`-0.00225 +- 0.00315` outside, and carries 118.0%.  On constgold it selects 30.0%,
+leaves `+0.00143 +- 0.00354` outside, and carries 93.7%.  The narrower ratio `>10`
+positive core is 18.5/19.3% and carries 120.0/82.4% of anchor/proxy deficits.  Even
+the old ratio `>20` core is only 11.8/12.2% yet carries 96.5/72.5%, leaving both
+complements consistent with zero.  The same broad carrier also replicated at
+`|g|=0.05`, so it is not a low-shear-only fluctuation.
+
+This resolves the previous apparent failure on constgold.  That test applied the
+ratio `>20` cut to the full residual, which mixes neighbour and self/flow terms.
+An exact-row decomposition on c90--139 gives, inside the 12.2% core, neighbour proxy
+`+0.09419 +- 0.01286` but direct-self-minus-flow `-0.06655 +- 0.00757`; the matched
+total is therefore only `+0.02764 +- 0.01013`.  Outside the core the respective terms
+are `+0.00497 +- 0.00320` and `+0.00581 +- 0.00222`.  For the broad pilot rule the
+selected neighbour contribution `+0.01486` is similarly cancelled by self/flow
+`-0.00901`.  The common neighbour carrier transfers, but the distance-dependent
+self/flow branch is anticorrelated with it and hides it in the summed total.
+
+The robust coordinate is model-output response dominance, not true flux dominance.
+Distance, magnitudes, sizes, morphology, and response/flux/distance-rank intersections
+did not yield a sharper shared validation rule.  Independent evidence points toward
+an emulator-amplitude issue: held-out half-shear pair vectors have measured/predicted
+slope `1.06070 +- 0.00730`, and fresh c300--399 anchors in the highest positive
+prediction quintile have raw model-minus-truth `-0.03884 +- 0.00755`.  The narrow
+conclusion is a real common emulator-side component concentrated where one positive
+pair prediction dominates; this localization alone does not distinguish regression
+amplitude error from residual coherent non-additivity/selection conditioning.
+
+The exploratory full-total search selected “dominant pair is brightest”, carrying
+60.6% of anchors and 91.9% of full constgold on validation, but its anchor
+selected-minus-rest contrast is only about one SEM and fails the fixed gate.  It is
+not promoted as the common carrier.
+
+Jobs `15716789`, `15717020`, `15717025`, `15717010`, and `15717518` completed.
+Main artifacts: `results/v22_shared_gap_localization_anchor_g002_constgold_c40-139`
+`.{json,md}`, `results/v22_shared_carrier_exactkey_decomposition_c40-139.{json,md}`,
+and `results/v22_shared_gap_localization_conclusion.md`.  Added the pair-feature,
+shared-localization, and exact-key-decomposition scripts, cluster wrappers, and focused
+tests.  Python compilation, focused tests, Bash syntax, strict JSON reads, and targeted
+`git diff --check` pass.  The large pair table remains on the project filesystem.
+
+## 2026-08-13d  Noiseless localized toys put the positive gap in the individual-pair sum
+
+Completed the frozen panel-E-tail noiseless toy decomposition on cases 700--899.  Each
+toy uses the exact latent primary and exact deployed V2.2 neighbours, a 48-pixel Moffat-
+convolved stamp, fixed positions, an unsheared primary, and matched antithetic neighbour
+shears at `g=0.02`.  The coherent arm shears all neighbours together; the individual arm
+shears one neighbour at a time and sums the responses.  Of 56,691 selected anchors,
+56,424 completed (`99.53%`); uncertainty is the SEM across 200 rendered catalogue cases,
+not across anchors.
+
+For all tail anchors, the g1 coherent-minus-model gap is `+0.12192 +- 0.02024`, while
+individual-sum-minus-model is `+0.17761 +- 0.04009` and coherent-minus-individual is
+`-0.05570 +- 0.03840`.  The rotation-control trace gives the cleaner decomposition:
+coherent-minus-model `+0.11526 +- 0.01562` = coherent-minus-individual
+`-0.02957 +- 0.02750` + individual-minus-model `+0.14483 +- 0.02814`.  Thus there is no
+evidence for a positive coherent non-additivity that generates the underprediction;
+the positive gap is already present in the sum of individual-neighbour responses, and
+coherent shearing slightly suppresses it on average.  The exact decomposition replays to
+`1.42e-14`.
+
+The compact-dominant-secondary subset (`Re_s<0.4 arcsec`, 7,411 anchors) has a much
+larger trace coherent-minus-model gap, `+0.40161 +- 0.07189`, but its trace additivity
+term remains consistent with zero, `-0.08772 +- 0.12131`.  The noncompact complement
+still has a smaller positive trace gap, `+0.07554 +- 0.01441`, with additivity
+`-0.02788 +- 0.02401`.  The original rendered coherent-anchor g1 gap on the same frozen
+sample is `+0.07363 +- 0.02104`; the noiseless toy g1 gap is higher by
+`+0.04829 +- 0.02775` (less than two case SEM).
+
+Jobs `15732592` and `15732593` completed cleanly.  Artifacts:
+`results/localized_anchor_noiseless_toy_v22_c700-899.{feather,json,md}` and
+`results/localized_anchor_noiseless_toy_v22_c700-899_pairs.feather`; production shards
+remain under the project filesystem cache.  Checked Slurm exit status, coverage, and the
+stored algebraic replay.  Main limitation: these runs use one deterministic ngmix
+initialization per anchor and a production-size 48-pixel crop, so the large per-anchor
+tails have not yet been separated into scene variation versus fit/crop instability.
+
+## 2026-08-13e  Common-noise repeats expose fit tails but retain the individual-sum gap
+
+Froze 20 outcome-blind feature-space medoids from the already-frozen panel-E tail:
+10 compact (`Re_s<0.4 arcsec`) and 10 noncompact dominant-secondary scenes, all from
+different catalogue cases.  Selection used 11 latent/model-side coordinates after a
+symmetric marginal 2% exclusion and did not use a measured residual, the rendered
+coherent response, or the preceding noiseless-toy outcome.  The panel averages 16.7
+deployed neighbours per scene.
+
+For every scene, ran 400 matched Gaussian-noise blocks at the production toy settings
+(`g=0.02`, 48 pixels, pixel RMS 0.312).  Within a block, the same pixel-noise image and
+same ngmix initialization were used across all coherent, one-neighbour-active,
+antithetic, and g1/g2 arms; noise and fit seeds changed between blocks, as in the old
+fixed-scene toy.  All 8,000 blocks completed and the response decomposition closes to
+`1.42e-14`.  Noise repeats are technical replicates; the 20 scene means, not the 8,000
+draws, are the units of the between-scene summary.
+
+On the balanced fixed panel, the equal-scene trace means are coherent-minus-model
+`+0.38841 +- 0.16304`, individual-sum-minus-model `+0.38399 +- 0.18825`, and their
+paired coherent-minus-individual difference `+0.00443 +- 0.09063`.  The two response
+constructions therefore retain essentially the same positive model gap, but the
+additivity contrast is not precise at the `~0.1` level.  For the 10 noncompact medoids,
+the corresponding values are `+0.35933 +- 0.10754`, `+0.39352 +- 0.13366`, and
+`-0.03419 +- 0.03100`; compact medoids are much less stable, with additivity
+`+0.04305 +- 0.18273`.  These are descriptive medoid-panel SEMs, not unbiased full-tail
+population errors.
+
+The prespecified per-scene precision target was a 95% CI half-width <=0.01 on the
+coherent-minus-individual trace, with a practical-null band of `+-0.02`.  Only 8/20
+scenes met the precision target (2/10 compact, 6/10 noncompact), and all eight place
+the difference inside the practical-null band.  The other 12 are not rescued by 400
+draws: rare ngmix branch changes produce response-difference tails reaching tens to
+roughly 100, although every scene's median draw is near zero.  Naive extrapolations
+would require `~1e4--2.4e7` draws for the target half-width, so extending the same
+Monte Carlo is not recommended.  Varying both image noise and fit initialization in
+the old-test convention means this experiment does not separate their contributions.
+
+This explains why the old handcrafted toys obtained tiny errors: those scenes used
+only 1--8 simple neighbours, `g=0.05`, and a 112-pixel stamp, whereas the localized
+tail uses exact faint/crowded Sersic scenes with about 17 neighbours, `g=0.02`, and a
+48-pixel production crop.  The smaller shear alone amplifies response excursions by
+2.5, and the nonlinear single-Gaussian fit plus neighbour summation supplies the much
+larger instability.
+
+Jobs `15734859`, `15734860`, and `15734861` completed cleanly.  Added the frozen-panel
+preparer, common-noise scene runner, analysis script, three job wrappers plus submitter,
+and focused tests.  Artifacts:
+`results/localized_anchor_noise_repeat_toy_manifest_v22_typical20.{feather,json}` and
+`results/localized_anchor_noise_repeat_toy_v22_typical20_r400`
+`.{feather,json,md}` plus `_pairs.feather`; raw draw and pair shards remain on the
+project filesystem.  Eight focused tests, Python compilation, Bash syntax, Slurm
+dry-runs, strict output reads, job exit checks, and targeted `git diff --check` passed.

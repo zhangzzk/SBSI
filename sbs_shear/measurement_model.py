@@ -120,6 +120,44 @@ SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ = [
     "e1_input_p", "e2_input_p", "sersic_n_input_p",
     "measured_mag_auto", "measured_flux_radius", *_MEAS_CROWD_NBR,
 ]
+# V2.8 one-scalar ablation: expose the same continuous summed BlendEMU response
+# that already defines V2.2's response-target crowd axis.  The final model still
+# adds R_blend separately; here it is only scene context for the self-response
+# flow.  Retaining near/far/max makes this an append-only comparison to V2.2.
+SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_RBLEND = [
+    *SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ, "r_blend",
+]
+# V2.3 scene-context probe: V2/V2.2's near/far/MAX block cannot distinguish
+# the flux in the two brightest neighbours from flux in the third and later
+# neighbours. Half-shear cases 40--199 show a 2.26+-0.46 point SELF-response
+# contrast along that missing direction even after all existing inputs are
+# balanced. This one additional pure-input scalar names that direction; no
+# constgold response or fitted correction enters it.
+SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_THIRDPLUS = [
+    *SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ, "nbr_flux_thirdplus",
+]
+# V2.6 scene decomposition: name both the leading two-neighbour flux and the
+# remaining scene flux explicitly.  The controlled half-shear diagnostic fixes
+# the former while varying the latter; using both prevents the marginal scene
+# trend from being attributed twice to third-plus flux.
+SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_TOP2_THIRDPLUS = [
+    *SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ, "nbr_flux_top2", "nbr_flux_thirdplus",
+]
+# V2.7 radial-scene probes.  These are deterministic intrinsic-scene inputs:
+# absolute neighbour flux in six disjoint annuli, or Eq. 17 image-overlap
+# blendedness.  They deliberately retain every V2.2 conditioner so the two
+# arms change only the proposed scene representation.
+V27_SIX_SHELL_FEATURES = [
+    "logflux_abs_shell_0_0p5", "logflux_abs_shell_0p5_1",
+    "logflux_abs_shell_1_2", "logflux_abs_shell_2_3",
+    "logflux_abs_shell_3_5", "logflux_abs_shell_5_10",
+]
+SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_SIXSHELL = [
+    *SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ, *V27_SIX_SHELL_FEATURES,
+]
+SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_PURITY = [
+    *SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ, "true_blendedness_eq17",
+]
 # V2 (realistic): full measured primary own-props. DROP sersic_n + redshift (no shear-safe measured
 # substitute; they are scatter conditioners, NOT response channels) and add measured_class_star as a
 # noisy profile/concentration proxy. This is the target p(ehat,thetahat|e,theta,theta_blending).
@@ -132,9 +170,9 @@ SHEARFREE_G0_MEAS_CROWD_CONC_FULL = [
 # The next three variants (a) diagnose WHICH true structural axis is load-bearing and (b) test whether a
 # fully-realistic (all-measured) concentration proxy can recover it. All share V2's realistic base.
 _MEAS_V2_BASE = ["measured_mag_auto", "measured_flux_radius", "measured_class_star", *_MEAS_CROWD_NBR]
-# V3a diagnostic: V2 + TRUE sersic_n only (redshift dropped). Isolates the sersic_n contribution.
+# Historical structure diagnostic: V2 + true sersic_n only (redshift dropped).
 SHEARFREE_G0_MEAS_CONC_SERN = ["e1_input_p", "e2_input_p", "sersic_n_input_p", *_MEAS_V2_BASE]
-# V3b diagnostic: V2 + TRUE redshift only (sersic_n dropped). Isolates the redshift contribution.
+# Historical structure diagnostic: V2 + true redshift only (sersic_n dropped).
 SHEARFREE_G0_MEAS_CONC_Z = ["e1_input_p", "e2_input_p", "redshift_input_p", *_MEAS_V2_BASE]
 # V4 realistic recovery: V2 + MEASURED structure proxies (mag_aper, fwhm_image, isoarea_image). The
 # mean-head can form concentration ~ mag_aper - mag_auto; fully measured -> deployable on real data.
@@ -153,6 +191,16 @@ MEASUREMENT_CONDITION_FEATURE_SETS = {
     "g0_crowd_flux_conc": SHEARFREE_G0_MEASUREMENT_CONDITION_FEATURES_CROWD_FLUX_CONC,
     "g0_meas_crowd_conc_szfl": SHEARFREE_G0_MEAS_CROWD_CONC_SZFL,
     "g0_meas_crowd_conc_szfl_noz": SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ,
+    "g0_meas_crowd_conc_szfl_noz_rblend":
+        SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_RBLEND,
+    "g0_meas_crowd_conc_szfl_noz_thirdplus":
+        SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_THIRDPLUS,
+    "g0_meas_crowd_conc_szfl_noz_top2_thirdplus":
+        SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_TOP2_THIRDPLUS,
+    "g0_meas_crowd_conc_szfl_noz_sixshell":
+        SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_SIXSHELL,
+    "g0_meas_crowd_conc_szfl_noz_purity":
+        SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_PURITY,
     "g0_meas_crowd_conc_full": SHEARFREE_G0_MEAS_CROWD_CONC_FULL,
     "g0_meas_conc_sern": SHEARFREE_G0_MEAS_CONC_SERN,
     "g0_meas_conc_z": SHEARFREE_G0_MEAS_CONC_Z,

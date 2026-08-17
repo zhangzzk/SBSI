@@ -3,13 +3,15 @@ results/
 models/
 figures/
 data/
-notebooks/
+!examples/data/
+!examples/data/example_catalog.feather
 
 # binary artifacts anywhere
 *.pt
 *.npz
 *.npy
 *.feather
+!examples/data/example_catalog.feather
 *.parquet
 *.h5
 *.hdf5
@@ -23,6 +25,14 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .ipynb_checkpoints/
+
+# ---- agent / editor scratch ----
+.claude/worktrees/
+.claude_resources.json
+*.orig
+*.swp
+*.rblendbak
+*.swabak
 
 # ---- job logs (also written outside the repo) ----
 jobs/logs/

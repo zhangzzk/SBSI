@@ -1,0 +1,54 @@
+# Extension block for the g=0.02 coherent-anchor amplitude test (cases 800--899).
+catalog:
+  type: fs2
+  path: /project/ls-gruen/users/zekang.zhang/lsst_sims/FS2/FS2_25876/FS2_25876_IA_Griffith_UDF_i_25.feather
+  mag_column: lsst_r_mag
+  mag_cut: 29
+  re_convention: circularized
+
+simulation:
+  output_path: /project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_anchorblend_g002_c800-899/
+  base_config: /home/z/Zekang.Zhang/blendemu/configs/base_sim_config.ini
+  n_cases: 100
+  case_offset: 800
+  area_deg2: 0.25
+  pixel_scale: 0.2
+  shear_mode: constant
+  constant_shear: 0.02
+  constant_shear_angle: 0.0
+  constant_two_sided: true
+
+noise:
+  source: csv
+  csv_path: /project/ls-gruen/users/zekang.zhang/lsst_sims/Euclid_Q1_median_LSST10yr.csv
+  band: LSST_r
+
+shape_measurement:
+  stamp_size: 48
+  pixel_scale: 0.2
+  use_pos: detect
+  tile_name: tile180.0_-0.5
+
+catalogues:
+  constant_shear:
+    r_max: 10
+    r_min: 0
+    k: 20
+    include_isolated: true
+    shape_suffix: _all
+  batch_size: 10
+  n_jobs: 8
+
+training:
+  model_dir: /home/z/Zekang.Zhang/blendemu/models
+  model_tag: lsst_r_anchorblend_g002_c800_899
+  rescale:
+    pixel_rms: 0.312
+    pixel_size: 0.2
+    zero_mag: 30
+    psf_fwhm: 0.73
+    moffat_beta: 2.224
+
+cluster:
+  n_mpi: 100
+  realizations: "d,0,1"

@@ -1,4 +1,4 @@
-"""Shared truth-level population cuts for cross-simulation response comparisons.
+"""Truth-level population cuts for SBSI catalogue comparisons.
 
 These cuts define which simulated scenes belong to the data domain.  They do
 not inspect detection state or any measured quantity.  Keeping this separate
@@ -12,8 +12,7 @@ The standard LSST pair support mirrors ``blendemu/configs/fs2_lsst_r.yaml``::
     [r_s, r_p, Re_s, Re_p, separation]
       [18,28], [18,28], [0.1,1.5], [0.1,1.5], [0,10]
 
-The primary is narrowed further by the V2.1 domain: true Re > 0.5 arcsec and
-the primary-only intrinsic S/N proxy > 10.
+The caller may intersect the primary with an explicit trained-model domain.
 """
 
 from __future__ import annotations
@@ -22,7 +21,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from . import domain
+from .domain import Domain
 
 
 @dataclass(frozen=True)
@@ -51,21 +50,29 @@ def _strict_between(values, limits):
     return np.isfinite(x) & (x > limits[0]) & (x < limits[1])
 
 
-def primary_mask(frame, cuts: PairPopulationCuts = LSST_PAIR_CUTS):
-    """Primary support box intersected with the primary-only V2.1 domain."""
+def primary_mask(
+    frame,
+    domain: Domain = None,
+    cuts: PairPopulationCuts = LSST_PAIR_CUTS,
+):
+    """Primary support box, optionally intersected with a model domain."""
     for col in ("r_input_p", "Re_input_p"):
         if col not in frame.columns:
             raise KeyError(f"primary_mask requires {col!r}")
     mag = frame["r_input_p"].to_numpy(dtype=float)
     re = frame["Re_input_p"].to_numpy(dtype=float)
-    return (
+    mask = (
         _strict_between(mag, cuts.primary_mag)
         & _strict_between(re, cuts.primary_re)
-        & domain.in_domain(mag, re)
     )
+    if domain is not None:
+        if not isinstance(domain, Domain):
+            raise TypeError("domain must be a Domain or None")
+        mask &= domain.mask(mag, re)
+    return mask
 
 
-def pair_mask(frame, cuts: PairPopulationCuts = LSST_PAIR_CUTS):
+def pair_mask(frame, domain: Domain = None, cuts: PairPopulationCuts = LSST_PAIR_CUTS):
     """One identical intrinsic primary+secondary+separation mask.
 
     Isolated rows have NaN secondary properties and therefore fail.  This is
@@ -76,18 +83,25 @@ def pair_mask(frame, cuts: PairPopulationCuts = LSST_PAIR_CUTS):
     if missing:
         raise KeyError(f"pair_mask missing required columns: {missing}")
     return (
-        primary_mask(frame, cuts=cuts)
+        primary_mask(frame, domain=domain, cuts=cuts)
         & _strict_between(frame["r_input_s"].to_numpy(dtype=float), cuts.secondary_mag)
         & _strict_between(frame["Re_input_s"].to_numpy(dtype=float), cuts.secondary_re)
         & _strict_between(frame["distance"].to_numpy(dtype=float), cuts.separation)
     )
 
 
-def describe(cuts: PairPopulationCuts = LSST_PAIR_CUTS):
+def describe(domain: Domain = None, cuts: PairPopulationCuts = LSST_PAIR_CUTS):
+    primary_mag = (
+        (domain.magnitude_min, domain.magnitude_max)
+        if domain is not None else cuts.primary_mag
+    )
+    primary_re = (
+        (domain.half_light_radius_min, domain.half_light_radius_max)
+        if domain is not None else cuts.primary_re
+    )
     return (
-        f"primary: {cuts.primary_mag[0]}<r_p<{cuts.primary_mag[1]}, "
-        f"{cuts.primary_re[0]}<Re_p<{cuts.primary_re[1]} arcsec, "
-        f"Re_p>{domain.V21_RE_MIN} arcsec, intrinsic S/N>{domain.V21_SN_MIN}; "
+        f"primary: {primary_mag[0]}<r_p<{primary_mag[1]}, "
+        f"{primary_re[0]}<Re_p<{primary_re[1]} arcsec; "
         f"secondary: {cuts.secondary_mag[0]}<r_s<{cuts.secondary_mag[1]}, "
         f"{cuts.secondary_re[0]}<Re_s<{cuts.secondary_re[1]} arcsec; "
         f"{cuts.separation[0]}<separation<{cuts.separation[1]} arcsec"

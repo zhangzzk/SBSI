@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from sbs_shear import domain
+from sbs_shear.domain import Domain
 from sbs_shear.population import EXTENDED_PAIR_CUTS, LSST_PAIR_CUTS, pair_mask, primary_mask
 
 
@@ -18,11 +18,13 @@ def test_standard_lsst_pair_passes():
     assert pair_mask(frame()).tolist() == [True]
 
 
-def test_primary_domain_is_intrinsic_and_v21():
-    faint = float(domain.sn_limiting_mag(0.8)) + 0.01
-    assert primary_mask(frame(r_input_p=[faint])).tolist() == [False]
-    assert primary_mask(frame(Re_input_p=[0.5])).tolist() == [False]
-    assert primary_mask(frame(Re_input_p=[0.5001])).tolist() == [True]
+def test_explicit_primary_domain_is_strict():
+    narrow = Domain(18.0, 25.8, 0.5, 1.5)
+    broad = Domain(18.0, 26.0, 0.3, 1.5)
+    assert primary_mask(frame(r_input_p=[25.8]), domain=narrow).tolist() == [False]
+    assert primary_mask(frame(Re_input_p=[0.5]), domain=narrow).tolist() == [False]
+    assert primary_mask(frame(Re_input_p=[0.5001]), domain=narrow).tolist() == [True]
+    assert primary_mask(frame(Re_input_p=[0.4]), domain=broad).tolist() == [True]
 
 
 def test_secondary_and_separation_boundaries_are_strict():

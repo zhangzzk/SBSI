@@ -16,10 +16,8 @@ Why each guard exists
 * **Row count.** The belt to the duplicate-key braces -- assert directly that the merge
   returned exactly the rows it was given.
 
-Before 2026-08-04 these guards were spread across four call sites at four different
-strengths: the strictest (``plotting/plot_fig2_flow2.py``) had all of them, while the
-script producing the *fiducial* figures had only the coverage check. This module is that
-strictest version, so the fiducial path is no longer the weakest one.
+Before 2026-08-04 these guards were spread across multiple scripts at different
+strengths. They now live here so every supported response call uses the same join.
 """
 
 from __future__ import annotations

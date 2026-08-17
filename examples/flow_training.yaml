@@ -1,0 +1,33 @@
+# User-owned configuration for `python -m sbs_shear flow --mode train|tune`.
+# Replace every /path/to entry; SBSI never chooses catalogues or output paths.
+training:
+  catalogue: /path/to/flow_train.feather
+  output: /path/to/models/flow_s501.pt
+  response_target: /path/to/calibration/response_target.npz
+  coupling_target: /path/to/calibration/coupling_target.npz
+  seed: 501
+  primary_magnitude_max: 25.8
+  primary_half_light_radius_min: 0.5
+  max_rows: 4000000
+  epochs: 80
+  batch_size: 8192
+  response_weight: 450.0
+  coupling_weight: 500.0
+  learning_rate: 0.0007
+  patience: 10
+  swa_last_k: 8
+  num_workers: 8
+  device: cuda
+  gpu_resident: true
+
+# Used only by `--mode tune`. The scorer is a user module callable with
+# (checkpoint_path, validation_catalogue_path) and must return a float to minimize.
+tuning:
+  validation_catalogue: /path/to/flow_validation.feather
+  scorer: your_project.validation:score_flow
+  results: /path/to/models/flow_tuning.json
+  candidates:
+    - output: /path/to/models/flow_lr5e-4.pt
+      learning_rate: 0.0005
+    - output: /path/to/models/flow_lr7e-4.pt
+      learning_rate: 0.0007

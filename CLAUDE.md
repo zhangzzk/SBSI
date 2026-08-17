@@ -8,8 +8,12 @@ The project overview, scope boundaries (SBSI consumes finished `blendemu` catalo
 
 ## Environment
 - Conda env: `conda activate sims1` (Python 3.9). Repo is NOT pip-installed.
-- Imports rely on PYTHONPATH — always set both repos:
-  `export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"`
+- Imports rely on PYTHONPATH: `export PYTHONPATH="$PWD:$PYTHONPATH"` from the repo root.
+  BlendEMU is NOT needed for this — add it only when loading the emulator
+  (`sbs_shear.models.load_emulator`), which is the sole place SBSI imports it. Its location
+  comes from `BLENDEMU_ROOT` / `BLENDEMU_MODELS`, not from a hardcoded path.
+- `pip install -e .` is an optional alternative (see `pyproject.toml`); it also installs the
+  `sbsi` console script.
 - Login node has no GPU (32c/376G); all training/GPU work must go through Slurm.
 
 ## Tests
@@ -19,22 +23,23 @@ The project overview, scope boundaries (SBSI consumes finished `blendemu` catalo
   `/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python -m pytest tests/ -q`
 - Whole suite is ~8 s, pure CPU, no catalogue access — fine on the login node, and worth running
   after any edit to `sbs_shear/`.
-- No pytest config; `tests/` covers `sbs_shear/` only, never `scripts/`.
+- No pytest config; `tests/` covers `sbs_shear/` only. The one BlendEMU cross-check in
+  `tests/test_api.py` skips when BlendEMU is absent, so the suite passes on a bare checkout.
 - Note `sims1`'s scipy fails to import on the LOGIN node (`GLIBCXX_3.4.30 not found`, via
   `sklearn`); it is fine on compute nodes. So login-node smoke tests of the trainers must use
   `py31`, or avoid importing sklearn.
 
-## Jobs
-- Submit with `sbatch jobs/job_*.sh`. Never run nontrivial work directly on the login node.
-- Job body pattern: activate `sims1`, set PYTHONPATH (both repos), `cd` to repo, `python -u scripts/...`.
-- Slurm logs: `/home/z/Zekang.Zhang/logs/*_%j.{out,err}` (outside repo) and `jobs/logs/`.
+## Compute jobs
+- Never run nontrivial work directly on the login node.
+- The repository has no supported job scripts. Users call the Python API from
+  their own Slurm or other scheduler environment.
+- Scheduler logs and wrappers live outside the SBSI source workflow.
 
 ## Data
-- `SBSI/data/` is empty. Real catalogues live at
-  `/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/`
-  (e.g. `det_meas_ngmix_ap7_g0.0_train.feather`). Jobs read from there.
+- Every training, validation, and inference catalogue is an explicit user input.
+  Do not add a project catalogue path as an API default.
 
 ## Gotchas
 - `WORKLOG.md` is large and newest-first — read only the top.
 - Current shape estimator is ngmix (`NGMIX_G1/G2`), superseding SExtractor moments.
-- `jobs/archive/` and `archive/` hold superseded scripts; don't resurrect without checking WORKLOG.
+- `archive/` holds superseded scripts; don't resurrect without checking WORKLOG.
