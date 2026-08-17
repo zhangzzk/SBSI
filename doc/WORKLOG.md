@@ -2,6 +2,49 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-17o  Public-`master` review, tutorial notebook, and worktree layout
+
+Owner request: clean the public `master` checkout, verify it functions, review it for
+security, and extend the tutorial notebook.  The working material stays untracked on
+disk next to `dev` (figures/, jobs/, logs/, plotting/, results/); dev's `.gitignore`
+already covers all of it, and the only remaining contents of jobs/ and plotting/ are
+scheduler logs and output PNGs whose sources live in `archive/pre-v3/`, so nothing new
+was committed to dev.
+
+**Layout.**  The main checkout is now `dev` (switched by the owner mid-session; all
+five working directories survived).  A pristine public worktree was created at
+`~/SBSI-master` (`git worktree add`).  The two stale agent worktrees under
+`.claude/worktrees/` (24 GB) were removed with `git worktree remove --force`; their
+branches (`worktree-selbias-plot`, merged; `worktree-inference-5b`, 74 unmerged
+commits) and every tracked file survive in `.git`, including the 244 quarantined
+anchorblend artifacts referenced by entry 2026-08-17n.
+
+**Functionality.**  Suite on the master worktree:
+`PYTHONPATH="$PWD" py31 -m pytest tests/ -q` -> 45 passed, 1 skipped (BlendEMU
+cross-check), 0 regression failures, 8.6 s.
+
+**Security.**  No credentials, keys, or tokens anywhere in the tracked tree or the
+3-commit public history.  New finding beyond the 2026-08-17n scan: every one of the 16
+frozen `models/ablation/*.pt` checkpoints embeds one absolute training-catalogue path
+(`/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/..._train_full.feather`) in its
+metadata; same username/cluster-layout exposure class as the known env-overridable
+defaults, harmless functionally.  No eval/exec/subprocess/shell patterns in the
+package.
+
+**Tutorial notebook** (`examples/sbsi_api_tutorial.ipynb`, on master, left
+uncommitted for review).  Cell 8 pinned `ResponsePredictor.load(..., device="cuda")`,
+which crashes on any GPU-less machine; changed to `device=None` (auto CUDA/CPU per
+`response.py:315`).  Added a markdown + code cell after the prediction cell plotting
+per-object histograms of `prediction.flow` (self response) and `prediction.blend`
+(blending response) in two panels of one figure, with dashed mean lines and a shared
+y-axis.  Executed via Slurm (job 15805711, inter/V100, py31 + BlendEMU on PYTHONPATH):
+64 s, all cells ran, zero errors, summary R_flow 0.8696 / R_blend 0.2497 /
+R_total 1.1193 over 10,265 in-domain primaries x 16 seeds (example catalogue only).
+Driver scripts: `jobs/job_tutorial_master.sh`, `jobs/run_tutorial_nb.py` (untracked,
+deployment details).  Limitation: the executed outputs embed the worktree path inside
+a blendemu extrapolation UserWarning; scrub or ship unexecuted if that matters for the
+public push.
+
 ## 2026-08-17n  Completed the requested full-V2 coherent-anchor supplement
 
 Finished the quarantined, frozen-model V2 validation requested before the API
