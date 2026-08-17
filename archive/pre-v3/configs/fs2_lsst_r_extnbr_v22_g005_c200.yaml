@@ -1,0 +1,71 @@
+# V2.2 response-emulator fit on all 200 available forward-g=0.05 cases.
+# This changes only the response shear and isolated output tag relative to V2.2.
+
+catalog:
+  type: fs2
+  path: /project/ls-gruen/users/zekang.zhang/lsst_sims/FS2/FS2_25876/FS2_25876_IA_Griffith_UDF_i_25.feather
+  mag_column: lsst_r_mag
+  mag_cut: 29
+  re_convention: circularized
+
+simulation:
+  output_path: /project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876/
+  base_config: base_sim_config.ini
+  case_offset: 0
+  response:
+    n_cases: 200
+    shear_values: [0.0, 0.05]
+  self_response:
+    n_cases: 200
+    shear_values: [0.0, 0.05]
+  pixel_scale: 0.2
+
+noise:
+  source: csv
+  csv_path: /project/ls-gruen/users/zekang.zhang/lsst_sims/Euclid_Q1_median_LSST10yr.csv
+  band: LSST_r
+
+shape_measurement:
+  stamp_size: 48
+  pixel_scale: 0.2
+  use_pos: detect
+  tile_name: tile180.0_-0.5
+
+catalogues:
+  response:
+    r_max: 10
+    k: 20
+  self_response:
+    r_max: 3
+    k: 2
+    shape_suffix: _secondaries
+  detection:
+    r_max: 3
+    k: 2
+  batch_size: 100
+  n_jobs: 32
+
+training:
+  model_dir: /home/z/Zekang.Zhang/blendemu/models
+  model_tag: lsst_r_extnbr_v22_g005_c200
+  n_trials: 100
+  early_stopping_rounds: 30
+  classification_early_stopping_min_delta: 1.0e-4
+  regression_cuts:      [[13, 29], [18, 25.8], [0.0, 10.0], [0.5, 1.5], [0, 10]]
+  self_response_cuts:   [[18, 28], [18, 28], [0.1, 1.5], [0.1, 1.5], [0, 3]]
+  classification_cuts:  [[18, 28], [18, 28], [0.1, 1.5], [0.1, 1.5], [0, 3]]
+  rescale:
+    pixel_rms: 0.312
+    pixel_size: 0.2
+    zero_mag: 30
+    psf_fwhm: 0.73
+    moffat_beta: 2.224
+
+inference:
+  catalogue_path: /home/z/Zekang.Zhang/blendemu/data/example_catalog.feather
+  resample_frac: 0.25
+  seed: 42
+
+cluster:
+  n_mpi: 50
+  realizations: "d,0,1"

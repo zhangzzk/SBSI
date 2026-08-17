@@ -1,93 +1,99 @@
-# Agent Instructions For SBSI
+# Agent instructions for SBSI
 
-This directory is a standalone SBI/shear-calibration project.
+SBSI is a general shear-calibration library. It has one workflow; scientific
+release names such as V3 and V3b are only convenience references to external
+model paths. Read `CONVENTIONS.md` before producing a science number.
 
 ## Scope
 
-- Keep SBSI implementation code under `SBSI/`.
-- Treat `blendemu` as the place where simulation outputs and catalogue-building live.
-- In SBS, consume completed blendemu catalogues; do not add catalogue builders here unless the user explicitly changes this boundary.
-- Do not move SBS-specific classifier, flow, validation, or inference code into `blendemu` unless the user explicitly asks for that integration.
-- If using blendemu outputs, read them as input data and write SBSI-derived products under `SBSI/data`, `SBSI/models`, or another user-specified SBSI path.
+- Keep classifiers, conditional flows, response prediction, validation, and
+  Bayesian inference in SBSI.
+- BlendEMU owns image simulation, measurement, simulation-catalogue production,
+  and emulator training. SBSI may call those supported APIs/CLIs but must not
+  copy their rendering or measurement implementation.
+- SBSI owns forward-response catalogue preparation from a user truth
+  catalogue: input validation, nearest-neighbour finding, the one-row-per-primary
+  flow scene view, pair construction, training-matched cuts and rescaling, and
+  keyed alignment of emulator predictions.
+- Do not copy SBSI inference or flow code into BlendEMU, or move BlendEMU
+  catalogue builders here, unless the owner explicitly changes this boundary.
+- The next emulator training/tuning update belongs in BlendEMU.
 
-### The blendemu boundary (enforced)
+## General API contract
 
-The user runs blendemu themselves and hands SBSI a catalogue path. Two crossings exist,
-and they are the only ones allowed:
+- Every training, validation, prior, and inference catalogue is supplied by the
+  user as a DataFrame or external path. Never hide a project catalogue in an API
+  default.
+- Flow checkpoints and emulator artifacts are explicit paths. `get_model("V3")`
+  and `get_model("V3b")` are path-only conveniences; no behavior may branch on
+  those names.
+- Model support is read from checkpoint metadata or supplied explicitly. Never
+  infer a domain from a filename.
+- Reusable behavior belongs in `sbs_shear/`. `examples/job_generate_catalogues.sh`
+  is a deployment example that calls BlendEMU; it is not part of the workflow
+  or imported by the library.
+- `archive/pre-v3/` is provenance, not supported code.
 
-1. `sbs_shear/emulator.py` — the *sole* module that imports blendemu. It is needed only
-   to evaluate `R_blend` via `BlendingPredictor`, and it imports lazily so the rest of the
-   pipeline runs with blendemu absent. Scripts must call `load_blending_predictor()`
-   rather than importing blendemu, editing `sys.path`, or hardcoding a models directory.
-2. `scripts/build_detection_measurement_catalogue.py` — the optional catalogue bridge.
+## Public API
 
-Rules for new code:
+1. `sbsi flow`: config-driven conditional-flow training and explicit tuning,
+   backed by the reusable implementation in `sbs_shear.flow`.
+2. `sbs_shear.response`: ensemble response prediction and blend-response
+   composition.
+3. `sbs_shear.inference`: the future simulation-based catalogue likelihood and
+   shear inference. Do not claim this is validated until its TODO boundary is
+   resolved.
 
-- Never write an absolute path into a script. Add a root to `sbs_shear/paths.py` and use
-  it; every root is environment-overridable (`SBSI_CATALOGUE_DIR`, `SBSI_CACHE_DIR`,
-  `SBSI_SIM_DIR`, `SBSI_CONST_SIM_DIR`, `BLENDEMU_ROOT`, ...).
-- Never re-declare the survey conditions. Import `SURVEY_CONDITIONS` / `RESCALE_KW` from
-  `sbs_shear.emulator`.
-- Jobs that `cd` into blendemu belong in `jobs/blendemu_side/`, not `jobs/`.
+Both response components are always required:
 
-## Work Log Requirement
+```text
+R_model = R_flow + R_blend
+m = R_sim / R_model - 1
+```
 
-- After any substantive SBSI change, update `SBSI/WORKLOG.md` before the final response.
-- Add a dated entry with:
-  - files added or changed,
-  - what behavior or workflow changed,
-  - commands run for validation,
-  - important outputs or known limitations,
-  - next recommended steps.
-- Keep entries concise and factual. Do not paste long terminal logs.
+`R_flow` is self-response and is never the complete response. Emulator responses
+come from a user-supplied aligned column/array or external catalogue. Unmatched
+rows are dropped or rejected, never assigned `R_blend = 0`.
 
-## Resource Policy
+## Numerical integrity
 
-- Use Slurm jobs for work that meaningfully consumes CPU, GPU, memory, or wall time:
-  training runs, full-catalogue scans, multi-case simulations, response production,
-  and large validation jobs.
-- Local commands are acceptable for negligible work only: file edits, syntax checks,
-  notebook JSON validation, metadata inspection, and tiny smoke tests.
-- Current full-catalogue selection jobs are expected to request nontrivial
-  resources. Use the existing job scripts as the baseline: training and feature
-  importance use 250G/16 CPUs/1 GPU; blend, gradient, and invariance diagnostics
-  use 128G/12 CPUs/1 GPU.
+- Do not introduce empirical offsets, scaling factors, or pasted results to make
+  a number agree with an expectation.
+- Derive ratios per seed and then summarize them.
+- Use all flow checkpoints selected by the user for a shape-response result.
+- Use common random numbers when differencing stochastic flow evaluations.
+- Apply the same forward or antithetic extraction convention to simulation and
+  model sides. See `CONVENTIONS.md`.
 
-## Development Notes
+## Work log
 
-- Prefer standalone model, validation, and inference utilities in `SBSI/sbs_shear`.
-- Prefer runnable scripts in `SBSI/scripts`.
-- Keep generated data and model artifacts out of source files; use `SBSI/data` and `SBSI/models`.
-- Keep all orientation-dependent features in the SBS canonical spin-2 basis
-  `(q1, q2) = q(cos 2 theta, sin 2 theta)`. Blendemu catalogues use this same
-  basis; missing `shear_component_convention` metadata should not trigger a
-  shear-component relabeling.
-- The first model target is the differentiable selection classifier:
-  `P(s=1 | true properties, neighbour properties, shear)`.
-  The current pilot uses SExtractor detection as `s=1`.
-- For nearest-neighbour pair-frame selection models, use `neighbored` as the
-  close-blend/rendered-neighbour indicator. Do not add a redundant
-  `within_blend_radius` model input unless a later analysis proves it is needed.
-- When every row has a nearest-neighbour frame, validate that `neighbored=False`
-  rows are not spuriously sensitive to far-neighbour secondary or pair-angle
-  properties before trusting the model response.
-- The current default selection model is the primary-major-axis frame model
-  trained on the capped `sbs_skycos` catalogue. It avoids assigning an arbitrary
-  nearest-neighbour direction to isolated rows while keeping secondary and
-  pair-geometry features gated by `neighbored`.
-- For primary-frame models, check gradient and performance summaries as a
-  function of `e_abs_p`; the frame becomes physically weak for nearly round
-  primaries even though the numerical fallback is deterministic.
-- Gradient validation against finite differences is required before treating `dP/dgamma` as a science result.
-- The next model target is the selected-object measurement likelihood
-  `p_meas(xhat | true properties, neighbour properties, shear, s=1)`.
-  Keep it factored separately from the selection classifier; compose the two
-  only when constructing the unnormalized catalogue density.
-- For scene-level measurement models, group pair-annotated detection catalogues
-  by `(case, shear_case, input_index)` and condition on the set of all annotated
-  neighbours inside the aperture. This only represents the intended
-  all-neighbour scene if the source blendemu catalogue was built with `k` large
-  enough to cover that aperture.
-- Keep full-geometry and radial-only scene models as explicit ablations.
-  `--geometry-mode full` keeps pair-angle/oriented features; `--geometry-mode
-  radial` keeps neighbour separation and scalar properties only.
+After every substantive change, prepend a dated entry to `WORKLOG.md` covering
+files and behavior changed, validation commands and outputs, limitations, and
+next steps.
+
+## Resources and environment
+
+- On the project login node, perform only edits, syntax checks, metadata
+  inspection, and tiny smoke tests. Submit training, full-catalogue scans,
+  response production, simulations, and other nontrivial CPU/GPU work through
+  the local scheduler.
+- The scheduling layer belongs to the user/deployment, not the SBSI source API.
+- Conda environment: `sims1`; the repository is not installed in production.
+
+```bash
+conda activate sims1
+export PYTHONPATH="$PWD:$PYTHONPATH"        # add BlendEMU only for the emulator step
+```
+
+`sims1` has no pytest, so run the suite with the `py31` interpreter (see `CLAUDE.md`):
+
+```bash
+PYTHONPATH="$PWD" /project/ls-gruen/users/zekang.zhang/envs/py31/bin/python -m pytest tests/ -q
+```
+
+The suite must pass on a checkout that has SBSI only; the single BlendEMU cross-check
+skips when BlendEMU is absent.
+
+Preserve the canonical spin-2 convention
+`(q1, q2) = q(cos 2 theta, sin 2 theta)`. Validate analytic gradients against
+finite differences before treating them as science results.

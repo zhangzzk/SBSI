@@ -405,3 +405,17 @@ def rescale(
     _add_primary_frame_features(dataset)
     _add_neighbor_gated_features(dataset)
     return dataset
+
+
+def intrinsic_e_abs(axis_ratio):
+    """|e_intrinsic| in the blendemu `angle2e` convention.
+
+    That convention is e = (1-q)/(1+q) * (cos 2theta, sin 2theta), so the MAGNITUDE depends only on
+    the axis ratio -- the position angle cancels. Lives here, rather than in either caller, because
+    the per-object response target (scripts/build_perobj_target.py) is FIT on this feature and the
+    trainer must DERIVE the identical quantity on the g=0 catalogue, which carries `axis_ratio_input_p`
+    but no `e_abs` column. Two private copies of this formula drifting apart would silently corrupt
+    the supervision signal with nothing raising.
+    """
+    q = np.asarray(axis_ratio, dtype=float)
+    return (1.0 - q) / (1.0 + q)

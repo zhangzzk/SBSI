@@ -19,6 +19,7 @@ import pandas as pd
 import torch
 from torch import nn
 
+from .nn_utils import activation_class as _activation
 from .coordinates import angle_to_radians
 from .selection_model import (
     DEFAULT_SELECTION_FEATURES,
@@ -119,6 +120,44 @@ SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ = [
     "e1_input_p", "e2_input_p", "sersic_n_input_p",
     "measured_mag_auto", "measured_flux_radius", *_MEAS_CROWD_NBR,
 ]
+# V2.8 one-scalar ablation: expose the same continuous summed BlendEMU response
+# that already defines V2.2's response-target crowd axis.  The final model still
+# adds R_blend separately; here it is only scene context for the self-response
+# flow.  Retaining near/far/max makes this an append-only comparison to V2.2.
+SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_RBLEND = [
+    *SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ, "r_blend",
+]
+# V2.3 scene-context probe: V2/V2.2's near/far/MAX block cannot distinguish
+# the flux in the two brightest neighbours from flux in the third and later
+# neighbours. Half-shear cases 40--199 show a 2.26+-0.46 point SELF-response
+# contrast along that missing direction even after all existing inputs are
+# balanced. This one additional pure-input scalar names that direction; no
+# constgold response or fitted correction enters it.
+SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_THIRDPLUS = [
+    *SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ, "nbr_flux_thirdplus",
+]
+# V2.6 scene decomposition: name both the leading two-neighbour flux and the
+# remaining scene flux explicitly.  The controlled half-shear diagnostic fixes
+# the former while varying the latter; using both prevents the marginal scene
+# trend from being attributed twice to third-plus flux.
+SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_TOP2_THIRDPLUS = [
+    *SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ, "nbr_flux_top2", "nbr_flux_thirdplus",
+]
+# V2.7 radial-scene probes.  These are deterministic intrinsic-scene inputs:
+# absolute neighbour flux in six disjoint annuli, or Eq. 17 image-overlap
+# blendedness.  They deliberately retain every V2.2 conditioner so the two
+# arms change only the proposed scene representation.
+V27_SIX_SHELL_FEATURES = [
+    "logflux_abs_shell_0_0p5", "logflux_abs_shell_0p5_1",
+    "logflux_abs_shell_1_2", "logflux_abs_shell_2_3",
+    "logflux_abs_shell_3_5", "logflux_abs_shell_5_10",
+]
+SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_SIXSHELL = [
+    *SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ, *V27_SIX_SHELL_FEATURES,
+]
+SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_PURITY = [
+    *SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ, "true_blendedness_eq17",
+]
 # V2 (realistic): full measured primary own-props. DROP sersic_n + redshift (no shear-safe measured
 # substitute; they are scatter conditioners, NOT response channels) and add measured_class_star as a
 # noisy profile/concentration proxy. This is the target p(ehat,thetahat|e,theta,theta_blending).
@@ -131,9 +170,9 @@ SHEARFREE_G0_MEAS_CROWD_CONC_FULL = [
 # The next three variants (a) diagnose WHICH true structural axis is load-bearing and (b) test whether a
 # fully-realistic (all-measured) concentration proxy can recover it. All share V2's realistic base.
 _MEAS_V2_BASE = ["measured_mag_auto", "measured_flux_radius", "measured_class_star", *_MEAS_CROWD_NBR]
-# V3a diagnostic: V2 + TRUE sersic_n only (redshift dropped). Isolates the sersic_n contribution.
+# Historical structure diagnostic: V2 + true sersic_n only (redshift dropped).
 SHEARFREE_G0_MEAS_CONC_SERN = ["e1_input_p", "e2_input_p", "sersic_n_input_p", *_MEAS_V2_BASE]
-# V3b diagnostic: V2 + TRUE redshift only (sersic_n dropped). Isolates the redshift contribution.
+# Historical structure diagnostic: V2 + true redshift only (sersic_n dropped).
 SHEARFREE_G0_MEAS_CONC_Z = ["e1_input_p", "e2_input_p", "redshift_input_p", *_MEAS_V2_BASE]
 # V4 realistic recovery: V2 + MEASURED structure proxies (mag_aper, fwhm_image, isoarea_image). The
 # mean-head can form concentration ~ mag_aper - mag_auto; fully measured -> deployable on real data.
@@ -152,6 +191,16 @@ MEASUREMENT_CONDITION_FEATURE_SETS = {
     "g0_crowd_flux_conc": SHEARFREE_G0_MEASUREMENT_CONDITION_FEATURES_CROWD_FLUX_CONC,
     "g0_meas_crowd_conc_szfl": SHEARFREE_G0_MEAS_CROWD_CONC_SZFL,
     "g0_meas_crowd_conc_szfl_noz": SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ,
+    "g0_meas_crowd_conc_szfl_noz_rblend":
+        SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_RBLEND,
+    "g0_meas_crowd_conc_szfl_noz_thirdplus":
+        SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_THIRDPLUS,
+    "g0_meas_crowd_conc_szfl_noz_top2_thirdplus":
+        SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_TOP2_THIRDPLUS,
+    "g0_meas_crowd_conc_szfl_noz_sixshell":
+        SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_SIXSHELL,
+    "g0_meas_crowd_conc_szfl_noz_purity":
+        SHEARFREE_G0_MEAS_CROWD_CONC_SZFL_NOZ_PURITY,
     "g0_meas_crowd_conc_full": SHEARFREE_G0_MEAS_CROWD_CONC_FULL,
     "g0_meas_conc_sern": SHEARFREE_G0_MEAS_CONC_SERN,
     "g0_meas_conc_z": SHEARFREE_G0_MEAS_CONC_Z,
@@ -348,6 +397,37 @@ class ConditionalAffineCoupling(nn.Module):
         return z, logdet
 
 
+def _qmc_normal(batch, n_samples, dim, dtype, device):
+    """Randomized-QMC standard normals, shape (batch*n_samples, dim), row-major (obj, sample).
+
+    The per-object integral we need is E[f(x)] over the flow's predictive distribution, estimated
+    from n_samples draws. Plain `torch.randn` converges as 1/sqrt(n); a low-discrepancy (Sobol) set
+    covers the unit cube far more evenly and converges nearer 1/n on smooth integrands, so the same
+    accuracy needs far fewer draws.
+
+    THE RANDOM SHIFT IS NOT OPTIONAL. If every object reused the SAME Sobol points, their quadrature
+    errors would be perfectly correlated and would NOT average away over the ~1e6 objects -- that
+    turns a variance into a BIAS, which is exactly the failure mode this estimator cannot tolerate.
+    Giving each object its own uniform shift mod 1 (a randomly-shifted digital net) keeps the
+    low-discrepancy structure WITHIN an object's n_samples while decorrelating objects, so the
+    estimator stays unbiased and the object-average still converges.
+
+    n_samples should be a power of two: Sobol's equidistribution guarantees hold on 2^k points and
+    degrade for other counts.
+    """
+    eng = torch.quasirandom.SobolEngine(dimension=dim, scramble=True, seed=_QMC_SEED)
+    u = eng.draw(n_samples).to(device=device, dtype=torch.float32)        # (n_samples, dim)
+    shift = torch.rand(batch, 1, dim, device=device, dtype=torch.float32)  # per-object shift
+    u = torch.remainder(u[None, :, :] + shift, 1.0)                       # (batch, n_samples, dim)
+    # ndtri(0)= -inf, ndtri(1)=+inf; clamp just inside the open interval.
+    u = u.clamp_(1e-7, 1.0 - 1e-7)
+    z = torch.special.ndtri(u)
+    return z.reshape(batch * n_samples, dim).to(dtype)
+
+
+_QMC_SEED = 0
+
+
 class ConditionalAffineFlow(nn.Module):
     def __init__(
         self,
@@ -405,7 +485,7 @@ class ConditionalAffineFlow(nn.Module):
         log_base = -0.5 * (z.pow(2) + np.log(2.0 * np.pi)).sum(dim=-1)
         return log_base + logdet
 
-    def sample(self, context, n_samples=1):
+    def sample(self, context, n_samples=1, qmc=False):
         if n_samples < 1:
             raise ValueError("n_samples must be >= 1")
         if context.ndim != 2:
@@ -413,20 +493,15 @@ class ConditionalAffineFlow(nn.Module):
         batch = context.shape[0]
         expanded_context = context[:, None, :].expand(batch, n_samples, self.context_dim)
         flat_context = expanded_context.reshape(batch * n_samples, self.context_dim)
-        z = torch.randn(batch * n_samples, self.target_dim, dtype=context.dtype, device=context.device)
+        if qmc:
+            z = _qmc_normal(batch, n_samples, self.target_dim, context.dtype, context.device)
+        else:
+            z = torch.randn(batch * n_samples, self.target_dim,
+                            dtype=context.dtype, device=context.device)
         flat_x, _ = self.forward(z, flat_context)
         return flat_x.reshape(batch, n_samples, self.target_dim)
 
 
-def _activation(name):
-    name = name.lower()
-    if name == "silu":
-        return nn.SiLU
-    if name == "gelu":
-        return nn.GELU
-    if name == "tanh":
-        return nn.Tanh
-    raise ValueError(f"Unsupported activation {name!r}")
 
 
 class MeasurementModelBundle:
@@ -460,12 +535,12 @@ class MeasurementModelBundle:
         return np.concatenate(values) if values else np.array([], dtype=np.float32)
 
     @torch.no_grad()
-    def sample(self, condition_frame, n_samples=1, batch_size=65536):
+    def sample(self, condition_frame, n_samples=1, batch_size=65536, qmc=False):
         samples = []
         for start in range(0, len(condition_frame), batch_size):
             batch = condition_frame.iloc[start:start + batch_size]
             context = self._context_from_frame(batch)
-            draw = self.model.sample(context, n_samples=n_samples).cpu().numpy()
+            draw = self.model.sample(context, n_samples=n_samples, qmc=qmc).cpu().numpy()
             flat = draw.reshape(-1, self.target_transform.dim)
             raw = self.target_transform.inverse_transform_array(flat)
             samples.append(raw.reshape(len(batch), n_samples, self.target_transform.dim))
@@ -540,11 +615,27 @@ class MeasurementModelBundle:
 class ConditionalMeanFlow(nn.Module):
     """Explicit-conditional-mean density: p(x|c) = p_resid(x - mu(c) | c).
 
-    A direct mean head mu(c) carries the conditional-mean response (so it is NOT shrunk
-    toward the marginal the way a pure flow's mean is), and the base flow models only the
-    residual scatter.  This fixes the measured-shape response under-fit (M_model -> M_data)
-    that drives the multiplicative shear bias.  mu is linear by default (the OLS conditional
-    mean is already an excellent fit); set mean_hidden>0 for an MLP head.
+    A direct mean head mu(c) carries the conditional-mean RESPONSE (so it is NOT shrunk
+    toward the marginal the way a pure flow's mean is).  This fixes the measured-shape
+    response under-fit (M_model -> M_data) that drives the multiplicative shear bias.
+    mu is linear by default (the OLS conditional mean is already an excellent fit); set
+    mean_hidden>0 for an MLP head.
+
+    *** mu IS NOT THE CONDITIONAL MEAN, AND p_resid IS NOT ZERO-CENTRED. ***  Only mu's
+    SHAPE-DEPENDENCE is pinned; its LEVEL is unidentified, because the response loss
+    constrains only DIFFERENCES mu(c+) - mu(c-) (any constant cancels) and the NLL
+    constrains only the SUM mu + residual.  Neither constrains mu alone, so it drifts and
+    the residual flow absorbs the offset.  Measured on the fiducial dom6x6 s501 checkpoint
+    (WORKLOG 2026-08-04f, `scripts/diag_meanhead_identifiability.py`): <mu(g2)> = +5.01 in
+    standardized units -- +1.79 in raw ellipticity, outside the physical range -- against a
+    data mean of +0.01, cancelled by <resid> = -5.00.
+
+    This is harmless for the response ONLY because the residual flow is blind to the shape
+    features (`flow_drop_indices`), which makes d<x>/d(shape) == d mu/d(shape) exactly,
+    whatever the level.  But it means: DO NOT read mu, or any per-object mean-head output,
+    as a predicted mean, and do not plot it as one -- only differences of mu are meaningful.
+    Code needing the actual model mean must sample the full model (as
+    `MeasurementModelBundle.target_mean_and_gradient` does).
     """
 
     def __init__(self, target_dim, context_dim, base_flow="affine", mean_hidden=0,
@@ -581,6 +672,18 @@ class ConditionalMeanFlow(nn.Module):
     def _flow_ctx(self, context):
         return context.index_select(1, self.keep_indices)
 
+    def _shift(self, context, u=None):
+        """Additive shift applied to the residual-flow draw / subtracted in log_prob.
+
+        The BASE class ignores `u` and returns exactly mu(context), so every existing call
+        site (and the fiducial arithmetic) is unchanged.  Subclasses that make the shift
+        REALISATION-AWARE (ConditionalMeanFlowRA) use `u`, the per-draw residual on the
+        `ra_indices` channels.  Callers that build a response by differencing mu across
+        shifted contexts MUST go through `_shift(ctx, u)` -- see the trainer -- or the
+        realisation-aware part of the response is silently left unsupervised.
+        """
+        return self._mu(context)
+
     @torch.no_grad()
     def set_ols_mean_and_freeze(self, context_std, target_std):
         """Fit the linear mean head by OLS on standardized (context, target) and freeze it.
@@ -612,9 +715,123 @@ class ConditionalMeanFlow(nn.Module):
     def log_prob(self, x, context):
         return self.flow.log_prob(x - self._mu(context), self._flow_ctx(context))
 
-    def sample(self, context, n_samples=1):
-        s = self.flow.sample(self._flow_ctx(context), n_samples=n_samples)
+    def sample(self, context, n_samples=1, qmc=False):
+        s = self.flow.sample(self._flow_ctx(context), n_samples=n_samples, qmc=qmc)
         return s + self._mu(context)[:, None, :]
+
+
+class ConditionalMeanFlowRA(ConditionalMeanFlow):
+    """REALISATION-AWARE mean head (design `mean_affine_ra`).
+
+        p(x|c) = p_resid( x - mu(c) - A(c, u) | c ),      u = (x - mu(c))[ra_indices]
+
+    THE DEFECT IT TARGETS.  In `ConditionalMeanFlow` the residual flow is deliberately blind to
+    the shape features, so the WHOLE shear response lives in the linear/MLP mean head mu(c) and
+    is added IDENTICALLY to every draw of an object.  Within one object every draw therefore
+    carries the same response, fixed by its TRUE properties: the model cannot represent the fact
+    that a particular measurement realisation came out faint/small and so has a collapsed
+    response.  A(c, u) restores exactly that: an additive shift on the SHAPE channels whose value
+    depends on the drawn photometry residual u (measured mag and log-size, target dims 2 and 3).
+
+    TRIANGULAR BY CONSTRUCTION.  `ra_targets` (shape channels 0,1) and `ra_indices` (photometry
+    channels 2,3) are disjoint, so A never moves the channels it reads.  The map
+    r -> r - A(c, r[ra_indices]) is therefore triangular with unit diagonal: |det J| = 1 and the
+    density needs NO log-det term.  The same disjointness makes the sampling inverse closed-form
+    (the drawn residual's ra_indices channels are already the final ones), so `sample` costs one
+    extra MLP pass and no iteration.
+
+    EXACT REDUCTION.  `ra_net`'s output layer is zero-initialised, so A == 0 at init and both
+    `log_prob` and `sample` are bit-identical to the parent class.  That makes a warm start from
+    an existing `mean_affine` checkpoint exact (`load_state_dict(..., strict=False)`).
+
+    SCOPE.  A is zero on channels 2,3 by construction, so the drawn mag and size -- and hence any
+    moving measured-cut boundary -- are UNCHANGED.  This design addresses the response VALUE, not
+    the selection/boundary channel.
+    """
+
+    def __init__(self, target_dim, context_dim, base_flow="affine", mean_hidden=0,
+                 mean_activation="silu", flow_drop_indices=None,
+                 ra_hidden=64, ra_activation="silu",
+                 ra_indices=(2, 3), ra_targets=(0, 1), **kwargs):
+        # SWALLOW TRAP. Both ConditionalMeanFlow and ConditionalAffineFlow end in a bare **kwargs,
+        # so an unknown key reaches neither an error nor an effect: `ra_hiden=32` silently builds
+        # the DEFAULT width, `ra_target=[2,3]` silently keeps ra_targets=(0,1). Nothing in the RA
+        # namespace may be swallowed -- no legitimate flow kwarg starts with "ra".
+        stray = sorted(k for k in kwargs if k.startswith("ra"))
+        if stray:
+            raise ValueError(
+                f"unknown realisation-aware key(s) {stray} would be silently swallowed by the "
+                "flow's **kwargs; valid RA keys are ra_hidden, ra_activation, ra_indices, "
+                "ra_targets")
+        super().__init__(target_dim=target_dim, context_dim=context_dim, base_flow=base_flow,
+                         mean_hidden=mean_hidden, mean_activation=mean_activation,
+                         flow_drop_indices=flow_drop_indices, **kwargs)
+        ridx = [int(i) for i in ra_indices]
+        rtgt = [int(i) for i in ra_targets]
+        if not ridx or not rtgt:
+            raise ValueError("ra_indices and ra_targets must be non-empty")
+        if set(ridx) & set(rtgt):
+            raise ValueError(
+                f"ra_indices {ridx} and ra_targets {rtgt} must be DISJOINT -- the unit-Jacobian "
+                "triangular argument fails if A moves a channel it reads")
+        bad = [i for i in ridx + rtgt if i < 0 or i >= self.target_dim]
+        if bad:
+            raise ValueError(f"ra index/target out of range for target_dim={self.target_dim}: {bad}")
+        if int(ra_hidden) <= 0:
+            raise ValueError(
+                "ra_hidden must be > 0 for flow_type='mean_affine_ra'; use flow_type='mean_affine' "
+                "for the plain (realisation-blind) head")
+        self.register_buffer("ra_indices", torch.as_tensor(ridx, dtype=torch.long))
+        self.register_buffer("ra_targets", torch.as_tensor(rtgt, dtype=torch.long))
+        self.ra_hidden = int(ra_hidden)
+        act = _activation(ra_activation)
+        self.ra_net = nn.Sequential(
+            nn.Linear(context_dim + len(ridx), self.ra_hidden), act(),
+            nn.Linear(self.ra_hidden, len(rtgt)))
+        # ZERO-INIT the output layer: A == 0 at construction => exact reduction to the parent.
+        nn.init.zeros_(self.ra_net[-1].weight)
+        nn.init.zeros_(self.ra_net[-1].bias)
+
+    def _A(self, context, u):
+        """(batch, target_dim) additive shift, non-zero only on `ra_targets`.
+
+        `u` is the realisation residual on `ra_indices` -- fed together with the context and
+        NOTHING else.  Feeding the absolute drawn photometry mu(c)+u instead would make A's
+        argument leg-dependent (mu moves between legs through the b_mag * e_int coupling) and
+        break the "u is shear-independent" statement the common-random-number response rests on.
+        """
+        if u is None:
+            raise ValueError(
+                "ConditionalMeanFlowRA needs the realisation residual u on the ra_indices "
+                "channels; a caller reached _A/_shift without one")
+        raw = self.ra_net(torch.cat([context, u], dim=-1))
+        zeros = torch.zeros(raw.shape[:-1] + (self.target_dim,), dtype=raw.dtype, device=raw.device)
+        return zeros.index_add(-1, self.ra_targets, raw)
+
+    def _shift(self, context, u=None):
+        return self._mu(context) + self._A(context, u)
+
+    @torch.no_grad()
+    def set_ols_mean_and_freeze(self, context_std, target_std):
+        raise NotImplementedError(
+            "OLS mean-freeze is not defined for the realisation-aware head: freezing mu alone "
+            "leaves A trainable and unsupervised. Use flow_type='mean_affine' for that path.")
+
+    def log_prob(self, x, context):
+        resid = x - self._mu(context)
+        u = resid.index_select(-1, self.ra_indices)
+        # unit Jacobian (triangular, ra_targets disjoint from ra_indices) -> no log-det term
+        return self.flow.log_prob(resid - self._A(context, u), self._flow_ctx(context))
+
+    def sample(self, context, n_samples=1, qmc=False):
+        z = self.flow.sample(self._flow_ctx(context), n_samples=n_samples, qmc=qmc)
+        batch, n, dim = z.shape
+        # closed-form inverse: A does not touch ra_indices, so the drawn residual's ra_indices
+        # channels ARE the final ones and u is read straight off z.
+        u = z.index_select(-1, self.ra_indices).reshape(batch * n, -1)
+        cflat = context[:, None, :].expand(batch, n, self.context_dim).reshape(batch * n, self.context_dim)
+        a = self._A(cflat, u).view(batch, n, dim)
+        return z + a + self._mu(context)[:, None, :]
 
 
 def build_flow(model_config):
@@ -625,6 +842,16 @@ def build_flow(model_config):
     # It does not affect the density architecture.
     cfg.pop("response_difference", None)
     cfg.pop("response_error", None)
+    # The OTHER half of the swallow trap: RA keys on a NON-RA flow_type. Those would be eaten by
+    # the same **kwargs chain and the model would be built with NO realisation-aware head at all
+    # -- the failure mode this whole design is trying to make impossible.
+    if not flow_type.endswith("_ra"):
+        stray = sorted(k for k in cfg if k.startswith("ra"))
+        if stray:
+            raise ValueError(
+                f"flow_type={flow_type!r} does not build a realisation-aware head, but the config "
+                f"carries {stray}; those keys would be silently ignored. Use flow_type "
+                "'mean_affine_ra' / 'mean_spline_ra', or drop the keys.")
     if flow_type == "affine":
         return ConditionalAffineFlow(**cfg)
     if flow_type == "spline":
@@ -633,6 +860,13 @@ def build_flow(model_config):
     if flow_type in ("mean_affine", "mean_spline"):
         cfg["base_flow"] = "affine" if flow_type == "mean_affine" else "spline"
         return ConditionalMeanFlow(**cfg)
+    # REALISATION-AWARE head. A distinct flow_type string, NOT a flag on mean_affine: the
+    # double **kwargs (ConditionalMeanFlow -> ConditionalAffineFlow) silently swallows unknown
+    # config keys, so a flag would be ignored by an older code copy instead of failing. With a
+    # new string the `raise` below makes an older copy fail loudly.
+    if flow_type in ("mean_affine_ra", "mean_spline_ra"):
+        cfg["base_flow"] = "affine" if flow_type == "mean_affine_ra" else "spline"
+        return ConditionalMeanFlowRA(**cfg)
     raise ValueError(f"Unknown flow_type {flow_type!r}")
 
 

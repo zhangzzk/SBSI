@@ -1,97 +1,140 @@
-# SBSI — simulation-based shear-bias inference
+# SBSI
 
-SBSI measures the multiplicative shear bias `m` from a catalogue of detected, measured
-galaxies, using the parameter-free response decomposition
+SBSI provides one model-name-agnostic workflow with three API areas:
 
+1. `sbs_shear.flow` — train and tune a conditional measurement flow.
+2. `sbs_shear.response` — combine flow self-response and emulator response.
+3. `sbs_shear.inference` — simulation-based shear inference (under development).
+
+Users choose every training, validation, and inference catalogue. The library
+does not select data from a release name and does not require repository job
+scripts. Run expensive API calls in whatever batch or cluster environment is
+appropriate for your system.
+
+The [inference tutorial notebook](examples/sbsi_api_tutorial.ipynb) is the main
+user-facing prediction walkthrough. Training and tuning use the CLI described
+below.
+
+## Models are paths, not pipelines
+
+The workflow accepts arbitrary model paths:
+
+```python
+from pathlib import Path
+
+from sbs_shear import ModelPaths, ResponsePredictor
+
+models = ModelPaths(
+    flow_checkpoints=(Path("/models/flow_s1.pt"), Path("/models/flow_s2.pt")),
+    emulator_model=Path("/models/emulator.json"),
+)
+predictor = ResponsePredictor.load(models, device="cuda")
 ```
-m = R_sim / (R_flow + R_blend) - 1
+
+`get_model("V3")` and `get_model("V3b")` are optional convenience presets that
+return the frozen external paths. They do not change training, catalogue
+selection, response estimation, or inference behavior.
+
+## External catalogues
+
+API boundaries accept either a pandas `DataFrame` or a user-supplied Feather,
+Parquet, CSV, or pickle path. For example:
+
+```python
+from sbs_shear import (
+    EmulatorPairingConfig,
+    ResponsePredictor,
+    get_model,
+    load_catalogue,
+    load_emulator,
+    prepare_forward_catalogue,
+    predict_blend_response,
+)
+
+models = get_model("V3")
+conditions = {
+    "pixel_size": 0.2,
+    "zero_point": 30.0,
+    "psf_fwhm": 0.73,
+    "moffat_beta": 2.224,
+    "pixel_rms": 0.312,
+}
+input_catalogue = load_catalogue("examples/data/example_catalog.feather")
+emulator = load_emulator(models, conditions=conditions)
+prepared = prepare_forward_catalogue(
+    input_catalogue,
+    config=EmulatorPairingConfig.from_emulator(emulator),
+)
+r_blend = predict_blend_response(emulator, prepared.emulator_pairs)
+
+predictor = ResponsePredictor.load(models, device="cuda")
+prediction = predictor.predict(
+    prepared.flow_inputs,
+    blend_response=r_blend,
+)
+print(prediction.summary())
 ```
 
-where `R_sim` is the response measured directly from the simulation, `R_flow` is the
-isolated-galaxy shape response from a trained conditional flow, and `R_blend` is the
-neighbour-blending response.
+SBSI owns the inference-time nearest-neighbour search, primary/secondary pair
+table, model-training cuts, feature rescaling, V3 crowding summaries, and
+alignment. `prepared.flow_inputs` is one row per retained primary;
+`prepared.emulator_pairs` may contain several neighbours per primary. They are
+separate views because passing the pair table to the flow would incorrectly
+weight crowded primaries more heavily. BlendEMU only evaluates its trained
+model on the prepared pairs.
 
-## Relationship to blendemu
+The bundled `examples/data/example_catalog.feather` contains the truth and
+orientation fields needed to build both response-model views. Measured image
+catalogues remain necessary for flow training and for the future measurement-
+likelihood/shear-inference API; they are not a second input to V3 response
+prediction. For precomputed emulator results, users may still provide a
+separate response catalogue joined on `(case, input_index)`, or an aligned
+`R_blend` column. Missing emulator responses are rejected or dropped, never
+replaced with zero.
 
-**SBSI consumes finished catalogues. It does not simulate or measure anything.**
+## Image simulation and measurement
 
-You run [blendemu](../blendemu) yourself to render the simulations and produce the
-detection/measurement catalogues, then point SBSI at the output directory. Nothing in the
-main pipeline imports blendemu.
+BlendEMU owns rendering, measurement, and simulation-catalogue construction.
+SBSI calls its supported pipeline CLI instead of copying that machinery. The
+[example Slurm wrapper](examples/job_generate_catalogues.sh) runs BlendEMU steps
+1 through 4b from a user-owned YAML configuration. It is a deployment example, not part
+of the SBSI workflow API.
 
-There are exactly two places the boundary is crossed, and both are isolated:
+## Training and tuning CLI
 
-| crossing | where | why |
-|---|---|---|
-| the blending-response emulator | `sbs_shear/emulator.py` | `R_blend` is evaluated by blendemu's trained `BlendingPredictor`. This is the only runtime dependency, and only for the R_blend step. |
-| the catalogue bridge | `scripts/build_detection_measurement_catalogue.py` | Turns an existing blendemu *rendering* into an SBSI input catalogue. Optional — skip it if you already have catalogues. |
-
-Emulator-retraining jobs, which run entirely inside blendemu, live in
-`jobs/blendemu_side/` and are not part of the SBSI pipeline.
-
-## Configuration
-
-Every external path is resolved in `sbs_shear/paths.py` from an environment variable with
-a fallback default — no path is hardcoded in a script. To run against your own data:
+Flow training is config-driven, like BlendEMU. Copy
+[`examples/flow_training.yaml`](examples/flow_training.yaml), replace every
+catalogue and artifact path, and run inside an appropriate compute allocation:
 
 ```bash
-export SBSI_CATALOGUE_DIR=/path/to/your/catalogues   # finished blendemu catalogues
-export SBSI_CACHE_DIR=/path/to/caches                # SBSI-derived lookups and harvests
-export SBSI_SIM_DIR=/path/to/lsst_sims               # half-shear sim set
-export SBSI_CONST_SIM_DIR=/path/to/lsst_sims_const   # constant-shear ("gold") sim set
-export BLENDEMU_ROOT=/path/to/blendemu               # only needed for R_blend
+python -m sbs_shear flow --config my_flow.yaml --mode train
+python -m sbs_shear flow --config my_flow.yaml --mode tune
 ```
 
-Print what is currently resolved, and whether it exists:
+An editable/package install provides the equivalent `sbsi` command.
 
-```bash
-python -m sbs_shear.paths
-```
+`--mode train` produces the configured checkpoint and averaged `*_swaavg.pt`
+checkpoint. `--mode tune` trains the explicit candidate list, evaluates each
+checkpoint with the user-supplied `package.module:function` scorer on the
+separate validation catalogue, and writes a ranked JSON manifest. Existing
+artifacts are never overwritten. Scheduler wrappers are deployment details and
+are not part of SBSI.
 
-## Layout
+Emulator training and tuning remain in BlendEMU and will use its CLI after the
+planned BlendEMU update; SBSI does not duplicate that implementation.
 
-```
-sbs_shear/       importable library
-  paths.py         all filesystem roots (environment-overridable)
-  emulator.py      the single blendemu boundary + survey conditions
-  measurement_model.py, spline_flow.py    the R_flow conditional flow
-  selection_model.py, scene_model.py      selection / scene models
-  response.py, shear_map.py, coordinates.py, preprocessing.py
-  forward_model.py, posterior_shape.py
-scripts/         runnable entrypoints (also an importable package; siblings reuse each other)
-jobs/            Slurm submission scripts
-  blendemu_side/   jobs that drive blendemu, not SBSI
-plotting/        figure scripts
-tests/           unit tests
-archive/         superseded scripts, kept for provenance
-```
+## Current scientific releases
+
+[MILESTONE.md](MILESTONE.md) records V3 and V3b results and provenance. Those
+names are release labels, not separate software pipelines.
 
 ## Environment
 
 ```bash
-conda activate sims1                                  # Python 3.9
-export PYTHONPATH="$PWD:$PYTHONPATH"                  # repo is not pip-installed
+conda activate sims1
+export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+python -m pytest tests/
 ```
 
-Scripts also self-bootstrap: each walks up from its own location to find the repo root,
-so `python scripts/foo.py` works without `PYTHONPATH` set.
-
-## Tests
-
-`pytest` is not installed in `sims1`, and not every test module has a `__main__` guard, so
-use the bundled runner (it needs no `PYTHONPATH`):
-
-```bash
-python tests/run_tests.py             # all modules
-python tests/run_tests.py shear_map   # only matching modules
-```
-
-If you do have pytest available, `python -m pytest tests/` works too.
-
-## Conventions
-
-- Never run compute on the login node — submit with `sbatch jobs/job_*.sh`.
-- Large data belongs under `$DATA_DIR`, not in the repo.
-- Record substantive changes in `WORKLOG.md` (newest first).
-- Current framing and estimator math: `INFERENCE.md`, `MATH.md`. Certified numbers:
-  `Gold-V1.md`, `Gold-V2.md`, `Gold-V3.md`.
+The package can also be installed with `pip install -e .` without changing the
+catalogue or model-path contract.

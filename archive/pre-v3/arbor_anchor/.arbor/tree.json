@@ -1,0 +1,103 @@
+{
+  "_counter": 5,
+  "root": "n0",
+  "nodes": {
+    "n0": {
+      "id": "n0",
+      "parent": null,
+      "depth": 0,
+      "status": "root",
+      "hypothesis": "Measure and correct V2.1 blend response with an independent neighbour-only coherent-shear simulation",
+      "insight": "[from n5] Direct coherent-neighbour calibration establishes most of the missing response, but its independently supported central correction stops at m=+0.389 percent; forcing the last 0.000854 would tune to constgold.\n[from n3] Fresh scenes validate the simple global R_blend scale but reject the isotonic curve; all 300 cases support scale 1.063188 and constgold m=+0.247 percent.",
+      "metadata": {
+        "dev_score": null,
+        "test_score": null,
+        "result": "",
+        "branch_ref": null
+      },
+      "created_at": 1785963592,
+      "updated_at": 1785988593
+    },
+    "n1": {
+      "id": "n1",
+      "parent": "n0",
+      "depth": 1,
+      "status": "pending",
+      "hypothesis": "A sparse unsheared-anchor simulation can directly measure the coherent scene R_blend estimand without constgold",
+      "insight": "[from n2] Sparse unsheared anchors are a valid direct R_blend experiment; adequate area and shear amplitude are required because per-object shape noise dominates.\n[from n3] Direct coherent-scene calibration recovers over half the V2.1 bias, but a single global scale cannot close the remaining response without exceeding its half-shear measurement.\n[from n3] Fresh scenes validate the simple global R_blend scale but reject the isotonic curve; all 300 cases support scale 1.063188 and constgold m=+0.247 percent.",
+      "metadata": {
+        "dev_score": null,
+        "test_score": null,
+        "result": "",
+        "branch_ref": null
+      },
+      "created_at": 1785963592,
+      "updated_at": 1785988593
+    },
+    "n2": {
+      "id": "n2",
+      "parent": "n1",
+      "depth": 2,
+      "status": "executed",
+      "hypothesis": "A two-case reduced-area smoke run will pass latent/shear/spacing/shape-matching guards and produce finite neighbour-only responses",
+      "insight": "The sparse unsheared-anchor construction is operational, but two 0.04 deg2 cases are far too noisy to measure R_blend.",
+      "metadata": {
+        "dev_score": 0.0,
+        "test_score": null,
+        "result": "Smoke DAG 15575653-15575656 passed all latent identity, opposite-shear, >=20 arcsec anchor spacing, rendering, ngmix, exact matching, and finite-response guards; 1152 matches. Case-mean truth=0.1692+/-0.2510 versus V2.1 prediction=0.0930+/-0.0020.",
+        "branch_ref": null
+      },
+      "created_at": 1785963592,
+      "updated_at": 1785965099
+    },
+    "n3": {
+      "id": "n3",
+      "parent": "n1",
+      "depth": 2,
+      "status": "merged",
+      "hypothesis": "One hundred independent 0.25 deg2 cases at |g|=0.05 will measure truth-minus-V2.1 R_blend to about 0.004 and determine whether a stable correction is warranted",
+      "insight": "The global coherent-neighbour correction replicates on 200 fresh scenes and reaches the 0.3 percent target after all-case refit; flexible isotonic conditioning fails fresh upper-quintile transfer and must not be promoted.",
+      "metadata": {
+        "dev_score": 0.001781,
+        "test_score": 0.247,
+        "result": "Extended direct-anchor experiment to 300 independent cases. Old 100-case global scale leaves +0.001781+/-0.002730 on fresh cases 100-299; all-case scale 1.063188+/-0.012305 changes constgold m from +1.008 to +0.247+/-0.121 percent.",
+        "branch_ref": "worktree-selbias-plot@83c229e"
+      },
+      "created_at": 1785965100,
+      "updated_at": 1785988712
+    },
+    "n4": {
+      "id": "n4",
+      "parent": "n0",
+      "depth": 1,
+      "status": "pruned",
+      "hypothesis": "A parameter-free monotonic calibration of per-primary R_blend, fit on anchor cases 0-49, will correct the held-out high-response conditional residuals and transfer more accurately than one global scale",
+      "insight": "Conditional monotonic calibration transfers as a stable 0.580-point improvement, but the dev-half fit still leaves 0.128 point beyond the acceptance boundary.\n[from n5] Direct coherent-neighbour calibration establishes most of the missing response, but its independently supported central correction stops at m=+0.389 percent; forcing the last 0.000854 would tune to constgold.",
+      "metadata": {
+        "dev_score": 0.000515,
+        "test_score": null,
+        "result": "Dev-half isotonic: held-out anchor residual +0.000515+/-0.002991; upper raw-response quintiles close to +0.00355 and +0.00386. Frozen constgold m improves +1.008 to +0.428+/-0.122 percent but misses 0.3.",
+        "branch_ref": "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/selbias-plot",
+        "prune_reason": "Held-out constgold abs(m)=0.428 percent exceeds the 0.3 percent goal"
+      },
+      "created_at": 1785973064,
+      "updated_at": 1785973697
+    },
+    "n5": {
+      "id": "n5",
+      "parent": "n4",
+      "depth": 2,
+      "status": "merged",
+      "hypothesis": "After the method passes its anchor holdout gates, refitting the unchanged isotonic estimator on all 100 anchor cases will use the validation data efficiently and close the remaining 0.128 point without constgold tuning",
+      "insight": "Using all validated anchor information recovers about 87 percent of the response increase required to reach the +0.3 percent boundary, but the last 0.000854 has no independent central-value support.",
+      "metadata": {
+        "dev_score": 0.000515,
+        "test_score": 0.389,
+        "result": "Unchanged isotonic method refit on all 100 validated anchor cases. Constgold m=+0.389+/-0.122 percent; R_blend 0.117858 -> 0.123906; paired improvement -0.619+/-0.002 point. Required R_blend at +0.3 percent is 0.124760, leaving 0.000854.",
+        "branch_ref": "worktree-selbias-plot@30a00d7"
+      },
+      "created_at": 1785973636,
+      "updated_at": 1785973945
+    }
+  }
+}

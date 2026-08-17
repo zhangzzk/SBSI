@@ -1,0 +1,94 @@
+# Dg=0.05 RESPONSE CATALOGUE -- the shear-amplitude test, and possibly the fix.
+#
+# The certified labels are a finite difference over Dg=0.2. The ruler, and the physics the m pipeline
+# needs, are at small shear. With the distance definition corrected and the close-pair training
+# imbalance addressed, a ~22% label-vs-ruler gap survives at <1" AT MATCHED FEATURES (the model
+# predicts 0.0391 on the ruler and 0.0393 on the response catalogue there, so it is not population).
+# Saturation of the Dg=0.2 secant is the leading explanation and predicts exactly this: no effect at
+# 1-3" (measured: <2%), a deficit only where the profiles overlap.
+#
+# The g=0.05 legs exist on disk for all 200 cases, so this is a CATALOGUE BUILD, not a
+# re-measurement: same galaxies, same estimator, same pairing, only the sheared leg changes. Compared
+# per-pair against the Dg=0.2 catalogue it measures the nonlinearity directly.
+#
+# Everything else is identical to fs2_lsst_r_extnbr_ho.yaml.
+# blendemu pipeline configuration
+# FS2 catalogue, LSST r-band — EXTENDED-NEIGHBOUR domain (secondary cuts relaxed)
+# Identical to fs2_lsst_r.yaml except: model_tag + regression_cuts relax the SECONDARY
+# (neighbour) magnitude/size so the emulator scores bright (r<18) + extreme-Re neighbours
+# it previously discarded (the confirmed source of ~56% of the gold coherent-blend under-count).
+# source_select_reg cut order = [r_input_s, r_input_p, Re_input_s, Re_input_p, distance].
+# ---
+
+catalog:
+  type: fs2
+  path: /project/ls-gruen/users/zekang.zhang/lsst_sims/FS2/FS2_25876/FS2_25876_IA_Griffith_UDF_i_25.feather
+  mag_column: lsst_r_mag
+  mag_cut: 29
+  re_convention: circularized
+
+simulation:
+  output_path: /project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876/
+  base_config: base_sim_config.ini
+  case_offset: 0
+  response:
+    n_cases: 200
+    shear_values: [0.0, 0.05]      # <-- AMPLITUDE TEST: was [0.0, 0.2]
+  self_response:
+    n_cases: 200
+    shear_values: [0.0, 0.05]
+  pixel_scale: 0.2
+
+noise:
+  source: csv
+  csv_path: /project/ls-gruen/users/zekang.zhang/lsst_sims/Euclid_Q1_median_LSST10yr.csv
+  band: LSST_r
+
+shape_measurement:
+  stamp_size: 48
+  pixel_scale: 0.2
+  use_pos: detect
+  tile_name: tile180.0_-0.5
+
+catalogues:
+  response:
+    r_max: 10    # arcsec
+    k: 20
+  self_response:
+    r_max: 3    # arcsec
+    k: 2
+    shape_suffix: _secondaries
+  detection:
+    r_max: 3    # arcsec
+    k: 2
+  batch_size: 100
+  n_jobs: 32
+
+training:
+  model_dir: /home/z/Zekang.Zhang/blendemu/models
+  model_tag: lsst_r_extnbr_g005    # appended to saved model filenames
+  n_trials: 100
+  early_stopping_rounds: 30
+  classification_early_stopping_min_delta: 1.0e-4
+  # cut order = [r_s, r_p, Re_s, Re_p, distance]. SECONDARY (neighbour) relaxed:
+  #   r_s  18->13  (include bright r<18 neighbours; catalogue min r_s=15.4)
+  #   Re_s [0.1,1.5]->[0.0,10.0] (include extreme-size neighbours; catalogue max Re_s=10)
+  # PRIMARY (target) cuts unchanged so the predicted-for sample matches the gold.
+  regression_cuts:      [[13, 29], [18, 28], [0.0, 10.0], [0.1, 1.5], [0, 10]]
+  self_response_cuts:   [[18, 28], [18, 28], [0.1, 1.5], [0.1, 1.5], [0, 3]]
+  classification_cuts:  [[18, 28], [18, 28], [0.1, 1.5], [0.1, 1.5], [0, 3]]
+  rescale:
+    pixel_rms: 0.312       # LSST r-band
+    pixel_size: 0.2
+    zero_mag: 30
+    psf_fwhm: 0.73
+    moffat_beta: 2.224
+
+inference:
+  catalogue_path: /home/z/Zekang.Zhang/blendemu/data/example_catalog.feather
+  resample_frac: 0.25
+  seed: 42
+
+cluster:
+  n_mpi: 50
+  realizations: "d,0,1"

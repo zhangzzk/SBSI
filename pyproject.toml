@@ -16,10 +16,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sbs-shear"
-version = "0.1.0"
-description = "Standalone SBI shear-calibration library for the SBSI response-decomposition pipeline (m = R_sim/(R_flow+R_blend)-1)."
+version = "3.0.0"
+description = "Simulation-based shear calibration with measurement flows and blending emulators."
 requires-python = ">=3.9"
 dependencies = []
+
+[project.scripts]
+sbsi = "sbs_shear.cli:main"
 
 [tool.setuptools]
 packages = ["sbs_shear"]
