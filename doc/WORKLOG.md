@@ -2,6 +2,61 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-17w  The §5B score-inference branch merged into dev (user)
+
+User: "merge to dev but not master and sync it back to this branch. then we'll continue on
+this branch." Done — `worktree-inference-5b` (74 commits, 2026-07-27..2026-08-05, last touched
+12 days ago) is now merged into `dev` as `1dac6cf`, and the branch has been fast-forwarded to
+the same commit so the two are identical. `master` is untouched and verified clean: the merge is
+not in its ancestry and it carries no `score_inference`.
+
+**Why merge rather than hand-port.** `dev` was 250 commits ahead of the split point and the
+branch 74, but the two touched nearly disjoint files, so a dry-run `git merge-tree` showed only
+four things needing a human: 66 of the 70 conflicts were "file location" notices that git
+resolves itself. The decisive detail is that git followed the `sbs_shear` -> `sbsi` rename (88%
+similarity) and merged the branch's `posterior_shape.py` change into `sbsi/posterior_shape.py`
+with no conflict at all — that was the file most likely to break. A hand-port would also have
+dropped the 25 worklog entries, and a large fraction of those are *retractions* (§5C structurally
+dead, the nested-Π artefact, the +0.78% quoted with a galaxies-only bar); losing them is how they
+get re-chased.
+
+**Placement decision worth knowing about.** `dev` tracks no `scripts/` or `jobs/` — V3 moved all
+of both into `archive/pre-v3/`, so git filed the branch's new files there too. The live §5B tools
+were moved back out into `scripts/` and `jobs/`: they are the drivers this line is about to be
+continued with, and `archive/` on dev means pre-V3 provenance. The dead §5C probe fleet (31 job
+scripts, `closure_v2_lagrangian.py`, `check_lagrangian_agreement.py`, `compare_transport_score.py`)
+and the V2-dump/bridge one-offs stay archived. `archive/README.md`'s claim that
+`closure_v2_lagrangian.py` must stay in the active tree for its shared V2 plumbing was checked and
+is now stale — no live §5B driver imports it, and the probes that do are co-located with it; the
+README says so rather than being silently contradicted.
+
+**Worklog numbering collision, left in place deliberately.** Both lines kept numbering entries
+`cont.N` after the 2026-07-27 split, so `cont.164`–`cont.169` now exist twice in this file with
+different content. The inference entries were spliced in as one delimited block with a banner
+rather than renumbered: they cross-reference each other constantly (cont.174 corrected by
+cont.175, cont.173 superseded by cont.174) and `doc/INFERENCE.md` §5B.4 cites cont.170 and
+cont.174 by number, so renumbering would have silently broken the document.
+
+**`doc/INFERENCE.md`** gained the branch's developed §5B text on all six conflicting hunks —
+the neighbour-channel split and the unclustered-field result, the measured `<s>_sel` anomaly, the
+dilution factor `c` in (5.3c), and the new §5B.4 existence conditions — while keeping dev's §0
+implementation-status section. 1336 -> 1521 lines. §0 still says catalogue-level shear inference
+is not shipped, which remains true: the estimator is in the package as a research prototype.
+
+`sbs_shear` -> `sbsi` rewritten across the 12 merged scripts and tests (38 occurrences);
+`archive/pre-v3/` keeps the old name, matching what dev already does there. A static pass
+confirmed all 78 names imported from `sbsi.*` by `scripts/` and `tests/` resolve.
+
+Tests: **101 passed, 1 skipped** (job 15810467, `py31` on `cluster`) — dev's suite plus the
+branch's 72. Recovery tag `pre-inference-merge-2026-08-17` marks dev's tip before the merge.
+
+**State of the science, unchanged by this merge** (see the block below, cont.177–179): closure at
+cut 0.6 is `-0.097 +/- 0.278%` at `g=0.05` with the population block on its own finer node bank.
+Open: the 6M shard merge (job 15540801 was cancelled 40 min in, so the cut-0.6 number at +/-0.17%
+never printed), shards 0/2/4, and the review's Finding 1 — the closure test only shears along
+`+g1`, a grid axis, so the lattice's m=4 anisotropy is untested and `--closure-g2` does not exist
+yet. Per the user, the `g=0.20` truncation test is dropped.
+
 ## 2026-08-17v  sample_measurement: public API for the direct flow output
 
 Owner asked for the flow's per-parameter PDFs as a separate API (response layer
