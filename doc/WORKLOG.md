@@ -2,6 +2,79 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-17l  Split the repo into a public `master` and a full `dev` branch
+
+Per the owner: two long-lived branches. `master` is the public view and tracks only
+core things; `dev` tracks more. Safety tag `pre-branch-split-2026-08-17` marks the
+last single-branch commit; nothing here is irreversible.
+
+**Commits.**
+
+- `a0e2e4b` (shared base, both branches) -- the `doc/` move, the tutorial prose
+  rewrite, and the `examples/job_generate_catalogues.sh -> job_blendemu.sh` rename.
+- `63cb51f` (dev) -- adds `notebooks/`, `slides/sbsi_slides.tex`, `doc/BRANCHES.md`,
+  and a dev `.gitignore` that additionally excludes LaTeX build products.
+- `master` -- whitelist `.gitignore`; removes `doc/`, `archive/`, `AGENTS.md`,
+  `CLAUDE.md`, `.claude/`, `.codex_resources.json` from the index (1981 index
+  deletions). Files remain on disk and remain tracked on `dev`.
+
+**Result:** master 36 tracked files, dev 2021.
+
+**master's `.gitignore` is a whitelist** -- `/*` ignores every top-level entry, then
+`!` lines re-admit `.gitignore`, `README.md`, `pyproject.toml`, `sbs_shear/`,
+`examples/`, `tests/`. Adding a public directory later means adding a `!` line.
+
+**`tests/` was added to master beyond the owner's list.** `README.md` and `AGENTS.md`
+both instruct the reader to run the suite, and `AGENTS.md` requires it to pass on a
+checkout that has SBSI only; a public branch without `tests/` cannot satisfy either.
+Cost is 7 files / 179 KB.
+
+**`AGENTS.md` and `CLAUDE.md` were kept OFF master.** Not on size grounds -- they
+carry internal infrastructure detail (`/project/ls-gruen/users/zekang.zhang/envs/py31`,
+`/home/z/Zekang.Zhang/blendemu`, node specs, partition names). They belong on `dev`
+until someone decides to sanitize them. Consequence: an agent working from a bare
+`master` clone gets no scope boundaries or numerical-integrity rules.
+
+**`models/` left ignored on BOTH branches, pending an owner decision.** It is 234 MB
+over 77 checkpoints and the shipped API does not read it: `get_model("V3")` resolves
+to `$DATA_DIR/sbsi_caches/ablation/measurement_flow_g0_ngmix_ablate_s2c_lt500_v22_s{seed}_swaavg.pt`,
+and no file of that name exists in `models/`. Its nearest 16-seed set is
+`..._meas_szfl_noz_lam450_fixresp_s501..s516.pt`, a different, earlier ensemble.
+Committing `models/` as it stands would ship a model the code never loads.
+
+**The merge hazard, recorded in `doc/BRANCHES.md`.** `.gitignore` does not filter
+files arriving through a merge -- it governs untracked files only. `git merge dev`
+from `master` would silently restore `doc/`, `archive/` and the agent files.
+Publish instead with
+`git checkout dev -- sbs_shear examples tests README.md pyproject.toml`.
+The reverse direction (`git merge master` from `dev`) is safe.
+
+**Validation.**
+
+```
+git check-ignore   # 10 public paths not ignored; 15 non-public paths ignored
+git ls-files       # master 36, dev 2021
+pytest tests/ -q   # 45 passed, 1 skipped, 1 warning  (on master, in-place)
+```
+
+Fresh single-branch clone of `master` into a scratch dir contains exactly
+`.gitignore README.md pyproject.toml examples/ sbs_shear/ tests/`, including the
+7.5 MB `examples/data/example_catalog.feather`, and its suite passes standalone:
+`45 passed, 1 skipped in 7.83s`.
+
+**Limitation -- master's HISTORY is not clean.** The split changed the index, not the
+past. Reachable from `master` there are still 163 commits touching `WORKLOG.md` and 9
+touching `archive/`, and several 1.4-1.9 MB WORKLOG blobs. Anyone cloning a published
+`master` gets all of it. Making the public branch genuinely free of internal history
+needs an orphan branch (`git checkout --orphan`) or `git filter-repo`; not done,
+because it discards shared history and is the owner's call.
+
+**Next.** (1) Owner decides `models/`: which checkpoints, if any, ship publicly.
+(2) Owner decides whether a clean-history public branch is wanted before any push.
+(3) `README.md` still documents `conda activate sims1 && python -m pytest tests/`,
+which cannot work -- `sims1` has no pytest. It is now on the public branch, so it is
+the first thing a new user will hit.
+
 ## 2026-08-17k  Moved project documentation into `doc/`
 
 Per the owner: all root-level markdown moves to `doc/`, except `README.md` and the two agent
