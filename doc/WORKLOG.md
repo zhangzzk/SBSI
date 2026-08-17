@@ -617,6 +617,2371 @@ reconciling them with the V3 library layout has not been done.
      logs were disjoint; they are spliced here verbatim so nothing is lost. Dates, not the
      `cont.N` counter, order them against the entries that follow. -->
 
+---
+
+# The §5B score-inference line (`worktree-inference-5b`, merged 2026-08-17)
+
+> **Read the `cont.N` numbers in this block as a separate series.** This branch split from the
+> main line on 2026-07-27 (`7a82125`) and both sides went on numbering their entries `cont.N`
+> independently, so `cont.164`–`cont.169` exist twice in this file with different content. Inside
+> the block below, and in every `WORKLOG cont.N` citation in `doc/INFERENCE.md`, `cont.N` means
+> the **inference** series (cont.161–179, 2026-07-27 → 2026-08-05). Outside it, `cont.N` means the
+> main series. The numbers were left as written rather than renumbered: the entries cross-
+> reference each other constantly (cont.174 is corrected by cont.175, cont.173 is superseded by
+> cont.174, cont.177's diagnosis is confirmed by cont.178) and `doc/INFERENCE.md` §5B.4 cites
+> cont.170 and cont.174 by number.
+>
+> Entries are newest-first, as everywhere else in this file: cont.179 first, cont.161 last.
+
+## cont.179 (2026-08-05) Code review of the §5B inference implementation: one real coverage gap, one untested shear direction, and five suspicions checked and cleared
+
+Review of `sbs_shear/score_inference.py`, `posterior_shape.py`, `scripts/eval_score_select.py`
+and `eval_score_response.py`. Tests: **58 passed** (15540902, `py31` — `sims1` has no pytest).
+No code changed by the review itself.
+
+**Cleared — checked, measured, and NOT problems.** Recorded so they are not re-chased:
+
+| suspicion | verdict |
+|---|---|
+| fp32 `cumsum` in `pass_fraction_by_node` over 1M rows | ≤2.5e-8 relative (torch sums pairwise); ≤0.00001% on `m`. Non-issue at any `--pi-samples`. |
+| grid truncation at `grid_rmax=0.95` discarding prior tail | empirical prior maxes at \|e\|=0.9036 (0 rows above 0.95); the FITTED prior's draws exceed 0.95 at 9.5e-6, so ≤0.01% on `m`. |
+| `_d1 = min(_d1, -1e-3)` tail-slope clamp (a possible silent fudge) | DORMANT: fitted slope is −15.98, nowhere near the floor. A guard, never an applied correction. |
+| jackknife blocks assigned `row_index % n_blocks` splitting correlated scenes | void — every catalogue row is its own `(case, input_index)`, 0 adjacent same-scene pairs in 200k. |
+| Louis analytic info dropping the injection Hessian | correctly fenced: `analytic_info=True` is used only when NOT injecting (`eval_score_response.py:568`). |
+
+**Finding 1 (real, and the sharpest one): the closure test only ever shears along `+g1`, which
+is a GRID AXIS.** `shear_and_sample` hardcodes `(g, 0)`. The square node lattice's leading
+quadrature error is its m=4 (45°) anisotropy — exactly the component an axis-aligned shear
+cannot excite. The `ghat_2 ≈ 0` null does NOT cover it: with the shear along an axis, the
+lattice and the cut are both symmetric under reflection about that axis, so `ghat_2` vanishes by
+symmetry whatever the quadrature is doing. It looks like a check and carries no information
+about this mode. This matters because cont.176 established `Pi` has genuine angular structure.
+Fix: add `--closure-g2` and run `g1 = g2 = g/sqrt(2)`. Costs a fresh score pass (the cache is
+keyed on `closure_g`, and the direction is not even a parameter yet). Until then, the grid
+convergence claim of cont.177/178 is established for one shear direction only — the `n`-ladder
+tests RESOLUTION, not isotropy.
+
+**Finding 2: the shard-merge path has no unit test**, and it is where the two worst bugs of this
+whole line lived (the cache-key regression that made jobs "COMPLETE" in 53 s with zero results,
+and the double-count guard). Every identity in the module is tested; this pure-bookkeeping path
+is exercised only by a Slurm smoke job. Cheap fix: synthesise two `npz` caches, assert the merge
+is additive, and assert a repeated `row_shard` and a mismatched key both raise.
+
+**Finding 3: `population_log_pi`'s docstring over-warns for the closure test and under-warns for
+real data.** It calls the per-galaxy average a violation of §5B.1(i) (cont.164 defect 3). But the
+closure test draws shapes i.i.d. from the prior and pastes them onto catalogue rows, so shape is
+independent of magnitude/size BY CONSTRUCTION and the factorisation
+`Pi^eff(e) = E_rest[Pi(e, rest)]` is exact. It becomes a real error only on a real catalogue,
+where shape correlates with size and magnitude. Worth rewording so the warning fires at the point
+it actually bites.
+
+**Findings 2 and 3 are now FIXED (owner request, same day).** Tests: **72 passed** (15542331),
+up from 58; the 14 new ones are all the merge path.
+
+*Finding 2.* The merge logic was inline in `main()`, which is why it had no test -- reaching it
+meant importing the whole driver. Extracted verbatim to
+`score_inference.merge_block_sum_caches` (next to `blocked_sums`/`jackknife_blocks`, whose
+output it concatenates) with a `ScoreCacheMismatch` exception; `eval_score_select.py` calls it
+and converts the exception to a clean `SystemExit` so job logs keep a one-line message instead
+of a traceback. No behaviour change -- verified by importing the driver and by the suite.
+`tests/test_score_cache_merge.py` covers: the exactness claim (merged block sums equal a single
+pass over the union, `ghat` AND its error bar to 1e-12); the uncut control travelling block-for-
+block with the kept sums; and -- the part that actually broke -- eight REFUSALS, since both
+historical failures were failures to refuse. Includes a direct regression test for the
+53-second silent no-op (a pre-sharding cache must read as a whole-catalogue pass, but must
+still be refused as a shard of a multi-shard run) and one asserting that the fallback did NOT
+become a general "absent key is fine" rule.
+
+*Finding 3.* `population_log_pi`'s docstring now splits the two regimes instead of flatly
+calling itself a defect: the factorisation is EXACT for the closure test (shapes are drawn
+i.i.d. and pasted onto rows, so shape is independent of the rest by construction) and a REAL
+error on data (shape correlates with size and magnitude). cont.164 defect 3 is corrected, not
+withdrawn -- the term still has to be priced before this is pointed at a real catalogue.
+
+**Finding 4 (cosmetic, NOT done):** `shear_velocity_jacobian` and the inline `v` in
+`blend_injection_term` are identical 6-line blocks; one should call the other. And the `_d1`
+clamp should print when it fires, since a silent activation would be exactly the class of thing
+[[feedback_no_silent_fudge]] forbids.
+
+## cont.178 (2026-08-04) The grid fix holds, but `g = 0.10` has HALF the error bar and shows a −0.49% residual that `g = 0.05` could not resolve — plus three silent-failure bugs in the job plumbing
+
+**The headline is not good news.** cont.177 closed cut 0.6 to −0.097 ± 0.278% at `g = 0.05`.
+Re-running the same ladder at `g = 0.10` (15518742, off the `c06_g10` cache):
+
+| pi_grid_n | `I_sel/⟨I⟩` | `d(m)` at `g=0.10` | `d(m)` at `g=0.05` (cont.177) |
+|---|---|---|---|
+| 61 | 0.2782 | +0.267 ± 0.148% | +0.640 ± 0.280% |
+| 101 | 0.2718 | −0.623 ± 0.146% | −0.227 ± 0.277% |
+| 141 | 0.2728 | **−0.489 ± 0.147%** (3.3σ) | **−0.097 ± 0.278%** (0.3σ) |
+
+The grid fix reproduces at `g = 0.10` (the ladder moves by 0.76%, matching the 0.74% at
+`g = 0.05`), so cont.177's diagnosis stands. What is new is that after the fix there is still
+something there.
+
+**Why `g = 0.10` is the sharper probe, and why this was hiding.** `m = ghat/g − 1`, so
+`σ_m = σ_ghat/g` while `σ_ghat` is shape-noise dominated and nearly independent of `g`.
+Doubling the injected shear therefore HALVES the error on `m` at fixed catalogue size —
+measured 0.278% → 0.147%, almost exactly ×2 (`σ_ghat` = 1.39e-4 and 1.47e-4 at the two shears,
+i.e. constant as claimed). The corollary is that the `g = 0.05` closure was never precise
+enough to see a −0.5% effect, and "consistent with 0.3%" there was a statement about the bar,
+not about the bias.
+
+**This is EXPECTED, not a defect (owner, 2026-08-04).** The estimator learns only the
+FIRST-ORDER response, so a bias at large shear is built in; the leading truncation term goes as
+`g²` and appears in `m` as `∝ g²`. That reading is quantitatively consistent with both points:
+`−0.097 × 4 = −0.39%` against a measured `−0.489%`.
+
+**Correction to the "free factor 2".** An earlier draft of this entry recommended adopting
+`g = 0.10` as the default closure shear for its tighter bar. That is WRONG: the noise falls as
+`1/g` but the truncation bias grows as `g²`, which is faster, so raising `g` buys precision on
+a number that is increasingly not the one wanted. With `k = −48.9 %/g²` fitted from the
+`g = 0.10` point:
+
+| g | predicted bias | stat error | bias/noise |
+|---|---|---|---|
+| 0.02 | −0.020% | 0.715% | 0.0 |
+| 0.05 | −0.122% | 0.286% | 0.4 |
+| 0.10 | −0.489% | 0.143% | 3.4 |
+| 0.20 | −1.956% | 0.072% | 27.4 |
+
+**The right use of large `g` is to MEASURE the quadratic term, not to hide inside it.** `g = 0.20`
+predicts `−1.96 ± 0.07%`, a ~27σ handle on the curvature — a decisive test of the `g²` form
+rather than a two-point plausibility argument. With `b` pinned there, the `g = 0.05` and
+`g = 0.10` points become estimates of the `g → 0` INTERCEPT, which is the closure number that
+matters (survey shears are `g ~ 0.02`, where the term is −0.02% and irrelevant). Note this is a
+fit of a functional form PREDICTED BY THE DERIVATION, not a curve chosen to fit the residual;
+the 4-point scan leaves 2 dof to check it (a surviving `g⁴` term would show up there). It must
+be reported as a fitted extrapolation, never applied silently — see
+[[feedback_no_silent_fudge]]. Runs: `g = 0.02` and `g = 0.20` (15525091/15525092, `inter`).
+
+**Three plumbing bugs, all of which failed SILENTLY (exit 0, plausible-looking output).**
+
+1. **Cache-key regression.** Adding `row_shard`/`row_shards` to `cache_key` (cont.177) made
+   every pre-existing cache mismatch on `want 1, got None`. Cost: the `pi_grid_n = 181, 221`
+   convergence ladder (15505527) "COMPLETED" in 53 s having printed four headers and zero
+   results, and I had been reporting it as pending. Fixed by reading a missing key as the
+   unsharded value (`row_shard=0`, `row_shards=1`) rather than as a mismatch.
+2. **`sbatch --export` splits its own argument on commas.** `--export=ALL,PGRIDS=61,101,141`
+   delivers `PGRIDS=61` and silently discards the rest; the job runs one rung and exits 0.
+   Two ladder submissions were truncated this way. Job scripts now accept colon-separated
+   lists and convert internally.
+3. **Hardcoded `--closure-g 0.05`** in both `job_pi_grid_ladder.sh` and `job_score_shard.sh`,
+   with `_g05_` baked into the cache path. A "g = 0.10" job would have re-reported the
+   `g = 0.05` numbers under a g=0.10 job name, and a g-scan would have overwritten one cache
+   repeatedly. Both now derive the flag AND the filename from one `CLOSURE_G` variable.
+
+**Scheduling: the wall is a GPU-count cap, not CPU or memory.** The `cip` QOS is
+`cpu=64, gres/gpu=3, MaxJobsPU=4`; measured usage while three shards sat in
+`QOSMaxGRESPerUser` was 32 of 64 cores, so trimming `--cpus-per-task` frees nothing. Note a
+16 GB vGPU slice counts the SAME as a whole A40 against `gres/gpu`, so requesting a smaller
+card does not buy a slot either. Headroom lives elsewhere: `inter` is a separate QOS
+(`gres/gpu=8`) and `cluster` is `cpu=3000, MaxJobsPU=50` with GPUs uncapped.
+`jobs/job_score_bench.sh` (new) measures whether the score pass is CPU-viable on `cluster`;
+CPU jobs there started immediately while GPU jobs queued.
+
+**Files.** `scripts/eval_score_select.py` (cache-key back-compat); `jobs/job_pi_grid_ladder.sh`,
+`jobs/job_score_shard.sh` (parameterised `CLOSURE_G`, colon-separated lists);
+`jobs/job_score_bench.sh` (new).
+
+**GRID CONVERGENCE: SETTLED (15518743).** With the cache bug fixed the ladder finally ran, and
+`pi_grid_n = 141` is converged — cut 0.6 gives `d(m)` = −0.097 / −0.129 / −0.107 / −0.108% at
+141 / 181 / 221 / 281, i.e. flat to 0.04% on `m`, with `I_sel/⟨I⟩` stable at 0.2687 to four
+digits. Adopt 141 as the default. (The job hit its 2 h wall on the last cut-0.4 rung; 141→181
+was already flat there, −0.475 → −0.513%.) cont.177's quadrature diagnosis is therefore
+complete: the grid is no longer a candidate for anything.
+
+**The `g` scan was cut to ONE point, deliberately.** The `g → 0` intercept does not need
+fitting: at `g = 0.05` the predicted truncation is −0.122% against a measured −0.108 ± 0.278%,
+so the intercept is already ~+0.01% and a curve fit would refine a correction nobody applies.
+What the scan is still for is discriminating the EXPECTED `g²` truncation from an UNEXPLAINED
+constant multiplicative error — which currently sits at only ~1.4σ, and which would be −0.49%
+at survey shear too and so would blow the 0.3% budget outright. `g = 0.20` separates the two
+by ~20σ (−1.96% vs −0.49%) for one job; `g = 0.02` separates nothing (bar 0.72%, wider than
+either prediction) and was cancelled. Caveat to check when it lands: at `g = 0.20` the `g⁴`
+term is no longer obviously negligible, so a deviation there is not automatically evidence
+against `g²`.
+
+**QUEUE CLEARED (owner request, 2026-08-04).** All pending closure jobs cancelled so the
+`flow_v21` array is not pushed back behind them — the `cip` cap is 3 GPUs and `flow_v21` was
+holding all three with a fourth waiting. Nothing is lost: shards 1, 3 and 5 had already
+COMPLETED and their caches are on disk
+(`c06_g05_r2000000_s{1,3,5}of6_G2765.npz`, 2M rows each). Resume with:
+
+```
+# the three missing shards (2M rows each, ~2.5-3.5 h on an a40-16gb slice)
+for SH in 0 2 4; do sbatch --partition=cip --gpus-per-node=a40-16gb:1 --mem=24G \
+  --export=ALL,CUT=0.6,ROWS=2000000,SHARD=$SH,NSHARDS=6,PGRID=141,CLOSURE_G=0.05 \
+  --job-name="sh6_$SH" jobs/job_score_shard.sh; done
+# the g^2-vs-constant discriminator
+sbatch --partition=inter --gpus-per-node=a40:1 --mem=48G --time=08:00:00 \
+  --export=ALL,CUT=0.6,ROWS=2000000,SHARD=0,NSHARDS=1,PGRID=141,CLOSURE_G=0.20 \
+  --job-name=gscan_0.20 jobs/job_score_shard.sh
+```
+
+Pin one slice per DISTINCT physical card (`cip-cl-h01g0{2,3,4,5}n1`) — three slices of one A40
+give no parallelism and ~3.6× slowdown — and note `h01g02` slices cap at 26 G host RAM.
+
+**Cashing in the banked 6M rows costs no GPU (15527903).** Merging the three finished shards
+needs no score pass, only the `Pi` block, which is small enough for CPU — so it runs on
+`cluster` (separate QOS, 50 job slots) and contends with nothing. Expected σ_gal
+0.270% → 0.270/√3 = 0.156%, total σ → sqrt(0.156² + 0.072²) = 0.172%.
+
+**The merge TIMED OUT and returned nothing (15527903), for two compounding reasons.** It asked
+for 3 h on `cluster` and was killed at the wall. The sizing was simply wrong: the `Pi` block at
+`pi_grid_n=141` costs ~10-15 min on an a40-16gb slice, and the measured CPU:GPU ratio on this
+pass is ~13×, which lands at 2-3.5 h — straddling a 3 h limit. Resubmitted as **15540801** with
+a 12 h wall (`jobs/job_shard_merge.sh`, new; the old wrapper lived in scratch). It started
+running on `cluster` immediately while all three `cip` GPUs were held by `flow_v21`/`cg_v21`,
+which is the intended confirmation that the two QOS pools are independent.
+
+**Silent-failure bug #4: `grep` block-buffers, so a killed job loses its log.** The merge's
+`.out` held nothing but the two header lines printed before the pipe opened — not because no
+work happened, but because `grep` buffers ~4 kB when stdout is a file and a SIGKILL at the time
+limit discards it. `jobs/job_score_shard.sh` already used `--line-buffered`;
+`jobs/job_pi_grid_ladder.sh` did not, so the earlier `grid_fine` TIMEOUT lost its last partial
+rung the same way. Both are now `--line-buffered`. This is the fourth member of the family in
+this entry (comma-split `--export`, hardcoded `--closure-g`, the cache-key regression): every
+one of them turns a failure into something that *reads* like a clean result or a clean log.
+
+**Next.** (1) Read the 6M merge (**15540801**, was 15527903): cut 0.6 at ±0.17% instead of ±0.28%.
+(2) Run `g = 0.20` when GPUs are free — a value near −1.96% confirms the expected truncation
+and closes the question; near −0.49% means a real multiplicative residual.
+(3) Finish shards 0/2/4 for σ_gal → ~0.13%; note
+σ_Pi = 0.072% does NOT shrink with rows and sets the floor. (4) Quote closure as the `g → 0`
+intercept of the `g²` fit, keeping `g = 0.05` as the default working shear — NOT `g = 0.10`,
+whose tighter bar is bought with a bias 3.4× its own noise.
+
+## cont.177 (2026-08-04) §5B closure was a QUADRATURE artefact: the population block and the per-galaxy block are different integrals sharing one grid, and only the first was unconverged
+
+**Result.** At cut 0.6, `d(m)` goes from **+0.640 ± 0.280%** (2.3σ, failing the 0.3%
+deliverable) to **−0.097 ± 0.278%** (0.3σ, inside it) with no change to the flow, the data, the
+prior or the estimator — only the node bank used for the population terms.
+
+**How it was found.** The closure test draws `xhat` FROM the flow and inverts it with that same
+flow, so the model is exact by construction and `d(m)` must be zero up to numerics. That leaves
+four candidates: grid quadrature, finite-difference truncation, ratio bias in `sum s / sum I`,
+and evaluating a `gamma = 0` estimator at finite `gamma`. The first two need no flow at all, so
+`scripts/check_quadrature.py` (new, job 15504948, CPU, 26 s) measures them with an ANALYTIC
+`Pi` — no Monte Carlo anywhere, which is what makes it sharp:
+
+| grid_n | G | Bartlett identities → m | **`Pi`-weighted `I_sel` error → m** |
+|---|---|---|---|
+| **61 (production)** | 2 765 | +0.044% | **−0.896%** |
+| 81 | 4 921 | +0.019% | −0.339% |
+| 101 | 7 693 | +0.009% | +0.098% |
+| 141 | 15 069 | +0.001% | −0.087% |
+
+Finite differences are clean: both steps converge quadratically (`info_delta` residuals
++6.4e-3, +1.5e-3 for successive halvings, ratio 4.2 ≈ 4), leaving 0.017% on `m` at the
+production values. The **per-galaxy** machinery is clean too — Bartlett's `E_0[u] = 0` and
+`E_0[du] + Var_0(u) = 0` hold to 1.2e-3 at `grid_n=61`. What is NOT clean is the same
+quadrature weighted by `Pi`: **2.4% on `I_sel`, i.e. 0.90% on `m`**, larger than the whole
+residual and 3× the target. The two integrals simply converge at different rates — `Pi` carries
+angular structure (the m=2/m=4 terms of cont.176) that the smooth prior does not — and they had
+been sharing a grid for no reason other than convenience.
+
+**Conversion used throughout:** `ghat = (Σs − N⟨s⟩_sel)/(ΣI − N I_sel)`, so a relative error
+`ε` on `I_sel` moves `m` by `−ε·I_sel/(⟨I⟩ − I_sel)` = `−0.377 ε` at cut 0.6. A 1% `I_sel`
+error is 0.38% on `m`; the 0.3% deliverable therefore needs `I_sel` to ~0.8%.
+
+**The fix is nearly free and leaves the score caches valid.** `--pi-grid-n` gives the population
+block its own, finer bank. Legitimate because they are different integrals, and because the
+per-galaxy quadrature error largely CANCELS in the paired cut-minus-uncut difference (both
+sides carry it) while `I_sel` enters the cut estimate alone and so lands undiluted — it is
+exactly the uncancelled part. Cheap because the `Pi` fast path made the population block
+minutes: the whole 8-point ladder below took 95 min, against ~16 h to redo the score pass at
+`G = 7693`. `pi_grid_n` is deliberately absent from `cache_key`, since the cached per-block
+sums depend on the score-pass grid and not on this one.
+
+**Measured (15504975, `cip` a40-16gb, off the existing `c06`/`c04` caches):**
+
+| pi_grid_n | G | `I_sel/⟨I⟩` (cut 0.6) | `d(m)` cut 0.6 | `d(m)` cut 0.4 |
+|---|---|---|---|---|
+| 61 | 2 765 | 0.2742 | +0.640 ± 0.280% | +0.447 ± 0.520% |
+| 81 | 4 921 | 0.2708 | +0.169 ± 0.278% | −0.160 ± 0.516% |
+| 101 | 7 693 | 0.2679 | −0.227 ± 0.277% | −0.647 ± 0.513% |
+| 141 | 15 069 | 0.2688 | **−0.097 ± 0.278%** | **−0.475 ± 0.514%** |
+
+The analytic prediction is confirmed quantitatively: `I_sel/⟨I⟩` moves 0.2742 → ~0.2688, a
+**2.0%** shift against the predicted 2.4%, and `d(m)` moves 0.74% (cut 0.6) and 0.92% (cut 0.4)
+against the predicted ~0.9%.
+
+**`<s>_sel` is untouched by the grid** — −0.001878 ± 0.000095 at every rung, to six digits. So
+cont.176's anisotropy signal is grid-independent and is not a quadrature artefact, which is a
+useful independent confirmation of that entry.
+
+**What is NOT established.** (1) The ladder is converging but not yet flat: the 101→141 moves
+are +0.130% and +0.172%, about half the target, so `pi_grid_n = 181, 221` is running (15505527)
+before 141 is treated as the answer. (2) The error bars (0.278%, 0.514%) are comparable to the
+0.3% target, so cut 0.6 is *consistent with* the deliverable, not yet a demonstration of it —
+that still needs the statistics below. (3) Cut 0.4's central value (−0.475%) is outside 0.3%,
+though 0.9σ from zero; its bar is too wide to decide.
+
+**This also rehabilitates cont.175's "GRID REFINEMENT: NULL".** That test doubled the bank
+against a *Monte-Carlo* `Pi` and got −0.349% ± 0.71%, recorded as a 0.5σ null that "removes one
+candidate". The effect is real and ~0.9%; the test simply had a bar 2× coarser than the thing
+it was looking for, and saw roughly the right size without being able to resolve it. I had been
+treating the grid as cleared. It was not. A null at a precision coarser than the target is not
+a null — see [[feedback_chi2_below_one_is_unresolved]] for the same mistake in another guise.
+
+**Also running.** `g = 0` (15504833) and `g = 0.10` (15504834) full score passes, to separate a
+multiplicative bias from curvature. Note the null is now expected to pass trivially: an `I_sel`
+error is multiplicative, so it biases `m` but not `ghat` at zero shear. The `g = 0.10` run still
+discriminates, and the quadrature explanation predicts `d(m)` there is unchanged.
+
+**Next.** (1) Finish the grid ladder; adopt the converged `pi_grid_n` as the default. (2) Buy
+statistics — σ_gal is now the only wall at 0.270%/0.503%, and the catalogue holds **31.4M rows
+against the 2M being used** (cont.176), which takes σ to 0.068%/0.127%. Needs a `--row-offset`
+to split the score pass across GPUs; the cached per-block sums are additive by construction.
+(3) Re-check cut 0.4 once (1) and (2) are in.
+
+**Files.** `scripts/check_quadrature.py`, `jobs/job_quadrature.sh`, `jobs/job_pi_grid_ladder.sh`
+(new); `scripts/eval_score_select.py` (`--pi-grid-n`).
+
+## cont.176 (2026-08-03) The `Pi` sweep was re-running a flow that cannot see the node — removed, bit-for-bit; and the score pass has never used a tensor core
+
+A cost pass, prompted by every definitive run taking 8+ hours. Neither half was slow for an
+interesting reason, and one half was doing work that is provably unnecessary.
+
+**Where the 8.4 h went** (measured, job 15486026): scoring 4 legs × 5147 s = **5.7 h**;
+population `Pi` 6 reps × ~27 min = **2.7 h**.
+
+1. **The `Pi` fast path — exact, and now verified at zero difference.** `pass_fraction_by_node`
+   rebuilt the whole conditioning frame inside its node loop (`sub.copy()` → `rescale()` →
+   `transform_frame` inside `bundle.sample`) — 2765 times per replicate on up to 262 144 rows,
+   to change two columns — and re-ran the flow each time. But the model is a location family
+   in the shape: `ConditionalMeanFlow.sample(c) = flow.sample(flow_ctx(c)) + mu(c)`, and
+   `flow_ctx` index-selects away exactly `flow_drop_indices = [0,1,8,9]` = `e1`, `e2` and their
+   missing indicators. The 10-layer coupling stack is **blind to the node**, so under the common
+   random numbers the loop already imposed, its draws at every node are the *same draws*. The
+   sweep is now one flow pass plus `G` evaluations of the 16→128→2 mean head — ~590× less
+   arithmetic — with the node entering only through `mu`. The per-node reduction also stays on
+   the GPU (`cut` now takes a torch tensor); only the `(n_ladder,)` rung values come back.
+   This is the same structure `PosteriorShapeEstimator` already asserts for the *scoring* side;
+   it was never exploited on the sampling side.
+2. **Verified at the level that matters, after a first attempt that tested the wrong thing.**
+   `scripts/check_pi_fastpath.py` transcribes the old loop literally and compares.
+   - At 4096 rows / 12 nodes: `max |fast − ref| = 0.000e+00` (job 15490047).
+   - At 65 536 rows / 64 nodes it is **not** zero: `max = 3.8e-06`, exactly **one flipped
+     draw in 67 million**, mean `|dPi| = 6e-08`. The two paths reach the same sample by
+     different arithmetic (`(resid+mu)*scale+mean` in torch vs `flow.sample()+mu` then
+     `inverse_transform_array` in numpy), so a draw sitting within float rounding of the cut
+     can land on the other side. That is rounding; my original tolerance (literal zero)
+     was wrong, not the code.
+   - **The decisive test**: `Pi` is not the number that matters — `<s>_sel` is a
+     near-cancellation and amplifies whatever survives in `Pi`, so a small `dPi` does not
+     imply a small `d<s>_sel`. On the FULL 2765-node bank, 6 replicates, 16 384 rows
+     (job 15490596): `d<s>_sel = [+1.7e-08, +3.7e-09]` and `dI_sel00 = −4.8e-07`, against a
+     replicate error of ~3e-04. **Four orders of magnitude below anything observable.**
+   - **Deterministic**: jobs 15490217 and 15496629, same config, are digit-identical on every
+     reported value.
+   Guards added inside the function itself (residual flow must not see the shape dims; no
+   e-derived features) so a future checkpoint cannot silently invalidate the reuse.
+3. **The score pass is honest work, run in the wrong precision on a third of a card.** Per leg
+   it is 2M rows × 2765 nodes = 2.2e10 flow evaluations; from the checkpoint's shapes (10 ×
+   [14→256→256→256→4]) one evaluation is 2.71 MFLOP, so ~60 PFLOP/leg. 5147 s ⇒ ~12 TFLOP/s
+   (~19 solo). A full A40 is 37 TFLOP/s in fp32 — and these ran on an `a40-16gb` **vGPU slice**.
+   So we are near peak *for what was requested*. `grep` found no `allow_tf32`, no `autocast`,
+   no half precision anywhere in the repo: the most tensor-core-shaped workload here has only
+   ever run in the one precision that cannot use them.
+4. **`--precision {fp32,tf32,bf16,fp16}`** added (`sbs_shear/precision.py`), wrapping both the
+   score pass and `Pi`. The acceptance metric is the shift in `ghat`, not `max |dlogL|`: the
+   definitive runs' statistical error is 2.5e-4 in `ghat`. Measured on the `a40-16gb` slice,
+   40 000 rows × 2765 nodes (job 15490165):
+
+   | mode | speedup | d ghat1 | verdict |
+   |---|---|---|---|
+   | fp32 | 1.00× | ref | — |
+   | tf32 | **1.31×** | **+9.0e-06** | safe, 25× below the statistical error |
+   | bf16 | 3.34× | +6.9e-03 | **reject** — 27× the statistical error |
+   | fp16 | 2.55× | −1.9e-03 | **reject** — 7.6× the error |
+
+   **Default stays `fp32`.** On the H200 the same table comes out differently (15490052 at
+   40k rows, 15499879 at 200k rows — stable across both):
+
+   | mode | H200 speedup | d ghat1 (40k) | d ghat1 (200k) | verdict |
+   |---|---|---|---|---|
+   | fp32 | 1.00× | ref | ref | — |
+   | tf32 | 2.30× | −1.82e-03 | **−1.87e-03** | **reject** — 7.5× the statistical error |
+   | fp16 | 3.03× | −1.90e-03 | −1.95e-03 | reject |
+
+   **TF32's accuracy cost is hardware-dependent**: `+9.0e-06` on an A40, `−1.9e-03` on an
+   H200 — a 200× difference in the same code on the same work. The tell is that on Hopper
+   TF32's error equals **fp16's** (−1.87 vs −1.95e-03), and fp16's own error agrees across
+   both machines (−1.91 vs −1.95e-03) despite entirely different data, so permitting TF32
+   there appears to let cuBLAS serve it from an fp16-like path. Flipping the default on the
+   A40 evidence alone — which I nearly did — would have silently biased every H200 run by
+   7× the statistical error. Any reduced precision must be re-validated per card, against
+   `ghat`, never against `max |dlogL|`.
+
+   **Third card, closing the set: a whole A40** (15502740, `cip-cl-nv01`, same 40k×2765 work):
+
+   | mode | speedup | s | TFLOP/s | d ghat1 | verdict |
+   |---|---|---|---|---|---|
+   | fp32 | 1.00× | 42.3 | 7.10 | ref | — |
+   | tf32 | 1.34× | 31.5 | 9.53 | **+5.4e-06** | safe, 46× below the statistical error |
+   | bf16 | 2.71× | 15.6 | 19.23 | +6.2e-03 | **reject** — 25× the error |
+   | fp16 | 2.17× | 19.5 | 15.39 | −1.9e-03 | **reject** |
+
+   Two things worth keeping. (i) TF32 is safe on the **whole** A40 as well as the slice
+   (+5.4e-06 vs +9.0e-06), so the hardware split is Ampere-vs-Hopper, not slice-vs-card — and
+   fp16's error is again −1.9e-03 on *all three* machines, the constant that identifies what
+   Hopper is serving TF32 from. (ii) The vGPU slice is **not** a third of a card on this
+   workload: whole A40 42.3 s vs `a40-16gb` 50.1 s is only **1.19×**, so item 3's "run in the
+   wrong precision on a third of a card" framing overstated the slice's cost. The real gap is
+   Ampere→Hopper: **H200 10.4 s vs whole A40 42.3 s = 4.1×**, still larger than any precision
+   setting buys, and free of numerical risk. `PI FASTPATH OK` again here, at exactly 0.000e+00.
+5b. **The speed is available without touching precision at all.** H200 fp32 does the score
+   pass in 10.4 s where the `a40-16gb` slice takes 50.1 s — **4.8×, bit-for-bit unchanged**.
+   That is more than TF32 buys and it is free of numerical risk. So the lever is hardware:
+   `jobs/pick_gpu.sh` now takes the fastest card with a free unit (preferring `inter`'s whole
+   cards, skipping drain/down nodes so "best available" cannot hang in PENDING), and the job
+   scripts detect vGPU slices from the card they actually got rather than needing
+   `NO_EXPANDABLE_SEGMENTS=1` passed in. Caveat recorded in the script: the CUDA RNG stream
+   depends on SM count, so a dynamically chosen card draws a *different* (equally valid)
+   random realisation — pin the card to reproduce a specific number.
+5. **Not yet tested: a coarser grid.** Cost is exactly linear in `G = 2765` (`--grid-n 61`).
+   cont.175 showed *refining* the grid is null; nobody has checked *coarsening* it.
+   `--grid-n 45` would be 1.7× cheaper.
+6. **`inter` is the default GPU partition** (user, 2026-08-03) — whole cards (h200nvl/a40/
+   a100/v100) rather than `cip`'s vGPU slices. Job scripts switched; use `cip` only when
+   `inter` has nothing free. Note `inter`'s untyped default can land on an RTX 2080 Ti, which
+   is Turing and has **no TF32** — request `--gpus-per-node=a40:1` or `h200nvl:1` for that test.
+
+**Code.** `scripts/eval_score_select.py` (`pass_fraction_by_node` rewritten; `--precision`;
+`precision` and `ll_dtype` added to the score-cache key), new `sbs_shear/precision.py`, new
+`scripts/check_pi_fastpath.py`, new `scripts/bench_score_speed.py` +
+`jobs/job_bench_score_speed.sh`, `jobs/job_score_select.sh` and `jobs/job_score_cache_smoke.sh`
+→ `--partition=inter`. The four existing `.npz` score caches had their stored keys migrated
+(`+precision=fp32`, `+ll_dtype=float32` — their true provenance, since the job script passes
+neither flag) rather than teaching the loader to accept absent keys; a missing key stays a
+hard error.
+
+7. **A separate bug, pre-existing and fatal to the whole overnight queue.** `keep_frac` was
+   dropped by cont.175's cache refactor — it was the last thing still referencing the kept row
+   mask — so **every run since commit `6d68b65` died with a `NameError`** at the `Pi`
+   consistency check, after doing all the work. The cache smoke test passed that broken code
+   because it only diffs the two runs' output: both crashed identically, and identical
+   failures read as agreement. The smoke test now requires both runs to exit zero *before* the
+   diff is consulted. Fixed in `2ed4d47`.
+8. **Grid defaults had silently diverged.** The driver builds `G = 2765` (`emax 0.96`,
+   `rmax 0.95`); the new bench/check scripts had been written with `0.99/0.99` → `G = 2817`,
+   which is a different node bank and makes `population_terms` incomparable. Aligned to the
+   driver.
+
+**Wall-clock, measured.** The `Pi` half: the full definitive configuration (6 reps × 65 536
+rows × 2765 nodes × 8 draws = 8.7 billion draws) now runs in **under 50 s**; the whole
+cache-loaded job is 18 s wall (15490217). It was ~2.7 h. The score half is unchanged so far
+(TF32 not yet default, hardware test pending).
+
+**Validation.** 58/58 tests pass. `Pi` fast path exact at the `<s>_sel` level (15490596),
+deterministic (15490217 = 15496629), and `Pi` itself agrees to mean `8.2e-08` across the full
+bank. Precision table measured (15490165). Still queued: 15490081 (inter a40), 15490052
+(inter h200nvl).
+
+**The `Pi` "irreproducibility" was mine, not the code's — withdrawn.** I flagged the definitive
+run 15484614 as unreproduced by today's reruns. On the numbers as compared, that reading was
+wrong twice over.
+
+| | `<s>_sel,1` at M=65 536 | node |
+|---|---|---|
+| 15484614 (pre-rewrite, live score pass) | −0.002077 ± 0.000365 | `cip-cl-h01g04n2` |
+| 15490217 (fast path, cache) | −0.001760 ± 0.000210 | `cip-cl-h01g04n1` |
+| 15496629 (repeat of 15490217) | −0.001760 ± 0.000210 | — |
+| **15500676** (15490217's config **pinned to `…n2`**) | **−0.001760 ± 0.000210** | `cip-cl-h01g04n2` |
+| 15499910 (deep ladder, H200) | −0.001814 ± 0.000262 | `kng-cl-nv03` |
+
+1. **The node/RNG hypothesis is dead.** 15500676 pins the run to 15484614's own node and comes
+   back digit-identical to the run on the *other* node. Same code + same config reproduces
+   across nodes exactly; it also reproduces on an H200 to 0.2σ.
+2. **There was no discrepancy to explain.** −0.002077 ± 0.000365 against −0.001760 ± 0.000210
+   is **0.75σ**. The "error bars differ by 1.5×, which rounding cannot do" argument was
+   worthless: with 6 replicates the error on the error is ~30%, so 0.000365 vs 0.000210 is an
+   ordinary fluctuation, not evidence of a different realisation.
+
+What is real, and small: the `Pi` arrays do differ between the Aug-2 job and today's, at the
+1–3e-4 level (`Pi_k` range 0.3992/0.8046 → 0.3990/0.8043 at M=16 384; the prior-weighted mean
+at M=65 536 is *identical*, 0.7649). That is well inside `Pi`'s own per-node Monte-Carlo error,
+`sqrt(0.764·0.236/(65536·8)) = 5.9e-4`. `<s>_sel` amplifies it ~3× because it is a
+near-cancellation — the expected behaviour, not a fault. Leading unverified candidate: the two
+jobs took different row draws because `--load-scores` and a live score pass do not hand
+`pass_fraction_by_node` the frame in the same order, so `rng.choice` picks different rows. Not
+worth chasing at this size. The genuine reproducibility hazard found while chasing it stands:
+PyTorch's CUDA RNG execution policy reads `multiProcessorCount`, so `torch.randn` streams are
+**not** portable across GPU models — pin the card to reproduce a published number.
+
+**Ladder results off the fast path (the first §5B science it produced).** Both re-run against
+cached score sums, on H200s chosen by `jobs/pick_gpu.sh`; 16 s and 26 s wall respectively,
+against 8 h before.
+
+| cut | job | M | `I_sel/<I>` | `d(m)` vs uncut | σ | rung-to-rung move |
+|---|---|---|---|---|---|---|
+| 0.6 | 15499910 | 16 384 | 0.2761 | +1.616% | 0.461% | — |
+| | | 65 536 | 0.2750 | +0.710% | 0.347% | 0.906% |
+| | | **262 144** | 0.2739 | **+0.570%** | **0.302%** | 0.140% |
+| 0.4 | 15500674 | 16 384 | 0.4786 | +0.810% | 0.841% | — |
+| | | 65 536 | 0.4760 | +0.614% | 0.543% | 0.197% |
+| | | **262 144** | 0.4737 | **+0.413%** | **0.546%** | 0.201% |
+
+**A fourth rung (M = 1 048 576) — and it withdraws the "cut 0.4 is not converged" reading.**
+Jobs 15503425/6, `cip` a40-16gb, ~3 min each. The ladder's `m_max` sets the row draw, so these
+are an *independent* population sample at every rung, not an extension of the runs above:
+
+| cut | 16 384 | 65 536 | 262 144 | 1 048 576 | moves |
+|---|---|---|---|---|---|
+| 0.4 | +1.909 ± 1.033% | +0.159 ± 0.573% | +0.785 ± 0.541% | **+0.447 ± 0.520%** | 1.751, 0.626, 0.338 |
+| 0.6 | +0.984 ± 0.472% | +0.699 ± 0.335% | +0.755 ± 0.312% | **+0.640 ± 0.280%** | 0.285, 0.056, 0.116 |
+
+Both sequences are **non-monotonic** (down, up, down), so the "still moving monotonically
+downward, therefore an upper bound" reading of the 3-rung cut-0.4 ladder was reading noise as a
+trend — three points and two moves were never enough to tell a drift from scatter. Every move
+past M = 65 536 is inside σ. Both cuts are converged, and the two independent draws agree:
+cut 0.6 gives +0.570 ± 0.302% and +0.640 ± 0.280%; cut 0.4 gives +0.413 ± 0.546% and
++0.447 ± 0.520%. (They share the score cache, so the galaxy half of σ is common to both and
+they are not independent measurements of the same thing — only the `Pi` half is fresh.)
+
+**Where that leaves §5B with selection, measured against the real target.** The deliverable is
+`|m| ≤ 0.3%` (owner, restated 2026-08-03; the canonical framing in `GOALS.md` and
+`Gold-V2.md`). An earlier draft of this entry called +0.64% "inside the 3% the
+forward-differencing route was aiming at" — that was the wrong yardstick and is withdrawn.
+Against 0.3%:
+
+| cut | `d(m)` | σ_gal | σ_Pi | σ_total | vs the 0.3% target |
+|---|---|---|---|---|---|
+| 0.6 | +0.640% | 0.270% | 0.072% | 0.280% | **fails** — the 1σ lower edge is +0.360%, still above 0.3% |
+| 0.4 | +0.447% | 0.503% | 0.131% | 0.520% | **cannot tell** — σ exceeds the target itself |
+
+So **neither cut demonstrates 0.3%**, and cut 0.6 is in mild tension with it (1.2σ *above* the
+boundary, and two independent `Pi` draws agree on the central value). Cut 0.4 is consistent with
+0.3% but equally consistent with 0 and with 1%; its error bar is larger than the quantity being
+tested, so it carries no information about the target either way.
+
+**The error budget says exactly what to do.** `Pi` is now essentially free of error — 0.072% and
+0.131%, down from 0.515% before the fast path — so the ladder work is done and further `Pi`
+rungs buy nothing. **σ_gal is the wall**: 0.270% at cut 0.6, 0.503% at cut 0.4. It scales as
+`1/sqrt(N_objects)` on the 8M objects currently scored (2M rows × 2 shape reps × 2 ring legs).
+To resolve 0.3% at 3σ, σ_total must reach ~0.10%, which needs **~7× more objects at cut 0.6**
+(58M) and **~25× at cut 0.4** (200M, because the tighter cut keeps fewer). That is score-pass
+cost, the expensive half — but it parallelises exactly, since the cache stores per-block partial
+sums and those are additive across jobs. Three `cip` GPUs scoring disjoint row ranges into three
+caches would cut the wall clock by 3. The untested `--grid-n 45` lever multiplies into this
+directly (cost is linear in `G`, so ~1.8× if it is null).
+
+**`<s>_sel` is converged and it is NOT zero — the sharpest open problem in §5B.** The deep
+ladders resolve it far better than anything before:
+
+| cut | `<s>_sel,1` at M = 1 048 576 | `<s>_sel,2` | |
+|---|---|---|---|
+| 0.6 | −0.001878 ± 0.000095 (19.9σ) | **+0.010809 ± 0.000078** | **138σ** |
+| 0.4 | +0.002394 ± 0.000113 (21.1σ) | **+0.017873 ± 0.000106** | **169σ** |
+
+§5B.2 predicts `<s>_sel = 0` for an isotropic cut. Component 2 is ~6× component 1, has the same
+sign at both cuts, and *grows* as the cut tightens; component 1 **flips sign** between cuts.
+This is stable across rungs (0.6: +0.01056, +0.01091, +0.01098, +0.01081), so it is not a
+sampling artefact. Ruled out already: the **prior is isotropic** — its 928 900-shape sample has
+`<e1> = +0.000356 ± 0.000248` and `<e2> = +0.000363 ± 0.000247` (both ~1.4σ, and equal), with
+per-component widths 0.23858 vs 0.23838, matched to 0.1%; it is also fitted as a radial spline
+in `|e|`, hence isotropic by construction. So the asymmetry is in the flow or in the score
+machinery. The supporting tell for the flow is already in every report: `I_sel` has diag 1.011
+(e1) vs 1.026 (e2), a 1.5% asymmetry, with off-diag/diag = 0.007. Nothing in the architecture or
+the loss imposes spin-2 rotational symmetry — it is only ever learned.
+
+**New diagnostic** `scripts/check_flow_isotropy.py` + `jobs/job_flow_isotropy.sh` (15503468/9)
+tests that directly and separates it from a grid bug by construction: `Pi_k` depends on `|e|`
+alone if the model is isotropic, so `Pi` on rings of constant `|e|` must be flat. It reuses the
+estimator's own `pass_fraction_by_node`, reports each ring's spread against the replicate-to-
+replicate error, and splits the variation into `m=2` (a genuine e1-vs-e2 axis asymmetry) and
+`m=4` (the signature of a Cartesian/preprocessing artefact rather than a learned-symmetry
+failure). A null is equally informative: flat rings would move the anomaly to `ShapeScoreNodes`
+/ `population_terms` / the grid quadrature.
+
+**Precision default: settled at `fp32`, on all three cards.** With the whole-A40 table above the
+set is complete. Nothing below fp32 is safe everywhere: TF32 is safe on both A40s and biased by
+7.5× the statistical error on the H200; bf16 and fp16 are rejected on every card. Choosing the
+card instead is worth 4.1× (H200 vs whole A40), beats TF32's best (1.34×), and changes no digit.
+So `--precision` stays available for measurement and stays `fp32` in production, and the speed
+comes from `jobs/pick_gpu.sh`. This also means the two 5.7 h score caches remain valid.
+
+**Known gap in `pick_gpu.sh`.** It checks free hardware *and* per-user QOS headroom, and both can
+pass while the job still sits in `(Priority)` behind another user's higher-priority pending work
+— which is what happened to 15490081 on `inter`'s a40s and to 15502747/8 on `inter`'s h200nvl.
+Free + permitted is not the same as schedulable. Not worth modelling; just do not read a
+`(Priority)` pend as "that partition is broken".
+
+**RESULT: the flow is anisotropic, and strongly so** (15504172 cut 0.6, 15504173 cut 0.4, `cip`
+a40-16gb, 20–27 s each). `Pi` on rings of constant `|e|`, 7 rings × 32 angles, M = 262 144 × 8
+draws × 4 reps; `spread/err` is the ring's variation over the replicate-to-replicate error, and
+isotropy predicts ~1:
+
+| `|e|` | spread/err (cut 0.6) | A2 | A4 | spread/err (cut 0.4) | A2 | A4 |
+|---|---|---|---|---|---|---|
+| 0.10 | 0.5 | 7.3e-06 | 1.0e-05 | 1.5 | 7.8e-05 | 2.5e-05 |
+| 0.20 | 1.4 | 7.4e-05 | 1.2e-04 | 4.4 | 6.0e-04 | 4.2e-04 |
+| 0.30 | 4.1 | 3.9e-04 | 6.5e-04 | 12.1 | 1.6e-03 | 1.2e-03 |
+| 0.45 | 17.3 | **2.2e-03** | 2.2e-04 | 20.7 | **1.8e-03** | 5.2e-04 |
+| 0.60 | 36.6 | 6.5e-04 | **4.8e-03** | 34.2 | 1.2e-03 | **5.9e-03** |
+| 0.75 | 50.9 | 1.9e-03 | **1.4e-02** | 76.1 | 1.1e-03 | **1.8e-02** |
+| 0.90 | 65.0 | 4.5e-03 | **2.4e-02** | 79.2 | 4.7e-03 | **2.3e-02** |
+
+Both cuts give the same picture. Near-round galaxies are clean (`|e| = 0.1` is flat at 0.5–1.5×);
+the anisotropy then grows monotonically and steeply with `|e|`, reaching **65–79×** the noise.
+The harmonic content changes with radius: **m=2 dominates at `|e| ≈ 0.3–0.45`, m=4 from `|e| ≳
+0.6`.**
+
+**Do not read m=4 as a bug by reflex.** The sim is rendered on square pixels and measured in
+square postage stamps, so the measurement genuinely has C4 symmetry rather than full SO(2) — an
+m=4 term in `Pi` may be the flow correctly reproducing pixelisation. **m=2 has no such excuse**:
+a square grid cannot produce it. So the m=2 amplitude (1.6–4.7e-3, present at every radius above
+0.2 and peaking at both ends) is the part that is either a learned-symmetry failure or a real
+e1-vs-e2 asymmetry in the simulation — an elliptical PSF would do it, though the Moffat used
+here is parameterised round (`psf_fwhm=0.73, moffat_beta=2.224`, no ellipticity).
+
+**Which harmonic actually drives `<s>_sel` is NOT settled by this.** I initially reasoned that
+only m=2 can couple, since `u` is spin-2 and `∫cos4φ·cos2φ dφ = 0` — that is wrong. The shear
+map is nonlinear in `e`, so `u` carries m=0, m=2 *and* m=4 content, and `Pi`'s m=4 term can
+couple to it. The decisive experiment is cheap and does not need the harmonic algebra:
+**recompute `<s>_sel` with `Pi` replaced by its azimuthal average**, so `Pi` depends on `|e|`
+alone by construction. If the 138σ anomaly vanishes, the anisotropy is the cause; if it
+survives, it is not, and the problem is in `ShapeScoreNodes` / `population_terms` / the
+quadrature. That is the next thing to run.
+
+**RESOLVED: the flow's angular structure is the entire cause of the `<s>_sel` anomaly — but it
+must NOT be removed.** The azimuthal-average experiment (15504625/6, off the same score caches,
+so the pair differs in `Pi` and nothing else) settles the cause exactly and then overturns the
+plan that motivated it:
+
+| | `<s>_sel` | off-diag/diag | `d(m)` cut 0.6 | `d(m)` cut 0.4 | `ghat_2` (0.6 / 0.4) |
+|---|---|---|---|---|---|
+| raw `Pi` | +0.0108 / +0.0179 (138σ / 169σ) | 0.007 | **+0.640 ± 0.280%** | **+0.447 ± 0.520%** | 0.00066 / 0.00060 |
+| `Pi` azimuthally averaged | **0.000000 ± 0.000000** | 0.000 | −0.635 ± 0.271% | +3.446 ± 0.511% | 0.00452 / 0.00889 |
+
+Force `Pi` to depend on `|e|` alone and `<s>_sel` collapses to **machine zero**, with the
+"numerator only" row becoming bit-identical to "none" — precisely what §5B.2 says must happen.
+So §5B.2's theorem is fine; what violates its hypothesis is the **model**, not a bug. The
+prediction assumed an isotropic likelihood, and the flow is not one. In that sense there was
+never an anomaly, only a wrong expectation — and the earlier framing of this as "the single
+largest unexplained term in §5B" is withdrawn.
+
+**The important part is what happens to `d(m)`.** Removing the angular structure makes the
+answer much *worse*: cut 0.6 flips sign to −0.635% and cut 0.4 blows up to +3.446% (6.7σ),
+while `ghat_2` leakage grows 7–15×. The estimator is *using* that structure, and using it
+roughly correctly. Azimuthal averaging is therefore a diagnostic only, never a correction —
+the code says so at the call site.
+
+**What this means for the 0.3% deliverable, and it is the main result of the night.** `d(m)`
+moves by **1.3% (cut 0.6) and 3.0% (cut 0.4)** when the flow's angular structure changes. That
+is a 4–10× larger lever on `m` than the entire target. So reaching 0.3% is no longer only a
+question of shrinking σ_gal: **the flow's angular structure has to be right, not merely
+present.** Buying 7–25× more objects to reach σ ≈ 0.1% would be wasted if that structure is
+wrong at even a fraction of its own size.
+
+**Which makes the next test the priority, ahead of the statistics.** The m=4 part is plausibly
+physical — square pixels and square postage stamps genuinely give the measurement C4 rather
+than SO(2) symmetry, so the flow may be reproducing the simulation faithfully. **m=2 cannot come
+from a square grid**, so it is the discriminating harmonic. `scripts/check_data_isotropy.py`
+(new, job 15504658) measures the same quantity straight from the catalogue with no flow
+involved — the fraction of rows with a given TRUE shape whose ngmix measurement passes the cut,
+decomposed into m=2 and m=4 — and compares harmonic by harmonic. Its own caveat is recorded in
+the docstring and matters: the flow's `Pi` holds the population fixed across angle by
+construction and the data cannot, so a data m=2 *detection* could be astrophysical alignment
+rather than measurement anisotropy. A data m=2 **null** against the flow's clear m=2 is the
+strong inference, and would mean the flow learned an asymmetry the simulation does not have.
+
+**The anisotropy is REAL, it is in the ngmix measurement, and the flow reproduces it. A claim
+of mine is withdrawn.** I asserted that a square pixel grid "cannot produce m=2, so an m=2 term
+is a learned-symmetry failure", and built the data test around that. **It is wrong, and the
+error inverts the conclusion.** Forcing `σ(e1) = σ(e2)` requires invariance under a 45° rotation
+(which maps `e1 → e2`, `e2 → −e1`). A square is not invariant under 45° — rotate it and you get
+a diamond. The square's symmetry group D4 only flips the *signs* of `e1` and `e2` separately,
+leaving their variances free to differ. Pixelisation couples differently to the axis-aligned
+quadrupole (`e1`) and the diagonal one (`e2`), so a square grid can and does make an m=2 term.
+
+Measured directly, 4M rows, **zero applied shear** (job 15504687):
+
+| | σ2/σ1 | |
+|---|---|---|
+| TRUE input shapes | 1.000002 ± 0.000500 | 0.0σ — exactly isotropic |
+| ngmix MEASUREMENTS | **1.017811 ± 0.000509** | **35σ** |
+| flow's target standardisation | 1.017254 | matches the data to **0.05%** |
+
+The measurement manufactures a 1.8% `e1`-vs-`e2` asymmetry out of a perfectly symmetric input,
+and the flow carries it to within 0.05%. So the flow is not broken — it is reproducing the
+simulation faithfully. §5B.2's isotropy hypothesis fails for a *physical* reason, `<s>_sel ≠ 0`
+is the correct behaviour, and there is nothing here to fix. This also explains the 1.5%
+diagonal asymmetry in `I_sel` (1.011 vs 1.026) that had been visible in every report.
+
+**The data ring test (15504661/2) is consistent but underpowered — not a validation.** m=4 is
+detected in the catalogue at 2.0–2.7σ in the outer rings for both cuts (4.9e-3, 5.6e-3, 1.8e-2
+at cut 0.6), tracking the flow's amplitudes and growth with `|e|`. m=2 is *not resolved*: the
+data's bars (±1.4–2.3e-3 in the populated rings) are comparable to the flow's own m=2
+amplitudes (0.4–4.5e-3), so every ring is consistent with the flow and none is a detection.
+That is an inconclusive test, not a null, and it should not be quoted as agreement. The
+`(case, input_index)` pairing that would have controlled the population exactly does not exist
+in this catalogue — every group has exactly one row (2 000 000 groups / 2 000 000 rows) and
+`polarization_angle` is continuous with 1 993 789 distinct values, i.e. each galaxy's own
+position angle rather than a controlled ring rotation.
+
+**A large statistics reserve was found while checking this: the catalogue holds 31 411 766
+rows and the runs load 2 000 000** (`--max-rows`). That is **15.7×** untapped, and real rows
+are strictly better than `--shape-reps`, which re-draws shapes on the same rows and therefore
+buys precision on *this* population rather than a wider one. σ_gal ∝ 1/√N, so the full
+catalogue takes σ_gal from 0.270% → **0.068%** at cut 0.6 and 0.503% → **0.127%** at cut 0.4 —
+which is exactly the ~0.1% needed to resolve the 0.3% target, without any change to the model.
+
+**Next.** (1) Score the full 31.4M rows. Cost scales linearly, so this is the expensive item;
+split it three ways across `cip`'s per-user GPU allowance into three caches and add the
+per-block sums, which are additive by construction. Drop `--shape-reps` to 1 and spend the
+budget on real rows instead. (2) Test `--grid-n 45` first — cost is exactly linear in `G`, so a
+null there is a free ~1.8× on (1). (3) The angular structure needs no fix; if it is ever
+revisited, the target is whether the flow has it *right* to better than ~10% of its own size,
+since `d(m)` moves 1.3–3.0% when it is removed entirely. The `Pi` ladders are done — both cuts
+converged, σ_Pi now 0.07–0.13%.
+
+**Method note worth keeping.** Three ladder rungs give two moves, and two moves cannot separate
+a drift from scatter — the cut-0.4 sequence looked cleanly monotonic on three points and was
+not. Read convergence off four rungs or off two independent draws, never off a short monotone
+run.
+
+## cont.175 (2026-08-03) Both cuts now consistent with zero — the residual was `Pi`, not the estimator; and the population error is dominated by the ONE term §5B.2 says should vanish
+
+Three definitive runs (15484614/15/16) plus a code change that makes the remaining question
+cheap to answer. All three completed; all use the certified V1 flow, closure at `g = 0.05`, a
+cut on the flow OUTPUT `|xhat| < c`, 200-block jackknife, ring pairs, and `Pi` = M random rows
+x G nodes x 8 draws x R independent replicates (the reps are POOLED for the central value, so
+the reported rung M is an effective `R*M` rows).
+
+      job        cut   keep   G      objects  no correction     FULL (5.3), d(m) vs uncut
+      15484614   0.6  76.4%  2765   8M       −28.018 ±0.210%   **+0.712 ± 0.451%**  (1.6 sigma)
+      15484615   0.4  55.9%  2765   8M       −46.028 ±0.260%   **−0.239 ± 0.817%**  (0.3 sigma)
+      15484616   0.6  76.4%  5417   4M       −28.123 ±0.295%   **+0.756 ± 0.673%**  (1.1 sigma)
+
+**1. CORRECTION TO cont.174 ITEM 2: the +0.780% was 2.2 sigma, not 2.9.** The quoted ±0.270%
+was the GALAXY jackknife alone; `Pi`'s own uncertainty enters only the cut estimate and so
+lands undiluted on the difference. Propagating it (now reported as separate `sig_gal` /
+`sig_Pi` columns) gives ±0.36%. The claim of a significant residual did not survive its own
+error bar.
+
+**2. CORRECTION TO cont.174 ITEM 2: "it is not `Pi`" was wrong.** cont.174 read the ladder as
+flat at M = 4096 -> 16384 (a 0.004% move) and concluded `Pi` had converged. Deepening to
+M = 65536 moved `d(m)` by −0.394%. The flatness was noise at a depth where `Pi`'s own error is
+±0.35%, i.e. the size of the effect being chased. Reading a ladder as converged requires the
+rung-to-rung move to be small COMPARED TO ITS OWN ERROR BAR, which was never checked.
+
+**3. THE HARDER CUT CONVERGED, AND IT IS CLEAN.** cont.174 item 7 flagged −1.433% as
+provisional because the rungs were still marching. At M = 65536 the harder cut gives
+`d(m) = −0.239% ± 0.817%` — consistent with zero. Uncorrected it is −46.0%, so the correction
+removes 99.5% of a bias that halves the sample.
+
+**4. BOTH CUTS ARE NOW CONSISTENT WITH ZERO**, at 1.6 and 0.3 sigma. What is NOT established
+is that the residual IS zero: both rungs still drift toward zero as `Pi` deepens (+1.105 ->
++0.712 at cut 0.6; −0.582 -> −0.239 at cut 0.4), and two rungs cannot establish the form of
+that drift. If it were `1/M` the limits would be about +0.58% and −0.13%; that extrapolation
+is quoted only to show the drift is not obviously heading to zero, and a third rung is needed
+before believing either number. Do not quote +0.58% as a result.
+
+**5. GRID REFINEMENT: NULL.** Doubling the node bank (G = 2765 -> 5417) moves `d(m)` by
+−0.349%. The galaxy halves are paired (the 4M run is exactly the first two legs of the 8M
+one), but the `Pi` estimates are independent, giving ±0.71% on the difference — 0.5 sigma. The
+grid is not detectable as a systematic at the current precision. cont.174's "cheapest
+discriminator" came back empty, which is the useful outcome: it removes one candidate.
+
+**6. THE POPULATION ERROR IS DOMINATED BY `<s>_sel_1`, AND THAT TERM IS NOT CONVERGING IN M.**
+Going 4x deeper in population rows should halve every `Pi` error. `I_sel` obeys this exactly
+(0.00909 -> 0.00408 = 2.23x at cut 0.6; 0.01798 -> 0.00708 = 2.54x at cut 0.4). `<s>_sel` does
+not (1.20x and 1.50x; 1.62x and 1.21x). Propagating each term's error separately at cut 0.6,
+M = 65536: `<s>_sel_1` contributes 0.272% of the 0.361% total and `I_sel` 0.153%. So the
+budget is dominated by the component that §5B.2 says should be identically zero and that
+cont.174 item 4 measured at 20 sigma from it. More population ROWS is therefore the wrong
+lever, which is why the two `Pi` rungs above cost hours and bought almost nothing.
+
+### Code: cache the catalogue half of (5.3)
+
+`(s_i, I_i)` depend on the cut only through WHICH rows join the sums, and on the population
+block not at all — yet every `Pi` experiment so far dragged a 2.4-hour GPU score pass behind
+it. Everything (5.3) needs from the catalogue is a per-block partial sum, so those are now
+cacheable and the population block can be re-estimated in minutes. It also makes such re-runs
+PAIRED: a change in `Pi` is no longer confounded with a change in the galaxies.
+
+- `sbs_shear/score_inference.py`: `jackknife_blocks(cnt, ns, ni, s_sel, i_sel)`, the same
+  estimator taking `blocked_sums` output instead of rows; `jackknife_shear` now delegates to
+  it, so the two paths cannot drift apart.
+- `scripts/eval_score_select.py`: `--save-scores` / `--load-scores`, the score pass factored
+  out into `score_catalogue()`, and a cache key covering everything that moves the sums (cut,
+  `g`, rows, ring, shape-reps, grid, deltas, seeds, model, catalogue). A mismatch is a hard
+  error — loading across one would pair one run's galaxies with another run's `Pi`.
+- `tests/test_jackknife_shear.py`: cached and row paths must agree EXACTLY (central value,
+  error bar, and every per-block replicate), with and without a population correction.
+- `jobs/job_score_cache_smoke.sh`: end-to-end regression — the same small configuration run
+  scored and cached must produce character-identical reports, and a deliberately mismatched
+  key must be refused.
+
+Validation: 58 tests pass. Cache smoke job (15486019) — scored vs cached reports identical,
+mismatched key refused.
+
+### Next
+
+The experiment item 6 sets up, all off ONE cached score pass and therefore all paired: at
+FIXED total draws, compare deepening rows (M = 65536, R = 6), adding independent replicates
+(M = 16384, R = 24 — same effective row depth, 4x the independent latent seeds), and adding
+draws per row (M = 16384, R = 6, 32 draws). Whichever shrinks `sig_Pi` is the lever; if none
+does, `<s>_sel_1` is not a sampling error at all but the flow's non-equivariance, and item 4
+becomes the story rather than a nuisance. Separately, a third rung at M = 262144 to test the
+drift in item 4. Still untouched: cont.164 defect 3 (4-D node bank), the detection channel,
+and the closure-to-data gap (no neighbour channel, prior fit to the same catalogue).
+
+## cont.174 (2026-08-02) [items 2 and 7 CORRECTED by cont.175 — the +0.78% was quoted with a galaxies-only error bar, and "it is not Pi" was wrong] §5B at 20x the precision: the estimator itself is unbiased to **+0.034% ± 0.252%** uncut, the selection correction turns −28% into **+0.78% ± 0.27%** — and cont.173's Π ladder was a nested-prefix artefact
+
+User: "the forward differentiating approach gives certified m within 3%. push forward towards
+that. work autonomously tonight."
+
+### RETRACTION FIRST: cont.173's +2.14% and its "clean 3-point Π convergence"
+
+`Pi`'s population rows were `df.iloc[:M]` — a PREFIX of a catalogue ordered by case — so the
+three ladder rungs were NESTED inside one another. They were one correlated draw relaxing
+toward the truth, not three independent measurements. That is the nested-ladder trap §5B.4
+records, for the third time in this project. Diagnosis and proof:
+
+- the prefix runs 1.3–1.7 sigma faint in `measured_mag_auto`; fainter galaxies have noisier
+  measured shapes and so a lower pass fraction,
+- so `<Pi>` came out biased LOW at every rung with a sign that NEVER FLIPPED
+  (−3.0/−1.4/−0.5% in cont.173; −3.6/−2.1% reproduced here at the same M),
+- switching to RANDOM rows without replacement, fresh per replicate: the mismatch drops to
+  −0.65%/+0.52% at the same M **and changes sign**, and `I_sel/<I>` moves from the prefix's
+  0.24–0.26 to 0.27.
+
+cont.173's `m = +2.14%` was therefore biased by a `Pi` that was never converged, only nested.
+Superseded by the table below. The three §5B.4 traps are now: nested error ladders,
+split-half-over-rows under CRN, and nested population subsamples — all the same mistake.
+
+### Five runs (all: certified V1 flow, closure at known `g`, cut on a flow OUTPUT, G=2765, 200-block jackknife, `Pi` = M random rows x 2765 nodes x 8 draws x 6 independent replicates, ladder M = 1024/4096/16384)
+
+`d(m)` is the PAIRED cut-minus-uncut difference, jackknifed block by block. It is the actual
+question — does the correction put the cut sample back where the uncut one is — and the two
+share their galaxies, so it is better determined than either estimate alone.
+
+      job        cut     g   objects   keep    uncut m         no correction        FULL (5.3)
+      15481003   0.6  0.02   4M ring  76.5%  −0.047 ±0.829%  −29.609 ±0.696%   **+0.700 ±0.892%**
+      15481004   0.4  0.02   4M ring  56.0%  −0.047 ±0.829%  −44.345 ±0.897%   **−1.433 ±1.602%**
+      15481005   0.6  0.02   4M NONE  76.5%  +0.942 ±1.289%  −30.366 ±0.863%   **+0.038 ±1.062%**
+      15477364   0.6  0     8M ring  76.5%  (2.1±12.5)e−5   (−5.4±0.9)e−4 6σ  **(+4±11)e−5**
+      15477365   0.6  0.05   8M ring  76.4%  +0.034 ±0.252%  −28.018 ±0.210%   **+0.780 ±0.270%**
+
+**1. THE ESTIMATOR ITSELF IS UNBIASED TO A QUARTER PERCENT.** The uncut control — §5B with no
+selection at all, where both population terms vanish by construction — gives `m = +0.034% ±
+0.252%` at `g = 0.05` and `−0.047% ± 0.829%` at `g = 0.02`, with an additive null at `g = 0` of
+`(2.1 ± 12.5)e−5`. cont.173 knew this number only to ±4.28%. This is the direct answer to the
+user's framing: the forward-differentiating route reproduces the injected shear to **±0.25%**,
+not ±3%.
+
+**2. THE SELECTION CORRECTION WORKS, AND A RESIDUAL SURVIVES.** Uncorrected, the cut biases
+`m` by −29.6% (keep 76.5%) and −44.3% (keep 56.0%). The full (5.3) removes ~97% of it. But at
+the most precise configuration the residual is `+0.780% ± 0.270%` — **2.9 sigma, not zero**.
+The `g = 0.02` run gives `+0.700% ± 0.892%`, the same central value, so the residual is
+MULTIPLICATIVE (~+0.75%) rather than additive, consistent with the `g = 0` null being clean.
+It is not `Pi`: at this cut the ladder is flat to 0.15% (rung moves 3.92%, then 0.004%).
+Candidates not yet separated: grid quadrature at G=2765, the flow's non-equivariance (item 4),
+and higher-order terms in the linearised estimator. Do not attribute it without a test.
+
+**3. NULL TEST AT g = 0 (new).** With no shear, the cut ALONE manufactures a spurious additive
+shear of `−5.4e−4` at 6 sigma; the full correction removes it to `(4 ± 11)e−5`. Selection bias
+is real at `g = 0` and the correction kills it.
+
+**4. §5B.2's "`<s>_sel = 0` EXACTLY" IS FALSIFIED AT 20 SIGMA — and is a useful diagnostic.**
+Measured `<s>_sel = (−0.00201 ± 0.00055, +0.01039 ± 0.00052)` at cut 0.6, growing to
+`(+0.00301 ± 0.00078, +0.01935 ± 0.00075)` at cut 0.4. The proof in §5B.2 is correct; its
+PREMISE (isotropic population, rotation-invariant cut) fails because the trained flow is not
+exactly equivariant, so `<s>_sel` is a direct, calibrated measure of that non-equivariance.
+The qualitative claim survives: `I_sel` carries +27.5% of the correction against the
+numerator's +2.80%, i.e. ~91%. cont.173's "rows 1–2 agree to 1.5%" was a statistics artefact;
+with 8x the sample they differ significantly.
+
+**5. AN ADDITIVE `c_2` IN THE ESTIMATOR.** The uncut `ghat_2` is `+5.4e−4` (g=0.02), `+4.2e−4`
+(g=0.05) and `+4.9e−4` (g=0) — the same value at three shears INCLUDING zero, 3–4 sigma each,
+so a pure additive bias, not multiplicative. Same sign and scale as item 4's `<s>_sel_2`.
+
+**6. ERROR-BAR MACHINERY VALIDATED AT SCALE.** Ring pairs: jackknife 0.829% against a Fisher
+bar of 1.352%, x1.6. No-ring control at matched object count: 1.289% against 1.353%, x1.0 —
+the jackknife reproduces Cramer-Rao exactly where Cramer-Rao is the right answer, and beats it
+only where the pairing earned it. The two configurations agree on the answer (+0.700 ± 0.892%
+vs +0.038 ± 1.062%), so the variance reduction did not buy precision by moving the estimate.
+
+**7. Pi CONVERGENCE IS NOW MEASURED, NOT ASSUMED**, and it is cut-dependent. At keep 76.5% the
+ladder is flat (moves 3.92%, then 0.004%). At keep 56.0% it is NOT (12.24%, then 2.26% against
+a 1.60% error bar), so **the −1.433% for the harder cut is provisional** — the rungs are still
+marching toward zero (−15.9 → −3.7 → −1.4) and it needs more `Pi` rows. `I_sel/<I>` rises from
+0.273 to 0.473 as the cut tightens, as expected.
+
+### Code (all committed; 57 tests pass, 11 new)
+
+- `sbs_shear/score_inference.py`: `blocked_sums`, `jackknife_shear`, `jackknife_sigma`. Once
+  objects are ring-paired, `1/sqrt(sum I)` overstates the error by exactly the reduction the
+  pairing bought — it would hide the thing the pairing was for.
+- `tests/test_jackknife_shear.py`: reproduces the Fisher bar on unpaired rows, beats it by the
+  predicted `nu/sigma` on ring pairs, matches the scatter of 40 independent realisations for
+  both pairings, hits the analytic `sqrt(1/f − 1)` for a paired difference.
+- `scripts/eval_score_select.py`: `--ring rot90` (90-degree pairs on the same catalogue row;
+  x1.6, and `--share-latents` measured WORSE at x1.2, so off), `--shape-reps`, `--pi-rows` as a
+  comma list (one score pass yields the whole ladder), `--closure-g 0` as a null test, random
+  `Pi` rows, and each leg scored ONCE — `(s_i, I_i)` know nothing about the cut, so the cut
+  estimate is a subset, not a second pass. Verified bit-for-bit against job 15477257.
+
+### Known limits
+
+- The +0.78% residual is unexplained (item 2). It is the thing to chase next.
+- Harder cut not converged in `Pi` (item 7).
+- Shape channel and the V1 flow only. cont.164 defect 3 (a node bank beyond the 2-D isotropic
+  shape grid, hence the 4-D V2 model and measured size/mag cuts) is still untouched.
+- The detection channel is implemented and unit-tested but still unexercised: the closure data
+  have no detection step and `detection_classifier.py` is a stub.
+- `--shape-reps` re-draws shapes on the same ~2M catalogue rows, so it buys precision on the
+  estimator's bias FOR THIS POPULATION, not a wider population average.
+- First three full-size jobs (15477358/59/60) hit the 8h wall: `load_g0` returns the full 2M
+  rows (the ~929k assumed was the PRIOR CACHE's size), and five concurrent jobs on shared a40
+  vGPU slices ran at 3.9 ms/object against 1.08 solo. Re-run at 2 legs with a 16h limit.
+
+### Next
+
+Chase the +0.78%: grid refinement (G) is the cheapest discriminator, then an equivariance
+ablation against item 4, then the linearisation. Push `Pi` for the harder cut.
+
+## cont.173 (2026-08-01) [SUPERSEDED by cont.174 — the Π ladder below was nested, and +2.14% with it] §5B inference COMPLETED, certified against A.7, and it CLOSES under selection: m = +2.14% ± 5.44% vs an uncut baseline of +2.98% ± 4.28%, on a clean 3-point Π convergence
+
+User: "keep going until the full inference is done". Closes two of the three cont.164 defects.
+
+### Machinery (certified)
+
+`sbs_shear/score_inference.py`:
+- `scores_from_loglike(..., log_det=)` — the DETECTION channel, `(G,)` or `(N,G)`. Detection
+  is not determined by `xhat` so it does not cancel from the per-object posterior
+  (§5B.1(iii)); it is gamma-independent in the Eulerian picture, so the same vector enters
+  the base and all four shifted banks.
+- `population_terms` — `<s>_sel = E_Pi[u]`, `I_sel = -E_Pi[d_gamma u] - Var_Pi(u)`.
+  `P(keep|gamma) = Int p_gamma Pi` is the same shape of object as a galaxy's evidence with
+  `Pi` in place of the likelihood, so this is `scores_from_loglike` on ONE pseudo-row and
+  inherits the validated finite-difference information route unchanged.
+- `population_log_pi`, `full_shear_estimate` (the 2-D solve).
+
+`tests/test_population_terms.py` (12 tests) drives the PRODUCTION functions through a node
+bank carrying A.7's shift family — a reimplementation would test nothing. All exact against
+A.7: `s_i = y/nu^2`, `I_i = 1/nu^2`, `<s>_sel = lambda/nu`, `I_sel = lambda(lambda-a)/nu^2`
+at four cut positions, A.7b's `I - I_sel = Var[y|y>c]/nu^4`, `I_sel/I = 2/pi` at the median,
+the detection channel's exact conjugate shift, unbiasedness under a cut, and the headline
+`m = -64%` penalty for centring the numerator but not the denominator — cont.164 defect 2
+reproduced from production code. Whole suite: 46 passed.
+
+### End-to-end run (jobs 15474218 / 15474269 / 15476452, a40-16gb, 15-40 min each)
+
+`scripts/eval_score_select.py` + `jobs/job_score_select.sh`. Closure at `g = +0.02` on the
+certified V1 flow, 400k rows, G=2765. Cut `|xhat| < 0.6` keeps 76.6%. The cut is on a flow
+OUTPUT because otherwise `P_pass` does not exist (§4.7) — and being isotropic it is exactly
+the case §5B.2 makes a prediction about. `Pi_k` comes from M rows x 2765 nodes x 8 draws x
+4 independent replicates, with M laddered 256 -> 1024 -> 4096 (22.7M -> 363M draws) to test
+convergence.
+
+The uncut control is identical in all three jobs (same rows, same seed), as it must be:
+
+      UNCUT CONTROL           m = +2.98% +/- 4.28%     <- the baseline; read the rest against
+                                                          THIS, not against zero
+
+      Pi population rows              256          1024          4096
+      cut, no correction          -25.50%       -25.50%       -25.50%   (+/- 4.69%)
+      cut, numerator only         -30.94%       -26.11%       -23.97%   (+/- 4.69%)
+      cut, FULL (5.3)             -13.23%        -2.59%        +2.14%   (+/- ~5.4%)
+      <Pi>_prior (true 0.766)      0.7430        0.7552        0.7620
+        -> mismatch                  2.3%          1.1%          0.5%
+      I_sel / <I>                   0.204        0.2414        0.2556
+      I_sel off-diag / diag         0.022         0.002         0.003
+      <s>_sel_1 / sigma               0.8           0.5           0.9
+      <s>_sel_2 / sigma               1.6           2.5           6.3
+
+**THE FULL ESTIMATOR CLOSES.** At 4096 `Pi` rows, `m = +2.14% +/- 5.44%` against an uncut
+baseline of `+2.98% +/- 4.28%` — the corrected cut estimator reproduces the uncut one to
+0.84%, far inside either error bar. The first run's `-13.23%` was a `Pi` SAMPLING artefact,
+not a residual bias. It was diagnosed from `Pi`'s own internal inconsistency — its
+prior-weighted mean against the actual keep fraction — and the diagnosis is confirmed by a
+clean three-point convergence: the `<Pi>` mismatch halves each time the population sample
+quadruples (2.3 -> 1.1 -> 0.5%, i.e. 1/sqrt(M)), and the estimator's distance from the
+baseline falls with it (16.2 -> 5.6 -> 0.8%). Both are monotone and settling.
+
+§5B.2's central claim about spin-2 selection is CONFIRMED on the real flow. For an
+isotropic cut the numerator correction does essentially nothing to the sheared component —
+rows 1 and 2 agree to 1.5%, against 5.4% apart when `Pi` was noisy — and `I_sel`, isotropic
+to 0.3%, carries the whole effect. The correction is large (26% of `<I>`) and moves `ghat`
+by exactly the predicted arithmetic factor `1/(1-0.2556) = 1.343`.
+
+`<s>_sel_2` IS REAL, AND IT IS DOING USEFUL WORK — not a defect, as an earlier draft of this
+entry had it. It converges to `+0.0127` and its significance GROWS with `Pi` statistics
+(1.6 -> 2.5 -> 6.3 sigma) while `<s>_sel_1` stays at ~1 sigma, which is the signature of a
+real quantity being resolved rather than noise. The shear here is applied along axis 1, so
+`ghat_2` is a B-mode-like null with truth 0, and subtracting `<s>_sel_2` moves it from
+`+0.00246` (uncorrected, identical in all three runs) to `-0.00095`. The population term is
+detecting a genuine small anisotropy — the flow is a trained network and is not exactly
+equivariant in shape — and removing it IMPROVES the null. The mechanism has not been traced
+and should not be asserted without a test.
+
+HONEST LIMITS ON THIS RESULT.
+- Precision is +/- 5.4%. This establishes the selection correction works at the ~5% level,
+  NOT at the 0.3% the project's deliverable needs. Closing that gap needs more rows.
+- `Pi` convergence is empirical, from three points. There is no guarantee 4096 rows suffices
+  for a harder (smaller-acceptance, or anisotropic) cut; the `<Pi>`-vs-keep-fraction
+  consistency check is cheap and should be read every run as the warning it turned out to be.
+- The uncut baseline itself is only known to +/- 4.28%, so "closes" means the two agree at
+  that precision, not that either is verified to be unbiased.
+
+### Two Pi-estimator traps found and fixed (both would have silently corrupted the answer)
+
+1. INDEPENDENT Bernoulli noise per node does NOT average out of `<s>_sel`, because that
+   quantity is a near-cancelling ratio of integrals. A 16-draw pilot produced a spurious
+   `<s>_sel = 0.049` that removed two thirds of the estimator's numerator. Fixed with
+   common random numbers across nodes (same latents at every node).
+2. The split-half-over-ROWS error bar that CRN then invites cannot see the shared-latent
+   realisation error — both halves carry the same latents. It reported 34 sigma for a
+   quantity that is zero by symmetry. This is the same trap §5B.4 records for nested
+   ladders, met one level down. Error bars now come from independent replicates.
+
+### Still open
+
+cont.164 defect 3 is untouched: the node bank is a 2-D isotropic SHAPE grid, so this does
+not reach the 4-D V2 model, and a measured size/mag cut remains impossible here because
+those are the V1 flow's inputs rather than its outputs (§4.7). The detection channel is
+implemented and unit-tested but is NOT exercised by this run (closure data have no
+detection step, and `detection_classifier.py` is still a stub).
+
+## cont.172 (2026-08-01) §5C archived; §5B gate PASSES for the shape channel — and cont.171's own existence condition (5.3d) was wrong
+
+User: "now archive the 5C work and start working on 5B".
+
+### Archived §5C
+
+27 `scripts/diag5c_*.py` -> `archive/`; 30 `jobs/job_diag5c_*.sh` + `job_lag5c_sweep.sh` ->
+`jobs/archive/`. `archive/README.md` gains a section stating the verdict (integrand tail index
+~1.3, denominator grows with bank size, survives removing both cont.170 setup defects) and
+pointing at `diag5c_bankctl.py`'s docstring for the protocol.
+
+KEPT in the active tree, deliberately: `scripts/closure_v2_lagrangian.py` (it is the §5C driver
+but also the shared V2 plumbing -- `rebuild`, `load_rows`, `scene_context`, `phi_block` -- that
+V2-side §5B work needs, and the archived probes import it from there) and
+`sbs_shear/lagrangian_score.py` (tested module, 10 tests). Verified the archived scripts still
+resolve `SBSI_ROOT = dirname(dirname(__file__))` to the repo root from `archive/`.
+
+### The correction: (5.3d) as written in cont.171 was WRONG
+
+cont.171 added an existence condition claiming that with `p_0 ~ (1-|eps|^2)^a` the generator
+behaves as `u ~ a/(1-|eps|^2)`, so the Fisher information exists only for `a > 1`. It assumed
+the shear velocity is `O(1)` at the edge of the ellipticity disc. **It is not.** The Mobius map
+preserves the unit disc, so the velocity is TANGENT to the boundary and its normal component
+vanishes like `1-|eps|^2`, exactly cancelling the divergence of `grad log p_0`. This was already
+visible in `score_inference.py`'s own closed form `u_a = e_a[4 - 2 psi'(t)(1-t)]`, where the
+prior enters only through `(1-t) psi'(t)`; cont.171 did not check the doc against it.
+
+Corrected statement: `E_0[u^2] < inf  <=>  (1-t) psi'(t)` is square-integrable against `p_0`,
+i.e. the log-density's slope may not blow up faster than `1/(1-t)`. For the power law that
+product is the constant `-a`, so `u_a = e_a(4+2a)` is BOUNDED and `E_0[u^2] = 4(a+2)` is finite
+for every `a > -1` (mere normalizability) -- including `a = 0`, a prior that does not vanish at
+the edge at all. The general PRINCIPLE cont.171 asserted (§5B's integrand is analytic, so its
+tail is a property of a prior you write down) survives intact and is now demonstrated rather
+than asserted; only the specific condition was wrong, and it was wrong in the restrictive
+direction.
+
+### New: `scripts/diag5b_gate.py` (login node, 16 s, no Slurm -- 11 MB prior cache + numpy)
+
+The gate §5B.4 asked for, run before trusting (5.3). What transfers from §5C and what does not
+is stated in the docstring: §5C's node bank is a Monte Carlo SAMPLE so disjoint blocks measure
+its realisation noise, whereas §5B's is a deterministic GRID with flat quadrature and has no
+realisation scatter at all -- two runs agree bit for bit. The failure mode is non-convergence,
+not noise, so the bank ladder is replaced by two grid ladders (refinement, and reach toward the
+edge). A disjoint-block ladder here would have been theatre.
+
+RESULTS (fitted `SmoothRadialPrior`, 2M-shape cache; §5C's numbers alongside):
+
+      diagnostic                      §5C (phi')        §5B (u)
+      Hill index, top 5/1/0.2%        1.32-1.38         9.42 / 41.5 / 544
+      integrand bounded               no                yes, max|u| = 12.27
+      denominator vs bank size        grows, +0.20      flat: Var_0(u) 35.3771->35.3788
+                                                        over a 25x node refinement (0.005%)
+      reach sensitivity               --                0.03% over rmax 0.85 -> 0.995
+
+  Var_0(u) = 35.379 by grid quadrature vs 35.410 from 2e6 prior draws -- two independent routes,
+  0.09% apart. Bartlett `E_0[u] = 0` to 1e-15; curvature residual falls to 2e-5 of Var_0(u).
+  Analytic control reproduces `u_a/[e_a(4+2a)] = 1.000000` at edge distances down to 1e-7 for
+  a = 0, 1, 2, differentiating the EXACT Mobius pullback.
+
+VERDICT: **§5C's variance non-existence does not arise in §5B's shape channel.** The default
+`rmax = 0.95` truncation, which never visits the edge, is not load-bearing.
+
+A confound I introduced and then removed: the first reach ladder held `n` fixed while widening
+`emax`, which silently coarsens the spacing (G moved only 11,065 -> 11,069, so the top rungs
+were the same grid). Rerun with the grid STEP held fixed and `n` scaled with `emax`, so reach
+varies alone; the conclusion is unchanged.
+
+### Limitations, stated plainly
+
+- SHAPE CHANNEL ONLY. The disc-tangency argument is special to the Mobius action on the unit
+  disc. Size and flux live on a half-line under a dilation, separation on the plane; each needs
+  its own edge analysis. The gate script says so in its own closing lines.
+- A bounded generator says nothing about whether the POSTERIOR WEIGHTS concentrate. That is a
+  property of the flow, not the prior, and is the separate worry in §5B.3 item 5.
+- This does not revive §5B as a science route. cont.161's verdict stands: §5B agrees with
+  transport everywhere honest and is worse in the extreme-blend tail, and its three live defects
+  (no detection channel; no `I_sel`, which is precisely the term that survives for a spin-2
+  shear; 2-D-shape-only node bank, so it does not reach the 4-D V2 model) are all untouched.
+  What changed is only that the estimator's denominator is now known to be a real number.
+
+FILES: `scripts/diag5b_gate.py` (new); `INFERENCE.md` §5B.4 rewritten + §6 bullet; 27+31 files
+moved to archive; `archive/README.md`. VALIDATION: `pytest tests/ -q` -> 34 passed; LaTeX
+delimiters balanced (150 display, 1416 inline, both even); tags 5.3/a/b/c/d in order.
+
+NEXT (not started, needs a green light): the same edge analysis for the size/flux channel
+(half-line under dilation) and the separation channel (plane, where §5B.1 already predicts the
+positional generator vanishes for an unclustered field); or, if §5B is to be revived as science
+rather than as machinery, the cont.164 defect list -- detection channel, `I_sel`, and a node
+bank over the 4-D V2 output.
+
+## cont.171 (2026-08-01) §5B math review: core algebra verified, 3 imprecisions fixed, 4 missing pieces added (incl. the positional blend channel vanishes for an unclustered field)
+
+Document-only change to `INFERENCE.md` (§3, §5B.1–5B.4 new, §6). No code, no jobs. Prompted by
+the question of whether §5B avoids the §5C pathology and whether `R_blend` fits in it.
+
+### VERIFIED CORRECT by re-derivation (no change needed)
+
+- Louis (2.5): `d2/dg2 log p = E_post[u'] + Var_post(u)` — rederived from the ratio rule.
+- `I_i = -E_w[du] - Var_w(u)`, and (5.3) numerator AND denominator, by differentiating
+  `log p_keep = log[∫ p_flow Pdet p_g] - log P(keep|g)` twice.
+- (5.3b) `I_sel = -E_Pi[du] - Var_Pi(u)`.
+- (5.3c) `iota = 4<e1^2> p'(Tc)/P_pass` — including the sign, and the rising/falling-side
+  discussion (iota>0 destroys information, iota<0 adds it).
+- (5.2) the measured cut cancels from the per-object posterior; detection does not.
+
+### IMPRECISIONS FIXED
+
+1. "a smooth function of |g| has zero gradient at the origin" — |g| is a cone, not
+   differentiable at 0. Corrected: isotropy forces dependence on |g|^2. Conclusion unchanged.
+2. (5.3c) used `d/dg log That = 2e`, the TRUE-size response. The measured size carries the
+   dilution factor `c(x)` of (5.1), which §5A.3 makes a whole point of being != 1 and varying.
+   Now `D = 4<c^2 e1^2>`; `c=1` flagged as the noiseless limit.
+3. §5B.3 item 5 "the bias is common across objects" — overstated. Now "systematic rather than
+   zero-mean", which is what actually prevents it averaging away.
+
+### ADDED
+
+4. **The positional blend channel (5.3a).** §2.4 gives the velocity `dr = Gamma r` but the doc
+   never formed `u` for it. Shear is traceless so `div v = 0` and only advection survives:
+   `u_pos = -r (rhat^T Gamma rhat) dlog(1+xi)/dr`. **For an unclustered (uniform Poisson)
+   neighbour field this is identically zero, node by node** — shear is area-preserving, so a
+   Poisson field is statistically invariant under it. The positional blend response is sourced
+   ENTIRELY by clustering and by the aperture edge; the neighbour-shape and neighbour-size
+   channels survive for any field. Derived here, not measured.
+5. **The aperture is not closed under S_gamma.** (2.7) holds sector-by-sector in neighbour
+   count (shear preserves multiplicity), so variable scene dimension is not an obstacle. But at
+   fixed APERTURE shear carries neighbours across the edge, leaving a surface term in the
+   separation channel — same species as §4.3. Consistent with cont.108's aperture sensitivity.
+6. **New §5B.4, existence of the information (5.3d).** The §5C failure asked of §5B. §5B's
+   integrand `u` is analytic: for `p0 ~ (1-|eps|^2)^a`, `u ~ a/(1-|eps|^2)` and
+   `E[u^2] ~ int t^(a-2) dt` converges iff **a > 1**. So finiteness is a one-line check on a
+   prior you write down, vs a property of a trained net discoverable only by measurement. Framed
+   as a condition to VERIFY (run the same Hill + disjoint-block tests on `u`), not a guarantee.
+   Also: the shared node bank correlates the `s_i`, so `sum s_i^2` understates Var(ghat); bank
+   error bars need independent banks. Duplicate-scene and nested-ladder traps recorded.
+
+### MODEL STATUS CORRECTION (§3)
+
+Verified against source, not assumed. The V2 model is **not** geometry-blind:
+`NEIGHBOR_FEATURES` (`train_joint_forward.py:76`) carries `distance_scaled`,
+`relative_position_angle_cos2/sin2`, `e1_input_s`, `e2_input_s`. So §3's non-degeneracy
+condition IS satisfied and `Cov(ehat, s_nbr)` is not identically zero for it — unlike the
+Gold-v1 flow (scalar `nbr_flux` only), which is why Gold-v1 must bolt on BlendEMU R_blend=0.1593.
+
+BUT the implemented shear map does not exercise it. `shifted_feature_frame`
+(`train_joint_forward.py:227-247`) Mobius-transforms the primary ellipticity and, under
+`--shear-both`, the neighbour's — and nothing else. `distance_scaled` rebuilds from untouched
+`distance`/`Re_input_p`; `relative_position_angle_*` from untouched `polarization_angle`
+(`preprocessing.py:166-179` via `rescale`). True size is not sheared either. `scene_context`
+(`closure_v2_lagrangian.py:112`) hardcodes `primary_only=True`. So the positional velocity is
+zero **by omission in code**, not by degeneracy — a `shifted_feature_frame` change, not an
+architecture change. Matches the measured "only e1/e2_input_p move with shear, all others 0".
+
+### VALIDATION
+
+`pytest tests/ -q` → 34 passed (85s; pytest lives in the 3.11 module, not in `sims1`).
+LaTeX delimiters balanced (146 display, inline even); tags renumbered to 5.3a/b/c/d in order.
+`R_blend=0.1593` traced to `Gold-v1.md:44,95`; all cited file:line anchors read directly.
+
+### LIMITATIONS / NEXT
+
+- 4 and 5 are derivations, NOT measurements. The uniform-field cancellation predicts the
+  positional blend response tracks `dlog(1+xi)/dr`; untested.
+- No claim that §5B works — only that its integrand's tail is checkable by construction where
+  §5C's was not. The Hill + disjoint-block test on `u` has NOT been run.
+- Science results untouched: Gold-v1 (+0.245%) and fiducial Gold-V2 (-0.123+-0.152%) use the
+  §5A transport route and never evaluate a score.
+
+## cont.170 (2026-08-01) §5C IS STRUCTURALLY DEAD as written: fact (b) survives removing BOTH setup defects; the pathology is phi' itself, not the bank
+
+Multi-agent round (3 probes + 3 adversarial verifiers + synthesis) followed by one decisive
+control. Added `scripts/diag5c_bankctl.py` + `jobs/job_diag5c_bankctl.sh` and the probe/verify
+scripts `diag5c_{probeA_spread,probeA2_tail,probeA3_delta,probeB_integrand,probeB2_tail,
+probeB3_response,tailC,verifyR_snis,verifyR2_scene,verifyV_tailcheck}.py`. Jobs 15460992,
+15461010, 15461075, 15461552, 15462216, 15462371, 15462550, 15463165, 15463374, 15463435,
+15463611, 15463970, 15464605, 15465523. Detail entries: cont.169-probeA, cont.169-verifyR.
+
+### TWO DEFECTS IN MY OWN SCRIPTS, FOUND AND NOW CONTROLLED
+
+D1 BANK DUPLICATION. The catalogue is pair-annotated: 8.19 rows share each `input_index` and
+   within a group the PRIMARY IS BYTE-IDENTICAL (within-group sd of `Re_input_p`,
+   `axis_ratio_input_p`, `sersic_n_input_p`, `measured_x_image` all exactly 0) -- only the
+   annotated neighbour differs. A 20,000-ROW bank is 2,456 DISTINCT SCENES. ESS overcounts by
+   r_eff = 4.27-4.47, flat in K.
+D2 NO `true_cut`. `closure_v2_lagrangian.py:246-255` filters rows by the checkpoint's own
+   `true_cut` (Re>0.3 & mag<26, keeps 40.4%) because the model was TRAINED only on passing
+   rows. `diag5c_repro.py` and `diag5c_shapegrid.py` DO NOT. cont.168 and cont.169 therefore
+   evaluated the flow OUT OF DOMAIN throughout. Both are now controlled, not just noted.
+
+### THE CONTROL (job 15465523): disjoint-equal-block ladder, 3 legs, outcome map fixed in advance
+
+Pool 10,000 nodes, N_gal 20,000, delta 0.01, seed 11. `noise(B) = <(s_m - s_m')^2>/2` over
+DISJOINT blocks and galaxies -- assumption-light, and it carries realisation error bars, which
+the retired nested ladder could not.
+
+    leg                          ESS    Hill    noise B=250 -> B=5000        exponent   tame
+    L0 as-is (dup, no cut)      233.2   0.908   5699+-23070 -> 242            -0.843    -0.382
+    L1 deduplicated             309.1   1.324   19.9+-3.1  -> 36.8            +0.204    -0.452
+    L2 dedup + true_cut         107.3   1.379   57.0+-4.6  -> 118.0           +0.243    -0.440
+
+Monte Carlo would be -1. L0's -0.843 is an ARTEFACT of its B=250 rung, whose sd (23,070) is
+four times its mean -- a handful of catastrophic galaxies. Do not quote it. L1 and L2 are
+clean, monotone and tight: the noise RISES by 85% (L1) and 107% (L2) across a 20x range in
+bank size, far outside the +-3-5 error bars.
+
+VERDICT against the pre-registered outcome map: this is the second branch. Removing bank
+duplication changes the LEVEL (L0's chaotic 122-242 -> L1's orderly 20-37) and cleans up the
+statistics, but the EXPONENT STAYS FIRMLY POSITIVE and the Hill index stays ~1.3-1.4, well
+below the alpha=2 needed for a finite second moment. Applying `true_cut` on top makes the
+level WORSE (57-118) and the exponent slightly more positive, and lowers ESS 309 -> 107.
+**Staying inside the model's training domain does not help.**
+
+THE CONTRAST THAT CARRIES THE VERDICT. Same bank, same weights, same galaxies: a tame
+integrand (the node's own true `e1_p`) averages DOWN at exponent -0.44 to -0.45 in every leg,
+while phi' averages UP. The weights are fine; the integrand is not.
+
+### CONCLUSION
+
+`Var_w(phi')` has no population limit (Hill alpha ~ 1.3 < 2), so the self-normalising
+denominator of (5.9) has nothing to converge to. This is now measured deduplicated, in-domain,
+with realisation error bars, and it is NOT a finite-difference artefact (O(delta^2)
+convergence; Richardson delta->0 gives 35.23 vs 34.75 at delta=0.01, +1.4%; an 8x delta sweep
+moves the Hill index 0.959/0.958/0.957). **Bank engineering is closed as a lever** -- bigger
+(cont.167), self- (cont.161), localised (cont.167), shape-stratified (cont.168), deduplicated
+and in-domain (here) have all failed. §5C in its current form is not repairable by choosing
+better nodes.
+
+### ALSO ESTABLISHED THIS ROUND
+
+- FACT (a) EXPLAINED, and my "92-94% bank-specific" reading RETRACTED as an average hiding a
+  split. By ESS quartile at K=20,000: <ESS> 17.5/112.4/441.6/1189.1, Var(phi') 132.2/5.55/
+  0.935/0.225, corr_AB 0.064/0.265/0.762/0.919. The best three quarters are 76-92%
+  reproducible; the worst quarter carries 95.2% of the variance and drags the global number to
+  0.084. Variance-weighted mean correlation 0.079 vs global 0.084.
+- THE FLOW'S OFF-SUPPORT TAIL IS EXONERATED, by arithmetic not sampling: `w_k <= exp(deficit_k)`
+  verified with 0 violations in 198,360,000 pairs; deleting every node with deficit < -10 moves
+  Var(s) 34.7496 -> 34.7478 (0.005%); per-galaxy max weight in the two worst deficit bins is
+  exactly 0. "More nodes -> more tail -> more spread" is dead.
+- THE WEIGHTS CARRY THE SHEAR SIGNAL: `d<E_w[e2_p]>/dgamma = +0.1189 +- 0.0284` (4.2σ,
+  own-mask like-for-like) at K=20,000, against a shrinkage-implied ~0.15. phi's own
+  information is I = 5.01 +- 1.72 (2.9σ). So the information is there; phi' is what destroys
+  it, via Var(s)=34.75 against I=5.01.
+- The DETECTION channel remains negligible (cont.169), now at every leg.
+
+### REFUTED BY THE VERIFIERS -- recorded because the failures are informative
+
+- Probe A's headline "p-q = -0.51 so spread-growth-cancels-averaging is refuted": p-q is the
+  exponent of mean(Var_w)/mean(ESS), not the mean of ratios that actually enters Var(s). The
+  right statistic gives +0.208-0.224 against a measured +0.238. DO NOT QUOTE p, q or p-q.
+- Probe A's "ESS is not the effective sample size": refuted -- the 6-10x offset is D1, a
+  measured K-independent factor 4.4, not a wrong model.
+- Probe A's batch-means "disagreement": circular (the 10x IS the M=10 it divides by).
+- Probe B's "one object explains both facts": an artefact of which average is taken; the exact
+  per-galaxy plug-in RISES x2.03.
+- Probe B's "27σ": a paired-vs-unpaired comparison; like-for-like it is 4.2σ vs 2.9σ.
+- Probe C's quintile variance shares FLIP DIRECTION with K -- do not use them.
+
+### WHAT MUST STILL BE RE-MEASURED BEFORE ANY OF THIS IS A SCIENCE RESULT
+
+No probe ran a gamma != 0 leg: every number here is a gamma=0 variance, and `m ~ -86%` is
+inherited from cont.169, which ran with both defects. Single seed (11), single checkpoint,
+primary-only shear, data drawn from the model itself so there is no misspecification by
+construction. A shape bias needs 16 seeds (AGENTS.md); none of these diagnostics satisfies
+that. Retire `sigma^2_half = Var(s_A) - Cov` (asymmetric: 15.38 vs 7.70 on the two halves).
+
+### NEXT, IF RESUMED
+
+Two options, both giving up self-calibration in exchange for a working estimator:
+(i) a different DENOMINATOR -- trimmed/robust or ESS-gated, since the plain second moment does
+    not exist; note clipping at per-galaxy p95 removes 65% of Var(s) but leaves the exponent at
+    +0.015, so a naive clip is not enough and this needs thought;
+(ii) a different READOUT -- `E_w[e2_p]`, which is a tame integrand (averages down, reproducible,
+    4.2σ shear response) with its response calibrated externally. That reintroduces exactly the
+    external calibration §5C was designed to avoid, and should be presented as such.
+
+SCOPE unchanged. Gold-v1 (+0.245%) and fiducial Gold-V2 (-0.123 +- 0.152%) use the §5A
+transport route, which forms no score and no node bank. Nothing here touches them.
+
+## cont.169-verifyR (2026-08-01) §5C: adversarial check of cont.169-probeA — its numbers reproduce, but "ESS is not the effective sample size" is refuted: the offset is the node bank's 8.14 rows/scene (ESS overcounts by r_eff=4.3, flat in K)
+
+Adversarial verification of the entry below. Added `scripts/diag5c_verifyR_snis.py` +
+`jobs/job_diag5c_verifyR.sh` (job 15463435) and `scripts/diag5c_verifyR2_scene.py` +
+`jobs/job_diag5c_verifyR2.sh` (job 15463611); same bank/galaxies/seed/delta as 15459872.
+Nothing else touched.
+
+WHAT REPRODUCES. Every number quoted by cont.169-probeA appears unrounded in its logs; the
+K=2000/6000/20000 validity check does match job 15459872.
+
+WHAT DOES NOT SURVIVE.
+1. `p-q = -0.51` is the exponent of mean(Var_w)/mean(ESS), not of the predicted noise.
+   Aggregated as it enters Var(s), mean_i[Var_w/ESS] ~ B^+0.208 against a directly measured
+   B^+0.238 — i.e. probe A's own proposed mechanism reproduces the non-averaging it was
+   declared to have failed to explain. Median galaxy: surrogate B^-0.572 vs measured B^-0.576.
+2. The 6-10x level offset is the BANK, not the formula. The pool holds 8.14 rows per
+   `input_index` with byte-identical primaries (within-group sd of Re/axis-ratio/sersic_n
+   = 0), so nodes are not i.i.d. rows: ESS_row/ESS_scene = 4.27/4.31/4.35/4.47 (flat in K).
+   Recomputing the surrogate on the scene as the sampling unit moves pred/meas from
+   0.156-0.202 to 0.384-0.542, with exponent B^+0.224 vs measured B^+0.238.
+3. The "third route disagrees by another ~10x" is the factor M=10 it divides by. Undoing it,
+   Var_block = 21.3/19.1/16.7/20.6 at block sizes 100/200/600/2000 against 18.4/18.3/22.9
+   measured at 500/1000/2500 — agreement to 10-20%. Batch means was fact (b) restated.
+4. No error bar was carried on any measured sigma^2_half, and `Var(sA)-Cov` is asymmetric:
+   15.377 from the A half, 7.700 from the B half at K=1000 (exponent r +0.197 vs +0.306).
+
+FACT (b) STANDS AND IS NOW ERROR-BARRED (this is new): on 40/20/8/4/2 equal-size DISJOINT
+column blocks, noise = 18.37+-1.31, 18.29+-0.76, 22.86+-1.71, 24.50+-2.07, 27.32 at bank
+size 500/1000/2500/5000/10000 (exponent +0.144); per-block Var(s) max/min 1.3-2.0, which is
+what made the nested ladder look non-monotonic. Also unchanged: the heavy |phi'| tail, its
+delta-independence, and the argmax concentration (540 nodes, 6 cover 50%).
+
+OPEN. The scene-level surrogate still under-predicts by ~2x, and it is in tension with
+probe A's p95 clip test (r stayed +0.015 where a bounded integrand should give ~K^-0.87);
+the surrogate was never recomputed under clipping. Next: rebuild the node bank with one row
+per `input_index` and repeat the ladder before drawing any further conclusion about (b).
+
+## cont.169-probeA (2026-08-01) §5C: the ESS/delta-method description of the score is INVALID (7x off); phi' is a genuine derivative with a Hill tail index ~1; the extreme is 6 shared node scenes; clipping does NOT restore 1/K
+
+Addendum to cont.169, answering its open puzzle (a)+(b). Added
+`scripts/diag5c_probeA_spread.py` + `jobs/job_diag5c_probeA.sh` (job 15461075),
+`scripts/diag5c_probeA2_tail.py` + `jobs/job_diag5c_probeA2.sh` (job 15461552),
+`scripts/diag5c_probeA3_delta.py` + `jobs/job_diag5c_probeA3.sh` (job 15462371).
+gamma = 0, N_gal = 20,000 (9,918 detected), delta 0.01, seed 11, nested K ladder
+1000/2000/6000/20000 as column slices of one phi array; two disjoint node pools.
+
+VALIDITY CHECK PASSES. Bank 0 reproduces job 15459872 to the printed digits: ESS
+54.24/147.01/440.07, corr(sA,sB) 0.0627/0.0415/0.0844, Var(s) 26.71/20.95/34.75,
+sigma^2_half 21.21/19.21/30.97. Var_w(K=20k)=53.18 reproduces across jobs 15461075/15462371.
+
+TESTED HYPOTHESIS -- REFUTED. "Var_w(phi') grows as fast as ESS, so the extra spread eats
+the extra averaging" requires p-q = 0. Measured p = +0.388+-0.027 / q = +0.897+-0.002 (bank
+0) and +0.345+-0.016 / +0.865+-0.002 (bank 1), so p-q = -0.509+-0.027 and -0.520+-0.016;
+medians give -0.53/-0.57. The spread does grow (mean Var_w 16.7 -> 53.2 over 20x in K) but
+only fast enough to cancel HALF the averaging gain in log-log.
+
+ESTABLISHED, and this is the real finding. THE WEIGHTED-MEAN VARIANCE FORMULA DOES NOT
+APPLY. Predicted noise mean_i[Var_w/ESS] against the directly measured half-bank noise is
+0.10-0.23 (typical 0.15) at every rung of both banks -- the formula UNDER-predicts the
+actual bank noise by 6-10x, with a stable ratio. Two independent measurements of the noise
+agree with each other (cov route Var(sA)-Cov(sA,sB) and the assumption-light per-galaxy
+route <(sA-sB)^2>/2 agree to <20%) and both are flat in K: exponents +0.20/-0.06 (cov) and
++0.24/+0.07 (pair) over a 20x range, against -1 for pure Monte Carlo. A third route,
+batch means over 10 disjoint blocks, disagrees with the half-bank routes by ~10x, i.e. the
+variance does not decompose over disjoint node blocks either. So the ESS bookkeeping is not
+merely mis-scaled, it is the wrong description.
+
+WHY: phi' IS HEAVY-TAILED, AND THE TAIL IS REAL. Unweighted |phi'| over nodes has p50/p99/
+p99.9 stationary in K (4.07/620/5949 at K=20k vs 4.12/675/4975 at K=1k) while the per-galaxy
+MAX grows 9,298 -> 35,530 (~K^0.45) and the pooled max reaches 7.4e6. Hill index per galaxy
+(top 1%) 2.04/1.64/1.41/1.26 down the ladder, pooled 0.94-1.05 and stable: alpha < 2, so
+phi' has no finite second moment under the node distribution and Var_w(phi') cannot
+converge at any bank size. NOT a stencil artefact: over delta = 0.02 -> 0.0025 (factor 8)
+every column moves <=17% and most 1-3%, where a jump inside the stencil would have scaled
+like 1/delta. Magnitude share of sum|w phi'|: top-1 20.4% -> 8.8% and top-10 63.8% -> 31.1%
+across the ladder -- concentration falls with K, but 10 nodes of 20,000 still carry a third.
+
+THE EXTREME IS A FEW SHARED SCENES, NOT PER-PAIR NOISE. At K=20,000 the argmax of |phi'|
+lands on only 540 distinct nodes for 9,918 galaxies; ONE node is the argmax for 11.4% of
+galaxies, the top 10 for 59.3%, and 6 nodes cover 50%. A per-(galaxy,node) pathology would
+need ~9,918 distinct nodes.
+
+CLIP TEST -- A CLEAN NULL, and it is why (b) is still open. Winsorising |phi'| at a
+per-galaxy threshold FIXED at the K=1000 percentile (diagnostic only; the clipped statistic
+is not the score) removes most of the DENOMINATOR but not the flatness: at p99.9 the noise
+exponent is unchanged (+0.239 vs +0.238); at p95 Var(s) at K=20k falls 34.75 -> 12.19 (-65%)
+yet the exponent only reaches +0.015. A bounded integrand averaged over 20x more i.i.d.
+nodes still does not average down. So the heavy tail explains the LEVEL of Var(s) and fact
+(a), but NOT fact (b).
+
+CONFOUNDS CHECKED. Node-pool ordering: `case`/`shear_case` constant over the first 40k rows
+and no drift of true properties with row index (|corr| <= 0.03), so the A/B halves sample
+the same population and the flat noise is not a between-block bias. Node clustering IS real
+and unquantified in its effect: 8.13 rows share each `input_index`, so a K-node bank holds
+only ~K/8 distinct input objects (K=1000 -> 117); this is a constant factor at every rung
+and cannot produce a K-scaling change, but it inflates the level. Galaxy bootstrap does not
+capture bank-to-bank scatter; the two disjoint banks agree on p-q to 0.011, within the
+quoted errors.
+
+NEXT if resumed: fact (b) is now isolated from the tail. The remaining suspect is the
+WEIGHTS -- ESS grows as K^0.88 yet the implied effective sample size behind the clipped
+noise is flat at ~200. Measure the K-scaling of the noise on a de-clustered bank (one row
+per `input_index`) before anything else, since that is the one confound with a measured
+factor of 8 attached to it.
+
+## cont.169 (2026-08-01) Var(s) decomposition FAILS its validity check; detection channel is definitively negligible; a 3-way split from cont.168 discussion is RETRACTED
+
+Added `scripts/diag5c_repro.py` + `jobs/job_diag5c_repro.sh`. Job 15459872. N_gal = 20,000
+(9,918 detected at g=0, 9,935 at g=0.05), delta 0.01, 400 bootstrap resamples, seed 11,
+K ladder 2000/6000/20000.
+
+MOTIVE. §5C attenuation is `m = I/Var(s) - 1` with `I = d<s>/dgamma` denominator-free and the
+numerator measured sound. So the question is which part of the inflated denominator is
+removable: BANK NOISE (falls with K) or REPRODUCIBLE-BUT-SHEAR-BLIND (same for any bank).
+Two disjoint half-banks are column slices of one phi array, so `Cov(s_A,s_B)` isolates the
+reproducible part at no extra cost.
+
+    K       ESS   corr(sA,sB)   Var(s)   sigma^2_half      I              m
+    2,000    54     0.063        26.71     21.21      -0.64 +- 1.40    -102.4%
+    6,000   147     0.042        20.95     19.21      +1.14 +- 1.32     -94.6%
+    20,000  440     0.084        34.75     30.97      +5.01 +- 1.72     -85.6%
+
+THE SPLIT IS NOT VALID AND ITS NUMBERS ARE NOT REPORTED. `sigma^2_full = sigma^2_half/2`
+assumes noise ~ 1/K. Measured `sigma^2_half` is 21.2 / 19.2 / 31.0 over a 10x range in K --
+flat, then rising. The script prints this check by design; it fails, so the `blind` and
+`noise` columns it computes are not quoted here.
+
+RETRACTED. The three-way split floated in the cont.168 discussion (I 5.8 / blind 30.7 /
+noise 25.5, "a perfect bank still leaves m = -84%") combined the half-bank correlation 0.417
+from the cont.167 `diag5c_localprop` job with the slope and variance from `diag5c_slope`, at
+different settings. Measured at ONE setting here, `corr(sA,sB)` is 0.04-0.08, not 0.417. The
+numbers were not comparable and the split is withdrawn.
+
+ESTABLISHED, and this one is clean. THE DETECTION CHANNEL IS NEGLIGIBLE. `log Pdet` enters
+phi as a per-NODE constant, so its gamma-derivative is galaxy-independent and `s` splits
+exactly at fixed posterior weights. At K=20,000: `Var(s_flow) = 34.75295` vs
+`Var(s_det) = 0.00010`, cross-channel `Cov = -0.00173`, `rms(d1_det) = 0.0386`. Five orders
+of magnitude, stable at every K. The entire score is the flow density channel. This upgrades
+cont.166's detection-ablation result from "not the cause" to "contributes nothing".
+
+THE OPEN PUZZLE, model-free, no assumed scaling. Two facts that no simple story satisfies:
+(a) independent half-banks agree only 6-8% per galaxy -- the score is almost entirely
+    bank-SPECIFIC, which reads as noise;
+(b) doubling the bank 10,000 -> 20,000 moves Var(s) 33.8 -> 34.8, i.e. NOT AT ALL, and over
+    the full ladder it is non-monotonic 26.7 / 21.0 / 34.8.
+Monte-Carlo noise shrinks when averaged; a fixed model bias reproduces across banks. This
+does neither. That is now the sharp question, and it is better posed than "the mixture is
+not the marginal".
+
+WEAK AND NOT A TREND: `m` reads -102% / -95% / -86% with K. `I` is at most 2.9 sigma from
+zero and Var(s) is non-monotonic, so this is suggestive only. Do not quote it as convergence.
+
+SCOPE unchanged: §5C only. Gold-v1 (+0.245%) and fiducial Gold-V2 (-0.123 +- 0.152%) use the
+§5A transport route, which forms no score and no node bank.
+
+NEXT if resumed: explain (a)+(b) together. The obvious probe is whether the bank-specific
+component is carried by the same nodes across galaxies (a shared systematic in the weights)
+or by different ones (per-galaxy), which `weight_diagnostics`' TV statistic already measures.
+
+## cont.168 (2026-08-01) shape-direction coverage does NOT fix §5C — the last bank idea fails too
+
+Added `scripts/diag5c_shapegrid.py` + `jobs/job_diag5c_shapegrid.sh`. Jobs 15449461/15449462
+(fixed-budget ladder, superseded by its own confound) and 15451498–15451501 (fixed-base
+ladder x marginal/conditional strata). N_gal = 20,000 (~9.9k detected), delta 0.01, 400
+bootstrap resamples over galaxies, seed 11.
+
+MOTIVE. Under `primary_only=True`, `S_g` moves exactly TWO of the ~18 scene coordinates (the
+primary intrinsic e1,e2), so `d/dg log p_hat` is a directional derivative along the shape
+axes alone. If the mixture's lumpiness ALONG THOSE AXES is what the derivative picks up,
+covering them systematically should help. Arm B replaces each base scene's shape with a
+STRATIFIED set of nodes (radii at equal-probability quantiles of empirical |e|, angles
+uniform in the (e1,e2) plane), so every node keeps equal prior weight and `log_prior` stays
+None — no p(e) density to model wrong.
+
+FIRST LADDER WAS CONFOUNDED (15449461/2), recorded because the confound is the lesson. At
+FIXED K the base count M and the shape count nr*na move oppositely, so "more shape nodes"
+and "fewer base scenes" cannot be separated. The gamma=0 null offset tracked BASE COUNT
+(+0.0138 / +0.0125 / +0.0068 / +0.0045 at 100 / 200 / 1000 / 2000 base), not shape count.
+The eye-catching m = -35.7% at the top rung is 1.1σ from baseline once the null is
+subtracted. Do not quote it.
+
+SECOND LADDER, base pinned at 200, shape grid alone growing (jobs 15451498-15451501).
+Null-corrected signal = ghat(0.05) - ghat(0); perfect recovery would be +0.0500.
+
+    shape nodes        4         20         50         98      baseline(20k scenes)
+    marginal      +0.0029    -0.0004    +0.0138    +0.0152        +0.0023
+      +-          0.0041     0.0050     0.0049     0.0062         0.0027
+    conditional   -0.0020    +0.0101    +0.0049    -0.0008        (same baseline)
+      +-          0.0057     0.0047     0.0048     0.0053
+
+VERDICT: NO. Three reasons, strongest first.
+(i) The gamma=0 NULL is broken in EVERY arm-B configuration (+0.002 to +0.017) and
+    conditioning the strata on the base scene's own (Re, mag) bin does NOT close it — with
+    `--cond-bins 4` the top rung's null is WORSE (+0.01736 +- 0.00320, 5.4σ). The predicted
+    cause (broken shape-size correlation from replacing the shape) is therefore REFUTED.
+    The baseline passes its null (+0.00271 +- 0.00194).
+(ii) The apparent win does not reproduce. Marginal top rung +0.0152 +- 0.0062 (2.5σ from
+    zero, 1.9σ above baseline); the SAME rung with conditional strata gives -0.0008 +-
+    0.0053, no signal. A second-order change flips the result.
+(iii) Best case is still m = -70% against truth 0.05. Baseline is -90%.
+
+WHAT IS GENUINELY IN ITS FAVOUR, stated so it is not lost: the RAW gamma=0.05 ghat rises
+monotonically with shape resolution in BOTH variants (marginal 0.0062/0.0161/0.0241,
+conditional 0.0120/0.0134/0.0165 at 20/50/98 nodes), and arm B raises ESS (437 -> 740 at
+equal K). Finer shape coverage does do something mechanically. But in the conditional
+variant the null rises at the same rate, which is a growing additive offset, not signal.
+
+SCOPE. No certified number is touched: Gold-v1 (+0.245%) and fiducial Gold-V2
+(-0.123 +- 0.152%) use the §5A transport route, which forms no score, no `I_i` and no node
+bank. This is §5C only.
+
+CUMULATIVE: four ways of buying a better bank have now failed — bigger (cont.167), self-
+(cont.161), localised proposal (cont.167), and shape-stratified (here). RECOMMENDATION: park
+§5C with the diagnosis written down rather than attempt a fifth. If it is revisited, the
+binding constraint is the arm-B null offset, which is NOT explained by the shape-size
+approximation and is currently unattributed — that is the thing to explain first.
+
+## cont.167-SETTLED (2026-08-01) the §5C failure is BANK COVERAGE, proved by a forced-answer test; the estimator is correct
+
+Added `scripts/diag5c_{selfmix,chansplit,signalreach,slope,slope_post,localprop,exactpool,
+poolsize}.py` + `jobs/job_diag5c_*.sh`. Jobs 15417628, 15417710, 15417711, 15417750,
+15417764, 15418898, 15420202.
+
+THE DECISIVE TEST (`diag5c_selfmix.py`, jobs 15417750 / 15417764). Draw the data from the
+estimator's OWN K-component mixture — node index uniform over the same bank, `xhat ~
+p(.|S_g z_k)`, detection Bernoulli at that node's `Pdet` — so the mixture IS the
+data-generating density by construction and Bartlett must hold EXACTLY at g=0 for any K.
+Run side by side with the ordinary marginal draw at identical K, seed, and galaxy count;
+N_gal = 40,000 (~20.6k detected), delta 0.01, bootstrap over galaxies.
+
+    g_true=0     K:       500          2000          6000         20000
+    MIXTURE  ratio   1.009+-0.027  1.000+-0.027  0.981+-0.025  0.965+-0.027
+             ghat   -0.00002       -0.00007      +0.00009      -0.00012   (+-0.0003)
+    MARGINAL ratio 105.3          17.1          17.7          16.9
+
+The identity holds under the mixture draw and fails under the marginal draw with the same
+code, same bank, same seed. **Hypothesis (A) is CONFIRMED and the estimator is arithmetically
+correct**: the K-component mixture is not the true marginal, and that gap is the entire
+failure. Eight rounds of suspicion of the estimator, the flow, the derivatives, the
+detection head and the precision are all now positively excluded rather than merely untested.
+
+HYPOTHESIS (B) REFUTED INDEPENDENTLY (`diag5c_chansplit.py`). Freezing the unsupervised
+density-shape channel out entirely leaves m = -95.2% +- 5.4% against the full estimator's
+-93.3% +- 6.5%; the supervised mean channel alone reproduces the deficit. The weight-carrying
+nodes are ON-manifold in the flow's own conditional scale: ||z|| = 1.959+-0.017 at the
+top-weight node vs 1.881 for matched pairs and 2.00 for a perfect fit. Nodes with log-weight
+deficit < -100 are 4.05% of the bank and carry 0.0000 of the posterior weight.
+**RETRACTED from cont.166**: the "top-weight nodes sit 4.65 sigma from the conditional mean"
+was computed in standardised marginal target units, in which MATCHED pairs read 4.096 — it
+never indicated an anomaly.
+
+POSITIVE CONTROL ON THE MODEL (`diag5c_signalreach.py`). The shear signal is present and
+large: `dmu[e2]/dgamma2 = +1.0525 +- 0.0251`, `<R> = +1.1200 +- 0.0186`, delta-independent
+0.01-0.05. **RETRACTED framing**: the certified `<R_flow> = 0.2930` is a FULL-population mean
+and is not what the true-cut population should return; on the true-cut val population the
+checkpoint's own training logs give `<R_model>` 0.703-0.716 vs `<R_sim>` 0.712-0.713, i.e.
+-1.3%..+0.4%. `keep_indices` covers all 128 context dims, so no shear-carrying direction is
+dropped before the flow. Confirmed exactly: 2 of 16 primary inputs move with gamma, 0 of 10
+neighbour inputs.
+
+THE FAILURE, STATED WITHOUT A DENOMINATOR (`diag5c_slope.py`). d<s>/dg = 5.834 +- 0.399
+against Var(s-<s>_sel) = 62.04 +- 2.39, i.e. m = -90.60% +- 0.68%. Linear over a 20x range in
+gamma; the paired per-gamma m is FLAT at about -89% from g=0.01 to 0.20, which bounds the
+entire (5.9b)-type drift contribution at 0.5-2.5% of the failure and refutes cont.166's
+"drift is a second sufficient explanation". K 2000->10000 doubles the slope (5.8->12) AND
+Var(s) (62->113), leaving m unchanged. RETIRE the Louis form (5.8): its denominator is never
+determined better than ~30%, is 1.7 sigma from zero, changes sign across resamples, and
+propagates to ghat errors of +-500 in shear units.
+
+THE OBVIOUS FIX DOES NOT WORK (`diag5c_localprop.py`, jobs 15418898/15420202). A per-galaxy
+localised proposal with a defensive uniform mixture (alpha=0.2) and exact discrete
+`p0/q` weights makes the score far more reproducible — half-bank corr(A,B) 0.417 -> 0.744 at
+K=20000, noise exponent +0.00 -> -0.28 +- 0.02 — but the denominator-free response is
+UNCHANGED: d ghat(0.05)-ghat(0) = +0.0021 +- 0.0010 against a truth of 0.05, the same few
+percent as the uniform bank. Reducing bank NOISE does not restore the response. Caveat: with
+a data-dependent proposal the two half-banks share the data dependence, so corr(A,B) bounds
+variance, not bias.
+
+LIMITATIONS. The mixture-draw cells at g=0.05 are NOT a test of the identity (the score is
+evaluated at 0 while the data are at 0.05) and their per-galaxy information is ~680 vs ~5 for
+the marginal draw, because the estimator can nearly identify the generating node — that
+regime is artificially easy and its ghat undershoot is a Newton-step artefact, not a defect.
+The localised-proposal agent died on a session limit before writing up; its numbers here are
+read directly from the job logs, unaudited. The round-2 verification and synthesis agents
+never ran.
+
+NEXT. (1) The question is now sharp and quantitative: how does the mixture-vs-marginal score
+gap scale, and what proposal or Rao-Blackwellisation closes it? Coverage in ~18 dims is the
+target, and noise reduction alone is proven insufficient. (2) Consider marginalising the
+shear-carrying directions analytically (only e1,e2 of the primary move) instead of sampling
+them, which converts the hard part of the integral from Monte Carlo to quadrature.
+(3) Honest fallback: keep the numerator, take the exchange rate from simulations — that
+converts 5C into a calibrated summary statistic and gives up self-calibration.
+
+## cont.167 (2026-07-31) §5C channel split: the shape channel is NOT the culprit, and the "off-manifold" leg of hypothesis (B) is refuted
+
+Added `scripts/diag5c_chansplit.py` + `jobs/job_diag5c_chansplit.sh` (Slurm 15418212, cip
+a40-16gb, 90 s). Splits `phi_k(g)` into the MEAN channel (`mu(ctx(S_g z))` moving the
+residual), the SHAPE channel (`flow_ctx(ctx(S_g z))` changing the residual density), and the
+DET channel, by evaluating all nine `(a,b)` blocks
+`L[a][b] = flow.log_prob(xhat_i - mu(ctx(S_a z_k)), flow_ctx(ctx(S_b z_k)))`; the 4-point
+mixed stencil closes the second-order accounting. K=2000, N_det≈2050, g_true = 0 and 0.05,
+delta = 0.01 and 0.005, galaxy-bootstrap errors (200 resamples). Shared modules untouched.
+
+MEASURED (g=0, delta=0.01).
+- Neither channel dominates. Posterior-weighted rms ratio SHAPE/MEAN = 0.859 ± 0.007;
+  weighted |dphi/dg| p50/p90/p99 = 3.05/13.76/30.83 (MEAN) vs 3.63/12.20/27.26 (SHAPE).
+  DET is 2 orders down (0.039). Same on MATCHED pairs: ratio 0.785 ± 0.022.
+- Both O(75–85) terms are residues of O(275) cancellations that need the cross term:
+  -E_w[phi''] = 85.7 ± 5.8 = MEAN 209.8 + SHAPE 150.6 + CROSS −274.7;
+  Var_w(phi') = 74.9 ± 4.2 = Var(M) 180.4 + Var(S) 147.6 + 2Cov(M,S) −253.1; <I> = 10.8 ± 5.3.
+  Per-channel partial I: MEAN 29.4 ± 11.7, SHAPE 3.0 ± 6.8, DET −0.0009. Var of `s_i` over
+  galaxies is likewise a cancellation: MEAN 165.3 + SHAPE 75.6, corr(M,S) = −0.69 → FULL 86.7.
+- corr(s_MEAN, s_FULL) = +0.739; corr(s_SHAPE, s_FULL) = −0.026.
+- OFF-MANIFOLD, in the flow's OWN scale (latent norm ||z||, ideal 2.00 at target_dim 4): top-1
+  weight node 1.959 ± 0.017, top-10 2.266, top-100 2.799, matched pairs 1.881 ± 0.016. The
+  weight-carrying nodes are effectively ON-manifold. Deficits reach −8125 but the bin below
+  −100 carries 4.05% of nodes and 0.0000 of the weight. This CORRECTS the cont.166 "4.65
+  sigma" reading, which used the marginal target sd — matched pairs give 4.096 in those units.
+- COUNTERFACTUAL (freeze a channel, denominator-free ghat(5.9) at 0.05 minus at 0):
+  FULL m = −93.3 ± 6.5%; MEAN+DET −95.2 ± 5.4%; SHAPE+DET −105.9 ± 6.7%. Freezing the
+  unsupervised shape channel does NOT restore the exchange rate.
+
+INFERRED. Hypothesis (B) as "the unsupervised shape channel or off-manifold flow tails break
+the estimator" is disfavoured: the failure survives removal of the shape channel, and the
+nodes carrying the weight are as on-manifold as the training pairs. Hypothesis (A) (mixture /
+bank coverage in the ~18-dim latent) is strengthened by elimination. NOT established: that the
+flow is innocent in general — the shape channel is a same-size, unsupervised contributor and
+the cross term is the largest single entry in both O(275) sums.
+
+CONFOUNDS. Errors are galaxy-bootstrap only and exclude bank Monte-Carlo error, which cont.166
+showed dominates per-galaxy `s`; the g=0 null reads ghat = 0.0064 ± 0.0020 here (N=2051), so
+the quoted `se` understates. The phi'' decomposition residual is O(1–5) at these deltas —
+small vs the 275-size constituents, comparable to <I> = 10.8. Single checkpoint, single seed,
+one bank size.
+
+NEXT. Test (A) directly: the same channel split as a function of bank size / ESS, or an
+exact-mixture bank in the full ~18-dim latent.
+
+## cont.167-slope (2026-07-31) the §5C failure is a GAMMA-INDEPENDENT ~11x response deficit; the (5.9b) drift explains ≤2.5% of it; retire the Louis form
+
+Added `scripts/diag5c_slope.py`, `scripts/diag5c_slope_post.py`, `jobs/job_diag5c_slope.sh`
+(jobs 15417710, 15417711). Denominator-free scoreboard replacing the Bartlett ratio: galaxies
+pinned (`--gal-offset 10000`), data seed fixed, node bank and its ±δ stencil built ONCE and
+shared across every `g_true` (common random numbers), `g_true` = 0/0.01/0.02/0.05/0.10/0.20,
+K = 2000 and 10000, N_gal = 20k and 40k, paired galaxy bootstrap B=400.
+
+MEASURED (paired, so much tighter than cont.166's independently-drawn two-point estimate).
+- NULL at `g_true`=0 holds on the large sample: `<s>-<s>_sel` = −0.0068 ± 0.0517 (0.13σ,
+  N=40k). The N=20k subsample reads +0.198 ± 0.079 (2.5σ) — the catalogue is row-ordered by
+  case, so galaxy blocks are not iid; treat any single block's offset as a sample property.
+- Response slope `d<s>/dg`, K=2000/N=40k: 5.83 ± 0.40 (all g), 5.68 ± 1.16 (g ≤ 0.05) — LINEAR,
+  no saturation. K=10000/N=20k: small-g slope ≈ 12–13, saturating above g ≈ 0.05.
+- DENOMINATOR-FREE headline, K=2000/N=40k: slope / Var(s−<s>_sel) = 0.0940 ± 0.0068, i.e.
+  m_Bartlett = **−90.6% ± 0.68%** (cont.166 had −90.7 ± 2.5%, confirmed and 4× tighter).
+  K=10000: −96.4% ± 0.76% on the all-g slope. Raising K raises BOTH slope (5.8→12) and
+  Var(s) (62→113), so m does not improve: the g=0-subtracted small-g m is −88.7 ± 2.9% at
+  K=10000 vs −88.2 ± 2.2% at K=2000.
+- PAIRED per-gamma m (g=0 row subtracted; removes any common galaxy/bank offset) is FLAT:
+  K=2000/N=40k gives −88.2, −89.6, −90.7, −89.8, −90.6% at g = 0.01…0.20.
+
+PART 2, (5.9b)/M.12 drift, applied here for the first time. As written it divides by
+`I_keep = <I>−I_sel`, the near-zero cancellation, so its own error bar is 10²–10⁵ % and it is
+unusable that way. Two conditioned forms: substituting `Var(s)` (its theoretical equal at
+γ=0) gives −3.7% ± 5.4% at γ=0.01 and is itself unstable at large γ; the model-free bound —
+fitting m(γ) = m0 + cγ over a 20× range in γ — gives, on the paired m,
+m0 = −89.1 ± 1.9% (K2000/N40k), −88.0 ± 2.5% (K10000), −87.7 ± 2.9% (K2000/N20k), with
+c = −0.08 ± 0.11, −0.44 ± 0.15, −0.28 ± 0.16 per unit γ. So ANY γ-linear drift accounts for
+−0.4% to −2.2% of m at γ=0.05, i.e. **0.5–2.5% of the failure**. The drift is identically zero
+at γ=0 and cannot touch the g=0 failure; the two must not be conflated. The cont.166 "drift
+alone could explain the away-from-zero behaviour" alternative is REFUTED for the real model.
+
+PART 3, RETIREMENT. `<I>−I_sel` is never determined better than ~30%: 2.78 ± 1.68 (K2000/
+N40k, 1.7σ from zero), 6.21 ± 2.56 (K2000/N20k), 13.81 ± 4.25 (K10000/N20k) — while
+`Var(s−<s>_sel)` on the SAME rows is 62.0 ± 2.4 (3.8%), 64.4 ± 2.5, 112.7 ± 11.6 (10.3%).
+Across the six near-identical `g_true` cells at K=10000, `<I>` scatters 13.8/12.8/14.6/6.1/
+3.8/−3.3 (sign change) while Var(s) scatters 5%. `ghat(5.8)` per-cell bootstrap errors reach
+±554 and ±623 in shear units. RECOMMENDATION: retire (5.8) from this project's diagnostics;
+report only the Bartlett form and denominator-free statements (slope, Var(s), paired m).
+
+VALIDATION: smoke run (K=400, N=1000, 2 γ) then the two Slurm jobs above; post-processing
+`diag5c_slope_post.py` on the saved `.npz` (login node, arrays only).
+LIMITATIONS: single checkpoint, single δ=0.01 (round 1 swept δ 8× with no effect), primary-
+only shear, no measured cut (P_pass=1). Bootstrap is over galaxies only — bank Monte-Carlo
+error is NOT in these bars. Arrays: `/home/z/Zekang.Zhang/.claude/jobs/be56a7ad/tmp/slope_*.npz`.
+NEXT: the surviving hypotheses are unchanged (bank/mixture coverage, off-manifold flow
+evaluation); the K=2000→10000 doubling of the slope against a doubling of Var(s) is a new
+constraint on both.
+
+## cont.166 (2026-07-31) §5C on Gold-V2: seven mechanisms ruled out, cause NOT settled, and the headline diagnostic itself is unreliable
+
+Nine-agent diagnostic round on the cont.165 failure (`Var(s) >> E[I]`; `ghat` flat at ~0.01
+whatever the true shear). Added `scripts/diag5c_{analytic_control,anactl_audit,splitbank,
+phianatomy,detablation,galbins}.py` and a `jobs/job_diag5c_*.sh` for each; the sub-entries
+below carry the per-probe detail. Shared files untouched except two fixes to
+`closure_v2_lagrangian.py` (top-k share normalised by `sum|.|` after it printed `-4.9e31%`;
+new `--gal-offset` to pin the galaxy sample, which the old K ladder silently varied).
+
+MEASURED.
+- Assembly is arithmetically correct: Fisher identity corr 0.9993–0.99995; ~50 exact-mixture
+  one-node "oracle" configurations return the Bartlett ratio 0.92–1.01; a float64 CPU control
+  moves `s_i` by rms 1.7e-4 and the ratio not at all; δ swept 8× changes nothing.
+- NOT the detection channel or the population terms (controlled ablation; `<s>_sel`=0.0452
+  converged over five stencil widths at 200k scenes, `I_sel`~0.001).
+- NOT a node-level heavy tail: the extreme `|phi'|` (to 3e5) hold ~4e-7 of the posterior
+  weight; winsorising and weight-truncation both leave the ratio put.
+- The failure IS concentrated across GALAXIES: top 1% carry 39–46% of the denominator sum;
+  score variance falls 35–50× bright→faint and ~110× across ESS quintiles.
+- Single-bank `s_i` is 82–99% bank Monte-Carlo noise (independent half-bank corr 0.02–0.24);
+  per-galaxy `I_i` has no reproducible content at all (corr −0.10 to +0.14).
+- The whole signature reproduces with NO FLOW: a 2-D Gaussian emission in the same code path
+  gives ratio 7–30 and `ghat` pinned near 0.005, purely by narrowing the emission against the
+  bank spacing. Reproduces also on a second seed and a second architecture.
+- Denominator-free statement of the failure: `ghat(0.05) - ghat(0)` = +0.00138 ± 0.00183 over
+  six bank sizes 500–20000, i.e. 2.8% of truth; `m` = −90.7% ± 2.5% at N=20,000. The
+  NUMERATOR is sound (0.13σ from zero at g=0 with 10,301 detected; 3.7σ signal at g=0.05).
+
+RETRACTED under cross-examination, within this round: "the reproducible part of `s` also
+fails the identity" (it agrees at 0.6–1.6σ once se(`<I>`) is propagated) and "more nodes will
+never fix this" (a variance-exponent-vs-sd-law slip; signal grows K^0.87–1.14 against noise
+K^0.26–0.33, and 500–20000 is entirely pre-asymptotic). The "de-duplicate the bank"
+prescription is refuted at realistic emission dimension.
+
+LIMITATION THAT INVALIDATES THE HEADLINE DIAGNOSTIC. `<I>` is a cancellation of two O(75–135)
+terms differing by a few percent, is consistent with zero at K>=4000, and its standard error
+GROWS with K. The Bartlett ratio is therefore 1/(an unmeasured quantity): across five runs at
+the same checkpoint and g=0 it read +7.5, +16.3, −26.3, −20.0, +11.1. Do not compare ratios
+across runs, and do not read their K-dependence as physics. Also: `closure_v2_lagrangian.py`
+and `diag5c_detablation.py` never seed the `xhat` draw, so their cross-K rows redrew the data;
+`drift_5_9b` has never been applied here, so every g=0.05 comparison to 1 is uncorrected.
+
+VERDICT. Cause NOT settled — seven mechanisms ruled out cumulatively (add detection/population
+terms and precision to the five from cont.165). The mixture/bank-coverage hypothesis is
+consistent with everything and tested by nothing. A second, untested hypothesis is now on the
+table: the flow's log-density is evaluated far off its training manifold (mismatched
+galaxy/scene pairs, log-weight deficits to −707, top-weight nodes still 4.65σ out) and its
+shear response is supervised only through the mean head, so the density's *shape* response is
+unsupervised. The Gaussian control has a shear-independent covariance and is structurally
+incapable of testing that, so "the flow is innocent" over-reaches; the supported statement is
+"a bank effect alone suffices in a model with no such channel".
+
+SCIENCE IMPACT: none on certified numbers. Gold-v1 (+0.245%) and fiducial Gold-V2
+(−0.123 ± 0.152%) come from the §5A transport route, which forms no score, no `I_i`, no node
+bank, and never evaluates the flow at a mismatched (galaxy, scene) pair. Confined to §5C.
+
+NEXT. (1) Decisive, one-line change: draw the test data FROM the estimator's own K-component
+mixture, where the identity must hold EXACTLY at g=0 for any K/ESS/tail. (2) Split
+`dphi/dgamma` into mean-shift vs density-shape channels. (3) Only if the bank is confirmed:
+a per-galaxy localised proposal, accepted on whether half-to-half noise falls like 1/K.
+
+## cont.166-phi-anatomy (2026-07-31) the §5C failure is NOT round-off and NOT the phi' tail
+
+Added `scripts/diag5c_phianatomy.py`, `jobs/job_diag5c_phianatomy.sh` (job 15413756).
+Four runs on `forward_ens_lr250_swa8_seed421_joint.pt`, g_true=0, delta swept
+0.02/0.01/0.005/0.0025: K=2000 at `--gal-offset 2000` (reference sample) plus a K ladder
+500/2000/6000 with galaxies PINNED at `--gal-offset 10000`.
+
+- `<I>` is a CANCELLATION, not a small number. At K=2000 (pinned) `-E_w[phi'']`=+74.45 and
+  `Var_w(phi')`=+77.37, so `<I>` = -2.92, a 4% residual of two O(75) terms. The Bartlett
+  ratio is meaningless as a relative error while the denominator is a near-zero difference;
+  its swings (+7.5 in job 15412224 vs -26.3 here on the same configuration but a different
+  xhat draw) are that cancellation moving, not the components moving.
+- Everything DIVERGES with K, pinned galaxies: `-E_w[phi'']` 27.96 -> 74.45 -> 120.21 and
+  `Var_w(phi')` 38.73 -> 77.37 -> 134.75 for K = 500 -> 2000 -> 6000, with `Var(s)` 54.8 ->
+  73.3 -> 97.2 and ESS 16.5 -> 34.9 -> 69.4. Nothing has converged; the bank is nowhere
+  near enough scenes.
+- WHERE THE VARIANCE LIVES: the nodes holding the top 90% of posterior weight (76 of 2000)
+  carry 79.9% of the `Var_w(phi')` terms and the top-99%-weight nodes carry 97.0%. The
+  variance tracks weight. The extreme phi' really are weightless (top-20 |phi'| nodes hold
+  mean weight 4e-7 at K=6000; weighted p99 of |phi'| is 47 against 482 unweighted), which
+  is why winsorising did nothing -- but that also kills the tail as an explanation.
+  Weight-truncation confirms it: keeping only the top-99.9%/99% weight leaves the ratio at
+  -26.2/-47.5.
+- NOT NUMERICAL. float64 CPU control (50 galaxies x K nodes, both f32-quantized and f64
+  inputs): measured float32 error in phi is rms 2.7e-4 (~100x the 1-ulp estimate), and it
+  changes `s_i` by 1.7e-4 rms, `Var_w(phi')` by 0.08 of 162, `E_w[phi'']` by 0.14 of 109 --
+  the Bartlett ratio is identical to 4 digits (-2.093 vs -2.093; -9.515 vs -9.481 at
+  K=6000). Across the delta sweep the high-weight-node medians move by 1e-3 (phi') and
+  3e-2 (phi''), and `Var_w`/`E_w[phi'']` move ~1%. TF32 is off for matmul.
+- WHAT MAKES phi' BIG: per-galaxy corr(log10|phi'|, log-weight deficit) median -0.45 to
+  -0.55; the |phi'|>200 population sits at deficit < -100 and carries total weight 0.0000.
+  corr with `||xhat - mu(ctx)||` is weaker (+0.17 to +0.21). Huge phi' = "this node is a
+  terrible explanation of this datum", harmless by itself.
+
+INFERRED (not measured): the excess is genuine structure of the K-component mixture score,
+consistent with the curse-of-dimensionality hypothesis. Next measurement: whether the
+components converge in K at all (extend the ladder to 3e4-1e5 nodes with pinned galaxies)
+and whether an analytic/AD phi' changes the picture (it should not, per the delta sweep).
+
+## cont.166-det-ablation (2026-07-31) the §5C failure is NOT the detection channel
+
+Added `scripts/diag5c_detablation.py`, `jobs/job_diag5c_detabl_main.sh`,
+`jobs/job_diag5c_detabl_null.sh` (jobs 15413463, 15413464). Four configurations of the same
+closure on `forward_ens_lr250_swa8_seed421_joint.pt`, delta=0.01, `--gal-offset 40000`:
+full (flow+Pdet, detected data, population terms), meas (flow only, ALL galaxies, no
+population terms), meas+ and full0 (the two half-controls).
+
+- The Bartlett ratio Var(s-<s>_sel)/(<I>-I_sel) is far from 1 in ALL FOUR, including the
+  clean measurement-only sub-problem: K=2000 g=0 gives 16.3 (full) / 26.6 (meas);
+  K=10000 g=0 gives 3.50 / 5.32. Detection is not the story; if anything it makes the
+  ratio smaller by adding curvature.
+- Population terms recomputed on 200,000 scenes and swept over delta 0.04-0.0025:
+  <s>_sel = +0.045211 (6 digits stable), I_sel = +0.00096. The K=2000 value 0.0442 was
+  already converged to 0.001. Dropping them (full0) moves the ratio only in the 4th digit.
+  They are ~20% of the numerator's standard error and cannot fix anything.
+- NULL at N_detected = 10,301: <s> - <s>_sel = +0.010 +- 0.079, i.e. UNBIASED at g=0.
+  The numerator is not the defect.
+- At g_true = 0.05, N = 10,320: numerator +0.291 +- 0.078, so d<s>/dg = 5.6 +- 2.2, while
+  Var(s) = 62.5. ghat(5.9) = 0.00466 +- 0.00124 => m = -90.7% +- 2.5%: a significant,
+  reproducible ~11x deficit, not noise.
+- d log Pdet/dg across nodes: mean +0.044, sd 0.019, range [0.001, 0.187] -- perfectly
+  behaved. d log p_flow/dg across pairs: sd 250-400, |.| p50 = 3.6, max up to 6.9e5.
+  The pathology is entirely in the flow's log-density derivative.
+
+Next: the remaining suspect is the K-component mixture score (ESS 38 at K=2000, 127 at
+K=10000) in an ~18-dim latent, not the detection head.
+
+## cont.165 (2026-07-31) §5C closure on Gold-V2 FAILS: the estimator recovers no shear signal
+
+Switched from the V1 shape flow to the Gold-V2 joint forward model at the owner's
+instruction. New: `scripts/closure_v2_lagrangian.py`, `jobs/job_closure_v2_5c.sh`.
+
+WHY V2 IS THE RIGHT TARGET. `forward_ens_lr250_swa8_seed421_joint.pt` carries
+`detection_prob` in the SAME network as `log_prob_obs`, conditions on TRUE properties, and
+has `target_dim=4` (measured e1,e2,mag_auto,log_flux_radius as OUTPUTS). That supplies all
+three things §5C needs and V1 could not give: the `P_det` channel, a true-scene latent, and
+a `P_pass` that can see a measured cut. It is NOT loadable by `PosteriorShapeEstimator`
+(which hard-requires a 2-D target and the ConditionalMeanFlow location-family structure),
+so the V1 grid path does not transfer; `lagrangian_score.py` is model-agnostic and does.
+
+THE TEST. Draw the measured vector FROM the flow at known gamma, draw detection from the
+model's own head, then ask (5.8)/(5.9) to return gamma. Model and data agree by
+construction, so this cannot be quadrature-limited the way cross-check (i) was.
+`S_gamma` uses `primary_only=True`, matching the checkpoint's `primary_only_shear`
+metadata. `P_pass = 1` (no measured cut yet), so the population term is detection alone.
+
+RESULT: IT FAILS. gamma sweep at n_node=10000, delta=0.01, 4000 galaxy scenes:
+
+      gamma_true    0.00      0.02      0.05      0.10      0.20
+      ghat (5.9)  -0.0002   +0.0032   +0.0029   +0.0106   +0.0096
+      <I>          +2.15     +5.12     +7.12     +4.27     -6.26
+
+The NULL PASSES (-0.0002), so there is no additive bias. But ghat is ~0.01 regardless of
+gamma -- flat, non-monotonic, and at the noise level sqrt(1/(N<I>)) ~ 0.014. **The
+estimator recovers essentially no shear signal.** (5.8) is worse: its Louis denominator is
+unstable and changes sign (<I> swings +2.2 to -6.3), which for a MEAN information is
+impossible for the true model.
+
+WHAT IS RULED OUT. Not the derivatives: (5.9) is stable to 3 digits across delta
+0.02/0.01/0.005. Not the physics: model and data agree by construction. Not the node-bank
+size: sweeping n_node 400/2000/10000/40000 does not converge it, and ESS stays at 2-4% of
+N at every size. Not the proposal: a `--self-bank` run, where each galaxy's OWN true scene
+is in the bank, fails the same way (<I> = -76). Not out-of-domain evaluation on its own:
+applying the checkpoint's `true_cut` (Re>0.3, mag<26 -- which removes 61% of catalogue rows,
+so the earlier banks were mostly out of domain) changes the numbers but not the verdict.
+
+HYPOTHESIS TESTED AND REFUTED. I proposed that the posterior weights barely track `xhat_i`,
+so `s_i` collapses to a constant. Measured (self-bank, n_node=2000): total-variation
+distance of each galaxy's weight row from the population mean row is **0.911** (median
+0.925) on a 0-1 scale, ESS 42 per galaxy against 1371 for the mean row, and each galaxy's
+OWN true scene ranks **median 9 of 2000** by weight (top-1% 64.9%). The weights are
+strongly galaxy-specific and the likelihood discriminates well. The hypothesis was wrong.
+
+WHERE THE FAILURE ACTUALLY IS: THE INFORMATION EQUALITY, NOT THE SCORE. A direct check of
+Fisher's identity -- differencing the EVIDENCE `log Z_i(g) = log mean_k exp(phi_k(g))`,
+which shares no arithmetic with `score_and_information` beyond `phi` -- agrees with the
+weighted form:
+
+      <s>_Ew = +10.811   vs   <s>_direct = +10.863     corr 0.9993,  rms|ds|/sd = 3.8e-2
+      <I>_Louis = -123.5 vs   <I>_direct = -132.2
+
+So the estimator computes the model's score faithfully; there is no weighting or derivative
+bug. But at gamma_true = 0.1 the two moments are inconsistent:
+
+      dE[s]/dgamma ~ 10.8/0.1 = 108        Var(s) ~ 729        ratio 6.7
+
+Bartlett requires these to be EQUAL. `ghat(5.9) = E[s]/E[s^2]` therefore comes back
+attenuated by exactly that ratio: measured 0.0146/0.1 = 0.146 = 1/6.85. The estimator is
+not broken; it is being fed a second moment that is ~7x too large.
+
+WHY THE SECOND MOMENT IS INFLATED (leading explanation, partially supported). `s_i` has
+sd ~27 where a physically sensible per-object score is O(1-10), so it is dominated by rare
+nodes with extreme `phi'` -- self-normalised importance sampling in the heavy-tailed regime,
+where the estimator's variance converges slowly or not at all. Support: ESS is 2-4% of N at
+every bank size. Against: raising n_node 2000 -> 10000 lifts ESS 42 -> 101 but moves
+`ghat(5.9)` 0.0105 -> 0.0092, i.e. slightly the WRONG way, which simple MC noise would not
+do. So heavy tails are indicated but not established, and the ESS-only story is incomplete.
+`<I>` is positive at small gamma (+2.2 at 0, +5.1 at 0.02, +7.1 at 0.05) and goes negative
+by gamma=0.2 (-6.3); the attenuation is already -84% at gamma=0.02 where `<I>` is healthy,
+so a negative information is a second symptom, not the cause.
+
+NEXT DIAGNOSTIC. Measure the tail directly: the distribution of `phi'` across nodes, the
+weighted contribution of the top-1/top-10 nodes to `s_i` and to `Var_w(phi')`, and whether
+a defensive proposal (prior mixed with a per-galaxy component) or clipping restores the
+information equality. The test to satisfy is `Var(s) = dE[s]/dgamma`, not `ghat` itself --
+that is the quantity that is failing and it is measurable without knowing the answer.
+
+STATUS. §5C's machinery is validated exactly on A.7 (cont.164) and reproduces brute-force
+curvature; what is NOT working is the full-scene, prior-sampled node bank on the real V2
+model. Do not read any V2 §5C number as a science result yet.
+
+## cont.164 (2026-07-31) INFERENCE.md §5C implemented: the Lagrangian score, exact against A.7's closed forms
+
+User: "we can try to implement 5C now. can you read it again -- also MATH.md and form a plan".
+
+WHAT §5C IS, AND WHY IT IS NOT OPTIONAL. §5C is not an alternative estimator — §5C.1 is
+titled "The same model, reparametrized" and states that (1.1) and (5.4) are the same
+integral. Shear acts on the prior SAMPLES rather than on the prior DENSITY, so `p_0` is
+needed only as a sampler. What that buys is concrete, and two of the three items are live
+defects in the existing §5B code rather than refinements:
+
+  1. `score_inference.py` has NO detection channel. `MATH.md` §7(a) measures the omitted
+     channel at 17–760% of the score, reversing its sign at one of four test points.
+  2. It has NO `I_sel`. A.7 gives the closed form: at a cut on the median `I_sel/I = 2/pi`,
+     so "an estimator that centres the score but leaves the denominator alone reports
+     m = -64%". For a spin-2 shear the NUMERATOR term `<s>_sel` averages away by
+     orientation and `I_sel` is the only selection term left (§5B.2) — i.e. the one we are
+     missing is precisely the one that survives for us.
+  3. Its latent is capped at a 2-D isotropic shape grid, because the Eulerian generator
+     needs `grad log p_0` in closed differentiable form. That is the requirement §5C removes.
+
+FILES. New `sbs_shear/lagrangian_score.py` (assembly of (5.8)/(5.9) from one scalar curve
+per (object, node) plus one for the population), new `tests/test_lagrangian_score.py`
+(10 tests), new `scripts/check_lagrangian_agreement.py` + `jobs/job_lagrangian_check.sh`.
+`sbs_shear/posterior_shape.py` gains `log_likelihood(..., shift_rows=)`. `INFERENCE.md` and
+`MATH.md` synced into the branch from the main working tree (the branch copy predated
+§5C.5, so the equation tags the code cites did not resolve here).
+
+DESIGN CALL: finite differences, not autograd. §5C.5 point 1 blesses "a central second
+difference in gamma at fixed node", because holding the node fixed IS common random
+numbers. So v1 needs no JVP through the flow — 3 `log_prob` evaluations per axis (5 with
+Richardson) — and `grad^2 log p_flow` is never formed. Posterior weights are just
+`softmax(phi_k(0))`, since `phi_k(0) = log L_k + log Pdet_k`.
+
+VALIDATION (login node, `py31`; the whole suite is 34 passed). Everything is asserted
+against A.7's closed forms, so these are exact statements, not regression values:
+
+      s_i = y/nu^2 and I_i = 1/nu^2                            to 1e-6
+      <s>_sel = lambda/nu, I_sel = lambda(lambda-a)/nu^2       to 1e-5
+      A.7b's own check  I - I_sel = Var[y|y>c]/nu^4            to 1e-5
+      full estimator == the one built from analytic ingredients to 1e-5
+
+  m = +1.224% for (5.8) and -1.303% for (5.9) at gamma = 0.05 is the exact value of the
+  single Newton step (`MATH.md` A2), converged: node count 601->2401, span 8->10, delta
+  0.01->0.002, n 20k->200k all move it by <0.03%.
+
+  Centring, both moments: uncentred m = +1773%; numerator-only centring gives exactly
+  `-I_sel/I = -68.7%`. (5.9b) predicts the gap between the two estimators to 2%.
+
+  `P_det`: including it in the curve reproduces direct `d_gamma log A` to 1e-6; keeping
+  `P_det` in the WEIGHTS but dropping its derivative — the §5C.2 transcription trap — is an
+  O(1) error that flips a sign.
+
+TWO NOTES ON `MATH.md` §7, both minor and neither affecting the maths. §7(a)'s exact digits
+need a sigmoid whose parameters the document does not state, so the test reproduces the
+claim with a stated sigmoid rather than the digits; the structure is confirmed, including
+that "without P_det" means keeping it in the weights and dropping its derivative. §7(b)'s
+central values (-0.8% / -3.3%) sit about 2.5 sigma of their own quoted error from the
+converged +1.224% / -1.303%; their DIFFERENCE (-2.5%) agrees with (5.9b) on both sides, so
+this looks like Monte-Carlo scatter in the quoted run rather than a discrepancy.
+
+ONE REAL TRAP FOUND IN EXISTING CODE. `posterior_shape.log_likelihood` row-max-shifts its
+output. That is exact for anything reweighting over the grid (softmax is shift-invariant)
+and is what keeps fp16 in range — but it is wrong for §5C, where the same rows are compared
+across a family of sheared grids: the row maximum itself moves with gamma, so differencing
+shifted rows puts `-dM/dgamma`, a nonzero per-row constant, straight into `s_i`. Now
+opt-out via `shift_rows=False`, which refuses fp16 because the guard being disabled is
+exactly the shift.
+
+COMMANDS. `python -m pytest tests/ -q` (34 passed, 93 s, `py31` — note `sims1` has no
+pytest installed despite CLAUDE.md; worth fixing). Job 15390873 =
+`ROWS=100000 sbatch --gpus-per-node=a40:1 jobs/job_lagrangian_check.sh`.
+
+CROSS-CHECK (i) ON THE REAL FLOW: QUADRATURE-LIMITED, AND CONVERGING. Jobs 15390873
+(finite differences, grid-n 61) and 15394036/15394748 (autograd) all report per-object
+disagreement far above the 1e-2 tolerance I set. It is not a bug in either side. The
+Eulerian/Lagrangian identity is an integration by parts: exact for the integrals, but on a
+finite grid only as good as the node bank, and the Eulerian side must resolve
+`grad log p_0` there. Refining the grid converges it (job 15394748, 2000 rows):
+
+      grid-n   G      ESS    corr g1  corr g2   worst rms |Ds|/sd(s)
+      41       1225    256    0.546    0.426     1.94
+      61       2765    575    0.605    0.770     1.40
+      81       4921   1023    0.874    0.893     0.58
+
+ESS is ~21% of G at every resolution, so the posterior is not collapsing onto a few nodes
+— this is resolution, not weight starvation. grid-n 121 OOMed (the Eulerian `--chunk` was
+not lowered along with `--deriv-chunk`; only the latter is sized in the sweep script).
+
+Two things I got wrong along the way, both corrected here. (a) I read
+`|u_fd-u_closed|/rms = 8.02e-01` as a defect in the prior's spline; a HEALTHY toy prior
+gives 8.18e-01 at the same grid-n 61 and 1.3e-2 at n=41, so it is a resolution artifact of
+a max-over-nodes metric. (b) I reported that autograd made the disagreement worse than
+finite differences (0.40 vs 0.60) — that comparison was confounded, since the two runs
+also differed in grid-n. At the SAME grid-n 61 autograd is better on both axes
+(0.605/0.770 vs 0.595/0.602). Finite differences do still fail to converge on this flow
+(sd(phi'') grows 174 -> 906 as delta shrinks 0.04 -> 0.0025), so autograd remains the
+right default, but it was not the cause of the disagreement.
+
+WHAT IS ACTUALLY VALIDATED. The machinery, exactly: A.7's closed forms (above), and a 2-D
+Mobius toy using the SAME grid, prior and `ShapeScoreNodes` as the real run but an analytic
+location-family flow, where the two forms agree at corr = 1.000000 with rms converging
+6e-3 -> 1.7e-4 under refinement, under every prior degradation tried (knots 6-30, bins
+120-600, 10x fewer samples).
+
+A SEPARATE FINDING, ABOUT EXISTING CODE: THE EULERIAN INFORMATION IS WRONG, INCLUDING THE
+PRODUCTION ROUTE. `I_i` is the DENOMINATOR of `ghat = sum s / sum I`, so an error in it
+scales the recovered shear one-for-one. `scripts/toy_information_routes.py` (new) measures
+all three routes against brute-force `-d2/dg2 log p(xhat|g)` by direct quadrature, in the
+2-D Mobius toy that uses the same grid, prior class and `ShapeScoreNodes` as the real run:
+
+      prior config              TRUTH    Eul-analytic   Eul-FD (default)   Lagrangian
+      healthy                  +1.9026      +1.021          +0.696          +1.9026
+      fewer knots k=6          +1.9025      -0.382          -0.492          +1.9025
+      10x fewer samples        +1.9024      +2.442          +1.896          +1.9024
+      overfit k=24 b=400       +1.9007      -3.461          -5.633          +1.9007
+      very overfit k=30 b=600  +1.9003     -64.641         -47.009          +1.9003
+
+The Lagrangian value is exact to 4-5 decimals in every row. Both Eulerian routes are wrong,
+and the FINITE-DIFFERENCE one -- which is `score_pass`'s default (`analytic_info=False`),
+i.e. what `mode_null` and `mode_constgold` actually use -- is no better than the analytic
+Louis and is sometimes worse. It is wrong by 2.7x on the HEALTHY prior, the configuration
+closest to the real one (928,900 shapes, 12 knots, 120 bins). Two Eulerian routes agreeing
+would not have caught this; they fail together.
+
+Why the Lagrangian is the correct one, not merely different: it is stable under refinement
+(1.9024 at grid-n 41, 81 and 161, and at rmax 0.95 and 0.99) while the Eulerian wanders
+(0.755, 6.95, 6.85, 2.86). The mechanism is the one `score_inference.py`'s own docstring
+warns about -- with nodes fixed in the LENSED variable, the sheared prior's support edge
+moves across a fixed truncated grid, so prior mass is not conserved as gamma varies. In the
+Lagrangian form the nodes and their prior weights are fixed by construction and the mass is
+exactly conserved; that is §5C.1's "pushing samples carries the Jacobian automatically".
+
+SCOPE. This does NOT touch the certified Gold-v1 `m`, which is the TRANSPORT route (§5A,
+`m = R_sim/(R_flow+R_blend)-1`) and never forms `I_i`. It affects `ghat` from the score
+route in `eval_score_response.py` (§5B). Caveat: measured in the toy, where truth is
+computable; there is no ground truth for `I_i` on the real flow, so the real-run magnitude
+is inferred from the toy plus the refinement-stability argument, not measured directly.
+`mode_closure`'s existing information cross-check WOULD flag it (healthy ratio 0.696/1.021
+= 0.68), so the warning signal is already in the code and worth reading.
+
+LIMITATIONS. The shape channel is the only place both forms are computable, so cross-check
+(i) validates the reparametrization, not the full (5.8) estimator. `P_det` and the
+population terms are stage 4; the multi-dimensional latent that is §5C's actual payoff is
+stage 5 and needs an owner decision on the scene sampler. Autograd memory scales with
+`deriv-chunk * G` (measured: 32 x 2765 = 88k rows needs >14 GB), so large grids need small
+chunks.
+
+NEXT. (1) Decide whether the Eulerian Louis information matters enough to fix or to
+retire in favour of the Lagrangian one. (2) Stage 4: wire the trained selection model in as `P_det`
+inside the curve, add `<s>_sel`/`I_sel` from the same node bank pushed through `S_gamma`,
+and re-run `null`/`constgold` — this is where the missing `I_sel` becomes a number.
+(3) Stage 5: prior-as-sampler over intrinsic (shape, size, flux, sersic, neighbour scalars),
+which is the structural reason to have done any of this. (4) §5C.3's injection already
+exists in the Eulerian code (`blend_stencil_on_grid`); once the population terms exist it
+must ALSO shift `P_pass` (§5C.5 point 3), or selection and blending do not compose.
+
+## cont.163 (2026-07-27) `figv2_fig3`'s -0.46% is a CANCELLATION: its own dumps give +3.49% on the acceptance population
+
+User challenged cont.162 — "is this transport? not sure I believe it. check out
+`figv2_fig3_bias_true_neighbours.png`, most of seeds have within 1% m". Both answers are yes and
+no respectively, and the figure settles the more important question against itself.
+
+IS IT TRANSPORT? Yes, both are, and they are the same recipe. The figure's `R_flow` is
+`response.flow_response` — the antithetic +-g secant with shear applied analytically to the
+intrinsic ellipticity via `apply_shear_to_ellipticity`, pushed through the model. cont.162's
+`R_flow` is the mean-head +-delta response in `eval_constgold_closure.py`. Neither is a fit.
+
+WHY THE NUMBERS DIFFER. `figv2_fig3` (`job_v2_constgold_8seed.sh`) is a DIFFERENT measurement on
+all three axes: the coupling-pinned TABULAR family
+`measurement_flow_g0_ngmix_ablate_s2c_coupling_lt500_s50*` (8 seeds, not `forward_ens_*seed42*`),
+`--min-case 40` with NO true cut (its own annotation `R_sim = 0.4534` is the global, uncut
+number), and the `extnbrho_c40-139` emulator rather than the 7"-gated one. So it is not in
+conflict with cont.162's -2.86% — it is not measuring the same thing.
+
+THE TEST. `scripts/split_v2_dumps_acceptance.py` (new) re-reduces the SAME per-object dumps the
+figure is drawn from (`derisk/v2_constgold_dumps/v2_perobj_s*.feather`, 26,926,617 rows x 8
+seeds), joining true size from the catalogue on (case, input_index) — all rows matched, row order
+verified identical across seeds, abort on either failing. Job 15294207.
+
+      band                          m (8 seeds)  seed sd    <R_sim>  <R_flow>  <R_blend>
+      GLOBAL  = published figure       -0.46%     1.00%      0.4534    0.2888    0.1593
+      ACCEPTED  Re>0.3 & mag<26        +3.49%     0.78%      0.8605    0.6844    0.1371
+      REJECTED                        -15.39%     2.59%      0.1419   -0.0139    0.1763
+
+GLOBAL reproduces the figure's annotation exactly (-0.46%, std 1.00%, sem 0.35%, N=8), so this is
+the figure's own arithmetic and not a re-derivation. **The published closure is a cancellation.**
+On the deliverable population the same 8 seeds read **+3.49% +- 0.78%**, ~12x the |m| < 0.3%
+target, and ALL EIGHT are positive (+2.11 to +4.75) — not seed noise. The rejected 57% carries it
+back with a NEGATIVE `R_flow` (-0.0139) propped up by `R_blend` (0.1763): the identical structure
+cont.161 found for V1 (accepted +6.53%, rejected -19.43%, `R_flow` negative on rejected). Three
+model families now show it, so it is a property of the uncut population, not of any one flow.
+
+NET. Both things called V2 miss the deliverable, in OPPOSITE directions: the tabular family
++3.49% (accepted, 8 seeds, `c40-139` emulator), the bright-trained DeepSets ensemble -2.86%
+(accepted, 6 seeds, 7"-gated emulator). Their `R_blend` on the accepted band differs by 67%
+(0.1371 vs 0.2291) and their `R_flow` by 10%, which is why they land either side of zero. The
+`<R_sim>` cross-check is reassuring: 0.8605 (cases >=40) vs 0.8619 (cases 0-39), independent case
+ranges agreeing to 0.16%, so the truth side of both is sound.
+
+CAUTION FOR FUTURE PLOTS: `figv2_fig3` is labelled "Gold-V2, constgold, true neighbours" with no
+indication that it is the uncut population. Any figure quoting `R_sim = 0.4534` is global; the
+deliverable's is 0.861.
+
+## cont.162 (2026-07-27) the acceptance check re-run with the REAL V2: it does NOT close, and constgold + half-shear AGREE on why
+
+User: "rerun that check with the real V2 model" — i.e. cont.161's acceptance-population bias
+check, this time on `forward_ens_lr250_swa8_seed42{1..6}_joint.pt` (`metadata.true_cut =
+(0.3, 26.0)`, `primary_only_shear = True`) rather than the ablation rung cont.161 retracted.
+Job 15294140 (`jobs/job_v2_acceptance_check.sh`), 6-seed ensemble, 7"-gated emulator
+`blend_lookup_extnbrho_d7_c0-39`, 7" isolation, cases 0-39, `bridge = 1.0`.
+
+FILES: `jobs/job_v2_acceptance_check.sh`; `scripts/apply_bridge_closure.py` (new);
+`scripts/eval_constgold_closure.py` (+ACCEPTED/REJECTED bands on identical rows, +per-band seed
+scatter). Dumps `derisk/v2acc_{accept,relaxed}.npz`.
+
+### The answer: no, it does not close
+
+      band                         m          seed sd        N
+      ISOLATED (pure flow)      +4.01%         3.55%     2,033,107
+      BLENDED                   -9.58%         3.48%     2,634,057
+      ALL  <- the deliverable   -2.86%         3.34%     4,667,164
+
+Run 1 reproduces `cl250_15215739` to the digit. Target is |m| < 0.3%; this is ~10x that, and the
+6-seed scatter (3.3%) is itself 11x the target, so an ensemble this size cannot even resolve the
+spec. **The premise that motivated the re-run does not hold**: the pair-matched half-shear
+validation for these exact six checkpoints (`selfresp_v2_15217379`) reads `flow/R_hs - 1 =
+-5.24%` on the ISOLATED acceptance set — that log is where the deficit was FOUND, not a pass.
+It is `Gold-V2.md`'s own "V2 (DeepSets), equal-weight -5.24%" row, attributed there to the
+DeepSets trunk and "resolved" only by dropping DeepSets for the tabular S2 rung.
+
+### The two sims agree — so this is the MODEL, not transport or extraction
+
+Same six checkpoints, two independent sims, same population definition (true cut, 7" isolation):
+
+      constgold  m_iso = +5.15%  (no blend)  <=>  R_flow/R_sim - 1 = -4.90%
+      half-shear                                 R_flow/R_hs  - 1 = -5.24%
+
+Agreement to 0.34 pt. The V2 flow under-responds ~5% on isolated bright galaxies, and both sims
+say so independently. That also settles the estimator BRIDGE, which is worth 8.5% on a 0.3%
+target and flips the sign of the answer: the constgold/half-shear agreement above only holds at
+`bridge = 1.0` (at 1.0853 constgold would read `+3.21%` against half-shear's `-5.24%`, an 8.5 pt
+break). Directly: on the SAME 7"-isolated true-cut set the two sims' responses are
+`R_sim_iso = 1.0479` vs `R_hs_iso = 1.0547`, ratio **0.9936** — there is no 8.5% estimator gap.
+`eval_estimator_match`'s 1.0853 was measured with **3"** `neighbored` isolation and a single-leg
+FORWARD extraction on the ngmix side, i.e. it is the known extraction/isolation artifact, not an
+estimator conversion. `eval_constgold_closure.py`'s `--bridge` default of 1.0853 is therefore
+misleading; `apply_bridge_closure.py` prints all three columns so the choice is never silent.
+
+### The -2.86% is a cancellation of two errors, not a closure
+
+      ISOLATED: R_sim 1.0479 vs R_flow 0.9965  -> flow UNDER-responds  (m > 0)
+      BLENDED : R_sim 0.7184 - R_flow 0.5654 = 0.1530 needed, emulator supplies 0.2291
+
+The 7"-gated emulator over-supplies R_blend by ~50% on this population (`est_match` independently
+implied 0.1704). Under-responding flow (+) and over-supplied blend (-) partially cancel: no-blend
+ALL is +14.44%, with blend -2.86%. Two large errors, not one small one.
+
+### Outside the training domain V2 is invalid — the V1 cancellation does NOT reproduce
+
+Relaxing the load cut and splitting on IDENTICAL rows (10,762,539 source-selected):
+
+      ACCEPTED  -2.86%      REJECTED  -52.06%      ALL  -17.60%
+
+V1's global sub-percent was a cancellation between +6.53% accepted and -19.43% rejected
+(cont.161). V2 does not reproduce that: trained behind `true_cut = (0.3, 26.0)`, it over-predicts
+the response of rejected rows almost 2:1 (`R_flow` 0.2906 vs `R_sim` 0.1393). Expected, not a
+new defect — the deliverable is defined on the accepted population — but it does mean **no V2
+number may be quoted on an uncut catalogue**.
+
+### NEXT
+
+1. The ~5% isolated shape deficit is the single blocking term and is already diagnosed
+   (`Gold-V2.md`: DeepSets trunk). Deciding between the DeepSets joint model and the tabular S2
+   rung is a modelling decision for the owner, not something this check can settle: only
+   `forward_ens_*` is trained on the bright population, only the S2 rung reproduces V1's response.
+2. The emulator's ~50% R_blend over-supply on the 7"-gated acceptance set is a SECOND independent
+   term of the same size. Both must be fixed; fixing either alone makes ALL worse, since they
+   currently cancel.
+3. Seed scatter 3.3% over 6 seeds means a spec-resolving ensemble needs ~O(100) seeds, or a
+   variance reduction. Worth costing before any further 6-seed run is treated as decisive.
+
+## cont.161 (2026-07-27) §5B score inference implemented and VALIDATED-BUT-PARKED; the durable result is a TRANSPORT fact about the acceptance population
+
+User: "realize what's written in the md into code — 5B. We expect the computed R from data to be
+consistent with what we measured from constantgold." Built §5B (per-object score `s_i`,
+information `I_i`, `ghat = sum s / sum I`) on the existing `posterior_shape.py` node bank and ran
+it on constgold. Branch `worktree-inference-5b`, rebased onto the V2 commit `7a82125`.
+
+FILES: `sbs_shear/score_inference.py`; `scripts/eval_score_response.py` (modes
+unit/closure/null/constgold); `scripts/analyse_score_perobj.py`,
+`scripts/analyse_score_acceptance.py`, `scripts/compare_transport_score.py`,
+`scripts/compare_v1_v2_seeds.py`; `tests/test_score_inference.py` (7 tests, all pass);
+`jobs/job_score_5b.sh`. `cip` is often backed up — override with
+`sbatch --partition=inter --gpus-per-node=a40:1`.
+
+### THE RESULT THAT MATTERS (transport only; no §5B machinery involved)
+
+`GOALS.md:9` defines the deliverable as **|m| <= 0.3% on the true-property-selected
+population**, and `GOALS.md:54` gives that cut as `Re > 0.3`, `mag < 26`. Only **43.3%** of
+source-selected constgold rows pass it. Transport (V1 certified flow, 4 seeds, 400k rows):
+
+      sample                          m (4-seed mean +/- seed sd)
+      FULL catalogue                   +1.05% +/- 0.68%
+      ACCEPTANCE mag<26 & Re>0.3       +6.53% +/- 0.78%
+      rejected                        -19.43% +/- 0.54%
+
+**The global sub-percent is arithmetically a CANCELLATION.** `m` is a ratio of means, so:
+
+      R_sim   = 0.8773 x 0.4335 + 0.1360 x 0.5665 = 0.4574   (full 0.4573)
+      R_model = 0.8177 x 0.4335 + 0.1672 x 0.5665 = 0.4492   (full 0.4492)
+                   ^acceptance      ^rejected
+
+The rejected rows have almost no true response (`R_sim` = 0.136) but a comparable MODELLED one,
+because `R_flow` there is NEGATIVE (-0.009) and `R_blend` (0.176) carries it — so they
+over-predict hard and offset the acceptance rows. Gold-v1's certified +0.245% is the GLOBAL,
+uncut number and was never a claim about the cut population; cont.110c already had deployed
+`true Re>0.3 = +5.49%`. What is new here is measuring it on the `GOALS.md` cut with both
+conditions jointly, and confirming it by transport rather than only by the score route.
+
+### §5B — machinery validated, science value nil
+
+VALIDATION. Node bank (mode `unit`, no flow, no data): `E_0[u] = 0` to 5e-16;
+`E_0[du] + Var_0(u)` = 0.12% of `Var(u)`; FD generator vs the closed form
+`u_a = e_a[4 - 2 psi'(r^2)(1-r^2)]` agrees to 1.8e-4 rms; Louis vs `-d_gamma s_gamma` agree to
+0.06%. Closure (data drawn FROM the flow at known shear, 1M rows) returns the injected shear to
+**+0.24%**. Two prior-fitting bugs found by those diagnostics and regression-tested:
+  (a) binning `|eps|` in `r` and dividing by `2 pi r` puts a spurious `1/r` in the generator —
+      Bartlett curvature DIVERGES as `1/delta`. Fix: fit `psi(t)`, `t = |eps|^2`, in equal-area
+      annuli, so `phi'(0) = 0` by construction.
+  (b) quantile knots hard against the data boundary leave the first spline span unconstrained;
+      on a Gaussian test prior with exact `psi' = -8.681` this read -4.5 and injected a
+      2%-of-Var(u) information floor. Fix: `knot_margin`, shrinking the quantile LEVELS.
+
+VERDICT. Put beside transport on the same rows and the same shear-independent bins
+(`compare_transport_score.py`), §5B agrees with transport everywhere honest — acceptance
++6.81 vs +7.30, rejected -21.65 vs -18.68, full -0.30 vs +1.82 — and is WORSE in the
+extreme-blend tail (`R_b 0.379-2.975`: score +55.84% vs transport +1.43%), because information
+weighting drags in exactly the objects whose response the bare flow lacks. So §5B sees nothing
+§5A does not. **Parked.** It is also 2-D-shape-target-only by construction
+(`PosteriorShapeEstimator` rejects anything else), so it does not apply to a 4-D joint model
+without extending the node bank over the extra output dimensions.
+
+RETRACTED from an earlier draft of this entry: the story that §5B's global `ghat/g = 0.997` on
+constgold was information weighting legitimately suppressing the blended objects the flow gets
+wrong. It is the same cancellation as above (+6.81% acceptance vs -21.65% rejected), not a
+property of the weighting.
+
+### §5C.3 blend injection — INCOMPLETE, DO NOT QUOTE
+
+`blend_stencil_on_grid` returns both terms from one stencil along `w_1`, `w_2`, `w_1+w_2`: the
+score `-w_a . grad log p_flow` and the information `H_ab = w_a^T grad^2 log p_flow w_b` that the
+first implementation dropped. Fixed on the way: the Hessian was stored as float16, whose 65504
+ceiling the `1/delta^2 = 400` times `|w|^2` routinely exceeds, so deep-tail nodes overflowed to
+`inf` and `0 * inf` turned those objects' information into NaN (job 15286662, cancelled).
+
+But the CLOSURE CONTROL FAILS. With `--closure-extra-perobj --inject-blend` the injected model
+IS the generating model, so `ghat/g` must read 1.000:
+
+      form      ghat/g    leg +g <I>   leg -g <I>
+      mobius    1.6479      1.044        5.566
+      flat      1.6008      1.234        5.567
+
+The two FORMS agreeing to 3% of a 65% error kills the functional-form hypothesis. The diagnostic
+is the leg asymmetry: two legs differing only by the sign of a 0.02 shear cannot have information
+differing by 5x (bare runs agree to three decimals, 3.485 vs 3.483), and the MEAN of the two
+injected legs (3.31) sits on the bare value (3.41) — the injection contributes something ODD in
+the leg sign. At 40k rows it very nearly passes (`ghat/g = 0.9755`) and the legs are symmetric
+(5.52 vs 5.67), so it is a TAIL effect: a few extreme-`R_blend` objects, where `|w| ~ 3 R_b`
+reaches ~11 in standardised units and `H ~ |w|^2`, blow up the curvature term.
+`scores_from_loglike` takes a `diag` dict splitting I11 into the FD and Hessian parts per leg to
+localise it. **All injected numbers are provisional.** Bare numbers are unaffected (they never
+touch the stencil).
+
+### ADDITIVE BIAS (mode `null`) — owner says already fixed upstream
+
+Three zero-shear runs separate the causes:
+
+      data source                                   ghat (truth 0)
+      flow-generated, shapes from the PRIOR         +0.00018 +/- 0.00069
+      flow-generated, shapes from the CATALOGUE     +0.00064 +/- 0.00072
+      REAL measured ngmix shapes, g=0 catalogue     gamma1 -0.00183 +/- 0.00072
+                                                    gamma2 +0.00781 +/- 0.00071   <- 11 sigma
+
+Deliberately mismatching the prior moves `ghat` by +0.0005, so prior misspecification is NOT the
+cause; it is the flow's likelihood against real measured shapes, and it is component-asymmetric.
+OWNER: this is the known misdefined-centroid additive bias in `g2`, already fixed in a newer
+catalogue and model — which this branch does not have, so the `null` test should be re-run
+against the fixed pair before this is read as a live problem.
+
+### SOURCE SELECTION AND LEG MATCHING (owner question; measured, not assumed)
+
+`DEFAULT_SELECTION_CUTS` are on TRUE properties — `r_input_p` in (18,28), `Re_input_p` in
+(0.1,1.5), `distance < 5"` or isolated — identical in both legs, so they DEFINE the sample
+rather than select on the data and cannot bias the response. They remove 9.7% of constgold,
+almost all of it the true-size cut (9.64%). **They are exactly the cuts the flow was trained
+behind**, proven by replaying today's `source_select_selection` over the first 100 batches of
+the g0 catalogue and reproducing the s501 training log's own counters to the row
+(`raw=6,543,416  source_cut=5,798,538  selected=5,798,538`). The checkpoint does NOT record the
+cuts and the repo has a single snapshot commit, so the replay is the only thing that settles it.
+Also learned: `selected == source_cut` exactly, i.e. the training catalogue is
+detection-pre-filtered and the flow has never seen an undetected object; and only the PRIMARY is
+cut (`source_select_detection` touches `_p` columns only; `cuts[0]`/`cuts[2]` are unreferenced),
+so neighbours are full-population as intended.
+
+LEGS ARE ALREADY MATCHED row-for-row — one row is one input galaxy carrying `measured_*_plus`
+and `measured_*_minus`, and `flow_response` adds common random numbers across legs. The real
+unmatched selection is upstream and invisible in the file: the schema has NO per-leg detection
+flag and ZERO rows with an unmeasured leg, so the catalogue is the both-legs-detected
+INTERSECTION. That IS shear-dependent, it is the only genuine cut in the chain, and its size is
+known (`R_full/R_both - 1` = -0.88% all, -0.08% isolated, -1.11% blended); the certified +0.245%
+excludes it by construction.
+
+`--no-source-selection` was added but its run is NOT interpretable: the BlendEMU lookup was built
+behind the same cuts, matched only 90.4%, and unmatched rows were filled `R_blend = 0`.
+
+### ⚠ RETRACTED IN FULL: the V1-vs-V2 comparison
+
+I evaluated `sbsi_caches/ablation/measurement_flow_g0_ngmix_ablate_s2c_coupling_lt500_*` and
+called it V2. It is an ABLATION RUNG (measured->true conditioning swap + 4-D output) trained by
+`train_measurement_model.py` on the FULL source-selected population — its training log shows
+`source_cut = 5,798,538 / 6,543,416`, no true cut. **The actual V2 is
+`sbsi_caches/forward_proto/forward_ens_lr250_swa8_seed42{1..6}_joint.pt`** from
+`train_joint_forward.py`, `metadata.true_cut = (0.3, 26.0)`, `primary_only_shear = True` —
+trained ON the bright population. On the same true-cut population the real V2 has
+`<R_flow> = 0.7532 +/- 0.0298` against the ablation model's 0.6814 that I measured, ~10% higher:
+the ablation model under-responds there precisely because it was trained on the fainter full
+population, so my "+6.27%" measured a train/eval population mismatch, not V2. I also paired it
+with the wrong emulator (`extnbrho_c40-139` rather than the 7"-gated `extnbrho_d7_c0-39` the V2
+chain uses). Also retracted: a single-seed claim that V2 fixed the `Re 0.10-0.24` bin
+(-18.93% -> +0.92%); over 4 seeds that bin is `-12.83% +/- 11.42%` — scatter as large as the
+effect.
+
+On record for the real V2 (`cl250_15215739`, 6-seed ensemble, constgold true-cut, N=4,667,164):
+`<R_sim> = 0.8619`, `<R_flow> = 0.7532`, isolated band (pure flow test, `R_blend = 0`)
+`m_iso = +5.15%` with 3.63% seed scatter, against the certified measured-conditioned flow's
+-8..-18% in the same band. That is the CONSTGOLD closure; the owner's validation is on
+PAIR-MATCHED half-shear galaxies of that population — the cleaner test, and the one
+`primary_only_shear=True` training is matched to. Do not conflate them.
+
+### NEXT
+
+1. The +6.5% on the deliverable population is explained by NEITHER candidate — not
+   errors-in-variables (V2 conditioning does not move it) and not blending (it is +4.8% on
+   essentially unblended acceptance objects). That is the open model question.
+2. Re-run `mode null` against the centroid-fixed catalogue + model before treating the `g2`
+   additive bias as live.
+3. §5C.3's tail bug, only if §5B is ever un-parked.
+4. Anything V2 in this branch must use `forward_proto/forward_ens_*_joint.pt` and the 7"-gated
+   `blend_lookup_extnbrho_d7_c0-39`, via `eval_constgold_closure.py` / `eval_joint_triad.py` —
+   NOT `eval_score_response.py`, whose loader and node bank are V1-shaped.
+
+
+---
+
+# Main line resumes
+
 ## cont.169 (2026-08-17) repo cleanup + blendemu decoupling (user)
 
 Housekeeping pass over the working tree, no compute and no science change.

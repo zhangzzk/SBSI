@@ -49,3 +49,26 @@ evaluation sets and both models (+16% on constgold, +7% on half-shear).
 
 NOTE: the two `plot_*_labelfix.py` files import `plot_fid_flow_figures` from `../plotting/`; run
 from there or fix the path if resurrected.
+## The §5C probe fleet (`diag5c_*.py`, archived 2026-08-01)
+
+27 probes and their 31 job scripts (`../jobs/archive/job_diag5c_*.sh`, `job_lag5c_sweep.sh`) from
+the investigation of `INFERENCE.md` §5C, the Lagrangian score. **Closed, not paused.** §5C's
+machinery is exact against the closed forms of `INFERENCE.md` A.7 (cont.164), but on the real V2
+model its integrand $\partial_\gamma\log p_{\rm flow}$ has a Hill tail index near 1.3 — below 2, so
+no finite second moment — and the estimator's denominator *grows* with bank size (fitted exponent
++0.20 against −1 for honest Monte Carlo) while a tame integrand on the identical weights averages
+down. cont.170 showed that survives removing both known setup defects (bank duplication, missing
+`true_cut`), so the weights were never at fault; the integrand is. Read `diag5c_bankctl.py`'s
+docstring first — it states the protocol and the outcome map that settled it.
+
+`closure_v2_lagrangian.py` sits here too, alongside the probes that import it. It is the §5C
+driver and also holds shared V2 plumbing (`rebuild`, `load_rows`, `scene_context`, `phi_block`).
+An earlier version of this note said it was deliberately kept in the active `scripts/` tree so
+V2-side §5B work could reach that plumbing; that is no longer accurate. The live §5B drivers
+(`scripts/eval_score_select.py`, `scripts/eval_score_response.py`) do not import it — checked at
+the 2026-08-17 merge — and the probes that do are now co-located with it, so the relative imports
+resolve here. `sbsi/lagrangian_score.py` does stay in the package: it is a tested module
+(`tests/test_lagrangian_score.py`) and §5C remains the documented Lagrangian route.
+
+Science impact of the §5C failure: **none**. Gold-v1 (+0.245%) and the fiducial Gold-V2
+(−0.123 ± 0.152%) both use the §5A transport route and never evaluate a score.

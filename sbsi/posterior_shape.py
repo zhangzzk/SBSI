@@ -237,7 +237,7 @@ class PosteriorShapeEstimator:
 
     @torch.no_grad()
     def log_likelihood(self, frame, ehat_raw, chunk=1024, out_dtype=np.float16,
-                       row_offset=0):
+                       row_offset=0, shift_rows=True):
         """log p(ehat | e_grid, rest) for every (galaxy, grid point).
 
         frame: rescale()d dataframe carrying all conditioning columns (the e columns
@@ -246,7 +246,18 @@ class PosteriorShapeEstimator:
         so the gold run can hold both signs in RAM and reweight under many priors
         without re-evaluating the flow).  row_offset: index of frame's first row in
         the full-run row order -- needed to look up armed per-object state (the
-        mu-correction cells) when the caller slabs the frame."""
+        mu-correction cells) when the caller slabs the frame.
+
+        shift_rows subtracts the per-row maximum, which is exact for anything that
+        reweights over the grid (softmax is shift-invariant) and is what keeps fp16 in
+        range.  It must be turned OFF for `INFERENCE.md` §5C, where the same rows are
+        compared ACROSS a family of sheared grids: there the row maximum itself moves
+        with gamma, so differencing shifted rows contaminates `phi'` with `-dM/dgamma`,
+        a per-row constant that lands directly in `s_i`.  Unshifted output needs the
+        fp16 guard's headroom, so float32 is required."""
+        if not shift_rows and np.dtype(out_dtype) == np.float16:
+            raise ValueError("shift_rows=False needs out_dtype=float32: the fp16 range "
+                             "guard is exactly the row shift being disabled")
         model = self.bundle.model
         tstd = self.bundle.target_transform
         ehat_std = tstd.transform_array(np.asarray(ehat_raw, dtype=np.float32))
@@ -274,8 +285,80 @@ class PosteriorShapeEstimator:
             # fp16 range guard (same as log_likelihood_marginal): softmax over the grid
             # is shift-invariant per row, so store row-max-shifted values.  Stored rows
             # are only meaningful up to a per-row constant (log_evidence too).
-            ll = ll - ll.max(dim=1, keepdim=True).values
+            if shift_rows:
+                ll = ll - ll.max(dim=1, keepdim=True).values
             out[start:stop] = ll.cpu().numpy().astype(out_dtype)
+        return out
+
+    def log_likelihood_shear_derivatives(self, frame, ehat_raw, axis, chunk=128):
+        """`(phi, phi', phi'')` along one shear axis, by autograd -- `INFERENCE.md` (5.5b).
+
+        The §5C curve is `phi_k(gamma) = log p_flow(ehat_i | S_gamma e_k)`, with the grid
+        point carrying the shear.  §5C.5 point 1 offers a choice of finite differences or a
+        forward-mode derivative along `v`; on this flow the differences do NOT converge
+        (the scatter of `phi''` grows as delta shrinks, so the curve is not smooth at the
+        scale a stencil probes), and Richardson makes it worse because it assumes exactly
+        the smoothness that is missing.  This is the analytic route, and it has no delta.
+
+        `t` is carried as a `(B, G)` tensor rather than a scalar, so plain reverse-mode
+        autograd returns the derivative ELEMENTWISE: `phi_ij` depends only on `t_ij`, hence
+        `d(sum phi)/dt_ij = d phi_ij / d t_ij`.  Two passes with `create_graph` give both
+        derivatives off the same curve, which is the §5C.5 "one curve, two derivatives"
+        property; no Hessian of `log p_flow` is ever formed.
+
+        Returns three `(N, G)` float64 arrays.  Unshifted -- the row-max trick of
+        `log_likelihood` is invalid here for the reason given in its docstring.
+
+        MEMORY.  `create_graph=True` retains the whole double-backward graph over
+        `chunk * G` rows, and that is the binding constraint, not `chunk` alone: measured,
+        `chunk=32` at `G=2765` (88k rows) needs >14 GB and OOMs a 16 GB vGPU slice.  Size
+        on the PRODUCT.  Roughly 10k rows per pass fits comfortably in 16 GB, so pick
+        `chunk ~ 10000/G` -- e.g. 8 at `G=1225`, 4 at `G=2765`.
+        """
+        model = self.bundle.model
+        pre = self.bundle.condition_preprocessor
+        tstd = self.bundle.target_transform
+        ehat_std = tstd.transform_array(np.asarray(ehat_raw, dtype=np.float32))
+        e1g = self.grid_raw[:, 0]
+        e2g = self.grid_raw[:, 1]
+        m1, s1 = float(pre.means[self.i1]), float(pre.scales[self.i1])
+        m2, s2 = float(pre.means[self.i2]), float(pre.scales[self.i2])
+        n = len(frame)
+        out = [np.empty((n, self.G), dtype=np.float64) for _ in range(3)]
+
+        for start in range(0, n, chunk):
+            stop = min(start + chunk, n)
+            with torch.no_grad():
+                base = self._grid_tiled_context(frame.iloc[start:stop])      # (B,G,D)
+            b = base.shape[0]
+            t = torch.zeros((b, self.G), dtype=torch.float32,
+                            device=self.device, requires_grad=True)
+
+            # Mobius eps' = (eps + g)/(1 + conj(g) eps), g real on axis 0, imaginary on 1.
+            if axis == 0:
+                nr, ni = e1g[None, :] + t, e2g[None, :].expand(b, self.G)
+                dr, di = 1.0 + t * e1g[None, :], t * e2g[None, :]
+            else:
+                nr, ni = e1g[None, :].expand(b, self.G), e2g[None, :] + t
+                dr, di = 1.0 + t * e2g[None, :], -t * e1g[None, :]
+            den = dr * dr + di * di
+            e1s = (nr * dr + ni * di) / den
+            e2s = (ni * dr - nr * di) / den
+
+            rep = base.clone()
+            rep[:, :, self.i1] = (e1s - m1) / s1
+            rep[:, :, self.i2] = (e2s - m2) / s2
+            flat = rep.view(b * self.G, -1)
+            mu = model._mu(flat)
+            xh = torch.as_tensor(ehat_std[start:stop], dtype=torch.float32,
+                                 device=self.device)
+            x = xh[:, None, :].expand(b, self.G, 2).reshape(b * self.G, 2) - mu
+            ll = model.flow.log_prob(x, model._flow_ctx(flat)).view(b, self.G)
+
+            d1, = torch.autograd.grad(ll.sum(), t, create_graph=True)
+            d2, = torch.autograd.grad(d1.sum(), t)
+            for arr, v in zip(out, (ll, d1, d2)):
+                arr[start:stop] = v.detach().double().cpu().numpy()
         return out
 
     @torch.no_grad()

@@ -43,6 +43,11 @@ from scripts.train_joint_forward import (  # noqa: E402
 CDIR = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant"
 MAG_EDGES = np.array([18.0, 24.0, 25.0, 26.0])
 SIZE_EDGES = np.array([0.30, 0.38, 0.50, 1.50])
+# `GOALS.md:54` acceptance cut, held fixed no matter what --true-re-min/--true-mag-max load.
+# Run with the load cut RELAXED and these still split the deliverable population out, so the
+# ACCEPTANCE / rejected bands are measured on identical rows -- which is what shows whether a
+# global number is a real closure or a cancellation between the two.
+ACC_RE_MIN, ACC_MAG_MAX = 0.30, 26.0
 
 
 def load_model(path, device):
@@ -266,12 +271,18 @@ def main():
     print("\n" + "=" * 78)
     print("FULL DELIVERABLE  m = R_sim / ((R_flow + R_blend) * bridge) - 1   [per-mag bridge]")
     print("=" * 78)
-    for name, sel in [("ISOLATED", iso), ("BLENDED ", bl), ("ALL     ", np.ones(len(base), bool))]:
+    acc = (size > ACC_RE_MIN) & (mag < ACC_MAG_MAX)
+    bands = [("ISOLATED", iso), ("BLENDED ", bl), ("ALL     ", np.ones(len(base), bool))]
+    if not acc.all():                       # only informative when the load cut was relaxed
+        bands += [("ACCEPTED", acc), ("REJECTED", ~acc)]
+    for name, sel in bands:
         rs = np.nanmean(Rsim[sel]); rm = np.nanmean(Rmodel_full[sel])
         mm = (rs / rm - 1) * 100 if rm else np.nan
-        for a, b in [(18, 24), (24, 25), (25, 26)]:
-            pass
-        print(f"  {name}: m = {mm:+6.2f}%   <R_sim>={rs:.4f}  <R_flow*br+R_blend*br>={rm:.4f}  N={int(sel.sum()):,}")
+        # per-seed spread on the same band, so a band difference can be read against seed noise
+        ms = [(rs / np.nanmean((Rf_seeds[s] + Rblend)[sel] * br_obj[sel]) - 1) * 100
+              for s in range(len(ckpts))]
+        print(f"  {name}: m = {mm:+6.2f}%   <R_sim>={rs:.4f}  <R_flow*br+R_blend*br>={rm:.4f}  "
+              f"N={int(sel.sum()):,}  (seed sd {np.std(ms):.2f}%)")
     # per-mag ALL-population m (the deliverable marginal)
     allm = []
     for a, b in [(18, 24), (24, 25), (25, 26)]:
