@@ -16,7 +16,7 @@ date
 
 eval "$(conda shell.bash hook)"
 conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 
 # Full-statistics run (all record batches): cubic/distortion/reduced forward responsivities
 # + the decisive per-object forward-model fidelity check.

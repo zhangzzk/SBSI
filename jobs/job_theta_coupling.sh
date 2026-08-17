@@ -13,9 +13,9 @@
 # from the shape target so the per-object binid is identical. Firewall: half-shear only.
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 OUT=results/response_target_theta_coupling_c0-99_6x9x5.npz
 echo "### THETA_COUP job=$SLURM_JOB_ID node=$SLURMD_NODENAME ###"; date

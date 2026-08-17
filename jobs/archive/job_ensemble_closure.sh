@@ -9,9 +9,9 @@
 # cont.100: aggregate the 16 per-seed R_flow dumps -> ensemble per-cut flow closure.
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 echo "### ENS_CLOSE job=$SLURM_JOB_ID node=$SLURMD_NODENAME ###"; date
 stdbuf -oL -eL python -B -u scripts/ensemble_flow_closure.py || { echo "ENS_CLOSE FAILED"; exit 1; }
 echo "### ENS_CLOSE_DONE job=$SLURM_JOB_ID ###"; date

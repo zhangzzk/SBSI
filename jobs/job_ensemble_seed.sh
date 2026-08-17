@@ -17,8 +17,8 @@
 # Harvest R_flow from all seed logs and average offline -> certified deterministic m.
 # NOTE: do NOT use `set -u` -- conda's activate.d scripts reference unbound vars (ADDR2LINE) and abort.
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 SEED=${SEED:?set SEED}
 FS=${FS:-g0_meas_conc_sern}
@@ -50,7 +50,7 @@ echo "TRAIN_DONE seed=$SEED"; date
 echo "### VALIDATE seed=$SEED on clean 40-139 ###"
 stdbuf -oL -eL python -u scripts/validate_constant_with_blend.py \
   --measurement-model $OUT \
-  --catalogue $CD/constant_response_catalogue_c40-139.feather \
+  --catalogue $CD/constant_response_catalogue_train.feather --min-case 40 \
   --blend-lookup results/blend_lookup_extnbrho_c40-139.feather \
   --crowd-flux-lookup $FL \
   --meas-prim-lookup $MP \

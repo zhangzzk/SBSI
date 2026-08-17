@@ -11,8 +11,8 @@
 #SBATCH -e /home/z/Zekang.Zhang/logs/sbsi_selr_v2.%j.err
 echo "START - response-aware selection v2 (centered diff + valid mask, lam=150)"; date
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"; export OMP_NUM_THREADS=8
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"; export OMP_NUM_THREADS=8
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 python -u scripts/train_selection_response.py \
     --response-target-npz results/selection_target_g0.05_4x2x4_blend.npz \
     --output models/selection_respaware_v2_lam150.pt \

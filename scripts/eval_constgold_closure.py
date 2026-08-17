@@ -17,6 +17,11 @@ det_meas half-shear, never constgold. Bridge measured firewall-cleanly on isolat
 """
 from __future__ import annotations
 
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear import paths  # noqa: E402
+
 import argparse
 import glob
 import os
@@ -154,7 +159,7 @@ def main():
                     help="per-(case,input_index) nn_dist_bright feather (build_nn_distance_lookup.py); "
                          "when given, isolation = no BRIGHTER true neighbour within --iso-radius (7\" convention).")
     ap.add_argument("--iso-radius", type=float, default=7.0)
-    ap.add_argument("--output", default="/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/constgold_closure.npz")
+    ap.add_argument("--output", default=f"{paths.CACHE_DIR}/derisk/constgold_closure.npz")
     args = ap.parse_args()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     t0 = time.time()

@@ -11,8 +11,8 @@
 #SBATCH -e /home/z/Zekang.Zhang/logs/sbsi_srng.%j.err
 echo "START ngmix response-aware selection classifier (lam=150)"; date
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"; export OMP_NUM_THREADS=8
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"; export OMP_NUM_THREADS=8
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 python -u scripts/train_selection_response.py \
     --catalogue /project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_ngmix_g0.0_train.feather \
     --response-target-npz results/selection_target_g0.05_4x2x4_blend_ngmix.npz \

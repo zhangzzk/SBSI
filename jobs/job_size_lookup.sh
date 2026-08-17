@@ -11,8 +11,8 @@
 # to enable true-SIZE realistic cuts in eval_selection_robustness.py. No model / certified artifact.
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 echo "### SIZE_LOOKUP job=$SLURM_JOB_ID node=$SLURMD_NODENAME ###"; date
 stdbuf -oL -eL python -B -u scripts/build_true_size_lookup.py || { echo "SIZE_LOOKUP FAILED"; exit 1; }
 echo "### SIZE_LOOKUP_JOB_DONE job=$SLURM_JOB_ID ###"; date

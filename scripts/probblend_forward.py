@@ -19,13 +19,19 @@ LEVEL B  (population forward model — NO true neighbour positions):
   measured neighbour separation/brightness distribution (empirical clustering xi) instead of the
   Poisson area-uniform draw, to size the clustering term.
 """
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear import paths  # noqa: E402
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear.emulator import load_blending_predictor  # noqa: E402
 import argparse, sys
 import numpy as np, pandas as pd, pyarrow.feather as pf
 
-BASE = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876"
+BASE = f"{paths.SIM_DIR}"
 DET = f"{BASE}/detection_catalogue_train.feather"
-BLEND_MODELS = "/home/z/Zekang.Zhang/blendemu/models"
-COND = dict(pixel_size=0.2, zero_point=30.0, psf_fwhm=0.73, moffat_beta=2.224, pixel_rms=0.312)
 TILE = "tile180.0_-0.5"
 R_TOTAL = 0.462
 R_MAX = 10.0        # regressor aperture (arcsec)
@@ -53,9 +59,7 @@ def main():
     args = ap.parse_args()
     rng = np.random.default_rng(args.seed)
 
-    sys.path.insert(0, "/home/z/Zekang.Zhang/blendemu")
-    from blendemu.inference import BlendingPredictor
-    pred = BlendingPredictor.load(BLEND_MODELS, tag=args.tag, conditions=COND, device="cpu")
+    pred = load_blending_predictor(tag=args.tag)
 
     det = pf.read_table(DET, columns=["case", "input_index", "detected"]).to_pandas()
     det = det[det.case.isin(args.cases)].drop_duplicates(["case", "input_index"])

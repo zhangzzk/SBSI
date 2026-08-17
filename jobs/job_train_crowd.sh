@@ -7,7 +7,7 @@
 #SBATCH --partition=cip
 #SBATCH --output=/home/z/Zekang.Zhang/logs/train_crowd_%j.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"; cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"; cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 FS=${1:?feature-set}; TAG=${2:?tag}; LAM=${3:-300}
 RESP=${4:-results/response_target_crowd_rblend_6x3x5.npz}
 D=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues

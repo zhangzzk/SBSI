@@ -10,9 +10,9 @@
 # Supplies the +0.10 the blended band needs. Emulator trained on half-shear; applied to constgold INPUTS.
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=12 MKL_NUM_THREADS=12
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 OUT=results/blend_lookup_const_c0-40.feather
 echo "### BLEND_LU job=$SLURM_JOB_ID node=$SLURMD_NODENAME ###"; date
 python -B -u scripts/build_blend_lookup.py --cases $(seq 0 40) --output "$OUT" \

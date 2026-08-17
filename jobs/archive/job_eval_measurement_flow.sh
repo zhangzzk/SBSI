@@ -14,7 +14,7 @@
 
 echo "START - SBSI measurement-flow eval (M diagnostic + recovery)"; date
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 
 MODEL="${MODEL:-SBSI/models/measurement_flow_g0_oriented_v2.pt}"
 CATDIR=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues

@@ -7,7 +7,7 @@
 #SBATCH --partition=inter
 #SBATCH --output=/home/z/Zekang.Zhang/logs/qdiag_c100_%j.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"; cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"; cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 # Headline: apply deficit(R_blend) correction (fit on cases 40-59) to the FULL 100-case set (40-139).
 # Compare against the known UNCORRECTED baseline job 15013994: global +0.81%, q3 +6.8% (same catalogue/binning).

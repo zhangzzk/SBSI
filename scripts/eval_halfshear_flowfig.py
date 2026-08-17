@@ -17,6 +17,11 @@ Saves per-object arrays -> plotting/plot_v2_halfshear_figs.py makes fig2 (mag/si
 fig5 (mag/size, 7"-isolated). FIREWALL: nothing trains; det_meas is the training sim (no constgold here).
 """
 from __future__ import annotations
+
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear import paths  # noqa: E402
 import argparse, os, sys, time
 import numpy as np, pandas as pd
 import pyarrow as pa, pyarrow.ipc as ipc, pyarrow.feather as pf
@@ -28,10 +33,10 @@ if SBSI_ROOT not in sys.path:
 from sbs_shear.preprocessing import DEFAULT_SELECTION_CUTS, source_select_selection  # noqa: E402
 from scripts.eval_constgold_closure import load_model, run_model_on  # noqa: E402
 
-CAT = "/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/"
-CROWD = "/home/z/Zekang.Zhang/SBSI/results/crowd_flux_conc_c0-199.feather"
-NN = "/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/nn_dist_c0-39.feather"
-CKPT = "/project/ls-gruen/users/zekang.zhang/sbsi_caches/forward_proto/forward_sw_th400_seed421_joint.pt"
+CAT = f"{paths.CATALOGUE_DIR}/"
+CROWD = f"{paths.RESULTS_DIR}/crowd_flux_conc_c0-199.feather"
+NN = f"{paths.CACHE_DIR}/derisk/nn_dist_c0-39.feather"
+CKPT = f"{paths.CACHE_DIR}/forward_proto/forward_sw_th400_seed421_joint.pt"
 
 # columns the flow's build_contexts / intrinsic_shape / shifted_feature_frame / neighbor_padded touch
 FLOW_COLS = ["case", "input_index", "neighbored", "distance", "polarization_angle",

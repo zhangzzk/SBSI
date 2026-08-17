@@ -12,23 +12,27 @@ PER PRIMARY-MAGNITUDE bin, comparing raw / global-isotonic / magnitude-condition
 calibration flattens soft/hard ~1 across all primary-mag bins, the tilt is a calibration artefact
 and this is the fix.
 """
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear import paths  # noqa: E402
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear.emulator import load_blending_predictor  # noqa: E402
 import sys
 import numpy as np, pandas as pd, pyarrow.feather as pf
 from sklearn.isotonic import IsotonicRegression
 
-BASE = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876"
+BASE = f"{paths.SIM_DIR}"
 DET = f"{BASE}/detection_catalogue_train.feather"
-BLEND_MODELS = "/home/z/Zekang.Zhang/blendemu/models"
-COND = dict(pixel_size=0.2, zero_point=30.0, psf_fwhm=0.73, moffat_beta=2.224, pixel_rms=0.312)
 TILE = "tile180.0_-0.5"
 CASES = [0, 1, 2, 3, 4, 5, 6, 7]
 MAG_BINS = np.array([13, 24, 25, 25.5, 26, 26.5, 27, 27.5, 28, 29.5])   # neighbour-mag calibration bins
 
 
 def main():
-    sys.path.insert(0, "/home/z/Zekang.Zhang/blendemu")
-    from blendemu.inference import BlendingPredictor
-    pred = BlendingPredictor.load(BLEND_MODELS, tag="lsst_r_extnbr_ho", conditions=COND, device="cpu")
+    pred = load_blending_predictor(tag="lsst_r_extnbr_ho")
 
     det = pf.read_table(DET, columns=["case", "input_index", "detected"]).to_pandas()
     det = det[det.case.isin(CASES)].drop_duplicates(["case", "input_index"])
@@ -48,7 +52,7 @@ def main():
     G["detected"] = G["detected"].fillna(False).astype(bool)
 
     # response weight per galaxy (as undetected neighbour)
-    P = pf.read_table("/home/z/Zekang.Zhang/SBSI/results/probblend_char.feather",
+    P = pf.read_table(f"{paths.RESULTS_DIR}/probblend_char.feather",
                       columns=["case", "ip", "is_", "rp", "resp", "det_p", "det_s"]).to_pandas()
     P = P[P.det_p.to_numpy()]
     w = P.groupby(["case", "is_"]).resp.sum().reset_index().rename(columns={"is_": "idx", "resp": "w"})

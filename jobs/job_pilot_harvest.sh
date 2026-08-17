@@ -11,9 +11,9 @@
 # models/measurement_flow_g0_ngmix_${TAG}_s${SEED}.pt. Prints one GLOBAL line per seed -> average offline.
 # Row-batched GPU reshear (--batch-size 16384) so 45M rows fit; expandable_segments avoids fragmentation.
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 SEEDS=${SEEDS:?set SEEDS (space-separated, e.g. "501 502 503")}
 TAG=${TAG:?set TAG (e.g. meas_szfl_noz_lam300)}

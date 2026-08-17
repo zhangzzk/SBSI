@@ -11,8 +11,8 @@
 # job_fig2_dump_szfine.sh (same constgold catalogue + lookups => same r_sim validation truth + same
 # emulator R_blend) EXCEPT the model TAG and DUMP path -> ONLY R_flow differs. Env: TAG, SEED, DUMPTAG.
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 SEED=${SEED:-501}
 TAG=${TAG:?set TAG}

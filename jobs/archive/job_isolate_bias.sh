@@ -15,7 +15,7 @@ echo "START - SBSI isolate multiplicative-bias source (progressive conditioning)
 date
 eval "$(conda shell.bash hook)"
 conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-12}"
 
 echo "########## flexible regressor (max_leaves=63, min_leaf=200) ##########"

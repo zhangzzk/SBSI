@@ -17,12 +17,16 @@ Output columns (lowercase measured_* to match the training feature names): case,
 measured_mag_auto, measured_flux_radius, measured_class_star, measured_flux_auto, measured_fluxerr_auto,
 measured_mag_aper, measured_fwhm_image, measured_isoarea_image.
 """
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear import paths  # noqa: E402
 import argparse, os
 import numpy as np
 import pandas as pd
 import pyarrow.feather as pf
 
-BASE_CONST = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant"
+BASE_CONST = f"{paths.CONST_SIM_DIR}"
 TILE = "tile180.0_-0.5"
 # raw SExtractor col -> output measured_* name
 COLMAP = {

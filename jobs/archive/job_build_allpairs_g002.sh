@@ -7,8 +7,8 @@
 #SBATCH --output=/home/z/Zekang.Zhang/logs/ap_g002_%j.out
 #SBATCH --error=/home/z/Zekang.Zhang/logs/ap_g002_%j.err
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 OUT=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues
 echo "=== ALL-PAIRS g0.02 held-out test build (7 arcsec, k=20, flow-only, cases 0-19) ==="; date
 python -u scripts/build_detection_measurement_catalogue.py \

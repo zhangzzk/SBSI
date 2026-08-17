@@ -13,9 +13,9 @@
 # Reports sim_c1/c2, flow_c1/c2, and the calibration-relevant RESIDUAL sim_c - flow_c per model.
 # Pass MODELS as a space-separated list of model paths via env. Small cards excluded (OOM-safe).
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 MODELS=${MODELS:?set MODELS (space-separated model paths)}
 CD=/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant

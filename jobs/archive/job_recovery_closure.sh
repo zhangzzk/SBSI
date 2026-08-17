@@ -16,7 +16,7 @@ echo "START - SBSI recovery closure test"
 date
 eval "$(conda shell.bash hook)"
 conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 
 MODEL=SBSI/models/measurement_flow_g0_oriented_v1.pt
 CAT=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_g0.05_val.feather

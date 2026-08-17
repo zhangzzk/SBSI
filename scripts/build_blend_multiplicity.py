@@ -13,14 +13,20 @@ Purpose: the constgold residual sits entirely in the moderate-R_blend regime (q3
   (b) R_flow (crowd-flux self-response) over-suppresses at moderate crowding -> deficit flat in n_pairs.
 This lookup lets validate_constant bin the deficit by n_pairs (with proper per-subset R_flow) to decide.
 """
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear import paths  # noqa: E402
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear.emulator import load_blending_predictor  # noqa: E402
 import argparse, os, sys
 import numpy as np
 import pandas as pd
 import pyarrow.feather as pf
 
-CBASE = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant"
-BLEND_MODELS = "/home/z/Zekang.Zhang/blendemu/models"
-COND = dict(pixel_size=0.2, zero_point=30.0, psf_fwhm=0.73, moffat_beta=2.224, pixel_rms=0.312)
+CBASE = f"{paths.CONST_SIM_DIR}"
 TILE = "tile180.0_-0.5"
 
 
@@ -37,9 +43,7 @@ def main():
     ap.add_argument("--tag", default="lsst_r_extnbr_ho", help="emulator tag (matches blend_lookup_extnbrho)")
     args = ap.parse_args()
 
-    sys.path.insert(0, "/home/z/Zekang.Zhang/blendemu")
-    from blendemu.inference import BlendingPredictor
-    pred = BlendingPredictor.load(BLEND_MODELS, tag=args.tag, conditions=COND, device="cpu")
+    pred = load_blending_predictor(tag=args.tag)
 
     parts = []
     for c in args.cases:

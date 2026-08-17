@@ -6,7 +6,7 @@
 #SBATCH --partition=cluster
 #SBATCH --output=/home/z/Zekang.Zhang/logs/audit_self_%j.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"; cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"; cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 # FINAL fork: is the residual q3 deficit flow-underfit (fixable) or anisotropy/cross-term (ceiling)?
 # Compares the TRUE self-response R_self_truth (delta_et1_self/gamma, neighbour present) to model R_flow,

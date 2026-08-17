@@ -8,8 +8,8 @@
 #SBATCH --output=/home/z/Zekang.Zhang/logs/ap_train_%j.out
 #SBATCH --error=/home/z/Zekang.Zhang/logs/ap_train_%j.err
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 LAM=${1:-1000}
 OUT=models/measurement_flow_g0_ngmix_ap7_respblend_lam${LAM}_v1.pt
 echo "=== AP7 response-aware flow train (all-pairs ngmix, lam=$LAM) ==="; date

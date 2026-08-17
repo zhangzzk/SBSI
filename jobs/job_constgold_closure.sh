@@ -14,9 +14,9 @@
 # measured-conditioned flow failed at -8..-18%. FIREWALL: constgold read for validation only.
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=12 MKL_NUM_THREADS=12
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 TAG=${TAG:-ensemble}
 CKPTGLOB=${CKPTGLOB:-/project/ls-gruen/users/zekang.zhang/sbsi_caches/forward_proto/forward_joint_c0-99_truecut_seed*_joint.pt}

@@ -15,9 +15,9 @@
 # Subsample rows (--max-rows) to keep CPU reshear fast; a global mean over 12M rows is amply precise.
 # Pass MODELS (space-separated seed numbers). Prints one GLOBAL line per seed -> average offline.
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=16 MKL_NUM_THREADS=16
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 SEEDS=${SEEDS:?set SEEDS (space-separated seed numbers, e.g. "501 504 507")}
 TAGBASE=${TAG:-meas_szfl}
@@ -34,7 +34,7 @@ for SEED in $SEEDS; do
   if [ ! -f "$OUT" ]; then echo "MISSING MODEL seed=$SEED"; continue; fi
   stdbuf -oL -eL python -u scripts/validate_constant_with_blend.py \
     --measurement-model $OUT --device cpu \
-    --catalogue $CD/constant_response_catalogue_c40-139.feather \
+    --catalogue $CD/constant_response_catalogue_train.feather --min-case 40 \
     --blend-lookup results/blend_lookup_extnbrho_c40-139.feather \
     --crowd-flux-lookup $FL --meas-prim-lookup $MP \
     --ood-lookup results/ood_split_c40-139.feather \

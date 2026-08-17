@@ -15,7 +15,7 @@ the single-seed CRN pilot_harvest_*.out logs.
 
 Environment:
     eval "$(conda shell.bash hook)"; conda activate sims1
-    export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+    export PYTHONPATH="$PWD:$PYTHONPATH"      # blendemu not needed; see sbs_shear/paths.py
 
 HARD RULES honoured: PNG only (no PDF), no gridlines, Agg backend, Okabe-Ito palette.
 """

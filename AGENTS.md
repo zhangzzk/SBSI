@@ -10,6 +10,26 @@ This directory is a standalone SBI/shear-calibration project.
 - Do not move SBS-specific classifier, flow, validation, or inference code into `blendemu` unless the user explicitly asks for that integration.
 - If using blendemu outputs, read them as input data and write SBSI-derived products under `SBSI/data`, `SBSI/models`, or another user-specified SBSI path.
 
+### The blendemu boundary (enforced)
+
+The user runs blendemu themselves and hands SBSI a catalogue path. Two crossings exist,
+and they are the only ones allowed:
+
+1. `sbs_shear/emulator.py` — the *sole* module that imports blendemu. It is needed only
+   to evaluate `R_blend` via `BlendingPredictor`, and it imports lazily so the rest of the
+   pipeline runs with blendemu absent. Scripts must call `load_blending_predictor()`
+   rather than importing blendemu, editing `sys.path`, or hardcoding a models directory.
+2. `scripts/build_detection_measurement_catalogue.py` — the optional catalogue bridge.
+
+Rules for new code:
+
+- Never write an absolute path into a script. Add a root to `sbs_shear/paths.py` and use
+  it; every root is environment-overridable (`SBSI_CATALOGUE_DIR`, `SBSI_CACHE_DIR`,
+  `SBSI_SIM_DIR`, `SBSI_CONST_SIM_DIR`, `BLENDEMU_ROOT`, ...).
+- Never re-declare the survey conditions. Import `SURVEY_CONDITIONS` / `RESCALE_KW` from
+  `sbs_shear.emulator`.
+- Jobs that `cd` into blendemu belong in `jobs/blendemu_side/`, not `jobs/`.
+
 ## Work Log Requirement
 
 - After any substantive SBSI change, update `SBSI/WORKLOG.md` before the final response.

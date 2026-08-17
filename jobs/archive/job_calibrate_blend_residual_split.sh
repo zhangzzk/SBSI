@@ -17,7 +17,7 @@ conda activate sims1
 
 export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:${PYTHONPATH:-}"
 
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 echo "### CASE-SPLIT R_BLEND RESIDUAL CALIBRATION"
 date

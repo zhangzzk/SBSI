@@ -8,8 +8,8 @@
 #SBATCH --output=/home/z/Zekang.Zhang/logs/train_conc_%j.out
 
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 # ROOT-CAUSE flow retrain (confirm-first positive, WORKLOG cont.15): add nbr_flux_max (flux
 # concentration / brightest-neighbour dominance) to the crowd-flux conditioning so the flow can

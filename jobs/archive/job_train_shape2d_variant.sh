@@ -16,7 +16,7 @@ echo "START - SBSI shape-only measurement flow variant"
 date
 eval "$(conda shell.bash hook)"
 conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-8}"
 
 CATALOGUE="${CATALOGUE:-/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_g0.0_train.feather}"

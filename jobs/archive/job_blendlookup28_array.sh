@@ -7,7 +7,7 @@
 #SBATCH --array=0-7
 #SBATCH --output=/home/z/Zekang.Zhang/logs/blk28_arr_%A_%a.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"; cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"; cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 START=$(( SLURM_ARRAY_TASK_ID * 5 ))
 CASES=$(seq $START $(( START + 4 )))
 echo "task $SLURM_ARRAY_TASK_ID -> cases: $CASES  (r<28, r_max=10, k=20)"

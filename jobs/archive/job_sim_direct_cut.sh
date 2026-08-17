@@ -13,9 +13,9 @@
 
 echo "START - model-free sim-direct cut-bias (measured-SNR vs true-mag cuts)"; date
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-8}"
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 python -u scripts/sim_direct_cut_bias.py \
     --cat-005 /project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_g0.05_val.feather \

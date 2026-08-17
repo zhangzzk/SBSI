@@ -49,6 +49,10 @@ Completing the cont.22 posterior (this file implements all of it):
       so Bayes on the detected subpopulation is already selection-consistent.
       (Residual caveat: shearing pi(e|det) assumes detection isotropy in e.)
 """
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear import paths  # noqa: E402
 import argparse
 import json
 import os
@@ -80,8 +84,8 @@ from sbs_shear.posterior_shape import (  # noqa: E402
     shear_prior_matrix,
 )
 
-CATBASE = "/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/"
-CBASE = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/"
+CATBASE = f"{paths.CATALOGUE_DIR}/"
+CBASE = f"{paths.CONST_SIM_DIR}/"
 G0_CAT = CATBASE + "det_meas_crowd_conc_g0.0_train_full.feather"
 GOLD_CAT = CBASE + "constant_response_catalogue_c40-139.feather"
 CROWD_LOOKUP = "results/crowd_flux_conc_c0-199.feather"

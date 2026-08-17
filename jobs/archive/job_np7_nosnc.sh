@@ -7,7 +7,7 @@
 #SBATCH --partition=cip
 #SBATCH --output=/home/z/Zekang.Zhang/logs/np7_nosnc_%j.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"; cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"; cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 M=models/measurement_flow_g0_ngmix_np7_respblend_lam300_v1.pt
 D=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues
 echo "### NP7 g=0.05  NO SNC (clean, apples-to-apples vs AP7 -0.64%) ###"

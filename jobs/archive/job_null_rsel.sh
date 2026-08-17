@@ -10,9 +10,9 @@
 # cont.98: shape-noise floor on constgold R_sel via CRN-preserving random re-orientation null.
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 echo "### NULLRSEL job=$SLURM_JOB_ID node=$SLURMD_NODENAME ###"; date
 stdbuf -oL -eL python -B -u scripts/null_rsel_constgold.py || { echo "NULLRSEL FAILED"; exit 1; }
 echo "### NULLRSEL_DONE job=$SLURM_JOB_ID ###"; date

@@ -7,7 +7,7 @@
 #SBATCH --partition=inter
 #SBATCH --output=/home/z/Zekang.Zhang/logs/val_fullemu_%j.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"; cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"; cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 # ATTRIBUTION TEST (flow vs emulator on held-out 0-39): re-validate conc-v1 on cases 0-39 using the
 # FULL emulator (blend_lookup_c0-199, trained on 0-199 -> in-distribution on 0-39) instead of the ho

@@ -16,9 +16,9 @@
 # Inference-only; certified m and all certified artifacts untouched.
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 FP=/project/ls-gruen/users/zekang.zhang/sbsi_caches/forward_proto
 D=/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk
 RBLEND=$D/rblend_scene_jointrflow_prod_szphi_c40-139.npz   # size-aware ensemble R_blend (common-mode)

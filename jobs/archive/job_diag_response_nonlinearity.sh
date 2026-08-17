@@ -11,9 +11,9 @@
 # LOW vs the true g->0 slope (root-cause hypothesis for the +6..8% large-size selection bias).
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 echo "### DIAG_RNL job=$SLURM_JOB_ID node=$SLURMD_NODENAME ###"; date
 stdbuf -oL -eL python -B -u scripts/diag_response_nonlinearity.py || { echo "DIAG_RNL FAILED"; exit 1; }
 echo "### DIAG_RNL_DONE job=$SLURM_JOB_ID ###"; date

@@ -12,9 +12,9 @@
 #SBATCH -e /home/z/Zekang.Zhang/logs/sbsi_rtgt_blend.%j.err
 echo "START - blend-aware response target (flux x size x blend)"; date
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-8}"
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 python -u scripts/compute_response_target_blend.py \
     --catalogue /project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_g0.05_val.feather \
     --nominal-g 0.05 --n-flux 6 --n-size 3 --n-dist 3 \

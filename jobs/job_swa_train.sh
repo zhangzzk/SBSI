@@ -13,9 +13,9 @@
 # This copy simply does NOT set it (plain caching allocator works; ~12 GB GPU need fits 24 GB).
 # Defaults sized for the 41 GB-RAM cip slice nodes: 36G/8c (train MaxRSS ~30 GB, ~1-1.5 h/seed).
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 unset PYTORCH_CUDA_ALLOC_CONF
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 SEEDS=${SEEDS:?set SEEDS (space-separated, e.g. "501 502 503")}
 FS=${FS:-g0_meas_crowd_conc_szfl_noz}

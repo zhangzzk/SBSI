@@ -7,7 +7,7 @@
 #SBATCH --partition=cip
 #SBATCH --output=/home/z/Zekang.Zhang/logs/cg_crowd_%j.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"; cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"; cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 TAG=${1:?tag}
 M=models/measurement_flow_g0_ngmix_${TAG}_lam300_v1.pt
 echo "### CONSTANT-GOLD $TAG : crowd flow (+) blend emulator (r<28), binned by R_blend ###"

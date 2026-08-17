@@ -17,7 +17,7 @@
 # cutting on the shear-dependent measured SNR. Sim-directly + trained-flow in one pass.
 echo "START - SNR sweep (response_ratio: sim R_sim + flow first-moment)"; date
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 
 MODEL="${MODEL:-SBSI/models/measurement_flow_g0_shape2d_resp_lam1000_v1.pt}"
 CATDIR=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues

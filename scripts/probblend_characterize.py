@@ -15,13 +15,15 @@ Outputs the mean split overall, vs primary magnitude, vs secondary magnitude, vs
 and the implied multiplicative-bias contribution if undetected neighbours are simply dropped
 (delta_m ~ <R_blend_undet>/R_total, R_total ~ 0.462).
 """
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear.emulator import load_blending_predictor  # noqa: E402
 import argparse, sys
 import numpy as np, pandas as pd, pyarrow.feather as pf
 
 BASE = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876"
 DET = f"{BASE}/detection_catalogue_train.feather"
-BLEND_MODELS = "/home/z/Zekang.Zhang/blendemu/models"
-COND = dict(pixel_size=0.2, zero_point=30.0, psf_fwhm=0.73, moffat_beta=2.224, pixel_rms=0.312)
 TILE = "tile180.0_-0.5"
 R_TOTAL = 0.462  # R_flow + R_blend denominator (from constgold), to convert response deficit -> m
 
@@ -37,9 +39,7 @@ def main():
     ap.add_argument("--output", default="/home/z/Zekang.Zhang/SBSI/results/probblend_char.feather")
     args = ap.parse_args()
 
-    sys.path.insert(0, "/home/z/Zekang.Zhang/blendemu")
-    from blendemu.inference import BlendingPredictor
-    pred = BlendingPredictor.load(BLEND_MODELS, tag=args.tag, conditions=COND, device="cpu")
+    pred = load_blending_predictor(tag=args.tag)
 
     # detection truth: detected flag per (case, input_index)
     det = pf.read_table(DET, columns=["case", "input_index", "detected"]).to_pandas()

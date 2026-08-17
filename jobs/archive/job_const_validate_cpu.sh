@@ -10,8 +10,8 @@
 #SBATCH -e /home/z/Zekang.Zhang/logs/sbsi_cval_cpu.%j.err
 echo "START - constant validation SMOKE (CPU)"; date
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"; export OMP_NUM_THREADS=8
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"; export OMP_NUM_THREADS=8
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 python -u scripts/validate_constant_response.py \
     --measurement-model models/measurement_flow_g0_shape2d_respblend_lam1000_v1.pt \
     --device cpu --max-rows 300000 --n-samples 16

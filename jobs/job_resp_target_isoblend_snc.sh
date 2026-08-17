@@ -16,8 +16,8 @@
 # Output -> train_forward_prototype.py --target-npz (production-guided isolated recipe).
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 NF=${1:-6}; NS=${2:-3}; NDIST=${3:-4}; MAXCASE=${4:-99}
 LK=${5:-results/g0_lookup_c0-99.feather}

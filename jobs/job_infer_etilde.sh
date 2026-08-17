@@ -9,7 +9,7 @@
 # Tip: the flow-eval stage is 3-8x faster on a newer GPU than v100 (and TF32 kicks in);
 # pick one at submit time, e.g.:  sbatch --gpus-per-node=a100:1 jobs/job_infer_etilde.sh
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"; cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"; cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 # Posterior-mean shape estimator etilde = E[e|ehat,theta_hat] (WORKLOG cont.26):
 # the cont.22 deployment object, prototyped for the true-neighbour conditional case.

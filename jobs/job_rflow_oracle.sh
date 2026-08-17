@@ -15,9 +15,9 @@
 # NO --isolated-zero (this is R_flow, nonzero for isolated). constgold = coords only, r_sim never read.
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 CONSTCAT=/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/constant_response_catalogue_train.feather
 GRID=results/response_target_isoblend_snc_c0-99_6x6x5.npz
 OVR=/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/rflow_oracle_isoblend_c40-139.npz

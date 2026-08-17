@@ -8,8 +8,8 @@
 #SBATCH --output=/home/z/Zekang.Zhang/logs/ap_g002_100_%j.out
 #SBATCH --error=/home/z/Zekang.Zhang/logs/ap_g002_100_%j.err
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 python -u scripts/build_detection_measurement_catalogue.py \
   --data-path /project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876 \
   --shear 0.02 --cases 0-99 --include-shapes --flow-only \

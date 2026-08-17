@@ -16,9 +16,9 @@
 # Experimental/additive; certified m=+0.245% untouched; new tags only.
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 D=/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk
 RFLOW=$D/rflow_joint_prod_ens3_c40-139.npz
 RBLEND=$D/rblend_scene_jointrflow_prod_szphi_c40-139.npz

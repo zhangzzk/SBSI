@@ -14,8 +14,8 @@
 set -e
 source /software/opt/focal/x86_64/python/3.10-2022.08/etc/profile.d/conda.sh
 conda activate /project/ls-gruen/users/zekang.zhang/envs/sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 CAT=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues
 DR=/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk
 echo "### BTRUE_NGMIX job=$SLURM_JOB_ID node=$SLURMD_NODENAME ###"; date

@@ -12,9 +12,9 @@
 #SBATCH -e /home/z/Zekang.Zhang/logs/sbsi_selbin.%j.err
 echo "START - population-controlled selection bias (binned)"; date
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-8}"
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 echo "##### g=0.05 #####"
 python -u scripts/selection_cut_binned.py \
     --catalogue /project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_g0.05_val.feather \

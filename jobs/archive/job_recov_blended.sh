@@ -8,8 +8,8 @@
 #SBATCH --output=/home/z/Zekang.Zhang/logs/ap_recov_%j.out
 #SBATCH --error=/home/z/Zekang.Zhang/logs/ap_recov_%j.err
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 M=models/measurement_flow_g0_ngmix_ap7_respblend_lam1000_v1.pt
 for spec in "0.02:/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_ngmix_g0.02_test.feather" "0.05:/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_ngmix_g0.05_val.feather"; do
   g="${spec%%:*}"; cat="${spec##*:}"

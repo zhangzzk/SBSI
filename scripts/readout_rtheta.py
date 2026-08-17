@@ -26,6 +26,11 @@ only (never constgold); this is evaluation, nothing trains.
 """
 from __future__ import annotations
 
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear import paths  # noqa: E402
+
 import argparse
 import os
 import sys
@@ -35,14 +40,12 @@ from types import SimpleNamespace
 import numpy as np
 import torch
 
-SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
-SBSI_ROOT = os.path.dirname(SCRIPTS_DIR)
-for _p in (SBSI_ROOT, SCRIPTS_DIR):
-    if _p not in sys.path:
-        sys.path.insert(0, _p)
+SBSI_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if SBSI_ROOT not in sys.path:
+    sys.path.insert(0, SBSI_ROOT)
 
 # reuse the trainer's data pipeline + model builder verbatim (no reimplementation)
-import train_joint_forward as T  # noqa: E402
+from scripts import train_joint_forward as T  # noqa: E402
 from sbs_shear.measurement_model import TargetStandardizer  # noqa: E402
 from sbs_shear.scene_model import SetFeatureStandardizer  # noqa: E402
 from sbs_shear.selection_model import TabularPreprocessor  # noqa: E402
@@ -97,14 +100,14 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--ckpts", nargs="+", required=True,
                     help="checkpoint .pt paths (or bare tags resolved under --outdir).")
-    ap.add_argument("--outdir", default="/project/ls-gruen/users/zekang.zhang/sbsi_caches/forward_proto")
+    ap.add_argument("--outdir", default=f"{paths.CACHE_DIR}/forward_proto")
     ap.add_argument("--flow-catalogue",
-                    default="/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_ngmix_g0.0_train.feather")
+                    default=f"{paths.CATALOGUE_DIR}/det_meas_ngmix_g0.0_train.feather")
     ap.add_argument("--target-npz",
-                    default="/home/z/Zekang.Zhang/SBSI/results/response_target_isoblend_RAWfine_c0-99_6x9x5.npz",
+                    default=f"{paths.RESULTS_DIR}/response_target_isoblend_RAWfine_c0-99_6x9x5.npz",
                     help="the SHAPE target grid (for flux/size/dist edges = the training binning).")
     ap.add_argument("--theta-target-npz",
-                    default="/home/z/Zekang.Zhang/SBSI/results/response_target_theta_coupling_c0-99_6x9x5.npz",
+                    default=f"{paths.RESULTS_DIR}/response_target_theta_coupling_c0-99_6x9x5.npz",
                     help="the R_theta coupling target (per-cell b_size/b_mag to compare against).")
     ap.add_argument("--max-case", type=int, default=200)
     ap.add_argument("--train-case-max", type=int, default=160)
@@ -114,7 +117,7 @@ def main():
     ap.add_argument("--delta", type=float, default=0.05)
     ap.add_argument("--true-re-min", type=float, default=0.3)
     ap.add_argument("--true-mag-max", type=float, default=26.0)
-    ap.add_argument("--output", default="/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/rtheta_readout.npz")
+    ap.add_argument("--output", default=f"{paths.CACHE_DIR}/derisk/rtheta_readout.npz")
     args = ap.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

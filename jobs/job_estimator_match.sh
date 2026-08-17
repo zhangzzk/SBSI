@@ -15,9 +15,9 @@
 # EVALUATION ONLY: reads the ngmix half-shear leg (train-safe) + constgold (held-out); trains nothing.
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 OUT=/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/estimator_match.npz
 echo "### EST_MATCH job=$SLURM_JOB_ID node=$SLURMD_NODENAME ###"; date

@@ -9,9 +9,9 @@
 #SBATCH --output=/home/z/Zekang.Zhang/logs/stage1_7as_%j.out
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=12 MKL_NUM_THREADS=12
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 NN=/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/nn_dist_c0-39.feather
 echo "### STAGE1_7AS job=$SLURM_JOB_ID node=$SLURMD_NODENAME ###"; nvidia-smi -L; date
 # 7"-isolation diagnostic (R_blend=0 for isolated => no blend-lookup needed for the m_iso headline).

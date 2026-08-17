@@ -17,9 +17,9 @@ set -e
 source /home/z/Zekang.Zhang/.bashrc
 module load python/3.11-2023.09 2>/dev/null || true
 conda activate /project/ls-gruen/users/zekang.zhang/envs/sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=8
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 CACHE=/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk
 RF=$CACHE/rflow_smooth_tr100_ev4079.npz

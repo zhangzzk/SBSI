@@ -7,8 +7,8 @@
 #SBATCH --partition=cip
 #SBATCH --output=/home/z/Zekang.Zhang/logs/hsext_va_%j.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 echo "### FLOW SELF-RESPONSE (incoherent half-shear) binned by EXTNBR R_blend (SAME axis+edges as gold) ###"
 echo "### gold per-bin m was ISO -2.2 / q1 -2.8 / q2 +2.6 / q3 +10.9 / q4 +1.4 %; this = flow error ALONE ###"
 python -u scripts/validate_allpairs_response.py \

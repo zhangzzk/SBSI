@@ -6,7 +6,7 @@
 #SBATCH --partition=cluster
 #SBATCH --output=/home/z/Zekang.Zhang/logs/extho_tr_%j.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/blendemu:/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 export XGB_DEVICE=cpu
 export CONFIG_PATH=/home/z/Zekang.Zhang/blendemu/configs/fs2_lsst_r_extnbr_ho.yaml
 export HELDOUT_MIN_CASE=40

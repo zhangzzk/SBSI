@@ -7,7 +7,7 @@
 #SBATCH --partition=inter
 #SBATCH --output=/home/z/Zekang.Zhang/logs/val_s1_%j.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"; cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"; cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 # NOISE-FLOOR study (WORKLOG cont.21): validate ONE model on the CLEAN emulator-in-sample split (40-139)
 # ONLY -- STEP 2 (held-out) dropped to halve wall time, since seed scatter (not emulator generalization)

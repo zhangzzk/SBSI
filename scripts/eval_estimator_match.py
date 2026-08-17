@@ -21,6 +21,11 @@ Reads the ngmix half-shear leg (train-safe) + constgold (held-out, eval-only). T
 """
 from __future__ import annotations
 
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear import paths  # noqa: E402
+
 import argparse
 import os
 import sys
@@ -101,13 +106,13 @@ def ngmix_stream(path, true_cut, max_rows, e_cols):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ngmix-cat",
-                    default="/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_ngmix_g0.05_val.feather")
+                    default=f"{paths.CATALOGUE_DIR}/det_meas_ngmix_g0.05_val.feather")
     ap.add_argument("--e-cols", nargs=2, default=["measured_ngmix_g1", "measured_ngmix_g2"])
     ap.add_argument("--ngmix-max-rows", type=int, default=0)
     ap.add_argument("--cg-max-case", type=int, default=None)
     ap.add_argument("--true-re-min", type=float, default=0.3)
     ap.add_argument("--true-mag-max", type=float, default=26.0)
-    ap.add_argument("--output", default="/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/estimator_match.npz")
+    ap.add_argument("--output", default=f"{paths.CACHE_DIR}/derisk/estimator_match.npz")
     args = ap.parse_args()
     true_cut = (args.true_re_min, args.true_mag_max)
     t0 = time.time()
@@ -171,7 +176,7 @@ def main():
         print("\n[moments] a/b/theta columns absent -> skipping moments decomposition", flush=True)
 
     # =============== CONSTGOLD: isolated & coherent R1 ===============
-    CDIR = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant"
+    CDIR = f"{paths.CONST_SIM_DIR}"
     rcols = ["measured_e1_plus", "measured_e2_plus", "measured_e1_minus", "measured_e2_minus",
              "applied_g1", "applied_g2", "axis_ratio_input_p", "position_angle_input_p",
              "r_input_p", "Re_input_p", "neighbored", "distance", "input_index", "case"]

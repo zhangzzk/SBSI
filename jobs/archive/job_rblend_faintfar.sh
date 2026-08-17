@@ -7,8 +7,8 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --output=logs/rblend_ff_%j.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 echo "### RBLEND_FAINTFAR job=$SLURM_JOB_ID ###"; date
 python -u scripts/rblend_faintfar_halfshear.py 2>&1 | grep -vE "module command|UserWarning|warn|RuntimeWarning"
 echo DONE; date

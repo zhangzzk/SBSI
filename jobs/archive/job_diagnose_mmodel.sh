@@ -18,7 +18,7 @@ date
 eval "$(conda shell.bash hook)"
 conda activate sims1
 
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 CAT=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_g0.0_train.feather
 
 for MODEL in \

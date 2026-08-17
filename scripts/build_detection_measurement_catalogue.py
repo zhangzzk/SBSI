@@ -23,6 +23,11 @@ I/O wrapper, kept on the SBSI side per the user's instruction.
 
 from __future__ import annotations
 
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear import paths  # noqa: E402
+
 import argparse
 import os
 import sys
@@ -30,11 +35,15 @@ import time
 
 import pandas as pd
 
-# blendemu provides the catalogue-building engine.
-BLENDEMU_ROOT = "/home/z/Zekang.Zhang/blendemu"
-if BLENDEMU_ROOT not in sys.path:
-    sys.path.insert(0, BLENDEMU_ROOT)
+# This is the one SBSI script that requires blendemu at import time: it is the bridge
+# that turns an existing blendemu rendering into an SBSI input catalogue. Everything
+# downstream consumes the feather it writes and needs no blendemu at all. Point at your
+# checkout with BLENDEMU_ROOT (see sbs_shear/paths.py).
+sys.path.insert(0, str(next(p for p in __import__("pathlib").Path(__file__).resolve().parents
+                            if (p / "sbs_shear").is_dir())))
+from sbs_shear.emulator import import_blendemu  # noqa: E402
 
+import_blendemu()
 from blendemu import response  # noqa: E402
 from blendemu import catalog as bcatalog  # noqa: E402
 
@@ -91,7 +100,7 @@ def build_one_case(case, shear_label, args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--data-path", default="/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876",
+    parser.add_argument("--data-path", default=f"{paths.SIM_DIR}",
                         help="blendemu simulation output directory (holds case{c}_{g}/ and gals{c}_{g}.feather)")
     parser.add_argument("--shear", required=True,
                         help="Shear value, e.g. 0.0 / 0.05 / 0.2. Matched to the case dir label.")

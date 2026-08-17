@@ -13,9 +13,9 @@
 #SBATCH -e /home/z/Zekang.Zhang/logs/sbsi_blval.%j.err
 echo "START - blend-fix validation (probes on respblend models)"; date
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-8}"
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 G05=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_g0.05_val.feather
 for M in lam300 lam1000; do
   MODEL=models/measurement_flow_g0_shape2d_respblend_${M}_v1.pt

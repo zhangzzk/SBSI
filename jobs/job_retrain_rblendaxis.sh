@@ -9,9 +9,9 @@
 #SBATCH --output=/home/z/Zekang.Zhang/logs/rblendaxis_%j.out
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=12 MKL_NUM_THREADS=12
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 D=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues
 EPOCHS=${EPOCHS:-60}; MRF=${MRF:-2400000}; MRV=${MRV:-500000}; TAG=${TAG:-rblendaxis_seed421}
 echo "### RBLENDAXIS job=$SLURM_JOB_ID node=$SLURMD_NODENAME TAG=$TAG EPOCHS=$EPOCHS ###"; nvidia-smi -L; date

@@ -9,8 +9,8 @@
 #SBATCH --partition=cip
 #SBATCH -e /home/z/Zekang.Zhang/logs/sbsi_selval3.%j.err
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"; export OMP_NUM_THREADS=8
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"; export OMP_NUM_THREADS=8
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 CATDIR=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues
 for GC in "0.05 $CATDIR/det_meas_g0.05_val.feather" "0.2 $CATDIR/det_meas_g0.2_val.feather"; do
   set -- $GC

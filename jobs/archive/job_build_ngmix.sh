@@ -10,8 +10,8 @@
 #SBATCH -e /home/z/Zekang.Zhang/logs/sbsi_ngb_%x.%j.err
 echo "START ngmix re-aggregation shear=$SHEAR -> $OUT"; date
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 python -u scripts/build_detection_measurement_catalogue.py \
   --data-path /project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876 \
   --shear "$SHEAR" --cases 0-199 --include-shapes \

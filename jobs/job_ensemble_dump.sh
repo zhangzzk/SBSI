@@ -14,8 +14,8 @@
 # Byte-for-byte mirror of job_fig2_dump.sh (same lookups/flags/full-a40) -> comparable R_flow.
 # Full a40 on cip-cl-nv01: do NOT set PYTORCH_CUDA_ALLOC_CONF (fine here, but matched to fig2 job).
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 SEED=${SLURM_ARRAY_TASK_ID}
 TAG=meas_szfl_noz_lam450_fixresp

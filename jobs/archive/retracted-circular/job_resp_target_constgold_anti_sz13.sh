@@ -14,9 +14,9 @@
 # FIREWALL: a-priori physics choice (resolve response where its gradient is steep), OOS by case, not |m|-tuning.
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=10 MKL_NUM_THREADS=10
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 CG=/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/constant_response_catalogue_train.feather
 OUT=results/response_target_constgold_c0-99_6x13x5.npz
 EDGES="0.10,0.155,0.20,0.25,0.31,0.38,0.46,0.55,0.66,0.78,0.90,1.05,1.20,1.50"

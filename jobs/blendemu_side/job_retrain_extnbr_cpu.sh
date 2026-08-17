@@ -6,7 +6,7 @@
 #SBATCH --partition=cluster
 #SBATCH --output=/home/z/Zekang.Zhang/logs/extnbr_tr_%j.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/blendemu:/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 export XGB_DEVICE=cpu
 cd /home/z/Zekang.Zhang/blendemu
 echo "### RETRAIN regression emulator on EXTENDED-NEIGHBOUR domain (CPU hist, relaxed secondary cuts) ###"

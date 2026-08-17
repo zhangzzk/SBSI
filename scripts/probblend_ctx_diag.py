@@ -6,13 +6,19 @@ shell computed three ways:
   faithful   : population MC, context = nearest of {primary@theta, Poisson field gal@d_f} (<3" else iso)
 The shell where TRUTH sits between the two tells us the correct context model.
 """
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear import paths  # noqa: E402
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear.emulator import load_blending_predictor  # noqa: E402
 import sys
 import numpy as np, pandas as pd, pyarrow.feather as pf
 
-BASE = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876"
+BASE = f"{paths.SIM_DIR}"
 DET = f"{BASE}/detection_catalogue_train.feather"
-BLEND_MODELS = "/home/z/Zekang.Zhang/blendemu/models"
-COND = dict(pixel_size=0.2, zero_point=30.0, psf_fwhm=0.73, moffat_beta=2.224, pixel_rms=0.312)
 TILE = "tile180.0_-0.5"
 R_MAX, THETA_MIN, R_MAX_CLA = 10.0, 0.05, 3.0
 SHELLS = [0.05, 0.3, 0.5, 1.0, 1.5, 2.0, 3.0, 5.0, 10.0]
@@ -21,9 +27,7 @@ N_SYN = 60
 
 
 def main():
-    sys.path.insert(0, "/home/z/Zekang.Zhang/blendemu")
-    from blendemu.inference import BlendingPredictor
-    pred = BlendingPredictor.load(BLEND_MODELS, tag="lsst_r_extnbr_ho", conditions=COND, device="cpu")
+    pred = load_blending_predictor(tag="lsst_r_extnbr_ho")
 
     det = pf.read_table(DET, columns=["case", "input_index", "detected"]).to_pandas()
     det = det[det.case == CASE].drop_duplicates(["input_index"])

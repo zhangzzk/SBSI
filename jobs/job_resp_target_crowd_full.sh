@@ -7,8 +7,8 @@
 #SBATCH --output=/home/z/Zekang.Zhang/logs/resp_crowd_full_%j.out
 
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 NF=${1:-6}
 NS=${2:-3}

@@ -13,9 +13,9 @@
 #SBATCH -e /home/z/Zekang.Zhang/logs/sbsi_pcat.%j.err
 echo "START - p_cat closure: does fixed classifier stop worsening m?"; date
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-8}"
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 MEAS=models/measurement_flow_g0_shape2d_respblend_lam1000_v1.pt
 G02=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_g0.02_val.feather
 echo "##### [A] NO selection (p_meas only) #####"

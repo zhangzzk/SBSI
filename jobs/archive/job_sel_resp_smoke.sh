@@ -13,9 +13,9 @@
 #SBATCH -e /home/z/Zekang.Zhang/logs/sbsi_selrsmoke.%j.err
 echo "START - response-aware selection SMOKE"; date
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-8}"
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 python -u scripts/train_selection_response.py \
     --response-target-npz results/selection_target_g0.05_4x2x4_blend.npz \
     --output models/selection_respaware_smoke.pt \

@@ -15,12 +15,17 @@ IDENTICAL cuts on both: detected, neighbored=False (ISOLATED), Re_input_p>0.3, r
 FIREWALL: constgold read for comparison only; nothing trains.
 """
 from __future__ import annotations
+
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear import paths  # noqa: E402
 import argparse, os, sys, time
 import numpy as np, pandas as pd
 import pyarrow as pa, pyarrow.ipc as ipc
 
-CAT = "/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/"
-CDIR = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant"
+CAT = f"{paths.CATALOGUE_DIR}/"
+CDIR = f"{paths.CONST_SIM_DIR}"
 MAG_EDGES = np.array([18.0, 24.0, 25.0, 26.0])
 
 

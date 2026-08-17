@@ -6,12 +6,19 @@ The project overview, scope boundaries (SBSI consumes finished `blendemu` catalo
 
 ## Environment
 - Conda env: `conda activate sims1` (Python 3.9). Repo is NOT pip-installed.
-- Imports rely on PYTHONPATH — always set both repos:
-  `export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"`
+- `export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"` is enough — blendemu no
+  longer needs to be on PYTHONPATH; `sbs_shear.emulator` resolves it from `BLENDEMU_ROOT`.
+- Scripts also self-bootstrap (they walk up to the repo root), so `python scripts/foo.py`
+  works with no PYTHONPATH at all.
 - Login node has no GPU (32c/376G); all training/GPU work must go through Slurm.
 
 ## Tests
-- `python -m pytest tests/` from repo root (env active, PYTHONPATH set). No pytest config.
+- `pytest` is NOT installed in `sims1`, and most test modules lack a `__main__` guard.
+  Use `python tests/run_tests.py` (needs no PYTHONPATH). 17 tests currently.
+
+## Paths
+- Nothing is hardcoded; `sbs_shear/paths.py` resolves every root from env vars.
+  `python -m sbs_shear.paths` prints what is resolved and flags anything missing.
 
 ## Jobs
 - Submit with `sbatch jobs/job_*.sh`. Never run nontrivial work directly on the login node.

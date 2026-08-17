@@ -1,9 +1,10 @@
 # Addendum: Response-aware Training Update
 
-> **Current framing lives in [`GOALS.md`](GOALS.md)** — the response loss now supervises
+> **Current framing lives in [`INFERENCE.md`](INFERENCE.md)** — the response loss now supervises
 > three derivatives (shape, measured mag/size → selection, detection), all on primary-only
 > matched pairs. The mechanism below (shear via the analytic distortion, response in the
-> loss) is unchanged; `GOALS.md` wins on targets, data, and cuts.
+> loss) is unchanged; `INFERENCE.md` wins on targets, data, and cuts.
+> (Supersedes the retired `GOALS.md`.)
 
 This section supersedes parts of the original training discussion while keeping the
 Bayesian forward-model framework unchanged.

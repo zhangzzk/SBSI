@@ -29,6 +29,11 @@ parameter-free m = R_sim / (R_flow + R_blend) - 1.  See forward_model.py.
 
 from __future__ import annotations
 
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear import paths  # noqa: E402
+
 import argparse
 import json
 import os
@@ -534,12 +539,12 @@ def train_one(mode, Ftr, Fva, Dtr, Dva, sc, args, primary_dim, neighbor_dim,
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--flow-catalogue",
-                    default="/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876/"
+                    default=f"{paths.SIM_DIR}/"
                             "self_response_catalogue_train_cases0_99.feather")
     ap.add_argument("--det-catalogue",
-                    default="/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_g0.05_val.feather")
+                    default=f"{paths.CATALOGUE_DIR}/det_meas_g0.05_val.feather")
     ap.add_argument("--btrue-npz",
-                    default="/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/btrue_detection.npz")
+                    default=f"{paths.CACHE_DIR}/derisk/btrue_detection.npz")
     ap.add_argument("--btrue-grid", action="store_true",
                     help="supervise the detection-response head on the BLEND-RESOLVED b_true grid "
                          "grid_b[flux,size,blend] (blend 0=isolated + distance bins) instead of mag_b "
@@ -557,7 +562,7 @@ def main():
                          "high-response LARGE-size cells (size cuts: additive residual +4..+6%). "
                          "CERTIFIED-path change: aligns with the equal-weighted early-stop metric; "
                          "a-priori (not tuned on |m|); needs re-certification of GLOBAL m before adoption.")
-    ap.add_argument("--outdir", default="/project/ls-gruen/users/zekang.zhang/sbsi_caches/forward_proto")
+    ap.add_argument("--outdir", default=f"{paths.CACHE_DIR}/forward_proto")
     ap.add_argument("--max-case", type=int, default=20)
     ap.add_argument("--train-case-max", type=int, default=16)   # train cases <16, val 16-19
     ap.add_argument("--max-rows-flow", type=int, default=1_000_000)

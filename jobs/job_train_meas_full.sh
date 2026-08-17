@@ -8,8 +8,8 @@
 #SBATCH --output=/home/z/Zekang.Zhang/logs/train_full_%j.out
 
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 # REALISTIC conditioning V2 / TARGET (WORKLOG cont.19). IDENTICAL to job_train_crowd_conc.sh (conc-v1)
 # EXCEPT --feature-set and --output. Fully realistic primary own-props: measured_mag_auto +

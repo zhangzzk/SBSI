@@ -13,9 +13,9 @@
 # (that OOM'd on shared nodes) -> harvest separately with job_pilot_harvest.sh reading these models.
 # Model naming (new clean convention): models/measurement_flow_g0_ngmix_${TAG}_s${SEED}.pt
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 SEEDS=${SEEDS:?set SEEDS (space-separated, e.g. "501 502 503")}
 FS=${FS:-g0_meas_crowd_conc_szfl_noz}

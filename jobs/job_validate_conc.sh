@@ -7,7 +7,7 @@
 #SBATCH --partition=inter
 #SBATCH --output=/home/z/Zekang.Zhang/logs/val_conc_%j.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"; cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"; cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 # Validate the CONCENTRATION-retrained flow on constgold, NO deficit(R_blend) correction.
 # Root-cause test: does adding nbr_flux_max flatten q3 at the source?

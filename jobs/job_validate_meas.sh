@@ -7,7 +7,7 @@
 #SBATCH --partition=inter
 #SBATCH --output=/home/z/Zekang.Zhang/logs/val_meas_%j.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"; cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"; cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 # Validate a REALISTIC (measured-primary) flow on constgold (WORKLOG cont.19). Parametrized by MTAG
 # (meas_szfl = V1 bridge, meas_full = V2 realistic), passed via sbatch --export=ALL,MTAG=...

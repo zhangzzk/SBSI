@@ -8,8 +8,8 @@
 #SBATCH --output=/home/z/Zekang.Zhang/logs/ap_full_%x_%j.out
 #SBATCH --error=/home/z/Zekang.Zhang/logs/ap_full_%x_%j.err
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 OUT=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues
 SH="$1"; TAG="$2"   # e.g. 0.0 train  |  0.05 val
 echo "=== ALL-PAIRS FULL build shear=$SH tag=$TAG (7 arcsec, k=20, flow-only, cases 0-199) ==="; date

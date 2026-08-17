@@ -11,9 +11,9 @@
 # TRUE-property gentle cuts. Firewall-safe (measures truth on constgold + compares; trains nothing).
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 echo "### CGDECOMP job=$SLURM_JOB_ID node=$SLURMD_NODENAME ###"; date
 stdbuf -oL -eL python -B -u scripts/decomp_constgold_ensemble.py || { echo "CGDECOMP FAILED"; exit 1; }
 echo "### CGDECOMP_DONE job=$SLURM_JOB_ID ###"; date

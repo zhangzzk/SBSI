@@ -26,13 +26,11 @@ import time
 import numpy as np
 import torch
 
-SCRIPTS = os.path.dirname(os.path.abspath(__file__))
-SBSI_ROOT = os.path.dirname(SCRIPTS)
-for p in (SBSI_ROOT, SCRIPTS):
-    if p not in sys.path:
-        sys.path.insert(0, p)
+SBSI_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if SBSI_ROOT not in sys.path:
+    sys.path.insert(0, SBSI_ROOT)
 
-import infer_posterior_shape as ips  # noqa: E402
+from scripts import infer_posterior_shape as ips  # noqa: E402
 from sbs_shear.measurement_model import load_measurement_model  # noqa: E402
 from sbs_shear.preprocessing import (  # noqa: E402
     DEFAULT_SELECTION_CUTS,

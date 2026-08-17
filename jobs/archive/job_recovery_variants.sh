@@ -16,7 +16,7 @@ echo "START - SBSI recovery variants (baseline / SNR>20 / isolated / both)"
 date
 eval "$(conda shell.bash hook)"
 conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 
 MODEL="${MODEL:-SBSI/models/measurement_flow_g0_shape2d_meanblind_v1.pt}"
 CATDIR=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues

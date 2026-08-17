@@ -8,8 +8,8 @@
 #SBATCH --output=/home/z/Zekang.Zhang/logs/nnlkup_%j.out
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 echo "### NNLKUP job=$SLURM_JOB_ID node=$SLURMD_NODENAME ###"; date
 python -B -u scripts/build_nn_distance_lookup.py --cases $(seq -s ' ' 0 39) \
   --sign 0.02 --base /project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant \

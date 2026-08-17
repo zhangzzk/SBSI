@@ -6,7 +6,7 @@
 #SBATCH --partition=cluster
 #SBATCH --output=/home/z/Zekang.Zhang/logs/g0lk199_%j.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"; cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"; cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 # OPTIONAL / 200-case extension only (WORKLOG cont.17). NOT needed for the primary g=0.02 test:
 # preflight found the g=0.02 render only covers cases 0-99, so the primary experiment uses the

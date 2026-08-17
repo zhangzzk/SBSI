@@ -20,6 +20,10 @@ finite-difference gradient check AGENTS.md requires before treating dP/dgamma as
 IMPORTANT: DIAGNOSTIC. Its output is NEVER wired into the certified parameter-free
 m = R_sim/(R_flow+R_blend)-1.
 """
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear import paths  # noqa: E402
 import argparse
 import os
 import sys
@@ -117,7 +121,7 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--max-batches", type=int, default=None)
     ap.add_argument("--out-prefix",
-                    default="/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk/detresp_ngmix")
+                    default=f"{paths.CACHE_DIR}/derisk/detresp_ngmix")
     args = ap.parse_args()
     g = args.nominal_g
     lines = []

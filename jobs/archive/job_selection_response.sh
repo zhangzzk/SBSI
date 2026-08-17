@@ -16,7 +16,7 @@ echo "START - SBSI selection-response gating diagnostic (classifier vs sim selec
 date
 eval "$(conda shell.bash hook)"
 conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 
 CATDIR=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues
 C005="$CATDIR/det_meas_g0.05_val.feather"

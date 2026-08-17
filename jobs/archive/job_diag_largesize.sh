@@ -13,9 +13,9 @@
 # using the iteration-2 (winner) R_blend. Diagnostic only; certified untouched.
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=4 MKL_NUM_THREADS=4
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 echo "### DIAG_LGSZ job=$SLURM_JOB_ID node=$SLURMD_NODENAME ###"; date
 stdbuf -oL -eL python -B -u scripts/diag_largesize_residual.py || { echo "DIAG_LGSZ FAILED"; exit 1; }
 echo "### DIAG_LGSZ_DONE job=$SLURM_JOB_ID ###"; date

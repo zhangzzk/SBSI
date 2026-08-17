@@ -11,7 +11,7 @@
 #   m_pred(bin) = K_intr(bin) * (1 - R_flow/R_sim)(bin)   vs measured m_she(bin).
 set -o pipefail
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"; cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"; cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 MODEL=${MODEL:-models/measurement_flow_g0_ngmix_crowdflux_conc_snc100_central02_lam300_v1.pt}
 OUT=${OUT:-/project/ls-gruen/users/zekang.zhang/sbsi_caches/flow_response_by_mag_r4M.csv}
 

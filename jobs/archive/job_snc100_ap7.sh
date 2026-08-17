@@ -8,8 +8,8 @@
 #SBATCH --output=/home/z/Zekang.Zhang/logs/ap_snc100_%j.out
 #SBATCH --error=/home/z/Zekang.Zhang/logs/ap_snc100_%j.err
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 M=models/measurement_flow_g0_ngmix_ap7_respblend_lam300_v1.pt; LK=results/g0_lookup_c0-99.feather; C=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_ngmix_ap7_g0.02_test100.feather
 echo "=== 100-case g=0.02, SNC, m at various true-mag cuts ==="; date
 for tm in 99 25 24; do

@@ -6,7 +6,7 @@
 #SBATCH --partition=cluster
 #SBATCH --output=/home/z/Zekang.Zhang/logs/measprimlk_%j.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"; cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"; cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 # Build the constgold measured-primary lookup (WORKLOG cont.19) so realistic flows can be validated.
 # Averages measured mag_auto/flux_radius/class_star over the +/-0.02 renders per (case,input_index).

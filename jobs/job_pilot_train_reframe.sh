@@ -14,9 +14,9 @@
 # fit -> per-cut (conditional) calibration, not just GLOBAL m~0. Built on the szfine non-circular target
 # (finer size). Firewall-clean (constgold never read in training). Certified path unchanged.
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 SEEDS=${SEEDS:?set SEEDS}
 FS=${FS:-g0_meas_crowd_conc_szfl_noz}

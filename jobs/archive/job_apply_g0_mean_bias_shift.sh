@@ -17,7 +17,7 @@ conda activate sims1
 
 export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:${PYTHONPATH:-}"
 
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 OUT_MODEL="models/measurement_flow_g0_ngmix_crowdflux_lam300_meanfix_bias_v1.pt"
 

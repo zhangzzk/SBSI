@@ -7,8 +7,8 @@
 #SBATCH --partition=cip
 #SBATCH --output=/home/z/Zekang.Zhang/logs/hs_selfr_%j.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 echo "### FLOW SELF-RESPONSE on INCOHERENT half-shear (no coherent blend) per R_blend bin ###"
 echo "### isolates the crowd_flux flow's self-response error -> its contribution to gold q3 (+10.9%) ###"
 python -u scripts/validate_allpairs_response.py \

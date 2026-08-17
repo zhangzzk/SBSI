@@ -16,7 +16,7 @@ echo "START - response-aware flow recovery (flow-MLE m) on g=0.05/0.2/0.02"
 date
 eval "$(conda shell.bash hook)"
 conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 
 MODEL="${MODEL:?set MODEL=SBSI/models/...pt}"
 CATDIR=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues

@@ -14,8 +14,8 @@
 # g=0 SNC lookup -- constgold is NEVER read. Firewall-clean. Does NOT touch the certified 6x3x5 target.
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 D=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues
 OUT=results/response_target_crowd_rblend_snc_c0-99_szfine.npz
 echo "### RESP_SZFINE job=$SLURM_JOB_ID node=$SLURMD_NODENAME ###"; date

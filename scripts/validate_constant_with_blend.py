@@ -10,6 +10,10 @@ add the BlendEMU blending-response emulator linearly, summed over neighbours:
 R_flow and R_sim reuse validate_constant_response's machinery; R_blend comes from
 BlendingPredictor.predict_response on the constant INPUT galaxies (keyed by input_index).
 """
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear.emulator import load_blending_predictor  # noqa: E402
 import argparse, os, sys
 import numpy as np
 import pandas as pd
@@ -44,15 +48,11 @@ from sbs_shear.coordinates import ellipticity_from_axis_ratio_angle  # noqa
 from scripts.response_ratio_diagnostic import model_mean_proj  # noqa
 
 CBASE = "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/"
-BLEND_MODELS = "/home/z/Zekang.Zhang/blendemu/models"
-COND = dict(pixel_size=0.2, zero_point=30.0, psf_fwhm=0.73, moffat_beta=2.224, pixel_rms=0.312)
 
 
 def r_blend_lookup(input_feather):
     """R_blend per input_index: emulator delta_et/gamma summed over neighbours (7in,k=30)."""
-    sys.path.insert(0, "/home/z/Zekang.Zhang/blendemu")
-    from blendemu.inference import BlendingPredictor
-    pred = BlendingPredictor.load(BLEND_MODELS, tag="lsst_r", conditions=COND, device="cpu")
+    pred = load_blending_predictor(tag="lsst_r")
     t = pf.read_table(input_feather).to_pandas()
     t = t.rename(columns={c: c.replace("_input", "") for c in t.columns})
     reg = pred.predict_response(t, t)                      # all gals are both primaries and neighbour pool

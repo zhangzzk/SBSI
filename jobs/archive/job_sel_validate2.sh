@@ -12,9 +12,9 @@
 #SBATCH -e /home/z/Zekang.Zhang/logs/sbsi_selval2.%j.err
 echo "START - selection validation: lam300 vs lam1000, g=0.05 and g=0.2 (transfer)"; date
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-8}"
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 CATDIR=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues
 for M in selection_respaware_lam300_v1 selection_respaware_lam1000_v1; do
   for GC in "0.05 $CATDIR/det_meas_g0.05_val.feather" "0.2 $CATDIR/det_meas_g0.2_val.feather"; do

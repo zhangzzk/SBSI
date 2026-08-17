@@ -16,10 +16,10 @@
 # Env: CKPTS (space-separated tags, default the sw_base/th100/th400 sweep).
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export OMP_NUM_THREADS=12 MKL_NUM_THREADS=12
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 CKPTS=${CKPTS:-"sw_base_seed421 sw_th100_seed421 sw_th400_seed421"}
 echo "### RTHETA_RO job=$SLURM_JOB_ID node=$SLURMD_NODENAME ckpts=$CKPTS ###"; nvidia-smi -L; date

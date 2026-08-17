@@ -11,8 +11,8 @@
 #SBATCH -e /home/z/Zekang.Zhang/logs/sbsi_cval.%j.err
 echo "START - constant-shear gold validation (flow vs antithetic response)"; date
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"; export OMP_NUM_THREADS=8
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"; export OMP_NUM_THREADS=8
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 python -u scripts/validate_constant_response.py \
     --measurement-model models/measurement_flow_g0_shape2d_respblend_lam1000_v1.pt \
     --max-rows "${MAXROWS:-400000}" --n-samples "${NS:-32}"

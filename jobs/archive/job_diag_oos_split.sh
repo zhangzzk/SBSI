@@ -9,9 +9,9 @@
 set -e
 source /software/opt/focal/x86_64/python/3.10-2022.08/etc/profile.d/conda.sh
 conda activate /project/ls-gruen/users/zekang.zhang/envs/sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 D=/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk
 echo "### DIAG_OOS job=$SLURM_JOB_ID ###"; date
 stdbuf -oL -eL python -B -u scripts/diag_oos_case_split.py \

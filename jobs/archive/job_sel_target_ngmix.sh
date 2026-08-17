@@ -10,8 +10,8 @@
 #SBATCH -e /home/z/Zekang.Zhang/logs/sbsi_stng.%j.err
 echo "START ngmix selection-response target (selection = detected & ngmix-converged)"; date
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 python -u scripts/compute_selection_target_blend.py \
     --catalogue /project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_ngmix_g0.05_val.feather \
     --nominal-g 0.05 --n-flux 4 --n-size 2 --n-dist 3 --max-rows 20000000 \

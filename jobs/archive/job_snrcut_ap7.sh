@@ -8,8 +8,8 @@
 #SBATCH --output=/home/z/Zekang.Zhang/logs/ap_snrcut_%j.out
 #SBATCH --error=/home/z/Zekang.Zhang/logs/ap_snrcut_%j.err
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 M=models/measurement_flow_g0_ngmix_ap7_respblend_lam300_v1.pt
 for snr in 0 10 15 20 30; do
   arg=""; [ "$snr" != "0" ] && arg="--snr-min $snr"

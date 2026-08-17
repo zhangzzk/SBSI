@@ -13,9 +13,9 @@
 # mean over 3M rows has bootstrap error ~0.0006 (negligible vs the +/-0.01 per-seed scatter we resolve).
 # GPU reshear of 3M x 64 is seconds/seed, so all 9 seeds finish in minutes. Prints one GLOBAL line per seed.
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 SEEDS=${SEEDS:-501 502 503 504 505 506 507 508 509}
 TAGBASE=${TAG:-meas_szfl}
@@ -32,7 +32,7 @@ for SEED in $SEEDS; do
   if [ ! -f "$OUT" ]; then echo "MISSING MODEL seed=$SEED"; continue; fi
   stdbuf -oL -eL python -u scripts/validate_constant_with_blend.py \
     --measurement-model $OUT \
-    --catalogue $CD/constant_response_catalogue_c40-139.feather \
+    --catalogue $CD/constant_response_catalogue_train.feather --min-case 40 \
     --blend-lookup results/blend_lookup_extnbrho_c40-139.feather \
     --crowd-flux-lookup $FL --meas-prim-lookup $MP \
     --ood-lookup results/ood_split_c40-139.feather \

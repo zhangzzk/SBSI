@@ -7,7 +7,7 @@
 #SBATCH --array=0-7
 #SBATCH --output=/home/z/Zekang.Zhang/logs/blk_extdom_%A_%a.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"; cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"; cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 M=/home/z/Zekang.Zhang/blendemu/models
 [ -f $M/classification_model_lsst_r_extdom.json ] || cp $M/classification_model_lsst_r.json $M/classification_model_lsst_r_extdom.json
 START=$(( SLURM_ARRAY_TASK_ID * 5 )); CASES=$(seq $START $((START+4)))

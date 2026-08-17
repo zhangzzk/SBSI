@@ -12,8 +12,8 @@
 # a40 GPUs; inter a40 queue is ~2 days backed up). Writes
 # results/fig5_selfresp_bins_s501.npz -> plotting/plot_flow_figures.py figure5().
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 echo "### FIG5_SELFRESP job=$SLURM_JOB_ID ###"; nvidia-smi -L; date
 stdbuf -oL -eL python -u scripts/eval_self_response_bins.py \

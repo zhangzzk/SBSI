@@ -7,7 +7,7 @@
 #SBATCH --partition=inter
 #SBATCH --output=/home/z/Zekang.Zhang/logs/valc_full_%j.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"; cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"; cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 TAG=${1:?tag}; G=${2:?shear}
 D=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues
 if [ "$G" = "0.05" ]; then CAT=$D/det_meas_crowd_g0.05_val_full.feather; else CAT=$D/det_meas_crowd_g0.02_test_full.feather; fi

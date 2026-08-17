@@ -7,7 +7,7 @@
 #SBATCH --array=0-7
 #SBATCH --output=/home/z/Zekang.Zhang/logs/crowd_lk_ext_%A_%a.out
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"; cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"; cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 START=$(( 40 + SLURM_ARRAY_TASK_ID * 20 )); CASES=$(seq $START $((START+19)))
 echo "shell-flux cases: $CASES"
 python -u scripts/build_crowding_lookup.py --cases $CASES \

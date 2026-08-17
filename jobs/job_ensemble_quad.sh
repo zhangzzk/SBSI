@@ -18,8 +18,8 @@
 # just tripled CPU+I/O contention (3x re-reading the 45M-row feather) instead of filling an idle GPU.
 # Serial gives each seed the full 24-CPU allocation -> ~1.5h/seed, ~4.5h/job. Harvest R_flow from the 12 logs.
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 
 SEEDS=${SEEDS:?set SEEDS (space-separated, e.g. "501 502 503")}
 FS=${FS:-g0_meas_crowd_conc_szfl}
@@ -57,7 +57,7 @@ train_and_val () {
     echo "TRAIN_DONE seed=$SEED"; date
     stdbuf -oL -eL python -u scripts/validate_constant_with_blend.py \
       --measurement-model $OUT \
-      --catalogue $CD/constant_response_catalogue_c40-139.feather \
+      --catalogue $CD/constant_response_catalogue_train.feather --min-case 40 \
       --blend-lookup results/blend_lookup_extnbrho_c40-139.feather \
       --crowd-flux-lookup $FL --meas-prim-lookup $MP \
       --ood-lookup results/ood_split_c40-139.feather \

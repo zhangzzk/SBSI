@@ -13,9 +13,9 @@
 # (r_sim NEVER read). Firewall-safe; no training. CPU to dodge the GPU queue.
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=16 MKL_NUM_THREADS=16
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 echo "### ENSBIAS(cpu) job=$SLURM_JOB_ID node=$SLURMD_NODENAME ###"; date
 stdbuf -oL -eL python -B -u scripts/eval_ensemble_bias_leg.py --max-rows 2000000 --n-samples 32 --batch-size 16384 \
   || { echo "ENSBIAS FAILED"; exit 1; }

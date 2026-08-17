@@ -8,8 +8,8 @@
 #SBATCH --output=/home/z/Zekang.Zhang/logs/ap_snc_%j.out
 #SBATCH --error=/home/z/Zekang.Zhang/logs/ap_snc_%j.err
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
-cd /home/z/Zekang.Zhang/SBSI
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 M=models/measurement_flow_g0_ngmix_ap7_respblend_lam300_v1.pt; LK=results/g0_lookup_c0-19.feather
 echo "###### g=0.02 NO-SNC (baseline) ######"
 python -u scripts/validate_allpairs_response.py --measurement-model "$M" \

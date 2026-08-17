@@ -16,7 +16,7 @@ echo "START - SBSI g=0 NULL test (flow on its own g=0 distribution; expect s_hat
 date
 eval "$(conda shell.bash hook)"
 conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:$PYTHONPATH"
 
 CAT=/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_g0.0_train.feather
 MAXROWS="${MAXROWS:-1000000}"

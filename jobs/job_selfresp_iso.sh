@@ -8,9 +8,9 @@
 #SBATCH --output=/home/z/Zekang.Zhang/logs/selfresp_iso_%j.out
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=8
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 echo "### SELFRESP_ISO job=$SLURM_JOB_ID node=$SLURMD_NODENAME ###"; date
 python -B -u scripts/selfresp_by_isolation.py
 echo "### SELFRESP_ISO_DONE job=$SLURM_JOB_ID ###"; date

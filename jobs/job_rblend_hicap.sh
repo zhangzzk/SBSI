@@ -16,9 +16,9 @@
 # R_flow rejected). K-fold-by-case OOS keeps it honest. Experimental; certified untouched.
 set -e
 eval "$(conda shell.bash hook)"; conda activate sims1
-export PYTHONPATH="/home/z/Zekang.Zhang/SBSI:/home/z/Zekang.Zhang/blendemu:$PYTHONPATH"
+export PYTHONPATH="${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}:$PYTHONPATH"
 export OMP_NUM_THREADS=16 MKL_NUM_THREADS=16
-cd /home/z/Zekang.Zhang/SBSI
+cd "${SBSI_ROOT:-/home/z/Zekang.Zhang/SBSI}"
 D=/project/ls-gruen/users/zekang.zhang/sbsi_caches/derisk
 RFLOW=$D/rflow_joint_prod_ens3_c40-139.npz                 # ACCEPTED iteration-2 _prod R_flow
 RBLEND=$D/rblend_scene_jointrflow_prod_szphiHC_c40-139.npz

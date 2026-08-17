@@ -1,3 +1,7 @@
+import pathlib as _pathlib, sys as _sys  # noqa: E402  -- make `sbs_shear` importable
+_sys.path.insert(0, str(next(p for p in _pathlib.Path(__file__).resolve().parents
+                             if (p / 'sbs_shear').is_dir())))
+from sbs_shear import paths  # noqa: E402
 #!/usr/bin/env python
 """Overlay the lam_r sweep vs the half-shear target: R_hs (blue) + old th400 (grey, distance axis)
 + lr150/lr250/lr450 (r_blend axis). Panels: mag / size / neighbour-flux (all objects) and mag/size
@@ -49,14 +53,14 @@ draw(ax,g,[(mag,r"true mag $r_{\rm input,p}$",False,None),(size,r"true size $R_e
            (nbf,r"neighbour flux (near shell, >1e-3)",True,1e-3)])
 ax[0].set_ylabel("self-response R"); ax[0].legend(loc="lower left",fontsize=8)
 fig.suptitle("lam_r sweep vs half-shear target — all objects (neighbour-flux panel = the blend fix)",y=1.02,fontsize=12.5)
-fig.tight_layout(); p1=f"/home/z/Zekang.Zhang/SBSI/figures/figv2_lamr_overlay_all.png"; fig.savefig(p1,dpi=200,bbox_inches="tight"); plt.close(fig)
+fig.tight_layout(); p1=f"{paths.FIGURE_DIR}/figv2_lamr_overlay_all.png"; fig.savefig(p1,dpi=200,bbox_inches="tight"); plt.close(fig)
 
 # fig: isolated (mag/size)
 fig,ax=plt.subplots(1,2,figsize=(12,5),sharey=True)
 draw(ax,iso,[(mag,r"true mag $r_{\rm input,p}$",False,None),(size,r"true size $R_e$ [pix]",False,None)])
 ax[0].set_ylabel("self-response R"); ax[0].legend(loc="lower left",fontsize=8)
 fig.suptitle("lam_r sweep vs half-shear target — 7\"-isolated (bright over-shoot vs faint fix)",y=1.02,fontsize=12.5)
-fig.tight_layout(); p2=f"/home/z/Zekang.Zhang/SBSI/figures/figv2_lamr_overlay_iso.png"; fig.savefig(p2,dpi=200,bbox_inches="tight"); plt.close(fig)
+fig.tight_layout(); p2=f"{paths.FIGURE_DIR}/figv2_lamr_overlay_iso.png"; fig.savefig(p2,dpi=200,bbox_inches="tight"); plt.close(fig)
 print("saved",p1); print("saved",p2)
 
 # corrected score: nbf panel restricted to nbf>1e-3
