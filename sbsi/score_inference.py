@@ -50,6 +50,8 @@ both are asserted in `tests/test_score_inference.py`:
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import torch
 
@@ -143,7 +145,22 @@ class SmoothRadialPrior(RadialShapePrior):
         self._t0, self._t1 = float(x[0]), float(x[-1])
         self._y0, self._d0 = float(self._spl(self._t0)), float(self._dspl(self._t0))
         self._y1, self._d1 = float(self._spl(self._t1)), float(self._dspl(self._t1))
-        self._d1 = min(self._d1, -1e-3)                  # decaying tail only
+        # DECAYING TAIL ONLY, and say so when it bites.  Beyond the last knot the density
+        # is continued as a pure exponential in `t`, and a fitted slope `psi'(t_1) >= 0`
+        # would continue it as a GROWING one -- unnormalizable, and it would put a wrong
+        # sign into `u = e[4 - 2 psi'(t)(1-t)]` out where the generator is largest.
+        # Clamping is the right repair, but silently is not: a positive fitted slope means
+        # the sparse |eps| tail is not constraining the fit, which is a fact about the
+        # prior sample and belongs in the run's log, not swallowed here.
+        self.tail_slope_raw = self._d1
+        self.tail_slope_clamped = self._d1 > -1e-3
+        if self.tail_slope_clamped:
+            warnings.warn(
+                f"SmoothRadialPrior: fitted tail slope psi'(t1) = {self._d1:+.4g} does not "
+                f"decay; clamped to -1e-3.  The |eps| tail beyond t = {self._t1:.4f} is "
+                f"under-constrained by this prior sample -- check n_knots and the sample "
+                f"size before using u out there.", RuntimeWarning, stacklevel=2)
+        self._d1 = min(self._d1, -1e-3)
         self.r_hard = float(r_hard)
         self._build_sampler()
 
@@ -901,13 +918,10 @@ def blend_injection_term(mean_grad_ehat, grid, r_blend):
     the injection was switched on (adding model response must RAISE it) and `ghat/g` read
     1.390 instead of 1.013.  Pass `extra_hess` to close it.
     """
-    e1, e2 = grid[:, 0], grid[:, 1]
-    # v_eps = d eps'/d gamma at gamma = 0: v_1 = 1 - eps^2, v_2 = i (1 + eps^2)
-    v = np.empty((len(grid), 2, 2))
-    v[:, 0, 0] = 1.0 - (e1 ** 2 - e2 ** 2)
-    v[:, 0, 1] = -2.0 * e1 * e2
-    v[:, 1, 0] = -2.0 * e1 * e2
-    v[:, 1, 1] = 1.0 + (e1 ** 2 - e2 ** 2)
+    # v_eps = d eps'/d gamma at gamma = 0: v_1 = 1 - eps^2, v_2 = i (1 + eps^2).  This is
+    # `shear_velocity_jacobian` -- it was written out a second time here, which is one
+    # place too many for a convention (§2.4's spin-2 sign) that both callers must share.
+    v = shear_velocity_jacobian(grid)
     g = np.asarray(mean_grad_ehat, float)
     if g.ndim == 2:
         g = g[None, :, :]

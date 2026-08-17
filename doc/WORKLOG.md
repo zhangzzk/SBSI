@@ -117,6 +117,16 @@ digit. `closure_g2` joins the score-cache key only when non-zero, so banked shar
 45-degree run itself is NOT done: it needs its own score pass (~5 h) and the queue is on the three
 production jobs.
 
+**Review Finding 4 (both halves).** `blend_injection_term` wrote out the Mobius shear velocity a
+second time instead of calling `shear_velocity_jacobian`; it now calls it, which leaves one place
+where §2.4's spin-2 sign convention lives. And `SmoothRadialPrior`'s `psi'(t1) -> min(psi', -1e-3)`
+tail clamp was silent. The clamp is right — a non-decaying continuation is unnormalizable and would
+put a wrong sign into `u` where the generator is largest — but a positive fitted slope is a fact
+about the prior sample (the sparse `|eps|` tail is not constraining the fit) and it now raises a
+`RuntimeWarning` and records `tail_slope_raw` / `tail_slope_clamped`. This has bitten before: the
+module docstring notes `closed_form_residual` was written after "a clamped, upturning spline tail".
+Neither run above triggered it.
+
 **Next.** Read out 15814616/17/18; re-run the `pi-grid-n` ladder for the mag and size cuts off those
 banked caches (minutes, no score pass); then settle the `I_sel` sign question against (5.3c). After
 that, the 45-degree closure at reduced rows, paired against an on-axis run on the same rows.
