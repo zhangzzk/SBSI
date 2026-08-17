@@ -1,11 +1,11 @@
 # INFERENCE.md — shear, response, and selection from the forward model
 
 Derivations and algorithms only. Measured results, model status and project history live in
-`WORKLOG.md`, `Gold-v1.md` and `Gold-V2.md`; the framework spec is `SBI_shear.md`.
+`WORKLOG.md`, `Gold-V1.md` and `Gold-V2.md`; the framework spec is `SBI_shear.md`.
 
-**Summary.** The shear response is a **covariance with the score**. Selection bias is the
-**size channel of that same score**, amplified by the cut into a boundary term. The blend response is
-its **neighbour channel**. All three follow from one identity, and none requires a separate model.
+**Summary.** The shear response is a **covariance with the score**. Selection bias is a **boundary
+term built from that same score**, dominated by its size channel. The blend response is its
+**neighbour channel**. All three follow from one identity, and none requires a separate model.
 
 New to the score/information machinery? **Appendix A** derives it from scratch on a one-dimensional
 Gaussian, with a dictionary between the statistics names and the lensing ones. §§1–7 do not depend
@@ -171,6 +171,10 @@ denominator of (2.6). They differ in noise: $s_i^{\,2}$ uses only the single rea
 Louis's $\mathcal I_i$ uses the whole posterior spread behind that vote and is generally the quieter
 estimate. Their agreement is a free internal consistency test.
 
+Everything in this subsection is stated for a **complete** sample. Under a cut the numerator and the
+denominator of (2.6) each acquire the *same* correction, and dropping the second one biases
+$\hat\gamma$; §5B.2 derives both.
+
 ### 2.4 The generator
 
 Let $v\equiv\partial_\gamma S_\gamma|_0$ be the shear velocity field on truth. Since $p_\gamma$ is the
@@ -300,18 +304,43 @@ $$\boxed{\;R_S=\frac{\mathrm{Cov}_0\big(\hat e\,W(\hat{\mathbf{x}}),\;s(\hat{\ma
 Selection changed only $f:\hat e\to\hat eW$; the identity did not care. $\mathbb E_0[W]$ is the kept
 fraction, converting a sum over all into a mean over the selected.
 
-### 4.3 Selection response = the size/flux channel
+### 4.3 Every channel splits into an interior and a boundary piece
 
 Substituting (3.1) into (4.3),
 
 $$R_S\,\mathbb E[W]=\mathbb E[\hat eWs_{\rm shape}]+\mathbb E[\hat eWs_{\rm size}]
 +\mathbb E[\hat eWs_{\rm flux}]+\mathbb E[\hat eWs_{\rm nbr}].\tag{4.4}$$
 
-With $W\equiv1$ the flux term is zero at $\kappa=0$ and the size term is the small population-averaged
-fidelity gradient (3.3). A cut changes the size term's *character*: $W$ correlates $\hat e$ with size
-at the threshold, converting a gradient averaged over the whole population into a **boundary** term
-(§4.4) that can dominate. **That amplified size term is the selection response** — not new physics and
-not a new model, but the size channel of the same score, brought to the surface by the cut.
+Each of those four terms has an exact Lagrangian counterpart, and the correspondence is worth making
+explicit because §4.4 will split the *same* total a different way. Let $\gamma_c$ be a fictitious
+parameter that switches on channel $c$'s velocity alone. Then $p_{\gamma_c}$ is a legitimate
+one-parameter family whose generator is $u_c$ and whose score is $s_c$, so (2.3) applies to it by
+itself; writing the same derivative pathwise — move the truth along $v_c$ at **fixed measurement
+noise**, and the measurement moves with it — gives
+
+$$\underbrace{\mathbb E\big[\hat eW\,s_c\big]}_{\text{Eulerian}}=\partial_{\gamma_c}\mathbb E[\hat eW]
+=\underbrace{\mathbb E\big[W\,\partial_{\gamma_c}\hat e\big]}_{\textbf{interior}}
++\underbrace{\mathbb E\big[\hat e\,\nabla_{\hat{\mathbf x}}W\cdot\partial_{\gamma_c}\hat{\mathbf x}\big]}_{\textbf{boundary}}.
+\tag{4.4b}$$
+
+Both sides are the derivative of one number along one family, so (4.4b) is an **identity, not a
+first-order approximation**: $f$ fixed with the density moving, versus objects moving with $f$
+carried along.
+
+So a cut does not *convert* a channel into a boundary term — it **adds a boundary piece to every
+channel** and leaves the interior pieces in place, now averaged over survivors. With $W\equiv1$ the
+boundary terms are absent, the flux interior term is zero at $\kappa=0$, and the size interior term is
+the small population-averaged fidelity gradient (3.3). Summing (4.4b) over channels collects
+$\sum_c\partial_{\gamma_c}\hat{\mathbf x}=\partial_\gamma\hat{\mathbf x}$, so the four boundary pieces
+merge into the single term (4.5), written with the *total* $\partial_\gamma\hat T$.
+
+**Why the size channel owns that boundary.** $R_{\rm sel}$ is the boundary sum over all channels, but
+(4.6) gives the size channel's contribution to $\partial_\gamma\hat T$ in closed form, $2e$ — spin-2
+at $O(1)$ and maximally aligned with $\hat e$ — whereas the shape and neighbour channels reach
+$\hat T$ only through the measurement's own weaker size–shape and blending couplings, enumerated in
+(5.1). §4.5 evaluates the size part on that expectation; §5A.2 is the diagnostic that tests it rather
+than assuming it. **That is the precise sense in which selection bias is the size channel** — not new
+physics and not a new model, but the boundary piece of the same score.
 
 ### 4.4 Boundary form
 
@@ -324,13 +353,19 @@ $$\boxed{\;R_{\rm sel}=\frac{p_c}{P_{\rm pass}}\;
 \qquad p_c\equiv p(\hat T=T_c)\tag{4.5}$$
 
 $R_{\rm sel}$ and $R_S$ are **not** the same object: $R_S$ (4.3) is the total response of the selected
-sample, while $R_{\rm sel}$ is only the piece the cut creates. In the language of (4.4),
+sample, while $R_{\rm sel}$ is only the boundary piece the cut creates. Collecting the *interior*
+terms of (4.4b) by object,
 
-$$R_S=R_{\rm self}\big|_S+R_{\rm blend}\big|_S+R_{\rm sel},$$
+$$R_S=R_{\rm self}\big|_S+R_{\rm blend}\big|_S+R_{\rm sel},
+\qquad
+R_X\big|_S\equiv\frac{\mathbb E\big[W\,\partial_\gamma^{(X)}\hat e\big]}{\mathbb E[W]},$$
 
-where $\big|_S$ restricts a channel to the survivors. Note also that (4.3) was derived by holding $f$
-fixed and moving the density, whereas (4.5) follows objects as they cross the threshold; the two
-routes are the Eulerian and Lagrangian forms of one derivative and agree at first order.
+where $\big|_S$ is the **interior (Lagrangian) restriction** — the survivors' own shapes moving — and
+*not* the Eulerian covariance (3.2) evaluated on survivors. Keeping that distinction is what makes the
+split exact rather than heuristic: (4.4b) removes the boundary piece from each channel *before* the
+channels are regrouped, so every term of (4.4) is counted exactly once and $R_{\rm sel}$ does not
+double-count with $R_{\rm self}|_S$. Conflating the two restrictions is the easy mistake here, and it
+double-counts the size channel.
 
 The selection response is a **boundary integral**: density at the cut edge times the correlation
 between measured shape and the shear response of the cut variable, evaluated on the edge. Interior
@@ -386,7 +421,11 @@ marginal likelihood's normalization, and in score form is a single centering,
 
 $$s_{\rm sel}=s-\langle s\rangle_{\rm sel}\tag{4.9}$$
 
-— the score-space analogue of the Sheldon–Huff selection response, which is stated in $\hat e$.
+— the score-space analogue of the Sheldon–Huff selection response, which is stated in $\hat e$. The
+centering is only half of it: truncation rescales the log-likelihood's *curvature* as well as shifting
+its slope, so $\mathcal I$ carries a matching correction (§5B.2). Applying (4.9) alone and leaving the
+denominator of (2.6) untouched leaves a multiplicative bias equal to the fractional information the
+cut removes.
 
 **Requirement.** (4.8) exists only if the flow **outputs** the cut variables. A model that takes
 measured mag/size as *inputs* and outputs shape alone has no $P_{\rm pass}$: its cut variables never
@@ -528,20 +567,30 @@ per galaxy i -- the only galaxy-specific quantity is L:
     s_i    = sum_k w_k u_k                                      # Eq 2.2
     I_i    = -sum_k w_k dU_k - Var_w(u)                         # Eq 2.5
 
-population:
+population -- the SAME node bank, reweighted by Pi_k = Ppass_k * Pdet_k
+             (normalized), and the SAME two formulas as the per-galaxy block:
 
-    <s>_sel = sum_k Ppass_k Pdet_k u_k / sum_k Ppass_k Pdet_k
-    ghat    = ( sum_i s_i - N <s>_sel ) / sum_i I_i
+    <s>_sel = sum_k Pi_k u_k                                    # cf. s_i
+    I_sel   = -sum_k Pi_k dU_k - Var_Pi(u)                      # cf. I_i,  Eq 5.3b
+    ghat    = ( sum_i s_i - N <s>_sel ) / ( sum_i I_i - N I_sel )
 ```
 
-In symbols,
+In symbols, with $\mathbb E_q$ the average under a normalized weight set $q$,
 
-$$s_i=\sum_k w_ku_k,\qquad
-\mathcal I_i=-\sum_kw_k\partial_\gamma u_k-\mathrm{Var}_w(u),$$
+$$s_i=\mathbb E_{w_i}[u],\qquad
+\mathcal I_i=-\mathbb E_{w_i}[\partial_\gamma u]-\mathrm{Var}_{w_i}(u),$$
 
-$$\boxed{\;\hat\gamma=\frac{\sum_is_i-N\langle s\rangle_{\rm sel}}{\sum_i\mathcal I_i}\;},\qquad
-\langle s\rangle_{\rm sel}=\partial_\gamma\log P(\text{pass}\mid\gamma)
-=\frac{\mathbb E_{p_0}[\Pi u]}{\mathbb E_{p_0}[\Pi]},\qquad \Pi=P_{\rm pass}P_{\rm det}.\tag{5.3}$$
+$$\langle s\rangle_{\rm sel}=\mathbb E_\Pi[u],\qquad
+\mathcal I_{\rm sel}=-\mathbb E_\Pi[\partial_\gamma u]-\mathrm{Var}_\Pi(u),
+\qquad \Pi=P_{\rm pass}P_{\rm det},$$
+
+$$\boxed{\;\hat\gamma=\frac{\sum_is_i-N\langle s\rangle_{\rm sel}}
+{\sum_i\mathcal I_i-N\,\mathcal I_{\rm sel}}\;}\tag{5.3}$$
+
+Numerator and denominator are the same pair of functionals — the mean of $u$, and Louis's combination
+— each evaluated at the **posterior** weights $w_i$ and then again at the **prior-survival** weights
+$\Pi$, and subtracted. §5B.2 derives the $\Pi$-weighted pair, and shows that under this document's own
+isotropy assumption the *denominator's* correction is the one that survives.
 
 **No true property appears anywhere.** This is the BFD estimator with a learned flow in place of an
 analytic moment likelihood.
@@ -553,7 +602,111 @@ condition at the level of weights: the blend contribution is $\sum_kw_ku_k^{(\rm
 $w_k\propto L_k$, so if $L_k$ does not change as the neighbour's position angle moves across nodes,
 the posterior over that angle equals the prior and the sum vanishes **by isotropy**.
 
-#### 5B.2 What (5.3) requires
+#### 5B.2 Selection corrects both moments, not just the first
+
+A kept object is not drawn from $p(\hat{\mathbf{x}}\mid\gamma)$. It is drawn from that density
+reweighted by survival and renormalized (A.6),
+
+$$p_{\rm keep}(\hat{\mathbf{x}}\mid\gamma)
+=\frac{\displaystyle\int p_{\rm flow}(\hat{\mathbf{x}}\mid\mathbf{x},\mathbf{n})\,W(\hat{\mathbf{x}})\,
+P_{\rm det}(\mathbf{x},\mathbf{n})\,p_\gamma\,d\mathbf{x}\,d\mathbf{n}}{P(\text{keep}\mid\gamma)},
+\qquad P(\text{keep}\mid\gamma)=\mathbb E_{p_\gamma}[\Pi],$$
+
+so **every** $\gamma$-derivative of a kept object's log-likelihood carries a matching derivative of
+$-\log P(\text{keep}\mid\gamma)$. Differentiating once gives the known centering (4.9); differentiating
+twice gives the correction that (2.6) needs and that (4.9) alone does not supply:
+
+$$s^{\rm keep}_i=s_i-\langle s\rangle_{\rm sel},\qquad
+\mathcal I^{\rm keep}_i=\mathcal I_i+\partial^2_\gamma\log P(\text{keep}\mid\gamma)\big|_0
+\;\equiv\;\mathcal I_i-\mathcal I_{\rm sel}.$$
+
+**$\mathcal I_{\rm sel}$ is Louis's identity again.** $P(\text{keep}\mid\gamma)=\int\Pi\,p_\gamma$ has
+exactly the form of the marginal (1.1) — a $\gamma$-independent function integrated against the
+sheared prior — with the flow's likelihood replaced by the survival probability $\Pi$. (2.5) therefore
+applies verbatim, with the posterior replaced by the $\Pi$-weighted prior:
+
+$$\partial^2_\gamma\log P(\text{keep}\mid\gamma)
+=\mathbb E_\Pi\big[\partial_\gamma u\big]+\mathrm{Var}_\Pi(u)
+\qquad\Longrightarrow\qquad
+\boxed{\;\mathcal I_{\rm sel}=-\mathbb E_\Pi[\partial_\gamma u]-\mathrm{Var}_\Pi(u)\;}\tag{5.3b}$$
+
+Nothing new is required to evaluate it: $u_k$, $\partial_\gamma u_k$ and $\Pi_k$ are already in the
+node bank for the per-object pass, so (5.3b) is one extra weighted sum over $N_{\rm node}$ — cost
+$O(N_{\rm node})$ against the estimator's $O(N_{\rm gal}N_{\rm node})$, i.e. free.
+
+**Under this document's own symmetry assumptions the first correction vanishes and the second does
+not.** §6 assumes an isotropic population at $\gamma=0$ and a rotationally invariant cut — the same
+assumption that gives $\mathbb E_0[\hat eW]=0$ in §4.2. Shear is spin-2, so conjugating by a rotation
+of angle $\alpha$ carries $S_\gamma$ to $S_{\gamma e^{2i\alpha}}$; with $p_0$ isotropic and $\Pi$
+rotation-invariant, the survival probability is therefore invariant along that whole circle,
+
+$$P(\text{keep}\mid\gamma)=P\big(\text{keep}\mid\gamma e^{2i\alpha}\big)\ \ \forall\alpha
+\qquad\Longrightarrow\qquad
+P(\text{keep}\mid\gamma)=P\big(|\gamma|\big),$$
+
+and a smooth function of $|\gamma|$ has **zero gradient at the origin**. Hence
+
+$$\langle s\rangle_{\rm sel}=0\ \ \text{exactly},
+\qquad
+\mathcal I_{\rm sel}=\iota\,\mathbb 1_{2\times2}\neq0,$$
+
+the second because the only rotation-invariant symmetric $2\times2$ tensor is the identity. So under
+the stated assumptions the estimator's **entire** selection correction sits in the denominator, and it
+is a single number $\iota$ rather than a matrix. Of the two corrections, the familiar first-order one
+is the one that vanishes; keeping only it would be keeping only the term that does nothing.
+
+That is §4 restated in the estimator's own language. An isotropic population under an isotropic cut
+cannot acquire a preferred direction, so selection cannot produce an **additive** bias — only a
+**multiplicative** one. $\langle s\rangle_{\rm sel}$ is the additive channel, and it is zero;
+$\mathcal I_{\rm sel}$ is the multiplicative channel, and it is $R_{\rm sel}$ (4.5) viewed from the
+score side. Both are boundary-concentrated and both are driven by the same $\partial_\gamma\log T=2e$
+of (4.6) — (4.5) through the first-order correlation $\langle\hat e\,e\rangle$ at the threshold,
+$\iota$ through the second-order spread that the same displacement puts across it.
+
+Keep $\langle s\rangle_{\rm sel}$ in (5.3) regardless: the symmetry is broken by PSF anisotropy, by any
+cut that touches $\hat e$, and by position-dependent depth or masking (A.6), and then it is not zero.
+
+**Magnitude and sign of $\iota$.** The vanishing of $\langle s\rangle_{\rm sel}$ says shear does not
+*shift* the measured-size distribution; what it does at leading order is **diffuse** it, since
+$\partial_\gamma\log\hat T=2e$ has zero mean and variance $D\equiv4\langle e_1^2\rangle$ per unit
+$\gamma^2$ (distortion convention, §4.5). Diffusing a density by $D\gamma^2$ moves the kept fraction by
+$-\tfrac12D\gamma^2\,p'(T_c)$, so for $e$ uncorrelated with size
+
+$$\iota\;\simeq\;\frac{4\langle e_1^2\rangle}{P_{\rm pass}}\;
+\frac{\partial p}{\partial\hat T}\bigg|_{\hat T=T_c}.\tag{5.3c}$$
+
+Set beside (4.7) this is a tidy pairing: **$R_{\rm sel}$ sees the density at the cut edge, $\iota$ sees
+its slope**, and both carry one factor of $\langle e^2\rangle$. So $\iota$ changes sign at the **peak**
+of $p(\hat T)$ — a mild cut on the rising side keeps most of the sample and destroys information
+($\iota>0$); an aggressive cut on the falling side keeps the responsive tail and *adds* information
+($\iota<0$), growing like $1/P_{\rm pass}$.
+
+A.7 gives the analogous term in closed form for a *shift* parameter, where it is enormous: a cut at the
+median destroys $2/\pi\approx64\%$ of the information. That toy overstates the lensing case exactly as
+the symmetry argument predicts — a shift acts at $O(1)$, where spin-2 leaves only the
+$O(\langle e^2\rangle)$ diffusion of (5.3c). Suppressed, then, but not small: with $\langle e_1^2\rangle
+\approx0.2$ in the distortion convention, $\iota/\mathcal I$ at the percent level is easy to reach,
+which is orders of magnitude above a Stage-IV requirement on $m$. Use (5.3c) to decide how much it
+matters; evaluate (5.3b) on the node bank for the number that goes into (5.3).
+
+**It is also self-detecting.** §2.3 offered the agreement of $\sum_is_i^{\,2}$ and $\sum_i\mathcal I_i$
+as a free consistency test. Under a cut the same test still works, because the sum-of-squares route
+picks the correction up automatically from the centering while the Louis route does not:
+
+$$\frac1N\sum_i\big(s_i-\langle s\rangle_{\rm sel}\big)^2
+\;\approx\;\frac1N\sum_i\mathcal I_i\;-\;\mathcal I_{\rm sel},$$
+
+both sides estimating the kept population's information. Run with the uncorrected denominator and the
+two disagree by exactly the missing term, which is the cheapest way to confirm the implementation —
+and, since $\langle s\rangle_{\rm sel}=0$ under isotropy, the centering drops out of the left side and
+the test reduces to comparing $N^{-1}\sum_is_i^{\,2}$ with $N^{-1}\sum_i\mathcal I_i-\iota$.
+
+In two components $\mathrm{Var}_\Pi(u)=\mathbb E_\Pi[uu^{\mathsf T}]-\mathbb E_\Pi[u]\,
+\mathbb E_\Pi[u]^{\mathsf T}$, so $\mathcal I_{\rm sel}$ is a $2\times2$ matrix in general — reducing
+to $\iota\mathbb 1$ under isotropy, which is itself a check on the node bank — and it is subtracted
+from $\sum_i\mathcal I_i$ before the matrix solve of §6.
+
+#### 5B.3 What (5.3) requires
 
 1. **$\nabla\log p_0$ over the whole scene** — shape, size, flux, Sérsic and neighbour configuration,
    tractable enough to differentiate. An analytic isotropic shape prior with an exact Möbius pullback
@@ -576,18 +729,24 @@ the posterior over that angle equals the prior and the sum vanishes **by isotrop
    varying footprint.
 4. **$P(\text{det}\mid\mathbf{x},\mathbf{n})$** and its integral against the sheared prior — i.e. over
    objects never observed.
-5. **Cost** — a $\gtrsim5$-dimensional per-object posterior. The node bank amortizes $u_k$,
-   $\partial_\gamma u_k$, $P_{{\rm det},k}$ and $P_{{\rm pass},k}$ across the catalogue, leaving
-   $N_{\rm gal}\times N_{\rm node}$ flow evaluations.
+5. **Cost, and effective sample size.** A $\gtrsim5$-dimensional per-object posterior. The node bank
+   amortizes $u_k$, $\partial_\gamma u_k$, $P_{{\rm det},k}$ and $P_{{\rm pass},k}$ across the
+   catalogue, leaving $N_{\rm gal}\times N_{\rm node}$ flow evaluations. The binding constraint is not
+   that count but the **ESS per object**: $w_k\propto L_kP_{{\rm det},k}$ is importance sampling from
+   $p_0$, and in $\gtrsim5$ dimensions the likelihood is far narrower than the prior, so a handful of
+   nodes can carry all the weight. $s_i=\mathbb E_{w_i}[u]$ is a ratio of weighted sums, hence
+   **biased, not merely noisy, at small ESS** — and the bias is common across objects, so averaging
+   over the catalogue does not remove it. $N_{\rm node}$ must be set by a measured ESS, not by budget;
+   the same caveat is what forced large template banks in BFD.
 
 A shape-only reduction is possible (analytic shape prior, location-family grid), but a shape-only
 score yields the **shape channel alone** — not even the whole of $R_{\rm self}$, since the size
 channel (3.3) is dropped with it — and neither blend (§3, geometry-blind ⇒ identically zero) nor
-selection (§4.3, that is the size channel).
+selection (§4.3: the boundary term is built mostly from the size channel).
 
 ### 5C. Lagrangian form — shear the samples, not the prior
 
-§5B needs $\nabla\log p_0$ over the whole scene, which is its most demanding requirement (§5B.2, item
+§5B needs $\nabla\log p_0$ over the whole scene, which is its most demanding requirement (§5B.3, item
 1). That requirement is an artefact of the parametrization, not of the problem, and this section
 removes it. It also gives an external $R_{\rm blend}$ a principled home, for the case where the flow
 is geometry-blind and §3's neighbour channel is therefore identically zero.
@@ -611,29 +770,88 @@ pushing samples carries it automatically; in (1.1) it is what becomes the $\nabl
 Differentiating (5.4) under the integral and dividing, as in §2.1,
 
 $$s=\mathbb E_{\rm post}\big[\tilde u\big],\qquad
-\tilde u(\mathbf{z};\hat{\mathbf{x}})\;\equiv\;\partial_\gamma\log p_{\rm flow}
-\big(\hat{\mathbf{x}}\mid S_\gamma\mathbf{z}\big)\Big|_0
-=\nabla_{\mathbf{x}}\log p_{\rm flow}(\hat{\mathbf{x}}\mid\mathbf{x})\big|_{\mathbf{z}}\cdot v(\mathbf{z}),\tag{5.5}$$
+\tilde u(\mathbf{z};\hat{\mathbf{x}})\;\equiv\;\partial_\gamma\log\Big[
+p_{\rm flow}\big(\hat{\mathbf{x}}\mid S_\gamma\mathbf{z}\big)\,
+P_{\rm det}\big(S_\gamma\mathbf{z}\big)\Big]_0
+=\Big[\nabla\log p_{\rm flow}(\hat{\mathbf{x}}\mid\cdot)+\nabla\log P_{\rm det}\Big]_{\mathbf{z}}
+\!\cdot v(\mathbf{z}),\tag{5.5}$$
 
-with $v$ the same velocity field of §2.4 and the posterior weights unchanged from §5B.1,
-$w_k\propto L_kP_{{\rm det},k}$. Louis (2.5) carries over verbatim with $u\to\tilde u$, since
+with $v$ the same velocity field of §2.4. The posterior is now over the **intrinsic** scene,
+
+$$q_\gamma(\mathbf{z}\mid\hat{\mathbf{x}})\;\propto\;
+p_{\rm flow}\big(\hat{\mathbf{x}}\mid S_\gamma\mathbf{z}\big)\,
+P_{\rm det}\big(S_\gamma\mathbf{z}\big)\,p_0(\mathbf{z}),$$
+
+and because $S_0=\mathrm{id}$ it coincides at $\gamma=0$ with §5B.1's. So drawing nodes
+$\mathbf{z}_k\sim p_0$ leaves the self-normalized weights unchanged,
+$w_k\propto L_kP_{{\rm det},k}$ with $L_k=p_{\rm flow}(\hat{\mathbf{x}}_i\mid\mathbf{z}_k)$; the cut
+factor still cancels by (5.2). Louis (2.5) carries over verbatim with $u\to\tilde u$, since
 $\tilde u$ is the $\gamma$-derivative of the complete-data log-likelihood in this parametrization.
 Both (2.2) and (5.5) equal $\partial_\gamma\log p(\hat{\mathbf{x}}\mid\gamma)$, so they agree object
 by object — an exact cross-check, and the identity relating them is the integration by parts that
 produced (2.7).
 
+**Every factor carrying $\gamma$ must be differentiated — including $P_{\rm det}$.** This is the one
+trap of the reparametrization, and it is easy to walk into by transcribing (2.2). In the Eulerian
+form $P_{\rm det}(\mathbf{x},\mathbf{n})$ is a *fixed* function of truth: $\gamma$ moves the prior
+underneath it, so it enters the weights and nothing else. Here $\gamma$ moves the sample *through*
+it, so it carries a derivative of its own. Omitting that channel is not a small error — it is the
+same order as the retained one and can reverse the sign of $s_i$. The general rule: in the
+Lagrangian form $\tilde u$ is the $\gamma$-derivative of the **whole** integrand except $p_0$, which
+is now $\gamma$-free. $P_{\rm pass}$ is *not* among those factors — by (5.2) the cut evaluates to
+$W(\hat{\mathbf{x}}_i)=1$ and cancels from the per-object posterior, reappearing only in the
+population term (5.5c). Detection does not cancel; the cut does. That asymmetry is §5B.1(ii)–(iii),
+and it is sharper here than in §5B because both would otherwise look like "selection functions of
+truth."
+
+Explicitly: let
+
+$$\varphi_k(\gamma)\;\equiv\;\log\Big[p_{\rm flow}\big(\hat{\mathbf{x}}_i\mid S_\gamma\mathbf{z}_k\big)\,
+P_{\rm det}\big(S_\gamma\mathbf{z}_k\big)\Big],$$
+
+a scalar function of one variable along the shear curve through node $k$ — the complete-data
+log-likelihood restricted to that curve. Then
+
+$$\tilde u_k=\varphi_k'(0),\qquad
+\partial_\gamma\tilde u_k=\varphi_k''(0),\qquad
+\mathcal I_i=-\mathbb E_{w_i}\big[\varphi''\big]-\mathrm{Var}_{w_i}\big(\varphi'\big).\tag{5.5b}$$
+
+Both derivatives live on the **same** curve, so one second-order forward pass returns the score and its
+Louis partner together; a central second difference in $\gamma$ at fixed node is equally clean, for the
+same common-random-numbers reason as below. This is the practical gain of the reparametrization. In the
+Eulerian form $u$ and $\partial_\gamma u$ are two separately-derived analytic objects, each requiring
+$\nabla\log p_0$ and $\nabla\!\cdot\!v$; here they are the first two Taylor coefficients of one scalar.
+
 | | Eulerian, (2.7) | Lagrangian, (5.5) |
 |---|---|---|
-| $\gamma$ acts on | the prior density | the flow's conditioning inputs |
-| requires | $\nabla\log p_0$ and $\nabla\!\cdot\!v$ over the whole scene | $\nabla_{\mathbf{x}}\log p_{\rm flow}$ — autograd |
+| $\gamma$ acts on | the prior density | the flow's **and the classifier's** inputs |
+| requires | $\nabla\log p_0$ and $\nabla\!\cdot\!v$ over the whole scene | $\nabla\log p_{\rm flow}$ *and* $\nabla\log P_{\rm det}$ — autograd |
+| $P_{\rm det}$ is | a fixed weight, not differentiated | a $\gamma$-carrying factor, differentiated |
 | the prior must be | a differentiable density | a sample generator |
 | Jacobian of $S_\gamma$ | explicit, the $\nabla\!\cdot\!v$ term | automatic |
 | amortization | $u_k$ precomputed once per node | $\tilde u$ depends on $\hat{\mathbf{x}}_i$, so per (object, node) |
 
+**The selection terms must be reparametrized too.** Both $\langle s\rangle_{\rm sel}$ and
+$\mathcal I_{\rm sel}$ are written in §5B as $\Pi$-weighted moments of $u$, so taking (5.5) for the
+score and leaving them alone would reintroduce $\nabla\log p_0$ through the back door and defeat the
+point of this section. They do not need it either. Both are derivatives of the single scalar
+
+$$P(\text{keep}\mid\gamma)=\mathbb E_{p_0(\mathbf{z})}\big[\Pi\big(S_\gamma\mathbf{z}\big)\big],
+\qquad
+\langle s\rangle_{\rm sel}=\partial_\gamma\log P\big|_0,\qquad
+\mathcal I_{\rm sel}=-\partial^2_\gamma\log P\big|_0,\tag{5.5c}$$
+
+evaluated by pushing the **same node bank** through $S_\gamma$ and asking the detection classifier and
+$P_{\rm pass}$ for their values on the sheared nodes. Two JVPs through $\Pi$ suffice; because the
+nodes are held fixed, a finite difference in $\gamma$ is also clean here (common random numbers) in a
+way it is not on the data side. The Eulerian and Lagrangian forms agree by the same integration by
+parts as before — $\mathbb E_{p_0}[\Pi u]=\mathbb E_{p_0}[\nabla\Pi\cdot v]$ — which is a useful check
+on the classifier's gradients.
+
 **This does not remove prior dependence.** $p_0$ still sets the posterior weights and the answer still
 depends on it; §6's bullet stands. What is removed is the requirement that $p_0$ be available in
-differentiable closed form — a modelling obstacle, not a statistical one. The cost is the last row:
-$\tilde u$ cannot be precomputed in the node bank the way $u_k$ can. In practice (5.5) is a
+differentiable closed form — a modelling obstacle, not a statistical one. The cost is the last row of
+the table: $\tilde u$ cannot be precomputed in the node bank the way $u_k$ can. In practice (5.5) is a
 directional derivative along $v$, so a forward-mode JVP returns $\log p_{\rm flow}$ and $\tilde u$
 together at roughly twice the cost of the §5B.1 evaluation, not the cost of a full gradient.
 
@@ -661,6 +879,20 @@ $\mathrm{Cov}(\hat e,\,R_b(\hat e-\mu)v_\varepsilon/\sigma^2)=R_b\langle v_\vare
 using the isotropic average of $v_\varepsilon$ from §2.5. The response is $R_b$ with the expected
 sign, and nothing was tuned to make it so.
 
+**The curvature follows automatically — do not bolt it on.** (5.6) is a properly normalized
+$\gamma$-family, so everything above applies to it unchanged: (5.6) simply redefines the curve
+$\varphi_k$ of (5.5b) to
+
+$$\varphi_k(\gamma)=\log\Big[p_{\rm flow}\Big(\hat{\mathbf{x}}_i-R_b(\theta_b)\,\Delta e(\gamma,\mathbf{z}_k)
+\;\Big|\;S_\gamma\mathbf{z}_k\Big)P_{\rm det}\big(S_\gamma\mathbf{z}_k\big)\Big],\qquad
+\Delta e(\gamma,\mathbf{z})=\big(S_\gamma\mathbf{z}\big)_e-\mathbf{z}_e,\tag{5.7b}$$
+
+and $s_i,\mathcal I_i$ are then read off that curve by (5.5b) exactly as before. In
+particular the injected channel contributes to $\mathcal I$ through *both* Louis terms, not only
+through the mean — (5.7) is nothing but $\varphi_k'(0)$ for this curve. Computing $\mathcal I$ from the un-injected $\tilde u$ and adding a response
+correction afterwards would repeat, one level down, the error §5B.2 corrects — a truncated model's
+slope paired with the untruncated model's curvature.
+
 **Why this is better than dividing.** The blend shift now sits *inside* the density, so $P_{\rm pass}$
 (4.8) integrates the shifted distribution and the cut boundary sees blending. Selection and blending
 compose. The additive form $m=R_{\rm sim}/(R_{\rm self}+R_{\rm blend})-1$ divides after selection has
@@ -685,6 +917,144 @@ assumption with no support at a $\hat T$ boundary, where §4.4 shows the whole e
   that transition is §3's own diagnostic: compute $\mathrm{Cov}(\hat e,s_{\rm nbr})\approx N^{-1}\sum_i
   \hat e_is_i^{(\rm nbr)}$ from the node bank and check it against the emulator's $R_{\rm blend}$.
 
+#### 5C.5 The algorithm
+
+The same three blocks as §5B.1, with $\nabla\log p_0$ nowhere in them: $p_0$ enters only as a
+**sampler**.
+
+```
+node bank -- built ONCE, shared across all galaxies:
+
+    z_k    ~ p_0(z)                     # INTRINSIC scene samples. Sampler only -- no density,
+                                        #   no gradient, no divergence.
+    Pdet_k = P( detected | z_k )        # classifier
+    Ppass_k= Integral_S p_flow( xhat | z_k ) dxhat     # Eq 4.8, MC -- FIXED base draws
+    Pi_k   = Ppass_k * Pdet_k
+
+per galaxy i -- nothing amortizes; all per (object, node), see the 5C.2 table:
+
+    phi_k(g) = log p_flow( xhat_i | S_g z_k )   # ONE scalar curve per node.
+             + log Pdet( S_g z_k )              #   BOTH factors carry g here -- see 5C.2.
+                                                #   NOT Ppass: the cut cancels, Eq 5.2.
+    L_k      = p_flow( xhat_i | z_k )
+    ut_k     = phi_k'(0)                        # Eq 5.5  -- score channel
+    dUt_k    = phi_k''(0)                       # Eq 5.5b -- Louis channel, SAME curve
+    w_k      propto L_k * Pdet_k                # Eq 5.2 -- no cut factor, it cancels
+    s_i      = sum_k w_k ut_k
+    I_i      = -sum_k w_k dUt_k - Var_w(ut)     # Eq 5.5b
+
+population -- push the SAME node bank through S_g, re-ask Pi on the sheared nodes:
+              (with an external R_blend, Ppass must be the SHIFTED one -- point 3)
+
+    P(g)     = mean_k [ Ppass( S_g z_k ) * Pdet( S_g z_k ) ]      # Eq 5.5c
+    <s>_sel  =   d/dg   log P |_0
+    I_sel    = -d2/dg2  log P |_0
+    ghat     = ( sum_i s_i - N <s>_sel ) / ( sum_i I_i - N I_sel )    # Eq 5.3
+```
+
+**The estimator.** The *form* of (5.3) is unchanged — only its ingredients are. With
+$\mathbb E_q$ the average under a normalized weight set $q$ (§5B.1), and with the two curves
+
+$$\varphi_k(\gamma)=\log\big[p_{\rm flow}(\hat{\mathbf{x}}_i\mid S_\gamma\mathbf{z}_k)\,
+P_{\rm det}(S_\gamma\mathbf{z}_k)\big]
+\ \ \text{per (object, node)},
+\qquad
+P(\gamma)=\mathbb E_{p_0(\mathbf{z})}\big[\Pi\big(S_\gamma\mathbf{z}\big)\big]
+\ \ \text{once for the population},$$
+
+the four ingredients are
+
+$$s_i=\mathbb E_{w_i}\big[\varphi'\big],\qquad
+\mathcal I_i=-\mathbb E_{w_i}\big[\varphi''\big]-\mathrm{Var}_{w_i}\big(\varphi'\big),
+\qquad w_k\propto L_k\,P_{{\rm det},k},$$
+
+$$\langle s\rangle_{\rm sel}=\big(\log P\big)'(0),\qquad
+\mathcal I_{\rm sel}=-\big(\log P\big)''(0),$$
+
+all derivatives at $\gamma=0$. Substituting into (5.3) and hiding nothing,
+
+$$\boxed{\;\hat\gamma\;=\;
+\frac{\displaystyle\sum_{i=1}^{N}\mathbb E_{w_i}\big[\varphi'\big]\;-\;N\,\big(\log P\big)'(0)}
+{\displaystyle-\sum_{i=1}^{N}\Big(\mathbb E_{w_i}\big[\varphi''\big]
++\mathrm{Var}_{w_i}\big(\varphi'\big)\Big)\;+\;N\,\big(\log P\big)''(0)}\;}\tag{5.8}$$
+
+**Every quantity in (5.8) is a first or second derivative of one of those two scalar curves**, and
+neither curve requires $\nabla\log p_0$ — that is the entire content of §5C. The numerator is a
+slope and the denominator a curvature, as in (2.6); the population terms subtract the part of each
+that the cut alone would have produced. With an external $R_{\rm blend}$, replace $\varphi_k$ by
+(5.7b) and $P_{\rm pass}$ by its shifted form (point 3); (5.8) itself does not change.
+
+**A cheaper denominator.** Nothing forces the Louis form. A kept object has score
+$s_i-\langle s\rangle_{\rm sel}$ and Bartlett applied to $p_{\rm keep}$ gives its information as the
+variance of that same quantity, so
+
+$$\hat\gamma=\frac{\sum_i\big(s_i-\langle s\rangle_{\rm sel}\big)}
+{\sum_i\big(s_i-\langle s\rangle_{\rm sel}\big)^2}\tag{5.9}$$
+
+is a legitimate first-order estimator needing **no second derivatives at all** — the §2.3 remark
+$\hat\gamma=\sum s_i/\sum s_i^2$, correctly centred for the cut. §5B.2's consistency test is exactly
+the statement that (5.9) and (5.8) share a denominator in expectation. Two cautions. Centring is not
+optional: dropping $\langle s\rangle_{\rm sel}$ from *both* places, not just the numerator, leaves an
+$O(1)$ bias, since a truncated sample has $\mathbb E_0[s]\neq0$. And the two denominators, though
+equal *at* $\gamma=0$ by the information equality, drift apart away from it. Both are averages of
+fixed functions of the data, so (2.3) gives each drift directly —
+$\partial_\gamma\mathbb E_\gamma[(s^{\rm keep})^2]_0=\mu_3$, the third central moment of the
+kept-sample score, and $\partial_\gamma\mathbb E_\gamma[\mathcal I^{\rm keep}]_0
+=\mathrm{Cov}_0(\mathcal I^{\rm keep},s^{\rm keep})$ — so
+
+$$m_{(5.9)}-m_{(5.8)}\;=\;-\gamma\,
+\frac{\mu_3-\mathrm{Cov}_0\big(\mathcal I^{\rm keep},s^{\rm keep}\big)}{\mathcal I_{\rm keep}}
++O(\gamma^2).\tag{5.9b}$$
+
+The covariance term is not optional: it vanishes only when $\mathcal I_i$ is the same for every
+object, which is a Gaussian accident (A.7 is one). For a flow with a realistic spread of
+$\mathcal I_i$ it carries a large fraction of (5.9b).
+
+Both estimators are single Newton steps from $\gamma=0$, and (5.9b) is a step-*size* difference only:
+the root is fixed by the numerator, which they share. Iterating either — re-evaluating its
+ingredients at $\hat\gamma$ rather than at $0$ — drives the numerator to zero, so both converge to
+the same MLE and (5.9b) disappears. Use (5.9) as a cheap cross-check on (5.8), or iterate it; do not
+use it once, uniterated, when the multiplicative-bias budget is tight.
+
+Four points decide whether it works.
+
+1. **One curve, two derivatives.** $\tilde u$ and $\partial_\gamma\tilde u$ are $\varphi'(0)$ and
+   $\varphi''(0)$ of the *same* scalar function (5.5b) — one second-order forward pass, or a central
+   second difference. Never form $\nabla^2\log p_{\rm flow}$: this is a directional derivative along
+   $v$, so the cost is $O(d)$, not $O(d^2)$.
+
+2. **Common random numbers, twice.** The MC draws inside $P_{\rm pass}$ must be held fixed *across
+   $\gamma$* and *across nodes*; otherwise $P(\gamma)$ is a noisy step function and its second
+   derivative is meaningless. $\mathcal I_{\rm sel}$ is the term that dies first. The same applies to
+   $\varphi_k$ if it is differenced rather than differentiated. Both are clean here **because the node
+   is held fixed** — the structural advantage this parametrization has over the data side.
+
+3. **Injection is a change of curve — but of *both* curves.** With an external $R_{\rm blend}$, (5.6)
+   redefines $\varphi_k$ to (5.7b), and (5.8) is unchanged: no new term, no new estimator. It also
+   redefines the survival curve, because $P_{\rm pass}$ must integrate the **shifted** density,
+
+   $$P_{\rm pass}(\mathbf{z};\gamma)=\int_S p_{\rm flow}
+   \big(\hat{\mathbf{x}}-R_b(\theta_b)\,\Delta e(\gamma,\mathbf{z})\mid S_\gamma\mathbf{z}\big)\,
+   d\hat{\mathbf{x}}
+   =\int_{S-R_b\Delta e}p_{\rm flow}\big(\hat{\mathbf{x}}'\mid S_\gamma\mathbf{z}\big)\,d\hat{\mathbf{x}}',$$
+
+   i.e. the cut region translates relative to the density. At $\gamma=0$ this reduces to the node
+   bank's stored $P_{{\rm pass},k}$ (since $\Delta e=0$), so the bank is still built once — but its
+   $\gamma$-derivative differs, so $\langle s\rangle_{\rm sel}$ and $\mathcal I_{\rm sel}$ do too.
+   Using the un-shifted $P_{\rm pass}$ here would silently discard the one thing §5C.3 was for: the
+   cut boundary moving with the blend response. **Selection and blending compose only if both curves
+   carry the shift.**
+
+4. **Three free cross-checks.** (i) Where both are computable, the Eulerian (2.2) and Lagrangian (5.5)
+   scores agree object by object. (ii) $\mathbb E_{p_0}[\Pi u]=\mathbb E_{p_0}[\nabla\Pi\cdot v]$ tests
+   the classifier's gradients. (iii) §5B.2's consistency test,
+   $N^{-1}\sum_i(s_i-\langle s\rangle_{\rm sel})^2\approx N^{-1}\sum_i\mathcal I_i-\mathcal I_{\rm sel}$,
+   carries over verbatim.
+
+**Cost.** The per-galaxy block is $O(N_{\rm gal}N_{\rm node})$ second-order forward passes — roughly
+2–3× §5B.1, and the price of the last row of the 5C.2 table. The population block is $O(N_{\rm node})$
+and free by comparison. Node-bank size is set by the effective sample size caveat of §5B.3, item 5.
+
 ---
 
 ## 6. Assumptions and conditions of validity
@@ -692,11 +1062,16 @@ assumption with no support at a $\hat T$ boundary, where §4.4 shows the whole e
 - **First order in $\gamma$.** (2.3), (2.6), (4.3) and (4.5) are leading order in shear. Cross-channel
   terms in (3.1) carry two powers of displacement and so sit in the discarded $O(\gamma^2)$.
 - **$\gamma$ is two-component.** It is written as a scalar throughout for readability. In
-  implementation $s_i$ is a 2-vector, $\mathcal I\equiv\mathbb E_0[ss^{\mathsf T}]$ and $\mathcal I_i$
-  are $2\times2$ matrices, and (2.6) and (5.3) are matrix solves,
-  $\hat\gamma=\big(\sum_i\mathcal I_i\big)^{-1}\sum_i s_i$.
+  implementation $s_i$ is a 2-vector, $\mathcal I\equiv\mathbb E_0[ss^{\mathsf T}]$, $\mathcal I_i$ and
+  $\mathcal I_{\rm sel}$ are $2\times2$ matrices, and (2.6) and (5.3) are matrix solves,
+  $\hat\gamma=\big(\sum_i\mathcal I_i-N\mathcal I_{\rm sel}\big)^{-1}\big(\sum_i s_i-N\langle s\rangle_{\rm sel}\big)$.
 - **Isotropy at $\gamma=0$, and a rotationally invariant cut** — required for $\mathbb E_0[\hat eW]=0$
-  in §4.2. A cut on $\hat e_1$ alone violates it and reinstates the dropped term.
+  in §4.2. A cut on $\hat e_1$ alone violates it and reinstates the dropped term. The same assumption
+  sets $\langle s\rangle_{\rm sel}=0$ and makes $\mathcal I_{\rm sel}$ a multiple of the identity
+  (§5B.2), so violating it costs two terms, not one.
+- **Selection corrects both moments of (2.6).** Centering the score without correcting the information
+  is not a partial fix but an inconsistent one — the truncated model's slope over the untruncated
+  model's curvature (A.6b). Under isotropy it is also the *wrong half*: §5B.2.
 - **$\kappa=0$** in (4.6) and in the flux row of §2.4. Real surveys carry convergence together with
   shear, so the first-order flux magnification suppressed here is genuinely present in data.
 - **Correct specification.** (2.4) returns the response *of the model*; misspecification appears as
@@ -712,8 +1087,8 @@ assumption with no support at a $\hat T$ boundary, where §4.4 shows the whole e
 
 ## 7. Pointers
 
-- Framework spec: `SBI_shear.md`. Certified numbers and model status: `Gold-v1.md`, `Gold-V2.md`,
-  `WORKLOG.md`.
+- Framework spec: `SBI_shear.md`. Certified numbers and model status: `Gold-V1.md`, `Gold-V2.md`,
+  `Gold-V3.md`, `WORKLOG.md`.
 - Code: `sbs_shear/posterior_shape.py` (posterior grid, shape prior with exact Möbius pullback),
   `sbs_shear/shear_map.py` (analytic $S_\gamma$), `sbs_shear/measurement_model.py`
   (`ConditionalMeanFlow`, `flow_drop_indices`), `sbs_shear/forward_model.py` +
@@ -829,7 +1204,17 @@ so every kept object's log-likelihood carries $-\log P(\text{pass}\mid\theta)$ a
 $s-\partial_\theta\log P(\text{pass}\mid\theta)$. The subtracted piece has no $y$ in it — $y$ was
 integrated away — so it is one number, repeated $N$ times. That is the $N\langle s\rangle_{\rm sel}$
 of (5.3), and by (A.1) applied to $p_S$ it is exactly the mean score of the surviving objects: the
-correction re-centres the score on the population you kept. Keep the two levels distinct:
+correction re-centres the score on the population you kept.
+
+**The same term differentiated twice.** $-\log P(\text{pass}\mid\theta)$ sits in the log-likelihood, so
+it contributes to the curvature as well as to the slope. Applying (A.2) to $p_S$,
+
+$$\mathcal I_S=\mathcal I+\partial^2_\theta\log P(\text{pass}\mid\theta),\tag{A.6b}$$
+
+which is the $-N\mathcal I_{\rm sel}$ of (5.3). There is nothing optional about it: (A.2) is what makes
+$s/\mathcal I$ the right estimator, and (A.2) holds for $p_S$ only with *both* corrections applied.
+Correcting the score alone is inconsistent — it uses the truncated model's slope with the untruncated
+model's curvature. Keep the two levels distinct:
 
 | | depends on | meaning |
 |---|---|---|
@@ -868,7 +1253,29 @@ $$P(\text{pass}\mid\theta)=\bar\Phi\!\left(\frac{c-\theta}{\nu}\right),\qquad
 the last equality because $\mathbb E[y\mid y>c]=\nu\,\phi/\bar\Phi$. So the correction in (5.3) is
 literally the average score of the objects that survived, and the naive estimator that omits it
 returns the truncated mean $\mathbb E[y\mid y>c]>0$ at $\theta=0$ — a selection bias, in the smallest
-possible model. Everything in §4 is this, with $y\to\hat T$ and a spin-2 shear in place of a shift.
+possible model.
+
+Differentiating once more gives the denominator's correction (5.3b) in closed form. Write $a=c/\nu$
+and $\lambda(a)=\phi(a)/\bar\Phi(a)$ for the inverse Mills ratio:
+
+$$\mathcal I_{\rm sel}=-\partial^2_\theta\log P(\text{pass}\mid\theta)\big\rvert_0
+=\frac{\lambda(\lambda-a)}{\nu^2},
+\qquad
+\mathcal I_S=\mathcal I-\mathcal I_{\rm sel}=\frac{1-\lambda(\lambda-a)}{\nu^2}
+=\frac{\mathrm{Var}[y\mid y>c]}{\nu^4}\ \checkmark\tag{A.7b}$$
+
+— the truncated normal's own information, as it must be. Two independent checks that (5.3b) is right:
+the last equality, and evaluating $\mathcal I_{\rm sel}$ instead as
+$-\mathbb E_\Pi[\partial_\theta u]-\mathrm{Var}_\Pi(u)=1/\tau^2-\mathrm{Var}[x\mid y>c]/\tau^4$, which
+returns the same $\lambda(\lambda-a)/\nu^2$ after the posterior algebra. At $c=0$ — a cut at the median
+— $\lambda=\sqrt{2/\pi}$ and $a=0$, so $\mathcal I_{\rm sel}/\mathcal I=2/\pi\approx0.64$: the cut
+destroys nearly two thirds of the information, and an estimator that centres the score but leaves the
+denominator alone reports $m=-64\%$. Nothing about that is a small correction.
+
+Everything in §4 is this, with $y\to\hat T$ and a spin-2 shear in place of a shift — and that
+replacement is not cosmetic. A shift has no orientation to average over, which is why
+$\langle s\rangle_{\rm sel}\neq0$ here; for spin-2 shear the same average kills it and leaves
+$\mathcal I_{\rm sel}$ as the only surviving selection term (§5B.2).
 
 ## A.8 Dictionary
 

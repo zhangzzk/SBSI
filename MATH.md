@@ -9,9 +9,10 @@ are equal in expectation; §5 derives (5.8) in full. Neither §3 nor §5 needs $
 acts on the *samples*, not on the prior density.
 
 §6 derives the other parametrization — `INFERENCE.md` §5B, equation (5.3) — in which shear acts on
-the **prior** instead. It is the same estimator, not a competing one; Step 7 there proves it by a
-change of variables. It is also where $\nabla\log p_0$ comes from, and it is the form the pipeline
-runs. §7 sets the Bartlett denominator against (5.3)'s.
+the **prior** instead. It stands alone and can be read without §§1–3 or §5; it is the same estimator,
+not a competing one, and its Step 8 proves so by a change of variables. It is also where
+$\nabla\log p_0$ comes from, and it is the form the pipeline runs. §7 sets the Bartlett denominator
+against (5.3)'s.
 
 Equations are tagged `M.x` to avoid collision with `INFERENCE.md`.
 
@@ -264,12 +265,12 @@ $\mathbb E_0[(\hat s^{\rm keep})^2]=\mathbb E_0[\mathcal I^{\rm keep}]$ — the 
 
 ## 6. The Eulerian form: derivation of `INFERENCE.md` (5.3)
 
-Same model, same selection (§4). §5 held the prior fixed and pushed $\gamma$ through the samples;
-here the samples stay put and the **prior density moves**. Step 7 shows the two are the same function
-of $\gamma$, hence the same estimator, not a competing one.
+Shear acts on the **prior**: the samples stay put and the density moves. The denominator comes from
+the **curvature** of the log-likelihood, by Louis's identity. Self-contained: everything the
+derivation needs, including the selection normalizer of §4, is restated below.
 
 **Definitions.** All derivatives at $\gamma=0$; $i$ indexes objects, $\theta=(\mathbf{x},\mathbf{n})$
-prior nodes, $p_\gamma=S_\gamma\#p_0$ the pushforward of the prior.
+prior nodes, $p_\gamma=S_\gamma\#p_0$ the pushforward of the prior along the shear map.
 
 $$u_\gamma\equiv\partial_\gamma\log p_\gamma,\quad u\equiv u_0,
 \qquad
@@ -286,14 +287,15 @@ $$\hat s_i=\partial_\gamma\log A,\quad
 
 ---
 
-**Step 1 — the model, with $\gamma$ on the prior.**
+**Step 1 — the model.** The flow and the classifier, integrated against the sheared prior:
 
 $$A(\hat{\mathbf{x}}\mid\gamma)=\int d\theta\;L(\hat{\mathbf{x}}\mid\theta)\,P_{\rm det}(\theta)\,
 p_\gamma(\theta),\tag{M.12}$$
 
-`INFERENCE.md` (1.1) with detection kept. Beside (M.1): there $L$ and $P_{\rm det}$ carried $\gamma$
-and $\pi$ did not; here the reverse. Exactly one factor is ever differentiated; the two forms differ
-only in which one.
+`INFERENCE.md` (1.1) with detection kept. $L$ and $P_{\rm det}$ are fixed functions of truth, so
+$p_\gamma$ is the only factor of the integrand that is ever differentiated. $A$ is **not
+normalized** — $\int A\,d\hat{\mathbf{x}}=P(\text{det}\mid\gamma)$, which itself moves with $\gamma$;
+Step 5 supplies the normalizer.
 
 **Step 2 — the generator.** A pushforward obeys continuity,
 $\partial_\gamma p_\gamma+\nabla\!\cdot\!(p_\gamma v)=0$, with $v\equiv\partial_\gamma S_\gamma|_0$
@@ -301,9 +303,9 @@ the shear velocity field on truth. Divide by $p_\gamma$ and expand the divergenc
 
 $$\boxed{\;u=-\Big(v\cdot\nabla\log p_0+\nabla\!\cdot\!v\Big)\;}\tag{M.13}$$
 
-`INFERENCE.md` (2.7), and the entire price of this form: **$\nabla\log p_0$ over the whole scene**.
-In §5 the Jacobian of $S_\gamma$ never appeared because pushing samples carries it; here it must be
-written down, and it is precisely $\nabla\!\cdot\!v$.
+`INFERENCE.md` (2.7), and the price of putting $\gamma$ on the prior: **$\nabla\log p_0$ over the
+whole scene** — shape, size, flux, Sérsic and neighbour configuration together — plus the
+$\nabla\!\cdot\!v$ contributed by the change of measure.
 
 > **Composition is not pushforward.** $p_\gamma=p_0\circ S_{-\gamma}$ with no Jacobian gives
 > $u=-v\cdot\nabla\log p_0$ and drops $-\nabla\!\cdot\!v$ — not a small term: for the shape channel
@@ -317,14 +319,14 @@ $$\partial_\gamma A=\int d\theta\;LP_{\rm det}\;p_\gamma\,\partial_\gamma\log p_
 \qquad\Longrightarrow\qquad
 \hat s_i=\mathbb E_{w_i}\big[u\big]\tag{M.14}$$
 
-`INFERENCE.md` (2.2). **$u$ does not depend on the galaxy** — the structural payoff. In (M.9)
-$\varphi_\theta$ was re-differentiated per (object, node); here the derivative falls on the prior
-alone, so $u_k$ and $\partial_\gamma u_k$ are built **once per node** and shared across the
-catalogue, leaving one flow call $L_k=L(\hat{\mathbf{x}}_i\mid\theta_k)$ as the only
+`INFERENCE.md` (2.2). **$u$ does not depend on the galaxy** — the structural payoff. The derivative
+falls on the prior alone, so $u_k$ and $\partial_\gamma u_k$ are built **once per node** and shared
+across the catalogue, leaving one flow call $L_k=L(\hat{\mathbf{x}}_i\mid\theta_k)$ as the only
 per-(object, node) quantity.
 
-**Step 4 — $\mathcal I_i$, by Louis.** The two lines of (M.10) with $u$ in place of $\varphi'$, using
-$\partial^2_\gamma p_\gamma=p_\gamma\big[u_\gamma^2+\partial_\gamma u_\gamma\big]$:
+**Step 4 — $\mathcal I_i$, by Louis.** Apply
+$\partial^2_\gamma\log A=\partial^2_\gamma A/A-(\partial_\gamma A/A)^2$ and push both derivatives
+onto the prior, using $\partial^2_\gamma p_\gamma=p_\gamma\big[u_\gamma^2+\partial_\gamma u_\gamma\big]$:
 
 $$\frac{\partial^2_\gamma A}{A}=\mathbb E_w\big[\partial_\gamma u+u^2\big],
 \qquad
@@ -335,14 +337,37 @@ $$\Longrightarrow\qquad
 \qquad\Longrightarrow\qquad
 \mathcal I_i=-\mathbb E_{w_i}\big[\partial_\gamma u\big]-\mathrm{Var}_{w_i}(u)\tag{M.15}$$
 
-$\partial_\gamma u_\gamma|_0=\partial^2_\gamma\log p_\gamma|_0$ is a second derivative of the
-**prior**. As on the Lagrangian route the flow is never differentiated with respect to $\gamma$ —
-$\gamma$ is not one of its inputs on either road.
+The $\mathrm{Var}$ term is the leftover $-(\partial_\gamma A/A)^2$ — observed $=$ complete $-$
+missing. $\partial_\gamma u|_0=\partial^2_\gamma\log p_\gamma|_0$ is a second derivative of the
+**prior**; the flow is never differentiated with respect to $\gamma$, which is not one of its inputs.
 
-**Step 5 — selection, and the population pair.** §4 carries over unchanged: $W$ cancels per object,
-$P_{\rm det}$ does not. Here $\Pi$ is a fixed function of truth and the moving factor is again
-$p_\gamma$, so $P(\gamma)$ has exactly the shape of (M.12) with $\Pi$ in place of $LP_{\rm det}$, and
-Steps 3–4 apply verbatim with the posterior replaced by the $\Pi$-weighted prior:
+**Step 5 — selection, and the estimator.** A kept object is drawn from $A$ restricted to the cut and
+renormalized (§4), so
+
+$$\log p_{\rm keep}=\log W+\log A-\log P(\gamma),
+\qquad
+P(\gamma)=\mathbb E_{p_\gamma}\big[\Pi\big],\quad\Pi=P_{\rm pass}P_{\rm det}.$$
+
+$W$ is $\gamma$-free and equals $1$ for a galaxy in hand, so differentiating once and twice centres
+**both** moments by the same population quantities:
+
+$$\hat s^{\rm keep}_i=\hat s_i-\langle s\rangle_{\rm sel},
+\qquad
+\mathcal I^{\rm keep}_i=\mathcal I_i-\mathcal I_{\rm sel}.$$
+
+The target is the MLE, $\ell'(\hat\gamma)=0$ with $\ell=\sum_i\log p_{\rm keep}$. One Newton step
+from $\gamma=0$ — slope over curvature — gives
+
+$$\hat\gamma=-\frac{\ell'(0)}{\ell''(0)}
+=\frac{\sum_i\hat s^{\rm keep}_i}{\sum_i\mathcal I^{\rm keep}_i}
+=\frac{\sum_i\hat s_i-N\langle s\rangle_{\rm sel}}{\sum_i\mathcal I_i-N\,\mathcal I_{\rm sel}}$$
+
+Centring the numerator alone, or neither, leaves an $O(1)$ bias: a truncated sample has
+$\mathbb E_0[\hat s]\neq0$.
+
+**Step 6 — the population pair.** $P(\gamma)=\int\Pi\,p_\gamma$ has exactly the shape of (M.12) with
+$\Pi$ in place of $LP_{\rm det}$, so Steps 3–4 apply verbatim with the posterior replaced by the
+$\Pi$-weighted prior:
 
 $$\langle s\rangle_{\rm sel}=\mathbb E_\Pi\big[u\big],
 \qquad
@@ -352,7 +377,7 @@ the second being `INFERENCE.md` (5.3b). Nothing new has to be evaluated: $u_k$, 
 and $\Pi_k$ are already in the node bank, so (M.16) is one extra weighted sum over nodes —
 $O(N_{\rm node})$ against the estimator's $O(N_{\rm gal}N_{\rm node})$, i.e. free.
 
-**Step 6 — assemble.** (M.14), (M.15) and (M.16) into (M.8):
+**Step 7 — assemble.** (M.14), (M.15) and (M.16) into Step 5:
 
 $$\boxed{\;\hat\gamma=
 \frac{\displaystyle\sum_i\mathbb E_{w_i}[u]\;-\;N\,\mathbb E_\Pi[u]}
@@ -368,7 +393,15 @@ the prior-survival weights $\Pi$, and subtracted.
 > response up with no separate term. It vanishes exactly when $L_k$ is blind to the neighbour
 > position angle: then that angle's posterior equals its prior and isotropy kills the sum (§3).
 
-**Step 7 — why this is (M.11) again.** A pushforward is defined so that
+**Why it is unbiased at first order.** $p_{\rm keep}$ is a properly normalized $\gamma$-family, so
+Bartlett applies to it: $\mathbb E_0[\hat s^{\rm keep}]=0$, hence
+$\mathbb E_\gamma[\hat s^{\rm keep}]=\mathcal I_{\rm keep}\gamma+O(\gamma^2)$ and the numerator is
+$\approx N\mathcal I_{\rm keep}\gamma$. The information equality gives
+$\mathbb E_0[\mathcal I^{\rm keep}_i]=\mathcal I_{\rm keep}$, so the denominator is
+$\approx N\mathcal I_{\rm keep}$. The two cancel:
+$\partial_\gamma\mathbb E[\hat\gamma]=1+O(\gamma)$.
+
+**Step 8 — the same $A$ from shearing the samples.** A pushforward is defined so that
 $\int f(\theta)\,p_\gamma(\theta)\,d\theta=\mathbb E_{\theta'\sim p_0}\big[f(S_\gamma\theta')\big]$
 for any $f$; take $f=LP_{\rm det}$:
 
@@ -376,18 +409,11 @@ $$\int d\theta\;L(\hat{\mathbf{x}}\mid\theta)P_{\rm det}(\theta)\,p_\gamma(\thet
 =\int d\theta'\;p_0(\theta')\,L\big(\hat{\mathbf{x}}\mid S_\gamma\theta'\big)\,
 P_{\rm det}\big(S_\gamma\theta'\big)\tag{M.18}$$
 
-The right-hand side is (M.1). So $A$ is *literally the same function of $\gamma$* on both routes,
-every $\gamma$-derivative of it agrees, and $\hat s_i$, $\mathcal I_i$, $\langle s\rangle_{\rm sel}$,
-$\mathcal I_{\rm sel}$ are the same four numbers computed two ways. Neither is an approximation of
-the other. What differs is only **which factor absorbs the derivative**:
-
-| | derivative lands on | needs | amortizes over objects |
-|---|---|---|---|
-| Eulerian, §6 | the prior, via $u$ (M.13) | $\nabla\log p_0$ over the whole scene | **yes** — $u_k,\partial_\gamma u_k$ once per node |
-| Lagrangian, §5 | flow $+$ classifier, via $\varphi_\theta$ (M.3) | $\nabla_\theta\log L$, $\nabla_\theta\log P_{\rm det}$ | no — $\varphi'$ is per (object, node) |
-
-The trade is real in both directions: §5C exists because $\nabla\log p_0$ for a *clustered scene*
-prior is the harder object to supply; what it costs is that the derivative stops amortizing.
+So the derivation can be read either way round — $\gamma$ on the prior, or $\gamma$ pushed through
+the samples with $p_0$ held fixed. $A$ is *literally the same function of $\gamma$*, so
+$\hat s_i,\mathcal I_i,\langle s\rangle_{\rm sel},\mathcal I_{\rm sel}$ are the same four numbers
+either way. What the choice buys is that here the derivative lands on the prior alone, so $u_k$ and
+$\partial_\gamma u_k$ amortize over the catalogue; what it costs is $\nabla\log p_0$ in (M.13).
 
 ---
 
@@ -410,7 +436,12 @@ symmetry.
 > those use a 1D *shift* toy, whose map is spin-0. The vanishing above is a property of spin-2, not
 > of selection.
 
-**Requirements**, beyond A1–A6 of §5 — `INFERENCE.md` §5B.3.
+**Regularity.** Differentiation under the integral sign, twice; the Newton step of Step 5 is exact
+only to $O(\gamma^2)$, removable by iterating at $\hat\gamma$; and the Monte-Carlo draws inside
+$P_{\rm pass}$ must be held fixed across $\gamma$ *and* across nodes, or $\partial^2_\gamma\log P$ is
+noise.
+
+**Requirements** — `INFERENCE.md` §5B.3.
 
 | | |
 |---|---|
@@ -419,9 +450,6 @@ symmetry.
 | E3 | $L$ conditioned on PSF size, PSF ellipticity and depth, or it is wrong across a varying footprint. |
 | E4 | $P_{\rm det}(\theta)$ **and** its integral against the sheared prior — over objects never observed. |
 | E5 | ESS per object, not node count. $\hat s_i=\mathbb E_{w_i}[u]$ is a ratio of weighted sums, hence **biased, not merely noisy, at small ESS**, with the bias common across objects — catalogue averaging does not remove it. |
-
-**Contrast with §5, in one line.** Same four numbers; §6 pays $\nabla\log p_0$ once and amortizes,
-§5 avoids it and pays per (object, node).
 
 ---
 
@@ -469,7 +497,7 @@ $$\boxed{\;m_{\rm(M.6)}-m_{\rm(5.3)}\;=\;
 -\gamma\,\frac{\mu_3-\mathrm{Cov}_0\big(\mathcal I^{\rm keep},\,\hat s^{\rm keep}\big)}
 {\mathcal I_{\rm keep}}\;+\;O(\gamma^2)\;}\tag{M.19}$$
 
-(equivalently $m_{(5.8)}$: by §6 Step 7 the two share this denominator, and §8 labels it (5.8)).
+(equivalently $m_{(5.8)}$: by (M.18) the two share this denominator, and §8 labels it (5.8)).
 
 **The gap is set by how much $\mathcal I_i$ varies across objects.** If every object carried the same
 information the covariance would vanish and (M.19) would reduce to
