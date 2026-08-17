@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-from sbs_shear.measurement_model import (
+from sbsi.measurement_model import (
     ConditionalAffineFlow,
     ConditionalMeanFlow,
     ConditionalMeanFlowRA,

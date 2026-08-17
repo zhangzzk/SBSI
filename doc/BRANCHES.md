@@ -6,7 +6,7 @@ and, since 2026-08-17, they have **completely separate histories**.
 | | `dev` | `master` |
 |---|---|---|
 | Purpose | the full working repo | the public/release view |
-| `sbs_shear/` | tracked | tracked |
+| `sbsi/` | tracked | tracked |
 | `examples/` | tracked | tracked |
 | `tests/` | tracked | tracked |
 | `models/` (frozen V3 artifacts) | tracked | tracked |
@@ -45,7 +45,7 @@ Two independent reasons, both of which will bite you:
 
 ```bash
 git checkout master
-git checkout dev -- sbs_shear examples tests models README.md pyproject.toml
+git checkout dev -- sbsi examples tests models README.md pyproject.toml
 git commit -m "Sync public tree from dev"
 ```
 

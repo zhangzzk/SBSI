@@ -9,7 +9,7 @@ SBSI_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if SBSI_ROOT not in sys.path:
     sys.path.insert(0, SBSI_ROOT)
 
-from sbs_shear.shear_map import (
+from sbsi.shear_map import (
     apply_shear_to_ellipticity,
     inverse_shear_to_ellipticity,
     magnification,

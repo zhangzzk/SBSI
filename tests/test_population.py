@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from sbs_shear.domain import Domain
-from sbs_shear.population import EXTENDED_PAIR_CUTS, LSST_PAIR_CUTS, pair_mask, primary_mask
+from sbsi.domain import Domain
+from sbsi.population import EXTENDED_PAIR_CUTS, LSST_PAIR_CUTS, pair_mask, primary_mask
 
 
 def frame(**overrides):

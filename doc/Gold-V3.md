@@ -87,4 +87,4 @@ std(ê·s_nbr)/√N` — consistent with zero today, should climb to BlendEMU's 
 ## Pointers
 
 `scripts/train_joint_forward.py` (`primary_only`, `_flow_mu_shifts`, `theta_coupling_residual`) ·
-`sbs_shear/measurement_model.py` (conditioning sets) · INFERENCE.md §3, §5B, §5C.3–4.
+`sbsi/measurement_model.py` (conditioning sets) · INFERENCE.md §3, §5B, §5C.3–4.

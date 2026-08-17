@@ -10,7 +10,7 @@ The project overview, scope boundaries (SBSI consumes finished `blendemu` catalo
 - Conda env: `conda activate sims1` (Python 3.9). Repo is NOT pip-installed.
 - Imports rely on PYTHONPATH: `export PYTHONPATH="$PWD:$PYTHONPATH"` from the repo root.
   BlendEMU is NOT needed for this — add it only when loading the emulator
-  (`sbs_shear.models.load_emulator`), which is the sole place SBSI imports it. Its location
+  (`sbsi.models.load_emulator`), which is the sole place SBSI imports it. Its location
   comes from `BLENDEMU_ROOT` / `BLENDEMU_MODELS`, not from a hardcoded path.
 - `pip install -e .` is an optional alternative (see `pyproject.toml`); it also installs the
   `sbsi` console script.
@@ -22,8 +22,8 @@ The project overview, scope boundaries (SBSI consumes finished `blendemu` catalo
   from the repo root with PYTHONPATH set:
   `/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python -m pytest tests/ -q`
 - Whole suite is ~8 s, pure CPU, no catalogue access — fine on the login node, and worth running
-  after any edit to `sbs_shear/`.
-- No pytest config; `tests/` covers `sbs_shear/` only. The one BlendEMU cross-check in
+  after any edit to `sbsi/`.
+- No pytest config; `tests/` covers `sbsi/` only. The one BlendEMU cross-check in
   `tests/test_api.py` skips when BlendEMU is absent, so the suite passes on a bare checkout.
 - Note `sims1`'s scipy fails to import on the LOGIN node (`GLIBCXX_3.4.30 not found`, via
   `sklearn`); it is fine on compute nodes. So login-node smoke tests of the trainers must use

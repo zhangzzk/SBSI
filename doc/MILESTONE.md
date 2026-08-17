@@ -12,7 +12,7 @@ sign convention is always `m = R_sim / (R_flow + R_blend) - 1`.
 
 ## Frozen artifact identity
 
-`sbs_shear.models` provides optional path-only presets and validates all 16 flow
+`sbsi.models` provides optional path-only presets and validates all 16 flow
 checkpoints plus the emulator hashes. It does not configure the workflow or
 choose any catalogue. In compact form:
 

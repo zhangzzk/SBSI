@@ -32,7 +32,7 @@ R_model = R_flow + R_blend
   no-cut population.
 
 Exact checkpoint and emulator paths are exposed by the optional
-`sbs_shear.models` presets; see `MILESTONE.md` for the frozen result record.
+`sbsi.models` presets; see `MILESTONE.md` for the frozen result record.
 User-selected catalogues and emulator-response products remain external API
 inputs.
 
@@ -82,7 +82,7 @@ The standard order implemented by `ResponsePredictor` is:
 
 1. **Case cut** — `case >= 40` (constgold) or `case <= 39` (half-shear).
 2. **Quality / selection cut** — `source_select_selection(df, cuts=DEFAULT_SELECTION_CUTS)`.
-   All on **TRUE** properties (`sbs_shear/preprocessing.py:108-118`):
+   All on **TRUE** properties (`sbsi/preprocessing.py:108-118`):
    - `18 < r_input_p < 28`
    - `0.1 < Re_input_p < 1.5`
    - `(0 < distance < 5)` **OR** `not neighbored`

@@ -32,15 +32,15 @@ All project documentation lives in `doc/`. Only this file, `CLAUDE.md`, and
   those names.
 - Model support is read from checkpoint metadata or supplied explicitly. Never
   infer a domain from a filename.
-- Reusable behavior belongs in `sbs_shear/`.
+- Reusable behavior belongs in `sbsi/`.
 
 ## Public API
 
 1. `sbsi flow`: config-driven conditional-flow training and explicit tuning,
-   backed by the reusable implementation in `sbs_shear.flow`.
-2. `sbs_shear.response`: ensemble response prediction and blend-response
+   backed by the reusable implementation in `sbsi.flow`.
+2. `sbsi.response`: ensemble response prediction and blend-response
    composition.
-3. `sbs_shear.inference`: the future simulation-based catalogue likelihood and
+3. `sbsi.inference`: the future simulation-based catalogue likelihood and
    shear inference. Do not claim this is validated until its TODO boundary is
    resolved.
 

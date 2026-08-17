@@ -18,7 +18,7 @@ on it.
 ## 0. Implementation status — what the shipped library actually does
 
 This section is the shipped-code boundary that `MILESTONE.md` and
-`sbs_shear/posterior_shape.py` point at. Everything from §1 onward is the derivation; it
+`sbsi/posterior_shape.py` point at. Everything from §1 onward is the derivation; it
 describes the target, not the current implementation.
 
 SBSI can load an explicit measurement-flow checkpoint and evaluate its
@@ -27,7 +27,7 @@ four-dimensional detected-object likelihood over a latent ellipticity grid.
 model-name agnostic and accept user-owned paths or DataFrames.
 
 The response input-catalogue boundary is implemented independently in
-`sbs_shear.forward_catalogue`: SBSI validates a truth catalogue and returns an
+`sbsi.forward_catalogue`: SBSI validates a truth catalogue and returns an
 aligned one-row-per-primary flow view plus a many-row primary/secondary emulator
 view. It computes the flow's intrinsic-shape and crowding features, applies the
 emulator's recorded pair cuts and rescaling, and preserves `primary_row` keys.
@@ -1124,11 +1124,11 @@ and free by comparison. Node-bank size is set by the effective sample size cavea
 
 - Framework spec: `SBI_shear.md`. Certified numbers and model status: `Gold-V1.md`, `Gold-V2.md`,
   `Gold-V3.md`, `WORKLOG.md`.
-- Code: `sbs_shear/posterior_shape.py` (posterior grid, shape prior with exact Möbius pullback),
-  `sbs_shear/shear_map.py` (analytic $S_\gamma$), `sbs_shear/measurement_model.py`
-  (`ConditionalMeanFlow`, `flow_drop_indices`), `sbs_shear/forward_model.py` +
-  `sbs_shear/scene_model.py` (geometry-conditioned scene likelihood),
-  `sbs_shear/selection_model.py` (detection classifier).
+- Code: `sbsi/posterior_shape.py` (posterior grid, shape prior with exact Möbius pullback),
+  `sbsi/shear_map.py` (analytic $S_\gamma$), `sbsi/measurement_model.py`
+  (`ConditionalMeanFlow`, `flow_drop_indices`), `sbsi/forward_model.py` +
+  `sbsi/scene_model.py` (geometry-conditioned scene likelihood),
+  `sbsi/selection_model.py` (detection classifier).
 
 ---
 

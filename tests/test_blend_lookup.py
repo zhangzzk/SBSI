@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from sbs_shear.blend_lookup import join_blend
+from sbsi.blend_lookup import join_blend
 
 
 def _ref(n=10):

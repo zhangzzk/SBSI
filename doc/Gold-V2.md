@@ -176,7 +176,7 @@ its shear response comes from perturbing the truth (ellipticity + size/moments),
 flow — so detection's g-dependence enters `R_model` as the detection channel.
 - **Triad R3 (DETECTION):** leg-average + TRUE cut + INTRINSIC e, detection free to differ → pure
   detection response. Gate: R3 matches and `m` holds once detection-affected samples enter.
-- `sbs_shear/detection_classifier.py` exists but was g-conditioned — the V2 classifier drops the g input.
+- `sbsi/detection_classifier.py` exists but was g-conditioned — the V2 classifier drops the g input.
 
 ---
 
@@ -214,7 +214,7 @@ each stage — the calibration itself is Direction A (§2).
 - Trainer: `scripts/train_joint_forward.py` (`P(measured|truth)` flow, not g-conditioned; also carries
   a detection head = detection Direction 1; `--lam-theta` = interim size-response supervision).
 - Size-response target: `scripts/build_theta_coupling_target.py` → `results/response_target_theta_coupling_c0-99_6x9x5.npz` (RAWfine 6×9×5 grid).
-- Detection classifier (Direction 2, preferred): `sbs_shear/detection_classifier.py` +
+- Detection classifier (Direction 2, preferred): `sbsi/detection_classifier.py` +
   `scripts/train_detection_classifier.py` — **exists but was g-conditioned; the V2 version drops g.**
 - Triad harness: `scripts/eval_joint_triad.py`; half-shear gate output `sbsi_caches/derisk/triad_halfshear_fixed.npz`.
 - Benchmark: `Gold-V1.md`. Firewall/data: `reference_constgold_catalogue`, `project_rblend_firewall`.

@@ -13,7 +13,7 @@ models/
   SHA256SUMS
 ```
 
-The 16 seeds are `SHAPE_SEEDS` in `sbs_shear/models.py`: 501, 502, 503 and 505–517.
+The 16 seeds are `SHAPE_SEEDS` in `sbsi/models.py`: 501, 502, 503 and 505–517.
 Total about 93 MB.  The classification booster is the per-pair detection model named
 by the metadata's `classification` task; `BlendingPredictor` loads it unconditionally,
 so it must sit next to the metadata file.  Through it the emulator also answers
@@ -22,7 +22,7 @@ paired galaxy.
 
 ## Using these files
 
-`sbs_shear/models.py` resolves preset paths through environment variables, so point
+`sbsi/models.py` resolves preset paths through environment variables, so point
 them at this directory:
 
 ```bash
@@ -46,7 +46,7 @@ Every file is listed in `SHA256SUMS`:
 cd models && sha256sum -c SHA256SUMS
 ```
 
-The emulator's hash is additionally pinned in `sbs_shear/models.py` as
+The emulator's hash is additionally pinned in `sbsi/models.py` as
 `emulator_sha256`, and `ModelPaths.validate()` checks it. That pin, not the filename,
 is what fixes the emulator's identity.
 
