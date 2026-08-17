@@ -2,6 +2,41 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-17v  sample_measurement: public API for the direct flow output
+
+Owner asked for the flow's per-parameter PDFs as a separate API (response layer
+stays as is).  Files: `sbsi/response.py` (new `MeasurementSample` dataclass +
+`sample_measurement()`; docstring and `__all__` updated), `sbsi/__init__.py`
+(exports), `tests/test_api.py` (new test), `examples/sbsi_api_tutorial.ipynb`
+(new section after the response histograms).
+
+`sample_measurement(flow_checkpoints | ModelPaths, catalogue, *, n_samples,
+batch_size, random_seed, rescale_kwargs, device)` draws the conditional
+distribution `p(measured | input galaxy, neighbours)` at each row's intrinsic
+input properties -- no shear applied -- pooling draws from every ensemble
+checkpoint along the sample axis (`n_seeds * n_samples` per object, physical
+units: ngmix g1/g2, MAG_AUTO, log FLUX_RADIUS).  It mirrors `predict()`'s
+frame contract, strict flow-domain check, checkpoint domain/target consistency
+checks, and default optics; `MeasurementSample.column(name)` returns one
+target as `(n_objects, n_draws)`.
+
+Tutorial section "The flow's direct output": two contrasted in-domain
+primaries (brightest r=18.0 vs faintest r~25.8), 2x2 contour figure -- rows =
+galaxies, columns = (g1,g2) and (MAG_AUTO, log FLUX_RADIUS), 16x256 pooled
+draws, scipy-smoothed histogram contours.
+
+Validation: suite 46 passed + 1 skipped on dev and on master (new test covers
+ensemble pooling shape, column accessor, index alignment, same-seed
+reproducibility, unknown-target KeyError); tutorial executed on slurm
+(15809187, V100, 47 s, 9 code cells, zero errors, 3 figures); warning
+prefixes normalized (`sbsi/response.py:196`, `blendemu/inference.py:523`,
+disclosed); identity scan of the executed file clean.  Published as master
+`7128626`; executed notebook synced back to dev (`eeecde1`).
+
+Limitations: draws are the ensemble-predictive mixture, not per-seed objects
+(no seed axis exposed); sampling is unconditional on applied shear by design.
+Next steps: none requested.
+
 ## 2026-08-17u  Tutorial detection cell fixed to the classifier's convention
 
 Follow-up to 2026-08-17t, owner approved.  Files: `examples/sbsi_api_tutorial.ipynb`
