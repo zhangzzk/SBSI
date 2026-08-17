@@ -2,6 +2,39 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-17u  Tutorial detection cell fixed to the classifier's convention
+
+Follow-up to 2026-08-17t, owner approved.  Files: `examples/sbsi_api_tutorial.ipynb`
+(cells 12-15) and `models/README.md` (classifier paragraph).  The detection cell now
+calls `emulator.predict_detection(input_catalogue.reset_index(drop=True))` -- one
+probability per galaxy from its own properties and its single nearest neighbour
+within the classifier's 3-arcsec training aperture, isolated-galaxy branch beyond,
+full catalogue as the neighbour pool -- and selects the retained primaries via
+`prepared.flow_inputs.index`.  The old `min` over the 10-arcsec response pair table
+is gone, as is the markdown describing it.  Histogram cells restyled per owner:
+independent y scales, mean as in-panel text, no y-axis decoration, no suptitle;
+the closing cell prints the means and adds an `R_total` histogram in the same
+style.  Owner trims kept: "Reusing emulator output" markdown deleted,
+`per_primary.head()` left commented.
+
+Validation: slurm job 15807302 (A100, 36 s), 8 code cells, zero errors.  Physics
+unchanged on the response side (R_flow 0.8696, R_blend 0.2497, R_total 1.1193).
+Detection: mean p_detect 0.8229 -> 0.902745 (matches the 2026-08-17t diagnostic);
+detection-weighted mean R_total 0.9414 -> 1.0225 (first-order estimate was ~1.01;
+the actual P-R correlation pushes higher).  Remaining warnings are small honest
+fractions (Re_p_scaled 2562/111210, r_p_scaled 157, sersic ~700/431,
+distance_scaled 4); the 81885-row distance warning is gone.  Warning location
+prefixes normalized to `sbsi/response.py:193` and `blendemu/inference.py:523`
+(cosmetic, disclosed); identity scan of the executed file: no `/home/`,
+`/project/`, `zekang`, `Zekang`, `sbs_shear`, `/scratch-local`, `slurm-job`,
+`ipykernel` strings.  Suite on master before push: 45 passed + 1 skipped.
+Published as master `07cb51c`; executed notebook synced back to dev (`e6e12ee`).
+
+Limitations: probabilities for galaxies outside the classifier's trained feature
+ranges (ultra-compact or very bright) remain extrapolations, disclosed in the
+warning and the markdown.  Next steps: none required for the tutorial; the
+SBSI-native selection classifier stays a separate milestone.
+
 ## 2026-08-17t  Diagnosed the tutorial detection-cell extrapolation warning
 
 Diagnostic record only; no code or notebook changed.  The executed tutorial's
