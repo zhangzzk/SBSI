@@ -63,15 +63,3 @@ export PYTHONPATH="$BLENDEMU_ROOT:$PYTHONPATH"
 The package can also be installed with `pip install -e .` without changing the
 catalogue or model-path contract; that also provides the `sbsi` console script.
 
-### Models
-
-The frozen V3 artifacts — the 16-seed flow ensemble and the blending emulator —
-ship in [`models/`](models/). To make `get_model("V3")` resolve against them
-rather than the original cluster paths:
-
-```bash
-export SBSI_CACHE_DIR="$PWD/models"
-export BLENDEMU_MODELS="$PWD/models/blendemu"
-```
-
-See [`models/README.md`](models/README.md) for the layout and checksums.
