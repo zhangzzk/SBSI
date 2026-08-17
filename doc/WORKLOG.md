@@ -45,6 +45,13 @@ deployment details).  Limitation: the executed outputs embed the worktree path i
 a blendemu extrapolation UserWarning; scrub or ship unexecuted if that matters for the
 public push.
 
+**Publish.**  Owner said "push it".  The executed outputs embedded not just the
+warning's worktree path but all 16 cluster checkpoint paths in the `ModelPaths`
+repr, so the notebook was shipped unexecuted (outputs and execution counts cleared;
+zero local paths remain in the file) and pushed as `c660bac`
+("Tutorial: auto device selection, per-object response histograms") to
+github.com/zhangzzk/SBSI.  `master` and `origin/master` are in sync.
+
 ## 2026-08-17n  Completed the requested full-V2 coherent-anchor supplement
 
 Finished the quarantined, frozen-model V2 validation requested before the API
