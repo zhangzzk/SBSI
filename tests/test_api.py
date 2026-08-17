@@ -266,3 +266,71 @@ def test_posterior_grid_accepts_four_output_flow():
     assert likelihood.shape == (len(frame), len(grid))
     assert mean.shape == (len(frame), 2)
     assert np.isfinite(mean).all() and np.isfinite(evidence).all()
+
+
+def test_sample_measurement_pools_ensemble_draws(tmp_path):
+    from sbsi.measurement_model import (
+        TargetStandardizer,
+        build_flow,
+        save_measurement_model,
+    )
+    from sbsi.preprocessing import rescale
+    from sbsi.response import sample_measurement
+
+    catalogue = pd.DataFrame({
+        "RA": [10.0, 10.0 + 0.5 / 3600.0],
+        "DEC": [0.0, 0.0],
+        "redshift": [0.5, 0.6],
+        "r": [22.0, 23.0],
+        "Re": [0.8, 0.7],
+        "sersic_n": [1.5, 2.0],
+        "axis_ratio": [0.7, 0.6],
+        "position_angle": [0.3, 1.1],
+    })
+    config = EmulatorPairingConfig(
+        cuts=((13.0, 29.0), (18.0, 25.8), (0.0, 10.0), (0.5, 1.5), (0.0, 5.0)),
+        r_max_arcsec=5.0,
+        k=3,
+        conditions={"pixel_size": 0.2, "zero_point": 30.0, "psf_fwhm": 0.73,
+                    "moffat_beta": 2.224, "pixel_rms": 0.312},
+    )
+    prepared = prepare_forward_catalogue(catalogue, config=config)
+
+    features = ["e1_input_p", "e2_input_p", "sersic_n_input_p",
+                "r_input_p_scaled", "Re_input_p_scaled"]
+    preprocessor = TabularPreprocessor.fit(
+        rescale(prepared.flow_inputs.copy()), features, add_missing_indicators=False
+    )
+    targets = ["measured_ngmix_g1", "measured_ngmix_g2",
+               "measured_mag_auto", "measured_log_flux_radius"]
+    rng = np.random.default_rng(4)
+    standardizer = TargetStandardizer.fit(
+        pd.DataFrame({name: rng.normal(size=len(prepared.flow_inputs)) for name in targets}),
+        targets,
+    )
+    model_config = {"flow_type": "affine", "target_dim": 4,
+                    "context_dim": len(features), "hidden_dim": 8,
+                    "n_layers": 1, "n_flows": 2}
+    metadata = {"selection_cuts": [[18, 28], [18, 25.8], [0.1, 1.5], [0.5, 1.5], [0, 5]]}
+    checkpoints = []
+    for seed in (1, 2):
+        torch.manual_seed(seed)
+        model = build_flow(model_config)
+        path = tmp_path / f"flow_s{seed}.pt"
+        save_measurement_model(path, model, preprocessor, standardizer,
+                               model_config, metadata)
+        checkpoints.append(path)
+
+    sample = sample_measurement(checkpoints, prepared.flow_inputs,
+                                n_samples=8, random_seed=7)
+    n_objects = len(prepared.flow_inputs)
+    assert sample.target_names == tuple(targets)
+    assert sample.samples.shape == (n_objects, 2 * 8, 4)
+    assert sample.column("measured_mag_auto").shape == (n_objects, 16)
+    assert sample.index.tolist() == prepared.flow_inputs.index.tolist()
+
+    repeat = sample_measurement(checkpoints, prepared.flow_inputs,
+                                n_samples=8, random_seed=7)
+    np.testing.assert_array_equal(sample.samples, repeat.samples)
+    with pytest.raises(KeyError):
+        sample.column("not_a_target")

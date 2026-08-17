@@ -12,6 +12,9 @@ model_mean_proj(...)       ``< E[e_hat | S_{s*ghat}(intrinsic)] . ghat >`` -- th
                            first moment projected on the per-object applied-shear direction.
 flow_response(...)         The antithetic +/-g secant ``R_flow = (m_+g - m_-g)/(2g)``,
                            optionally per-object, with optional Common-Random-Numbers reseeding.
+sample_measurement(...)    Pooled conditional draws of the flow's measured targets
+                           at each row's intrinsic input properties (the direct
+                           flow output, before any response reduction).
 
 Most users should call :meth:`ResponsePredictor.load` with their flow paths and
 then pass their inference catalogue and external emulator responses to
@@ -278,6 +281,45 @@ class ResponsePrediction:
         }
 
 
+@dataclass(frozen=True)
+class MeasurementSample:
+    """Pooled conditional draws of the measured parameters from the flow ensemble.
+
+    ``samples`` has shape ``(n_objects, n_seeds * n_samples, n_targets)`` in
+    physical units (magnitudes, log FLUX_RADIUS in pixels, ellipticity
+    components), column order following ``target_names``.  Draws from every
+    flow seed are pooled along the draw axis, so the array represents the
+    ensemble predictive distribution of the measurement model.
+    """
+
+    model: str
+    index: np.ndarray
+    target_names: Tuple[str, ...]
+    samples: np.ndarray
+
+    def __post_init__(self):
+        samples = np.asarray(self.samples)
+        index = np.asarray(self.index)
+        target_names = tuple(self.target_names)
+        if samples.ndim != 3 or samples.shape[0] != len(index):
+            raise ValueError(
+                "samples must have shape (n_objects, n_draws, n_targets) matching index"
+            )
+        if samples.shape[1] == 0 or samples.shape[2] != len(target_names):
+            raise ValueError("samples carry no draws or do not match target_names")
+        object.__setattr__(self, "samples", samples)
+        object.__setattr__(self, "index", index)
+        object.__setattr__(self, "target_names", target_names)
+
+    def column(self, name: str) -> np.ndarray:
+        """Return one measured parameter as an ``(n_objects, n_draws)`` array."""
+        if name not in self.target_names:
+            raise KeyError(
+                f"unknown target {name!r}; available: {list(self.target_names)}"
+            )
+        return self.samples[:, :, self.target_names.index(name)]
+
+
 class ResponsePredictor:
     """Predict ``R_flow + R_blend`` from user-selected model artifacts.
 
@@ -534,11 +576,127 @@ class ResponsePredictor:
         )
 
 
+def sample_measurement(
+    flow_checkpoints: Union[Sequence[Union[str, Path]], ModelPaths],
+    catalogue: Catalogue,
+    *,
+    n_samples: int = 256,
+    batch_size: int = 16384,
+    random_seed: int = 12345,
+    rescale_kwargs: Optional[dict] = None,
+    device: Optional[str] = None,
+) -> MeasurementSample:
+    """Draw the flow ensemble's measured-parameter distribution per object.
+
+    For every row of ``catalogue`` -- the same one-row-per-primary frame
+    :meth:`ResponsePredictor.predict` consumes -- draw ``n_samples`` vectors
+    of the flow's measured targets at the row's intrinsic input properties.
+    No shear is applied: the draws are the direct conditional distribution
+    ``p(measured | input galaxy, neighbours)`` the flow models.  Draws from
+    every checkpoint are pooled (``n_seeds * n_samples`` per object), giving
+    the ensemble predictive; the same ``random_seed`` makes repeat calls
+    reproducible.
+    """
+
+    if isinstance(flow_checkpoints, ModelPaths):
+        paths = flow_checkpoints.flow_checkpoints
+        label = flow_checkpoints.name
+    else:
+        paths = list(flow_checkpoints)
+        label = "custom"
+    checkpoints = tuple(Path(path) for path in paths)
+    if not checkpoints:
+        raise ValueError("at least one flow checkpoint is required")
+    if n_samples <= 0 or batch_size <= 0:
+        raise ValueError("n_samples and batch_size must be positive")
+    missing = [path for path in checkpoints if not path.is_file()]
+    if missing:
+        rendered = "\n  ".join(str(path) for path in missing)
+        raise FileNotFoundError(f"missing flow checkpoints:\n  {rendered}")
+
+    import torch
+
+    device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+    frame = load_catalogue(catalogue)
+    if len(frame) == 0:
+        raise ValueError("measurement frame is empty")
+    required = {
+        "e1_input_rot0_p",
+        "e2_input_rot0_p",
+        "r_input_p",
+        "Re_input_p",
+        "r_input_s",
+        "Re_input_s",
+        "distance",
+    }
+    missing_columns = sorted(required - set(frame.columns))
+    if missing_columns:
+        raise KeyError(f"measurement frame lacks flow/rescaling columns: {missing_columns}")
+
+    first_bundle = load_measurement_model(str(checkpoints[0]), device=device)
+    ensemble_domain = Domain.from_flow_metadata(first_bundle.metadata)
+    target_names = tuple(first_bundle.target_transform.target_names)
+
+    domain_mask = ensemble_domain.mask(
+        frame["r_input_p"].to_numpy(float),
+        frame["Re_input_p"].to_numpy(float),
+    )
+    if not domain_mask.all():
+        raise ValueError(
+            f"{int((~domain_mask).sum()):,} of {len(frame):,} rows are outside "
+            "the trained flow domain"
+        )
+
+    optics = dict(
+        pixel_rms=0.312,
+        pixel_size=0.2,
+        zero_mag=30.0,
+        psf_fwhm=0.73,
+        moffat_beta=2.224,
+    )
+    optics.update(rescale_kwargs or {})
+    conditions = rescale(frame.copy(), **optics)
+
+    draws = []
+    for checkpoint_index, checkpoint in enumerate(checkpoints):
+        bundle = (
+            first_bundle
+            if checkpoint_index == 0
+            else load_measurement_model(str(checkpoint), device=device)
+        )
+        if Domain.from_flow_metadata(bundle.metadata) != ensemble_domain:
+            raise ValueError(
+                f"flow checkpoint domain differs from the ensemble domain: {checkpoint}"
+            )
+        if tuple(bundle.target_transform.target_names) != target_names:
+            raise ValueError(
+                f"flow checkpoint targets differ from the ensemble targets: {checkpoint}"
+            )
+        torch.manual_seed(random_seed)
+        draws.append(
+            bundle.sample(conditions, n_samples=n_samples, batch_size=batch_size)
+        )
+        if checkpoint_index != 0:
+            del bundle
+        if str(device).startswith("cuda"):
+            torch.cuda.empty_cache()
+    samples = np.concatenate(draws, axis=1)
+
+    return MeasurementSample(
+        model=label,
+        index=frame.index.to_numpy(copy=True),
+        target_names=target_names,
+        samples=samples,
+    )
+
+
 __all__ = [
+    "MeasurementSample",
     "ResponsePrediction",
     "ResponsePredictor",
     "flow_response",
     "load_sheared_sample",
     "model_mean_proj",
     "predict_blend_response",
+    "sample_measurement",
 ]
