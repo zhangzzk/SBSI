@@ -358,6 +358,15 @@ def main():
                          "default: the wide DEFAULT_SELECTION_CUTS domain, which for a V3 "
                          "flow means scoring rows it never saw")
     ap.add_argument("--closure-g", type=float, default=0.02)
+    ap.add_argument("--closure-g2", type=float, default=0.0,
+                    help="second component of the injected shear (default 0, i.e. shear "
+                         "along +g1).  +g1 is a SYMMETRY AXIS of the square node lattice, "
+                         "so the quadrature's leading m=4 angular error is invisible to a "
+                         "run along it -- it enters as cos(4*phi), which is stationary "
+                         "there.  Run g1=g2=g/sqrt(2) (45 degrees, the lattice diagonal, "
+                         "where cos(4*phi)=-1) to expose it; the two should agree, and the "
+                         "gap is the lattice error on m.  Everything is reported projected "
+                         "onto the injected direction, so the two runs are comparable")
     ap.add_argument("--cut-abs-ehat", type=_opt_float, default=0.6,
                     help="keep |xhat| < this, or 'none' for no shape cut.  Isotropic on "
                          "purpose (see module docstring)")
@@ -441,8 +450,16 @@ def main():
         ap.add_argument(f"--{k.replace('_', '-')}", type=float, default=v)
     args = ap.parse_args()
 
-    gn = float(args.closure_g) or 1.0   # g=0 is the null test: quote c = ghat, not m
-    is_null = float(args.closure_g) == 0.0
+    # THE INJECTED SHEAR IS A VECTOR, AND EVERY READ-OUT IS ITS PROJECTION.  With the
+    # default `--closure-g2 0` this is the old scalar run exactly (`gdir = (1,0)`, so the
+    # projection is `ghat_1`); with both components set it is the same estimator read
+    # along the direction actually injected, which is what makes a 45-degree run
+    # comparable to an on-axis one.
+    gvec = np.array([float(args.closure_g), float(args.closure_g2)])
+    gmag = float(np.hypot(*gvec))
+    gn = gmag or 1.0                    # g=0 is the null test: quote c = ghat, not m
+    is_null = gmag == 0.0
+    gdir = np.array([1.0, 0.0]) if is_null else gvec / gmag
     lab = "c = ghat (truth 0)" if is_null else "m = ghat/g - 1"
     rk = dict(pixel_rms=args.pixel_rms, pixel_size=args.pixel_size, zero_mag=args.zero_mag,
               psf_fwhm=args.psf_fwhm, moffat_beta=args.moffat_beta)
@@ -536,7 +553,7 @@ def main():
     def shear_and_sample(e1, e2, seed):
         f = df.iloc[:len(e1)].copy()
         f["e1_input_rot0_p"], f["e2_input_rot0_p"] = apply_shear_to_ellipticity(
-            e1, e2, g * np.ones(len(e1)), np.zeros(len(e1)))
+            e1, e2, gvec[0] * np.ones(len(e1)), gvec[1] * np.ones(len(e1)))
         f = rescale(f, **rk)
         torch.manual_seed(seed)
         if torch.cuda.is_available():
@@ -597,6 +614,11 @@ def main():
                      row_shard=args.row_shard, row_shards=args.row_shards)
     if cut.bounds:
         cache_key["cut_bounds"] = cut.key()
+    if gvec[1]:
+        # only when non-zero, for the same reason as `cut_bounds`: a key absent from a
+        # banked cache reads as a mismatch, so adding it unconditionally would strand
+        # every shard scored before --closure-g2 existed (all of which had g2 = 0)
+        cache_key["closure_g2"] = float(gvec[1])
     if cuts is not None and cuts != [list(c) for c in DEFAULT_SELECTION_CUTS]:
         cache_key["primary_domain"] = json.dumps(cuts)
 
@@ -642,14 +664,21 @@ def main():
     reps_u = None
     if args.uncut_control:
         gh_u, sig_u, reps_u = jackknife_blocks(*blk_u)
-        fisher_u = 1.0 / np.sqrt(max(blk_u[2].sum(axis=0)[0, 0], 1e-30))
+        gp_u = float(gh_u @ gdir)
+        sp_u = float(jackknife_sigma((reps_u @ gdir)[:, None])[0])
+        # Cramer-Rao ALONG THE INJECTED DIRECTION: sqrt(d^T (sum I)^-1 d).  For the
+        # on-axis default this is the old 1/sqrt(sum I_11) up to the off-diagonal, which
+        # is 0.6% of the diagonal here -- i.e. the printed bar moves in the 5th digit,
+        # and only because the general formula is the right one to compare a 45-degree
+        # run against.
+        fisher_u = float(np.sqrt(gdir @ np.linalg.solve(blk_u[2].sum(axis=0), gdir)))
         print(f"\nUNCUT CONTROL (Pi == 1, so both population terms vanish by construction):")
         print(f"  ghat = [{gh_u[0]:+.6f} +/- {sig_u[0]:.6f}, "
               f"{gh_u[1]:+.6f} +/- {sig_u[1]:.6f}]   "
-              f"{lab} = {gh_u[0]/gn - (0 if is_null else 1):+.3%} +/- {sig_u[0]/abs(gn):.3%}")
+              f"{lab} = {gp_u/gn - (0 if is_null else 1):+.3%} +/- {sp_u/abs(gn):.3%}")
         print(f"  error bar is a {args.jk_blocks}-block JACKKNIFE.  The Cramer-Rao/Fisher "
               f"bar would say {fisher_u/abs(gn):.3%};")
-        print(f"  ring pairing beats it by x{fisher_u/max(sig_u[0], 1e-30):.1f} "
+        print(f"  ring pairing beats it by x{fisher_u/max(sp_u, 1e-30):.1f} "
               f"(x1 means no variance reduction, which is correct for --ring none).")
         print(f"  Any bias here is the BASELINE estimator's, not the cut's.  The cut rows")
         print(f"  below must be read against this number, not against zero.")
@@ -710,8 +739,9 @@ def main():
               f"(actual keep {keep_frac:.4f}, mismatch "
               f"{float(w @ pi)/keep_frac - 1:+.2%})")
         print(f"  ^ the cheap internal consistency check on Pi.  <Pi> is integrated over "
-              f"the g=0 prior\n    and the keep fraction is measured at g={g:+.3f}; that "
-              f"difference is <s>_sel*g/<Pi> ~ {abs(s_sel[1])*abs(g)/max(float(w@pi),1e-9):.2%}, "
+              f"the g=0 prior\n    and the keep fraction is measured at |g|={gmag:.3f}; that "
+              f"difference is <s>_sel*g/<Pi> ~ "
+              f"{abs(float(s_sel @ gdir))*gmag/max(float(w@pi),1e-9):.2%}, "
               f"far below the mismatches\n    that mattered, so a mismatch above ~0.1% is "
               f"Pi's own sampling error and nothing else.")
         print(f"<s>_sel = [{s_sel[0]:+.6f} +/- {es[0]:.6f}, "
@@ -722,7 +752,10 @@ def main():
               f"[{i_sel[1,0]:+.5f}, {i_sel[1,1]:+.5f} +/- {ei[1,1]:.5f}]]")
         off = 0.5 * (abs(i_sel[0, 1]) + abs(i_sel[1, 0]))
         dia = 0.5 * (i_sel[0, 0] + i_sel[1, 1])
-        print(f"  I_sel/<I> = {i_sel[0,0]/mean_i[0,0]:+.4f} (A.7's 2/pi analogue);  "
+        # both projected onto the injected direction, so this is the fraction of the
+        # information the cut removes ALONG the parameter actually being estimated
+        iota_frac = float(gdir @ i_sel @ gdir) / float(gdir @ mean_i @ gdir)
+        print(f"  I_sel/<I> = {iota_frac:+.4f} (A.7's 2/pi analogue);  "
               f"off-diag/diag = {off/max(abs(dia),1e-12):.3f} (0 if the cut is isotropic)")
 
         # Pi's OWN UNCERTAINTY MUST REACH THE ANSWER.  The jackknife bars galaxies; it says
@@ -751,30 +784,34 @@ def main():
             if ss is None and ii is None:
                 sig_pi = 0.0                       # no population term, nothing to propagate
             else:
-                gj = [ghat_with(q[0] if ss is not None else None,
-                                q[1] if ii is not None else None)[0] for q in per_rep]
+                gj = [float(ghat_with(q[0] if ss is not None else None,
+                                      q[1] if ii is not None else None) @ gdir)
+                      for q in per_rep]
                 sig_pi = float(np.std(gj, ddof=1) / np.sqrt(len(gj)))
+            gp = float(gh @ gdir)
+            sp = float(jackknife_sigma((reps @ gdir)[:, None])[0])
             line = (f"  {name:<24} {gh[0]:>10.6f} {gh[1]:>10.6f} "
-                    f"{gh[0]/gn - (0 if is_null else 1):>18.3%} +/- {sig[0]/abs(gn):.3%}")
+                    f"{gp/gn - (0 if is_null else 1):>18.3%} +/- {sp/abs(gn):.3%}")
             if reps_u is not None:
                 # THE PAIRED COMPARISON IS THE ACTUAL QUESTION: does the correction put
                 # the cut sample back where the uncut one is?  Both run on the same rows
                 # and share most of their shape noise, so the DIFFERENCE is much better
                 # determined than either -- but only when jackknifed AS a difference,
                 # block by block.  Adding the two bars in quadrature throws that away.
-                dm = float(gh[0] - gh_u[0]) / gn
-                d = (reps[:, 0] - reps_u[:, 0]) / gn
+                dm = (gp - gp_u) / gn
+                d = (reps @ gdir - reps_u @ gdir) / gn
                 sd_gal = float(jackknife_sigma(d[:, None])[0])
                 sd_pi = sig_pi / abs(gn)
                 sd = float(np.hypot(sd_gal, sd_pi))
                 line += (f" {dm:>15.3%} {sd_gal:>7.3%} {sd_pi:>7.3%} {sd:>7.3%} "
                          f"{abs(dm)/max(sd,1e-12):>6.1f}")
                 if name.startswith("FULL"):
-                    summary.append((m_pi, float(w @ pi), i_sel[0, 0] / mean_i[0, 0],
-                                    gh[0] / gn - (0 if is_null else 1), dm, sd))
+                    summary.append((m_pi, float(w @ pi), iota_frac,
+                                    gp / gn - (0 if is_null else 1), dm, sd))
             print(line)
 
-    print(f"\n  truth g = {g:+.6f}   (sigma = galaxy {args.jk_blocks}-block jackknife\n  and Pi replicate scatter, in quadrature -- Pi enters only the CUT estimate, so\n  its error lands undiluted on the difference)")
+    print(f"\n  truth g = [{gvec[0]:+.6f}, {gvec[1]:+.6f}], |g| = {gmag:.6f}, read out "
+          f"projected on that direction   (sigma = galaxy {args.jk_blocks}-block jackknife\n  and Pi replicate scatter, in quadrature -- Pi enters only the CUT estimate, so\n  its error lands undiluted on the difference)")
     print("  §5B.2 predicts the numerator correction does nothing for an isotropic cut")
     print("  and that I_sel carries the whole effect.  Compare rows 1-2 (should agree)")
     print("  against row 3 (should move, and toward the truth).")

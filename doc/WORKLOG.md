@@ -104,8 +104,22 @@ one flow seed, not the 16-seed ensemble: a closure test must generate and estima
 density. (iv) Review Finding 1 stands — the closure still shears along `+g1` only, so the square
 lattice's leading m=4 error is invisible; `--closure-g2` does not exist yet.
 
+**Also: `--closure-g2` (Review Finding 1).** The closure injected shear along `+g1` only, which is a
+symmetry axis of the square node lattice — the quadrature's leading angular error goes as
+`cos(4 phi)`, which is stationary there, so an on-axis run cannot see it. `--closure-g2` sets the
+second component and every read-out (`m`, its jackknife bar, `d(m)`, `iota/I`, the Fisher bar) is now
+the projection on the injected direction, so a 45-degree run at `g1 = g2 = g/sqrt(2)` — the lattice
+diagonal, where `cos(4 phi) = -1` — is directly comparable to an on-axis one and the gap between them
+is the lattice error on `m`. On-axis the projection is the identity (`gdir = (1,0)`), so every number
+above is unchanged except the printed Cramer-Rao bar, which now uses the general
+`sqrt(d^T (sum I)^-1 d)` and so picks up the off-diagonal — 0.6% of the diagonal here, i.e. the 5th
+digit. `closure_g2` joins the score-cache key only when non-zero, so banked shards still load. The
+45-degree run itself is NOT done: it needs its own score pass (~5 h) and the queue is on the three
+production jobs.
+
 **Next.** Read out 15814616/17/18; re-run the `pi-grid-n` ladder for the mag and size cuts off those
-banked caches (minutes, no score pass); then settle the `I_sel` sign question against (5.3c).
+banked caches (minutes, no score pass); then settle the `I_sel` sign question against (5.3c). After
+that, the 45-degree closure at reduced rows, paired against an on-axis run on the same rows.
 
 ## 2026-08-17w  The §5B score-inference branch merged into dev (user)
 
