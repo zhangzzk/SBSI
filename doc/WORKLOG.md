@@ -2,6 +2,47 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-17p  Executed tutorial published; repo-relative emulator loading fixed
+
+Owner follow-ups: publish the executed notebook, and assess adding the detection
+classifier to the tutorial.
+
+**Bug found and fixed.**  `models/README.md`'s documented repo-relative recipe
+(`SBSI_CACHE_DIR=$PWD/models`, `BLENDEMU_MODELS=$PWD/models/blendemu`) was broken
+two ways: (i) `load_emulator` passed `reg_file` relative and BlendEMU's loader
+`os.path.join`s it onto `model_dir`, producing `models/blendemu/models/derisk/...`;
+fixed in `sbs_shear/models.py` by resolving `emulator_model` before the call.
+(ii) BlendEMU loads the classification booster unconditionally, and
+`classification_model_lsst_r_extnbr_ho.json` (5.8 MB, the file the pinned v22
+metadata names) was not shipped.  Shipped it into `models/blendemu/`, appended to
+`SHA256SUMS` (manifest verifies; total ~93 MB), updated `models/README.md`.
+
+**Executed notebook.**  Rerun on Slurm (job 15806053, V100, 32 s, six cells, zero
+errors) with `SBSI_CACHE_DIR=models BLENDEMU_MODELS=models/blendemu` and the
+nbclient kernel cwd pinned to the repo root, so the `ModelPaths` repr and all
+outputs are repository-relative.  One cosmetic normalization was applied to the
+saved outputs: the blendemu extrapolation warning's location prefix
+`/home/z/Zekang.Zhang/SBSI-master/sbs_shear/response.py:193` -> `sbs_shear/response.py:193`;
+no other edit.  Verified zero `/home`, `/project`, or username strings remain.
+Suite after the loader change: 45 passed + 1 skipped without BlendEMU, 46 passed
+with BlendEMU on `PYTHONPATH` (cross-check exercises `load_emulator`).  Pushed as
+`a91a8ad`; `master` and `origin/master` in sync.
+
+**Detection-classifier assessment** (owner question: how much work to add it).
+The tutorial does not include any classifier today.  Two distinct classifiers
+exist: (1) BlendEMU's per-pair XGBoost detection model — already reachable
+through the tutorial's `emulator` object via
+`predict_on_pairs(prepared.emulator_pairs, task="detection")` -> `detection_prob`
+per paired galaxy (validated on a 3k-row slice: min 0.009 / mean 0.965 /
+max 0.999); with the booster now shipped, adding it is trivial: one markdown +
+1-2 code cells, plus a stated convention for reducing pair-level probabilities
+to per-primary values.  (2) SBSI's own response-aware selection classifier
+(`sbs_shear/selection_model.py`, `predict_proba` + `probability_and_gradient`) --
+present in the public tree but unexported from `sbs_shear/__init__`, untested,
+and with no shipped checkpoint; wiring THAT one in is a real task (export
+decision, test, artifact).  Recommended: add the BlendEMU detection cells now;
+treat the SBSI-native classifier as its own milestone.
+
 ## 2026-08-17o  Public-`master` review, tutorial notebook, and worktree layout
 
 Owner request: clean the public `master` checkout, verify it functions, review it for
