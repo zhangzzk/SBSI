@@ -1,0 +1,235 @@
+% SBSI -- preliminary status slides.
+% Build:  pdflatex sbsi_slides.tex   (run from this directory)
+\documentclass[aspectratio=169,10pt]{beamer}
+
+\usetheme{default}
+\usecolortheme{dove}
+\usepackage[T1]{fontenc}
+\usepackage{helvet}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\renewcommand{\familydefault}{\sfdefault}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{%
+  \hfill\usebeamerfont{footline}\color{gray!80}\scriptsize\insertframenumber\hspace{4mm}\vspace{2mm}}
+\setbeamerfont{frametitle}{size=\large,series=\bfseries}
+\setbeamercolor{frametitle}{fg=black}
+\setbeamertemplate{frametitle}{\vspace{3mm}\insertframetitle\par
+  \vspace{-1mm}{\color{gray!50}\rule{\textwidth}{0.4pt}}}
+\setbeamertemplate{itemize item}{\color{gray!70}\textbf{--}}
+\setbeamertemplate{itemize subitem}{\color{gray!70}\textbf{\textperiodcentered}}
+\setbeamercolor{block title}{fg=black,bg=black!6}
+\setbeamercolor{block body}{bg=black!3}
+
+\graphicspath{{../figures/}}
+
+\newcommand{\xh}{\hat{\mathbf{x}}}
+\newcommand{\xt}{\mathbf{x}}
+\newcommand{\nb}{\mathbf{n}}
+\newcommand{\Rsf}{R_{\rm self}}
+\newcommand{\Rbl}{R_{\rm blend}}
+
+\begin{document}
+
+% ----------------------------------------------------------------- 1
+\begin{frame}{SBSI --- simulation-based shear inference for blended, selected galaxies}
+\vspace{2mm}
+{\large Preliminary status, \today}
+\vspace{4mm}
+
+\begin{itemize}\itemsep5pt
+  \item \textbf{Problem.} Weak-lensing shear from an LSST-like catalogue where galaxies
+        \emph{overlap} (blending) and where \emph{cuts} are applied. Target: multiplicative
+        bias $|m|<0.3\%$.
+  \item \textbf{Approach.} Not a calibration. Learn the measurement likelihood
+        $p(\xh\mid\xt,\nb)$ with a conditional normalizing flow trained on image
+        simulations (ngmix shapes), then do inference through it.
+  \item \textbf{Shear enters the prior}, not the data: it is a transformation $S_\gamma$ of the
+        \emph{scene}. The estimator is a score / Fisher ratio (BFD-like). No true galaxy
+        property is ever used at inference time.
+  \item \textbf{Two response channels.} $R=\Rsf+\Rbl$: the galaxy's own shape response, and
+        the coupling to its neighbours. $\Rbl$ currently comes from an external
+        (BlendEMU) emulator; folding it into the flow is the next step.
+\end{itemize}
+\end{frame}
+
+% ----------------------------------------------------------------- 2
+\begin{frame}{The model, and its two derivatives \quad{\normalsize\color{gray}(MATH.md \S6, steps 1--4)}}
+\vspace{1mm}
+{\small A scene $\theta=(\xt,\nb)$ --- primary plus neighbours --- is drawn from a prior $p_0$, and the
+flow turns it into a measurement. Shear acts on the \textbf{prior}, pushing it forward along
+$S_\gamma$. Keeping the detection classifier, the measured density of one object is}
+\vspace{-2mm}
+\[ A(\xh\mid\gamma)\;=\;\int d\theta\;
+   \underbrace{p_{\rm flow}(\xh\mid\theta)}_{\text{flow}}\;
+   \underbrace{P_{\rm det}(\theta)}_{\text{classifier}}\;p_\gamma(\theta),
+   \qquad\quad p_\gamma\;=\;S_\gamma\#p_0 . \]
+
+\vspace{-2mm}
+{\small \textbf{The generator.} $p_\gamma$ is the only factor carrying $\gamma$. A pushforward obeys a
+continuity equation, which gives its logarithmic derivative in closed form:}
+\vspace{-2mm}
+\[ u\;\equiv\;\partial_\gamma\log p_\gamma\big|_0
+   \;=\;-\big(v\cdot\nabla\log p_0+\nabla\!\cdot\!v\big),
+   \qquad\quad v\;\equiv\;\partial_\gamma S_\gamma\big|_0 . \]
+
+\vspace{-2mm}
+{\small \textbf{Two derivatives of $\log A$} --- Fisher's identity, then Louis's --- both as averages
+over a node bank $\theta_k\sim p_0$ with posterior weights
+$w_k\propto p_{\rm flow}(\xh_i\mid\theta_k)P_{\rm det}(\theta_k)$:}
+\vspace{-2mm}
+\[ \underbrace{s_i\;=\;\partial_\gamma\log A\;=\;\mathbb{E}_{w_i}[u]}_{\text{score}},
+   \qquad\qquad
+   \underbrace{\mathcal{I}_i\;=\;-\partial^2_\gamma\log A
+   \;=\;-\mathbb{E}_{w_i}\big[\partial_\gamma u\big]-\mathrm{Var}_{w_i}(u)}_{\text{information}} . \]
+
+\vspace{-1mm}
+{\scriptsize\color{black!75}
+The flow is \emph{never} differentiated with respect to $\gamma$ --- $\gamma$ is not one of its
+inputs. And $u$ does not depend on the galaxy: $u_k$ and $\partial_\gamma u_k$ are built \emph{once
+per node} and shared across the whole catalogue, leaving one flow call per (object, node). The price
+is $\nabla\log p_0$ over the whole scene.}
+\end{frame}
+
+% ----------------------------------------------------------------- 3
+\begin{frame}{Selection, the estimator, and $\Rbl$ \quad{\normalsize\color{gray}(MATH.md \S6, steps 5--7)}}
+\vspace{1mm}
+{\small \textbf{Selection.} A kept object is drawn from $A$ restricted to the cut and
+\emph{renormalised} --- one normaliser handles detection and the cut together:}
+\vspace{-2mm}
+\[ \log p_{\rm keep}\;=\;\log W(\xh)+\log A(\xh\mid\gamma)-\log P(\gamma),
+   \qquad P(\gamma)=\mathbb{E}_{p_\gamma}\big[\Pi\big],\quad \Pi=P_{\rm pass}P_{\rm det} . \]
+
+\vspace{-2mm}
+{\small $W$ is $\gamma$-free and $=1$ for a galaxy in hand, so differentiating once and twice subtracts
+the \emph{same two population numbers} from \emph{both} moments --- same node bank, reweighted by prior
+survival $\Pi_k$:}
+\vspace{-2mm}
+\[ \langle s\rangle_{\rm sel}=\mathbb{E}_{\Pi}[u],
+   \qquad\qquad
+   \mathcal{I}_{\rm sel}=-\mathbb{E}_{\Pi}\big[\partial_\gamma u\big]-\mathrm{Var}_{\Pi}(u) . \]
+
+\vspace{-1mm}
+{\small One Newton step on the kept log-likelihood --- slope over curvature --- is the estimator:}
+\vspace{-1mm}
+\begin{center}
+\fbox{$\displaystyle\;\hat\gamma\;=\;-\frac{\ell'(0)}{\ell''(0)}
+   \;=\;\frac{\sum_i s_i-N\langle s\rangle_{\rm sel}}
+             {\sum_i\mathcal{I}_i-N\,\mathcal{I}_{\rm sel}}\;$}
+\end{center}
+
+\vspace{0mm}
+{\footnotesize \textbf{Cut vs.\ detection.} A cut on \emph{measured} $\xh$ is a function of data already
+held, so it cancels from the per-object posterior: $P_{\rm pass}$ appears \emph{only} in the population
+term. Detection is \emph{not} determined by $\xh$, so $P_{\rm det}$ survives in both.}
+
+\vspace{1mm}
+{\footnotesize \textbf{Where $\Rbl$ enters.} With $\nb$ latent and $S_\gamma$ acting on the whole scene,
+$u$ carries neighbour components --- separation, neighbour shape and size, all spin-2 --- so
+$s_i=\sum_kw_ku_k$ picks the blend response up with \emph{no separate term}.}
+
+\vspace{0mm}
+{\scriptsize\color{black!75}
+It vanishes when the flow is blind to the neighbour position angle --- that angle's posterior equals
+its prior, and isotropy kills the sum. Today's conditioning is scalar, so $\Rbl$ is still supplied
+externally: $m=R_{\rm sim}/(\Rsf+\Rbl)-1$.}
+\end{frame}
+
+% ----------------------------------------------------------------- 4
+\begin{frame}{Trained models}
+\vspace{2mm}
+{\footnotesize\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{@{}L{2.3cm}L{2.6cm}YY@{}}
+\toprule
+\textbf{Model} & \textbf{Provides} & \textbf{Architecture} & \textbf{Training} \\
+\midrule
+Measurement flow\newline\emph{V2 \texttt{dom6x6}} &
+$p_{\rm flow}(\xh|\xt,\nb)$: 4D output $(g_1,g_2,\mathrm{mag},\log R_{50})$ from 8 scene features &
+conditional mean-affine flow, 10 blocks, hidden 256, 3 layers, SiLU, 16D context &
+3.4M/0.6M rows, 80 epochs, batch 8192, lr $7\!\times\!10^{-4}$; NLL $+\ \lambda_r$ response penalty
+$+\ \lambda_\theta$ spin-2 coupling; SWA epochs 73--80; \textbf{16 seeds} \\[2pt]
+Detection classifier\newline\emph{response-aware} &
+$P_{\rm det}(\xt,\nb)$ &
+MLP $4\times256$, SiLU, 28 inputs incl.\ pair-frame $\cos2\varphi,\sin2\varphi$ &
+BCE $+\ \lambda=300$ regularisation onto the measured detection response \\[2pt]
+Blend emulator\newline\emph{BlendEMU, tuned} &
+$\Rbl$ &
+external lookup, joined per object &
+valid only in its box: true $\mathrm{mag}<26$, $0.3<R_e<1.5''$ \\
+\bottomrule
+\end{tabularx}}
+
+\vspace{1mm}
+{\scriptsize\color{black!75}Constant-shear population, $N=11{,}674{,}408$ in-domain objects:\;
+$R_{\rm sim}=0.8605$,\; $R_{\rm flow}=0.7258$,\; $\Rbl=0.1358$\; $\Rightarrow$\;
+16-seed ensemble $m=-0.12\pm0.15\%$ (seed scatter $0.61\%$).}
+
+\end{frame}
+
+% ----------------------------------------------------------------- 5
+\begin{frame}{Training, and the spread over seeds}
+\vspace{2mm}
+\begin{columns}[t]
+\begin{column}{0.5\textwidth}\centering
+\includegraphics[width=\linewidth]{fid_fig1_seed_loss.png}\\[2mm]
+{\scriptsize\color{black!75}Validation NLL per epoch, all 16 seeds. Plateau at $1.429$; the
+checkpoint used is an SWA average over epochs 73--80.}
+\end{column}
+\begin{column}{0.5\textwidth}\centering
+\includegraphics[width=0.96\linewidth]{fid_fig3_bias_true_neighbours.png}\\[2mm]
+{\scriptsize\color{black!75}Multiplicative bias per seed. Scatter between seeds is $0.61\%$, so the
+16-seed ensemble gives $m=-0.12\pm0.15\%$ --- inside the $\pm0.3\%$ target.}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ----------------------------------------------------------------- 6
+\begin{frame}{Self response: the flow alone, against half-shear truth}
+\vspace{-1mm}
+\begin{center}
+\includegraphics[width=0.94\textwidth]{fid_fig5_selfresp_halfshear.png}
+\end{center}
+\vspace{-2mm}
+{\footnotesize\color{black!75}
+Half-shear simulation legs isolate $\Rsf$, so the emulator has no freedom here --- this is the flow
+on its own. It tracks the truth to within about $\pm2\%$ across primary flux, size and neighbour
+flux, degrading at the bright end ($-7\%$ in the last S/N bin) and at the crowded tail.
+Band $=$ spread over the 16 seeds; $N=2{,}364{,}527$.}
+\end{frame}
+
+% ----------------------------------------------------------------- 7
+\begin{frame}{Full response: flow $+$ emulator, against the constant-shear simulation}
+\vspace{-1mm}
+\begin{center}
+\includegraphics[width=0.94\textwidth]{fid_fig2_response_vs_properties.png}
+\end{center}
+\vspace{-2mm}
+{\footnotesize\color{black!75}
+$R_{\rm flow}+\Rbl$ vs.\ the simulated response. Residuals stay within roughly $\pm5\%$ per bin and
+average to $m=-0.12\pm0.15\%$ over the population. The population is the emulator's in-domain box
+(true $\mathrm{mag}<26$, $R_e>0.3''$); rows outside it are dropped, not zero-filled.}
+\end{frame}
+
+% ----------------------------------------------------------------- 8
+\begin{frame}{Selection: response under near-domain \emph{measured} cuts}
+\vspace{-1mm}
+\begin{center}
+\includegraphics[height=5.5cm]{fid_fig4_selection_near_domain.png}
+\end{center}
+\vspace{-2mm}
+{\footnotesize\color{black!75}
+Cuts move the mean response by up to $17\%$ (left); the model follows most of that move. Residual
+bias at the cut (right): $-0.12\pm0.15\%$ no cut,\; $+0.20\pm0.16\%$ at $\mathrm{mag}<26$,\;
+$+0.63\pm0.17\%$ at $\mathrm{mag}<25$,\; $+0.66\pm0.17\%$ at $\mathrm{S/N}>10$ --- and
+$+4.46\pm0.14\%$ at $R>0.70''$, the one clear failure.
+\textbf{Open:} $\Rbl$ still external; shear also moves galaxy \emph{positions} (not yet modelled);
+all of the above is in-domain only.}
+\end{frame}
+
+\end{document}

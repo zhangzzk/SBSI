@@ -1,4 +1,12 @@
-# ---- large data / model / output artifacts (live under $DATA_DIR or are regenerable) ----
+# ---------------------------------------------------------------------------
+# dev -- the full working branch. It tracks the library, examples, tests, the
+# documentation in doc/, the archive/ provenance tree, notebooks and slides.
+#
+# `master` is the trimmed public branch and carries its own, much stricter
+# .gitignore. Do not merge dev into master; see doc/BRANCHES.md.
+# ---------------------------------------------------------------------------
+
+# ---- large data / model / output artifacts (live under $DATA_DIR, or regenerable) ----
 results/
 models/
 figures/
@@ -39,3 +47,15 @@ jobs/logs/
 logs/
 *.out
 *.err
+
+# ---- LaTeX build products (slides/); the .tex source is tracked ----
+*.aux
+*.bbl
+*.blg
+*.log
+*.nav
+*.snm
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
