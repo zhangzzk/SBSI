@@ -2,7 +2,7 @@
 
 SBSI is a general shear-calibration library. It has one workflow; scientific
 release names such as V3 and V3b are only convenience references to external
-model paths. Read `doc/CONVENTIONS.md` before producing a science number.
+model paths.
 
 All project documentation lives in `doc/`. Only this file, `CLAUDE.md`, and
 `README.md` stay at the repository root.
@@ -32,10 +32,7 @@ All project documentation lives in `doc/`. Only this file, `CLAUDE.md`, and
   those names.
 - Model support is read from checkpoint metadata or supplied explicitly. Never
   infer a domain from a filename.
-- Reusable behavior belongs in `sbs_shear/`. `examples/job_blendemu.sh`
-  is a deployment example that calls BlendEMU; it is not part of the workflow
-  or imported by the library.
-- `archive/pre-v3/` is provenance, not supported code.
+- Reusable behavior belongs in `sbs_shear/`.
 
 ## Public API
 
@@ -53,17 +50,12 @@ Both response components are always required:
 R_model = R_flow + R_blend
 m = R_sim / R_model - 1
 ```
-
-`R_flow` is self-response and is never the complete response. Emulator responses
-come from a user-supplied aligned column/array or external catalogue. Unmatched
-rows are dropped or rejected, never assigned `R_blend = 0`.
+Unmatched rows are dropped or rejected, never assigned `R_blend = 0`, and should be reported.
 
 ## Numerical integrity
 
 - Do not introduce empirical offsets, scaling factors, or pasted results to make
   a number agree with an expectation.
-- Derive ratios per seed and then summarize them.
-- Use all flow checkpoints selected by the user for a shape-response result.
 - Use common random numbers when differencing stochastic flow evaluations.
 - Apply the same forward or antithetic extraction convention to simulation and
   model sides. See `doc/CONVENTIONS.md`.
