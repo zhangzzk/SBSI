@@ -21,13 +21,16 @@ below.
 ## Installation
 
 ```bash
-python -m pip install --config-settings editable_mode=compat -e /path/to/blendemu
 python -m pip install -e /path/to/SBSI
 ```
 
 BlendEMU is only required for emulator prediction; the flow checkpoints need SBSI and
-PyTorch alone.
+PyTorch alone. Clone [BlendEMU](https://github.com/zhangzzk/blendemu) and tell SBSI where it is:
 
+```bash
+git clone https://github.com/zhangzzk/blendemu.git
+export BLENDEMU_ROOT=$PWD/blendemu
+```
 
 ## Image simulation and measurement
 

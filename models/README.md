@@ -37,12 +37,19 @@ export SBSI_CACHE_DIR=/path/to/models
 export BLENDEMU_MODELS=/path/to/models/blendemu
 ```
 
-The emulator itself is loaded by BlendEMU, so `load_emulator` requires an installed
-BlendEMU package (`python -m pip install --config-settings editable_mode=compat -e
-/path/to/blendemu`). The compatibility mode matters when a Jupyter server starts in the
-parent of a checkout also named `blendemu`; it prevents that outer directory from being
-mistaken for an empty namespace package. The flow checkpoints
-need only SBSI and PyTorch.
+The emulator itself is loaded by BlendEMU, so `load_emulator` needs a BlendEMU checkout on
+the import path. BlendEMU ships no packaging metadata, so it is not pip-installable; point
+SBSI at the clone instead:
+
+```bash
+export BLENDEMU_ROOT=/path/to/blendemu
+```
+
+`sbsi/blendemu_checkout.py` does the resolution, and also accepts a `blendemu` checkout
+beside the SBSI checkout or an already-importable package. It deliberately ignores a bare
+`blendemu/` directory with no `__init__.py` — what the import system otherwise picks up as
+an empty namespace package when a Jupyter server starts in the parent of a checkout. The
+flow checkpoints need only SBSI and PyTorch.
 
 ## Integrity
 

@@ -13,6 +13,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Dict, Iterable, Optional, Tuple
 
+from .blendemu_checkout import import_blendemu
 from .paths import RELEASE_MODELS_ROOT
 
 
@@ -152,17 +153,8 @@ def load_emulator(
             "Presets use the checkout's models/ directory by default. Override external "
             "stores with SBSI_CACHE_DIR and BLENDEMU_MODELS."
         )
-    try:
-        from blendemu import BlendingPredictor
-    except ImportError as error:
-        if isinstance(error, ModuleNotFoundError) and error.name not in {None, "blendemu"}:
-            raise
-        raise ImportError(
-            "BlendEMU is not installed correctly in this Python environment. Install its "
-            "checkout editable (`python -m pip install --config-settings "
-            "editable_mode=compat -e /path/to/blendemu`) and restart "
-            "the Python process or notebook kernel."
-        ) from error
+    blendemu = import_blendemu()
+    BlendingPredictor = blendemu.BlendingPredictor
 
     return BlendingPredictor.load(
         model_dir=str(models.emulator_metadata.parent),

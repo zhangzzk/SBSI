@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 import torch
 
+from sbsi.blendemu_checkout import import_blendemu
 from sbsi.catalogue import load_catalogue
 from sbsi.domain import Domain
 from sbsi.flow import FlowTrainingConfig
@@ -153,10 +154,10 @@ def test_prepared_pairs_match_blendemu_catalogue_conversion():
     # cross-check that the reimplementation still agrees with BlendEMU's own conversion. It
     # is therefore the one test that needs BlendEMU, and it skips when BlendEMU is absent
     # rather than failing -- the suite must pass on a checkout that has SBSI only.
-    nz_utils = pytest.importorskip(
-        "blendemu.nz_utils",
-        reason="BlendEMU not on PYTHONPATH; skipping the cross-check against its converter",
-    )
+    try:
+        nz_utils = import_blendemu().nz_utils
+    except ImportError as error:
+        pytest.skip(f"no BlendEMU checkout reachable, skipping the converter cross-check: {error}")
 
     catalogue = _input_catalogue().drop(columns="case")
     config = _pairing_config()
