@@ -125,9 +125,28 @@ same closure test with the flow replaced by `xhat = e + N(0, sigma^2)` — flow-
 and correctly specified, so any departure from `g` IS the grid's error. Its one free number is
 pinned by matching the measured `<I> = 6.243`, which lands `sigma = 0.25` (`<I> = 6.66`,
 nothing tuned). At 2,000 objects it predicted `d(m) = +0.711% +/- 0.127%` for exactly this
-61 -> 101 step, against the +0.664% measured. A Gaussian shape likelihood is not the flow, so
-the agreement is support for the mechanism rather than proof of it — but the mechanism was
-named, quantified and committed (921b2c3) before the GPU job finished.
+61 -> 101 step, committed (921b2c3) before the GPU job finished. The production run
+(15823023, 50,000 objects, CPU, 14 min) sharpens that and is worth quoting in full, because
+the honest reading is agreement in mechanism and magnitude but NOT to the error bar:
+
+| sigma | `<I>` | m(61) | m(81) | m(101) | m(141) | predicted d(m), 61 -> 101 |
+|---|---|---|---|---|---|---|
+| 0.20 | 7.862 | −0.572% | −0.048% | +0.044% | +0.054% | +0.616% |
+| 0.25 | 6.671 | −0.674% | −0.057% | +0.052% | +0.063% | **+0.726% ± 0.024%** |
+| 0.30 | 5.638 | −0.797% | −0.067% | +0.061% | +0.075% | +0.858% |
+
+(`m` is quoted against the toy's own grid_n=201 reference.) The measured `<I> = 6.243` sits
+between sigma 0.25 and 0.30, so the pinned prediction is +0.73 to +0.78%, against +0.664% ±
+0.005% measured — the toy runs 10–18% high, and at its own bar that is a 2.5 sigma
+disagreement. It is not a calibration and should not be used as one. What it does establish,
+before the fact, is that a grid this coarse costs a bias of this size and sign, which is the
+claim cont.182 could not make.
+
+Two further readings. The dependence on sigma is mild — halve the posterior width and the
+grid error moves 20% — so the conclusion does not hinge on the toy's one free number. And the
+grid error is NOT monotonic: it lands within 0.06% of the fine reference from n=81 onward and
+then sits there, so n=101 buys essentially all of the available improvement and n=141 adds
+0.011%. Job 15825062 tests that last step on the real flow.
 
 **The published cut results survive.** Every cut row is quoted as `d(m)` against the uncut
 control, so a shift common to both cancels. Measured, at grid_n=101 on the 500k subsample the
