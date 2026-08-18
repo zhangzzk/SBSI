@@ -698,7 +698,7 @@ def make_figure(stamps, selected, flow_rows, draws, blend_response):
                 markerfacecolor="0.35",
                 markeredgecolor="0.35",
                 markersize=6,
-                label="Constgold realization",
+                label="Measurement",
             ),
         ),
         loc="center",
