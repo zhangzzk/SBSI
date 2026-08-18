@@ -1,14 +1,10 @@
 # Packaging for the SBSI shear-calibration library (`sbsi`).
 #
-# The repo runs under the conda env `sims1` with PYTHONPATH set (see CLAUDE.md); that
-# remains the primary contract. This file additionally lets the library be installed
-# editable so `import sbsi` and `from sbsi.response import flow_response` resolve
-# without the per-script sys.path shim:
+# Install the checkout editable into the environment used by scripts and notebooks.
+# This is the primary import contract; code must not depend on the shell or kernel's
+# current working directory:
 #
-#     conda activate sims1 && pip install -e .   # optional; PYTHONPATH still works as before
-#
-# Runtime dependencies are provided by the conda env, so none are declared here (keeps
-# `pip install -e .` from touching the shared env's package versions).
+#     python -m pip install -e .
 
 [build-system]
 requires = ["setuptools>=61"]
@@ -19,7 +15,17 @@ name = "sbsi"
 version = "3.0.0"
 description = "Simulation-based shear calibration with measurement flows and blending emulators."
 requires-python = ">=3.9"
-dependencies = []
+dependencies = [
+    "numpy",
+    "pandas",
+    "pyarrow",
+    "PyYAML",
+    "scipy",
+    "torch",
+]
+
+[project.optional-dependencies]
+notebook = ["ipykernel", "matplotlib"]
 
 [project.scripts]
 sbsi = "sbsi.cli:main"

@@ -2,6 +2,36 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-18f  tutorial — robust checkout paths and published measurement contours
+
+**Change.** The public tutorial and batch wrapper now use one editable Python
+environment for SBSI and BlendEMU instead of modifying `PYTHONPATH` or importing
+BlendEMU through `BLENDEMU_ROOT`. New `sbsi.paths` helpers anchor example data and the
+frozen `models/` release tree on the imported checkout, so notebook behavior is
+independent of the Jupyter working directory. Packaging now declares runtime and
+notebook dependencies, `load_emulator` reports missing artifacts/import problems at the
+API boundary, and the README/model documentation describes the same contract.
+
+**Figure.** The tutorial's measurement-flow cell now draws padded, smoothed
+highest-density contours for three representative galaxies, with linear FLUX_RADIUS in
+arcseconds. Axis limits come from complete contour paths and input markers. The radius
+KDE has an explicit zero-density boundary at radius 0, preventing smoothing leakage and
+clipped half-contours without a log transform. The cell exports
+`examples/measurement_flow_contours.png`, which the README displays with a short caption.
+
+**Validation.** The complete notebook executed on SLURM GPU job 15827250 in 43 s and
+regenerated both the embedded output and README PNG. The resulting contours are visibly
+closed and the radius axis remains nonnegative. Under `py31`, the public worktree reported
+47 passed, 1 skipped and the dev `tests/` suite reported 117 passed, 1 skipped; notebook
+JSON/source compilation, `git diff --check`, and the README asset link also passed. Master
+commit `5831486` was transferred as a content patch, not a history merge, after
+checkpointing the previous dev notebook as `f6d3139`.
+
+**Limitation.** A regular wheel does not contain the checkout-level examples and frozen
+artifacts; these resource helpers intentionally require an editable install from a
+complete checkout. External artifact stores remain supported through `SBSI_CACHE_DIR`
+and `BLENDEMU_MODELS`.
+
 ## 2026-08-18e  cont.185 — the grid shift does NOT cancel in d(m), and it closes the shape cut (loop)
 
 Two jobs, both off banked score caches. Job 15825061 re-ran the population block for the

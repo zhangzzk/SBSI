@@ -26,6 +26,7 @@ from .models import (
     load_emulator,
     validate_models,
 )
+from .paths import example_path, repository_path
 from .response import (
     MeasurementSample,
     ResponsePrediction,
@@ -59,6 +60,7 @@ __all__ = [
     "V3B",
     "get_model",
     "find_neighbours",
+    "example_path",
     "load_catalogue",
     "load_flow",
     "load_emulator",
@@ -66,6 +68,7 @@ __all__ = [
     "prepare_emulator_pairs",
     "prepare_flow_inputs",
     "prepare_forward_catalogue",
+    "repository_path",
     "train_flow",
     "tune_flow",
     "predict_blend_response",

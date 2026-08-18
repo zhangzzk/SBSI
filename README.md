@@ -13,6 +13,17 @@ The [inference tutorial notebook](examples/sbsi_api_tutorial.ipynb) is the main
 user-facing prediction walkthrough. Training and tuning use the CLI described
 below.
 
+## Conditional measurement predictions
+
+The measurement flow returns joint predictive distributions, not only point
+estimates. This example shows measured ellipticity, magnitude, and linear
+FLUX_RADIUS for representative bright, middle, and faint galaxies. The curves
+are the one- and two-sigma highest-density contours; plus signs mark the input
+galaxy parameters. The complete example is reproducible from the tutorial
+notebook.
+
+![Conditional measurement-flow contours for three representative galaxies](examples/measurement_flow_contours.png)
+
 ## Image simulation and measurement
 
 SBSI training data are generated using BlendEMU. 
@@ -45,48 +56,54 @@ $R_{\rm blend}$ Emulator training and tuning remain in BlendEMU.
 
 ## Environment
 
-SBSI is not installed in production; it runs from the checkout with `PYTHONPATH`
-set. From the repository root:
+Use one Python environment for the SBSI checkout and its BlendEMU dependency. Install
+both repositories editable; do not add checkout paths to `PYTHONPATH`, and do not rely
+on launching Python from a particular directory:
 
 ```bash
-export PYTHONPATH="$PWD:$PYTHONPATH"
+conda activate sims1
+python -m pip install --config-settings editable_mode=compat -e /path/to/blendemu
+python -m pip install -e /path/to/SBSI
 ```
 
-BlendEMU is needed only for the emulator step (`sbsi.models.load_emulator`).
-Add it when you need it:
+For simultaneous git worktrees, give each worktree a small environment overlay so one
+editable `sbsi` installation cannot silently select another checkout:
 
 ```bash
-export BLENDEMU_ROOT=/path/to/blendemu
+cd /path/to/SBSI-worktree
+/path/to/sims1/bin/python -m venv --system-site-packages .venv
+# This cluster's venv seed is older than the Setuptools inherited from sims1.
+.venv/bin/python -m pip uninstall -y setuptools
+.venv/bin/python -m pip install --no-build-isolation --no-deps \
+    --config-settings editable_mode=compat -e /path/to/blendemu
+.venv/bin/python -m pip install --no-build-isolation --no-deps -e .
+.venv/bin/python -m ipykernel install --user \
+    --name sbsi-master --display-name "SBSI master"
 ```
 
-With `BLENDEMU_ROOT` set, `load_emulator` imports BlendEMU from there
-automatically whenever it is not already importable; putting BlendEMU on
-`PYTHONPATH` (or installing it) works too and takes precedence.
-`BLENDEMU_ROOT` is never read for model artifacts (see
-[Models](#models) below).
+Select that kernel in `examples/sbsi_api_tutorial.ipynb`. The notebook obtains bundled
+data through `sbsi.example_path`, and model presets resolve from the imported checkout's
+`models/` directory, so the Jupyter server's working directory is irrelevant. Use
+`SBSI_CACHE_DIR` or `BLENDEMU_MODELS` only to override model artifacts stored elsewhere.
 
-If your Jupyter is launched without your shell exports (JupyterHub does this),
-record the path once in a file instead — `load_emulator` reads it when the
-variable is unset:
+To confirm which code a process is using:
 
 ```bash
-mkdir -p ~/.config/sbsi && echo /path/to/blendemu > ~/.config/sbsi/blendemu_root
+python -c 'import sbsi, blendemu; print(sbsi.__file__); print(blendemu.__file__)'
 ```
 
-The package can also be installed with `pip install -e .` without changing the
-catalogue or model-path contract; that also provides the `sbsi` console script.
+BlendEMU is only required for emulator prediction; the flow checkpoints need SBSI and
+PyTorch alone.
 
 ### Models
 
-The frozen V3 artifacts — the 16-seed flow ensemble and the blending emulator —
-ship in [`models/`](models/), and `get_model("V3")` resolves against them by
-default, in any clone, with nothing to configure. If you keep the artifacts
-elsewhere (cluster caches, a non-editable install), override the roots:
+The frozen V3 artifacts—the 16-seed flow ensemble and blending emulator—ship in
+[`models/`](models/). `get_model("V3")` resolves them from the imported checkout by
+default, independent of the working directory. For artifacts stored elsewhere, set:
 
 ```bash
-export SBSI_CACHE_DIR=/path/to/models      # ablation/ and derisk/ roots
+export SBSI_CACHE_DIR=/path/to/models
 export BLENDEMU_MODELS=/path/to/models/blendemu
 ```
 
 See [`models/README.md`](models/README.md) for the layout and checksums.
-

@@ -33,8 +33,19 @@ eval "$(conda shell.bash hook)"
 conda activate sims1
 module load sextractor
 
-export PYTHONPATH="${SBSI_ROOT}:${BLENDEMU_ROOT}:${PYTHONPATH:-}"
 export BLENDEMU_SIM_RUN
+
+if [[ -z "${SBSI_PYTHON:-}" ]]; then
+    if [[ -x "${SBSI_ROOT}/.venv/bin/python" ]]; then
+        SBSI_PYTHON="${SBSI_ROOT}/.venv/bin/python"
+    else
+        SBSI_PYTHON="$(command -v python)"
+    fi
+fi
+
+# SBSI and BlendEMU are editable-installed into this environment. This check fails
+# early if a batch job picked up a different checkout or an incomplete installation.
+"${SBSI_PYTHON}" -c 'import sbsi, blendemu; print("SBSI:", sbsi.__file__); print("BlendEMU:", blendemu.__file__)'
 
 # BlendEMU owns all four operations:
 #   1  generate realization catalogues and simulator configs
@@ -43,7 +54,7 @@ export BLENDEMU_SIM_RUN
 #   4/4b  assemble response, detection, and self-response catalogues
 # run_pipeline.py dispatches its own srun calls for the MPI steps, so do not
 # wrap this command in another srun.
-python -u "${BLENDEMU_ROOT}/scripts/run_pipeline.py" \
+"${SBSI_PYTHON}" -u "${BLENDEMU_ROOT}/scripts/run_pipeline.py" \
     --config "${BLENDEMU_CONFIG}" \
     --steps 1,2,3,3b,4,4b \
     --n-mpi "${N_MPI}" \
