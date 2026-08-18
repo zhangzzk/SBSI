@@ -2,6 +2,75 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-18e  cont.185 — the grid shift does NOT cancel in d(m), and it closes the shape cut (loop)
+
+Two jobs, both off banked score caches. Job 15825061 re-ran the population block for the
+`|xhat| < 0.6` cut on the grid_n=61 cache at the SAME 500,000 rows the grid_n=101 run used, so
+the cut rows can be differenced across grids the way cont.184 differenced the controls. Job
+15822958 ran the `--pi-azimuthal-average` diagnostic that has been outstanding since cont.181.
+
+**1. The correction to cont.184.** That entry argued the published cut results were safe
+because `d(m)` is a difference against the control and a common shift cancels. It does not
+cancel. With `<s>_sel` and `I_sel` IDENTICAL on both sides (verified: the population block does
+not depend on the score grid -- `I_sel = [[+2.57216, -0.03617], [-0.03619, +2.50511]]` in both
+logs), the only thing that changes is the score sums, and:
+
+| paired, 500k rows, grid_n 61 -> 101 | shift |
+|---|---|
+| `m_uncut` | +0.6637% ± 0.0045% (149σ) |
+| `m_cut` | +1.3284% ± 0.0116% (115σ) |
+| **`d(m)`** | **+0.6646% ± 0.0095% (70σ)** |
+
+The cut row moves TWICE as far as the control, so `d(m)` moves by the full amount. The reason
+is structural: (5.3) divides by `<I> - I_sel`, and with `I_sel/<I> = +0.41` a relative error on
+the information is amplified by `1/(1 - 0.41) = 1.7` in the cut estimate and by 1.0 in the
+control. (Measured 2.0 rather than 1.7, so the simple lever is not the whole story and the
+shift must be MEASURED per cut, not extrapolated.)
+
+**2. That closes the shape cut.** cont.181's one unclosed row was `d(m) = -0.583% +/- 0.265%`
+(2.2σ) for `|xhat| < 0.6`. Adding the measured grid shift gives `-0.583 + 0.665 = +0.082%`,
+i.e. consistent with zero at a bar of 0.265%. On the 500k subsample the same statement reads
+`-1.129% +/- 0.535%` at 61 and `-0.464% +/- 0.542%` at 101. So the §5B correction now closes on
+all three cuts, and the residual that cont.181 tentatively linked to flow anisotropy was
+quadrature.
+
+**3. The mag and size rows are NOT yet corrected.** Their shifts are cut-specific -- the lever
+above runs through `I_sel/<I>`, which is +0.0013 for the magnitude cut and −0.1635 for the size
+cut, against +0.4115 here -- so a naive scaling predicts ~0% and ~−0.09% respectively, and
+point 1 shows exactly that kind of scaling to be 18% wrong. **The headline result (+16.0% size
+bias corrected to +0.024% ± 0.110%) therefore stands ONLY at grid_n=61 until measured.** Jobs
+submitted to measure it: 500k-row paired arms at both grids for both cuts (15827006 mag61, 15827007 mag101, 15827008 size61, 15827009 size101; 500k rows each).
+
+**4. The azimuthal diagnostic: the test is weaker than it was designed to be.** Control rung
+(azim=0) reproduces cont.181 exactly -- uncut `-0.665% +/- 0.116%`, `<s>_sel = [+0.009776,
++0.004048]` (154σ, 48σ), `I_sel/<I> = +0.4115`, FULL `d(m) = -0.583% +/- 0.265%` -- so the
+banked cache and the ladder path are sound. Averaging `Pi` over rings then collapses `<s>_sel`
+from 9.8e-3 to ~1e-7 (still 8.9σ, i.e. down to quadrature noise). But that collapse is FORCED:
+`<s>_sel` integrates the spin-2 generator against `Pi`, so an isotropic `Pi` gives zero
+identically, whatever the flow does. The diagnostic therefore cannot distinguish "the flow's
+anisotropy causes the `<s>_sel` anomaly" from "the anomaly is spurious", which is what
+cont.181 hoped it would do. INFERENCE.md's suggestion to use it that way is wrong and is
+corrected.
+
+What it DOES establish is worth having: the angular structure of `Pi` is load-bearing.
+Deleting it takes `d(m)` from `-0.583%` to `+3.766% +/- 0.261%`, a 4.35% swing. So `<s>_sel`
+is a real term to be evaluated, not a symmetry-zero to be assumed -- §5B.2's "the numerator
+correction vanishes for an isotropic CUT" is false whenever `Pi` is anisotropic, and `Pi` is
+anisotropic here even though the cut is a disc. Combined with point 2, the `<s>_sel` line of
+inquiry from cont.181 is closed: the anomaly is real, it is needed, and it was not the cause
+of the unclosed residual.
+
+**Files.** No library change. `scripts/diff_score_caches.py` handles the control; the cut-row
+pairing is a 20-line use of `sbsi.score_inference.jackknife_blocks` with each side's own
+population terms (recorded here rather than added to the repo until a second caller needs it).
+
+**Next.** (a) The four paired mag/size jobs above. (b) 15825062 tests grid_n 101 -> 141 on the
+real flow; the toy puts it at 0.011%. (c) Then decide on a production re-run at grid_n=101.
+That is 2.8x the 9.2 h score pass per cut and must be sharded (4 x 500k, merged through
+`--load-scores`): 12 GPU-jobs, ~38 GPU-hours, ~1 day wall clock at 2-3 concurrent. NOT
+launched -- proposing it, because the cheaper path is to publish the 8M table at grid_n=61
+with the measured per-cut shift applied and quoted, which points (1)-(3) make defensible.
+
 ## 2026-08-18d  models — load_emulator imports BlendEMU through BLENDEMU_ROOT
 
 **Motivation.** Notebook users had to export a per-session
@@ -148,13 +217,11 @@ grid error is NOT monotonic: it lands within 0.06% of the fine reference from n=
 then sits there, so n=101 buys essentially all of the available improvement and n=141 adds
 0.011%. Job 15825062 tests that last step on the real flow.
 
-**The published cut results survive.** Every cut row is quoted as `d(m)` against the uncut
-control, so a shift common to both cancels. Measured, at grid_n=101 on the 500k subsample the
-`|xhat| < 0.6` cut gives FULL (5.3) `d(m) = -0.465% +/- 0.547%`, against cont.181's
-`-0.583% +/- 0.265%` at grid_n=61 on 8M. Consistent, and the correction still does what it
-did. `I_sel/<I>` moves +0.4115 -> +0.4151 and `<s>_sel` keeps its sign and size. So cont.181's
-table is NOT retracted: what changes is the interpretation of the control row it is quoted
-against, which is now understood and no longer a floor under the analysis.
+**Do the cut rows survive?** Provisionally yes: every cut row is a `d(m)` against the uncut
+control, so a shift common to both should cancel, and at grid_n=101 on the 500k subsample the
+`|xhat| < 0.6` cut gives FULL (5.3) `d(m) = -0.465% +/- 0.547%` against cont.181's
+`-0.583% +/- 0.265%` at grid_n=61 on 8M -- consistent at these bars. **cont.185 measures this
+properly and overturns it: the shift does NOT cancel.** Read that entry, not this paragraph.
 
 **Limitations.** (1) grid_n=101 is shown to be much better than 61, not shown to be converged.
 The toy puts 101 -> 141 at `-0.012% +/- 0.002%`, but that is the toy; the real flow has not

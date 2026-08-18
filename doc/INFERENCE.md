@@ -818,7 +818,17 @@ of $p(\hat T)$ — a mild cut on the rising side keeps most of the sample and de
 ($\iota>0$); an aggressive cut on the falling side keeps the responsive tail and *adds* information
 ($\iota<0$), growing like $1/P_{\rm pass}$.
 
-**SETTLED, against the rule: do not trust (5.3c)'s sign for a strongly shape-dependent cut.** The
+**SETTLED, against the rule: do not trust (5.3c)'s sign for a strongly shape-dependent cut.** (2026-08-18: and do not use `--pi-azimuthal-average` to
+decide whether the flow's anisotropy *causes* a non-zero $\langle s\rangle_{\rm sel}$. Averaging
+$\Pi$ over rings forces $\langle s\rangle_{\rm sel}=0$ identically — it integrates a spin-2
+generator against an isotropic weight — so the collapse is guaranteed and carries no
+information about the flow. Measured, it falls from $9.8\times10^{-3}$ to $\sim10^{-7}$ and
+$d(m)$ moves from $-0.583\%$ to $+3.766\%\pm0.261\%$. The useful conclusion is the opposite of
+the intended one: the angular structure of $\Pi$ is load-bearing to the tune of 4.35% on
+$d(m)$, so $\langle s\rangle_{\rm sel}$ must be evaluated and never assumed to vanish. §5B.2's
+"the numerator correction vanishes for an isotropic cut" holds for an isotropic $\Pi$, not for
+an isotropic CUT, and the two differ here: $|\hat x|<c$ is a disc, and $\Pi$ on it is not
+isotropic.) The
 production size-cut run (cont.181, V3, $\log\hat r\ge1.45$, keeping 71.1% of 8M objects) measures
 $\mathcal I_{\rm sel}=-1.15075\pm0.00033$, i.e. $\iota/\mathcal I=-0.1635$ — negative at
 $\sim3500\sigma$. That cut sits near the 29th percentile of $p(\log\hat r)$, the **rising** side,
