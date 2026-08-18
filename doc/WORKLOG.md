@@ -2,6 +2,95 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-18a  cont.181 — production: the selection correction closes a 16% size-cut bias to 0.02% (loop)
+
+Jobs 15814616/17/18, all COMPLETED (9.0–9.2 h each, cip a40-16gb, 8,000,000 objects = 2M rows x 2
+shape realisations x ring pair, `Pi` at 1,048,576 rows x 8 draws x 6 replicates on the G=15069 bank).
+These are the numbers; the cont.180 table was a plumbing pilot at 1/200 the statistics and is
+superseded by this one.
+
+**Uncut control** — the same rows and seed in all three runs, and identical in all three logs, which
+is the check that the score pass is cut-independent:
+
+    ghat = [+0.049667 +/- 0.000058, -0.000034 +/- 0.000058]     m = -0.665% +/- 0.116%
+
+Read that carefully: the BASELINE closure is 5.7 sigma from zero. At pilot precision it was
+−1.58 ± 1.85% and consistent with anything; at 8M objects the estimator's own bias resolves at
+−0.67%. It is not a selection effect — `Pi = 1` here, so both population terms vanish identically —
+and it is not the population block, which this row never touches. It is the score pass alone: the
+G=2765 (n=61) node bank, the `fd_delta`/`info_delta` stencils, or the prior fit. This is now the
+floor under every §5B number and it is the next thing to chase. Every cut row below is quoted as
+`d(m)` against this control, jackknifed block by block as a difference, so the floor cancels there.
+
+**The three cuts.** `d(m)` is cut-minus-uncut; sigma combines the 200-block jackknife on galaxies
+with the scatter across the 6 independent `Pi` replicates.
+
+| | `\|xhat\| < 0.6` | `mag_auto < 24.5` | `log flux_radius >= 1.45` |
+|---|---|---|---|
+| kept | 5,810,870 (72.64%) | 5,253,050 (65.66%) | 5,688,211 (71.10%) |
+| `<I>` (11) | 6.2432 | 8.4153 | 7.0401 |
+| `Pi` range | 0.196 – 0.892 | 0.6510 – 0.6576 | 0.6123 – 0.9871 |
+| `<Pi>` vs keep | +0.22% | +0.01% | −0.12% |
+| `I_sel` (11) | +2.5692 ± 0.0007 | +0.0113 ± 0.0000 | **−1.1508 ± 0.0003** |
+| `I_sel/<I>` | +0.4115 | +0.0013 | **−0.1635** |
+| `d(m)` no correction | −38.079% ± 0.157% | −0.281% ± 0.091% | +15.973% ± 0.130% |
+| `d(m)` numerator only | −41.221% ± 0.158% | −0.198% ± 0.091% | +16.267% ± 0.130% |
+| **`d(m)` FULL (5.3)** | **−0.583% ± 0.265%** (2.2σ) | **−0.065% ± 0.091%** (0.7σ) | **+0.024% ± 0.110%** (0.2σ) |
+
+**The size cut is the result.** A cut on the flow's own measured size — the cut a real analysis
+applies, and the one that was impossible to even write down before the move to V3 — biases the
+estimator by **+16.0%**, and the full (5.3) correction removes it to **+0.024% ± 0.110%**. Nothing
+was tuned to make that happen: `I_sel` is computed from `Pi` by (5.3b) on the node bank, and the only
+freedom in the whole chain is how finely `Pi` is sampled. This is the first end-to-end demonstration
+that the population block works against a cut that matters, and it lands a factor of 10 inside the
+0.3% deliverable.
+
+**(5.3c)'s sign rule is wrong here, and the evaluated term is right.** cont.180 flagged that the size
+cut's `I_sel` came out negative where §5B.2 predicts positive on the rising side of `p(That)`.
+Production settles the measurement and not in (5.3c)'s favour: `I_sel = -1.15075 ± 0.00033`, i.e.
+negative at ~3,500 sigma, with `Pi` running 0.61 to 0.99 across the shape grid. But the important
+half is that **using that negative value closes the test to 0.02%**. So the defect is in the
+closed-form ESTIMATE (5.3c), not in the machinery: the diffusion argument assumes `c*e` uncorrelated
+with size, and for a cut whose `Pi` varies by 60% across the shape grid that assumption is simply
+false. (5.3b) evaluated on the bank is the operational term and it is correct. INFERENCE.md §5B.2 is
+updated to say so — (5.3c) is now marked as an order-of-magnitude guide whose sign is not to be
+trusted for a strongly shape-dependent cut.
+
+**A measured-magnitude cut carries almost no selection bias in this model.** `Pi` varies by 1.0%
+across the entire shape grid (0.6510 to 0.6576), `I_sel/<I>` is 0.0013, and the uncorrected estimator
+is already within 0.28% of the control. Worth stating as a result rather than a null: the flow's
+measured magnitude barely knows the true shape, so magnitude selection is nearly harmless here while
+size selection is not. Note also `<I>` = 8.42 for the bright subsample against 6.24 for the shape cut
+— brighter objects carry more shear information per galaxy, as they should.
+
+**`<s>_sel` is NOT zero, and on the shape cut it hurts.** §5B.2 predicts the numerator term vanishes
+by orientation averaging for an isotropic cut. Measured, it is 154σ/48σ from zero on `|xhat|`,
+453σ on magnitude and 1290σ on size. The magnitudes are small, and on two of the three cuts the
+"numerator only" row moves `d(m)` by less than 0.1%. On the shape cut it moves it by **−3.1%, away
+from the truth**, and that is also the one cut whose full correction does not close (−0.583% at
+2.2σ). Those two facts are consistent with cont.176's finding that the flow is anisotropic in shape
+(`Pi` on rings of constant `|e|` varies by 65–79x its own noise), but they are not yet causally
+linked. `--pi-azimuthal-average` is the diagnostic that separates them and it has not been run at
+production precision.
+
+**Files.** `jobs/job_pi_grid_ladder.sh`: `--load-oversample` plumbed through (default 7.0) and the
+GPU pinned to `a40-16gb`. Without the first the ladder cannot load any V3-domain cache at all —
+`rows=len(df)` is in the cache key, only 17.8% of raw rows survive the V3 primary domain, and the
+1.6 default never reaches 2M rows, so every load refuses.
+
+**Limitations.** (i) The −0.67% baseline floor is unexplained and is larger than two of the three
+residuals; until it is understood, "the correction closes to 0.02%" is a statement about the
+DIFFERENCE and not about absolute calibration. (ii) `pi_grid_n = 141` was converged for the V1
+`|xhat|` cut and for nothing else; ladders at 101/141/181 for the magnitude and size caches are
+running as jobs 15819669 and 15819670 (minutes each, no score pass — the score caches are banked).
+Until those land, the two right-hand columns carry an unquantified quadrature error. (iii) Single
+flow seed, one shear direction (`+g1`, a lattice axis — `--closure-g2` exists now but the 45-degree
+run does not). (iv) Closure, so this tests the estimator and not the flow's fidelity to the sky.
+
+**Next.** Read the two ladders; chase the −0.67% baseline (score-grid refinement is the first
+suspect, since the population bank needed 141 where the score pass is still at 61); then the
+45-degree closure.
+
 ## 2026-08-17x  cont.180 — the §5B selection closure moved onto the V3 4D-output flow (user)
 
 User: "Go on. Use V3." The §5B selection driver now runs on the V3 measurement flow, and with it
@@ -61,7 +150,8 @@ used. `primary_domain_cuts()` reads the bound from `bundle.metadata`, never from
 (AGENTS.md), and the prior cache is tagged by domain so two domains can never share one file.
 
 **Pilot results (20k rows x ring pair = 40k objects, `Pi` at only 512 rows x 2 reps, `g = 0.05`).**
-These are a plumbing check, NOT a measurement — `sigma_Pi` alone is 9.5% on the first row. Production
+These are a plumbing check, NOT a measurement — `sigma_Pi` alone is 9.5% on the first row.
+**SUPERSEDED** by the production numbers in 2026-08-18a; quote those, not these. Production
 runs at the cont.177 scale (2M rows x 2 shape realisations = 8M objects, `Pi` at 1,048,576 rows x 6
 reps) are in flight as jobs 15814616/17/18.
 

@@ -3,7 +3,7 @@
 #SBATCH --time=05:00:00
 #SBATCH --mem=32G
 #SBATCH --cpus-per-task=8
-#SBATCH --gpus-per-node=1
+#SBATCH --gpus-per-node=a40-16gb:1
 #SBATCH --partition=cip
 #SBATCH --output=/home/z/Zekang.Zhang/logs/pi_grid_%j.out
 #SBATCH --error=/home/z/Zekang.Zhang/logs/pi_grid_%j.err
@@ -49,7 +49,8 @@ for CUT in $(split_list "${CUTS:-0.6 0.4}"); do
   for PG in $(split_list "${PGRIDS:-61 81 101 141 181}"); do
     echo ""; echo "######## cut=$CUT  closure_g=$CG  pi_grid_n=$PG ########"
     python -u scripts/eval_score_select.py \
-      --closure-g "$CG" --cut-abs-ehat "$CUT" --max-rows "${ROWS:-2000000}" \
+      --closure-g "$CG" --cut-abs-ehat "$CUT" \
+      --load-oversample "${OVERSAMPLE:-7.0}" --max-rows "${ROWS:-2000000}" \
       --pi-rows "${PIROWS:-1048576}" --pi-samples 8 --pi-reps 6 \
       --ring rot90 --shape-reps 2 --jk-blocks 200 --uncut-control \
       --pi-grid-n "$PG" \
@@ -64,7 +65,7 @@ for B in ${BOUNDS:-}; do
     echo ""; echo "######## cut=$B  closure_g=$CG  pi_grid_n=$PG ########"
     python -u scripts/eval_score_select.py \
       --closure-g "$CG" --cut-abs-ehat "${ABSCUT:-none}" --cut-bound "$B" \
-      --max-rows "${ROWS:-2000000}" \
+      --load-oversample "${OVERSAMPLE:-7.0}" --max-rows "${ROWS:-2000000}" \
       --pi-rows "${PIROWS:-1048576}" --pi-samples 8 --pi-reps 6 \
       --ring rot90 --shape-reps 2 --jk-blocks 200 --uncut-control \
       --pi-grid-n "$PG" \

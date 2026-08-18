@@ -498,9 +498,10 @@ the flow does not predict raises rather than silently producing a $P_{\rm pass}$
 The same object is applied by the score pass and by the population block, in NumPy and in torch
 respectively, because a divergence between those two would leave $\Pi$ describing a different sample
 from the one being scored with nothing to catch it. First runs are recorded in `doc/WORKLOG.md`
-(cont.180); at pilot precision a measured-magnitude cut turns out to be nearly inert
-($\Pi$ varies by 1.3% across the whole shape grid, $\iota/\mathcal I=0.002$) while a measured-size cut
-is the strong case ($\Pi$ from 0.61 to 0.99, +16% uncorrected bias at 8.6$\sigma$).
+(cont.180) and the production numbers in cont.181. A measured-magnitude cut is nearly inert
+($\Pi$ varies by 1.0% across the whole shape grid, $\iota/\mathcal I=0.0013$, uncorrected bias
+$-0.28\%$); a measured-size cut is the strong case ($\Pi$ from 0.61 to 0.99, uncorrected bias
+$+16.0\%$, corrected to $+0.024\%\pm0.110\%$ by the full (5.3)).
 
 **Detection is not this.** Undetected objects have no $\hat{\mathbf{x}}$, so one cannot integrate the
 flow over a region of output space that does not exist. Detection requires a separate
@@ -817,16 +818,21 @@ of $p(\hat T)$ — a mild cut on the rising side keeps most of the sample and de
 ($\iota>0$); an aggressive cut on the falling side keeps the responsive tail and *adds* information
 ($\iota<0$), growing like $1/P_{\rm pass}$.
 
-**Open: the measured sign disagrees with this rule.** The first size-cut run (cont.180, V3, cut
-$\log\hat r\ge1.45$, keeping 70.8%) gives $\iota/\mathcal I=-0.172\pm0.055$. That cut sits near the
-29th percentile of $p(\log\hat r)$ — the **rising** side — where the paragraph above predicts
-$\iota>0$. Two ways out, not yet separated: (i) the "$ce$ uncorrelated with size" step in (5.3c) is
-doing real work, since $\Pi$ for this cut runs 0.61 to 0.99 across the shape grid and so $c\,e$ is
-strongly size-dependent by construction; or (ii) $p(\log\hat r)$ near the cut is not
-single-peaked-and-rising in the way percentile position suggests. The measurement is at pilot
-precision with 2 $\Pi$ replicates, so it is not yet a refutation of (5.3c) — production
-$\Pi$ has to confirm the sign at its own precision first. Do not quote either the number or the rule
-for a size cut until that is settled.
+**SETTLED, against the rule: do not trust (5.3c)'s sign for a strongly shape-dependent cut.** The
+production size-cut run (cont.181, V3, $\log\hat r\ge1.45$, keeping 71.1% of 8M objects) measures
+$\mathcal I_{\rm sel}=-1.15075\pm0.00033$, i.e. $\iota/\mathcal I=-0.1635$ — negative at
+$\sim3500\sigma$. That cut sits near the 29th percentile of $p(\log\hat r)$, the **rising** side,
+where the rule above predicts $\iota>0$. The rule is wrong here, and the reason is the step it is
+derived under: (5.3c) assumes $c\,e$ uncorrelated with size, and for this cut $\Pi$ runs from 0.61 to
+0.99 across the shape grid, so the pass probability depends on the shape by 60% and that assumption
+fails outright.
+
+What did *not* fail is the operational term. Using the measured, negative $\mathcal I_{\rm sel}$ in
+(5.3) takes a $+16.0\%$ selection bias to $+0.024\%\pm0.110\%$. So (5.3b) evaluated on the node bank
+is correct and (5.3c) is an order-of-magnitude guide only — useful for deciding whether the term
+matters at all, not for predicting its sign, and never a substitute for evaluating it. Where the
+cut's $\Pi$ is nearly flat in shape the guide is not needed either: the same run's magnitude cut has
+$\Pi$ varying by 1.0% and $\iota/\mathcal I=0.0013$, i.e. no selection correction worth making.
 
 A.7 gives the analogous term in closed form for a *shift* parameter, where it is enormous: a cut at the
 median destroys $2/\pi\approx64\%$ of the information. That toy overstates the lensing case exactly as
