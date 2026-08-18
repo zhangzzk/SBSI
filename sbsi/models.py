@@ -8,6 +8,7 @@ behavior branches on these names.
 from __future__ import annotations
 
 import os
+import sys
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
@@ -68,22 +69,25 @@ def _file_sha256(path: Path, block_size: int = 8 * 1024 * 1024) -> str:
 
 
 def _root(variable: str, default: str) -> Path:
-    """Location of a preset's artifacts, overridable so presets work off this machine.
+    """Location of a preset's artifacts, overridable so presets work off this checkout.
 
-    The defaults are the frozen V3/V3b locations, so an unset environment reproduces the
-    milestone exactly; the emulator SHA-256 in each preset is what actually pins identity.
-    A user who keeps BlendEMU or the caches elsewhere sets the variable instead of editing
-    this file.
+    The defaults are the release tree shipped in this repository (models/), so an unset
+    environment resolves get_model("V3") inside any clone; the emulator SHA-256 in each
+    preset is what actually pins identity. A user who keeps the caches or the BlendEMU
+    artifacts elsewhere sets the variable instead of editing this file.
     """
 
     return Path(os.environ.get(variable) or default).expanduser()
 
 
-_CACHE_ROOT = _root("SBSI_CACHE_DIR", "/project/ls-gruen/users/zekang.zhang/sbsi_caches")
+_RELEASE_ROOT = Path(__file__).resolve().parents[1] / "models"
+_CACHE_ROOT = _root("SBSI_CACHE_DIR", str(_RELEASE_ROOT))
 _FLOW_ROOT = _CACHE_ROOT / "ablation"
 _EMU_ROOT = _CACHE_ROOT / "derisk"
-_BLENDEMU_ROOT = _root("BLENDEMU_ROOT", "/home/z/Zekang.Zhang/blendemu")
-_BLENDEMU_MODELS = _root("BLENDEMU_MODELS", str(_BLENDEMU_ROOT / "models"))
+# BLENDEMU_ROOT is deliberately not consulted for artifact paths: it names the BlendEMU
+# code checkout, and deriving artifact paths from it made a code checkout silently shadow
+# the release tree. load_emulator does read it as an import fallback (_blendemu_import_root).
+_BLENDEMU_MODELS = _root("BLENDEMU_MODELS", str(_RELEASE_ROOT / "blendemu"))
 
 V3 = ModelPaths(
     name="V3",
@@ -130,6 +134,37 @@ def validate_models(names: Iterable[str] = ("V3", "V3b")) -> None:
         get_model(name).validate()
 
 
+def _blendemu_configured_root() -> str:
+    """Raw BlendEMU location from $BLENDEMU_ROOT or ~/.config/sbsi/blendemu_root."""
+
+    configured = os.environ.get("BLENDEMU_ROOT")
+    if not configured:
+        try:
+            configured = (Path.home() / ".config/sbsi/blendemu_root").read_text().strip()
+        except OSError:
+            configured = ""
+    return configured or ""
+
+
+def _blendemu_import_root() -> Optional[Path]:
+    """Directory whose insertion into sys.path makes `import blendemu` succeed.
+
+    The location comes from $BLENDEMU_ROOT or, failing that, a one-line
+    ~/.config/sbsi/blendemu_root file — the file survives JupyterHub-style launches
+    that skip the shell exports.
+    """
+
+    configured = _blendemu_configured_root()
+    if not configured:
+        return None
+    root = Path(configured).expanduser()
+    if (root / "blendemu").is_dir():
+        return root
+    if root.name == "blendemu" and root.is_dir():
+        return root.parent
+    return None
+
+
 def load_emulator(
     models: ModelPaths,
     *,
@@ -140,12 +175,42 @@ def load_emulator(
 
     if models.emulator_model is None or models.emulator_metadata is None:
         raise ValueError("emulator_model and emulator_metadata paths are required")
+    missing = [
+        path
+        for path in (models.emulator_metadata, models.emulator_model)
+        if not path.is_file()
+    ]
+    if missing:
+        rendered = "\n  ".join(str(path) for path in missing)
+        raise FileNotFoundError(
+            f"missing emulator artifacts:\n  {rendered}\n"
+            "Presets resolve through SBSI_CACHE_DIR and BLENDEMU_MODELS; unset, they "
+            "default to the repository's models/ release tree (see models/README.md)."
+        )
     try:
         from blendemu import BlendingPredictor
     except ModuleNotFoundError as error:
-        raise ModuleNotFoundError(
-            "BlendEMU must be installed or present on PYTHONPATH to load its emulator"
-        ) from error
+        if error.name is not None and not error.name.startswith("blendemu"):
+            raise  # a dependency inside BlendEMU is missing; a search path cannot fix that
+        root = _blendemu_import_root()
+        if root is None:
+            hint = (
+                "export BLENDEMU_ROOT=/path/to/blendemu, or write that path once to"
+                f" {Path.home() / '.config/sbsi/blendemu_root'}"
+            )
+            configured = _blendemu_configured_root()
+            if configured:
+                hint += (
+                    f" (configured {configured!r} does not contain"
+                    " a blendemu package)"
+                )
+            raise ModuleNotFoundError(
+                "BlendEMU is required to load the emulator: install it, put its checkout"
+                f" on PYTHONPATH, or {hint} — SBSI imports it from there"
+            ) from error
+        if str(root) not in sys.path:
+            sys.path.insert(0, str(root))
+        from blendemu import BlendingPredictor
 
     return BlendingPredictor.load(
         model_dir=str(models.emulator_metadata.parent),

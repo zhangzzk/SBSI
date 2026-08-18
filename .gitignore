@@ -36,6 +36,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .ipynb_checkpoints/
+sbsi.egg-info/
 
 # ---- agent / editor scratch ----
 .claude/worktrees/

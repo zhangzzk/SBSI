@@ -26,21 +26,27 @@ response emulator's 10-arcsec aperture are outside the classifier's training dom
 
 ## Using these files
 
-`sbsi/models.py` resolves preset paths through environment variables, so point
-them at this directory:
+`sbsi/models.py` resolves the presets against this directory by default: with the
+environment unset, `get_model("V3")` resolves entirely inside a clone of this
+repository and needs no access to the original cluster paths. Identity is fixed
+by the checksums below, not by the location.
+
+Two environment variables override the roots, for cluster caches, custom
+layouts, or non-editable installs:
 
 ```bash
-export SBSI_CACHE_DIR="$PWD/models"
-export BLENDEMU_MODELS="$PWD/models/blendemu"
+export SBSI_CACHE_DIR=/path/to/caches    # ablation/ and derisk/ roots
+export BLENDEMU_MODELS=/path/to/models   # the metadata + classifier directory
 ```
 
-With those set, `get_model("V3")` resolves entirely inside this repository and needs
-no access to the original cluster paths. Unset, the presets fall back to their
-frozen locations under `/project/ls-gruen/users/zekang.zhang/sbsi_caches` and
-`~/blendemu/models`, which reproduces the milestone on the machine where it was made.
-
-The emulator itself is loaded by BlendEMU, so `load_emulator` still requires BlendEMU
-on the `PYTHONPATH`. The flow checkpoints need only SBSI and torch.
+`BLENDEMU_ROOT` is not read for model resolution; it names the BlendEMU code
+checkout (with `~/.config/sbsi/blendemu_root` as a file-based fallback when the
+variable is unset). When `blendemu` is not otherwise importable, `load_emulator`
+inserts that location into `sys.path` and imports it from there, so the emulator step
+needs no `PYTHONPATH` entry of its own; the flow checkpoints need only SBSI and
+torch. When an artifact named by a preset
+is missing, `load_emulator` raises a `FileNotFoundError` naming it, rather than
+deferring to BlendEMU's filename fallbacks.
 
 ## Integrity
 
@@ -58,7 +64,9 @@ is what fixes the emulator's identity.
 
 - **V3b.** `get_model("V3b")` names a different flow ensemble
   (`..._dom6x6_s{seed}_swaavg.pt`) and a different emulator. Those files are not in
-  this directory, so V3b resolves only against the original cluster paths.
+  this directory, so on a fresh clone `load_emulator` reports them as missing; point
+  `SBSI_CACHE_DIR` and `BLENDEMU_MODELS` at a tree that carries them (on this
+  project's cluster, the original caches).
 - **Training data and intermediate caches.** They live under `$DATA_DIR` and are not
   redistributable at this size.
 - **Superseded checkpoints.** 77 earlier experimental flows that used to sit here were

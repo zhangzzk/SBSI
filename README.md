@@ -53,11 +53,24 @@ export PYTHONPATH="$PWD:$PYTHONPATH"
 ```
 
 BlendEMU is needed only for the emulator step (`sbsi.models.load_emulator`).
-Add it when you need it, and point the model roots at your own copies:
+Add it when you need it:
 
 ```bash
 export BLENDEMU_ROOT=/path/to/blendemu
-export PYTHONPATH="$BLENDEMU_ROOT:$PYTHONPATH"
+```
+
+With `BLENDEMU_ROOT` set, `load_emulator` imports BlendEMU from there
+automatically whenever it is not already importable; putting BlendEMU on
+`PYTHONPATH` (or installing it) works too and takes precedence.
+`BLENDEMU_ROOT` is never read for model artifacts (see
+[Models](#models) below).
+
+If your Jupyter is launched without your shell exports (JupyterHub does this),
+record the path once in a file instead — `load_emulator` reads it when the
+variable is unset:
+
+```bash
+mkdir -p ~/.config/sbsi && echo /path/to/blendemu > ~/.config/sbsi/blendemu_root
 ```
 
 The package can also be installed with `pip install -e .` without changing the
@@ -66,12 +79,13 @@ catalogue or model-path contract; that also provides the `sbsi` console script.
 ### Models
 
 The frozen V3 artifacts — the 16-seed flow ensemble and the blending emulator —
-ship in [`models/`](models/). To make `get_model("V3")` resolve against them
-rather than the original cluster paths:
+ship in [`models/`](models/), and `get_model("V3")` resolves against them by
+default, in any clone, with nothing to configure. If you keep the artifacts
+elsewhere (cluster caches, a non-editable install), override the roots:
 
 ```bash
-export SBSI_CACHE_DIR="$PWD/models"
-export BLENDEMU_MODELS="$PWD/models/blendemu"
+export SBSI_CACHE_DIR=/path/to/models      # ablation/ and derisk/ roots
+export BLENDEMU_MODELS=/path/to/models/blendemu
 ```
 
 See [`models/README.md`](models/README.md) for the layout and checksums.

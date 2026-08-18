@@ -7,11 +7,17 @@ The project overview, scope boundaries (SBSI consumes finished `blendemu` catalo
 **Before building any new number, read `doc/CONVENTIONS.md`** — it fixes which catalogue, the population-cut order, true vs measured cuts, unsheared/sheared/measured shapes, leg matching, the response estimators, and the single definition of `m`. Update it when a convention changes.
 
 ## Environment
-- Conda env: `conda activate sims1` (Python 3.9). Repo is NOT pip-installed.
+- Conda env: `conda activate sims1` (Python 3.9). Repo is editable-installed in `sims1`
+  and `py31` (`pip install -e . --no-build-isolation`, no declared deps), so `import sbsi`
+  works without PYTHONPATH; the PYTHONPATH contract still works as before.
 - Imports rely on PYTHONPATH: `export PYTHONPATH="$PWD:$PYTHONPATH"` from the repo root.
   BlendEMU is NOT needed for this — add it only when loading the emulator
-  (`sbsi.models.load_emulator`), which is the sole place SBSI imports it. Its location
-  comes from `BLENDEMU_ROOT` / `BLENDEMU_MODELS`, not from a hardcoded path.
+  (`sbsi.models.load_emulator`), which is the sole place SBSI imports it. Model
+  artifacts resolve through `SBSI_CACHE_DIR` / `BLENDEMU_MODELS`, defaulting to the
+  repository's `models/` release tree; `BLENDEMU_ROOT` is not read for model paths —
+  `load_emulator` reads it only to import `blendemu` when it is not already importable
+  (falling back to a one-line `~/.config/sbsi/blendemu_root` file when the variable is
+  unset, for JupyterHub-style launches that skip shell exports).
 - `pip install -e .` is an optional alternative (see `pyproject.toml`); it also installs the
   `sbsi` console script.
 - Login node has no GPU (32c/376G); all training/GPU work must go through Slurm.

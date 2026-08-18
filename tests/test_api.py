@@ -1,3 +1,9 @@
+import importlib
+import importlib.util
+import os
+import sys
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -12,7 +18,13 @@ from sbsi.measurement_model import (
     MeasurementModelBundle,
     TargetStandardizer,
 )
-from sbsi.models import ModelPaths, SHAPE_SEEDS, get_model
+from sbsi.models import (
+    ModelPaths,
+    SHAPE_SEEDS,
+    _blendemu_import_root,
+    get_model,
+    load_emulator,
+)
 from sbsi.forward_catalogue import (
     EmulatorPairingConfig,
     make_pair_catalogue,
@@ -34,6 +46,189 @@ def test_named_models_are_path_presets_not_pipeline_configuration():
     assert not hasattr(v3, "blend_lookup")
     assert not hasattr(v3, "evaluation_result")
     assert v3.emulator_metadata.name == "emulator_metadata_lsst_r_extnbr_v22.json"
+
+
+def test_preset_defaults_resolve_inside_the_repository(tmp_path):
+    # The module reads the roots at import time, so each scenario reloads it under a
+    # patched environment and the original environment is restored (and reloaded in)
+    # afterwards.
+    import sbsi.models as models_module
+
+    variables = ("SBSI_CACHE_DIR", "BLENDEMU_MODELS", "BLENDEMU_ROOT")
+    saved = {name: os.environ.get(name) for name in variables}
+    release_root = Path(__file__).resolve().parents[1] / "models"
+    try:
+        for name in variables:
+            os.environ.pop(name, None)
+        v3 = importlib.reload(models_module).get_model("V3")
+        assert (
+            v3.emulator_metadata
+            == release_root / "blendemu/emulator_metadata_lsst_r_extnbr_v22.json"
+        )
+        assert (
+            v3.emulator_model
+            == release_root
+            / "derisk/v22_reweighted_vector_optuna30_all40_v1/best_weighted_model.json"
+        )
+        assert (
+            v3.flow_checkpoints[0]
+            == release_root
+            / "ablation/measurement_flow_g0_ngmix_ablate_s2c_lt500_v22_s501_swaavg.pt"
+        )
+
+        cache_root = tmp_path / "caches"
+        blendemu_models = tmp_path / "blendemu_models"
+        os.environ["SBSI_CACHE_DIR"] = str(cache_root)
+        os.environ["BLENDEMU_MODELS"] = str(blendemu_models)
+        v3 = importlib.reload(models_module).get_model("V3")
+        assert v3.emulator_metadata.parent == blendemu_models
+        assert (
+            v3.emulator_model.parent
+            == cache_root / "derisk/v22_reweighted_vector_optuna30_all40_v1"
+        )
+        assert v3.flow_checkpoints[0].parent == cache_root / "ablation"
+    finally:
+        for name, value in saved.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
+        importlib.reload(models_module)
+
+
+def test_load_emulator_names_missing_artifacts_before_importing_blendemu(tmp_path):
+    checkpoint = tmp_path / "flow.pt"
+    checkpoint.touch()
+    emulator_model = tmp_path / "best_weighted_model.json"
+    emulator_model.touch()
+    metadata = tmp_path / "emulator_metadata.json"  # deliberately absent
+    models = ModelPaths(
+        flow_checkpoints=(checkpoint,),
+        emulator_model=emulator_model,
+        emulator_metadata=metadata,
+    )
+
+    with pytest.raises(FileNotFoundError) as excinfo:
+        load_emulator(models, conditions={}, device="cpu")
+
+    message = str(excinfo.value)
+    assert str(metadata) in message
+    assert "BLENDEMU_MODELS" in message
+
+
+@pytest.mark.skipif(
+    importlib.util.find_spec("blendemu") is not None,
+    reason="BlendEMU importable; the no-BlendEMU error path cannot be exercised",
+)
+def test_load_emulator_reaches_the_blendemu_import_when_artifacts_exist(
+    tmp_path, monkeypatch
+):
+    checkpoint = tmp_path / "flow.pt"
+    checkpoint.touch()
+    emulator_model = tmp_path / "best_weighted_model.json"
+    emulator_model.touch()
+    metadata = tmp_path / "emulator_metadata.json"
+    metadata.write_text("{}")
+    models = ModelPaths(
+        flow_checkpoints=(checkpoint,),
+        emulator_model=emulator_model,
+        emulator_metadata=metadata,
+    )
+    monkeypatch.delenv("BLENDEMU_ROOT", raising=False)
+    monkeypatch.setenv("HOME", str(tmp_path))  # a real blendemu_root file must not leak in
+
+    # The existence gate passed, so the next failure is the BlendEMU import itself.
+    with pytest.raises(ModuleNotFoundError, match="BlendEMU"):
+        load_emulator(models, conditions={}, device="cpu")
+
+
+def test_blendemu_import_root_accepts_checkout_or_package_dir(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.delenv("BLENDEMU_ROOT", raising=False)
+    assert _blendemu_import_root() is None
+
+    package = tmp_path / "blendemu"
+    package.mkdir()
+    monkeypatch.setenv("BLENDEMU_ROOT", str(tmp_path))
+    assert _blendemu_import_root() == tmp_path
+
+    monkeypatch.setenv("BLENDEMU_ROOT", str(package))
+    assert _blendemu_import_root() == tmp_path
+
+    monkeypatch.setenv("BLENDEMU_ROOT", str(tmp_path / "missing"))
+    assert _blendemu_import_root() is None
+
+    # The persisted config file backs launches that skip shell exports (JupyterHub).
+    monkeypatch.delenv("BLENDEMU_ROOT", raising=False)
+    config = tmp_path / "home/.config/sbsi/blendemu_root"
+    config.parent.mkdir(parents=True)
+    config.write_text("")
+    assert _blendemu_import_root() is None
+
+    other = tmp_path / "other/blendemu"
+    other.mkdir(parents=True)
+    config.write_text(str(tmp_path / "other") + "\n")
+    assert _blendemu_import_root() == tmp_path / "other"
+
+    monkeypatch.setenv("BLENDEMU_ROOT", str(tmp_path))
+    assert _blendemu_import_root() == tmp_path  # the env var wins over the file
+
+
+@pytest.mark.skipif(
+    importlib.util.find_spec("blendemu") is not None,
+    reason="BlendEMU importable; the BLENDEMU_ROOT fallback cannot be exercised",
+)
+def test_load_emulator_imports_blendemu_through_blendemu_root(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))  # isolate any real config file
+    package = tmp_path / "blendemu"
+    package.mkdir()
+    (package / "__init__.py").write_text(
+        "LOAD_CALLS = []\n"
+        "class BlendingPredictor:\n"
+        "    @staticmethod\n"
+        "    def load(**kwargs):\n"
+        "        LOAD_CALLS.append(kwargs)\n"
+        "        return 'predictor-sentinel'\n"
+    )
+    checkpoint = tmp_path / "flow.pt"
+    checkpoint.touch()
+    emulator_model = tmp_path / "best_weighted_model.json"
+    emulator_model.touch()
+    metadata = tmp_path / "emulator_metadata.json"
+    metadata.write_text("{}")
+    models = ModelPaths(
+        flow_checkpoints=(checkpoint,),
+        emulator_model=emulator_model,
+        emulator_metadata=metadata,
+    )
+    monkeypatch.setenv("BLENDEMU_ROOT", str(tmp_path))
+
+    try:
+        result = load_emulator(models, conditions={"airmass": 1.2}, device="cpu")
+        import blendemu
+
+        assert result == "predictor-sentinel"
+        assert blendemu.__file__ == str(package / "__init__.py")
+        assert blendemu.LOAD_CALLS[0]["conditions"] == {"airmass": 1.2}
+
+        # Same import through the persisted config file alone (hub-style launch).
+        monkeypatch.delenv("BLENDEMU_ROOT")
+        sys.modules.pop("blendemu", None)
+        sys.path.remove(str(tmp_path))
+        config = Path.home() / ".config/sbsi/blendemu_root"
+        config.parent.mkdir(parents=True)
+        config.write_text(str(tmp_path) + "\n")
+        result = load_emulator(models, conditions={"airmass": 1.2}, device="cpu")
+        import blendemu
+
+        assert result == "predictor-sentinel"
+        assert blendemu.__file__ == str(package / "__init__.py")
+        assert blendemu.LOAD_CALLS[-1]["conditions"] == {"airmass": 1.2}
+    finally:
+        # The fake must not shadow a real blendemu for later tests in this session.
+        if str(tmp_path) in sys.path:
+            sys.path.remove(str(tmp_path))
+        sys.modules.pop("blendemu", None)
 
 
 def test_training_recipe_uses_only_explicit_user_paths(tmp_path):
