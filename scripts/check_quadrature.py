@@ -81,6 +81,17 @@ def build_nodes(args, n, delta, info_delta, prior):
     return grid, ShapeScoreNodes(grid, prior, delta=delta, info_delta=info_delta)
 
 
+def _list(text):
+    """Split a CLI list on commas OR colons.
+
+    `sbatch --export` splits its OWN argument on commas, so `--export=ALL,EXTRA="--grid-ns
+    61,101,141"` delivers `--grid-ns 61` and drops the rest -- the job then runs one rung,
+    exits 0 and reads as a converged sweep.  It cost a run here.  Colons survive, and
+    `jobs/job_pi_grid_ladder.sh` already uses that convention, so accept both.
+    """
+    return [x for x in text.replace(":", ",").split(",") if x.strip()]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--grid-emax", type=float, default=0.96)
@@ -100,7 +111,7 @@ def main():
     args = ap.parse_args()
 
     prior = build_prior(args)
-    ns = [int(x) for x in args.grid_ns.split(",")]
+    ns = [int(x) for x in _list(args.grid_ns)]
 
     # ---- probe 1: Bartlett, the machinery's own identities --------------------------
     print("=" * 78)
@@ -150,7 +161,7 @@ def main():
     print(f"\n  at grid_n={n_fix}, varying `delta` (the generator step):")
     print(f"    delta      <s>_sel_1      I_sel_00      |E_0[u]|/scale")
     base = None
-    for d in [float(x) for x in args.delta_sweep.split(",")]:
+    for d in [float(x) for x in _list(args.delta_sweep)]:
         grid, nodes = build_nodes(args, n_fix, d, args.info_delta, prior)
         s, i = population_terms(nodes, np.log(analytic_pi(grid)))
         b = nodes.bartlett()
@@ -161,7 +172,7 @@ def main():
 
     print(f"\n  at grid_n={n_fix}, varying `info_delta` (the information step):")
     print(f"    info_delta   <s>_sel_1      I_sel_00")
-    for d in [float(x) for x in args.delta_sweep.split(",")]:
+    for d in [float(x) for x in _list(args.delta_sweep)]:
         grid, nodes = build_nodes(args, n_fix, args.fd_delta, d, prior)
         s, i = population_terms(nodes, np.log(analytic_pi(grid)))
         print(f"    {d:<10.4f}   {s[0]:+.6f}    {i[0,0]:+.6f}")

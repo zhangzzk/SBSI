@@ -2,6 +2,71 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-18b  cont.182 — the population grid IS converged; the baseline floor points at the SCORE grid (loop)
+
+Three follow-ups to cont.181, all cheap, all off banked caches or flow-free.
+
+**1. `pi_grid_n` is converged for the magnitude and size cuts too** (jobs 15819669/15819670, 35 min
+each, no score pass). The cont.181 caveat that 141 was converged for the V1 `|xhat|` cut and nothing
+else is now closed:
+
+| `pi_grid_n` | G | mag cut `d(m)` | size cut `d(m)` |
+|---|---|---|---|
+| 101 | 7,693 | −0.056% | +0.035% |
+| 141 | 15,069 | −0.065% | +0.024% |
+| 181 | 24,925 | −0.045% | +0.044% |
+
+Rung-to-rung motion is ~0.02% against error bars of 0.091% and 0.110%, and `I_sel/<I>` is stable to
+the last digit printed (mag +0.0014/+0.0013/+0.0015; size −0.1633/−0.1635/−0.1632). The population
+quadrature contributes at most ~0.02% to `m` for these cuts — negligible, and the cont.181 numbers
+stand as quoted. Note the motion is non-monotonic, so this is a bound and not an extrapolation;
+rungs are nested within a `Pi` replicate so their central values are correlated.
+
+**2. The score grid is the prime suspect for the −0.665% baseline** (`check_quadrature.py`, CPU,
+22 s, flow-free and data-free, on the V3-domain prior). Probe 1 is the Bartlett curvature identity,
+which must vanish for any normalised prior, so a residual is a spurious information floor carried by
+every object:
+
+    grid_n     G      |curv|/Var_0(u)      floor / <I>
+        61   2,765        3.618e-03            ~2.0%
+        81   4,921        3.905e-04            ~0.22%
+       101   7,693        1.637e-04            ~0.09%
+       181  24,925        5.332e-05            ~0.03%
+       301  69,217        1.098e-05            ~0.006%
+
+The right-hand column converts the residual (which the script reports relative to
+`Var_0(u) = 35.4`) into a fraction of the measured per-object `<I> = 6.243`, which is what lands on
+`m`. **The production score pass runs at n=61.** A positive information floor inflates the
+denominator of `ghat = sum s / sum I` and biases `m` NEGATIVE, which is the sign observed, and the
+flat-likelihood limit ~2.0% is an upper bound comfortably above the −0.665% measured. Nothing here
+is yet a demonstration — the Bartlett residual is the floor a galaxy with a FLAT likelihood would
+carry, and real posteriors are peaked, so they see less of the grid's coarseness. But it is the
+first candidate with both the right sign and enough room.
+
+The decisive test is paired and is running: jobs 15820746 (n=61) and 15820747 (n=101), identical
+rows, seeds and latents at 500k rows (2M objects), differing ONLY in the score-pass grid. Because
+the drawn data do not depend on the node bank, the two runs score the SAME objects, so the
+difference in their uncut controls is far better determined than either — it can be jackknifed
+block by block off the two banked caches, which align by construction.
+
+**3. Two `--export` comma traps, one of which cost a run.** `sbatch --export` splits its own
+argument on commas, so `--export=ALL,EXTRA="--grid-ns 61,81,101"` delivers `--grid-ns 61` and drops
+the rest; the job then sweeps ONE rung, exits 0, and reads as a converged sweep.
+`check_quadrature.py` now accepts `:` as well as `,` in `--grid-ns` and `--delta-sweep`, matching the
+convention `jobs/job_pi_grid_ladder.sh` already documents. Second trap, no damage: `CUTS=` (empty)
+does NOT suppress the `${CUTS:-0.6 0.4}` default, so both ladders also attempted the `|xhat|` rungs
+against a magnitude/size cache. Those failed loudly on the cache-key check within seconds, which is
+the guard working as designed.
+
+**Files.** `scripts/check_quadrature.py` (`_list` separator helper); `jobs/job_score_shard.sh` (new
+`GRIDN` knob for the SCORE grid, with the cache name carrying `Gn<n>` so a refined pass cannot
+overwrite a banked one; unset keeps the historical `G2765` suffix and every existing cache loads).
+
+**Next.** Read 15820746/15820747 and difference their uncut controls block by block. If the floor
+falls with the grid, the fix is a finer score pass and its cost is linear in G. If it does not, the
+remaining candidates are the finite-difference stencils (probe 3 shows `I_sel` still moving 6e-4 at
+`delta=0.0025`) and the ratio estimator itself.
+
 ## 2026-08-18a  cont.181 — production: the selection correction closes a 16% size-cut bias to 0.02% (loop)
 
 Jobs 15814616/17/18, all COMPLETED (9.0–9.2 h each, cip a40-16gb, 8,000,000 objects = 2M rows x 2

@@ -40,6 +40,16 @@ fi
 # writes every leg to the same `_g05_` path and they overwrite each other silently.
 CG=${CLOSURE_G:-0.05}
 GTAG="g$(printf '%02d' "$(python -c "print(round(float('$CG')*100))")")"
+# THE SCORE-PASS GRID.  Separate from --pi-grid-n, which refines only the population block.
+# cont.181 left the uncut control at -0.665% +/- 0.116% with no selection in it at all, and
+# `check_quadrature.py` puts the Bartlett curvature residual at 3.6e-3 of Var(u) at n=61
+# against 3.9e-4 at n=81 -- a spurious information floor of the right size and sign.  Testing
+# that needs the SCORE grid moved, which costs a full re-scan (cost ~ G), so it gets its own
+# knob and its own cache name.  Unset keeps the historical `G2765` suffix so banked caches
+# stay loadable.
+GRIDN=${GRIDN:-}
+GSUF=${GRIDN:+Gn$GRIDN}
+GSUF=${GSUF:-G2765}
 date; nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null
 echo "closure_g=$CG  cache tag=$GTAG"
 python -u scripts/eval_score_select.py \
@@ -48,7 +58,7 @@ python -u scripts/eval_score_select.py \
   --max-rows "${ROWS:-4000000}" --row-shard "${SHARD:-0}" --row-shards "${NSHARDS:-1}" \
   --pi-rows 1048576 --pi-samples 8 --pi-reps 6 \
   --ring rot90 --shape-reps 2 --jk-blocks 200 --uncut-control \
-  --pi-grid-n "${PGRID:-141}" \
-  --save-scores "$SC/${TAG}_${GTAG}_r${ROWS:-4000000}_s${SHARD:-0}of${NSHARDS:-1}_G2765.npz" 2>&1 \
+  --pi-grid-n "${PGRID:-141}" ${GRIDN:+--grid-n "$GRIDN"} \
+  --save-scores "$SC/${TAG}_${GTAG}_r${ROWS:-4000000}_s${SHARD:-0}of${NSHARDS:-1}_${GSUF}.npz" 2>&1 \
   | grep --line-buffered -vE "module command|Pi rep "
 STATUS=$?; date; echo "### DONE (exit $STATUS) ###"; exit $STATUS
