@@ -436,7 +436,7 @@ def density_contours(ax, x, y, color, bins=50, y_floor=None):
         density,
         levels=levels,
         colors=[color] * len(levels),
-        linewidths=np.linspace(1.0, 1.8, len(levels)),
+        linewidths=np.linspace(1.9, 2.8, len(levels)),
         alpha=0.95,
     )
 
