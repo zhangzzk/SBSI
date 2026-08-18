@@ -2,6 +2,191 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-18d  models — load_emulator imports BlendEMU through BLENDEMU_ROOT
+
+**Motivation.** Notebook users had to export a per-session
+`PYTHONPATH="$BLENDEMU_ROOT:$PYTHONPATH"` for the one `from blendemu import` in SBSI,
+on top of installing/making SBSI itself importable. `BLENDEMU_ROOT` was documented as an
+"import-path convenience" that SBSI never read — so the variable existed but did nothing
+without shell plumbing. The request: configure BlendEMU's location once, then run the
+tutorial from anywhere.
+
+**Change** (`sbsi/models.py`). `load_emulator` still tries the plain import first
+(installed or PYTHONPATH BlendEMU keeps working, and takes precedence). Only on
+`ModuleNotFoundError` for `blendemu` itself does it consult the new
+`_blendemu_import_root()`: `BLENDEMU_ROOT` may name the checkout root (a directory
+containing `blendemu/`) or the package directory itself; if it resolves, the root is
+inserted at the front of `sys.path` (no duplicates) and the import is retried. If it does
+not resolve, the chained `ModuleNotFoundError` now names all three options — install,
+PYTHONPATH, `export BLENDEMU_ROOT=/path/to/blendemu` — and echoes a set-but-wrong value
+so typos are visible. A `ModuleNotFoundError` raised from *inside* BlendEMU (a missing
+dependency, `error.name` not starting with `blendemu`) propagates untouched. The fallback
+is lazy: `import sbsi` never touches `sys.path`; only the emulator step does.
+
+`BLENDEMU_ROOT` remains excluded from model-artifact resolution — the 2026-08-18c
+guarantee that a BlendEMU code checkout cannot shadow the `models/` release tree is
+unchanged; the variable is read for imports only.
+
+**Tests** (`tests/test_api.py`). `test_blendemu_import_root_accepts_checkout_or_package_dir`
+covers checkout root, package dir, unset, and nonexistent values (env read at call time,
+so plain `monkeypatch` suffices — no module reload).
+`test_load_emulator_imports_blendemu_through_blendemu_root` (skipif BlendEMU importable)
+builds a fake checkout whose `BlendingPredictor.load` returns a sentinel and asserts
+`load_emulator` reaches it through the fallback with conditions round-tripped; `finally`
+removes the inserted `sys.path` entry and drops the fake from `sys.modules` so it cannot
+shadow a real BlendEMU later in the session. The existing no-BlendEMU error-path test now
+`delenv`s `BLENDEMU_ROOT` to stay deterministic.
+
+**Docs.** README.md drops the PYTHONPATH line from the emulator recipe (setting
+`BLENDEMU_ROOT` alone is enough now); models/README.md, CLAUDE.md, and the tutorial
+notebook's setup cell restate the contract: `BLENDEMU_ROOT` is read for imports, never
+for artifacts. Jobs' hardcoded `PYTHONPATH=.../blendemu` entries and
+`examples/job_blendemu.sh` are untouched — the plain import still wins there.
+
+**Validation.** `PYTHONPATH="$PWD" /project/ls-gruen/users/zekang.zhang/envs/py31/bin/python -m
+pytest tests/ -q` → 121 passed, 1 skipped (the pre-existing BlendEMU cross-check; py31 has
+no BlendEMU, so both new skipif'd tests ran). End-to-end fallback under the sims1
+interpreter with BlendEMU absent from PYTHONPATH (a bare `import blendemu` fails there):
+`env -u SBSI_CACHE_DIR -u BLENDEMU_MODELS BLENDEMU_ROOT=/home/z/Zekang.Zhang/blendemu
+PYTHONPATH="$PWD" .../envs/sims1/bin/python -c "...load_emulator(get_model('V3'), conditions=...)"
+prints `blendemu.inference.BlendingPredictor` with `blendemu.__file__` inside the
+`BLENDEMU_ROOT` checkout — the import went through the fallback. Finally, the notebook
+itself: cells 0–8 of `examples/sbsi_api_tutorial.ipynb` (imports, catalogue, presets,
+`load_emulator`, flow-ensemble load) executed under `examples/` with the notebook's
+`sims1` kernel, `PYTHONPATH` unset and only `BLENDEMU_ROOT` set — OK in 18 s. That run
+exposed an environment gap, not a code gap: the notebook kernel is `sims1`, but the
+user's `pip install -e .` had landed in `py31` (leaving `sbsi.egg-info/` in the repo
+root), so `import sbsi` failed in the kernel under `examples/`. sbsi is now
+editable-installed in `sims1` as well (`pip install -e . --no-build-isolation`; py31's
+`python3` kernelspec uses a bare `python` argv, so `run_tutorial_nb.py`-style execution
+should name a kernel with an absolute interpreter path). `sbsi.egg-info/` is now
+gitignored; CLAUDE.md records the installed state.
+
+**Limitations / next steps.** Requires `BLENDEMU_ROOT` per environment (no persisted
+config file — deliberately, to stay consistent with `SBSI_CACHE_DIR`/`BLENDEMU_MODELS`);
+reaches the friend at the next master publish together with 2026-08-18c.
+
+**Follow-up (same day): persisted config file.** The user's Jupyter runs behind JupyterHub
+(`jpserver` runtime files on the shared home, interactive node), and hub-spawned servers do
+not source `.bashrc` — so `BLENDEMU_ROOT` never reached the kernel no matter when it was
+exported. `_blendemu_configured_root()` now resolves the BlendEMU location from
+`$BLENDEMU_ROOT` first, then from a one-line `~/.config/sbsi/blendemu_root` file (computed
+lazily via `Path.home()` so a patched `HOME` is honoured); the import fallback and the error
+message (which now names both mechanisms) use it unchanged. Tests isolate `HOME` so a real
+config file can never leak into the no-root error paths, and the end-to-end fake test
+exercises both the env var and the file. The file was created on this machine
+(`~/.config/sbsi/blendemu_root` → `/home/z/Zekang.Zhang/blendemu`). Re-validated: suite
+121 passed / 1 skipped, and notebook cells 0–8 executed under `examples/` with the
+`sims1` kernel and **no environment variables at all** (no `PYTHONPATH`, no
+`BLENDEMU_ROOT`) — the hub-equivalent launch — OK in 13 s. One test bug found on the way:
+the env var correctly outranks the file, so the file-scenario assertions must clear
+`BLENDEMU_ROOT` first.
+
+## 2026-08-18c  models — presets default to the repository release tree; load_emulator fails fast on missing artifacts
+
+**Motivation.** An external user on a fresh master clone hit
+`XGBoostError: Opening .../ext/blendemu/models/classification_model.json failed` from
+`load_emulator`. Root cause: they set `BLENDEMU_ROOT` at their BlendEMU code checkout (as
+README advised for the import), and `sbsi/models.py` derived `BLENDEMU_MODELS` from it. A
+BlendEMU clone's `models/` carries only the base `lsst_r` set — every `extnbr*` artifact is
+untracked — so the V3 metadata sidecar was silently absent, BlendEMU's `_load_metadata`
+returned `None`, and the classifier filename fell back to the never-trained default
+`classification_model.json`.
+
+**Changes.**
+
+- `sbsi/models.py`: preset roots now default to the release tree shipped in this
+  repository (`Path(__file__).resolve().parents[1] / "models"`): `SBSI_CACHE_DIR` →
+  `<repo>/models` (unchanged `ablation/` + `derisk/` subroots), `BLENDEMU_MODELS` →
+  `<repo>/models/blendemu`. `BLENDEMU_ROOT` is no longer read for model resolution at
+  all — it is a PYTHONPATH convention only — so a BlendEMU code checkout can never
+  shadow the release tree. Env vars remain as explicit overrides (cluster caches, custom
+  layouts, non-editable installs).
+- `sbsi/models.py`: `load_emulator` now checks `emulator_metadata` and `emulator_model`
+  exist before importing blendemu and raises `FileNotFoundError` naming the missing
+  paths and the `SBSI_CACHE_DIR`/`BLENDEMU_MODELS` overrides, replacing the misleading
+  xgboost fallback error. Existence only; sha256 pinning stays in `validate_models()`.
+- `tests/test_api.py`: `test_preset_defaults_resolve_inside_the_repository` (saves env,
+  reloads `sbsi.models`, asserts in-repo defaults and env-override routing, restores),
+  `test_load_emulator_names_missing_artifacts_before_importing_blendemu`, and
+  `test_load_emulator_reaches_the_blendemu_import_when_artifacts_exist` (skips when
+  BlendEMU is importable).
+- Docs: `models/README.md` "Using these files" and the V3b bullet, `README.md`
+  Environment + Models sections, `CLAUDE.md` env bullet, and the tutorial notebook's
+  setup cell now state the new contract: V3 resolves in any clone with nothing set.
+
+**Identity verification.** The repo tree equals the frozen originals:
+`models/derisk/.../best_weighted_model.json` sha256 `01decd13…` matches both the preset
+pin and the cluster copy at `/project/ls-gruen/.../sbsi_caches/derisk/...`; flow
+checkpoints spot-checked (seeds 501, 517) hash-match the cluster; the metadata and
+classifier match `~/blendemu/models`; `sha256sum -c models/SHA256SUMS` is clean (19/19).
+Location changed, bytes did not, so no result can move.
+
+**Behavior changes.** (1) Unset env now resolves in-repo instead of to
+`/project/ls-gruen/...` and `~/blendemu/models` (hash-identical for V3). (2) Setting
+`BLENDEMU_ROOT` alone no longer redirects artifact resolution. (3) V3b on a fresh clone
+fails immediately with the named missing files (its artifacts are not shipped) instead of
+resolving to cluster paths. (4) Jobs that set the env vars explicitly
+(`jobs/diag_detection_*.py`, `jobs/job_tutorial_exec.sh`) are unaffected — verified their
+sets precede the sbsi import.
+
+**Validation.**
+
+    PYTHONPATH="$PWD" /project/ls-gruen/users/zekang.zhang/envs/py31/bin/python -m pytest tests/ -q
+    → 119 passed, 1 skipped (the pre-existing BlendEMU cross-check), 0 failed
+
+    env -u SBSI_CACHE_DIR -u BLENDEMU_MODELS -u BLENDEMU_ROOT PYTHONPATH="$PWD" \
+      python -c "get_model('V3'); validate_models(('V3',))"
+    → resolves under <repo>/models/…, hash pin validates
+
+    load_emulator(get_model("V3b")) with env cleared
+    → FileNotFoundError naming emulator_metadata_lsst_r_extnbr_indom_tuned.json and
+      derisk/v2_reweighted_vector_fixed_v1/weighted_model.json
+
+**Limitations / next steps.** The default is repo-relative, so a *non-editable* pip
+install has no adjacent `models/` and must use the env vars (documented). Publishing to
+master flows through the usual `git checkout dev -- …` step; the friend's machine then
+works with no exports beyond BlendEMU on `PYTHONPATH`.
+
+## 2026-08-18c  cont.183 — the paired grid test: two submission failures, one salvaged control (loop)
+
+Housekeeping entry for the two jobs cont.182 left in flight. Both failed, both on MY submission
+rather than on the physics, and in ways worth recording because each has a one-line fix that should
+have been in the job script from the start.
+
+**15820746 (n=61) — died one line after the number it was submitted to produce.** The score pass ran
+to completion (37 min, 4 legs, 2,000,000 objects), the cache was banked, and the uncut control
+printed:
+
+    ghat = [+0.049779 +/- 0.000107, -0.000147 +/- 0.000113]   m = -0.442% +/- 0.215%
+
+It then raised `ValueError: ladder rung 1048576 exceeds the 500000 rows available` in
+`pass_fraction_by_node`, because `job_score_shard.sh` hardcoded `--pi-rows 1048576` while this run
+loaded `ROWS=500000`. `Pi` samples rows WITHOUT replacement, so that is a legitimate hard error — the
+defect is that it fires AFTER the expensive pass, not before it. Nothing was lost (the cache write
+and the control print both precede it), but the run produced no cut rows. `PIROWS` is now clamped to
+`min(1048576, ROWS)` in the job script.
+
+The salvaged control is consistent with the cont.181 production value of −0.665% ± 0.116%: same
+sign, 0.9 sigma apart on the naive combination, and the two are positively correlated anyway since
+these 500k rows are a subset of that run's 2M. It does NOT independently confirm the floor; it is
+the n=61 arm of a paired comparison and is only useful differenced against the n=101 arm.
+
+**15820747 (n=101) — CUDA OOM at 22 s.** `torch.OutOfMemoryError: Tried to allocate 7.51 GiB` on a
+15.80 GiB a40-16gb. The score-pass grid drives the `log_likelihood` slab linearly in G, and n=61 ->
+n=101 is G=2765 -> 7693, a 2.8x slab. The batch geometry that fits at n=61 does not fit at n=101.
+`job_score_shard.sh` gained a `CHUNK` passthrough; resubmitted as **15821526** with `CHUNK=256`
+(4x smaller), everything else byte-identical, so it still scores the same objects with the same
+seeds and the paired difference remains valid. In flight at time of writing (leg 3/4; a leg costs
+~2700 s at n=101 against ~557 s at n=61, consistent with the 2.8x slab plus fixed overhead).
+
+**Files.** `jobs/job_score_shard.sh` (`PIROWS` clamp with the rationale in-line; `${CHUNK:+--chunk}`
+passthrough). No library change — neither failure was in `sbsi/`.
+
+**Next.** Unchanged from cont.182: difference the two uncut controls block by block off the banked
+caches. Nothing else in the §5B table moves until that lands, because the −0.665% floor sits under
+every row of it.
+
 ## 2026-08-18b  cont.182 — the population grid IS converged; the baseline floor points at the SCORE grid (loop)
 
 Three follow-ups to cont.181, all cheap, all off banked caches or flow-free.

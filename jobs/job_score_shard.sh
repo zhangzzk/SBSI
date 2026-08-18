@@ -50,13 +50,19 @@ GTAG="g$(printf '%02d' "$(python -c "print(round(float('$CG')*100))")")"
 GRIDN=${GRIDN:-}
 GSUF=${GRIDN:+Gn$GRIDN}
 GSUF=${GSUF:-G2765}
+# `Pi` samples rows WITHOUT replacement, so a rung larger than the catalogue slice is a hard
+# error -- and it fires AFTER the multi-hour score pass, killing the run one line before the
+# read-out.  Clamp to the rows actually loaded.  (A short run still saves its score cache
+# first, so nothing is lost, but the log ends in a traceback for no reason.)
+PIROWS=${PIROWS:-$(python -c "print(min(1048576, int(${ROWS:-4000000})))")}
 date; nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null
 echo "closure_g=$CG  cache tag=$GTAG"
 python -u scripts/eval_score_select.py \
   --closure-g "$CG" --cut-abs-ehat "$CUT" ${BOUND:+--cut-bound "$BOUND"} \
+  ${CHUNK:+--chunk "$CHUNK"} \
   --load-oversample "${OVERSAMPLE:-7.0}" \
   --max-rows "${ROWS:-4000000}" --row-shard "${SHARD:-0}" --row-shards "${NSHARDS:-1}" \
-  --pi-rows 1048576 --pi-samples 8 --pi-reps 6 \
+  --pi-rows "$PIROWS" --pi-samples 8 --pi-reps 6 \
   --ring rot90 --shape-reps 2 --jk-blocks 200 --uncut-control \
   --pi-grid-n "${PGRID:-141}" ${GRIDN:+--grid-n "$GRIDN"} \
   --save-scores "$SC/${TAG}_${GTAG}_r${ROWS:-4000000}_s${SHARD:-0}of${NSHARDS:-1}_${GSUF}.npz" 2>&1 \
