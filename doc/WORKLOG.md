@@ -82,6 +82,77 @@ exercises both the env var and the file. The file was created on this machine
 the env var correctly outranks the file, so the file-scenario assertions must clear
 `BLENDEMU_ROOT` first.
 
+**Follow-up 2: the notebook's catalogue cell was working-directory dependent.** The user's
+actual traceback (finally supplied) was `FileNotFoundError: data/example_catalog.feather`
+from the tutorial's `EXAMPLES = Path("examples") if ... else Path(".")` snippet: their
+JupyterHub kernel starts with CWD neither at the repo root nor in `examples/` (the hub
+server runs with `root_dir=/home/z/Zekang.Zhang`), and the snippet only handled those two.
+The cell now anchors the path on the sbsi package itself
+(`Path(sbsi.__file__).resolve().parents[1] / "examples"`), which is launcher-independent;
+the setup and catalogue markdown cells say so. Validation: the full notebook (cells 0–17,
+including the response-prediction cells) executed under `examples/` with the `sims1`
+kernel and no env vars in 284 s, and cells 0–4 executed with the kernel CWD set to the
+home directory — the exact failure mode — in 12 s.
+
+## 2026-08-18d  cont.184 — the −0.665% baseline floor IS the score grid, at 148 sigma (loop)
+
+The paired test landed. Two score passes over the SAME 500,000 rows (2,000,000 objects), same
+seeds, same latents, differing ONLY in the score-pass node bank:
+
+| | grid_n=61 (G=2,765) | grid_n=101 (G=7,693) |
+|---|---|---|
+| uncut control | `m = -0.442% +/- 0.215%` | `m = +0.221% +/- 0.216%` |
+| `<I>` | 6.2432 | 6.1970 |
+| wall clock | 37 min | 3 h 13 min |
+
+    B - A: d(ghat_1) = +0.000332 +/- 0.000002    d(m) = +0.6637% +/- 0.0045%   (148.8 sigma)
+
+That bar is the point of running the pair. Each run on its own knows `m` to 0.215%; the
+DIFFERENCE is known to 0.0045%, a factor of 48 better, because the two score identical objects
+and the shape noise cancels row for row. `scripts/diff_score_caches.py` forms the difference
+inside each of the 200 jackknife replicates and refuses to pair caches whose keys differ in
+anything outside a quadrature whitelist (`grid_n` here).
+
+**This closes the cont.181 open item.** The production floor was `m = -0.665% +/- 0.116%` at
+grid_n=61 on 8M objects. Adding the measured grid step gives `-0.665 + 0.664 = -0.001%`. The
+estimator's baseline bias is quadrature and nothing else — not the ratio estimator, not the
+finite-difference stencils, not evaluating a `gamma=0` estimator at `g=0.05`, all of which
+were live candidates in cont.182. On this subsample the refined control is `+0.221% +/-
+0.216%`, 1.0 sigma from zero.
+
+**It was predicted before it was measured.** `scripts/predict_grid_floor.py` (new) runs the
+same closure test with the flow replaced by `xhat = e + N(0, sigma^2)` — flow-free, data-free,
+and correctly specified, so any departure from `g` IS the grid's error. Its one free number is
+pinned by matching the measured `<I> = 6.243`, which lands `sigma = 0.25` (`<I> = 6.66`,
+nothing tuned). At 2,000 objects it predicted `d(m) = +0.711% +/- 0.127%` for exactly this
+61 -> 101 step, against the +0.664% measured. A Gaussian shape likelihood is not the flow, so
+the agreement is support for the mechanism rather than proof of it — but the mechanism was
+named, quantified and committed (921b2c3) before the GPU job finished.
+
+**The published cut results survive.** Every cut row is quoted as `d(m)` against the uncut
+control, so a shift common to both cancels. Measured, at grid_n=101 on the 500k subsample the
+`|xhat| < 0.6` cut gives FULL (5.3) `d(m) = -0.465% +/- 0.547%`, against cont.181's
+`-0.583% +/- 0.265%` at grid_n=61 on 8M. Consistent, and the correction still does what it
+did. `I_sel/<I>` moves +0.4115 -> +0.4151 and `<s>_sel` keeps its sign and size. So cont.181's
+table is NOT retracted: what changes is the interpretation of the control row it is quoted
+against, which is now understood and no longer a floor under the analysis.
+
+**Limitations.** (1) grid_n=101 is shown to be much better than 61, not shown to be converged.
+The toy puts 101 -> 141 at `-0.012% +/- 0.002%`, but that is the toy; the real flow has not
+been measured there and a confirming run is queued. (2) The paired difference is measured on
+one 500k subsample at one cut and one shear; it is a statement about the quadrature, which is
+data-independent, but it has not been repeated at g=0 or g=0.10. (3) The 8M production numbers
+were NOT re-run at 101 — the correction above is applied arithmetically from a paired
+measurement on a subsample, and is quoted as such.
+
+**Files.** `scripts/diff_score_caches.py`, `scripts/predict_grid_floor.py`,
+`jobs/job_grid_floor.sh` (new); `jobs/job_pi_grid_ladder.sh` (AZIMS knob);
+`jobs/job_score_shard.sh` (PIROWS clamp, CHUNK passthrough).
+
+**Next.** Confirm 101 -> 141 on the real flow, then decide whether the production table is
+re-run at 101. A full 8M re-run costs 2.8x the 9.2 h score pass, so it must be sharded
+(`SHARD`/`NSHARDS`, merged through `--load-scores`) rather than run as one job.
+
 ## 2026-08-18c  models — presets default to the repository release tree; load_emulator fails fast on missing artifacts
 
 **Motivation.** An external user on a fresh master clone hit

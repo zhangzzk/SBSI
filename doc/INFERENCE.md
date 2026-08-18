@@ -894,6 +894,30 @@ from $\sum_i\mathcal I_i$ before the matrix solve of §6.
    not by budget; the same caveat is what forced large template banks in BFD. §5B.4 gives the
    separate — and prior condition — under which the denominator of (5.3) exists at all.
 
+**Node-bank RESOLUTION is a separate requirement from ESS, and it bit (2026-08-18).** Item 5
+above is about how many nodes carry weight for one galaxy. This is about how finely the bank
+samples the plane at all, and it biases every galaxy in the same direction rather than the
+tails. Measured on the closure test with the flow's own draws — where the answer is $g$ by
+construction — the uncut control at $n=61$ ($G=2765$) reads $m=-0.442\%\pm0.215\%$ and at
+$n=101$ ($G=7693$) reads $m=+0.221\%\pm0.216\%$ on the same objects, a paired shift of
+$+0.664\%\pm0.005\%$ (148$\sigma$; the pair scores identical objects, so shape noise cancels and
+the difference is 48$\times$ better determined than either side). That shift accounts for the
+whole of the $-0.665\%\pm0.116\%$ baseline bias seen at production resolution.
+
+The diagnostic that predicts it needs no flow: the Bartlett identity $\mathbb E_0[\partial_\gamma
+u]+\mathrm{Var}_0(u)=0$ must hold for any normalised prior, so its residual on a given bank is
+that bank's spurious information floor, and a positive floor inflates the denominator of (5.3)
+and pushes $m$ negative. `scripts/check_quadrature.py` reports it; `scripts/predict_grid_floor.py`
+converts it into a predicted bias at a realistic posterior width and got $+0.711\%\pm0.127\%$
+for this step before the run finished. **Set the bank by that residual, not by eye**: at
+$n=61$ it is $3.6\times10^{-3}$ of $\mathrm{Var}_0(u)$, at $n=101$ it is $1.6\times10^{-4}$.
+Cost is linear in $G$.
+
+Because every cut result is quoted as $d(m)$ against the uncut control, a resolution shift
+common to both largely cancels — the $|\hat x|<0.6$ correction gives $-0.465\%\pm0.547\%$ at
+$n=101$ against $-0.583\%\pm0.265\%$ at $n=61$ — so this changes what the control row means, not
+the selection conclusions of §5B.2.
+
 Note that the *dimensionality* of requirement 1 is set by the support of $v$, not by the dimension of
 the scene. A primary-only shear moves the primary's shape and nothing else, so it needs
 $\nabla\log p_0$ in the two-dimensional shape plane alone — a smooth, densely sampled marginal, not a
