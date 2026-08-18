@@ -13,6 +13,8 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Dict, Iterable, Optional, Tuple
 
+from .paths import RELEASE_MODELS_ROOT
+
 
 SHAPE_SEEDS: Tuple[int, ...] = (501, 502, 503, *range(505, 518))
 
@@ -67,23 +69,21 @@ def _file_sha256(path: Path, block_size: int = 8 * 1024 * 1024) -> str:
     return digest.hexdigest()
 
 
-def _root(variable: str, default: str) -> Path:
-    """Location of a preset's artifacts, overridable so presets work off this machine.
+def _root(variable: str, default: Path) -> Path:
+    """Location of a preset's artifacts, overridable for external model stores.
 
-    The defaults are the frozen V3/V3b locations, so an unset environment reproduces the
-    milestone exactly; the emulator SHA-256 in each preset is what actually pins identity.
-    A user who keeps BlendEMU or the caches elsewhere sets the variable instead of editing
-    this file.
+    Defaults are anchored to the imported SBSI checkout, not the current working
+    directory.  The emulator SHA-256 pins model identity.  Users who keep artifacts
+    elsewhere can override the roots without editing source files.
     """
 
-    return Path(os.environ.get(variable) or default).expanduser()
+    return Path(os.environ.get(variable) or default).expanduser().resolve()
 
 
-_CACHE_ROOT = _root("SBSI_CACHE_DIR", "/project/ls-gruen/users/zekang.zhang/sbsi_caches")
+_CACHE_ROOT = _root("SBSI_CACHE_DIR", RELEASE_MODELS_ROOT)
 _FLOW_ROOT = _CACHE_ROOT / "ablation"
 _EMU_ROOT = _CACHE_ROOT / "derisk"
-_BLENDEMU_ROOT = _root("BLENDEMU_ROOT", "/home/z/Zekang.Zhang/blendemu")
-_BLENDEMU_MODELS = _root("BLENDEMU_MODELS", str(_BLENDEMU_ROOT / "models"))
+_BLENDEMU_MODELS = _root("BLENDEMU_MODELS", RELEASE_MODELS_ROOT / "blendemu")
 
 V3 = ModelPaths(
     name="V3",
@@ -140,11 +140,28 @@ def load_emulator(
 
     if models.emulator_model is None or models.emulator_metadata is None:
         raise ValueError("emulator_model and emulator_metadata paths are required")
+    missing = [
+        path
+        for path in (models.emulator_metadata, models.emulator_model)
+        if not path.is_file()
+    ]
+    if missing:
+        rendered = "\n  ".join(str(path) for path in missing)
+        raise FileNotFoundError(
+            f"missing emulator artifacts:\n  {rendered}\n"
+            "Presets use the checkout's models/ directory by default. Override external "
+            "stores with SBSI_CACHE_DIR and BLENDEMU_MODELS."
+        )
     try:
         from blendemu import BlendingPredictor
-    except ModuleNotFoundError as error:
-        raise ModuleNotFoundError(
-            "BlendEMU must be installed or present on PYTHONPATH to load its emulator"
+    except ImportError as error:
+        if isinstance(error, ModuleNotFoundError) and error.name not in {None, "blendemu"}:
+            raise
+        raise ImportError(
+            "BlendEMU is not installed correctly in this Python environment. Install its "
+            "checkout editable (`python -m pip install --config-settings "
+            "editable_mode=compat -e /path/to/blendemu`) and restart "
+            "the Python process or notebook kernel."
         ) from error
 
     return BlendingPredictor.load(

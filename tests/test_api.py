@@ -13,6 +13,7 @@ from sbsi.measurement_model import (
     TargetStandardizer,
 )
 from sbsi.models import ModelPaths, SHAPE_SEEDS, get_model
+from sbsi.paths import RELEASE_MODELS_ROOT, REPOSITORY_ROOT, example_path
 from sbsi.forward_catalogue import (
     EmulatorPairingConfig,
     make_pair_catalogue,
@@ -34,6 +35,14 @@ def test_named_models_are_path_presets_not_pipeline_configuration():
     assert not hasattr(v3, "blend_lookup")
     assert not hasattr(v3, "evaluation_result")
     assert v3.emulator_metadata.name == "emulator_metadata_lsst_r_extnbr_v22.json"
+
+
+def test_checkout_resources_do_not_depend_on_working_directory(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    assert example_path("data", "example_catalog.feather").is_file()
+    assert get_model("V3").emulator_model.is_file()
+    assert (REPOSITORY_ROOT / "pyproject.toml").is_file()
+    assert get_model("V3").flow_checkpoints[0].is_relative_to(RELEASE_MODELS_ROOT)
 
 
 def test_training_recipe_uses_only_explicit_user_paths(tmp_path):

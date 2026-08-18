@@ -26,21 +26,23 @@ response emulator's 10-arcsec aperture are outside the classifier's training dom
 
 ## Using these files
 
-`sbsi/models.py` resolves preset paths through environment variables, so point
-them at this directory:
+`sbsi/models.py` anchors preset paths on the imported SBSI checkout. With an editable
+install, `get_model("V3")` therefore finds this directory from any working directory and
+requires no configuration.
+
+If artifacts live outside the checkout, override their roots explicitly:
 
 ```bash
-export SBSI_CACHE_DIR="$PWD/models"
-export BLENDEMU_MODELS="$PWD/models/blendemu"
+export SBSI_CACHE_DIR=/path/to/models
+export BLENDEMU_MODELS=/path/to/models/blendemu
 ```
 
-With those set, `get_model("V3")` resolves entirely inside this repository and needs
-no access to the original cluster paths. Unset, the presets fall back to their
-frozen locations under `/project/ls-gruen/users/zekang.zhang/sbsi_caches` and
-`~/blendemu/models`, which reproduces the milestone on the machine where it was made.
-
-The emulator itself is loaded by BlendEMU, so `load_emulator` still requires BlendEMU
-on the `PYTHONPATH`. The flow checkpoints need only SBSI and torch.
+The emulator itself is loaded by BlendEMU, so `load_emulator` requires an installed
+BlendEMU package (`python -m pip install --config-settings editable_mode=compat -e
+/path/to/blendemu`). The compatibility mode matters when a Jupyter server starts in the
+parent of a checkout also named `blendemu`; it prevents that outer directory from being
+mistaken for an empty namespace package. The flow checkpoints
+need only SBSI and PyTorch.
 
 ## Integrity
 
