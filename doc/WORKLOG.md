@@ -2,6 +2,88 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-18l  cont.186 — grid_n=101 IS converged; the per-cut shifts are in flight (loop)
+
+Follow-up to cont.185, which measured the score-pass node bank as the carrier of the −0.665%
+baseline floor and showed the shift does NOT cancel between the cut row and the uncut control.
+Two questions were left open: (a) is grid_n=101 — the bank cont.185 corrected *to* — itself
+converged, or does the whole shift analysis have to be redone at a finer one? and (b) the shape
+cut's shift is measured, but the magnitude and size shifts are cut-specific and were not.
+
+**(a) is answered: 101 is converged.**  Job 15825062 (`g141_500k`, 7:46:46 on `cip-cl-h01g08n2`)
+scored the same 500,000 rows at grid_n=141 (G=15,069, cell 1.881e-04,
+`|u_fd-u_closed|/rms = 7.84e-04`).  Paired against the banked 101 pass:
+
+```
+PYTHONPATH="$PWD" .../envs/py31/bin/python scripts/diff_score_caches.py \
+  $SC/c06_g05_r500000_s0of1_Gn101.npz $SC/c06_g05_r500000_s0of1_Gn141.npz
+
+  differs: grid_n  101 -> 141   quadrature
+  A: ghat = [+0.050111 +/- 0.000108, ...]   m = +0.221% +/- 0.216%
+  B: ghat = [+0.050115 +/- 0.000108, ...]   m = +0.230% +/- 0.216%
+  B - A:  d(m) = +0.0089% +/- 0.0008%   (11.2 sigma)
+  pairing gains a factor 272.8 over A's own bar
+```
+
++0.0089% ± 0.0008%.  The pre-registered bar was 0.1% (above that, 101 is not converged and the
+shift analysis needs a finer bank); the residual is an order of magnitude below it, and below the
+0.11% statistical bar on the size row it has to be applied to, so it does not move any published
+number.  It is nonzero at 11.2σ — the grid error has not vanished, it has become negligible.
+
+Worth recording that this was **predicted before it was measured**: the flow-free Gaussian toy of
+cont.184 (`scripts/predict_grid_floor.py`) put the 101→141 step at ~+0.011% against +0.0089%
+measured, having already called the much larger 61→101 step to within 10–18%.  Two successful
+predictions at very different magnitudes is what promotes "the node bank is the mechanism" from an
+inference to a settled reading.  The toy remains a mechanism check, never a calibration — no
+number from it has been applied to anything.
+
+Note the 61→101→141 sequence is monotone and decelerating (−0.442% → +0.221% → +0.230%), i.e.
+converging from below, which is what a quadrature error that shrinks with cell size should do.
+
+**(b) is in flight.**  Four paired arms measure the magnitude and size shifts the way cont.185 did
+the shape cut.  One has landed:
+
+| job | arm | state | ⟨I⟩ | I_sel/⟨I⟩ | FULL (5.3) d(m) vs uncut |
+|---|---|---|---|---|---|
+| 15827006 | mag, grid_n=61 | COMPLETED 00:42:41 | 8.4255 | +0.0013 | −0.080% ± 0.184% |
+| 15827007 | mag, grid_n=101 | RUNNING (leg 2/4) | | | |
+| 15827008 | size, grid_n=61 | RUNNING (leg 1/4) | | | |
+| 15827009 | size, grid_n=101 | RUNNING (leg 1/4) | | | |
+
+The mag-61 population block: ⟨s⟩_sel = [−0.000345 ± 0.000001, +0.000035 ± 0.000002],
+I_sel = [[+0.01116, +0.00010], [+0.00011, +0.01080]], Π ∈ [0.6522, 0.6588].  These must come out
+identical on the 101 arm — the population block is built on its own bank (G=15,069 here) and does
+not depend on the score grid.  **If they differ, that is a bug, and nothing gets quoted until it is
+understood.**  That check runs first, before any difference is formed.
+
+Once both arms of a cut are banked the read-out is cont.185's: `sbsi.score_inference.jackknife_blocks`
+with each side's own ⟨s⟩_sel and I_sel, difference formed *inside* each replicate so the shared
+shape noise cancels (that pairing is worth a factor 48–273 depending on the run).  Then the shift
+is applied to cont.181's 8M table, whose two uncorrected rows are size +0.024% ± 0.110% (the
+headline) and mag −0.065% ± 0.091%.
+
+### Limitations
+
+- The size row — the headline result — still stands **only at grid_n=61**.  It is not corrected
+  and must not be quoted as final until 15827008/09 land and are differenced.
+- Naive scaling of the shape cut's shift by the 1/(1 − I_sel/⟨I⟩) lever does not reproduce the
+  measured amplification (predicted 1.7, measured 2.0), so the mag and size shifts must be
+  MEASURED, not extrapolated.  I_sel/⟨I⟩ is +0.4115 for the shape cut, +0.0013 for mag,
+  −0.1635 for size — three different regimes, including one of opposite sign.
+- Convergence is established for the uncut control at this catalogue, cut and injected shear.
+  It has not been re-measured per cut; the cut rows inherit it on the argument that the score pass
+  is identical and only the population weight differs.
+
+### Next steps
+
+1. Difference mag-61 vs mag-101, then size-61 vs size-101, verifying the population blocks agree
+   between arms first.  Apply to the 8M table and report whether the size row still closes.
+2. Owner decision, not to be taken unilaterally: re-run the full 8M table at grid_n=101
+   (12 sharded GPU jobs, ~38 GPU-hours, ~1 day) versus publishing the existing table with the
+   measured per-cut shift applied and quoted.  cont.186(a) removes one objection to the second
+   option — 101 is converged, so a table corrected to 101 is not merely corrected to another
+   arbitrary bank.
+
 ## 2026-08-18f  tutorial — robust checkout paths and published measurement contours
 
 **Change.** The public tutorial and batch wrapper now use one editable Python
