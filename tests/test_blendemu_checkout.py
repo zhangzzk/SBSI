@@ -87,6 +87,18 @@ def test_missing_checkout_reports_how_to_point_at_one(tmp_path, monkeypatch):
         blendemu_checkout.import_blendemu()
 
 
+def test_a_missing_blendemu_requirement_names_the_install_that_fixes_it(tmp_path, monkeypatch):
+    # Installing SBSI cannot pull in BlendEMU's requirements, so a fresh environment hits
+    # this before anything else. A bare "No module named 'xgboost'" is not actionable.
+    _make_checkout(tmp_path / "clone", body="import xgboost\n")
+    monkeypatch.setenv(ROOT_ENV_VAR, str(tmp_path / "clone"))
+    monkeypatch.setitem(sys.modules, "xgboost", None)
+    monkeypatch.delitem(sys.modules, "blendemu", raising=False)
+    monkeypatch.setattr(blendemu_checkout, "EXTRA_REQUIREMENTS", ("xgboost", "joblib"))
+    with pytest.raises(ImportError, match=r"pip install xgboost joblib"):
+        blendemu_checkout.import_blendemu()
+
+
 def test_a_wrong_env_var_fails_instead_of_falling_back(tmp_path, monkeypatch):
     # An explicit setting is authoritative: a typo must not silently resolve to some other
     # copy of BlendEMU in the environment.

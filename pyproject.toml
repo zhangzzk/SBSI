@@ -26,6 +26,9 @@ dependencies = [
 
 [project.optional-dependencies]
 notebook = ["ipykernel", "matplotlib"]
+# BlendEMU itself is a source checkout with no dependency metadata (see
+# sbsi/blendemu_checkout.py), so its import-time requirements are declared here.
+blendemu = ["xgboost", "joblib"]
 
 [project.scripts]
 sbsi = "sbsi.cli:main"

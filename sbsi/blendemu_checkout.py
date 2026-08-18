@@ -75,6 +75,11 @@ def _forget_namespace_package() -> None:
         del sys.modules[name]
 
 
+#: BlendEMU's import-time requirements that installing SBSI does not bring in.  SBSI
+#: declares them as the ``blendemu`` extra, since BlendEMU cannot declare them itself.
+EXTRA_REQUIREMENTS = ("xgboost", "joblib")
+
+
 def _try_import() -> Optional[ModuleType]:
     """Import ``blendemu``, returning ``None`` when the package itself is absent.
 
@@ -86,9 +91,30 @@ def _try_import() -> Optional[ModuleType]:
         module = importlib.import_module("blendemu")
     except ModuleNotFoundError as error:
         if error.name not in {None, "blendemu"}:
-            raise
+            raise _missing_dependency_error(error) from error
         return None
     return module if _is_importable_package(module) else None
+
+
+def _missing_dependency_error(error: ModuleNotFoundError) -> ImportError:
+    """Explain a dependency BlendEMU needs and nothing in the environment installs.
+
+    BlendEMU ships no dependency metadata, so ``pip install sbsi`` cannot pull its
+    requirements in.  The bare ``No module named 'xgboost'`` gives a new user nothing to
+    act on, so name the install that fixes it.
+    """
+
+    hint = ""
+    if error.name in EXTRA_REQUIREMENTS:
+        hint = (
+            f" Install BlendEMU's own requirements, which installing SBSI does not "
+            f"provide:\n    python -m pip install {' '.join(EXTRA_REQUIREMENTS)}\n"
+            'or install SBSI with its "blendemu" extra '
+            '(`python -m pip install -e ".[blendemu]"`).'
+        )
+    return ImportError(
+        f"the BlendEMU checkout was found, but importing it failed: {error}.{hint}"
+    )
 
 
 def _not_reachable_message() -> str:

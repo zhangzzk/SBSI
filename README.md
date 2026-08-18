@@ -30,7 +30,11 @@ PyTorch alone. Clone [BlendEMU](https://github.com/zhangzzk/blendemu) and tell S
 ```bash
 git clone https://github.com/zhangzzk/blendemu.git
 export BLENDEMU_ROOT=$PWD/blendemu
+python -m pip install -e '/path/to/SBSI[blendemu]'   # BlendEMU's own requirements
 ```
+
+The last line adds `xgboost` and `joblib`: BlendEMU carries no dependency metadata, so
+nothing else installs them.
 
 ## Image simulation and measurement
 
