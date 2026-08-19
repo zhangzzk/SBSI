@@ -2,6 +2,145 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-19f  cont.192 — the per-cut grid shifts, measured: the 8M table's two cut rows move by <0.1%
+
+Jobs 15827006/07/08/09 (queued in cont.186) all completed.  The four caches are banked, the
+precondition held, and both cut rows of cont.181's 8M table now carry a **measured** grid
+correction instead of an inherited one.
+
+### The precondition, checked first
+
+cont.186 said: the population block is built on its own node bank (G=15,069) and does not depend
+on the score grid, so `<s>_sel` and `I_sel` must come out identical on both arms of a cut — *"if
+they differ, that is a bug, and nothing gets quoted until it is understood."*  They are identical,
+to every digit printed, for both cuts:
+
+| cut | `<s>_sel` | `I_sel` | arms |
+|---|---|---|---|
+| `mag_auto < 24.5` | [−0.000345, +0.000035] | [[+0.01116, +0.00010], [+0.00011, +0.01080]] | 15827006 = 15827007 |
+| `log flux_radius >= 1.45` | [−0.001048, +0.000982] | [[−1.15184, +0.00118], [+0.00116, −1.15085]] | 15827008 = 15827009 |
+
+`I_sel/<I>` does differ between arms on the size cut (−0.1633 vs −0.1644) — that is `<I>` moving
+with the grid, not `I_sel`, and is expected.
+
+### Files and behavior changed
+
+`scripts/diff_score_caches.py` — was uncut-only; now differences either arm.
+
+- `--arm {uncut,kept}`.  The kept arm forms `(sum s − n<s>_sel) . (sum I − n I_sel)^-1` per
+  jackknife replicate, i.e. (5.3) in full, so the paired difference is of the *corrected*
+  estimates rather than of the raw ratios.
+- `--pop-log LOG_A LOG_B` — the population terms are **parsed out of the run logs**, not passed
+  as numbers.  They are not in the cache (the population block is a separate, cheap computation),
+  and retyping them into a command line is the same hand-carried-number failure that has now
+  bitten this log ten times.  The two logs must agree exactly or the script refuses: a comparison
+  run against two different population blocks would attribute their difference to the score pass.
+  A log carrying no population terms is an error, not a zero — defaulting to zero would turn a
+  missing population block into an uncorrected number that still reads as a corrected one.
+- `--vs-uncut` — reports the double difference.  Each cache carries its own uncut control on the
+  *same* blocks, so `cut − uncut` is paired twice over and the part of the grid shift common to
+  both arms cancels before the variance is taken.  This is the column cont.181 actually reports.
+- Removed `ratio_estimate`, now dead.  Fixed the module docstring's first line, which still said
+  "Difference the UNCUT control" after the script had stopped being uncut-only.
+
+`tests/test_diff_score_caches.py` — new, 5 tests.  The parser is pinned against a log excerpt
+copied verbatim from job 15827006 rather than a paraphrase, including the off-diagonal order (the
+printed matrix is [[11,12],[21,22]] and the off-diagonals differ only in the fifth decimal, so a
+transposed parse would look right to the eye).  Also pinned: a log with no population terms
+raises; two logs that disagree are refused end-to-end through `subprocess`; and the kept arm
+demonstrably *applies* the terms rather than merely parsing them.
+
+### Validation
+
+Regression on the uncut path, which must be untouched by the refactor — it reproduces cont.186's
+committed headline exactly, to the last digit including the pairing factor:
+
+```
+c06 Gn101 -> Gn141:  d(m) = +0.0089% +/- 0.0008%   (11.2 sigma)
+                     pairing gains a factor 272.8 over A's own bar (0.216%)
+```
+
+Cross-check on the new path: both arms of both cuts reproduce the numbers the *runs themselves*
+printed — mag −0.522%/+0.048%, size −0.787%/−0.197%, and the `d(m) vs uncut` column −0.080%/−0.174%
+and −0.344%/−0.418%.  Rebuilding the cut estimate from cached blocks plus parsed population terms
+therefore lands on what the original job computed in memory.  The uncut control embedded in the
+mag and size caches also equals the standalone `c06` cache exactly (−0.442% at 61, +0.221% at 101).
+
+Full suite: **254 passed, 1 skipped** in 70s.
+
+### The measured shifts, grid_n 61 -> 101, paired, 500k rows
+
+| arm | grid 61 | grid 101 | paired d(m) |
+|---|---|---|---|
+| uncut control | −0.442% ± 0.215% | +0.221% ± 0.216% | **+0.6637% ± 0.0045%** (148.8σ) |
+| `mag_auto < 24.5` | −0.522% ± 0.252% | +0.048% ± 0.253% | **+0.5703% ± 0.0056%** (101.3σ) |
+| `log flux_radius >= 1.45` | −0.787% ± 0.301% | −0.197% ± 0.303% | **+0.5898% ± 0.0054%** (109.6σ) |
+
+**The grid shift is very nearly common mode.**  It moves every absolute `m` by about +0.6%, and
+moves the cut and its own uncut control together, so the reported `d(m) vs uncut` moves by an
+order of magnitude less:
+
+| cut | `d(m)` at 61 | `d(m)` at 101 | shift to apply |
+|---|---|---|---|
+| `mag_auto < 24.5` | −0.080% ± 0.184% | −0.174% ± 0.185% | **−0.0935% ± 0.0018%** (53.3σ) |
+| `log flux_radius >= 1.45` | −0.344% ± 0.203% | −0.418% ± 0.204% | **−0.0739% ± 0.0018%** (41.6σ) |
+
+### cont.181's 8M table, corrected
+
+The shift is measured at 500k rows and applied to the 8M central values; the 8M error bars are
+carried across unchanged, because the shift's own error (±0.0018%) is fifty to sixty times smaller
+than them and adding it in quadrature changes nothing at the quoted precision.
+
+| cut | cont.181 (grid 61) | corrected to grid 101 |
+|---|---|---|
+| `mag_auto < 24.5` | −0.065% ± 0.091% (0.7σ) | **−0.159% ± 0.091%** (1.7σ) |
+| `log flux_radius >= 1.45` — headline | +0.024% ± 0.110% (0.2σ) | **−0.050% ± 0.110%** (0.5σ) |
+
+**cont.181's conclusion is unchanged.**  Both cuts remain consistent with zero.  Both central
+values do get *further* from zero, not closer — size |0.024| → |0.050| and mag |0.065| → |0.159| —
+so the correction is not flattering, it is simply small.  The headline size row changes sign and
+stays a null at 0.5σ.  The mag row moves from 0.7σ to 1.7σ: still not a detection, but no longer
+the most comfortable row in the table, and the one to watch if the bar ever shrinks.
+
+### What this settles, and what it does not
+
+cont.186 carried the cut rows on an *argument*: the score pass is identical and only the
+population weight differs, so the cuts inherit the uncut control's convergence.  That argument is
+now tested rather than assumed, and it is **approximately but not exactly right**.  The cut arms
+shift by +0.570% and +0.590% where the uncut control shifts by +0.664% — a discrepancy of 0.07–0.09%,
+which the pairing resolves at 40–50σ.  So the inheritance is real to first order and wrong in the
+third digit; small enough not to matter here, and not something to assume again elsewhere.
+
+### Limitations
+
+- **Convergence at grid_n=101 is established for the uncut control only** (cont.186, 101→141 =
+  +0.0089% ± 0.0008%).  No 141 arm was run for either cut, so the cuts' convergence at 101 is
+  still inherited by the same argument this entry just showed to be inexact.  cont.181 already
+  records that naive scaling of a cut's shift by its `1/(1 − I_sel/<I>)` lever does not reproduce
+  the measured amplification (predicted 1.7, measured 2.0), so extrapolating the uncut 101→141
+  step to the cuts is not defensible either.  The residual is *plausibly* far below the 0.09–0.11%
+  bars, but it is unmeasured, and saying otherwise would be quoting an estimate as a measurement.
+- The shift is measured on a 500k-row shard (`s0of1`) of the same catalogue and applied to the 8M
+  table.  Quadrature convergence should not depend on the row sample, and the keep fractions agree
+  (65.79% vs 65.66% for mag, 71.08% vs 71.10% for size), but this is a transfer, not a re-run.
+- `I_sel` is read from the logs at the 5 decimals they print.  This is common mode between the two
+  arms, so it cancels from the difference to second order; it is not a limitation on the shift,
+  only on either arm's absolute value.
+- The shape cut (`|xhat| < 0.6`) has no grid pair and is not corrected here.  cont.183 closed it
+  by a different route; its 8M row still stands at grid_n=61.
+
+### Next steps
+
+1. If either cut row is to be quoted as final, run a 141 arm per cut (2 GPU jobs, ~2h each) and
+   difference it the same way.  That is the only thing that would turn the inherited convergence
+   into a measured one.
+2. Decide — a user call, not this log's — between re-running the whole 8M table at grid_n=101
+   (12 sharded GPU jobs, ~38 GPU-hours, about a day) and publishing the existing table with the
+   measured shift above applied.  The second is what this entry supports.
+3. Still open from cont.186: the 45-degree closure run (`--closure-g2`; the code exists, the run
+   does not), and the banked V1 shards `c06_g05_r2000000_s{1,3,5}of6_G2765.npz`, whose partners
+   0/2/4 were never run and which therefore cannot be merged.
+
 ## 2026-08-18l  cont.186 — grid_n=101 IS converged; the per-cut shifts are in flight (loop)
 
 Follow-up to cont.185, which measured the score-pass node bank as the carrier of the −0.665%
