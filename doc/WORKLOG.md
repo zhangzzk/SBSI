@@ -87,11 +87,17 @@ order of magnitude less:
 
 ### cont.181's 8M table, corrected
 
+**Both columns below are `d(m)` = cut minus its own uncut control, FULL (5.3)** — stated here
+rather than left to the reference, because that is the quantity the shift applies to and naming
+the rows is not the same as naming what they measure.  Had these been absolute `m` the correct
+shift would have been +0.570% / +0.590% instead of −0.094% / −0.074%, a factor of seven and the
+opposite sign.
+
 The shift is measured at 500k rows and applied to the 8M central values; the 8M error bars are
 carried across unchanged, because the shift's own error (±0.0018%) is fifty to sixty times smaller
 than them and adding it in quadrature changes nothing at the quoted precision.
 
-| cut | cont.181 (grid 61) | corrected to grid 101 |
+| cut | cont.181 `d(m)` (grid 61) | corrected `d(m)` (grid 101) |
 |---|---|---|
 | `mag_auto < 24.5` | −0.065% ± 0.091% (0.7σ) | **−0.159% ± 0.091%** (1.7σ) |
 | `log flux_radius >= 1.45` — headline | +0.024% ± 0.110% (0.2σ) | **−0.050% ± 0.110%** (0.5σ) |
