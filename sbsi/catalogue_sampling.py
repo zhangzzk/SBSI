@@ -566,6 +566,7 @@ class DefensiveLocalProposal:
         self._uncertainty_mips_tree = None
         self._uncertainty_mips_indices = None
         self._torch_standardized = {}
+        self._torch_reranking_tables = {}
         self.global_cdf = np.cumsum(self.prior_weights)
         self.global_cdf[-1] = 1.0
         # A reusable atom-id -> local-candidate-position table avoids sorting
@@ -661,6 +662,94 @@ class DefensiveLocalProposal:
             raise ValueError("observed proposal coordinates must be finite")
         return values
 
+    def _torch_uncertainty_rerank(
+        self,
+        values: np.ndarray,
+        positions: torch.Tensor,
+        *,
+        n_candidates: int,
+        device: torch.device,
+    ) -> ProposalCandidates:
+        """Rerank a location prefilter without transferring it to the host."""
+
+        if self.coordinates.dispersion is None:
+            raise ValueError(
+                "uncertainty reranking requires a version-3 proposal cache"
+            )
+        key = str(device)
+        tables = self._torch_reranking_tables.get(key)
+        if tables is None:
+            # Keep the established float64 Gaussian score.  For the 12.76M-
+            # atom Infer V1 prior these reusable tables cost about 1 GiB,
+            # materially less than each temporary location-distance slab.
+            tables = (
+                torch.as_tensor(
+                    np.ascontiguousarray(
+                        self.coordinates.values[self.active_indices]
+                    ),
+                    dtype=torch.float64,
+                    device=device,
+                ),
+                torch.as_tensor(
+                    np.ascontiguousarray(
+                        self.coordinates.dispersion[self.active_indices]
+                    ),
+                    dtype=torch.float64,
+                    device=device,
+                ),
+                torch.as_tensor(
+                    np.ascontiguousarray(
+                        self.local_base_weights[self.active_indices]
+                    ),
+                    dtype=torch.float64,
+                    device=device,
+                ).log(),
+                torch.as_tensor(
+                    np.ascontiguousarray(self.active_indices),
+                    dtype=torch.long,
+                    device=device,
+                ),
+            )
+            self._torch_reranking_tables[key] = tables
+        atom_values, atom_dispersion, log_base, active_indices = tables
+        observed = torch.as_tensor(
+            np.ascontiguousarray(values),
+            dtype=torch.float64,
+            device=device,
+        )
+        with torch.no_grad():
+            selected_dispersion = atom_dispersion[positions]
+            residual = (
+                observed[:, None, :] - atom_values[positions]
+            ) / selected_dispersion
+            approximate_log_target = (
+                log_base[positions]
+                - torch.log(selected_dispersion).sum(dim=2)
+                - 0.5 * torch.square(residual).sum(dim=2)
+            )
+            selected_score, selected = torch.topk(
+                approximate_log_target,
+                k=n_candidates,
+                dim=1,
+                largest=True,
+                sorted=True,
+            )
+            selected_position = torch.gather(positions, 1, selected)
+            indices = active_indices[selected_position]
+            distances = selected_score[:, :1] - selected_score
+            finite = torch.isfinite(distances)
+            row_max = torch.max(
+                torch.where(finite, distances, 0.0), dim=1, keepdim=True
+            ).values
+            distances = torch.where(finite, distances, row_max + 1.0)
+        indices_np = indices.cpu().numpy().astype(np.int64)
+        distances_np = distances.cpu().numpy().astype(np.float64)
+        return ProposalCandidates(
+            indices_np,
+            distances_np,
+            distances_np[:, -1].copy(),
+        )
+
     def candidates(
         self,
         observed,
@@ -725,9 +814,18 @@ class DefensiveLocalProposal:
                     largest=False,
                     sorted=True,
                 )
+            del matrix, query
+            if prefilter > k:
+                del distance_tensor
+                return self._torch_uncertainty_rerank(
+                    values,
+                    position_tensor,
+                    n_candidates=k,
+                    device=device,
+                )
             distances = distance_tensor.cpu().numpy().astype(np.float64)
             positions = position_tensor.cpu().numpy().astype(np.int64)
-            del matrix, distance_tensor, position_tensor, query
+            del distance_tensor, position_tensor
         indices = self.active_indices[positions]
         if prefilter > k:
             if self.coordinates.dispersion is None:

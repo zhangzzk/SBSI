@@ -396,6 +396,7 @@ def test_uncertainty_reranking_can_recover_narrow_high_mass_atom():
     assert reranked.indices[0, 0] == 2
     assert reranked.distances[0, 0] == 0.0
     np.testing.assert_array_equal(torch_reranked.indices, reranked.indices)
+    np.testing.assert_allclose(torch_reranked.distances, reranked.distances)
 
 
 def test_direct_uncertainty_mips_matches_brute_gaussian_ranking():

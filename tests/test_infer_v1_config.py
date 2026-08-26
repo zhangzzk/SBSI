@@ -44,3 +44,20 @@ def test_infer_v1_job_records_the_named_setup():
     ):
         assert setting in job
     assert '--inference-version "Infer V1"' in job
+
+
+def test_candidate_backend_benchmark_is_matched_to_infer_v1():
+    job = (ROOT / "jobs" / "job_benchmark_infer_v1_candidates.sh").read_text()
+
+    for setting in (
+        "PROPOSAL_FLOW_SAMPLES=128",
+        "PROPOSAL_STATISTIC=mean PROPOSAL_DISPERSION_STATISTIC=std",
+        "PROPOSAL_CANDIDATES=16384 PROPOSAL_PREFILTER_CANDIDATES=131072",
+        "PROPOSAL_EPSILON=0.1 PROPOSAL_SEED=8701",
+        'ADAPTIVE_DRAW_LADDER="512 1024 2048 4096 8192 16384"',
+        "RETAIN_FULL_LADDER=1 COMPILE_FLOW=1",
+        'CANDIDATE_BACKEND="$backend" OBJECT_CHUNK=128 ATOM_CHUNK=4096',
+    ):
+        assert setting in job
+    assert "gpu:v100:1" in job
+    assert "OBSERVATION_START=0" in job

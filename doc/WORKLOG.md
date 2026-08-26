@@ -2,6 +2,37 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-26 cont.255 — Infer V1 GPU candidate reranking benchmark launched
+
+The first measured Infer V1 efficiency change targets its actual dominant
+phase.  In the frozen 20,000-object V100 reference, candidate query and
+Gaussian-uncertainty reranking consumed 856.6 of 1,699.4 seconds (50.4%), while
+all eight non-centre full-information stencil views and their reductions took
+609.2 seconds.  The existing optional Torch backend moved only the broad
+location query to the accelerator, then copied all 131,072 prefilter rows per
+object back to the host for NumPy reranking.
+
+`DefensiveLocalProposal` now keeps that reranking on the selected Torch device.
+It caches the active atom means, dispersions, log detected-prior masses, and
+global atom IDs once per device; evaluates the established float64 diagonal
+Gaussian score there; and transfers only the final 16,384 atom IDs and
+diagnostic distances.  The SciPy path and the frozen Infer V1 default remain
+unchanged pending an end-to-end numerical and timing gate.  New
+`jobs/job_benchmark_infer_v1_candidates.sh` fixes the prior, QMC-128 cache,
+first 20,000 frozen observations, centre, proposal seed, K/M ladder, stencil,
+chunks, compilation, and V100 hardware while varying only the candidate
+backend.
+
+The login node resource audit found 32 physical cores, 329.6 GiB available RAM,
+8.60 TiB free disk, and no GPU, so only light validation ran locally.  Ruff,
+Bash syntax, whitespace validation, 59 focused sampling/inference tests, and
+the complete suite pass; the latter reports 297 passed and 2 optional skips in
+61.03 seconds.  V100 jobs **16032131** (20,000 rows, one-hour limit) and
+**16032180** (1,024-row backfill validation, twenty-minute limit) are submitted
+and initially pending for priority.  No performance or numerical-equivalence
+claim is made until their outputs are compared with the retained SciPy
+reference moments.
+
 ## 2026-08-26 cont.254 — Active tests reviewed, simplified, and made one-third faster
 
 The 35 active test modules and their support fixtures were reviewed after the
