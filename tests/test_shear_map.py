@@ -14,6 +14,7 @@ from sbsi.shear_map import (
     inverse_shear_to_ellipticity,
     magnification,
     shear_jacobian_at_zero,
+    shear_separation,
 )
 
 
@@ -68,6 +69,12 @@ def test_orientation_average_responsivity_is_unity():
 def test_magnification_positive_weak():
     assert np.isclose(magnification(0.0, 0.0), 1.0)
     assert magnification(0.05, 0.0) > 1.0
+
+
+def test_source_to_image_separation_matches_positive_ellipticity_convention():
+    x, y = shear_separation((1.0, 1.0), 0.1, 0.0)
+    assert np.isclose(x, 1.0 / 0.9)
+    assert np.isclose(y, 1.0 / 1.1)
 
 
 if __name__ == "__main__":

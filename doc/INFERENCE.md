@@ -21,6 +21,31 @@ This section is the shipped-code boundary that `MILESTONE.md` and
 `sbsi/posterior_shape.py` point at. Everything from §1 onward is the derivation; it
 describes the target, not the current implementation.
 
+### Infer V1
+
+**Infer V1** names the frozen numerical catalogue-inference setup in
+`configs/infer_v1.json`: the default 200-case FS2 prior, QMC-128 mean/std
+proposal coordinates, Gaussian uncertainty ranking, `K=M=16,384`, a 131,072
+location prefilter, defensive mixture `epsilon=0.1`, the raw mean observed shape
+as the initial centre, and one full two-component numerical update with
+`h=0.001`. The execution baseline uses compiled FP32 flow evaluation with
+128-object and 4,096-atom chunks.
+
+Inference and model versions are independent. **V3.2** names the current model
+artifacts; **Infer V1** names how an explicit model and prior are sampled and
+solved. No inference behavior branches on a model release name.
+
+The completed 20k diagnostic supports Infer V1 as the fast survey-scale
+baseline, not as a strict per-20k `1e-4` numerical-closure claim. Larger K/M
+ladders remain validation diagnostics rather than Infer V1 defaults.
+
+**Project shear convention.**  The operational catalogue closure follows the
+image simulation: shear changes only intrinsic ellipticity.  Flux, size,
+positions, pair separations, and neighbour membership are invariant; no
+magnification or positional shear is included.  Broader scene-lensing terms
+derived later in this document are outside the present project scope unless
+explicitly reinstated.
+
 SBSI can load an explicit measurement-flow checkpoint and evaluate its
 four-dimensional detected-object likelihood over a latent ellipticity grid.
 `BayesianInference.load(checkpoint)` and its catalogue arguments are
@@ -945,11 +970,18 @@ mostly from the size channel).
 
 (5.3) divides by $\sum_i\mathcal I_i-N\mathcal I_{\rm sel}$, and $\mathcal I_i$ contains
 $\mathrm{Var}_{w_i}(u)$. A denominator built out of a variance is only as good as that variance's
-existence, and existence is not automatic. The §5C form of this same estimator was measured to fail
-exactly here: its integrand $\partial_\gamma\log p_{\rm flow}$ carries a Hill tail index near $1.3$
-— below $2$, so no finite second moment — and its denominator *grows* with bank size (fitted
-exponent $+0.20$ against $-1$ for honest Monte Carlo) while a tame integrand on the identical weights
-averages down. The weights were not at fault; the integrand was. WORKLOG cont.170 has the numbers.
+existence, and existence is not automatic. An archived §5C implementation/model was measured to fail
+exactly here: its integrand $\partial_\gamma\log p_{\rm flow}$ carried a Hill tail index near $1.3$
+— below $2$, so no finite second moment — and its denominator grew with bank size (fitted exponent
+$+0.20$ against $-1$ for honest Monte Carlo). WORKLOG cont.170 has those historical numbers. They do
+not describe the current response-regularized mean-affine flow: matched exact nulls now satisfy the
+information identity, with Hill indices near 3.5 (WORKLOG cont.202). The full-prior importance run is
+numerically stable but has a still-marginal g2 Hill estimate of 1.91, so tail existence remains a
+gate to measure rather than a structural verdict about §5C.  The subsequent
+paired nonzero response does fail that gate: after the importance ladder is
+stable, its influence Hill indices are 1.76 and 1.74 (WORKLOG cont.203).
+Those are full marginal-estimator tails rather than the old per-node integrand
+probe, but they likewise prohibit an ordinary square-root error extrapolation.
 
 The corresponding question for (5.3) has a clean answer, and this is the structural reason to prefer
 it: §5B's integrand is analytic, so its tail is a property of a prior **you write down** — checkable
@@ -1013,6 +1045,34 @@ rungs are column prefixes of one another, cannot see bank-realisation scatter at
 equal blocks can.
 
 ### 5C. Lagrangian form — shear the samples, not the prior
+
+**Current implementation status (2026-08-22).**  For the response-regularized
+mean-affine flow used by the catalogue closure, matched exhaustive mocks pass
+score centring and $E[I]=\mathrm{Var}(s)$, and exact Torch autograd agrees with
+the `h=0.00125` numerical derivative.  The older tail-failure measurements in
+this section are retained as provenance for a different implementation/model;
+they are not evidence that the Lagrangian method itself is structurally
+invalid.  The 10,000-object full-prior run closes the null and importance
+ladder, with a marginal g2 tail diagnostic still outstanding (WORKLOG
+cont.202).  The paired `+-0.00125` nonzero implementation is sampler-stable
+and statistically consistent with zero bias at about 0.5% precision, but its
+response-influence Hill indices are 1.76 and 1.74.  The declared tail gate
+therefore stops the powered escalation before a 0.2% claim.  Its off-diagonal
+responses are also 10--14% at more than four sigma: the operational five-view
+stencil omitted mixed information under a rotational-symmetry assumption that
+the learned likelihood does not satisfy (WORKLOG cont.203).
+
+The zero-centred expansion must not be used as a finite-shear Newton estimate.
+On 10,000 saved mocks, full directional profiles recover injected 0.02 and
+0.05 in both components within 0.31 profile-curvature errors, but the one-step
+estimate overshoots at 0.02 and its information at zero becomes negative for
+data generated at 0.05.  This does not contradict the flow's validated linear
+mean response.  Equation (5.4) is a catalogue mixture, not a common Gaussian
+location family; shear changes posterior atom responsibilities and hence the
+log-likelihood curvature.  The likelihood is locally quadratic around its
+finite-shear maximum, not globally quadratic between zero and that maximum.
+Use a profile or an iteratively recentered score/Hessian for finite shear
+(WORKLOG cont.204).
 
 §5B needs $\nabla\log p_0$ over the whole scene, which is its most demanding requirement (§5B.3, item
 1). That requirement is an artefact of the parametrization, not of the problem, and this section
@@ -1357,11 +1417,14 @@ and free by comparison. Node-bank size is set by the effective sample size cavea
   neighbours across the edge and leaves a surface term in the separation channel (§5B.1). Assuming it
   away is an assumption about the catalogue's build radius.
 - **The information must exist.** (5.3) divides by a variance, and heavy-tailed integrands can leave
-  it without a finite population value — the measured failure mode of §5C. For §5B's **shape**
+  it without a finite population value — the measured failure mode of the archived §5C probe. The
+  current response-regularized flow instead passes matched exact information-identity tests; its
+  full-prior null g2 Hill estimate is marginal, while the paired nonzero-response influence is below
+  two for both components (cont.202--203). For §5B's **shape**
   channel this is now settled rather than assumed: the shear velocity is tangent to the ellipticity
   disc, so the generator (5.3d) depends on the prior only through $(1-t)\psi'(t)$ and stays bounded
   for the whole power-law family. Verified analytically and measured on the fitted prior — Hill index
-  $9.4$ against §5C's $1.3$, $\mathrm{Var}_0(u)$ flat under both refinement and reach (§5B.4). The
+  $9.4$ against the archived probe's $1.3$, $\mathrm{Var}_0(u)$ flat under both refinement and reach (§5B.4). The
   **size, flux and separation channels are not covered** by that argument and still need their own
   edge analysis.
 
@@ -1369,13 +1432,13 @@ and free by comparison. Node-bank size is set by the effective sample size cavea
 
 ## 7. Pointers
 
-- Framework spec: `SBI_shear.md`. Certified numbers and model status: `Gold-V1.md`, `Gold-V2.md`,
-  `Gold-V3.md`, `WORKLOG.md`.
+- Framework spec: `archive/pre-v3/docs/SBI_shear.md` (provenance). Frozen numbers: `MILESTONE.md`.
+  Stage records: `Gold-V1.md`, `Gold-V2.md`, `Gold-V3.md`, `WORKLOG.md`.
 - Code: `sbsi/posterior_shape.py` (posterior grid, shape prior with exact Möbius pullback),
   `sbsi/shear_map.py` (analytic $S_\gamma$), `sbsi/measurement_model.py`
-  (`ConditionalMeanFlow`, `flow_drop_indices`), `sbsi/forward_model.py` +
-  `sbsi/scene_model.py` (geometry-conditioned scene likelihood),
-  `sbsi/selection_model.py` (detection classifier).
+  (`ConditionalMeanFlow`, `flow_drop_indices`), `sbsi/selection_model.py`
+  (detection classifier). The pre-V3 geometry-conditioned scene likelihood lives in
+  `archive/pre-v3/sbs_shear/{forward_model,scene_model}.py` (provenance).
 
 ---
 

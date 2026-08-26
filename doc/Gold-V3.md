@@ -1,7 +1,9 @@
 # Gold-V3 — Folding R_blend into the flow (IDEA)
 
 **Status:** IDEA, 2026-07-28. Nothing built. Builds on `Gold-V2.md` (R_blend deliberately external)
-and `INFERENCE.md` (§3, §5B, §5C.3).
+and `INFERENCE.md` (§3, §5B, §5C.3). **Not the V3 release of `MILESTONE.md`** — that V3 keeps
+R_blend external (V2.2 flow + emulator); this document is the fold-R_blend-into-the-flow idea.
+Implementation paths below predate the library restructure and now live under `archive/pre-v3/`.
 
 ## The idea
 

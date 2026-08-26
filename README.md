@@ -9,6 +9,11 @@ SBSI provides one model-name-agnostic workflow with three API areas:
 2. `sbsi.response` — combine flow self-response and emulator blending response.
 3. `sbsi.inference` — simulation-based shear inference (under development).
 
+The current numerical catalogue setup is **Infer V1**, defined in
+[`configs/infer_v1.json`](configs/infer_v1.json). Inference versions identify
+the numerical algorithm and sampling choices; model versions are separate.
+The current model preset is V3.2, but Infer V1 does not branch on that name.
+
 The [inference tutorial notebook](examples/sbsi_api_tutorial.ipynb) is the main
 user-facing prediction walkthrough. Training and tuning use the CLI described
 below.
@@ -98,8 +103,12 @@ PyTorch alone.
 ### Models
 
 The frozen V3 artifacts—the 16-seed flow ensemble and blending emulator—ship in
-[`models/`](models/). `get_model("V3")` resolves them from the imported checkout by
-default, independent of the working directory. For artifacts stored elsewhere, set:
+[`models/`](models/). `get_model("V3.1")` names the external four-seed original-E
+ensemble paired with that same emulator. `get_model("V3.2")` keeps those V3.1
+components and additionally pins the SBSI transition-aware detection classifier.
+Model presets resolve from the imported
+checkout by default, independent of the working directory. For artifacts stored
+elsewhere, set:
 
 ```bash
 export SBSI_CACHE_DIR=/path/to/models

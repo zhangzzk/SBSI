@@ -3,7 +3,9 @@
 **Status:** PLAN, locked + iterated with owner 2026-07-23. Parallels `Gold-V1.md` (the certified V1
 shape result). **Supersedes** the additive framing `m = R_sim/(R_flow+R_blend+R_sel+R_detect)−1` and
 the deleted Gold-v2 selection-*estimator* (cont.119). There are **no empirically-learned R_sel /
-R_detect terms.**
+R_detect terms.** Stage 1 was resolved on 2026-07-24 (cont.146: the tabular S2 reframe, DeepSets
+dropped); the V3 milestone flows (`MILESTONE.md`) descend from it. Implementation paths below
+predate the library restructure and now live under `archive/pre-v3/`.
 
 ---
 
@@ -25,14 +27,13 @@ detection, each gated by its **triad test**.
   the ±δ response contexts shear the *intrinsic ellipticity*, not a g input.)
 - Flow: `P(measured | truth, blending)`. Conditions on the **true** primary properties (ellipticity,
   size / second moments, flux, sersic, …) + the neighbour / blending set. The **measured** quantities
-  are OUTPUTS — the reframe that removes the errors-in-variables floor (`project_framing`). Measured
+  are OUTPUTS — the reframe that removes the errors-in-variables floor. Measured
   vector = **(e1, e2, flux, size)** — shape plus the two extra directions (flux, size).
 - Detection: `P(detected | truth, blending)` — **also not conditioned on g, same as the flow.** Its
   shear response comes only from perturbing the truth (§2). Two ways to model it — (1) a detection head
   inside the flow, or (2) a **separate classifier**. **We do (2) first.**
 - **FIREWALL:** the model trains on the half-shear / `det_meas` legs only. **constgold is EVAL-ONLY**
-  — the held-out acceptance metric, never trained on (`reference_constgold_catalogue`,
-  `project_rblend_firewall`).
+  — the held-out acceptance metric, never trained on (`CONVENTIONS.md` §2a).
 
 ---
 
@@ -106,8 +107,8 @@ branch `ablation-v1-to-v2`, 3-seed):
 Decomposition of the ~10-pt V1→V2 gap: DeepSets **architecture ≈ 7.4 pt** (dominant; S3a +4.70% → V2-count
 −2.69% at identical grid & weighting) + **equal-weighting ≈ 2.5 pt** (secondary) + conditioning / output-dim /
 grid / blinding / detection / loss ≈ **0** (all excluded). **The truth-conditioning + measured-as-outputs
-reframe (§1) is NOT what costs the shape response** — that was the concern (`project_framing`'s
-errors-in-variables motivation); the ablation RETRACTS the "EiV floor" attribution (`memory/project_eiv_floor`).
+reframe (§1) is NOT what costs the shape response** — that was the concern (the errors-in-variables
+motivation for the reframe); the ablation RETRACTS the "EiV floor" attribution.
 The deficit is V2's `SetConditionedForwardModel` shared **trunk** smearing the mean-head response (the neighbour
 set is EMPTY for isolated galaxies, so it's the primary-feature trunk path, not neighbour handling). V1 avoids
 this precisely via §1a's design (blind the intrinsic shape from the density flow; explicit mean head carries the
@@ -217,7 +218,7 @@ each stage — the calibration itself is Direction A (§2).
 - Detection classifier (Direction 2, preferred): `sbsi/detection_classifier.py` +
   `scripts/train_detection_classifier.py` — **exists but was g-conditioned; the V2 version drops g.**
 - Triad harness: `scripts/eval_joint_triad.py`; half-shear gate output `sbsi_caches/derisk/triad_halfshear_fixed.npz`.
-- Benchmark: `Gold-V1.md`. Firewall/data: `reference_constgold_catalogue`, `project_rblend_firewall`.
+- Benchmark: `Gold-V1.md`. Firewall/data: `CONVENTIONS.md` §2a.
 - **Real next code:** (a, Direction A) response estimator that perturbs the **full truth** (ellipticity
   + size/moments + flux) through the V2 model, applies the measured cut, forms `m = R_sim/R_model − 1`;
   (b) a **not-g-conditioned detection classifier** (Stage 3, Direction 2). Direction B (invert → cut →

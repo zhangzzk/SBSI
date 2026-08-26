@@ -28,7 +28,7 @@ Three traps this module is built to keep the caller out of, each with a live tes
 
   `P_det` carries gamma too.  In the Eulerian form `P_det(x, n)` is a fixed function of
       truth and only weights.  Here gamma moves the sample THROUGH it, so it must be
-      inside `phi`.  `MATH.md` §7(a) measures the omitted channel at 17-760% of the
+      inside `phi`.  `MATH.md` §8(a) measures the omitted channel at 17-760% of the
       score, reversing its sign at one of four test points.
 
   `P_pass` does NOT carry gamma in `phi`.  By (5.2) the cut evaluates to
@@ -208,7 +208,7 @@ def drift_5_9b(s, info, s_sel=0.0, i_sel=0.0, gamma=0.0):
 
     `mu_3` is the third central moment of the kept-sample score.  The covariance term is
     not optional -- it vanishes only when `I_i` is identical for every object, a Gaussian
-    accident; `MATH.md` §7(c) measures dropping it as a 60% overprediction.
+    accident; `MATH.md` §8(c) measures dropping it as a 60% overprediction.
     """
     sk = np.asarray(s, dtype=np.float64) - float(s_sel)
     ik = np.asarray(info, dtype=np.float64) - float(i_sel)

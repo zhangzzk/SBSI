@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pytest
 import torch
 
 from sbsi.measurement_model import (
@@ -7,11 +8,38 @@ from sbsi.measurement_model import (
     ConditionalMeanFlow,
     ConditionalMeanFlowRA,
     MEASUREMENT_CONDITION_FEATURE_SETS,
+    MeasurementModelBundle,
     TargetStandardizer,
     add_measurement_target_features,
     build_flow,
     raw_columns_for_measurement_targets,
 )
+
+
+def test_bundle_compiles_the_named_log_prob_method(monkeypatch):
+    model = ConditionalAffineFlow(
+        target_dim=2, context_dim=2, hidden_dim=4, n_layers=1, n_flows=1
+    )
+    bundle = MeasurementModelBundle(model, None, None)
+    calls = []
+
+    def fake_compile(function, **kwargs):
+        calls.append(kwargs)
+
+        def wrapped(*args, **inner_kwargs):
+            return function(*args, **inner_kwargs)
+
+        return wrapped
+
+    monkeypatch.setattr(torch, "compile", fake_compile)
+    bundle.compile_log_prob(mode=None, dynamic=True)
+    value = bundle.model.log_prob(torch.zeros(3, 2), torch.zeros(3, 2))
+    assert value.shape == (3,)
+    assert calls == [{"mode": None, "dynamic": True}]
+    assert bundle.compile_log_prob(mode=None, dynamic=True) is bundle
+    assert len(calls) == 1
+    with pytest.raises(RuntimeError, match="different configuration"):
+        bundle.compile_log_prob(mode="reduce-overhead", dynamic=True)
 
 
 def test_rblend_ablation_appends_one_condition_feature():
@@ -177,8 +205,8 @@ def test_ra_head_gives_per_draw_response_variation():
 
     d_plain = crn(plain)
     d_ra = crn(ra)
-    assert float(d_plain.std(dim=1).max()) < 1.0e-6      # realisation-blind: no per-draw spread
-    assert float(d_ra.std(dim=1).min()) > 1.0e-6         # realisation-aware: it varies
+    assert float(d_plain.std(dim=1).max().detach()) < 1.0e-6  # realisation-blind
+    assert float(d_ra.std(dim=1).min().detach()) > 1.0e-6  # realisation-aware
 
 
 def test_flow_context_is_blind_to_the_shifted_shape_columns():
@@ -226,4 +254,4 @@ def test_build_flow_dispatches_the_realisation_aware_type():
                ra_indices=[2, 3], ra_targets=[0, 1])
     model = build_flow(cfg)
     assert isinstance(model, ConditionalMeanFlowRA)
-    assert float(model.ra_net[-1].weight.abs().sum()) == 0.0
+    assert float(model.ra_net[-1].weight.abs().sum().detach()) == 0.0

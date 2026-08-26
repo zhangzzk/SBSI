@@ -48,6 +48,7 @@ from .preprocessing import (
     source_select_selection,
 )
 from .selection_model import TabularPreprocessor
+from .shear_map import apply_shear_to_ellipticity
 from .training import (
     GPUBatches,
     _add_legacy_missing_shear,
@@ -124,134 +125,199 @@ def selection_cuts_from_args(args):
     return cuts
 
 
+def _fold_catalogue_shear_into_shape(batch):
+    """Fold each stored applied shear into the corresponding intrinsic shape.
+
+    Half-shear catalogues retain the unsheared ``e*_input_rot0_*`` values and
+    store the random applied direction in ``gamma*_input_*``.  Mixed-shear NLL
+    training must condition on ``S_gamma(e)``, not on the unsheared value and
+    not on gamma as an extra label.  Zeroing gamma after the fold also prevents
+    downstream feature engineering from applying or exposing it a second time.
+    """
+
+    folded = []
+    for suffix in ("p", "s"):
+        names = (
+            f"e1_input_rot0_{suffix}",
+            f"e2_input_rot0_{suffix}",
+            f"gamma1_input_{suffix}",
+            f"gamma2_input_{suffix}",
+        )
+        if not set(names).issubset(batch.columns):
+            continue
+        e1, e2, g1, g2 = (batch[name].to_numpy(float) for name in names)
+        finite = np.isfinite(e1) & np.isfinite(e2) & np.isfinite(g1) & np.isfinite(g2)
+        s1, s2 = e1.copy(), e2.copy()
+        if finite.any():
+            s1[finite], s2[finite] = apply_shear_to_ellipticity(
+                e1[finite], e2[finite], g1[finite], g2[finite]
+            )
+        batch[names[0]] = s1
+        batch[names[1]] = s2
+        batch.loc[finite, names[2]] = 0.0
+        batch.loc[finite, names[3]] = 0.0
+        folded.append(suffix)
+    if "p" not in folded:
+        raise KeyError(
+            "--fold-catalogue-shear requires primary rot0 shape and gamma columns"
+        )
+    return batch
+
+
 def load_measurement_data(args, condition_features, target_features):
     rng = np.random.default_rng(args.seed)
     t0 = time.time()
+    catalogues = [args.catalogue, *(args.additional_catalogue or [])]
+    if len(set(map(os.path.abspath, catalogues))) != len(catalogues):
+        raise ValueError("measurement catalogue paths must be distinct")
+    if args.max_rows and args.max_rows < len(catalogues):
+        raise ValueError("--max-rows must be at least the number of catalogues")
+    if args.max_rows:
+        per_catalogue, remainder = divmod(args.max_rows, len(catalogues))
+        row_caps = [per_catalogue + (index < remainder) for index in range(len(catalogues))]
+    else:
+        row_caps = [0] * len(catalogues)
 
-    print(f"Loading measurement sample: {args.catalogue}")
+    print(f"Loading measurement sample from {len(catalogues)} catalogue(s)")
+    for index, (path, cap) in enumerate(zip(catalogues, row_caps)):
+        rendered = f"{cap:,}" if cap else "all"
+        print(f"  [{index}] {path} (selected-row cap={rendered})")
     print(f"  Selection target column: {args.target_column}")
-    print(f"  Requested max selected rows: {args.max_rows:,}" if args.max_rows else "  Requested max selected rows: all")
-
-    reservoir = None
-    raw_rows = 0
-    source_cut_rows = 0
-    selected_rows = 0
-    finite_rows = 0
-    batches_seen = 0
-
-    with ipc.open_file(args.catalogue) as reader:
-        available = set(reader.schema.names)
-        condition_raw = raw_columns_for_selection_features(condition_features, available_columns=available)
-        target_raw = raw_columns_for_measurement_targets(target_features)
-        extra_columns = {args.target_column}
-        for c in ("input_index", "case"):   # per-(case,target) all-pairs weighting
-            if c in available:
-                extra_columns.add(c)
-        if args.shear_case is not None and "shear_case" in available:
-            extra_columns.add("shear_case")
-        if getattr(args, "response_weight", 0.0) > 0:
-            # raw shape + shear columns the response loss needs to apply S_delta in main(),
-            # and true flux/size for the property-resolved response bins.
-            for c in ("e1_input_rot0_p", "e2_input_rot0_p", "gamma1_input_p", "gamma2_input_p",
-                      "r_input_p", "Re_input_p", "neighbored", "distance",
-                      "r_blend", "nbr_flux_near", "nbr_flux_far"):   # crowding cols for the response-bin axis
-                if c in available:
-                    extra_columns.add(c)
-        if getattr(args, "response_target_perobj", None):
-            # The per-object target is evaluated on TRUE properties in main(). `sersic_n_input_p` is
-            # not otherwise needed, and `axis_ratio_input_p` is the raw column `e_abs` is derived
-            # from, so both must survive the read AND the keep_columns filter or the target cannot
-            # be built. Anything genuinely absent is caught by the explicit REFUSE in main().
-            for c in ("sersic_n_input_p", "axis_ratio_input_p"):
-                if c in available:
-                    extra_columns.add(c)
-        requested_columns = sorted(condition_raw | target_raw | extra_columns)
-        missing_non_shear = [
-            name for name in requested_columns
-            if name not in available and name not in SHEAR_FEATURES
-        ]
-        if missing_non_shear:
-            raise KeyError(f"Missing required catalogue columns: {missing_non_shear}")
-        read_columns = [name for name in requested_columns if name in available]
-
-        print(f"  File record batches: {reader.num_record_batches:,}")
-        print(f"  Reading columns: {len(read_columns):,}")
-        print(f"  Condition features: {len(condition_features):,}")
-        print(f"  Target features: {len(target_features):,}")
-
-        for batch_index in range(reader.num_record_batches):
-            if args.max_read_batches is not None and batch_index >= args.max_read_batches:
-                break
-            table = pa.Table.from_batches([reader.get_batch(batch_index)]).select(read_columns)
-            batch = table.to_pandas()
-            raw_rows += len(batch)
-            if args.shear_case is not None and "shear_case" in batch.columns:
-                batch = batch[np.isclose(batch["shear_case"].astype(float), args.shear_case)]
-                if len(batch) == 0:
-                    continue
-
-            if args.max_cases is not None and "case" in batch.columns:
-                batch = batch[batch["case"].astype(int) < args.max_cases]
-                if len(batch) == 0:
-                    continue
-
-            batch = source_select_selection(batch, cuts=selection_cuts_from_args(args))
-            source_cut_rows += len(batch)
-            if len(batch) == 0:
-                continue
-
-            selected = batch[args.target_column].astype(bool).to_numpy()
-            batch = batch.loc[selected].reset_index(drop=True)
-            selected_rows += len(batch)
-            if len(batch) == 0:
-                continue
-
-            batch = rescale(
-                batch,
-                pixel_rms=args.pixel_rms,
-                pixel_size=args.pixel_size,
-                zero_mag=args.zero_mag,
-                psf_fwhm=args.psf_fwhm,
-                moffat_beta=args.moffat_beta,
+    parts = []
+    case_sets = []
+    for catalogue_index, (catalogue, row_cap) in enumerate(zip(catalogues, row_caps)):
+        reservoir = None
+        raw_rows = source_cut_rows = selected_rows = finite_rows = batches_seen = 0
+        with ipc.open_file(catalogue) as reader:
+            available = set(reader.schema.names)
+            condition_raw = raw_columns_for_selection_features(
+                condition_features, available_columns=available
             )
-            batch = _add_legacy_missing_shear(batch, condition_features)
-            batch = add_measurement_target_features(batch)
-            finite = _finite_target_mask(batch, target_features)
-            batch = batch.loc[finite].reset_index(drop=True)
-            finite_rows += len(batch)
-            if len(batch) == 0:
-                continue
+            target_raw = raw_columns_for_measurement_targets(target_features)
+            extra_columns = {args.target_column}
+            for c in ("input_index", "case", "shear_case"):
+                if c in available:
+                    extra_columns.add(c)
+            need_response_columns = (
+                getattr(args, "response_weight", 0.0) > 0
+                or getattr(args, "coupling_weight", 0.0) > 0
+            )
+            if need_response_columns or args.fold_catalogue_shear:
+                for suffix in ("p", "s"):
+                    for stem in ("e1_input_rot0", "e2_input_rot0", "gamma1_input", "gamma2_input"):
+                        name = f"{stem}_{suffix}"
+                        if name in available:
+                            extra_columns.add(name)
+            if need_response_columns:
+                for c in ("r_input_p", "Re_input_p", "neighbored", "distance",
+                          "r_blend", "nbr_flux_near", "nbr_flux_far"):
+                    if c in available:
+                        extra_columns.add(c)
+            if getattr(args, "response_target_perobj", None):
+                for c in ("sersic_n_input_p", "axis_ratio_input_p"):
+                    if c in available:
+                        extra_columns.add(c)
+            requested_columns = sorted(condition_raw | target_raw | extra_columns)
+            missing_non_shear = [
+                name for name in requested_columns
+                if name not in available and name not in SHEAR_FEATURES
+            ]
+            if missing_non_shear:
+                raise KeyError(f"Missing required columns in {catalogue}: {missing_non_shear}")
+            read_columns = [name for name in requested_columns if name in available]
+            print(
+                f"  [{catalogue_index}] batches={reader.num_record_batches:,}, "
+                f"read_columns={len(read_columns):,}"
+            )
 
-            if args.noise_photoz or args.noise_sersic_frac:
-                # emulate survey measurement error on the TRUE structure conditioners so the flow
-                # learns the noisy channel it will be fed at deployment (realistic-structure study).
-                batch = apply_structure_measurement_noise(
-                    batch, photoz_sigma=args.noise_photoz, sersic_frac=args.noise_sersic_frac, rng=rng)
-
-            keep_columns = list(dict.fromkeys([*condition_features, *target_features, args.target_column]))
-            for c in ("input_index", "case"):   # survive to the dataset for all-pairs weighting
-                if c in batch.columns and c not in keep_columns:
-                    keep_columns.append(c)
-            if getattr(args, "response_weight", 0.0) > 0:
-                # keep the raw columns so main() can re-apply the analytic shear map S_delta
-                # to the intrinsic shape and recompute the conditioning for the response loss.
-                keep_columns += [c for c in read_columns if c not in keep_columns]
-            reservoir = _append_to_priority_sample(reservoir, batch[keep_columns], args.max_rows, rng)
-            batches_seen += 1
-            if args.progress_every and batches_seen % args.progress_every == 0:
-                kept = _priority_sample_rows(reservoir)
-                print(
-                    f"  batches={batches_seen:,}, raw={raw_rows:,}, "
-                    f"source_cut={source_cut_rows:,}, selected={selected_rows:,}, "
-                    f"finite={finite_rows:,}, reservoir={kept:,}"
+            for batch_index in range(reader.num_record_batches):
+                if args.max_read_batches is not None and batch_index >= args.max_read_batches:
+                    break
+                table = pa.Table.from_batches([reader.get_batch(batch_index)]).select(read_columns)
+                batch = table.to_pandas()
+                raw_rows += len(batch)
+                if args.shear_case is not None and "shear_case" in batch.columns:
+                    batch = batch[np.isclose(batch["shear_case"].astype(float), args.shear_case)]
+                    if len(batch) == 0:
+                        continue
+                if args.max_cases is not None and "case" in batch.columns:
+                    batch = batch[batch["case"].astype(int) < args.max_cases]
+                    if len(batch) == 0:
+                        continue
+                batch = source_select_selection(batch, cuts=selection_cuts_from_args(args))
+                source_cut_rows += len(batch)
+                if len(batch) == 0:
+                    continue
+                selected = batch[args.target_column].astype(bool).to_numpy()
+                batch = batch.loc[selected].reset_index(drop=True)
+                selected_rows += len(batch)
+                if len(batch) == 0:
+                    continue
+                if args.fold_catalogue_shear:
+                    batch = _fold_catalogue_shear_into_shape(batch)
+                batch = rescale(
+                    batch,
+                    pixel_rms=args.pixel_rms,
+                    pixel_size=args.pixel_size,
+                    zero_mag=args.zero_mag,
+                    psf_fwhm=args.psf_fwhm,
+                    moffat_beta=args.moffat_beta,
                 )
+                batch = _add_legacy_missing_shear(batch, condition_features)
+                batch = add_measurement_target_features(batch)
+                finite = _finite_target_mask(batch, target_features)
+                batch = batch.loc[finite].reset_index(drop=True)
+                finite_rows += len(batch)
+                if len(batch) == 0:
+                    continue
+                if args.noise_photoz or args.noise_sersic_frac:
+                    batch = apply_structure_measurement_noise(
+                        batch,
+                        photoz_sigma=args.noise_photoz,
+                        sersic_frac=args.noise_sersic_frac,
+                        rng=rng,
+                    )
+                batch["__catalogue_index"] = catalogue_index
+                keep_columns = list(dict.fromkeys(
+                    [*condition_features, *target_features, args.target_column,
+                     "__catalogue_index"]
+                ))
+                for c in ("input_index", "case", "shear_case"):
+                    if c in batch.columns and c not in keep_columns:
+                        keep_columns.append(c)
+                if need_response_columns:
+                    keep_columns += [c for c in read_columns if c not in keep_columns]
+                reservoir = _append_to_priority_sample(
+                    reservoir, batch[keep_columns], row_cap, rng
+                )
+                batches_seen += 1
+                if args.progress_every and batches_seen % args.progress_every == 0:
+                    print(
+                        f"  [{catalogue_index}] batches={batches_seen:,}, raw={raw_rows:,}, "
+                        f"source_cut={source_cut_rows:,}, selected={selected_rows:,}, "
+                        f"finite={finite_rows:,}, reservoir={_priority_sample_rows(reservoir):,}"
+                    )
+        part = _finalize_priority_sample(reservoir, row_cap)
+        cases = set(part["case"].astype(int).unique()) if "case" in part else set()
+        case_sets.append(cases)
+        parts.append(part)
+        print(
+            f"  [{catalogue_index}] raw={raw_rows:,}, source_cut={source_cut_rows:,}, "
+            f"selected={selected_rows:,}, finite={finite_rows:,}, used={len(part):,}, "
+            f"cases={len(cases):,}"
+        )
 
-    dataset = _finalize_priority_sample(reservoir, args.max_rows)
-    print(f"  Raw rows scanned: {raw_rows:,}")
-    print(f"  Rows after source cuts: {source_cut_rows:,}")
-    print(f"  Selected rows before measured-target cuts: {selected_rows:,}")
-    print(f"  Selected rows with finite targets: {finite_rows:,}")
-    print(f"  Rows used: {len(dataset):,}")
+    if args.expected_case_count is not None:
+        for index, cases in enumerate(case_sets):
+            if len(cases) != args.expected_case_count:
+                raise ValueError(
+                    f"catalogue {index} supplied {len(cases)} sampled cases; "
+                    f"expected {args.expected_case_count}"
+                )
+        if any(cases != case_sets[0] for cases in case_sets[1:]):
+            raise ValueError("mixed-shear catalogues do not contain the same sampled case IDs")
+    dataset = pd.concat(parts, ignore_index=True)
+    print(f"  Rows used total: {len(dataset):,}")
     print(f"  Load/sample time: {time.time() - t0:.1f}s")
     return dataset
 
@@ -261,7 +327,8 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
                    response_error="absolute", rel_floor=0.05,
                    optimizer=None, max_grad_norm=None,
                    sc23=None, lam_theta=0.0, bin_state=None,
-                   pop_w=None, global_anchor=0.0, ra=None, perobj=False):
+                   pop_w=None, global_anchor=0.0, ra=None, perobj=False,
+                   response_components="trace"):
     """NLL + PROPERTY-RESOLVED response loss. Pulls the model's induced first-moment
     response R_model(bin) -> R_sim(bin) in bins of true flux x size (bin_targets is a
     (n_bins,) tensor; n_bins=1 reduces to the old global response loss). R_model is the
@@ -276,7 +343,19 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
     coupling_on = (lam_theta > 0.0) and (sc23 is not None)
     bt = bin_targets.to(device)
     pop_w = None if pop_w is None else pop_w.to(device)
-    n_bins = bt.numel()
+    if response_components not in {"trace", "matrix"}:
+        raise ValueError(f"unknown response_components={response_components!r}")
+    if response_components == "matrix":
+        if bt.ndim != 2 or bt.shape[1] != 4:
+            raise ValueError("matrix response targets must have shape (n_bins, 4)")
+        if perobj or ra is not None or global_anchor > 0 or bin_state is not None:
+            raise ValueError(
+                "matrix response regularization is incompatible with per-object, RA, "
+                "global-anchor, and response-bin-EMA modes"
+            )
+        n_bins = bt.shape[0]
+    else:
+        n_bins = bt.numel()
     tot_nll = tot_resp = n_tot = rmodel_sum = rmodel_n = tot_theta = tot_anchor = 0.0
     # --- realisation-aware (RA) bookkeeping (all no-ops when ra is None / model is not RA) ---
     ra_model = isinstance(model, ConditionalMeanFlowRA)
@@ -338,15 +417,37 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
         mu0 = model._shift(ctx0, u)
         mu1 = model._shift(ce1, u)
         mu2 = model._shift(ce2, u)
-        # per-galaxy physical-unit response (additive mean cancels in the difference)
+        # Per-galaxy physical-unit response matrix (additive mean cancels in the
+        # difference). Flattened order is [R11, R12, R21, R22], with measured
+        # component as row and applied-shear component as column.
         if response_difference == "central":
             if cm1 is None or cm2 is None:
                 raise ValueError("central response difference requires negative-shift contexts")
             mum1 = model._shift(cm1, u)
             mum2 = model._shift(cm2, u)
-            r_i = 0.25 * ((mu1[:, 0] - mum1[:, 0]) * sc0 + (mu2[:, 1] - mum2[:, 1]) * sc1) / delta
+            inv = 1.0 / (2.0 * delta)
+            r_matrix_i = torch.stack(
+                [
+                    (mu1[:, 0] - mum1[:, 0]) * sc0 * inv,
+                    (mu2[:, 0] - mum2[:, 0]) * sc0 * inv,
+                    (mu1[:, 1] - mum1[:, 1]) * sc1 * inv,
+                    (mu2[:, 1] - mum2[:, 1]) * sc1 * inv,
+                ],
+                dim=1,
+            )
         else:
-            r_i = 0.5 * ((mu1[:, 0] - mu0[:, 0]) * sc0 + (mu2[:, 1] - mu0[:, 1]) * sc1) / delta
+            inv = 1.0 / delta
+            r_matrix_i = torch.stack(
+                [
+                    (mu1[:, 0] - mu0[:, 0]) * sc0 * inv,
+                    (mu2[:, 0] - mu0[:, 0]) * sc0 * inv,
+                    (mu1[:, 1] - mu0[:, 1]) * sc1 * inv,
+                    (mu2[:, 1] - mu0[:, 1]) * sc1 * inv,
+                ],
+                dim=1,
+            )
+        r_trace_i = 0.5 * (r_matrix_i[:, 0] + r_matrix_i[:, 3])
+        r_i = r_matrix_i if response_components == "matrix" else r_trace_i
         if perobj:
             # PER-OBJECT SUPERVISION. `bt` holds one target per catalogue row and `binid` is the
             # row's own index, so this is a gather, NOT a scatter -- O(batch), never O(catalogue).
@@ -366,7 +467,12 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
         else:
           # per-bin WEIGHTED mean response via scatter (weight = all-pairs 1/n_pairs so each
           # (case,target) counts once, not proportional to neighbour count); absent bins no penalty
-          sum_b = torch.zeros(n_bins, device=device).index_add_(0, binid, weight * r_i)
+          if response_components == "matrix":
+              sum_b = torch.zeros((n_bins, 4), device=device).index_add_(
+                  0, binid, weight[:, None] * r_i
+              )
+          else:
+              sum_b = torch.zeros(n_bins, device=device).index_add_(0, binid, weight * r_i)
           cnt_b = torch.zeros(n_bins, device=device).index_add_(0, binid, weight)
           wgt_b = cnt_b
           if bin_state is not None:
@@ -390,7 +496,14 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
                   bin_state["sum"] = (hs + sum_b.detach()) * bin_state["decay"]
                   bin_state["cnt"] = (hc + cnt_b.detach()) * bin_state["decay"]
           else:
-              mean_b = torch.where(cnt_b > 0, sum_b / cnt_b.clamp_min(1e-8), bt)
+              if response_components == "matrix":
+                  mean_b = torch.where(
+                      cnt_b[:, None] > 0,
+                      sum_b / cnt_b[:, None].clamp_min(1e-8),
+                      bt,
+                  )
+              else:
+                  mean_b = torch.where(cnt_b > 0, sum_b / cnt_b.clamp_min(1e-8), bt)
           if response_error == "relative":
               # Penalize the FRACTIONAL response error (R_model/R_sim - 1)^2, i.e. the per-bin
               # multiplicative bias m itself, rather than absolute (R_model - R_sim)^2. Absolute
@@ -400,9 +513,20 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
               # any population reweighting (constant-gold, survey depth). The relative form pulls
               # m -> 0 uniformly per bin. Floor guards small/negative target bins.
               denom = bt.abs().clamp_min(rel_floor)
-              resp = (((mean_b - bt) / denom) ** 2 * wgt_b).sum() / cnt_b.sum().clamp_min(1.0)
+              if response_components == "matrix":
+                  resp = ((((mean_b - bt) / denom) ** 2) * wgt_b[:, None]).sum() \
+                      / (2.0 * cnt_b.sum().clamp_min(1.0))
+              else:
+                  resp = (((mean_b - bt) / denom) ** 2 * wgt_b).sum() / cnt_b.sum().clamp_min(1.0)
           else:
-              resp = ((mean_b - bt) ** 2 * wgt_b).sum() / cnt_b.sum().clamp_min(1.0)
+              if response_components == "matrix":
+                  # Divide the Frobenius loss by two: if both diagonal errors
+                  # equal ``a`` and cross errors vanish, this is ``a**2``, the
+                  # same scale as the historical trace loss.
+                  resp = (((mean_b - bt) ** 2) * wgt_b[:, None]).sum() \
+                      / (2.0 * cnt_b.sum().clamp_min(1.0))
+              else:
+                  resp = ((mean_b - bt) ** 2 * wgt_b).sum() / cnt_b.sum().clamp_min(1.0)
           loss = nll + lam * resp
           # POPULATION-WEIGHTED GLOBAL ANCHOR (gated; default 0 -> byte-identical to the certified path).
           # The per-cell term above penalises SQUARED errors, so nothing in the loss controls the SIGNED
@@ -499,8 +623,8 @@ def epoch_response(model, loader, device, target_scales01, delta, bin_targets, l
         tot_theta += theta_val * bw
         tot_anchor += anchor_val * bw
         tot_ra += ra_val * bw
-        rmodel_sum += float(r_i.sum().detach().cpu())
-        rmodel_n += r_i.numel()
+        rmodel_sum += float(r_trace_i.sum().detach().cpu())
+        rmodel_n += r_trace_i.numel()
         n_tot += bw
     n = max(n_tot, 1e-8)
     diag = {"ra": tot_ra / n}
@@ -540,7 +664,14 @@ def parse_args(argv=None):
     parser.add_argument(
         "--catalogue",
         required=True,
-        help="user-supplied g=0 detection and measurement catalogue",
+        help="primary user-supplied detection and measurement catalogue",
+    )
+    parser.add_argument(
+        "--additional-catalogue",
+        action="append",
+        default=[],
+        help="additional catalogue leg; repeat for balanced multi-leg NLL training. "
+             "--max-rows is divided equally across all supplied catalogues.",
     )
     parser.add_argument("--output", required=True)
     parser.add_argument("--target-column", default="detected")
@@ -574,6 +705,15 @@ def parse_args(argv=None):
     parser.add_argument("--max-rows", type=int, default=2_000_000)
     parser.add_argument("--max-cases", type=int, default=None,
                         help="keep only rows with case < this (fast prototype on a case subset)")
+    parser.add_argument("--expected-case-count", type=int, default=None,
+                        help="require this many sampled case IDs in every catalogue and require the "
+                             "case-ID sets to agree across catalogue legs")
+    parser.add_argument("--validation-group-column", default=None,
+                        help="split train/validation by this column (use 'case' for CRN-matched "
+                             "multi-shear catalogues); default keeps the historical row split")
+    parser.add_argument("--fold-catalogue-shear", action="store_true",
+                        help="replace stored intrinsic rot0 shapes by S_gamma(e) using each row's "
+                             "gamma columns, then zero gamma. Required for mixed half-shear NLL.")
     parser.add_argument("--primary-mag-max", type=float, default=None,
                         help="restrict TRAINING to primaries with true mag (r_input_p) below this "
                              "(deliverable domain: 26.0). Neighbours stay full-population.")
@@ -638,6 +778,9 @@ def parse_args(argv=None):
                              "error in the small-response crowded/faint tail). 'relative' penalizes "
                              "((R_model-R_sim)/R_sim)^2 = the per-bin multiplicative bias m, driving "
                              "m->0 uniformly and making the calibration robust to population reweighting.")
+    parser.add_argument("--response-components", choices=["trace", "matrix"], default="trace",
+                        help="Regularize either historical trace(R)/2 or the full 2x2 response. "
+                             "Matrix mode requires Rsim_matrix[...,2,2] in --response-target-npz.")
     parser.add_argument("--response-rel-floor", type=float, default=0.05,
                         help="Floor on |R_sim| in the relative response-loss denominator; guards "
                              "small/negative target bins from blowing up the fractional error.")
@@ -836,7 +979,16 @@ def main(argv=None):
         print("  the per-CELL grid pin is BYPASSED; --response-target-npz is used only for its "
               "reporting grid if given")
 
-    train_df, val_df = split_data(frame, args.seed, args.validation_size)
+    train_df, val_df = split_data(
+        frame,
+        args.seed,
+        args.validation_size,
+        group_column=args.validation_group_column,
+    )
+    if "__catalogue_index" in frame.columns:
+        for label, subset in (("train", train_df), ("validation", val_df)):
+            counts = subset["__catalogue_index"].value_counts().sort_index().to_dict()
+            print(f"  {label} rows by catalogue: {counts}")
 
     # PROBE 1b (WORKLOG 2026-08-03n): the mean head sees Re raw and linearly standardised, so the
     # true response rise 0.244 -> 0.586 over Re 0.300-0.355 occupies only ~4.6% of the input range
@@ -987,6 +1139,7 @@ def main(argv=None):
     if response_on:
         model_config["response_difference"] = args.response_difference
         model_config["response_error"] = args.response_error
+        model_config["response_components"] = args.response_components
         if not isinstance(model, ConditionalMeanFlow):
             raise ValueError("--response-weight requires a mean_* flow (ConditionalMeanFlow).")
         if not any(p.requires_grad for p in model.mean_net.parameters()):
@@ -1002,6 +1155,13 @@ def main(argv=None):
             if [int(i) for i in model.ra_indices.tolist()] != [2, 3]:
                 raise ValueError(f"RA head reads dims {model.ra_indices.tolist()}; expected [2, 3] "
                                  "(measured mag, measured log flux radius)")
+        if args.response_components == "matrix":
+            if perobj_target is not None:
+                raise ValueError("matrix response mode does not support per-object targets")
+            if args.ra_target_npz or args.ra_weight > 0:
+                raise ValueError("matrix response mode does not support RA targets")
+            if args.response_bin_ema > 0 or args.response_global_anchor > 0:
+                raise ValueError("matrix response mode does not support bin EMA/global anchor")
         tnames = list(target_transform.target_names)
         if len(tnames) < 2:
             raise ValueError(f"response loss needs 2 shape-component targets (e1/e2-like); got {tnames}")
@@ -1051,7 +1211,22 @@ def main(argv=None):
                         f"response target {key}={stored} but trainer requests {requested}; "
                         "the target and flow must use the same primary population")
             ef, es, Rsim = tt["edges_flux"], tt["edges_size"], tt["Rsim"]
-            bin_targets = torch.as_tensor(np.asarray(Rsim).reshape(-1), dtype=torch.float32)
+            if args.response_components == "matrix":
+                if "Rsim_matrix" not in tt.files:
+                    raise ValueError(
+                        "--response-components matrix requires Rsim_matrix in the target npz"
+                    )
+                Rsim_matrix = np.asarray(tt["Rsim_matrix"])
+                if Rsim_matrix.shape != np.asarray(Rsim).shape + (2, 2):
+                    raise ValueError(
+                        f"Rsim_matrix shape {Rsim_matrix.shape} is inconsistent with "
+                        f"Rsim shape {np.asarray(Rsim).shape}"
+                    )
+                bin_targets = torch.as_tensor(
+                    Rsim_matrix.reshape(-1, 4), dtype=torch.float32
+                )
+            else:
+                bin_targets = torch.as_tensor(np.asarray(Rsim).reshape(-1), dtype=torch.float32)
             # COUNT-WEIGHTED target mean, for the per-epoch readout. The epoch line compares this to
             # <R_model>(val), which is a POPULATION mean over galaxies; the cells-unweighted
             # bin_targets.mean() is NOT the same quantity and must not be put next to it. On recorded
@@ -1060,7 +1235,7 @@ def main(argv=None):
             bin_counts_t = None
             if "counts" in tt.files:
                 _c = np.asarray(tt["counts"], dtype=np.float64).reshape(-1)
-                if _c.size == bin_targets.numel() and _c.sum() > 0:
+                if _c.size == bin_targets.shape[0] and _c.sum() > 0:
                     bin_counts_t = torch.as_tensor(_c / _c.sum(), dtype=torch.float32)
             ccol = tt["crowd_col"].item() if "crowd_col" in tt.files else ""
             ccol2 = tt["crowd2_col"].item() if "crowd2_col" in tt.files else ""
@@ -1150,10 +1325,10 @@ def main(argv=None):
             # deliverable-population cell weights for the global anchor (see epoch_response)
             if args.response_pop_weight_npz:
                 pw = np.load(args.response_pop_weight_npz)["pop_w"].astype(np.float64).reshape(-1)
-                if pw.size != bin_targets.numel():
+                if pw.size != bin_targets.shape[0]:
                     raise ValueError(
                         f"pop_w has {pw.size} cells but the response target has "
-                        f"{bin_targets.numel()} -- they must be built on the SAME grid")
+                            f"{bin_targets.shape[0]} -- they must be built on the SAME grid")
                 pop_w_t = torch.as_tensor(pw / max(pw.sum(), 1e-12), dtype=torch.float32)
                 tr_w = np.asarray(tt["counts"], dtype=np.float64).reshape(-1)
                 tr_w = tr_w / max(tr_w.sum(), 1e-12)
@@ -1379,14 +1554,16 @@ def main(argv=None):
                 optimizer=optimizer, max_grad_norm=args.max_grad_norm,
                 sc23=sc23, lam_theta=args.coupling_weight, bin_state=bin_state,
                 pop_w=pop_w_t, global_anchor=args.response_global_anchor, ra=ra_spec,
-                perobj=perobj_target is not None)
+                perobj=perobj_target is not None,
+                response_components=args.response_components)
             val_nll, val_resp, val_R, val_theta, val_anchor, val_diag = epoch_response(
                 model, resp_val_loader, device, target_scales01, args.response_delta,
                 bin_targets, args.response_weight, args.response_difference,
                 args.response_error, args.response_rel_floor,
                 sc23=sc23, lam_theta=args.coupling_weight,
                 pop_w=pop_w_t, global_anchor=args.response_global_anchor, ra=ra_spec,
-                perobj=perobj_target is not None)
+                perobj=perobj_target is not None,
+                response_components=args.response_components)
             history.setdefault("val_anchor", []).append(val_anchor)
             history["train_nll"].append(train_nll)
             history["val_nll"].append(val_nll)
@@ -1397,8 +1574,12 @@ def main(argv=None):
             # comparison against <R_model>(val), which is a population mean. The cells-unweighted
             # mean is kept but LABELLED, never presented as "the target".
             if bin_counts_t is not None:
-                _tgt = f"target {float((bin_targets * bin_counts_t).sum()):.4f} pop-wtd" \
-                       f" / {float(bin_targets.mean()):.4f} cell-avg"
+                if args.response_components == "matrix":
+                    _trace_target = 0.5 * (bin_targets[:, 0] + bin_targets[:, 3])
+                else:
+                    _trace_target = bin_targets
+                _tgt = f"target {float((_trace_target * bin_counts_t).sum()):.4f} pop-wtd" \
+                       f" / {float(_trace_target.mean()):.4f} cell-avg"
             else:
                 _tgt = f"target mean {float(bin_targets.mean()):.4f} (cell-avg; NOT pop-weighted)"
             print(f"  epoch {epoch:03d}: nll={train_nll:.5f}/{val_nll:.5f}  "
@@ -1481,6 +1662,11 @@ def main(argv=None):
         "selection_name": args.selection_name,
         "target_column": args.target_column,
         "catalogue_path": args.catalogue,
+        "catalogue_paths": [args.catalogue, *args.additional_catalogue],
+        "fold_catalogue_shear": bool(args.fold_catalogue_shear),
+        "validation_group_column": args.validation_group_column,
+        "expected_case_count": args.expected_case_count,
+        "response_components": args.response_components,
         "feature_set": args.feature_set,
         "shear_case": None if args.shear_case is None else float(args.shear_case),
         "condition_features": condition_features,

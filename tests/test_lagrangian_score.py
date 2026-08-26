@@ -1,4 +1,4 @@
-"""`INFERENCE.md` §5C against the closed forms of A.7, and the two traps of `MATH.md` §7.
+"""`INFERENCE.md` §5C against the closed forms of A.7, and the two traps of `MATH.md` §8.
 
 A.7 is the whole document in a Gaussian toy: truth `z ~ N(0, tau^2)`, shear as a shift
 `S_g z = z + g`, one-dimensional flow `p(y | x) = N(x, sigma^2)`, `nu^2 = tau^2 + sigma^2`.
@@ -37,7 +37,7 @@ from sbsi.lagrangian_score import (
 TAU, SIGMA = 1.0, 0.7
 NU2 = TAU ** 2 + SIGMA ** 2
 NU = np.sqrt(NU2)
-CUT = 0.3                      # `MATH.md` §7(b) uses this cut on y
+CUT = 0.3                      # `MATH.md` §8(b) uses this cut on y
 
 
 @pytest.fixture(scope="module")
@@ -149,7 +149,7 @@ def test_selected_information_is_the_truncated_normal_variance(bank):
 
 
 # --------------------------------------------------------------------------------------
-# the estimator under a cut -- `MATH.md` §7(b)
+# the estimator under a cut -- `MATH.md` §8(b)
 # --------------------------------------------------------------------------------------
 
 def kept_sample(truth, n=20_000):
@@ -211,7 +211,7 @@ def test_centring_is_not_optional_in_either_moment(bank):
     s_sel, i_sel = population_curve(lambda t: norm.sf((CUT - z - t) / SIGMA), weights=w)
 
     # No centring at all: returns the truncated mean E[y|y>c]/nu^2 instead of the shear.
-    # `MATH.md` §7(b) measures m = +1770%; the converged value is +1773%.
+    # `MATH.md` §8(b) measures m = +1770%; the converged value is +1773%.
     uncentred = shear_estimate_bartlett(s, 0.0)
     assert uncentred / truth - 1.0 == pytest.approx(17.73, rel=0.01)
 
@@ -243,13 +243,13 @@ def test_denominator_consistency_and_the_5_9b_drift(bank):
 
 
 # --------------------------------------------------------------------------------------
-# the detection channel -- `MATH.md` §7(a)
+# the detection channel -- `MATH.md` §8(a)
 # --------------------------------------------------------------------------------------
 
 def test_pdet_channel_is_not_optional(bank):
     """`P_det` carries gamma; keeping it in the weights but not differentiating it is O(1).
 
-    `MATH.md` §7(a) reports the omitted channel at 17-760% of the score and reversing its
+    `MATH.md` §8(a) reports the omitted channel at 17-760% of the score and reversing its
     sign at one of its four test points.  Its exact digits come from an unspecified
     sigmoid, so this reproduces the CLAIM with a stated sigmoid: the full curve matches
     the direct `d_gamma log A` to quadrature precision, and the truncated one does not.

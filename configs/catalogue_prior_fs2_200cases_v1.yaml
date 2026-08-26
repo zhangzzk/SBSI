@@ -1,0 +1,44 @@
+# Default inference-prior source: fresh FS2-25876 random realizations only.
+# BlendEMU step 1 owns the generated catalogues; no images are rendered.
+catalog:
+  type: fs2
+  path: /project/ls-gruen/users/zekang.zhang/lsst_sims/FS2/FS2_25876/FS2_25876_IA_Griffith_UDF_i_25.feather
+  mag_column: lsst_r_mag
+  mag_cut: 29
+  re_convention: circularized
+
+simulation:
+  output_path: /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/fs2_prior_cases20000_20199_v1/cases
+  base_config: /home/z/Zekang.Zhang/blendemu/configs/base_sim_config.ini
+  case_offset: 20000
+  n_cases: 200
+  shear_values: [0.0]
+  pixel_scale: 0.2
+
+noise:
+  source: csv
+  csv_path: /project/ls-gruen/users/zekang.zhang/lsst_sims/Euclid_Q1_median_LSST10yr.csv
+  band: LSST_r
+
+shape_measurement:
+  stamp_size: 48
+  pixel_scale: 0.2
+  use_pos: detect
+  tile_name: tile180.0_-0.5
+
+catalogues:
+  response:
+    r_max: 10
+    k: 20
+  self_response:
+    r_max: 3
+    k: 2
+  detection:
+    r_max: 3
+    k: 2
+  batch_size: 100
+  n_jobs: 8
+
+cluster:
+  n_mpi: 10
+  realizations: "d,0,1"

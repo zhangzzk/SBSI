@@ -11,8 +11,33 @@ acts on the *samples*, not on the prior density.
 §6 derives the other parametrization — `INFERENCE.md` §5B, equation (5.3) — in which shear acts on
 the **prior** instead. It stands alone and can be read without §§1–3 or §5; it is the same estimator,
 not a competing one, and its Step 8 proves so by a change of variables. It is also where
-$\nabla\log p_0$ comes from, and it is the form the pipeline runs. §7 sets the Bartlett denominator
-against (5.3)'s.
+$\nabla\log p_0$ comes from. It is retained for the earlier finite-M score study; the catalogue-prior
+null-closure path now follows §5 and numerically differentiates the marginalized log likelihood at
+$g=0$. §7 sets the Bartlett denominator against (5.3)'s.
+
+For the current response-regularized mean-affine flow, the matched finite-
+catalogue closure verifies this equality directly: exhaustive numerical
+derivatives at `h=0.00125` agree with exact Torch autograd, and both
+$E[I]=\mathrm{Var}(s)$ and the additive null pass.  The 10,000-object full-
+prior importance run also closes the identity and draw ladder, although its
+g2 score-tail estimate remains marginal (WORKLOG cont.202).  The paired local
+nonzero implementation is sampler-stable and statistically consistent with
+zero multiplicative bias at about 0.5% precision, but its response-influence
+Hill indices are below two and its off-diagonal responses are 10--14% at more
+than four sigma.  The five-view estimator omits the mixed Hessian under an
+exact rotational-symmetry assumption that the learned likelihood does not
+meet (WORKLOG cont.203).
+
+This is specifically a *local* expansion.  Full likelihood profiles of 10,000
+saved mocks recover axis-aligned injected shears 0.02 and 0.05 within 0.31
+profile-curvature errors in all four tests, whereas a single Newton step from
+zero overshoots at 0.02 and encounters negative observed information at 0.05.
+The mock mean response remains linear to about four parts in 100,000 between
+those amplitudes.  Thus mean linearity does not make the catalogue-marginalized
+likelihood a common Gaussian location family: changing posterior mixture
+responsibilities makes its curvature shear-dependent.  Finite-shear inference
+must profile or iteratively recentre; the null/local estimator still does not
+establish `|m|<0.2%` (WORKLOG cont.204).
 
 Equations are tagged `M.x` to avoid collision with `INFERENCE.md`.
 
@@ -23,6 +48,12 @@ Equations are tagged `M.x` to avoid collision with `INFERENCE.md`.
 Let $\theta=(\mathbf{x},\mathbf{n})$ be the **intrinsic** scene — primary and neighbours, unsheared —
 drawn from $\pi(\theta)$. Shear maps it to $S_\gamma\theta$, and the measurement and detection
 machinery act on the *sheared* truth:
+
+For the SBSI closure in this repository, $S_\gamma$ is deliberately the same
+shape-only operation as the image simulation: it applies the exact
+reduced-shear map to every object's intrinsic ellipticity and leaves flux,
+size, position, pair separation, and neighbour membership unchanged.  There
+is no magnification or positional shear in this project scope.
 
 $$A(\hat{\mathbf{x}}\mid\gamma)\;=\;\int d\theta\;\pi(\theta)\;
 L\big(\hat{\mathbf{x}}\mid S_\gamma\theta\big)\;P_{\rm det}\big(S_\gamma\theta\big),\tag{M.1}$$
@@ -578,4 +609,3 @@ $v$ that §6 needs), §5B.1 (the Eulerian algorithm and the detection-vs-cut asy
 §5B.2 ($\mathcal I_{\rm sel}$, the isotropy argument, and the consistency test), §5B.3 (what the
 Eulerian route demands, $\nabla\log p_0$ first among them), §5C (the Lagrangian parametrization and
 its algorithm), (5.9) (where (M.6) is recorded there).
-

@@ -3,9 +3,10 @@
 Purpose: make any two SBSI tests comparable by fixing the vocabulary and the setup. If a number in a
 figure, table or WORKLOG entry does not say which of these it used, it is under-specified.
 
-**Scope.** This file defines *how quantities are built*. It does not restate the milestone MODEL, the
-seed convention, or the numerical-integrity rules — those live in `AGENTS.md` and are referenced from
-here. Where the two disagree, `AGENTS.md` wins and this file is the bug.
+**Scope.** This file defines *how quantities are built*. It does not restate the milestone MODEL
+(that is `MILESTONE.md`) or the numerical-integrity rules (those live in `AGENTS.md`) — both are
+referenced from here. The seed convention lives in §9 below. Where this file and `AGENTS.md`
+disagree, `AGENTS.md` wins and this file is the bug.
 
 **Status of each claim below.** The model and population rules were updated for
 the V3 milestone on 2026-08-17. Historical implementation paths mentioned in
@@ -15,10 +16,13 @@ this document now live under `archive/pre-v3/`; they are provenance, not API.
 
 ## 1. The model
 
-For the frozen scientific comparison, V3 is V2.2 flow plus the latest
-narrow-domain emulator and V3b is the named broad-domain comparison. These are
-model-path presets, not separate software pipelines. For every model choice,
-the prediction is always
+For the frozen scientific comparisons, V3 is V2.2 flow plus the latest
+narrow-domain emulator; V3.1 is the four-seed original-E mixed-shear flow plus
+that exact same emulator; V3.2 keeps both V3.1 components and replaces the
+catalogue-inference detector with the transition-aware SBSI classifier; and
+V3b is the named broad-domain comparison. These
+are model-path presets, not separate software pipelines. For every model
+choice, the prediction is always
 
 ```
 R_model = R_flow + R_blend
@@ -35,6 +39,12 @@ Exact checkpoint and emulator paths are exposed by the optional
 `sbsi.models` presets; see `MILESTONE.md` for the frozen result record.
 User-selected catalogues and emulator-response products remain external API
 inputs.
+
+V3.2 detection views use every candidate inside 3 arcsec and retain the one
+maximizing `flux_secondary * (Re_secondary / distance)**1`.  The classifier is
+then evaluated on the sheared primary and retained-neighbour ellipticities.
+This neighbour rule is explicit inference configuration: it must not fall back
+to the older nearest-neighbour detector convention.
 
 ---
 
@@ -56,8 +66,8 @@ Two families. **They are not interchangeable and must not be described with the 
   `measured_flux_radius`.
 - ngmix failures are **dropped**, not kept as NaN (fixed 2026-07-31; the older builder kept ~5,300
   such rows and the certified file did not).
-- Cases 40–139 are the evaluation split. The `c40-*` split files are STALE old-centroid — see
-  `reference_constgold_catalogue` memory.
+- Cases 40–139 are the evaluation split. The `c40-*` split files are STALE old-centroid (quarantine
+  record: `Gold-V1.md` §3).
 
 **constgold is EVALUATION ONLY.** Nothing may be trained on it and no model or hyperparameter may be
 selected using its `m`. This is the R_blend firewall.
@@ -74,6 +84,28 @@ det_meas_ngmix_g0.05_val.feather      (leg g: |g| = 0.05)          cases <= 39
   self-response be isolated — see §6b.
 - Do **not** call these "constant-shear"; that name belongs to constgold.
 
+### 2c. inference prior — the fresh FS2 catalogue
+
+The default catalogue-prior identity is registered in
+`configs/default_catalogue_prior.json`.  Its immutable external manifest is:
+
+```
+/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/
+    fs2_prior_cases20000_20199_v1/default_prior_manifest.json
+```
+
+- FS2-25876 cases 20000--20199, generator seeds 20123--20322, are disjoint
+  from all simulation/model-development cases 0--899.
+- The prior leg is exactly unsheared.  All 139,936,000 rows remain available
+  as neighbour context; the 12,760,990 positive-mass primary atoms satisfy
+  the V3.1 truth domain `18<r<25.8, 0.5<Re<1.5`.
+- The store is partitioned into twenty ten-case scene shards.  A consumer must
+  use every shard with the manifest's `global_shard_mass`; substituting one
+  shard is a smaller diagnostic prior, not the default 200-case prior.
+- GalSBI scene catalogues are historical sampler/transfer stress tests only.
+  They are not the default inference prior and must not be mixed into an FS2
+  model result.
+
 ---
 
 ## 3. Building the population — order matters
@@ -87,7 +119,8 @@ The standard order implemented by `ResponsePredictor` is:
    - `0.1 < Re_input_p < 1.5`
    - `(0 < distance < 5)` **OR** `not neighbored`
 3. **Registered domain cut** — on TRUE properties and mandatory. V3 uses
-   `18 < r_input_p < 25.8` and `0.5 < Re_input_p < 1.5`; V3b uses
+   `18 < r_input_p < 25.8` and `0.5 < Re_input_p < 1.5`; V3.1 uses the same
+   domain; V3.2 uses the same V3.1 domain; while V3b uses
    `18 < r_input_p < 26` and `0.3 < Re_input_p < 1.5`. Never infer these cuts
    from a filename or substitute one model's domain for another.
 4. **Emulator-lookup join** — inner join on `(case, input_index)`. Rows with no `R_blend` are
@@ -99,8 +132,8 @@ Steps 2–4 overlap on purpose. The registered flow and emulator must be scored
 on their common named domain; overlap is a consistency check, not redundancy
 to remove.
 
-The frozen populations are **N = 5,642,349 for V3** and **N = 11,674,408 for
-V3b**.
+The frozen populations are **N = 5,642,349 for V3, V3.1, and V3.2** and
+**N = 11,674,408 for V3b**.
 
 **Steps 1–4 are TRUE-property cuts. They define the population.** They are NOT the selection effect
 being measured — see §5.
@@ -206,8 +239,8 @@ inherit the sim's pass mask — predicting which objects survive is the thing be
   this omits is ~−0.9% globally and ~−1.1% on blended objects.
 
 **Deliberately not restated here:** the detection-response estimator itself. It is a separate
-construction (response-regularised `P(detect | true + blend)`) and lives in the stage-3 work; see the
-`project_stage3_detection` memory and the WORKLOG entries it points to. Copying a summary of it into
+construction (response-regularised `P(detect | true + blend)`) and lives in the stage-3 WORKLOG
+entries. Copying a summary of it into
 this file would create a second, drifting definition — which is the failure mode this file exists to
 prevent.
 
@@ -306,7 +339,44 @@ Split by **which flow OUTPUT drives the reported number**: e (`g1/g2`) response 
 flux/size → **4**. Ask what the number IS, not what the cut is on — a selection table cuts on
 flux/size but reports `m`, a shape-response bias, so it takes 16.
 
-Full statement, rationale and the worked example: `AGENTS.md` → "Ensemble Seed Convention".
+Full statement, rationale and the worked example below, restored 2026-08-18 from the
+"Ensemble Seed Convention" section that lived in `AGENTS.md` until the 3193cc5 restructure
+(and survived only in git history after that):
+
+**The split is by WHICH FLOW OUTPUT drives the reported number, not by shape-vs-selection**
+(clarified by the owner 2026-07-31; the earlier "shape 16 / selection 4" wording was too loose and
+led to a 4-seed fig4 that should have been 16):
+
+- **e (`measured_ngmix_g1/g2`) response → 16 seeds.** Any multiplicative bias `m`, the certified
+  pipeline number, any absolute shear response.
+- **flux / size outputs → 4 seeds.** Flux- and size-response validation
+  (`scripts/eval_fluxsize_response.py`), proxy construction, cut-threshold calibration.
+
+**Apply it by asking what the number IS, not what the cut is on.** A selection table cuts on measured
+flux and size, so it is tempting to call it a 4-seed job — but the quantity it reports is `m`, a bias
+on the SHAPE response of the surviving subset. The flux/size outputs only decide WHICH objects enter
+the average; the average itself is an e-response. So the e-response standard binds: **selection
+tables that report `m` need 16 seeds.** 4 seeds would only be enough for a table whose reported
+number is itself a flux or size quantity.
+
+Concretely, the constgold near-domain table at 4 seeds carried `+-0.43%` on its `m` column — nearly
+3x the 16-seed error and too coarse to test against the `+-0.3%` target, which is the whole point of
+the table. Its no-cut row read `-0.239 +- 0.430%` where the 16-seed value is `-0.123 +- 0.152%`: the
+same quantity, the gap driven almost entirely by s503 (a `-1.41%` outlier carrying 1/4 of the weight
+instead of 1/16).
+
+- Default `SEEDS` in job scripts to the full 16 (`501 502 503 505 506 ... 517`; **504 does not
+  exist**). The 4-seed set is `501 502 503 505`.
+- Do not quote any `m` from 4 seeds.
+- Scoring cost is linear in checkpoint count, so a 16-seed table is ~4x the GPU time. That cost is
+  accepted for anything reporting `m`.
+
+**The seed offset cancels in a DIFFERENCE, not in an absolute `m`.** `m` at a cut is model-vs-sim and
+the sim side has no seed dependence, so each seed's own offset survives in full. It cancels only in
+model-vs-model ratios (column (4)) and in `dm = m(cut) - m(no cut)`, where each seed's offset appears
+in both terms. `dm` therefore comes out ~20x tighter (`+-0.02` to `+-0.16` vs `+-0.43`) and was
+briefly plotted as a fig4 panel to work around the 4-seed noise; it is still computed and stored in
+the npz but is no longer plotted, because at 16 seeds the absolute `m` is precise enough on its own.
 
 ---
 

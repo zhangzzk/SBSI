@@ -1,7 +1,9 @@
 # Gold-v1 — the certified SBSI shear-calibration pipeline
 
 **Status:** CERTIFIED baseline. Confirmed 2026-07-23 (16-seed ensemble, fixed catalogue),
-consistent with `plotting/plot_flow_figures.py` / `figures/`.
+consistent with `plotting/plot_flow_figures.py` / `figures/`. Superseded as the headline by the
+V3 milestone (`MILESTONE.md`); retained unchanged as the certified V1 shape benchmark.
+Implementation paths below predate the library restructure and now live under `archive/pre-v3/`.
 
 **Headline result:** overall multiplicative shear bias **m = +0.245%** on the held-out
 constant-gold test set — parameter-free (no fitted correction):
@@ -27,7 +29,7 @@ Two pieces, added linearly. **Keep both UNTOUCHED when extending** (e.g. for sel
   measured_flux_radius, nbr_flux_near, nbr_flux_far, nbr_flux_max]` — i.e. TRUE shape + TRUE
   sérsic + **MEASURED mag & size** + **blending flux** (the near/far/max neighbour-flux features).
   Measured mag/size are INPUTS here (this is the measured-conditioned model; NOT the true-property
-  reframe, which was a 2026-07 detour — see `memory/project_reframe_outcome`).
+  reframe, which was a 2026-07 detour).
 - **`flow_drop_indices=[0,1,8,9]`:** the density is BLIND to `e1_input_p, e2_input_p` (indices 0,1)
   and their `__is_missing` flags (8,9). The explicit **mean head** `mu(context)` sees the true shape
   and carries the (un-shrunk) shear response — the density can't, because ML shrinks a first-moment
@@ -70,7 +72,6 @@ Two pieces, added linearly. **Keep both UNTOUCHED when extending** (e.g. for sel
 - **⚠ DO NOT USE** the `constant_response_catalogue_{c40-139,c40-79,c80-139}.feather` splits —
   old reverted-centroid (R_sim ≈ 0.4655, ~+2.7% high, inflates m by ~+3%). **Quarantined 2026-07-23 →
   `*.OLD_do_not_use`.** `job_build_100.sh` rebuilds the bad c40-139 from the old halves (now disarmed).
-  See `memory/reference_constgold_catalogue`.
 - **Lookups (all match 100% on the held-out set):**
   - `results/blend_lookup_extnbrho_c40-139.feather` — R_blend (BlendEMU `lsst_r_extnbr_ho`).
   - `results/meas_prim_lookup_c0-139.feather` — MEASURED primary observables for constgold

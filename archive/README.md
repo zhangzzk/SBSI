@@ -1,8 +1,12 @@
 # archive/ — one-off diagnostic & probe scripts
 
-Exploratory / diagnostic scripts that produced results now recorded in `WORKLOG.md` and
-`SUMMARY.md`. Kept for reference and reproducibility; **not part of the active pipeline**
+Exploratory / diagnostic scripts that produced results now recorded in
+`doc/WORKLOG.md`. Kept for reference and reproducibility; **not part of the active pipeline**
 (that lives in `../scripts/`).
+
+Pytest is configured to discover only `../tests/`; historical files whose
+names match `test_*.py` are intentionally inert. The Infer V1 development
+campaign has its own index in `infer-v1-development/README.md`.
 
 Located one level under the repo root on purpose: these scripts compute
 `SBSI_ROOT = dirname(dirname(__file__))`, so they still resolve `sbs_shear` and

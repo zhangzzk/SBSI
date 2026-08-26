@@ -58,6 +58,14 @@ is what fixes the emulator's identity.
 
 ## What is *not* here
 
+- **V3.1.** `get_model("V3.1")` combines the four original-E SWA checkpoints
+  (seeds 501--504) from the external `mixed_shear_cde/` cache with the exact V3
+  emulator shipped here. The E checkpoints are not bundled in this directory.
+- **V3.2.** `get_model("V3.2")` keeps the V3.1 flow and emulator and pins the
+  external transition-aware SBSI detector at
+  `detection_classifier_transition_lambda1_v1/models/transition_aware.pt`.
+  Its SHA-256 is checked by `ModelPaths.validate()`. Detection views must use
+  the trained 3-arcsec, impact-ranked (`a=1`) neighbour convention.
 - **V3b.** `get_model("V3b")` names a different flow ensemble
   (`..._dom6x6_s{seed}_swaavg.pt`) and a different emulator. Those files are not in
   this directory, so V3b resolves only against the original cluster paths.

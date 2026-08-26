@@ -12,7 +12,14 @@ from sbsi.measurement_model import (
     MeasurementModelBundle,
     TargetStandardizer,
 )
-from sbsi.models import ModelPaths, SHAPE_SEEDS, get_model
+from sbsi.models import (
+    ModelPaths,
+    SHAPE_SEEDS,
+    V31_SEEDS,
+    V32_SEEDS,
+    get_model,
+    load_detection_classifier,
+)
 from sbsi.paths import RELEASE_MODELS_ROOT, REPOSITORY_ROOT, example_path
 from sbsi.forward_catalogue import (
     EmulatorPairingConfig,
@@ -27,14 +34,46 @@ from sbsi.selection_model import TabularPreprocessor
 
 def test_named_models_are_path_presets_not_pipeline_configuration():
     v3 = get_model("v3")
+    v31 = get_model("V3.1")
+    v32 = get_model("v3.2")
     v3b = get_model("V3B")
     assert isinstance(v3, ModelPaths)
     assert len(v3.flow_checkpoints) == len(v3b.flow_checkpoints) == 16
+    assert len(v31.flow_checkpoints) == 4
+    assert v32.flow_checkpoints == v31.flow_checkpoints
     assert SHAPE_SEEDS == (501, 502, 503, *range(505, 518))
+    assert V31_SEEDS == (501, 502, 503, 504)
+    assert V32_SEEDS == V31_SEEDS
+    assert v31.name == "V3.1"
+    assert v31.emulator_model == v3.emulator_model
+    assert v31.emulator_metadata == v3.emulator_metadata
+    assert v31.emulator_sha256 == v3.emulator_sha256
+    assert v32.name == "V3.2"
+    assert v32.emulator_model == v31.emulator_model
+    assert v32.emulator_metadata == v31.emulator_metadata
+    assert v32.emulator_sha256 == v31.emulator_sha256
+    assert v31.detection_classifier is None
+    assert v32.detection_classifier.name == "transition_aware.pt"
+    assert v32.detection_classifier_sha256 == (
+        "9966cfbc191f11b049bf7419dbdb45d65d1262428889a91bb3c9caf928703455"
+    )
+    assert all("mixed_g0_g005_E" in path.name for path in v31.flow_checkpoints)
     assert not hasattr(v3, "domain")
     assert not hasattr(v3, "blend_lookup")
     assert not hasattr(v3, "evaluation_result")
     assert v3.emulator_metadata.name == "emulator_metadata_lsst_r_extnbr_v22.json"
+
+
+def test_v32_detection_classifier_loads_with_frozen_transition_metadata():
+    models = get_model("V3.2")
+    if not models.detection_classifier.is_file():
+        pytest.skip("external V3.2 detection checkpoint is not configured")
+    detector = load_detection_classifier(models)
+    assert detector.metadata["training_objective"] == "transition_aware"
+    assert detector.metadata["transition_weight"] == 1.0
+    assert detector.metadata["response_supervision"] is False
+    assert "e1_input_p" in detector.preprocessor.feature_names
+    assert "e1_input_s" in detector.preprocessor.feature_names
 
 
 def test_checkout_resources_do_not_depend_on_working_directory(tmp_path, monkeypatch):

@@ -23,8 +23,9 @@ class FlowTrainingConfig:
 
     catalogue: Path
     output: Path
-    response_target: Path
-    coupling_target: Path
+    response_target: Optional[Path] = None
+    coupling_target: Optional[Path] = None
+    additional_catalogues: Tuple[Path, ...] = ()
     seed: int = 501
     primary_magnitude_max: float = 25.8
     primary_half_light_radius_min: float = 0.5
@@ -39,6 +40,12 @@ class FlowTrainingConfig:
     num_workers: int = 8
     device: Optional[str] = None
     gpu_resident: bool = True
+    shear_case: Optional[float] = 0.0
+    fold_catalogue_shear: bool = False
+    validation_group_column: Optional[str] = None
+    validation_size: float = 0.15
+    expected_case_count: Optional[int] = None
+    response_components: str = "trace"
     extra_arguments: Tuple[str, ...] = ()
 
     @property
@@ -56,7 +63,16 @@ class FlowTrainingConfig:
         return output.with_name(f"{output.stem}_train_curve.npz")
 
     def validate(self) -> None:
-        for path in (self.catalogue, self.response_target, self.coupling_target):
+        required_paths = [self.catalogue, *self.additional_catalogues]
+        if self.response_weight > 0:
+            if self.response_target is None:
+                raise ValueError("response_weight > 0 requires response_target")
+            required_paths.append(self.response_target)
+        if self.coupling_weight > 0:
+            if self.coupling_target is None:
+                raise ValueError("coupling_weight > 0 requires coupling_target")
+            required_paths.append(self.coupling_target)
+        for path in required_paths:
             if not Path(path).is_file():
                 raise FileNotFoundError(path)
         existing = [
@@ -70,6 +86,10 @@ class FlowTrainingConfig:
             raise ValueError("seed must be positive")
         if self.max_rows < 0:
             raise ValueError("max_rows must be >= 0 (zero means all rows)")
+        if self.response_components not in {"trace", "matrix"}:
+            raise ValueError("response_components must be 'trace' or 'matrix'")
+        if self.response_components == "matrix" and self.response_weight <= 0:
+            raise ValueError("matrix response components require response_weight > 0")
 
     def to_argv(self) -> List[str]:
         args = [
@@ -83,7 +103,6 @@ class FlowTrainingConfig:
             "--flow-type", "mean_affine",
             "--mean-hidden", "128",
             "--flow-blind-features", "e1_input_p", "e2_input_p",
-            "--shear-case", "0.0",
             "--max-rows", str(self.max_rows),
             "--epochs", str(self.epochs),
             "--batch-size", str(self.batch_size),
@@ -98,16 +117,34 @@ class FlowTrainingConfig:
             "--num-workers", str(self.num_workers),
             "--primary-mag-max", str(self.primary_magnitude_max),
             "--primary-re-min", str(self.primary_half_light_radius_min),
-            "--response-weight", str(self.response_weight),
-            "--response-delta", "0.02",
-            "--response-difference", "central",
-            "--response-target-npz", str(self.response_target),
-            "--response-error", "absolute",
-            "--response-rel-floor", "0.05",
-            "--response-bin-ema", "0.0",
-            "--coupling-weight", str(self.coupling_weight),
-            "--coupling-target-npz", str(self.coupling_target),
+            "--validation-size", str(self.validation_size),
         ]
+        for catalogue in self.additional_catalogues:
+            args.extend(("--additional-catalogue", str(catalogue)))
+        if self.shear_case is not None:
+            args.extend(("--shear-case", str(self.shear_case)))
+        if self.fold_catalogue_shear:
+            args.append("--fold-catalogue-shear")
+        if self.validation_group_column:
+            args.extend(("--validation-group-column", self.validation_group_column))
+        if self.expected_case_count is not None:
+            args.extend(("--expected-case-count", str(self.expected_case_count)))
+        if self.response_weight > 0:
+            args.extend((
+                "--response-weight", str(self.response_weight),
+                "--response-delta", "0.02",
+                "--response-difference", "central",
+                "--response-target-npz", str(self.response_target),
+                "--response-error", "absolute",
+                "--response-components", self.response_components,
+                "--response-rel-floor", "0.05",
+                "--response-bin-ema", "0.0",
+            ))
+        if self.coupling_weight > 0:
+            args.extend((
+                "--coupling-weight", str(self.coupling_weight),
+                "--coupling-target-npz", str(self.coupling_target),
+            ))
         if self.device:
             args.extend(("--device", self.device))
         if self.gpu_resident:

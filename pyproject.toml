@@ -35,3 +35,7 @@ packages = ["sbsi"]
 
 [tool.ruff]
 line-length = 110
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = ["archive"]

@@ -14,9 +14,9 @@ map of the intrinsic properties.  This module implements the pieces SBSI needs:
   ``R = M_data * <1 - eps^2> ~ 0.233`` (PSF dilution + measurement shrink), derived by
   finite-differencing the trained flow, not from this scene Jacobian. Do not wire this
   function into a calibration as if it were the measured R.
-* ``shear_separation_matrix`` / ``magnification`` -- the A-matrix distortion of the
-  pair-separation vector and the flux/size magnification, used for exact
-  finite-shear injection in validation.
+* ``lensing_matrix`` / ``shear_separation`` / ``magnification`` -- the
+  source-to-image distortion of pair separations and flux/area magnification,
+  used for exact finite-shear injection in validation.
 
 Everything is plain NumPy and broadcasts over arrays of galaxies.  The core science uses
 ``apply_shear_to_ellipticity`` (the finite-shear map S_delta applied to the intrinsic shape
@@ -89,9 +89,21 @@ def shear_matrix(g1, g2, kappa=0.0):
     return A
 
 
+def lensing_matrix(g1, g2, kappa=0.0):
+    """Return the source-to-image map ``A^{-1}``.
+
+    ``shear_matrix`` is the image-to-source lens equation ``beta = A theta``.
+    Truth-catalogue injection needs the inverse: a positive ``g1`` stretches a
+    round source along the first axis, consistently with
+    :func:`apply_shear_to_ellipticity` returning positive ``e1``.
+    """
+
+    return np.linalg.inv(shear_matrix(g1, g2, kappa=kappa))
+
+
 def shear_separation(dtheta, g1, g2, kappa=0.0):
-    """Apply the A-matrix to a separation vector dtheta=(d1,d2). Returns (d1',d2')."""
-    A = shear_matrix(g1, g2, kappa=kappa)
+    """Map a source-plane separation into the sheared image plane."""
+    A = lensing_matrix(g1, g2, kappa=kappa)
     d1 = np.asarray(dtheta[0], dtype=float)
     d2 = np.asarray(dtheta[1], dtype=float)
     out1 = A[..., 0, 0] * d1 + A[..., 0, 1] * d2

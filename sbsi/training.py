@@ -77,15 +77,49 @@ def make_loader(targets, context, batch_size, shuffle=False, num_workers=0, pin_
     )
 
 
-def split_data(frame, seed, validation_size):
-    # sklearn is imported lazily so that `import sbsi.training` keeps working on the
-    # login node, where sims1's sklearn -> scipy chain fails with `GLIBCXX_3.4.30 not found`.
-    # Only the trainers (which run on compute nodes) ever reach this call.
-    from sklearn.model_selection import train_test_split
-
+def split_group_values(values, seed, validation_size):
+    """Return deterministic disjoint train/validation values for a grouped split."""
+    groups = np.asarray(sorted(set(values)))
+    if groups.size < 2:
+        raise ValueError("grouped split needs at least two distinct values")
     if not (0.0 < validation_size < 1.0):
         raise ValueError("validation_size must be in (0, 1)")
-    train_df, val_df = train_test_split(frame, test_size=validation_size, random_state=seed)
+    # Match sklearn's ShuffleSplit convention without importing scipy/sklearn:
+    # a float test size rounds upward and the first n_test shuffled groups are
+    # validation.  Keeping grouped splitting NumPy-only makes it usable in the
+    # supported sims1 scheduler environment as well as py31.
+    n_validation = int(np.ceil(validation_size * groups.size))
+    permutation = np.random.RandomState(seed).permutation(groups.size)
+    validation = groups[permutation[:n_validation]]
+    train = groups[permutation[n_validation:]]
+    return train, validation
+
+
+def split_data(frame, seed, validation_size, group_column=None):
+    if not (0.0 < validation_size < 1.0):
+        raise ValueError("validation_size must be in (0, 1)")
+    if group_column is None:
+        # Keep the grouped path NumPy-only: sims1's sklearn -> scipy import chain
+        # is unavailable on the scheduler because its libstdc++ is too old.
+        from sklearn.model_selection import train_test_split
+
+        train_df, val_df = train_test_split(frame, test_size=validation_size, random_state=seed)
+    else:
+        if group_column not in frame.columns:
+            raise KeyError(f"grouped split column is absent: {group_column!r}")
+        train_groups, val_groups = split_group_values(
+            frame[group_column].dropna().unique(), seed, validation_size
+        )
+        is_validation = frame[group_column].isin(set(val_groups))
+        train_df = frame.loc[~is_validation]
+        val_df = frame.loc[is_validation]
+        overlap = set(train_groups) & set(val_groups)
+        if overlap:
+            raise RuntimeError(f"grouped split leaked {len(overlap)} group(s)")
+        print(
+            f"  Grouped split on {group_column}: "
+            f"train_groups={len(train_groups):,}, val_groups={len(val_groups):,}"
+        )
     print(f"  Split: train={len(train_df):,}, val={len(val_df):,}")
     return train_df.reset_index(drop=True), val_df.reset_index(drop=True)
 

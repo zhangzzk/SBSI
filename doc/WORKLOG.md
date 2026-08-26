@@ -2,6 +2,3242 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-26 cont.253 — Infer V1 frozen; development tree archived and repository made test-clean
+
+Per owner decision, **Infer V1** now names the numerical inference setup
+independently of model release names such as V3.2.  Its canonical machine-readable
+definition is `configs/infer_v1.json`: the default 200-case FS2 prior, QMC-128
+mean/std proposal coordinates, Gaussian uncertainty ranking, `K=M=16,384`, a
+131,072-candidate location prefilter, defensive mixture `epsilon=0.1`, raw mean
+observed shape as the initial centre, one full two-component update at `h=0.001`,
+and compiled FP32 execution with 128-object/4,096-atom chunks.  The cluster-local
+reference wrapper is now `jobs/job_infer_v1.sh`; it requires an explicit flow
+checkpoint, records `inference_version="Infer V1"`, and the runner hashes the
+canonical config in its implementation provenance.  Inference behavior remains
+model-name agnostic: V3.2 identifies artifacts, while Infer V1 identifies sampling
+and solving.
+
+The active tree no longer presents completed experiments as production choices.
+Sixty-nine files now live under `archive/infer-v1-development/`, grouped into the
+superseded §5B legacy-score study, rejected GalSBI-prior work, unadopted JAX and
+other optimization branches, and the completed K/M/candidate-capture diagnostics.
+This removes the legacy `sbsi.catalogue_prior` and JAX modules from the installed
+package and moves their historical tests out of CI without deleting provenance.
+The active documentation points to the archive instead of advertising those paths.
+Editor scratch was discarded; the existing local Claude permission file was
+restored unchanged.
+
+Pytest discovery is now explicitly limited to `tests/`, so plain `python -m
+pytest -q` does not collect the pre-V3 archive and its retired `sbs_shear`
+dependencies.  Six newly surfaced loop-carried states were inspected and documented
+in the narrow allowlist: the partition cursor, first-shard schema references,
+nested-M previous-rung references, and detector-training best-score tracker.  No
+finding was suppressed without a concrete state invariant.  A small regression test
+pins the Infer V1 config and launcher defaults.
+
+Validation: active Python compilation passes; every active Bash job passes `bash
+-n`; `git diff --check` passes; the loop-shadowing sweep reports zero new hits;
+30 focused Infer V1/provenance/cleanup tests pass; and the clean default suite reports
+296 passed and 2 optional skips.  PyTorch scalar-conversion warnings were removed
+with an explicit tensor detach.  No scientific output was recomputed and no empirical
+correction was introduced.  Infer V1 remains the fast survey-scale baseline supported
+by the completed 20k diagnostic, not a strict `1e-4` numerical-closure claim at 20k;
+the next work is the separately gated 5x performance effort.
+
+## 2026-08-26 cont.252 — V3.2 names V3.1 plus the transition-aware detector
+
+Per owner decision, **V3.2** now names the unchanged V3.1 original-E four-seed
+flow and unchanged V3/V3.1 response emulator together with the frozen
+transition-aware (`lambda=1`) SBSI detection classifier.  `sbsi.models` exposes
+public `V32`/`V32_SEEDS`, pins the classifier at
+`detection_classifier_transition_lambda1_v1/models/transition_aware.pt`, and
+checks its SHA-256
+`9966cfbc191f11b049bf7419dbdb45d65d1262428889a91bb3c9caf928703455`.
+`load_detection_classifier()` loads this explicit SBSI checkpoint without a
+BlendEMU dependency.  V3 and V3.1 retain their existing detector behavior; no
+pipeline branches on a release name.
+
+The catalogue model cache and `scripts/run_catalogue_closure.py` now accept and
+persist an explicit detection-neighbour rule.  The V3.2 invocation is a
+3-arcsec aperture with impact ranking
+`flux_s * (Re_s / distance)**1`, not the older nearest-neighbour rule.  The
+runner accepts `--detection-model`, `--detection-neighbour-selection impact`,
+and `--detection-impact-exponent 1`; its cache identity hashes the explicit
+detector, and model-cache format 4 records the neighbour rule while continuing
+to read formats 2 and 3 as nearest/`a=2`.  A synthetic sheared-scene smoke test
+loaded the pinned checkpoint, supplied all 17 expected features, returned
+finite probabilities, and changed probability under `g1=0.02`, confirming that
+the shape-sensitive detector is not incorrectly reused as spin-0.
+
+The milestone and conventions distinguish the composition decision from an
+end-to-end calibration claim.  Frozen ConstGold cases 40--49 give the new
+detector balanced accuracy 0.906117 and standalone fixed-intrinsic detection
+response `-0.024023`, versus truth `-0.019253 +/- 0.000652` (case SEM), with
+zero unmatched CrossMatch IDs.  This response is not pasted into or added to
+the independently defined `R_flow + R_blend`; full V3.2 catalogue closure is
+the next scientific validation.
+
+Validation: 53 focused API/catalogue/classifier tests pass with two expected
+optional-dependency/external-artifact skips; Python compilation,
+`run_catalogue_closure.py --help`, `git diff --check`, external
+`ModelPaths.validate()`, checkpoint metadata inspection, and the synthetic
+inference smoke test pass.  The full repository suite reaches 417 passed and
+2 skipped; its only two failures are the pre-existing repository-wide
+loop-shadowing allowlist guard, which reports nine unrelated dirty-worktree
+scripts (including the already-existing classifier trainer) and was not
+modified here.
+
+Files: `sbsi/models.py`, `sbsi/__init__.py`, `sbsi/cli.py`,
+`sbsi/catalogue_likelihood.py`, `scripts/run_catalogue_closure.py`,
+`tests/test_api.py`, `tests/test_catalogue_likelihood.py`, `README.md`,
+`doc/API.md`, `doc/CONVENTIONS.md`, `doc/MILESTONE.md`, and
+`models/README.md`.
+
+## 2026-08-26 cont.251 — direct K=M=16,384 result is computationally viable but shows coherent K and M shifts
+
+Both V100 inference arms and the dependent summary completed with exit code
+zero and empty stderr.  Seed-8701 job **16029099** took 29m28s, seed-8702 job
+**16029100** took 28m59s, and CPU summary **16029101** took 2s.  The scheduler
+ran the GPU jobs consecutively on `th-cl-nv01`, so elapsed campaign wall time
+was about 59 minutes rather than the per-arm 29 minutes.  Each arm performed
+about 1.950 billion flow evaluations.
+
+At K=M=16,384, seed estimates are `(0.02221618,-0.00197880)` and
+`(0.02135124,-0.00216416)`.  Their paired difference is
+`(-8.649e-4,-1.854e-4)`, with paired standard error
+`(6.876e-4,3.730e-4)`; the two seeds are mutually compatible at this 20k size.
+Within K=16,384, the M=8,192 to 16,384 shifts are
+`(+1.315e-3,-1.95e-5)` and `(+7.707e-4,-2.429e-4)`, corresponding to g1 pulls
+2.36 and 2.49.  Their zero-mean paired standard-error projections at one
+million observations are `(7.90e-5,3.70e-5)` and
+`(4.38e-5,3.36e-5)`, but simply scaling the observed g1 shifts would give
+`1.86e-4` and `1.09e-4`.
+
+The retained ten-by-2,000 block check further disfavors treating the positive
+g1 M shift as purely symmetric finite-observation noise: 9/10 exact blocks are
+positive for each proposal seed.  At fixed M=16,384, increasing K from 16,384
+to 32,768 shifts g by `(+2.219e-4,-1.676e-4)` and
+`(+1.378e-4,-1.456e-4)` for the two seeds, again coherently directed.  Those
+candidate-support shifts and any nonzero mean finite-M shift do not average
+away with a larger observation catalogue, even though their zero-mean random
+components do.  This makes K=M=16,384 a useful fast exploratory configuration,
+but not an empirically demonstrated 1e-4 numerical-closure configuration.
+
+Canonical reports are `k16384_m16384_summary.json` and
+`m_doubling_8192_16384_block_scaling_n2000.json` under campaign root
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/v31_fs2_default_qmc128_km_n20k_v1`.
+The summary validated hashes, frozen-arm identities, positive information, and
+exact reproduction of recorded estimates to 1e-12; whitespace validation also
+passes.  Truth displacement remains reported but is not a tuning criterion.
+
+## 2026-08-26 cont.250 — direct K=M=16,384 frozen-20k diagnostic prepared
+
+The deliberately cheaper setting is now tested directly rather than rejected
+from a conservative one-million-object tolerance projection.  New wrapper
+`jobs/job_v31_fs2_qmc128_k16384_m16384_n20k.sh` runs K=16,384 with retained
+common prefixes M=512--16,384 on the same first 20,000 frozen likelihood rows,
+full-mock raw-mean centre, 131,072 prefilter, QMC-128 mean/std ranking, epsilon
+0.1, and the unchanged V3.1 flow.  Proposal seeds 8701 and 8702 are separate
+one-V100 jobs so they can run concurrently and stay hardware-matched to the
+completed K=32,768 reference arms.
+
+New `scripts/summarize_k16384_m16384_diagnostic.py` and its lightweight Slurm
+wrapper compare M=8,192 to 16,384 within K=16,384, K=16,384 to 32,768 at fixed
+M=16,384, and the two proposal seeds.  Every comparison uses paired per-object
+influences, and the report projects only the paired zero-mean numerical standard
+error to one million objects.  It explicitly does not scale candidate
+truncation or a nonzero finite-M expectation away.  The existing exact
+candidate-capture result is included alongside the numerical comparisons.
+
+The resource-discovery skill reports 32 physical login cores, 315 GiB available
+RAM, 8.65 TiB free disk, and no login GPU; GPU work therefore remains scheduled.
+Both Bash wrappers pass `bash -n`; the summary passes Python compilation and
+`--help`; whitespace validation passes; and no target result directory exists
+before submission.
+Submitted seed-8701 V100 arm **16029099**, seed-8702 V100 arm **16029100**, and
+after-success CPU summary **16029101**.  Slurm confirms one typed V100, eight
+CPUs, and 160 GiB for each inference arm; both initially wait for priority.
+
+## 2026-08-26 cont.249 — retained 2k blocks confirm 1/sqrt(N) finite-M scaling but expose rare nonlinear outliers
+
+New `scripts/analyse_m_doubling_block_scaling.py` exactly re-sums the retained
+per-object score and information at M=32,768 and 65,536, so the 20,000-object
+diagnostic can be split into ten disjoint 2,000-object estimates without any
+new likelihood or GPU work.  It verifies that its full-sample recomputation
+matches every recorded estimate to 1e-12.  Because a one-step Newton solution
+on a small block can respond nonlinearly to influential rows, the report gives
+both exact block estimates and the corresponding full-sample influence-
+linearized block estimates.
+
+At selected K=32,768 and proposal seed 8701, the full-20k M-doubling shift is
+`(-3.228e-4,-1.668e-4)`, while the median absolute exact 2k-block shifts are
+`(1.021e-3,4.792e-4)`: factors 3.16 and 2.87 larger.  More generally, across
+K=8,192/32,768/65,536 and both available K=32,768 seeds, the measured
+influence-linearized 2k-block standard deviations are 0.87--1.10 times the
+prediction obtained by multiplying the stored full-20k paired standard error
+by sqrt(10).  This is strong internal agreement with ordinary 1/sqrt(N)
+averaging of the finite-M error.
+
+The exact block distribution is heavy-tailed.  For example, K=32,768 seed
+8701 has one block shift `(-0.0245,+0.00944)`, and seed 8702 has one
+`(+0.00900,-0.01334)`.  Their block information matrices remain positive
+definite; the large movements arise from influential proposal-noise rows and
+the nonlinear re-solution of a much smaller aggregate, not a failed file or
+singular solve.  Thus a typical 2k block follows the anticipated roughly
+sqrt(10) amplification, but RMS scatter from only ten exact blocks is dominated
+by rare outliers and should not be summarized as Gaussian.  Canonical output:
+`m_doubling_block_scaling_n2000_v2.json` under the cont.248 campaign root.  The
+initial v1 output is retained for provenance; v2 adds linearized diagnostics.
+Python syntax, whitespace, hashes, and exact full-estimate reproduction pass.
+
+## 2026-08-26 cont.248 — deep-capture and paired 20k K x M diagnostic completes; K=8k rejected and M=65k not converged
+
+All replacement numerical jobs completed with exit code zero.  The V100
+K=65,536 arm **16026581** took 1h07m28s, the A40 K=8,192 arm **16026582**
+took 36m29s, and the sequential V100 continuation **16026584** took 1h52m01s.
+Total elapsed wall time from the parallel arms starting through final completion
+was 2h59m43s.  All job-level stderr files are empty; the K=8,192 arm contains
+only PyTorch's informational warning that optional TF32 matmul was not enabled.
+
+The 1,024-object exact capture audit required the extended 131,072-candidate
+reference.  At the centre, Gaussian-ranked K=8,192/16,384/32,768/65,536
+captured median reference masses 0.5684/0.7524/0.9184/0.9961.  Their 1st
+percentiles were only 0.1564/0.2813/0.5073/0.8084, and K=65,536 had a minimum
+capture of 0.4040.  All eight h=0.001 stencil views give essentially the same
+result.  Thus the previous K=8,192 setting demonstrably omitted substantial
+posterior support for the enlarged 12.76-million-atom prior.
+
+For proposal seed 8701 and M=65,536, aggregate estimates are K=8,192
+`(0.02201455,-0.00248007)`, K=32,768 `(0.02254195,-0.00272122)`, and K=65,536
+`(0.02259963,-0.00274760)`.  Expanding K=8,192 to 32,768 changes g by as much
+as 5.27e-4 and fails the fixed 1e-4 gate; expanding K=32,768 to 65,536 changes
+it by only `(5.77e-5,-2.64e-5)` and passes.  K=32,768 is therefore the smallest
+empirically supported aggregate candidate count in this diagnostic.
+
+Larger K does not permit a smaller retained-draw count.  The final M doubling
+changes g by maxima 2.76e-4, 3.23e-4, and 3.26e-4 for K=8,192, 32,768, and
+65,536 respectively, so no K arm passes the 1e-4 nested-M gate.  At selected
+K=32,768, proposal seed 8702 ends at `(0.02235111,-0.00269875)`, differs from
+seed 8701 by up to 1.91e-4, and has a final-doubling change up to 8.04e-4.
+Consequently no M through 65,536 passes both nested-tail and seed gates, and
+no M reduction is supported.  Truth displacement was not used for selection.
+Canonical machine-readable report: `final_summary.json` under campaign root
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/v31_fs2_default_qmc128_km_n20k_v1`.
+
+## 2026-08-26 cont.247 — paired numerical stage split across one V100 and one A40
+
+The deep candidate-capture audit completed successfully as V100 job **16025613**
+in 14m14s and produced both the 65,536- and automatically triggered 131,072-row
+reference reports.  The untouched two-V100 numerical job **16025614** remained
+pending for priority and was cancelled before doing any work.
+
+At the owner's request, `jobs/job_v31_fs2_qmc128_km_n20k.sh` now has explicit
+one-GPU phases.  The common-seed K=65,536 arm is submitted on one V100 and the
+K=8,192 arm on one A40; because those GPU types are installed on different
+nodes, they are independent jobs writing disjoint result directories.  An
+after-success continuation on one V100 verifies both results, runs K=32,768,
+selects K using the fixed 1e-4 gate, and runs the selected second proposal seed.
+This changes scheduling only: frozen rows, initial centre, QMC-128 coordinates,
+epsilon, proposal seeds, K/M ladders, and numerical outputs are unchanged.
+Bash syntax and whitespace validation passed before submission.
+The replacement jobs are V100 K=65,536 arm **16026581**, A40 K=8,192 arm
+**16026582**, and after-success V100 continuation **16026584**.  Slurm accepted
+the exact typed one-GPU requests.  Both first-stage arms entered RUNNING, while
+the continuation waits on both after-success dependencies.
+
+## 2026-08-26 cont.246 — deep-capture and paired 20k K x M diagnostic prepared
+
+The next sampling diagnostic reuses, without regeneration, the frozen
+100,000-object likelihood mock and completed 12,760,990-atom FS2/QMC-128 cache
+from cont.245.  It first audits the first 1,024 frozen observations at the same
+raw-mean centre `(0.014022970805913502, 0.0023700238746689867)`.  A 65,536-row
+location-tree reference is exactly evaluated at the centre and all eight
+`h=0.001` full-information stencil views; within that deep reference, the
+QMC-128 per-atom mean/std Gaussian proxy ranks nested prefixes
+`K=(8192,16384,32768,65536)`.  Reports include 0.1st, 1st, 5th, and 10th
+percentile capture.  If the worst-view 1st-percentile capture at K=32,768 is
+below 0.999, the job automatically repeats against Kref=131,072 and the
+numerical experiment uses that deeper prefilter.
+
+The paired numerical stage holds the first 20,000 mock rows, full-mock initial
+centre, epsilon 0.1, and proposal seed 8701 fixed while testing
+`K=(8192,32768,65536)` with retained common prefixes
+`M=(512,1024,2048,4096,8192,16384,32768,65536)`.  It runs two arms concurrently
+on two full A40s.  A deterministic 1e-4 absolute gate selects the smallest K
+passing both the last-M-doubling and next-K endpoint checks; if no smaller K
+passes, the largest support is the conservative fallback.  Only that selected
+K is repeated with proposal seed 8702.  The final report records every K/M
+aggregate, paired K and seed changes, unique-atom percentiles, flow counts,
+wall time, and whether any smaller M passes both nested-tail and seed gates.
+The retained-full-ladder path does not persist outside-local evidence or ESS,
+so the report labels those diagnostics unavailable rather than inventing them.
+Truth displacement is not a selection input.
+
+New files are `scripts/diagnose_deep_candidate_capture.py`,
+`scripts/summarize_km_diagnostic.py`,
+`jobs/job_v31_fs2_candidate_capture_audit.sh`,
+`jobs/job_v31_fs2_qmc128_km_n20k.sh`, and
+`tests/test_summarize_km_diagnostic.py`.  The resource-discovery skill reports
+32 physical login-node cores, 376 GiB RAM, 8.69 TB free storage, and no
+login-node GPU; all likelihood work therefore remains scheduled.  Python and
+Bash syntax checks and `git diff --check` pass.  Focused sampling, partition
+combination, and new summary tests pass 24/24.  Campaign root:
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/v31_fs2_default_qmc128_km_n20k_v1`.
+Submitted capture audit **16025587** followed after-success by paired numerical
+job **16025588**.  Slurm confirms exact A40 requests of one GPU for the audit
+and two GPUs in one allocation for the numerical stage.  The audit is initially
+pending for priority with no scheduler start prediction; compute after allocation
+is estimated at approximately 1.5--2.5 hours for the full chain.
+Both jobs remained pending and performed no work.  At the owner's request they
+were cancelled and replaced by V100 audit **16025613** and dependent two-V100
+numerical job **16025614**.  Slurm confirms `gpu:v100:1` and `gpu:v100:2`
+respectively; both V100 nodes satisfy the 160/224-GiB host-memory requests.
+The wrappers now record V100 as the reproducible default for this campaign.
+Allow approximately 2--3.5 hours of compute after allocation because V100 flow
+throughput may be lower than the measured A40 rate.
+
+## 2026-08-26 cont.245 — FS2-default QMC-128 100k run completes; truth-compatible endpoint but M ladder is not converged
+
+All five jobs in the frozen V3.1 campaign completed with exit code zero:
+build `16017468` in 32m11s, merge `16017469` in 7m39s, mock preparation
+`16017470` in 20s, two-A40 inference `16017471` in 1h03m10s, and exact
+partition combination `16017472` in 7s.  Excluding scheduler gaps, the full
+new-prior build plus inference cost was 1h43m27s.  The two 50,000-observation
+partitions took 3731.6s and 3729.4s, confirming balanced use of both A40s.
+Stderr contains only the informational PyTorch warning that available TF32
+matmul was not enabled.
+
+The exact 100,000-object aggregate at the retained `M=65536` endpoint is
+`ghat=(0.01951996,-0.00047124)` for injected `g=(0.02,0)`, with robust
+sandwich standard errors `(0.00057378,0.00043965)`.  Thus the g1 difference is
+`-0.00048004`, or `m=-2.400%`, but only 0.84 robust standard errors from the
+injected value; it is not evidence for a resolved closure bias.  The disjoint
+50k estimates are `(0.01986997,-0.00090473)` and
+`(0.01920169,-0.00007673)`, mutually compatible at their robust errors.
+
+The endpoint must not yet be called numerically converged.  The common-draw
+nested g1 ladder is `0.01354615, 0.01434247, 0.01500313, 0.01588474,
+0.01662080, 0.01762080, 0.01856399, 0.01951996` at
+`M=512,...,65536`; the final doubling changes g1 by `+0.00095598`, larger than
+the quoted statistical error.  The new broad 200-case prior therefore behaves
+differently from the earlier ten-case sampling test, whose two proposal seeds
+agreed at `M=65536`.  This run establishes performance and a truth-compatible
+finite-M endpoint, not a stable final inference result.  The reusable compact
+cache contains exactly 12,760,990 positive atoms with the audited twenty-shard
+mixture and literal QMC-128 mean/std coordinates.  Canonical aggregate:
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/v31_fs2_default_qmc128_n100k_v1/combined/result.json`.
+
+## 2026-08-25 cont.244 — sharded FS2-default QMC-128 100k inference campaign
+
+The numerical recentering path now consumes the complete fresh 200-case FS2
+prior without pretending that one ten-case shard is the population.  Each of
+the twenty neighbour-complete stores is first evaluated independently by the
+frozen V3.1 measurement flow and detection model.  Only after those neighbour
+features are fixed are the zero-mass context rows removed and all 12,760,990
+positive atoms merged.  The merged masses retain the exact
+`global_shard_mass` mixture in `default_prior_manifest.json`; its compact scene
+has an intentionally empty graph because inference uses the precomputed
+shard-level model views, not a context-free rebuild.
+
+New scripts `build_sharded_prior_model_qmc.py` and
+`merge_sharded_prior_model_qmc.py` build that compact cache and compute literal
+per-atom Gaussian mean/standard-deviation coordinates from 128 QMC flow draws.
+The one-percent dispersion floor is applied globally after concatenation,
+rather than separately by shard.  `run_section5_numerical_recenter.py` now has
+a provenance-preserving prepare-only mode and disjoint observation bounds.
+`run_adaptive_section5` accepts an absolute object-ID offset, so two GPU
+partitions with master proposal seed 8701 reproduce the same row-specific
+random streams as one unsplit 100,000-object call.  The initial raw-mean centre
+is computed on the complete mock before either 50,000-object partition is
+taken.  `combine_numerical_recenter_partitions.py` concatenates the per-object
+score and full 2x2 information, then performs one global Newton solve and one
+global robust sandwich uncertainty calculation; it never averages two shear
+estimates.
+
+The frozen inference configuration is V3.1 original-E SWA seed 501,
+`K=8192`, Gaussian-uncertainty ranking, `epsilon=0.1`, retained nested prefixes
+through `M=65536`, `h=0.001`, raw-mean initial centre, one full-2D recentering
+step, no measured cut, and external `R_blend=0`.  The likelihood-generated mock
+contains 100,000 detections at injected `g=(0.02,0)` from the new FS2 default.
+The build and inference wrappers request exactly two A40 GPUs in one Slurm
+allocation; merge, finalization, and all other heavy CPU work remain scheduled.
+
+Python/Bash syntax checks pass.  The focused catalogue-sampling, provenance,
+summary, and new partition-combination tests pass **48/48**, and `git diff
+--check` passes.  The campaign output root is
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/v31_fs2_default_qmc128_n100k_v1`.
+Next: submit and monitor the build -> merge -> mock -> two-GPU inference ->
+combine dependency chain; the current runtime estimate is 2.5--4 hours after
+resources start, plus scheduler queue time, dominated by twenty QMC-128 shard
+caches and the two 50k retained-full-ladder evaluations.
+
+The chain is submitted as build **16017468** -> merge **16017469** -> mock
+preparation **16017470** -> two-GPU inference **16017471** -> final combination
+**16017472**.  Slurm confirms that each expensive job requests two A40s on one
+node (`gres/gpu:a40=2`); the build is initially pending for priority with a
+provisional scheduler start of 2026-08-26 03:46 CEST.  That start prediction is
+queue state, not computation time, and can move.
+
+## 2026-08-25 cont.243 — fresh 200-case FS2 default-prior campaign prepared
+
+The inference-prior source is returned to the same FS2-25876 population family
+used by the simulations and deployed models.  The new frozen range is cases
+**20000--20199**, for BlendEMU catalogue-generator seeds **20123--20322** under
+the existing exact rule `seed=case+123`.  This is disjoint from the complete
+historical model/simulation case range found in the repository and worklog
+(0--899); the generation audit additionally hard-rejects every case 0--9999.
+Only the unsheared `g=(0,0)` catalogue leg is generated.  It uses the exact
+FS2-25876 parent file, `r<29` source depth, circularized-to-semimajor size
+conversion, one-square-degree density, and BlendEMU step-1 generator used by
+the model simulations.  No images, measurements, or labels are generated or
+reused.
+
+`configs/catalogue_prior_fs2_200cases_v1.yaml` freezes this source identity.
+`audit_fs2_prior_generation.py` requires all 200 exact files, 699,680 ordered
+rows per file, exact zero shear, the `sky_cos_sin` convention, unique disjoint
+seeds, and records SHA-256 hashes for every raw case, the 4.57-GB FS2 parent,
+the config, and both BlendEMU generator modules.  The approximately 140-million
+row catalogue is built as twenty ten-case `ScenePrior` shards, preserving every
+galaxy as neighbour context while assigning primary mass only in the V3.1
+domain `18<r<25.8, 0.5<Re<1.5`.  The finalizer verifies the shards are an exact
+partition and records global mixture masses proportional to each shard's
+positive-atom count; it will publish `default_prior_manifest.json` only after
+all shards pass.
+
+The resource-discovery skill reported 32 physical login-node cores, 376 GiB
+RAM, 8.76 TB free storage, and no login-node GPU; all generation and graph work
+therefore goes through Slurm.  New wrappers are
+`job_generate_fs2_prior_200cases.sh`,
+`job_build_fs2_prior_200cases_shards.sh`, and
+`job_finalize_fs2_prior_200cases.sh`.  Bash/Python syntax checks and
+`git diff --check` pass.  The new generation/finalization tests pass 3/3, and
+the combined assembly/scene regression set passes 13/13.  Next: submit the
+generation -> four-concurrent-shard -> final-audit dependency chain and promote
+the completed manifest in the conventions/default wrappers; GalSBI remains a
+historical closure stress test, not the default prior.  Submitted jobs are
+generation **16016632**, scene-shard array **16016633_0-19%4**, and gated final
+audit **16016634**.  Generation 16016632 wrote all 200 cases in 95 seconds,
+then its audit correctly stopped on a stale expected-row constant inherited
+from the archived 2026 cases: the current pinned FS2 loader produces 699,680,
+not 699,568, rows per square degree.  Direct checks of cases 20000, 20099, and
+20199 confirm complete ordered indices, exact zero shear, and the declared
+convention.  The gate and ten-case shard expectation are corrected to the
+current source-identified count; audit-only recovery reuses the completed raw
+files without regenerating them.  Impossible dependents 16016633/16016634 were
+cancelled; replacement audit **16016679** gates scene array
+**16016680_0-19%4** and final audit **16016681**.
+
+The replacement chain completed in full.  Audit 16016679 verified and hashed
+all **139,936,000** raw rows.  Every one of the twenty scene tasks exited zero
+in 9m51s--11m06s with 16.64--18.91 GiB peak RSS; together they contain
+**12,760,990 positive prior atoms** and **2,864,350,310 directed 11-arcsec
+edges**.  Final audit 16016681 completed in 3m18s after hashing the 70-GB
+campaign and published `default_prior_manifest.json` with SHA-256
+`9d3568495c194c7efc3d05b7b6e783640f6ea860304d4af8d0cb4eed6fcf6090`.
+`configs/default_catalogue_prior.json`, `doc/CONVENTIONS.md` §2c, and
+`doc/API.md` now designate that immutable sharded manifest as the default.
+Consumers must preserve its positive-atom-weighted shard masses; using a
+single shard is explicitly not the 200-case default.  GalSBI products remain
+available for historical stress-test reproduction only.
+
+## 2026-08-25 cont.242 — QMC-64 Gaussian sampling matrix complete; K=8192/epsilon=0.1 wins, but one-seed M cannot yet be cut below 65536
+
+Replacement preparation **16013565_0** and all 12 tasks of matrix
+**16013566** completed with exit code zero.  Peak host RSS was 8.54--9.07 GiB
+for the matrix tasks.  Stderr contains only PyTorch's informational warning
+that TF32 matmul was available but not enabled.  Although the array throttle
+allowed two concurrent tasks, Slurm actually ran the tasks sequentially on
+`kng-cl-nv02`; `%2` was a ceiling rather than a two-GPU guarantee.  The matrix
+used the frozen 10,000-object self-consistent V3.1 likelihood mock at
+`g=(0.02,0)`, external `R_blend=0`, raw-mean-shape centre
+`(0.0126333,-0.0026580)`, QMC-64 mean/std proposal coordinates, and retained
+common prefixes through `M=65536`.
+
+At `M=65536`, `K=8192, epsilon=0.1` has by far the cleanest independent-seed
+agreement: seed 8701 gives `(0.0242481,-0.0007231)` and seed 8702 gives
+`(0.0242462,-0.0006953)`, a difference of only
+`(-0.0000019,+0.0000278)`.  For `K=8192`, the seed-averaged endpoints across
+`epsilon=(0.1,0.2,0.3)` span only `(0.000068,0.000008)`, while epsilon 0.1 is
+fastest (about 12.1 minutes per retained-full-ladder seed versus 15.8 and 19.2
+minutes).  `K=4096` is not support-stable: its endpoint seed differences in g1
+are 0.00056--0.00114, and its paired differences from `K=8192` reach 0.00077.
+Thus the supported numerical choice is **K=8192, epsilon=0.1**.
+
+The retained ladder does not justify the hoped-for one-seed reduction to
+`M=4096` or 8192.  For the supported K/epsilon pair, the 8702-minus-8701 g1
+differences are 0.000914 at M=4096, 0.000675 at M=8192, 0.000816 at M=16384,
+0.000079 at M=32768, and 0.000002 at M=65536.  Relative to each seed's
+M=65536 endpoint, M=32768 differs by at most 0.000214 in g1 and 0.000041 in g2;
+this is a defensible exploratory approximation if an absolute 2.5e-4 numerical
+tolerance is accepted, but it misses a 1e-4 (and therefore a 0.3%-at-g=0.02)
+gate.  Under the stricter calibration target, **retain M=65536 for a one-seed
+run** rather than selecting an accidentally cancelling seed mean.
+
+Finally, the stable high-M estimate remains about `g1=0.02425` for an injected
+0.02 mock.  Because this displacement persists across K and epsilon, it is not
+an importance-support effect.  The run took only one full-2D Newton step from
+the raw-mean centre, so the next inference experiment should test a second
+recentering step (holding K=8192/epsilon=0.1 and the same frozen mock) before
+interpreting this as model closure bias.  No ConstGold value was used for any
+choice.
+
+## 2026-08-25 cont.241 — frozen transition classifier transfers qualitatively but overpredicts ConstGold detection response
+
+The ordinary-concatenation and equal-weight transition-aware checkpoints were
+evaluated in one frozen campaign on unmatched ConstGold cases 40--49, with no
+fitting, calibration, early stopping, checkpoint selection, or hyperparameter
+choice.  Both
+`g1=-0.02` and `g1=+0.02` CrossMatch arms are retained independently; the
+prebuilt both-detected response catalogue is deliberately not used because it
+would remove the detection transitions.  All 5,627,065 inputs passing the
+classifier's training-domain cut (`18 < r < 28`, `0.1 < Re < 1.5`) are scored.
+There are 22,248 plus-only and 22,506 minus-only objects, respectively 0.786%
+and 0.795% of their own arm detections.  All CrossMatch identifiers are known;
+unmatched rows are zero.
+
+The response is the pure fixed-intrinsic detection-selection response,
+`(<e1_intrinsic>_plus - <e1_intrinsic>_minus)/(2g)`, with `2g=0.04`.
+An explicit rendered-shape cross-check gives, on the classifier domain,
+`R_parent=1.000096 +/- 0.000049`, `R_detected=0.980814 +/- 0.000705`, and
+`R_detected-R_parent=-0.019282 +/- 0.000663`.  This agrees with the direct
+fixed-intrinsic result `-0.019253 +/- 0.000652`.  On the full input population,
+the corresponding values are `1.000109 +/- 0.000041`,
+`0.981646 +/- 0.000681`, and `-0.018463 +/- 0.000644`; the fixed-intrinsic
+result is `-0.018421 +/- 0.000631`.  The latter reproduces the independent
+archived cases-40--139 fixed-intrinsic result `-0.018512 +/- 0.000149` in
+`derisk/detection_constgold_v1.npz`.
+
+This direct denominator audit reveals that cont.206's later
+`-0.009191 +/- 0.000275` quotation is inconsistent by approximately a factor
+of two with the fixed-intrinsic estimand and with
+`R_detected-R_parent`.  Its underlying one-off audit artifact was not retained,
+so the exact faulty operation cannot be identified, but it must not be used as
+the reference for this classifier test.  The two independent current
+estimators and the archived truth artifact all support approximately `-0.0185`
+globally with the required antithetic denominator `2g`, not `4g`.
+
+| cases 40--49, classifier domain | ordinary concatenation | transition-aware (`lambda=1`) |
+| --- | ---: | ---: |
+| marginal log loss | **0.229106** | 0.238624 |
+| flip-direction conditional loss | 0.697131 | **0.690394** |
+| flip-direction AUC | 0.3806 | **0.5778** |
+| predicted `R_detect` | +0.021908 | **-0.024023** |
+| truth `R_detect` | -0.019253 +/- 0.000652 | -0.019253 +/- 0.000652 |
+| model minus truth | +0.041161 +/- 0.000660 | **-0.004770 +/- 0.000641** |
+
+Thus transition supervision transfers qualitatively: it retains the correct
+sign, beats random on 44,754 arm-discordant objects, and predicts almost the
+same response as on new half-shear `g=0.02` cases (`-0.023593`).  It does not
+close quantitatively on ConstGold: its magnitude is 24.8% too large and its
+additive residual is 7.4 paired-case standard errors from zero.  The ordinary
+model remains wrong-sign.  The transition model also retains its approximately
+4.2% marginal-log-loss penalty.  This validation therefore rejects both
+checkpoints for deployment; ConstGold must not now be used to tune their loss
+weight or select a replacement.
+
+New files: `scripts/evaluate_detection_classifier_constgold.py`,
+`jobs/job_evaluate_detection_classifier_constgold.sh`, and
+`tests/test_detection_classifier_constgold.py`.  Initial job **16014930**
+completed in 6m20s; the canonical explicit-decomposition rerun **16015076**
+completed in 5m35s with 2.34 GiB peak host RSS and reproduced all shared fields
+bit-for-bit.  Fourteen focused classifier tests, Python/Bash syntax checks,
+JSON provenance/estimator assertions, and `git diff --check` pass.  Canonical
+report:
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/detection_classifier_constgold_c40_49_v2/report.json`
+(SHA-256 `26c6b73263c7d57d2ba6572f9703f9e507e591f0ff45c278cdd7d9856d384678`).
+
+## 2026-08-25 cont.240 — transition-aware detection response transfers to new cases and g=0.02
+
+The ordinary-concatenation and equal-weight transition-aware checkpoints from
+cont.239 were kept frozen and evaluated on half-shear cases 140--159, which are
+disjoint from classifier train/tune/test cases 0--39 and from the ConstGold
+evaluation case IDs 40--139.  Each amplitude uses the same deterministic
+50,000-primary sample per case: one million paired objects at `0 -> 0.02` and
+one million at `0 -> 0.05`.  No fitting, calibration, early stopping,
+checkpoint selection, or hyperparameter choice was performed, and no
+ConstGold file was read.  All CrossMatch inputs were known; unmatched rows are
+zero.
+
+The centered fixed-intrinsic detection response is stable.  The ordinary model
+remains wrong-sign, whereas the transition-aware model remains close to the
+simulation at both amplitudes:
+
+| new cases 140--159 | ordinary, `g=0.02` | transition, `g=0.02` | ordinary, `g=0.05` | transition, `g=0.05` |
+| --- | ---: | ---: | ---: | ---: |
+| marginal log loss | 0.229731 | 0.239256 | 0.229696 | 0.239177 |
+| flip-direction conditional loss | 0.694528 | 0.691808 | 0.697899 | 0.688488 |
+| flip-direction AUC | 0.4079 | 0.5706 | 0.3745 | 0.6055 |
+| predicted `R_detect` | +0.021411 | **-0.023593** | +0.021360 | **-0.023553** |
+| truth `R_detect` | -0.021062 +/- 0.002296 | -0.021062 +/- 0.002296 | -0.020905 +/- 0.001505 | -0.020905 +/- 0.001505 |
+| model minus truth | +0.042473 +/- 0.002287 | **-0.002531 +/- 0.002297** | +0.042265 +/- 0.001500 | **-0.002647 +/- 0.001507** |
+
+The transition model changes by only `-0.000040 +/- 0.000004` between its
+`g=0.02` and `g=0.05` predictions.  The truth low-minus-high difference is
+`-0.000157 +/- 0.001747`, so there is no detected amplitude dependence.  Its
+new-case `g=0.05` residual also reproduces the cases-30--39 value from cont.239
+(`-0.002765 +/- 0.001928`).  At `g=0.02`, only 2,525 of 695,433
+morphology-changing pairs are discordant (versus 4,708 at `g=0.05`), so the
+direction diagnostic is noisier; nevertheless its conditional loss remains
+below `log(2)` and the response sign is correct.  The ordinary model's stable
+positive response confirms that marginal classification quality alone does
+not supply the required shear sensitivity.
+
+New reusable files:
+`scripts/evaluate_detection_classifier_shear_stability.py`,
+`jobs/job_evaluate_detection_classifier_shear_stability.sh`, and
+`tests/test_detection_classifier_stability.py`.  Scheduler job **16014820**
+completed in 3m19s with 1.20 GiB peak host RSS.  Ten focused classifier tests,
+Python/Bash syntax checks, JSON provenance assertions, and `git diff --check`
+pass.  Canonical report:
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/detection_classifier_stability_c140_159_v1/report.json`
+(SHA-256 `d2d6433ce247334ba1354949d6ecb525c51d5bae1ed634157052e7bce3f505d7`).
+
+This strengthens the transition-aware result but does not approve deployment:
+its marginal log loss remains about 4.1% worse than the ordinary model, only
+one transition weight has passed, and the independent ConstGold antithetic
+validation is still pending.
+
+## 2026-08-25 cont.239 — paired transition supervision recovers the detection-response sign
+
+Two smooth detection classifiers were compared on exactly paired forward-shear
+scenes.  Cases 0--24 train the models, cases 25--29 control early stopping, and
+cases 30--39 are an untouched test set; each case contributes the same 50,000
+eligible primaries selected with the existing seed.  Both models use the same
+impact-`a=1` neighbour, initialization, batch order, 3x128 SiLU MLP, and
+single-leg input.  Axis ratio and position angle are excluded.  The morphology
+inputs are instead the rendered primary and neighbour `(e1,e2)`, together with
+both shapes projected into the pair-separation frame.  Neither the applied
+shear, a leg identifier, nor any measured shape is an input.
+
+The ordinary model minimizes the two marginal BCE terms, mathematically the
+ordinary concatenation of both legs.  The transition-aware model adds a
+conditional logistic loss on morphology-changing discordant pairs:
+`BCEWithLogits(z_g-z_0, 1[y_g>y_0])`.  Roughly 69.5% of test pairs have changed
+input morphology; 2,361 of 347,216 such pairs are discordant.  Input-identical
+flips are excluded from the transition term rather than presented as learnable
+morphology effects.  An initial `lambda=0.25` pilot was rejected using tuning
+metrics alone because its conditional loss remained above random (`0.69497 >
+log(2)`).  The equal-weight `lambda=1` model was then fixed at epoch 19 using
+only marginal and conditional tuning losses.  Shape response was not used in
+fitting, early stopping, weight choice, or model selection; it was evaluated
+only after each checkpoint was frozen.
+
+| frozen cases-30--39 diagnostic | ordinary concatenation | transition-aware (`lambda=1`) |
+| --- | ---: | ---: |
+| marginal log loss | **0.227646** | 0.236848 |
+| Brier score | **0.066591** | 0.069585 |
+| flip-direction conditional log loss | 0.698100 | **0.689455** |
+| flip-direction AUC | 0.3685 | **0.5930** |
+| flip-direction accuracy | 0.4083 | **0.5680** |
+| fixed-intrinsic `R_detect` | +0.021264 | **-0.023273** |
+| truth fixed-intrinsic `R_detect` | -0.020509 +/- 0.001875 | -0.020509 +/- 0.001875 |
+| model minus truth | +0.041773 +/- 0.001879 | **-0.002765 +/- 0.001928** |
+
+Thus pairing supplies the missing small-morphology sensitivity and recovers the
+response sign without direct response supervision.  It is not yet approved for
+deployment: marginal log loss worsens by 4.0%, the response residual is still
+1.4 paired-case standard errors from zero, only one acceptable transition
+weight has been tested, and ConstGold remains unread.  A next experiment should
+map the marginal/transition tuning frontier between `lambda=0.25` and `1`
+without consulting cases 30--39 or ConstGold, then freeze one checkpoint for a
+single antithetic external validation.
+
+Files: `sbsi/detection_classifier.py`,
+`scripts/train_detection_classifier_transition_pair.py`,
+`jobs/job_train_detection_classifier_transition_pair.sh`,
+`jobs/job_train_detection_classifier_transition_lambda1.sh`, and
+`tests/test_detection_classifier.py`.  GPU jobs **16014409** and **16014545**
+completed in 17m28s and 6m56s with 3.85 GiB and 3.72 GiB peak host RSS.
+Focused tests pass (8/8); Python and Bash syntax checks and `git diff --check`
+pass.  Canonical ordinary report:
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/detection_classifier_transition_pair_v1/models/report.json`
+(SHA-256 `6e787234546d0d152ff4be2a6a4c328215875a4649e00195a5a7bc30b0c36750`).
+Canonical transition-aware report:
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/detection_classifier_transition_lambda1_v1/models/report.json`
+(SHA-256 `959bdefe4773cf5357603a5d65bf0d616ad10ff0f0519c9a3885854ff2e5b2b2`).
+
+## 2026-08-25 cont.238 — QMC-64 matrix preparation failure diagnosed and corrected
+
+Preparation task **16013322_0** failed cleanly after 1m37s because the new
+sampling wrapper supplied the production fixed `R_blend` cache to
+`estimate_one_step_adaptive_section5`, whose validated contract explicitly
+requires external `R_blend=0`.  The A40 allocation was healthy, peak host RSS
+was 6.99 GiB, and the expensive proposal-coordinate build completed before the
+configuration check: its version-4 manifest records V3.1 seed 501, 64 QMC flow
+draws, `statistic=mean`, and `dispersion_statistic=std`.  Dependent matrix job
+**16013323** consequently remained `DependencyNeverSatisfied` and performed no
+work.
+
+`jobs/job_v31_gaussian_qmc64_sampling.sh` now explicitly leaves
+`BLEND_RESPONSE_CACHE` empty and uses a fresh
+`prepare_mock_qmc64_mean_std_rblend0` output path, while retaining and reusing
+the valid QMC-64 proposal cache.  This keeps the experiment focused on
+adaptive-sampler numerical stability and avoids silently broadening that
+estimator's validated scope.  The earlier worklog description of this matrix
+as using fixed `R_blend` is superseded by this correction.  Validation:
+`bash -n jobs/job_v31_gaussian_qmc64_sampling.sh` passes.  The impossible
+dependency **16013323** was cancelled; replacement preparation **16013565_0**
+gates replacement matrix **16013566_0-11%2**.  The replacement remained healthy
+with empty stderr beyond 2m23s on the same full A40, past the former 1m37s
+failure point.  Next: require preparation to complete before interpreting the
+matrix results.
+
+## 2026-08-25 cont.237 — V3.1 Gaussian QMC-64 sampling matrix launched on two full A40s
+
+The proposal-coordinate cache can now distinguish its location and dispersion
+summaries.  `ProposalCoordinateTable.from_flow` retains the existing
+`median`/robust-IQR default, while the new explicit `dispersion_statistic=std`
+path records the population standard deviation of the same cached QMC flow
+draws.  Cache format version 4 records that choice; version-2 and version-3
+caches remain loadable as robust-IQR caches.  The numerical-recenter CLI and
+job wrapper expose the setting and normalize old cache provenance before
+comparison, so existing production caches remain valid and the new experiment
+is literally Gaussian `mu_j`/`sigma_j`, not mean locations with IQR widths.
+
+`jobs/job_v31_gaussian_qmc64_sampling.sh` first builds a fresh V3.1 seed-501
+mean/std coordinate cache with 64 QMC draws per active prior atom and a fresh
+10,000-object `g=(0.02,0)` likelihood mock using the complete cases-0--9 prior,
+fixed `R_blend`, and deployed detector.  This avoids selecting numerical
+hyperparameters from the evaluation-only ConstGold result.  The dependent
+matrix holds a 32,768-neighbour location prefilter and raw-mean-shape one-step
+centre fixed, crosses `K=(4096,8192)`, `epsilon=(0.1,0.2,0.3)`, and proposal
+seeds `(8701,8702)`, and retains the common nested
+`M=(512,1024,2048,4096,8192,16384,32768,65536)` ladder.  Selection will use
+only paired nested-draw, independent-seed, and cross-K numerical stability,
+plus ESS/peak-weight diagnostics and runtime; the inferred displacement from
+truth is not a tuning target.
+
+Preparation job **16013322_0** is running on one full A40 in `inter`; dependent
+array **16013323_0-11%2** is held `afterok` and caps execution at two concurrent
+full A40s.  Focused sampling/null/summary regressions pass (64/64), Bash and
+Python syntax checks pass, and the full suite reaches 403 passed / 1 skipped.
+Its only two failures are the pre-existing loop-shadowing guard's five
+unreviewed hits in unrelated existing loops; none is introduced by the
+Gaussian-cache change.  Next: verify cache/mock completion, then choose the
+smallest `M` that passes both nested-prefix and independent-seed gates before
+any frozen ConstGold rerun.
+
+Files: `sbsi/catalogue_sampling.py`,
+`scripts/run_section5_numerical_recenter.py`,
+`jobs/job_section5_numerical_recenter.sh`,
+`jobs/job_v31_gaussian_qmc64_sampling.sh`, and
+`tests/test_catalogue_sampling.py`.
+
+## 2026-08-25 cont.236 — fully rendered pair shapes do not fix detection response
+
+The detection-classifier ladder now tests the complete sheared primary and
+representative-neighbour shapes, while preserving rotation symmetry.  Each
+truth row's intrinsic `(q, PA)` is composed with its stored `(g1,g2)`, then the
+resulting primary and secondary ellipticities are projected into the
+primary--secondary separation frame as `(e_parallel_p, e_cross_p,
+e_parallel_s, e_cross_s)`.  The classifier is not given `(g1,g2)` themselves:
+those are simulation truth, not observable deployment features.  A direct
+case-0 catalogue comparison confirms that `r`, `Re`, Sersic `n`, positions,
+intrinsic `q`, and intrinsic PA are identical between the `g=0` and `g=0.05`
+files; only the stored shear tags differ.  This matches SBSI's shape-only shear
+contract, so there are no additional flux, size, separation, or concentration
+transformations to invent.
+
+GPU job **16011696** completed in 5m29s with 2.87 GiB peak RSS on one A40.  It
+used the same cases 0--29 training / 30--39 validation split, 50,000 eligible
+primaries per case, labels, neighbour choices, XGBoost capacity, and centered
+probability-weighted response estimator as cont.233; cases 40--139 remained
+unread.  Against held-case truth `R_detect=-0.0208917 +/- 0.0018719`, the
+rendered pair-shape variants give:
+
+| classifier | log loss | balanced accuracy | model `R_detect` | model - truth |
+| --- | ---: | ---: | ---: | ---: |
+| nearest + q + pair shape | 0.245164 | 0.90377 | +0.018769 | +0.039661 +/- 0.001946 |
+| impact a=1 + q + pair shape | **0.228990** | **0.91067** | +0.018581 | +0.039473 +/- 0.001941 |
+| impact a=2 + q + pair shape | 0.229747 | 0.91016 | +0.019151 | +0.040042 +/- 0.001843 |
+| impact a=4 + q + pair shape | 0.231765 | 0.90896 | +0.019046 | +0.039938 +/- 0.001882 |
+
+The best pair-shape model is slightly worse in log loss than the q-only a=1
+model (`0.228990` versus `0.228550`) and retains the same wrong-sign response.
+Thus the missing response is not explained by feeding intrinsic rather than
+rendered morphology; ordinary pointwise BCE is the remaining demonstrated
+failure.  No model is approved for deployment.  Next: retain the compact
+impact-a=1 + q input and add a differentiable held-case response term to the
+training objective before a single frozen ConstGold evaluation.
+
+Files: `sbsi/detection_classifier.py`,
+`scripts/train_detection_classifier_ladder.py`,
+`jobs/job_train_detection_classifier_rendered_shape.sh`, and
+`tests/test_detection_classifier.py`.  The focused classifier/scene tests pass
+(15/15), Python and Bash syntax checks pass, and `git diff --check` passes.
+Canonical report:
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/detection_classifier_rendered_shape_v1/models/report.json`
+(SHA-256 `d94b2e6449ee3fa6ea054f1d7b7f95d5dd212b46037385928c775080ef32dcf0`).
+
+## 2026-08-24 cont.235 — V3.1 ConstGold launch recovered from cache-builder OOM
+
+The initial cache-building task **16007622_0** was not healthy: Slurm killed it
+for host-memory exhaustion after 5m35s.  Its batch step reached 21,787,068 KiB
+MaxRSS under the 24 GiB request, and dependent array **16007623_1-9%2** entered
+`DependencyNeverSatisfied`; no inference result was written.  Preparation job
+**16007608** remains valid, with all ten mocks complete and empty stderr logs.
+
+`jobs/job_constgold_v31_s501_g1p002_c50_99.sh` now requests 38 GiB host RAM.
+That confines the A40-16GB work to the available 41,472 MiB nodes and leaves
+substantially more headroom for the one-time model/proposal cache construction.
+The empty partial cases-50--54 output directory from the failed task is retained
+as `recenter_g1p002_c50_54_n2048.failed_16007622`.  Replacement cache-builder
+**16007990_0** gates replacement array **16007991_1-9%2**, preserving the
+two-GPU throttle.  Validation: the updated wrapper passes `bash -n`; scheduler
+inventory reports idle A40-16GB nodes with 41,472 MiB RAM.  Next: require task
+0 to complete before releasing tasks 1--9, and verify the first result plus
+sampler diagnostics before treating the campaign as healthy.
+
+## 2026-08-24 cont.234 — V3.1 seed-501 one-arm 50-case ConstGold screen launched on two GPUs
+
+The catalogue-inference image test is being repeated with the owner's reduced
+scope: one V3.1 flow checkpoint (original-E SWA seed 501), only the existing
+ConstGold `g1=+0.02` arm, and 50 cases.  Cases 50--99 are divided before
+inspection into ten disjoint five-case blocks; each block samples 2,048 valid
+measurements in the registered `18<r<25.8`, `0.5<Re<1.5` primary domain.  This
+gives 20,480 inference objects while preserving source cases as uncertainty
+blocks.  The fixed V3 `R_blend` cache, complete FS2 cases-0--9 prior, deployed
+detection classifier, no measured-output cut, posterior-adapted proposal,
+`M=K=65,536`, `epsilon=0.5`, and numerical recentering at `h=0.001` match the
+latest converged image configuration.  The old V2.2 flow/proposal caches are
+not reused: their manifests are checkpoint-hashed, so task 0 serially creates
+new V3.1 seed-501 caches before the remaining array is released.
+
+New deployment wrappers are
+`jobs/job_prepare_constgold_v31_s501_g1p002_c50_99.sh` and
+`jobs/job_constgold_v31_s501_g1p002_c50_99.sh`.  CPU preparation array
+**16007608** completed all ten tasks in 25--28 seconds each.  GPU job
+**16007622_0** is the cache-building cases-50--54 block; dependent array
+**16007623_1-9%2** enforces at most two concurrent A40-16GB slices for the
+remaining cases 55--99.  The first GPU submission was rejected before creating
+a job because 96 GiB host RAM is unavailable on those slice nodes; the wrapper
+was right-sized to 24 GiB, above the approximately 13 GiB peak of the matching
+prior runs, and the replacement entered RUNNING immediately.
+
+Validation before launch: both wrappers pass `bash -n`; the exact seed-501
+checkpoint exists; `validate_models(("V3.1",))` passes with the documented
+`SBSI_CACHE_DIR`; every preparation task exited zero and produced one frozen
+mock directory.  This one-arm screen can test the recovered displacement
+`ghat-(0.02,0)` and whether the earlier large deficit persists, but by design
+cannot separate multiplicative and additive response as an antithetic `+/-g`
+pair would.  Next: require task 0 to finish and initialize both caches, run the
+two-GPU array, then report equal-weight case-block means and case-block SEMs.
+
+## 2026-08-24 cont.233 — impact/q improves detection prediction but gives wrong-sign response
+
+The detection model study now tests the owner's two proposed blend-awareness
+changes without touching the ConstGold firewall.  `sbsi/detection_classifier.py`
+defines an uncapped exact-radius neighbour query and the ranking
+`I_s proportional to flux_s (Re_s / d_ps)^a`, evaluated in log space with
+deterministic ties.  It also builds rescaled classifier frames and implements a
+centered paired `0 -> +g` detection-selection response.  `SceneView` keeps
+nearest as its backwards-compatible default but can now select the impact-ranked
+neighbour, expose its log impact, emit both primary and secondary axis ratios,
+and restrict construction to requested primary rows.
+
+The retained per-case candidate table is not sufficient for this experiment:
+case 0 has exactly four stored candidate slots for nearly every primary and
+37.55% fill all four over that table's wider candidate construction.  In the
+actual eligible 3-arcsec training sample the exact query finds more than four
+neighbours for about 2%, still a material truncation risk for an impact maximum.
+The training script therefore queries the complete truth field rather than
+silently ranking the retained list.  `scripts/train_detection_classifier_ladder.py` compares the
+frozen deployed seven-feature detector, a newly fitted seven-feature nearest
+control, nearest plus `(q_p,q_s)`, impact plus those axis ratios at
+`a={1,2,4}`, and an `a=2` variant that also receives the log-impact score.  All
+new fits share the deployed XGBoost capacity, use both the `g=0` and `g=0.05`
+legs, train on cases 0--29, and select on cases 30--39 by absolute centered
+detection-response mismatch with held-case log loss only as an exact-tie
+breaker.  Cases 40--139 are not read.
+
+New tests cover exact impact-versus-nearest identity, axis-ratio propagation,
+per-object shear composition, isolate handling, shear-invariant neighbour
+identity, score validation, and the centered response estimator.  The focused
+14 tests pass; Python/Bash syntax and `git diff --check` pass.  The full
+dirty-worktree suite has 400 passes and one
+skip; its two failures are pre-existing loop-shadowing allowlist hits in three
+unrelated Section-5 scripts, none in these changes.  The first GPU run
+**16007383** exposed that BlendEMU truth files retain intrinsic `(q, PA)` plus
+separate applied `(g1, g2)` rather than overwriting the shape columns.  It
+finished during the cancellation race, but its q-blind artifacts are explicitly
+superseded and no intermediate result is used.  The corrected preparation
+composes each row's stored shear into its rendered shape before building both
+primary and neighbour q features.
+
+Replacement job **16007402** completed successfully in 5m07s with 2.16 GiB
+peak RSS on one P5000.  The cases-30--39 forward truth response is
+`R_detect=-0.020892 +/- 0.001872` from ten independent case blocks.  Results on
+the same one-million validation leg rows are:
+
+| classifier | log loss | balanced accuracy | model `R_detect` | model - truth |
+| --- | ---: | ---: | ---: | ---: |
+| frozen deployed seven-feature | 0.243712 | 0.90426 | -0.000435 | +0.020456 +/- 0.001880 |
+| refit nearest seven-feature | 0.246038 | 0.90345 | -0.000416 | +0.020476 +/- 0.001881 |
+| nearest + `(q_p,q_s)` | 0.244912 | 0.90408 | +0.018986 | +0.039878 +/- 0.002037 |
+| impact `a=1` + q | **0.228550** | **0.91082** | +0.018790 | +0.039682 +/- 0.002017 |
+| impact `a=2` + q | 0.229422 | 0.91028 | +0.019182 | +0.040074 +/- 0.001879 |
+| impact `a=2` + q + score | 0.229244 | 0.91030 | +0.019060 | +0.039952 +/- 0.001963 |
+| impact `a=4` + q | 0.231397 | 0.90917 | +0.018986 | +0.039878 +/- 0.001915 |
+
+Thus the owner's features are useful for ordinary detection prediction:
+impact `a=1` lowers log loss by 6.2% relative to the frozen detector and raises
+balanced accuracy by 0.66 percentage points.  Impact selection changes the
+representative neighbour for 22.38%, 20.67%, and 19.39% of primaries for
+`a=1,2,4`; 1.972% have more than four neighbours inside 3 arcsec.  But BCE
+alone learns `R_detect approximately +0.019`, the opposite sign from the image
+truth, doubling the response error.  The procedure therefore selects the
+shape-blind nearest-seven control among new fits, and **no new classifier is
+approved for deployment**.  This independently reproduces the earlier
+wrong-sign BCE diagnosis: the next ladder must retain q/impact but train a
+differentiable classifier with a held-case response loss.  Only its preselected
+winner should cross the cases-40--139 ConstGold firewall.
+
+Canonical report:
+`detection_classifier_impact_ladder_v2/models/report.json` (SHA-256
+`8f6126...de5a2`).  `doc/API.md` now describes configurable representative-
+neighbour selection.  All CrossMatch identifiers aligned; none were silently
+dropped.  The superseded q-blind v1 directory is retained solely for audit and
+must not be compared or deployed.
+
+## 2026-08-24 cont.232 — original E plus unchanged V3 emulator is named V3.1
+
+Per owner decision, **V3.1** now names the four-seed original-E ensemble
+(seeds 501--504) composed with exactly the existing V3 `R_blend` emulator
+(SHA-256 `01decd...c21f`).  Its registered ConstGold result is
+`R_sim=0.96255892`, `R_flow=0.82770035`, `R_blend=0.13260828`, and
+`m=+0.23433% +- 0.15040%` on 5,642,349 rows.  “Original E” is explicitly the
+80-epoch, response-lambda-450 recipe with SWA epochs 73--80; the longer
+100-epoch seed-501 model and non-SWA epoch-78 checkpoint are excluded.
+
+Added the path-only `get_model("V3.1")` preset and public `V31`/`V31_SEEDS`
+symbols.  Its four checkpoint paths resolve under
+`$SBSI_CACHE_DIR/mixed_shear_cde`, while its emulator path, metadata, and hash
+pin are byte-identical to V3.  Updated `doc/MILESTONE.md`, conventions, API,
+README/model documentation, exports, and focused preset tests.  This is a name
+and provenance registration only: no artifacts, predictions, or scientific
+numbers changed.  V3.1 currently has four flow seeds, so its seed uncertainty
+is less mature than V3's 16-seed estimate; its 2.77-SE cross-response mismatch
+also remains documented.  Direct validation against the cluster cache finds all
+four flow files and verifies the shared emulator hash.  Python syntax and
+`git diff --check` pass; focused API/worklog validation gives 17 passed and one
+optional BlendEMU cross-check skipped.
+
+## 2026-08-24 cont.231 — V3 R_blend mean has 0.000126 ConstGold sampling error
+
+The frozen-emulator audit from cont.230 completed as CPU scheduler job
+**16007318** in 3m20s with 145 MiB peak RSS and exit zero.  Whole-case
+100,000-draw bootstraps of the pooled mean per-primary prediction give:
+
+| prediction population | cases | primaries | mean `R_blend` | case-bootstrap SE | relative SE |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| exact registered ConstGold evaluation | 100 | 5,642,349 | 0.13260828 | 0.00012561 | 0.09472% |
+| emulator pair cache, all available | 200 | 5,632,925 | 0.06689947 | 0.00008306 | 0.12415% |
+| emulator fit cases 40--199 | 160 | 4,506,407 | 0.06686405 | 0.00009548 | 0.14280% |
+| tuning/development cases 0--39 | 40 | 1,126,518 | 0.06704117 | 0.00016031 | 0.23911% |
+
+The relevant answer for the data that fit the frozen V3 emulator is therefore
+`0.06686405 +- 0.00009548`; the official 80/20 split is over pair rows inside
+those same 160 cases, so the full case population is used to define a complete
+per-primary pair sum.  If “training data” instead means every available
+half-shear case including the 40-case development window, its error is
+`0.00008306`.  ConstGold's corresponding error is `0.00012561` with 95% case-
+bootstrap interval `[0.13236125, 0.13285461]`.
+
+The absolute means must not be compared as a transfer shift: ConstGold deploys
+the emulator on the full input field and sums its native neighbour enumeration,
+whereas the retained response-training cache contains its designated labelled
+pair list.  This is the previously documented pair-list firewall.  Only their
+case-sampling precision is compared here.  These errors condition on the one
+frozen V3 checkpoint and omit training-seed/model-form uncertainty because the
+emulator has neither an ensemble nor an uncertainty head.
+
+Canonical output:
+`mixed_shear_cde/rblend_prediction_uncertainty_v3.json` (SHA-256
+`c749a1...18378`).  It uses 47,310,214 cached pair rows, reproduces the stored
+ConstGold pooled `R_blend` exactly from its 100 per-case summaries, and records
+the frozen model/cache/result hashes.  Stderr is empty; Python/Bash syntax,
+`git diff --check`, scheduler admission, and the completed job pass.
+
+## 2026-08-24 cont.230 — frozen V3 R_blend mean-uncertainty audit launched
+
+To put the emulator term on the same case-sampling footing as the measured-
+response audit, new read-only script
+`scripts/audit_rblend_prediction_uncertainty.py` sums the frozen V3 emulator's
+pair predictions per primary, pools the resulting `R_blend` over primaries,
+and uses a 100,000-draw whole-case bootstrap of the per-case prediction sums
+and primary counts.  It evaluates the exact registered 100-case ConstGold
+population from its retained per-case summaries, and predicts the retained
+half-shear pair cache separately for all 200 available cases, the actual
+160-case fit window 40--199 (including its official random-row training and
+validation subsets), and the 40-case tuning/development window 0--39.
+
+This is sampling uncertainty conditional on the one frozen emulator; neither
+training-seed nor model-form uncertainty can be inferred from this checkpoint.
+The resource audit found ample login-host memory but no GPU.  Project policy
+therefore sends the 47.3-million-pair prediction scan to the CPU scheduler via
+new wrapper `jobs/job_audit_rblend_prediction_uncertainty.sh`.  Python and Bash
+syntax checks and `git diff --check` pass; result and job ID follow after
+submission.  Audit job **16007318** was submitted.
+
+## 2026-08-24 cont.229 — removing SWA worsens original E seed 501 to +0.741% on ConstGold
+
+The original-E best-validation single-epoch checkpoint completed its registered
+ConstGold evaluation as scheduler job **16007108** in 1m36s with 2.79 GiB peak
+RSS and exit zero.  This is epoch 78 of the same seed-501 trajectory whose SWA
+checkpoint averages epochs 73--80.  On the identical 5,642,349 rows:
+
+| checkpoint | `R_flow` | `R_model` | canonical `m` | 100-case bootstrap SE |
+| --- | ---: | ---: | ---: | ---: |
+| SWA epochs 73--80 | 0.82620959 | 0.95881787 | +0.39017% | 0.12608% |
+| non-SWA best epoch 78 | 0.82287195 | 0.95548023 | +0.74085% | 0.12655% |
+
+The non-SWA checkpoint lowers `R_flow` by 0.00333764 and worsens `m` by
+**+0.35068 percentage points**.  A paired 100,000-draw case bootstrap gives
+only 0.00051 percentage points SE on this difference because the change is
+coherent over the fixed cases; this conditional comparison does not include
+training-seed variation.  The on-axis cross mismatch also changes slightly in
+the wrong direction, from -0.00319961 with SWA to -0.00330959 without SWA.
+Thus SWA materially helps E's seed-501 ConstGold transfer and should not be
+removed on this evidence, even though the unsmoothed epoch was selected by the
+best internal validation objective.
+
+Output:
+`constgold/constgold_response_E_noswa_bestep78_s501_c40-139.json` (SHA-256
+`952bde...febcd58`).  Model-independent quantities and per-case row counts are
+exactly identical to the SWA score.  Bash syntax, `git diff --check`, scheduler
+admission, and the completed evaluation pass.
+
+## 2026-08-24 cont.228 — original E non-SWA ConstGold comparison launched
+
+The original 80-epoch E run retained both checkpoint forms.  Inspection of the
+trainer and persisted history confirms that `...E_s501_swabase.pt` is the
+unsmoothed checkpoint selected by the same validation total objective used for
+early stopping, `val_nll + 450 val_resp`; its minimum is at epoch 78.  The
+published `swaavg` comparator averages the eight end-of-epoch states from
+epochs 73--80.  Therefore evaluating `swabase` isolates best-single-epoch
+weights versus SWA without retraining or changing data, seed, objective, or
+epoch budget.
+
+New wrapper `jobs/job_evaluate_constgold_E_noswa_s501.sh` applies the registered
+100-case ConstGold protocol and frozen V3 `R_blend` shards to that best-val
+checkpoint, writing the overwrite-guarded
+`constgold_response_E_noswa_bestep78_s501_c40-139.json`.  The resource audit
+found no login GPU, so inference is sent to the GPU scheduler.  Result and job
+ID follow after completion.  Bash syntax, `git diff --check`, and scheduler
+admission passed; job **16007108** was submitted.
+
+## 2026-08-24 cont.227 — ConstGold and all-200 response means have about 0.001 uncertainty
+
+The direct mixed-shear uncertainty audit completed as CPU scheduler job
+**16005594** in 1m44s with 9.68 GiB peak RSS and exit zero.  A 100,000-draw
+case-block bootstrap, re-pooling each draw's least-squares sufficient
+statistics rather than treating rows as independent, gives:
+
+| response sample | cases | rows | mean measured response | case-bootstrap SE | relative SE |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| ConstGold evaluation | 100 | 5,642,349 | 0.96255892 | 0.00120620 | 0.12531% |
+| mixed-shear, all available | 200 | 5,596,260 | 0.81535128 | 0.00103126 | 0.12648% |
+| mixed-shear E target | 160 | 4,476,099 | 0.81542019 | 0.00115398 | 0.14152% |
+| mixed-shear held out | 40 | 1,120,161 | 0.81507599 | 0.00231059 | 0.28348% |
+
+Thus all 200 mixed-shear cases have a slightly smaller *absolute* response
+error than the 100 ConstGold cases, but essentially the same fractional error
+because their mean response is lower.  For the E checkpoint as actually
+trained, the relevant response-target sampling error is the 160-case value,
+not the all-200 value.  The two catalogues use their registered distinct
+estimators—ConstGold antithetic `-g -> +g`, mixed shear forward `0 -> g`—so
+their mean response levels should not be equated; the comparison here is their
+case-sampling precision.
+
+The mixed-shear result is
+`mixed_shear_cde/mixed_shear_response_uncertainty_all200.json` (SHA-256
+`03c6a4...d1b0d5`).  It exactly reproduces the stored 160-case target matrix
+and global trace response.  Python/Bash syntax, `git diff --check`, scheduler
+admission, and the completed job all pass.
+
+## 2026-08-24 cont.226 — direct 200-case response-uncertainty audit launched
+
+To compare the precision of the 100-case ConstGold measured response with the
+mixed-shear response data on the same case-block footing, a new read-only audit
+reconstructs the exact forward `g=0 -> |g|=0.05` least-squares response used by
+the E response target.  It reports separate pooled matrices and 100,000-draw
+case-bootstrap errors for all 200 available cases, the actual 160 target cases,
+and the 40 grouped validation cases.  This distinction matters because the
+catalogue has 200 cases, but E's response regularizer was built only from the
+160 training cases; validation is case-disjoint.
+
+Files: `scripts/audit_mixed_shear_response_uncertainty.py` and
+`jobs/job_audit_mixed_shear_response_uncertainty.sh`.  The audit mirrors the
+target's keyed inner join, true-property cuts, finite-row filter, full 2-by-2
+matrix fit, and trace/2 scalar definition.  The resource check found ample
+login-host memory but no GPU; project policy still sends the material
+catalogue scan to the CPU scheduler.  Job ID and results follow after
+completion.  Pre-submit Python/Bash syntax, `git diff --check`, and scheduler
+admission checks passed; audit job **16005594** is queued.
+
+## 2026-08-24 cont.225 — seed 501 closes the strict primary-only forward ruler within 1.1 SE
+
+The primary-only forward audit from cont.224 completed successfully as scheduler
+job **16004299** in 46 s with 1.56 GiB peak RSS.  The underlying half-shear
+suite and its compact current-centroid product are still present.  The suite has
+200 cases; 139,913,563 raw rows produced 31,398,334 usable compact rows.  Within
+seed 501's 40 untouched validation cases, the compact catalogue contains
+6,280,324 rows: 3,889,602 primary-sheared/secondary-unsheared rows, 2,390,719
+both-sheared rows, and three anomalous primary-unsheared rows.  Joining the
+strict primary-only subset to the zero-shear leg leaves 3,866,485 rows, and the
+checkpoint's registered true-property cuts leave 685,142 rows for the response
+test.
+
+Using forward `0 -> |g|=0.05` differences on both sides gives matrices (rows =
+measured component, columns = applied primary-shear component)
+
+```
+R_sim  = [[0.845706, +0.004629],
+          [-0.002339, 0.850271]]
+R_flow = [[0.851689, -0.002553],
+          [-0.001927, 0.851382]]
+```
+
+Their trace responses are `R_sim=0.84798835` and `R_flow=0.85153517`.
+Therefore canonical `m=R_sim/R_flow-1` is
+**-0.41652% +- 0.38484%**, where the error is a 10,000-draw bootstrap over the
+40 simulation cases.  Equivalently, the historical half-shear orientation is
+`R_flow/R_sim-1=+0.41826%`.  The result is only 1.08 standard errors from zero:
+original E seed 501 passes this primary-only ruler at the present precision.
+
+This is more specific than cont.215: it excludes both-sheared rows and matches
+the simulation's finite forward shear rather than comparing it to the model's
+local central derivative.  It is also leakage-clean at the case level, using
+only the seed-501 grouped validation cases.  Canonical output is
+`mixed_shear_cde/primary_only_forward_response_E_s501.json` (SHA-256
+`b85d96...97ad42f`).  The scorer exited zero; Python/Bash syntax and
+`git diff --check` pass; 17 focused mixed-shear, ConstGold, and worklog tests
+pass.
+
+## 2026-08-24 cont.224 — strict primary-only forward audit launched for original E seed 501
+
+The retained random-direction half-shear catalogue has a 2-by-2 design in which
+primary and secondary shear states vary independently.  The existing cont.215
+audit includes every usable primary-sheared row (primary-only plus both-sheared)
+and compares the simulation's forward difference with a local central model
+derivative.  To answer the narrower primary-only question without conflating
+those conventions, new `audit_primary_only_forward_response` code keeps only
+rows with finite nonzero primary shear and zero or absent secondary shear, uses
+seed 501's 40 case-disjoint validation cases, and evaluates both simulation and
+flow with the matched forward `0 -> g` difference.  It reports the full matrix,
+trace response, canonical `m=R_sim/R_flow-1`, case-bootstrap error, and pre-cut
+shear-state counts.  Missing secondary shears are treated as unsheared, which
+retains genuinely isolated primaries.
+
+Files: `sbsi/flow_response_audit.py`,
+`scripts/audit_primary_only_forward_response.py`,
+`jobs/job_audit_primary_only_forward_E_s501.sh`, and focused tests in
+`tests/test_flow_mixed_shear.py`.  Scheduler job **16004299** was submitted to
+one A40-16Q GPU because the resource audit found no login-node GPU and project
+policy forbids this catalogue scan there.  Pre-submit validation: Python and
+Bash syntax, `git diff --check`, scheduler test-only admission, and 11 focused
+mixed-shear/ConstGold tests all pass.
+
+## 2026-08-24 cont.223 — four-seed original E closes ConstGold at +0.234% +- 0.150%
+
+The three additional original-E replicas from cont.222 completed successfully
+as scheduler array **15997692**: seed 502 in 23m34s, seed 503 in 21m36s, and
+seed 504 in 22m13s.  Each trained for all 80 requested epochs, and each saved
+an SWA checkpoint averaging exactly epochs 73--80 before running the registered
+ConstGold scorer.  All three tasks exited zero; their only stderr text is the
+known harmless Python `runpy` warning caused by `sbsi.__init__` importing the
+training module before `python -m sbsi.flow_training` executes it.
+
+On the same 5,642,349 joined ConstGold rows, the four original-E SWA models give
+
+| training seed | `R_flow` | `m` | 100-case bootstrap SE |
+| ---: | ---: | ---: | ---: |
+| 501 | 0.82620959 | +0.39017% | 0.12608% |
+| 502 | 0.82939757 | +0.05749% | 0.12577% |
+| 503 | 0.82655716 | +0.35380% | 0.12620% |
+| 504 | 0.82863708 | +0.13665% | 0.12582% |
+
+Every result has identical `R_sim=0.9625589205`,
+`R_blend=0.1326082762`, row count, per-case object counts, and unmatched-row
+accounting (one blend row dropped, zero crowd rows dropped).  Averaging the four
+flow responses before applying the canonical ratio gives
+`R_flow=0.8277003508`, `R_model=0.9603086270`, and
+`m=+0.0023433024 = +0.23433%`.  The per-seed m values have sample standard
+deviation 0.16266 percentage points and seed-mean standard error 0.08133
+percentage points.  A 100,000-draw case bootstrap of the four-flow ensemble
+gives 0.12652 percentage points; combining seed and case terms in quadrature,
+as for frozen V3, yields **+0.23433% +- 0.15040%**.  This is 1.56 standard
+errors from zero and therefore no longer a compelling nonzero closure residual.
+
+The ensemble on-axis cross response is -0.00253821 versus the simulation's
++0.00053317.  Their difference is -0.00307138 +- 0.00110975 across cases
+(2.77 standard errors), so the cross-response concern from cont.216 remains.
+The four-seed point is closer to zero than frozen 16-seed V3's +0.34883%, but
+the difference is not resolved by these uncertainties.  With only four E
+seeds, its smaller observed seed scatter is preliminary and should not be read
+as more stable than the 16-seed V3 estimate.  The fixed response-target artifact
+is shared across replicas, exactly as required to replicate original E; each
+training seed otherwise changes the row reservoir, grouped split,
+initialization, and minibatch order.  The 100-epoch seed-501 variant is excluded.
+
+Canonical new scores are
+`constgold/constgold_response_E_s{502,503,504}_c40-139.json` beside their
+immutable `measurement_flow_mixed_g0_g005_E_s{502,503,504}_swaavg.pt`
+checkpoints under the `mixed_shear_cde` cache.  Validation: model and score
+hashes were recorded during the audit; checkpoint metadata confirms seeds,
+four-million-row samples, matrix supervision, and SWA epochs 73--80; all four
+scores agree exactly on model-independent quantities; Bash syntax,
+`git diff --check`, and the focused ConstGold/worklog tests pass.
+
+## 2026-08-24 cont.222 — three additional original-E seeds launched through ConstGold
+
+Three independent replicas of the original 80-epoch mixed-shear arm E were
+launched as scheduler array **15997692**, using seeds 502, 503, and 504.  New
+wrapper `jobs/job_train_and_evaluate_constgold_E_seed_array.sh` retains the
+seed-501 recipe exactly: balanced two-million-row `g=0` and `|g|=0.05` legs,
+seed-specific grouped 160/40 case split, full-matrix response target with
+weight 450, fixed learning rate 0.0007, 80 epochs, and SWA over epochs 73--80.
+Each task evaluates its completed SWA checkpoint immediately on ConstGold cases
+40--139 using the same frozen V3 `R_blend` shards, antithetic scorer, and
+10,000 case-bootstrap draws as cont.216.  Outputs are overwrite guarded and
+named `measurement_flow_mixed_g0_g005_E_s{502,503,504}_*` and
+`constgold/constgold_response_E_s{502,503,504}_c40-139.json`.
+
+The resource audit found no GPU on the login host, so all heavy work was sent
+to three allocated A40-16Q GPUs in `cip`; all array tasks entered RUNNING.
+Validation before submission: Bash syntax and `git diff --check` pass, the
+scheduler test-only admission check passes, and every input exists while all
+intended outputs were absent.  The final comparison will report all four E80
+seeds individually and summarize their training-seed scatter separately from
+the conditional 100-case bootstrap uncertainty.
+
+## 2026-08-24 cont.221 — longer E worsens ConstGold parallel closure despite a better validation objective
+
+The 100-epoch arm-E run from cont.220 completed successfully as scheduler job
+**15992205** in 26m52s.  Its immutable SWA checkpoint averages the requested
+epochs 85--100 and has SHA-256 `11e413...1be833b`.  The last unsmoothed
+validation objective, defined as `val_nll + 450 * val_resp`, is 1.4883 and its
+minimum is 1.4848 at epoch 98, both below the original 80-epoch run's minimum
+of 1.5346.  Thus the longer optimization did improve its own mixed-shear
+validation criterion.
+
+The new SWA checkpoint was evaluated with exactly the registered ConstGold
+protocol of cont.216: cases 40--139, the checkpoint selection domain,
+antithetic extraction on simulation and model sides, the same frozen V3
+`R_blend` lookup, 10,000 case-bootstrap draws with seed zero, and
+`m=R_sim/(R_flow+R_blend)-1`.  New scheduler wrapper
+`jobs/job_evaluate_constgold_E_e100_swa16.sh` changes only the checkpoint and
+output paths relative to the original E wrapper.  Evaluation job **15992791**
+completed in 1m42s with 2.99 GB peak RSS and wrote
+`constgold/constgold_response_E_e100_swa16_s501_c40-139.json` (SHA-256
+`1a2881...65c63`).
+
+On the same 5,642,349 joined rows, with the same one dropped `R_blend` row and
+zero dropped crowding rows, the longer E gives
+
+```
+R_sim   = 0.9625589205
+R_flow  = 0.8240353675
+R_blend = 0.1326082762
+R_model = 0.9566436438
+m       = +0.0061833649 = +0.61834% +- 0.12644% (100-case bootstrap)
+```
+
+This is worse than the original E's `+0.39017%`: the longer checkpoint lowers
+`R_flow` by 0.0021742 and shifts m upward by 0.22816 percentage points.  A
+paired 100,000-draw case bootstrap, possible because the two evaluations have
+identical rows, simulation response, and blend response in every case, gives
+`SE(delta m)=0.00118` percentage points.  This tiny conditional error only says
+that the prediction shift is coherent across the fixed ConstGold cases; it
+does **not** include training-run or training-seed variation and therefore is
+not evidence at 194 sigma about the training recipe.
+
+The on-axis cross response improves modestly: the flow value moves from
+-0.0026664 to -0.0022171, while the simulation value remains +0.0005332.  The
+new flow-minus-simulation cross mismatch is -0.0027503 +- 0.0011108 across
+cases, or 2.48 standard errors, compared with 2.84 standard errors before.
+Longer training therefore trades a slightly less negative cross term for
+materially worse parallel transfer.  Since its mixed-shear validation objective
+improved at the same time, this result points to target/domain transfer rather
+than failure to converge; simply extending the same fixed-learning-rate recipe
+is not an improvement for ConstGold.  The result still represents one training
+seed, so recipe selection should not use its nominal case-only significance.
+
+Validation: the wrapper passes `bash -n`, all model and lookup inputs passed
+explicit existence guards, the scheduler test-only admission check passed, the
+scorer exited zero, and per-case equality checks confirmed that the two runs
+used identical object counts, simulation responses, and blend responses.
+
+## 2026-08-24 cont.220 — longer E training launched with a 16-epoch SWA tail
+
+A controlled longer arm-E run was launched to test the small residual response-
+loss drift seen in cont.219.  It keeps seed 501, both two-million-row catalogue
+legs, the grouped 160/40 case split, model architecture, full 2-by-2 response
+target, response weight 450, optimizer, learning rate, and every selection and
+conditioning setting fixed.  The only intended training changes are 80 to 100
+epochs and SWA over the final 16 rather than eight epochs.  Patience is raised
+from 10 to 100 solely to guarantee that all 100 requested epochs run; it does
+not alter any completed-epoch update.
+
+New scheduler wrapper: `jobs/job_train_mixed_shear_E_e100_swa16.sh`.  It writes
+distinct, overwrite-guarded artifacts named
+`measurement_flow_mixed_g0_g005_E_e100_swa16_s501_{swabase,swaavg}.pt` plus
+the corresponding `_swabase_train_curve.npz` under the existing
+`mixed_shear_cde` cache.  Job **15992205** was submitted on one `cip`
+A40-16GB GPU and entered RUNNING immediately.  Its three-hour limit is ample
+relative to the original 80-epoch run's 24m47s training time.  Bash syntax,
+the scheduler's test-only admission check, input existence, output nonexistence,
+and `git diff --check` pass; the live log confirms the requested 100 epochs,
+16-snapshot SWA, matrix response loss, seed 501, and allocated A40-16Q GPU.
+
+Interpretation plan after completion: compare the exact validation objective
+and its tail against the original E curve, then evaluate the new SWA checkpoint
+on the same held-out response audit.  Because prior work found some hardware/
+run nondeterminism even at fixed seed, a small difference will be treated as a
+run-level diagnostic rather than evidence that 100 epochs is universally
+better.
+
+## 2026-08-24 cont.219 — E learning curve reaches a noisy plateau in the SWA window
+
+The persisted 80-epoch learning history for mixed-shear arm E (seed 501) was
+plotted as `doc/generated/mixed_shear_E_s501_training_curve.{png,pdf,json}`.
+The exact validation checkpoint-selection objective is
+`val_nll + 450 * val_resp`; the figure separates that total into its density
+and weighted full-matrix-response terms, shows train versus validation NLL, and
+zooms the final 30 epochs.  Raw epoch values are retained beneath five-epoch
+trailing means.  The last-eight-epoch SWA window (epochs 73--80) and the
+minimum-total epoch are marked explicitly.
+
+The validation total falls from 8.4696 at epoch 1 to 1.5676 at epoch 80 and is
+minimal at epoch 78 (1.5346).  Its mean over epochs 71--80 is
+`1.5626 +- 0.0250` (standard deviation), with fitted slope `+0.00136` per
+epoch; this is consistent with a noisy plateau rather than continued material
+descent.  The weighted response term still decreases gently over the same
+window, at `-0.00125` per epoch, while validation NLL fluctuates around zero.
+Train and validation NLL track one another without a widening late-epoch gap.
+Thus E is practically converged at the resolution of this run, and the chosen
+SWA window lies on the plateau, although a lower learning-rate continuation
+would be needed to distinguish complete optimization from the remaining small
+response drift.
+
+New reusable script: `scripts/plot_mixed_shear_training_curve.py`.  It also
+writes a machine-readable summary and explicitly records that the analogous
+total *training* objective cannot be reconstructed because per-epoch training
+response loss was not persisted; only training NLL is available.  The plot
+uses colorblind-safe colors plus line-style/marker redundancy and was inspected
+at native resolution and in grayscale.  Python compilation, rendering, and
+`git diff --check` pass.  ImageMagick's `magick` entry point is unavailable,
+but its legacy `convert` entry point successfully produced the grayscale
+inspection copy.
+
+## 2026-08-24 cont.218 — bright-bin curvature zoom for E
+
+Panel c of the E finite-shear curvature diagnostic was expanded within the
+bright interval `18 <= measured_mag_auto <= 23.1`.  The 2,056 selected objects
+per injection (20.56% of the 10,000-object mock) were split into five
+equal-count bins.  Bar heights retain the original denominator--the curvature
+change summed over all 10,000 objects--so the new plot is a genuine subdivision
+of the original bright bar rather than a renormalization of the selected
+subset.
+
+The bin edges are approximately `18.0, 21.4, 22.1, 22.5, 22.8, 23.1`.  The
+five signed fractions of the total curvature change are
+`44.8%, 32.2%, 12.4%, 7.5%, 1.8%` for g1 and
+`53.2%, 31.4%, 11.7%, 2.3%, 1.4%` for g2.  Thus the contribution decreases
+monotonically within the original bright bin, and objects brighter than about
+22.1 supply 77.0% (g1) and 84.6% (g2) of the full-catalogue curvature change.
+The entire requested range supplies 98.7% for g1 and 100.1% for g2.  The latter
+can exceed 100% because these are signed contributions: objects outside the
+range have a small net negative g2 contribution.
+
+`scripts/plot_section5_component_diagnostics.py` now has a reusable
+`--magnitude-panel-only --magnitude-range LOWER UPPER` mode.  The output is
+`doc/generated/section5_curvature_bright_18_23p1_E_s501.{png,pdf,json}`.
+It preserves the colorblind-safe component palette and total-curvature
+normalization, adds a redundant hatch to g2, and was inspected both at native
+resolution and after grayscale conversion.  Python compilation and
+`git diff --check` pass; the existing three-panel `--curvature-only` mode was
+rerendered successfully as a regression smoke test; and the six current-number
+worklog regression tests pass.  Ruff is not installed in the documented py31
+environment.
+
+## 2026-08-24 cont.217 — E peaks at the injected shear but retains strong finite-shear curvature
+
+The recent Section 5 component-curvature diagnostic was remade for mixed-shear
+arm E (training seed 501).  This is a matched-model test: new 10,000-object
+catalogue-prior mocks were sampled with the E flow for positive `g1=0.02` and
+positive `g2=0.02`, while preserving the scene, detection, flow-noise, proposal,
+and numerical seeds used by the earlier diagnostic.  The retained Section 5
+model/proposal caches are intentionally fixed so the comparison changes the
+measurement-flow checkpoint and its mock, not the importance-sampling proposal.
+The setup has no population cuts and uses `R_blend=0`; it is a catalogue-prior
+likelihood diagnostic, not the ConstGold response test in cont.216.
+
+At 16,384 proposal draws, the full likelihood-profile estimates are
+`g1=0.0204064` and `g2=0.0191443` for the true value 0.02.  Thus both full
+profiles peak close to the injection in this one matched mock.  The quadratic
+expansion at zero is nevertheless not a useful finite-shear approximation.
+At the finest derivative step (`h=0.00125`) its one-step estimates are 0.08850
+for g1 and 0.04680 for g2.  Across `h=0.00125,0.0025,0.005,0.01,0.02`, the g1
+values are `0.08850,0.08165,0.06807,0.05897,0.04227`, and the g2 values are
+`0.04680,0.04658,0.04592,0.04313,0.03366`; step dependence does not explain
+away the mismatch.
+
+The mean catalogue-marginal information changes with expansion centre
+`0 -> 0.01 -> 0.02` from `52.70 -> 243.56 -> 320.02` for g1 and
+`92.41 -> 240.91 -> 327.83` for g2.  The end-to-end changes are
+`267.32 +- 27.79` and `235.42 +- 24.47`, respectively.  The corresponding
+generating-atom information is `341.43 -> 649.66 -> 780.40` for g1 and
+`403.39 -> 617.58 -> 757.41` for g2.  E therefore makes the two components
+more similar at the injected shear, but it has not linearized the likelihood:
+substantial curvature remains in both directions and is especially visible in
+the zero-centred g1 approximation.  Bright objects dominate the change: the
+brightest magnitude quintile supplies 98.7% (g1) and 98.9% (g2) of the signed
+change, while the top 1% of objects supplies 53.9% and 47.1%.
+
+The publication-style focused output is
+`doc/generated/section5_curvature_diagnostics_E_s501.{png,pdf,json}`.  It keeps
+the original component colors and line/marker semantics, uses the same axes for
+direct comparison, and was visually inspected at native resolution for label,
+legend, and panel overlap.  `scripts/plot_section5_component_diagnostics.py`
+now supports `--curvature-only` plus configurable profile/curvature directory
+patterns and labels; its default four-panel behavior is unchanged.
+
+Supporting workflow changes: `scripts/run_section5_nonzero_closure.py` gained a
+`--generate-only` mode with provenance output; new scheduler wrappers
+`jobs/job_section5_generate_mocks.sh` and
+`jobs/job_section5_profile_diagnostic.sh` generate matched mocks and evaluate a
+saved-mock profile; and `jobs/job_section5_curvature_scan.sh` now accepts model,
+cache, chunk, and centre overrides while retaining the original object chunk of
+four.  Mock generation job **15989896** completed in 48 s; corrected full-profile
+jobs **15989939** (g1, 30m18s) and **15989940** (g2, 13m30s) completed; corrected
+three-centre curvature jobs **15990314** (g1, 33m39s) and **15990315** (g2,
+51m01s) completed.  An initial profile job **15989907** failed before output
+because a negative-leading argparse value needed `--option=value`, and sibling
+**15989908** was cancelled.  Initial curvature jobs **15989905/15989906**
+received only centre zero because commas in `sbatch --export` split the value;
+their partial outputs were preserved under explicit
+`incomplete_center0_job*` names, and the wrapper default was corrected before
+the final runs.
+
+Validation: both modified Python scripts compile; all three job wrappers pass
+`bash -n`; targeted `git diff --check` passes; the new plot mode also rendered
+successfully against the old-flow inputs as a smoke test.  The focused catalogue
+null/sampling tests pass (55 tests).  The full suite passes 392 tests with one
+skip and two failures only in the existing loop-shadowing allowlist gate, which
+reports five pre-existing names in unrelated/current files; no name was added
+by these changes.  This result still has only one flow-training seed and one
+matched mock realization, so it diagnoses the shape of E's likelihood but does
+not certify across-seed closure uncertainty.
+
+## 2026-08-24 cont.216 — arm E transfers to ConstGold at +0.390% m, with residual cross response
+
+Mixed-shear arm E was evaluated first on the registered ConstGold V3 population,
+as requested.  The direct response test uses cases 40--139, the checkpoint's
+true-property domain (`18<r_p<25.8`, `0.5<Re_p<1.5`), the antithetic extraction
+on both simulation and model sides, and the canonical
+`m=R_sim/(R_flow+R_blend)-1`.  The latest frozen V3 BlendEMU model (SHA-256
+`01decd...c21f`) was used, not the older cached `_ho` lookup.  Its missing
+current lookup artifact was deterministically rebuilt in ten parallel 10-case
+shards from the original ConstGold input catalogues.  The evaluator inner-joins
+`R_blend` by `(case,input_index)` and drops/reports unmatched rows rather than
+zero-filling them; crowd-flux coverage is also checked explicitly.
+
+On 5,642,349 rows in all 100 cases (5,642,350 before the response-lookup join,
+one unmatched `R_blend` row dropped, zero unmatched crowd rows), arm E gives
+
+```
+R_sim   = 0.9625589205
+R_flow  = 0.8262095921
+R_blend = 0.1326082762
+R_model = 0.9588178683
+m       = +0.0039017340 = +0.39017% +- 0.12608% (100-case bootstrap)
+```
+
+The case-only result is 3.1 standard errors above zero.  It is not a certified
+uncertainty because E has only training seed 501; the quoted error resamples
+simulation cases and includes no across-flow-seed term.  The point estimate is
+not an improvement over frozen 16-seed V3, which used the identical
+`R_sim=0.96255892` and `R_blend=0.13260828` with
+`R_flow=0.82662669`, giving `m=+0.34883% +- 0.17727%` including seed and case
+terms.  E lowers ConstGold `R_flow` by only 0.000417 and moves m upward by 0.041
+percentage points.  The difference is far below the uncertainty and cannot be
+read as a seed-controlled degradation, but the intended half-shear response
+repair plainly does not improve the ConstGold point.
+
+ConstGold supplies only one applied shear axis, so its normal matrix has rank
+one and cannot identify a complete 2-by-2 response.  The evaluator now records
+the unidentifiable matrix as null rather than manufacturing a zero column with
+a pseudo-inverse.  It can identify the on-axis cross response: simulation gives
+`+0.000533`, while E gives `-0.002666`.  From the retained 100 per-case values,
+the paired model-minus-simulation difference is `-0.003195 +- 0.001123`
+(2.84 standard errors).  This is consistent with E learning the small negative
+`R21` in its half-shear matrix target, but the more precise ConstGold axis test
+prefers zero.  Full-matrix regularization therefore did not remove every
+component issue; it may have transferred noise in the training target's cross
+term.
+
+New implementation: `sbsi/constgold_response.py`,
+`scripts/build_constgold_blend_lookup.py`,
+`scripts/evaluate_constgold_response.py`,
+`jobs/job_build_constgold_e_rblend.sh`,
+`jobs/job_evaluate_constgold_e.sh`, and
+`tests/test_constgold_response.py`.  The scorer streams the 9.4-GB catalogue,
+uses sorted integer keyed lookups, evaluates the model mean head on row-wise
+antithetic shear directions, retains per-case sufficient statistics, and
+reports both parallel and cross response.  Compilation and Bash syntax pass;
+Ruff passes; the ConstGold plus mixed-shear focused set passes nine tests.
+
+Scheduler record: initial lookup array **15989233** stopped before writing
+shards because a guard did not distinguish the predictor's primary and
+secondary index columns; corrected array **15989302** completed all ten tasks
+in 1m51s--2m32s.  Scorer **15989316** stopped before reading data on an old-
+PyArrow `Path` incompatibility.  Scorer **15989407** processed the population
+but correctly rejected the rank-one matrix inversion before writing output.
+After making rank deficiency explicit, final scorer **15989470** completed in
+37s with 2.94 GB peak RSS.  Canonical output:
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/mixed_shear_cde/constgold/constgold_response_E_s501_c40-139.json`.
+
+## 2026-08-24 cont.215 — mixed-shear C/D/E completes: data fixes symmetry, response loss fixes scale
+
+Training array **15985365** and its dependent held-out audit array **15985428**
+completed successfully for all three arms.  Each arm used the same four-million-row
+sample (two million rows from each of the `g=0` and random-direction `|g|=0.05`
+legs), the same seed-501 160-case/40-case grouped split, and the SWA average over
+epochs 73--80.  The audit uses 1,120,161 matched, cut-passing rows from all 40
+untouched validation cases.  Its matrix convention is rows = measured `e1/e2`,
+columns = applied `g1/g2`.
+
+The held-out simulation response is
+`[[0.812117+-0.003830, +0.001967+-0.003995],
+[-0.004771+-0.003055, 0.817970+-0.003674]]`, where errors are standard errors
+across validation cases.  The SWA model results are:
+
+| arm | response supervision | held-out model matrix | trace | SWA validation NLL |
+| --- | --- | --- | ---: | ---: |
+| C | none | `[[1.007241,-0.000002],[-0.001738,1.003566]]` | 1.005403 | -0.323969 |
+| D | scalar `trace(R)/2`, lambda 450 | `[[0.815926,-0.003552],[-0.002750,0.816776]]` | 0.816351 | -0.044756 |
+| E | full 2-by-2, lambda 450 | `[[0.815640,-0.002254],[-0.002764,0.816987]]` | 0.816314 | -0.033946 |
+
+Thus mixed-shear NLL data alone do not calibrate the response amplitude.  C is
+nearly isotropic and has small cross terms, but its trace exceeds the simulation
+trace 0.815044 by 0.190360 (23.4%).  Both explicit-response arms recover the
+held-out amplitude.  Using the full covariance of the 40 paired per-case
+model-minus-simulation matrices gives chi-square 2.91 for D and 2.08 for E over
+four components (nominal p=0.57 and 0.72); no component differs by more than
+1.38 paired standard errors.  C is decisively incompatible (chi-square 7514).
+
+E more closely reproduces the independently constructed 160-training-case
+global target `[[0.814944,-0.002059],[-0.002327,0.815896]]`: its Frobenius
+residual is 0.00138 versus 0.00204 for D, chiefly because E learns the targeted
+`R12` cross term.  On the held-out simulation matrix, E's Frobenius residual is
+0.00593 versus 0.00710 for D, but that small difference is unresolved by the
+40-case simulation noise.  D has the better density fit by 0.0108 nats/object,
+and both are far behind C by 0.279--0.290 nats/object.  Consequently full-matrix
+supervision behaves as intended, but this one-seed experiment does not establish
+that E is materially better than scalar D.  The large likelihood cost also says
+that lambda 450 is forcing a response that the unconstrained conditional-density
+optimum does not naturally learn; it should not be hidden by selecting only on
+response.
+
+Scientific interpretation: the extra sheared leg is useful for rotational
+structure (equal diagonals and near-zero cross terms in C), while explicit
+response supervision supplies the missing overall measurement-response scale.
+For the immediate g1/g2 problem, E is the more direct guard against recurrence
+of component or cross-response asymmetry, whereas D is the simpler competitive
+baseline.  Promotion still requires end-to-end catalogue-prior closure and more
+than one training seed; those have not been run here.  The immutable artifacts
+are `measurement_flow_mixed_g0_g005_{C,D,E}_s501_swaavg.pt` and
+`heldout_response_matrix_{C,D,E}_s501.json` under
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/mixed_shear_cde/`.
+
+## 2026-08-24 cont.214 — 200-case mixed-shear C/D/E flow experiment launched
+
+The measurement-flow trainer now supports balanced NLL training from multiple
+explicit catalogue legs, a case-grouped train/validation split, and explicit
+folding of the catalogue's applied shear into the stored intrinsic shape.  This
+last operation is necessary for the half-shear products: a direct catalogue
+probe verified that `e1/e2_input_rot0_p` remains identical between matched
+`g=0` and `g=0.05` rows, while the random applied direction is stored in
+`gamma1/2_input_p`.  With `--fold-catalogue-shear`, the trainer conditions on
+`S_gamma(e)` and then zeros gamma, rather than exposing gamma as a model label or
+silently conditioning the sheared measurement on the unsheared truth.
+
+The new multi-leg path divides the existing 4-million-row budget equally among
+legs.  C/D/E therefore use 2 million selected rows from `g=0` and 2 million
+from `g=0.05`.  All 200 case IDs are required in both sampled legs.  The
+deterministic seed-501 80/20 split is grouped by `case`, giving 160 training
+cases and 40 validation cases; both CRN-matched shear realizations of a case
+always remain on the same side.  Checkpoint metadata records all catalogue
+paths, shear folding, grouped-split column, expected case count, and response
+component mode.
+
+Full response-matrix supervision is now an opt-in extension of the historical
+trace loss.  For central differences it forms all four derivatives in row
+(measured component), column (applied component) order and penalizes the
+per-cell Frobenius error against `Rsim_matrix[...,2,2]`.  Its normalization is
+chosen so equal errors on the two diagonals have the same loss scale as the
+old scalar `trace(R)/2` penalty.  Trace mode is unchanged and remains the
+default.  Matrix mode deliberately refuses the currently scalar-only
+per-object, RA, bin-EMA, and global-anchor branches.
+
+`sbsi.flow_catalogue` and `scripts/prepare_flow_catalogue.py` prepare the current-
+centroid `g=0.05` leg from explicit external products, attach crowding and
+`R_blend` by `(case,input_index)`, and drop/report unmatched rows instead of
+zero-filling them.  `sbsi.flow_response_target` and
+`scripts/build_flow_response_target.py` estimate the full matrix by 2-D least
+squares over the random half-shear directions, save its trace target too, and
+use only the 160 training cases.  The held-out 40 cases never enter D/E's target.
+
+The controlled arms are: C = mixed-shear NLL only; D = mixed-shear NLL plus
+the existing scalar trace penalty (`lambda=450`); E = mixed-shear NLL plus the
+full 2-by-2 penalty at the same lambda.  They share architecture, seed 501,
+sample budget, split, and optimizer settings.  The photometric coupling pin is
+off in all three arms: its original target artifact was not retained in the
+standalone repository, and reconstructing a different target in only some arms
+would confound this first shape-response comparison.
+
+Files changed/added: `sbsi/flow.py`, `sbsi/flow_training.py`,
+`sbsi/training.py`, `sbsi/measurement_model.py`,
+`sbsi/flow_catalogue.py`, `sbsi/flow_response_target.py`,
+`sbsi/flow_response_audit.py`,
+`sbsi/cli.py`, `scripts/prepare_flow_catalogue.py`,
+`scripts/build_flow_response_target.py`,
+`scripts/audit_flow_response_matrix.py`,
+`jobs/job_prepare_mixed_shear_cde.sh`,
+`jobs/job_train_mixed_shear_cde.sh`,
+`jobs/job_audit_mixed_shear_cde.sh`, and
+`tests/test_flow_mixed_shear.py`.
+
+Validation: Python compilation passed under the supported `sims1` interpreter;
+all three scheduler scripts pass `bash -n`; the focused mixed-flow/API/CLI/model tests
+pass (`33 passed, 1 skipped`).  The complete suite reached `388 passed, 1
+skipped`; its two failures are the loop-shadowing repository guard, caused by
+five already-present unreviewed hits in the ongoing catalogue-inference edits.
+The new flow-catalogue writer initially added a sixth hit and was rewritten;
+the scanner now reports only those five unrelated existing hits.  The newly
+added preparation, target, audit, and mixed-shear test files pass Ruff; the
+audit-focused unit set passes all six tests.
+
+Initial preparation job **15984846** successfully wrote the all-200 current-
+centroid sheared leg: 139,913,563 raw rows produced 31,398,334 usable rows in
+200 cases, with zero unmatched crowding or `R_blend` lookups.  It then failed
+before target construction because grouped splitting unnecessarily imported
+sklearn and the `sims1` SciPy stack could not resolve `GLIBCXX_3.4.30` on that
+compute node.  Group splitting is now NumPy-only while preserving sklearn's
+seeded ShuffleSplit convention; the prep job resumes from (and never
+overwrites) the completed catalogue.  The unsatisfiable dependent array
+**15984847** was cancelled.  Resume preparation job **15984965** builds the
+6x6x5 trace+matrix target under
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/mixed_shear_cde/`.  It matched
+24,943,053 of 25,128,384 selected g0 rows and 25,118,010 selected sheared rows;
+the unmatched leg-specific detections were dropped and reported.  No cell fell
+below the 500-object minimum.  The training-case global matrix is
+`[[0.814944,-0.002059],[-0.002327,0.815896]]`, independently confirming equal
+diagonals and small cross terms.  Replacement GPU array **15984968** then
+loaded both two-million-row legs in all three arms but failed at the grouped
+split: although the split implementation itself was NumPy-only, `split_data`
+still imported sklearn unconditionally before selecting that branch.  The
+import is now confined to the legacy ungrouped path.  The exact grouped call
+passes under `sims1`, and the focused mixed-flow/API/CLI tests pass again (`20
+passed, 1 skipped`).  Replacement array **15985365** is running C/D/E with the
+corrected path.  Dependent array **15985428** will evaluate the complete 2-by-2
+model and simulation response matrices on the untouched 40 validation cases
+for each SWA checkpoint; this audit uses no training target or empirical
+correction.  Next: compare validation NLL and these held-out matrices before
+any catalogue-prior closure run.
+
+## 2026-08-24 cont.213 — independent-pilot adaptation and bounded JAX gate
+
+The unsafe production-prefix ESS stopper has been replaced experimentally by
+an independent-pilot allocator.  Pilot and production draws use distinct
+per-object random streams; the pilot fixes each object's production rung before
+any production weight is inspected.  Production now generates only the chosen
+prefix instead of generating the maximum draw count and discarding its suffix.
+The result records pilot ESS/peak-weight diagnostics, allocation provenance,
+phase timings, and optional retained common-draw ladders.  The proposal cache
+used by the uncertainty-reranked path is now correctly the version-3 spread
+cache.
+
+The first 10,000-object full-2D null calibration used `K=4096`, a 16,384-row
+uncertainty prefilter, `M=(512,1024,2048,4096,8192)`, and a 512-draw independent
+pilot.  On an A40-16Q slice, fixed `M=8192` took 536.6 s and returned
+`(+0.00047699,-0.00122146)`.  The raw adaptive rule cut reported flow terms from
+358.4 million to 157.3 million but took 687.7 s and shifted the estimate by
+`(-0.00032183,+0.00031388)`, or `(-1.94,+1.44)` paired standard errors.  None of
+36 ESS/peak/safety rules passed the predeclared 0.25-paired-SE gate.  Thus the
+remaining error is a broad finite-M bias, not just a tail of low-ESS objects.
+
+Batching still matters strongly.  Repeating exactly the same calculation with
+`object_chunk=128` reproduced the fixed and adaptive estimates to a few
+`1e-9`, reduced adaptive time to 308.4 s, and supplied a 1.68x speedup relative
+to its 518.7-s fixed reference.  The earlier chunk-16 result was slower despite
+fewer nominal padded flow terms.  These absolute times are not comparable to
+the standing full-A40 baseline because A40-16Q is a sliced device; the paired
+ratios are the relevant result.
+
+The retained ladder supports an explicit leading-bias cancellation,
+`T_corr(M)=2 T(M)-T(M/2)`, applied to each object's score and full information
+matrix with no additional flow evaluations.  Offline recombination makes
+several independent-pilot rules pass the 0.25-paired-SE gate.  The fastest
+passing rule averages 1,161 production draws and has an idealized 4.8x flow-term
+speedup.  This is implemented as the opt-in `richardson_1_over_m` correction.
+The first end-to-end arm (job **15981028**) passes: 95.6 s versus a 186.8-s
+compiled deep reference, with paired shifts `(-0.120,+0.006)` standard errors.
+But the required robustness arms reject it.  Proposal seed 8702 gives paired
+shifts `(-0.666,+1.008)` standard errors, and the `g_true=(0.05,0)` arm gives
+`(-0.357,+0.226)`; neither satisfies the 0.25-SE gate.  Their speedups are only
+2.07x and 2.31x.  Richardson/adaptive sampling therefore remains experimental
+and is not the default.  The apparent seed-8701 pass was not sufficient evidence.
+
+Phase timings explain the remaining wall.  In the passing arm, the 95.6 s split
+into 38.4 s candidate query/reranking, 13.3 s exact candidate likelihood, 3.6 s
+pilot/centre work, and 39.7 s stencil work.  Narrowing the location prefilter is
+not safe: at final `K=4096`, reducing the 16,384 prefilter to 8,192 lowers median
+retained reference mass from 0.971 to 0.786.  An exact lifted-space MIPS index for
+the heteroscedastic Gaussian proxy was implemented and verified, but SciPy's
+tree is slower (6.86 versus 1.08 s per 1,024 objects) and its 10th-percentile
+mass ratio is only 0.80, so it is not integrated.  A Torch GPU location query
+does reproduce the support summaries exactly and cuts the pure 16,384-neighbour
+query from 1.08 to 0.46 s per 1,024 objects; it is available behind
+`candidate_backend=torch` but remains opt-in pending a full closure benchmark.
+
+The validated low-risk defaults are now `object_chunk=128` and compiled PyTorch
+in the numerical-recenter job.  They preserve the fixed/adaptive estimates to
+few-`1e-9` in the common-draw chunk comparison; earlier full-A40 execution tests
+showed about 1.23x from compilation.  The requested 5--10x wall-time milestone is
+not achieved.  A genuinely stronger proposal or different controlled-bias
+integration scheme is still required.
+
+A bounded JAX 0.6.2 GPU prototype was installed in an isolated project overlay;
+the working `py31` environment was not modified.  On 294,912 realistic frozen-
+flow rows, full-fp32 JAX is 1.37x faster than eager PyTorch but slightly slower
+than compiled PyTorch (3.23 versus 3.35 million rows/s).  Its worst log-density
+difference from fused PyTorch is 0.302, so it fails both the predeclared 1.5x
+incremental-speed gate and the maximum-error gate.  JAX is therefore retained
+only as a prototype and is not integrated into catalogue inference.  The
+focused sampling/null/JAX tests pass, including exact nested-stream and
+Richardson-combination regressions.
+
+## 2026-08-24 cont.212 — next efficiency milestone is 5--10x
+
+The next optimization target is defined against the accepted A40 catalogue-mock
+run at `K=4096`, `M=8192`, and nine numerical views: 226.7 s per 10,000
+objects.  The target is 22.7--45.3 s per 10,000 objects, with unchanged
+catalogue likelihood and closure results.  This is a 5x primary milestone and
+a 10x stretch milestone.  At fixed scaling it corresponds to approximately
+26--52 A40 GPU-days per billion objects for one pass, so it is an intermediate
+production target rather than the earlier literal few-day-per-billion goal.
+
+The first algorithmic track is adaptive sampling.  The existing ESS-only rule
+is not acceptable because it produced a significant g2 shift.  Its replacement
+will use a cheap independent pilot to assign each object a fixed production
+draw rung before the derivative views are evaluated.  Pilot and production
+draws must either be independent or enter a correctly weighted deterministic
+mixture.  Validation will compare every adaptive result with the fixed
+`M=8192` common-draw reference, including paired component shifts, proposal
+seeds, bright-object tails, and the full 2-by-2 information matrix.  A useful
+adaptive design should supply at least 2x end-to-end speedup; otherwise it does
+not justify the added machinery.
+
+The second track is a bounded JAX experiment, not an immediate rewrite.  Export
+the frozen affine-coupling flow weights and implement only the fused hot kernel:
+shear map, condition standardization, flow log probability, importance weights,
+and per-object log-sum-exp over fixed-shape draw buckets.  Compare it on identical
+arrays with eager PyTorch and the current `torch.compile` path.  Numerical
+likelihoods, scores, Hessians, and recovered shear must pass the existing paired
+gates before timing counts.  JAX should be retained only if it provides at least
+1.5x incremental speedup at production-sized batches.  Higher-order JAX
+autodiff is a separate benchmark because the existing Torch autograd Hessian is
+slower and much more memory-intensive than nine numerical views.
+
+The realistic route to 5--10x is therefore multiplicative: approximately 2--4x
+from safer draw allocation and a stronger proposal, then approximately 1.5--2x
+from a fused execution backend.  JAX alone is not expected to provide the full
+gain, and the current adaptive stopping rule is not licensed for production.
+
+## 2026-08-24 cont.211 — three current catalogue-inference problems
+
+The current work is organized around three separate problems.  They should not
+be conflated: solving the runtime problem does not validate the likelihood, and
+explaining the bright-object behaviour does not by itself remove the component
+asymmetry.
+
+| Problem | Current evidence | Target / deciding check |
+| --- | --- | --- |
+| Computation efficiency | The accepted one-step numerical path takes 226.7--273.2 s per 10,000 objects on an A40.  At fixed settings this is about 262--316 A40 GPU-days per billion objects for one pass, before any extra recentering iterations. | Reach the next 5--10x milestone: 22.7--45.3 s per 10,000 objects with unchanged inference results. |
+| Bright-object non-Gaussianity | The catalogue-marginal likelihood is not well described over finite shear by the quadratic expansion at zero.  The signed curvature change is concentrated in bright, large, relatively round objects: the brightest magnitude quintile supplies approximately all of the aggregate change and the top 1% of objects supplies 61% (g1) and 69% (g2).  The known-atom flow curvature is much more stable, so catalogue marginalization and finite prior-bank resolution remain leading explanations. | Treat this first as an interesting likelihood/prior question, not automatically as a defect.  Separate single-atom flow shape from posterior atom switching by plotting object-level profiles and higher derivatives, repeating on the bright subset with a denser independent bank, and checking whether the apparent non-Gaussianity persists. |
+| g1/g2 inconsistency | The flow-mock response matrix has unequal diagonals, nonzero cross terms, and less g2 information: exact-null `I22/I11=0.727` and full-prior `I22/I11=0.709`.  The independent V2.2 simulation response instead has equal diagonals and cross terms consistent with zero. | Diagnose this as a likely learned flow symmetry/generalization problem.  Evaluate the full flow response matrix on the held-out V2.2 response-population conditions, then require component-wise diagonal agreement and cross responses consistent with zero before treating g1 and g2 closure as interchangeable. |
+
+The immediate scientific diagnostics are therefore the bright-object profile
+study and the held-out component-response audit.  Efficiency remains a hard
+production blocker.  The immediate milestone is now 5--10x rather than claiming
+that the next iteration will already reach literal few-day billion-object
+inference on one GPU.
+
+## 2026-08-24  cont.210 — g2 asymmetry is real; finite-shear failure localizes to catalogue marginalization
+
+No new mocks or flow evaluations were run.  The retained exact-null, full-prior,
+finite-profile, and per-object curvature products were analyzed together in
+`scripts/plot_section5_component_diagnostics.py`.  It writes the reproducible
+numbers and the PNG/PDF diagnostic to `doc/generated/section5_component_diagnostics.*`.
+
+The current flow likelihood does treat the two shear components differently.
+At the exact finite-catalogue null, mean information is 662 for g1 and 482 for
+g2, a ratio of 0.727; the robust g2 error is 1.14 times the g1 error.  After the
+full catalogue-prior integral the information ratio is 0.709 and the error ratio
+is 1.19.  This is not a proposal-seed artifact.  The same saved nonzero mocks
+have diagonal measured mean responses 1.106843 (g1) and 1.069889 (g2), whose
+squared ratio is 0.934, so unequal mean response explains only part of the
+information gap.  The full mean response matrix (rows are measured e1/e2,
+columns are injected g1/g2) is
+
+```
+[[ 1.106843, -0.021021],
+ [-0.018963,  1.069889]]
+```
+
+with standard errors `[[0.002890,0.001754],[0.001779,0.002754]]`.  The cross
+terms are therefore 12.0 and 10.7 sigma from zero, and repeat at injected 0.05
+to better than `5e-5`.  They are not caused by the finite mock's intrinsic
+orientations: the analytic reduced-shear Jacobian on the identical 10,000
+intrinsic rows has cross term `+0.00091+-0.00161`, consistent with zero.
+
+The finite-shear non-quadraticity localizes differently.  For `g_true=0.02`,
+the information of the likelihood evaluated at the *known generating atom* is
+nearly flat as the expansion centre moves from zero to truth: 874 -> 849 for g1
+and 592 -> 618 for g2.  The catalogue-marginal information changes from 77 ->
+246 and 66 -> 186 instead.  The reason is visible in the Louis decomposition:
+at zero it is the small difference of conditional information and posterior
+score variance (810 - 732 for g1; 593 - 527 for g2).  Changing shear changes
+the posterior atom responsibilities and therefore that cancellation.  This is
+why the aggregate profiles can look Gaussian around their maxima and recover
+0.020114/0.019915, while the quadratic constructed at zero peaks at
+0.05116/0.04338.  The evidence points to catalogue marginalization (including
+possible finite property-bank resolution), not strong nonlinearity of the
+single-atom flow response, as the source of the failed finite extrapolation.
+
+The curvature change is concentrated rather than a bulk faint-tail effect.
+The brightest measured-magnitude quintile supplies about 100% of the signed
+aggregate change for both components; contributions from the other four
+quintiles nearly cancel.  The top 1% in absolute change supplies 61% (g1) and
+69% (g2).  Its median measured magnitude is 21.28/21.23 versus 24.36 overall,
+median log radius is 1.73/1.70 versus 1.42, and median measured ellipticity is
+0.31/0.38 versus 0.44.  Thus the problematic responsibility switching is driven
+by bright, large, relatively round high-information objects, not very elliptical
+or low-S/N galaxies.
+
+The flow audit leaves one genuine validation gap.  The deployed mean-affine
+architecture is not rotation-equivariant, and its response loss explicitly
+supervises only `trace(R)/2`: code line 347 averages the g1 and g2 diagonal
+responses before comparison with the scalar bin target.  It does not separately
+pin `R11`, `R22`, or the cross responses.  Earlier simulation work established
+that square-pixel ngmix measurements can have real component anisotropy, so an
+unequal diagonal flow response is not automatically wrong.  The nonzero cross
+response is more concerning: a square grid with a round PSF retains reflection
+symmetries that should remove the population cross terms.  The current 3.3%
+diagonal-response gap, 29% information gap, and approximately 2% cross response
+have not been validated component by component on a held-out response catalogue.
+The scalar projected response target used in training cannot perform that check.
+Thus there is now positive evidence for a learned symmetry/convention defect.
+
+The original response simulation supplies the missing matrix check.  CPU audit
+job **15971088** collapsed the all-pairs table to 2,850,008 unique detected
+primaries in the exact V2.2 box (`r<25.8`, `Re>0.5`) and fit each of the 100
+random-direction simulation cases independently, controlling for intrinsic e1/e2.
+It gives
+
+```
+R_sim = [[0.81925+-0.00439, 0.00485+-0.00435],
+         [0.00062+-0.00474, 0.81564+-0.00480]].
+```
+
+The two simulation diagonals agree and both cross terms are consistent with
+zero.  The mean diagonal, 0.81745, also agrees with the checkpoint's saved
+validation response 0.82125, validating the audit against the scalar quantity
+that training did supervise.  Therefore the flow's directional split/cross
+response on the catalogue-prior population is not inherited from the response
+simulation; it is a learned conditional-generalization/symmetry problem.  The
+remaining discriminating checks are to evaluate the full flow matrix directly
+on the V2.2 response-population conditions and to test a denser independent prior
+bank on the bright/large subset.  More mock target objects alone cannot resolve
+either question.
+
+## 2026-08-23e  cont.209 — uncertainty-aware candidate proposal
+
+Candidate-support error was isolated from draw error on 1,024 frozen
+`g=(0.05,0)` likelihood mocks.  The exact `pi Pdet L` target was evaluated over
+the validated `K=16384` nearest-median support and normalized within that support.
+The existing distance order captures median posterior masses of only 0.270, 0.405,
+and 0.580 at `K=1024,2048,4096`.  Perfectly ranking the same support would capture
+0.836, 0.966, and 0.998.  The reference posterior is not always narrow: its
+effective atom count has 10th/50th/90th percentiles 35/1,413/5,240.  Thus both
+effects are present, but poor ranking is the avoidable one.
+
+Proposal-coordinate cache version 3 now retains a robust per-atom dispersion for
+every measured flow target, estimated from the same cached QMC flow draws used for
+the median coordinate.  Version-2 caches remain loadable.  The new optional path
+queries a large nearest-location prefilter and ranks it with a diagonal
+heteroscedastic approximation including detected-prior mass.  It then evaluates
+the exact flow target only on the requested final support.  The defensive global
+prior mixture and exact `pi/q` correction are unchanged, so this alters Monte Carlo
+variance rather than the catalogue likelihood.  The adaptive one-step runner and
+job wrapper expose the prefilter separately and record it in the result.
+
+On the same 1,024 objects, uncertainty ranking raises median captured mass at
+`K=1024,2048,4096` to 0.680, 0.859, and 0.971.  Their 10th-percentile masses are
+0.301, 0.511, and 0.779.  It closes much, but not all, of the gap to ideal ranking.
+The one-time 7.11-million-row spread cache is 34 MB compressed because only 627,528
+rows have prior mass and inactive rows compress to constants.
+
+The end-to-end common-mock closure comparison uses 10,000 likelihood mocks,
+`g=(0.05,0)`, the calibrated mean-shape centre, the full nine-view `h=0.001`
+stencil, and `M=(512,1024,2048,4096,8192)`.  The fresh `K=16384` reference exactly
+reproduces the earlier deep estimate `(0.04959087,-0.00155985)` and takes 273.2 s
+inside the estimator.  Uncertainty-ranked `K=4096` returns
+`(0.04957298,-0.00152687)`: its paired difference from the reference is
+`(-0.0000179,+0.0000330)`, or `(-0.58,+0.99)` paired sigma.  It cuts reported flow
+terms from 564.8 million to 356.0 million and runtime to 226.7 s, a 1.20-fold wall
+speedup.  `K=2048` is rejected at this draw depth: it returns
+`(0.04944638,-0.00144496)`, with a primary paired shift of `-0.0001445 +/-
+0.0000632` (2.29 sigma), despite reducing runtime to 193.2 s.
+
+Candidate work is therefore no longer the dominant cost at the accepted `K=4096`:
+the eight non-central views over `M=8192` dominate, so a fourfold reduction in exact
+candidate evaluation yields only a 17% wall-time reduction.  Shallow rungs still
+show significant finite-draw movement.  At `K=4096`, the primary estimates are
+0.048388, 0.048935, 0.049095, 0.049446, and 0.049573 over the ladder; the final
+`4096 -> 8192` shift is `+0.0001268 +/- 0.0000952`.  An independent proposal seed
+is the next support gate.  Reducing `M`, likely with explicitly validated leading-
+bias cancellation or a stronger proposal, is now required for a large speedup;
+ESS-only stopping remains rejected.
+
+The independent-seed check shows that the remaining movement is primarily draw
+noise, not candidate truncation.  At `K=4096,M=8192`, seed 8702 returns
+`(0.04959436,-0.00188433)`.  Relative to seed 8701 the shift is
+`(+0.0000214,-0.0003575)`, or `(0.12,-1.68)` paired sigma.  Enlarging the support
+to `K=8192` gives `(0.04958103,-0.00155856)` and
+`(0.04962757,-0.00188996)` for the two seeds: the seed shift remains almost the
+same in g2.  At fixed seed, `K=4096` and `K=8192` differ by at most `3.3e-5` in
+either component.  Candidate support around 4096 is therefore adequate at the
+few-times-`1e-5` level for this mock, but the `M=8192` stochastic integral still
+fails the strict independent-seed gate.
+
+A stratified exact-support prototype was added without changing the likelihood.
+It evaluates the selected candidate contribution exactly at all nine views and
+estimates only the catalogue-prior complement with fixed global draws:
+`Z = sum_C(pi Pdet L) + mean_{j~pi}[Pdet L 1(j not in C)]`.  Regressions verify
+that it is seed-independent when the candidate set covers the full prior.  On the
+10,000-object nonzero mock with `K=4096` and complement ladder
+`G=(64,128,256,512,1024)`, seed 8701 moves from primary 0.048635 to 0.049710;
+the final `512 -> 1024` shift is `+0.0000647 +/- 0.0000972`.  Seed 8702 ends at
+0.049555, giving a seed shift of `-0.000155 +/- 0.000255`.  Although compatible
+within one sigma, it does not meet the predeclared 0.25-SE gate, and the 235.5-s
+runtime with 460.8 million flow terms is not materially better than the sampled
+candidate path.  The method remains an exact-target experimental path, not the
+default.  The focused proposal/null/provenance suite now passes 65 tests.
+
+## 2026-08-23d  cont.208 — large-N shallow sampling fails; nonzero common-draw ladder added
+
+The optimized one-step path was stress-tested with one million likelihood mocks at
+`g=(0.05,0)`, deliberately using only `K=128,M=64`.  The calibrated raw-shape pilot
+started at `(0.046831,-0.001984)`, but the likelihood step returned
+`(0.036447,+0.002925)`.  The primary difference is `-0.013553`, while its robust
+error is `0.000955`; increasing the number of objects therefore makes the finite-draw
+error more significant rather than averaging it away.  The job completed on a P5000
+in 14m58s (874.9s inside the estimator), with 609.6 million reported flow terms.
+
+ESS-only object stopping is not accepted as a production rule.  On 100,000 null
+mocks with `K=4096` and ladder `M=(512,1024,2048)`, it stopped 44.2% of objects at
+512, 3.8% at 1024, and 52.1% at 2048.  Its `g2` result differed from the fixed
+`M=2048` result by `+0.0001522 +/- 0.0000601`, a 2.53-sigma paired shift.  The
+fixed common-draw null estimates themselves were
+`(-0.0002061,-0.0000909)`, `(-0.0002060,-0.0001226)`, and
+`(-0.0001564,-0.0002358)` at the three rungs.  The final g2 movement is
+`-0.0001132 +/- 0.0000633`; a shallower null ladder that happened to look stable
+was therefore not a sufficient stopping calibration.
+
+`run_adaptive_section5` now has an explicit `retain_full_ladder` diagnostic mode.
+It evaluates every object at the maximum nested prefix, evaluates each unique atom
+once per shear view, and reduces those same weights at every requested rung.  With
+full information it retains the two-component score and full 2-by-2 information at
+every rung.  The numerical recenter runner saves these arrays and reports their
+common-draw Newton estimates and paired rung shifts.  This diagnostic costs no extra
+flow calls relative to the deepest rung; it is a calibration run, not an adaptive
+speed claim.  A regression reproduces separate nested-prefix runs exactly.
+
+The first nonzero common-draw diagnostic used 10,000 `g=(0.05,0)` likelihood mocks,
+the calibrated mean-shape centre, `K=16384`, `M=(512,1024,2048,4096,8192)`, the full
+nine-view numerical stencil, and no cuts or external `R_blend`.  It completed in
+4m49s (271.3s estimator time) on an A40.  The primary estimates were
+`0.0486721`, `0.0490635`, `0.0491579`, `0.0495056`, and `0.0495909`.
+The last `4096 -> 8192` shift is `+0.0000853 +/- 0.0000924`: its absolute size is
+below `1e-4`, but it is 0.92 paired sigma rather than the predeclared 0.25-sigma
+convergence gate.  The final result differs from truth by `-0.0004091` with robust
+error `0.0006823`; it is statistically consistent but does not establish 0.2%
+multiplicative calibration.
+
+Candidate support is now the main optimization target.  Earlier `K=1024,M=512`
+gave about `0.0441` at the same injection, whereas the new `K=16384,M=512` rung is
+`0.04867`.  Because the exact `pi/q` correction is present, this is finite-sample
+proposal error rather than a different likelihood target.  A better proposal must
+reproduce the large-support result with small `K`; only then is aggressive adaptive
+`M` meaningful.
+
+Autograd is retained as a cross-check, not promoted as the fast path.  At
+`N=512,K=1024,M<=512`, increasing the autograd object batch from 8 to 64, 128, and
+256 reduced runtime from 7.87s to 2.89s, 2.72s, and 2.57s.  The nine-view numerical
+adaptive path took 2.19s.  The final autograd test is still 17% slower and uses
+10.96 GB rather than 0.88 GB, despite fewer forward terms.  Second-derivative
+backward work dominates.  The new ladder and runner tests pass with the existing
+catalogue-null/provenance set: 45 tests total; Python and shell syntax checks pass.
+
+## 2026-08-23c  cont.207 — posterior-adapted ConstGold image gate
+
+The complete FS2 cases-0--9 prior is now the only prior used by the current
+image test: 6,995,680 scene rows, 637,226 positive-mass primary atoms, and
+143,168,426 directed neighbour edges. Its atom-aligned response cache has a
+nonzero `R_blend` for every active atom and mean 0.2130975. Existing ConstGold
+cases 40--49 at injected `g1=+-0.02` supply the image mocks; no new image
+simulation was run. The current gate includes the flow, detection weighting,
+detected-population normalization, and full fixed `R_blend`, with measured
+selection disabled.
+
+The first finite-shear runs exposed a numerical-optimization issue distinct
+from shear bias. At `h=0.005`, one image arm required seven iterations and 67
+likelihood evaluations while the other stalled after 117 evaluations even
+though a direct profile showed a nearby maximum. Promoting the streamed
+log-sum-exp reduction to float64 and using `h=0.001` made the same fixed-draw
+surface converge in 2--5 iterations. The `h=0.001` value is now the operational
+finite-shear-recentering default; it does not replace the independently
+validated `h=0.00125` null/Section-5 stencil.
+
+The distance-kernel proposal nevertheless failed its independent-seed gate.
+At `M=8192`, `K=16384`, and defensive fraction 0.1, mean ESS was only about 95
+of 8192, the p10 ESS was about 20, and roughly 44% of the evidence came from
+outside the local support. Changing only proposal seed moved the response from
+roughly `(R11,R21)=(0.58,+0.56)` to `(0.72,-0.30)`. Increasing the defensive
+fraction to 0.5 raised mean ESS to about 260 but still moved the positive-arm
+`g1` estimate by 0.0101 across seeds. These runs diagnose proposal quadrature;
+their multiplicative and cross responses are not image-bias measurements.
+
+Numerical recentering now defaults to an initial-centre posterior-adapted
+proposal. For each object it evaluates exact `pi Pdet L(initial)` on the `K`
+cached nearest candidates, normalizes this as the local proposal, mixes it
+with `epsilon pi`, and retains exact `pi/q`. The draw is assembled in object
+chunks with object-indexed random streams and then frozen for every stencil and
+line-search point. On the tensor path the already-computed candidate
+likelihoods supply candidate-member weights at the initial point; only
+defensive draws outside that support are evaluated again. Metadata records the
+method, reference shear, reuse flag, inactive bandwidth, and separate
+candidate, reuse, numerator, selection, and diagnostic flow-evaluation counts.
+The distance kernel remains an explicit fallback.
+
+Regressions require full-versus-chunked adapted draws to agree exactly in atom
+IDs, proposal probabilities, support membership, global-component flags,
+candidate radii, and local positions. A combined `R_blend` plus selection test
+reproduces the independently evaluated fixed-draw surface when the initial
+candidate likelihood is reused. The full light suite passes **363 tests, 1
+skipped**; the one warning is unchanged.
+
+The first adapted cases-40--44 pilot used `h=0.001`, `M=8192`, `K=16384`,
+`epsilon=0.5`, zero initial shear, full `R_blend`, and no measured cut. Proposal
+seed 8701 gave `(+0.017087,+0.004568)` for the `+0.02` arm and
+`(-0.011608,+0.011123)` for the `-0.02` arm. Mean ESS rose to 553 and 557,
+p10 ESS to 180 and 203, and p90 maximum-weight fraction fell to 0.0490 and
+0.0454. The paired one-block values, `m=-28.26% +/- 9.98%`,
+`c=+0.002739 +/- 0.001996`, and cross response
+`-0.1639 +/- 0.1347`, are preliminary because proposal-seed convergence had
+not passed. Seed 8702 moved the two fitted arms to
+`(+0.015675,+0.005754)` and `(-0.012491,+0.013406)`. The four component shifts
+are 0.29--0.61 likelihood-curvature standard errors, above the declared 0.25-SE
+gate. At the nested `M=32768` rung, seed 8701 gives
+`(+0.018494,+0.005422)` and `(-0.011518,+0.011833)`, while seed 8702 gives
+`(+0.017802,+0.005887)` and `(-0.011976,+0.011921)`. The seed shifts are now
+only 0.02--0.20 likelihood-curvature standard errors, so the independent-seed
+gate passes at this rung. Mean ESS is 1,827--1,937 and p10 ESS is 619--676.
+The nested `M=8192` to `M=32768` shifts nevertheless reach 0.66 standard
+errors, so draw convergence did not pass at that point. Jobs **15954939** and
+**15954940** advanced both signs and both seeds to the predeclared `M=65536`,
+`K=16384` rung. They completed successfully. Seed 8701 gives
+`(+0.017853,+0.004937)` and `(-0.011500,+0.011889)`; seed 8702 gives
+`(+0.017799,+0.005472)` and `(-0.011847,+0.012801)`. Every nested
+`M=32768` to `M=65536` shift is below the declared 0.25-curvature-SE gate; the
+largest is 0.210 SE. Every independent-seed shift at `M=65536` also passes;
+the largest is 0.222 SE. Mean ESS is 3,527--3,683 and p10 ESS is 1,205--1,243.
+The resulting one-block paired responses remain large and mutually stable:
+`m1=-26.62%`, cross response `-17.38%` for seed 8701, and `m1=-25.89%`,
+cross response `-18.32%` for seed 8702. These are not yet a calibrated image
+bias measurement, but increasing the catalogue draw count no longer moves
+them appreciably. Jobs **15955455** and **15955456** now repeat the same
+`M=65536`, `K=16384`, two-seed, two-arm configuration on independent ConstGold
+cases 45--49. No measured cut is open. Those jobs completed, but the independent
+block does not pass its proposal-seed gate. The negative arm agrees to at most
+0.09 curvature SE, at `(-0.002972,+0.005015)` and
+`(-0.002754,+0.004965)`. The positive arm instead moves from
+`(+0.030890,+0.007837)` to `(+0.042718,+0.010675)`; its `g1` shift is
+3.09 curvature SE. Both optimizers report local convergence, so this is a
+fixed-draw surface difference rather than an unfinished Newton solve. The
+positive arm also has the weakest p10 ESS, 585--857, and about 45% of its
+evidence is carried by the defensive component. Jobs **15956427** and
+**15956428** therefore hold `M=65536` fixed and enlarge only the positive-arm
+posterior candidate support from `K=16384` to `K=65536`, once per seed. The
+already seed-stable negative arm is not repeated at this diagnostic rung.
+The enlarged-support jobs completed at `(+0.030105,+0.008377)` and
+`(+0.030629,+0.007752)`. Their seed shifts are only 0.148 and 0.129 curvature
+SE. Mean ESS rises to about 7,900, p10 ESS to 2,257--2,276, and the evidence
+outside local support falls to 27.9%. Thus the discrepant `K=16384`, seed-8702
+surface was proposal-support error; it is not interpreted as image bias.
+
+The matched full-model likelihood isolation now uses `M=K=65536`, defensive
+fraction 0.5, the complete FS2 cases-0--9 prior, current flow and detection
+classifier, fixed `R_blend`, and no measured cut. Jobs **15962772** and
+**15962773** generate 2,048-object mocks at `g1=+0.02` and `-0.02` with common
+generation seeds and infer them with proposal seed 8701. Dependent jobs
+**15962774** and **15962775** reuse those exact frozen mocks with proposal seed
+8702. This separates likelihood/sampler self-consistency from transfer to the
+ConstGold image measurements and avoids comparing separately generated GPU
+mocks across proposal seeds. The owner subsequently deferred this FS2-specific
+isolation to focus on GalSBI likelihood closure and its compute cost. Job
+15962773 had already completed in 37m57s; 15962772 was cancelled at 42m24s,
+15962774 was cancelled while pending, and 15962775 exited during the dependency
+cancellation race. No result from this intentionally incomplete four-job panel
+is used as a closure claim.
+
+An independent cases-40--139 catalogue audit also found a real model gap. The
+full truth ellipticity response is
+`(1.000008 +/- 0.000063, 0.000118 +/- 0.000065)`, whereas arm-specific image
+detection gives `(0.990795 +/- 0.000295, 0.000183 +/- 0.000300)`. Thus the
+missing detection-selection response is
+`(-0.009191 +/- 0.000275, +0.000062 +/- 0.000282)`. The deployed classifier's
+seven declared inputs are spin-0 and contain no ellipticity, so its cached
+`Pdet` cannot reproduce this approximately 0.92% diagonal response. The
+separate failed-ngmix event is tiny, but the eventual normalization must still
+describe one usable event `U=D and F`. This detector/usable-event mismatch is
+too small to explain the large proposal-seed movement, but it blocks a 0.2%
+image-closure claim after the sampler stabilizes. Consequently all current
+image results have `selection=null` and zero selection-flow evaluations;
+realistic and stress cuts remain gated.
+
+## 2026-08-23b  cont.206 — full-model recentering and complete-FS2 prior gate
+
+The fixed-draw two-component numerical optimizer now evaluates the complete
+finite-catalogue likelihood rather than rejecting measured selection and an
+external response. `CatalogueLikelihood.log_population_normalization`
+centralizes
+
+`log B_W(g) = log sum_j pi_j Pdet_j(g) Ppass_j(g)`.
+
+At every stencil and line-search point,
+`evaluate_fixed_draw_log_likelihood` retains the same proposal atoms,
+probabilities, and exact `pi/q` numerator, then subtracts `N log B_W(g)`.
+`Ppass` is not inserted into a retained object's numerator. Existing tensor
+and dataframe likelihood paths apply the fixed atom response by subtracting
+`R_blend,j [e(S_g z_j)-e(z_j)]` from the two observed shape targets; selection
+QMC adds the same shift to flow draws before applying the measured cut. Image
+measurements are never given an additional response shift because their pixels
+already contain blending.
+
+`run_section5_numerical_recenter.py` now loads and provenance-checks an optional
+atom-aligned response cache and measured-cut cache. It accepts the same
+repeatable `OutputCut` bounds as the general likelihood runner, applies the cut
+to each loaded image leg independently, records the keep fraction, and saves
+the exact retained analysis mock. It can also generate a full-model likelihood
+mock when no input mock is supplied. Missing current-format zero-model and
+proposal-coordinate caches are built once and then reused. Selection caches
+include scene, model, response, cut, QMC-depth, seed, and row-chunk identity.
+Every result also hashes the executable script and all likelihood, sampling,
+scene, shear, model, and cut modules used by the dirty-worktree run.
+The optimizer's evaluation count now separates object-numerator flow calls
+from global selection-QMC calls instead of hiding the latter. After a scalar
+likelihood value is cached, its nonzero catalogue frame and accelerator tensor
+are released; the zero base and compact per-atom selection probabilities stay
+resident. This prevents `R_blend` recentering from retaining one full catalogue
+tensor for every adaptive optimizer point.
+
+The fixed response no longer forces the scene/model cache to rebuild all
+spin-0 flow features and re-run detection at every shear. Nonzero response
+views shallow-reuse the zero flow/detection tables, replace only the two
+intrinsic-shape columns, and compute `R_blend` times the exact ellipticity
+displacement directly from the stored prior. The blend-aware tensor likelihood
+remains on its general target-shift path. A regression compares the optimized
+view with a complete sheared-scene rebuild and makes any nonzero classifier
+call fail.
+
+New regressions cover uncut, response-only, selection-only, and combined
+fixed-draw surfaces. Enumerating all positive atoms once reproduces both the
+exact likelihood and a hand-computed finite Gaussian catalogue sum at zero and
+two oblique shears. Additional tests pin the selected-normalization identity,
+selection common-random-number invariance to shear evaluation order, the mixed
+Hessian term, and combined-model recentering against an independent bounded
+exact MLE. The old strong-cut finite-mock profile assertion now allows its one
+known grid-cell sampling displacement; formula equality, rather than equality
+of a finite-sample MLE to injected truth, remains the exact gate. Paired
+numerical results are summarized with simulation cases as the independent
+blocks, including the cross-component response. The full light suite passes
+**334 tests, 1 skipped** in 89.74 seconds.
+
+The planned image-prior audit found that
+`realflow_cases0_9_v1` is not the full FS2 population: it was reconstructed
+from paired detected/measurement rows and contains 343,341 positive atoms,
+only 53.9% of the 637,226 eligible atoms in the existing raw cases 0--9. It is
+therefore rejected for image closure. New
+`assemble_fs2_scene_catalogue.py` verifies and assembles the already-existing
+unsheared FS2 truth files without rendering new images; it hard-gates the
+expected 6,995,680 rows and 637,226 positive atoms before the 11-arcsec scene
+graph is built. CPU job **15954085** completed in 18m21s with 143,168,426
+directed edges, no duplicate positions, and 17.5 GB peak RSS. GPU job
+**15954086** completed the fresh response cache in 1m12s: 10,413,623 supported
+pairs, nonzero response on all active atoms, and prior mean `R_blend=0.2130975`.
+It reported 77 secondary-magnitude and five separation extrapolations among
+10.4 million pair rows; they are retained and reported rather than clipped.
+Job **15954096** is running the first 512-object full-model likelihood isolation
+pilot while building current model/proposal caches. These jobs process existing data only.
+
+All 100 existing ConstGold case pairs 40--139 at `g1=+-0.02` were found
+complete. The missing `-0.02` cases-40--44, 2,048-object image mock was prepared
+successfully in job **15954087**; the older `+0.02` mate already exists. A
+0.5-arcsec measured-radius cut corresponds to
+`measured_log_flux_radius>=log(2.5)=0.916290732` because `FLUX_RADIUS` is in
+pixels; it retains 99.85% of the pilot and is nearly empty as a selection test,
+so `logR>=1.45` remains the declared stress cut. The current four-output flow
+does not supply a flux uncertainty, so an undefined `SNR>10` cut is not used.
+
+No image-inference or multiplicative-bias result is reported yet. Cases 0--9
+in the full prior are scene-disjoint from evaluation cases 40--139, but the
+deployed models were trained on the same FS2 family and the response training
+included cases 40--199. The eventual result is therefore a re-render and
+shear-transfer closure, not a fully held-out population claim. The image
+adapter also drops failed ngmix fits after cross-match; that measurement-success
+conditioning must be reconciled with the detector/flow definition before a
+final detection-selection claim.
+
+## 2026-08-23  cont.205 — safeguarded two-component numerical recentering implemented
+
+Implemented the finite-shear follow-up to cont.204 in `sbsi/catalogue_null.py`.
+`evaluate_fixed_draw_log_likelihood` evaluates arbitrary `(g1,g2)` points with
+one shared defensive-importance draw and the exact `pi/q` correction.  The new
+`optimize_shear_numerical` computes the population score and full 2x2 observed
+information from a nine-view central stencil.  Positive-information iterations
+use a capped Newton step; indefinite iterations use the population-gradient
+direction.  A backtracking line search accepts only a direct increase in the
+summed marginalized likelihood.  The proposal atoms and probabilities remain
+fixed across all stencil and line-search points.
+
+This does not change the inference target.  It retains the 100-case catalogue
+prior, detection weighting and detected-population normalization, exact
+shape-only reduced-shear map, no measured-output cuts, and `R_blend=0`.  The
+only search guard is the configurable default `|g1|,|g2| <= 0.1`; it is not a
+likelihood term.  `scripts/run_section5_numerical_recenter.py` and
+`jobs/job_section5_numerical_recenter.sh` provide the saved-mock operational
+path.  The older profile and zero-centred estimators are unchanged.
+
+Focused tests cover equality with the retained directional profile likelihood,
+the full numerical Hessian machinery, and a deliberately negative-curvature
+zero start that must fall back to gradient ascent before Newton convergence.
+`tests/test_catalogue_null.py` plus the loop-shadowing guards pass **25 tests**.
+The full light suite gives **315 passed, 1 skipped, 3 failed** before recording
+the deliberate fixed-point update in the loop allowlist; two failures were that
+new allowlist entry.  The remaining failure is the pre-existing strong
+measured-cut profile grid assertion (`0.0225` rather than `0.0200`), outside
+this no-cut path.
+
+GPU job **15952873** tested 512 saved `g=(0.02,0)` mocks at deliberately shallow
+`K=8192,M=2048`.  Starting from zero, it converged in four iterations to
+`(0.017886,0.000369)` and every accepted step increased the fixed-draw
+likelihood.  This is an optimizer smoke test, not a powered closure result.
+Full `K=32768,M=16384`, 10,000-object validations against the four cont.204
+saved mocks completed in jobs **15952875--15952878**.  Starting from zero, the
+two-dimensional estimates and final curvature errors are:
+
+| injection | recentered estimate | curvature errors | injected difference / error |
+|---|---:|---:|---:|
+| `(0.02,0)` | `(0.020110,0.000040)` | `(0.000645,0.000746)` | `(+0.17,+0.05)` |
+| `(0,0.02)` | `(0.000044,0.020000)` | `(0.000632,0.000741)` | `(+0.07,+0.00)` |
+| `(0.05,0)` | `(0.049793,0.000174)` | `(0.000612,0.000729)` | `(-0.34,+0.24)` |
+| `(0,0.05)` | `(0.000007,0.050191)` | `(0.000623,0.000733)` | `(+0.01,+0.26)` |
+
+All runs converged by the Newton-step tolerance, every accepted update
+increased the fixed-draw likelihood, and every final information matrix was
+positive definite.  The 0.02 runs needed three or four iterations.  At 0.05,
+the information at zero was indefinite as expected from cont.204; the guard
+used gradient ascent for the first two or three iterations, then ordinary
+Newton updates, and converged in seven iterations.  The recentered primary
+components agree with the retained one-dimensional profile maxima to at most
+`2.3e-5`, while fitting the cross component simultaneously.  This establishes
+the finite-shear optimizer path at the tested Monte Carlo depth.  It does not
+yet establish `|m|<0.2%`: that requires multiple mock realizations or a much
+larger paired/nonzero test so statistical error is below the target.
+
+Wall times were 32--43 minutes for the 0.02 runs, 1h14m for 0.05 g1, and
+2h58m for 0.05 g2.  The variation follows the number and type of recentering
+iterations and confirms that this unoptimized nine-view numerical path is a
+correctness implementation rather than the final billion-object production
+implementation.
+
+## 2026-08-22  cont.204 — finite-shear profiles recover 0.02 and 0.05; the zero-centred Newton step does not
+
+Added `scripts/run_section5_profile_diagnostic.py` to profile the full
+marginalized likelihood of an already-saved Section 5 mock without regenerating
+measurements.  It keeps the current 100-case catalogue prior, flow, detector,
+shape-only shear map, no measured cuts, and `R_blend=0`; every shear point in a
+profile shares the same importance draws.  It also reconstructs the local
+zero-centred score, information, and one-step estimate at each available
+finite-difference spacing.
+
+Jobs **15941259--15941262** profiled 10,000 positive-arm mocks at injected
+`g=0.02` and `0.05`, for both coordinate directions, with `K=32768` and nested
+`M=8192,16384`.  The final-rung profile maxima are:
+
+| injection | profile maximum | curvature error | difference / error |
+|---|---:|---:|---:|
+| `(0.02,0)` | `0.020114` | `0.000640` | `+0.18` |
+| `(0,0.02)` | `0.019915` | `0.000735` | `-0.12` |
+| `(0.05,0)` | `0.049809` | `0.000609` | `-0.31` |
+| `(0,0.05)` | `0.050193` | `0.000728` | `+0.26` |
+
+All four grid maxima land exactly on the injected grid point.  The nested-rung
+maxima move by `0.000176`, `0.000576`, `0.000072`, and `0.000455`, respectively.
+Thus these tests give no evidence for a wrong mean response, prior shear map, or
+finite-shear likelihood maximum.  They do not measure multiplicative bias at
+0.2% precision: the four statistical errors are still roughly 1.2--3.7% of the
+injected shear, only positive arms were profiled, and simultaneous two-component
+recovery was not tested.
+
+The zero-centred Section 5 one-step estimate fails dramatically on the same
+objects.  At numerical `h=0.00125`, it gives `0.05116` and `0.04338` for the
+two `g=0.02` mocks.  For the `g=0.05` mocks, the observed information at zero
+is negative (`-6.90e5` and `-4.19e5` in the population sum), so the Newton step
+points in the wrong direction.  Increasing the derivative spacing up to 0.02
+does not repair this.  In contrast, the profile curvature is positive at every
+maximum, with population information `2.44e6`, `1.85e6`, `2.70e6`, and
+`1.88e6`.
+
+Directly inspecting the saved mocks confirms the owner's mean-response
+argument.  The measured diagonal response is `1.106843+-0.002890` at g1=0.02
+and `1.106878+-0.002888` at g1=0.05; for g2 it is
+`1.069889+-0.002754` and `1.069934+-0.002752`.  The change between injection
+amplitudes is only about four parts in 100,000.  Mean linearity is therefore
+not the missing condition.
+
+The missing condition in the Gaussian example is a *common Gaussian location
+family*.  The catalogue likelihood is a fixed-weight mixture over atoms whose
+conditional means, mean responses, spin-0 conditions, and residual densities
+differ.  Even if every component were Gaussian and the mixture mean were
+exactly linear, its log curvature contains a posterior-responsibility variance
+term and need not be constant.  A one-dimensional measured marginal can look
+Gaussian while the four-dimensional marginalized likelihood changes mixture
+responsibilities with shear.  The completed profiles show exactly this:
+they are well approximated by a parabola near the true maximum, but not over
+the interval from zero to that maximum.  Section 5 remains a valid local/null
+estimator; a finite-shear analysis must profile or iteratively recentre the
+score and Hessian.  A two-dimensional optimizer is the natural next closure
+path, with the retained profile code serving as its oracle.
+
+## 2026-08-22  cont.203 — local nonzero closure is sampler-stable but fails the response-tail gate
+
+The Section 5 path now has a dedicated paired nonzero runner,
+`run_section5_nonzero_closure.py`.  It generates likelihood mocks at
+`+-g_inj` from identical scene, detection, and flow random streams, evaluates
+the likelihood derivatives only at zero, retains every per-object score and
+information value, and reports the symmetric response of the population
+estimator.  The response is estimated as
+
+`mean[(s_plus-s_minus)/(2*g_inj)] / mean[(I_plus+I_minus)/2]`,
+
+not as the difference of two noisy finite-sample ratios.  This follows by
+differentiating `E[s]/E[I]` at the null, where `E[s]=0`.  Its aligned influence
+function supplies the robust error and response-tail diagnostic.  The old
+arm-wise estimates remain in the result only as diagnostics.  The streamed
+API can optionally retain object moments and can build both arms from one
+fixed zero-shear proposal observation, while preserving the exact `pi/q`
+correction.
+
+The first `g_inj=0.02` pilots showed that the zero-centred one-step expansion is
+strongly nonlinear over that interval.  The earlier description of this as a
+score response "only about half" its infinitesimal value was premature: the
+powered profiles in cont.204 show that the decisive failure is the assumption
+of constant curvature between zero and the finite-shear maximum.  Shrinking to
+`g_inj=0.00125` raised the sign-pair influence correlation to 0.995 and tests
+the intended local derivative.  An attempted 90-degree rotational ring is
+retained as an opt-in diagnostic but disabled by default: even at
+`K=131072,M=65536` (job **15939541**) the rotated mock had non-positive mean
+information and failed the tail gate.  The learned likelihood is not
+equivariant enough for that artificial variance reduction, so those ring
+numbers are rejected.
+
+Full-depth 512-scene ordinary-pair pilots gave
+`g1: m=+4.680%+-4.182%` (job **15939606**) and
+`g2: m=+2.390%+-1.942%` (job **15939628**), both statistically compatible
+with zero.  A nested sampler benchmark on the exact same mocks showed that
+`K=16384,M=8192` agreed with `K=131072,M=65536` to 0.12 sigma for g1 and
+0.13 sigma for g2, reducing flow evaluations eightfold.
+
+Two independent-proposal-seed 10,000-scene runs at that reduced setting were
+jobs **15939660/15939661**.  Their final rungs agreed closely:
+
+- g1: `m=-0.513%+-0.569%` and `-0.606%+-0.712%`;
+- g2: `m=+0.172%+-0.520%` and `+0.034%+-0.525%`.
+
+The g1 4,096-to-8,192 rung movement was still 0.48--0.79 sigma.  A deeper
+confirmation, job **15939772**, used `K=32768` and nested
+`M=8192,16384`.  It completed in 1h08m38s with 4.13 GB peak RSS and passed
+the sampling rung, arm-moment, arm-tail, positive-information, and additive
+offset checks.  Its stable result is
+
+- `g1: m=-0.3736%+-0.5269%`, rung movement 0.042 sigma;
+- `g2: m=+0.1567%+-0.5044%`, rung movement 0.093 sigma.
+
+Those diagonal responses are statistically consistent with zero, but neither
+establishes the `|m|<0.2%` requirement.  The initial nonzero result gate
+incorrectly inspected only the injected component.  Auditing the already-
+saved cross-component moments exposes a decisive failure:
+
+- injecting g1 gives a g2 response of `+0.13605+-0.03346` (4.07 sigma);
+- injecting g2 gives a g1 response of `+0.10030+-0.02355` (4.26 sigma).
+
+The five primary views estimate only `I11` and `I22`; they set `I12=0` by the
+assumed rotational symmetry.  The current learned likelihood is not symmetric
+enough for that reduction, consistent with the rejected rotational-ring test.
+The runner now hard-gates off-diagonal response, its draw ladder, and its tail.
+Resolving this requires either enforcing the intended rotational equivariance
+in the likelihood or adding the four corner views needed for a full mixed
+Hessian and inverting the resulting 2-by-2 information matrix.  That is a
+methodological deviation from the agreed five-view design and was not chosen
+autonomously.
+
+Independently, the diagonal paired-response influence Hill
+indices are **1.759 and 1.742**.  The same rare measurements dominate both
+proposal seeds (81--86 of their top 100 rows overlap), including extreme flow
+draws such as measured ngmix `g2=-3.69`; this is not primarily importance
+noise.  The predeclared rule was to stop if the old non-convergent derivative
+tail returned, so no 100,000-object escalation was launched.  At the now-
+validated sampler setting that run would cost about 11.4 GPU-hours and its
+usual `1/sqrt(N)` error projection is not licensed while the tail gate fails.
+
+The result therefore establishes the nonzero plumbing, local-injection choice,
+paired response formula, and an eightfold sampler reduction.  The remaining
+blockers are the omitted off-diagonal information and the full-prior response
+tail, not numerical differentiation or proposal convergence.  Measured cuts
+remain disabled and external `R_blend=0`, exactly as requested.
+
+## 2026-08-22  cont.202 — current-flow Section 5 null closes; full-prior tail remains marginal
+
+The conclusion at the end of cont.201 was too strong.  The archived §5C probe
+measured a different implementation/model, and the first N=1,024 catalogue
+run was not powered to diagnose a 5% information-identity error.  The current
+measurement flow is mean-affine and was trained with a central `+-0.02` shear-
+response loss.  ConstGold validates its mean response; that fact does not by
+itself prove the marginalized score identity, but it rules out describing this
+checkpoint as an unregularized conditional density.
+
+New `autograd_exact_section5` differentiates the exact finite-catalogue
+marginal likelihood through the Torch flow and the exact reduced-shear map.
+`run_section5_powered_exact.py` generates mocks from the same finite prior it
+scores, including separate matched mocks for each `property_seed` bank.  This
+replaces the earlier diagnostic that generated full-prior mocks and then
+scored them with sub-priors, which was not a closure test.  The seven-point
+profile implementation is untouched.
+
+The powered exact job **15938810** used 4,096 atoms and 32,768 mocks.  At
+`h=0.005`, `E[I]/Var(s)` was `0.97585+-0.03038` for g1 and
+`1.00928+-0.02843` for g2, so the 5%-and-3-sigma identity passed.  All three
+matched 4,096-atom/8,192-mock property banks were statistically compatible.
+The score Hill indices were 3.65 and 3.49.  Finite differences were highly
+correlated with autograd but still had visible per-object truncation error.
+
+Job **15938932** therefore swept the step against autograd.  The score RMS
+error fell from about 2.4--2.8% at `h=0.005` to 0.14% at `h=0.00125`; the
+information error fell to about 1.9%.  At `h=0.000625`, float32 cancellation
+made the second derivative worse.  The supported numerical step is therefore
+`h=0.00125`.  Repeating the powered exact closure at that step in job
+**15938940** passed every exact, matched-bank, and autograd comparison.  Its
+identity ratios were `0.95377+-0.02675` and `1.00782+-0.02845`, and its null
+estimates were `-0.000335+-0.000219` and `-0.000256+-0.000250`.
+
+Full-prior powered job **15939014** then generated and scored 10,000 detected
+mocks using all 627,528 active atoms, `K=131072`, and nested
+`M=32768,65536`.  It completed in 1h55m with 4.09 GB peak RSS.  At the final
+rung:
+
+- `g1=-0.000103+-0.000642`, with `E[I]/Var(s)=0.98284+-0.07085`;
+- `g2=-0.000551+-0.000766`, with `E[I]/Var(s)=0.96863+-0.08153`.
+
+Both components are centred, both identity ratios are within 5% of one, and
+the draw-doubling movements are only 0.031 and 0.00065 standard errors.
+Median ESS is 18,496, 10th-percentile ESS is 2,542, and the 90th-percentile
+maximum weight is 0.0134.  Thus the null, information, and importance-sampling
+tests close for the current flow.
+
+One planned gate was accidentally absent from the powered script's `passed`
+boolean: the final Hill-index check.  The result file says `passed=true`, but
+the measured indices are 2.006 for g1 and 1.914 for g2.  Score variance and
+mean information themselves change by less than 0.06% across the two M rungs,
+and the exact/matched tests have indices above two, so this is not the old
+non-convergent §5C failure.  It is nevertheless a real tail warning.  Future
+runs now require less than 5% rung changes in both moments and Hill index above
+two before reporting an unconditional pass.
+
+The powered run evaluated 4.588 billion flow terms at about 667,400 terms/s,
+or 458,752 terms per object.  At this fixed design, one billion objects would
+cost about 191,000 GPU-hours.  This closes the numerical null machinery, not
+production scalability and not the eventual `|m|<0.2%` requirement; the latter
+still needs a nonzero-shear closure.
+
+## 2026-08-21c  cont.201 — Section 5 streamed catalogue-prior null closure
+
+The default catalogue-prior closure now follows `MATH.md` §5.  New module
+`sbsi.catalogue_null` numerically differentiates each object's marginalized,
+detected-population log likelihood at `g=0` for both components.  The primary
+five views use `h=0.005`; `h=0.01,0.02` add convergence checks.  Importance
+draws are common across the full stencil and exact prefixes across
+`M=(8192,32768,65536)`.  Object batches are streamed, and
+`CatalogueLikelihood.log_importance_weights` now also chunks atoms, so only a
+batch-sized object-by-atom tensor is resident.
+
+The hard assessment implements the declared small exact oracle, 0.25-SE
+finite-difference/rung/proposal-seed checks, three-sigma score centring, the
+5%-and-three-sigma `E[I]/Var(s)` identity, score/information stability, and
+Hill-tail checks.  Independent `property_seed` banks reuse the full run's flow
+evaluations and proposal draws; only their prior masses and detected
+normalizers change.  A powered 10,000-object null starts only after every gate
+passes.  External `R_blend` and measured-output selection are rejected by this
+runner; detection remains active, and the real classifier metadata was checked
+to contain only the seven declared spin-0 features.
+
+`CatalogueModelCache` version 3 can store one compact zero-shear base.  For the
+current eight-condition flow, invariant spin-0 columns and detection arrays are
+shared across stencil views; only `e1_input_p,e2_input_p` are materialized per
+view.  Version-2 full-view caches still load.  The seven-point profile code is
+unchanged and remains the explicitly bracketed nonlinear fallback.
+`select_adaptive_draw_counts` adds the production draw-doubling decision on
+zero-shear weight prefixes; the selected prefix is then held fixed across the
+five primary views, while validation retains every fixed rung.
+
+The new prior preparation separates population support from density.
+`build_galsbi_property_bank.py` merges independent, exact-BlendSim-processed
+GalSBI outputs with hashes and a >=1,000,000 usable-row requirement;
+`randomize_galsbi_scene_cases.py` calls the exact BlendSim realization helper
+for 100 cases of 71,104 rows.  Scene manifests now carry upstream catalogue and
+manifest hashes, while every row retains its property seed/ID and case seed/ID.
+
+New targeted Section 5, compact-cache, stream-offset, bank-reweighting, and
+gate tests pass.  The current `tests/` suite reports **305 passed, 1 skipped**;
+the sole failure is the pre-existing measured-cut profile assertion whose
+fixed realization peaks one 0.0025 grid cell high at 0.0225.  It is outside
+the no-cut null path and was left unchanged with the retained profile code.
+`py_compile`, shell syntax checks, CLI-help checks, and `git diff --check` pass.
+
+Initial property job **15937035** generated all three catalogues but failed
+after writing the bank because `blendsim/` is not a Git checkout. No catalogue
+was removed: provenance now falls back to the exact `blendsim/catalog.py` hash,
+and an orphaned bank is resumed only after a full logical equality check. The
+two impossible dependent jobs were cancelled and replaced by chain
+**15937041 -> 15937042 -> 15937043**.
+
+The recovered property stage contains **1,268,254** usable galaxies: 423,205,
+421,896, and 423,153 from seeds 20260822--20260824. The 100-case scene stage
+completed in 4m10s with **7,110,400** rows, **627,528** positive-mass primary
+atoms, **6,482,872** zero-mass neighbour-context rows, **14,792,586** directed
+11-arcsec edges, and no duplicate positions. Scene and upstream hashes are in
+the store manifest. These are catalogue/likelihood jobs only; no image
+simulation was launched.
+
+GPU null job **15937043** finished in 52m11s and stopped before the powered
+run. The small exhaustive oracle agreed with importance sampling to 0.0253
+standard errors, and score centring passed, but the geometric proposal failed
+the rung, proposal-seed, information-identity, and tail gates. At the primary
+`h=0.005,M=65536`, median ESS was only about 1,030 and the 10th percentile was
+44--47.
+
+The `K=131072` candidates are now posterior-adapted with their exact
+zero-shear `pi*P_det*L_i(0)` values before drawing `M`; the defensive full-prior
+component and exact `pi/q` correction are unchanged. Job **15937193** tested
+this correction in 54m58s. Median ESS rose to 18,965--19,191, the maximum last-
+rung movement fell from 0.354 to 0.0297 standard errors, proposal-seed spread
+fell from 0.491 to 0.00437 standard errors, and the exact-oracle discrepancy
+fell to 0.00491 standard errors. Thus the importance sampler and exhaustive
+finite-catalogue calculation agree and are numerically stable.
+
+The hard Section 5C gate still fails intrinsically. At `h=0.005,M=65536`, the
+two seeds both give `E[I]/Var(s)=1.436` for g1 and 1.214--1.217 for g2, while
+the score Hill indices are 1.73--1.84. The independent-bank stability metric
+is 22.4% and its minimum tail index is 1.54. The primary estimates remain
+centred (`g1=+0.000536 +/- 0.001383`, `g2=+0.00069 +/- 0.00180`), but centring
+alone cannot override information inconsistency and non-finite-variance tail
+evidence. The plan's explicit stop condition therefore fired; no 10,000-object
+powered null or autograd follow-up was launched.
+
+The adapted run measured about 682,571 equivalent flow evaluations per GPU
+second. A production primary stencil at fixed `M=65536` costs 131,072 candidate
+evaluations plus `5M`, or **458,752 flow evaluations per galaxy**. At the
+measured rate this is about **186,693 GPU-hours per billion galaxies** before
+I/O and orchestration. Adaptive `M` can reduce the five stencil terms but not
+the candidate pass, so this implementation is not a billion-object production
+solution even if the statistical gate were repaired.
+
+## 2026-08-21b  cont.200 — fixed catalogue R_blend enters generation, likelihood, and selection
+
+The optional external BlendEMU response is now part of the finite-catalogue
+likelihood rather than a post-hoc scalar calibration.  For atom `j`, the
+zero-shear pair emulator is evaluated once and cached as `R_blend,j`; at trial
+shear `g` the two measured-shape outputs receive
+`b_j(g)=R_blend,j [e(S_g z_j)-e(z_j)]`.  Mock generation adds this shift,
+likelihood evaluation subtracts it before calling the conditional flow, and
+selection QMC draws add it before the measured cut.  The response stays fixed
+while the ellipticity displacement uses the exact finite shear map.
+
+`CatalogueBlendResponse` persists one response value aligned to every scene
+row.  Pair construction now materializes only positive-mass atoms as
+primaries, while all scene rows remain eligible as their neighbours.  Cache
+and frozen-mock identities include the response artifact; response-aware mocks
+record the source row, `R_blend`, and both applied shift components.  Direct
+finite-sum, generator-sign, selection-cut, cache-round-trip, and nonzero-response
+toy closure tests were added.  After the sampler-prefix regression was added,
+SLURM test job **15934177** passes **295 tests, 1 skipped** with one existing
+PyTorch warning; Ruff passes.
+
+Real cache job **15933603** completed on the ten-case prior in 21 seconds:
+2,764,521 scene rows, 343,341 positive atoms, 2,440,130 supported response
+pairs, and 343,333 nonzero active responses.  The prior-weighted mean response
+is 0.125494 (active range -1.7364 to 3.8572).  One of 2.44 million pair rows
+triggered a floating-boundary extrapolation warning; it is retained and
+reported rather than silently clipped.
+
+The first N=1,024 real-flow+detection+response profile, job **15933605**, is
+interior and concave.  At injected `g1=0.02`, M=32,768 and K=131,072 give a
+quadratic maximum 0.015834 with information 210,951 (model sigma 0.00218), an
+offset of about 1.9 sigma for this single mock.  This is not yet a sampler or
+bias claim.  Frozen-mock diagnostic **15933703** produced stable M=65,536
+estimates near 0.0161 across two proposal seeds, but also exposed that its
+M=32,768 likelihood did not reproduce job 15933605 despite the common seed.
+
+The cause was proposal random-stream layout, not the response likelihood:
+changing the requested maximum draw count shifted the RNG offsets of every
+object after the first.  `DefensiveLocalProposal` now assigns an independent
+stream to each object and consumes one fixed-width random record per draw for
+the mixture decision, global atom, and local atom.  A regression proves exact
+short/long prefix equality for indices, proposal probabilities, component and
+membership flags, and candidate radii.  The affected 28 sampling, likelihood,
+and response tests pass.  Frozen comparison jobs **15934147/15934148** rerun
+the identical seven-point profile at maximum M=32,768 and 65,536.  Mock,
+model, implementation, and response hashes match, and all seven common
+M=32,768 likelihood sums agree bit-for-bit.  At M=65,536 the two estimates are
+0.016118 and 0.015417; proposal-seed span is 0.000701 and the maximum
+M=32,768-to-65,536 movement is 0.000082.  Both maxima are interior and concave,
+with final pulls -2.13 and -2.62.  The corrected sampler therefore passes the
+predeclared convergence and three-sigma single-mock gates; the low realization
+is not promoted to a bias claim.
+
+The disjoint-population chain completed independently of that gate.  Job
+**15933708** called the public `GalSBI("Fischbacher+24")` intrinsic,
+model-index-0 pipeline with new seed 20260821 and generated 569,281 intrinsic
+galaxies while recording package/git/file hashes.  Job **15933727** called the
+existing blendsim catalogue step for ten independent random-position cases of
+71,104 rows each.  The reusable scene store contains 711,040 rows and 1,482,006
+directed neighbour edges; 62,902 rows in the explicit `18<r<25.8,
+0.5<Re<1.5` primary domain carry prior mass and all remaining rows supply
+neighbour context.  No image render or training catalogue is reused in this
+fresh prior.
+
+Ten GalSBI cases have much less primary support than ten FS2 cases, so they are
+retained as a smoke prior rather than used for the powered result.  Job
+**15934268** generated and assembled 50 cases from the same fresh base in 2m52s:
+3,555,200 scene rows, 315,799 positive-mass atoms, 7,390,912 directed edges,
+and no duplicate positions.  This restores approximately the support size of
+the original ten-case FS2 prior while averaging over five times as many
+independent position fields.  Its response-cache and first profile jobs are
+**15934285/15934286**.
+
+The initial ten-case all-three-model smoke, job **15934154**, passes its
+sampler and closure checks at injected `g1=0.02`.  The two M=32,768 proposal
+seeds give 0.018638 and 0.018856 (span 0.000218); their M=8,192 to 32,768
+movements are 0.000005 and 0.000107.  Both are within 0.75 quadratic profile
+sigma of truth, with interior concave maxima.  This validates the fresh-prior
+plumbing but is not used as the powered population result.
+
+The scaled 50-case smoke, jobs **15934285/15934286**, also passes.  Its fixed
+response cache has 542,741 supported pairs, 259,269 nonzero active responses,
+and prior mean 0.0206985.  At injected `g1=0.02`, the M=32,768 estimates are
+0.021440 and 0.021586 (proposal-seed span 0.000146); maximum M=8,192-to-32,768
+movement is 0.000280, and the truth offsets are 0.96 and 1.04 quadratic sigma.
+The powered five-block zero/sign arrays for g1 and g2 are jobs
+**15934405/15934406**, with N=2,048, M=32,768, and one independent proposal
+seed per paired mock block.  All 30 tasks and dependent audit **15934460**
+completed with exit zero.  Every maximum is interior and concave; maximum
+absolute pull is 2.271.  The independently reproduced paired-block fits are
+`g1: m=-0.3564% +/- 0.3393%, c=-0.000082 +/- 0.000682` and
+`g2: m=-0.8042% +/- 0.9441%, c=-0.000516 +/- 0.000660`.  Pull mean/standard
+deviation are -0.101/1.172 and -0.362/1.078.  Each component has 15 distinct
+mock hashes and exactly five mocks at each injection.  Across components three
+corresponding zero-shear blocks are bit-identical; the other two ran on
+different GPU types and differ at the already documented CUDA sampling level.
+This establishes sub-percent-precision likelihood closure for the complete
+flow+detection+fixed-Rblend model on the fresh 50-case empirical prior.
+
+This disjoint catalogue is deliberately not described as a matched-population
+validation prior.  Checkpoint provenance and the frozen V2.2 configuration
+show that the deployed flow, detection classifier, and BlendEMU response were
+all trained from FS2-25876, not GalSBI/Fischbacher+24.  Within the common
+primary box, the fresh GalSBI and original FS2 scene atoms have KS distances
+0.031 in magnitude, 0.137 in size, 0.286 in Sersic index, and 0.036 in axis
+ratio.  A likelihood-generated closure on GalSBI still tests sampler and
+likelihood self-consistency, but cannot establish image-to-measurement model
+transfer to that population.  The only other local FS2 base is independent but
+truncated at r=27, short of V2.2's r=29 secondary support; choosing it,
+acquiring a full-depth independent FS2 base, or retraining all three models on
+GalSBI is deferred rather than silently changing the required population.
+
+The operational surface was then cleaned without deleting reproducibility
+artifacts.  `doc/API.md` now names the finite-scene likelihood, defensive
+importance sampler, response-cache builder, closure runner, and bias summarizer
+as the supported path.  The older score/quadrature module and its three scripts
+and job wrapper are explicitly labelled legacy and must not be mixed with that
+path.  Ruff and shell syntax checks pass, 51 focused catalogue-prior tests pass,
+and final SLURM test job **15935949** passes **295 tests, 1 skipped** with the
+same pre-existing PyTorch warning.
+
+## 2026-08-21a  cont.199 — catalogue likelihood now closes measured-output selection
+
+The finite catalogue-prior likelihood now conditions on the same measured-output
+selection used to retain the mock data.  For prior atoms with masses `pi_j`, the
+per-object numerator remains `sum pi_j Pdet_j L_ij`, while the population
+normalization is `B_W(g)=sum pi_j Pdet_j Ppass_j`.  `Ppass_j` is measured with
+fixed-seed QMC flow draws, common random numbers across trial shears, fixed row
+chunks, and a cut/model/scene-identified cache.  Only positive-mass prior atoms
+are sampled; zero-mass rows remain available as their clustered environments.
+The closure generator performs detection, draws from the same four-output flow,
+and rejects measurements with the same `OutputCut`.
+
+The first ten-case profile job, **15919197**, found a genuine implementation bug:
+the importance-profile path still divided by detection-only mass and therefore
+never evaluated selection.  It failed when trying to save an empty selection
+cache rather than silently writing a false result.  The profile now uses the
+detected-and-selected mass.  Two regressions pin both the exact likelihood shift
+and profile-cache population.  The maintained suite passes **285 tests, 1
+skipped**, with one pre-existing PyTorch warning.
+
+Three N=2,048, two-proposal-seed closure panels were then run at M=8,192/32,768
+and K=131,072:
+
+- `|ehat|<0.6`, jobs **15919505/15919887/15919888**: every arm is within 2.7
+  profile sigma; the seed-averaged three-point result is statistically
+  consistent with closure.  Its apparent positive slope is not resolved by
+  three mocks.
+- the combined realistic cut `|ehat|<0.6 AND measured_log_flux_radius>=1.45`,
+  jobs **15927470/15927471/15927472**: +0.02 gives 0.01981/0.02030, zero gives
+  0.00083/0.00091, and -0.02 gives -0.02222/-0.02304.  A conservative fit that
+  includes proposal-seed scatter gives `m=+6.56% +/- 6.37%`, consistent with
+  zero.
+- the documented strong size-only cut `measured_log_flux_radius>=1.45`, jobs
+  **15931697/15931698/15931699**: +0.02 gives 0.01848/0.01838, zero gives
+  -0.00017/+0.00056, and -0.02 gives -0.02210/-0.02248.  The conservative fit is
+  `m=+1.33% +/- 6.16%`, `c=-0.00121 +/- 0.00101`; every individual result is
+  inside two sigma.
+
+`scripts/summarize_catalogue_bias.py` now hashes and rejects duplicate frozen
+mocks, combines proposal-seed replicates without shrinking the observational
+error, fits `ghat=c+(1+m)g`, and inflates its covariance when mock scatter
+exceeds profile curvature.  Future closure results also record hashes for newly
+generated mocks.  An explicitly empty `CUT_ABS` now disables the shape cut in
+both catalogue job wrappers; previously Bash `:=` replaced the empty value by
+0.6, which is why the first size run became the useful combined-cut panel.
+
+This closes measured-selection plumbing and its strong-cut likelihood test.
+The powered follow-up used five paired random-stream blocks at each of
+`g=(-0.02,0,+0.02)` for both components (jobs **15932698/15932699**, audit
+**15932745**).  All 30 maxima are interior and concave.  The independent audit
+reproduces `g1: m=-1.7135% +/- 1.5296%, c=+0.000396 +/- 0.000252` and
+`g2: m=+0.9336% +/- 1.9543%, c=+0.000315 +/- 0.000389` exactly.  Every arm is
+inside two sigma, with pull standard deviations 0.712 and 0.795.  This is a
+flow+detection+measured-selection closure result at roughly two-percent
+multiplicative precision, not a sub-percent calibration bound.
+
+## 2026-08-20f  cont.198 — ten-case sampler oracle passed; powered run exposes the one-step limit
+
+The ten-case catalogue now passes the exhaustive sampler oracle, and the first N=2,048
+zero/+/-0.02 importance run cleanly separates a stable score from an invalid one-step Newton
+approximation.  No shear-closure claim is made yet: likelihood profiling about nonzero trial
+shears is now the active test.
+
+### Ten-case proposal correction and oracle result
+
+- The first ten-case coordinates were summarized over all 2.76 million scene rows even though
+  88% are zero-mass neighbour-only rows.  They could not be sampled but distorted the robust
+  coordinate scale and wasted the one-time flow pass.  Proposal-cache format v2 computes QMC
+  summaries and scaling only on the 343,341 positive atoms, retaining centre-filled inactive rows
+  solely for scene alignment.  The cache shrank from 51 MB to 7.5 MB.
+- With this correction, job **15915442** passed all six unchanged exact-oracle gates at N=256,
+  M=16,384/65,536, K=65,536/131,072, and proposal seeds 4201/4202: max exact shear error 0.002692,
+  last-rung change 0.008804, seed spread 0.003023, candidate expansion shift 0.002037, minimum mean
+  ESS fraction 0.027701, and maximum p90 weight fraction 0.052622.
+
+### Powered zero/sign result
+
+- Jobs **15915654/15915655/15915656** generated 2,048 detected mocks at g1=0,+0.02,-0.02 from
+  the same ten-case prior, detection classifier, and four-output flow used by the likelihood.
+  R_blend remains zero.  At M=65,536 the two zero-shear proposal seeds give 0.000493 and 0.000510,
+  with per-object observed information 205.26 and 206.73.
+- The +/- score has the correct odd sign and is stable across proposal seeds, but its symmetric
+  slope is only 112.71 versus zero-shear information 205.99, a response ratio of 0.547.  Observed
+  curvature is already negative for the +0.02 mock and near zero for one -0.02 seed, so dividing
+  the score at zero by that curvature produces meaningless one-step estimates despite a healthy
+  ESS fraction near 0.038 and p90 maximum weight near 0.045.
+- This is the explicit A2 limitation in `doc/MATH.md`: a single Newton step from zero is only a
+  local approximation.  The sign, zero centring, and sampler behavior do not support changing the
+  shear map or neighbour likelihood.  The next estimator evaluates a fixed-draw likelihood
+  profile (equivalently, iterates the score) and finds its nonzero maximum.
+
+### Iterated/profile implementation
+
+- Directional score evaluation now accepts a nonzero centre.  Every importance rung records
+  `sum(s^2)`, the score z-statistic, a Fisher-scoring candidate, sandwich/model errors, and the
+  evaluation shear in addition to the observed-curvature Newton candidate.
+- A bounded-memory fixed-draw profile holds identical catalogue draws across every shear point,
+  nested M rung, and proposal seed; evaluates the exact classifier normalization at each point;
+  locally interpolates an interior maximum; and releases each multi-million-row model view after
+  use.  Loaded caches can attach the classifier and grow lazily.  Implementation hashes are now
+  captured at process start rather than after a long run.
+- Coarse +/- profile jobs **15918087/15918088** were submitted with a 0.005 grid, nested
+  M=8,192/32,768, K=131,072, and independent seeds 4401/4402.  A narrow M=65,536 confirmation will
+  be defined from this profile rather than spending the largest rung across a post-hoc-wide grid.
+
+Before inspecting that confirmation, the closure gates are fixed as follows.  The M=32,768
+log-likelihood at every grid point shared with the coarse run must reproduce to `1e-6`; the M=65,536
+profile estimate must move by at most 0.002 from M=32,768 for each proposal seed; the two M=65,536
+proposal seeds must span at most 0.003; every profile maximum must be interior; zero and each sign
+must lie within three quadratic likelihood standard errors of their injections; the odd recovered
+amplitude and the even offset relative to zero must each lie within three propagated standard
+errors, with absolute odd-amplitude error at most 0.003.  Refining the profile spacing from 0.005 to
+0.0025 replaces a finite-difference/Richardson gate for the final MLE because the profile evaluates
+the likelihood itself, not a numerical derivative.  Jobs **15918614/15918615/15918616** implement
+this predeclared zero/sign/seed/M/grid test at M=32,768/65,536.
+
+### Final closure result
+
+Jobs **15918614/15918615/15918616** completed successfully.  Every scientific gate passes:
+
+- maximum M=32,768 to 65,536 movement: **0.001198** (gate 0.002);
+- maximum proposal-seed span at M=65,536: **0.000929** (gate 0.003);
+- maximum change between 0.005 and 0.0025 profile spacing: **0.000494** (gate 0.002);
+- every maximum is interior and locally concave;
+- zero estimates are -0.000165 and +0.000764, only -0.08 and +0.37 likelihood sigma from zero;
+- +0.02 estimates are 0.023325 and 0.023389 (2.20 and 2.12 sigma high);
+- -0.02 estimates are -0.017240 and -0.016920 (1.54 and 1.38 sigma high);
+- paired odd amplitudes are **0.020282 +/- 0.001171** and
+  **0.020155 +/- 0.001376**, errors of 0.000282 and 0.000155 (gate 0.003 and well below one sigma);
+- even offsets relative to the corresponding zero estimate are 1.35 and 1.00 propagated sigma.
+
+The initial cross-job `1e-6` log-likelihood reproducibility check was not a sampler failure: the
+jobs regenerated the flow mock, and CUDA sampling on different GPU types changed four measured
+columns by up to `1.9e-6`.  Because the proposal is target-specific, that means the reruns did not
+hold their data or atom draws fixed.  The runner now accepts `--mock-input`, hashes the frozen
+measurement/truth parquet pair, validates its row count, flow targets, and injected shear, and
+copies it losslessly to the new output.  `MockCatalogue.save/load` has an exact round-trip test.
+Cross-job bitwise comparison is therefore replaced by the correctly scoped invariant: frozen mock
+hash equality, followed by the within-job nested-M and seed gates above.  No scientific threshold
+was relaxed.
+
+This establishes end-to-end catalogue-prior closure for the current declared boundary: ten input
+scene cases, flow plus detection likelihood, target-specific defensive importance sampling,
+direct likelihood profiling, and **R_blend=0**.  Enabling the already separated R_blend view is the
+next model extension, not part of this initial closure claim.
+
+Focused centred-score/profile tests: **13 passed**.  Full light suite: **276 passed, 1 skipped,
+1 pre-existing PyTorch warning**.
+
+## 2026-08-20e  cont.197 — real catalogue oracle passed; finite-prior response isolated and ten-case scaling begun
+
+The first real flow+classifier runs now distinguish three separate questions that the 64-object
+smoke could not: pipeline correctness, importance convergence, and shear closure.  The first two
+pass on the one-case exhaustive oracle.  The third is limited by the granularity of a one-case
+prior with hard neighbour apertures, so no closure claim is made yet.
+
+### Real scene and pipeline results
+
+- Case 0 extraction/build jobs **15913052** completed in 6 minutes: 276,876 unique scene galaxies,
+  34,260 positive-mass prior atoms, 242,616 zero-mass neighbours, 2,375,080 directed edges inside
+  the guarded 11-arcsec graph, and zero duplicate positions.  Median degree is 8 and p99 is 17 for
+  both the whole scene and positive atoms.
+- Smoke **15913053** completed all scientific work but exited while pretty-printing a NumPy boolean.
+  The convergence checks are now explicitly Python `bool`, the result writer no longer hides
+  unsupported types with `default=str`, and a JSON-serialization regression test pins this.
+  Cached rerun **15913710** completed in 33 seconds.
+- Exact outputs now include the object-level log likelihood, score, and information, a ratio-
+  estimator sandwich error, the model-based error when information is positive, the closure pull,
+  and hashes of all ten implementation files on the executable path.  This is necessary for paired
+  finite-difference checks in the deliberately dirty research worktree.
+
+### Proposal defect found and exact-oracle convergence
+
+- The first real proposal tree incorrectly included all 242,616 zero-mass neighbour-only rows.
+  They consumed K and could be drawn in an all-zero local patch.  `DefensiveLocalProposal` now
+  builds its KD tree only over `prior_weight>0` indices; the full rows remain in the scene and all
+  model feature views.  A focused test proves zero-mass rows never enter draws, and the real rerun
+  has no divide-by-zero warnings.
+- Magnitude alone failed all gates.  Magnitude+log-size improved localization but did not converge.
+  Using all four measured flow outputs, then expanding nested M and K, passed all six unchanged
+  gates in job **15914248**: max exact shear error 0.001105, last-rung change 0.003110, seed spread
+  0.001216, candidate expansion shift 0.000561, minimum mean ESS fraction 0.024579, and maximum p90
+  weight fraction 0.064205.  The passing configuration is M=4,096/16,384, K=8,192/16,384,
+  proposal seeds 4101/4102, epsilon 0.1, bandwidth 1.0.
+
+### Exact score diagnosis — why this is not closure yet
+
+- At N=64, two valid high-ellipticity flow draws dominate the derivative.  Central delta=0.005,
+  central delta=0.0025, and Richardson delta=0.005 give similar score sums (746.8, 738.5, 735.7)
+  but unstable negative information sums (-55k, -104k, -120k).  The score is much more stable than
+  the second derivative.
+- At zero shear and N=2,048, job **15914077** restores the expected behavior: the score is centred
+  within 2.01 standard errors, observed information is positive, and the information identity is
+  accurate to 1.28% (`sum(I)/sum(s^2)=1.0128`).  The exact path therefore generates from and scores
+  the same normalized likelihood.
+- The common-seed +/-0.02 pair **15914213/15914214** has the correct odd score sign but an odd score
+  response only `0.560 +/- 0.049` of the zero-shear information; the even score is consistent with
+  zero at about 2 sigma.  Across +/-0.02, 15% of positive atoms change membership in the hard
+  7-arcsec flow shell (4% already do so across the +/-0.005 stencil).  The one-case empirical sum is
+  consequently too granular for a smooth Newton response at the target step.
+
+### Ten-case scaling now in flight
+
+- Preparation **15914242** completed in 4m22s: cases 0--9 give 2,764,521 scene galaxies and
+  343,341 positive atoms; the reusable compressed graph is 424 MB.  The first model/proposal cache
+  build and N=256 oracle job **15914251** completed in 10 minutes, using 25.6 GB peak RAM and writing
+  about 11 GB of stencil views plus 51 MB of proposal coordinates.
+- Reusing one-case K under-covered the ten-times-larger support, as expected: 32--40% of posterior
+  weight remained outside K and the IS gates failed.  Job **15914736** expands K proportionally to
+  65,536/131,072 and M to 16,384/65,536 without changing the proposal or any threshold.  Once this
+  oracle comparison passes, the cached ten-case prior is the target for the powered zero/sign/seed
+  closure; `R_blend` remains deliberately zero.
+
+Focused likelihood/sampler tests after the fixes: **10 passed** across the two focused files; Ruff
+and compilation pass.  Full light suite: **273 passed, 1 skipped, 1 pre-existing PyTorch warning**.
+
+## 2026-08-20d  cont.196 — first real-flow catalogue-prior closure submitted with a lossless scene extraction gate
+
+The autonomous closure goal moved from toy tests to scheduled real artifacts.  This entry records
+the input interpretation and predeclared smoke design before either result exists.
+
+### Input representation and new extraction gate
+
+The available 17-GB `det_meas_crowd_conc_g0.0_train_full.feather` is not a raw scene table.  It has
+31,411,766 paired primary/nearest-secondary rows over 200 cases.  Building a prior from primary rows
+alone would silently delete galaxies that occur only as secondaries and therefore erase real
+neighbour structure.
+
+- `scripts/extract_scene_catalogue.py` unions the primary and secondary truth blocks, keyed by
+  `(case,input_index)`, and rejects a key if repeated records disagree in any truth property.
+- The first run uses case 0 only.  All unique input galaxies remain in the scene and neighbour
+  graph.  Galaxies outside the explicit flow primary domain `18<r<25.8`, `0.5<Re<1.5` receive
+  `prior_weight=0` instead of being deleted, so they cannot be drawn as primaries but remain valid
+  clustered neighbours.
+- `sbsi/catalogue_likelihood.py` now skips zero-mass atoms in the exhaustive flow sum.  The scene
+  and classifier views still retain them, preserving neighbour context and the exact population
+  normalization.
+- `tests/test_extract_scene_catalogue.py` pins the primary/secondary union, zero-weight-neighbour
+  behavior, and conflicting-record refusal.
+
+### Predeclared scheduled smoke
+
+Resource record: `/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/resources_login_20260820.json`.
+The login node has no GPU; current SLURM availability supports a CPU preparation job followed by a
+GPU flow job.
+
+- Preparation job **15913052** (`cluster`, 16 CPU, 96 GB): extract case 0, then build the guarded
+  11-arcsec scene store.
+- Dependent smoke job **15913053** (`inter,cip`, one GPU, 8 CPU, 64 GB): one real V3 flow checkpoint
+  plus the BlendEMU detection classifier, `R_blend=0`, 64 detected mocks at injected `g1=0.02`,
+  exact finite sum and defensive IS on identical data.
+- Smoke stencil: central differences at delta 0.005 without Richardson.  This is a pipeline and
+  sampler-agreement test, not the final shear-recovery measurement; 64 objects retain substantial
+  catalogue noise.
+- Proposal: measured magnitude, 16 cached QMC flow draws per atom, `M=16,64,256`,
+  `K=256,1024`, independent seeds 4101/4102, epsilon 0.1, bandwidth 1.0.
+- Sampler gates were written into the job before submission: max exact shear error, last-rung
+  change, seed spread, and candidate-count change each 0.01; mean ESS fraction at least 0.02;
+  90th-percentile maximum normalized weight at most 0.9.  Passing these gates does not establish
+  final closure; it licenses the larger mock and Richardson runs.
+
+### Validation and next action
+
+- Extractor/sampler focused tests: **11 passed**; Ruff, compilation, CLI help, and diff checks pass.
+- Full light suite after extraction changes: **272 passed, 1 skipped, 1 pre-existing PyTorch
+  warning**.
+- Await 15913052/15913053.  On failure, diagnose the recorded artifact rather than changing the
+  estimator.  On a clean smoke, inspect exact centred score and shear, IS gate details, detection
+  fraction, cache support, and finite-difference behavior before pricing the larger closure.
+
+## 2026-08-20c  cont.195 — target-specific defensive importance sampling implemented against the exact oracle
+
+Stage 2 of catalogue-prior inference is now executable.  This is an implementation and toy-
+oracle result, **not** a real-flow closure claim: no checkpoint or large catalogue was evaluated
+on the login node.
+
+### Files and behavior
+
+- `sbsi/catalogue_likelihood.py`: sampled atom arrays may now be target-specific `(N,M)` rather
+  than one global bank.  Every contribution carries `pi/q_i`.  The detection normalization
+  `B(g)=sum pi*Pdet` is always evaluated exactly from the cached classifier view; only the
+  expensive flow numerator is importance sampled.  Added per-draw log importance weights for
+  diagnostics.
+- `sbsi/catalogue_sampling.py`: new proposal-coordinate cache, defensive local/global proposal,
+  nested importance ladder, diagnostics, and explicit convergence assessment.  Atom coordinates
+  are mean/median summaries of QMC draws from the complete flow — never the explicit mean head.
+  The proposal is `q_i=epsilon*pi+(1-epsilon)*q_local,i`, with the local kernel over `K` nearest
+  atoms and optional `pi*Pdet` local base mass.  Thus every prior atom retains support and
+  `pi/q_i <= 1/epsilon`.  Draws are held fixed across all shear stencil points.
+- The diagnostics report ESS, maximum normalized-weight concentration, contribution outside the
+  local candidate set, and contribution from draws generated by the global component.  The
+  stopping assessment requires, simultaneously, exact-oracle agreement, last-rung stability,
+  independent-seed stability, candidate-count expansion stability, ESS, and weight concentration.
+  Missing a second seed, second candidate count, or second draw rung is a failed gate rather than
+  an unreported comparison.
+- `scripts/run_catalogue_closure.py`: `--sampler exact|importance|both`; persistent flow-predicted
+  proposal coordinates with scene/model/condition/aperture/config identity checks; comma-separated
+  nested `M`, candidate `K`, and independent seed ladders; optional predeclared `--gate-*`
+  thresholds.  `scripts/summarize_catalogue_closure.py` prints exact and every IS arm/rung.
+- `tests/test_catalogue_sampling.py` and `tests/test_catalogue_likelihood.py`: global-support and
+  bounded-ratio invariant, proposal-cache round trip, per-galaxy matrix `pi/q` exactness,
+  dominant-weight diagnostics, nested ladder against the exact oracle, and the multi-axis gate.
+- `doc/CATALOGUE_PRIOR.md` and `doc/API.md`: updated implementation boundary and stopping rules.
+
+### Validation
+
+- Focused sampler/likelihood tests: **9 passed**.
+- API/integration subset: **20 passed, 1 skipped**.
+- Full light suite: **270 passed, 1 skipped, 1 pre-existing PyTorch warning**.
+- Ruff, module compilation, CLI `--help`, and `git diff --check` pass.
+
+### Limitations and next steps
+
+- The proposal coordinates add a one-time flow-sampling pass over every prior atom.  This belongs
+  in a scheduled cache-building job and has not yet been timed on the real catalogue.
+- The current local metric standardizes each measured axis robustly but does not yet learn a full
+  covariance or nonlinear metric.  Candidate-count and bandwidth expansion must show whether that
+  is sufficient before adding complexity.
+- Run a scheduled small real-flow `--sampler both` study first, with measured magnitude alone and
+  then measured magnitude plus log-size, at multiple `M`, `K`, and proposal seeds.  Predeclare the
+  six gate thresholds in the job record.  Do not scale up or archive the old scripts until this
+  passes.
+- After IS passes, implement tempered SMC only for reported failing galaxies, then enable the
+  existing separate response-pair view and carry `R_blend` through both mock generation and the
+  likelihood.
+
+## 2026-08-20b  cont.194 — catalogue-prior stage 1 implemented: reusable scenes and an exact flow+detection closure oracle
+
+This is the first implementation step of the replacement for the fixed-cell catalogue-prior
+research script.  It does **not** claim production closure yet: it establishes the exact
+small-catalogue reference that adaptive importance sampling must reproduce, and deliberately
+sets `R_blend = 0`.
+
+### Files and behavior
+
+- `sbsi/scene_prior.py`: new finite empirical scene prior.  A user catalogue is processed once
+  into normalized atom masses and a guarded directed CSR neighbour graph.  Trial shears reuse
+  that graph, transform and re-rank pair offsets, and reject an aperture if the guard cannot
+  contain shear-induced boundary crossings.  The scene emits three distinct views: all-neighbour
+  shell summaries for the flow, nearest-in-aperture pairs for detection, and training-cut
+  many-pair tables for the response emulator.  Exact duplicate positions are reported and
+  rejected by default rather than silently confused with self-matches.
+- `sbsi/shear_map.py`: added the source-to-image lensing matrix and made
+  `shear_separation` consistent with the existing positive-`g1` ellipticity convention.  The
+  full scene transform now applies the same map to ellipticity and pair geometry, with exact
+  circularized-size and flux magnification retained at finite shear.
+- `sbsi/catalogue_likelihood.py`: new model-view cache and finite catalogue sum.  Cached stencil
+  views can be reloaded without loading the classifier; cache reuse is refused unless the CLI's
+  scene-file and model hashes, observing conditions, and apertures match.  The likelihood keeps the
+  normalized conditional flow separate from the Bernoulli classifier and evaluates
+  `A_i(g)=sum pi_j Pdet_j(g) L_ij(g)` and the detected-catalogue normalization
+  `B(g)=sum pi_j Pdet_j(g)`.  The optional sampled path is ordinary importance sampling with
+  the explicit `pi/q` correction; it is present for oracle tests, not yet an adaptive proposal.
+- `sbsi/catalogue_closure.py`: mock generation in the correct order — scene draw, full-scene
+  shear, Bernoulli detection, then flow sample — with independent scene/detection/flow seeds and
+  saved generating rows and uniforms.  The exact closure differentiates the same conditional
+  log-likelihood curve on common atoms at every stencil point.
+- `scripts/build_scene_prior.py`, `scripts/run_catalogue_closure.py`, and
+  `scripts/summarize_catalogue_closure.py`: thin explicit-path entry points.  The run command
+  loads one flow checkpoint plus the BlendEMU companion model for its classifier, records all
+  model hashes, can persist stencil model views, and writes its mock data and result manifest.
+- `doc/CATALOGUE_PRIOR.md` and `doc/API.md`: mathematical convention, reuse boundary, command
+  workflow, validation gates, and the next adaptive-IS / tempered-SMC / `R_blend` phases.
+- `tests/test_scene_prior.py`, `tests/test_catalogue_likelihood.py`, and
+  `tests/test_shear_map.py`: identity and finite-shear geometry, 3/7-arcsec conventions and
+  boundary crossing, guard rejection, store round-trip, direct finite-sum equality,
+  importance-weight plumbing, and small mock closure.
+
+### Validation
+
+- Focused: `PYTHONPATH="$PWD" .../py31/bin/python -m pytest -q
+  tests/test_scene_prior.py tests/test_catalogue_likelihood.py tests/test_shear_map.py` —
+  **15 passed**.
+- Full light suite: `PYTHONPATH="$PWD" .../py31/bin/python -m pytest tests/ -q` —
+  **265 passed, 1 skipped, 1 pre-existing PyTorch warning**.
+- New modules and scripts compile; all three CLIs pass `--help`; `git diff --check` is clean.
+
+### Limitations and next steps
+
+- No full catalogue or real checkpoint was loaded on the login node.  The first scheduled run
+  must use a deliberately small catalogue and compare cached feature tables with the model
+  metadata and BlendEMU conversion before any scale-up.
+- The exact oracle costs `O(N_detected * N_atoms)` flow evaluations per stencil point.  It is
+  intentionally not the production algorithm.
+- Next implement target-specific defensive importance proposals (measured magnitude, then
+  magnitude plus log-size), with exact `pi/q`, common atoms across the stencil, and stopping on
+  score/information stability, tail contribution, and independent proposal seeds — not ESS
+  alone.  Tempered SMC is a reported per-object fallback only after IS matches this oracle.
+- Then enable the separately prepared response pairs and apply `R_blend` consistently in both
+  mock generation and likelihood.  The old `eval_score_catprior.py` / `combine_catprior.py`
+  scripts remain untouched until real-flow exhaustive parity is achieved; only then can they be
+  archived without losing the existing proposal/weight/pairing regression evidence.
+
+## 2026-08-20a  cont.193 — the k=8 production run: a bound, and the ceiling it could not have reached
+
+Files: `scripts/combine_catprior.py` (`shards_block` now prints `q = F/V` and the ceiling AT
+that q; the "independent of how large `a` is" wording corrected),
+`tests/test_catprior_ladder_fit.py` (new test pinning `a/sd = (1-q)*sqrt(dof/2)`).
+Suite at this entry: 255 passed, 1 skipped (`py31`).  Data: the eight production
+pool-shard arms 15869525/526/527/551/552/553/554/555 — `nbr`, 120k rows, ladder 1-16, draw
+seed 99, split seed 1, k=8, ~1h14m each, all exit 0.  No science code touched.
+
+READ IN THE PRE-REGISTERED ORDER, which was written into cont.191 §6 before the eighth shard
+existed: F at the top rung first, then `q`, then the size of `a`, then the headline.  That
+order is the whole reason this entry says what it says, because F is what moved.
+
+    pin gate: pin spread across the eight arms is 0.000e+00% — exactly zero, not small.
+    Pin never reads the pool, so anything else would have invalidated everything below it.
+
+       M    sd arms [%]   floor [%]   q = F/V   (1-q)*1.87   a quoted [%]
+       1        0.7177      0.6403      0.796        0.38       0.264  (<)
+       2        0.4065      0.4904      1.456        0.00       0.094  (<)
+       4        0.2940      0.3548      1.456        0.00       0.068  (<)
+       8        0.1330      0.2441      3.367        0.00       0.000  (<)
+      16        0.1292      0.1795      1.931        0.00       0.000  (<)
+
+    THE CEILING COLUMN IS HEADED BY ITS FORMULA, not by a name, and the `a/sd` column an
+    earlier draft of this table carried has been REMOVED.  Two columns that are deterministic
+    functions of one another read as two facts agreeing, and they cannot disagree: that is
+    the LAYOUT of corroboration with the substance structurally unavailable.  `a/sd` was the
+    worse offender because its name asserts an interpretation (a z-score) that it does not
+    satisfy.  A column whose name makes a claim has to meet it or be renamed.
+
+**THE RESULT IS A BOUND, AS REGISTERED — AND THE REGISTERED 1.77 SIGMA CEILING WAS NEVER
+AVAILABLE.**  cont.189 §6c predicted 1.77 sigma for this design at `q = 0.053`.  The measured
+`q` at the top rung is 1.93.  Every rung but M=1 has `q > 1`, meaning the jackknife floor is
+at or above the across-arm scatter, so the achievable significance `(1-q)*sqrt((k-1)/2)` is
+zero: no detection was available at any effect size.  Reporting this as a bound was the right
+call, but it was the right call for a reason the plan did not anticipate.
+
+WHY, AND IT IS NOT A FAULT IN THE ARMS.  `q = F/V` with `V = k*a + F`, so `q` is not a
+property of the design — a smaller true `a` drives `q` toward 1 and the ceiling toward zero.
+The 0.053 came from a simulation with an injected `a_full` of 0.150% rms against a 0.100%
+floor.  The production data are telling us `a` is much smaller than 0.150%, and a
+floor-dominated `V` is exactly what that looks like from inside the estimator.  The design
+arithmetic is fine; what was carried over was a number computed under an assumption about the
+answer.
+
+SO THE "INDEPENDENT OF HOW LARGE `a` IS" LINE IS WRONG OUTSIDE THE q -> 0 LIMIT, and
+`shards_block` printed it flatly on every run.  cont.189 §6a's algebra is right — `a` cancels
+from the ratio at FIXED V — but `a` returns through `V = k*a + F`.  Its numerical check (1.22
+sigma at both `a` = 0.1% and 1.0%) was run where the floor was negligible, which is precisely
+the limit where the claim holds.  Corrected in the code, at the point of use.
+
+THE TABLE HAS ONLY ONE INDEPENDENT COLUMN, and this is the correction that matters most for
+anyone reading it.  `a/sd` is not a z-score: `sd = V*sqrt(2/dof)/k` is proportional to `V`
+itself, so `a/sd = (1-q)*sqrt((k-1)/2)` IDENTICALLY.  M=8's `-4.43` is therefore not a 4.4
+sigma anomaly and carries no information the `q` column does not — it is `(1-3.367)*1.871`,
+arithmetic.  Read as a significance it would have looked like a serious defect in the floor
+estimator and sent the next day into chasing it.  Checked by computing the identity rather
+than reading the column back: it holds to 1e-16 at all five rungs, and is now pinned by
+`test_a_over_sd_IS_q_RESTATED_and_carries_no_independent_information` — the misreading is
+available to anyone who looks at the column without re-deriving `sd`, so a test is the right
+home for it rather than a sentence.
+
+WHAT M=8 ACTUALLY IS: `V` on 7 dof carries a 53% fractional error (`sqrt(2/7)`), so `sd(V)`
+drawing low once across five rungs is ordinary.  `sqrt(V)` falls 0.294 -> 0.133 from M=4 to
+M=8 and then only 0.133 -> 0.129 to M=16, which is the shape of one low draw rather than a
+trend.  No action.
+
+THE LIMITS AT M=8 AND M=16 CLIP AT ZERO AND MUST NOT BE READ AS "`a` = 0".  The rule fixed in
+cont.189 §6 quotes `sqrt(max(0, a + 1.645*sd))`; at these rungs `a + 1.645*sd` is itself
+negative, so the limit is the clip, not a measurement.  The defensible statement is the M=16
+one: **no positive finite-catalogue term is detected, and the arm scatter (0.129%) sits below
+the jackknife floor (0.180%)**, so any `a` is buried under the floor at this pool size.  The
+honest quotable bound is the M=16 floor scale itself, ~0.18%, not 0.000%.
+
+LIMITATIONS
+- ONE `k`, so `a ~ 1/N_pool` is assumed and not tested.  This was known going in (cont.189
+  §6c) and is unchanged by the run.
+- The `q > 1` rungs mean this design cannot be pushed to a detection by adding splits at the
+  same `k`: with the floor dominating, more arms buy dof against a ceiling of zero.
+- ESS at M=16 is 9.82 against a ladder top of 16 (61.4% efficiency), so the top rung is not
+  the asymptotic limit; the bound is at the pool and ladder actually run.
+
+NEXT — AND THE REGISTERED FOLLOW-UP IS NOT THE RIGHT BUY, which is a change of plan and is
+argued rather than asserted.
+
+- k=4 WOULD MAKE `q` WORSE, NOT BETTER.  `q = F/(k*a + F)` falls with `k` — cont.189 §6c's own
+  table has 0.182 / 0.100 / 0.053 at k = 2 / 4 / 8 — so dropping to k=4 roughly doubles a `q`
+  that is already 1.93.  k=4 was registered as a check on the `a ~ 1/N_pool` scaling, not as a
+  sensitivity buy, and that check needs two ESTIMATES to compare.  Both would be consistent
+  with zero here, and a scaling test between two null results measures nothing.  So the
+  registered follow-up is withdrawn for this pool, on its own stated purpose rather than on
+  its cost.
+- RAISING `k` BUYS NOTHING EITHER, AND THE FIRST VERSION OF THIS BULLET GOT IT WRONG THE SAME
+  WAY.  It priced k=16 at q ~ 0.97 and k=32 at ~0.48 using `q ~ F/(k*a)` — the ASYMPTOTIC form,
+  valid only when `k*a >> F`, i.e. only when q << 1.  The measured q is 1.93.  Applying it
+  there imports the design's injected `a` = 0.150% along with it, which is the same constant
+  that put 0.053 in the plan; it escaped its assumption twice, in different clothes.
+  Computed properly at M=16 with `F` held fixed:
+
+        a assumed                       k=8    k=16    k=32   ceiling at k=32
+        measured a       (negative)    1.93  28.0(p)   pole      0.00 sigma
+        a at +1 sd       (negative)    1.26    1.70    5.59      0.00 sigma
+        a = 0                          1.00    1.00    1.00      0.00 sigma
+        a at +2 sd       (physical)    0.93    0.87    0.78      0.88 sigma
+        a at +3 sd       (physical)    0.74    0.59    0.42      2.29 sigma
+        a = F/8 (q = 0.5 at k=8)       0.50    0.33    0.20         --
+
+  READ THE ROWS, NOT THE TREND, AND MIND THE POLE.  `28.0(p)` is not a magnitude: with `a`
+  negative, `k*a + F` crosses zero as `k` grows and `q` DIVERGES there.  28.0 is that
+  denominator passing through small and the k=32 entry is past the pole, where the expression
+  has no value at all.  Printed bare beside 1.93 it would read as a smooth curve getting
+  worse, which is this entry's own error class once more, in the presentation rather than the
+  algebra.
+
+  WHAT THE +1 SD ROW EARNS, and it is the row that does the work.  `q` RISES with `k` only
+  when `k*a + F` is shrinking, i.e. only when `a` is negative — so a rising row is a signature
+  of the unphysical region, and the +1 sd end of the measurement is still in it.  `a` does not
+  turn positive until +1.74 sd.  So the conclusion is not "no `k` helps at the point estimate";
+  it is that **no `k` helps anywhere across the plausible range of the measurement**.  Even at
+  +2 sd, the first physical point, k=32 reaches 0.88 sigma — still not a detection, at four
+  times the jobs.  And reaching q = 0.5 needs `a` at amplitude 0.064% (k=8) or 0.045% (k=16),
+  against a measurement whose one-sided limit clips at zero.  The design needs the answer to
+  be larger than the data permit, at either end.
+- SO THE FINDING IS AVAILABLE NOW, FOR ZERO FURTHER JOBS: **at this catalogue size this design
+  cannot resolve `a` at any `k`.**  That is a result about the method's reach, not a failed
+  run, and it is worth more than the better bound the four k=4 jobs would have bought.
+- CUTTING `F` IS THE ONLY REMAINING LEVER: the floor is galaxy jackknife noise over the scored
+  rows, so it falls with rows, while `a` falls with the POOL.  That is a different experiment
+  from anything registered so far and is not priced here, because pricing it needs the
+  measurement below first.
+- THE NEXT MEASUREMENT IS CONSTANT-`F`-IN-`k` AT THE TOP RUNG, and it outranks every lever
+  above because it is a precondition for PRICING them, not merely for buying them.  Every
+  number in this section holds `F` fixed in `k`, and that is measured only at M=1 and M=2 from
+  the smoke runs (cont.189 §6c, constant within 3%).  The mechanism says it should hold — the
+  shard restricts the DRAW POOL only, the scored rows are identical in every arm — but M=16 is
+  the rung every number here is read at, and it has never been checked.
+- THE CLASS BOTH OF THIS ENTRY'S ERRORS BELONG TO: a relation that holds in a limit, used
+  where the limit does not apply.  `a/sd` as a z-score is one (`sd` is proportional to `V`, so
+  the ratio is `q` restated); `q ~ 1/k` is the other (asymptotic in `k*a >> F`, used at
+  q = 1.93).  Both survived a reading and neither survived being computed.
+- AND THAT IS carry-the-definition, ONE CATEGORY OVER.  A pointer has to carry the DEFINITION
+  of what it points at; a formula has to carry the DOMAIN on which it holds, at the point of
+  use.  The ceiling column headed `(1-q)*1.87` does this for the identity.  The scaling law
+  needed "asymptotic in `k*a >> F`" attached wherever `1/k` appeared and had nothing attached,
+  which is exactly why it read as a property of the design rather than an assumption about the
+  answer.  General form: a reference must carry whatever makes it true — what a number MEANS,
+  or where a formula HOLDS.
+
 ## 2026-08-19f  cont.192 — the per-cut grid shifts, measured: the 8M table's two cut rows move by <0.1%
 
 Jobs 15827006/07/08/09 (queued in cont.186) all completed.  The four caches are banked, the
@@ -147,6 +3383,2061 @@ third digit; small enough not to matter here, and not something to assume again 
    does not), and the banked V1 shards `c06_g05_r2000000_s{1,3,5}of6_G2765.npz`, whose partners
    0/2/4 were never run and which therefore cannot be merged.
 
+## 2026-08-19e  cont.191 — every common-slope law in the family is rejected; ESS is the least-bad member
+
+Files: `scripts/ess_exponent_control.py` (rewritten: degeneracy flagging, a second
+per-configuration tier, the ESS reference computed rather than pasted, an exact minimum-span
+search replacing the O(N^3) scan, and the §3 grid-top scan moved from prose into the run),
+`tests/test_worklog_quotes_current_numbers.py` (new; §3 added to the covered set),
+`scripts/sweep_loop_shadowing.py` (module scope added to the scanned scopes),
+`tests/fixtures/shadow_module_scope_sample.py` (new), `scripts/loop_shadowing_allowlist.txt`
+(three reviewed running-minima),
+`doc/generated/ess_exponent_control.{numbers,tables}` (generated).  No science code touched.  Data: the three
+`_d777_*_irow.npz` runs of cont.190, already on disk; no new compute.  Suite at this entry: 249 passed,
+1 skipped (`py31`, per `doc/ENVIRONMENT.md`; `sims1` has no pytest and its scipy fails to
+import on the login node for want of GLIBCXX_3.4.30 — unrelated to this change).
+
+THE HEADLINE IS THE REJECTION, NOT THE MARGIN.  Restructured on the peer's framing argument,
+which is right and corrects an emphasis this entry had backwards.  **No common-slope law in
+this family describes the three configurations.**  Every member is refuted, by more than a
+hundred orders of magnitude:
+
+    ESS (zero fitted parameters)    chi2 =   525.83 on 2 dof   p = 6.6e-115
+    best universal power law        chi2 =   859.04 on 2 dof   p = 2.9e-187
+    1/M (the nominal expectation)   chi2 =  1223.56 on 2 dof   p = 2.0e-266
+
+That result needs NONE of §3-§4c: no threshold, no extrapolation convention, no bootstrap, no
+covariance channel.  It is the same under every convention tested, because chi2 of this size
+on 2 dof is not a close call.  (chi2 survival on 2 dof is exactly `exp(-x/2)`, so the tails
+are arithmetic rather than a library call — `sims1`'s scipy will not import on the login node
+anyway.)
+
+SECONDARY CHARACTERISATION, and it is second-order: ESS is the LEAST-BAD member of the
+refuted family, by a factor 1.22x-2.25x depending on analysis choices.  That margin is what
+needed all the machinery below, and it is a comparison between two models that are both
+rejected.  §3-§4c should be read as pinning down how soft that margin is, not as establishing
+the finding.
+
+WHY THIS ENTRY HAD IT BACKWARDS, since the failure is instructive.  §4 read as though the
+margin were the result, because that is where the work went — five rounds of thresholds,
+conventions and bootstraps, all of it on the second-order number.  PROMINENCE SHOULD NOT BE
+INHERITED FROM EFFORT.  It also makes the margin's fragility a normal shape rather than an
+embarrassment: a soft second-order number attached to a hard first-order result is ordinary,
+whereas a soft number carrying a section alone invites exactly the scrutiny the last several
+rounds gave it.
+
+ON THE ORIGINAL QUESTION.  cont.190 §2 concluded that "the configuration-specific part of ESS
+is what works".  That sentence bundled two separable claims, and the separation favours the
+STRONG reading: a THREE-parameter fitted family of per-configuration power laws does not reach
+the ZERO-parameter measured ESS abscissa, by 1.88x on span honestly fitted and 1.40x even when
+the exponents are tuned directly against the statistic being reported.  ESS's content is NOT
+reducible to "each configuration has its own effective exponent" — but note this too is a
+statement about margins WITHIN a refuted family.
+
+### 1  The proposed degeneracy diagnostic does not work, and the reason is structural
+
+The peer session proposed striking rows whose fitted slope carries a fractional error
+`sd/|a|` above ~50%, on the grounds that the p -> 0 degeneracy inflates the slope error.  It
+inflates the slope error, but it inflates the SLOPE BY THE SAME FACTOR, because both are the
+same ratio against the same shrinking abscissa.  Measured on nbr:
+
+    p = 1.00   a =   -8.15% +/- 0.724%   ->  sd/|a| = 8.9%
+    p = 0.05   a =  -40.96% +/- 4.034%   ->  sd/|a| = 9.8%
+
+A 5.6x inflation of both, and the diagnostic moves by one point.  It is very nearly
+invariant under the reparametrisation it is supposed to detect.
+
+Worse, it fires on something else entirely.  `struct b=0.8` has a slope CONSISTENT WITH ZERO
+(a = +3.1% +/- 2.5% on the `1/M` abscissa, 1.2 sigma), so its fractional error is large for a
+PHYSICAL reason rather than a degeneracy — median 81% over p <= 3.
+
+WHAT THE CUT ACTUALLY DOES, CORRECTED — and the correction is itself an instance of this
+entry's subject, so it is shown rather than quietly patched.  As first written this paragraph
+said the cut "strikes every row on the grid and keeps none".  THAT WAS TRUE WHEN WRITTEN, on
+the grid as then scanned (top 3.0): 0 rows kept.  §3 then extended the top to 12.0 for an
+unrelated reason, and the claim silently stopped being true — on the 479-row grid the cut now
+keeps 350 rows.  Re-measured:
+
+    grid top 3.0    50% cut keeps    0 rows      0 of them non-step-degenerate
+    grid top 12.0   50% cut keeps  350 rows     42 of them non-step-degenerate
+
+AND THE FIRST REPAIR OF THAT WAS ALSO WRONG, WHICH IS THE MORE USEFUL HALF.  Written first
+here was: the 42 survivors "lie against the step boundary at p = 4.32, precisely the region §2
+strikes anyway".  THEY DO NOT.  They lie at p = 3.275 to 4.300, just BELOW that boundary, so
+§2 strikes none of them.  The peer flagged the structural risk — that §1 was now leaning on §2,
+which would restore the circularity this entry took care to avoid, one section further out —
+and checking it showed the lean was not merely circular but factually empty.  §1 does NOT
+depend on §2, and the cleanest resolution of the peer's concern is that the dependence was
+never real.
+
+WHY THE SURVIVORS EXIST, measured rather than rescued.  They are exactly the window where
+`struct b=0.8`'s fractional error dips to 41%-50%, marginally under an arbitrary 50% line,
+while the other two configurations sit at 12% and 3%.  Nothing structural distinguishes that
+window; it is where one configuration's noise happens to fall just below a chosen threshold.
+Their number is correspondingly threshold-shopped if leaned on: 135 survivors at
+`STEP_MIN = 1%`, 42 at 5%, 2 at 10%.  Any argument resting on that count would be choosing a
+threshold by its outcome, which is the thing §4a exists to forbid.
+
+AND THE WINDOW IS FLUSH AGAINST THE STEP BOUNDARY, NOT MERELY BELOW IT — the peer's
+observation, verified: 4.300 is the LAST grid point under the boundary at p = 4.3219, a gap of
+0.0219 against a grid step of 0.025.  So there is no empirical seam anywhere here to anchor a
+cut on; the region is a continuum and every cut through it is a chosen cut.  That cuts both
+ways and both favour withdrawal: it is why the survivor count reads out the THRESHOLD rather
+than the configurations (135/42/2 is steep and monotone in `STEP_MIN`), and it is why §2's 5%
+must stand definitionally rather than on a visible break in the data.
+
+SO THE CONCLUSION RESTS ON THE STRUCTURAL ARGUMENT ALONE, WHICH IS WHERE IT ALWAYS BELONGED.
+`sd/|a|` moves by one point across a 5.6x reparametrisation — grid-independent, threshold-
+independent, and sufficient on its own.  The "strikes everything" claim was never load-bearing;
+it was corroboration, and it is now WITHDRAWN rather than repaired.  The peer independently
+verified that their diagnostic still fails on the corrected numbers (81% median below p = 3 on
+`1/M`, 52% on the ESS abscissa), so the refutation stands — but on different numbers from the
+ones originally quoted to them, which is recorded here rather than substituted silently.
+
+WHAT DOES WORK is the slope error measured against its own best value over the scan
+(`DEGEN_INFLATE = 1.5`), which is the operational statement that a parametrisation costs
+precision, and is immune to a genuinely small slope.  The regressor's dynamic range is
+printed beside it as the same fact stated geometrically (0.13 at p = 0.05 against 0.94 at
+p = 1).
+
+The peer's proposed restriction p >= 0.3 gives, measured on this run, chi2 1.55x, span 1.44x
+and sigma 1.27x — a shade below the figures they quoted, and close to what the corrected
+flag gives on the same restricted grid.  So the NUMBERS were about right; it was the
+JUSTIFICATION that did not hold, and the cut would not have transferred to any other data set.
+(Their figures are not reproduced here: §1 is now inside the drift guard, and carrying an
+external literal through a checked section defeats the check.)
+
+### 2  A second degeneracy, in the opposite limit, that the first flag cannot see
+
+Extending the scan (needed, see §3) exposed the mirror problem: as p grows, `M^-p` collapses
+onto an indicator of the M=1 rung, and the "power law" becomes a two-point step saying only
+"M=1 differs from the rest".  That fit is perfectly well conditioned — the error-inflation
+test is blind to it — but it is no longer the hypothesis under test.  Rows are struck once
+the second rung carries under `STEP_MIN = 5%` of the first (p > 4.32).
+
+THE JUSTIFICATION IS DEFINITIONAL, AND IT MATTERS THAT IT IS.  A regressor collapsed onto an
+indicator of the M = 1 rung is not a power law, so the row is not the hypothesis under test —
+a statement about what is being FITTED, not about what any measure does there.  The 5% is a
+chosen threshold; §4a sweeps it and §5 records it as chosen.  Checked rather than assumed after
+§1's correction raised the possibility that §1 might come to depend on §2, since a boundary
+picked by its outcome would have restored the circularity this entry avoided.  §1 turned out
+not to depend on §2 at all, so the question is moot there — the justification is stated anyway,
+because next time it may not be.
+
+AND NOTE WHERE THE OPTIMA THEN SIT: both tiers push right up against that boundary and are
+held there only by the flag.  What helps the power-law family is not an exponent at all but
+permission to treat M=1 as special — the family's only route to competitiveness is to stop
+being a power law.  That is the §4 conclusion restated, not independent evidence for it.
+
+### 3  The bound is edge-limited, and the sensitivity is measured rather than assumed
+
+`struct b=0.8`'s exponent is not identified (its slope is consistent with zero), so the
+tuned best case runs to whatever grid edge it is given.  Scanning the top (ESS's advantage
+on span; emitted, not typed):
+
+    grid top         3.0     6.0    12.0    24.0
+    best-case      1.49x   1.47x   1.47x   1.47x
+    honest         1.90x   1.88x   1.88x   1.88x
+
+Converged: 12.0 to 24.0 moves the best case by 0.00x, so 12.0 is inside the plateau and is
+what the script uses.
+
+THIS TABLE WAS THE TENTH INSTANCE OF THE STALE-LITERAL CLASS, and §6 of the previous entry
+had already named the place: §3's grid top is the very dimension whose change falsified §1,
+and §3 was the one section left uncovered because its scan was manual.  Making the scan part
+of the run found the columns had drifted — the hand-carried table read
+`1.49 / 1.43 / 1.40 / 1.39` and `1.90 / 1.87 / 1.87 / 1.87`, and only the top = 3.0 column
+was still right.  The conclusion is unchanged (converged, 12.0 inside the plateau), which is
+the ordinary case: drift is usually harmless and always invisible, and being harmless is why
+nobody looks.  §3 now runs on its own wider grid rather than by extending `PGRID`, because
+extending `PGRID` would move `max(PGRID)` and with it §4b's weakest-bound region — a
+sensitivity probe must not change the thing it is probing.  The two grids are made
+comparable by an assertion rather than by assumption: the top = 12.0 column must reproduce
+the main analysis's own best-case and honest ratios, or the script stops.
+
+WHAT THAT ASSERTION DOES AND DOES NOT SAY.  It ties the two grids AT THE SHARED COLUMN, one
+point.  That is the right point — it is the only one both grids compute — and a one-point
+tie is honest so long as nobody reads it as the grids agreeing across the range, which is
+not checked and is not claimed.  The O(N^3) triple scan
+that the first version used could not reach that grid — it is replaced by an exact
+sliding-window search over the merged sorted slopes (the narrowest window covering every
+configuration), which is O(N log N) and gives the same optimum.
+
+### 4  Which summary may be quoted, and the answer's range
+
+The peer session raised a second invariance objection, and it is correct on the statistics:
+under a uniform rescale `x -> c*x` of the abscissa, every fitted slope and its error scale by
+`1/c` TOGETHER.  So `chi2` and the two-config `sigma` are INVARIANT, and so is `span/|a|`;
+the RAW SPAN is not — it scales by `1/c`, and it was the measure cont.190/191 had promoted to
+headline precisely because it flagged the degeneracy.  `span/|a|` is now reported alongside.
+
+TWO THINGS QUALIFY THAT, both measured rather than argued.
+
+(a) THERE IS NO FREE `c` HERE.  Every abscissa in this comparison equals exactly 1 at M = 1
+— ESS because one draw has effective sample size one by construction, `M^-p` trivially —
+verified to 1e-10.  The scale is anchored, not chosen, so the raw span is not comparing
+arbitrary units.  What the abscissae do NOT share is their RANGE (ESS falls to 0.118 at nbr's
+top rung but only to 0.396 at struct's, against 0.062 for `1/M`), so anchoring pins the
+origin without making the units identical.  Raw span keeps the job it did well — it is the
+only one of the four that caught the `p -> 0` degeneracy — and is no longer quoted alone.
+
+(b) `span/|a|` CANNOT BE THE SELECTION CRITERION, though it is invariant.  It rises
+MONOTONICALLY across the whole non-degenerate range (5.40 at p = 0.05 to 12.47 at p = 1.00),
+so minimising it drives the exponent straight back into the degeneracy the raw span exists to
+guard against.  Invariant and usable-for-selection are different properties.
+
+That makes "pick one exponent, quote four summaries at it" the wrong construction: it
+confounds the family's quality with the criterion that chose the exponent.  Each measure now
+gets its OWN best exponent — the most generous reading available to the power law:
+
+  measure                       best p   power law         ESS  ESS better by
+  chi2      [invariant]          4.300      859.04      525.83          1.63x
+  two-cfg sigma  [invariant]     4.300       29.31       22.02          1.33x
+  span/|a|  [invariant]          0.675       10.38        6.20          1.67x
+  raw span  [CARRIES UNITS]      4.300      108.94       71.67          1.52x
+
+The peer's estimate that `span/|a|` would collapse the margin came from evaluating it at
+p = 0.30, which the corrected flag of §1 strikes as FLAT-degenerate (1.99x error inflation).
+Their figure and this one are ONE number, not two — the same computation, 1.1655, which is
+1.17x to two figures; the peer's slightly lower rendering truncated it rather than rounding it,
+so there is nothing to reconcile and the entry does not print both.  On admissible exponents it is 1.67x, the LARGEST of the four, not the smallest.
+
+Tier 2, all four measures, ESS's advantage:
+
+    tier                                     chi2   sigma  span/|a|  raw span
+    per-config p, honest (own ladder chi2)  2.25x   1.56x     1.65x     1.88x
+    per-config p, tuned to the span         1.70x   1.35x     1.27x     1.47x
+    per-config p, step-degeneracy allowed   1.38x   1.22x     1.27x     1.40x
+
+The "honest" row picks each exponent from that configuration's OWN ladder fit, blind to the
+cross-configuration statistic; it is WORSE than a single universal exponent, which is the
+substantive finding — three free exponents chosen fairly do not help at all.  The two tuned
+rows are UPPER BOUNDS on what per-configuration exponents could achieve, not legitimate fits.
+
+### 4a  Every headline sits ON a flag boundary, so the thresholds are swept
+
+Raised by the peer and correct: none of the four tier-1 optima is an INTERIOR minimum.  chi2
+and sigma optimise at p = 4.300, the step cut; span/|a| at p = 0.675, where the 1.5x
+error-inflation cut bites.  Each number is the value AT a chosen threshold.  Swept
+(ESS's advantage per measure, and where the admissible region starts):
+
+   inflation cut  step flag     chi2    sigma  span/|a|  raw span    admissible p from
+            1.2x         on    1.63x    1.33x     2.52x     1.52x                2.850
+            1.2x        OFF    1.55x    1.29x     2.52x     1.44x                2.850
+            1.5x         on    1.63x    1.33x     1.67x     1.52x                0.675
+            1.5x        OFF    1.55x    1.29x     1.67x     1.44x                0.675
+            2.0x         on    1.63x    1.27x     1.17x     1.52x                0.300
+            2.0x        OFF    1.55x    1.27x     1.17x     1.44x                0.300
+            none         on    1.24x    1.06x     0.87x     1.52x                0.050
+            none        OFF    1.24x    1.06x     0.87x     1.44x                0.050
+             none         OFF   1.24x   1.06x     0.87x     1.44x               0.050
+
+`span/|a|` runs 0.87x-2.52x while chi2 holds 1.24x-1.63x and sigma 1.06x-1.33x.  So the
+measure §4 called the LARGEST of the four is also the most threshold-exposed, and the peer's
+1.17x and this script's 1.67x are the SAME calculation at two cut positions — their table
+reproduces exactly as the 2.0x row.
+
+AND THE LAST ROW RETRACTS AN OVERCLAIM.  cont.191's first draft of §4 said the direction was
+threshold-free.  It is not: with NO inflation cut, `span/|a|` INVERTS to 0.87x — ESS loses —
+and sigma falls to a 1.06x near-tie.  The winner there is p = 0.05, whose slope is inflated
+7.8x over its own best and is not identified.  The correct statement is that ESS leads on
+every measure at every cut THAT EXCLUDES UNIDENTIFIED SLOPES (1.2x-2.0x, step flag on or
+off), and loses on one measure only when they are admitted.  That is an argument FOR the
+flag, and it is why the flag has to stand on §1's reasoning rather than on its outcome.
+
+### 4b  A sampling bar on the ratio, taken at the data level
+
+A HAND-SYNTHESISED TABLE WAS THE PUREST CASE.  §4's Tier-2 summary was assembled by hand from
+three separate script prints — a table nothing produced, and so a table nothing could check.
+It is now emitted, and reproduces every hand-written cell exactly, which says the synthesis was
+right and not that it was safe.
+
+Also raised by the peer, also correct: none of these ratios carried an error, and they are
+not noise-free.  The two common-slope chi2 CANNOT be perturbed independently — they are two
+fits of the SAME `d(m)` — so the bar is taken by perturbing `d(m)` with the jackknife
+covariance and refitting BOTH abscissae from the SAME draw, which carries the correlation
+through exactly.  The GLS slope is linear in the data, so each draw is a matrix product, not
+a refit; the linear form is asserted against the fitted slope it stands in for.
+
+    measure     point    bootstrap median     68% interval   P(ESS worse)
+    chi2        1.63x          1.63x        [1.49, 1.79]      < 0.00005
+    span/|a|    1.67x          1.67x        [1.64, 1.71]      < 0.00005
+
+20,000 draws; `P(ESS worse)` is quoted as `< 0.00005` rather than 0.000, since a zero count
+in 20,000 draws bounds the rate at 1/n and does not measure it — the same resolution point as
+§4c, applied where it was originally missed.  The peer's independent-chi2 estimate of
++/-0.18 turns out to be about right for chi2 (+/-0.146 here) but far too wide for `span/|a|`
+(+/-0.039), where the shared-data
+correlation removes most of the scatter.
+
+### 4c  The covariance's own error, propagated through the cut
+
+Peer-raised, and it turns out to be the LARGEST of the statistical channels — larger than
+§4b's data bar, and it retracts §4b's tightest number.
+
+FIRST, AN OBJECTION THAT DOES NOT APPLY.  The admissible-p boundary looks like a
+data-dependent selection that §4b ought to re-derive inside every draw.  It is not: for GLS
+with fixed `C`, `Var(a_hat) = (A' C^-1 A)^-1` depends on the DESIGN and the COVARIANCE only,
+never on the data values, so the inflation ratio defining the boundary is identical in every
+draw and holding it fixed is exact.  Pinned by
+`test_gls_slope_VARIANCE_does_not_depend_on_the_data_values`.
+
+BUT THE BOUNDARY DEPENDS ON `C`, AND `C` IS ESTIMATED from ~200 blocks.  A global rescale of
+`C` cancels (it scales every slope error equally, leaving the ratio alone), so only its SHAPE
+noise matters.  Measured by drawing `C* ~ Wishart(C, df)/df`, refitting every slope, error
+and the ESS reference from the SAME `C*`, re-deriving the boundary from `C*`, and re-reading
+the ratios.  150 draws each; `df = 199` is the generous block count (jackknife replicates are
+not independent, so this UNDERSTATES the channel) and `df = 50` brackets it pessimistically:
+
+      df   chi2 ratio           span/|a| ratio        cut p                  P(ESS worse)
+     199   1.63x [1.46, 1.83]   1.57x [1.40, 1.84]   0.613 [0.400, 1.200]   < 0.007
+      50   1.71x [1.37, 2.19]   1.63x [1.34, 2.10]   0.625 [0.275, 1.450]   < 0.007
+
+Against the fixed-`C` values (chi2 1.63x, span/|a| 1.67x, cut 0.675).  Two readings:
+
+- THE CUT IS WHAT MOVES — median 0.61 but ranging 0.28 to 1.45.  Exactly the channel §4a's
+  sweep predicted would dominate.
+- §4b's `span/|a|` bar of +/-2% IS ILLUSORY.  Propagating `C` widens it to about
+  [1.40, 1.84], roughly ten times wider, because §4b holds the cut fixed and `span/|a|` is
+  the measure most sensitive to where the cut falls.  chi2 widens far less
+  ([1.49, 1.79] -> [1.46, 1.83]).
+
+The ordering never inverts in 300 draws — quoted as `P < 0.003` across both brackets and
+`< 0.007` within each, NOT as 0.000: with 150 draws per bracket a zero count bounds the rate
+at 1/n and does not measure it.  The 68%
+endpoints themselves carry ~6% at this draw count, so the small difference between §4b's
+interval and §4c's is INSIDE that noise and nothing should be read into it; the finding that
+survives it is the `span/|a|` widening, which is a factor of ten.
+
+EFFECTIVE df, BOUNDED RATHER THAN DERIVED — AND UNDER BOTH CONVENTIONS.  There is no
+principled effective df for a jackknife covariance, but it does not have to be derived.  The
+CI half-width scales as `1/sqrt(df)` — measured 2.21x between the brackets against the 1.99
+the law predicts, so the extrapolation runs on a law the two brackets confirm — and
+extrapolating to where the 68% band first touches 1.0x bounds it.  BUT THE LAW FIXES HOW THE
+INTERVAL GROWS, NOT WHAT IT GROWS ON, and the additive and multiplicative readings differ:
+
+                        df = 199    df = 50
+    LINEAR (additive)         17         17
+    LOG (multiplicative)      11         10
+
+Both are internally consistent across the brackets, so neither is failing; they differ only
+in assumed shape.  **THE SKEW MEASURED BELOW IS THE EVIDENCE ABOUT WHICH**, and it favours
+the log form.  So the advantage survives unless 200 jackknife blocks carry less information
+about the covariance than **~10-17 independent realisations** would — log and linear
+conventions respectively, a factor ~12-21 degradation.  THE CONCLUSION IS UNCHANGED ACROSS
+THE WHOLE RANGE, so nothing rests on picking one, and the range is what gets quoted.
+Correlated replicates make 199 optimistic, but not by that much.  The missing effective df is
+therefore a bound nobody has to resolve, not an open limitation.
+
+(History, because the number moved twice.  The peer first offered df ~ 11 from FRACTIONAL
+rather than absolute half-widths — a real slip, and on the measured intervals that arithmetic
+gives 17.  Their second version reached ~10 by a different and CORRECT route, the log
+convention, which reproduces here exactly.  Quoting the linear 17 alone was a
+conservative-LOOKING choice this run's own skew evidence does not support; quoting ~10 alone
+would be over-confident.  The range names both.)
+
+THE 2-SIGMA READING, QUOTED RATHER THAN BURIED — AND IT IS ALSO THE CONVENTION EVIDENCE.
+Three readings of the same lower edge, the empirical one being the arbiter because it assumes
+no shape at all:
+
+               symmetric-linear   symmetric-log   EMPIRICAL PERCENTILE
+    df = 199        1.26x             1.30x              1.36x
+    df =  50        0.89x             1.07x              1.19x
+
+The percentile sits ABOVE both symmetric forms and much nearer the log one in each bracket —
+which is exactly what right-skew implies, since a distribution right-skewed on a linear scale
+is closer to symmetric on a log scale.  That is the same observation used above to prefer
+percentiles over `median - 2*sigma`, so preferring the log extrapolation is not a second
+assumption but the same one applied twice.  At the pessimistic bracket the advantage is
+1-sigma secure and only marginally 2-sigma secure.  The ORDERING is robust; "1.6x" as a
+MAGNITUDE is not 2-sigma robust there — the same conclusion as everywhere else in this entry,
+which is not to quote the partial to two figures.
+
+### 4d  Headline on chi2, not on span/|a|
+
+Following from §4a and §4c, and adopted from the peer's presentational argument.  `chi2` is
+invariant AND threshold-stable (1.24x-1.63x across the whole §4a sweep, [1.46, 1.83] under
+covariance noise).  `span/|a|` is invariant but NOT threshold-stable (0.87x-2.52x), and its
+§4b bar is the TIGHTEST of the four — so the measure that looks most precise is the one whose
+value is most determined by a choice.  Quoting "1.67x +/- 0.035" without the sweep beside it
+would be among the more misleading true statements available here.  `span/|a|` is therefore
+reported only in the sweep tables, where its spread is visible.
+
+ONE UNPROPAGATED CHANNEL, WITH ITS DIRECTION KNOWN.  `<1/ESS>` is measured with noise while
+`M^-p` is exact, since M is known.  Noise in a REGRESSOR adds scatter to the fitted relation
+and inflates chi2, so propagating it would LOWER ESS's chi2 and leave the power law's
+untouched — WIDENING ESS's lead.  Omitting it is conservative for the claim being made, which
+makes this a one-sided bound rather than an open risk.  The frozen-weight choice is bounded
+separately in cont.190 §4.
+
+RANGE OF THE CLAIM, AND WHAT KIND OF RANGE IT IS.  Across every tier and every summary, ESS
+leads by 1.22x (weakest: a three-parameter family tuned against the statistic with
+step-degeneracy allowed, read on the two-config sigma) to 2.25x (honest three-parameter
+selection, read on chi2).  THAT IS A RANGE OVER ANALYSIS CHOICES — one-parameter vs
+three-parameter family, honest vs tuned selection, which flag setting — and NOT a confidence
+interval.  THREE kinds of uncertainty are in play and none substitutes for another: the spread over
+analysis choices (§4a, widest), the covariance's own error acting through the cut (§4c,
+comparable), and the data sampling bar at fixed choices (§4b, narrowest).  "Partial and
+insufficient rescaling" stands; the SIZE of the partial is that range and should not be
+quoted to two figures.
+
+### 4e  The stale-literal failure, closed structurally rather than by care
+
+Three times now a statement that was correct WHEN WRITTEN silently stopped being true and
+nothing errored: a grouping key that outlived the dimension it assumed; a docstring
+describing `C = C_jk + C_seed/S` after the body stopped computing it; and, in this entry,
+prose literals from a 40-draw run surviving into the 150-draw §4c.  A fourth turned up while
+fixing the third — §4c's table still printed `P = 0.000` after the script had been corrected
+to `< 0.007`.  The peer named the class, correctly, as one meta-failure rather than three
+slips, and the prose instance is the one most likely to reach a reader, because prose is what
+gets quoted.
+
+The key instance was closed permanently by `assert_group_is_replicates`.  This is the same
+shape applied to prose: **do not hand-carry values a run produces.**
+`scripts/ess_exponent_control.py` now EMITS every number this entry quotes —
+`doc/generated/ess_exponent_control.numbers` for scattered figures and
+`doc/generated/ess_exponent_control.tables` for whole rows — and
+`tests/test_worklog_quotes_current_numbers.py` checks the entry against both.  A re-run that
+moves a number now either forces the prose to be updated or fails the suite.
+
+THREE CHECKS, EACH ONE THERE BECAUSE THE PREVIOUS HAD A HOLE, and the progression is worth
+recording because every version looked sufficient when written.
+
+1. VALUE SEARCH — every emitted value still appears in the entry.  FAILS TO FIRE on the
+   historical case: `1.49x` is a stale Tier-5 median AND a live §3 grid-scan figure, so the
+   search finds the digits and passes.  A test satisfiable by coincidence is worse than none,
+   because it certifies.  Kept only for scattered figures, as a tripwire and not a proof.
+2. ROW MATCH — numbers that travel together are compared as whole rows, which a coincidence
+   cannot satisfy without reproducing the entire row.  Compared as PARSED NUMERIC FIELDS, not
+   as raw text: byte comparison would fail on a column width or a rounding change, which is
+   not drift, and that is the failure that teaches people to loosen a check built precisely so
+   it cannot be loosened.
+3. COMPLEMENT — every result-shaped figure IN the covered sections must be claimed by an
+   emitted value, with a five-entry allowlist carrying a stated reason each (the `0.000` the
+   entry quotes as a counterexample, the `1.0x` no-advantage point, the rounded `1.6x`, the
+   `~6%` order-of-magnitude, and the 200-block INPUT).  This is the only one that pins the
+   FUTURE: the first two are silent about a figure typed in by hand that no emitter covers,
+   which would be unchecked and pass forever.  Same safe-by-default property as `run_identity`
+   — a new number is unchecked until someone consciously exempts it, rather than checked only
+   if someone remembers to emit it.  Adopted from the peer.
+
+Verified by injection, since a guard nobody has seen fire is not known to work: a drifted table
+cell fails (2 of 6), a hand-added ratio no emitter covers fails (1 of 6), and a REFORMATTED
+table still passes
+— the three properties the design is trying to have at once.
+
+COVERAGE FOLLOWS WHAT GETS QUOTED, NOT WHERE DRIFT WAS CAUGHT.  Adopted from the peer, and it
+was the right correction: §4c/§4e were covered because that is where the first stale literal
+turned up, but a check is worth what it protects, and the figures that LEAVE this document are
+the headline and the summary tables.  Coverage is now the headline, §4, §4a, §4b, §4c and §4e.
+Extending it caught three more drifts immediately: both of §4b's bootstrap half-widths and
+`1/M`'s top-rung abscissa were hand-rounded away from what the run produces.  The corrected
+values are in §4 and §4b; the wrong ones are deliberately NOT reproduced here, since a stale
+figure quoted inside a note about stale figures is still a stale figure in the document.  None
+of the three would have been questioned by a reader.  §4b's `P = 0.000` was
+the same resolution error as §4c's, at 20,000 draws rather than 150, and now reads `< 0.00005`.
+
+THE AUDIT OF THE UNCOVERED SECTIONS, WHICH THE PEER ASKED FOR RATHER THAN REGISTERED.  Their
+argument: eight stale literals accumulated in the sections that were later checked, §1-§3 had
+the same treatment for the same period, so the honest prior is that they contain some now — and
+a one-time audit costs nothing structural, while either outcome is informative.  Correct, and
+done; but done by EMITTING §1's and §2's numbers rather than checking them once, so the answer
+does not go stale in turn.  §1 and §2 are now inside the guard.  It found:
+
+- `struct b=0.8`'s slope quoted as `+3.5% +/- 2.2%, 1.5 sigma`.  No abscissa gives that.  It is
+  +3.1% +/- 2.5% (1.2 sigma) on `1/M`, and +5.2% +/- 2.7% (1.9 sigma) on the ESS abscissa.  The
+  §5 limitation carried the same wrong figure and is corrected with both.
+- its fractional error described as roughly seventy per cent at EVERY exponent.  It is 81%
+  median below p = 3 and varies by orders of magnitude across the full grid, since the slope
+  crosses zero.  (The stale figure is spelled out rather than printed, so a wrong number does
+  not re-enter the document inside the note recording that it was wrong.)
+- **THE CENTRAL CLAIM OF §1 WAS FALSE AS IT STOOD.**  "The cut strikes every row on the grid and
+  keeps none" was TRUE when written, on the grid topping at 3.0.  §3 later extended the top to
+  12.0 for an unrelated reason and the claim silently became wrong: the cut now keeps 350 of 479
+  rows.  The conclusion survives narrower — see §1 — because the 42 non-step-degenerate
+  survivors all sit in p = 3.275 to 4.300, against the step boundary.
+
+THAT IS THE MOST SERIOUS DRIFT FOUND SO FAR and it is worth being plain about why: it is not a
+rounded decimal, it is a claim about the diagnostic this whole entry rejects, and it was
+invalidated by a change made three sections away for an unrelated purpose.  Nothing errored, and
+it read correctly.  A ninth instance, and the first that could have changed a reader's
+conclusion rather than a digit.
+
+AND THE FIRST REPAIR OF IT WAS WRONG TOO — worth recording, because it is the failure mode a
+correction is most prone to.  The repair claimed the surviving exponents were struck by §2
+anyway; they sit just below §2's boundary and are struck by nothing.  Two things caught it: the
+peer asked whether §1 now DEPENDED on §2, since that would restore the circularity avoided
+elsewhere; and answering that question honestly required measuring the survivors rather than
+describing them.  A repair written to save a claim reaches for the nearest adjacent fact and
+stops checking at the point it feels rescued.  The claim is now withdrawn, and §1 rests on the
+structural argument that never needed it.
+
+THE GENERALISABLE FORM, sharpened by the peer and worth keeping: the original claim DESCRIBED
+the grid instead of measuring it, and the repair DESCRIBED the survivors instead of measuring
+them — description standing in for measurement twice, one level apart.  The guard is not about
+repairs as such.  It is that **a repair is held to a lower evidentiary bar than the claim it
+rescues, because it feels like cleanup rather than a new assertion.**  It is a new assertion,
+made under relief.
+
+A SIBLING DIRECTION, from cont.192 the same day: that entry's error was in PROSE, in the one
+paragraph stating what the result MEANS, and it ran in the FLATTERING direction — a corrected
+value described as smaller in magnitude when it was larger.  It was caught by computing the
+comparison rather than reading the sentence back.  Two things generalise.  The sentence
+saying what a number means is the least checked part of an entry and the most quoted part of
+it, which is the worst possible pairing.  And errors there are not direction-neutral: a draft
+is written by someone who already believes the conclusion, so the ones that survive a reading
+are disproportionately the ones that flatter it.
+
+AND THE KIND OF QUESTION THAT CAUGHT IT.  The peer asked whether §1 now depended on §2 as a
+QUESTION, with no more evidence than I had; what made it productive is that it could not be
+closed by re-reading anything.  Questions answerable only by running something are worth more
+than questions answerable by looking again — the second kind returns the writer's own
+description to them.
+
+Two smaller things fell out of the same pass.  The audit script could not read the ESS abscissae
+because the rejection block had rebound `ex` — the name holding them — to a loop variable; the
+run was unaffected only because nothing read it afterwards.  And the peer's slightly lower rendering of the p = 0.30
+ratio turned out to be this run's own number at lower precision (1.1655), so the allowlist entry
+added for it was removed again rather than kept.
+
+WHAT IS STILL NOT COVERED, stated rather than implied.  §3 is the only section still out: its numbers
+record a MANUAL scan across several grid tops rather than one run's output, so covering it
+means making that scan part of the run — registered in §6.  Given what the §1 audit found, that
+item is now urgent rather than tidy: §3's grid top is exactly the dimension whose change
+invalidated §1.  The allowlist briefly gained an entry for a figure quoted from the peer's message, then lost
+it again: checked at full precision the two figures are ONE number (1.1655), and printing both
+would have invited a reader to reconcile a disagreement that does not exist.  Printing your own
+value beside a borrowed one is right when they can differ; when they cannot, it is noise.  Fixing this
+also turned up the same failure ONE LEVEL UP: `scripts/ess_exponent_control.py` was itself
+hand-carrying three run outputs in its own Tier-5 prose (`chi2 1.63x, span/|a| 1.67x, cut
+0.675`) and Tier 4's `[1.49, 1.79]`.  Those now come from the variables that produce them, and
+reproduce identically — which is evidence they were right, not evidence the check was
+unnecessary.
+
+### 5  Limitations
+
+- Three configurations, so the common-slope statistic carries 2 dof and the two-config sigma
+  1; these ratios are effect sizes, not significances.
+- `STEP_MIN` and `DEGEN_INFLATE` are chosen thresholds, not derived ones.  The verdict is
+  insensitive to both: with the step flag removed entirely, ESS still leads by 1.22x-1.40x
+  depending on the summary.
+- THE FOUR SUMMARIES ARE NOT INDEPENDENT and this belongs beside the §4 table, not in a
+  limitations list: chi2 and the two-config sigma are built from the same slopes and errors,
+  and with three configurations the sigma uses two of them.  Four columns reading 1.33x to
+  1.67x is ONE measurement viewed four ways, not four confirmations.
+- The bootstrap of §4b propagates the jackknife covariance of `d(m)` only.  It does not
+  propagate uncertainty in the ESS abscissa itself, nor the frozen-weight choice; cont.190 §4
+  bounds the latter separately.
+- The comparison is of two descriptions sharing the same data and is not nested; no
+  delta-chi2 interpretation is available, as cont.190 §2 already recorded.
+- `struct b=0.8`'s near-zero slope is doing a lot of work in the span statistic and is
+  itself only a 1.2 sigma measurement on the `1/M` abscissa (1.9 sigma on the ESS one).
+- THE GUARD CLOSES ONLY THE NUMERIC SUBSET.  Both findings of the §1-§3 audit — the rebound
+  `ex`, and the wrong repair — were about whether PROSE still matched CODE, a relation no test
+  owns and none of these express.  Emitting the numbers closes the part that is numeric; the
+  rest is audit-only, permanently, and audits therefore stay worth repeating rather than being
+  retired once a guard exists.
+- THE NUMBER-DRIFT GUARD OF §4e NOW COVERS EVERY SECTION OF THIS ENTRY: the headline, §1,
+  §2, §3, §4, §4a, §4b, §4c and §4e.  §3 was the last one out and its table had drifted in
+  three of four columns.
+- AND THAT IS A CLAIM, NOT A COINCIDENCE (the peer's sharpening, adopted).  **Partial
+  coverage does not leave the uncovered remainder at its old risk level; it raises it.**
+  Attention follows the guard, checking starts to feel done, and the uncovered part quietly
+  inherits the confidence the covered part earned.  Drift is therefore CONCENTRATED into the
+  complement.  The obvious move after a guard lands is to relax; the correct move is to
+  enumerate what it does not touch — which is why `COVERED` is an explicit list in the test
+  file rather than a default, and why §5 states the non-numeric residue rather than implying
+  the guard closed everything.
+- The rejection is a statement about THIS FAMILY of common-slope laws on THESE three
+  configurations.  It says a shared exponent cannot describe them; it does not say no
+  parametrisation could.
+
+### 6  Next
+
+- Production k=8 pool shards 15869525/526/527/551-555 (nbr, 120k rows, ladder 1-16, draw
+  seed 99, split seed 1): six complete at ~1h14m each, two still running.  `shards_block`
+  refuses an incomplete family by design, so nothing is readable until the eighth lands.
+  Confirm F constancy at M=16 from these rather than arguing it from the M=1,2 smoke
+  measurement (cont.189 §6c) — and read F FIRST: if k-independence moves at the top rung it
+  is the ceiling that changes, not a caveat to attach to a number already quoted.
+  THIS IS A PRE-REGISTERED READ ORDER, written down here BEFORE the eighth shard exists,
+  which is the only thing that makes it a guard rather than a description.  It is the cheap
+  version of the discipline §4a enforces expensively: a threshold or a read order committed
+  to in advance costs nothing and cannot be chosen by its outcome; the same commitment made
+  after the number is on the screen is worth nothing at all.
+- The k=8 run is a ceiling and will be reported as a BOUND, per the rule in cont.189 §6.
+  Whether to buy a k=4 scaling arm or a second k=8 split stays open until q and the rough
+  size of `a` are read.
+
+- DONE (this entry): the §3 grid-top scan now runs, on its own grid past `PGRID`'s top, with
+  an assertion tying its top = 12.0 column to the main analysis.  §3 is covered and its table
+  is emitted.  What it cost to find: nothing was wrong with the conclusion, three of the four
+  columns were wrong, and no test could have said so while the scan lived only in prose.
+- THE SWEEP FOUND MY OWN NEW CODE, AND THE INTERESTING PART WAS WHAT THAT IMPLIED.  Lifting
+  the window search into `_narrowest_window()` made `scripts/sweep_loop_shadowing.py` fire on
+  a running-minimum rebind — while the IDENTICAL search at module scope in the same file had
+  never been reported, because the sweep read function bodies only (`scan_source` skipped
+  every node that was not a `FunctionDef`).  That is the same shape as the point above, one
+  level down: a checker blind to a region makes that region the preferred hiding place for
+  the very defect it looks for, and **an unscanned region is silent in exactly the way clean
+  code is silent** — two silences indistinguishable from outside.
+  So the discipline is not "allowlist it and move on".  When a tool first fires on code you
+  merely MOVED, the second question is what else sits on the unscanned side of the boundary
+  it just revealed — and that question is answered by a sweep, not by reasoning.  Swept:
+  module scope is now a scope, and the whole blind spot contained two hits, `bb` and `bu`,
+  both best-so-far window trackers, nothing worse.  That is a result and not what was known
+  before running it.
+  Scope selection had to become scope-RESTRICTED at the same time: with the module in the
+  list, the old whole-tree walk per scope would attribute every nested function's loops to
+  `<module>` too and report each twice.  Validated the way this file demands rather than by
+  assertion — `tests/fixtures/shadow_module_scope_sample.py` carries the bug at module scope
+  AND a nested function carrying it one level down, and the test pins both the attribution
+  and the count.  Checked against the pre-change logic: it returns only the nested `helper`
+  hit, so the new test genuinely fails without the change.
+
+## 2026-08-19d  cont.190 — ESS is not the mechanism: the parameter-free tests, on three configurations
+
+Files: `scripts/ess_exponent_control.py` (new, the §2 exponent control).  Otherwise this
+entry reports the first runs carrying per-rung ESS
+(`ess_rung`) and per-row Fisher (`i_row`).  Runs: 15849099/100/101, draw seed 777,
+`catprior_{nbr_b0.0_r120000_M16, struct_b0.0_r60000_M64, struct_b0.8_r60000_M64}_d777_irow.npz`.
+Analysis: `scripts/combine_catprior.py`.  Suite: 232 passed, 1 skipped.
+
+THE HEADLINE.  cont.188 called the ESS conjecture dead on fit quality.  Fit quality was the
+wrong evidence and is now RETRACTED as evidence (§1).  The conjecture fails anyway, on two
+tests that do not depend on a fit: no single linear ESS-unit slope describes the three
+configurations (§2), and the parameter-free correlation prediction is worse under ESS in
+every configuration at every rung pair (§3).  The conclusion survives; the reason for it is
+replaced.
+
+BUT "DEAD" IS TOO STRONG AND §2's OWN CONTROL SAYS SO.  Against the 1/M control, ESS roughly
+HALVES the cross-configuration inconsistency (chi2 1223 -> 526, span 145% -> 72%) -- it
+absorbs about half the configuration dependence and then fails to remove the rest.  So the
+right verdict is "ESS is a partial and insufficient rescaling", not "ESS is irrelevant", and
+what is refuted is a LINEAR 1/ESS law rather than ESS as a controlling variable.
+
+### 1. THE MEAN AXIS HAS NO DISCRIMINATING POWER, AND I NEARLY CLAIMED IT DID
+
+Seed 777 nbr, all rungs: 1/M gives chi2/dof 1.20 (p 0.309), 1/ESS gives 0.75 (p 0.520).  The
+temptation is to read that as "1/ESS describes the ladder better".  It is not readable that
+way.  At 3 dof, sd(chi2/dof) = 0.82, so the two differ by 0.55 of one statistic's own noise,
+and they are computed on the SAME points, so the effective separation is smaller still.
+cont.188 §2 already established exactly this, as the reason the M>=4 cut had to be retracted;
+it applies here identically and I should have applied my own precedent without prompting.
+
+AND THE APPARENT REVERSAL AGAINST cont.188 IS NOT A REVERSAL.  cont.188 recorded 1/M 0.71
+(p 0.545) BEATING 1/ESS 3.58 (p 0.013) -- the opposite ordering.  That is not seed noise
+flipping one test, because it is not the same test:
+
+    catprior_nbr_b0.0_d99_r120000_G61_M16.npz     NO ess_rung | no i_row
+    catprior_nbr_b0.0_d99_r120000_G61_M4.npz      NO ess_rung | no i_row
+    catprior_nbr_b0.0_d99_r120000_G101_M4.npz     NO ess_rung | no i_row
+
+None of the cont.188 nbr inputs carry per-rung ESS at all, so its 1/ESS abscissa came from
+the FITTED power law (ESS ~ 0.948*M^0.825, log-residual rms 4.5%).  Seed 777 is the first run
+with MEASURED per-rung <1/ESS>.  Different regressors, so the ordering cannot be compared
+across the two entries in either direction.  Recorded explicitly so a later reader does not
+resolve the "contradiction" by picking whichever number suits.
+
+Either way the mean axis supports nothing, and no claim is attached to it.
+
+### 2. THE ESS-UNIT SLOPE IS NOT ONE NUMBER ACROSS CONFIGURATIONS
+
+This is the test AMENDMENT 5 was written for and could never run: it needs >= 2 configurations
+with per-rung ESS, and until these runs there was 1.  If the ladder were really a 1/ESS law,
+`a` expressed in ESS units would be a single number across configurations.  It is not:
+
+      configuration            a (1/ESS units)        a (1/M units)   ratio
+      nbr    beta=0.0            -8.256% +/- 0.729%      -8.150%       0.99
+      struct beta=0.0           -66.478% +/- 2.542%    -142.029%       2.14
+      struct beta=0.8            +5.190% +/- 2.699%      +3.130%       0.60
+      common value -11.557%,  chi2 = 525.83/2,  p = 0.0000,  spread 71.668%
+
+The signs do not even agree.  The code prints a standing caveat that 3 configurations give
+2 dof and the test "is not powerful" -- that caveat protects against over-reading a PASS, and
+this is a rejection, so it does not apply.  Nor does it rest on the weakest arm: struct
+beta=0.8's mean law is REJECTED in cont.188 (chi2/dof 8.88, p 0.003), so drop it entirely and
+the two surviving configurations still differ by 58.222% +/- 2.644% = 22.0 sigma.
+
+THE 1/M CONTROL, WITHOUT WHICH THIS TEST DOES NOT ISOLATE ESS.  Three configurations differ
+in more than their ESS, so a disagreeing ESS-unit slope only indicts ESS if a comparable fit
+in M units does not disagree just as badly.  Nobody expects a universal slope in M units --
+absorbing configuration differences is the entire selling point of the ESS hypothesis -- so
+the M column is what says whether ESS did the job it was proposed for:
+
+      units     common slope      chi2   dof            p        span   survivors differ by
+      1/ESS         -11.552%    525.80     2   6.7e-115      71.67%          22.0 sigma
+      1/M           -11.641%   1223.27     2   2.4e-266     145.16%          34.5 sigma
+
+So ESS does DO something: it roughly halves the cross-configuration inconsistency (span 145%
+-> 72%, 34.5 -> 22.0 sigma).  It just does not come close to removing it.  The correct
+statement is therefore NOT "ESS is irrelevant" but "ESS absorbs about half the configuration
+dependence and no single linear ESS-unit slope describes all three configurations".
+
+WHY THE COMPARISON IS MEANINGFUL AT ALL, since the first instinct is that these are two
+arbitrary unit choices.  A UNIFORM rescale of the abscissa leaves the common-slope chi2
+EXACTLY unchanged -- every slope and every error scale by the same 1/c and the statistic is
+invariant.  So the whole 145% -> 72% improvement is the NON-UNIFORM part: how ESS/M actually
+varies between configurations.  That is the quantity of interest, and it is what is measured.
+
+BUT IS IT ESS, OR JUST A FITTED EXPONENT?  ESS ~ 0.948*M^0.825 for nbr, so a large part of
+what the ESS abscissa does might be nothing but changing the exponent on M -- a one-parameter
+change available to anyone, carrying no effective-sample-size content whatsoever.  The
+control is to refit the common slope in units of 1/M^p for a UNIVERSAL p (the same for every
+configuration -- the strongest form: if even the BEST universal power law matches ESS, then
+ESS adds nothing beyond an exponent).  `scripts/ess_exponent_control.py` reproduces this:
+
+        p      common a      chi2      span     2-cfg sigma
+      0.05      -56.506%    651.75   305.22%       23.2
+      0.10      -31.711%    692.45   181.54%       24.2
+      0.20      -19.692%    778.77   126.78%       26.2
+      0.30      -15.998%    868.55   115.63%       28.0
+      0.40      -14.345%    956.91   115.77%       29.7
+      0.825     -12.152%   1203.70   139.23%       34.0
+      1.00      -11.641%   1223.56   145.16%       34.5
+      ESS       -11.552%    525.80    71.67%       22.0
+
+READ THE SPAN, NOT THE chi2, AND HERE IS THE CONCRETE REASON.  As p -> 0 the regressor
+M^-p -> 1 for every rung, the slope becomes unidentifiable, the errors blow up, and chi2
+falls for want of power while the span EXPLODES to 305%.  The p=0.05 row is that degeneracy,
+not a good fit.  Span is the effect size that does not degenerate, and the minimum over the
+whole scan is 115.6% near p ~ 0.3 -- still 1.6x ESS's 71.7%, and never close to it.
+
+Note also that at p = 0.825, the exponent ESS itself follows for nbr, chi2 is 1203.7 against
+1/M's 1223.3: changing the exponent alone buys essentially NOTHING.  What works is the
+CONFIGURATION-SPECIFIC part of ESS -- struct's ESS goes as M^0.42 where nbr's goes as
+M^0.825 -- plus the per-rung departures from any power law.  That part reflects actual weight
+concentration, so "partial but REAL rescaling" is earned rather than assumed, and the ESS
+concept is not a relabelled exponent.
+
+SCOPE, STATED NARROWLY.  This refutes a LINEAR 1/ESS law.  If the true relation were curved
+in 1/ESS and the three configurations spanned different ESS ranges, different local slopes
+would follow without ESS being the wrong variable.  The sign flip in the table makes that a
+stretch, but it is not excluded, so the claim written down is the linear one.
+
+### 3. THE PARAMETER-FREE CORRELATION TEST, WHICH IS WHERE THE RESULT ACTUALLY LIVES
+
+The correlations among the displayed differences D_M = d_M - d_M16 are EXACT consequences of
+the nesting -- no fitted parameter enters, and the common pin noise cancels -- so they are
+predictions rather than bounds.  Substituting ESS for M in that prediction makes it worse in
+all three configurations, at all thirteen rung pairs, without exception (nsig = |meas-pred|/sd):
+
+      configuration        pairs   plain nsig                 ESS nsig
+      nbr    beta=0.0        3     0.9  2.2  1.3              3.2  3.5  1.9
+      struct beta=0.0        5     4.1  4.0  2.6  2.2  1.4    8.0  8.4  7.2  5.7  4.0
+      struct beta=0.8        5     3.3  3.1  1.5  0.2  0.4    6.1  5.0  3.2  1.5  2.1
+
+Read honestly.  For nbr the plain prediction sits inside the noise and the ESS substitution
+sits outside it.  For struct NEITHER is fully consistent -- the plain form is off by 4.1
+sigma at the tightest pair -- so this is not "plain works, ESS fails"; it is "ESS is roughly
+twice as far off as plain, everywhere".  That is the claim, and it is weaker than a clean
+pass for the plain form, which struct does not give.
+
+HOW MUCH INDEPENDENCE IS ACTUALLY HERE, AND WHERE THE WEIGHT REALLY SITS.  Within a
+configuration the pairs share the same D vectors, so the five struct entries are NOT five
+independent tests and must not be read as compounding.  But "the same direction in 3
+independent datasets" is not the argument either: a sign test on three units is 0.5^3 = 0.125,
+which is no evidence at all, and the same discipline that declines to count 13 pairs as 13
+tests has to decline to count 3 as 3.  THE WEIGHT IS IN THE MAGNITUDES, not the direction
+count -- 8.0 against 4.1, 8.4 against 4.0.  Summarised as the median ratio of ESS nsig to
+plain nsig per configuration: 1.6 (nbr), 2.6 (struct b=0.0), 2.1 (struct b=0.8).  The median
+is the right summary because two of struct beta=0.8's ratios are 7.5 and 5.2 only by virtue
+of denominators of 0.2 and 0.4; those two must not be quoted.  Note also that rho is
+parameter-free, so struct beta=0.8 remains usable here even though its MEAN law is rejected --
+that rejection is about the fit, and no fit enters this test.
+
+### 4. <1/ESS> vs 1/<ESS> IS A 16.3% EFFECT AND THE FIT USES THE RIGHT ONE
+
+The bias law is per row, so the abscissa is a MEAN OF RECIPROCALS.  1/<ESS> differs from
+<1/ESS> by 1 + Var(ESS)/<ESS>^2, and this is a BIAS, not a variance: more rows measure it
+better and do not shrink it.
+
+BUT BE PRECISE ABOUT WHAT IT CAN AND CANNOT MOVE, because the loose version over-retracts
+cont.188.  A UNIFORM rescaling of an abscissa is absorbed entirely into the fitted slope and
+leaves chi2 EXACTLY unchanged.  Only the M-DEPENDENT part of the gap can move a chi2.  Here
+the gap is in fact M-dependent -- 1.000, 1.060, 1.112, 1.144, 1.163 across the nbr rungs --
+so it does move it, along with the 4.5% power-law residual; but the mechanism is the 16%
+VARIATION across rungs, not the 16% level.  Accordingly cont.188's mean-axis chi2 values are
+NOT invalidated by the Jensen correction as such.  They are retracted for the reason in §1 --
+Delta chi2 = 1.35 at 3 dof is inside the statistic's own noise -- which stands on its own and
+does not need the abscissa argument.  The two are separate and only §1 is load-bearing.
+
+### 5. LIMITATIONS
+
+- ONE DRAW SEED (777) per configuration.  The three files are three CONFIGURATIONS, not three
+  seeds; there is no independent check on any single configuration's covariance, and the
+  jackknife is taken on trust within each.  §2 and §3 draw their strength from agreement
+  ACROSS configurations, which is the part that does not need a second seed.
+- §3's plain-form failure for struct (4.1 sigma) is unexplained and is NOT claimed as a pass
+  for the plain nesting law.  It is a separate open question from the ESS one.
+- struct beta=0.8's mean law is rejected, so its row in §2 is a fit parameter of a failing
+  model; §2 is quoted both with and without it for that reason.
+
+Next: the k=8 pool-shard arms (cont.189 §6c) once the smoke tests 15869286-93 clear; a second
+draw seed for nbr with `i_row` would give §3 the independent covariance check it lacks.
+
+## 2026-08-19c  cont.189 — pool halves: the A/B split, and its gain PREDICTED before running
+
+Files: `sbsi/catalogue_prior.py` (new `pool_shard_indices`, `pool_half_indices`),
+`scripts/eval_score_catprior.py` (`--pool-half`, `--pool-split-seed`),
+`scripts/combine_catprior.py` (`pool_halves_report`, `irreducible_term` — signed, NOT
+clipped at zero, see §6b — `a_verdict`,
+`jackknife_blindness_check`, `halves_block`, `halves_aggregate`, and the grouping key
+replaced by `run_identity` + `assert_group_is_replicates` — see §5),
+`jobs/job_score_catprior.sh` (`HALF`/`SPLIT`, and the output path now carries them),
+`tests/test_catprior_ladder_fit.py` (+35 tests, 226 passed / 1 skipped).
+Ruff on the touched files: 32 hits, all pre-existing cosmetic F541/E702 on lines outside
+this work; none in the code added here.
+
+THREE COLLISIONS FOUND AND FIXED WHILE WIRING THIS UP, all of which would have destroyed
+the measurement SILENTLY — none of them errors, which is why each had to be found by
+looking rather than by running:
+  - the combine GROUPING KEY had no `pool_half`, so arms A and B would have landed in one
+    group and been AVERAGED as if they were two draw seeds — erasing the exact difference
+    the run exists to measure;
+  - the same key had no `pool_split_seed` either, so several splits of the SAME half would
+    have been pooled as draw seeds, relabelling pool-to-pool scatter as seed scatter and
+    feeding it to `seed_scatter_check` as though it were a covariance cross-check;
+  - the job script's OUTPUT PATH had no `pool_half`, so arm B would have overwritten arm
+    A's `.npz` and left one file where the pair should be.
+All three now carry the split identity, each with a comment saying why.  The second was
+found only by running the synthetic fixture END TO END and reading the group header, which
+said `6 run(s), draw seeds [99, 99, 99, 99, 99, 99]` — six identical seeds is not a
+plausible replicate set, and that line was the only visible symptom.
+
+END-TO-END CHECK ON FILE-SHAPED INPUT (`$CLAUDE_JOB_DIR/tmp/synth_halves.py`, scratch).
+Six synthetic A/B split pairs with a KNOWN irreducible term injected at 0.150% rms, run
+through `load` -> grouping -> `halves_block` -> `halves_aggregate`.  Recovered 0.126% rms at
+the top rung; with 6 splits the sampling error on an rms is ~32%, so that is consistent.
+The blindness check read BLIND (scatter 0.051 vs sampling error 0.050), which is correct for
+this fixture since no galaxy-dependent pool effect was injected.  THE PIN GATE ALSO PROVED
+ITSELF HERE: the first draft of the fixture drew the shared galaxy term separately per arm,
+so the arms did not share rows, and the gate fired on every split and refused to interpret
+anything below it.  That was a fixture bug, and the gate caught it exactly as designed.
+
+NOT YET RUN — this entry registers the design and the prediction
+BEFORE any number exists, which is the point of writing it now rather than afterwards.
+
+1. WHAT THE TEST ASKS.  The draw pool IS the scored rows (`eval_score_catprior.py`, the
+   `cell_pool = cell_row` line).  So restricting the pool to half the catalogue leaves the
+   galaxies being scored completely untouched and changes only which atoms are drawn to
+   marginalise over.  Arm A and arm B take exact complementary halves; `d_A - d_B` then asks
+   whether the answer depends on WHICH half of the catalogue supplies the prior.
+
+   The split has its OWN seed, deliberately not the draw seed.  The two arms must share
+   their draw randomness for the difference to be paired, so the split has to stay put when
+   `--draw-seed` moves.  Folding the seeds together would silently unpair the comparison —
+   pinned by `test_the_split_is_INDEPENDENT_of_the_draw_seed`.
+
+   HARD GATE: the pin arm never reads the pool, so `pin` must come out bit-identical between
+   the halves.  If it moves at all the split touched something it should not have and
+   nothing downstream is worth reading.  Same shape as the `pin across runs: identical`
+   check used for the two seeds in cont.188.
+
+2. THE PAIRING GAIN, PREDICTED BEFORE THE RUN.  An earlier heuristic — "gain near 1 means
+   the pairing failed" — DOES NOT TRANSFER to this test, and applying it here would have
+   misled.  In the grid comparison the arms shared everything but the grid, so a gain near 1
+   could only be breakage.  Here the varied quantity is entirely unshared: arm B's pool is
+   the exact complement of arm A's, zero overlap by construction.  The pool contribution to
+   the variance therefore CANNOT cancel; only the scored-row contribution can.  A modest
+   gain is the expected outcome and is itself the measurement, not a symptom.
+
+   So the gain must be predicted first, from the variance split already measured on the two
+   nbr b=0.0 seeds.  Pooling two seeds gives ratio = (1-f) + f/2, so f = 2(1-ratio) is the
+   draw-noise share.  The galaxy part cancels in the paired difference; writing Vsurv for
+   whatever does NOT cancel, gain = sqrt(1 + Vgal/Vsurv).  The table below takes
+   Vsurv = Vdraw, i.e. sqrt(1/f) — READ THE TWO PARAGRAPHS THAT FOLLOW IT BEFORE USING IT:
+   that substitution is an assumption, it is wrong in a known direction, and the corrected
+   form makes this table an UPPER BOUND rather than a central case.
+
+       M     var(pooled)/var(single)   draw share f   sqrt(1/f) = UPPER BOUND
+       1              0.709                0.582           1.31
+       2              0.755                0.490           1.43
+       4              0.850                0.300           1.83
+       8              0.896                0.208           2.19
+      16              0.946                0.108           3.04
+
+   f falls with M as it must — more draws, less draw noise.
+
+   BUT f IS THE DRAW SHARE, AND THE HALVES TEST IS EXPOSED TO THE POOL SHARE.  These are
+   different components and identifying them is an ASSUMPTION, not a consequence.  f came
+   from pooling two seeds that share rows AND pool, so it measures what the DRAW SEED
+   carries.  The halves test holds rows and draw seed fixed and varies the POOL — the very
+   thing the seed experiment held constant and therefore could not measure.  The algebra
+   gain = sqrt(1 + Vgal/Vpool) is sound; the step Vpool = f x Vtotal is the substitution.
+
+   The exposure is not small.  With x = Vpool/Vdraw, and Vsurv = Vdraw(1+x) the variance
+   that SURVIVES the pairing, gain = sqrt(1 + (1-f)/(f(1+x))):
+
+       M      x=0      x=1      x=2      x=4
+       1     1.31     1.17     1.11     1.07
+       2     1.43     1.23     1.16     1.10
+       4     1.83     1.47     1.33     1.21
+       8     2.19     1.70     1.51     1.33
+      16     3.04     2.26     1.94     1.63
+
+   THE GAIN CANNOT GO BELOW 1, and this is structural, not an empirical range.
+   gain^2 = (varA + varB)/(varA + varB - 2cov), so gain < 1 requires cov < 0 — the two arms
+   would have to be ANTI-correlated.  Independent arms give exactly 1.  Any table of
+   predicted gains containing a sub-1 entry has an algebra error, and the specific error to
+   watch for is writing sqrt(1/f)/sqrt(1+x): that scales the whole ratio instead of only the
+   Vgal/Vsurv term and silently drops the leading `1 +`.  (Caught exactly this way once.)
+
+   AND x IS NOT FIXED — IT GROWS WITH M.  Vdraw falls as 1/M, but Vpool does NOT vanish as
+   M -> infinity: at infinite draws the estimator converges to the EMPIRICAL-POOL integral,
+   not the true prior integral, and which rows are in the pool still matters.  So
+   Vpool = a + b/M with a > 0, and x = Vpool/Vdraw rises up the ladder.  The x=0 column is
+   therefore progressively OPTIMISTIC toward the top: 3.04 at M=16 is an upper envelope,
+   not a central value.  Note this is why the bound is TIGHTEST at low M — the opposite of
+   what one might guess, and it means the low-M points are the quotable ones.
+
+   Two consequences, and the second is the more interesting:
+
+   (i) GRADE THE RUN ON THE MONOTONE RISE, NOT THE FIVE VALUES.  The rise is robust — it
+       holds for every x in the table above, because the shared component's share falls
+       with M regardless of the ratio.  The point values are the x=0 UPPER BOUND, with the
+       ratio named as its assumption.  So: a flat or FALLING gain says something real and
+       is a failure; missing a point prediction does not.  Order of magnitude (~1.1 rising
+       to ~1.6-3.0, bounded above by the x=0 column) plus monotonicity is the
+       pre-registered criterion.
+   (ii) THE GAIN SHOULD RISE AND THEN SATURATE, at sqrt(1 + Vgal/a).  That saturation level
+       MEASURES a, the irreducible finite-catalogue term — the part of the error that more
+       draws cannot remove because it is set by which rows the catalogue contains.  That is
+       a quantity worth having in its own right, and this test can deliver it.  Watch for
+       the knee, not just the slope.
+
+   THE DRAW COMPONENT DOES NOT CANCEL IN THE PAIRING.  Checked in the code rather than
+   assumed: `draw_indices` does `idx = rng.integers(0, pool_size, ...)`.  Both halves are
+   the SAME size, so the index array is bit-identical between the arms — but it indexes
+   DISJOINT row sets, so the realised atoms are effectively independent.  Nothing about the
+   draw cancels.  What cancels in the halves comparison is the GALAXY term (same rows, same
+   shape seed); what cancels in the SEED comparison is the POOL (same catalogue).  Those
+   are different experiments and this is the correction that matters:
+
+       seed comparison   pool fixed, draws vary   ->  measures Vdraw       (this is f)
+       halves comparison rows fixed, pool varies  ->  Vdraw + Vpool survive
+
+   CONSEQUENCE: Vsurv/Vdraw = 1 + x >= 1 STRICTLY, so sqrt(1/f) (the x=0 column) is a
+   STRICT UPPER BOUND on the gain
+   at every rung, not merely a central case.  It is tightest where Vdraw dominates and
+   loosest where Vpool does.  Since Vdraw ~ 1/(M x N_rows) while Vpool is a coherent shift
+   that does NOT average down over rows, k grows up the ladder — so the bound is nearly
+   attained at LOW M and progressively loose at HIGH M.  (Stated against the f-based
+   prediction actually logged here.  Against a Vpool-based prediction the exposed end is
+   the opposite one; naming the baseline is what fixes which end is which.)
+
+   READING `a` OFF THE RUN — the payback, and worth more than the caveat costs.  At the top
+   of the ladder Vdraw has died, so what remains in `d_A - d_B` IS the pool term.  With
+   disjoint 1/n shards each arm sits at 1/n of the production pool, so under a ~ 1/N_pool:
+
+       var(d_A - d_B) = 2 * n_shards * a_prod        (at n=2, a_prod = var(A-B)/4)
+
+   Verified on a toy: disjoint halves of a size-N pool, var(A-B)/4 recovers the full-pool
+   variance to 3% over 4000 trials.  This turns the halves run from a validity check into a
+   MEASUREMENT of the irreducible finite-catalogue error — the part the ladder can never
+   reach, because the ladder only probes the 1/M term.
+
+   THE SATURATION SURVIVES THIS CORRECTION.  Worth stating, because the natural reaction to
+   "the bound goes slack at high M" is to fear the knee went with it.  It did not: Vsurv =
+   Vdraw + Vpool falls monotonically toward a, so the gain still rises monotonically and
+   still saturates at sqrt(1 + Vgal/a).  x growing with M only makes the APPROACH slower
+   than the x=0 column suggests.  Monotonicity holds at every x in the table.
+
+   THE JACKKNIFE CANNOT SEE `a`, WHICH IS WHY THE SCATTER ACROSS SPLITS IS THE ESTIMATOR.
+   The block jackknife resamples GALAXIES, not the pool.  A different pool shifts every row
+   coherently, so that shift enters every leave-one-block replicate identically and its
+   jackknife variance is ZERO.  `sd_paired` is therefore blind to `a` by construction, and
+   is instead the NOISE FLOOR the across-split scatter must beat — `irreducible_term`
+   subtracts it rather than ignoring it (`test_the_sampling_floor_is_SUBTRACTED_not_ignored`
+   fails if that subtraction is dropped).  This is a second, independent reason a single
+   split is worthless here: with n = 1 there is no scatter at all, and the function returns
+   `None` rather than a number.
+
+   BUT THAT BLINDNESS IS EXACT ONLY IN THE COHERENT LIMIT, and the failure runs the
+   NON-CONSERVATIVE way.  Zero jackknife variance holds for the part of a pool change that
+   is a coherent offset — the same displacement for every galaxy.  Any galaxy-DEPENDENT part
+   is different: galaxies weight the pool rows differently, and that part IS visible to a
+   block jackknife over galaxies.  Where it exists, `sd_paired^2` contains a slice of the
+   very thing it is being subtracted away from, so the subtraction OVER-subtracts and `a`
+   comes out BIASED LOW — i.e. the irreducible catalogue error looks smaller than it is.
+   That is the direction that over-claims precision, so it must not ride on an assumption.
+
+   FREE DIAGNOSTIC, once several splits exist (`jackknife_blindness_check`).  If the
+   jackknife is genuinely blind, `sd_paired` should be near-identical from split to split:
+   same galaxies, same blocks, same draw machinery, only pool membership changing.  Scatter
+   beyond its own sampling error — about 1/sqrt(2(B-1)) = 5.0% fractional at B=200 blocks —
+   is direct evidence the jackknife is seeing pool structure and the subtraction is eating
+   real signal.  This converts the coherence argument from an assumption into a MEASURED
+   statement, at no extra cost.  `test_over_subtraction_biases_the_irreducible_term_LOW_not_high`
+   pins the direction so it cannot be misremembered later.
+
+   TWO CONDITIONS ON QUOTING `a`.  (1) The 1/N_pool scaling is an ASSUMPTION and halves
+   alone cannot test it; `pool_shard_indices` generalises the split to any shard count, so a
+   quarters arm gives a second pool size and turns the assumption into a measurement.
+   (2) It is only clean where Vdraw has died, i.e. the top rung — which is also where the
+   pairing caveat above is harmless, so both point at the same end of the ladder.
+
+   INDEPENDENCE OF THE TWO SEEDS' DRAW COMPONENTS, which the f = 2(1-ratio) inversion
+   assumes.  If the draw components correlated at rho_d the inversion would be
+   f = 2(1-ratio)/(1-rho_d) and the whole column would shift.  Here rho_d = 0 BY
+   CONSTRUCTION, not by measurement: `drng = np.random.default_rng(args.draw_seed)` with
+   seeds 99 and 2024 gives two independent streams, and the draw component is a
+   deterministic function of that stream once rows and pool are fixed — which they are, as
+   the xhat digests match pair-for-pair.  The -0.788 anti-correlation reported in cont.188
+   is a POST-FIT residual correlation on a 2-parameter fit of 5 points, a different object
+   entirely, and it cannot propagate into rho_d without the RNG streams themselves being
+   dependent.  Noted rather than assumed silently.
+
+3. SCOPE — WHAT THIS TEST DOES NOT ASK.  Three limits, stated up front for the same reason
+   the rho block in cont.188 was scoped:
+
+   (a) It probes WHICH ROWS enter the sum, not how the pool sets the scale.  Note the scale
+       is not pool-derived at all: `standardized_pool` transforms through the TRAINED
+       `est.bundle.condition_preprocessor`, so standardisation is fixed by the model and is
+       identical in both arms and in the full-pool run.  There is no pool-fitted scale for
+       the split to perturb.
+   (b) Each arm sits at HALF the pool size, hence at a different ESS from production.  So
+       this measures row-identity sensitivity at fixed half-size pool and says nothing about
+       ESS scaling — that is the ladder's job.
+   (c) (A + B)/2 DOES NOT reproduce the full-pool run, and should not be expected to.  The
+       estimator is self-normalised (`ghat = sum s / sum I`), hence nonlinear in the pool;
+       the halves do not average back.  Neither half nor their mean is comparable to the
+       full-pool run.  Only A against B is.
+
+4. ONE SPLIT WOULD BE n = 1.  A single A/B pair gives one difference with no handle on how
+   much of it is the split itself — the same low-dof trap as the two-seed chi2 in cont.188,
+   in a different costume.  Several independent splits (distinct `--pool-split-seed`) are
+   required so that `d_A - d_B` has a distribution rather than a value.  Nothing will be
+   quoted from a single split.
+
+5. THE BUG CLASS IS CLOSED, NOT JUST THE THREE INSTANCES.  All three had one shape: a
+   field that identifies a run missing from the grouping key.  The cause is that the key was
+   a BLACKLIST -- someone enumerates the fields to include, so every new dimension is
+   poolable by default until a human remembers it.  Adding `pool_half` and then walking into
+   the identical hole with `pool_split_seed` within the same session is the proof that
+   remembering is not a control.
+
+   INVERTED (`run_identity`): the key is now EVERY config field except a declared replicate
+   axis (`REPLICATE_AXES = ("draw_seed",)`) and a deliberately tiny ignore list
+   (`IDENTITY_IGNORE = ("save",)` -- the output path differs by construction and says
+   nothing about the measurement).  A field added to the eval script later is identifying
+   automatically.  Pooling now requires DECLARING an axis rather than remembering a field,
+   so instance four is impossible rather than merely findable.
+   `test_a_NEW_config_field_is_identifying_without_being_registered` fails if anyone
+   re-inverts it.
+
+   AND THE SYMPTOM IS NOW A GATE.  The only visible sign of instance two was a header
+   reading `draw seeds [99, 99, 99, 99, 99, 99]`; six identical seeds is not a plausible
+   replicate set, but it was printed, not asserted.  `assert_group_is_replicates` now
+   REFUSES to pool a group whose runs are not distinguished by the replicate axis, naming
+   the files.  That single assertion would have caught all three instances without anyone
+   anticipating any of them.
+
+   REGRESSION CHECK: the two real nbr seeds differ only in `draw_seed` and `save`, so the
+   inverted key reproduces the existing grouping exactly -- re-running the cont.188 headline
+   gives d_inf = -0.247% +/- 0.522%, chi2/dof 0.71, p = 0.545 and `pin across runs:
+   identical`, unchanged to the last digit.
+
+6. WHAT `a` ACTUALLY COSTS, before any GPU time is spent on it.  The error on `a` as an
+   amplitude is 0.5*sqrt(2/(n-1))/(1-q) for n splits, where q is the blindness floor as a
+   fraction of the across-split variance -- the floor subtraction inflates the error, so a
+   floor worth half the signal doubles it.  Each split is 2 runs:
+
+       n splits   jobs    q=0     q=0.25   q=0.5
+          4          8    41%      54%      82%
+          6         12    32%      42%      63%
+         14         28    20%      26%      39%
+         51        102    10%      13%      20%
+        201        402     5%       7%      10%
+
+   A 10% measurement of `a` costs ~102 jobs at ~75 min each, i.e. ~127 GPU-hours.  That is
+   not proportionate.  CONCLUSION: `a` is realistically an ORDER-OF-MAGNITUDE number here
+   (~30-40% at 4-6 splits), and should be quoted as one.  q is measurable from the first
+   pair of splits -- both terms are already printed by `halves_aggregate` -- so the plan is
+   8 jobs first, read q and the rough size of `a`, and only then decide whether more is worth
+   buying.  Registering the cost now stops "we have 6 splits" turning into a precision claim
+   later.  (The 8 jobs were originally 4 half-splits; §6c REPLACES that with k=8 at the same
+   job count, for 1.6x the significance.  The budget and the stop-and-read rule are unchanged
+   -- only how the catalogue is cut.)
+
+6a. THE SIGNIFICANCE OF `a` DOES NOT DEPEND ON HOW BIG `a` IS.  This is the sharper form of
+   the table above and it was nearly missed.  `a = (V - F)/(2*n_shards)` with V the
+   across-split variance; V is itself estimated from n samples, so it carries a fractional
+   error sqrt(2/(n-1)) that the excess inherits WHOLE.  Hence
+
+       significance = (1 - q) * sqrt((n-1)/2),        q = F/V
+
+   with the true value of `a` cancelling out entirely.  Verified numerically: at n = 4 the
+   median significance is 1.22 for an injected a of 0.1% AND for an injected a of 1.0% --
+   a ten-fold larger effect is detected no better.  Ceilings at q = 0:
+
+       n splits    4     6     9    19
+       max sigma  1.22  1.58  2.00  3.00
+
+   CONSEQUENCE FOR THE PLAN: 4 splits CANNOT yield a detection of `a` at any effect size --
+   1.22 sigma is the ceiling, before the jackknife floor makes it worse.  2 sigma needs 9
+   splits (18 jobs) and 3 sigma needs 19 (38 jobs).  So the 8-job run is a BOUND on `a`, not
+   a measurement of it, and that is what it will be reported as.  A bound is still worth the
+   8 jobs -- an upper limit on the irreducible finite-catalogue error is the thing the ladder
+   cannot otherwise reach -- but calling it a measurement afterwards would be wrong, and the
+   arithmetic saying so is here before the run rather than after.
+   (This also corrects an earlier working figure of "2.4 sigma at n = 4", which was the
+   AMPLITUDE error 41% converted as 1/0.41; the detection test is on the variance, so the
+   correct conversion is 1/(2*0.41) = 1.22.  The cost table itself was right.)
+   The derivation treats F as EXACT, and that is deliberate -- do not "improve" it by adding
+   an error term for F and wonder why the ceiling moves.  F is a mean of n jackknife
+   variances, each ~10% on the variance scale at B = 200, so ~10%/sqrt(n) of F, negligible
+   against V's 82% at n = 4 unless q is large; and V and F come from the SAME splits, so they
+   are positively correlated and the difference's error is smaller still.  Both effects make
+   the ceiling slightly conservative, which is the safe direction.
+
+6c. THE HALVES DESIGN IS THE WRONG SPLIT, AND 6a IS WHY.  Once the ceiling is written as
+   (1-q)*sqrt((n-1)/2), the question "how do I buy dof more cheaply" answers itself, and the
+   answer is not more half-splits.  A k-WAY shard split gives k-1 degrees of freedom from k
+   jobs; halves give 1 from 2.  And because the finite-catalogue term goes as 1/N_pool, a
+   k-way arm carries k*a_full, so the jackknife floor q is a SMALLER fraction of the signal
+   at larger k.  Both effects push the same way.  Simulated against the estimator itself
+   (a_full = 0.150% rms, floor 0.100%, 3000 trials, an honest leave-one-block-out jackknife):
+
+       design            jobs   dof     q     predicted   simulated
+       k=2, 4 splits       8      4   0.182      1.16        1.13
+       k=4, 2 splits       8      6   0.100      1.56        1.54
+       k=8, 1 split        8      7   0.053      1.77        1.84
+       k=8, 2 splits      16     14   0.053      2.51        2.50
+
+   Same 8 jobs, 1.84 sigma instead of 1.13 -- a factor 1.63 for free, purely from how the
+   catalogue is cut.  And 16 jobs at k=8 reach 2.50 sigma, i.e. an actual DETECTION-capable
+   run, which the halves design could not reach at any affordable cost (6a: 2 sigma needs 18
+   half-jobs, and that is at q=0).  The registered plan is revised accordingly: k=8, one
+   split, 8 jobs.  Note the per-job cost is UNCHANGED by k -- the shard restricts the DRAW
+   POOL, not the scored rows, so all 120k rows are still scored in every arm.
+
+   THE ASSUMPTION THIS LEANS ON, STATED: scaling a k-way arm back to the full pool uses
+   a ~ 1/N_pool.  A single k has to assume it.  TWO different k values test it, which is the
+   "add a second shard size" the halves code comment already flagged as missing -- so the
+   follow-up is k=4 (4 jobs), not more splits at the same k.
+
+   `shard_family_term` implements it and is validated against injected truth, recovering
+   a_full to 1.014 +/- 0.028 (k=2), 0.981 +/- 0.015 (k=4), 0.990 +/- 0.010 (k=8).  The
+   common galaxy term cancels out of the across-arm scatter exactly as it does out of a
+   paired difference -- the arms score the SAME rows -- so the floor is the jackknife scale
+   of the CENTRED arms, corrected by k/(k-1) for the variance the centring removes.
+   `test_the_COMMON_galaxy_term_cancels_out_of_the_across_arm_scatter` pins that by making
+   the shared term 100x louder and requiring `a` not to move.
+
+   THE CONSTANT-FLOOR ASSUMPTION IS MEASURED, NOT ASSUMED.  The table above holds F fixed as
+   k grows, which is why q comes out exactly proportional to 1/k; if instead the floor grew
+   with the shard count (smaller pools -> noisier arms), k=8 at 8 jobs would fall from 1.77
+   to 1.53 sigma and at 16 jobs from 2.51 to 2.16 -- the ordering would survive but the 16-job
+   run would only barely clear 2 sigma.  Worth settling rather than carrying, and both smoke
+   runs are on real data, so:
+
+       M    F_arm k=2 [%]   F_arm k=8 [%]   ratio
+       1        3.410           3.520        1.032
+       2        2.634           2.601        0.988
+
+   (k=2's per-arm floor is sd_paired/sqrt(2): the common galaxy term cancels in the
+   difference, so sd_paired^2 = F_A + F_B = 2*F_arm.)  Constant in k within 3%, with no
+   trend.  The MECHANISM says it should be: the shard restricts the DRAW POOL only, the
+   scored rows are identical in every arm, and F is galaxy jackknife noise over those rows --
+   so there is nothing in F for k to act on.  Production pools are 30x larger than these
+   smoke pools, which if anything makes the constancy safer.  The 1.77/2.51 figures stand.
+
+   TWICE DURING DEVELOPMENT THE SYNTHETIC WAS WRONG AND THE CODE WAS RIGHT, both times by
+   fabricating jackknife replicate scatter directly instead of doing a real leave-one-out.
+   Replicates scale as sigma/sqrt(B-1), not sigma*sqrt(B-1), and the full-sample value is
+   not an independent draw from them; the first version reported a ratio of -5609 and the
+   second a 5% bias that was also the harness.  The test helper `_shard_jk` builds per-block
+   contributions and does the real leave-one-out, and it is the thing to copy for any future
+   estimator test.  Validating against injected truth is what caught both.
+
+6b. HOW `a` IS REPORTED, FIXED NOW.  `irreducible_term` returns the SIGNED excess and does
+   NOT clip it at zero.  `a` is a difference of two noisy variances, so a negative draw is an
+   ordinary null result at small n; clipping a symmetric estimator at zero biases it upward,
+   and does so hardest in the low-signal regime -- exactly the regime 6a says every affordable
+   run lives in.  Clipping would therefore manufacture a detection out of noise precisely
+   where one is least warranted.  The rule, implemented in `a_verdict` and pinned by
+   `test_a_negative_draw_is_REPORTED_not_clipped`:
+
+       a > 2*sigma_a   ->  DETECTION;    quote sqrt(a) as a value.
+       otherwise       ->  UPPER LIMIT;  quote sqrt(max(0, a + 1.645*sigma_a)), one-sided 95%.
+
+   Zero-clipping is applied to the LIMIT and only to the limit: a bound on a variance cannot
+   be negative, whereas a point estimate must keep its sign or the estimator stops being
+   unbiased.  The end-to-end fixture confirms the rule behaves: with 0.150% injected and 6
+   splits it returned "< 0.182%" -- an upper limit, correctly bracketing the truth, and
+   correctly NOT a detection at 1.58 sigma.  Which branch fires is thus determined by n and q
+   alone, both of which are known before the run, so the choice cannot be made while looking
+   at the answer.
+
+VALIDATED END TO END ON REAL DATA.  k=2 smoke (15850164/65): pin gate identical across the
+halves, gain rising 1.28 -> 1.40, and the n=1 refusal firing.  k=8 smoke (15869286-93):
+pin gate identical across all eight arms, 7 dof, ceiling 1.87 printed above the table, and
+the M=2 rung returning a NEGATIVE a of -0.347% -- reported with its sign, quoted as an
+upper limit, exactly as §6b requires and as the old clipping would have hidden.
+
+Next: production k=8 arms submitted as 15869525/526/527/551/552/553/554/555 (nbr, 120k
+rows, ladder 1-16, draw seed 99, split seed 1).  Then k=4 (4 jobs) to test a ~ 1/N_pool.
+
+## 2026-08-19b  cont.188 — production ESS ladders: the closure passes for nbr, and the ESS conjecture is DEAD
+
+**Runs.** SLURM 15845013 (nbr, beta=0.0, 120k rows, seed 2024, ladder 1..16, 1h13m),
+15845011 (struct, beta=0.8) and 15845012 (struct, beta=0.0), both 60k rows, seed 99,
+ladder 1..64, ~2h20m each. All COMPLETED exit 0. Outputs `*_essr.npz` under
+`$DATA_DIR/sbsi_catprior/`; combined with `scripts/combine_catprior.py`. These three are the
+only runs carrying `ess_rung`, one draw seed per configuration, so the seed-scatter column is
+unavailable and the bars are within-run jackknife plus the inflation floor.
+
+### 1. THE GATE PASSES: struct's ESS spread really is far worse than nbr's
+
+Read first, because it decides whether the rest is interpretable. CV(ESS) at the deepest
+SHARED rung, M=16:
+
+    nbr  beta=0.0    CV 0.289     <ESS> 9.83 at M=16   efficiency 61.4%   ESS ~ M^0.82
+    struct beta=0.0  CV 0.568     <ESS> 5.84 at M=64   efficiency  9.1%   ESS ~ M^0.42
+    struct beta=0.8  CV 0.740     <ESS> 5.37 at M=64   efficiency  8.4%   ESS ~ M^0.43
+
+struct is 2.0-2.6x nbr in CV, and the efficiency gap is starker still (61% vs ~9%). The
+ESS power law is the sharper statement: nbr's ESS grows nearly linearly in M, so draws keep
+buying independent information, while struct's grows as M^0.42, so they largely do not. The
+account of struct's low ESS holds and struct's ladder may be read -- subject to section 3.
+
+The Jensen gap `<1/ESS>` vs `1/<ESS>` measured here, and it is NOT small: 1.15x (nbr),
+1.80x (struct b=0.0), 1.98x (struct b=0.8) at the deepest rung. Using `1/<ESS>` would have
+been a factor-2 error on the abscissa in the struct configurations.
+
+### 2. THE CLOSURE RESIDUAL IS CONSISTENT WITH ZERO FOR nbr, AND ONLY FOR nbr
+
+`d_inf` must be zero: both likelihoods are exact for these data. With the declared min-M
+cuts (M>=4 nbr, M>=16 struct), 1/M regressor:
+
+    nbr    beta=0.0   d_inf = -0.172% +/- 0.534%   chi2/dof 1.35  p=0.245   PASS
+    struct beta=0.0   d_inf = -0.348% +/- 0.772%   chi2/dof 0.15  p=0.703   UNRESOLVED
+    struct beta=0.8   d_inf = -0.350% +/- 2.153%   chi2/dof 8.88  p=0.003   LAW REJECTED
+
+All rungs, no cut: nbr d_inf = -0.126% +/- 0.533% at chi2/dof 0.70 (p=0.550) -- stable
+against the cut, which is the check that matters for an extrapolated intercept.
+
+The struct beta=0.0 row is NOT a pass and must not be reported as one. M>=16 leaves three
+rungs and two parameters, so chi2/dof 0.15 is 1 dof: the fit cannot fail. That is the
+project's own scar -- an unresolved measurement is not a pass -- and the honest statement is
+that this configuration has no power at the declared cut, not that it closed. Its all-rungs
+fit, which does have power, gives chi2/dof 2.64 (p=0.022) and d_inf = -1.531% +/- 1.057%.
+
+struct beta=0.8 is rejected at every cut (chi2/dof 10.79 all rungs, 8.88 at M>=16), which
+CONFIRMS cont.187's headline from an independent, deeper ladder: the beta>0 ladder is not a
+1/M law and its extrapolation is not usable.
+
+### 2b. TWO SEEDS POOLED: the closure passes with NO cut, and the cut was never needed
+
+Seed 2024 shares its galaxies with the earlier seed 99 run -- `pin across runs: identical`,
+and the two xhat digests match pair-for-pair -- so the two differ ONLY in draws and pool
+legitimately. Pooled, nbr beta=0.0, ALL FIVE RUNGS, no min-M cut:
+
+    1/M,  all rungs   d_inf = -0.247% +/- 0.522%   chi2/dof 0.71  p=0.545   (3 dof)
+    1/M,  drop M=1    d_inf = -0.179% +/- 0.525%   chi2/dof 0.52  p=0.597
+    1/ESS, all rungs  d_inf = +0.345% +/- 0.994%   chi2/dof 3.58  p=0.013
+
+This is the best-powered nbr fit in the arc and it supersedes the single-seed numbers above.
+
+AND IT RETRACTS THE CASE FOR THE M>=4 CUT. Seed 99 ALONE gives chi2/dof 3.45 (p=0.016) on
+the same rungs; seed 2024 alone gives 0.70 (p=0.550). At 3 dof, sd(chi2/dof) = 0.82 and the
+two differ by ~2.4 sigma if treated as independent -- but they share galaxies and pool, so
+only the draw component differs and they are consistent. Pooled they give 0.71. The earlier
+single-seed rejection that motivated cutting M=1,2 for nbr was DRAW NOISE, and it did not
+reproduce. The cut should be reported as mechanistically motivated (at M=1 the snapshot is
+not a mixture) and statistically UNRESOLVED -- not as measured. It is not needed for the
+deliverable: the closure passes on all five rungs without it.
+
+This is also the one place in the investigation where a pre-registered choice met fresh data
+with nothing chosen in between, and the honest reading of that test is that it removed a
+result rather than confirming one.
+
+STATUS OF THE TWO ANALYSES. The M>=4 cut is the PRE-REGISTERED analysis; the uncut
+all-rungs fit is NOT, because the cut was dropped after seeing that the fresh seed did not
+need it. That is a data-dependent choice and the uncut 3 dof must not inherit
+pre-registered status. Both are reported: pre-registered (M>=4, two seeds) d_inf =
+-0.157% +/- 0.524% at chi2/dof 0.06 on 1 dof -- UNRESOLVED, NOT A PASS: a chi2 that far
+below expectation says the errors exceed the scatter and the test had almost no resolving
+power, which is the project's standing rule and not a technicality. Post-hoc uncut d_inf =
+-0.247% +/- 0.522% at chi2/dof 0.71 on 3 dof. The uncut arm carries the claim, precisely
+because it has enough dof to have failed; dropping a cut also moves toward the more
+inclusive analysis and buys power, the conservative direction. That the two agree to 0.09%
+is a consistency remark, NOT a second confirmation.
+
+### 2c. WHY "the bar barely moved" and "the chi2 moved a lot" are BOTH true
+
+Pooling raises an apparent contradiction that had to be resolved rather than waved past: the
+d_inf bar shrinks only from 0.547%/0.533% to 0.522% (ratio 0.966, where independent seeds
+would give 0.707), which says the two seeds share most of their fluctuation -- yet their
+chi2 differ by a factor of five (3.45 vs 0.70), which says they do not. If both were about
+the same variance component, one of the two statements would have to be wrong.
+
+They are about DIFFERENT components, and the fit is what separates them. Measured on these
+two seeds, all five rungs, one specification:
+
+    corr( raw d(m) across seeds )        = +0.990     <- shared galaxy noise dominates
+    corr( fit residuals across seeds )   = -0.707     <- what the chi2 actually sees
+    d_inf bar,      pooled / single      =  0.966     (independent would be 0.707)
+    residual rms,   pooled / single      =  0.513     (independent would be 0.707)
+    draw share of total variance per rung: median 25%, range 10%-100%
+
+The intercept bar is set by the COMMON component -- a shared offset moves d_inf directly and
+cannot shrink when the seeds carry the same galaxies. The chi2 is set by the residual AFTER
+the two-parameter law is subtracted, and the fit absorbs the shared smooth part into d_inf
+and a, leaving a draw-dominated wiggle that does shrink. So the draw-noise reading of the
+chi2 swing SURVIVES, and it is now measured rather than asserted.
+
+SCOPE OF THE DRAW-NOISE FINDING, stated as narrowly as the data support it. With two seeds
+each rung's draw estimate carries 1 dof, so the per-rung shares are nearly uninformative
+individually. The 100% at M=4 is ONE excursion (d_99 = -3.600% vs d_2024 = -2.308%), and it
+carries most of seed 99's residual rms (0.421% against seed 2024's 0.141%). So the correct
+statement is NOT "the ensemble was draw noise" but "ONE RUNG FLUCTUATED, and it was the rung
+driving the rejection". That is still a legitimate finding -- the rejection did not
+reproduce -- but it is a statement about a single point, not about the ladder.
+
+The exact -0.7071 centered residual correlation is a coincidence of five points with two
+parameters removed; uncentered it is -0.788. It should not be read as structure.
+
+VERIFIED NOT AN ARTIFACT OF THE POOLING ARITHMETIC. Two checks, because a chi2 that drops
+when data are combined is exactly the shape of a manufactured pass:
+
+  (a) Residuals are taken against EACH SEED'S OWN fit, not the pooled fit. Against the
+      pooled fit, r_A + r_B = 2*r_pool identically and a small pooled residual would FORCE
+      the anti-correlation. Measured: max|r_A + r_B - 2*r_pool| = 0.294%, so the constraint
+      does not hold and the anti-correlation is a property of the data, not of the
+      definition.
+  (b) The covariance shrinks on pooling, rung by rung and in the physically required
+      direction -- var(pooled)/var(single) = 0.709, 0.755, 0.850, 0.896, 0.946 at
+      M = 1..16, bracketed by 0.5 (pure draw) and 1.0 (pure shared), with the draw share
+      largest at low M as expected. Substituting the UNSHRUNK single-seed covariance into
+      the pooled fit gives chi2/dof 0.38, LOWER than the quoted 0.71. So shrinking the
+      covariance made the test HARDER, not easier, and 0.71 is the conservative of the two.
+      NOTE WHAT THIS DOES AND DOES NOT SHOW: it establishes that shrinking the covariance
+      made the test harder, NOT that the covariance shrank by the same factor the residuals
+      did. It did not -- see the sensitivity block below, which is where that gap is closed.
+
+SENSITIVITY: WHAT WOULD HAVE TO BE TRUE FOR THE PASS TO FAIL ON THE CORRELATION AXIS.
+The heading is scoped deliberately: what follows varies ONE parameter, the residual
+correlation rho between seeds, holding the covariance normalisation fixed. It is not a
+global robustness claim. The second axis is quantified at the end of the block.
+
+The pooled chi2/dof of 0.71 IS flattered, and the mechanism is now quantified rather than defended. The covariance
+shrinks on pooling to sigma ratios 0.842-0.973 per rung, while the residuals shrank to
+0.513; that mismatch is what puts the chi2 at 0.71 instead of near 1.4, and it traces
+entirely to the measured residual anti-correlation. Since rho = -0.788 on five points with
+two parameters removed is only ~1.4 sigma from zero (sd(rho) ~ 0.58 at 3 effective dof), it
+must not be built on -- so the fit was re-read across the whole range of rho:
+
+    rho        pooled/single   chi2/dof       p
+    -0.788         0.513         0.71       0.546     <- MEASURED
+    -0.474         0.598         0.97       0.408
+     0.000         0.707         1.35       0.256     <- NULL: independent draw noise
+    +0.500         0.807         1.76       0.153
+    +1.000         0.895         2.17       0.090     <- maximally pessimistic
+
+THE FIT IS NEVER REJECTED ANYWHERE IN THE PHYSICAL RANGE OF RHO. At the null the story itself
+predicts -- draw noise independent across seeds -- the pooled fit sits at chi2/dof 1.35,
+p = 0.256, still a pass. At rho = +1, the worst case the parameter admits, p = 0.090, still
+above 0.05. So the deliverable does not depend on the anti-correlation being real, and the
+honest headline is not the 0.71 but this: no value of rho, anywhere in its accessible
+range, turns the pass into a failure on its own.
+
+THE SECOND AXIS: COVARIANCE NORMALISATION. rho is not the only way the fit could be
+flattered -- an overestimated covariance shrinks chi2 just as an anti-correlation does, and
+the two multiply. Since chi2 scales as C_used/C_true, the headroom is exact:
+
+    rho = -0.788 (measured)   chi2/dof 0.71   C would have to be 267% too large to fail
+    rho =  0.000 (null)       chi2/dof 1.35   C would have to be  93% too large to fail
+    rho = +1.000 (max pess)   chi2/dof 2.17   C would have to be  20% too large to fail
+
+(failure = p < 0.05 at 3 dof, i.e. chi2/dof > 2.605.)
+
+Read that against the covariance's OWN sampling error rather than by eye. A 200-block
+jackknife carries roughly sqrt(2/199) ~ 10% error in variance, so the realistic corner has
+~9 sigma of headroom and the maximally pessimistic corner ~2.0 sigma. The pessimistic
+corner is therefore comfortable but NOT comfortable-by-inspection, and that is the honest
+way to state it: 20% is two standard errors of the jackknife, not an unreachable margin.
+The per-rung shrink already sits inside the 0.5-1.0 bracket, which is the independent check
+that C is not grossly overestimated, so nothing here moves the conclusion.
+
+  WHICH WAY THAT 2.0 SIGMA ERRS: the 10% is the error on a SINGLE variance element, used
+  here as a proxy for a GLOBAL rescaling of the whole 5x5. A global scale averages over the
+  diagonal, so its true error is smaller -- bounded below by 10%/sqrt(5) = 4.5% if the
+  elements were independent, and in between in practice since all five share the same 200
+  blocks. The pessimistic corner is therefore 2.0 to 4.5 sigma, not 2.0 flat. The 2.0 is
+  quoted deliberately: it is the conservative floor, which is what a sensitivity block
+  should carry. The approximation errs toward understating the margin, never overstating.
+
+  HARTLAP IS APPLIED, and the 0.71 already includes it. `fit_ladder` scales the inverse by
+  (N-p-2)/(N-1) with N the block count and p = mask.sum(), i.e. the DIMENSION OF THE DATA
+  VECTOR, not the parameter count -- the two conventions differ and only the former is
+  Hartlap. At N=200, p=5 the factor is 193/199 = 0.9698, so the uncorrected chi2/dof would
+  be 0.732 rather than 0.71: a 3.1% systematic, named here rather than absorbed, because a
+  block that quotes a 20% margin should not leave a 3% term unstated. It goes the
+  conservative way in any case -- an uncorrected chi2 is too LARGE, so omitting it would
+  understate the pass. Caveat already in the fit docstring: jackknife replicates are not
+  independent samples, so N=200 is generous and the corrected bars stay slightly
+  optimistic.
+
+Taken together the statement is a two-parameter one: no value of rho fails on its own, and
+failing at the pessimistic rho additionally needs the covariance wrong by 20% in variance,
+about 2 sigma of its sampling error. That joint form is stronger than quoting 0.71 alone,
+and it is the form to cite.
+
+Normalisation note, since a reader will try the formula: the 0.513 residual-rms ratio is
+pooled rms divided by the QUADRATURE MEAN of the two single-seed rms values. With the
+measured unequal variances (0.421% and 0.141%) and rho = -0.788 the formula predicts
+0.513, reproducing it exactly. The equal-variance formula predicts 0.326 and is not the
+same quantity.
+
+A STALE DOCSTRING was found and fixed while checking this: `fit_ladder` still claimed
+`C = C_jk + C_seed/S` in its header while the body had removed that term as a double count
+and explained why. The header now states what the code does and records the separation
+above, since the wrong reading is exactly the one that produced the apparent contradiction.
+
+### 3. AMENDMENT 4(b) IS REFUTED -- per configuration FIRST, across configurations second
+
+The conjecture was that `1/ESS` is the right regressor. It is not, and the decisive evidence
+is the across-configuration test (AMENDMENT 5), which the within-ladder chi2 cannot give:
+
+    a in 1/ESS units    nbr b=0.0  -9.970% +/- 0.700%
+                        struct b=0.0  -60.786% +/- 2.707%
+                        struct b=0.8   +5.749% +/- 2.681%
+    common value -12.020%,  chi2 = 376.93 / 2 dof,  p < 1e-4,  spread 66.5%
+
+If the bias tracked ESS, `a` in ESS units would be ONE number across configurations. It
+spans 66.5% including a SIGN CHANGE, at p < 1e-4.
+
+BUT THAT IS CORROBORATION, NOT THE PRIMARY EVIDENCE, and the ordering matters. Those three
+slopes are the `a` column of the 1/ESS fits, and ALL THREE OF THOSE FITS ARE THEMSELVES
+REJECTED: chi2/dof 5.56 (p=0.001) for nbr single-seed, 3.58 (p=0.013) pooled over two seeds,
+178.55 (p<1e-4) for struct b=0.0 and 10.37 (p<1e-4) for struct b=0.8. A slope from a rejected
+fit does not estimate anything, so quoting the 66.5% spread as the measure of disagreement
+over-states its precision -- part of that spread is simply three bad fits landing where they
+land.
+
+The defensible statement is therefore: the 1/ESS description fails PER CONFIGURATION, at the
+first hurdle, in every configuration measured; the across-configuration incompatibility is
+consistent with that rather than being the load-bearing evidence. The common-slope test would
+have been decisive only if the individual ESS-unit fits had been ACCEPTABLE and the slopes had
+still disagreed. It is also 2 dof, so a pass there would have been weak evidence either way.
+
+The regressor behind every per-configuration chi2 quoted in this section is 1/ESS; the 1/M
+numbers are in section 2. 4(b) is reported as refuted.
+
+Within-ladder the discrimination is cleanest in the POOLED two-seed nbr fit, which has 3 dof
+and real power: p(1/M) = 0.545 against p(1/ESS) = 0.013. Single-seed the same comparison runs
+0.550 vs 0.001 (nbr) and 0.022 vs 0.000 (struct b=0.0).
+
+LIMITATION, stated because it cuts against the tidy version: under the declared M>=4 cut the
+nbr verdict FLIPS (p(1/M)=0.245 vs p(1/ESS)=0.452), because the cut leaves 1 dof and neither
+model can be rejected there. That is an argument against the cut -- see section 2b, where two
+seeds show it was never warranted -- not against the comparison. Uncut and pooled, the
+discrimination is unambiguous.
+
+### 4. Row-weighted abscissa: not computable on these runs, as predicted
+
+All three predate the `<rung>_i_row` field (added mid-flight, 2026-08-19), so the readout
+printed its unbounded-error notice rather than a reassuring zero. The weighted abscissa,
+the Cov(I_i, 1/ESS_i) readout and the denominator-bias diagnostic all await the next runs.
+
+### 5. `SLOPE_FLOOR` replaced by `slope_floor(K)` -- the single number was wrong
+
+Injection grid (exponents 1.0/0.7/0.5/0.3, 4 seeds, 6000 rows, at the production rung sets)
+shows the recovery bias is FLAT in the true exponent (0.026/0.025/0.024/0.023 at K=5) and
+falls as 1/K in ladder length: 0.034 (K=4), 0.026 (K=5), 0.019 (K=7), i.e. `bias ~ K^-1.03`
+with `bias*K` constant to 1.8%. The fixed 0.10 came from ONE injected truth at ONE depth on
+a single seed and was 3-5x too conservative -- too loose on long ladders, discarding
+sensitivity exactly where the measurement is best. Now `slope_floor(K) = 0.27/K`, a uniform
+2.0x margin over the measured bias (0.068 / 0.054 / 0.039 at K = 4/5/7).
+
+DELIBERATELY NOT A CALIBRATION. Measured-vs-injected pairs invert into a mapping that could
+be applied to the central slope; that is the empirical correction AGENTS.md forbids, and it
+would make a reported number agree with an expectation by construction. Widening the
+threshold costs sensitivity honestly; correcting the value would hide the same uncertainty.
+
+A test caught a real bug in this: the factor-2 margin was applied twice (constant AND
+formula), giving 4x behind a docstring promising 2x.
+
+**Validation.** `pytest tests/ -q` -> 194 passed, 1 skipped, 69 s (from 178 at the start of
+this arc). **Limitations.** One draw seed per configuration, so no seed-scatter column. The
+catalogue POOL is fixed across all rows and seeds; no bar here sees a pool-level shift. The
+eval-side `i_row` save is not end-to-end tested (needs a GPU run); only the read side is
+covered. **Next steps.** (i) Re-run at least one configuration with the `i_row` field to get
+the weighted abscissa and the denominator-bias slope. (ii) A second draw seed for the deep
+struct ladders. (iii) The named pool test: split the catalogue pool into two disjoint halves,
+same rows/seed/everything, paired difference -- same remedy shape as the score-grid bank
+error.
+
+## 2026-08-19a  cont.187 — catalogue-prior closure: the beta>0 ladder is not a 1/M law
+
+**Files.** `scripts/combine_catprior.py` (covariance double-count removed; seed-scatter
+cross-check added, then corrected to be one-sided), `tests/test_catprior_ladder_fit.py`
+(17 tests), `tests/test_catprior_weight_path.py` (new, 8 tests, the beta>0 weight path),
+`$DATA_DIR/sbsi_catprior/quarantine_a40/` (one run removed on provenance).
+
+**Result 1 — the bank does not drive d(m) at beta=0.** Paired grid_n 61 vs 101, identical
+xhat digests, nbr features, beta=0, 120k rows x 2 legs:
+
+| M | d(m)@61 | d(m)@101 | D | nsig | pairing |
+|---|---|---|---|---|---|
+| 1 | -9.554% | -9.581% | -0.027% +/- 0.017% | 1.6 | 52.6x |
+| 2 | -5.488% | -5.479% | +0.008% +/- 0.017% | 0.5 | 41.8x |
+| 4 | -2.860% | -2.831% | +0.029% +/- 0.017% | 1.8 | 38.2x |
+
+d(m) itself runs -9.6%..-2.9%, so the bank error cancels out of it to ~1 part in 300.
+This is the check the whole ladder result rests on, and at beta=0 it passes.
+
+**Result 2 — at beta=0.8 the same check fails, and fails harder the smaller M is.**
+`all` features, beta=0.8, same paired grids:
+
+| M | d(m)@61 | d(m)@101 | D | nsig | pairing |
+|---|---|---|---|---|---|
+| 1 | -12.754% | -15.825% | -3.071% +/- 0.278% | 11.0 | 7.5x |
+| 2 | -2.189% | -3.131% | -0.941% +/- 0.153% | 6.1 | 10.4x |
+| 4 | -8.721% | -8.847% | -0.126% +/- 0.085% | 1.5 | 14.2x |
+
+**Result 3 — the mechanism, provable from the accumulator.** `marginal_score_pass` forms
+`acc = logaddexp(acc, ll + lw)`, `lw_run = logaddexp(lw_run, lw)` and snapshots
+`acc - lw_run`. At M=1 that is `(ll + lw) - lw = ll`: **the weight cancels identically**, so
+the M=1 rung of a weighted ladder estimates the PROPOSAL, not the target. At beta=0.8 with
+8x8 cells the proposal puts P = beta + (1-beta)/64 = 0.803 of its atoms in the row's own
+(mag, size) cell, so M=1 is a nearly-pinned estimator and returns d(m) ~ 0 spuriously
+(+0.027% +/- 2.427% for struct). The pathology persists while ALL atoms are own-cell:
+P^M = 0.80, 0.64, 0.42, 0.17, 0.030, 0.0009 at M = 1, 2, 4, 8, 16, 32. It is therefore not
+a small-M inaccuracy a 1/M fit absorbs -- it is a different estimator on the same axis.
+
+Deep ladders (M to 64, 60k rows, one seed) show exactly that shape. struct beta=0.8:
+d(m) = +0.027, +7.345, -0.520, -2.556, -1.522, -0.085, -0.806% at M = 1..64, non-monotone,
+chi2/dof = 10.79 (p < 1e-3); the 1/M+1/M^2 form is worse (12.13), so it is not a missing
+curvature term. struct beta=0: d(m) = -151.174 .. -3.498%, lawful but enormous
+(a = -148.269% +/- 3.986%, needing M ~ 1483 for |bias| < 0.1%); its D-vector is OFF by
+4.1 sigma and 3.0 sigma at the 1-vs-2 and 2-vs-4 pairs and on target (0.3-1.5 sigma) from
+4-vs-8 upward -- the same rungs, flagged by a diagnostic that knows nothing about the fit.
+
+**Result 4 — the clean beta=0 nbr ladder.** Two V100 seeds, pin column identical as it must
+be: rho above the sqrt(M/Mmax) floor at every rung; a/s constant (chi2 = 0.27/3, p = 0.966);
+D-vector 0.9, 1.6, 0.3 sigma against the parameter-free prediction. d_inf = -0.298%
++/- 0.887% (inflated bar), a = -9.671% +/- 0.572%, needing M ~ 97 for 0.1%. **But chi2/dof
+= 2.73, p = 0.042**, so by the pre-registered thresholds (`PREREGISTERED_prediction.md`:
+p > 0.05 AND all D < 3 sigma AND a/s constant, all in the same run) this is a FAIL on the
+primary 1/M fit, not a pass. The intercept is stable across fit variants (max shift 0.115%)
+and consistent with the required zero, but the law is mildly rejected.
+
+**What I got wrong and corrected.**
+1. `fit_ladder` added `C_seed/S` on top of the jackknife covariance. That double counts --
+   the jackknife of the seed-averaged replicates already contains the draw noise and
+   already reflects the 1/S shrinkage. An inflated covariance shows up as a flatteringly
+   LOW chi2, i.e. a fit that looks passed when it has merely gone untested. Removed.
+2. The seed-scatter cross-check flagged `ratio < 0.35` as "covariance likely CONSERVATIVE".
+   Wrong: a small ratio only says draw noise is a minor part of galaxy-sampling noise,
+   which is what a healthy ladder looks like. The check is now explicitly ONE-SIDED (it can
+   detect an understated covariance, never an inflated one) and prints the dof of the
+   spread column.
+3. I briefly concluded `--beta` "cannot help" because the own-cell share of the NORMALISER
+   is exactly f = 1/ncell at every beta. That ignored the likelihood: beta=0.8 with 64
+   cells is in fact near-optimal when the own-cell likelihood ratio is ~257. Retracted, and
+   pinned by `test_the_own_cell_share_of_the_TARGET_is_f_regardless_of_beta`.
+4. chi2/dof = 0.32 was earlier called a "cleaner fit". It is an UNRESOLVED test, not a pass.
+   Relatedly, the 2.62 -> 0.32 change must not be credited to removing the A40 run: at
+   3 dof the sampling sd of chi2/dof is sqrt(2/3) = 0.82.
+
+**Provenance.** `catprior_nbr_b0.0_d99_r120000_G61.npz` (job 15839571) ran on an A40; every
+other run is on a Tesla V100. The GPU model fixes the CUDA RNG stream, so its xhat is a
+different dataset -- its pin column reads +0.927% where the V100 runs read +0.327%, and the
+pin arm is common data by construction. Moved to `quarantine_a40/` with a README, on
+provenance grounds alone. Job 15839572 (also A40) produced no output.
+
+**Validation.** `PYTHONPATH=$PWD python -m pytest tests/ -q` -- 154 passed, 1 skipped, 124.60s.
+`tests/test_catprior_weight_path.py` 8 passed; `tests/test_catprior_ladder_fit.py` 17 passed.
+
+**Limitations.** The deep M=64 ladders are ONE draw seed each, so their covariance has no
+independent check and the jackknife is taken on trust. The beta=0 nbr fit rejects the pure
+1/M law at p = 0.042. Nothing here measures whether the catalogue-marginalised likelihood
+is right in absolute terms -- both limits are exact for closure data, so d_inf must be zero
+and only its consistency with zero is being tested.
+
+**Next.** (a) Re-run the beta>0 ladders starting at M=8 or 16, where the all-atoms-own-cell
+fraction is below 3%, since the low rungs are a different estimator and cannot be fitted
+jointly. (b) Second draw seed for the deep ladders. (c) Extend `--self-pool-check` to the
+weighted path -- it currently passes `np.zeros(...)` as `log_w` and so certifies only
+beta=0.
+
+
+**Result 5 — the controlling variable is how tightly the measurement constrains the
+nuisance parameter, and I had this wrong before.** Regenerating every banked run through
+the corrected combiner (the covariance double-count touched every bar and chi2 that code
+ever produced, so all earlier quoted values are superseded, not a continuing series):
+
+| features | beta | ESS efficiency | a (price of the quadrature) | chi2/dof |
+|---|---|---|---|---|
+| NBR (3 neighbour fluxes) | 0.0 | 61-70% | -8.9 .. -9.7% | 1.4 - 2.7 |
+| STRUCT (sersic_n, r, Re) | 0.0 | 9-14% | -141 .. -148% | 2.6 - 7.8 |
+| STRUCT | 0.8 | 8-22% | +3.6 .. +7.0% | 10.8 - 65.1 |
+| ALL (6 vars) | 0.0 | 12.7% | -161.6% | 4.1 |
+| ALL | 0.8 | 22-43% | -0.4 .. -6.5% | high |
+
+At beta=0, `a` tracks ESS efficiency inversely and steeply: a factor ~5 in ESS buys a factor
+~15 in the finite-M error. Catalogue-drawn marginalisation WORKS for the neighbour fluxes,
+which the measurement barely constrains, and FAILS for the structural parameters, which the
+measured magnitude and size pin hard -- so a random catalogue row is a hopeless proposal for
+them. I previously wrote that ESS efficiency was NOT the controlling variable; that came
+from a beta=0 vs beta=0.8 comparison inside `struct`, which is confounded because beta>0
+changes the estimator itself at low M (Result 3). Compared across FEATURE SETS at fixed
+beta=0, ESS controls the outcome cleanly. Retracted.
+
+**Result 6 — where the beta=0 nbr misfit actually lives.** The pre-registered primary fit
+(1/M, all rungs) gives chi2/dof = 2.73, p = 0.042: a FAIL. The failure is NOT localised to
+M=1 -- dropping M=1 alone makes it worse (chi2/dof = 3.28, p = 0.038). It takes dropping
+M=1 AND M=2 to get a lawful fit: M >= 4 gives chi2/dof = 1.86, p = 0.172, d_inf = -0.150%
++/- 0.734%, consistent with the required zero. No new mechanism is needed for that -- the
+1/M law is the LEADING term of an expansion, and the quadratic fit puts b/a = 2.128/11.888
+= 18%, so at M=1,2 the neglected term is 18% and 9% of the term being fitted. But the M >= 4
+restriction was chosen AFTER seeing the chi2, so it is EXPLORATORY and must not be quoted as
+the pre-registered result. The headline stands as the pre-registered one: FAIL at p = 0.042.
+Confirming the M >= 4 reading needs a fresh draw seed, out of sample.
+
+**Also changed.** `scripts/combine_catprior.py` gained `--min-m`, which drops rungs below a
+stated M from the FIT while leaving them in the table, so any such exclusion is visible in
+the log rather than silent. `scripts/eval_score_catprior.py`'s `--self-pool-check` now runs
+three weight sets -- unit, varied over the bounded-mixture range, and one atom carrying
+essentially all the weight -- instead of the `np.zeros(...)` stub. With every atom the row
+itself the weights normalise away, so all three must agree exactly; this makes the weighted
+path a run-time gate rather than only a unit test. Not yet exercised on a GPU run.
+
+**Result 7 — the misfit is a wrong AXIS, not a truncated expansion, and this was measured
+before it was fitted.** Decomposing the deep-ladder chi2 by which rung is dropped (chi2 =
+chi2/dof x dof; dropping one rung costs 1 dof, so the change is testable on its own):
+
+| | M>=4 | M>=8 | M>=16 | drop M=4 | drop M=8 |
+|---|---|---|---|---|---|
+| struct beta=0.0 | 10.83 / 3 | 7.16 / 2 | 0.15 / 1 | dchi2 +3.67 (p 0.055) | dchi2 +7.01 (p 0.008) |
+| struct beta=0.8 | 17.91 / 3 | 8.84 / 2 | 8.88 / 1 | dchi2 +9.07 (p 0.003) | dchi2 -0.04 (p 1.000) |
+
+At beta=0 the M=8 rung is discrepant on its own at 2.6 sigma and the rungs above it are
+mutually consistent, so the asymptotic regime begins between M=8 and M=16 -- a statement
+about ONE point against a fit, which survives the 1-dof objection that the p = 0.703
+goodness-of-fit does not. At beta=0.8 dropping M=8 changes nothing: its misfit lives
+ENTIRELY among rungs 16, 32, 64. That is the opposite of a truncated expansion, which is
+worst at low M and dies as M grows.
+
+The cause is measurable without fitting anything. ESS at the ladder top, averaged over
+objects, against ladder depth:
+
+| features | beta | ESS scaling | 1/M fit |
+|---|---|---|---|
+| nbr | 0.0 | ESS ~ M^0.90 | lawful from M >= 4 |
+| struct | 0.0 | ESS ~ M^0.70 | lawful from M >= 16 |
+| all | 0.8 | ESS ~ M^0.53 | fails |
+| struct | 0.8 | ESS ~ M^0.29 | fails, misfit at HIGH M |
+
+The exponent orders monotonically with fit quality and predicts where the misfit sits: if
+the error goes as 1/ESS ~ M^-p with p < 1, a forced 1/M law leaves a residual that GROWS
+with M. So `1/M` is simply the wrong x-axis, and how wrong it is, is what the table
+measures.
+
+**A further correction.** I had recorded (Amendment 2) that the 1/ESS substitution "applies
+only to beta>0". It does not. At beta=0 the proposal weights ARE uniform, yet ESS/M is 61%
+(nbr) and 9% (struct) and p is 0.90 / 0.70, not 1 -- because this ESS is of the EVIDENCE
+contributions, reflecting how much the drawn SCENES differ in likelihood, not how uniform
+the weights are. 1/ESS is therefore the right axis at every beta, and one mechanism covers
+the whole table. It also means the substitution does not by itself discriminate against the
+expansion story; the two are separated by WHERE the misfit lives, which is the table above.
+Relatedly, I had compared chi2/dof between the nested linear and quadratic fits and called
+the quadratic "worse"; that comparison is invalid. The quadratic buys dchi2 = 0.50 for one
+parameter, where chance gives ~1, so it does nothing -- which closes the missing-curvature
+branch outright rather than leaving it open.
+
+**Enabling the refit.** `sbsi/catalogue_prior.py`'s `marginal_score_pass` now returns
+`ess_rung` `(N, len(ladder))` -- the evidence ESS at EVERY rung, not only the top -- and
+`eval_score_catprior.py` saves it. Per-rung ESS was not previously stored, so the refit
+against 1/ESS could NOT be run on banked data; an earlier note calling it "a combiner
+change, not a run" was wrong. Jobs 15845011/12/13 (V100-pinned, new filenames so nothing is
+overwritten) regenerate struct beta=0.8 and beta=0.0 deep ladders plus an nbr run on a fresh
+draw seed 2024, which is the declared out-of-sample confirmation of the M >= 4 cut.
+
+The first attempt at those three (15844986/87/88) DIED 21 s in, all with `'Tensor' object
+has no attribute 'add_missing_indicators'`: the per-rung ESS patch bound `pre = ev[:, :m+1]`
+inside the draw loop, shadowing `pre = est.bundle.condition_preprocessor`, which the same
+loop reads on every draw. The full suite stayed green because nothing in `tests/` runs
+`marginal_score_pass` against a real flow bundle. Fixed by renaming, and
+`test_the_draw_loop_does_not_shadow_names_it_reads` now guards the property statically --
+verified by reintroducing the bug (test fails, naming `pre`) and removing it again. Chasing
+that also surfaced a LATENT shadowing of the same kind in `combine_catprior.py`, where a
+per-pair correlation sigma was named `rs`, overwriting the group's list of runs; it changed
+no printed number because nothing read `rs` afterwards until the new lever code did.
+
+THE WEIGHTED SELF-POOL GATE NOW RUNS AND PASSES ON GPU. With every atom the row itself:
+`varied` weights reproduce the unit-weight scores to max|ds| = 1.907e-06 and the `extreme`
+variant (one atom carrying e^30 of the weight) to 2.861e-06, against a 1e-3 tolerance --
+and the extreme case is precisely where a doubled or dropped normaliser would show. The
+pre-existing M=1 (bit-exact) and M=4 (9.537e-07) checks are unchanged. The `--beta` plumbing
+is therefore validated at run time, not only in unit tests.
+
+`combine_catprior.py` now prints the EXTRAPOLATION LEVER beside every intercept -- the span
+of 1/ESS covered by the rungs and how far the nearest one sits from the 1/ESS = 0 intercept
+-- because fitting in 1/ESS puts d_inf in a regime no rung reaches, and a chi2 over a short
+lever cannot check the functional form out there. Runs predating `ess_rung` say so
+explicitly rather than printing nothing.
+PASS/FAIL for both is written down in `PREREGISTERED_prediction.md` Amendment 3 BEFORE the
+runs land: chi2 reaching p > 0.05 AND the correlation prediction, re-derived on ESS,
+returning within 3 sigma -- either alone is not a pass.
+
+**Follow-up (same day): closing the hole that let the `pre` shadowing reach the GPU.**
+The three jobs that died 21s in were not caught by a green suite because nothing under
+`tests/` ever executed `marginal_score_pass` against a bundle -- the 154-passed report was
+evidence about everything except the loop that broke. Two additions, in order of what they
+are worth.
+
+`tests/test_catprior_loop_smoke.py` (new, 7 tests, ~7 s, no flow and no GPU). Duck-typed
+stubs expose only the attributes the draw loop actually touches, and six parametrizations
+run it end to end over ladders [1], [1,2], [1,2,4] with the missing-indicator preprocessor
+on and off. This is the test whose absence let the bug through: it fails on ANY
+AttributeError in that loop, without anyone having had to guess which name would be
+shadowed. Confirmed by reintroducing the rebind.
+
+An AST sweep for the same class repo-wide, at `scripts/sweep_loop_shadowing.py`:
+a name assigned before a loop, read inside it ABOVE the rebinding line, and rebound to
+something not derived from it. The "read above" clause carries the sweep -- it is why the
+bug survives a one-iteration run and dies on iteration two, and it is what separates the
+real thing from the ubiquitous harmless reuse of a short name (`s`, `d`) by a later
+independent loop. Without it the sweep returns 59 candidates; with it, 12. VALIDATED by
+reintroducing the `pre` rebind (fires) and reverting (silent); two earlier drafts were
+wrong and only that check exposed them -- one counted comprehension variables as pre-loop
+reads, the other silently dropped an isinstance guard so the walk descended into `if`
+bodies and reported the `if` line instead of the assignment. All 12 survivors are
+deliberate loop-carried state (`shear = candidate`, `dim = hidden_dim`, binary-search
+`lo`/`hi`, `base = i[0,0]`, `resc = rw` guarded by `is None`) and none needs a change.
+
+THE VALIDATION IS NOW A TEST, NOT A CLAIM, and the review is now durable -- both on the
+peer session's recommendation, and both are the standard already applied to the D-vector
+prediction. `tests/test_loop_shadowing_sweep.py` (10 tests, 2.8 s) pins the sweep against
+three fixtures in `tests/fixtures/`: it FIRES on the `pre` pattern verbatim, stays SILENT
+on self-refines, and -- the case worth spelling out -- reports a deliberate fixed point
+(`shear = candidate`) on purpose. The sweep cannot distinguish an intended fixed-point
+update from an accidental clobber, because telling them apart requires knowing what the
+loop means. That is a human judgement, not a tuning parameter, so the sweep reports the
+shape and `scripts/loop_shadowing_allowlist.txt` records the judgement WITH a reason per
+entry. Writing the third fixture down matters because the tempting "fix" is to suppress
+that shape, and the real bug has exactly that shape.
+
+The allowlist is keyed by `path::function::name`, NOT by line number: line numbers drift
+on every edit above them, and a stale allowlist either re-hides reviewed hits or floods
+the output with false new ones. Two tests guard it -- one fails on any hit that is not
+allowlisted (so the thirteenth is visibly new), one fails on any allowlist entry that no
+longer matches a hit (so it cannot rot). The CLI exits 1 only on a new hit, so it can gate
+CI without anyone reading the output.
+
+Building the sweep needed three drafts and the fire/silence pair caught the two bad ones:
+the first counted comprehension variables as pre-loop reads (59 candidates), the second
+silently dropped an isinstance guard so the walk descended into `if` bodies and anchored
+on the `if` line instead of the assignment. Both looked right on inspection.
+
+`ruff check --select PLW2901,F811,B020 sbsi/ scripts/` gives 9 hits, none F811/B020. Eight
+are pre-existing `x = refine(x)` self-narrowings and are fine. The ninth was ours:
+`combine_catprior.py` did `ladder = fit_ladder_rungs`, rebinding the group-key loop target
+from `for (feat, beta, rows, grid_n, ladder), rs in ...`. Latent rather than live -- nothing
+below wanted the full ladder -- but the same trap, so the rebind is gone and the restricted
+list is used by name. RECORD THE LIMIT: PLW2901 would never have caught `pre`, because it
+only fires when the rebound name is the loop TARGET, and `pre` was an ordinary local. "ruff
+is clean" must not be read as coverage of this class; the smoke test is what covers it.
+
+**A wrong assertion, corrected.** The seventh smoke test first asserted ESS = 1 for M
+identical atoms, on the reasoning that repeated draws carry no new information. That
+confuses ESS with the number of DISTINCT scenes. Identical contributions are perfectly
+uniform weights, so ESS = M exactly; ESS = 1 is the opposite case, one atom carrying
+everything. The test now asserts ESS = M per rung and the docstring records the error,
+because the same confusion would misread the production numbers: the 61-70% ESS/M on the
+nbr beta=0 runs measures the SPREAD of the evidence contributions across drawn scenes, not
+how distinct they are, which is why it sits well below M even at beta=0 where the proposal
+weights are uniform.
+
+**Validation.** Full suite 178 passed, 1 skipped
+(`PYTHONPATH=$PWD /project/ls-gruen/users/zekang.zhang/envs/py31/bin/python -m pytest tests/ -q`).
+
+**The ESS refit, built and instrumented before the data to test it exists.**
+`scripts/combine_catprior.py` now carries both halves of the pre-registered ESS
+substitution, printed separately and never merged, plus a diagnostic that says how much the
+weaker half is worth. `fit_ladder` gained an explicit abscissa (`x=`, `xname=`) so the same
+GLS, the same covariance and the same variants can be run against 1/ESS instead of 1/M;
+passing no `x` reproduces the old behaviour, pinned by a test.
+
+TWO PRE-REGISTERED CLAIMS WERE WRONG AND BOTH WERE CAUGHT BY BUILDING THE CODE, NOT BY
+LOOKING AT RESULTS -- no run carrying `ess_rung` has landed yet.
+
+Amendment 4(a) declared "ESS in the covariance only" as a variant that might restore
+p > 0.05 on its own, and called it the stronger outcome because it rests on a definition
+rather than an analogy. It cannot do anything of the kind. `C` in `fit_ladder` is the
+EMPIRICAL jackknife covariance of the block replicates; there is no modelled 1/M inside it,
+so M reaches the chi2 only through the regressor, which is 4(b). 4(a)'s only observable is
+the parameter-free rho prediction, which now prints an ESS column beside the 1/M one.
+Reading 4(a) as "did the chi2 improve" would be reading a number arithmetically incapable
+of moving.
+
+Amendment 5(ii) then claimed the opposite error. Driving the new 4(b) path with a SYNTHETIC
+`ess_rung` set to ESS = M^0.9 moved chi2/dof 2.73 -> 1.83 and d_inf -0.298% -> -0.077% on
+data that had gained no information, and I generalised that into "any monotone
+reparametrisation flatters a marginal chi2, so 4(b) is close to vacuous". Measuring it
+withdrew it. On synthetic ladders whose truth is bias ~ 1/M exactly, fitted against M^-0.9:
+
+    sigma_draw   chi2/dof (1/M)   chi2/dof (M^-0.9)
+     1.5e-03        1.20               465.3
+     5.0e-03        1.20                43.0
+     1.5e-02        1.20                 5.9
+
+The wrong abscissa is rejected everywhere, by orders of magnitude at realistic noise. The
+GLS sees the SHAPE of the abscissa because the rungs are strongly correlated through the
+shared pin arm and the nesting -- the same structure that makes the full covariance
+necessary is what makes a reparametrisation visible. And the exponent is not a fitted
+degree of freedom in the first place: it is measured from `ess_rung`, independently of
+`d(m)`. 5(ii) conflated "the abscissa happens to be a power law" with "the exponent was
+fitted to the residuals", and only the second would have been a free parameter. So 4(b) is
+a real test and is reported as one. Recorded as AMENDMENT 6 rather than edited into 5,
+because the point of pre-registering is that the corrections stay visible.
+
+The across-configuration test declared in Amendment 5 STANDS and is still the stronger of
+the two: if the bias tracks ESS, the slope `a` in ESS units must be COMMON to configurations
+whose 1/M slopes differ by an order of magnitude (nbr beta=0 at a = -9.7%, struct beta=0 at
+-141..-148%). A single exponent cannot reconcile three configurations at once unless the
+conjecture holds. Pass is a common-value chi2 over the three at 2 dof.
+
+Also added: the combiner prints `ESS = c * M^p` with the log-residual rms per configuration,
+so the reader can see for themselves whether 1/ESS is a reparametrised 1/M; six new tests in
+`tests/test_catprior_ladder_fit.py` pin the explicit abscissa, the unchanged default, the
+rejection of a wrong abscissa (with its loss of power as noise rises), and both sides of the
+power-law detector. The 4(b) reporting path was smoke-tested end to end on copies of two
+real runs with a synthetic `ess_rung` grafted on, because an untested reporting path that
+only executes when real data lands is exactly how the `pre` shadowing reached the GPU.
+Existing pre-`ess_rung` runs print an explicit "4(b) not evaluated" line rather than nothing.
+
+**The abscissa is measured, and the chi2 is brutally sensitive to it (AMENDMENT 7).**
+Raised by the peer session; the reasoning is theirs. AMENDMENT 6's own table is the
+argument: chi2/dof goes 1.20 -> 465 for a 10% change in the abscissa exponent, and is still
+1.20 -> 5.9 at the noisiest rung tested. That gain is what makes 4(b) a real test, and it
+applies equally to the abscissa's OWN error -- and `ess_rung` is an estimate from finite
+draws. It was the only quantity entering the fit with no uncertainty attached, which is the
+worst possible place for that omission.
+
+Three changes, all in `scripts/combine_catprior.py`. The fit uses the RAW per-rung ESS and
+never the fitted `c * M^p` -- already true, but true by accident rather than by intent, so
+it now says so where someone could "simplify" it. Each rung's ESS carries a bar: the larger
+of the within-run standard error on the mean over rows (rows carry independent draws) and
+the between-seed scatter, which also catches anything common to all rows of a run. And the
+chi2 is BOUNDED rather than corrected -- every sign pattern of a +/-1 sigma shift is
+enumerated (2^K, exhaustive at K <= 12) and the chi2/p ranges printed. Enumeration rather
+than a first-order (dd/dx)^2 sigma^2 propagation on purpose: at this gain, linearisation is
+the approximation most likely to understate the swing, and 32 GLS fits are free. If the
+range spans p = 0.05 the output states that 4(b) cannot decide the question at the achieved
+ESS precision and forbids reporting whichever side the central value fell on.
+
+QUANTITATIVELY THE CONCERN LOOKS SMALL, WHICH IS THE POINT OF MEASURING IT. ESS is a
+per-row quantity and rows carry independent draws, so the standard error on the mean falls
+as 1/sqrt(N); at 120,000 rows that is order 0.01-0.1%, not the "few percent" the worry was
+framed at. On the synthetic exercise set (200 rows, 2% row scatter) the bar came out
+0.12-0.15% and all 32 sign patterns held chi2/dof inside [1.76, 1.91]. So the amplification
+is real and the input precision is high enough that it does not bite -- to be confirmed on
+the real runs rather than assumed, since between-seed scatter could still dominate.
+
+The asymmetry is pre-registered rather than decided later: any abscissa error INFLATES chi2
+and cannot deflate it, so 4(b) produces false FAILs, not false PASSes. A PASS is
+informative; a bare FAIL is AMBIGUOUS and is reportable as a failure only if the sensitivity
+range sits entirely below p = 0.05 AND the enumerated swing is a minor part of the excess.
+This is the reverse of the usual reading, and it is written down now because deciding it
+after seeing a chi2 of 12 would be indistinguishable from rationalising.
+
+The AMENDMENT 5 across-configuration test is implemented and runs over every configuration
+carrying per-rung ESS: `a` in ESS units against `a` in 1/M units with the ratio, then a
+common-value chi2. Smoke-tested on synthetic data built with deliberately INCOMPATIBLE ESS
+exponents (0.9 vs 0.7), where it correctly reported not-consistent at p < 1e-4 -- so it has
+been observed to fail as well as to pass. It also prints that two or three configurations
+give one or two degrees of freedom, so a pass means "not excluded", not "established".
+
+BOTH PRE-REGISTRATION ERRORS ABOVE CAME FROM WRITING THE CODE, NOT FROM SEEING A RESULT.
+No run carrying `ess_rung` had landed when either was found. That is the difference between
+a pre-registration that moved and one that was moved, and it is why the corrections are
+recorded as AMENDMENTS 6 and 7 rather than edited into the text they correct.
+
+**The abscissa was the wrong statistic: <1/ESS>, not 1/<ESS> (AMENDMENT 8).** Caught by the
+peer session after the code was already built the wrong way, so this is a defect fixed, not
+a caveat added. The bias law is PER ROW -- each row's finite-draw error goes as c_i/ESS_i
+with that row's own effective sample size -- and the estimator is a ratio of sums over rows,
+so the aggregate error is a MEAN OF RECIPROCALS. Building the abscissa as one over the mean
+ESS swaps the two, and by Jensen they differ by `1 + Var(ESS)/<ESS>^2` to leading order:
+4% at CV 0.2, 25% at CV 0.5, 100% at CV 1.0. Against AMENDMENT 6's sensitivity -- a 10%
+abscissa shift moving chi2/dof 1.20 -> 465 -- a CV of 0.5 is far outside what the test can
+absorb, and unlike everything in AMENDMENT 7 it is a BIAS: 120,000 rows measure it
+precisely, they do not shrink it.
+
+Validated on a deliberately high-spread synthetic (lognormal per-row ESS, CV ~ 0.5-0.6, the
+struct-like regime) rather than letting the warning fire for the first time on real data:
+
+     M     <ESS>   CV(ESS)   1/<ESS>   <1/ESS>   ratio
+     1     1.134     0.256    0.8816    0.9187   1.042
+     8     2.809     0.581    0.3559    0.4688   1.317
+    16     4.049     0.550    0.2469    0.3184   1.289
+
+THE GAP VARIES ACROSS RUNGS, and that is the part that matters. A constant factor would
+rescale the fitted slope and leave the chi2 alone; because CV(ESS) itself grows with M, the
+wrong abscissa is a rung-dependent distortion of the SHAPE -- precisely what AMENDMENT 6
+showed the GLS is most sensitive to, and why this error moves the chi2 in either direction.
+It is therefore NOT covered by AMENDMENT 7's inflate-only asymmetry, which means AMENDMENT
+7's reading ("a bare FAIL is ambiguous, a PASS is informative") holds only once the abscissa
+is the right statistic. With the wrong one neither outcome was interpretable.
+
+The fit, the sensitivity enumeration and the parameter-free rho prediction now all use
+<1/ESS>. The combiner prints <ESS>, CV(ESS), 1/<ESS>, <1/ESS> and their ratio per rung and
+says explicitly when the largest gap exceeds 5%, so the size of the effect is visible rather
+than asserted. Pre-registered and checkable: low mean ESS and high row-to-row CV should be
+the same phenomenon, so the gap must be much larger for struct (ESS/M ~ 9-14%) than for nbr
+(~61%); if the measured CVs do not show that ordering, the account of why struct's ESS is
+low is wrong and struct's ladder should not be interpreted until that is settled.
+
+Two approximations remain, stated rather than fixed: the row mean is unweighted where the
+estimator weights rows by their information; and the POOL is fixed across rows and seeds, so
+a pool-level shift in ESS is invisible to every scatter measured here -- the same shape as
+the score-grid bank systematic, and the same remedy (vary the pool). Until then the
+enumerated chi2 range bounds DRAW noise in the abscissa only.
+
+### The row-weighting approximation is now EXACT, not bounded -- and the pool one is named
+
+The first of those two approximations is closed, on future runs. The gap between the flat
+row mean and the information-weighted one is not a leading-order expansion; it is an
+identity that holds at any sample size:
+
+    <1/ESS>_I  =  <1/ESS>  +  Cov(I_i, 1/ESS_i) / <I>
+
+because a weighted mean minus a flat mean IS the covariance over the mean weight. So this
+is not implemented as a diagnostic printed alongside a flat abscissa. The abscissa itself
+is weighted, and the printed shift is the covariance as a by-product. The weight is
+`w_i = g^T I_i g`, the per-row information along the shear direction, because
+`ghat = sum s / sum I` is a ratio of sums projected on g -- NOT the trace, which is a
+different statistic; `test_row_weights_projects_the_information_onto_the_shear_direction`
+fails if the two are swapped.
+
+WHY IT LANDS ON FUTURE RUNS ONLY. Per-row `I` was never saved: the npz carried `ns`/`ni` as
+per-BLOCK sums and only `ess` per row. `scripts/eval_score_catprior.py` now also writes
+`<rung>_i_row` (per-row 2x2, float32, ~6 MB/run against a ~1-2 MB file). Runs written before
+2026-08-19 get None, and `combine_catprior.py` prints that the abscissa is the flat mean and
+that the error is UNBOUNDED there -- it does not print a reassuring zero.
+
+The block-level proxy was considered and REJECTED, and that is the substantive decision
+here. `eval_score_catprior.py` assigns blocks by `pair % jk_blocks`, i.e. interleaved, so
+blocks are near-identical in composition by construction and a between-block
+`Cov(I, 1/ESS)` reads ~0 whatever the row-level truth is. That number would have looked
+like a bound while being an artifact of the block assignment -- worse than no number. The
+reason is in the `row_weights` docstring so it is not re-added.
+
+PREDICTED SIGN, recorded before the data lands: POSITIVE. A row whose measured mag and size
+pin its true values tightly is both high-information and hard for catalogue draws to match,
+so high `I` and low ESS travel together and the flat mean UNDERSTATES the abscissa. That is
+the SAME direction as the Jensen gap, so the two stack rather than partly cancelling. A
+negative result would mean the account of what makes a row informative is wrong, and the
+slope should not be read until that is settled. The shift should also GROW along the ladder
+(the I-ESS correlation tightens with M), which bends the curve rather than rescaling `a`;
+the readout fires `***` if it varies by more than 2 percentage points across rungs, at which
+point 1/M and 1/ESS are different models and not a reparameterisation.
+
+`row_weights` is all-or-nothing across the ladder: if any rung lacks per-row `I` it returns
+None for the whole group. A ladder mixing weighted and flat rungs would vary the statistic
+along exactly the axis the fit reads.
+
+THE WEIGHT IS FROZEN ACROSS RUNGS, AND THAT IS NOT COSMETIC. Each rung's own `I` is itself
+finite-draw biased, and that bias IS the quantity the ladder measures. A weight recomputed
+from each rung's `I` therefore drifts along the ladder because of the effect under study,
+manufacturing a rung-dependent shift indistinguishable from the one being looked for -- the
+`***` 2-point warning above would have fired on an artifact of its own construction. The
+default takes the weight from the PIN arm, which has no marginalisation and hence no draw
+bias, on the same rows, and reuses that one vector at every rung; any surviving
+rung-dependence then comes from the ESS side, which is the thing of interest.
+`source="deep"` (deepest rung, least biased but not unbiased) and `source="per_rung"` (the
+unfrozen version) are kept so the confound is MEASURED, not assumed: the group loop runs
+both and prints the per-rung shift difference, warning when it approaches the same 2-point
+threshold. `eval_score_catprior.py` writes `<k>_i_row` for every `k` in `["pin"] + ladder`,
+so the pin arm is on disk; a test pins that contract.
+
+WHAT MAKES `w_i = g^T I_i g` THE RIGHT WEIGHT is a MODEL, named rather than assumed away.
+Under a MULTIPLICATIVE response error, `s_i = I_i g (1 + eps_i)`, one gets
+`m = sum_i I_i eps_i / sum_i I_i` -- an information-weighted mean of fractional errors, so
+the weight is exactly `I` projected on `g`. Under an ADDITIVE score error,
+`s_i = I_i g + delta_i`, one gets `m = sum_i delta_i / (g sum_i I_i)`, whose numerator is a
+FLAT sum, and the unweighted abscissa is correct. The multiplicative model is the natural
+one here -- a mismatched catalogue draw perturbs a row's RESPONSE, not its score by an
+additive constant -- but the flat abscissa is not a sloppier version of the weighted one,
+it is the right statistic under the other model. The two are distinguishable from the
+per-row data now saved (regress `s_i - I_i g` on `I_i`; multiplicative predicts a slope in
+`I`, additive none), worth doing only if weighted and flat disagree enough to move a
+conclusion. Not chased now.
+
+Runs 15845011/12/13 were already executing when the field was added and are therefore
+PRE-CHANGE: their `irow` is absent because the eval script had not been edited yet, not for
+any other reason.
+
+THE FROZEN-VS-UNFROZEN DRIFT IS A MEASUREMENT, NOT ONLY A NUISANCE. The unfrozen weight
+drifts precisely BECAUSE per-row `I` is itself draw-biased, and worse at low M. So the drift
+per rung is an independent read on the bias in the INFORMATION -- the denominator of `ghat`
+-- from the same runs, using a quantity the fit never touches. The ladder measures the
+NUMERATOR's bias; this measures the DENOMINATOR's, at no extra cost. It is therefore printed
+at every rung, not only when it trips the warning, and the readout fits its own power law in
+M. If the drift falls near 1/M that is a consistency check on the whole finite-M picture
+from outside the fit; if it is SHALLOWER, the information bias outlives the shear bias, and a
+denominator bias surviving where the numerator's has died is invisible to the 1/M -> 0
+extrapolation -- so that case fires a `***` warning.
+
+Both readouts were verified end-to-end on synthetic runs rather than by inspection, since
+neither path had ever executed: the FALLBACK path (ess_rung present, `irow` absent -- what
+15845011/12/13 will hit) prints its unbounded-error notice and completes; the WEIGHTED path
+recovers injected truth in both directions -- an information bias injected as 1/M reads back
+as M^-0.95 and is reported consistent, one injected as M^-0.2 reads back as M^-0.15 and trips
+the SHALLOWER warning. Exponent recovery good to ~0.05. A literal `%%` left in a non-format
+string was found and fixed in the same pass.
+
+THE DRIFT DIAGNOSTIC NOW CARRIES ITS OWN RESOLUTION, AND THE FIRST BAR WAS WRONG. Because
+this readout warns only in one direction -- drift shallower than 1/M -- its quiet branch is
+uninterpretable without a resolution: silence would read as "consistent with 1/M" when it
+may only mean "within resolution". Same discipline as the minimum detectable offset, same
+reason: an unresolved measurement is not a pass.
+
+`drift_slope()` bootstraps ROWS (not the two draw seeds, which give an error estimated from
+two points) since each row carries independent draws. But the bootstrap alone was WRONG, and
+finding out how was the useful part: it returns +/- 0.01, while an injected true 1/M drift
+recovers as M^-0.95 -- so the truth sits ~4 sigma outside the bar. The bootstrap measures
+DRAW NOISE and is blind to the estimator's own recovery bias; a short ladder is not exactly a
+power law and fitting one costs a systematic. Reporting the bar by itself would have
+manufactured a 4-sigma alarm from data that was right. The threshold is therefore
+`max(2*sd, SLOPE_FLOOR)` with `SLOPE_FLOOR = 0.10` measured by injection, and the readout
+prints which of the two dominates. Re-verified end to end: injected 1/M now reads consistent
+with no alarm, injected M^-0.2 reads M^-0.15 and trips at 8.5x the detectable departure.
+
+`test_the_bootstrap_bar_DOES_NOT_cover_the_recovery_bias` pins this directly -- truth outside
+the bootstrap bar, floor covering it, floor exceeding 2*sd -- so the floor cannot be dropped
+later as apparent redundancy.
+
+`pytest tests/ -q` -> 192 passed, 1 skipped.
+
+Additional validation: 2 further tests (33 in file), `pytest tests/ -q` -> 188 passed,
+1 skipped, 68.5 s. `test_an_unfrozen_weight_FORGES_a_rung_dependence_that_the_freeze_removes`
+reproduces the confound rather than merely asserting against it: ESS with no rung-dependent
+correlation to the true information, but a per-rung `I` draw-biased increasingly with M,
+gives a manufactured shift spread >5% under the unfrozen weight and <1% under the frozen
+one. A fixture bug was caught by the suite in passing -- the load test wrote rung fields
+only, which under the new default correctly yields None.
+
+The SECOND approximation is not closed and is not attempted here. Named next step for it:
+split the catalogue pool into two disjoint halves, hold rows/seeds/everything else fixed,
+and take the paired difference -- the same remedy shape as the score-grid bank error. Not
+run ahead of the ladders in flight.
+
+Files: `scripts/eval_score_catprior.py` (saves `<rung>_i_row`), `scripts/combine_catprior.py`
+(`load` reads it; new `_wmean`, `_wsem`, `row_weights`; `ess_abscissa` gains `wr=` and returns
+a fifth `shift` dict; group loop prints the weighted-vs-flat shift per rung or announces the
+fallback). Validation: 8 new tests in `tests/test_catprior_ladder_fit.py` (31 in file),
+`pytest tests/ -q` -> 186 passed, 1 skipped, 68.6 s, up from 178. Fire/reverted three ways --
+weights dropped in `_wmean`, trace substituted for the g-projection, partial `irow` accepted
+-- each broke a different test; the sign test also checks that reversing the correlation
+reverses the shift, so a sign error cannot pass on magnitude alone. Limitation: the eval-side
+save is NOT end-to-end tested, since that needs a GPU run; only the read side is covered.
+
 ## 2026-08-18l  cont.186 — grid_n=101 IS converged; the per-cut shifts are in flight (loop)
 
 Follow-up to cont.185, which measured the score-pass node bank as the carrier of the −0.665%
@@ -228,6 +5519,230 @@ headline) and mag −0.065% ± 0.091%.
    measured per-cut shift applied and quoted.  cont.186(a) removes one objection to the second
    option — 101 is converged, so a table corrected to 101 is not merely corrected to another
    arbitrary bank.
+
+## 2026-08-18k  docs — "Reading the docs" section added to AGENTS.md; CLAUDE.md collapsed to the import
+
+Per owner question ("how does the agent read the docs — relevant entries or the full doc?"), the
+reading strategy is now a rule instead of a convention. `AGENTS.md` (auto-loaded every session)
+gained a "Reading the docs" section replacing the owner's one-line placeholder: AGENTS/CLAUDE are
+injected automatically, nothing in `doc/` is — pull on demand, by section. Per file: API /
+ENVIRONMENT / MILESTONE / BRANCHES short, read whole; CONVENTIONS read in full before building or
+quoting any number; WORKLOG (largest file in the repo) never whole — top entries for state, then
+keyword/date/`cont.NNN` search for older self-contained entries; INFERENCE/MATH by cited §/M.x
+anchor; Gold-V* by Status banner first. Plus a writing norm: keep docs navigable — greppable
+headings, cite sections by anchor, not file alone.
+
+`CLAUDE.md` reduced to the `@AGENTS.md` import + one line: its three reading-order bullets became
+redundant with the new section (CONVENTIONS-first, ENVIRONMENT pointer, WORKLOG top-only). The
+owner's concurrent manual trim of the AGENTS.md rules section (formula block moved out to
+`doc/API.md`, spin-2 bullet out to CONVENTIONS §4, leaner unmatched-rows and login-node wording)
+is preserved as-is and not re-expanded.
+
+**Validation.** No code touched. Cross-checked that every rule the removed CLAUDE.md bullets
+carried exists in AGENTS.md's new section or in the target doc itself (CONVENTIONS §11 carries the
+update-when-changed duty).
+
+## 2026-08-18j  docs — cross-reference and staleness pass over the remaining doc/ files
+
+Follow-up to 2026-08-18i. Content-free reorganization only: no number, convention, or derivation
+was touched. Files: `doc/CONVENTIONS.md`, `doc/Gold-V1.md`, `doc/Gold-V2.md`, `doc/Gold-V3.md`,
+`doc/INFERENCE.md`.
+
+**Dangling memory pointers removed.** Eight references to the deleted Claude-memory files
+(`memory/project_reframe_outcome`, `memory/reference_constgold_catalogue`, `memory/project_eiv_floor`,
+`project_framing`, `project_rblend_firewall`, `project_stage3_detection`) — no `memory/` directory
+exists. Each site already carried the substance or gained an in-repo pointer instead: the constgold
+firewall now cites `CONVENTIONS.md` §2a, the c40-* quarantine record cites `Gold-V1.md` §3, and the
+stage-3 detection estimator cites its WORKLOG entries.
+
+**INFERENCE.md §7 (Pointers) fixed.** `SBI_shear.md` → `archive/pre-v3/docs/SBI_shear.md`
+(its own header already said so); the frozen-numbers line now credits `MILESTONE.md` first;
+`sbsi/forward_model.py` + `sbsi/scene_model.py` — gone from `sbsi/` since the V3 restructure — now
+point at `archive/pre-v3/sbs_shear/`. All other §7 code pointers verified to exist.
+
+**Path-convention banners.** Every script/job/plotting path cited inside Gold-V1/V2/V3 (15 checked,
+e.g. `scripts/train_measurement_model.py`, `jobs/job_pilot_harvest.sh`, `plotting/plot_flow_figures.py`)
+was moved to `archive/pre-v3/` by the library restructure and is stale at its stated location. The
+records are certified/planning history, so each doc's Status block now says once: paths predate the
+restructure and live under `archive/pre-v3/` — rather than rewriting them line by line.
+
+**Status/disambiguation banners added.** Gold-V1: superseded as the headline by the V3 milestone,
+retained as the certified V1 shape benchmark. Gold-V2: Stage 1 resolved 2026-07-24 (cont.146),
+V3 milestone flows descend from it. Gold-V3: explicitly disambiguated from the V3 *release* of
+`MILESTONE.md` (that V3 keeps R_blend external; this is the fold-R_blend-into-the-flow idea, still
+unbuilt) — the two "V3" meanings otherwise collide.
+
+**Verified current, left alone:** `MILESTONE.md`, `BRANCHES.md` (tight, accurate), `MATH.md` (all
+§-anchors it cites in INFERENCE.md — 2.3, 2.4, 5B.1–5B.3, 5C, A.7, (5.9) — exist), `README.md`
+(public master view; its environment section is deliberately self-contained because `doc/` does not
+exist on `master`), `INFERENCE.md` §0.
+
+**Validation.** Repo-wide grep: zero remaining memory-style references outside WORKLOG history; all
+cross-doc §-references resolve. No code touched, so no test run needed (suite state unchanged from
+18i: 117 passed, 1 skipped).
+
+## 2026-08-18i  docs — AGENTS.md/CLAUDE.md trimmed; detail split into doc/API.md and doc/ENVIRONMENT.md; seed convention restored into CONVENTIONS.md §9; stale root MATH.md removed
+
+Continues the uncommitted AGENTS.md trim from earlier today. No code behavior changed; the two
+`*.py` edits are comments/docstrings only.
+
+**AGENTS.md** (71 → 61 lines, restructured): keeps the one-workflow/V3 preamble, a doc index, the
+never-waived rules (scope, explicit-path contract, the `R_model = R_flow + R_blend` / `m`
+definition with the drop-don't-zero rule, numerical integrity + spin-2 + gradient check, login-node
+policy), and the WORKLOG requirement. All detail moved out:
+
+- **`doc/API.md` (new)** — Scope (the full pre-trim boundary bullets restored from HEAD, incl.
+  forward-response catalogue preparation and "next emulator update belongs in BlendEMU"), General
+  API contract, Public API with the response formula.
+- **`doc/ENVIRONMENT.md` (new)** — interpreters/install (sims1 + py31, PYTHONPATH, BlendEMU import
+  boundary, SBSI_CACHE_DIR/BLENDEMU_MODELS/BLENDEMU_ROOT), running the tests (py31 pytest command,
+  ~8 s suite, sklearn/GLIBCXX login-node trap), login-node/scheduler policy, data rule, gotchas.
+  Absorbs the corresponding sections of both AGENTS.md (incl. the conda/pytest block removed by the
+  earlier trim) and CLAUDE.md.
+
+**CLAUDE.md** (52 → 17 lines): keeps the `@AGENTS.md` import, the read-`doc/CONVENTIONS.md`-first
+rule, and pointers to `doc/ENVIRONMENT.md` and the WORKLOG reading note.
+
+**CONVENTIONS.md** — fixed a dangling pointer: §9 referenced the "Ensemble Seed Convention" section
+of `AGENTS.md`, which commit 3193cc5 had deleted (the text survived only in git history; recovered
+from `32b3c6f:AGENTS.md`). The full statement, rationale, worked example and seed-offset-cancellation
+paragraph now live in §9 itself. The scope note at the top now credits `MILESTONE.md` for the MODEL
+and `AGENTS.md` for numerical integrity, and records that seeds live in §9.
+
+**Root `MATH.md` removed.** It was the 07-31 (40e38ae) 368-line draft of the Bartlett derivation;
+`doc/MATH.md` is the 08-17 (a0e2e4b) 581-line expanded version that restructured §6–8 (new §6
+"Eulerian form", so old §6/7/8 → §7/8/9). Root MATH.md also violated the AGENTS.md rule that only
+AGENTS.md/CLAUDE.md/README.md live at the root. The old-numbering references in
+`sbsi/lagrangian_score.py` and `tests/test_lagrangian_score.py` (`MATH.md` §7(a)/(b)/(c) =
+"Numerator checks") were renumbered to §8(a)/(b)/(c) to match `doc/MATH.md`; §4 references are
+unchanged (numbering identical through §5). `archive/` left untouched (provenance).
+
+**Validation.** Repo-wide grep: no remaining references to root `MATH.md` outside `archive/` and
+WORKLOG history; no references to AGENTS.md sections that moved (checked `AGENTS.md` mentions in
+`doc/`, `sbsi/`, `scripts/`, `tests/`, `README.md` — all point at rules that remain in AGENTS.md).
+Test suite after the comment edits:
+`PYTHONPATH="$PWD" /project/ls-gruen/users/zekang.zhang/envs/py31/bin/python -m pytest tests/ -q`
+— 117 passed, 1 skipped (the BlendEMU cross-check), 80 s on the login node.
+
+**Limitations / next steps.** Old WORKLOG entries still say "AGENTS.md 'Ensemble Seed Convention'"
+— left as history. `doc/BRANCHES.md` line 16 (AGENTS.md/CLAUDE.md tracked vs ignored) is unaffected.
+Nothing here commits the earlier session's pending WORKLOG entries; they stay staged for the owner's
+commit decision.
+
+## 2026-08-18h  BlendEMU — repo cleanup: dev checkpoint, main back to GitHub, V3 strategy integrated into train_emulator
+
+Follow-up to 2026-08-18g, per owner: BlendEMU had accumulated too many unpushed intermediate
+experiment files. Restructured with three moves (SBSI itself untouched except this entry):
+
+**1. `dev` checkpoint.** New branch `dev` in BlendEMU with one commit capturing the ENTIRE prior
+local state — the 9 in-flight tracked edits, all ~168 untracked experiment artifacts under
+`models/` (~95 MB), CLAUDE.md, and 2026-08-18g's standalone `retrain_extnbr_reweighted.py`
+port + its tests. Nothing discarded; switching back to `dev` restores everything (checkout
+removes those files from `main`'s working tree, by design).
+
+**2. `main` = GitHub + README.** Local `main` was already at `origin/main` (9da0def); after the
+dev checkpoint it was re-checked-out clean, with the owner's local README trim (ASCII banner
+removed, convention section folded away) restored from `dev` and committed
+(f752f6b). The ignored per-user files (`configs/*.yaml`, `jobs/*.sh`) survive in the working
+tree on both branches.
+
+**3. V3 strategy replaces the old regression recipe on `main` (a0a124e).** The old
+single-stage flow in `scripts/train_emulator.py` (R2 early stopping, Optuna objective
+`eval_r2 - 0.6*|train_r2 - eval_r2|`, split over the whole cut population) is REMOVED and
+replaced by the V3 strategy, integrated in place:
+- `load_regression_data` streams the pair catalogue batched with the vector-score columns
+  (case, input_index, shear_angle, delta_et2), applies window→cuts→finite per batch, computes
+  the official random-row split over the fit-window rows only, standardizes on the fit
+  population (the one generalization vs V3, which froze the source-metadata standardization),
+  and returns the DMatrix trio + `VectorEvaluation` over the development rows.
+- `tune_regression` / `train_regression` use the shared `fit_two_stage`: ordinary base with
+  RMSE early stopping (1000/50/seed 20260816), then the from-scratch positive-response-weighted
+  refit at the base's tree count (cap 50, label-free weights). The Optuna objective MINIMIZES
+  abs(case-balanced dev vector slope − 1) of the weighted model over the 8 XGBoost params +
+  response_weight_alpha (0.01–0.2 log); seeded TPE; the DEPLOYED model is the weighted booster
+  (sidecar records the full `response_power_weight` provenance). `DEFAULT_PARAMS` gains the V3
+  winner alpha 0.0305735 as the no-study fallback.
+- New config keys (DEFAULTS + example yaml): `training.regression_fit_cases` [40, 199] and
+  `training.regression_dev_cases` [0, 39]. Self-response and classification recipes, the CLI,
+  and `run_pipeline` step 5 (subprocess `--mode tune --task all`) are unchanged.
+
+**Validation.** Weight formula and vector score verified numerically IDENTICAL to the archived
+V3 reference (`archive/pre-v3/scripts/tune_v22_reweighted_vector_optuna.py`) on random inputs.
+New `tests/test_regression_v3_strategy.py` (6 tests, standalone-under-sims1 or pytest): weights
+(cap/mean-1/label-independence), hand-solved spin-2 slope (0.75, null 0), loader split +
+fit-population standardization + reproducible seed + gap-case rejection, two-stage fixed-trees
+fit (incl. booster determinism), and the CLI end to end (2-trial tune → final train → sidecar;
+plus the `--no-optuna` fallback path). All 6 pass under sims1 (xgboost 2.1.1, optuna 4.0.0,
+CPU); `pytest tests/` on main passes (the GitHub `tests/` dir was empty, so this file is the
+whole suite there). One loader indexing bug (fit-block labels indexed by a full-length mask)
+was caught by the smoke tests and fixed before commit.
+
+**State.** `main` is 2 commits ahead of `origin/main` (README + V3) — NOT pushed; push is the
+owner's call. The real production tune still belongs on the scheduler (run_pipeline step 5 or
+`train_emulator.py --mode tune --task regression` under sims1 with a GPU).
+
+## 2026-08-18g  BlendEMU — the V3 R_blend reweight training + vector-slope tuning ported into the emulator repo
+
+Per the standing decision ("the next emulator training/tuning update belongs in BlendEMU"), the
+strategy that produced the V3/V3b emulators — two sequential trainings per candidate plus an
+Optuna search scored by the case-balanced vector slope — now lives in BlendEMU itself. SBSI is
+unchanged except this entry.
+
+**BlendEMU additions** (all new files; no tracked BlendEMU file touched, the owner's uncommitted
+in-flight edits untouched):
+
+- `scripts/retrain_extnbr_reweighted.py` — the port of
+  `archive/pre-v3/scripts/tune_v22_reweighted_vector_optuna.py` onto BlendEMU's own data path.
+  `--mode tune`: every Optuna trial (TPESampler seed 20260816, multivariate, 10 startup trials,
+  empty study seeded with the source-metadata params at alphas 0.035/0.05/0.065/0.10) performs
+  (1) a fresh ordinary squared-error base with 50-round RMSE early stopping on the official
+  validation rows, then (2) a from-scratch refit at the base's selected tree count under
+  positive-response weights derived from THAT trial's own base predictions —
+  `(1 + alpha*min(max(pred,0)^2/mean_train_power, 50))/mean_raw_weight`, labels never used —
+  and is scored by `abs(case-balanced vector slope - 1)` on the case-disjoint development cases
+  (default fit 40–199, dev 0–39). Resume-capable sqlite study; atomic no-overwrite artifacts
+  (`best_base_model.json`, `best_weighted_model.json`, `summary.json` with sha256s, `trials.csv`);
+  ConstGold/anchor flags recorded false and never read. `--mode train`: the fixed-recipe variant
+  (both stages pinned to an exact tree count, no early stopping) replayed from a tune summary or
+  explicit params/alpha/n-trees, optionally writing the standard BlendEMU sidecar
+  (`regression_model_<tag>.json` + `emulator_metadata_<tag>.json` via `train_emulator._update_metadata`,
+  with the `response_power_weight` provenance block) so `BlendingPredictor` can load it.
+- `jobs/job_retrain_extnbr_reweighted_tune.sh` — Slurm wrapper (a40, 140 G, 12 cpus, XGB_DEVICE=cuda)
+  for the 30-trial production tune, following the V3 job's resources.
+- `tests/test_reweighted_extnbr.py` — 5 smoke tests (pytest or standalone `python`).
+- `configs/fs2_lsst_r_extnbr_v22.yaml` — the frozen V2.2 config copied from the SBSI archive so the
+  job is self-contained (gitignored like every real yaml; the script validates config features/cuts
+  against the frozen source metadata, and takes standardization from it rather than recomputing).
+
+**Data-path fidelity.** `load_pair_population` reproduces the SBSI V3 cache builder exactly:
+batched column-projected read of `response_catalogue_train.feather`, case window then
+`source_select_reg` cuts then finite check, the official `rescale`, per-batch row order preserved,
+target frozen at the source metadata's mean/std, and the official random-row 80/20 split taken as
+`train_test_split` over the positions of the fit-case rows (test_size/random_state from config
+defaults 0.2/321) — the same construction `prepare_v22_oof_learning_cache.py` used.
+
+**Verified identical to the archived V3 tuner** (random-input differencing under sims1):
+`positive_response_weights` outputs and metadata, `VectorEvaluation.score` dictionaries, and the
+Optuna `suggest_*` parameterization all match bit-for-bit. Two deliberate deviations: early
+stopping uses the `xgb.callback.EarlyStopping` API (the `early_stopping_rounds=` kwarg is gone in
+newer xgboost; semantics unchanged), and `json_clean` checks bool before int so summary booleans
+serialize as `false`/`true` (the V3 helper ordered int first and wrote 0/1).
+
+**Smoke validation.** Standalone under sims1 (xgboost 2.1.1, optuna 4.0.0, XGB_DEVICE=cpu,
+LD_LIBRARY_PATH fix for the login node): all 5 pass — weight formula (cap, mean-1 normalization,
+label-independence), a hand-solved spin-2 vector case (slope 0.75, null 0), the two-stage fit at
+fixed tree count, a 2-trial end-to-end tune including resume-as-no-op and artifact/no-temp-file
+checks, and the fixed-recipe train + sidecar write. Under py31 (pytest 9, xgboost 3.0.5, no
+optuna): 5 passed with the end-to-end tests guarded to explicit SKIPs — `train_emulator` imports
+optuna at module level, so the training stack is sims1-only by construction (pre-existing).
+Pre-existing and unrelated: `tests/test_constant_shear.py::test_retrieve_constant_response_per_object_response`
+fails with `KeyError: 'MAG_AUTO'` inside the owner-modified `blendemu/response.py`, untouched by
+this change.
+
+**Not run.** The real 47.3M-row tune stays off the login node; `sbatch
+blendemu/jobs/job_retrain_extnbr_reweighted_tune.sh` is ready. Next steps after it completes:
+swap-evaluate the new `best_weighted_model.json` through the existing ConstGold additive-swap path
+before any promotion, and only then pin its sha256 into the SBSI model registry.
 
 ## 2026-08-18f  tutorial — robust checkout paths and published measurement contours
 

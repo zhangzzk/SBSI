@@ -1,0 +1,81 @@
+{
+  "label": "Experiment E (seed 501)",
+  "curve": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/mixed_shear_cde/measurement_flow_mixed_g0_g005_E_s501_swabase_train_curve.npz",
+  "n_epochs": 80,
+  "response_weight": 450.0,
+  "objective_definition": "val_nll + response_weight * val_resp",
+  "training_total_available": false,
+  "training_total_note": "Per-epoch training response loss was not persisted.",
+  "best_total": {
+    "epoch": 78,
+    "value": 1.5345794982966359,
+    "val_nll": -0.03276946675060687,
+    "weighted_response": 1.5673489650472427
+  },
+  "final": {
+    "epoch": 80,
+    "train_nll": -0.009990591156811666,
+    "val_nll": -0.0026101220501979637,
+    "val_response": 0.0034892951511998477,
+    "weighted_response": 1.5701828180399315,
+    "val_total": 1.5675726959897336
+  },
+  "swa_epochs": [
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80
+  ],
+  "windows": {
+    "previous_ten": {
+      "val_total": {
+        "first_epoch": 61,
+        "last_epoch": 70,
+        "mean": 1.588014183917878,
+        "standard_deviation": 0.020467578097370112,
+        "linear_slope_per_epoch": -0.005396684716003578
+      },
+      "val_nll": {
+        "first_epoch": 61,
+        "last_epoch": 70,
+        "mean": -0.00713972960988834,
+        "standard_deviation": 0.019613328031600045,
+        "linear_slope_per_epoch": -0.004768681467576569
+      },
+      "weighted_response": {
+        "first_epoch": 61,
+        "last_epoch": 70,
+        "mean": 1.5951539135277661,
+        "standard_deviation": 0.007018094699276203,
+        "linear_slope_per_epoch": -0.000628003248426956
+      }
+    },
+    "last_ten": {
+      "val_total": {
+        "first_epoch": 71,
+        "last_epoch": 80,
+        "mean": 1.5626345719068253,
+        "standard_deviation": 0.024951920309095148,
+        "linear_slope_per_epoch": 0.0013611647615139292
+      },
+      "val_nll": {
+        "first_epoch": 71,
+        "last_epoch": 80,
+        "mean": -0.014473980200804116,
+        "standard_deviation": 0.024408318456521597,
+        "linear_slope_per_epoch": 0.002612153213451537
+      },
+      "weighted_response": {
+        "first_epoch": 71,
+        "last_epoch": 80,
+        "mean": 1.5771085521076293,
+        "standard_deviation": 0.010583599777770677,
+        "linear_slope_per_epoch": -0.0012509884519376093
+      }
+    }
+  }
+}
