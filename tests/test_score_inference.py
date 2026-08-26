@@ -10,15 +10,7 @@ transporting the samples does.
 """
 
 import numpy as np
-
-try:                                       # pytest lives in py31; the flow env is sims1
-    import pytest
-except ImportError:                        # minimal shim so `python tests/...` also works
-    import functools
-    import types
-
-    pytest = types.SimpleNamespace(
-        fixture=lambda *a, **k: (lambda fn: functools.lru_cache(maxsize=None)(fn)))
+import pytest
 
 from sbsi.posterior_shape import make_e_grid
 from sbsi.score_inference import (
@@ -32,9 +24,10 @@ from sbsi.score_inference import (
 )
 from sbsi.shear_map import apply_shear_to_ellipticity
 
-SIGMA_E = 0.24          # per-component intrinsic ellipticity scatter, ~ the real one
-A_RESP = 0.30           # toy "measurement" response, ~ the certified R_flow
-SIGMA_N = 0.20          # toy measurement noise
+SIGMA_E = 0.24  # per-component intrinsic ellipticity scatter, ~ the real one
+A_RESP = 0.30  # toy "measurement" response, ~ the certified R_flow
+SIGMA_N = 0.20  # toy measurement noise
+TOY_GAMMA = 0.02
 
 
 @pytest.fixture(scope="module")
@@ -65,7 +58,7 @@ def test_generator_matches_closed_form(nodes, prior):
     differentiates the sheared prior numerically, the other assembles
     `-(v . grad log p0 + div v)` by hand."""
     u_closed = generator_closed_form(prior, nodes.grid)
-    rms = np.sqrt(np.mean(nodes.u ** 2))
+    rms = np.sqrt(np.mean(nodes.u**2))
     assert np.abs(nodes.u - u_closed).max() / rms < 1e-3
 
 
@@ -93,7 +86,7 @@ def _toy_experiment(prior, nodes, gamma, n=60_000, seed=3):
     """
     rng = np.random.default_rng(seed)
     e1i, e2i = prior.sample(n, rng)
-    noise = rng.normal(0.0, SIGMA_N, size=(n, 2))          # common random numbers
+    noise = rng.normal(0.0, SIGMA_N, size=(n, 2))  # common random numbers
     grid = nodes.grid
     out = {}
     for sign in (+1, -1):
@@ -102,44 +95,47 @@ def _toy_experiment(prior, nodes, gamma, n=60_000, seed=3):
         # log p(ehat | e_k) for every node, up to a per-row constant
         d1 = ehat[:, None, 0] - A_RESP * grid[None, :, 0]
         d2 = ehat[:, None, 1] - A_RESP * grid[None, :, 1]
-        ll = -(d1 ** 2 + d2 ** 2) / (2 * SIGMA_N ** 2)
+        ll = -(d1**2 + d2**2) / (2 * SIGMA_N**2)
         s, info, _ = scores_from_loglike(ll.astype(np.float32), nodes, device="cpu")
         out[sign] = dict(s=s, info=info, ehat=ehat, e=np.stack([e1, e2], axis=1))
     # transport: the same derivative, taken by moving the samples
-    out["R_transport"] = float(
-        np.mean(A_RESP * (out[+1]["e"][:, 0] - out[-1]["e"][:, 0])) / (2 * gamma))
+    out["R_transport"] = float(np.mean(A_RESP * (out[+1]["e"][:, 0] - out[-1]["e"][:, 0])) / (2 * gamma))
     return out
 
 
-def test_estimator_recovers_injected_shear(prior, nodes):
+@pytest.fixture(scope="module")
+def toy_experiment(prior, nodes):
+    return _toy_experiment(prior, nodes, TOY_GAMMA)
+
+
+def test_estimator_recovers_injected_shear(toy_experiment):
     """§5B end to end: `ghat = sum s / sum I` must return the shear that was applied."""
-    gamma = 0.02
-    r = _toy_experiment(prior, nodes, gamma)
+    r = toy_experiment
     ones = np.ones(len(r[+1]["s"]))
     sp, ip = [], []
     for sign in (+1, -1):
         a, b = project(r[sign]["s"], r[sign]["info"], ones, 0 * ones)
         sp.append(a)
         ip.append(b)
-    s_anti = 0.5 * (sp[0] - sp[1])                        # antithetic: kills shape noise
+    s_anti = 0.5 * (sp[0] - sp[1])  # antithetic: kills shape noise
     i_anti = 0.5 * (ip[0] + ip[1])
     ghat, _ = shear_estimate(s_anti, i_anti)
     err = float(np.std(s_anti / np.mean(i_anti)) / np.sqrt(len(s_anti)))
-    assert abs(ghat - gamma) < max(4 * err, 0.02 * gamma), (
-        f"ghat={ghat:.5f} vs injected {gamma}, err={err:.5f}")
+    assert abs(ghat - TOY_GAMMA) < max(4 * err, 0.02 * TOY_GAMMA), (
+        f"ghat={ghat:.5f} vs injected {TOY_GAMMA}, err={err:.5f}"
+    )
 
 
-def test_covariance_identity_returns_the_transport_response(prior, nodes):
+def test_covariance_identity_returns_the_transport_response(toy_experiment):
     """(2.3) with `f = ehat`: `Cov_0(ehat, s)` is the response, and it must agree with
     the response obtained by transporting the samples -- the two sides of §5's opening
     equation, evaluated on the same draws."""
-    gamma = 0.02
-    r = _toy_experiment(prior, nodes, gamma)
-    rs = [response_from_score(r[sign]["ehat"][:, 0], r[sign]["s"][:, 0])
-          for sign in (+1, -1)]
+    r = toy_experiment
+    rs = [response_from_score(r[sign]["ehat"][:, 0], r[sign]["s"][:, 0]) for sign in (+1, -1)]
     r_score = 0.5 * (rs[0] + rs[1])
     assert abs(r_score / r["R_transport"] - 1.0) < 0.03, (
-        f"Cov(ehat,s)={r_score:.4f} vs transport {r['R_transport']:.4f}")
+        f"Cov(ehat,s)={r_score:.4f} vs transport {r['R_transport']:.4f}"
+    )
 
 
 def test_information_finite_difference_matches_louis(prior, nodes):
@@ -150,7 +146,7 @@ def test_information_finite_difference_matches_louis(prior, nodes):
     ehat = A_RESP * np.stack([e1i, e2i], 1) + rng.normal(0, SIGMA_N, size=(20_000, 2))
     d1 = ehat[:, None, 0] - A_RESP * nodes.grid[None, :, 0]
     d2 = ehat[:, None, 1] - A_RESP * nodes.grid[None, :, 1]
-    ll = (-(d1 ** 2 + d2 ** 2) / (2 * SIGMA_N ** 2)).astype(np.float32)
+    ll = (-(d1**2 + d2**2) / (2 * SIGMA_N**2)).astype(np.float32)
     _, i_fd, _ = scores_from_loglike(ll, nodes, device="cpu")
     _, i_an, _ = scores_from_loglike(ll, nodes, device="cpu", analytic_info=True)
     assert abs(i_fd[:, 0, 0].mean() / i_an[:, 0, 0].mean() - 1.0) < 0.01
@@ -166,27 +162,3 @@ def test_uninformative_data_carries_no_information(prior, nodes):
     var_u = nodes.bartlett()["scale"] ** 2
     assert np.abs(s).max() < 1e-6 * np.sqrt(var_u)
     assert np.abs(info).max() < 5e-3 * var_u
-
-
-if __name__ == "__main__":                 # `python tests/test_score_inference.py`
-    import inspect
-    import sys
-    import time
-
-    _get = (lambda f: f.__wrapped__ if hasattr(f, "__wrapped__") else f)
-    _p = _get(prior)()
-    _n = _get(nodes)(_p)
-    _fx = {"prior": _p, "nodes": _n}
-    fails = 0
-    for _name, _fn in sorted(globals().items()):
-        if not _name.startswith("test_") or not callable(_fn):
-            continue
-        _t = time.time()
-        try:
-            _fn(**{k: _fx[k] for k in inspect.signature(_fn).parameters})
-            print(f"PASS {_name:<52} {time.time() - _t:5.1f}s")
-        except AssertionError as exc:
-            fails += 1
-            print(f"FAIL {_name:<52} {exc}")
-    print(f"\n{fails} failure(s)")
-    sys.exit(1 if fails else 0)

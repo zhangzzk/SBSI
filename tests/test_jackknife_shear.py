@@ -20,12 +20,15 @@ import numpy as np
 import pytest
 
 from sbsi.score_inference import (
-    blocked_sums, full_shear_estimate, jackknife_blocks, jackknife_shear,
+    blocked_sums,
+    full_shear_estimate,
+    jackknife_blocks,
+    jackknife_shear,
     jackknife_sigma,
 )
 
-TAU, SIGMA = 0.30, 0.10          # intrinsic shape scatter and measurement noise
-NU2 = TAU ** 2 + SIGMA ** 2
+TAU, SIGMA = 0.30, 0.10  # intrinsic shape scatter and measurement noise
+NU2 = TAU**2 + SIGMA**2
 NBLOCK = 100
 
 
@@ -164,7 +167,7 @@ def test_paired_difference_is_tighter_than_either_bar():
     """
     rng = np.random.default_rng(7)
     s, info, block = draw(20_000, 0.02, rng, ring=False)
-    keep = np.hypot(s[:, 0], s[:, 1]) * NU2 < 0.55        # a cut on the same objects
+    keep = np.hypot(s[:, 0], s[:, 1]) * NU2 < 0.55  # a cut on the same objects
     _, sig_a, reps_a = jackknife_shear(s, info, block, NBLOCK)
     _, sig_b, reps_b = jackknife_shear(s[keep], info[keep], block[keep], NBLOCK)
     d_sig = float(jackknife_sigma((reps_b[:, 0] - reps_a[:, 0])[:, None])[0])
@@ -207,7 +210,7 @@ def test_empty_blocks_keep_the_replicate_array_aligned():
     """Replicates must be one per block even when a block is empty, or pairing misaligns."""
     rng = np.random.default_rng(11)
     s, info, block = draw(500, 0.02, rng, ring=False)
-    sub = block < NBLOCK - 10                              # last 10 blocks empty
+    sub = block < NBLOCK - 10  # last 10 blocks empty
     _, _, reps = jackknife_shear(s[sub], info[sub], block[sub], NBLOCK)
     assert len(reps) == NBLOCK
-    assert np.allclose(reps[-1], reps[-2])                 # both delete nothing
+    assert np.allclose(reps[-1], reps[-2])  # both delete nothing

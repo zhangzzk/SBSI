@@ -9,7 +9,7 @@ comprehension variables as pre-loop reads (59 candidates instead of 12), the oth
 an isinstance guard so the walk descended into `if` bodies and reported the `if` line
 instead of the assignment.  Only the fire/silence pair caught them.
 """
-import io
+
 import pathlib
 import subprocess
 import sys
@@ -28,13 +28,18 @@ REVIEWED = FIXTURES / "shadow_reviewed_sample.py"
 MODSCOPE = FIXTURES / "shadow_module_scope_sample.py"
 
 
+@pytest.fixture(scope="module")
+def repository_scan():
+    return sweep.scan_paths(sweep.default_paths(REPO)), sweep.load_allowlist()
+
+
 def test_the_sweep_fires_on_the_bug_that_killed_the_gpu_jobs():
     """`pre` bound before the loop, read inside it, rebound to a tensor."""
     hits = sweep.scan_paths([BUG])
     names = {h.name for h in hits}
     assert names == {"pre"}, f"expected exactly the `pre` rebind, got {hits}"
     assert hits[0].func == "draw_loop"
-    assert "ev[:, :m + 1]" in hits[0].source
+    assert "ev[:,:m+1]" in "".join(hits[0].source.split())
 
 
 def test_the_sweep_fires_at_MODULE_SCOPE_and_attributes_each_scope_correctly():
@@ -76,37 +81,19 @@ def test_a_deliberate_fixed_point_IS_reported_and_that_is_correct():
 
 
 def test_a_self_refine_is_not_a_hit_even_when_read_above():
-    src = (
-        "def f(rows, dev):\n"
-        "    x = load()\n"
-        "    for r in rows:\n"
-        "        use(x)\n"
-        "        x = x.to(dev)\n"
-    )
+    src = "def f(rows, dev):\n    x = load()\n    for r in rows:\n        use(x)\n        x = x.to(dev)\n"
     assert sweep.scan_source(src, "inline") == []
 
 
 def test_a_rebind_read_only_BELOW_it_is_not_a_hit():
     """The mechanism needs the read ABOVE: that is what makes iteration 2 differ from 1."""
-    src = (
-        "def f(rows):\n"
-        "    x = load()\n"
-        "    for r in rows:\n"
-        "        x = compute(r)\n"
-        "        use(x)\n"
-    )
+    src = "def f(rows):\n    x = load()\n    for r in rows:\n        x = compute(r)\n        use(x)\n"
     assert sweep.scan_source(src, "inline") == []
 
 
 def test_a_comprehension_variable_is_not_a_victim():
     """Comprehension targets have their own scope in Python 3 -- they flooded draft one."""
-    src = (
-        "def f(rows):\n"
-        "    y = [s for s in rows]\n"
-        "    for r in rows:\n"
-        "        use(s_outer)\n"
-        "        s = r\n"
-    )
+    src = "def f(rows):\n    y = [s for s in rows]\n    for r in rows:\n        use(s_outer)\n        s = r\n"
     assert [h.name for h in sweep.scan_source(src, "inline")] == []
 
 
@@ -125,40 +112,45 @@ def test_an_assignment_nested_in_an_if_is_still_reported():
     assert hits[0].source == "p = r", f"must anchor on the assignment, got {hits[0].source}"
 
 
-def test_the_repo_has_no_unreviewed_hits():
+def test_the_repo_has_no_unreviewed_hits(repository_scan):
     """The regression guard.  A NEW hit means someone wrote the pattern again.
 
     If this fails, read the loop.  Deliberate loop-carried state goes in the allowlist
     WITH a reason; a rebind that means something different from what the loop reads above
     it is the bug, and it should be renamed instead.
     """
-    hits = sweep.scan_paths(sweep.default_paths(REPO))
-    allow = sweep.load_allowlist()
+    hits, allow = repository_scan
     # keys are repo-relative, so scan from the repo root the same way the CLI does
-    new = [h for h in hits
-           if str(pathlib.Path(h.path).relative_to(REPO)) + f"::{h.func}::{h.name}"
-           not in allow]
-    assert not new, ("unreviewed loop-shadowing hits:\n  "
-                     + "\n  ".join(f"{h.path}:{h.lineno} {h.func}() {h.name!r}"
-                                   for h in new))
+    new = [
+        h for h in hits if str(pathlib.Path(h.path).relative_to(REPO)) + f"::{h.func}::{h.name}" not in allow
+    ]
+    assert not new, "unreviewed loop-shadowing hits:\n  " + "\n  ".join(
+        f"{h.path}:{h.lineno} {h.func}() {h.name!r}" for h in new
+    )
 
 
-def test_the_allowlist_has_no_dead_entries():
+def test_the_allowlist_has_no_dead_entries(repository_scan):
     """A stale allowlist silently re-hides a reviewed line that moved or was deleted."""
-    hits = sweep.scan_paths(sweep.default_paths(REPO))
-    live = {str(pathlib.Path(h.path).relative_to(REPO)) + f"::{h.func}::{h.name}"
-            for h in hits}
-    dead = sorted(sweep.load_allowlist() - live)
+    hits, allow = repository_scan
+    live = {str(pathlib.Path(h.path).relative_to(REPO)) + f"::{h.func}::{h.name}" for h in hits}
+    dead = sorted(allow - live)
     assert not dead, f"allowlist entries that no longer match any hit: {dead}"
 
 
 def test_the_cli_exits_nonzero_only_on_a_new_hit():
     """So it can gate CI without anyone reading the output."""
-    ok = subprocess.run([sys.executable, str(REPO / "scripts" / "sweep_loop_shadowing.py")],
-                        cwd=REPO, capture_output=True, text=True)
+    ok = subprocess.run(
+        [sys.executable, str(REPO / "scripts" / "sweep_loop_shadowing.py")],
+        cwd=REPO,
+        capture_output=True,
+        text=True,
+    )
     assert ok.returncode == 0, ok.stdout + ok.stderr
-    bad = subprocess.run([sys.executable, str(REPO / "scripts" / "sweep_loop_shadowing.py"),
-                          str(BUG), "--no-allowlist"], cwd=REPO,
-                         capture_output=True, text=True)
+    bad = subprocess.run(
+        [sys.executable, str(REPO / "scripts" / "sweep_loop_shadowing.py"), str(BUG), "--no-allowlist"],
+        cwd=REPO,
+        capture_output=True,
+        text=True,
+    )
     assert bad.returncode == 1
     assert "pre" in bad.stdout

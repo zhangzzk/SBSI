@@ -31,16 +31,16 @@ def test_infer_v1_job_records_the_named_setup():
     job = (ROOT / "jobs" / "job_infer_v1.sh").read_text()
 
     for setting in (
-        '${PROPOSAL_FLOW_SAMPLES:=128}',
-        '${PROPOSAL_STATISTIC:=mean}',
-        '${PROPOSAL_DISPERSION_STATISTIC:=std}',
-        '${PROPOSAL_CANDIDATES:=16384}',
-        '${PROPOSAL_PREFILTER_CANDIDATES:=131072}',
-        '${DRAWS:=16384}',
-        '${PROPOSAL_EPSILON:=0.1}',
-        '${INITIAL_STRATEGY:=mean_observed_shape}',
-        '${ADAPTIVE_ONE_STEP:=1}',
-        '${RETAIN_FULL_LADDER:=1}',
+        "${PROPOSAL_FLOW_SAMPLES:=128}",
+        "${PROPOSAL_STATISTIC:=mean}",
+        "${PROPOSAL_DISPERSION_STATISTIC:=std}",
+        "${PROPOSAL_CANDIDATES:=16384}",
+        "${PROPOSAL_PREFILTER_CANDIDATES:=131072}",
+        "${DRAWS:=16384}",
+        "${PROPOSAL_EPSILON:=0.1}",
+        "${INITIAL_STRATEGY:=mean_observed_shape}",
+        "${ADAPTIVE_ONE_STEP:=1}",
+        "${RETAIN_FULL_LADDER:=1}",
     ):
         assert setting in job
     assert '--inference-version "Infer V1"' in job

@@ -87,9 +87,7 @@ def test_defensive_proposal_draws_are_exact_prefixes_across_maximum_sizes():
     np.testing.assert_array_equal(short.indices, long.indices[:, :37])
     np.testing.assert_array_equal(short.probability, long.probability[:, :37])
     np.testing.assert_array_equal(short.local_member, long.local_member[:, :37])
-    np.testing.assert_array_equal(
-        short.global_component, long.global_component[:, :37]
-    )
+    np.testing.assert_array_equal(short.global_component, long.global_component[:, :37])
     np.testing.assert_array_equal(short.candidate_radius, long.candidate_radius)
 
 
@@ -137,9 +135,7 @@ def test_posterior_adapted_draw_is_exact_across_object_chunks():
         likelihood.cache.prior.weights,
         local_base_weights=likelihood.cache.get(0.0, 0.0).detection_probability,
     )
-    observed = pd.DataFrame(
-        {"measured_e1": [-0.22, -0.08, 0.0, 0.11, 0.24]}
-    )
+    observed = pd.DataFrame({"measured_e1": [-0.22, -0.08, 0.0, 0.11, 0.24]})
 
     def adapted_draw(frame, *, object_offset):
         candidates = proposal.candidates(frame, n_candidates=3)
@@ -186,9 +182,7 @@ def test_posterior_adapted_subset_keeps_absolute_object_streams():
         likelihood.cache.prior.weights,
         local_base_weights=likelihood.cache.get(0.0, 0.0).detection_probability,
     )
-    observed = pd.DataFrame(
-        {"measured_e1": [-0.22, -0.08, 0.0, 0.11, 0.24]}
-    )
+    observed = pd.DataFrame({"measured_e1": [-0.22, -0.08, 0.0, 0.11, 0.24]})
     candidates = proposal.candidates(observed, n_candidates=3)
     target = likelihood.log_importance_weights(
         observed,
@@ -228,9 +222,7 @@ def test_posterior_adapted_subset_keeps_absolute_object_streams():
 
 def test_global_prior_draws_are_nested_and_mark_candidate_membership():
     likelihood = _likelihood()
-    proposal = DefensiveLocalProposal(
-        _coordinates(likelihood), likelihood.cache.prior.weights
-    )
+    proposal = DefensiveLocalProposal(_coordinates(likelihood), likelihood.cache.prior.weights)
     observed = pd.DataFrame({"measured_e1": [-0.15, 0.12]})
     candidates = proposal.candidates(observed, n_candidates=2)
     short = proposal.draw_global(candidates, n_draws=31, seed=207)
@@ -241,16 +233,12 @@ def test_global_prior_draws_are_nested_and_mark_candidate_membership():
     assert np.all(short.global_component)
     rows = np.arange(len(short.indices))[:, None]
     recovered = candidates.indices[rows, short.local_position.clip(min=0)]
-    np.testing.assert_array_equal(
-        recovered[short.local_member], short.indices[short.local_member]
-    )
+    np.testing.assert_array_equal(recovered[short.local_member], short.indices[short.local_member])
 
 
 def test_coalesced_draw_preserves_every_nested_importance_sum():
     likelihood = _likelihood()
-    proposal = DefensiveLocalProposal(
-        _coordinates(likelihood), likelihood.cache.prior.weights
-    )
+    proposal = DefensiveLocalProposal(_coordinates(likelihood), likelihood.cache.prior.weights)
     draw = proposal.draw(
         pd.DataFrame({"measured_e1": [-0.1, 0.1]}),
         n_draws=64,
@@ -350,12 +338,8 @@ def test_gaussian_coordinate_cache_uses_mean_and_standard_deviation():
         seed=9,
     )
 
-    np.testing.assert_allclose(
-        coordinates.values[:2, 0], draws.mean(axis=1)[:2, 0]
-    )
-    np.testing.assert_allclose(
-        coordinates.dispersion[:2, 0], draws.std(axis=1)[:2, 0]
-    )
+    np.testing.assert_allclose(coordinates.values[:2, 0], draws.mean(axis=1)[:2, 0])
+    np.testing.assert_allclose(coordinates.dispersion[:2, 0], draws.std(axis=1)[:2, 0])
     assert coordinates.dispersion_statistic == "std"
 
 
@@ -400,9 +384,7 @@ def test_uncertainty_reranking_can_recover_narrow_high_mass_atom():
     observed = pd.DataFrame({"measured_e1": [0.0]})
 
     nearest = proposal.candidates(observed, n_candidates=1)
-    reranked = proposal.candidates(
-        observed, n_candidates=1, prefilter_candidates=4
-    )
+    reranked = proposal.candidates(observed, n_candidates=1, prefilter_candidates=4)
     torch_reranked = proposal.candidates(
         observed,
         n_candidates=1,
@@ -427,9 +409,7 @@ def test_direct_uncertainty_mips_matches_brute_gaussian_ranking():
     )
     prior = np.array([0.05, 0.15, 0.5, 0.3])
     detection = np.array([0.8, 0.4, 0.9, 0.7])
-    proposal = DefensiveLocalProposal(
-        coordinates, prior, local_base_weights=detection
-    )
+    proposal = DefensiveLocalProposal(coordinates, prior, local_base_weights=detection)
     observed = pd.DataFrame({"x": [0.12, -0.25], "y": [0.03, 0.18]})
     result = proposal.uncertainty_candidates(observed, n_candidates=4)
 
@@ -439,8 +419,7 @@ def test_direct_uncertainty_mips_matches_brute_gaussian_ranking():
         - np.log(coordinates.dispersion).sum(axis=1)[None, :]
         - 0.5
         * np.square(
-            (values[:, None, :] - coordinates.values[None, :, :])
-            / coordinates.dispersion[None, :, :]
+            (values[:, None, :] - coordinates.values[None, :, :]) / coordinates.dispersion[None, :, :]
         ).sum(axis=2)
     )
     expected = np.argsort(-score, axis=1)
@@ -530,9 +509,7 @@ def test_importance_ladder_uses_nested_draws_and_approaches_exact_oracle():
 
 def test_importance_diagnostics_identify_single_dominant_draw():
     likelihood = _likelihood()
-    proposal = DefensiveLocalProposal(
-        _coordinates(likelihood), likelihood.cache.prior.weights
-    )
+    proposal = DefensiveLocalProposal(_coordinates(likelihood), likelihood.cache.prior.weights)
     draw = proposal.draw(
         pd.DataFrame({"measured_e1": [0.0]}),
         n_draws=4,
@@ -541,9 +518,7 @@ def test_importance_diagnostics_identify_single_dominant_draw():
         bandwidth=1.0,
         seed=31,
     )
-    diagnostic = importance_diagnostics(
-        np.array([[0.0, -100.0, -100.0, -100.0]]), draw
-    )
+    diagnostic = importance_diagnostics(np.array([[0.0, -100.0, -100.0, -100.0]]), draw)
     assert np.isclose(diagnostic.mean_ess, 1.0)
     assert np.isclose(diagnostic.p90_max_weight_fraction, 1.0)
 
@@ -622,10 +597,7 @@ def test_importance_profile_recovers_small_catalogue_mle_and_releases_views():
     )
     assert [result.proposal_seed for result in results] == [43, 44]
     assert all([rung.n_draws for rung in result.rungs] == [256, 1024] for result in results)
-    assert all(
-        abs(result.rungs[-1].estimated_shear - 0.02) < 0.03
-        for result in results
-    )
+    assert all(abs(result.rungs[-1].estimated_shear - 0.02) < 0.03 for result in results)
     assert set(likelihood.cache.available_shears) == protected
 
 
@@ -711,12 +683,8 @@ def test_importance_profile_uses_measured_selection_normalization():
     for uncut_point, selected_point in zip(uncut_points, selected_points):
         view = selected.cache.get(selected_point.shear, 0.0)
         detected_mass = selected.cache.prior.weights * view.detection_probability
-        selected_mass = detected_mass * selected.selection_probability(
-            selected_point.shear, 0.0
-        )
-        expected_shift = len(mock.measurements) * np.log(
-            detected_mass.sum() / selected_mass.sum()
-        )
+        selected_mass = detected_mass * selected.selection_probability(selected_point.shear, 0.0)
+        expected_shift = len(mock.measurements) * np.log(detected_mass.sum() / selected_mass.sum())
         assert selected_point.log_likelihood_sum - uncut_point.log_likelihood_sum == pytest.approx(
             expected_shift
         )

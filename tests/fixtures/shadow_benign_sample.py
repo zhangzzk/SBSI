@@ -12,7 +12,7 @@ DOES get reported, on purpose, and lives in shadow_reviewed_sample.py -- see its
 def self_refine(batches, device):
     total = 0
     for batch in batches:
-        batch = batch.to(device)          # loop target, self-refine -- ruff PLW2901's job
+        batch = batch.to(device)  # loop target, self-refine -- ruff PLW2901's job
         total += len(batch)
     return total
 
@@ -20,7 +20,7 @@ def self_refine(batches, device):
 def accumulate(chunks):
     reservoir = None
     for chunk in chunks:
-        reservoir = chunk if reservoir is None else reservoir + chunk   # self-refine
+        reservoir = chunk if reservoir is None else reservoir + chunk  # self-refine
     return reservoir
 
 
@@ -28,5 +28,5 @@ def narrow_in_place(rows, valid):
     keep = rows
     for _ in range(3):
         n = len(keep)
-        keep = keep[valid[:n]]            # derived from itself
+        keep = keep[valid[:n]]  # derived from itself
     return keep

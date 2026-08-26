@@ -1,18 +1,10 @@
-import importlib.util
-from pathlib import Path
-
 import pandas as pd
 import pytest
 
+from _script_loader import load_script_module
 
-SCRIPT = (
-    Path(__file__).resolve().parents[1]
-    / "scripts"
-    / "assemble_fs2_scene_catalogue.py"
-)
-SPEC = importlib.util.spec_from_file_location("assemble_fs2_scene_catalogue", SCRIPT)
-MODULE = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(MODULE)
+
+MODULE = load_script_module("assemble_fs2_scene_catalogue.py")
 
 
 def _case(case, *, g1=0.0):

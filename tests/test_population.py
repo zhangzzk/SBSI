@@ -7,8 +7,11 @@ from sbsi.population import EXTENDED_PAIR_CUTS, LSST_PAIR_CUTS, pair_mask, prima
 
 def frame(**overrides):
     values = dict(
-        r_input_p=[24.0], Re_input_p=[0.8],
-        r_input_s=[24.0], Re_input_s=[0.8], distance=[2.0],
+        r_input_p=[24.0],
+        Re_input_p=[0.8],
+        r_input_s=[24.0],
+        Re_input_s=[0.8],
+        distance=[2.0],
     )
     values.update(overrides)
     return pd.DataFrame(values)

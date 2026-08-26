@@ -53,13 +53,30 @@ def _fake_cache(path, grid_n, seed):
     """A cache with the fields the differencer reads and nothing else."""
     rng = np.random.default_rng(seed)
     nb = 8
-    key = {"closure_g": 0.05, "jk_blocks": nb, "grid_n": grid_n, "rows": 1000,
-           "flow_seed": 1, "ring": "rot90", "shape_reps": 2}
+    key = {
+        "closure_g": 0.05,
+        "jk_blocks": nb,
+        "grid_n": grid_n,
+        "rows": 1000,
+        "flow_seed": 1,
+        "ring": "rot90",
+        "shape_reps": 2,
+    }
     cnt = rng.uniform(90, 110, nb)
     ns = rng.normal(0.4, 0.01, (nb, 2))
     ni = np.tile(np.eye(2) * 8.0, (nb, 1, 1)) + rng.normal(0, 0.01, (nb, 2, 2))
-    np.savez(path, key=json.dumps(key), n_keep=800, n_tot=1000,
-             cnt_k=cnt, ns_k=ns, ni_k=ni, cnt_u=cnt, ns_u=ns, ni_u=ni)
+    np.savez(
+        path,
+        key=json.dumps(key),
+        n_keep=800,
+        n_tot=1000,
+        cnt_k=cnt,
+        ns_k=ns,
+        ni_k=ni,
+        cnt_u=cnt,
+        ns_u=ns,
+        ni_u=ni,
+    )
 
 
 def _run(tmp_path, log_b_text):
@@ -70,9 +87,10 @@ def _run(tmp_path, log_b_text):
     la.write_text(LOG_MAG)
     lb.write_text(log_b_text)
     return subprocess.run(
-        [sys.executable, str(SCRIPT), str(a), str(b), "--arm", "kept",
-         "--pop-log", str(la), str(lb)],
-        capture_output=True, text=True)
+        [sys.executable, str(SCRIPT), str(a), str(b), "--arm", "kept", "--pop-log", str(la), str(lb)],
+        capture_output=True,
+        text=True,
+    )
 
 
 def test_two_logs_with_DIFFERENT_population_terms_are_refused(tmp_path):

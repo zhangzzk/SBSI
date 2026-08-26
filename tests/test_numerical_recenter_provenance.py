@@ -1,4 +1,3 @@
-import importlib.util
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -9,16 +8,10 @@ import pytest
 
 from sbsi.catalogue_closure import MockCatalogue
 from sbsi.scene_prior import SHEAR_TRANSFORM
+from _script_loader import load_script_module
 
 
-SCRIPT = (
-    Path(__file__).resolve().parents[1]
-    / "scripts"
-    / "run_section5_numerical_recenter.py"
-)
-SPEC = importlib.util.spec_from_file_location("run_section5_numerical_recenter", SCRIPT)
-MODULE = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(MODULE)
+MODULE = load_script_module("run_section5_numerical_recenter.py")
 
 TARGETS = (
     "measured_ngmix_g1",
@@ -43,9 +36,7 @@ def test_mean_observed_shape_is_only_the_raw_two_component_mean():
 
 
 def test_mean_observed_shape_rejects_nonfinite_or_missing_shape():
-    frame = pd.DataFrame(
-        {"measured_ngmix_g1": [0.1], "measured_ngmix_g2": [np.nan]}
-    )
+    frame = pd.DataFrame({"measured_ngmix_g1": [0.1], "measured_ngmix_g2": [np.nan]})
     with pytest.raises(ValueError, match="non-finite"):
         MODULE._mean_observed_shape(frame, TARGETS)
     with pytest.raises(ValueError, match="missing"):
@@ -67,9 +58,7 @@ def test_calibrated_mean_observed_shape_applies_full_affine_response():
         offset=offset,
         response=response,
     )
-    expected = np.linalg.solve(
-        np.asarray(response), np.asarray([0.14, -0.02]) - np.asarray(offset)
-    )
+    expected = np.linalg.solve(np.asarray(response), np.asarray([0.14, -0.02]) - np.asarray(offset))
     np.testing.assert_allclose(center, expected)
     np.testing.assert_allclose(raw, [0.14, -0.02])
     assert names == ("measured_ngmix_g1", "measured_ngmix_g2")
@@ -88,9 +77,7 @@ def test_full_ladder_report_uses_paired_full_2d_influences():
             [[1.2, 1.8], [2.8, -0.8], [-1.7, 0.7]],
         ]
     )
-    information = np.broadcast_to(
-        np.array([[[4.0, 0.5], [0.5, 3.0]]]), (2, 3, 2, 2)
-    ).copy()
+    information = np.broadcast_to(np.array([[[4.0, 0.5], [0.5, 3.0]]]), (2, 3, 2, 2)).copy()
     moments = SimpleNamespace(
         center=(0.02, -0.01),
         draw_ladder=(32, 64),
@@ -101,18 +88,12 @@ def test_full_ladder_report_uses_paired_full_2d_influences():
     assert set(report) == {"32", "64"}
     assert report["32"]["positive_definite"]
     assert "previous_rung_shift" not in report["32"]
-    first = np.asarray(moments.center) + np.linalg.solve(
-        information[0].sum(axis=0), score[0].sum(axis=0)
-    )
-    second = np.asarray(moments.center) + np.linalg.solve(
-        information[1].sum(axis=0), score[1].sum(axis=0)
-    )
+    first = np.asarray(moments.center) + np.linalg.solve(information[0].sum(axis=0), score[0].sum(axis=0))
+    second = np.asarray(moments.center) + np.linalg.solve(information[1].sum(axis=0), score[1].sum(axis=0))
     np.testing.assert_allclose(report["32"]["estimate"], first)
     np.testing.assert_allclose(report["64"]["estimate"], second)
     np.testing.assert_allclose(report["64"]["previous_rung_shift"], second - first)
-    assert np.isfinite(
-        report["64"]["previous_rung_paired_standard_error"]
-    ).all()
+    assert np.isfinite(report["64"]["previous_rung_paired_standard_error"]).all()
 
 
 def _image_mock(root: Path) -> MockCatalogue:
@@ -141,9 +122,7 @@ def _image_mock(root: Path) -> MockCatalogue:
         "injected_g2": 0.0,
         "target_names": list(TARGETS),
         "measurement_model_sha256": "flow-hash",
-        "output_sha256": MODULE._file_hashes(
-            root, ("measurements.parquet", "truth.parquet")
-        ),
+        "output_sha256": MODULE._file_hashes(root, ("measurements.parquet", "truth.parquet")),
     }
     (root / "image_mock_manifest.json").write_text(json.dumps(manifest) + "\n")
     return mock
@@ -185,9 +164,7 @@ def test_image_mock_manifest_validation_requires_manifest(tmp_path):
         ),
     ),
 )
-def test_image_mock_manifest_validation_rejects_identity_mismatch(
-    tmp_path, field, value, message
-):
+def test_image_mock_manifest_validation_rejects_identity_mismatch(tmp_path, field, value, message):
     mock = _image_mock(tmp_path)
     manifest_path = tmp_path / "image_mock_manifest.json"
     payload = json.loads(manifest_path.read_text())
@@ -219,13 +196,9 @@ def _likelihood_mock(root: Path):
         "mock_kind": "likelihood",
         "generation_identity": identity,
         "implementation_sha256": implementation,
-        "output_sha256": MODULE._file_hashes(
-            root, ("measurements.parquet", "truth.parquet")
-        ),
+        "output_sha256": MODULE._file_hashes(root, ("measurements.parquet", "truth.parquet")),
     }
-    (root / "likelihood_mock_manifest.json").write_text(
-        json.dumps(manifest) + "\n"
-    )
+    (root / "likelihood_mock_manifest.json").write_text(json.dumps(manifest) + "\n")
     return mock, identity, implementation
 
 
@@ -249,9 +222,7 @@ def test_likelihood_mock_manifest_validation_accepts_complete_identity(tmp_path)
         ("hash", "files do not match"),
     ),
 )
-def test_likelihood_mock_manifest_validation_rejects_mismatch(
-    tmp_path, mutation, message
-):
+def test_likelihood_mock_manifest_validation_rejects_mismatch(tmp_path, mutation, message):
     mock, identity, implementation = _likelihood_mock(tmp_path)
     path = tmp_path / "likelihood_mock_manifest.json"
     if mutation == "missing":

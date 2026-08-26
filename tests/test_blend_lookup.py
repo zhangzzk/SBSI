@@ -13,15 +13,19 @@ from sbsi.blend_lookup import join_blend
 
 
 def _ref(n=10):
-    return pd.DataFrame({"case": np.zeros(n, dtype=int),
-                         "input_index": np.arange(n),
-                         "r_sim": np.linspace(0.5, 1.5, n)})
+    return pd.DataFrame(
+        {"case": np.zeros(n, dtype=int), "input_index": np.arange(n), "r_sim": np.linspace(0.5, 1.5, n)}
+    )
 
 
 def _lookup(idx, value=0.13):
-    return pd.DataFrame({"case": np.zeros(len(idx), dtype=int),
-                         "input_index": np.asarray(idx),
-                         "R_blend": np.full(len(idx), value)})
+    return pd.DataFrame(
+        {
+            "case": np.zeros(len(idx), dtype=int),
+            "input_index": np.asarray(idx),
+            "R_blend": np.full(len(idx), value),
+        }
+    )
 
 
 def test_row_order_is_preserved_so_positional_alignment_holds():

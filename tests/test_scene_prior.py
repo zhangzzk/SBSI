@@ -60,12 +60,8 @@ def test_model_views_keep_classifier_and_flow_neighbour_conventions_separate():
 
     # The image simulations keep positions fixed under shear, so neighbour
     # identities, distances, and hard aperture membership must be invariant.
-    compressed = prior.shear(-0.05, 0.0).detection_view(
-        conditions=CONDITIONS, radius_arcsec=3.0
-    )
-    pd.testing.assert_series_equal(
-        compressed["secondary_row"], detection["secondary_row"]
-    )
+    compressed = prior.shear(-0.05, 0.0).detection_view(conditions=CONDITIONS, radius_arcsec=3.0)
+    pd.testing.assert_series_equal(compressed["secondary_row"], detection["secondary_row"])
     pd.testing.assert_series_equal(compressed["distance"], detection["distance"])
 
 
@@ -94,9 +90,7 @@ def test_detection_view_can_choose_flux_size_impact_instead_of_nearest():
     assert impact.loc[0, "secondary_row"] == 2
     assert np.isclose(impact.loc[0, "axis_ratio_input_p"], 1.0)
     assert np.isclose(impact.loc[0, "axis_ratio_input_s"], 0.35)
-    expected = -0.4 * np.log(10.0) * 21.0 + 2.0 * (
-        np.log(0.8) - np.log(3.1)
-    )
+    expected = -0.4 * np.log(10.0) * 21.0 + 2.0 * (np.log(0.8) - np.log(3.1))
     assert np.isclose(impact.loc[0, "neighbour_log_impact"], expected)
 
     # Shapes change under shear, but fixed positions, fluxes, and sizes make
@@ -133,9 +127,7 @@ def test_impact_neighbour_validation_is_explicit():
 
 
 def test_scene_store_round_trip(tmp_path):
-    prior = ScenePrior.from_catalogue(
-        _catalogue(), guard_radius_arcsec=12.0, weight_column=None
-    )
+    prior = ScenePrior.from_catalogue(_catalogue(), guard_radius_arcsec=12.0, weight_column=None)
     prior.save(tmp_path / "scene")
     restored = ScenePrior.load(tmp_path / "scene")
 

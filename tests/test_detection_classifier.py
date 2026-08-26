@@ -54,9 +54,7 @@ def test_exact_sampled_neighbour_search_can_choose_impact_over_nearest():
     assert impact.secondary_row.tolist() == [2, -1]
     assert nearest.candidate_count.tolist() == [2, 0]
 
-    frame = build_detection_feature_frame(
-        _catalogue(), impact, conditions=CONDITIONS
-    )
+    frame = build_detection_feature_frame(_catalogue(), impact, conditions=CONDITIONS)
     assert frame.index.tolist() == [0, 3]
     assert frame["input_index"].tolist() == [10, 13]
     assert np.isclose(frame.loc[0, "axis_ratio_input_s"], 0.4)
@@ -81,9 +79,7 @@ def test_render_catalogue_shape_shear_composes_stored_shear_into_q():
     catalogue["g2"] = 0.0
     rendered = render_catalogue_shape_shear(catalogue)
     assert not np.isclose(rendered.loc[0, "axis_ratio"], catalogue.loc[0, "axis_ratio"])
-    np.testing.assert_allclose(
-        rendered.loc[1:, "axis_ratio"], catalogue.loc[1:, "axis_ratio"]
-    )
+    np.testing.assert_allclose(rendered.loc[1:, "axis_ratio"], catalogue.loc[1:, "axis_ratio"])
     np.testing.assert_allclose(rendered[["RA", "DEC"]], catalogue[["RA", "DEC"]])
 
 
@@ -111,9 +107,7 @@ def test_centered_detection_response_is_zero_for_shear_invariant_selection():
     e0 = np.array([-0.3, -0.1, 0.2, 0.4])
     eg = e0 + 0.05
     weights = np.array([0.2, 0.8, 0.4, 0.7])
-    response = detection_selection_response(
-        e0, eg, weights, weights, np.full(4, 0.05)
-    )
+    response = detection_selection_response(e0, eg, weights, weights, np.full(4, 0.05))
     assert abs(response) < 1.0e-12
 
 

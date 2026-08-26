@@ -22,26 +22,35 @@ import torch
 from sbsi.score_inference import OutputCut
 
 
-V3_OUTPUTS = ["measured_ngmix_g1", "measured_ngmix_g2",
-              "measured_mag_auto", "measured_log_flux_radius"]
+V3_OUTPUTS = ["measured_ngmix_g1", "measured_ngmix_g2", "measured_mag_auto", "measured_log_flux_radius"]
 V1_OUTPUTS = ["measured_ngmix_g1", "measured_ngmix_g2"]
 
 
 def sample_draws(n=4000, seed=3):
     """Draws with the V3 flow's own scale, so the cuts land mid-distribution."""
     rng = np.random.default_rng(seed)
-    return np.stack([rng.normal(0.0, 0.364, n), rng.normal(0.0, 0.366, n),
-                     rng.normal(23.89, 1.214, n), rng.normal(1.586, 0.232, n)],
-                    axis=1)
+    return np.stack(
+        [
+            rng.normal(0.0, 0.364, n),
+            rng.normal(0.0, 0.366, n),
+            rng.normal(23.89, 1.214, n),
+            rng.normal(1.586, 0.232, n),
+        ],
+        axis=1,
+    )
 
 
-@pytest.mark.parametrize("kw", [
-    dict(abs_shape=0.6),
-    dict(abs_shape=None, bounds=[("measured_mag_auto", None, 24.5)]),
-    dict(abs_shape=None, bounds=[("measured_log_flux_radius", 1.45, None)]),
-    dict(abs_shape=0.6, bounds=[("measured_mag_auto", 22.0, 24.5),
-                                ("measured_log_flux_radius", 1.45, 2.0)]),
-])
+@pytest.mark.parametrize(
+    "kw",
+    [
+        dict(abs_shape=0.6),
+        dict(abs_shape=None, bounds=[("measured_mag_auto", None, 24.5)]),
+        dict(abs_shape=None, bounds=[("measured_log_flux_radius", 1.45, None)]),
+        dict(
+            abs_shape=0.6, bounds=[("measured_mag_auto", 22.0, 24.5), ("measured_log_flux_radius", 1.45, 2.0)]
+        ),
+    ],
+)
 def test_numpy_and_torch_agree_exactly(kw):
     cut = OutputCut(V3_OUTPUTS, **kw)
     x = sample_draws()
@@ -55,8 +64,7 @@ def test_numpy_and_torch_agree_exactly(kw):
 
 def test_agreement_holds_on_the_stacked_shape_the_population_block_uses():
     """The score pass sees `(N, D)`; `pass_fraction_by_node` sees `(M, S, D)`."""
-    cut = OutputCut(V3_OUTPUTS, abs_shape=0.6,
-                    bounds=[("measured_mag_auto", None, 24.5)])
+    cut = OutputCut(V3_OUTPUTS, abs_shape=0.6, bounds=[("measured_mag_auto", None, 24.5)])
     x = sample_draws(n=1200).reshape(150, 8, 4)
     keep = cut(torch.as_tensor(x))
     assert keep.shape == (150, 8)
@@ -74,10 +82,8 @@ def test_bounds_are_half_open():
 def test_absent_bound_means_unbounded():
     x = np.zeros((2, 4))
     x[:, 2] = [10.0, 30.0]
-    assert list(OutputCut(V3_OUTPUTS, bounds=[("measured_mag_auto", None, 24.0)])(x)) \
-        == [True, False]
-    assert list(OutputCut(V3_OUTPUTS, bounds=[("measured_mag_auto", 24.0, None)])(x)) \
-        == [False, True]
+    assert list(OutputCut(V3_OUTPUTS, bounds=[("measured_mag_auto", None, 24.0)])(x)) == [True, False]
+    assert list(OutputCut(V3_OUTPUTS, bounds=[("measured_mag_auto", 24.0, None)])(x)) == [False, True]
 
 
 def test_a_cut_on_a_non_output_is_refused():
@@ -113,31 +119,37 @@ def test_key_stays_a_bare_float_for_a_plain_shape_cut():
 
 
 def test_key_separates_cuts_that_select_different_samples():
-    keys = {OutputCut(V3_OUTPUTS, abs_shape=0.6).key(),
-            OutputCut(V3_OUTPUTS, abs_shape=0.7).key(),
-            OutputCut(V3_OUTPUTS, bounds=[("measured_mag_auto", None, 24.5)]).key(),
-            OutputCut(V3_OUTPUTS, bounds=[("measured_mag_auto", None, 25.0)]).key(),
-            OutputCut(V3_OUTPUTS, abs_shape=0.6,
-                      bounds=[("measured_mag_auto", None, 24.5)]).key()}
+    keys = {
+        OutputCut(V3_OUTPUTS, abs_shape=0.6).key(),
+        OutputCut(V3_OUTPUTS, abs_shape=0.7).key(),
+        OutputCut(V3_OUTPUTS, bounds=[("measured_mag_auto", None, 24.5)]).key(),
+        OutputCut(V3_OUTPUTS, bounds=[("measured_mag_auto", None, 25.0)]).key(),
+        OutputCut(V3_OUTPUTS, abs_shape=0.6, bounds=[("measured_mag_auto", None, 24.5)]).key(),
+    }
     assert len(keys) == 5
 
 
 def test_from_specs_parses_the_command_line_form():
-    cut = OutputCut.from_specs(V3_OUTPUTS, abs_shape=None,
-                               specs=["measured_mag_auto::24.5",
-                                      "measured_log_flux_radius:1.45:"])
+    cut = OutputCut.from_specs(
+        V3_OUTPUTS, abs_shape=None, specs=["measured_mag_auto::24.5", "measured_log_flux_radius:1.45:"]
+    )
     assert [(n, lo, hi) for n, _, lo, hi in cut.bounds] == [
         ("measured_mag_auto", None, 24.5),
-        ("measured_log_flux_radius", 1.45, None)]
-    assert OutputCut.from_specs(V3_OUTPUTS, specs=["measured_mag_auto:-inf:inf"]).bounds \
-        == [("measured_mag_auto", 2, None, None)]
+        ("measured_log_flux_radius", 1.45, None),
+    ]
+    assert OutputCut.from_specs(V3_OUTPUTS, specs=["measured_mag_auto:-inf:inf"]).bounds == [
+        ("measured_mag_auto", 2, None, None)
+    ]
     with pytest.raises(ValueError, match="NAME:LO:HI"):
         OutputCut.from_specs(V3_OUTPUTS, specs=["measured_mag_auto<24.5"])
 
 
 def test_describe_reads_as_the_selection_it_applies():
-    cut = OutputCut(V3_OUTPUTS, abs_shape=0.6,
-                    bounds=[("measured_mag_auto", None, 24.5),
-                            ("measured_log_flux_radius", 1.45, 2.0)])
-    assert cut.describe() == ("|xhat| < 0.6 and measured_mag_auto < 24.5 "
-                              "and 1.45 <= measured_log_flux_radius < 2")
+    cut = OutputCut(
+        V3_OUTPUTS,
+        abs_shape=0.6,
+        bounds=[("measured_mag_auto", None, 24.5), ("measured_log_flux_radius", 1.45, 2.0)],
+    )
+    assert cut.describe() == (
+        "|xhat| < 0.6 and measured_mag_auto < 24.5 and 1.45 <= measured_log_flux_radius < 2"
+    )

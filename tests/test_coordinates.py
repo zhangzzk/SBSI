@@ -38,26 +38,29 @@ def test_spin2_projection_is_parallel_to_its_own_angle():
 
 def test_raw_gradient_chain_rule_adds_canonical_sky_components():
     theta = np.deg2rad(np.array([20.0, 70.0]))
-    frame = pd.DataFrame({
-        "gamma1_input_p": np.cos(2.0 * theta),
-        "gamma2_input_p": np.sin(2.0 * theta),
-        "gamma1_input_s": np.cos(2.0 * theta),
-        "gamma2_input_s": np.sin(2.0 * theta),
-        "shear_component_convention": SKY_SHEAR_CONVENTION,
-    })
-    grad = pd.DataFrame({
-        "dPsel_dgamma1_input_p": [3.0, 4.0],
-        "dPsel_dgamma2_input_p": [5.0, 6.0],
-        "dPsel_dgamma1_input_s": [7.0, 8.0],
-        "dPsel_dgamma2_input_s": [9.0, 10.0],
-    })
+    frame = pd.DataFrame(
+        {
+            "gamma1_input_p": np.cos(2.0 * theta),
+            "gamma2_input_p": np.sin(2.0 * theta),
+            "gamma1_input_s": np.cos(2.0 * theta),
+            "gamma2_input_s": np.sin(2.0 * theta),
+            "shear_component_convention": SKY_SHEAR_CONVENTION,
+        }
+    )
+    grad = pd.DataFrame(
+        {
+            "dPsel_dgamma1_input_p": [3.0, 4.0],
+            "dPsel_dgamma2_input_p": [5.0, 6.0],
+            "dPsel_dgamma1_input_s": [7.0, 8.0],
+            "dPsel_dgamma2_input_s": [9.0, 10.0],
+        }
+    )
 
     out = add_shear_aligned_gradients(frame, grad)
 
     np.testing.assert_allclose(out["dPsel_dgamma1_sky_p"], grad["dPsel_dgamma1_input_p"])
     np.testing.assert_allclose(out["dPsel_dgamma2_sky_p"], grad["dPsel_dgamma2_input_p"])
-    expected_parallel = (
-        grad["dPsel_dgamma1_input_p"].to_numpy() * np.cos(2.0 * theta)
-        + grad["dPsel_dgamma2_input_p"].to_numpy() * np.sin(2.0 * theta)
-    )
+    expected_parallel = grad["dPsel_dgamma1_input_p"].to_numpy() * np.cos(2.0 * theta) + grad[
+        "dPsel_dgamma2_input_p"
+    ].to_numpy() * np.sin(2.0 * theta)
     np.testing.assert_allclose(out["dPsel_dgamma_parallel_p"], expected_parallel)

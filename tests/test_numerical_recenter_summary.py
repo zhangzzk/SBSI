@@ -1,4 +1,3 @@
-import importlib.util
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -7,11 +6,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from _script_loader import load_script_module
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "summarize_numerical_recenter.py"
-SPEC = importlib.util.spec_from_file_location("summarize_numerical_recenter", SCRIPT)
-MODULE = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(MODULE)
+
+MODULE = load_script_module("summarize_numerical_recenter.py")
 
 
 def _sha256(path):
@@ -176,9 +174,7 @@ def test_load_summary_verifies_mock_and_retains_complete_sampler_identity(tmp_pa
     assert row["identity"]["implementation_sha256"] == {
         "scripts/run_section5_numerical_recenter.py": "implementation-a"
     }
-    assert row["identity"]["proposal_cache_sha256"]["coordinates.npz"] == (
-        "proposal-values"
-    )
+    assert row["identity"]["proposal_cache_sha256"]["coordinates.npz"] == ("proposal-values")
 
 
 def test_load_summary_retains_posterior_adapted_proposal_identity(tmp_path):
@@ -187,9 +183,7 @@ def test_load_summary_retains_posterior_adapted_proposal_identity(tmp_path):
         proposal_method="initial_center_posterior_adapted",
     )
     row = MODULE.load_recenter_summary(path)
-    assert row["identity"]["proposal_method"] == (
-        "initial_center_posterior_adapted"
-    )
+    assert row["identity"]["proposal_method"] == ("initial_center_posterior_adapted")
     assert row["identity"]["proposal_reference_shear"] == [0.0, 0.0]
     assert row["identity"]["initial_likelihood_reused"]
     assert row["proposal_flow_evaluations"] == 6

@@ -48,9 +48,7 @@ from test_catalogue_likelihood import CONDITIONS, SpinZeroDetector, _catalogue, 
 
 
 def _proposal(likelihood):
-    values = likelihood.cache.get(0.0, 0.0).flow[
-        ["e1_input_p", "e2_input_p"]
-    ].to_numpy(float)
+    values = likelihood.cache.get(0.0, 0.0).flow[["e1_input_p", "e2_input_p"]].to_numpy(float)
     coordinates = ProposalCoordinateTable(
         values=values,
         target_names=("measured_ngmix_g1", "measured_ngmix_g2"),
@@ -101,9 +99,7 @@ def _torch_two_shape_likelihood(sigma=0.12, *, blend_values=None, selection=None
         target_transform,
         device="cpu",
     )
-    prior = ScenePrior.from_catalogue(
-        _catalogue(), guard_radius_arcsec=8.0, weight_column="prior_weight"
-    )
+    prior = ScenePrior.from_catalogue(_catalogue(), guard_radius_arcsec=8.0, weight_column="prior_weight")
     detector = SpinZeroDetector()
     detector.predict_proba = lambda frame: np.ones(len(frame), dtype=float)
     blend_response = None
@@ -191,9 +187,7 @@ def test_autograd_exact_section5_matches_direct_finite_difference():
                 object_chunk=12,
                 atom_chunk=4,
             )
-            np.testing.assert_allclose(
-                autograd.score[:, component], finite.score, rtol=2e-3, atol=2e-3
-            )
+            np.testing.assert_allclose(autograd.score[:, component], finite.score, rtol=2e-3, atol=2e-3)
             np.testing.assert_allclose(
                 autograd.information[:, component, component],
                 finite.information,
@@ -243,10 +237,7 @@ def test_fixed_draw_two_component_evaluator_matches_directional_profile():
         direction=(1.0, 0.0),
         object_chunk=6,
     )[0]
-    expected = {
-        point.shear: point.log_likelihood_sum
-        for point in profile.rungs[0].points
-    }
+    expected = {point.shear: point.log_likelihood_sum for point in profile.rungs[0].points}
     np.testing.assert_allclose(surface[(0.0, 0.0)], expected[0.0], atol=2e-5)
     np.testing.assert_allclose(surface[(0.01, 0.0)], expected[0.01], atol=2e-5)
 
@@ -255,9 +246,7 @@ def test_fixed_draw_two_component_evaluator_matches_directional_profile():
     ("use_blend", "use_selection"),
     ((False, False), (True, False), (False, True), (True, True)),
 )
-def test_fixed_draw_surface_matches_exact_likelihood_with_full_model(
-    use_blend, use_selection
-):
+def test_fixed_draw_surface_matches_exact_likelihood_with_full_model(use_blend, use_selection):
     selection = None
     if use_selection:
         cut = OutputCut(
@@ -336,21 +325,15 @@ def test_fixed_draw_surface_matches_hand_catalogue_sum(use_blend, use_selection)
         object_chunk=8,
         atom_chunk=4,
     )
-    observed = mock.measurements[
-        ["measured_ngmix_g1", "measured_ngmix_g2"]
-    ].to_numpy(float)
+    observed = mock.measurements[["measured_ngmix_g1", "measured_ngmix_g2"]].to_numpy(float)
     for point in shears:
         view = likelihood.cache.get(*point)
         mean = view.flow[["e1_input_p", "e2_input_p"]].to_numpy(float)
         mean = mean + view.blend_shift
         residual = observed[:, None, :] - mean[None, :, :]
         sigma = likelihood.flow_model.sigma
-        density = np.exp(-0.5 * np.square(residual / sigma).sum(axis=2)) / (
-            2.0 * np.pi * sigma**2
-        )
-        detected_mass = (
-            likelihood.cache.prior.weights * view.detection_probability
-        )
+        density = np.exp(-0.5 * np.square(residual / sigma).sum(axis=2)) / (2.0 * np.pi * sigma**2)
+        detected_mass = likelihood.cache.prior.weights * view.detection_probability
         pass_probability = (
             np.ones(len(mean), dtype=float)
             if selection is None
@@ -381,19 +364,17 @@ def test_posterior_adapted_reference_reuse_matches_fixed_draw_full_model():
         flow_seed=771,
     )
     reference = (0.012, -0.007)
-    draw, reused, candidate_evaluations, reuse_evaluations = (
-        _draw_initial_center_posterior_adapted(
-            likelihood,
-            mock,
-            _proposal(likelihood),
-            reference=reference,
-            n_draws=64,
-            n_candidates=2,
-            epsilon=0.5,
-            proposal_seed=772,
-            object_chunk=5,
-            atom_chunk=4,
-        )
+    draw, reused, candidate_evaluations, reuse_evaluations = _draw_initial_center_posterior_adapted(
+        likelihood,
+        mock,
+        _proposal(likelihood),
+        reference=reference,
+        n_draws=64,
+        n_candidates=2,
+        epsilon=0.5,
+        proposal_seed=772,
+        object_chunk=5,
+        atom_chunk=4,
     )
     independent = evaluate_fixed_draw_log_likelihood(
         likelihood,
@@ -460,9 +441,7 @@ def test_full_numerical_stencil_recovers_mixed_information():
     def evaluate(points):
         return {
             tuple(point): float(
-                1.3
-                + linear @ np.asarray(point)
-                - 0.5 * np.asarray(point) @ information @ np.asarray(point)
+                1.3 + linear @ np.asarray(point) - 0.5 * np.asarray(point) @ information @ np.asarray(point)
             )
             for point in points
         }
@@ -492,14 +471,16 @@ def test_combined_likelihood_recenter_matches_independent_exact_mle():
     )
 
     reference = minimize(
-        lambda shear: -float(
-            likelihood.log_likelihood(
-                mock.measurements,
-                float(shear[0]),
-                float(shear[1]),
-                object_chunk=200,
-                atom_chunk=4,
-            ).sum()
+        lambda shear: (
+            -float(
+                likelihood.log_likelihood(
+                    mock.measurements,
+                    float(shear[0]),
+                    float(shear[1]),
+                    object_chunk=200,
+                    atom_chunk=4,
+                ).sum()
+            )
         ),
         x0=np.array([0.02, -0.01]),
         method="L-BFGS-B",
@@ -530,8 +511,7 @@ def test_combined_likelihood_recenter_matches_independent_exact_mle():
     assert result.converged, result.reason
     np.testing.assert_allclose(result.estimate, reference.x, rtol=0, atol=3e-4)
     assert all(
-        iteration.next_log_likelihood_sum >= iteration.log_likelihood_sum
-        for iteration in result.iterations
+        iteration.next_log_likelihood_sum >= iteration.log_likelihood_sum for iteration in result.iterations
     )
     assert min(result.iterations[-1].information_eigenvalues) > 0
     assert result.diagnostic_flow_evaluations == len(mock.measurements) * 4
@@ -546,9 +526,7 @@ def test_combined_likelihood_recenter_matches_independent_exact_mle():
 
 
 def test_posterior_adapted_optimizer_reuses_initial_and_counts_flow_calls():
-    likelihood = _torch_two_shape_likelihood(
-        blend_values=[0.6, -0.1, 0.3, 0.8]
-    )
+    likelihood = _torch_two_shape_likelihood(blend_values=[0.6, -0.1, 0.3, 0.8])
     mock = generate_mock_catalogue(
         likelihood,
         n_detected=12,
@@ -586,12 +564,9 @@ def test_posterior_adapted_optimizer_reuses_initial_and_counts_flow_calls():
     assert result.proposal_candidate_flow_evaluations == len(mock.measurements) * 2
     assert result.proposal_reuse_flow_evaluations > 0
     assert result.proposal_flow_evaluations == (
-        result.proposal_candidate_flow_evaluations
-        + result.proposal_reuse_flow_evaluations
+        result.proposal_candidate_flow_evaluations + result.proposal_reuse_flow_evaluations
     )
-    assert result.numerator_flow_evaluations == (
-        len(mock.measurements) * 64 * (len(result.evaluations) - 1)
-    )
+    assert result.numerator_flow_evaluations == (len(mock.measurements) * 64 * (len(result.evaluations) - 1))
     assert result.flow_evaluations == (
         result.proposal_flow_evaluations
         + result.numerator_flow_evaluations
@@ -608,9 +583,7 @@ def test_safeguarded_recenter_crosses_negative_curvature_from_zero():
         for point in points:
             x, y = point
             displacement = x - truth
-            result[point] = (
-                -displacement**2 - 10.0 * displacement**3 - y**2
-            ) * 1.0e6
+            result[point] = (-(displacement**2) - 10.0 * displacement**3 - y**2) * 1.0e6
         return result
 
     estimate, converged, reason, history = _safeguarded_numerical_recenter(
@@ -627,10 +600,7 @@ def test_safeguarded_recenter_crosses_negative_curvature_from_zero():
     assert history[0].step_method == "gradient"
     assert converged, reason
     assert estimate == pytest.approx((truth, 0.0), abs=3e-4)
-    assert all(
-        iteration.next_log_likelihood_sum >= iteration.log_likelihood_sum
-        for iteration in history
-    )
+    assert all(iteration.next_log_likelihood_sum >= iteration.log_likelihood_sum for iteration in history)
 
 
 def test_tensor_native_importance_weights_and_stream_match_dataframe_path():
@@ -678,9 +648,7 @@ def test_tensor_native_importance_weights_and_stream_match_dataframe_path():
         object_chunk=12,
         atom_chunk=16,
     )
-    np.testing.assert_allclose(
-        tensor.detach().cpu().numpy(), dataframe, rtol=2e-5, atol=2e-5
-    )
+    np.testing.assert_allclose(tensor.detach().cpu().numpy(), dataframe, rtol=2e-5, atol=2e-5)
 
     kwargs = dict(
         steps=(0.005,),
@@ -694,12 +662,8 @@ def test_tensor_native_importance_weights_and_stream_match_dataframe_path():
         posterior_adapt_proposal=True,
         retain_object_moments=True,
     )
-    old = run_streamed_section5(
-        likelihood, mock, _proposal(likelihood), use_tensor_native=False, **kwargs
-    )
-    new = run_streamed_section5(
-        likelihood, mock, _proposal(likelihood), use_tensor_native=True, **kwargs
-    )
+    old = run_streamed_section5(likelihood, mock, _proposal(likelihood), use_tensor_native=False, **kwargs)
+    new = run_streamed_section5(likelihood, mock, _proposal(likelihood), use_tensor_native=True, **kwargs)
     for key in old.object_moments[798].score:
         np.testing.assert_allclose(
             new.object_moments[798].score[key],
@@ -759,9 +723,7 @@ def test_adaptive_tensor_path_matches_fixed_maximum_when_all_rows_continue():
     moments = fixed.object_moments[802]
     for component, index in (("g1", 0), ("g2", 1)):
         key = (component, 0.005, 64)
-        np.testing.assert_allclose(
-            adaptive.score[:, index], moments.score[key], rtol=5e-3, atol=5e-3
-        )
+        np.testing.assert_allclose(adaptive.score[:, index], moments.score[key], rtol=5e-3, atol=5e-3)
         np.testing.assert_allclose(
             adaptive.information[:, index],
             moments.information[key],
@@ -839,9 +801,7 @@ def test_independent_pilot_allocation_is_fixed_before_production_draw():
 
     np.testing.assert_array_equal(first.draw_counts, second.draw_counts)
     np.testing.assert_allclose(first.pilot_ess_fraction, second.pilot_ess_fraction)
-    np.testing.assert_allclose(
-        first.pilot_max_weight_fraction, second.pilot_max_weight_fraction
-    )
+    np.testing.assert_allclose(first.pilot_max_weight_fraction, second.pilot_max_weight_fraction)
     assert first.allocation_method == "independent_pilot"
     assert first.pilot_draws == 16
     assert first.pilot_seed == 919
@@ -896,19 +856,13 @@ def test_stratified_path_is_exact_when_candidates_cover_prior_support():
         object_chunk=5,
         atom_chunk=16,
     )
-    first = run_stratified_section5(
-        likelihood, mock, _proposal(likelihood), proposal_seed=910, **kwargs
-    )
-    second = run_stratified_section5(
-        likelihood, mock, _proposal(likelihood), proposal_seed=911, **kwargs
-    )
+    first = run_stratified_section5(likelihood, mock, _proposal(likelihood), proposal_seed=910, **kwargs)
+    second = run_stratified_section5(likelihood, mock, _proposal(likelihood), proposal_seed=911, **kwargs)
 
     np.testing.assert_allclose(first.score, second.score, rtol=0, atol=0)
     np.testing.assert_allclose(first.information, second.information, rtol=0, atol=0)
     np.testing.assert_allclose(first.ladder_score[0], first.ladder_score[1])
-    np.testing.assert_allclose(
-        first.ladder_information[0], first.ladder_information[1]
-    )
+    np.testing.assert_allclose(first.ladder_information[0], first.ladder_information[1])
 
 
 def test_retained_full_ladder_matches_separate_nested_prefix_runs():
@@ -937,9 +891,7 @@ def test_retained_full_ladder_matches_separate_nested_prefix_runs():
         object_chunk=6,
         atom_chunk=16,
     )
-    retained = run_adaptive_section5(
-        draw_ladder=(32, 64), retain_full_ladder=True, **common
-    )
+    retained = run_adaptive_section5(draw_ladder=(32, 64), retain_full_ladder=True, **common)
     shallow = run_adaptive_section5(draw_ladder=(32,), **common)
     deep = run_adaptive_section5(draw_ladder=(64,), **common)
 
@@ -978,12 +930,8 @@ def test_richardson_correction_matches_nested_moment_combination():
         object_chunk=6,
         atom_chunk=16,
     )
-    retained = run_adaptive_section5(
-        draw_ladder=(32, 64), retain_full_ladder=True, **common
-    )
-    corrected = run_adaptive_section5(
-        draw_ladder=(64,), bias_correction="richardson_1_over_m", **common
-    )
+    retained = run_adaptive_section5(draw_ladder=(32, 64), retain_full_ladder=True, **common)
+    corrected = run_adaptive_section5(draw_ladder=(64,), bias_correction="richardson_1_over_m", **common)
 
     np.testing.assert_allclose(
         corrected.score,
@@ -1086,10 +1034,7 @@ def test_batched_importance_autograd_matches_local_finite_difference():
 
 
 def _estimate_index(result):
-    return {
-        (estimate.component, estimate.h, estimate.n_draws): estimate
-        for estimate in result.estimates
-    }
+    return {(estimate.component, estimate.h, estimate.n_draws): estimate for estimate in result.estimates}
 
 
 def test_streamed_section5_matches_small_exact_catalogue_without_atom_tensor():
@@ -1103,9 +1048,7 @@ def test_streamed_section5_matches_small_exact_catalogue_without_atom_tensor():
         detection_seed=802,
         flow_seed=803,
     )
-    exact = run_exact_section5(
-        likelihood, mock, steps=(0.005,), object_chunk=40, atom_chunk=4
-    )
+    exact = run_exact_section5(likelihood, mock, steps=(0.005,), object_chunk=40, atom_chunk=4)
     weights = likelihood.cache.prior.weights
     bank_a = weights * np.array([1, 1, 0, 0], dtype=float)
     bank_b = weights * np.array([0, 0, 1, 1], dtype=float)
@@ -1124,9 +1067,7 @@ def test_streamed_section5_matches_small_exact_catalogue_without_atom_tensor():
         independent_bank_weights={"a": bank_a, "b": bank_b},
     )
     sampled = streamed.results[0]
-    exact_by_component = {
-        estimate.component: estimate for estimate in exact.estimates
-    }
+    exact_by_component = {estimate.component: estimate for estimate in exact.estimates}
     sampled_index = _estimate_index(sampled)
     for component in ("g1", "g2"):
         actual = sampled_index[(component, 0.005, 512)]
@@ -1137,10 +1078,7 @@ def test_streamed_section5_matches_small_exact_catalogue_without_atom_tensor():
     assert sampled.n_views == 5
     assert sampled.flow_evaluations == 80 * 512 * 5
     assert set(streamed.independent_banks) == {"a", "b"}
-    assert all(
-        result.flow_evaluations == 0
-        for result in streamed.independent_banks.values()
-    )
+    assert all(result.flow_evaluations == 0 for result in streamed.independent_banks.values())
 
 
 def test_streamed_section5_supports_zero_shear_posterior_adaptation():
@@ -1169,10 +1107,7 @@ def test_streamed_section5_supports_zero_shear_posterior_adaptation():
         posterior_adapt_proposal=True,
     ).results[0]
     assert result.flow_evaluations == 40 * (5 * 256 + 4)
-    assert all(
-        estimate.importance.mean_ess_fraction > 0.5
-        for estimate in result.estimates
-    )
+    assert all(estimate.importance.mean_ess_fraction > 0.5 for estimate in result.estimates)
 
 
 def test_streamed_section5_retains_nonzero_object_moments_only_when_requested():
@@ -1259,9 +1194,7 @@ def test_paired_section5_response_is_joint_population_derivative_not_arm_differe
         n_draws=64,
     )
     assert paired.response == pytest.approx(1.0)
-    arm_difference = (
-        paired.positive_estimated_shear - paired.negative_estimated_shear
-    ) / (2.0 * amplitude)
+    arm_difference = (paired.positive_estimated_shear - paired.negative_estimated_shear) / (2.0 * amplitude)
     assert arm_difference == pytest.approx(1.125)
 
 
@@ -1329,12 +1262,8 @@ def test_streamed_object_offsets_reproduce_one_full_proposal_draw():
     full = proposal.draw(mock.measurements, **kwargs)
     first = proposal.draw(mock.measurements.iloc[:3], object_offset=0, **kwargs)
     second = proposal.draw(mock.measurements.iloc[3:], object_offset=3, **kwargs)
-    np.testing.assert_array_equal(
-        full.indices, np.concatenate([first.indices, second.indices])
-    )
-    np.testing.assert_array_equal(
-        full.probability, np.concatenate([first.probability, second.probability])
-    )
+    np.testing.assert_array_equal(full.indices, np.concatenate([first.indices, second.indices]))
+    np.testing.assert_array_equal(full.probability, np.concatenate([first.probability, second.probability]))
 
 
 def _passing_result(seed, ladder=(8192, 32768, 65536), steps=(0.005, 0.01, 0.02)):
@@ -1390,8 +1319,7 @@ def test_section5_assessment_requires_and_accepts_all_declared_gates():
             estimate,
             tail=replace(estimate.tail, hill_tail_index=1.3),
         )
-        if (estimate.component, estimate.h, estimate.n_draws)
-        == ("g1", 0.005, 65536)
+        if (estimate.component, estimate.h, estimate.n_draws) == ("g1", 0.005, 65536)
         else estimate
         for estimate in first.estimates
     )

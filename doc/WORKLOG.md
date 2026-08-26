@@ -2,6 +2,38 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-26 cont.254 — Active tests reviewed, simplified, and made one-third faster
+
+The 35 active test modules and their support fixtures were reviewed after the
+Infer V1 archive cleanup.  Ten copies of ad hoc `importlib` script-loading
+boilerplate now use one cached helper in `tests/_script_loader.py`.  Obsolete
+standalone-test machinery was removed from `test_score_inference.py`, and
+`test_shear_map.py` no longer mutates `sys.path`.  The loop-shadowing guard now
+shares one repository scan between its assertions and compares fixture source
+without depending on whitespace, so automatic formatting cannot change its
+meaning.
+
+The slowest repeated numerical setup is now module-scoped where test isolation
+does not require regeneration.  The Lagrangian tests evaluate each fixed
+catalogue once instead of three times, the score-inference tests share one
+deterministic toy experiment, and the loop sweep shares its read-only scan.  The
+population-term quadrature catalogue was reduced from 150,000 to 50,000 rows and
+still passes the original analytic tolerances.  A proposed reduction of the
+Lagrangian calibration sample from 20,000 to 5,000 was explicitly rejected and
+reverted after it moved the expected multiplicative-bias check outside its
+existing `2e-4` tolerance; no scientific assertion was loosened or removed.
+Ruff formatting was applied consistently to the active test tree, eliminating
+the remaining test-only lint findings and 184 net lines of duplicated or dead
+test code.
+
+Validation: `ruff check tests`, `ruff format --check tests`, `git diff --check`,
+and the loop-shadowing repository scan all pass.  The affected 88-test subset
+passes.  With the documented `py31` interpreter and repository `PYTHONPATH`, the
+complete active suite reports 296 passed and 2 optional skips in 60.04 s, versus
+89.17 s before cleanup (33% lower wall time).  An accidental run with the system
+Python failed only at collection because that interpreter has no editable SBSI
+installation; no tests executed in that invocation.
+
 ## 2026-08-26 cont.253 — Infer V1 frozen; development tree archived and repository made test-clean
 
 Per owner decision, **Infer V1** now names the numerical inference setup

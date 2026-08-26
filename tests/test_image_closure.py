@@ -48,9 +48,7 @@ def _write_case(root: Path, *, case: int = 4, g1: float = 0.02):
             "MAG_AUTO": [24.1, 25.9, 23.8, 24.6],
             "FLUX_RADIUS": [2.0, 2.2, 1.8, 3.0],
         }
-    ).to_feather(
-        shape_dir / f"shape_catalogue_detect_position_all_{tile}.feather"
-    )
+    ).to_feather(shape_dir / f"shape_catalogue_detect_position_all_{tile}.feather")
 
 
 def test_image_mock_maps_single_leg_products_and_records_source(tmp_path):

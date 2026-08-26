@@ -1,20 +1,9 @@
-import importlib.util
-from pathlib import Path
-
 import numpy as np
 
+from _script_loader import load_script_module
 
-SCRIPT = (
-    Path(__file__).parents[1]
-    / "scripts"
-    / "evaluate_detection_classifier_shear_stability.py"
-)
-SPEC = importlib.util.spec_from_file_location(
-    "evaluate_detection_classifier_shear_stability", SCRIPT
-)
-MODULE = importlib.util.module_from_spec(SPEC)
-assert SPEC.loader is not None
-SPEC.loader.exec_module(MODULE)
+
+MODULE = load_script_module("evaluate_detection_classifier_shear_stability.py")
 
 
 def _response(truth, model):

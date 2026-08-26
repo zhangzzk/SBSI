@@ -1,16 +1,13 @@
-import importlib.util
 import json
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
+from _script_loader import load_script_module
 
-SCRIPT = Path(__file__).parents[1] / "scripts" / "summarize_catalogue_bias.py"
-SPEC = importlib.util.spec_from_file_location("summarize_catalogue_bias", SCRIPT)
-MODULE = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(MODULE)
+
+MODULE = load_script_module("summarize_catalogue_bias.py")
 
 
 def _result(root, injected, estimate, *, token, stream=None):
@@ -50,8 +47,7 @@ def _result(root, injected, estimate, *, token, stream=None):
 
 def test_bias_summary_recovers_known_line(tmp_path):
     paths = [
-        _result(tmp_path / f"r{i}", g, 0.002 + 1.05 * g, token=i)
-        for i, g in enumerate((-0.02, 0.0, 0.02))
+        _result(tmp_path / f"r{i}", g, 0.002 + 1.05 * g, token=i) for i, g in enumerate((-0.02, 0.0, 0.02))
     ]
     summaries = [MODULE.profile_summary(path) for path in paths]
     result = MODULE.fit_bias(summaries)
@@ -62,10 +58,7 @@ def test_bias_summary_recovers_known_line(tmp_path):
 
 
 def test_bias_summary_rejects_duplicate_mock(tmp_path):
-    paths = [
-        _result(tmp_path / f"r{i}", g, g, token=i)
-        for i, g in enumerate((-0.02, 0.0, 0.02))
-    ]
+    paths = [_result(tmp_path / f"r{i}", g, g, token=i) for i, g in enumerate((-0.02, 0.0, 0.02))]
     summaries = [MODULE.profile_summary(path) for path in paths]
     summaries[2]["mock_sha256"] = summaries[1]["mock_sha256"]
     with pytest.raises(ValueError, match="same frozen mock"):

@@ -162,15 +162,26 @@ def test_matrix_regularizer_reads_diagonals_and_cross_terms():
     plus2 = delta * response[:, 1].repeat(count, 1)
     minus2 = -plus2
     tensors = (
-        torch.zeros((count, 2)), zero, torch.ones(count), zero,
-        plus1, plus2, minus1, minus2, torch.zeros(count, dtype=torch.long),
+        torch.zeros((count, 2)),
+        zero,
+        torch.ones(count),
+        zero,
+        plus1,
+        plus2,
+        minus1,
+        minus2,
+        torch.zeros(count, dtype=torch.long),
     )
-    loader = torch.utils.data.DataLoader(
-        torch.utils.data.TensorDataset(*tensors), batch_size=count
-    )
+    loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(*tensors), batch_size=count)
     _, matching_loss, trace, *_ = epoch_response(
-        IdentityMean(), loader, torch.device("cpu"), (1.0, 1.0), delta,
-        response.reshape(1, 4), 1.0, response_difference="central",
+        IdentityMean(),
+        loader,
+        torch.device("cpu"),
+        (1.0, 1.0),
+        delta,
+        response.reshape(1, 4),
+        1.0,
+        response_difference="central",
         response_components="matrix",
     )
     assert matching_loss < 1e-12
@@ -179,8 +190,14 @@ def test_matrix_regularizer_reads_diagonals_and_cross_terms():
     wrong_target = response.clone()
     wrong_target[0, 1] = 0.0
     _, cross_loss, *_ = epoch_response(
-        IdentityMean(), loader, torch.device("cpu"), (1.0, 1.0), delta,
-        wrong_target.reshape(1, 4), 1.0, response_difference="central",
+        IdentityMean(),
+        loader,
+        torch.device("cpu"),
+        (1.0, 1.0),
+        delta,
+        wrong_target.reshape(1, 4),
+        1.0,
+        response_difference="central",
         response_components="matrix",
     )
     assert cross_loss > 0.0

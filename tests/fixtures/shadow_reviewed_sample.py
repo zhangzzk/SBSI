@@ -16,8 +16,8 @@ def fixed_point(start, steps, tol=1e-9):
     shear = start
     for _ in range(steps):
         candidate = 0.5 * shear + 0.5
-        if abs(candidate - shear) < tol:      # reads the PREVIOUS iterate, on purpose
+        if abs(candidate - shear) < tol:  # reads the PREVIOUS iterate, on purpose
             shear = candidate
             break
-        shear = candidate                     # deliberate loop-carried state
+        shear = candidate  # deliberate loop-carried state
     return shear

@@ -76,9 +76,7 @@ def test_blend_response_is_evaluated_once_and_aligned_to_active_atoms(tmp_path):
 
 def test_blend_shift_vanishes_at_zero_and_uses_exact_shape_displacement():
     prior = _prior()
-    response = CatalogueBlendResponse(
-        np.array([0.2, 0.0, -0.1]), metadata={}, report={}
-    )
+    response = CatalogueBlendResponse(np.array([0.2, 0.0, -0.1]), metadata={}, report={})
     np.testing.assert_array_equal(response.shape_shift(prior.shear(0.0, 0.0)), 0.0)
 
     sheared = prior.shear(0.02, -0.01)

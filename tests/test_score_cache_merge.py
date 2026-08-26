@@ -25,12 +25,25 @@ import numpy as np
 import pytest
 
 from sbsi.score_inference import (
-    ScoreCacheMismatch, blocked_sums, jackknife_blocks, merge_block_sum_caches,
+    ScoreCacheMismatch,
+    blocked_sums,
+    jackknife_blocks,
+    merge_block_sum_caches,
 )
 
 NBLOCK = 20
-BASE_KEY = dict(cut=0.6, closure_g=0.05, rows=1000, ring="rot90", shape_reps=2,
-                jk_blocks=NBLOCK, grid_n=61, uncut=1, row_shard=0, row_shards=3)
+BASE_KEY = dict(
+    cut=0.6,
+    closure_g=0.05,
+    rows=1000,
+    ring="rot90",
+    shape_reps=2,
+    jk_blocks=NBLOCK,
+    grid_n=61,
+    uncut=1,
+    row_shard=0,
+    row_shards=3,
+)
 
 
 def make_shard(tmp_path, name, key, n=1000, seed=0, uncut=True):
@@ -42,8 +55,16 @@ def make_shard(tmp_path, name, key, n=1000, seed=0, uncut=True):
     cnt, ns, ni = blocked_sums(s, info, block, NBLOCK)
     path = str(tmp_path / f"{name}.npz")
     extra = dict(cnt_u=cnt, ns_u=ns, ni_u=ni) if uncut else {}
-    np.savez(path, key=json.dumps(key, sort_keys=True), n_keep=n // 2, n_tot=n,
-             cnt_k=cnt, ns_k=ns, ni_k=ni, **extra)
+    np.savez(
+        path,
+        key=json.dumps(key, sort_keys=True),
+        n_keep=n // 2,
+        n_tot=n,
+        cnt_k=cnt,
+        ns_k=ns,
+        ni_k=ni,
+        **extra,
+    )
     return path, (cnt, ns, ni)
 
 
@@ -55,6 +76,7 @@ def key_for(shard, **over):
 
 # -- the exactness claim ---------------------------------------------------------------
 
+
 def test_merging_shards_concatenates_blocks_and_adds_counts(tmp_path):
     """`k` shards of `B` blocks -> one `k*B`-block jackknife, sums added."""
     paths, parts = [], []
@@ -62,15 +84,13 @@ def test_merging_shards_concatenates_blocks_and_adds_counts(tmp_path):
         p, blk = make_shard(tmp_path, f"s{i}", key_for(i), seed=i)
         paths.append(p)
         parts.append(blk)
-    blk_k, blk_u, n_keep, n_tot, shards = merge_block_sum_caches(
-        paths, key_for(0), want_uncut=True)
+    blk_k, blk_u, n_keep, n_tot, shards = merge_block_sum_caches(paths, key_for(0), want_uncut=True)
 
     assert shards == [0, 1, 2]
     assert n_keep == 3 * 500 and n_tot == 3 * 1000
     assert len(blk_k[0]) == 3 * NBLOCK
     for axis in range(3):
-        np.testing.assert_allclose(
-            blk_k[axis], np.concatenate([p[axis] for p in parts], axis=0))
+        np.testing.assert_allclose(blk_k[axis], np.concatenate([p[axis] for p in parts], axis=0))
     # the uncut control must travel with the kept sums, block for block, or the paired
     # cut-minus-uncut difference silently compares different galaxies
     for axis in range(3):
@@ -91,20 +111,27 @@ def test_merged_estimate_equals_scoring_the_union_in_one_pass(tmp_path):
     paths = []
     for i in range(3):
         lo, hi = i * (n // 3), (i + 1) * (n // 3)
-        cnt, ns, ni = blocked_sums(s[lo:hi], info[lo:hi],
-                                   np.arange(hi - lo) % NBLOCK, NBLOCK)
+        cnt, ns, ni = blocked_sums(s[lo:hi], info[lo:hi], np.arange(hi - lo) % NBLOCK, NBLOCK)
         p = str(tmp_path / f"part{i}.npz")
-        np.savez(p, key=json.dumps(key_for(i), sort_keys=True), n_keep=1, n_tot=hi - lo,
-                 cnt_k=cnt, ns_k=ns, ni_k=ni)
+        np.savez(
+            p,
+            key=json.dumps(key_for(i), sort_keys=True),
+            n_keep=1,
+            n_tot=hi - lo,
+            cnt_k=cnt,
+            ns_k=ns,
+            ni_k=ni,
+        )
         paths.append(p)
     blk_k, _, _, _, _ = merge_block_sum_caches(paths, key_for(0), want_uncut=False)
     merged = jackknife_blocks(*blk_k)
 
-    np.testing.assert_allclose(merged[0], whole[0], rtol=1e-12)   # ghat
-    np.testing.assert_allclose(merged[1], whole[1], rtol=1e-12)   # and its error bar
+    np.testing.assert_allclose(merged[0], whole[0], rtol=1e-12)  # ghat
+    np.testing.assert_allclose(merged[1], whole[1], rtol=1e-12)  # and its error bar
 
 
 # -- the refusals, which is what actually broke -----------------------------------------
+
 
 def test_repeating_a_shard_is_refused(tmp_path):
     """Double-counting is invisible in the sums; only the registry catches it."""
@@ -114,14 +141,17 @@ def test_repeating_a_shard_is_refused(tmp_path):
         merge_block_sum_caches([p0, p0_again], key_for(0), want_uncut=True)
 
 
-@pytest.mark.parametrize("field,value", [
-    ("closure_g", 0.10),        # the g-scan bug: same path, different injected shear
-    ("cut", 0.4),
-    ("grid_n", 101),
-    ("rows", 2000),
-    ("ring", "none"),
-    ("row_shards", 6),          # a whole-catalogue cache is NOT a shard of a 3-way run
-])
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("closure_g", 0.10),  # the g-scan bug: same path, different injected shear
+        ("cut", 0.4),
+        ("grid_n", 101),
+        ("rows", 2000),
+        ("ring", "none"),
+        ("row_shards", 6),  # a whole-catalogue cache is NOT a shard of a 3-way run
+    ],
+)
 def test_incompatible_settings_are_refused(tmp_path, field, value):
     """Anything that shapes a score must match, or one run's galaxies meet another's Pi."""
     p, _ = make_shard(tmp_path, "x", key_for(0, **{field: value}))
@@ -146,8 +176,7 @@ def test_pre_sharding_caches_read_as_whole_catalogue_passes(tmp_path):
     old = {k: v for k, v in BASE_KEY.items() if not k.startswith("row_shard")}
     p, _ = make_shard(tmp_path, "legacy", old)
 
-    blk_k, _, _, _, shards = merge_block_sum_caches(
-        [p], key_for(0, row_shards=1), want_uncut=True)
+    blk_k, _, _, _, shards = merge_block_sum_caches([p], key_for(0, row_shards=1), want_uncut=True)
     assert shards == [0] and len(blk_k[0]) == NBLOCK
 
     # ...but it is still not a shard of a MULTI-shard run

@@ -34,18 +34,11 @@ class GaussianShapeFlow:
         self.target_transform = SimpleNamespace(target_names=["measured_e1"])
 
     def log_prob(self, frame):
-        residual = (
-            frame["measured_e1"].to_numpy(float)
-            - frame["e1_input_p"].to_numpy(float)
-        )
-        return -0.5 * (residual / self.sigma) ** 2 - np.log(
-            self.sigma * np.sqrt(2.0 * np.pi)
-        )
+        residual = frame["measured_e1"].to_numpy(float) - frame["e1_input_p"].to_numpy(float)
+        return -0.5 * (residual / self.sigma) ** 2 - np.log(self.sigma * np.sqrt(2.0 * np.pi))
 
     def sample(self, condition_frame, n_samples=1, batch_size=None, qmc=False):
-        mean = torch.as_tensor(
-            condition_frame["e1_input_p"].to_numpy(float), dtype=torch.float32
-        )
+        mean = torch.as_tensor(condition_frame["e1_input_p"].to_numpy(float), dtype=torch.float32)
         noise = torch.randn(len(condition_frame), n_samples) * self.sigma
         return (mean[:, None] + noise).numpy()[..., None]
 
@@ -54,20 +47,15 @@ class GaussianTwoShapeFlow:
     def __init__(self, sigma=0.12, deterministic_samples=False):
         self.sigma = float(sigma)
         self.deterministic_samples = bool(deterministic_samples)
-        self.condition_preprocessor = SimpleNamespace(
-            feature_names=["e1_input_p", "e2_input_p"]
-        )
-        self.target_transform = SimpleNamespace(
-            target_names=["measured_ngmix_g1", "measured_ngmix_g2"]
-        )
+        self.condition_preprocessor = SimpleNamespace(feature_names=["e1_input_p", "e2_input_p"])
+        self.target_transform = SimpleNamespace(target_names=["measured_ngmix_g1", "measured_ngmix_g2"])
 
     def log_prob(self, frame):
-        residual = frame[
-            ["measured_ngmix_g1", "measured_ngmix_g2"]
-        ].to_numpy(float) - frame[["e1_input_p", "e2_input_p"]].to_numpy(float)
-        return (
-            -0.5 * np.square(residual / self.sigma).sum(axis=1)
-            - 2.0 * np.log(self.sigma * np.sqrt(2.0 * np.pi))
+        residual = frame[["measured_ngmix_g1", "measured_ngmix_g2"]].to_numpy(float) - frame[
+            ["e1_input_p", "e2_input_p"]
+        ].to_numpy(float)
+        return -0.5 * np.square(residual / self.sigma).sum(axis=1) - 2.0 * np.log(
+            self.sigma * np.sqrt(2.0 * np.pi)
         )
 
     def sample(self, condition_frame, n_samples=1, batch_size=None, qmc=False):
@@ -126,9 +114,7 @@ class SpinZeroDetector:
 
 
 def _likelihood():
-    prior = ScenePrior.from_catalogue(
-        _catalogue(), guard_radius_arcsec=8.0, weight_column="prior_weight"
-    )
+    prior = ScenePrior.from_catalogue(_catalogue(), guard_radius_arcsec=8.0, weight_column="prior_weight")
     cache = CatalogueModelCache(
         prior,
         detector=_detector,
@@ -141,9 +127,7 @@ def _likelihood():
 
 
 def _two_shape_likelihood(*, blend_values=None, flow=None, selection=None):
-    prior = ScenePrior.from_catalogue(
-        _catalogue(), guard_radius_arcsec=8.0, weight_column="prior_weight"
-    )
+    prior = ScenePrior.from_catalogue(_catalogue(), guard_radius_arcsec=8.0, weight_column="prior_weight")
     response = None
     if blend_values is not None:
         response = CatalogueBlendResponse(
@@ -158,18 +142,14 @@ def _two_shape_likelihood(*, blend_values=None, flow=None, selection=None):
         crowding_radii_arcsec=(3.0, 7.0),
         blend_response=response,
     )
-    return CatalogueLikelihood(
-        flow or GaussianTwoShapeFlow(), cache, selection=selection
-    )
+    return CatalogueLikelihood(flow or GaussianTwoShapeFlow(), cache, selection=selection)
 
 
 class FixedSelection:
     """Known per-atom P_pass for a direct normalization check."""
 
     def __init__(self, probability):
-        self.output_cut = OutputCut(
-            ["measured_e1"], bounds=[("measured_e1", None, 0.2)]
-        )
+        self.output_cut = OutputCut(["measured_e1"], bounds=[("measured_e1", None, 0.2)])
         self._probability = np.asarray(probability, dtype=float)
 
     def probability(self, flow_model, view, *, active_indices=None):
@@ -182,9 +162,7 @@ class AnalyticGaussianSelection:
 
     def __init__(self, upper=0.05):
         self.upper = float(upper)
-        self.output_cut = OutputCut(
-            ["measured_e1"], bounds=[("measured_e1", None, self.upper)]
-        )
+        self.output_cut = OutputCut(["measured_e1"], bounds=[("measured_e1", None, self.upper)])
 
     def probability(self, flow_model, view, *, active_indices=None):
         mean = view.flow["e1_input_p"].to_numpy(float)
@@ -199,9 +177,9 @@ def test_exact_catalogue_likelihood_matches_direct_finite_sum():
     view = likelihood.cache.get(0.0, 0.0)
     means = view.flow["e1_input_p"].to_numpy(float)
     sigma = likelihood.flow_model.sigma
-    density = np.exp(
-        -0.5 * ((observed["measured_e1"].to_numpy()[:, None] - means) / sigma) ** 2
-    ) / (sigma * np.sqrt(2 * np.pi))
+    density = np.exp(-0.5 * ((observed["measured_e1"].to_numpy()[:, None] - means) / sigma) ** 2) / (
+        sigma * np.sqrt(2 * np.pi)
+    )
     mass = likelihood.cache.prior.weights * view.detection_probability
     expected = np.log(density @ mass) - np.log(mass.sum())
     np.testing.assert_allclose(actual, expected, rtol=0, atol=1e-12)
@@ -221,19 +199,15 @@ def test_measured_selection_enters_only_the_population_normalization():
     view = likelihood.cache.get(0.0, 0.0)
     means = view.flow["e1_input_p"].to_numpy(float)
     sigma = likelihood.flow_model.sigma
-    density = np.exp(
-        -0.5 * ((observed["measured_e1"].to_numpy()[:, None] - means) / sigma) ** 2
-    ) / (sigma * np.sqrt(2 * np.pi))
-    detected_mass = likelihood.cache.prior.weights * view.detection_probability
-    expected = np.log(density @ detected_mass) - np.log(
-        np.sum(detected_mass * p_pass)
+    density = np.exp(-0.5 * ((observed["measured_e1"].to_numpy()[:, None] - means) / sigma) ** 2) / (
+        sigma * np.sqrt(2 * np.pi)
     )
+    detected_mass = likelihood.cache.prior.weights * view.detection_probability
+    expected = np.log(density @ detected_mass) - np.log(np.sum(detected_mass * p_pass))
     np.testing.assert_allclose(actual, expected, rtol=0, atol=1e-12)
 
     with pytest.raises(ValueError, match="fail the declared measured cut"):
-        likelihood.log_likelihood(
-            pd.DataFrame({"measured_e1": [0.25]}), 0.0, 0.0
-        )
+        likelihood.log_likelihood(pd.DataFrame({"measured_e1": [0.25]}), 0.0, 0.0)
 
 
 def test_selection_probability_cache_round_trip_and_common_seed(tmp_path):
@@ -247,9 +221,7 @@ def test_selection_probability_cache_round_trip_and_common_seed(tmp_path):
 
     restored = CatalogueSelection.load(tmp_path / "selection", output_cut=cut)
     assert restored.metadata == {"identity": "toy"}
-    np.testing.assert_array_equal(
-        restored.probability(base.flow_model, view), first
-    )
+    np.testing.assert_array_equal(restored.probability(base.flow_model, view), first)
     assert restored.available_shears == ((0.0, 0.0),)
 
 
@@ -268,9 +240,7 @@ def test_selection_cache_extension_keeps_existing_shear_file_stable(tmp_path):
     selection.save(root)
     second_manifest = json.loads((root / "manifest.json").read_text())
     zero_entry = next(
-        entry
-        for entry in second_manifest["entries"]
-        if entry["g1"] == 0.0 and entry["g2"] == 0.0
+        entry for entry in second_manifest["entries"] if entry["g1"] == 0.0 and entry["g2"] == 0.0
     )
     assert zero_entry["probability"] == first_name
     assert (root / first_name).read_bytes() == first_bytes
@@ -285,9 +255,7 @@ def test_selection_cache_extension_keeps_existing_shear_file_stable(tmp_path):
         np.array([0.1, 0.2, 0.3]),
     ),
 )
-def test_selection_cache_rejects_invalid_probability_arrays(
-    tmp_path, corrupt_probability
-):
+def test_selection_cache_rejects_invalid_probability_arrays(tmp_path, corrupt_probability):
     base = _likelihood()
     cut = OutputCut(["measured_e1"], bounds=[("measured_e1", None, 0.05)])
     selection = CatalogueSelection(cut, n_samples=32, seed=91, row_chunk=2)
@@ -408,14 +376,10 @@ def test_model_cache_round_trip_reuses_views_without_detector(tmp_path):
     expected = likelihood.log_likelihood(observed, 0.0, 0.0)
     likelihood.cache.save(tmp_path / "model-cache", metadata={"model": "fake"})
 
-    restored = CatalogueModelCache.load(
-        tmp_path / "model-cache", prior=likelihood.cache.prior
-    )
+    restored = CatalogueModelCache.load(tmp_path / "model-cache", prior=likelihood.cache.prior)
     assert restored.detector is None
     assert restored.metadata == {"model": "fake"}
-    actual = CatalogueLikelihood(likelihood.flow_model, restored).log_likelihood(
-        observed, 0.0, 0.0
-    )
+    actual = CatalogueLikelihood(likelihood.flow_model, restored).log_likelihood(observed, 0.0, 0.0)
     np.testing.assert_allclose(actual, expected, rtol=0, atol=1e-12)
     restored.attach_detector(_detector)
     restored.get(0.01, 0.0)
@@ -456,9 +420,7 @@ def test_model_cache_rejects_detection_rows_not_aligned_with_scene(tmp_path):
 
 
 def test_shape_only_compact_cache_stores_spin0_conditions_once(tmp_path):
-    prior = ScenePrior.from_catalogue(
-        _catalogue(), guard_radius_arcsec=8.0, weight_column="prior_weight"
-    )
+    prior = ScenePrior.from_catalogue(_catalogue(), guard_radius_arcsec=8.0, weight_column="prior_weight")
     features = (
         "e1_input_p",
         "e2_input_p",
@@ -493,16 +455,10 @@ def test_shape_only_compact_cache_stores_spin0_conditions_once(tmp_path):
     np.testing.assert_allclose(
         shifted.flow.loc[:, features], reference.flow.loc[:, features], rtol=0, atol=1e-14
     )
-    np.testing.assert_array_equal(
-        zero.flow["nbr_flux_near"], shifted.flow["nbr_flux_near"]
-    )
+    np.testing.assert_array_equal(zero.flow["nbr_flux_near"], shifted.flow["nbr_flux_near"])
     assert not np.array_equal(zero.flow["e1_input_p"], shifted.flow["e1_input_p"])
-    np.testing.assert_array_equal(
-        zero.detection_probability, shifted.detection_probability
-    )
-    assert cache.validate_detection_shear_invariance() == tuple(
-        detector.preprocessor.feature_names
-    )
+    np.testing.assert_array_equal(zero.detection_probability, shifted.detection_probability)
+    assert cache.validate_detection_shear_invariance() == tuple(detector.preprocessor.feature_names)
 
     cache.save(tmp_path / "compact")
     manifest = json.loads((tmp_path / "compact" / "manifest.json").read_text())
@@ -518,9 +474,7 @@ def test_shape_only_compact_cache_stores_spin0_conditions_once(tmp_path):
 
 
 def test_detection_neighbour_rule_is_applied_and_persisted(tmp_path):
-    prior = ScenePrior.from_catalogue(
-        _catalogue(), guard_radius_arcsec=8.0, weight_column="prior_weight"
-    )
+    prior = ScenePrior.from_catalogue(_catalogue(), guard_radius_arcsec=8.0, weight_column="prior_weight")
     cache = CatalogueModelCache(
         prior,
         detector=_detector,
@@ -611,8 +565,7 @@ def test_mock_generation_and_exact_small_catalogue_closure():
     assert np.isfinite(result.model_standard_error)
     np.testing.assert_allclose(
         result.closure_pull,
-        (result.estimated_shear - result.injected_shear)
-        / result.robust_standard_error,
+        (result.estimated_shear - result.injected_shear) / result.robust_standard_error,
     )
     assert {"scene_row", "detection_uniform", "flow_seed"}.issubset(mock.truth)
 
@@ -634,9 +587,7 @@ def test_blend_response_likelihood_matches_direct_shifted_finite_sum():
     mean = mean + view.blend_shift
     residual = observed.to_numpy(float)[:, None, :] - mean[None, :, :]
     sigma = likelihood.flow_model.sigma
-    density = np.exp(-0.5 * np.square(residual / sigma).sum(axis=2)) / (
-        2.0 * np.pi * sigma**2
-    )
+    density = np.exp(-0.5 * np.square(residual / sigma).sum(axis=2)) / (2.0 * np.pi * sigma**2)
     mass = likelihood.cache.prior.weights * view.detection_probability
     expected = np.log(density @ mass) - np.log(mass.sum())
     np.testing.assert_allclose(actual, expected, rtol=0, atol=1e-12)
@@ -657,9 +608,7 @@ def test_mock_generator_adds_exact_atom_blend_shift_and_records_truth():
     base_mock = generate_mock_catalogue(base, **kwargs)
     blend_mock = generate_mock_catalogue(blended, **kwargs)
 
-    np.testing.assert_array_equal(
-        blend_mock.truth["scene_row"], base_mock.truth["scene_row"]
-    )
+    np.testing.assert_array_equal(blend_mock.truth["scene_row"], base_mock.truth["scene_row"])
     difference = blend_mock.measurements.to_numpy() - base_mock.measurements.to_numpy()
     recorded = blend_mock.truth[["blend_shift_g1", "blend_shift_g2"]].to_numpy()
     np.testing.assert_allclose(difference, recorded, rtol=0, atol=2e-8)
@@ -680,15 +629,11 @@ def test_selection_qmc_applies_blend_shift_before_measured_cut():
     base_selection = CatalogueSelection(cut, n_samples=8, seed=501, row_chunk=2)
     blend_selection = CatalogueSelection(cut, n_samples=8, seed=501, row_chunk=2)
     g1 = 0.04
-    base_probability = base_selection.probability(
-        flow, base.cache.get(g1, 0.0)
-    )
+    base_probability = base_selection.probability(flow, base.cache.get(g1, 0.0))
     blend_view = blended.cache.get(g1, 0.0)
     blend_probability = blend_selection.probability(flow, blend_view)
 
-    expected_draws = blend_view.flow[
-        ["e1_input_p", "e2_input_p"]
-    ].to_numpy(float) + blend_view.blend_shift
+    expected_draws = blend_view.flow[["e1_input_p", "e2_input_p"]].to_numpy(float) + blend_view.blend_shift
     expected = (expected_draws[:, 0] < 0.15).astype(float)
     np.testing.assert_array_equal(blend_probability, expected)
     assert np.any(blend_probability != base_probability)
@@ -707,13 +652,9 @@ def test_selection_common_random_numbers_do_not_depend_on_shear_order():
     first = CatalogueSelection(cut, n_samples=32, seed=502, row_chunk=2)
     second = CatalogueSelection(cut, n_samples=32, seed=502, row_chunk=2)
     points = ((0.02, -0.01), (-0.015, 0.025), (0.0, 0.0))
-    forward = {
-        point: first.probability(flow, likelihood.cache.get(*point)).copy()
-        for point in points
-    }
+    forward = {point: first.probability(flow, likelihood.cache.get(*point)).copy() for point in points}
     reverse = {
-        point: second.probability(flow, likelihood.cache.get(*point)).copy()
-        for point in reversed(points)
+        point: second.probability(flow, likelihood.cache.get(*point)).copy() for point in reversed(points)
     }
     for point in points:
         np.testing.assert_array_equal(forward[point], reverse[point])
@@ -730,9 +671,7 @@ def test_model_cache_round_trip_reconstructs_blend_shift(tmp_path):
         prior=likelihood.cache.prior,
         blend_response=likelihood.cache.blend_response,
     )
-    np.testing.assert_allclose(
-        restored.get(0.02, -0.01).blend_shift, expected, rtol=0, atol=0
-    )
+    np.testing.assert_allclose(restored.get(0.02, -0.01).blend_shift, expected, rtol=0, atol=0)
 
 
 def test_blend_cache_reuses_spin0_views_and_only_updates_shape_and_shift():

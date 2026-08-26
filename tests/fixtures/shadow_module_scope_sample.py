@@ -8,12 +8,13 @@ exactly the way it is silent on clean code, so nothing distinguished "no hits he
 The nested function below must be attributed to `helper`, NOT to `<module>` -- with the
 module in the scope list, a plain ast.walk would report every nested loop twice.
 """
+
 PRE = "preprocessor"
 OUT = []
 for m in range(3):
     ctx = PRE.upper() + str(m)
     OUT.append(ctx)
-    PRE = OUT[:m + 1]                # <-- the bug, at module scope
+    PRE = OUT[: m + 1]  # <-- the bug, at module scope
 
 
 def helper(seed, n):
@@ -21,5 +22,5 @@ def helper(seed, n):
     got = []
     for i in range(n):
         got.append(acc * i)
-        acc = got                    # <-- the same bug, one scope down
+        acc = got  # <-- the same bug, one scope down
     return got

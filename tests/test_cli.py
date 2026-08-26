@@ -57,7 +57,7 @@ def test_flow_tune_cli_writes_ranked_manifest(monkeypatch, tmp_path):
     config_path.write_text(
         f"""training:
   catalogue: {catalogue}
-  output: {tmp_path / 'base.pt'}
+  output: {tmp_path / "base.pt"}
   response_target: {response}
   coupling_target: {coupling}
 tuning:

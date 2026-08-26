@@ -1,16 +1,9 @@
-import importlib.util
 import json
-from pathlib import Path
+
+from _script_loader import load_script_module
 
 
-SCRIPT = (
-    Path(__file__).resolve().parents[1]
-    / "scripts"
-    / "finalize_fs2_sharded_prior.py"
-)
-SPEC = importlib.util.spec_from_file_location("finalize_fs2_sharded_prior", SCRIPT)
-MODULE = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(MODULE)
+MODULE = load_script_module("finalize_fs2_sharded_prior.py")
 
 
 def _write_json(path, payload):

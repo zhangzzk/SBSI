@@ -1,18 +1,10 @@
-import importlib.util
-from pathlib import Path
-
 import pandas as pd
 import pytest
 
+from _script_loader import load_script_module
 
-SCRIPT = (
-    Path(__file__).resolve().parents[1]
-    / "scripts"
-    / "audit_fs2_prior_generation.py"
-)
-SPEC = importlib.util.spec_from_file_location("audit_fs2_prior_generation", SCRIPT)
-MODULE = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(MODULE)
+
+MODULE = load_script_module("audit_fs2_prior_generation.py")
 
 
 def _write_case(path):

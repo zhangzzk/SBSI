@@ -25,9 +25,7 @@ def test_case_accumulator_matrix_and_projected_response():
     result = accumulator.summary()
     np.testing.assert_allclose(result["simulation_matrix"], simulation_matrix, atol=1e-14)
     np.testing.assert_allclose(result["flow_matrix"], flow_matrix, atol=1e-14)
-    np.testing.assert_allclose(
-        result["model_matrix"], flow_matrix + 0.08 * np.eye(2), atol=1e-14
-    )
+    np.testing.assert_allclose(result["model_matrix"], flow_matrix + 0.08 * np.eye(2), atol=1e-14)
     assert np.isclose(result["simulation_response"], np.trace(simulation_matrix) / 2)
     assert np.isclose(result["flow_response"], np.trace(flow_matrix) / 2)
 

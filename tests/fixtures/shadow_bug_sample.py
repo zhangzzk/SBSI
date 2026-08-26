@@ -13,5 +13,5 @@ def draw_loop(bundle, draws, ev):
     for m in range(draws):
         ctx = pre.add_missing_indicators(ev[m])
         out.append(ctx)
-        pre = ev[:, :m + 1]          # <-- the bug: unrelated rebind of a live name
+        pre = ev[:, : m + 1]  # <-- the bug: unrelated rebind of a live name
     return out
