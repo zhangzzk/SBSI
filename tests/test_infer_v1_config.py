@@ -78,3 +78,20 @@ def test_efficiency_mock_reuses_the_frozen_generation_streams():
     assert "N_DETECTED=100000 INJECTED_G1=0.02 INJECTED_G2=0.0" in job
     assert "SCENE_SEED=12001 DETECTION_SEED=12002 FLOW_SEED=12003" in job
     assert "INITIAL_STRATEGY=mean_observed_shape PREPARE_ONLY=1 COMPILE_FLOW=0" in job
+
+
+def test_one_million_closure_uses_infer_v1_on_two_v100s():
+    prepare = (ROOT / "jobs" / "job_infer_v1_closure_n1m_prepare.sh").read_text()
+    infer = (ROOT / "jobs" / "job_infer_v1_closure_n1m.sh").read_text()
+    combine = (ROOT / "jobs" / "job_infer_v1_closure_n1m_combine.sh").read_text()
+
+    assert "N_DETECTED=1000000 INJECTED_G1=0.02 INJECTED_G2=0.0" in prepare
+    assert "SCENE_SEED=12001 DETECTION_SEED=12002 FLOW_SEED=12003" in prepare
+    assert "gpu:v100:2" in infer
+    assert "PROPOSAL_CANDIDATES=16384 PROPOSAL_PREFILTER_CANDIDATES=131072" in infer
+    assert 'ADAPTIVE_DRAW_LADDER="512 1024 2048 4096 8192 16384"' in infer
+    assert "RETAIN_FULL_LADDER=1 COMPILE_FLOW=1 CANDIDATE_BACKEND=torch" in infer
+    assert "run_partition 0 0 500000" in infer
+    assert "run_partition 1 500000 1000000" in infer
+    assert "observations_000000_499999" in combine
+    assert "observations_500000_999999" in combine

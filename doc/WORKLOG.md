@@ -2,6 +2,39 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-26 cont.258 — one-million-object Infer V1 likelihood closure launched
+
+A single positive closure arm is launched at injected `g=(0.02,0)` with one
+mock stream and one proposal seed.  It uses the accepted Infer V1 setup on the
+complete 200-case FS2 prior: QMC-128 mean/std proposal coordinates,
+Gaussian-uncertainty ranking, `K=M=16384`, 131,072 location prefilter,
+`epsilon=0.1`, raw mean observed shape as the centre, one full two-component
+`h=0.001` step, compiled FP32 flow, Torch candidate backend, and retained
+common-draw M ladder.  The model/cache identity is the same seed-501 V3.1 flow
+and spin-0 detector used by the completed efficiency benchmark, with no
+measured cut and `R_blend=0`.
+
+This is deliberately a matched likelihood closure of the accelerated numerical
+pipeline, not a V3.2 image or shape-sensitive-detection closure.  The current
+one-step path validates and requires shear-invariant detector inputs; it cannot
+silently substitute the V3.2 transition-aware classifier whose ellipticity
+features must be recomputed at every shear view.
+
+New wrappers freeze 1,000,000 likelihood detections, infer disjoint
+`[0,500000)` and `[500000,1000000)` partitions concurrently on two V100s, and
+combine their per-object score and full information by exact summation.  The
+mock uses the same explicit streams as the current 100k preparation
+(`scene/detection/flow=12001/12002/12003`), and inference uses proposal seed
+8701.  The expected inference wall time after allocation is approximately six
+hours from the matched 20k timing, plus mock preparation and scheduler gaps.
+
+The dependency chain is preparation **16034315** -> two-V100 inference
+**16034316** -> CPU combination **16034317**.  Slurm confirms the exact typed
+requests; preparation entered RUNNING immediately on `th-cl-nv01`, and the
+later jobs wait on successful dependencies.  Bash syntax, Ruff, whitespace,
+and 23 Infer V1/partition/provenance tests pass.  No existing result path was
+overwritten.
+
 ## 2026-08-26 cont.257 — Torch candidate backend accepted: 1.93x Infer V1 speedup
 
 The matched current-mock V100 comparison accepts device-resident candidate
