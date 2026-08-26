@@ -56,6 +56,9 @@ The operational catalogue-prior command path is deliberately small:
 
 - `configs/infer_v1.json` is the canonical **Infer V1** numerical setup. It
   versions sampling and solving independently of model presets such as V3.2;
+  its default Torch candidate backend performs the broad location query and
+  Gaussian-uncertainty reranking on the inference GPU, while the SciPy backend
+  remains an explicit CPU fallback;
 - `configs/default_catalogue_prior.json` names the current immutable,
   sharded FS2 prior manifest; shard-aware consumers must preserve its declared
   global mixture masses;

@@ -21,6 +21,7 @@
   "execution": {
     "precision": "fp32",
     "compile_flow": true,
+    "candidate_backend": "torch",
     "object_chunk": 128,
     "atom_chunk": 4096
   }

@@ -25,6 +25,13 @@ def test_infer_v1_is_the_frozen_profiled_setup():
         "step": "one_step_full_2d",
         "finite_difference_h": 0.001,
     }
+    assert config["execution"] == {
+        "precision": "fp32",
+        "compile_flow": True,
+        "candidate_backend": "torch",
+        "object_chunk": 128,
+        "atom_chunk": 4096,
+    }
 
 
 def test_infer_v1_job_records_the_named_setup():
@@ -41,6 +48,7 @@ def test_infer_v1_job_records_the_named_setup():
         "${INITIAL_STRATEGY:=mean_observed_shape}",
         "${ADAPTIVE_ONE_STEP:=1}",
         "${RETAIN_FULL_LADDER:=1}",
+        "${CANDIDATE_BACKEND:=torch}",
     ):
         assert setting in job
     assert '--inference-version "Infer V1"' in job

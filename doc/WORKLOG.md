@@ -2,6 +2,42 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-26 cont.257 — Torch candidate backend accepted: 1.93x Infer V1 speedup
+
+The matched current-mock V100 comparison accepts device-resident candidate
+query and uncertainty reranking as the Infer V1 default.  SciPy control
+**16033259** and Torch arm **16032755** use identical 20,000 observations,
+initial centre, prior/model/proposal/mock/implementation hashes, proposal seed,
+K/M ladder, and nine-view compiled-FP32 likelihood.  Candidate time falls from
+848.004 to 42.071 seconds (**20.16x**), while candidate-flow, allocation, and
+stencil phases remain respectively 128.271/125.373, 104.535/104.005, and
+595.722/598.559 seconds.  Total inference time falls from 1,676.727 to 870.188
+seconds, an end-to-end **1.927x** speedup.  Slurm elapsed times are 28m56s and
+15m17s on the same V100 node.
+
+The paired numerical change is negligible: Torch minus SciPy is
+`(+2.452e-7,-2.866e-7)` in aggregate shear, versus paired standard errors
+`(4.467e-7,5.369e-7)`, or `(0.55,-0.53)` paired standard errors.  Every retained
+M rung agrees within 1.61e-6 in either component, far inside the fixed 1e-4
+gate.  Draw counts are identical; unique-atom counts agree for 99.57% of
+objects, as expected from rare float32 location-prefilter boundary changes.
+The independent 1,024-row controls **16033258/16032754** agree within
+`(-4.04e-6,+1.01e-5)`, or about 0.22 paired standard errors.  All result
+identities and hashes match within each paired comparison.
+
+The current V100 preparation **16032753** reproduced the historical truth table
+byte-for-byte but not the stochastic measurement table generated earlier on an
+A40.  Consequently no cross-mock estimate comparison was used; the accepted
+numbers above come only from the new same-mock controls.  The strict provenance
+gate remains unchanged.
+
+`configs/infer_v1.json` and `jobs/job_infer_v1.sh` now default to
+`candidate_backend=torch`; SciPy remains an explicit fallback.  Documentation
+and config regressions record that choice.  The next measured bottleneck is the
+598.6-second stencil phase, 68.8% of the accelerated inference time.  This
+change supplies the first 1.93x of the requested 5x target; approximately 2.6x
+further end-to-end improvement is still required.
+
 ## 2026-08-26 cont.256 — efficiency benchmark mock provenance repaired by regeneration
 
 The first V100 benchmark jobs **16032131** and **16032180** both stopped after

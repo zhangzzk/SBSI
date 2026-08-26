@@ -13,6 +13,9 @@ The current numerical catalogue setup is **Infer V1**, defined in
 [`configs/infer_v1.json`](configs/infer_v1.json). Inference versions identify
 the numerical algorithm and sampling choices; model versions are separate.
 The current model preset is V3.2, but Infer V1 does not branch on that name.
+Its candidate query and uncertainty reranking run on the inference GPU by
+default; the numerically gated SciPy implementation remains available as a
+fallback.
 
 The [inference tutorial notebook](examples/sbsi_api_tutorial.ipynb) is the main
 user-facing prediction walkthrough. Training and tuning use the CLI described
