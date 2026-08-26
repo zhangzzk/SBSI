@@ -2,6 +2,30 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-26 cont.256 — efficiency benchmark mock provenance repaired by regeneration
+
+The first V100 benchmark jobs **16032131** and **16032180** both stopped after
+36 seconds, before any likelihood evaluation, because the strict saved-mock
+gate correctly rejected the old mock's historical whole-run implementation
+hash after `catalogue_sampling.py` changed.  Both stderr files contain only
+that provenance exception; neither job produced a result.  The gate was not
+weakened and the old manifest was not edited.
+
+New `jobs/job_prepare_infer_v1_efficiency_mock.sh` regenerates the complete
+100,000-object likelihood mock under the current implementation using the
+identical FS2 prior, model/cache artifacts, injection, and scene/detection/flow
+seeds as the retained reference.  The benchmark wrapper now accepts an explicit
+mock path and filesystem-safe run tag so dependent runs remain immutable and do
+not collide with the failed empty output directories.  V100 preparation job
+**16032753** is followed after success by the 1,024-row validation
+**16032754** and full 20,000-row timing **16032755**.  They are initially
+pending for priority/dependency.  The regenerated measurement/truth hashes
+must match the historical mock before numerical or speed results are accepted.
+
+Validation: both Bash wrappers pass `bash -n`; Ruff and whitespace checks pass;
+and 21 Infer V1/provenance tests pass.  No inference default or scientific gate
+changed.
+
 ## 2026-08-26 cont.255 — Infer V1 GPU candidate reranking benchmark launched
 
 The first measured Infer V1 efficiency change targets its actual dominant

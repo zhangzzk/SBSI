@@ -61,3 +61,12 @@ def test_candidate_backend_benchmark_is_matched_to_infer_v1():
         assert setting in job
     assert "gpu:v100:1" in job
     assert "OBSERVATION_START=0" in job
+
+
+def test_efficiency_mock_reuses_the_frozen_generation_streams():
+    job = (ROOT / "jobs" / "job_prepare_infer_v1_efficiency_mock.sh").read_text()
+
+    assert "gpu:v100:1" in job
+    assert "N_DETECTED=100000 INJECTED_G1=0.02 INJECTED_G2=0.0" in job
+    assert "SCENE_SEED=12001 DETECTION_SEED=12002 FLOW_SEED=12003" in job
+    assert "INITIAL_STRATEGY=mean_observed_shape PREPARE_ONLY=1 COMPILE_FLOW=0" in job

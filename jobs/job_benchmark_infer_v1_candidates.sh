@@ -17,6 +17,8 @@ source_root=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/v31_fs2_de
 root=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/infer_v1_efficiency_v1
 backend=${CANDIDATE_BACKEND:-torch}
 n_observations=${N_OBSERVATIONS:-20000}
+mock_input=${MOCK_INPUT:-$source_root/prepare/mock}
+benchmark_tag=${BENCHMARK_TAG:-original_mock}
 
 case "$backend" in
   scipy|torch) ;;
@@ -29,8 +31,12 @@ if ((n_observations <= 0 || n_observations > 20000)); then
   echo "N_OBSERVATIONS must lie in [1, 20000]" >&2
   exit 2
 fi
+if [[ ! "$benchmark_tag" =~ ^[A-Za-z0-9_.-]+$ ]]; then
+  echo "BENCHMARK_TAG contains unsupported characters" >&2
+  exit 2
+fi
 
-output="$root/results/${backend}_n${n_observations}"
+output="$root/results/${benchmark_tag}_${backend}_n${n_observations}"
 if [[ -e "$output" ]]; then
   echo "refusing to overwrite $output" >&2
   exit 2
@@ -39,7 +45,7 @@ mkdir -p "$root/logs" "$root/results"
 
 CUDA_VISIBLE_DEVICES=0 env \
   OUTPUT="$output" \
-  MOCK_INPUT="$source_root/prepare/mock" \
+  MOCK_INPUT="$mock_input" \
   SCENE_STORE="$source_root/compact_global/scene_store" \
   MODEL_CACHE="$source_root/compact_global/model_cache" \
   PROPOSAL_CACHE="$source_root/compact_global/proposal_cache" \
@@ -59,4 +65,4 @@ CUDA_VISIBLE_DEVICES=0 env \
   OMP_NUM_THREADS=8 \
   bash "$repo/jobs/job_infer_v1.sh"
 
-echo "Infer V1 candidate benchmark backend=$backend N=$n_observations complete"
+echo "Infer V1 candidate benchmark tag=$benchmark_tag backend=$backend N=$n_observations complete"
