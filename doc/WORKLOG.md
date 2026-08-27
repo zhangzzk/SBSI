@@ -2,6 +2,36 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-27 cont.266 — first K/epsilon sweep improves support; million-K extension prepared
+
+CIP A40-16GB job **16039375** completed cleanly in 2m03s (exit 0) and
+evaluated all paired settings against exact `log Z=-7.0113355`.  Enlarging one
+fixed 4,194,304-atom Gaussian prefilter makes candidate capture rise from
+65.23% at K=16,384 to 79.32%, 84.77%, 88.91%, and 91.82% at K=65k, 131k,
+262k, and 524k.  The exact-target top-K upper bounds are 80.24%, 92.47%,
+96.18%, 98.31%, and 99.37% at K=16k, 65k, 131k, 262k, and 524k, confirming
+that the posterior is compressible but the Gaussian ranking remains materially
+suboptimal.
+
+At K=524,288 the exact importance-variance optimum is epsilon=0.8423 with
+ESS/M=3.164%; the exact variance projects 4.32% relative standard error at
+M=16,384.  The 256 paired realizations have mean relative evidence 1.0014,
+median Delta-log-Z -0.0054, and empirical p90 absolute error 0.0503, but this
+finite replicate set can miss the ultra-rare p/q tail.  Fixed epsilon=0.4 looks
+slightly better by empirical p90 (0.0423) despite an inferior exact ESS/M of
+1.75%, demonstrating why a single finite-seed or small-replicate stopping rule
+is unsafe.
+
+The sweep's decision rule and response-surface panel now use the exact
+importance-weight variance: projected relative SE is
+`sqrt(chi_square(p||q)/M)`, with a normal p90 absolute-log-evidence guide of
+1.64485 times that value.  The retained common-random-number simulations remain
+an empirical tail diagnostic.  No first-stage setting clears p90 <=0.05 under
+the exact-variance projection.  New wrapper
+`jobs/job_infer_v1_proposal_sweep_large.sh` therefore extends the nested search
+to K=524,288/1,048,576/2,097,152 inside an 8,388,608-atom prefilter and focuses
+epsilon at 0.4--1.0 plus the exact optimum.
+
 ## 2026-08-27 cont.265 — paired adaptive K/epsilon proposal search implemented
 
 The difficult exact target for observation 514716 can now drive a controlled

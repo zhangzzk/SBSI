@@ -212,10 +212,9 @@ def _plot_proposal_sweep(payload: dict, output: Path) -> tuple[Path, Path]:
             continue
         k_index = k_ladder.index(row["n_candidates"])
         epsilon_index = epsilon_ladder.index(row["epsilon"])
-        mc = next(item for item in row["mc"] if item["n_draws"] == m_max)
-        heat[k_index, epsilon_index] = mc[
-            "absolute_log_evidence_error_percentiles"
-        ][1]
+        heat[k_index, epsilon_index] = row[
+            "normal_p90_absolute_log_evidence_error_at_max_m"
+        ]
     image = axes[1, 0].imshow(heat, aspect="auto", cmap="cividis_r")
     axes[1, 0].set_xticks(range(len(epsilon_ladder)), epsilon_ladder)
     axes[1, 0].set_yticks(
@@ -224,7 +223,7 @@ def _plot_proposal_sweep(payload: dict, output: Path) -> tuple[Path, Path]:
     axes[1, 0].set_xlabel(r"Defensive fraction $\epsilon$")
     axes[1, 0].set_ylabel("Candidate count K")
     colorbar = figure.colorbar(image, ax=axes[1, 0], shrink=0.9)
-    colorbar.set_label(r"p90 $|\Delta\log Z|$ at M=16k")
+    colorbar.set_label(r"Exact-variance normal p90 $|\Delta\log Z|$ at M=16k")
 
     x = np.asarray([row["n_candidates"] for row in optimized])
     quantiles = np.asarray(
@@ -347,18 +346,19 @@ def _run_proposal_sweep(
             local_uniform=local_uniform,
             ladder=m_ladder,
         )
-        final = next(item for item in mc if item["n_draws"] == m_ladder[-1])
-        median = final["log_evidence_error_percentiles"][2]
-        p90_abs = final["absolute_log_evidence_error_percentiles"][1]
+        relative_se = float(
+            np.sqrt(exact["chi_square_target_vs_proposal"] / m_ladder[-1])
+        )
+        normal_p90 = float(1.6448536269514722 * relative_se)
         settings.append(
             {
                 "ranking": ranking,
                 "epsilon_kind": kind,
                 **exact,
                 "mc": mc,
-                "passes_m16k_evidence_goal": bool(
-                    abs(median) <= 0.01 and p90_abs <= 0.05
-                ),
+                "projected_relative_evidence_se_at_max_m": relative_se,
+                "normal_p90_absolute_log_evidence_error_at_max_m": normal_p90,
+                "passes_m16k_evidence_goal": bool(normal_p90 <= 0.05),
             }
         )
 
@@ -387,11 +387,9 @@ def _run_proposal_sweep(
     else:
         best = min(
             settings,
-            key=lambda row: next(
-                item["absolute_log_evidence_error_percentiles"][1]
-                for item in row["mc"]
-                if item["n_draws"] == m_ladder[-1]
-            ),
+            key=lambda row: row[
+                "normal_p90_absolute_log_evidence_error_at_max_m"
+            ],
         )
     payload = {
         "status": "complete",
@@ -407,7 +405,7 @@ def _run_proposal_sweep(
             "m_ladder": m_ladder,
             "replicates": int(args.proposal_replicates),
             "mc_seed": int(args.proposal_mc_seed),
-            "success_rule": "|median Delta log Z| <= 0.01 and p90 |Delta log Z| <= 0.05 at max M",
+            "success_rule": "exact-variance normal p90 |Delta log Z| <= 0.05 at max M",
             "common_random_numbers": True,
         },
         "ideal_target_mass_by_k": {

@@ -125,3 +125,13 @@ def test_proposal_sweep_is_paired_to_the_exact_second_example():
     assert "--proposal-prefilter 4194304" in job
     assert "--proposal-epsilon-ladder 0.1 0.2 0.3 0.4 0.6 1.0" in job
     assert "--proposal-replicates 256 --proposal-mc-seed 9917" in job
+
+
+def test_large_proposal_sweep_doubles_to_two_million_candidates():
+    job = (ROOT / "jobs" / "job_infer_v1_proposal_sweep_large.sh").read_text()
+
+    assert "gpu:a40-16gb:1" in job
+    assert "--proposal-k-ladder 524288 1048576 2097152" in job
+    assert "--proposal-prefilter 8388608" in job
+    assert "--proposal-epsilon-ladder 0.4 0.6 0.75 0.85 0.95 1.0" in job
+    assert "--proposal-replicates 256 --proposal-mc-seed 9917" in job
