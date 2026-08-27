@@ -2,6 +2,38 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-27 cont.265 — paired adaptive K/epsilon proposal search implemented
+
+The difficult exact target for observation 514716 can now drive a controlled
+proposal search rather than a sequence of lucky single-seed comparisons.
+`sampling_diagnostics.py` adds exact construction and metrics for
+`q=epsilon*pi+(1-epsilon)*p(.|candidate)`, bounded one-dimensional optimization
+of epsilon for maximum asymptotic ESS, and paired finite-M evidence simulation
+using normalized `p/q`.  The simulation consumes common component/global/local
+uniforms across every proposal setting, so differences reflect K and epsilon
+rather than proposal-seed noise.  It reports the empirical mean relative
+evidence, scatter, log-evidence-error percentiles, absolute-error percentiles,
+and fractions within 0.01/0.05.  `ExactProposalTargetComparison` now retains the
+ordered candidate IDs needed for genuinely nested K prefixes.
+
+`plot_infer_v1_sampling.py --proposal-sweep` evaluates the exact target once,
+then compares the frozen production ranking with a fixed deep Gaussian ranking
+at K=16,384 through 524,288 and epsilon=0.1,0.2,0.3,0.4,0.6,1.0 plus the exact
+ESS-optimal epsilon for every K.  It uses 256 common-random-number replicates at
+M=4,096/8,192/16,384 and records an explicit exploratory success rule:
+absolute median Delta-log-Z <=0.01 and p90 absolute Delta-log-Z <=0.05 at the
+largest M.  The exact-target top-K mass is retained as a non-implementable upper
+bound that distinguishes insufficient K from deficient ranking.  A four-panel,
+colorblind-safe PNG/PDF shows capture, ESS, the p90 error response surface, and
+optimized-epsilon evidence intervals.
+
+New wrapper `jobs/job_infer_v1_proposal_sweep.sh` requests one CIP A40-16GB,
+36 GiB host RAM, and 45 minutes; its fixed 4,194,304-atom prefilter makes all K
+prefixes paired.  Resource detection found 32 physical/64 logical login cores,
+309 GiB available RAM, 8.5 TiB free disk, and no login GPU, so flow evaluation
+remains scheduler-only.  Validation: 13 focused tests pass in the frozen py31
+environment; Ruff, Bash syntax, Python compilation, and whitespace checks pass.
+
 ## 2026-08-27 cont.264 — exact proposal scan confirms ranking support failure
 
 CIP job **16039191** completed successfully in 2m18s on an A40-16GB slice

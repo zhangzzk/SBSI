@@ -113,3 +113,15 @@ def test_exact_proposal_target_scans_second_example_on_v100():
     assert "gpu:v100:1" in job
     assert '"$closure/combined/result.json"' in job
     assert "--exact-object-id 514716 --device cuda" in job
+
+
+def test_proposal_sweep_is_paired_to_the_exact_second_example():
+    job = (ROOT / "jobs" / "job_infer_v1_proposal_sweep.sh").read_text()
+
+    assert "gpu:a40-16gb:1" in job
+    assert '"$closure/combined/result.json"' in job
+    assert "--exact-object-id 514716 --proposal-sweep --device cuda" in job
+    assert "--proposal-k-ladder 16384 32768 65536 131072 262144 524288" in job
+    assert "--proposal-prefilter 4194304" in job
+    assert "--proposal-epsilon-ladder 0.1 0.2 0.3 0.4 0.6 1.0" in job
+    assert "--proposal-replicates 256 --proposal-mc-seed 9917" in job

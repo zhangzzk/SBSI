@@ -6,12 +6,16 @@ from scipy.special import logsumexp
 from sbsi.sampling_diagnostics import (
     ExactProposalTargetComparison,
     ImportanceSamplingDiagnostic,
+    defensive_proposal_probabilities,
     normalized_importance_weights,
+    optimize_defensive_epsilon,
     plot_exact_proposal_target,
     plot_importance_sampling_diagnostic,
     save_exact_proposal_target,
     save_importance_sampling_diagnostic,
     select_example_rows,
+    simulate_defensive_evidence_errors,
+    summarize_defensive_proposal,
     summarize_exact_proposal_target,
     summarize_importance_sampling,
 )
@@ -131,6 +135,7 @@ def test_exact_proposal_target_reports_mismatch_and_saves_figure(tmp_path):
         log_target=np.log(target),
         proposal_probability=proposal,
         candidate_member=np.asarray([True, True, False, False, False]),
+        candidate_indices=np.asarray([0, 1]),
         population_log_normalization=0.5,
         epsilon=0.1,
         n_candidates=2,
@@ -150,3 +155,41 @@ def test_exact_proposal_target_reports_mismatch_and_saves_figure(tmp_path):
     assert json.loads(result.read_text())["object_id"] == 514716
     paths = plot_exact_proposal_target(comparison, output, bins=8)
     assert all(path.stat().st_size > 0 for path in paths)
+
+
+def test_defensive_proposal_sweep_metrics_and_paired_mc_are_exact():
+    target = np.asarray([0.40, 0.30, 0.20, 0.10])
+    prior = np.full(4, 0.25)
+    candidates = np.asarray([0, 1])
+    proposal, local, mass = defensive_proposal_probabilities(
+        target, prior, candidates, 0.4
+    )
+    np.testing.assert_allclose(local, [4 / 7, 3 / 7])
+    np.testing.assert_allclose(mass, 0.7)
+    np.testing.assert_allclose(proposal.sum(), 1.0)
+    summary = summarize_defensive_proposal(target, prior, candidates, 0.4)
+    np.testing.assert_allclose(
+        summary["asymptotic_ess_fraction"],
+        1.0 / np.sum(np.square(target) / proposal),
+    )
+    epsilon, ess_fraction = optimize_defensive_epsilon(
+        target, prior, candidates
+    )
+    assert 0 < epsilon <= 1
+    assert ess_fraction >= summary["asymptotic_ess_fraction"]
+
+    component = np.asarray([[0.1, 0.9, 0.1, 0.9], [0.9, 0.1, 0.9, 0.1]])
+    global_positions = np.asarray([[0, 1, 2, 3], [3, 2, 1, 0]])
+    local_uniform = np.asarray([[0.1, 0.9, 0.2, 0.8], [0.8, 0.2, 0.9, 0.1]])
+    rows = simulate_defensive_evidence_errors(
+        target,
+        prior,
+        candidates,
+        0.4,
+        component_uniform=component,
+        global_positions=global_positions,
+        local_uniform=local_uniform,
+        ladder=(2, 4),
+    )
+    assert [row["n_draws"] for row in rows] == [2, 4]
+    assert all(row["n_replicates"] == 2 for row in rows)

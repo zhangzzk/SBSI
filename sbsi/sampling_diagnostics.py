@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Mapping, Sequence
 
 import numpy as np
+from scipy.optimize import minimize_scalar
 from scipy.special import logsumexp
 
 from .catalogue_likelihood import CatalogueLikelihood
@@ -64,6 +65,7 @@ class ExactProposalTargetComparison:
     log_target: np.ndarray
     proposal_probability: np.ndarray
     candidate_member: np.ndarray
+    candidate_indices: np.ndarray
     population_log_normalization: float
     epsilon: float
     n_candidates: int
@@ -278,6 +280,7 @@ def evaluate_exact_proposal_target(
         log_target=log_target,
         proposal_probability=proposal_probability,
         candidate_member=candidate_member,
+        candidate_indices=candidates.indices[0].copy(),
         population_log_normalization=likelihood.log_population_normalization(
             float(center[0]), float(center[1])
         ),
@@ -287,6 +290,202 @@ def evaluate_exact_proposal_target(
             None if prefilter_candidates is None else int(prefilter_candidates)
         ),
     )
+
+
+def defensive_proposal_probabilities(
+    target_probability: np.ndarray,
+    prior_probability: np.ndarray,
+    candidate_positions: np.ndarray,
+    epsilon: float,
+) -> tuple[np.ndarray, np.ndarray, float]:
+    """Construct ``epsilon*pi + (1-epsilon)*p(.|candidate)`` exactly."""
+
+    target = np.asarray(target_probability, dtype=np.float64)
+    prior = np.asarray(prior_probability, dtype=np.float64)
+    positions = np.asarray(candidate_positions, dtype=np.int64)
+    if target.ndim != 1 or prior.shape != target.shape or not len(target):
+        raise ValueError("target and prior must be aligned one-dimensional arrays")
+    if (target < 0).any() or (prior <= 0).any():
+        raise ValueError("target must be non-negative and active prior must be positive")
+    if not np.isclose(target.sum(), 1.0) or not np.isclose(prior.sum(), 1.0):
+        raise ValueError("target and prior must each sum to one")
+    if (
+        positions.ndim != 1
+        or not len(positions)
+        or (positions < 0).any()
+        or (positions >= len(target)).any()
+        or len(np.unique(positions)) != len(positions)
+    ):
+        raise ValueError("candidate positions must be unique valid target positions")
+    if not 0 < epsilon <= 1:
+        raise ValueError("epsilon must lie in (0, 1]")
+    candidate_mass = float(target[positions].sum())
+    if candidate_mass <= 0:
+        raise ValueError("candidate support has zero exact target mass")
+    local = target[positions] / candidate_mass
+    proposal = epsilon * prior.copy()
+    proposal[positions] += (1.0 - epsilon) * local
+    if not np.isclose(proposal.sum(), 1.0, rtol=0, atol=2e-12):
+        raise RuntimeError("defensive proposal does not sum to one")
+    return proposal, local, candidate_mass
+
+
+def summarize_defensive_proposal(
+    target_probability: np.ndarray,
+    prior_probability: np.ndarray,
+    candidate_positions: np.ndarray,
+    epsilon: float,
+) -> dict:
+    """Return exact mismatch metrics for one candidate support and epsilon."""
+
+    proposal, _, candidate_mass = defensive_proposal_probabilities(
+        target_probability,
+        prior_probability,
+        candidate_positions,
+        epsilon,
+    )
+    target = np.asarray(target_probability, dtype=np.float64)
+    positive = target > 0
+    ratio = np.zeros_like(target)
+    ratio[positive] = target[positive] / proposal[positive]
+    second_moment = float(np.sum(target[positive] * ratio[positive]))
+    candidate_proposal_mass = float(proposal[candidate_positions].sum())
+    return {
+        "epsilon": float(epsilon),
+        "n_candidates": int(len(candidate_positions)),
+        "candidate_target_mass": candidate_mass,
+        "outside_candidate_target_mass": float(1.0 - candidate_mass),
+        "candidate_proposal_mass": candidate_proposal_mass,
+        "outside_candidate_proposal_mass": float(1.0 - candidate_proposal_mass),
+        "asymptotic_ess_fraction": float(1.0 / second_moment),
+        "chi_square_target_vs_proposal": float(second_moment - 1.0),
+        "kl_target_vs_proposal": float(
+            np.sum(target[positive] * np.log(ratio[positive]))
+        ),
+        "total_variation": float(0.5 * np.abs(target - proposal).sum()),
+        "maximum_target_to_proposal_ratio": float(ratio.max()),
+    }
+
+
+def optimize_defensive_epsilon(
+    target_probability: np.ndarray,
+    prior_probability: np.ndarray,
+    candidate_positions: np.ndarray,
+    *,
+    lower: float = 1.0e-3,
+) -> tuple[float, float]:
+    """Minimize the exact importance-weight second moment over epsilon."""
+
+    target = np.asarray(target_probability, dtype=np.float64)
+    prior = np.asarray(prior_probability, dtype=np.float64)
+    positions = np.asarray(candidate_positions, dtype=np.int64)
+    # Validation and the candidate-conditional target come from the shared
+    # constructor.  Its epsilon value is immaterial here.
+    _, local, candidate_mass = defensive_proposal_probabilities(
+        target, prior, positions, 1.0
+    )
+    if not 0 < lower < 1:
+        raise ValueError("epsilon lower bound must lie in (0, 1)")
+    positive = target > 0
+    global_second = float(np.sum(np.square(target[positive]) / prior[positive]))
+    candidate_global_second = float(
+        np.sum(np.square(target[positions]) / prior[positions])
+    )
+    outside_second = max(0.0, global_second - candidate_global_second)
+    target_candidate = target[positions]
+    prior_candidate = prior[positions]
+
+    def objective(epsilon: float) -> float:
+        proposal_candidate = (
+            epsilon * prior_candidate + (1.0 - epsilon) * local
+        )
+        inside = np.sum(np.square(target_candidate) / proposal_candidate)
+        return float(outside_second / epsilon + inside)
+
+    result = minimize_scalar(
+        objective,
+        bounds=(float(lower), 1.0),
+        method="bounded",
+        options={"xatol": 1.0e-5},
+    )
+    candidates = ((float(result.x), float(result.fun)), (1.0, objective(1.0)))
+    epsilon, second_moment = min(candidates, key=lambda item: item[1])
+    return float(epsilon), float(1.0 / second_moment)
+
+
+def simulate_defensive_evidence_errors(
+    target_probability: np.ndarray,
+    prior_probability: np.ndarray,
+    candidate_positions: np.ndarray,
+    epsilon: float,
+    *,
+    component_uniform: np.ndarray,
+    global_positions: np.ndarray,
+    local_uniform: np.ndarray,
+    ladder: Sequence[int],
+) -> list[dict]:
+    """Simulate paired finite-M log-evidence errors from an exact target.
+
+    The returned errors are relative to the exact evidence, so the normalized
+    importance ratio ``p/q`` is sufficient and no additional flow calls are
+    needed.  Supplying shared uniforms makes comparisons across settings use
+    common random numbers.
+    """
+
+    proposal, local, _ = defensive_proposal_probabilities(
+        target_probability,
+        prior_probability,
+        candidate_positions,
+        epsilon,
+    )
+    component = np.asarray(component_uniform, dtype=np.float64)
+    global_position = np.asarray(global_positions, dtype=np.int64)
+    local_u = np.asarray(local_uniform, dtype=np.float64)
+    if component.ndim != 2 or global_position.shape != component.shape:
+        raise ValueError("component uniforms and global positions must align")
+    if local_u.shape != component.shape:
+        raise ValueError("local uniforms must align with component uniforms")
+    if (
+        (component < 0).any()
+        or (component >= 1).any()
+        or (local_u < 0).any()
+        or (local_u >= 1).any()
+    ):
+        raise ValueError("uniform variates must lie in [0, 1)")
+    if (global_position < 0).any() or (global_position >= len(proposal)).any():
+        raise ValueError("global draw positions lie outside active prior support")
+    sizes = tuple(sorted({int(value) for value in ladder}))
+    if not sizes or sizes[0] <= 0 or sizes[-1] > component.shape[1]:
+        raise ValueError("evidence ladder lies outside the simulated draws")
+    local_cdf = np.cumsum(local)
+    local_cdf[-1] = 1.0
+    local_position = candidate_positions[
+        np.searchsorted(local_cdf, local_u, side="right")
+    ]
+    selected = np.where(component < epsilon, global_position, local_position)
+    ratio = target_probability[selected] / proposal[selected]
+    rows = []
+    for n_draws in sizes:
+        relative = ratio[:, :n_draws].mean(axis=1)
+        log_error = np.log(relative)
+        absolute = np.abs(log_error)
+        rows.append(
+            {
+                "n_draws": int(n_draws),
+                "n_replicates": int(len(relative)),
+                "mean_relative_evidence": float(relative.mean()),
+                "relative_evidence_std": float(relative.std(ddof=1)),
+                "log_evidence_error_percentiles": np.percentile(
+                    log_error, [0, 10, 50, 90, 100]
+                ).tolist(),
+                "absolute_log_evidence_error_percentiles": np.percentile(
+                    absolute, [50, 90, 95, 99, 100]
+                ).tolist(),
+                "fraction_within_0p01": float(np.mean(absolute <= 0.01)),
+                "fraction_within_0p05": float(np.mean(absolute <= 0.05)),
+            }
+        )
+    return rows
 
 
 def normalized_importance_weights(log_weight: np.ndarray) -> np.ndarray:
@@ -818,14 +1017,18 @@ def plot_importance_sampling_diagnostic(
 __all__ = [
     "ExactProposalTargetComparison",
     "ImportanceSamplingDiagnostic",
+    "defensive_proposal_probabilities",
     "evaluate_exact_proposal_target",
     "evaluate_importance_sampling",
     "normalized_importance_weights",
+    "optimize_defensive_epsilon",
     "plot_importance_sampling_diagnostic",
     "plot_exact_proposal_target",
     "save_exact_proposal_target",
     "save_importance_sampling_diagnostic",
     "select_example_rows",
+    "simulate_defensive_evidence_errors",
+    "summarize_defensive_proposal",
     "summarize_importance_sampling",
     "summarize_exact_proposal_target",
 ]
