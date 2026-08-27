@@ -31,6 +31,9 @@ the exact-variance projection.  New wrapper
 `jobs/job_infer_v1_proposal_sweep_large.sh` therefore extends the nested search
 to K=524,288/1,048,576/2,097,152 inside an 8,388,608-atom prefilter and focuses
 epsilon at 0.4--1.0 plus the exact optimum.
+CIP job **16039435** was submitted to a new immutable v2 output root and is
+initially pending for priority; it reuses the same exact observation, centre,
+models, prior, and common-random-number seed as stage one.
 
 ## 2026-08-27 cont.265 — paired adaptive K/epsilon proposal search implemented
 
