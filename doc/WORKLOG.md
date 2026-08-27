@@ -2,6 +2,42 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-27 cont.259 — one-million-object Infer V1 likelihood closure completed
+
+The complete dependency chain (preparation **16034315**, two-V100 inference
+**16034316**, and combination **16034317**) finished successfully with zero
+exit codes and empty stderr logs.  Preparation took 41 seconds, the concurrent
+500,000-object partitions took 6h38m wall time, and exact combination took 25
+seconds.  Both inference partitions completed all nine stencil views and all
+retained M rungs; their internal inference times were 23,819.5 and 23,559.9
+seconds.  The result contains exactly 1,000,000 observations.
+
+For injected `g=(0.02,0)`, exact summation of the partition score and
+information gives `g_hat=(0.02090624,-0.00067311)`, hence closure displacement
+`(+0.00090624,-0.00067311)`.  Object-level sandwich standard errors are
+`(0.00028542,0.00016258)`, so the marginal displacements are `(3.18,-4.14)`
+standard errors (joint sandwich chi-square 21.31 for two components).  This
+single positive arm does not by itself separate multiplicative and additive
+calibration terms.
+
+The retained common-draw ladder is not numerically converged at the Infer V1
+default.  From M=8,192 to 16,384, the aggregate estimate changes by
+`(+0.00059713,-0.00007483)`.  Moreover every M doubling from 512 through
+16,384 moves g1 upward by 0.00048--0.00062.  At the last rung M equals
+K=16,384, so resolving the residual finite-support/draw effect requires a
+larger K and M rather than more observations alone.  Consequently the measured
+closure displacement cannot yet be assigned wholly to the likelihood model or
+to the single Newton update.  The two independent 500,000-row estimates agree
+within their statistical precision, and the run itself is computationally
+healthy.
+
+The immutable combined record is
+`infer_v1_fs2_n1m_closure_v1/combined/result.json` under the project catalogue
+prior area; it includes hashes, partition records, the complete M ladder, and
+per-object sandwich moments.  This result retains the launch limitation: it is
+a matched seed-501 V3.1/spin-0-detector likelihood closure, not a full V3.2
+shape-sensitive-detection closure.  No code or inference default changed.
+
 ## 2026-08-26 cont.258 — one-million-object Infer V1 likelihood closure launched
 
 A single positive closure arm is launched at injected `g=(0.02,0)` with one
