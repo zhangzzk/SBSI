@@ -2,6 +2,34 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-27 cont.264 — exact proposal scan confirms ranking support failure
+
+CIP job **16039191** completed successfully in 2m18s on an A40-16GB slice
+(exit 0), producing the exact finite-catalogue comparison for observation
+514716.  The warnings were non-fatal: optional TF32 was disabled, a read-only
+NumPy view was passed read-only to Torch, zero target/proposal ratios became
+`-inf` only in a plotting transform, and Matplotlib reported a slow automatic
+legend placement.  The JSON, top-target atoms, PNG, and PDF were all written.
+
+The exact normalized target over 12,760,990 positive-prior atoms has
+`log evidence=-7.01134`.  Infer V1's K=16,384 local candidates contain only
+62.4145% of target mass but receive 90.0128% of proposal mass; 37.5855% of the
+target is therefore left to the 10% defensive prior component.  Proposal rank
+captures 59.8049% at K=4,096, 62.3257% at 8,192, 62.4160% at 16,384,
+62.5424% at 65,536, and only 65.4342% at 1,048,576.  Capturing 90% of the target
+requires 9,384,641 ranked atoms (97.354% of proposal mass).  This plateau shows
+that simply enlarging K under the current ranking cannot recover the omitted
+mode efficiently.
+
+The mismatch is severe: asymptotic ESS/M is 0.000669 (about 11 effective draws
+at M=16,384), total variation is 0.367, KL(p||q) is 2.211, chi-square divergence
+is 1,493, and the largest exact p/q ratio is 138,252.  The earlier finite-M ESS
+of 32 is therefore optimistic because that particular draw set did not fully
+sample the rarest ratios.  The prior/global component must remain nonzero;
+the direct efficiency target is a better multimodal candidate ranking or
+proposal, with a larger defensive epsilon as an interim variance reduction
+test—not K expansion alone.
+
 ## 2026-08-27 cont.263 — exact comparison moved from queued V100 to CIP A40
 
 The exact observation-514716 proposal-versus-target scan remained pending on
