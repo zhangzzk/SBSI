@@ -19,6 +19,7 @@ from sbsi.catalogue_sampling import (
     run_importance_profiles,
     select_score_diversified_candidates,
     select_tempered_candidates,
+    select_weighted_candidates,
     select_adaptive_draw_counts,
     select_independent_pilot_draw_counts,
     union_candidate_sets,
@@ -514,6 +515,34 @@ def test_tempered_selection_softens_the_entire_support_without_replacement():
     assert len(selected) == len(np.unique(selected)) == 100
     assert selected.max() >= 100
     assert not np.array_equal(selected, ranked[:100])
+
+
+def test_weighted_selection_supports_simple_score_gap_forms():
+    ranked = np.arange(1000, dtype=np.int64)
+    gap = np.linspace(0.0, 8.0, len(ranked))
+    supports = {}
+    for weight_form in ("exponential", "gaussian", "logistic", "cauchy"):
+        supports[weight_form] = select_weighted_candidates(
+            ranked,
+            gap,
+            n_candidates=100,
+            temperature=1.0,
+            weight_form=weight_form,
+            seed=52,
+        )
+        assert len(np.unique(supports[weight_form])) == 100
+
+    np.testing.assert_array_equal(
+        supports["exponential"],
+        select_tempered_candidates(
+            ranked,
+            gap,
+            n_candidates=100,
+            temperature=1.0,
+            seed=52,
+        ),
+    )
+    assert len({tuple(value) for value in supports.values()}) == len(supports)
 
 
 def test_union_candidate_sets_stably_deduplicates_and_fills():

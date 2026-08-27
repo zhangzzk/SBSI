@@ -2,6 +2,36 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-27 cont.274 — flatter selection-family epsilon-zero screen prepared
+
+The observation-514716 selection diagnostic now compares four simple global
+score-gap weight families under the same fixed-width Gumbel top-K draw:
+exponential `exp(-u)`, Gaussian `exp(-u^2)`, logistic shoulder
+`2/(1+exp(u))`, and Cauchy `1/(1+u^2)`, where `u=(smax-s)/T`.  New
+`select_weighted_candidates` implements all four in stable log space;
+`select_tempered_candidates` remains the backward-compatible exponential
+wrapper.  Tests cover deterministic replay, uniqueness, equivalence of the
+exponential wrapper, and distinct supports across forms.
+
+New `scripts/test_infer_v1_flatter_selection.py` uses the attached original-
+panel setting K=16,384 for observation 514716, while sharing the deeper
+4,194,304-score pool inside the 8,388,608 prefilter.  It crosses all four
+forms with T=0.5/1.0/1.5 and seeds 7301--7305 against one exact target.  At
+the requested epsilon=0, plotted `q` is precisely the exact target restricted
+and renormalized on the selected support.  The result explicitly warns that
+such `q` has zero support outside the candidates and therefore cannot be used
+as an unbiased standalone evidence proposal.  The primary reported scalar is
+exact posterior target mass captured by the selected K atoms; ESS is not
+defined at epsilon zero.
+
+The diagnostic writes a 4x3 remake of the original likelihood-histogram panel
+with candidate-seed p10--p90 bands, a compact capture-versus-temperature
+figure, raw settings, long-form exact histogram bins, and JSON metadata.  The
+login resource audit again found no GPU, so the full scan remains CIP-only;
+the wrapper requests one A40-16GB, 12 CPUs, 36 GiB, and 30 minutes.  All 39
+focused tests pass, together with Ruff, Python compilation, CLI help, Bash
+syntax, and whitespace checks.  Infer V1 remains unchanged.
+
 ## 2026-08-27 cont.273 — full soft-top-K does not beat deterministic top-K
 
 CIP job **16041537** completed successfully in 5m27s (exit 0) and evaluated

@@ -166,3 +166,13 @@ def test_soft_topk_is_the_minimal_full_support_temperature_screen():
     assert "--score-pool 4194304 --score-prefilter 8388608 --k 65536" in job
     assert "--temperatures 0.5 1.0 1.5" in job
     assert "--candidate-seeds 7301 7302 7303 7304 7305 --epsilon 0.3" in job
+
+
+def test_flatter_selection_remakes_exact_panel_at_epsilon_zero():
+    job = (ROOT / "jobs" / "job_infer_v1_flatter_selection.sh").read_text()
+
+    assert "gpu:a40-16gb:1" in job
+    assert "--score-pool 4194304 --score-prefilter 8388608 --k 16384" in job
+    assert "--weight-forms exponential gaussian logistic cauchy" in job
+    assert "--temperatures 0.5 1.0 1.5" in job
+    assert "--candidate-seeds 7301 7302 7303 7304 7305 --bins 70" in job

@@ -629,6 +629,27 @@ def select_tempered_candidates(
 ) -> np.ndarray:
     """Draw a full candidate support without replacement from tempered scores."""
 
+    return select_weighted_candidates(
+        ranked_indices,
+        score_gap,
+        n_candidates=n_candidates,
+        temperature=temperature,
+        weight_form="exponential",
+        seed=seed,
+    )
+
+
+def select_weighted_candidates(
+    ranked_indices: np.ndarray,
+    score_gap: np.ndarray,
+    *,
+    n_candidates: int,
+    temperature: float,
+    weight_form: str,
+    seed: int,
+) -> np.ndarray:
+    """Draw without replacement from a simple score-gap weight family."""
+
     ranked = np.asarray(ranked_indices, dtype=np.int64)
     gap = np.asarray(score_gap, dtype=np.float64)
     if ranked.ndim != 1 or gap.shape != ranked.shape or not len(ranked):
@@ -641,10 +662,21 @@ def select_tempered_candidates(
         raise ValueError("candidate count lies outside the ranked pool")
     if temperature <= 0 or not np.isfinite(temperature):
         raise ValueError("temperature must be finite and positive")
+    if weight_form not in {"exponential", "gaussian", "logistic", "cauchy"}:
+        raise ValueError("unknown score-gap weight form")
 
+    scaled_gap = gap / float(temperature)
+    if weight_form == "exponential":
+        log_weight = -scaled_gap
+    elif weight_form == "gaussian":
+        log_weight = -np.square(scaled_gap)
+    elif weight_form == "logistic":
+        log_weight = np.log(2.0) - np.logaddexp(0.0, scaled_gap)
+    else:
+        log_weight = -np.log1p(np.square(scaled_gap))
     rng = np.random.default_rng(int(seed))
     uniform = np.maximum(rng.random(len(ranked)), np.finfo(float).tiny)
-    key = -gap / float(temperature) - np.log(-np.log(uniform))
+    key = log_weight - np.log(-np.log(uniform))
     selected = np.argpartition(key, -int(n_candidates))[-int(n_candidates) :]
     selected = selected[np.argsort(-key[selected], kind="stable")]
     result = ranked[selected]
@@ -2206,6 +2238,7 @@ __all__ = [
     "candidate_support_diagnostics",
     "select_score_diversified_candidates",
     "select_tempered_candidates",
+    "select_weighted_candidates",
     "importance_diagnostics",
     "run_importance_ladder",
     "run_importance_curvature_scan",
