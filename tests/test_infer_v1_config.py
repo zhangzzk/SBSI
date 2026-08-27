@@ -147,3 +147,13 @@ def test_proposal_diversification_screen_keeps_infer_v1_frozen():
     assert "--candidate-seeds 7301 7302 7303 7304 7305" in job
     assert "--query-counts 8 16 --log-strata 16" in job
     assert "--mc-replicates 256 --mc-draws 16384" in job
+
+
+def test_proposal_histograms_reuse_the_frozen_diversification_screen():
+    job = (ROOT / "jobs" / "job_infer_v1_proposal_histograms.sh").read_text()
+
+    assert "gpu:a40-16gb:1" in job
+    assert '"$closure/combined/result.json"' in job
+    assert '"$root/screen/result.json"' in job
+    assert '"$root/likelihood_histograms_v1"' in job
+    assert "--object-id 514716 --device cuda --bins 90" in job

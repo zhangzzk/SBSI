@@ -2,6 +2,28 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-27 cont.270 — diversified-proposal likelihood histograms prepared
+
+New `scripts/plot_infer_v1_proposal_histograms.py` reconstructs the exact same
+104 candidate supports from the completed observation-514716 diversification
+screen and compares their atom-level conditional-log-likelihood marginals.
+Every panel distinguishes the exact normalized posterior target
+`p(j) proportional to pi_j Pdet_j L_j`, the full defensive proposal
+`q=epsilon*pi+(1-epsilon)*q_local`, and the candidate-restricted local
+component.  Seeded methods show median curves and p10--p90 bands rather than a
+selected favorable seed.  Common bins and explicit clipped edge masses make
+the histograms comparable across all K=32k/64k and epsilon=0.1/0.2/0.3 arms.
+
+The diagnostic writes linear- and log-y selected six-panel PNG/PDF figures, a
+12-page PDF spanning every tested proposal method and K/epsilon combination,
+and a gzipped long-form histogram table.  Histogram proposal mass is computed
+exactly as the mixture of prior and support-local histograms, avoiding any new
+Monte Carlo noise.  It reuses the frozen closure result and completed screen,
+does not use the exact target for candidate selection, and does not change
+Infer V1.  The new CIP A40 wrapper requests 12 CPUs, 36 GiB, and 30 minutes.
+CLI help, Python compilation, Ruff, Bash syntax, whitespace checks, and all 11
+Infer V1 configuration tests pass.
+
 ## 2026-08-27 cont.269 — proposal diversification screen completed
 
 CIP job **16039943** completed successfully in 7m04s (exit 0; peak RSS
