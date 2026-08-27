@@ -2,6 +2,28 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-27 cont.273 — full soft-top-K does not beat deterministic top-K
+
+CIP job **16041537** completed successfully in 5m27s (exit 0) and evaluated
+the minimal no-core Gumbel top-K experiment against exact
+`log Z=-7.011335485`.  Deterministic K=65,536 at epsilon=0.3 captures
+79.3042% of the target with exact ESS/M 0.36456%.  Fully probabilistic T=0.5
+is the closest soft setting, but across five support seeds its capture p10/
+median/p90 is 78.5400/78.5734/78.5983% and ESS/M is
+0.34236/0.34413/0.35454%.  Thus even its best-seed ESS remains below the
+deterministic control; the robust median loses 0.731 percentage points of
+capture and 5.6% relative ESS.
+
+Softening further is monotonically worse.  T=1.0 has median capture 76.5963%
+and ESS/M 0.32915%; T=1.5 has median capture 73.0205% and ESS/M 0.27535%, with
+one seed collapsing to ESS/M 0.06199% and maximum p/q 230,041.  Candidate
+selection itself takes only about 0.35 s per support, so runtime is not the
+limitation.  The result directly rejects this simple full-support temperature
+softening for observation 514716: as T approaches zero it converges back to
+the superior deterministic prefix, while larger T replaces high-target atoms
+faster than it discovers missed modes.  Per the preregistered screen rule, no
+M=16,384 MC stage was run.  Infer V1 remains unchanged.
+
 ## 2026-08-27 cont.272 — minimal fully probabilistic soft-top-K test prepared
 
 The proposed soft-boundary test is implemented without additional tuning
