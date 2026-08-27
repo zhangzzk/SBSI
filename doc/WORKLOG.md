@@ -42,6 +42,9 @@ work therefore remain scheduler-only.  New wrapper
 `jobs/job_infer_v1_proposal_diversification.sh` requests one CIP A40-16GB,
 12 CPUs, 36 GiB RAM, and one hour.  Validation passes: 39 focused tests, Ruff,
 Bash syntax, Python compilation, CLI help, and whitespace checks.
+CIP job **16039943** was submitted to the new immutable v1 diversification
+root and started immediately on `cip-cl-h01g05n2`; its frozen identity and
+output path do not overlap any previous exact-proposal experiment.
 
 ## 2026-08-27 cont.267 — million-K sweep reaches exact-evidence stability target
 
