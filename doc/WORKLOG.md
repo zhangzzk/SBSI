@@ -28,6 +28,8 @@ retaining the existing pool mode.  The new one-V100 wrapper freezes object
 tests, Ruff, Bash syntax, Python compilation, and whitespace checks.  The login
 node resource audit found 32 physical cores, 318 GiB available RAM, 8.5 TiB
 free disk, and no GPU; the exact flow scan therefore remains scheduler-only.
+V100 job **16039086** was submitted with the new immutable output root and is
+initially pending for priority; no existing result was overwritten.
 
 ## 2026-08-27 cont.261 — sampling visualization exposes outside-local evidence
 
