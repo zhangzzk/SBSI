@@ -24,6 +24,28 @@ Infer V1.  The new CIP A40 wrapper requests 12 CPUs, 36 GiB, and 30 minutes.
 CLI help, Python compilation, Ruff, Bash syntax, whitespace checks, and all 11
 Infer V1 configuration tests pass.
 
+CIP job **16040716** completed successfully in 3m30s (exit 0; peak RSS
+8.1 GB) and produced all five figures, the 12-page all-settings PDF, the
+long-form table, and exact metadata.  Every target, proposal, local, and prior
+histogram sums to one within `4e-13`.  The histograms explain why generic
+diversification did not help.  For deep top-K at K=65,536 and epsilon=0.3,
+the exact target puts only 0.118% of its mass below `log L=-10`, while the
+global prior puts 90.18% there; consequently the full defensive proposal
+spends 27.05% below -10.  Conversely, the candidate-local component puts only
+0.00047% below -10 and 0.155% between -10 and -5, versus 0.118% and 4.207%
+for the target.  Thus the local arm is indeed too narrow in likelihood, but
+the defensive global arm is vastly too broad.
+
+More importantly, only 4.326% of target mass lies below `log L=-5`, whereas
+top-K misses 20.696% of total target mass.  Most missing mass therefore lives
+on alternative atoms with ordinary high likelihood, not in a simple low-
+likelihood rank tail.  Logarithmic and tempered rank diversification mostly
+replace useful core atoms without finding those modes; the QMC query unions
+slightly improve mode coverage but retain nearly the same one-dimensional
+`log L` marginal.  The figures therefore support targeted multimodal ranking
+or a better learned proposal, not indiscriminate tail broadening or a larger
+global-prior mixture.
+
 ## 2026-08-27 cont.269 — proposal diversification screen completed
 
 CIP job **16039943** completed successfully in 7m04s (exit 0; peak RSS
