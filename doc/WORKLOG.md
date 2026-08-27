@@ -2,6 +2,21 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-27 cont.263 — exact comparison moved from queued V100 to CIP A40
+
+The exact observation-514716 proposal-versus-target scan remained pending on
+`inter` as V100 job **16039086**, with a scheduler estimate of 20:21 CEST.
+`cip` had idle A40 vGPU slices, including 16 GiB slices.  Because this
+one-observation calculation streams 65,536-atom GPU chunks and retains only
+compact catalogue arrays, its original 128 GiB host-memory request was not a
+scientific requirement.  The still-pending V100 job was cancelled before it
+ran, and the identical frozen command was resubmitted as CIP
+`a40-16gb:1`, 8 CPUs, 36 GiB RAM, 45 minutes: job **16039191**.  It started
+immediately on `cip-cl-h01g04n3`; the first health check showed RUNNING state,
+active CPU/disk input, 269 MiB resident memory, and empty stdout/stderr.  The
+input, object ID, code commit, and output root are unchanged, so this is only a
+resource-placement change and cannot alter the intended diagnostic.
+
 ## 2026-08-27 cont.262 — exact proposal-versus-target diagnostic added
 
 The second plotted example, observation 514716, can now be audited without
