@@ -16,8 +16,11 @@ from sbsi.catalogue_sampling import DefensiveLocalProposal, ProposalCoordinateTa
 from sbsi.measurement_model import load_measurement_model
 from sbsi.models import ModelPaths, load_emulator
 from sbsi.sampling_diagnostics import (
+    evaluate_exact_proposal_target,
     evaluate_importance_sampling,
+    plot_exact_proposal_target,
     plot_importance_sampling_diagnostic,
+    save_exact_proposal_target,
     save_importance_sampling_diagnostic,
     select_example_rows,
     summarize_importance_sampling,
@@ -47,6 +50,12 @@ def _parse_args(argv=None):
     parser.add_argument("--pool-size", type=int, default=64)
     parser.add_argument("--pool-seed", type=int, default=9101)
     parser.add_argument("--examples", type=int, default=3, choices=(1, 2, 3))
+    parser.add_argument(
+        "--exact-object-id",
+        type=int,
+        default=None,
+        help="scan every active prior atom for this one observation instead of a pool",
+    )
     parser.add_argument(
         "--ladder", nargs="+", type=int, default=(4096, 8192, 16384)
     )
@@ -81,7 +90,7 @@ def main(argv=None):
     output = Path(args.output).resolve()
     if output.exists():
         raise SystemExit(f"refusing to overwrite {output}")
-    if args.pool_size < args.examples:
+    if args.exact_object_id is None and args.pool_size < args.examples:
         raise SystemExit("--pool-size must be at least --examples")
     ladder = tuple(sorted({int(value) for value in args.ladder}))
     if not ladder or ladder[0] <= 0:
@@ -168,6 +177,57 @@ def main(argv=None):
     if config.get("compile_flow", False):
         flow.compile_log_prob(mode=None, dynamic=True)
 
+    common_metadata = {
+        "inference_version": config["inference_version"],
+        "reference_result": str(reference_path),
+        "reference_result_sha256": _sha256(reference_path),
+        "sampling_diagnostic_sha256": _sha256(Path(__file__)),
+        "mock_input": config["mock_input"],
+        "mock_input_sha256": identity["mock_input_sha256"],
+        "model_sha256": identity["model_sha256"],
+        "model_cache_sha256": identity["model_cache_sha256"],
+        "proposal_cache_sha256": identity["proposal_cache_sha256"],
+        "reference_implementation_sha256": identity["implementation_sha256"],
+    }
+    if args.exact_object_id is not None:
+        object_id = int(args.exact_object_id)
+        if not 0 <= object_id < len(mock.measurements):
+            raise RuntimeError("--exact-object-id lies outside the saved mock")
+        comparison = evaluate_exact_proposal_target(
+            likelihood,
+            mock.measurements.iloc[[object_id]],
+            proposal,
+            object_id=object_id,
+            center=center,
+            n_candidates=int(config["proposal_candidates"]),
+            prefilter_candidates=config["proposal_prefilter_candidates"],
+            epsilon=float(config["proposal_epsilon"]),
+            candidate_backend=config["candidate_backend"],
+            atom_chunk=65536,
+        )
+        result = save_exact_proposal_target(
+            comparison,
+            output,
+            metadata={
+                **common_metadata,
+                "target": "normalized pi_j Pdet_j L_ij over all active atoms",
+                "proposal": "epsilon*pi + (1-epsilon)*candidate-local target",
+            },
+        )
+        figures = plot_exact_proposal_target(comparison, output)
+        print(
+            json.dumps(
+                {
+                    "status": "complete",
+                    "object_id": object_id,
+                    "result": str(result),
+                    "figures": [str(path) for path in figures],
+                },
+                indent=2,
+            )
+        )
+        return
+
     pool = evaluate_importance_sampling(
         likelihood,
         mock.measurements.iloc[pool_ids],
@@ -200,16 +260,7 @@ def main(argv=None):
             "rungs": _rung_pool_summary(pool_metrics, ladder),
         },
         metadata={
-            "inference_version": config["inference_version"],
-            "reference_result": str(reference_path),
-            "reference_result_sha256": _sha256(reference_path),
-            "sampling_diagnostic_sha256": _sha256(Path(__file__)),
-            "mock_input": config["mock_input"],
-            "mock_input_sha256": identity["mock_input_sha256"],
-            "model_sha256": identity["model_sha256"],
-            "model_cache_sha256": identity["model_cache_sha256"],
-            "proposal_cache_sha256": identity["proposal_cache_sha256"],
-            "reference_implementation_sha256": identity["implementation_sha256"],
+            **common_metadata,
             "conditional_log_likelihood": "flow-only log p(x_i | z_j, g_center)",
             "importance_weight": "pi_j Pdet_j L_ij / q_i(j)",
         },

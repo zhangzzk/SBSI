@@ -2,6 +2,33 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-27 cont.262 — exact proposal-versus-target diagnostic added
+
+The second plotted example, observation 514716, can now be audited without
+Monte Carlo reference error.  `evaluate_exact_proposal_target` evaluates the
+central-view flow likelihood for every one of the 12.76 million positive-prior
+atoms in GPU chunks, reconstructs the exact production mixture
+`q=epsilon*pi+(1-epsilon)q_local`, and normalizes the finite-catalogue target
+`p(j|x,g) proportional to pi_j Pdet_j L_ij`.  Sampling catalogue rows uniformly
+would be valid only for equal prior atom masses; the exact scan retains the
+actual `pi_j` and is both cleaner and feasible for one observation.
+
+The compact result reports exact log evidence, target and proposal mass inside
+and outside K, asymptotic importance ESS fraction, chi-square divergence, KL,
+total variation, target/proposal ratio, target capture by proposal rank, and
+the proposal mass/rank required for 50/90/99% target capture.  Only the top
+10,000 exact-target atoms are retained as arrays.  A colorblind-safe four-panel
+figure directly compares q- and p-weighted `log L`, cumulative target versus
+proposal mass, target capture by proposal rank, and the target-weighted
+`log10(p/q)` mismatch.  Labeled endpoint bins preserve tail mass.
+
+`scripts/plot_infer_v1_sampling.py` exposes this as `--exact-object-id` while
+retaining the existing pool mode.  The new one-V100 wrapper freezes object
+514716 and a new output root.  Validation passes: 11 focused sampling/config
+tests, Ruff, Bash syntax, Python compilation, and whitespace checks.  The login
+node resource audit found 32 physical cores, 318 GiB available RAM, 8.5 TiB
+free disk, and no GPU; the exact flow scan therefore remains scheduler-only.
+
 ## 2026-08-27 cont.261 — sampling visualization exposes outside-local evidence
 
 V100 diagnostic **16036946** completed successfully in 1m44s with zero exit

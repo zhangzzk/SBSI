@@ -105,3 +105,11 @@ def test_sampling_visualization_uses_nested_infer_v1_draws_on_v100():
     assert '"$closure/combined/result.json"' in job
     assert "--pool-size 64 --pool-seed 9101 --examples 3" in job
     assert "--ladder 4096 8192 16384 --device cuda" in job
+
+
+def test_exact_proposal_target_scans_second_example_on_v100():
+    job = (ROOT / "jobs" / "job_infer_v1_exact_proposal_target.sh").read_text()
+
+    assert "gpu:v100:1" in job
+    assert '"$closure/combined/result.json"' in job
+    assert "--exact-object-id 514716 --device cuda" in job

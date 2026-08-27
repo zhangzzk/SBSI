@@ -53,6 +53,27 @@ class ImportanceSamplingDiagnostic:
         )
 
 
+@dataclass(frozen=True)
+class ExactProposalTargetComparison:
+    """Exact finite-catalogue target and its production proposal for one object."""
+
+    object_id: int
+    center: tuple[float, float]
+    atom_indices: np.ndarray
+    conditional_log_likelihood: np.ndarray
+    log_target: np.ndarray
+    proposal_probability: np.ndarray
+    candidate_member: np.ndarray
+    population_log_normalization: float
+    epsilon: float
+    n_candidates: int
+    prefilter_candidates: int | None
+
+    @property
+    def target_probability(self) -> np.ndarray:
+        return np.exp(self.log_target - logsumexp(self.log_target))
+
+
 def evaluate_importance_sampling(
     likelihood: CatalogueLikelihood,
     observed,
@@ -163,6 +184,111 @@ def evaluate_importance_sampling(
     )
 
 
+def evaluate_exact_proposal_target(
+    likelihood: CatalogueLikelihood,
+    observed,
+    proposal: DefensiveLocalProposal,
+    *,
+    object_id: int,
+    center: Sequence[float],
+    n_candidates: int,
+    prefilter_candidates: int | None,
+    epsilon: float,
+    candidate_backend: str = "torch",
+    atom_chunk: int = 65536,
+) -> ExactProposalTargetComparison:
+    """Evaluate every positive-prior atom and reconstruct the production ``q``."""
+
+    center = np.asarray(center, dtype=np.float64)
+    if center.shape != (2,) or not np.isfinite(center).all():
+        raise ValueError("exact comparison center must be a finite two-vector")
+    if len(observed) != 1 or object_id < 0:
+        raise ValueError("exact comparison requires one observation and its object id")
+    if not 0 < epsilon <= 1:
+        raise ValueError("epsilon must lie in (0, 1]")
+    if candidate_backend not in {"scipy", "torch"}:
+        raise ValueError("candidate_backend must be scipy or torch")
+    if not likelihood.tensor_native_available:
+        raise TypeError("exact comparison requires a tensor-native Torch flow")
+
+    observed = observed.reset_index(drop=True)
+    observed_targets = likelihood.observed_target_tensor(observed)
+    candidates = proposal.candidates(
+        observed,
+        n_candidates=n_candidates,
+        prefilter_candidates=prefilter_candidates,
+        torch_device=(
+            likelihood.flow_model.device if candidate_backend == "torch" else None
+        ),
+    )
+    candidate_target = likelihood.log_importance_weights_tensor(
+        observed,
+        float(center[0]),
+        float(center[1]),
+        atom_indices=candidates.indices,
+        proposal_probability=np.ones_like(candidates.indices, dtype=np.float64),
+        observed_targets=observed_targets,
+        object_chunk=1,
+        atom_chunk=atom_chunk,
+    )[0].detach().cpu().numpy().astype(np.float64)
+    candidate_normalizer = logsumexp(candidate_target)
+    if not np.isfinite(candidate_normalizer):
+        raise RuntimeError("candidate target has zero finite mass")
+    local_probability = np.exp(candidate_target - candidate_normalizer)
+
+    prior_probability = likelihood.cache.prior.weights
+    active = np.flatnonzero(prior_probability > 0).astype(np.int64)
+    proposal_probability = epsilon * prior_probability[active].astype(
+        np.float64, copy=True
+    )
+    candidate_position = np.searchsorted(active, candidates.indices[0])
+    if (
+        (candidate_position >= len(active)).any()
+        or not np.array_equal(active[candidate_position], candidates.indices[0])
+    ):
+        raise RuntimeError("candidate support is not contained in active prior atoms")
+    proposal_probability[candidate_position] += (1.0 - epsilon) * local_probability
+    if not np.isclose(proposal_probability.sum(), 1.0, rtol=0, atol=1e-12):
+        raise RuntimeError("reconstructed proposal probability does not sum to one")
+
+    log_target = likelihood.log_importance_weights_tensor(
+        observed,
+        float(center[0]),
+        float(center[1]),
+        atom_indices=active,
+        proposal_probability=np.ones(len(active), dtype=np.float64),
+        observed_targets=observed_targets,
+        object_chunk=1,
+        atom_chunk=atom_chunk,
+    )[0].detach().cpu().numpy().astype(np.float64)
+    view = likelihood.cache.get(float(center[0]), float(center[1]))
+    detected_mass = (
+        prior_probability[active] * view.detection_probability[active]
+    )
+    conditional = np.full_like(log_target, -np.inf)
+    positive = detected_mass > 0
+    conditional[positive] = log_target[positive] - np.log(detected_mass[positive])
+    candidate_member = np.zeros(len(active), dtype=bool)
+    candidate_member[candidate_position] = True
+    return ExactProposalTargetComparison(
+        object_id=int(object_id),
+        center=(float(center[0]), float(center[1])),
+        atom_indices=active,
+        conditional_log_likelihood=conditional,
+        log_target=log_target,
+        proposal_probability=proposal_probability,
+        candidate_member=candidate_member,
+        population_log_normalization=likelihood.log_population_normalization(
+            float(center[0]), float(center[1])
+        ),
+        epsilon=float(epsilon),
+        n_candidates=int(n_candidates),
+        prefilter_candidates=(
+            None if prefilter_candidates is None else int(prefilter_candidates)
+        ),
+    )
+
+
 def normalized_importance_weights(log_weight: np.ndarray) -> np.ndarray:
     """Normalize finite log importance weights without underflow."""
 
@@ -220,6 +346,249 @@ def summarize_importance_sampling(
                 }
             )
     return rows
+
+
+def summarize_exact_proposal_target(
+    comparison: ExactProposalTargetComparison,
+) -> dict:
+    """Summarize exact proposal mismatch and target-mass capture."""
+
+    target = comparison.target_probability
+    proposal = comparison.proposal_probability
+    if target.shape != proposal.shape or not np.isclose(target.sum(), 1.0):
+        raise ValueError("exact target and proposal must be aligned probabilities")
+    if (proposal <= 0).any():
+        raise ValueError("proposal must have positive support on every target atom")
+    ratio = target / proposal
+    candidate = comparison.candidate_member
+    order = np.argsort(-proposal, kind="stable")
+    cumulative_target = np.cumsum(target[order])
+    cumulative_proposal = np.cumsum(proposal[order])
+    ranks = (4096, 8192, 16384, 32768, 65536, 131072, 1048576)
+    rank_capture = {
+        str(rank): float(cumulative_target[min(rank, len(order)) - 1])
+        for rank in ranks
+        if rank <= len(order)
+    }
+    proposal_mass_for_target = {}
+    rank_for_target = {}
+    for fraction in (0.5, 0.9, 0.99):
+        position = min(
+            int(np.searchsorted(cumulative_target, fraction, side="left")),
+            len(order) - 1,
+        )
+        proposal_mass_for_target[str(fraction)] = float(
+            cumulative_proposal[position]
+        )
+        rank_for_target[str(fraction)] = int(position + 1)
+    second_moment = float(np.sum(np.square(target) / proposal))
+    positive_target = target > 0
+    return {
+        "object_id": comparison.object_id,
+        "n_active_atoms": int(len(target)),
+        "center": list(comparison.center),
+        "epsilon": comparison.epsilon,
+        "n_candidates": comparison.n_candidates,
+        "prefilter_candidates": comparison.prefilter_candidates,
+        "exact_log_evidence": float(
+            logsumexp(comparison.log_target)
+            - comparison.population_log_normalization
+        ),
+        "candidate_target_mass": float(target[candidate].sum()),
+        "outside_candidate_target_mass": float(target[~candidate].sum()),
+        "candidate_proposal_mass": float(proposal[candidate].sum()),
+        "outside_candidate_proposal_mass": float(proposal[~candidate].sum()),
+        "asymptotic_ess_fraction": float(1.0 / second_moment),
+        "chi_square_target_vs_proposal": float(second_moment - 1.0),
+        "kl_target_vs_proposal": float(
+            np.sum(target[positive_target] * np.log(ratio[positive_target]))
+        ),
+        "total_variation": float(0.5 * np.abs(target - proposal).sum()),
+        "maximum_target_to_proposal_ratio": float(ratio.max()),
+        "target_mass_by_proposal_rank": rank_capture,
+        "proposal_mass_needed_for_target_mass": proposal_mass_for_target,
+        "proposal_rank_needed_for_target_mass": rank_for_target,
+    }
+
+
+def _weighted_quantile(values: np.ndarray, probability: np.ndarray, quantile: float) -> float:
+    order = np.argsort(values, kind="stable")
+    cumulative = np.cumsum(probability[order])
+    position = min(int(np.searchsorted(cumulative, quantile, side="left")), len(order) - 1)
+    return float(values[order[position]])
+
+
+def plot_exact_proposal_target(
+    comparison: ExactProposalTargetComparison,
+    output: str | Path,
+    *,
+    bins: int = 70,
+) -> tuple[Path, Path]:
+    """Plot exact proposal mass against exact posterior target mass."""
+
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    target = comparison.target_probability
+    proposal = comparison.proposal_probability
+    log_likelihood = comparison.conditional_log_likelihood
+    summary = summarize_exact_proposal_target(comparison)
+    finite = np.isfinite(log_likelihood)
+    left = min(
+        _weighted_quantile(log_likelihood[finite], proposal[finite], 0.01),
+        _weighted_quantile(log_likelihood[finite], target[finite], 0.001),
+    )
+    right = max(
+        _weighted_quantile(log_likelihood[finite], proposal[finite], 0.999),
+        _weighted_quantile(log_likelihood[finite], target[finite], 0.999),
+    )
+    shown = np.clip(log_likelihood, left, right)
+    edges = np.linspace(left, right, bins + 1)
+    order = np.argsort(-proposal, kind="stable")
+    cumulative_proposal = np.cumsum(proposal[order])
+    cumulative_target = np.cumsum(target[order])
+    ratio = target / proposal
+
+    figure, axes = plt.subplots(2, 2, figsize=(8.2, 6.2), constrained_layout=True)
+    axes[0, 0].hist(
+        shown,
+        bins=edges,
+        weights=proposal,
+        histtype="step",
+        linewidth=1.5,
+        color="#0072B2",
+        label="Proposal q",
+    )
+    axes[0, 0].hist(
+        shown,
+        bins=edges,
+        weights=target,
+        histtype="step",
+        linewidth=1.5,
+        color="#D55E00",
+        label="Exact target p",
+    )
+    axes[0, 0].set_xlabel(r"Conditional log likelihood  $\log p(x_i\mid z_j,g)$")
+    axes[0, 0].set_ylabel("Probability mass per bin")
+    axes[0, 0].legend(frameon=False, fontsize=8)
+    axes[0, 0].text(
+        0.02,
+        0.96,
+        (
+            f"left edge: q={100 * proposal[log_likelihood < left].sum():.2f}%, "
+            f"p={100 * target[log_likelihood < left].sum():.2f}%\n"
+            f"right edge: q={100 * proposal[log_likelihood > right].sum():.2f}%, "
+            f"p={100 * target[log_likelihood > right].sum():.2f}%"
+        ),
+        transform=axes[0, 0].transAxes,
+        ha="left",
+        va="top",
+        fontsize=7,
+    )
+
+    axes[0, 1].plot(
+        cumulative_proposal,
+        cumulative_target,
+        color="#009E73",
+        linewidth=1.5,
+    )
+    axes[0, 1].plot([0, 1], [0, 1], "--", color="0.5", linewidth=1, label="Ideal q=p")
+    axes[0, 1].set_xlabel("Cumulative proposal mass")
+    axes[0, 1].set_ylabel("Cumulative exact target mass")
+    axes[0, 1].legend(frameon=False, fontsize=8)
+
+    ranks = np.arange(1, len(order) + 1)
+    axes[1, 0].semilogx(ranks, cumulative_target, color="#CC79A7", linewidth=1.5)
+    axes[1, 0].axvline(
+        comparison.n_candidates,
+        linestyle="--",
+        color="0.35",
+        linewidth=1,
+        label=f"K={comparison.n_candidates:,}",
+    )
+    axes[1, 0].set_xlabel("Atoms ranked by proposal probability")
+    axes[1, 0].set_ylabel("Exact target mass captured")
+    axes[1, 0].set_ylim(0, 1.01)
+    axes[1, 0].legend(frameon=False, fontsize=8)
+
+    log_ratio = np.log10(ratio)
+    ratio_left = _weighted_quantile(log_ratio, target, 0.001)
+    ratio_right = _weighted_quantile(log_ratio, target, 0.999)
+    ratio_shown = np.clip(log_ratio, ratio_left, ratio_right)
+    axes[1, 1].hist(
+        ratio_shown,
+        bins=70,
+        weights=target,
+        histtype="stepfilled",
+        color="#E69F00",
+        alpha=0.7,
+    )
+    axes[1, 1].axvline(0, linestyle="--", color="0.35", linewidth=1)
+    axes[1, 1].set_xlabel(r"Atom mismatch  $\log_{10}[p_i(j)/q_i(j)]$")
+    axes[1, 1].set_ylabel("Exact target mass per bin")
+    axes[1, 1].text(
+        0.98,
+        0.96,
+        (
+            f"candidate target mass={100 * summary['candidate_target_mass']:.2f}%\n"
+            f"ESS/M ceiling={100 * summary['asymptotic_ess_fraction']:.3f}%\n"
+            f"TV={summary['total_variation']:.3f}"
+        ),
+        transform=axes[1, 1].transAxes,
+        ha="right",
+        va="top",
+        fontsize=7,
+    )
+    for axis in axes.flat:
+        axis.spines[["top", "right"]].set_visible(False)
+        axis.tick_params(labelsize=7)
+    figure.suptitle(
+        (
+            f"Observation {comparison.object_id:,}: production proposal versus "
+            f"exact {len(target):,}-atom target"
+        ),
+        fontsize=10,
+    )
+    output = Path(output)
+    output.mkdir(parents=True, exist_ok=True)
+    png = output / f"exact_proposal_target_{comparison.object_id:07d}.png"
+    pdf = output / f"exact_proposal_target_{comparison.object_id:07d}.pdf"
+    figure.savefig(png, dpi=300, bbox_inches="tight")
+    figure.savefig(pdf, bbox_inches="tight")
+    plt.close(figure)
+    return png, pdf
+
+
+def save_exact_proposal_target(
+    comparison: ExactProposalTargetComparison,
+    output: str | Path,
+    *,
+    metadata: Mapping | None = None,
+) -> Path:
+    """Save exact comparison metrics and compact top-atom diagnostics."""
+
+    output = Path(output)
+    output.mkdir(parents=True, exist_ok=False)
+    target = comparison.target_probability
+    proposal = comparison.proposal_probability
+    ratio = target / proposal
+    top = np.argsort(-target, kind="stable")[:10000]
+    np.savez_compressed(
+        output / "top_target_atoms.npz",
+        atom_indices=comparison.atom_indices[top],
+        conditional_log_likelihood=comparison.conditional_log_likelihood[top],
+        target_probability=target[top],
+        proposal_probability=proposal[top],
+        target_to_proposal_ratio=ratio[top],
+        candidate_member=comparison.candidate_member[top],
+    )
+    payload = summarize_exact_proposal_target(comparison)
+    payload["metadata"] = dict(metadata or {})
+    result = output / "result.json"
+    result.write_text(json.dumps(payload, indent=2) + "\n")
+    return result
 
 
 def select_example_rows(
@@ -447,11 +816,16 @@ def plot_importance_sampling_diagnostic(
 
 
 __all__ = [
+    "ExactProposalTargetComparison",
     "ImportanceSamplingDiagnostic",
+    "evaluate_exact_proposal_target",
     "evaluate_importance_sampling",
     "normalized_importance_weights",
     "plot_importance_sampling_diagnostic",
+    "plot_exact_proposal_target",
+    "save_exact_proposal_target",
     "save_importance_sampling_diagnostic",
     "select_example_rows",
     "summarize_importance_sampling",
+    "summarize_exact_proposal_target",
 ]

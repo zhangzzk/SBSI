@@ -4,11 +4,15 @@ import numpy as np
 from scipy.special import logsumexp
 
 from sbsi.sampling_diagnostics import (
+    ExactProposalTargetComparison,
     ImportanceSamplingDiagnostic,
     normalized_importance_weights,
+    plot_exact_proposal_target,
     plot_importance_sampling_diagnostic,
+    save_exact_proposal_target,
     save_importance_sampling_diagnostic,
     select_example_rows,
+    summarize_exact_proposal_target,
     summarize_importance_sampling,
 )
 
@@ -113,4 +117,36 @@ def test_sampling_diagnostic_saves_arrays_summary_and_figures(tmp_path):
         bins=8,
     )
     assert len(paths) == 4
+    assert all(path.stat().st_size > 0 for path in paths)
+
+
+def test_exact_proposal_target_reports_mismatch_and_saves_figure(tmp_path):
+    target = np.asarray([0.40, 0.30, 0.20, 0.08, 0.02])
+    proposal = np.asarray([0.10, 0.10, 0.10, 0.30, 0.40])
+    comparison = ExactProposalTargetComparison(
+        object_id=514716,
+        center=(0.01, 0.0),
+        atom_indices=np.arange(5),
+        conditional_log_likelihood=np.asarray([-2.0, -1.0, 0.0, 1.0, 2.0]),
+        log_target=np.log(target),
+        proposal_probability=proposal,
+        candidate_member=np.asarray([True, True, False, False, False]),
+        population_log_normalization=0.5,
+        epsilon=0.1,
+        n_candidates=2,
+        prefilter_candidates=4,
+    )
+    summary = summarize_exact_proposal_target(comparison)
+    np.testing.assert_allclose(summary["candidate_target_mass"], 0.7)
+    np.testing.assert_allclose(summary["candidate_proposal_mass"], 0.2)
+    np.testing.assert_allclose(
+        summary["asymptotic_ess_fraction"],
+        1.0 / np.sum(np.square(target) / proposal),
+    )
+    output = tmp_path / "exact"
+    result = save_exact_proposal_target(
+        comparison, output, metadata={"reference": "test"}
+    )
+    assert json.loads(result.read_text())["object_id"] == 514716
+    paths = plot_exact_proposal_target(comparison, output, bins=8)
     assert all(path.stat().st_size > 0 for path in paths)
