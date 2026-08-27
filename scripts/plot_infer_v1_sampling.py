@@ -129,6 +129,7 @@ def _plot_proposal_sweep(payload: dict, output: Path) -> tuple[Path, Path]:
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    from matplotlib.colors import LogNorm
 
     rows = payload["settings"]
     k_ladder = payload["design"]["k_ladder"]
@@ -215,15 +216,22 @@ def _plot_proposal_sweep(payload: dict, output: Path) -> tuple[Path, Path]:
         heat[k_index, epsilon_index] = row[
             "normal_p90_absolute_log_evidence_error_at_max_m"
         ]
-    image = axes[1, 0].imshow(heat, aspect="auto", cmap="cividis_r")
+    image = axes[1, 0].imshow(
+        heat,
+        aspect="auto",
+        cmap="cividis_r",
+        norm=LogNorm(vmin=np.nanmin(heat), vmax=np.nanmax(heat)),
+    )
     axes[1, 0].set_xticks(range(len(epsilon_ladder)), epsilon_ladder)
     axes[1, 0].set_yticks(
         range(len(k_ladder)), [f"{k // 1024}k" for k in k_ladder]
     )
     axes[1, 0].set_xlabel(r"Defensive fraction $\epsilon$")
     axes[1, 0].set_ylabel("Candidate count K")
-    colorbar = figure.colorbar(image, ax=axes[1, 0], shrink=0.9)
-    colorbar.set_label(r"Exact-variance normal p90 $|\Delta\log Z|$ at M=16k")
+    axes[1, 0].set_title(
+        r"Normal p90 $|\Delta\log Z|$ at M=16k", fontsize=8
+    )
+    figure.colorbar(image, ax=axes[1, 0], shrink=0.9)
 
     x = np.asarray([row["n_candidates"] for row in optimized])
     quantiles = np.asarray(
@@ -253,7 +261,7 @@ def _plot_proposal_sweep(payload: dict, output: Path) -> tuple[Path, Path]:
     axes[1, 1].axhline(0.05, color="0.5", linestyle="--", linewidth=0.8)
     axes[1, 1].axhline(-0.05, color="0.5", linestyle="--", linewidth=0.8)
     axes[1, 1].set_xlabel("Candidate count K")
-    axes[1, 1].set_ylabel(r"$\Delta\log Z$ at optimized $\epsilon$, M=16k")
+    axes[1, 1].set_ylabel(r"Empirical $\Delta\log Z$ at optimized $\epsilon$")
     axes[1, 1].legend(frameon=False, fontsize=7)
 
     for label, axis in zip("ABCD", axes.flat):

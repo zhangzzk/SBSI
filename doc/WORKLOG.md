@@ -2,6 +2,32 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-27 cont.267 — million-K sweep reaches exact-evidence stability target
+
+CIP A40-16GB job **16039435** completed cleanly in 1m33s (exit 0).  Within the
+fixed 8,388,608-atom deep Gaussian prefilter, candidate target capture is
+92.02%, 94.28%, and 96.29% for K=524,288, 1,048,576, and 2,097,152.  The
+corresponding ideal exact-target ranks would capture 99.37%, 99.85%, and
+99.99%, again showing that ranking quality, rather than irreducible posterior
+breadth, drives most of the required K.
+
+K=2,097,152 is the first tested support to meet the exact-variance evidence
+criterion at M=16,384.  The exact ESS optimum is epsilon=0.74737,
+ESS/M=7.347%, chi-square=12.610, projected relative evidence SE=2.774%, and
+normal p90 absolute Delta-log-Z=0.04563.  In the 256 paired realizations the
+mean relative evidence is 0.99815, median Delta-log-Z is -0.00440 (median
+`log Z=-7.01573` versus exact -7.01134), empirical p90 absolute error is
+0.02942, and 97.66% lie within 0.05.  Fixed epsilon=0.6, 0.75, and 0.85 also
+pass the exact-variance threshold at this K; the optimum is essentially 0.75.
+
+This establishes that epsilon must be much larger than Infer V1's 0.1 for this
+missed-mode observation, but K=2.1 million (16.4% of the active prior per
+object) is not a viable production fix.  A better ranking/proposal should aim
+to approach the ideal curve, where K=65,536 already captures 92.47% target
+mass.  The sweep heatmap now uses logarithmic color normalization so the
+successful 0.04--0.05 region remains visible beside the pathological
+epsilon=1 global-prior arm; plot labels were shortened to avoid panel overlap.
+
 ## 2026-08-27 cont.266 — first K/epsilon sweep improves support; million-K extension prepared
 
 CIP A40-16GB job **16039375** completed cleanly in 2m03s (exit 0) and
