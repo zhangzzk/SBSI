@@ -33,6 +33,9 @@ prefixes paired.  Resource detection found 32 physical/64 logical login cores,
 309 GiB available RAM, 8.5 TiB free disk, and no login GPU, so flow evaluation
 remains scheduler-only.  Validation: 13 focused tests pass in the frozen py31
 environment; Ruff, Bash syntax, Python compilation, and whitespace checks pass.
+CIP job **16039375** was submitted against the frozen one-million-closure
+identity and new output root; it is initially pending for priority, with no
+scheduler start estimate and no result path overwritten.
 
 ## 2026-08-27 cont.264 — exact proposal scan confirms ranking support failure
 
