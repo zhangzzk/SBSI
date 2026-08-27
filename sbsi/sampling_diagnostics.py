@@ -12,7 +12,7 @@ from scipy.optimize import minimize_scalar
 from scipy.special import logsumexp
 
 from .catalogue_likelihood import CatalogueLikelihood
-from .catalogue_sampling import DefensiveLocalProposal
+from .catalogue_sampling import DefensiveLocalProposal, ProposalCandidates
 
 
 @dataclass(frozen=True)
@@ -66,6 +66,7 @@ class ExactProposalTargetComparison:
     proposal_probability: np.ndarray
     candidate_member: np.ndarray
     candidate_indices: np.ndarray
+    candidate_score_gap: np.ndarray
     population_log_normalization: float
     epsilon: float
     n_candidates: int
@@ -198,6 +199,7 @@ def evaluate_exact_proposal_target(
     epsilon: float,
     candidate_backend: str = "torch",
     atom_chunk: int = 65536,
+    candidates: ProposalCandidates | None = None,
 ) -> ExactProposalTargetComparison:
     """Evaluate every positive-prior atom and reconstruct the production ``q``."""
 
@@ -215,14 +217,17 @@ def evaluate_exact_proposal_target(
 
     observed = observed.reset_index(drop=True)
     observed_targets = likelihood.observed_target_tensor(observed)
-    candidates = proposal.candidates(
-        observed,
-        n_candidates=n_candidates,
-        prefilter_candidates=prefilter_candidates,
-        torch_device=(
-            likelihood.flow_model.device if candidate_backend == "torch" else None
-        ),
-    )
+    if candidates is None:
+        candidates = proposal.candidates(
+            observed,
+            n_candidates=n_candidates,
+            prefilter_candidates=prefilter_candidates,
+            torch_device=(
+                likelihood.flow_model.device if candidate_backend == "torch" else None
+            ),
+        )
+    elif candidates.indices.shape != (1, int(n_candidates)):
+        raise ValueError("precomputed candidates do not match the exact comparison")
     candidate_target = likelihood.log_importance_weights_tensor(
         observed,
         float(center[0]),
@@ -281,6 +286,7 @@ def evaluate_exact_proposal_target(
         proposal_probability=proposal_probability,
         candidate_member=candidate_member,
         candidate_indices=candidates.indices[0].copy(),
+        candidate_score_gap=candidates.distances[0].copy(),
         population_log_normalization=likelihood.log_population_normalization(
             float(center[0]), float(center[1])
         ),

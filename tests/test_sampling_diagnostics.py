@@ -136,6 +136,7 @@ def test_exact_proposal_target_reports_mismatch_and_saves_figure(tmp_path):
         proposal_probability=proposal,
         candidate_member=np.asarray([True, True, False, False, False]),
         candidate_indices=np.asarray([0, 1]),
+        candidate_score_gap=np.asarray([0.0, 1.0]),
         population_log_normalization=0.5,
         epsilon=0.1,
         n_candidates=2,

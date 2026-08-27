@@ -2,6 +2,47 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-27 cont.268 — proposal-diversification screen implemented and frozen
+
+The observation-514716 experiment now has a dedicated diagnostic without any
+Infer V1 default change.  `select_score_diversified_candidates` freezes a
+high-score core and fills the tail either from 16 logarithmic rank strata or
+by seeded Gumbel-top-k sampling with proxy probability proportional to
+`exp(-score_gap/T)`.  It validates fixed width, uniqueness, seed determinism,
+and never reads the exact likelihood.  `union_candidate_sets` stable-deduplicates
+batched small-query supports and fills any overlap shortfall from a separately
+ranked central fallback.  Exact comparisons may now accept a precomputed
+`ProposalCandidates` object and retain its proxy score gaps, avoiding a second
+4.2-million-candidate search and enabling honest shared-setup timing.
+
+New `scripts/test_infer_v1_proposal_diversification.py` freezes observation
+514716, the initial centre, all identity hashes, and the exact 12.76-million-
+atom target.  It compares K=32,768/65,536 deep top-K and global uncertainty
+top-K controls; 75/25 and 50/50 core/tail splits; logarithmic and tempered
+T=1.5/2/4 tails over candidate seeds 7301--7305; epsilon=0.1/0.2/0.3; and
+QMC unions of 8 or 16 uncertainty-aware queries over the same five seeds.
+The union query offsets use the median top-4,096 predicted dispersion and a
+scrambled Sobol normal design.  A cached global uncertainty index is timed
+separately; union proposal time includes both the central fallback and
+perturbed queries, while deep-score methods include their common deep-pool
+construction time.
+
+All 104 supports and 312 support/epsilon settings use the same 256 by 16,384
+component/global/local MC uniforms.  Exact capture, ESS/M, maximum p/q,
+projected relative evidence SE, a normal p90 Delta-log-Z guide, empirical
+error percentiles, union overlap, and runtime are retained per candidate seed;
+aggregate min/p10/median/p90/max summaries prevent seed cherry-picking.  The
+group with the best p90-across-candidate-seeds exact-variance error receives a
+second independent common-MC block.  JSON, raw/aggregate CSV, and a
+colorblind-safe four-panel PNG/PDF are written to a new immutable output root.
+
+The resource audit found 32 physical/64 logical login cores, 323 GiB available
+RAM, 8.5 TiB free disk, and no login GPU; the flow and 8.4-million-prefilter
+work therefore remain scheduler-only.  New wrapper
+`jobs/job_infer_v1_proposal_diversification.sh` requests one CIP A40-16GB,
+12 CPUs, 36 GiB RAM, and one hour.  Validation passes: 39 focused tests, Ruff,
+Bash syntax, Python compilation, CLI help, and whitespace checks.
+
 ## 2026-08-27 cont.267 — million-K sweep reaches exact-evidence stability target
 
 CIP A40-16GB job **16039435** completed cleanly in 1m33s (exit 0).  Within the

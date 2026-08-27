@@ -532,6 +532,123 @@ def candidate_support_diagnostics(
     )
 
 
+def select_score_diversified_candidates(
+    ranked_indices: np.ndarray,
+    score_gap: np.ndarray,
+    *,
+    n_candidates: int,
+    core_fraction: float,
+    tail_method: str,
+    seed: int,
+    temperature: float | None = None,
+    n_log_strata: int = 16,
+) -> np.ndarray:
+    """Keep a high-score core and diversify the remaining candidate ranks.
+
+    ``score_gap`` is the non-negative proxy-score loss relative to the best
+    ranked atom.  ``log_stratified`` assigns equal quotas to logarithmic rank
+    bands, while ``tempered`` samples without replacement with probability
+    proportional to ``exp(-score_gap / temperature)``.  Exact likelihoods are
+    intentionally absent: this is a proposal-selection rule, not an oracle.
+    """
+
+    ranked = np.asarray(ranked_indices, dtype=np.int64)
+    gap = np.asarray(score_gap, dtype=np.float64)
+    if ranked.ndim != 1 or gap.shape != ranked.shape or not len(ranked):
+        raise ValueError("ranked indices and score gaps must be aligned vectors")
+    if len(np.unique(ranked)) != len(ranked):
+        raise ValueError("ranked candidate pool must contain unique atoms")
+    if not np.isfinite(gap).all() or (gap < 0).any():
+        raise ValueError("candidate score gaps must be finite and non-negative")
+    if n_candidates <= 0 or n_candidates > len(ranked):
+        raise ValueError("candidate count lies outside the ranked pool")
+    if not 0 < core_fraction < 1:
+        raise ValueError("core fraction must lie strictly between zero and one")
+    if tail_method not in {"log_stratified", "tempered"}:
+        raise ValueError("tail method must be log_stratified or tempered")
+    if tail_method == "tempered" and (temperature is None or temperature <= 0):
+        raise ValueError("tempered tails require a positive temperature")
+    if n_log_strata <= 0:
+        raise ValueError("log-stratified tails require at least one stratum")
+
+    core_count = int(round(float(core_fraction) * int(n_candidates)))
+    core_count = min(max(core_count, 1), int(n_candidates) - 1)
+    tail_count = int(n_candidates) - core_count
+    tail_rank = np.arange(core_count, len(ranked), dtype=np.int64)
+    if len(tail_rank) < tail_count:
+        raise ValueError("ranked pool is too small for the requested tail")
+    rng = np.random.default_rng(int(seed))
+
+    if tail_method == "tempered":
+        log_weight = -gap[tail_rank] / float(temperature)
+        uniform = np.maximum(rng.random(len(tail_rank)), np.finfo(float).tiny)
+        gumbel = -np.log(-np.log(uniform))
+        key = log_weight + gumbel
+        selected = np.argpartition(key, -tail_count)[-tail_count:]
+        selected = selected[np.argsort(-key[selected], kind="stable")]
+        tail_rank = tail_rank[selected]
+    else:
+        n_strata = min(int(n_log_strata), tail_count)
+        boundaries = np.rint(
+            np.geomspace(core_count, len(ranked), n_strata + 1)
+        ).astype(np.int64)
+        boundaries[0] = core_count
+        boundaries[-1] = len(ranked)
+        boundaries = np.unique(boundaries)
+        n_strata = len(boundaries) - 1
+        quota = np.full(n_strata, tail_count // n_strata, dtype=np.int64)
+        quota[: tail_count % n_strata] += 1
+        pieces = []
+        for index, count in enumerate(quota):
+            available = np.arange(boundaries[index], boundaries[index + 1])
+            take = min(int(count), len(available))
+            if take:
+                pieces.append(rng.choice(available, size=take, replace=False))
+        selected = np.concatenate(pieces) if pieces else np.empty(0, dtype=np.int64)
+        if len(selected) < tail_count:
+            remaining = np.setdiff1d(tail_rank, selected, assume_unique=False)
+            extra = rng.choice(
+                remaining, size=tail_count - len(selected), replace=False
+            )
+            selected = np.concatenate((selected, extra))
+        tail_rank = selected
+
+    result = np.concatenate((ranked[:core_count], ranked[tail_rank]))
+    if len(result) != n_candidates or len(np.unique(result)) != len(result):
+        raise RuntimeError("diversified candidate selection lost support width")
+    return result
+
+
+def union_candidate_sets(
+    query_indices: np.ndarray,
+    *,
+    n_candidates: int,
+    fallback_indices: np.ndarray,
+) -> tuple[np.ndarray, int]:
+    """Stable-deduplicate small query supports and fill to a fixed width."""
+
+    query = np.asarray(query_indices, dtype=np.int64)
+    fallback = np.asarray(fallback_indices, dtype=np.int64)
+    if query.ndim != 2 or not query.size or fallback.ndim != 1:
+        raise ValueError("query supports must be a matrix and fallback a vector")
+    if n_candidates <= 0 or len(fallback) < n_candidates:
+        raise ValueError("fallback support is too small for the requested union")
+    flattened = query.ravel()
+    _, first = np.unique(flattened, return_index=True)
+    unique = flattened[np.sort(first)]
+    prefill = min(len(unique), int(n_candidates))
+    result = unique[:n_candidates]
+    if len(result) < n_candidates:
+        available = fallback[~np.isin(fallback, result)]
+        needed = n_candidates - len(result)
+        if len(available) < needed:
+            raise ValueError("fallback cannot fill the deduplicated query union")
+        result = np.concatenate((result, available[:needed]))
+    if len(np.unique(result)) != n_candidates:
+        raise RuntimeError("query union did not produce unique fixed-width support")
+    return result, int(prefill)
+
+
 class DefensiveLocalProposal:
     """Nearest-neighbour kernel proposal mixed with the full catalogue prior."""
 
@@ -2053,10 +2170,12 @@ __all__ = [
     "ProposalDraw",
     "assess_importance_convergence",
     "candidate_support_diagnostics",
+    "select_score_diversified_candidates",
     "importance_diagnostics",
     "run_importance_ladder",
     "run_importance_curvature_scan",
     "run_importance_profiles",
     "select_adaptive_draw_counts",
     "select_independent_pilot_draw_counts",
+    "union_candidate_sets",
 ]

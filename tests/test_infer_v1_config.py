@@ -135,3 +135,15 @@ def test_large_proposal_sweep_doubles_to_two_million_candidates():
     assert "--proposal-prefilter 8388608" in job
     assert "--proposal-epsilon-ladder 0.4 0.6 0.75 0.85 0.95 1.0" in job
     assert "--proposal-replicates 256 --proposal-mc-seed 9917" in job
+
+
+def test_proposal_diversification_screen_keeps_infer_v1_frozen():
+    job = (ROOT / "jobs" / "job_infer_v1_proposal_diversification.sh").read_text()
+
+    assert "gpu:a40-16gb:1" in job
+    assert "--score-pool 4194304 --score-prefilter 8388608" in job
+    assert "--k 32768 65536 --core-fractions 0.75 0.5" in job
+    assert "--temperatures 1.5 2 4 --epsilons 0.1 0.2 0.3" in job
+    assert "--candidate-seeds 7301 7302 7303 7304 7305" in job
+    assert "--query-counts 8 16 --log-strata 16" in job
+    assert "--mc-replicates 256 --mc-draws 16384" in job

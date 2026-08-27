@@ -17,8 +17,10 @@ from sbsi.catalogue_sampling import (
     run_importance_curvature_scan,
     run_importance_ladder,
     run_importance_profiles,
+    select_score_diversified_candidates,
     select_adaptive_draw_counts,
     select_independent_pilot_draw_counts,
+    union_candidate_sets,
 )
 from sbsi.score_inference import OutputCut
 from test_catalogue_likelihood import AnalyticGaussianSelection, _likelihood
@@ -448,6 +450,57 @@ def test_candidate_support_diagnostic_separates_ranking_from_support_width():
     )
     np.testing.assert_allclose(result.reference_max_mass_fraction, [0.80, 0.40])
     assert np.all(result.reference_effective_atoms > 1)
+
+
+def test_score_diversification_keeps_core_and_seeded_unique_tail():
+    ranked = np.arange(1000, dtype=np.int64)
+    gap = np.linspace(0.0, 20.0, len(ranked))
+    log_tail = select_score_diversified_candidates(
+        ranked,
+        gap,
+        n_candidates=100,
+        core_fraction=0.75,
+        tail_method="log_stratified",
+        seed=41,
+        n_log_strata=5,
+    )
+    repeated = select_score_diversified_candidates(
+        ranked,
+        gap,
+        n_candidates=100,
+        core_fraction=0.75,
+        tail_method="log_stratified",
+        seed=41,
+        n_log_strata=5,
+    )
+    tempered = select_score_diversified_candidates(
+        ranked,
+        gap,
+        n_candidates=100,
+        core_fraction=0.5,
+        tail_method="tempered",
+        temperature=2.0,
+        seed=42,
+    )
+
+    np.testing.assert_array_equal(log_tail[:75], ranked[:75])
+    np.testing.assert_array_equal(log_tail, repeated)
+    np.testing.assert_array_equal(tempered[:50], ranked[:50])
+    assert len(np.unique(log_tail)) == len(np.unique(tempered)) == 100
+    assert log_tail.max() > 100
+    assert not np.array_equal(log_tail, tempered)
+
+
+def test_union_candidate_sets_stably_deduplicates_and_fills():
+    query = np.asarray([[5, 2, 7, 9], [5, 3, 7, 8], [2, 4, 9, 6]])
+    fallback = np.arange(20, dtype=np.int64)
+    result, prefill = union_candidate_sets(
+        query, n_candidates=10, fallback_indices=fallback
+    )
+
+    assert prefill == 8
+    np.testing.assert_array_equal(result[:8], [5, 2, 7, 9, 3, 8, 4, 6])
+    np.testing.assert_array_equal(result[8:], [0, 1])
 
 
 def test_importance_ladder_uses_nested_draws_and_approaches_exact_oracle():
