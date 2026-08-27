@@ -29,7 +29,9 @@ GPU audit and points only to the completed one-million closure and a new output
 root.  Focused validation passes: nine sampling/config tests, Ruff, Bash syntax,
 Python compilation/help smoke tests, and whitespace checks.  The diagnostic
 module lazily imports Matplotlib, so it does not add a plotting dependency to
-the core inference import path.
+the core inference import path.  V100 job **16036946** was submitted with a new
+output root and is initially pending for scheduler priority; no existing result
+was overwritten.
 
 ## 2026-08-27 cont.259 — one-million-object Infer V1 likelihood closure completed
 
