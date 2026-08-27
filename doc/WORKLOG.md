@@ -2,6 +2,41 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-27 cont.261 — sampling visualization exposes outside-local evidence
+
+V100 diagnostic **16036946** completed successfully in 1m44s with zero exit
+status and empty stderr.  It audited the deterministic 64-observation pool at
+the saved raw-mean centre and generated all requested M=4,096/8,192/16,384
+draw/evidence panels.  At M=16,384 the pool's ESS percentiles
+`[min,p10,median,p90,max]` are `[6.56,33.56,73.01,191.36,14782.04]`; the median
+ESS fraction is only 0.00446.  The corresponding outside-local evidence
+fractions are `[0.0008,0.2490,0.7515,0.9525,0.9923]`, and peak normalized-weight
+fractions are `[0.0001,0.0304,0.0657,0.1349,0.3841]`.  Thus the nominally 10%
+global defensive component often carries most of the evidence, while the 90%
+adapted-local component misses important support.
+
+The selected minimum-ESS observation 261315 is a direct visual example.  Its
+central log-evidence estimate changes `-5.202 -> -4.255 -> -4.634`; a rare
+outside-local draw appearing by M=8,192 holds 52.6% of normalized evidence,
+and still holds 38.4% at M=16,384 (ESS 6.56).  The low-ESS example 514716 moves
+`-7.030 -> -6.707 -> -6.856`, while even the pool-median example 100367 moves
+`-5.296 -> -5.107 -> -5.038` and receives 91.1% of its final evidence from
+outside the local candidate set.  These are ordinary nested-M fluctuations of
+the evidence mean, not self-normalized estimates.
+
+The first figures preserved every extreme flow log likelihood, but a few
+negligible-evidence values down to about -9,000 compressed all useful structure
+into one bin.  `plot_importance_sampling_diagnostic` now collects the lowest 5%
+of proposal `log L` values into a labeled left-edge bin and explicitly prints
+both censored proposal mass and censored evidence mass.  Regenerated zoomed PNG
+and PDF panels retain the original figures and underlying arrays.  The change
+improves presentation only; no diagnostic number or inference behavior changed.
+
+The result supports the prior K concern: increasing M at fixed K relies on rare
+epsilon draws to repair omitted local support.  Improving or expanding the
+candidate proposal is the direct target; merely adding observations does not
+remove this per-observation importance instability.
+
 ## 2026-08-27 cont.260 — draw-level Infer V1 sampling visualization added
 
 `sbsi/sampling_diagnostics.py` now evaluates and retains the exact central-view

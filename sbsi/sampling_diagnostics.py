@@ -317,8 +317,15 @@ def plot_importance_sampling_diagnostic(
     ladder: Sequence[int],
     labels: Sequence[str],
     bins: int = 55,
+    lower_proposal_percentile: float = 5.0,
 ) -> tuple[Path, ...]:
-    """Plot proposal-draw mass beside importance-weighted evidence mass."""
+    """Plot proposal-draw mass beside importance-weighted evidence mass.
+
+    Extreme flow failures can stretch ``log L`` by thousands while carrying
+    negligible evidence.  Values below ``lower_proposal_percentile`` are
+    collected into the first visible bin, and both the censored proposal mass
+    and censored evidence mass are printed on every panel.
+    """
 
     import matplotlib
 
@@ -326,6 +333,8 @@ def plot_importance_sampling_diagnostic(
     import matplotlib.pyplot as plt
 
     output = Path(output)
+    if not 0 <= lower_proposal_percentile < 50:
+        raise ValueError("lower proposal percentile must lie in [0, 50)")
     metrics = summarize_importance_sampling(diagnostic, ladder)
     palette = {"proposal": "#0072B2", "evidence": "#D55E00"}
     paths = []
@@ -334,7 +343,8 @@ def plot_importance_sampling_diagnostic(
         finite = values[np.isfinite(values)]
         if not finite.size:
             raise RuntimeError(f"object {object_id} has no finite likelihood draws")
-        left, right = float(finite.min()), float(finite.max())
+        left = float(np.percentile(finite, lower_proposal_percentile))
+        right = float(finite.max())
         if left == right:
             left -= 0.5
             right += 0.5
@@ -349,12 +359,14 @@ def plot_importance_sampling_diagnostic(
         axes = np.atleast_2d(axes)
         for rung_row, n_draws in enumerate(ladder):
             x = values[:n_draws]
+            shown_x = np.maximum(x, left)
             weight = normalized_importance_weights(
                 diagnostic.log_importance_weight[row, :n_draws]
             )
             before = np.full(n_draws, 1.0 / n_draws)
+            below = x < left
             axes[rung_row, 0].hist(
-                x,
+                shown_x,
                 bins=edges,
                 weights=before,
                 histtype="stepfilled",
@@ -362,7 +374,7 @@ def plot_importance_sampling_diagnostic(
                 alpha=0.65,
             )
             axes[rung_row, 1].hist(
-                x,
+                shown_x,
                 bins=edges,
                 weights=weight,
                 histtype="stepfilled",
@@ -381,12 +393,32 @@ def plot_importance_sampling_diagnostic(
                 0.94,
                 (
                     f"log evidence={entry['log_evidence']:.3f}\n"
-                    f"ESS={entry['ess']:.0f} ({entry['ess_fraction']:.3f}M)\n"
-                    f"max weight={entry['max_weight_fraction']:.3f}\n"
-                    f"outside local={entry['outside_local_evidence_fraction']:.3f}"
+                    f"ESS={entry['ess']:.0f} "
+                    f"({100 * entry['ess_fraction']:.3f}% of M)\n"
+                    f"max weight={100 * entry['max_weight_fraction']:.1f}%\n"
+                    "outside local="
+                    f"{100 * entry['outside_local_evidence_fraction']:.1f}%"
                 ),
                 transform=axes[rung_row, 1].transAxes,
                 ha="right",
+                va="top",
+                fontsize=7,
+            )
+            axes[rung_row, 0].text(
+                0.02,
+                0.94,
+                f"{100 * before[below].sum():.1f}% draws at left edge",
+                transform=axes[rung_row, 0].transAxes,
+                ha="left",
+                va="top",
+                fontsize=7,
+            )
+            axes[rung_row, 1].text(
+                0.02,
+                0.94,
+                f"{100 * weight[below].sum():.2f}% evidence at left edge",
+                transform=axes[rung_row, 1].transAxes,
+                ha="left",
                 va="top",
                 fontsize=7,
             )
@@ -398,7 +430,10 @@ def plot_importance_sampling_diagnostic(
         for axis in axes[-1]:
             axis.set_xlabel(r"Conditional log likelihood  $\log p(x_i\mid z_j,g)$")
         figure.suptitle(
-            f"Observation {int(object_id):,} — {label}; center={diagnostic.center}",
+            (
+                f"Observation {int(object_id):,} — {label}; "
+                f"center=({diagnostic.center[0]:.5f}, {diagnostic.center[1]:.5f})"
+            ),
             fontsize=10,
         )
         stem = output / f"sampling_observation_{int(object_id):07d}"
