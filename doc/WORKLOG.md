@@ -2,6 +2,43 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-27 cont.269 — proposal diversification screen completed
+
+CIP job **16039943** completed successfully in 7m04s (exit 0; peak RSS
+10.8 GB).  It evaluated 104 candidate supports and all 312 support/epsilon
+settings for observation 514716 against exact `log Z=-7.011335485`, followed
+by an independent MC holdout for the robust winner.  The deep and cached
+global uncertainty top-K controls agree: at K=65,536 they capture 79.3042% of
+the exact target.  With epsilon=0.3 their exact ESS/M is 0.3646%, maximum p/q
+is 46,084, exact-variance normal p90 absolute Delta-log-Z is 0.2124, and the
+256-replicate empirical p90 is 0.1037 at M=16,384.
+
+Simple diverse rank tails are counterproductive.  The best such arm,
+tempered T=1.5 with a 75/25 core/tail split at K=65,536 and epsilon=0.3,
+captures a median 77.93% and has a candidate-seed-p90 normal error of 0.2206;
+logarithmic tails and 50/50 splits are worse.  Increasing epsilon monotonically
+helps all tested arms, but epsilon=0.3 remains far from the earlier
+large-K/epsilon-optimum result.
+
+The scalable QMC uncertainty-query union is the only tested diversification
+with a positive signal.  Q=16, K=65,536, epsilon=0.3 captures median 79.49%
+(candidate-seed p10--p90 78.74--79.75%), obtains median exact ESS/M 0.6176%,
+and lowers the candidate-seed-p90 normal error slightly from 0.2124 to 0.2095.
+Its median warm proposal time is 4.54 s/object versus 1.32 s for the cached
+single-query top-K control.  Candidate seeds vary materially: exact ESS/M is
+0.358--0.803%, maximum p/q is 17,976--46,084, and empirical M=16,384 p90
+absolute error is 0.0890--0.1100.  In the independent holdout, mean relative
+evidence remains 0.9968--1.0007 across seeds, but median absolute log-evidence
+errors are 0.131--0.147 and only 53.9--62.9% of replicates fall within 0.05.
+Thus the union suggests better ranking is possible, but neither it nor the
+rank-tail methods match the exact evidence reliably enough to change Infer V1.
+
+The diagnostic's query-frame assignment now casts perturbations back to the
+observed frame dtype, eliminating harmless pandas incompatible-dtype warnings
+seen in this run.  Infer V1 defaults remain unchanged.  Results are frozen in
+`infer_v1_proposal_diversification_obs514716_v1/screen/` as JSON, raw and
+aggregate CSV, and PNG/PDF.
+
 ## 2026-08-27 cont.268 — proposal-diversification screen implemented and frozen
 
 The observation-514716 experiment now has a dedicated diagnostic without any

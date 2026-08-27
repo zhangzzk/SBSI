@@ -153,7 +153,9 @@ def _qmc_query_frame(
     offsets[1:] = norm.ppf(np.clip(points, 1.0e-6, 1.0 - 1.0e-6)) * scale
     queries = pd.concat([observed] * n_queries, ignore_index=True)
     center = observed.loc[:, target_names].to_numpy(dtype=np.float64)[0]
-    queries.loc[:, target_names] = center[None, :] + offsets
+    queries.loc[:, list(target_names)] = (center[None, :] + offsets).astype(
+        observed.loc[:, target_names].dtypes.iloc[0]
+    )
     return queries
 
 
