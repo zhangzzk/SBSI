@@ -2,6 +2,29 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-27 cont.272 — minimal fully probabilistic soft-top-K test prepared
+
+The proposed soft-boundary test is implemented without additional tuning
+machinery.  New `select_tempered_candidates` draws the entire fixed-width
+support by seeded Gumbel top-K without replacement with log weight
+`(score-score_max)/T`; unlike the earlier diversified-tail selector, it has no
+deterministic core.  Validation covers deterministic replay, uniqueness,
+fixed width, and a support distinct from the deterministic prefix.
+
+New `scripts/test_infer_v1_soft_topk.py` freezes observation 514716, the same
+4,194,304-score pool within the 8,388,608 prefilter, K=65,536, epsilon=0.3,
+temperatures 0.5/1.0/1.5, and candidate seeds 7301--7305.  Every arm shares
+one exact 12.76-million-atom target and is compared with deterministic top-K
+using exact target capture, ESS/M, and maximum p/q; no MC screen is run unless
+the robust soft-support result first beats top-K ESS.  A compact capture/ESS
+figure, raw CSV, and JSON retain the result.  Infer V1 is unchanged.
+
+The resource audit found 32 physical/64 logical login cores, 326 GiB available
+RAM, 8.5 TiB free disk, and no login GPU, so the exact scan remains scheduler-
+only.  The CIP wrapper requests one A40-16GB, 12 CPUs, 36 GiB, and 30 minutes.
+Thirty-seven focused tests pass, together with Ruff, Python compilation, CLI
+help, Bash syntax, and whitespace checks.
+
 ## 2026-08-27 cont.271 — histogram panels verified; small differences exposed
 
 The apparently identical selected proposal panels were checked directly from

@@ -619,6 +619,40 @@ def select_score_diversified_candidates(
     return result
 
 
+def select_tempered_candidates(
+    ranked_indices: np.ndarray,
+    score_gap: np.ndarray,
+    *,
+    n_candidates: int,
+    temperature: float,
+    seed: int,
+) -> np.ndarray:
+    """Draw a full candidate support without replacement from tempered scores."""
+
+    ranked = np.asarray(ranked_indices, dtype=np.int64)
+    gap = np.asarray(score_gap, dtype=np.float64)
+    if ranked.ndim != 1 or gap.shape != ranked.shape or not len(ranked):
+        raise ValueError("ranked indices and score gaps must be aligned vectors")
+    if len(np.unique(ranked)) != len(ranked):
+        raise ValueError("ranked candidate pool must contain unique atoms")
+    if not np.isfinite(gap).all() or (gap < 0).any():
+        raise ValueError("candidate score gaps must be finite and non-negative")
+    if n_candidates <= 0 or n_candidates > len(ranked):
+        raise ValueError("candidate count lies outside the ranked pool")
+    if temperature <= 0 or not np.isfinite(temperature):
+        raise ValueError("temperature must be finite and positive")
+
+    rng = np.random.default_rng(int(seed))
+    uniform = np.maximum(rng.random(len(ranked)), np.finfo(float).tiny)
+    key = -gap / float(temperature) - np.log(-np.log(uniform))
+    selected = np.argpartition(key, -int(n_candidates))[-int(n_candidates) :]
+    selected = selected[np.argsort(-key[selected], kind="stable")]
+    result = ranked[selected]
+    if len(result) != n_candidates or len(np.unique(result)) != len(result):
+        raise RuntimeError("tempered selection lost support width")
+    return result
+
+
 def union_candidate_sets(
     query_indices: np.ndarray,
     *,
@@ -2171,6 +2205,7 @@ __all__ = [
     "assess_importance_convergence",
     "candidate_support_diagnostics",
     "select_score_diversified_candidates",
+    "select_tempered_candidates",
     "importance_diagnostics",
     "run_importance_ladder",
     "run_importance_curvature_scan",

@@ -18,6 +18,7 @@ from sbsi.catalogue_sampling import (
     run_importance_ladder,
     run_importance_profiles,
     select_score_diversified_candidates,
+    select_tempered_candidates,
     select_adaptive_draw_counts,
     select_independent_pilot_draw_counts,
     union_candidate_sets,
@@ -489,6 +490,30 @@ def test_score_diversification_keeps_core_and_seeded_unique_tail():
     assert len(np.unique(log_tail)) == len(np.unique(tempered)) == 100
     assert log_tail.max() > 100
     assert not np.array_equal(log_tail, tempered)
+
+
+def test_tempered_selection_softens_the_entire_support_without_replacement():
+    ranked = np.arange(1000, dtype=np.int64)
+    gap = np.linspace(0.0, 12.0, len(ranked))
+    selected = select_tempered_candidates(
+        ranked,
+        gap,
+        n_candidates=100,
+        temperature=1.0,
+        seed=51,
+    )
+    repeated = select_tempered_candidates(
+        ranked,
+        gap,
+        n_candidates=100,
+        temperature=1.0,
+        seed=51,
+    )
+
+    np.testing.assert_array_equal(selected, repeated)
+    assert len(selected) == len(np.unique(selected)) == 100
+    assert selected.max() >= 100
+    assert not np.array_equal(selected, ranked[:100])
 
 
 def test_union_candidate_sets_stably_deduplicates_and_fills():

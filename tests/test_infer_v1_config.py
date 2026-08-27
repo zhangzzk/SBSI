@@ -157,3 +157,12 @@ def test_proposal_histograms_reuse_the_frozen_diversification_screen():
     assert '"$root/screen/result.json"' in job
     assert '"$root/likelihood_histograms_v1"' in job
     assert "--object-id 514716 --device cuda --bins 90" in job
+
+
+def test_soft_topk_is_the_minimal_full_support_temperature_screen():
+    job = (ROOT / "jobs" / "job_infer_v1_soft_topk.sh").read_text()
+
+    assert "gpu:a40-16gb:1" in job
+    assert "--score-pool 4194304 --score-prefilter 8388608 --k 65536" in job
+    assert "--temperatures 0.5 1.0 1.5" in job
+    assert "--candidate-seeds 7301 7302 7303 7304 7305 --epsilon 0.3" in job
