@@ -379,6 +379,94 @@ def _plot_all_pages(frame, target_hist, edges, output, *, methods, k_values, eps
     return path
 
 
+def _plot_method_differences(frame, target_hist, edges, output, *, k, epsilon):
+    """Expose small method changes hidden by the broad defensive mixture."""
+
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    centers = 0.5 * (edges[:-1] + edges[1:])
+    methods = [
+        ("top_deep", "Deep top-K", "#0072B2", "-"),
+        ("log_75/25", "Log 75/25", "#E69F00", "--"),
+        ("temp1.5_75/25", "T=1.5 75/25", "#009E73", "-."),
+        ("temp1.5_50/50", "T=1.5 50/50", "#CC79A7", ":"),
+        ("union_q8", "Union Q=8", "#56B4E9", (0, (5, 2))),
+        ("union_q16", "Union Q=16", "#D55E00", (0, (3, 1, 1, 1))),
+    ]
+    local = {
+        key: _aggregate_histograms(
+            frame,
+            method_key=key,
+            k=k,
+            epsilon=epsilon,
+            column="local_hist",
+        )[0][1]
+        for key, *_ in methods
+    }
+    baseline = local["top_deep"]
+    figure, axes = plt.subplots(2, 1, figsize=(8.0, 6.2), sharex=True)
+    axes[0].fill_between(
+        centers,
+        0,
+        target_hist,
+        step="mid",
+        color="0.75",
+        alpha=0.45,
+        label="Exact target p",
+    )
+    for key, label, color, linestyle in methods:
+        axes[0].step(
+            centers,
+            local[key],
+            where="mid",
+            color=color,
+            linestyle=linestyle,
+            linewidth=1.25,
+            label=label,
+        )
+    axes[0].set_ylabel("Local probability mass / bin")
+    axes[0].legend(frameon=False, fontsize=7, ncol=2)
+
+    for key, label, color, linestyle in methods[1:]:
+        difference = 100 * (local[key] - baseline)
+        histogram_tv = 0.5 * np.abs(local[key] - baseline).sum()
+        axes[1].step(
+            centers,
+            difference,
+            where="mid",
+            color=color,
+            linestyle=linestyle,
+            linewidth=1.35,
+            label=f"{label}  (TV={100 * histogram_tv:.2f}%)",
+        )
+    axes[1].axhline(0, color="0.4", linewidth=0.8)
+    axes[1].set_ylabel("Local minus top-K\n(percentage points / bin)")
+    axes[1].set_xlabel(r"Conditional log likelihood  $\log L_j$")
+    axes[1].legend(frameon=False, fontsize=7, ncol=2)
+    axes[1].set_xlim(max(-22.0, edges[0]), edges[-1])
+    for axis in axes:
+        axis.spines[["top", "right"]].set_visible(False)
+        axis.tick_params(labelsize=7)
+    figure.suptitle(
+        (
+            f"Observation 514,716: candidate-method differences hidden in the full view\n"
+            rf"$K={k:,}$, $\epsilon={epsilon:g}$; full-q differences are "
+            rf"$(1-\epsilon)$ times the lower panel"
+        ),
+        fontsize=10,
+    )
+    figure.tight_layout(rect=(0, 0, 1, 0.94))
+    png = output / "proposal_loglikelihood_histogram_differences.png"
+    pdf = output / "proposal_loglikelihood_histogram_differences.pdf"
+    figure.savefig(png, dpi=300, bbox_inches="tight")
+    figure.savefig(pdf, bbox_inches="tight")
+    plt.close(figure)
+    return png, pdf
+
+
 def main(argv=None):
     args = _parse_args(argv)
     reference_path = Path(args.reference_result).resolve()
@@ -538,6 +626,16 @@ def main(argv=None):
             methods=methods,
             k_values=design["k"],
             epsilons=design["epsilons"],
+        )
+    )
+    files.extend(
+        _plot_method_differences(
+            frame,
+            target_hist,
+            edges,
+            output,
+            k=selected_k,
+            epsilon=selected_epsilon,
         )
     )
     payload = {

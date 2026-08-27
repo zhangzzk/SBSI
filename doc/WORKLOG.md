@@ -2,6 +2,29 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-27 cont.271 — histogram panels verified; small differences exposed
+
+The apparently identical selected proposal panels were checked directly from
+the frozen long-form bin table; no panel-indexing or aggregation duplication
+was found.  Relative to deep top-K, the local-log-likelihood histogram TV
+distances are 1.85% (log 75/25), 1.19% (T=1.5 75/25), 2.50% (T=1.5 50/50),
+0.84% (QMC union Q=8), and 0.89% (QMC union Q=16).  At epsilon=0.3 the
+corresponding full-proposal distances shrink exactly by `1-epsilon` to
+1.29%, 0.83%, 1.75%, 0.59%, and 0.62%; the largest full-proposal single-bin
+change is only 1.11 percentage points.  This establishes that the visual
+similarity is genuine: the methods change atom identity/support more than the
+one-dimensional conditional-`log L` marginal.
+
+`plot_infer_v1_proposal_histograms.py` now also emits a zoomed overlay and a
+method-minus-top-K difference panel.  The post-check figure was rendered
+directly from the immutable histogram table as
+`proposal_loglikelihood_histogram_differences.{png,pdf}`.  It shows changes
+near `log L=-5` to `+5` that the original `-82` to `+5` common axis concealed;
+the generic tail methods remove more intermediate-likelihood mass and add
+high-likelihood-bin mass, while the query unions make smaller redistributions.
+Ruff and whitespace validation pass; no inference or candidate selection
+default changed.
+
 ## 2026-08-27 cont.270 — diversified-proposal likelihood histograms prepared
 
 New `scripts/plot_infer_v1_proposal_histograms.py` reconstructs the exact same
