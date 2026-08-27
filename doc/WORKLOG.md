@@ -2,6 +2,37 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-27 cont.275 — flatter selection forms evaluated at epsilon zero
+
+CIP job **16042055** completed successfully in 4m19s (exit 0) and evaluated
+all 60 seeded K=16,384 supports against exact `log Z=-7.011335485`.  Because
+this screen uses the shared 4,194,304-score deep pool rather than the original
+production 131,072 prefilter, its deterministic deep top-K reference captures
+65.2342% of exact posterior target mass; this is intentionally different from
+the 62.4145% production-support number in the earlier attached figure.
+
+Gaussian weighting is the only form that remains competitive, but it does not
+produce a robust improvement.  At T=0.5 its candidate-seed p10/median/p90
+capture is 65.2169/65.2286/65.2609%; only two of five seeds exceed deep top-K,
+and the largest gain is just 0.0307 percentage points.  Gaussian T=1.0 and 1.5
+have median capture 65.2042% and 65.0398%.  Their epsilon-zero likelihood-
+histogram TV from the exact target is approximately 0.261--0.263.
+
+Global flattening is otherwise strongly harmful.  Exponential median capture
+falls from 63.2521% at T=0.5 to 57.7202% at T=1.0 and 49.6740% at T=1.5;
+the logistic shoulder is numerically almost identical because the selected
+boundary lies in its exponential asymptotic regime.  Cauchy's polynomial tail
+lets the multiplicity of the 4.2-million pool dominate, yielding only
+10.1188%, 9.0110%, and 7.9500% median capture.  Its proposal histograms are
+also highly seed-variable.
+
+The requested 4x3 first-panel remake shows exact target p, median epsilon-zero
+local q, and candidate-seed p10--p90 for every form/temperature.  At epsilon
+zero, q is the target restricted and renormalized on selected atoms; it is a
+support-shape diagnostic only and cannot yield unbiased evidence because it
+has zero probability on the uncaptured 34.7--92.0% target mass.  Infer V1 is
+unchanged.
+
 ## 2026-08-27 cont.274 — flatter selection-family epsilon-zero screen prepared
 
 The observation-514716 selection diagnostic now compares four simple global
