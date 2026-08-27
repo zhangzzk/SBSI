@@ -2,6 +2,35 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-27 cont.260 — draw-level Infer V1 sampling visualization added
+
+`sbsi/sampling_diagnostics.py` now evaluates and retains the exact central-view
+quantities needed to inspect an adapted proposal: the flow-only conditional
+`log L`, ordinary importance log weight `log(pi Pdet L/q)`, proposal atom and
+mixture probability, local/global membership, and detected-population
+normalization.  For each nested M prefix it reports the ordinary log-evidence
+estimate, ESS, peak normalized weight, outside-local and global-draw evidence
+fractions, and unique-atom count.  The plot deliberately compares a histogram
+with equal proposal-draw mass to the same `log L` bins weighted by normalized
+evidence mass; it does not mislabel a histogram as the scalar evidence.
+
+`scripts/plot_infer_v1_sampling.py` is a read-only diagnostic tied to an
+immutable completed result.  It verifies all referenced scene, model, cache,
+proposal, and mock hashes, reconstructs the same compiled Infer V1 proposal at
+the saved raw-mean centre, audits a deterministic 64-object pool, and chooses
+distinct typical-ESS, p10-like low-ESS, and minimum-ESS examples.  It writes
+draw arrays, JSON metrics, and 300-dpi PNG plus vector PDF figures for nested
+M=4,096/8,192/16,384.  Keeping this in a separate diagnostic entry point leaves
+the frozen production runner and its strict saved-mock implementation gate
+unchanged.
+
+`jobs/job_infer_v1_sampling_visualization.sh` requests one V100 for the small
+GPU audit and points only to the completed one-million closure and a new output
+root.  Focused validation passes: nine sampling/config tests, Ruff, Bash syntax,
+Python compilation/help smoke tests, and whitespace checks.  The diagnostic
+module lazily imports Matplotlib, so it does not add a plotting dependency to
+the core inference import path.
+
 ## 2026-08-27 cont.259 — one-million-object Infer V1 likelihood closure completed
 
 The complete dependency chain (preparation **16034315**, two-V100 inference

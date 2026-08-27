@@ -95,3 +95,13 @@ def test_one_million_closure_uses_infer_v1_on_two_v100s():
     assert "run_partition 1 500000 1000000" in infer
     assert "observations_000000_499999" in combine
     assert "observations_500000_999999" in combine
+
+
+def test_sampling_visualization_uses_nested_infer_v1_draws_on_v100():
+    job = (ROOT / "jobs" / "job_infer_v1_sampling_visualization.sh").read_text()
+
+    assert "gpu:v100:1" in job
+    assert "infer_v1_fs2_n1m_closure_v1" in job
+    assert '"$closure/combined/result.json"' in job
+    assert "--pool-size 64 --pool-seed 9101 --examples 3" in job
+    assert "--ladder 4096 8192 16384 --device cuda" in job
