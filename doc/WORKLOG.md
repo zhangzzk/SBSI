@@ -2,6 +2,86 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.320 — the first conditioned-DM held-out gate fails narrowly in coverage, while source diagnostics replace a misleading prior-reference gate
+
+**Measured result.** Held-out job 16121678 completed in 8m03s on rows
+25,000:25,512 with `K=131,072`, exact `S=16,384`, `M=16,384`, proposal seed
+8701, and diagnostic seed 7008704. The fixed conditioned `T1:T2:prior =
+4:3:1` deterministic mixture reduced complement relative SE by a factor of
+about 15 at the median: its p10/median/p90 relative SE was
+`0.0130 / 0.0220 / 0.0608`, versus `0.0403 / 0.0879 / 0.3070` for prior
+sampling, and the paired ratio was `0.147 / 0.258 / 0.413`. Pareto-k was
+defined for all 512 objects and had p10/median/p90
+`0.0668 / 0.299 / 0.647`.
+
+The preregistered reliability gate nevertheless **fails**: only 76.6% are
+below k=0.5 (required 90%) and 93.6% are below k=0.7 (required 99%), leaving
+33 objects above k=0.7. The complement-relative-SE median and p90 also exceed
+the recorded `0.00882 / 0.0268` thresholds at this one-eighth production draw
+depth. Draw-depth projection is allowed for planning, not promotion: it says
+roughly 84k--102k draws would meet the SE thresholds, but cannot repair k.
+Adding the exact-stratum term already known without Monte Carlo gives total
+relative-SE p10/median/p90 `0.0081 / 0.0132 / 0.0211`; this distinction is
+reported but does not change the failed complement gate.
+
+**Failure localization.** The sharp component's complement normalization mass
+was `0.191 / 0.812 / 0.924` at p10/median/p90, while the `T=2` bridge was
+`0.696 / 0.959 / 0.980`. Of the 33 k failures, 29 are in the lowest quartile
+of `T=1` complement mass. Spearman correlation between k and that mass is
+-0.617, and between relative SE and mass is -0.803. Failed objects have median
+`T=1` complement mass 0.0745 versus 0.825 for passing objects. The proposal is
+therefore still too concentrated precisely when the exact stratum captures
+most of its sharp mass; the next development arm adds a broader temperature
+bridge rather than merely increasing draws.
+
+**Agreement-gate correction.** The paired DM-minus-prior z statistic had mean
+0.374 and RMS 1.510, apparently failing the old `|mean| <= 0.1` and
+`0.8 <= RMS <= 1.2` gates. That comparator is not a stable bias oracle here.
+Its z distribution has skewness 4.77 and excess kurtosis 53.6; one object has
+z=19.2, prior k=3.78, and a prior estimate only 6% of the DM estimate, while
+the discrepancy is just 0.256% of the object's exact-plus-DM total. Removing
+the five `|z| > 5` cases gives mean 0.295 and RMS 1.144. Prior sampling lands
+below the exact prefilter-complement sum in 306/512 objects despite an
+aggregate sampled/exact ratio of 1.018, the expected signature of a typically
+low, rare-jump reference. The prior arm remains a variance baseline, but an
+independent exact blocked oracle will be used for confirmation; no failed gate
+is reinterpreted as a pass.
+
+**Files and performance instrumentation.** `sbsi/catalogue_sampling.py` now
+keeps all block/component indices and balance probabilities on the proposal
+device until one transfer per object, removing hundreds of small GPU-host
+synchronizations without changing the fixed streams or probabilities.
+`sbsi/complement_diagnostic.py` records wall time by candidate query,
+prefilter flow, both samplers, both target-flow passes, and reduction. It also
+reports, for every source, mean and weighted mean `c/qbar`, sample variance,
+deterministic-mixture variance contribution and fraction, Pareto k, maximum
+and p99, top-1%-weight source fraction, and target contribution fraction.
+`tests/test_complement_diagnostic.py` checks the timing schema and that source
+target, variance, and top-weight fractions each close to one.
+
+**Validation and artifacts.** The immutable result is
+`complement_tail_dm_mis_heldout25k_v1/results/rows25000_25512_seed8701_fixed_dm_v1`
+under the project catalogue-prior directory. Login-node validation after the
+instrumentation change:
+
+```text
+python -m compileall -q sbsi scripts tests                         clean
+ruff check <changed Python and test files>                         clean
+/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python \
+  -m pytest tests -q                                               209 passed,
+                                                                  2 skipped
+bash -n <diagnostic and estimator wrappers>                        clean
+git diff --check                                                   clean
+```
+
+**Next steps.** First rerun the identical development window and recipe with a
+new output tag to verify numerical identity, measure the synchronization
+speedup, and identify which source dominates variance. Then screen a fixed
+`T=4` bridge on these development rows. Rows 25,000:25,512 are now development
+data and cannot provide final confirmation. Any selected recipe must pass on
+a fresh, predeclared window and an outcome-independent exact-oracle subset
+before a 25,000-object estimator comparison or release promotion.
+
 ## 2026-08-30 cont.319 — conditioned deterministic MIS removes exact-stratum waste and makes the whole-catalogue tail recipe fixed and auditable
 
 **Why.** The completed 512-object complement diagnostic, job 16121435, made

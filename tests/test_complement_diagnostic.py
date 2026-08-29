@@ -333,6 +333,16 @@ def test_partition_uses_absolute_ids_once_and_reports_production_components():
     assert diagnostic.metadata["flow_atom_chunk"] == 4096
     assert diagnostic.metadata["tail_proposal_device"] == "cpu"
     assert diagnostic.metadata["tail_proposal_atom_chunk"] == 262144
+    assert diagnostic.metadata["elapsed_seconds"] >= 0.0
+    assert set(diagnostic.metadata["phase_seconds"]) == {
+        "candidate_query",
+        "prefilter_flow",
+        "prior_draw",
+        "prior_flow",
+        "tail_proposal_draw",
+        "tail_proposal_flow",
+        "reduction",
+    }
     for name in TAIL_PROPOSAL_RECIPE.component_names:
         assert f"tail_proposal_component_complement_mass_{name}" in diagnostic.table
     assert np.isfinite(
@@ -341,6 +351,22 @@ def test_partition_uses_absolute_ids_once_and_reports_production_components():
         ]
     ).all()
     assert "mass_complement_tail_minus_prior_z" in diagnostic.table
+    for _, row in diagnostic.table.iterrows():
+        target = sum(
+            row[f"tail_proposal_component_target_contribution_fraction_{name}"]
+            for name in TAIL_PROPOSAL_RECIPE.component_names
+        )
+        variance = sum(
+            row[f"tail_proposal_component_variance_fraction_{name}"]
+            for name in TAIL_PROPOSAL_RECIPE.component_names
+        )
+        top = sum(
+            row[f"tail_proposal_top_1_percent_source_fraction_{name}"]
+            for name in TAIL_PROPOSAL_RECIPE.component_names
+        )
+        assert target == pytest.approx(1.0)
+        assert variance == pytest.approx(1.0)
+        assert top == pytest.approx(1.0)
     summary = diagnostic.summary()
     assert set(summary["tail_proposal_component_complement_mass_percentiles"]) == set(
         TAIL_PROPOSAL_RECIPE.component_names
@@ -349,3 +375,6 @@ def test_partition_uses_absolute_ids_once_and_reports_production_components():
     assert summary["tail_proposal_minus_prior_z_mean"] is not None
     assert summary["tail_proposal_minus_prior_z_rms"] is not None
     assert summary["pareto_k_tail_proposal_complement_undefined"] == 2
+    assert set(summary["tail_proposal_component_variance_fraction_percentiles"]) == set(
+        TAIL_PROPOSAL_RECIPE.component_names
+    )

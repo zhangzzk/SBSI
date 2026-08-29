@@ -1767,8 +1767,12 @@ class WholeCatalogueProxy:
                 np.nextafter(1.0, 0.0),
             )
 
-        drawn_indices = np.empty(len(uniforms), dtype=np.int64)
-        drawn_probability = np.empty(len(uniforms), dtype=np.float64)
+        drawn_indices_device = torch.empty(
+            len(uniforms), dtype=torch.long, device=self.a1.device
+        )
+        drawn_probability_device = torch.empty(
+            len(uniforms), dtype=torch.float64, device=self.a1.device
+        )
         mixture_weight = torch.as_tensor(
             recipe.component_weights,
             dtype=torch.float64,
@@ -1807,12 +1811,17 @@ class WholeCatalogueProxy:
                     score = (
                         self.log_base[start:stop] + float(beta) * likelihood
                     ).masked_fill(mask, -torch.inf)
-                    if bool(torch.isfinite(score).any()):
+                    if block_probability[component, int(block)] > 0.0:
                         within.append(torch.softmax(score, dim=0))
                     else:
                         within.append(torch.zeros_like(score))
                 within.append(prior_within)
                 within_probability = torch.stack(within)
+                block_component_probability = torch.as_tensor(
+                    block_probability[:, int(block)],
+                    dtype=torch.float64,
+                    device=self.a1.device,
+                )[:, None]
 
                 for component in range(len(recipe.component_names)):
                     draws = np.flatnonzero(
@@ -1820,6 +1829,9 @@ class WholeCatalogueProxy:
                     )
                     if not len(draws):
                         continue
+                    draw_positions = torch.as_tensor(
+                        draws, dtype=torch.long, device=self.a1.device
+                    )
                     cumulative = torch.cumsum(
                         within_probability[component], dim=0
                     )
@@ -1833,18 +1845,19 @@ class WholeCatalogueProxy:
                         ),
                         right=True,
                     ).clamp(max=stop - start - 1)
-                    drawn_indices[draws] = self.active[start + local].cpu().numpy()
+                    drawn_indices_device[draw_positions] = self.active[start + local]
                     actual_component_probability = (
-                        torch.as_tensor(
-                            block_probability[:, int(block)],
-                            dtype=torch.float64,
-                            device=self.a1.device,
-                        )[:, None]
-                        * within_probability[:, local]
+                        block_component_probability * within_probability[:, local]
                     )
-                    drawn_probability[draws] = (
+                    drawn_probability_device[draw_positions] = (
                         mixture_weight[:, None] * actual_component_probability
-                    ).sum(dim=0).cpu().numpy()
+                    ).sum(dim=0)
+
+        # Keep block/component work on one device stream; synchronizing here
+        # once per object avoids hundreds of tiny host transfers per catalogue
+        # pass at production draw depth.
+        drawn_indices = drawn_indices_device.cpu().numpy()
+        drawn_probability = drawn_probability_device.cpu().numpy()
 
         if not np.isfinite(drawn_probability).all() or (drawn_probability <= 0.0).any():
             raise RuntimeError("conditioned MIS produced an invalid balance probability")

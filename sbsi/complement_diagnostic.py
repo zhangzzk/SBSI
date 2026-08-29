@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 import inspect
+import time
 from typing import Optional
 
 import numpy as np
@@ -48,12 +49,43 @@ class ComplementDiagnostic:
 
         tail_recipe = self.metadata.get("tail_proposal")
         component_mass = None
+        component_target = None
+        component_variance = None
+        component_k = None
+        component_top = None
         if tail_recipe is not None:
+            names = tail_recipe["component_names"]
             component_mass = {
                 name: percentiles(
                     frame[f"tail_proposal_component_complement_mass_{name}"]
                 )
-                for name in tail_recipe["component_names"]
+                for name in names
+            }
+            component_target = {
+                name: percentiles(
+                    frame[
+                        f"tail_proposal_component_target_contribution_fraction_{name}"
+                    ]
+                )
+                for name in names
+            }
+            component_variance = {
+                name: percentiles(
+                    frame[f"tail_proposal_component_variance_fraction_{name}"]
+                )
+                for name in names
+            }
+            component_k = {
+                name: percentiles(
+                    frame[f"pareto_k_tail_proposal_component_{name}"]
+                )
+                for name in names
+            }
+            component_top = {
+                name: percentiles(
+                    frame[f"tail_proposal_top_1_percent_source_fraction_{name}"]
+                )
+                for name in names
             }
         paired_z = None
         if "mass_complement_tail_minus_prior_z" in frame:
@@ -168,6 +200,14 @@ class ComplementDiagnostic:
                 percentiles(paired_z) if paired_z is not None else None
             ),
             "tail_proposal_component_complement_mass_percentiles": component_mass,
+            "tail_proposal_component_target_contribution_fraction_percentiles": (
+                component_target
+            ),
+            "tail_proposal_component_variance_fraction_percentiles": (
+                component_variance
+            ),
+            "pareto_k_tail_proposal_component_percentiles": component_k,
+            "tail_proposal_top_1_percent_source_fraction_percentiles": component_top,
             "flow_evaluations": int(self.metadata["flow_evaluations"]),
         }
 
@@ -287,6 +327,16 @@ def diagnose_complement(
     lookup = np.zeros(len(proposal.prior_weights), dtype=bool)
     rows = []
     flow_evaluations = 0
+    started = time.perf_counter()
+    phase_seconds = {
+        "candidate_query": 0.0,
+        "prefilter_flow": 0.0,
+        "prior_draw": 0.0,
+        "prior_flow": 0.0,
+        "tail_proposal_draw": 0.0,
+        "tail_proposal_flow": 0.0,
+        "reduction": 0.0,
+    }
 
     for object_start in range(start, stop, object_chunk):
         object_stop = min(object_start + object_chunk, stop)
@@ -296,6 +346,7 @@ def diagnose_complement(
         )
         observed_targets = likelihood.observed_target_tensor(observed)
 
+        phase_started = time.perf_counter()
         prefilter = proposal.candidates(
             observed,
             n_candidates=prefilter_candidates,
@@ -307,7 +358,9 @@ def diagnose_complement(
             prefilter_candidates=prefilter_candidates,
             torch_device=torch_device,
         )
+        phase_seconds["candidate_query"] += time.perf_counter() - phase_started
 
+        phase_started = time.perf_counter()
         ones = np.ones_like(prefilter.indices, dtype=np.float64)
         prefilter_log_c = (
             likelihood.log_importance_weights_tensor(
@@ -326,17 +379,21 @@ def diagnose_complement(
             .astype(np.float64)
         )
         flow_evaluations += int(prefilter.indices.size)
+        phase_seconds["prefilter_flow"] += time.perf_counter() - phase_started
 
         # Both arms use production samplers, the same absolute object ids, the
         # same seed, and the same fixed-width record's atom-uniform column.
         # Their estimates are therefore paired by common random numbers even
         # when this call covers only a slice of a larger catalogue.
+        phase_started = time.perf_counter()
         prior_draw = proposal.draw_stratified(
             stratum,
             n_draws=n_global_draws,
             seed=seed,
             object_ids=absolute_ids,
         )
+        phase_seconds["prior_draw"] += time.perf_counter() - phase_started
+        phase_started = time.perf_counter()
         prior_log_ratio = (
             likelihood.log_importance_weights_tensor(
                 observed,
@@ -354,10 +411,12 @@ def diagnose_complement(
             .astype(np.float64)
         )
         flow_evaluations += int(prior_draw.indices.size)
+        phase_seconds["prior_flow"] += time.perf_counter() - phase_started
 
         tail_draw = None
         tail_ratio = None
         if include_tail_proposal:
+            phase_started = time.perf_counter()
             tail_draw = proposal.draw_tilted_mis(
                 stratum,
                 observed,
@@ -366,6 +425,10 @@ def diagnose_complement(
                 object_ids=absolute_ids,
                 device=likelihood.flow_model.device,
             )
+            phase_seconds["tail_proposal_draw"] += (
+                time.perf_counter() - phase_started
+            )
+            phase_started = time.perf_counter()
             tail_log_ratio = (
                 likelihood.log_importance_weights_tensor(
                     observed,
@@ -384,7 +447,11 @@ def diagnose_complement(
             )
             flow_evaluations += int(tail_draw.indices.size)
             tail_ratio = np.exp(tail_log_ratio)
+            phase_seconds["tail_proposal_flow"] += (
+                time.perf_counter() - phase_started
+            )
 
+        phase_started = time.perf_counter()
         for row in range(len(observed)):
             prefilter_ids = prefilter.indices[row]
             stratum_ids = stratum.indices[row]
@@ -438,8 +505,80 @@ def diagnose_complement(
                     if np.isfinite(mass_difference_se) and mass_difference_se > 0.0
                     else float("nan")
                 )
+                component_records = {}
+                component_variance = []
+                top_count = max(1, int(np.ceil(0.01 * len(tail_contribution))))
+                top_positions = np.argpartition(
+                    tail_contribution, len(tail_contribution) - top_count
+                )[-top_count:]
+                for component, name in enumerate(
+                    TAIL_PROPOSAL_RECIPE.component_names
+                ):
+                    component_values = tail_contribution[
+                        source_component == component
+                    ]
+                    count = len(component_values)
+                    alpha = count / len(tail_contribution)
+                    sample_variance = (
+                        float(component_values.var(ddof=1))
+                        if count > 1
+                        else float("nan")
+                    )
+                    variance_contribution = (
+                        alpha**2 * sample_variance / count
+                        if count > 1
+                        else float("nan")
+                    )
+                    component_variance.append(variance_contribution)
+                    component_k, component_maximum = tail_of(component_values)
+                    component_records.update(
+                        {
+                            f"mass_tail_proposal_component_mean_{name}": float(
+                                component_values.mean()
+                            ),
+                            f"mass_tail_proposal_component_weighted_mean_{name}": (
+                                float(alpha * component_values.mean())
+                            ),
+                            f"mass_tail_proposal_component_sample_variance_{name}": (
+                                sample_variance
+                            ),
+                            f"mass_tail_proposal_component_variance_{name}": (
+                                variance_contribution
+                            ),
+                            f"pareto_k_tail_proposal_component_{name}": component_k,
+                            f"maximum_ratio_tail_proposal_component_{name}": (
+                                component_maximum
+                            ),
+                            f"p99_ratio_tail_proposal_component_{name}": float(
+                                np.percentile(component_values, 99)
+                            ),
+                            f"tail_proposal_top_1_percent_source_fraction_{name}": (
+                                float(
+                                    np.mean(source_component[top_positions] == component)
+                                )
+                            ),
+                        }
+                    )
+                total_component_variance = float(np.sum(component_variance))
+                for component, name in enumerate(
+                    TAIL_PROPOSAL_RECIPE.component_names
+                ):
+                    weighted_mean = component_records[
+                        f"mass_tail_proposal_component_weighted_mean_{name}"
+                    ]
+                    component_records[
+                        f"tail_proposal_component_target_contribution_fraction_{name}"
+                    ] = weighted_mean / mass_tail if mass_tail > 0.0 else float("nan")
+                    component_records[
+                        f"tail_proposal_component_variance_fraction_{name}"
+                    ] = (
+                        component_variance[component] / total_component_variance
+                        if total_component_variance > 0.0
+                        else float("nan")
+                    )
                 record.update(
                     {
+                        **component_records,
                         "pareto_k_tail_proposal_complement": k_tail,
                         "maximum_ratio_tail_proposal_complement": max_tail,
                         "mass_complement_tail_proposal": mass_tail,
@@ -489,6 +628,7 @@ def diagnose_complement(
                     "draws_outside_prefilter": int(outside.sum()),
                 }
             )
+        phase_seconds["reduction"] += time.perf_counter() - phase_started
 
     metadata = {
         "center": [float(center[0]), float(center[1])],
@@ -513,5 +653,9 @@ def diagnose_complement(
             asdict(TAIL_PROPOSAL_RECIPE) if include_tail_proposal else None
         ),
         "tail_proposal_common_random_numbers": bool(include_tail_proposal),
+        "elapsed_seconds": float(time.perf_counter() - started),
+        "phase_seconds": {
+            name: float(value) for name, value in phase_seconds.items()
+        },
     }
     return ComplementDiagnostic(pd.DataFrame(rows), metadata)
