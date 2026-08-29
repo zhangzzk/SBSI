@@ -2,6 +2,90 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.321 — source variance selects a fixed T=4 bridge; final estimator rows move beyond proposal development
+
+**Reproducibility rerun.** Job 16121716 reran the cont.320 development window
+and original `T1:T2:prior = 4:3:1` recipe after the sampler batching and source
+instrumentation change. All 29 pre-existing scientific columns agree with job
+16121678 to absolute error at most `3.5e-14`; the stochastic streams and
+balance probabilities are unchanged. Scheduler wall time was 8m02s versus
+8m03s, so there is no measurable end-to-end speedup to claim. Instrumented
+wall time was 440.6s: conditioned proposal construction consumed 376.0s,
+prefilter flow 35.2s, prior drawing 10.4s, reduction 8.6s, candidate queries
+5.0s, and the two sampled-flow passes 2.7s each. Future efficiency comparisons
+must therefore include proposal construction rather than counting only target
+flow evaluations.
+
+**Source diagnosis.** Across all 512 objects, median target-contribution
+fractions were 0.613 / 0.354 / 0.030 for `T=1 / T=2 / prior`; median variance
+fractions were 0.601 / 0.332 / 0.030, and source-specific k medians were
+0.263 / 0.314 / 0.543. The aggregate failure subset is qualitatively different.
+For its 33 objects above k=0.7, median target fractions were
+0.406 / 0.427 / 0.130, variance fractions were 0.016 / 0.447 / 0.472, and
+source k values were 0.532 / 0.812 / 1.840. Broad draws carry the missing
+target but are not yet targeted enough; simply increasing `T=1` cannot solve
+that failure.
+
+**New development recipe.** The next fixed screen is
+
+```text
+components       proxy T=1       proxy T=2       proxy T=4       prior pi
+cycle counts         3               2               2               1
+balance weights     3/8             1/4             1/4             1/8
+```
+
+The source cycle `(T1,T2,T4,pi,T2,T1,T4,T1)` preserves six of the old eight
+source slots, including the prior slot, for maximum common-random-number
+continuity. A quarter of the balance density is now a material broad bridge;
+one eighth would be unlikely to reduce 33 failures to the required five or
+fewer, while shifting four slots to `T=1` is contradicted by the nearly equal
+`T=1` and `T=2` target shares on failures. This is a directional development
+choice, not a fitted optimum: introducing `T=4` changes `qbar`, so old
+source-variance fractions cannot identify its optimal weight.
+
+**Files and invariants.** `sbsi/catalogue_sampling.py` generalizes the recipe
+validator and fixed sampler to any aligned proxy sequence plus a final prior,
+while explicitly requiring that final component to be named `prior` and the
+implemented base measure to be `prior_times_detection`. The exported recipe
+is now `T1:T2:T4:prior = 3:2:2:1`; every component remains separately
+conditioned on the exact complement and every draw still uses the full balance
+mixture denominator. `sbsi/catalogue_null.py` now passes and records a distinct
+fixed proposal-scoring atom chunk of 262,144 rather than leaving that important
+376-second execution phase implicit behind a function default; the flow atom
+chunk remains the separate configured value 4,096. `scripts/run_inference.py`
+copies both into resolved provenance. Tests and `doc/CATALOGUE_PRIOR.md` cover
+the fourth component, source counts, temperatures, underflow fallback, dynamic
+diagnostic shapes, and execution routing.
+
+The diagnostic wrapper's 25,000:25,512 default is now labelled development,
+because these rows selected the bridge. Its tag names the DM4 recipe. The exact
+oracle confirmation is reserved for fresh rows 25,512:26,024. The final paired
+25,000-object estimator wrapper moves to rows 26,024:51,024, disjoint from both
+development and confirmation, and its default tag also names the recipe.
+
+**Validation.** Login-node validation after the code and protocol change:
+
+```text
+ruff check <changed Python and tests>                              clean
+pytest tests/test_catalogue_sampling.py tests/test_catalogue_null.py \
+  tests/test_complement_diagnostic.py tests/test_release_config.py  79 passed
+/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python \
+  -m pytest tests -q                                               209 passed,
+                                                                  2 skipped
+bash -n <diagnostic and estimator wrappers>                        clean
+git diff --check                                                   clean
+```
+
+**Limitations and next steps.** DM4 has not yet passed a scientific gate. Run
+it first on the contaminated development rows at the same `M=16,384`, compare
+all original gates plus component variance and elapsed time, and reject it if
+it does not materially reduce the 33 high-k cases. If it succeeds, freeze the
+exact-oracle implementation and run once on rows 25,512:26,024 at production
+depth before touching the final estimator window. If it fails, the next design
+is a predeclared proposal-only route using `T=1` complement mass, with fixed
+easy and hard cycles; no threshold may be tuned on the eventual confirmation
+or estimator rows.
+
 ## 2026-08-30 cont.320 — the first conditioned-DM held-out gate fails narrowly in coverage, while source diagnostics replace a misleading prior-reference gate
 
 **Measured result.** Held-out job 16121678 completed in 8m03s on rows

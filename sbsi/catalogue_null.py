@@ -22,6 +22,7 @@ from .catalogue_sampling import (
     CoalescedProposalDraw,
     DefensiveLocalProposal,
     ProposalDraw,
+    TAIL_PROPOSAL_ATOM_CHUNK,
     TAIL_PROPOSAL_RECIPE,
     pareto_tail_index,
     select_adaptive_draw_counts,
@@ -213,6 +214,7 @@ class AdaptiveSection5Result:
     proposal_component_complement_mass: Optional[np.ndarray] = field(
         default=None, repr=False
     )
+    tail_proposal_atom_chunk: Optional[int] = None
     proposal_prefilter_candidates: Optional[int] = None
     allocation_method: str = "production_prefix"
     pilot_draws: Optional[int] = None
@@ -436,6 +438,11 @@ class AdaptiveSection5Result:
             object.__setattr__(
                 self, "proposal_component_complement_mass", complement_mass
             )
+        if self.estimator_mode == "tilted_stratified":
+            if self.tail_proposal_atom_chunk is None or self.tail_proposal_atom_chunk <= 0:
+                raise ValueError("tilted estimator proposal atom chunk must be positive")
+        elif self.tail_proposal_atom_chunk is not None:
+            raise ValueError("proposal atom chunk requires tilted_stratified mode")
         object.__setattr__(self, "score", score)
         object.__setattr__(self, "information", information)
         object.__setattr__(self, "draw_counts", counts)
@@ -545,6 +552,7 @@ class AdaptiveSection5Result:
         return {
             "component_names": list(self.proposal_component_names),
             "component_weights": list(self.proposal_component_weights),
+            "atom_chunk": int(self.tail_proposal_atom_chunk),
             "component_counts": count_rows,
             "preconditioning_complement_mass_percentiles": {
                 name: np.percentile(
@@ -1945,6 +1953,7 @@ def run_adaptive_section5(
     object_id_offset: int = 0,
     object_chunk: int = 16,
     atom_chunk: int = 4096,
+    tail_proposal_atom_chunk: int = TAIL_PROPOSAL_ATOM_CHUNK,
 ) -> AdaptiveSection5Result:
     """Fast local Section 5 path with object-specific nested draw stopping.
 
@@ -1973,7 +1982,12 @@ def run_adaptive_section5(
         raise ValueError("h must be finite and positive")
     if not ladder or ladder[0] <= 0:
         raise ValueError("adaptive draw ladder must be positive")
-    if n_candidates <= 0 or object_chunk <= 0 or atom_chunk <= 0:
+    if (
+        n_candidates <= 0
+        or object_chunk <= 0
+        or atom_chunk <= 0
+        or tail_proposal_atom_chunk <= 0
+    ):
         raise ValueError("candidate and chunk sizes must be positive")
     if object_id_offset < 0:
         raise ValueError("object_id_offset must be non-negative")
@@ -2224,6 +2238,7 @@ def run_adaptive_section5(
                     # independent backends.  The latter belongs beside the flow
                     # even when scipy performs the former.
                     device=likelihood.flow_model.device,
+                    atom_chunk=tail_proposal_atom_chunk,
                 )
                 component_id = np.asarray(draw.component_id, dtype=np.int64)
                 complement_mass = np.asarray(
@@ -2578,6 +2593,11 @@ def run_adaptive_section5(
         ),
         proposal_component_counts=proposal_component_counts,
         proposal_component_complement_mass=proposal_component_complement_mass,
+        tail_proposal_atom_chunk=(
+            int(tail_proposal_atom_chunk)
+            if estimator_mode == "tilted_stratified"
+            else None
+        ),
         proposal_prefilter_candidates=(
             None
             if proposal_prefilter_candidates is None

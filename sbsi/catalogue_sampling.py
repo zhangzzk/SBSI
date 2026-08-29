@@ -256,11 +256,11 @@ class ProposalCoordinateTable:
 class TailProposalRecipe:
     """Immutable provenance for complement-conditioned deterministic MIS.
 
-    The first two components retain the detected-prior base measure and temper
-    only the observation-dependent Gaussian proxy likelihood.  The final
-    component is the catalogue prior.  ``component_cycle`` fixes source counts
-    in every complete cycle; all samples are nevertheless weighted by the
-    balance-mixture probability, not by their source-component probability.
+    Every component except the last retains the detected-prior base measure
+    and tempers only the observation-dependent Gaussian proxy likelihood.  The
+    final component is the catalogue prior.  ``component_cycle`` fixes source
+    counts in every complete cycle; all samples are nevertheless weighted by
+    the balance-mixture probability, not by their source probability.
     """
 
     name: str
@@ -281,10 +281,18 @@ class TailProposalRecipe:
             for value in self.component_betas
         )
         cycle = tuple(int(value) for value in self.component_cycle)
-        if len(names) != 3 or len(weights) != 3 or len(betas) != 3:
-            raise ValueError("the tail recipe needs T1, T2, and prior components")
+        if (
+            len(names) < 2
+            or len(weights) != len(names)
+            or len(betas) != len(names)
+        ):
+            raise ValueError(
+                "the tail recipe needs aligned proxy and final-prior components"
+            )
         if len(set(names)) != len(names) or any(not name for name in names):
             raise ValueError("tail-recipe component names must be unique and non-empty")
+        if names[-1] != "prior":
+            raise ValueError("the final tail-recipe component must be named prior")
         if not all(np.isfinite(weights)) or any(value <= 0.0 for value in weights):
             raise ValueError("tail-recipe component weights must be finite and positive")
         if not np.isclose(sum(weights), 1.0, rtol=0.0, atol=1.0e-15):
@@ -301,6 +309,8 @@ class TailProposalRecipe:
             raise ValueError("tail-recipe cycle frequencies must equal component weights")
         if self.conditioning != "component":
             raise ValueError("tail components must be conditioned separately")
+        if self.base_measure != "prior_times_detection":
+            raise ValueError("proxy components must use the prior-times-detection base")
         if self.temperature_scope != "proxy_likelihood_only":
             raise ValueError("temperature must apply only to the proxy likelihood")
         if self.denominator != "balance_mixture":
@@ -327,12 +337,13 @@ class TailProposalRecipe:
 
 
 TAIL_PROPOSAL_RECIPE = TailProposalRecipe(
-    name="conditioned_dm_mis_t1_t2_prior_4_3_1",
-    component_names=("proxy_t1", "proxy_t2", "prior"),
-    component_weights=(0.5, 0.375, 0.125),
-    component_betas=(1.0, 0.5, None),
-    component_cycle=(0, 1, 0, 2, 1, 0, 1, 0),
+    name="conditioned_dm_mis_t1_t2_t4_prior_3_2_2_1",
+    component_names=("proxy_t1", "proxy_t2", "proxy_t4", "prior"),
+    component_weights=(0.375, 0.25, 0.25, 0.125),
+    component_betas=(1.0, 0.5, 0.25, None),
+    component_cycle=(0, 1, 2, 3, 1, 0, 2, 0),
 )
+TAIL_PROPOSAL_ATOM_CHUNK = 262144
 
 
 @dataclass(frozen=True)
@@ -1233,16 +1244,17 @@ class DefensiveLocalProposal:
         object_ids: Optional[np.ndarray] = None,
         device: Optional[str | torch.device] = None,
         recipe: TailProposalRecipe = TAIL_PROPOSAL_RECIPE,
-        atom_chunk: int = 262144,
+        atom_chunk: int = TAIL_PROPOSAL_ATOM_CHUNK,
     ) -> ProposalDraw:
         """Draw a complement-conditioned deterministic-mixture MIS stream.
 
-        The fixed production recipe draws four samples from the T=1 proxy,
-        three from the T=2 proxy, and one from ``pi`` in every eight-sample
-        cycle.  Each component is normalized separately on ``S^c`` before the
-        mixture is formed.  Every returned probability is the balance mixture
+        The fixed screening recipe draws three samples from the T=1 proxy, two
+        each from the T=2 and T=4 proxies, and one from ``pi`` in every
+        eight-sample cycle.  Each component is normalized separately on
+        ``S^c`` before the mixture is formed.  Every returned probability is
+        the balance mixture
 
-        ``qbar_C = 1/2 r1_C + 3/8 r2_C + 1/8 pi_C``,
+        ``qbar_C = 3/8 r1_C + 1/4 r2_C + 1/4 r4_C + 1/8 pi_C``,
 
         irrespective of which component generated that sample.  Fixed source
         counts make this deterministic-mixture estimator exactly unbiased and

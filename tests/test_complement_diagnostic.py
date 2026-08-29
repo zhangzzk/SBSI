@@ -146,18 +146,19 @@ def test_tail_index_is_undefined_rather_than_guessed():
 
 
 def test_fixed_component_standard_error_preserves_paired_groups():
-    component_id = np.repeat(np.arange(3), (4, 3, 2))
-    values = np.array([1.0, 2.0, 4.0, 5.0, 10.0, 13.0, 16.0, 7.0, 11.0])
+    counts = 2 * np.asarray(TAIL_PROPOSAL_RECIPE.component_counts)
+    component_id = np.repeat(np.arange(len(counts)), counts)
+    values = np.arange(1.0, len(component_id) + 1.0) ** 1.5
     expected_variance = sum(
         len(selected) * selected.var(ddof=1)
-        for component in range(3)
+        for component in range(len(counts))
         for selected in [values[component_id == component]]
     ) / len(values) ** 2
     assert _fixed_component_standard_error(values, component_id) == pytest.approx(
         np.sqrt(expected_variance)
     )
     assert np.isnan(
-        _fixed_component_standard_error(values[:7], component_id[:7])
+        _fixed_component_standard_error(values[:-2], component_id[:-2])
     )
 
 
@@ -246,18 +247,19 @@ class _DiagnosticProposal:
         ).copy()
         probability = np.full(indices.shape, 1.0 / 3.0)
         component_id = np.broadcast_to(schedule, indices.shape).copy()
-        complement_mass = np.column_stack(
-            (
-                0.20 + object_ids / 1_000_000.0,
-                0.70 + object_ids / 1_000_000.0,
-                np.full(len(object_ids), 0.90),
-            )
-        )
+        n_components = len(TAIL_PROPOSAL_RECIPE.component_names)
+        complement_mass = np.broadcast_to(
+            np.linspace(0.20, 0.80, n_components),
+            (len(object_ids), n_components),
+        ).copy()
+        complement_mass[:, :-1] += object_ids[:, None] / 1_000_000.0
+        complement_mass[:, -1] = 0.90
+        prior_component = n_components - 1
         return ProposalDraw(
             indices=indices,
             probability=probability,
             local_member=np.zeros_like(indices, dtype=bool),
-            global_component=component_id == 2,
+            global_component=component_id == prior_component,
             candidate_radius=candidates.radius,
             seed=seed,
             local_position=np.full(indices.shape, -1, dtype=np.int32),

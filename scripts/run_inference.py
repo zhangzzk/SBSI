@@ -24,6 +24,7 @@ from sbsi.catalogue_null import (
     estimate_one_step_adaptive_section5,
 )
 from sbsi.catalogue_sampling import (
+    TAIL_PROPOSAL_ATOM_CHUNK,
     TAIL_PROPOSAL_RECIPE,
     DefensiveLocalProposal,
     ProposalCoordinateTable,
@@ -354,6 +355,9 @@ def _resolved_pipeline_config(args, source: dict) -> dict:
             # manifest lists and callers cannot mutate the module constant.
             resolved["estimator"]["tail_proposal"] = json.loads(
                 json.dumps(asdict(TAIL_PROPOSAL_RECIPE))
+            )
+            resolved["execution"]["tail_proposal_atom_chunk"] = (
+                TAIL_PROPOSAL_ATOM_CHUNK
             )
     return resolved
 
@@ -720,8 +724,9 @@ def parse_args(argv=None):
             "complement; it requires the production-prefix allocation, a "
             "retained full ladder, and no finite-draw bias correction, and it "
             "marks the run as a custom pipeline.  'tilted_stratified' uses "
-            "the same split with the fixed component-conditioned T1/T2/prior "
-            "deterministic-MIS whole-catalogue complement recipe."
+            "the same split with the fixed component-conditioned "
+            "T1/T2/T4/prior deterministic-MIS whole-catalogue complement "
+            "recipe."
         ),
     )
     parser.add_argument("--adaptive-min-ess", type=float, default=32.0)
@@ -1511,6 +1516,7 @@ def main(argv=None):
         object_id_offset=int(args.observation_start),
         object_chunk=args.object_chunk,
         atom_chunk=args.atom_chunk,
+        tail_proposal_atom_chunk=TAIL_PROPOSAL_ATOM_CHUNK,
     )
     moment_path = output / "one_step_moments.npz"
     np.savez_compressed(

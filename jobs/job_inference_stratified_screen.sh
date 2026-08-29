@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Held-out estimator screen for the fixed conditioned deterministic-MIS tail.
+# Fresh estimator screen for the fixed conditioned deterministic-MIS tail.
 #
-# The frozen mock rows 25,000:50,000 are disjoint from the first 25,000 rows
-# used to choose the recipe. Run paired arms by changing only MODE:
+# Rows through 26,023 are reserved for proposal development and confirmation.
+# The default 26,024:51,024 window is a disjoint 25,000-row estimator screen.
+# Run paired arms by changing only MODE:
 #
 #   MODE=stratified sbatch jobs/job_inference_stratified_screen.sh
 #   MODE=tilted_stratified sbatch jobs/job_inference_stratified_screen.sh
@@ -40,11 +41,11 @@ case "$MODE" in
   *) echo "MODE must be stratified or tilted_stratified, got $MODE" >&2; exit 2 ;;
 esac
 
-OBSERVATION_START=${OBSERVATION_START:-25000}
-OBSERVATION_STOP=${OBSERVATION_STOP:-50000}
+OBSERVATION_START=${OBSERVATION_START:-26024}
+OBSERVATION_STOP=${OBSERVATION_STOP:-51024}
 K=${K:-16384}
 PROPOSAL_SEED=${PROPOSAL_SEED:-8701}
-TAG=${TAG:-${MODE}_rows${OBSERVATION_START}_${OBSERVATION_STOP}_seed${PROPOSAL_SEED}_fixed_dm_v1}
+TAG=${TAG:-${MODE}_rows${OBSERVATION_START}_${OBSERVATION_STOP}_seed${PROPOSAL_SEED}_dm4_t1_t2_t4_3_2_2_1_v1}
 output="$root/results/$TAG"
 
 for variable in OBSERVATION_START OBSERVATION_STOP K PROPOSAL_SEED; do

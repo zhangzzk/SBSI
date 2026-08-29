@@ -90,6 +90,10 @@ def test_tilted_screen_records_the_fixed_tail_recipe_without_mutating_release():
     assert resolved["estimator"]["tail_proposal"] == json.loads(
         json.dumps(RUNNER.asdict(RUNNER.TAIL_PROPOSAL_RECIPE))
     )
+    assert (
+        resolved["execution"]["tail_proposal_atom_chunk"]
+        == RUNNER.TAIL_PROPOSAL_ATOM_CHUNK
+    )
     assert resolved != source
 
 
@@ -122,7 +126,6 @@ def test_heldout_tail_jobs_pin_the_isolated_checkout_and_fixed_recipe():
     diagnostic_job = (ROOT / "jobs" / "job_complement_mass_diagnostic.sh").read_text()
     for job in (inference_job, diagnostic_job):
         assert "/home/z/Zekang.Zhang/SBSI-inference-sampler-night" in job
-        assert "OBSERVATION_START=${OBSERVATION_START:-25000}" in job
         assert "refusing to overwrite" in job
         assert "must be an unsigned integer" in job
         assert "PROPOSAL_SEED=${PROPOSAL_SEED:-8701}" in job
@@ -134,7 +137,10 @@ def test_heldout_tail_jobs_pin_the_isolated_checkout_and_fixed_recipe():
             assert f"${reserved}" not in job
         assert "--estimator-tilt-delta" not in job
         assert "--estimator-tilt-temperature" not in job
-    assert "OBSERVATION_STOP=${OBSERVATION_STOP:-50000}" in inference_job
+        assert "dm4_t1_t2_t4_3_2_2_1_v1" in job
+    assert "OBSERVATION_START=${OBSERVATION_START:-26024}" in inference_job
+    assert "OBSERVATION_STOP=${OBSERVATION_STOP:-51024}" in inference_job
+    assert "OBSERVATION_START=${OBSERVATION_START:-25000}" in diagnostic_job
     assert "OBSERVATION_STOP=${OBSERVATION_STOP:-25512}" in diagnostic_job
     assert "--diagnose-complement-tail-proposal" in diagnostic_job
     assert "16121540--16121542" in diagnostic_job

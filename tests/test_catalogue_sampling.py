@@ -863,10 +863,15 @@ def test_tilted_draws_are_nested_and_report_their_own_probability():
 def test_conditioned_dm_mis_reports_qbar_counts_nesting_and_split_streams():
     proposal, observed, candidates = _mis_fixture()
     recipe = TAIL_PROPOSAL_RECIPE
-    assert recipe.component_names == ("proxy_t1", "proxy_t2", "prior")
-    assert recipe.component_counts == (4, 3, 1)
+    assert recipe.component_names == (
+        "proxy_t1",
+        "proxy_t2",
+        "proxy_t4",
+        "prior",
+    )
+    assert recipe.component_counts == (3, 2, 2, 1)
     assert recipe.cycle_length == 8
-    assert recipe.proxy_temperatures == (1.0, 2.0)
+    assert recipe.proxy_temperatures == (1.0, 2.0, 4.0)
 
     long = proposal.draw_tilted_mis(
         candidates,
@@ -918,7 +923,8 @@ def test_conditioned_dm_mis_reports_qbar_counts_nesting_and_split_streams():
         )
         for prefix in range(recipe.cycle_length, 81, recipe.cycle_length):
             counts = np.bincount(
-                long.component_id[row, :prefix], minlength=3
+                long.component_id[row, :prefix],
+                minlength=len(recipe.component_names),
             )
             np.testing.assert_array_equal(
                 counts,
@@ -926,7 +932,8 @@ def test_conditioned_dm_mis_reports_qbar_counts_nesting_and_split_streams():
             )
     assert not long.local_member.any()
     np.testing.assert_array_equal(
-        long.global_component, long.component_id == 2
+        long.global_component,
+        long.component_id == len(recipe.component_names) - 1,
     )
 
     rows = np.array([2, 0])
@@ -958,13 +965,14 @@ def test_conditioned_dm_mis_temperature_preserves_detected_prior_base():
     value = observed.loc[0, ["x", "y"]].to_numpy(float)
     likelihood = proxy.proxy_likelihood(value).cpu().numpy()
     log_base = proxy.log_base.cpu().numpy()
-    score_t1, score_t2 = [
+    score_t1, score_t2, score_t4 = [
         value.cpu().numpy()
         for value in proxy.component_log_scores(value, TAIL_PROPOSAL_RECIPE)
     ]
     left, right = 0, 4
     np.testing.assert_allclose(score_t1, log_base + likelihood, rtol=0, atol=1e-14)
     np.testing.assert_allclose(score_t2, log_base + 0.5 * likelihood, rtol=0, atol=1e-14)
+    np.testing.assert_allclose(score_t4, log_base + 0.25 * likelihood, rtol=0, atol=1e-14)
     expected_difference = (
         log_base[left] - log_base[right]
         + 0.5 * (likelihood[left] - likelihood[right])
@@ -1032,8 +1040,11 @@ def test_conditioned_dm_mis_normalizes_proxy_components_after_underflow():
     components, qbar, masses, _ = _dense_conditioned_components(
         proposal, np.array([0.0]), np.array([0, 1])
     )
-    assert masses[0] == 0.0 and masses[1] == 0.0
-    np.testing.assert_array_equal(draw.component_complement_mass[0, :2], [0.0, 0.0])
+    assert np.all(masses[:-1] == 0.0)
+    np.testing.assert_array_equal(
+        draw.component_complement_mass[0, :-1],
+        np.zeros(len(TAIL_PROPOSAL_RECIPE.component_names) - 1),
+    )
     positions = np.searchsorted(proposal.active_indices, draw.indices[0])
     np.testing.assert_allclose(draw.probability[0], qbar[positions], atol=1e-15)
     # Separate log-domain conditioning keeps the proxy concentrated on atom 2;
@@ -1104,7 +1115,9 @@ def test_conditioned_dm_mis_blocking_and_stencil_streams_are_invariant():
         atom_chunk=3,
     )
     np.testing.assert_array_equal(view_a.component_id, view_b.component_id)
-    prior_source = view_a.component_id == 2
+    prior_source = (
+        view_a.component_id == len(TAIL_PROPOSAL_RECIPE.component_names) - 1
+    )
     np.testing.assert_array_equal(
         view_a.indices[prior_source], view_b.indices[prior_source]
     )
@@ -1142,6 +1155,16 @@ def test_conditioned_dm_mis_validates_recipe_support_and_full_support_sentinel()
             component_betas=(1.0, 0.5, None),
             component_cycle=(0, 1, 2),
         )
+    with pytest.raises(ValueError, match="final.*named prior"):
+        TailProposalRecipe(
+            name="invalid",
+            component_names=("proxy", "defense"),
+            component_weights=(0.5, 0.5),
+            component_betas=(1.0, None),
+            component_cycle=(0, 1),
+        )
+    with pytest.raises(ValueError, match="prior-times-detection"):
+        replace(TAIL_PROPOSAL_RECIPE, base_measure="prior")
 
     without_dispersion = DefensiveLocalProposal(
         replace(proposal.coordinates, dispersion=None), proposal.prior_weights

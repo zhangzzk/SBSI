@@ -1614,7 +1614,7 @@ def test_tilted_sampler_uses_flow_device_independent_of_candidate_backend(
     seen = []
 
     def recorded(*args, **kwargs):
-        seen.append(kwargs.get("device"))
+        seen.append((kwargs.get("device"), kwargs.get("atom_chunk")))
         return original(*args, **kwargs)
 
     monkeypatch.setattr(proposal, "draw_tilted_mis", recorded)
@@ -1623,10 +1623,12 @@ def test_tilted_sampler_uses_flow_device_independent_of_candidate_backend(
         proposal=proposal,
         candidate_backend=candidate_backend,
         draw_ladder=(2 * TAIL_PROPOSAL_RECIPE.cycle_length,),
+        tail_proposal_atom_chunk=7,
     )
     run_adaptive_section5(proposal_seed=1544, **common)
     assert seen
     assert all(
         torch.device(device) == torch.device(likelihood.flow_model.device)
-        for device in seen
+        and atom_chunk == 7
+        for device, atom_chunk in seen
     )
