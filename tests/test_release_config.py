@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from _script_loader import load_script_module
 
 
@@ -58,6 +60,48 @@ def test_runner_consumes_release_defaults():
     assert args.compile_flow and args.retain_full_ladder
 
 
+def _minimal_runner_arguments(*extra):
+    return [
+        "--scene-store",
+        "scene",
+        "--measurement-model",
+        "flow.pt",
+        "--model-cache",
+        "model-cache",
+        "--proposal-cache",
+        "proposal-cache",
+        "--output",
+        "output",
+        *extra,
+    ]
+
+
+def test_tilted_screen_records_the_fixed_tail_recipe_without_mutating_release():
+    args = RUNNER.parse_args(
+        _minimal_runner_arguments("--estimator-mode", "tilted_stratified")
+    )
+    source = RUNNER._load_release_config(args.inference_config, kind="inference")
+    original = json.loads(json.dumps(source))
+    resolved = RUNNER._resolved_pipeline_config(args, source)
+
+    assert source == original
+    assert "tail_proposal" not in source["estimator"]
+    assert resolved["estimator"]["estimator_mode"] == "tilted_stratified"
+    assert resolved["estimator"]["tail_proposal"] == json.loads(
+        json.dumps(RUNNER.asdict(RUNNER.TAIL_PROPOSAL_RECIPE))
+    )
+    assert resolved != source
+
+
+@pytest.mark.parametrize(
+    "retired",
+    ("--estimator-tilt-delta", "--estimator-tilt-temperature"),
+)
+def test_tilted_estimator_recipe_has_no_cli_tuning_knobs(retired):
+    with pytest.raises(SystemExit):
+        RUNNER.parse_args(_minimal_runner_arguments(retired, "0.5"))
+
+
 def test_reference_job_only_supplies_runtime_paths():
     job = (ROOT / "jobs" / "job_inference.sh").read_text()
     assert "v1.1-infer with v3.2-like" in job
@@ -71,3 +115,27 @@ def test_reference_job_only_supplies_runtime_paths():
         "CANDIDATE_BACKEND",
     ):
         assert duplicated_setting not in job
+
+
+def test_heldout_tail_jobs_pin_the_isolated_checkout_and_fixed_recipe():
+    inference_job = (ROOT / "jobs" / "job_inference_stratified_screen.sh").read_text()
+    diagnostic_job = (ROOT / "jobs" / "job_complement_mass_diagnostic.sh").read_text()
+    for job in (inference_job, diagnostic_job):
+        assert "/home/z/Zekang.Zhang/SBSI-inference-sampler-night" in job
+        assert "OBSERVATION_START=${OBSERVATION_START:-25000}" in job
+        assert "refusing to overwrite" in job
+        assert "must be an unsigned integer" in job
+        assert "PROPOSAL_SEED=${PROPOSAL_SEED:-8701}" in job
+        assert "seed${PROPOSAL_SEED}" in job
+        assert '--proposal-seed "$PROPOSAL_SEED"' in job
+        assert 'cd "$repo"' in job
+        for reserved in ("TEMP", "TMP"):
+            assert f"{reserved}=" not in job
+            assert f"${reserved}" not in job
+        assert "--estimator-tilt-delta" not in job
+        assert "--estimator-tilt-temperature" not in job
+    assert "OBSERVATION_STOP=${OBSERVATION_STOP:-50000}" in inference_job
+    assert "OBSERVATION_STOP=${OBSERVATION_STOP:-25512}" in diagnostic_job
+    assert "--diagnose-complement-tail-proposal" in diagnostic_job
+    assert "16121540--16121542" in diagnostic_job
+    assert "TILT_TEMPERATURE" in diagnostic_job

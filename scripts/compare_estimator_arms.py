@@ -364,8 +364,8 @@ def render_weights(arms) -> str:
                     100.0 * above,
                     threshold,
                     (
-                        " -- infinite weight variance, so no root-M rate exists "
-                        "and more draws cannot fix this arm"
+                        " -- sampled weights remain heavy-tailed; root-M "
+                        "extrapolation is not reliable at this depth"
                         if above > 0.5
                         else ""
                     ),

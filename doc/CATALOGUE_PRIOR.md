@@ -210,6 +210,56 @@ ladder, because the mixture ESS and maximum-weight rules that drive adaptive
 stopping do not define its draw budget. It is a screen: a run that selects it
 records the deviation and is labelled `custom`, not `v1.1-infer`.
 
+#### Conditioned deterministic-mixture tail proposal
+
+`tilted_stratified` keeps the exact stratum above and replaces its inefficient
+prior draw on `C_i = S_i^c` with a fixed deterministic multiple-importance
+sampler. Let the cached diagonal-Gaussian proxy log likelihood be
+
+```text
+ell_proxy,i(j) = -sum_d log sigma_jd
+                 - 0.5 sum_d ((x_i,d - mu_jd) / sigma_jd)^2.
+```
+
+The three unconditioned components are proportional to
+
+```text
+r_1(j)   proportional to pi_j Pdet_j exp(ell_proxy,i(j))
+r_2(j)   proportional to pi_j Pdet_j exp(ell_proxy,i(j) / 2)
+r_pi(j)  = pi_j.
+```
+
+Each component is normalized separately on `C_i`; tempering changes only the
+approximate likelihood, never the `pi Pdet` base measure. Their balance
+mixture is
+
+```text
+qbar_C(j) = (1/2) r_1,C(j) + (3/8) r_2,C(j) + (1/8) pi_C(j).
+```
+
+Every eight-draw cycle has sources `(r_1, r_2, r_1, pi_C, r_2, r_1,
+r_2, r_1)`, hence exact `4:3:1` source counts. Regardless of its source, every
+draw is divided by the same exact `qbar_C`. Thus
+
+```text
+Ahat_i(g) = sum_{j in S_i} c_j(g)
+          + (1/M) sum_t c_jt(g) / qbar_C(j_t)
+```
+
+is unbiased whenever `M` is a complete number of cycles. Fixing the component
+counts removes between-component allocation noise and cannot increase variance
+relative to iid draws from the same `qbar_C`. The `pi_C` component gives full
+catalogue support and bounds `pi_j / qbar_C(j)` by eight times the complement
+normalizer. The sampler uses blocked two-pass normalization and sampling, so
+its working memory is bounded by the atom chunk rather than catalogue size
+times object count.
+
+The recipe is exported as `TAIL_PROPOSAL_RECIPE` and copied verbatim into the
+resolved pipeline provenance. It has no runner flags for temperatures or
+mixture weights. `tilted_stratified` remains a `custom` validation arm until
+held-out convergence, reliability, efficiency, and independent-seed gates are
+met; it does not change the `v1.1-infer` default.
+
 ### Weight diagnostics
 
 A retained ladder also records, per object and per rung, the zero-view weight
@@ -221,9 +271,12 @@ ladder because only there does every object share one prefix; adaptive
 allocation gives each object its own draw count and no rung is comparable
 across objects.
 
-`k` is the decisive one. At `k >= 0.5` the weight variance is infinite, so the
-estimator has no root-M rate and a `1/M` finite-draw bias correction does not
-apply; at `k >= 1` the mean is infinite too. The reported threshold is
+For an unbounded continuous tail, `k >= 0.5` corresponds to infinite variance
+and `k >= 1` to an infinite mean. SBSI instead sums a finite catalogue with a
+full-support defensive component, so every exact importance moment is finite.
+Here `k` is an operational, pre-asymptotic diagnostic: a high value says the
+available draw ladder behaves like a heavy tail and does not yet justify a
+root-M or `1/M` extrapolation. The reported threshold is
 `min(1 - 1/log10(M), 0.7)`. Rows whose tail cannot be fitted — a weight vector
 taking too few distinct values — are reported as undefined and counted, never
 as light-tailed.
@@ -240,6 +293,14 @@ relvar = (1/ESS - 1/M) (T / (E + T))^2
 
 with `E` the exact stratum and `T` the sampled mean. For the mixture the
 stratum is empty and this is the usual `sqrt(1/ESS - 1/M)`.
+
+For the deterministic mixture, pooled ESS and Pareto-k remain concentration
+diagnostics but pooled ESS is not a variance estimator: its between-component
+spread is not random. The reported relative standard error instead combines
+the unbiased within-component sample variances under the fixed `4:3:1`
+allocation. Per-rung component counts and per-object pre-conditioning
+complement masses are stored with the one-step moments and summarized in
+`result.json`.
 
 ## Numerical estimate and partitioning
 

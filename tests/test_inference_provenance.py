@@ -253,3 +253,14 @@ def test_likelihood_mock_manifest_validation_rejects_mismatch(tmp_path, mutation
             generation_identity=identity,
             implementation_sha256=implementation,
         )
+
+
+def test_mock_input_hashes_include_the_frozen_manifest(tmp_path):
+    _likelihood_mock(tmp_path)
+    hashes = MODULE._mock_input_hashes(tmp_path)
+    assert set(hashes) == {
+        "measurements.parquet",
+        "truth.parquet",
+        "likelihood_mock_manifest.json",
+    }
+    assert all(len(value) == 64 for value in hashes.values())

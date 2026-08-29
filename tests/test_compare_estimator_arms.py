@@ -197,7 +197,7 @@ def test_main_renders_both_tables_and_writes_json(tmp_path, capsys):
     assert "Arm difference at each rung" in text
     assert "NOT on ESS/M" in text
     # The k warning must fire when most fitted objects are above threshold.
-    assert "more draws cannot fix this arm" in text
+    assert "root-M extrapolation is not reliable at this depth" in text
     payload = json.loads(output.read_text())
     assert payload["reference"] == "mixture"
     assert set(payload["arms"]) == {"mixture", "stratified"}

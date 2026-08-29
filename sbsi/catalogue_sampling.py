@@ -253,6 +253,89 @@ class ProposalCoordinateTable:
 
 
 @dataclass(frozen=True)
+class TailProposalRecipe:
+    """Immutable provenance for complement-conditioned deterministic MIS.
+
+    The first two components retain the detected-prior base measure and temper
+    only the observation-dependent Gaussian proxy likelihood.  The final
+    component is the catalogue prior.  ``component_cycle`` fixes source counts
+    in every complete cycle; all samples are nevertheless weighted by the
+    balance-mixture probability, not by their source-component probability.
+    """
+
+    name: str
+    component_names: tuple[str, ...]
+    component_weights: tuple[float, ...]
+    component_betas: tuple[Optional[float], ...]
+    component_cycle: tuple[int, ...]
+    conditioning: str = "component"
+    base_measure: str = "prior_times_detection"
+    temperature_scope: str = "proxy_likelihood_only"
+    denominator: str = "balance_mixture"
+
+    def __post_init__(self):
+        names = tuple(self.component_names)
+        weights = tuple(float(value) for value in self.component_weights)
+        betas = tuple(
+            None if value is None else float(value)
+            for value in self.component_betas
+        )
+        cycle = tuple(int(value) for value in self.component_cycle)
+        if len(names) != 3 or len(weights) != 3 or len(betas) != 3:
+            raise ValueError("the tail recipe needs T1, T2, and prior components")
+        if len(set(names)) != len(names) or any(not name for name in names):
+            raise ValueError("tail-recipe component names must be unique and non-empty")
+        if not all(np.isfinite(weights)) or any(value <= 0.0 for value in weights):
+            raise ValueError("tail-recipe component weights must be finite and positive")
+        if not np.isclose(sum(weights), 1.0, rtol=0.0, atol=1.0e-15):
+            raise ValueError("tail-recipe component weights must sum to one")
+        if (
+            betas[-1] is not None
+            or any(value is None or not np.isfinite(value) or value <= 0.0 for value in betas[:-1])
+        ):
+            raise ValueError("proxy components need positive betas and the prior beta must be None")
+        if not cycle or any(value < 0 or value >= len(names) for value in cycle):
+            raise ValueError("tail-recipe cycle contains an invalid component id")
+        frequencies = np.bincount(cycle, minlength=len(names)) / len(cycle)
+        if not np.allclose(frequencies, weights, rtol=0.0, atol=1.0e-15):
+            raise ValueError("tail-recipe cycle frequencies must equal component weights")
+        if self.conditioning != "component":
+            raise ValueError("tail components must be conditioned separately")
+        if self.temperature_scope != "proxy_likelihood_only":
+            raise ValueError("temperature must apply only to the proxy likelihood")
+        if self.denominator != "balance_mixture":
+            raise ValueError("deterministic MIS requires the balance-mixture denominator")
+        object.__setattr__(self, "component_names", names)
+        object.__setattr__(self, "component_weights", weights)
+        object.__setattr__(self, "component_betas", betas)
+        object.__setattr__(self, "component_cycle", cycle)
+
+    @property
+    def cycle_length(self) -> int:
+        return len(self.component_cycle)
+
+    @property
+    def component_counts(self) -> tuple[int, ...]:
+        counts = np.bincount(
+            self.component_cycle, minlength=len(self.component_names)
+        )
+        return tuple(int(value) for value in counts)
+
+    @property
+    def proxy_temperatures(self) -> tuple[float, ...]:
+        return tuple(1.0 / value for value in self.component_betas if value is not None)
+
+
+TAIL_PROPOSAL_RECIPE = TailProposalRecipe(
+    name="conditioned_dm_mis_t1_t2_prior_4_3_1",
+    component_names=("proxy_t1", "proxy_t2", "prior"),
+    component_weights=(0.5, 0.375, 0.125),
+    component_betas=(1.0, 0.5, None),
+    component_cycle=(0, 1, 0, 2, 1, 0, 1, 0),
+)
+
+
+@dataclass(frozen=True)
 class ProposalDraw:
     """Per-object atoms and their full mixture probabilities."""
 
@@ -263,6 +346,8 @@ class ProposalDraw:
     candidate_radius: np.ndarray
     seed: int
     local_position: Optional[np.ndarray] = None
+    component_id: Optional[np.ndarray] = None
+    component_complement_mass: Optional[np.ndarray] = None
 
     def __post_init__(self):
         if self.local_position is None:
@@ -274,18 +359,52 @@ class ProposalDraw:
             if np.any((position >= 0) != self.local_member):
                 raise ValueError("local positions and membership flags disagree")
         object.__setattr__(self, "local_position", position)
+        if (self.component_id is None) != (self.component_complement_mass is None):
+            raise ValueError(
+                "component ids and complement-mass diagnostics must be stored together"
+            )
+        if self.component_id is not None:
+            component_id = np.asarray(self.component_id, dtype=np.int16)
+            complement_mass = np.asarray(
+                self.component_complement_mass, dtype=np.float64
+            )
+            if component_id.shape != self.indices.shape:
+                raise ValueError("component ids must align with proposal draws")
+            if complement_mass.ndim != 2 or complement_mass.shape[0] != len(self.indices):
+                raise ValueError(
+                    "component complement masses need one row per observed object"
+                )
+            if (
+                (component_id < 0).any()
+                or (component_id >= complement_mass.shape[1]).any()
+            ):
+                raise ValueError("component ids are outside the diagnostic component axis")
+            if (
+                not np.isfinite(complement_mass).all()
+                or (complement_mass < 0.0).any()
+                or (complement_mass > 1.0 + 1.0e-12).any()
+            ):
+                raise ValueError("component complement masses must lie in [0, 1]")
+            object.__setattr__(self, "component_id", component_id)
+            object.__setattr__(self, "component_complement_mass", complement_mass)
 
     def prefix(self, n_draws: int) -> "ProposalDraw":
         if n_draws <= 0 or n_draws > self.indices.shape[1]:
             raise ValueError("prefix draw count is outside the stored ladder")
         return ProposalDraw(
-            self.indices[:, :n_draws],
-            self.probability[:, :n_draws],
-            self.local_member[:, :n_draws],
-            self.global_component[:, :n_draws],
-            self.candidate_radius,
-            self.seed,
-            self.local_position[:, :n_draws],
+            indices=self.indices[:, :n_draws],
+            probability=self.probability[:, :n_draws],
+            local_member=self.local_member[:, :n_draws],
+            global_component=self.global_component[:, :n_draws],
+            candidate_radius=self.candidate_radius,
+            seed=self.seed,
+            local_position=self.local_position[:, :n_draws],
+            component_id=(
+                None
+                if self.component_id is None
+                else self.component_id[:, :n_draws]
+            ),
+            component_complement_mass=self.component_complement_mass,
         )
 
     def take(self, rows: np.ndarray) -> "ProposalDraw":
@@ -295,13 +414,21 @@ class ProposalDraw:
         if rows.ndim != 1 or ((rows < 0) | (rows >= len(self.indices))).any():
             raise ValueError("proposal row selection is invalid")
         return ProposalDraw(
-            self.indices[rows],
-            self.probability[rows],
-            self.local_member[rows],
-            self.global_component[rows],
-            self.candidate_radius[rows],
-            self.seed,
-            self.local_position[rows],
+            indices=self.indices[rows],
+            probability=self.probability[rows],
+            local_member=self.local_member[rows],
+            global_component=self.global_component[rows],
+            candidate_radius=self.candidate_radius[rows],
+            seed=self.seed,
+            local_position=self.local_position[rows],
+            component_id=(
+                None if self.component_id is None else self.component_id[rows]
+            ),
+            component_complement_mass=(
+                None
+                if self.component_complement_mass is None
+                else self.component_complement_mass[rows]
+            ),
         )
 
     def coalesce(self) -> "CoalescedProposalDraw":
@@ -498,7 +625,6 @@ class DefensiveLocalProposal:
         self._uncertainty_mips_tree = None
         self._uncertainty_mips_indices = None
         self._torch_standardized = {}
-        self._torch_reranking_tables = {}
         self._tilted_proxies = {}
         self.global_cdf = np.cumsum(self.prior_weights)
         self.global_cdf[-1] = 1.0
@@ -609,57 +735,12 @@ class DefensiveLocalProposal:
             raise ValueError(
                 "uncertainty reranking requires a version-3 proposal cache"
             )
-        key = str(device)
-        tables = self._torch_reranking_tables.get(key)
-        if tables is None:
-            # Keep the established float64 Gaussian score.  For the 12.76M-
-            # atom v1.1-infer prior these reusable tables cost about 1 GiB,
-            # materially less than each temporary location-distance slab.
-            tables = (
-                torch.as_tensor(
-                    np.ascontiguousarray(
-                        self.coordinates.values[self.active_indices]
-                    ),
-                    dtype=torch.float64,
-                    device=device,
-                ),
-                torch.as_tensor(
-                    np.ascontiguousarray(
-                        self.coordinates.dispersion[self.active_indices]
-                    ),
-                    dtype=torch.float64,
-                    device=device,
-                ),
-                torch.as_tensor(
-                    np.ascontiguousarray(
-                        self.local_base_weights[self.active_indices]
-                    ),
-                    dtype=torch.float64,
-                    device=device,
-                ).log(),
-                torch.as_tensor(
-                    np.ascontiguousarray(self.active_indices),
-                    dtype=torch.long,
-                    device=device,
-                ),
-            )
-            self._torch_reranking_tables[key] = tables
-        atom_values, atom_dispersion, log_base, active_indices = tables
-        observed = torch.as_tensor(
-            np.ascontiguousarray(values),
-            dtype=torch.float64,
-            device=device,
-        )
+        # The whole-catalogue sampler and the reranker use the same expanded
+        # Gaussian coefficients.  Sharing them avoids a second roughly-GiB
+        # device cache for the production catalogue.
+        proxy = self._tilted_proxy(device)
         with torch.no_grad():
-            selected_dispersion = atom_dispersion[positions]
-            residual = (
-                observed[:, None, :] - atom_values[positions]
-            ) / selected_dispersion
-            approximate_log_target = (
-                log_base[positions]
-                - torch.log(selected_dispersion).sum(dim=2)
-                - 0.5 * torch.square(residual).sum(dim=2)
-            )
+            approximate_log_target = proxy.score_positions(values, positions)
             selected_score, selected = torch.topk(
                 approximate_log_target,
                 k=n_candidates,
@@ -668,7 +749,7 @@ class DefensiveLocalProposal:
                 sorted=True,
             )
             selected_position = torch.gather(positions, 1, selected)
-            indices = active_indices[selected_position]
+            indices = proxy.active[selected_position]
             distances = selected_score[:, :1] - selected_score
             finite = torch.isfinite(distances)
             row_max = torch.max(
@@ -1046,22 +1127,32 @@ class DefensiveLocalProposal:
         """Draw the complement from a tilted whole-catalogue proposal.
 
         :meth:`draw_stratified` samples the complement from the detected prior
-        ``pi``, whose ratio ``c_j / pi_j`` is unbounded because ``pi`` knows
-        nothing about the observation.  cont.317 measured that this is what
+        ``pi``, whose ratio ``c_j / pi_j`` has no useful observation-informed
+        bound.  The finite catalogue makes every realized ratio finite, but
+        cont.317 measured that their extreme concentration is what
         keeps the tail index above the 0.7 reliability threshold, and that
         about 80% of the mass the exact stratum misses lies outside the
         location prefilter, so no prefilter-restricted proposal can reach it.
 
-        This draw replaces ``pi`` with
+        This draw replaces ``pi`` with a whole-catalogue defensive proposal
 
         ``q_i(j) = (1 - delta) softmax(s_i)_j + delta pi_j``
 
         where ``s_i`` is the diagonal Gaussian proxy the reranker already
         computes -- here evaluated over every active atom rather than only the
         prefilter, which costs two matmuls and no flow evaluations.  The
-        defensive ``delta pi`` component keeps full support, and ``q`` is
-        reported exactly, so the complement estimator stays unbiased and only
-        its variance changes.
+        defensive ``delta pi`` component keeps full support.  Because the
+        candidate stratum ``S_i`` is already summed exactly, sampling ``q``
+        there and then assigning the draw zero weight is dominated by drawing
+        from its conditional distribution on the complement.  This method
+        therefore samples
+
+        ``q_i(j | j not in S_i) = q_i(j) / (1 - q_i(S_i))``
+
+        and reports that conditional probability exactly.  Every nondegenerate
+        draw reaches the sampled complement, while the estimator stays
+        unbiased because its importance denominator is the distribution that
+        actually generated the atom.
 
         The record layout, the per-object seeding, and the nested-prefix
         property match :meth:`draw_stratified`, and the atom is drawn from the
@@ -1098,12 +1189,22 @@ class DefensiveLocalProposal:
                 np.random.SeedSequence([int(seed), int(absolute_ids[row])])
             )
             uniforms = rng.random((n_draws, 3))
-            drawn, drawn_probability = proxy.draw_uniforms(
-                values[row],
-                uniforms[:, 1],
-                delta=float(delta),
-                temperature=float(temperature),
-            )
+            if candidates.indices.shape[1] == len(self.active_indices):
+                # The exact stratum covers the full prior.  There is no
+                # conditional complement to sample and the consumer will drop
+                # these sentinel draws as local members before any flow call.
+                drawn = np.full(
+                    n_draws, candidates.indices[row, 0], dtype=np.int64
+                )
+                drawn_probability = np.ones(n_draws, dtype=np.float64)
+            else:
+                drawn, drawn_probability = proxy.draw_uniforms(
+                    values[row],
+                    uniforms[:, 1],
+                    delta=float(delta),
+                    temperature=float(temperature),
+                    exclude_indices=candidates.indices[row],
+                )
             indices[row] = drawn
             probability[row] = drawn_probability
             position, member = self._local_positions(
@@ -1119,6 +1220,123 @@ class DefensiveLocalProposal:
             candidate_radius=candidates.radius,
             seed=int(seed),
             local_position=local_position,
+        )
+
+    def draw_tilted_mis(
+        self,
+        candidates: ProposalCandidates,
+        observed,
+        *,
+        n_draws: int,
+        seed: int,
+        object_offset: int = 0,
+        object_ids: Optional[np.ndarray] = None,
+        device: Optional[str | torch.device] = None,
+        recipe: TailProposalRecipe = TAIL_PROPOSAL_RECIPE,
+        atom_chunk: int = 262144,
+    ) -> ProposalDraw:
+        """Draw a complement-conditioned deterministic-mixture MIS stream.
+
+        The fixed production recipe draws four samples from the T=1 proxy,
+        three from the T=2 proxy, and one from ``pi`` in every eight-sample
+        cycle.  Each component is normalized separately on ``S^c`` before the
+        mixture is formed.  Every returned probability is the balance mixture
+
+        ``qbar_C = 1/2 r1_C + 3/8 r2_C + 1/8 pi_C``,
+
+        irrespective of which component generated that sample.  Fixed source
+        counts make this deterministic-mixture estimator exactly unbiased and
+        no more variable than iid sampling from ``qbar_C``.  Object-specific
+        fixed-width random records preserve nested prefixes, chunk invariance,
+        and common random numbers with the other complement samplers.
+
+        ``component_complement_mass`` records each *unconditioned* component's
+        mass on ``S^c``.  When ``S`` is the full active support, a local-member
+        sentinel with unit probability is returned for every scheduled source;
+        consumers already discard such rows before evaluating the flow.
+        """
+
+        if not isinstance(recipe, TailProposalRecipe):
+            raise TypeError("recipe must be a TailProposalRecipe")
+        if n_draws <= 0 or n_draws % recipe.cycle_length:
+            raise ValueError(
+                f"n_draws must be a positive multiple of {recipe.cycle_length}"
+            )
+        if atom_chunk <= 0:
+            raise ValueError("atom_chunk must be positive")
+        if object_offset < 0:
+            raise ValueError("object_offset must be non-negative")
+        n_objects = len(candidates.indices)
+        if object_ids is None:
+            absolute_ids = object_offset + np.arange(n_objects, dtype=np.int64)
+        else:
+            absolute_ids = np.asarray(object_ids, dtype=np.int64)
+            if object_offset != 0:
+                raise ValueError(
+                    "object_offset and explicit object_ids cannot be combined"
+                )
+            if absolute_ids.shape != (n_objects,) or (absolute_ids < 0).any():
+                raise ValueError(
+                    "object_ids must contain one non-negative id per row"
+                )
+        values = self._observed_values(observed)
+        if len(values) != n_objects:
+            raise ValueError("observations and candidate rows must align")
+
+        proxy = self._tilted_proxy(device)
+        schedule = np.tile(
+            np.asarray(recipe.component_cycle, dtype=np.int16),
+            n_draws // recipe.cycle_length,
+        )
+        indices = np.empty((n_objects, n_draws), dtype=np.int64)
+        probability = np.empty((n_objects, n_draws), dtype=np.float64)
+        component_id = np.broadcast_to(
+            schedule, (n_objects, n_draws)
+        ).copy()
+        component_complement_mass = np.empty(
+            (n_objects, len(recipe.component_names)), dtype=np.float64
+        )
+        local_member = np.zeros((n_objects, n_draws), dtype=bool)
+        local_position = np.full((n_objects, n_draws), -1, dtype=np.int32)
+
+        for row in range(n_objects):
+            excluded_position = proxy._excluded_positions(candidates.indices[row])
+            rng = np.random.default_rng(
+                np.random.SeedSequence([int(seed), int(absolute_ids[row])])
+            )
+            uniforms = rng.random((n_draws, 3))
+            if len(excluded_position) == len(self.active_indices):
+                if not len(candidates.indices[row]):
+                    raise RuntimeError("full support has no sentinel candidate")
+                indices[row].fill(int(candidates.indices[row, 0]))
+                probability[row].fill(1.0)
+                component_complement_mass[row].fill(0.0)
+                local_member[row].fill(True)
+                local_position[row].fill(0)
+                continue
+            (
+                indices[row],
+                probability[row],
+                component_complement_mass[row],
+            ) = proxy.draw_conditioned_mis_uniforms(
+                values[row],
+                uniforms[:, 1],
+                component_id[row],
+                candidates.indices[row],
+                recipe=recipe,
+                atom_chunk=int(atom_chunk),
+            )
+
+        return ProposalDraw(
+            indices=indices,
+            probability=probability,
+            local_member=local_member,
+            global_component=component_id == len(recipe.component_names) - 1,
+            candidate_radius=candidates.radius,
+            seed=int(seed),
+            local_position=local_position,
+            component_id=component_id,
+            component_complement_mass=component_complement_mass,
         )
 
     def _tilted_proxy(self, device: Optional[str | torch.device]) -> "WholeCatalogueProxy":
@@ -1248,23 +1466,33 @@ class WholeCatalogueProxy:
         values = proposal.coordinates.values[proposal.active_indices]
         dispersion = proposal.coordinates.dispersion[proposal.active_indices]
         inverse_variance = np.reciprocal(np.square(dispersion))
-        constant = (
-            np.log(
-                np.where(
-                    proposal.local_base_weights[proposal.active_indices] > 0,
-                    proposal.local_base_weights[proposal.active_indices],
-                    np.nan,
-                )
+        log_base = np.log(
+            np.where(
+                proposal.local_base_weights[proposal.active_indices] > 0,
+                proposal.local_base_weights[proposal.active_indices],
+                np.nan,
             )
-            - np.log(dispersion).sum(axis=1)
+        )
+        gaussian_constant = (
+            -np.log(dispersion).sum(axis=1)
             - 0.5 * (np.square(values) * inverse_variance).sum(axis=1)
         )
         # Atoms with no detection probability carry no target mass either, so
         # dropping them from the tilted component loses nothing; the defensive
         # prior component still covers them.
-        self.constant = torch.as_tensor(
-            np.nan_to_num(constant, nan=-np.inf), dtype=torch.float64, device=device
+        self.log_base = torch.as_tensor(
+            np.nan_to_num(log_base, nan=-np.inf),
+            dtype=torch.float64,
+            device=device,
         )
+        self.gaussian_constant = torch.as_tensor(
+            np.ascontiguousarray(gaussian_constant),
+            dtype=torch.float64,
+            device=device,
+        )
+        # ``constant`` is retained for callers that inspect the expanded T=1
+        # score, while tempering uses the two terms above separately.
+        self.constant = self.log_base + self.gaussian_constant
         self.a1 = torch.as_tensor(
             np.ascontiguousarray(inverse_variance), dtype=torch.float64, device=device
         )
@@ -1278,6 +1506,7 @@ class WholeCatalogueProxy:
             dtype=torch.long,
             device=device,
         )
+        self.active_indices = np.asarray(proposal.active_indices, dtype=np.int64)
         self.prior = torch.as_tensor(
             np.ascontiguousarray(proposal.prior_weights[proposal.active_indices]),
             dtype=torch.float64,
@@ -1285,10 +1514,343 @@ class WholeCatalogueProxy:
         )
 
     def score(self, observation: np.ndarray) -> torch.Tensor:
+        """Return the untempered ``log(pi Pdet) + proxy log likelihood``."""
+
+        return self.log_base + self.proxy_likelihood(observation)
+
+    def proxy_likelihood(self, observation: np.ndarray) -> torch.Tensor:
+        """Observation-dependent diagonal-Gaussian log likelihood."""
+
         x = torch.as_tensor(observation, dtype=torch.float64, device=self.a1.device)
-        return self.constant - 0.5 * (
+        return self.gaussian_constant - 0.5 * (
             torch.square(x) @ self.a1.T - 2.0 * (x @ self.a2.T)
         )
+
+    def score_positions(
+        self, observations: np.ndarray, positions: torch.Tensor
+    ) -> torch.Tensor:
+        """Score an active-position slab using the shared proxy coefficients."""
+
+        x = torch.as_tensor(
+            np.ascontiguousarray(observations),
+            dtype=torch.float64,
+            device=self.a1.device,
+        )
+        if x.ndim != 2 or positions.ndim != 2 or len(x) != len(positions):
+            raise ValueError("observations and proxy positions must be aligned matrices")
+        selected_a1 = self.a1[positions]
+        selected_a2 = self.a2[positions]
+        likelihood = self.gaussian_constant[positions] - 0.5 * (
+            (torch.square(x)[:, None, :] * selected_a1).sum(dim=2)
+            - 2.0 * (x[:, None, :] * selected_a2).sum(dim=2)
+        )
+        return self.log_base[positions] + likelihood
+
+    def component_log_scores(
+        self, observation: np.ndarray, recipe: TailProposalRecipe
+    ) -> tuple[torch.Tensor, ...]:
+        """Dense component scores, primarily for exact small-catalogue checks."""
+
+        likelihood = self.proxy_likelihood(observation)
+        return tuple(
+            self.log_base + float(beta) * likelihood
+            for beta in recipe.component_betas[:-1]
+        )
+
+    def _excluded_positions(self, exclude_indices: np.ndarray) -> np.ndarray:
+        excluded = np.asarray(exclude_indices, dtype=np.int64)
+        if excluded.ndim != 1:
+            raise ValueError("excluded atom ids must be one-dimensional")
+        if len(np.unique(excluded)) != len(excluded):
+            raise ValueError("excluded atom ids must be unique")
+        positions = np.searchsorted(self.active_indices, excluded)
+        valid = positions < len(self.active_indices)
+        if valid.any():
+            valid[valid] &= self.active_indices[positions[valid]] == excluded[valid]
+        if not valid.all():
+            raise ValueError("excluded atom ids must belong to active support")
+        return np.sort(positions.astype(np.int64, copy=False))
+
+    def _proxy_likelihood_block(
+        self, observation: torch.Tensor, start: int, stop: int
+    ) -> torch.Tensor:
+        return self.gaussian_constant[start:stop] - 0.5 * (
+            torch.square(observation) @ self.a1[start:stop].T
+            - 2.0 * (observation @ self.a2[start:stop].T)
+        )
+
+    def draw_conditioned_mis_uniforms(
+        self,
+        observation: np.ndarray,
+        uniforms: np.ndarray,
+        component_id: np.ndarray,
+        exclude_indices: np.ndarray,
+        *,
+        recipe: TailProposalRecipe,
+        atom_chunk: int,
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Map uniforms through separately conditioned DM-MIS components.
+
+        This is a blocked two-pass sampler.  The first pass stores only one
+        log mass per component and atom block.  The second revisits blocks hit
+        by the draw stream, samples within each block, and evaluates the exact
+        hierarchical balance-mixture probability.  Its working memory is
+        ``O(atom_chunk)`` rather than ``O(n_objects * n_atoms)``.
+        """
+
+        if atom_chunk <= 0:
+            raise ValueError("atom_chunk must be positive")
+        uniforms = np.asarray(uniforms, dtype=np.float64)
+        component_id = np.asarray(component_id, dtype=np.int16)
+        if (
+            uniforms.ndim != 1
+            or component_id.shape != uniforms.shape
+            or not np.isfinite(uniforms).all()
+        ):
+            raise ValueError("uniforms and component ids must be aligned vectors")
+        if ((uniforms < 0.0) | (uniforms >= 1.0)).any():
+            raise ValueError("uniforms must lie in [0, 1)")
+        if (
+            (component_id < 0).any()
+            or (component_id >= len(recipe.component_names)).any()
+        ):
+            raise ValueError("component ids are invalid for the tail recipe")
+        excluded = self._excluded_positions(exclude_indices)
+        n_atoms = len(self.active_indices)
+        if len(excluded) == n_atoms:
+            raise ValueError("cannot sample an empty catalogue complement")
+
+        observation_tensor = torch.as_tensor(
+            np.ascontiguousarray(observation),
+            dtype=torch.float64,
+            device=self.a1.device,
+        )
+        if observation_tensor.shape != (self.a1.shape[1],):
+            raise ValueError("observation has the wrong proxy dimension")
+        bounds = [
+            (start, min(start + int(atom_chunk), n_atoms))
+            for start in range(0, n_atoms, int(atom_chunk))
+        ]
+        n_proxy = len(recipe.component_betas) - 1
+        complement_log_blocks: list[list[torch.Tensor]] = [
+            [] for _ in range(n_proxy)
+        ]
+        full_log_blocks: list[list[torch.Tensor]] = [
+            [] for _ in range(n_proxy)
+        ]
+        prior_blocks: list[torch.Tensor] = []
+
+        with torch.no_grad():
+            for start, stop in bounds:
+                likelihood = self._proxy_likelihood_block(
+                    observation_tensor, start, stop
+                )
+                left = np.searchsorted(excluded, start, side="left")
+                right = np.searchsorted(excluded, stop, side="left")
+                block_excluded = excluded[left:right] - start
+                mask = None
+                if len(block_excluded):
+                    mask = torch.zeros(
+                        stop - start, dtype=torch.bool, device=self.a1.device
+                    )
+                    mask[
+                        torch.as_tensor(
+                            block_excluded,
+                            dtype=torch.long,
+                            device=self.a1.device,
+                        )
+                    ] = True
+                for component, beta in enumerate(recipe.component_betas[:-1]):
+                    score = self.log_base[start:stop] + float(beta) * likelihood
+                    full_log_blocks[component].append(torch.logsumexp(score, dim=0))
+                    if mask is not None:
+                        score = score.masked_fill(mask, -torch.inf)
+                    complement_log_blocks[component].append(
+                        torch.logsumexp(score, dim=0)
+                    )
+                prior = self.prior[start:stop]
+                if mask is not None:
+                    prior = prior.masked_fill(mask, 0.0)
+                prior_blocks.append(prior.sum())
+
+            full_log_z = [
+                torch.logsumexp(torch.stack(blocks), dim=0)
+                for blocks in full_log_blocks
+            ]
+            complement_log_z = [
+                torch.logsumexp(torch.stack(blocks), dim=0)
+                for blocks in complement_log_blocks
+            ]
+            for component, (full_mass, complement_mass) in enumerate(
+                zip(full_log_z, complement_log_z)
+            ):
+                invalid_full = torch.isnan(full_mass) | torch.isposinf(full_mass)
+                invalid_complement = torch.isnan(complement_mass) | torch.isposinf(
+                    complement_mass
+                )
+                if bool(invalid_full | invalid_complement):
+                    raise RuntimeError(
+                        "proxy component produced a NaN or positive-infinite "
+                        f"normalizer: {recipe.component_names[component]}"
+                    )
+                if bool(
+                    torch.isneginf(full_mass)
+                    & ~torch.isneginf(complement_mass)
+                ):
+                    raise RuntimeError(
+                        "proxy complement has mass while its full support does not"
+                    )
+            prior_block_mass = torch.stack(prior_blocks)
+            prior_complement_mass = prior_block_mass.sum()
+            if not bool(
+                torch.isfinite(prior_complement_mass)
+                & (prior_complement_mass > 0.0)
+            ):
+                raise RuntimeError("catalogue prior has zero complement mass")
+
+            diagnostics = np.empty(len(recipe.component_names), dtype=np.float64)
+            for component in range(n_proxy):
+                if not bool(torch.isneginf(complement_log_z[component])):
+                    diagnostics[component] = float(
+                        torch.exp(
+                            complement_log_z[component] - full_log_z[component]
+                        ).item()
+                    )
+                else:
+                    diagnostics[component] = 0.0
+            diagnostics[-1] = float(prior_complement_mass.item())
+            diagnostics[:] = np.clip(diagnostics, 0.0, 1.0)
+
+            prior_block_probability = (
+                prior_block_mass / prior_complement_mass
+            ).cpu().numpy()
+            block_probability = np.empty(
+                (len(recipe.component_names), len(bounds)), dtype=np.float64
+            )
+            proxy_fallback = np.zeros(n_proxy, dtype=bool)
+            for component in range(n_proxy):
+                if not bool(torch.isneginf(complement_log_z[component])):
+                    block_probability[component] = torch.exp(
+                        torch.stack(complement_log_blocks[component])
+                        - complement_log_z[component]
+                    ).cpu().numpy()
+                else:
+                    # Only an exact log(0) support mass reaches this branch.
+                    # NaN and +inf are cache/numerical defects rejected above.
+                    # Falling back to pi_C preserves support and the fixed
+                    # source count without inventing a likelihood score; the
+                    # complement-mass diagnostic deliberately remains 0.
+                    proxy_fallback[component] = True
+                    block_probability[component] = prior_block_probability
+            block_probability[-1] = prior_block_probability
+        block_probability /= block_probability.sum(axis=1, keepdims=True)
+
+        block_cdf = np.cumsum(block_probability, axis=1)
+        block_cdf[:, -1] = 1.0
+        selected_block = np.empty(len(uniforms), dtype=np.int64)
+        residual_uniform = np.empty(len(uniforms), dtype=np.float64)
+        for component in range(len(recipe.component_names)):
+            draws = np.flatnonzero(component_id == component)
+            if not len(draws):
+                continue
+            blocks = np.searchsorted(
+                block_cdf[component], uniforms[draws], side="right"
+            )
+            blocks = np.minimum(blocks, len(bounds) - 1)
+            selected_block[draws] = blocks
+            lower = np.where(
+                blocks > 0, block_cdf[component, np.maximum(blocks - 1, 0)], 0.0
+            )
+            mass = block_probability[component, blocks]
+            residual_uniform[draws] = np.minimum(
+                (uniforms[draws] - lower) / mass,
+                np.nextafter(1.0, 0.0),
+            )
+
+        drawn_indices = np.empty(len(uniforms), dtype=np.int64)
+        drawn_probability = np.empty(len(uniforms), dtype=np.float64)
+        mixture_weight = torch.as_tensor(
+            recipe.component_weights,
+            dtype=torch.float64,
+            device=self.a1.device,
+        )
+        with torch.no_grad():
+            for block in np.unique(selected_block):
+                start, stop = bounds[int(block)]
+                likelihood = self._proxy_likelihood_block(
+                    observation_tensor, start, stop
+                )
+                left = np.searchsorted(excluded, start, side="left")
+                right = np.searchsorted(excluded, stop, side="left")
+                block_excluded = excluded[left:right] - start
+                mask = torch.zeros(
+                    stop - start, dtype=torch.bool, device=self.a1.device
+                )
+                if len(block_excluded):
+                    mask[
+                        torch.as_tensor(
+                            block_excluded,
+                            dtype=torch.long,
+                            device=self.a1.device,
+                        )
+                    ] = True
+                prior = self.prior[start:stop].masked_fill(mask, 0.0)
+                prior_total = prior.sum()
+                prior_within = torch.where(
+                    prior_total > 0.0, prior / prior_total, torch.zeros_like(prior)
+                )
+                within = []
+                for component, beta in enumerate(recipe.component_betas[:-1]):
+                    if proxy_fallback[component]:
+                        within.append(prior_within)
+                        continue
+                    score = (
+                        self.log_base[start:stop] + float(beta) * likelihood
+                    ).masked_fill(mask, -torch.inf)
+                    if bool(torch.isfinite(score).any()):
+                        within.append(torch.softmax(score, dim=0))
+                    else:
+                        within.append(torch.zeros_like(score))
+                within.append(prior_within)
+                within_probability = torch.stack(within)
+
+                for component in range(len(recipe.component_names)):
+                    draws = np.flatnonzero(
+                        (component_id == component) & (selected_block == block)
+                    )
+                    if not len(draws):
+                        continue
+                    cumulative = torch.cumsum(
+                        within_probability[component], dim=0
+                    )
+                    cumulative[-1] = 1.0
+                    local = torch.searchsorted(
+                        cumulative,
+                        torch.as_tensor(
+                            np.ascontiguousarray(residual_uniform[draws]),
+                            dtype=torch.float64,
+                            device=self.a1.device,
+                        ),
+                        right=True,
+                    ).clamp(max=stop - start - 1)
+                    drawn_indices[draws] = self.active[start + local].cpu().numpy()
+                    actual_component_probability = (
+                        torch.as_tensor(
+                            block_probability[:, int(block)],
+                            dtype=torch.float64,
+                            device=self.a1.device,
+                        )[:, None]
+                        * within_probability[:, local]
+                    )
+                    drawn_probability[draws] = (
+                        mixture_weight[:, None] * actual_component_probability
+                    ).sum(dim=0).cpu().numpy()
+
+        if not np.isfinite(drawn_probability).all() or (drawn_probability <= 0.0).any():
+            raise RuntimeError("conditioned MIS produced an invalid balance probability")
+        if np.isin(drawn_indices, np.asarray(exclude_indices, dtype=np.int64)).any():
+            raise RuntimeError("conditioned MIS sampled its excluded exact stratum")
+        return drawn_indices, drawn_probability, diagnostics
 
     def draw(
         self,
@@ -1298,6 +1860,7 @@ class WholeCatalogueProxy:
         delta: float,
         rng,
         temperature: float = 1.0,
+        exclude_indices: Optional[np.ndarray] = None,
     ):
         """Sample ``q = (1-delta) softmax(s/T) + delta pi`` over every atom.
 
@@ -1306,7 +1869,11 @@ class WholeCatalogueProxy:
         """
 
         return self.draw_uniforms(
-            observation, rng.random(n_draws), delta=delta, temperature=temperature
+            observation,
+            rng.random(n_draws),
+            delta=delta,
+            temperature=temperature,
+            exclude_indices=exclude_indices,
         )
 
     def draw_uniforms(
@@ -1316,6 +1883,7 @@ class WholeCatalogueProxy:
         *,
         delta: float,
         temperature: float = 1.0,
+        exclude_indices: Optional[np.ndarray] = None,
     ):
         """Map an explicit uniform stream to atoms, for common random numbers.
 
@@ -1328,21 +1896,44 @@ class WholeCatalogueProxy:
         spikes; flattening trades some efficiency on the easy objects for
         coverage on the hard ones.  It changes only the proposal, never the
         estimator, so unbiasedness is untouched at any value.
+
+        ``exclude_indices`` conditions the mixture on the complement of a
+        deterministic exact stratum.  The returned probability is normalized
+        on that complement, not the unconditional mixture probability.
         """
 
+        if not 0.0 < delta < 1.0:
+            raise ValueError("delta must lie strictly between zero and one")
         if not np.isfinite(temperature) or temperature <= 0.0:
             raise ValueError("temperature must be positive and finite")
-        score = self.score(observation)
-        if temperature != 1.0:
-            score = score / float(temperature)
+        uniforms = np.asarray(uniforms, dtype=np.float64)
+        if uniforms.ndim != 1 or not np.isfinite(uniforms).all():
+            raise ValueError("uniforms must be a finite one-dimensional array")
+        if ((uniforms < 0.0) | (uniforms >= 1.0)).any():
+            raise ValueError("uniforms must lie in [0, 1)")
+        # Temperature deliberately leaves the detected-prior base measure
+        # untouched: only the approximate likelihood is flattened.
+        score = self.log_base + self.proxy_likelihood(observation) / float(temperature)
         finite = torch.isfinite(score)
         shifted = torch.where(finite, score, torch.tensor(-np.inf, device=score.device))
         tilted = torch.softmax(shifted, dim=0)
         mixture = (1.0 - delta) * tilted + delta * self.prior
+        if exclude_indices is not None:
+            positions = self._excluded_positions(exclude_indices)
+            if len(positions) == len(self.active_indices):
+                raise ValueError("cannot sample an empty catalogue complement")
+            mixture[
+                torch.as_tensor(positions, dtype=torch.long, device=score.device)
+            ] = 0.0
+            normalizer = mixture.sum()
+            normalizer_value = float(normalizer)
+            if not np.isfinite(normalizer_value) or normalizer_value <= 0.0:
+                raise RuntimeError("tilted proposal has zero complement mass")
+            mixture = mixture / normalizer
         cumulative = torch.cumsum(mixture, dim=0)
         cumulative[-1] = 1.0
         drawn = torch.as_tensor(
-            np.ascontiguousarray(uniforms, dtype=np.float64),
+            np.ascontiguousarray(uniforms),
             dtype=torch.float64,
             device=score.device,
         )
@@ -1359,11 +1950,13 @@ def pareto_tail_index(weights, *, minimum_tail: int = 5):
 
     This is the Zhang and Stephens (2009) empirical-Bayes estimator used as the
     PSIS ``k-hat`` diagnostic.  It measures how heavy the importance-weight tail
-    is, which is what decides whether a draw ladder can converge at all:
-    ``k >= 0.5`` means the weight variance is infinite, so the estimator has no
-    root-M rate and a 1/M finite-draw bias correction is not applicable;
-    ``k >= 1`` means the mean is infinite as well.  The practical reliability
-    threshold is ``min(1 - 1/log10(S), 0.7)`` for a sample of size ``S``.
+    is.  In a continuous heavy-tail model, ``k >= 0.5`` corresponds to
+    infinite variance and ``k >= 1`` to an infinite mean.  This estimator has
+    finite support, so its moments are mathematically finite; here k-hat is an
+    operational warning that the sampled regime behaves like a heavy tail and
+    that root-M or 1/M extrapolation is not yet trustworthy.  The practical
+    reliability threshold is ``min(1 - 1/log10(S), 0.7)`` for a sample of size
+    ``S``.
 
     ``weights`` is a nonnegative ``(rows, S)`` array or tensor of raw importance
     weights, not log weights and not normalized; the shape is invariant to

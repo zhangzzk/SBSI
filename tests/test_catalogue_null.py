@@ -2,6 +2,7 @@ import numpy as np
 from dataclasses import replace
 import pytest
 import torch
+from scipy.special import logsumexp
 from scipy.stats import norm
 
 from sbsi.catalogue_closure import generate_mock_catalogue, generate_ring_mock_catalogue
@@ -11,6 +12,7 @@ from sbsi.catalogue_likelihood import (
     CatalogueModelCache,
 )
 from sbsi.catalogue_null import (
+    AdaptiveOneStepResult,
     Section5SeedResult,
     _coalesced_logsumexp,
     autograd_exact_section5,
@@ -26,6 +28,7 @@ from sbsi.catalogue_null import (
 from sbsi.catalogue_sampling import (
     DefensiveLocalProposal,
     ProposalCoordinateTable,
+    TAIL_PROPOSAL_RECIPE,
     pareto_tail_index,
 )
 from sbsi.measurement_model import (
@@ -1293,3 +1296,337 @@ def test_weight_diagnostics_are_absent_without_the_retained_ladder():
     assert result.weight_diagnostic_draws is None
     assert result.weight_ess is None
     assert result.weight_diagnostic_summary() is None
+
+
+def _tilted_common(likelihood, mock, n_candidates=2):
+    common = _stratified_common(likelihood, mock, n_candidates)
+    common.update(
+        estimator_mode="tilted_stratified",
+        full_information=False,
+        draw_ladder=(
+            4 * TAIL_PROPOSAL_RECIPE.cycle_length,
+            8 * TAIL_PROPOSAL_RECIPE.cycle_length,
+        ),
+    )
+    return common
+
+
+def _direct_tilted_log_likelihoods(
+    likelihood,
+    mock,
+    candidates,
+    draw,
+    *,
+    views,
+    rungs,
+):
+    """Hand reduction of exact S plus the fixed-count qbar complement."""
+
+    exact_probability = np.ones(candidates.indices.shape, dtype=np.float64)
+    reduced = {}
+    for name, (g1, g2) in views.items():
+        exact = likelihood.log_importance_weights(
+            mock.measurements,
+            g1,
+            g2,
+            atom_indices=candidates.indices,
+            proposal_probability=exact_probability,
+        )
+        sampled = likelihood.log_importance_weights(
+            mock.measurements,
+            g1,
+            g2,
+            atom_indices=draw.indices,
+            proposal_probability=draw.probability,
+        )
+        exact_sum = logsumexp(exact, axis=1)
+        for rung in rungs:
+            sampled_mean = logsumexp(sampled[:, :rung], axis=1) - np.log(rung)
+            reduced[(name, rung)] = np.logaddexp(exact_sum, sampled_mean) - (
+                likelihood.log_population_normalization(g1, g2)
+            )
+    return reduced
+
+
+def test_tilted_mis_estimator_matches_hand_reduced_exact_plus_qbar_tail():
+    likelihood = _torch_two_shape_likelihood()
+    mock = generate_mock_catalogue(
+        likelihood,
+        n_detected=6,
+        g1=0.01,
+        g2=-0.005,
+        scene_seed=1501,
+        detection_seed=1502,
+        flow_seed=1503,
+    )
+    proposal = _proposal(likelihood)
+    common = _tilted_common(likelihood, mock)
+    common["proposal"] = proposal
+    seed = 1504
+    result = run_adaptive_section5(proposal_seed=seed, **common)
+
+    candidates = proposal.candidates(mock.measurements, n_candidates=2)
+    draw = proposal.draw_tilted_mis(
+        candidates,
+        mock.measurements,
+        n_draws=common["draw_ladder"][-1],
+        seed=seed,
+        device=likelihood.flow_model.device,
+    )
+    assert not draw.local_member.any()
+    h = common["h"]
+    views = {
+        "zero": (0.0, 0.0),
+        "g1_plus": (h, 0.0),
+        "g1_minus": (-h, 0.0),
+        "g2_plus": (0.0, h),
+        "g2_minus": (0.0, -h),
+    }
+    direct = _direct_tilted_log_likelihoods(
+        likelihood,
+        mock,
+        candidates,
+        draw,
+        views=views,
+        rungs=common["draw_ladder"],
+    )
+    for rung_index, rung in enumerate(common["draw_ladder"]):
+        for component, plus, minus in (
+            (0, "g1_plus", "g1_minus"),
+            (1, "g2_plus", "g2_minus"),
+        ):
+            expected_score = (
+                direct[(plus, rung)] - direct[(minus, rung)]
+            ) / (2.0 * h)
+            expected_information = -(
+                direct[(plus, rung)]
+                - 2.0 * direct[("zero", rung)]
+                + direct[(minus, rung)]
+            ) / h**2
+            np.testing.assert_allclose(
+                result.ladder_score[rung_index, :, component],
+                expected_score,
+                rtol=2e-5,
+                atol=2e-5,
+            )
+            np.testing.assert_allclose(
+                result.ladder_information[rung_index, :, component],
+                expected_information,
+                # The production path evaluates float32 tensors while this
+                # direct check reduces float64 host arrays; the second
+                # difference amplifies their harmless reassociation error.
+                rtol=1e-3,
+                atol=2e-2,
+            )
+
+    assert result.proposal_component_names == TAIL_PROPOSAL_RECIPE.component_names
+    assert result.proposal_component_weights == TAIL_PROPOSAL_RECIPE.component_weights
+    np.testing.assert_allclose(
+        result.proposal_component_complement_mass,
+        draw.component_complement_mass,
+        rtol=0.0,
+        atol=0.0,
+    )
+    for rung_index, rung in enumerate(common["draw_ladder"]):
+        expected_counts = np.stack(
+            [
+                np.sum(draw.component_id[:, :rung] == component, axis=1)
+                for component in range(len(TAIL_PROPOSAL_RECIPE.component_names))
+            ],
+            axis=1,
+        )
+        np.testing.assert_array_equal(
+            result.proposal_component_counts[rung_index], expected_counts
+        )
+
+    # The public JSON summary labels pooled weight diagnostics honestly and
+    # carries the fixed recipe plus the pre-conditioning component masses.
+    identity = ((1.0, 0.0), (0.0, 1.0))
+    payload = AdaptiveOneStepResult(
+        center=(0.0, 0.0),
+        estimate=(0.0, 0.0),
+        step=(0.0, 0.0),
+        information_eigenvalues=(1.0, 1.0),
+        robust_covariance=identity,
+        model_covariance=identity,
+        robust_standard_error=(1.0, 1.0),
+        model_standard_error=(1.0, 1.0),
+        quadratic_log_likelihood_gain=0.0,
+        moments=result,
+    ).to_dict()
+    assert payload["proposal_diagnostics"]["component_names"] == list(
+        TAIL_PROPOSAL_RECIPE.component_names
+    )
+    assert payload["weight_diagnostics"][0]["ess_interpretation"] == (
+        "pooled_concentration_only_for_deterministic_mixture"
+    )
+
+    with pytest.raises(ValueError, match="component counts must have shape"):
+        replace(
+            result,
+            proposal_component_counts=result.proposal_component_counts[..., :-1],
+        )
+    invalid_mass = result.proposal_component_complement_mass.copy()
+    invalid_mass[0, 0] = np.nan
+    with pytest.raises(ValueError, match="complement masses"):
+        replace(result, proposal_component_complement_mass=invalid_mass)
+
+
+def test_tilted_mis_relative_error_uses_within_component_sample_variances():
+    likelihood = _torch_two_shape_likelihood()
+    mock = generate_mock_catalogue(
+        likelihood,
+        n_detected=6,
+        g1=0.01,
+        g2=0.0,
+        scene_seed=1511,
+        detection_seed=1512,
+        flow_seed=1513,
+    )
+    proposal = _proposal(likelihood)
+    common = _tilted_common(likelihood, mock)
+    common["proposal"] = proposal
+    seed = 1514
+    result = run_adaptive_section5(proposal_seed=seed, **common)
+    candidates = proposal.candidates(mock.measurements, n_candidates=2)
+    draw = proposal.draw_tilted_mis(
+        candidates,
+        mock.measurements,
+        n_draws=common["draw_ladder"][-1],
+        seed=seed,
+        device=likelihood.flow_model.device,
+    )
+    exact_log = likelihood.log_importance_weights(
+        mock.measurements,
+        0.0,
+        0.0,
+        atom_indices=candidates.indices,
+        proposal_probability=np.ones(candidates.indices.shape, dtype=np.float64),
+    )
+    sampled_log = likelihood.log_importance_weights(
+        mock.measurements,
+        0.0,
+        0.0,
+        atom_indices=draw.indices,
+        proposal_probability=draw.probability,
+    )
+    pooled_values_differ = False
+    for rung_index, rung in enumerate(common["draw_ladder"]):
+        for row in range(len(mock.measurements)):
+            peak = max(exact_log[row].max(), sampled_log[row, :rung].max())
+            exact = np.exp(exact_log[row] - peak).sum()
+            sampled = np.exp(sampled_log[row, :rung] - peak)
+            sampled_mean = sampled.mean()
+            variance = 0.0
+            for component in range(len(TAIL_PROPOSAL_RECIPE.component_names)):
+                values = sampled[draw.component_id[row, :rung] == component]
+                assert len(values) >= 2
+                variance += (len(values) / rung) ** 2 * np.var(
+                    values, ddof=1
+                ) / len(values)
+            expected = np.sqrt(variance) / (exact + sampled_mean)
+            np.testing.assert_allclose(
+                result.weight_relative_error[rung_index, row],
+                expected,
+                rtol=1e-5,
+                atol=1e-12,
+            )
+            pooled = sampled.std(ddof=1) / np.sqrt(rung) / (
+                exact + sampled_mean
+            )
+            pooled_values_differ |= not np.isclose(expected, pooled, rtol=1e-3)
+    assert pooled_values_differ
+
+
+def test_tilted_mis_is_exact_when_candidate_stratum_has_full_support():
+    likelihood = _torch_two_shape_likelihood()
+    mock = generate_mock_catalogue(
+        likelihood,
+        n_detected=6,
+        g1=0.01,
+        g2=0.0,
+        scene_seed=1521,
+        detection_seed=1522,
+        flow_seed=1523,
+    )
+    common = _tilted_common(likelihood, mock, n_candidates=4)
+    first = run_adaptive_section5(proposal_seed=1524, **common)
+    second = run_adaptive_section5(proposal_seed=1525, **common)
+    np.testing.assert_allclose(first.score, second.score, rtol=0.0, atol=1e-12)
+    np.testing.assert_allclose(
+        first.ladder_score[0], first.ladder_score[1], rtol=0.0, atol=1e-12
+    )
+    assert np.all(first.unique_counts == 0)
+    assert np.all(first.weight_relative_error == 0.0)
+    assert np.all(first.proposal_component_complement_mass == 0.0)
+
+    h = common["h"]
+    for component, plus, minus in (
+        (0, (h, 0.0), (-h, 0.0)),
+        (1, (0.0, h), (0.0, -h)),
+    ):
+        expected = (
+            likelihood.log_likelihood(mock.measurements, *plus)
+            - likelihood.log_likelihood(mock.measurements, *minus)
+        ) / (2.0 * h)
+        np.testing.assert_allclose(
+            first.score[:, component], expected, rtol=2e-3, atol=2e-3
+        )
+
+
+def test_tilted_mis_rejects_a_ladder_outside_the_recipe_cycle():
+    likelihood = _torch_two_shape_likelihood()
+    mock = generate_mock_catalogue(
+        likelihood,
+        n_detected=2,
+        g1=0.0,
+        g2=0.0,
+        scene_seed=1531,
+        detection_seed=1532,
+        flow_seed=1533,
+    )
+    common = _tilted_common(likelihood, mock)
+    common["draw_ladder"] = (2 * TAIL_PROPOSAL_RECIPE.cycle_length + 1,)
+    with pytest.raises(ValueError, match="divisible.*cycle length"):
+        run_adaptive_section5(proposal_seed=1534, **common)
+
+    common["draw_ladder"] = (TAIL_PROPOSAL_RECIPE.cycle_length,)
+    with pytest.raises(ValueError, match="at least two draws from each"):
+        run_adaptive_section5(proposal_seed=1534, **common)
+
+
+@pytest.mark.parametrize("candidate_backend", ["scipy", "torch"])
+def test_tilted_sampler_uses_flow_device_independent_of_candidate_backend(
+    monkeypatch, candidate_backend
+):
+    likelihood = _torch_two_shape_likelihood()
+    mock = generate_mock_catalogue(
+        likelihood,
+        n_detected=2,
+        g1=0.0,
+        g2=0.0,
+        scene_seed=1541,
+        detection_seed=1542,
+        flow_seed=1543,
+    )
+    proposal = _proposal(likelihood)
+    original = proposal.draw_tilted_mis
+    seen = []
+
+    def recorded(*args, **kwargs):
+        seen.append(kwargs.get("device"))
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(proposal, "draw_tilted_mis", recorded)
+    common = _tilted_common(likelihood, mock)
+    common.update(
+        proposal=proposal,
+        candidate_backend=candidate_backend,
+        draw_ladder=(2 * TAIL_PROPOSAL_RECIPE.cycle_length,),
+    )
+    run_adaptive_section5(proposal_seed=1544, **common)
+    assert seen
+    assert all(
+        torch.device(device) == torch.device(likelihood.flow_model.device)
+        for device in seen
+    )

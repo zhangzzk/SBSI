@@ -2,6 +2,118 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.319 — conditioned deterministic MIS removes exact-stratum waste and makes the whole-catalogue tail recipe fixed and auditable
+
+**Why.** The completed 512-object complement diagnostic, job 16121435, made
+the remaining failure mode precise. The exact-stratum mass had p10/median/p90
+`0.0738 / 0.2943 / 0.8516`; the prefilter complement held only
+`0.0147 / 0.0822 / 0.1786`, while the estimated mass outside the prefilter was
+`0.1127 / 0.5618 / 0.8808`. A median 84.7% of complement mass therefore lay
+outside the prefilter. The prefilter-only tail proposal is retired.
+
+The whole-catalogue `0.9 proxy + 0.1 pi` diagnostic was much better than the
+prior: Pareto-k p10/median/p90 `0.076 / 0.297 / 0.646` versus
+`0.271 / 0.616 / 1.478`, and its relative-SE ratio was
+`0.174 / 0.268 / 0.608`, about 13.9x less median variance. But 38/512 objects
+(7.4%) still exceeded k=0.7 and seven exceeded k=1. The cause was visible in
+the draw allocation. The proxy proposal was normalized over the whole
+catalogue even though `S` was already summed exactly; its complement-retained
+fraction was p10/median/p90 `0.263 / 0.833 / 0.936`, falling to median 0.226
+on k>0.7 objects and about 0.103 on k>1 objects. The proxy disappeared behind
+the exact stratum precisely where it was needed most.
+
+**The fixed recipe.** The new `tilted_stratified` screen conditions each
+component separately on `C=S^c`, then uses deterministic multiple importance
+sampling:
+
+```text
+components       proxy T=1       proxy T=2       prior pi
+cycle counts         4               3               1
+balance weights     1/2             3/8             1/8
+
+qbar_C = (1/2) r_1,C + (3/8) r_2,C + (1/8) pi_C
+Ahat   = sum_S c + (1/M) sum_t c(j_t) / qbar_C(j_t)
+```
+
+Temperature applies only to the approximate Gaussian likelihood, not to its
+`pi Pdet` base measure. Every component is normalized on the complement before
+mixing. The fixed eight-draw source cycle gives exact `4:3:1` counts at every
+retained rung, while every source uses the same balance denominator. This is
+unbiased, removes random component-allocation noise, and has variance no larger
+than iid sampling from the same mixture. The prior component supplies full
+support. There are deliberately no CLI temperature, defense, or allocation
+knobs: the exported `TAIL_PROPOSAL_RECIPE` is copied into run provenance.
+
+**Files and behaviour changed.** Work was isolated from the concurrently dirty
+`dev` checkout in worktree
+`/home/z/Zekang.Zhang/SBSI-inference-sampler-night`, branch
+`codex/inference-sampler-night`; commit `843cb52` records the exact starting
+snapshot. `sbsi/catalogue_sampling.py` adds the frozen recipe, component-aware
+draw records, and a blocked two-pass whole-catalogue sampler with shared GPU
+proxy tables, exact component conditioning, exact hierarchical balance
+probabilities, fixed object streams, full-support/underflow handling, and loud
+rejection of NaN or positive-infinite component normalizers.
+`sbsi/catalogue_null.py` integrates it with the exact stratum, validates the
+cycle, calculates relative SE from within-component variances, and retains
+component counts and complement masses. `sbsi/complement_diagnostic.py` now
+pairs the production prior and DM samplers by absolute object ID and fixes the
+old double-slicing error for nonzero observation windows. It stores the
+within-component variance of the aligned per-slot `DM - prior` difference, so
+the common-random-number agreement z-score includes the paired covariance.
+`scripts/run_inference.py` records the fixed recipe, raw proposal diagnostics,
+and full code/config/input/cache/output hashes for the standalone diagnostic;
+the two screen wrappers pin this isolated checkout, refuse overwrite, expose a
+validated seed included in the output tag, and put the estimator screen on
+held-out rows 25,000:50,000. The first diagnostic gate uses 512 of those rows.
+Tests cover exact enumeration, empirical frequencies, nesting, split-object
+identity, common random numbers, unbiasedness, the deterministic-mixture
+variance identity, severe underflow, backend/device routing, serialization,
+and release labelling. `doc/CATALOGUE_PRIOR.md` records the algorithm.
+
+**A reliability correction.** The 12.76M-atom catalogue is finite and the
+prior component has full support, so its exact importance moments are finite.
+Earlier wording that k>=0.5 proved literally infinite variance, or that k>=1
+proved an infinite mean, was wrong. Pareto k remains a useful pre-asymptotic
+warning: a high fitted value says this draw range behaves like the analogous
+heavy-tailed continuous model and does not support root-M or `1/M`
+extrapolation. Maintained code and documentation now use that interpretation;
+historical entries remain unchanged as the record of what was claimed then.
+
+**Validation.** On the login node, only light checks were run:
+
+```text
+python -m compileall -q sbsi scripts tests                         clean
+bash -n jobs/job_complement_mass_diagnostic.sh \
+        jobs/job_inference_stratified_screen.sh                   clean
+ruff check <all changed Python and tests>                          clean
+pytest -p no:cacheprovider tests/test_catalogue_sampling.py \
+  tests/test_catalogue_null.py tests/test_complement_diagnostic.py \
+  tests/test_inference_provenance.py tests/test_release_config.py \
+  tests/test_compare_estimator_arms.py                            106 passed
+pytest tests -q                                                  209 passed,
+                                                                  2 skipped
+git diff --check                                                  clean
+```
+
+Ancillary jobs 16121540--16121542 failed in 19--20 seconds before scientific
+work because the retired wrapper reused Slurm's reserved `TEMP` scratch path as
+an argparse float. No result from those jobs was used. The new wrappers use no
+reserved scratch-variable name and validate numeric inputs.
+
+**Limitations and next steps.** This entry establishes code correctness, not
+scientific promotion. `tilted_stratified` remains a custom screen and
+`v1.1-infer` remains unchanged. Run the 512-object held-out diagnostic first;
+require no undefined k, at least 90% below k=0.5 and 99% below k=0.7, p90
+relative SE at most 0.0268, median at most 0.00882, and calibrated paired mass
+differences. Only then run paired prior-stratified and DM arms on held-out rows
+25,000:50,000, test the `M=8,192 -> 16,384` plateau and elapsed-time-adjusted
+variance, and repeat under a second proposal seed before considering release
+promotion. Job 16121455 is useful historical evidence for the old unconditioned
+tilt, but it is not a paired control for this gate: it uses rows 0:25,000 and
+an older implementation, while the new screen uses rows 25,000:50,000. The
+paired prior-vs-DM complement mass z-score replaces that unreachable
+cross-version comparison as the unbiasedness check.
+
 ## 2026-08-29 cont.318 — the g=0 null does not separate multiplicative from additive at K=16,384: both readings survive
 
 **Why.** cont.314 found a residual that survives at 125,000 objects and grows

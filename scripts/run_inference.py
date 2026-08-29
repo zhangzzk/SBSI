@@ -23,7 +23,11 @@ from sbsi.catalogue_likelihood import (
 from sbsi.catalogue_null import (
     estimate_one_step_adaptive_section5,
 )
-from sbsi.catalogue_sampling import DefensiveLocalProposal, ProposalCoordinateTable
+from sbsi.catalogue_sampling import (
+    TAIL_PROPOSAL_RECIPE,
+    DefensiveLocalProposal,
+    ProposalCoordinateTable,
+)
 from sbsi.complement_diagnostic import diagnose_complement
 from sbsi.forward_catalogue import EmulatorPairingConfig
 from sbsi.measurement_model import load_measurement_model
@@ -345,9 +349,11 @@ def _resolved_pipeline_config(args, source: dict) -> dict:
         # document exactly and reports v1.1-infer rather than custom.
         resolved["estimator"]["estimator_mode"] = args.estimator_mode
         if args.estimator_mode == "tilted_stratified":
-            resolved["estimator"]["tilt_delta"] = float(args.estimator_tilt_delta)
-            resolved["estimator"]["tilt_temperature"] = float(
-                args.estimator_tilt_temperature
+            # The expanded complement proposal is a scientific recipe, not a
+            # deployment knob.  Copy through JSON so tuples become stable
+            # manifest lists and callers cannot mutate the module constant.
+            resolved["estimator"]["tail_proposal"] = json.loads(
+                json.dumps(asdict(TAIL_PROPOSAL_RECIPE))
             )
     return resolved
 
@@ -380,6 +386,17 @@ def _model_cache_hashes(root: str | Path) -> dict[str, str]:
     names = ["manifest.json"]
     for view in manifest.get("views", ()):
         names.extend((view["flow"], view["detection"]))
+    return _file_hashes(root, names)
+
+
+def _mock_input_hashes(root: str | Path) -> dict[str, str]:
+    """Hash a frozen mock and whichever provenance manifest it carries."""
+
+    root = Path(root)
+    names = ["measurements.parquet", "truth.parquet"]
+    for manifest in ("image_mock_manifest.json", "likelihood_mock_manifest.json"):
+        if (root / manifest).is_file():
+            names.append(manifest)
     return _file_hashes(root, names)
 
 
@@ -702,9 +719,9 @@ def parse_args(argv=None):
             "sums the candidate support exactly and spends every draw on its "
             "complement; it requires the production-prefix allocation, a "
             "retained full ladder, and no finite-draw bias correction, and it "
-            "marks the run as a custom pipeline.  'tilted_stratified' is "
-            "the same split with the complement drawn from the tilted "
-            "whole-catalogue proposal instead of the flat prior."
+            "marks the run as a custom pipeline.  'tilted_stratified' uses "
+            "the same split with the fixed component-conditioned T1/T2/prior "
+            "deterministic-MIS whole-catalogue complement recipe."
         ),
     )
     parser.add_argument("--adaptive-min-ess", type=float, default=32.0)
@@ -740,24 +757,6 @@ def parse_args(argv=None):
     )
     parser.add_argument("--object-chunk", type=int, default=128)
     parser.add_argument(
-        "--estimator-tilt-delta",
-        type=float,
-        default=0.1,
-        help="defensive prior fraction of the tilted complement proposal",
-    )
-    parser.add_argument(
-        "--estimator-tilt-temperature",
-        type=float,
-        default=1.0,
-        help="flatten the tilted complement proposal; above one broadens it",
-    )
-    parser.add_argument(
-        "--diagnose-complement-tilt-temperature",
-        type=float,
-        default=1.0,
-        help="flatten the tilted component; above one broadens its coverage",
-    )
-    parser.add_argument(
         "--diagnose-complement",
         metavar="DIRECTORY",
         default=None,
@@ -774,14 +773,11 @@ def parse_args(argv=None):
         help="prior draws per object used to reach beyond the prefilter",
     )
     parser.add_argument(
-        "--diagnose-complement-tilt",
-        type=float,
-        default=None,
-        metavar="DELTA",
+        "--diagnose-complement-tail-proposal",
+        action="store_true",
         help=(
-            "also draw the complement from a whole-catalogue proposal mixing "
-            "the diagonal Gaussian proxy with DELTA of the detected prior, and "
-            "report its tail index beside the prior-only one"
+            "also diagnose the same fixed conditioned deterministic-MIS tail "
+            "proposal used by estimator-mode tilted_stratified"
         ),
     )
     parser.add_argument("--atom-chunk", type=int, default=4096)
@@ -1217,6 +1213,10 @@ def main(argv=None):
         else:
             raise RuntimeError(f"unsupported saved mock kind {mock.kind!r}")
 
+    source_mock_hashes = (
+        None if generated_mock else _mock_input_hashes(args.mock_input)
+    )
+
     selection_report = None
     if output_cut is not None:
         values = mock.measurements.loc[:, likelihood.target_names].to_numpy(float)
@@ -1422,19 +1422,64 @@ def main(argv=None):
             ),
             n_global_draws=args.diagnose_complement_global_draws,
             seed=int(args.proposal_seed) + 7_000_003,
-            observation_start=args.observation_start,
-            observation_stop=args.observation_stop,
+            # `mock` is already the local partition.  The previous code sliced
+            # it and then applied the original absolute bounds a second time,
+            # producing an empty/wrong diagnostic for nonzero partitions.
+            observation_start=0,
+            observation_stop=len(mock.measurements),
+            object_id_offset=int(args.observation_start),
             object_chunk=args.object_chunk,
             atom_chunk=args.atom_chunk,
             candidate_backend=args.candidate_backend,
-            tilt_delta=args.diagnose_complement_tilt,
-            tilt_temperature=args.diagnose_complement_tilt_temperature,
+            include_tail_proposal=args.diagnose_complement_tail_proposal,
         )
         destination = Path(args.diagnose_complement)
         destination.mkdir(parents=True, exist_ok=True)
-        diagnostic.table.to_parquet(destination / "per_object.parquet")
-        summary = {"metadata": diagnostic.metadata, "summary": diagnostic.summary()}
-        (destination / "summary.json").write_text(json.dumps(summary, indent=2))
+        table_path = destination / "per_object.parquet"
+        diagnostic.table.to_parquet(table_path)
+        summary = {
+            "method": "held-out complement tail-proposal diagnostic",
+            "metadata": diagnostic.metadata,
+            "summary": diagnostic.summary(),
+            "provenance": {
+                "pipeline_release": "diagnostic",
+                "pipeline_base_release": inference_config["release"],
+                "pipeline_config_sha256": pipeline_config_sha256,
+                "pipeline_resolved_config_sha256": _json_sha256(
+                    resolved_pipeline_config
+                ),
+                "likelihood_release": likelihood_config["release"],
+                "likelihood_config_sha256": likelihood_config_sha256,
+                "pipeline_config": resolved_pipeline_config,
+                "config": _result_arguments(args),
+                "conditions": conditions,
+                "selection": selection_report,
+                "initial_center": initial_report,
+                "observation_partition": observation_partition,
+                "mock_kind": mock.kind,
+                "mock_generated": generated_mock,
+                "injected_shear": injected_shear.tolist(),
+                "model_sha256": model_hashes,
+                "model_cache_sha256": model_cache_hashes,
+                "scene_sha256": scene_hashes,
+                "proposal_cache_sha256": proposal_cache_hashes,
+                "mock_input_sha256": source_mock_hashes,
+                "likelihood_component_sha256": likelihood_component_hashes,
+                "pipeline_implementation_sha256": pipeline_implementation_hashes,
+                "likelihood_implementation_sha256": (
+                    likelihood_implementation_hashes
+                ),
+                "diagnostic_implementation_sha256": {
+                    "sbsi/complement_diagnostic.py": _sha256(
+                        REPOSITORY_ROOT / "sbsi/complement_diagnostic.py"
+                    )
+                },
+                "output_sha256": {table_path.name: _sha256(table_path)},
+            },
+        }
+        (destination / "summary.json").write_text(
+            json.dumps(summary, indent=2) + "\n"
+        )
         print(json.dumps(summary, indent=2))
         return 0
 
@@ -1462,8 +1507,6 @@ def main(argv=None):
         bias_correction=args.adaptive_bias_correction,
         candidate_backend=args.candidate_backend,
         estimator_mode=args.estimator_mode,
-        tilt_delta=args.estimator_tilt_delta,
-        tilt_temperature=args.estimator_tilt_temperature,
         retain_full_ladder=args.retain_full_ladder,
         object_id_offset=int(args.observation_start),
         object_chunk=args.object_chunk,
@@ -1497,6 +1540,20 @@ def main(argv=None):
                 "weight_pareto_k": result.moments.weight_pareto_k,
             }
             if result.moments.weight_diagnostic_draws is not None
+            else {}
+        ),
+        # Preserve the full per-object/component audit, not only the
+        # percentile reduction embedded in result.json.
+        **(
+            {
+                "proposal_component_counts": (
+                    result.moments.proposal_component_counts
+                ),
+                "proposal_component_complement_mass": (
+                    result.moments.proposal_component_complement_mass
+                ),
+            }
+            if result.moments.proposal_component_counts is not None
             else {}
         ),
     )
@@ -1539,23 +1596,6 @@ def main(argv=None):
         selection_report["probabilities"] = probabilities
         selection_report["cache_sha256"] = selection_cache_hashes
 
-    source_mock_hashes = None
-    if not generated_mock:
-        source_root = Path(args.mock_input)
-        source_mock_hashes = {
-            name: _sha256(source_root / name)
-            for name in ("measurements.parquet", "truth.parquet")
-        }
-        source_image_manifest = source_root / "image_mock_manifest.json"
-        if source_image_manifest.is_file():
-            source_mock_hashes[source_image_manifest.name] = _sha256(
-                source_image_manifest
-            )
-        source_likelihood_manifest = source_root / "likelihood_mock_manifest.json"
-        if source_likelihood_manifest.is_file():
-            source_mock_hashes[source_likelihood_manifest.name] = _sha256(
-                source_likelihood_manifest
-            )
     mock_root = output / "mock"
     mock.save(mock_root)
     mock_hashes = {

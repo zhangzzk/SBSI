@@ -22,6 +22,7 @@ from .catalogue_sampling import (
     CoalescedProposalDraw,
     DefensiveLocalProposal,
     ProposalDraw,
+    TAIL_PROPOSAL_RECIPE,
     pareto_tail_index,
     select_adaptive_draw_counts,
     select_independent_pilot_draw_counts,
@@ -195,14 +196,23 @@ class AdaptiveSection5Result:
     ladder_information: Optional[np.ndarray] = field(default=None, repr=False)
     # Per-object weight diagnostics of the zero-shear view, one row per prefix
     # in `weight_diagnostic_draws`: the retained ladder when it is kept, and
-    # the production draw count alone otherwise.  They answer whether the
-    # estimator's weights admit a root-M rate at all, which no other saved
-    # quantity does.
+    # the production draw count alone otherwise.  They diagnose whether the
+    # finite-draw regime supports a credible root-M extrapolation, which no
+    # other saved quantity does.
     weight_diagnostic_draws: Optional[tuple[int, ...]] = None
     weight_ess: Optional[np.ndarray] = field(default=None, repr=False)
     weight_max_fraction: Optional[np.ndarray] = field(default=None, repr=False)
     weight_relative_error: Optional[np.ndarray] = field(default=None, repr=False)
     weight_pareto_k: Optional[np.ndarray] = field(default=None, repr=False)
+    # The tilted complement is a deterministic multiple-importance sampler.
+    # These arrays make its fixed allocation and the conditioning normalizers
+    # auditable per rung and object instead of leaving them implicit in code.
+    proposal_component_names: Optional[tuple[str, ...]] = None
+    proposal_component_weights: Optional[tuple[float, ...]] = None
+    proposal_component_counts: Optional[np.ndarray] = field(default=None, repr=False)
+    proposal_component_complement_mass: Optional[np.ndarray] = field(
+        default=None, repr=False
+    )
     proposal_prefilter_candidates: Optional[int] = None
     allocation_method: str = "production_prefix"
     pilot_draws: Optional[int] = None
@@ -333,15 +343,99 @@ class AdaptiveSection5Result:
                     raise ValueError(f"{name} must have shape {expected}")
                 object.__setattr__(self, name, value)
             # `weight_pareto_k` is NaN wherever the tail is undefined -- a row
-            # whose weights are flat above the fitting threshold -- so only the
-            # two exact quantities are required to be finite.
+            # whose weights are flat above the fitting threshold.  The other
+            # diagnostics must be finite, and k-hat may be finite or NaN but
+            # never infinite.
             if (
                 not np.isfinite(self.weight_ess).all()
                 or not np.isfinite(self.weight_max_fraction).all()
                 or not np.isfinite(self.weight_relative_error).all()
+                or np.isinf(self.weight_pareto_k).any()
             ):
                 raise ValueError("weight diagnostics contain non-finite values")
             object.__setattr__(self, "weight_diagnostic_draws", diagnostic_draws)
+        proposal_diagnostics = (
+            self.proposal_component_names,
+            self.proposal_component_weights,
+            self.proposal_component_counts,
+            self.proposal_component_complement_mass,
+        )
+        if all(value is None for value in proposal_diagnostics):
+            if self.estimator_mode == "tilted_stratified":
+                raise ValueError("tilted estimator proposal diagnostics are missing")
+        elif any(value is None for value in proposal_diagnostics):
+            raise ValueError("tilted estimator proposal diagnostics are incomplete")
+        else:
+            if self.estimator_mode != "tilted_stratified":
+                raise ValueError(
+                    "proposal-component diagnostics require tilted_stratified mode"
+                )
+            if not all(
+                isinstance(value, str) for value in self.proposal_component_names
+            ):
+                raise ValueError("proposal component names must be strings")
+            names = tuple(self.proposal_component_names)
+            weights = np.asarray(self.proposal_component_weights, dtype=np.float64)
+            raw_component_counts = np.asarray(self.proposal_component_counts)
+            if not np.issubdtype(raw_component_counts.dtype, np.integer):
+                raise ValueError("proposal component counts must be integer-valued")
+            component_counts = raw_component_counts.astype(np.int64, copy=False)
+            complement_mass = np.asarray(
+                self.proposal_component_complement_mass, dtype=np.float64
+            )
+            n_components = len(names)
+            if not n_components or len(set(names)) != n_components or any(
+                not name for name in names
+            ):
+                raise ValueError("proposal component names must be non-empty and unique")
+            if (
+                weights.shape != (n_components,)
+                or not np.isfinite(weights).all()
+                or (weights <= 0).any()
+                or not np.isclose(weights.sum(), 1.0, rtol=0.0, atol=1.0e-12)
+            ):
+                raise ValueError("proposal component weights must be positive and sum to one")
+            expected_counts = (len(self.draw_ladder), len(score), n_components)
+            if component_counts.shape != expected_counts:
+                raise ValueError(
+                    f"proposal component counts must have shape {expected_counts}"
+                )
+            if (component_counts < 0).any():
+                raise ValueError("proposal component counts must be non-negative")
+            rung_totals = component_counts.sum(axis=2)
+            expected_totals = np.broadcast_to(
+                np.asarray(self.draw_ladder, dtype=np.int64)[:, None],
+                rung_totals.shape,
+            )
+            if not np.array_equal(rung_totals, expected_totals):
+                raise ValueError("proposal component counts do not sum to each rung")
+            expected_component_counts = np.asarray(self.draw_ladder)[:, None] * weights
+            if not np.allclose(
+                component_counts,
+                expected_component_counts[:, None, :],
+                rtol=0.0,
+                atol=1.0e-12,
+            ):
+                raise ValueError("proposal component counts do not match recipe weights")
+            expected_mass = (len(score), n_components)
+            if (
+                complement_mass.shape != expected_mass
+                or not np.isfinite(complement_mass).all()
+                or (complement_mass < 0).any()
+                or (complement_mass > 1).any()
+            ):
+                raise ValueError(
+                    "proposal component complement masses must be finite probabilities "
+                    f"with shape {expected_mass}"
+                )
+            object.__setattr__(self, "proposal_component_names", names)
+            object.__setattr__(
+                self, "proposal_component_weights", tuple(float(x) for x in weights)
+            )
+            object.__setattr__(self, "proposal_component_counts", component_counts)
+            object.__setattr__(
+                self, "proposal_component_complement_mass", complement_mass
+            )
         object.__setattr__(self, "score", score)
         object.__setattr__(self, "information", information)
         object.__setattr__(self, "draw_counts", counts)
@@ -365,46 +459,101 @@ class AdaptiveSection5Result:
         for index, n_draws in enumerate(self.weight_diagnostic_draws):
             khat = self.weight_pareto_k[index]
             fitted = khat[np.isfinite(khat)]
-            rows.append(
+            row = {
+                "draws": int(n_draws),
+                "ess_percentiles": np.percentile(
+                    self.weight_ess[index], percentiles
+                ).tolist(),
+                "ess_fraction_percentiles": np.percentile(
+                    self.weight_ess[index] / n_draws, percentiles
+                ).tolist(),
+                "max_weight_fraction_percentiles": np.percentile(
+                    self.weight_max_fraction[index], percentiles
+                ).tolist(),
+                # The one row that compares across estimator modes.
+                "relative_standard_error_percentiles": np.percentile(
+                    self.weight_relative_error[index], percentiles
+                ).tolist(),
+                "pareto_k_percentiles": (
+                    None
+                    if fitted.size == 0
+                    else np.percentile(fitted, percentiles).tolist()
+                ),
+                "pareto_k_undefined": int(khat.size - fitted.size),
+                # The PSIS reliability threshold is sample-size dependent;
+                # above it the weight variance is effectively unusable.
+                "pareto_k_threshold": float(
+                    min(1.0 - 1.0 / np.log10(max(n_draws, 11)), 0.7)
+                ),
+                "pareto_k_above_threshold": (
+                    None
+                    if fitted.size == 0
+                    else float(
+                        np.mean(
+                            fitted
+                            > min(1.0 - 1.0 / np.log10(max(n_draws, 11)), 0.7)
+                        )
+                    )
+                ),
+            }
+            if self.estimator_mode == "tilted_stratified":
+                # Fixed component counts remove between-component allocation
+                # noise.  Pooled ESS, maxima and k-hat still expose weight
+                # concentration, but only the within-component variance gives
+                # the deterministic-mixture estimator's sampling error.
+                row.update(
+                    {
+                        "ess_interpretation": (
+                            "pooled_concentration_only_for_deterministic_mixture"
+                        ),
+                        "max_weight_fraction_interpretation": (
+                            "pooled_concentration_diagnostic"
+                        ),
+                        "pareto_k_interpretation": (
+                            "pooled_concentration_diagnostic"
+                        ),
+                        "relative_standard_error_interpretation": (
+                            "fixed_count_within_component_variance"
+                        ),
+                    }
+                )
+            rows.append(row)
+        return rows
+
+    def proposal_diagnostic_summary(self) -> Optional[dict]:
+        """JSON-friendly deterministic-mixture recipe and conditioning audit."""
+
+        if self.proposal_component_names is None:
+            return None
+        percentiles = [0, 10, 50, 90, 100]
+        count_rows = []
+        for rung_index, n_draws in enumerate(self.draw_ladder):
+            count_rows.append(
                 {
                     "draws": int(n_draws),
-                    "ess_percentiles": np.percentile(
-                        self.weight_ess[index], percentiles
-                    ).tolist(),
-                    "ess_fraction_percentiles": np.percentile(
-                        self.weight_ess[index] / n_draws, percentiles
-                    ).tolist(),
-                    "max_weight_fraction_percentiles": np.percentile(
-                        self.weight_max_fraction[index], percentiles
-                    ).tolist(),
-                    # The one row that compares across estimator modes.
-                    "relative_standard_error_percentiles": np.percentile(
-                        self.weight_relative_error[index], percentiles
-                    ).tolist(),
-                    "pareto_k_percentiles": (
-                        None
-                        if fitted.size == 0
-                        else np.percentile(fitted, percentiles).tolist()
-                    ),
-                    "pareto_k_undefined": int(khat.size - fitted.size),
-                    # The PSIS reliability threshold is sample-size dependent;
-                    # above it the weight variance is effectively unusable.
-                    "pareto_k_threshold": float(
-                        min(1.0 - 1.0 / np.log10(max(n_draws, 11)), 0.7)
-                    ),
-                    "pareto_k_above_threshold": (
-                        None
-                        if fitted.size == 0
-                        else float(
-                            np.mean(
-                                fitted
-                                > min(1.0 - 1.0 / np.log10(max(n_draws, 11)), 0.7)
-                            )
+                    "component_count_percentiles": {
+                        name: np.percentile(
+                            self.proposal_component_counts[rung_index, :, component],
+                            percentiles,
+                        ).tolist()
+                        for component, name in enumerate(
+                            self.proposal_component_names
                         )
-                    ),
+                    },
                 }
             )
-        return rows
+        return {
+            "component_names": list(self.proposal_component_names),
+            "component_weights": list(self.proposal_component_weights),
+            "component_counts": count_rows,
+            "preconditioning_complement_mass_percentiles": {
+                name: np.percentile(
+                    self.proposal_component_complement_mass[:, component],
+                    percentiles,
+                ).tolist()
+                for component, name in enumerate(self.proposal_component_names)
+            },
+        }
 
 
 @dataclass(frozen=True)
@@ -460,6 +609,7 @@ class AdaptiveOneStepResult:
             "phase_seconds": dict(self.moments.phase_seconds),
             "retained_full_ladder": self.moments.ladder_score is not None,
             "weight_diagnostics": self.moments.weight_diagnostic_summary(),
+            "proposal_diagnostics": self.moments.proposal_diagnostic_summary(),
             "allocation_method": self.moments.allocation_method,
             "bias_correction": self.moments.bias_correction,
             "candidate_backend": self.moments.candidate_backend,
@@ -737,9 +887,11 @@ def _stratified_logsumexp(
 
     ``exact_log_terms`` is ``log(pi Pdet L)`` on the deterministic candidate
     support, summed with no proposal correction and therefore no variance.
-    ``tail_log_weights`` is ``log(pi Pdet L / pi)`` on the unique prior draws;
-    slots whose atom already lies inside the candidate support carry no
-    contribution, because that stratum is accounted for exactly.
+    ``tail_log_weights`` is ``log(pi Pdet L / qbar)`` on the unique complement
+    draws, where ``qbar`` is the distribution that generated them (the prior
+    for plain stratification and the balance mixture for tilted MIS).  Slots
+    whose atom already lies inside the candidate support carry no contribution,
+    because that stratum is accounted for exactly.
     """
 
     counts = torch.as_tensor(
@@ -813,8 +965,10 @@ def _weight_tail_diagnostics(
 
     `ess` counts effective draws out of `n_draws`; `maximum` is the largest
     single draw's share of the sampled sum; `khat` is the generalized-Pareto
-    shape of the weight tail, so `khat >= 0.5` means the weight variance is
-    infinite and no number of extra draws buys a root-M rate.
+    shape of the sampled weight tail.  Because the catalogue is finite, all
+    exact moments are finite; `khat >= 0.5` instead warns that the observed
+    draw regime behaves like an infinite-variance tail and does not support a
+    root-M extrapolation yet.
 
     `atom_valid` restricts the weight set to the atoms the estimator actually
     reduces.  Under stratification the draws that land in the exact stratum
@@ -835,6 +989,17 @@ def _weight_tail_diagnostics(
     with `E` the exact stratum and `T` the sampled mean.  For the mixture the
     stratum is empty, the share is one, and this reduces to the usual
     `sqrt(1/ESS - 1/M)`.
+
+    A deterministic multiple-importance draw is different: its component
+    counts are fixed, so the between-component variation in pooled weights is
+    not sampling noise.  When ``draw.source.component_id`` is present, the
+    variance is therefore the stratified-sampling variance
+
+    ``sum_c (n_c / M)^2 s_c^2 / n_c``
+
+    using the unbiased within-component sample variances ``s_c^2``.  Pooled
+    ESS, maximum weight and Pareto-k remain useful concentration diagnostics,
+    but they are deliberately not used for the relative standard error.
     """
 
     counts = torch.as_tensor(
@@ -843,11 +1008,16 @@ def _weight_tail_diagnostics(
     live = counts > 0
     if atom_valid is not None:
         live = live & torch.as_tensor(atom_valid, device=log_weights.device)
-    peak = torch.max(
+    tail_peak = torch.max(
         torch.where(live, log_weights, torch.full_like(log_weights, -torch.inf)),
         dim=1,
         keepdim=True,
     ).values
+    if exact_log_terms is None:
+        peak = tail_peak
+    else:
+        exact_peak = torch.max(exact_log_terms, dim=1, keepdim=True).values
+        peak = torch.maximum(tail_peak, exact_peak)
     finite_peak = torch.isfinite(peak)
     weights = torch.where(
         live & finite_peak,
@@ -863,20 +1033,14 @@ def _weight_tail_diagnostics(
 
     sampled_mean = total / float(n_draws)
     if exact_log_terms is None:
-        share = torch.ones_like(ess)
+        exact_total = torch.zeros_like(ess)
     else:
         # Rescaled by the same per-row peak, so the two strata stay comparable.
         exact_total = torch.exp(
             exact_log_terms - torch.where(finite_peak, peak, torch.zeros_like(peak))
         ).sum(dim=1)
-        denominator = exact_total + sampled_mean
-        share = torch.where(
-            denominator > 0, sampled_mean / denominator, torch.zeros_like(ess)
-        )
+    denominator = exact_total + sampled_mean
     relative = torch.zeros_like(ess)
-    relative[good] = share[good] * torch.sqrt(
-        (1.0 / ess[good] - 1.0 / float(n_draws)).clamp_min(0.0)
-    )
 
     # The tail fit needs the draw sample itself, not the unique atoms: a weight
     # drawn ten times is ten draws of that weight.
@@ -884,7 +1048,57 @@ def _weight_tail_diagnostics(
         draw.inverse[:, :n_draws].astype(np.int64, copy=False),
         device=log_weights.device,
     )
-    khat = pareto_tail_index(torch.gather(weights, 1, inverse))
+    raw_weights = torch.gather(weights, 1, inverse)
+    component_id = getattr(draw.source, "component_id", None)
+    if component_id is None:
+        share = torch.where(
+            denominator > 0, sampled_mean / denominator, torch.zeros_like(ess)
+        )
+        relative[good] = share[good] * torch.sqrt(
+            (1.0 / ess[good] - 1.0 / float(n_draws)).clamp_min(0.0)
+        )
+    else:
+        component_id = np.asarray(component_id)
+        if component_id.shape != draw.source.indices.shape:
+            raise ValueError("proposal component ids must align with raw draws")
+        prefix_component = torch.as_tensor(
+            component_id[:, :n_draws], dtype=torch.long, device=log_weights.device
+        )
+        n_components = len(TAIL_PROPOSAL_RECIPE.component_names)
+        if ((prefix_component < 0) | (prefix_component >= n_components)).any():
+            raise ValueError("proposal component ids are outside the recipe")
+        variance = torch.zeros_like(ess)
+        sampled_tail = raw_weights.sum(dim=1) > 0
+        for component in range(n_components):
+            member = prefix_component == component
+            component_count = member.sum(dim=1)
+            if ((component_count < 2) & sampled_tail).any():
+                raise ValueError(
+                    "deterministic-mixture relative error needs at least two "
+                    "draws from every component"
+                )
+            member_float = member.to(dtype=raw_weights.dtype)
+            safe_count = component_count.clamp_min(1).to(dtype=raw_weights.dtype)
+            component_sum = (member_float * raw_weights).sum(dim=1)
+            component_mean = component_sum / safe_count
+            centered_sum_squares = (
+                member_float * torch.square(raw_weights - component_mean[:, None])
+            ).sum(dim=1)
+            sample_variance = torch.where(
+                component_count > 1,
+                centered_sum_squares
+                / (component_count - 1).clamp_min(1).to(raw_weights.dtype),
+                torch.zeros_like(centered_sum_squares),
+            )
+            # (n_c/M)^2 * s_c^2/n_c == n_c*s_c^2/M^2.
+            variance += component_count.to(raw_weights.dtype) * sample_variance
+        variance /= float(n_draws) ** 2
+        relative = torch.where(
+            denominator > 0,
+            torch.sqrt(variance.clamp_min(0.0)) / denominator,
+            torch.zeros_like(relative),
+        )
+    khat = pareto_tail_index(raw_weights)
     khat[~good.detach().cpu().numpy()] = np.nan
     return (
         ess.detach().cpu().numpy().astype(np.float64),
@@ -1726,8 +1940,6 @@ def run_adaptive_section5(
     bias_correction: str = "none",
     candidate_backend: str = "scipy",
     estimator_mode: str = "mixture",
-    tilt_delta: float = 0.1,
-    tilt_temperature: float = 1.0,
     full_information: bool = False,
     retain_full_ladder: bool = False,
     object_id_offset: int = 0,
@@ -1787,8 +1999,23 @@ def run_adaptive_section5(
                 "stratified estimation and finite-draw bias correction are "
                 "separate modes"
             )
-    if estimator_mode == "tilted_stratified" and not 0.0 < tilt_delta < 1.0:
-        raise ValueError("tilt_delta must lie strictly between zero and one")
+    if estimator_mode == "tilted_stratified" and any(
+        value % TAIL_PROPOSAL_RECIPE.cycle_length for value in ladder
+    ):
+        raise ValueError(
+            "every tilted-stratified draw rung must be divisible by the "
+            f"proposal recipe cycle length {TAIL_PROPOSAL_RECIPE.cycle_length}"
+        )
+    if estimator_mode == "tilted_stratified" and any(
+        min(TAIL_PROPOSAL_RECIPE.component_counts)
+        * (value // TAIL_PROPOSAL_RECIPE.cycle_length)
+        < 2
+        for value in ladder
+    ):
+        raise ValueError(
+            "every tilted-stratified rung needs at least two draws from each "
+            "proposal component for its standard error"
+        )
     if bias_correction != "none" and retain_full_ladder:
         raise ValueError(
             "finite-draw bias correction and retained raw ladder are separate modes"
@@ -1885,6 +2112,19 @@ def run_adaptive_section5(
         if retain_full_ladder
         else None
     )
+    n_proposal_components = len(TAIL_PROPOSAL_RECIPE.component_names)
+    proposal_component_counts = (
+        np.empty(
+            (len(ladder), n_objects, n_proposal_components), dtype=np.int64
+        )
+        if estimator_mode == "tilted_stratified"
+        else None
+    )
+    proposal_component_complement_mass = (
+        np.empty((n_objects, n_proposal_components), dtype=np.float64)
+        if estimator_mode == "tilted_stratified"
+        else None
+    )
     flow_evaluations = 0
     started = time.perf_counter()
     phase_seconds = {
@@ -1970,23 +2210,49 @@ def run_adaptive_section5(
             # budget therefore reaches the tail that carries the mass the
             # mixture proposal covers with epsilon of its draws.
             if estimator_mode == "tilted_stratified":
-                # cont.317: drawing that complement from the flat prior is what
-                # leaves the tail index above 0.7.  The tilted proposal uses
-                # the same uniform stream, so the arms stay paired.
-                draw = proposal.draw_tilted(
+                # Fixed counts from the exported recipe remove random mixture-
+                # component allocation noise.  `probability` is the exact
+                # balance mixture qbar conditioned on the complement, so the
+                # downstream c/qbar reduction remains unbiased.
+                draw = proposal.draw_tilted_mis(
                     candidates,
                     observed,
                     n_draws=ladder[-1],
-                    delta=tilt_delta,
-                    temperature=tilt_temperature,
                     seed=proposal_seed,
                     object_offset=object_id_offset + object_start,
-                    device=(
-                        likelihood.flow_model.device
-                        if candidate_backend == "torch"
-                        else None
-                    ),
+                    # Candidate lookup and whole-catalogue proposal scoring are
+                    # independent backends.  The latter belongs beside the flow
+                    # even when scipy performs the former.
+                    device=likelihood.flow_model.device,
                 )
+                component_id = np.asarray(draw.component_id, dtype=np.int64)
+                complement_mass = np.asarray(
+                    draw.component_complement_mass, dtype=np.float64
+                )
+                expected_draw_shape = (len(observed), ladder[-1])
+                expected_mass_shape = (len(observed), n_proposal_components)
+                if component_id.shape != expected_draw_shape:
+                    raise RuntimeError(
+                        "tilted proposal component ids have the wrong shape"
+                    )
+                if (
+                    complement_mass.shape != expected_mass_shape
+                    or not np.isfinite(complement_mass).all()
+                ):
+                    raise RuntimeError(
+                        "tilted proposal complement masses are invalid"
+                    )
+                proposal_component_complement_mass[
+                    object_start:object_stop
+                ] = complement_mass
+                for rung_index, rung in enumerate(ladder):
+                    for component in range(n_proposal_components):
+                        proposal_component_counts[
+                            rung_index, object_start:object_stop, component
+                        ] = np.sum(
+                            component_id[:, :rung] == component,
+                            axis=1,
+                        )
             else:
                 draw = proposal.draw_stratified(
                     candidates,
@@ -2300,6 +2566,18 @@ def run_adaptive_section5(
         weight_max_fraction=weight_max_fraction,
         weight_relative_error=weight_relative_error,
         weight_pareto_k=weight_pareto_k,
+        proposal_component_names=(
+            tuple(TAIL_PROPOSAL_RECIPE.component_names)
+            if estimator_mode == "tilted_stratified"
+            else None
+        ),
+        proposal_component_weights=(
+            tuple(TAIL_PROPOSAL_RECIPE.component_weights)
+            if estimator_mode == "tilted_stratified"
+            else None
+        ),
+        proposal_component_counts=proposal_component_counts,
+        proposal_component_complement_mass=proposal_component_complement_mass,
         proposal_prefilter_candidates=(
             None
             if proposal_prefilter_candidates is None
