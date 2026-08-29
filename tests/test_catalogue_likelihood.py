@@ -15,7 +15,7 @@ from sbsi.catalogue_likelihood import (
     CatalogueSelection,
 )
 from sbsi.scene_prior import ScenePrior
-from sbsi.score_inference import OutputCut
+from sbsi.catalogue_likelihood import OutputCut
 
 
 CONDITIONS = {

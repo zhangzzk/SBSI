@@ -1,14 +1,21 @@
 # Agent instructions for SBSI
 
-SBSI is a general shear-calibration library. It has one workflow; scientific
-release names such as V3 and V3b are only convenience references to external
-model paths.
+SBSI is a general shear-calibration library with one inference workflow.
+`v1.1-infer` names the current numerical pipeline and `v3.2-like` names its
+likelihood composition. Model-preset names such as `V3.2` remain path-only
+conveniences and are not likelihood or pipeline releases.
 
 All project documentation lives in `doc/`. Only this file, `CLAUDE.md`, and
 `README.md` stay at the repository root:
 
 - `doc/API.md` — the BlendEMU scope boundary, the general API contract, and the
   public API.
+- `doc/INFERENCE.md` — the current inference/likelihood release boundary and
+  the estimator derivation.
+- `doc/CATALOGUE_PRIOR.md` — the finite scene prior, likelihood, caches, and
+  scalable importance-sampling workflow.
+- `doc/MATH.md` — the detailed Bartlett/score derivation used by the inference
+  implementation.
 - `doc/CONVENTIONS.md` — the definitions every reported number must cite:
   catalogues, population-cut order, shape kinds, response estimators, seeds,
   and the definition of `m`.

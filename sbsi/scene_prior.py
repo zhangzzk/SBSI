@@ -35,7 +35,6 @@ from .coordinates import (
     ellipticity_from_axis_ratio_angle,
     spin2_angle_from_components,
 )
-from .detection_classifier import log_neighbour_impact
 from .forward_catalogue import (
     DEFAULT_CROWDING_RADII_ARCSEC,
     INPUT_CATALOGUE_COLUMNS,
@@ -51,6 +50,36 @@ from .shear_map import apply_shear_to_ellipticity
 
 SCENE_STORE_VERSION = 1
 SHEAR_TRANSFORM = "intrinsic_ellipticity_only_v1"
+
+
+def _log_neighbour_impact(
+    secondary_magnitude: np.ndarray,
+    secondary_size_arcsec: np.ndarray,
+    distance_arcsec: np.ndarray,
+    exponent: float,
+) -> np.ndarray:
+    """Rank neighbours by flux times ``(size / distance) ** exponent``."""
+
+    magnitude = np.asarray(secondary_magnitude, dtype=float)
+    size = np.asarray(secondary_size_arcsec, dtype=float)
+    distance = np.asarray(distance_arcsec, dtype=float)
+    if not np.isfinite(exponent) or exponent < 0:
+        raise ValueError("impact exponent must be finite and non-negative")
+    if (
+        not np.isfinite(magnitude).all()
+        or not np.isfinite(size).all()
+        or (size <= 0).any()
+        or not np.isfinite(distance).all()
+        or (distance <= 0).any()
+    ):
+        raise ValueError(
+            "impact score requires finite magnitudes and positive finite sizes "
+            "and separations"
+        )
+    return (
+        -0.4 * np.log(10.0) * magnitude
+        + float(exponent) * (np.log(size) - np.log(distance))
+    )
 
 
 @dataclass(frozen=True)
@@ -460,7 +489,7 @@ class ShearedScenePrior:
                 "impact-ranked neighbours require finite magnitudes and positive "
                 "finite sizes and separations"
             )
-        log_impact = log_neighbour_impact(magnitude, size, distance, exponent)
+        log_impact = _log_neighbour_impact(magnitude, size, distance, exponent)
         order = np.lexsort(
             (
                 secondary,
@@ -573,7 +602,7 @@ class ShearedScenePrior:
                 representative_secondary[matched]
             ]
             separation = self.distance_arcsec[representative_edge[matched]]
-            primary.loc[matched, "neighbour_log_impact"] = log_neighbour_impact(
+            primary.loc[matched, "neighbour_log_impact"] = _log_neighbour_impact(
                 sec_mag, sec_size, separation, impact_exponent
             )
 

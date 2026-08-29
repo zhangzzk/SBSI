@@ -7,7 +7,6 @@ This module provides the induced first-moment projection used to form the flow s
 
 Public API
 ----------
-load_sheared_sample(...)   Stream + select + reservoir-sample a sheared catalogue.
 model_mean_proj(...)       ``< E[e_hat | S_{s*ghat}(intrinsic)] . ghat >`` -- the induced
                            first moment projected on the per-object applied-shear direction.
 flow_response(...)         The antithetic +/-g secant ``R_flow = (m_+g - m_-g)/(2g)``,
@@ -30,80 +29,16 @@ from typing import Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
-import pyarrow as pa
-import pyarrow.ipc as ipc
 
 from .catalogue import Catalogue, load_catalogue
 from .domain import Domain
-from .measurement_model import raw_columns_for_measurement_targets
 from .measurement_model import load_measurement_model
 from .models import ModelPaths
 from .blend_lookup import join_blend
 from .preprocessing import (
-    DEFAULT_SELECTION_CUTS,
-    raw_columns_for_selection_features,
     rescale,
-    source_select_selection,
 )
 from .shear_map import apply_shear_to_ellipticity
-
-
-def load_sheared_sample(catalogue, bundle, max_rows, shear_threshold, seed, max_read_batches=None,
-                        snr_min=None):
-    """Stream a sheared catalogue, apply the standard cuts + detected, and reservoir-
-    sample.  Keep intrinsic shape, applied-shear truth, and the measured targets.
-    snr_min applies a measured-quality cut (measured_flux_auto/fluxerr_auto > snr_min)
-    on the SHEARED measured quantity -- a shear-dependent selection."""
-    rng = np.random.default_rng(seed)
-    condition_features = bundle.condition_preprocessor.feature_names
-    target_features = bundle.target_transform.target_names
-
-    with ipc.open_file(catalogue) as reader:
-        available = set(reader.schema.names)
-        needed = set()
-        needed |= raw_columns_for_selection_features(condition_features, available_columns=available)
-        needed |= raw_columns_for_measurement_targets(target_features)
-        needed |= {"detected", "gamma1_input_p", "gamma2_input_p"}
-        needed |= {"e1_input_rot0_p", "e2_input_rot0_p"}
-        needed |= {"r_input_p", "Re_input_p", "distance", "neighbored"}
-        needed |= {"measured_flux_auto", "measured_fluxerr_auto", "measured_mag_auto"}
-        read_columns = sorted(c for c in needed if c in available)
-
-        reservoir = None
-        raw_rows = 0
-        for bi in range(reader.num_record_batches):
-            if max_read_batches is not None and bi >= max_read_batches:
-                break
-            batch = pa.Table.from_batches([reader.get_batch(bi)]).select(read_columns).to_pandas()
-            raw_rows += len(batch)
-            batch = source_select_selection(batch, cuts=DEFAULT_SELECTION_CUTS)
-            if len(batch) == 0:
-                continue
-            batch = batch[batch["detected"].astype(bool)].reset_index(drop=True)
-            if len(batch) == 0:
-                continue
-            if snr_min is not None and "measured_flux_auto" in batch.columns:
-                snr = batch["measured_flux_auto"].to_numpy(float) / batch["measured_fluxerr_auto"].to_numpy(float)
-                batch = batch[np.isfinite(snr) & (snr > snr_min)].reset_index(drop=True)
-                if len(batch) == 0:
-                    continue
-            gmag = np.hypot(batch["gamma1_input_p"].to_numpy(float), batch["gamma2_input_p"].to_numpy(float))
-            batch = batch[gmag > shear_threshold].reset_index(drop=True)
-            if len(batch) == 0:
-                continue
-            batch = batch.copy()
-            batch["__key"] = rng.random(len(batch))
-            reservoir = batch if reservoir is None else pd.concat([reservoir, batch], ignore_index=True)
-            if len(reservoir) > 2 * max_rows:
-                reservoir = reservoir.nlargest(max_rows, "__key").reset_index(drop=True)
-
-    if reservoir is None:
-        raise SystemExit(f"No sheared rows selected from {catalogue}")
-    if len(reservoir) > max_rows:
-        reservoir = reservoir.nlargest(max_rows, "__key").reset_index(drop=True)
-    reservoir = reservoir.drop(columns="__key").reset_index(drop=True)
-    print(f"  raw scanned={raw_rows:,}  kept (sheared)={len(reservoir):,}")
-    return reservoir
 
 
 def _shape_target_indices(names):
@@ -695,7 +630,6 @@ __all__ = [
     "ResponsePrediction",
     "ResponsePredictor",
     "flow_response",
-    "load_sheared_sample",
     "model_mean_proj",
     "predict_blend_response",
     "sample_measurement",

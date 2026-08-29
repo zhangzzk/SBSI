@@ -1,19 +1,11 @@
-# ---------------------------------------------------------------------------
-# dev -- the full working branch. It tracks the library, examples, tests, the
-# documentation in doc/, the archive/ provenance tree, notebooks and slides.
-#
-# `master` is the trimmed public branch and carries its own, much stricter
-# .gitignore. Do not merge dev into master; see doc/BRANCHES.md.
-# ---------------------------------------------------------------------------
-
-# ---- large data / output artifacts (live under $DATA_DIR, or regenerable) ----
+# User data and generated scientific products
 results/
 figures/
 data/
 !examples/data/
 !examples/data/example_catalog.feather
 
-# binary artifacts anywhere
+# Binary artifacts and generated figures
 *.pt
 *.npz
 *.npy
@@ -26,11 +18,7 @@ data/
 *.pdf
 *.stale_bak
 
-# ---- exception: the frozen V3 release artifacts ARE tracked (see models/README.md) ----
-!models/
-!models/**
-
-# ---- python / tooling caches ----
+# Python and tool caches
 __pycache__/
 *.py[cod]
 .pytest_cache/
@@ -38,21 +26,22 @@ __pycache__/
 .ipynb_checkpoints/
 sbsi.egg-info/
 
-# ---- agent / editor scratch ----
+# Local editor and agent state
 .claude/worktrees/
+.claude/scheduled_tasks.lock
 .claude_resources.json
 *.orig
 *.swp
 *.rblendbak
 *.swabak
 
-# ---- job logs (also written outside the repo) ----
+# Scheduler logs
 jobs/logs/
 logs/
 *.out
 *.err
 
-# ---- LaTeX build products (slides/); the .tex source is tracked ----
+# LaTeX build products
 *.aux
 *.bbl
 *.blg

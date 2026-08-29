@@ -25,11 +25,10 @@ import pyarrow as pa
 import pyarrow.ipc as ipc
 import torch
 
+from .coordinates import SHEAR_FEATURES
 from .measurement_model import (
-    DEFAULT_MEASUREMENT_CONDITION_FEATURES,
     DEFAULT_MEASUREMENT_TARGETS,
     MEASUREMENT_CONDITION_FEATURE_SETS,
-    ConditionalAffineFlow,
     ConditionalMeanFlow,
     ConditionalMeanFlowRA,
     build_flow,
@@ -40,7 +39,6 @@ from .measurement_model import (
 )
 from .preprocessing import (
     DEFAULT_SELECTION_CUTS,
-    SHEAR_FEATURES,
     apply_structure_measurement_noise,
     intrinsic_e_abs,
     raw_columns_for_selection_features,
@@ -1274,7 +1272,8 @@ def main(argv=None):
                       f"crowd2_edges={'conditional' if conditional2 else 'global'}, "
                       f"R_sim {np.nanmin(Rsim):.3f}..{np.nanmax(Rsim):.3f}, delta={d}")
             elif ccol and np.asarray(Rsim).ndim == 3:
-                ec = tt["edges_crowd"]; nf, ns, nb = Rsim.shape  # 3rd axis = crowding quantile bins
+                ec = tt["edges_crowd"]
+                nf, ns, nb = Rsim.shape  # 3rd axis = crowding quantile bins
                 conditional = bool(tt["crowd_conditional"].item()) \
                     if "crowd_conditional" in tt.files else False
 
@@ -1295,7 +1294,8 @@ def main(argv=None):
                       f"crowd_edges={'conditional' if conditional else 'global'}, "
                       f"R_sim {np.nanmin(Rsim):.3f}..{np.nanmax(Rsim):.3f}, delta={d}")
             elif "edges_dist" in tt.files and np.asarray(Rsim).ndim == 3:
-                ed = tt["edges_dist"]; nf, ns, nb = Rsim.shape  # blend bin 0=isolated, 1..nb-1=by distance
+                ed = tt["edges_dist"]
+                nf, ns, nb = Rsim.shape  # blend bin 0=isolated, 1..nb-1=by distance
 
                 def _bin_id(frame):
                     flux = frame["r_input_p"].to_numpy(float)
@@ -1452,7 +1452,8 @@ def main(argv=None):
             cccol = ct["crowd_col"].item() if "crowd_col" in ct.files else ""
             if not (cccol and cs.ndim == 3):
                 raise ValueError("coupling target must be a 3D crowd grid (edges_flux/size/crowd, crowd_col)")
-            cec = ct["edges_crowd"]; cnf, cns, cnb = cs.shape
+            cec = ct["edges_crowd"]
+            cnf, cns, cnb = cs.shape
 
             def _coupling_bin_id(frame):
                 flux = frame["r_input_p"].to_numpy(float)
@@ -1592,7 +1593,8 @@ def main(argv=None):
                           if isinstance(model, ConditionalMeanFlowRA) else 0.0)
                 rstd = val_diag.get("ra_resp_std", 0.0)
                 rms = val_diag.get("ra_rho_rms", float("nan"))
-                rm = val_diag.get("rho_model_b"); rs = val_diag.get("rho_sim_b")
+                rm = val_diag.get("rho_model_b")
+                rs = val_diag.get("rho_sim_b")
                 ref = ""
                 if rm is not None and rs is not None and len(rm) > 1:
                     ref = (f"  rho[b0] {rm[0]:.3f}/{rs[0]:.3f}  "

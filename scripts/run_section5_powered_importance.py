@@ -9,7 +9,6 @@ import json
 from pathlib import Path
 import time
 
-import numpy as np
 import torch
 
 from sbsi.catalogue_closure import generate_mock_catalogue

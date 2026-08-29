@@ -170,7 +170,6 @@ def main(argv=None):
     cache.attach_detector(detector)
     cache.validate_model_features(flow)
     detection_features = cache.validate_detection_shear_invariance()
-    likelihood = CatalogueLikelihood(flow, cache)
     active = np.flatnonzero(prior.weights > 0)
 
     exact_prior, exact_rows = _sample_prior(
