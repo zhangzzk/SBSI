@@ -2,6 +2,53 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.336 — recovered learned ladder reproduces byte-exactly on Hopper; A40 drift isolated
+
+**Stop/go result.** The mandatory archived 16-object learned K/epsilon
+reproduction passes without relaxing the comparison declared in cont.335.
+The archive was H200NVL job 16051112.  Exact-source H100NVL job 16123814
+completed with exit code zero in 6m55s and 11,658,736 KiB peak RSS.  Its
+`per_observation.csv` is byte-identical to the archive (SHA-256
+`a7f8e12a18099fc95f19f1724eee524ead8033aa63d721aaea289472a60c1177`)
+and so is `aggregate.json` (SHA-256
+`d2baf5ba09da9eb1f7073dd7937f07bac3eb8e15ab8292c476ebe46de6c6f8`).
+Status, design, identity, default-change flag, and output basenames are also
+exact; only the new output-root strings make `result.json` differ (new SHA-256
+`ff36249640ea0e2d92134c4618cd86f289ca6b4105ce70dfd56304124a088eed`).
+Thus every row passes the predeclared `2e-5` ordinary and `2e-4`
+maximum-ratio tolerances with zero difference.  The frozen qualitative result
+remains K=524,288, epsilon=0.5, with 15/16 objects above 20% asymptotic ESS.
+
+**Why two preliminary A40 comparisons failed.** A40 job 16123686 first ran
+the recovered ladder through the current checkout.  It preserved all discrete
+keys and the qualitative frontier but failed the deliberately strict numeric
+identity check: maximum capture/ESS absolute differences were
+`6.230342e-4`/`5.277982e-3`, and the largest target/proposal-ratio relative
+difference was 1.238146.  Its CSV/aggregate hashes are
+`8a88759e...`/`db4e102d...`.  This correctly stopped the 512-row gate.
+
+To separate source recovery from hardware, branch
+`codex/infer-v1-exact-repro` commit `1ee016d` was built from historical commit
+`716828ec`, which matches all 12 implementation hashes carried by the archive,
+plus the artifact-exact recovered uncommitted retriever and diagnostic sources.
+Its wrapper verifies those 12 identities, 11 artifact/source hashes, clean
+checkout state, and overwrite protection before evaluation.  Exact-source A40
+job 16123771 completed in 8m43s and produced a CSV and aggregate byte-identical
+to job 16123686.  The implementation swap changed zero output bytes, while the
+Hopper run reproduced the archive exactly.  The discrepancy is therefore the
+known GPU-generation numerical path, not an unrecovered model, likelihood, or
+retriever.  Redundant pending H200 job 16123770 was cancelled before it
+started; it produced no diagnostic output.
+
+**Decision.** The recovered architecture, precision convention, ranking, and
+frontier are accepted.  No threshold was changed after observing a result.
+The Stage-1 A40 centre gate remains scientifically self-contained: it exactly
+sums its actual A40-selected `R`, independently streams the exact active
+catalogue for 64 rows, cross-checks the exact-R sum at `1e-5`, and gates actual
+A40 capture and conditioned-tail reliability.  The next action is therefore
+the already frozen 512-row A40 centre diagnostic from detached commit
+`bf09c2e`; no inference default or release label changes.
+
 ## 2026-08-30 cont.335 — frozen learned-R centre gate recovered and preregistered before any new rows are read
 
 **Decision and estimator.** The clustered and direct pilot promotions in
