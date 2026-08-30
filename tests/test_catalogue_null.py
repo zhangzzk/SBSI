@@ -1406,8 +1406,13 @@ def test_tilted_mis_estimator_matches_hand_reduced_exact_plus_qbar_tail():
             np.testing.assert_allclose(
                 result.ladder_score[rung_index, :, component],
                 expected_score,
-                rtol=2e-5,
-                atol=2e-5,
+                # Production coalesces repeated float32 flow terms before a
+                # float64 reduction; the independent check expands them and
+                # reduces on the host. Across this fixture their log-evidence
+                # numerators differ by at most 3.6e-7, which the h=0.005
+                # first difference amplifies to 3.6e-5 in the score.
+                rtol=1e-4,
+                atol=4e-5,
             )
             np.testing.assert_allclose(
                 result.ladder_information[rung_index, :, component],

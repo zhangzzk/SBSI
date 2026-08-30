@@ -137,7 +137,7 @@ def test_heldout_tail_jobs_pin_the_isolated_checkout_and_fixed_recipe():
             assert f"${reserved}" not in job
         assert "--estimator-tilt-delta" not in job
         assert "--estimator-tilt-temperature" not in job
-        assert "dm4_t1_t2_t4_3_2_2_1_v1" in job
+        assert "dmdet_t1_t2_pdet_prior_3_2_2_1_v1" in job
     assert "OBSERVATION_START=${OBSERVATION_START:-26024}" in inference_job
     assert "OBSERVATION_STOP=${OBSERVATION_STOP:-51024}" in inference_job
     assert "OBSERVATION_START=${OBSERVATION_START:-25000}" in diagnostic_job

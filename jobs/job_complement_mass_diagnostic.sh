@@ -2,10 +2,11 @@
 # Complement diagnostic for the fixed DM-MIS tail recipe.
 #
 # The default 25,000:25,512 window is the development screen used to choose the
-# T=4 bridge. A confirmation run must override it with a fresh predeclared
-# window and unique tag. The diagnostic compares the prior complement estimator
-# with the exact production sampler and records each component's pre-conditioning
-# complement mass. The recipe has no command-line temperatures or weights.
+# broad-bridge family. A confirmation run must override it with a fresh
+# predeclared window and unique tag. The diagnostic compares the prior
+# complement estimator with the exact production sampler and records each
+# component's pre-conditioning complement mass. The recipe has no command-line
+# temperatures or weights.
 # Jobs 16121540--16121542 failed before startup because the retired wrapper
 # reused Slurm's reserved TEMP scratch-path variable as a float. This wrapper
 # deliberately exposes no temperature variable; any future diagnostic-only
@@ -36,7 +37,7 @@ K=${K:-16384}
 PREFILTER=${PREFILTER:-131072}
 GLOBAL_DRAWS=${GLOBAL_DRAWS:-16384}
 PROPOSAL_SEED=${PROPOSAL_SEED:-8701}
-TAG=${TAG:-rows${OBSERVATION_START}_${OBSERVATION_STOP}_seed${PROPOSAL_SEED}_dm4_t1_t2_t4_3_2_2_1_v1}
+TAG=${TAG:-rows${OBSERVATION_START}_${OBSERVATION_STOP}_seed${PROPOSAL_SEED}_dmdet_t1_t2_pdet_prior_3_2_2_1_v1}
 output="$root/results/$TAG"
 
 for variable in OBSERVATION_START OBSERVATION_STOP K PREFILTER GLOBAL_DRAWS PROPOSAL_SEED; do

@@ -299,9 +299,14 @@ class TailProposalRecipe:
             raise ValueError("tail-recipe component weights must sum to one")
         if (
             betas[-1] is not None
-            or any(value is None or not np.isfinite(value) or value <= 0.0 for value in betas[:-1])
+            or any(
+                value is None or not np.isfinite(value) or value < 0.0
+                for value in betas[:-1]
+            )
         ):
-            raise ValueError("proxy components need positive betas and the prior beta must be None")
+            raise ValueError(
+                "proxy components need non-negative betas and the prior beta must be None"
+            )
         if not cycle or any(value < 0 or value >= len(names) for value in cycle):
             raise ValueError("tail-recipe cycle contains an invalid component id")
         frequencies = np.bincount(cycle, minlength=len(names)) / len(cycle)
@@ -333,14 +338,18 @@ class TailProposalRecipe:
 
     @property
     def proxy_temperatures(self) -> tuple[float, ...]:
-        return tuple(1.0 / value for value in self.component_betas if value is not None)
+        return tuple(
+            np.inf if value == 0.0 else 1.0 / value
+            for value in self.component_betas
+            if value is not None
+        )
 
 
 TAIL_PROPOSAL_RECIPE = TailProposalRecipe(
-    name="conditioned_dm_mis_t1_t2_t4_prior_3_2_2_1",
-    component_names=("proxy_t1", "proxy_t2", "proxy_t4", "prior"),
+    name="conditioned_dm_mis_t1_t2_detected_prior_prior_3_2_2_1",
+    component_names=("proxy_t1", "proxy_t2", "detected_prior", "prior"),
     component_weights=(0.375, 0.25, 0.25, 0.125),
-    component_betas=(1.0, 0.5, 0.25, None),
+    component_betas=(1.0, 0.5, 0.0, None),
     component_cycle=(0, 1, 2, 3, 1, 0, 2, 0),
 )
 TAIL_PROPOSAL_ATOM_CHUNK = 262144
@@ -1249,12 +1258,12 @@ class DefensiveLocalProposal:
         """Draw a complement-conditioned deterministic-mixture MIS stream.
 
         The fixed screening recipe draws three samples from the T=1 proxy, two
-        each from the T=2 and T=4 proxies, and one from ``pi`` in every
-        eight-sample cycle.  Each component is normalized separately on
-        ``S^c`` before the mixture is formed.  Every returned probability is
-        the balance mixture
+        from the T=2 proxy, two from the detected-prior limit ``pi Pdet``, and
+        one from ``pi`` in every eight-sample cycle.  Each component is
+        normalized separately on ``S^c`` before the mixture is formed.  Every
+        returned probability is the balance mixture
 
-        ``qbar_C = 3/8 r1_C + 1/4 r2_C + 1/4 r4_C + 1/8 pi_C``,
+        ``qbar_C = 3/8 r1_C + 1/4 r2_C + 1/4 rinf_C + 1/8 pi_C``,
 
         irrespective of which component generated that sample.  Fixed source
         counts make this deterministic-mixture estimator exactly unbiased and

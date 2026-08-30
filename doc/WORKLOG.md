@@ -2,6 +2,61 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.323 — replace the rejected diffuse Gaussian bridge with the detected-prior limit
+
+**Hypothesis.** DM4 failed because a quarter of the balance density followed a
+still-misaligned but much more diffuse Gaussian proxy. The exact target is
+`c = pi Pdet L`, so the proxy's zero-temperature limit `r_inf proportional to
+pi Pdet` is a more targeted robust bridge: it discards the suspect Gaussian
+factor without discarding detection. Raw `pi` remains at one eighth as the
+strict full-prior-support defense. This is a new same-window development
+hypothesis, not a reinterpretation of job 16121897.
+
+**Fixed recipe.** The cycle remains length eight and the allocation remains
+`3:2:2:1`, but its third component is now detected prior rather than `T=4`:
+
+```text
+components       proxy T=1       proxy T=2       pi Pdet       prior pi
+cycle counts         3               2               2               1
+balance weights     3/8             1/4             1/4             1/8
+betas                 1              1/2               0             none
+```
+
+Every source is separately conditioned on `S^c`, and all draws use
+`qbar_C = 3/8 r1_C + 1/4 r2_C + 1/4 rinf_C + 1/8 pi_C`. The source cycle keeps
+the same uniforms in the two sharp positions and the defensive-prior position
+used by DM4. Temperature zero is implemented as `log(pi Pdet) + 0*ell_proxy`,
+not as raw prior, and its reported temperature is infinity.
+
+**Files and validation.** `sbsi/catalogue_sampling.py` permits finite
+non-negative proxy betas, exports the detected-prior recipe, and documents the
+new balance mixture. `doc/CATALOGUE_PRIOR.md`, the runner help, recipe-specific
+wrapper tags, and dynamic tests follow it. The hand-expanded estimator test
+also now states its measured floating-point bound: production coalesces
+repeated float32 flow values before float64 reduction, while the independent
+oracle expands them on the host. Their log-evidence numerators differ by at
+most `3.6e-7` in the fixture, amplified by the `h=0.005` first difference to
+`3.6e-5`; the score tolerance records that bound rather than failing according
+to whichever recipe happens to generate fewer duplicates.
+
+```text
+ruff check <changed Python and tests>                              clean
+pytest tests/test_catalogue_sampling.py tests/test_catalogue_null.py \
+  tests/test_complement_diagnostic.py tests/test_release_config.py  79 passed
+/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python \
+  -m pytest tests -q                                               209 passed,
+                                                                  2 skipped
+bash -n <diagnostic and estimator wrappers>                        clean
+git diff --check                                                   clean
+```
+
+**Limitations and next steps.** This entry establishes an auditable estimator,
+not a successful proposal. Screen it only on rows 25,000:25,512 at
+`M=16,384`; require a material reduction from DM3's 33 k failures and report
+elapsed time. Do not use the fresh oracle or estimator windows unless it earns
+confirmation. The batched implementation is being developed independently of
+this component choice and must reproduce whichever fixed recipe survives.
+
 ## 2026-08-30 cont.322 — measured: the fixed T=4 bridge is slower and less reliable, so DM4 is rejected before confirmation
 
 **Result.** Development job 16121897 evaluated the cont.321

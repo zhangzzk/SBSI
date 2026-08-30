@@ -226,7 +226,7 @@ The four unconditioned components are proportional to
 ```text
 r_1(j)   proportional to pi_j Pdet_j exp(ell_proxy,i(j))
 r_2(j)   proportional to pi_j Pdet_j exp(ell_proxy,i(j) / 2)
-r_4(j)   proportional to pi_j Pdet_j exp(ell_proxy,i(j) / 4)
+r_inf(j) proportional to pi_j Pdet_j
 r_pi(j)  = pi_j.
 ```
 
@@ -236,11 +236,11 @@ mixture is
 
 ```text
 qbar_C(j) = (3/8) r_1,C(j) + (1/4) r_2,C(j)
-          + (1/4) r_4,C(j) + (1/8) pi_C(j).
+          + (1/4) r_inf,C(j) + (1/8) pi_C(j).
 ```
 
-Every eight-draw cycle has sources `(r_1, r_2, r_4, pi_C, r_2, r_1,
-r_4, r_1)`, hence exact `3:2:2:1` source counts. Regardless of its source,
+Every eight-draw cycle has sources `(r_1, r_2, r_inf, pi_C, r_2, r_1,
+r_inf, r_1)`, hence exact `3:2:2:1` source counts. Regardless of its source,
 every draw is divided by the same exact `qbar_C`. Thus
 
 ```text
@@ -250,11 +250,12 @@ Ahat_i(g) = sum_{j in S_i} c_j(g)
 
 is unbiased whenever `M` is a complete number of cycles. Fixing the component
 counts removes between-component allocation noise and cannot increase variance
-relative to iid draws from the same `qbar_C`. The `T=4` bridge was added after
-the first conditioned screen localized 29/33 k failures to the lowest quartile
-of `T=1` complement mass; in those failures `T=2` and prior draws each supplied
-about 45--47% of estimated variance. The `pi_C` component gives full catalogue
-support and bounds `pi_j / qbar_C(j)` by eight times the complement normalizer.
+relative to iid draws from the same `qbar_C`. The `r_inf` bridge is the
+zero-temperature proxy limit: it retains the target's `pi Pdet` base while
+discarding the misaligned Gaussian approximation. It replaced a rejected
+`T=4` development arm that increased both k failures and cost. The `pi_C`
+component gives full catalogue support and bounds `pi_j / qbar_C(j)` by eight
+times the complement normalizer.
 The sampler uses blocked two-pass normalization and sampling, so its working
 memory is bounded by the atom chunk rather than catalogue size times object
 count. Proposal scoring uses a fixed 262,144-atom chunk, recorded separately
