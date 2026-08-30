@@ -435,8 +435,10 @@ pilot seed 1,008,704, and production seed 7,008,704. It requires the frozen
 mock hashes and the independent exact-oracle selection manifest. Measured
 cuts, selection caches, learned retrieval, the earlier pilot-promotion path,
 and the ordinary tail-proposal diagnostic are mutually excluded. The
-diagnostic fails closed until the outcome-blind partition described below has
-three reviewed hashes embedded in `SPATIAL_NEYMAN_PROTOCOL`.
+diagnostic was disabled until the outcome-blind partition described below had
+three independently reviewed hashes; those semantic, cache-byte, and
+manifest-byte identities are now embedded in `SPATIAL_NEYMAN_PROTOCOL`, and
+science fails closed on any drift.
 
 The global active support is partitioned once into 256 cells using only
 catalogue-side quantities. Starting from all active atoms, eight binary levels

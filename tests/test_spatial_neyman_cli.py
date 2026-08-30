@@ -180,7 +180,12 @@ def test_spatial_science_cli_accepts_only_reviewed_frozen_artifacts(partition_ro
     RUNNER._validate_spatial_neyman_request(args)
 
 
-def test_spatial_science_cli_refuses_unfrozen_partition_hashes(partition_root):
+def test_spatial_science_cli_refuses_unfrozen_partition_hashes(
+    partition_root, monkeypatch
+):
+    protocol = dict(RUNNER.SPATIAL_NEYMAN_PROTOCOL)
+    protocol["partition_sha256"] = None
+    monkeypatch.setattr(RUNNER, "SPATIAL_NEYMAN_PROTOCOL", protocol)
     args = RUNNER.parse_args(_spatial_arguments(partition_root))
     with pytest.raises(SystemExit, match="lacks frozen partition hashes"):
         RUNNER._validate_spatial_neyman_request(args)

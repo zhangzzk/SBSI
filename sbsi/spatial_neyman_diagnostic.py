@@ -91,12 +91,18 @@ SPATIAL_NEYMAN_PROTOCOL = {
     "allocation_total_cycles": 2_048,
     "tail_proposal_recipe": asdict(TAIL_PROPOSAL_RECIPE),
     "partition_recipe_sha256": SPATIAL_PARTITION_RECIPE_SHA256,
-    # These three identities are intentionally frozen only after the
-    # outcome-blind partition audit.  A science run fails closed while any is
-    # null and if any observed artifact identity differs.
-    "partition_sha256": None,
-    "partition_cache_sha256": None,
-    "partition_manifest_sha256": None,
+    # Outcome-blind A40 audit job 16124243 from detached commit b3d8d2e read
+    # zero science rows, issued zero candidate queries, and evaluated zero
+    # target-flow terms.  Science fails closed on any semantic or byte drift.
+    "partition_sha256": (
+        "0da871a79abfd124360a2d93f02707bb88de42e5281edfda741a819a58b557ab"
+    ),
+    "partition_cache_sha256": (
+        "1a63e4a7e435f79fa319f1a909698ee117bcb6394a257e0258ace9daf0248e3c"
+    ),
+    "partition_manifest_sha256": (
+        "7cd8ae16a65c8488b5ff6c8abfeef5edbdce75b0035dcb37ad83fa51ff29cdef"
+    ),
     "exact_selection_manifest_sha256": (
         "6abcc361aec9ada6010f2a91a68aa70440904873518182445c2a712ae69bad6a"
     ),

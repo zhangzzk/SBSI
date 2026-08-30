@@ -2,6 +2,61 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.339 — outcome-blind spatial partition passes audit and its three identities are frozen
+
+**Audit result.** Detached pre-audit commit
+`b3d8d2ed1f4d757ca5c3cacbd3156dc5f68b3d89` ran only the partition path as
+A40 Slurm job 16124243. It completed with exit code zero in 57 seconds and
+6,613,676 KiB peak RSS. The wrapper was submitted from an external log
+directory, so Slurm's relative stdout/stderr did not dirty the clean detached
+checkout. The immutable artifact is
+`complement_spatial_neyman_center_dev_v1/partition_audit_v1` and reports
+`outcome_blind=true`, 256 cells, 12,760,990 active atoms, zero science rows
+read, zero candidate queries, and zero target-flow evaluations. Partition
+construction itself took 31.986246456042863 seconds; this audit-build time is
+not science method time.
+
+The reviewed identities are:
+
+```text
+semantic partition  0da871a79abfd124360a2d93f02707bb88de42e5281edfda741a819a58b557ab
+NPZ cache bytes     1a63e4a7e435f79fa319f1a909698ee117bcb6394a257e0258ace9daf0248e3c
+manifest bytes      7cd8ae16a65c8488b5ff6c8abfeef5edbdce75b0035dcb37ad83fa51ff29cdef
+audit JSON bytes    45917b69ea227b397ad5a7eca87ce94ff3d115e5c9acfcab82836406e37ce786
+recipe              e2f67fa69a2f723578a76b3f805dd7015cef539e2ef33b34ced1d0e3171b9a50
+```
+
+Cell counts range from 45,130 to 64,511, comfortably satisfying the
+predeclared `>16,384` nonempty-after-exclusion bound and `<=262,144` mapping-
+slab bound. Detected-prior masses range only from
+0.0034952195398293027 to 0.003495344347822755; prior masses range from
+0.003536559467567811 to 0.00505532877934866. The manifest binds the frozen
+active IDs, standardized coordinates and coordinate names, detected and prior
+weights, assignment, counts, and both cell-mass arrays.
+
+**Independent verification and freeze.** Login-node audit work was limited to
+metadata, checksums, and the compact 25.5 MB NPZ. Independent reduction
+recomputed the cache and manifest hashes, reconstructed
+`SpatialCellPartition` under its strict hash contract, recomputed counts from
+all compact cell IDs, confirmed their sum/minimum/maximum as
+12,760,990/45,130/64,511, matched semantic/cache/manifest identities across
+the NPZ, manifest, and audit JSON, and reconfirmed all three zero-science
+counters. `sbsi/spatial_neyman_diagnostic.py` now replaces the deliberate
+nulls with exactly these reviewed identities. The null-path rejection remains
+mutation-tested, while the ordinary science path can now load only these
+bytes and still verifies the embedded record against live proposal inputs.
+`doc/CATALOGUE_PRIOR.md` records that the audit prerequisite is satisfied.
+
+Focused sampler/diagnostic/CLI validation after freezing passed 70/70; the
+full suite passed 372 tests with two optional skips in 36.89 seconds. Ruff,
+Python compilation, Bash syntax, and `git diff --check` remain clean. No
+science row has yet been read and no centre-gate job has yet been submitted.
+No estimator default or release label changes. Next: commit this identity-only
+freeze, create a second clean detached checkout, submit the exact frozen A40
+centre gate from an external log directory, and independently reduce every
+integrity, tail, exact-calibration, and efficiency gate before deciding
+whether any inference stencil is authorized.
+
 ## 2026-08-30 cont.338 — spatial pilot/Neyman DM3 gate implemented and frozen before partition audit
 
 **Decision and estimator.** The valid learned-support rejection in cont.337

@@ -210,12 +210,24 @@ def test_public_protocol_has_cli_contract_and_starts_unfrozen():
         "partition_manifest_sha256",
     }
     assert required <= SPATIAL_NEYMAN_PROTOCOL.keys()
-    assert SPATIAL_NEYMAN_PROTOCOL["partition_sha256"] is None
-    assert SPATIAL_NEYMAN_PROTOCOL["partition_cache_sha256"] is None
-    assert SPATIAL_NEYMAN_PROTOCOL["partition_manifest_sha256"] is None
+    assert SPATIAL_NEYMAN_PROTOCOL["partition_sha256"] == (
+        "0da871a79abfd124360a2d93f02707bb88de42e5281edfda741a819a58b557ab"
+    )
+    assert SPATIAL_NEYMAN_PROTOCOL["partition_cache_sha256"] == (
+        "1a63e4a7e435f79fa319f1a909698ee117bcb6394a257e0258ace9daf0248e3c"
+    )
+    assert SPATIAL_NEYMAN_PROTOCOL["partition_manifest_sha256"] == (
+        "7cd8ae16a65c8488b5ff6c8abfeef5edbdce75b0035dcb37ad83fa51ff29cdef"
+    )
 
 
-def test_science_runner_fails_before_work_while_partition_is_unfrozen():
+def test_science_runner_fails_before_work_while_partition_is_unfrozen(monkeypatch):
+    for name in (
+        "partition_sha256",
+        "partition_cache_sha256",
+        "partition_manifest_sha256",
+    ):
+        monkeypatch.setitem(SPATIAL_NEYMAN_PROTOCOL, name, None)
     with pytest.raises(ValueError, match="disabled until"):
         diagnose_spatial_neyman_complement(
             SimpleNamespace(),
