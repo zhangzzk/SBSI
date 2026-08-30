@@ -286,6 +286,8 @@ specific to the four-component DM4 recipe.
 `--diagnose-complement-pilot-stratum` is a development diagnostic, not an
 estimator mode or release change. It requires the fixed tail-proposal
 diagnostic and cannot be combined with the frozen `exact-oracle/v1` protocol.
+Measured cuts and selection caches are rejected so post-cut row positions can
+never be relabelled as the frozen absolute IDs.
 There are no command-line controls for its pilot size, score, anchor count,
 promotion count, neighbourhood, proposal recipe, execution chunks, or random
 stream. The
@@ -294,7 +296,9 @@ consumed development rows 25,000:25,512, `K=M=16,384`, prefilter 131,072, and
 base proposal seed 8701. It explicitly retains the release
 `mean_observed_shape` strategy, reproducing the archived DM3 development
 centre `[0.013610377120038044, 0.002740148300964851]` from the full frozen
-mock; it does not touch confirmation rows.
+mock. Confirmation-window measurements therefore contribute only to that
+already archived full-mock centre; no confirmation row receives candidate,
+flow, pilot, or diagnostic evaluation.
 
 For each object, the deterministic base stratum `S0` is constructed first. A
 discarded 8,192-draw pilot then samples the selected DM3 proposal conditioned
@@ -354,13 +358,16 @@ The frozen development protocol label is
 production diagnostic seed 7,008,704, and primary pilot seed 1,008,704. It also
 pins the torch candidate backend, diagnostic/flow chunks 64/4,096, both DM3
 proposal chunks 262,144/32, the complete tail and pilot recipes, pilot recipe
-hash, and hash contract. The exact expected flow counts are 4,194,304 pilot,
+hash, hash contract, and SHA-256 identities of the frozen measurements, truth,
+and likelihood-mock manifest. The job wrapper recomputes those three source
+hashes before starting. The exact expected flow counts are 4,194,304 pilot,
 10,485,760 final-stratum, and 98,566,144 total evaluations. A toy or partial
 call is still valid, but its identity reports `matched=false` and its frozen
 development gates fail; identity mismatch is not an API error.
 
 The development summary preregisters three hard gate families. Integrity
-requires the exact 512 absolute IDs and protocol identity; 512 finite positive
+requires the exact 512 integer-typed, int64-compatible absolute IDs and
+protocol identity; 512 finite positive
 `stratum + tail` masses and tail standard errors; base/promoted/final/anchor
 counts 16,384/4,096/20,480/256 for every object; 16,384 retained tail draws and
 at least 256 finite-score pilot atoms for every object; zero fallback fills;
@@ -382,7 +389,8 @@ reduction. It excludes the prior-reference draw and flow. Both
 `(T/T0) mean(rT^2)/baseline_mean` and
 `(T/T0) p90_higher(rT^2)/baseline_p90` must be at most 0.90. The summary also
 reports `T/T0` and total elapsed time divided by `T0`; total elapsed is context,
-not substituted for the fair method time. Overall `gates.passed` requires all
+not substituted for the fair method time. Missing, nonfinite, negative, or
+zero total method time fails closed. Overall `gates.passed` requires all
 integrity, tail-reliability, and efficiency gates.
 
 Pilot seed offset 2,000,003 is separately reserved before seeing the primary

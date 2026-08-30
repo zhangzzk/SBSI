@@ -217,6 +217,33 @@ def test_exact_oracle_rejects_measured_selection(selection_arguments):
         RUNNER._validate_exact_oracle_request(args)
 
 
+@pytest.mark.parametrize(
+    "selection_arguments",
+    (
+        ("--cut-abs-ehat", "0.8"),
+        ("--cut-bound", "measured_ngmix_g1:-1:1"),
+        (
+            "--cut-abs-ehat",
+            "0.8",
+            "--selection-cache",
+            "selection-cache",
+        ),
+    ),
+)
+def test_pilot_stratum_rejects_measured_selection(selection_arguments):
+    args = RUNNER.parse_args(
+        _minimal_runner_arguments(
+            "--diagnose-complement",
+            "diagnostic",
+            "--diagnose-complement-tail-proposal",
+            "--diagnose-complement-pilot-stratum",
+            *selection_arguments,
+        )
+    )
+    with pytest.raises(SystemExit, match="frozen absolute row ids"):
+        RUNNER._validate_pilot_stratum_request(args)
+
+
 def test_reference_job_only_supplies_runtime_paths():
     job = (ROOT / "jobs" / "job_inference.sh").read_text()
     assert "v1.1-infer with v3.2-like" in job
@@ -308,6 +335,8 @@ def test_pilot_stratum_job_pins_consumed_development_window_and_recipe():
     assert "SBSI/complement-pilot-stratum-development/v1" in job
     assert 'PILOT_STRATUM_DEVELOPMENT_PROTOCOL["pilot_seed"] != 1_008_704' in job
     assert 'PILOT_STRATUM_DEVELOPMENT_PROTOCOL["production_seed"] != 7_008_704' in job
+    assert 'PILOT_STRATUM_DEVELOPMENT_PROTOCOL[\n    "mock_input_sha256"\n]' in job
+    assert "sha256((mock / name).read_bytes()).hexdigest()" in job
     assert "PILOT_STRATUM_RECIPE.atom_chunk != TAIL_PROPOSAL_ATOM_CHUNK" in job
     assert "PILOT_STRATUM_RECIPE.object_chunk != TAIL_PROPOSAL_OBJECT_CHUNK" in job
     assert "b4349271763311c2127d785c79fc637e115f421a31fb821e6db6e0a592b8d410" in job

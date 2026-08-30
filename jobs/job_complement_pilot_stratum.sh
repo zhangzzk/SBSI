@@ -50,6 +50,9 @@ export PYTHONPATH="$repo:${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}${PYTHON
 cd "$repo"
 
 "$python" - <<'PREFLIGHT' || exit 2
+from hashlib import sha256
+from pathlib import Path
+
 from sbsi.catalogue_sampling import (
     PILOT_STRATUM_RECIPE,
     TAIL_PROPOSAL_ATOM_CHUNK,
@@ -92,6 +95,18 @@ if PILOT_STRATUM_DEVELOPMENT_PROTOCOL["pilot_seed"] != 1_008_704:
     raise SystemExit("primary pilot seed identity changed")
 if PILOT_STRATUM_DEVELOPMENT_PROTOCOL["production_seed"] != 7_008_704:
     raise SystemExit("production seed identity changed")
+mock = Path(
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/"
+    "inference_candidate_ladder_n125k_v1/prepare_cont303/mock"
+)
+for name, expected_hash in PILOT_STRATUM_DEVELOPMENT_PROTOCOL[
+    "mock_input_sha256"
+].items():
+    actual_hash = sha256((mock / name).read_bytes()).hexdigest()
+    if actual_hash != expected_hash:
+        raise SystemExit(
+            f"pilot source changed for {name}: {actual_hash} != {expected_hash}"
+        )
 PREFLIGHT
 
 exec "$python" "$repo/scripts/run_inference.py" \

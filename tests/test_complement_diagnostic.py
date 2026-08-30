@@ -933,6 +933,9 @@ def _pilot_gate_diagnostic(
         "production_seed": PILOT_STRATUM_DEVELOPMENT_PROTOCOL[
             "production_seed"
         ],
+        "mock_input_sha256": PILOT_STRATUM_DEVELOPMENT_PROTOCOL[
+            "mock_input_sha256"
+        ],
         "pilot_atom_chunk": PILOT_STRATUM_DEVELOPMENT_PROTOCOL[
             "pilot_atom_chunk"
         ],
@@ -1070,6 +1073,20 @@ def test_pilot_development_protocol_and_baseline_are_frozen():
     assert protocol["pilot_flow_evaluations"] == 4_194_304
     assert protocol["final_stratum_flow_evaluations"] == 10_485_760
     assert protocol["run_flow_evaluations"] == 98_566_144
+    assert protocol["mock_input_sha256"] == {
+        "measurements.parquet": (
+            "fdfecacc13adabd6005e21150ab0dc74767cad34da3d3ea95e362515ce38365b"
+        ),
+        "truth.parquet": (
+            "78d1c8e02f43e1ac4673b2ca309b484d3565de3b9400bf736ca98bf584e5dc30"
+        ),
+        "likelihood_mock_manifest.json": (
+            "5c097c98fa820177738156f6dd3290daaf68594dd90b2e80733f083b019d9a48"
+        ),
+    }
+    assert protocol["mock_input_sha256"] == EXACT_ORACLE_CONFIRMATION[
+        "mock_input_sha256"
+    ]
     assert PILOT_STRATUM_DEVELOPMENT_BASELINE == {
         "total_relative_error_median": 0.013214266498501442,
         "total_relative_error_p90_higher": 0.021110866788308195,
@@ -1198,6 +1215,32 @@ def test_pilot_development_efficiency_gate_boundaries_and_failures():
     assert failed["gates"]["efficiency_passed"] is False
     assert failed["gates"]["passed"] is False
 
+    zero_time = _pilot_gate_diagnostic(method_seconds=0.0)._pilot_stratum_summary()
+    assert np.isnan(zero_time["method_seconds"])
+    assert zero_time["gates"]["efficiency_passed"] is False
+    assert zero_time["gates"]["passed"] is False
+
+
+def test_pilot_development_integrity_rejects_nonintegral_object_ids():
+    table_ids = _pilot_gate_diagnostic()
+    table_ids.table["object_index"] = (
+        table_ids.table["object_index"].astype(np.float64) + 0.5
+    )
+    table_summary = table_ids._pilot_stratum_summary()
+    assert table_summary["gates"]["integrity"][
+        "absolute_object_ids_exact"
+    ]["passed"] is False
+    assert table_summary["gates"]["passed"] is False
+
+    provenance_ids = _pilot_gate_diagnostic()
+    for record in provenance_ids.metadata["pilot_stratum"]["object_provenance"]:
+        record["object_index"] += 0.5
+    provenance_summary = provenance_ids._pilot_stratum_summary()
+    assert provenance_summary["gates"]["integrity"][
+        "hashes_and_run_manifest_internally_matched"
+    ]["passed"] is False
+    assert provenance_summary["gates"]["passed"] is False
+
 
 def test_pilot_stratum_manifest_composes_from_identical_chunked_and_sliced_rows():
     together, _ = _run_toy_pilot_stratum(object_chunk=2)
@@ -1282,6 +1325,16 @@ def test_pilot_stratum_fails_closed_on_invalid_mode_or_seed():
         )
     with pytest.raises(ValueError, match="pilot seed requires"):
         diagnose_complement(**common, pilot_seed=37)
+
+    selected_likelihood = _DiagnosticLikelihood()
+    selected_likelihood.selection = object()
+    with pytest.raises(ValueError, match="measured selection.*disabled"):
+        diagnose_complement(
+            **{**common, "likelihood": selected_likelihood},
+            include_tail_proposal=True,
+            include_pilot_stratum=True,
+            pilot_seed=37,
+        )
 
 
 def test_exact_oracle_summary_pins_gate_boundaries_and_protocol_identity():

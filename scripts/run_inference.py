@@ -870,6 +870,15 @@ def _validate_pilot_stratum_request(args) -> None:
             "--diagnose-complement-pilot-stratum cannot be combined with "
             "--diagnose-complement-exact-oracle"
         )
+    if (
+        args.cut_abs_ehat is not None
+        or bool(args.cut_bound)
+        or args.selection_cache is not None
+    ):
+        raise SystemExit(
+            "--diagnose-complement-pilot-stratum requires measured cuts and "
+            "selection caches to be disabled so frozen absolute row ids are preserved"
+        )
 
 
 def main(argv=None):

@@ -2,6 +2,45 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.331 — pilot development protocol fails closed before launch
+
+**Adversarial audit fixes.** A final independent audit of the frozen primary
+pilot diagnostic found three ways an invalid run could have appeared eligible.
+`sbsi/complement_diagnostic.py` now requires strictly positive finite total
+method time, rather than allowing zero time to produce a spuriously perfect
+variance-time score. It validates table, per-object provenance, and
+execution-call IDs as integer-typed, nonnegative, exactly int64-compatible
+values before conversion; fractional IDs can no longer truncate to the frozen
+25,000:25,512 window. Both the direct API and `scripts/run_inference.py` reject
+measured selection in pilot mode, including cut and selection-cache CLI paths,
+before a filtered table can be reset and relabelled with absolute row IDs.
+
+The development identity now also pins the SHA-256 hashes of the frozen
+measurements, truth, and likelihood-mock manifest already used by the exact
+oracle. The observed identity records the hashes supplied by the runner, and
+`jobs/job_complement_pilot_stratum.sh` recomputes every source hash before
+execution. `doc/CATALOGUE_PRIOR.md` clarifies that the archived centre uses the
+full mock, including confirmation-window measurements, while no confirmation
+row is itself candidate-, flow-, pilot-, or diagnostic-evaluated. No primary
+outcome had been generated before these corrections.
+
+**Validation.** Focused regressions cover zero-time rejection, fractional
+table and provenance IDs, direct and CLI selection rejection, frozen source
+hashes, and wrapper preflight. Before any scheduler submission:
+
+```text
+pytest tests/test_complement_diagnostic.py tests/test_release_config.py -q
+                                                               41 passed
+pytest tests -q                                  251 passed, 2 skipped
+ruff check <changed Python and tests>                   all checks passed
+python -m compileall -q sbsi scripts tests                        clean
+bash -n jobs/job_complement_pilot_stratum.sh                      clean
+git diff --check                                                   clean
+```
+
+An independent post-fix adversarial review also returned clean after probing
+fractional, boolean, and overflowing IDs plus zero/nonfinite timing paths.
+
 ## 2026-08-30 cont.330 — frozen independent-pilot development gates encoded before execution
 
 **Predeclared identity and gates.** `sbsi/complement_diagnostic.py` now owns
@@ -42,7 +81,8 @@ frozen protocol be replicated with pilot seed 2,008,704 and no other change.
 tests pin the primary identity, thresholds, inclusive boundaries, discrete
 `higher` p90, failure behavior, timing definition, and this replication rule.
 No primary or replication outcome is measured by this commit, no production
-estimator is changed, and no exact-confirmation row is used.
+estimator is changed, and no exact-confirmation row is diagnostically
+evaluated.
 
 **Promotion hardening and coordinate audit.** The immediately preceding
 `f0fb16b` follow-up is recorded here because it made no separate work-log

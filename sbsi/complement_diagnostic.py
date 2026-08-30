@@ -53,6 +53,17 @@ PILOT_STRATUM_DEVELOPMENT_BASELINE = {
     "total_relative_error_squared_p90_higher": 4.45668696553694e-4,
     "method_seconds": 91.04022970038932,
 }
+PILOT_STRATUM_DEVELOPMENT_MOCK_SHA256 = {
+    "measurements.parquet": (
+        "fdfecacc13adabd6005e21150ab0dc74767cad34da3d3ea95e362515ce38365b"
+    ),
+    "truth.parquet": (
+        "78d1c8e02f43e1ac4673b2ca309b484d3565de3b9400bf736ca98bf584e5dc30"
+    ),
+    "likelihood_mock_manifest.json": (
+        "5c097c98fa820177738156f6dd3290daaf68594dd90b2e80733f083b019d9a48"
+    ),
+}
 PILOT_STRATUM_DEVELOPMENT_GATE_THRESHOLDS = {
     "objects": 512,
     "pareto_k_below_0_5_count": 461,
@@ -99,6 +110,7 @@ PILOT_STRATUM_DEVELOPMENT_PROTOCOL = {
     "pilot_flow_evaluations": 4_194_304,
     "final_stratum_flow_evaluations": 10_485_760,
     "run_flow_evaluations": 98_566_144,
+    "mock_input_sha256": dict(PILOT_STRATUM_DEVELOPMENT_MOCK_SHA256),
 }
 EXACT_ORACLE_CONFIRMATION = {
     "universe_start": 25_512,
@@ -133,17 +145,7 @@ EXACT_ORACLE_CONFIRMATION = {
         "temperature_scope": "proxy_likelihood_only",
         "denominator": "balance_mixture",
     },
-    "mock_input_sha256": {
-        "measurements.parquet": (
-            "fdfecacc13adabd6005e21150ab0dc74767cad34da3d3ea95e362515ce38365b"
-        ),
-        "truth.parquet": (
-            "78d1c8e02f43e1ac4673b2ca309b484d3565de3b9400bf736ca98bf584e5dc30"
-        ),
-        "likelihood_mock_manifest.json": (
-            "5c097c98fa820177738156f6dd3290daaf68594dd90b2e80733f083b019d9a48"
-        ),
-    },
+    "mock_input_sha256": dict(PILOT_STRATUM_DEVELOPMENT_MOCK_SHA256),
 }
 
 
@@ -570,6 +572,33 @@ class ComplementDiagnostic:
             data = values(name)
             return int(np.sum(predicate(data)))
 
+        def exact_int64_vector(data) -> Optional[np.ndarray]:
+            """Return integer-typed, exactly int64-compatible values only."""
+
+            try:
+                if isinstance(data, pd.Series):
+                    if not pd.api.types.is_integer_dtype(data.dtype):
+                        return None
+                    raw = data.to_numpy()
+                else:
+                    raw = np.asarray(data)
+                    if raw.dtype.kind not in "iu":
+                        return None
+                if raw.ndim != 1:
+                    return None
+                scalar_values = raw.tolist()
+                if any(
+                    isinstance(value, (bool, np.bool_))
+                    or not isinstance(value, (int, np.integer))
+                    or value < 0
+                    or value > np.iinfo(np.int64).max
+                    for value in scalar_values
+                ):
+                    return None
+                return np.asarray(scalar_values, dtype=np.int64)
+            except (TypeError, ValueError, OverflowError):
+                return None
+
         development = protocol.get("development_protocol", {})
         expected_identity = development.get("expected")
         observed_identity = development.get("observed")
@@ -626,6 +655,7 @@ class ComplementDiagnostic:
                 "run_flow_evaluations": int(
                     self.metadata["flow_evaluations"]
                 ),
+                "mock_input_sha256": protocol["mock_input_sha256"],
             }
             pilot_flow_counts_matched = bool(
                 pilot_arm_flow_evaluations
@@ -642,13 +672,21 @@ class ComplementDiagnostic:
             and pilot_flow_counts_matched
             and development.get("matched") is True
         )
-        object_ids = frame["object_index"].to_numpy(dtype=np.int64)
+        validated_object_ids = exact_int64_vector(frame["object_index"])
+        object_ids = (
+            validated_object_ids
+            if validated_object_ids is not None
+            else np.asarray([], dtype=np.int64)
+        )
         expected_ids = np.arange(
             PILOT_STRATUM_DEVELOPMENT_PROTOCOL["universe_start"],
             PILOT_STRATUM_DEVELOPMENT_PROTOCOL["universe_stop"],
             dtype=np.int64,
         )
-        ids_exact = bool(np.array_equal(object_ids, expected_ids))
+        ids_exact = bool(
+            validated_object_ids is not None
+            and np.array_equal(object_ids, expected_ids)
+        )
 
         total_mass = values("mass_stratum") + values(
             "mass_complement_tail_proposal"
@@ -716,16 +754,13 @@ class ComplementDiagnostic:
             isinstance(object_provenance, list)
             and all(isinstance(record, dict) for record in object_provenance)
         )
-        try:
-            provenance_ids = np.asarray(
-                [record.get("object_index", -1) for record in object_provenance],
-                dtype=np.int64,
-            )
-        except (TypeError, ValueError):
-            provenance_ids = np.asarray([], dtype=np.int64)
+        provenance_ids = exact_int64_vector(
+            [record.get("object_index", -1) for record in object_provenance]
+        )
         object_hashes_well_formed = bool(
             provenance_records_well_formed
             and len(object_provenance) == len(frame)
+            and provenance_ids is not None
             and np.array_equal(provenance_ids, object_ids)
             and all(
                 is_sha256(record.get(name))
@@ -765,12 +800,20 @@ class ComplementDiagnostic:
                 calls_well_formed = False
                 break
             try:
-                call_start = int(record["object_start"])
-                call_stop = int(record["object_stop"])
-                call_objects = int(record["objects"])
-            except (KeyError, TypeError, ValueError):
+                call_identity = exact_int64_vector(
+                    [
+                        record["object_start"],
+                        record["object_stop"],
+                        record["objects"],
+                    ]
+                )
+            except KeyError:
                 calls_well_formed = False
                 break
+            if call_identity is None:
+                calls_well_formed = False
+                break
+            call_start, call_stop, call_objects = call_identity.tolist()
             if (
                 call_start < 0
                 or call_stop <= call_start
@@ -953,10 +996,14 @@ class ComplementDiagnostic:
             except (KeyError, TypeError, ValueError):
                 value = float("nan")
             method_phase_values.append(value)
+        method_phase_values_array = np.asarray(
+            method_phase_values, dtype=np.float64
+        )
         method_seconds = (
-            float(np.sum(method_phase_values))
-            if np.isfinite(method_phase_values).all()
-            and np.all(np.asarray(method_phase_values) >= 0.0)
+            float(np.sum(method_phase_values_array))
+            if np.isfinite(method_phase_values_array).all()
+            and np.all(method_phase_values_array >= 0.0)
+            and float(np.sum(method_phase_values_array)) > 0.0
             else float("nan")
         )
         method_time_ratio = (
@@ -1412,6 +1459,11 @@ def diagnose_complement(
     if include_exact_oracle and getattr(likelihood, "selection", None) is not None:
         raise ValueError(
             "the exact oracle requires measured selection to be disabled so "
+            "frozen absolute row ids are preserved"
+        )
+    if include_pilot_stratum and getattr(likelihood, "selection", None) is not None:
+        raise ValueError(
+            "the pilot stratum requires measured selection to be disabled so "
             "frozen absolute row ids are preserved"
         )
 
@@ -2262,6 +2314,11 @@ def diagnose_complement(
                 pilot_stratum_flow_evaluations
             ),
             "run_flow_evaluations": int(flow_evaluations),
+            "mock_input_sha256": (
+                None
+                if confirmation_mock_sha256 is None
+                else dict(confirmation_mock_sha256)
+            ),
         }
         pilot_stratum_metadata = {
             "mode": "diagnostic_only_discarded_independent_pilot",
@@ -2274,6 +2331,11 @@ def diagnose_complement(
             "production_seed": int(seed),
             "pilot_seed_offset": PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET,
             "production_seed_offset": COMPLEMENT_DIAGNOSTIC_SEED_OFFSET,
+            "mock_input_sha256": (
+                None
+                if confirmation_mock_sha256 is None
+                else dict(confirmation_mock_sha256)
+            ),
             "streams_independent": bool(int(pilot_seed) != int(seed)),
             "score_formula": "2 * log_target_over_qbar + log(qbar)",
             "score_centering": None,
