@@ -2,6 +2,98 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.346 — finite-state island SMC passes its algebra audit but is not a catalogue sampler
+
+**Why and scope.** H256-U8-PS2 showed that removing the pilot reservoir can
+make construction much faster while static outcome-blind allocation makes the
+tail substantially worse. Before that outcome was read, an independent
+contingency review selected a genuinely target-informed alternative: fixed-grid
+annealed sequential Monte Carlo with independent islands. This entry implements
+only the catalogue-agnostic finite-state algebra in
+`sbsi/island_annealed_smc.py`; it has no runner flag, catalogue adapter, job,
+release identity, or inference integration.
+
+For a normalized, strictly positive base `q0` and unnormalized finite target
+`c`, the reference bridge is
+
+```text
+gamma_beta(j) = q0(j)^(1-beta) c(j)^beta
+G_t(j)        = (c(j) / q0(j))^(beta_t - beta_(t-1)).
+```
+
+Each island independently samples `q0`, multiplies by `G_t`, records the
+log-mean increment, multinomial-resamples, and applies a kernel invariant to
+`gamma_beta`. The independence proposal from `q0` accepts with
+`min(1, exp(beta * (ell_y - ell_x)))`, where `ell=log(c/q0)`. An optional
+uniform-neighbour undirected graph move includes the exact
+`degree(current)/degree(proposal)` Hastings correction and is mixed with a
+strictly positive independence refresh. Mutation after the terminal weight was
+removed because it cannot affect a normalizer. The arithmetic mean of
+independent island normalizers is the estimator; the island sample variance
+divided by island count estimates its variance. `log_normalizer` is reported
+for stable representation but is not claimed unbiased. Zero-weight islands
+remain zero, including the all-collapsed case; a later gate must never read its
+zero sample SE as evidence of precision.
+
+**Algebra and software evidence.** Thirty focused tests pass. They include
+constant-potential exactness beyond the linear exponential range, explicit
+one-particle Feynman--Kac path enumeration, complete two-particle multinomial
+resampling enumeration, independence and degree-corrected graph detailed
+balance, the three-state path degree ratio, empirical tiny-law unbiasedness,
+independent-island variance, isolated-support collapse without retry, frozen
+PCG64 raw output, object/island/chunk invariance, terminal-mutation omission,
+immutable results, and fail-closed target/base/beta/graph contracts. A separate
+350-case random graph calculation over two through eight states found maximum
+row-sum error `2.22e-16` and maximum detailed-balance error `5.55e-17`.
+
+```text
+python -m pytest -q tests/test_island_annealed_smc.py             30 passed
+ruff check sbsi/island_annealed_smc.py \
+  tests/test_island_annealed_smc.py                              clean
+python -m py_compile <the two files above>                       clean
+git diff --check                                                 clean
+```
+
+**Independent no-go audit.** The algebra is a go; literal production use is
+not. The reference API requires dense `log_target` and `q0` over every state,
+recomputes full-state bridge arrays inside islands and stages, and repeatedly
+calls float-probability `Generator.choice`. Applied literally, it would request
+all 12,760,990 target values per object rather than sample them. It has no lazy
+target cache, packed device path, requested/unique/cache-hit accounting, exact
+finite-precision categorical/resampling/MH contract, or catalogue provenance.
+The optional graph retains edge-list and CSR copies and would consume about
+1.71/3.23 GiB at average degree 8/16 before construction workspace. Nominal
+acceptance also counts accepted self-proposals rather than actual movement.
+These are blockers, not deferred polish, so neither a production preflight nor
+a science gate may call this dense function.
+
+The provisional `16 islands x 256 particles`, `beta=t/8`, one move after
+stages 1--7 geometry would request 32,768 complement targets per object, or
+16,777,216 over 512 objects, plus 8,388,608 unchanged exact-stratum targets.
+That is twice H256's complement count but could still be faster because it can
+remove the measured 38.782-second object-specific DM3 scan while adding only
+about one extra 2.680-second packed complement-flow pass at equal throughput.
+Against the 91.04023-second DM3 baseline, equal variance requires total method
+time at most 81.93621 seconds; in general it must satisfy
+`V_SMC/V_DM3 <= 81.93621/T_SMC`. Sixteen islands provide only 15 variance
+degrees of freedom, so their SE calibration must be tested rather than assumed.
+
+**Next implementation boundary.** The smallest credible successor is a packed
+preproposed-particle kernel, not the dense reference and not a catalogue-wide
+k-nearest-neighbour graph. The current design candidate uses one outcome-blind
+global integer base artifact: separately quantized detected-prior and raw-prior
+laws with `2^48` ticks, mixed by the exact `7/8:1/8` source law. The raw-prior
+source reserves a tick for every active atom, so the realized mixture has full
+support and probability `(7 K_detected + K_prior) / 2^51`. It is sampled over
+the full catalogue; draws in the exact stratum receive zero complement target,
+avoiding object-specific normalization and keeping the proposal probability
+exactly dyadic. A fixed integer intermediate bridge plus corrected integer-law
+resampling and exact integer-ratio independence-MH can then target the same
+final floating complement mass without inheriting NumPy CDF rounding. This is
+an implementation direction, not a frozen method: it still needs exact-law
+unit enumeration, a packed evaluator, immutable cache/protocol hashes, and the
+32-object production-shape A40 preflight before any target outcome is read.
+
 ## 2026-08-30 cont.345 — H256-U8-PS2 is valid but rejected on reliability, calibration, and efficiency
 
 **Frozen result and artifact validity.** Clean detached commit

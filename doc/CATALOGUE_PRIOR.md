@@ -711,6 +711,29 @@ archived diagnostic implementation and is not an inference estimator, stencil,
 or release mode. Any later target-informed sequential proposal is a separately
 versioned method and cannot inherit this route's acceptance or identity.
 
+#### Algebra-only island annealed-SMC prototype
+
+`sbsi.island_annealed_smc` is an outcome-independent finite-state reference
+implementation, not a catalogue sampler or inference mode. It starts from a
+strictly positive normalized base `q0`, uses a fixed geometric bridge
+`gamma_beta = q0^(1-beta) c^beta`, accumulates the standard Feynman--Kac
+increment before multinomial resampling, and applies an invariant independence
+Metropolis kernel, optionally mixed with a degree-corrected undirected-graph
+kernel, after every nonterminal temperature. Independent islands are combined
+in linear mass, never by averaging log normalizers; only the linear normalizer
+is unbiased in the exact-arithmetic model. Variance is estimated across island
+normalizers and all-zero islands are retained rather than retried or dropped.
+
+The module exists to test the algebra on enumerated finite laws. It deliberately
+accepts dense target/base arrays and therefore cannot be used on the
+12.76-million-atom scene. Its NumPy categorical and Metropolis thresholds also
+do not establish the exact realized finite-precision law required for a
+catalogue claim. There is no target-flow adapter, cache/evaluation accounting,
+catalogue base artifact, or production provenance. A scalable successor must
+first replace the dense path with a packed lazy evaluator and an audited
+integer proposal/resampling/mutation law; until then no scheduler science gate,
+inference integration, or efficiency claim is authorized.
+
 #### Frozen exact-oracle confirmation
 
 `--diagnose-complement-exact-oracle` is a diagnostic-only extension of the
