@@ -2,6 +2,85 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.340 — spatial execution failure isolated and cell/source-local reduction stabilized
+
+**Failed execution, not a sampler result.** Clean detached commit
+`9114aa74d4cbc334c072d7233c4818c4fa390ff7` launched the exact frozen spatial
+centre protocol as A40 Slurm job 16124279. It failed with exit code 1 after
+3m11s and 8,777,892 KiB peak RSS while reducing the first eight-object batch.
+Scheduler stdout is empty (SHA-256
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`);
+stderr has SHA-256
+`201c6dbc4371f6f2595e2927f9873dadd6da74ff902299642f54196a3b9aaa08`
+and ends at the deliberate `scaled spatial reduction underflowed an entire
+cell` guard. No Parquet, summary, completed row, exact-oracle result, or gate
+value was written, so this execution supplies no evidence for accepting or
+rejecting the sampler. Its empty output directory was moved intact to
+`complement_spatial_neyman_center_dev_v1/failed_runs/job16124279_empty_output`;
+the scheduler logs remain under `submission_logs/science_9114aa7`.
+
+The failure followed the first batch's exact-support, pilot, and selected
+production flow evaluations and preceded its exact-oracle stream. The frozen
+implementation shifted all 16,384 production log ratios for an object by one
+object-wide maximum before exponentiation. At least one spatial cell lay more
+than the float64 exponential range below a different cell, so every otherwise
+finite ratio in that cell became zero. The fail-closed guard correctly stopped
+the run instead of permitting a meaningless aggregate/core comparison.
+
+**Invariant numerical repair.** `sbsi/spatial_neyman_diagnostic.py` now
+exponentiates every `(cell, source)` block under its own finite maximum. For
+production, it reconstructs each physical `alpha_l * mean_l` with `+shift_hl`
+and each fixed-source variance term
+`n_hl / n_h^2 * sample_variance_l` with `+2 shift_hl`, then combines sources,
+cells, and the object by stable log-sum-exp. This source level matters: a
+constant high-scale source must not erase a varying lower-scale source whose
+physical standard error remains representable. The effective Pareto vector is
+still `log(c/q_h) + log(M/n_h)`, shifted once by its global finite maximum
+before the scale-invariant tail fit.
+
+The discarded pilot uses the same source-local scaling. Its three
+`alpha_l * sample_variance_l` terms regain physical scale in log space before
+forming the relative cell allocation scores. Three source-isolated calls to
+the sampler core cross-check every pilot source variance. Production checks
+all 256 locally scaled cell means and estimator variances plus the complete
+cell-by-source sample-variance tensor. A shared stable `(cell, source)` group
+sort, grouped maxima, and groups bucketed by identical draw count let native
+NumPy `mean` and `var(ddof=1)` retain the core's exact reduction semantics
+without one Python reduction per group. No tolerance was loosened: source
+variances with coefficients of variation from `1e-10` through `1e-15` match
+the direct NumPy reductions bit-for-bit. On the identical synthetic
+eight-by-16,384 DM3 benchmark, the grouped production reduction improved from
+0.730501 seconds to a 0.035002-second five-run median (20.9x); an independent
+final recheck measured 0.040627 seconds.
+
+All-`-inf` source blocks contribute exact zero, an all-`-inf` object fails,
+and NaN or positive infinity is rejected before pilot allocation or production
+reduction. The proposal law, exact support, partition, pilot/allocation
+algorithm, production draws, RNG streams, flow hashes and counts, variance
+algebra, method-time accounting, and every predeclared gate remain byte-for-
+byte or mathematically unchanged.
+
+Regression tests in `tests/test_spatial_neyman_diagnostic.py` reproduce the
+old whole-object underflow with cells separated by 2,000 log units and the
+source-level case with constant log-700 sources plus a varying log-50 source;
+the latter recovers standard error `1.104830271866158e-23` instead of zero.
+They also cover ordinary-regime mass/variance/SE/maximum-weight/Pareto
+equivalence, analytic heterogeneous source shifts, exact-zero source and
+object behavior, near-constant variance semantics, multirow pilot scaling,
+and whole-block NaN/+infinity rejection before the reducer is called. Focused
+spatial sampler/diagnostic/CLI validation passes 82/82; the full suite passes
+384 tests with two optional skips in 34.41 seconds. Ruff, Python compilation,
+both wrapper Bash syntax checks, and `git diff --check` pass. Independent
+read-only review found and drove fixes for the cell-only source-variance loss,
+invalid-pilot fail-open edge, and near-constant vectorized/core false mismatch;
+its final review found no launch blocker and independently matched variable-
+allocation physical moments, strict core moments, near-constant source
+variances, and invalid-block rejection. Next: freeze the repair and this
+failure record in a new commit, create a fresh clean detached checkout, rerun
+the identical frozen science job from an external log directory, and
+independently audit all artifacts and stop/go gates if and only if it
+completes.
+
 ## 2026-08-30 cont.339 — outcome-blind spatial partition passes audit and its three identities are frozen
 
 **Audit result.** Detached pre-audit commit

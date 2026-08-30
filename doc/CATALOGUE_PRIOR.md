@@ -516,7 +516,17 @@ Var_hat(complement_i)
 The equivalent pooled vector for the Pareto diagnostic is
 `(M/n_ih) Y_ih`, where `M=16,384`; raw `Y_ih` values from unequally allocated
 cells are not pooled. An independent reduction recomputes the sum of cell
-means and fixed-source variance and must agree with the sampler core.
+means and fixed-source variance and must agree with the sampler core. For
+numerical stability, pilot and production ratios are exponentiated under a
+separate finite maximum in every `(cell, source)` block. Pilot source
+variances regain their physical scales in log space before forming `V_ih`.
+Production source means and fixed-source variance terms likewise regain their
+physical scales before source, cell, and object totals are combined by
+log-sum-exp. The Pareto vector is formed directly in log space and shifted
+once by its global maximum. This is only an algebraically invariant reduction
+and does not change the proposal, draws, allocation, estimator, variance
+formula, or frozen gates; NaN or positive infinity fails before either pilot
+allocation or production reduction.
 
 The fixed execution uses eight-object proposal batches, 262,144-atom spatial
 slabs, and 4,096-atom target-flow slabs. Exact-support, pilot, selected

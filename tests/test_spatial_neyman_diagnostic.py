@@ -15,6 +15,7 @@ from sbsi.spatial_neyman_diagnostic import (
     SPATIAL_NEYMAN_PROTOCOL,
     _higher_percentile,
     _partition_cell_lookup,
+    _reduce_spatial_log_mis_arrays,
     _reduce_spatial_mis_arrays,
     _rescale_log_values,
     _row_arrays,
@@ -310,32 +311,278 @@ def test_scaled_float64_reduction_is_invariant_to_large_log_shift():
     )
 
 
-def test_production_scaling_fails_if_an_entire_finite_cell_underflows():
-    with pytest.raises(RuntimeError, match="underflowed an entire cell"):
-        _rescale_log_values(
-            np.asarray([0.0, -1_000.0]),
-            groups=np.asarray([0, 1]),
+def test_cell_local_log_reduction_survives_more_than_float64_dynamic_range():
+    schedule = np.asarray([0, 1, 0, 2, 1, 0, 1, 0], dtype=np.int64)
+    cell_id = np.repeat(np.arange(2, dtype=np.int64), 16)
+    source_id = np.tile(schedule, 4)
+    pattern = np.log(np.linspace(1.0, 2.0, 16))
+    log_values = np.concatenate((pattern - 100.0, pattern - 2_100.0))
+
+    object_scaled, _ = _rescale_log_values(log_values)
+    assert not object_scaled[cell_id == 1].any()
+    result = _reduce_spatial_log_mis_arrays(
+        log_values, cell_id, source_id, cells=2
+    )
+
+    assert np.isfinite(result.mass)
+    assert np.isfinite(result.standard_error)
+    assert np.isfinite(result.cell_log_mass).all()
+    assert result.cell_log_mass[0] - result.cell_log_mass[1] == pytest.approx(
+        2_000.0
+    )
+    assert result.mass == pytest.approx(
+        np.exp(-100.0) * np.linspace(1.0, 2.0, 16).mean()
+    )
+    assert np.all(result.cell_scaled_mass > 0.0)
+    assert np.all(result.cell_scaled_variance > 0.0)
+    assert np.isfinite(result.pareto_k)
+    local_crosscheck = _reduce_spatial_mis_arrays(
+        result.scaled_values, cell_id, source_id, cells=2
+    )
+    assert np.allclose(result.cell_scaled_mass, local_crosscheck.cell_mass)
+    assert np.allclose(result.cell_scaled_variance, local_crosscheck.cell_variance)
+
+
+def test_cell_local_log_reduction_matches_direct_reduction_in_normal_regime():
+    schedule = np.asarray([0, 1, 0, 2, 1, 0, 1, 0], dtype=np.int64)
+    cell_id = np.concatenate(
+        (np.zeros(16, dtype=np.int64), np.ones(24, dtype=np.int64))
+    )
+    source_id = np.concatenate((np.tile(schedule, 2), np.tile(schedule, 3)))
+    values = np.linspace(0.5, 2.5, 40)
+    logs = np.log(values)
+
+    direct = _reduce_spatial_mis_arrays(values, cell_id, source_id, cells=2)
+    stable = _reduce_spatial_log_mis_arrays(logs, cell_id, source_id, cells=2)
+
+    assert stable.mass == pytest.approx(direct.mass, rel=1.0e-14)
+    assert stable.variance == pytest.approx(direct.variance, rel=1.0e-14)
+    assert stable.standard_error == pytest.approx(
+        direct.standard_error, rel=1.0e-14
+    )
+    assert stable.maximum_effective_weight == pytest.approx(
+        direct.maximum_effective_weight, rel=1.0e-14
+    )
+    assert stable.pareto_k == pytest.approx(direct.pareto_k, rel=1.0e-13)
+    assert np.allclose(np.exp(stable.cell_log_mass), direct.cell_mass)
+    assert np.allclose(np.exp(stable.cell_log_variance), direct.cell_variance)
+
+
+def test_source_local_shift_preserves_low_scale_fixed_source_variance():
+    schedule = np.asarray([0, 1, 0, 2, 1, 0, 1, 0], dtype=np.int64)
+    source_id = np.tile(schedule, 2)
+    cell_id = np.zeros(len(source_id), dtype=np.int64)
+    log_values = np.full(len(source_id), 700.0, dtype=np.float64)
+    low_values = np.exp(-50.0) * np.linspace(1.0, 2.0, 6)
+    log_values[source_id == 1] = np.log(low_values)
+
+    result = _reduce_spatial_log_mis_arrays(
+        log_values, cell_id, source_id, cells=1
+    )
+    expected_variance = 6 / 16**2 * low_values.var(ddof=1)
+
+    assert result.standard_error == pytest.approx(
+        1.104830271866158e-23, rel=1.0e-14
+    )
+    assert result.variance == pytest.approx(expected_variance, rel=1.0e-14)
+    assert result.log_variance == pytest.approx(-105.7195333570327)
+    assert result.cell_source_scaled_sample_variance[0, 1] > 0.0
+    assert result.cell_source_scaled_sample_variance[0, 0] == 0.0
+    assert result.cell_source_scaled_sample_variance[0, 2] == 0.0
+    local_crosscheck = _reduce_spatial_mis_arrays(
+        result.scaled_values, cell_id, source_id, cells=1
+    )
+    assert np.allclose(result.cell_scaled_mass, local_crosscheck.cell_mass)
+    assert np.allclose(result.cell_scaled_variance, local_crosscheck.cell_variance)
+
+
+def test_all_negative_infinity_source_contributes_exact_zero():
+    schedule = np.asarray([0, 1, 0, 2, 1, 0, 1, 0], dtype=np.int64)
+    source_id = np.tile(schedule, 2)
+    cell_id = np.zeros(len(source_id), dtype=np.int64)
+    log_values = np.log(np.linspace(1.0, 2.0, len(source_id)))
+    log_values[source_id == 1] = -np.inf
+
+    result = _reduce_spatial_log_mis_arrays(
+        log_values, cell_id, source_id, cells=1
+    )
+    direct = _reduce_spatial_mis_arrays(
+        np.exp(log_values), cell_id, source_id, cells=1
+    )
+
+    assert np.isneginf(result.cell_source_shift[0, 1])
+    assert result.cell_source_scaled_mass[0, 1] == 0.0
+    assert result.cell_source_scaled_estimator_variance[0, 1] == 0.0
+    assert result.mass == pytest.approx(direct.mass)
+    assert result.variance == pytest.approx(direct.variance)
+
+
+def test_all_negative_infinity_spatial_values_fail_closed():
+    schedule = np.asarray([0, 1, 0, 2, 1, 0, 1, 0], dtype=np.int64)
+    source_id = np.tile(schedule, 2)
+    with pytest.raises(RuntimeError, match="all spatial cell estimates are zero"):
+        _reduce_spatial_log_mis_arrays(
+            np.full(16, -np.inf),
+            np.zeros(16, dtype=np.int64),
+            source_id,
+            cells=1,
         )
 
 
-def test_pilot_variance_uses_per_cell_scaling_before_global_normalization():
+def test_constant_cell_source_blocks_have_zero_fixed_source_variance():
+    schedule = np.asarray([0, 1, 0, 2, 1, 0, 1, 0], dtype=np.int64)
+    source_id = np.tile(schedule, 2)
+    log_values = np.choose(source_id, [0.0, -1_000.0, 5.0])
+
+    result = _reduce_spatial_log_mis_arrays(
+        log_values,
+        np.zeros(16, dtype=np.int64),
+        source_id,
+        cells=1,
+    )
+
+    assert np.isneginf(result.log_variance)
+    assert result.variance == 0.0
+    assert result.standard_error == 0.0
+    assert np.all(result.cell_source_scaled_sample_variance == 0.0)
+
+
+def test_heterogeneous_source_shifts_restore_mass_and_variance_analytically():
+    schedule = np.asarray([0, 1, 0, 2, 1, 0, 1, 0], dtype=np.int64)
+    source_id = np.tile(schedule, 4)
+    cell_id = np.repeat(np.arange(2, dtype=np.int64), 16)
+    shifts = np.asarray([[-2.0, -20.0, -100.0], [-5.0, -30.0, -200.0]])
+    log_values = np.empty(32, dtype=np.float64)
+    for cell in range(2):
+        for source in range(3):
+            member = (cell_id == cell) & (source_id == source)
+            log_values[member] = shifts[cell, source] + np.log(
+                np.linspace(1.0, 2.0, int(member.sum()))
+            )
+
+    result = _reduce_spatial_log_mis_arrays(
+        log_values, cell_id, source_id, cells=2
+    )
+    physical = np.exp(log_values)
+    alpha = np.asarray([0.5, 0.375, 0.125])
+    expected_source_mass = np.empty((2, 3), dtype=np.float64)
+    expected_source_variance = np.empty((2, 3), dtype=np.float64)
+    for cell in range(2):
+        cell_count = int(np.sum(cell_id == cell))
+        for source in range(3):
+            member = (cell_id == cell) & (source_id == source)
+            expected_source_mass[cell, source] = alpha[source] * physical[
+                member
+            ].mean()
+            expected_source_variance[cell, source] = (
+                int(member.sum())
+                / cell_count**2
+                * physical[member].var(ddof=1)
+            )
+    recovered_source_mass = np.exp(
+        np.log(result.cell_source_scaled_mass) + result.cell_source_shift
+    )
+    recovered_source_variance = np.exp(
+        np.log(result.cell_source_scaled_estimator_variance)
+        + 2.0 * result.cell_source_shift
+    )
+
+    assert np.allclose(
+        recovered_source_mass, expected_source_mass, rtol=2.0e-14, atol=0.0
+    )
+    assert np.allclose(
+        recovered_source_variance,
+        expected_source_variance,
+        rtol=3.0e-14,
+        atol=0.0,
+    )
+    assert result.mass == pytest.approx(expected_source_mass.sum(), rel=1.0e-14)
+    assert result.variance == pytest.approx(
+        expected_source_variance.sum(), rel=1.0e-14
+    )
+
+
+@pytest.mark.parametrize("coefficient_of_variation", [1e-10, 1e-12, 1e-14, 1e-15])
+def test_grouped_near_constant_source_variance_matches_numpy_exactly(
+    coefficient_of_variation,
+):
+    schedule = np.asarray([0, 1, 0, 2, 1, 0, 1, 0], dtype=np.int64)
+    source_id = np.tile(schedule, 64)
+    cell_id = np.zeros(len(source_id), dtype=np.int64)
+    values = np.empty(len(source_id), dtype=np.float64)
+    for source in range(3):
+        member = source_id == source
+        values[member] = 1.0 + coefficient_of_variation * np.linspace(
+            -1.0, 1.0, int(member.sum())
+        )
+
+    result = _reduce_spatial_log_mis_arrays(
+        np.log(values), cell_id, source_id, cells=1
+    )
+    direct_source_variance = np.asarray(
+        [
+            result.scaled_values[source_id == source].var(ddof=1)
+            for source in range(3)
+        ]
+    )
+
+    assert np.array_equal(
+        result.cell_source_scaled_sample_variance[0], direct_source_variance
+    )
+
+
+def test_pilot_variance_uses_per_cell_and_source_scaling():
     cells = np.repeat(np.arange(256), 16)
+    schedule = np.asarray([0, 1, 0, 2, 1, 0, 1, 0], dtype=np.int64)
+    sources = np.tile(schedule, 512)
     logs = np.empty((1, len(cells)), dtype=np.float64)
-    pattern = np.log(np.linspace(1.0, 2.0, 16))
     for cell in range(256):
-        logs[0, cells == cell] = pattern - (1_400.0 if cell else 0.0)
+        offset = 1_400.0 if cell else 0.0
+        high = (cells == cell) & (sources != 1)
+        low = (cells == cell) & (sources == 1)
+        logs[0, high] = 700.0 - offset
+        logs[0, low] = -50.0 - offset + np.log(np.linspace(1.0, 2.0, 6))
     reservoir = SimpleNamespace(
         indices=np.zeros_like(logs, dtype=np.int64),
         cell_id=cells,
+        component_id=sources,
     )
 
     def reducer(values, _reservoir):
-        return values.reshape(1, 256, 16).var(axis=2, ddof=1)
+        reshaped = values.reshape(1, 256, 16)
+        result = np.zeros((1, 256), dtype=np.float64)
+        cell_sources = np.tile(schedule, 2)
+        for source, alpha in enumerate((0.5, 0.375, 0.125)):
+            result += alpha * reshaped[:, :, cell_sources == source].var(
+                axis=2, ddof=1
+            )
+        return result
 
     variance = _stable_spatial_pilot_variance(logs, reservoir, reducer)
     assert variance.shape == (1, 256)
     assert variance[0, 0] == pytest.approx(1.0)
     assert np.all(variance[0, 1:] > 0.0)
+
+
+@pytest.mark.parametrize("invalid", [np.nan, np.inf])
+def test_pilot_variance_rejects_nan_or_positive_infinity_before_reduction(invalid):
+    cells = np.repeat(np.arange(256), 16)
+    schedule = np.asarray([0, 1, 0, 2, 1, 0, 1, 0], dtype=np.int64)
+    sources = np.tile(schedule, 512)
+    logs = np.zeros((1, len(cells)), dtype=np.float64)
+    invalid_block = (cells == 173) & (sources == 1)
+    logs[0, invalid_block] = invalid
+    reservoir = SimpleNamespace(
+        indices=np.zeros_like(logs, dtype=np.int64),
+        cell_id=cells,
+        component_id=sources,
+    )
+
+    def must_not_reduce(*_args):
+        raise AssertionError("invalid pilot logs reached the variance reducer")
+
+    with pytest.raises(ValueError, match=r"free of NaN and \+inf"):
+        _stable_spatial_pilot_variance(logs, reservoir, must_not_reduce)
 
 
 def test_higher_percentile_uses_observed_upper_order_statistic():

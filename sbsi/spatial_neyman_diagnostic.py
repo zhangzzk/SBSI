@@ -269,6 +269,8 @@ class _SpatialReduction:
     maximum_effective_weight: float
     variance: float
     effective_weights: np.ndarray
+    cell_mass: np.ndarray
+    cell_variance: np.ndarray
     cell_draw_counts: np.ndarray
     cell_source_draw_counts: np.ndarray
 
@@ -305,6 +307,8 @@ def _reduce_spatial_mis_arrays(
     if (cell_counts == 0).any():
         raise ValueError("every spatial cell must receive production draws")
     source_counts = np.zeros((cells, sources), dtype=np.int64)
+    cell_mass = np.empty(cells, dtype=np.float64)
+    cell_variance = np.empty(cells, dtype=np.float64)
     mass = 0.0
     variance = 0.0
     effective = np.empty_like(values)
@@ -313,7 +317,9 @@ def _reduce_spatial_mis_arrays(
         member = cell_id == cell
         selected = values[member]
         count = len(selected)
-        mass += float(selected.mean(dtype=np.float64))
+        cell_mass[cell] = float(selected.mean(dtype=np.float64))
+        cell_variance[cell] = 0.0
+        mass += cell_mass[cell]
         effective[member] = (total_draws / count) * selected
         for source in range(sources):
             source_values = values[member & (source_id == source)]
@@ -321,7 +327,11 @@ def _reduce_spatial_mis_arrays(
             source_counts[cell, source] = source_count
             if source_count < 2:
                 raise ValueError("each spatial cell/source needs two production draws")
-            variance += source_count * float(source_values.var(ddof=1)) / count**2
+            component_variance = (
+                source_count * float(source_values.var(ddof=1)) / count**2
+            )
+            cell_variance[cell] += component_variance
+            variance += component_variance
     k = float(pareto_tail_index(effective[None, :])[0])
     return _SpatialReduction(
         mass=float(mass),
@@ -330,14 +340,289 @@ def _reduce_spatial_mis_arrays(
         maximum_effective_weight=float(effective.max()),
         variance=float(variance),
         effective_weights=effective,
+        cell_mass=cell_mass,
+        cell_variance=cell_variance,
         cell_draw_counts=cell_counts,
         cell_source_draw_counts=source_counts,
     )
 
 
-def _rescale_log_values(
-    log_values: np.ndarray, *, groups: Optional[np.ndarray] = None
-) -> tuple[np.ndarray, float]:
+@dataclass(frozen=True)
+class _LogSpatialReduction:
+    """Stable physical reduction plus source-local cross-check values."""
+
+    mass: float
+    standard_error: float
+    pareto_k: float
+    maximum_effective_weight: float
+    variance: float
+    log_mass: float
+    log_variance: float
+    log_maximum_effective_weight: float
+    scaled_values: np.ndarray
+    cell_source_shift: np.ndarray
+    cell_source_scaled_mean: np.ndarray
+    cell_source_scaled_sample_variance: np.ndarray
+    cell_source_scaled_mass: np.ndarray
+    cell_source_scaled_estimator_variance: np.ndarray
+    cell_scaled_mass: np.ndarray
+    cell_scaled_variance: np.ndarray
+    cell_log_mass: np.ndarray
+    cell_log_variance: np.ndarray
+    cell_draw_counts: np.ndarray
+    cell_source_draw_counts: np.ndarray
+
+
+def _finite_logsumexp(values: np.ndarray) -> float:
+    """Return log(sum(exp(values))) while retaining arbitrarily separated terms."""
+
+    values = np.asarray(values, dtype=np.float64)
+    if values.ndim != 1 or np.isnan(values).any() or np.isposinf(values).any():
+        raise ValueError("log-sum-exp values must be a vector free of NaN and +inf")
+    finite = np.isfinite(values)
+    if not finite.any():
+        return float("-inf")
+    peak = float(np.max(values[finite]))
+    return float(peak + np.log(np.exp(values[finite] - peak).sum(dtype=np.float64)))
+
+
+def _finite_row_logsumexp(values: np.ndarray) -> np.ndarray:
+    """Vectorized log-sum-exp for rows containing finite values or ``-inf``."""
+
+    values = np.asarray(values, dtype=np.float64)
+    if values.ndim != 2 or np.isnan(values).any() or np.isposinf(values).any():
+        raise ValueError("row log-sum-exp values must be a matrix free of NaN and +inf")
+    peak = np.max(values, axis=1)
+    result = np.full(len(values), -np.inf, dtype=np.float64)
+    usable = np.isfinite(peak)
+    if usable.any():
+        centered = values[usable] - peak[usable, None]
+        result[usable] = peak[usable] + np.log(
+            np.exp(centered).sum(axis=1, dtype=np.float64)
+        )
+    return result
+
+
+@dataclass(frozen=True)
+class _GroupedLogMoments:
+    """Source-local scales and two-pass moments in the original draw order."""
+
+    scaled_values: np.ndarray
+    shift: np.ndarray
+    mean: np.ndarray
+    sample_variance: np.ndarray
+    counts: np.ndarray
+
+
+def _grouped_log_moments(
+    log_values: np.ndarray,
+    group_id: np.ndarray,
+    *,
+    groups: int,
+) -> _GroupedLogMoments:
+    """Scale and reduce one or more rows by a shared integer group schedule.
+
+    The stable sort is performed once.  Maxima use contiguous ``reduceat``
+    blocks.  Groups with the same draw count are gathered together so native
+    NumPy ``mean`` and ``var(ddof=1)`` reductions run along their final axis;
+    this retains the exact per-source reduction semantics used by the sampler
+    core without one Python call per group.  Returned values always have a row
+    axis, while ``scaled_values`` is restored to the caller's original draw
+    order for the sampler-core cross-check.
+    """
+
+    logs = np.asarray(log_values, dtype=np.float64)
+    if logs.ndim == 1:
+        logs = logs[None, :]
+    if logs.ndim != 2 or not logs.shape[0] or not logs.shape[1]:
+        raise ValueError("grouped log values must be a nonempty vector or matrix")
+    if np.isnan(logs).any() or np.isposinf(logs).any():
+        raise ValueError("grouped log values must be free of NaN and +inf")
+    raw_group_id = np.asarray(group_id)
+    if (
+        raw_group_id.ndim != 1
+        or raw_group_id.shape != (logs.shape[1],)
+        or raw_group_id.dtype.kind not in "iu"
+    ):
+        raise ValueError("group ids must be an integer vector aligned with draws")
+    group_id = raw_group_id.astype(np.int64, copy=False)
+    if groups <= 0 or ((group_id < 0) | (group_id >= groups)).any():
+        raise ValueError("group ids are out of range")
+    counts = np.bincount(group_id, minlength=groups).astype(np.int64)
+    if (counts < 2).any():
+        raise ValueError("every grouped block needs at least two draws")
+
+    order = np.argsort(group_id, kind="stable")
+    starts = np.concatenate(
+        (np.zeros(1, dtype=np.int64), np.cumsum(counts[:-1], dtype=np.int64))
+    )
+    ordered_logs = logs[:, order]
+    shifts = np.maximum.reduceat(ordered_logs, starts, axis=1)
+    draw_shifts = np.repeat(shifts, counts, axis=1)
+    ordered_scaled = np.full_like(ordered_logs, 0.0)
+    finite_shift = np.isfinite(draw_shifts)
+    ordered_scaled[finite_shift] = np.exp(
+        ordered_logs[finite_shift] - draw_shifts[finite_shift]
+    )
+    means = np.empty((len(logs), groups), dtype=np.float64)
+    sample_variance = np.empty_like(means)
+    for count in np.unique(counts):
+        selected_groups = np.flatnonzero(counts == count)
+        positions = starts[selected_groups, None] + np.arange(count, dtype=np.int64)
+        blocks = ordered_scaled[:, positions]
+        means[:, selected_groups] = blocks.mean(axis=2, dtype=np.float64)
+        sample_variance[:, selected_groups] = blocks.var(
+            axis=2, ddof=1, dtype=np.float64
+        )
+    scaled = np.empty_like(ordered_scaled)
+    scaled[:, order] = ordered_scaled
+    return _GroupedLogMoments(
+        scaled_values=scaled,
+        shift=shifts,
+        mean=means,
+        sample_variance=sample_variance,
+        counts=counts,
+    )
+
+
+def _reduce_spatial_log_mis_arrays(
+    log_values: np.ndarray,
+    cell_id: np.ndarray,
+    source_id: np.ndarray,
+    *,
+    cells: int = 256,
+    sources: int = 3,
+) -> _LogSpatialReduction:
+    """Reduce spatial MIS draws without one object-wide exponentiation scale.
+
+    Each cell/source block is exponentiated under its own maximum.  Its mean
+    and sample variance are therefore ordinary, well-conditioned float64
+    quantities.  The fixed-source mass terms ``alpha_l * mean_l`` and variance
+    terms ``n_hl / n_h**2 * s_hl**2`` regain their physical scales in log
+    space, then are combined across sources and cells by log-sum-exp.  Pareto
+    ``k`` is fitted to ``M / n_h * c / q_h`` after subtracting the maximum of
+    those effective *log* weights, a global rescaling that leaves ``k``
+    unchanged.
+    """
+
+    logs = np.asarray(log_values, dtype=np.float64)
+    cell_id = np.asarray(cell_id, dtype=np.int64)
+    source_id = np.asarray(source_id, dtype=np.int64)
+    if logs.ndim != 1 or cell_id.shape != logs.shape or source_id.shape != logs.shape:
+        raise ValueError("log values, cells, and sources must be aligned vectors")
+    if not len(logs) or np.isnan(logs).any() or np.isposinf(logs).any():
+        raise ValueError(
+            "spatial log importance values must be nonempty and free of NaN and +inf"
+        )
+    if ((cell_id < 0) | (cell_id >= cells)).any():
+        raise ValueError("spatial cell ids are out of range")
+    if ((source_id < 0) | (source_id >= sources)).any():
+        raise ValueError("spatial source ids are out of range")
+
+    if sources != len(TAIL_PROPOSAL_RECIPE.component_weights):
+        raise ValueError("spatial sources do not match the frozen component recipe")
+    alpha = np.asarray(TAIL_PROPOSAL_RECIPE.component_weights, dtype=np.float64)
+    combined_group = cell_id * sources + source_id
+    moments = _grouped_log_moments(
+        logs, combined_group, groups=cells * sources
+    )
+    scaled = moments.scaled_values[0]
+    shifts = moments.shift[0].reshape(cells, sources)
+    source_counts = moments.counts.reshape(cells, sources)
+    source_scaled_mean = moments.mean[0].reshape(cells, sources)
+    source_scaled_sample_variance = moments.sample_variance[0].reshape(
+        cells, sources
+    )
+    cell_counts = source_counts.sum(axis=1, dtype=np.int64)
+    observed_alpha = source_counts / cell_counts[:, None]
+    if not np.allclose(observed_alpha, alpha[None, :], rtol=0.0, atol=1.0e-15):
+        raise ValueError("spatial fixed-source counts differ from recipe weights")
+
+    source_scaled_mass = alpha[None, :] * source_scaled_mean
+    source_scaled_estimator_variance = (
+        source_counts
+        / np.square(cell_counts[:, None])
+        * source_scaled_sample_variance
+    )
+    source_log_mass = np.full((cells, sources), -np.inf, dtype=np.float64)
+    positive_mass = (source_scaled_mass > 0.0) & np.isfinite(shifts)
+    source_log_mass[positive_mass] = (
+        np.log(source_scaled_mass[positive_mass]) + shifts[positive_mass]
+    )
+    source_log_variance = np.full((cells, sources), -np.inf, dtype=np.float64)
+    positive_variance = (
+        source_scaled_estimator_variance > 0.0
+    ) & np.isfinite(shifts)
+    source_log_variance[positive_variance] = (
+        np.log(source_scaled_estimator_variance[positive_variance])
+        + 2.0 * shifts[positive_variance]
+    )
+    cell_log_mass = _finite_row_logsumexp(source_log_mass)
+    log_mass = _finite_logsumexp(cell_log_mass)
+    if not np.isfinite(log_mass):
+        raise RuntimeError("all spatial cell estimates are zero")
+    mass = float(np.exp(log_mass))
+    if not np.isfinite(mass) or mass <= 0.0:
+        raise RuntimeError("spatial mass reduction is outside finite float64 range")
+
+    cell_log_variance = _finite_row_logsumexp(source_log_variance)
+    log_variance = _finite_logsumexp(cell_log_variance)
+    standard_error = (
+        0.0 if np.isneginf(log_variance) else float(np.exp(0.5 * log_variance))
+    )
+    variance = (
+        0.0 if np.isneginf(log_variance) else float(np.exp(log_variance))
+    )
+    if not np.isfinite(standard_error):
+        raise RuntimeError("spatial standard error is outside finite float64 range")
+
+    effective_log_weights = logs + np.log(
+        len(logs) / cell_counts[cell_id], dtype=np.float64
+    )
+    finite_effective = np.isfinite(effective_log_weights)
+    if not finite_effective.any():
+        raise RuntimeError("all effective spatial importance weights are zero")
+    log_maximum_effective_weight = float(
+        np.max(effective_log_weights[finite_effective])
+    )
+    scaled_effective_weights = np.exp(
+        effective_log_weights - log_maximum_effective_weight,
+        dtype=np.float64,
+    )
+    pareto_k = float(pareto_tail_index(scaled_effective_weights[None, :])[0])
+    maximum_effective_weight = float(np.exp(log_maximum_effective_weight))
+    if not np.isfinite(maximum_effective_weight):
+        raise RuntimeError("maximum effective weight is outside finite float64 range")
+
+    return _LogSpatialReduction(
+        mass=mass,
+        standard_error=standard_error,
+        pareto_k=pareto_k,
+        maximum_effective_weight=maximum_effective_weight,
+        variance=variance,
+        log_mass=log_mass,
+        log_variance=log_variance,
+        log_maximum_effective_weight=log_maximum_effective_weight,
+        scaled_values=scaled,
+        cell_source_shift=shifts,
+        cell_source_scaled_mean=source_scaled_mean,
+        cell_source_scaled_sample_variance=source_scaled_sample_variance,
+        cell_source_scaled_mass=source_scaled_mass,
+        cell_source_scaled_estimator_variance=(
+            source_scaled_estimator_variance
+        ),
+        cell_scaled_mass=source_scaled_mass.sum(axis=1, dtype=np.float64),
+        cell_scaled_variance=source_scaled_estimator_variance.sum(
+            axis=1, dtype=np.float64
+        ),
+        cell_log_mass=cell_log_mass,
+        cell_log_variance=cell_log_variance,
+        cell_draw_counts=cell_counts,
+        cell_source_draw_counts=source_counts,
+    )
+
+
+def _rescale_log_values(log_values: np.ndarray) -> tuple[np.ndarray, float]:
     """Exponentiate after a per-object log shift for stable float64 moments."""
 
     values = np.asarray(log_values, dtype=np.float64)
@@ -348,55 +633,82 @@ def _rescale_log_values(
         raise ValueError("at least one spatial importance value must be finite")
     shift = float(np.max(values[finite]))
     scaled = np.exp(values - shift, dtype=np.float64)
-    if groups is not None:
-        groups = np.asarray(groups)
-        if groups.shape != values.shape:
-            raise ValueError("underflow-check groups must align with log values")
-        for group in np.unique(groups):
-            member = groups == group
-            if np.isfinite(values[member]).any() and not np.any(scaled[member] > 0.0):
-                raise RuntimeError("scaled spatial reduction underflowed an entire cell")
     return scaled, shift
 
 
 def _stable_spatial_pilot_variance(log_values: np.ndarray, reservoir, reducer) -> np.ndarray:
-    """Compute relative cell variances without a catalogue-wide exponent shift."""
+    """Compute relative pilot cell variances with cell/source-local shifts."""
 
     logs = np.asarray(log_values, dtype=np.float64)
+    if np.isnan(logs).any() or np.isposinf(logs).any():
+        raise ValueError("pilot log ratios must be free of NaN and +inf")
     if logs.shape != reservoir.indices.shape:
         raise ValueError("pilot log ratios must align with the spatial reservoir")
     cells = np.asarray(reservoir.cell_id, dtype=np.int64)
+    sources = np.asarray(reservoir.component_id, dtype=np.int64)
     if cells.ndim != 1 or cells.shape != (logs.shape[1],):
         raise ValueError("pilot reservoir must expose one shared cell schedule")
-    scaled = np.zeros_like(logs)
-    shifts = np.full((len(logs), 256), -np.inf, dtype=np.float64)
+    if sources.ndim != 1 or sources.shape != cells.shape:
+        raise ValueError("pilot reservoir must expose one shared source schedule")
+    n_sources = len(TAIL_PROPOSAL_RECIPE.component_weights)
+    if ((sources < 0) | (sources >= n_sources)).any():
+        raise ValueError("pilot source ids are out of range")
+    alpha = np.asarray(TAIL_PROPOSAL_RECIPE.component_weights, dtype=np.float64)
+    combined_group = cells * n_sources + sources
+    moments = _grouped_log_moments(
+        logs, combined_group, groups=256 * n_sources
+    )
+    scaled = moments.scaled_values
+    shifts = moments.shift.reshape(len(logs), 256, n_sources)
+    source_counts = moments.counts.reshape(256, n_sources)
+    cell_counts = source_counts.sum(axis=1, dtype=np.int64)
+    if not np.allclose(
+        source_counts / cell_counts[:, None],
+        alpha[None, :],
+        rtol=0.0,
+        atol=1.0e-15,
+    ):
+        raise ValueError("pilot fixed-source counts differ from recipe weights")
+    source_sample_variance = moments.sample_variance.reshape(
+        len(logs), 256, n_sources
+    )
+    local_source_variance = alpha[None, None, :] * source_sample_variance
+    for source in range(n_sources):
+        source_only = np.where(sources[None, :] == source, scaled, 0.0)
+        reduced = np.asarray(reducer(source_only, reservoir), dtype=np.float64)
+        if reduced.shape != (len(logs), 256):
+            raise RuntimeError("pilot variance reducer returned the wrong cell shape")
+        if not np.allclose(
+            reduced,
+            local_source_variance[:, :, source],
+            rtol=1.0e-13,
+            atol=0.0,
+        ):
+            raise RuntimeError(
+                "independent source-local pilot variance disagrees with sampler core"
+            )
+
+    log_source_variance = np.full_like(shifts, -np.inf)
+    positive = (local_source_variance > 0.0) & np.isfinite(shifts)
+    log_source_variance[positive] = (
+        np.log(local_source_variance[positive]) + 2.0 * shifts[positive]
+    )
+    log_cell_variance = _finite_row_logsumexp(
+        log_source_variance.reshape(-1, n_sources)
+    ).reshape(len(logs), 256)
+    result = np.zeros_like(log_cell_variance)
     for row in range(len(logs)):
-        for cell in range(256):
-            member = cells == cell
-            finite = np.isfinite(logs[row, member])
-            if finite.any():
-                shift = float(np.max(logs[row, member][finite]))
-                shifts[row, cell] = shift
-                scaled[row, member] = np.exp(logs[row, member] - shift)
-    local_variance = np.asarray(reducer(scaled, reservoir), dtype=np.float64)
-    if local_variance.shape != shifts.shape:
-        raise RuntimeError("pilot variance reducer returned the wrong cell shape")
-    result = np.zeros_like(local_variance)
-    positive = local_variance > 0.0
-    for row in range(len(logs)):
-        usable = positive[row] & np.isfinite(shifts[row])
+        usable = np.isfinite(log_cell_variance[row])
         if not usable.any():
             continue
-        log_variance = np.full(256, -np.inf, dtype=np.float64)
-        log_variance[usable] = (
-            np.log(local_variance[row, usable]) + 2.0 * shifts[row, usable]
-        )
-        peak = float(np.max(log_variance[usable]))
+        peak = float(np.max(log_cell_variance[row, usable]))
         # Preserve every genuinely positive pilot variance.  Values below the
         # normal float64 range are negligible for allocation but remain
         # positive, so they cannot masquerade as an all-zero fallback.
         floor = float(np.log(np.finfo(np.float64).tiny))
-        result[row, usable] = np.exp(np.maximum(log_variance[usable] - peak, floor))
+        result[row, usable] = np.exp(
+            np.maximum(log_cell_variance[row, usable] - peak, floor)
+        )
     return result
 
 
@@ -1312,12 +1624,20 @@ def diagnose_spatial_neyman_complement(
         phase_seconds["selected_production_flow"] += time.perf_counter() - tick
         production_flow_evaluations += int(selected_production.indices.size)
         tick = time.perf_counter()
-        production_scaled = np.empty_like(production_log_ratio)
-        production_shift = np.empty(len(observed), dtype=np.float64)
+        production_reduction = []
         for row in range(len(observed)):
-            production_scaled[row], production_shift[row] = _rescale_log_values(
-                production_log_ratio[row], groups=selected_production.cell_id[row]
+            production_reduction.append(
+                _reduce_spatial_log_mis_arrays(
+                    production_log_ratio[row],
+                    selected_production.cell_id[row],
+                    selected_production.component_id[row],
+                    cells=256,
+                    sources=3,
+                )
             )
+        production_scaled = np.stack(
+            [reduction.scaled_values for reduction in production_reduction]
+        )
         core_reduction = reduce_spatial_mis(production_scaled, selected_production)
         if (
             selected_production.partition_sha256 != partition.partition_sha256
@@ -1429,33 +1749,32 @@ def diagnose_spatial_neyman_complement(
             ):
                 raise RuntimeError("pilot and production did not reuse one normalized cell law")
 
-            scaled = production_scaled[row]
-            shift = float(production_shift[row])
-            reduction = _reduce_spatial_mis_arrays(
-                scaled, selected_cells, selected_sources, cells=256, sources=3
-            )
+            reduction = production_reduction[row]
             if not (
-                np.isclose(
-                    reduction.mass,
-                    core_reduction.estimate[row],
+                np.allclose(
+                    reduction.cell_scaled_mass,
+                    core_reduction.cell_estimate[row],
                     rtol=1.0e-13,
                     atol=0.0,
                 )
-                and np.isclose(
-                    reduction.standard_error,
-                    core_reduction.standard_error[row],
+                and np.allclose(
+                    reduction.cell_scaled_variance,
+                    core_reduction.cell_variance[row],
+                    rtol=1.0e-13,
+                    atol=0.0,
+                )
+                and np.allclose(
+                    reduction.cell_source_scaled_sample_variance,
+                    core_reduction.cell_source_sample_variance[row],
                     rtol=1.0e-13,
                     atol=0.0,
                 )
             ):
-                raise RuntimeError("independent spatial reduction disagrees with sampler core")
-            factor = float(np.exp(shift))
-            if not np.isfinite(factor) or factor <= 0.0:
-                raise RuntimeError("spatial importance scale is outside finite float64 range")
-            mass_complement = float(reduction.mass * factor)
-            complement_se = float(reduction.standard_error * factor)
-            if not np.isfinite(mass_complement) or not np.isfinite(complement_se):
-                raise RuntimeError("spatial mass reduction is outside finite float64 range")
+                raise RuntimeError(
+                    "independent cell-local spatial reduction disagrees with sampler core"
+                )
+            mass_complement = reduction.mass
+            complement_se = reduction.standard_error
             mass_stratum, log_mass_stratum = _scaled_sum(stratum_log_c[row])
             cycles = allocation_cycles[row]
             whole_cycles = bool(
@@ -1549,7 +1868,7 @@ def diagnose_spatial_neyman_complement(
                 "mass_complement_spatial_neyman_standard_error": complement_se,
                 "pareto_k_spatial_neyman_complement": reduction.pareto_k,
                 "maximum_effective_weight_spatial_neyman": (
-                    reduction.maximum_effective_weight * factor
+                    reduction.maximum_effective_weight
                 ),
                 "exact_oracle_selected": int(object_id) in selected_id_set,
             }
