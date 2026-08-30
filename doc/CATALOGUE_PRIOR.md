@@ -560,6 +560,123 @@ squared total relative errors
 integrity, reliability, exact-calibration, and efficiency gates must pass
 before any stencil or inference integration is authorized.
 
+The frozen run of this protocol is a valid rejection: its uncertainty was
+calibrated on the exact subset, but it failed the reliability and efficiency
+bars. It is therefore archived as a diagnostic result and is not an inference
+estimator. The independently versioned contingency below does not reuse its
+pilot, allocation, reservoir, or source-pooled variance formula.
+
+#### Uniform-cell probability-microstratified centre diagnostic
+
+`H256-U8-PS2` is the preregistered no-pilot contingency for the rejected
+spatial pilot/Neyman route. It remains a centre-only development diagnostic,
+not an estimator mode or release change. Before any new target result is read,
+the protocol freezes the same rows 25,000:25,512, centre, `K=16,384`,
+prefilter 131,072, proposal seed 8701, production seed 7,008,704, exact-64
+selection, DM3 coefficients, audited 256-cell partition identities, mock
+identities, exact-stratum exclusion, zero-fallback semantics, and target-flow
+chunk 4,096. It uses 32-object proposal batches, four consecutive complete
+cells per at-most-262,144-atom slab, and one direct 16,384-draw production
+array. There is no pilot, allocation, unused reservoir, or promotion step.
+
+Every cell receives exactly eight DM3 cycles, hence 64 draws and fixed source
+counts `(32,24,8)`. The proxy-t1, proxy-t2, and prior sources are divided into
+`B=(16,12,4)` ordered probability microstrata, with two independent draws in
+each microstratum. Storage is cell-major, source-major, microstratum-major,
+then replicate-major. Within a cell the atoms are in ascending active-atom-ID
+order. Repeated selected atoms are retained: a discrete atom may legitimately
+overlap several probability microstrata.
+
+The implemented proposal is defined by an integer law, rather than by a
+floating cumulative distribution whose plateaus could disagree with the
+recorded balance probability. Let `T=2^48` be the exact number of ticks in
+each microstratum and `L_l=B_l T` the source total. For a proxy source with
+finite nonzero masked raw weights `w_j`, form monotone integer cumulative
+boundaries
+
+```text
+C_lj = floor(L_l * cumulative_sum_[a<=j](w_a) / sum_a(w_a)).
+```
+
+The boundary from the last positive eligible atom onward is explicitly
+`L_l`; excluded atoms remain on a plateau. Integer source masses are adjacent
+differences `k_lj=C_lj-C_l,j-1`. Rounding a positive proxy atom to zero ticks
+is allowed and is part of the realized source law. A proxy whose log
+normalizer is minus infinity falls back exactly to the already-quantized prior
+law: its integer masses are four times the prior masses for t1 or three times
+them for t2.
+
+The prior must preserve full complement support. If `N` atoms remain after
+exact-stratum exclusion and `R=L_prior-N`, its cumulative boundary is
+
+```text
+C_prior,j = cumulative_count_[a<=j](eligible_a)
+            + floor(R * cumulative_sum_[a<=j](w_a) / sum_a(w_a)).
+```
+
+The boundary from the last eligible atom onward is set to `L_prior`. Thus
+every eligible atom has at least one prior tick, every excluded atom has zero,
+and every source total is exact. NaN, positive infinity, a negative weight, a
+nonpositive total, a decreasing boundary, an invalid endpoint, or loss of
+prior support fails closed; none is repaired empirically.
+
+For source `l`, microstratum `b` is the exact integer interval
+`[b T,(b+1) T)`. A frozen PCG64 stream is keyed by the uint32 words of
+`(seed, absolute object ID, cell, source, domain, version)`. Its canonical
+offset `2 b + r` supplies one raw uint64 for replicate `r`; the high 48 bits
+give `u`, and integer `searchsorted(C_l, b T + u, side=right)` maps the draw.
+One rejection-free `random_raw(2 B_l)` call may materialize a complete source
+stream, so batching and outer call order cannot change a slot. Golden streams,
+key/offset arrays, integer thresholds, and the distinct domain/version are
+hashed; equal random values or duplicate atoms are valid.
+
+Let `K_j=k_t1,j+k_t2,j+k_prior,j`. Since the source fractions satisfy
+`alpha_l=B_l/32`, the exact realized balance probability is
+
+```text
+q_h(j) = K_j / (32 T) = K_j / 2^53.
+```
+
+Here `0 < K_j <= 2^53` on the complement, so both the integer and its binary64
+probability are exact. Raw softmax probabilities and floating CDF differences
+are never used as the importance denominator. With `Y=c/q_h`, the cell
+estimator and its paired variance estimate are
+
+```text
+T_hat_ih = (1/64) sum_[l,b,r] Y_ihlbr,
+Var_hat(T_hat_ih) = (1/64^2) sum_[l,b] (Y_ihlb0 - Y_ihlb1)^2.
+```
+
+Averaging the 32 equal-tick microstrata recovers `K_j/2^53`, so the estimator
+is exactly unbiased for each cell under the implemented integer law. The
+total complement estimate and variance sum over the 256 independent cells.
+The old source-pooled `ddof=1` reducer is invalid for this design. Stable
+diagnostic reduction uses a cell/source-local log scale and `expm1` for close
+paired log weights. The Pareto vector remains the operational effective
+weight `256 Y`; its existing threshold is retained even though the independent
+microstrata are not identically distributed.
+
+The method performs exactly 8,388,608 exact-stratum and 8,388,608 sampled
+target-flow evaluations for 512 objects. With the unchanged exact oracle, the
+diagnostic total is 833,480,576. Method time includes partition verification,
+candidate query, exact-stratum flow, integer-law construction and audits,
+production flow, paired reduction, and hashing; it excludes the exact oracle.
+An outcome-free A40 memory/throughput preflight may validate the frozen packed
+execution but may not change scientific constants after any target outcome.
+
+All earlier reliability, exact-calibration, and efficiency thresholds remain
+byte-for-byte unchanged: at least 461/512 finite `k<0.5`, at least 507/512
+`k<0.7`, no `k>=1`, complement relative-SE median/higher-p90 at most
+0.00882/0.0268, the seven exact-64 checks above, and both variance-time ratios
+at most 0.90 against the same 91.04022970038932-second baseline. Additional
+integrity gates require the exact slot layout, integer source totals, prior
+support, exclusion plateaus, dyadic balance law, RNG identities, partition
+and within-cell order hashes, zero support leakage, direct-draw provenance,
+exact flow counts, and the explicit no-pilot identity. One primary science
+run is allowed. Thresholds, constants, or code are not tuned from its outcome.
+Only a complete pass can authorize a separately preregistered fixed-draw
+nine-view stencil; failure archives this route without inference integration.
+
 #### Frozen exact-oracle confirmation
 
 `--diagnose-complement-exact-oracle` is a diagnostic-only extension of the

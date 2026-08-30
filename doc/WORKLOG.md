@@ -2,6 +2,64 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.342 — exact tick law freezes the no-pilot H256-U8-PS2 contingency
+
+**Pre-outcome estimator contract.** Following the valid cont.341 rejection,
+`doc/CATALOGUE_PRIOR.md` now freezes the independent `H256-U8-PS2` centre
+diagnostic before implementation or any new target result. It keeps the
+audited 256 cells and assigns exactly eight DM3 cycles, or 64 draws, to every
+cell. The fixed t1/t2/prior source counts are 32/24/8. Their ordered CDFs are
+split into 16/12/4 equal-probability microstrata with two independent draws
+per microstratum. This removes the rejected route's discarded pilot, noisy
+Neyman allocation, 131,072-entry reservoir, and source-pooled variance
+formula. The estimator is the mean of 64 balance-weighted values per cell;
+its new unbiased variance estimator is the sum of the 32 within-microstratum
+pair differences squared divided by `64^2`.
+
+**Exact finite-precision proposal law.** Review found that simply forcing the
+last entry of a float64 CDF to one was not rigorous: cumulative plateaus make
+the inverse-CDF law differ from the raw probability used in `q`, and a trailing
+excluded atom can receive the forced endpoint residual. The frozen repair is
+not a tolerance. Each microstratum instead has `T=2^48` integer ticks. Source
+totals are `(16T,12T,4T)` and cumulative-floor apportionment defines the
+realized source masses. The prior reserves one tick for every complement atom;
+excluded atoms receive zero. An all-minus-infinity proxy copies the quantized
+prior masses times four or three exactly. Integer thresholds are mapped with
+right-sided search, so plateaus and boundaries have an unambiguous law.
+
+If `K` is the sum of the three realized source masses at an atom, the balance
+probability is exactly `K/(32T)=K/2^53`. It is therefore exactly representable
+in binary64, positive everywhere on the complement, and identical to the law
+obtained by averaging all fixed microstrata. Raw softmax values or floating CDF
+differences are never used as the denominator. PCG64 streams are independently
+keyed by seed/object/cell/source/domain/version; canonical offset `2b+r`
+identifies each replicate, and the high 48 raw bits select a tick without
+rejection. Duplicate atoms remain distinct draw slots.
+
+**Frozen execution and gates.** The route retains rows 25,000:25,512, the
+archived centre, `K=16,384`, prefilter 131,072, proposal seed 8701, production
+seed 7,008,704, exact-64 selection, DM3 coefficients, partition/mock hashes,
+and every cont.341 reliability, exact-calibration, and efficiency threshold.
+Execution is frozen at 32-object batches, four complete consecutive cells per
+at-most-262,144-atom slab, and 4,096-atom target-flow chunks. The method has
+exactly 8,388,608 exact-stratum plus 8,388,608 sampled target-flow evaluations;
+with the unchanged oracle the diagnostic total is 833,480,576. New hard gates
+cover integer totals/support/endpoints, dyadic `q`, canonical order and slot
+layout, RNG identities, no leakage, provenance, exact flow counts, and an
+explicit zero-draw/no-allocation/no-reservoir pilot identity. One primary run
+is permitted. An outcome-free scheduler preflight may test memory and runtime,
+but no constant, threshold, or implementation may be tuned after a target
+outcome. Only a complete pass can authorize a separately frozen nine-view
+runner.
+
+**Validation at this documentation-only freeze.** No sampler code or job was
+run in this entry. The protocol was independently checked algebraically: the
+32 equal-tick microstrata average to `q`, the 64-slot estimator integrates each
+cell exactly in expectation, the paired variance formula is unbiased, all
+integer ranges fit int64, and `q=K/2^53` is binary64-exact. Implementation,
+adversarial quantizer/RNG tests, packed-kernel review, full regression tests,
+and the structural scheduler preflight are next.
+
 ## 2026-08-30 cont.341 — spatial pilot/Neyman gate is valid but rejected on tail reliability and efficiency
 
 **Frozen result and artifact audit.** Clean detached repair commit
