@@ -810,6 +810,17 @@ pass establishes only structural production shape, exact-law provenance, and
 synthetic pack/scatter fit. It says nothing about real flow runtime or accuracy
 and does not authorize a response stencil or inference mode.
 
+The sole frozen run, Slurm job 16125369 from detached commit `6c3c018`, passed
+with zero structural failures. Its byte-identical report/stdout has SHA-256
+`2f76e35439e58f26deaad80170d021532b99110e99976fa0b8d1716308594d20`
+and reconstructs run manifest
+`da5d5311a88e76729a004574b370c719406a9835335ecc21d30e15b60ef296e9`.
+The exact-parity control has z-score RMS 1.199 and maximum absolute z 2.545;
+all 32 production-shaped controls retain valid independent-island SEs. This
+authorizes only a fixed centre-development adapter on consumed rows
+25,000:25,512 under the existing exact-64 and efficiency gates. It does not
+authorize a fresh row, likelihood stencil, default, or release change.
+
 #### Frozen exact-oracle confirmation
 
 `--diagnose-complement-exact-oracle` is a diagnostic-only extension of the

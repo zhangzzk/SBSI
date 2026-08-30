@@ -2,6 +2,72 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.349 — packed-bridge production-shape preflight passes
+
+**Immutable execution and audit.** Clean detached commit
+`6c3c01815b02d91992781c41fb72ec8e170f6306` ran the sole frozen
+outcome-free A40 preflight as Slurm job 16125369. It completed with exit code
+zero in 1m20s; the in-process clock through final provenance hashing was
+62.286 s. Slurm reported 4,974,996 KiB batch MaxRSS, while the process
+high-water counter reported 6,442,393,600 bytes; these use different
+accounting mechanisms and are observational rather than gates. The canonical
+report is
+`complement_integer_bridge_smc_center_dev_v1/preflight_reports/preflight-16125369.json`.
+It is byte-identical to scheduler stdout (14,462 bytes, SHA-256
+`2f76e35439e58f26deaad80170d021532b99110e99976fa0b8d1716308594d20`).
+Progress-only stderr is 1,183 bytes with SHA-256
+`5f997e3ae85fa8967d1258478c755776a124811c356762d7a6c87ee1fc2f607a`.
+
+An independent read-only reduction reconstructed the complete run-manifest
+SHA-256
+`da5d5311a88e76729a004574b370c719406a9835335ecc21d30e15b60ef296e9`
+from the report's detached commit, all nine source/merge hashes, integer-base
+law and cache files, complete draw record, exact-stratum and target-ratio
+records, both controls, 32 per-object draw records, and 32 bridge records.
+Every structural assertion passed: all 12,760,990 atoms are active; both
+source quantizers need zero terminal correction; 1,048,576 proposal slots
+replay under object chunks and reordered object IDs; the first object's bridge
+trace replays under island chunking and reversed island IDs; there are zero
+structural failures and all seven declared science counters are zero.
+
+**Control results and cost.** The constant-ratio control returns
+`Z=2.999999999999897`, zero variance, acceptance/movement one, and no terminal
+move. The unique-ID collapse fixture retains exactly eight zero islands and
+returns `Z=0.49999999999999645` with SE `0.12909944487357966`, agreeing with
+`sqrt(1/60)`. On the primary exact-parity law, the 32 known-normalizer z scores
+have RMS 1.1994 and range `[-2.5446, 2.0220]`, inside the frozen RMS-three and
+absolute-eight gates. No production-shaped object collapses; all 32 have valid
+independent-island SEs. Median final lineage count is 54 of 256 and the seven
+mean move acceptances decrease smoothly from 0.965 to 0.777.
+
+Cold cache publication dominates the one-time path: staged save/verify/reload
+take 28.34 s, source hashing 6.30 s, and input loading 5.62 s. The 32 CPU
+bridge kernels take 11.34 s total, with 0.354 s median per object. The synthetic
+GPU pack/scatter takes 0.265 s and evaluates 1,047,146 unique atoms from
+1,048,576 slots. CUDA allocation increases by only 1,572,864 bytes over the
+already loaded inputs; this is not a production-flow memory measurement.
+
+**Decision and boundary.** The structural gate passes and authorizes one
+fixed centre-development likelihood adapter on the already consumed rows
+25,000:25,512. It does not authorize inference integration, a response
+stencil, a fresh confirmation window, or a release/default change. The target
+adapter must verify this exact base law and preflight artifact; evaluate
+duplicate atoms once while retaining original slot multiplicity; make the
+existing exact candidate stratum zero only after the global unconditioned
+draw; preserve object/island chunk replay; add exact-stratum and stochastic
+complement masses only in linear space; and treat an all-collapsed object as
+invalid precision even when its exact-stratum mass is positive. Its first
+target execution must reuse the frozen development centre, mock, exact-64
+selection, and archived reliability/efficiency thresholds without tuning
+from its outcome.
+
+**Validation.** The launch commit had already passed 89 focused tests and the
+full suite (`582 passed, 2 skipped`), Ruff, compilation, shell syntax, and
+`git diff --check`. Post-run validation additionally requires byte equality
+of report/stdout, matching SHA-256 values, a recomputed run manifest, exact
+workload/control identities, valid 32-object replay records, zero scope
+counters, and successful Slurm accounting; all passed.
+
 ## 2026-08-30 cont.348 — packed-bridge production-shape preflight is frozen and launch-ready
 
 **Scope and identity.** `scripts/preflight_packed_integer_bridge_smc.py`, its
