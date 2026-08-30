@@ -395,6 +395,7 @@ class PilotStratumRecipe:
     object_chunk: int = TAIL_PROPOSAL_OBJECT_CHUNK
     score_name: str = "log_target_squared_over_proposal"
     ranking: str = "unique_max_explicit_score_desc_atom_id"
+    promotion_strategy: str = "ranked_anchors_with_coordinate_neighbors"
     coordinate_metric: str = "standardized_proposal_euclidean"
     neighbor_order: str = "ranked_anchor_then_distance_atom_id"
     hash_contract: str = PILOT_STRATUM_HASH_CONTRACT
@@ -427,12 +428,23 @@ class PilotStratumRecipe:
             raise ValueError("pilot score name must be non-empty")
         if self.ranking != "unique_max_explicit_score_desc_atom_id":
             raise ValueError("unsupported pilot-anchor ranking")
-        if self.coordinate_metric != "standardized_proposal_euclidean":
-            raise ValueError("unsupported pilot-neighbor coordinate metric")
-        if (
-            self.neighbor_order != "ranked_anchor_then_distance_atom_id"
-        ):
-            raise ValueError("unsupported pilot-neighbor ordering")
+        promotion_strategy = str(self.promotion_strategy)
+        if promotion_strategy == "ranked_anchors_with_coordinate_neighbors":
+            if self.coordinate_metric != "standardized_proposal_euclidean":
+                raise ValueError("unsupported pilot-neighbor coordinate metric")
+            if self.neighbor_order != "ranked_anchor_then_distance_atom_id":
+                raise ValueError("unsupported pilot-neighbor ordering")
+        elif promotion_strategy == "ranked_atoms_then_active_id_fill":
+            if neighbors_per_anchor != 1:
+                raise ValueError(
+                    "direct pilot promotion requires one atom per anchor"
+                )
+            if self.coordinate_metric != "none" or self.neighbor_order != "none":
+                raise ValueError(
+                    "direct pilot promotion must disable coordinate neighbours"
+                )
+        else:
+            raise ValueError("unsupported pilot promotion strategy")
         if self.hash_contract != PILOT_STRATUM_HASH_CONTRACT:
             raise ValueError("unsupported pilot-stratum hash contract")
         object.__setattr__(self, "name", name)
@@ -443,6 +455,7 @@ class PilotStratumRecipe:
         object.__setattr__(self, "atom_chunk", atom_chunk)
         object.__setattr__(self, "object_chunk", object_chunk)
         object.__setattr__(self, "score_name", str(self.score_name))
+        object.__setattr__(self, "promotion_strategy", promotion_strategy)
 
     @property
     def sha256(self) -> str:
@@ -456,12 +469,15 @@ class PilotStratumRecipe:
 
 
 PILOT_STRATUM_RECIPE = PilotStratumRecipe(
-    name="independent_pilot_exact_stratum_second_moment_clusters_v1",
+    name="independent_pilot_exact_stratum_direct_second_moment_v2",
     pilot_draws=8192,
-    max_anchors=256,
+    max_anchors=4096,
     n_promotions=4096,
-    neighbors_per_anchor=16,
+    neighbors_per_anchor=1,
     pilot_proposal=PILOT_STRATUM_PROPOSAL_RECIPE,
+    promotion_strategy="ranked_atoms_then_active_id_fill",
+    coordinate_metric="none",
+    neighbor_order="none",
 )
 
 
@@ -1026,6 +1042,24 @@ class PilotStratumPromotion:
             valid_anchors = anchors[row, anchor_valid[row]]
             if not np.isin(valid_anchors, promoted[row]).all():
                 raise ValueError("every consumed pilot anchor must be promoted")
+        if self.recipe.promotion_strategy == "ranked_atoms_then_active_id_fill":
+            anchor_counts = anchor_valid.sum(axis=1)
+            expected_anchor_counts = np.minimum(
+                finite_counts,
+                min(self.recipe.max_anchors, promoted.shape[1]),
+            )
+            if not np.array_equal(anchor_counts, expected_anchor_counts):
+                raise ValueError(
+                    "direct promotion anchor counts do not match finite pilot scores"
+                )
+            if not np.array_equal(
+                fallback_counts, promoted.shape[1] - anchor_counts
+            ):
+                raise ValueError(
+                    "direct promotion fallback counts do not fill the stratum"
+                )
+            if np.any(max_query_width != 0):
+                raise ValueError("direct promotion cannot record neighbor queries")
         provenance = self.provenance
         if provenance.recipe_sha256 != self.recipe.sha256:
             raise ValueError("pilot provenance recipe hash does not match the recipe")
@@ -1304,15 +1338,15 @@ class DefensiveLocalProposal:
         *,
         recipe: PilotStratumRecipe = PILOT_STRATUM_RECIPE,
     ) -> PilotStratumPromotion:
-        """Promote pilot-discovered atoms and coordinate clusters exactly.
+        """Promote pilot-discovered atoms into an exact stratum.
 
         ``pilot_scores`` is intentionally explicit.  The selected development
         recipe expects ``log(c^2/q)`` (equivalently ``2*log(c/q)+log(q)``), but
         callers can instantiate another immutable recipe for a predeclared
         ranking or quota.  Duplicate pilot atoms use their maximum score, then
-        atom id breaks ties.  Ranked anchors contribute themselves followed by
-        their nearest coordinate neighbors until the fixed promotion budget is
-        full.
+        atom id breaks ties. The recipe either consumes ranked atoms directly
+        with an ascending-support uniqueness fill, or uses the retained
+        development-only coordinate-cluster strategy.
 
         The pilot is selection data only.  This method returns no estimator
         weights and performs no production draw; consumers must exact-sum the
@@ -1445,100 +1479,137 @@ class DefensiveLocalProposal:
                 ]
 
                 consumed = []
-                # Batch tree queries without making their return order part of
-                # the algorithm.  Each cluster is anchor + nearest other atoms.
-                cluster_query = min(
-                    len(self.active_indices), recipe.neighbors_per_anchor
-                )
-                if len(ranked):
-                    max_query_width[row] = cluster_query
-                anchor_batch = 64
-
-                def consume_anchor_range(anchor_values):
-                    nonlocal selected_count
-                    for start in range(0, len(anchor_values), anchor_batch):
-                        stop = min(start + anchor_batch, len(anchor_values))
-                        batch = anchor_values[start:stop]
-                        neighbor_rows = self._canonical_coordinate_neighbors(
-                            batch, n_neighbors=cluster_query
-                        )
-                        for anchor, neighbors in zip(batch, neighbor_rows):
-                            if len(consumed) >= anchor_width:
-                                return
-                            consumed.append(int(anchor))
-                            anchors[row, len(consumed) - 1] = int(anchor)
-                            anchor_valid[row, len(consumed) - 1] = True
-                            cluster = np.concatenate(
-                                (
-                                    np.asarray([anchor], dtype=np.int64),
-                                    neighbors[neighbors != anchor][
-                                        : max(recipe.neighbors_per_anchor - 1, 0)
-                                    ],
-                                )
+                if recipe.promotion_strategy == "ranked_atoms_then_active_id_fill":
+                    # The clustered v1 result showed that score-ranked pilot
+                    # atoms carried much more target mass per slot than their
+                    # coordinate neighbours. Consume ranked unique atoms
+                    # directly, then fill a uniqueness deficit deterministically.
+                    for anchor in ranked[:anchor_width]:
+                        atom = int(anchor)
+                        consumed.append(atom)
+                        anchors[row, len(consumed) - 1] = atom
+                        anchor_valid[row, len(consumed) - 1] = True
+                        if seen[atom]:
+                            raise RuntimeError(
+                                "direct pilot anchor already belongs to the stratum"
                             )
-                            for atom in cluster:
+                        promoted[row, selected_count] = atom
+                        selected_count += 1
+                        seen[atom] = True
+                        if selected_count == promotion_size:
+                            break
+                    if selected_count < promotion_size:
+                        for atom in self.active_indices:
+                            atom = int(atom)
+                            if not seen[atom]:
+                                promoted[row, selected_count] = atom
+                                selected_count += 1
+                                fallback_fill_counts[row] += 1
+                                seen[atom] = True
+                                if selected_count == promotion_size:
+                                    break
+                else:
+                    # Batch tree queries without making their return order part
+                    # of the algorithm. Each cluster is anchor + nearest atoms.
+                    cluster_query = min(
+                        len(self.active_indices), recipe.neighbors_per_anchor
+                    )
+                    if len(ranked):
+                        max_query_width[row] = cluster_query
+                    anchor_batch = 64
+
+                    def consume_anchor_range(anchor_values):
+                        nonlocal selected_count
+                        for start in range(0, len(anchor_values), anchor_batch):
+                            stop = min(start + anchor_batch, len(anchor_values))
+                            batch = anchor_values[start:stop]
+                            neighbor_rows = self._canonical_coordinate_neighbors(
+                                batch, n_neighbors=cluster_query
+                            )
+                            for anchor, neighbors in zip(batch, neighbor_rows):
+                                if len(consumed) >= anchor_width:
+                                    return
+                                consumed.append(int(anchor))
+                                anchors[row, len(consumed) - 1] = int(anchor)
+                                anchor_valid[row, len(consumed) - 1] = True
+                                cluster = np.concatenate(
+                                    (
+                                        np.asarray([anchor], dtype=np.int64),
+                                        neighbors[neighbors != anchor][
+                                            : max(
+                                                recipe.neighbors_per_anchor - 1,
+                                                0,
+                                            )
+                                        ],
+                                    )
+                                )
+                                for atom in cluster:
+                                    atom = int(atom)
+                                    if not seen[atom]:
+                                        promoted[row, selected_count] = atom
+                                        selected_count += 1
+                                        seen[atom] = True
+                                        if selected_count == promotion_size:
+                                            return
+
+                    consume_anchor_range(ranked[:anchor_width])
+
+                    # A degenerate pilot with fewer finite anchors receives an
+                    # explicit ascending-support fill.
+                    if (
+                        selected_count < promotion_size
+                        and len(consumed)
+                        < min(recipe.max_anchors, promotion_size)
+                    ):
+                        for atom in self.active_indices:
+                            atom = int(atom)
+                            if not seen[atom]:
+                                promoted[row, selected_count] = atom
+                                selected_count += 1
+                                fallback_fill_counts[row] += 1
+                                seen[atom] = True
+                                if selected_count == promotion_size:
+                                    break
+
+                    # Heavy overlap deepens only the consumed anchor
+                    # neighborhoods; it never consumes another ranked atom.
+                    query_k = cluster_query
+                    while selected_count < promotion_size:
+                        if not consumed:
+                            raise RuntimeError(
+                                "pilot promotion has no usable finite anchor"
+                            )
+                        if query_k == len(self.active_indices):
+                            raise RuntimeError(
+                                "pilot promotion could not fill exact stratum"
+                            )
+                        query_k = min(
+                            len(self.active_indices), max(query_k + 1, 2 * query_k)
+                        )
+                        max_query_width[row] = query_k
+                        neighbor_rows = self._canonical_coordinate_neighbors(
+                            np.asarray(consumed, dtype=np.int64),
+                            n_neighbors=query_k,
+                        )
+                        before = selected_count
+                        for neighbors in neighbor_rows:
+                            for atom in neighbors:
                                 atom = int(atom)
                                 if not seen[atom]:
                                     promoted[row, selected_count] = atom
                                     selected_count += 1
                                     seen[atom] = True
                                     if selected_count == promotion_size:
-                                        return
-
-                consume_anchor_range(ranked[:anchor_width])
-
-                # A normal finite pilot supplies the full frozen anchor count.
-                # Cluster overlap is then repaired only by deepening around
-                # those same anchors; consuming a 257th pilot atom would change
-                # the declared algorithm.  A degenerate pilot with fewer finite
-                # unique scores instead receives an explicit, auditable fill in
-                # ascending active-atom order.
-                if (
-                    selected_count < promotion_size
-                    and len(consumed) < min(recipe.max_anchors, promotion_size)
-                ):
-                    for atom in self.active_indices:
-                        atom = int(atom)
-                        if not seen[atom]:
-                            promoted[row, selected_count] = atom
-                            selected_count += 1
-                            fallback_fill_counts[row] += 1
-                            seen[atom] = True
+                                        break
                             if selected_count == promotion_size:
                                 break
-
-                # Heavy overlap can exhaust the ranked-anchor budget before the
-                # fixed-width stratum is full.  Expand the already consumed
-                # anchor neighborhoods canonically; this affects efficiency only,
-                # never support or the estimator's conditional unbiasedness.
-                query_k = cluster_query
-                while selected_count < promotion_size:
-                    if not consumed:
-                        raise RuntimeError("pilot promotion has no usable finite anchor")
-                    if query_k == len(self.active_indices):
-                        raise RuntimeError("pilot promotion could not fill exact stratum")
-                    query_k = min(
-                        len(self.active_indices), max(query_k + 1, 2 * query_k)
-                    )
-                    max_query_width[row] = query_k
-                    neighbor_rows = self._canonical_coordinate_neighbors(
-                        np.asarray(consumed, dtype=np.int64),
-                        n_neighbors=query_k,
-                    )
-                    before = selected_count
-                    for neighbors in neighbor_rows:
-                        for atom in neighbors:
-                            atom = int(atom)
-                            if not seen[atom]:
-                                promoted[row, selected_count] = atom
-                                selected_count += 1
-                                seen[atom] = True
-                                if selected_count == promotion_size:
-                                    break
-                        if selected_count == promotion_size:
-                            break
-                    if selected_count == before and query_k == len(self.active_indices):
-                        raise RuntimeError("pilot promotion exhausted active support")
+                        if (
+                            selected_count == before
+                            and query_k == len(self.active_indices)
+                        ):
+                            raise RuntimeError(
+                                "pilot promotion exhausted active support"
+                            )
             finally:
                 seen[base_row] = False
                 # Only the initialized prefix is marked if validation raises.

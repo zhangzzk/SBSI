@@ -44,7 +44,7 @@ PILOT_STRATUM_REPLICATION_SEED_OFFSET = 2_000_003
 # the production diagnostic seed through this name.
 EXACT_ORACLE_DIAGNOSTIC_SEED_OFFSET = COMPLEMENT_DIAGNOSTIC_SEED_OFFSET
 PILOT_STRATUM_DEVELOPMENT_LABEL = (
-    "SBSI/complement-pilot-stratum-development/v1"
+    "SBSI/complement-pilot-stratum-development/v2-direct"
 )
 PILOT_STRATUM_DEVELOPMENT_BASELINE = {
     "total_relative_error_median": 0.013214266498501442,
@@ -52,6 +52,7 @@ PILOT_STRATUM_DEVELOPMENT_BASELINE = {
     "mean_total_relative_error_squared": 4.6256941067948046e-4,
     "total_relative_error_squared_p90_higher": 4.45668696553694e-4,
     "method_seconds": 91.04022970038932,
+    "total_elapsed_seconds": 103.91162065404933,
 }
 PILOT_STRATUM_DEVELOPMENT_MOCK_SHA256 = {
     "measurements.parquet": (
@@ -568,10 +569,6 @@ class ComplementDiagnostic:
                 "passed": bool(passed),
             }
 
-        def passing_count(name, predicate) -> int:
-            data = values(name)
-            return int(np.sum(predicate(data)))
-
         def exact_int64_vector(data) -> Optional[np.ndarray]:
             """Return integer-typed, exactly int64-compatible values only."""
 
@@ -702,30 +699,79 @@ class ComplementDiagnostic:
                 & (tail_standard_error > 0.0)
             )
         )
-        base_count = passing_count(
-            "pilot_stratum_base_count", lambda data: data == 16_384
+        count_column_names = (
+            "pilot_stratum_base_count",
+            "pilot_stratum_promoted_count",
+            "pilot_stratum_anchor_count",
+            "pilot_stratum_neighbor_count",
+            "pilot_stratum_fallback_fill_count",
+            "pilot_stratum_max_neighbor_query_width",
+            "pilot_stratum_finite_score_atom_count",
+            "draws_tail_proposal_complement",
         )
-        promoted_count = passing_count(
-            "pilot_stratum_promoted_count", lambda data: data == 4_096
+        count_columns = {
+            name: exact_int64_vector(frame[name]) for name in count_column_names
+        }
+        integer_typed_counts = all(
+            data is not None for data in count_columns.values()
         )
-        final_count = int(
-            np.sum(
-                values("pilot_stratum_base_count")
-                + values("pilot_stratum_promoted_count")
-                == 20_480
+        base_values = count_columns["pilot_stratum_base_count"]
+        promoted_values = count_columns["pilot_stratum_promoted_count"]
+        anchor_values = count_columns["pilot_stratum_anchor_count"]
+        neighbor_values = count_columns["pilot_stratum_neighbor_count"]
+        fallback_values = count_columns["pilot_stratum_fallback_fill_count"]
+        query_values = count_columns[
+            "pilot_stratum_max_neighbor_query_width"
+        ]
+        finite_score_values = count_columns[
+            "pilot_stratum_finite_score_atom_count"
+        ]
+        tail_draw_values = count_columns["draws_tail_proposal_complement"]
+        base_count = (
+            int(np.sum(base_values == 16_384)) if base_values is not None else 0
+        )
+        promoted_count = (
+            int(np.sum(promoted_values == 4_096))
+            if promoted_values is not None
+            else 0
+        )
+        final_count = (
+            int(np.sum(base_values + promoted_values == 20_480))
+            if base_values is not None and promoted_values is not None
+            else 0
+        )
+        if (
+            anchor_values is not None
+            and finite_score_values is not None
+            and fallback_values is not None
+        ):
+            expected_anchor_values = np.minimum(finite_score_values, 4_096)
+            direct_anchor_rule_count = int(
+                np.sum(anchor_values == expected_anchor_values)
             )
+            direct_fallback_rule_count = int(
+                np.sum(fallback_values == 4_096 - expected_anchor_values)
+            )
+        else:
+            direct_anchor_rule_count = 0
+            direct_fallback_rule_count = 0
+        zero_neighbor_count = (
+            int(np.sum(neighbor_values == 0))
+            if neighbor_values is not None
+            else 0
         )
-        anchor_count = passing_count(
-            "pilot_stratum_anchor_count", lambda data: data == 256
+        zero_neighbor_query_count = (
+            int(np.sum(query_values == 0)) if query_values is not None else 0
         )
-        tail_draw_count = passing_count(
-            "draws_tail_proposal_complement", lambda data: data == 16_384
+        tail_draw_count = (
+            int(np.sum(tail_draw_values == 16_384))
+            if tail_draw_values is not None
+            else 0
         )
-        finite_score_count = passing_count(
-            "pilot_stratum_finite_score_atom_count", lambda data: data >= 256
-        )
-        fallback_count = passing_count(
-            "pilot_stratum_fallback_fill_count", lambda data: data == 0
+        finite_score_count = (
+            int(np.sum(finite_score_values >= 1))
+            if finite_score_values is not None
+            else 0
         )
 
         hash_fields = (
@@ -845,6 +891,12 @@ class ComplementDiagnostic:
 
         integrity_gates = {
             "absolute_object_ids_exact": gate(ids_exact, "is", True, ids_exact),
+            "count_columns_are_nonnegative_int64_compatible_integers": gate(
+                integer_typed_counts,
+                "is",
+                True,
+                integer_typed_counts,
+            ),
             "development_protocol_identity_matched": gate(
                 identity_matched, "is", True, identity_matched
             ),
@@ -866,8 +918,29 @@ class ComplementDiagnostic:
             "final_stratum_count_all_objects": gate(
                 final_count, "==", expected_objects, final_count == expected_objects
             ),
-            "anchor_count_all_objects": gate(
-                anchor_count, "==", expected_objects, anchor_count == expected_objects
+            "direct_anchor_count_matches_finite_scores_all_objects": gate(
+                direct_anchor_rule_count,
+                "==",
+                expected_objects,
+                direct_anchor_rule_count == expected_objects,
+            ),
+            "direct_fallback_fills_uniqueness_deficit_all_objects": gate(
+                direct_fallback_rule_count,
+                "==",
+                expected_objects,
+                direct_fallback_rule_count == expected_objects,
+            ),
+            "zero_coordinate_neighbors_all_objects": gate(
+                zero_neighbor_count,
+                "==",
+                expected_objects,
+                zero_neighbor_count == expected_objects,
+            ),
+            "zero_neighbor_query_width_all_objects": gate(
+                zero_neighbor_query_count,
+                "==",
+                expected_objects,
+                zero_neighbor_query_count == expected_objects,
             ),
             "tail_draw_count_all_objects": gate(
                 tail_draw_count,
@@ -875,17 +948,11 @@ class ComplementDiagnostic:
                 expected_objects,
                 tail_draw_count == expected_objects,
             ),
-            "finite_score_count_at_least_256_all_objects": gate(
+            "finite_score_count_at_least_one_all_objects": gate(
                 finite_score_count,
                 "==",
                 expected_objects,
                 finite_score_count == expected_objects,
-            ),
-            "zero_fallback_all_objects": gate(
-                fallback_count,
-                "==",
-                expected_objects,
-                fallback_count == expected_objects,
             ),
             "hashes_and_run_manifest_internally_matched": gate(
                 hash_manifest_matched, "is", True, hash_manifest_matched
@@ -1015,7 +1082,7 @@ class ComplementDiagnostic:
             self.metadata.get("elapsed_seconds", float("nan"))
         )
         total_elapsed_ratio = (
-            total_elapsed_seconds / baseline["method_seconds"]
+            total_elapsed_seconds / baseline["total_elapsed_seconds"]
             if np.isfinite(total_elapsed_seconds) and total_elapsed_seconds >= 0.0
             else float("nan")
         )

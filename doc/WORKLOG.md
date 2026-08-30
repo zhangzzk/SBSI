@@ -2,6 +2,75 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.333 — deeper DM3 is efficient but less reliable; direct promotion is frozen
+
+**Eightfold-depth comparator result.** Detached commit `d464aec` ran the
+predeclared unmodified DM3 comparator as A40 Slurm job 16123363, changing only
+the complement depth from 16,384 to 131,072 on the consumed rows
+25,000:25,512. It completed with exit code zero in 4m51s and 8,959,524 KiB
+peak RSS. The immutable artifact is
+`complement_tail_dm_mis_heldout25k_v1/results/rows25000_25512_seed8701_dm3_batched32_m131072_d464aec_v1`;
+`per_object.parquet` has SHA-256
+`b678906353485a0ce2ba2b7689ddd05d56898f4a7cd3c93f588ee6632d7ddfef`
+and `summary.json` has
+`7dfea2b3836fd99714d03001f32f2ed3b082b5d3d96a2e4e131bbd3b1ee2cd69`.
+Scheduler stdout is byte-identical to the summary.
+
+An independent Parquet reduction reproduces the 512 absolute IDs and shows
+that depth fixes variance but not the proposal tail. Complement relative-SE
+median improves from 0.021977 to 0.008110 and passes its 0.00882 gate, but the
+discrete-higher p90 is 0.034525 and still fails the 0.0268 gate. Counts with
+`k<0.5` and `k<0.7` are 392 and 452, versus required 461 and 507; `k>=1`
+grows from six to 19. At `k=0.7`, only four baseline failures clear while 31
+new failures appear. Thus the all-reliability gate fails and the deeper
+sampler is rejected despite good efficiency. Gated method time is 150.464 s,
+only 1.653x the baseline because proposal construction amortizes; the
+normalized mean/p90 variance-time scores are 0.2800/0.2996 and both pass.
+Total relative-SE median/p90 improves from 0.013214/0.021111 to
+0.004932/0.008988. None of these ungated improvements overrides the tail
+reliability failure, and no confirmation row is used.
+
+**Frozen direct-promotion v2.** The next already-declared pilot arm is now
+implemented under label
+`SBSI/complement-pilot-stratum-development/v2-direct` and recipe hash
+`7571ab61f7ee16e10199abdfc47c68113f89ca121451057526f94f2bcfac9154`.
+It retains the discarded 8,192-draw independent DM3 pilot and exact-stratum
+increment of 4,096, but promotes the top 4,096 unique finite
+`log(c^2/qbar)` atoms directly. Score ties use atom ID. A uniqueness deficit
+is filled in ascending active-atom order, excluding the base stratum and
+already selected atoms. The algorithm performs no coordinate query and
+records zero neighbours and query width; integrity gates require anchor count
+`min(finite-score count, 4096)` and fallback count equal to the remaining
+slots. The older clustered strategy remains constructible for archived tests,
+but it is not the active frozen recipe.
+
+The v2 wrapper has a distinct output root and tag and pins the direct strategy,
+anchor width, atom-per-anchor count, recipe hash, consumed rows, source hashes,
+seeds, chunks, and overwrite protection. All reliability and fair-efficiency
+thresholds remain unchanged. `sbsi/complement_diagnostic.py` also corrects the
+context-only total-elapsed ratio to divide candidate total elapsed by the
+baseline total elapsed 103.91162065404933 s; gated method-time calculations
+were already correct and are unchanged.
+
+**Files and validation.** `sbsi/catalogue_sampling.py` implements and validates
+the strategy-specific promotion paths; `sbsi/complement_diagnostic.py` freezes
+the v2 identity and direct integrity gates; the dedicated job wrapper, tests,
+and `doc/CATALOGUE_PRIOR.md` describe and pin the new protocol. Before
+scheduler submission:
+
+```text
+pytest tests/test_catalogue_sampling.py tests/test_complement_diagnostic.py \
+  tests/test_release_config.py -q                              95 passed
+pytest tests -q                                  257 passed, 2 skipped
+ruff check <changed Python and tests>                   all checks passed
+python -m compileall -q sbsi scripts tests                        clean
+bash -n jobs/job_complement_pilot_stratum.sh                      clean
+git diff --check                                                   clean
+```
+
+The v2 primary must pass every integrity, reliability, and efficiency gate
+before its reserved pilot-seed replication or any fresh exact-oracle run.
+
 ## 2026-08-30 cont.332 — clustered pilot is valid but inefficient and rejected
 
 **Frozen primary result.** Detached commit `fdfc079` ran the predeclared

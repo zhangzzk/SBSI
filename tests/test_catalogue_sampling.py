@@ -118,6 +118,9 @@ def _pilot_promotion_fixture(n_objects=1):
         n_promotions=6,
         neighbors_per_anchor=3,
         score_name="toy_explicit_score",
+        promotion_strategy="ranked_anchors_with_coordinate_neighbors",
+        coordinate_metric="standardized_proposal_euclidean",
+        neighbor_order="ranked_anchor_then_distance_atom_id",
     )
     patterns = np.array(
         [
@@ -193,21 +196,24 @@ def _dense_conditioned_components(proposal, observation, excluded):
     return components, qbar, np.asarray(masses), complement
 
 
-def test_pilot_stratum_recipe_freezes_reviewed_second_moment_design():
+def test_pilot_stratum_recipe_freezes_direct_second_moment_design():
     recipe = PILOT_STRATUM_RECIPE
     assert isinstance(recipe, PilotStratumRecipe)
     assert recipe.pilot_draws == 8192
-    assert recipe.max_anchors == 256
+    assert recipe.max_anchors == 4096
     assert recipe.n_promotions == 4096
-    assert recipe.neighbors_per_anchor == 16
+    assert recipe.neighbors_per_anchor == 1
     assert recipe.atom_chunk == 262144
     assert recipe.object_chunk == 32
     assert recipe.score_name == "log_target_squared_over_proposal"
     assert recipe.pilot_proposal is TAIL_PROPOSAL_RECIPE
     assert PILOT_STRATUM_PROPOSAL_RECIPE is TAIL_PROPOSAL_RECIPE
+    assert recipe.promotion_strategy == "ranked_atoms_then_active_id_fill"
+    assert recipe.coordinate_metric == "none"
+    assert recipe.neighbor_order == "none"
     assert recipe.hash_contract == PILOT_STRATUM_HASH_CONTRACT
     assert recipe.sha256 == (
-        "b4349271763311c2127d785c79fc637e115f421a31fb821e6db6e0a592b8d410"
+        "7571ab61f7ee16e10199abdfc47c68113f89ca121451057526f94f2bcfac9154"
     )
     with pytest.raises(FrozenInstanceError):
         recipe.pilot_draws = 4096
@@ -222,6 +228,12 @@ def test_pilot_stratum_recipe_freezes_reviewed_second_moment_design():
         replace(recipe, atom_chunk=0)
     with pytest.raises(ValueError, match="unsupported pilot-anchor"):
         replace(recipe, ranking="python_hash_order")
+    with pytest.raises(ValueError, match="one atom per anchor"):
+        replace(recipe, neighbors_per_anchor=2)
+    with pytest.raises(ValueError, match="disable coordinate neighbours"):
+        replace(recipe, coordinate_metric="standardized_proposal_euclidean")
+    with pytest.raises(ValueError, match="unsupported pilot promotion"):
+        replace(recipe, promotion_strategy="unknown")
 
 
 def test_pilot_promotion_ranks_unique_explicit_scores_and_fills_fixed_width():
@@ -345,7 +357,7 @@ def test_pilot_promotion_rejects_replaced_inconsistent_provenance():
             )
 
 
-def test_frozen_pilot_recipe_consumes_256_anchors_for_4096_promotions():
+def test_frozen_direct_pilot_recipe_consumes_top_4096_without_tree(monkeypatch):
     n_base = 16_384
     n_promoted = PILOT_STRATUM_RECIPE.n_promotions
     n_atoms = n_base + n_promoted + 1
@@ -408,6 +420,13 @@ def test_frozen_pilot_recipe_consumes_256_anchors_for_4096_promotions():
         ),
     )
 
+    def unexpected_coordinate_query(*args, **kwargs):
+        raise AssertionError("direct pilot promotion queried coordinate neighbours")
+
+    monkeypatch.setattr(
+        proposal, "_canonical_coordinate_neighbors", unexpected_coordinate_query
+    )
+
     result = proposal.promote_exact_stratum(
         candidates,
         pd.DataFrame({"x": [0.0]}),
@@ -416,12 +435,49 @@ def test_frozen_pilot_recipe_consumes_256_anchors_for_4096_promotions():
     )
 
     assert result.promotion_size == n_promoted
-    np.testing.assert_array_equal(result.anchor_counts, [256])
+    np.testing.assert_array_equal(result.anchor_counts, [4096])
     np.testing.assert_array_equal(result.anchor_indices[0], anchor_ids)
     np.testing.assert_array_equal(result.promoted_indices[0], promoted_ids)
     np.testing.assert_array_equal(result.fallback_fill_counts, [0])
-    np.testing.assert_array_equal(result.max_neighbor_query_width, [16])
+    np.testing.assert_array_equal(result.max_neighbor_query_width, [0])
     assert result.candidates.indices.shape == (1, 20_480)
+
+
+def test_direct_pilot_promotion_fills_only_unique_score_deficit(monkeypatch):
+    proposal, observed, candidates, draw, scores, cluster_recipe = (
+        _pilot_promotion_fixture()
+    )
+    recipe = replace(
+        cluster_recipe,
+        name="toy_direct_score_pilot",
+        max_anchors=6,
+        neighbors_per_anchor=1,
+        promotion_strategy="ranked_atoms_then_active_id_fill",
+        coordinate_metric="none",
+        neighbor_order="none",
+    )
+    draw = replace(
+        draw,
+        component_recipe=recipe.pilot_proposal,
+        atom_chunk=recipe.atom_chunk,
+        object_chunk=recipe.object_chunk,
+    )
+
+    def unexpected_coordinate_query(*args, **kwargs):
+        raise AssertionError("direct pilot promotion queried coordinate neighbours")
+
+    monkeypatch.setattr(
+        proposal, "_canonical_coordinate_neighbors", unexpected_coordinate_query
+    )
+    result = proposal.promote_exact_stratum(
+        candidates, observed, draw, scores, recipe=recipe
+    )
+
+    np.testing.assert_array_equal(result.anchor_counts, [5])
+    np.testing.assert_array_equal(result.anchor_indices[0, :5], [5, 6, 7, 4, 9])
+    np.testing.assert_array_equal(result.promoted_indices[0], [5, 6, 7, 4, 9, 1])
+    np.testing.assert_array_equal(result.fallback_fill_counts, [1])
+    np.testing.assert_array_equal(result.max_neighbor_query_width, [0])
 
 
 def test_pilot_promotion_is_independent_of_kdtree_tie_return_order():

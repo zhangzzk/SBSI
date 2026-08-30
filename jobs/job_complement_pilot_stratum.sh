@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Development-only complement diagnostic for the fixed independent-pilot
-# exact-stratum recipe.  The discovery rows are already consumed; this wrapper
-# must never be pointed at the frozen exact-oracle confirmation window.
+# Development-only complement diagnostic for direct score-ranked pilot
+# promotion. The discovery rows are already consumed; this wrapper must never
+# be pointed at the frozen exact-oracle confirmation window.
 
 #SBATCH --job-name=sbsi_tail_pilot_stratum
 #SBATCH --partition=inter
@@ -9,8 +9,8 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=192G
 #SBATCH --time=16:00:00
-#SBATCH --output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/complement_pilot_stratum_dev_v1/logs/%x_%j.out
-#SBATCH --error=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/complement_pilot_stratum_dev_v1/logs/%x_%j.err
+#SBATCH --output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/complement_pilot_stratum_direct_dev_v2/logs/%x_%j.out
+#SBATCH --error=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/complement_pilot_stratum_direct_dev_v2/logs/%x_%j.err
 
 set -euo pipefail
 
@@ -19,7 +19,7 @@ python=${SBSI_PYTHON:-/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python}
 
 source_root=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/v31_fs2_default_qmc128_n100k_v1
 source_mock=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/inference_candidate_ladder_n125k_v1/prepare_cont303/mock
-root=${DIAGNOSTIC_ROOT:-/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/complement_pilot_stratum_dev_v1}
+root=${DIAGNOSTIC_ROOT:-/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/complement_pilot_stratum_direct_dev_v2}
 compact="$source_root/compact_global"
 
 OBSERVATION_START=25000
@@ -28,7 +28,7 @@ K=16384
 PREFILTER=131072
 GLOBAL_DRAWS=16384
 PROPOSAL_SEED=8701
-TAG=rows25000_25512_seed8701_pilot8192_promote4096_meanobs_dm3_v1
+TAG=rows25000_25512_seed8701_pilot8192_direct4096_meanobs_dm3_v2
 output="$root/results/$TAG"
 
 if [[ ! -d "$repo/.git" && ! -f "$repo/.git" ]]; then
@@ -71,6 +71,14 @@ if PILOT_STRATUM_RECIPE.pilot_draws != 8192:
     raise SystemExit("pilot draw count changed")
 if PILOT_STRATUM_RECIPE.n_promotions != 4096:
     raise SystemExit("pilot promotion count changed")
+if PILOT_STRATUM_RECIPE.max_anchors != 4096:
+    raise SystemExit("direct pilot anchor limit changed")
+if PILOT_STRATUM_RECIPE.neighbors_per_anchor != 1:
+    raise SystemExit("direct pilot atom-per-anchor count changed")
+if PILOT_STRATUM_RECIPE.promotion_strategy != (
+    "ranked_atoms_then_active_id_fill"
+):
+    raise SystemExit("direct pilot promotion strategy changed")
 if PILOT_STRATUM_RECIPE.pilot_proposal != TAIL_PROPOSAL_RECIPE:
     raise SystemExit("pilot and production DM3 recipes differ")
 if PILOT_STRATUM_RECIPE.atom_chunk != TAIL_PROPOSAL_ATOM_CHUNK:
@@ -78,7 +86,7 @@ if PILOT_STRATUM_RECIPE.atom_chunk != TAIL_PROPOSAL_ATOM_CHUNK:
 if PILOT_STRATUM_RECIPE.object_chunk != TAIL_PROPOSAL_OBJECT_CHUNK:
     raise SystemExit("pilot object chunk changed")
 if PILOT_STRATUM_RECIPE.sha256 != (
-    "b4349271763311c2127d785c79fc637e115f421a31fb821e6db6e0a592b8d410"
+    "7571ab61f7ee16e10199abdfc47c68113f89ca121451057526f94f2bcfac9154"
 ):
     raise SystemExit("pilot recipe hash changed")
 if PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET != 1_000_003:
@@ -88,7 +96,7 @@ if PILOT_STRATUM_REPLICATION_SEED_OFFSET != 2_000_003:
 if COMPLEMENT_DIAGNOSTIC_SEED_OFFSET != 7_000_003:
     raise SystemExit("production diagnostic seed offset changed")
 if PILOT_STRATUM_DEVELOPMENT_LABEL != (
-    "SBSI/complement-pilot-stratum-development/v1"
+    "SBSI/complement-pilot-stratum-development/v2-direct"
 ):
     raise SystemExit("pilot development protocol label changed")
 if PILOT_STRATUM_DEVELOPMENT_PROTOCOL["pilot_seed"] != 1_008_704:

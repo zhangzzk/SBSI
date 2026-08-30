@@ -281,16 +281,15 @@ reduced median DM4 proposal construction from 28.254 seconds at batch one to
 implementation is recipe-generic; this timing and memory measurement are
 specific to the four-component DM4 recipe.
 
-#### Independent-pilot exact-stratum diagnostic
+#### Independent-pilot exact-stratum diagnostics
 
 `--diagnose-complement-pilot-stratum` is a development diagnostic, not an
 estimator mode or release change. It requires the fixed tail-proposal
 diagnostic and cannot be combined with the frozen `exact-oracle/v1` protocol.
 Measured cuts and selection caches are rejected so post-cut row positions can
 never be relabelled as the frozen absolute IDs.
-There are no command-line controls for its pilot size, score, anchor count,
-promotion count, neighbourhood, proposal recipe, execution chunks, or random
-stream. The
+There are no command-line controls for its pilot size, score, promotion rule,
+promotion count, proposal recipe, execution chunks, or random stream. The
 dedicated `jobs/job_complement_pilot_stratum.sh` wrapper fixes the already
 consumed development rows 25,000:25,512, `K=M=16,384`, prefilter 131,072, and
 base proposal seed 8701. It explicitly retains the release
@@ -310,13 +309,23 @@ the explicit discovery score is
 2 ell + log(qbar) = log(c^2 / qbar).
 ```
 
-Duplicate atom draws retain their maximum score. The fixed promotion rule
-ranks unique atoms by score and atom ID, takes at most 256 anchors, and adds
-canonical standardized-coordinate neighbours in distance/atom-ID order until
-4,096 atoms beyond `S0` have been promoted. Degenerate pilots and overlapping
-clusters have deterministic, recorded fallback/deepening behavior. Pilot
-draws are selection data only: they never enter an estimate, standard error,
-or Pareto-tail fit.
+Duplicate atom draws retain their maximum score. The active direct-v2 rule
+ranks unique finite-score atoms by descending score and ascending atom ID,
+then promotes the first 4,096 atoms beyond `S0`. If the pilot supplies fewer
+than 4,096 unique finite-score atoms, the remaining slots are filled in
+ascending active-atom order, excluding `S0` and the selected atoms. No
+coordinate index or neighbour query is used. Pilot draws are selection data
+only: they never enter an estimate, standard error, or Pareto-tail fit.
+
+The archived clustered-v1 rule took 256 ranked anchors and filled the remaining
+slots with standardized-coordinate neighbours. Its frozen primary run was
+valid but failed every reliability and efficiency gate: only 390/466 of 512
+objects had `k<0.5`/`k<0.7`, complement relative-SE median/p90 was
+0.022191/0.078543, and mean/p90 variance-time scores were 1.478/1.612. It is
+retained as a reproducible API option but is rejected as a proposal candidate.
+The v1 result showed that anchors carried substantially more exact target mass
+per slot than neighbours and that the coordinate query alone cost 46.087 s;
+those observations fixed direct-v2 before its primary run.
 
 The pilot draw is bound to the complete DM3 component recipe, fixed
 262,144-atom and 32-object proposal chunks, and a canonical per-object hash of
@@ -350,8 +359,8 @@ GEMM/reduction shape can move last bits in probabilities and scores. With the
 pilot flag absent, existing table columns, metadata keys, flow counts, and
 stochastic streams are unchanged.
 
-The frozen development protocol label is
-`SBSI/complement-pilot-stratum-development/v1`. Its expected identity is rows
+The active frozen development protocol label is
+`SBSI/complement-pilot-stratum-development/v2-direct`. Its expected identity is rows
 25,000:25,512 at centre
 `[0.013610377120038044, 0.002740148300964851]`, base/final stratum sizes
 16,384/20,480, prefilter 131,072, `M=16,384`, base proposal seed 8701,
@@ -367,11 +376,13 @@ development gates fail; identity mismatch is not an API error.
 
 The development summary preregisters three hard gate families. Integrity
 requires the exact 512 integer-typed, int64-compatible absolute IDs and
-protocol identity; 512 finite positive
-`stratum + tail` masses and tail standard errors; base/promoted/final/anchor
-counts 16,384/4,096/20,480/256 for every object; 16,384 retained tail draws and
-at least 256 finite-score pilot atoms for every object; zero fallback fills;
-and internally consistent per-object hashes, execution-call coverage, table
+protocol identity; 512 finite positive `stratum + tail` masses and tail
+standard errors; nonnegative integer-typed count columns; base/promoted/final
+counts 16,384/4,096/20,480 for every object; anchor count equal to
+`min(finite-score count, 4096)`; fallback count
+equal to the remaining promotion slots; zero coordinate-neighbour and query
+counts; 16,384 retained tail draws; at least one finite-score pilot atom; and
+internally consistent per-object hashes, execution-call coverage, table
 final-stratum hashes, and run manifest. Tail reliability requires finite
 Pareto `k` for all objects, at least 461 with `k < 0.5`, at least 507 with
 `k < 0.7`, and complement relative-SE median/p90 no larger than
@@ -388,10 +399,11 @@ flow, promotion, final exact-stratum flow, tail proposal draw and flow, and
 reduction. It excludes the prior-reference draw and flow. Both
 `(T/T0) mean(rT^2)/baseline_mean` and
 `(T/T0) p90_higher(rT^2)/baseline_p90` must be at most 0.90. The summary also
-reports `T/T0` and total elapsed time divided by `T0`; total elapsed is context,
-not substituted for the fair method time. Missing, nonfinite, negative, or
-zero total method time fails closed. Overall `gates.passed` requires all
-integrity, tail-reliability, and efficiency gates.
+reports `T/T0` and candidate total elapsed divided by the baseline total
+elapsed 103.91162065404933 s; total elapsed is context, not substituted for
+the fair method time. Missing, nonfinite, negative, or zero total method time
+fails closed. Overall `gates.passed` requires all integrity,
+tail-reliability, and efficiency gates.
 
 Pilot seed offset 2,000,003 is separately reserved before seeing the primary
 outcome. If and only if the primary frozen run passes every gate, the

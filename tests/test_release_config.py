@@ -322,7 +322,7 @@ def test_pilot_stratum_job_pins_consumed_development_window_and_recipe():
     assert "OBSERVATION_STOP=${" not in job
     assert "GLOBAL_DRAWS=${" not in job
     assert "PROPOSAL_SEED=${" not in job
-    assert "pilot8192_promote4096_meanobs_dm3" in job
+    assert "pilot8192_direct4096_meanobs_dm3" in job
     assert "--initial-strategy mean_observed_shape" in job
     assert "--initial-strategy fixed" not in job
     assert "--initial 0,0" not in job
@@ -332,12 +332,16 @@ def test_pilot_stratum_job_pins_consumed_development_window_and_recipe():
     assert "PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET != 1_000_003" in job
     assert "PILOT_STRATUM_REPLICATION_SEED_OFFSET != 2_000_003" in job
     assert "COMPLEMENT_DIAGNOSTIC_SEED_OFFSET != 7_000_003" in job
-    assert "SBSI/complement-pilot-stratum-development/v1" in job
+    assert "SBSI/complement-pilot-stratum-development/v2-direct" in job
     assert 'PILOT_STRATUM_DEVELOPMENT_PROTOCOL["pilot_seed"] != 1_008_704' in job
     assert 'PILOT_STRATUM_DEVELOPMENT_PROTOCOL["production_seed"] != 7_008_704' in job
     assert 'PILOT_STRATUM_DEVELOPMENT_PROTOCOL[\n    "mock_input_sha256"\n]' in job
     assert "sha256((mock / name).read_bytes()).hexdigest()" in job
     assert "PILOT_STRATUM_RECIPE.atom_chunk != TAIL_PROPOSAL_ATOM_CHUNK" in job
     assert "PILOT_STRATUM_RECIPE.object_chunk != TAIL_PROPOSAL_OBJECT_CHUNK" in job
-    assert "b4349271763311c2127d785c79fc637e115f421a31fb821e6db6e0a592b8d410" in job
+    assert "PILOT_STRATUM_RECIPE.max_anchors != 4096" in job
+    assert "PILOT_STRATUM_RECIPE.neighbors_per_anchor != 1" in job
+    assert "PILOT_STRATUM_RECIPE.promotion_strategy != (" in job
+    assert '"ranked_atoms_then_active_id_fill"' in job
+    assert "7571ab61f7ee16e10199abdfc47c68113f89ca121451057526f94f2bcfac9154" in job
     assert "refusing to overwrite" in job

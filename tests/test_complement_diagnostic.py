@@ -369,7 +369,7 @@ class _DiagnosticProposal:
             pilot_unique_counts=np.full(len(final), 3, dtype=np.int64),
             pilot_finite_score_counts=np.full(len(final), 3, dtype=np.int64),
             fallback_fill_counts=np.zeros(len(final), dtype=np.int64),
-            max_neighbor_query_width=np.full(len(final), 16, dtype=np.int64),
+            max_neighbor_query_width=np.zeros(len(final), dtype=np.int64),
             provenance=SimpleNamespace(
                 pilot_seed=pilot_draw.seed,
                 pilot_atom_chunk=pilot_draw.atom_chunk,
@@ -772,7 +772,7 @@ def test_pilot_stratum_is_discarded_then_production_uses_final_stratum():
     assert table["pilot_stratum_anchor_count"].tolist() == [1, 1]
     assert table["pilot_stratum_neighbor_count"].tolist() == [0, 0]
     assert table["pilot_stratum_fallback_fill_count"].tolist() == [0, 0]
-    assert table["pilot_stratum_max_neighbor_query_width"].tolist() == [16, 16]
+    assert table["pilot_stratum_max_neighbor_query_width"].tolist() == [0, 0]
     assert table["draws_outside_prefilter"].tolist() == [0, 0]
 
     pilot = diagnostic.metadata["pilot_stratum"]
@@ -988,9 +988,11 @@ def _pilot_gate_diagnostic(
             "pilot_stratum_base_count": np.full(objects, 16_384),
             "pilot_stratum_promoted_count": np.full(objects, 4_096),
             "pilot_stratum_anchor_count": np.full(objects, 256),
-            "pilot_stratum_neighbor_count": np.full(objects, 3_840),
-            "pilot_stratum_fallback_fill_count": np.zeros(objects),
-            "pilot_stratum_max_neighbor_query_width": np.full(objects, 16),
+            "pilot_stratum_neighbor_count": np.zeros(objects, dtype=np.int64),
+            "pilot_stratum_fallback_fill_count": np.full(objects, 3_840),
+            "pilot_stratum_max_neighbor_query_width": np.zeros(
+                objects, dtype=np.int64
+            ),
             "pilot_stratum_finite_score_atom_count": np.full(objects, 256),
             "pilot_stratum_promoted_outside_prefilter_count": np.zeros(objects),
             "mass_stratum_promoted_exact": np.full(objects, 0.1),
@@ -1043,7 +1045,7 @@ def _pilot_gate_diagnostic(
 def test_pilot_development_protocol_and_baseline_are_frozen():
     protocol = PILOT_STRATUM_DEVELOPMENT_PROTOCOL
     assert PILOT_STRATUM_DEVELOPMENT_LABEL == (
-        "SBSI/complement-pilot-stratum-development/v1"
+        "SBSI/complement-pilot-stratum-development/v2-direct"
     )
     assert protocol["universe_start"] == 25_000
     assert protocol["universe_stop"] == 25_512
@@ -1068,7 +1070,7 @@ def test_pilot_development_protocol_and_baseline_are_frozen():
     assert protocol["tail_proposal_recipe"] == asdict(TAIL_PROPOSAL_RECIPE)
     assert protocol["pilot_stratum_recipe"] == asdict(PILOT_STRATUM_RECIPE)
     assert protocol["pilot_stratum_recipe_sha256"] == (
-        "b4349271763311c2127d785c79fc637e115f421a31fb821e6db6e0a592b8d410"
+        "7571ab61f7ee16e10199abdfc47c68113f89ca121451057526f94f2bcfac9154"
     )
     assert protocol["pilot_flow_evaluations"] == 4_194_304
     assert protocol["final_stratum_flow_evaluations"] == 10_485_760
@@ -1093,6 +1095,7 @@ def test_pilot_development_protocol_and_baseline_are_frozen():
         "mean_total_relative_error_squared": 4.6256941067948046e-4,
         "total_relative_error_squared_p90_higher": 4.45668696553694e-4,
         "method_seconds": 91.04022970038932,
+        "total_elapsed_seconds": 103.91162065404933,
     }
     assert PILOT_STRATUM_DEVELOPMENT_GATE_THRESHOLDS == {
         "objects": 512,
@@ -1119,6 +1122,9 @@ def test_pilot_development_summary_passes_only_all_three_gate_families():
     assert pilot["gates"]["passed"] is True
     assert pilot["method_seconds"] == 1.0
     assert pilot["total_elapsed_seconds"] == 41.0
+    assert pilot["total_elapsed_ratio"] == pytest.approx(
+        41.0 / PILOT_STRATUM_DEVELOPMENT_BASELINE["total_elapsed_seconds"]
+    )
     assert pilot["method_time_components"] == list(
         PILOT_STRATUM_METHOD_TIME_COMPONENTS
     )
@@ -1131,6 +1137,58 @@ def test_pilot_development_summary_passes_only_all_three_gate_families():
     assert failed["tail_reliability_passed"] is True
     assert failed["efficiency_passed"] is True
     assert failed["passed"] is False
+
+
+@pytest.mark.parametrize(
+    ("column", "value", "gate_name"),
+    (
+        (
+            "pilot_stratum_anchor_count",
+            257,
+            "direct_anchor_count_matches_finite_scores_all_objects",
+        ),
+        (
+            "pilot_stratum_fallback_fill_count",
+            3_839,
+            "direct_fallback_fills_uniqueness_deficit_all_objects",
+        ),
+        (
+            "pilot_stratum_neighbor_count",
+            1,
+            "zero_coordinate_neighbors_all_objects",
+        ),
+        (
+            "pilot_stratum_max_neighbor_query_width",
+            1,
+            "zero_neighbor_query_width_all_objects",
+        ),
+    ),
+)
+def test_direct_pilot_integrity_rejects_wrong_promotion_counts(
+    column, value, gate_name
+):
+    diagnostic = _pilot_gate_diagnostic()
+    diagnostic.table.loc[0, column] = value
+    gates = diagnostic._pilot_stratum_summary()["gates"]
+
+    assert gates["integrity"][gate_name]["passed"] is False
+    assert gates["integrity_passed"] is False
+    assert gates["passed"] is False
+
+
+def test_direct_pilot_integrity_rejects_fractional_count_columns():
+    diagnostic = _pilot_gate_diagnostic()
+    diagnostic.table["pilot_stratum_finite_score_atom_count"] = (
+        diagnostic.table["pilot_stratum_finite_score_atom_count"].astype(float)
+        + 0.5
+    )
+    gates = diagnostic._pilot_stratum_summary()["gates"]
+
+    assert gates["integrity"][
+        "count_columns_are_nonnegative_int64_compatible_integers"
+    ]["passed"] is False
+    assert gates["integrity_passed"] is False
+    assert gates["passed"] is False
 
 
 def test_pilot_development_tail_gates_use_higher_and_include_boundaries():
