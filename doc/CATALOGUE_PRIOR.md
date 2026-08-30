@@ -701,6 +701,16 @@ run is allowed. Thresholds, constants, or code are not tuned from its outcome.
 Only a complete pass can authorize a separately preregistered fixed-draw
 nine-view stencil; failure archives this route without inference integration.
 
+The frozen run is a valid rejection. All exact-law, provenance, flow-count,
+finite-output, and timing integrity gates pass, but the route fails five of six
+tail-reliability gates, four of seven exact-calibration gates, and both
+variance-time gates. Fixed uniform cell allocation is faster to construct than
+the archived pilot/Neyman reservoir but materially less precise and less
+reliable at the same total draw count. `H256-U8-PS2` therefore remains an
+archived diagnostic implementation and is not an inference estimator, stencil,
+or release mode. Any later target-informed sequential proposal is a separately
+versioned method and cannot inherit this route's acceptance or identity.
+
 #### Frozen exact-oracle confirmation
 
 `--diagnose-complement-exact-oracle` is a diagnostic-only extension of the

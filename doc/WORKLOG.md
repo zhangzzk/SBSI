@@ -2,6 +2,122 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.345 — H256-U8-PS2 is valid but rejected on reliability, calibration, and efficiency
+
+**Frozen result and artifact validity.** Clean detached commit
+`720a05797602fe2d44831c90443d1264bc630dff` ran the sole preregistered centre
+gate as A40 Slurm job 16125007. It completed with exit code zero in 7m49s and
+7,780,036 KiB peak RSS. The immutable result is
+`complement_spatial_h256_u8_ps2_center_dev_v1/results/rows25000_25512_seed8701_spatialH256_u8_ps2_dm3_m16384_exact64_v1`.
+`per_object.parquet` has SHA-256
+`bdfd22b66255684aa1b04cf20263c02ed0fc72bef8985f79c2b8ed43a3b2ac7f`;
+`summary.json` has
+`b0895cf1823c0c29a7a82440449f16e90f33cdbc06816b6ea7aa4d79954b4f63`
+and is byte-identical to scheduler stdout. Stderr is the same two expected
+PyTorch warnings and no traceback (855 bytes, SHA-256
+`859673c209685e2c034c3da9019b5c4b433c96f6fb86704fae0f7c659fe9ecaf`).
+
+Read-only reduction of all 512 rows and 68 columns reproduces the embedded
+run manifest
+`ad9fbc659f3cde04a4ad3dbcf0f18e3aa3b071bd4a512d184aa8766fa81e2d95`,
+Parquet hash, exact-64 selection, complete summary, and every gate. All 18
+integrity gates pass: absolute IDs, protocol and partition identities, exact
+support/exclusion, fixed slot layout, integer source totals and full-support
+prior, dyadic probabilities and CDF brackets, RNG and cell membership,
+object/call/run hashes, zero pilot/allocation, flow counts, source-isolated
+core reductions, method timing, finite physical/log identities, and manifest
+columns. All fallback counts and fallback-law mismatches are zero. JSON turns
+the recipe's tuples into lists; the audit rehydrates those four fields before
+calling the in-memory summary, then requires JSON-canonical expected and
+observed protocols to match. This is serialization normalization, not a gate
+change. The result is therefore a valid scientific rejection, not an
+execution, numerical, or provenance failure.
+
+The reusable auditor is
+`scripts/audit_spatial_h256_u8_ps2_result.py`. It reads only the two frozen
+result files plus optional scheduler streams, pins every implementation blob
+to commit `720a057`, reconstructs the complete 512-by-68 writer contract and
+summary, and fails closed on any schema, dtype, order, null-layout, algebra,
+identity, manifest, protocol, stream, or gate mismatch. On the immutable
+artifact it reports `validated=true`, the hashes above, all 512 objects and 68
+columns, and `scientific_gates_passed=false`. The initial synthetic fixture
+incorrectly expected all four flow targets where runtime provenance records
+the two mean-shape targets, and its sample TensorFloat32 warning contained a
+spurious hyphen; both audit-fixture assumptions were corrected against the
+pinned runner and immutable stderr before acceptance. Ten success/tamper tests
+then pass, including direct CLI use without an installed working-tree package.
+
+**Stop/go outcome.** Only the finite-Pareto integrity check passes in the
+tail family. Three of seven exact gates pass, including the exact count,
+`2.18463e-9` stratum cross-check, and aggregate signed z. Both efficiency
+gates fail:
+
+```text
+metric                                      observed             required
+Pareto k < 0.5                              286 / 512            >= 461 / 512
+Pareto k < 0.7                              419 / 512            >= 507 / 512
+Pareto k >= 1                                25 / 512             0 / 512
+complement relative-SE median/p90           0.04982 / 0.14192    <= 0.00882 / 0.0268
+exact-64 |delta log Z| median/p90            0.01948 / 0.05999    <= 0.01 / 0.05
+exact-64 aggregate z / z RMS                -0.5224 / 1.9596     <= 2.5 / 0.8--1.2
+exact-64 |z| <= 1.96                         55 / 64              >= 58 / 64
+mean/p90 variance-time ratio                 7.1043 / 9.3468      <= 0.90 / 0.90
+```
+
+The aggregate z supplies no evidence of signed bias, but the paired standard
+errors are far too noisy to calibrate object-level errors at this depth. The
+failed log-evidence and z gates agree with the all-object reliability failure;
+none is overridden by the passing aggregate check.
+
+**Cost and mechanism.** Complete gated method time is 165.228 seconds against
+the 91.040-second DM3 baseline. Integer-law construction, sampling, and audit
+cost 106.415 seconds; pair reduction and hashing 24.970; exact-stratum flow
+16.825; candidate query 11.690; selected production flow 2.678; partition
+load 2.511; and proposal initialization 0.139. The 270.058-second exact oracle
+is correctly excluded. Relative to the rejected pilot/Neyman route, the new
+constructor replaces the 321.781-second reservoir and cuts total method time
+by 2.77x, while the stable reduction is 3.92x faster. That execution success
+does not compensate for the scientific loss.
+
+At the same rows and draw count, the archived pilot/Neyman route had
+357/462/9 objects at `k<0.5`/`k<0.7`/`k>=1`; the fixed route has
+286/419/25. It clears 20 old `k>=0.7` failures but creates 63 new ones. Its
+paired complement-relative-SE ratio to the archived route is 2.14 at the
+median (higher p10/p90 1.38/2.95). Thus uniform eight-cycle allocation plus
+two-draw probability microstrata weakly improves fixed-allocation IID for the
+same realized laws, as proved, but cannot replace target-aware allocation and
+does not repair the underlying static-proposal tail. The roughly fivefold
+increase in total relative variance more than erases the constructor speedup.
+
+**Decision and independent next route.** H256-U8-PS2 stops here. No stencil,
+inference integration, default, release, threshold, or empirical correction
+is authorized. Before this outcome was read, an independent contingency
+review formulated a genuinely different fixed-grid island annealed-SMC
+normalizer: a full-support detected-prior base, eight fixed temperatures,
+independent unbiased island normalizers, and frozen independence plus
+degree-corrected graph Metropolis moves. Its Feynman--Kac algebra is credible,
+but there is not yet catalogue evidence for graph connectivity, lineage
+survival, stage acceptance, island-SE calibration, or packed runtime. It is
+therefore not preregistered for another target run. Next work is limited to a
+catalogue-agnostic finite-state prototype with exact enumeration and
+detailed-balance tests, followed by an outcome-free throughput/graph audit if
+the prototype survives; no new science row is authorized from this result.
+
+**Validation.** The immutable output was audited from the isolated worktree
+against the detached science checkout; login-node checks were light:
+
+```text
+python scripts/audit_spatial_h256_u8_ps2_result.py <result> \
+  --repository <detached-720a057> --scheduler-stdout <stdout> \
+  --scheduler-stderr <stderr>                                  validated=true,
+                                                  scientific_gates_passed=false
+python -m pytest -q tests/test_spatial_h256_u8_ps2_audit.py     10 passed
+ruff check scripts/audit_spatial_h256_u8_ps2_result.py \
+  tests/test_spatial_h256_u8_ps2_audit.py                      clean
+python -m py_compile <the two files above>                     clean
+git diff --check                                               clean
+```
+
 ## 2026-08-30 cont.344 — outcome-free production-shape A40 constructor preflight passes
 
 **Structural result only.** Clean detached implementation commit
