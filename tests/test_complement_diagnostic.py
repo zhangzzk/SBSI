@@ -20,6 +20,7 @@ from sbsi.catalogue_sampling import (
     ProposalCandidates,
     ProposalDraw,
     WholeCatalogueProxy,
+    _candidate_exclusion_manifest_sha256,
 )
 from sbsi.complement_diagnostic import (
     EXACT_ORACLE_ATOM_CHUNK,
@@ -245,7 +246,7 @@ class _DiagnosticProposal:
         atom_chunk=262144,
         object_chunk=32,
     ):
-        del observed, device, atom_chunk, object_chunk
+        del observed, device
         self.tail_calls.append((int(seed), object_ids.copy()))
         schedule = np.resize(
             np.asarray(TAIL_PROPOSAL_RECIPE.component_cycle, dtype=np.int16),
@@ -275,6 +276,12 @@ class _DiagnosticProposal:
             local_position=np.full(indices.shape, -1, dtype=np.int32),
             component_id=component_id,
             component_complement_mass=complement_mass,
+            component_recipe=TAIL_PROPOSAL_RECIPE,
+            atom_chunk=atom_chunk,
+            object_chunk=object_chunk,
+            object_excluded_candidate_indices_sha256=(
+                _candidate_exclusion_manifest_sha256(candidates.indices)
+            ),
         )
 
 

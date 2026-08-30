@@ -19,6 +19,7 @@ from sbsi.catalogue_sampling import (
     ProposalDraw,
     TAIL_PROPOSAL_RECIPE,
     TailProposalRecipe,
+    _candidate_exclusion_manifest_sha256,
     assess_importance_convergence,
     importance_diagnostics,
     pareto_tail_index,
@@ -150,6 +151,12 @@ def _pilot_promotion_fixture(n_objects=1):
         component_complement_mass=np.full(
             (n_objects, n_components), 0.75, dtype=np.float64
         ),
+        component_recipe=recipe.pilot_proposal,
+        atom_chunk=recipe.atom_chunk,
+        object_chunk=recipe.object_chunk,
+        object_excluded_candidate_indices_sha256=(
+            _candidate_exclusion_manifest_sha256(candidates.indices)
+        ),
     )
     return proposal, observed, candidates, draw, scores, recipe
 
@@ -193,12 +200,14 @@ def test_pilot_stratum_recipe_freezes_reviewed_second_moment_design():
     assert recipe.max_anchors == 256
     assert recipe.n_promotions == 4096
     assert recipe.neighbors_per_anchor == 16
+    assert recipe.atom_chunk == 262144
+    assert recipe.object_chunk == 32
     assert recipe.score_name == "log_target_squared_over_proposal"
     assert recipe.pilot_proposal is TAIL_PROPOSAL_RECIPE
     assert PILOT_STRATUM_PROPOSAL_RECIPE is TAIL_PROPOSAL_RECIPE
     assert recipe.hash_contract == PILOT_STRATUM_HASH_CONTRACT
     assert recipe.sha256 == (
-        "344db5c7f18a741515184d193830302248eb643010595f1ca4f0742f413c7535"
+        "b4349271763311c2127d785c79fc637e115f421a31fb821e6db6e0a592b8d410"
     )
     with pytest.raises(FrozenInstanceError):
         recipe.pilot_draws = 4096
@@ -209,6 +218,8 @@ def test_pilot_stratum_recipe_freezes_reviewed_second_moment_design():
         replace(recipe, max_anchors=8193)
     with pytest.raises(ValueError, match="score name"):
         replace(recipe, score_name="")
+    with pytest.raises(ValueError, match="chunk sizes"):
+        replace(recipe, atom_chunk=0)
     with pytest.raises(ValueError, match="unsupported pilot-anchor"):
         replace(recipe, ranking="python_hash_order")
 
@@ -234,29 +245,51 @@ def test_pilot_promotion_ranks_unique_explicit_scores_and_fills_fixed_width():
     np.testing.assert_array_equal(result.fallback_fill_counts, [0])
     # The two three-atom clusters overlap, so the same two anchors are deepened
     # to six canonical neighbors rather than consuming a third pilot anchor.
-    np.testing.assert_array_equal(result.neighbor_query_counts, [6])
+    np.testing.assert_array_equal(result.max_neighbor_query_width, [6])
     assert result.promotion_size == 6
     assert result.provenance.pilot_seed == draw.seed
+    assert result.provenance.pilot_atom_chunk == recipe.atom_chunk
+    assert result.provenance.pilot_object_chunk == recipe.object_chunk
     assert result.provenance.recipe_sha256 == recipe.sha256
-    assert result.provenance.pilot_draw_indices_sha256 == (
-        "1e8e25542d786fe1c28c31707e5e2560dfe4cd2f1c6324cc0dc232d0600e03af"
+    assert result.provenance.call_pilot_draw_indices_sha256 == (
+        "06f37b0cac10263e14ed0dd9566c4bf7b3eae3b058066964bafe72fdc0e492c0"
     )
-    assert result.provenance.pilot_probability_sha256 == (
-        "1eda4b6ec74e440c7af3e81c9da599a67f043e0d79f827e9f41bf0543a203920"
+    assert result.provenance.call_pilot_probability_sha256 == (
+        "003895ad51168bc3615f96d0382025831cd23d4a0e8a01113d1e05a9bf82e6a3"
     )
-    assert result.provenance.pilot_scores_sha256 == (
-        "e2db6f7da9d8402865f1874b1e08cc71d6f4c11a6b01c542ce627a51dfbc9cf2"
+    assert result.provenance.call_pilot_scores_sha256 == (
+        "a4aec0f60cdc444c096132876266f625a79ca8b0dcb90b3ac36f539846f7a663"
     )
-    assert result.provenance.final_stratum_indices_sha256 == (
-        "c7a374621a6ce0da19a7dd06b9e37951b2b872538ab08fde3c4acb94b7f30ae4"
+    assert result.provenance.call_final_stratum_indices_sha256 == (
+        "e6c7778e1e2da1d851436145e448c0a4513b6b5fb55ad7527b4bbdbae5db9c7f"
     )
     assert result.provenance.object_final_stratum_indices_sha256 == (
-        "ffd9d0c19114ec1e1af13a159b7aecead70258b37c8d4b18c258e0d0b7555304",
+        "e9f4eda64b6611125b11776381319d237eece1cddb6293e2eefb41e1493c7fc6",
     )
+    np.testing.assert_allclose(
+        result.candidates.distances[0],
+        [5.0, 6.0, 0.0, 1.0, 1.0, 2.0, 2.0, 3.0],
+        rtol=0.0,
+        atol=0.0,
+    )
+    np.testing.assert_array_equal(result.candidates.radius, [6.0])
     assert not result.anchor_indices.flags.writeable
     assert not result.promoted_indices.flags.writeable
+    assert not result.candidates.indices.flags.writeable
+    assert not result.candidates.distances.flags.writeable
+    assert not result.candidates.radius.flags.writeable
+    final_hash = result.provenance.call_final_stratum_indices_sha256
     with pytest.raises(ValueError):
         result.promoted_indices[0, 0] = 1
+    with pytest.raises(ValueError):
+        result.candidates.indices[0, 0] = 1
+    with pytest.raises(ValueError):
+        result.candidates.distances[0, 0] = -1.0
+    with pytest.raises(ValueError):
+        result.candidates.radius[0] = -1.0
+    candidates.indices[0, 0] = 1
+    assert result.candidates.indices[0, 0] == 0
+    assert result.provenance.call_final_stratum_indices_sha256 == final_hash
 
 
 def test_pilot_promotion_is_independent_of_kdtree_tie_return_order():
@@ -273,15 +306,17 @@ def test_pilot_promotion_is_independent_of_kdtree_tie_return_order():
 
     underlying = proposal.tree
 
-    class ReverseBallOrder:
+    class ReverseTieOrder:
         def query(self, *args, **kwargs):
-            return underlying.query(*args, **kwargs)
+            distances, positions = underlying.query(*args, **kwargs)
+            distances = np.asarray(distances).copy()
+            positions = np.asarray(positions).copy()
+            for distance in np.unique(distances):
+                tied = distances == distance
+                positions[tied] = positions[tied][::-1]
+            return distances, positions
 
-        def query_ball_point(self, *args, **kwargs):
-            balls = underlying.query_ball_point(*args, **kwargs)
-            return [list(reversed(ball)) for ball in balls]
-
-    proposal.tree = ReverseBallOrder()
+    proposal.tree = ReverseTieOrder()
     reordered_neighbors = proposal._canonical_coordinate_neighbors(
         np.array([5]), n_neighbors=2
     )
@@ -291,9 +326,43 @@ def test_pilot_promotion_is_independent_of_kdtree_tie_return_order():
     np.testing.assert_array_equal(reordered_neighbors, expected_neighbors)
     np.testing.assert_array_equal(actual.promoted_indices, expected.promoted_indices)
     assert (
-        actual.provenance.final_stratum_indices_sha256
-        == expected.provenance.final_stratum_indices_sha256
+        actual.provenance.call_final_stratum_indices_sha256
+        == expected.provenance.call_final_stratum_indices_sha256
     )
+
+
+def test_pilot_neighbors_bound_memory_for_large_coordinate_ties():
+    n_atoms = 20_000
+    coordinates = ProposalCoordinateTable(
+        values=np.zeros((n_atoms, 1), dtype=np.float64),
+        target_names=("x",),
+        center=np.zeros(1),
+        scale=np.ones(1),
+        statistic="mean",
+    )
+    proposal = DefensiveLocalProposal(
+        coordinates, np.full(n_atoms, 1.0 / n_atoms)
+    )
+    underlying = proposal.tree
+
+    class OneAnchorQueryOnly:
+        max_probe = 0
+
+        def query(self, query, *, k, workers):
+            assert np.asarray(query).ndim == 1
+            self.max_probe = max(self.max_probe, int(k))
+            return underlying.query(query, k=k, workers=workers)
+
+        def query_ball_point(self, *args, **kwargs):
+            raise AssertionError("canonical neighbor search used an unbounded ball query")
+
+    guarded = OneAnchorQueryOnly()
+    proposal.tree = guarded
+    neighbors = proposal._canonical_coordinate_neighbors(
+        np.array([n_atoms - 1]), n_neighbors=16
+    )
+    np.testing.assert_array_equal(neighbors[0], np.arange(16))
+    assert guarded.max_probe == n_atoms
 
 
 def test_pilot_promotion_never_materializes_whole_standardized_table(monkeypatch):
@@ -340,9 +409,21 @@ def test_pilot_promotion_is_object_chunk_invariant_with_row_manifests():
         np.testing.assert_array_equal(
             separate.anchor_indices[0], together.anchor_indices[row]
         )
+        for name in (
+            "object_pilot_draw_indices_sha256",
+            "object_pilot_probability_sha256",
+            "object_pilot_scores_sha256",
+            "object_base_stratum_indices_sha256",
+            "object_anchor_indices_sha256",
+            "object_promoted_indices_sha256",
+            "object_final_stratum_indices_sha256",
+        ):
+            assert getattr(separate.provenance, name)[0] == getattr(
+                together.provenance, name
+            )[row]
         assert (
-            separate.provenance.object_final_stratum_indices_sha256[0]
-            == together.provenance.object_final_stratum_indices_sha256[row]
+            separate.provenance.call_final_stratum_indices_sha256
+            != together.provenance.call_final_stratum_indices_sha256
         )
 
 
@@ -362,16 +443,16 @@ def test_pilot_promotion_manifests_are_canonical_for_stratum_membership():
         reversed_base, observed, draw, scores, recipe=recipe
     )
     assert (
-        forward.provenance.base_stratum_indices_sha256
-        == reverse.provenance.base_stratum_indices_sha256
+        forward.provenance.call_base_stratum_indices_sha256
+        == reverse.provenance.call_base_stratum_indices_sha256
     )
     assert (
-        forward.provenance.promoted_indices_sha256
-        == reverse.provenance.promoted_indices_sha256
+        forward.provenance.call_promoted_indices_sha256
+        == reverse.provenance.call_promoted_indices_sha256
     )
     assert (
-        forward.provenance.final_stratum_indices_sha256
-        == reverse.provenance.final_stratum_indices_sha256
+        forward.provenance.call_final_stratum_indices_sha256
+        == reverse.provenance.call_final_stratum_indices_sha256
     )
     assert (
         forward.provenance.object_final_stratum_indices_sha256
@@ -389,7 +470,7 @@ def test_pilot_promotion_falls_back_only_for_insufficient_finite_anchors():
     )
     np.testing.assert_array_equal(result.anchor_counts, [0])
     np.testing.assert_array_equal(result.fallback_fill_counts, [6])
-    np.testing.assert_array_equal(result.neighbor_query_counts, [0])
+    np.testing.assert_array_equal(result.max_neighbor_query_width, [0])
     np.testing.assert_array_equal(result.promoted_indices[0], [1, 2, 3, 4, 5, 6])
 
 
@@ -437,6 +518,46 @@ def test_pilot_promotion_validates_scores_support_conditioning_and_schedule():
             recipe=recipe,
         )
 
+    wrong_component_recipe = replace(
+        recipe.pilot_proposal, name="wrong_component_recipe"
+    )
+    with pytest.raises(ValueError, match="component recipe"):
+        proposal.promote_exact_stratum(
+            candidates,
+            observed,
+            replace(draw, component_recipe=wrong_component_recipe),
+            scores,
+            recipe=recipe,
+        )
+
+    with pytest.raises(ValueError, match="execution chunks"):
+        proposal.promote_exact_stratum(
+            candidates,
+            observed,
+            replace(draw, atom_chunk=recipe.atom_chunk // 2),
+            scores,
+            recipe=recipe,
+        )
+    with pytest.raises(ValueError, match="execution chunks"):
+        proposal.promote_exact_stratum(
+            candidates,
+            observed,
+            replace(draw, object_chunk=recipe.object_chunk // 2),
+            scores,
+            recipe=recipe,
+        )
+
+    other_base = ProposalCandidates(
+        indices=np.array([[1, 10]], dtype=np.int64),
+        distances=np.zeros((1, 2), dtype=np.float64),
+        radius=np.zeros(1, dtype=np.float64),
+    )
+    assert not np.isin(draw.indices, other_base.indices).any()
+    with pytest.raises(ValueError, match="conditioned-exclusion support"):
+        proposal.promote_exact_stratum(
+            other_base, observed, draw, scores, recipe=recipe
+        )
+
     duplicate_base = ProposalCandidates(
         np.array([[0, 0]]), np.zeros((1, 2)), np.zeros(1)
     )
@@ -478,14 +599,30 @@ def test_pilot_promotion_full_support_is_an_exact_identity():
     full = ProposalCandidates(
         active, np.zeros_like(active, dtype=np.float64), np.zeros(1)
     )
+    full_draw = replace(
+        draw,
+        indices=np.zeros_like(draw.indices),
+        probability=np.ones_like(draw.probability),
+        local_member=np.ones_like(draw.local_member),
+        local_position=np.zeros_like(draw.local_position),
+        component_complement_mass=np.zeros_like(
+            draw.component_complement_mass
+        ),
+        object_excluded_candidate_indices_sha256=(
+            _candidate_exclusion_manifest_sha256(full.indices)
+        ),
+    )
     result = proposal.promote_exact_stratum(
-        full, observed, draw, scores, recipe=recipe
+        full, observed, full_draw, scores, recipe=recipe
     )
     np.testing.assert_array_equal(result.candidates.indices, full.indices)
+    expected_distances = np.abs(np.arange(12, dtype=np.float64) - 5.0)[None, :]
+    np.testing.assert_array_equal(result.candidates.distances, expected_distances)
+    np.testing.assert_array_equal(result.candidates.radius, [6.0])
     assert result.promotion_size == 0
     assert result.anchor_indices.shape == (1, 0)
     np.testing.assert_array_equal(result.fallback_fill_counts, [0])
-    np.testing.assert_array_equal(result.neighbor_query_counts, [0])
+    np.testing.assert_array_equal(result.max_neighbor_query_width, [0])
 
 
 def test_defensive_proposal_has_global_support_and_bounded_prior_ratio():
@@ -1268,7 +1405,24 @@ def test_conditioned_dm_mis_reports_qbar_counts_nesting_and_split_streams():
     np.testing.assert_array_equal(
         short.component_complement_mass, long.component_complement_mass
     )
-    np.testing.assert_array_equal(long.prefix(16).component_id, short.component_id)
+    prefixed = long.prefix(16)
+    np.testing.assert_array_equal(prefixed.component_id, short.component_id)
+    expected_exclusion_hashes = _candidate_exclusion_manifest_sha256(
+        candidates.indices
+    )
+    assert long.component_recipe == recipe
+    assert long.atom_chunk == 3
+    assert long.object_chunk == 32
+    assert long.object_excluded_candidate_indices_sha256 == expected_exclusion_hashes
+    assert prefixed.component_recipe == recipe
+    assert prefixed.atom_chunk == long.atom_chunk
+    assert prefixed.object_chunk == long.object_chunk
+    assert (
+        prefixed.object_excluded_candidate_indices_sha256
+        == expected_exclusion_hashes
+    )
+    with pytest.raises(FrozenInstanceError):
+        long.atom_chunk = 4
 
     for row in range(len(observed)):
         components, qbar, masses, complement = _dense_conditioned_components(
@@ -1326,6 +1480,14 @@ def test_conditioned_dm_mis_reports_qbar_counts_nesting_and_split_streams():
         "component_complement_mass",
     ):
         np.testing.assert_array_equal(getattr(subset, name), getattr(expected, name))
+    assert subset.component_recipe == expected.component_recipe == recipe
+    assert subset.atom_chunk == expected.atom_chunk == 3
+    assert subset.object_chunk == expected.object_chunk == 32
+    assert (
+        subset.object_excluded_candidate_indices_sha256
+        == expected.object_excluded_candidate_indices_sha256
+        == tuple(expected_exclusion_hashes[int(row)] for row in rows)
+    )
 
 
 def test_conditioned_dm_mis_batched_matches_scalar_constructor_and_object_batches():
@@ -1416,6 +1578,15 @@ def test_conditioned_dm_mis_batched_matches_scalar_constructor_and_object_batche
             rtol=5e-15,
             atol=1e-15,
         )
+        assert candidate.component_recipe == all_rows.component_recipe == recipe
+        assert candidate.atom_chunk == all_rows.atom_chunk == 3
+        assert (
+            candidate.object_excluded_candidate_indices_sha256
+            == all_rows.object_excluded_candidate_indices_sha256
+        )
+    assert one.object_chunk == 1
+    assert two.object_chunk == 2
+    assert all_rows.object_chunk == 32
 
 
 def test_conditioned_dm_mis_temperature_preserves_detected_prior_base():

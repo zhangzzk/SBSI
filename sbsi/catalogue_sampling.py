@@ -355,6 +355,15 @@ TAIL_PROPOSAL_RECIPE = TailProposalRecipe(
 )
 
 
+TAIL_PROPOSAL_ATOM_CHUNK = 262144
+# A proposal batch owns, at its peak, one float64 probability slab per
+# component plus likelihood/cumulative workspaces.  At the fixed 262,144-atom
+# slab, the validated four-component stress recipe used 2.44 GB total CUDA
+# allocation including the static whole-catalogue tables, while turning the two
+# scans into matrix--matrix rather than hundreds of matrix--vector operations.
+TAIL_PROPOSAL_OBJECT_CHUNK = 32
+
+
 # The pilot is discarded, but using the same fixed DM3 law makes its primary
 # second-moment score directly relevant to the production proposal.  Keep an
 # explicit alias so resolved provenance can name both roles without copying a
@@ -382,6 +391,8 @@ class PilotStratumRecipe:
     n_promotions: int
     neighbors_per_anchor: int
     pilot_proposal: TailProposalRecipe
+    atom_chunk: int = TAIL_PROPOSAL_ATOM_CHUNK
+    object_chunk: int = TAIL_PROPOSAL_OBJECT_CHUNK
     score_name: str = "log_target_squared_over_proposal"
     ranking: str = "unique_max_explicit_score_desc_atom_id"
     coordinate_metric: str = "standardized_proposal_euclidean"
@@ -394,6 +405,8 @@ class PilotStratumRecipe:
         max_anchors = int(self.max_anchors)
         n_promotions = int(self.n_promotions)
         neighbors_per_anchor = int(self.neighbors_per_anchor)
+        atom_chunk = int(self.atom_chunk)
+        object_chunk = int(self.object_chunk)
         if not name:
             raise ValueError("pilot-stratum recipe name must be non-empty")
         if not isinstance(self.pilot_proposal, TailProposalRecipe):
@@ -408,6 +421,8 @@ class PilotStratumRecipe:
             raise ValueError("pilot promotions must be positive")
         if neighbors_per_anchor <= 0:
             raise ValueError("neighbors per anchor must be positive")
+        if atom_chunk <= 0 or object_chunk <= 0:
+            raise ValueError("pilot proposal chunk sizes must be positive")
         if not str(self.score_name):
             raise ValueError("pilot score name must be non-empty")
         if self.ranking != "unique_max_explicit_score_desc_atom_id":
@@ -425,6 +440,8 @@ class PilotStratumRecipe:
         object.__setattr__(self, "max_anchors", max_anchors)
         object.__setattr__(self, "n_promotions", n_promotions)
         object.__setattr__(self, "neighbors_per_anchor", neighbors_per_anchor)
+        object.__setattr__(self, "atom_chunk", atom_chunk)
+        object.__setattr__(self, "object_chunk", object_chunk)
         object.__setattr__(self, "score_name", str(self.score_name))
 
     @property
@@ -473,6 +490,42 @@ def _array_manifest_sha256(
     return digest.hexdigest()
 
 
+def _object_array_manifest_sha256(
+    label: str,
+    values: np.ndarray,
+    *,
+    dtype: str,
+    sort_rows: bool = False,
+) -> tuple[str, ...]:
+    """Hash rows independently so provenance survives object slicing."""
+
+    array = np.asarray(values)
+    if array.ndim != 2:
+        raise ValueError("object manifests require a matrix")
+    return tuple(
+        _array_manifest_sha256(
+            label,
+            array[row : row + 1],
+            dtype=dtype,
+            sort_rows=sort_rows,
+        )
+        for row in range(len(array))
+    )
+
+
+def _candidate_exclusion_manifest_sha256(
+    indices: np.ndarray,
+) -> tuple[str, ...]:
+    """Canonical per-object identity of a conditioned proposal exclusion."""
+
+    return _object_array_manifest_sha256(
+        "object_conditioned_exclusion_indices",
+        indices,
+        dtype=">i8",
+        sort_rows=True,
+    )
+
+
 @dataclass(frozen=True)
 class PilotStratumProvenance:
     """Canonical hashes for one pilot-promotion result."""
@@ -480,28 +533,54 @@ class PilotStratumProvenance:
     hash_contract: str
     recipe_sha256: str
     pilot_seed: int
-    pilot_draw_indices_sha256: str
-    pilot_probability_sha256: str
-    pilot_scores_sha256: str
-    base_stratum_indices_sha256: str
-    anchor_indices_sha256: str
-    promoted_indices_sha256: str
-    final_stratum_indices_sha256: str
+    pilot_atom_chunk: int
+    pilot_object_chunk: int
+    call_pilot_draw_indices_sha256: str
+    call_pilot_probability_sha256: str
+    call_pilot_scores_sha256: str
+    call_base_stratum_indices_sha256: str
+    call_anchor_indices_sha256: str
+    call_promoted_indices_sha256: str
+    call_final_stratum_indices_sha256: str
+    object_pilot_draw_indices_sha256: tuple[str, ...]
+    object_pilot_probability_sha256: tuple[str, ...]
+    object_pilot_scores_sha256: tuple[str, ...]
+    object_base_stratum_indices_sha256: tuple[str, ...]
+    object_anchor_indices_sha256: tuple[str, ...]
+    object_promoted_indices_sha256: tuple[str, ...]
     object_final_stratum_indices_sha256: tuple[str, ...]
 
     def __post_init__(self):
         if self.hash_contract != PILOT_STRATUM_HASH_CONTRACT:
             raise ValueError("pilot provenance uses an unsupported hash contract")
+        pilot_atom_chunk = int(self.pilot_atom_chunk)
+        pilot_object_chunk = int(self.pilot_object_chunk)
+        if pilot_atom_chunk <= 0 or pilot_object_chunk <= 0:
+            raise ValueError("pilot provenance chunk sizes must be positive")
+        object_hash_fields = (
+            "object_pilot_draw_indices_sha256",
+            "object_pilot_probability_sha256",
+            "object_pilot_scores_sha256",
+            "object_base_stratum_indices_sha256",
+            "object_anchor_indices_sha256",
+            "object_promoted_indices_sha256",
+            "object_final_stratum_indices_sha256",
+        )
+        object_hashes = tuple(
+            tuple(getattr(self, name)) for name in object_hash_fields
+        )
+        if len({len(values) for values in object_hashes}) != 1:
+            raise ValueError("pilot provenance object hashes must have equal lengths")
         hashes = (
             self.recipe_sha256,
-            self.pilot_draw_indices_sha256,
-            self.pilot_probability_sha256,
-            self.pilot_scores_sha256,
-            self.base_stratum_indices_sha256,
-            self.anchor_indices_sha256,
-            self.promoted_indices_sha256,
-            self.final_stratum_indices_sha256,
-            *self.object_final_stratum_indices_sha256,
+            self.call_pilot_draw_indices_sha256,
+            self.call_pilot_probability_sha256,
+            self.call_pilot_scores_sha256,
+            self.call_base_stratum_indices_sha256,
+            self.call_anchor_indices_sha256,
+            self.call_promoted_indices_sha256,
+            self.call_final_stratum_indices_sha256,
+            *(value for values in object_hashes for value in values),
         )
         if any(
             len(value) != 64
@@ -510,20 +589,10 @@ class PilotStratumProvenance:
         ):
             raise ValueError("pilot provenance hashes must be lowercase SHA-256")
         object.__setattr__(self, "pilot_seed", int(self.pilot_seed))
-        object.__setattr__(
-            self,
-            "object_final_stratum_indices_sha256",
-            tuple(self.object_final_stratum_indices_sha256),
-        )
-
-
-TAIL_PROPOSAL_ATOM_CHUNK = 262144
-# A proposal batch owns, at its peak, one float64 probability slab per
-# component plus likelihood/cumulative workspaces.  At the fixed 262,144-atom
-# slab, the validated four-component stress recipe used 2.44 GB total CUDA
-# allocation including the static whole-catalogue tables, while turning the two
-# scans into matrix--matrix rather than hundreds of matrix--vector operations.
-TAIL_PROPOSAL_OBJECT_CHUNK = 32
+        object.__setattr__(self, "pilot_atom_chunk", pilot_atom_chunk)
+        object.__setattr__(self, "pilot_object_chunk", pilot_object_chunk)
+        for name, values in zip(object_hash_fields, object_hashes):
+            object.__setattr__(self, name, values)
 
 
 @dataclass(frozen=True)
@@ -539,6 +608,10 @@ class ProposalDraw:
     local_position: Optional[np.ndarray] = None
     component_id: Optional[np.ndarray] = None
     component_complement_mass: Optional[np.ndarray] = None
+    component_recipe: Optional[TailProposalRecipe] = None
+    atom_chunk: Optional[int] = None
+    object_chunk: Optional[int] = None
+    object_excluded_candidate_indices_sha256: Optional[tuple[str, ...]] = None
 
     def __post_init__(self):
         if self.local_position is None:
@@ -554,6 +627,52 @@ class ProposalDraw:
             raise ValueError(
                 "component ids and complement-mass diagnostics must be stored together"
             )
+        if (self.component_id is None) != (self.component_recipe is None):
+            raise ValueError(
+                "component diagnostics and recipe provenance must be stored together"
+            )
+        if self.component_recipe is None:
+            if (
+                self.atom_chunk is not None
+                or self.object_chunk is not None
+                or self.object_excluded_candidate_indices_sha256 is not None
+            ):
+                raise ValueError(
+                    "component chunk provenance requires a component recipe"
+                )
+        else:
+            if not isinstance(self.component_recipe, TailProposalRecipe):
+                raise TypeError("component recipe must be a TailProposalRecipe")
+            if self.atom_chunk is None or self.object_chunk is None:
+                raise ValueError(
+                    "component recipe provenance requires atom and object chunks"
+                )
+            if self.object_excluded_candidate_indices_sha256 is None:
+                raise ValueError(
+                    "component recipe provenance requires conditioned-exclusion hashes"
+                )
+            atom_chunk = int(self.atom_chunk)
+            object_chunk = int(self.object_chunk)
+            if atom_chunk <= 0 or object_chunk <= 0:
+                raise ValueError("component provenance chunk sizes must be positive")
+            object.__setattr__(self, "atom_chunk", atom_chunk)
+            object.__setattr__(self, "object_chunk", object_chunk)
+            exclusion_hashes = tuple(
+                self.object_excluded_candidate_indices_sha256
+            )
+            if len(exclusion_hashes) != len(self.indices) or any(
+                len(value) != 64
+                or any(character not in "0123456789abcdef" for character in value)
+                for value in exclusion_hashes
+            ):
+                raise ValueError(
+                    "conditioned-exclusion hashes must contain one lowercase SHA-256 per row"
+                )
+            object.__setattr__(
+                self,
+                "object_excluded_candidate_indices_sha256",
+                exclusion_hashes,
+            )
         if self.component_id is not None:
             component_id = np.asarray(self.component_id, dtype=np.int16)
             complement_mass = np.asarray(
@@ -565,11 +684,29 @@ class ProposalDraw:
                 raise ValueError(
                     "component complement masses need one row per observed object"
                 )
+            n_components = len(self.component_recipe.component_names)
+            if complement_mass.shape[1] != n_components:
+                raise ValueError(
+                    "component complement masses do not match the component recipe"
+                )
             if (
                 (component_id < 0).any()
-                or (component_id >= complement_mass.shape[1]).any()
+                or (component_id >= n_components).any()
             ):
                 raise ValueError("component ids are outside the diagnostic component axis")
+            schedule = np.resize(
+                np.asarray(
+                    self.component_recipe.component_cycle, dtype=np.int16
+                ),
+                self.indices.shape[1],
+            )
+            if not np.array_equal(
+                component_id,
+                np.broadcast_to(schedule, component_id.shape),
+            ):
+                raise ValueError(
+                    "component schedule does not match the recorded component recipe"
+                )
             if (
                 not np.isfinite(complement_mass).all()
                 or (complement_mass < 0.0).any()
@@ -596,6 +733,12 @@ class ProposalDraw:
                 else self.component_id[:, :n_draws]
             ),
             component_complement_mass=self.component_complement_mass,
+            component_recipe=self.component_recipe,
+            atom_chunk=self.atom_chunk,
+            object_chunk=self.object_chunk,
+            object_excluded_candidate_indices_sha256=(
+                self.object_excluded_candidate_indices_sha256
+            ),
         )
 
     def take(self, rows: np.ndarray) -> "ProposalDraw":
@@ -619,6 +762,17 @@ class ProposalDraw:
                 None
                 if self.component_complement_mass is None
                 else self.component_complement_mass[rows]
+            ),
+            component_recipe=self.component_recipe,
+            atom_chunk=self.atom_chunk,
+            object_chunk=self.object_chunk,
+            object_excluded_candidate_indices_sha256=(
+                None
+                if self.object_excluded_candidate_indices_sha256 is None
+                else tuple(
+                    self.object_excluded_candidate_indices_sha256[int(row)]
+                    for row in rows
+                )
             ),
         )
 
@@ -800,7 +954,7 @@ class PilotStratumPromotion:
     pilot_unique_counts: np.ndarray
     pilot_finite_score_counts: np.ndarray
     fallback_fill_counts: np.ndarray
-    neighbor_query_counts: np.ndarray
+    max_neighbor_query_width: np.ndarray
     provenance: PilotStratumProvenance
 
     def __post_init__(self):
@@ -808,6 +962,20 @@ class PilotStratumPromotion:
             raise TypeError("promoted candidates must be ProposalCandidates")
         if not isinstance(self.recipe, PilotStratumRecipe):
             raise TypeError("promotion recipe must be a PilotStratumRecipe")
+        candidate_indices = np.array(
+            self.candidates.indices, dtype=np.int64, copy=True
+        )
+        candidate_distances = np.array(
+            self.candidates.distances, dtype=np.float64, copy=True
+        )
+        candidate_radius = np.array(
+            self.candidates.radius, dtype=np.float64, copy=True
+        )
+        for value in (candidate_indices, candidate_distances, candidate_radius):
+            value.setflags(write=False)
+        candidates = ProposalCandidates(
+            candidate_indices, candidate_distances, candidate_radius
+        )
         base_size = int(self.base_size)
         anchors = np.array(self.anchor_indices, dtype=np.int64, copy=True)
         anchor_valid = np.array(self.anchor_valid, dtype=bool, copy=True)
@@ -819,10 +987,10 @@ class PilotStratumPromotion:
         fallback_counts = np.array(
             self.fallback_fill_counts, dtype=np.int64, copy=True
         )
-        query_counts = np.array(
-            self.neighbor_query_counts, dtype=np.int64, copy=True
+        max_query_width = np.array(
+            self.max_neighbor_query_width, dtype=np.int64, copy=True
         )
-        n_objects, final_size = self.candidates.indices.shape
+        n_objects, final_size = candidates.indices.shape
         if base_size <= 0 or base_size > final_size:
             raise ValueError("pilot promotion base size is invalid")
         if anchors.ndim != 2 or anchor_valid.shape != anchors.shape:
@@ -835,7 +1003,7 @@ class PilotStratumPromotion:
             (unique_counts, "unique pilot counts"),
             (finite_counts, "finite pilot-score counts"),
             (fallback_counts, "deterministic fallback-fill counts"),
-            (query_counts, "neighbor query counts"),
+            (max_query_width, "maximum neighbor-query widths"),
         ):
             if values.shape != (n_objects,) or (values < 0).any():
                 raise ValueError(f"{name} must contain one non-negative value per row")
@@ -846,7 +1014,7 @@ class PilotStratumPromotion:
         ):
             raise ValueError("invalid anchor padding or atom ids")
         for row in range(n_objects):
-            final = self.candidates.indices[row]
+            final = candidates.indices[row]
             if len(np.unique(final)) != len(final):
                 raise ValueError("final exact-stratum rows must be unique")
             if len(np.unique(promoted[row])) != len(promoted[row]):
@@ -865,17 +1033,18 @@ class PilotStratumPromotion:
             unique_counts,
             finite_counts,
             fallback_counts,
-            query_counts,
+            max_query_width,
         ):
             value.setflags(write=False)
         object.__setattr__(self, "base_size", base_size)
+        object.__setattr__(self, "candidates", candidates)
         object.__setattr__(self, "anchor_indices", anchors)
         object.__setattr__(self, "anchor_valid", anchor_valid)
         object.__setattr__(self, "promoted_indices", promoted)
         object.__setattr__(self, "pilot_unique_counts", unique_counts)
         object.__setattr__(self, "pilot_finite_score_counts", finite_counts)
         object.__setattr__(self, "fallback_fill_counts", fallback_counts)
-        object.__setattr__(self, "neighbor_query_counts", query_counts)
+        object.__setattr__(self, "max_neighbor_query_width", max_query_width)
 
     @property
     def promotion_size(self) -> int:
@@ -1022,11 +1191,12 @@ class DefensiveLocalProposal:
     ) -> np.ndarray:
         """Return exact-distance neighbors with atom-id tie breaking.
 
-        ``KDTree.query`` identifies a radius, not the final ordering.  A ball
-        query then includes every atom at that boundary, after which float64
-        squared distances and absolute atom ids define the canonical result.
-        Consequently neither the tree's tie order nor Python hashing enters the
-        selected stratum.
+        Each anchor uses a bounded ``KDTree.query`` probe.  If the requested
+        kth distance ties the probe boundary, the probe doubles until it finds
+        a strictly larger distance or reaches the full active support.  Exact
+        float64 squared distances and absolute atom ids then define the final
+        order.  Processing one anchor at a time bounds temporary memory by one
+        active-support vector even when every catalogue coordinate is tied.
         """
 
         anchors = np.asarray(anchor_indices, dtype=np.int64)
@@ -1035,27 +1205,35 @@ class DefensiveLocalProposal:
         if n_neighbors <= 0:
             raise ValueError("coordinate-neighbor count must be positive")
         self._validate_active_atom_rows(anchors[None, :], label="neighbor anchors")
-        k = min(int(n_neighbors), len(self.active_indices))
+        n_active = len(self.active_indices)
+        k = min(int(n_neighbors), n_active)
         queries = (
             self.coordinates.values[anchors] - self.coordinates.center
         ) / self.coordinates.scale
-        distances, positions = self.tree.query(queries, k=k, workers=-1)
-        distances = np.asarray(distances, dtype=np.float64).reshape(len(anchors), k)
-        positions = np.asarray(positions, dtype=np.int64).reshape(len(anchors), k)
-        boundary = distances[:, -1]
-        # The margin protects a mathematically tied point from an implementation-
-        # level downward rounding of the returned square root.  Any additionally
-        # admitted point is re-ranked by the exact stored coordinates below.
-        margin = 32.0 * np.finfo(np.float64).eps * np.maximum(1.0, boundary)
-        radii = np.nextafter(boundary + margin, np.inf)
-        balls = self.tree.query_ball_point(queries, radii, workers=-1)
         result = np.empty((len(anchors), k), dtype=np.int64)
-        for row, (query, ball) in enumerate(zip(queries, balls)):
-            tree_positions = np.unique(
-                np.concatenate(
-                    (positions[row], np.asarray(ball, dtype=np.int64))
+        initial_probe = min(n_active, max(k + 1, 2 * k))
+        for row, query in enumerate(queries):
+            probe = initial_probe
+            while True:
+                distances, tree_positions = self.tree.query(
+                    query, k=probe, workers=-1
                 )
-            )
+                distances = np.asarray(distances, dtype=np.float64).reshape(probe)
+                tree_positions = np.asarray(
+                    tree_positions, dtype=np.int64
+                ).reshape(probe)
+                if probe == n_active:
+                    break
+                kth_distance = distances[k - 1]
+                probe_boundary = distances[-1]
+                margin = (
+                    32.0
+                    * np.finfo(np.float64).eps
+                    * max(1.0, abs(kth_distance), abs(probe_boundary))
+                )
+                if probe_boundary > kth_distance + margin:
+                    break
+                probe = min(n_active, max(probe + 1, 2 * probe))
             atom_ids = self.active_indices[tree_positions]
             atom_standardized = (
                 self.coordinates.values[atom_ids] - self.coordinates.center
@@ -1065,8 +1243,6 @@ class DefensiveLocalProposal:
                 "ij,ij->i", difference, difference, optimize=True
             )
             order = np.lexsort((atom_ids, distance_squared))
-            if len(order) < k:
-                raise RuntimeError("KDTree boundary query lost canonical neighbors")
             result[row] = atom_ids[order[:k]]
         return result
 
@@ -1119,6 +1295,31 @@ class DefensiveLocalProposal:
             or (pilot_probability <= 0.0).any()
         ):
             raise ValueError("pilot proposal probabilities must be positive and finite")
+        if base_size <= 0:
+            raise ValueError("base exact stratum must be nonempty")
+        if any(len(np.unique(row)) != base_size for row in base):
+            raise ValueError("base exact-stratum rows must be unique")
+        self._validate_active_atom_rows(base, label="base exact stratum")
+        if base_size > len(self.active_indices):
+            raise ValueError("base exact stratum is wider than active support")
+        if pilot_draw.component_recipe != recipe.pilot_proposal:
+            raise ValueError(
+                "pilot draw component recipe does not match the frozen pilot recipe"
+            )
+        if (
+            pilot_draw.atom_chunk != recipe.atom_chunk
+            or pilot_draw.object_chunk != recipe.object_chunk
+        ):
+            raise ValueError(
+                "pilot draw execution chunks do not match the frozen pilot recipe"
+            )
+        if (
+            pilot_draw.object_excluded_candidate_indices_sha256
+            != _candidate_exclusion_manifest_sha256(base)
+        ):
+            raise ValueError(
+                "pilot draw conditioned-exclusion support does not match the base stratum"
+            )
         if pilot_draw.component_id is None:
             raise ValueError("pilot draw must record its deterministic component schedule")
         schedule = np.tile(
@@ -1136,18 +1337,10 @@ class DefensiveLocalProposal:
             != (n_objects, len(recipe.pilot_proposal.component_names))
         ):
             raise ValueError("pilot complement-mass diagnostics do not match its recipe")
-        if base_size <= 0:
-            raise ValueError("base exact stratum must be nonempty")
-        if any(len(np.unique(row)) != base_size for row in base):
-            raise ValueError("base exact-stratum rows must be unique")
-        self._validate_active_atom_rows(base, label="base exact stratum")
         self._validate_active_atom_rows(pilot_indices, label="pilot draws")
         values = self._observed_values(observed)
         if len(values) != n_objects:
             raise ValueError("observations and exact-stratum rows must align")
-        if base_size > len(self.active_indices):
-            raise ValueError("base exact stratum is wider than active support")
-
         promotion_size = min(
             recipe.n_promotions, len(self.active_indices) - base_size
         )
@@ -1158,7 +1351,7 @@ class DefensiveLocalProposal:
         unique_counts = np.empty(n_objects, dtype=np.int64)
         finite_counts = np.empty(n_objects, dtype=np.int64)
         fallback_fill_counts = np.zeros(n_objects, dtype=np.int64)
-        query_counts = np.zeros(n_objects, dtype=np.int64)
+        max_query_width = np.zeros(n_objects, dtype=np.int64)
         seen = np.zeros(len(self.prior_weights), dtype=bool)
 
         for row in range(n_objects):
@@ -1209,7 +1402,7 @@ class DefensiveLocalProposal:
                     len(self.active_indices), recipe.neighbors_per_anchor
                 )
                 if len(ranked):
-                    query_counts[row] = cluster_query
+                    max_query_width[row] = cluster_query
                 anchor_batch = 64
 
                 def consume_anchor_range(anchor_values):
@@ -1278,7 +1471,7 @@ class DefensiveLocalProposal:
                     query_k = min(
                         len(self.active_indices), max(query_k + 1, 2 * query_k)
                     )
-                    query_counts[row] = query_k
+                    max_query_width[row] = query_k
                     neighbor_rows = self._canonical_coordinate_neighbors(
                         np.asarray(consumed, dtype=np.int64),
                         n_neighbors=query_k,
@@ -1303,67 +1496,92 @@ class DefensiveLocalProposal:
                 if selected_count:
                     seen[promoted[row, :selected_count]] = False
 
-        if promotion_size:
-            observed_standardized = (
-                values - self.coordinates.center
-            ) / self.coordinates.scale
-            promoted_standardized = (
-                self.coordinates.values[promoted] - self.coordinates.center
-            ) / self.coordinates.scale
-            promoted_distances = np.sqrt(
-                np.square(
-                    promoted_standardized - observed_standardized[:, None, :]
-                ).sum(axis=2)
-            )
-            final_distances = np.concatenate(
-                (candidates.distances, promoted_distances), axis=1
-            )
-            final_radius = np.maximum(
-                candidates.radius, np.max(promoted_distances, axis=1)
-            )
-            final_indices = np.concatenate((base, promoted), axis=1)
-        else:
-            final_indices = base.copy()
-            final_distances = candidates.distances.copy()
-            final_radius = candidates.radius.copy()
+        final_indices = (
+            np.concatenate((base, promoted), axis=1)
+            if promotion_size
+            else base.copy()
+        )
+        # Candidate constructors may use uncertainty scores rather than metric
+        # distances.  Once support is promoted, every distance and the radius
+        # must have one meaning: Euclidean separation in the standardized
+        # proposal coordinates.  Index raw coordinates so this never
+        # materializes the full catalogue-sized standardized table.
+        observed_standardized = (
+            values - self.coordinates.center
+        ) / self.coordinates.scale
+        final_standardized = (
+            self.coordinates.values[final_indices] - self.coordinates.center
+        ) / self.coordinates.scale
+        final_distances = np.sqrt(
+            np.square(
+                final_standardized - observed_standardized[:, None, :]
+            ).sum(axis=2)
+        )
+        final_radius = np.max(final_distances, axis=1)
         final_candidates = ProposalCandidates(
             final_indices, final_distances, final_radius
         )
 
-        object_hashes = tuple(
-            _array_manifest_sha256(
-                "final_stratum_row",
-                np.sort(final_indices[row])[None, :],
-                dtype=">i8",
-            )
-            for row in range(n_objects)
-        )
         provenance = PilotStratumProvenance(
             hash_contract=PILOT_STRATUM_HASH_CONTRACT,
             recipe_sha256=recipe.sha256,
             pilot_seed=int(pilot_draw.seed),
-            pilot_draw_indices_sha256=_array_manifest_sha256(
-                "pilot_draw_indices", pilot_indices, dtype=">i8"
+            pilot_atom_chunk=pilot_draw.atom_chunk,
+            pilot_object_chunk=pilot_draw.object_chunk,
+            call_pilot_draw_indices_sha256=_array_manifest_sha256(
+                "call_pilot_draw_indices", pilot_indices, dtype=">i8"
             ),
-            pilot_probability_sha256=_array_manifest_sha256(
-                "pilot_probability", pilot_probability, dtype=">f8"
+            call_pilot_probability_sha256=_array_manifest_sha256(
+                "call_pilot_probability", pilot_probability, dtype=">f8"
             ),
-            pilot_scores_sha256=_array_manifest_sha256(
-                "pilot_scores", scores, dtype=">f8"
+            call_pilot_scores_sha256=_array_manifest_sha256(
+                "call_pilot_scores", scores, dtype=">f8"
             ),
-            base_stratum_indices_sha256=_array_manifest_sha256(
-                "base_stratum_indices", base, dtype=">i8", sort_rows=True
+            call_base_stratum_indices_sha256=_array_manifest_sha256(
+                "call_base_stratum_indices", base, dtype=">i8", sort_rows=True
             ),
-            anchor_indices_sha256=_array_manifest_sha256(
-                "anchor_indices", anchors, dtype=">i8"
+            call_anchor_indices_sha256=_array_manifest_sha256(
+                "call_anchor_indices", anchors, dtype=">i8"
             ),
-            promoted_indices_sha256=_array_manifest_sha256(
-                "promoted_indices", promoted, dtype=">i8", sort_rows=True
+            call_promoted_indices_sha256=_array_manifest_sha256(
+                "call_promoted_indices", promoted, dtype=">i8", sort_rows=True
             ),
-            final_stratum_indices_sha256=_array_manifest_sha256(
-                "final_stratum_indices", final_indices, dtype=">i8", sort_rows=True
+            call_final_stratum_indices_sha256=_array_manifest_sha256(
+                "call_final_stratum_indices",
+                final_indices,
+                dtype=">i8",
+                sort_rows=True,
             ),
-            object_final_stratum_indices_sha256=object_hashes,
+            object_pilot_draw_indices_sha256=_object_array_manifest_sha256(
+                "object_pilot_draw_indices", pilot_indices, dtype=">i8"
+            ),
+            object_pilot_probability_sha256=_object_array_manifest_sha256(
+                "object_pilot_probability", pilot_probability, dtype=">f8"
+            ),
+            object_pilot_scores_sha256=_object_array_manifest_sha256(
+                "object_pilot_scores", scores, dtype=">f8"
+            ),
+            object_base_stratum_indices_sha256=_object_array_manifest_sha256(
+                "object_base_stratum_indices",
+                base,
+                dtype=">i8",
+                sort_rows=True,
+            ),
+            object_anchor_indices_sha256=_object_array_manifest_sha256(
+                "object_anchor_indices", anchors, dtype=">i8"
+            ),
+            object_promoted_indices_sha256=_object_array_manifest_sha256(
+                "object_promoted_indices",
+                promoted,
+                dtype=">i8",
+                sort_rows=True,
+            ),
+            object_final_stratum_indices_sha256=_object_array_manifest_sha256(
+                "object_final_stratum_indices",
+                final_indices,
+                dtype=">i8",
+                sort_rows=True,
+            ),
         )
         return PilotStratumPromotion(
             candidates=final_candidates,
@@ -1375,7 +1593,7 @@ class DefensiveLocalProposal:
             pilot_unique_counts=unique_counts,
             pilot_finite_score_counts=finite_counts,
             fallback_fill_counts=fallback_fill_counts,
-            neighbor_query_counts=query_counts,
+            max_neighbor_query_width=max_query_width,
             provenance=provenance,
         )
 
@@ -1920,8 +2138,11 @@ class DefensiveLocalProposal:
         irrespective of which component generated that sample.  Fixed source
         counts make this deterministic-mixture estimator exactly unbiased and
         no more variable than iid sampling from ``qbar_C``.  Object-specific
-        fixed-width random records preserve nested prefixes, chunk invariance,
-        and common random numbers with the other complement samplers.
+        fixed-width random records preserve nested prefixes, object-batch
+        invariance at one fixed atom-reduction chunk, and common random numbers
+        with the other complement samplers.  The returned draw records both
+        execution chunks because changing the atom chunk can change last-bit
+        balance probabilities through floating-point reduction order.
 
         ``component_complement_mass`` records each *unconditioned* component's
         mass on ``S^c``.  When ``S`` is the full active support, a local-member
@@ -2031,6 +2252,12 @@ class DefensiveLocalProposal:
             local_position=local_position,
             component_id=component_id,
             component_complement_mass=component_complement_mass,
+            component_recipe=recipe,
+            atom_chunk=int(atom_chunk),
+            object_chunk=int(object_chunk),
+            object_excluded_candidate_indices_sha256=(
+                _candidate_exclusion_manifest_sha256(candidates.indices)
+            ),
         )
 
     def _tilted_proxy(self, device: Optional[str | torch.device]) -> "WholeCatalogueProxy":
