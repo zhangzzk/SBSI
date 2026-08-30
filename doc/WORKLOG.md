@@ -2,6 +2,67 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.332 — clustered pilot is valid but inefficient and rejected
+
+**Frozen primary result.** Detached commit `fdfc079` ran the predeclared
+independent-pilot development protocol as Slurm job 16123126 on an A40. The job
+completed with exit code zero in 3m36s and 8,469,160 KiB peak RSS. Its immutable
+artifact is
+`complement_pilot_stratum_dev_v1/results/rows25000_25512_seed8701_pilot8192_promote4096_meanobs_dm3_v1`;
+`per_object.parquet` has SHA-256
+`d4224aa04bd610f1115ffbbbe4a83d4f19d60ef005bec8ff2154825f32442fea`
+and `summary.json` has
+`4ea9c838f3a8b5ea7890c28abdb6018f8de44899fbdb12bfc54e692f1ea26842`.
+The scheduler stdout is byte-identical to the summary.
+
+All integrity gates pass: the expected/observed/metadata-derived protocol,
+three source-mock hashes, 512 absolute IDs, eight execution calls, recipes,
+flow counts, per-object hashes, table hashes, and recomputed run manifest agree.
+An independent reduction of the Parquet table reproduced every gate value.
+The candidate nevertheless fails every tail-performance gate:
+
+```text
+metric                               clustered pilot        required
+k < 0.5 count                          390 / 512             >= 461
+k < 0.7 count                          466 / 512             >= 507
+complement relative-SE median          0.022191              <= 0.00882
+complement relative-SE p90 higher      0.078543              <= 0.0268
+mean variance-time efficiency          1.477584              <= 0.90
+p90 variance-time efficiency           1.611586              <= 0.90
+```
+
+All fitted `k` values are finite, but `k>=1` grows from six under the batched
+DM3 baseline to 13, and only six old `k>=0.7` failures clear while 19 new ones
+appear. Total relative SE does improve: median 0.013214 to 0.012879, higher p90
+0.021111 to 0.019525, and mean squared relative error by 21.6%. That is not an
+efficiency win: method time rises from 91.0402 to 171.522 seconds (1.884x), so
+the normalized mean/p90 variance-time scores remain 1.48/1.61. The algorithm
+is rejected. Under the frozen policy, pilot seed 2,008,704 is not run, no
+replication is averaged or selected, and the fresh exact-oracle rows remain
+untouched.
+
+**Why the next tests change allocation and promotion.** The 46.087-second
+coordinate-neighbor promotion is costly, while the 256 score-ranked anchors
+are much more target-mass dense than their 3,840 neighbors. The next pilot
+development recipe therefore promotes the top 4,096 unique finite-score pilot
+atoms directly and fills the rare uniqueness deficit deterministically in
+active-atom order; it performs no coordinate query. Pilot size, score,
+stratum increment, production recipe, consumed rows, centre, and independent
+seeds stay fixed. In parallel, an unmodified no-pilot DM3 comparator increases
+`M` from 16,384 to 131,072. Proposal scans dominate the baseline, so eightfold
+draw depth should amortize fixed construction cost while directly testing
+whether the finite-catalogue tail stabilizes at production depth.
+
+Both are development-only on the already consumed rows 25,000:25,512. Each
+must independently meet the existing all-finite-k, 461/507 count,
+0.00882/0.0268 complement-relative-SE, and 0.90 mean/p90 variance-time gates
+against the immutable batched DM3 baseline. The deeper comparator uses the
+same mean-observed-shape centre, exact/prefilter widths, proposal seed 8701,
+production seed 7,008,704, DM3 recipe, chunks, and source mock, changing only
+`M=131,072`. If both candidates pass, the smaller worst of the two
+variance-time scores wins; neither may reach fresh confirmation merely by
+improving an ungated summary.
+
 ## 2026-08-30 cont.331 — pilot development protocol fails closed before launch
 
 **Adversarial audit fixes.** A final independent audit of the frozen primary
