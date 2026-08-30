@@ -779,6 +779,37 @@ memory and time. Even a passing centre diagnostic would not authorize a
 nine-view response stencil: target-dependent resampling paths need their own
 common-random-number and extraction derivation.
 
+##### Frozen outcome-free production-shape preflight
+
+`scripts/preflight_packed_integer_bridge_smc.py` is the structural gate for
+this development component. It pins and independently rehashes the complete
+12,760,990-atom compact-global payload and its merge report, verifies the live
+source weights against the integer-base cache, and uses 32 objects by 16
+islands by eight rounds by 256 particles. The base draw is global and
+unconditioned; 16,384 independently selected exclusions per object are marked
+zero only in the synthetic complement target. Object stream chunks/order and
+island chunks/order must replay exactly.
+
+The preflight has three fixed target-free checks: constant ratio `log(3)`;
+eight explicitly collapsed plus eight unit-mass islands on a guaranteed-unique
+pathwise fixture; and a nonconstant known-normalizer parity target formed as
+`log(c)-log(q0)` from the exact marginal mixture probability. For the latter,
+even/odd atom multipliers are `1/2` and `3/2`, so exact parity tick sums and
+exclusion ticks determine `Z` without a catalogue target. Duplicate atoms are
+evaluated once on the A40 and scattered back to all particle slots. Each
+object must be within eight island SEs of known `Z`, and the 32-object z-score
+RMS must not exceed three. These gates are frozen before execution and are not
+likelihood-selection criteria.
+
+Cold integer-base construction uses a lock, verified staging directory, and
+atomic publication. The canonical report and stdout are byte-identical and
+jointly bind source payloads, base law/draw, exclusions, ratios, controls,
+per-object bridge records, runtime, and the clean detached commit. Zero science
+counters are scope declarations: no catalogue target or mock is imported. A
+pass establishes only structural production shape, exact-law provenance, and
+synthetic pack/scatter fit. It says nothing about real flow runtime or accuracy
+and does not authorize a response stencil or inference mode.
+
 #### Frozen exact-oracle confirmation
 
 `--diagnose-complement-exact-oracle` is a diagnostic-only extension of the

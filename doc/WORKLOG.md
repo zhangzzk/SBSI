@@ -2,6 +2,101 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.348 — packed-bridge production-shape preflight is frozen and launch-ready
+
+**Scope and identity.** `scripts/preflight_packed_integer_bridge_smc.py`, its
+Slurm wrapper, and 13 focused tests now define the sole outcome-free structural
+gate allowed before a catalogue target is read. The gate pins all
+12,760,990 atoms and the complete `compact_global` payload, not only its three
+manifests: merge report SHA-256
+`797747617121b980c0f221a858021b509acef1b95017a3264d08967e905e3af6`
+and the eight scene/model/proposal hashes recorded in its `output_sha256` map
+are independently rehashed before loading. The exact integer base additionally
+rehashes the live normalized raw prior and zero-shear `prior * detection`
+vectors, requires all 12,760,990 atoms to be active in canonical order, and
+binds those hashes into its law identity.
+
+The production geometry is fixed at 32 object-keyed synthetic IDs, 16,384
+outcome-independent exclusions per object, 16 independent islands, 256
+particles, and eight fresh proposal rounds: 32,768 slots per object and
+1,048,576 total. The global base seed/domain are 7,008,705 and
+`0x425249444745`; the bridge seed is 7,008,706 and exclusion seed is
+20,260,832. Proposal rows are reshaped once in C order to
+`(island,round,particle)` without rejection, shuffling, reuse, or
+conditioning. Exclusion hits become `-inf` only after the unconditioned draw.
+Full object-chunk and three-object order replay rederive the independent keyed
+source and threshold streams; first-object island order and 16-versus-5 chunk
+replay require identical scientific traces.
+
+**Three outcome-free controls.** A constant `log(c/q0)=log(3)` control requires
+normalizer three, zero island variance, full ESS, acceptance one, actual
+movement, and no terminal move. A separate production-shaped pathwise fixture
+uses 32,768 guaranteed-unique synthetic atom IDs, forces eight islands to
+collapse at stage one and leaves eight at unit mass, and requires linear mean
+`0.5` with SE `sqrt(1/60)`. Unique IDs are essential: assigning island-specific
+zero/live values to naturally duplicated `q0` atoms would violate the
+deterministic target contract. This fixture tests collapse reduction only and
+is never represented as a proposal-law run.
+
+The primary nonconstant control evaluates each unique sampled atom once on the
+A40 and scatters it back without changing slot multiplicity. It explicitly
+forms `ell=log(c)-log(q0)` from the exact overlapping-source marginal
+`(7 K_detected+K_prior)/2^51`; even and odd atoms receive multipliers `1/2`
+and `3/2`, while excluded atoms receive zero. Its exact unconditioned parity
+masses make the object-specific complement normalizer
+`(N_even_remaining+3 N_odd_remaining)/2^52` known before sampling. Each object
+must lie within eight island SEs (with a `5e-12` numerical floor), and the 32
+standardized errors must have maximum absolute value at most eight and RMS at
+most three. These are synthetic structural/algebra gates, not tunable science
+thresholds.
+
+**Fail-closed artifacts and observability.** Cold base construction acquires an
+atomic lock, writes and fully reloads a unique same-filesystem staging
+directory, then publishes it by atomic rename. A crash can leave an explicit
+lock/staging artifact but cannot expose a partial canonical cache; an existing
+partial/noncanonical cache fails instead of being overwritten. The preflight
+releases the large source/cache objects before building the integer artifact,
+emits phase progress to stderr, records CPU/CUDA memory and time, and writes
+one canonical JSON report atomically to a job-ID path. The exact same bytes are
+written to stdout. Its run manifest jointly binds the detached repository,
+all source payloads, integer-base law, complete base draw, per-object draw
+records, exact-stratum array, target-ratio array, both controls, and all object
+bridge records. Python/NumPy/Torch/CUDA identities and source paths are also
+reported.
+
+The wrapper requires one A40, a clean detached full commit, explicit source and
+cache paths, and an executable script. Its Slurm log directory must exist
+before submission because Slurm opens stdout/stderr before the shell runs. The
+preflight imports no mock, catalogue target, candidate query, likelihood
+reducer, exact oracle, or gate path. The reported zero science counters are
+explicit scope declarations, not claims of dynamic instrumentation.
+
+**Validation and boundary.** Three independent reviews found and closed four
+launch blockers before any job: unpinned payload bytes and production count,
+non-atomic cold-cache publication, a nonconstant control without known `Z`,
+and duplicate-inconsistent mixed-collapse targets. The final focused suite is:
+
+```text
+python -m pytest -q tests/test_integer_mixture_base.py \
+  tests/test_packed_integer_bridge_smc.py \
+  tests/test_packed_integer_bridge_smc_preflight.py             89 passed
+ruff check scripts/preflight_packed_integer_bridge_smc.py \
+  tests/test_packed_integer_bridge_smc_preflight.py             clean
+python -m py_compile <the two Python preflight files>           clean
+bash -n jobs/job_preflight_packed_integer_bridge_smc.sh         clean
+python -m pytest tests -q                              582 passed, 2 skipped
+git diff --check                                                clean
+```
+
+This gate measures exact-base construction/draw/replay, the NumPy CPU bridge,
+and only a small synthetic GPU unique/scatter calculation. It deliberately
+does not measure production target-flow fit or throughput and cannot authorize
+inference integration. The next action is one clean detached A40 execution.
+Only a complete structural report can authorize a fixed development likelihood
+adapter on already consumed rows; production-flow packing/chunk invariance,
+exact-stratum addition, and all-collapse-invalid precision semantics remain
+mandatory in that separate adapter.
+
 ## 2026-08-30 cont.347 — exact global base and packed integer bridge pass the software/algebra gate
 
 **Scope.** This entry implements the scalable successor named, but not yet
