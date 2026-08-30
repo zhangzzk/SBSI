@@ -2,6 +2,95 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.343 — exact H256-U8-PS2 constructor and outcome-free A40 preflight are launch-ready
+
+**Exact constructor implemented.** `sbsi/catalogue_sampling.py` now provides
+the isolated `h256_u8_ps2_v1` sampler frozen in cont.342. It packs four
+complete spatial cells per device slab, quantizes the two proxy laws and the
+full-support prior into exact integer ticks, maps object/cell/source PCG64
+streams through right-sided integer CDF searches, and returns exactly 64
+cell-major draws per cell. The retained draw record includes the integer
+balance numerator, all three realized source masses at each selected atom,
+the scheduled source's lower CDF boundary, the high-48-bit RNG word, source
+totals/support/correction audits, fallback-law mismatch counts, object hashes,
+and enclosing call hashes. Construction fails unless `K=sum_l k_l` and
+`q=ldexp(K,-53)` agree bitwise and every scheduled threshold lies in the
+selected mass interval. The paired reducer implements
+`sum_32pairs(Y0-Y1)^2/64^2` rather than reusing the invalid archived
+source-pooled variance.
+
+Exact-stratum exclusions no longer trigger an object-by-cell support scan.
+Each object's active positions are resolved once, converted through a cached
+inverse cell order, sorted by cell, and bucketed in
+`O(objects * K)` work. Dense likelihoods, source laws, integer CDFs, and
+searches stay on the proposal device; only selected-law evidence and compact
+audits transfer to the host. The new cache is separate from the archived
+spatial-Neyman cache, and both call orders leave
+`draw_spatial_mis_reservoirs` byte-identical to commit `30b9cff` (14,747
+bytes, SHA-256
+`5886ebc815a657cc61f55d34fcae007f9fd89dd705126267391a2b55d7a03d38`).
+
+**Frozen diagnostic and provenance.**
+`sbsi/spatial_h256_u8_ps2_diagnostic.py` implements the no-pilot centre gate,
+and `scripts/run_inference.py` exposes only its fail-closed frozen CLI. The
+runner requires the reviewed partition and mock hashes, rows
+25,000:25,512, the archived centre, exact-64 oracle, Torch candidates,
+`K=16,384`, prefilter 131,072, the two frozen seeds, 32-object batches,
+4,096-atom flow chunks, and 262,144-atom proposal slabs. The dedicated
+launcher requires a clean detached full commit, refuses overwrites, and has no
+scientific tuning knob.
+
+The diagnostic reduces log weights with cell/source-local scales and stable
+paired `expm1` differences. It independently recomputes RNG words, integer
+brackets and probabilities, exclusion/cell membership, object hashes, call
+records, and the complete run manifest. Every call's record, schedule, cell
+order, and hash contract must match its 32 table rows. Physical masses and
+standard errors are tied back to their log values; total relative variance is
+computed as `exp(log_variance - 2*logaddexp(log_Z_S,log_Z_C))`, so adding two
+finite near-limit masses cannot overflow into a false zero-efficiency pass.
+The method clock contains one combined integer-construction/sampling/audit
+phase and requires finite nonnegative proposal initialization and phase
+times. All archived reliability and efficiency thresholds and all seven
+exact-calibration gates, including the exact-64 count, remain unchanged.
+
+Independent adversarial review found and drove fixes for a definition-time
+capture of the archived partition protocol, a missing all-object finite
+Pareto gate, unbound physical/log outputs and proposal setup time, unbound
+row-to-call hashes, ordinary-space efficiency overflow, and an overly tight
+64-epsilon consistency check across 256 reconstructed cell sums. Only the
+last internal roundoff check moved, to 512 eps; finite/positive science gates,
+the 64-epsilon physical/log identities, and every preregistered threshold are
+unchanged. A deterministic 256-cell regression measures about 124/215 eps of
+valid mass/variance reconstruction drift.
+
+**Outcome-free scheduler preflight.**
+`scripts/preflight_spatial_h256_u8_ps2.py` and its A40 wrapper exercise one
+production-shape constructor call with the real 12,760,990-atom proposal and
+audited partition, but fixed synthetic observations and exclusions. The
+workload is 32 objects, 16,384 exclusions per object, object IDs beginning at
+`2^40`, observation/exclusion seeds 20,260,830/20,260,831, and the frozen
+sampler seed and chunks. It loads no mock, makes no candidate query or target-
+flow call, and invokes no reducer, oracle, Pareto calculation, or science
+gate. Its single JSON record contains timing, CUDA/RSS memory, geometry,
+structural checks, and six explicit zero science counters. It records rather
+than thresholds performance, so it cannot select a constant from an outcome.
+
+**Validation before any scheduler result.** The complete CPU suite passes
+`453 passed, 2 skipped in 54.25s`; focused new and archived spatial coverage
+passes 145/145, and the standalone preflight tests pass 5/5. Ruff lint, Python
+compilation, both Bash syntax checks, executable modes, and `git diff --check`
+pass. Adversarial tests cover tiny prior atoms, proxy plateaus, B=12 integer
+boundaries, exact RNG records, exclusions and cache order, chunk invariance,
+full-law fallback, rational unbiasedness, paired variance, log dynamic range,
+all summary gate families, provenance tampering, undefined Pareto values,
+near-float-limit masses, and zero-science preflight scope. No new target row,
+mock outcome, Pareto value, relative error, exact-oracle value, or efficiency
+result has been read in this entry. No inference default, stencil, release
+label, or likelihood changes. Next: commit these reviewed sources, run the
+constructor-only preflight from a clean detached checkout, then permit the one
+frozen A40 science gate only if the structural run completes without an
+invariant or resource failure.
+
 ## 2026-08-30 cont.342 — exact tick law freezes the no-pilot H256-U8-PS2 contingency
 
 **Pre-outcome estimator contract.** Following the valid cont.341 rejection,

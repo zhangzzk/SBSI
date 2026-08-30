@@ -48,6 +48,11 @@ from sbsi.spatial_neyman_diagnostic import (
     diagnose_spatial_neyman_complement,
     spatial_neyman_summary,
 )
+from sbsi.spatial_h256_u8_ps2_diagnostic import (
+    SPATIAL_H256_U8_PS2_PROTOCOL,
+    diagnose_spatial_h256_u8_ps2_complement,
+    spatial_h256_u8_ps2_center_summary,
+)
 from sbsi.forward_catalogue import EmulatorPairingConfig
 from sbsi.measurement_model import load_measurement_model
 from sbsi.models import ModelPaths, load_emulator
@@ -529,11 +534,13 @@ def _write_spatial_partition_audit(
 def _load_verified_spatial_partition(
     root: str | Path,
     proposal: DefensiveLocalProposal,
+    *,
+    protocol: dict | None = None,
 ) -> tuple[SpatialCellPartition, float]:
     """Load a frozen partition and verify bytes, semantics, and live inputs."""
 
     started = time.perf_counter()
-    expected = SPATIAL_NEYMAN_PROTOCOL
+    expected = SPATIAL_NEYMAN_PROTOCOL if protocol is None else protocol
     frozen_hashes = {
         name: expected.get(name)
         for name in (
@@ -751,6 +758,7 @@ def _pipeline_implementation_hashes() -> dict[str, str]:
         "sbsi/catalogue_sampling.py",
         "sbsi/learned_retrieval_diagnostic.py",
         "sbsi/spatial_neyman_diagnostic.py",
+        "sbsi/spatial_h256_u8_ps2_diagnostic.py",
     )
     return {name: _sha256(root / name) for name in names}
 
@@ -1096,6 +1104,34 @@ def parse_args(argv=None):
         help="active atoms per frozen spatial-proposal slab",
     )
     parser.add_argument(
+        "--spatial-h256-u8-ps2-partition-cache",
+        default=None,
+        help=(
+            "reviewed outcome-blind SpatialCellPartition cache required by "
+            "the frozen H256-U8-PS2 complement diagnostic"
+        ),
+    )
+    parser.add_argument(
+        "--diagnose-complement-spatial-h256-u8-ps2",
+        action="store_true",
+        help=(
+            "run the frozen development-only no-pilot H256-U8-PS2 integer-"
+            "CDF centre diagnostic; requires its reviewed partition and exact oracle"
+        ),
+    )
+    parser.add_argument(
+        "--spatial-h256-u8-ps2-object-chunk",
+        type=int,
+        default=32,
+        help="observations per frozen H256-U8-PS2 integer-CDF batch",
+    )
+    parser.add_argument(
+        "--spatial-h256-u8-ps2-atom-chunk",
+        type=int,
+        default=262144,
+        help="active atoms per frozen four-cell H256-U8-PS2 slab",
+    )
+    parser.add_argument(
         "--learned-retrieval-object-chunk",
         type=int,
         default=8,
@@ -1135,11 +1171,13 @@ def _validate_exact_oracle_request(args) -> None:
     if not (
         args.diagnose_complement_tail_proposal
         or args.diagnose_complement_spatial_neyman
+        or args.diagnose_complement_spatial_h256_u8_ps2
     ):
         raise SystemExit(
             "--diagnose-complement-exact-oracle requires "
             "--diagnose-complement-tail-proposal or "
-            "--diagnose-complement-spatial-neyman"
+            "--diagnose-complement-spatial-neyman or "
+            "--diagnose-complement-spatial-h256-u8-ps2"
         )
     if (
         args.cut_abs_ehat is not None
@@ -1176,6 +1214,11 @@ def _validate_pilot_stratum_request(args) -> None:
             "--diagnose-complement-pilot-stratum cannot be combined with "
             "--diagnose-complement-spatial-neyman"
         )
+    if args.diagnose_complement_spatial_h256_u8_ps2:
+        raise SystemExit(
+            "--diagnose-complement-pilot-stratum cannot be combined with "
+            "--diagnose-complement-spatial-h256-u8-ps2"
+        )
     if (
         args.cut_abs_ehat is not None
         or bool(args.cut_bound)
@@ -1205,6 +1248,9 @@ def _validate_learned_retrieval_center_request(args) -> None:
         "exact_oracle": bool(args.diagnose_complement_exact_oracle),
         "pilot_stratum": bool(args.diagnose_complement_pilot_stratum),
         "spatial_neyman": bool(args.diagnose_complement_spatial_neyman),
+        "spatial_h256_u8_ps2": bool(
+            args.diagnose_complement_spatial_h256_u8_ps2
+        ),
         "candidate_backend": args.candidate_backend,
         "universe_start": int(args.observation_start),
         "universe_stop": (
@@ -1226,6 +1272,7 @@ def _validate_learned_retrieval_center_request(args) -> None:
         "exact_oracle": True,
         "pilot_stratum": False,
         "spatial_neyman": False,
+        "spatial_h256_u8_ps2": False,
         "candidate_backend": expected["candidate_backend"],
         "universe_start": expected["universe_start"],
         "universe_stop": expected["universe_stop"],
@@ -1299,11 +1346,17 @@ def _validate_spatial_neyman_partition_audit_request(args) -> None:
         "--diagnose-complement-pilot-stratum": bool(args.diagnose_complement_pilot_stratum),
         "--diagnose-complement-exact-oracle": bool(args.diagnose_complement_exact_oracle),
         "--diagnose-complement-spatial-neyman": bool(args.diagnose_complement_spatial_neyman),
+        "--diagnose-complement-spatial-h256-u8-ps2": bool(
+            args.diagnose_complement_spatial_h256_u8_ps2
+        ),
         "--diagnose-complement-learned-center-checkpoint": (
             args.diagnose_complement_learned_center_checkpoint is not None
         ),
         "--mock-input": args.mock_input is not None,
         "--spatial-neyman-partition-cache": (args.spatial_neyman_partition_cache is not None),
+        "--spatial-h256-u8-ps2-partition-cache": (
+            args.spatial_h256_u8_ps2_partition_cache is not None
+        ),
     }
     active = sorted(name for name, enabled in conflicts.items() if enabled)
     if active:
@@ -1333,6 +1386,9 @@ def _validate_spatial_neyman_request(args) -> None:
         "pilot_stratum": bool(args.diagnose_complement_pilot_stratum),
         "learned_retrieval": (args.diagnose_complement_learned_center_checkpoint is not None),
         "partition_audit": bool(args.audit_spatial_neyman_partition),
+        "spatial_h256_u8_ps2": bool(
+            args.diagnose_complement_spatial_h256_u8_ps2
+        ),
         "candidate_backend": args.candidate_backend,
         "universe_start": int(args.observation_start),
         "universe_stop": (None if args.observation_stop is None else int(args.observation_stop)),
@@ -1353,6 +1409,7 @@ def _validate_spatial_neyman_request(args) -> None:
         "pilot_stratum": False,
         "learned_retrieval": False,
         "partition_audit": False,
+        "spatial_h256_u8_ps2": False,
         "candidate_backend": expected["candidate_backend"],
         "universe_start": expected["universe_start"],
         "universe_stop": expected["universe_stop"],
@@ -1425,6 +1482,131 @@ def _validate_spatial_neyman_request(args) -> None:
         )
 
 
+def _validate_spatial_h256_u8_ps2_request(args) -> None:
+    """Fail closed around the separate frozen H256-U8-PS2 diagnostic."""
+
+    if not args.diagnose_complement_spatial_h256_u8_ps2:
+        return
+    expected = SPATIAL_H256_U8_PS2_PROTOCOL
+    effective_prefilter = (
+        args.proposal_candidates
+        if args.proposal_prefilter_candidates is None
+        else args.proposal_prefilter_candidates
+    )
+    observed = {
+        "diagnostic_enabled": args.diagnose_complement is not None,
+        "tail_proposal": bool(args.diagnose_complement_tail_proposal),
+        "exact_oracle": bool(args.diagnose_complement_exact_oracle),
+        "pilot_stratum": bool(args.diagnose_complement_pilot_stratum),
+        "learned_retrieval": (
+            args.diagnose_complement_learned_center_checkpoint is not None
+        ),
+        "partition_audit": bool(args.audit_spatial_neyman_partition),
+        "spatial_neyman": bool(args.diagnose_complement_spatial_neyman),
+        "old_partition_cache": args.spatial_neyman_partition_cache is not None,
+        "candidate_backend": args.candidate_backend,
+        "universe_start": int(args.observation_start),
+        "universe_stop": (
+            None
+            if args.observation_stop is None
+            else int(args.observation_stop)
+        ),
+        "n_candidates": int(args.proposal_candidates),
+        "prefilter_candidates": int(effective_prefilter),
+        "n_global_draws": int(args.diagnose_complement_global_draws),
+        "proposal_seed": int(args.proposal_seed),
+        "initial_strategy": args.initial_strategy,
+        "diagnostic_object_chunk": int(args.object_chunk),
+        "flow_atom_chunk": int(args.atom_chunk),
+        "spatial_object_chunk": int(
+            args.spatial_h256_u8_ps2_object_chunk
+        ),
+        "spatial_atom_chunk": int(args.spatial_h256_u8_ps2_atom_chunk),
+    }
+    required = {
+        "diagnostic_enabled": True,
+        "tail_proposal": False,
+        "exact_oracle": True,
+        "pilot_stratum": False,
+        "learned_retrieval": False,
+        "partition_audit": False,
+        "spatial_neyman": False,
+        "old_partition_cache": False,
+        "candidate_backend": expected["candidate_backend"],
+        "universe_start": expected["universe_start"],
+        "universe_stop": expected["universe_stop"],
+        "n_candidates": expected["n_candidates"],
+        "prefilter_candidates": expected["prefilter_candidates"],
+        "n_global_draws": expected["n_global_draws"],
+        "proposal_seed": expected["proposal_seed"],
+        "initial_strategy": expected["initial_strategy"],
+        "diagnostic_object_chunk": expected["diagnostic_object_chunk"],
+        "flow_atom_chunk": expected["flow_atom_chunk"],
+        "spatial_object_chunk": expected["spatial_object_chunk"],
+        "spatial_atom_chunk": expected["spatial_atom_chunk"],
+    }
+    mismatched = {
+        name: {"expected": required[name], "observed": observed[name]}
+        for name in required
+        if observed[name] != required[name]
+    }
+    if mismatched:
+        raise SystemExit(
+            "H256-U8-PS2 centre protocol mismatch: "
+            + json.dumps(mismatched, sort_keys=True)
+        )
+    if (
+        args.cut_abs_ehat is not None
+        or bool(args.cut_bound)
+        or args.selection_cache is not None
+    ):
+        raise SystemExit(
+            "the H256-U8-PS2 centre protocol requires measured cuts and "
+            "selection caches to be disabled"
+        )
+    partition_root = (
+        None
+        if args.spatial_h256_u8_ps2_partition_cache is None
+        else Path(args.spatial_h256_u8_ps2_partition_cache)
+    )
+    if partition_root is None:
+        raise SystemExit(
+            "--diagnose-complement-spatial-h256-u8-ps2 requires "
+            "--spatial-h256-u8-ps2-partition-cache"
+        )
+    manifest_path = partition_root / SPATIAL_NEYMAN_PARTITION_MANIFEST
+    partition_path = partition_root / SPATIAL_NEYMAN_PARTITION_FILE
+    if not manifest_path.is_file():
+        raise SystemExit(
+            f"missing H256-U8-PS2 partition manifest: {manifest_path}"
+        )
+    if not partition_path.is_file():
+        raise SystemExit(
+            f"missing H256-U8-PS2 partition cache: {partition_path}"
+        )
+    actual_manifest_sha256 = _sha256(manifest_path)
+    if actual_manifest_sha256 != expected["partition_manifest_sha256"]:
+        raise SystemExit(
+            "H256-U8-PS2 partition manifest SHA-256 mismatch: "
+            f"{actual_manifest_sha256} != "
+            f"{expected['partition_manifest_sha256']}"
+        )
+    if args.mock_input is None:
+        raise SystemExit("H256-U8-PS2 requires its frozen mock input")
+    try:
+        actual_mock_sha256 = _mock_input_hashes(args.mock_input)
+    except OSError as error:
+        raise SystemExit(
+            f"cannot hash the H256-U8-PS2 frozen mock input: {error}"
+        ) from error
+    if actual_mock_sha256 != expected["mock_input_sha256"]:
+        raise SystemExit(
+            "H256-U8-PS2 mock-input SHA-256 mismatch: "
+            f"{json.dumps(actual_mock_sha256, sort_keys=True)} != "
+            f"{json.dumps(expected['mock_input_sha256'], sort_keys=True)}"
+        )
+
+
 def main(argv=None):
     args = parse_args(argv)
     inference_config = _load_release_config(
@@ -1450,6 +1632,7 @@ def main(argv=None):
     _validate_pilot_stratum_request(args)
     _validate_learned_retrieval_center_request(args)
     _validate_spatial_neyman_request(args)
+    _validate_spatial_h256_u8_ps2_request(args)
     if args.prepare_only and args.mock_input is not None:
         raise SystemExit("--prepare-only generates a new mock and rejects --mock-input")
     if args.selection_cache is not None and not (
@@ -1814,6 +1997,7 @@ def main(argv=None):
     if (
         args.audit_spatial_neyman_partition
         or args.diagnose_complement_spatial_neyman
+        or args.diagnose_complement_spatial_h256_u8_ps2
     ):
         proposal_started = time.perf_counter()
         proposal = DefensiveLocalProposal(
@@ -1855,7 +2039,17 @@ def main(argv=None):
             return 0
         spatial_partition, spatial_partition_load_seconds = (
             _load_verified_spatial_partition(
-                args.spatial_neyman_partition_cache, proposal
+                (
+                    args.spatial_h256_u8_ps2_partition_cache
+                    if args.diagnose_complement_spatial_h256_u8_ps2
+                    else args.spatial_neyman_partition_cache
+                ),
+                proposal,
+                protocol=(
+                    SPATIAL_H256_U8_PS2_PROTOCOL
+                    if args.diagnose_complement_spatial_h256_u8_ps2
+                    else SPATIAL_NEYMAN_PROTOCOL
+                ),
             )
         )
 
@@ -2111,10 +2305,13 @@ def main(argv=None):
                 local_base_weights=cache.get(0.0, 0.0).detection_probability,
             )
         proposal_initialization_seconds = time.perf_counter() - proposal_started
-    elif not args.diagnose_complement_spatial_neyman:
-        raise RuntimeError("prebuilt proposal is reserved for spatial-Neyman mode")
+    elif not (
+        args.diagnose_complement_spatial_neyman
+        or args.diagnose_complement_spatial_h256_u8_ps2
+    ):
+        raise RuntimeError("prebuilt proposal is reserved for frozen spatial modes")
     elif proposal.tree is not None or spatial_partition is None:
-        raise RuntimeError("spatial-Neyman pre-work did not freeze its tree-free partition")
+        raise RuntimeError("spatial pre-work did not freeze its tree-free partition")
 
     if args.compile_flow:
         flow.compile_log_prob(mode=None, dynamic=True)
@@ -2122,7 +2319,44 @@ def main(argv=None):
     if args.diagnose_complement is not None:
         # A measurement, not a release: the estimator never runs, so this
         # writes its own directory and no `result.json` identity block.
-        if args.diagnose_complement_spatial_neyman:
+        if args.diagnose_complement_spatial_h256_u8_ps2:
+            diagnostic = diagnose_spatial_h256_u8_ps2_complement(
+                likelihood,
+                mock,
+                proposal,
+                partition=spatial_partition,
+                partition_cache_sha256=SPATIAL_H256_U8_PS2_PROTOCOL[
+                    "partition_cache_sha256"
+                ],
+                partition_manifest_sha256=SPATIAL_H256_U8_PS2_PROTOCOL[
+                    "partition_manifest_sha256"
+                ],
+                partition_load_seconds=float(spatial_partition_load_seconds),
+                proposal_initialization_seconds=float(
+                    proposal_initialization_seconds
+                ),
+                confirmation_mock_sha256=source_mock_hashes,
+                center=initial,
+                observation_start=0,
+                observation_stop=len(mock.measurements),
+                object_id_offset=int(args.observation_start),
+                object_chunk=args.object_chunk,
+                atom_chunk=args.atom_chunk,
+                spatial_atom_chunk=args.spatial_h256_u8_ps2_atom_chunk,
+                spatial_object_chunk=args.spatial_h256_u8_ps2_object_chunk,
+                candidate_backend=args.candidate_backend,
+                n_candidates=args.proposal_candidates,
+                prefilter_candidates=(
+                    args.proposal_candidates
+                    if args.proposal_prefilter_candidates is None
+                    else args.proposal_prefilter_candidates
+                ),
+                proposal_seed=args.proposal_seed,
+                production_seed=SPATIAL_H256_U8_PS2_PROTOCOL[
+                    "production_seed"
+                ],
+            )
+        elif args.diagnose_complement_spatial_neyman:
             diagnostic = diagnose_spatial_neyman_complement(
                 likelihood,
                 mock,
@@ -2215,11 +2449,19 @@ def main(argv=None):
             spatial_summary = spatial_neyman_summary(diagnostic)
             diagnostic_summary["spatial_neyman"] = spatial_summary
             diagnostic_summary["gates"] = spatial_summary["gates"]
+        if args.diagnose_complement_spatial_h256_u8_ps2:
+            spatial_ps_summary = spatial_h256_u8_ps2_center_summary(diagnostic)
+            diagnostic_summary["spatial_h256_u8_ps2"] = spatial_ps_summary
+            diagnostic_summary["gates"] = spatial_ps_summary["gates"]
         summary = {
             "method": (
-                "held-out complement spatial-Neyman diagnostic"
-                if args.diagnose_complement_spatial_neyman
-                else "held-out complement tail-proposal diagnostic"
+                "held-out complement spatial H256-U8-PS2 diagnostic"
+                if args.diagnose_complement_spatial_h256_u8_ps2
+                else (
+                    "held-out complement spatial-Neyman diagnostic"
+                    if args.diagnose_complement_spatial_neyman
+                    else "held-out complement tail-proposal diagnostic"
+                )
             ),
             "metadata": diagnostic.metadata,
             "summary": diagnostic_summary,
@@ -2248,11 +2490,34 @@ def main(argv=None):
                 "mock_input_sha256": source_mock_hashes,
                 "spatial_partition_sha256": (
                     {
-                        "partition_sha256": SPATIAL_NEYMAN_PROTOCOL["partition_sha256"],
-                        "partition_cache_sha256": SPATIAL_NEYMAN_PROTOCOL["partition_cache_sha256"],
-                        "partition_manifest_sha256": SPATIAL_NEYMAN_PROTOCOL["partition_manifest_sha256"],
+                        "partition_sha256": (
+                            SPATIAL_H256_U8_PS2_PROTOCOL["partition_sha256"]
+                            if args.diagnose_complement_spatial_h256_u8_ps2
+                            else SPATIAL_NEYMAN_PROTOCOL["partition_sha256"]
+                        ),
+                        "partition_cache_sha256": (
+                            SPATIAL_H256_U8_PS2_PROTOCOL[
+                                "partition_cache_sha256"
+                            ]
+                            if args.diagnose_complement_spatial_h256_u8_ps2
+                            else SPATIAL_NEYMAN_PROTOCOL[
+                                "partition_cache_sha256"
+                            ]
+                        ),
+                        "partition_manifest_sha256": (
+                            SPATIAL_H256_U8_PS2_PROTOCOL[
+                                "partition_manifest_sha256"
+                            ]
+                            if args.diagnose_complement_spatial_h256_u8_ps2
+                            else SPATIAL_NEYMAN_PROTOCOL[
+                                "partition_manifest_sha256"
+                            ]
+                        ),
                     }
-                    if args.diagnose_complement_spatial_neyman
+                    if (
+                        args.diagnose_complement_spatial_neyman
+                        or args.diagnose_complement_spatial_h256_u8_ps2
+                    )
                     else None
                 ),
                 "likelihood_component_sha256": likelihood_component_hashes,
@@ -2314,6 +2579,22 @@ def main(argv=None):
                             ),
                         }
                         if args.diagnose_complement_spatial_neyman
+                        else {}
+                    ),
+                    **(
+                        {
+                            "sbsi/spatial_h256_u8_ps2_diagnostic.py": _sha256(
+                                REPOSITORY_ROOT
+                                / "sbsi/spatial_h256_u8_ps2_diagnostic.py"
+                            ),
+                            "jobs/job_complement_spatial_h256_u8_ps2_center.sh": (
+                                _sha256(
+                                    REPOSITORY_ROOT
+                                    / "jobs/job_complement_spatial_h256_u8_ps2_center.sh"
+                                )
+                            ),
+                        }
+                        if args.diagnose_complement_spatial_h256_u8_ps2
                         else {}
                     ),
                 },

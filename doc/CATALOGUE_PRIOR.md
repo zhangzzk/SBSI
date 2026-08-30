@@ -664,6 +664,30 @@ production flow, paired reduction, and hashing; it excludes the exact oracle.
 An outcome-free A40 memory/throughput preflight may validate the frozen packed
 execution but may not change scientific constants after any target outcome.
 
+The reviewed implementation maps every object's 16,384 exclusions into the
+cell order once, then buckets their local offsets in
+`O(objects * K)` work. Four-cell likelihood slabs, source normalization,
+integer quantization, and inverse-CDF mapping remain on the proposal device;
+only selected three-source tick masses, selected lower CDF boundaries, RNG
+words, normalizers, and compact source audits cross to the host. The draw type
+recomputes `K=sum_l k_l`, `q=ldexp(K,-53)`, and every selected integer bracket
+before it can be constructed. The diagnostic independently recomputes the RNG,
+cell membership, exclusion, probability, CDF-bracket, object-array, call, and
+run-manifest identities. Its physical mass, standard error, and efficiency
+metrics are bound back to the authoritative log-space reductions; finite
+physical additions are never allowed to overflow into a spurious efficiency
+pass.
+
+The structural preflight is separately frozen at 32 synthetic objects,
+16,384 object-keyed exclusions, observation/exclusion seeds
+20,260,830/20,260,831, sampler seed 7,008,704, and the production
+32-by-262,144 chunks. It uses the real 12,760,990-atom proposal inputs and the
+reviewed partition but loads no mock, performs no candidate query or target
+flow, invokes no reducer or oracle, and evaluates no science gate. Its sole
+JSON record reports constructor timing, CUDA/RSS memory, cell/slab geometry,
+structural invariant failures, and explicit zero science counters; it has no
+performance threshold and cannot select or tune the method.
+
 All earlier reliability, exact-calibration, and efficiency thresholds remain
 byte-for-byte unchanged: at least 461/512 finite `k<0.5`, at least 507/512
 `k<0.7`, no `k>=1`, complement relative-SE median/higher-p90 at most

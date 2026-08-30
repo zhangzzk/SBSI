@@ -378,6 +378,34 @@ SPATIAL_PARTITION_HASH_CONTRACT = "sha256_domain_shape_big_endian_v1"
 SPATIAL_RNG_CONTRACT = "seedsequence_seed_object_cell_domain_v1"
 
 
+# H256-U8-PS2 is intentionally a separate sampler contract from the archived
+# pilot/Neyman reservoir above.  Its integer laws make the probability stored
+# beside a draw exactly equal to the law realized by inverse-CDF sampling,
+# including at zero-mass plateaus and exact-stratum exclusions.
+SPATIAL_PS_VERSION = "h256_u8_ps2_v1"
+SPATIAL_PS_TICKS_PER_MICROSTRATUM = 1 << 48
+SPATIAL_PS_MICROSTRATA = (16, 12, 4)
+SPATIAL_PS_REPLICATES = 2
+SPATIAL_PS_SOURCE_COUNTS = tuple(
+    value * SPATIAL_PS_REPLICATES for value in SPATIAL_PS_MICROSTRATA
+)
+SPATIAL_PS_DRAWS_PER_CELL = sum(SPATIAL_PS_SOURCE_COUNTS)
+SPATIAL_PS_CELLS_PER_SLAB = 4
+SPATIAL_PS_SEED = SPATIAL_PRODUCTION_SEED
+SPATIAL_PS_RNG_DOMAIN_WORD = 0x48553250
+SPATIAL_PS_RNG_VERSION_WORD = 1
+SPATIAL_PS_RNG_CONTRACT = (
+    "pcg64_seedsequence_seed_object_cell_source_h256_u8_ps2_v1"
+)
+SPATIAL_PS_QUANTIZER_CONTRACT = (
+    "cumulative_floor_uint48_microstrata_prior_floor_v1"
+)
+SPATIAL_PS_HASH_CONTRACT = "sha256_domain_shape_big_endian_h256_u8_ps2_v1"
+SPATIAL_PS_ORDER_CONTRACT = (
+    "ascending_active_atom_id__cell_source_microstratum_replicate_v1"
+)
+
+
 def _spatial_partition_recipe_sha256() -> str:
     payload = json.dumps(
         {
@@ -637,6 +665,558 @@ def _spatial_record_sha256(label: str, values: Sequence[str]) -> str:
         digest.update(len(encoded).to_bytes(8, "big"))
         digest.update(encoded)
     return digest.hexdigest()
+
+
+def _spatial_ps_array_sha256(
+    label: str,
+    values: np.ndarray,
+    *,
+    dtype: str,
+    sort_rows: bool = False,
+) -> str:
+    """Hash an H256-U8-PS2 array in its separate provenance domain."""
+
+    array = np.asarray(values)
+    if sort_rows:
+        if array.ndim != 2:
+            raise ValueError("only matrices can be canonically sorted by row")
+        array = np.sort(array, axis=1)
+    canonical = np.ascontiguousarray(array, dtype=np.dtype(dtype))
+    shape = np.ascontiguousarray(canonical.shape, dtype=np.dtype(">u8"))
+    digest = sha256()
+    digest.update(b"SBSI/spatial-probability-stratified-array/v1\0")
+    digest.update(label.encode("utf-8"))
+    digest.update(b"\0")
+    digest.update(shape.tobytes())
+    digest.update(canonical.tobytes())
+    return digest.hexdigest()
+
+
+def _spatial_ps_text_sha256(label: str, value: object) -> str:
+    payload = json.dumps(
+        value, sort_keys=True, separators=(",", ":"), allow_nan=False
+    ).encode("utf-8")
+    digest = sha256()
+    digest.update(b"SBSI/spatial-probability-stratified-text/v1\0")
+    digest.update(label.encode("utf-8"))
+    digest.update(b"\0")
+    digest.update(payload)
+    return digest.hexdigest()
+
+
+def _spatial_ps_record_sha256(label: str, values: Sequence[str]) -> str:
+    digest = sha256()
+    digest.update(b"SBSI/spatial-probability-stratified-record/v1\0")
+    digest.update(label.encode("utf-8"))
+    digest.update(b"\0")
+    for value in values:
+        encoded = str(value).encode("ascii")
+        digest.update(len(encoded).to_bytes(8, "big"))
+        digest.update(encoded)
+    return digest.hexdigest()
+
+
+def _spatial_ps_object_array_sha256(
+    label: str, values: np.ndarray, *, dtype: str
+) -> tuple[str, ...]:
+    array = np.asarray(values)
+    if array.ndim != 2:
+        raise ValueError("H256-U8-PS2 object manifests require a matrix")
+    return tuple(
+        _spatial_ps_array_sha256(
+            label, array[row : row + 1], dtype=dtype
+        )
+        for row in range(len(array))
+    )
+
+
+def _spatial_ps_exclusion_manifest_sha256(
+    indices: np.ndarray,
+) -> tuple[str, ...]:
+    array = np.asarray(indices)
+    if array.ndim != 2:
+        raise ValueError("H256-U8-PS2 exclusions require a matrix")
+    return tuple(
+        _spatial_ps_array_sha256(
+            "object_conditioned_exclusion_indices",
+            array[row : row + 1],
+            dtype=">i8",
+            sort_rows=True,
+        )
+        for row in range(len(array))
+    )
+
+
+def _spatial_ps_canonical_schedule() -> tuple[np.ndarray, ...]:
+    """Return the frozen cell/source/microstratum/replicate slot schedule."""
+
+    cells = []
+    sources = []
+    microstrata = []
+    replicates = []
+    for cell in range(SPATIAL_CELL_COUNT):
+        for source, n_strata in enumerate(SPATIAL_PS_MICROSTRATA):
+            for microstratum in range(n_strata):
+                for replicate in range(SPATIAL_PS_REPLICATES):
+                    cells.append(cell)
+                    sources.append(source)
+                    microstrata.append(microstratum)
+                    replicates.append(replicate)
+    return (
+        np.asarray(cells, dtype=np.uint16),
+        np.asarray(sources, dtype=np.uint8),
+        np.asarray(microstrata, dtype=np.uint8),
+        np.asarray(replicates, dtype=np.uint8),
+    )
+
+
+def _spatial_ps_source_total_ticks(source: int) -> int:
+    source = int(source)
+    if not 0 <= source < len(SPATIAL_PS_MICROSTRATA):
+        raise ValueError("H256-U8-PS2 source id is invalid")
+    return int(SPATIAL_PS_MICROSTRATA[source]) * int(
+        SPATIAL_PS_TICKS_PER_MICROSTRATUM
+    )
+
+
+def _spatial_ps_rng_u48(
+    seed: int, object_id: int, cell_id: int, source: int
+) -> np.ndarray:
+    """Emit the canonical top-48-bit PCG64 record for one source and cell."""
+
+    seed = int(seed)
+    object_id = int(object_id)
+    cell_id = int(cell_id)
+    source = int(source)
+    uint64_max = int(np.iinfo(np.uint64).max)
+    if not 0 <= seed <= uint64_max:
+        raise ValueError("H256-U8-PS2 seed must fit uint64")
+    if not 0 <= object_id <= uint64_max:
+        raise ValueError("H256-U8-PS2 object id must fit uint64")
+    if not 0 <= cell_id < SPATIAL_CELL_COUNT:
+        raise ValueError("H256-U8-PS2 cell id is invalid")
+    if not 0 <= source < len(SPATIAL_PS_MICROSTRATA):
+        raise ValueError("H256-U8-PS2 source id is invalid")
+    words = [
+        seed & 0xFFFFFFFF,
+        seed >> 32,
+        object_id & 0xFFFFFFFF,
+        object_id >> 32,
+        cell_id,
+        source,
+        SPATIAL_PS_RNG_DOMAIN_WORD,
+        SPATIAL_PS_RNG_VERSION_WORD,
+    ]
+    bit_generator = np.random.PCG64(np.random.SeedSequence(words))
+    raw = bit_generator.random_raw(SPATIAL_PS_SOURCE_COUNTS[source])
+    result = np.right_shift(raw, np.uint64(16)).astype(np.uint64, copy=False)
+    result.setflags(write=False)
+    return result
+
+
+def _spatial_ps_thresholds(source: int, u48: np.ndarray) -> np.ndarray:
+    """Place canonical 48-bit records in their exact integer microstrata."""
+
+    source = int(source)
+    n_strata = SPATIAL_PS_MICROSTRATA[source]
+    values = np.asarray(u48, dtype=np.uint64)
+    expected = SPATIAL_PS_SOURCE_COUNTS[source]
+    if values.shape != (expected,) or (
+        values >= SPATIAL_PS_TICKS_PER_MICROSTRATUM
+    ).any():
+        raise ValueError("H256-U8-PS2 u48 record is invalid")
+    microstratum = np.repeat(
+        np.arange(n_strata, dtype=np.int64), SPATIAL_PS_REPLICATES
+    )
+    thresholds = (
+        microstratum * int(SPATIAL_PS_TICKS_PER_MICROSTRATUM)
+        + values.astype(np.int64)
+    )
+    thresholds.setflags(write=False)
+    return thresholds
+
+
+def _spatial_ps_quantize_proxy(
+    weights: np.ndarray,
+    eligible: np.ndarray,
+    *,
+    source: int,
+) -> tuple[np.ndarray, int]:
+    """Cumulative-floor quantization of a non-fallback proxy source."""
+
+    values = np.asarray(weights, dtype=np.float64)
+    keep = np.asarray(eligible, dtype=bool)
+    if (
+        values.ndim != 1
+        or keep.shape != values.shape
+        or not len(values)
+        or not np.isfinite(values).all()
+        or (values < 0.0).any()
+    ):
+        raise ValueError("proxy quantizer weights and eligibility are invalid")
+    values = np.where(keep, values, 0.0)
+    positive = keep & (values > 0.0)
+    if not positive.any():
+        raise ValueError("proxy quantizer has no positive eligible weight")
+    cumulative = np.cumsum(values, dtype=np.float64)
+    total = float(cumulative[-1])
+    if not np.isfinite(total) or total <= 0.0:
+        raise ValueError("proxy quantizer has invalid total weight")
+    total_ticks = _spatial_ps_source_total_ticks(source)
+    boundary = np.floor((cumulative / total) * float(total_ticks)).astype(
+        np.int64
+    )
+    last_positive = int(np.flatnonzero(positive)[-1])
+    correction = int(total_ticks - int(boundary[last_positive]))
+    boundary[last_positive:] = total_ticks
+    ticks = np.diff(
+        np.concatenate((np.zeros(1, dtype=np.int64), boundary))
+    )
+    if (
+        (np.diff(boundary) < 0).any()
+        or (ticks < 0).any()
+        or int(ticks.sum(dtype=np.int64)) != total_ticks
+        or (ticks[~keep] != 0).any()
+    ):
+        raise RuntimeError("proxy integer quantizer failed its exact audit")
+    ticks.setflags(write=False)
+    return ticks, correction
+
+
+def _spatial_ps_quantize_prior(
+    weights: np.ndarray,
+    eligible: np.ndarray,
+) -> tuple[np.ndarray, int]:
+    """Quantize the defensive prior while reserving one tick per atom."""
+
+    values = np.asarray(weights, dtype=np.float64)
+    keep = np.asarray(eligible, dtype=bool)
+    if (
+        values.ndim != 1
+        or keep.shape != values.shape
+        or not len(values)
+        or not keep.any()
+        or not np.isfinite(values).all()
+        or (values < 0.0).any()
+        or (values[keep] <= 0.0).any()
+    ):
+        raise ValueError("prior quantizer weights and eligibility are invalid")
+    values = np.where(keep, values, 0.0)
+    cumulative = np.cumsum(values, dtype=np.float64)
+    total = float(cumulative[-1])
+    if not np.isfinite(total) or total <= 0.0:
+        raise ValueError("prior quantizer has invalid total weight")
+    total_ticks = _spatial_ps_source_total_ticks(2)
+    eligible_count = int(np.count_nonzero(keep))
+    remainder = total_ticks - eligible_count
+    if remainder <= 0:
+        raise ValueError("prior quantizer requires eligible count below prior ticks")
+    eligible_cumulative = np.cumsum(keep, dtype=np.int64)
+    boundary = eligible_cumulative + np.floor(
+        (cumulative / total) * float(remainder)
+    ).astype(np.int64)
+    last_eligible = int(np.flatnonzero(keep)[-1])
+    correction = int(total_ticks - int(boundary[last_eligible]))
+    boundary[last_eligible:] = total_ticks
+    ticks = np.diff(
+        np.concatenate((np.zeros(1, dtype=np.int64), boundary))
+    )
+    if (
+        (np.diff(boundary) < 0).any()
+        or (ticks < 0).any()
+        or int(ticks.sum(dtype=np.int64)) != total_ticks
+        or (ticks[~keep] != 0).any()
+        or (ticks[keep] < 1).any()
+    ):
+        raise RuntimeError("prior integer quantizer failed its exact audit")
+    ticks.setflags(write=False)
+    return ticks, correction
+
+
+def _spatial_ps_inverse_integer_cdf(
+    ticks: np.ndarray, thresholds: np.ndarray
+) -> np.ndarray:
+    """Map integer thresholds through ``inf{j: C[j] > threshold}``."""
+
+    mass = np.asarray(ticks, dtype=np.int64)
+    targets = np.asarray(thresholds, dtype=np.int64)
+    if (
+        mass.ndim != 1
+        or targets.ndim != 1
+        or not len(mass)
+        or (mass < 0).any()
+        or (targets < 0).any()
+    ):
+        raise ValueError("integer inverse-CDF inputs are invalid")
+    cumulative = np.cumsum(mass, dtype=np.int64)
+    if int(cumulative[-1]) <= 0 or (targets >= cumulative[-1]).any():
+        raise ValueError("integer thresholds exceed the source law")
+    selected = np.searchsorted(cumulative, targets, side="right")
+    if (selected >= len(mass)).any() or (mass[selected] <= 0).any():
+        raise RuntimeError("integer inverse-CDF selected a zero-mass atom")
+    selected = selected.astype(np.int64, copy=False)
+    selected.setflags(write=False)
+    return selected
+
+
+def _spatial_ps_quantize_proxy_tensor(
+    weights: torch.Tensor,
+    eligible: torch.Tensor,
+    *,
+    source: int,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    """On-device counterpart of :func:`_spatial_ps_quantize_proxy`."""
+
+    if (
+        weights.ndim != 2
+        or eligible.shape != weights.shape
+        or weights.dtype != torch.float64
+        or eligible.dtype != torch.bool
+    ):
+        raise ValueError("on-device proxy quantizer inputs are invalid")
+    total_ticks = _spatial_ps_source_total_ticks(source)
+    input_valid = (
+        torch.isfinite(weights).all(dim=1)
+        & (weights >= 0.0).all(dim=1)
+        & torch.where(
+            eligible, torch.ones_like(eligible), weights == 0.0
+        ).all(dim=1)
+    )
+    values = torch.where(eligible, weights, torch.zeros_like(weights))
+    cumulative = torch.cumsum(values, dim=1)
+    total = cumulative[:, -1]
+    fraction = cumulative / total[:, None]
+    boundary = torch.floor(fraction * float(total_ticks)).to(torch.int64)
+    positions = torch.arange(
+        weights.shape[1], dtype=torch.int64, device=weights.device
+    )[None, :]
+    positive = eligible & (values > 0.0)
+    last_positive = torch.where(
+        positive, positions, torch.full_like(positions, -1)
+    ).amax(dim=1)
+    gathered = torch.gather(
+        boundary, 1, torch.clamp(last_positive, min=0)[:, None]
+    )[:, 0]
+    correction = total_ticks - gathered
+    boundary = torch.where(
+        positions >= last_positive[:, None],
+        torch.full_like(boundary, total_ticks),
+        boundary,
+    )
+    ticks = torch.diff(
+        boundary,
+        dim=1,
+        prepend=torch.zeros(
+            (len(weights), 1), dtype=torch.int64, device=weights.device
+        ),
+    )
+    valid = (
+        input_valid
+        & torch.isfinite(total)
+        & (total > 0.0)
+        & (last_positive >= 0)
+        & (ticks >= 0).all(dim=1)
+        & (ticks.sum(dim=1) == total_ticks)
+        & (torch.where(eligible, torch.zeros_like(ticks), ticks).sum(dim=1) == 0)
+    )
+    return ticks, boundary, correction, valid
+
+
+def _spatial_ps_quantize_prior_tensor(
+    weights: torch.Tensor,
+    eligible: torch.Tensor,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    """On-device defensive-prior quantizer with one tick per eligible atom."""
+
+    if (
+        weights.ndim != 2
+        or eligible.shape != weights.shape
+        or weights.dtype != torch.float64
+        or eligible.dtype != torch.bool
+    ):
+        raise ValueError("on-device prior quantizer inputs are invalid")
+    total_ticks = _spatial_ps_source_total_ticks(2)
+    input_valid = (
+        torch.isfinite(weights).all(dim=1)
+        & torch.where(eligible, weights > 0.0, weights == 0.0).all(dim=1)
+    )
+    values = torch.where(eligible, weights, torch.zeros_like(weights))
+    cumulative = torch.cumsum(values, dim=1)
+    total = cumulative[:, -1]
+    eligible_cumulative = torch.cumsum(eligible.to(torch.int64), dim=1)
+    eligible_count = eligible_cumulative[:, -1]
+    remainder = total_ticks - eligible_count
+    fraction = cumulative / total[:, None]
+    boundary = eligible_cumulative + torch.floor(
+        fraction * remainder[:, None].to(torch.float64)
+    ).to(torch.int64)
+    positions = torch.arange(
+        weights.shape[1], dtype=torch.int64, device=weights.device
+    )[None, :]
+    last_eligible = torch.where(
+        eligible, positions, torch.full_like(positions, -1)
+    ).amax(dim=1)
+    gathered = torch.gather(
+        boundary, 1, torch.clamp(last_eligible, min=0)[:, None]
+    )[:, 0]
+    correction = total_ticks - gathered
+    boundary = torch.where(
+        positions >= last_eligible[:, None],
+        torch.full_like(boundary, total_ticks),
+        boundary,
+    )
+    ticks = torch.diff(
+        boundary,
+        dim=1,
+        prepend=torch.zeros(
+            (len(weights), 1), dtype=torch.int64, device=weights.device
+        ),
+    )
+    valid = (
+        input_valid
+        & torch.isfinite(total)
+        & (total > 0.0)
+        & (eligible_count > 0)
+        & (eligible_count < total_ticks)
+        & (last_eligible >= 0)
+        & (ticks >= 0).all(dim=1)
+        & (ticks.sum(dim=1) == total_ticks)
+        & (torch.where(eligible, torch.zeros_like(ticks), ticks).sum(dim=1) == 0)
+        & torch.where(eligible, ticks >= 1, torch.ones_like(eligible)).all(dim=1)
+    )
+    return ticks, boundary, correction, valid
+
+
+def _spatial_ps_schedule_sha256(
+    cell_id: np.ndarray,
+    component_id: np.ndarray,
+    microstratum_id: np.ndarray,
+    replicate_id: np.ndarray,
+) -> str:
+    return _spatial_ps_record_sha256(
+        "canonical_slot_schedule",
+        (
+            _spatial_ps_array_sha256("cell_id", cell_id, dtype=">u2"),
+            _spatial_ps_array_sha256(
+                "component_id", component_id, dtype=">u1"
+            ),
+            _spatial_ps_array_sha256(
+                "microstratum_id", microstratum_id, dtype=">u1"
+            ),
+            _spatial_ps_array_sha256(
+                "replicate_id", replicate_id, dtype=">u1"
+            ),
+        ),
+    )
+
+
+def _spatial_ps_quantization_sha256(
+    source_tick_sum: np.ndarray,
+    source_eligible_count: np.ndarray,
+    source_positive_tick_count: np.ndarray,
+    source_minimum_eligible_tick: np.ndarray,
+    source_excluded_tick_sum: np.ndarray,
+    source_terminal_correction: np.ndarray,
+    source_audit_passed: np.ndarray,
+    fallback_scaled_law_mismatch_count: np.ndarray,
+) -> str:
+    return _spatial_ps_record_sha256(
+        "integer_quantization_audit",
+        (
+            _spatial_ps_array_sha256(
+                "source_tick_sum", source_tick_sum, dtype=">u8"
+            ),
+            _spatial_ps_array_sha256(
+                "source_eligible_count", source_eligible_count, dtype=">u4"
+            ),
+            _spatial_ps_array_sha256(
+                "source_positive_tick_count",
+                source_positive_tick_count,
+                dtype=">u4",
+            ),
+            _spatial_ps_array_sha256(
+                "source_minimum_eligible_tick",
+                source_minimum_eligible_tick,
+                dtype=">u8",
+            ),
+            _spatial_ps_array_sha256(
+                "source_excluded_tick_sum",
+                source_excluded_tick_sum,
+                dtype=">u8",
+            ),
+            _spatial_ps_array_sha256(
+                "source_terminal_correction",
+                source_terminal_correction,
+                dtype=">i8",
+            ),
+            _spatial_ps_array_sha256(
+                "source_audit_passed", source_audit_passed, dtype=">u1"
+            ),
+            _spatial_ps_array_sha256(
+                "fallback_scaled_law_mismatch_count",
+                fallback_scaled_law_mismatch_count,
+                dtype=">u4",
+            ),
+        ),
+    )
+
+
+def _spatial_ps_draw_record_sha256(
+    *,
+    partition_hashes: Sequence[str],
+    cell_order_sha256: str,
+    indices_sha256: str,
+    probability_sha256: str,
+    numerator_sha256: str,
+    selected_source_ticks_sha256: str,
+    selected_source_cdf_lower_sha256: str,
+    u48_sha256: str,
+    normalizer_sha256: str,
+    object_ids_sha256: str,
+    schedule_sha256: str,
+    quantization_sha256: str,
+    exclusions: Sequence[str],
+    seed: int,
+    atom_chunk: int,
+    object_chunk: int,
+) -> str:
+    return _spatial_ps_record_sha256(
+        "draw",
+        (
+            *partition_hashes,
+            cell_order_sha256,
+            indices_sha256,
+            probability_sha256,
+            numerator_sha256,
+            selected_source_ticks_sha256,
+            selected_source_cdf_lower_sha256,
+            u48_sha256,
+            normalizer_sha256,
+            object_ids_sha256,
+            schedule_sha256,
+            quantization_sha256,
+            _spatial_ps_record_sha256("exclusions", tuple(exclusions)),
+            _spatial_ps_text_sha256("version", SPATIAL_PS_VERSION),
+            _spatial_ps_text_sha256("seed", int(seed)),
+            _spatial_ps_text_sha256("atom_chunk", int(atom_chunk)),
+            _spatial_ps_text_sha256("object_chunk", int(object_chunk)),
+            _spatial_ps_text_sha256(
+                "cells_per_slab", SPATIAL_PS_CELLS_PER_SLAB
+            ),
+            _spatial_ps_text_sha256("microstrata", SPATIAL_PS_MICROSTRATA),
+            _spatial_ps_text_sha256("replicates", SPATIAL_PS_REPLICATES),
+            _spatial_ps_text_sha256(
+                "ticks_per_microstratum",
+                SPATIAL_PS_TICKS_PER_MICROSTRATUM,
+            ),
+            _spatial_ps_text_sha256("rng_contract", SPATIAL_PS_RNG_CONTRACT),
+            _spatial_ps_text_sha256(
+                "quantizer_contract", SPATIAL_PS_QUANTIZER_CONTRACT
+            ),
+            _spatial_ps_text_sha256("hash_contract", SPATIAL_PS_HASH_CONTRACT),
+            _spatial_ps_text_sha256("order_contract", SPATIAL_PS_ORDER_CONTRACT),
+        ),
+    )
 
 
 def _validate_sha256(value: str, *, label: str) -> str:
@@ -1705,6 +2285,595 @@ class SpatialMISReduction:
         object.__setattr__(self, "cell_variance", cell_variance)
         object.__setattr__(
             self, "cell_source_sample_variance", source_variance
+        )
+
+    @property
+    def mass(self) -> np.ndarray:
+        return self.estimate
+
+
+@dataclass(frozen=True)
+class SpatialProbabilityStratifiedMISDraw:
+    """Frozen H256-U8-PS2 draws from exact integer realized laws."""
+
+    indices: np.ndarray
+    probability: np.ndarray
+    probability_numerator: np.ndarray
+    selected_source_ticks: np.ndarray
+    selected_source_cdf_lower: np.ndarray
+    u48: np.ndarray
+    cell_id: np.ndarray
+    component_id: np.ndarray
+    microstratum_id: np.ndarray
+    replicate_id: np.ndarray
+    component_log_normalizer: np.ndarray
+    object_ids: np.ndarray
+    source_tick_sum: np.ndarray
+    source_eligible_count: np.ndarray
+    source_positive_tick_count: np.ndarray
+    source_minimum_eligible_tick: np.ndarray
+    source_excluded_tick_sum: np.ndarray
+    source_terminal_correction: np.ndarray
+    source_audit_passed: np.ndarray
+    fallback_scaled_law_mismatch_count: np.ndarray
+    seed: int
+    atom_chunk: int
+    object_chunk: int
+    cells_per_slab: int
+    partition_sha256: str
+    partition_assignment_sha256: str
+    partition_counts_sha256: str
+    partition_detected_mass_sha256: str
+    partition_prior_mass_sha256: str
+    partition_recipe_sha256: str
+    cell_order_sha256: str
+    object_excluded_candidate_indices_sha256: tuple[str, ...]
+    indices_sha256: str
+    probability_sha256: str
+    numerator_sha256: str
+    selected_source_ticks_sha256: str
+    selected_source_cdf_lower_sha256: str
+    u48_sha256: str
+    normalizer_sha256: str
+    object_ids_sha256: str
+    schedule_sha256: str
+    quantization_sha256: str
+    object_indices_sha256: tuple[str, ...]
+    object_probability_sha256: tuple[str, ...]
+    object_numerator_sha256: tuple[str, ...]
+    object_selected_source_ticks_sha256: tuple[str, ...]
+    object_selected_source_cdf_lower_sha256: tuple[str, ...]
+    object_u48_sha256: tuple[str, ...]
+    record_sha256: str
+    component_recipe: TailProposalRecipe = TAIL_PROPOSAL_RECIPE
+    version: str = SPATIAL_PS_VERSION
+    rng_contract: str = SPATIAL_PS_RNG_CONTRACT
+    quantizer_contract: str = SPATIAL_PS_QUANTIZER_CONTRACT
+    hash_contract: str = SPATIAL_PS_HASH_CONTRACT
+    order_contract: str = SPATIAL_PS_ORDER_CONTRACT
+
+    def __post_init__(self):
+        indices = np.ascontiguousarray(self.indices, dtype=np.int64).copy()
+        probability = np.ascontiguousarray(
+            self.probability, dtype=np.float64
+        ).copy()
+        numerator = np.ascontiguousarray(
+            self.probability_numerator, dtype=np.uint64
+        ).copy()
+        selected_source_ticks = np.ascontiguousarray(
+            self.selected_source_ticks, dtype=np.uint64
+        ).copy()
+        selected_source_cdf_lower = np.ascontiguousarray(
+            self.selected_source_cdf_lower, dtype=np.uint64
+        ).copy()
+        u48 = np.ascontiguousarray(self.u48, dtype=np.uint64).copy()
+        cells = np.ascontiguousarray(self.cell_id, dtype=np.uint16).copy()
+        components = np.ascontiguousarray(
+            self.component_id, dtype=np.uint8
+        ).copy()
+        microstrata = np.ascontiguousarray(
+            self.microstratum_id, dtype=np.uint8
+        ).copy()
+        replicates = np.ascontiguousarray(
+            self.replicate_id, dtype=np.uint8
+        ).copy()
+        normalizer = np.ascontiguousarray(
+            self.component_log_normalizer, dtype=np.float64
+        ).copy()
+        object_ids = np.ascontiguousarray(self.object_ids, dtype=np.int64).copy()
+        tick_sum = np.ascontiguousarray(
+            self.source_tick_sum, dtype=np.uint64
+        ).copy()
+        eligible_count = np.ascontiguousarray(
+            self.source_eligible_count, dtype=np.uint32
+        ).copy()
+        positive_count = np.ascontiguousarray(
+            self.source_positive_tick_count, dtype=np.uint32
+        ).copy()
+        minimum_tick = np.ascontiguousarray(
+            self.source_minimum_eligible_tick, dtype=np.uint64
+        ).copy()
+        excluded_tick = np.ascontiguousarray(
+            self.source_excluded_tick_sum, dtype=np.uint64
+        ).copy()
+        correction = np.ascontiguousarray(
+            self.source_terminal_correction, dtype=np.int64
+        ).copy()
+        audit_passed = np.ascontiguousarray(
+            self.source_audit_passed, dtype=np.uint8
+        ).copy()
+        fallback_mismatch = np.ascontiguousarray(
+            self.fallback_scaled_law_mismatch_count, dtype=np.uint32
+        ).copy()
+
+        n_objects = len(indices)
+        n_draws = SPATIAL_CELL_COUNT * SPATIAL_PS_DRAWS_PER_CELL
+        n_components = len(TAIL_PROPOSAL_RECIPE.component_names)
+        audit_shape = (n_objects, SPATIAL_CELL_COUNT, n_components)
+        if not isinstance(self.component_recipe, TailProposalRecipe):
+            raise TypeError("H256-U8-PS2 component recipe is invalid")
+        if self.component_recipe != TAIL_PROPOSAL_RECIPE:
+            raise ValueError("H256-U8-PS2 requires the frozen DM3 recipe")
+        if (
+            self.version != SPATIAL_PS_VERSION
+            or self.rng_contract != SPATIAL_PS_RNG_CONTRACT
+            or self.quantizer_contract != SPATIAL_PS_QUANTIZER_CONTRACT
+            or self.hash_contract != SPATIAL_PS_HASH_CONTRACT
+            or self.order_contract != SPATIAL_PS_ORDER_CONTRACT
+        ):
+            raise ValueError("unsupported H256-U8-PS2 sampler contract")
+        if (
+            int(self.cells_per_slab) != SPATIAL_PS_CELLS_PER_SLAB
+            or int(self.atom_chunk) <= 0
+            or int(self.object_chunk) <= 0
+        ):
+            raise ValueError("H256-U8-PS2 chunk contract is invalid")
+        if (
+            indices.ndim != 2
+            or indices.shape != (n_objects, n_draws)
+            or probability.shape != indices.shape
+            or numerator.shape != indices.shape
+            or selected_source_ticks.shape
+            != (n_objects, n_draws, n_components)
+            or selected_source_cdf_lower.shape != (n_objects, n_draws)
+            or u48.shape != indices.shape
+            or cells.shape != (n_draws,)
+            or components.shape != (n_draws,)
+            or microstrata.shape != (n_draws,)
+            or replicates.shape != (n_draws,)
+            or normalizer.shape
+            != (n_objects, SPATIAL_CELL_COUNT, n_components)
+            or object_ids.shape != (n_objects,)
+            or tick_sum.shape != audit_shape
+            or eligible_count.shape != audit_shape
+            or positive_count.shape != audit_shape
+            or minimum_tick.shape != audit_shape
+            or excluded_tick.shape != audit_shape
+            or correction.shape != audit_shape
+            or audit_passed.shape != audit_shape
+            or fallback_mismatch.shape
+            != (n_objects, SPATIAL_CELL_COUNT, n_components - 1)
+        ):
+            raise ValueError("H256-U8-PS2 draw arrays have invalid shapes")
+        expected_schedule = _spatial_ps_canonical_schedule()
+        for observed, expected in zip(
+            (cells, components, microstrata, replicates), expected_schedule
+        ):
+            if not np.array_equal(observed, expected):
+                raise ValueError("H256-U8-PS2 slot schedule is not canonical")
+        mixture_total = 1 << 53
+        expected_probability = np.ldexp(numerator.astype(np.float64), -53)
+        source_totals = np.asarray(
+            [
+                _spatial_ps_source_total_ticks(source)
+                for source in range(n_components)
+            ],
+            dtype=np.uint64,
+        )
+        scheduled_source = np.broadcast_to(
+            components[None, :, None], (n_objects, n_draws, 1)
+        )
+        scheduled_tick = np.take_along_axis(
+            selected_source_ticks, scheduled_source, axis=2
+        )[:, :, 0]
+        scheduled_total = source_totals[components][None, :]
+        scheduled_upper = selected_source_cdf_lower + scheduled_tick
+        threshold = (
+            microstrata[None, :].astype(np.uint64)
+            * np.uint64(SPATIAL_PS_TICKS_PER_MICROSTRATUM)
+            + u48
+        )
+        if (
+            not n_objects
+            or (indices < 0).any()
+            or not np.isfinite(probability).all()
+            or (probability <= 0.0).any()
+            or (numerator < 1).any()
+            or (numerator > mixture_total).any()
+            or np.any(selected_source_ticks > source_totals)
+            or not np.array_equal(
+                numerator,
+                selected_source_ticks.sum(axis=2, dtype=np.uint64),
+            )
+            or (scheduled_tick == 0).any()
+            or np.any(selected_source_cdf_lower >= scheduled_total)
+            or np.any(scheduled_upper > scheduled_total)
+            or np.any(selected_source_cdf_lower > threshold)
+            or np.any(
+                threshold >= scheduled_upper
+            )
+            or not np.array_equal(probability, expected_probability)
+            or (u48 >= SPATIAL_PS_TICKS_PER_MICROSTRATUM).any()
+            or np.isnan(normalizer).any()
+            or np.isposinf(normalizer).any()
+            or not np.isfinite(normalizer[:, :, -1]).all()
+            or (object_ids < 0).any()
+            or len(np.unique(object_ids)) != n_objects
+        ):
+            raise ValueError("H256-U8-PS2 draw contains invalid values")
+
+        expected_tick_sum = source_totals
+        if (
+            not np.all(tick_sum == expected_tick_sum)
+            or (eligible_count == 0).any()
+            or not np.all(eligible_count == eligible_count[:, :, 2:3])
+            or (positive_count > eligible_count).any()
+            or (excluded_tick != 0).any()
+            or (correction != 0).any()
+            or (audit_passed != 1).any()
+            or (fallback_mismatch != 0).any()
+            or not np.all(positive_count[:, :, 2] == eligible_count[:, :, 2])
+            or (minimum_tick[:, :, 2] < 1).any()
+        ):
+            raise ValueError("H256-U8-PS2 integer-law audit is invalid")
+        fallback = np.isneginf(normalizer[:, :, :-1])
+        for component, scale in enumerate((4, 3)):
+            selected = fallback[:, :, component]
+            if not selected.any():
+                continue
+            if (
+                not np.all(
+                    positive_count[:, :, component][selected]
+                    == positive_count[:, :, 2][selected]
+                )
+                or not np.all(
+                    minimum_tick[:, :, component][selected]
+                    == scale * minimum_tick[:, :, 2][selected]
+                )
+                or not np.all(
+                    correction[:, :, component][selected]
+                    == scale * correction[:, :, 2][selected]
+                )
+            ):
+                raise ValueError("H256-U8-PS2 fallback is not scaled prior law")
+
+        exclusion_hashes = tuple(self.object_excluded_candidate_indices_sha256)
+        object_index_hashes = tuple(self.object_indices_sha256)
+        object_probability_hashes = tuple(self.object_probability_sha256)
+        object_numerator_hashes = tuple(self.object_numerator_sha256)
+        object_selected_source_ticks_hashes = tuple(
+            self.object_selected_source_ticks_sha256
+        )
+        object_selected_source_cdf_lower_hashes = tuple(
+            self.object_selected_source_cdf_lower_sha256
+        )
+        object_u48_hashes = tuple(self.object_u48_sha256)
+        if not (
+            len(exclusion_hashes)
+            == len(object_index_hashes)
+            == len(object_probability_hashes)
+            == len(object_numerator_hashes)
+            == len(object_selected_source_ticks_hashes)
+            == len(object_selected_source_cdf_lower_hashes)
+            == len(object_u48_hashes)
+            == n_objects
+        ):
+            raise ValueError("H256-U8-PS2 object provenance does not align")
+        for name in (
+            "partition_sha256",
+            "partition_assignment_sha256",
+            "partition_counts_sha256",
+            "partition_detected_mass_sha256",
+            "partition_prior_mass_sha256",
+            "partition_recipe_sha256",
+            "cell_order_sha256",
+            "indices_sha256",
+            "probability_sha256",
+            "numerator_sha256",
+            "selected_source_ticks_sha256",
+            "selected_source_cdf_lower_sha256",
+            "u48_sha256",
+            "normalizer_sha256",
+            "object_ids_sha256",
+            "schedule_sha256",
+            "quantization_sha256",
+            "record_sha256",
+        ):
+            _validate_sha256(getattr(self, name), label=name)
+        for value in (
+            *exclusion_hashes,
+            *object_index_hashes,
+            *object_probability_hashes,
+            *object_numerator_hashes,
+            *object_selected_source_ticks_hashes,
+            *object_selected_source_cdf_lower_hashes,
+            *object_u48_hashes,
+        ):
+            _validate_sha256(value, label="H256-U8-PS2 object hash")
+
+        expected_indices_hash = _spatial_ps_array_sha256(
+            "indices", indices, dtype=">i8"
+        )
+        expected_probability_hash = _spatial_ps_array_sha256(
+            "probability", probability, dtype=">f8"
+        )
+        expected_numerator_hash = _spatial_ps_array_sha256(
+            "probability_numerator", numerator, dtype=">u8"
+        )
+        expected_selected_source_ticks_hash = _spatial_ps_array_sha256(
+            "selected_source_ticks", selected_source_ticks, dtype=">u8"
+        )
+        expected_selected_source_cdf_lower_hash = _spatial_ps_array_sha256(
+            "selected_source_cdf_lower",
+            selected_source_cdf_lower,
+            dtype=">u8",
+        )
+        expected_u48_hash = _spatial_ps_array_sha256(
+            "u48", u48, dtype=">u8"
+        )
+        expected_normalizer_hash = _spatial_ps_array_sha256(
+            "component_log_normalizer", normalizer, dtype=">f8"
+        )
+        expected_object_ids_hash = _spatial_ps_array_sha256(
+            "object_ids", object_ids, dtype=">i8"
+        )
+        expected_schedule_hash = _spatial_ps_schedule_sha256(
+            cells, components, microstrata, replicates
+        )
+        expected_quantization_hash = _spatial_ps_quantization_sha256(
+            tick_sum,
+            eligible_count,
+            positive_count,
+            minimum_tick,
+            excluded_tick,
+            correction,
+            audit_passed,
+            fallback_mismatch,
+        )
+        if (
+            self.indices_sha256 != expected_indices_hash
+            or self.probability_sha256 != expected_probability_hash
+            or self.numerator_sha256 != expected_numerator_hash
+            or self.selected_source_ticks_sha256
+            != expected_selected_source_ticks_hash
+            or self.selected_source_cdf_lower_sha256
+            != expected_selected_source_cdf_lower_hash
+            or self.u48_sha256 != expected_u48_hash
+            or self.normalizer_sha256 != expected_normalizer_hash
+            or self.object_ids_sha256 != expected_object_ids_hash
+            or self.schedule_sha256 != expected_schedule_hash
+            or self.quantization_sha256 != expected_quantization_hash
+            or object_index_hashes
+            != _spatial_ps_object_array_sha256(
+                "object_indices", indices, dtype=">i8"
+            )
+            or object_probability_hashes
+            != _spatial_ps_object_array_sha256(
+                "object_probability", probability, dtype=">f8"
+            )
+            or object_numerator_hashes
+            != _spatial_ps_object_array_sha256(
+                "object_probability_numerator", numerator, dtype=">u8"
+            )
+            or object_selected_source_ticks_hashes
+            != tuple(
+                _spatial_ps_array_sha256(
+                    "object_selected_source_ticks",
+                    selected_source_ticks[row : row + 1],
+                    dtype=">u8",
+                )
+                for row in range(n_objects)
+            )
+            or object_selected_source_cdf_lower_hashes
+            != _spatial_ps_object_array_sha256(
+                "object_selected_source_cdf_lower",
+                selected_source_cdf_lower,
+                dtype=">u8",
+            )
+            or object_u48_hashes
+            != _spatial_ps_object_array_sha256(
+                "object_u48", u48, dtype=">u8"
+            )
+        ):
+            raise ValueError("H256-U8-PS2 draw provenance does not match arrays")
+        expected_record_hash = _spatial_ps_draw_record_sha256(
+            partition_hashes=(
+                self.partition_sha256,
+                self.partition_assignment_sha256,
+                self.partition_counts_sha256,
+                self.partition_detected_mass_sha256,
+                self.partition_prior_mass_sha256,
+                self.partition_recipe_sha256,
+            ),
+            cell_order_sha256=self.cell_order_sha256,
+            indices_sha256=expected_indices_hash,
+            probability_sha256=expected_probability_hash,
+            numerator_sha256=expected_numerator_hash,
+            selected_source_ticks_sha256=expected_selected_source_ticks_hash,
+            selected_source_cdf_lower_sha256=(
+                expected_selected_source_cdf_lower_hash
+            ),
+            u48_sha256=expected_u48_hash,
+            normalizer_sha256=expected_normalizer_hash,
+            object_ids_sha256=expected_object_ids_hash,
+            schedule_sha256=expected_schedule_hash,
+            quantization_sha256=expected_quantization_hash,
+            exclusions=exclusion_hashes,
+            seed=int(self.seed),
+            atom_chunk=int(self.atom_chunk),
+            object_chunk=int(self.object_chunk),
+        )
+        if self.record_sha256 != expected_record_hash:
+            raise ValueError("H256-U8-PS2 record hash does not match")
+        for array in (
+            indices,
+            probability,
+            numerator,
+            selected_source_ticks,
+            selected_source_cdf_lower,
+            u48,
+            cells,
+            components,
+            microstrata,
+            replicates,
+            normalizer,
+            object_ids,
+            tick_sum,
+            eligible_count,
+            positive_count,
+            minimum_tick,
+            excluded_tick,
+            correction,
+            audit_passed,
+            fallback_mismatch,
+        ):
+            array.setflags(write=False)
+        for name, value in (
+            ("indices", indices),
+            ("probability", probability),
+            ("probability_numerator", numerator),
+            ("selected_source_ticks", selected_source_ticks),
+            ("selected_source_cdf_lower", selected_source_cdf_lower),
+            ("u48", u48),
+            ("cell_id", cells),
+            ("component_id", components),
+            ("microstratum_id", microstrata),
+            ("replicate_id", replicates),
+            ("component_log_normalizer", normalizer),
+            ("object_ids", object_ids),
+            ("source_tick_sum", tick_sum),
+            ("source_eligible_count", eligible_count),
+            ("source_positive_tick_count", positive_count),
+            ("source_minimum_eligible_tick", minimum_tick),
+            ("source_excluded_tick_sum", excluded_tick),
+            ("source_terminal_correction", correction),
+            ("source_audit_passed", audit_passed),
+            ("fallback_scaled_law_mismatch_count", fallback_mismatch),
+        ):
+            object.__setattr__(self, name, value)
+        object.__setattr__(
+            self, "object_excluded_candidate_indices_sha256", exclusion_hashes
+        )
+        object.__setattr__(self, "object_indices_sha256", object_index_hashes)
+        object.__setattr__(
+            self, "object_probability_sha256", object_probability_hashes
+        )
+        object.__setattr__(
+            self, "object_numerator_sha256", object_numerator_hashes
+        )
+        object.__setattr__(
+            self,
+            "object_selected_source_ticks_sha256",
+            object_selected_source_ticks_hashes,
+        )
+        object.__setattr__(
+            self,
+            "object_selected_source_cdf_lower_sha256",
+            object_selected_source_cdf_lower_hashes,
+        )
+        object.__setattr__(self, "object_u48_sha256", object_u48_hashes)
+        object.__setattr__(self, "seed", int(self.seed))
+        object.__setattr__(self, "atom_chunk", int(self.atom_chunk))
+        object.__setattr__(self, "object_chunk", int(self.object_chunk))
+        object.__setattr__(self, "cells_per_slab", int(self.cells_per_slab))
+
+    @property
+    def q_h(self) -> np.ndarray:
+        return self.probability
+
+    @property
+    def source_id(self) -> np.ndarray:
+        return self.component_id
+
+    @property
+    def proxy_fallback(self) -> np.ndarray:
+        result = np.isneginf(self.component_log_normalizer[:, :, :-1])
+        result.setflags(write=False)
+        return result
+
+
+@dataclass(frozen=True)
+class SpatialProbabilityStratifiedMISReduction:
+    """Cell means and exact paired-microstratum variance for H256-U8-PS2."""
+
+    estimate: np.ndarray
+    variance: np.ndarray
+    standard_error: np.ndarray
+    cell_estimate: np.ndarray
+    cell_variance: np.ndarray
+    cell_pair_squared_difference_sum: np.ndarray
+
+    def __post_init__(self):
+        estimate = np.ascontiguousarray(self.estimate, dtype=np.float64).copy()
+        variance = np.ascontiguousarray(self.variance, dtype=np.float64).copy()
+        standard_error = np.ascontiguousarray(
+            self.standard_error, dtype=np.float64
+        ).copy()
+        cell_estimate = np.ascontiguousarray(
+            self.cell_estimate, dtype=np.float64
+        ).copy()
+        cell_variance = np.ascontiguousarray(
+            self.cell_variance, dtype=np.float64
+        ).copy()
+        pair_sum = np.ascontiguousarray(
+            self.cell_pair_squared_difference_sum, dtype=np.float64
+        ).copy()
+        n_objects = len(estimate)
+        shape = (n_objects, SPATIAL_CELL_COUNT)
+        if (
+            estimate.ndim != 1
+            or variance.shape != (n_objects,)
+            or standard_error.shape != (n_objects,)
+            or cell_estimate.shape != shape
+            or cell_variance.shape != shape
+            or pair_sum.shape != shape
+            or not np.isfinite(estimate).all()
+            or not np.isfinite(variance).all()
+            or (variance < 0.0).any()
+            or not np.isfinite(standard_error).all()
+            or not np.isfinite(cell_estimate).all()
+            or not np.isfinite(cell_variance).all()
+            or (cell_variance < 0.0).any()
+            or not np.isfinite(pair_sum).all()
+            or (pair_sum < 0.0).any()
+            or not np.array_equal(
+                cell_variance,
+                pair_sum / float(SPATIAL_PS_DRAWS_PER_CELL**2),
+            )
+            or not np.allclose(
+                standard_error,
+                np.sqrt(variance),
+                rtol=0.0,
+                atol=16.0 * np.finfo(np.float64).eps,
+            )
+        ):
+            raise ValueError("H256-U8-PS2 reduction arrays are invalid")
+        for array in (
+            estimate,
+            variance,
+            standard_error,
+            cell_estimate,
+            cell_variance,
+            pair_sum,
+        ):
+            array.setflags(write=False)
+        object.__setattr__(self, "estimate", estimate)
+        object.__setattr__(self, "variance", variance)
+        object.__setattr__(self, "standard_error", standard_error)
+        object.__setattr__(self, "cell_estimate", cell_estimate)
+        object.__setattr__(self, "cell_variance", cell_variance)
+        object.__setattr__(
+            self, "cell_pair_squared_difference_sum", pair_sum
         )
 
     @property
@@ -3614,6 +4783,34 @@ class DefensiveLocalProposal:
             recipe=recipe,
         )
 
+    def draw_spatial_probability_stratified_mis(
+        self,
+        candidates: ProposalCandidates,
+        observed,
+        *,
+        seed: int = SPATIAL_PS_SEED,
+        partition: Optional[SpatialCellPartition] = None,
+        object_ids: Optional[np.ndarray] = None,
+        device: Optional[str | torch.device] = None,
+        atom_chunk: int = TAIL_PROPOSAL_ATOM_CHUNK,
+        object_chunk: int = TAIL_PROPOSAL_OBJECT_CHUNK,
+        recipe: TailProposalRecipe = TAIL_PROPOSAL_RECIPE,
+    ) -> "SpatialProbabilityStratifiedMISDraw":
+        """Draw the isolated fixed-width H256-U8-PS2 integer proposal."""
+
+        return draw_spatial_probability_stratified_mis(
+            self,
+            candidates,
+            observed,
+            seed=seed,
+            partition=partition,
+            object_ids=object_ids,
+            device=device,
+            atom_chunk=atom_chunk,
+            object_chunk=object_chunk,
+            recipe=recipe,
+        )
+
     def draw(
         self,
         observed,
@@ -5135,6 +6332,708 @@ def draw_spatial_mis_reservoirs(
     return pilot, production
 
 
+def draw_spatial_probability_stratified_mis(
+    proposal: DefensiveLocalProposal,
+    candidates: ProposalCandidates,
+    observed,
+    *,
+    seed: int = SPATIAL_PS_SEED,
+    partition: Optional[SpatialCellPartition] = None,
+    object_ids: Optional[np.ndarray] = None,
+    device: Optional[str | torch.device] = None,
+    atom_chunk: int = TAIL_PROPOSAL_ATOM_CHUNK,
+    object_chunk: int = TAIL_PROPOSAL_OBJECT_CHUNK,
+    recipe: TailProposalRecipe = TAIL_PROPOSAL_RECIPE,
+) -> SpatialProbabilityStratifiedMISDraw:
+    """Draw H256-U8-PS2 from exact on-device integer realized laws.
+
+    Four complete consecutive cells share each proxy-likelihood slab.  Each
+    cell is then normalized, cumulative-floor quantized, terminally reset and
+    searched independently on the active device.  Dense source laws never
+    cross to host memory: only selected slots and compact integer-law audits
+    are retained.
+    """
+
+    if not isinstance(proposal, DefensiveLocalProposal):
+        raise TypeError("proposal must be a DefensiveLocalProposal")
+    if not isinstance(candidates, ProposalCandidates):
+        raise TypeError("H256-U8-PS2 exclusions must be ProposalCandidates")
+    if recipe != TAIL_PROPOSAL_RECIPE:
+        raise ValueError("H256-U8-PS2 requires the frozen DM3 recipe")
+    seed = int(seed)
+    atom_chunk = int(atom_chunk)
+    object_chunk = int(object_chunk)
+    if not 0 <= seed <= np.iinfo(np.uint64).max:
+        raise ValueError("H256-U8-PS2 seed must fit uint64")
+    if atom_chunk <= 0 or object_chunk <= 0:
+        raise ValueError("H256-U8-PS2 chunk sizes must be positive")
+    if partition is None:
+        partition = proposal.spatial_cell_partition()
+    elif not isinstance(partition, SpatialCellPartition):
+        raise TypeError("partition must be a SpatialCellPartition")
+    else:
+        partition.verify(proposal)
+        proposal._spatial_cell_partition = partition
+
+    values = proposal._observed_values(observed)
+    exclusions = np.asarray(candidates.indices, dtype=np.int64)
+    if exclusions.ndim != 2 or len(exclusions) != len(values):
+        raise ValueError("H256-U8-PS2 exclusions and observations must align")
+    n_objects = len(values)
+    if not n_objects:
+        raise ValueError("H256-U8-PS2 object batch cannot be empty")
+    if object_ids is None:
+        absolute_ids = np.arange(n_objects, dtype=np.int64)
+    else:
+        absolute_ids = np.asarray(object_ids, dtype=np.int64)
+    if (
+        absolute_ids.shape != (n_objects,)
+        or (absolute_ids < 0).any()
+        or len(np.unique(absolute_ids)) != n_objects
+    ):
+        raise ValueError("object_ids must be unique non-negative ids aligned to rows")
+
+    proxy = proposal._tilted_proxy(device)
+    excluded_positions = [
+        proxy._excluded_positions(exclusions[row]) for row in range(n_objects)
+    ]
+    exclusion_hashes = _spatial_ps_exclusion_manifest_sha256(exclusions)
+    cache = getattr(proposal, "_spatial_ps_cell_order", None)
+    if cache is None or cache[0] != partition.partition_sha256:
+        order = np.argsort(partition.cell_id, kind="stable").astype(
+            np.int64, copy=False
+        )
+        offsets = np.concatenate(
+            (
+                np.zeros(1, dtype=np.int64),
+                np.cumsum(partition.counts, dtype=np.int64),
+            )
+        )
+        inverse = np.empty(len(order), dtype=np.int64)
+        inverse[order] = np.arange(len(order), dtype=np.int64)
+        cache = (partition.partition_sha256, order, offsets, inverse)
+        proposal._spatial_ps_cell_order = cache
+    _, cell_order, cell_offsets, inverse_cell_order = cache
+    exclusion_buckets = []
+    for excluded in excluded_positions:
+        excluded_cells = partition.cell_id[excluded].astype(
+            np.int64, copy=False
+        )
+        local_offset = (
+            inverse_cell_order[excluded] - cell_offsets[excluded_cells]
+        )
+        bucket_order = np.argsort(excluded_cells, kind="stable")
+        sorted_cells = excluded_cells[bucket_order]
+        sorted_local = local_offset[bucket_order].astype(np.int64, copy=False)
+        bucket_offsets = np.concatenate(
+            (
+                np.zeros(1, dtype=np.int64),
+                np.cumsum(
+                    np.bincount(
+                        sorted_cells, minlength=SPATIAL_CELL_COUNT
+                    ),
+                    dtype=np.int64,
+                ),
+            )
+        )
+        if (
+            len(sorted_local)
+            and (
+                (sorted_local < 0).any()
+                or np.any(
+                    sorted_local
+                    >= partition.counts[sorted_cells].astype(np.int64)
+                )
+            )
+        ):
+            raise RuntimeError("H256-U8-PS2 exclusion bucketing failed")
+        exclusion_buckets.append((sorted_local, bucket_offsets))
+    ordered_atom_ids = proposal.active_indices[cell_order]
+    for cell in range(SPATIAL_CELL_COUNT):
+        start = int(cell_offsets[cell])
+        stop = int(cell_offsets[cell + 1])
+        if start == stop or (
+            np.diff(ordered_atom_ids[start:stop]) <= 0
+        ).any():
+            raise RuntimeError(
+                "H256-U8-PS2 cell atoms are not in ascending active atom id"
+            )
+    for slab_start in range(0, SPATIAL_CELL_COUNT, SPATIAL_PS_CELLS_PER_SLAB):
+        slab_stop = slab_start + SPATIAL_PS_CELLS_PER_SLAB
+        slab_count = int(cell_offsets[slab_stop] - cell_offsets[slab_start])
+        if slab_count > atom_chunk:
+            raise ValueError(
+                "H256-U8-PS2 four-cell slab exceeds the atom chunk"
+            )
+    cell_order_sha256 = _spatial_ps_array_sha256(
+        "ascending_cell_atom_order", ordered_atom_ids, dtype=">i8"
+    )
+
+    n_draws = SPATIAL_CELL_COUNT * SPATIAL_PS_DRAWS_PER_CELL
+    n_components = len(recipe.component_names)
+    draw_indices = np.empty((n_objects, n_draws), dtype=np.int64)
+    draw_numerator = np.empty((n_objects, n_draws), dtype=np.uint64)
+    selected_source_ticks = np.empty(
+        (n_objects, n_draws, n_components), dtype=np.uint64
+    )
+    selected_source_cdf_lower = np.empty(
+        (n_objects, n_draws), dtype=np.uint64
+    )
+    draw_u48 = np.empty((n_objects, n_draws), dtype=np.uint64)
+    log_normalizer = np.empty(
+        (n_objects, SPATIAL_CELL_COUNT, n_components), dtype=np.float64
+    )
+    audit_shape = (n_objects, SPATIAL_CELL_COUNT, n_components)
+    source_tick_sum = np.empty(audit_shape, dtype=np.uint64)
+    source_eligible_count = np.empty(audit_shape, dtype=np.uint32)
+    source_positive_tick_count = np.empty(audit_shape, dtype=np.uint32)
+    source_minimum_eligible_tick = np.empty(audit_shape, dtype=np.uint64)
+    source_excluded_tick_sum = np.empty(audit_shape, dtype=np.uint64)
+    source_terminal_correction = np.empty(audit_shape, dtype=np.int64)
+    source_audit_passed = np.empty(audit_shape, dtype=np.uint8)
+    fallback_mismatch = np.empty(
+        (n_objects, SPATIAL_CELL_COUNT, n_components - 1), dtype=np.uint32
+    )
+    source_offsets = np.concatenate(
+        (
+            np.zeros(1, dtype=np.int64),
+            np.cumsum(SPATIAL_PS_SOURCE_COUNTS, dtype=np.int64),
+        )
+    )
+    active_device = proxy.active
+
+    with torch.no_grad():
+        for object_start in range(0, n_objects, object_chunk):
+            object_stop = min(object_start + object_chunk, n_objects)
+            chunk_size = object_stop - object_start
+            observation = torch.as_tensor(
+                np.ascontiguousarray(values[object_start:object_stop]),
+                dtype=torch.float64,
+                device=proxy.a1.device,
+            )
+            chunk_indices = torch.empty(
+                (chunk_size, n_draws),
+                dtype=torch.int64,
+                device=proxy.a1.device,
+            )
+            chunk_selected_ticks = torch.empty(
+                (chunk_size, n_draws, n_components),
+                dtype=torch.int64,
+                device=proxy.a1.device,
+            )
+            chunk_selected_lower = torch.empty(
+                (chunk_size, n_draws),
+                dtype=torch.int64,
+                device=proxy.a1.device,
+            )
+            chunk_normalizer = torch.empty(
+                (chunk_size, SPATIAL_CELL_COUNT, n_components),
+                dtype=torch.float64,
+                device=proxy.a1.device,
+            )
+            chunk_tick_sum = torch.empty(
+                (chunk_size, SPATIAL_CELL_COUNT, n_components),
+                dtype=torch.int64,
+                device=proxy.a1.device,
+            )
+            chunk_eligible_count = torch.empty_like(chunk_tick_sum)
+            chunk_positive_count = torch.empty_like(chunk_tick_sum)
+            chunk_minimum_tick = torch.empty_like(chunk_tick_sum)
+            chunk_excluded_tick = torch.empty_like(chunk_tick_sum)
+            chunk_correction = torch.empty_like(chunk_tick_sum)
+            chunk_audit_passed = torch.empty(
+                (chunk_size, SPATIAL_CELL_COUNT, n_components),
+                dtype=torch.bool,
+                device=proxy.a1.device,
+            )
+            chunk_fallback_mismatch = torch.zeros(
+                (chunk_size, SPATIAL_CELL_COUNT, n_components - 1),
+                dtype=torch.int64,
+                device=proxy.a1.device,
+            )
+
+            for slab_start in range(
+                0, SPATIAL_CELL_COUNT, SPATIAL_PS_CELLS_PER_SLAB
+            ):
+                slab_stop = slab_start + SPATIAL_PS_CELLS_PER_SLAB
+                order_start = int(cell_offsets[slab_start])
+                order_stop = int(cell_offsets[slab_stop])
+                slab_positions = cell_order[order_start:order_stop]
+                slab_positions_device = torch.as_tensor(
+                    np.ascontiguousarray(slab_positions),
+                    dtype=torch.long,
+                    device=proxy.a1.device,
+                )
+                a1 = proxy.a1[slab_positions_device]
+                a2 = proxy.a2[slab_positions_device]
+                likelihood_slab = proxy.gaussian_constant[
+                    slab_positions_device
+                ][None, :] - 0.5 * (
+                    torch.square(observation) @ a1.T
+                    - 2.0 * (observation @ a2.T)
+                )
+
+                for cell in range(slab_start, slab_stop):
+                    start = int(cell_offsets[cell])
+                    stop = int(cell_offsets[cell + 1])
+                    relative_start = start - order_start
+                    relative_stop = stop - order_start
+                    cell_positions = cell_order[start:stop]
+                    cell_count = len(cell_positions)
+                    cell_positions_device = slab_positions_device[
+                        relative_start:relative_stop
+                    ]
+                    likelihood = likelihood_slab[
+                        :, relative_start:relative_stop
+                    ]
+                    mask_array = np.zeros(
+                        (chunk_size, cell_count), dtype=bool
+                    )
+                    for local_row, (local_offsets, bucket_offsets) in enumerate(
+                        exclusion_buckets[object_start:object_stop]
+                    ):
+                        excluded_start = int(bucket_offsets[cell])
+                        excluded_stop = int(bucket_offsets[cell + 1])
+                        if excluded_stop > excluded_start:
+                            mask_array[
+                                local_row,
+                                local_offsets[excluded_start:excluded_stop],
+                            ] = True
+                    eligible_count_array = np.count_nonzero(
+                        ~mask_array, axis=1
+                    )
+                    prior_ticks_total = _spatial_ps_source_total_ticks(2)
+                    if (
+                        (eligible_count_array <= 0).any()
+                        or (eligible_count_array >= prior_ticks_total).any()
+                    ):
+                        raise RuntimeError(
+                            "H256-U8-PS2 prior requires 0 < N < L_prior"
+                        )
+                    mask = torch.as_tensor(
+                        mask_array,
+                        dtype=torch.bool,
+                        device=proxy.a1.device,
+                    )
+                    eligible = ~mask
+                    prior = proxy.prior[cell_positions_device][None, :].expand(
+                        chunk_size, -1
+                    ).masked_fill(mask, 0.0)
+                    prior_total = prior.sum(dim=1)
+                    prior_ticks, prior_boundary, prior_correction, prior_valid = (
+                        _spatial_ps_quantize_prior_tensor(prior, eligible)
+                    )
+                    chunk_normalizer[:, cell, 2] = torch.log(prior_total)
+
+                    laws = []
+                    boundaries = []
+                    corrections = []
+                    valids = []
+                    for component, beta in enumerate(recipe.component_betas[:-1]):
+                        score = (
+                            proxy.log_base[cell_positions_device][None, :]
+                            + float(beta) * likelihood
+                        ).masked_fill(mask, -torch.inf)
+                        component_log_z = torch.logsumexp(score, dim=1)
+                        component_log_valid = ~(
+                            torch.isnan(component_log_z)
+                            | torch.isposinf(component_log_z)
+                        )
+                        fallback = torch.isneginf(component_log_z)
+                        safe_score = torch.where(
+                            fallback[:, None],
+                            torch.where(
+                                prior > 0.0,
+                                torch.log(prior),
+                                torch.full_like(prior, -torch.inf),
+                            ),
+                            score,
+                        )
+                        normalized = torch.softmax(safe_score, dim=1)
+                        (
+                            proxy_ticks,
+                            proxy_boundary,
+                            proxy_correction,
+                            proxy_valid,
+                        ) = _spatial_ps_quantize_proxy_tensor(
+                            normalized, eligible, source=component
+                        )
+                        scale = (4, 3)[component]
+                        scaled_prior = prior_ticks * scale
+                        proxy_ticks = torch.where(
+                            fallback[:, None], scaled_prior, proxy_ticks
+                        )
+                        proxy_boundary = torch.cumsum(proxy_ticks, dim=1)
+                        proxy_correction = torch.where(
+                            fallback,
+                            prior_correction * scale,
+                            proxy_correction,
+                        )
+                        proxy_valid = torch.where(
+                            fallback, prior_valid, proxy_valid
+                        )
+                        mismatch = (
+                            (proxy_ticks != scaled_prior)
+                            & fallback[:, None]
+                        ).sum(dim=1)
+                        chunk_fallback_mismatch[:, cell, component] = mismatch
+                        chunk_normalizer[:, cell, component] = component_log_z
+                        laws.append(proxy_ticks)
+                        boundaries.append(proxy_boundary)
+                        corrections.append(proxy_correction)
+                        valids.append(
+                            proxy_valid & (mismatch == 0) & component_log_valid
+                        )
+                    laws.append(prior_ticks)
+                    boundaries.append(prior_boundary)
+                    corrections.append(prior_correction)
+                    valids.append(prior_valid)
+                    if not bool(prior_valid.all()):
+                        raise RuntimeError(
+                            "H256-U8-PS2 prior integer law failed before search"
+                        )
+                    if not bool(torch.stack(valids[:-1], dim=1).all()):
+                        raise RuntimeError(
+                            "H256-U8-PS2 proxy integer law or normalizer "
+                            "failed before search"
+                        )
+                    law_tensor = torch.stack(laws, dim=1)
+
+                    for component in range(n_components):
+                        ticks = laws[component]
+                        total_ticks = _spatial_ps_source_total_ticks(component)
+                        positive_count = (
+                            (ticks > 0) & eligible
+                        ).sum(dim=1)
+                        minimum_tick = torch.where(
+                            eligible,
+                            ticks,
+                            torch.full_like(ticks, total_ticks + 1),
+                        ).amin(dim=1)
+                        excluded_sum = torch.where(
+                            eligible, torch.zeros_like(ticks), ticks
+                        ).sum(dim=1)
+                        chunk_tick_sum[:, cell, component] = ticks.sum(dim=1)
+                        chunk_eligible_count[:, cell, component] = eligible.sum(
+                            dim=1
+                        )
+                        chunk_positive_count[:, cell, component] = positive_count
+                        chunk_minimum_tick[:, cell, component] = minimum_tick
+                        chunk_excluded_tick[:, cell, component] = excluded_sum
+                        chunk_correction[:, cell, component] = corrections[
+                            component
+                        ]
+                        chunk_audit_passed[:, cell, component] = (
+                            valids[component]
+                            & (ticks <= total_ticks).all(dim=1)
+                        )
+
+                    cell_draw_start = cell * SPATIAL_PS_DRAWS_PER_CELL
+                    for source in range(n_components):
+                        source_start = int(source_offsets[source])
+                        source_stop = int(source_offsets[source + 1])
+                        draw_start = cell_draw_start + source_start
+                        draw_stop = cell_draw_start + source_stop
+                        records = np.empty(
+                            (chunk_size, SPATIAL_PS_SOURCE_COUNTS[source]),
+                            dtype=np.uint64,
+                        )
+                        for local_row, object_id in enumerate(
+                            absolute_ids[object_start:object_stop]
+                        ):
+                            records[local_row] = _spatial_ps_rng_u48(
+                                seed, int(object_id), cell, source
+                            )
+                        draw_u48[
+                            object_start:object_stop, draw_start:draw_stop
+                        ] = records
+                        microstratum = np.repeat(
+                            np.arange(
+                                SPATIAL_PS_MICROSTRATA[source], dtype=np.int64
+                            ),
+                            SPATIAL_PS_REPLICATES,
+                        )
+                        thresholds = (
+                            microstratum[None, :]
+                            * int(SPATIAL_PS_TICKS_PER_MICROSTRATUM)
+                            + records.astype(np.int64)
+                        )
+                        threshold_device = torch.as_tensor(
+                            np.ascontiguousarray(thresholds),
+                            dtype=torch.int64,
+                            device=proxy.a1.device,
+                        )
+                        selected = torch.searchsorted(
+                            boundaries[source].contiguous(),
+                            threshold_device.contiguous(),
+                            right=True,
+                        )
+                        chunk_indices[:, draw_start:draw_stop] = active_device[
+                            cell_positions_device[selected]
+                        ]
+                        gather_index = selected[:, None, :].expand(
+                            -1, n_components, -1
+                        )
+                        selected_ticks = torch.gather(
+                            law_tensor, 2, gather_index
+                        ).permute(0, 2, 1)
+                        chunk_selected_ticks[
+                            :, draw_start:draw_stop, :
+                        ] = selected_ticks
+                        lower_boundary = torch.cat(
+                            (
+                                torch.zeros(
+                                    (chunk_size, 1),
+                                    dtype=torch.int64,
+                                    device=proxy.a1.device,
+                                ),
+                                boundaries[source][:, :-1],
+                            ),
+                            dim=1,
+                        )
+                        chunk_selected_lower[
+                            :, draw_start:draw_stop
+                        ] = torch.gather(lower_boundary, 1, selected)
+
+            chunk_numerator = chunk_selected_ticks.sum(dim=2)
+            draw_indices[object_start:object_stop] = (
+                chunk_indices.cpu().numpy()
+            )
+            selected_source_ticks[object_start:object_stop] = (
+                chunk_selected_ticks.cpu().numpy().astype(np.uint64, copy=False)
+            )
+            selected_source_cdf_lower[object_start:object_stop] = (
+                chunk_selected_lower.cpu().numpy().astype(np.uint64, copy=False)
+            )
+            draw_numerator[object_start:object_stop] = (
+                chunk_numerator.cpu().numpy().astype(np.uint64, copy=False)
+            )
+            log_normalizer[object_start:object_stop] = (
+                chunk_normalizer.cpu().numpy()
+            )
+            source_tick_sum[object_start:object_stop] = (
+                chunk_tick_sum.cpu().numpy().astype(np.uint64, copy=False)
+            )
+            source_eligible_count[object_start:object_stop] = (
+                chunk_eligible_count.cpu().numpy().astype(np.uint32, copy=False)
+            )
+            source_positive_tick_count[object_start:object_stop] = (
+                chunk_positive_count.cpu().numpy().astype(np.uint32, copy=False)
+            )
+            source_minimum_eligible_tick[object_start:object_stop] = (
+                chunk_minimum_tick.cpu().numpy().astype(np.uint64, copy=False)
+            )
+            source_excluded_tick_sum[object_start:object_stop] = (
+                chunk_excluded_tick.cpu().numpy().astype(np.uint64, copy=False)
+            )
+            source_terminal_correction[object_start:object_stop] = (
+                chunk_correction.cpu().numpy()
+            )
+            source_audit_passed[object_start:object_stop] = (
+                chunk_audit_passed.cpu().numpy().astype(np.uint8, copy=False)
+            )
+            fallback_mismatch[object_start:object_stop] = (
+                chunk_fallback_mismatch.cpu()
+                .numpy()
+                .astype(np.uint32, copy=False)
+            )
+
+    return _make_spatial_probability_stratified_draw(
+        indices=draw_indices,
+        probability_numerator=draw_numerator,
+        selected_source_ticks=selected_source_ticks,
+        selected_source_cdf_lower=selected_source_cdf_lower,
+        u48=draw_u48,
+        component_log_normalizer=log_normalizer,
+        object_ids=absolute_ids,
+        source_tick_sum=source_tick_sum,
+        source_eligible_count=source_eligible_count,
+        source_positive_tick_count=source_positive_tick_count,
+        source_minimum_eligible_tick=source_minimum_eligible_tick,
+        source_excluded_tick_sum=source_excluded_tick_sum,
+        source_terminal_correction=source_terminal_correction,
+        source_audit_passed=source_audit_passed,
+        fallback_scaled_law_mismatch_count=fallback_mismatch,
+        seed=seed,
+        atom_chunk=atom_chunk,
+        object_chunk=object_chunk,
+        partition=partition,
+        cell_order_sha256=cell_order_sha256,
+        exclusions=exclusion_hashes,
+        recipe=recipe,
+    )
+
+
+def _make_spatial_probability_stratified_draw(
+    *,
+    indices: np.ndarray,
+    probability_numerator: np.ndarray,
+    selected_source_ticks: np.ndarray,
+    selected_source_cdf_lower: np.ndarray,
+    u48: np.ndarray,
+    component_log_normalizer: np.ndarray,
+    object_ids: np.ndarray,
+    source_tick_sum: np.ndarray,
+    source_eligible_count: np.ndarray,
+    source_positive_tick_count: np.ndarray,
+    source_minimum_eligible_tick: np.ndarray,
+    source_excluded_tick_sum: np.ndarray,
+    source_terminal_correction: np.ndarray,
+    source_audit_passed: np.ndarray,
+    fallback_scaled_law_mismatch_count: np.ndarray,
+    seed: int,
+    atom_chunk: int,
+    object_chunk: int,
+    partition: SpatialCellPartition,
+    cell_order_sha256: str,
+    exclusions: tuple[str, ...],
+    recipe: TailProposalRecipe,
+) -> SpatialProbabilityStratifiedMISDraw:
+    probability = np.ldexp(
+        np.asarray(probability_numerator, dtype=np.uint64).astype(np.float64),
+        -53,
+    )
+    cells, components, microstrata, replicates = (
+        _spatial_ps_canonical_schedule()
+    )
+    indices_hash = _spatial_ps_array_sha256(
+        "indices", indices, dtype=">i8"
+    )
+    probability_hash = _spatial_ps_array_sha256(
+        "probability", probability, dtype=">f8"
+    )
+    numerator_hash = _spatial_ps_array_sha256(
+        "probability_numerator", probability_numerator, dtype=">u8"
+    )
+    selected_ticks_hash = _spatial_ps_array_sha256(
+        "selected_source_ticks", selected_source_ticks, dtype=">u8"
+    )
+    selected_lower_hash = _spatial_ps_array_sha256(
+        "selected_source_cdf_lower", selected_source_cdf_lower, dtype=">u8"
+    )
+    u48_hash = _spatial_ps_array_sha256("u48", u48, dtype=">u8")
+    normalizer_hash = _spatial_ps_array_sha256(
+        "component_log_normalizer", component_log_normalizer, dtype=">f8"
+    )
+    object_ids_hash = _spatial_ps_array_sha256(
+        "object_ids", object_ids, dtype=">i8"
+    )
+    schedule_hash = _spatial_ps_schedule_sha256(
+        cells, components, microstrata, replicates
+    )
+    quantization_hash = _spatial_ps_quantization_sha256(
+        source_tick_sum,
+        source_eligible_count,
+        source_positive_tick_count,
+        source_minimum_eligible_tick,
+        source_excluded_tick_sum,
+        source_terminal_correction,
+        source_audit_passed,
+        fallback_scaled_law_mismatch_count,
+    )
+    partition_hashes = (
+        partition.partition_sha256,
+        partition.assignment_sha256,
+        partition.counts_sha256,
+        partition.detected_mass_sha256,
+        partition.prior_mass_sha256,
+        partition.recipe_sha256,
+    )
+    record_hash = _spatial_ps_draw_record_sha256(
+        partition_hashes=partition_hashes,
+        cell_order_sha256=cell_order_sha256,
+        indices_sha256=indices_hash,
+        probability_sha256=probability_hash,
+        numerator_sha256=numerator_hash,
+        selected_source_ticks_sha256=selected_ticks_hash,
+        selected_source_cdf_lower_sha256=selected_lower_hash,
+        u48_sha256=u48_hash,
+        normalizer_sha256=normalizer_hash,
+        object_ids_sha256=object_ids_hash,
+        schedule_sha256=schedule_hash,
+        quantization_sha256=quantization_hash,
+        exclusions=exclusions,
+        seed=seed,
+        atom_chunk=atom_chunk,
+        object_chunk=object_chunk,
+    )
+    return SpatialProbabilityStratifiedMISDraw(
+        indices=indices,
+        probability=probability,
+        probability_numerator=probability_numerator,
+        selected_source_ticks=selected_source_ticks,
+        selected_source_cdf_lower=selected_source_cdf_lower,
+        u48=u48,
+        cell_id=cells,
+        component_id=components,
+        microstratum_id=microstrata,
+        replicate_id=replicates,
+        component_log_normalizer=component_log_normalizer,
+        object_ids=object_ids,
+        source_tick_sum=source_tick_sum,
+        source_eligible_count=source_eligible_count,
+        source_positive_tick_count=source_positive_tick_count,
+        source_minimum_eligible_tick=source_minimum_eligible_tick,
+        source_excluded_tick_sum=source_excluded_tick_sum,
+        source_terminal_correction=source_terminal_correction,
+        source_audit_passed=source_audit_passed,
+        fallback_scaled_law_mismatch_count=(
+            fallback_scaled_law_mismatch_count
+        ),
+        seed=seed,
+        atom_chunk=atom_chunk,
+        object_chunk=object_chunk,
+        cells_per_slab=SPATIAL_PS_CELLS_PER_SLAB,
+        partition_sha256=partition.partition_sha256,
+        partition_assignment_sha256=partition.assignment_sha256,
+        partition_counts_sha256=partition.counts_sha256,
+        partition_detected_mass_sha256=partition.detected_mass_sha256,
+        partition_prior_mass_sha256=partition.prior_mass_sha256,
+        partition_recipe_sha256=partition.recipe_sha256,
+        cell_order_sha256=cell_order_sha256,
+        object_excluded_candidate_indices_sha256=exclusions,
+        indices_sha256=indices_hash,
+        probability_sha256=probability_hash,
+        numerator_sha256=numerator_hash,
+        selected_source_ticks_sha256=selected_ticks_hash,
+        selected_source_cdf_lower_sha256=selected_lower_hash,
+        u48_sha256=u48_hash,
+        normalizer_sha256=normalizer_hash,
+        object_ids_sha256=object_ids_hash,
+        schedule_sha256=schedule_hash,
+        quantization_sha256=quantization_hash,
+        object_indices_sha256=_spatial_ps_object_array_sha256(
+            "object_indices", indices, dtype=">i8"
+        ),
+        object_probability_sha256=_spatial_ps_object_array_sha256(
+            "object_probability", probability, dtype=">f8"
+        ),
+        object_numerator_sha256=_spatial_ps_object_array_sha256(
+            "object_probability_numerator", probability_numerator, dtype=">u8"
+        ),
+        object_selected_source_ticks_sha256=tuple(
+            _spatial_ps_array_sha256(
+                "object_selected_source_ticks",
+                selected_source_ticks[row : row + 1],
+                dtype=">u8",
+            )
+            for row in range(len(indices))
+        ),
+        object_selected_source_cdf_lower_sha256=(
+            _spatial_ps_object_array_sha256(
+                "object_selected_source_cdf_lower",
+                selected_source_cdf_lower,
+                dtype=">u8",
+            )
+        ),
+        object_u48_sha256=_spatial_ps_object_array_sha256(
+            "object_u48", u48, dtype=">u8"
+        ),
+        record_sha256=record_hash,
+        component_recipe=recipe,
+    )
+
+
 def spatial_pilot_variance(
     values: np.ndarray, reservoir: SpatialMISReservoir
 ) -> np.ndarray:
@@ -5309,6 +7208,60 @@ def reduce_spatial_mis(
         cell_estimate=cell_estimate,
         cell_variance=cell_variance,
         cell_source_sample_variance=source_variance,
+    )
+
+
+def reduce_spatial_probability_stratified_mis(
+    values: np.ndarray,
+    draw: SpatialProbabilityStratifiedMISDraw,
+) -> SpatialProbabilityStratifiedMISReduction:
+    """Reduce H256-U8-PS2 values with its paired-stratum variance law."""
+
+    if not isinstance(draw, SpatialProbabilityStratifiedMISDraw):
+        raise TypeError(
+            "H256-U8-PS2 reduction requires a "
+            "SpatialProbabilityStratifiedMISDraw"
+        )
+    values = np.asarray(values, dtype=np.float64)
+    if values.shape != draw.indices.shape or not np.isfinite(values).all():
+        raise ValueError(
+            "H256-U8-PS2 reduction values must be finite and align with draws"
+        )
+    expected_schedule = _spatial_ps_canonical_schedule()
+    if not all(
+        np.array_equal(observed, expected)
+        for observed, expected in zip(
+            (
+                draw.cell_id,
+                draw.component_id,
+                draw.microstratum_id,
+                draw.replicate_id,
+            ),
+            expected_schedule,
+        )
+    ):
+        raise ValueError("H256-U8-PS2 reduction layout is not canonical")
+    pairs_per_cell = SPATIAL_PS_DRAWS_PER_CELL // SPATIAL_PS_REPLICATES
+    paired = values.reshape(
+        len(values),
+        SPATIAL_CELL_COUNT,
+        pairs_per_cell,
+        SPATIAL_PS_REPLICATES,
+    )
+    cell_estimate = paired.mean(axis=(2, 3), dtype=np.float64)
+    difference = paired[:, :, :, 0] - paired[:, :, :, 1]
+    pair_sum = np.square(difference).sum(axis=2, dtype=np.float64)
+    cell_variance = pair_sum / float(SPATIAL_PS_DRAWS_PER_CELL**2)
+    estimate = cell_estimate.sum(axis=1, dtype=np.float64)
+    variance = cell_variance.sum(axis=1, dtype=np.float64)
+    standard_error = np.sqrt(variance)
+    return SpatialProbabilityStratifiedMISReduction(
+        estimate=estimate,
+        variance=variance,
+        standard_error=standard_error,
+        cell_estimate=cell_estimate,
+        cell_variance=cell_variance,
+        cell_pair_squared_difference_sum=pair_sum,
     )
 
 
@@ -6034,6 +7987,18 @@ __all__ = [
     "SPATIAL_PARTITION_RECIPE_SHA256",
     "SPATIAL_PILOT_CYCLES",
     "SPATIAL_PILOT_SEED",
+    "SPATIAL_PS_CELLS_PER_SLAB",
+    "SPATIAL_PS_DRAWS_PER_CELL",
+    "SPATIAL_PS_HASH_CONTRACT",
+    "SPATIAL_PS_MICROSTRATA",
+    "SPATIAL_PS_ORDER_CONTRACT",
+    "SPATIAL_PS_QUANTIZER_CONTRACT",
+    "SPATIAL_PS_REPLICATES",
+    "SPATIAL_PS_RNG_CONTRACT",
+    "SPATIAL_PS_SEED",
+    "SPATIAL_PS_SOURCE_COUNTS",
+    "SPATIAL_PS_TICKS_PER_MICROSTRATUM",
+    "SPATIAL_PS_VERSION",
     "SPATIAL_PRODUCTION_CYCLES",
     "SPATIAL_PRODUCTION_SEED",
     "SPATIAL_RNG_CONTRACT",
@@ -6043,6 +8008,8 @@ __all__ = [
     "SpatialMISDraw",
     "SpatialMISReduction",
     "SpatialMISReservoir",
+    "SpatialProbabilityStratifiedMISDraw",
+    "SpatialProbabilityStratifiedMISReduction",
     "TAIL_PROPOSAL_ATOM_CHUNK",
     "TAIL_PROPOSAL_OBJECT_CHUNK",
     "TAIL_PROPOSAL_RECIPE",
@@ -6052,9 +8019,11 @@ __all__ = [
     "assess_importance_convergence",
     "build_spatial_cell_partition",
     "draw_spatial_mis_reservoirs",
+    "draw_spatial_probability_stratified_mis",
     "importance_diagnostics",
     "pack_spatial_production_prefix",
     "reduce_spatial_mis",
+    "reduce_spatial_probability_stratified_mis",
     "run_importance_ladder",
     "run_importance_profiles",
     "select_adaptive_draw_counts",
