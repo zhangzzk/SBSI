@@ -2,6 +2,61 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.334 — direct score promotion is valid but worsens the estimator and is rejected
+
+**Frozen primary result.** Detached commit `317a91c` ran the direct-v2
+development protocol as A40 Slurm job 16123439. It completed with exit code
+zero in 3m24s and 8,169,168 KiB peak RSS. The immutable artifact is
+`complement_pilot_stratum_direct_dev_v2/results/rows25000_25512_seed8701_pilot8192_direct4096_meanobs_dm3_v2`;
+`per_object.parquet` has SHA-256
+`1b46dcf14bab6a5ad5892fa1f3079eba1cecd45581693a293d937822632e5ad2`
+and `summary.json` has
+`be110440db8f14b370dcbc9bd4b43da6dfa78a17fc7e883b24f3da6a1a04fe12`.
+Scheduler stdout is byte-identical to the summary. Every integrity gate passes,
+including the direct recipe and source identities, 512 absolute IDs, integer
+count columns, exact 4,096-anchor/no-neighbour promotion rule, flow counts,
+per-object and call hashes, and recomputed run manifest.
+
+The primary fails every performance gate and is rejected:
+
+```text
+metric                               direct pilot           required
+k < 0.5 count                          397 / 512             >= 461
+k < 0.7 count                          460 / 512             >= 507
+complement relative-SE median          0.022873              <= 0.00882
+complement relative-SE p90 higher      0.077714              <= 0.0268
+mean variance-time efficiency          1.918948              <= 0.90
+p90 variance-time efficiency           1.842417              <= 0.90
+```
+
+Relative to the unmodified DM3 baseline, only three old `k>=0.7` failures
+clear while 22 new failures appear; `k>=1` remains 13 versus six. Total
+relative-SE median/p90 worsens from 0.013214/0.021111 to
+0.013370/0.022176, and mean squared total relative error grows 14.9%. Gated
+method time is 152.010 s, 1.670x the baseline; removing the KD tree reduced the
+promotion phase from 46.087 to 18.796 s but did not make the full method
+competitive. Corrected total elapsed is 164.414 s, 1.582x the baseline total.
+
+**Mechanism and policy.** Direct promotion selected less exact target mass than
+the clustered rule, not more: its promoted mass is only 0.322x the clustered
+mass at the paired median and exceeds the clustered mass for 10/512 objects.
+The direct promoted share of final exact-stratum mass is
+1.37/2.44/7.81% at p10/median/p90. High `c^2/qbar` is the correct
+second-moment discovery score, but the lower-ranked pilot atoms do not form
+the dense coordinate neighbourhoods supplied by clustered v1. Neither scheme
+removes enough stochastic tail, and direct v2 additionally loses the modest
+total-variance improvement of clustered v1.
+
+Under the frozen policy, pilot seed 2,008,704 is not run and no fresh
+exact-oracle row is touched. Together with cont.333, this closes both obvious
+DM3-only routes: eightfold depth exposes rather than repairs the heavy tail,
+while pilot-selected exact promotion cannot discover enough of its modes. The
+next development route must change the support decomposition. The strongest
+archived evidence is the frozen contrastive retriever used only to define a
+large exact-centre bridge support, never as an importance probability; its
+source and checkpoint reproduction are being recovered before any new rows are
+evaluated.
+
 ## 2026-08-30 cont.333 — deeper DM3 is efficient but less reliable; direct promotion is frozen
 
 **Eightfold-depth comparator result.** Detached commit `d464aec` ran the

@@ -327,6 +327,15 @@ The v1 result showed that anchors carried substantially more exact target mass
 per slot than neighbours and that the coordinate query alone cost 46.087 s;
 those observations fixed direct-v2 before its primary run.
 
+Direct-v2 was subsequently run once under its frozen primary protocol. All
+integrity gates passed, but it also failed every performance gate: only
+397/460 objects had `k<0.5`/`k<0.7`, complement relative-SE median/p90 was
+0.022873/0.077714, and mean/p90 variance-time scores were 1.919/1.842. Its
+lower-ranked pilot atoms captured less exact mass than clustered neighbours
+and worsened total relative error. It is therefore also rejected. The reserved
+second pilot seed was not run and neither pilot strategy is an accepted
+inference mode.
+
 The pilot draw is bound to the complete DM3 component recipe, fixed
 262,144-atom and 32-object proposal chunks, and a canonical per-object hash of
 the exact `S0` exclusion. Promotion rejects a draw whose recorded recipe,
@@ -359,7 +368,7 @@ GEMM/reduction shape can move last bits in probabilities and scores. With the
 pilot flag absent, existing table columns, metadata keys, flow counts, and
 stochastic streams are unchanged.
 
-The active frozen development protocol label is
+The frozen direct-development protocol label is
 `SBSI/complement-pilot-stratum-development/v2-direct`. Its expected identity is rows
 25,000:25,512 at centre
 `[0.013610377120038044, 0.002740148300964851]`, base/final stratum sizes
