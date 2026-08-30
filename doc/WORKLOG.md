@@ -2,6 +2,64 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.337 — learned broad-support centre gate is valid but decisively rejected
+
+**Frozen result.** Detached commit `bf09c2e` ran the preregistered learned-R
+centre protocol from cont.335 as A40 Slurm job 16123871.  It completed with
+exit code zero in 19m01s and 7,505,136 KiB peak RSS.  The immutable artifact is
+`complement_learned_retrieval_center_dev_v1/results/rows25000_25512_seed8701_learnedR524288_dm3_m16384_exact64_v1`;
+`per_object.parquet` has SHA-256
+`d0198bc7d5442287a58314a438c38c247f82c800fcae253aea611f9bb7d1eb53`
+and `summary.json` has
+`8a1c97ce932fcb5a2e7a83d01f18050ab8a5eac8710af83092efe3f519aa9c4c`.
+Scheduler stdout is byte-identical to the summary, and the embedded Parquet
+hash agrees.  An independent audit reproduced all 28 gate values and pass
+bits (19 pass, nine fail), both manifests, the exact-64 selection, and every
+recorded source, mock, and checkpoint hash.  All 512 absolute IDs, frozen protocol
+fields, integer counts, fixed 8,192/6,144/2,048 DM3 component counts, support
+widths, exclusion and support hashes, run-manifest recomputation, flow counts,
+and finite-mass checks pass.  No conditioned-tail draw landed in the learned
+support.  The result is therefore a valid rejection, not an execution or
+provenance failure.  The nested generic exact-oracle confirmation flag is
+expectedly false because that separate contract pins rows 25,512:26,024 at
+zero shear; the learned-centre protocol independently pins this row window,
+centre, and exact selection and passes its identity gate.
+
+**Stop/go gates.** Independent reduction of the row-level Parquet exactly
+reproduces the emitted summary:
+
+```text
+metric                                      observed             required
+retrieved exact-mass capture p10/median     0.7067 / 0.8764      >= 0.70 / 0.85
+retrieved exact-mass capture minimum        0.4297               >= 0.50
+Pareto k < 0.5                              316 / 512            >= 461 / 512
+Pareto k < 0.7                              424 / 512            >= 507 / 512
+Pareto k >= 1                                10 / 512             0 / 512
+complement relative-SE median/p90           0.02846 / 0.13303    <= 0.00882 / 0.0268
+exact-64 |delta log Z| median/p90            0.00219 / 0.00800    <= 0.01 / 0.05
+exact-64 aggregate z / z RMS                 0.1088 / 1.4486      <= 2.5 / 0.8--1.2
+exact-64 |z| <= 1.96                         58 / 64              >= 58 / 64
+mean/p90 variance-time ratio                 4.7544 / 0.9513      <= 0.90 / 0.90
+```
+
+The exact-R streaming cross-check passes at `1.5117e-6`, and the exact subset
+shows small median/p90 log-evidence errors and no aggregate signed bias.  That
+does not rescue the proposal: its exact-error z RMS is over-dispersed, every
+tail-quality gate fails, and complete gated method time is 496.651 seconds
+against the 91.040-second fixed-DM3 baseline.  The minimum-capture miss also
+shows that a fixed 524,288-wide learned support is not uniformly defensive.
+
+**Decision.** The learned nine-view `S/B/O` bridge is stopped before
+implementation exactly as preregistered.  Learned scores remain development
+diagnostics and are not importance probabilities; no inference default or
+release label changes.  The next independent route changes coverage rather
+than enlarging another object-specific support: a centre-only two-stage,
+spatially stratified DM3 pilot/Neyman diagnostic, with deterministic
+detected-prior-mass-balanced cells, a discarded independent pilot, exact
+within-cell proposal probabilities, and all pilot plus production time charged
+to the efficiency gates.  Its estimator and allocation must be reviewed and
+frozen before another consumed-row job is launched.
+
 ## 2026-08-30 cont.336 — recovered learned ladder reproduces byte-exactly on Hopper; A40 drift isolated
 
 **Stop/go result.** The mandatory archived 16-object learned K/epsilon
