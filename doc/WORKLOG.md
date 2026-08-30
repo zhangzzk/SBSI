@@ -2,6 +2,69 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.329 — independent-pilot exact-stratum development arm implemented
+
+**Diagnostic algorithm.** `sbsi/catalogue_sampling.py` owns a frozen
+8,192-draw DM3 pilot recipe and deterministic promotion primitive. Unique
+pilot atoms are ranked by the explicit second-moment score
+`log(c^2/qbar)`, with atom-ID tie breaking; at most 256 anchors and their
+canonical coordinate neighbours promote 4,096 atoms beyond the deterministic
+base stratum. The primitive binds every draw to the complete component recipe,
+fixed atom/object chunks, and canonical per-object exclusion hashes. It records
+promotion and fallback behavior, freezes returned arrays, and hashes pilot,
+base, anchor, promoted, and final arrays independently per object as well as
+per execution call.
+
+`sbsi/complement_diagnostic.py` now exposes this algorithm only through the
+optional diagnostic arm. The code-owned pilot seed offset is 1,000,003, while
+the existing production diagnostic offset remains 7,000,003; equal pilot and
+production seeds fail closed. Each batch discards the pilot after promotion,
+reevaluates the entire final stratum canonically with `q=1`, and only then
+creates fresh prior-reference and fixed DM3 production streams. Pilot values
+never enter a mass estimate, standard error, or Pareto fit. Promoted members
+are removed from both the prefilter-complement and outside-prefilter pieces,
+including when they originated outside the prefilter. Per-object outputs split
+exact promoted, anchor, neighbour, and fallback masses and record the
+corresponding counts. Metadata records recipes, independent seeds, fixed pilot
+chunks, phase and flow counts, conditioned-exclusion and all per-object
+promotion hashes, execution-call hashes, and an absolute-ID keyed final-stratum
+run manifest composable from already identical per-object rows. Numerical
+reproduction pins 262,144-atom/32-object pilot proposal chunks and outer
+diagnostic boundaries aligned to those 32-object batches; no claim is made that
+changing the GEMM/reduction shape preserves last-bit probability or score
+hashes. Pilot-off execution retains the prior schema and streams, and the
+frozen exact-oracle v1 arm is mutually exclusive.
+
+**CLI, wrapper, and scope.** `scripts/run_inference.py` adds the single boolean
+`--diagnose-complement-pilot-stratum`; no scientific tuning knobs are exposed.
+`jobs/job_complement_pilot_stratum.sh` pins consumed development rows
+25,000:25,512, `K=M=16,384`, prefilter 131,072, proposal seed 8701, the release
+`mean_observed_shape` strategy, and the code-owned recipes/seed offsets. The
+strategy reproduces the archived DM3 development centre
+`[0.013610377120038044, 0.002740148300964851]` from the full frozen mock; the
+wrapper never addresses the fresh confirmation universe.
+`doc/CATALOGUE_PRIOR.md` documents the statistical separation, exact
+decomposition, and provenance contract. This change does not integrate pilot
+promotion into the production estimator and makes no performance or
+reliability claim.
+
+**Validation.** Focused tests cover the literal pilot score, discarded-stream
+separation, final-stratum conditioning, canonical exact mass, promoted atoms
+outside the prefilter, flow/phase accounting, fail-closed mode combinations,
+pilot-off identity, absolute-ID keyed manifest composition across toy
+chunk/slice partitions, fixed proposal-chunk provenance, the fixed CLI surface,
+and the scheduler wrapper. Final validation:
+
+```text
+pytest tests/test_catalogue_sampling.py tests/test_complement_diagnostic.py \
+  tests/test_release_config.py                                    79 passed
+pytest tests -q                                      241 passed, 2 skipped
+ruff check <changed Python and tests>                         all checks passed
+python -m compileall -q sbsi scripts tests                              clean
+bash -n jobs/job_complement_pilot_stratum.sh                            clean
+git diff --check                                                        clean
+```
+
 ## 2026-08-30 cont.328 — batched DM3 is scientifically identical and 4.24x faster end to end on the development window
 
 **Scheduled equivalence.** A detached checkout of commit `0cf6500` ran the

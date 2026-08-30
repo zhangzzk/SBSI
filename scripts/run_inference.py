@@ -30,7 +30,11 @@ from sbsi.catalogue_sampling import (
     DefensiveLocalProposal,
     ProposalCoordinateTable,
 )
-from sbsi.complement_diagnostic import diagnose_complement
+from sbsi.complement_diagnostic import (
+    COMPLEMENT_DIAGNOSTIC_SEED_OFFSET,
+    PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET,
+    diagnose_complement,
+)
 from sbsi.forward_catalogue import EmulatorPairingConfig
 from sbsi.measurement_model import load_measurement_model
 from sbsi.models import ModelPaths, load_emulator
@@ -789,6 +793,15 @@ def parse_args(argv=None):
         ),
     )
     parser.add_argument(
+        "--diagnose-complement-pilot-stratum",
+        action="store_true",
+        help=(
+            "diagnose the fixed discarded-independent-pilot enlargement of "
+            "the exact stratum before fresh prior and tail-proposal draws; "
+            "requires --diagnose-complement-tail-proposal"
+        ),
+    )
+    parser.add_argument(
         "--diagnose-complement-exact-oracle",
         action="store_true",
         help=(
@@ -838,6 +851,27 @@ def _validate_exact_oracle_request(args) -> None:
         )
 
 
+def _validate_pilot_stratum_request(args) -> None:
+    """Keep the development-only pilot arm behind one fixed boolean."""
+
+    if not args.diagnose_complement_pilot_stratum:
+        return
+    if args.diagnose_complement is None:
+        raise SystemExit(
+            "--diagnose-complement-pilot-stratum requires --diagnose-complement"
+        )
+    if not args.diagnose_complement_tail_proposal:
+        raise SystemExit(
+            "--diagnose-complement-pilot-stratum requires "
+            "--diagnose-complement-tail-proposal"
+        )
+    if args.diagnose_complement_exact_oracle:
+        raise SystemExit(
+            "--diagnose-complement-pilot-stratum cannot be combined with "
+            "--diagnose-complement-exact-oracle"
+        )
+
+
 def main(argv=None):
     args = parse_args(argv)
     inference_config = _load_release_config(
@@ -859,6 +893,7 @@ def main(argv=None):
     if args.observation_start < 0:
         raise SystemExit("--observation-start must be non-negative")
     _validate_exact_oracle_request(args)
+    _validate_pilot_stratum_request(args)
     if args.prepare_only and args.mock_input is not None:
         raise SystemExit("--prepare-only generates a new mock and rejects --mock-input")
     if args.selection_cache is not None and not (
@@ -1464,7 +1499,13 @@ def main(argv=None):
                 else args.proposal_prefilter_candidates
             ),
             n_global_draws=args.diagnose_complement_global_draws,
-            seed=int(args.proposal_seed) + 7_000_003,
+            seed=int(args.proposal_seed) + COMPLEMENT_DIAGNOSTIC_SEED_OFFSET,
+            pilot_seed=(
+                int(args.proposal_seed)
+                + PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET
+                if args.diagnose_complement_pilot_stratum
+                else None
+            ),
             # `mock` is already the local partition.  The previous code sliced
             # it and then applied the original absolute bounds a second time,
             # producing an empty/wrong diagnostic for nonzero partitions.
@@ -1475,6 +1516,9 @@ def main(argv=None):
             atom_chunk=args.atom_chunk,
             candidate_backend=args.candidate_backend,
             include_tail_proposal=args.diagnose_complement_tail_proposal,
+            include_pilot_stratum=(
+                args.diagnose_complement_pilot_stratum
+            ),
             include_exact_oracle=args.diagnose_complement_exact_oracle,
             confirmation_mock_sha256=source_mock_hashes,
         )
@@ -1526,6 +1570,16 @@ def main(argv=None):
                             )
                         }
                         if args.diagnose_complement_exact_oracle
+                        else {}
+                    ),
+                    **(
+                        {
+                            "jobs/job_complement_pilot_stratum.sh": _sha256(
+                                REPOSITORY_ROOT
+                                / "jobs/job_complement_pilot_stratum.sh"
+                            )
+                        }
+                        if args.diagnose_complement_pilot_stratum
                         else {}
                     ),
                 },

@@ -132,6 +132,64 @@ def test_exact_oracle_cli_is_one_boolean_without_selection_knobs():
         assert retired_knob not in help_text
 
 
+def test_pilot_stratum_cli_is_one_boolean_with_code_owned_streams():
+    args = RUNNER.parse_args(
+        _minimal_runner_arguments(
+            "--diagnose-complement",
+            "diagnostic",
+            "--diagnose-complement-tail-proposal",
+            "--diagnose-complement-pilot-stratum",
+        )
+    )
+    assert args.diagnose_complement_pilot_stratum
+    RUNNER._validate_pilot_stratum_request(args)
+    assert RUNNER.PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET == 1_000_003
+    assert RUNNER.COMPLEMENT_DIAGNOSTIC_SEED_OFFSET == 7_000_003
+    assert 8701 + RUNNER.PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET == 1_008_704
+    assert 8701 + RUNNER.COMPLEMENT_DIAGNOSTIC_SEED_OFFSET == 7_008_704
+
+    help_text = (ROOT / "scripts" / "run_inference.py").read_text()
+    assert "--diagnose-complement-pilot-stratum" in help_text
+    for forbidden_knob in (
+        "--pilot-stratum-draws",
+        "--pilot-stratum-anchors",
+        "--pilot-stratum-promotions",
+        "--pilot-stratum-neighbors",
+        "--pilot-stratum-seed",
+    ):
+        assert forbidden_knob not in help_text
+
+
+@pytest.mark.parametrize(
+    "extra, message",
+    (
+        (("--diagnose-complement-pilot-stratum",), "requires --diagnose-complement"),
+        (
+            (
+                "--diagnose-complement",
+                "diagnostic",
+                "--diagnose-complement-pilot-stratum",
+            ),
+            "requires --diagnose-complement-tail-proposal",
+        ),
+        (
+            (
+                "--diagnose-complement",
+                "diagnostic",
+                "--diagnose-complement-tail-proposal",
+                "--diagnose-complement-pilot-stratum",
+                "--diagnose-complement-exact-oracle",
+            ),
+            "cannot be combined",
+        ),
+    ),
+)
+def test_pilot_stratum_cli_rejects_incomplete_or_oracle_modes(extra, message):
+    args = RUNNER.parse_args(_minimal_runner_arguments(*extra))
+    with pytest.raises(SystemExit, match=message):
+        RUNNER._validate_pilot_stratum_request(args)
+
+
 @pytest.mark.parametrize(
     "selection_arguments",
     (
@@ -221,4 +279,32 @@ def test_exact_oracle_job_pins_fresh_universe_and_manifest():
     assert "--diagnose-complement-tail-proposal" in job
     assert "--diagnose-complement-exact-oracle" in job
     assert "fc44a632ed4758440a3e241ffeab9fba087f58397f114cfbc38aecc7feedcb8b" in job
+    assert "refusing to overwrite" in job
+
+
+def test_pilot_stratum_job_pins_consumed_development_window_and_recipe():
+    job = (ROOT / "jobs" / "job_complement_pilot_stratum.sh").read_text()
+    assert "/home/z/Zekang.Zhang/SBSI-inference-sampler-night" in job
+    assert "OBSERVATION_START=25000" in job
+    assert "OBSERVATION_STOP=25512" in job
+    assert "K=16384" in job
+    assert "PREFILTER=131072" in job
+    assert "GLOBAL_DRAWS=16384" in job
+    assert "PROPOSAL_SEED=8701" in job
+    assert "OBSERVATION_START=${" not in job
+    assert "OBSERVATION_STOP=${" not in job
+    assert "GLOBAL_DRAWS=${" not in job
+    assert "PROPOSAL_SEED=${" not in job
+    assert "pilot8192_promote4096_meanobs_dm3" in job
+    assert "--initial-strategy mean_observed_shape" in job
+    assert "--initial-strategy fixed" not in job
+    assert "--initial 0,0" not in job
+    assert "--diagnose-complement-tail-proposal" in job
+    assert "--diagnose-complement-pilot-stratum" in job
+    assert "--diagnose-complement-exact-oracle" not in job
+    assert "PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET != 1_000_003" in job
+    assert "COMPLEMENT_DIAGNOSTIC_SEED_OFFSET != 7_000_003" in job
+    assert "PILOT_STRATUM_RECIPE.atom_chunk != TAIL_PROPOSAL_ATOM_CHUNK" in job
+    assert "PILOT_STRATUM_RECIPE.object_chunk != TAIL_PROPOSAL_OBJECT_CHUNK" in job
+    assert "b4349271763311c2127d785c79fc637e115f421a31fb821e6db6e0a592b8d410" in job
     assert "refusing to overwrite" in job

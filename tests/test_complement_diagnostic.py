@@ -16,22 +16,28 @@ import pytest
 import torch
 
 from sbsi.catalogue_sampling import (
+    PILOT_STRATUM_RECIPE,
     TAIL_PROPOSAL_RECIPE,
     ProposalCandidates,
     ProposalDraw,
     WholeCatalogueProxy,
+    _array_manifest_sha256,
     _candidate_exclusion_manifest_sha256,
+    _object_array_manifest_sha256,
 )
 from sbsi.complement_diagnostic import (
+    COMPLEMENT_DIAGNOSTIC_SEED_OFFSET,
     EXACT_ORACLE_ATOM_CHUNK,
     EXACT_ORACLE_CONFIRMATION,
     EXACT_ORACLE_LABEL,
     EXACT_ORACLE_OBJECT_CHUNK,
     EXACT_ORACLE_SELECTION_COUNT,
     EXACT_ORACLE_SELECTION_KEY_SHA256,
+    PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET,
     ComplementDiagnostic,
     _fixed_component_standard_error,
     _membership,
+    _pilot_stratum_run_manifest_sha256,
     _stream_exact_oracle_mass,
     diagnose_complement,
     exact_oracle_object_ids,
@@ -198,6 +204,8 @@ class _DiagnosticProposal:
         self.active_indices = np.arange(len(self.prior_weights), dtype=np.int64)
         self.stratified_calls = []
         self.tail_calls = []
+        self.tail_call_details = []
+        self.promotion_calls = []
 
     def candidates(
         self,
@@ -222,8 +230,13 @@ class _DiagnosticProposal:
         self.stratified_calls.append((int(seed), object_ids.copy()))
         pattern = np.resize(np.array([0, 1, 2, 3], dtype=np.int64), n_draws)
         indices = np.broadcast_to(pattern, (len(object_ids), n_draws)).copy()
-        local_member = indices == 0
-        local_position = np.where(local_member, 0, -1).astype(np.int32)
+        local_member = np.zeros_like(indices, dtype=bool)
+        local_position = np.full_like(indices, -1, dtype=np.int32)
+        for row in range(len(object_ids)):
+            for position, atom in enumerate(candidates.indices[row]):
+                member = indices[row] == atom
+                local_member[row, member] = True
+                local_position[row, member] = position
         return ProposalDraw(
             indices=indices,
             probability=self.prior_weights[indices],
@@ -243,22 +256,41 @@ class _DiagnosticProposal:
         seed,
         object_ids,
         device,
+        recipe=TAIL_PROPOSAL_RECIPE,
         atom_chunk=262144,
         object_chunk=32,
     ):
         del observed, device
         self.tail_calls.append((int(seed), object_ids.copy()))
+        self.tail_call_details.append(
+            {
+                "seed": int(seed),
+                "object_ids": object_ids.copy(),
+                "n_draws": int(n_draws),
+                "candidates": candidates.indices.copy(),
+                "recipe": recipe,
+                "atom_chunk": int(atom_chunk),
+                "object_chunk": int(object_chunk),
+            }
+        )
         schedule = np.resize(
-            np.asarray(TAIL_PROPOSAL_RECIPE.component_cycle, dtype=np.int16),
+            np.asarray(recipe.component_cycle, dtype=np.int16),
             n_draws,
         )
-        indices = np.broadcast_to(
-            np.resize(np.array([1, 2, 3], dtype=np.int64), n_draws),
-            (len(object_ids), n_draws),
-        ).copy()
-        probability = np.full(indices.shape, 1.0 / 3.0)
+        indices = np.empty((len(object_ids), n_draws), dtype=np.int64)
+        probability = np.empty_like(indices, dtype=np.float64)
+        for row in range(len(object_ids)):
+            complement = self.active_indices[
+                ~np.isin(self.active_indices, candidates.indices[row])
+            ]
+            if len(complement):
+                indices[row] = np.resize(complement, n_draws)
+                probability[row].fill(1.0 / len(complement))
+            else:
+                indices[row].fill(candidates.indices[row, 0])
+                probability[row].fill(1.0)
         component_id = np.broadcast_to(schedule, indices.shape).copy()
-        n_components = len(TAIL_PROPOSAL_RECIPE.component_names)
+        n_components = len(recipe.component_names)
         complement_mass = np.broadcast_to(
             np.linspace(0.20, 0.80, n_components),
             (len(object_ids), n_components),
@@ -266,21 +298,131 @@ class _DiagnosticProposal:
         complement_mass[:, :-1] += object_ids[:, None] / 1_000_000.0
         complement_mass[:, -1] = 0.90
         prior_component = n_components - 1
+        local_member = np.zeros_like(indices, dtype=bool)
+        local_position = np.full(indices.shape, -1, dtype=np.int32)
+        for row in range(len(object_ids)):
+            for position, atom in enumerate(candidates.indices[row]):
+                member = indices[row] == atom
+                local_member[row, member] = True
+                local_position[row, member] = position
         return ProposalDraw(
             indices=indices,
             probability=probability,
-            local_member=np.zeros_like(indices, dtype=bool),
+            local_member=local_member,
             global_component=component_id == prior_component,
             candidate_radius=candidates.radius,
             seed=seed,
-            local_position=np.full(indices.shape, -1, dtype=np.int32),
+            local_position=local_position,
             component_id=component_id,
             component_complement_mass=complement_mass,
-            component_recipe=TAIL_PROPOSAL_RECIPE,
+            component_recipe=recipe,
             atom_chunk=atom_chunk,
             object_chunk=object_chunk,
             object_excluded_candidate_indices_sha256=(
                 _candidate_exclusion_manifest_sha256(candidates.indices)
+            ),
+        )
+
+    def promote_exact_stratum(
+        self, candidates, observed, pilot_draw, pilot_scores, *, recipe
+    ):
+        del observed
+        assert recipe == PILOT_STRATUM_RECIPE
+        self.promotion_calls.append(
+            {
+                "base": candidates.indices.copy(),
+                "pilot_draw": pilot_draw,
+                "pilot_scores": pilot_scores.copy(),
+            }
+        )
+        promoted = np.full((len(candidates.indices), 1), 3, dtype=np.int64)
+        final = np.concatenate((candidates.indices, promoted), axis=1)
+        anchors = promoted.copy()
+
+        def call_hash(label, values, dtype, *, sort_rows=False):
+            return _array_manifest_sha256(
+                label, values, dtype=dtype, sort_rows=sort_rows
+            )
+
+        def object_hashes(label, values, dtype, *, sort_rows=False):
+            return _object_array_manifest_sha256(
+                label, values, dtype=dtype, sort_rows=sort_rows
+            )
+
+        return SimpleNamespace(
+            candidates=ProposalCandidates(
+                final,
+                np.zeros_like(final, dtype=np.float64),
+                np.zeros(len(final), dtype=np.float64),
+            ),
+            recipe=recipe,
+            base_size=candidates.indices.shape[1],
+            anchor_indices=anchors,
+            anchor_valid=np.ones_like(promoted, dtype=bool),
+            promoted_indices=promoted,
+            pilot_unique_counts=np.full(len(final), 3, dtype=np.int64),
+            pilot_finite_score_counts=np.full(len(final), 3, dtype=np.int64),
+            fallback_fill_counts=np.zeros(len(final), dtype=np.int64),
+            max_neighbor_query_width=np.full(len(final), 16, dtype=np.int64),
+            provenance=SimpleNamespace(
+                pilot_seed=pilot_draw.seed,
+                pilot_atom_chunk=pilot_draw.atom_chunk,
+                pilot_object_chunk=pilot_draw.object_chunk,
+                recipe_sha256=recipe.sha256,
+                call_pilot_draw_indices_sha256=call_hash(
+                    "call_pilot_draw_indices", pilot_draw.indices, ">i8"
+                ),
+                call_pilot_probability_sha256=call_hash(
+                    "call_pilot_probability", pilot_draw.probability, ">f8"
+                ),
+                call_pilot_scores_sha256=call_hash(
+                    "call_pilot_scores", pilot_scores, ">f8"
+                ),
+                call_base_stratum_indices_sha256=call_hash(
+                    "call_base_stratum_indices",
+                    candidates.indices,
+                    ">i8",
+                    sort_rows=True,
+                ),
+                call_anchor_indices_sha256=call_hash(
+                    "call_anchor_indices", anchors, ">i8"
+                ),
+                call_promoted_indices_sha256=call_hash(
+                    "call_promoted_indices", promoted, ">i8", sort_rows=True
+                ),
+                call_final_stratum_indices_sha256=call_hash(
+                    "call_final_stratum_indices", final, ">i8", sort_rows=True
+                ),
+                object_pilot_draw_indices_sha256=object_hashes(
+                    "object_pilot_draw_indices", pilot_draw.indices, ">i8"
+                ),
+                object_pilot_probability_sha256=object_hashes(
+                    "object_pilot_probability", pilot_draw.probability, ">f8"
+                ),
+                object_pilot_scores_sha256=object_hashes(
+                    "object_pilot_scores", pilot_scores, ">f8"
+                ),
+                object_base_stratum_indices_sha256=object_hashes(
+                    "object_base_stratum_indices",
+                    candidates.indices,
+                    ">i8",
+                    sort_rows=True,
+                ),
+                object_anchor_indices_sha256=object_hashes(
+                    "object_anchor_indices", anchors, ">i8"
+                ),
+                object_promoted_indices_sha256=object_hashes(
+                    "object_promoted_indices",
+                    promoted,
+                    ">i8",
+                    sort_rows=True,
+                ),
+                object_final_stratum_indices_sha256=object_hashes(
+                    "object_final_stratum_indices",
+                    final,
+                    ">i8",
+                    sort_rows=True,
+                ),
             ),
         )
 
@@ -481,10 +623,12 @@ def test_exact_oracle_off_preserves_existing_table_and_flow_identity():
         measurements=pd.DataFrame({"observed": [10.0, 11.0]})
     )
 
-    def run(include_exact_oracle=None):
+    def run(include_exact_oracle=None, include_pilot_stratum=None):
         kwargs = {}
         if include_exact_oracle is not None:
             kwargs["include_exact_oracle"] = include_exact_oracle
+        if include_pilot_stratum is not None:
+            kwargs["include_pilot_stratum"] = include_pilot_stratum
         return diagnose_complement(
             _DiagnosticLikelihood(),
             mock,
@@ -503,11 +647,21 @@ def test_exact_oracle_off_preserves_existing_table_and_flow_identity():
 
     default = run()
     explicit_off = run(False)
+    explicit_pilot_off = run(include_pilot_stratum=False)
     pd.testing.assert_frame_equal(default.table, explicit_off.table)
+    pd.testing.assert_frame_equal(default.table, explicit_pilot_off.table)
     assert not any("exact_oracle" in name for name in default.table.columns)
     assert "exact_oracle" not in default.metadata
     assert "exact_oracle_flow" not in default.metadata["phase_seconds"]
+    assert "pilot_stratum" not in default.metadata
+    assert not any("pilot_stratum" in name for name in default.table.columns)
+    assert not any(
+        name.startswith("pilot_") for name in default.metadata["phase_seconds"]
+    )
     assert default.metadata["flow_evaluations"] == explicit_off.metadata[
+        "flow_evaluations"
+    ]
+    assert default.metadata["flow_evaluations"] == explicit_pilot_off.metadata[
         "flow_evaluations"
     ]
     assert "exact_oracle" not in default.summary()
@@ -540,6 +694,227 @@ def test_exact_oracle_off_preserves_existing_table_and_flow_identity():
             include_tail_proposal=True,
             include_exact_oracle=True,
         )
+
+
+def _run_toy_pilot_stratum(*, object_chunk=2, object_id_offset=25_000):
+    proposal = _DiagnosticProposal()
+    mock = SimpleNamespace(
+        measurements=pd.DataFrame({"observed": [10.0, 11.0]})
+    )
+    diagnostic = diagnose_complement(
+        _DiagnosticLikelihood(),
+        mock,
+        proposal,
+        center=(0.0, 0.0),
+        n_candidates=1,
+        prefilter_candidates=3,
+        n_global_draws=16,
+        seed=73,
+        pilot_seed=37,
+        object_id_offset=object_id_offset,
+        object_chunk=object_chunk,
+        candidate_backend="scipy",
+        include_tail_proposal=True,
+        include_pilot_stratum=True,
+    )
+    return diagnostic, proposal
+
+
+def test_pilot_stratum_is_discarded_then_production_uses_final_stratum():
+    diagnostic, proposal = _run_toy_pilot_stratum()
+
+    assert PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET == 1_000_003
+    assert COMPLEMENT_DIAGNOSTIC_SEED_OFFSET == 7_000_003
+    assert len(proposal.promotion_calls) == 1
+    promotion_call = proposal.promotion_calls[0]
+    pilot_draw = promotion_call["pilot_draw"]
+    expected_log_ratio = np.log(
+        _DiagnosticLikelihood.atom_mass[pilot_draw.indices]
+        / pilot_draw.probability
+    )
+    np.testing.assert_allclose(
+        promotion_call["pilot_scores"],
+        2.0 * expected_log_ratio + np.log(pilot_draw.probability),
+    )
+
+    assert [call["seed"] for call in proposal.tail_call_details] == [37, 73]
+    assert proposal.tail_call_details[0]["n_draws"] == 8192
+    assert proposal.tail_call_details[0]["candidates"].shape == (2, 1)
+    assert proposal.tail_call_details[0]["recipe"] == PILOT_STRATUM_RECIPE.pilot_proposal
+    assert proposal.tail_call_details[0]["atom_chunk"] == PILOT_STRATUM_RECIPE.atom_chunk
+    assert (
+        proposal.tail_call_details[0]["object_chunk"]
+        == PILOT_STRATUM_RECIPE.object_chunk
+    )
+    assert proposal.tail_call_details[1]["n_draws"] == 16
+    assert proposal.tail_call_details[1]["candidates"].shape == (2, 2)
+    assert {seed for seed, _ in proposal.stratified_calls} == {73}
+
+    table = diagnostic.table
+    np.testing.assert_allclose(table["mass_stratum"], 0.5)
+    np.testing.assert_allclose(table["mass_stratum_base_exact"], 0.4)
+    np.testing.assert_allclose(table["mass_stratum_promoted_exact"], 0.1)
+    np.testing.assert_allclose(table["mass_stratum_pilot_anchor_exact"], 0.1)
+    np.testing.assert_allclose(table["mass_stratum_pilot_neighbor_exact"], 0.0)
+    np.testing.assert_allclose(table["mass_prefilter_complement"], 0.5)
+    np.testing.assert_allclose(table["mass_outside_prefilter"], 0.0)
+    assert table["pilot_stratum_promoted_outside_prefilter_count"].tolist() == [
+        1,
+        1,
+    ]
+    assert table["pilot_stratum_anchor_count"].tolist() == [1, 1]
+    assert table["pilot_stratum_neighbor_count"].tolist() == [0, 0]
+    assert table["pilot_stratum_fallback_fill_count"].tolist() == [0, 0]
+    assert table["pilot_stratum_max_neighbor_query_width"].tolist() == [16, 16]
+    assert table["draws_outside_prefilter"].tolist() == [0, 0]
+
+    pilot = diagnostic.metadata["pilot_stratum"]
+    assert pilot["recipe"] == asdict(PILOT_STRATUM_RECIPE)
+    assert pilot["recipe_sha256"] == PILOT_STRATUM_RECIPE.sha256
+    assert pilot["pilot_seed"] == 37
+    assert pilot["production_seed"] == 73
+    assert pilot["pilot_seed_offset"] == 1_000_003
+    assert pilot["production_seed_offset"] == 7_000_003
+    assert pilot["pilot_atom_chunk"] == PILOT_STRATUM_RECIPE.atom_chunk
+    assert pilot["pilot_object_chunk"] == PILOT_STRATUM_RECIPE.object_chunk
+    assert pilot["streams_independent"]
+    assert pilot["pilot_draws_enter_estimate"] is False
+    assert pilot["score_formula"] == "2 * log_target_over_qbar + log(qbar)"
+    assert pilot["flow_evaluations"] == {
+        "pilot_proposal": 2 * 8192,
+        "final_stratum_exact": 2 * 2,
+        "total": 2 * 8192 + 2 * 2,
+    }
+    assert diagnostic.metadata["flow_evaluations"] == (
+        2 * (3 + 8192 + 2 + 16 + 16)
+    )
+    assert len(pilot["object_provenance"]) == 2
+    assert len(pilot["execution_call_provenance"]) == 1
+    assert pilot["execution_call_provenance"][0]["object_start"] == 25_000
+    assert pilot["execution_call_provenance"][0]["object_stop"] == 25_002
+    for record in pilot["object_provenance"]:
+        assert set(record) == {
+            "object_index",
+            "pilot_draw_indices_sha256",
+            "pilot_probability_sha256",
+            "pilot_scores_sha256",
+            "base_stratum_indices_sha256",
+            "anchor_indices_sha256",
+            "promoted_indices_sha256",
+            "final_stratum_indices_sha256",
+            "conditioned_exclusion_indices_sha256",
+        }
+        assert all(
+            len(value) == 64
+            for name, value in record.items()
+            if name != "object_index"
+        )
+    assert set(diagnostic.metadata["phase_seconds"]) == {
+        "candidate_query",
+        "prefilter_flow",
+        "prior_draw",
+        "prior_flow",
+        "tail_proposal_draw",
+        "tail_proposal_flow",
+        "pilot_proposal_draw",
+        "pilot_proposal_flow",
+        "pilot_promotion",
+        "pilot_stratum_exact_flow",
+        "reduction",
+    }
+    summary = diagnostic.summary()["pilot_stratum"]
+    assert summary["promoted_count_percentiles"] == [1.0, 1.0, 1.0]
+    assert summary["mass_promoted_exact_percentiles"] == pytest.approx(
+        [0.1, 0.1, 0.1]
+    )
+    assert summary["promoted_share_of_exact_stratum_percentiles"] == pytest.approx(
+        [0.2, 0.2, 0.2]
+    )
+
+
+def test_pilot_stratum_manifest_composes_from_identical_chunked_and_sliced_rows():
+    together, _ = _run_toy_pilot_stratum(object_chunk=2)
+    separate, _ = _run_toy_pilot_stratum(object_chunk=1)
+    pd.testing.assert_frame_equal(together.table, separate.table)
+    assert (
+        together.metadata["pilot_stratum"]["run_manifest_sha256"]
+        == separate.metadata["pilot_stratum"]["run_manifest_sha256"]
+    )
+
+    sliced_proposal = _DiagnosticProposal()
+    sliced = diagnose_complement(
+        _DiagnosticLikelihood(),
+        SimpleNamespace(measurements=pd.DataFrame({"observed": [11.0]})),
+        sliced_proposal,
+        center=(0.0, 0.0),
+        n_candidates=1,
+        prefilter_candidates=3,
+        n_global_draws=16,
+        seed=73,
+        pilot_seed=37,
+        object_id_offset=25_001,
+        object_chunk=1,
+        candidate_backend="scipy",
+        include_tail_proposal=True,
+        include_pilot_stratum=True,
+    )
+    pd.testing.assert_series_equal(
+        together.table.iloc[1], sliced.table.iloc[0], check_names=False
+    )
+    full_identity = together.metadata["pilot_stratum"]["object_provenance"][1]
+    assert sliced.metadata["pilot_stratum"]["object_provenance"] == [
+        full_identity
+    ]
+    assert len(together.metadata["pilot_stratum"]["execution_call_provenance"]) == 1
+    assert len(separate.metadata["pilot_stratum"]["execution_call_provenance"]) == 2
+
+    object_hashes = [
+        (entry["object_index"], entry["final_stratum_indices_sha256"])
+        for entry in together.metadata["pilot_stratum"]["object_provenance"]
+    ]
+    assert _pilot_stratum_run_manifest_sha256(object_hashes) == (
+        _pilot_stratum_run_manifest_sha256(list(reversed(object_hashes)))
+    )
+
+
+def test_pilot_stratum_fails_closed_on_invalid_mode_or_seed():
+    mock = SimpleNamespace(measurements=pd.DataFrame({"observed": [10.0]}))
+    common = {
+        "likelihood": _DiagnosticLikelihood(),
+        "mock": mock,
+        "proposal": _DiagnosticProposal(),
+        "center": (0.0, 0.0),
+        "n_candidates": 1,
+        "prefilter_candidates": 3,
+        "n_global_draws": 16,
+        "seed": 73,
+        "candidate_backend": "scipy",
+    }
+    with pytest.raises(ValueError, match="requires the tail-proposal"):
+        diagnose_complement(**common, include_pilot_stratum=True, pilot_seed=37)
+    with pytest.raises(ValueError, match="explicit pilot seed"):
+        diagnose_complement(
+            **common,
+            include_tail_proposal=True,
+            include_pilot_stratum=True,
+        )
+    with pytest.raises(ValueError, match="must be different"):
+        diagnose_complement(
+            **common,
+            include_tail_proposal=True,
+            include_pilot_stratum=True,
+            pilot_seed=73,
+        )
+    with pytest.raises(ValueError, match="exact-oracle v1"):
+        diagnose_complement(
+            **common,
+            include_tail_proposal=True,
+            include_pilot_stratum=True,
+            pilot_seed=37,
+            include_exact_oracle=True,
+        )
+    with pytest.raises(ValueError, match="pilot seed requires"):
+        diagnose_complement(**common, pilot_seed=37)
 
 
 def test_exact_oracle_summary_pins_gate_boundaries_and_protocol_identity():

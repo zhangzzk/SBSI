@@ -21,6 +21,8 @@ import pandas as pd
 import torch
 
 from .catalogue_sampling import (
+    PILOT_STRATUM_HASH_CONTRACT,
+    PILOT_STRATUM_RECIPE,
     TAIL_PROPOSAL_RECIPE,
     pareto_tail_index,
 )
@@ -34,7 +36,11 @@ EXACT_ORACLE_UNIVERSE_SIZE = 512
 EXACT_ORACLE_SELECTION_COUNT = 64
 EXACT_ORACLE_ATOM_CHUNK = 65_536
 EXACT_ORACLE_OBJECT_CHUNK = 4
-EXACT_ORACLE_DIAGNOSTIC_SEED_OFFSET = 7_000_003
+COMPLEMENT_DIAGNOSTIC_SEED_OFFSET = 7_000_003
+PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET = 1_000_003
+# Kept as an oracle-specific alias because the frozen v1 protocol serializes
+# the production diagnostic seed through this name.
+EXACT_ORACLE_DIAGNOSTIC_SEED_OFFSET = COMPLEMENT_DIAGNOSTIC_SEED_OFFSET
 EXACT_ORACLE_CONFIRMATION = {
     "universe_start": 25_512,
     "universe_stop": 26_024,
@@ -121,6 +127,38 @@ def exact_oracle_object_ids(
     )
     encoded = np.asarray(selected, dtype=">u8").tobytes()
     return selected, sha256(encoded).hexdigest()
+
+
+def _pilot_stratum_run_manifest_sha256(
+    object_hashes: list[tuple[int, str]],
+) -> str:
+    """Hash final-stratum identities independently of execution batching.
+
+    Promotion constructs one canonical final-stratum hash per absolute object
+    id.  The diagnostic run identity is the sorted sequence of those pairs,
+    rather than any batch-shaped pilot array, so identical per-object results
+    compose across calls and slices.  Numerical reproduction separately fixes
+    the proposal atom/object chunks that generated those object hashes.
+    """
+
+    ordered = sorted(
+        (int(object_id), str(value)) for object_id, value in object_hashes
+    )
+    if len({object_id for object_id, _ in ordered}) != len(ordered):
+        raise ValueError("pilot-stratum manifest object ids must be unique")
+    digest = sha256()
+    digest.update(b"SBSI/pilot-stratum-run/v1\0")
+    digest.update(struct.pack(">Q", len(ordered)))
+    for object_id, value in ordered:
+        if object_id < 0 or object_id > np.iinfo(np.int64).max:
+            raise ValueError("pilot-stratum manifest ids must fit non-negative int64")
+        if len(value) != 64 or any(
+            character not in "0123456789abcdef" for character in value
+        ):
+            raise ValueError("pilot-stratum object hashes must be lowercase SHA-256")
+        digest.update(struct.pack(">Q", object_id))
+        digest.update(bytes.fromhex(value))
+    return digest.hexdigest()
 
 
 @dataclass(frozen=True)
@@ -437,6 +475,41 @@ class ComplementDiagnostic:
         if self.metadata.get("exact_oracle") is not None:
             result["exact_oracle"] = self._exact_oracle_summary()
             result["gates"] = result["exact_oracle"]["gates"]
+        if self.metadata.get("pilot_stratum") is not None:
+            result["pilot_stratum"] = {
+                "protocol": self.metadata["pilot_stratum"],
+                "promoted_count_percentiles": percentiles(
+                    frame["pilot_stratum_promoted_count"]
+                ),
+                "anchor_count_percentiles": percentiles(
+                    frame["pilot_stratum_anchor_count"]
+                ),
+                "neighbor_count_percentiles": percentiles(
+                    frame["pilot_stratum_neighbor_count"]
+                ),
+                "fallback_fill_count_percentiles": percentiles(
+                    frame["pilot_stratum_fallback_fill_count"]
+                ),
+                "max_neighbor_query_width_percentiles": percentiles(
+                    frame["pilot_stratum_max_neighbor_query_width"]
+                ),
+                "promoted_outside_prefilter_count_percentiles": percentiles(
+                    frame[
+                        "pilot_stratum_promoted_outside_prefilter_count"
+                    ]
+                ),
+                "mass_promoted_exact_percentiles": percentiles(
+                    frame["mass_stratum_promoted_exact"]
+                ),
+                "promoted_share_of_exact_stratum_percentiles": percentiles(
+                    np.divide(
+                        frame["mass_stratum_promoted_exact"],
+                        frame["mass_stratum"],
+                        out=np.full(len(frame), np.nan, dtype=np.float64),
+                        where=frame["mass_stratum"].to_numpy() > 0.0,
+                    )
+                ),
+            }
         return result
 
     def _exact_oracle_summary(self) -> dict:
@@ -724,6 +797,8 @@ def diagnose_complement(
     atom_chunk: int = 4096,
     candidate_backend: str = "torch",
     include_tail_proposal: bool = False,
+    include_pilot_stratum: bool = False,
+    pilot_seed: Optional[int] = None,
     include_exact_oracle: bool = False,
     confirmation_mock_sha256: Optional[dict[str, str]] = None,
 ) -> ComplementDiagnostic:
@@ -750,6 +825,22 @@ def diagnose_complement(
         )
     if include_exact_oracle and not include_tail_proposal:
         raise ValueError("the exact oracle requires the tail-proposal diagnostic")
+    if include_pilot_stratum and not include_tail_proposal:
+        raise ValueError(
+            "the pilot stratum requires the tail-proposal diagnostic"
+        )
+    if include_pilot_stratum and include_exact_oracle:
+        raise ValueError(
+            "the pilot stratum cannot be combined with exact-oracle v1"
+        )
+    if include_pilot_stratum and pilot_seed is None:
+        raise ValueError("the pilot stratum requires an explicit pilot seed")
+    if not include_pilot_stratum and pilot_seed is not None:
+        raise ValueError("a pilot seed requires the pilot-stratum diagnostic")
+    if include_pilot_stratum and int(pilot_seed) < 0:
+        raise ValueError("the pilot seed must be non-negative")
+    if include_pilot_stratum and int(pilot_seed) == int(seed):
+        raise ValueError("pilot and production seeds must be different")
     if include_exact_oracle and getattr(likelihood, "selection", None) is not None:
         raise ValueError(
             "the exact oracle requires measured selection to be disabled so "
@@ -809,12 +900,27 @@ def diagnose_complement(
     }
     if include_exact_oracle:
         phase_seconds["exact_oracle_flow"] = 0.0
+    if include_pilot_stratum:
+        phase_seconds.update(
+            {
+                "pilot_proposal_draw": 0.0,
+                "pilot_proposal_flow": 0.0,
+                "pilot_promotion": 0.0,
+                "pilot_stratum_exact_flow": 0.0,
+            }
+        )
     exact_records = {}
     exact_flow_evaluations = 0
     exact_active_atoms = None
     exact_atoms_visited = None
     exact_atom_blocks = None
     exact_active_indices_sha256 = None
+    pilot_flow_evaluations = 0
+    pilot_stratum_flow_evaluations = 0
+    pilot_object_provenance = []
+    pilot_call_provenance = []
+    pilot_base_stratum_size = None
+    pilot_final_stratum_size = None
 
     for object_start in range(start, stop, object_chunk):
         object_stop = min(object_start + object_chunk, stop)
@@ -858,6 +964,203 @@ def diagnose_complement(
         )
         flow_evaluations += int(prefilter.indices.size)
         phase_seconds["prefilter_flow"] += time.perf_counter() - phase_started
+
+        pilot_promotion = None
+        pilot_stratum_log_c = None
+        if include_pilot_stratum:
+            # The discovery stream is conditioned only on the deterministic
+            # base stratum S0 and is discarded after selecting S.  Its seed is
+            # deliberately distinct from both production reference streams.
+            phase_started = time.perf_counter()
+            pilot_draw = proposal.draw_tilted_mis(
+                stratum,
+                observed,
+                n_draws=PILOT_STRATUM_RECIPE.pilot_draws,
+                seed=int(pilot_seed),
+                object_ids=absolute_ids,
+                device=likelihood.flow_model.device,
+                recipe=PILOT_STRATUM_RECIPE.pilot_proposal,
+                atom_chunk=PILOT_STRATUM_RECIPE.atom_chunk,
+                object_chunk=PILOT_STRATUM_RECIPE.object_chunk,
+            )
+            phase_seconds["pilot_proposal_draw"] += (
+                time.perf_counter() - phase_started
+            )
+            phase_started = time.perf_counter()
+            pilot_log_ratio = (
+                likelihood.log_importance_weights_tensor(
+                    observed,
+                    float(center[0]),
+                    float(center[1]),
+                    atom_indices=pilot_draw.indices,
+                    proposal_probability=pilot_draw.probability,
+                    observed_targets=observed_targets,
+                    object_chunk=len(observed),
+                    atom_chunk=atom_chunk,
+                )
+                .detach()
+                .cpu()
+                .numpy()
+                .astype(np.float64)
+            )
+            if np.isnan(pilot_log_ratio).any() or np.isposinf(
+                pilot_log_ratio
+            ).any():
+                raise RuntimeError(
+                    "pilot importance log ratios may be finite or -inf only"
+                )
+            pilot_count = int(pilot_draw.indices.size)
+            pilot_flow_evaluations += pilot_count
+            flow_evaluations += pilot_count
+            phase_seconds["pilot_proposal_flow"] += (
+                time.perf_counter() - phase_started
+            )
+
+            # Keep the explicit recipe score itself in provenance.  This stays
+            # in the log domain, so no exponential or per-object centering is
+            # needed: log(c^2/qbar) = 2 log(c/qbar) + log(qbar).
+            pilot_scores = 2.0 * pilot_log_ratio + np.log(
+                pilot_draw.probability
+            )
+            phase_started = time.perf_counter()
+            pilot_promotion = proposal.promote_exact_stratum(
+                stratum,
+                observed,
+                pilot_draw,
+                pilot_scores,
+                recipe=PILOT_STRATUM_RECIPE,
+            )
+            phase_seconds["pilot_promotion"] += (
+                time.perf_counter() - phase_started
+            )
+            if pilot_promotion.provenance.pilot_seed != int(pilot_seed):
+                raise RuntimeError("pilot promotion recorded the wrong seed")
+            if (
+                pilot_promotion.provenance.recipe_sha256
+                != PILOT_STRATUM_RECIPE.sha256
+            ):
+                raise RuntimeError("pilot promotion recorded the wrong recipe")
+            pilot_provenance = pilot_promotion.provenance
+            if (
+                pilot_provenance.pilot_atom_chunk
+                != PILOT_STRATUM_RECIPE.atom_chunk
+                or pilot_provenance.pilot_object_chunk
+                != PILOT_STRATUM_RECIPE.object_chunk
+            ):
+                raise RuntimeError("pilot promotion recorded the wrong chunks")
+            current_base_size = int(pilot_promotion.base_size)
+            current_final_size = int(
+                pilot_promotion.candidates.indices.shape[1]
+            )
+            if pilot_base_stratum_size is None:
+                pilot_base_stratum_size = current_base_size
+                pilot_final_stratum_size = current_final_size
+            elif (
+                pilot_base_stratum_size != current_base_size
+                or pilot_final_stratum_size != current_final_size
+            ):
+                raise RuntimeError(
+                    "pilot-stratum widths changed between object batches"
+                )
+
+            object_hash_fields = {
+                "pilot_draw_indices_sha256": (
+                    pilot_provenance.object_pilot_draw_indices_sha256
+                ),
+                "pilot_probability_sha256": (
+                    pilot_provenance.object_pilot_probability_sha256
+                ),
+                "pilot_scores_sha256": (
+                    pilot_provenance.object_pilot_scores_sha256
+                ),
+                "base_stratum_indices_sha256": (
+                    pilot_provenance.object_base_stratum_indices_sha256
+                ),
+                "anchor_indices_sha256": (
+                    pilot_provenance.object_anchor_indices_sha256
+                ),
+                "promoted_indices_sha256": (
+                    pilot_provenance.object_promoted_indices_sha256
+                ),
+                "final_stratum_indices_sha256": (
+                    pilot_provenance.object_final_stratum_indices_sha256
+                ),
+                "conditioned_exclusion_indices_sha256": (
+                    pilot_draw.object_excluded_candidate_indices_sha256
+                ),
+            }
+            if any(
+                len(values) != len(absolute_ids)
+                for values in object_hash_fields.values()
+            ):
+                raise RuntimeError(
+                    "pilot promotion recorded incomplete per-object hashes"
+                )
+            for local_row, object_id in enumerate(absolute_ids):
+                pilot_object_provenance.append(
+                    {
+                        "object_index": int(object_id),
+                        **{
+                            name: values[local_row]
+                            for name, values in object_hash_fields.items()
+                        },
+                    }
+                )
+            pilot_call_provenance.append(
+                {
+                    "object_start": int(absolute_ids[0]),
+                    "object_stop": int(absolute_ids[-1]) + 1,
+                    "objects": int(len(absolute_ids)),
+                    "pilot_draw_indices_sha256": (
+                        pilot_provenance.call_pilot_draw_indices_sha256
+                    ),
+                    "pilot_probability_sha256": (
+                        pilot_provenance.call_pilot_probability_sha256
+                    ),
+                    "pilot_scores_sha256": (
+                        pilot_provenance.call_pilot_scores_sha256
+                    ),
+                    "base_stratum_indices_sha256": (
+                        pilot_provenance.call_base_stratum_indices_sha256
+                    ),
+                    "anchor_indices_sha256": (
+                        pilot_provenance.call_anchor_indices_sha256
+                    ),
+                    "promoted_indices_sha256": (
+                        pilot_provenance.call_promoted_indices_sha256
+                    ),
+                    "final_stratum_indices_sha256": (
+                        pilot_provenance.call_final_stratum_indices_sha256
+                    ),
+                }
+            )
+
+            stratum = pilot_promotion.candidates
+            phase_started = time.perf_counter()
+            pilot_stratum_log_c = (
+                likelihood.log_importance_weights_tensor(
+                    observed,
+                    float(center[0]),
+                    float(center[1]),
+                    atom_indices=stratum.indices,
+                    proposal_probability=np.ones_like(
+                        stratum.indices, dtype=np.float64
+                    ),
+                    observed_targets=observed_targets,
+                    object_chunk=len(observed),
+                    atom_chunk=atom_chunk,
+                )
+                .detach()
+                .cpu()
+                .numpy()
+                .astype(np.float64)
+            )
+            stratum_count = int(stratum.indices.size)
+            pilot_stratum_flow_evaluations += stratum_count
+            flow_evaluations += stratum_count
+            phase_seconds["pilot_stratum_exact_flow"] += (
+                time.perf_counter() - phase_started
+            )
 
         # Both arms use production samplers, the same absolute object ids, the
         # same seed, and the same fixed-width record's atom-uniform column.
@@ -983,14 +1286,91 @@ def diagnose_complement(
 
             in_stratum = _membership(lookup, stratum_ids, prefilter_ids)
             c_prefilter = np.exp(prefilter_log_c[row])
-            mass_stratum = float(c_prefilter[in_stratum].sum())
             mass_prefilter_complement = float(c_prefilter[~in_stratum].sum())
+
+            pilot_record = {}
+            if pilot_promotion is None:
+                mass_stratum = float(c_prefilter[in_stratum].sum())
+            else:
+                stratum_c = np.exp(pilot_stratum_log_c[row])
+                base_size = int(pilot_promotion.base_size)
+                promoted_ids = pilot_promotion.promoted_indices[row]
+                promoted_c = stratum_c[base_size:]
+                valid_anchors = pilot_promotion.anchor_indices[row][
+                    pilot_promotion.anchor_valid[row]
+                ]
+                anchor_member = np.isin(promoted_ids, valid_anchors)
+                fallback_count = int(
+                    pilot_promotion.fallback_fill_counts[row]
+                )
+                fallback_member = np.zeros(len(promoted_ids), dtype=bool)
+                if fallback_count:
+                    fallback_member[-fallback_count:] = True
+                neighbor_member = ~(anchor_member | fallback_member)
+                promoted_in_prefilter = _membership(
+                    lookup, prefilter_ids, promoted_ids
+                )
+
+                mass_stratum = float(stratum_c.sum())
+                pilot_record = {
+                    "pilot_stratum_base_count": base_size,
+                    "pilot_stratum_promoted_count": int(len(promoted_ids)),
+                    "pilot_stratum_anchor_count": int(anchor_member.sum()),
+                    "pilot_stratum_neighbor_count": int(neighbor_member.sum()),
+                    "pilot_stratum_fallback_fill_count": fallback_count,
+                    "pilot_stratum_max_neighbor_query_width": int(
+                        pilot_promotion.max_neighbor_query_width[row]
+                    ),
+                    "pilot_stratum_unique_drawn_atom_count": int(
+                        pilot_promotion.pilot_unique_counts[row]
+                    ),
+                    "pilot_stratum_finite_score_atom_count": int(
+                        pilot_promotion.pilot_finite_score_counts[row]
+                    ),
+                    "pilot_stratum_promoted_outside_prefilter_count": int(
+                        (~promoted_in_prefilter).sum()
+                    ),
+                    "pilot_stratum_anchor_outside_prefilter_count": int(
+                        (anchor_member & ~promoted_in_prefilter).sum()
+                    ),
+                    "pilot_stratum_neighbor_outside_prefilter_count": int(
+                        (neighbor_member & ~promoted_in_prefilter).sum()
+                    ),
+                    "pilot_stratum_fallback_outside_prefilter_count": int(
+                        (fallback_member & ~promoted_in_prefilter).sum()
+                    ),
+                    "mass_stratum_base_exact": float(
+                        stratum_c[:base_size].sum()
+                    ),
+                    "mass_stratum_promoted_exact": float(promoted_c.sum()),
+                    "mass_stratum_pilot_anchor_exact": float(
+                        promoted_c[anchor_member].sum()
+                    ),
+                    "mass_stratum_pilot_neighbor_exact": float(
+                        promoted_c[neighbor_member].sum()
+                    ),
+                    "mass_stratum_pilot_fallback_exact": float(
+                        promoted_c[fallback_member].sum()
+                    ),
+                    "pilot_stratum_final_indices_sha256": (
+                        pilot_promotion.provenance.object_final_stratum_indices_sha256[
+                            row
+                        ]
+                    ),
+                }
 
             drawn_in_stratum = prior_draw.local_member[row]
             drawn_in_prefilter = _membership(lookup, prefilter_ids, drawn_ids)
             ratio = np.exp(prior_log_ratio[row])
 
-            outside = ~drawn_in_prefilter
+            if pilot_promotion is None:
+                # Preserve the ordinary diagnostic's exact mask and streams.
+                outside = ~drawn_in_prefilter
+            else:
+                # A promoted atom can lie beyond the deterministic prefilter.
+                # It belongs to the exact final stratum and must not leak back
+                # into the outside-prefilter diagnostic.
+                outside = ~drawn_in_prefilter & ~drawn_in_stratum
             contribution = np.where(outside, ratio, 0.0)
             mass_outside = float(contribution.mean())
             mass_outside_se = (
@@ -1196,6 +1576,7 @@ def diagnose_complement(
             rows.append(
                 {
                     **record,
+                    **pilot_record,
                     "object_index": int(absolute_ids[row]),
                     "mass_stratum": mass_stratum,
                     "mass_prefilter_complement": mass_prefilter_complement,
@@ -1274,6 +1655,56 @@ def diagnose_complement(
                 ),
             },
         }
+    pilot_stratum_metadata = None
+    if include_pilot_stratum:
+        ordered_object_provenance = sorted(
+            pilot_object_provenance, key=lambda item: item["object_index"]
+        )
+        ordered_object_hashes = [
+            (item["object_index"], item["final_stratum_indices_sha256"])
+            for item in ordered_object_provenance
+        ]
+        pilot_stratum_metadata = {
+            "mode": "diagnostic_only_discarded_independent_pilot",
+            "recipe": asdict(PILOT_STRATUM_RECIPE),
+            "recipe_sha256": PILOT_STRATUM_RECIPE.sha256,
+            "pilot_proposal_recipe": asdict(
+                PILOT_STRATUM_RECIPE.pilot_proposal
+            ),
+            "pilot_seed": int(pilot_seed),
+            "production_seed": int(seed),
+            "pilot_seed_offset": PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET,
+            "production_seed_offset": COMPLEMENT_DIAGNOSTIC_SEED_OFFSET,
+            "streams_independent": bool(int(pilot_seed) != int(seed)),
+            "score_formula": "2 * log_target_over_qbar + log(qbar)",
+            "score_centering": None,
+            "pilot_draws_enter_estimate": False,
+            "final_stratum_proposal_probability": 1.0,
+            "pilot_atom_chunk": PILOT_STRATUM_RECIPE.atom_chunk,
+            "pilot_object_chunk": PILOT_STRATUM_RECIPE.object_chunk,
+            "base_stratum_size": int(pilot_base_stratum_size),
+            "final_stratum_size": int(pilot_final_stratum_size),
+            "flow_evaluations": {
+                "pilot_proposal": int(pilot_flow_evaluations),
+                "final_stratum_exact": int(
+                    pilot_stratum_flow_evaluations
+                ),
+                "total": int(
+                    pilot_flow_evaluations
+                    + pilot_stratum_flow_evaluations
+                ),
+            },
+            "hash_contract": PILOT_STRATUM_HASH_CONTRACT,
+            "manifest_contract": (
+                "sha256(domain || count || sorted(uint64_be(object_id), "
+                "object_final_stratum_sha256))"
+            ),
+            "object_provenance": ordered_object_provenance,
+            "execution_call_provenance": pilot_call_provenance,
+            "run_manifest_sha256": _pilot_stratum_run_manifest_sha256(
+                ordered_object_hashes
+            ),
+        }
     metadata = {
         "center": [float(center[0]), float(center[1])],
         "n_candidates": int(n_candidates),
@@ -1305,4 +1736,6 @@ def diagnose_complement(
     }
     if exact_oracle_metadata is not None:
         metadata["exact_oracle"] = exact_oracle_metadata
+    if pilot_stratum_metadata is not None:
+        metadata["pilot_stratum"] = pilot_stratum_metadata
     return ComplementDiagnostic(pd.DataFrame(rows), metadata)

@@ -281,6 +281,73 @@ reduced median DM4 proposal construction from 28.254 seconds at batch one to
 implementation is recipe-generic; this timing and memory measurement are
 specific to the four-component DM4 recipe.
 
+#### Independent-pilot exact-stratum diagnostic
+
+`--diagnose-complement-pilot-stratum` is a development diagnostic, not an
+estimator mode or release change. It requires the fixed tail-proposal
+diagnostic and cannot be combined with the frozen `exact-oracle/v1` protocol.
+There are no command-line controls for its pilot size, score, anchor count,
+promotion count, neighbourhood, proposal recipe, execution chunks, or random
+stream. The
+dedicated `jobs/job_complement_pilot_stratum.sh` wrapper fixes the already
+consumed development rows 25,000:25,512, `K=M=16,384`, prefilter 131,072, and
+base proposal seed 8701. It explicitly retains the release
+`mean_observed_shape` strategy, reproducing the archived DM3 development
+centre `[0.013610377120038044, 0.002740148300964851]` from the full frozen
+mock; it does not touch confirmation rows.
+
+For each object, the deterministic base stratum `S0` is constructed first. A
+discarded 8,192-draw pilot then samples the selected DM3 proposal conditioned
+on `S0` with seed `base_seed + 1,000,003` (1,008,704 in the fixed development
+job). If `ell = log(c/qbar)` is the exact target-to-balance-proposal log ratio,
+the explicit discovery score is
+
+```text
+2 ell + log(qbar) = log(c^2 / qbar).
+```
+
+Duplicate atom draws retain their maximum score. The fixed promotion rule
+ranks unique atoms by score and atom ID, takes at most 256 anchors, and adds
+canonical standardized-coordinate neighbours in distance/atom-ID order until
+4,096 atoms beyond `S0` have been promoted. Degenerate pilots and overlapping
+clusters have deterministic, recorded fallback/deepening behavior. Pilot
+draws are selection data only: they never enter an estimate, standard error,
+or Pareto-tail fit.
+
+The pilot draw is bound to the complete DM3 component recipe, fixed
+262,144-atom and 32-object proposal chunks, and a canonical per-object hash of
+the exact `S0` exclusion. Promotion rejects a draw whose recorded recipe,
+chunks, schedule, or exclusion hash differs from its supplied base stratum.
+
+The final stratum `S` is reevaluated canonically with proposal probability one
+and summed exactly, including promoted atoms outside the original prefilter.
+Fresh prior-reference and DM3 complement streams then use `S` and the unchanged
+production diagnostic seed `base_seed + 7,000,003` (7,008,704 in the fixed
+job). Thus the production estimates are independent of the discarded pilot
+conditional on the selected `S`, while retaining common random numbers between
+the prior reference and DM3 arms. Outside-prefilter diagnostics explicitly
+exclude every member of final `S`, so a promoted atom cannot be counted both
+exactly and in the sampled outside mass.
+
+Outputs record pilot and final-stratum flow counts and timings; the immutable
+pilot/production recipes and seeds; recipe and run hashes; and per-object base,
+promoted, anchor, neighbour, fallback, and outside-prefilter counts. Exact
+base, promoted, anchor, neighbour, and fallback masses are separate table
+columns. Each absolute object ID carries canonical hashes for its exclusion,
+pilot atoms/probabilities/scores, base stratum, anchors, promotions, and final
+stratum. Batch-shaped call hashes are retained separately as execution
+provenance. The run manifest hashes the sorted `(absolute object ID, final
+stratum hash)` pairs, not those batch-shaped arrays, so its scientific identity
+is composable across sliced calls and independent of how already identical
+per-object hashes are grouped. Numerical reproduction fixes the recipe's
+262,144/32 proposal chunks; outer diagnostic partitions of at least 32 objects
+must split on those 32-object boundaries, because changing the underlying
+GEMM/reduction shape can move last bits in probabilities and scores. With the
+pilot flag absent, existing table columns, metadata keys, flow counts, and
+stochastic streams are unchanged. Promotion into the production estimator
+remains explicitly out of scope until the development diagnostic passes its
+efficiency and reliability screens.
+
 #### Frozen exact-oracle confirmation
 
 `--diagnose-complement-exact-oracle` is a diagnostic-only extension of the
