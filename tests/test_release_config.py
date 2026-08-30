@@ -110,6 +110,27 @@ def test_tilted_estimator_recipe_has_no_cli_tuning_knobs(retired):
         RUNNER.parse_args(_minimal_runner_arguments(retired, "0.5"))
 
 
+def test_exact_oracle_cli_is_one_boolean_without_selection_knobs():
+    args = RUNNER.parse_args(
+        _minimal_runner_arguments(
+            "--diagnose-complement",
+            "diagnostic",
+            "--diagnose-complement-tail-proposal",
+            "--diagnose-complement-exact-oracle",
+        )
+    )
+    assert args.diagnose_complement_exact_oracle
+    help_text = (ROOT / "scripts" / "run_inference.py").read_text()
+    assert "--diagnose-complement-exact-oracle" in help_text
+    for retired_knob in (
+        "--exact-oracle-seed",
+        "--exact-oracle-count",
+        "--exact-oracle-atom-chunk",
+        "--exact-oracle-object-chunk",
+    ):
+        assert retired_knob not in help_text
+
+
 def test_reference_job_only_supplies_runtime_paths():
     job = (ROOT / "jobs" / "job_inference.sh").read_text()
     assert "v1.1-infer with v3.2-like" in job
@@ -149,3 +170,19 @@ def test_heldout_tail_jobs_pin_the_isolated_checkout_and_fixed_recipe():
     assert "--diagnose-complement-tail-proposal" in diagnostic_job
     assert "16121540--16121542" in diagnostic_job
     assert "TILT_TEMPERATURE" in diagnostic_job
+
+
+def test_exact_oracle_job_pins_fresh_universe_and_manifest():
+    job = (ROOT / "jobs" / "job_complement_exact_oracle.sh").read_text()
+    assert "/home/z/Zekang.Zhang/SBSI-inference-sampler-night" in job
+    assert "OBSERVATION_START=25512" in job
+    assert "OBSERVATION_STOP=26024" in job
+    assert "GLOBAL_DRAWS=131072" in job
+    assert "PROPOSAL_SEED=9701" in job
+    assert "GLOBAL_DRAWS=${" not in job
+    assert "PROPOSAL_SEED=${" not in job
+    assert "SOURCE_MOCK" not in job
+    assert "--diagnose-complement-tail-proposal" in job
+    assert "--diagnose-complement-exact-oracle" in job
+    assert "fc44a632ed4758440a3e241ffeab9fba087f58397f114cfbc38aecc7feedcb8b" in job
+    assert "refusing to overwrite" in job

@@ -2,6 +2,44 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.326 — frozen 64-object exact oracle integrated for untouched confirmation
+
+**Protocol.** `sbsi/complement_diagnostic.py` now defines the fixed label
+`SBSI/complement-exact-oracle/v1` (SHA-256
+`f02f535eab874dd6f9f6184d4040283493266074903fc6c20160b4ae88b5993e`).
+It selects the 64 smallest `SHA256(key_bytes || uint64_be(object_id))` scores
+from a declared 512-row universe, independently of observations and proposal
+outcomes. The development and fresh manifests are respectively
+`6abcc361aec9ada6010f2a91a68aa70440904873518182445c2a712ae69bad6a` and
+`fc44a632ed4758440a3e241ffeab9fba087f58397f114cfbc38aecc7feedcb8b`.
+
+**Exact reference.** Selected objects stream every active atom once in fixed
+65,536-atom blocks and four-object subchunks. Separate stratum and complement
+float64 log-sum-exp reductions use direct `q=1` target evaluations, and the
+stratum is cross-checked against the existing exact-prefilter reduction. The
+diagnostic records sparse exact masses, proposal-minus-exact z scores, evidence
+differences, support and selection hashes, visits, flow counts, timings, and
+implementation provenance. Disabled mode preserves the prior schema and
+stochastic streams.
+
+**Frozen gates and execution.** The exact subset must pass integrity and
+stratum agreement, median absolute delta-log-evidence at most 0.01, higher-
+method p90 at most 0.05, absolute aggregate signed z at most 2.5, exact-z RMS
+in `[0.8, 1.2]`, and at least 58/64 values within `+/-1.96`. The all-512 gates
+remain no undefined k, at least 90% below 0.5, at least 99% below 0.7, and
+complement-relative-SE median/p90 at most `0.00882 / 0.0268`.
+`jobs/job_complement_exact_oracle.sh` pins fresh rows 25,512:26,024,
+`M=131,072`, the seeds, catalogue hashes, and overwrite protection. It remains
+unsubmitted until a proposal passes the development screen; confirmation rows
+are still untouched.
+
+**Validation inherited at integration.** The oracle staging commit passed 22
+focused tests and the full suite (`216 passed, 2 skipped`), plus Ruff, Python
+compilation, shell syntax, and `git diff --check`; an independent review found
+no correctness blocker. The integrated tree will be revalidated after the
+sampler work. The exact scan costs 816,703,360 additional flow evaluations and
+is intentionally scheduler-only.
+
 ## 2026-08-30 cont.325 — batched conditioned-MIS construction is 10.11x faster at production shape with identical sampled atoms
 
 **Execution change.** `WholeCatalogueProxy` now scans each 12.76M-atom slab
@@ -225,7 +263,6 @@ objects, because proposal construction rather than Monte Carlo target scoring
 now dominates wall time by roughly 93:1. If the fixed detected-prior bridge
 also fails, use the already predeclared `T=1` complement-mass router on these
 development rows rather than adding more uniform broad components.
-
 ## 2026-08-30 cont.321 — source variance selects a fixed T=4 bridge; final estimator rows move beyond proposal development
 
 **Reproducibility rerun.** Job 16121716 reran the cont.320 development window

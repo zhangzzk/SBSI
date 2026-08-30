@@ -788,6 +788,15 @@ def parse_args(argv=None):
             "proposal used by estimator-mode tilted_stratified"
         ),
     )
+    parser.add_argument(
+        "--diagnose-complement-exact-oracle",
+        action="store_true",
+        help=(
+            "on a declared 512-object complement diagnostic, exactly sum all "
+            "active atoms for the frozen outcome-independent 64-object subset; "
+            "requires --diagnose-complement-tail-proposal"
+        ),
+    )
     parser.add_argument("--atom-chunk", type=int, default=4096)
     parser.add_argument("--pixel-size", type=float, default=0.2)
     parser.add_argument("--zero-point", type=float, default=30.0)
@@ -824,6 +833,18 @@ def main(argv=None):
     likelihood_implementation_hashes = _likelihood_implementation_hashes()
     if args.observation_start < 0:
         raise SystemExit("--observation-start must be non-negative")
+    if args.diagnose_complement_exact_oracle and args.diagnose_complement is None:
+        raise SystemExit(
+            "--diagnose-complement-exact-oracle requires --diagnose-complement"
+        )
+    if (
+        args.diagnose_complement_exact_oracle
+        and not args.diagnose_complement_tail_proposal
+    ):
+        raise SystemExit(
+            "--diagnose-complement-exact-oracle requires "
+            "--diagnose-complement-tail-proposal"
+        )
     if args.prepare_only and args.mock_input is not None:
         raise SystemExit("--prepare-only generates a new mock and rejects --mock-input")
     if args.selection_cache is not None and not (
@@ -1440,6 +1461,8 @@ def main(argv=None):
             atom_chunk=args.atom_chunk,
             candidate_backend=args.candidate_backend,
             include_tail_proposal=args.diagnose_complement_tail_proposal,
+            include_exact_oracle=args.diagnose_complement_exact_oracle,
+            confirmation_mock_sha256=source_mock_hashes,
         )
         destination = Path(args.diagnose_complement)
         destination.mkdir(parents=True, exist_ok=True)
@@ -1480,7 +1503,17 @@ def main(argv=None):
                 "diagnostic_implementation_sha256": {
                     "sbsi/complement_diagnostic.py": _sha256(
                         REPOSITORY_ROOT / "sbsi/complement_diagnostic.py"
-                    )
+                    ),
+                    **(
+                        {
+                            "jobs/job_complement_exact_oracle.sh": _sha256(
+                                REPOSITORY_ROOT
+                                / "jobs/job_complement_exact_oracle.sh"
+                            )
+                        }
+                        if args.diagnose_complement_exact_oracle
+                        else {}
+                    ),
                 },
                 "output_sha256": {table_path.name: _sha256(table_path)},
             },

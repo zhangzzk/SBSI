@@ -281,6 +281,60 @@ reduced median DM4 proposal construction from 28.254 seconds at batch one to
 implementation is recipe-generic; this timing and memory measurement are
 specific to the four-component DM4 recipe.
 
+#### Frozen exact-oracle confirmation
+
+`--diagnose-complement-exact-oracle` is a diagnostic-only extension of the
+tail-proposal screen. It requires both `--diagnose-complement` and
+`--diagnose-complement-tail-proposal`; it never changes estimator mode. The
+declared diagnostic universe must contain exactly 512 consecutive absolute
+object IDs. There are no oracle seed, count, or chunk command-line knobs. A
+run is labelled as the predeclared confirmation only when it also matches
+rows 25,512:26,024, `K=16,384`, prefilter 131,072, `M=131,072`, proposal seed
+9701, and the derived diagnostic seed 7,009,704; development or forensic runs
+may compute the same metrics but fail the protocol-identity gate. The identity
+also pins the frozen mock's measurements, truth, and manifest SHA-256 values;
+the runner independently rehashes those files before the diagnostic.
+
+The fixed label is `SBSI/complement-exact-oracle/v1`, whose SHA-256 digest is
+`f02f535eab874dd6f9f6184d4040283493266074903fc6c20160b4ae88b5993e`.
+For every absolute object ID `i`, selection scores
+`SHA256(key_bytes || uint64_be(i))`; the 64 smallest scores are retained, then
+their IDs are put back in ascending order. The manifest is SHA-256 over those
+64 sorted big-endian uint64 values. Its frozen hashes are
+`6abcc361aec9ada6010f2a91a68aa70440904873518182445c2a712ae69bad6a`
+for the development universe 25,000:25,512 and
+`fc44a632ed4758440a3e241ffeab9fba087f58397f114cfbc38aecc7feedcb8b`
+for the untouched confirmation universe 25,512:26,024. Selection therefore
+uses neither observations nor proposal outcomes.
+
+For each selected object the oracle visits `proposal.active_indices` exactly
+once in 65,536-atom blocks and four-object subchunks. It calls
+`log_importance_weights_tensor` with `q=1`, masks the exact stratum `S`
+directly, and accumulates separate `S` and `S^c` log-sum-exp reductions in
+float64. The streamed `S` result must reproduce the already evaluated
+prefilter-stratum sum. Only the selected 64 table rows receive exact mass,
+exact z, and total-evidence-difference values; the other 448 rows carry nulls.
+The output records the selected IDs and manifest, active-support hash, chunks,
+flow count, code/wrapper hashes, and the following predeclared gates:
+
+- integrity: an exact match to the frozen confirmation protocol, exactly 64
+  selected objects, every active atom visited once per selected object, finite
+  positive exact masses and proposal standard errors, and maximum relative
+  stratum cross-check error at most `1e-5`;
+- accuracy: median absolute tail-minus-exact change in log total evidence at
+  most `0.01`, with the higher-order-statistic p90 at most `0.05`;
+- signed aggregate calibration:
+  `abs(sum(DM - exact) / sqrt(sum(SE^2))) <= 2.5`;
+- per-object calibration: exact-z RMS in `[0.8, 1.2]` and at least 58 of 64
+  exact z values within `[-1.96, 1.96]`; and
+- all 512 objects, unchanged from the proposal screen: no undefined Pareto k,
+  at least 90% with `k < 0.5`, at least 99% with `k < 0.7`, and complement
+  relative-SE median/p90 (higher method) at most `0.00882 / 0.0268`.
+
+The exact subset cannot relax an all-object proposal gate. The dedicated
+`jobs/job_complement_exact_oracle.sh` wrapper fixes the fresh universe and
+checks its selection manifest before starting the production-depth screen.
+
 ### Weight diagnostics
 
 A retained ladder also records, per object and per rung, the zero-view weight

@@ -22,10 +22,18 @@ from sbsi.catalogue_sampling import (
     WholeCatalogueProxy,
 )
 from sbsi.complement_diagnostic import (
+    EXACT_ORACLE_ATOM_CHUNK,
+    EXACT_ORACLE_CONFIRMATION,
+    EXACT_ORACLE_LABEL,
+    EXACT_ORACLE_OBJECT_CHUNK,
+    EXACT_ORACLE_SELECTION_COUNT,
+    EXACT_ORACLE_SELECTION_KEY_SHA256,
     ComplementDiagnostic,
     _fixed_component_standard_error,
     _membership,
+    _stream_exact_oracle_mass,
     diagnose_complement,
+    exact_oracle_object_ids,
     tail_of,
 )
 
@@ -186,6 +194,7 @@ def test_summary_reduces_the_mass_shares():
 class _DiagnosticProposal:
     def __init__(self):
         self.prior_weights = np.array([0.1, 0.2, 0.3, 0.4])
+        self.active_indices = np.arange(len(self.prior_weights), dtype=np.int64)
         self.stratified_calls = []
         self.tail_calls = []
 
@@ -286,11 +295,248 @@ class _DiagnosticLikelihood:
         proposal_probability,
         **kwargs,
     ):
-        del observed, g1, g2, kwargs
-        ratio = self.atom_mass[np.asarray(atom_indices)] / np.asarray(
-            proposal_probability
-        )
+        del g1, g2, kwargs
+        indices = np.asarray(atom_indices)
+        probability = np.asarray(proposal_probability)
+        if indices.ndim == 1:
+            indices = np.broadcast_to(indices, (len(observed), len(indices)))
+            probability = np.broadcast_to(probability, indices.shape)
+        ratio = self.atom_mass[indices] / probability
         return torch.as_tensor(np.log(ratio), dtype=torch.float64)
+
+
+def test_exact_oracle_selection_has_frozen_golden_manifests():
+    assert EXACT_ORACLE_LABEL == "SBSI/complement-exact-oracle/v1"
+    assert EXACT_ORACLE_SELECTION_KEY_SHA256 == (
+        "f02f535eab874dd6f9f6184d4040283493266074903fc6c20160b4ae88b5993e"
+    )
+    development, development_manifest = exact_oracle_object_ids(25_000, 25_512)
+    confirmation, confirmation_manifest = exact_oracle_object_ids(25_512, 26_024)
+    assert len(development) == EXACT_ORACLE_SELECTION_COUNT
+    assert len(confirmation) == EXACT_ORACLE_SELECTION_COUNT
+    assert np.all(np.diff(development) > 0)
+    assert np.all(np.diff(confirmation) > 0)
+    assert development_manifest == (
+        "6abcc361aec9ada6010f2a91a68aa70440904873518182445c2a712ae69bad6a"
+    )
+    assert confirmation_manifest == (
+        "fc44a632ed4758440a3e241ffeab9fba087f58397f114cfbc38aecc7feedcb8b"
+    )
+    with pytest.raises(ValueError, match="512-object"):
+        exact_oracle_object_ids(25_000, 25_511)
+
+
+def test_streamed_exact_oracle_matches_toy_finite_sum_and_chunking():
+    likelihood = _DiagnosticLikelihood()
+    proposal = _DiagnosticProposal()
+    observed = pd.DataFrame({"observed": [10.0, 11.0]})
+    targets = likelihood.observed_target_tensor(observed)
+    strata = np.array([[0], [1]], dtype=np.int64)
+
+    whole = _stream_exact_oracle_mass(
+        likelihood,
+        observed,
+        proposal,
+        strata,
+        center=(0.0, 0.0),
+        observed_targets=targets,
+        atom_chunk=4,
+        object_chunk=2,
+    )
+    fragmented = _stream_exact_oracle_mass(
+        likelihood,
+        observed,
+        proposal,
+        strata,
+        center=(0.0, 0.0),
+        observed_targets=targets,
+        atom_chunk=1,
+        object_chunk=1,
+    )
+
+    np.testing.assert_allclose(np.exp(whole.log_stratum), [0.4, 0.3])
+    np.testing.assert_allclose(np.exp(whole.log_complement), [0.6, 0.7])
+    np.testing.assert_allclose(fragmented.log_stratum, whole.log_stratum, atol=1e-15)
+    np.testing.assert_allclose(
+        fragmented.log_complement, whole.log_complement, atol=1e-15
+    )
+    assert whole.flow_evaluations == 8
+    assert whole.active_atoms == 4
+    assert whole.atoms_visited == 4
+    assert whole.atom_blocks == 1
+    assert fragmented.atom_blocks == 4
+
+
+def test_exact_oracle_is_sparse_and_counts_every_active_flow_evaluation():
+    proposal = _DiagnosticProposal()
+    mock = SimpleNamespace(
+        measurements=pd.DataFrame({"observed": np.arange(512, dtype=float)})
+    )
+    diagnostic = diagnose_complement(
+        _DiagnosticLikelihood(),
+        mock,
+        proposal,
+        center=(0.0, 0.0),
+        n_candidates=1,
+        prefilter_candidates=3,
+        n_global_draws=16,
+        seed=73,
+        object_id_offset=25_000,
+        object_chunk=128,
+        candidate_backend="scipy",
+        include_tail_proposal=True,
+        include_exact_oracle=True,
+    )
+
+    table = diagnostic.table
+    selected = table["exact_oracle_selected"]
+    assert selected.sum() == EXACT_ORACLE_SELECTION_COUNT
+    np.testing.assert_allclose(
+        table.loc[selected, "mass_stratum_exact_oracle"], 0.4
+    )
+    np.testing.assert_allclose(
+        table.loc[selected, "mass_complement_exact_oracle"], 0.6
+    )
+    np.testing.assert_allclose(table.loc[selected, "mass_total_exact_oracle"], 1.0)
+    assert table.loc[~selected, "mass_total_exact_oracle"].isna().all()
+    assert (
+        table.loc[selected, "mass_stratum_exact_oracle_relative_error"].max()
+        < 1e-14
+    )
+
+    exact = diagnostic.metadata["exact_oracle"]
+    expected_exact_flow = EXACT_ORACLE_SELECTION_COUNT * 4
+    expected_base_flow = 512 * (3 + 16 + 16)
+    assert exact["atom_chunk"] == EXACT_ORACLE_ATOM_CHUNK
+    assert exact["object_chunk"] == EXACT_ORACLE_OBJECT_CHUNK
+    assert exact["flow_evaluations"] == expected_exact_flow
+    assert diagnostic.metadata["flow_evaluations"] == (
+        expected_base_flow + expected_exact_flow
+    )
+    assert exact["active_atoms_visited_per_selected_object"] == 4
+    summary = diagnostic.summary()
+    assert summary["exact_oracle"]["selected_objects"] == 64
+    assert summary["gates"]["predeclared"] is False
+    assert summary["gates"]["thresholds_predeclared"] is True
+    assert exact["confirmation_protocol"]["expected"] == EXACT_ORACLE_CONFIRMATION
+    assert exact["confirmation_protocol"]["matched"] is False
+    assert not summary["gates"]["exact_oracle_64_object_subset"][
+        "confirmation_protocol_matched"
+    ]["passed"]
+    assert (
+        summary["gates"]["exact_oracle_64_object_subset"][
+            "active_support_visited_once_per_selected_object"
+        ]["passed"]
+    )
+
+
+def test_exact_oracle_off_preserves_existing_table_and_flow_identity():
+    mock = SimpleNamespace(
+        measurements=pd.DataFrame({"observed": [10.0, 11.0]})
+    )
+
+    def run(include_exact_oracle=None):
+        kwargs = {}
+        if include_exact_oracle is not None:
+            kwargs["include_exact_oracle"] = include_exact_oracle
+        return diagnose_complement(
+            _DiagnosticLikelihood(),
+            mock,
+            _DiagnosticProposal(),
+            center=(0.0, 0.0),
+            n_candidates=1,
+            prefilter_candidates=3,
+            n_global_draws=16,
+            seed=73,
+            object_id_offset=25_000,
+            object_chunk=1,
+            candidate_backend="scipy",
+            include_tail_proposal=True,
+            **kwargs,
+        )
+
+    default = run()
+    explicit_off = run(False)
+    pd.testing.assert_frame_equal(default.table, explicit_off.table)
+    assert not any("exact_oracle" in name for name in default.table.columns)
+    assert "exact_oracle" not in default.metadata
+    assert "exact_oracle_flow" not in default.metadata["phase_seconds"]
+    assert default.metadata["flow_evaluations"] == explicit_off.metadata[
+        "flow_evaluations"
+    ]
+    assert "exact_oracle" not in default.summary()
+    with pytest.raises(ValueError, match="tail-proposal"):
+        diagnose_complement(
+            _DiagnosticLikelihood(),
+            mock,
+            _DiagnosticProposal(),
+            center=(0.0, 0.0),
+            n_candidates=1,
+            prefilter_candidates=3,
+            n_global_draws=16,
+            seed=73,
+            candidate_backend="scipy",
+            include_exact_oracle=True,
+        )
+
+
+def test_exact_oracle_summary_pins_gate_boundaries_and_protocol_identity():
+    selected = np.arange(512) < EXACT_ORACLE_SELECTION_COUNT
+    signs = np.where(np.arange(512) % 2, 1.0, -1.0)
+    tail_se = np.full(512, 0.008)
+    tail_mass = 1.0 + signs * 0.8 * tail_se
+    frame = pd.DataFrame(
+        {
+            "exact_oracle_selected": selected,
+            "pareto_k_tail_proposal_complement": np.full(512, 0.49),
+            "mass_complement_tail_proposal": tail_mass,
+            "mass_complement_tail_proposal_standard_error": tail_se,
+            "mass_complement_exact_oracle": np.where(selected, 1.0, np.nan),
+            "mass_stratum_exact_oracle": np.where(selected, 1.0, np.nan),
+            "mass_total_exact_oracle": np.where(selected, 2.0, np.nan),
+            "mass_stratum_exact_oracle_relative_error": np.where(
+                selected, 0.0, np.nan
+            ),
+            "delta_log_total_evidence_tail_minus_exact": np.where(
+                selected, np.log((1.0 + tail_mass) / 2.0), np.nan
+            ),
+            "mass_complement_tail_minus_exact_z": np.where(
+                selected, signs * 0.8, np.nan
+            ),
+        }
+    )
+    protocol = {
+        "active_atoms": 4,
+        "active_atoms_visited_per_selected_object": 4,
+        "selected_objects_evaluated": 64,
+        "confirmation_protocol": {
+            "expected": dict(EXACT_ORACLE_CONFIRMATION),
+            "observed": dict(EXACT_ORACLE_CONFIRMATION),
+            "matched": True,
+        },
+    }
+    summary = ComplementDiagnostic(frame, {"exact_oracle": protocol})._exact_oracle_summary()
+    gates = summary["gates"]
+
+    assert gates["predeclared"] is True
+    assert gates["passed"] is True
+    assert gates["proposal_all_512_objects"][
+        "complement_relative_error_median"
+    ]["threshold"] == 0.00882
+    assert gates["proposal_all_512_objects"][
+        "complement_relative_error_p90_higher"
+    ]["threshold"] == 0.0268
+    exact_gates = gates["exact_oracle_64_object_subset"]
+    assert exact_gates["stratum_relative_crosscheck_max"]["threshold"] == 1.0e-5
+    assert exact_gates["absolute_delta_log_total_evidence_median"][
+        "threshold"
+    ] == 0.01
+    assert exact_gates["absolute_delta_log_total_evidence_p90_higher"][
+        "threshold"
+    ] == 0.05
+    assert exact_gates["absolute_signed_aggregate_z"]["threshold"] == 2.5
+    assert exact_gates["exact_z_rms"]["threshold"] == [0.8, 1.2]
+    assert exact_gates["exact_z_within_1_96_count"]["threshold"] == 58
 
 
 def test_partition_uses_absolute_ids_once_and_reports_production_components():
