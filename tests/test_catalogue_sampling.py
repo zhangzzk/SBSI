@@ -1,4 +1,4 @@
-from dataclasses import asdict, replace
+from dataclasses import FrozenInstanceError, asdict, replace
 import json
 
 import numpy as np
@@ -10,8 +10,13 @@ from sbsi.catalogue_closure import generate_mock_catalogue
 from sbsi.catalogue_likelihood import CatalogueLikelihood, CatalogueSelection
 from sbsi.catalogue_sampling import (
     DefensiveLocalProposal,
+    PILOT_STRATUM_HASH_CONTRACT,
+    PILOT_STRATUM_PROPOSAL_RECIPE,
+    PILOT_STRATUM_RECIPE,
+    PilotStratumRecipe,
     ProposalCandidates,
     ProposalCoordinateTable,
+    ProposalDraw,
     TAIL_PROPOSAL_RECIPE,
     TailProposalRecipe,
     assess_importance_convergence,
@@ -86,6 +91,69 @@ def _mis_fixture():
     return proposal, observed, candidates
 
 
+def _pilot_promotion_fixture(n_objects=1):
+    coordinates = ProposalCoordinateTable(
+        values=np.arange(12, dtype=np.float64)[:, None],
+        target_names=("x",),
+        center=np.zeros(1),
+        scale=np.ones(1),
+        dispersion=np.ones((12, 1)),
+        statistic="mean",
+    )
+    proposal = DefensiveLocalProposal(coordinates, np.full(12, 1.0 / 12.0))
+    observed = pd.DataFrame({"x": np.linspace(5.0, 6.0, n_objects)})
+    candidates = ProposalCandidates(
+        indices=np.broadcast_to(
+            np.array([0, 11], dtype=np.int64), (n_objects, 2)
+        ).copy(),
+        distances=np.zeros((n_objects, 2), dtype=np.float64),
+        radius=np.zeros(n_objects, dtype=np.float64),
+    )
+    recipe = replace(
+        PILOT_STRATUM_RECIPE,
+        name="toy_explicit_score_pilot",
+        pilot_draws=8,
+        max_anchors=2,
+        n_promotions=6,
+        neighbors_per_anchor=3,
+        score_name="toy_explicit_score",
+    )
+    patterns = np.array(
+        [
+            [5, 5, 7, 6, 7, 8, 9, 4],
+            [8, 8, 3, 7, 3, 2, 1, 6],
+        ],
+        dtype=np.int64,
+    )[:n_objects]
+    scores = np.array(
+        [
+            [10.0, 1.0, 9.0, 9.0, 2.0, -np.inf, 0.0, 3.0],
+            [7.0, 2.0, 8.0, 6.0, 1.0, 5.0, 4.0, 3.0],
+        ],
+        dtype=np.float64,
+    )[:n_objects]
+    schedule = np.tile(
+        np.asarray(recipe.pilot_proposal.component_cycle, dtype=np.int16),
+        recipe.pilot_draws // recipe.pilot_proposal.cycle_length,
+    )
+    component_id = np.broadcast_to(schedule, patterns.shape).copy()
+    n_components = len(recipe.pilot_proposal.component_names)
+    draw = ProposalDraw(
+        indices=patterns,
+        probability=np.full(patterns.shape, 0.1),
+        local_member=np.zeros(patterns.shape, dtype=bool),
+        global_component=component_id == n_components - 1,
+        candidate_radius=candidates.radius,
+        seed=812_701,
+        local_position=np.full(patterns.shape, -1, dtype=np.int32),
+        component_id=component_id,
+        component_complement_mass=np.full(
+            (n_objects, n_components), 0.75, dtype=np.float64
+        ),
+    )
+    return proposal, observed, candidates, draw, scores, recipe
+
+
 def _dense_conditioned_components(proposal, observation, excluded):
     recipe = TAIL_PROPOSAL_RECIPE
     proxy = proposal._tilted_proxy(None)
@@ -116,6 +184,308 @@ def _dense_conditioned_components(proposal, observation, excluded):
     components = np.stack(components)
     qbar = np.asarray(recipe.component_weights) @ components
     return components, qbar, np.asarray(masses), complement
+
+
+def test_pilot_stratum_recipe_freezes_reviewed_second_moment_design():
+    recipe = PILOT_STRATUM_RECIPE
+    assert isinstance(recipe, PilotStratumRecipe)
+    assert recipe.pilot_draws == 8192
+    assert recipe.max_anchors == 256
+    assert recipe.n_promotions == 4096
+    assert recipe.neighbors_per_anchor == 16
+    assert recipe.score_name == "log_target_squared_over_proposal"
+    assert recipe.pilot_proposal is TAIL_PROPOSAL_RECIPE
+    assert PILOT_STRATUM_PROPOSAL_RECIPE is TAIL_PROPOSAL_RECIPE
+    assert recipe.hash_contract == PILOT_STRATUM_HASH_CONTRACT
+    assert recipe.sha256 == (
+        "344db5c7f18a741515184d193830302248eb643010595f1ca4f0742f413c7535"
+    )
+    with pytest.raises(FrozenInstanceError):
+        recipe.pilot_draws = 4096
+
+    with pytest.raises(ValueError, match="positive multiple"):
+        replace(recipe, pilot_draws=8191)
+    with pytest.raises(ValueError, match="maximum pilot anchors"):
+        replace(recipe, max_anchors=8193)
+    with pytest.raises(ValueError, match="score name"):
+        replace(recipe, score_name="")
+    with pytest.raises(ValueError, match="unsupported pilot-anchor"):
+        replace(recipe, ranking="python_hash_order")
+
+
+def test_pilot_promotion_ranks_unique_explicit_scores_and_fills_fixed_width():
+    proposal, observed, candidates, draw, scores, recipe = (
+        _pilot_promotion_fixture()
+    )
+    result = proposal.promote_exact_stratum(
+        candidates, observed, draw, scores, recipe=recipe
+    )
+
+    np.testing.assert_array_equal(result.anchor_counts, [2])
+    np.testing.assert_array_equal(result.anchor_indices[0], [5, 6])
+    # Atom 5 is duplicated, but frequency does not change its maximum explicit
+    # score. Atoms 6 and 7 tie, so absolute id chooses anchor 6.
+    np.testing.assert_array_equal(result.promoted_indices[0], [5, 4, 6, 7, 3, 2])
+    np.testing.assert_array_equal(result.candidates.indices[0, :2], [0, 11])
+    assert result.candidates.indices.shape == (1, 8)
+    assert len(np.unique(result.candidates.indices[0])) == 8
+    np.testing.assert_array_equal(result.pilot_unique_counts, [6])
+    np.testing.assert_array_equal(result.pilot_finite_score_counts, [5])
+    np.testing.assert_array_equal(result.fallback_fill_counts, [0])
+    # The two three-atom clusters overlap, so the same two anchors are deepened
+    # to six canonical neighbors rather than consuming a third pilot anchor.
+    np.testing.assert_array_equal(result.neighbor_query_counts, [6])
+    assert result.promotion_size == 6
+    assert result.provenance.pilot_seed == draw.seed
+    assert result.provenance.recipe_sha256 == recipe.sha256
+    assert result.provenance.pilot_draw_indices_sha256 == (
+        "1e8e25542d786fe1c28c31707e5e2560dfe4cd2f1c6324cc0dc232d0600e03af"
+    )
+    assert result.provenance.pilot_probability_sha256 == (
+        "1eda4b6ec74e440c7af3e81c9da599a67f043e0d79f827e9f41bf0543a203920"
+    )
+    assert result.provenance.pilot_scores_sha256 == (
+        "e2db6f7da9d8402865f1874b1e08cc71d6f4c11a6b01c542ce627a51dfbc9cf2"
+    )
+    assert result.provenance.final_stratum_indices_sha256 == (
+        "c7a374621a6ce0da19a7dd06b9e37951b2b872538ab08fde3c4acb94b7f30ae4"
+    )
+    assert result.provenance.object_final_stratum_indices_sha256 == (
+        "ffd9d0c19114ec1e1af13a159b7aecead70258b37c8d4b18c258e0d0b7555304",
+    )
+    assert not result.anchor_indices.flags.writeable
+    assert not result.promoted_indices.flags.writeable
+    with pytest.raises(ValueError):
+        result.promoted_indices[0, 0] = 1
+
+
+def test_pilot_promotion_is_independent_of_kdtree_tie_return_order():
+    proposal, observed, candidates, draw, scores, recipe = (
+        _pilot_promotion_fixture()
+    )
+    expected_neighbors = proposal._canonical_coordinate_neighbors(
+        np.array([5]), n_neighbors=2
+    )
+    np.testing.assert_array_equal(expected_neighbors, [[5, 4]])
+    expected = proposal.promote_exact_stratum(
+        candidates, observed, draw, scores, recipe=recipe
+    )
+
+    underlying = proposal.tree
+
+    class ReverseBallOrder:
+        def query(self, *args, **kwargs):
+            return underlying.query(*args, **kwargs)
+
+        def query_ball_point(self, *args, **kwargs):
+            balls = underlying.query_ball_point(*args, **kwargs)
+            return [list(reversed(ball)) for ball in balls]
+
+    proposal.tree = ReverseBallOrder()
+    reordered_neighbors = proposal._canonical_coordinate_neighbors(
+        np.array([5]), n_neighbors=2
+    )
+    actual = proposal.promote_exact_stratum(
+        candidates, observed, draw, scores, recipe=recipe
+    )
+    np.testing.assert_array_equal(reordered_neighbors, expected_neighbors)
+    np.testing.assert_array_equal(actual.promoted_indices, expected.promoted_indices)
+    assert (
+        actual.provenance.final_stratum_indices_sha256
+        == expected.provenance.final_stratum_indices_sha256
+    )
+
+
+def test_pilot_promotion_never_materializes_whole_standardized_table(monkeypatch):
+    proposal, observed, candidates, draw, scores, recipe = (
+        _pilot_promotion_fixture()
+    )
+
+    def forbidden(_self):
+        raise AssertionError("promotion materialized the whole standardized table")
+
+    # The proposal tree is already built. Promotion must standardize only the
+    # indexed anchors, boundary pools, and promoted atoms from this point on.
+    monkeypatch.setattr(
+        ProposalCoordinateTable, "standardized", property(forbidden)
+    )
+    result = proposal.promote_exact_stratum(
+        candidates, observed, draw, scores, recipe=recipe
+    )
+    assert result.promotion_size == 6
+
+
+def test_pilot_promotion_is_object_chunk_invariant_with_row_manifests():
+    proposal, observed, candidates, draw, scores, recipe = (
+        _pilot_promotion_fixture(n_objects=2)
+    )
+    together = proposal.promote_exact_stratum(
+        candidates, observed, draw, scores, recipe=recipe
+    )
+    for row in range(2):
+        rows = np.array([row])
+        separate = proposal.promote_exact_stratum(
+            candidates.take(rows),
+            observed.iloc[[row]].reset_index(drop=True),
+            draw.take(rows),
+            scores[[row]],
+            recipe=recipe,
+        )
+        np.testing.assert_array_equal(
+            separate.candidates.indices[0], together.candidates.indices[row]
+        )
+        np.testing.assert_array_equal(
+            separate.promoted_indices[0], together.promoted_indices[row]
+        )
+        np.testing.assert_array_equal(
+            separate.anchor_indices[0], together.anchor_indices[row]
+        )
+        assert (
+            separate.provenance.object_final_stratum_indices_sha256[0]
+            == together.provenance.object_final_stratum_indices_sha256[row]
+        )
+
+
+def test_pilot_promotion_manifests_are_canonical_for_stratum_membership():
+    proposal, observed, candidates, draw, scores, recipe = (
+        _pilot_promotion_fixture()
+    )
+    forward = proposal.promote_exact_stratum(
+        candidates, observed, draw, scores, recipe=recipe
+    )
+    reversed_base = ProposalCandidates(
+        candidates.indices[:, ::-1],
+        candidates.distances[:, ::-1],
+        candidates.radius,
+    )
+    reverse = proposal.promote_exact_stratum(
+        reversed_base, observed, draw, scores, recipe=recipe
+    )
+    assert (
+        forward.provenance.base_stratum_indices_sha256
+        == reverse.provenance.base_stratum_indices_sha256
+    )
+    assert (
+        forward.provenance.promoted_indices_sha256
+        == reverse.provenance.promoted_indices_sha256
+    )
+    assert (
+        forward.provenance.final_stratum_indices_sha256
+        == reverse.provenance.final_stratum_indices_sha256
+    )
+    assert (
+        forward.provenance.object_final_stratum_indices_sha256
+        == reverse.provenance.object_final_stratum_indices_sha256
+    )
+
+
+def test_pilot_promotion_falls_back_only_for_insufficient_finite_anchors():
+    proposal, observed, candidates, draw, scores, recipe = (
+        _pilot_promotion_fixture()
+    )
+    scores[:] = -np.inf
+    result = proposal.promote_exact_stratum(
+        candidates, observed, draw, scores, recipe=recipe
+    )
+    np.testing.assert_array_equal(result.anchor_counts, [0])
+    np.testing.assert_array_equal(result.fallback_fill_counts, [6])
+    np.testing.assert_array_equal(result.neighbor_query_counts, [0])
+    np.testing.assert_array_equal(result.promoted_indices[0], [1, 2, 3, 4, 5, 6])
+
+
+def test_pilot_promotion_validates_scores_support_conditioning_and_schedule():
+    proposal, observed, candidates, draw, scores, recipe = (
+        _pilot_promotion_fixture()
+    )
+    invalid_scores = scores.copy()
+    invalid_scores[0, 0] = np.nan
+    with pytest.raises(ValueError, match=r"NaN/\+inf"):
+        proposal.promote_exact_stratum(
+            candidates, observed, draw, invalid_scores, recipe=recipe
+        )
+
+    overlap = draw.indices.copy()
+    overlap[0, 0] = candidates.indices[0, 0]
+    with pytest.raises(ValueError, match="conditioned on the base-stratum"):
+        proposal.promote_exact_stratum(
+            candidates,
+            observed,
+            replace(draw, indices=overlap),
+            scores,
+            recipe=recipe,
+        )
+
+    inactive = draw.indices.copy()
+    inactive[0, 0] = 99
+    with pytest.raises(ValueError, match="only active atom ids"):
+        proposal.promote_exact_stratum(
+            candidates,
+            observed,
+            replace(draw, indices=inactive),
+            scores,
+            recipe=recipe,
+        )
+
+    bad_component = draw.component_id.copy()
+    bad_component[0] = np.roll(bad_component[0], 1)
+    with pytest.raises(ValueError, match="component schedule"):
+        proposal.promote_exact_stratum(
+            candidates,
+            observed,
+            replace(draw, component_id=bad_component),
+            scores,
+            recipe=recipe,
+        )
+
+    duplicate_base = ProposalCandidates(
+        np.array([[0, 0]]), np.zeros((1, 2)), np.zeros(1)
+    )
+    with pytest.raises(ValueError, match="must be unique"):
+        proposal.promote_exact_stratum(
+            duplicate_base, observed, draw, scores, recipe=recipe
+        )
+
+
+def test_pilot_promotion_requires_duplicate_balance_probability_agreement():
+    proposal, observed, candidates, draw, scores, recipe = (
+        _pilot_promotion_fixture()
+    )
+    close = draw.probability.copy()
+    close[0, 1] *= 1.0 + 5.0e-13
+    proposal.promote_exact_stratum(
+        candidates,
+        observed,
+        replace(draw, probability=close),
+        scores,
+        recipe=recipe,
+    )
+
+    inconsistent = draw.probability.copy()
+    inconsistent[0, 1] *= 1.0 + 5.0e-10
+    with pytest.raises(ValueError, match="inconsistent balance probability"):
+        proposal.promote_exact_stratum(
+            candidates,
+            observed,
+            replace(draw, probability=inconsistent),
+            scores,
+            recipe=recipe,
+        )
+
+
+def test_pilot_promotion_full_support_is_an_exact_identity():
+    proposal, observed, _, draw, scores, recipe = _pilot_promotion_fixture()
+    active = proposal.active_indices[None, :]
+    full = ProposalCandidates(
+        active, np.zeros_like(active, dtype=np.float64), np.zeros(1)
+    )
+    result = proposal.promote_exact_stratum(
+        full, observed, draw, scores, recipe=recipe
+    )
+    np.testing.assert_array_equal(result.candidates.indices, full.indices)
+    assert result.promotion_size == 0
+    assert result.anchor_indices.shape == (1, 0)
+    np.testing.assert_array_equal(result.fallback_fill_counts, [0])
+    np.testing.assert_array_equal(result.neighbor_query_counts, [0])
 
 
 def test_defensive_proposal_has_global_support_and_bounded_prior_ratio():

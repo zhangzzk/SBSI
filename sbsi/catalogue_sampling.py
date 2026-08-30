@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 import gc
+from hashlib import sha256
 import json
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
@@ -352,6 +353,170 @@ TAIL_PROPOSAL_RECIPE = TailProposalRecipe(
     component_betas=(1.0, 0.5, None),
     component_cycle=(0, 1, 0, 2, 1, 0, 1, 0),
 )
+
+
+# The pilot is discarded, but using the same fixed DM3 law makes its primary
+# second-moment score directly relevant to the production proposal.  Keep an
+# explicit alias so resolved provenance can name both roles without copying a
+# second recipe that might silently drift.
+PILOT_STRATUM_PROPOSAL_RECIPE = TAIL_PROPOSAL_RECIPE
+
+
+PILOT_STRATUM_HASH_CONTRACT = "sha256_domain_shape_big_endian_v1"
+PILOT_DUPLICATE_LOG_PROBABILITY_ATOL = 1.0e-12
+
+
+@dataclass(frozen=True)
+class PilotStratumRecipe:
+    """Frozen independent-pilot rule for enlarging an exact stratum.
+
+    The pilot proposal is used only to discover atoms.  A consumer must sum the
+    returned stratum exactly and generate its production complement from an
+    independent random stream; this class deliberately contains no production
+    seed or estimator state.
+    """
+
+    name: str
+    pilot_draws: int
+    max_anchors: int
+    n_promotions: int
+    neighbors_per_anchor: int
+    pilot_proposal: TailProposalRecipe
+    score_name: str = "log_target_squared_over_proposal"
+    ranking: str = "unique_max_explicit_score_desc_atom_id"
+    coordinate_metric: str = "standardized_proposal_euclidean"
+    neighbor_order: str = "ranked_anchor_then_distance_atom_id"
+    hash_contract: str = PILOT_STRATUM_HASH_CONTRACT
+
+    def __post_init__(self):
+        name = str(self.name)
+        pilot_draws = int(self.pilot_draws)
+        max_anchors = int(self.max_anchors)
+        n_promotions = int(self.n_promotions)
+        neighbors_per_anchor = int(self.neighbors_per_anchor)
+        if not name:
+            raise ValueError("pilot-stratum recipe name must be non-empty")
+        if not isinstance(self.pilot_proposal, TailProposalRecipe):
+            raise TypeError("pilot proposal must be a TailProposalRecipe")
+        if pilot_draws <= 0 or pilot_draws % self.pilot_proposal.cycle_length:
+            raise ValueError(
+                "pilot draws must be a positive multiple of the pilot-proposal cycle"
+            )
+        if max_anchors <= 0 or max_anchors > pilot_draws:
+            raise ValueError("maximum pilot anchors must lie in [1, pilot_draws]")
+        if n_promotions <= 0:
+            raise ValueError("pilot promotions must be positive")
+        if neighbors_per_anchor <= 0:
+            raise ValueError("neighbors per anchor must be positive")
+        if not str(self.score_name):
+            raise ValueError("pilot score name must be non-empty")
+        if self.ranking != "unique_max_explicit_score_desc_atom_id":
+            raise ValueError("unsupported pilot-anchor ranking")
+        if self.coordinate_metric != "standardized_proposal_euclidean":
+            raise ValueError("unsupported pilot-neighbor coordinate metric")
+        if (
+            self.neighbor_order != "ranked_anchor_then_distance_atom_id"
+        ):
+            raise ValueError("unsupported pilot-neighbor ordering")
+        if self.hash_contract != PILOT_STRATUM_HASH_CONTRACT:
+            raise ValueError("unsupported pilot-stratum hash contract")
+        object.__setattr__(self, "name", name)
+        object.__setattr__(self, "pilot_draws", pilot_draws)
+        object.__setattr__(self, "max_anchors", max_anchors)
+        object.__setattr__(self, "n_promotions", n_promotions)
+        object.__setattr__(self, "neighbors_per_anchor", neighbors_per_anchor)
+        object.__setattr__(self, "score_name", str(self.score_name))
+
+    @property
+    def sha256(self) -> str:
+        payload = json.dumps(
+            asdict(self), sort_keys=True, separators=(",", ":"), allow_nan=False
+        ).encode("utf-8")
+        digest = sha256()
+        digest.update(b"SBSI/pilot-stratum-recipe/v1\0")
+        digest.update(payload)
+        return digest.hexdigest()
+
+
+PILOT_STRATUM_RECIPE = PilotStratumRecipe(
+    name="independent_pilot_exact_stratum_second_moment_clusters_v1",
+    pilot_draws=8192,
+    max_anchors=256,
+    n_promotions=4096,
+    neighbors_per_anchor=16,
+    pilot_proposal=PILOT_STRATUM_PROPOSAL_RECIPE,
+)
+
+
+def _array_manifest_sha256(
+    label: str,
+    values: np.ndarray,
+    *,
+    dtype: str,
+    sort_rows: bool = False,
+) -> str:
+    """Hash an array with explicit domain, shape, and endian conventions."""
+
+    array = np.asarray(values)
+    if sort_rows:
+        if array.ndim != 2:
+            raise ValueError("only matrices can be canonically sorted by row")
+        array = np.sort(array, axis=1)
+    canonical = np.ascontiguousarray(array, dtype=np.dtype(dtype))
+    shape = np.ascontiguousarray(canonical.shape, dtype=np.dtype(">u8"))
+    digest = sha256()
+    digest.update(b"SBSI/pilot-stratum-array/v1\0")
+    digest.update(label.encode("utf-8"))
+    digest.update(b"\0")
+    digest.update(shape.tobytes())
+    digest.update(canonical.tobytes())
+    return digest.hexdigest()
+
+
+@dataclass(frozen=True)
+class PilotStratumProvenance:
+    """Canonical hashes for one pilot-promotion result."""
+
+    hash_contract: str
+    recipe_sha256: str
+    pilot_seed: int
+    pilot_draw_indices_sha256: str
+    pilot_probability_sha256: str
+    pilot_scores_sha256: str
+    base_stratum_indices_sha256: str
+    anchor_indices_sha256: str
+    promoted_indices_sha256: str
+    final_stratum_indices_sha256: str
+    object_final_stratum_indices_sha256: tuple[str, ...]
+
+    def __post_init__(self):
+        if self.hash_contract != PILOT_STRATUM_HASH_CONTRACT:
+            raise ValueError("pilot provenance uses an unsupported hash contract")
+        hashes = (
+            self.recipe_sha256,
+            self.pilot_draw_indices_sha256,
+            self.pilot_probability_sha256,
+            self.pilot_scores_sha256,
+            self.base_stratum_indices_sha256,
+            self.anchor_indices_sha256,
+            self.promoted_indices_sha256,
+            self.final_stratum_indices_sha256,
+            *self.object_final_stratum_indices_sha256,
+        )
+        if any(
+            len(value) != 64
+            or any(character not in "0123456789abcdef" for character in value)
+            for value in hashes
+        ):
+            raise ValueError("pilot provenance hashes must be lowercase SHA-256")
+        object.__setattr__(self, "pilot_seed", int(self.pilot_seed))
+        object.__setattr__(
+            self,
+            "object_final_stratum_indices_sha256",
+            tuple(self.object_final_stratum_indices_sha256),
+        )
+
+
 TAIL_PROPOSAL_ATOM_CHUNK = 262144
 # A proposal batch owns, at its peak, one float64 probability slab per
 # component plus likelihood/cumulative workspaces.  At the fixed 262,144-atom
@@ -617,6 +782,112 @@ class ProposalCandidates:
         )
 
 
+@dataclass(frozen=True)
+class PilotStratumPromotion:
+    """Fixed-width exact stratum selected by a discarded pilot.
+
+    Invalid anchor slots are padded with ``-1`` and identified by
+    ``anchor_valid``.  Promoted and final-stratum matrices never use padding:
+    each row has exactly the same width, is unique, and contains active atoms.
+    """
+
+    candidates: ProposalCandidates
+    recipe: PilotStratumRecipe
+    base_size: int
+    anchor_indices: np.ndarray
+    anchor_valid: np.ndarray
+    promoted_indices: np.ndarray
+    pilot_unique_counts: np.ndarray
+    pilot_finite_score_counts: np.ndarray
+    fallback_fill_counts: np.ndarray
+    neighbor_query_counts: np.ndarray
+    provenance: PilotStratumProvenance
+
+    def __post_init__(self):
+        if not isinstance(self.candidates, ProposalCandidates):
+            raise TypeError("promoted candidates must be ProposalCandidates")
+        if not isinstance(self.recipe, PilotStratumRecipe):
+            raise TypeError("promotion recipe must be a PilotStratumRecipe")
+        base_size = int(self.base_size)
+        anchors = np.array(self.anchor_indices, dtype=np.int64, copy=True)
+        anchor_valid = np.array(self.anchor_valid, dtype=bool, copy=True)
+        promoted = np.array(self.promoted_indices, dtype=np.int64, copy=True)
+        unique_counts = np.array(self.pilot_unique_counts, dtype=np.int64, copy=True)
+        finite_counts = np.array(
+            self.pilot_finite_score_counts, dtype=np.int64, copy=True
+        )
+        fallback_counts = np.array(
+            self.fallback_fill_counts, dtype=np.int64, copy=True
+        )
+        query_counts = np.array(
+            self.neighbor_query_counts, dtype=np.int64, copy=True
+        )
+        n_objects, final_size = self.candidates.indices.shape
+        if base_size <= 0 or base_size > final_size:
+            raise ValueError("pilot promotion base size is invalid")
+        if anchors.ndim != 2 or anchor_valid.shape != anchors.shape:
+            raise ValueError("pilot anchors and validity must be aligned matrices")
+        if len(anchors) != n_objects:
+            raise ValueError("pilot anchor rows must align with candidates")
+        if promoted.shape != (n_objects, final_size - base_size):
+            raise ValueError("promoted atom matrix has the wrong fixed width")
+        for values, name in (
+            (unique_counts, "unique pilot counts"),
+            (finite_counts, "finite pilot-score counts"),
+            (fallback_counts, "deterministic fallback-fill counts"),
+            (query_counts, "neighbor query counts"),
+        ):
+            if values.shape != (n_objects,) or (values < 0).any():
+                raise ValueError(f"{name} must contain one non-negative value per row")
+        if (finite_counts > unique_counts).any():
+            raise ValueError("finite pilot-score counts cannot exceed unique counts")
+        if np.any(anchors[~anchor_valid] != -1) or np.any(
+            anchors[anchor_valid] < 0
+        ):
+            raise ValueError("invalid anchor padding or atom ids")
+        for row in range(n_objects):
+            final = self.candidates.indices[row]
+            if len(np.unique(final)) != len(final):
+                raise ValueError("final exact-stratum rows must be unique")
+            if len(np.unique(promoted[row])) != len(promoted[row]):
+                raise ValueError("promoted atom rows must be unique")
+            if not np.array_equal(final[base_size:], promoted[row]):
+                raise ValueError("promoted atoms must be the final stratum suffix")
+            valid_anchors = anchors[row, anchor_valid[row]]
+            if not np.isin(valid_anchors, promoted[row]).all():
+                raise ValueError("every consumed pilot anchor must be promoted")
+        if len(self.provenance.object_final_stratum_indices_sha256) != n_objects:
+            raise ValueError("pilot provenance needs one final-stratum hash per row")
+        for value in (
+            anchors,
+            anchor_valid,
+            promoted,
+            unique_counts,
+            finite_counts,
+            fallback_counts,
+            query_counts,
+        ):
+            value.setflags(write=False)
+        object.__setattr__(self, "base_size", base_size)
+        object.__setattr__(self, "anchor_indices", anchors)
+        object.__setattr__(self, "anchor_valid", anchor_valid)
+        object.__setattr__(self, "promoted_indices", promoted)
+        object.__setattr__(self, "pilot_unique_counts", unique_counts)
+        object.__setattr__(self, "pilot_finite_score_counts", finite_counts)
+        object.__setattr__(self, "fallback_fill_counts", fallback_counts)
+        object.__setattr__(self, "neighbor_query_counts", query_counts)
+
+    @property
+    def promotion_size(self) -> int:
+        return self.promoted_indices.shape[1]
+
+    @property
+    def anchor_counts(self) -> np.ndarray:
+        counts = self.anchor_valid.sum(axis=1)
+        counts.setflags(write=False)
+        return counts
+
+
 class DefensiveLocalProposal:
     """Nearest-neighbour kernel proposal mixed with the full catalogue prior."""
 
@@ -732,6 +1003,381 @@ class DefensiveLocalProposal:
         positions = self._candidate_lookup[drawn].copy()
         self._candidate_lookup[candidates] = -1
         return positions, positions >= 0
+
+    def _validate_active_atom_rows(self, indices: np.ndarray, *, label: str) -> None:
+        """Require every atom id in a matrix to belong to active support."""
+
+        values = np.asarray(indices, dtype=np.int64)
+        if values.ndim != 2:
+            raise ValueError(f"{label} must be a matrix")
+        positions = np.searchsorted(self.active_indices, values)
+        valid = positions < len(self.active_indices)
+        if valid.any():
+            valid[valid] &= self.active_indices[positions[valid]] == values[valid]
+        if not valid.all():
+            raise ValueError(f"{label} must contain only active atom ids")
+
+    def _canonical_coordinate_neighbors(
+        self, anchor_indices: np.ndarray, *, n_neighbors: int
+    ) -> np.ndarray:
+        """Return exact-distance neighbors with atom-id tie breaking.
+
+        ``KDTree.query`` identifies a radius, not the final ordering.  A ball
+        query then includes every atom at that boundary, after which float64
+        squared distances and absolute atom ids define the canonical result.
+        Consequently neither the tree's tie order nor Python hashing enters the
+        selected stratum.
+        """
+
+        anchors = np.asarray(anchor_indices, dtype=np.int64)
+        if anchors.ndim != 1 or not len(anchors):
+            raise ValueError("coordinate-neighbor anchors must be a nonempty vector")
+        if n_neighbors <= 0:
+            raise ValueError("coordinate-neighbor count must be positive")
+        self._validate_active_atom_rows(anchors[None, :], label="neighbor anchors")
+        k = min(int(n_neighbors), len(self.active_indices))
+        queries = (
+            self.coordinates.values[anchors] - self.coordinates.center
+        ) / self.coordinates.scale
+        distances, positions = self.tree.query(queries, k=k, workers=-1)
+        distances = np.asarray(distances, dtype=np.float64).reshape(len(anchors), k)
+        positions = np.asarray(positions, dtype=np.int64).reshape(len(anchors), k)
+        boundary = distances[:, -1]
+        # The margin protects a mathematically tied point from an implementation-
+        # level downward rounding of the returned square root.  Any additionally
+        # admitted point is re-ranked by the exact stored coordinates below.
+        margin = 32.0 * np.finfo(np.float64).eps * np.maximum(1.0, boundary)
+        radii = np.nextafter(boundary + margin, np.inf)
+        balls = self.tree.query_ball_point(queries, radii, workers=-1)
+        result = np.empty((len(anchors), k), dtype=np.int64)
+        for row, (query, ball) in enumerate(zip(queries, balls)):
+            tree_positions = np.unique(
+                np.concatenate(
+                    (positions[row], np.asarray(ball, dtype=np.int64))
+                )
+            )
+            atom_ids = self.active_indices[tree_positions]
+            atom_standardized = (
+                self.coordinates.values[atom_ids] - self.coordinates.center
+            ) / self.coordinates.scale
+            difference = atom_standardized - query
+            distance_squared = np.einsum(
+                "ij,ij->i", difference, difference, optimize=True
+            )
+            order = np.lexsort((atom_ids, distance_squared))
+            if len(order) < k:
+                raise RuntimeError("KDTree boundary query lost canonical neighbors")
+            result[row] = atom_ids[order[:k]]
+        return result
+
+    def promote_exact_stratum(
+        self,
+        candidates: ProposalCandidates,
+        observed,
+        pilot_draw: ProposalDraw,
+        pilot_scores: np.ndarray,
+        *,
+        recipe: PilotStratumRecipe = PILOT_STRATUM_RECIPE,
+    ) -> PilotStratumPromotion:
+        """Promote pilot-discovered atoms and coordinate clusters exactly.
+
+        ``pilot_scores`` is intentionally explicit.  The selected development
+        recipe expects ``log(c^2/q)`` (equivalently ``2*log(c/q)+log(q)``), but
+        callers can instantiate another immutable recipe for a predeclared
+        ranking or quota.  Duplicate pilot atoms use their maximum score, then
+        atom id breaks ties.  Ranked anchors contribute themselves followed by
+        their nearest coordinate neighbors until the fixed promotion budget is
+        full.
+
+        The pilot is selection data only.  This method returns no estimator
+        weights and performs no production draw; consumers must exact-sum the
+        final stratum and independently sample a newly conditioned complement.
+        """
+
+        if not isinstance(candidates, ProposalCandidates):
+            raise TypeError("base exact stratum must be ProposalCandidates")
+        if not isinstance(pilot_draw, ProposalDraw):
+            raise TypeError("pilot draw must be a ProposalDraw")
+        if not isinstance(recipe, PilotStratumRecipe):
+            raise TypeError("pilot recipe must be a PilotStratumRecipe")
+        base = np.asarray(candidates.indices, dtype=np.int64)
+        pilot_indices = np.asarray(pilot_draw.indices, dtype=np.int64)
+        pilot_probability = np.asarray(pilot_draw.probability, dtype=np.float64)
+        scores = np.asarray(pilot_scores, dtype=np.float64)
+        n_objects, base_size = base.shape
+        expected_draw_shape = (n_objects, recipe.pilot_draws)
+        if pilot_indices.shape != expected_draw_shape or scores.shape != expected_draw_shape:
+            raise ValueError(
+                "pilot atoms and explicit scores must match the recipe draw matrix"
+            )
+        if np.isnan(scores).any() or np.isposinf(scores).any():
+            raise ValueError("pilot scores may be finite or -inf, but not NaN/+inf")
+        if (
+            pilot_probability.shape != expected_draw_shape
+            or pilot_draw.local_member.shape != expected_draw_shape
+            or not np.isfinite(pilot_probability).all()
+            or (pilot_probability <= 0.0).any()
+        ):
+            raise ValueError("pilot proposal probabilities must be positive and finite")
+        if pilot_draw.component_id is None:
+            raise ValueError("pilot draw must record its deterministic component schedule")
+        schedule = np.tile(
+            np.asarray(recipe.pilot_proposal.component_cycle, dtype=np.int16),
+            recipe.pilot_draws // recipe.pilot_proposal.cycle_length,
+        )
+        if not np.array_equal(
+            pilot_draw.component_id,
+            np.broadcast_to(schedule, expected_draw_shape),
+        ):
+            raise ValueError("pilot component schedule does not match its frozen recipe")
+        if (
+            pilot_draw.component_complement_mass is None
+            or pilot_draw.component_complement_mass.shape
+            != (n_objects, len(recipe.pilot_proposal.component_names))
+        ):
+            raise ValueError("pilot complement-mass diagnostics do not match its recipe")
+        if base_size <= 0:
+            raise ValueError("base exact stratum must be nonempty")
+        if any(len(np.unique(row)) != base_size for row in base):
+            raise ValueError("base exact-stratum rows must be unique")
+        self._validate_active_atom_rows(base, label="base exact stratum")
+        self._validate_active_atom_rows(pilot_indices, label="pilot draws")
+        values = self._observed_values(observed)
+        if len(values) != n_objects:
+            raise ValueError("observations and exact-stratum rows must align")
+        if base_size > len(self.active_indices):
+            raise ValueError("base exact stratum is wider than active support")
+
+        promotion_size = min(
+            recipe.n_promotions, len(self.active_indices) - base_size
+        )
+        anchor_width = min(recipe.max_anchors, promotion_size)
+        promoted = np.empty((n_objects, promotion_size), dtype=np.int64)
+        anchors = np.full((n_objects, anchor_width), -1, dtype=np.int64)
+        anchor_valid = np.zeros_like(anchors, dtype=bool)
+        unique_counts = np.empty(n_objects, dtype=np.int64)
+        finite_counts = np.empty(n_objects, dtype=np.int64)
+        fallback_fill_counts = np.zeros(n_objects, dtype=np.int64)
+        query_counts = np.zeros(n_objects, dtype=np.int64)
+        seen = np.zeros(len(self.prior_weights), dtype=bool)
+
+        for row in range(n_objects):
+            base_row = base[row]
+            seen[base_row] = True
+            selected_count = 0
+            try:
+                if promotion_size == 0:
+                    unique_counts[row] = 0
+                    finite_counts[row] = 0
+                    continue
+                if seen[pilot_indices[row]].any() or pilot_draw.local_member[row].any():
+                    raise ValueError(
+                        "pilot draw must be conditioned on the base-stratum complement"
+                    )
+                unique, inverse = np.unique(
+                    pilot_indices[row], return_inverse=True
+                )
+                log_probability = np.log(pilot_probability[row])
+                minimum_log_probability = np.full(
+                    len(unique), np.inf, dtype=np.float64
+                )
+                maximum_log_probability = np.full(
+                    len(unique), -np.inf, dtype=np.float64
+                )
+                np.minimum.at(minimum_log_probability, inverse, log_probability)
+                np.maximum.at(maximum_log_probability, inverse, log_probability)
+                if np.any(
+                    maximum_log_probability - minimum_log_probability
+                    > PILOT_DUPLICATE_LOG_PROBABILITY_ATOL
+                ):
+                    raise ValueError(
+                        "duplicate pilot atom has inconsistent balance probability"
+                    )
+                unique_score = np.full(len(unique), -np.inf, dtype=np.float64)
+                np.maximum.at(unique_score, inverse, scores[row])
+                unique_counts[row] = len(unique)
+                finite_counts[row] = int(np.isfinite(unique_score).sum())
+                order = np.lexsort((unique, -unique_score))
+                ranked = unique[order[np.isfinite(unique_score[order])]][
+                    : recipe.max_anchors
+                ]
+
+                consumed = []
+                # Batch tree queries without making their return order part of
+                # the algorithm.  Each cluster is anchor + nearest other atoms.
+                cluster_query = min(
+                    len(self.active_indices), recipe.neighbors_per_anchor
+                )
+                if len(ranked):
+                    query_counts[row] = cluster_query
+                anchor_batch = 64
+
+                def consume_anchor_range(anchor_values):
+                    nonlocal selected_count
+                    for start in range(0, len(anchor_values), anchor_batch):
+                        stop = min(start + anchor_batch, len(anchor_values))
+                        batch = anchor_values[start:stop]
+                        neighbor_rows = self._canonical_coordinate_neighbors(
+                            batch, n_neighbors=cluster_query
+                        )
+                        for anchor, neighbors in zip(batch, neighbor_rows):
+                            if len(consumed) >= anchor_width:
+                                return
+                            consumed.append(int(anchor))
+                            anchors[row, len(consumed) - 1] = int(anchor)
+                            anchor_valid[row, len(consumed) - 1] = True
+                            cluster = np.concatenate(
+                                (
+                                    np.asarray([anchor], dtype=np.int64),
+                                    neighbors[neighbors != anchor][
+                                        : max(recipe.neighbors_per_anchor - 1, 0)
+                                    ],
+                                )
+                            )
+                            for atom in cluster:
+                                atom = int(atom)
+                                if not seen[atom]:
+                                    promoted[row, selected_count] = atom
+                                    selected_count += 1
+                                    seen[atom] = True
+                                    if selected_count == promotion_size:
+                                        return
+
+                consume_anchor_range(ranked[:anchor_width])
+
+                # A normal finite pilot supplies the full frozen anchor count.
+                # Cluster overlap is then repaired only by deepening around
+                # those same anchors; consuming a 257th pilot atom would change
+                # the declared algorithm.  A degenerate pilot with fewer finite
+                # unique scores instead receives an explicit, auditable fill in
+                # ascending active-atom order.
+                if (
+                    selected_count < promotion_size
+                    and len(consumed) < min(recipe.max_anchors, promotion_size)
+                ):
+                    for atom in self.active_indices:
+                        atom = int(atom)
+                        if not seen[atom]:
+                            promoted[row, selected_count] = atom
+                            selected_count += 1
+                            fallback_fill_counts[row] += 1
+                            seen[atom] = True
+                            if selected_count == promotion_size:
+                                break
+
+                # Heavy overlap can exhaust the ranked-anchor budget before the
+                # fixed-width stratum is full.  Expand the already consumed
+                # anchor neighborhoods canonically; this affects efficiency only,
+                # never support or the estimator's conditional unbiasedness.
+                query_k = cluster_query
+                while selected_count < promotion_size:
+                    if not consumed:
+                        raise RuntimeError("pilot promotion has no usable finite anchor")
+                    if query_k == len(self.active_indices):
+                        raise RuntimeError("pilot promotion could not fill exact stratum")
+                    query_k = min(
+                        len(self.active_indices), max(query_k + 1, 2 * query_k)
+                    )
+                    query_counts[row] = query_k
+                    neighbor_rows = self._canonical_coordinate_neighbors(
+                        np.asarray(consumed, dtype=np.int64),
+                        n_neighbors=query_k,
+                    )
+                    before = selected_count
+                    for neighbors in neighbor_rows:
+                        for atom in neighbors:
+                            atom = int(atom)
+                            if not seen[atom]:
+                                promoted[row, selected_count] = atom
+                                selected_count += 1
+                                seen[atom] = True
+                                if selected_count == promotion_size:
+                                    break
+                        if selected_count == promotion_size:
+                            break
+                    if selected_count == before and query_k == len(self.active_indices):
+                        raise RuntimeError("pilot promotion exhausted active support")
+            finally:
+                seen[base_row] = False
+                # Only the initialized prefix is marked if validation raises.
+                if selected_count:
+                    seen[promoted[row, :selected_count]] = False
+
+        if promotion_size:
+            observed_standardized = (
+                values - self.coordinates.center
+            ) / self.coordinates.scale
+            promoted_standardized = (
+                self.coordinates.values[promoted] - self.coordinates.center
+            ) / self.coordinates.scale
+            promoted_distances = np.sqrt(
+                np.square(
+                    promoted_standardized - observed_standardized[:, None, :]
+                ).sum(axis=2)
+            )
+            final_distances = np.concatenate(
+                (candidates.distances, promoted_distances), axis=1
+            )
+            final_radius = np.maximum(
+                candidates.radius, np.max(promoted_distances, axis=1)
+            )
+            final_indices = np.concatenate((base, promoted), axis=1)
+        else:
+            final_indices = base.copy()
+            final_distances = candidates.distances.copy()
+            final_radius = candidates.radius.copy()
+        final_candidates = ProposalCandidates(
+            final_indices, final_distances, final_radius
+        )
+
+        object_hashes = tuple(
+            _array_manifest_sha256(
+                "final_stratum_row",
+                np.sort(final_indices[row])[None, :],
+                dtype=">i8",
+            )
+            for row in range(n_objects)
+        )
+        provenance = PilotStratumProvenance(
+            hash_contract=PILOT_STRATUM_HASH_CONTRACT,
+            recipe_sha256=recipe.sha256,
+            pilot_seed=int(pilot_draw.seed),
+            pilot_draw_indices_sha256=_array_manifest_sha256(
+                "pilot_draw_indices", pilot_indices, dtype=">i8"
+            ),
+            pilot_probability_sha256=_array_manifest_sha256(
+                "pilot_probability", pilot_probability, dtype=">f8"
+            ),
+            pilot_scores_sha256=_array_manifest_sha256(
+                "pilot_scores", scores, dtype=">f8"
+            ),
+            base_stratum_indices_sha256=_array_manifest_sha256(
+                "base_stratum_indices", base, dtype=">i8", sort_rows=True
+            ),
+            anchor_indices_sha256=_array_manifest_sha256(
+                "anchor_indices", anchors, dtype=">i8"
+            ),
+            promoted_indices_sha256=_array_manifest_sha256(
+                "promoted_indices", promoted, dtype=">i8", sort_rows=True
+            ),
+            final_stratum_indices_sha256=_array_manifest_sha256(
+                "final_stratum_indices", final_indices, dtype=">i8", sort_rows=True
+            ),
+            object_final_stratum_indices_sha256=object_hashes,
+        )
+        return PilotStratumPromotion(
+            candidates=final_candidates,
+            recipe=recipe,
+            base_size=base_size,
+            anchor_indices=anchors,
+            anchor_valid=anchor_valid,
+            promoted_indices=promoted,
+            pilot_unique_counts=unique_counts,
+            pilot_finite_score_counts=finite_counts,
+            fallback_fill_counts=fallback_fill_counts,
+            neighbor_query_counts=query_counts,
+            provenance=provenance,
+        )
 
     def _observed_values(self, observed) -> np.ndarray:
         if isinstance(observed, pd.DataFrame):
@@ -3187,6 +3833,13 @@ __all__ = [
     "ImportanceProfileResult",
     "ImportanceProfileRung",
     "ImportanceRung",
+    "PILOT_STRATUM_HASH_CONTRACT",
+    "PILOT_DUPLICATE_LOG_PROBABILITY_ATOL",
+    "PILOT_STRATUM_PROPOSAL_RECIPE",
+    "PILOT_STRATUM_RECIPE",
+    "PilotStratumPromotion",
+    "PilotStratumProvenance",
+    "PilotStratumRecipe",
     "ProposalCoordinateTable",
     "ProposalCandidates",
     "ProposalDraw",
