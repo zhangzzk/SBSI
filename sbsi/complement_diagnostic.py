@@ -25,7 +25,11 @@ from .catalogue_sampling import (
     PILOT_STRATUM_HASH_CONTRACT,
     PILOT_STRATUM_RECIPE,
     TAIL_PROPOSAL_RECIPE,
+    _candidate_exclusion_manifest_sha256,
     pareto_tail_index,
+)
+from .learned_retrieval_diagnostic import (
+    learned_retrieval_run_manifest_sha256,
 )
 
 
@@ -220,6 +224,19 @@ def _pilot_stratum_run_manifest_sha256(
             raise ValueError("pilot-stratum object hashes must be lowercase SHA-256")
         digest.update(struct.pack(">Q", object_id))
         digest.update(bytes.fromhex(value))
+    return digest.hexdigest()
+
+
+def _learned_center_log_target_sha256(values: np.ndarray) -> str:
+    """Hash one ordered exact-centre log-target row with an explicit contract."""
+
+    canonical = np.ascontiguousarray(values, dtype=np.dtype(">f8"))
+    if canonical.ndim != 1:
+        raise ValueError("learned centre log target must be one-dimensional")
+    digest = sha256()
+    digest.update(b"SBSI/learned-retrieval-center-log-target/v1\0")
+    digest.update(struct.pack(">Q", len(canonical)))
+    digest.update(canonical.tobytes())
     return digest.hexdigest()
 
 
@@ -1483,6 +1500,7 @@ def diagnose_complement(
     pilot_seed: Optional[int] = None,
     include_exact_oracle: bool = False,
     confirmation_mock_sha256: Optional[dict[str, str]] = None,
+    learned_retrieval_center: Optional[dict] = None,
 ) -> ComplementDiagnostic:
     """Split target mass and pair prior versus fixed DM-MIS tail draws.
 
@@ -1533,6 +1551,22 @@ def diagnose_complement(
             "the pilot stratum requires measured selection to be disabled so "
             "frozen absolute row ids are preserved"
         )
+    if learned_retrieval_center is not None:
+        if not isinstance(learned_retrieval_center, dict):
+            raise TypeError("learned-retrieval centre identity must be a dictionary")
+        if not include_tail_proposal or not include_exact_oracle:
+            raise ValueError(
+                "the learned-retrieval centre protocol requires conditioned DM3 "
+                "and the exact oracle"
+            )
+        if include_pilot_stratum:
+            raise ValueError(
+                "the learned-retrieval centre protocol excludes pilot promotion"
+            )
+        if candidate_backend != "torch" or n_candidates != prefilter_candidates:
+            raise ValueError(
+                "learned retrieval requires one equal-width Torch support"
+            )
 
     measurements = mock.measurements
     stop = len(measurements) if observation_stop is None else int(observation_stop)
@@ -1608,6 +1642,9 @@ def diagnose_complement(
     pilot_call_provenance = []
     pilot_base_stratum_size = None
     pilot_final_stratum_size = None
+    learned_stratum_flow_evaluations = 0
+    learned_prior_flow_evaluations = 0
+    learned_tail_flow_evaluations = 0
 
     for object_start in range(start, stop, object_chunk):
         object_stop = min(object_start + object_chunk, stop)
@@ -1623,13 +1660,38 @@ def diagnose_complement(
             n_candidates=prefilter_candidates,
             torch_device=torch_device,
         )
-        stratum = proposal.candidates(
-            observed,
-            n_candidates=n_candidates,
-            prefilter_candidates=prefilter_candidates,
-            torch_device=torch_device,
+        # Equal-width diagnostics use the same deterministic support for the
+        # exact stratum and prefilter.  Reusing the immutable candidate record
+        # is important for broad learned retrieval: a second global MIPS call
+        # would add cost and could introduce a device-dependent boundary tie.
+        stratum = (
+            prefilter
+            if n_candidates == prefilter_candidates
+            else proposal.candidates(
+                observed,
+                n_candidates=n_candidates,
+                prefilter_candidates=prefilter_candidates,
+                torch_device=torch_device,
+            )
         )
         phase_seconds["candidate_query"] += time.perf_counter() - phase_started
+
+        if learned_retrieval_center is not None:
+            learned_ids = np.asarray(stratum.indices, dtype=np.int64)
+            if learned_ids.shape != (len(observed), int(n_candidates)):
+                raise RuntimeError("learned retrieval returned the wrong support width")
+            if any(len(np.unique(row)) != len(row) for row in learned_ids):
+                raise RuntimeError("learned retrieval returned duplicate atom ids")
+            active = np.asarray(proposal.active_indices, dtype=np.int64)
+            positions = np.searchsorted(active, learned_ids)
+            active_member = positions < len(active)
+            if active_member.any():
+                active_member[active_member] &= (
+                    active[positions[active_member]]
+                    == learned_ids[active_member]
+                )
+            if not active_member.all():
+                raise RuntimeError("learned retrieval returned inactive atom ids")
 
         phase_started = time.perf_counter()
         ones = np.ones_like(prefilter.indices, dtype=np.float64)
@@ -1650,6 +1712,8 @@ def diagnose_complement(
             .astype(np.float64)
         )
         flow_evaluations += int(prefilter.indices.size)
+        if learned_retrieval_center is not None:
+            learned_stratum_flow_evaluations += int(prefilter.indices.size)
         phase_seconds["prefilter_flow"] += time.perf_counter() - phase_started
 
         pilot_promotion = None
@@ -1879,6 +1943,8 @@ def diagnose_complement(
             .astype(np.float64)
         )
         flow_evaluations += int(prior_draw.indices.size)
+        if learned_retrieval_center is not None:
+            learned_prior_flow_evaluations += int(prior_draw.indices.size)
         phase_seconds["prior_flow"] += time.perf_counter() - phase_started
 
         tail_draw = None
@@ -1914,6 +1980,8 @@ def diagnose_complement(
                 .astype(np.float64)
             )
             flow_evaluations += int(tail_draw.indices.size)
+            if learned_retrieval_center is not None:
+                learned_tail_flow_evaluations += int(tail_draw.indices.size)
             tail_ratio = np.exp(tail_log_ratio)
             phase_seconds["tail_proposal_flow"] += (
                 time.perf_counter() - phase_started
@@ -2260,10 +2328,47 @@ def diagnose_complement(
                             }
                         )
 
+            learned_record = {}
+            if learned_retrieval_center is not None:
+                if (
+                    tail_draw is None
+                    or tail_draw.object_excluded_candidate_indices_sha256 is None
+                ):
+                    raise RuntimeError(
+                        "learned retrieval requires conditioned-exclusion provenance"
+                    )
+                exclusion_sha256 = (
+                    tail_draw.object_excluded_candidate_indices_sha256[row]
+                )
+                # Recompute the canonical support identity from the exact set
+                # consumed here.  This is deliberately independent of the
+                # sampler-supplied exclusion provenance checked below.
+                support_sha256 = _candidate_exclusion_manifest_sha256(
+                    stratum_ids[None, :]
+                )[0]
+                learned_record = {
+                    "learned_retrieval_count": int(len(stratum_ids)),
+                    "learned_retrieval_unique_count": int(len(stratum_ids)),
+                    # Batch-level searchsorted validation above has already
+                    # proved every returned id belongs to active support.
+                    "learned_retrieval_active_count": int(len(stratum_ids)),
+                    "tail_draws_in_learned_retrieval": int(
+                        tail_draw.local_member[row].sum()
+                    ),
+                    "learned_retrieval_indices_sha256": support_sha256,
+                    "conditioned_exclusion_indices_sha256": exclusion_sha256,
+                    "learned_retrieval_center_log_target_sha256": (
+                        _learned_center_log_target_sha256(
+                            prefilter_log_c[row]
+                        )
+                    ),
+                }
+
             rows.append(
                 {
                     **record,
                     **pilot_record,
+                    **learned_record,
                     "object_index": int(absolute_ids[row]),
                     "mass_stratum": mass_stratum,
                     "mass_prefilter_complement": mass_prefilter_complement,
@@ -2442,6 +2547,33 @@ def diagnose_complement(
                 ),
             },
         }
+    frame = pd.DataFrame(rows)
+    learned_retrieval_metadata = None
+    if learned_retrieval_center is not None:
+        learned_retrieval_metadata = {
+            **deepcopy(learned_retrieval_center),
+            "candidate_calls": int(getattr(proposal, "candidate_calls", -1)),
+            "retrieval_batches": int(
+                getattr(proposal, "retrieval_batches", -1)
+            ),
+            "retrieval_objects": int(
+                getattr(proposal, "retrieval_objects", -1)
+            ),
+            "stratum_flow_evaluations": int(
+                learned_stratum_flow_evaluations
+            ),
+            "prior_flow_evaluations": int(learned_prior_flow_evaluations),
+            "tail_flow_evaluations": int(learned_tail_flow_evaluations),
+            "learned_scores_define_support_only": True,
+            "importance_probabilities": "exact conditioned DM3 balance mixture",
+            "run_manifest_sha256": learned_retrieval_run_manifest_sha256(
+                frame
+            ),
+            "manifest_contract": (
+                "sha256(domain || count || sorted(object_id, support_sha256, "
+                "center_log_target_sha256, exclusion_sha256))"
+            ),
+        }
     metadata = {
         "center": [float(center[0]), float(center[1])],
         "n_candidates": int(n_candidates),
@@ -2475,4 +2607,6 @@ def diagnose_complement(
         metadata["exact_oracle"] = exact_oracle_metadata
     if pilot_stratum_metadata is not None:
         metadata["pilot_stratum"] = pilot_stratum_metadata
-    return ComplementDiagnostic(pd.DataFrame(rows), metadata)
+    if learned_retrieval_metadata is not None:
+        metadata["learned_retrieval_center"] = learned_retrieval_metadata
+    return ComplementDiagnostic(frame, metadata)

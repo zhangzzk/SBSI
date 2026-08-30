@@ -76,6 +76,79 @@ def _minimal_runner_arguments(*extra):
     ]
 
 
+def _learned_center_runner_arguments(
+    checkpoint,
+    *,
+    mock_input="frozen-mock",
+    diagnostic=True,
+    tail=True,
+    exact=True,
+    pilot=False,
+    extra=(),
+):
+    arguments = _minimal_runner_arguments(
+        "--diagnose-complement-learned-center-checkpoint",
+        str(checkpoint),
+        "--observation-start",
+        "25000",
+        "--observation-stop",
+        "25512",
+        "--proposal-candidates",
+        "524288",
+        "--proposal-prefilter-candidates",
+        "524288",
+        "--diagnose-complement-global-draws",
+        "16384",
+        "--proposal-seed",
+        "8701",
+        "--initial-strategy",
+        "mean_observed_shape",
+        "--candidate-backend",
+        "torch",
+        "--object-chunk",
+        "8",
+        "--atom-chunk",
+        "4096",
+        "--learned-retrieval-object-chunk",
+        "8",
+        "--learned-retrieval-atom-chunk",
+        "262144",
+    )
+    if mock_input is not None:
+        arguments.extend(("--mock-input", str(mock_input)))
+    if diagnostic:
+        arguments.extend(("--diagnose-complement", "diagnostic"))
+    if tail:
+        arguments.append("--diagnose-complement-tail-proposal")
+    if exact:
+        arguments.append("--diagnose-complement-exact-oracle")
+    if pilot:
+        arguments.append("--diagnose-complement-pilot-stratum")
+    arguments.extend(extra)
+    return arguments
+
+
+def _valid_learned_center_args(tmp_path, monkeypatch, **kwargs):
+    checkpoint = tmp_path / "learned-center.pt"
+    checkpoint.write_bytes(b"small learned-center checkpoint fixture")
+    monkeypatch.setattr(
+        RUNNER,
+        "_sha256",
+        lambda path: RUNNER.LEARNED_RETRIEVAL_CENTER_CHECKPOINT_SHA256,
+    )
+    monkeypatch.setattr(
+        RUNNER,
+        "_mock_input_hashes",
+        lambda path: dict(
+            RUNNER.LEARNED_RETRIEVAL_CENTER_PROTOCOL["mock_input_sha256"]
+        ),
+    )
+    args = RUNNER.parse_args(
+        _learned_center_runner_arguments(checkpoint, **kwargs)
+    )
+    return args, checkpoint
+
+
 def test_tilted_screen_records_the_fixed_tail_recipe_without_mutating_release():
     args = RUNNER.parse_args(
         _minimal_runner_arguments("--estimator-mode", "tilted_stratified")
@@ -130,6 +203,145 @@ def test_exact_oracle_cli_is_one_boolean_without_selection_knobs():
         "--exact-oracle-object-chunk",
     ):
         assert retired_knob not in help_text
+
+
+def test_learned_center_cli_accepts_only_the_frozen_protocol_and_checkpoint(
+    tmp_path, monkeypatch
+):
+    checkpoint = tmp_path / "learned-center.pt"
+    checkpoint.write_bytes(b"small learned-center checkpoint fixture")
+    hashed = []
+
+    def frozen_hash(path):
+        hashed.append(Path(path))
+        return RUNNER.LEARNED_RETRIEVAL_CENTER_CHECKPOINT_SHA256
+
+    monkeypatch.setattr(RUNNER, "_sha256", frozen_hash)
+    monkeypatch.setattr(
+        RUNNER,
+        "_mock_input_hashes",
+        lambda path: dict(
+            RUNNER.LEARNED_RETRIEVAL_CENTER_PROTOCOL["mock_input_sha256"]
+        ),
+    )
+    args = RUNNER.parse_args(_learned_center_runner_arguments(checkpoint))
+
+    RUNNER._validate_learned_retrieval_center_request(args)
+
+    assert hashed == [checkpoint]
+    assert args.proposal_candidates == 524_288
+    assert args.proposal_prefilter_candidates == 524_288
+    assert args.diagnose_complement_global_draws == 16_384
+
+
+@pytest.mark.parametrize(
+    "mode, field",
+    (
+        ({"diagnostic": False}, "diagnostic_enabled"),
+        ({"tail": False}, "tail_proposal"),
+        ({"exact": False}, "exact_oracle"),
+        ({"pilot": True}, "pilot_stratum"),
+    ),
+)
+def test_learned_center_cli_rejects_missing_arms_and_pilot(
+    tmp_path, monkeypatch, mode, field
+):
+    args, _ = _valid_learned_center_args(tmp_path, monkeypatch, **mode)
+
+    with pytest.raises(SystemExit, match=field):
+        RUNNER._validate_learned_retrieval_center_request(args)
+
+
+@pytest.mark.parametrize(
+    "extra, field",
+    (
+        (("--proposal-candidates", "524287"), "n_candidates"),
+        (("--proposal-prefilter-candidates", "524287"), "prefilter_candidates"),
+        (("--diagnose-complement-global-draws", "8192"), "n_global_draws"),
+        (("--observation-start", "24999"), "universe_start"),
+        (("--observation-stop", "25513"), "universe_stop"),
+        (("--proposal-seed", "8702"), "proposal_seed"),
+        (("--candidate-backend", "scipy"), "candidate_backend"),
+        (("--object-chunk", "16"), "diagnostic_object_chunk"),
+        (("--atom-chunk", "8192"), "flow_atom_chunk"),
+        (("--learned-retrieval-object-chunk", "16"), "retrieval_object_chunk"),
+        (("--learned-retrieval-atom-chunk", "131072"), "retrieval_atom_chunk"),
+        (("--initial-strategy", "fixed"), "initial_strategy"),
+    ),
+)
+def test_learned_center_cli_rejects_any_frozen_protocol_change(
+    tmp_path, monkeypatch, extra, field
+):
+    args, _ = _valid_learned_center_args(
+        tmp_path,
+        monkeypatch,
+        extra=extra,
+    )
+
+    with pytest.raises(SystemExit, match=field):
+        RUNNER._validate_learned_retrieval_center_request(args)
+
+
+@pytest.mark.parametrize(
+    "selection_arguments",
+    (
+        ("--cut-abs-ehat", "0.8"),
+        ("--cut-bound", "measured_ngmix_g1:-1:1"),
+        ("--selection-cache", "selection-cache"),
+    ),
+)
+def test_learned_center_cli_rejects_measured_selection(
+    tmp_path, monkeypatch, selection_arguments
+):
+    args, _ = _valid_learned_center_args(
+        tmp_path,
+        monkeypatch,
+        extra=selection_arguments,
+    )
+
+    with pytest.raises(SystemExit, match="measured cuts.*selection caches"):
+        RUNNER._validate_learned_retrieval_center_request(args)
+
+
+def test_learned_center_cli_rejects_missing_checkpoint(tmp_path):
+    missing = tmp_path / "missing-learned-center.pt"
+    args = RUNNER.parse_args(_learned_center_runner_arguments(missing))
+
+    with pytest.raises(SystemExit, match="missing learned-retrieval checkpoint"):
+        RUNNER._validate_learned_retrieval_center_request(args)
+
+
+def test_learned_center_cli_rejects_checkpoint_hash_change(tmp_path, monkeypatch):
+    checkpoint = tmp_path / "learned-center.pt"
+    checkpoint.write_bytes(b"changed checkpoint")
+    monkeypatch.setattr(RUNNER, "_sha256", lambda path: "0" * 64)
+    args = RUNNER.parse_args(_learned_center_runner_arguments(checkpoint))
+
+    with pytest.raises(SystemExit, match="checkpoint SHA-256 mismatch"):
+        RUNNER._validate_learned_retrieval_center_request(args)
+
+
+def test_learned_center_cli_requires_the_frozen_mock(tmp_path, monkeypatch):
+    args, _ = _valid_learned_center_args(
+        tmp_path,
+        monkeypatch,
+        mock_input=None,
+    )
+
+    with pytest.raises(SystemExit, match="requires its frozen mock input"):
+        RUNNER._validate_learned_retrieval_center_request(args)
+
+
+def test_learned_center_cli_rejects_mock_hash_change(tmp_path, monkeypatch):
+    args, _ = _valid_learned_center_args(tmp_path, monkeypatch)
+    monkeypatch.setattr(
+        RUNNER,
+        "_mock_input_hashes",
+        lambda path: {"measurements.parquet": "0" * 64},
+    )
+
+    with pytest.raises(SystemExit, match="mock-input SHA-256 mismatch"):
+        RUNNER._validate_learned_retrieval_center_request(args)
 
 
 def test_pilot_stratum_cli_is_one_boolean_with_code_owned_streams():
@@ -344,4 +556,58 @@ def test_pilot_stratum_job_pins_consumed_development_window_and_recipe():
     assert "PILOT_STRATUM_RECIPE.promotion_strategy != (" in job
     assert '"ranked_atoms_then_active_id_fill"' in job
     assert "7571ab61f7ee16e10199abdfc47c68113f89ca121451057526f94f2bcfac9154" in job
+    assert "refusing to overwrite" in job
+
+
+def test_learned_center_job_pins_isolated_checkout_protocol_and_overwrite_guard():
+    job = (
+        ROOT / "jobs" / "job_complement_learned_retrieval_center.sh"
+    ).read_text()
+
+    assert "/home/z/Zekang.Zhang/SBSI-inference-sampler-night" in job
+    assert 'cd "$repo"' in job
+    assert 'exec "$python" "$repo/scripts/run_inference.py"' in job
+
+    for assignment in (
+        "OBSERVATION_START=25000",
+        "OBSERVATION_STOP=25512",
+        "K=524288",
+        "GLOBAL_DRAWS=16384",
+        "PROPOSAL_SEED=8701",
+    ):
+        assert assignment in job
+    for frozen_name in (
+        "OBSERVATION_START",
+        "OBSERVATION_STOP",
+        "K",
+        "GLOBAL_DRAWS",
+        "PROPOSAL_SEED",
+    ):
+        assert f"{frozen_name}=${{" not in job
+
+    for invocation in (
+        '--observation-start "$OBSERVATION_START"',
+        '--observation-stop "$OBSERVATION_STOP"',
+        '--proposal-candidates "$K"',
+        '--proposal-prefilter-candidates "$K"',
+        '--proposal-seed "$PROPOSAL_SEED"',
+        '--diagnose-complement-global-draws "$GLOBAL_DRAWS"',
+        "--initial-strategy mean_observed_shape",
+        "--candidate-backend torch",
+        "--object-chunk 8",
+        "--atom-chunk 4096",
+        "--diagnose-complement-tail-proposal",
+        "--diagnose-complement-exact-oracle",
+        '--diagnose-complement-learned-center-checkpoint "$checkpoint"',
+        "--learned-retrieval-object-chunk 8",
+        "--learned-retrieval-atom-chunk 262144",
+    ):
+        assert invocation in job
+    assert "--diagnose-complement-pilot-stratum" not in job
+
+    assert "LEARNED_RETRIEVAL_CENTER_PROTOCOL" in job
+    assert "LEARNED_RETRIEVAL_CENTER_CHECKPOINT_SHA256" in job
+    assert "sha256(checkpoint.read_bytes()).hexdigest()" in job
+    assert "actual_checkpoint != LEARNED_RETRIEVAL_CENTER_CHECKPOINT_SHA256" in job
+    assert 'if [[ -e "$output" ]]' in job
     assert "refusing to overwrite" in job

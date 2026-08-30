@@ -8,6 +8,7 @@ from dataclasses import asdict
 from hashlib import sha256
 import json
 from pathlib import Path
+import time
 
 import numpy as np
 import torch
@@ -30,10 +31,16 @@ from sbsi.catalogue_sampling import (
     DefensiveLocalProposal,
     ProposalCoordinateTable,
 )
+from sbsi.amortized_proposal import ContrastiveRetrievalProposal
 from sbsi.complement_diagnostic import (
     COMPLEMENT_DIAGNOSTIC_SEED_OFFSET,
     PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET,
     diagnose_complement,
+)
+from sbsi.learned_retrieval_diagnostic import (
+    LEARNED_RETRIEVAL_CENTER_CHECKPOINT_SHA256,
+    LEARNED_RETRIEVAL_CENTER_PROTOCOL,
+    learned_retrieval_center_summary,
 )
 from sbsi.forward_catalogue import EmulatorPairingConfig
 from sbsi.measurement_model import load_measurement_model
@@ -509,9 +516,11 @@ def _pipeline_implementation_hashes() -> dict[str, str]:
     names = (
         "configs/inference.json",
         "scripts/run_inference.py",
+        "sbsi/amortized_proposal.py",
         "sbsi/catalogue_null.py",
         "sbsi/catalogue_likelihood.py",
         "sbsi/catalogue_sampling.py",
+        "sbsi/learned_retrieval_diagnostic.py",
     )
     return {name: _sha256(root / name) for name in names}
 
@@ -810,6 +819,26 @@ def parse_args(argv=None):
             "requires --diagnose-complement-tail-proposal"
         ),
     )
+    parser.add_argument(
+        "--diagnose-complement-learned-center-checkpoint",
+        default=None,
+        help=(
+            "run the frozen development-only exact learned-R/conditioned-DM3 "
+            "centre diagnostic using this contrastive checkpoint"
+        ),
+    )
+    parser.add_argument(
+        "--learned-retrieval-object-chunk",
+        type=int,
+        default=8,
+        help="observations per global learned-score matrix",
+    )
+    parser.add_argument(
+        "--learned-retrieval-atom-chunk",
+        type=int,
+        default=262144,
+        help="active atoms encoded per learned-retrieval block",
+    )
     parser.add_argument("--atom-chunk", type=int, default=4096)
     parser.add_argument("--pixel-size", type=float, default=0.2)
     parser.add_argument("--zero-point", type=float, default=30.0)
@@ -881,6 +910,104 @@ def _validate_pilot_stratum_request(args) -> None:
         )
 
 
+def _validate_learned_retrieval_center_request(args) -> None:
+    """Fail closed around the one frozen learned-R development protocol."""
+
+    checkpoint = args.diagnose_complement_learned_center_checkpoint
+    if checkpoint is None:
+        return
+    expected = LEARNED_RETRIEVAL_CENTER_PROTOCOL
+    effective_prefilter = (
+        args.proposal_candidates
+        if args.proposal_prefilter_candidates is None
+        else args.proposal_prefilter_candidates
+    )
+    observed = {
+        "diagnostic_enabled": args.diagnose_complement is not None,
+        "tail_proposal": bool(args.diagnose_complement_tail_proposal),
+        "exact_oracle": bool(args.diagnose_complement_exact_oracle),
+        "pilot_stratum": bool(args.diagnose_complement_pilot_stratum),
+        "candidate_backend": args.candidate_backend,
+        "universe_start": int(args.observation_start),
+        "universe_stop": (
+            None if args.observation_stop is None else int(args.observation_stop)
+        ),
+        "n_candidates": int(args.proposal_candidates),
+        "prefilter_candidates": int(effective_prefilter),
+        "n_global_draws": int(args.diagnose_complement_global_draws),
+        "proposal_seed": int(args.proposal_seed),
+        "initial_strategy": args.initial_strategy,
+        "diagnostic_object_chunk": int(args.object_chunk),
+        "flow_atom_chunk": int(args.atom_chunk),
+        "retrieval_object_chunk": int(args.learned_retrieval_object_chunk),
+        "retrieval_atom_chunk": int(args.learned_retrieval_atom_chunk),
+    }
+    required = {
+        "diagnostic_enabled": True,
+        "tail_proposal": True,
+        "exact_oracle": True,
+        "pilot_stratum": False,
+        "candidate_backend": expected["candidate_backend"],
+        "universe_start": expected["universe_start"],
+        "universe_stop": expected["universe_stop"],
+        "n_candidates": expected["n_candidates"],
+        "prefilter_candidates": expected["prefilter_candidates"],
+        "n_global_draws": expected["n_global_draws"],
+        "proposal_seed": expected["proposal_seed"],
+        "initial_strategy": expected["initial_strategy"],
+        "diagnostic_object_chunk": expected["diagnostic_object_chunk"],
+        "flow_atom_chunk": expected["flow_atom_chunk"],
+        "retrieval_object_chunk": expected["retrieval_object_chunk"],
+        "retrieval_atom_chunk": expected["retrieval_atom_chunk"],
+    }
+    mismatched = {
+        name: {"expected": required[name], "observed": observed[name]}
+        for name in required
+        if observed[name] != required[name]
+    }
+    if mismatched:
+        raise SystemExit(
+            "learned-retrieval centre protocol mismatch: "
+            + json.dumps(mismatched, sort_keys=True)
+        )
+    if (
+        args.cut_abs_ehat is not None
+        or bool(args.cut_bound)
+        or args.selection_cache is not None
+    ):
+        raise SystemExit(
+            "the learned-retrieval centre protocol requires measured cuts and "
+            "selection caches to be disabled"
+        )
+    checkpoint_path = Path(checkpoint)
+    if not checkpoint_path.is_file():
+        raise SystemExit(f"missing learned-retrieval checkpoint: {checkpoint_path}")
+    actual_sha256 = _sha256(checkpoint_path)
+    if actual_sha256 != LEARNED_RETRIEVAL_CENTER_CHECKPOINT_SHA256:
+        raise SystemExit(
+            "learned-retrieval checkpoint SHA-256 mismatch: "
+            f"{actual_sha256} != {LEARNED_RETRIEVAL_CENTER_CHECKPOINT_SHA256}"
+        )
+    if args.mock_input is None:
+        raise SystemExit(
+            "the learned-retrieval centre protocol requires its frozen mock input"
+        )
+    try:
+        actual_mock_sha256 = _mock_input_hashes(args.mock_input)
+    except OSError as error:
+        raise SystemExit(
+            "cannot hash the learned-retrieval centre frozen mock input: "
+            f"{error}"
+        ) from error
+    expected_mock_sha256 = expected["mock_input_sha256"]
+    if actual_mock_sha256 != expected_mock_sha256:
+        raise SystemExit(
+            "learned-retrieval mock-input SHA-256 mismatch: "
+            f"{json.dumps(actual_mock_sha256, sort_keys=True)} != "
+            f"{json.dumps(expected_mock_sha256, sort_keys=True)}"
+        )
+
+
 def main(argv=None):
     args = parse_args(argv)
     inference_config = _load_release_config(
@@ -903,6 +1030,7 @@ def main(argv=None):
         raise SystemExit("--observation-start must be non-negative")
     _validate_exact_oracle_request(args)
     _validate_pilot_stratum_request(args)
+    _validate_learned_retrieval_center_request(args)
     if args.prepare_only and args.mock_input is not None:
         raise SystemExit("--prepare-only generates a new mock and rejects --mock-input")
     if args.selection_cache is not None and not (
@@ -1484,11 +1612,28 @@ def main(argv=None):
     # Proposal trees are unnecessary when this invocation only freezes a mock.
     # On the 12.76-million-atom default prior they are material enough to defer
     # until an inference partition actually needs candidate queries.
-    proposal = DefensiveLocalProposal(
-        coordinates,
-        prior.weights,
-        local_base_weights=cache.get(0.0, 0.0).detection_probability,
-    )
+    proposal_started = time.perf_counter()
+    if args.diagnose_complement_learned_center_checkpoint is not None:
+        proposal = ContrastiveRetrievalProposal(
+            coordinates,
+            prior.weights,
+            local_base_weights=cache.get(0.0, 0.0).detection_probability,
+            likelihood=likelihood,
+            checkpoint=args.diagnose_complement_learned_center_checkpoint,
+            center=initial,
+            contrastive_pool=args.proposal_candidates,
+            retrieval_object_chunk=args.learned_retrieval_object_chunk,
+            rerank_object_chunk=args.object_chunk,
+            atom_chunk=args.learned_retrieval_atom_chunk,
+            build_coordinate_tree=False,
+        )
+    else:
+        proposal = DefensiveLocalProposal(
+            coordinates,
+            prior.weights,
+            local_base_weights=cache.get(0.0, 0.0).detection_probability,
+        )
+    proposal_initialization_seconds = time.perf_counter() - proposal_started
 
     if args.compile_flow:
         flow.compile_log_prob(mode=None, dynamic=True)
@@ -1530,15 +1675,50 @@ def main(argv=None):
             ),
             include_exact_oracle=args.diagnose_complement_exact_oracle,
             confirmation_mock_sha256=source_mock_hashes,
+            learned_retrieval_center=(
+                {
+                    "label": LEARNED_RETRIEVAL_CENTER_PROTOCOL["label"],
+                    "initial_strategy": args.initial_strategy,
+                    "checkpoint": str(
+                        Path(
+                            args.diagnose_complement_learned_center_checkpoint
+                        ).resolve()
+                    ),
+                    "checkpoint_sha256": (
+                        LEARNED_RETRIEVAL_CENTER_CHECKPOINT_SHA256
+                    ),
+                    "retrieval_object_chunk": int(
+                        args.learned_retrieval_object_chunk
+                    ),
+                    "retrieval_atom_chunk": int(
+                        args.learned_retrieval_atom_chunk
+                    ),
+                    "retrieval_matmul_precision": (
+                        proposal.retrieval_matmul_precision
+                    ),
+                    "mock_input_sha256": dict(source_mock_hashes),
+                    "proposal_initialization_seconds": float(
+                        proposal_initialization_seconds
+                    ),
+                }
+                if args.diagnose_complement_learned_center_checkpoint
+                is not None
+                else None
+            ),
         )
         destination = Path(args.diagnose_complement)
         destination.mkdir(parents=True, exist_ok=True)
         table_path = destination / "per_object.parquet"
         diagnostic.table.to_parquet(table_path)
+        diagnostic_summary = diagnostic.summary()
+        if args.diagnose_complement_learned_center_checkpoint is not None:
+            learned_summary = learned_retrieval_center_summary(diagnostic)
+            diagnostic_summary["learned_retrieval_center"] = learned_summary
+            diagnostic_summary["gates"] = learned_summary["gates"]
         summary = {
             "method": "held-out complement tail-proposal diagnostic",
             "metadata": diagnostic.metadata,
-            "summary": diagnostic.summary(),
+            "summary": diagnostic_summary,
             "provenance": {
                 "pipeline_release": "diagnostic",
                 "pipeline_base_release": inference_config["release"],
@@ -1589,6 +1769,26 @@ def main(argv=None):
                             )
                         }
                         if args.diagnose_complement_pilot_stratum
+                        else {}
+                    ),
+                    **(
+                        {
+                            "sbsi/amortized_proposal.py": _sha256(
+                                REPOSITORY_ROOT / "sbsi/amortized_proposal.py"
+                            ),
+                            "sbsi/learned_retrieval_diagnostic.py": _sha256(
+                                REPOSITORY_ROOT
+                                / "sbsi/learned_retrieval_diagnostic.py"
+                            ),
+                            "jobs/job_complement_learned_retrieval_center.sh": (
+                                _sha256(
+                                    REPOSITORY_ROOT
+                                    / "jobs/job_complement_learned_retrieval_center.sh"
+                                )
+                            ),
+                        }
+                        if args.diagnose_complement_learned_center_checkpoint
+                        is not None
                         else {}
                     ),
                 },

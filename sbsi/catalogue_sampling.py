@@ -1148,6 +1148,7 @@ class DefensiveLocalProposal:
         prior_weights: np.ndarray,
         *,
         local_base_weights: Optional[np.ndarray] = None,
+        build_coordinate_tree: bool = True,
     ):
         prior = np.asarray(prior_weights, dtype=np.float64)
         if prior.shape != (len(coordinates.values),) or (prior < 0).any() or prior.sum() <= 0:
@@ -1169,7 +1170,14 @@ class DefensiveLocalProposal:
         # neighbour environment of positive prior atoms. They are not prior
         # support and must not consume candidate slots or be sampled.
         self.active_indices = np.flatnonzero(prior > 0).astype(np.int64)
-        self.tree = KDTree(coordinates.standardized[self.active_indices])
+        # Learned support retrieval never queries the coordinate tree.  Its
+        # 12.76-million-row construction is therefore optional for that
+        # diagnostic-only path; every established proposal keeps the default.
+        self.tree = (
+            KDTree(coordinates.standardized[self.active_indices])
+            if build_coordinate_tree
+            else None
+        )
         self._uncertainty_mips_tree = None
         self._uncertainty_mips_indices = None
         self._torch_standardized = {}

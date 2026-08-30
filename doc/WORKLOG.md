@@ -2,6 +2,102 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.335 — frozen learned-R centre gate recovered and preregistered before any new rows are read
+
+**Decision and estimator.** The clustered and direct pilot promotions in
+cont.332--334 did not repair the DM3 tail, so this continuation opens a
+different, strictly gated development route.  A frozen contrastive checkpoint
+selects a deterministic per-object support
+`R = top-524,288 learned scores`; learned scores are never treated as proposal
+probabilities.  At the single preregistered centre, the target is summed
+exactly on `R`, while the fixed-component DM3 proposal draws 16,384 samples
+conditioned on `R^c`.  Thus
+
+```text
+Z_hat(center) = sum_[j in R] target_j
+              + mean_[J ~ q_DM3(. | R^c)] target_J / q_DM3(J | R^c),
+```
+
+which remains unbiased conditional on the fixed retrieval support.  Only if
+this centre diagnostic passes may a later continuation implement the proposed
+nine-view `S/B/O` bridge (exact `S`, centre-target proposal on `B=R minus S`, and
+conditioned DM3 on `O=R^c`).  Ratios, log evidence, stencils, and Newton
+updates are consistency targets rather than finite-sample unbiased quantities.
+
+**Recovered provenance.** The production retriever was recovered from the
+archived 2026-08-24 development transcript rather than reconstructed from
+memory.  The artifact-exact historical `sbsi/amortized_proposal.py` has SHA-256
+`ad2346524c5948721ead96cf7ddb81b6cb9286c0ac964615b6efe43fb55dd198`:
+SiLU query and atom towers, 16-dimensional embeddings, no normalization,
+learned scalar `log_scale`, and atom bias.  Retrieval adds the atom
+`log_detected_mass`; historical classifier training sampled from that base
+measure and therefore left the same mass implicit in its logits.  The frozen
+checkpoint is
+`infer_v1_contrastive_proposal_b2048_s20000_v1/pilot/model.pt`, SHA-256
+`1338cf30b2d500316b31304530a623674ad56ca94416cf29699b5645e366d39b`.
+Both training and the archived K=524,288 confirmation explicitly used
+`torch.set_float32_matmul_precision("high")`; the recovered retriever now pins
+that setting only around embedding/retrieval matrix products and restores the
+caller's global setting in a `finally` block.
+
+The exact historical K/epsilon ladder source was also recovered as
+`scripts/test_infer_v1_learned_k_epsilon_ladder.py` (SHA-256
+`8e4c51968cdc0d39e1a096064d7472ba1f3ff1c4781be379cd034802c0902ec8`),
+together with its plot helper and sampling diagnostics.  Because the original
+script imports APIs removed by the current pipeline, an isolated compatibility
+module and a hash-checking reproduction runner/wrapper preserve the old
+calculation without restoring obsolete APIs to SBSI's public path.  The
+archived 64-object K=524,288 result captured p10/median/p90 target mass
+`0.7513/0.9234/0.9958`, with exact-local ESS/draw
+`0.2179/0.3500/0.4904`; this is prior evidence for testing the support, not a
+result from the new 512-row gate.
+
+**Frozen stop/go protocol.** `sbsi/learned_retrieval_diagnostic.py` pins rows
+25,000:25,512, centre `(0.013610377120038044,
+0.002740148300964851)`, mean-observed-shape initialization, proposal seed
+8,701, K=524,288, conditioned-DM3 M=16,384, all chunks, backend, checkpoint
+and mock hashes, exact-oracle selection manifest, every support/exclusion hash,
+and all expected call and flow-evaluation counts.  The exact support and the
+conditioned sampler's exclusion are hashed independently under the same
+canonical order-independent contract.  Integrity fails closed.
+Performance requires at least 461/512 `k<0.5`, at least 507/512 `k<0.7`, no
+`k>=1`, outside-R relative-SE median/p90 no worse than 0.00882/0.0268,
+retrieved-mass capture p10/median/minimum at least 0.70/0.85/0.50, and exact-64
+agreement gates (maximum exact-R relative cross-check `1e-5`, median/p90
+absolute log-evidence error 0.01/0.05, aggregate `|z|<=2.5`, z RMS 0.8--1.2,
+at least 58/64 within 1.96).  Mean and higher-p90
+squared-total-relative-error times complete method time must each be at most
+0.90 of the frozen 91.0402297-second DM3 baseline.  Method time includes
+checkpoint/model setup, atom embedding, retrieval, exact-R flow evaluation,
+conditioned-DM3 sampling/flow, and reduction; it excludes the prior comparator
+and exact oracle.
+
+**Implementation.** `sbsi/amortized_proposal.py` provides the recovered direct
+retriever with explicit counters and optional KD-tree construction.
+`sbsi/catalogue_sampling.py` keeps tree construction enabled by default, while
+the learned centre gate skips the unused 12.8-million-row tree.
+`sbsi/complement_diagnostic.py` reuses one immutable retrieval when candidate
+and prefilter widths coincide, evaluates all of `R`, excludes the identical
+support from DM3, and records support, target, exclusion, timing, and flow
+identities.  `scripts/run_inference.py` exposes only a strict
+`--diagnose-complement-learned-center-checkpoint` path and validates the entire
+protocol before work starts.  The A40 wrapper
+`jobs/job_complement_learned_retrieval_center.sh` refuses overwrites, verifies
+all frozen hashes and protocol fields, and uses submission-directory Slurm log
+paths so Slurm does not require a not-yet-created absolute log directory.
+
+**Validation before launch.** The complete suite passed `302 passed, 2
+skipped`; the final focused production/release tests passed 91/91, including
+precision restoration, one-retrieval semantics, exact-R mass and exclusion,
+flow accounting, gate pass/mutation tests, and CLI/wrapper rejection tests.
+Ruff, Python compilation, Bash syntax, and `git diff --check` passed.  Resource
+detection found no login-node GPU; the full-catalogue work therefore remains a
+Slurm-only operation.  No new science rows have been evaluated in this
+continuation and no inference default or release label changes.  Next: freeze
+these sources in an immutable commit, reproduce the archived 16-object
+retrieval ladder, then run the preregistered 512-row centre gate only if that
+reproduction agrees.
+
 ## 2026-08-30 cont.334 — direct score promotion is valid but worsens the estimator and is rejected
 
 **Frozen primary result.** Detached commit `317a91c` ran the direct-v2

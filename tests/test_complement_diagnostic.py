@@ -205,9 +205,13 @@ def test_summary_reduces_the_mass_shares():
 
 
 class _DiagnosticProposal:
-    def __init__(self):
+    def __init__(self, candidate_order=None):
         self.prior_weights = np.array([0.1, 0.2, 0.3, 0.4])
         self.active_indices = np.arange(len(self.prior_weights), dtype=np.int64)
+        if candidate_order is None:
+            candidate_order = self.active_indices
+        self.candidate_order = np.asarray(candidate_order, dtype=np.int64)
+        self.candidate_calls = []
         self.stratified_calls = []
         self.tail_calls = []
         self.tail_call_details = []
@@ -221,11 +225,18 @@ class _DiagnosticProposal:
         prefilter_candidates=None,
         torch_device=None,
     ):
-        del prefilter_candidates, torch_device
+        del torch_device
         indices = np.broadcast_to(
-            np.arange(n_candidates, dtype=np.int64),
+            self.candidate_order[:n_candidates],
             (len(observed), n_candidates),
         ).copy()
+        self.candidate_calls.append(
+            {
+                "n_candidates": int(n_candidates),
+                "prefilter_candidates": prefilter_candidates,
+                "indices": indices.copy(),
+            }
+        )
         return ProposalCandidates(
             indices=indices,
             distances=np.zeros_like(indices, dtype=np.float64),
@@ -295,6 +306,7 @@ class _DiagnosticProposal:
             else:
                 indices[row].fill(candidates.indices[row, 0])
                 probability[row].fill(1.0)
+        self.tail_call_details[-1]["drawn_indices"] = indices.copy()
         component_id = np.broadcast_to(schedule, indices.shape).copy()
         n_components = len(recipe.component_names)
         complement_mass = np.broadcast_to(
@@ -458,6 +470,100 @@ class _DiagnosticLikelihood:
             probability = np.broadcast_to(probability, indices.shape)
         ratio = self.atom_mass[indices] / probability
         return torch.as_tensor(np.log(ratio), dtype=torch.float64)
+
+
+class _CountingDiagnosticLikelihood(_DiagnosticLikelihood):
+    def __init__(self):
+        self.flow_evaluation_calls = []
+
+    def log_importance_weights_tensor(
+        self,
+        observed,
+        g1,
+        g2,
+        *,
+        atom_indices,
+        proposal_probability,
+        **kwargs,
+    ):
+        indices = np.asarray(atom_indices)
+        evaluations = int(indices.size)
+        if indices.ndim == 1:
+            evaluations *= len(observed)
+        self.flow_evaluation_calls.append(evaluations)
+        return super().log_importance_weights_tensor(
+            observed,
+            g1,
+            g2,
+            atom_indices=atom_indices,
+            proposal_probability=proposal_probability,
+            **kwargs,
+        )
+
+
+def _run_equal_width_learned_center():
+    proposal = _DiagnosticProposal(candidate_order=[2, 0, 3, 1])
+    likelihood = _CountingDiagnosticLikelihood()
+    mock = SimpleNamespace(
+        measurements=pd.DataFrame({"observed": [10.0, 11.0]})
+    )
+    diagnostic = diagnose_complement(
+        likelihood,
+        mock,
+        proposal,
+        center=(0.0, 0.0),
+        n_candidates=3,
+        prefilter_candidates=3,
+        n_global_draws=16,
+        seed=73,
+        object_id_offset=25_000,
+        object_chunk=2,
+        candidate_backend="scipy",
+        include_tail_proposal=True,
+    )
+    return diagnostic, proposal, likelihood
+
+
+def test_equal_candidate_and_prefilter_width_reuses_candidate_query_once():
+    _, proposal, _ = _run_equal_width_learned_center()
+
+    assert len(proposal.candidate_calls) == 1
+    call = proposal.candidate_calls[0]
+    assert call["n_candidates"] == 3
+    np.testing.assert_array_equal(
+        call["indices"],
+        np.array([[2, 0, 3], [2, 0, 3]], dtype=np.int64),
+    )
+
+
+def test_learned_center_uses_full_exact_set_for_mass_tail_and_flow_accounting():
+    diagnostic, proposal, likelihood = _run_equal_width_learned_center()
+
+    returned = proposal.candidate_calls[0]["indices"]
+    np.testing.assert_allclose(diagnostic.table["mass_stratum"], 0.7)
+    np.testing.assert_allclose(
+        diagnostic.table["mass_prefilter_complement"], 0.0
+    )
+
+    assert len(proposal.tail_call_details) == 1
+    tail_call = proposal.tail_call_details[0]
+    np.testing.assert_array_equal(tail_call["candidates"], returned)
+    for excluded, drawn in zip(returned, tail_call["drawn_indices"]):
+        assert not np.isin(drawn, excluded).any()
+    np.testing.assert_array_equal(
+        tail_call["drawn_indices"],
+        np.ones((2, 16), dtype=np.int64),
+    )
+    np.testing.assert_allclose(
+        diagnostic.table["mass_complement_tail_proposal"], 0.3
+    )
+
+    # Three exact returned atoms and two 16-draw production arms are scored
+    # for each of the two objects.  Querying or reusing candidates is flow-free.
+    expected_flow = 2 * (3 + 16 + 16)
+    assert likelihood.flow_evaluation_calls == [2 * 3, 2 * 16, 2 * 16]
+    assert sum(likelihood.flow_evaluation_calls) == expected_flow
+    assert diagnostic.metadata["flow_evaluations"] == expected_flow
 
 
 def test_exact_oracle_selection_has_frozen_golden_manifests():
