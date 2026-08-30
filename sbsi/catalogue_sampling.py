@@ -353,6 +353,12 @@ TAIL_PROPOSAL_RECIPE = TailProposalRecipe(
     component_cycle=(0, 1, 0, 2, 1, 0, 1, 0),
 )
 TAIL_PROPOSAL_ATOM_CHUNK = 262144
+# A proposal batch owns, at its peak, one float64 probability slab per
+# component plus likelihood/cumulative workspaces.  At the fixed 262,144-atom
+# slab and the validated four-component stress recipe, 32 observations keep
+# that transient storage below roughly 1 GiB while turning the two catalogue
+# scans into matrix--matrix rather than hundreds of matrix--vector operations.
+TAIL_PROPOSAL_OBJECT_CHUNK = 32
 
 
 @dataclass(frozen=True)
@@ -1254,6 +1260,7 @@ class DefensiveLocalProposal:
         device: Optional[str | torch.device] = None,
         recipe: TailProposalRecipe = TAIL_PROPOSAL_RECIPE,
         atom_chunk: int = TAIL_PROPOSAL_ATOM_CHUNK,
+        object_chunk: int = TAIL_PROPOSAL_OBJECT_CHUNK,
     ) -> ProposalDraw:
         """Draw a complement-conditioned deterministic-mixture MIS stream.
 
@@ -1284,6 +1291,8 @@ class DefensiveLocalProposal:
             )
         if atom_chunk <= 0:
             raise ValueError("atom_chunk must be positive")
+        if object_chunk <= 0:
+            raise ValueError("object_chunk must be positive")
         if object_offset < 0:
             raise ValueError("object_offset must be non-negative")
         n_objects = len(candidates.indices)
@@ -1319,13 +1328,17 @@ class DefensiveLocalProposal:
         local_member = np.zeros((n_objects, n_draws), dtype=bool)
         local_position = np.full((n_objects, n_draws), -1, dtype=np.int32)
 
-        for row in range(n_objects):
-            excluded_position = proxy._excluded_positions(candidates.indices[row])
-            rng = np.random.default_rng(
-                np.random.SeedSequence([int(seed), int(absolute_ids[row])])
-            )
-            uniforms = rng.random((n_draws, 3))
-            if len(excluded_position) == len(self.active_indices):
+        if candidates.indices.shape[1] == len(self.active_indices):
+            # Candidate matrices have a common width.  If that width is the
+            # active-support size, every valid row is a full-support stratum.
+            # Still validate every row so duplicates or inactive ids cannot be
+            # hidden behind the sentinel shortcut.
+            for row in range(n_objects):
+                excluded_position = proxy._excluded_positions(
+                    candidates.indices[row]
+                )
+                if len(excluded_position) != len(self.active_indices):
+                    raise RuntimeError("full-width candidate support is incomplete")
                 if not len(candidates.indices[row]):
                     raise RuntimeError("full support has no sentinel candidate")
                 indices[row].fill(int(candidates.indices[row, 0]))
@@ -1333,19 +1346,34 @@ class DefensiveLocalProposal:
                 component_complement_mass[row].fill(0.0)
                 local_member[row].fill(True)
                 local_position[row].fill(0)
-                continue
-            (
-                indices[row],
-                probability[row],
-                component_complement_mass[row],
-            ) = proxy.draw_conditioned_mis_uniforms(
-                values[row],
-                uniforms[:, 1],
-                component_id[row],
-                candidates.indices[row],
-                recipe=recipe,
-                atom_chunk=int(atom_chunk),
-            )
+        else:
+            # Random records stay object-local and fixed-width.  Batching only
+            # changes how their atom uniforms are mapped through the proposal;
+            # it cannot shift another object's stream or a nested prefix.
+            for object_start in range(0, n_objects, int(object_chunk)):
+                object_stop = min(object_start + int(object_chunk), n_objects)
+                atom_uniforms = np.empty(
+                    (object_stop - object_start, n_draws), dtype=np.float64
+                )
+                for local_row, absolute_id in enumerate(
+                    absolute_ids[object_start:object_stop]
+                ):
+                    rng = np.random.default_rng(
+                        np.random.SeedSequence([int(seed), int(absolute_id)])
+                    )
+                    atom_uniforms[local_row] = rng.random((n_draws, 3))[:, 1]
+                (
+                    indices[object_start:object_stop],
+                    probability[object_start:object_stop],
+                    component_complement_mass[object_start:object_stop],
+                ) = proxy.draw_conditioned_mis_uniforms_batched(
+                    values[object_start:object_stop],
+                    atom_uniforms,
+                    component_id[object_start:object_stop],
+                    candidates.indices[object_start:object_stop],
+                    recipe=recipe,
+                    atom_chunk=int(atom_chunk),
+                )
 
         return ProposalDraw(
             indices=indices,
@@ -1598,6 +1626,483 @@ class WholeCatalogueProxy:
             torch.square(observation) @ self.a1[start:stop].T
             - 2.0 * (observation @ self.a2[start:stop].T)
         )
+
+    def _proxy_likelihood_blocks(
+        self, observations: torch.Tensor, start: int, stop: int
+    ) -> torch.Tensor:
+        """Score one atom slab for a fixed batch of observations.
+
+        The catalogue coefficients are read once for the whole observation
+        batch.  This is mathematically the row-wise form of
+        :meth:`_proxy_likelihood_block`; GEMM may change the last few floating
+        point bits relative to independent GEMV calls, but neither the random
+        records nor the probability being evaluated changes.
+        """
+
+        return self.gaussian_constant[start:stop][None, :] - 0.5 * (
+            torch.square(observations) @ self.a1[start:stop].T
+            - 2.0 * (observations @ self.a2[start:stop].T)
+        )
+
+    def _exclusion_mask(
+        self,
+        excluded_positions: Sequence[np.ndarray],
+        start: int,
+        stop: int,
+    ) -> torch.Tensor:
+        """Return a row-specific mask for one streamed atom slab."""
+
+        n_rows = len(excluded_positions)
+        mask = torch.zeros(
+            (n_rows, stop - start),
+            dtype=torch.bool,
+            device=self.a1.device,
+        )
+        flat_rows = []
+        flat_positions = []
+        for row, excluded in enumerate(excluded_positions):
+            left = np.searchsorted(excluded, start, side="left")
+            right = np.searchsorted(excluded, stop, side="left")
+            if right > left:
+                flat_rows.append(np.full(right - left, row, dtype=np.int64))
+                flat_positions.append(excluded[left:right] - start)
+        if flat_rows:
+            rows = torch.as_tensor(
+                np.concatenate(flat_rows), dtype=torch.long, device=self.a1.device
+            )
+            positions = torch.as_tensor(
+                np.concatenate(flat_positions),
+                dtype=torch.long,
+                device=self.a1.device,
+            )
+            mask[rows, positions] = True
+        return mask
+
+    @staticmethod
+    def _padded_draw_matrix(
+        draw_lists: Sequence[np.ndarray],
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Pad ragged per-row draw ids and mark the entries that are real."""
+
+        width = max((len(draws) for draws in draw_lists), default=0)
+        indices = np.zeros((len(draw_lists), width), dtype=np.int64)
+        valid = np.zeros((len(draw_lists), width), dtype=bool)
+        for row, draws in enumerate(draw_lists):
+            count = len(draws)
+            if count:
+                indices[row, :count] = draws
+                valid[row, :count] = True
+        return indices, valid
+
+    def draw_conditioned_mis_uniforms_batched(
+        self,
+        observations: np.ndarray,
+        uniforms: np.ndarray,
+        component_id: np.ndarray,
+        exclude_indices: np.ndarray,
+        *,
+        recipe: TailProposalRecipe,
+        atom_chunk: int,
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Map several object streams through exact conditioned DM-MIS.
+
+        Atom slabs are streamed twice, exactly as in the scalar constructor.
+        The first pass obtains each object's component normalizers and block
+        probabilities.  The second pass samples within selected blocks and
+        evaluates the full balance density.  Only the observation axis is
+        batched: exclusions, component conditioning, fixed source counts and
+        object-local uniform records remain separate.
+
+        At peak, the method owns ``O(B * atom_chunk * n_components)`` device
+        memory for a proposal object batch of size ``B``.  It never constructs
+        an ``n_objects * n_atoms`` table.
+        """
+
+        if atom_chunk <= 0:
+            raise ValueError("atom_chunk must be positive")
+        observations = np.asarray(observations, dtype=np.float64)
+        uniforms = np.asarray(uniforms, dtype=np.float64)
+        component_id = np.asarray(component_id, dtype=np.int16)
+        exclude_indices = np.asarray(exclude_indices, dtype=np.int64)
+        if observations.ndim != 2 or observations.shape[1] != self.a1.shape[1]:
+            raise ValueError("observations have the wrong proxy shape")
+        n_objects = len(observations)
+        if not n_objects:
+            raise ValueError("a conditioned MIS batch cannot be empty")
+        if (
+            uniforms.ndim != 2
+            or uniforms.shape[0] != n_objects
+            or component_id.shape != uniforms.shape
+            or exclude_indices.ndim != 2
+            or exclude_indices.shape[0] != n_objects
+            or not np.isfinite(observations).all()
+            or not np.isfinite(uniforms).all()
+        ):
+            raise ValueError(
+                "observations, uniforms, component ids, and exclusions must align"
+            )
+        if ((uniforms < 0.0) | (uniforms >= 1.0)).any():
+            raise ValueError("uniforms must lie in [0, 1)")
+        if (
+            (component_id < 0).any()
+            or (component_id >= len(recipe.component_names)).any()
+        ):
+            raise ValueError("component ids are invalid for the tail recipe")
+
+        excluded_positions = [
+            self._excluded_positions(exclude_indices[row])
+            for row in range(n_objects)
+        ]
+        n_atoms = len(self.active_indices)
+        if any(len(excluded) == n_atoms for excluded in excluded_positions):
+            raise ValueError("cannot sample an empty catalogue complement")
+        bounds = [
+            (start, min(start + int(atom_chunk), n_atoms))
+            for start in range(0, n_atoms, int(atom_chunk))
+        ]
+        n_blocks = len(bounds)
+        n_proxy = len(recipe.component_betas) - 1
+        n_components = len(recipe.component_names)
+        observation_tensor = torch.as_tensor(
+            np.ascontiguousarray(observations),
+            dtype=torch.float64,
+            device=self.a1.device,
+        )
+
+        complement_log_blocks = torch.empty(
+            (n_objects, n_proxy, n_blocks),
+            dtype=torch.float64,
+            device=self.a1.device,
+        )
+        full_log_z = torch.full(
+            (n_objects, n_proxy),
+            -torch.inf,
+            dtype=torch.float64,
+            device=self.a1.device,
+        )
+        prior_block_mass = torch.empty(
+            (n_objects, n_blocks),
+            dtype=torch.float64,
+            device=self.a1.device,
+        )
+
+        with torch.no_grad():
+            for block, (start, stop) in enumerate(bounds):
+                likelihood = self._proxy_likelihood_blocks(
+                    observation_tensor, start, stop
+                )
+                mask = self._exclusion_mask(excluded_positions, start, stop)
+                prior = self.prior[start:stop][None, :].expand(n_objects, -1)
+                prior_block_mass[:, block] = prior.masked_fill(mask, 0.0).sum(
+                    dim=1
+                )
+                for component, beta in enumerate(recipe.component_betas[:-1]):
+                    score = (
+                        self.log_base[start:stop][None, :]
+                        + float(beta) * likelihood
+                    )
+                    block_full = torch.logsumexp(score, dim=1)
+                    block_complement = torch.logsumexp(
+                        score.masked_fill(mask, -torch.inf), dim=1
+                    )
+                    full_log_z[:, component] = torch.logaddexp(
+                        full_log_z[:, component], block_full
+                    )
+                    complement_log_blocks[:, component, block] = block_complement
+
+            complement_log_z = torch.logsumexp(
+                complement_log_blocks, dim=2
+            )
+            invalid_full = torch.isnan(full_log_z) | torch.isposinf(full_log_z)
+            invalid_complement = torch.isnan(complement_log_z) | torch.isposinf(
+                complement_log_z
+            )
+            if bool((invalid_full | invalid_complement).any()):
+                bad_components = torch.nonzero(
+                    (invalid_full | invalid_complement).any(dim=0)
+                ).flatten().cpu().tolist()
+                names = ", ".join(
+                    recipe.component_names[int(component)]
+                    for component in bad_components
+                )
+                raise RuntimeError(
+                    "proxy component produced a NaN or positive-infinite "
+                    f"normalizer: {names}"
+                )
+            if bool(
+                (torch.isneginf(full_log_z) & ~torch.isneginf(complement_log_z)).any()
+            ):
+                raise RuntimeError(
+                    "proxy complement has mass while its full support does not"
+                )
+
+            prior_complement_mass = prior_block_mass.sum(dim=1)
+            if not bool(
+                (
+                    torch.isfinite(prior_complement_mass)
+                    & (prior_complement_mass > 0.0)
+                ).all()
+            ):
+                raise RuntimeError("catalogue prior has zero complement mass")
+
+            proxy_fallback_tensor = torch.isneginf(complement_log_z)
+            prior_block_probability = (
+                prior_block_mass / prior_complement_mass[:, None]
+            )
+            proxy_block_probability = torch.exp(
+                complement_log_blocks - complement_log_z[:, :, None]
+            )
+            proxy_block_probability = torch.where(
+                proxy_fallback_tensor[:, :, None],
+                prior_block_probability[:, None, :],
+                proxy_block_probability,
+            )
+            block_probability_tensor = torch.cat(
+                (proxy_block_probability, prior_block_probability[:, None, :]),
+                dim=1,
+            )
+
+            proxy_diagnostics = torch.where(
+                proxy_fallback_tensor,
+                torch.zeros_like(complement_log_z),
+                torch.exp(complement_log_z - full_log_z),
+            )
+            diagnostics_tensor = torch.cat(
+                (proxy_diagnostics, prior_complement_mass[:, None]), dim=1
+            )
+
+        # One synchronization per proposal object batch, rather than once per
+        # atom block and object.  Normalizing again in float64 ensures every
+        # row's CDF terminates at exactly one after roundoff.
+        block_probability = block_probability_tensor.cpu().numpy()
+        block_probability /= block_probability.sum(axis=2, keepdims=True)
+        diagnostics = np.clip(
+            diagnostics_tensor.cpu().numpy(), 0.0, 1.0
+        )
+        proxy_fallback = proxy_fallback_tensor.cpu().numpy()
+
+        selected_block = np.empty(uniforms.shape, dtype=np.int64)
+        residual_uniform = np.empty(uniforms.shape, dtype=np.float64)
+        block_cdf = np.cumsum(block_probability, axis=2)
+        block_cdf[:, :, -1] = 1.0
+        for row in range(n_objects):
+            for component in range(n_components):
+                draws = np.flatnonzero(component_id[row] == component)
+                if not len(draws):
+                    continue
+                blocks = np.searchsorted(
+                    block_cdf[row, component],
+                    uniforms[row, draws],
+                    side="right",
+                )
+                blocks = np.minimum(blocks, n_blocks - 1)
+                selected_block[row, draws] = blocks
+                lower = np.where(
+                    blocks > 0,
+                    block_cdf[
+                        row, component, np.maximum(blocks - 1, 0)
+                    ],
+                    0.0,
+                )
+                mass = block_probability[row, component, blocks]
+                if (mass <= 0.0).any():
+                    raise RuntimeError("conditioned MIS selected a zero-mass block")
+                residual_uniform[row, draws] = np.minimum(
+                    (uniforms[row, draws] - lower) / mass,
+                    np.nextafter(1.0, 0.0),
+                )
+
+        drawn_indices_device = torch.empty(
+            uniforms.shape, dtype=torch.long, device=self.a1.device
+        )
+        drawn_probability_device = torch.empty(
+            uniforms.shape, dtype=torch.float64, device=self.a1.device
+        )
+        drawn_local_position = torch.empty(
+            uniforms.shape, dtype=torch.long, device=self.a1.device
+        )
+        mixture_weight = torch.as_tensor(
+            recipe.component_weights,
+            dtype=torch.float64,
+            device=self.a1.device,
+        )
+        normalized_block_probability = torch.as_tensor(
+            np.ascontiguousarray(block_probability),
+            dtype=torch.float64,
+            device=self.a1.device,
+        )
+
+        with torch.no_grad():
+            for block in np.unique(selected_block):
+                start, stop = bounds[int(block)]
+                active_rows = np.flatnonzero(
+                    (selected_block == int(block)).any(axis=1)
+                )
+                active_rows_device = torch.as_tensor(
+                    active_rows, dtype=torch.long, device=self.a1.device
+                )
+                likelihood = self._proxy_likelihood_blocks(
+                    observation_tensor[active_rows_device], start, stop
+                )
+                mask = self._exclusion_mask(
+                    [excluded_positions[row] for row in active_rows], start, stop
+                )
+                prior = self.prior[start:stop][None, :].expand(
+                    len(active_rows), -1
+                ).masked_fill(mask, 0.0)
+                prior_total = prior.sum(dim=1, keepdim=True)
+                prior_within = torch.where(
+                    prior_total > 0.0,
+                    prior / prior_total,
+                    torch.zeros_like(prior),
+                )
+
+                within = []
+                for component, beta in enumerate(recipe.component_betas[:-1]):
+                    score = (
+                        self.log_base[start:stop][None, :]
+                        + float(beta) * likelihood
+                    ).masked_fill(mask, -torch.inf)
+                    component_within = torch.zeros_like(score)
+                    regular = np.flatnonzero(
+                        ~proxy_fallback[active_rows, component]
+                        & (
+                            block_probability[
+                                active_rows, component, int(block)
+                            ]
+                            > 0.0
+                        )
+                    )
+                    if len(regular):
+                        regular_device = torch.as_tensor(
+                            regular, dtype=torch.long, device=self.a1.device
+                        )
+                        component_within[regular_device] = torch.softmax(
+                            score[regular_device], dim=1
+                        )
+                    fallback = np.flatnonzero(
+                        proxy_fallback[active_rows, component]
+                    )
+                    if len(fallback):
+                        fallback_device = torch.as_tensor(
+                            fallback, dtype=torch.long, device=self.a1.device
+                        )
+                        component_within[fallback_device] = prior_within[
+                            fallback_device
+                        ]
+                    within.append(component_within)
+                within.append(prior_within)
+                within_probability = torch.stack(within, dim=0)
+
+                # Search every object's within-block CDF in one kernel per
+                # source component.  Ragged draw lists are padded only across
+                # the small proposal object batch and discarded immediately.
+                for component in range(n_components):
+                    draw_lists = [
+                        np.flatnonzero(
+                            (component_id[row] == component)
+                            & (selected_block[row] == int(block))
+                        )
+                        for row in active_rows
+                    ]
+                    draw_matrix, valid = self._padded_draw_matrix(draw_lists)
+                    if not valid.any():
+                        continue
+                    residual = np.zeros(draw_matrix.shape, dtype=np.float64)
+                    for row, draws in enumerate(draw_lists):
+                        if len(draws):
+                            residual[row, : len(draws)] = residual_uniform[
+                                active_rows[row], draws
+                            ]
+                    cumulative = torch.cumsum(
+                        within_probability[component], dim=1
+                    )
+                    cumulative[:, -1] = 1.0
+                    local = torch.searchsorted(
+                        cumulative,
+                        torch.as_tensor(
+                            np.ascontiguousarray(residual),
+                            dtype=torch.float64,
+                            device=self.a1.device,
+                        ),
+                        right=True,
+                    ).clamp(max=stop - start - 1)
+                    valid_device = torch.as_tensor(
+                        valid, dtype=torch.bool, device=self.a1.device
+                    )
+                    draw_matrix_device = torch.as_tensor(
+                        draw_matrix, dtype=torch.long, device=self.a1.device
+                    )
+                    row_matrix_device = active_rows_device[:, None].expand_as(
+                        draw_matrix_device
+                    )
+                    target_rows = row_matrix_device[valid_device]
+                    target_draws = draw_matrix_device[valid_device]
+                    target_local = local[valid_device]
+                    drawn_local_position[target_rows, target_draws] = target_local
+                    drawn_indices_device[target_rows, target_draws] = self.active[
+                        start + target_local
+                    ]
+
+                all_draw_lists = [
+                    np.flatnonzero(selected_block[row] == int(block))
+                    for row in active_rows
+                ]
+                draw_matrix, valid = self._padded_draw_matrix(all_draw_lists)
+                valid_device = torch.as_tensor(
+                    valid, dtype=torch.bool, device=self.a1.device
+                )
+                draw_matrix_device = torch.as_tensor(
+                    draw_matrix, dtype=torch.long, device=self.a1.device
+                )
+                row_matrix_device = active_rows_device[:, None].expand_as(
+                    draw_matrix_device
+                )
+                local = drawn_local_position[
+                    row_matrix_device, draw_matrix_device
+                ]
+                # Padded draw ids are arbitrary placeholders.  Keep their
+                # gather index valid even though their qbar entries are never
+                # copied to the returned stream.
+                local = torch.where(
+                    valid_device, local, torch.zeros_like(local)
+                )
+                qbar = torch.zeros(
+                    draw_matrix.shape,
+                    dtype=torch.float64,
+                    device=self.a1.device,
+                )
+                for component in range(n_components):
+                    within_at_draw = torch.gather(
+                        within_probability[component], 1, local
+                    )
+                    qbar += (
+                        mixture_weight[component]
+                        * normalized_block_probability[
+                            active_rows_device, component, int(block)
+                        ][:, None]
+                        * within_at_draw
+                    )
+                drawn_probability_device[
+                    row_matrix_device[valid_device],
+                    draw_matrix_device[valid_device],
+                ] = qbar[valid_device]
+
+        drawn_indices = drawn_indices_device.cpu().numpy()
+        drawn_probability = drawn_probability_device.cpu().numpy()
+        if (
+            not np.isfinite(drawn_probability).all()
+            or (drawn_probability <= 0.0).any()
+        ):
+            raise RuntimeError(
+                "conditioned MIS produced an invalid balance probability"
+            )
+        for row in range(n_objects):
+            if np.isin(drawn_indices[row], exclude_indices[row]).any():
+                raise RuntimeError(
+                    "conditioned MIS sampled its excluded exact stratum"
+                )
+        return drawn_indices, drawn_probability, diagnostics
 
     def draw_conditioned_mis_uniforms(
         self,

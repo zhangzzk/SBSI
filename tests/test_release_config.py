@@ -94,6 +94,10 @@ def test_tilted_screen_records_the_fixed_tail_recipe_without_mutating_release():
         resolved["execution"]["tail_proposal_atom_chunk"]
         == RUNNER.TAIL_PROPOSAL_ATOM_CHUNK
     )
+    assert (
+        resolved["execution"]["tail_proposal_object_chunk"]
+        == RUNNER.TAIL_PROPOSAL_OBJECT_CHUNK
+    )
     assert resolved != source
 
 

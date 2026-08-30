@@ -234,8 +234,9 @@ class _DiagnosticProposal:
         object_ids,
         device,
         atom_chunk=262144,
+        object_chunk=32,
     ):
-        del observed, device, atom_chunk
+        del observed, device, atom_chunk, object_chunk
         self.tail_calls.append((int(seed), object_ids.copy()))
         schedule = np.resize(
             np.asarray(TAIL_PROPOSAL_RECIPE.component_cycle, dtype=np.int16),
@@ -335,6 +336,7 @@ def test_partition_uses_absolute_ids_once_and_reports_production_components():
     assert diagnostic.metadata["flow_atom_chunk"] == 4096
     assert diagnostic.metadata["tail_proposal_device"] == "cpu"
     assert diagnostic.metadata["tail_proposal_atom_chunk"] == 262144
+    assert diagnostic.metadata["tail_proposal_object_chunk"] == 32
     assert diagnostic.metadata["elapsed_seconds"] >= 0.0
     assert set(diagnostic.metadata["phase_seconds"]) == {
         "candidate_query",

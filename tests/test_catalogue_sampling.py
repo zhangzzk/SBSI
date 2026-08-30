@@ -958,6 +958,96 @@ def test_conditioned_dm_mis_reports_qbar_counts_nesting_and_split_streams():
         np.testing.assert_array_equal(getattr(subset, name), getattr(expected, name))
 
 
+def test_conditioned_dm_mis_batched_matches_scalar_constructor_and_object_batches():
+    proposal, observed, candidates = _mis_fixture()
+    recipe = TAIL_PROPOSAL_RECIPE
+    n_draws = 80
+    schedule = np.tile(
+        np.asarray(recipe.component_cycle, dtype=np.int16),
+        n_draws // recipe.cycle_length,
+    )
+    uniforms = []
+    scalar = []
+    proxy = proposal._tilted_proxy(None)
+    values = proposal._observed_values(observed)
+    for row in range(len(observed)):
+        rng = np.random.default_rng(
+            np.random.SeedSequence([20260830, row])
+        )
+        atom_uniforms = rng.random((n_draws, 3))[:, 1]
+        uniforms.append(atom_uniforms)
+        scalar.append(
+            proxy.draw_conditioned_mis_uniforms(
+                values[row],
+                atom_uniforms,
+                schedule,
+                candidates.indices[row],
+                recipe=recipe,
+                atom_chunk=3,
+            )
+        )
+    batched = proxy.draw_conditioned_mis_uniforms_batched(
+        values,
+        np.stack(uniforms),
+        np.broadcast_to(schedule, (len(observed), n_draws)),
+        candidates.indices,
+        recipe=recipe,
+        atom_chunk=3,
+    )
+    np.testing.assert_array_equal(
+        batched[0], np.stack([result[0] for result in scalar])
+    )
+    np.testing.assert_allclose(
+        batched[1],
+        np.stack([result[1] for result in scalar]),
+        rtol=5e-15,
+        atol=1e-15,
+    )
+    np.testing.assert_allclose(
+        batched[2],
+        np.stack([result[2] for result in scalar]),
+        rtol=5e-15,
+        atol=1e-15,
+    )
+
+    one = proposal.draw_tilted_mis(
+        candidates,
+        observed,
+        n_draws=n_draws,
+        seed=20260830,
+        atom_chunk=3,
+        object_chunk=1,
+    )
+    two = proposal.draw_tilted_mis(
+        candidates,
+        observed,
+        n_draws=n_draws,
+        seed=20260830,
+        atom_chunk=3,
+        object_chunk=2,
+    )
+    all_rows = proposal.draw_tilted_mis(
+        candidates,
+        observed,
+        n_draws=n_draws,
+        seed=20260830,
+        atom_chunk=3,
+        object_chunk=32,
+    )
+    for candidate in (one, two):
+        np.testing.assert_array_equal(candidate.indices, all_rows.indices)
+        np.testing.assert_array_equal(candidate.component_id, all_rows.component_id)
+        np.testing.assert_allclose(
+            candidate.probability, all_rows.probability, rtol=5e-15, atol=1e-15
+        )
+        np.testing.assert_allclose(
+            candidate.component_complement_mass,
+            all_rows.component_complement_mass,
+            rtol=5e-15,
+            atol=1e-15,
+        )
+
+
 def test_conditioned_dm_mis_temperature_preserves_detected_prior_base():
     proposal, observed, _ = _mis_fixture()
     proxy = proposal._tilted_proxy(None)
@@ -1016,6 +1106,98 @@ def test_conditioned_dm_mis_is_unbiased_and_dominates_iid_qbar_variance():
     np.testing.assert_allclose(
         iid_variance - dm_variance, between_component, rtol=0, atol=2e-15
     )
+
+
+def test_conditioned_dm_mis_empirical_sources_and_estimate_match_dense_oracle():
+    proposal, observed, candidates = _mis_fixture()
+    row = 1
+    n_draws = 32000
+    draw = proposal.draw_tilted_mis(
+        candidates.take(np.array([row])),
+        observed.iloc[[row]].reset_index(drop=True),
+        n_draws=n_draws,
+        seed=8127,
+        atom_chunk=3,
+        object_chunk=1,
+    )
+    components, qbar, _, complement = _dense_conditioned_components(
+        proposal,
+        observed.loc[row, ["x", "y"]].to_numpy(float),
+        candidates.indices[row],
+    )
+    positions = np.searchsorted(proposal.active_indices, draw.indices[0])
+    for component in range(len(TAIL_PROPOSAL_RECIPE.component_names)):
+        source = draw.component_id[0] == component
+        empirical = np.bincount(
+            positions[source], minlength=len(proposal.active_indices)
+        ) / np.sum(source)
+        np.testing.assert_allclose(
+            empirical[complement], components[component, complement], atol=0.025
+        )
+        np.testing.assert_array_equal(empirical[~complement], 0.0)
+
+    target = np.zeros_like(qbar)
+    target[complement] = np.array([0.03, 0.4, 0.08, 0.27, 0.12, 0.2])
+    estimate = np.mean(target[positions] / draw.probability[0])
+    component_mean = (components * np.divide(
+        target,
+        qbar,
+        out=np.zeros_like(target),
+        where=qbar > 0,
+    )[None, :]).sum(axis=1)
+    component_variance = (
+        components
+        * np.square(
+            np.divide(
+                target,
+                qbar,
+                out=np.zeros_like(target),
+                where=qbar > 0,
+            )[None, :]
+            - component_mean[:, None]
+        )
+    ).sum(axis=1)
+    standard_error = np.sqrt(
+        np.asarray(TAIL_PROPOSAL_RECIPE.component_weights)
+        @ component_variance
+        / n_draws
+    )
+    assert abs(estimate - target.sum()) < 5.0 * standard_error
+
+
+def test_conditioned_dm_mis_fallback_is_per_object_and_component():
+    coordinates = ProposalCoordinateTable(
+        values=np.array([[0.0], [0.2], [1.0], [1.2]]),
+        target_names=("x",),
+        center=np.zeros(1),
+        scale=np.ones(1),
+        dispersion=np.ones((4, 1)),
+        statistic="mean",
+    )
+    proposal = DefensiveLocalProposal(
+        coordinates,
+        np.full(4, 0.25),
+        local_base_weights=np.array([1.0, 1.0, 0.0, 0.0]),
+    )
+    candidates = ProposalCandidates(
+        np.array([[0, 1], [2, 3]]),
+        np.zeros((2, 2)),
+        np.ones(2),
+    )
+    observed = pd.DataFrame({"x": [0.1, 0.1]})
+    draw = proposal.draw_tilted_mis(
+        candidates,
+        observed,
+        n_draws=800,
+        seed=992,
+        atom_chunk=2,
+        object_chunk=2,
+    )
+    np.testing.assert_array_equal(draw.component_complement_mass[0, :-1], 0.0)
+    assert np.all(draw.component_complement_mass[1, :-1] > 0.0)
+    assert np.isin(draw.indices[0], [2, 3]).all()
+    assert np.isin(draw.indices[1], [0, 1]).all()
+    np.testing.assert_allclose(draw.probability[0], 0.5, atol=1e-15)
 
 
 def test_conditioned_dm_mis_normalizes_proxy_components_after_underflow():

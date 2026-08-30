@@ -2,6 +2,70 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.325 — batched conditioned-MIS construction is 10.11x faster at production shape with identical sampled atoms
+
+**Execution change.** `WholeCatalogueProxy` now scans each 12.76M-atom slab
+once for a fixed batch of observations instead of once per observation. The
+first pass obtains every row/component/block normalizer; the second maps the
+unchanged object-local uniform records through row-specific CDFs and evaluates
+the same hierarchical balance density
+`qbar_i(j) = sum_c alpha_c p_i(c,block(j)) p_i(j|c,block(j))`. Exact-stratum
+exclusions, separate component conditioning, fixed source counts, underflow
+fallback, prior support, nested prefixes, and explicit absolute object streams
+are unchanged. Batched GEMM can change final floating-point bits relative to
+scalar GEMV, so tests require identical atoms on fixed streams and tight PMF
+agreement rather than claiming bit identity for every possible CDF boundary.
+
+**Fixed execution contract.** `TAIL_PROPOSAL_OBJECT_CHUNK=32` is distinct from
+the 262,144-atom proposal slab and from target-flow chunks. The sampler,
+complement diagnostic, resolved custom pipeline, and estimator result record
+both proposal chunks. Full-support sentinels bypass the scan only after every
+candidate row is validated. The benchmark harness warms each shape and reports
+stream drift, probability drift, complement-mass drift, wall time, and both
+total and incremental CUDA peaks.
+
+**Production-shape A40 measurement.** Job 16121928 used 12.76M active atoms,
+32 objects, four proxy coordinates, `K=M=16,384`, a 262,144-atom slab, and
+three repeats per object batch. Median constructor times were
+
+```text
+proposal object batch       1        8       16       32
+seconds                  28.254    5.780    3.777    2.793
+speedup                    1.00x    4.89x    7.48x   10.11x
+total CUDA peak (GB)       1.374    1.614    1.888    2.436
+```
+
+All 524,288 sampled atom IDs matched the batch-one reference. At batch 32,
+maximum qbar difference was `2.71e-19` absolute / `1.90e-15` relative and
+maximum complement-mass difference was `8.88e-16`. The scheduler job exited
+zero in 3m05s with MaxRSS 3,135,740 KiB. The benchmark used the then-current
+DM4 recipe, but the implementation and tests are component-count generic; the
+selected DM3 recipe uses less component workspace.
+
+**Files and validation.** `sbsi/catalogue_sampling.py` implements the batched
+two-pass constructor; `sbsi/catalogue_null.py`,
+`sbsi/complement_diagnostic.py`, and `scripts/run_inference.py` route and
+record it; `scripts/benchmark_tail_proposal_batching.py` reproduces the
+measurement. Tests cover scalar/batch qbar and distribution agreement,
+unbiasedness, atom/object split invariance, fallback, exclusions, sentinels,
+invalid chunks, and provenance.
+
+```text
+pytest tests/test_catalogue_sampling.py tests/test_catalogue_null.py \
+  tests/test_complement_diagnostic.py tests/test_release_config.py   82 passed
+/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python \
+  -m pytest tests -q                                                212 passed,
+                                                                   2 skipped
+ruff check <changed Python, tests, and benchmark>                    clean
+python -m compileall -q sbsi scripts tests                          clean
+git diff --check                                                    clean
+```
+
+**Next step.** Rerun the selected DM3 development rows through batch 32 to
+measure the end-to-end speedup and scientific equivalence before layering on
+pilot stratum promotion. This entry changes execution only and cannot turn
+DM3's failed reliability gate into a pass.
+
 ## 2026-08-30 cont.324 — detected-prior bridge also fails; DM3 remains the base and tail modes must move into the exact stratum
 
 **Result.** Job 16121927 completed the fixed

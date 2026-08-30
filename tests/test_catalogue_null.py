@@ -1462,6 +1462,7 @@ def test_tilted_mis_estimator_matches_hand_reduced_exact_plus_qbar_tail():
     assert payload["proposal_diagnostics"]["component_names"] == list(
         TAIL_PROPOSAL_RECIPE.component_names
     )
+    assert payload["proposal_diagnostics"]["object_chunk"] == 32
     assert payload["weight_diagnostics"][0]["ess_interpretation"] == (
         "pooled_concentration_only_for_deterministic_mixture"
     )
@@ -1619,7 +1620,13 @@ def test_tilted_sampler_uses_flow_device_independent_of_candidate_backend(
     seen = []
 
     def recorded(*args, **kwargs):
-        seen.append((kwargs.get("device"), kwargs.get("atom_chunk")))
+        seen.append(
+            (
+                kwargs.get("device"),
+                kwargs.get("atom_chunk"),
+                kwargs.get("object_chunk"),
+            )
+        )
         return original(*args, **kwargs)
 
     monkeypatch.setattr(proposal, "draw_tilted_mis", recorded)
@@ -1629,11 +1636,13 @@ def test_tilted_sampler_uses_flow_device_independent_of_candidate_backend(
         candidate_backend=candidate_backend,
         draw_ladder=(2 * TAIL_PROPOSAL_RECIPE.cycle_length,),
         tail_proposal_atom_chunk=7,
+        tail_proposal_object_chunk=3,
     )
     run_adaptive_section5(proposal_seed=1544, **common)
     assert seen
     assert all(
         torch.device(device) == torch.device(likelihood.flow_model.device)
         and atom_chunk == 7
-        for device, atom_chunk in seen
+        and object_chunk == 3
+        for device, atom_chunk, object_chunk in seen
     )

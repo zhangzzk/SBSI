@@ -25,6 +25,7 @@ from sbsi.catalogue_null import (
 )
 from sbsi.catalogue_sampling import (
     TAIL_PROPOSAL_ATOM_CHUNK,
+    TAIL_PROPOSAL_OBJECT_CHUNK,
     TAIL_PROPOSAL_RECIPE,
     DefensiveLocalProposal,
     ProposalCoordinateTable,
@@ -358,6 +359,9 @@ def _resolved_pipeline_config(args, source: dict) -> dict:
             )
             resolved["execution"]["tail_proposal_atom_chunk"] = (
                 TAIL_PROPOSAL_ATOM_CHUNK
+            )
+            resolved["execution"]["tail_proposal_object_chunk"] = (
+                TAIL_PROPOSAL_OBJECT_CHUNK
             )
     return resolved
 
@@ -1516,6 +1520,7 @@ def main(argv=None):
         object_chunk=args.object_chunk,
         atom_chunk=args.atom_chunk,
         tail_proposal_atom_chunk=TAIL_PROPOSAL_ATOM_CHUNK,
+        tail_proposal_object_chunk=TAIL_PROPOSAL_OBJECT_CHUNK,
     )
     moment_path = output / "one_step_moments.npz"
     np.savez_compressed(

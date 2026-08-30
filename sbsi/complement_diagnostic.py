@@ -315,15 +315,21 @@ def diagnose_complement(
     )
     flow_device = str(likelihood.flow_model.device)
     tail_proposal_atom_chunk = None
+    tail_proposal_object_chunk = None
     if include_tail_proposal:
-        atom_chunk_parameter = inspect.signature(
-            proposal.draw_tilted_mis
-        ).parameters.get("atom_chunk")
+        parameters = inspect.signature(proposal.draw_tilted_mis).parameters
+        atom_chunk_parameter = parameters.get("atom_chunk")
         if (
             atom_chunk_parameter is not None
             and atom_chunk_parameter.default is not inspect.Parameter.empty
         ):
             tail_proposal_atom_chunk = int(atom_chunk_parameter.default)
+        object_chunk_parameter = parameters.get("object_chunk")
+        if (
+            object_chunk_parameter is not None
+            and object_chunk_parameter.default is not inspect.Parameter.empty
+        ):
+            tail_proposal_object_chunk = int(object_chunk_parameter.default)
     lookup = np.zeros(len(proposal.prior_weights), dtype=bool)
     rows = []
     flow_evaluations = 0
@@ -648,6 +654,7 @@ def diagnose_complement(
         "flow_atom_chunk": int(atom_chunk),
         "tail_proposal_device": flow_device if include_tail_proposal else None,
         "tail_proposal_atom_chunk": tail_proposal_atom_chunk,
+        "tail_proposal_object_chunk": tail_proposal_object_chunk,
         "flow_evaluations": int(flow_evaluations),
         "tail_proposal": (
             asdict(TAIL_PROPOSAL_RECIPE) if include_tail_proposal else None
