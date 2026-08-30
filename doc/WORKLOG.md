@@ -2,6 +2,51 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.322 — measured: the fixed T=4 bridge is slower and less reliable, so DM4 is rejected before confirmation
+
+**Result.** Development job 16121897 evaluated the cont.321
+`T1:T2:T4:prior = 3:2:2:1` recipe on the same rows 25,000:25,512, candidate
+stratum 16,384, prefilter 131,072, and complement draw depth 16,384 as the DM3
+screen. It completed successfully in 10m07s. Pareto-k p10/median/p90 was
+`0.0685 / 0.292 / 0.676`, with 77.7% below k=0.5 and only 91.0% below k=0.7.
+The number above k=0.7 increased from 33 to 46 and the number above k=1 from
+six to nine. Only four old failures cleared, while 17 previously passing
+objects became failures. DM4 therefore fails both preregistered k gates and is
+strictly worse on the primary reliability count.
+
+Complement-relative-SE p10/median/p90 was
+`0.0135 / 0.0233 / 0.0638`, versus DM3's
+`0.0130 / 0.0220 / 0.0608`. The paired DM4/DM3 relative-SE ratio was
+`0.897 / 1.075 / 1.143` at p10/median/p90, and the fraction meeting the p90
+threshold 0.0268 fell from 62.7% to 59.8%. Total exact-plus-sampled relative-SE
+median also worsened, from 0.0132 to 0.0142. This is not a trade of a little
+efficiency for reliability; both moved in the wrong direction.
+
+**Cost.** Instrumented total time increased from 440.6s to 564.4s. Tail
+proposal construction alone increased from 376.0s to 499.8s, while all target
+flow work remained about 5.4s. The extra component therefore adds 33% to the
+dominant phase for a 7.5% worse median relative SE. A production-depth or
+fresh-window DM4 run is not justified.
+
+**Interpretation.** The `T=4` source itself had complement mass
+`0.908 / 0.987 / 0.992`, but source k p10/median/p90
+`0.080 / 0.355 / 0.785`. Moving balance density away from the sharper
+components lowered their protection in ordinary rows faster than the diffuse
+bridge repaired proxy misses. DM4's result is a rejection, not input to a
+post-hoc relaxed gate. The immutable artifact is
+`complement_tail_dm_mis_heldout25k_v1/results/rows25000_25512_seed8701_dm4_t1_t2_t4_3_2_2_1_dev_v1`;
+its implementation is commit `a56741c`.
+
+**Next steps.** Keep the fresh confirmation rows untouched. The next
+development hypothesis replaces `T=4` with the proxy's zero-temperature limit
+`pi Pdet`, which follows the exact target's detection base without imposing a
+misaligned Gaussian tail; raw `pi` remains as the full-support defense. In
+parallel, batch the mathematically identical two-pass construction across
+objects, because proposal construction rather than Monte Carlo target scoring
+now dominates wall time by roughly 93:1. If the fixed detected-prior bridge
+also fails, use the already predeclared `T=1` complement-mass router on these
+development rows rather than adding more uniform broad components.
+
 ## 2026-08-30 cont.321 — source variance selects a fixed T=4 bridge; final estimator rows move beyond proposal development
 
 **Reproducibility rerun.** Job 16121716 reran the cont.320 development window
