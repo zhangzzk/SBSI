@@ -355,8 +355,8 @@ TAIL_PROPOSAL_RECIPE = TailProposalRecipe(
 TAIL_PROPOSAL_ATOM_CHUNK = 262144
 # A proposal batch owns, at its peak, one float64 probability slab per
 # component plus likelihood/cumulative workspaces.  At the fixed 262,144-atom
-# slab and the validated four-component stress recipe, 32 observations keep
-# that transient storage below roughly 1 GiB while turning the two catalogue
+# slab, the validated four-component stress recipe used 2.44 GB total CUDA
+# allocation including the static whole-catalogue tables, while turning the two
 # scans into matrix--matrix rather than hundreds of matrix--vector operations.
 TAIL_PROPOSAL_OBJECT_CHUNK = 32
 

@@ -98,6 +98,11 @@ def main() -> None:
     observed = pd.DataFrame(observations, columns=names)
     # Build and transfer immutable proxy coefficients outside every timing.
     proposal._tilted_proxy(device)
+    cuda_baseline_allocated = (
+        int(torch.cuda.memory_allocated(device))
+        if device.type == "cuda"
+        else None
+    )
 
     def timed_draw(object_chunk: int):
         if device.type == "cuda":
@@ -146,6 +151,9 @@ def main() -> None:
             "cuda_peak_allocated_bytes": (
                 max(peaks) if peaks else None
             ),
+            "cuda_incremental_peak_bytes": (
+                max(peaks) - cuda_baseline_allocated if peaks else None
+            ),
         }
         if object_chunk == object_chunks[0]:
             reference = draw
@@ -192,6 +200,7 @@ def main() -> None:
                 "draws": args.draws,
                 "atom_chunk": args.atom_chunk,
                 "repeats": args.repeats,
+                "cuda_baseline_allocated_bytes": cuda_baseline_allocated,
                 "recipe": TAIL_PROPOSAL_RECIPE.name,
                 "results": records,
             },

@@ -1310,6 +1310,10 @@ def test_conditioned_dm_mis_validates_recipe_support_and_full_support_sentinel()
         proposal.draw_tilted_mis(
             candidates, observed, n_draws=8, seed=1, atom_chunk=0
         )
+    with pytest.raises(ValueError, match="object_chunk must be positive"):
+        proposal.draw_tilted_mis(
+            candidates, observed, n_draws=8, seed=1, object_chunk=0
+        )
     duplicate = ProposalCandidates(
         np.array([[0, 0]]), np.zeros((1, 2)), np.ones(1)
     )

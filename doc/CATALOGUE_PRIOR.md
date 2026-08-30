@@ -258,13 +258,14 @@ memory is bounded by the atom and proposal-object chunks rather than catalogue
 size times the full observation count. Each atom slab is scored for a fixed
 batch of 32 observations, which reuses the catalogue coefficients and replaces
 per-object GPU scans with batched matrix operations. At the fixed 262,144-atom
-slab, the four-component stress recipe kept total transient proposal storage
-below roughly 1 GiB; the selected three-component recipe uses less. Both the
-262,144-atom and 32-object proposal chunks are recorded separately from the
-target-flow chunks in custom-run provenance. Object-local random records make
-the result invariant to this execution batching up to the documented last-bit
-GEMM/GEMV rounding; the sampled balance probability is always assembled from
-the same normalized block and within-block probabilities used by the sampler.
+slab, the validated four-component stress benchmark measured 2.436 GB total
+CUDA allocation including the static whole-catalogue proxy tables; the
+selected three-component recipe uses less. Both the 262,144-atom and 32-object
+proposal chunks are recorded separately from the target-flow chunks in custom-
+run provenance. Object-local random records make the result invariant to this
+execution batching up to the documented last-bit GEMM/GEMV rounding; the
+sampled balance probability is always assembled from the same normalized block
+and within-block probabilities used by the sampler.
 
 The recipe is exported as `TAIL_PROPOSAL_RECIPE` and copied verbatim into the
 resolved pipeline provenance. It has no runner flags for temperatures or
@@ -274,6 +275,11 @@ met; it does not change the `v1.1-infer` default.
 `scripts/benchmark_tail_proposal_batching.py` is the light synthetic execution
 check; production timing must run it through the scheduler on the
 proposal-development window or a catalogue-sized synthetic fixture.
+On a 12.76M-atom, 32-object, `K=M=16,384` synthetic fixture, A40 job 16121928
+reduced median DM4 proposal construction from 28.254 seconds at batch one to
+2.793 seconds at batch 32 (10.11x), with identical sampled ids. The batching
+implementation is recipe-generic; this timing and memory measurement are
+specific to the four-component DM4 recipe.
 
 ### Weight diagnostics
 
