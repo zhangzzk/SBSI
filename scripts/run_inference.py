@@ -725,8 +725,7 @@ def parse_args(argv=None):
             "retained full ladder, and no finite-draw bias correction, and it "
             "marks the run as a custom pipeline.  'tilted_stratified' uses "
             "the same split with the fixed component-conditioned "
-            "T1/T2/detected-prior/prior deterministic-MIS whole-catalogue "
-            "complement recipe."
+            "T1/T2/prior deterministic-MIS whole-catalogue complement recipe."
         ),
     )
     parser.add_argument("--adaptive-min-ess", type=float, default=32.0)

@@ -866,12 +866,11 @@ def test_conditioned_dm_mis_reports_qbar_counts_nesting_and_split_streams():
     assert recipe.component_names == (
         "proxy_t1",
         "proxy_t2",
-        "detected_prior",
         "prior",
     )
-    assert recipe.component_counts == (3, 2, 2, 1)
+    assert recipe.component_counts == (4, 3, 1)
     assert recipe.cycle_length == 8
-    assert recipe.proxy_temperatures == (1.0, 2.0, np.inf)
+    assert recipe.proxy_temperatures == (1.0, 2.0)
 
     long = proposal.draw_tilted_mis(
         candidates,
@@ -965,14 +964,13 @@ def test_conditioned_dm_mis_temperature_preserves_detected_prior_base():
     value = observed.loc[0, ["x", "y"]].to_numpy(float)
     likelihood = proxy.proxy_likelihood(value).cpu().numpy()
     log_base = proxy.log_base.cpu().numpy()
-    score_t1, score_t2, score_detected = [
+    score_t1, score_t2 = [
         value.cpu().numpy()
         for value in proxy.component_log_scores(value, TAIL_PROPOSAL_RECIPE)
     ]
     left, right = 0, 4
     np.testing.assert_allclose(score_t1, log_base + likelihood, rtol=0, atol=1e-14)
     np.testing.assert_allclose(score_t2, log_base + 0.5 * likelihood, rtol=0, atol=1e-14)
-    np.testing.assert_allclose(score_detected, log_base, rtol=0, atol=1e-14)
     expected_difference = (
         log_base[left] - log_base[right]
         + 0.5 * (likelihood[left] - likelihood[right])
@@ -1040,15 +1038,14 @@ def test_conditioned_dm_mis_normalizes_proxy_components_after_underflow():
     components, qbar, masses, _ = _dense_conditioned_components(
         proposal, np.array([0.0]), np.array([0, 1])
     )
-    assert np.all(masses[:2] == 0.0)
-    assert masses[2] > 0.0
+    assert np.all(masses[:-1] == 0.0)
     np.testing.assert_array_equal(draw.component_complement_mass[0, :2], [0.0, 0.0])
     positions = np.searchsorted(proposal.active_indices, draw.indices[0])
     np.testing.assert_allclose(draw.probability[0], qbar[positions], atol=1e-15)
     # Separate log-domain conditioning keeps the proxy concentrated on atom 2;
     # falling back merely because the diagnostic mass underflowed would give .5.
     assert components[0, 2] > 0.999999999999
-    assert qbar[2] > 0.8
+    assert qbar[2] > 0.9
 
 
 def test_conditioned_dm_mis_rejects_nonfinite_proxy_normalizers():

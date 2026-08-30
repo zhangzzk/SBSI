@@ -346,11 +346,11 @@ class TailProposalRecipe:
 
 
 TAIL_PROPOSAL_RECIPE = TailProposalRecipe(
-    name="conditioned_dm_mis_t1_t2_detected_prior_prior_3_2_2_1",
-    component_names=("proxy_t1", "proxy_t2", "detected_prior", "prior"),
-    component_weights=(0.375, 0.25, 0.25, 0.125),
-    component_betas=(1.0, 0.5, 0.0, None),
-    component_cycle=(0, 1, 2, 3, 1, 0, 2, 0),
+    name="conditioned_dm_mis_t1_t2_prior_4_3_1_v2",
+    component_names=("proxy_t1", "proxy_t2", "prior"),
+    component_weights=(0.5, 0.375, 0.125),
+    component_betas=(1.0, 0.5, None),
+    component_cycle=(0, 1, 0, 2, 1, 0, 1, 0),
 )
 TAIL_PROPOSAL_ATOM_CHUNK = 262144
 
@@ -1257,13 +1257,12 @@ class DefensiveLocalProposal:
     ) -> ProposalDraw:
         """Draw a complement-conditioned deterministic-mixture MIS stream.
 
-        The fixed screening recipe draws three samples from the T=1 proxy, two
-        from the T=2 proxy, two from the detected-prior limit ``pi Pdet``, and
-        one from ``pi`` in every eight-sample cycle.  Each component is
-        normalized separately on ``S^c`` before the mixture is formed.  Every
-        returned probability is the balance mixture
+        The selected fixed recipe draws four samples from the T=1 proxy, three
+        from the T=2 proxy, and one from ``pi`` in every eight-sample cycle.
+        Each component is normalized separately on ``S^c`` before the mixture
+        is formed. Every returned probability is the balance mixture
 
-        ``qbar_C = 3/8 r1_C + 1/4 r2_C + 1/4 rinf_C + 1/8 pi_C``,
+        ``qbar_C = 1/2 r1_C + 3/8 r2_C + 1/8 pi_C``,
 
         irrespective of which component generated that sample.  Fixed source
         counts make this deterministic-mixture estimator exactly unbiased and

@@ -2,6 +2,66 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.324 — detected-prior bridge also fails; DM3 remains the base and tail modes must move into the exact stratum
+
+**Result.** Job 16121927 completed the fixed
+`T1:T2:(pi Pdet):pi = 3:2:2:1` development screen in 9m48s. Its Pareto-k
+p10/median/p90 was `0.0628 / 0.286 / 0.629`, but only 79.1% fell below k=0.5
+and 93.4% below k=0.7. It left 34 objects above k=0.7 and seven above k=1,
+versus 33 and six under DM3. Complement-relative-SE p10/median/p90 was
+`0.0144 / 0.0241 / 0.0670`, 9.5% worse than DM3 at the median; total
+exact-plus-sampled relative-SE median was 0.0149 versus 0.0132. Proposal
+construction still dominated at 480.0 of 545.2 instrumented seconds.
+
+The bridge did reach the intended failures: 11 of DM3's 33 high-k objects
+cleared. But 12 formerly passing objects became failures. Routing cannot rescue
+this proposal family. A sweep that uses detected-prior DM only below fixed
+`T=1` complement-mass thresholds has a best count of 29 failures at threshold
+0.15, still far above the allowed five. Even an impossible outcome oracle that
+chooses whichever of the DM3 and detected-prior realized k values is smaller
+for every object leaves 22 failures. The fixed bridge and a router between
+these two realized proposals are rejected before confirmation.
+
+**Selected base.** Maintained code and `doc/CATALOGUE_PRIOR.md` return the
+exported recipe to the best measured base,
+`T1:T2:prior = 4:3:1` (recipe name suffix `v2`). The generalized
+`TailProposalRecipe` still permits beta zero because it is mathematically valid
+and useful for independent pilot exploration, but it is no longer in the
+production complement mix. Runner help, wrapper tags, and tests again identify
+the three-component recipe. This is not promotion: DM3 still fails the broad k
+gate, so the fresh confirmation rows remain untouched.
+
+**Why the next mechanism changes.** Reweighting broad fixed components merely
+moves failures between objects. The next estimator will use an independent,
+discarded pilot to discover high exact-target atoms, promote a fixed number of
+those atoms and their coordinate neighbours into the exactly summed stratum,
+and then draw an independent DM3 complement stream. Conditional on the random
+promoted stratum, exact-plus-independent-complement estimation remains
+unbiased. This directly removes discovered modes from the Monte Carlo tail
+instead of hoping a globally broad component samples them often enough.
+
+**Artifact and validation.** The immutable result is
+`complement_tail_dm_mis_heldout25k_v1/results/rows25000_25512_seed8701_dmdet_t1_t2_pdet_prior_3_2_2_1_dev_v1`.
+The detected-prior implementation is commit `20824bc`; the selected-base
+reversion is covered by the same generic sampler tests. Login-node validation:
+
+```text
+ruff check <changed Python and tests>                              clean
+pytest tests/test_catalogue_sampling.py tests/test_catalogue_null.py \
+  tests/test_complement_diagnostic.py tests/test_release_config.py  79 passed
+bash -n <diagnostic and estimator wrappers>                        clean
+git diff --check                                                   clean
+```
+
+**Parallel efficiency result.** Independently, A40 job 16121928 measured the
+batched implementation on 12.76M atoms, 32 objects, and `K=M=16,384`. Proposal
+batch 32 took 2.793s versus 28.254s at batch one, a 10.11x speedup, with zero
+index mismatches across 524,288 draws, maximum qbar differences
+`2.71e-19` absolute / `1.90e-15` relative, complement-mass difference
+`8.88e-16`, and 2.436GB total peak CUDA allocation. Merge this recipe-generic
+optimization before evaluating pilot promotion so runtime is no longer the
+limiting mechanism.
+
 ## 2026-08-30 cont.323 — replace the rejected diffuse Gaussian bridge with the detected-prior limit
 
 **Hypothesis.** DM4 failed because a quarter of the balance density followed a
