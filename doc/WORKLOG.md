@@ -2,6 +2,77 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.341 — spatial pilot/Neyman gate is valid but rejected on tail reliability and efficiency
+
+**Frozen result and artifact audit.** Clean detached repair commit
+`76e8afa5d8c032456cbc873dbac209b0ba6e6dc5` ran the unchanged preregistered
+spatial centre protocol as A40 Slurm job 16124551. It completed with exit code
+zero in 12m55s and 8,680,088 KiB peak RSS. The immutable result is
+`complement_spatial_neyman_center_dev_v1/results/rows25000_25512_seed8701_spatialH256_pilot4096_dm3_m16384_exact64_v1`.
+`per_object.parquet` has SHA-256
+`b7a70b991619007d953f3e7433df3af5003d71dd141d3da991a13b33eb123d79`;
+`summary.json` has
+`b76afe7b7d7b8f4f992997817473970f8d225078c51c543f81960419711815af`
+and is byte-identical to scheduler stdout. Stderr remained exactly the two
+expected PyTorch warnings (855 bytes, SHA-256
+`b707e451fbe92c235cd3d6aa15eef6e0868c9f70d5495270abc3ba5a99ceab4b`),
+with no traceback.
+
+Independent read-only reduction verified all 512 absolute IDs and 60 columns,
+integer dtypes and exact support/pilot/production counts, bounded whole-cycle
+allocations, zero support leakage and zero fallback cells, all row hashes,
+all detached implementation hashes, 64 exact IDs and 64 execution-call
+records, three partition identities and bounds, exact flow counts, and the
+embedded Parquet hash. It recomputed run manifest
+`cc6a602867b3bc610f678486cb731f2ef5994d8204a0a0e076ecd6082485238c`,
+matched the emitted protocol and every metric, and reproduced the exact seven
+failed gates. Thus this is a valid scientific rejection, not another execution
+or provenance failure.
+
+**Stop/go outcome.** Every one of 19 integrity gates and seven exact-
+calibration gates passes. The standard errors are well calibrated on the
+exact-64 subset: median/higher-p90 absolute total-log-evidence errors are
+0.006808/0.027871, signed aggregate z is -0.5229, z RMS is 1.0689, 61/64
+objects lie within 1.96, and the exact-support cross-check maximum is
+`1.79565e-6`. Reliability and efficiency nevertheless fail decisively:
+
+```text
+metric                                      observed             required
+Pareto k < 0.5                              357 / 512            >= 461 / 512
+Pareto k < 0.7                              462 / 512            >= 507 / 512
+Pareto k >= 1                                 9 / 512             0 / 512
+complement relative-SE median/p90           0.02136 / 0.07762    <= 0.00882 / 0.0268
+exact-64 |delta log Z| median/p90            0.00681 / 0.02787    <= 0.01 / 0.05
+exact-64 aggregate z / z RMS                -0.5229 / 1.0689     <= 2.5 / 0.8--1.2
+exact-64 |z| <= 1.96                         61 / 64              >= 58 / 64
+mean/p90 variance-time ratio                 4.0005 / 4.4121      <= 0.90 / 0.90
+```
+
+Complete gated method time is 457.485 seconds against the 91.040-second DM3
+baseline. Reservoir construction alone costs 321.781 seconds and diagnostic
+reduction/provenance 97.851 seconds; candidate query, exact-support flow,
+pilot flow, allocation, and selected-production flow cost
+12.088/16.290/0.822/3.068/2.971 seconds. The allocation is also extremely
+polarized: the median object leaves 187/256 cells at the two-cycle floor while
+10 cells hit the 64-cycle cap. This buys calibrated uncertainty, but neither
+the required tail coverage nor enough variance reduction to pay for its full
+cell normalization and mapping pass.
+
+**Decision and next route.** The pilot/Neyman spatial sampler stops here. No
+stencil or inference integration is authorized, no threshold is relaxed, and
+no default or release label changes. Before the job outcome was supplied, an
+independent contingency review had already formulated a fixed-allocation
+source-CDF microstratified design: eight DM3 cycles per audited cell, with two
+independent draws in each of 16/12/4 equal-probability microstrata for the
+t1/t2/prior sources. Its pair estimator is conditionally unbiased and weakly
+variance-dominates fixed-allocation IID DM3, but it needs a new paired variance
+reducer and cannot inherit the source-pooled formula. A segmented, larger-
+object-batch constructor must also eliminate the failed route's full 64-cycle
+bank and Python cell-loop overhead. Next: complete mathematical/code review,
+freeze ordering, RNG, variance, timing, and stop/go contracts before reading
+new target outcomes, then implement only that independent route if its runtime
+and provenance plan remains credible.
+
 ## 2026-08-30 cont.340 — spatial execution failure isolated and cell/source-local reduction stabilized
 
 **Failed execution, not a sampler result.** Clean detached commit
