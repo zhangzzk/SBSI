@@ -2,6 +2,45 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.327 — exact confirmation now fails closed on row identity and records the selected DM3 honestly
+
+**Review defect and correction.** Independent review of the merged batch and
+exact-oracle commits found that the dedicated wrapper still called and tagged
+the selected three-component sampler as DM4, even though the exported recipe
+had already returned to `T1:T2:prior = 4:3:1` DM3. The wrapper header and tag
+now identify DM3 and its fixed recipe name. It also explicitly requests
+`--initial-strategy fixed --initial 0,0`, so the confirmation centre is no
+longer inherited implicitly from the release's mean-observed-shape start.
+
+**Fail-closed identity.** `scripts/run_inference.py` now rejects an exact-oracle
+request with any effective measured cut, cut bound, or selection cache before
+creating its output. This prevents filtering the frozen mock and then assigning
+the reserved absolute IDs to post-cut row positions. The confirmation protocol
+now compares centre `(0,0)`, the frozen selection key and fresh manifest, Torch
+candidate backend, 64-object diagnostic and 4,096-atom target-flow chunks,
+262,144-atom and 32-object tail-proposal chunks, and 65,536-atom/four-object
+exact chunks, in addition to its already fixed universe, budgets, seeds, and
+mock hashes. It also pins the full serialized DM3 `TAIL_PROPOSAL_RECIPE`; a
+future pilot or other selected proposal must intentionally version the frozen
+confirmation protocol instead of inheriting a matched v1 label. Alternative
+development runs remain permitted but cannot carry a matched confirmation
+identity. With exact mode disabled, CLI acceptance, diagnostic table/schema,
+stochastic streams, and metadata remain unchanged.
+
+**Files and validation.** `sbsi/complement_diagnostic.py` expands the frozen
+identity, `scripts/run_inference.py` enforces the no-selection boundary,
+`jobs/job_complement_exact_oracle.sh` fixes centre and DM3 naming, and focused
+tests cover the new gate inputs and hard rejection. Validation:
+
+```text
+pytest tests/test_catalogue_sampling.py tests/test_catalogue_null.py \
+  tests/test_complement_diagnostic.py tests/test_release_config.py   92 passed
+ruff check <changed Python, tests, and wrapper-adjacent code>         clean
+python -m compileall -q sbsi scripts tests                           clean
+bash -n jobs/job_complement_exact_oracle.sh                          clean
+git diff --check                                                    clean
+```
+
 ## 2026-08-30 cont.326 — frozen 64-object exact oracle integrated for untouched confirmation
 
 **Protocol.** `sbsi/complement_diagnostic.py` now defines the fixed label

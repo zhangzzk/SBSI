@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Frozen exact-oracle confirmation for the conditioned DM4 tail proposal.
+# Frozen exact-oracle confirmation for the selected conditioned DM3 tail proposal.
 #
 # The 512-object universe, 64-object exact subset, hash key, atom/object chunks,
 # and every promotion gate are code constants, not launcher knobs.  This wrapper
@@ -30,7 +30,7 @@ K=16384
 PREFILTER=131072
 GLOBAL_DRAWS=131072
 PROPOSAL_SEED=9701
-TAG=rows25512_26024_seed9701_dm4_exact64_m131072_v1
+TAG=rows25512_26024_seed9701_dm3_t1_t2_prior_4_3_1_v2_exact64_m131072_v1
 output="$root/results/$TAG"
 
 for variable in K PREFILTER GLOBAL_DRAWS PROPOSAL_SEED; do
@@ -70,7 +70,9 @@ cd "$repo"
 "$python" - <<'PREFLIGHT' || exit 2
 from hashlib import sha256
 from pathlib import Path
+from dataclasses import asdict
 
+from sbsi.catalogue_sampling import TAIL_PROPOSAL_RECIPE
 from sbsi.complement_diagnostic import (
     EXACT_ORACLE_CONFIRMATION,
     exact_oracle_object_ids,
@@ -78,8 +80,12 @@ from sbsi.complement_diagnostic import (
 
 _, manifest = exact_oracle_object_ids(25512, 26024)
 expected = "fc44a632ed4758440a3e241ffeab9fba087f58397f114cfbc38aecc7feedcb8b"
+if EXACT_ORACLE_CONFIRMATION["selection_manifest_sha256"] != expected:
+    raise SystemExit("exact-oracle confirmation manifest constant changed")
 if manifest != expected:
     raise SystemExit(f"exact-oracle selection changed: {manifest} != {expected}")
+if asdict(TAIL_PROPOSAL_RECIPE) != EXACT_ORACLE_CONFIRMATION["tail_proposal_recipe"]:
+    raise SystemExit("exact-oracle confirmation tail recipe changed")
 mock = Path(
     "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/"
     "inference_candidate_ladder_n125k_v1/prepare_cont303/mock"
@@ -106,6 +112,8 @@ exec "$python" "$repo/scripts/run_inference.py" \
   --proposal-candidates "$K" \
   --proposal-prefilter-candidates "$PREFILTER" \
   --proposal-seed "$PROPOSAL_SEED" \
+  --initial-strategy fixed \
+  --initial 0,0 \
   --candidate-backend torch \
   --object-chunk 64 \
   --diagnose-complement "$output" \

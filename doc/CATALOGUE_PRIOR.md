@@ -288,12 +288,21 @@ tail-proposal screen. It requires both `--diagnose-complement` and
 `--diagnose-complement-tail-proposal`; it never changes estimator mode. The
 declared diagnostic universe must contain exactly 512 consecutive absolute
 object IDs. There are no oracle seed, count, or chunk command-line knobs. A
-run is labelled as the predeclared confirmation only when it also matches
-rows 25,512:26,024, `K=16,384`, prefilter 131,072, `M=131,072`, proposal seed
-9701, and the derived diagnostic seed 7,009,704; development or forensic runs
-may compute the same metrics but fail the protocol-identity gate. The identity
-also pins the frozen mock's measurements, truth, and manifest SHA-256 values;
-the runner independently rehashes those files before the diagnostic.
+measured cut or selection cache is rejected before output creation: otherwise
+post-cut row positions could be mistaken for the frozen absolute object IDs. A
+run is labelled as the predeclared confirmation only when it also matches rows
+25,512:26,024, centre `(0,0)`, `K=16,384`, prefilter 131,072, `M=131,072`,
+proposal seed 9701, and the derived diagnostic seed 7,009,704. The execution
+identity additionally fixes the Torch candidate backend, 64-object diagnostic
+and 4,096-atom target-flow chunks, 262,144-atom and 32-object tail-proposal
+chunks, and 65,536-atom and four-object exact chunks. Development or forensic
+runs may compute the same metrics but fail the protocol-identity gate. The
+identity pins the complete `asdict(TAIL_PROPOSAL_RECIPE)` DM3 recipe, selection
+key, and fresh-window selection manifest as well as the frozen mock's
+measurements, truth, and manifest SHA-256 values; the runner independently
+rehashes those files before the diagnostic. A future selected proposal must
+therefore version and deliberately update this protocol rather than silently
+inheriting the v1 confirmation label.
 
 The fixed label is `SBSI/complement-exact-oracle/v1`, whose SHA-256 digest is
 `f02f535eab874dd6f9f6184d4040283493266074903fc6c20160b4ae88b5993e`.
@@ -333,7 +342,10 @@ flow count, code/wrapper hashes, and the following predeclared gates:
 
 The exact subset cannot relax an all-object proposal gate. The dedicated
 `jobs/job_complement_exact_oracle.sh` wrapper fixes the fresh universe and
-checks its selection manifest before starting the production-depth screen.
+checks its selection manifest before starting the production-depth screen. Its
+tag identifies the selected three-component `T1:T2:prior = 4:3:1` DM3 recipe,
+and it explicitly requests the fixed zero centre rather than inheriting the
+release's data-derived optimizer start.
 
 ### Weight diagnostics
 

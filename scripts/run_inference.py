@@ -813,6 +813,31 @@ def parse_args(argv=None):
     return parser.parse_args(argv)
 
 
+def _validate_exact_oracle_request(args) -> None:
+    """Fail closed before exact-mode row identities can be changed by a cut."""
+
+    if not args.diagnose_complement_exact_oracle:
+        return
+    if args.diagnose_complement is None:
+        raise SystemExit(
+            "--diagnose-complement-exact-oracle requires --diagnose-complement"
+        )
+    if not args.diagnose_complement_tail_proposal:
+        raise SystemExit(
+            "--diagnose-complement-exact-oracle requires "
+            "--diagnose-complement-tail-proposal"
+        )
+    if (
+        args.cut_abs_ehat is not None
+        or bool(args.cut_bound)
+        or args.selection_cache is not None
+    ):
+        raise SystemExit(
+            "--diagnose-complement-exact-oracle requires measured cuts and "
+            "selection caches to be disabled so frozen absolute row ids are preserved"
+        )
+
+
 def main(argv=None):
     args = parse_args(argv)
     inference_config = _load_release_config(
@@ -833,18 +858,7 @@ def main(argv=None):
     likelihood_implementation_hashes = _likelihood_implementation_hashes()
     if args.observation_start < 0:
         raise SystemExit("--observation-start must be non-negative")
-    if args.diagnose_complement_exact_oracle and args.diagnose_complement is None:
-        raise SystemExit(
-            "--diagnose-complement-exact-oracle requires --diagnose-complement"
-        )
-    if (
-        args.diagnose_complement_exact_oracle
-        and not args.diagnose_complement_tail_proposal
-    ):
-        raise SystemExit(
-            "--diagnose-complement-exact-oracle requires "
-            "--diagnose-complement-tail-proposal"
-        )
+    _validate_exact_oracle_request(args)
     if args.prepare_only and args.mock_input is not None:
         raise SystemExit("--prepare-only generates a new mock and rejects --mock-input")
     if args.selection_cache is not None and not (

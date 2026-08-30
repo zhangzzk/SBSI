@@ -322,6 +322,29 @@ def test_exact_oracle_selection_has_frozen_golden_manifests():
     assert confirmation_manifest == (
         "fc44a632ed4758440a3e241ffeab9fba087f58397f114cfbc38aecc7feedcb8b"
     )
+    assert EXACT_ORACLE_CONFIRMATION["center"] == [0.0, 0.0]
+    assert EXACT_ORACLE_CONFIRMATION["candidate_backend"] == "torch"
+    assert EXACT_ORACLE_CONFIRMATION["diagnostic_object_chunk"] == 64
+    assert EXACT_ORACLE_CONFIRMATION["flow_atom_chunk"] == 4096
+    assert EXACT_ORACLE_CONFIRMATION["tail_proposal_atom_chunk"] == 262144
+    assert EXACT_ORACLE_CONFIRMATION["tail_proposal_object_chunk"] == 32
+    assert EXACT_ORACLE_CONFIRMATION["exact_atom_chunk"] == EXACT_ORACLE_ATOM_CHUNK
+    assert (
+        EXACT_ORACLE_CONFIRMATION["exact_object_chunk"]
+        == EXACT_ORACLE_OBJECT_CHUNK
+    )
+    assert EXACT_ORACLE_CONFIRMATION["selection_key_sha256"] == (
+        EXACT_ORACLE_SELECTION_KEY_SHA256
+    )
+    assert EXACT_ORACLE_CONFIRMATION["selection_manifest_sha256"] == (
+        confirmation_manifest
+    )
+    assert EXACT_ORACLE_CONFIRMATION["tail_proposal_recipe"] == asdict(
+        TAIL_PROPOSAL_RECIPE
+    )
+    assert EXACT_ORACLE_CONFIRMATION["tail_proposal_recipe"]["name"] == (
+        "conditioned_dm_mis_t1_t2_prior_4_3_1_v2"
+    )
     with pytest.raises(ValueError, match="512-object"):
         exact_oracle_object_ids(25_000, 25_511)
 
@@ -420,6 +443,22 @@ def test_exact_oracle_is_sparse_and_counts_every_active_flow_evaluation():
     assert summary["gates"]["thresholds_predeclared"] is True
     assert exact["confirmation_protocol"]["expected"] == EXACT_ORACLE_CONFIRMATION
     assert exact["confirmation_protocol"]["matched"] is False
+    observed_protocol = exact["confirmation_protocol"]["observed"]
+    assert observed_protocol["center"] == [0.0, 0.0]
+    assert observed_protocol["candidate_backend"] == "scipy"
+    assert observed_protocol["diagnostic_object_chunk"] == 128
+    assert observed_protocol["flow_atom_chunk"] == 4096
+    assert observed_protocol["tail_proposal_atom_chunk"] == 262144
+    assert observed_protocol["tail_proposal_object_chunk"] == 32
+    assert observed_protocol["exact_atom_chunk"] == EXACT_ORACLE_ATOM_CHUNK
+    assert observed_protocol["exact_object_chunk"] == EXACT_ORACLE_OBJECT_CHUNK
+    assert observed_protocol["selection_key_sha256"] == (
+        EXACT_ORACLE_SELECTION_KEY_SHA256
+    )
+    assert observed_protocol["selection_manifest_sha256"] == (
+        "6abcc361aec9ada6010f2a91a68aa70440904873518182445c2a712ae69bad6a"
+    )
+    assert observed_protocol["tail_proposal_recipe"] == asdict(TAIL_PROPOSAL_RECIPE)
     assert not summary["gates"]["exact_oracle_64_object_subset"][
         "confirmation_protocol_matched"
     ]["passed"]
@@ -476,6 +515,22 @@ def test_exact_oracle_off_preserves_existing_table_and_flow_identity():
             n_global_draws=16,
             seed=73,
             candidate_backend="scipy",
+            include_exact_oracle=True,
+        )
+    selected_likelihood = _DiagnosticLikelihood()
+    selected_likelihood.selection = object()
+    with pytest.raises(ValueError, match="measured selection.*disabled"):
+        diagnose_complement(
+            selected_likelihood,
+            mock,
+            _DiagnosticProposal(),
+            center=(0.0, 0.0),
+            n_candidates=1,
+            prefilter_candidates=3,
+            n_global_draws=16,
+            seed=73,
+            candidate_backend="scipy",
+            include_tail_proposal=True,
             include_exact_oracle=True,
         )
 

@@ -38,11 +38,36 @@ EXACT_ORACLE_DIAGNOSTIC_SEED_OFFSET = 7_000_003
 EXACT_ORACLE_CONFIRMATION = {
     "universe_start": 25_512,
     "universe_stop": 26_024,
+    "center": [0.0, 0.0],
     "n_candidates": 16_384,
     "prefilter_candidates": 131_072,
     "n_global_draws": 131_072,
     "proposal_seed": 9_701,
     "diagnostic_seed": 7_009_704,
+    "candidate_backend": "torch",
+    "diagnostic_object_chunk": 64,
+    "flow_atom_chunk": 4_096,
+    "tail_proposal_atom_chunk": 262_144,
+    "tail_proposal_object_chunk": 32,
+    "exact_atom_chunk": 65_536,
+    "exact_object_chunk": 4,
+    "selection_key_sha256": (
+        "f02f535eab874dd6f9f6184d4040283493266074903fc6c20160b4ae88b5993e"
+    ),
+    "selection_manifest_sha256": (
+        "fc44a632ed4758440a3e241ffeab9fba087f58397f114cfbc38aecc7feedcb8b"
+    ),
+    "tail_proposal_recipe": {
+        "name": "conditioned_dm_mis_t1_t2_prior_4_3_1_v2",
+        "component_names": ("proxy_t1", "proxy_t2", "prior"),
+        "component_weights": (0.5, 0.375, 0.125),
+        "component_betas": (1.0, 0.5, None),
+        "component_cycle": (0, 1, 0, 2, 1, 0, 1, 0),
+        "conditioning": "component",
+        "base_measure": "prior_times_detection",
+        "temperature_scope": "proxy_likelihood_only",
+        "denominator": "balance_mixture",
+    },
     "mock_input_sha256": {
         "measurements.parquet": (
             "fdfecacc13adabd6005e21150ab0dc74767cad34da3d3ea95e362515ce38365b"
@@ -725,6 +750,11 @@ def diagnose_complement(
         )
     if include_exact_oracle and not include_tail_proposal:
         raise ValueError("the exact oracle requires the tail-proposal diagnostic")
+    if include_exact_oracle and getattr(likelihood, "selection", None) is not None:
+        raise ValueError(
+            "the exact oracle requires measured selection to be disabled so "
+            "frozen absolute row ids are preserved"
+        )
 
     measurements = mock.measurements
     stop = len(measurements) if observation_stop is None else int(observation_stop)
@@ -1192,11 +1222,22 @@ def diagnose_complement(
         confirmation_observed = {
             "universe_start": int(object_id_offset + start),
             "universe_stop": int(object_id_offset + stop),
+            "center": [float(center[0]), float(center[1])],
             "n_candidates": int(n_candidates),
             "prefilter_candidates": int(prefilter_candidates),
             "n_global_draws": int(n_global_draws),
             "proposal_seed": int(seed) - EXACT_ORACLE_DIAGNOSTIC_SEED_OFFSET,
             "diagnostic_seed": int(seed),
+            "candidate_backend": candidate_backend,
+            "diagnostic_object_chunk": int(object_chunk),
+            "flow_atom_chunk": int(atom_chunk),
+            "tail_proposal_atom_chunk": tail_proposal_atom_chunk,
+            "tail_proposal_object_chunk": tail_proposal_object_chunk,
+            "exact_atom_chunk": EXACT_ORACLE_ATOM_CHUNK,
+            "exact_object_chunk": EXACT_ORACLE_OBJECT_CHUNK,
+            "selection_key_sha256": EXACT_ORACLE_SELECTION_KEY_SHA256,
+            "selection_manifest_sha256": exact_selection_manifest_sha256,
+            "tail_proposal_recipe": asdict(TAIL_PROPOSAL_RECIPE),
             "mock_input_sha256": (
                 None
                 if confirmation_mock_sha256 is None

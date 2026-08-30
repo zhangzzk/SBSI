@@ -120,6 +120,7 @@ def test_exact_oracle_cli_is_one_boolean_without_selection_knobs():
         )
     )
     assert args.diagnose_complement_exact_oracle
+    RUNNER._validate_exact_oracle_request(args)
     help_text = (ROOT / "scripts" / "run_inference.py").read_text()
     assert "--diagnose-complement-exact-oracle" in help_text
     for retired_knob in (
@@ -129,6 +130,33 @@ def test_exact_oracle_cli_is_one_boolean_without_selection_knobs():
         "--exact-oracle-object-chunk",
     ):
         assert retired_knob not in help_text
+
+
+@pytest.mark.parametrize(
+    "selection_arguments",
+    (
+        ("--cut-abs-ehat", "0.8"),
+        ("--cut-bound", "measured_ngmix_g1:-1:1"),
+        (
+            "--cut-abs-ehat",
+            "0.8",
+            "--selection-cache",
+            "selection-cache",
+        ),
+    ),
+)
+def test_exact_oracle_rejects_measured_selection(selection_arguments):
+    args = RUNNER.parse_args(
+        _minimal_runner_arguments(
+            "--diagnose-complement",
+            "diagnostic",
+            "--diagnose-complement-tail-proposal",
+            "--diagnose-complement-exact-oracle",
+            *selection_arguments,
+        )
+    )
+    with pytest.raises(SystemExit, match="frozen absolute row ids"):
+        RUNNER._validate_exact_oracle_request(args)
 
 
 def test_reference_job_only_supplies_runtime_paths():
@@ -182,6 +210,14 @@ def test_exact_oracle_job_pins_fresh_universe_and_manifest():
     assert "GLOBAL_DRAWS=${" not in job
     assert "PROPOSAL_SEED=${" not in job
     assert "SOURCE_MOCK" not in job
+    assert "dm3_t1_t2_prior_4_3_1_v2_exact64" in job
+    assert "dm4" not in job.lower()
+    assert "--initial-strategy fixed" in job
+    assert "--initial 0,0" in job
+    assert "--candidate-backend torch" in job
+    assert "--object-chunk 64" in job
+    assert "asdict(TAIL_PROPOSAL_RECIPE)" in job
+    assert 'EXACT_ORACLE_CONFIRMATION["tail_proposal_recipe"]' in job
     assert "--diagnose-complement-tail-proposal" in job
     assert "--diagnose-complement-exact-oracle" in job
     assert "fc44a632ed4758440a3e241ffeab9fba087f58397f114cfbc38aecc7feedcb8b" in job
