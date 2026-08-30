@@ -14,6 +14,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 import gc
 from hashlib import sha256
+import heapq
 import json
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
@@ -364,6 +365,44 @@ TAIL_PROPOSAL_ATOM_CHUNK = 262144
 TAIL_PROPOSAL_OBJECT_CHUNK = 32
 
 
+SPATIAL_CELL_COUNT = 256
+SPATIAL_PARTITION_DEPTH = 8
+SPATIAL_PARTITION_AXES = (0, 1, 2, 3, 0, 1, 2, 3)
+SPATIAL_PILOT_CYCLES = 2
+SPATIAL_PRODUCTION_CYCLES = 64
+SPATIAL_MIN_CYCLES = 2
+SPATIAL_TOTAL_CYCLES = 2048
+SPATIAL_PILOT_SEED = 1_008_704
+SPATIAL_PRODUCTION_SEED = 7_008_704
+SPATIAL_PARTITION_HASH_CONTRACT = "sha256_domain_shape_big_endian_v1"
+SPATIAL_RNG_CONTRACT = "seedsequence_seed_object_cell_domain_v1"
+
+
+def _spatial_partition_recipe_sha256() -> str:
+    payload = json.dumps(
+        {
+            "axes": SPATIAL_PARTITION_AXES,
+            "cell_count": SPATIAL_CELL_COUNT,
+            "count_guard": [0.45, 0.55],
+            "depth": SPATIAL_PARTITION_DEPTH,
+            "detected_mass_tie": "smaller_cut",
+            "leaf_id": "left_right_binary_path",
+            "ordering": "coordinate_then_atom_id",
+            "version": 1,
+            "zero_detected_mass": "count_midpoint",
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    digest = sha256()
+    digest.update(b"SBSI/spatial-cell-partition-recipe/v1\0")
+    digest.update(payload)
+    return digest.hexdigest()
+
+
+SPATIAL_PARTITION_RECIPE_SHA256 = _spatial_partition_recipe_sha256()
+
+
 # The pilot is discarded, but using the same fixed DM3 law makes its primary
 # second-moment score directly relevant to the production proposal.  Keep an
 # explicit alias so resolved provenance can name both roles without copying a
@@ -540,6 +579,1137 @@ def _candidate_exclusion_manifest_sha256(
         dtype=">i8",
         sort_rows=True,
     )
+
+
+def _spatial_array_sha256(
+    label: str,
+    values: np.ndarray,
+    *,
+    dtype: str,
+) -> str:
+    """Hash spatial-sampler state using canonical big-endian identities."""
+
+    canonical = np.ascontiguousarray(values, dtype=np.dtype(dtype))
+    shape = np.ascontiguousarray(canonical.shape, dtype=np.dtype(">u8"))
+    digest = sha256()
+    digest.update(b"SBSI/spatial-neyman-array/v1\0")
+    digest.update(label.encode("utf-8"))
+    digest.update(b"\0")
+    digest.update(shape.tobytes())
+    digest.update(canonical.tobytes())
+    return digest.hexdigest()
+
+
+def _spatial_text_sha256(label: str, value: object) -> str:
+    payload = json.dumps(
+        value, sort_keys=True, separators=(",", ":"), allow_nan=False
+    ).encode("utf-8")
+    digest = sha256()
+    digest.update(b"SBSI/spatial-neyman-text/v1\0")
+    digest.update(label.encode("utf-8"))
+    digest.update(b"\0")
+    digest.update(payload)
+    return digest.hexdigest()
+
+
+def _spatial_assignment_sha256(
+    active_indices: np.ndarray, cell_id: np.ndarray
+) -> str:
+    active = np.ascontiguousarray(active_indices, dtype=np.dtype(">i8"))
+    cells = np.ascontiguousarray(cell_id, dtype=np.dtype(">u2"))
+    if active.shape != cells.shape:
+        raise ValueError("active indices and spatial cell ids must align")
+    digest = sha256()
+    digest.update(b"SBSI/spatial-cell-assignment/v1\0")
+    digest.update(np.asarray(active.shape, dtype=np.dtype(">u8")).tobytes())
+    digest.update(active.tobytes())
+    digest.update(cells.tobytes())
+    return digest.hexdigest()
+
+
+def _spatial_record_sha256(label: str, values: Sequence[str]) -> str:
+    digest = sha256()
+    digest.update(b"SBSI/spatial-neyman-record/v1\0")
+    digest.update(label.encode("utf-8"))
+    digest.update(b"\0")
+    for value in values:
+        encoded = str(value).encode("ascii")
+        digest.update(len(encoded).to_bytes(8, "big"))
+        digest.update(encoded)
+    return digest.hexdigest()
+
+
+def _validate_sha256(value: str, *, label: str) -> str:
+    value = str(value)
+    if len(value) != 64 or any(
+        character not in "0123456789abcdef" for character in value
+    ):
+        raise ValueError(f"{label} must be a lowercase SHA-256")
+    return value
+
+
+def _file_sha256(path: str | Path) -> str:
+    digest = sha256()
+    with Path(path).open("rb") as stream:
+        while block := stream.read(1024 * 1024):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def _spatial_partition_inputs(proposal):
+    active = np.asarray(proposal.active_indices, dtype=np.int64)
+    if active.ndim != 1 or len(active) < SPATIAL_CELL_COUNT:
+        raise ValueError(
+            f"spatial partition needs at least {SPATIAL_CELL_COUNT} active atoms"
+        )
+    if not np.array_equal(active, np.sort(active)) or len(np.unique(active)) != len(active):
+        raise ValueError("active proposal atom ids must be unique and sorted")
+    if len(proposal.coordinates.target_names) != 4:
+        raise ValueError("spatial partition requires exactly four proposal coordinates")
+    coordinates = np.ascontiguousarray(
+        (
+            proposal.coordinates.values[active]
+            - proposal.coordinates.center[None, :]
+        )
+        / proposal.coordinates.scale[None, :],
+        dtype=np.float64,
+    )
+    detected = np.ascontiguousarray(
+        proposal.local_base_weights[active], dtype=np.float64
+    )
+    prior = np.ascontiguousarray(proposal.prior_weights[active], dtype=np.float64)
+    if (
+        coordinates.shape != (len(active), 4)
+        or not np.isfinite(coordinates).all()
+        or not np.isfinite(detected).all()
+        or (detected < 0.0).any()
+        or not np.isfinite(prior).all()
+        or (prior <= 0.0).any()
+    ):
+        raise ValueError("spatial partition inputs must be finite on active support")
+    hashes = {
+        "active_indices_sha256": _spatial_array_sha256(
+            "partition_active_indices", active, dtype=">i8"
+        ),
+        "coordinates_sha256": _spatial_array_sha256(
+            "partition_standardized_coordinates", coordinates, dtype=">f8"
+        ),
+        "coordinate_names_sha256": _spatial_text_sha256(
+            "partition_coordinate_names", tuple(proposal.coordinates.target_names)
+        ),
+        "detected_weights_sha256": _spatial_array_sha256(
+            "partition_detected_prior_weights", detected, dtype=">f8"
+        ),
+        "prior_weights_sha256": _spatial_array_sha256(
+            "partition_prior_weights", prior, dtype=">f8"
+        ),
+    }
+    return active, coordinates, detected, prior, hashes
+
+
+@dataclass(frozen=True)
+class SpatialCellPartition:
+    """Frozen detected-mass-balanced partition of active proposal support."""
+
+    cell_id: np.ndarray
+    counts: np.ndarray
+    detected_mass: np.ndarray
+    prior_mass: np.ndarray
+    active_indices_sha256: str
+    coordinates_sha256: str
+    coordinate_names_sha256: str
+    detected_weights_sha256: str
+    prior_weights_sha256: str
+    assignment_sha256: str
+    counts_sha256: str
+    detected_mass_sha256: str
+    prior_mass_sha256: str
+    partition_sha256: str
+    recipe_sha256: str = SPATIAL_PARTITION_RECIPE_SHA256
+    hash_contract: str = SPATIAL_PARTITION_HASH_CONTRACT
+
+    def __post_init__(self):
+        cells = np.ascontiguousarray(self.cell_id, dtype=np.uint16).copy()
+        counts = np.ascontiguousarray(self.counts, dtype=np.uint64).copy()
+        detected = np.ascontiguousarray(self.detected_mass, dtype=np.float64).copy()
+        prior = np.ascontiguousarray(self.prior_mass, dtype=np.float64).copy()
+        if self.hash_contract != SPATIAL_PARTITION_HASH_CONTRACT:
+            raise ValueError("unsupported spatial-partition hash contract")
+        if self.recipe_sha256 != SPATIAL_PARTITION_RECIPE_SHA256:
+            raise ValueError("spatial partition uses a different frozen recipe")
+        if (
+            cells.ndim != 1
+            or counts.shape != (SPATIAL_CELL_COUNT,)
+            or detected.shape != (SPATIAL_CELL_COUNT,)
+            or prior.shape != (SPATIAL_CELL_COUNT,)
+        ):
+            raise ValueError("spatial partition arrays have invalid shapes")
+        if (
+            len(cells) < SPATIAL_CELL_COUNT
+            or (cells >= SPATIAL_CELL_COUNT).any()
+            or not np.isfinite(detected).all()
+            or (detected < 0.0).any()
+            or not np.isfinite(prior).all()
+            or (prior <= 0.0).any()
+        ):
+            raise ValueError("spatial partition arrays contain invalid values")
+        actual_counts = np.bincount(
+            cells.astype(np.int64), minlength=SPATIAL_CELL_COUNT
+        ).astype(np.uint64)
+        if not np.array_equal(actual_counts, counts) or (counts == 0).any():
+            raise ValueError("spatial partition must cover every active atom exactly once")
+        hashes = {
+            name: _validate_sha256(getattr(self, name), label=name)
+            for name in (
+                "active_indices_sha256",
+                "coordinates_sha256",
+                "coordinate_names_sha256",
+                "detected_weights_sha256",
+                "prior_weights_sha256",
+                "assignment_sha256",
+                "counts_sha256",
+                "detected_mass_sha256",
+                "prior_mass_sha256",
+                "partition_sha256",
+                "recipe_sha256",
+            )
+        }
+        expected_counts_hash = _spatial_array_sha256(
+            "partition_cell_counts", counts, dtype=">u8"
+        )
+        expected_detected_hash = _spatial_array_sha256(
+            "partition_cell_detected_mass", detected, dtype=">f8"
+        )
+        expected_prior_hash = _spatial_array_sha256(
+            "partition_cell_prior_mass", prior, dtype=">f8"
+        )
+        if hashes["counts_sha256"] != expected_counts_hash:
+            raise ValueError("spatial partition count hash does not match its array")
+        if hashes["detected_mass_sha256"] != expected_detected_hash:
+            raise ValueError("spatial partition detected-mass hash does not match its array")
+        if hashes["prior_mass_sha256"] != expected_prior_hash:
+            raise ValueError("spatial partition prior-mass hash does not match its array")
+        expected_partition_hash = _spatial_record_sha256(
+            "spatial_cell_partition",
+            (
+                hashes["recipe_sha256"],
+                hashes["active_indices_sha256"],
+                hashes["coordinates_sha256"],
+                hashes["coordinate_names_sha256"],
+                hashes["detected_weights_sha256"],
+                hashes["prior_weights_sha256"],
+                hashes["assignment_sha256"],
+                hashes["counts_sha256"],
+                hashes["detected_mass_sha256"],
+                hashes["prior_mass_sha256"],
+            ),
+        )
+        if hashes["partition_sha256"] != expected_partition_hash:
+            raise ValueError("spatial partition record hash does not match its contents")
+        for array in (cells, counts, detected, prior):
+            array.setflags(write=False)
+        object.__setattr__(self, "cell_id", cells)
+        object.__setattr__(self, "counts", counts)
+        object.__setattr__(self, "detected_mass", detected)
+        object.__setattr__(self, "prior_mass", prior)
+
+    @property
+    def manifest_sha256(self) -> str:
+        return sha256(self.manifest_bytes).hexdigest()
+
+    @property
+    def partition_manifest_sha256(self) -> str:
+        return self.manifest_sha256
+
+    @property
+    def metadata(self) -> dict:
+        return {
+            "hash_contract": self.hash_contract,
+            "recipe_sha256": self.recipe_sha256,
+            "partition_sha256": self.partition_sha256,
+            "active_indices_sha256": self.active_indices_sha256,
+            "coordinates_sha256": self.coordinates_sha256,
+            "coordinate_names_sha256": self.coordinate_names_sha256,
+            "detected_weights_sha256": self.detected_weights_sha256,
+            "prior_weights_sha256": self.prior_weights_sha256,
+            "assignment_sha256": self.assignment_sha256,
+            "counts_sha256": self.counts_sha256,
+            "detected_mass_sha256": self.detected_mass_sha256,
+            "prior_mass_sha256": self.prior_mass_sha256,
+            "cell_count": SPATIAL_CELL_COUNT,
+            "depth": SPATIAL_PARTITION_DEPTH,
+            "axes": list(SPATIAL_PARTITION_AXES),
+            "n_active": int(len(self.cell_id)),
+            "min_cell_count": int(self.counts.min()),
+            "max_cell_count": int(self.counts.max()),
+        }
+
+    @property
+    def manifest_bytes(self) -> bytes:
+        """Canonical bytes for a separately frozen artifact manifest."""
+
+        return (
+            json.dumps(
+                self.metadata,
+                sort_keys=True,
+                separators=(",", ":"),
+                allow_nan=False,
+            )
+            + "\n"
+        ).encode("utf-8")
+
+    @classmethod
+    def build(cls, proposal, *, n_cells: int = SPATIAL_CELL_COUNT):
+        if int(n_cells) != SPATIAL_CELL_COUNT:
+            raise ValueError("the frozen spatial recipe requires exactly 256 cells")
+        return build_spatial_cell_partition(proposal)
+
+    def verify(self, proposal) -> None:
+        active, _, detected, prior, input_hashes = _spatial_partition_inputs(proposal)
+        if len(active) != len(self.cell_id):
+            raise ValueError("spatial partition active-support length does not match")
+        for name, expected in input_hashes.items():
+            if getattr(self, name) != expected:
+                raise ValueError(f"spatial partition {name} does not match the proposal")
+        assignment_hash = _spatial_assignment_sha256(active, self.cell_id)
+        if self.assignment_sha256 != assignment_hash:
+            raise ValueError("spatial partition assignment does not match active atom ids")
+        counts = np.bincount(
+            self.cell_id.astype(np.int64), minlength=SPATIAL_CELL_COUNT
+        ).astype(np.uint64)
+        detected_mass = np.bincount(
+            self.cell_id.astype(np.int64),
+            weights=detected,
+            minlength=SPATIAL_CELL_COUNT,
+        )
+        prior_mass = np.bincount(
+            self.cell_id.astype(np.int64),
+            weights=prior,
+            minlength=SPATIAL_CELL_COUNT,
+        )
+        checks = (
+            (
+                self.counts_sha256,
+                _spatial_array_sha256("partition_cell_counts", counts, dtype=">u8"),
+                "counts",
+            ),
+            (
+                self.detected_mass_sha256,
+                _spatial_array_sha256(
+                    "partition_cell_detected_mass", detected_mass, dtype=">f8"
+                ),
+                "detected mass",
+            ),
+            (
+                self.prior_mass_sha256,
+                _spatial_array_sha256(
+                    "partition_cell_prior_mass", prior_mass, dtype=">f8"
+                ),
+                "prior mass",
+            ),
+        )
+        for actual, expected, label in checks:
+            if actual != expected:
+                raise ValueError(f"spatial partition {label} does not match the proposal")
+
+    def save(self, path: str | Path, metadata: Optional[Mapping] = None) -> dict:
+        if metadata:
+            raise ValueError("the frozen partition artifact does not accept extra metadata")
+        target = Path(path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        arrays = {
+            "format_version": np.asarray(1, dtype=np.uint16),
+            "hash_contract": np.asarray(self.hash_contract),
+            "recipe_sha256": np.asarray(self.recipe_sha256),
+            "axes": np.asarray(SPATIAL_PARTITION_AXES, dtype=np.uint8),
+            "cell_id": self.cell_id,
+            "counts": self.counts,
+            "detected_mass": self.detected_mass,
+            "prior_mass": self.prior_mass,
+            "active_indices_sha256": np.asarray(self.active_indices_sha256),
+            "coordinates_sha256": np.asarray(self.coordinates_sha256),
+            "coordinate_names_sha256": np.asarray(self.coordinate_names_sha256),
+            "detected_weights_sha256": np.asarray(self.detected_weights_sha256),
+            "prior_weights_sha256": np.asarray(self.prior_weights_sha256),
+            "assignment_sha256": np.asarray(self.assignment_sha256),
+            "counts_sha256": np.asarray(self.counts_sha256),
+            "detected_mass_sha256": np.asarray(self.detected_mass_sha256),
+            "prior_mass_sha256": np.asarray(self.prior_mass_sha256),
+            "partition_sha256": np.asarray(self.partition_sha256),
+        }
+        with target.open("wb") as stream:
+            np.savez_compressed(stream, **arrays)
+        return {
+            "partition_sha256": self.partition_sha256,
+            "partition_cache_sha256": _file_sha256(target),
+            "partition_manifest_sha256": self.partition_manifest_sha256,
+        }
+
+    def save_artifact(self, directory: str | Path) -> dict:
+        """Write deterministic ``partition.npz`` and canonical ``manifest.json``."""
+
+        root = Path(directory)
+        root.mkdir(parents=True, exist_ok=True)
+        cache = root / "partition.npz"
+        manifest = root / "manifest.json"
+        identities = self.save(cache)
+        manifest.write_bytes(self.manifest_bytes)
+        if _file_sha256(manifest) != identities["partition_manifest_sha256"]:
+            raise RuntimeError("spatial partition manifest write was not byte exact")
+        return identities
+
+    @classmethod
+    def load(cls, path: str | Path, proposal=None) -> "SpatialCellPartition":
+        if proposal is None:
+            raise ValueError("loading a spatial partition requires its proposal")
+        expected_keys = {
+            "format_version",
+            "hash_contract",
+            "recipe_sha256",
+            "axes",
+            "cell_id",
+            "counts",
+            "detected_mass",
+            "prior_mass",
+            "active_indices_sha256",
+            "coordinates_sha256",
+            "coordinate_names_sha256",
+            "detected_weights_sha256",
+            "prior_weights_sha256",
+            "assignment_sha256",
+            "counts_sha256",
+            "detected_mass_sha256",
+            "prior_mass_sha256",
+            "partition_sha256",
+        }
+        with np.load(Path(path), allow_pickle=False) as arrays:
+            if set(arrays.files) != expected_keys:
+                raise ValueError("spatial partition artifact has an unexpected schema")
+            if np.asarray(arrays["format_version"]).shape != () or int(
+                arrays["format_version"]
+            ) != 1:
+                raise ValueError("unsupported spatial partition artifact version")
+            if not np.array_equal(
+                arrays["axes"], np.asarray(SPATIAL_PARTITION_AXES, dtype=np.uint8)
+            ):
+                raise ValueError("spatial partition artifact has different split axes")
+            if arrays["cell_id"].dtype != np.dtype(np.uint16):
+                raise ValueError("spatial partition cell ids must be compact uint16")
+            if arrays["counts"].dtype != np.dtype(np.uint64):
+                raise ValueError("spatial partition counts must be uint64")
+            if arrays["detected_mass"].dtype != np.dtype(np.float64) or arrays[
+                "prior_mass"
+            ].dtype != np.dtype(np.float64):
+                raise ValueError("spatial partition masses must be float64")
+            def scalar(name):
+                return str(np.asarray(arrays[name]).item())
+
+            partition = cls(
+                cell_id=arrays["cell_id"],
+                counts=arrays["counts"],
+                detected_mass=arrays["detected_mass"],
+                prior_mass=arrays["prior_mass"],
+                active_indices_sha256=scalar("active_indices_sha256"),
+                coordinates_sha256=scalar("coordinates_sha256"),
+                coordinate_names_sha256=scalar("coordinate_names_sha256"),
+                detected_weights_sha256=scalar("detected_weights_sha256"),
+                prior_weights_sha256=scalar("prior_weights_sha256"),
+                assignment_sha256=scalar("assignment_sha256"),
+                counts_sha256=scalar("counts_sha256"),
+                detected_mass_sha256=scalar("detected_mass_sha256"),
+                prior_mass_sha256=scalar("prior_mass_sha256"),
+                partition_sha256=scalar("partition_sha256"),
+                recipe_sha256=scalar("recipe_sha256"),
+                hash_contract=scalar("hash_contract"),
+            )
+        partition.verify(proposal)
+        return partition
+
+    @classmethod
+    def load_artifact(
+        cls, directory: str | Path, proposal=None
+    ) -> "SpatialCellPartition":
+        root = Path(directory)
+        partition = cls.load(root / "partition.npz", proposal=proposal)
+        manifest = root / "manifest.json"
+        if not manifest.is_file() or manifest.read_bytes() != partition.manifest_bytes:
+            raise ValueError("spatial partition manifest does not match the cache")
+        return partition
+
+
+def build_spatial_cell_partition(proposal) -> SpatialCellPartition:
+    """Build the frozen depth-eight outcome-blind spatial partition."""
+
+    cached = getattr(proposal, "_spatial_cell_partition", None)
+    if cached is not None:
+        return cached
+    active, coordinates, detected, prior, input_hashes = _spatial_partition_inputs(
+        proposal
+    )
+    nodes = [np.arange(len(active), dtype=np.int64)]
+    for level, axis in enumerate(SPATIAL_PARTITION_AXES):
+        next_nodes = []
+        descendants_per_child = 1 << (SPATIAL_PARTITION_DEPTH - level - 1)
+        for positions in nodes:
+            count = len(positions)
+            lower = max(
+                descendants_per_child,
+                int(np.ceil(0.45 * count)),
+            )
+            upper = min(
+                count - descendants_per_child,
+                int(np.floor(0.55 * count)),
+            )
+            if lower > upper:
+                raise ValueError(
+                    "spatial count guard cannot preserve nonempty descendant cells"
+                )
+            order = np.lexsort(
+                (active[positions], coordinates[positions, int(axis)])
+            )
+            ordered = positions[order]
+            node_weights = detected[ordered]
+            total = float(node_weights.sum(dtype=np.float64))
+            if total == 0.0:
+                cut = min(max(count // 2, lower), upper)
+            else:
+                candidates = np.arange(lower, upper + 1, dtype=np.int64)
+                cumulative = np.cumsum(node_weights, dtype=np.float64)
+                objective = np.abs(cumulative[candidates - 1] - 0.5 * total)
+                cut = int(candidates[int(np.argmin(objective))])
+            next_nodes.extend((ordered[:cut], ordered[cut:]))
+        nodes = next_nodes
+    if len(nodes) != SPATIAL_CELL_COUNT:
+        raise RuntimeError("spatial partition did not produce 256 leaves")
+    cell_id = np.empty(len(active), dtype=np.uint16)
+    for leaf, positions in enumerate(nodes):
+        if not len(positions):
+            raise RuntimeError("spatial partition produced an empty leaf")
+        cell_id[positions] = np.uint16(leaf)
+    counts = np.bincount(
+        cell_id.astype(np.int64), minlength=SPATIAL_CELL_COUNT
+    ).astype(np.uint64)
+    detected_mass = np.bincount(
+        cell_id.astype(np.int64), weights=detected, minlength=SPATIAL_CELL_COUNT
+    )
+    prior_mass = np.bincount(
+        cell_id.astype(np.int64), weights=prior, minlength=SPATIAL_CELL_COUNT
+    )
+    assignment_hash = _spatial_assignment_sha256(active, cell_id)
+    counts_hash = _spatial_array_sha256(
+        "partition_cell_counts", counts, dtype=">u8"
+    )
+    detected_hash = _spatial_array_sha256(
+        "partition_cell_detected_mass", detected_mass, dtype=">f8"
+    )
+    prior_hash = _spatial_array_sha256(
+        "partition_cell_prior_mass", prior_mass, dtype=">f8"
+    )
+    partition_hash = _spatial_record_sha256(
+        "spatial_cell_partition",
+        (
+            SPATIAL_PARTITION_RECIPE_SHA256,
+            input_hashes["active_indices_sha256"],
+            input_hashes["coordinates_sha256"],
+            input_hashes["coordinate_names_sha256"],
+            input_hashes["detected_weights_sha256"],
+            input_hashes["prior_weights_sha256"],
+            assignment_hash,
+            counts_hash,
+            detected_hash,
+            prior_hash,
+        ),
+    )
+    partition = SpatialCellPartition(
+        cell_id=cell_id,
+        counts=counts,
+        detected_mass=detected_mass,
+        prior_mass=prior_mass,
+        assignment_sha256=assignment_hash,
+        counts_sha256=counts_hash,
+        detected_mass_sha256=detected_hash,
+        prior_mass_sha256=prior_hash,
+        partition_sha256=partition_hash,
+        **input_hashes,
+    )
+    proposal._spatial_cell_partition = partition
+    return partition
+
+
+@dataclass(frozen=True)
+class SpatialCycleAllocation:
+    """Exact box-constrained whole-cycle allocation for every object."""
+
+    cycles: np.ndarray
+    all_zero_fallback: np.ndarray
+    pilot_variance_sha256: str
+    cycles_sha256: str
+    allocation_sha256: str
+
+    def __post_init__(self):
+        cycles = np.ascontiguousarray(self.cycles, dtype=np.uint8).copy()
+        fallback = np.ascontiguousarray(
+            self.all_zero_fallback, dtype=bool
+        ).copy()
+        if cycles.ndim != 2 or cycles.shape[1] != SPATIAL_CELL_COUNT:
+            raise ValueError("spatial cycle allocation must have 256 cells per row")
+        if fallback.shape != (len(cycles),):
+            raise ValueError("spatial allocation fallback flags must align with rows")
+        if (
+            (cycles < SPATIAL_MIN_CYCLES).any()
+            or (cycles > SPATIAL_PRODUCTION_CYCLES).any()
+            or not np.all(cycles.sum(axis=1, dtype=np.uint64) == SPATIAL_TOTAL_CYCLES)
+        ):
+            raise ValueError("spatial cycle allocation violates its box or total")
+        if fallback.any() and not np.all(cycles[fallback] == 8):
+            raise ValueError("all-zero spatial fallback must use eight cycles per cell")
+        pilot_hash = _validate_sha256(
+            self.pilot_variance_sha256, label="pilot_variance_sha256"
+        )
+        expected_cycles_hash = _spatial_array_sha256(
+            "spatial_neyman_cycles", cycles, dtype=">u1"
+        )
+        if self.cycles_sha256 != expected_cycles_hash:
+            raise ValueError("spatial allocation cycle hash does not match")
+        expected_allocation_hash = _spatial_record_sha256(
+            "spatial_neyman_allocation",
+            (
+                pilot_hash,
+                expected_cycles_hash,
+                _spatial_array_sha256(
+                    "spatial_neyman_zero_fallback", fallback, dtype=">u1"
+                ),
+            ),
+        )
+        if self.allocation_sha256 != expected_allocation_hash:
+            raise ValueError("spatial allocation record hash does not match")
+        cycles.setflags(write=False)
+        fallback.setflags(write=False)
+        object.__setattr__(self, "cycles", cycles)
+        object.__setattr__(self, "all_zero_fallback", fallback)
+
+    @property
+    def min_cycles(self) -> np.ndarray:
+        result = self.cycles.min(axis=1)
+        result.setflags(write=False)
+        return result
+
+    @property
+    def max_cycles(self) -> np.ndarray:
+        result = self.cycles.max(axis=1)
+        result.setflags(write=False)
+        return result
+
+    @property
+    def total_cycles(self) -> np.ndarray:
+        result = self.cycles.sum(axis=1, dtype=np.uint64)
+        result.setflags(write=False)
+        return result
+
+
+def allocate_spatial_neyman_cycles(
+    pilot_variance: np.ndarray,
+) -> SpatialCycleAllocation:
+    """Allocate 2,048 cycles by exact greedy marginal variance reduction."""
+
+    variance = np.asarray(pilot_variance, dtype=np.float64)
+    if variance.ndim == 1:
+        variance = variance[None, :]
+    if (
+        variance.ndim != 2
+        or variance.shape[1] != SPATIAL_CELL_COUNT
+        or not np.isfinite(variance).all()
+        or (variance < 0.0).any()
+    ):
+        raise ValueError("pilot variance must be a finite non-negative N x 256 array")
+    cycles = np.full(
+        variance.shape, SPATIAL_MIN_CYCLES, dtype=np.uint8
+    )
+    fallback = np.all(variance == 0.0, axis=1)
+    cycles[fallback] = 8
+    additions = SPATIAL_TOTAL_CYCLES - SPATIAL_MIN_CYCLES * SPATIAL_CELL_COUNT
+    for row in np.flatnonzero(~fallback):
+        heap = [
+            (
+                -float(variance[row, cell])
+                / (SPATIAL_MIN_CYCLES * (SPATIAL_MIN_CYCLES + 1)),
+                cell,
+            )
+            for cell in range(SPATIAL_CELL_COUNT)
+        ]
+        heapq.heapify(heap)
+        for _ in range(additions):
+            _, cell = heapq.heappop(heap)
+            value = int(cycles[row, cell]) + 1
+            cycles[row, cell] = value
+            if value < SPATIAL_PRODUCTION_CYCLES:
+                gain = float(variance[row, cell]) / (value * (value + 1))
+                heapq.heappush(heap, (-gain, cell))
+    pilot_hash = _spatial_array_sha256(
+        "spatial_pilot_variance", variance, dtype=">f8"
+    )
+    cycles_hash = _spatial_array_sha256(
+        "spatial_neyman_cycles", cycles, dtype=">u1"
+    )
+    allocation_hash = _spatial_record_sha256(
+        "spatial_neyman_allocation",
+        (
+            pilot_hash,
+            cycles_hash,
+            _spatial_array_sha256(
+                "spatial_neyman_zero_fallback", fallback, dtype=">u1"
+            ),
+        ),
+    )
+    return SpatialCycleAllocation(
+        cycles=cycles,
+        all_zero_fallback=fallback,
+        pilot_variance_sha256=pilot_hash,
+        cycles_sha256=cycles_hash,
+        allocation_sha256=allocation_hash,
+    )
+
+
+@dataclass(frozen=True)
+class SpatialMISReservoir:
+    """Isolated fixed-width cell-stratified deterministic-MIS reservoir."""
+
+    indices: np.ndarray
+    probability: np.ndarray
+    cell_id: np.ndarray
+    component_id: np.ndarray
+    component_log_normalizer: np.ndarray
+    object_ids: np.ndarray
+    seed: int
+    domain: str
+    cycles_per_cell: int
+    atom_chunk: int
+    object_chunk: int
+    partition_sha256: str
+    partition_assignment_sha256: str
+    partition_counts_sha256: str
+    partition_detected_mass_sha256: str
+    partition_prior_mass_sha256: str
+    partition_recipe_sha256: str
+    object_excluded_candidate_indices_sha256: tuple[str, ...]
+    indices_sha256: str
+    probability_sha256: str
+    normalizer_sha256: str
+    object_ids_sha256: str
+    object_indices_sha256: tuple[str, ...]
+    object_probability_sha256: tuple[str, ...]
+    record_sha256: str
+    component_recipe: TailProposalRecipe = TAIL_PROPOSAL_RECIPE
+    rng_contract: str = SPATIAL_RNG_CONTRACT
+
+    def __post_init__(self):
+        indices = np.ascontiguousarray(self.indices, dtype=np.int64).copy()
+        probability = np.ascontiguousarray(
+            self.probability, dtype=np.float64
+        ).copy()
+        cell_id = np.ascontiguousarray(self.cell_id, dtype=np.uint16).copy()
+        component_id = np.ascontiguousarray(
+            self.component_id, dtype=np.uint8
+        ).copy()
+        normalizer = np.ascontiguousarray(
+            self.component_log_normalizer, dtype=np.float64
+        ).copy()
+        object_ids = np.ascontiguousarray(self.object_ids, dtype=np.int64).copy()
+        cycles = int(self.cycles_per_cell)
+        atom_chunk = int(self.atom_chunk)
+        object_chunk = int(self.object_chunk)
+        domain = str(self.domain)
+        if not isinstance(self.component_recipe, TailProposalRecipe):
+            raise TypeError("spatial reservoir component recipe is invalid")
+        if self.component_recipe != TAIL_PROPOSAL_RECIPE:
+            raise ValueError("spatial reservoir requires the frozen DM3 recipe")
+        if self.rng_contract != SPATIAL_RNG_CONTRACT:
+            raise ValueError("unsupported spatial-reservoir RNG contract")
+        if atom_chunk <= 0 or object_chunk <= 0:
+            raise ValueError("spatial reservoir chunk sizes must be positive")
+        if domain not in {"pilot", "production"}:
+            raise ValueError("spatial reservoir domain must be pilot or production")
+        expected_cycles = (
+            SPATIAL_PILOT_CYCLES
+            if domain == "pilot"
+            else SPATIAL_PRODUCTION_CYCLES
+        )
+        if cycles != expected_cycles:
+            raise ValueError("spatial reservoir width does not match its RNG domain")
+        per_cell = cycles * self.component_recipe.cycle_length
+        expected_draws = SPATIAL_CELL_COUNT * per_cell
+        if (
+            indices.ndim != 2
+            or probability.shape != indices.shape
+            or indices.shape[1] != expected_draws
+            or cell_id.shape != (expected_draws,)
+            or component_id.shape != (expected_draws,)
+            or normalizer.shape
+            != (
+                len(indices),
+                SPATIAL_CELL_COUNT,
+                len(self.component_recipe.component_names),
+            )
+            or object_ids.shape != (len(indices),)
+        ):
+            raise ValueError("spatial reservoir arrays have invalid shapes")
+        expected_cells = np.repeat(
+            np.arange(SPATIAL_CELL_COUNT, dtype=np.uint16), per_cell
+        )
+        expected_component = np.tile(
+            np.tile(
+                np.asarray(
+                    self.component_recipe.component_cycle, dtype=np.uint8
+                ),
+                cycles,
+            ),
+            SPATIAL_CELL_COUNT,
+        )
+        if not np.array_equal(cell_id, expected_cells):
+            raise ValueError("spatial reservoir is not stored in canonical cell order")
+        if not np.array_equal(component_id, expected_component):
+            raise ValueError("spatial reservoir source schedule is not whole-cycle DM3")
+        if (
+            not len(indices)
+            or (indices < 0).any()
+            or not np.isfinite(probability).all()
+            or (probability <= 0.0).any()
+            or np.isnan(normalizer).any()
+            or np.isposinf(normalizer).any()
+            or not np.isfinite(normalizer[:, :, -1]).all()
+            or (object_ids < 0).any()
+            or len(np.unique(object_ids)) != len(object_ids)
+        ):
+            raise ValueError("spatial reservoir contains invalid values")
+        exclusion_hashes = tuple(self.object_excluded_candidate_indices_sha256)
+        object_index_hashes = tuple(self.object_indices_sha256)
+        object_probability_hashes = tuple(self.object_probability_sha256)
+        if not (
+            len(exclusion_hashes)
+            == len(object_index_hashes)
+            == len(object_probability_hashes)
+            == len(indices)
+        ):
+            raise ValueError("spatial reservoir object provenance must align")
+        for name in (
+            "partition_sha256",
+            "partition_assignment_sha256",
+            "partition_counts_sha256",
+            "partition_detected_mass_sha256",
+            "partition_prior_mass_sha256",
+            "partition_recipe_sha256",
+            "indices_sha256",
+            "probability_sha256",
+            "normalizer_sha256",
+            "object_ids_sha256",
+            "record_sha256",
+        ):
+            _validate_sha256(getattr(self, name), label=name)
+        for value in (
+            *exclusion_hashes,
+            *object_index_hashes,
+            *object_probability_hashes,
+        ):
+            _validate_sha256(value, label="spatial reservoir object hash")
+        expected_indices_hash = _spatial_array_sha256(
+            f"spatial_{domain}_indices", indices, dtype=">i8"
+        )
+        expected_probability_hash = _spatial_array_sha256(
+            f"spatial_{domain}_probability", probability, dtype=">f8"
+        )
+        expected_normalizer_hash = _spatial_array_sha256(
+            "spatial_component_log_normalizer", normalizer, dtype=">f8"
+        )
+        expected_object_ids_hash = _spatial_array_sha256(
+            "spatial_object_ids", object_ids, dtype=">i8"
+        )
+        if (
+            self.indices_sha256 != expected_indices_hash
+            or self.probability_sha256 != expected_probability_hash
+            or self.normalizer_sha256 != expected_normalizer_hash
+            or self.object_ids_sha256 != expected_object_ids_hash
+        ):
+            raise ValueError("spatial reservoir call hash does not match its array")
+        if object_index_hashes != _object_array_manifest_sha256(
+            f"spatial_{domain}_object_indices", indices, dtype=">i8"
+        ):
+            raise ValueError("spatial reservoir object-index hashes do not match")
+        if object_probability_hashes != _object_array_manifest_sha256(
+            f"spatial_{domain}_object_probability", probability, dtype=">f8"
+        ):
+            raise ValueError("spatial reservoir object-probability hashes do not match")
+        expected_record_hash = _spatial_record_sha256(
+            f"spatial_{domain}_reservoir",
+            (
+                self.partition_sha256,
+                self.partition_assignment_sha256,
+                self.partition_counts_sha256,
+                self.partition_detected_mass_sha256,
+                self.partition_prior_mass_sha256,
+                self.partition_recipe_sha256,
+                expected_indices_hash,
+                expected_probability_hash,
+                expected_normalizer_hash,
+                expected_object_ids_hash,
+                _spatial_text_sha256("spatial_seed", int(self.seed)),
+                _spatial_text_sha256("spatial_domain", domain),
+                _spatial_text_sha256("spatial_atom_chunk", atom_chunk),
+                _spatial_text_sha256("spatial_object_chunk", object_chunk),
+                _spatial_record_sha256("spatial_exclusions", exclusion_hashes),
+            ),
+        )
+        if self.record_sha256 != expected_record_hash:
+            raise ValueError("spatial reservoir record hash does not match")
+        for array in (
+            indices,
+            probability,
+            cell_id,
+            component_id,
+            normalizer,
+            object_ids,
+        ):
+            array.setflags(write=False)
+        object.__setattr__(self, "indices", indices)
+        object.__setattr__(self, "probability", probability)
+        object.__setattr__(self, "cell_id", cell_id)
+        object.__setattr__(self, "component_id", component_id)
+        object.__setattr__(self, "component_log_normalizer", normalizer)
+        object.__setattr__(self, "object_ids", object_ids)
+        object.__setattr__(self, "seed", int(self.seed))
+        object.__setattr__(self, "domain", domain)
+        object.__setattr__(self, "cycles_per_cell", cycles)
+        object.__setattr__(self, "atom_chunk", atom_chunk)
+        object.__setattr__(self, "object_chunk", object_chunk)
+        object.__setattr__(
+            self, "object_excluded_candidate_indices_sha256", exclusion_hashes
+        )
+        object.__setattr__(self, "object_indices_sha256", object_index_hashes)
+        object.__setattr__(
+            self, "object_probability_sha256", object_probability_hashes
+        )
+
+    @property
+    def q_h(self) -> np.ndarray:
+        return self.probability
+
+    @property
+    def source_id(self) -> np.ndarray:
+        return self.component_id
+
+    @property
+    def proxy_fallback(self) -> np.ndarray:
+        result = np.isneginf(self.component_log_normalizer[:, :, :-1])
+        result.setflags(write=False)
+        return result
+
+    @property
+    def cell_source_counts(self) -> np.ndarray:
+        counts = np.tile(
+            np.asarray(self.component_recipe.component_counts, dtype=np.uint16)
+            * self.cycles_per_cell,
+            (SPATIAL_CELL_COUNT, 1),
+        )
+        counts.setflags(write=False)
+        return counts
+
+
+@dataclass(frozen=True)
+class SpatialMISDraw:
+    """Packed object-specific whole-cycle prefixes of a production reservoir."""
+
+    indices: np.ndarray
+    probability: np.ndarray
+    cell_id: np.ndarray
+    component_id: np.ndarray
+    cycles: np.ndarray
+    object_ids: np.ndarray
+    partition_sha256: str
+    reservoir_record_sha256: str
+    allocation_sha256: str
+    indices_sha256: str
+    probability_sha256: str
+    record_sha256: str
+    component_recipe: TailProposalRecipe = TAIL_PROPOSAL_RECIPE
+
+    def __post_init__(self):
+        indices = np.ascontiguousarray(self.indices, dtype=np.int64).copy()
+        probability = np.ascontiguousarray(
+            self.probability, dtype=np.float64
+        ).copy()
+        cells = np.ascontiguousarray(self.cell_id, dtype=np.uint16).copy()
+        components = np.ascontiguousarray(
+            self.component_id, dtype=np.uint8
+        ).copy()
+        cycles = np.ascontiguousarray(self.cycles, dtype=np.uint8).copy()
+        object_ids = np.ascontiguousarray(self.object_ids, dtype=np.int64).copy()
+        if (
+            indices.ndim != 2
+            or indices.shape[1]
+            != SPATIAL_TOTAL_CYCLES * self.component_recipe.cycle_length
+            or probability.shape != indices.shape
+            or cells.shape != indices.shape
+            or components.shape != indices.shape
+            or cycles.shape != (len(indices), SPATIAL_CELL_COUNT)
+            or object_ids.shape != (len(indices),)
+        ):
+            raise ValueError("packed spatial draw arrays have invalid shapes")
+        if (
+            not np.isfinite(probability).all()
+            or (probability <= 0.0).any()
+            or (cycles < SPATIAL_MIN_CYCLES).any()
+            or (cycles > SPATIAL_PRODUCTION_CYCLES).any()
+            or not np.all(cycles.sum(axis=1) == SPATIAL_TOTAL_CYCLES)
+        ):
+            raise ValueError("packed spatial draw contains invalid values")
+        for row in range(len(indices)):
+            offset = 0
+            for cell, n_cycles in enumerate(cycles[row]):
+                width = int(n_cycles) * self.component_recipe.cycle_length
+                if not np.all(cells[row, offset : offset + width] == cell):
+                    raise ValueError("packed spatial draw cell order is invalid")
+                expected = np.tile(
+                    np.asarray(
+                        self.component_recipe.component_cycle, dtype=np.uint8
+                    ),
+                    int(n_cycles),
+                )
+                if not np.array_equal(
+                    components[row, offset : offset + width], expected
+                ):
+                    raise ValueError("packed spatial draw source schedule is invalid")
+                offset += width
+        for name in (
+            "partition_sha256",
+            "reservoir_record_sha256",
+            "allocation_sha256",
+            "indices_sha256",
+            "probability_sha256",
+            "record_sha256",
+        ):
+            _validate_sha256(getattr(self, name), label=name)
+        expected_indices_hash = _spatial_array_sha256(
+            "packed_spatial_indices", indices, dtype=">i8"
+        )
+        expected_probability_hash = _spatial_array_sha256(
+            "packed_spatial_probability", probability, dtype=">f8"
+        )
+        if (
+            self.indices_sha256 != expected_indices_hash
+            or self.probability_sha256 != expected_probability_hash
+        ):
+            raise ValueError("packed spatial draw hash does not match its array")
+        expected_record_hash = _spatial_record_sha256(
+            "packed_spatial_draw",
+            (
+                self.partition_sha256,
+                self.reservoir_record_sha256,
+                self.allocation_sha256,
+                expected_indices_hash,
+                expected_probability_hash,
+                _spatial_array_sha256("packed_spatial_cells", cells, dtype=">u2"),
+                _spatial_array_sha256(
+                    "packed_spatial_components", components, dtype=">u1"
+                ),
+                _spatial_array_sha256("packed_spatial_cycles", cycles, dtype=">u1"),
+                _spatial_array_sha256(
+                    "packed_spatial_object_ids", object_ids, dtype=">i8"
+                ),
+            ),
+        )
+        if self.record_sha256 != expected_record_hash:
+            raise ValueError("packed spatial draw record hash does not match")
+        for array in (indices, probability, cells, components, cycles, object_ids):
+            array.setflags(write=False)
+        object.__setattr__(self, "indices", indices)
+        object.__setattr__(self, "probability", probability)
+        object.__setattr__(self, "cell_id", cells)
+        object.__setattr__(self, "component_id", components)
+        object.__setattr__(self, "cycles", cycles)
+        object.__setattr__(self, "object_ids", object_ids)
+
+    @property
+    def q_h(self) -> np.ndarray:
+        return self.probability
+
+    @property
+    def source_id(self) -> np.ndarray:
+        return self.component_id
+
+
+@dataclass(frozen=True)
+class SpatialMISReduction:
+    """Sum-of-cell-means estimate and fixed-source variance decomposition."""
+
+    estimate: np.ndarray
+    variance: np.ndarray
+    standard_error: np.ndarray
+    cell_estimate: np.ndarray
+    cell_variance: np.ndarray
+    cell_source_sample_variance: np.ndarray
+
+    def __post_init__(self):
+        estimate = np.ascontiguousarray(self.estimate, dtype=np.float64).copy()
+        variance = np.ascontiguousarray(self.variance, dtype=np.float64).copy()
+        standard_error = np.ascontiguousarray(
+            self.standard_error, dtype=np.float64
+        ).copy()
+        cell_estimate = np.ascontiguousarray(
+            self.cell_estimate, dtype=np.float64
+        ).copy()
+        cell_variance = np.ascontiguousarray(
+            self.cell_variance, dtype=np.float64
+        ).copy()
+        source_variance = np.ascontiguousarray(
+            self.cell_source_sample_variance, dtype=np.float64
+        ).copy()
+        n_objects = len(estimate)
+        if (
+            estimate.ndim != 1
+            or variance.shape != (n_objects,)
+            or standard_error.shape != (n_objects,)
+            or cell_estimate.shape != (n_objects, SPATIAL_CELL_COUNT)
+            or cell_variance.shape != cell_estimate.shape
+            or source_variance.shape
+            != (n_objects, SPATIAL_CELL_COUNT, len(TAIL_PROPOSAL_RECIPE.component_names))
+            or not np.isfinite(estimate).all()
+            or not np.isfinite(variance).all()
+            or (variance < 0.0).any()
+            or not np.isfinite(standard_error).all()
+            or not np.isfinite(cell_estimate).all()
+            or not np.isfinite(cell_variance).all()
+            or (cell_variance < 0.0).any()
+            or not np.isfinite(source_variance).all()
+            or (source_variance < 0.0).any()
+        ):
+            raise ValueError("spatial reduction arrays are invalid")
+        if not np.allclose(
+            standard_error,
+            np.sqrt(variance),
+            rtol=0.0,
+            atol=16.0 * np.finfo(np.float64).eps,
+        ):
+            raise ValueError("spatial standard error does not match its variance")
+        for array in (
+            estimate,
+            variance,
+            standard_error,
+            cell_estimate,
+            cell_variance,
+            source_variance,
+        ):
+            array.setflags(write=False)
+        object.__setattr__(self, "estimate", estimate)
+        object.__setattr__(self, "variance", variance)
+        object.__setattr__(self, "standard_error", standard_error)
+        object.__setattr__(self, "cell_estimate", cell_estimate)
+        object.__setattr__(self, "cell_variance", cell_variance)
+        object.__setattr__(
+            self, "cell_source_sample_variance", source_variance
+        )
+
+    @property
+    def mass(self) -> np.ndarray:
+        return self.estimate
 
 
 @dataclass(frozen=True)
@@ -1182,6 +2352,7 @@ class DefensiveLocalProposal:
         self._uncertainty_mips_indices = None
         self._torch_standardized = {}
         self._tilted_proxies = {}
+        self._spatial_cell_partition = None
         self.global_cdf = np.cumsum(self.prior_weights)
         self.global_cdf[-1] = 1.0
         # A reusable atom-id -> local-candidate-position table avoids sorting
@@ -2399,6 +3570,50 @@ class DefensiveLocalProposal:
             self._tilted_proxies[key] = proxy
         return proxy
 
+    def spatial_cell_partition(self) -> SpatialCellPartition:
+        """Return the cached frozen 256-cell partition, building it if needed."""
+
+        return build_spatial_cell_partition(self)
+
+    def load_spatial_cell_partition(
+        self, path: str | Path
+    ) -> SpatialCellPartition:
+        """Strictly verify and cache a frozen partition artifact."""
+
+        partition = SpatialCellPartition.load(path, proposal=self)
+        self._spatial_cell_partition = partition
+        return partition
+
+    def draw_spatial_mis_reservoirs(
+        self,
+        candidates: ProposalCandidates,
+        observed,
+        *,
+        pilot_seed: int = SPATIAL_PILOT_SEED,
+        production_seed: int = SPATIAL_PRODUCTION_SEED,
+        partition: Optional[SpatialCellPartition] = None,
+        object_ids: Optional[np.ndarray] = None,
+        device: Optional[str | torch.device] = None,
+        atom_chunk: int = TAIL_PROPOSAL_ATOM_CHUNK,
+        object_chunk: int = TAIL_PROPOSAL_OBJECT_CHUNK,
+        recipe: TailProposalRecipe = TAIL_PROPOSAL_RECIPE,
+    ) -> tuple["SpatialMISReservoir", "SpatialMISReservoir"]:
+        """Map independent pilot and production streams through shared cell laws."""
+
+        return draw_spatial_mis_reservoirs(
+            self,
+            candidates,
+            observed,
+            pilot_seed=pilot_seed,
+            production_seed=production_seed,
+            partition=partition,
+            object_ids=object_ids,
+            device=device,
+            atom_chunk=atom_chunk,
+            object_chunk=object_chunk,
+            recipe=recipe,
+        )
+
     def draw(
         self,
         observed,
@@ -3484,6 +4699,619 @@ class WholeCatalogueProxy:
         )
 
 
+def _spatial_rng(
+    seed: int, object_id: int, cell_id: int, domain: str
+) -> np.random.Generator:
+    domain_code = {"pilot": 0x50494C54, "production": 0x50524F44}[domain]
+    seed = int(seed)
+    object_id = int(object_id)
+    if not 0 <= seed <= np.iinfo(np.uint64).max:
+        raise ValueError("spatial proposal seeds must fit uint64")
+    if not 0 <= object_id <= np.iinfo(np.uint64).max:
+        raise ValueError("spatial proposal object ids must fit uint64")
+    words = [
+        seed & 0xFFFFFFFF,
+        seed >> 32,
+        object_id & 0xFFFFFFFF,
+        object_id >> 32,
+        int(cell_id),
+        domain_code,
+    ]
+    return np.random.default_rng(np.random.SeedSequence(words))
+
+
+def _make_spatial_reservoir(
+    *,
+    indices: np.ndarray,
+    probability: np.ndarray,
+    cell_id: np.ndarray,
+    component_id: np.ndarray,
+    component_log_normalizer: np.ndarray,
+    object_ids: np.ndarray,
+    seed: int,
+    domain: str,
+    cycles_per_cell: int,
+    atom_chunk: int,
+    object_chunk: int,
+    partition: SpatialCellPartition,
+    exclusions: tuple[str, ...],
+    recipe: TailProposalRecipe,
+) -> SpatialMISReservoir:
+    indices_hash = _spatial_array_sha256(
+        f"spatial_{domain}_indices", indices, dtype=">i8"
+    )
+    probability_hash = _spatial_array_sha256(
+        f"spatial_{domain}_probability", probability, dtype=">f8"
+    )
+    normalizer_hash = _spatial_array_sha256(
+        "spatial_component_log_normalizer",
+        component_log_normalizer,
+        dtype=">f8",
+    )
+    object_ids_hash = _spatial_array_sha256(
+        "spatial_object_ids", object_ids, dtype=">i8"
+    )
+    record_hash = _spatial_record_sha256(
+        f"spatial_{domain}_reservoir",
+        (
+            partition.partition_sha256,
+            partition.assignment_sha256,
+            partition.counts_sha256,
+            partition.detected_mass_sha256,
+            partition.prior_mass_sha256,
+            partition.recipe_sha256,
+            indices_hash,
+            probability_hash,
+            normalizer_hash,
+            object_ids_hash,
+            _spatial_text_sha256("spatial_seed", int(seed)),
+            _spatial_text_sha256("spatial_domain", domain),
+            _spatial_text_sha256("spatial_atom_chunk", int(atom_chunk)),
+            _spatial_text_sha256("spatial_object_chunk", int(object_chunk)),
+            _spatial_record_sha256("spatial_exclusions", exclusions),
+        ),
+    )
+    return SpatialMISReservoir(
+        indices=indices,
+        probability=probability,
+        cell_id=cell_id,
+        component_id=component_id,
+        component_log_normalizer=component_log_normalizer,
+        object_ids=object_ids,
+        seed=int(seed),
+        domain=domain,
+        cycles_per_cell=int(cycles_per_cell),
+        atom_chunk=int(atom_chunk),
+        object_chunk=int(object_chunk),
+        partition_sha256=partition.partition_sha256,
+        partition_assignment_sha256=partition.assignment_sha256,
+        partition_counts_sha256=partition.counts_sha256,
+        partition_detected_mass_sha256=partition.detected_mass_sha256,
+        partition_prior_mass_sha256=partition.prior_mass_sha256,
+        partition_recipe_sha256=partition.recipe_sha256,
+        object_excluded_candidate_indices_sha256=exclusions,
+        indices_sha256=indices_hash,
+        probability_sha256=probability_hash,
+        normalizer_sha256=normalizer_hash,
+        object_ids_sha256=object_ids_hash,
+        object_indices_sha256=_object_array_manifest_sha256(
+            f"spatial_{domain}_object_indices", indices, dtype=">i8"
+        ),
+        object_probability_sha256=_object_array_manifest_sha256(
+            f"spatial_{domain}_object_probability", probability, dtype=">f8"
+        ),
+        record_sha256=record_hash,
+        component_recipe=recipe,
+    )
+
+
+def draw_spatial_mis_reservoirs(
+    proposal: DefensiveLocalProposal,
+    candidates: ProposalCandidates,
+    observed,
+    *,
+    pilot_seed: int = SPATIAL_PILOT_SEED,
+    production_seed: int = SPATIAL_PRODUCTION_SEED,
+    partition: Optional[SpatialCellPartition] = None,
+    object_ids: Optional[np.ndarray] = None,
+    device: Optional[str | torch.device] = None,
+    atom_chunk: int = TAIL_PROPOSAL_ATOM_CHUNK,
+    object_chunk: int = TAIL_PROPOSAL_OBJECT_CHUNK,
+    recipe: TailProposalRecipe = TAIL_PROPOSAL_RECIPE,
+) -> tuple[SpatialMISReservoir, SpatialMISReservoir]:
+    """Map discarded-pilot and production banks through each exact cell law.
+
+    A cell's proxy likelihood and three conditioned normalizers are evaluated
+    once for an object chunk.  Independent pilot and production uniforms are
+    then mapped while those normalized probabilities are live, so the method
+    never materializes a dense cell-by-catalogue table or rescans a cell for
+    the second reservoir.
+    """
+
+    if not isinstance(proposal, DefensiveLocalProposal):
+        raise TypeError("proposal must be a DefensiveLocalProposal")
+    if not isinstance(candidates, ProposalCandidates):
+        raise TypeError("spatial exclusions must be ProposalCandidates")
+    if recipe != TAIL_PROPOSAL_RECIPE:
+        raise ValueError("spatial reservoirs require the frozen DM3 recipe")
+    pilot_seed = int(pilot_seed)
+    production_seed = int(production_seed)
+    if pilot_seed == production_seed:
+        raise ValueError("pilot and production seeds must be distinct")
+    if atom_chunk <= 0 or object_chunk <= 0:
+        raise ValueError("spatial proposal chunk sizes must be positive")
+    if partition is None:
+        partition = proposal.spatial_cell_partition()
+    elif not isinstance(partition, SpatialCellPartition):
+        raise TypeError("partition must be a SpatialCellPartition")
+    else:
+        partition.verify(proposal)
+        proposal._spatial_cell_partition = partition
+    if int(partition.counts.max()) > int(atom_chunk):
+        raise ValueError(
+            "spatial partition cell exceeds the frozen atom-reduction chunk"
+        )
+    values = proposal._observed_values(observed)
+    exclusions = np.asarray(candidates.indices, dtype=np.int64)
+    if exclusions.ndim != 2 or len(exclusions) != len(values):
+        raise ValueError("spatial exclusions and observations must align")
+    n_objects = len(values)
+    if not n_objects:
+        raise ValueError("spatial proposal object batch cannot be empty")
+    if object_ids is None:
+        absolute_ids = np.arange(n_objects, dtype=np.int64)
+    else:
+        absolute_ids = np.asarray(object_ids, dtype=np.int64)
+    if (
+        absolute_ids.shape != (n_objects,)
+        or (absolute_ids < 0).any()
+        or len(np.unique(absolute_ids)) != n_objects
+    ):
+        raise ValueError("object_ids must be unique non-negative ids aligned to rows")
+
+    proxy = proposal._tilted_proxy(device)
+    excluded_positions = [
+        proxy._excluded_positions(exclusions[row]) for row in range(n_objects)
+    ]
+    exclusion_hashes = _candidate_exclusion_manifest_sha256(exclusions)
+    cache = getattr(proposal, "_spatial_cell_order", None)
+    if cache is None or cache[0] != partition.partition_sha256:
+        order = np.argsort(partition.cell_id, kind="stable").astype(
+            np.int64, copy=False
+        )
+        offsets = np.concatenate(
+            (
+                np.zeros(1, dtype=np.int64),
+                np.cumsum(partition.counts, dtype=np.int64),
+            )
+        )
+        cache = (partition.partition_sha256, order, offsets)
+        proposal._spatial_cell_order = cache
+    _, cell_order, cell_offsets = cache
+
+    n_components = len(recipe.component_names)
+    pilot_per_cell = SPATIAL_PILOT_CYCLES * recipe.cycle_length
+    production_per_cell = SPATIAL_PRODUCTION_CYCLES * recipe.cycle_length
+    pilot_width = SPATIAL_CELL_COUNT * pilot_per_cell
+    production_width = SPATIAL_CELL_COUNT * production_per_cell
+    pilot_indices = np.empty((n_objects, pilot_width), dtype=np.int64)
+    pilot_probability = np.empty((n_objects, pilot_width), dtype=np.float64)
+    production_indices = np.empty((n_objects, production_width), dtype=np.int64)
+    production_probability = np.empty(
+        (n_objects, production_width), dtype=np.float64
+    )
+    log_normalizer = np.empty(
+        (n_objects, SPATIAL_CELL_COUNT, n_components), dtype=np.float64
+    )
+    pilot_schedule = np.tile(
+        np.asarray(recipe.component_cycle, dtype=np.uint8), SPATIAL_PILOT_CYCLES
+    )
+    production_schedule = np.tile(
+        np.asarray(recipe.component_cycle, dtype=np.uint8),
+        SPATIAL_PRODUCTION_CYCLES,
+    )
+    mixture_weight = torch.as_tensor(
+        recipe.component_weights, dtype=torch.float64, device=proxy.a1.device
+    )
+
+    with torch.no_grad():
+        for object_start in range(0, n_objects, int(object_chunk)):
+            object_stop = min(object_start + int(object_chunk), n_objects)
+            chunk_size = object_stop - object_start
+            observation = torch.as_tensor(
+                np.ascontiguousarray(values[object_start:object_stop]),
+                dtype=torch.float64,
+                device=proxy.a1.device,
+            )
+            for cell in range(SPATIAL_CELL_COUNT):
+                start = int(cell_offsets[cell])
+                stop = int(cell_offsets[cell + 1])
+                cell_positions = cell_order[start:stop]
+                cell_count = len(cell_positions)
+                if not cell_count or cell_count > int(atom_chunk):
+                    raise RuntimeError("spatial cell violates the one-slab contract")
+                cell_positions_device = torch.as_tensor(
+                    np.ascontiguousarray(cell_positions),
+                    dtype=torch.long,
+                    device=proxy.a1.device,
+                )
+                mask_array = np.zeros((chunk_size, cell_count), dtype=bool)
+                for local_row, excluded in enumerate(
+                    excluded_positions[object_start:object_stop]
+                ):
+                    insertion = np.searchsorted(cell_positions, excluded)
+                    valid = insertion < cell_count
+                    if valid.any():
+                        valid_indices = np.flatnonzero(valid)
+                        matching = (
+                            cell_positions[insertion[valid]]
+                            == excluded[valid]
+                        )
+                        if matching.any():
+                            mask_array[
+                                local_row,
+                                insertion[valid_indices[matching]],
+                            ] = True
+                mask = torch.as_tensor(
+                    mask_array, dtype=torch.bool, device=proxy.a1.device
+                )
+                a1 = proxy.a1[cell_positions_device]
+                a2 = proxy.a2[cell_positions_device]
+                likelihood = proxy.gaussian_constant[cell_positions_device][
+                    None, :
+                ] - 0.5 * (
+                    torch.square(observation) @ a1.T
+                    - 2.0 * (observation @ a2.T)
+                )
+                prior = proxy.prior[cell_positions_device][None, :].expand(
+                    chunk_size, -1
+                ).masked_fill(mask, 0.0)
+                prior_normalizer = prior.sum(dim=1)
+                if not bool(
+                    (
+                        torch.isfinite(prior_normalizer)
+                        & (prior_normalizer > 0.0)
+                    ).all()
+                ):
+                    raise RuntimeError(
+                        f"spatial cell {cell} is empty after exact-stratum exclusion"
+                    )
+                prior_probability = prior / prior_normalizer[:, None]
+                component_probability = []
+                for component, beta in enumerate(recipe.component_betas[:-1]):
+                    score = (
+                        proxy.log_base[cell_positions_device][None, :]
+                        + float(beta) * likelihood
+                    ).masked_fill(mask, -torch.inf)
+                    component_log_z = torch.logsumexp(score, dim=1)
+                    if bool(
+                        (
+                            torch.isnan(component_log_z)
+                            | torch.isposinf(component_log_z)
+                        ).any()
+                    ):
+                        raise RuntimeError(
+                            "spatial proxy component produced a NaN or "
+                            f"positive-infinite normalizer in cell {cell}"
+                        )
+                    fallback = torch.isneginf(component_log_z)
+                    safe_score = torch.where(
+                        fallback[:, None],
+                        torch.where(prior > 0.0, torch.log(prior), -torch.inf),
+                        score,
+                    )
+                    probability = torch.softmax(safe_score, dim=1)
+                    component_probability.append(probability)
+                    log_normalizer[
+                        object_start:object_stop, cell, component
+                    ] = component_log_z.cpu().numpy()
+                component_probability.append(prior_probability)
+                log_normalizer[
+                    object_start:object_stop, cell, -1
+                ] = torch.log(prior_normalizer).cpu().numpy()
+                component_probability_tensor = torch.stack(
+                    component_probability, dim=0
+                )
+                q_h = (
+                    mixture_weight[:, None, None]
+                    * component_probability_tensor
+                ).sum(dim=0)
+                if bool(
+                    (~torch.isfinite(q_h)).any()
+                    or (q_h.masked_select(~mask) <= 0.0).any()
+                    or (q_h.masked_select(mask) != 0.0).any()
+                ):
+                    raise RuntimeError(
+                        f"spatial balance mixture is invalid in cell {cell}"
+                    )
+
+                for domain, domain_seed, cycles, schedule, output_indices, output_q in (
+                    (
+                        "pilot",
+                        pilot_seed,
+                        SPATIAL_PILOT_CYCLES,
+                        pilot_schedule,
+                        pilot_indices,
+                        pilot_probability,
+                    ),
+                    (
+                        "production",
+                        production_seed,
+                        SPATIAL_PRODUCTION_CYCLES,
+                        production_schedule,
+                        production_indices,
+                        production_probability,
+                    ),
+                ):
+                    draws_per_cell = cycles * recipe.cycle_length
+                    uniforms = np.empty(
+                        (chunk_size, draws_per_cell), dtype=np.float64
+                    )
+                    for local_row, object_id in enumerate(
+                        absolute_ids[object_start:object_stop]
+                    ):
+                        uniforms[local_row] = _spatial_rng(
+                            domain_seed, int(object_id), cell, domain
+                        ).random(draws_per_cell)
+                    uniforms_device = torch.as_tensor(
+                        uniforms, dtype=torch.float64, device=proxy.a1.device
+                    )
+                    local = torch.empty(
+                        (chunk_size, draws_per_cell),
+                        dtype=torch.long,
+                        device=proxy.a1.device,
+                    )
+                    for component in range(n_components):
+                        source_draws = np.flatnonzero(schedule == component)
+                        cumulative = torch.cumsum(
+                            component_probability_tensor[component], dim=1
+                        )
+                        cumulative[:, -1] = 1.0
+                        local[:, source_draws] = torch.searchsorted(
+                            cumulative.contiguous(),
+                            uniforms_device[:, source_draws].contiguous(),
+                            right=True,
+                        ).clamp(max=cell_count - 1)
+                    absolute = proxy.active[cell_positions_device][local]
+                    drawn_q = torch.gather(q_h, 1, local)
+                    draw_start = cell * draws_per_cell
+                    draw_stop = draw_start + draws_per_cell
+                    output_indices[
+                        object_start:object_stop, draw_start:draw_stop
+                    ] = absolute.cpu().numpy()
+                    output_q[
+                        object_start:object_stop, draw_start:draw_stop
+                    ] = drawn_q.cpu().numpy()
+
+    if (
+        not np.isfinite(pilot_probability).all()
+        or (pilot_probability <= 0.0).any()
+        or not np.isfinite(production_probability).all()
+        or (production_probability <= 0.0).any()
+    ):
+        raise RuntimeError("spatial reservoir produced an invalid q_h")
+    pilot_cells = np.repeat(
+        np.arange(SPATIAL_CELL_COUNT, dtype=np.uint16), pilot_per_cell
+    )
+    production_cells = np.repeat(
+        np.arange(SPATIAL_CELL_COUNT, dtype=np.uint16), production_per_cell
+    )
+    pilot_components = np.tile(pilot_schedule, SPATIAL_CELL_COUNT)
+    production_components = np.tile(production_schedule, SPATIAL_CELL_COUNT)
+    pilot = _make_spatial_reservoir(
+        indices=pilot_indices,
+        probability=pilot_probability,
+        cell_id=pilot_cells,
+        component_id=pilot_components,
+        component_log_normalizer=log_normalizer,
+        object_ids=absolute_ids,
+        seed=pilot_seed,
+        domain="pilot",
+        cycles_per_cell=SPATIAL_PILOT_CYCLES,
+        atom_chunk=atom_chunk,
+        object_chunk=object_chunk,
+        partition=partition,
+        exclusions=exclusion_hashes,
+        recipe=recipe,
+    )
+    production = _make_spatial_reservoir(
+        indices=production_indices,
+        probability=production_probability,
+        cell_id=production_cells,
+        component_id=production_components,
+        component_log_normalizer=log_normalizer,
+        object_ids=absolute_ids,
+        seed=production_seed,
+        domain="production",
+        cycles_per_cell=SPATIAL_PRODUCTION_CYCLES,
+        atom_chunk=atom_chunk,
+        object_chunk=object_chunk,
+        partition=partition,
+        exclusions=exclusion_hashes,
+        recipe=recipe,
+    )
+    if pilot.record_sha256 == production.record_sha256:
+        raise RuntimeError("pilot and production spatial reservoirs are not independent")
+    return pilot, production
+
+
+def spatial_pilot_variance(
+    values: np.ndarray, reservoir: SpatialMISReservoir
+) -> np.ndarray:
+    """Return ``V_h = sum_l alpha_l samplevar(Y_hl)`` from discarded pilot."""
+
+    if not isinstance(reservoir, SpatialMISReservoir) or reservoir.domain != "pilot":
+        raise TypeError("pilot variance requires a pilot SpatialMISReservoir")
+    values = np.asarray(values, dtype=np.float64)
+    if values.shape != reservoir.indices.shape or not np.isfinite(values).all():
+        raise ValueError("pilot values must be finite and align with the reservoir")
+    per_cell = reservoir.cycles_per_cell * reservoir.component_recipe.cycle_length
+    reshaped = values.reshape(len(values), SPATIAL_CELL_COUNT, per_cell)
+    schedule = reservoir.component_id[:per_cell]
+    source_variance = np.empty(
+        (
+            len(values),
+            SPATIAL_CELL_COUNT,
+            len(reservoir.component_recipe.component_names),
+        ),
+        dtype=np.float64,
+    )
+    for component in range(source_variance.shape[2]):
+        source = reshaped[:, :, schedule == component]
+        if source.shape[2] < 2:
+            raise RuntimeError("pilot source needs at least two samples per cell")
+        source_variance[:, :, component] = np.var(source, axis=2, ddof=1)
+    result = np.einsum(
+        "nhc,c->nh",
+        source_variance,
+        np.asarray(reservoir.component_recipe.component_weights),
+        optimize=True,
+    )
+    result = np.maximum(result, 0.0)
+    result.setflags(write=False)
+    return result
+
+
+def pack_spatial_production_prefix(
+    reservoir: SpatialMISReservoir,
+    allocation: SpatialCycleAllocation,
+) -> SpatialMISDraw:
+    """Pack each object's allocated whole-cycle prefixes into 16,384 draws."""
+
+    if (
+        not isinstance(reservoir, SpatialMISReservoir)
+        or reservoir.domain != "production"
+    ):
+        raise TypeError("packing requires a production SpatialMISReservoir")
+    if not isinstance(allocation, SpatialCycleAllocation):
+        raise TypeError("allocation must be a SpatialCycleAllocation")
+    if len(allocation.cycles) != len(reservoir.indices):
+        raise ValueError("spatial allocation and reservoir object rows must align")
+    width = SPATIAL_TOTAL_CYCLES * reservoir.component_recipe.cycle_length
+    indices = np.empty((len(reservoir.indices), width), dtype=np.int64)
+    probability = np.empty((len(reservoir.indices), width), dtype=np.float64)
+    cells = np.empty((len(reservoir.indices), width), dtype=np.uint16)
+    components = np.empty((len(reservoir.indices), width), dtype=np.uint8)
+    bank_per_cell = (
+        SPATIAL_PRODUCTION_CYCLES * reservoir.component_recipe.cycle_length
+    )
+    for row in range(len(indices)):
+        output = 0
+        for cell, cycles in enumerate(allocation.cycles[row]):
+            count = int(cycles) * reservoir.component_recipe.cycle_length
+            source = cell * bank_per_cell
+            target = slice(output, output + count)
+            indices[row, target] = reservoir.indices[row, source : source + count]
+            probability[row, target] = reservoir.probability[
+                row, source : source + count
+            ]
+            cells[row, target] = cell
+            components[row, target] = reservoir.component_id[
+                source : source + count
+            ]
+            output += count
+        if output != width:
+            raise RuntimeError("spatial prefix packing did not fill its draw budget")
+    indices_hash = _spatial_array_sha256(
+        "packed_spatial_indices", indices, dtype=">i8"
+    )
+    probability_hash = _spatial_array_sha256(
+        "packed_spatial_probability", probability, dtype=">f8"
+    )
+    record_hash = _spatial_record_sha256(
+        "packed_spatial_draw",
+        (
+            reservoir.partition_sha256,
+            reservoir.record_sha256,
+            allocation.allocation_sha256,
+            indices_hash,
+            probability_hash,
+            _spatial_array_sha256("packed_spatial_cells", cells, dtype=">u2"),
+            _spatial_array_sha256(
+                "packed_spatial_components", components, dtype=">u1"
+            ),
+            _spatial_array_sha256(
+                "packed_spatial_cycles", allocation.cycles, dtype=">u1"
+            ),
+            _spatial_array_sha256(
+                "packed_spatial_object_ids", reservoir.object_ids, dtype=">i8"
+            ),
+        ),
+    )
+    return SpatialMISDraw(
+        indices=indices,
+        probability=probability,
+        cell_id=cells,
+        component_id=components,
+        cycles=allocation.cycles,
+        object_ids=reservoir.object_ids,
+        partition_sha256=reservoir.partition_sha256,
+        reservoir_record_sha256=reservoir.record_sha256,
+        allocation_sha256=allocation.allocation_sha256,
+        indices_sha256=indices_hash,
+        probability_sha256=probability_hash,
+        record_sha256=record_hash,
+        component_recipe=reservoir.component_recipe,
+    )
+
+
+def reduce_spatial_mis(
+    values: np.ndarray, draw: SpatialMISDraw
+) -> SpatialMISReduction:
+    """Reduce scalar integrand values with the fixed-source stratified law."""
+
+    if not isinstance(draw, SpatialMISDraw):
+        raise TypeError("spatial reduction requires a SpatialMISDraw")
+    values = np.asarray(values, dtype=np.float64)
+    if values.shape != draw.indices.shape or not np.isfinite(values).all():
+        raise ValueError("spatial reduction values must be finite and align with draws")
+    n_objects = len(values)
+    n_components = len(draw.component_recipe.component_names)
+    alpha = np.asarray(draw.component_recipe.component_weights, dtype=np.float64)
+    cell_estimate = np.empty((n_objects, SPATIAL_CELL_COUNT), dtype=np.float64)
+    cell_variance = np.empty_like(cell_estimate)
+    source_variance = np.empty(
+        (n_objects, SPATIAL_CELL_COUNT, n_components), dtype=np.float64
+    )
+    for row in range(n_objects):
+        offset = 0
+        for cell, cycles in enumerate(draw.cycles[row]):
+            width = int(cycles) * draw.component_recipe.cycle_length
+            block = values[row, offset : offset + width]
+            source = draw.component_id[row, offset : offset + width]
+            means = np.empty(n_components, dtype=np.float64)
+            counts = np.empty(n_components, dtype=np.int64)
+            for component in range(n_components):
+                component_values = block[source == component]
+                counts[component] = len(component_values)
+                if len(component_values) < 2:
+                    raise RuntimeError(
+                        "spatial fixed-source variance needs two draws per source"
+                    )
+                means[component] = component_values.mean(dtype=np.float64)
+                source_variance[row, cell, component] = np.var(
+                    component_values, ddof=1
+                )
+            cell_estimate[row, cell] = np.dot(alpha, means)
+            cell_variance[row, cell] = np.sum(
+                np.square(alpha)
+                * source_variance[row, cell]
+                / counts
+            )
+            offset += width
+    estimate = cell_estimate.sum(axis=1, dtype=np.float64)
+    variance = cell_variance.sum(axis=1, dtype=np.float64)
+    standard_error = np.sqrt(np.maximum(variance, 0.0))
+    return SpatialMISReduction(
+        estimate=estimate,
+        variance=variance,
+        standard_error=standard_error,
+        cell_estimate=cell_estimate,
+        cell_variance=cell_variance,
+        cell_source_sample_variance=source_variance,
+    )
+
+
 def pareto_tail_index(weights, *, minimum_tail: int = 5):
     """Generalized-Pareto shape ``k`` of each row's upper weight tail.
 
@@ -4198,10 +6026,38 @@ __all__ = [
     "ProposalCoordinateTable",
     "ProposalCandidates",
     "ProposalDraw",
+    "SPATIAL_CELL_COUNT",
+    "SPATIAL_MIN_CYCLES",
+    "SPATIAL_PARTITION_AXES",
+    "SPATIAL_PARTITION_DEPTH",
+    "SPATIAL_PARTITION_HASH_CONTRACT",
+    "SPATIAL_PARTITION_RECIPE_SHA256",
+    "SPATIAL_PILOT_CYCLES",
+    "SPATIAL_PILOT_SEED",
+    "SPATIAL_PRODUCTION_CYCLES",
+    "SPATIAL_PRODUCTION_SEED",
+    "SPATIAL_RNG_CONTRACT",
+    "SPATIAL_TOTAL_CYCLES",
+    "SpatialCellPartition",
+    "SpatialCycleAllocation",
+    "SpatialMISDraw",
+    "SpatialMISReduction",
+    "SpatialMISReservoir",
+    "TAIL_PROPOSAL_ATOM_CHUNK",
+    "TAIL_PROPOSAL_OBJECT_CHUNK",
+    "TAIL_PROPOSAL_RECIPE",
+    "TailProposalRecipe",
+    "WholeCatalogueProxy",
+    "allocate_spatial_neyman_cycles",
     "assess_importance_convergence",
+    "build_spatial_cell_partition",
+    "draw_spatial_mis_reservoirs",
     "importance_diagnostics",
+    "pack_spatial_production_prefix",
+    "reduce_spatial_mis",
     "run_importance_ladder",
     "run_importance_profiles",
     "select_adaptive_draw_counts",
     "select_independent_pilot_draw_counts",
+    "spatial_pilot_variance",
 ]

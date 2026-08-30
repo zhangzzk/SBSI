@@ -422,6 +422,132 @@ seed-2 job yet. Promotion into the production estimator remains out of scope;
 an exact-confirmation protocol would require an intentional version after
 selection and must not reuse the frozen exact-oracle-v1 rows.
 
+#### Spatially stratified pilot/Neyman centre diagnostic
+
+`--diagnose-complement-spatial-neyman` is a centre-only development
+diagnostic, not an estimator mode or release change. It tests whether changing
+coverage, rather than enlarging another object-specific exact support, repairs
+the heavy conditioned-DM3 tail. The protocol fixes rows 25,000:25,512, the
+archived mean-observed-shape centre
+`[0.013610377120038044, 0.002740148300964851]`, Torch candidate search,
+`K=16,384`, prefilter 131,072, DM3 production size 16,384, proposal seed 8701,
+pilot seed 1,008,704, and production seed 7,008,704. It requires the frozen
+mock hashes and the independent exact-oracle selection manifest. Measured
+cuts, selection caches, learned retrieval, the earlier pilot-promotion path,
+and the ordinary tail-proposal diagnostic are mutually excluded. The
+diagnostic fails closed until the outcome-blind partition described below has
+three reviewed hashes embedded in `SPATIAL_NEYMAN_PROTOCOL`.
+
+The global active support is partitioned once into 256 cells using only
+catalogue-side quantities. Starting from all active atoms, eight binary levels
+split axes `(0,1,2,3,0,1,2,3)` in the four float64 standardized proposal
+coordinates. Within each node atoms are stably ordered by coordinate and then
+atom ID. The chosen cut minimizes the distance from one half of the node's
+detected-prior mass, subject to a 45--55% count guard; ties choose the smaller
+cut, and a zero-detected-mass node uses its count midpoint. Left/right binary
+paths define cell IDs. The count guard ensures every audited science cell has
+more than 16,384 and no more than 262,144 active atoms, so removing an entire
+exact stratum cannot empty a cell and one cell fits the frozen mapping slab.
+
+Partition construction is a separate Slurm audit that returns before loading
+a mock, querying candidates, or evaluating the target flow. The audit writes
+the compact assignment/count/mass cache plus a manifest containing the recipe,
+input-array, assignment, count, detected-mass, and prior-mass identities. A
+science run separately verifies the semantic `partition_sha256`, exact cache
+bytes, exact manifest bytes, embedded identities, live proposal inputs, and
+cell execution bounds. The audit wrapper and science wrapper both require a
+clean detached commit and refuse overwrites. Partition building is not charged
+to science, while actual science-side cache/manifest loading and semantic
+verification are charged.
+
+For object `i`, let `S_i` be the deterministic 16,384-atom exact support and
+let `H_h` be cell `h`. On `H_h \ S_i`, each of the three DM3 source
+components is normalized separately. The balance law is
+
+```text
+q_ih = (1/2) r_ih,t1 + (3/8) r_ih,t2 + (1/8) r_ih,prior.
+```
+
+The prior component gives full complement support. A proxy component whose
+cell normalizer is exactly zero falls back to the cell prior; NaN or positive
+infinity is an error. Pilot and production reservoirs reuse the same exact
+cell normalizers and `q_ih` values but use independent counter-keyed random
+domains. The discarded pilot has two complete DM3 cycles per cell, hence
+4,096 draws total with fixed source counts 2,048/1,536/512. The production
+reservoir has 64 cycles per cell, hence 131,072 mapped draws; only selected
+whole-cycle prefixes are target-flow evaluated. Normalization and mapping of
+both reservoirs occur in one cell pass, without a dense cell-by-catalogue or
+object-by-catalogue probability table.
+
+If `Y=c/q_ih`, the discarded pilot estimates the allocation score
+
+```text
+V_ih = sum_l alpha_l sample_variance(Y_ihl),
+alpha = (1/2, 3/8, 1/8).
+```
+
+Production starts at two cycles in every cell and assigns exactly 1,536
+additional cycles, one at a time, to the uncapped cell maximizing
+`V_ih / (m_ih (m_ih + 1))`; cell-ID order breaks ties. Each cell is bounded to
+2--64 cycles and every object has exactly 2,048 cycles, or 16,384 selected
+draws. An all-zero pilot score has a deterministic eight-cycle-per-cell
+fallback, but any such fallback fails the science integrity gate. Pilot draws
+never enter the estimate, standard error, or Pareto fit.
+
+The centre estimator is
+
+```text
+Z_hat_i = sum_[j in S_i] c_ij
+          + sum_h mean_[J in production prefix h] c_iJ / q_ih(J).
+```
+
+It is unbiased conditional on the fixed exact support, partition, pilot, and
+allocation because the independent production mean in every cell integrates
+that cell's complement. With fixed source counts `n_ihl` and total cell count
+`n_ih`, its conditional variance estimate is
+
+```text
+Var_hat(complement_i)
+  = sum_h sum_l n_ihl * sample_variance(Y_ihl) / n_ih^2.
+```
+
+The equivalent pooled vector for the Pareto diagnostic is
+`(M/n_ih) Y_ih`, where `M=16,384`; raw `Y_ih` values from unequally allocated
+cells are not pooled. An independent reduction recomputes the sum of cell
+means and fixed-source variance and must agree with the sampler core.
+
+The fixed execution uses eight-object proposal batches, 262,144-atom spatial
+slabs, and 4,096-atom target-flow slabs. Exact-support, pilot, selected
+production, and exact-oracle target-flow counts are respectively
+8,388,608, 2,097,152, 8,388,608, and 816,703,360; total diagnostic target-flow
+count is 835,577,728. Method time excludes the exact oracle but includes
+proposal initialization, science-side partition load/verification, candidate
+query, exact-support flow, all reservoir normalization and mapping including
+unused production entries, pilot flow, allocation, selected production flow,
+and reduction.
+
+Integrity additionally requires exact absolute IDs and protocol identity,
+the three frozen partition identities and cell bounds, unique active exact
+supports, exact fixed source/cell/draw counts, distinct RNG streams, zero
+support leakage, zero all-zero allocation fallbacks, whole-cycle bounded
+allocations, matching support/exclusion hashes, exact core call provenance,
+recomputed run manifest, exact flow counts, and finite positive masses and
+standard errors. Per-object output records the number of proxy-component cells
+that used the exact prior fallback; fallback is valid, but it may not be
+silent. Reliability retains the preregistered learned-centre bars:
+at least 461/512 finite `k<0.5`, at least 507/512 `k<0.7`, no `k>=1`, and
+complement relative-SE median/higher-p90 at most 0.00882/0.0268.
+
+The same outcome-independent 64-object exact subset requires maximum exact-
+support cross-check error `1e-5`, median/higher-p90 absolute total-log-evidence
+error 0.01/0.05, aggregate `|z|<=2.5`, exact-error z RMS in 0.8--1.2, and at
+least 58/64 `|z|<=1.96`. Against the frozen DM3 baseline mean/higher-p90
+squared total relative errors
+`4.6256941067948046e-4`/`4.45668696553694e-4` and method time
+`91.04022970038932 s`, both variance-time ratios must be at most 0.90. All
+integrity, reliability, exact-calibration, and efficiency gates must pass
+before any stencil or inference integration is authorized.
+
 #### Frozen exact-oracle confirmation
 
 `--diagnose-complement-exact-oracle` is a diagnostic-only extension of the

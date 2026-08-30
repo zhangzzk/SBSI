@@ -30,6 +30,7 @@ from sbsi.catalogue_sampling import (
     TAIL_PROPOSAL_RECIPE,
     DefensiveLocalProposal,
     ProposalCoordinateTable,
+    SpatialCellPartition,
 )
 from sbsi.amortized_proposal import ContrastiveRetrievalProposal
 from sbsi.complement_diagnostic import (
@@ -42,6 +43,11 @@ from sbsi.learned_retrieval_diagnostic import (
     LEARNED_RETRIEVAL_CENTER_PROTOCOL,
     learned_retrieval_center_summary,
 )
+from sbsi.spatial_neyman_diagnostic import (
+    SPATIAL_NEYMAN_PROTOCOL,
+    diagnose_spatial_neyman_complement,
+    spatial_neyman_summary,
+)
 from sbsi.forward_catalogue import EmulatorPairingConfig
 from sbsi.measurement_model import load_measurement_model
 from sbsi.models import ModelPaths, load_emulator
@@ -51,6 +57,9 @@ from sbsi.scene_prior import SHEAR_TRANSFORM, ScenePrior
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INFERENCE_CONFIG = REPOSITORY_ROOT / "configs" / "inference.json"
 DEFAULT_LIKELIHOOD_CONFIG = REPOSITORY_ROOT / "configs" / "likelihood.json"
+SPATIAL_NEYMAN_PARTITION_FILE = "spatial_partition.npz"
+SPATIAL_NEYMAN_PARTITION_MANIFEST = "manifest.json"
+SPATIAL_NEYMAN_PARTITION_AUDIT = "partition_audit.json"
 
 
 def _sha256(path: str | Path) -> str:
@@ -419,6 +428,226 @@ def _mock_input_hashes(root: str | Path) -> dict[str, str]:
     return _file_hashes(root, names)
 
 
+def _spatial_partition_manifest_payload(
+    partition: SpatialCellPartition,
+    *,
+    partition_cache_sha256: str,
+    provenance: dict,
+) -> dict:
+    """Return the path-independent manifest for an audited spatial partition."""
+
+    return {
+        "schema_version": 1,
+        "kind": "SBSI/outcome-blind-spatial-cell-partition/v1",
+        "protocol_label": SPATIAL_NEYMAN_PROTOCOL["label"],
+        "partition_file": SPATIAL_NEYMAN_PARTITION_FILE,
+        "partition_cache_sha256": partition_cache_sha256,
+        "partition_sha256": partition.partition_sha256,
+        "partition_recipe_sha256": partition.recipe_sha256,
+        "hash_contract": partition.hash_contract,
+        "n_cells": int(len(partition.counts)),
+        "n_active": int(len(partition.cell_id)),
+        "cell_count_minimum": int(np.min(partition.counts)),
+        "cell_count_maximum": int(np.max(partition.counts)),
+        "detected_mass_minimum": float(np.min(partition.detected_mass)),
+        "detected_mass_maximum": float(np.max(partition.detected_mass)),
+        "prior_mass_minimum": float(np.min(partition.prior_mass)),
+        "prior_mass_maximum": float(np.max(partition.prior_mass)),
+        "input_sha256": {
+            "active_indices_sha256": partition.active_indices_sha256,
+            "coordinates_sha256": partition.coordinates_sha256,
+            "coordinate_names_sha256": partition.coordinate_names_sha256,
+            "detected_weights_sha256": partition.detected_weights_sha256,
+            "prior_weights_sha256": partition.prior_weights_sha256,
+        },
+        "array_sha256": {
+            "assignment_sha256": partition.assignment_sha256,
+            "counts_sha256": partition.counts_sha256,
+            "detected_mass_sha256": partition.detected_mass_sha256,
+            "prior_mass_sha256": partition.prior_mass_sha256,
+        },
+        "partition_metadata": partition.metadata,
+        "provenance": provenance,
+        "science_rows_read": 0,
+        "candidate_queries": 0,
+        "target_flow_evaluations": 0,
+    }
+
+
+def _write_spatial_partition_audit(
+    output: Path,
+    proposal: DefensiveLocalProposal,
+    *,
+    provenance: dict,
+) -> dict:
+    """Build and freeze the outcome-blind partition, then write its audit."""
+
+    started = time.perf_counter()
+    if proposal.tree is not None:
+        raise RuntimeError("spatial partition audit unexpectedly built a KD tree")
+    partition = SpatialCellPartition.build(proposal, n_cells=int(SPATIAL_NEYMAN_PROTOCOL["n_cells"]))
+    partition_path = output / SPATIAL_NEYMAN_PARTITION_FILE
+    partition.save(partition_path)
+    partition_cache_sha256 = _sha256(partition_path)
+    manifest = _spatial_partition_manifest_payload(
+        partition,
+        partition_cache_sha256=partition_cache_sha256,
+        provenance=provenance,
+    )
+    manifest_path = output / SPATIAL_NEYMAN_PARTITION_MANIFEST
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+    manifest_sha256 = _sha256(manifest_path)
+    audit = {
+        "status": "complete",
+        "outcome_blind": True,
+        "partition_sha256": partition.partition_sha256,
+        "partition_cache_sha256": partition_cache_sha256,
+        "partition_manifest_sha256": manifest_sha256,
+        "partition_recipe_sha256": partition.recipe_sha256,
+        "n_cells": int(len(partition.counts)),
+        "n_active": int(len(partition.cell_id)),
+        "cell_count_minimum": int(np.min(partition.counts)),
+        "cell_count_maximum": int(np.max(partition.counts)),
+        "detected_mass_minimum": float(np.min(partition.detected_mass)),
+        "detected_mass_maximum": float(np.max(partition.detected_mass)),
+        "prior_mass_minimum": float(np.min(partition.prior_mass)),
+        "prior_mass_maximum": float(np.max(partition.prior_mass)),
+        "science_rows_read": 0,
+        "candidate_queries": 0,
+        "target_flow_evaluations": 0,
+        "elapsed_seconds": float(time.perf_counter() - started),
+        "files": {
+            SPATIAL_NEYMAN_PARTITION_FILE: partition_cache_sha256,
+            SPATIAL_NEYMAN_PARTITION_MANIFEST: manifest_sha256,
+        },
+    }
+    audit_path = output / SPATIAL_NEYMAN_PARTITION_AUDIT
+    audit_path.write_text(json.dumps(audit, indent=2) + "\n")
+    return audit
+
+
+def _load_verified_spatial_partition(
+    root: str | Path,
+    proposal: DefensiveLocalProposal,
+) -> tuple[SpatialCellPartition, float]:
+    """Load a frozen partition and verify bytes, semantics, and live inputs."""
+
+    started = time.perf_counter()
+    expected = SPATIAL_NEYMAN_PROTOCOL
+    frozen_hashes = {
+        name: expected.get(name)
+        for name in (
+            "partition_sha256",
+            "partition_cache_sha256",
+            "partition_manifest_sha256",
+        )
+    }
+    missing = sorted(name for name, value in frozen_hashes.items() if value is None)
+    if missing:
+        raise SystemExit("the spatial-Neyman protocol lacks frozen partition hashes: " + ", ".join(missing))
+    root = Path(root)
+    manifest_path = root / SPATIAL_NEYMAN_PARTITION_MANIFEST
+    partition_path = root / SPATIAL_NEYMAN_PARTITION_FILE
+    try:
+        manifest = json.loads(manifest_path.read_text())
+    except (OSError, json.JSONDecodeError) as error:
+        raise SystemExit(f"cannot load spatial-Neyman partition manifest: {error}") from error
+    try:
+        actual_manifest_sha256 = _sha256(manifest_path)
+        actual_cache_sha256 = _sha256(partition_path)
+    except OSError as error:
+        raise SystemExit(f"cannot hash spatial-Neyman partition artifacts: {error}") from error
+    if actual_manifest_sha256 != frozen_hashes["partition_manifest_sha256"]:
+        raise SystemExit(
+            "spatial-Neyman partition manifest SHA-256 mismatch: "
+            f"{actual_manifest_sha256} != "
+            f"{frozen_hashes['partition_manifest_sha256']}"
+        )
+    if actual_cache_sha256 != frozen_hashes["partition_cache_sha256"]:
+        raise SystemExit(
+            "spatial-Neyman partition cache SHA-256 mismatch: "
+            f"{actual_cache_sha256} != {frozen_hashes['partition_cache_sha256']}"
+        )
+    manifest_identity = {
+        "partition_sha256": manifest.get("partition_sha256"),
+        "partition_cache_sha256": manifest.get("partition_cache_sha256"),
+        "partition_recipe_sha256": manifest.get("partition_recipe_sha256"),
+        "n_cells": manifest.get("n_cells"),
+        "n_active": manifest.get("n_active"),
+    }
+    expected_identity = {
+        "partition_sha256": frozen_hashes["partition_sha256"],
+        "partition_cache_sha256": frozen_hashes["partition_cache_sha256"],
+        "partition_recipe_sha256": expected["partition_recipe_sha256"],
+        "n_cells": expected["n_cells"],
+        "n_active": expected["active_atoms"],
+    }
+    if manifest_identity != expected_identity:
+        raise SystemExit(
+            "spatial-Neyman partition manifest identity mismatch: "
+            + json.dumps(
+                {"expected": expected_identity, "observed": manifest_identity},
+                sort_keys=True,
+            )
+        )
+    try:
+        partition = SpatialCellPartition.load(partition_path, proposal=proposal)
+    except (OSError, TypeError, ValueError) as error:
+        raise SystemExit(f"spatial-Neyman partition failed semantic verification: {error}") from error
+    manifest_embedded_identity = {
+        "hash_contract": manifest.get("hash_contract"),
+        "input_sha256": manifest.get("input_sha256"),
+        "array_sha256": manifest.get("array_sha256"),
+        "cell_count_minimum": manifest.get("cell_count_minimum"),
+        "cell_count_maximum": manifest.get("cell_count_maximum"),
+        "detected_mass_minimum": manifest.get("detected_mass_minimum"),
+        "detected_mass_maximum": manifest.get("detected_mass_maximum"),
+        "prior_mass_minimum": manifest.get("prior_mass_minimum"),
+        "prior_mass_maximum": manifest.get("prior_mass_maximum"),
+    }
+    partition_embedded_identity = {
+        "hash_contract": partition.hash_contract,
+        "input_sha256": {
+            "active_indices_sha256": partition.active_indices_sha256,
+            "coordinates_sha256": partition.coordinates_sha256,
+            "coordinate_names_sha256": partition.coordinate_names_sha256,
+            "detected_weights_sha256": partition.detected_weights_sha256,
+            "prior_weights_sha256": partition.prior_weights_sha256,
+        },
+        "array_sha256": {
+            "assignment_sha256": partition.assignment_sha256,
+            "counts_sha256": partition.counts_sha256,
+            "detected_mass_sha256": partition.detected_mass_sha256,
+            "prior_mass_sha256": partition.prior_mass_sha256,
+        },
+        "cell_count_minimum": int(np.min(partition.counts)),
+        "cell_count_maximum": int(np.max(partition.counts)),
+        "detected_mass_minimum": float(np.min(partition.detected_mass)),
+        "detected_mass_maximum": float(np.max(partition.detected_mass)),
+        "prior_mass_minimum": float(np.min(partition.prior_mass)),
+        "prior_mass_maximum": float(np.max(partition.prior_mass)),
+    }
+    if manifest_embedded_identity != partition_embedded_identity:
+        raise SystemExit(
+            "spatial-Neyman partition manifest does not match embedded assignment, input, or mass identities"
+        )
+    if (
+        partition.partition_sha256 != frozen_hashes["partition_sha256"]
+        or partition.recipe_sha256 != expected["partition_recipe_sha256"]
+        or len(partition.cell_id) != expected["active_atoms"]
+        or len(partition.counts) != expected["n_cells"]
+    ):
+        raise SystemExit("spatial-Neyman partition embedded identity does not match the frozen protocol")
+    minimum_count = int(np.min(partition.counts))
+    maximum_count = int(np.max(partition.counts))
+    if minimum_count <= 16_384 or maximum_count > 262_144:
+        raise SystemExit(
+            "spatial-Neyman partition cell counts fail the frozen execution "
+            f"bounds: min={minimum_count}, max={maximum_count}"
+        )
+    return partition, float(time.perf_counter() - started)
+
+
 def _validate_loaded_mock_manifest(
     root: str | Path,
     mock: MockCatalogue,
@@ -521,6 +750,7 @@ def _pipeline_implementation_hashes() -> dict[str, str]:
         "sbsi/catalogue_likelihood.py",
         "sbsi/catalogue_sampling.py",
         "sbsi/learned_retrieval_diagnostic.py",
+        "sbsi/spatial_neyman_diagnostic.py",
     )
     return {name: _sha256(root / name) for name in names}
 
@@ -828,6 +1058,44 @@ def parse_args(argv=None):
         ),
     )
     parser.add_argument(
+        "--audit-spatial-neyman-partition",
+        action="store_true",
+        help=(
+            "build and audit the outcome-blind frozen spatial-cell partition "
+            "under --output, then stop before loading a mock or evaluating "
+            "candidate/target likelihoods"
+        ),
+    )
+    parser.add_argument(
+        "--spatial-neyman-partition-cache",
+        default=None,
+        help=(
+            "frozen outcome-blind SpatialCellPartition cache required by the "
+            "spatial-Neyman complement diagnostic"
+        ),
+    )
+    parser.add_argument(
+        "--diagnose-complement-spatial-neyman",
+        action="store_true",
+        help=(
+            "run the frozen development-only spatially stratified discarded-"
+            "pilot Neyman centre diagnostic; requires its partition cache and "
+            "the frozen exact oracle"
+        ),
+    )
+    parser.add_argument(
+        "--spatial-neyman-object-chunk",
+        type=int,
+        default=8,
+        help="observations per frozen spatial-proposal batch",
+    )
+    parser.add_argument(
+        "--spatial-neyman-atom-chunk",
+        type=int,
+        default=262144,
+        help="active atoms per frozen spatial-proposal slab",
+    )
+    parser.add_argument(
         "--learned-retrieval-object-chunk",
         type=int,
         default=8,
@@ -864,10 +1132,14 @@ def _validate_exact_oracle_request(args) -> None:
         raise SystemExit(
             "--diagnose-complement-exact-oracle requires --diagnose-complement"
         )
-    if not args.diagnose_complement_tail_proposal:
+    if not (
+        args.diagnose_complement_tail_proposal
+        or args.diagnose_complement_spatial_neyman
+    ):
         raise SystemExit(
             "--diagnose-complement-exact-oracle requires "
-            "--diagnose-complement-tail-proposal"
+            "--diagnose-complement-tail-proposal or "
+            "--diagnose-complement-spatial-neyman"
         )
     if (
         args.cut_abs_ehat is not None
@@ -899,6 +1171,11 @@ def _validate_pilot_stratum_request(args) -> None:
             "--diagnose-complement-pilot-stratum cannot be combined with "
             "--diagnose-complement-exact-oracle"
         )
+    if args.diagnose_complement_spatial_neyman:
+        raise SystemExit(
+            "--diagnose-complement-pilot-stratum cannot be combined with "
+            "--diagnose-complement-spatial-neyman"
+        )
     if (
         args.cut_abs_ehat is not None
         or bool(args.cut_bound)
@@ -927,6 +1204,7 @@ def _validate_learned_retrieval_center_request(args) -> None:
         "tail_proposal": bool(args.diagnose_complement_tail_proposal),
         "exact_oracle": bool(args.diagnose_complement_exact_oracle),
         "pilot_stratum": bool(args.diagnose_complement_pilot_stratum),
+        "spatial_neyman": bool(args.diagnose_complement_spatial_neyman),
         "candidate_backend": args.candidate_backend,
         "universe_start": int(args.observation_start),
         "universe_stop": (
@@ -947,6 +1225,7 @@ def _validate_learned_retrieval_center_request(args) -> None:
         "tail_proposal": True,
         "exact_oracle": True,
         "pilot_stratum": False,
+        "spatial_neyman": False,
         "candidate_backend": expected["candidate_backend"],
         "universe_start": expected["universe_start"],
         "universe_stop": expected["universe_stop"],
@@ -1008,6 +1287,144 @@ def _validate_learned_retrieval_center_request(args) -> None:
         )
 
 
+def _validate_spatial_neyman_partition_audit_request(args) -> None:
+    """Keep the outcome-blind partition build separate from all science rows."""
+
+    if not args.audit_spatial_neyman_partition:
+        return
+    conflicts = {
+        "--prepare-only": bool(args.prepare_only),
+        "--diagnose-complement": args.diagnose_complement is not None,
+        "--diagnose-complement-tail-proposal": bool(args.diagnose_complement_tail_proposal),
+        "--diagnose-complement-pilot-stratum": bool(args.diagnose_complement_pilot_stratum),
+        "--diagnose-complement-exact-oracle": bool(args.diagnose_complement_exact_oracle),
+        "--diagnose-complement-spatial-neyman": bool(args.diagnose_complement_spatial_neyman),
+        "--diagnose-complement-learned-center-checkpoint": (
+            args.diagnose_complement_learned_center_checkpoint is not None
+        ),
+        "--mock-input": args.mock_input is not None,
+        "--spatial-neyman-partition-cache": (args.spatial_neyman_partition_cache is not None),
+    }
+    active = sorted(name for name, enabled in conflicts.items() if enabled)
+    if active:
+        raise SystemExit(
+            "--audit-spatial-neyman-partition is outcome-blind and cannot be "
+            "combined with " + ", ".join(active)
+        )
+    if args.candidate_backend != "torch":
+        raise SystemExit("--audit-spatial-neyman-partition requires --candidate-backend torch")
+
+
+def _validate_spatial_neyman_request(args) -> None:
+    """Fail closed around the frozen spatial-Neyman centre diagnostic."""
+
+    if not args.diagnose_complement_spatial_neyman:
+        return
+    expected = SPATIAL_NEYMAN_PROTOCOL
+    effective_prefilter = (
+        args.proposal_candidates
+        if args.proposal_prefilter_candidates is None
+        else args.proposal_prefilter_candidates
+    )
+    observed = {
+        "diagnostic_enabled": args.diagnose_complement is not None,
+        "tail_proposal": bool(args.diagnose_complement_tail_proposal),
+        "exact_oracle": bool(args.diagnose_complement_exact_oracle),
+        "pilot_stratum": bool(args.diagnose_complement_pilot_stratum),
+        "learned_retrieval": (args.diagnose_complement_learned_center_checkpoint is not None),
+        "partition_audit": bool(args.audit_spatial_neyman_partition),
+        "candidate_backend": args.candidate_backend,
+        "universe_start": int(args.observation_start),
+        "universe_stop": (None if args.observation_stop is None else int(args.observation_stop)),
+        "n_candidates": int(args.proposal_candidates),
+        "prefilter_candidates": int(effective_prefilter),
+        "n_global_draws": int(args.diagnose_complement_global_draws),
+        "proposal_seed": int(args.proposal_seed),
+        "initial_strategy": args.initial_strategy,
+        "diagnostic_object_chunk": int(args.object_chunk),
+        "flow_atom_chunk": int(args.atom_chunk),
+        "spatial_object_chunk": int(args.spatial_neyman_object_chunk),
+        "spatial_atom_chunk": int(args.spatial_neyman_atom_chunk),
+    }
+    required = {
+        "diagnostic_enabled": True,
+        "tail_proposal": False,
+        "exact_oracle": True,
+        "pilot_stratum": False,
+        "learned_retrieval": False,
+        "partition_audit": False,
+        "candidate_backend": expected["candidate_backend"],
+        "universe_start": expected["universe_start"],
+        "universe_stop": expected["universe_stop"],
+        "n_candidates": expected["n_candidates"],
+        "prefilter_candidates": expected["prefilter_candidates"],
+        "n_global_draws": expected["n_global_draws"],
+        "proposal_seed": expected["proposal_seed"],
+        "initial_strategy": expected["initial_strategy"],
+        "diagnostic_object_chunk": expected["diagnostic_object_chunk"],
+        "flow_atom_chunk": expected["flow_atom_chunk"],
+        "spatial_object_chunk": expected["spatial_object_chunk"],
+        "spatial_atom_chunk": expected["spatial_atom_chunk"],
+    }
+    mismatched = {
+        name: {"expected": required[name], "observed": observed[name]}
+        for name in required
+        if observed[name] != required[name]
+    }
+    if mismatched:
+        raise SystemExit("spatial-Neyman centre protocol mismatch: " + json.dumps(mismatched, sort_keys=True))
+    if args.cut_abs_ehat is not None or bool(args.cut_bound) or args.selection_cache is not None:
+        raise SystemExit(
+            "the spatial-Neyman centre protocol requires measured cuts and selection caches to be disabled"
+        )
+    partition_root = (
+        None if args.spatial_neyman_partition_cache is None else Path(args.spatial_neyman_partition_cache)
+    )
+    if partition_root is None:
+        raise SystemExit("--diagnose-complement-spatial-neyman requires --spatial-neyman-partition-cache")
+    manifest_path = partition_root / "manifest.json"
+    if not manifest_path.is_file():
+        raise SystemExit(f"missing spatial-Neyman partition manifest: {manifest_path}")
+    partition_path = partition_root / SPATIAL_NEYMAN_PARTITION_FILE
+    if not partition_path.is_file():
+        raise SystemExit(f"missing spatial-Neyman partition cache: {partition_path}")
+    frozen_partition_hashes = {
+        name: expected.get(name)
+        for name in (
+            "partition_sha256",
+            "partition_cache_sha256",
+            "partition_manifest_sha256",
+        )
+    }
+    missing_frozen_hashes = sorted(name for name, value in frozen_partition_hashes.items() if value is None)
+    if missing_frozen_hashes:
+        raise SystemExit(
+            "the spatial-Neyman protocol lacks frozen partition hashes "
+            "(" + ", ".join(missing_frozen_hashes) + "); run and review the "
+            "outcome-blind audit first"
+        )
+    actual_manifest_sha256 = _sha256(manifest_path)
+    if actual_manifest_sha256 != frozen_partition_hashes["partition_manifest_sha256"]:
+        raise SystemExit(
+            "spatial-Neyman partition manifest SHA-256 mismatch: "
+            f"{actual_manifest_sha256} != "
+            f"{frozen_partition_hashes['partition_manifest_sha256']}"
+        )
+    if args.mock_input is None:
+        raise SystemExit("the spatial-Neyman centre protocol requires its frozen mock input")
+    try:
+        actual_mock_sha256 = _mock_input_hashes(args.mock_input)
+    except OSError as error:
+        raise SystemExit(f"cannot hash the spatial-Neyman frozen mock input: {error}") from error
+    expected_mock_sha256 = expected["mock_input_sha256"]
+    if actual_mock_sha256 != expected_mock_sha256:
+        raise SystemExit(
+            "spatial-Neyman mock-input SHA-256 mismatch: "
+            f"{json.dumps(actual_mock_sha256, sort_keys=True)} != "
+            f"{json.dumps(expected_mock_sha256, sort_keys=True)}"
+        )
+
+
 def main(argv=None):
     args = parse_args(argv)
     inference_config = _load_release_config(
@@ -1028,9 +1445,11 @@ def main(argv=None):
     likelihood_implementation_hashes = _likelihood_implementation_hashes()
     if args.observation_start < 0:
         raise SystemExit("--observation-start must be non-negative")
+    _validate_spatial_neyman_partition_audit_request(args)
     _validate_exact_oracle_request(args)
     _validate_pilot_stratum_request(args)
     _validate_learned_retrieval_center_request(args)
+    _validate_spatial_neyman_request(args)
     if args.prepare_only and args.mock_input is not None:
         raise SystemExit("--prepare-only generates a new mock and rejects --mock-input")
     if args.selection_cache is not None and not (
@@ -1383,6 +1802,63 @@ def main(argv=None):
         raise RuntimeError(
             f"proposal cache uses unknown flow targets: {missing_proposal_targets}"
         )
+
+    # The spatial partition is outcome-blind.  Build or verify it before a mock
+    # is loaded, before rows are sliced, and before any candidate query or
+    # target-flow evaluation can occur.  The spatial Torch path never needs the
+    # 12.76-million-row coordinate KD tree.
+    proposal = None
+    spatial_partition = None
+    spatial_partition_load_seconds = None
+    proposal_initialization_seconds = None
+    if (
+        args.audit_spatial_neyman_partition
+        or args.diagnose_complement_spatial_neyman
+    ):
+        proposal_started = time.perf_counter()
+        proposal = DefensiveLocalProposal(
+            coordinates,
+            prior.weights,
+            local_base_weights=cache.get(0.0, 0.0).detection_probability,
+            build_coordinate_tree=False,
+        )
+        proposal_initialization_seconds = time.perf_counter() - proposal_started
+        if args.audit_spatial_neyman_partition:
+            audit = _write_spatial_partition_audit(
+                output,
+                proposal,
+                provenance={
+                    "pipeline_release": "partition_audit",
+                    "pipeline_base_release": inference_config["release"],
+                    "pipeline_config_sha256": pipeline_config_sha256,
+                    "pipeline_resolved_config_sha256": _json_sha256(
+                        resolved_pipeline_config
+                    ),
+                    "likelihood_release": likelihood_config["release"],
+                    "likelihood_config_sha256": likelihood_config_sha256,
+                    "conditions": conditions,
+                    "model_sha256": model_hashes,
+                    "model_cache_sha256": model_cache_hashes,
+                    "scene_sha256": scene_hashes,
+                    "proposal_cache_sha256": proposal_cache_hashes,
+                    "likelihood_component_sha256": likelihood_component_hashes,
+                    "pipeline_implementation_sha256": (
+                        pipeline_implementation_hashes
+                    ),
+                    "proposal_initialization_seconds": float(
+                        proposal_initialization_seconds
+                    ),
+                    "coordinate_tree_built": False,
+                },
+            )
+            print(json.dumps(audit, indent=2))
+            return 0
+        spatial_partition, spatial_partition_load_seconds = (
+            _load_verified_spatial_partition(
+                args.spatial_neyman_partition_cache, proposal
+            )
+        )
+
     generated_mock = args.mock_input is None
     if generated_mock:
         mock = generate_mock_catalogue(
@@ -1612,28 +2088,33 @@ def main(argv=None):
     # Proposal trees are unnecessary when this invocation only freezes a mock.
     # On the 12.76-million-atom default prior they are material enough to defer
     # until an inference partition actually needs candidate queries.
-    proposal_started = time.perf_counter()
-    if args.diagnose_complement_learned_center_checkpoint is not None:
-        proposal = ContrastiveRetrievalProposal(
-            coordinates,
-            prior.weights,
-            local_base_weights=cache.get(0.0, 0.0).detection_probability,
-            likelihood=likelihood,
-            checkpoint=args.diagnose_complement_learned_center_checkpoint,
-            center=initial,
-            contrastive_pool=args.proposal_candidates,
-            retrieval_object_chunk=args.learned_retrieval_object_chunk,
-            rerank_object_chunk=args.object_chunk,
-            atom_chunk=args.learned_retrieval_atom_chunk,
-            build_coordinate_tree=False,
-        )
-    else:
-        proposal = DefensiveLocalProposal(
-            coordinates,
-            prior.weights,
-            local_base_weights=cache.get(0.0, 0.0).detection_probability,
-        )
-    proposal_initialization_seconds = time.perf_counter() - proposal_started
+    if proposal is None:
+        proposal_started = time.perf_counter()
+        if args.diagnose_complement_learned_center_checkpoint is not None:
+            proposal = ContrastiveRetrievalProposal(
+                coordinates,
+                prior.weights,
+                local_base_weights=cache.get(0.0, 0.0).detection_probability,
+                likelihood=likelihood,
+                checkpoint=args.diagnose_complement_learned_center_checkpoint,
+                center=initial,
+                contrastive_pool=args.proposal_candidates,
+                retrieval_object_chunk=args.learned_retrieval_object_chunk,
+                rerank_object_chunk=args.object_chunk,
+                atom_chunk=args.learned_retrieval_atom_chunk,
+                build_coordinate_tree=False,
+            )
+        else:
+            proposal = DefensiveLocalProposal(
+                coordinates,
+                prior.weights,
+                local_base_weights=cache.get(0.0, 0.0).detection_probability,
+            )
+        proposal_initialization_seconds = time.perf_counter() - proposal_started
+    elif not args.diagnose_complement_spatial_neyman:
+        raise RuntimeError("prebuilt proposal is reserved for spatial-Neyman mode")
+    elif proposal.tree is not None or spatial_partition is None:
+        raise RuntimeError("spatial-Neyman pre-work did not freeze its tree-free partition")
 
     if args.compile_flow:
         flow.compile_log_prob(mode=None, dynamic=True)
@@ -1641,71 +2122,86 @@ def main(argv=None):
     if args.diagnose_complement is not None:
         # A measurement, not a release: the estimator never runs, so this
         # writes its own directory and no `result.json` identity block.
-        diagnostic = diagnose_complement(
-            likelihood,
-            mock,
-            proposal,
-            center=initial,
-            n_candidates=args.proposal_candidates,
-            prefilter_candidates=(
-                args.proposal_candidates
-                if args.proposal_prefilter_candidates is None
-                else args.proposal_prefilter_candidates
-            ),
-            n_global_draws=args.diagnose_complement_global_draws,
-            seed=int(args.proposal_seed) + COMPLEMENT_DIAGNOSTIC_SEED_OFFSET,
-            pilot_seed=(
-                int(args.proposal_seed)
-                + PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET
-                if args.diagnose_complement_pilot_stratum
-                else None
-            ),
-            # `mock` is already the local partition.  The previous code sliced
-            # it and then applied the original absolute bounds a second time,
-            # producing an empty/wrong diagnostic for nonzero partitions.
-            observation_start=0,
-            observation_stop=len(mock.measurements),
-            object_id_offset=int(args.observation_start),
-            object_chunk=args.object_chunk,
-            atom_chunk=args.atom_chunk,
-            candidate_backend=args.candidate_backend,
-            include_tail_proposal=args.diagnose_complement_tail_proposal,
-            include_pilot_stratum=(
-                args.diagnose_complement_pilot_stratum
-            ),
-            include_exact_oracle=args.diagnose_complement_exact_oracle,
-            confirmation_mock_sha256=source_mock_hashes,
-            learned_retrieval_center=(
-                {
-                    "label": LEARNED_RETRIEVAL_CENTER_PROTOCOL["label"],
-                    "initial_strategy": args.initial_strategy,
-                    "checkpoint": str(
-                        Path(
-                            args.diagnose_complement_learned_center_checkpoint
-                        ).resolve()
-                    ),
-                    "checkpoint_sha256": (
-                        LEARNED_RETRIEVAL_CENTER_CHECKPOINT_SHA256
-                    ),
-                    "retrieval_object_chunk": int(
-                        args.learned_retrieval_object_chunk
-                    ),
-                    "retrieval_atom_chunk": int(
-                        args.learned_retrieval_atom_chunk
-                    ),
-                    "retrieval_matmul_precision": (
-                        proposal.retrieval_matmul_precision
-                    ),
-                    "mock_input_sha256": dict(source_mock_hashes),
-                    "proposal_initialization_seconds": float(
-                        proposal_initialization_seconds
-                    ),
-                }
-                if args.diagnose_complement_learned_center_checkpoint
-                is not None
-                else None
-            ),
-        )
+        if args.diagnose_complement_spatial_neyman:
+            diagnostic = diagnose_spatial_neyman_complement(
+                likelihood,
+                mock,
+                proposal,
+                partition=spatial_partition,
+                partition_cache_sha256=SPATIAL_NEYMAN_PROTOCOL["partition_cache_sha256"],
+                partition_manifest_sha256=SPATIAL_NEYMAN_PROTOCOL["partition_manifest_sha256"],
+                partition_load_seconds=float(spatial_partition_load_seconds),
+                proposal_initialization_seconds=float(proposal_initialization_seconds),
+                confirmation_mock_sha256=source_mock_hashes,
+                center=initial,
+                # The runner has already sliced the frozen absolute window;
+                # preserve absolute object ids for every counter-based stream.
+                observation_start=0,
+                observation_stop=len(mock.measurements),
+                object_id_offset=int(args.observation_start),
+                object_chunk=args.object_chunk,
+                atom_chunk=args.atom_chunk,
+                spatial_atom_chunk=args.spatial_neyman_atom_chunk,
+                spatial_object_chunk=args.spatial_neyman_object_chunk,
+                candidate_backend=args.candidate_backend,
+                n_candidates=args.proposal_candidates,
+                prefilter_candidates=(
+                    args.proposal_candidates
+                    if args.proposal_prefilter_candidates is None
+                    else args.proposal_prefilter_candidates
+                ),
+                proposal_seed=args.proposal_seed,
+                pilot_seed=SPATIAL_NEYMAN_PROTOCOL["pilot_seed"],
+                production_seed=SPATIAL_NEYMAN_PROTOCOL["production_seed"],
+            )
+        else:
+            diagnostic = diagnose_complement(
+                likelihood,
+                mock,
+                proposal,
+                center=initial,
+                n_candidates=args.proposal_candidates,
+                prefilter_candidates=(
+                    args.proposal_candidates
+                    if args.proposal_prefilter_candidates is None
+                    else args.proposal_prefilter_candidates
+                ),
+                n_global_draws=args.diagnose_complement_global_draws,
+                seed=int(args.proposal_seed) + COMPLEMENT_DIAGNOSTIC_SEED_OFFSET,
+                pilot_seed=(
+                    int(args.proposal_seed) + PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET
+                    if args.diagnose_complement_pilot_stratum
+                    else None
+                ),
+                # `mock` is already the local partition.  The previous code sliced
+                # it and then applied the original absolute bounds a second time,
+                # producing an empty/wrong diagnostic for nonzero partitions.
+                observation_start=0,
+                observation_stop=len(mock.measurements),
+                object_id_offset=int(args.observation_start),
+                object_chunk=args.object_chunk,
+                atom_chunk=args.atom_chunk,
+                candidate_backend=args.candidate_backend,
+                include_tail_proposal=args.diagnose_complement_tail_proposal,
+                include_pilot_stratum=(args.diagnose_complement_pilot_stratum),
+                include_exact_oracle=args.diagnose_complement_exact_oracle,
+                confirmation_mock_sha256=source_mock_hashes,
+                learned_retrieval_center=(
+                    {
+                        "label": LEARNED_RETRIEVAL_CENTER_PROTOCOL["label"],
+                        "initial_strategy": args.initial_strategy,
+                        "checkpoint": str(Path(args.diagnose_complement_learned_center_checkpoint).resolve()),
+                        "checkpoint_sha256": (LEARNED_RETRIEVAL_CENTER_CHECKPOINT_SHA256),
+                        "retrieval_object_chunk": int(args.learned_retrieval_object_chunk),
+                        "retrieval_atom_chunk": int(args.learned_retrieval_atom_chunk),
+                        "retrieval_matmul_precision": (proposal.retrieval_matmul_precision),
+                        "mock_input_sha256": dict(source_mock_hashes),
+                        "proposal_initialization_seconds": float(proposal_initialization_seconds),
+                    }
+                    if args.diagnose_complement_learned_center_checkpoint is not None
+                    else None
+                ),
+            )
         destination = Path(args.diagnose_complement)
         destination.mkdir(parents=True, exist_ok=True)
         table_path = destination / "per_object.parquet"
@@ -1715,8 +2211,16 @@ def main(argv=None):
             learned_summary = learned_retrieval_center_summary(diagnostic)
             diagnostic_summary["learned_retrieval_center"] = learned_summary
             diagnostic_summary["gates"] = learned_summary["gates"]
+        if args.diagnose_complement_spatial_neyman:
+            spatial_summary = spatial_neyman_summary(diagnostic)
+            diagnostic_summary["spatial_neyman"] = spatial_summary
+            diagnostic_summary["gates"] = spatial_summary["gates"]
         summary = {
-            "method": "held-out complement tail-proposal diagnostic",
+            "method": (
+                "held-out complement spatial-Neyman diagnostic"
+                if args.diagnose_complement_spatial_neyman
+                else "held-out complement tail-proposal diagnostic"
+            ),
             "metadata": diagnostic.metadata,
             "summary": diagnostic_summary,
             "provenance": {
@@ -1742,6 +2246,15 @@ def main(argv=None):
                 "scene_sha256": scene_hashes,
                 "proposal_cache_sha256": proposal_cache_hashes,
                 "mock_input_sha256": source_mock_hashes,
+                "spatial_partition_sha256": (
+                    {
+                        "partition_sha256": SPATIAL_NEYMAN_PROTOCOL["partition_sha256"],
+                        "partition_cache_sha256": SPATIAL_NEYMAN_PROTOCOL["partition_cache_sha256"],
+                        "partition_manifest_sha256": SPATIAL_NEYMAN_PROTOCOL["partition_manifest_sha256"],
+                    }
+                    if args.diagnose_complement_spatial_neyman
+                    else None
+                ),
                 "likelihood_component_sha256": likelihood_component_hashes,
                 "pipeline_implementation_sha256": pipeline_implementation_hashes,
                 "likelihood_implementation_sha256": (
@@ -1789,6 +2302,18 @@ def main(argv=None):
                         }
                         if args.diagnose_complement_learned_center_checkpoint
                         is not None
+                        else {}
+                    ),
+                    **(
+                        {
+                            "sbsi/spatial_neyman_diagnostic.py": _sha256(
+                                REPOSITORY_ROOT / "sbsi/spatial_neyman_diagnostic.py"
+                            ),
+                            "jobs/job_complement_spatial_neyman_center.sh": (
+                                _sha256(REPOSITORY_ROOT / "jobs/job_complement_spatial_neyman_center.sh")
+                            ),
+                        }
+                        if args.diagnose_complement_spatial_neyman
                         else {}
                     ),
                 },

@@ -2,6 +2,115 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.338 — spatial pilot/Neyman DM3 gate implemented and frozen before partition audit
+
+**Decision and estimator.** The valid learned-support rejection in cont.337
+stopped support enlargement and opened the preregistered coverage-changing
+route. The new centre-only development diagnostic keeps a deterministic
+16,384-atom exact support, partitions its active complement into 256 global
+outcome-blind spatial cells, discards a 4,096-draw independent pilot, and uses
+that pilot only to choose bounded whole-cycle production counts. For cell
+`h`, the exact balance law on `H_h \ S_i` is the separately normalized DM3
+mixture `(1/2) r_t1 + (3/8) r_t2 + (1/8) r_prior`. The prior component gives
+full support; a zero proxy normalizer falls back exactly to that conditioned
+prior, while NaN or positive infinity fails. The independent 16,384-draw
+production estimate is the sum of cell means, added to the exact support sum,
+and is unbiased conditional on the support, partition, pilot, and allocation.
+The fixed-source conditional variance is
+`sum_[h,l] n_hl samplevar(c/q_h)_hl / n_h^2`; the pooled Pareto vector is
+`M/n_h * c/q_h`, not the raw unequal-cell ratios.
+
+The discarded pilot uses two complete DM3 cycles in every cell. Its allocation
+score is `V_h=sum_l alpha_l samplevar_l(c/q_h)`. Production starts at two
+cycles per cell and greedily assigns the remaining cycles by maximum
+`V_h/[m_h(m_h+1)]`, with cell-ID ties, a 64-cycle cap, and exactly 2,048 total
+cycles. The all-zero deterministic eight-cycle fallback is implemented for
+mathematical completeness but is a hard science-gate failure. Pilot and
+production use explicit independent seeds 1,008,704 and 7,008,704 plus object,
+cell, and domain keys. Both reservoirs are mapped through one normalized cell
+law; the unused 131,072-entry production bank is never target-flow evaluated,
+but its construction time and hashes remain part of the method and run
+identity.
+
+**Outcome-blind partition.** `sbsi/catalogue_sampling.py` now provides a
+compact, immutable `SpatialCellPartition` plus strict save/load/verification.
+Eight binary levels split standardized proposal axes `(0,1,2,3,0,1,2,3)` by
+detected-prior mass, with coordinate/atom-ID stable ordering, a 45--55% count
+guard, smaller-cut ties, and count-midpoint zero-mass nodes. Semantic recipe,
+input, assignment, count, detected-mass, and prior-mass hashes are separate
+from deterministic NPZ bytes and canonical manifest bytes. The dedicated
+audit path builds the partition before mock loading, candidate queries, or
+target-flow evaluations and reports zero for all three. Science fails closed
+until all three reviewed artifact identities replace the intentional nulls in
+`SPATIAL_NEYMAN_PROTOCOL`, then rehashes bytes, verifies the embedded record
+and live proposal inputs, and requires every cell count to be in
+`(16,384, 262,144]`.
+
+**Frozen centre gate.** `sbsi/spatial_neyman_diagnostic.py` fixes rows
+25,000:25,512 at the archived mean-observed-shape centre
+`(0.013610377120038044, 0.002740148300964851)`, Torch candidate search,
+prefilter 131,072, exact support and production width 16,384, object/spatial/
+flow chunks 8/262,144/4,096, proposal seed 8701, the two RNG seeds above, the
+DM3 recipe, mock hashes, and exact-64 selection manifest. Exact-support,
+pilot, selected-production, exact-oracle, and total target-flow counts are
+8,388,608, 2,097,152, 8,388,608, 816,703,360, and 835,577,728. Method time
+includes proposal initialization, actual partition load and semantic verify,
+candidate query, exact-support flow, normalization and mapping of both full
+reservoirs, pilot flow, allocation, selected-production flow, and reduction;
+the exact oracle is excluded. Core and independently written reductions must
+agree. Per-object manifests bind exact support, exclusions, pilot and full/
+selected production indices and probabilities, cell/source schedules,
+normalizers, flow outputs, and allocation. Proxy-to-prior fallback cell counts
+are explicit. Batch records separately bind core reservoir/allocation/packed
+identities.
+
+Stop/go thresholds are unchanged from the learned-centre comparison: at least
+461/512 `k<0.5`, at least 507/512 `k<0.7`, no `k>=1`, complement relative-SE
+median/higher-p90 at most 0.00882/0.0268, exact-support cross-check at most
+`1e-5`, exact-64 median/higher-p90 absolute total-log-evidence error
+0.01/0.05, aggregate `|z|<=2.5`, z RMS 0.8--1.2, and at least 58/64 within
+1.96. Mean and higher-p90 squared-total-relative-error times complete method
+time must each be at most 0.90 of the frozen 91.04022970038932-second DM3
+baseline. Every integrity, reliability, exact-calibration, and efficiency gate
+must pass; only then may a multi-view stencil or inference integration be
+implemented.
+
+**Files and validation.** `scripts/run_inference.py` adds mutually exclusive,
+strict audit/science branches and preserves already sliced local rows while
+keying every stream by absolute IDs. New detached-clean, overwrite-refusing
+A40 wrappers are `jobs/job_spatial_neyman_partition_audit.sh` and
+`jobs/job_complement_spatial_neyman_center.sh`. New sampler, diagnostic, CLI,
+artifact, mutation, and wrapper coverage is in
+`tests/test_spatial_neyman_sampling.py`,
+`tests/test_spatial_neyman_diagnostic.py`, and
+`tests/test_spatial_neyman_cli.py`. `doc/CATALOGUE_PRIOR.md` records the
+maintained estimator and gate contract. Independent mathematical/code review
+found no launch blocker and specifically checked complement indexing,
+normalization, conditional unbiasedness, fixed-source variance, greedy
+allocation, effective Pareto weights, flow counts, timing, memory scaling, and
+absolute-row slicing. Validation after provenance hardening passed:
+
+```text
+/project/.../py31/bin/python -m pytest tests -q
+  372 passed, 2 skipped in 32.38s
+/project/.../py31/bin/python -m pytest -q tests/test_spatial_neyman_*.py
+  70 passed
+ruff check <changed Python and test files>
+  All checks passed!
+/project/.../py31/bin/python -m py_compile <changed Python and test files>
+bash -n jobs/job_spatial_neyman_partition_audit.sh jobs/job_complement_spatial_neyman_center.sh
+git diff --check
+  passed
+```
+
+No new science row has been read by this continuation, no scheduler job has
+been submitted, and no inference default or release label changes. The three
+partition identities remain null deliberately. Next: commit these sources,
+create a clean detached checkout, submit only the outcome-blind partition
+audit from an external log directory, independently verify its identities and
+cell bounds, then freeze those identities in a second commit before the A40
+science gate.
+
 ## 2026-08-30 cont.337 — learned broad-support centre gate is valid but decisively rejected
 
 **Frozen result.** Detached commit `bf09c2e` ran the preregistered learned-R
