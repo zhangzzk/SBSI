@@ -2,6 +2,38 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.328 — batched DM3 is scientifically identical and 4.24x faster end to end on the development window
+
+**Scheduled equivalence.** A detached checkout of commit `0cf6500` ran the
+already consumed rows 25,000:25,512 under A40 job 16121966 with the selected
+`T1:T2:prior = 4:3:1` recipe, `K=M=16,384`, prefilter 131,072, proposal seed
+8701, 262,144-atom slabs, and 32-object proposal batches. All 59 per-object
+columns and their null masks match the scalar-constructor result from job
+16121716. Every discrete value is identical; the largest floating-point
+absolute difference is `1.67e-15`, in a component complement-mass diagnostic.
+All scientific summaries, sampled atoms, importance ratios, and gate counts are
+therefore unchanged.
+
+**Measured speed.** Instrumented time fell from 440.606 s to 103.912 s
+(4.24x). The dominant conditioned-MIS constructor fell from 375.955 s to
+38.782 s (9.69x). Candidate queries were 5.010/4.927 s, prefilter flow
+35.240/36.103 s, prior drawing 10.370/10.203 s, prior flow 2.667/2.656 s,
+tail flow 2.713/2.680 s, and reduction 8.637/8.549 s for scalar/batched runs.
+The scheduler job completed in 2m31s with MaxRSS 8,220,796 KiB and exit code
+zero. This production-data result supersedes the earlier synthetic runtime
+projection while retaining that benchmark's memory and batch-scaling evidence.
+
+**Interpretation and artifact.** Execution batching does not promote DM3: its
+33/512 objects above k=0.7 and complement-relative-SE distribution remain the
+same failed development result. It does make a second independent discovery
+pass affordable. The immutable output is
+`complement_tail_dm_mis_heldout25k_v1/results/rows25000_25512_seed8701_dm3_batched32_0cf6500_v1`;
+its frozen scheduler checkout is
+`/home/z/Zekang.Zhang/SBSI-inference-dm3-batch-run-0cf6500`. The next screen
+uses a discarded pilot to choose an enlarged exact stratum, then rebuilds an
+independent DM3 complement proposal. Reserved confirmation rows remain
+untouched.
+
 ## 2026-08-30 cont.327 — exact confirmation now fails closed on row identity and records the selected DM3 honestly
 
 **Review defect and correction.** Independent review of the merged batch and
