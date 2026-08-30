@@ -2,6 +2,39 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.344 — outcome-free production-shape A40 constructor preflight passes
+
+**Structural result only.** Clean detached implementation commit
+`720a05797602fe2d44831c90443d1264bc630dff` ran the frozen constructor-only
+preflight as A40 Slurm job 16124988. It completed with exit code zero in 38
+seconds on `kng-cl-nv01`; the batch step reported 5,952,516 KiB MaxRSS. The
+single JSON stdout record has SHA-256
+`7f413562d32d00830634ced716bf202cb2058b517287b0fd653bc018deef2050`.
+Stderr is empty, SHA-256
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+Independent parsing verified the detached commit, sampler and partition
+identities, all frozen workload fields, 12,760,990 active atoms, four-cell
+slab maximum 232,247 below the 262,144 bound, zero structural failures, and
+all six science counters exactly zero.
+
+The cold 32-object constructor took 7.773700385 seconds. CUDA baseline/peak
+allocated memory was 1,340,211,712/1,875,504,640 bytes; peak reserved memory
+was 2,610,954,240 bytes. The retained draw arrays occupied 34,906,368 bytes.
+The process-reported maximum RSS was 7,771,340,800 bytes; this and Slurm's
+cgroup MaxRSS are observational, not gates. Complete in-process time was
+21.157461 seconds, including scene/proposal/cache loading, semantic partition
+verification, proxy transfer and CUDA initialization, deterministic synthetic
+input construction, the constructor, and structural checks.
+
+No mock row was loaded; there was no candidate query, target-flow evaluation,
+reducer, exact oracle, Pareto calculation, or gate evaluation. Therefore this
+run has no target outcome and supplies no evidence for changing a sampler
+constant or scientific threshold. It establishes that the preregistered
+production chunks fit the A40 and that the exact-law invariants survive the
+real proposal and partition. The one frozen centre science gate may now run
+unchanged from the same detached commit; it remains the first target result
+for this route and must be accepted or rejected only by all predeclared gates.
+
 ## 2026-08-30 cont.343 — exact H256-U8-PS2 constructor and outcome-free A40 preflight are launch-ready
 
 **Exact constructor implemented.** `sbsi/catalogue_sampling.py` now provides
