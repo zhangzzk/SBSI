@@ -2,6 +2,106 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.347 — exact global base and packed integer bridge pass the software/algebra gate
+
+**Scope.** This entry implements the scalable successor named, but not yet
+implemented, in cont.346. `sbsi/integer_mixture_base.py` constructs a single
+outcome-independent full-catalogue proposal artifact. Raw-prior and
+detected-prior weights are each quantized once in canonical catalogue order to
+`2^48` ticks. The raw-prior law reserves at least one tick for every positive
+prior atom; an independent three-bit source draw selects detected prior with
+probability `7/8` and raw prior with probability `1/8`. The realized marginal
+atom probability is therefore exactly
+
+```text
+q0(j) = (7 K_detected(j) + K_prior(j)) / 2^51.
+```
+
+Source selection and CDF thresholds use separate PCG64 raw streams keyed by
+the full uint64 seed, object ID, domain, purpose, and version. Draw offsets and
+object chunks preserve the canonical stream mapping. The immutable draw
+records selected source ticks, exact CDF brackets, mixture numerators,
+probabilities, and hashes; `verify()` now replays both keyed raw streams as
+well as every selected-law field. The deterministic two-file cache refuses a
+nonempty destination and validates its canonical manifest, archive schema,
+file hash, array hashes, law hash, and live source-weight hashes on load.
+
+`sbsi/packed_integer_bridge_smc.py` consumes exactly eight fresh IID `q0`
+rounds in `(island, round, particle)` order. Its provisional fixed bridge is
+
+```text
+H_t(ell) = max(1, floor(2^24 exp(clip(t ell / 8, -24, 24)))), t=1,...,7,
+gamma_t  = q0 H_t,
+gamma_8  = q0 exp(ell) = c.
+```
+
+True zero targets (`ell=-inf`) receive zero, while every finite target remains
+on every intermediate support. Each nonterminal stage applies `H_t/H_(t-1)`,
+forms a full-support-on-positive-weights `2^48`-tick resampling law, samples
+multinomial ancestors, and carries the exact realized-law auxiliary correction
+`U_parent/(P r_parent)`. It then proposes the next fresh `q0` round and accepts
+with the exact integer Bernoulli `min(1,H_t(y)/H_t(x))`, implemented by
+unbiased uint64 rejection sampling. Stage eight applies the unclipped
+`exp(ell)/H_7` factor and performs no mutation. The linear mean of independent
+island normalizers is the estimator; the reported variance is the island
+sample variance divided by island count. Collapsed islands remain zero and are
+never retried, dropped, or excluded from that mean.
+
+**Independent algebra review.** For fixed numerical target ratios this is the
+standard unbiased Feynman--Kac recursion, up to ordinary floating-point
+roundoff: resampling offspring have conditional mean `P r`, the auxiliary
+factor restores the pre-resampling random measure exactly for the realized
+integer law, and independence MH is reversible because both directions equal
+`q0(x) q0(y) min(H_t(x),H_t(y))`. The review made the required conditions
+explicit: `q0>0` on final support; positive `H_t` on every finite target;
+actual rather than intended resampling probabilities in the correction; exact
+rational MH coins; increment--resample/correct--move order; fixed bridge maps;
+fresh nonreused IID proposal entries; and linear retention of zero islands.
+The implementation enforces all conditions it can observe. Caller IID
+generation remains a bound input contract and is supplied by the exact base
+artifact in the next adapter.
+
+**Validation.** The combined focused suite has 76 passing cases after the
+review hardening. It covers exact tick totals and marginal mixture identities,
+defensive support, source frequencies, CDF brackets, frozen keyed raw streams,
+high-word key sensitivity, object/order/offset replay, deterministic cache
+round trips and tamper failures, keyed-RNG replay in draw verification,
+positive intermediate support after floating underflow, exact `Fraction`
+enumeration of the auxiliary-resampling first moment, integer-MH detailed
+balance, exact randbelow replay/range, constant-target telescoping, unclipped
+extreme terminal ratios, partial and complete zero support, mixed-island
+collapse retention, acceptance versus actual movement, duplicate-target
+consistency, island order/chunk replay, immutable temperatures/results,
+ancestor CDF replay, lineage reconstruction, and the general absence of a
+terminal move.
+
+```text
+python -m pytest -q tests/test_integer_mixture_base.py \
+  tests/test_packed_integer_bridge_smc.py                    76 passed
+ruff check sbsi/integer_mixture_base.py \
+  sbsi/packed_integer_bridge_smc.py \
+  tests/test_integer_mixture_base.py \
+  tests/test_packed_integer_bridge_smc.py                    clean
+python -m py_compile <the four files above>                  clean
+git diff --check                                             clean
+```
+
+**Boundary and next gate.** These modules are still catalogue-agnostic and
+have no inference flag, likelihood adapter, scheduler result, or science
+claim. The tests establish exact resampling first moments and MH reversibility
+as separate components rather than exhaustively enumerating all eight stages.
+They do not prove caller proposals are IID, and IEEE-754 log/division arithmetic
+targets the fixed stored numerical ratios rather than an exact rational
+likelihood. The law is deliberately global and unconditioned:
+object-specific exact-stratum hits are retained as zero complement targets.
+Conditioning would generally reduce variance, but its non-dyadic normalizer
+would require a separately specified proposal and denominator. The next
+authorized action is an outcome-free production-shape A40 preflight using the
+real 12,760,990-atom source arrays, `32 x 16 x 8 x 256` fresh proposal slots,
+synthetic targets, explicit unique/cache accounting, replay checks, and timing
+observability. No mock row, target flow, exact oracle, or science threshold may
+be read before that structural gate passes.
+
 ## 2026-08-30 cont.346 — finite-state island SMC passes its algebra audit but is not a catalogue sampler
 
 **Why and scope.** H256-U8-PS2 showed that removing the pilot reservoir can

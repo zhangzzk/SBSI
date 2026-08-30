@@ -734,6 +734,51 @@ first replace the dense path with a packed lazy evaluator and an audited
 integer proposal/resampling/mutation law; until then no scheduler science gate,
 inference integration, or efficiency claim is authorized.
 
+#### Exact global base and packed integer bridge
+
+`sbsi.integer_mixture_base` is the outcome-independent proposal-law layer for
+the scalable bridge prototype. It quantizes the detected-prior and raw-prior
+sources independently to `2^48` ticks in canonical full-catalogue order, with
+at least one raw-prior tick on every active atom. Separate keyed PCG64 streams
+select the source and its top-48-bit CDF threshold. The fixed `7/8:1/8`
+mixture therefore has exactly representable marginal probability
+`(7 K_detected + K_prior)/2^51`, including on atoms shared by both sources.
+The cache is global and unconditioned: an object's exact-stratum atoms are not
+removed or renormalized, and must instead receive zero stochastic-complement
+target. Cached artifacts must be verified against the live raw and detected
+source arrays before use.
+
+`sbsi.packed_integer_bridge_smc` accepts eight fresh IID proposal rounds per
+island and a pre-evaluated `log(c/q0)` for every requested slot. Its seven
+integer intermediate bridges use a fixed positive score for every finite
+target, exact `2^48`-tick multinomial resampling, the realized-law correction
+`U_parent/(P r_parent)`, and exact-integer independence-MH. The eighth stage
+uses the unclipped terminal ratio and has no mutation. Zero islands are
+retained. Independent islands are reduced in linear mass; only that linear
+normalizer is unbiased in the fixed-numerical-target model, while the log is a
+stable representation and the island sample variance divided by island count
+is an estimated variance of the mean.
+
+The packed kernel cannot verify its most important external condition: every
+round/particle slot must be a fresh IID-with-replacement `q0` draw at a fixed
+causal index. Reusing a proposal, sampling without replacement from a shuffled
+frequency table, or sharing proposal entries between islands invalidates the
+usual independent-island error estimate and can invalidate the invariant
+kernel. Duplicate atom evaluations may be packed and scattered, but the
+original slot multiplicity must remain in resampling. `target_cache_hit_count`
+is therefore the number of duplicate slots that a mandatory unique
+pack/scatter adapter can avoid evaluating, not an assertion that the bare
+kernel performed target evaluation.
+
+This remains a development component. Before it can read a catalogue target,
+an outcome-free scheduler preflight must bind the exact global base to the real
+12.76-million-atom inputs, demonstrate nonreused canonical slot construction,
+exercise synthetic unique evaluation and scatter, replay object/island order
+and chunks, report zero science counters, and measure construction/kernel
+memory and time. Even a passing centre diagnostic would not authorize a
+nine-view response stencil: target-dependent resampling paths need their own
+common-random-number and extraction derivation.
+
 #### Frozen exact-oracle confirmation
 
 `--diagnose-complement-exact-oracle` is a diagnostic-only extension of the
