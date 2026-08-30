@@ -58,7 +58,10 @@ from sbsi.catalogue_sampling import (
 )
 from sbsi.complement_diagnostic import (
     COMPLEMENT_DIAGNOSTIC_SEED_OFFSET,
+    PILOT_STRATUM_DEVELOPMENT_LABEL,
+    PILOT_STRATUM_DEVELOPMENT_PROTOCOL,
     PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET,
+    PILOT_STRATUM_REPLICATION_SEED_OFFSET,
 )
 
 if PILOT_STRATUM_RECIPE.pilot_draws != 8192:
@@ -77,8 +80,18 @@ if PILOT_STRATUM_RECIPE.sha256 != (
     raise SystemExit("pilot recipe hash changed")
 if PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET != 1_000_003:
     raise SystemExit("pilot seed offset changed")
+if PILOT_STRATUM_REPLICATION_SEED_OFFSET != 2_000_003:
+    raise SystemExit("replication pilot seed offset changed")
 if COMPLEMENT_DIAGNOSTIC_SEED_OFFSET != 7_000_003:
     raise SystemExit("production diagnostic seed offset changed")
+if PILOT_STRATUM_DEVELOPMENT_LABEL != (
+    "SBSI/complement-pilot-stratum-development/v1"
+):
+    raise SystemExit("pilot development protocol label changed")
+if PILOT_STRATUM_DEVELOPMENT_PROTOCOL["pilot_seed"] != 1_008_704:
+    raise SystemExit("primary pilot seed identity changed")
+if PILOT_STRATUM_DEVELOPMENT_PROTOCOL["production_seed"] != 7_008_704:
+    raise SystemExit("production seed identity changed")
 PREFLIGHT
 
 exec "$python" "$repo/scripts/run_inference.py" \

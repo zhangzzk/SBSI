@@ -33,7 +33,13 @@ from sbsi.complement_diagnostic import (
     EXACT_ORACLE_OBJECT_CHUNK,
     EXACT_ORACLE_SELECTION_COUNT,
     EXACT_ORACLE_SELECTION_KEY_SHA256,
+    PILOT_STRATUM_DEVELOPMENT_BASELINE,
+    PILOT_STRATUM_DEVELOPMENT_GATE_THRESHOLDS,
+    PILOT_STRATUM_DEVELOPMENT_LABEL,
+    PILOT_STRATUM_DEVELOPMENT_PROTOCOL,
     PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET,
+    PILOT_STRATUM_METHOD_TIME_COMPONENTS,
+    PILOT_STRATUM_REPLICATION_SEED_OFFSET,
     ComplementDiagnostic,
     _fixed_component_standard_error,
     _membership,
@@ -724,6 +730,7 @@ def test_pilot_stratum_is_discarded_then_production_uses_final_stratum():
     diagnostic, proposal = _run_toy_pilot_stratum()
 
     assert PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET == 1_000_003
+    assert PILOT_STRATUM_REPLICATION_SEED_OFFSET == 2_000_003
     assert COMPLEMENT_DIAGNOSTIC_SEED_OFFSET == 7_000_003
     assert len(proposal.promotion_calls) == 1
     promotion_call = proposal.promotion_calls[0]
@@ -830,6 +837,366 @@ def test_pilot_stratum_is_discarded_then_production_uses_final_stratum():
     assert summary["promoted_share_of_exact_stratum_percentiles"] == pytest.approx(
         [0.2, 0.2, 0.2]
     )
+    assert pilot["development_protocol"]["label"] == (
+        PILOT_STRATUM_DEVELOPMENT_LABEL
+    )
+    assert pilot["development_protocol"]["expected"] == (
+        PILOT_STRATUM_DEVELOPMENT_PROTOCOL
+    )
+    assert pilot["development_protocol"]["matched"] is False
+    assert summary["gates"]["predeclared"] is False
+    assert summary["gates"]["passed"] is False
+
+
+def _pilot_gate_diagnostic(
+    *,
+    complement_relative_error=None,
+    total_relative_error=None,
+    pareto_k=None,
+    method_seconds=1.0,
+    identity_matched=True,
+):
+    objects = PILOT_STRATUM_DEVELOPMENT_GATE_THRESHOLDS["objects"]
+    object_ids = np.arange(25_000, 25_000 + objects, dtype=np.int64)
+    if complement_relative_error is None:
+        complement_relative_error = np.full(objects, 0.008, dtype=np.float64)
+    else:
+        complement_relative_error = np.broadcast_to(
+            np.asarray(complement_relative_error, dtype=np.float64), (objects,)
+        ).copy()
+    if total_relative_error is None:
+        total_relative_error = complement_relative_error / 2.0
+    else:
+        total_relative_error = np.broadcast_to(
+            np.asarray(total_relative_error, dtype=np.float64), (objects,)
+        ).copy()
+    if pareto_k is None:
+        pareto_k = np.full(objects, 0.49, dtype=np.float64)
+    else:
+        pareto_k = np.broadcast_to(
+            np.asarray(pareto_k, dtype=np.float64), (objects,)
+        ).copy()
+
+    tail_mass = np.ones(objects, dtype=np.float64)
+    tail_standard_error = complement_relative_error * tail_mass
+    total_mass = np.divide(
+        tail_standard_error,
+        total_relative_error,
+        out=np.full(objects, np.nan, dtype=np.float64),
+        where=total_relative_error != 0.0,
+    )
+    stratum_mass = total_mass - tail_mass
+    object_provenance = []
+    for object_id in object_ids:
+        value = f"{int(object_id):064x}"
+        object_provenance.append(
+            {
+                "object_index": int(object_id),
+                "pilot_draw_indices_sha256": value,
+                "pilot_probability_sha256": value,
+                "pilot_scores_sha256": value,
+                "base_stratum_indices_sha256": value,
+                "anchor_indices_sha256": value,
+                "promoted_indices_sha256": value,
+                "final_stratum_indices_sha256": value,
+                "conditioned_exclusion_indices_sha256": value,
+            }
+        )
+    call_hash = "f" * 64
+    execution_calls = [
+        {
+            "object_start": int(start),
+            "object_stop": int(start + 64),
+            "objects": 64,
+            "pilot_draw_indices_sha256": call_hash,
+            "pilot_probability_sha256": call_hash,
+            "pilot_scores_sha256": call_hash,
+            "base_stratum_indices_sha256": call_hash,
+            "anchor_indices_sha256": call_hash,
+            "promoted_indices_sha256": call_hash,
+            "final_stratum_indices_sha256": call_hash,
+        }
+        for start in range(25_000, 25_512, 64)
+    ]
+    final_hashes = [
+        (record["object_index"], record["final_stratum_indices_sha256"])
+        for record in object_provenance
+    ]
+    observed_identity = dict(PILOT_STRATUM_DEVELOPMENT_PROTOCOL)
+    if not identity_matched:
+        observed_identity["pilot_seed"] += 1
+    protocol = {
+        "recipe": asdict(PILOT_STRATUM_RECIPE),
+        "recipe_sha256": PILOT_STRATUM_RECIPE.sha256,
+        "hash_contract": PILOT_STRATUM_DEVELOPMENT_PROTOCOL["hash_contract"],
+        "pilot_seed": PILOT_STRATUM_DEVELOPMENT_PROTOCOL["pilot_seed"],
+        "production_seed": PILOT_STRATUM_DEVELOPMENT_PROTOCOL[
+            "production_seed"
+        ],
+        "pilot_atom_chunk": PILOT_STRATUM_DEVELOPMENT_PROTOCOL[
+            "pilot_atom_chunk"
+        ],
+        "pilot_object_chunk": PILOT_STRATUM_DEVELOPMENT_PROTOCOL[
+            "pilot_object_chunk"
+        ],
+        "base_stratum_size": 16_384,
+        "final_stratum_size": 20_480,
+        "flow_evaluations": {
+            "pilot_proposal": PILOT_STRATUM_DEVELOPMENT_PROTOCOL[
+                "pilot_flow_evaluations"
+            ],
+            "final_stratum_exact": PILOT_STRATUM_DEVELOPMENT_PROTOCOL[
+                "final_stratum_flow_evaluations"
+            ],
+            "total": (
+                PILOT_STRATUM_DEVELOPMENT_PROTOCOL["pilot_flow_evaluations"]
+                + PILOT_STRATUM_DEVELOPMENT_PROTOCOL[
+                    "final_stratum_flow_evaluations"
+                ]
+            ),
+        },
+        "object_provenance": object_provenance,
+        "execution_call_provenance": execution_calls,
+        "run_manifest_sha256": _pilot_stratum_run_manifest_sha256(final_hashes),
+        "development_protocol": {
+            "label": PILOT_STRATUM_DEVELOPMENT_LABEL,
+            "expected": dict(PILOT_STRATUM_DEVELOPMENT_PROTOCOL),
+            "observed": observed_identity,
+            "matched": bool(identity_matched),
+        },
+    }
+    frame = pd.DataFrame(
+        {
+            "object_index": object_ids,
+            "mass_stratum": stratum_mass,
+            "mass_prefilter_complement": np.zeros(objects),
+            "mass_outside_prefilter": np.zeros(objects),
+            "mass_outside_prefilter_standard_error": np.zeros(objects),
+            "mass_complement_tail_proposal": tail_mass,
+            "mass_complement_tail_proposal_standard_error": (
+                tail_standard_error
+            ),
+            "mass_complement_prior": tail_mass,
+            "mass_complement_prior_standard_error": tail_standard_error,
+            "pareto_k_complement": pareto_k,
+            "pareto_k_prefilter_complement": pareto_k,
+            "pareto_k_outside_prefilter": pareto_k,
+            "pareto_k_tail_proposal_complement": pareto_k,
+            "pilot_stratum_base_count": np.full(objects, 16_384),
+            "pilot_stratum_promoted_count": np.full(objects, 4_096),
+            "pilot_stratum_anchor_count": np.full(objects, 256),
+            "pilot_stratum_neighbor_count": np.full(objects, 3_840),
+            "pilot_stratum_fallback_fill_count": np.zeros(objects),
+            "pilot_stratum_max_neighbor_query_width": np.full(objects, 16),
+            "pilot_stratum_finite_score_atom_count": np.full(objects, 256),
+            "pilot_stratum_promoted_outside_prefilter_count": np.zeros(objects),
+            "mass_stratum_promoted_exact": np.full(objects, 0.1),
+            "draws_tail_proposal_complement": np.full(objects, 16_384),
+            "pilot_stratum_final_indices_sha256": [
+                record["final_stratum_indices_sha256"]
+                for record in object_provenance
+            ],
+        }
+    )
+    for name in TAIL_PROPOSAL_RECIPE.component_names:
+        frame[f"tail_proposal_component_complement_mass_{name}"] = 1.0
+        frame[
+            f"tail_proposal_component_target_contribution_fraction_{name}"
+        ] = 1.0 / len(TAIL_PROPOSAL_RECIPE.component_names)
+        frame[f"tail_proposal_component_variance_fraction_{name}"] = (
+            1.0 / len(TAIL_PROPOSAL_RECIPE.component_names)
+        )
+        frame[f"pareto_k_tail_proposal_component_{name}"] = 0.49
+        frame[
+            f"tail_proposal_top_1_percent_source_fraction_{name}"
+        ] = 1.0 / len(TAIL_PROPOSAL_RECIPE.component_names)
+    phase_seconds = {
+        name: 0.0 for name in PILOT_STRATUM_METHOD_TIME_COMPONENTS
+    }
+    phase_seconds[PILOT_STRATUM_METHOD_TIME_COMPONENTS[0]] = method_seconds
+    phase_seconds.update({"prior_draw": 17.0, "prior_flow": 23.0})
+    metadata = {
+        "observation_start": 25_000,
+        "observation_stop": 25_512,
+        "center": PILOT_STRATUM_DEVELOPMENT_PROTOCOL["center"],
+        "prefilter_candidates": 131_072,
+        "n_global_draws": 16_384,
+        "candidate_backend": "torch",
+        "object_chunk": 64,
+        "flow_atom_chunk": 4_096,
+        "tail_proposal_atom_chunk": 262_144,
+        "tail_proposal_object_chunk": 32,
+        "tail_proposal": asdict(TAIL_PROPOSAL_RECIPE),
+        "flow_evaluations": PILOT_STRATUM_DEVELOPMENT_PROTOCOL[
+            "run_flow_evaluations"
+        ],
+        "phase_seconds": phase_seconds,
+        "elapsed_seconds": method_seconds + 40.0,
+        "pilot_stratum": protocol,
+    }
+    return ComplementDiagnostic(frame, metadata)
+
+
+def test_pilot_development_protocol_and_baseline_are_frozen():
+    protocol = PILOT_STRATUM_DEVELOPMENT_PROTOCOL
+    assert PILOT_STRATUM_DEVELOPMENT_LABEL == (
+        "SBSI/complement-pilot-stratum-development/v1"
+    )
+    assert protocol["universe_start"] == 25_000
+    assert protocol["universe_stop"] == 25_512
+    assert protocol["center"] == [
+        0.013610377120038044,
+        0.002740148300964851,
+    ]
+    assert protocol["base_stratum_size"] == 16_384
+    assert protocol["promotions"] == 4_096
+    assert protocol["final_stratum_size"] == 20_480
+    assert protocol["prefilter_candidates"] == 131_072
+    assert protocol["n_global_draws"] == 16_384
+    assert protocol["proposal_seed"] == 8_701
+    assert protocol["production_seed"] == 7_008_704
+    assert protocol["pilot_seed"] == 1_008_704
+    assert protocol["diagnostic_object_chunk"] == 64
+    assert protocol["flow_atom_chunk"] == 4_096
+    assert protocol["tail_proposal_atom_chunk"] == 262_144
+    assert protocol["tail_proposal_object_chunk"] == 32
+    assert protocol["pilot_atom_chunk"] == 262_144
+    assert protocol["pilot_object_chunk"] == 32
+    assert protocol["tail_proposal_recipe"] == asdict(TAIL_PROPOSAL_RECIPE)
+    assert protocol["pilot_stratum_recipe"] == asdict(PILOT_STRATUM_RECIPE)
+    assert protocol["pilot_stratum_recipe_sha256"] == (
+        "b4349271763311c2127d785c79fc637e115f421a31fb821e6db6e0a592b8d410"
+    )
+    assert protocol["pilot_flow_evaluations"] == 4_194_304
+    assert protocol["final_stratum_flow_evaluations"] == 10_485_760
+    assert protocol["run_flow_evaluations"] == 98_566_144
+    assert PILOT_STRATUM_DEVELOPMENT_BASELINE == {
+        "total_relative_error_median": 0.013214266498501442,
+        "total_relative_error_p90_higher": 0.021110866788308195,
+        "mean_total_relative_error_squared": 4.6256941067948046e-4,
+        "total_relative_error_squared_p90_higher": 4.45668696553694e-4,
+        "method_seconds": 91.04022970038932,
+    }
+    assert PILOT_STRATUM_DEVELOPMENT_GATE_THRESHOLDS == {
+        "objects": 512,
+        "pareto_k_below_0_5_count": 461,
+        "pareto_k_below_0_7_count": 507,
+        "complement_relative_error_median": 0.00882,
+        "complement_relative_error_p90_higher": 0.0268,
+        "efficiency_mean": 0.90,
+        "efficiency_p90_higher": 0.90,
+    }
+
+
+def test_pilot_development_summary_passes_only_all_three_gate_families():
+    diagnostic = _pilot_gate_diagnostic()
+    summary = diagnostic.summary()
+    pilot = summary["pilot_stratum"]
+
+    assert summary["gates"] == pilot["gates"]
+    assert pilot["development_protocol_matched"] is True
+    assert pilot["gates"]["predeclared"] is True
+    assert pilot["gates"]["integrity_passed"] is True
+    assert pilot["gates"]["tail_reliability_passed"] is True
+    assert pilot["gates"]["efficiency_passed"] is True
+    assert pilot["gates"]["passed"] is True
+    assert pilot["method_seconds"] == 1.0
+    assert pilot["total_elapsed_seconds"] == 41.0
+    assert pilot["method_time_components"] == list(
+        PILOT_STRATUM_METHOD_TIME_COMPONENTS
+    )
+
+    diagnostic.metadata["pilot_stratum"]["object_provenance"][0][
+        "pilot_scores_sha256"
+    ] = "not-a-hash"
+    failed = diagnostic._pilot_stratum_summary()["gates"]
+    assert failed["integrity_passed"] is False
+    assert failed["tail_reliability_passed"] is True
+    assert failed["efficiency_passed"] is True
+    assert failed["passed"] is False
+
+
+def test_pilot_development_tail_gates_use_higher_and_include_boundaries():
+    relative_error = np.concatenate(
+        (
+            np.full(460, 0.00882),
+            np.array([0.0268]),
+            np.full(51, 0.03),
+        )
+    )
+    pareto_k = np.concatenate(
+        (
+            np.full(461, 0.49),
+            np.full(46, 0.69),
+            np.full(5, 0.70),
+        )
+    )
+    pilot = _pilot_gate_diagnostic(
+        complement_relative_error=relative_error,
+        total_relative_error=relative_error / 2.0,
+        pareto_k=pareto_k,
+    )._pilot_stratum_summary()
+    gates = pilot["gates"]["tail_reliability"]
+
+    assert pilot["quantile_method"] == "higher"
+    assert pilot["complement_relative_error_median"] == pytest.approx(0.00882)
+    assert pilot["complement_relative_error_p90_higher"] == pytest.approx(0.0268)
+    assert gates["pareto_k_below_0_5_count"]["observed"] == 461
+    assert gates["pareto_k_below_0_7_count"]["observed"] == 507
+    assert all(item["passed"] for item in gates.values())
+
+    failing_k = pareto_k.copy()
+    failing_k[460] = 0.70
+    failed = _pilot_gate_diagnostic(
+        complement_relative_error=relative_error,
+        total_relative_error=relative_error / 2.0,
+        pareto_k=failing_k,
+    )._pilot_stratum_summary()["gates"]
+    assert failed["tail_reliability_passed"] is False
+    assert failed["passed"] is False
+
+
+def test_pilot_development_efficiency_gate_boundaries_and_failures():
+    baseline = PILOT_STRATUM_DEVELOPMENT_BASELINE
+    threshold = PILOT_STRATUM_DEVELOPMENT_GATE_THRESHOLDS["efficiency_mean"]
+
+    mean_boundary = _pilot_gate_diagnostic(
+        total_relative_error=np.sqrt(
+            baseline["mean_total_relative_error_squared"]
+        ),
+        method_seconds=threshold * baseline["method_seconds"],
+    )._pilot_stratum_summary()
+    mean_gate = mean_boundary["gates"]["efficiency"][
+        "mean_relative_variance_time_efficiency"
+    ]
+    assert mean_gate["observed"] == pytest.approx(threshold)
+    assert mean_gate["passed"] is True
+
+    p90_boundary = _pilot_gate_diagnostic(
+        total_relative_error=np.sqrt(
+            baseline["total_relative_error_squared_p90_higher"]
+        ),
+        method_seconds=threshold * baseline["method_seconds"],
+    )._pilot_stratum_summary()
+    p90_gate = p90_boundary["gates"]["efficiency"][
+        "p90_higher_relative_variance_time_efficiency"
+    ]
+    assert p90_gate["observed"] == pytest.approx(threshold)
+    assert p90_gate["passed"] is True
+
+    failed = _pilot_gate_diagnostic(
+        total_relative_error=np.sqrt(
+            baseline["total_relative_error_squared_p90_higher"]
+        ),
+        method_seconds=np.nextafter(
+            threshold * baseline["method_seconds"], np.inf
+        ),
+        identity_matched=False,
+    )._pilot_stratum_summary()
+    assert failed["gates"]["predeclared"] is False
+    assert failed["gates"]["integrity_passed"] is False
+    assert failed["gates"]["efficiency_passed"] is False
+    assert failed["gates"]["passed"] is False
 
 
 def test_pilot_stratum_manifest_composes_from_identical_chunked_and_sliced_rows():

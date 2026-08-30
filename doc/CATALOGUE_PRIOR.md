@@ -344,9 +344,54 @@ per-object hashes are grouped. Numerical reproduction fixes the recipe's
 must split on those 32-object boundaries, because changing the underlying
 GEMM/reduction shape can move last bits in probabilities and scores. With the
 pilot flag absent, existing table columns, metadata keys, flow counts, and
-stochastic streams are unchanged. Promotion into the production estimator
-remains explicitly out of scope until the development diagnostic passes its
-efficiency and reliability screens.
+stochastic streams are unchanged.
+
+The frozen development protocol label is
+`SBSI/complement-pilot-stratum-development/v1`. Its expected identity is rows
+25,000:25,512 at centre
+`[0.013610377120038044, 0.002740148300964851]`, base/final stratum sizes
+16,384/20,480, prefilter 131,072, `M=16,384`, base proposal seed 8701,
+production diagnostic seed 7,008,704, and primary pilot seed 1,008,704. It also
+pins the torch candidate backend, diagnostic/flow chunks 64/4,096, both DM3
+proposal chunks 262,144/32, the complete tail and pilot recipes, pilot recipe
+hash, and hash contract. The exact expected flow counts are 4,194,304 pilot,
+10,485,760 final-stratum, and 98,566,144 total evaluations. A toy or partial
+call is still valid, but its identity reports `matched=false` and its frozen
+development gates fail; identity mismatch is not an API error.
+
+The development summary preregisters three hard gate families. Integrity
+requires the exact 512 absolute IDs and protocol identity; 512 finite positive
+`stratum + tail` masses and tail standard errors; base/promoted/final/anchor
+counts 16,384/4,096/20,480/256 for every object; 16,384 retained tail draws and
+at least 256 finite-score pilot atoms for every object; zero fallback fills;
+and internally consistent per-object hashes, execution-call coverage, table
+final-stratum hashes, and run manifest. Tail reliability requires finite
+Pareto `k` for all objects, at least 461 with `k < 0.5`, at least 507 with
+`k < 0.7`, and complement relative-SE median/p90 no larger than
+0.00882/0.0268. The p90 is NumPy's discrete `higher` quantile, inclusive at
+the threshold.
+
+Fair efficiency uses
+`rT = tail_standard_error / abs(stratum_mass + tail_mass)`. The frozen archived
+same-centre DM3 baseline has `rT` median 0.013214266498501442, `higher` p90
+0.021110866788308195, mean `rT^2` 4.6256941067948046e-4, `higher` p90 `rT^2`
+4.45668696553694e-4, and method time `T0=91.04022970038932 s`. Pilot method
+time `T` includes candidate query, prefilter flow, pilot proposal draw and
+flow, promotion, final exact-stratum flow, tail proposal draw and flow, and
+reduction. It excludes the prior-reference draw and flow. Both
+`(T/T0) mean(rT^2)/baseline_mean` and
+`(T/T0) p90_higher(rT^2)/baseline_p90` must be at most 0.90. The summary also
+reports `T/T0` and total elapsed time divided by `T0`; total elapsed is context,
+not substituted for the fair method time. Overall `gates.passed` requires all
+integrity, tail-reliability, and efficiency gates.
+
+Pilot seed offset 2,000,003 is separately reserved before seeing the primary
+outcome. If and only if the primary frozen run passes every gate, the
+predeclared replication repeats the identical protocol with pilot seed
+2,008,704 and no other change. There is intentionally no replication CLI or
+seed-2 job yet. Promotion into the production estimator remains out of scope;
+an exact-confirmation protocol would require an intentional version after
+selection and must not reuse the frozen exact-oracle-v1 rows.
 
 #### Frozen exact-oracle confirmation
 

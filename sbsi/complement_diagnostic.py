@@ -9,6 +9,7 @@ run is identical to the corresponding rows of an unsliced run.
 
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import asdict, dataclass
 from hashlib import sha256
 import inspect
@@ -38,9 +39,67 @@ EXACT_ORACLE_ATOM_CHUNK = 65_536
 EXACT_ORACLE_OBJECT_CHUNK = 4
 COMPLEMENT_DIAGNOSTIC_SEED_OFFSET = 7_000_003
 PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET = 1_000_003
+PILOT_STRATUM_REPLICATION_SEED_OFFSET = 2_000_003
 # Kept as an oracle-specific alias because the frozen v1 protocol serializes
 # the production diagnostic seed through this name.
 EXACT_ORACLE_DIAGNOSTIC_SEED_OFFSET = COMPLEMENT_DIAGNOSTIC_SEED_OFFSET
+PILOT_STRATUM_DEVELOPMENT_LABEL = (
+    "SBSI/complement-pilot-stratum-development/v1"
+)
+PILOT_STRATUM_DEVELOPMENT_BASELINE = {
+    "total_relative_error_median": 0.013214266498501442,
+    "total_relative_error_p90_higher": 0.021110866788308195,
+    "mean_total_relative_error_squared": 4.6256941067948046e-4,
+    "total_relative_error_squared_p90_higher": 4.45668696553694e-4,
+    "method_seconds": 91.04022970038932,
+}
+PILOT_STRATUM_DEVELOPMENT_GATE_THRESHOLDS = {
+    "objects": 512,
+    "pareto_k_below_0_5_count": 461,
+    "pareto_k_below_0_7_count": 507,
+    "complement_relative_error_median": 0.00882,
+    "complement_relative_error_p90_higher": 0.0268,
+    "efficiency_mean": 0.90,
+    "efficiency_p90_higher": 0.90,
+}
+PILOT_STRATUM_METHOD_TIME_COMPONENTS = (
+    "candidate_query",
+    "prefilter_flow",
+    "pilot_proposal_draw",
+    "pilot_proposal_flow",
+    "pilot_promotion",
+    "pilot_stratum_exact_flow",
+    "tail_proposal_draw",
+    "tail_proposal_flow",
+    "reduction",
+)
+PILOT_STRATUM_DEVELOPMENT_PROTOCOL = {
+    "universe_start": 25_000,
+    "universe_stop": 25_512,
+    "center": [0.013610377120038044, 0.002740148300964851],
+    "base_stratum_size": 16_384,
+    "promotions": 4_096,
+    "final_stratum_size": 20_480,
+    "prefilter_candidates": 131_072,
+    "n_global_draws": 16_384,
+    "proposal_seed": 8_701,
+    "production_seed": 7_008_704,
+    "pilot_seed": 1_008_704,
+    "candidate_backend": "torch",
+    "diagnostic_object_chunk": 64,
+    "flow_atom_chunk": 4_096,
+    "tail_proposal_atom_chunk": 262_144,
+    "tail_proposal_object_chunk": 32,
+    "pilot_atom_chunk": 262_144,
+    "pilot_object_chunk": 32,
+    "tail_proposal_recipe": asdict(TAIL_PROPOSAL_RECIPE),
+    "pilot_stratum_recipe": asdict(PILOT_STRATUM_RECIPE),
+    "pilot_stratum_recipe_sha256": PILOT_STRATUM_RECIPE.sha256,
+    "hash_contract": PILOT_STRATUM_HASH_CONTRACT,
+    "pilot_flow_evaluations": 4_194_304,
+    "final_stratum_flow_evaluations": 10_485_760,
+    "run_flow_evaluations": 98_566_144,
+}
 EXACT_ORACLE_CONFIRMATION = {
     "universe_start": 25_512,
     "universe_stop": 26_024,
@@ -476,41 +535,550 @@ class ComplementDiagnostic:
             result["exact_oracle"] = self._exact_oracle_summary()
             result["gates"] = result["exact_oracle"]["gates"]
         if self.metadata.get("pilot_stratum") is not None:
-            result["pilot_stratum"] = {
-                "protocol": self.metadata["pilot_stratum"],
-                "promoted_count_percentiles": percentiles(
-                    frame["pilot_stratum_promoted_count"]
+            result["pilot_stratum"] = self._pilot_stratum_summary()
+            result["gates"] = result["pilot_stratum"]["gates"]
+        return result
+
+    def _pilot_stratum_summary(self) -> dict:
+        """Reduce the frozen 512-row development protocol and its hard gates."""
+
+        frame = self.table
+        protocol = self.metadata["pilot_stratum"]
+        thresholds = PILOT_STRATUM_DEVELOPMENT_GATE_THRESHOLDS
+        baseline = PILOT_STRATUM_DEVELOPMENT_BASELINE
+        expected_objects = int(thresholds["objects"])
+
+        def values(name):
+            return frame[name].to_numpy(dtype=np.float64)
+
+        def percentiles(data):
+            data = np.asarray(data, dtype=np.float64)
+            data = data[np.isfinite(data)]
+            if not len(data):
+                return None
+            return [float(value) for value in np.percentile(data, (10, 50, 90))]
+
+        def gate(observed, operator, threshold, passed):
+            return {
+                "observed": observed,
+                "operator": operator,
+                "threshold": threshold,
+                "passed": bool(passed),
+            }
+
+        def passing_count(name, predicate) -> int:
+            data = values(name)
+            return int(np.sum(predicate(data)))
+
+        development = protocol.get("development_protocol", {})
+        expected_identity = development.get("expected")
+        observed_identity = development.get("observed")
+        try:
+            pilot_flow_evaluations = int(
+                protocol["flow_evaluations"]["pilot_proposal"]
+            )
+            final_stratum_flow_evaluations = int(
+                protocol["flow_evaluations"]["final_stratum_exact"]
+            )
+            pilot_arm_flow_evaluations = int(
+                protocol["flow_evaluations"]["total"]
+            )
+            metadata_identity = {
+                "universe_start": int(self.metadata["observation_start"]),
+                "universe_stop": int(self.metadata["observation_stop"]),
+                "center": [
+                    float(self.metadata["center"][0]),
+                    float(self.metadata["center"][1]),
+                ],
+                "base_stratum_size": int(protocol["base_stratum_size"]),
+                "promotions": int(
+                    protocol["final_stratum_size"]
+                    - protocol["base_stratum_size"]
                 ),
-                "anchor_count_percentiles": percentiles(
-                    frame["pilot_stratum_anchor_count"]
+                "final_stratum_size": int(protocol["final_stratum_size"]),
+                "prefilter_candidates": int(
+                    self.metadata["prefilter_candidates"]
                 ),
-                "neighbor_count_percentiles": percentiles(
-                    frame["pilot_stratum_neighbor_count"]
+                "n_global_draws": int(self.metadata["n_global_draws"]),
+                "proposal_seed": int(protocol["production_seed"])
+                - COMPLEMENT_DIAGNOSTIC_SEED_OFFSET,
+                "production_seed": int(protocol["production_seed"]),
+                "pilot_seed": int(protocol["pilot_seed"]),
+                "candidate_backend": self.metadata["candidate_backend"],
+                "diagnostic_object_chunk": int(self.metadata["object_chunk"]),
+                "flow_atom_chunk": int(self.metadata["flow_atom_chunk"]),
+                "tail_proposal_atom_chunk": int(
+                    self.metadata["tail_proposal_atom_chunk"]
                 ),
-                "fallback_fill_count_percentiles": percentiles(
-                    frame["pilot_stratum_fallback_fill_count"]
+                "tail_proposal_object_chunk": int(
+                    self.metadata["tail_proposal_object_chunk"]
                 ),
-                "max_neighbor_query_width_percentiles": percentiles(
-                    frame["pilot_stratum_max_neighbor_query_width"]
+                "pilot_atom_chunk": int(protocol["pilot_atom_chunk"]),
+                "pilot_object_chunk": int(protocol["pilot_object_chunk"]),
+                "tail_proposal_recipe": self.metadata["tail_proposal"],
+                "pilot_stratum_recipe": protocol["recipe"],
+                "pilot_stratum_recipe_sha256": protocol["recipe_sha256"],
+                "hash_contract": protocol["hash_contract"],
+                "pilot_flow_evaluations": pilot_flow_evaluations,
+                "final_stratum_flow_evaluations": (
+                    final_stratum_flow_evaluations
                 ),
-                "promoted_outside_prefilter_count_percentiles": percentiles(
-                    frame[
-                        "pilot_stratum_promoted_outside_prefilter_count"
-                    ]
-                ),
-                "mass_promoted_exact_percentiles": percentiles(
-                    frame["mass_stratum_promoted_exact"]
-                ),
-                "promoted_share_of_exact_stratum_percentiles": percentiles(
-                    np.divide(
-                        frame["mass_stratum_promoted_exact"],
-                        frame["mass_stratum"],
-                        out=np.full(len(frame), np.nan, dtype=np.float64),
-                        where=frame["mass_stratum"].to_numpy() > 0.0,
-                    )
+                "run_flow_evaluations": int(
+                    self.metadata["flow_evaluations"]
                 ),
             }
-        return result
+            pilot_flow_counts_matched = bool(
+                pilot_arm_flow_evaluations
+                == pilot_flow_evaluations + final_stratum_flow_evaluations
+            )
+        except (KeyError, TypeError, ValueError):
+            metadata_identity = None
+            pilot_flow_counts_matched = False
+        identity_matched = bool(
+            development.get("label") == PILOT_STRATUM_DEVELOPMENT_LABEL
+            and expected_identity == PILOT_STRATUM_DEVELOPMENT_PROTOCOL
+            and observed_identity == PILOT_STRATUM_DEVELOPMENT_PROTOCOL
+            and metadata_identity == PILOT_STRATUM_DEVELOPMENT_PROTOCOL
+            and pilot_flow_counts_matched
+            and development.get("matched") is True
+        )
+        object_ids = frame["object_index"].to_numpy(dtype=np.int64)
+        expected_ids = np.arange(
+            PILOT_STRATUM_DEVELOPMENT_PROTOCOL["universe_start"],
+            PILOT_STRATUM_DEVELOPMENT_PROTOCOL["universe_stop"],
+            dtype=np.int64,
+        )
+        ids_exact = bool(np.array_equal(object_ids, expected_ids))
+
+        total_mass = values("mass_stratum") + values(
+            "mass_complement_tail_proposal"
+        )
+        tail_standard_error = values(
+            "mass_complement_tail_proposal_standard_error"
+        )
+        finite_positive_mass_and_se = int(
+            np.sum(
+                np.isfinite(total_mass)
+                & (total_mass > 0.0)
+                & np.isfinite(tail_standard_error)
+                & (tail_standard_error > 0.0)
+            )
+        )
+        base_count = passing_count(
+            "pilot_stratum_base_count", lambda data: data == 16_384
+        )
+        promoted_count = passing_count(
+            "pilot_stratum_promoted_count", lambda data: data == 4_096
+        )
+        final_count = int(
+            np.sum(
+                values("pilot_stratum_base_count")
+                + values("pilot_stratum_promoted_count")
+                == 20_480
+            )
+        )
+        anchor_count = passing_count(
+            "pilot_stratum_anchor_count", lambda data: data == 256
+        )
+        tail_draw_count = passing_count(
+            "draws_tail_proposal_complement", lambda data: data == 16_384
+        )
+        finite_score_count = passing_count(
+            "pilot_stratum_finite_score_atom_count", lambda data: data >= 256
+        )
+        fallback_count = passing_count(
+            "pilot_stratum_fallback_fill_count", lambda data: data == 0
+        )
+
+        hash_fields = (
+            "pilot_draw_indices_sha256",
+            "pilot_probability_sha256",
+            "pilot_scores_sha256",
+            "base_stratum_indices_sha256",
+            "anchor_indices_sha256",
+            "promoted_indices_sha256",
+            "final_stratum_indices_sha256",
+            "conditioned_exclusion_indices_sha256",
+        )
+        call_hash_fields = tuple(
+            name for name in hash_fields if name != "conditioned_exclusion_indices_sha256"
+        )
+
+        def is_sha256(value) -> bool:
+            return bool(
+                isinstance(value, str)
+                and len(value) == 64
+                and all(character in "0123456789abcdef" for character in value)
+            )
+
+        object_provenance = protocol.get("object_provenance", [])
+        provenance_records_well_formed = bool(
+            isinstance(object_provenance, list)
+            and all(isinstance(record, dict) for record in object_provenance)
+        )
+        try:
+            provenance_ids = np.asarray(
+                [record.get("object_index", -1) for record in object_provenance],
+                dtype=np.int64,
+            )
+        except (TypeError, ValueError):
+            provenance_ids = np.asarray([], dtype=np.int64)
+        object_hashes_well_formed = bool(
+            provenance_records_well_formed
+            and len(object_provenance) == len(frame)
+            and np.array_equal(provenance_ids, object_ids)
+            and all(
+                is_sha256(record.get(name))
+                for record in object_provenance
+                for name in hash_fields
+            )
+        )
+        table_hashes_match = bool(
+            object_hashes_well_formed
+            and frame["pilot_stratum_final_indices_sha256"].astype(str).tolist()
+            == [
+                record["final_stratum_indices_sha256"]
+                for record in object_provenance
+            ]
+        )
+        try:
+            recomputed_manifest = _pilot_stratum_run_manifest_sha256(
+                [
+                    (
+                        record["object_index"],
+                        record["final_stratum_indices_sha256"],
+                    )
+                    for record in object_provenance
+                ]
+            )
+        except (KeyError, TypeError, ValueError):
+            recomputed_manifest = None
+        run_manifest_matches = bool(
+            recomputed_manifest is not None
+            and protocol.get("run_manifest_sha256") == recomputed_manifest
+        )
+        execution_calls = protocol.get("execution_call_provenance", [])
+        covered_objects = 0
+        calls_well_formed = isinstance(execution_calls, list)
+        for record in execution_calls if calls_well_formed else ():
+            if not isinstance(record, dict):
+                calls_well_formed = False
+                break
+            try:
+                call_start = int(record["object_start"])
+                call_stop = int(record["object_stop"])
+                call_objects = int(record["objects"])
+            except (KeyError, TypeError, ValueError):
+                calls_well_formed = False
+                break
+            if (
+                call_start < 0
+                or call_stop <= call_start
+                or call_objects != call_stop - call_start
+                or covered_objects + call_objects > len(object_ids)
+                or not np.array_equal(
+                    object_ids[
+                        covered_objects : covered_objects + call_objects
+                    ],
+                    np.arange(call_start, call_stop, dtype=np.int64),
+                )
+                or not all(is_sha256(record.get(name)) for name in call_hash_fields)
+            ):
+                calls_well_formed = False
+                break
+            covered_objects += call_objects
+        calls_well_formed = bool(
+            calls_well_formed
+            and covered_objects == len(object_ids)
+            and protocol.get("hash_contract") == PILOT_STRATUM_HASH_CONTRACT
+            and protocol.get("recipe_sha256") == PILOT_STRATUM_RECIPE.sha256
+        )
+        hash_manifest_matched = bool(
+            object_hashes_well_formed
+            and table_hashes_match
+            and run_manifest_matches
+            and calls_well_formed
+        )
+
+        integrity_gates = {
+            "absolute_object_ids_exact": gate(ids_exact, "is", True, ids_exact),
+            "development_protocol_identity_matched": gate(
+                identity_matched, "is", True, identity_matched
+            ),
+            "finite_positive_total_masses_and_tail_standard_errors": gate(
+                finite_positive_mass_and_se,
+                "==",
+                expected_objects,
+                finite_positive_mass_and_se == expected_objects,
+            ),
+            "base_stratum_count_all_objects": gate(
+                base_count, "==", expected_objects, base_count == expected_objects
+            ),
+            "promoted_count_all_objects": gate(
+                promoted_count,
+                "==",
+                expected_objects,
+                promoted_count == expected_objects,
+            ),
+            "final_stratum_count_all_objects": gate(
+                final_count, "==", expected_objects, final_count == expected_objects
+            ),
+            "anchor_count_all_objects": gate(
+                anchor_count, "==", expected_objects, anchor_count == expected_objects
+            ),
+            "tail_draw_count_all_objects": gate(
+                tail_draw_count,
+                "==",
+                expected_objects,
+                tail_draw_count == expected_objects,
+            ),
+            "finite_score_count_at_least_256_all_objects": gate(
+                finite_score_count,
+                "==",
+                expected_objects,
+                finite_score_count == expected_objects,
+            ),
+            "zero_fallback_all_objects": gate(
+                fallback_count,
+                "==",
+                expected_objects,
+                fallback_count == expected_objects,
+            ),
+            "hashes_and_run_manifest_internally_matched": gate(
+                hash_manifest_matched, "is", True, hash_manifest_matched
+            ),
+        }
+
+        tail_k = values("pareto_k_tail_proposal_complement")
+        finite_tail_k = np.isfinite(tail_k)
+        below_0_5_count = int(np.sum(finite_tail_k & (tail_k < 0.5)))
+        below_0_7_count = int(np.sum(finite_tail_k & (tail_k < 0.7)))
+        tail_mass = values("mass_complement_tail_proposal")
+        complement_relative_error = np.divide(
+            tail_standard_error,
+            np.abs(tail_mass),
+            out=np.full(len(frame), np.nan, dtype=np.float64),
+            where=np.abs(tail_mass) > 0.0,
+        )
+        relative_error_finite = bool(
+            len(complement_relative_error) == expected_objects
+            and np.isfinite(complement_relative_error).all()
+        )
+        complement_relative_error_median = (
+            float(np.median(complement_relative_error))
+            if relative_error_finite
+            else float("nan")
+        )
+        complement_relative_error_p90 = (
+            float(
+                np.percentile(
+                    complement_relative_error, 90, method="higher"
+                )
+            )
+            if relative_error_finite
+            else float("nan")
+        )
+        tail_gates = {
+            "pareto_k_defined_all_objects": gate(
+                int((~finite_tail_k).sum()),
+                "undefined_count ==",
+                0,
+                len(tail_k) == expected_objects and finite_tail_k.all(),
+            ),
+            "pareto_k_below_0_5_count": gate(
+                below_0_5_count,
+                ">=",
+                thresholds["pareto_k_below_0_5_count"],
+                below_0_5_count >= thresholds["pareto_k_below_0_5_count"],
+            ),
+            "pareto_k_below_0_7_count": gate(
+                below_0_7_count,
+                ">=",
+                thresholds["pareto_k_below_0_7_count"],
+                below_0_7_count >= thresholds["pareto_k_below_0_7_count"],
+            ),
+            "complement_relative_error_median": gate(
+                complement_relative_error_median,
+                "<=",
+                thresholds["complement_relative_error_median"],
+                np.isfinite(complement_relative_error_median)
+                and complement_relative_error_median
+                <= thresholds["complement_relative_error_median"],
+            ),
+            "complement_relative_error_p90_higher": gate(
+                complement_relative_error_p90,
+                "<=",
+                thresholds["complement_relative_error_p90_higher"],
+                np.isfinite(complement_relative_error_p90)
+                and complement_relative_error_p90
+                <= thresholds["complement_relative_error_p90_higher"],
+            ),
+        }
+
+        total_relative_error = np.divide(
+            tail_standard_error,
+            np.abs(total_mass),
+            out=np.full(len(frame), np.nan, dtype=np.float64),
+            where=np.abs(total_mass) > 0.0,
+        )
+        finite_total_relative_error = bool(
+            len(total_relative_error) == expected_objects
+            and np.isfinite(total_relative_error).all()
+        )
+        if finite_total_relative_error:
+            total_relative_error_median = float(np.median(total_relative_error))
+            total_relative_error_p90 = float(
+                np.percentile(total_relative_error, 90, method="higher")
+            )
+            total_relative_error_squared = np.square(total_relative_error)
+            mean_total_relative_error_squared = float(
+                np.mean(total_relative_error_squared)
+            )
+            total_relative_error_squared_p90 = float(
+                np.percentile(
+                    total_relative_error_squared, 90, method="higher"
+                )
+            )
+        else:
+            total_relative_error_median = float("nan")
+            total_relative_error_p90 = float("nan")
+            mean_total_relative_error_squared = float("nan")
+            total_relative_error_squared_p90 = float("nan")
+
+        phase_seconds = self.metadata.get("phase_seconds", {})
+        method_phase_values = []
+        for name in PILOT_STRATUM_METHOD_TIME_COMPONENTS:
+            try:
+                value = float(phase_seconds[name])
+            except (KeyError, TypeError, ValueError):
+                value = float("nan")
+            method_phase_values.append(value)
+        method_seconds = (
+            float(np.sum(method_phase_values))
+            if np.isfinite(method_phase_values).all()
+            and np.all(np.asarray(method_phase_values) >= 0.0)
+            else float("nan")
+        )
+        method_time_ratio = (
+            method_seconds / baseline["method_seconds"]
+            if np.isfinite(method_seconds)
+            else float("nan")
+        )
+        total_elapsed_seconds = float(
+            self.metadata.get("elapsed_seconds", float("nan"))
+        )
+        total_elapsed_ratio = (
+            total_elapsed_seconds / baseline["method_seconds"]
+            if np.isfinite(total_elapsed_seconds) and total_elapsed_seconds >= 0.0
+            else float("nan")
+        )
+        efficiency_mean = (
+            method_time_ratio
+            * mean_total_relative_error_squared
+            / baseline["mean_total_relative_error_squared"]
+            if np.isfinite(method_time_ratio)
+            and np.isfinite(mean_total_relative_error_squared)
+            else float("nan")
+        )
+        efficiency_p90 = (
+            method_time_ratio
+            * total_relative_error_squared_p90
+            / baseline["total_relative_error_squared_p90_higher"]
+            if np.isfinite(method_time_ratio)
+            and np.isfinite(total_relative_error_squared_p90)
+            else float("nan")
+        )
+        efficiency_gates = {
+            "mean_relative_variance_time_efficiency": gate(
+                efficiency_mean,
+                "<=",
+                thresholds["efficiency_mean"],
+                np.isfinite(efficiency_mean)
+                and efficiency_mean <= thresholds["efficiency_mean"],
+            ),
+            "p90_higher_relative_variance_time_efficiency": gate(
+                efficiency_p90,
+                "<=",
+                thresholds["efficiency_p90_higher"],
+                np.isfinite(efficiency_p90)
+                and efficiency_p90 <= thresholds["efficiency_p90_higher"],
+            ),
+        }
+        integrity_passed = all(item["passed"] for item in integrity_gates.values())
+        tail_passed = all(item["passed"] for item in tail_gates.values())
+        efficiency_passed = all(item["passed"] for item in efficiency_gates.values())
+
+        promoted_share = np.divide(
+            values("mass_stratum_promoted_exact"),
+            values("mass_stratum"),
+            out=np.full(len(frame), np.nan, dtype=np.float64),
+            where=values("mass_stratum") > 0.0,
+        )
+        return {
+            "protocol": protocol,
+            "development_protocol_matched": identity_matched,
+            "quantile_method": "higher",
+            "promoted_count_percentiles": percentiles(
+                frame["pilot_stratum_promoted_count"]
+            ),
+            "anchor_count_percentiles": percentiles(
+                frame["pilot_stratum_anchor_count"]
+            ),
+            "neighbor_count_percentiles": percentiles(
+                frame["pilot_stratum_neighbor_count"]
+            ),
+            "fallback_fill_count_percentiles": percentiles(
+                frame["pilot_stratum_fallback_fill_count"]
+            ),
+            "max_neighbor_query_width_percentiles": percentiles(
+                frame["pilot_stratum_max_neighbor_query_width"]
+            ),
+            "promoted_outside_prefilter_count_percentiles": percentiles(
+                frame["pilot_stratum_promoted_outside_prefilter_count"]
+            ),
+            "mass_promoted_exact_percentiles": percentiles(
+                frame["mass_stratum_promoted_exact"]
+            ),
+            "promoted_share_of_exact_stratum_percentiles": percentiles(
+                promoted_share
+            ),
+            "complement_relative_error_median": complement_relative_error_median,
+            "complement_relative_error_p90_higher": (
+                complement_relative_error_p90
+            ),
+            "total_relative_error_median": total_relative_error_median,
+            "total_relative_error_p90_higher": total_relative_error_p90,
+            "mean_total_relative_error_squared": (
+                mean_total_relative_error_squared
+            ),
+            "total_relative_error_squared_p90_higher": (
+                total_relative_error_squared_p90
+            ),
+            "baseline": dict(baseline),
+            "method_time_components": list(PILOT_STRATUM_METHOD_TIME_COMPONENTS),
+            "method_seconds": method_seconds,
+            "method_time_ratio": method_time_ratio,
+            "total_elapsed_seconds": total_elapsed_seconds,
+            "total_elapsed_ratio": total_elapsed_ratio,
+            "efficiency_mean": efficiency_mean,
+            "efficiency_p90_higher": efficiency_p90,
+            "gates": {
+                "predeclared": identity_matched,
+                "thresholds_predeclared": True,
+                "integrity": integrity_gates,
+                "tail_reliability": tail_gates,
+                "efficiency": efficiency_gates,
+                "integrity_passed": integrity_passed,
+                "tail_reliability_passed": tail_passed,
+                "efficiency_passed": efficiency_passed,
+                "passed": bool(
+                    integrity_passed and tail_passed and efficiency_passed
+                ),
+                "policy": (
+                    "integrity, tail reliability, and fair efficiency must all pass"
+                ),
+            },
+        }
 
     def _exact_oracle_summary(self) -> dict:
         """Reduce the frozen exact subset and all-512 predeclared gates."""
@@ -1664,6 +2232,37 @@ def diagnose_complement(
             (item["object_index"], item["final_stratum_indices_sha256"])
             for item in ordered_object_provenance
         ]
+        development_observed = {
+            "universe_start": int(object_id_offset + start),
+            "universe_stop": int(object_id_offset + stop),
+            "center": [float(center[0]), float(center[1])],
+            "base_stratum_size": int(pilot_base_stratum_size),
+            "promotions": int(
+                pilot_final_stratum_size - pilot_base_stratum_size
+            ),
+            "final_stratum_size": int(pilot_final_stratum_size),
+            "prefilter_candidates": int(prefilter_candidates),
+            "n_global_draws": int(n_global_draws),
+            "proposal_seed": int(seed) - COMPLEMENT_DIAGNOSTIC_SEED_OFFSET,
+            "production_seed": int(seed),
+            "pilot_seed": int(pilot_seed),
+            "candidate_backend": candidate_backend,
+            "diagnostic_object_chunk": int(object_chunk),
+            "flow_atom_chunk": int(atom_chunk),
+            "tail_proposal_atom_chunk": tail_proposal_atom_chunk,
+            "tail_proposal_object_chunk": tail_proposal_object_chunk,
+            "pilot_atom_chunk": int(PILOT_STRATUM_RECIPE.atom_chunk),
+            "pilot_object_chunk": int(PILOT_STRATUM_RECIPE.object_chunk),
+            "tail_proposal_recipe": asdict(TAIL_PROPOSAL_RECIPE),
+            "pilot_stratum_recipe": asdict(PILOT_STRATUM_RECIPE),
+            "pilot_stratum_recipe_sha256": PILOT_STRATUM_RECIPE.sha256,
+            "hash_contract": PILOT_STRATUM_HASH_CONTRACT,
+            "pilot_flow_evaluations": int(pilot_flow_evaluations),
+            "final_stratum_flow_evaluations": int(
+                pilot_stratum_flow_evaluations
+            ),
+            "run_flow_evaluations": int(flow_evaluations),
+        }
         pilot_stratum_metadata = {
             "mode": "diagnostic_only_discarded_independent_pilot",
             "recipe": asdict(PILOT_STRATUM_RECIPE),
@@ -1704,6 +2303,15 @@ def diagnose_complement(
             "run_manifest_sha256": _pilot_stratum_run_manifest_sha256(
                 ordered_object_hashes
             ),
+            "development_protocol": {
+                "label": PILOT_STRATUM_DEVELOPMENT_LABEL,
+                "expected": deepcopy(PILOT_STRATUM_DEVELOPMENT_PROTOCOL),
+                "observed": development_observed,
+                "matched": bool(
+                    development_observed
+                    == PILOT_STRATUM_DEVELOPMENT_PROTOCOL
+                ),
+            },
         }
     metadata = {
         "center": [float(center[0]), float(center[1])],

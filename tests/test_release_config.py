@@ -303,7 +303,11 @@ def test_pilot_stratum_job_pins_consumed_development_window_and_recipe():
     assert "--diagnose-complement-pilot-stratum" in job
     assert "--diagnose-complement-exact-oracle" not in job
     assert "PILOT_STRATUM_DIAGNOSTIC_SEED_OFFSET != 1_000_003" in job
+    assert "PILOT_STRATUM_REPLICATION_SEED_OFFSET != 2_000_003" in job
     assert "COMPLEMENT_DIAGNOSTIC_SEED_OFFSET != 7_000_003" in job
+    assert "SBSI/complement-pilot-stratum-development/v1" in job
+    assert 'PILOT_STRATUM_DEVELOPMENT_PROTOCOL["pilot_seed"] != 1_008_704' in job
+    assert 'PILOT_STRATUM_DEVELOPMENT_PROTOCOL["production_seed"] != 7_008_704' in job
     assert "PILOT_STRATUM_RECIPE.atom_chunk != TAIL_PROPOSAL_ATOM_CHUNK" in job
     assert "PILOT_STRATUM_RECIPE.object_chunk != TAIL_PROPOSAL_OBJECT_CHUNK" in job
     assert "b4349271763311c2127d785c79fc637e115f421a31fb821e6db6e0a592b8d410" in job

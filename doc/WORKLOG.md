@@ -2,6 +2,85 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-08-30 cont.330 — frozen independent-pilot development gates encoded before execution
+
+**Predeclared identity and gates.** `sbsi/complement_diagnostic.py` now owns
+the label `SBSI/complement-pilot-stratum-development/v1` and the exact expected
+identity for consumed rows 25,000:25,512 at the archived
+`mean_observed_shape` centre
+`[0.013610377120038044, 0.002740148300964851]`: base/final exact widths
+16,384/20,480, prefilter 131,072, `M=16,384`, proposal/production/pilot seeds
+8701/7,008,704/1,008,704, torch backend, 64/4,096 diagnostic/flow chunks,
+262,144/32 proposal chunks, complete recipes, pilot recipe hash, and hash
+contract. Exact expected pilot/final/whole-run flow counts are
+4,194,304/10,485,760/98,566,144. The observed identity is assembled from the
+actual run metadata and promotion provenance and compared back to this frozen
+record. Nonmatching toy or partial calls remain valid APIs but report
+`matched=false` and fail the frozen gates.
+
+The pilot summary now exposes integrity, tail-reliability, and fair-efficiency
+gate families. Integrity requires the exact 512 IDs, matching identity, finite
+positive total masses and tail standard errors, per-object base/promoted/final/
+anchor widths 16,384/4,096/20,480/256, 16,384 tail draws, at least 256 finite
+pilot-score atoms, zero fallback, and consistent provenance hashes, call
+coverage, table final hashes, and absolute-ID run manifest. Tail gates require
+all finite `k`, counts `k<0.5 >= 461` and `k<0.7 >= 507`, and complement
+relative-SE median/`higher` p90 at most 0.00882/0.0268. Fair efficiency uses
+`rT=tail_SE/abs(stratum+tail)` and the same-centre archived DM3 baseline:
+median/p90 `rT` 0.013214266498501442/0.021110866788308195, mean/`higher`-p90
+`rT^2` 4.6256941067948046e-4/4.45668696553694e-4, and `T0=91.04022970038932`
+seconds. `T` includes candidate query, prefilter flow, pilot draw/flow,
+promotion, final exact flow, tail draw/flow, and reduction, while excluding
+both prior-reference phases. Both normalized variance-time efficiencies must
+be at most 0.90. The method-time and total-elapsed ratios are reported, and
+overall pass requires all three families.
+
+The second pilot offset 2,000,003 is reserved in code but is not exposed as a
+CLI and is not run here. Only after a primary all-gate pass may the identical
+frozen protocol be replicated with pilot seed 2,008,704 and no other change.
+`jobs/job_complement_pilot_stratum.sh`, `doc/CATALOGUE_PRIOR.md`, and focused
+tests pin the primary identity, thresholds, inclusive boundaries, discrete
+`higher` p90, failure behavior, timing definition, and this replication rule.
+No primary or replication outcome is measured by this commit, no production
+estimator is changed, and no exact-confirmation row is used.
+
+**Promotion hardening and coordinate audit.** The immediately preceding
+`f0fb16b` follow-up is recorded here because it made no separate work-log
+entry. `PilotStratumPromotion` now recomputes and verifies recipe/chunk binding
+and the base, anchor, promoted, and final call/per-object hashes when a result
+is constructed. A fixed-scale 20,481-active-atom semantics test verifies that
+the frozen recipe consumes all 256 anchors, promotes exactly 4,096 atoms from
+a 16,384-atom base into a 20,480-atom final stratum, needs no fallback, and
+retains query width 16. The canonical tie path is clarified to use one
+per-anchor `O(n_active * n_coordinates)` temporary workspace, never one such
+workspace for every anchor.
+
+Scheduler job 16122061 audited the actual 12,760,990-by-4 proposal-coordinate
+cache. All rows are finite and bitwise unique after signed-zero
+canonicalization; scale and dispersion are finite and positive. Across 16,384
+full-cache queries there were no exact or near (`<=1e-8` relative) neighbour
+boundary ties at `k=2,4,8,16,32`; the minimum `k=16` relative boundary gap was
+1.4069216784842377e-7. Scheduler elapsed was 35 seconds with MaxRSS 645472K.
+The artifact is
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/complement_pilot_stratum_dev_v1/coordinate_tie_audit_20260830_v1/audit.json`
+(SHA-256
+`5e0bf3599bb32f649afd759458b37327ae689ca9805839cfa8a85039707c894e`).
+Together with the bounded canonical tie probe, this closes the cache-specific
+KDTree worst-case concern; the query audit is a frozen sampled audit, not a
+claim about arbitrary future coordinate caches.
+
+**Validation.** Final local checks:
+
+```text
+pytest tests/test_catalogue_sampling.py tests/test_complement_diagnostic.py \
+  tests/test_release_config.py                                    85 passed
+pytest tests -q                                      247 passed, 2 skipped
+ruff check <changed Python and tests>                         all checks passed
+python -m compileall -q sbsi scripts tests                              clean
+bash -n jobs/job_complement_pilot_stratum.sh                            clean
+git diff --check                                                        clean
+```
+
 ## 2026-08-30 cont.329 — independent-pilot exact-stratum development arm implemented
 
 **Diagnostic algorithm.** `sbsi/catalogue_sampling.py` owns a frozen
