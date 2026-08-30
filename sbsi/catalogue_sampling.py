@@ -962,6 +962,8 @@ class PilotStratumPromotion:
             raise TypeError("promoted candidates must be ProposalCandidates")
         if not isinstance(self.recipe, PilotStratumRecipe):
             raise TypeError("promotion recipe must be a PilotStratumRecipe")
+        if not isinstance(self.provenance, PilotStratumProvenance):
+            raise TypeError("promotion provenance must be PilotStratumProvenance")
         candidate_indices = np.array(
             self.candidates.indices, dtype=np.int64, copy=True
         )
@@ -1024,8 +1026,54 @@ class PilotStratumPromotion:
             valid_anchors = anchors[row, anchor_valid[row]]
             if not np.isin(valid_anchors, promoted[row]).all():
                 raise ValueError("every consumed pilot anchor must be promoted")
-        if len(self.provenance.object_final_stratum_indices_sha256) != n_objects:
-            raise ValueError("pilot provenance needs one final-stratum hash per row")
+        provenance = self.provenance
+        if provenance.recipe_sha256 != self.recipe.sha256:
+            raise ValueError("pilot provenance recipe hash does not match the recipe")
+        if (
+            provenance.pilot_atom_chunk != self.recipe.atom_chunk
+            or provenance.pilot_object_chunk != self.recipe.object_chunk
+        ):
+            raise ValueError("pilot provenance chunks do not match the recipe")
+        base = candidates.indices[:, :base_size]
+        call_manifests = {
+            "call_base_stratum_indices_sha256": _array_manifest_sha256(
+                "call_base_stratum_indices", base, dtype=">i8", sort_rows=True
+            ),
+            "call_anchor_indices_sha256": _array_manifest_sha256(
+                "call_anchor_indices", anchors, dtype=">i8"
+            ),
+            "call_promoted_indices_sha256": _array_manifest_sha256(
+                "call_promoted_indices", promoted, dtype=">i8", sort_rows=True
+            ),
+            "call_final_stratum_indices_sha256": _array_manifest_sha256(
+                "call_final_stratum_indices",
+                candidates.indices,
+                dtype=">i8",
+                sort_rows=True,
+            ),
+        }
+        object_manifests = {
+            "object_base_stratum_indices_sha256": _object_array_manifest_sha256(
+                "object_base_stratum_indices", base, dtype=">i8", sort_rows=True
+            ),
+            "object_anchor_indices_sha256": _object_array_manifest_sha256(
+                "object_anchor_indices", anchors, dtype=">i8"
+            ),
+            "object_promoted_indices_sha256": _object_array_manifest_sha256(
+                "object_promoted_indices", promoted, dtype=">i8", sort_rows=True
+            ),
+            "object_final_stratum_indices_sha256": _object_array_manifest_sha256(
+                "object_final_stratum_indices",
+                candidates.indices,
+                dtype=">i8",
+                sort_rows=True,
+            ),
+        }
+        for name, expected in {**call_manifests, **object_manifests}.items():
+            if getattr(provenance, name) != expected:
+                raise ValueError(
+                    f"pilot provenance {name} does not match the promotion"
+                )
         for value in (
             anchors,
             anchor_valid,
@@ -1195,8 +1243,9 @@ class DefensiveLocalProposal:
         kth distance ties the probe boundary, the probe doubles until it finds
         a strictly larger distance or reaches the full active support.  Exact
         float64 squared distances and absolute atom ids then define the final
-        order.  Processing one anchor at a time bounds temporary memory by one
-        active-support vector even when every catalogue coordinate is tied.
+        order.  Processing one anchor at a time bounds temporary workspace by
+        ``O(n_active * n_coordinates)`` even when every catalogue coordinate is
+        tied; it never materializes one such workspace per anchor.
         """
 
         anchors = np.asarray(anchor_indices, dtype=np.int64)

@@ -292,6 +292,138 @@ def test_pilot_promotion_ranks_unique_explicit_scores_and_fills_fixed_width():
     assert result.provenance.call_final_stratum_indices_sha256 == final_hash
 
 
+def test_pilot_promotion_rejects_replaced_inconsistent_provenance():
+    proposal, observed, candidates, draw, scores, recipe = (
+        _pilot_promotion_fixture()
+    )
+    result = proposal.promote_exact_stratum(
+        candidates, observed, draw, scores, recipe=recipe
+    )
+
+    with pytest.raises(TypeError, match="PilotStratumProvenance"):
+        replace(result, provenance=object())
+    with pytest.raises(ValueError, match="recipe hash"):
+        replace(
+            result,
+            provenance=replace(result.provenance, recipe_sha256="0" * 64),
+        )
+    with pytest.raises(ValueError, match="chunks"):
+        replace(
+            result,
+            provenance=replace(
+                result.provenance,
+                pilot_atom_chunk=result.provenance.pilot_atom_chunk // 2,
+            ),
+        )
+
+    call_fields = (
+        "call_base_stratum_indices_sha256",
+        "call_anchor_indices_sha256",
+        "call_promoted_indices_sha256",
+        "call_final_stratum_indices_sha256",
+    )
+    object_fields = (
+        "object_base_stratum_indices_sha256",
+        "object_anchor_indices_sha256",
+        "object_promoted_indices_sha256",
+        "object_final_stratum_indices_sha256",
+    )
+    for name in call_fields:
+        with pytest.raises(ValueError, match=name):
+            replace(
+                result,
+                provenance=replace(result.provenance, **{name: "f" * 64}),
+            )
+    for name in object_fields:
+        with pytest.raises(ValueError, match=name):
+            replace(
+                result,
+                provenance=replace(
+                    result.provenance,
+                    **{name: ("e" * 64,)},
+                ),
+            )
+
+
+def test_frozen_pilot_recipe_consumes_256_anchors_for_4096_promotions():
+    n_base = 16_384
+    n_promoted = PILOT_STRATUM_RECIPE.n_promotions
+    n_atoms = n_base + n_promoted + 1
+    coordinates = np.empty((n_atoms, 1), dtype=np.float64)
+    coordinates[:n_base, 0] = -100_000.0 - np.arange(n_base)
+    promoted_ids = np.arange(n_base, n_base + n_promoted, dtype=np.int64)
+    coordinates[promoted_ids, 0] = np.repeat(
+        100.0 * np.arange(PILOT_STRATUM_RECIPE.max_anchors),
+        PILOT_STRATUM_RECIPE.neighbors_per_anchor,
+    )
+    coordinates[-1, 0] = 1.0e9
+    coordinate_table = ProposalCoordinateTable(
+        values=coordinates,
+        target_names=("x",),
+        center=np.zeros(1),
+        scale=np.ones(1),
+        statistic="mean",
+    )
+    proposal = DefensiveLocalProposal(
+        coordinate_table, np.full(n_atoms, 1.0 / n_atoms)
+    )
+    base_indices = np.arange(n_base, dtype=np.int64)[None, :]
+    candidates = ProposalCandidates(
+        indices=base_indices,
+        distances=np.zeros_like(base_indices, dtype=np.float64),
+        radius=np.zeros(1),
+    )
+    complement_ids = np.arange(n_base, n_atoms, dtype=np.int64)
+    pilot_indices = np.resize(
+        complement_ids, (1, PILOT_STRATUM_RECIPE.pilot_draws)
+    )
+    component_schedule = np.resize(
+        np.asarray(
+            PILOT_STRATUM_RECIPE.pilot_proposal.component_cycle,
+            dtype=np.int16,
+        ),
+        PILOT_STRATUM_RECIPE.pilot_draws,
+    )[None, :]
+    pilot_scores = np.zeros_like(pilot_indices, dtype=np.float64)
+    anchor_ids = promoted_ids[:: PILOT_STRATUM_RECIPE.neighbors_per_anchor]
+    pilot_scores[np.isin(pilot_indices, anchor_ids)] = 1.0
+    n_components = len(PILOT_STRATUM_RECIPE.pilot_proposal.component_names)
+    pilot_draw = ProposalDraw(
+        indices=pilot_indices,
+        probability=np.full_like(
+            pilot_indices, 1.0 / len(complement_ids), dtype=np.float64
+        ),
+        local_member=np.zeros_like(pilot_indices, dtype=bool),
+        global_component=(component_schedule == n_components - 1),
+        candidate_radius=candidates.radius,
+        seed=812_702,
+        local_position=np.full_like(pilot_indices, -1, dtype=np.int32),
+        component_id=component_schedule,
+        component_complement_mass=np.full((1, n_components), 0.5),
+        component_recipe=PILOT_STRATUM_RECIPE.pilot_proposal,
+        atom_chunk=PILOT_STRATUM_RECIPE.atom_chunk,
+        object_chunk=PILOT_STRATUM_RECIPE.object_chunk,
+        object_excluded_candidate_indices_sha256=(
+            _candidate_exclusion_manifest_sha256(base_indices)
+        ),
+    )
+
+    result = proposal.promote_exact_stratum(
+        candidates,
+        pd.DataFrame({"x": [0.0]}),
+        pilot_draw,
+        pilot_scores,
+    )
+
+    assert result.promotion_size == n_promoted
+    np.testing.assert_array_equal(result.anchor_counts, [256])
+    np.testing.assert_array_equal(result.anchor_indices[0], anchor_ids)
+    np.testing.assert_array_equal(result.promoted_indices[0], promoted_ids)
+    np.testing.assert_array_equal(result.fallback_fill_counts, [0])
+    np.testing.assert_array_equal(result.max_neighbor_query_width, [16])
+    assert result.candidates.indices.shape == (1, 20_480)
+
+
 def test_pilot_promotion_is_independent_of_kdtree_tie_return_order():
     proposal, observed, candidates, draw, scores, recipe = (
         _pilot_promotion_fixture()
