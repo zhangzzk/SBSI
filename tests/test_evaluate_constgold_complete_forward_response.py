@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from scripts.evaluate_constgold_complete_forward_response import (
+    _experiment_comparison,
     _flow_seed_sem,
     _measured_leg,
 )
@@ -13,6 +14,32 @@ def test_flow_seed_sem_is_null_for_single_checkpoint():
         _flow_seed_sem(np.array([[0.8, -0.1], [1.0, 0.1]])),
         [0.1, 0.1],
     )
+
+
+def test_experiment_comparison_records_residual_and_bootstrap():
+    measured = {"response_first_column": [0.9, -0.1], "plus_count": 12}
+    predicted = {"response_first_column": [0.95, -0.08]}
+    result = _experiment_comparison(
+        measured=measured,
+        predicted=predicted,
+        bootstrap={
+            "standard_error": [0.01, 0.02],
+            "ci95": [[0.03, -0.02], [0.07, 0.06]],
+        },
+        definition="fixed population",
+        model_components=("flow",),
+    )
+
+    assert result["measured"] is measured
+    assert result["predicted"] is predicted
+    assert result["model_components"] == ["flow"]
+    assert np.allclose(
+        result["predicted_minus_measured"]["response_first_column"],
+        [0.05, 0.02],
+    )
+    assert result["predicted_minus_measured"][
+        "case_bootstrap_standard_error"
+    ] == [0.01, 0.02]
 
 
 def test_measured_leg_reports_inner_join_exclusions(tmp_path):

@@ -389,6 +389,36 @@ def _serialize_sufficient(item):
     return item
 
 
+def _experiment_comparison(
+    *,
+    measured: dict,
+    predicted: dict,
+    bootstrap: dict,
+    definition: str,
+    model_components: tuple[str, ...],
+) -> dict:
+    """Build one compact measured-versus-predicted response comparison."""
+    measured_response = np.asarray(
+        measured["response_first_column"], dtype=np.float64
+    )
+    predicted_response = np.asarray(
+        predicted["response_first_column"], dtype=np.float64
+    )
+    return {
+        "definition": definition,
+        "model_components": list(model_components),
+        "measured": measured,
+        "predicted": predicted,
+        "predicted_minus_measured": {
+            "response_first_column": (
+                predicted_response - measured_response
+            ).tolist(),
+            "case_bootstrap_standard_error": bootstrap["standard_error"],
+            "case_bootstrap_ci95": bootstrap["ci95"],
+        },
+    }
+
+
 def _combine_measured(items: list[dict]) -> dict:
     return {
         "count": int(sum(item["count"] for item in items)),
@@ -1180,6 +1210,53 @@ def main(argv=None):
         replicates=args.n_boot,
         seed=args.bootstrap_seed,
     )
+    experiments = {
+        "1_leg_matched_selected_shape": _experiment_comparison(
+            measured=measured_matched_selected,
+            predicted=pooled_prediction["matched_selected"],
+            bootstrap=bootstrap[
+                "matched_selected_predicted_minus_measured"
+            ],
+            definition=(
+                "measured ellipticity response on the common identities that "
+                "are detected, usable, and pass every measured cut in both "
+                "legs; prediction uses the same fixed identities, so detection "
+                "and moving-boundary selection responses are conditioned away"
+            ),
+            model_components=("measurement_flow", "fixed_r_blend_shift"),
+        ),
+        "2_sheared_intrinsic_detection": _experiment_comparison(
+            measured=truth_actual_detected,
+            predicted=pooled_prediction["truth_detection"],
+            bootstrap=truth_shape_bootstrap[
+                "detection_predicted_minus_actual"
+            ],
+            definition=(
+                "per-leg mean analytically sheared intrinsic ellipticity over "
+                "the actual detected identities versus the full parent "
+                "population weighted by the independently evaluated classifier"
+            ),
+            model_components=("transition_aware_classifier",),
+        ),
+        "3_sheared_intrinsic_detection_and_selection": _experiment_comparison(
+            measured=truth_actual_selected,
+            predicted=pooled_prediction["truth_complete"],
+            bootstrap=truth_shape_bootstrap[
+                "detection_and_selection_predicted_minus_actual"
+            ],
+            definition=(
+                "per-leg mean analytically sheared intrinsic ellipticity over "
+                "actual detected identities passing every measured cut versus "
+                "the full parent population weighted by classifier probability "
+                "times the flow-estimated cut-pass probability"
+            ),
+            model_components=(
+                "transition_aware_classifier",
+                "measurement_flow_selection_probability",
+                "fixed_r_blend_shift_for_shape_cut",
+            ),
+        ),
+    }
     plot_sample_manifest = None
     if args.plot_sample_size:
         if args.plot_sample_output is None:
@@ -1291,6 +1368,7 @@ def main(argv=None):
                 "measured-cut pass probability"
             ),
         },
+        "experiments": experiments,
         "pooled": {
             "measured": {
                 "matched_selected": measured_matched_selected,

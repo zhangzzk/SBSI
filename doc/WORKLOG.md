@@ -2,6 +2,55 @@
 
 This file records substantive changes to the standalone SBSI shear-calibration project.
 
+## 2026-09-02 cont.394 — V3.3-like three-way ConstGold response audit on all 100 cases
+
+Ran the owner-specified V3.3-like response audit on ConstGold cases 40--139 at
+`g1=+/-0.02`.  The three estimands are now reported directly under the result's
+top-level `experiments` block: (1) measured versus flow-predicted ellipticity on
+the common identities detected, usable, and selected in both legs; (2) the
+per-leg analytically sheared intrinsic-shape mean for actual detections versus
+classifier weighting of the complete parent; and (3) the same intrinsic-shape
+mean after measured selection versus classifier probability times the flow
+cut-pass probability.  The measured cut is independently evaluated in each leg
+and is exactly `|e|<0.6`, `MAG_AUTO<25.8`, and measured radius `>=0.75 arcsec`.
+
+The pooled first-column responses are:
+
+| experiment | measured R11 | predicted R11 | predicted - measured | case-bootstrap SE |
+|---|---:|---:|---:|---:|
+| fixed both-leg selected identities, measured shape | 0.955800 | 0.952444 | -0.003356 | 0.000831 |
+| sheared intrinsic shape, detection only | 0.990795 | 0.994319 | +0.003525 | 0.000276 |
+| sheared intrinsic shape, detection plus selection | 0.791181 | 0.792680 | +0.001499 | 0.001090 |
+
+Thus the absolute fixed-population shape discrepancy is 0.34%, resolved at
+4.04 case-bootstrap SE with 100 cases.  The transition-aware classifier-only
+detection-population response is 0.35% high, now resolved at 12.76 SE.  Joint
+detection plus measured selection closes to 0.15%, 1.37 SE; this last agreement
+contains the selection-weight cancellation specified by the estimand and should
+not be read as erasing the separately measured classifier discrepancy.
+
+The common selected population contains 3,557,769 identities per leg.  The
+actual detection populations contain 5,707,625/5,707,786 identities and the
+detection-plus-selection populations 3,701,635/3,701,052 in the plus/minus legs.
+Zero CrossMatch rows lack a shape row.  The explicitly reported shape-only rows
+are 322,297/323,380, and 25,713,934/25,714,170 cross-matched rows lie outside the
+registered finite-prior support in the plus/minus legs.
+
+Scheduler job **16186541** completed in 50m39s with exit code zero, an empty
+error log, and 6,976,936 KiB peak RSS.  It pins the seed-501 500/500 Flow-E and
+transition-aware classifier hashes from cont.392.  The immutable result is
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/v33_constgold_response_experiments_c40_139_v1/result.json`,
+SHA-256 `a00a16f6a60ea57aca661778d2cadaa17512d6e4917f206ecb8dbf4cc4f287bd`.
+
+Files changed: `scripts/evaluate_constgold_complete_forward_response.py` adds
+the compact three-experiment summary; the reusable scheduler launcher is kept
+under `scripts/run_constgold_v33_response_experiments_c40_139.sh` as requested;
+`tests/test_evaluate_constgold_complete_forward_response.py` covers residual and
+bootstrap serialization.  Validation: Bash syntax, Python compilation, Ruff,
+whitespace checks, focused tests, artifact schema/hash/finiteness audit, exact
+100-case coverage, unmatched-row accounting, and the full CPU suite (`265 passed,
+2 skipped` in 32.13 s).
+
 ## 2026-09-02 cont.393 — consolidated V3.3-like and the v1.2 inference release on dev
 
 Per owner request, the current standalone-library cleanup, the validated
