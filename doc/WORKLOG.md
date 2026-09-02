@@ -19,9 +19,12 @@ the independent three-commit ablation branch, and retained two dirty development
 worktrees rather than discarding unrecoverable work: the active packed-bridge
 sampler experiment and the locked cut-support development tree.  Clean detached
 run worktrees whose commits are ancestors of the retained sampler history, plus
-superseded clean staging worktrees/branches, were eligible for removal.  This
-reduces the visible worktree set without pretending experimental sampler history
-is the v1.2 release.
+superseded clean staging worktrees/branches, were removed.  Fifteen clean
+worktrees and seven obsolete local branch names were pruned.  The final worktree
+set is `dev`, `master`, `codex/inference-sampler-night`, and the locked
+`worktree-cut-support-adaptive`; `ablation-v1-to-v2` remains as a branch without
+a worktree.  This reduces the visible worktree set without pretending
+experimental sampler history is the v1.2 release.
 
 Validation before checkpointing: both staged and unstaged `git diff --check`
 passed.  The documented `/project/ls-gruen/users/zekang.zhang/envs/py31`
