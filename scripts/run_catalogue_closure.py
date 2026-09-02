@@ -24,6 +24,7 @@ from sbsi.catalogue_likelihood import (
     CatalogueLikelihood,
     CatalogueModelCache,
     CatalogueSelection,
+    OutputCut,
 )
 from sbsi.catalogue_sampling import (
     DefensiveLocalProposal,
@@ -36,7 +37,6 @@ from sbsi.measurement_model import load_measurement_model
 from sbsi.models import ModelPaths, load_detection_classifier, load_emulator
 from sbsi.scene_prior import ScenePrior
 from sbsi.scene_prior import SHEAR_TRANSFORM
-from sbsi.score_inference import OutputCut
 
 
 def _sha256(path):
@@ -59,10 +59,8 @@ def _implementation_hashes() -> dict[str, str]:
         "sbsi/catalogue_sampling.py",
         "sbsi/scene_prior.py",
         "sbsi/shear_map.py",
-        "sbsi/lagrangian_score.py",
         "sbsi/measurement_model.py",
         "sbsi/selection_model.py",
-        "sbsi/detection_classifier.py",
         "sbsi/forward_catalogue.py",
         "sbsi/models.py",
     )

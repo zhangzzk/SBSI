@@ -1,71 +1,107 @@
 # SBSI environment and resources
 
-Split out of `AGENTS.md` and `CLAUDE.md` on 2026-08-18. No code behavior lives
-here; this is how to run what the repository already contains.
+This document records the local execution contract. Scientific behavior belongs
+in code and release configuration, not in shell setup.
 
-## Interpreters and installation
+## Installation
 
-- Conda env: `conda activate sims1` (Python 3.9). The repo is
-  editable-installed in `sims1` and `py31`
-  (`pip install -e . --no-build-isolation`, no declared deps), so `import sbsi`
-  works without PYTHONPATH; the PYTHONPATH contract still works as before:
+Install SBSI into the interpreter that will run it:
 
-  ```bash
-  conda activate sims1
-  export PYTHONPATH="$PWD:$PYTHONPATH"        # add BlendEMU only for the emulator step
-  ```
+```bash
+python -m pip install -e /path/to/SBSI
+```
 
-- BlendEMU is NOT needed for this — add it only when loading the emulator
-  (`sbsi.models.load_emulator`), which is the sole place SBSI imports it. Model
-  artifacts resolve through `SBSI_CACHE_DIR` / `BLENDEMU_MODELS`, defaulting to
-  the repository's `models/` release tree; `BLENDEMU_ROOT` is not read for
-  model paths — `load_emulator` reads it only to import `blendemu` when it is
-  not already importable (falling back to a one-line
-  `~/.config/sbsi/blendemu_root` file when the variable is unset, for
-  JupyterHub-style launches that skip shell exports).
-- `pip install -e .` also installs the `sbsi` console script.
+The package metadata declares the core Python dependencies and installs the
+`sbsi` command. Imports must work from any directory; do not add checkout paths
+to `PYTHONPATH` or depend on the current working directory.
 
-## Running the tests
+BlendEMU is required only when loading its response emulator or classifier
+artifacts. Install its checkout into the same environment:
 
-- **`sims1` has no pytest** — the obvious `conda activate sims1 && python -m
-  pytest` fails with `No module named pytest`. Run the suite with the `py31`
-  interpreter instead (pytest 9 + torch), from the repo root with PYTHONPATH
-  set:
+```bash
+python -m pip install --config-settings editable_mode=compat -e /path/to/blendemu
+```
 
-  ```bash
-  PYTHONPATH="$PWD" /project/ls-gruen/users/zekang.zhang/envs/py31/bin/python -m pytest tests/ -q
-  ```
+SBSI does not search `BLENDEMU_ROOT` or a user configuration file for source
+code. Model-store locations may be supplied explicitly or through the optional
+`SBSI_CACHE_DIR` and `BLENDEMU_MODELS` path overrides.
 
-- Whole suite is ~80 s, pure CPU, no catalogue access — fine on the login node,
-  and worth running after any edit to `sbsi/`. The suite must pass on a
-  checkout that has SBSI only; the single BlendEMU cross-check in
-  `tests/test_api.py` skips when BlendEMU is absent.
-- Pytest discovery is pinned to `tests/`; archived historical tests are
-  provenance and are not collected by the default command.
-- `sims1`'s scipy fails to import on the LOGIN node (`GLIBCXX_3.4.30 not
-  found`, via `sklearn`); it is fine on compute nodes. Login-node smoke tests
-  of the trainers must therefore use `py31`, or avoid importing sklearn.
+## Local interpreters
+
+Two project environments are currently available:
+
+- `/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python` — Python 3.10,
+  pytest, and PyTorch; use this for the test suite and light validation.
+- `/project/ls-gruen/users/zekang.zhang/envs/sims1/bin/python` — Python 3.9
+  runtime used by existing scheduled science jobs. It does not provide pytest
+  and its login-node SciPy/sklearn stack has a `GLIBCXX` incompatibility.
+
+Both environments need the checkout installed editable after a clean setup.
+Environment names are deployment details, not part of either scientific
+release identity.
+
+## Tests
+
+From the repository root:
+
+```bash
+/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python -m pytest tests -q
+```
+
+The default pytest configuration searches only `tests/`. The suite is CPU
+only and must pass without BlendEMU installed; the optional cross-check against
+BlendEMU skips when that package is unavailable.
+
+Use targeted tests while editing, then run the whole suite for changes to
+`sbsi/`, production scripts, configuration validation, or artifact loading.
 
 ## Login node and scheduler
 
-- The login node has no GPU (32c/376G); perform only edits, syntax checks,
-  metadata inspection, and tiny smoke tests on it.
-- Never run nontrivial work directly on the login node — training,
-  full-catalogue scans, response production, simulations, and other nontrivial
-  CPU/GPU work go through the local scheduler.
-- `jobs/job_infer_v1.sh` is the cluster-local reference launcher for the
-  canonical Infer V1 defaults. Other scheduler wrappers are deployment and
-  provenance aids rather than public SBSI APIs.
+The login node is for edits, syntax checks, metadata inspection, checksum
+verification, and small CPU tests. Training, simulations, full-catalogue scans,
+response-cache construction, and other substantial CPU/GPU work go through the
+local scheduler.
 
-## Data
+`jobs/job_inference.sh` is the cluster-local reference launcher for
+`v1.1-infer` with the `v3.2-like` likelihood. It must resolve every
+user-owned catalogue, checkpoint, cache, and output path explicitly. Other
+scheduler wrappers are validation or deployment aids, not public Python APIs.
 
-- Every training, validation, and inference catalogue is an explicit user
-  input. Do not add a project catalogue path as an API default.
+`jobs/job_inference_hybrid_chain.sh` is the multi-GPU iterated launcher.  It
+derives its worker count from the Slurm allocation (or `N_GPUS` outside
+Slurm), partitions both prior-atom normalization and observation work across
+all visible GPUs, and strictly combines the resulting shards.  Requesting
+more GPUs therefore changes the partitioning automatically; scientific
+settings such as `K`, `M`, cuts, seeds, and stencil step remain unchanged.
+When `SELECTION_NORMALIZATION_CACHE` names a validated surrogate, the launcher
+skips the atom preparation and reuses that cache for every pass.  Without it,
+exact normalization preparation is automatically sharded and repeated at each
+iteration centre.  Set `BUILD_SELECTION_NORMALIZATION_QUADRATIC=0` when the
+exact chain is intended only as inference/validation and no reusable surrogate
+has yet met the induced-shear accuracy gate.
+Set `SCORE_ROOT_BFGS=1` only for an iterated custom chain that should solve the
+successive catalogue scores with a positive-definite BFGS secant matrix rather
+than require every intermediate observed Hessian to be positive definite.
+Bright-only workers may persist indefinite shard-level moments because those
+shards are not estimators; the combined full-catalogue solve retains the
+positive-definite requirement.
 
-## Gotchas
+## Data and models
 
-- `doc/WORKLOG.md` is large and newest-first — read only the top.
-- Current shape estimator is ngmix (`NGMIX_G1/G2`), superseding SExtractor
-  moments.
-- `archive/` holds superseded scripts; don't resurrect without checking
-  WORKLOG.
+- Training, validation, simulation, prior, cache, mock, and output catalogues
+  are user data. They do not belong in the repository and are never hidden
+  defaults.
+- `models/` contains only the three small JSON artifacts described in
+  `models/README.md`. The seed-501 measurement flow is supplied externally and
+  verified by its recorded SHA-256.
+- `configs/inference.json` and `configs/likelihood.json` contain portable
+  scientific settings and artifact identities. They intentionally omit
+  machine-specific data and output paths.
+
+## Documentation workflow
+
+`doc/WORKLOG.md` is newest-first and intentionally historical. Read its top
+entry for current state and search for a date, keyword, or `cont.NNN` tag when
+older provenance is needed. The maintained operational contract is in
+`doc/API.md`, `doc/INFERENCE.md`, `doc/CATALOGUE_PRIOR.md`, and the two
+release configuration files.

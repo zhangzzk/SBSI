@@ -1,121 +1,129 @@
 # Simulation-Based Shear Inference (SBSI)
 
-SBSI is an integrated weak gravitational lensing (shear) calibration framework, accounting for detection and selection bias,
-as well as blending.
+SBSI is a scientific library for weak-lensing shear inference with a finite
+scene prior, a conditional measurement flow, detection probabilities, measured
+selection, and an optional atom-aligned blending response.
 
-SBSI provides one model-name-agnostic workflow with three API areas:
+The current releases are:
 
-1. `sbsi.flow` — train and tune a conditional measurement flow.
-2. `sbsi.response` — combine flow self-response and emulator blending response.
-3. `sbsi.inference` — simulation-based shear inference (under development).
+| role | release | definition |
+| --- | --- | --- |
+| numerical inference pipeline | `v1.1-infer` | [`configs/inference.json`](configs/inference.json) |
+| catalogue likelihood | `v3.2-like` | [`configs/likelihood.json`](configs/likelihood.json) |
 
-The current numerical catalogue setup is **Infer V1**, defined in
-[`configs/infer_v1.json`](configs/infer_v1.json). Inference versions identify
-the numerical algorithm and sampling choices; model versions are separate.
-The current model preset is V3.2, but Infer V1 does not branch on that name.
-Its candidate query and uncertainty reranking run on the inference GPU by
-default; the numerically gated SciPy implementation remains available as a
-fallback.
+These are independent scientific release labels. `v1.1-infer` identifies how
+an explicit likelihood and prior are sampled and solved; `v3.2-like` identifies
+the flow, detector, response artifact, and geometry used by that likelihood.
+Neither label replaces the SBSI package version, and neither should control code
+behavior without validating its configuration and artifact hashes.
 
-The [inference tutorial notebook](examples/sbsi_api_tutorial.ipynb) is the main
-user-facing prediction walkthrough. Training and tuning use the CLI described
-below.
+`v3.2-like` is also not the same thing as the path-only
+`get_model("V3.2")` preset. The distinction and frozen hashes are documented in
+[`models/README.md`](models/README.md).
 
-## Conditional measurement predictions
+The validated seed-501 500/500 Flow-E plus transition-aware detector set is
+named `V3.3-like` and is available as the path-only
+`get_model("V3.3-like")` preset. It is not yet the likelihood selected by
+`configs/likelihood.json`; see [`models/README.md`](models/README.md) for the
+exact artifacts and promotion boundary.
 
-The measurement flow returns joint predictive distributions, not only point
-estimates. This example shows measured ellipticity, magnitude, and linear
-FLUX_RADIUS for representative bright, middle, and faint galaxies. The curves
-are the one- and two-sigma highest-density contours; plus signs mark the input
-galaxy parameters. The complete example is reproducible from the tutorial
-notebook.
+## Inference workflow
 
-![Conditional measurement-flow contours for three representative galaxies](examples/measurement_flow_contours.png)
+The production workflow has one entry point:
+
+```bash
+python scripts/run_inference.py \
+  --inference-config configs/inference.json \
+  --likelihood-config configs/likelihood.json \
+  --scene-store /path/to/scene \
+  --measurement-model /path/to/measurement_flow_mixed_g0_g005_E_s501_swaavg.pt \
+  --model-cache /path/to/model-cache \
+  --proposal-cache /path/to/proposal-cache \
+  --output /new/output/path
+```
+
+All catalogues, checkpoints, caches, and outputs are explicit user inputs. The
+repository configurations define the named scientific setup; they do not hide
+project data paths. The cluster-local reference wrapper is
+[`jobs/job_inference.sh`](jobs/job_inference.sh).
+
+Supporting commands prepare reusable inputs:
+
+- `scripts/build_scene_prior.py` builds a guarded finite scene prior.
+- `scripts/build_catalogue_blend_response.py` builds the optional fixed
+  atom-aligned `R_blend` cache.
+- `scripts/prepare_image_closure_mock.py` maps one declared image leg into the
+  measurement-flow target convention.
+
+The inference result records the release labels, complete effective
+configuration, model/cache/input hashes, random streams, object partition, and
+per-object score/information moments needed for exact partition combination.
+Common random numbers are retained across every finite-difference view and
+nested draw rung.
+
+## Library areas
+
+Reusable behavior lives in `sbsi/`:
+
+1. `sbsi.flow` trains and tunes conditional measurement flows.
+2. `sbsi.scene_prior`, `sbsi.catalogue_likelihood`, and
+   `sbsi.catalogue_sampling` implement the finite-prior likelihood and defensive
+   importance sampler.
+3. `sbsi.catalogue_blend` and `sbsi.response` handle the external blending
+   response without copying BlendEMU's simulation or training implementation.
+4. `sbsi.catalogue_closure` and `sbsi.image_closure` provide likelihood- and
+   image-closure adapters and validation.
 
 ## Image simulation and measurement
 
-SBSI training data are generated using BlendEMU. 
-BlendEMU owns rendering, measurement, and simulation-catalogue construction.
-SBSI calls its supported pipeline CLI. The
-[example Slurm wrapper](examples/job_blendemu.sh) runs BlendEMU steps
-1 through 4b from a user-owned YAML configuration. 
+BlendEMU owns image rendering, measurement, simulation-catalogue construction,
+and emulator training. SBSI consumes its supported catalogues and trained
+artifacts; it does not carry a second copy of that implementation. The example
+Slurm wrapper [`examples/job_blendemu.sh`](examples/job_blendemu.sh) runs the
+BlendEMU production steps from a user-owned configuration.
 
-## Training and tuning
+## Flow training and tuning
 
-Flow training is config-driven, like BlendEMU. Copy
-[`examples/flow_training.yaml`](examples/flow_training.yaml), replace every
-catalogue and artifact path, and run inside an appropriate compute allocation:
+Copy [`examples/flow_training.yaml`](examples/flow_training.yaml), replace its
+catalogue and artifact paths, and run inside an appropriate compute allocation:
 
 ```bash
 python -m sbsi flow --config my_flow.yaml --mode train
 python -m sbsi flow --config my_flow.yaml --mode tune
 ```
 
-An editable/package install provides the equivalent `sbsi` command.
+An editable install provides the equivalent `sbsi` command. Training writes the
+declared checkpoint and averaged `*_swaavg.pt` checkpoint. Tuning evaluates an
+explicit candidate list against a separate validation catalogue and writes a
+ranked JSON manifest. Existing artifacts are never overwritten.
 
-`--mode train` produces the configured checkpoint and averaged `*_swaavg.pt`
-checkpoint. `--mode tune` trains the explicit candidate list, evaluates each
-checkpoint with the user-supplied `package.module:function` scorer on the
-separate validation catalogue, and writes a ranked JSON manifest. Existing
-artifacts are never overwritten. Scheduler wrappers are deployment details and
-are not part of SBSI.
+## Installation
 
-$R_{\rm blend}$ Emulator training and tuning remain in BlendEMU.
-
-## Environment
-
-Use one Python environment for the SBSI checkout and its BlendEMU dependency. Install
-both repositories editable; do not add checkout paths to `PYTHONPATH`, and do not rely
-on launching Python from a particular directory:
+Use one Python environment for SBSI and its BlendEMU dependency:
 
 ```bash
-conda activate sims1
 python -m pip install --config-settings editable_mode=compat -e /path/to/blendemu
 python -m pip install -e /path/to/SBSI
 ```
 
-For simultaneous git worktrees, give each worktree a small environment overlay so one
-editable `sbsi` installation cannot silently select another checkout:
+BlendEMU is required only when its classifier or response emulator is loaded.
+The measurement-flow checkpoint itself needs SBSI and PyTorch. Do not add
+checkout paths to `PYTHONPATH` or depend on the process working directory.
 
-```bash
-cd /path/to/SBSI-worktree
-/path/to/sims1/bin/python -m venv --system-site-packages .venv
-# This cluster's venv seed is older than the Setuptools inherited from sims1.
-.venv/bin/python -m pip uninstall -y setuptools
-.venv/bin/python -m pip install --no-build-isolation --no-deps \
-    --config-settings editable_mode=compat -e /path/to/blendemu
-.venv/bin/python -m pip install --no-build-isolation --no-deps -e .
-.venv/bin/python -m ipykernel install --user \
-    --name sbsi-master --display-name "SBSI master"
-```
+The repository bundles only three small JSON likelihood artifacts. The
+seed-501 measurement flow is supplied externally and verified by SHA-256; see
+[`models/README.md`](models/README.md).
 
-Select that kernel in `examples/sbsi_api_tutorial.ipynb`. The notebook obtains bundled
-data through `sbsi.example_path`, and model presets resolve from the imported checkout's
-`models/` directory, so the Jupyter server's working directory is irrelevant. Use
-`SBSI_CACHE_DIR` or `BLENDEMU_MODELS` only to override model artifacts stored elsewhere.
+## Documentation
 
-To confirm which code a process is using:
-
-```bash
-python -c 'import sbsi, blendemu; print(sbsi.__file__); print(blendemu.__file__)'
-```
-
-BlendEMU is only required for emulator prediction; the flow checkpoints need SBSI and
-PyTorch alone.
-
-### Models
-
-The frozen V3 artifacts—the 16-seed flow ensemble and blending emulator—ship in
-[`models/`](models/). `get_model("V3.1")` names the external four-seed original-E
-ensemble paired with that same emulator. `get_model("V3.2")` keeps those V3.1
-components and additionally pins the SBSI transition-aware detection classifier.
-Model presets resolve from the imported
-checkout by default, independent of the working directory. For artifacts stored
-elsewhere, set:
-
-```bash
-export SBSI_CACHE_DIR=/path/to/models
-export BLENDEMU_MODELS=/path/to/models/blendemu
-```
-
-See [`models/README.md`](models/README.md) for the layout and checksums.
+- [`doc/API.md`](doc/API.md) defines the scope and public contract.
+- [`doc/INFERENCE.md`](doc/INFERENCE.md) defines the current releases and the
+  estimator.
+- [`doc/CATALOGUE_PRIOR.md`](doc/CATALOGUE_PRIOR.md) documents the finite-prior
+  likelihood and caches.
+- [`doc/CONVENTIONS.md`](doc/CONVENTIONS.md) fixes catalogue, shear, response,
+  seed, and reported-`m` conventions.
+- [`doc/ENVIRONMENT.md`](doc/ENVIRONMENT.md) gives local interpreter, test, and
+  scheduler instructions.
+- [`doc/WORKLOG.md`](doc/WORKLOG.md) is the preserved, newest-first scientific
+  record.

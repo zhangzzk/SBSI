@@ -15,7 +15,13 @@ from sbsi.catalogue_likelihood import (
     CatalogueSelection,
 )
 from sbsi.scene_prior import ScenePrior
-from sbsi.score_inference import OutputCut
+from sbsi.catalogue_likelihood import OutputCut
+from sbsi.selection_normalization import (
+    ExactPopulationNormalization,
+    QuadraticPopulationNormalization,
+    detected_selected_mass_shard,
+    load_population_normalization,
+)
 
 
 CONDITIONS = {
@@ -25,6 +31,51 @@ CONDITIONS = {
     "moffat_beta": 2.224,
     "pixel_rms": 0.312,
 }
+
+
+def _quadratic_normalization(**updates):
+    values = {
+        "center": np.array([0.01, -0.02]),
+        "log_mass_at_center": -0.4,
+        "gradient": np.array([0.3, -0.2]),
+        "hessian": np.array([[2.0, 0.5], [0.5, -1.0]]),
+        "trust_min": np.array([-0.02, -0.04]),
+        "trust_max": np.array([0.04, 0.02]),
+        "finite_difference_step": 0.001,
+        "identity": {"scene": "test"},
+        "validation": {"maximum_absolute_gradient_error": 1e-4},
+        "source": {"sha256": "test"},
+    }
+    values.update(updates)
+    return QuadraticPopulationNormalization(**values)
+
+
+def test_quadratic_population_normalization_evaluates_and_refuses_extrapolation():
+    model = _quadratic_normalization()
+    point = np.array([0.013, -0.016])
+    offset = point - model.center
+    expected = -0.4 + model.gradient @ offset + 0.5 * offset @ model.hessian @ offset
+    assert model.log_mass(*point) == pytest.approx(expected)
+    with pytest.raises(ValueError, match="refuses extrapolation"):
+        model.log_mass(0.041, 0.0)
+
+
+def test_exact_population_normalization_round_trip_and_missing_point(tmp_path):
+    model = ExactPopulationNormalization(
+        points={(0.01, -0.02): 0.4, (0.011, -0.02): 0.41},
+        finite_difference_step=0.001,
+        identity={"scene": "test"},
+        source={"n_shards": 2},
+    )
+    path = tmp_path / "exact.json"
+    model.save(path)
+    restored = load_population_normalization(path)
+    assert restored.log_mass(0.01, -0.02) == pytest.approx(np.log(0.4))
+    assert restored.available_shears == ((0.01, -0.02), (0.011, -0.02))
+    with pytest.raises(ValueError, match="has no value"):
+        restored.log_mass(0.0, 0.0)
+
+
 
 
 class GaussianShapeFlow:
@@ -40,6 +91,22 @@ class GaussianShapeFlow:
     def sample(self, condition_frame, n_samples=1, batch_size=None, qmc=False):
         mean = torch.as_tensor(condition_frame["e1_input_p"].to_numpy(float), dtype=torch.float32)
         noise = torch.randn(len(condition_frame), n_samples) * self.sigma
+        return (mean[:, None] + noise).numpy()[..., None]
+
+
+class RandomShiftShapeFlow(GaussianShapeFlow):
+    """Small flow with the production QMC stream shape for shard tests."""
+
+    device = torch.device("cpu")
+
+    def sample(self, condition_frame, n_samples=1, batch_size=None, qmc=False):
+        mean = torch.as_tensor(condition_frame["e1_input_p"].to_numpy(float))
+        if not qmc:
+            return super().sample(
+                condition_frame, n_samples=n_samples, batch_size=batch_size, qmc=qmc
+            )
+        shift = torch.rand(len(condition_frame), 1, 1).squeeze(-1)
+        noise = (shift - 0.5).expand(len(condition_frame), n_samples) * self.sigma
         return (mean[:, None] + noise).numpy()[..., None]
 
 
@@ -280,6 +347,36 @@ def test_selection_probability_skips_zero_mass_scene_rows():
     )
     np.testing.assert_array_equal(probability[[0, 2]], 0.0)
     assert ((probability[[1, 3]] > 0) & (probability[[1, 3]] < 1)).all()
+
+
+def test_distributed_selection_mass_matches_full_probability_scan():
+    base = _likelihood()
+    base = CatalogueLikelihood(RandomShiftShapeFlow(), base.cache)
+    cut = OutputCut(["measured_e1"], bounds=[("measured_e1", None, 0.05)])
+    selection = CatalogueSelection(cut, n_samples=32, seed=96, row_chunk=2)
+    view = base.cache.get(0.0, 0.0)
+    active = np.flatnonzero(base.cache.prior.weights > 0).astype(np.int64)
+    probability = selection.probability(base.flow_model, view, active_indices=active)
+    expected = np.sum(
+        base.cache.prior.weights * view.detection_probability * probability
+    )
+    first = detected_selected_mass_shard(
+        selection,
+        base.flow_model,
+        view,
+        base.cache.prior.weights,
+        active_indices=active[:2],
+        random_offset_rows=0,
+    )
+    second = detected_selected_mass_shard(
+        selection,
+        base.flow_model,
+        view,
+        base.cache.prior.weights,
+        active_indices=active[2:],
+        random_offset_rows=2,
+    )
+    assert first + second == pytest.approx(expected, rel=0, abs=1e-15)
 
 
 def test_selected_mock_generation_applies_the_same_output_cut():

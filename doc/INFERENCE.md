@@ -1,9 +1,7 @@
-# INFERENCE.md — shear, response, and selection from the forward model
+# Shear, response, and selection from the forward model
 
-Derivations and algorithms only. Measured results, model status and project history live in
-`WORKLOG.md`, `Gold-V1.md`, `Gold-V2.md` and `MILESTONE.md`; the frozen V3 numbers are in
-`MILESTONE.md`. The older framework spec is `archive/pre-v3/docs/SBI_shear.md` (provenance —
-it predates the V3 library and is no longer maintained).
+This document defines the current inference boundary and derives the estimator.
+Measured results and project history live in `doc/WORKLOG.md`.
 
 **Summary.** The shear response is a **covariance with the score**. Selection bias is a **boundary
 term built from that same score**, dominated by its size channel. The blend response is its
@@ -15,61 +13,130 @@ on it.
 
 ---
 
-## 0. Implementation status — what the shipped library actually does
+## 0. Current implementation and release identity
 
-This section is the shipped-code boundary that `MILESTONE.md` and
-`sbsi/posterior_shape.py` point at. Everything from §1 onward is the derivation; it
-describes the target, not the current implementation.
+### Scientific releases
 
-### Infer V1
+The numerical pipeline is **`v1.1-infer`**, defined by
+`configs/inference.json`. It fixes the proposal, draw ladder, two-component
+finite-difference estimator, numerical precision, and chunking. Its current
+estimator starts at the mean observed shape, constructs one posterior-adapted
+defensive importance proposal, freezes the sampled atoms across the complete
+stencil, and takes one full-2D Newton update.
 
-**Infer V1** names the frozen numerical catalogue-inference setup in
-`configs/infer_v1.json`: the default 200-case FS2 prior, QMC-128 mean/std
-proposal coordinates, Gaussian uncertainty ranking, `K=M=16,384`, a 131,072
-location prefilter, defensive mixture `epsilon=0.1`, the raw mean observed shape
-as the initial centre, and one full two-component numerical update with
-`h=0.001`. The execution baseline uses compiled FP32 flow evaluation with
-128-object and 4,096-atom chunks.
+**`v1.2-infer`** is defined by `configs/inference_v1_2.json` and names the
+tilted-stratified trimmed sampler. It keeps the `v3.2-like` likelihood, the
+same posterior-adapted proposal construction, the same `h = 0.001` stencil,
+and the same one-step full-2D update. What it replaces is the way the
+per-object catalogue sum is estimated. The candidate shortlist is trimmed
+from 16,384 atoms to 1,024 and summed **exactly**, contributing no variance;
+the complement is then drawn from the tilted whole-catalogue proposal
+`q = (1-delta) softmax(s/T) + delta pi` at `delta = 0.1`, `T = 1`, over an
+8,192-draw ladder, rather than being carried by the flat defensive tail. The
+exact stratum and the drawn complement are added; every drawn term keeps its
+own `1/q` correction, so the split is an identity and not an approximation.
+Measured against the `v1.1-infer` arm on the same 25,000-object window
+(cont.328, cont.336, cont.344): median Pareto k-hat 2.01 -> 0.292, objects
+above the 0.7 diagnostic threshold 98.0% -> 7.0%, in-sample relative standard
+error 0.1264 -> 0.0260, and `time x relse^2` 3.53e-3 -> 2.08e-4.
 
-Inference and model versions are independent. **V3.2** names the current model
-artifacts; **Infer V1** names how an explicit model and prior are sampled and
-solved. No inference behavior branches on a model release name.
+`v1.2-infer` is a **sampler** release. Two further pieces are specified but
+not yet implemented in the runner, and until they are, a `v1.2-infer` run is
+still a single Newton step from a single centre:
 
-The completed 20k diagnostic supports Infer V1 as the fast survey-scale
-baseline, not as a strict per-20k `1e-4` numerical-closure claim. Larger K/M
-ladders remain validation diagnostics rather than Infer V1 defaults.
+- **Iterated recentring.** One step from the mean observed shape is biased by
+  its own linearisation, not by the sampler; the centre enters only through
+  the stencil shear points, and the drawn atom set is centre-independent.
+  Re-solving from the previous estimate converged in three passes with the
+  quadratic gain falling 77.10 -> 20.32 -> 0.34, and three independent
+  starting points agreed to 0.007 sigma (cont.342).
+- **The bright/faint hybrid.** The score and information of faint objects are
+  carried between passes by their own quadratic expansion,
+  `s_faint(g) = s_faint(g0) - I_faint(g0) (g - g0)`, and only objects brighter
+  than the recompute cut are re-evaluated. At `mag_auto < 22` that is 7.91% of
+  objects carrying 78.0% of the `g1` information and 86.8% of the pass-to-pass
+  score change, and it reproduces the fully converged answer to 0.14 sigma for
+  1.16 pass-equivalents of compute (cont.344). Freezing the faint moments
+  without the linear carry does not work: it errs by 3.2%, 1.04 sigma.
 
-**Project shear convention.**  The operational catalogue closure follows the
-image simulation: shear changes only intrinsic ellipticity.  Flux, size,
-positions, pair separations, and neighbour membership are invariant; no
-magnification or positional shear is included.  Broader scene-lensing terms
-derived later in this document are outside the present project scope unless
-explicitly reinstated.
+`configs/inference.json` therefore still names `v1.1-infer` as the default
+that `scripts/run_inference.py` loads. Promoting `v1.2-infer` to that file
+requires those two pieces plus a closure test at production scale; the hybrid
+has so far been validated on one 25,000-object window at one injected shear.
 
-SBSI can load an explicit measurement-flow checkpoint and evaluate its
-four-dimensional detected-object likelihood over a latent ellipticity grid.
-`BayesianInference.load(checkpoint)` and its catalogue arguments are
-model-name agnostic and accept user-owned paths or DataFrames.
+The likelihood is independently named **`v3.2-like`** and is defined by
+`configs/likelihood.json`. It combines the seed-501 original-E measurement
+flow, the bundled seven-input spin-0 BlendEMU detector, and the bundled response
+model used for an optional fixed atom-aligned `R_blend` cache. This is not the
+path-only `get_model("V3.2")` preset, which describes a four-flow ensemble and
+an external transition-aware detector. Release strings are recorded as
+provenance; executable behavior is determined by validated configuration,
+metadata, and hashes.
 
-The response input-catalogue boundary is implemented independently in
-`sbsi.forward_catalogue`: SBSI validates a truth catalogue and returns an
-aligned one-row-per-primary flow view plus a many-row primary/secondary emulator
-view. It computes the flow's intrinsic-shape and crowding features, applies the
-emulator's recorded pair cuts and rescaling, and preserves `primary_row` keys.
-BlendEMU is called only to evaluate its trained model on the prepared pair
-table. This preparation completes the two inputs for response prediction, but
-it does not create the measured-target catalogue or complete the joint shear
-likelihood described below.
+### Operational estimator
 
-This is not yet the validated catalogue-level shear inference requested for the
-public workflow. That implementation still needs a joint generative likelihood
-for the measurement flow and neighbour/emulator contribution, detection and
-selection normalization, latent scene marginalization, a hierarchical population
-prior, ensemble uncertainty, and simulation-based coverage tests.
+`scripts/run_inference.py` is the single production runner and
+`jobs/job_inference.sh` is its cluster-local reference wrapper. The runner
+evaluates the catalogue-marginalized detected-object likelihood with optional
+measured-output selection and the corresponding population normalization. It
+records the complete effective configuration, input/model/cache identities,
+random streams, partition, score and information moments, sampler diagnostics,
+and flow-evaluation counts.
 
-Until those pieces are complete, the tutorial leaves Part 3 as TODO. Existing
-posterior-grid and empirical-Bayes code is a research prototype for a detected
-population and must not be presented as the final simulation-based shear result.
+For the iterated bright/faint production chain,
+`jobs/job_inference_hybrid_chain.sh` uses every GPU in the allocation.  When no
+normalization cache is supplied it partitions the active prior atoms into
+disjoint, row-chunk-aligned shards, evaluates the nine exact measured-selection
+normalization views concurrently, and reduces their scalar masses into one
+identity-checked cache.  The measured-size-0.75 experiment evaluates a fresh
+exact stencil at every recentering centre: a single quadratic at `g=0` failed
+the induced-shear accuracy gate even though its pointwise `log B_W` residuals
+looked small.  Once a fresh stencil is available, the hybrid carry replaces
+the old normalization score and curvature for **every** carried object;
+`B_W(g)` is a common population term, not a bright-object term.  Cache identity
+includes the prior, measurement model, detector, response cache, QMC sampling,
+and measured cuts; changing any of them requires a new cache.
+
+The 100k measured-size experiment additionally opts into a positive-definite
+BFGS score-root update after pass 0.  Its first step uses the observed
+information.  Later passes update that matrix from successive centres and
+catalogue scores using the BFGS secant equation, while retaining the directly
+measured score and reporting the local observed-information eigenvalues.  This
+is a custom orchestration mode, not part of the `v1.2-infer` sampler release;
+it prevents an intermediate non-positive observed Hessian from defining an
+invalid Newton step without altering the likelihood score.
+
+The direct whole-catalogue candidate arm also shares one dense Gaussian-proxy
+calculation between the exact top-K ranking and the tilted complement draw.
+It ranks the score first, transforms that same buffer in place into the
+defensive mixture, samples the complement, and discards it.  This changes no
+candidate membership, random stream, proposal probability, or nested-M
+prefix; it removes a duplicated pair of whole-catalogue matrix products.
+
+The exact finite sum remains the small-catalogue oracle. Defensive importance
+sampling is the scalable path: a local proposal is mixed with the full prior,
+every term retains the exact `pi/q` correction, and nested draw rungs are fixed
+prefixes. Closure programs are validation tools, not alternate inference
+pipelines. See `doc/CATALOGUE_PRIOR.md` for the operational likelihood and cache
+contract.
+
+### Scope and limitations
+
+The project shear transform changes intrinsic ellipticity only. Flux, size,
+positions, pair separations, and neighbour membership remain invariant; no
+magnification or positional shear is included. Broader scene-lensing terms
+derived later in this document are outside the current implementation.
+
+`sbsi.forward_catalogue` validates a truth catalogue and returns aligned flow
+and response-emulator views. BlendEMU is called only to evaluate its trained
+artifact on the prepared pair table. Failed catalogue joins are rejected or
+explicitly dropped and reported.
+
+The `v3.2-like` detector's spin-0 feature contract permits probability reuse
+across shape-only shear views, but it cannot represent the measured image
+detection-selection response or the separate usable-measurement event. A
+likelihood-generated closure validates the numerical likelihood; precision
+image closure still requires those model limitations to be resolved.
 
 ---
 
@@ -326,30 +393,14 @@ model and must be supplied externally and added, i.e. $m=R_{\rm sim}/(R_{\rm sel
 for the multiplicative bias $m$. The additive form is a symptom of the missing conditioning, not a
 modelling choice.
 
-**Model status — the condition is met, the implementation does not use it.** The two are separate
-and it is worth stating which is which.
-
-*Conditioning.* The Gold-v1 flow sees scalar neighbour fluxes only, so for it the term above vanishes
-identically and the external $R_{\rm blend}=0.1593$ is forced. The V2 model is not that model:
-`NEIGHBOR_FEATURES` (`scripts/train_joint_forward.py:76`) carries `distance_scaled`,
-`relative_position_angle_cos2`/`sin2` and the neighbour shape `e1_input_s`/`e2_input_s`. Separation,
-spin-2 pair orientation and neighbour shape are all present, so the non-degeneracy condition is
-satisfied and $\mathrm{Cov}(\hat e,s_{\rm nbr})$ has somewhere to come from.
-
-*Shear map.* The implemented map does not exercise it. `shifted_feature_frame`
-(`scripts/train_joint_forward.py:227-247`) applies the Möbius transform to the primary's ellipticity
-and — under `--shear-both` — the neighbour's, and to nothing else. `distance_scaled` is rebuilt from
-the untouched `distance` and `Re_input_p`; `relative_position_angle_*` from the untouched
-`polarization_angle` (`sbs_shear/preprocessing.py:166-179`, reached via `rescale`). True size is not
-sheared either, so the $v_{\log T}=2e$ row of §2.4 is absent from this path. `scene_context`
-(`scripts/closure_v2_lagrangian.py:112`) hardcodes `primary_only=True`, so the §5C closure runs with
-the primary shape as the *only* moving input.
-
-So the positional velocity of §2.4 is zero **by omission in code**, not by the degeneracy above. The
-neighbour-shape channel is reachable today through the existing `--shear-both`; the positional
-channel needs the separation vector sheared, which is a change to `shifted_feature_frame` rather than
-to the architecture. §5B.1 shows the two channels are not interchangeable — they have different
-sources and one of them nearly vanishes.
+**Current model status.** The `v3.2-like` flow conditions on scalar crowding
+summaries, not the neighbour geometry needed to identify this channel. The
+likelihood therefore supplies an explicit atom-aligned $R_{\rm blend}$ from the
+response emulator and inserts its finite-shear shape displacement inside the
+density. The project shear map moves intrinsic ellipticity only; it does not
+move separations or change aperture membership. A future geometry-conditioned
+likelihood could internalize the neighbour channel, but it would be a different
+likelihood release and would need its own closure.
 
 ---
 
@@ -516,17 +567,12 @@ cut removes.
 measured mag/size as *inputs* and outputs shape alone has no $P_{\rm pass}$: its cut variables never
 move with shear. A 4D output $(\hat e_1,\hat e_2,\hat m,\hat T)$ makes them endogenous.
 
-**Status (2026-08-17).** Met in code. The V3 checkpoint outputs
-$(\hat e_1,\hat e_2,\hat m_{\rm auto},\log\hat r)$, and `sbsi.score_inference.OutputCut` builds the
-selection $W(\hat{\mathbf{x}})$ against the checkpoint's own target names, so a cut naming a column
-the flow does not predict raises rather than silently producing a $P_{\rm pass}$ that does not exist.
-The same object is applied by the score pass and by the population block, in NumPy and in torch
-respectively, because a divergence between those two would leave $\Pi$ describing a different sample
-from the one being scored with nothing to catch it. First runs are recorded in `doc/WORKLOG.md`
-(cont.180) and the production numbers in cont.181. A measured-magnitude cut is nearly inert
-($\Pi$ varies by 1.0% across the whole shape grid, $\iota/\mathcal I=0.0013$, uncorrected bias
-$-0.28\%$); a measured-size cut is the strong case ($\Pi$ from 0.61 to 0.99, uncorrected bias
-$+16.0\%$, corrected to $+0.024\%\pm0.110\%$ by the full (5.3)).
+**Implementation.** The `v3.2-like` checkpoint outputs the two measured-shape
+components, measured magnitude, and measured log flux radius.
+`sbsi.catalogue_likelihood.OutputCut` validates predicates against those exact
+target names. The same predicate implementation is used for observed rows and
+population draws, so the scored sample and normalization cannot silently
+diverge.
 
 **Detection is not this.** Undetected objects have no $\hat{\mathbf{x}}$, so one cannot integrate the
 flow over a region of output space that does not exist. Detection requires a separate
@@ -738,8 +784,7 @@ is left over is a surface term in the separation channel, of the same species as
 of §4.3 and with the same structure — a density at the edge times a spin-2 correlation. It is
 negligible only if the aperture is wide enough that edge neighbours do not affect
 $\hat{\mathbf{x}}$, which is an assumption about the catalogue's build radius rather than a theorem,
-and one the recorded aperture sensitivity of the summed $R_{\rm blend}$ (WORKLOG cont.108) argues
-against taking for granted.
+and must be tested by enlarging the guarded scene radius.
 
 #### 5B.2 Selection corrects both moments, not just the first
 
@@ -796,19 +841,11 @@ the stated assumptions the estimator's **entire** selection correction sits in t
 is a single number $\iota$ rather than a matrix. Of the two corrections, the familiar first-order one
 is the one that vanishes; keeping only it would be keeping only the term that does nothing.
 
-**Measured, the exact zero is false — and that is informative.** On the certified V1 flow at
-`|\hat{\mathbf x}|<0.6` (WORKLOG cont.174, 4–8M objects),
-
-$$\langle s\rangle_{\rm sel}=(-0.00201\pm0.00055,\;+0.01039\pm0.00052),$$
-
-i.e. $20\sigma$ from zero in the second component, growing to $+0.01935\pm0.00075$ when the cut is
-tightened to $0.4$. The derivation above is not wrong; its **premise** is. The argument needs the
-population isotropic and the cut rotation-invariant *as the model sees them*, and a trained flow is
-not exactly equivariant — so $\langle s\rangle_{\rm sel}$ is a direct, calibrated measure of that
-non-equivariance, available for free from a bank that has to be built anyway. Read it as a diagnostic,
-not as noise. The *qualitative* claim survives intact: $\mathcal I_{\rm sel}$ moves $m$ by $+27.5\%$
-against the numerator term's $+2.80\%$, so the denominator still carries $\sim\!91\%$ of the
-correction, and keeping only the first-order term would still be keeping almost the wrong one.
+For a learned flow the symmetry premises are not automatic. A nonzero
+$\langle s\rangle_{\rm sel}$ is a direct diagnostic of model or population
+non-equivariance, not a term to discard as noise. Evaluate both selection
+moments from the declared model even when the requested cut is geometrically
+isotropic.
 
 That is §4 restated in the estimator's own language. An isotropic population under an isotropic cut
 cannot acquire a preferred direction, so selection cannot produce an **additive** bias — only a
@@ -843,31 +880,12 @@ of $p(\hat T)$ — a mild cut on the rising side keeps most of the sample and de
 ($\iota>0$); an aggressive cut on the falling side keeps the responsive tail and *adds* information
 ($\iota<0$), growing like $1/P_{\rm pass}$.
 
-**SETTLED, against the rule: do not trust (5.3c)'s sign for a strongly shape-dependent cut.** (2026-08-18: and do not use `--pi-azimuthal-average` to
-decide whether the flow's anisotropy *causes* a non-zero $\langle s\rangle_{\rm sel}$. Averaging
-$\Pi$ over rings forces $\langle s\rangle_{\rm sel}=0$ identically — it integrates a spin-2
-generator against an isotropic weight — so the collapse is guaranteed and carries no
-information about the flow. Measured, it falls from $9.8\times10^{-3}$ to $\sim10^{-7}$ and
-$d(m)$ moves from $-0.583\%$ to $+3.766\%\pm0.261\%$. The useful conclusion is the opposite of
-the intended one: the angular structure of $\Pi$ is load-bearing to the tune of 4.35% on
-$d(m)$, so $\langle s\rangle_{\rm sel}$ must be evaluated and never assumed to vanish. §5B.2's
-"the numerator correction vanishes for an isotropic cut" holds for an isotropic $\Pi$, not for
-an isotropic CUT, and the two differ here: $|\hat x|<c$ is a disc, and $\Pi$ on it is not
-isotropic.) The
-production size-cut run (cont.181, V3, $\log\hat r\ge1.45$, keeping 71.1% of 8M objects) measures
-$\mathcal I_{\rm sel}=-1.15075\pm0.00033$, i.e. $\iota/\mathcal I=-0.1635$ — negative at
-$\sim3500\sigma$. That cut sits near the 29th percentile of $p(\log\hat r)$, the **rising** side,
-where the rule above predicts $\iota>0$. The rule is wrong here, and the reason is the step it is
-derived under: (5.3c) assumes $c\,e$ uncorrelated with size, and for this cut $\Pi$ runs from 0.61 to
-0.99 across the shape grid, so the pass probability depends on the shape by 60% and that assumption
-fails outright.
-
-What did *not* fail is the operational term. Using the measured, negative $\mathcal I_{\rm sel}$ in
-(5.3) takes a $+16.0\%$ selection bias to $+0.024\%\pm0.110\%$. So (5.3b) evaluated on the node bank
-is correct and (5.3c) is an order-of-magnitude guide only — useful for deciding whether the term
-matters at all, not for predicting its sign, and never a substitute for evaluating it. Where the
-cut's $\Pi$ is nearly flat in shape the guide is not needed either: the same run's magnitude cut has
-$\Pi$ varying by 1.0% and $\iota/\mathcal I=0.0013$, i.e. no selection correction worth making.
+Equation (5.3c) is an order-of-magnitude guide only. Its sign assumes that the
+response factor $ce$ is independent of size, which can fail for a strongly
+shape-dependent pass probability. The operational term is the direct
+node-bank evaluation in (5.3b). Do not azimuthally average $\Pi$ as a test of
+equivariance: that operation forces the spin-2 numerator to zero and removes
+the diagnostic by construction.
 
 A.7 gives the analogous term in closed form for a *shift* parameter, where it is enormous: a cut at the
 median destroys $2/\pi\approx64\%$ of the information. That toy overstates the lensing case exactly as
@@ -929,29 +947,13 @@ from $\sum_i\mathcal I_i$ before the matrix solve of §6.
    not by budget; the same caveat is what forced large template banks in BFD. §5B.4 gives the
    separate — and prior condition — under which the denominator of (5.3) exists at all.
 
-**Node-bank RESOLUTION is a separate requirement from ESS, and it bit (2026-08-18).** Item 5
-above is about how many nodes carry weight for one galaxy. This is about how finely the bank
-samples the plane at all, and it biases every galaxy in the same direction rather than the
-tails. Measured on the closure test with the flow's own draws — where the answer is $g$ by
-construction — the uncut control at $n=61$ ($G=2765$) reads $m=-0.442\%\pm0.215\%$ and at
-$n=101$ ($G=7693$) reads $m=+0.221\%\pm0.216\%$ on the same objects, a paired shift of
-$+0.664\%\pm0.005\%$ (148$\sigma$; the pair scores identical objects, so shape noise cancels and
-the difference is 48$\times$ better determined than either side). That shift accounts for the
-whole of the $-0.665\%\pm0.116\%$ baseline bias seen at production resolution.
-
-The diagnostic that predicts it needs no flow: the Bartlett identity $\mathbb E_0[\partial_\gamma
-u]+\mathrm{Var}_0(u)=0$ must hold for any normalised prior, so its residual on a given bank is
-that bank's spurious information floor, and a positive floor inflates the denominator of (5.3)
-and pushes $m$ negative. `scripts/check_quadrature.py` reports it; `scripts/predict_grid_floor.py`
-converts it into a predicted bias at a realistic posterior width and got $+0.711\%\pm0.127\%$
-for this step before the run finished. **Set the bank by that residual, not by eye**: at
-$n=61$ it is $3.6\times10^{-3}$ of $\mathrm{Var}_0(u)$, at $n=101$ it is $1.6\times10^{-4}$.
-Cost is linear in $G$.
-
-Because every cut result is quoted as $d(m)$ against the uncut control, a resolution shift
-common to both largely cancels — the $|\hat x|<0.6$ correction gives $-0.465\%\pm0.547\%$ at
-$n=101$ against $-0.583\%\pm0.265\%$ at $n=61$ — so this changes what the control row means, not
-the selection conclusions of §5B.2.
+**Node-bank resolution is separate from ESS.** ESS measures how many supplied
+nodes carry posterior weight for an object; resolution measures whether the
+bank represents the prior closely enough in the first place. Resolution error
+is common across objects and need not average away. The Bartlett residual
+$\mathbb E_0[\partial_\gamma u]+\mathrm{Var}_0(u)$ provides a direct bank
+adequacy diagnostic. Set refinement from that identity and convergence tests,
+not visual grid density.
 
 Note that the *dimensionality* of requirement 1 is set by the support of $v$, not by the dimension of
 the scene. A primary-only shear moves the primary's shape and nothing else, so it needs
@@ -970,18 +972,11 @@ mostly from the size channel).
 
 (5.3) divides by $\sum_i\mathcal I_i-N\mathcal I_{\rm sel}$, and $\mathcal I_i$ contains
 $\mathrm{Var}_{w_i}(u)$. A denominator built out of a variance is only as good as that variance's
-existence, and existence is not automatic. An archived §5C implementation/model was measured to fail
-exactly here: its integrand $\partial_\gamma\log p_{\rm flow}$ carried a Hill tail index near $1.3$
-— below $2$, so no finite second moment — and its denominator grew with bank size (fitted exponent
-$+0.20$ against $-1$ for honest Monte Carlo). WORKLOG cont.170 has those historical numbers. They do
-not describe the current response-regularized mean-affine flow: matched exact nulls now satisfy the
-information identity, with Hill indices near 3.5 (WORKLOG cont.202). The full-prior importance run is
-numerically stable but has a still-marginal g2 Hill estimate of 1.91, so tail existence remains a
-gate to measure rather than a structural verdict about §5C.  The subsequent
-paired nonzero response does fail that gate: after the importance ladder is
-stable, its influence Hill indices are 1.76 and 1.74 (WORKLOG cont.203).
-Those are full marginal-estimator tails rather than the old per-node integrand
-probe, but they likewise prohibit an ordinary square-root error extrapolation.
+existence, and existence is not automatic. Tail existence is therefore a
+measured validation gate, separate from apparent stability of a finite draw
+ladder. If the relevant influence distribution has no finite second moment,
+ordinary square-root error extrapolation is invalid even when successive finite
+rungs agree.
 
 The corresponding question for (5.3) has a clean answer, and this is the structural reason to prefer
 it: §5B's integrand is analytic, so its tail is a property of a prior **you write down** — checkable
@@ -1009,24 +1004,10 @@ $$\mathbb E_0\big[u^2\big]=4\,(a+2)\qquad\text{finite for every }a>-1,$$
 the condition $a>-1$ being nothing but normalizability. The information exists for the *entire*
 power-law family — including $a=0$, a prior that does not vanish at the edge at all.
 
-This is verified numerically, not merely asserted. `scripts/diag5b_gate.py` differentiates the exact
-Möbius pullback on a ray running into the edge and recovers $u_a/[e_a(4+2a)]=1.000000$ at edge
-distances down to $10^{-7}$ for $a=0,1,2$. On the prior actually fitted
-(`SmoothRadialPrior`, whose $\psi$ continues linearly in $t$ so that $(1-t)\psi'\to0$) it measures,
-against §5C's numbers on the identical diagnostics:
-
-| | §5C ($\partial_\gamma\log p_{\rm flow}$) | §5B ($u$) |
-|---|---|---|
-| Hill index of the integrand | $1.32-1.38$ | $9.4$ / $41.5$ / $544$ (top $5\%$/$1\%$/$0.2\%$) |
-| integrand bounded? | no | yes, $\max|u|=12.27$ |
-| denominator vs bank size | *grows*, exponent $+0.20$ | flat: $\mathrm{Var}_0(u)$ stable to $0.005\%$ over a $25\times$ node refinement |
-| sensitivity to the truncation | — | $0.03\%$ over $r_{\max}=0.85\to0.995$ |
-
-Two independent routes agree on the value: grid quadrature gives $\mathrm{Var}_0(u)=35.379$, and
-$2\times10^6$ draws from the prior give $35.410$. Bartlett's $\mathbb E_0[u]=0$ holds to $10^{-15}$
-and the curvature residual falls to $2\times10^{-5}$ of $\mathrm{Var}_0(u)$ under refinement.
-**§5C's variance non-existence does not arise in §5B's shape channel**, and the default
-$r_{\max}=0.95$ truncation — which never visits the edge — is not load-bearing.
+Thus the variance pathology that can affect a general likelihood derivative
+does not arise from §5B's power-law shape generator. Implementations should
+still verify Bartlett centring and curvature convergence numerically for their
+actual prior representation.
 
 Note carefully what this does *not* cover. It is the **shape channel only**. The disc-tangency
 argument is special to the Möbius action on the unit disc; size and flux live on a half-line under a
@@ -1046,33 +1027,12 @@ equal blocks can.
 
 ### 5C. Lagrangian form — shear the samples, not the prior
 
-**Current implementation status (2026-08-22).**  For the response-regularized
-mean-affine flow used by the catalogue closure, matched exhaustive mocks pass
-score centring and $E[I]=\mathrm{Var}(s)$, and exact Torch autograd agrees with
-the `h=0.00125` numerical derivative.  The older tail-failure measurements in
-this section are retained as provenance for a different implementation/model;
-they are not evidence that the Lagrangian method itself is structurally
-invalid.  The 10,000-object full-prior run closes the null and importance
-ladder, with a marginal g2 tail diagnostic still outstanding (WORKLOG
-cont.202).  The paired `+-0.00125` nonzero implementation is sampler-stable
-and statistically consistent with zero bias at about 0.5% precision, but its
-response-influence Hill indices are 1.76 and 1.74.  The declared tail gate
-therefore stops the powered escalation before a 0.2% claim.  Its off-diagonal
-responses are also 10--14% at more than four sigma: the operational five-view
-stencil omitted mixed information under a rotational-symmetry assumption that
-the learned likelihood does not satisfy (WORKLOG cont.203).
-
-The zero-centred expansion must not be used as a finite-shear Newton estimate.
-On 10,000 saved mocks, full directional profiles recover injected 0.02 and
-0.05 in both components within 0.31 profile-curvature errors, but the one-step
-estimate overshoots at 0.02 and its information at zero becomes negative for
-data generated at 0.05.  This does not contradict the flow's validated linear
-mean response.  Equation (5.4) is a catalogue mixture, not a common Gaussian
-location family; shear changes posterior atom responsibilities and hence the
-log-likelihood curvature.  The likelihood is locally quadratic around its
-finite-shear maximum, not globally quadratic between zero and that maximum.
-Use a profile or an iteratively recentered score/Hessian for finite shear
-(WORKLOG cont.204).
+The `v1.1-infer` implementation uses this Lagrangian form. It shears the fixed
+intrinsic scene atoms, evaluates the full two-component numerical stencil with
+common importance draws, and includes mixed information rather than assuming
+rotational decoupling. The zero-centred score expansion remains a local
+validation tool; a finite-shear catalogue mixture must be evaluated about its
+declared initial centre and updated with the full local score/information.
 
 §5B needs $\nabla\log p_0$ over the whole scene, which is its most demanding requirement (§5B.3, item
 1). That requirement is an artefact of the parametrization, not of the problem, and this section
@@ -1235,8 +1195,9 @@ assumption with no support at a $\hat T$ boundary, where §4.4 shows the whole e
   emulator; the estimator does not repair a wrong $R_b$, it faithfully reports it.
 - **Double counting.** A flow conditioned on `nbr_flux_*` has already learned part of the blending
   response — the flux-dilution part. $R_b$ must be defined as the **residual the flow misses**, not
-  the total per-pair response. Gold-v1's additive formula makes the same disjointness assumption;
-  conditioning $R_b(\theta_b)$ on the same scalars the flow sees is what keeps the two separable.
+  the total per-pair response. The external-additive formulation makes the same
+  disjointness assumption; conditioning $R_b(\theta_b)$ on the same scalars the
+  flow sees is what keeps the two separable.
 - **Mean-only.** (5.6) shifts the mean of $\hat e$; blending also broadens it. The point estimate is
   therefore right and $\mathcal I$ is optimistic, so error bars from (2.6) are too small by whatever
   fraction of the scatter blending contributes.
@@ -1417,28 +1378,29 @@ and free by comparison. Node-bank size is set by the effective sample size cavea
   neighbours across the edge and leaves a surface term in the separation channel (§5B.1). Assuming it
   away is an assumption about the catalogue's build radius.
 - **The information must exist.** (5.3) divides by a variance, and heavy-tailed integrands can leave
-  it without a finite population value — the measured failure mode of the archived §5C probe. The
-  current response-regularized flow instead passes matched exact information-identity tests; its
-  full-prior null g2 Hill estimate is marginal, while the paired nonzero-response influence is below
-  two for both components (cont.202--203). For §5B's **shape**
-  channel this is now settled rather than assumed: the shear velocity is tangent to the ellipticity
-  disc, so the generator (5.3d) depends on the prior only through $(1-t)\psi'(t)$ and stays bounded
-  for the whole power-law family. Verified analytically and measured on the fitted prior — Hill index
-  $9.4$ against the archived probe's $1.3$, $\mathrm{Var}_0(u)$ flat under both refinement and reach (§5B.4). The
-  **size, flux and separation channels are not covered** by that argument and still need their own
-  edge analysis.
+  it without a finite population value. For §5B's **shape** channel, the shear
+  velocity is tangent to the ellipticity disc, so the generator (5.3d) depends
+  on the prior only through $(1-t)\psi'(t)$ and stays bounded for the stated
+  power-law family. The **size, flux, and separation channels are not covered**
+  by that argument and require their own edge and tail analysis. Operational
+  runs therefore report information-identity, ESS, maximum-weight, and tail
+  diagnostics rather than assuming asymptotic variance exists.
 
 ---
 
 ## 7. Pointers
 
-- Framework spec: `archive/pre-v3/docs/SBI_shear.md` (provenance). Frozen numbers: `MILESTONE.md`.
-  Stage records: `Gold-V1.md`, `Gold-V2.md`, `Gold-V3.md`, `WORKLOG.md`.
-- Code: `sbsi/posterior_shape.py` (posterior grid, shape prior with exact Möbius pullback),
-  `sbsi/shear_map.py` (analytic $S_\gamma$), `sbsi/measurement_model.py`
-  (`ConditionalMeanFlow`, `flow_drop_indices`), `sbsi/selection_model.py`
-  (detection classifier). The pre-V3 geometry-conditioned scene likelihood lives in
-  `archive/pre-v3/sbs_shear/{forward_model,scene_model}.py` (provenance).
+- Release definitions: `configs/inference.json` and
+  `configs/likelihood.json`.
+- Production entry points: `scripts/run_inference.py` and
+  `jobs/job_inference.sh`.
+- Likelihood code: `sbsi/scene_prior.py`, `sbsi/catalogue_likelihood.py`,
+  `sbsi/catalogue_sampling.py`, and `sbsi/catalogue_blend.py`.
+- Shared transformations and learned models: `sbsi/shear_map.py`,
+  `sbsi/measurement_model.py`, and `sbsi/selection_model.py`.
+- Operational finite-prior details: `doc/CATALOGUE_PRIOR.md`. The compact
+  implementation derivation is `doc/MATH.md`; measured validation history is
+  kept in `doc/WORKLOG.md`.
 
 ---
 

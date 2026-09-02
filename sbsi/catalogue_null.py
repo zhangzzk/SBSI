@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 import time
-from typing import Callable, Mapping, Optional, Sequence
+from typing import Mapping, Optional, Sequence
 
 import numpy as np
 from scipy.special import logsumexp
@@ -22,9 +22,17 @@ from .catalogue_sampling import (
     CoalescedProposalDraw,
     DefensiveLocalProposal,
     ProposalDraw,
+    pareto_tail_index,
     select_adaptive_draw_counts,
     select_independent_pilot_draw_counts,
 )
+
+
+# Both stratified modes sum the candidate stratum exactly and estimate only
+# its complement; they differ solely in the proposal that complement is drawn
+# from.  Every downstream branch treats them identically.
+STRATIFIED_MODES = ("stratified", "tilted_stratified", "priority_stratified")
+CANDIDATE_SOURCES = ("location_prefilter", "whole_catalogue_gaussian_proxy")
 
 
 @dataclass(frozen=True)
@@ -186,6 +194,16 @@ class AdaptiveSection5Result:
     elapsed_seconds: float
     ladder_score: Optional[np.ndarray] = field(default=None, repr=False)
     ladder_information: Optional[np.ndarray] = field(default=None, repr=False)
+    # Per-object weight diagnostics of the zero-shear view, one row per prefix
+    # in `weight_diagnostic_draws`: the retained ladder when it is kept, and
+    # the production draw count alone otherwise.  They answer whether the
+    # estimator's weights admit a root-M rate at all, which no other saved
+    # quantity does.
+    weight_diagnostic_draws: Optional[tuple[int, ...]] = None
+    weight_ess: Optional[np.ndarray] = field(default=None, repr=False)
+    weight_max_fraction: Optional[np.ndarray] = field(default=None, repr=False)
+    weight_relative_error: Optional[np.ndarray] = field(default=None, repr=False)
+    weight_pareto_k: Optional[np.ndarray] = field(default=None, repr=False)
     proposal_prefilter_candidates: Optional[int] = None
     allocation_method: str = "production_prefix"
     pilot_draws: Optional[int] = None
@@ -195,6 +213,14 @@ class AdaptiveSection5Result:
     phase_seconds: Mapping[str, float] = field(default_factory=dict)
     bias_correction: str = "none"
     candidate_backend: str = "scipy"
+    candidate_source: str = "location_prefilter"
+    estimator_mode: str = "mixture"
+    # Atom slots the stencil actually pushed through the flow, against the slots
+    # that carry a nonzero draw count.  `coalesce` pads every row in an object
+    # chunk out to that chunk's widest unique-atom count, and the padded slots are
+    # scored and then discarded by the reduction, so the ratio is pure waste.
+    stencil_atom_slots: int = 0
+    stencil_valid_atom_slots: int = 0
 
     def __post_init__(self):
         score = np.asarray(self.score, dtype=np.float64)
@@ -211,7 +237,12 @@ class AdaptiveSection5Result:
             raise ValueError("adaptive draw counts must contain one value per object")
         if not np.isfinite(score).all() or not np.isfinite(information).all():
             raise ValueError("adaptive moments contain non-finite values")
-        if (counts <= 0).any() or (unique <= 0).any() or (unique > counts).any():
+        # Under the mixture every draw contributes, so a row with no unique
+        # atom is a defect.  Under stratification `unique` counts only the
+        # retained complement draws, and zero is the legitimate answer for an
+        # object whose candidate support already covers the catalogue.
+        floor = 0 if self.estimator_mode in STRATIFIED_MODES else 1
+        if (counts <= 0).any() or (unique < floor).any() or (unique > counts).any():
             raise ValueError("adaptive draw/unique counts are invalid")
         if (
             self.proposal_prefilter_candidates is not None
@@ -251,6 +282,8 @@ class AdaptiveSection5Result:
         elif pilot_ess is not None or pilot_maximum is not None:
             raise ValueError("production-prefix allocation cannot carry pilot diagnostics")
         phases = {str(name): float(value) for name, value in self.phase_seconds.items()}
+        if self.candidate_source not in CANDIDATE_SOURCES:
+            raise ValueError("unknown candidate source")
         if any(not np.isfinite(value) or value < 0 for value in phases.values()):
             raise ValueError("adaptive phase timings must be finite and non-negative")
         ladder_score = self.ladder_score
@@ -281,11 +314,101 @@ class AdaptiveSection5Result:
                 raise ValueError("full-ladder moments contain non-finite values")
             object.__setattr__(self, "ladder_score", ladder_score)
             object.__setattr__(self, "ladder_information", ladder_information)
+        diagnostic_draws = self.weight_diagnostic_draws
+        diagnostics = {
+            "weight_ess": self.weight_ess,
+            "weight_max_fraction": self.weight_max_fraction,
+            "weight_relative_error": self.weight_relative_error,
+            "weight_pareto_k": self.weight_pareto_k,
+        }
+        if diagnostic_draws is None:
+            if any(value is not None for value in diagnostics.values()):
+                raise ValueError("weight diagnostics need their draw counts")
+        else:
+            diagnostic_draws = tuple(int(value) for value in diagnostic_draws)
+            if not diagnostic_draws or any(value <= 0 for value in diagnostic_draws):
+                raise ValueError("weight-diagnostic draw counts must be positive")
+            expected = (len(diagnostic_draws), len(score))
+            for name, value in diagnostics.items():
+                if value is None:
+                    raise ValueError(f"weight diagnostics are incomplete: {name}")
+                value = np.asarray(value, dtype=np.float64)
+                if value.shape != expected:
+                    raise ValueError(f"{name} must have shape {expected}")
+                object.__setattr__(self, name, value)
+            # `weight_pareto_k` is NaN wherever the tail is undefined -- a row
+            # whose weights are flat above the fitting threshold -- so only the
+            # two exact quantities are required to be finite.
+            if (
+                not np.isfinite(self.weight_ess).all()
+                or not np.isfinite(self.weight_max_fraction).all()
+                or not np.isfinite(self.weight_relative_error).all()
+            ):
+                raise ValueError("weight diagnostics contain non-finite values")
+            object.__setattr__(self, "weight_diagnostic_draws", diagnostic_draws)
         object.__setattr__(self, "score", score)
         object.__setattr__(self, "information", information)
         object.__setattr__(self, "draw_counts", counts)
         object.__setattr__(self, "unique_counts", unique)
         object.__setattr__(self, "phase_seconds", phases)
+
+    def weight_diagnostic_summary(self) -> Optional[list]:
+        """One JSON-friendly row per diagnosed prefix.
+
+        Percentiles rather than means, because these distributions are the
+        heavy-tailed thing under investigation and a mean ESS says very little
+        about the worst objects.  `pareto_k_undefined` counts the rows whose
+        tail could not be fitted, so a small `pareto_k` sample cannot be
+        mistaken for a clean one.
+        """
+
+        if self.weight_diagnostic_draws is None:
+            return None
+        percentiles = [0, 10, 50, 90, 100]
+        rows = []
+        for index, n_draws in enumerate(self.weight_diagnostic_draws):
+            khat = self.weight_pareto_k[index]
+            fitted = khat[np.isfinite(khat)]
+            rows.append(
+                {
+                    "draws": int(n_draws),
+                    "ess_percentiles": np.percentile(
+                        self.weight_ess[index], percentiles
+                    ).tolist(),
+                    "ess_fraction_percentiles": np.percentile(
+                        self.weight_ess[index] / n_draws, percentiles
+                    ).tolist(),
+                    "max_weight_fraction_percentiles": np.percentile(
+                        self.weight_max_fraction[index], percentiles
+                    ).tolist(),
+                    # The one row that compares across estimator modes.
+                    "relative_standard_error_percentiles": np.percentile(
+                        self.weight_relative_error[index], percentiles
+                    ).tolist(),
+                    "pareto_k_percentiles": (
+                        None
+                        if fitted.size == 0
+                        else np.percentile(fitted, percentiles).tolist()
+                    ),
+                    "pareto_k_undefined": int(khat.size - fitted.size),
+                    # The PSIS reliability threshold is sample-size dependent;
+                    # above it the weight variance is effectively unusable.
+                    "pareto_k_threshold": float(
+                        min(1.0 - 1.0 / np.log10(max(n_draws, 11)), 0.7)
+                    ),
+                    "pareto_k_above_threshold": (
+                        None
+                        if fitted.size == 0
+                        else float(
+                            np.mean(
+                                fitted
+                                > min(1.0 - 1.0 / np.log10(max(n_draws, 11)), 0.7)
+                            )
+                        )
+                    ),
+                }
+            )
+        return rows
 
 
 @dataclass(frozen=True)
@@ -328,12 +451,24 @@ class AdaptiveOneStepResult:
                 np.mean(self.moments.unique_counts / self.moments.draw_counts)
             ),
             "flow_evaluations": self.moments.flow_evaluations,
+            "stencil_atom_slots": int(self.moments.stencil_atom_slots),
+            "stencil_valid_atom_slots": int(self.moments.stencil_valid_atom_slots),
+            "stencil_padding_fraction": (
+                None
+                if self.moments.stencil_atom_slots == 0
+                else 1.0
+                - self.moments.stencil_valid_atom_slots
+                / self.moments.stencil_atom_slots
+            ),
             "elapsed_seconds": self.moments.elapsed_seconds,
             "phase_seconds": dict(self.moments.phase_seconds),
             "retained_full_ladder": self.moments.ladder_score is not None,
+            "weight_diagnostics": self.moments.weight_diagnostic_summary(),
             "allocation_method": self.moments.allocation_method,
             "bias_correction": self.moments.bias_correction,
             "candidate_backend": self.moments.candidate_backend,
+            "candidate_source": self.moments.candidate_source,
+            "estimator_mode": self.moments.estimator_mode,
             "pilot_draws": self.moments.pilot_draws,
             "pilot_seed": self.moments.pilot_seed,
             "pilot_ess_fraction_percentiles": (
@@ -376,73 +511,6 @@ class ImportanceAutogradResult:
             raise ValueError("autograd importance moments contain non-finite values")
         object.__setattr__(self, "score", score)
         object.__setattr__(self, "information", information)
-
-
-@dataclass(frozen=True)
-class AutogradShearOptimizationResult:
-    """Newton recentering history using full sampled 2x2 information."""
-
-    estimate: tuple[float, float]
-    converged: bool
-    iterations: tuple[ImportanceAutogradResult, ...]
-
-
-@dataclass(frozen=True)
-class NumericalLikelihoodPoint:
-    """One fixed-draw population log-likelihood evaluation."""
-
-    shear: tuple[float, float]
-    log_likelihood_sum: float
-
-
-@dataclass(frozen=True)
-class NumericalShearIteration:
-    """One safeguarded local numerical expansion and accepted update."""
-
-    center: tuple[float, float]
-    log_likelihood_sum: float
-    score: tuple[float, float]
-    information: tuple[tuple[float, float], tuple[float, float]]
-    information_eigenvalues: tuple[float, float]
-    step_method: str
-    raw_step: tuple[float, float]
-    accepted_step: tuple[float, float]
-    next_center: tuple[float, float]
-    next_log_likelihood_sum: float
-    accepted: bool
-
-
-@dataclass(frozen=True)
-class NumericalShearOptimizationResult:
-    """Fixed-draw, safeguarded two-component catalogue-likelihood maximum."""
-
-    estimate: tuple[float, float]
-    converged: bool
-    reason: str
-    h: float
-    n_objects: int
-    n_draws: int
-    n_candidates: int
-    proposal_method: str
-    proposal_reference_shear: Optional[tuple[float, float]]
-    proposal_seed: int
-    epsilon: float
-    bandwidth: Optional[float]
-    initial_likelihood_reused: bool
-    proposal_candidate_flow_evaluations: int
-    proposal_reuse_flow_evaluations: int
-    proposal_flow_evaluations: int
-    numerator_flow_evaluations: int
-    selection_flow_evaluations: int
-    diagnostic_flow_evaluations: int
-    flow_evaluations: int
-    elapsed_seconds: float
-    importance: StreamedImportanceDiagnostics
-    iterations: tuple[NumericalShearIteration, ...]
-    evaluations: tuple[NumericalLikelihoodPoint, ...]
-
-    def to_dict(self) -> dict:
-        return asdict(self)
 
 
 def _torch_shear_ellipticity(e1, e2, g1, g2):
@@ -627,31 +695,6 @@ def _diagnostic_arrays(log_weights: np.ndarray, draw: ProposalDraw):
     )
 
 
-def _diagnostic_tensors(log_weights: torch.Tensor, draw: ProposalDraw):
-    """Device-side importance diagnostics with only four vectors returned."""
-
-    peak = torch.max(log_weights, dim=1, keepdim=True).values
-    finite = torch.isfinite(peak[:, 0])
-    normalized = torch.zeros_like(log_weights)
-    normalized[finite] = torch.exp(log_weights[finite] - peak[finite])
-    total = normalized.sum(dim=1, keepdim=True)
-    good = finite & (total[:, 0] > 0)
-    normalized[good] /= total[good]
-    ess = torch.zeros(len(log_weights), dtype=log_weights.dtype, device=log_weights.device)
-    ess[good] = 1.0 / normalized[good].square().sum(dim=1)
-    local = torch.as_tensor(draw.local_member, device=log_weights.device)
-    global_component = torch.as_tensor(
-        draw.global_component, device=log_weights.device
-    )
-    values = (
-        ess,
-        normalized.max(dim=1).values,
-        (normalized * (~local)).sum(dim=1),
-        (normalized * global_component).sum(dim=1),
-    )
-    return tuple(value.detach().cpu().numpy().astype(np.float64) for value in values)
-
-
 def _pilot_concentration(log_weights: torch.Tensor) -> tuple[np.ndarray, np.ndarray]:
     """Return per-object ESS fraction and maximum weight for a pilot draw."""
 
@@ -687,6 +730,38 @@ def _coalesced_logsumexp(
         torch.full_like(log_weights, -torch.inf),
     )
     return torch.logsumexp(terms, dim=1) - np.log(n_draws)
+
+
+def _stratified_logsumexp(
+    exact_log_terms: torch.Tensor,
+    tail_log_weights: torch.Tensor,
+    draw: CoalescedProposalDraw,
+    n_draws: int,
+) -> torch.Tensor:
+    """Log of an exact candidate stratum plus its sampled complement.
+
+    ``exact_log_terms`` is ``log(pi Pdet L)`` on the deterministic candidate
+    support, summed with no proposal correction and therefore no variance.
+    ``tail_log_weights`` is ``log(pi Pdet L / pi)`` on the unique prior draws;
+    slots whose atom already lies inside the candidate support carry no
+    contribution, because that stratum is accounted for exactly.
+    """
+
+    counts = torch.as_tensor(
+        draw.counts(n_draws),
+        dtype=tail_log_weights.dtype,
+        device=tail_log_weights.device,
+    )
+    outside = torch.as_tensor(
+        (draw.local_position < 0) & draw.valid,
+        device=tail_log_weights.device,
+    )
+    tail = torch.where(
+        outside & (counts > 0),
+        tail_log_weights + torch.log(counts.clamp_min(1)) - np.log(n_draws),
+        torch.full_like(tail_log_weights, -torch.inf),
+    )
+    return torch.logsumexp(torch.cat((exact_log_terms, tail), dim=1), dim=1)
 
 
 def _coalesced_diagnostic_tensors(
@@ -731,6 +806,99 @@ def _coalesced_diagnostic_tensors(
     return tuple(value.detach().cpu().numpy().astype(np.float64) for value in values)
 
 
+def _weight_tail_diagnostics(
+    log_weights: torch.Tensor,
+    draw: CoalescedProposalDraw,
+    n_draws: int,
+    *,
+    atom_valid: Optional[np.ndarray] = None,
+    exact_log_terms: Optional[torch.Tensor] = None,
+):
+    """Weight diagnostics of one nested prefix, at the zero-shear view.
+
+    `ess` counts effective draws out of `n_draws`; `maximum` is the largest
+    single draw's share of the sampled sum; `khat` is the generalized-Pareto
+    shape of the weight tail, so `khat >= 0.5` means the weight variance is
+    infinite and no number of extra draws buys a root-M rate.
+
+    `atom_valid` restricts the weight set to the atoms the estimator actually
+    reduces.  Under stratification the draws that land in the exact stratum
+    carry weight zero; they contribute nothing to either sum, so they lower the
+    effective count exactly as they should.
+
+    `relative` is the estimator's own relative standard error, and it is the
+    only one of these that compares across estimator modes.  ESS/M does not:
+    the stratified arm's exact stratum contributes no variance and no draws, so
+    its ESS fraction is mechanically lower while its estimate can be far
+    better.  Passing the exact stratum's log terms as `exact_log_terms` folds
+    in the share of the total that is sampled at all,
+
+    ```text
+    relvar = (1/ESS - 1/M) (T / (E + T))^2
+    ```
+
+    with `E` the exact stratum and `T` the sampled mean.  For the mixture the
+    stratum is empty, the share is one, and this reduces to the usual
+    `sqrt(1/ESS - 1/M)`.
+    """
+
+    counts = torch.as_tensor(
+        draw.counts(n_draws), dtype=log_weights.dtype, device=log_weights.device
+    )
+    live = counts > 0
+    if atom_valid is not None:
+        live = live & torch.as_tensor(atom_valid, device=log_weights.device)
+    peak = torch.max(
+        torch.where(live, log_weights, torch.full_like(log_weights, -torch.inf)),
+        dim=1,
+        keepdim=True,
+    ).values
+    finite_peak = torch.isfinite(peak)
+    weights = torch.where(
+        live & finite_peak,
+        torch.exp(log_weights - torch.where(finite_peak, peak, torch.zeros_like(peak))),
+        torch.zeros_like(log_weights),
+    )
+    total = (counts * weights).sum(dim=1)
+    good = finite_peak[:, 0] & (total > 0)
+    ess = torch.zeros(len(log_weights), dtype=log_weights.dtype, device=log_weights.device)
+    ess[good] = total[good].square() / (counts[good] * weights[good].square()).sum(dim=1)
+    maximum = torch.zeros_like(ess)
+    maximum[good] = weights[good].max(dim=1).values / total[good]
+
+    sampled_mean = total / float(n_draws)
+    if exact_log_terms is None:
+        share = torch.ones_like(ess)
+    else:
+        # Rescaled by the same per-row peak, so the two strata stay comparable.
+        exact_total = torch.exp(
+            exact_log_terms - torch.where(finite_peak, peak, torch.zeros_like(peak))
+        ).sum(dim=1)
+        denominator = exact_total + sampled_mean
+        share = torch.where(
+            denominator > 0, sampled_mean / denominator, torch.zeros_like(ess)
+        )
+    relative = torch.zeros_like(ess)
+    relative[good] = share[good] * torch.sqrt(
+        (1.0 / ess[good] - 1.0 / float(n_draws)).clamp_min(0.0)
+    )
+
+    # The tail fit needs the draw sample itself, not the unique atoms: a weight
+    # drawn ten times is ten draws of that weight.
+    inverse = torch.as_tensor(
+        draw.inverse[:, :n_draws].astype(np.int64, copy=False),
+        device=log_weights.device,
+    )
+    khat = pareto_tail_index(torch.gather(weights, 1, inverse))
+    khat[~good.detach().cpu().numpy()] = np.nan
+    return (
+        ess.detach().cpu().numpy().astype(np.float64),
+        maximum.detach().cpu().numpy().astype(np.float64),
+        relative.detach().cpu().numpy().astype(np.float64),
+        khat,
+    )
+
+
 def _reuse_adapted_reference_weights(
     likelihood: CatalogueLikelihood,
     observed,
@@ -758,36 +926,36 @@ def _reuse_adapted_reference_weights(
     if not outside.any():
         return output
 
+    # Left-pack each row's outside draws into a rectangle as wide as the widest
+    # row.  `np.nonzero` walks the mask in row-major order, so subtracting each
+    # row's start offset turns its flat position into its rank within the row --
+    # the same packing the per-row loop this replaced did one row at a time.
     counts = outside.sum(axis=1)
     width = int(counts.max())
-    packed_indices = np.empty((len(draw.indices), width), dtype=np.int64)
-    packed_probability = np.ones((len(draw.indices), width), dtype=np.float64)
-    for row, count in enumerate(counts):
-        count = int(count)
-        selected = np.flatnonzero(outside[row])
-        if count:
-            packed_indices[row, :count] = draw.indices[row, selected]
-            packed_probability[row, :count] = draw.probability[row, selected]
-        if count < width:
-            packed_indices[row, count:] = draw.indices[row, 0]
-            packed_probability[row, count:] = draw.probability[row, 0]
+    rows, columns = np.nonzero(outside)
+    starts = np.concatenate(([0], np.cumsum(counts)[:-1]))
+    packed_position = np.arange(rows.size, dtype=np.int64) - starts[rows]
+    packed_indices = np.repeat(draw.indices[:, :1], width, axis=1)
+    packed_probability = np.repeat(draw.probability[:, :1], width, axis=1)
+    packed_valid = np.zeros(packed_indices.shape, dtype=bool)
+    packed_indices[rows, packed_position] = draw.indices[rows, columns]
+    packed_probability[rows, packed_position] = draw.probability[rows, columns]
+    packed_valid[rows, packed_position] = True
     evaluated = likelihood.log_importance_weights_tensor(
         observed,
         float(center[0]),
         float(center[1]),
         atom_indices=packed_indices,
         proposal_probability=packed_probability,
+        atom_valid=packed_valid,
         observed_targets=observed_targets,
         object_chunk=object_chunk,
         atom_chunk=atom_chunk,
     )
-    for row, count in enumerate(counts):
-        count = int(count)
-        if count:
-            selected = torch.as_tensor(
-                np.flatnonzero(outside[row]), dtype=torch.long, device=device
-            )
-            output[row, selected] = evaluated[row, :count]
+    row_index = torch.as_tensor(rows, dtype=torch.long, device=device)
+    output[row_index, torch.as_tensor(columns, dtype=torch.long, device=device)] = (
+        evaluated[row_index, torch.as_tensor(packed_position, dtype=torch.long, device=device)]
+    )
     return output
 
 
@@ -989,6 +1157,11 @@ def _view_normalizer(likelihood: CatalogueLikelihood, g1: float, g2: float) -> f
     # In the shape-only, no-cut closure, detection and prior mass are exactly
     # shear-invariant.  Reuse the zero view instead of materializing a full
     # pandas catalogue at every stencil point.
+    surrogate = getattr(likelihood, "population_normalization", None)
+    if surrogate is not None:
+        if likelihood.selection is None:
+            raise ValueError("a population-normalization cache requires measured selection")
+        return surrogate.log_mass(g1, g2)
     if likelihood.selection is None and likelihood.tensor_shape_only_available:
         likelihood.cache.validate_detection_shear_invariance()
         view = likelihood.cache.get(0.0, 0.0)
@@ -1209,8 +1382,9 @@ def run_streamed_section5(
                             object_chunk=len(observed),
                             atom_chunk=atom_chunk,
                         )
-                        outside_width = int((~draw.local_member).sum(axis=1).max())
-                        flow_evaluation_count += len(draw.indices) * outside_width
+                        # Padded slots of the packed rectangle are no longer
+                        # scored, so the count is the outside draws themselves.
+                        flow_evaluation_count += int((~draw.local_member).sum())
                         first_position = torch.as_tensor(
                             coalesced.first_position,
                             dtype=torch.long,
@@ -1432,6 +1606,115 @@ def run_streamed_section5(
     return Section5StreamResult(tuple(results), bank_results, retained_moments)
 
 
+def _reduce_stencil(
+    log_likelihood,
+    half_log_likelihood,
+    rung_log_likelihood,
+    *,
+    score: np.ndarray,
+    information: np.ndarray,
+    ladder_score: Optional[np.ndarray],
+    ladder_information: Optional[np.ndarray],
+    global_rows: np.ndarray,
+    ladder: Sequence[int],
+    h: float,
+    full_information: bool,
+    retain_full_ladder: bool,
+) -> None:
+    """Turn one group's stencil log likelihoods into score and information.
+
+    The estimators differ only in how each view's log likelihood is formed;
+    the finite-difference algebra below is identical for all of them and is
+    shared so that no mode can drift away from another.
+    """
+
+    zero = log_likelihood["zero"]
+    for component, plus, minus in (
+        (0, "g1_plus", "g1_minus"),
+        (1, "g2_plus", "g2_minus"),
+    ):
+        upper = log_likelihood[plus]
+        lower = log_likelihood[minus]
+        component_score = (upper - lower) / (2.0 * h)
+        diagonal_tensor = -(upper - 2.0 * zero + lower) / h**2
+        if half_log_likelihood is not None:
+            half_upper = half_log_likelihood[plus]
+            half_lower = half_log_likelihood[minus]
+            half_zero = half_log_likelihood["zero"]
+            component_score = 2.0 * component_score - (
+                (half_upper - half_lower) / (2.0 * h)
+            )
+            diagonal_tensor = 2.0 * diagonal_tensor - (
+                -(half_upper - 2.0 * half_zero + half_lower) / h**2
+            )
+        score[global_rows, component] = (
+            component_score.detach().cpu().numpy()
+        )
+        diagonal = diagonal_tensor.detach().cpu().numpy()
+        if full_information:
+            information[global_rows, component, component] = diagonal
+        else:
+            information[global_rows, component] = diagonal
+    if full_information:
+        mixed_hessian = (
+            log_likelihood["pp"]
+            - log_likelihood["pm"]
+            - log_likelihood["mp"]
+            + log_likelihood["mm"]
+        ) / (4.0 * h**2)
+        mixed_information = (-mixed_hessian).detach().cpu().numpy()
+        if half_log_likelihood is not None:
+            half_mixed_hessian = (
+                half_log_likelihood["pp"]
+                - half_log_likelihood["pm"]
+                - half_log_likelihood["mp"]
+                + half_log_likelihood["mm"]
+            ) / (4.0 * h**2)
+            mixed_information = (
+                -2.0 * mixed_hessian + half_mixed_hessian
+            ).detach().cpu().numpy()
+        information[global_rows, 0, 1] = mixed_information
+        information[global_rows, 1, 0] = mixed_information
+    if retain_full_ladder:
+        for rung_index, rung in enumerate(ladder):
+            rung_zero = rung_log_likelihood[("zero", rung)]
+            for component, plus, minus in (
+                (0, "g1_plus", "g1_minus"),
+                (1, "g2_plus", "g2_minus"),
+            ):
+                upper = rung_log_likelihood[(plus, rung)]
+                lower = rung_log_likelihood[(minus, rung)]
+                ladder_score[rung_index, global_rows, component] = (
+                    (upper - lower) / (2.0 * h)
+                ).detach().cpu().numpy()
+                diagonal = (
+                    -(upper - 2.0 * rung_zero + lower) / h**2
+                ).detach().cpu().numpy()
+                if full_information:
+                    ladder_information[
+                        rung_index, global_rows, component, component
+                    ] = diagonal
+                else:
+                    ladder_information[
+                        rung_index, global_rows, component
+                    ] = diagonal
+            if full_information:
+                rung_mixed_hessian = (
+                    rung_log_likelihood[("pp", rung)]
+                    - rung_log_likelihood[("pm", rung)]
+                    - rung_log_likelihood[("mp", rung)]
+                    + rung_log_likelihood[("mm", rung)]
+                ) / (4.0 * h**2)
+                rung_mixed_information = (
+                    -rung_mixed_hessian
+                ).detach().cpu().numpy()
+                ladder_information[rung_index, global_rows, 0, 1] = (
+                    rung_mixed_information
+                )
+                ladder_information[rung_index, global_rows, 1, 0] = (
+                    rung_mixed_information
+                )
+
 def run_adaptive_section5(
     likelihood: CatalogueLikelihood,
     mock: MockCatalogue,
@@ -1452,9 +1735,14 @@ def run_adaptive_section5(
     pilot_safety_factor: float = 1.0,
     bias_correction: str = "none",
     candidate_backend: str = "scipy",
+    candidate_source: str = "location_prefilter",
+    estimator_mode: str = "mixture",
+    tilt_delta: float = 0.1,
+    tilt_temperature: float = 1.0,
     full_information: bool = False,
     retain_full_ladder: bool = False,
     object_id_offset: int = 0,
+    object_ids: Optional[np.ndarray] = None,
     object_chunk: int = 16,
     atom_chunk: int = 4096,
 ) -> AdaptiveSection5Result:
@@ -1472,10 +1760,10 @@ def run_adaptive_section5(
 
     if not likelihood.tensor_native_available:
         raise TypeError("adaptive Section 5 requires a tensor-native Torch flow")
-    if likelihood.selection is not None:
-        raise ValueError("adaptive Section 5 currently requires measured cuts disabled")
-    if likelihood.cache.blend_response is not None:
-        raise ValueError("adaptive Section 5 currently requires external R_blend=0")
+    # Measured selection enters only through the scalar population normalizer,
+    # while an external R_blend disables the zero-view shortcut and forces each
+    # stencil view through the ordinary tensor path.  Both are already handled
+    # below; neither changes the proposal or complement algebra.
     likelihood.cache.validate_detection_shear_invariance()
     center = np.asarray(center, dtype=np.float64)
     ladder = tuple(sorted({int(value) for value in draw_ladder}))
@@ -1489,12 +1777,59 @@ def run_adaptive_section5(
         raise ValueError("candidate and chunk sizes must be positive")
     if object_id_offset < 0:
         raise ValueError("object_id_offset must be non-negative")
+    # cont.345: a bright-only recompute evaluates a non-contiguous subset of
+    # the mock, so the per-object draw seed can no longer be derived from a
+    # scalar offset.  Passing the absolute row ids explicitly keeps every
+    # object's atoms identical to the ones it would draw inside a full pass,
+    # which is what makes the hybrid comparable to the exact chain under
+    # common random numbers (doc/CONVENTIONS.md section 6d).
+    if object_ids is None:
+        resolved_object_ids = None
+    else:
+        resolved_object_ids = np.asarray(object_ids, dtype=np.int64)
+        if resolved_object_ids.ndim != 1:
+            raise ValueError("object_ids must be one-dimensional")
+        if (resolved_object_ids < 0).any():
+            raise ValueError("object_ids must be non-negative")
+        if object_id_offset:
+            raise ValueError("object_ids and object_id_offset are exclusive")
     if allocation_method not in ("production_prefix", "independent_pilot"):
         raise ValueError("unknown adaptive allocation method")
     if bias_correction not in ("none", "richardson_1_over_m"):
         raise ValueError("unknown adaptive finite-draw bias correction")
     if candidate_backend not in ("scipy", "torch"):
         raise ValueError("unknown candidate-query backend")
+    if candidate_source not in CANDIDATE_SOURCES:
+        raise ValueError("unknown candidate source")
+    if estimator_mode not in ("mixture",) + STRATIFIED_MODES:
+        raise ValueError("unknown estimator mode")
+    if estimator_mode in STRATIFIED_MODES:
+        # The stratified estimator has no mixture weights, so the mixture ESS
+        # and maximum-weight rules that drive adaptive stopping do not define
+        # its draw budget.  Screening it therefore requires the fixed ladder.
+        if allocation_method != "production_prefix" or not retain_full_ladder:
+            raise ValueError(
+                "stratified estimation requires the production prefix "
+                "allocation and a retained full ladder"
+            )
+        if bias_correction != "none":
+            raise ValueError(
+                "stratified estimation and finite-draw bias correction are "
+                "separate modes"
+            )
+    if estimator_mode in ("tilted_stratified", "priority_stratified") and not (
+        0.0 < tilt_delta < 1.0
+    ):
+        raise ValueError("tilt_delta must lie strictly between zero and one")
+    if estimator_mode == "priority_stratified" and len(ladder) > 1:
+        # Priority sampling nests its retained set in M but not its weights:
+        # tau is the (M+1)-th largest key, so a shorter prefix of the same
+        # draw carries the wrong inclusion probabilities.  Refusing the ladder
+        # is the honest option until the reduction carries a per-rung tau.
+        raise ValueError(
+            "priority_stratified needs a single-rung ladder: tau depends on M, "
+            f"so the nested prefixes of {list(ladder)} are not valid rungs"
+        )
     if bias_correction != "none" and retain_full_ladder:
         raise ValueError(
             "finite-draw bias correction and retained raw ladder are separate modes"
@@ -1567,6 +1902,30 @@ def run_adaptive_section5(
         if retain_full_ladder
         else None
     )
+    # Weight diagnostics follow the retained ladder for the same reason the
+    # ladder moments do: only there does every object share one prefix, so a
+    # rung is a comparable quantity across objects.  Adaptive allocation gives
+    # each object its own draw count and there is no common rung to report.
+    weight_ess = (
+        np.empty((len(ladder), n_objects), dtype=np.float64)
+        if retain_full_ladder
+        else None
+    )
+    weight_max_fraction = (
+        np.empty((len(ladder), n_objects), dtype=np.float64)
+        if retain_full_ladder
+        else None
+    )
+    weight_relative_error = (
+        np.empty((len(ladder), n_objects), dtype=np.float64)
+        if retain_full_ladder
+        else None
+    )
+    weight_pareto_k = (
+        np.empty((len(ladder), n_objects), dtype=np.float64)
+        if retain_full_ladder
+        else None
+    )
     flow_evaluations = 0
     started = time.perf_counter()
     phase_seconds = {
@@ -1574,21 +1933,65 @@ def run_adaptive_section5(
         "candidate_flow": 0.0,
         "allocation_and_center_weights": 0.0,
         "stencil_views_and_reduction": 0.0,
+        "weight_diagnostics": 0.0,
     }
+    stencil_atom_slots = 0
+    stencil_valid_atom_slots = 0
+
+    # Every draw already accepts explicit ids and resolves a bare offset to
+    # `offset + arange`, so passing the array unconditionally is identical to
+    # the previous offset path for a contiguous partition and correct for a
+    # non-contiguous one.
+    if resolved_object_ids is None:
+        all_object_ids = object_id_offset + np.arange(n_objects, dtype=np.int64)
+    elif len(resolved_object_ids) != n_objects:
+        raise ValueError("object_ids must carry one id per observation")
+    else:
+        all_object_ids = resolved_object_ids
 
     for object_start in range(0, n_objects, object_chunk):
         object_stop = min(object_start + object_chunk, n_objects)
+        chunk_object_ids = all_object_ids[object_start:object_stop]
         observed = mock.measurements.iloc[object_start:object_stop].reset_index(drop=True)
         observed_targets = likelihood.observed_target_tensor(observed)
         phase_started = time.perf_counter()
-        candidates = proposal.candidates(
-            observed,
-            n_candidates=n_candidates,
-            prefilter_candidates=proposal_prefilter_candidates,
-            torch_device=(
-                likelihood.flow_model.device if candidate_backend == "torch" else None
-            ),
+        candidate_device = (
+            likelihood.flow_model.device if candidate_backend == "torch" else None
         )
+        draw = None
+        if (
+            candidate_source == "whole_catalogue_gaussian_proxy"
+            and estimator_mode == "tilted_stratified"
+        ):
+            # Production direct-top-K path: rank the pure proxy, then transform
+            # that same dense score matrix in place into the tilted proposal.
+            # Candidate membership, uniforms, and q probabilities are
+            # identical to the former two-pass implementation.
+            candidates, draw = (
+                proposal.whole_catalogue_proxy_candidates_and_tilted_draw(
+                    observed,
+                    n_candidates=n_candidates,
+                    n_draws=ladder[-1],
+                    delta=tilt_delta,
+                    temperature=tilt_temperature,
+                    seed=proposal_seed,
+                    object_ids=chunk_object_ids,
+                    device=candidate_device,
+                )
+            )
+        elif candidate_source == "whole_catalogue_gaussian_proxy":
+            candidates = proposal.whole_catalogue_proxy_candidates(
+                observed,
+                n_candidates=n_candidates,
+                device=candidate_device,
+            )
+        else:
+            candidates = proposal.candidates(
+                observed,
+                n_candidates=n_candidates,
+                prefilter_candidates=proposal_prefilter_candidates,
+                torch_device=candidate_device,
+            )
         phase_seconds["candidate_query"] += time.perf_counter() - phase_started
         phase_started = time.perf_counter()
         candidate_target_tensor = likelihood.log_importance_weights_tensor(
@@ -1601,7 +2004,9 @@ def run_adaptive_section5(
             atom_chunk=atom_chunk,
         )
         flow_evaluations += int(candidates.indices.size)
-        candidate_target = candidate_target_tensor.detach().cpu().numpy().astype(np.float64)
+        candidate_target = (
+            candidate_target_tensor.detach().cpu().numpy().astype(np.float64)
+        )
         phase_seconds["candidate_flow"] += time.perf_counter() - phase_started
         phase_started = time.perf_counter()
         if allocation_method == "independent_pilot":
@@ -1611,7 +2016,7 @@ def run_adaptive_section5(
                 n_draws=int(pilot_draws),
                 epsilon=epsilon,
                 seed=int(pilot_seed),
-                object_offset=object_id_offset + object_start,
+                object_ids=chunk_object_ids,
             )
             pilot_weights = _reuse_adapted_reference_weights(
                 likelihood,
@@ -1623,9 +2028,7 @@ def run_adaptive_section5(
                 object_chunk=len(observed),
                 atom_chunk=atom_chunk,
             )
-            flow_evaluations += len(pilot_draw.indices) * int(
-                (~pilot_draw.local_member).sum(axis=1).max()
-            )
+            flow_evaluations += int((~pilot_draw.local_member).sum())
             pilot_ess, pilot_peak = _pilot_concentration(pilot_weights)
             pilot_ess_fraction[object_start:object_stop] = pilot_ess
             pilot_maximum[object_start:object_stop] = pilot_peak
@@ -1641,16 +2044,64 @@ def run_adaptive_section5(
                 )
             del pilot_draw, pilot_weights, pilot_ess, pilot_peak
 
-        draw = None
         zero_weights = None
-        if allocation_method == "production_prefix":
+        if estimator_mode in STRATIFIED_MODES:
+            # No mixture weights exist here: the candidate stratum is summed
+            # exactly and every draw estimates only its complement.  The whole
+            # budget therefore reaches the tail that carries the mass the
+            # mixture proposal covers with epsilon of its draws.
+            if estimator_mode == "priority_stratified":
+                # cont.343: without replacement, so the ratio is capped by
+                # tau / q_j rather than left to the luck of the draw.
+                draw = proposal.draw_priority(
+                    candidates,
+                    observed,
+                    n_draws=ladder[-1],
+                    delta=tilt_delta,
+                    temperature=tilt_temperature,
+                    seed=proposal_seed,
+                    object_ids=chunk_object_ids,
+                    device=(
+                        likelihood.flow_model.device
+                        if candidate_backend == "torch"
+                        else None
+                    ),
+                )
+            elif estimator_mode == "tilted_stratified":
+                # cont.317: drawing that complement from the flat prior is what
+                # leaves the tail index above 0.7.  The tilted proposal uses
+                # the same uniform stream, so the arms stay paired.
+                if draw is None:
+                    draw = proposal.draw_tilted(
+                        candidates,
+                        observed,
+                        n_draws=ladder[-1],
+                        delta=tilt_delta,
+                        temperature=tilt_temperature,
+                        seed=proposal_seed,
+                        object_ids=chunk_object_ids,
+                        device=(
+                            likelihood.flow_model.device
+                            if candidate_backend == "torch"
+                            else None
+                        ),
+                    )
+            else:
+                draw = proposal.draw_stratified(
+                    candidates,
+                    n_draws=ladder[-1],
+                    seed=proposal_seed,
+                    object_ids=chunk_object_ids,
+                )
+            counts = np.full(len(observed), ladder[-1], dtype=np.int64)
+        elif allocation_method == "production_prefix":
             draw = proposal.draw_adapted(
                 candidates,
                 candidate_target,
                 n_draws=ladder[-1],
                 epsilon=epsilon,
                 seed=proposal_seed,
-                object_offset=object_id_offset + object_start,
+                object_ids=chunk_object_ids,
             )
             zero_weights = _reuse_adapted_reference_weights(
                 likelihood,
@@ -1662,9 +2113,7 @@ def run_adaptive_section5(
                 object_chunk=len(observed),
                 atom_chunk=atom_chunk,
             )
-            flow_evaluations += len(draw.indices) * int(
-                (~draw.local_member).sum(axis=1).max()
-            )
+            flow_evaluations += int((~draw.local_member).sum())
             if retain_full_ladder:
                 # Diagnostic calibration evaluates the maximum prefix once and
                 # reduces those same unique-atom weights at every nested rung.
@@ -1687,7 +2136,7 @@ def run_adaptive_section5(
         for n_draws in np.unique(counts):
             local_rows = np.flatnonzero(counts == n_draws)
             global_rows = object_start + local_rows
-            absolute_rows = object_id_offset + global_rows
+            absolute_rows = all_object_ids[global_rows]
             group_observed = observed.iloc[local_rows].reset_index(drop=True)
             group_targets = observed_targets[torch.as_tensor(
                 local_rows, dtype=torch.long, device=observed_targets.device
@@ -1718,13 +2167,120 @@ def run_adaptive_section5(
                     object_chunk=len(group_observed),
                     atom_chunk=atom_chunk,
                 )
-                flow_evaluations += len(group_draw.indices) * int(
-                    (~group_draw.local_member).sum(axis=1).max()
-                )
+                flow_evaluations += int((~group_draw.local_member).sum())
             else:
                 group_draw = draw.take(local_rows).prefix(int(n_draws))
                 group_zero_weights = zero_weights
             coalesced = group_draw.coalesce()
+
+            def _record_weight_diagnostics(
+                log_weights, group_draw, rows, atom_valid=None, exact_log_terms=None
+            ):
+                """Fill the ladder diagnostic rows for this object group."""
+
+                if not retain_full_ladder:
+                    return
+                started_diagnostics = time.perf_counter()
+                for rung_index, rung in enumerate(ladder):
+                    (
+                        weight_ess[rung_index, rows],
+                        weight_max_fraction[rung_index, rows],
+                        weight_relative_error[rung_index, rows],
+                        weight_pareto_k[rung_index, rows],
+                    ) = _weight_tail_diagnostics(
+                        log_weights,
+                        group_draw,
+                        rung,
+                        atom_valid=atom_valid,
+                        exact_log_terms=exact_log_terms,
+                    )
+                phase_seconds["weight_diagnostics"] += (
+                    time.perf_counter() - started_diagnostics
+                )
+
+            if estimator_mode in STRATIFIED_MODES:
+                # Slots whose atom already lies in the candidate stratum are
+                # never handed to the flow: that stratum is summed exactly.
+                outside_valid = coalesced.valid & (coalesced.local_position < 0)
+                unique_counts[global_rows] = outside_valid.sum(axis=1)
+                exact_indices = candidates.indices[local_rows]
+                exact_ones = np.ones(exact_indices.shape, dtype=np.float64)
+                log_likelihood = {}
+                half_log_likelihood = None
+                rung_log_likelihood = {} if retain_full_ladder else None
+                for name in views:
+                    if name == "zero":
+                        exact = candidate_target_tensor[
+                            torch.as_tensor(
+                                local_rows,
+                                dtype=torch.long,
+                                device=candidate_target_tensor.device,
+                            )
+                        ]
+                    else:
+                        exact = likelihood.log_importance_weights_tensor(
+                            group_observed,
+                            *views[name],
+                            atom_indices=exact_indices,
+                            proposal_probability=exact_ones,
+                            observed_targets=group_targets,
+                            object_chunk=len(group_observed),
+                            atom_chunk=atom_chunk,
+                        )
+                        flow_evaluations += int(exact_indices.size)
+                        stencil_atom_slots += int(exact_indices.size)
+                        stencil_valid_atom_slots += int(exact_indices.size)
+                    tail = likelihood.log_importance_weights_tensor(
+                        group_observed,
+                        *views[name],
+                        atom_indices=coalesced.indices,
+                        proposal_probability=coalesced.probability,
+                        atom_valid=outside_valid,
+                        observed_targets=group_targets,
+                        object_chunk=len(group_observed),
+                        atom_chunk=atom_chunk,
+                    )
+                    flow_evaluations += int(outside_valid.sum())
+                    stencil_atom_slots += int(coalesced.indices.size)
+                    stencil_valid_atom_slots += int(outside_valid.sum())
+                    if name == "zero":
+                        _record_weight_diagnostics(
+                            tail,
+                            coalesced,
+                            global_rows,
+                            atom_valid=outside_valid,
+                            exact_log_terms=exact,
+                        )
+                    log_likelihood[name] = (
+                        _stratified_logsumexp(
+                            exact, tail, coalesced, int(n_draws)
+                        )
+                        - normalizers[name]
+                    )
+                    if retain_full_ladder:
+                        for rung in ladder:
+                            rung_log_likelihood[(name, rung)] = (
+                                _stratified_logsumexp(
+                                    exact, tail, coalesced, rung
+                                )
+                                - normalizers[name]
+                            )
+                    del exact, tail
+                _reduce_stencil(
+                    log_likelihood,
+                    half_log_likelihood,
+                    rung_log_likelihood,
+                    score=score,
+                    information=information,
+                    ladder_score=ladder_score,
+                    ladder_information=ladder_information,
+                    global_rows=global_rows,
+                    ladder=ladder,
+                    h=h,
+                    full_information=full_information,
+                    retain_full_ladder=retain_full_ladder,
+                )
+                continue
             unique_counts[global_rows] = coalesced.valid.sum(axis=1)
             first = torch.as_tensor(
                 coalesced.first_position,
@@ -1742,6 +2298,7 @@ def run_adaptive_section5(
                     device=group_zero_weights.device,
                 )[:, None]
             zero_unique = group_zero_weights[row_tensor, first]
+            _record_weight_diagnostics(zero_unique, coalesced, global_rows)
             log_likelihood = {
                 "zero": (
                     _coalesced_logsumexp(zero_unique, coalesced, int(n_draws))
@@ -1776,11 +2333,14 @@ def run_adaptive_section5(
                     *views[name],
                     atom_indices=coalesced.indices,
                     proposal_probability=coalesced.probability,
+                    atom_valid=coalesced.valid,
                     observed_targets=group_targets,
                     object_chunk=len(group_observed),
                     atom_chunk=atom_chunk,
                 )
-                flow_evaluations += int(coalesced.indices.size)
+                flow_evaluations += int(coalesced.valid.sum())
+                stencil_atom_slots += int(coalesced.indices.size)
+                stencil_valid_atom_slots += int(coalesced.valid.sum())
                 log_likelihood[name] = (
                     _coalesced_logsumexp(weights, coalesced, int(n_draws))
                     - normalizers[name]
@@ -1797,92 +2357,20 @@ def run_adaptive_section5(
                             - normalizers[name]
                         )
                 del weights
-            zero = log_likelihood["zero"]
-            for component, plus, minus in (
-                (0, "g1_plus", "g1_minus"),
-                (1, "g2_plus", "g2_minus"),
-            ):
-                upper = log_likelihood[plus]
-                lower = log_likelihood[minus]
-                component_score = (upper - lower) / (2.0 * h)
-                diagonal_tensor = -(upper - 2.0 * zero + lower) / h**2
-                if half_log_likelihood is not None:
-                    half_upper = half_log_likelihood[plus]
-                    half_lower = half_log_likelihood[minus]
-                    half_zero = half_log_likelihood["zero"]
-                    component_score = 2.0 * component_score - (
-                        (half_upper - half_lower) / (2.0 * h)
-                    )
-                    diagonal_tensor = 2.0 * diagonal_tensor - (
-                        -(half_upper - 2.0 * half_zero + half_lower) / h**2
-                    )
-                score[global_rows, component] = (
-                    component_score.detach().cpu().numpy()
-                )
-                diagonal = diagonal_tensor.detach().cpu().numpy()
-                if full_information:
-                    information[global_rows, component, component] = diagonal
-                else:
-                    information[global_rows, component] = diagonal
-            if full_information:
-                mixed_hessian = (
-                    log_likelihood["pp"]
-                    - log_likelihood["pm"]
-                    - log_likelihood["mp"]
-                    + log_likelihood["mm"]
-                ) / (4.0 * h**2)
-                mixed_information = (-mixed_hessian).detach().cpu().numpy()
-                if half_log_likelihood is not None:
-                    half_mixed_hessian = (
-                        half_log_likelihood["pp"]
-                        - half_log_likelihood["pm"]
-                        - half_log_likelihood["mp"]
-                        + half_log_likelihood["mm"]
-                    ) / (4.0 * h**2)
-                    mixed_information = (
-                        -2.0 * mixed_hessian + half_mixed_hessian
-                    ).detach().cpu().numpy()
-                information[global_rows, 0, 1] = mixed_information
-                information[global_rows, 1, 0] = mixed_information
-            if retain_full_ladder:
-                for rung_index, rung in enumerate(ladder):
-                    rung_zero = rung_log_likelihood[("zero", rung)]
-                    for component, plus, minus in (
-                        (0, "g1_plus", "g1_minus"),
-                        (1, "g2_plus", "g2_minus"),
-                    ):
-                        upper = rung_log_likelihood[(plus, rung)]
-                        lower = rung_log_likelihood[(minus, rung)]
-                        ladder_score[rung_index, global_rows, component] = (
-                            (upper - lower) / (2.0 * h)
-                        ).detach().cpu().numpy()
-                        diagonal = (
-                            -(upper - 2.0 * rung_zero + lower) / h**2
-                        ).detach().cpu().numpy()
-                        if full_information:
-                            ladder_information[
-                                rung_index, global_rows, component, component
-                            ] = diagonal
-                        else:
-                            ladder_information[
-                                rung_index, global_rows, component
-                            ] = diagonal
-                    if full_information:
-                        rung_mixed_hessian = (
-                            rung_log_likelihood[("pp", rung)]
-                            - rung_log_likelihood[("pm", rung)]
-                            - rung_log_likelihood[("mp", rung)]
-                            + rung_log_likelihood[("mm", rung)]
-                        ) / (4.0 * h**2)
-                        rung_mixed_information = (
-                            -rung_mixed_hessian
-                        ).detach().cpu().numpy()
-                        ladder_information[rung_index, global_rows, 0, 1] = (
-                            rung_mixed_information
-                        )
-                        ladder_information[rung_index, global_rows, 1, 0] = (
-                            rung_mixed_information
-                        )
+            _reduce_stencil(
+                log_likelihood,
+                half_log_likelihood,
+                rung_log_likelihood,
+                score=score,
+                information=information,
+                ladder_score=ladder_score,
+                ladder_information=ladder_information,
+                global_rows=global_rows,
+                ladder=ladder,
+                h=h,
+                full_information=full_information,
+                retain_full_ladder=retain_full_ladder,
+            )
             del coalesced, group_draw, log_likelihood, zero_unique, first, row_tensor
             del half_log_likelihood
             if allocation_method == "independent_pilot":
@@ -1906,9 +2394,15 @@ def run_adaptive_section5(
         elapsed_seconds=float(time.perf_counter() - started),
         ladder_score=ladder_score,
         ladder_information=ladder_information,
+        weight_diagnostic_draws=(tuple(ladder) if retain_full_ladder else None),
+        weight_ess=weight_ess,
+        weight_max_fraction=weight_max_fraction,
+        weight_relative_error=weight_relative_error,
+        weight_pareto_k=weight_pareto_k,
         proposal_prefilter_candidates=(
             None
-            if proposal_prefilter_candidates is None
+            if candidate_source == "whole_catalogue_gaussian_proxy"
+            or proposal_prefilter_candidates is None
             else int(proposal_prefilter_candidates)
         ),
         allocation_method=allocation_method,
@@ -1923,6 +2417,10 @@ def run_adaptive_section5(
         phase_seconds=phase_seconds,
         bias_correction=bias_correction,
         candidate_backend=candidate_backend,
+        candidate_source=candidate_source,
+        estimator_mode=estimator_mode,
+        stencil_atom_slots=int(stencil_atom_slots),
+        stencil_valid_atom_slots=int(stencil_valid_atom_slots),
     )
 
 
@@ -1932,6 +2430,7 @@ def estimate_one_step_adaptive_section5(
     proposal: DefensiveLocalProposal,
     *,
     center: Sequence[float],
+    require_positive_definite: bool = True,
     **kwargs,
 ) -> AdaptiveOneStepResult:
     """Take one full-2D catalogue-likelihood Newton step from ``center``.
@@ -1955,12 +2454,18 @@ def estimate_one_step_adaptive_section5(
         full_information=True,
         **kwargs,
     )
-    return _summarize_one_step(center_array, moments)
+    return _summarize_one_step(
+        center_array,
+        moments,
+        require_positive_definite=bool(require_positive_definite),
+    )
 
 
 def _summarize_one_step(
     center_array: np.ndarray,
     moments: AdaptiveSection5Result,
+    *,
+    require_positive_definite: bool = True,
 ) -> AdaptiveOneStepResult:
     """Convert per-object score/information into one full-2D Newton step."""
 
@@ -1968,9 +2473,16 @@ def _summarize_one_step(
     information_sum = moments.information.sum(axis=0, dtype=np.float64)
     information_sum = 0.5 * (information_sum + information_sum.T)
     eigenvalues = np.linalg.eigvalsh(information_sum)
-    if not np.isfinite(eigenvalues).all() or eigenvalues[0] <= 0:
+    if not np.isfinite(eigenvalues).all() or (
+        require_positive_definite and eigenvalues[0] <= 0
+    ):
         raise RuntimeError(
             "one-step catalogue information is not positive definite: "
+            f"eigenvalues={eigenvalues.tolist()}"
+        )
+    if np.any(np.isclose(eigenvalues, 0.0, rtol=0, atol=np.finfo(float).eps)):
+        raise RuntimeError(
+            "one-step catalogue information is singular: "
             f"eigenvalues={eigenvalues.tolist()}"
         )
     step = np.linalg.solve(information_sum, score_sum)
@@ -1981,6 +2493,8 @@ def _summarize_one_step(
     influence = np.linalg.solve(mean_information, residual.T).T
     robust_covariance = np.cov(influence, rowvar=False, ddof=1) / len(residual)
     model_covariance = np.linalg.inv(information_sum)
+    robust_diagonal = np.diag(robust_covariance)
+    model_diagonal = np.diag(model_covariance)
     return AdaptiveOneStepResult(
         center=tuple(map(float, center_array)),
         estimate=tuple(map(float, estimate)),
@@ -1991,202 +2505,18 @@ def _summarize_one_step(
         ),
         model_covariance=tuple(tuple(map(float, row)) for row in model_covariance),
         robust_standard_error=tuple(
-            map(float, np.sqrt(np.diag(robust_covariance)))
+            map(float, np.sqrt(np.maximum(robust_diagonal, 0.0)))
         ),
-        model_standard_error=tuple(map(float, np.sqrt(np.diag(model_covariance)))),
+        # An indefinite observation shard is never a standalone estimator; it
+        # exists only to persist additive moments for the positive-definite
+        # catalogue-level hybrid solve.  Keep its diagnostic covariance finite
+        # without pretending a negative diagonal is a variance.
+        model_standard_error=tuple(
+            map(float, np.sqrt(np.maximum(model_diagonal, 0.0)))
+        ),
         quadratic_log_likelihood_gain=0.5 * float(score_sum @ step),
         moments=moments,
     )
-
-
-def run_stratified_section5(
-    likelihood: CatalogueLikelihood,
-    mock: MockCatalogue,
-    proposal: DefensiveLocalProposal,
-    *,
-    center: Sequence[float] = (0.0, 0.0),
-    h: float = 0.001,
-    complement_draw_ladder: Sequence[int] = (128, 256, 512, 1024),
-    n_candidates: int = 4096,
-    proposal_prefilter_candidates: Optional[int] = 16384,
-    proposal_seed: int = 8701,
-    retain_full_ladder: bool = True,
-    object_chunk: int = 16,
-    atom_chunk: int = 4096,
-) -> AdaptiveSection5Result:
-    """Sum the candidate evidence exactly and sample only its complement.
-
-    For each object and shear view this estimates the unchanged catalogue
-    numerator as
-
-    ``sum[j in C] pi_j Pdet_j L_j + mean[j~pi](Pdet_j L_j 1[j not in C])``.
-
-    Candidate support is selected once at the expansion centre and every prior
-    draw is fixed across all nine stencil views.  Unlike the self-normalized
-    adapted proposal, already-known candidate atoms are never resampled.
-    """
-
-    if not likelihood.tensor_native_available:
-        raise TypeError("stratified Section 5 requires a tensor-native Torch flow")
-    if likelihood.selection is not None:
-        raise ValueError("stratified Section 5 currently requires measured cuts disabled")
-    if likelihood.cache.blend_response is not None:
-        raise ValueError("stratified Section 5 currently requires external R_blend=0")
-    likelihood.cache.validate_detection_shear_invariance()
-    center = np.asarray(center, dtype=np.float64)
-    ladder = tuple(sorted({int(value) for value in complement_draw_ladder}))
-    if center.shape != (2,) or not np.isfinite(center).all():
-        raise ValueError("center must be a finite two-vector")
-    if not np.isfinite(h) or h <= 0:
-        raise ValueError("h must be finite and positive")
-    if not ladder or ladder[0] <= 0:
-        raise ValueError("complement draw ladder must be positive")
-    if n_candidates <= 0 or object_chunk <= 0 or atom_chunk <= 0:
-        raise ValueError("candidate and chunk sizes must be positive")
-
-    views = {
-        "zero": (float(center[0]), float(center[1])),
-        "g1_plus": (float(center[0] + h), float(center[1])),
-        "g1_minus": (float(center[0] - h), float(center[1])),
-        "g2_plus": (float(center[0]), float(center[1] + h)),
-        "g2_minus": (float(center[0]), float(center[1] - h)),
-        "pp": (float(center[0] + h), float(center[1] + h)),
-        "pm": (float(center[0] + h), float(center[1] - h)),
-        "mp": (float(center[0] - h), float(center[1] + h)),
-        "mm": (float(center[0] - h), float(center[1] - h)),
-    }
-    normalizers = {
-        name: _view_normalizer(likelihood, *view) for name, view in views.items()
-    }
-    n_objects = len(mock.measurements)
-    score = np.empty((n_objects, 2), dtype=np.float64)
-    information = np.empty((n_objects, 2, 2), dtype=np.float64)
-    ladder_score = np.empty((len(ladder), n_objects, 2), dtype=np.float64)
-    ladder_information = np.empty(
-        (len(ladder), n_objects, 2, 2), dtype=np.float64
-    )
-    unique_counts = np.empty(n_objects, dtype=np.int64)
-    flow_evaluations = 0
-    started = time.perf_counter()
-
-    for object_start in range(0, n_objects, object_chunk):
-        object_stop = min(object_start + object_chunk, n_objects)
-        observed = mock.measurements.iloc[object_start:object_stop].reset_index(drop=True)
-        observed_targets = likelihood.observed_target_tensor(observed)
-        candidates = proposal.candidates(
-            observed,
-            n_candidates=n_candidates,
-            prefilter_candidates=proposal_prefilter_candidates,
-        )
-        global_draw = proposal.draw_global(
-            candidates,
-            n_draws=ladder[-1],
-            seed=proposal_seed,
-            object_offset=object_start,
-        )
-        unique_counts[object_start:object_stop] = np.asarray(
-            [len(np.unique(row)) for row in global_draw.indices], dtype=np.int64
-        )
-        membership = torch.as_tensor(
-            global_draw.local_member,
-            dtype=torch.bool,
-            device=observed_targets.device,
-        )
-        log_likelihood = {}
-        for name, view in views.items():
-            candidate_weight = likelihood.log_importance_weights_tensor(
-                observed,
-                *view,
-                atom_indices=candidates.indices,
-                proposal_probability=np.ones_like(
-                    candidates.indices, dtype=np.float64
-                ),
-                observed_targets=observed_targets,
-                object_chunk=len(observed),
-                atom_chunk=atom_chunk,
-            )
-            global_weight = likelihood.log_importance_weights_tensor(
-                observed,
-                *view,
-                atom_indices=global_draw.indices,
-                proposal_probability=global_draw.probability,
-                observed_targets=observed_targets,
-                object_chunk=len(observed),
-                atom_chunk=atom_chunk,
-            ).masked_fill(membership, -torch.inf)
-            flow_evaluations += int(candidates.indices.size + global_draw.indices.size)
-            candidate_sum = torch.logsumexp(candidate_weight, dim=1)
-            for rung in ladder:
-                complement_mean = (
-                    torch.logsumexp(global_weight[:, :rung], dim=1)
-                    - np.log(rung)
-                )
-                log_likelihood[(name, rung)] = (
-                    torch.logaddexp(candidate_sum, complement_mean)
-                    - normalizers[name]
-                )
-            del candidate_weight, global_weight, candidate_sum
-
-        rows = slice(object_start, object_stop)
-        for rung_index, rung in enumerate(ladder):
-            zero = log_likelihood[("zero", rung)]
-            for component, plus, minus in (
-                (0, "g1_plus", "g1_minus"),
-                (1, "g2_plus", "g2_minus"),
-            ):
-                upper = log_likelihood[(plus, rung)]
-                lower = log_likelihood[(minus, rung)]
-                ladder_score[rung_index, rows, component] = (
-                    (upper - lower) / (2.0 * h)
-                ).detach().cpu().numpy()
-                ladder_information[rung_index, rows, component, component] = (
-                    -(upper - 2.0 * zero + lower) / h**2
-                ).detach().cpu().numpy()
-            mixed = -(
-                log_likelihood[("pp", rung)]
-                - log_likelihood[("pm", rung)]
-                - log_likelihood[("mp", rung)]
-                + log_likelihood[("mm", rung)]
-            ) / (4.0 * h**2)
-            mixed = mixed.detach().cpu().numpy()
-            ladder_information[rung_index, rows, 0, 1] = mixed
-            ladder_information[rung_index, rows, 1, 0] = mixed
-        del observed_targets, candidates, global_draw, membership, log_likelihood
-
-    score[:] = ladder_score[-1]
-    information[:] = ladder_information[-1]
-    return AdaptiveSection5Result(
-        center=(float(center[0]), float(center[1])),
-        h=float(h),
-        draw_ladder=ladder,
-        n_candidates=int(n_candidates),
-        score=score,
-        information=information,
-        draw_counts=np.full(n_objects, ladder[-1], dtype=np.int64),
-        unique_counts=unique_counts,
-        flow_evaluations=int(flow_evaluations),
-        elapsed_seconds=float(time.perf_counter() - started),
-        ladder_score=ladder_score if retain_full_ladder else None,
-        ladder_information=ladder_information if retain_full_ladder else None,
-        proposal_prefilter_candidates=proposal_prefilter_candidates,
-    )
-
-
-def estimate_one_step_stratified_section5(
-    likelihood: CatalogueLikelihood,
-    mock: MockCatalogue,
-    proposal: DefensiveLocalProposal,
-    *,
-    center: Sequence[float],
-    **kwargs,
-) -> AdaptiveOneStepResult:
-    """Take one full-2D step using exact candidates plus complement sampling."""
-
-    center_array = np.asarray(center, dtype=np.float64)
-    moments = run_stratified_section5(
-        likelihood, mock, proposal, center=center_array, **kwargs
-    )
-    return _summarize_one_step(center_array, moments)
 
 
 def autograd_importance_section5(
@@ -2208,8 +2538,8 @@ def autograd_importance_section5(
 
     A separate two-component shear variable is assigned to every observed
     object.  Because object evidences are independent, differentiating the sum
-    yields all per-object gradients and all diagonal 2x2 Hessian blocks in two
-    reverse passes, including the off-diagonal information.
+    yields all per-object gradients and all diagonal 2x2 Hessian blocks,
+    including the off-diagonal information.
     """
 
     if not likelihood.tensor_native_available:
@@ -2276,9 +2606,7 @@ def autograd_importance_section5(
             object_chunk=len(observed),
             atom_chunk=atom_chunk,
         )
-        flow_evaluations += len(draw.indices) * int(
-            (~draw.local_member).sum(axis=1).max()
-        )
+        flow_evaluations += int((~draw.local_member).sum())
         counts = select_adaptive_draw_counts(
             center_weights.detach().cpu().numpy(),
             ladder,
@@ -2354,10 +2682,9 @@ def autograd_importance_section5(
                         retain_graph=component == 0,
                     )[0]
                 )
+            hessian = torch.stack(hessian_rows, dim=1)
             score[global_rows] = gradient.detach().cpu().numpy()
-            information[global_rows] = -torch.stack(
-                hessian_rows, dim=1
-            ).detach().cpu().numpy()
+            information[global_rows] = -hessian.detach().cpu().numpy()
             flow_evaluations += int(coalesced.indices.size)
             del raw, shear, context, targets, log_flow, unique_log_weight, log_evidence
         del candidates, candidate_target_tensor, draw, center_weights
@@ -2370,725 +2697,6 @@ def autograd_importance_section5(
         unique_counts=unique_counts,
         flow_evaluations=int(flow_evaluations),
         elapsed_seconds=float(time.perf_counter() - started),
-    )
-
-
-def optimize_shear_autograd(
-    likelihood: CatalogueLikelihood,
-    mock: MockCatalogue,
-    proposal: DefensiveLocalProposal,
-    *,
-    initial: Sequence[float] = (0.0, 0.0),
-    max_iterations: int = 5,
-    tolerance: float = 1e-4,
-    max_step: float = 0.03,
-    **kwargs,
-) -> AutogradShearOptimizationResult:
-    """Iteratively recenter the full two-component sampled likelihood."""
-
-    center = np.asarray(initial, dtype=np.float64)
-    if center.shape != (2,) or not np.isfinite(center).all():
-        raise ValueError("initial shear must be a finite two-vector")
-    if max_iterations <= 0 or tolerance <= 0 or max_step <= 0:
-        raise ValueError("optimizer controls must be positive")
-    history = []
-    converged = False
-    for _ in range(int(max_iterations)):
-        result = autograd_importance_section5(
-            likelihood, mock, proposal, center=center, **kwargs
-        )
-        history.append(result)
-        score_sum = result.score.sum(axis=0)
-        information_sum = result.information.sum(axis=0)
-        step = np.linalg.solve(information_sum, score_sum)
-        scale = max(1.0, float(np.max(np.abs(step))) / float(max_step))
-        step = step / scale
-        center = center + step
-        if float(np.max(np.abs(step))) < tolerance:
-            converged = True
-            break
-    return AutogradShearOptimizationResult(
-        estimate=(float(center[0]), float(center[1])),
-        converged=converged,
-        iterations=tuple(history),
-    )
-
-
-def evaluate_fixed_draw_log_likelihood(
-    likelihood: CatalogueLikelihood,
-    mock: MockCatalogue,
-    draw: ProposalDraw,
-    shears: Sequence[Sequence[float]],
-    *,
-    object_chunk: int = 16,
-    atom_chunk: int = 4096,
-) -> Mapping[tuple[float, float], float]:
-    """Evaluate the same importance atoms at arbitrary two-component shears.
-
-    This is deliberately the same detected-and-selected catalogue likelihood
-    as the exact path.  Only the expansion centre changes.  An external fixed
-    ``R_blend`` shifts each atom's measured-shape likelihood, while a declared
-    measured cut changes only the shared population normalization for retained
-    observations.
-    """
-
-    likelihood.cache.validate_detection_shear_invariance()
-    points = tuple(
-        dict.fromkeys(
-            (float(value[0]), float(value[1]))
-            for value in shears
-        )
-    )
-    if not points or any(len(value) != 2 for value in shears):
-        raise ValueError("shears must contain at least one two-component point")
-    if not np.isfinite(np.asarray(points, dtype=np.float64)).all():
-        raise ValueError("shear points must be finite")
-    if object_chunk <= 0 or atom_chunk <= 0:
-        raise ValueError("chunk sizes must be positive")
-    if draw.indices.ndim != 2 or draw.indices.shape[0] != len(mock.measurements):
-        raise ValueError("fixed proposal draw must contain one row per mock object")
-
-    log_draws = float(np.log(draw.indices.shape[1]))
-    sums = {point: 0.0 for point in points}
-
-    for start in range(0, len(mock.measurements), object_chunk):
-        stop = min(start + object_chunk, len(mock.measurements))
-        observed = mock.measurements.iloc[start:stop].reset_index(drop=True)
-        indices = np.ascontiguousarray(draw.indices[start:stop])
-        probability = np.ascontiguousarray(draw.probability[start:stop])
-        observed_targets = (
-            likelihood.observed_target_tensor(observed)
-            if likelihood.tensor_native_available
-            else None
-        )
-        for point in points:
-            if likelihood.tensor_native_available:
-                weights = likelihood.log_importance_weights_tensor(
-                    observed,
-                    point[0],
-                    point[1],
-                    atom_indices=indices,
-                    proposal_probability=probability,
-                    observed_targets=observed_targets,
-                    object_chunk=len(observed),
-                    atom_chunk=atom_chunk,
-                )
-                # The population objective sums thousands of per-object log
-                # evidences, while recentering can compare trial points that
-                # differ by only ~1e-4 in total log likelihood.  Reducing the
-                # importance weights in float32 creates a visibly corrugated
-                # line-search surface at that scale even though the flow
-                # itself is evaluated in float32.  Promote only the cheap
-                # log-sum-exp reduction; this leaves the likelihood target and
-                # flow evaluations unchanged.
-                evidence = torch.logsumexp(weights.double(), dim=1) - log_draws
-                sums[point] += float(evidence.sum().item())
-                del weights, evidence
-            else:
-                weights = likelihood.log_importance_weights(
-                    observed,
-                    point[0],
-                    point[1],
-                    atom_indices=indices,
-                    proposal_probability=probability,
-                    object_chunk=len(observed),
-                    atom_chunk=atom_chunk,
-                )
-                evidence = logsumexp(weights, axis=1) - log_draws
-                sums[point] += float(evidence.sum())
-                del weights, evidence
-        del observed, indices, probability, observed_targets
-
-    return {
-        point: value
-        - len(mock.measurements)
-        * likelihood.log_population_normalization(point[0], point[1])
-        for point, value in sums.items()
-    }
-
-
-def evaluate_fixed_draw_importance_diagnostics(
-    likelihood: CatalogueLikelihood,
-    mock: MockCatalogue,
-    draw: ProposalDraw,
-    shear: Sequence[float],
-    *,
-    object_chunk: int = 16,
-    atom_chunk: int = 4096,
-) -> StreamedImportanceDiagnostics:
-    """Summarize final-shear importance concentration without retaining weights."""
-
-    shear = tuple(shear)
-    if len(shear) != 2:
-        raise ValueError("diagnostic shear must be a finite two-vector")
-    point = (float(shear[0]), float(shear[1]))
-    if not np.isfinite(point).all():
-        raise ValueError("diagnostic shear must be a finite two-vector")
-    if object_chunk <= 0 or atom_chunk <= 0:
-        raise ValueError("chunk sizes must be positive")
-    if draw.indices.ndim != 2 or draw.indices.shape[0] != len(mock.measurements):
-        raise ValueError("fixed proposal draw must contain one row per mock object")
-
-    likelihood.cache.validate_detection_shear_invariance()
-    parts = []
-    for start in range(0, len(mock.measurements), object_chunk):
-        stop = min(start + object_chunk, len(mock.measurements))
-        observed = mock.measurements.iloc[start:stop].reset_index(drop=True)
-        indices = np.ascontiguousarray(draw.indices[start:stop])
-        probability = np.ascontiguousarray(draw.probability[start:stop])
-        chunk_draw = ProposalDraw(
-            indices=indices,
-            probability=probability,
-            local_member=np.ascontiguousarray(draw.local_member[start:stop]),
-            global_component=np.ascontiguousarray(
-                draw.global_component[start:stop]
-            ),
-            candidate_radius=np.ascontiguousarray(draw.candidate_radius[start:stop]),
-            seed=draw.seed,
-            local_position=np.ascontiguousarray(draw.local_position[start:stop]),
-        )
-        if likelihood.tensor_native_available:
-            observed_targets = likelihood.observed_target_tensor(observed)
-            weights = likelihood.log_importance_weights_tensor(
-                observed,
-                point[0],
-                point[1],
-                atom_indices=indices,
-                proposal_probability=probability,
-                observed_targets=observed_targets,
-                object_chunk=len(observed),
-                atom_chunk=atom_chunk,
-            )
-            parts.append(_diagnostic_tensors(weights, chunk_draw))
-            del observed_targets, weights
-        else:
-            weights = likelihood.log_importance_weights(
-                observed,
-                point[0],
-                point[1],
-                atom_indices=indices,
-                proposal_probability=probability,
-                object_chunk=len(observed),
-                atom_chunk=atom_chunk,
-            )
-            parts.append(_diagnostic_arrays(weights, chunk_draw))
-            del weights
-        del observed, indices, probability, chunk_draw
-    diagnostics = _summarize_importance(parts, draw.indices.shape[1])
-    if diagnostics is None:
-        raise RuntimeError("importance diagnostics received no mock objects")
-    return diagnostics
-
-
-def _concatenate_proposal_draws(draws: Sequence[ProposalDraw]) -> ProposalDraw:
-    """Join object-chunk draws without changing any object's random stream."""
-
-    draws = tuple(draws)
-    if not draws:
-        raise ValueError("at least one proposal draw chunk is required")
-    seeds = {int(draw.seed) for draw in draws}
-    widths = {int(draw.indices.shape[1]) for draw in draws}
-    if len(seeds) != 1 or len(widths) != 1:
-        raise ValueError("proposal draw chunks must share their seed and width")
-    return ProposalDraw(
-        indices=np.concatenate([draw.indices for draw in draws], axis=0),
-        probability=np.concatenate([draw.probability for draw in draws], axis=0),
-        local_member=np.concatenate([draw.local_member for draw in draws], axis=0),
-        global_component=np.concatenate(
-            [draw.global_component for draw in draws], axis=0
-        ),
-        candidate_radius=np.concatenate(
-            [draw.candidate_radius for draw in draws], axis=0
-        ),
-        seed=draws[0].seed,
-        local_position=np.concatenate(
-            [draw.local_position for draw in draws], axis=0
-        ),
-    )
-
-
-def _draw_initial_center_posterior_adapted(
-    likelihood: CatalogueLikelihood,
-    mock: MockCatalogue,
-    proposal: DefensiveLocalProposal,
-    *,
-    reference: Sequence[float],
-    n_draws: int,
-    n_candidates: int,
-    epsilon: float,
-    proposal_seed: int,
-    object_chunk: int,
-    atom_chunk: int,
-) -> tuple[ProposalDraw, Optional[float], int, int]:
-    """Build one exact initial-centre proposal and optionally reuse its density.
-
-    The local proposal is proportional to the exact unnormalised numerator
-    ``pi * Pdet * L(reference)`` on the deterministic candidate support.  It is
-    mixed with the full catalogue prior and retains the exact ``pi/q``
-    correction.  The resulting draw is assembled once and is never adapted
-    again during recentering.
-
-    Tensor-native likelihoods also reuse the candidate likelihoods to evaluate
-    the reference point, calling the flow only for defensive global draws that
-    fall outside the candidate support.  The dataframe fallback keeps the same
-    adapted proposal but lets the ordinary evaluator recompute the reference.
-    """
-
-    reference = (float(reference[0]), float(reference[1]))
-    log_draws = float(np.log(n_draws))
-    draw_chunks = []
-    candidate_evaluations = 0
-    reuse_evaluations = 0
-    reference_log_sum = 0.0
-    reused_reference = bool(likelihood.tensor_native_available)
-
-    for start in range(0, len(mock.measurements), object_chunk):
-        stop = min(start + object_chunk, len(mock.measurements))
-        observed = mock.measurements.iloc[start:stop].reset_index(drop=True)
-        candidates = proposal.candidates(observed, n_candidates=n_candidates)
-        ones = np.ones_like(candidates.indices, dtype=np.float64)
-        if likelihood.tensor_native_available:
-            observed_targets = likelihood.observed_target_tensor(observed)
-            candidate_target_tensor = likelihood.log_importance_weights_tensor(
-                observed,
-                reference[0],
-                reference[1],
-                atom_indices=candidates.indices,
-                proposal_probability=ones,
-                observed_targets=observed_targets,
-                object_chunk=len(observed),
-                atom_chunk=atom_chunk,
-            )
-            candidate_target = (
-                candidate_target_tensor.detach().cpu().numpy().astype(np.float64)
-            )
-        else:
-            observed_targets = None
-            candidate_target_tensor = None
-            candidate_target = likelihood.log_importance_weights(
-                observed,
-                reference[0],
-                reference[1],
-                atom_indices=candidates.indices,
-                proposal_probability=ones,
-                object_chunk=len(observed),
-                atom_chunk=atom_chunk,
-            )
-        candidate_evaluations += int(candidates.indices.size)
-        chunk_draw = proposal.draw_adapted(
-            candidates,
-            candidate_target,
-            n_draws=n_draws,
-            epsilon=epsilon,
-            seed=proposal_seed,
-            object_offset=start,
-        )
-        draw_chunks.append(chunk_draw)
-
-        if reused_reference:
-            reference_weights = _reuse_adapted_reference_weights(
-                likelihood,
-                observed,
-                observed_targets,
-                candidate_target_tensor,
-                chunk_draw,
-                center=reference,
-                object_chunk=len(observed),
-                atom_chunk=atom_chunk,
-            )
-            outside_width = int((~chunk_draw.local_member).sum(axis=1).max())
-            reuse_evaluations += len(observed) * outside_width
-            reference_evidence = (
-                torch.logsumexp(reference_weights.double(), dim=1) - log_draws
-            )
-            reference_log_sum += float(reference_evidence.sum().item())
-            del reference_weights, reference_evidence
-
-        del (
-            observed,
-            candidates,
-            ones,
-            observed_targets,
-            candidate_target_tensor,
-            candidate_target,
-            chunk_draw,
-        )
-
-    draw = _concatenate_proposal_draws(draw_chunks)
-    reference_value = None
-    if reused_reference:
-        reference_value = reference_log_sum - len(mock.measurements) * (
-            likelihood.log_population_normalization(*reference)
-        )
-    return draw, reference_value, candidate_evaluations, reuse_evaluations
-
-
-def _numerical_stencil(
-    evaluate: Callable[
-        [Sequence[tuple[float, float]]], Mapping[tuple[float, float], float]
-    ],
-    center: np.ndarray,
-    h: float,
-) -> tuple[float, np.ndarray, np.ndarray]:
-    """Return population log likelihood, score, and full observed information."""
-
-    x, y = map(float, center)
-    points = (
-        (x, y),
-        (x + h, y),
-        (x - h, y),
-        (x, y + h),
-        (x, y - h),
-        (x + h, y + h),
-        (x + h, y - h),
-        (x - h, y + h),
-        (x - h, y - h),
-    )
-    values = evaluate(points)
-    zero, xp, xm, yp, ym, pp, pm, mp, mm = (
-        float(values[point]) for point in points
-    )
-    score = np.array(
-        [(xp - xm) / (2.0 * h), (yp - ym) / (2.0 * h)],
-        dtype=np.float64,
-    )
-    information = np.array(
-        [
-            [-(xp - 2.0 * zero + xm) / h**2, 0.0],
-            [0.0, -(yp - 2.0 * zero + ym) / h**2],
-        ],
-        dtype=np.float64,
-    )
-    cross_hessian = (pp - pm - mp + mm) / (4.0 * h**2)
-    information[0, 1] = information[1, 0] = -cross_hessian
-    return zero, score, information
-
-
-def _safeguarded_numerical_recenter(
-    evaluate: Callable[
-        [Sequence[tuple[float, float]]], Mapping[tuple[float, float], float]
-    ],
-    *,
-    initial: Sequence[float],
-    h: float,
-    max_iterations: int,
-    tolerance: float,
-    max_step: float,
-    shear_bound: float,
-    max_backtracks: int,
-) -> tuple[tuple[float, float], bool, str, tuple[NumericalShearIteration, ...]]:
-    """Safeguarded Newton iteration for a deterministic likelihood evaluator."""
-
-    center = np.asarray(initial, dtype=np.float64)
-    if center.shape != (2,) or not np.isfinite(center).all():
-        raise ValueError("initial shear must be a finite two-vector")
-    controls = (h, tolerance, max_step, shear_bound)
-    if not np.isfinite(controls).all() or any(value <= 0 for value in controls):
-        raise ValueError("optimizer controls must be finite and positive")
-    if max_iterations <= 0 or max_backtracks <= 0:
-        raise ValueError("iteration counts must be positive")
-    if np.max(np.abs(center)) > shear_bound:
-        raise ValueError("initial shear lies outside the optimizer guard bound")
-
-    history = []
-    converged = False
-    reason = "maximum_iterations"
-    for _ in range(int(max_iterations)):
-        value, score, information = _numerical_stencil(evaluate, center, h)
-        eigenvalues = np.linalg.eigvalsh(information)
-        positive = bool(eigenvalues[0] > 0)
-        raw_newton = None
-        if positive:
-            try:
-                raw_newton = np.linalg.solve(information, score)
-            except np.linalg.LinAlgError:
-                raw_newton = None
-
-        if raw_newton is not None and np.max(np.abs(raw_newton)) <= tolerance:
-            history.append(
-                NumericalShearIteration(
-                    center=tuple(map(float, center)),
-                    log_likelihood_sum=float(value),
-                    score=tuple(map(float, score)),
-                    information=tuple(tuple(map(float, row)) for row in information),
-                    information_eigenvalues=tuple(map(float, eigenvalues)),
-                    step_method="converged_newton",
-                    raw_step=tuple(map(float, raw_newton)),
-                    accepted_step=(0.0, 0.0),
-                    next_center=tuple(map(float, center)),
-                    next_log_likelihood_sum=float(value),
-                    accepted=False,
-                )
-            )
-            converged = True
-            reason = "newton_step_below_tolerance"
-            break
-
-        gradient_scale = float(np.max(np.abs(score)))
-        gradient_step = (
-            score * (max_step / gradient_scale)
-            if gradient_scale > 0
-            else np.zeros(2, dtype=np.float64)
-        )
-        directions = []
-        if raw_newton is not None and float(score @ raw_newton) > 0:
-            newton_scale = max(1.0, float(np.max(np.abs(raw_newton))) / max_step)
-            directions.append(("newton", raw_newton / newton_scale, raw_newton))
-        directions.append(("gradient", gradient_step, gradient_step))
-
-        accepted = False
-        accepted_method = "stalled"
-        accepted_step = np.zeros(2, dtype=np.float64)
-        accepted_center = center.copy()
-        accepted_value = float(value)
-        raw_step = directions[0][2]
-        for method, direction, unscaled in directions:
-            raw_step = unscaled
-            for backtrack in range(int(max_backtracks)):
-                step = direction * (0.5**backtrack)
-                candidate = center + step
-                if np.max(np.abs(candidate)) > shear_bound:
-                    continue
-                point = tuple(map(float, candidate))
-                trial = float(evaluate((point,))[point])
-                if trial > value + 1.0e-10:
-                    accepted = True
-                    accepted_method = method
-                    accepted_step = step
-                    accepted_center = candidate
-                    accepted_value = trial
-                    break
-            if accepted:
-                break
-
-        history.append(
-            NumericalShearIteration(
-                center=tuple(map(float, center)),
-                log_likelihood_sum=float(value),
-                score=tuple(map(float, score)),
-                information=tuple(tuple(map(float, row)) for row in information),
-                information_eigenvalues=tuple(map(float, eigenvalues)),
-                step_method=accepted_method,
-                raw_step=tuple(map(float, raw_step)),
-                accepted_step=tuple(map(float, accepted_step)),
-                next_center=tuple(map(float, accepted_center)),
-                next_log_likelihood_sum=float(accepted_value),
-                accepted=accepted,
-            )
-        )
-        if not accepted:
-            reason = "no_likelihood_increasing_step"
-            break
-        center = accepted_center
-
-    return tuple(map(float, center)), converged, reason, tuple(history)
-
-
-def optimize_shear_numerical(
-    likelihood: CatalogueLikelihood,
-    mock: MockCatalogue,
-    proposal: DefensiveLocalProposal,
-    *,
-    initial: Sequence[float] = (0.0, 0.0),
-    h: float = 0.001,
-    n_draws: int = 16384,
-    n_candidates: int = 32768,
-    epsilon: float = 0.1,
-    bandwidth: float = 1.0,
-    proposal_seed: int = 8701,
-    proposal_method: str = "initial_center_posterior_adapted",
-    max_iterations: int = 10,
-    tolerance: float = 1e-4,
-    max_step: float = 0.01,
-    shear_bound: float = 0.1,
-    max_backtracks: int = 8,
-    object_chunk: int = 16,
-    atom_chunk: int = 4096,
-) -> NumericalShearOptimizationResult:
-    """Maximize the fixed catalogue likelihood by local numerical recentering.
-
-    Proposal atoms and probabilities are drawn once and reused for every
-    stencil and line-search point.  This preserves common random numbers and
-    the exact importance correction throughout the optimization.
-    """
-
-    if n_draws <= 0 or n_candidates <= 0:
-        raise ValueError("draw and candidate counts must be positive")
-    if not (0 < epsilon <= 1):
-        raise ValueError("proposal epsilon must satisfy 0 < epsilon <= 1")
-    proposal_method = str(proposal_method)
-    if proposal_method not in {
-        "initial_center_posterior_adapted",
-        "distance_kernel",
-    }:
-        raise ValueError(
-            "proposal_method must be initial_center_posterior_adapted or distance_kernel"
-        )
-    if proposal_method == "distance_kernel" and bandwidth <= 0:
-        raise ValueError("distance-kernel bandwidth must be positive")
-    initial_array = np.asarray(initial, dtype=np.float64)
-    if initial_array.shape != (2,) or not np.isfinite(initial_array).all():
-        raise ValueError("initial shear must be a finite two-vector")
-    started = time.perf_counter()
-    selection_initial_shears = (
-        set(likelihood.selection.available_shears)
-        if likelihood.selection is not None
-        and hasattr(likelihood.selection, "available_shears")
-        else set()
-    )
-    proposal_candidate_evaluations = 0
-    proposal_reuse_evaluations = 0
-    reference_value = None
-    if proposal_method == "initial_center_posterior_adapted":
-        (
-            draw,
-            reference_value,
-            proposal_candidate_evaluations,
-            proposal_reuse_evaluations,
-        ) = _draw_initial_center_posterior_adapted(
-            likelihood,
-            mock,
-            proposal,
-            reference=initial_array,
-            n_draws=int(n_draws),
-            n_candidates=int(n_candidates),
-            epsilon=float(epsilon),
-            proposal_seed=int(proposal_seed),
-            object_chunk=int(object_chunk),
-            atom_chunk=int(atom_chunk),
-        )
-        result_bandwidth = None
-        proposal_reference = tuple(map(float, initial_array))
-    else:
-        draw = proposal.draw(
-            mock.measurements,
-            n_draws=int(n_draws),
-            n_candidates=int(n_candidates),
-            epsilon=float(epsilon),
-            bandwidth=float(bandwidth),
-            seed=int(proposal_seed),
-        )
-        result_bandwidth = float(bandwidth)
-        proposal_reference = None
-
-    initial_key = tuple(map(float, initial_array))
-    cache: dict[tuple[float, float], float] = {}
-    evaluation_order: list[tuple[float, float]] = []
-    general_evaluation_order: list[tuple[float, float]] = []
-    if reference_value is not None:
-        cache[initial_key] = float(reference_value)
-        evaluation_order.append(initial_key)
-        if initial_key != (0.0, 0.0):
-            likelihood.discard_tensor_views((initial_key,))
-            likelihood.cache.discard_views((initial_key,))
-
-    def evaluate(
-        points: Sequence[tuple[float, float]],
-    ) -> Mapping[tuple[float, float], float]:
-        normalized = tuple(
-            dict.fromkeys((float(point[0]), float(point[1])) for point in points)
-        )
-        missing = tuple(point for point in normalized if point not in cache)
-        if missing:
-            values = evaluate_fixed_draw_log_likelihood(
-                likelihood,
-                mock,
-                draw,
-                missing,
-                object_chunk=object_chunk,
-                atom_chunk=atom_chunk,
-            )
-            for point in missing:
-                cache[point] = float(values[point])
-                evaluation_order.append(point)
-                general_evaluation_order.append(point)
-            # With an external response the general tensor path materializes
-            # one full catalogue view per arbitrary shear.  The scalar value
-            # above is deterministic and cached, so retain only the zero base;
-            # measured-selection probabilities live in their own compact
-            # cache and are unaffected by releasing these frames/tensors.
-            releasable = tuple(point for point in missing if point != (0.0, 0.0))
-            if releasable:
-                likelihood.discard_tensor_views(releasable)
-                likelihood.cache.discard_views(releasable)
-        return {point: cache[point] for point in normalized}
-
-    estimate, converged, reason, iterations = _safeguarded_numerical_recenter(
-        evaluate,
-        initial=initial_array,
-        h=float(h),
-        max_iterations=int(max_iterations),
-        tolerance=float(tolerance),
-        max_step=float(max_step),
-        shear_bound=float(shear_bound),
-        max_backtracks=int(max_backtracks),
-    )
-    evaluations = tuple(
-        NumericalLikelihoodPoint(point, cache[point]) for point in evaluation_order
-    )
-    numerator_evaluations = (
-        len(mock.measurements)
-        * int(n_draws)
-        * len(general_evaluation_order)
-    )
-    proposal_evaluations = (
-        int(proposal_candidate_evaluations) + int(proposal_reuse_evaluations)
-    )
-    selection_evaluations = 0
-    if likelihood.selection is not None and hasattr(likelihood.selection, "n_samples"):
-        new_selection_shears = (
-            set(likelihood.selection.available_shears) - selection_initial_shears
-        )
-        n_active = int(np.count_nonzero(likelihood.cache.prior.weights > 0))
-        selection_evaluations = (
-            len(new_selection_shears)
-            * n_active
-            * int(likelihood.selection.n_samples)
-        )
-    importance = evaluate_fixed_draw_importance_diagnostics(
-        likelihood,
-        mock,
-        draw,
-        estimate,
-        object_chunk=object_chunk,
-        atom_chunk=atom_chunk,
-    )
-    diagnostic_evaluations = len(mock.measurements) * int(n_draws)
-    if estimate != (0.0, 0.0):
-        likelihood.discard_tensor_views((estimate,))
-        likelihood.cache.discard_views((estimate,))
-    return NumericalShearOptimizationResult(
-        estimate=estimate,
-        converged=converged,
-        reason=reason,
-        h=float(h),
-        n_objects=len(mock.measurements),
-        n_draws=int(n_draws),
-        n_candidates=int(n_candidates),
-        proposal_method=proposal_method,
-        proposal_reference_shear=proposal_reference,
-        proposal_seed=int(proposal_seed),
-        epsilon=float(epsilon),
-        bandwidth=result_bandwidth,
-        initial_likelihood_reused=reference_value is not None,
-        proposal_candidate_flow_evaluations=int(
-            proposal_candidate_evaluations
-        ),
-        proposal_reuse_flow_evaluations=int(proposal_reuse_evaluations),
-        proposal_flow_evaluations=int(proposal_evaluations),
-        numerator_flow_evaluations=int(numerator_evaluations),
-        selection_flow_evaluations=int(selection_evaluations),
-        diagnostic_flow_evaluations=int(diagnostic_evaluations),
-        flow_evaluations=int(
-            proposal_evaluations
-            + numerator_evaluations
-            + selection_evaluations
-            + diagnostic_evaluations
-        ),
-        elapsed_seconds=float(time.perf_counter() - started),
-        importance=importance,
-        iterations=iterations,
-        evaluations=evaluations,
     )
 
 
@@ -3317,7 +2925,6 @@ def assess_section5_null(
 __all__ = [
     "AdaptiveOneStepResult",
     "AdaptiveSection5Result",
-    "AutogradShearOptimizationResult",
     "ImportanceAutogradResult",
     "PairedSection5Estimate",
     "Section5AutogradResult",
@@ -3332,12 +2939,9 @@ __all__ = [
     "TailDiagnostics",
     "assess_section5_null",
     "estimate_one_step_adaptive_section5",
-    "estimate_one_step_stratified_section5",
     "run_exact_section5",
     "run_adaptive_section5",
-    "run_stratified_section5",
     "run_streamed_section5",
-    "optimize_shear_autograd",
     "summarize_paired_section5",
     "summarize_section5",
 ]

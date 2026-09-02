@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 import torch
 from torch import nn
-import torch.nn.functional as F
 
 from .nn_utils import activation_class as _activation
 
@@ -58,31 +57,6 @@ SHEARFREE_G0_SELECTION_FEATURES = [
     "e_pframe_parallel_s_blend",
     "e_pframe_cross_s_blend",
 ]
-
-
-SELECTION_FEATURE_SETS = {
-    "v6_primary_frame": DEFAULT_SELECTION_FEATURES,
-    "g0_shearfree": SHEARFREE_G0_SELECTION_FEATURES,
-}
-
-
-class FocalLossWithLogits(nn.Module):
-    def __init__(self, gamma=2.0, alpha=None):
-        super().__init__()
-        self.gamma = float(gamma)
-        self.alpha = None if alpha is None else float(alpha)
-
-    def forward(self, logits, targets):
-        targets = targets.float()
-        logits = logits.view_as(targets)
-        bce = F.binary_cross_entropy_with_logits(logits, targets, reduction="none")
-        prob = torch.sigmoid(logits)
-        prob_t = prob * targets + (1.0 - prob) * (1.0 - targets)
-        loss = (1.0 - prob_t).clamp_min(1e-8).pow(self.gamma) * bce
-        if self.alpha is not None:
-            alpha_t = self.alpha * targets + (1.0 - self.alpha) * (1.0 - targets)
-            loss = alpha_t * loss
-        return loss.mean()
 
 
 class SelectionMLP(nn.Module):
@@ -278,17 +252,6 @@ class SelectionModelBundle:
         return prob_out, grad_df
 
 
-def save_selection_model(path, model, preprocessor, model_config, temperature, metadata=None):
-    checkpoint = {
-        "state_dict": model.state_dict(),
-        "preprocessor": preprocessor.to_state(),
-        "model_config": dict(model_config),
-        "temperature": float(temperature),
-        "metadata": metadata or {},
-    }
-    torch.save(checkpoint, path)
-
-
 def load_selection_model(path, device="cpu"):
     try:
         checkpoint = torch.load(path, map_location=device, weights_only=False)
@@ -304,31 +267,3 @@ def load_selection_model(path, device="cpu"):
         metadata=checkpoint.get("metadata", {}),
         device=device,
     )
-
-
-@torch.no_grad()
-def collect_logits_and_targets(model, loader, device):
-    model.eval()
-    logits = []
-    targets = []
-    for xb, yb in loader:
-        logits.append(model(xb.to(device)).detach().cpu())
-        targets.append(yb.detach().cpu())
-    return torch.cat(logits), torch.cat(targets)
-
-
-def fit_temperature(logits, targets, max_iter=100):
-    logits = logits.detach().float()
-    targets = targets.detach().float()
-    log_temperature = torch.zeros(1, requires_grad=True)
-    optimizer = torch.optim.LBFGS([log_temperature], lr=0.1, max_iter=max_iter)
-
-    def closure():
-        optimizer.zero_grad()
-        temperature = torch.exp(log_temperature).clamp_min(1e-4)
-        loss = F.binary_cross_entropy_with_logits(logits / temperature, targets)
-        loss.backward()
-        return loss
-
-    optimizer.step(closure)
-    return float(torch.exp(log_temperature).detach().clamp(1e-4, 1e4).item())

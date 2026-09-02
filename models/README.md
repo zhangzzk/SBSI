@@ -1,77 +1,112 @@
-# V3 model artifacts
+# Likelihood artifacts
 
-This directory holds the frozen **V3** release artifacts: the 16-seed measurement
-flow ensemble and the companion BlendEMU blending emulator. Together they are what
-`get_model("V3")` names.
+`models/` contains the three small JSON artifacts used by the current
+catalogue likelihood. The measurement-flow checkpoint is supplied separately;
+no `.pt` checkpoint is bundled in this repository.
 
-```
+```text
 models/
-  ablation/   measurement_flow_g0_ngmix_ablate_s2c_lt500_v22_s{seed}_swaavg.pt   x16
-  derisk/     v22_reweighted_vector_optuna30_all40_v1/best_weighted_model.json
-  blendemu/   emulator_metadata_lsst_r_extnbr_v22.json
-              classification_model_lsst_r_extnbr_ho.json
+  blendemu/
+    emulator_metadata_lsst_r_extnbr_v22.json
+    classification_model_lsst_r_extnbr_ho.json
+  derisk/v22_reweighted_vector_optuna30_all40_v1/
+    best_weighted_model.json
   SHA256SUMS
 ```
 
-The 16 seeds are `SHAPE_SEEDS` in `sbsi/models.py`: 501, 502, 503 and 505–517.
-Total about 93 MB.  The classification booster is the per-galaxy detection model named
-by the metadata's `classification` task; `BlendingPredictor` loads it unconditionally,
-so it must sit next to the metadata file.  Through it the emulator answers
-`predict_detection(catalogue)`: the detection probability of each galaxy from its own
-properties and its single nearest neighbour, considering neighbours only within the
-classifier's 3-arcsec training aperture (galaxies with no such neighbour take the
-isolated-galaxy branch).  The pair-level form is
-`predict_on_pairs(pairs, task="detection")` — note that pair tables built for the
-response emulator's 10-arcsec aperture are outside the classifier's training domain.
+## The `v3.2-like` likelihood release
 
-## Using these files
+`v3.2-like` names a likelihood composition, not a Python API version or an
+SBSI package version. Its components are:
 
-`sbsi/models.py` anchors preset paths on the imported SBSI checkout. With an editable
-install, `get_model("V3")` therefore finds this directory from any working directory and
-requires no configuration.
+- the externally supplied seed-501 original-E measurement flow,
+  `measurement_flow_mixed_g0_g005_E_s501_swaavg.pt`, with SHA-256
+  `38a76bb9bbece61f403ce2781883f38779b419101d0e690439edffb82b93c51e`;
+- the bundled BlendEMU metadata and its legacy classification booster. This
+  detector has seven spin-0 inputs, uses the nearest neighbour inside its
+  3-arcsec training aperture, and can therefore be cached across the
+  shape-only shear views used by the likelihood; and
+- the bundled response-regression artifact used to build an optional fixed,
+  atom-aligned `R_blend` cache.
 
-If artifacts live outside the checkout, override their roots explicitly:
+The seed-501 flow is intentionally explicit: likelihood-generated closure
+mocks must be generated and scored with the same density. An ensemble is a
+separate model-robustness study, not part of this likelihood identity.
 
-```bash
-export SBSI_CACHE_DIR=/path/to/models
-export BLENDEMU_MODELS=/path/to/models/blendemu
+The numerical pipeline using this likelihood is independently named
+`v1.1-infer`. `configs/likelihood.json` records the likelihood release and
+artifact identities; `configs/inference.json` records sampling and solver
+choices. No likelihood or inference behavior should branch on either release
+string alone: paths, hashes, feature metadata, and geometry are the executable
+contract.
+
+### Not the `V3.2` model preset
+
+`v3.2-like` is deliberately distinct from `get_model("V3.2")`.
+The latter is a path-only convenience preset for the four-seed original-E flow
+ensemble, the response emulator, and an external transition-aware SBSI
+detection classifier using shape-dependent, impact-ranked neighbours. The
+`v3.2-like` catalogue likelihood instead uses one seed-501 flow and the legacy
+spin-0 BlendEMU classifier described above. Do not substitute one name for the
+other or infer likelihood behavior from a model-preset name.
+
+## The `V3.3-like` validated model set
+
+`V3.3-like` names the model composition validated on the cases-40--59
+ConstGold response ladder on 2026-09-02:
+
+- the single seed-501 500/500 Flow-E checkpoint with both full-matrix shape and
+  magnitude/log-size derivative supervision,
+  `measurement_flow_mixed_g0_g005_E_r500_t500_s501_swaavg.pt`, SHA-256
+  `4e816ba5cd4be86771008fbbf5f7fec26d3d39cfb2fd90afe52acd0012373d73`;
+- the frozen transition-aware SBSI detector, SHA-256
+  `9966cfbc191f11b049bf7419dbdb45d65d1262428889a91bb3c9caf928703455`,
+  evaluated separately on each sheared view with the 3-arcsec, impact-ranked,
+  exponent-one neighbour rule; and
+- the same response emulator and atom-aligned `R_blend` convention as V3.2.
+
+`get_model("V3.3-like")` is a path-only convenience for these artifacts.  The
+set has one flow seed, so it has no flow-seed ensemble uncertainty.  It is not
+the likelihood selected by `configs/likelihood.json`: the production inference
+runner still uses the deployed `v3.2-like` spin-0 detector contract and cannot
+silently reuse a transition probability across shear views.  Promoting
+`V3.3-like` to an inference likelihood therefore requires an explicit config
+and shear-dependent detector integration, not a release-string substitution.
+
+## Supplying the flow
+
+Pass the seed-501 checkpoint as an explicit user path in the likelihood
+configuration or command invocation. A typical external layout is:
+
+```text
+/path/to/models/mixed_shear_cde/
+  measurement_flow_mixed_g0_g005_E_s501_swaavg.pt
 ```
 
-The emulator itself is loaded by BlendEMU, so `load_emulator` requires an installed
-BlendEMU package (`python -m pip install --config-settings editable_mode=compat -e
-/path/to/blendemu`). The compatibility mode matters when a Jupyter server starts in the
-parent of a checkout also named `blendemu`; it prevents that outer directory from being
-mistaken for an empty namespace package. The flow checkpoints
-need only SBSI and PyTorch.
+The checkpoint is 5,576,968 bytes in the frozen release. Verify both its size
+and digest before building model, proposal, or mock caches.
+
+BlendEMU is needed only to load the JSON classifier/response artifacts. Install
+the BlendEMU checkout into the same environment as SBSI; the measurement flow
+itself needs only SBSI and PyTorch.
 
 ## Integrity
 
-Every file is listed in `SHA256SUMS`:
+Verify the bundled files from this directory:
 
 ```bash
-cd models && sha256sum -c SHA256SUMS
+sha256sum -c SHA256SUMS
 ```
 
-The emulator's hash is additionally pinned in `sbsi/models.py` as
-`emulator_sha256`, and `ModelPaths.validate()` checks it. That pin, not the filename,
-is what fixes the emulator's identity.
+Verify the separately supplied flow against the full digest printed above:
 
-## What is *not* here
+```bash
+sha256sum /path/to/measurement_flow_mixed_g0_g005_E_s501_swaavg.pt
+```
 
-- **V3.1.** `get_model("V3.1")` combines the four original-E SWA checkpoints
-  (seeds 501--504) from the external `mixed_shear_cde/` cache with the exact V3
-  emulator shipped here. The E checkpoints are not bundled in this directory.
-- **V3.2.** `get_model("V3.2")` keeps the V3.1 flow and emulator and pins the
-  external transition-aware SBSI detector at
-  `detection_classifier_transition_lambda1_v1/models/transition_aware.pt`.
-  Its SHA-256 is checked by `ModelPaths.validate()`. Detection views must use
-  the trained 3-arcsec, impact-ranked (`a=1`) neighbour convention.
-- **V3b.** `get_model("V3b")` names a different flow ensemble
-  (`..._dom6x6_s{seed}_swaavg.pt`) and a different emulator. Those files are not in
-  this directory, so V3b resolves only against the original cluster paths.
-- **Training data and intermediate caches.** They live under `$DATA_DIR` and are not
-  redistributable at this size.
-- **Superseded checkpoints.** 77 earlier experimental flows that used to sit here were
-  retired on 2026-08-17 to
-  `/project/ls-gruen/users/zekang.zhang/sbsi_caches/retired_models_2026-08-17/`.
-  No shipped code path ever read them.
+`SHA256SUMS` also records the external filename, size, and digest as comments;
+the three ordinary checksum lines are intentionally limited to files present in
+the checkout so the standard verification command remains portable.
+
+Training catalogues, scene priors, derived response caches, proposal caches,
+and scheduler outputs are user data and do not belong in `models/`.

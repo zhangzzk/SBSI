@@ -2,7 +2,6 @@ import numpy as np
 from dataclasses import replace
 import pytest
 import torch
-from scipy.optimize import minimize
 from scipy.stats import norm
 
 from sbsi.catalogue_closure import generate_mock_catalogue, generate_ring_mock_catalogue
@@ -10,21 +9,15 @@ from sbsi.catalogue_blend import CatalogueBlendResponse
 from sbsi.catalogue_likelihood import (
     CatalogueLikelihood,
     CatalogueModelCache,
-    CatalogueSelection,
 )
 from sbsi.catalogue_null import (
     Section5SeedResult,
-    _draw_initial_center_posterior_adapted,
-    _numerical_stencil,
-    _safeguarded_numerical_recenter,
+    _coalesced_logsumexp,
     autograd_exact_section5,
     autograd_importance_section5,
     assess_section5_null,
     estimate_one_step_adaptive_section5,
-    evaluate_fixed_draw_log_likelihood,
-    optimize_shear_numerical,
     run_adaptive_section5,
-    run_stratified_section5,
     run_exact_section5,
     run_streamed_section5,
     summarize_paired_section5,
@@ -32,9 +25,8 @@ from sbsi.catalogue_null import (
 )
 from sbsi.catalogue_sampling import (
     DefensiveLocalProposal,
-    ProposalDraw,
     ProposalCoordinateTable,
-    run_importance_profiles,
+    pareto_tail_index,
 )
 from sbsi.measurement_model import (
     ConditionalMeanFlow,
@@ -43,7 +35,7 @@ from sbsi.measurement_model import (
 )
 from sbsi.scene_prior import ScenePrior
 from sbsi.selection_model import TabularPreprocessor
-from sbsi.score_inference import OutputCut
+from sbsi.catalogue_likelihood import OutputCut
 from test_catalogue_likelihood import CONDITIONS, SpinZeroDetector, _catalogue, _two_shape_likelihood
 
 
@@ -120,23 +112,6 @@ def _torch_two_shape_likelihood(sigma=0.12, *, blend_values=None, selection=None
     return CatalogueLikelihood(bundle, cache, selection=selection)
 
 
-def _enumerated_draw(likelihood, n_objects):
-    """Represent one exact finite-catalogue sum as an importance draw."""
-
-    rows = np.flatnonzero(likelihood.cache.prior.weights > 0).astype(np.int64)
-    indices = np.broadcast_to(rows, (n_objects, len(rows))).copy()
-    probability = np.full(indices.shape, 1.0 / len(rows), dtype=np.float64)
-    flags = np.zeros(indices.shape, dtype=bool)
-    return ProposalDraw(
-        indices=indices,
-        probability=probability,
-        local_member=flags,
-        global_component=flags,
-        candidate_radius=np.zeros(n_objects, dtype=np.float64),
-        seed=0,
-    )
-
-
 class _AnalyticTwoShapeSelection:
     """Exact Gaussian pass mass for a cut on the first measured shape."""
 
@@ -152,14 +127,81 @@ class _AnalyticTwoShapeSelection:
         return norm.cdf((self.upper - mean) / flow_model.sigma)
 
 
-class _EnumeratingProposal:
-    """Public optimizer proposal whose draw is the exact atom enumeration."""
+class _TorchAnalyticTwoShapeSelection(_AnalyticTwoShapeSelection):
+    def __init__(self, sigma, upper=0.2):
+        super().__init__(upper=upper)
+        self.sigma = float(sigma)
 
-    def __init__(self, likelihood):
-        self.likelihood = likelihood
+    def probability(self, flow_model, view, *, active_indices=None):
+        mean = view.flow["e1_input_p"].to_numpy(float) + view.blend_shift[:, 0]
+        return norm.cdf((self.upper - mean) / self.sigma)
 
-    def draw(self, observed, **kwargs):
-        return _enumerated_draw(self.likelihood, len(observed))
+
+def _adaptive_versus_exact_complete_likelihood(**fixture):
+    likelihood = _torch_two_shape_likelihood(0.12, **fixture)
+    mock = generate_mock_catalogue(
+        likelihood,
+        n_detected=24,
+        g1=0.0,
+        g2=0.0,
+        scene_seed=901,
+        detection_seed=902,
+        flow_seed=903,
+    )
+    h = 0.005
+    adaptive = run_adaptive_section5(
+        likelihood,
+        mock,
+        _proposal(likelihood),
+        h=h,
+        draw_ladder=(32,),
+        n_candidates=4,
+        epsilon=0.2,
+        estimator_mode="stratified",
+        retain_full_ladder=True,
+        proposal_seed=904,
+        min_ess=1e9,
+        max_weight_fraction=1.0,
+        object_chunk=8,
+        atom_chunk=16,
+    )
+    report = []
+    for component, direction in ((0, (1.0, 0.0)), (1, (0.0, 1.0))):
+        exact = likelihood.score_and_information(
+            mock.measurements,
+            center=(0.0, 0.0),
+            direction=direction,
+            delta=h,
+            richardson=False,
+            object_chunk=8,
+            atom_chunk=16,
+        )
+        difference = adaptive.score[:, component] - exact.score
+        scale = np.abs(exact.score).max()
+        report.append(
+            {
+                "max_relative": float(
+                    (np.abs(difference) / np.maximum(np.abs(exact.score), 1e-12)).max()
+                ),
+                "common_offset_fraction": float(np.abs(difference.mean()) / scale),
+            }
+        )
+    return report
+
+
+def test_adaptive_matches_exact_with_a_measured_cut_and_external_r_blend():
+    control = _adaptive_versus_exact_complete_likelihood()
+    combined = _adaptive_versus_exact_complete_likelihood(
+        blend_values=[0.6, -0.1, 0.3, 0.8],
+        selection=_TorchAnalyticTwoShapeSelection(0.12),
+    )
+    for component, (base, test) in enumerate(zip(control, combined)):
+        assert test["common_offset_fraction"] < 1e-5, (component, test)
+        assert test["max_relative"] < max(10.0 * base["max_relative"], 1e-3), (
+            component,
+            base,
+            test,
+        )
 
 
 def test_autograd_exact_section5_matches_direct_finite_difference():
@@ -194,199 +236,6 @@ def test_autograd_exact_section5_matches_direct_finite_difference():
                 rtol=2e-2,
                 atol=5e-2,
             )
-
-
-def test_fixed_draw_two_component_evaluator_matches_directional_profile():
-    likelihood = _torch_two_shape_likelihood()
-    mock = generate_mock_catalogue(
-        likelihood,
-        n_detected=12,
-        g1=0.01,
-        g2=0.0,
-        scene_seed=781,
-        detection_seed=782,
-        flow_seed=783,
-    )
-    proposal = _proposal(likelihood)
-    kwargs = dict(
-        n_draws=64,
-        n_candidates=4,
-        epsilon=0.2,
-        bandwidth=1.0,
-        seed=784,
-    )
-    draw = proposal.draw(mock.measurements, **kwargs)
-    surface = evaluate_fixed_draw_log_likelihood(
-        likelihood,
-        mock,
-        draw,
-        ((0.0, 0.0), (0.01, 0.0)),
-        object_chunk=6,
-        atom_chunk=16,
-    )
-    profile = run_importance_profiles(
-        likelihood,
-        mock,
-        proposal,
-        shears=(0.0, 0.01),
-        ladder=(64,),
-        n_candidates=4,
-        epsilon=0.2,
-        bandwidth=1.0,
-        proposal_seeds=(784,),
-        direction=(1.0, 0.0),
-        object_chunk=6,
-    )[0]
-    expected = {point.shear: point.log_likelihood_sum for point in profile.rungs[0].points}
-    np.testing.assert_allclose(surface[(0.0, 0.0)], expected[0.0], atol=2e-5)
-    np.testing.assert_allclose(surface[(0.01, 0.0)], expected[0.01], atol=2e-5)
-
-
-@pytest.mark.parametrize(
-    ("use_blend", "use_selection"),
-    ((False, False), (True, False), (False, True), (True, True)),
-)
-def test_fixed_draw_surface_matches_exact_likelihood_with_full_model(use_blend, use_selection):
-    selection = None
-    if use_selection:
-        cut = OutputCut(
-            ["measured_ngmix_g1", "measured_ngmix_g2"],
-            bounds=[("measured_ngmix_g1", None, 0.2)],
-        )
-        selection = CatalogueSelection(cut, n_samples=32, seed=771, row_chunk=2)
-    blend = [0.6, -0.1, 0.3, 0.8] if use_blend else None
-    likelihood = _torch_two_shape_likelihood(
-        blend_values=blend,
-        selection=selection,
-    )
-    mock = generate_mock_catalogue(
-        likelihood,
-        n_detected=24,
-        g1=0.015,
-        g2=-0.01,
-        scene_seed=772,
-        detection_seed=773,
-        flow_seed=774,
-    )
-    shears = ((0.0, 0.0), (0.015, -0.01), (0.025, 0.005))
-    actual = evaluate_fixed_draw_log_likelihood(
-        likelihood,
-        mock,
-        _enumerated_draw(likelihood, len(mock.measurements)),
-        shears,
-        object_chunk=8,
-        atom_chunk=4,
-    )
-    expected = {
-        point: float(
-            likelihood.log_likelihood(
-                mock.measurements,
-                point[0],
-                point[1],
-                object_chunk=8,
-                atom_chunk=4,
-            ).sum()
-        )
-        for point in shears
-    }
-    for point in shears:
-        np.testing.assert_allclose(actual[point], expected[point], rtol=0, atol=5e-5)
-
-
-@pytest.mark.parametrize(
-    ("use_blend", "use_selection"),
-    ((False, False), (True, False), (False, True), (True, True)),
-)
-def test_fixed_draw_surface_matches_hand_catalogue_sum(use_blend, use_selection):
-    response = np.array([0.6, -0.1, 0.3, 0.8]) if use_blend else None
-    selection = _AnalyticTwoShapeSelection() if use_selection else None
-    likelihood = _two_shape_likelihood(
-        blend_values=response,
-        selection=selection,
-    )
-    # The toy detector is a bare callable, so declare its spin-0 input here;
-    # production checkpoints expose this metadata themselves.
-    likelihood.cache.detection_features = ("r_input_p_scaled",)
-    mock = generate_mock_catalogue(
-        likelihood,
-        n_detected=24,
-        g1=0.015,
-        g2=-0.01,
-        scene_seed=775,
-        detection_seed=776,
-        flow_seed=777,
-    )
-    shears = ((0.0, 0.0), (0.015, -0.01), (0.025, 0.005))
-    actual = evaluate_fixed_draw_log_likelihood(
-        likelihood,
-        mock,
-        _enumerated_draw(likelihood, len(mock.measurements)),
-        shears,
-        object_chunk=8,
-        atom_chunk=4,
-    )
-    observed = mock.measurements[["measured_ngmix_g1", "measured_ngmix_g2"]].to_numpy(float)
-    for point in shears:
-        view = likelihood.cache.get(*point)
-        mean = view.flow[["e1_input_p", "e2_input_p"]].to_numpy(float)
-        mean = mean + view.blend_shift
-        residual = observed[:, None, :] - mean[None, :, :]
-        sigma = likelihood.flow_model.sigma
-        density = np.exp(-0.5 * np.square(residual / sigma).sum(axis=2)) / (2.0 * np.pi * sigma**2)
-        detected_mass = likelihood.cache.prior.weights * view.detection_probability
-        pass_probability = (
-            np.ones(len(mean), dtype=float)
-            if selection is None
-            else norm.cdf((selection.upper - mean[:, 0]) / sigma)
-        )
-        expected = np.log(density @ detected_mass).sum() - len(observed) * np.log(
-            np.sum(detected_mass * pass_probability)
-        )
-        np.testing.assert_allclose(actual[point], expected, rtol=0, atol=1e-10)
-
-
-def test_posterior_adapted_reference_reuse_matches_fixed_draw_full_model():
-    cut = OutputCut(
-        ["measured_ngmix_g1", "measured_ngmix_g2"],
-        bounds=[("measured_ngmix_g1", None, 0.2)],
-    )
-    likelihood = _torch_two_shape_likelihood(
-        blend_values=[0.6, -0.1, 0.3, 0.8],
-        selection=CatalogueSelection(cut, n_samples=32, seed=768, row_chunk=2),
-    )
-    mock = generate_mock_catalogue(
-        likelihood,
-        n_detected=12,
-        g1=0.015,
-        g2=-0.01,
-        scene_seed=769,
-        detection_seed=770,
-        flow_seed=771,
-    )
-    reference = (0.012, -0.007)
-    draw, reused, candidate_evaluations, reuse_evaluations = _draw_initial_center_posterior_adapted(
-        likelihood,
-        mock,
-        _proposal(likelihood),
-        reference=reference,
-        n_draws=64,
-        n_candidates=2,
-        epsilon=0.5,
-        proposal_seed=772,
-        object_chunk=5,
-        atom_chunk=4,
-    )
-    independent = evaluate_fixed_draw_log_likelihood(
-        likelihood,
-        mock,
-        draw,
-        (reference,),
-        object_chunk=5,
-        atom_chunk=4,
-    )[reference]
-    assert reused == pytest.approx(independent, abs=1e-11)
-    assert candidate_evaluations == len(mock.measurements) * 2
-    assert reuse_evaluations > 0
 
 
 def test_selected_likelihood_differs_only_by_population_normalization():
@@ -434,173 +283,72 @@ def test_selected_likelihood_differs_only_by_population_normalization():
         np.testing.assert_allclose(actual, expected, rtol=0, atol=1e-11)
 
 
-def test_full_numerical_stencil_recovers_mixed_information():
-    information = np.array([[3.0, 0.7], [0.7, 2.0]])
-    linear = np.array([0.4, -0.25])
+def test_skipping_padded_atom_slots_leaves_the_scored_slots_unchanged():
+    """The ragged path must be a cost change only.
 
-    def evaluate(points):
-        return {
-            tuple(point): float(
-                1.3 + linear @ np.asarray(point) - 0.5 * np.asarray(point) @ information @ np.asarray(point)
-            )
-            for point in points
-        }
+    `coalesce` pads every row of an object chunk out to the widest row's unique
+    atom count, and every consumer masks those slots off again by their zero
+    draw count.  Scoring them is therefore pure waste, but only if dropping
+    them leaves the slots that survive the mask bit-comparable.
+    """
 
-    center = np.array([0.03, -0.02])
-    value, score, measured_information = _numerical_stencil(evaluate, center, 0.005)
-    expected_value = 1.3 + linear @ center - 0.5 * center @ information @ center
-    np.testing.assert_allclose(value, expected_value, rtol=0, atol=1e-12)
-    np.testing.assert_allclose(score, linear - information @ center, rtol=0, atol=1e-12)
-    np.testing.assert_allclose(measured_information, information, rtol=0, atol=1e-10)
-
-
-def test_combined_likelihood_recenter_matches_independent_exact_mle():
-    likelihood = _two_shape_likelihood(
-        blend_values=[0.6, -0.1, 0.3, 0.8],
-        selection=_AnalyticTwoShapeSelection(),
-    )
-    likelihood.cache.detection_features = ("r_input_p_scaled",)
+    likelihood = _torch_two_shape_likelihood()
     mock = generate_mock_catalogue(
         likelihood,
-        n_detected=600,
-        g1=0.02,
-        g2=-0.01,
-        scene_seed=785,
-        detection_seed=786,
-        flow_seed=787,
+        n_detected=24,
+        g1=0.0,
+        g2=0.0,
+        scene_seed=794,
+        detection_seed=795,
+        flow_seed=796,
     )
-
-    reference = minimize(
-        lambda shear: (
-            -float(
-                likelihood.log_likelihood(
-                    mock.measurements,
-                    float(shear[0]),
-                    float(shear[1]),
-                    object_chunk=200,
-                    atom_chunk=4,
-                ).sum()
-            )
-        ),
-        x0=np.array([0.02, -0.01]),
-        method="L-BFGS-B",
-        bounds=((-0.1, 0.1), (-0.1, 0.1)),
-        options={"gtol": 1e-8, "ftol": 1e-12},
+    proposal = _proposal(likelihood)
+    candidates = proposal.candidates(mock.measurements, n_candidates=4)
+    candidate_target = likelihood.log_importance_weights(
+        mock.measurements,
+        0.0,
+        0.0,
+        atom_indices=candidates.indices,
+        proposal_probability=np.ones_like(candidates.indices, dtype=float),
     )
-    assert reference.success or np.linalg.norm(reference.jac) < 1e-4
-    result = optimize_shear_numerical(
-        likelihood,
-        mock,
-        _EnumeratingProposal(likelihood),
-        initial=(0.0, 0.0),
-        h=0.001,
-        n_draws=4,
-        n_candidates=4,
-        epsilon=0.2,
-        bandwidth=1.0,
-        proposal_seed=788,
-        proposal_method="distance_kernel",
-        max_iterations=10,
-        tolerance=1e-5,
-        max_step=0.02,
-        shear_bound=0.1,
-        max_backtracks=8,
-        object_chunk=200,
-        atom_chunk=4,
-    )
-    assert result.converged, result.reason
-    np.testing.assert_allclose(result.estimate, reference.x, rtol=0, atol=3e-4)
-    assert all(
-        iteration.next_log_likelihood_sum >= iteration.log_likelihood_sum for iteration in result.iterations
-    )
-    assert min(result.iterations[-1].information_eigenvalues) > 0
-    assert result.diagnostic_flow_evaluations == len(mock.measurements) * 4
-    assert result.flow_evaluations == (
-        result.numerator_flow_evaluations
-        + result.selection_flow_evaluations
-        + result.diagnostic_flow_evaluations
-    )
-    assert 0 < result.importance.mean_ess <= 4
-    assert 0 < result.importance.mean_ess_fraction <= 1
-    assert 0 < result.importance.p90_max_weight_fraction <= 1
-
-
-def test_posterior_adapted_optimizer_reuses_initial_and_counts_flow_calls():
-    likelihood = _torch_two_shape_likelihood(blend_values=[0.6, -0.1, 0.3, 0.8])
-    mock = generate_mock_catalogue(
-        likelihood,
-        n_detected=12,
-        g1=0.015,
-        g2=-0.01,
-        scene_seed=789,
-        detection_seed=790,
-        flow_seed=791,
-    )
-    initial = (0.01, -0.005)
-    result = optimize_shear_numerical(
-        likelihood,
-        mock,
-        _proposal(likelihood),
-        initial=initial,
-        h=0.001,
+    coalesced = proposal.draw_adapted(
+        candidates,
+        candidate_target,
         n_draws=64,
-        n_candidates=2,
-        epsilon=0.5,
-        proposal_seed=792,
-        proposal_method="initial_center_posterior_adapted",
-        max_iterations=5,
-        tolerance=1e-4,
-        max_step=0.02,
-        shear_bound=0.1,
-        max_backtracks=8,
-        object_chunk=5,
-        atom_chunk=4,
-    )
-    assert result.proposal_method == "initial_center_posterior_adapted"
-    assert result.proposal_reference_shear == initial
-    assert result.bandwidth is None
-    assert result.initial_likelihood_reused
-    assert result.evaluations[0].shear == initial
-    assert result.proposal_candidate_flow_evaluations == len(mock.measurements) * 2
-    assert result.proposal_reuse_flow_evaluations > 0
-    assert result.proposal_flow_evaluations == (
-        result.proposal_candidate_flow_evaluations + result.proposal_reuse_flow_evaluations
-    )
-    assert result.numerator_flow_evaluations == (len(mock.measurements) * 64 * (len(result.evaluations) - 1))
-    assert result.flow_evaluations == (
-        result.proposal_flow_evaluations
-        + result.numerator_flow_evaluations
-        + result.selection_flow_evaluations
-        + result.diagnostic_flow_evaluations
-    )
+        epsilon=0.2,
+        seed=797,
+    ).coalesce()
+    # The fixture has to actually exercise padding, or the test proves nothing.
+    assert not coalesced.valid.all()
 
-
-def test_safeguarded_recenter_crosses_negative_curvature_from_zero():
-    truth = 0.05
-
-    def evaluate(points):
-        result = {}
-        for point in points:
-            x, y = point
-            displacement = x - truth
-            result[point] = (-(displacement**2) - 10.0 * displacement**3 - y**2) * 1.0e6
-        return result
-
-    estimate, converged, reason, history = _safeguarded_numerical_recenter(
-        evaluate,
-        initial=(0.0, 0.0),
-        h=0.005,
-        max_iterations=12,
-        tolerance=2e-4,
-        max_step=0.01,
-        shear_bound=0.1,
-        max_backtracks=8,
+    kwargs = dict(
+        atom_indices=coalesced.indices,
+        proposal_probability=coalesced.probability,
+        object_chunk=12,
+        atom_chunk=16,
     )
-    assert history[0].information_eigenvalues[0] < 0
-    assert history[0].step_method == "gradient"
-    assert converged, reason
-    assert estimate == pytest.approx((truth, 0.0), abs=3e-4)
-    assert all(iteration.next_log_likelihood_sum >= iteration.log_likelihood_sum for iteration in history)
+    dense = likelihood.log_importance_weights_tensor(
+        mock.measurements, 0.005, 0.0, **kwargs
+    )
+    ragged = likelihood.log_importance_weights_tensor(
+        mock.measurements, 0.005, 0.0, atom_valid=coalesced.valid, **kwargs
+    )
+    np.testing.assert_allclose(
+        ragged.detach().cpu().numpy()[coalesced.valid],
+        dense.detach().cpu().numpy()[coalesced.valid],
+        rtol=1e-6,
+        atol=1e-6,
+    )
+    # Padded slots are never read downstream, so they only have to be finite.
+    assert np.all(ragged.detach().cpu().numpy()[~coalesced.valid] == 0.0)
+    # What the reduction actually consumes must agree at every nested rung.
+    for rung in (16, 32, 64):
+        np.testing.assert_allclose(
+            _coalesced_logsumexp(ragged, coalesced, rung).detach().cpu().numpy(),
+            _coalesced_logsumexp(dense, coalesced, rung).detach().cpu().numpy(),
+            rtol=1e-6,
+            atol=1e-6,
+        )
 
 
 def test_tensor_native_importance_weights_and_stream_match_dataframe_path():
@@ -766,6 +514,45 @@ def test_adaptive_tensor_path_accepts_uncertainty_reranked_prefilter():
     assert np.isfinite(result.information).all()
 
 
+def test_adaptive_tensor_path_accepts_whole_catalogue_proxy_shortlist():
+    likelihood = _torch_two_shape_likelihood()
+    mock = generate_mock_catalogue(
+        likelihood,
+        n_detected=12,
+        g1=0.01,
+        g2=0.0,
+        scene_seed=907,
+        detection_seed=908,
+        flow_seed=909,
+    )
+    result = run_adaptive_section5(
+        likelihood,
+        mock,
+        _proposal(likelihood),
+        center=(0.01, 0.0),
+        h=0.005,
+        draw_ladder=(32,),
+        n_candidates=2,
+        proposal_prefilter_candidates=4,
+        epsilon=0.2,
+        proposal_seed=910,
+        min_ess=1e9,
+        max_weight_fraction=1.0,
+        candidate_backend="torch",
+        candidate_source="whole_catalogue_gaussian_proxy",
+        estimator_mode="tilted_stratified",
+        retain_full_ladder=True,
+        object_chunk=6,
+        atom_chunk=16,
+    )
+
+    assert result.n_candidates == 2
+    assert result.proposal_prefilter_candidates is None
+    assert result.candidate_source == "whole_catalogue_gaussian_proxy"
+    assert np.isfinite(result.score).all()
+    assert np.isfinite(result.information).all()
+
+
 def test_independent_pilot_allocation_is_fixed_before_production_draw():
     likelihood = _torch_two_shape_likelihood()
     mock = generate_mock_catalogue(
@@ -833,36 +620,6 @@ def test_independent_pilot_rejects_reusing_production_seed():
             pilot_draws=8,
             pilot_seed=925,
         )
-
-
-def test_stratified_path_is_exact_when_candidates_cover_prior_support():
-    likelihood = _torch_two_shape_likelihood()
-    mock = generate_mock_catalogue(
-        likelihood,
-        n_detected=10,
-        g1=0.01,
-        g2=0.0,
-        scene_seed=907,
-        detection_seed=908,
-        flow_seed=909,
-    )
-    kwargs = dict(
-        center=(0.01, 0.0),
-        h=0.005,
-        complement_draw_ladder=(8, 16),
-        n_candidates=4,
-        proposal_prefilter_candidates=None,
-        retain_full_ladder=True,
-        object_chunk=5,
-        atom_chunk=16,
-    )
-    first = run_stratified_section5(likelihood, mock, _proposal(likelihood), proposal_seed=910, **kwargs)
-    second = run_stratified_section5(likelihood, mock, _proposal(likelihood), proposal_seed=911, **kwargs)
-
-    np.testing.assert_allclose(first.score, second.score, rtol=0, atol=0)
-    np.testing.assert_allclose(first.information, second.information, rtol=0, atol=0)
-    np.testing.assert_allclose(first.ladder_score[0], first.ladder_score[1])
-    np.testing.assert_allclose(first.ladder_information[0], first.ladder_information[1])
 
 
 def test_retained_full_ladder_matches_separate_nested_prefix_runs():
@@ -1331,3 +1088,324 @@ def test_section5_assessment_requires_and_accepts_all_declared_gates():
         independent_banks=banks,
     )
     assert not rejected.checks["tail_stability"]
+
+
+def _stratified_common(likelihood, mock, n_candidates):
+    return dict(
+        likelihood=likelihood,
+        mock=mock,
+        proposal=_proposal(likelihood),
+        center=(0.0, 0.0),
+        h=0.005,
+        draw_ladder=(16, 32),
+        n_candidates=n_candidates,
+        epsilon=0.2,
+        min_ess=1e9,
+        max_weight_fraction=1.0,
+        full_information=True,
+        retain_full_ladder=True,
+        estimator_mode="stratified",
+        object_chunk=4,
+        atom_chunk=16,
+    )
+
+
+def test_stratified_estimator_is_exact_when_support_covers_the_catalogue():
+    likelihood = _torch_two_shape_likelihood()
+    mock = generate_mock_catalogue(
+        likelihood,
+        n_detected=8,
+        g1=0.01,
+        g2=0.0,
+        scene_seed=1201,
+        detection_seed=1202,
+        flow_seed=1203,
+    )
+    # Four active atoms, so a four-atom candidate support leaves an empty
+    # complement: the sampled stratum contributes nothing and the estimator
+    # collapses onto the exact finite sum.
+    common = _stratified_common(likelihood, mock, n_candidates=4)
+    first = run_adaptive_section5(proposal_seed=1204, **common)
+    second = run_adaptive_section5(proposal_seed=1205, **common)
+
+    # No draw can move it: neither the seed nor the rung changes the answer.
+    np.testing.assert_allclose(first.score, second.score, rtol=0, atol=1e-12)
+    np.testing.assert_allclose(
+        first.information, second.information, rtol=0, atol=1e-12
+    )
+    np.testing.assert_allclose(
+        first.ladder_score[0], first.ladder_score[1], rtol=0, atol=1e-12
+    )
+    assert np.all(first.unique_counts == 0)
+
+    h = 0.005
+
+    def exact(g1, g2):
+        return likelihood.log_likelihood(
+            mock.measurements, g1, g2, object_chunk=4, atom_chunk=16
+        )
+
+    for component, plus, minus in (
+        (0, (h, 0.0), (-h, 0.0)),
+        (1, (0.0, h), (0.0, -h)),
+    ):
+        expected = (exact(*plus) - exact(*minus)) / (2.0 * h)
+        np.testing.assert_allclose(
+            first.score[:, component], expected, rtol=2e-3, atol=2e-3
+        )
+
+
+def test_stratified_mode_rejects_allocation_and_correction_combinations():
+    likelihood = _torch_two_shape_likelihood()
+    mock = generate_mock_catalogue(
+        likelihood,
+        n_detected=4,
+        g1=0.0,
+        g2=0.0,
+        scene_seed=1301,
+        detection_seed=1302,
+        flow_seed=1303,
+    )
+    common = _stratified_common(likelihood, mock, n_candidates=2)
+    with pytest.raises(ValueError, match="retained full ladder"):
+        run_adaptive_section5(
+            proposal_seed=1304, **{**common, "retain_full_ladder": False}
+        )
+    with pytest.raises(ValueError, match="retained full ladder"):
+        run_adaptive_section5(
+            proposal_seed=1304,
+            **{**common, "allocation_method": "independent_pilot"},
+        )
+    with pytest.raises(ValueError, match="separate modes"):
+        run_adaptive_section5(
+            proposal_seed=1304,
+            **{**common, "bias_correction": "richardson_1_over_m"},
+        )
+    with pytest.raises(ValueError, match="unknown estimator mode"):
+        run_adaptive_section5(
+            proposal_seed=1304, **{**common, "estimator_mode": "nonsense"}
+        )
+
+
+def test_stratified_complement_is_summed_once_and_normalized_by_the_draw_count():
+    likelihood = _torch_two_shape_likelihood()
+    mock = generate_mock_catalogue(
+        likelihood,
+        n_detected=8,
+        g1=0.01,
+        g2=0.0,
+        scene_seed=1401,
+        detection_seed=1402,
+        flow_seed=1403,
+    )
+    # Half the catalogue is summed exactly and the rest is reached only by
+    # prior draws.  Rebuilding the two-stratum sum by hand from the same draw
+    # is the test that the complement is neither dropped nor counted twice and
+    # that it carries the 1/M factor rather than a per-atom proposal weight.
+    n_draws = 4096
+    common = _stratified_common(likelihood, mock, n_candidates=2)
+    common["draw_ladder"] = (1024, n_draws)
+    result = run_adaptive_section5(proposal_seed=1404, **common)
+    assert np.all(result.unique_counts > 0)
+
+    proposal = _proposal(likelihood)
+    candidates = proposal.candidates(mock.measurements, n_candidates=2)
+    draw = proposal.draw_stratified(candidates, n_draws=n_draws, seed=1404)
+    weights = likelihood.cache.prior.weights
+    n_objects = len(mock.measurements)
+    every_atom = np.tile(np.arange(len(weights)), (n_objects, 1))
+    ones = np.ones(every_atom.shape, dtype=np.float64)
+
+    def log_likelihood(g1, g2):
+        log_term = likelihood.log_importance_weights_tensor(
+            mock.measurements,
+            g1,
+            g2,
+            atom_indices=every_atom,
+            proposal_probability=ones,
+            object_chunk=4,
+            atom_chunk=16,
+        )
+        term = np.exp(log_term.detach().cpu().numpy().astype(np.float64))
+        rows = np.arange(n_objects)[:, None]
+        exact = term[rows, candidates.indices].sum(axis=1)
+        retained = ~draw.local_member
+        tail = np.where(
+            retained, term[rows, draw.indices] / weights[draw.indices], 0.0
+        ).sum(axis=1) / n_draws
+        return np.log(exact + tail) - likelihood.log_population_normalization(g1, g2)
+
+    h = 0.005
+    for component, plus, minus in (
+        (0, (h, 0.0), (-h, 0.0)),
+        (1, (0.0, h), (0.0, -h)),
+    ):
+        expected = (log_likelihood(*plus) - log_likelihood(*minus)) / (2.0 * h)
+        np.testing.assert_allclose(
+            result.score[:, component], expected, rtol=1e-3, atol=1e-3
+        )
+
+
+def test_weight_diagnostics_match_a_direct_reduction_of_the_same_draws():
+    """The saved ESS, peak share, and k-hat must describe the actual draws.
+
+    Rebuilding them from the proposal draw itself, without touching the
+    reduction path, is the only check that they describe the weights the
+    estimator reduces rather than some neighbouring quantity.
+    """
+
+    likelihood = _torch_two_shape_likelihood()
+    mock = generate_mock_catalogue(
+        likelihood,
+        n_detected=6,
+        g1=0.01,
+        g2=0.0,
+        scene_seed=1301,
+        detection_seed=1302,
+        flow_seed=1303,
+    )
+    proposal = _proposal(likelihood)
+    ladder = (64, 256)
+    result = run_adaptive_section5(
+        likelihood=likelihood,
+        mock=mock,
+        proposal=proposal,
+        center=(0.0, 0.0),
+        h=0.005,
+        draw_ladder=ladder,
+        n_candidates=2,
+        epsilon=0.2,
+        min_ess=1e9,
+        max_weight_fraction=1.0,
+        full_information=False,
+        retain_full_ladder=True,
+        proposal_seed=1304,
+        object_chunk=3,
+        atom_chunk=8,
+    )
+    assert result.weight_diagnostic_draws == ladder
+    assert result.weight_ess.shape == (len(ladder), len(mock.measurements))
+    # Every rung's effective count must be inside its own budget.
+    for rung_index, rung in enumerate(ladder):
+        assert (result.weight_ess[rung_index] > 0).all()
+        assert (result.weight_ess[rung_index] <= rung + 1e-9).all()
+    assert ((result.weight_max_fraction > 0) & (result.weight_max_fraction <= 1)).all()
+    # With no exact stratum the relative error is the plain sampling one.
+    for rung_index, rung in enumerate(ladder):
+        assert np.allclose(
+            result.weight_relative_error[rung_index],
+            np.sqrt(1.0 / result.weight_ess[rung_index] - 1.0 / rung),
+            rtol=1e-6,
+        )
+
+    candidates = proposal.candidates(mock.measurements, n_candidates=2)
+    candidate_target = likelihood.log_importance_weights(
+        mock.measurements,
+        0.0,
+        0.0,
+        atom_indices=candidates.indices,
+        proposal_probability=np.ones_like(candidates.indices, dtype=np.float64),
+    )
+    draw = proposal.draw_adapted(
+        candidates,
+        candidate_target,
+        n_draws=ladder[-1],
+        epsilon=0.2,
+        seed=1304,
+    )
+    log_weights = likelihood.log_importance_weights(
+        mock.measurements,
+        0.0,
+        0.0,
+        atom_indices=draw.indices,
+        proposal_probability=draw.probability,
+    )
+    # Rescale each row before exponentiating, exactly as the reduction does;
+    # the diagnostics are invariant to it and the raw weights can underflow.
+    weights = np.exp(log_weights - log_weights.max(axis=1, keepdims=True))
+    for rung_index, rung in enumerate(ladder):
+        prefix = weights[:, :rung]
+        total = prefix.sum(axis=1)
+        expected_ess = total**2 / (prefix**2).sum(axis=1)
+        assert np.allclose(result.weight_ess[rung_index], expected_ess, rtol=1e-6)
+        assert np.allclose(
+            result.weight_max_fraction[rung_index],
+            prefix.max(axis=1) / total,
+            rtol=1e-6,
+        )
+        expected_k = pareto_tail_index(prefix)
+        recorded = result.weight_pareto_k[rung_index]
+        finite = np.isfinite(expected_k)
+        assert np.array_equal(finite, np.isfinite(recorded))
+        assert np.allclose(recorded[finite], expected_k[finite], rtol=1e-6)
+
+
+def test_stratified_weight_diagnostics_ignore_the_exactly_summed_stratum():
+    """Only the sampled complement carries variance, so only it is diagnosed."""
+
+    likelihood = _torch_two_shape_likelihood()
+    mock = generate_mock_catalogue(
+        likelihood,
+        n_detected=6,
+        g1=0.01,
+        g2=0.0,
+        scene_seed=1311,
+        detection_seed=1312,
+        flow_seed=1313,
+    )
+    common = _stratified_common(likelihood, mock, 2)
+    common["draw_ladder"] = (64, 256)
+    result = run_adaptive_section5(**common, proposal_seed=1314)
+    covered = run_adaptive_section5(
+        **{**common, "n_candidates": 4, "draw_ladder": (64, 256)}, proposal_seed=1314
+    )
+
+    assert result.weight_diagnostic_draws == (64, 256)
+    # Draws landing inside the exact stratum contribute nothing, so the
+    # effective count is strictly below the budget.
+    assert (result.weight_ess[-1] < 256).all()
+    assert (result.weight_ess[-1] > 0).all()
+    # With the whole catalogue in the stratum there is no sampled term left at
+    # all, and the diagnostics must say so rather than invent a value.
+    assert (covered.weight_ess == 0).all()
+    assert (covered.weight_max_fraction == 0).all()
+    assert np.isnan(covered.weight_pareto_k).all()
+    # An estimator with nothing left to sample has no sampling error.
+    assert (covered.weight_relative_error == 0).all()
+    # The sampled share discounts the relative error below the plain sampling
+    # one, which is exactly why ESS alone cannot be compared across modes.
+    plain = np.sqrt(1.0 / result.weight_ess[-1] - 1.0 / 256)
+    assert (result.weight_relative_error[-1] < plain).all()
+
+
+def test_weight_diagnostics_are_absent_without_the_retained_ladder():
+    likelihood = _torch_two_shape_likelihood()
+    mock = generate_mock_catalogue(
+        likelihood,
+        n_detected=6,
+        g1=0.01,
+        g2=0.0,
+        scene_seed=1321,
+        detection_seed=1322,
+        flow_seed=1323,
+    )
+    result = run_adaptive_section5(
+        likelihood=likelihood,
+        mock=mock,
+        proposal=_proposal(likelihood),
+        center=(0.0, 0.0),
+        h=0.005,
+        draw_ladder=(64, 256),
+        n_candidates=2,
+        epsilon=0.2,
+        min_ess=8.0,
+        max_weight_fraction=0.5,
+        full_information=False,
+        retain_full_ladder=False,
+        proposal_seed=1324,
+        object_chunk=3,
+        atom_chunk=8,
+    )
+    assert result.weight_diagnostic_draws is None
+    assert result.weight_ess is None
+    assert result.weight_diagnostic_summary() is None

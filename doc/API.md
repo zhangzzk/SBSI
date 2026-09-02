@@ -1,149 +1,149 @@
-# SBSI API — scope, contract, and public API
+# SBSI API — scope, releases, and public contract
 
-Split out of `AGENTS.md` on 2026-08-18. `AGENTS.md` carries the one-line
-invariants and points here for the detail; where the two disagree, `AGENTS.md`
-wins.
+`AGENTS.md` carries the short project rules. This document defines the code and
+data boundary behind them.
 
-## Scope
+## Scope boundary
 
-- Keep classifiers, conditional flows, response prediction, validation, and
-  Bayesian inference in SBSI.
+- SBSI owns conditional measurement flows, detection classifiers, response
+  prediction, finite-scene likelihoods, sampling, validation, and shear
+  inference.
 - BlendEMU owns image simulation, measurement, simulation-catalogue production,
-  and emulator training. SBSI may call those supported APIs/CLIs but must not
-  copy their rendering or measurement implementation.
-- SBSI owns forward-response catalogue preparation from a user truth
-  catalogue: input validation, neighbour finding, representative-neighbour
-  selection (nearest by default, optionally impact-ranked), the
-  one-row-per-primary flow scene view, pair construction, training-matched cuts
-  and rescaling, and keyed alignment of emulator predictions.
-- Do not copy SBSI inference or flow code into BlendEMU, or move BlendEMU
-  catalogue builders here, unless the owner explicitly changes this boundary.
-- The next emulator training/tuning update belongs in BlendEMU.
+  and response-emulator training. SBSI consumes its supported catalogue and
+  model interfaces; it does not copy those implementations.
+- SBSI prepares response-emulator inputs from an explicit truth catalogue. This
+  includes validation, neighbour finding, pair selection, training-matched
+  cuts and scaling, and keyed alignment of predictions.
+- A new simulator, measurement, or emulator-training feature belongs in
+  BlendEMU unless the project owner explicitly changes this boundary.
 
-## General API contract
+## Release identity
+
+SBSI has one inference workflow with two independent scientific release labels:
+
+| role | release | authoritative definition |
+| --- | --- | --- |
+| numerical pipeline | `v1.1-infer` | `configs/inference.json` |
+| catalogue likelihood | `v3.2-like` | `configs/likelihood.json` |
+
+The labels are provenance, not dispatch keys. Code validates the effective
+configuration, artifact hashes, target order, feature metadata, geometry, and
+cache identities; it must not select behavior from a release string alone.
+They are also separate from the package version in `pyproject.toml`.
+
+`v3.2-like` is not the path-only `get_model("V3.2")` preset. The likelihood
+uses the single seed-501 original-E flow and the bundled seven-input spin-0
+BlendEMU classifier. The `V3.2` preset points to a four-flow ensemble and an
+external transition-aware detector. `models/README.md` records the complete
+distinction and the frozen artifact hashes.
+
+Model presets remain optional compatibility conveniences. `get_model("V3.1")`,
+`get_model("V3.2")`, and `get_model("V3.3-like")` return paths only; no
+catalogue, selection, response, or inference behavior may branch on those
+names. `V3.3-like` is the validated single-seed 500/500 Flow-E plus
+transition-aware detector set, not the likelihood currently selected by
+`configs/likelihood.json`. Broken presets for retired checkpoint trees are
+intentionally not kept.
+
+## General contract
 
 - Every training, validation, prior, and inference catalogue is supplied by the
-  user as a DataFrame or external path. Never hide a project catalogue in an
-  API default.
-- Flow checkpoints, emulator artifacts, and detection-classifier checkpoints are
-  explicit paths. `get_model("V3")`, `get_model("V3.1")`, `get_model("V3.2")`,
-  and `get_model("V3b")` are path-only conveniences; no
-  behavior may branch on those names.
-- Model support is read from checkpoint metadata or supplied explicitly. Never
-  infer a domain from a filename.
-- Reusable behavior belongs in `sbsi/`.
+  user as a DataFrame or explicit path. Project data paths are never API
+  defaults.
+- Flow checkpoints, classifier artifacts, response models, derived caches, and
+  outputs are explicit and provenance-checked.
+- Model support comes from checkpoint metadata or an explicit configuration,
+  never from a filename.
+- Unmatched keyed rows are rejected or intentionally dropped and reported.
+  Alignment failure is never represented as a zero blending response.
+- Common random numbers are retained across all finite-difference views. A
+  sampled atom set and its proposal probabilities stay fixed throughout an
+  inference stencil.
+- Loaded mocks and caches must match their declared inputs, models, selection,
+  shear transform, target order, and implementation identity.
 
-## Public API
+## Public Python surface
 
-1. `sbsi flow`: config-driven conditional-flow training and explicit tuning,
-   backed by the reusable implementation in `sbsi.flow`.
-2. `sbsi.response`: ensemble response prediction and blend-response
-   composition.
-3. `sbsi.scene_prior`: reusable finite catalogue atoms and their guarded
-   neighbour graph.  It exposes separate flow, detection, and response-pair
-   views because those models use different apertures and neighbour rules.
-4. `sbsi.catalogue_likelihood` and `sbsi.catalogue_closure`: the exact
-   small-catalogue flow+detection likelihood and closure oracle, plus
-   `sbsi.catalogue_sampling` for target-specific defensive importance
-   sampling, and `sbsi.catalogue_blend` for a fixed atom-aligned external
-   response cache.  Mock generation, likelihood residuals, and measured-cut
-   draws apply the same finite-shear blend shift.
-5. `sbsi.catalogue_null`: the streamed two-component `MATH.md` §5 expansion
-   and its exact-oracle, sampling, information-identity, and tail gates.
-6. `sbsi.inference`: the earlier shape-prior Bayesian interface.
+The package root is intentionally small and lazy. It exports
+`EmulatorPairingConfig`, `ModelPaths`, `ResponsePredictor`, `example_path`,
+`get_model`, `load_catalogue`, `load_emulator`, `prepare_forward_catalogue`,
+`predict_blend_response`, and `sample_measurement`.
 
-The operational catalogue-prior command path is deliberately small:
+Specialized workflows import their implementation modules directly:
 
-- `configs/infer_v1.json` is the canonical **Infer V1** numerical setup. It
-  versions sampling and solving independently of model presets such as V3.2;
-  its default Torch candidate backend performs the broad location query and
-  Gaussian-uncertainty reranking on the inference GPU, while the SciPy backend
-  remains an explicit CPU fallback;
-- `configs/default_catalogue_prior.json` names the current immutable,
-  sharded FS2 prior manifest; shard-aware consumers must preserve its declared
-  global mixture masses;
-- `scripts/build_scene_prior.py` builds the guarded reusable scene;
-- `scripts/build_catalogue_blend_response.py` builds the fixed atom-aligned
-  response cache;
-- `scripts/prepare_image_closure_mock.py` maps one declared BlendEMU image leg
-  into the exact flow outputs, with source and shear provenance;
-- `scripts/run_catalogue_closure.py` generates or loads a frozen mock and runs
-  the exact/importance likelihood;
-- `scripts/run_section5_powered_exact.py` is the first catalogue-prior null
-  gate: matched finite priors and mocks test the exhaustive sum, independent
-  property banks, and numerical derivatives against exact Torch autograd;
-- `scripts/run_section5_powered_importance.py` is the full-prior powered gate:
-  it evaluates the local numerical expansion at `g=0` with `h=0.00125`,
-  measured cuts off and `R_blend=0`; its local proposal is posterior-adapted
-  using exact zero-shear likelihoods on the cached nearest-candidate support;
-- `scripts/run_section5_nonzero_closure.py` is the paired local multiplicative
-  test.  It injects `+-0.00125` with common mock/proposal streams, retains
-  object moments, and gates the joint score-response ratio on sampler and
-  response-tail convergence.  Its optional rotational ring is diagnostic-only;
-- `scripts/run_section5_numerical_recenter.py` maximizes the full catalogue
-  likelihood for either a saved mock or a newly generated likelihood mock. It
-  supports the fixed atom-aligned `R_blend` cache and measured-output selection,
-  including `P_pass(g)` in the detected-and-selected population normalization.
-  It uses `h=0.001` by default, distinct from the null estimator's `h=0.00125`.
-  Its default `initial_center_posterior_adapted` proposal weights the cached
-  candidate support by exact `pi Pdet L(initial)`, mixes it with the defensive
-  prior with exact `pi/q`, and reuses the candidate likelihood at the initial
-  point. The resulting draw is held fixed for every two-component stencil and
-  line-search point. `distance_kernel` remains an explicit fallback. It accepts
-  only likelihood-increasing safeguarded updates. After recentering it makes
-  one streamed pass at the final shear and records ESS, maximum-weight
-  concentration, local/global proposal
-  contributions, proposal method/reference/reuse, the complete flow-evaluation
-  split, and runtime. The bandwidth result is inactive/null for the adapted
-  method. Loaded image mocks must pass their kind, shape-only shear-map, model,
-  target-order, injection, and
-  output-hash manifest gates. Loaded likelihood mocks additionally require the
-  runner's exact generation and implementation identity. This is the
-  finite-shear closure path; the zero-centred one-step estimator remains the
-  local/null path;
-- the earlier combined-null and cross-prior reweighting experiments are
-  archived under `archive/infer-v1-development/`; they are provenance, not
-  production entry points;
-- `scripts/summarize_catalogue_closure.py` reports individual profiles;
-- `scripts/summarize_catalogue_bias.py` audits the powered zero/sign panel;
-- `scripts/summarize_numerical_recenter.py` pairs independent `+/-` image legs
-  by simulation-case block and reports additive, multiplicative, and
-  cross-component estimates with case-block and likelihood-curvature errors.
-  It re-hashes the frozen analysis tables, requires converged positive-
-  information fits and complete sampler diagnostics, and refuses mixed model,
-  cache, stencil, optimizer, implementation, duplicate-mock, or overlapping-
-  case identities.
+- `sbsi.flow` — conditional-flow training and explicit tuning;
+- `sbsi.scene_prior` — finite catalogue atoms and the guarded neighbour graph;
+- `sbsi.catalogue_likelihood` — flow, detection, measured-selection, and
+  population-normalization terms;
+- `sbsi.catalogue_sampling` — defensive importance sampling;
+- `sbsi.catalogue_blend` — fixed atom-aligned external response caches;
+- `sbsi.catalogue_null` — score/information diagnostics and exact local
+  validation;
+- `sbsi.catalogue_closure` and `sbsi.image_closure` — likelihood- and
+  image-generated closure adapters; and
+- `sbsi.shear_map`, `sbsi.measurement_model`, and `sbsi.selection_model` — the
+  shared scientific transformations and learned-model loaders.
 
-The detection checkpoint metadata gate accepts only the declared seven
-spin-0 inputs, so the current likelihood legitimately reuses its cached
-`Pdet` across shear views. This is only a software contract. ConstGold images
-show a missing diagonal detection-selection response of
-`-0.009191 +/- 0.000275`; the checkpoint has no ellipticity input with which to
-model it. Precision image closure therefore requires a detection/usable-event
-model update even after numerical sampling stabilizes.
+Reusable scientific behavior belongs in these modules, not in scheduler
+wrappers or one-off scripts.
 
-The image-stage order is: uncut full-model closure with at least two proposal
-seeds; reconciliation of the detector and usable-measurement event; then the
-realistic and stress measured cuts. A measured-cut likelihood closure alone
-does not authorize a selected-image closure claim.
+## Operational entry points
 
-The superseded §5B finite-M score/quadrature implementation and its tests live
-under `archive/infer-v1-development/legacy-score/`. It is not installed as
-`sbsi`, collected by pytest, or available as an alternative production entry
-point.
+The production path is deliberately small:
 
-The seven-point profile mode in `run_catalogue_closure.py` is retained as a
-nonlinear MLE fallback. It requires a supplied shear bracket and is not the
-default null-closure estimator.
+- `configs/inference.json` defines `v1.1-infer` sampling, finite differences,
+  optimization, precision, and chunking;
+- `configs/likelihood.json` defines `v3.2-like` model artifacts, target order,
+  shear transform, geometry, and observing conditions;
+- `scripts/run_inference.py` is the single inference runner; and
+- `jobs/job_inference.sh` is the cluster-local reference wrapper.
 
-Both response components are always required:
+Reusable inputs are prepared separately:
+
+- `scripts/build_scene_prior.py` builds the guarded finite scene store;
+- `scripts/build_catalogue_blend_response.py` builds the optional fixed,
+  atom-aligned `R_blend` cache; and
+- `scripts/prepare_image_closure_mock.py` converts one declared BlendEMU image
+  leg into the flow's measured-target convention.
+
+`scripts/run_catalogue_closure.py` and the retained exact, powered, and nonzero
+closure programs are validation tools. They are not alternative production
+pipelines or release choices.
+
+## Likelihood and response invariants
+
+For prior atoms `z_j` with masses `pi_j`, retained measurements use
+
+```text
+A_i(g) = sum_j pi_j P_det(S_g z_j) p_flow(xhat_i - b_j(g) | S_g z_j)
+B_W(g) = sum_j pi_j P_det(S_g z_j) P_pass,j(g)
+p(xhat_i | detected, W, g) = A_i(g) / B_W(g)
+
+b_j(g) = R_blend,j [e(S_g z_j) - e(z_j)]
+```
+
+The current project shear transform changes intrinsic ellipticity only. Flux,
+size, positions, pair separations, and neighbour membership remain fixed;
+magnification is outside this likelihood. A measured cut cancels from the
+numerator for retained objects, but its population probability does not cancel
+from `B_W`.
+
+Response reporting always uses both components:
 
 ```text
 R_model = R_flow + R_blend
 m = R_sim / R_model - 1
 ```
 
-Failed catalogue joins are rejected, never silently assigned `R_blend = 0`.
-An atom with no neighbour inside the emulator's supported pair selection has a
-physical zero external response and is reported separately from alignment
-failures.
+An atom with no supported neighbour has a physical zero external response and
+is reported separately from a failed catalogue join.
+
+## Current scientific limitation
+
+The `v3.2-like` detector has only seven spin-0 inputs, so the software may cache
+its probability across shape-only shear views. That is a model contract, not
+evidence that image detection is shear invariant. Precision image closure
+still requires a detector/usable-measurement model that represents the missing
+detection-selection response. A likelihood-generated closure validates the
+likelihood implementation; it does not by itself validate population transfer
+or image selection.

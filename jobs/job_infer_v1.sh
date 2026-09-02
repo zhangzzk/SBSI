@@ -52,6 +52,14 @@ root=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/section5_galsbi_1
 : "${PROPOSAL_PREFILTER_CANDIDATES:=131072}"
 : "${PROPOSAL_SEED:=8701}"
 : "${PROPOSAL_EPSILON:=0.1}"
+: "${HYBRID_PROPOSAL_CHECKPOINT:=}"
+: "${HYBRID_CONTRASTIVE_POOL:=65536}"
+: "${HYBRID_RETRIEVAL_OBJECT_CHUNK:=16}"
+: "${HYBRID_RERANK_OBJECT_CHUNK:=16}"
+: "${HYBRID_RERANK_ATOM_CHUNK:=65536}"
+: "${CONTRASTIVE_PROPOSAL_CHECKPOINT:=}"
+: "${CONTRASTIVE_RETRIEVAL_OBJECT_CHUNK:=16}"
+: "${CONTRASTIVE_ATOM_CHUNK:=65536}"
 : "${PROPOSAL_METHOD:=initial_center_posterior_adapted}"
 : "${H:=0.001}"
 : "${MAX_ITERATIONS:=10}"
@@ -78,6 +86,7 @@ root=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/section5_galsbi_1
 : "${RETAIN_FULL_LADDER:=1}"
 : "${OBJECT_CHUNK:=128}"
 : "${ATOM_CHUNK:=4096}"
+: "${PRECISION:=fp32}"
 
 export PYTHONPATH="$repo:$blendemu"
 export OMP_NUM_THREADS="$SLURM_CPUS_PER_TASK"
@@ -126,6 +135,22 @@ if [[ -n "$OBSERVATION_STOP" ]]; then
 fi
 if [[ -n "$PROPOSAL_PREFILTER_CANDIDATES" ]]; then
   extra_args+=(--proposal-prefilter-candidates "$PROPOSAL_PREFILTER_CANDIDATES")
+fi
+if [[ -n "$HYBRID_PROPOSAL_CHECKPOINT" ]]; then
+  extra_args+=(
+    --hybrid-proposal-checkpoint "$HYBRID_PROPOSAL_CHECKPOINT"
+    --hybrid-contrastive-pool "$HYBRID_CONTRASTIVE_POOL"
+    --hybrid-retrieval-object-chunk "$HYBRID_RETRIEVAL_OBJECT_CHUNK"
+    --hybrid-rerank-object-chunk "$HYBRID_RERANK_OBJECT_CHUNK"
+    --hybrid-rerank-atom-chunk "$HYBRID_RERANK_ATOM_CHUNK"
+  )
+fi
+if [[ -n "$CONTRASTIVE_PROPOSAL_CHECKPOINT" ]]; then
+  extra_args+=(
+    --contrastive-proposal-checkpoint "$CONTRASTIVE_PROPOSAL_CHECKPOINT"
+    --contrastive-retrieval-object-chunk "$CONTRASTIVE_RETRIEVAL_OBJECT_CHUNK"
+    --contrastive-atom-chunk "$CONTRASTIVE_ATOM_CHUNK"
+  )
 fi
 if [[ "$ADAPTIVE_ONE_STEP" == 1 ]]; then
   read -r -a adaptive_draw_ladder <<< "$ADAPTIVE_DRAW_LADDER"
@@ -180,4 +205,5 @@ fi
   --max-iterations "$MAX_ITERATIONS" --max-step "$MAX_STEP" \
   --tolerance "$TOLERANCE" --shear-bound 0.1 \
   --max-backtracks "$MAX_BACKTRACKS" \
-  --object-chunk "$OBJECT_CHUNK" --atom-chunk "$ATOM_CHUNK" --device cuda
+  --object-chunk "$OBJECT_CHUNK" --atom-chunk "$ATOM_CHUNK" \
+  --precision "$PRECISION" --device cuda

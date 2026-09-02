@@ -10,7 +10,8 @@ from __future__ import annotations
 import numpy as np
 import torch
 
-from .preprocessing import SHEAR_FEATURES, rescale
+from .coordinates import SHEAR_FEATURES
+from .preprocessing import rescale
 from .shear_map import apply_shear_to_ellipticity
 
 __all__ = [
@@ -180,12 +181,19 @@ def compute_decorrelation_weights(frame, nbins=40, clip=10.0):
     a = np.hypot(frame["e1_input_p"].to_numpy(float), frame["e2_input_p"].to_numpy(float))
     b = frame["Re_input_p_scaled"].to_numpy(float)
     good = np.isfinite(a) & np.isfinite(b)
-    ea = np.quantile(a[good], np.linspace(0, 1, nbins + 1)); ea[0] -= 1e-9; ea[-1] += 1e-9
-    eb = np.quantile(b[good], np.linspace(0, 1, nbins + 1)); eb[0] -= 1e-9; eb[-1] += 1e-9
+    ea = np.quantile(a[good], np.linspace(0, 1, nbins + 1))
+    ea[0] -= 1e-9
+    ea[-1] += 1e-9
+    eb = np.quantile(b[good], np.linspace(0, 1, nbins + 1))
+    eb[0] -= 1e-9
+    eb[-1] += 1e-9
     ia = np.clip(np.digitize(a, ea) - 1, 0, nbins - 1)
     ib = np.clip(np.digitize(b, eb) - 1, 0, nbins - 1)
-    joint = np.zeros((nbins, nbins)); np.add.at(joint, (ia, ib), good.astype(float))
-    pa = joint.sum(1); pb = joint.sum(0); N = max(joint.sum(), 1.0)
+    joint = np.zeros((nbins, nbins))
+    np.add.at(joint, (ia, ib), good.astype(float))
+    pa = joint.sum(1)
+    pb = joint.sum(0)
+    N = max(joint.sum(), 1.0)
     wij = (pa[ia] * pb[ib]) / (N * np.maximum(joint[ia, ib], 1.0))
     w = np.where(good, wij, 1.0)
     w = np.clip(w, 1.0 / clip, clip)

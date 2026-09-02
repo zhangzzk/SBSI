@@ -35,7 +35,6 @@ from scipy.special import logsumexp
 import torch
 
 from .catalogue_blend import CatalogueBlendResponse
-from .lagrangian_score import curve_derivatives
 from .scene_prior import ScenePrior
 from .shear_map import apply_shear_to_ellipticity
 
@@ -94,13 +93,136 @@ def _shape_target_indices(names: Sequence[str]) -> tuple[int, int]:
     raise KeyError(f"no known two-component shape target pair in {list(names)}")
 
 
+def _curve_derivatives(curve, *, delta: float, richardson: bool = True):
+    """Return value, first derivative, and curvature of a scalar curve at zero.
+
+    Callers must use common random numbers at every evaluation point.  The
+    central stencil is second-order; Richardson extrapolation removes its
+    leading truncation term.
+    """
+
+    value = np.asarray(curve(0.0), dtype=np.float64)
+
+    def central(step: float):
+        plus = np.asarray(curve(+step), dtype=np.float64)
+        minus = np.asarray(curve(-step), dtype=np.float64)
+        gradient = (plus - minus) / (2.0 * step)
+        curvature = (plus - 2.0 * value + minus) / step**2
+        return gradient, curvature
+
+    gradient, curvature = central(delta)
+    if richardson:
+        fine_gradient, fine_curvature = central(0.5 * delta)
+        gradient = (4.0 * fine_gradient - gradient) / 3.0
+        curvature = (4.0 * fine_curvature - curvature) / 3.0
+    return value, gradient, curvature
+
+
+class OutputCut:
+    """Selection predicate on the measurement flow's output vector.
+
+    Bounds are half-open (``lower <= value < upper``), with ``None`` for an
+    open side.  The implementation deliberately uses operations shared by
+    NumPy and Torch so the observed-catalogue and population-normalization
+    paths apply exactly the same cut.
+    """
+
+    def __init__(self, target_names, abs_shape=None, bounds=()):
+        self.target_names = list(target_names)
+        self.abs_shape = None if abs_shape is None else float(abs_shape)
+        if self.abs_shape is not None and self.abs_shape <= 0.0:
+            raise ValueError(f"abs_shape must be positive, got {self.abs_shape}")
+
+        self.bounds = []
+        for name, lower, upper in bounds:
+            if name not in self.target_names:
+                raise KeyError(
+                    f"cut column {name!r} is not a flow output; "
+                    f"available outputs are {self.target_names}"
+                )
+            lower = None if lower is None else float(lower)
+            upper = None if upper is None else float(upper)
+            if lower is not None and upper is not None and not lower < upper:
+                raise ValueError(f"empty bound on {name}: [{lower}, {upper})")
+            self.bounds.append(
+                (name, self.target_names.index(name), lower, upper)
+            )
+
+        if self.abs_shape is None and not self.bounds:
+            raise ValueError("use None instead of an OutputCut that keeps everything")
+        self.j1, self.j2 = (
+            _shape_target_indices(self.target_names)
+            if self.abs_shape is not None
+            else (None, None)
+        )
+
+    def __call__(self, values):
+        """Return a keep mask over all axes except the final output axis."""
+
+        keep = None
+        if self.abs_shape is not None:
+            keep = (
+                values[..., self.j1] ** 2 + values[..., self.j2] ** 2
+                < self.abs_shape**2
+            )
+        for _, index, lower, upper in self.bounds:
+            masks = (
+                values[..., index] >= lower if lower is not None else None,
+                values[..., index] < upper if upper is not None else None,
+            )
+            for mask in masks:
+                if mask is not None:
+                    keep = mask if keep is None else keep & mask
+        return keep
+
+    def key(self):
+        """Return the stable identity stored with selection caches."""
+
+        if not self.bounds:
+            return self.abs_shape
+        parts = [] if self.abs_shape is None else [f"|xhat|<{self.abs_shape!r}"]
+        parts.extend(
+            f"{name}:{lower!r}:{upper!r}"
+            for name, _, lower, upper in self.bounds
+        )
+        return ";".join(parts)
+
+    def describe(self):
+        parts = [] if self.abs_shape is None else [f"|xhat| < {self.abs_shape:g}"]
+        for name, _, lower, upper in self.bounds:
+            if lower is None:
+                parts.append(f"{name} < {upper:g}")
+            elif upper is None:
+                parts.append(f"{name} >= {lower:g}")
+            else:
+                parts.append(f"{lower:g} <= {name} < {upper:g}")
+        return " and ".join(parts)
+
+    @classmethod
+    def from_specs(cls, target_names, abs_shape=None, specs=()):
+        """Build a cut from repeatable ``NAME:LOWER:UPPER`` CLI strings."""
+
+        bounds = []
+        for spec in specs or ():
+            fields = str(spec).split(":")
+            if len(fields) != 3:
+                raise ValueError(f"cut spec {spec!r} is not NAME:LO:HI")
+            name, lower, upper = (field.strip() for field in fields)
+            bounds.append(
+                (
+                    name,
+                    None if lower in ("", "none", "-inf") else lower,
+                    None if upper in ("", "none", "inf") else upper,
+                )
+            )
+        return cls(target_names, abs_shape=abs_shape, bounds=bounds)
+
+
 class CatalogueSelection:
     """Measured-output selection probabilities for catalogue-prior atoms.
 
-    ``output_cut`` is normally :class:`sbsi.score_inference.OutputCut`.  The
-    class only relies on its callable predicate, ``target_names``, and ``key``
-    interface so the exact same cut object can be used by the older score path
-    and this finite-catalogue likelihood.
+    ``output_cut`` is normally :class:`OutputCut`.  The class only relies on
+    its callable predicate, ``target_names``, and ``key`` interface.
 
     Re-seeding to the same state at every trial shear holds the flow latents
     fixed across the likelihood curve.  Rows are processed in fixed chunks and
@@ -923,6 +1045,7 @@ class CatalogueLikelihood:
         *,
         atom_indices: np.ndarray,
         proposal_probability: np.ndarray,
+        atom_valid: Optional[np.ndarray] = None,
         observed_targets: Optional[torch.Tensor] = None,
         object_chunk: int = 16,
         atom_chunk: int = 4096,
@@ -933,6 +1056,17 @@ class CatalogueLikelihood:
         block then consists only of device gathers, flow evaluation, and
         device-side additions; no pandas object or host transfer is created in
         the atom loop.
+
+        ``atom_indices`` is rectangular, but a coalesced draw is ragged: rows
+        with fewer unique atoms than the widest row in their chunk are padded
+        out with a repeat of their own first atom.  Pass the ``atom_valid``
+        mask and those padded slots are never handed to the flow -- the caller
+        gets ``0.0`` in them instead of a scored duplicate.  Every consumer
+        already discards them (a padded slot carries a zero draw count and is
+        masked to ``-inf`` before any reduction), so this changes cost, not
+        arithmetic.  Rows are scored independently, so which rows share a flow
+        batch is free to change; the returned values for valid slots are the
+        same up to float32 reassociation inside the batched matmuls.
         """
 
         frame = self._observed_frame(observed)
@@ -949,6 +1083,11 @@ class CatalogueLikelihood:
             raise ValueError("atom_indices contains an out-of-range row")
         if object_chunk <= 0 or atom_chunk <= 0:
             raise ValueError("chunk sizes must be positive")
+        valid = None
+        if atom_valid is not None:
+            valid = np.asarray(atom_valid, dtype=bool)
+            if valid.shape != indices.shape:
+                raise ValueError("atom_valid must align with atom_indices")
 
         tensor_shear = self.tensor_shape_only_available
         tensor_view = self._tensor_view(0.0, 0.0) if tensor_shear else self._tensor_view(g1, g2)
@@ -960,9 +1099,28 @@ class CatalogueLikelihood:
             raise ValueError("observed targets are on the wrong device")
 
         device = tensor_view.context.device
-        output = torch.empty(
-            indices.shape, dtype=tensor_view.context.dtype, device=device
+        output = (
+            torch.empty(indices.shape, dtype=tensor_view.context.dtype, device=device)
+            if valid is None
+            else torch.zeros(
+                indices.shape, dtype=tensor_view.context.dtype, device=device
+            )
         )
+        if valid is not None:
+            self._ragged_importance_weights(
+                output,
+                indices,
+                proposal,
+                valid,
+                tensor_view,
+                tensor_shear,
+                observed_targets,
+                float(g1),
+                float(g2),
+                object_chunk=object_chunk,
+                atom_chunk=atom_chunk,
+            )
+            return output
         with torch.no_grad():
             for start in range(0, len(frame), object_chunk):
                 stop = min(start + object_chunk, len(frame))
@@ -1008,6 +1166,83 @@ class CatalogueLikelihood:
                     )
                     output[start:stop, atom_start:atom_stop] = block
         return output
+
+    def _ragged_importance_weights(
+        self,
+        output: torch.Tensor,
+        indices: np.ndarray,
+        proposal: np.ndarray,
+        valid: np.ndarray,
+        tensor_view,
+        tensor_shear: bool,
+        observed_targets: torch.Tensor,
+        g1: float,
+        g2: float,
+        *,
+        object_chunk: int,
+        atom_chunk: int,
+    ) -> None:
+        """Score only the valid slots of a padded atom grid, in place.
+
+        The dense path walks a rectangle of ``(object chunk) x (atom chunk)``
+        slots.  Here the valid slots of an object chunk are packed into one
+        flat list of ``(observed row, atom)`` pairs and walked in blocks of the
+        same total size, so the flow sees the same working set with none of the
+        padding.  Slots left untouched keep the caller's zero fill.
+        """
+
+        device = output.device
+        width = indices.shape[1]
+        pair_chunk = max(1, object_chunk * atom_chunk)
+        n_targets = len(self.target_names)
+        with torch.no_grad():
+            for start in range(0, len(indices), object_chunk):
+                stop = min(start + object_chunk, len(indices))
+                rows_np, cols_np = np.nonzero(valid[start:stop])
+                if rows_np.size == 0:
+                    continue
+                block_slots = rows_np * width + cols_np
+                atoms_np = indices[start:stop].reshape(-1)[block_slots]
+                probability_np = proposal[start:stop].reshape(-1)[block_slots]
+                slots = torch.as_tensor(
+                    block_slots + start * width, dtype=torch.long, device=device
+                )
+                rows = torch.as_tensor(
+                    rows_np + start, dtype=torch.long, device=device
+                )
+                atoms = torch.as_tensor(atoms_np, dtype=torch.long, device=device)
+                probability = torch.as_tensor(
+                    probability_np, dtype=output.dtype, device=device
+                )
+                flat_output = output.view(-1)
+                for pair_start in range(0, len(block_slots), pair_chunk):
+                    pair_stop = min(pair_start + pair_chunk, len(block_slots))
+                    flat = atoms[pair_start:pair_stop]
+                    context = tensor_view.context.index_select(0, flat)
+                    if tensor_shear:
+                        context = self._shear_standardized_context(
+                            context, flat, g1, g2
+                        )
+                    target = observed_targets.index_select(
+                        0, rows[pair_start:pair_stop]
+                    )
+                    if target.shape[1] != n_targets:
+                        raise ValueError("observed target tensor has the wrong shape")
+                    if self.shape_target_indices is not None:
+                        target = (
+                            target
+                            - tensor_view.blend_shift_standardized.index_select(0, flat)
+                        )
+                    block = (
+                        self.flow_model.log_prob_tensor(
+                            target, context, batch_size=65536
+                        )
+                        + tensor_view.log_detected_mass.index_select(0, flat)
+                        - torch.log(probability[pair_start:pair_stop])
+                    )
+                    flat_output.index_copy_(
+                        0, slots[pair_start:pair_stop], block
+                    )
 
     def _observed_frame(self, observed) -> pd.DataFrame:
         if isinstance(observed, pd.DataFrame):
@@ -1323,7 +1558,7 @@ class CatalogueLikelihood:
                 atom_chunk=atom_chunk,
             )
 
-        log_likelihood, score, curvature = curve_derivatives(
+        log_likelihood, score, curvature = _curve_derivatives(
             curve, delta=delta, richardson=richardson
         )
         return CatalogueScore(log_likelihood, score, -curvature)
@@ -1333,6 +1568,7 @@ __all__ = [
     "CatalogueLikelihood",
     "CatalogueModelCache",
     "CatalogueModelView",
+    "OutputCut",
     "CatalogueSelection",
     "CatalogueScore",
     "SHEAR_INVARIANT_DETECTION_FEATURES",

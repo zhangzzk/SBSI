@@ -7,7 +7,6 @@ import numpy as np
 from .coordinates import (
     RAW_SHEAR_FEATURES,
     SHEAR_ALIGNMENT_FEATURES,
-    SHEAR_FEATURES,
     SKY_SHEAR_FEATURES,
     add_pair_aligned_spin2_components,
     add_sky_shear_components,
@@ -46,19 +45,11 @@ def apply_structure_measurement_noise(frame, photoz_sigma=0.0, sersic_frac=0.0, 
         n = frame["sersic_n_input_p"].to_numpy(float)
         frame["sersic_n_input_p"] = np.clip(n + rng.normal(0.0, sersic_frac * np.abs(n)), 0.3, 8.0)
     return frame
-SHAPE_FEATURES = {
-    "e1_input_p", "e2_input_p",
-    "e1_input_s", "e2_input_s",
-}
 RELATIVE_POSITION_FEATURES = {
     "relative_position_angle_cos",
     "relative_position_angle_sin",
     "relative_position_angle_cos2",
     "relative_position_angle_sin2",
-}
-RELATIVE_ALIGNMENT_FEATURES = {
-    "e_parallel_p", "e_cross_p",
-    "e_parallel_s", "e_cross_s",
 }
 PRIMARY_FRAME_FEATURES = {
     "e_abs_p",

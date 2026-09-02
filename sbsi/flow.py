@@ -14,7 +14,6 @@ from typing import Callable, Iterable, List, Optional, Tuple
 
 from .catalogue import Catalogue
 from .flow_training import main as _run_training
-from .measurement_model import MeasurementModelBundle, load_measurement_model
 
 
 @dataclass(frozen=True)
@@ -208,14 +207,9 @@ def tune_flow(
     return sorted(trials, key=lambda trial: trial.score)
 
 
-def load_flow(path: Path, device: str = "cpu") -> MeasurementModelBundle:
-    return load_measurement_model(str(path), device=device)
-
-
 __all__ = [
     "FlowTrainingConfig",
     "FlowTrial",
-    "load_flow",
     "train_flow",
     "tune_flow",
 ]

@@ -13,7 +13,6 @@ from pathlib import Path
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
 REPOSITORY_ROOT = PACKAGE_ROOT.parent
-EXAMPLES_ROOT = REPOSITORY_ROOT / "examples"
 RELEASE_MODELS_ROOT = REPOSITORY_ROOT / "models"
 
 
@@ -42,7 +41,6 @@ def example_path(*parts: str) -> Path:
 
 
 __all__ = [
-    "EXAMPLES_ROOT",
     "PACKAGE_ROOT",
     "RELEASE_MODELS_ROOT",
     "REPOSITORY_ROOT",

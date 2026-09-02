@@ -12,19 +12,14 @@ from sbsi.catalogue_sampling import (
     DefensiveLocalProposal,
     ProposalCoordinateTable,
     assess_importance_convergence,
-    candidate_support_diagnostics,
     importance_diagnostics,
-    run_importance_curvature_scan,
+    pareto_tail_index,
     run_importance_ladder,
     run_importance_profiles,
-    select_score_diversified_candidates,
-    select_tempered_candidates,
-    select_weighted_candidates,
     select_adaptive_draw_counts,
     select_independent_pilot_draw_counts,
-    union_candidate_sets,
 )
-from sbsi.score_inference import OutputCut
+from sbsi.catalogue_likelihood import OutputCut
 from test_catalogue_likelihood import AnalyticGaussianSelection, _likelihood
 
 
@@ -431,131 +426,86 @@ def test_direct_uncertainty_mips_matches_brute_gaussian_ranking():
     np.testing.assert_array_equal(result.indices, expected)
 
 
-def test_candidate_support_diagnostic_separates_ranking_from_support_width():
-    target = np.log(
-        np.array(
-            [
-                [0.05, 0.05, 0.80, 0.10],
-                [0.40, 0.30, 0.20, 0.10],
-            ]
+def test_whole_catalogue_proxy_candidates_match_brute_gaussian_ranking():
+    """The direct shortlist ranks the pure proxy, without the prior floor."""
+
+    coordinates = ProposalCoordinateTable(
+        values=np.array([[0.0, 0.2], [0.1, -0.2], [0.3, 0.0], [-0.4, 0.1]]),
+        target_names=("x", "y"),
+        center=np.zeros(2),
+        scale=np.ones(2),
+        dispersion=np.array([[0.1, 0.4], [0.3, 0.2], [0.2, 0.5], [0.6, 0.1]]),
+        statistic="mean",
+    )
+    prior = np.array([0.05, 0.15, 0.5, 0.3])
+    detection = np.array([0.8, 0.4, 0.9, 0.7])
+    proposal = DefensiveLocalProposal(coordinates, prior, local_base_weights=detection)
+    observed = pd.DataFrame({"x": [0.12, -0.25], "y": [0.03, 0.18]})
+    result = proposal.whole_catalogue_proxy_candidates(
+        observed, n_candidates=3, device="cpu", object_chunk=1
+    )
+
+    values = observed[["x", "y"]].to_numpy()
+    score = (
+        np.log(proposal.local_base_weights)[None, :]
+        - np.log(coordinates.dispersion).sum(axis=1)[None, :]
+        - 0.5
+        * np.square(
+            (values[:, None, :] - coordinates.values[None, :, :])
+            / coordinates.dispersion[None, :, :]
+        ).sum(axis=2)
+    )
+    expected = np.argsort(-score, axis=1)[:, :3]
+    np.testing.assert_array_equal(result.indices, expected)
+    np.testing.assert_allclose(
+        result.distances,
+        score.max(axis=1)[:, None] - np.take_along_axis(score, expected, axis=1),
+    )
+    np.testing.assert_allclose(result.radius, result.distances[:, -1])
+
+
+def test_fused_whole_catalogue_candidates_and_tilted_draw_match_two_pass_path():
+    likelihood = _likelihood()
+    base = _coordinates(likelihood)
+    rng = np.random.default_rng(20260831)
+    coordinates = replace(
+        base, dispersion=0.1 + 0.2 * rng.random(base.values.shape)
+    )
+    proposal = DefensiveLocalProposal(
+        coordinates,
+        likelihood.cache.prior.weights,
+        local_base_weights=likelihood.cache.get(0.0, 0.0).detection_probability,
+    )
+    observed = pd.DataFrame({"measured_e1": [-0.15, 0.12, 0.03]})
+    separate_candidates = proposal.whole_catalogue_proxy_candidates(
+        observed, n_candidates=3, device="cpu", object_chunk=2
+    )
+    separate_draw = proposal.draw_tilted(
+        separate_candidates,
+        observed,
+        n_draws=37,
+        delta=0.25,
+        seed=99,
+        device="cpu",
+        object_chunk=2,
+    )
+    fused_candidates, fused_draw = (
+        proposal.whole_catalogue_proxy_candidates_and_tilted_draw(
+            observed,
+            n_candidates=3,
+            n_draws=37,
+            delta=0.25,
+            seed=99,
+            device="cpu",
+            object_chunk=2,
         )
     )
-    result = candidate_support_diagnostics(target, (1, 2, 4))
-
-    np.testing.assert_allclose(
-        result.distance_prefix_mass,
-        [[0.05, 0.10, 1.0], [0.40, 0.70, 1.0]],
-    )
-    np.testing.assert_allclose(
-        result.optimal_prefix_mass,
-        [[0.80, 0.90, 1.0], [0.40, 0.70, 1.0]],
-    )
-    np.testing.assert_allclose(result.reference_max_mass_fraction, [0.80, 0.40])
-    assert np.all(result.reference_effective_atoms > 1)
-
-
-def test_score_diversification_keeps_core_and_seeded_unique_tail():
-    ranked = np.arange(1000, dtype=np.int64)
-    gap = np.linspace(0.0, 20.0, len(ranked))
-    log_tail = select_score_diversified_candidates(
-        ranked,
-        gap,
-        n_candidates=100,
-        core_fraction=0.75,
-        tail_method="log_stratified",
-        seed=41,
-        n_log_strata=5,
-    )
-    repeated = select_score_diversified_candidates(
-        ranked,
-        gap,
-        n_candidates=100,
-        core_fraction=0.75,
-        tail_method="log_stratified",
-        seed=41,
-        n_log_strata=5,
-    )
-    tempered = select_score_diversified_candidates(
-        ranked,
-        gap,
-        n_candidates=100,
-        core_fraction=0.5,
-        tail_method="tempered",
-        temperature=2.0,
-        seed=42,
-    )
-
-    np.testing.assert_array_equal(log_tail[:75], ranked[:75])
-    np.testing.assert_array_equal(log_tail, repeated)
-    np.testing.assert_array_equal(tempered[:50], ranked[:50])
-    assert len(np.unique(log_tail)) == len(np.unique(tempered)) == 100
-    assert log_tail.max() > 100
-    assert not np.array_equal(log_tail, tempered)
-
-
-def test_tempered_selection_softens_the_entire_support_without_replacement():
-    ranked = np.arange(1000, dtype=np.int64)
-    gap = np.linspace(0.0, 12.0, len(ranked))
-    selected = select_tempered_candidates(
-        ranked,
-        gap,
-        n_candidates=100,
-        temperature=1.0,
-        seed=51,
-    )
-    repeated = select_tempered_candidates(
-        ranked,
-        gap,
-        n_candidates=100,
-        temperature=1.0,
-        seed=51,
-    )
-
-    np.testing.assert_array_equal(selected, repeated)
-    assert len(selected) == len(np.unique(selected)) == 100
-    assert selected.max() >= 100
-    assert not np.array_equal(selected, ranked[:100])
-
-
-def test_weighted_selection_supports_simple_score_gap_forms():
-    ranked = np.arange(1000, dtype=np.int64)
-    gap = np.linspace(0.0, 8.0, len(ranked))
-    supports = {}
-    for weight_form in ("exponential", "gaussian", "logistic", "cauchy"):
-        supports[weight_form] = select_weighted_candidates(
-            ranked,
-            gap,
-            n_candidates=100,
-            temperature=1.0,
-            weight_form=weight_form,
-            seed=52,
-        )
-        assert len(np.unique(supports[weight_form])) == 100
-
-    np.testing.assert_array_equal(
-        supports["exponential"],
-        select_tempered_candidates(
-            ranked,
-            gap,
-            n_candidates=100,
-            temperature=1.0,
-            seed=52,
-        ),
-    )
-    assert len({tuple(value) for value in supports.values()}) == len(supports)
-
-
-def test_union_candidate_sets_stably_deduplicates_and_fills():
-    query = np.asarray([[5, 2, 7, 9], [5, 3, 7, 8], [2, 4, 9, 6]])
-    fallback = np.arange(20, dtype=np.int64)
-    result, prefill = union_candidate_sets(
-        query, n_candidates=10, fallback_indices=fallback
-    )
-
-    assert prefill == 8
-    np.testing.assert_array_equal(result[:8], [5, 2, 7, 9, 3, 8, 4, 6])
-    np.testing.assert_array_equal(result[8:], [0, 1])
-
+    np.testing.assert_array_equal(fused_candidates.indices, separate_candidates.indices)
+    np.testing.assert_allclose(fused_candidates.distances, separate_candidates.distances)
+    np.testing.assert_array_equal(fused_draw.indices, separate_draw.indices)
+    np.testing.assert_array_equal(fused_draw.local_member, separate_draw.local_member)
+    np.testing.assert_array_equal(fused_draw.local_position, separate_draw.local_position)
+    np.testing.assert_allclose(fused_draw.probability, separate_draw.probability, rtol=1e-12)
 
 def test_importance_ladder_uses_nested_draws_and_approaches_exact_oracle():
     likelihood = _likelihood()
@@ -708,51 +658,6 @@ def test_importance_profile_recovers_small_catalogue_mle_and_releases_views():
     assert all(abs(result.rungs[-1].estimated_shear - 0.02) < 0.03 for result in results)
     assert set(likelihood.cache.available_shears) == protected
 
-
-def test_curvature_scan_decomposes_marginal_information_and_true_atom_curve():
-    likelihood = _likelihood()
-    mock = generate_mock_catalogue(
-        likelihood,
-        n_detected=32,
-        g1=0.02,
-        g2=0.0,
-        scene_seed=140,
-        detection_seed=141,
-        flow_seed=142,
-    )
-    proposal = DefensiveLocalProposal(
-        _coordinates(likelihood),
-        likelihood.cache.prior.weights,
-        local_base_weights=likelihood.cache.get(0.0, 0.0).detection_probability,
-    )
-    protected = set(likelihood.cache.available_shears)
-    result = run_importance_curvature_scan(
-        likelihood,
-        mock,
-        proposal,
-        centers=(0.0, 0.02),
-        h=0.0025,
-        profile_shears=(-0.005, 0.005),
-        ladder=(256, 1024),
-        n_candidates=4,
-        epsilon=0.2,
-        bandwidth=0.8,
-        proposal_seed=143,
-        truth_atom_indices=mock.truth["scene_row"].to_numpy(np.int64),
-        object_chunk=32,
-        decomposition_chunk=16,
-    )
-    assert result.shears == (-0.005, -0.0025, 0.0, 0.0025, 0.005, 0.0175, 0.02, 0.0225)
-    assert result.true_atom_log_likelihood.shape == (len(result.shears), 32)
-    final = result.rungs[-1]
-    assert final.marginalized_information.shape == (2, 32)
-    assert final.true_atom_information.shape == (2, 32)
-    # The identity is exact for analytic derivatives; applying the same
-    # three-point finite difference to both sides leaves an O(h^2) residual.
-    np.testing.assert_allclose(final.decomposition_residual, 0.0, atol=0.01)
-    assert set(likelihood.cache.available_shears) == protected
-
-
 def test_importance_profile_uses_measured_selection_normalization():
     base = _likelihood()
     selected = CatalogueLikelihood(
@@ -826,3 +731,277 @@ def test_importance_profile_populates_selection_cache():
         object_chunk=20,
     )
     assert selection.available_shears == ((0.0, 0.0), (0.02, 0.0))
+
+
+def test_stratified_draws_are_nested_and_pair_with_the_mixture_global_component():
+    likelihood = _likelihood()
+    proposal = DefensiveLocalProposal(
+        _coordinates(likelihood),
+        likelihood.cache.prior.weights,
+        local_base_weights=likelihood.cache.get(0.0, 0.0).detection_probability,
+    )
+    observed = pd.DataFrame({"measured_e1": [-0.15, 0.12]})
+    candidates = proposal.candidates(observed, n_candidates=2)
+    short = proposal.draw_stratified(candidates, n_draws=31, seed=411)
+    long = proposal.draw_stratified(candidates, n_draws=79, seed=411)
+
+    np.testing.assert_array_equal(short.indices, long.indices[:, :31])
+    np.testing.assert_array_equal(short.probability, long.probability[:, :31])
+    np.testing.assert_array_equal(
+        short.probability, likelihood.cache.prior.weights[short.indices]
+    )
+
+    # The complement draws are the mixture's own global-component draws, so a
+    # paired screen differences the two estimators under common random numbers.
+    log_target = np.log(
+        np.maximum(likelihood.cache.prior.weights[candidates.indices], 1e-300)
+    )
+    mixture = proposal.draw_adapted(
+        candidates, log_target, n_draws=79, epsilon=0.3, seed=411
+    )
+    assert mixture.global_component.any()
+    np.testing.assert_array_equal(
+        mixture.indices[mixture.global_component],
+        long.indices[mixture.global_component],
+    )
+
+
+def test_tilted_draws_are_nested_and_report_their_own_probability():
+    """The tilted complement must stay unbiased and stay paired.
+
+    Unbiasedness of the complement estimator rests entirely on the reported
+    ``probability`` being the true mixture probability of the atom drawn -- a
+    mismatch would not raise, it would silently bias every ``A_i``.  The nested
+    prefix is what lets one run report a whole ``M`` ladder, and reusing the
+    uniform stream is what keeps a tilted arm paired with a prior-drawn one.
+    """
+
+    likelihood = _likelihood()
+    base = _coordinates(likelihood)
+    observed = pd.DataFrame({"measured_e1": [-0.15, 0.12]})
+    delta = 0.25
+
+    # The proxy is the reranker's score, so it needs the cached per-atom flow
+    # dispersion; without it the mode must refuse rather than invent one.
+    without = DefensiveLocalProposal(
+        base,
+        likelihood.cache.prior.weights,
+        local_base_weights=likelihood.cache.get(0.0, 0.0).detection_probability,
+    )
+    with pytest.raises(ValueError, match="version-3 proposal cache"):
+        without.draw_tilted(
+            without.candidates(observed, n_candidates=2),
+            observed,
+            n_draws=4,
+            delta=delta,
+            seed=411,
+        )
+
+    rng = np.random.default_rng(20260829)
+    coordinates = replace(
+        base,
+        dispersion=0.1 + 0.2 * rng.random(base.values.shape),
+    )
+    proposal = DefensiveLocalProposal(
+        coordinates,
+        likelihood.cache.prior.weights,
+        local_base_weights=likelihood.cache.get(0.0, 0.0).detection_probability,
+    )
+    candidates = proposal.candidates(observed, n_candidates=2)
+    short = proposal.draw_tilted(
+        candidates, observed, n_draws=31, delta=delta, seed=411
+    )
+    long = proposal.draw_tilted(
+        candidates, observed, n_draws=79, delta=delta, seed=411
+    )
+    np.testing.assert_array_equal(short.indices, long.indices[:, :31])
+    np.testing.assert_array_equal(short.probability, long.probability[:, :31])
+
+    proxy = proposal._tilted_proxy(None)
+    values = proposal._observed_values(observed)
+    for row in range(len(observed)):
+        score = proxy.score(values[row]).numpy()
+        finite = np.isfinite(score)
+        tilted = np.zeros(len(score))
+        tilted[finite] = np.exp(score[finite] - score[finite].max())
+        tilted /= tilted.sum()
+        mixture = (1.0 - delta) * tilted + delta * proposal.prior_weights[
+            proposal.active_indices
+        ]
+        lookup = dict(zip(proposal.active_indices.tolist(), mixture.tolist()))
+        expected = np.array([lookup[int(j)] for j in long.indices[row]])
+        np.testing.assert_allclose(long.probability[row], expected, rtol=1e-12)
+
+    # Flattening changes only the proposal, so the reported probability must
+    # move with it and stay a normalized mixture.
+    flattened = proposal.draw_tilted(
+        candidates, observed, n_draws=79, delta=delta, seed=411, temperature=3.0
+    )
+    assert not np.allclose(flattened.probability, long.probability)
+    assert (flattened.probability > 0).all()
+    with pytest.raises(ValueError, match="temperature must be positive"):
+        proposal.draw_tilted(
+            candidates, observed, n_draws=4, delta=delta, seed=411, temperature=0.0
+        )
+
+    # Same uniform stream as the prior-drawn complement, so the two estimator
+    # arms remain paired even though they map those uniforms to other atoms.
+    prior_drawn = proposal.draw_stratified(candidates, n_draws=79, seed=411)
+    assert prior_drawn.indices.shape == long.indices.shape
+    assert not np.array_equal(prior_drawn.indices, long.indices)
+
+
+def test_pareto_tail_index_recovers_a_known_generalized_pareto_shape():
+    """The k-hat fit must be accurate where it is used to make decisions.
+
+    The reliability threshold sits at 0.7 and the finite-variance boundary at
+    0.5, so a bias of a few hundredths there would change conclusions.  Draws
+    come from the exact inverse CDF of a unit-scale generalized Pareto.
+    """
+
+    rng = np.random.default_rng(20260829)
+    for shape in (-0.2, 0.3, 0.5, 0.7, 1.0):
+        uniform = rng.random((12, 20000))
+        draws = ((1.0 - uniform) ** (-shape) - 1.0) / shape
+        khat = pareto_tail_index(draws)
+        assert np.isfinite(khat).all()
+        assert abs(float(np.mean(khat)) - shape) < 0.05
+
+    # Rescaling a row cannot change its tail index.
+    uniform = rng.random((4, 8000))
+    draws = ((1.0 - uniform) ** (-0.6) - 1.0) / 0.6
+    scaled = pareto_tail_index(draws * 1.0e7)
+    assert np.allclose(pareto_tail_index(draws), scaled, atol=1e-9)
+
+
+def test_pareto_tail_index_reports_undefined_rows_rather_than_a_number():
+    # No spread above the threshold, and too few draws to place one.
+    flat = pareto_tail_index(np.ones((2, 4000)))
+    assert np.isnan(flat).all()
+    assert np.isnan(pareto_tail_index(np.arange(8.0).reshape(2, 4))).all()
+
+    mixed = np.vstack((np.ones(4000), np.exp(np.random.default_rng(3).normal(size=4000))))
+    index = pareto_tail_index(mixed)
+    assert np.isnan(index[0]) and np.isfinite(index[1])
+
+    with pytest.raises(ValueError):
+        pareto_tail_index(np.array([1.0, 2.0]))
+    with pytest.raises(ValueError):
+        pareto_tail_index(np.array([[1.0, -2.0]]))
+
+
+def test_pareto_tail_index_refuses_a_tied_discrete_tail():
+    """A weight vector with few distinct values has no fittable tail.
+
+    This is not hypothetical: a small catalogue produces exactly this, and an
+    unguarded fit divides by a zero quartile and returns a large meaningless
+    shape rather than declining to answer.
+    """
+
+    rng = np.random.default_rng(77)
+    tied = rng.integers(0, 4, size=(6, 4000)).astype(np.float64) + 1.0
+    assert np.isnan(pareto_tail_index(tied)).all()
+
+    # One strictly larger value on top of a tied bulk is still not a tail.
+    almost = np.ones((1, 4000))
+    almost[0, -1] = 5.0
+    assert np.isnan(pareto_tail_index(almost)).all()
+
+
+def test_top_atoms_are_the_largest_proposal_mass_and_need_no_draws():
+    """The extended exact stratum must be exactly the heaviest atoms.
+
+    Moving atoms into the exact sum is only variance-free if the atoms chosen
+    are the ones the proposal actually concentrates on, and only unbiased if
+    the choice never looks at the draws.  Both are checked here against a
+    brute-force mixture.
+    """
+
+    likelihood = _likelihood()
+    base = _coordinates(likelihood)
+    observed = pd.DataFrame({"measured_e1": [-0.15, 0.12]})
+    delta = 0.25
+
+    rng = np.random.default_rng(20260830)
+    coordinates = replace(
+        base, dispersion=0.1 + 0.2 * rng.random(base.values.shape)
+    )
+    proposal = DefensiveLocalProposal(
+        coordinates,
+        likelihood.cache.prior.weights,
+        local_base_weights=likelihood.cache.get(0.0, 0.0).detection_probability,
+    )
+    proxy = proposal._tilted_proxy(None)
+    values = proposal._observed_values(observed)
+
+    assert proxy.top_atoms(values[0], 0, delta=delta).size == 0
+
+    for row in range(len(observed)):
+        score = proxy.score(values[row]).numpy()
+        finite = np.isfinite(score)
+        tilted = np.zeros(len(score))
+        tilted[finite] = np.exp(score[finite] - score[finite].max())
+        tilted /= tilted.sum()
+        mixture = (1.0 - delta) * tilted + delta * proposal.prior_weights[
+            proposal.active_indices
+        ]
+        for count in (1, 3):
+            expected = proposal.active_indices[
+                np.argsort(mixture)[::-1][:count]
+            ]
+            got = proxy.top_atoms(values[row], count, delta=delta)
+            assert sorted(got.tolist()) == sorted(expected.tolist())
+
+    with pytest.raises(ValueError, match="temperature must be positive"):
+        proxy.top_atoms(values[0], 2, delta=delta, temperature=0.0)
+
+
+def test_batched_tilted_draws_match_the_single_row_path():
+    """Batching is a speed change and must not be a numerical one.
+
+    cont.328 batches the whole-catalogue mixture across observations to remove
+    a step that was 78% of the estimator's wall clock.  Reassociating the
+    arithmetic across rows perturbs the reported probabilities at the 1e-15
+    level, but the atoms drawn must be identical -- a changed atom is a changed
+    estimate, not a rounding difference.
+    """
+
+    likelihood = _likelihood()
+    base = _coordinates(likelihood)
+    observed = pd.DataFrame({"measured_e1": [-0.15, 0.12, 0.03, -0.28, 0.19]})
+    delta = 0.25
+
+    rng = np.random.default_rng(20260830)
+    coordinates = replace(
+        base, dispersion=0.1 + 0.2 * rng.random(base.values.shape)
+    )
+    proposal = DefensiveLocalProposal(
+        coordinates,
+        likelihood.cache.prior.weights,
+        local_base_weights=likelihood.cache.get(0.0, 0.0).detection_probability,
+    )
+    candidates = proposal.candidates(observed, n_candidates=2)
+
+    one = proposal.draw_tilted(
+        candidates, observed, n_draws=37, delta=delta, seed=99, object_chunk=1
+    )
+    for chunk in (2, 3, 5, 64):
+        many = proposal.draw_tilted(
+            candidates,
+            observed,
+            n_draws=37,
+            delta=delta,
+            seed=99,
+            object_chunk=chunk,
+        )
+        np.testing.assert_array_equal(one.indices, many.indices)
+        np.testing.assert_array_equal(one.local_member, many.local_member)
+        np.testing.assert_array_equal(one.local_position, many.local_position)
+        np.testing.assert_allclose(
+            one.probability, many.probability, rtol=1e-12, atol=0.0
+        )
+
+    with pytest.raises(ValueError, match="object_chunk must be positive"):
+        proposal.draw_tilted(
+            candidates, observed, n_draws=4, delta=delta, seed=99, object_chunk=0
+        )

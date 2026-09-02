@@ -19,8 +19,10 @@ this document now live under `archive/pre-v3/`; they are provenance, not API.
 For the frozen scientific comparisons, V3 is V2.2 flow plus the latest
 narrow-domain emulator; V3.1 is the four-seed original-E mixed-shear flow plus
 that exact same emulator; V3.2 keeps both V3.1 components and replaces the
-catalogue-inference detector with the transition-aware SBSI classifier; and
-V3b is the named broad-domain comparison. These
+catalogue-inference detector with the transition-aware SBSI classifier;
+V3.3-like uses the single seed-501 500/500 Flow-E derivative-regularized
+checkpoint, that same transition-aware classifier, and the unchanged response
+emulator/R_blend convention; and V3b is the named broad-domain comparison. These
 are model-path presets, not separate software pipelines. For every model
 choice, the prediction is always
 
@@ -44,7 +46,8 @@ V3.2 detection views use every candidate inside 3 arcsec and retain the one
 maximizing `flux_secondary * (Re_secondary / distance)**1`.  The classifier is
 then evaluated on the sheared primary and retained-neighbour ellipticities.
 This neighbour rule is explicit inference configuration: it must not fall back
-to the older nearest-neighbour detector convention.
+to the older nearest-neighbour detector convention. V3.3-like uses this same
+detection-view rule independently at every shear.
 
 ---
 
