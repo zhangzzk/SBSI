@@ -8,15 +8,7 @@ Flow likelihood for three example galaxies. Shape measurements are also contamin
 
 SBSI is an integrated weak gravitational lensing (shear) calibration framework, accounting for detection, selection, and blending.
 
-SBSI provides one model-name-agnostic workflow with three API areas:
-
-1. `sbsi.flow` — train and tune a conditional measurement flow.
-2. `sbsi.response` — combine flow self-response and emulator blending response.
-3. `sbsi.inference` — simulation-based shear inference (under development).
-
-The [inference tutorial notebook](examples/sbsi_api_tutorial.ipynb) is the main
-user-facing prediction walkthrough. Training and tuning use the CLI described
-below.
+The [inference tutorial notebook](examples/sbsi_api_tutorial.ipynb) is the main prediction walkthrough. Training and tuning use the CLI described below.
 
 ## Installation
 
