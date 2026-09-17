@@ -181,9 +181,14 @@ def evaluate_convention(
     groups: int,
     batch_size: int,
     resamples: int,
+    evaluation_seed: int = EVALUATION_SEED,
 ) -> dict:
     measured = np.empty((len(cases), len(cuts)), dtype=np.float64)
     model = np.empty((len(cases), len(cuts)), dtype=np.float64)
+    # The groups are independent latent replicas of the same model response, so
+    # their spread is the flow's Monte Carlo draw noise and nothing else.  It
+    # costs nothing extra to keep: it is already computed to form the score.
+    group_spread = np.empty((len(cases), len(cuts)), dtype=np.float64)
     headline = headline_cut(cuts)
     headline_name = cuts[headline]["name"]
     pair_counts = []
@@ -207,10 +212,16 @@ def evaluate_convention(
             batch_size=batch_size,
             # A shared seed across conventions makes the hard/soft comparison
             # a common-random-number difference rather than a noisy one.
-            seed=EVALUATION_SEED + 1_000_003 * case,
+            seed=evaluation_seed + 1_000_003 * case,
         )
         measured[index] = self_response(evaluated["target"])
         model[index] = self_response(evaluated["mean_response"])
+        per_group = np.stack(
+            [self_response(group) for group in evaluated["group_means"]]
+        )
+        # Standard error of the mean over the groups, which is what
+        # ``mean_response`` averages, so this is the noise on ``model``.
+        group_spread[index] = per_group.std(axis=0, ddof=1) / np.sqrt(groups)
         pair_counts.append(int(len(population.pairs)))
         pass_fraction[index] = population.statistics["baseline_mass"]
         print(
@@ -250,6 +261,15 @@ def evaluate_convention(
                     float(summary["m_ci95_percent"][position][1]),
                 ],
                 "mean_pass_fraction": float(pass_fraction[:, position].mean()),
+                # Draw noise on the 40-case mean model response, from the
+                # independent latent groups, expressed in the same percentage
+                # points as m so the two are directly comparable.
+                "model_draw_noise_percentage_points": float(
+                    100.0
+                    * np.sqrt((group_spread[:, position] ** 2).sum())
+                    / len(cases)
+                    / abs(measured[:, position].mean())
+                ),
             }
         )
     return {
@@ -259,7 +279,9 @@ def evaluate_convention(
         "rows": rows,
         "per_case_measured_R_self": measured,
         "per_case_model_R_self": model,
+        "per_case_model_draw_sem": group_spread,
         "per_case_pairs": pair_counts,
+        "evaluation_seed": int(evaluation_seed),
         "cases": [int(case) for case in cases],
         "draws": int(draws),
         "groups": int(groups),
@@ -288,6 +310,16 @@ def parse_args(argv=None) -> argparse.Namespace:
         help="report only the hard catalogue indicator convention",
     )
     parser.add_argument("--device", default="cuda")
+    parser.add_argument(
+        "--evaluation-seed",
+        type=int,
+        default=EVALUATION_SEED,
+        help=(
+            "latent seed for the flow draws; repeating a measurement with a "
+            "different value and holding everything else fixed isolates the "
+            "draw noise, because the simulation side does not depend on it"
+        ),
+    )
     parser.add_argument(
         "--radius-band-edges",
         type=float,
@@ -357,6 +389,7 @@ def main() -> None:
             groups=args.groups,
             batch_size=args.batch_size,
             resamples=args.bootstrap_resamples,
+            evaluation_seed=args.evaluation_seed,
         )
 
     payload = {
