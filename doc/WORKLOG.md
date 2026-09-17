@@ -1,3 +1,147 @@
+## 2026-09-17 — The reported m had the wrong sign; checkpoint selection was best-of-twenty
+
+Goal restated by the owner: `|m| < 0.3%` on ConstGold, with the flow's own bias
+sub-percent.  No separate sub-percent target is set for the emulator, though
+its size still has to be measured because it decides whether 0.3% is reachable.
+
+### The sign was inverted against the documented convention
+
+`doc/CONVENTIONS.md` section 7 defines `m = R_sim / R_model - 1`.
+`bootstrap_relative_bias` in `scripts/evaluate_per_leg_hard_cut_response.py`
+computed `model / measured - 1`, the reciprocal.  Every per-leg number reported
+on 2026-09-17 therefore carried the wrong sign.  Magnitudes and every
+checkpoint-to-checkpoint comparison are unaffected; the direction was not.
+
+Restated, recomputed from the per-case matrices and the fixed bootstrap seed
+already stored in each result file, so this is a re-reduction and not a
+re-measurement:
+
+| checkpoint | global | deployment cut | cuts within +-0.3% |
+| --- | --- | --- | --- |
+| baseline | +0.185% +- 0.429 | +0.731% +- 0.420 | 8/16 |
+| w=0.01 selected | +0.424% +- 0.431 | +0.519% +- 0.420 | 6/16 |
+| w=0.01 last epoch | +1.279% +- 0.435 | +1.207% +- 0.423 | 0/16 |
+| w=0.1 selected | +0.306% +- 0.429 | +0.185% +- 0.419 | 15/16 |
+| w=0.1 last epoch | +1.627% +- 0.435 | +1.334% +- 0.422 | 0/16 |
+
+Positive `m` means the simulation responds more strongly than the model, so the
+flow's response is too *small*.  The ratio of corrected to stored value is
+-1.002 to -1.013 across the five files, as a reciprocal should be at these
+magnitudes.
+
+### There is no held-out set behind the selected checkpoint
+
+`metric = validation_nll + validation_guard_loss`, minimised over 20 epochs,
+both terms on `manifest["split"]["validation_cases"]`.
+`evaluate_per_leg_hard_cut_response.py` defaults to that same list, and the
+evaluated case list was verified equal to it element for element.  The
+40 cases are held out of the training gradient but not out of model selection,
+and there is no third split.  Earlier entries calling them "held-out cases"
+should be read with that restriction.
+
+Whether the selection is skill:
+
+| | w=0.01 | w=0.1 |
+| --- | --- | --- |
+| selected epoch | 11 | 9 |
+| its abs m | 0.482% | 0.360% |
+| rank among the 20 epochs | 3rd smallest | 2nd smallest |
+| all epochs | +1.057% +- 0.370 | +1.111% +- 0.422 |
+| best-of-20 expectation, no skill | +0.366% | +0.323% |
+| actually selected | +0.482% | +0.360% |
+
+The guard loss does carry signal: it correlates with the true bias at r = +0.77
+(w=0.1) and +0.56 (w=0.01).  But the level it is selecting within has no trend
+over the run, so the selection finds the bottom of a stationary fluctuation
+band rather than a better model, and the selected value sits on the
+order-statistic expectation for the luckiest of twenty draws.  At w=0.1 the
+selected epoch also ranks 18th of 20 on NLL, and `corr(nll, |m|) = -0.26`:
+better density fit goes with worse response bias in this run.
+
+### Noise budget for the flow's predicted response
+
+| term | size | scales with |
+| --- | --- | --- |
+| case / data | 2.7 pp per case, 0.42 pp on 40 cases | `1/sqrt(cases)`; 0.1 pp needs ~730 |
+| training epoch | 0.37-0.42 pp sd, span 1.3-1.7 pp | averaging epochs, not cases |
+| flow draws | being measured, job 16552709 | draws and pairs |
+| model seed | unmeasured | independent training runs |
+
+The epoch term is coherent, not noise: between the selected and the last epoch
+all 40 cases move the same direction, with a scatter of 0.013 pp against a
+1.3 pp shift.  The model is uniformly rescaling its response, so more cases
+will never reduce it.  Two independent paths agree on its size to three digits
+-- the training history predicts +1.299 pp for epoch 9 to 20 and the per-case
+evaluation measures +1.30 pp.
+
+### Consequence: averaging fixes the variance, not the level
+
+The honest level of these runs is the epoch mean, +1.06% and +1.11%, against
++0.185% for the baseline on the same global cut.  Band-guard training as
+configured made the overall bias *worse* while improving the band structure,
+which is the coherence result of the previous entry seen from the other side.
+Averaging weights will stabilise the estimate but land near +1.1%.  The
+load-bearing fix is therefore the cumulative-cut re-weighting, not the
+averaging, and it makes a falsifiable prediction: the epoch *mean* must move
+toward zero, not just its spread.
+
+### Files and behaviour changed
+
+- `scripts/evaluate_per_leg_hard_cut_response.py` — `bootstrap_relative_bias`
+  now computes `measured / model - 1` with arguments reordered to read in the
+  documented direction; new `--evaluation-seed` (default unchanged, so existing
+  comparisons stay common-random-number); records
+  `per_case_model_draw_sem` and `model_draw_noise_percentage_points` from the
+  four independent latent groups, which were already computed and discarded.
+- `scripts/refine_band_guard_flow.py` — `build_guard_bank` now also returns the
+  cumulative cut count; `build_response_scale` divides the cumulative cuts'
+  scale by `CUMULATIVE_SCALE_FACTOR = 0.1`, multiplying their share of the
+  averaged quadratic by a hundred; weights from the back half of the run are
+  accumulated and written as `averaged.pt`, carried in the optimizer state so
+  `--resume` is unaffected; non-floating buffers carry their latest value
+  rather than a meaningless mean.
+- `jobs/job_band_guard_smoke_v2.sh` — re-measures the gradient balance after the
+  re-weighting and asserts `averaged.pt` exists.
+- `jobs/job_response_noise_budget.sh` — one fixed checkpoint at three evaluation
+  seeds, which leaves the flow's draws as the only thing that changed.
+- `jobs/job_constgold_split_full_domain.sh` — merges the ten full-domain
+  `R_blend` blocks once and fits `flow_fractional_error` and
+  `blend_fractional_error` on cases 40-139, crossed with a primary-magnitude
+  axis.  The flow is the only swappable argument.
+
+### Validation
+
+    pytest tests/test_evaluate_per_leg_hard_cut_response.py \
+           tests/test_refine_band_guard_flow.py \
+           tests/test_flow_guard_response.py -q     -> 26 passed
+
+New `tests/test_refine_band_guard_flow.py` (5 tests) covers the cumulative
+up-weighting, the off-diagonal de-weighting surviving it, rejection of a
+cut count outside the bank, and acceptance by `GuardResponsePopulation`.
+`test_bias_sign_follows_the_documented_convention` pins the sign so the
+reciprocal cannot come back silently.
+
+### Limitations
+
+- The draw-noise and model-seed terms are not yet measured, so the noise budget
+  is incomplete.
+- The domain holds 200 cases, 160 train and 40 validation.  Case scatter of
+  2.7 pp caps any validation-only measurement at 0.42 pp, which cannot on its
+  own support a 0.3% claim.
+- The split job's coefficients have not been read yet; the emulator term on
+  this domain is still unmeasured.
+- Detection and selection modelling is absent from the flow/blending split, and
+  shear-induced position shifts remain unmodelled.
+
+### Next steps
+
+- Read jobs 16552255 (smoke, rebalanced weight), 16552709 (draw noise) and
+  16553026 (baseline ConstGold split).
+- Launch production refinements at the weight the smoke run indicates, and test
+  the prediction that the epoch mean moves toward zero.
+- Re-run the split with the improved flow to confirm the flow coefficient moved
+  and the blending coefficient did not.
+
 ## 2026-09-17 — Band guards fix the size profile; the global level still random-walks
 
 Two band-guard refinements ran from the sharp-guard full-domain flow
