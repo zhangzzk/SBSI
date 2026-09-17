@@ -1,3 +1,97 @@
+## 2026-09-17 — The 0.42 pp precision floor is simulation-side noise, so more cases lift it
+
+The previous entry left the case/data term as the binding limit on any absolute
+`|m|` claim: 2.7 percentage points of scatter per case, 0.42 pp on the 40
+validation cases, against a 0.3% target.  That number is only a floor if the
+scatter is real case-to-case structure.  It is not.
+
+### Where the scatter sits
+
+Splitting the variance of `m = R_sim / R_model - 1` into its two sides, from the
+per-case matrices already stored in the evaluation outputs:
+
+| | simulation side | model side | quadrature | observed sd(m) | correlation |
+| --- | --- | --- | --- | --- | --- |
+| global | 2.670 pp | 0.517 pp | 2.720 pp | 2.723 pp | +0.008 |
+| deployment cut | 2.620 pp | 0.411 pp | 2.652 pp | 2.682 pp | -0.017 |
+
+Quadrature reproduces the observed scatter to within 1%, which is the
+signature of two independent terms, and the correlation between the two sides
+is consistent with zero.  The simulation side carries 96% of the variance
+globally and 98% at the deployment cut.  The same decomposition on the
+`w=0.1 selected` checkpoint gives the same answer to three digits, so it is a
+property of the measurement and not of a particular flow.
+
+Every domain case renders the same input truth catalogue
+(`gals_info_tile180.0_-0.5.feather`, shared across `case*_0.02/real0`), so the
+true response is essentially common to all cases and the 2.67 pp is
+measurement noise on the simulation's estimate of it, not structure the flow is
+failing to track.  A zero correlation is what that predicts; it would be a
+finding if the cases differed physically.
+
+### Two consequences
+
+Measurement noise averages down, so the cases needed for a given precision are:
+
+| target | cases |
+| --- | --- |
+| +-0.30 pp | 80-82 |
+| +-0.15 pp | 318-330 |
+| +-0.10 pp | 716-742 |
+
+The domain holds 200 cases, not 40.  Evaluating all of them gives 0.19 pp,
+which does resolve 0.3%.  160 of them are in the training gradient, so the
+result cannot be called held-out — but the evaluation stores the full per-case
+matrices, so the train-only and validation-only numbers both come out of a
+single run for free, and their agreement or disagreement is itself the
+measurement of how much the flow has memorised.
+
+Separately, this floor applies to *absolute* claims only.  The simulation side
+does not depend on the flow and is bit-identical across checkpoints
+(`max |diff| = 0.000e+00`, previous entry), so when two checkpoints are
+differenced it cancels exactly.  Checkpoint-to-checkpoint improvements are
+resolvable far below 0.42 pp; that is why the 1.30 pp selected-to-last shift
+was measurable with a per-case scatter of 0.013 pp.
+
+### Files and behaviour changed
+
+- `jobs/job_per_leg_all_domain_cases.sh` — new.  Runs the per-leg cumulative
+  evaluation for one checkpoint over all 200 domain cases, into
+  `all_domain_cases/<tag>/cumulative.json`.  The train/validation split is done
+  in the reduction, not in the run.
+- `jobs/job_band_guard_refine_v2.sh` — new.  The production refinement under the
+  re-weighted guard loss, writing to `rebalanced_weight_<w>` rather than
+  `weight_<w>`.  The separate tree is load-bearing: `job_band_guard_refine.sh`
+  passes `--resume`, and pointing it at the existing directories would continue
+  runs under a loss they were not trained with, silently mixing two loss
+  definitions in one history.  Asserts `averaged.pt` exists on completion.
+
+### Validation
+
+    bash -n jobs/job_band_guard_refine_v2.sh jobs/job_per_leg_all_domain_cases.sh
+
+The variance decomposition is a re-reduction of the stored
+`per_case_measured_R_self` and `per_case_model_R_self` matrices in
+`per_leg_hard_cut_c40_v1/refined_heldout_per_leg.json` and
+`evaluation_weight_0.1/cumulative.json`; no run was repeated.
+
+### Limitations
+
+- The 200-case number is not held-out and its value depends on train and
+  validation agreeing; that comparison has not been made yet.
+- The model side's 0.4-0.5 pp is not separated into flow draw noise and genuine
+  per-case variation.  Job 16552709 measures the draw part.
+- Nothing here addresses the level, only the precision with which it can be
+  stated.
+
+### Next steps
+
+- Read the baseline ConstGold split (job 16553100) for the flow and blending
+  coefficients.
+- Run `job_per_leg_all_domain_cases.sh` on the baseline flow and compare the
+  train-only and validation-only numbers.
+- Launch `job_band_guard_refine_v2.sh` at the weight the smoke run indicates.
+
 ## 2026-09-17 — The reported m had the wrong sign; checkpoint selection was best-of-twenty
 
 Goal restated by the owner: `|m| < 0.3%` on ConstGold, with the flow's own bias
