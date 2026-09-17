@@ -1,149 +1,135 @@
-# SBSI API — scope, releases, and public contract
-
-`AGENTS.md` carries the short project rules. This document defines the code and
-data boundary behind them.
+# SBSI API and scope
 
 ## Scope boundary
 
-- SBSI owns conditional measurement flows, detection classifiers, response
-  prediction, finite-scene likelihoods, sampling, validation, and shear
-  inference.
-- BlendEMU owns image simulation, measurement, simulation-catalogue production,
-  and response-emulator training. SBSI consumes its supported catalogue and
-  model interfaces; it does not copy those implementations.
-- SBSI prepares response-emulator inputs from an explicit truth catalogue. This
-  includes validation, neighbour finding, pair selection, training-matched
-  cuts and scaling, and keyed alignment of predictions.
-- A new simulator, measurement, or emulator-training feature belongs in
-  BlendEMU unless the project owner explicitly changes this boundary.
+SBSI owns:
 
-## Release identity
+- finite scene priors and their guarded neighbour graph;
+- conditional measurement-flow loading and evaluation;
+- usable-measurement classifier loading and evaluation;
+- measured-output selection and population normalization;
+- fixed atom-aligned `R_blend` composition;
+- likelihood caches, importance sampling, validation, and inference.
 
-SBSI has one inference workflow with two independent scientific release labels:
+BlendEMU owns image simulation, measurement, simulation-catalogue production,
+and response-emulator training. SBSI accepts the resulting catalogues and model
+artifacts through explicit paths. Unmatched keyed rows are rejected or dropped
+and reported; they are never represented by a zero response.
 
-| role | release | authoritative definition |
-| --- | --- | --- |
-| numerical pipeline | `v1.1-infer` | `configs/inference.json` |
-| catalogue likelihood | `v3.2-like` | `configs/likelihood.json` |
+The archived training and response-development code under
+`archive/research-2026-09-14/` is provenance, not part of the supported API.
 
-The labels are provenance, not dispatch keys. Code validates the effective
-configuration, artifact hashes, target order, feature metadata, geometry, and
-cache identities; it must not select behavior from a release string alone.
-They are also separate from the package version in `pyproject.toml`.
+## Release and model identities
 
-`v3.2-like` is not the path-only `get_model("V3.2")` preset. The likelihood
-uses the single seed-501 original-E flow and the bundled seven-input spin-0
-BlendEMU classifier. The `V3.2` preset points to a four-flow ensemble and an
-external transition-aware detector. `models/README.md` records the complete
-distinction and the frozen artifact hashes.
+The configured default is numerical pipeline `v1.1-infer` with likelihood
+`v3.2-like`. `v1.2-infer` is the available tilted-stratified numerical
+estimator.
 
-Model presets remain optional compatibility conveniences. `get_model("V3.1")`,
-`get_model("V3.2")`, and `get_model("V3.3-like")` return paths only; no
-catalogue, selection, response, or inference behavior may branch on those
-names. `V3.3-like` is the validated single-seed 500/500 Flow-E plus
-transition-aware detector set, not the likelihood currently selected by
-`configs/likelihood.json`. Broken presets for retired checkpoint trees are
-intentionally not kept.
+`V3.5-like` is a path-only development model set:
 
-## General contract
+1. lambda10 epoch154 joint four-output measurement flow;
+2. trial9 response emulator used to build fixed atom-aligned `R_blend`;
+3. equal-probability ensemble of three nine-input coherent-`U` classifiers.
 
-- Every training, validation, prior, and inference catalogue is supplied by the
-  user as a DataFrame or explicit path. Project data paths are never API
-  defaults.
-- Flow checkpoints, classifier artifacts, response models, derived caches, and
-  outputs are explicit and provenance-checked.
-- Model support comes from checkpoint metadata or an explicit configuration,
-  never from a filename.
-- Unmatched keyed rows are rejected or intentionally dropped and reported.
-  Alignment failure is never represented as a zero blending response.
-- Common random numbers are retained across all finite-difference views. A
-  sampled atom set and its proposal probabilities stay fixed throughout an
-  inference stencil.
-- Loaded mocks and caches must match their declared inputs, models, selection,
-  shear transform, target order, and implementation identity.
+It is defined in `configs/likelihood_v3_5_like.json` and `sbsi.models`. The name
+must never select behavior by itself: effective configuration, feature and
+target metadata, paths, and hashes remain authoritative. The model set has not
+demonstrated 0.3% calibration and is not the default likelihood.
+
+## Likelihood contract
+
+For scene atom `j` and shear `g`, the model composes
+
+```text
+p(U_j(g) | x_j(g))
+p(e1, e2, FLUX_RADIUS, flux-from-MAG_AUTO | U_j(g), x_j(g))
+R_blend,j [e_j(g) - e_j(0)]
+```
+
+`U` is the actual per-leg usable-measurement event. The classifier does not
+replace measured selection. The magnitude and radius cuts are integrated over
+the joint flow outputs (up to invertible coordinate transforms), so
+`MAG_AUTO` and `FLUX_RADIUS` must remain in the measurement target. For the
+current sample:
+
+```text
+MAG_AUTO < 25.8
+FLUX_RADIUS >= 0.75 arcsec
+no measured-|e| cut
+```
+
+The blend term is evaluated once per atom at zero shear and applied as
+
+```text
+e_model,j(g) = e_flow,j(g) + R_blend,j [e_truth,j(g) - e_truth,j(0)].
+```
+
+Under selection, `R_blend` is averaged over the same passing population as the
+flow outputs.
+
+### Replacement fixed-cohort training contract
+
+The 2026-09-14 replacement training run is deliberately distinct from the
+configured V3.5-like likelihood. Its flow and BlendEMU response emulator use
+objects selected once on the measured g=0 leg by strict
+`MAG_AUTO < 25.8` and `FLUX_RADIUS > 0.60 arcsec`, with exact object keys
+carried to the sheared leg and no analysis truth cut. The usable-event
+classifier instead uses the complete simulation target-role parent and no
+measured selection or analysis truth cut.
+
+The blending-response cohort is additionally restricted to the simulator's
+structural primary target role, identified by stable
+`input_index < floor(N_generated / 2)`. Shape placeholders do not define that
+role. Response-pair rows require finite, strictly interior ngmix shapes in
+both label legs; this only makes the response target well defined and does not
+alter the fixed-g0 cohort predicate.
+
+Because the replacement flow is conditional on fixed cohort membership, it
+must not be combined with the current per-leg measured-selection normalizer.
+New model artifacts do not become a public/configured model set until a
+separate fixed-cohort likelihood contract and rebuilt caches pass validation.
 
 ## Public Python surface
 
-The package root is intentionally small and lazy. It exports
-`EmulatorPairingConfig`, `ModelPaths`, `ResponsePredictor`, `example_path`,
-`get_model`, `load_catalogue`, `load_emulator`, `prepare_forward_catalogue`,
-`predict_blend_response`, and `sample_measurement`.
+The package root exports only lightweight prediction helpers:
 
-Specialized workflows import their implementation modules directly:
+- `EmulatorPairingConfig`
+- `ModelPaths`
+- `ResponsePredictor`
+- `example_path`
+- `get_model`
+- `load_catalogue`
+- `load_emulator`
+- `prepare_forward_catalogue`
+- `predict_blend_response`
+- `sample_measurement`
 
-- `sbsi.flow` — conditional-flow training and explicit tuning;
-- `sbsi.scene_prior` — finite catalogue atoms and the guarded neighbour graph;
-- `sbsi.catalogue_likelihood` — flow, detection, measured-selection, and
-  population-normalization terms;
-- `sbsi.catalogue_sampling` — defensive importance sampling;
-- `sbsi.catalogue_blend` — fixed atom-aligned external response caches;
-- `sbsi.catalogue_null` — score/information diagnostics and exact local
-  validation;
-- `sbsi.catalogue_closure` and `sbsi.image_closure` — likelihood- and
-  image-generated closure adapters; and
-- `sbsi.shear_map`, `sbsi.measurement_model`, and `sbsi.selection_model` — the
-  shared scientific transformations and learned-model loaders.
+Specialized workflows import their modules directly:
 
-Reusable scientific behavior belongs in these modules, not in scheduler
-wrappers or one-off scripts.
+- `sbsi.scene_prior` — finite scene atoms and model views;
+- `sbsi.catalogue_likelihood` — likelihood and model caches;
+- `sbsi.catalogue_sampling` — proposals and importance sampling;
+- `sbsi.catalogue_null` — score/information inference estimators;
+- `sbsi.catalogue_blend` — atom-aligned response caches;
+- `sbsi.selection_normalization` — exact and fitted selection normalization;
+- `sbsi.measurement_model` and `sbsi.selection_model` — model loaders;
+- `sbsi.shear_map` — the shared reduced-shear transformation.
 
-## Operational entry points
+`python -m sbsi show-model V3.5-like` prints the path preset. The production
+inference entry point remains `scripts/run_inference.py`.
 
-The production path is deliberately small:
+## Input and cache rules
 
-- `configs/inference.json` defines `v1.1-infer` sampling, finite differences,
-  optimization, precision, and chunking;
-- `configs/likelihood.json` defines `v3.2-like` model artifacts, target order,
-  shear transform, geometry, and observing conditions;
-- `scripts/run_inference.py` is the single inference runner; and
-- `jobs/job_inference.sh` is the cluster-local reference wrapper.
+- Catalogues and artifact paths are user inputs; project data paths are not API
+  defaults.
+- Caches record their input, model, configuration, implementation, and random
+  stream identities.
+- Common random numbers are retained across every finite-difference view.
+- A sampled atom set and proposal probabilities remain fixed across a stencil.
+- Loaded caches must match their declared scene, flow, classifier, selection,
+  shear transform, target order, and implementation.
+- Existing output paths are not overwritten.
 
-Reusable inputs are prepared separately:
-
-- `scripts/build_scene_prior.py` builds the guarded finite scene store;
-- `scripts/build_catalogue_blend_response.py` builds the optional fixed,
-  atom-aligned `R_blend` cache; and
-- `scripts/prepare_image_closure_mock.py` converts one declared BlendEMU image
-  leg into the flow's measured-target convention.
-
-`scripts/run_catalogue_closure.py` and the retained exact, powered, and nonzero
-closure programs are validation tools. They are not alternative production
-pipelines or release choices.
-
-## Likelihood and response invariants
-
-For prior atoms `z_j` with masses `pi_j`, retained measurements use
-
-```text
-A_i(g) = sum_j pi_j P_det(S_g z_j) p_flow(xhat_i - b_j(g) | S_g z_j)
-B_W(g) = sum_j pi_j P_det(S_g z_j) P_pass,j(g)
-p(xhat_i | detected, W, g) = A_i(g) / B_W(g)
-
-b_j(g) = R_blend,j [e(S_g z_j) - e(z_j)]
-```
-
-The current project shear transform changes intrinsic ellipticity only. Flux,
-size, positions, pair separations, and neighbour membership remain fixed;
-magnification is outside this likelihood. A measured cut cancels from the
-numerator for retained objects, but its population probability does not cancel
-from `B_W`.
-
-Response reporting always uses both components:
-
-```text
-R_model = R_flow + R_blend
-m = R_sim / R_model - 1
-```
-
-An atom with no supported neighbour has a physical zero external response and
-is reported separately from a failed catalogue join.
-
-## Current scientific limitation
-
-The `v3.2-like` detector has only seven spin-0 inputs, so the software may cache
-its probability across shape-only shear views. That is a model contract, not
-evidence that image detection is shear invariant. Precision image closure
-still requires a detector/usable-measurement model that represents the missing
-detection-selection response. A likelihood-generated closure validates the
-likelihood implementation; it does not by itself validate population transfer
-or image selection.
+The cache formats and scalable workflow are specified in
+[`CATALOGUE_PRIOR.md`](CATALOGUE_PRIOR.md). The numerical estimator is specified
+in [`INFERENCE.md`](INFERENCE.md) and [`MATH.md`](MATH.md).

@@ -28,6 +28,7 @@ from sbsi.complement_diagnostic import diagnose_complement
 from sbsi.forward_catalogue import EmulatorPairingConfig
 from sbsi.measurement_model import load_measurement_model
 from sbsi.models import ModelPaths, load_emulator
+from sbsi.selection_model import load_selection_model, load_selection_model_ensemble
 from sbsi.likelihood_landscape import likelihood_landscape
 from sbsi.scene_prior import SHEAR_TRANSFORM, ScenePrior
 from sbsi.selection_normalization import (
@@ -59,9 +60,7 @@ def _pair(value: str) -> tuple[float, float]:
 def _matrix2(value: str) -> tuple[tuple[float, float], tuple[float, float]]:
     parts = tuple(float(item) for item in value.split(","))
     if len(parts) != 4 or not np.isfinite(parts).all():
-        raise argparse.ArgumentTypeError(
-            "expected four finite comma-separated row-major values"
-        )
+        raise argparse.ArgumentTypeError("expected four finite comma-separated row-major values")
     matrix = np.asarray(parts, dtype=np.float64).reshape(2, 2)
     if abs(float(np.linalg.det(matrix))) <= 1e-12:
         raise argparse.ArgumentTypeError("mean-shape response matrix must be invertible")
@@ -85,9 +84,7 @@ def _mean_observed_shape(measurements, target_names):
     names = ("measured_ngmix_g1", "measured_ngmix_g2")
     missing = sorted(set(names) - set(target_names))
     if missing:
-        raise ValueError(
-            f"mean-observed initial centre requires flow targets {names}; missing {missing}"
-        )
+        raise ValueError(f"mean-observed initial centre requires flow targets {names}; missing {missing}")
     values = measurements.loc[:, names].to_numpy(dtype=np.float64)
     if values.ndim != 2 or values.shape[1] != 2 or len(values) == 0:
         raise ValueError("mean-observed initial centre requires nonempty shape measurements")
@@ -148,14 +145,10 @@ def _full_ladder_one_step_report(moments):
             "positive_definite": bool(eigenvalues[0] > 0),
         }
         try:
-            step = np.linalg.solve(
-                information_sum, score.sum(axis=0, dtype=np.float64)
-            )
+            step = np.linalg.solve(information_sum, score.sum(axis=0, dtype=np.float64))
             estimate = center + step
             residual = score - np.einsum("nij,j->ni", information, step)
-            influence = np.linalg.solve(
-                information_sum / len(score), residual.T
-            ).T
+            influence = np.linalg.solve(information_sum / len(score), residual.T).T
             robust_se = np.std(influence, axis=0, ddof=1) / np.sqrt(len(score))
         except np.linalg.LinAlgError:
             entry.update(
@@ -245,15 +238,11 @@ def _inference_defaults(config: dict) -> dict:
             # ladder of any release that stops shallower.
             "draws": int(estimator["draw_ladder"][-1]),
             "adaptive_min_ess": float(estimator["minimum_ess"]),
-            "adaptive_max_weight_fraction": float(
-                estimator["maximum_weight_fraction"]
-            ),
+            "adaptive_max_weight_fraction": float(estimator["maximum_weight_fraction"]),
             "adaptive_allocation": estimator["allocation"],
             "adaptive_pilot_draws": int(estimator["pilot_draws"]),
             "adaptive_pilot_seed": int(estimator["pilot_seed"]),
-            "adaptive_pilot_safety_factor": float(
-                estimator["pilot_safety_factor"]
-            ),
+            "adaptive_pilot_safety_factor": float(estimator["pilot_safety_factor"]),
             "adaptive_bias_correction": estimator["bias_correction"],
             "retain_full_ladder": bool(estimator["retain_full_ladder"]),
             "compile_flow": bool(execution["compile_flow"]),
@@ -272,13 +261,9 @@ def _inference_defaults(config: dict) -> dict:
             defaults["estimator_mode"] = str(mode)
             if mode in ("tilted_stratified", "priority_stratified"):
                 defaults["estimator_tilt_delta"] = float(estimator["tilt_delta"])
-                defaults["estimator_tilt_temperature"] = float(
-                    estimator["tilt_temperature"]
-                )
+                defaults["estimator_tilt_temperature"] = float(estimator["tilt_temperature"])
             elif "tilt_delta" in estimator or "tilt_temperature" in estimator:
-                raise ValueError(
-                    f"estimator_mode {mode} does not take a complement tilt"
-                )
+                raise ValueError(f"estimator_mode {mode} does not take a complement tilt")
         return defaults
     except (KeyError, TypeError, ValueError) as error:
         raise ValueError(f"invalid inference config: {error}") from error
@@ -290,15 +275,13 @@ def _likelihood_defaults(config: dict) -> dict:
         conditions = config["observing_conditions"]
         emulator = config["emulator"]
         crowding = geometry["crowding_radii_arcsec"]
-        return {
+        defaults = {
             "emulator_model": str(_repo_path(emulator["model"]["path"])),
             "emulator_metadata": str(_repo_path(emulator["metadata"]["path"])),
-            "detection_radius_arcsec": float(
-                geometry["detection_radius_arcsec"]
-            ),
-            "flow_neighbour_radius_arcsec": float(
-                geometry["flow_neighbour_radius_arcsec"]
-            ),
+            "detection_radius_arcsec": float(geometry["detection_radius_arcsec"]),
+            "detection_neighbour_selection": str(geometry.get("detection_neighbour_selection", "nearest")),
+            "detection_impact_exponent": float(geometry.get("detection_impact_exponent", 2.0)),
+            "flow_neighbour_radius_arcsec": float(geometry["flow_neighbour_radius_arcsec"]),
             "crowding_near_arcsec": float(crowding[0]),
             "crowding_far_arcsec": float(crowding[1]),
             "pixel_size": float(conditions["pixel_size"]),
@@ -307,6 +290,15 @@ def _likelihood_defaults(config: dict) -> dict:
             "moffat_beta": float(conditions["moffat_beta"]),
             "pixel_rms": float(conditions["pixel_rms"]),
         }
+        selection = config.get("measured_selection")
+        if isinstance(selection, dict):
+            if selection.get("mode") != "output_cut_with_population_normalization":
+                raise ValueError("unsupported measured-selection mode")
+            bounds = selection.get("bounds")
+            if not isinstance(bounds, list) or not all(isinstance(bound, str) and bound for bound in bounds):
+                raise ValueError("measured-selection bounds must be nonempty strings")
+            defaults["cut_bound"] = list(bounds)
+        return defaults
     except (KeyError, IndexError, TypeError, ValueError) as error:
         raise ValueError(f"invalid likelihood config: {error}") from error
 
@@ -316,8 +308,7 @@ def _validate_artifact(path: str | Path, spec: dict, *, name: str) -> str:
     actual = _sha256(path)
     if not isinstance(expected, str) or actual != expected:
         raise RuntimeError(
-            f"{name} does not match the likelihood release: expected {expected}, "
-            f"found {actual}"
+            f"{name} does not match the likelihood release: expected {expected}, found {actual}"
         )
     return actual
 
@@ -381,20 +372,14 @@ def _resolved_pipeline_config(args, source: dict) -> dict:
         resolved["estimator"]["estimator_mode"] = args.estimator_mode
         if args.estimator_mode in ("tilted_stratified", "priority_stratified"):
             resolved["estimator"]["tilt_delta"] = float(args.estimator_tilt_delta)
-            resolved["estimator"]["tilt_temperature"] = float(
-                args.estimator_tilt_temperature
-            )
+            resolved["estimator"]["tilt_temperature"] = float(args.estimator_tilt_temperature)
     return resolved
 
 
 def _result_arguments(args) -> dict:
     """JSON-safe invocation details, excluding the retired naming switch."""
 
-    return {
-        name: value
-        for name, value in vars(args).items()
-        if name != "legacy_inference_version"
-    }
+    return {name: value for name, value in vars(args).items() if name != "legacy_inference_version"}
 
 
 def _selection_cache_hashes(root: str | Path) -> dict[str, str]:
@@ -440,9 +425,7 @@ def _validate_loaded_mock_manifest(
     if payload.get("shear_transform") != mock.shear_transform:
         raise RuntimeError("image mock shear transform does not match its source manifest")
     if payload.get("measurement_model_sha256") != measurement_model_sha256:
-        raise RuntimeError(
-            "image mock was prepared for a different measurement-flow checkpoint"
-        )
+        raise RuntimeError("image mock was prepared for a different measurement-flow checkpoint")
     if tuple(payload.get("target_names", ())) != tuple(target_names):
         raise RuntimeError("image mock target names do not match the measurement flow")
 
@@ -455,9 +438,7 @@ def _validate_loaded_mock_manifest(
         raise RuntimeError("image mock files do not match their source manifest")
 
     injected = mock.truth[["injected_g1", "injected_g2"]].drop_duplicates()
-    manifest_injection = np.asarray(
-        [payload.get("injected_g1"), payload.get("injected_g2")], dtype=float
-    )
+    manifest_injection = np.asarray([payload.get("injected_g1"), payload.get("injected_g2")], dtype=float)
     if (
         len(injected) != 1
         or not np.isfinite(manifest_injection).all()
@@ -492,13 +473,9 @@ def _validate_loaded_likelihood_manifest(
     if payload.get("mock_kind") != "likelihood" or mock.kind != "likelihood":
         raise RuntimeError("likelihood mock kind does not match its source manifest")
     if payload.get("generation_identity") != generation_identity:
-        raise RuntimeError(
-            "likelihood mock was generated with different scene/model/selection settings"
-        )
+        raise RuntimeError("likelihood mock was generated with different scene/model/selection settings")
     if payload.get("implementation_sha256") != implementation_sha256:
-        raise RuntimeError(
-            "likelihood mock was generated by a different implementation"
-        )
+        raise RuntimeError("likelihood mock was generated by a different implementation")
     actual_hashes = _file_hashes(
         root,
         ("measurements.parquet", "truth.parquet"),
@@ -542,20 +519,12 @@ def _likelihood_implementation_hashes() -> dict[str, str]:
 
 def parse_args(argv=None):
     release_parser = argparse.ArgumentParser(add_help=False)
-    release_parser.add_argument(
-        "--inference-config", default=str(DEFAULT_INFERENCE_CONFIG)
-    )
-    release_parser.add_argument(
-        "--likelihood-config", default=str(DEFAULT_LIKELIHOOD_CONFIG)
-    )
+    release_parser.add_argument("--inference-config", default=str(DEFAULT_INFERENCE_CONFIG))
+    release_parser.add_argument("--likelihood-config", default=str(DEFAULT_LIKELIHOOD_CONFIG))
     release_args, _ = release_parser.parse_known_args(argv)
     try:
-        inference_config = _load_release_config(
-            release_args.inference_config, kind="inference"
-        )
-        likelihood_config = _load_release_config(
-            release_args.likelihood_config, kind="likelihood"
-        )
+        inference_config = _load_release_config(release_args.inference_config, kind="inference")
+        likelihood_config = _load_release_config(release_args.likelihood_config, kind="likelihood")
         release_defaults = {
             **_inference_defaults(inference_config),
             **_likelihood_defaults(likelihood_config),
@@ -587,13 +556,17 @@ def parse_args(argv=None):
     parser.add_argument("--model-cache", required=True)
     parser.add_argument("--proposal-cache", required=True)
     parser.add_argument("--detection-radius-arcsec", type=float, default=3.0)
+    parser.add_argument(
+        "--detection-neighbour-selection",
+        choices=("nearest", "impact"),
+        default="nearest",
+    )
+    parser.add_argument("--detection-impact-exponent", type=float, default=2.0)
     parser.add_argument("--flow-neighbour-radius-arcsec", type=float, default=7.0)
     parser.add_argument("--crowding-near-arcsec", type=float, default=3.0)
     parser.add_argument("--crowding-far-arcsec", type=float, default=7.0)
     parser.add_argument("--proposal-flow-samples", type=int, default=16)
-    parser.add_argument(
-        "--proposal-statistic", choices=("mean", "median"), default="median"
-    )
+    parser.add_argument("--proposal-statistic", choices=("mean", "median"), default="median")
     parser.add_argument(
         "--proposal-dispersion-statistic",
         choices=("robust_iqr", "std"),
@@ -781,9 +754,7 @@ def parse_args(argv=None):
         action="store_true",
         help=argparse.SUPPRESS,
     )
-    parser.add_argument(
-        "--adaptive-draw-ladder", nargs="+", type=int, default=(512, 1024, 2048)
-    )
+    parser.add_argument("--adaptive-draw-ladder", nargs="+", type=int, default=(512, 1024, 2048))
     parser.add_argument(
         "--estimator-mode",
         choices=("mixture", "stratified", "tilted_stratified", "priority_stratified"),
@@ -817,9 +788,7 @@ def parse_args(argv=None):
         choices=("none", "richardson_1_over_m"),
         default="none",
     )
-    parser.add_argument(
-        "--candidate-backend", choices=("scipy", "torch"), default="scipy"
-    )
+    parser.add_argument("--candidate-backend", choices=("scipy", "torch"), default="scipy")
     parser.add_argument(
         "--retain-full-ladder",
         action="store_true",
@@ -928,26 +897,18 @@ def parse_args(argv=None):
     # observation in flight rather than a hundred, so a 12.76-million-atom row
     # would otherwise be walked in three thousand launches.
     parser.add_argument("--likelihood-landscape", default=None)
-    parser.add_argument(
-        "--likelihood-landscape-rows", nargs="+", type=int, default=()
-    )
+    parser.add_argument("--likelihood-landscape-rows", nargs="+", type=int, default=())
     parser.add_argument("--likelihood-landscape-head", type=int, default=4096)
-    parser.add_argument(
-        "--likelihood-landscape-atom-chunk", type=int, default=1 << 20
-    )
+    parser.add_argument("--likelihood-landscape-atom-chunk", type=int, default=1 << 20)
     # Shortlist sizes to score against the exact profile: how much of the true
     # mass the estimator's exactly-summed stratum would have captured.
-    parser.add_argument(
-        "--likelihood-landscape-shortlists", nargs="+", type=int, default=()
-    )
+    parser.add_argument("--likelihood-landscape-shortlists", nargs="+", type=int, default=())
     parser.add_argument("--pixel-size", type=float, default=0.2)
     parser.add_argument("--zero-point", type=float, default=30.0)
     parser.add_argument("--psf-fwhm", type=float, default=0.73)
     parser.add_argument("--moffat-beta", type=float, default=2.224)
     parser.add_argument("--pixel-rms", type=float, default=0.312)
-    parser.add_argument(
-        "--device", default="cuda" if torch.cuda.is_available() else "cpu"
-    )
+    parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     # Kept as a rejected-value compatibility option for older launchers.  The
     # current likelihood is deliberately fp32-only.
     parser.add_argument("--precision", choices=("fp32",), help=argparse.SUPPRESS)
@@ -957,17 +918,11 @@ def parse_args(argv=None):
 
 def main(argv=None):
     args = parse_args(argv)
-    inference_config = _load_release_config(
-        args.inference_config, kind="inference"
-    )
-    likelihood_config = _load_release_config(
-        args.likelihood_config, kind="likelihood"
-    )
+    inference_config = _load_release_config(args.inference_config, kind="inference")
+    likelihood_config = _load_release_config(args.likelihood_config, kind="likelihood")
     resolved_pipeline_config = _resolved_pipeline_config(args, inference_config)
     pipeline_release = (
-        inference_config["release"]
-        if resolved_pipeline_config == inference_config
-        else "custom"
+        inference_config["release"] if resolved_pipeline_config == inference_config else "custom"
     )
     pipeline_config_sha256 = _sha256(args.inference_config)
     likelihood_config_sha256 = _sha256(args.likelihood_config)
@@ -977,9 +932,7 @@ def main(argv=None):
         raise SystemExit("--observation-start must be non-negative")
     if args.prepare_only and args.mock_input is not None:
         raise SystemExit("--prepare-only generates a new mock and rejects --mock-input")
-    if args.selection_cache is not None and not (
-        args.cut_abs_ehat is not None or args.cut_bound
-    ):
+    if args.selection_cache is not None and not (args.cut_abs_ehat is not None or args.cut_bound):
         raise SystemExit("--selection-cache requires a measured cut")
     if args.selection_normalization_cache is not None and not (
         args.cut_abs_ehat is not None or args.cut_bound
@@ -990,23 +943,14 @@ def main(argv=None):
         or args.selection_normalization_shards is not None
     )
     if normalization_shard_mode:
-        if (
-            args.selection_normalization_shard_index is None
-            or args.selection_normalization_shards is None
-        ):
-            raise SystemExit(
-                "distributed normalization requires both shard index and shard count"
-            )
+        if args.selection_normalization_shard_index is None or args.selection_normalization_shards is None:
+            raise SystemExit("distributed normalization requires both shard index and shard count")
         if args.selection_normalization_shards <= 0 or not (
-            0
-            <= args.selection_normalization_shard_index
-            < args.selection_normalization_shards
+            0 <= args.selection_normalization_shard_index < args.selection_normalization_shards
         ):
             raise SystemExit("distributed normalization shard index/count are invalid")
         if args.selection_normalization_cache is not None:
-            raise SystemExit(
-                "normalization shard preparation cannot also consume a normalization cache"
-            )
+            raise SystemExit("normalization shard preparation cannot also consume a normalization cache")
         if args.mock_input is None:
             raise SystemExit("normalization shard preparation requires --mock-input")
         if not (args.cut_abs_ehat is not None or args.cut_bound):
@@ -1025,16 +969,10 @@ def main(argv=None):
     }
     likelihood_defaults = _likelihood_defaults(likelihood_config)
     geometry_names = tuple(
-        name
-        for name in likelihood_defaults
-        if name not in {"emulator_model", "emulator_metadata"}
+        name for name in likelihood_defaults if name not in {"emulator_model", "emulator_metadata"}
     )
-    resolved_likelihood_defaults = {
-        name: getattr(args, name) for name in geometry_names
-    }
-    expected_likelihood_defaults = {
-        name: likelihood_defaults[name] for name in geometry_names
-    }
+    resolved_likelihood_defaults = {name: getattr(args, name) for name in geometry_names}
+    expected_likelihood_defaults = {name: likelihood_defaults[name] for name in geometry_names}
     if resolved_likelihood_defaults != expected_likelihood_defaults:
         raise RuntimeError(
             "likelihood geometry, observing conditions, and emulator paths must "
@@ -1058,12 +996,34 @@ def main(argv=None):
         emulator_config["metadata"],
         name="emulator metadata",
     )
-    detection_model_path = _repo_path(emulator_config["detection_model"]["path"])
-    _validate_artifact(
-        detection_model_path,
-        emulator_config["detection_model"],
-        name="detection model",
-    )
+    detection_spec = emulator_config["detection_model"]
+    detection_backend = detection_spec.get("backend", "blendemu")
+    detection_model_paths = []
+    if detection_backend == "sbsi_selection_model_ensemble":
+        if detection_spec.get("aggregation") != "arithmetic_mean_probability":
+            raise RuntimeError("selection-model ensemble aggregation must be arithmetic_mean_probability")
+        members = detection_spec.get("members")
+        if not isinstance(members, list) or not members:
+            raise RuntimeError("selection-model ensemble requires a nonempty members list")
+        for index, member in enumerate(members):
+            if not isinstance(member, dict) or "path" not in member:
+                raise RuntimeError(f"selection-model ensemble member {index} lacks a path")
+            path = _repo_path(member["path"])
+            _validate_artifact(path, member, name=f"detection model member {index}")
+            detection_model_paths.append(path)
+        detection_identity = {
+            "aggregation": "arithmetic_mean_probability",
+            "members": [_sha256(path) for path in detection_model_paths],
+        }
+    else:
+        detection_model_path = _repo_path(detection_spec["path"])
+        _validate_artifact(
+            detection_model_path,
+            detection_spec,
+            name="detection model",
+        )
+        detection_model_paths.append(detection_model_path)
+        detection_identity = _sha256(detection_model_path)
     prior = ScenePrior.load(args.scene_store)
     # The blend-response cache is built over the full active support, so a half
     # still lies inside it.  Keep the full count for the cache identity check
@@ -1089,9 +1049,7 @@ def main(argv=None):
     flow = load_measurement_model(args.measurement_model, device=args.device)
     expected_targets = tuple(likelihood_config["measurement_model"]["target_names"])
     if tuple(flow.target_transform.target_names) != expected_targets:
-        raise RuntimeError(
-            "measurement-flow target order does not match the likelihood release"
-        )
+        raise RuntimeError("measurement-flow target order does not match the likelihood release")
     output_cut = None
     if args.cut_abs_ehat is not None or args.cut_bound:
         try:
@@ -1110,7 +1068,7 @@ def main(argv=None):
     }
     likelihood_component_hashes = {
         **model_hashes,
-        "detection": _sha256(detection_model_path),
+        "detection": detection_identity,
     }
     scene_hashes = _file_hashes(
         args.scene_store,
@@ -1118,6 +1076,11 @@ def main(argv=None):
     )
     blend_response = None
     blend_cache_hashes = None
+    if (
+        likelihood_config.get("blend_response") == "required_fixed_atom_cache"
+        and args.blend_response_cache is None
+    ):
+        raise RuntimeError("this likelihood candidate requires --blend-response-cache")
     if args.blend_response_cache is not None:
         blend_cache_hashes = _file_hashes(
             args.blend_response_cache,
@@ -1132,17 +1095,14 @@ def main(argv=None):
             },
             "conditions": conditions,
         }
-        actual_blend_metadata = {
-            name: blend_response.metadata.get(name)
-            for name in expected_blend_metadata
-        }
+        actual_blend_metadata = {name: blend_response.metadata.get(name) for name in expected_blend_metadata}
         if actual_blend_metadata != expected_blend_metadata:
             raise RuntimeError(
                 "blend-response cache identity does not match the supplied scene, "
                 "emulator, or observing conditions"
             )
 
-    detector = load_emulator(
+    emulator = load_emulator(
         ModelPaths(
             flow_checkpoints=(Path(args.measurement_model),),
             emulator_model=Path(args.emulator_model),
@@ -1151,32 +1111,30 @@ def main(argv=None):
         conditions=conditions,
         device=args.device,
     )
+    cache_model_hashes = model_hashes if detection_backend == "blendemu" else likelihood_component_hashes
+    if detection_backend == "blendemu":
+        detector = emulator
+    elif detection_backend == "sbsi_selection_model":
+        detector = load_selection_model(detection_model_paths[0], device=args.device)
+    elif detection_backend == "sbsi_selection_model_ensemble":
+        detector = load_selection_model_ensemble(detection_model_paths, device=args.device)
+    else:
+        raise RuntimeError(f"unsupported detection-model backend {detection_backend!r}")
     if blend_response is not None:
         expected_pairing = json.loads(
-            json.dumps(
-                asdict(
-                    EmulatorPairingConfig.from_emulator(
-                        detector, task="regression"
-                    )
-                )
-            )
+            json.dumps(asdict(EmulatorPairingConfig.from_emulator(emulator, task="regression")))
         )
         if blend_response.metadata.get("pairing_config") != expected_pairing:
             raise RuntimeError(
-                "blend-response cache pairing configuration does not match the "
-                "supplied emulator"
+                "blend-response cache pairing configuration does not match the supplied emulator"
             )
         expected_counts = {
             "n_scene_rows": int(len(prior.galaxies)),
             "n_active_atoms": full_active_atoms,
         }
-        actual_counts = {
-            name: blend_response.report.get(name) for name in expected_counts
-        }
+        actual_counts = {name: blend_response.report.get(name) for name in expected_counts}
         if actual_counts != expected_counts:
-            raise RuntimeError(
-                "blend-response cache does not cover the supplied scene/prior support"
-            )
+            raise RuntimeError("blend-response cache does not cover the supplied scene/prior support")
     cache_path = Path(args.model_cache)
     cache_created = False
     if (cache_path / "manifest.json").is_file():
@@ -1186,16 +1144,16 @@ def main(argv=None):
             blend_response=blend_response,
         )
         for name, expected in (
-            ("model_sha256", model_hashes),
+            ("model_sha256", cache_model_hashes),
             ("scene_sha256", scene_hashes),
         ):
             if cache.metadata.get(name) != expected:
-                raise RuntimeError(
-                    f"model cache {name} does not match the supplied catalogue/models"
-                )
+                raise RuntimeError(f"model cache {name} does not match the supplied catalogue/models")
         expected_geometry = (
             conditions,
             float(args.detection_radius_arcsec),
+            args.detection_neighbour_selection,
+            float(args.detection_impact_exponent),
             float(args.flow_neighbour_radius_arcsec),
             (float(args.crowding_near_arcsec), float(args.crowding_far_arcsec)),
             tuple(flow.condition_preprocessor.feature_names),
@@ -1203,25 +1161,25 @@ def main(argv=None):
         actual_geometry = (
             cache.conditions,
             cache.detection_radius_arcsec,
+            cache.detection_neighbour_selection,
+            cache.detection_impact_exponent,
             cache.flow_neighbour_radius_arcsec,
             cache.crowding_radii_arcsec,
             tuple(cache.flow_features or ()),
         )
         if actual_geometry != expected_geometry:
-            raise RuntimeError(
-                "model cache geometry/features do not match the requested inference setup"
-            )
+            raise RuntimeError("model cache geometry/features do not match the requested inference setup")
         cache.attach_detector(detector)
     else:
         if cache_path.exists() and any(cache_path.iterdir()):
-            raise RuntimeError(
-                f"model cache path exists without a manifest and is not empty: {cache_path}"
-            )
+            raise RuntimeError(f"model cache path exists without a manifest and is not empty: {cache_path}")
         cache = CatalogueModelCache(
             prior,
             detector=detector,
             conditions=conditions,
             detection_radius_arcsec=args.detection_radius_arcsec,
+            detection_neighbour_selection=args.detection_neighbour_selection,
+            detection_impact_exponent=args.detection_impact_exponent,
             flow_neighbour_radius_arcsec=args.flow_neighbour_radius_arcsec,
             crowding_radii_arcsec=(
                 args.crowding_near_arcsec,
@@ -1233,13 +1191,15 @@ def main(argv=None):
         cache.get(0.0, 0.0)
         cache_created = True
     cache.validate_model_features(flow)
-    detection_features = cache.validate_detection_shear_invariance()
+    detection_features = tuple(cache.detection_features)
+    if detection_backend == "blendemu":
+        cache.validate_detection_shear_invariance()
     if cache_created:
         cache.save(
             cache_path,
             metadata={
                 "purpose": "numerical_catalogue_likelihood_recenter_base",
-                "model_sha256": model_hashes,
+                "model_sha256": cache_model_hashes,
                 "scene_sha256": scene_hashes,
                 "flow_features": list(flow.condition_preprocessor.feature_names),
                 "selection": None,
@@ -1259,6 +1219,8 @@ def main(argv=None):
         "blend_response_sha256": blend_cache_hashes,
         "conditions": conditions,
         "detection_radius_arcsec": float(args.detection_radius_arcsec),
+        "detection_neighbour_selection": args.detection_neighbour_selection,
+        "detection_impact_exponent": float(args.detection_impact_exponent),
         "flow_neighbour_radius_arcsec": float(args.flow_neighbour_radius_arcsec),
         "crowding_radii_arcsec": [
             float(args.crowding_near_arcsec),
@@ -1268,6 +1230,11 @@ def main(argv=None):
         "selection_seed": int(args.selection_seed),
         "selection_row_chunk": int(args.selection_row_chunk),
     }
+    if detection_backend != "blendemu":
+        selection_identity["detection_model"] = {
+            "backend": detection_backend,
+            "sha256": likelihood_component_hashes["detection"],
+        }
     if output_cut is not None:
         if selection_path is not None and (selection_path / "manifest.json").is_file():
             selection = CatalogueSelection.load(selection_path, output_cut=output_cut)
@@ -1281,10 +1248,7 @@ def main(argv=None):
                 selection.seed,
                 selection.row_chunk,
             )
-            if (
-                selection.metadata != selection_identity
-                or cached_sampling != requested_sampling
-            ):
+            if selection.metadata != selection_identity or cached_sampling != requested_sampling:
                 raise RuntimeError(
                     "selection cache identity/configuration does not match the supplied "
                     "catalogue, models, R_blend cache, cut, or sampling settings"
@@ -1318,9 +1282,7 @@ def main(argv=None):
             rtol=0,
             atol=1e-15,
         ):
-            raise RuntimeError(
-                "selection normalization cache finite-difference step does not match --h"
-            )
+            raise RuntimeError("selection normalization cache finite-difference step does not match --h")
         population_normalization_hash = _sha256(normalization_path)
     likelihood = CatalogueLikelihood(flow, cache, selection=selection)
     likelihood.population_normalization = population_normalization
@@ -1335,16 +1297,14 @@ def main(argv=None):
         "blend_response_sha256": blend_cache_hashes,
         "conditions": conditions,
         "detection_radius_arcsec": float(args.detection_radius_arcsec),
+        "detection_neighbour_selection": args.detection_neighbour_selection,
+        "detection_impact_exponent": float(args.detection_impact_exponent),
         "flow_neighbour_radius_arcsec": float(args.flow_neighbour_radius_arcsec),
         "crowding_radii_arcsec": [
             float(args.crowding_near_arcsec),
             float(args.crowding_far_arcsec),
         ],
-        "selection_cut_key": (
-            None
-            if output_cut is None
-            else json.loads(json.dumps(output_cut.key()))
-        ),
+        "selection_cut_key": (None if output_cut is None else json.loads(json.dumps(output_cut.key()))),
     }
     proposal_path = Path(args.proposal_cache)
     proposal_identity = {
@@ -1369,13 +1329,9 @@ def main(argv=None):
             actual = coordinates.metadata.get(name)
             if name == "coordinate_config" and actual is not None:
                 actual = dict(actual)
-                actual.setdefault(
-                    "dispersion_statistic", coordinates.dispersion_statistic
-                )
+                actual.setdefault("dispersion_statistic", coordinates.dispersion_statistic)
             if actual != expected:
-                raise RuntimeError(
-                    f"proposal cache {name} does not match the supplied catalogue/models"
-                )
+                raise RuntimeError(f"proposal cache {name} does not match the supplied catalogue/models")
     else:
         if proposal_path.exists() and any(proposal_path.iterdir()):
             raise RuntimeError(
@@ -1396,13 +1352,9 @@ def main(argv=None):
         proposal_path,
         ("manifest.json", "coordinates.npz"),
     )
-    missing_proposal_targets = sorted(
-        set(coordinates.target_names) - set(likelihood.target_names)
-    )
+    missing_proposal_targets = sorted(set(coordinates.target_names) - set(likelihood.target_names))
     if missing_proposal_targets:
-        raise RuntimeError(
-            f"proposal cache uses unknown flow targets: {missing_proposal_targets}"
-        )
+        raise RuntimeError(f"proposal cache uses unknown flow targets: {missing_proposal_targets}")
     generated_mock = args.mock_input is None
     if generated_mock:
         mock = generate_mock_catalogue(
@@ -1478,21 +1430,17 @@ def main(argv=None):
         required = {"scene_row", "r_blend", "blend_shift_g1", "blend_shift_g2"}
         missing = sorted(required - set(mock.truth))
         if blend_response is not None and missing:
-            raise RuntimeError(
-                f"saved R_blend likelihood mock lacks truth columns: {missing}"
-            )
+            raise RuntimeError(f"saved R_blend likelihood mock lacks truth columns: {missing}")
         if not missing:
             rows = mock.truth["scene_row"].to_numpy(dtype=np.int64)
             recorded = mock.truth["r_blend"].to_numpy(float)
             if blend_response is None:
                 if np.any(recorded != 0.0):
-                    raise RuntimeError(
-                        "saved likelihood mock contains R_blend but inference disabled it"
-                    )
+                    raise RuntimeError("saved likelihood mock contains R_blend but inference disabled it")
             else:
-                expected_shift = cache.get(
-                    float(injected_shear[0]), float(injected_shear[1])
-                ).blend_shift[rows]
+                expected_shift = cache.get(float(injected_shear[0]), float(injected_shear[1])).blend_shift[
+                    rows
+                ]
                 if not np.allclose(
                     recorded,
                     blend_response.values[rows],
@@ -1510,9 +1458,7 @@ def main(argv=None):
 
     initial_raw_mean = None
     if args.initial_strategy == "mean_observed_shape":
-        initial, initial_targets = _mean_observed_shape(
-            mock.measurements, likelihood.target_names
-        )
+        initial, initial_targets = _mean_observed_shape(mock.measurements, likelihood.target_names)
         initial_raw_mean = initial
     elif args.initial_strategy == "calibrated_mean_observed_shape":
         initial, initial_targets, initial_raw_mean = _calibrated_mean_observed_shape(
@@ -1527,9 +1473,7 @@ def main(argv=None):
     initial_report = {
         "strategy": args.initial_strategy,
         "center": list(initial),
-        "raw_mean_shape": (
-            None if initial_raw_mean is None else list(initial_raw_mean)
-        ),
+        "raw_mean_shape": (None if initial_raw_mean is None else list(initial_raw_mean)),
         "target_names": None if initial_targets is None else list(initial_targets),
         "n_objects": int(len(mock.measurements)),
         "affine_calibration": (
@@ -1544,15 +1488,9 @@ def main(argv=None):
     }
 
     n_observations_total = len(mock.measurements)
-    observation_stop = (
-        n_observations_total
-        if args.observation_stop is None
-        else int(args.observation_stop)
-    )
+    observation_stop = n_observations_total if args.observation_stop is None else int(args.observation_stop)
     if not (0 <= args.observation_start < observation_stop <= n_observations_total):
-        raise RuntimeError(
-            "observation partition must satisfy 0 <= start < stop <= mock size"
-        )
+        raise RuntimeError("observation partition must satisfy 0 <= start < stop <= mock size")
     subset_rows = None
     if args.object_subset is not None:
         if args.observation_start != 0 or args.observation_stop is not None:
@@ -1568,9 +1506,7 @@ def main(argv=None):
         if subset_rows.min() < 0 or subset_rows.max() >= n_observations_total:
             raise RuntimeError("--object-subset row out of range for this mock")
     elif args.allow_indefinite_partition_summary:
-        raise RuntimeError(
-            "--allow-indefinite-partition-summary is restricted to --object-subset workers"
-        )
+        raise RuntimeError("--allow-indefinite-partition-summary is restricted to --object-subset workers")
     observation_partition = {
         "start": int(args.observation_start),
         "stop": observation_stop,
@@ -1581,12 +1517,8 @@ def main(argv=None):
         ),
         "n_total": int(n_observations_total),
         "proposal_object_id_offset": int(args.observation_start),
-        "object_subset": (
-            None if subset_rows is None else str(Path(args.object_subset).resolve())
-        ),
-        "object_subset_sha256": (
-            None if subset_rows is None else _sha256(args.object_subset)
-        ),
+        "object_subset": (None if subset_rows is None else str(Path(args.object_subset).resolve())),
+        "object_subset_sha256": (None if subset_rows is None else _sha256(args.object_subset)),
     }
 
     if normalization_shard_mode:
@@ -1667,10 +1599,7 @@ def main(argv=None):
             raise RuntimeError("--prepare-only requires the complete generated mock")
         mock_root = output / "mock"
         mock.save(mock_root)
-        mock_hashes = {
-            name: _sha256(mock_root / name)
-            for name in ("measurements.parquet", "truth.parquet")
-        }
+        mock_hashes = {name: _sha256(mock_root / name) for name in ("measurements.parquet", "truth.parquet")}
         likelihood_mock_manifest = {
             "mock_kind": "likelihood",
             "generation_identity": likelihood_mock_identity,
@@ -1690,9 +1619,7 @@ def main(argv=None):
             "pipeline_release": pipeline_release,
             "pipeline_base_release": inference_config["release"],
             "pipeline_config_sha256": pipeline_config_sha256,
-            "pipeline_resolved_config_sha256": _json_sha256(
-                resolved_pipeline_config
-            ),
+            "pipeline_resolved_config_sha256": _json_sha256(resolved_pipeline_config),
             "likelihood_release": likelihood_config["release"],
             "likelihood_config_sha256": likelihood_config_sha256,
             "pipeline_config": resolved_pipeline_config,
@@ -1711,12 +1638,17 @@ def main(argv=None):
             "implementation_sha256": pipeline_implementation_hashes,
         }
         (output / "preparation.json").write_text(json.dumps(payload, indent=2) + "\n")
-        print(json.dumps({
-            "status": "prepared",
-            "n_observations": n_observations_total,
-            "initial_center": initial_report["center"],
-            "injected_shear": injected_shear.tolist(),
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "status": "prepared",
+                    "n_observations": n_observations_total,
+                    "initial_center": initial_report["center"],
+                    "injected_shear": injected_shear.tolist(),
+                },
+                indent=2,
+            )
+        )
         return
 
     if subset_rows is not None:
@@ -1738,9 +1670,7 @@ def main(argv=None):
         coordinates,
         prior.weights,
         local_base_weights=cache.get(0.0, 0.0).detection_probability,
-        score_dtype=(
-            torch.float32 if args.tilt_score_precision == "float32" else torch.float64
-        ),
+        score_dtype=(torch.float32 if args.tilt_score_precision == "float32" else torch.float64),
     )
 
     if args.compile_flow:
@@ -1825,9 +1755,7 @@ def main(argv=None):
         return 0
 
     if args.proposal_method != "initial_center_posterior_adapted":
-        raise ValueError(
-            "v1.1-infer requires the initial-center posterior proposal"
-        )
+        raise ValueError("v1.1-infer requires the initial-center posterior proposal")
     result = estimate_one_step_adaptive_section5(
         likelihood,
         mock,
@@ -1861,6 +1789,10 @@ def main(argv=None):
         object_ids=subset_rows,
         object_chunk=args.object_chunk,
         atom_chunk=args.atom_chunk,
+        progress=lambda completed, total, elapsed: print(
+            json.dumps({"event": "inference_progress", "completed": completed,
+                        "total": total, "elapsed_seconds": elapsed}), flush=True
+        ),
     )
     moment_path = output / "one_step_moments.npz"
     np.savez_compressed(
@@ -1874,9 +1806,7 @@ def main(argv=None):
         object_rows=(
             subset_rows
             if subset_rows is not None
-            else np.arange(
-                int(args.observation_start), observation_stop, dtype=np.int64
-            )
+            else np.arange(int(args.observation_start), observation_stop, dtype=np.int64)
         ),
         **(
             {
@@ -1890,9 +1820,7 @@ def main(argv=None):
         # the objects that carry it rather than only read as a percentile.
         **(
             {
-                "weight_diagnostic_draws": np.asarray(
-                    result.moments.weight_diagnostic_draws, dtype=np.int64
-                ),
+                "weight_diagnostic_draws": np.asarray(result.moments.weight_diagnostic_draws, dtype=np.int64),
                 "weight_ess": result.moments.weight_ess,
                 "weight_max_fraction": result.moments.weight_max_fraction,
                 "weight_relative_error": result.moments.weight_relative_error,
@@ -1916,20 +1844,12 @@ def main(argv=None):
         and selection.available_shears != selection_initial_shears
     ):
         selection.save(selection_path)
-    selection_cache_hashes = (
-        None
-        if selection_path is None
-        else _selection_cache_hashes(selection_path)
-    )
+    selection_cache_hashes = None if selection_path is None else _selection_cache_hashes(selection_path)
     if selection_report is not None:
         probabilities = []
         for g1, g2 in selection.available_shears:
             probability = selection.cached_probability(g1, g2)
-            detected_mass = (
-                prior.weights
-                * cache.get(g1, g2).detection_probability
-                * probability
-            )
+            detected_mass = prior.weights * cache.get(g1, g2).detection_probability * probability
             probabilities.append(
                 {
                     "g1": g1,
@@ -1952,8 +1872,7 @@ def main(argv=None):
                     {
                         "method": "exact_distributed_detected_selected_mass",
                         "available_shears": [
-                            list(point)
-                            for point in population_normalization.available_shears
+                            list(point) for point in population_normalization.available_shears
                         ],
                     }
                 )
@@ -1973,8 +1892,7 @@ def main(argv=None):
         selection_report["normalization_surrogate"] = (
             normalization_report
             if normalization_report is not None
-            and normalization_report["method"]
-            == "local_quadratic_log_detected_selected_mass"
+            and normalization_report["method"] == "local_quadratic_log_detected_selected_mass"
             else None
         )
 
@@ -1982,25 +1900,17 @@ def main(argv=None):
     if not generated_mock:
         source_root = Path(args.mock_input)
         source_mock_hashes = {
-            name: _sha256(source_root / name)
-            for name in ("measurements.parquet", "truth.parquet")
+            name: _sha256(source_root / name) for name in ("measurements.parquet", "truth.parquet")
         }
         source_image_manifest = source_root / "image_mock_manifest.json"
         if source_image_manifest.is_file():
-            source_mock_hashes[source_image_manifest.name] = _sha256(
-                source_image_manifest
-            )
+            source_mock_hashes[source_image_manifest.name] = _sha256(source_image_manifest)
         source_likelihood_manifest = source_root / "likelihood_mock_manifest.json"
         if source_likelihood_manifest.is_file():
-            source_mock_hashes[source_likelihood_manifest.name] = _sha256(
-                source_likelihood_manifest
-            )
+            source_mock_hashes[source_likelihood_manifest.name] = _sha256(source_likelihood_manifest)
     mock_root = output / "mock"
     mock.save(mock_root)
-    mock_hashes = {
-        name: _sha256(mock_root / name)
-        for name in ("measurements.parquet", "truth.parquet")
-    }
+    mock_hashes = {name: _sha256(mock_root / name) for name in ("measurements.parquet", "truth.parquet")}
     if generated_mock:
         likelihood_mock_manifest = {
             "mock_kind": "likelihood",

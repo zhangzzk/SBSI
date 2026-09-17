@@ -56,7 +56,13 @@ def _proposal(likelihood):
     )
 
 
-def _torch_two_shape_likelihood(sigma=0.12, *, blend_values=None, selection=None):
+def _torch_two_shape_likelihood(
+    sigma=0.12,
+    *,
+    blend_values=None,
+    selection=None,
+    shape_sensitive_detection=False,
+):
     features = ["e1_input_p", "e2_input_p"]
     preprocessor = TabularPreprocessor(
         feature_names=features,
@@ -93,7 +99,13 @@ def _torch_two_shape_likelihood(sigma=0.12, *, blend_values=None, selection=None
     )
     prior = ScenePrior.from_catalogue(_catalogue(), guard_radius_arcsec=8.0, weight_column="prior_weight")
     detector = SpinZeroDetector()
-    detector.predict_proba = lambda frame: np.ones(len(frame), dtype=float)
+    if shape_sensitive_detection:
+        detector.preprocessor.feature_names = ["e1_input_p", "e2_input_p"]
+        detector.predict_proba = lambda frame: 1.0 / (
+            1.0 + np.exp(-frame["e1_input_p"].to_numpy(float))
+        )
+    else:
+        detector.predict_proba = lambda frame: np.ones(len(frame), dtype=float)
     blend_response = None
     if blend_values is not None:
         blend_response = CatalogueBlendResponse(
@@ -351,6 +363,63 @@ def test_skipping_padded_atom_slots_leaves_the_scored_slots_unchanged():
         )
 
 
+def test_physical_flow_dense_and_ragged_weights_preserve_float64():
+    from sbsi.flow_physical_disk import ConditionalPhysicalDiskFlow
+
+    base = _torch_two_shape_likelihood(blend_values=[0.1, 0.2, 0.3, 0.4])
+    model = ConditionalPhysicalDiskFlow(
+        target_dim=4, context_dim=4, hidden_dim=8, n_layers=1, n_flows=1,
+        disk_map="radial_tanh", disk_shape_means=[0, 0],
+        disk_shape_scales=[0.3, 0.3], disk_coordinate_means=[0, 0],
+        disk_coordinate_scales=[1, 1], physical_map="softplus",
+        physical_means=[2, 100], physical_scales=[1, 100],
+        physical_units=[1, 100], physical_coordinate_means=[0, 0],
+        physical_coordinate_scales=[1, 1],
+    )
+    targets = TargetStandardizer(
+        ["measured_ngmix_g1", "measured_ngmix_g2", "measured_flux_radius",
+         "measured_flux_from_mag_auto"],
+        np.array([0, 0, 2, 100]), np.array([0.3, 0.3, 1, 100]),
+        dtype="float64",
+    )
+    bundle = MeasurementModelBundle(
+        model, base.flow_model.condition_preprocessor, targets, device="cpu"
+    )
+    likelihood = CatalogueLikelihood(bundle, base.cache)
+    observed = np.array([[0.1, -0.2, 1.3, 80], [-0.3, 0.2, 2.4, 120],
+                         [0.01, 0.02, 0.8, 60]])
+    atoms = np.array([[0, 1, 2], [2, 3, 2], [0, 0, 0]])
+    valid = np.array([[True, True, True], [True, True, False], [True, False, False]])
+    probability = np.array([[0.123456789, 0.2, 0.3], [0.3, 0.4, 0.3],
+                            [0.123456789, 0.123456789, 0.123456789]])
+    kwargs = dict(atom_indices=atoms, proposal_probability=probability,
+                  object_chunk=2, atom_chunk=2)
+    dense = likelihood.log_importance_weights_tensor(observed, 0.005, 0, **kwargs)
+    ragged = likelihood.log_importance_weights_tensor(
+        observed, 0.005, 0, atom_valid=valid, **kwargs
+    )
+    view = likelihood._tensor_view(0.005, 0)
+    flat = torch.as_tensor(atoms.reshape(-1))
+    target = bundle.target_tensor(likelihood._observed_frame(observed))
+    target = target.repeat_interleave(3, dim=0) - view.blend_shift_standardized[flat]
+    with torch.no_grad():
+        expected = (
+            bundle.log_prob_tensor(target, view.context[flat])
+            + view.log_detected_mass[flat]
+            - torch.log(torch.as_tensor(probability.reshape(-1)))
+        ).reshape(atoms.shape)
+    assert view.context.dtype == torch.float32
+    assert dense.dtype == ragged.dtype == expected.dtype == torch.float64
+    torch.testing.assert_close(dense, expected, rtol=1e-7, atol=1e-7)
+    torch.testing.assert_close(ragged[valid], expected[valid], rtol=1e-7, atol=1e-7)
+    assert torch.all(ragged[~valid] == 0)
+    empty = likelihood.log_importance_weights_tensor(
+        observed, 0.005, 0, atom_valid=np.zeros_like(valid), **kwargs
+    )
+    assert empty.dtype == torch.float64
+    assert torch.all(empty == 0)
+
+
 def test_tensor_native_importance_weights_and_stream_match_dataframe_path():
     likelihood = _torch_two_shape_likelihood()
     mock = generate_mock_catalogue(
@@ -549,6 +618,41 @@ def test_adaptive_tensor_path_accepts_whole_catalogue_proxy_shortlist():
     assert result.n_candidates == 2
     assert result.proposal_prefilter_candidates is None
     assert result.candidate_source == "whole_catalogue_gaussian_proxy"
+    assert np.isfinite(result.score).all()
+    assert np.isfinite(result.information).all()
+
+
+def test_adaptive_tensor_path_accepts_shape_sensitive_detection_views():
+    likelihood = _torch_two_shape_likelihood(shape_sensitive_detection=True)
+    assert likelihood.tensor_shape_only_available is False
+    mock = generate_mock_catalogue(
+        likelihood,
+        n_detected=12,
+        g1=0.01,
+        g2=0.0,
+        scene_seed=911,
+        detection_seed=912,
+        flow_seed=913,
+    )
+    result = run_adaptive_section5(
+        likelihood,
+        mock,
+        _proposal(likelihood),
+        center=(0.01, 0.0),
+        h=0.005,
+        draw_ladder=(32,),
+        n_candidates=2,
+        epsilon=0.2,
+        proposal_seed=914,
+        min_ess=1e9,
+        max_weight_fraction=1.0,
+        candidate_backend="torch",
+        candidate_source="whole_catalogue_gaussian_proxy",
+        estimator_mode="tilted_stratified",
+        retain_full_ladder=True,
+        object_chunk=6,
+        atom_chunk=16,
+    )
     assert np.isfinite(result.score).all()
     assert np.isfinite(result.information).all()
 

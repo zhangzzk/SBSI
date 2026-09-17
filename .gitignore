@@ -24,12 +24,14 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .ipynb_checkpoints/
-sbsi.egg-info/
+*.egg-info/
+.arbor/
 
 # Local editor and agent state
 .claude/worktrees/
 .claude/scheduled_tasks.lock
 .claude_resources.json
+.codex_resources.json
 *.orig
 *.swp
 *.rblendbak

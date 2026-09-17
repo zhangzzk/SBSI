@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable, Optional, Sequence
+from typing import Sequence
 
 import numpy as np
 import pandas as pd
@@ -11,52 +11,6 @@ import torch
 from torch import nn
 
 from .nn_utils import activation_class as _activation
-
-
-DEFAULT_SELECTION_FEATURES = [
-    "Re_input_p_scaled",
-    "r_input_p_scaled",
-    "sersic_n_input_p",
-    "e_abs_p",
-    "gamma_pframe_parallel_p",
-    "gamma_pframe_cross_p",
-    "neighbored",
-    "distance_scaled_blend",
-    "pair_pframe_cos2_blend",
-    "pair_pframe_sin2_blend",
-    "Re_input_s_scaled_blend",
-    "r_input_s_scaled_blend",
-    "flux_ratio_blend",
-    "sersic_n_input_s_blend",
-    "e_pframe_parallel_s_blend",
-    "e_pframe_cross_s_blend",
-    "gamma_pframe_parallel_s_blend",
-    "gamma_pframe_cross_s_blend",
-]
-
-
-# Shear-free conditioning for the refined g=0 forward model (SBI_shear.md §2/§4).
-# Trained on the g=0 realization only: at g=0 the rendered scene shape equals the
-# intrinsic shape, so the applied-shear features (gamma_pframe_*) carry no signal
-# and are dropped.  The selection response dP(s=1)/dgamma is recovered afterwards
-# by autograd through the intrinsic-shape features composed with the S_gamma map,
-# not from a shear input feature.
-SHEARFREE_G0_SELECTION_FEATURES = [
-    "Re_input_p_scaled",
-    "r_input_p_scaled",
-    "sersic_n_input_p",
-    "e_abs_p",
-    "neighbored",
-    "distance_scaled_blend",
-    "pair_pframe_cos2_blend",
-    "pair_pframe_sin2_blend",
-    "Re_input_s_scaled_blend",
-    "r_input_s_scaled_blend",
-    "flux_ratio_blend",
-    "sersic_n_input_s_blend",
-    "e_pframe_parallel_s_blend",
-    "e_pframe_cross_s_blend",
-]
 
 
 class SelectionMLP(nn.Module):
@@ -78,8 +32,6 @@ class SelectionMLP(nn.Module):
 
     def forward(self, x):
         return self.net(x).squeeze(-1)
-
-
 
 
 @dataclass
@@ -113,8 +65,13 @@ class TabularPreprocessor:
         return out
 
     @classmethod
-    def fit(cls, frame: pd.DataFrame, feature_names: Sequence[str], add_missing_indicators=True,
-            log_features: Sequence[str] = ()):
+    def fit(
+        cls,
+        frame: pd.DataFrame,
+        feature_names: Sequence[str],
+        add_missing_indicators=True,
+        log_features: Sequence[str] = (),
+    ):
         missing = [name for name in feature_names if name not in frame.columns]
         if missing:
             raise KeyError(f"Missing feature columns: {missing}")
@@ -135,8 +92,9 @@ class TabularPreprocessor:
         means = filled.mean(axis=0, dtype=np.float64).astype(np.float32)
         scales = filled.std(axis=0, ddof=1).astype(np.float32)
         scales[~np.isfinite(scales) | (scales < 1e-6)] = 1.0
-        return cls(list(feature_names), fill_values, means, scales, add_missing_indicators,
-                   tuple(log_features))
+        return cls(
+            list(feature_names), fill_values, means, scales, add_missing_indicators, tuple(log_features)
+        )
 
     @property
     def output_dim(self):
@@ -222,34 +180,44 @@ class SelectionModelBundle:
     def predict_proba(self, frame, batch_size=65536):
         probs = []
         for start in range(0, len(frame), batch_size):
-            raw = self.preprocessor.raw_tensor_from_frame(
-                frame.iloc[start:start + batch_size], self.device
-            )
+            raw = self.preprocessor.raw_tensor_from_frame(frame.iloc[start : start + batch_size], self.device)
             probs.append(torch.sigmoid(self.logits_from_raw_tensor(raw)).cpu().numpy())
         return np.concatenate(probs) if probs else np.array([], dtype=np.float32)
 
-    def probability_and_gradient(self, frame, gradient_features: Optional[Iterable[str]] = None, batch_size=8192):
-        if gradient_features is None:
-            gradient_features = self.preprocessor.feature_names
-        gradient_features = list(gradient_features)
-        feature_to_idx = {name: i for i, name in enumerate(self.preprocessor.feature_names)}
-        grad_idx = [feature_to_idx[name] for name in gradient_features]
 
-        probs = []
-        grads = []
-        for start in range(0, len(frame), batch_size):
-            raw = self.preprocessor.raw_tensor_from_frame(
-                frame.iloc[start:start + batch_size], self.device, requires_grad=True
-            )
-            prob = torch.sigmoid(self.logits_from_raw_tensor(raw))
-            grad = torch.autograd.grad(prob.sum(), raw, create_graph=False)[0]
-            probs.append(prob.detach().cpu().numpy())
-            grads.append(grad[:, grad_idx].detach().cpu().numpy())
+def _same_preprocessor(left: TabularPreprocessor, right: TabularPreprocessor) -> bool:
+    """Return whether two ensemble members accept exactly the same raw table."""
 
-        prob_out = np.concatenate(probs) if probs else np.array([], dtype=np.float32)
-        grad_arr = np.concatenate(grads) if grads else np.empty((0, len(gradient_features)))
-        grad_df = pd.DataFrame(grad_arr, columns=[f"dPsel_d{name}" for name in gradient_features])
-        return prob_out, grad_df
+    return bool(
+        left.feature_names == right.feature_names
+        and left.add_missing_indicators == right.add_missing_indicators
+        and left.log_features == right.log_features
+        and np.array_equal(left.fill_values, right.fill_values)
+        and np.array_equal(left.means, right.means)
+        and np.array_equal(left.scales, right.scales)
+    )
+
+
+class SelectionModelEnsembleBundle:
+    """Equal-weight probability ensemble with one shared feature contract."""
+
+    def __init__(self, members: Sequence[SelectionModelBundle]):
+        self.members = tuple(members)
+        if not self.members:
+            raise ValueError("selection-model ensemble must contain at least one member")
+        reference = self.members[0].preprocessor
+        if any(not _same_preprocessor(reference, member.preprocessor) for member in self.members[1:]):
+            raise ValueError("selection-model ensemble members have different preprocessors")
+        self.preprocessor = reference
+        self.metadata = {
+            "aggregation": "arithmetic_mean_probability",
+            "n_members": len(self.members),
+            "members": [dict(member.metadata) for member in self.members],
+        }
+
+    def predict_proba(self, frame, batch_size=65536):
+        probabilities = [member.predict_proba(frame, batch_size=batch_size) for member in self.members]
+        return np.mean(np.stack(probabilities, axis=0), axis=0)
 
 
 def load_selection_model(path, device="cpu"):
@@ -267,3 +235,9 @@ def load_selection_model(path, device="cpu"):
         metadata=checkpoint.get("metadata", {}),
         device=device,
     )
+
+
+def load_selection_model_ensemble(paths: Sequence[str], device="cpu"):
+    """Load an equal-weight ensemble, rejecting incompatible input contracts."""
+
+    return SelectionModelEnsembleBundle([load_selection_model(path, device=device) for path in paths])

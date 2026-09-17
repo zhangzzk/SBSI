@@ -62,8 +62,25 @@ verification, and small CPU tests. Training, simulations, full-catalogue scans,
 response-cache construction, and other substantial CPU/GPU work go through the
 local scheduler.
 
+### Job monitoring
+
+Follow new jobs through startup and first meaningful progress, using brief
+status/log checks about every 30--60 seconds to catch early failures. Short
+preparation, validation, and test stages (normally under 30 minutes) may be
+followed through completion, including the startup of a dependent stage.
+After a long job demonstrates normal progress, or queue/startup waiting becomes
+prolonged, yield and use a bounded scheduled check about every two hours.
+Do not keep a turn occupied polling an entire long run. Report meaningful
+progress or failures rather than repeated unchanged states. Immediate checks
+requested by the owner remain allowed. This is the owner's 2026-09-10 revision
+to the earlier blanket prohibition, including historical work-log notes.
+
+### Scheduler launchers
+
 `jobs/job_inference.sh` is the cluster-local reference launcher for
-`v1.1-infer` with the `v3.2-like` likelihood. It must resolve every
+`v1.1-infer` with the configured `v3.2-like` likelihood. A V3.5-like run must
+explicitly select `configs/likelihood_v3_5_like.json`. Every launcher resolves
+every
 user-owned catalogue, checkpoint, cache, and output path explicitly. Other
 scheduler wrappers are validation or deployment aids, not public Python APIs.
 
@@ -100,8 +117,8 @@ positive-definite requirement.
 
 ## Documentation workflow
 
-`doc/WORKLOG.md` is newest-first and intentionally historical. Read its top
-entry for current state and search for a date, keyword, or `cont.NNN` tag when
-older provenance is needed. The maintained operational contract is in
+`doc/WORKLOG.md` is a concise newest-first active log. Detailed pre-cleanup
+provenance is preserved under `archive/research-2026-09-14/`. The maintained
+operational contract is in
 `doc/API.md`, `doc/INFERENCE.md`, `doc/CATALOGUE_PRIOR.md`, and the two
-release configuration files.
+numerical release configurations plus the selected likelihood configuration.
