@@ -1,3 +1,99 @@
+## 2026-09-17 — Under the measured cuts ConstGold's +1.5% is a cancellation, not a small error
+
+Reading the two existing ConstGold property-bias runs side by side, binned on
+`blend_response_abs`.  Both use the same flow
+(`full_domain_true_mag26_guard_refine_v1/flow/selected.pt`, sha `8aad6862`) and
+the same three classifiers; they differ in the anchor domain and, note, in the
+version of `plots/constgold_property_bias.py` that produced them.
+
+| | global m (matched_usable) | coherence | bins 0-5 mean | bin 7 |
+| --- | --- | --- | --- | --- |
+| cut, anchor `fixed_g0_m258_r060_v2` | +1.502% +- 0.234 | 0.224 | +5.80% | -11.83% +- 0.498 |
+| uncut, anchor `full_domain_true_mag26_guard_v1` | -2.424% +- 0.228 | 0.602 | +1.25% | -12.20% +- 0.487 |
+
+Coherence is the signed mass-weighted residual over the mass-weighted absolute
+residual, the same statistic the band-guard entries use.  At 0.224 the cut
+run's +1.5% is a fifth of the error that is actually present: it is the residue
+of a +5.8% error on the quiet three quarters of the objects against a -11.8%
+error on the loudest eighth.
+
+Leaving one component perfect and recomputing:
+
+| | fix bin 7 only | fix bins 6-7 | fix bins 0-5 instead |
+| --- | --- | --- | --- |
+| cut | **+3.806%** | +4.106% | -2.437% |
+| uncut | +0.224% | +0.840% | -3.244% |
+
+Under the measured cuts, repairing the blending emulator's loud tail on its own
+makes the headline *worse*, because it removes the negative term that was
+cancelling a larger positive one.  The uncut configuration does not show this,
+which is why the two have to be quoted together.
+
+### What is established and what is not
+
+Robust: the loudest blending bin is over-responsive by about 12% in both
+configurations, -11.83% +- 0.498 and -12.20% +- 0.487, roughly 24 sigma each.
+The model predicts too much response where blending is strongest.  This is the
+blending term and it has to be fixed regardless of which configuration is
+quoted.
+
+Robust: the quiet bins are *under*-responsive, positive m, in both runs.  In the
+uncut run they sit at +1.25%, consistent with the independent per-leg flow-only
+measurement of +0.19% to +1.11% on the same flow.  Two unrelated estimators
+agreeing at this level is the strongest evidence so far that the flow's own
+response level is close to right.
+
+Not established: the quiet bins sit at +5.80% under the cuts against +1.25%
+without them, on the same flow.  The natural reading is that the measured cuts
+re-weight toward a sub-population where the model is worse, and that detection
+and selection modelling is the largest single term under realistic cuts.  It
+cannot be claimed from these two files: they use different anchor domains *and*
+different implementation hashes, so the comparison is not a controlled A/B.  A
+matched rerun is required before the 4.5-point figure is used.
+
+Bounded separately: within each run the classifier-weighted branch and the
+actual-usability-flag branch differ by 0.81 pp (uncut, -2.919% against -2.111%)
+and 0.20 pp (cut, +1.130% against +0.932%).  That bounds the classifier's own
+modelling error and it is sub-percent in both.
+
+### Consequence for the goal
+
+`|m| < 0.3%` under realistic cuts cannot be reached by moving the global number,
+because the global number is already small for the wrong reason.  Three terms
+have to come down together: the flow's quiet-population level, the blending
+emulator's loud tail, and whatever is responsible for the quiet bins being four
+times worse under the cuts.  The band-guard refinement work addresses only the
+first, and the previous entry's finding that it improved band structure while
+worsening the level is the same cancellation seen from the flow side.
+
+### Files and behaviour changed
+
+None.  This is a re-reduction of
+`constgold_property_bias_true_mag26_c40_139_v1/result.json` and
+`constgold_property_bias_uncut_true_mag26_c40_139_v1/result.json`; no run was
+repeated and no code was modified.
+
+### Limitations
+
+- The two runs are not a controlled A/B, as above.
+- `blend_response_abs` is the model's own blending prediction, so binning on it
+  is binning on a quantity the model computes.  A truth-side crowding axis
+  would be a stronger test; the 2026-07-05 work found that binning on the
+  emulator's own noisy `R_blend` produced an artifact, and `R_blend_abs` was
+  adopted to avoid the cancellation part of that problem, not the
+  model-dependence part.
+- Bins 0-1 of `g0_radius` and `true_size` carry very large `m` on tiny
+  denominators and are not interpretable; they are excluded from any reading
+  here.
+
+### Next steps
+
+- Read the formal fit from job 16553100, which gives one coefficient each for
+  the flow and blending terms rather than this bin-by-bin reading.
+- Rerun the cut configuration with the current implementation and a matched
+  anchor domain, so the 4.5-point selection gap is either confirmed or removed.
+- Re-plan the flow work around being one of three terms rather than the lever.
+
 ## 2026-09-17 — The 0.42 pp precision floor is simulation-side noise, so more cases lift it
 
 The previous entry left the case/data term as the binding limit on any absolute
