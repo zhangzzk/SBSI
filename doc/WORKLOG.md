@@ -1,3 +1,143 @@
+## 2026-09-17 — Band guards fix the size profile; the global level still random-walks
+
+Two band-guard refinements ran from the sharp-guard full-domain flow
+(`full_domain_true_mag26_guard_refine_v1/flow/selected.pt`), 20 epochs each at
+guard weights 0.01 (job 16546672, 1:47:32) and 0.1 (job 16546739, 1:57:12).
+Both were measured on the 40 held-out validation cases with the per-leg exact
+catalogue indicator (jobs 16550672/16550673), and then re-measured at their
+final epoch with no checkpoint selection at all (jobs 16551217/16551219, both
+COMPLETED 0:16, exit 0).
+
+`selected.pt` minimises a validation objective whose guard term is a noisy
+Monte Carlo estimate, evaluated on the same 40 cases the per-leg script then
+measures.  The last-epoch export exists to separate a real improvement from a
+favourable fluctuation the selection picked out.  It did not survive.
+
+### The size profile improved and the improvement is selection-free
+
+Band residuals (model minus measured `R_self`), radius bands in pixels at
+`magnitude < 25.8`, 40 held-out cases:
+
+| band | mass | baseline | w=0.01 sel | w=0.01 last | w=0.1 sel | w=0.1 last |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2.2–2.6 | 0.010 | −0.0124 | +0.0035 | +0.0049 | +0.0170 | +0.0115 |
+| 2.6–2.8 | 0.033 | −0.0028 | −0.0137 | −0.0138 | −0.0159 | −0.0165 |
+| 2.8–3.0 | 0.061 | +0.0576 | +0.0252 | +0.0234 | +0.0079 | +0.0094 |
+| 3.0–3.2 | 0.078 | +0.0129 | +0.0028 | −0.0000 | −0.0050 | −0.0095 |
+| 3.2–3.5 | 0.125 | −0.0730 | −0.0287 | −0.0345 | −0.0152 | −0.0268 |
+| 3.5–4.0 | 0.183 | −0.0581 | −0.0230 | −0.0276 | −0.0161 | −0.0217 |
+| 4–5 | 0.227 | +0.0228 | +0.0133 | +0.0110 | +0.0109 | +0.0038 |
+| 5–7 | 0.153 | +0.0498 | +0.0121 | +0.0104 | +0.0070 | +0.0037 |
+| >7 | 0.060 | +0.0447 | +0.0069 | −0.0005 | +0.0145 | +0.0125 |
+
+Mass-weighted `|residual|`: baseline 0.04299, w=0.01 0.01649 (last 0.01657),
+w=0.1 0.01162 (last 0.01233).  The last-epoch column tracks the selected
+column band for band, so the 3.5x reduction in size-structured response error
+is a property of the training, not of the checkpoint choice.
+
+### The global level did not improve, and the earlier number was a lucky draw
+
+Deployment cut `radius_gt_3_magnitude_lt_25.8`, per-leg exact indicator,
+case-bootstrap standard errors over the same 40 cases:
+
+| checkpoint | m | cuts within ±0.3% |
+| --- | --- | --- |
+| baseline | −0.726% ± 0.415 | — |
+| w=0.01 selected | −0.516% ± 0.416 | 6/16 |
+| w=0.01 last epoch | −1.192% ± 0.413 | 0/16 |
+| w=0.1 selected | −0.185% ± 0.417 | 15/16 |
+| w=0.1 last epoch | −1.316% ± 0.411 | 0/16 |
+
+The selected and last-epoch measurements share cases and sampling seeds, so
+the error on their difference is below the 0.41 pp single-measurement error;
+the ~1.1 pp gap is a real difference between the two models, not measurement
+noise.  The previously reported −0.185% is therefore withdrawn as a headline:
+it is one draw from a distribution whose spread is about ±1.3% in m.
+
+`weight_0.1/history.json` shows why.  The global cut's `mean_residual[0][0]`
+over the 20 epochs runs −0.0113, −0.0070, −0.0069, −0.0058, −0.0116, −0.0036,
+−0.0078, −0.0046, −0.0024, −0.0027, −0.0025, −0.0056, −0.0055, −0.0035,
+−0.0076, −0.0038, −0.0030, −0.0037, −0.0058, −0.0075 — no trend, amplitude
+about 0.009 on `R_self ≈ 0.42`, i.e. ±1.3% in m.  The band term over the same
+epochs falls from −0.0244 to roughly −0.020 and stays there.  The bands
+converge; the overall normalisation of the response does not.
+
+### Why smaller band errors gave a worse global number
+
+Signed mass-weighted band residual, which is what the cut's m responds to:
+
+| checkpoint | signed | `|residual|` | coherence |
+| --- | --- | --- | --- |
+| baseline | +0.00008 | 0.04299 | 0.002 |
+| w=0.01 selected | −0.00123 | 0.01649 | 0.075 |
+| w=0.01 last epoch | −0.00459 | 0.01657 | 0.277 |
+| w=0.1 selected | −0.00073 | 0.01162 | 0.063 |
+| w=0.1 last epoch | −0.00614 | 0.01233 | 0.498 |
+
+The baseline's small global bias was near-exact cancellation of band errors
+15x larger (coherence 0.002).  The refined flows have much smaller band errors
+that lean one way (coherence up to 0.5), so they add instead of cancelling.
+Smaller errors that are coherent can produce a worse global number than larger
+errors that cancel.  This is the same failure mode the band profile was built
+to expose, one level further in, and it is the reason the global number must
+be supervised directly rather than inherited from the band terms.
+
+### Diagnosis
+
+`build_guard_bank()` mixes 16 cumulative cuts with 9 disjoint bands at a
+uniform `RESPONSE_SCALE = 0.01`.  The band residuals start an order of
+magnitude above the cumulative ones, so the squared-bias loss is dominated by
+the bands and the cumulative terms — the ones that pin the overall level —
+contribute almost nothing to the gradient.  The level is then free to drift,
+and epoch selection on the noisy validation guard harvests whichever epoch
+drifted closest to zero on those 40 cases.
+
+### Files and behaviour changed
+
+- `scripts/export_band_guard_last_epoch.py` (new) — loads `latest_optimizer.pt`
+  from a run root, checks its epoch against the last `history.json` entry,
+  loads the state into the initial flow's architecture with `strict=True`, and
+  writes a normal checkpoint via `train_fixed_g0_flow.save_checkpoint` tagged
+  `training_phase="full_domain_band_guard_last_epoch"`, `selection_free=True`.
+  Refuses to overwrite an existing output.  No science code changed.
+
+### Validation
+
+- `scripts/export_band_guard_last_epoch.py` for both weights on the login node
+  (state-dict copy only, no compute): `EXPORTED_LAST_EPOCH epoch=20` for each.
+- Jobs 16551217 / 16551219, `sacct` COMPLETED, elapsed 00:16:06 / 00:16:05,
+  ExitCode 0:0; both wrote `cumulative.json` and `bands_magnitude_lt_25.8.json`.
+- Band masses sum to 0.929 in every file, matching the `magnitude < 25.8` pass
+  fraction, so the bands still partition the radius axis after the export.
+
+### Limitations
+
+- All numbers are the flow's own response only.  `R_blend` and the detection
+  classifier are not exercised here.  `R_blend` blocks are built with a fixed
+  loader flow (`fixed_g0_m258_r060_v2/flow/nll/selected.pt`) passed as
+  `--measurement-model`, so they are unchanged by a flow swap, but they are
+  also uncorrected by this work.
+- 40 held-out cases give ±0.41 pp on m.  Demonstrating 0.3% needs roughly 305
+  cases; nothing here can confirm a 0.3% result at that precision.
+- Shear-induced position shifts remain unmodelled.
+- The per-epoch residuals quoted above are single Monte Carlo estimates on the
+  validation split and carry their own noise; the claim is about the absence of
+  a trend, not about any individual epoch's value.
+
+### Next steps
+
+- Give the global and cumulative cuts a per-component `response_scale` 10–30x
+  the bands' in `refine_band_guard_flow.py`.  `GuardResponsePopulation` already
+  accepts a per-cut scale array, so this needs no library change.
+- Average weights over the last several epochs instead of selecting one, so the
+  level's random walk averages out rather than being sampled.
+- Select on cases disjoint from the ones the per-leg script measures, so the
+  reported number is never the one the selection optimised.
+- Only then consider the ConstGold swap.  It is a clean A/B — the current
+  ConstGold flow is exactly this refinement's starting point, and `--rblend`
+  and `--classifier` are fixed lookup files — but it is not worth 4 GPU-hours
+  while the flow's own global level is unconverged.
+
 ## 2026-09-17 — Band-resolved guards; the global bias is cancelling band errors
 
 The per-leg measurement earlier today put the whole residual at the radius
