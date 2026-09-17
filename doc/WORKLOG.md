@@ -1,3 +1,87 @@
+## 2026-09-17 — Per-leg hard-cut response measured; the quoted bias was a different estimand
+
+The guard training loss and the reported hard-cut bias were measuring two
+different quantities, and the quantity actually being trained had never been
+evaluated.  This entry adds that measurement.
+
+`sampled_guard_response_backward` weights each leg by that leg's own generated
+row, averages over draws and only then differences.  Its estimand is therefore
+a functional of the per-leg marginals alone, contains the selection response,
+and is invariant to the cross-leg latent pairing;
+`scripts/diagnose_flow_generated_radius_coupling.py` asserts that invariance
+directly at its permutation check.  The hard-cut numbers quoted for the
+sharp-guard refinement instead come from that script's
+`generated_radius_anchor` extraction, which takes the anchor from the g=0 draw
+and applies it to the same-index sheared draw.  That is a cross-leg
+conditional expectation.  Its postcut value is `model - measured = -0.008382`
+(m = -1.527%) with coherent draws and `-0.023889` (m = -4.35%) when only the
+sheared draw order is permuted, while the marginal
+`catalogue_radius_unconditional` extraction gives `-0.024453` (m = -4.52%).
+The permuted and marginal extractions agree because an independent pairing
+reproduces the product of the marginals.  The 2.9-point spread between -1.5%
+and -4.4% is thus a coupling convention, not model quality, and no per-leg
+likelihood identifies which coupling is correct.  Neither number is the
+per-leg bias.
+
+Added an exact-indicator `hard` convention to `sbsi/flow_guard_response.py`
+(`numpy_guard_weights`, `torch_guard_weights`, `fit_guard_response`,
+`GuardResponsePopulation`); the soft training band is unchanged by default and
+remains the only differentiable path.  Added
+`scripts/evaluate_per_leg_hard_cut_response.py` and
+`jobs/job_evaluate_per_leg_hard_cut_response.sh`, which evaluate the measured
+and model sides under one identical per-leg cut definition on the 40 held-out
+cases, with equal-weight case-bootstrap uncertainties and a common-random-number
+soft companion.
+
+One-A40 job16546155 completed all 40 held-out cases in 7m43s with exit 0 and
+empty stderr, after smoke job16546150 completed three cases in 37s.  At the
+realistic joint cut `FLUX_RADIUS > 3`, `MAG_AUTO < 25.8` the per-leg hard-cut
+result is
+
+    m = -0.726% +/- 0.414%   (95% CI -1.525% to +0.094%)
+
+against the -1.527% +/- 0.396% previously quoted for the same checkpoint and
+the same cases.  The trained 0.005-pixel/0.01-magnitude soft guard gives
+-0.739% +/- 0.408% under common random numbers, so that softness is already
+numerically hard and the earlier sharpening concern was not a real effect.
+
+The residual is localised.  Magnitude-only cuts are consistent with zero
+(+0.086%, -0.028%, +0.059%, each +/- 0.42--0.48), as is the global response
+(-0.184% +/- 0.427%) and `FLUX_RADIUS > 2.8` (-0.124% +/- 0.391%).  The bias
+switches on between 2.8 and 3.0 pixels: `FLUX_RADIUS > 3` gives -1.024% +/-
+0.401% and `FLUX_RADIUS > 3.2` gives -0.997% +/- 0.379%.  Three pixels is
+0.6 arcsec, which is where the uncut ConstGold property figure shows the
+measured response crossing zero, just above the 0.527-arcsec PSF half-light
+radius.  The deployment radius cut therefore sits on the response
+zero-crossing, and the whole remaining bias is the model's error across that
+boundary rather than a global calibration offset.
+
+Limitations.  The measurement is now precision-limited rather than
+bias-limited: the point estimate is 1.8 sigma from zero, and the +/- 0.414
+percentage-point case bootstrap is dominated by the measured side (per-case
+standard deviation 0.01416 measured versus 0.00222 model).  Demonstrating a
+0.3% bound at comparable significance needs roughly 305 held-out cases, not 40.
+These are the same reused development scenes as before, so this is a
+diagnostic rather than fresh acceptance evidence.  The evaluation is
+gradient-free; hard indicators must never be used for guard training.
+
+Validation: 387 passed and 2 skipped, including 12 focused guard tests, with
+one pre-existing NumPy degrees-of-freedom warning.  Ruff, `compileall` and
+`bash -n` pass.  The launcher records that `sbsi` resolved from the worktree
+rather than the main checkout.
+
+Next steps, in order.  Record the three estimands and their estimators in
+`doc/CONVENTIONS.md` and mark the zero-leg-anchor extraction as
+copula-dependent.  Then address the training budget: the guard receives 4
+optimizer steps per epoch against 489 NLL steps, every step of both is clipped
+at `GRADIENT_CLIP = 5.0` with raw guard norms of 45--105, so `RESPONSE_SCALE`
+cannot set the relative weight and the guard loss degrades from 0.056 at epoch
+4 to 0.127 by epoch 29 while the NLL improves.  Also drop the off-diagonal
+response components, which are ~0.4% of R11 and dilute the loss by 1.47x, and
+impose the O(2) covariance the circular-PSF measurement law has but the
+alternating-mask coupling flow does not, since R11 and R22 residuals currently
+disagree by about 1 percentage point.
+
 ## 2026-09-17 — Underlying responses exposed for uncut size panels
 
 Added a focused response-rendering mode to
