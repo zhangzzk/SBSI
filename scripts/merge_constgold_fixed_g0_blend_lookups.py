@@ -31,11 +31,25 @@ def main(argv=None):
     expected = set(args.case)
     if len(expected) != len(args.case):
         raise ValueError("duplicate expected cases")
+    # ``R_blend`` is the signed sum and can sit near zero through cancellation,
+    # so a diagnostic that bins on it cannot tell a genuinely quiet object from
+    # a loud one whose contributions happened to cancel.  ``R_blend_abs`` is the
+    # sum of the per-pair magnitudes and is the column
+    # ``diagnose_constgold_response_split.py`` recommends binning on.  Dropping
+    # it here silently removed that option from every merged lookup, so the
+    # optional columns are now carried through when every block has them.
+    optional = ("R_blend_abs", "blend_pairs")
+    available = [set(pd.read_feather(path).columns) for path in args.input]
+    carried = [name for name in optional if all(name in columns for columns in available)]
+    missing = [name for name in optional if name not in carried]
+    wanted = ["case", "input_index", "R_blend", *carried]
     frames = []
     inputs = []
-    for path in args.input:
-        frame = pd.read_feather(path, columns=["case", "input_index", "R_blend"])
-        frames.append(frame)
+    for path, columns in zip(args.input, available):
+        absent = {"case", "input_index", "R_blend"} - columns
+        if absent:
+            raise ValueError(f"{path} is missing required columns: {sorted(absent)}")
+        frames.append(pd.read_feather(path, columns=wanted))
         inputs.append({"path": str(path.resolve()), "sha256": file_sha256(path)})
     merged = pd.concat(frames, ignore_index=True)
     if merged.duplicated(["case", "input_index"]).any():
@@ -43,8 +57,14 @@ def main(argv=None):
     actual = set(merged["case"].unique())
     if actual != expected:
         raise ValueError(f"case coverage mismatch: expected={expected}, actual={actual}")
-    if not np.isfinite(merged["R_blend"].to_numpy(float)).all():
-        raise ValueError("merged lookup contains non-finite responses")
+    for name in ["R_blend", *carried]:
+        if not np.isfinite(merged[name].to_numpy(float)).all():
+            raise ValueError(f"merged lookup contains non-finite {name}")
+    if "R_blend_abs" in carried:
+        signed = merged["R_blend"].to_numpy(float)
+        absolute = merged["R_blend_abs"].to_numpy(float)
+        if (absolute + 1.0e-12 < np.abs(signed)).any():
+            raise ValueError("absolute blending sum below the signed sum")
     merged = merged.sort_values(["case", "input_index"], kind="stable").reset_index(
         drop=True
     )
@@ -56,6 +76,8 @@ def main(argv=None):
                 "format_version": 1,
                 "rows": int(len(merged)),
                 "cases": sorted(int(case) for case in actual),
+                "columns": list(merged.columns),
+                "optional_columns_dropped": missing,
                 "inputs": inputs,
             },
             indent=2,
