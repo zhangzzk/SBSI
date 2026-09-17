@@ -34,6 +34,30 @@ averages over ``R11``, ``R12``, ``R21`` and ``R22`` with equal weight, but the
 off-diagonals are about 0.4% of ``R11`` and carry no signal, so half of the
 averaged gradient was spent on them.  They are kept in the bank, at a tenth
 of the diagonal weight, rather than dropped.
+
+Two further points follow from measuring the first version of this recipe on
+held-out cases.  The band residuals fell by a factor of 3.5 and the fall
+survived a selection-free re-measurement of the final epoch, so the bands work.
+The global bias did not fall, and the number reported from ``selected.pt``
+turned out to be one lucky draw.
+
+**The cumulative cuts are now weighted to match the bands.**  Band residuals
+start about ten times the cumulative ones, so under a uniform
+``RESPONSE_SCALE`` the averaged quadratic was roughly fifty times more
+sensitive to the nine bands than to the sixteen cumulative cuts.  The cuts
+that pin the overall level of the response contributed almost nothing to the
+gradient, and the level then drifted freely: over twenty epochs the global
+residual wandered between -0.0011 and +0.0017 on ``R_self ~ 0.42``, about
++-1.3% in ``m``, with no trend.  ``CUMULATIVE_SCALE_FACTOR`` divides their
+scale by ten, multiplying their share of the loss by a hundred.
+
+**The reportable checkpoint is an epoch average, not a selected epoch.**
+``selected.pt`` minimises a validation objective whose guard term is a noisy
+Monte Carlo estimate on the same cases the evaluation then measures, so
+selecting on it harvests whichever epoch drifted closest to zero on those
+cases.  ``averaged.pt`` averages the weights over the tail of the run, which
+estimates a level that wanders without a trend far better than any single
+epoch and involves no choice made on the measured cases at all.
 """
 
 from __future__ import annotations
@@ -85,6 +109,20 @@ RESPONSE_SCALE = 0.01
 # A ten times larger scale divides its share of the averaged quadratic by a
 # hundred, which removes the dilution without dropping the component.
 OFF_DIAGONAL_SCALE_FACTOR = 10.0
+# The band residuals start about ten times the cumulative ones, so under a
+# uniform scale the averaged quadratic is a hundred times more sensitive to a
+# band than to a cumulative cut.  Nine bands then outweigh sixteen cumulative
+# cuts by roughly fifty to one, the cuts that pin the overall level of the
+# response contribute almost nothing to the gradient, and that level is free to
+# drift.  Dividing the cumulative scale by ten multiplies their share of the
+# loss by a hundred, which restores a comparable footing.
+CUMULATIVE_SCALE_FACTOR = 0.1
+
+# Epochs whose weights are averaged into ``averaged.pt``.  The level wanders
+# from epoch to epoch without a trend, so an average over the tail of the run
+# estimates it far better than any single epoch, and unlike ``selected.pt`` it
+# involves no choice made on the cases the evaluation then measures.
+AVERAGE_FROM_FRACTION = 0.5
 
 # Disjoint radius bands across the resolution cliff, under the deployment
 # magnitude limit.  The lowest edge sits below the flux-radius selection so
@@ -107,23 +145,35 @@ VALIDATION_GUARD_SEED = 823_000_000_001
 VALIDATION_GUARD_SUBSET_SEED = 900000822
 
 
-def build_guard_bank() -> tuple[dict, ...]:
-    """Cumulative deployment guards plus disjoint radius bands."""
+def build_guard_bank() -> tuple[tuple[dict, ...], int]:
+    """Cumulative deployment guards plus disjoint radius bands.
+
+    Returns the bank and the number of leading cumulative cuts, because the
+    two kinds carry different residual scales and must be weighted apart.
+    """
 
     cumulative = make_guard_cuts(RADIUS_THRESHOLDS, MAGNITUDE_THRESHOLDS)
     bands = make_guard_band_cuts(BAND_RADIUS_EDGES, magnitude_max=BAND_MAGNITUDE_MAX)
     names = [cut["name"] for cut in cumulative]
     combined = list(cumulative)
     combined.extend(cut for cut in bands if cut["name"] not in names)
-    return tuple(combined)
+    return tuple(combined), len(cumulative)
 
 
-def build_response_scale(cuts) -> np.ndarray:
-    """Per-cut, per-component guard scale with de-weighted off-diagonals."""
+def build_response_scale(cuts, cumulative_count: int) -> np.ndarray:
+    """Per-cut, per-component guard scale.
 
+    Off-diagonal components are de-weighted, and the leading cumulative cuts
+    are up-weighted so the overall level of the response is supervised rather
+    than left to whatever the band terms happen to imply.
+    """
+
+    if not 0 <= cumulative_count <= len(cuts):
+        raise ValueError("cumulative_count must index into the guard bank")
     scale = np.full(
         (len(cuts), len(SHAPE_RESPONSE_COMPONENTS)), RESPONSE_SCALE, dtype=np.float64
     )
+    scale[:cumulative_count, :] *= CUMULATIVE_SCALE_FACTOR
     for index, component in enumerate(SHAPE_RESPONSE_COMPONENTS):
         if component in {"R12", "R21"}:
             scale[:, index] *= OFF_DIAGONAL_SCALE_FACTOR
@@ -289,8 +339,8 @@ def main() -> None:
     validation_nll_ids = torch.as_tensor(
         validation_nll_indices, dtype=torch.long, device=device
     )
-    cuts = build_guard_bank()
-    scales = build_response_scale(cuts)
+    cuts, cumulative_count = build_guard_bank()
+    scales = build_response_scale(cuts, cumulative_count)
     train_population = GuardResponsePopulation(
         train_context,
         train_data["pairs"],
@@ -335,6 +385,9 @@ def main() -> None:
             "magnitude_softness": MAGNITUDE_SOFTNESS,
             "response_scale": RESPONSE_SCALE,
             "off_diagonal_scale_factor": OFF_DIAGONAL_SCALE_FACTOR,
+            "cumulative_scale_factor": CUMULATIVE_SCALE_FACTOR,
+            "cumulative_cut_count": cumulative_count,
+            "average_from_fraction": AVERAGE_FROM_FRACTION,
             "band_radius_edges": list(BAND_RADIUS_EDGES),
             "band_magnitude_max": BAND_MAGNITUDE_MAX,
             "components": list(SHAPE_RESPONSE_COMPONENTS),
@@ -398,6 +451,11 @@ def main() -> None:
     best_epoch = 0
     stale = 0
     start_epoch = 1
+    # Averaging starts after a burn-in so the early epochs, which are still
+    # moving the model rather than wandering around a level, stay out of it.
+    average_from = max(1, math.ceil(args.epochs * AVERAGE_FROM_FRACTION))
+    average_sum: dict[str, torch.Tensor] = {}
+    average_count = 0
     if args.resume and state_path.exists():
         state = torch.load(state_path, map_location=device, weights_only=False)
         model.load_state_dict(state["model"])
@@ -408,6 +466,8 @@ def main() -> None:
         best_epoch = state["best_epoch"]
         stale = state["stale"]
         start_epoch = state["epoch"] + 1
+        average_sum = {k: v.clone() for k, v in state.get("average_sum", {}).items()}
+        average_count = state.get("average_count", 0)
     if (output_root / "completed.json").exists():
         print("BAND_GUARD_ALREADY_COMPLETE", flush=True)
         return
@@ -479,10 +539,25 @@ def main() -> None:
             )
         else:
             stale += 1
+        if epoch >= average_from:
+            for key, value in model.state_dict().items():
+                if not value.is_floating_point():
+                    # Integer buffers are counters or indices, not parameters;
+                    # a mean of them is meaningless, so carry the latest.
+                    average_sum[key] = value.detach().cpu().clone()
+                    continue
+                tensor = value.detach().to("cpu", torch.float64)
+                if key in average_sum:
+                    average_sum[key] += tensor
+                else:
+                    average_sum[key] = tensor
+            average_count += 1
         torch.save(
             {
                 "epoch": epoch,
                 "model": model.state_dict(),
+                "average_sum": average_sum,
+                "average_count": average_count,
                 "optimizer": optimizer.state_dict(),
                 "scheduler": scheduler.state_dict(),
                 "history": history,
@@ -510,6 +585,62 @@ def main() -> None:
         if stale >= 15 and optimizer.param_groups[0]["lr"] <= MIN_LEARNING_RATE:
             break
 
+    averaged_path = output_root / "averaged.pt"
+    averaged_report = None
+    if average_count:
+        reference = model.state_dict()
+        averaged_state = {}
+        for key, value in average_sum.items():
+            target_tensor = reference[key]
+            if not target_tensor.is_floating_point():
+                averaged_state[key] = value.to(target_tensor.dtype)
+            else:
+                averaged_state[key] = (value / average_count).to(target_tensor.dtype)
+        model.load_state_dict(averaged_state, strict=True)
+        model.to(device)
+        averaged_nll = base.nll_pass(model, validation_values, validation_context)
+        averaged_guard = evaluate_guard_response(
+            model,
+            validation_population,
+            validation_guard_indices,
+            draws=VALIDATION_GUARD_DRAWS,
+            groups=VALIDATION_GUARD_GROUPS,
+            batch_size=VALIDATION_GUARD_BATCH,
+            seed=VALIDATION_GUARD_SEED,
+        )
+        base.save_checkpoint(
+            averaged_path,
+            model,
+            condition,
+            target,
+            model_config,
+            {
+                "training_phase": "full_domain_band_guard_epoch_average",
+                "averaged_epochs": average_count,
+                "average_from_epoch": average_from,
+                "stop_epoch": history[-1]["epoch"],
+                "selection_free": True,
+                "validation_nll": averaged_nll["nll"],
+                "guard_response_loss": averaged_guard["loss"],
+                "population": population,
+                "protocol_sha256": base.sha256(protocol_path),
+                "measurement_conditions_used": False,
+            },
+        )
+        averaged_report = {
+            "checkpoint": str(averaged_path),
+            "sha256": base.sha256(averaged_path),
+            "averaged_epochs": average_count,
+            "average_from_epoch": average_from,
+            "full_validation_nll": averaged_nll,
+            "fixed_subset_guard_response": compact_guard_result(averaged_guard),
+        }
+        print(
+            f"BAND_GUARD_AVERAGED epochs={average_count} from={average_from} "
+            f"nll={averaged_nll['nll']:.8f} guard={averaged_guard['loss']:.8f}",
+            flush=True,
+        )
+
     selected_path = output_root / "selected.pt"
     checkpoint = torch.load(selected_path, map_location=device, weights_only=False)
     model.load_state_dict(checkpoint["state_dict"])
@@ -529,6 +660,7 @@ def main() -> None:
             "checks_passed": True,
             "selected_checkpoint": str(selected_path),
             "selected_sha256": base.sha256(selected_path),
+            "averaged": averaged_report,
             "best_epoch": best_epoch,
             "stop_epoch": history[-1]["epoch"],
             "best_selection_metric": best_metric,
@@ -538,7 +670,8 @@ def main() -> None:
             "limitations": [
                 "single refinement seed",
                 "finite generated-draw integration",
-                "validation cases participate in checkpoint selection",
+                "validation cases participate in selecting selected.pt; "
+                "averaged.pt is selection-free and is the reportable checkpoint",
                 "guard weight fixed from one measured gradient-norm ratio",
                 "not an end-to-end SBSI calibration acceptance result",
             ],
