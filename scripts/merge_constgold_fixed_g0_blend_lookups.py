@@ -38,8 +38,22 @@ def main(argv=None):
     # ``diagnose_constgold_response_split.py`` recommends binning on.  Dropping
     # it here silently removed that option from every merged lookup, so the
     # optional columns are now carried through when every block has them.
+    #  Per-shell sums (``R_blend_r<lo>_<hi>`` and their ``_abs`` partners) are
+    #  carried the same way.  They are what lets a downstream fit ask ConstGold
+    #  how much of each neighbour-separation range is real, instead of forcing
+    #  the whole 20-neighbour sum to be wrong by one common factor.  Which shell
+    #  columns exist is a property of the blocks, so they are discovered rather
+    #  than named here.
     optional = ("R_blend_abs", "blend_pairs")
     available = [set(pd.read_feather(path).columns) for path in args.input]
+    shared = set.intersection(*available)
+    shells = sorted(name for name in shared if name.startswith("R_blend_r"))
+    #  The share columns are per-object ratios rather than additive sums, but a
+    #  merge only concatenates rows, so they travel unchanged.  They are the
+    #  axis the per-shell fit bins on, so losing them silently would quietly
+    #  remove the only well-conditioned binning available.
+    shares = sorted(name for name in shared if name.startswith("blend_abs_share_"))
+    optional = (*optional, *shells, *shares)
     carried = [name for name in optional if all(name in columns for columns in available)]
     missing = [name for name in optional if name not in carried]
     wanted = ["case", "input_index", "R_blend", *carried]
@@ -65,6 +79,31 @@ def main(argv=None):
         absolute = merged["R_blend_abs"].to_numpy(float)
         if (absolute + 1.0e-12 < np.abs(signed)).any():
             raise ValueError("absolute blending sum below the signed sum")
+    signed_shells = [name for name in shells if not name.endswith("_abs")]
+    if signed_shells:
+        #  The shells partition the pairs R_blend sums over, so they must add
+        #  back to it exactly.  Checking after the merge catches blocks built
+        #  with different shell edges being concatenated into one lookup.
+        rebuilt = merged[signed_shells].to_numpy(float).sum(axis=1)
+        whole = merged["R_blend"].to_numpy(float)
+        #  The shells are summed in float64 while R_blend is a float32
+        #  accumulation of up to `blend_pairs` per-pair values, so the two agree
+        #  only to that precision.  The bound is the standard one for summing n
+        #  float32 terms, n * eps * sum|x|, widened by four for summation order.
+        eps32 = float(np.finfo(np.float32).eps)
+        if "blend_pairs" in carried and "R_blend_abs" in carried:
+            scale = (merged["blend_pairs"].to_numpy(float)
+                     * merged["R_blend_abs"].to_numpy(float))
+        else:
+            scale = 20.0 * np.abs(whole)
+        bound = 4.0 * eps32 * (scale + 1.0)
+        if np.any(np.abs(rebuilt - whole) > bound):
+            worst = int(np.argmax(np.abs(rebuilt - whole) - bound))
+            raise ValueError(
+                "merged per-shell sums do not reconstruct R_blend "
+                f"(difference={abs(rebuilt[worst] - whole[worst])}, "
+                f"bound={bound[worst]}); blocks may use different shell edges"
+            )
     merged = merged.sort_values(["case", "input_index"], kind="stable").reset_index(
         drop=True
     )

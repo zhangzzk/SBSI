@@ -69,6 +69,14 @@ def parse_args(argv=None):
                         help="the one measurement flow, shared by every arm")
     parser.add_argument("--rblend", action="append", required=True,
                         help="label=path; the first is the reference for binning")
+    parser.add_argument(
+        "--blend-column", action="append", default=None,
+        help="label=COLUMN inside the single reference lookup.  Each becomes its "
+             "own blending term and all are fitted jointly with the flow, which "
+             "is how a per-separation-shell lookup is read.  Incompatible with "
+             "more than one --rblend, because the terms must come from one "
+             "partition of the same pairs.",
+    )
     parser.add_argument("--case", type=int, action="append", required=True)
     parser.add_argument("--bins", type=int, default=12)
     parser.add_argument(
@@ -267,8 +275,35 @@ FIT_NAMES = ("flow_fractional_error", "blend_fractional_error",
              "blend_only_fractional_error", "flow_only_fractional_error")
 
 
+def fit_joint(flow: np.ndarray, components: np.ndarray, residual: np.ndarray,
+              weights: np.ndarray, labels) -> dict:
+    """One fractional error per blending component, fitted together with the flow.
+
+    The two-term fit forces every neighbour, from a touching pair to one five
+    arcseconds away, to share a single multiplicative error.  Splitting
+    ``R_blend`` into separation shells and giving each its own coefficient lets
+    ConstGold say which separations it actually supports.  The shells are
+    near-orthogonal per object, so this is a genuine measurement rather than a
+    reparametrisation -- but the answer is only as good as the design's
+    conditioning, which is reported alongside it.
+    """
+    design = np.column_stack((flow, components))
+    root = np.sqrt(weights)
+    solution, *_ = np.linalg.lstsq(design * root[:, None], residual * root, rcond=None)
+    fitted = design @ solution
+    weighted = weights * (residual - fitted) ** 2
+    result = {
+        "joint_flow_fractional_error": float(solution[0]),
+        "joint_condition_number": float(np.linalg.cond(design * root[:, None])),
+        "joint_weighted_residual": float(np.sqrt(weighted.sum() / weights.sum())),
+    }
+    for index, label in enumerate(labels):
+        result[f"joint_fractional_error::{label}"] = float(solution[1 + index])
+    return result
+
+
 def summarize(per_case: dict, cases, cells, groups, blend_keys, labels, *,
-              h, replicates, seed) -> dict:
+              h, replicates, seed, joint=False) -> dict:
     """Responses and ``m`` for every reported group, bootstrapped over cases."""
     cases = tuple(cases)
     terms = ["measured", "flow"] + [f"blend::{label}" for label in labels]
@@ -293,15 +328,26 @@ def summarize(per_case: dict, cases, cells, groups, blend_keys, labels, *,
                                  weights)
                 for index, label in enumerate(labels)}
 
+    def joint_of(values: np.ndarray, objects: np.ndarray) -> dict:
+        flow = values[blend_rows, 1]
+        measured = values[blend_rows, 0]
+        components = np.column_stack(
+            [values[blend_rows, 2 + index] for index in range(len(labels))])
+        residual = measured - flow - components.sum(axis=1)
+        return fit_joint(flow, components, residual, objects[blend_rows], labels)
+
     point, objects = group_responses(numerator, denominator, matrix, h)
     point_m = m_percent(point)
     point_fits = fits_of(point, objects)
+    point_joint = joint_of(point, objects) if joint else None
+    joint_names = tuple(point_joint) if joint else ()
 
     rng = np.random.default_rng(seed)
     draws = rng.integers(0, len(cases), size=(replicates, len(cases)))
     m_samples = np.empty((replicates, len(names), len(labels)))
     fit_samples = {label: {name: np.empty(replicates) for name in FIT_NAMES}
                    for label in labels}
+    joint_samples = {name: np.empty(replicates) for name in joint_names}
     for index, choice in enumerate(draws):
         values, counts = group_responses(numerator[choice], denominator[choice],
                                          matrix, h, strict=False)
@@ -310,10 +356,15 @@ def summarize(per_case: dict, cases, cells, groups, blend_keys, labels, *,
             for label in labels:
                 for name in FIT_NAMES:
                     fit_samples[label][name][index] = np.nan
+            for name in joint_names:
+                joint_samples[name][index] = np.nan
             continue
         for label, entry in fits_of(values, counts).items():
             for name, value in entry.items():
                 fit_samples[label][name][index] = value
+        if joint:
+            for name, value in joint_of(values, counts).items():
+                joint_samples[name][index] = value
 
     def described(value, samples):
         usable = samples[np.isfinite(samples)]
@@ -348,6 +399,11 @@ def summarize(per_case: dict, cases, cells, groups, blend_keys, labels, *,
                     for name in FIT_NAMES}
             for label in labels
         },
+        "joint_fit": (
+            {name: described(point_joint[name], joint_samples[name])
+             for name in joint_names}
+            if joint else None
+        ),
     }
 
 
@@ -362,8 +418,28 @@ def main(argv=None):
         raise ValueError("positive h/batch and even draws >=2 required")
     cases = tuple(dict.fromkeys(int(case) for case in args.case))
     rblend_paths = parse_mapping(args.rblend, "--rblend")
-    labels = list(rblend_paths)
-    reference = labels[0]
+    reference = list(rblend_paths)[0]
+    joint = bool(args.blend_column)
+    if joint:
+        if len(rblend_paths) != 1:
+            raise ValueError(
+                "--blend-column needs exactly one --rblend: the components must "
+                "be one partition of the same pairs, not separate models"
+            )
+        blend_columns = {}
+        for value in args.blend_column:
+            label, separator, column = value.partition("=")
+            if not separator or not label or not column:
+                raise ValueError("--blend-column entries must have form LABEL=COLUMN")
+            if label in blend_columns:
+                raise ValueError(f"duplicate --blend-column label {label!r}")
+            blend_columns[label] = column
+        labels = list(blend_columns)
+    else:
+        labels = list(rblend_paths)
+        blend_columns = {label: "R_blend" for label in labels}
+    blend_paths = {label: rblend_paths[reference] for label in labels} if joint \
+        else dict(rblend_paths)
     if not args.flow.is_file():
         raise FileNotFoundError(args.flow)
 
@@ -379,6 +455,10 @@ def main(argv=None):
             and args.bin_column not in columns
         ):
             columns.append(args.bin_column)
+        if label == reference and joint:
+            for column in blend_columns.values():
+                if column not in columns:
+                    columns.append(column)
         table = pd.read_feather(path, columns=columns)
         if table.duplicated(["case", "input_index"]).any():
             raise ValueError(f"duplicate R_blend keys in {path}")
@@ -457,8 +537,35 @@ def main(argv=None):
             bundle, plus_frame, minus_frame, draws=args.draws,
             batch_size=args.batch_size, seed=args.sampling_seed + 10_000_019 * case)
         flow_values = {"plus": plus_mean, "minus": minus_mean}
-        rblend = {label: load_rblend(tables[label], rblend_paths[label], case, anchor_ids)
-                  for label in labels}
+        if joint:
+            rblend = {
+                label: load_column(tables[reference], blend_paths[label], case,
+                                   anchor_ids, blend_columns[label])
+                for label in labels
+            }
+            #  The components partition the pairs R_blend sums over, so they
+            #  must add back to it on exactly these anchors.  Checking here, not
+            #  only at build time, catches a lookup whose shell columns were
+            #  written with different edges from the R_blend beside them.
+            rebuilt = np.sum([rblend[label] for label in labels], axis=0)
+            whole = load_rblend(tables[reference], blend_paths[reference], case,
+                                anchor_ids)
+            #  The components are float64 sums while R_blend is a float32
+            #  accumulation over up to 20 pairs, so they agree only to that
+            #  precision: n * eps * sum|x|, widened by four for summation order.
+            eps32 = float(np.finfo(np.float32).eps)
+            bound = 4.0 * eps32 * (20.0 * np.abs(whole) + 1.0)
+            if np.any(np.abs(rebuilt - whole) > bound):
+                worst = int(np.argmax(np.abs(rebuilt - whole) - bound))
+                raise RuntimeError(
+                    f"case {case}: blend components do not reconstruct R_blend "
+                    f"(difference={abs(rebuilt[worst] - whole[worst])}, "
+                    f"bound={bound[worst]})"
+                )
+        else:
+            rblend = {label: load_rblend(tables[label], rblend_paths[label], case,
+                                         anchor_ids)
+                      for label in labels}
         if args.anchor_bin_column is None:
             binned_on = load_column(
                 tables[reference],
@@ -537,10 +644,13 @@ def main(argv=None):
             "flow_sha256": file_sha256(args.flow),
             "rblend": {label: {"path": str(path), "sha256": file_sha256(path)}
                        for label, path in rblend_paths.items()},
+            "blend_columns": dict(blend_columns),
+            "joint_fit": bool(joint),
         },
         "cases": list(cases),
         "summary": summarize(per_case, cases, cells, groups, keys, labels, h=args.h,
-                             replicates=args.n_boot, seed=args.bootstrap_seed),
+                             replicates=args.n_boot, seed=args.bootstrap_seed,
+                             joint=joint),
         "per_case_sufficient": per_case,
         "limitations": [
             (
@@ -563,6 +673,21 @@ def main(argv=None):
             "resolved by it.",
             "One flow-training seed and one antithetic integration seed.",
             "Only the matched-usable branch is reported.",
+            *(
+                [
+                    "With --blend-column the per-label R_blend and m_percent "
+                    "entries are one COMPONENT of the blending term, not a "
+                    "competing blending model, so m_percent::<label> is not a "
+                    "bias estimate for anything; read joint_fit instead.",
+                    "The joint fit gives each component its own multiplicative "
+                    "error.  It can only separate components that vary "
+                    "independently across the fitted bins, so its "
+                    "joint_condition_number has to be read with it: a large "
+                    "value means the split between components is unconstrained "
+                    "even when each coefficient has a small bootstrap error.",
+                ]
+                if joint else []
+            ),
         ],
     }
     write_json(output, result)

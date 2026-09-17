@@ -1,3 +1,196 @@
+## 2026-09-17 — Most of the blending term comes from neighbours too far away to blend
+
+The flow/blending split says the blending term is `-15.41% +- 0.53` too large
+and contributes `-4.125 pp` of the full-domain `m = -2.424% +- 0.230`.  It
+reaches that with one multiplicative coefficient for the whole term.  Two
+findings this entry records say that coefficient is hiding structure, and add
+the instrument to resolve it.
+
+### The flow handed to the R_blend lookup never reaches the emulator
+
+`sbsi/models.py:157` `load_emulator` builds `ModelPaths` with
+`flow_checkpoints`, validates them, and then calls
+`BlendingPredictor.load(..., load_self=False)` passing only `emulator_model`,
+`emulator_metadata` and `conditions`.  The flow is never passed on, so
+`--measurement-model` in `scripts/build_constgold_fixed_g0_blend_lookup.py` is
+required, hashed into the manifest, and has no effect on `R_blend`.
+
+This was found by testing the hypothesis that `R_blend` and `R_flow` being built
+with different flows explained the error.  Job 16555291 rebuilt `R_blend` on the
+identical anchors with `full_domain_true_mag26_guard_refine_v1/flow/selected.pt`
+in place of `fixed_g0_m258_r060_v2/flow/nll/selected.pt`:
+
+    rows compared 9,802,054 over 100 cases, 0 dropped
+    summed R_blend  old +1511051.3954  new +1511051.3954  change +0.0000%
+    bit-identical in every one of the 10 blocks
+
+The hypothesis is dead, and the manifest now records the argument as "validated
+but unused" so it does not mislead again.
+
+### Where R_blend actually comes from
+
+`R_blend` sums the 20 nearest neighbours inside `r_max = 10` **arcsec** (50 LSST
+pixels).  That cap binds almost everywhere: on case 40 the mean pair count is
+16.01 of a maximum 20 and 32.9% of primaries carry exactly 19 pairs, so nearly
+every object is a sum of ~16 terms.  Profiling the per-pair predictions against
+separation, on 1,580,326 pairs over 98,712 primaries:
+
+| separation | pairs | mean response | contribution | cumulative |
+| --- | --- | --- | --- | --- |
+| 0-0.5" | 0.2% | +0.047098 | +0.001597 | 1.0% |
+| 0.5-1.5" | 1.8% | +0.019 | +0.005572 | 4.6% |
+| 1.5-3" | 6.9% | +0.046 | +0.051318 | 37.6% |
+| 3-5" | 16.9% | +0.027 | +0.071548 | 83.7% |
+| 5-10" | 74.2% | +0.002133 | +0.025354 | 100.0% |
+
+Only 4.6% of the term comes from inside 1.5 arcsec; 62.4% comes from beyond 3
+arcsec, against galaxies with median `Re` 0.26 arcsec under a 0.73 arcsec PSF.
+
+The raw profile is not monotonic -- it peaks at 2-3 arcsec, above the 0-0.5
+arcsec bin -- but that is a population effect and not a defect: median
+`flux_ratio` falls from 0.825 at 0-0.5 arcsec to 0.706 at 9-10 arcsec, because
+the nearest-neighbour slots are filled by whatever is close while the distant
+slots sample the field.  Holding `flux_ratio` in its middle quintile
+(316,066 pairs) the profile is monotonic and then changes sign:
+
+    0-0.5"  +0.025890 +- 0.001295
+    1-1.5"  +0.002102 +- 0.000129
+    3-4"    +0.001611 +- 0.000053
+    4-5"    +0.000342 +- 0.000030
+    5-6"    -0.000432 +- 0.000023
+    6-7"    -0.000665 +- 0.000016   (41 sigma from zero)
+    9-10"   -0.000233 +- 0.000016
+
+A significantly negative predicted response at 25-50 pixels is not physical.
+The emulator's `validation_r2_physical` is 0.005665, so it predicts close to a
+conditional mean and is only meaningful in aggregate -- but an aggregate summed
+over ~12 distant neighbours per object is exactly where a small conditional-mean
+error is multiplied up.
+
+### What was deliberately not done
+
+Truncating the neighbour list is one line and lands anywhere:
+
+| neighbours dropped | R_blend | m would become |
+| --- | --- | --- |
+| beyond 3" | 0.05849 | +17.449% |
+| beyond 4" | 0.10118 | +7.778% |
+| beyond 5" | 0.13004 | +2.096% |
+| beyond 6" | 0.14521 | -0.658% |
+| beyond 7" | 0.15061 | -1.603% |
+
+Choosing the cut by looking at `m` is exactly the empirical offset the project
+forbids, and a 1 arcsec change moving `m` by 2.8 pp shows how little the
+resulting number would mean.  The shells are measured instead.
+
+### Per-shell blending terms
+
+`R_blend` can now be emitted resolved by separation, and the split can give each
+shell its own fractional error fitted jointly with the flow.
+
+- `scripts/build_constgold_fixed_g0_blend_lookup.py` — new `--shell-edge`
+  (repeatable, arcsec) emits `R_blend_r<lo>_<hi>` and `_abs` partners; new
+  `--share-edge` emits `blend_abs_share_beyond_<edge>`.  `R_blend`,
+  `R_blend_abs` and `blend_pairs` are untouched.  The shells are checked to
+  partition the pairs exactly in float64 (`atol=1e-12`), and then `R_blend` is
+  checked against that exact sum within the float32 accumulation bound
+  `4 * eps32 * (blend_pairs * R_blend_abs + 1)`.  The first version used a flat
+  `atol=1e-9` and killed all ten array tasks of job 16555419 at a worst
+  discrepancy of `2.37e-07`, which is float32 round-off, not a partition
+  failure: `response` is float32 and `R_blend` is a float32 accumulation while
+  the shells are summed in float64.
+- `scripts/merge_constgold_fixed_g0_blend_lookups.py` — carries shell and share
+  columns when every block has them, and re-checks the partition after the
+  merge so blocks cut on different edges cannot be concatenated silently.
+- `scripts/diagnose_constgold_response_split.py` — new `--blend-column
+  LABEL=COLUMN` (repeatable) makes each named column its own blending term from
+  a single lookup, all fitted jointly with the flow.  Reports
+  `joint_fit` with one `joint_fractional_error::<label>` per component plus
+  `joint_condition_number` and `joint_weighted_residual`.  Re-checks the
+  partition per case on the actual anchors.
+
+### The binning axis was chosen on conditioning, before reading any m from it
+
+Per object the four shells are nearly orthogonal (all pairwise |r| <= 0.019,
+near vs far +0.013), but that is not sufficient: the fit needs them to vary
+independently across the fitted bins.  Scaled condition number of the
+`[flow, r0_2, r2_4, r4_6, r6_10]` design over 12 quantile bins, case 40:
+
+| binning axis | scaled cond | smallest shell spread |
+| --- | --- | --- |
+| `R_blend_abs` (the current axis) | 63.0 | 3.98x |
+| `R_blend_r0_2_abs` | 69.2 | 0.16x |
+| `R_blend_r4_6_abs` | 112.5 | 0.16x |
+| **`blend_abs_share_beyond_4`** | **29.3** | **3.19x** |
+| `near_abs_share` | 373.5 | 1.86x |
+
+The share axis wins and is what `jobs/job_constgold_split_shells.sh` uses.  The
+raw (unscaled) condition numbers are all in the thousands and say nothing: they
+are dominated by `R_flow ~ 0.42` against outer shells `~ 0.01`, which is column
+scale, not geometry.
+
+### Files and behaviour changed
+
+- `scripts/build_constgold_fixed_g0_blend_lookup.py` — `--shell-edge`,
+  `--share-edge`, partition and precision checks, `neighbour_aperture` block in
+  the manifest, `measurement_model_note`.
+- `scripts/merge_constgold_fixed_g0_blend_lookups.py` — shell/share carry-through
+  and post-merge partition check.
+- `scripts/diagnose_constgold_response_split.py` — `--blend-column`, `fit_joint`,
+  `summarize(..., joint=)`, `joint_fit` output, two added limitations.
+- `tests/test_constgold_blend_shells.py` — new, 10 tests.
+- `jobs/job_build_constgold_full_domain_rblend_shells.sh` — new, CPU array.
+- `jobs/job_constgold_split_shells.sh` — new, the joint per-shell split.
+- `jobs/job_constgold_split_cut_domain.sh` — new, the same two-term split run on
+  the emulator's own training predicate.
+
+### Validation
+
+    pytest tests/test_constgold_blend_shells.py tests/test_blend_lookup.py \
+           tests/test_constgold_response_split.py \
+           tests/test_merge_constgold_fixed_g0_blend_lookups.py \
+           tests/test_constgold_fixed_g0_response.py -q
+    40 passed
+
+The decisive test plants a near shell that is modelled correctly and a far shell
+over-predicted by 60%, and checks the joint fit returns `0.0` and `-0.60`
+separately where a single blending coefficient could only return their blend.
+Another checks that exactly collinear components still return coefficients but
+raise `joint_condition_number` above `1e6`, so the output cannot look confident
+when the split is undetermined.
+
+    bash -n jobs/job_build_constgold_full_domain_rblend_shells.sh
+    bash -n jobs/job_constgold_split_shells.sh
+    bash -n jobs/job_constgold_split_cut_domain.sh
+
+Job 16555443 case 40 reproduces the profile exactly and leaves `R_blend`
+unchanged: `mean_R_blend 0.15538841244137291`, shells `0.01789348`, `0.08328494`,
+`0.04403122`, `0.01017878`, `mean_blend_pairs 16.009`.
+
+### Limitations
+
+- The separation profile is one case (40) of 100.  The shell sums in the
+  production lookup cover all of 40--139, but the flux-ratio-controlled profile
+  above has not been repeated elsewhere.
+- `response` is the emulator's per-pair prediction.  Nothing here measures it
+  against truth at large separation, because the training pair catalogue is not
+  kept beside the model and rebuilding it is BlendEMU's scope, not SBSI's.  The
+  claim that a significantly negative response at 6 arcsec is unphysical rests
+  on the physics, not on a measured label.
+- The joint fit still assumes each shell is wrong by a single multiplicative
+  factor within the shell, and still absorbs anything unmodelled that scales
+  with that shell -- including detection and selection response, which the
+  matched-usable branch does not model.
+- Shell edges 2/4/6 arcsec are round numbers, not an optimisation.
+
+### Next steps
+
+- Read the joint per-shell fit and see whether the outer shells are consistent
+  with contributing nothing real.
+- Read the cut-domain two-term split (job 16555340) to separate "the emulator is
+  used out of domain" from "the emulator is wrong everywhere".
+- If the outer shells are spurious, the fix belongs in BlendEMU's emulator, not
+  in a truncation applied downstream in SBSI.
 ## 2026-09-17 — The blending term, not the flow, spends the ConstGold budget; the V3.5 flow does not transfer
 
 First separated measurement of the two model terms on the full domain, cases

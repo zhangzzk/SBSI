@@ -54,7 +54,50 @@ def parse_args(argv=None):
     parser.add_argument("--emulator-model", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--device", default="cpu")
+    parser.add_argument(
+        "--shell-edge", type=float, action="append", default=None,
+        help="inner edge in ARCSEC of a neighbour-separation shell; repeat for "
+             "several.  R_blend is a signed sum over the 20 nearest neighbours "
+             "inside r_max=10 arcsec, and the cap binds for nearly every "
+             "primary, so the single number mixes genuinely blended close pairs "
+             "with a dozen distant ones.  Emitting the per-shell sums lets a "
+             "downstream fit ask ConstGold how much of each separation range is "
+             "real instead of assuming the whole sum is wrong by one factor.  "
+             "R_blend itself is unchanged and the shells are asserted to sum "
+             "back to it.",
+    )
+    parser.add_argument(
+        "--share-edge", type=float, action="append", default=None,
+        help="emit the fraction of a primary's ABSOLUTE blending amplitude that "
+             "comes from pairs at or beyond this separation in arcsec; repeat "
+             "for several.  This is the binning axis a per-shell joint fit "
+             "needs: binning on the total amplitude leaves the four shells "
+             "nearly parallel across bins (scaled condition number 63 against "
+             "29 for the share at 4 arcsec, measured on case 40), so the split "
+             "between them would be unconstrained.",
+    )
     return parser.parse_args(argv)
+
+
+def share_column_name(edge: float) -> str:
+    return f"blend_abs_share_beyond_{edge:g}".replace(".", "p")
+
+
+def shell_bounds(inner: tuple[float, ...], r_max: float) -> tuple[tuple[float, float], ...]:
+    """Half-open [lo, hi) shells covering [0, r_max) from the inner edges."""
+    if not inner:
+        return ()
+    ordered = tuple(sorted(inner))
+    if len(set(ordered)) != len(ordered):
+        raise ValueError("repeated --shell-edge")
+    if ordered[0] <= 0.0 or ordered[-1] >= r_max:
+        raise ValueError(f"--shell-edge values must lie strictly inside (0, {r_max})")
+    cuts = (0.0, *ordered, float(r_max))
+    return tuple((cuts[index], cuts[index + 1]) for index in range(len(cuts) - 1))
+
+
+def shell_column_names(bounds: tuple[tuple[float, float], ...]) -> tuple[str, ...]:
+    return tuple(f"R_blend_r{lo:g}_{hi:g}".replace(".", "p") for lo, hi in bounds)
 
 
 def load_anchor(path: Path) -> tuple[np.ndarray, np.ndarray]:
@@ -142,6 +185,16 @@ def main(argv=None):
     if domain.get("sheared_leg_recut") is not False:
         raise ValueError("fixed-g0 blend lookup refuses a sheared-leg recut")
 
+    #  The neighbour aperture is the emulator's own, not a free choice here.
+    r_max = float(regression.get("r_max", 0.0))
+    if r_max <= 0.0:
+        raise ValueError("emulator metadata lacks a positive regression r_max")
+    bounds = shell_bounds(tuple(args.shell_edge or ()), r_max)
+    shell_names = shell_column_names(bounds)
+    share_edges = tuple(sorted(set(args.share_edge or ())))
+    if any(edge <= 0.0 or edge >= r_max for edge in share_edges):
+        raise ValueError(f"--share-edge values must lie strictly inside (0, {r_max})")
+
     paths = ModelPaths(
         flow_checkpoints=(args.measurement_model,),
         emulator_metadata=args.emulator_metadata,
@@ -200,17 +253,100 @@ def main(argv=None):
             raise RuntimeError("non-finite fixed-g0 absolute blending response")
         if (absolute_values + 1e-12 < np.abs(values)).any():
             raise RuntimeError("absolute blending sum below the signed sum")
-        parts.append(
-            pd.DataFrame(
-                {
-                    "case": np.full(len(anchor_ids), case, dtype=np.int32),
-                    "input_index": anchor_ids,
-                    "R_blend": values,
-                    "R_blend_abs": absolute_values,
-                    "blend_pairs": pair_counts,
-                }
-            )
+        block = pd.DataFrame(
+            {
+                "case": np.full(len(anchor_ids), case, dtype=np.int32),
+                "input_index": anchor_ids,
+                "R_blend": values,
+                "R_blend_abs": absolute_values,
+                "blend_pairs": pair_counts,
+            }
         )
+        if bounds or share_edges:
+            if "distance" not in predicted:
+                raise RuntimeError(
+                    "response prediction lacks the pair separation column "
+                    "'distance'; per-shell sums cannot be built"
+                )
+            separation = predicted["distance"].to_numpy(np.float64)
+            if not np.isfinite(separation).all() or separation.min() < 0.0:
+                raise RuntimeError("non-finite or negative pair separation")
+            if separation.max() > r_max:
+                raise RuntimeError(
+                    f"pair separation {separation.max()} exceeds the emulator "
+                    f"aperture r_max={r_max}"
+                )
+            pair_response = predicted["response"].to_numpy(np.float64)
+            for edge in share_edges:
+                beyond = (
+                    predicted.assign(
+                        _beyond=np.where(separation >= edge, np.abs(pair_response), 0.0))
+                    .groupby(primary_column, sort=False)["_beyond"]
+                    .sum()
+                    .reindex(anchor_ids, fill_value=0.0)
+                    .to_numpy(np.float64)
+                )
+                #  A primary with no blending amplitude at all has no share to
+                #  speak of; zero puts it in the lowest bin, alongside the
+                #  objects whose amplitude is entirely close-in, which is where
+                #  a quiet object belongs.
+                block[share_column_name(edge)] = np.divide(
+                    beyond, absolute_values,
+                    out=np.zeros_like(beyond),
+                    where=absolute_values > 0.0,
+                )
+            shell_total = np.zeros(len(anchor_ids), dtype=np.float64)
+            for (lo, hi), name in zip(bounds, shell_names):
+                inside = (separation >= lo) & (separation < hi)
+                shell_frame = predicted.assign(
+                    _signed=np.where(inside, pair_response, 0.0),
+                    _magnitude=np.where(inside, np.abs(pair_response), 0.0),
+                )
+                summed = shell_frame.groupby(primary_column, sort=False)[
+                    ["_signed", "_magnitude"]
+                ].sum().reindex(anchor_ids, fill_value=0.0)
+                part = summed["_signed"].to_numpy(np.float64)
+                block[name] = part
+                block[f"{name}_abs"] = summed["_magnitude"].to_numpy(np.float64)
+                shell_total += part
+            #  The shells partition the same pairs R_blend sums, so this is an
+            #  identity.  It is checked twice, because the two sides are not
+            #  computed in the same precision.
+            #
+            #  First exactly: the shells and a float64 sum over every pair are
+            #  both float64 and must agree to round-off.
+            exact_total = (
+                predicted.assign(_all=pair_response)
+                .groupby(primary_column, sort=False)["_all"]
+                .sum()
+                .reindex(anchor_ids, fill_value=0.0)
+                .to_numpy(np.float64)
+            )
+            if not np.allclose(shell_total, exact_total, rtol=0.0, atol=1e-12):
+                worst = float(np.max(np.abs(shell_total - exact_total)))
+                raise RuntimeError(
+                    f"per-shell sums do not partition the pairs; worst={worst}"
+                )
+            #  Then to the precision R_blend itself carries.  ``response`` is
+            #  float32, so the stored R_blend is a float32 accumulation of up to
+            #  `blend_pairs` terms; the standard bound on that error is
+            #  n * eps * sum|x|, which is `blend_pairs * eps32 * R_blend_abs`.
+            #  Four times that leaves room for the pairwise summation order
+            #  without loosening the check into meaninglessness.  This is a
+            #  floating-point bound, not a tolerance chosen to make a number
+            #  agree with an expectation.
+            eps32 = float(np.finfo(np.float32).eps)
+            bound = 4.0 * eps32 * (pair_counts * absolute_values + 1.0)
+            excess = np.abs(exact_total - values) - bound
+            if np.any(excess > 0.0):
+                worst = int(np.argmax(excess))
+                raise RuntimeError(
+                    "R_blend differs from an exact sum over its own pairs by "
+                    f"more than float32 accumulation allows: "
+                    f"difference={abs(exact_total[worst] - values[worst])}, "
+                    f"bound={bound[worst]}, pairs={pair_counts[worst]}"
+                )
+        parts.append(block)
         report = {
             "case": int(case),
             "anchor_rows": int(len(anchor_ids)),
@@ -220,6 +356,8 @@ def main(argv=None):
             "mean_R_blend_abs": float(absolute_values.mean()),
             "mean_blend_pairs": float(pair_counts.mean()),
         }
+        for name in shell_names:
+            report[f"mean_{name}"] = float(block[name].to_numpy(float).mean())
         reports.append(report)
         print(json.dumps(report, sort_keys=True), flush=True)
 
@@ -233,9 +371,27 @@ def main(argv=None):
         "population": "exact fixed-g0 flow-anchor keys; no truth cut; no sheared-leg recut",
         "cases": [int(case) for case in args.cases],
         "rows": int(len(result)),
+        "neighbour_aperture": {
+            "r_max_arcsec": r_max,
+            "k": regression.get("k"),
+            "shell_bounds_arcsec": [[float(lo), float(hi)] for lo, hi in bounds],
+            "shell_columns": list(shell_names),
+            "share_edges_arcsec": [float(edge) for edge in share_edges],
+            "share_columns": [share_column_name(edge) for edge in share_edges],
+        },
         "inputs": {
             "anchor_pattern": args.anchor_pattern,
             "input_pattern": args.input_pattern,
+            #  Recorded for provenance only.  `sbsi.models.load_emulator` calls
+            #  `BlendingPredictor.load(..., load_self=False)` and never passes
+            #  `flow_checkpoints`, so the measurement model does NOT reach the
+            #  emulator and changing it leaves R_blend bit-identical.  This was
+            #  verified on 2026-09-17 over 9,802,054 rows in 10 blocks: every
+            #  value identical, every decile +0.00%.
+            "measurement_model_note": (
+                "validated but unused by the emulator; R_blend does not depend "
+                "on it"
+            ),
             "measurement_model": str(args.measurement_model.resolve()),
             "measurement_model_sha256": file_sha256(args.measurement_model),
             "emulator_model": str(args.emulator_model.resolve()),
