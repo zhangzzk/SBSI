@@ -1,3 +1,124 @@
+## 2026-09-17 — The blending term, not the flow, spends the ConstGold budget; the V3.5 flow does not transfer
+
+First separated measurement of the two model terms on the full domain, cases
+40--139, from `scripts/diagnose_constgold_response_split.py`.  Two arms, with
+the anchor domain, the `R_blend` lookup, the bin definition and the three
+classifiers held byte-identical and only `--flow` changed.
+
+| arm | flow fractional error | blending fractional error | m |
+| --- | --- | --- | --- |
+| baseline, `guard_refine/flow/selected.pt` | **+2.071% +- 0.275** | **-15.41% +- 0.53** | -2.424% +- 0.230 |
+| `lambda10 epoch154`, the V3.5-like flow | +1.867% +- 0.275 | -14.99% +- 0.53 | -2.512% +- 0.229 |
+
+`R_blend` is bit-identical between the arms (0.15251939149890195), as it must
+be: the lookup is built with a fixed, different measurement model and does not
+depend on the flow under test.  The arm's m reproduces the independent
+property-bias result to five digits (-2.4240725044258116 against
+-2.4240725044257894), which cross-checks the two pipelines against each other.
+
+### Where m comes from
+
+With `R_flow = 0.41729` (73.2% of the model response) and `R_blend = 0.15252`
+(26.8%), each term's contribution to m is its fractional error times its share:
+
+| term | contribution to m |
+| --- | --- |
+| flow | +1.517 pp |
+| blending | **-4.125 pp** |
+| sum | -2.608 pp, against -2.424 measured |
+
+The blending term is 2.7 times the flow term and carries the sign of the
+result.
+
+### The V3.5-like flow does not transfer to the full domain
+
+This was a directed test of the owner's observation that V3.5-like had poor
+density but good total response, m = -0.238% +- 0.294 against -1.017% +- 0.292
+for the model that replaced it.  The prediction was that swapping it in would
+move the full-domain result toward zero.  It does not.
+
+- flow fractional error moves -0.204 pp, against a standard error of 0.275 on
+  each arm.  Not a detection.
+- `R_flow` moves +0.123%, from 0.41729 to 0.41780.
+- m moves -0.088 pp, the wrong way, and far inside its own 0.23 pp error.
+
+The swap itself is sound and was verified before running: identical
+architecture (`physical_disk_affine`, 4 targets, 16-wide context, 99 tensors,
+no shape mismatch), identical eight conditioning features, identical four
+target names, and the checkpoint hash matches `configs/likelihood_v3_5_like.json`
+(`9c5bb028...`).  The flow also passed the script's own feature-contract check.
+So this is a real null, not a failed load.
+
+The reconciliation is the population.  V3.5-like's -0.238% was measured on the
+old truth support only -- 2,112,010 rows, 46.8% of the cohort, `18<r_input<25.8`
+and `0.37<Re<1.5` arcsec.  On that support the flow swap was worth 0.73 pp and
+the emulator swap 0.05 pp.  On the full domain, with the emulator held fixed,
+the flow swap is worth 0.09 pp.  The flow lever shrank by a factor of eight when
+the population grew, which says the full domain's error lives in the objects the
+old support excluded, where the blending term is large.
+
+### Consequence for the goal
+
+Holding the flow at its measured value, `|m| < 0.3%` needs the blending
+fractional error inside `[-6.79%, -4.55%]`.  It is -15.41%, so that term has to
+improve by roughly a factor of 2.5.  If instead the flow were made exact, the
+blending error would have to come inside `+-1.1%`, a factor of 14.  Neither
+branch reaches 0.3% without a large change in the blending term, and no flow
+change alone can do it: with a perfect flow and today's blending, m would still
+be -4.1%.
+
+Against the owner's restated goal, the flow's own bias is +2.07% +- 0.28, so
+"sub-percent for the flow" is a real but secondary task worth 1.5 pp of m at
+most.
+
+### Attribution caveat
+
+`blend_fractional_error` is the coefficient of `R_blend` in a weighted fit of
+`R_measured - R_flow - R_blend` on the two model terms across the twelve
+blending bins.  It absorbs everything unmodelled that scales with `R_blend`,
+which includes detection and selection response, not only emulator error.
+Calling it "the emulator" is an over-attribution; it is the part of the error
+that tracks the blending prediction.  The fit is on the matched-usable branch,
+which carries no selection modelling at all.
+
+### Files and behaviour changed
+
+- `jobs/job_constgold_split_full_domain.sh` — the primary-magnitude cross is now
+  off by default and available as a third argument with coarser edges.  With it
+  on, every crossed cell becomes a reported group and `group_responses` refuses
+  an empty group, so 12 bins by 5 bands imposed 60 occupancy constraints; job
+  16553100 completed all 100 cases in 27 minutes and then died in `summarize`
+  on one empty corner.  The two-term fit reads only the twelve blending bins,
+  so nothing it needs is lost.
+
+### Validation
+
+    bash -n jobs/job_constgold_split_full_domain.sh
+
+Jobs 16554613 (baseline) and 16554615 (lambda10) both completed, 100/100 cases,
+empty stderr, on `gpu:a40-16gb` slices.  Each arm's m was checked against the
+independently produced property-bias result.
+
+### Limitations
+
+- The attribution caveat above: the blending coefficient is not purely the
+  emulator.
+- One flow seed per arm; the 0.275 pp errors are case bootstraps and do not
+  include training-seed variation.
+- The comparison is on the uncut anchor domain.  The cut configuration was not
+  rerun here, and the previous entry's finding stands that it is a near-total
+  cancellation with a different balance between the terms.
+
+### Next steps
+
+- Take the blending term as the primary target; a factor of 2.5 there is worth
+  more than any achievable flow change.
+- Decide whether the -15.4% is emulator error or unmodelled selection response,
+  since the fit cannot separate them.  A split run on the modelled-usable branch
+  would begin to.
+- Release the held jobs 16552255 and 16552709 only if the band-guard line is
+  still wanted; this result makes it a secondary effort.
+
 ## 2026-09-17 — Under the measured cuts ConstGold's +1.5% is a cancellation, not a small error
 
 Reading the two existing ConstGold property-bias runs side by side, binned on

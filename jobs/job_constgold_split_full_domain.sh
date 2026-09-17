@@ -74,6 +74,20 @@ else
     "${inputs[@]}" "${cases[@]}" --output "$merged"
 fi
 
+# The magnitude cross is off by default.  When it is on, every crossed cell
+# becomes its own reported group, and `group_responses` refuses an empty group
+# outright, so 12 bins by 5 magnitude bands imposes 60 occupancy constraints
+# that must all hold.  Job 16553100 ran all 100 cases in 27 minutes and then
+# died in `summarize` on one empty corner, losing the whole run.  The two-term
+# fit is cut on the blending bins alone and never reads the magnitude groups,
+# so nothing the fit needs is lost by leaving the cross off.  Pass "magnitude"
+# as the third argument to turn it back on, and expect it to need coarser bins.
+magnitude_args=()
+if [ "${3:-}" = "magnitude" ]; then
+  magnitude_args=(--magnitude-edge 24 --magnitude-edge 25
+                  --primary-catalogue "$truth")
+fi
+
 output=$root/split_$tag.json
 if [ -f "$output" ]; then
   echo "refusing to overwrite existing split result: $output" >&2
@@ -86,9 +100,7 @@ fi
   --flow "$flow" \
   --rblend "full_domain=$merged" \
   "${cases[@]}" --bins 12 --bin-column R_blend_abs \
-  --magnitude-edge 23 --magnitude-edge 24 \
-  --magnitude-edge 25 --magnitude-edge 26 \
-  --primary-catalogue "$truth" \
+  ${magnitude_args[@]+"${magnitude_args[@]}"} \
   --output "$output" \
   --h 0.02 --draws 64 --sampling-seed 7301 --batch-size 1024 \
   --n-boot 10000 --bootstrap-seed 20260917 --device cuda
