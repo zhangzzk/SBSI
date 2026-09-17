@@ -23,8 +23,13 @@ def test_self_response_collapses_to_the_trace_half():
 def test_bootstrap_relative_bias_recovers_an_exact_ratio():
     measured = np.full((8, 3), 0.5)
     model = np.full((8, 3), 0.5) * np.array([1.0, 0.99, 1.02])
-    summary = bootstrap_relative_bias(model, measured, resamples=200)
-    np.testing.assert_allclose(summary["m_percent"], [0.0, -1.0, 2.0], atol=1.0e-9)
+    summary = bootstrap_relative_bias(measured, model, resamples=200)
+    # m = R_sim / R_model - 1, so a model below the simulation gives positive m.
+    np.testing.assert_allclose(
+        summary["m_percent"],
+        [0.0, 100.0 * (1.0 / 0.99 - 1.0), 100.0 * (1.0 / 1.02 - 1.0)],
+        atol=1.0e-9,
+    )
     # Every case is identical, so resampling cannot move the ratio.
     np.testing.assert_allclose(
         summary["m_standard_error_percentage_points"], np.zeros(3), atol=1.0e-9
@@ -35,7 +40,7 @@ def test_bootstrap_relative_bias_reports_case_scatter():
     rng = np.random.default_rng(11)
     measured = rng.normal(0.5, 0.01, size=(40, 2))
     model = measured * 1.01 + rng.normal(0.0, 0.004, size=(40, 2))
-    summary = bootstrap_relative_bias(model, measured, resamples=2000)
+    summary = bootstrap_relative_bias(measured, model, resamples=2000)
     assert np.all(summary["m_standard_error_percentage_points"] > 0.0)
     low = summary["m_ci95_percent"][:, 0]
     high = summary["m_ci95_percent"][:, 1]
@@ -66,3 +71,17 @@ def test_headline_cut_falls_back_for_a_band_bank():
 
     limited = make_guard_band_cuts((2.6, 3.0, 3.5), magnitude_max=25.8)
     assert limited[headline_cut(limited)]["name"] == "radius_gt_3.5_magnitude_lt_25.8"
+
+
+def test_bias_sign_follows_the_documented_convention():
+    # doc/CONVENTIONS.md section 7: m = R_sim / R_model - 1.  A model response
+    # below the simulation's is a positive m, and above it a negative m.  The
+    # script reported the reciprocal until 2026-09-17, so this pins the sign.
+    measured = np.full((8, 1), 0.50)
+    below = bootstrap_relative_bias(measured, np.full((8, 1), 0.49), resamples=200)
+    above = bootstrap_relative_bias(measured, np.full((8, 1), 0.51), resamples=200)
+    assert below["m_percent"][0] > 0.0
+    assert above["m_percent"][0] < 0.0
+    np.testing.assert_allclose(
+        below["m_percent"][0], 100.0 * (0.50 / 0.49 - 1.0), atol=1.0e-9
+    )

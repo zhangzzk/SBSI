@@ -122,11 +122,17 @@ def case_populations(
 
 
 def bootstrap_relative_bias(
-    model_by_case: np.ndarray,
     measured_by_case: np.ndarray,
+    model_by_case: np.ndarray,
     resamples: int,
 ) -> dict:
-    """Case-resampled percentage bias of the equal-weight case means."""
+    """Case-resampled percentage bias of the equal-weight case means.
+
+    ``doc/CONVENTIONS.md`` section 7 defines ``m = R_sim / R_model - 1``, so
+    the simulation's response is the numerator: positive ``m`` means the
+    simulation responds more strongly than the model and the model response is
+    too small.  The arguments are ordered to read in that direction.
+    """
 
     if model_by_case.shape != measured_by_case.shape or model_by_case.ndim != 2:
         raise ValueError("aligned per-case response matrices required")
@@ -134,14 +140,14 @@ def bootstrap_relative_bias(
     if cases < 2 or resamples < 2:
         raise ValueError("at least two cases and two resamples required")
     point = 100.0 * (
-        model_by_case.mean(axis=0) / measured_by_case.mean(axis=0) - 1.0
+        measured_by_case.mean(axis=0) / model_by_case.mean(axis=0) - 1.0
     )
     rng = np.random.default_rng(BOOTSTRAP_SEED)
     draws = np.empty((resamples, model_by_case.shape[1]), dtype=np.float64)
     for index in range(resamples):
         pick = rng.integers(cases, size=cases)
         draws[index] = 100.0 * (
-            model_by_case[pick].mean(axis=0) / measured_by_case[pick].mean(axis=0)
+            measured_by_case[pick].mean(axis=0) / model_by_case[pick].mean(axis=0)
             - 1.0
         )
     if not np.isfinite(draws).all():
@@ -217,7 +223,7 @@ def evaluate_convention(
         raise ValueError("nonfinite per-case response")
     if np.any(np.abs(measured.mean(axis=0)) <= 0.0):
         raise ValueError("a guard has zero measured response and no defined ratio")
-    summary = bootstrap_relative_bias(model, measured, resamples)
+    summary = bootstrap_relative_bias(measured, model, resamples)
     rows = []
     for position, cut in enumerate(cuts):
         rows.append(
