@@ -103,8 +103,16 @@ def numpy_guard_weights(
     radius_softness: float,
     magnitude_softness: float,
     zero_point: float = 30.0,
+    hard: bool = False,
 ):
-    """Evaluate smooth catalogue guards on physical flow outputs."""
+    """Evaluate catalogue guards on physical flow outputs.
+
+    With ``hard=False`` each guard is the smooth sigmoid band used for
+    training.  With ``hard=True`` the same guard becomes the exact catalogue
+    indicator ``radius > radius_min`` and ``magnitude < magnitude_max``.  The
+    softness arguments are still validated so that a caller cannot silently
+    switch conventions, but they do not enter the hard weights.
+    """
 
     values = np.asarray(values, dtype=np.float64)
     cuts = _validate_cuts(cuts)
@@ -122,13 +130,23 @@ def numpy_guard_weights(
     result = np.ones((len(values), len(cuts)), dtype=np.float64)
     for index, cut in enumerate(cuts):
         if cut["radius_min"] is not None:
-            result[:, index] *= _numpy_sigmoid(
-                (radius - float(cut["radius_min"])) / radius_softness
-            )
+            if hard:
+                result[:, index] *= (radius > float(cut["radius_min"])).astype(
+                    np.float64
+                )
+            else:
+                result[:, index] *= _numpy_sigmoid(
+                    (radius - float(cut["radius_min"])) / radius_softness
+                )
         if cut["magnitude_max"] is not None:
-            result[:, index] *= _numpy_sigmoid(
-                (float(cut["magnitude_max"]) - magnitude) / magnitude_softness
-            )
+            if hard:
+                result[:, index] *= (magnitude < float(cut["magnitude_max"])).astype(
+                    np.float64
+                )
+            else:
+                result[:, index] *= _numpy_sigmoid(
+                    (float(cut["magnitude_max"]) - magnitude) / magnitude_softness
+                )
     return result
 
 
@@ -139,8 +157,14 @@ def torch_guard_weights(
     radius_softness: float,
     magnitude_softness: float,
     zero_point: float = 30.0,
+    hard: bool = False,
 ):
-    """Differentiable counterpart of :func:`numpy_guard_weights`."""
+    """Differentiable counterpart of :func:`numpy_guard_weights`.
+
+    ``hard=True`` returns the exact catalogue indicator.  It has zero gradient
+    almost everywhere and is intended for evaluation only, never for guard
+    training.
+    """
 
     cuts = _validate_cuts(cuts)
     if (
@@ -165,13 +189,21 @@ def torch_guard_weights(
     for cut in cuts:
         value = torch.ones_like(radius)
         if cut["radius_min"] is not None:
-            value = value * torch.sigmoid(
-                (radius - float(cut["radius_min"])) / radius_softness
-            )
+            if hard:
+                value = value * (radius > float(cut["radius_min"])).to(radius.dtype)
+            else:
+                value = value * torch.sigmoid(
+                    (radius - float(cut["radius_min"])) / radius_softness
+                )
         if cut["magnitude_max"] is not None:
-            value = value * torch.sigmoid(
-                (float(cut["magnitude_max"]) - magnitude) / magnitude_softness
-            )
+            if hard:
+                value = value * (magnitude < float(cut["magnitude_max"])).to(
+                    radius.dtype
+                )
+            else:
+                value = value * torch.sigmoid(
+                    (float(cut["magnitude_max"]) - magnitude) / magnitude_softness
+                )
         weights.append(value)
     return torch.stack(weights, dim=-1)
 
@@ -186,8 +218,15 @@ def fit_guard_response(
     magnitude_softness: float,
     zero_point: float = 30.0,
     chunk_size: int = 1_000_000,
+    hard: bool = False,
 ):
-    """Fit guarded two-by-two forward responses from measured paired rows."""
+    """Fit guarded two-by-two forward responses from measured paired rows.
+
+    ``hard=True`` selects each leg with the exact catalogue indicator instead
+    of the smooth training band.  Both legs are always weighted by their own
+    measurement, so the fitted response includes the selection response and is
+    a functional of the per-leg marginals alone.
+    """
 
     zero = np.asarray(measured_zero, dtype=np.float64)
     shear = np.asarray(measured_shear, dtype=np.float64)
@@ -218,6 +257,7 @@ def fit_guard_response(
             radius_softness=radius_softness,
             magnitude_softness=magnitude_softness,
             zero_point=zero_point,
+            hard=hard,
         )
         mass_sum += weight.sum(axis=0)
         shape_sum += np.einsum("nc,no->co", weight, block[:, :2])
@@ -236,6 +276,7 @@ def fit_guard_response(
             radius_softness=radius_softness,
             magnitude_softness=magnitude_softness,
             zero_point=zero_point,
+            hard=hard,
         )
         weight_shear = numpy_guard_weights(
             block_shear,
@@ -243,6 +284,7 @@ def fit_guard_response(
             radius_softness=radius_softness,
             magnitude_softness=magnitude_softness,
             zero_point=zero_point,
+            hard=hard,
         )
         influence_zero = (
             weight_zero[:, :, None]
@@ -268,6 +310,7 @@ def fit_guard_response(
         "radius_softness": float(radius_softness),
         "magnitude_softness": float(magnitude_softness),
         "zero_point": float(zero_point),
+        "hard": bool(hard),
     }
 
 
@@ -322,6 +365,7 @@ class GuardResponsePopulation:
         magnitude_softness: float,
         response_scale,
         zero_point: float = 30.0,
+        hard: bool = False,
     ):
         cuts = _validate_cuts(cuts)
         pairs = np.asarray(pairs)
@@ -350,6 +394,7 @@ class GuardResponsePopulation:
             radius_softness=radius_softness,
             magnitude_softness=magnitude_softness,
             zero_point=zero_point,
+            hard=hard,
         )
         device = context.device
         self.context = context
@@ -358,6 +403,7 @@ class GuardResponsePopulation:
         self.radius_softness = float(radius_softness)
         self.magnitude_softness = float(magnitude_softness)
         self.zero_point = float(zero_point)
+        self.hard = bool(hard)
         self.target = torch.as_tensor(
             statistics["target"], dtype=torch.float64, device=device
         )
@@ -394,6 +440,7 @@ class GuardResponsePopulation:
                 radius_softness=self.radius_softness,
                 magnitude_softness=self.magnitude_softness,
                 zero_point=self.zero_point,
+                hard=self.hard,
             )
             influence = (
                 weights[..., None]
