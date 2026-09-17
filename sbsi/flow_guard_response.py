@@ -71,25 +71,95 @@ def make_guard_cuts(
         for r in radius
         for m in magnitude
     )
-    return tuple(cuts)
+    return _validate_cuts(cuts)
+
+
+def make_guard_band_cuts(
+    radius_edges: Iterable[float],
+    magnitude_max: float | None = None,
+) -> tuple[dict, ...]:
+    """Build disjoint radius-band guards, optionally under a magnitude limit.
+
+    A threshold guard ``radius > r`` constrains the mean response of every
+    object above ``r``, which is dominated by the well-resolved majority.  An
+    error concentrated in a narrow band just above the threshold is therefore
+    diluted by the population it is averaged with, and can stay large while
+    the threshold guard reads as satisfied.  A band guard
+    ``lo < radius <= hi`` removes that dilution: its residual is the error of
+    the band alone.  The bands are consecutive and disjoint, so together they
+    partition the radius axis above ``radius_edges[0]`` and supervise the
+    response profile rather than a single cumulative mean.
+    """
+
+    edges = tuple(float(value) for value in radius_edges)
+    limit = None if magnitude_max is None else float(magnitude_max)
+    if (
+        len(edges) < 2
+        or not np.isfinite(edges).all()
+        or any(b <= a for a, b in zip(edges, edges[1:]))
+        or (limit is not None and not math.isfinite(limit))
+    ):
+        raise ValueError("at least two increasing finite radius edges required")
+    suffix = "" if limit is None else f"_magnitude_lt_{limit:g}"
+    cuts = [
+        {
+            "name": f"radius_band_{lo:g}_{hi:g}{suffix}",
+            "radius_min": lo,
+            "radius_max": hi,
+            "magnitude_max": limit,
+        }
+        for lo, hi in zip(edges, edges[1:])
+    ]
+    cuts.append(
+        {
+            "name": f"radius_gt_{edges[-1]:g}{suffix}",
+            "radius_min": edges[-1],
+            "magnitude_max": limit,
+        }
+    )
+    return _validate_cuts(cuts)
+
+
+_CUT_EDGES = ("radius_min", "radius_max", "magnitude_min", "magnitude_max")
 
 
 def _validate_cuts(cuts: Iterable[Mapping]) -> tuple[dict, ...]:
-    result = tuple(dict(cut) for cut in cuts)
+    """Normalise guard cuts to the full four-edge schema.
+
+    ``radius_max`` and ``magnitude_min`` are optional and default to ``None``,
+    so a cut written in the original lower-radius/upper-magnitude form stays
+    valid and unchanged in meaning.
+    """
+
+    result = []
+    names = []
+    for cut in cuts:
+        entry = dict(cut)
+        extra = set(entry) - {"name", *_CUT_EDGES}
+        if "name" not in entry or extra:
+            raise ValueError(f"unexpected guard cut keys: {sorted(extra)}")
+        for key in _CUT_EDGES:
+            value = entry.setdefault(key, None)
+            if value is not None:
+                value = float(value)
+                if not math.isfinite(value):
+                    raise ValueError(f"nonfinite guard threshold: {key}")
+                entry[key] = value
+        if entry["radius_min"] is not None and entry["radius_max"] is not None:
+            if entry["radius_max"] <= entry["radius_min"]:
+                raise ValueError("guard radius band must have radius_max > radius_min")
+        if entry["magnitude_min"] is not None and entry["magnitude_max"] is not None:
+            if entry["magnitude_max"] <= entry["magnitude_min"]:
+                raise ValueError(
+                    "guard magnitude band must have magnitude_max > magnitude_min"
+                )
+        names.append(str(entry["name"]))
+        result.append({"name": entry["name"], **{k: entry[k] for k in _CUT_EDGES}})
     if not result:
         raise ValueError("at least one guard cut is required")
-    names = []
-    for cut in result:
-        if set(cut) != {"name", "radius_min", "magnitude_max"}:
-            raise ValueError("guard cuts require name, radius_min and magnitude_max")
-        names.append(str(cut["name"]))
-        for key in ("radius_min", "magnitude_max"):
-            value = cut[key]
-            if value is not None and not math.isfinite(float(value)):
-                raise ValueError(f"nonfinite guard threshold: {key}")
     if len(set(names)) != len(names):
         raise ValueError("guard names must be unique")
-    return result
+    return tuple(result)
 
 
 def _numpy_sigmoid(value):
@@ -109,9 +179,10 @@ def numpy_guard_weights(
 
     With ``hard=False`` each guard is the smooth sigmoid band used for
     training.  With ``hard=True`` the same guard becomes the exact catalogue
-    indicator ``radius > radius_min`` and ``magnitude < magnitude_max``.  The
-    softness arguments are still validated so that a caller cannot silently
-    switch conventions, but they do not enter the hard weights.
+    indicator, with strict lower edges and inclusive upper edges so that
+    consecutive bands partition the axis exactly.  The softness arguments are
+    still validated so that a caller cannot silently switch conventions, but
+    they do not enter the hard weights.
     """
 
     values = np.asarray(values, dtype=np.float64)
@@ -128,25 +199,26 @@ def numpy_guard_weights(
     radius = values[:, 2]
     magnitude = float(zero_point) - 2.5 * np.log10(values[:, 3])
     result = np.ones((len(values), len(cuts)), dtype=np.float64)
+    edges = (
+        ("radius_min", radius, radius_softness, 1.0),
+        ("radius_max", radius, radius_softness, -1.0),
+        ("magnitude_min", magnitude, magnitude_softness, 1.0),
+        ("magnitude_max", magnitude, magnitude_softness, -1.0),
+    )
     for index, cut in enumerate(cuts):
-        if cut["radius_min"] is not None:
+        for key, quantity, softness, sign in edges:
+            threshold = cut[key]
+            if threshold is None:
+                continue
+            gap = sign * (quantity - float(threshold))
             if hard:
-                result[:, index] *= (radius > float(cut["radius_min"])).astype(
-                    np.float64
-                )
+                # Bands are half-open (lo, hi]: the lower edge is strict and
+                # the upper edge inclusive, so consecutive bands partition the
+                # axis without double counting or dropping a boundary object.
+                factor = (gap > 0.0) if sign > 0.0 else (gap >= 0.0)
+                result[:, index] *= factor.astype(np.float64)
             else:
-                result[:, index] *= _numpy_sigmoid(
-                    (radius - float(cut["radius_min"])) / radius_softness
-                )
-        if cut["magnitude_max"] is not None:
-            if hard:
-                result[:, index] *= (magnitude < float(cut["magnitude_max"])).astype(
-                    np.float64
-                )
-            else:
-                result[:, index] *= _numpy_sigmoid(
-                    (float(cut["magnitude_max"]) - magnitude) / magnitude_softness
-                )
+                result[:, index] *= _numpy_sigmoid(gap / softness)
     return result
 
 
@@ -185,25 +257,25 @@ def torch_guard_weights(
     # gradient.
     safe_flux = flux.clamp_min(torch.finfo(flux.dtype).tiny)
     magnitude = float(zero_point) - 2.5 * torch.log10(safe_flux)
+    edges = (
+        ("radius_min", radius, radius_softness, 1.0),
+        ("radius_max", radius, radius_softness, -1.0),
+        ("magnitude_min", magnitude, magnitude_softness, 1.0),
+        ("magnitude_max", magnitude, magnitude_softness, -1.0),
+    )
     weights = []
     for cut in cuts:
         value = torch.ones_like(radius)
-        if cut["radius_min"] is not None:
+        for key, quantity, softness, sign in edges:
+            threshold = cut[key]
+            if threshold is None:
+                continue
+            gap = sign * (quantity - float(threshold))
             if hard:
-                value = value * (radius > float(cut["radius_min"])).to(radius.dtype)
+                factor = (gap > 0.0) if sign > 0.0 else (gap >= 0.0)
+                value = value * factor.to(radius.dtype)
             else:
-                value = value * torch.sigmoid(
-                    (radius - float(cut["radius_min"])) / radius_softness
-                )
-        if cut["magnitude_max"] is not None:
-            if hard:
-                value = value * (magnitude < float(cut["magnitude_max"])).to(
-                    radius.dtype
-                )
-            else:
-                value = value * torch.sigmoid(
-                    (float(cut["magnitude_max"]) - magnitude) / magnitude_softness
-                )
+                value = value * torch.sigmoid(gap / softness)
         weights.append(value)
     return torch.stack(weights, dim=-1)
 
@@ -370,9 +442,15 @@ class GuardResponsePopulation:
         cuts = _validate_cuts(cuts)
         pairs = np.asarray(pairs)
         gamma = np.asarray(gamma, dtype=np.float64)
+        # A scalar or per-cut scale weights every response component alike.
+        # A (cuts, components) scale additionally sets the relative weight of
+        # the four components, which is how the near-zero off-diagonals are
+        # kept from diluting the diagonal gradient they share a mean with.
         scale = np.asarray(response_scale, dtype=np.float64)
         if scale.ndim == 0:
             scale = np.full(len(cuts), float(scale), dtype=np.float64)
+        if scale.ndim == 1:
+            scale = scale[:, None]
         if (
             context.ndim != 2
             or pairs.ndim != 2
@@ -381,7 +459,8 @@ class GuardResponsePopulation:
             or np.any(pairs < 0)
             or np.any(pairs >= len(context))
             or gamma.shape != pairs.shape
-            or scale.shape != (len(cuts),)
+            or scale.shape
+            not in {(len(cuts), 1), (len(cuts), len(SHAPE_RESPONSE_COMPONENTS))}
             or not np.isfinite(scale).all()
             or np.any(scale <= 0.0)
         ):
@@ -420,7 +499,7 @@ class GuardResponsePopulation:
             device=device,
         )
         self.response_scale = torch.as_tensor(
-            scale[:, None], dtype=torch.float64, device=device
+            scale, dtype=torch.float64, device=device
         )
         self.statistics = statistics
 
@@ -606,6 +685,7 @@ __all__ = [
     "evaluate_guard_response",
     "fit_guard_response",
     "independent_guard_score",
+    "make_guard_band_cuts",
     "make_guard_cuts",
     "numpy_guard_weights",
     "physical_context_draws",

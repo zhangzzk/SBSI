@@ -1,8 +1,10 @@
 import numpy as np
 import pytest
 
+from sbsi.flow_guard_response import make_guard_band_cuts, make_guard_cuts
 from scripts.evaluate_per_leg_hard_cut_response import (
     bootstrap_relative_bias,
+    headline_cut,
     self_response,
 )
 
@@ -46,3 +48,21 @@ def test_bootstrap_relative_bias_rejects_degenerate_input():
         bootstrap_relative_bias(np.ones((1, 2)), np.ones((1, 2)), resamples=10)
     with pytest.raises(ValueError):
         bootstrap_relative_bias(np.ones((4, 2)), np.ones((4, 3)), resamples=10)
+
+
+def test_headline_cut_prefers_the_deployment_cut():
+    cuts = make_guard_cuts((2.8, 3.0, 3.2), (25.6, 25.8, 26.0))
+    assert cuts[headline_cut(cuts)]["name"] == "radius_gt_3_magnitude_lt_25.8"
+
+
+def test_headline_cut_falls_back_for_a_band_bank():
+    # A band profile has no cumulative deployment cut.  The headline must
+    # still resolve, because it is used both for progress and for the final
+    # summary line after the results file is written.
+    cuts = make_guard_band_cuts((2.6, 3.0, 3.5))
+    index = headline_cut(cuts)
+    assert 0 <= index < len(cuts)
+    assert cuts[index]["name"] == "radius_gt_3.5"
+
+    limited = make_guard_band_cuts((2.6, 3.0, 3.5), magnitude_max=25.8)
+    assert limited[headline_cut(limited)]["name"] == "radius_gt_3.5_magnitude_lt_25.8"

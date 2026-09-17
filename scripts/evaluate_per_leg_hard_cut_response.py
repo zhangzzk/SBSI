@@ -52,6 +52,7 @@ from sbsi.fixed_g0_domain import FLOW_FEATURES
 from sbsi.flow_guard_response import (
     GuardResponsePopulation,
     evaluate_guard_response,
+    make_guard_band_cuts,
     make_guard_cuts,
 )
 from sbsi.measurement_model import load_measurement_model
@@ -152,6 +153,14 @@ def bootstrap_relative_bias(
     }
 
 
+def headline_cut(cuts) -> int:
+    """Index of the cut to echo per case, preferring the deployment cut."""
+
+    names = [cut["name"] for cut in cuts]
+    preferred = f"radius_gt_{RADIUS_THRESHOLDS[1]:g}_magnitude_lt_{MAGNITUDE_THRESHOLDS[1]:g}"
+    return names.index(preferred) if preferred in names else len(names) - 1
+
+
 def evaluate_convention(
     bundle,
     context: torch.Tensor,
@@ -169,6 +178,8 @@ def evaluate_convention(
 ) -> dict:
     measured = np.empty((len(cases), len(cuts)), dtype=np.float64)
     model = np.empty((len(cases), len(cuts)), dtype=np.float64)
+    headline = headline_cut(cuts)
+    headline_name = cuts[headline]["name"]
     pair_counts = []
     pass_fraction = np.empty((len(cases), len(cuts)), dtype=np.float64)
     for index, case in enumerate(cases):
@@ -198,8 +209,8 @@ def evaluate_convention(
         pass_fraction[index] = population.statistics["baseline_mass"]
         print(
             f"case{case:03d} pairs={pair_counts[-1]} "
-            f"measured_joint={measured[index][-5]:+.6f} "
-            f"model_joint={model[index][-5]:+.6f}",
+            f"measured_{headline_name}={measured[index][headline]:+.6f} "
+            f"model_{headline_name}={model[index][headline]:+.6f}",
             flush=True,
         )
     if not np.isfinite(measured).all() or not np.isfinite(model).all():
@@ -213,6 +224,8 @@ def evaluate_convention(
             {
                 "cut": cut["name"],
                 "radius_min_pixels": cut["radius_min"],
+                "radius_max_pixels": cut["radius_max"],
+                "magnitude_min": cut["magnitude_min"],
                 "magnitude_max": cut["magnitude_max"],
                 "measured_R_self": float(measured[:, position].mean()),
                 "model_R_self": float(model[:, position].mean()),
@@ -269,6 +282,23 @@ def parse_args(argv=None) -> argparse.Namespace:
         help="report only the hard catalogue indicator convention",
     )
     parser.add_argument("--device", default="cuda")
+    parser.add_argument(
+        "--radius-band-edges",
+        type=float,
+        nargs="+",
+        default=None,
+        help=(
+            "evaluate disjoint radius bands with these increasing edges "
+            "instead of the cumulative threshold bank; the final guard is the "
+            "open tail above the last edge"
+        ),
+    )
+    parser.add_argument(
+        "--band-magnitude-max",
+        type=float,
+        default=None,
+        help="optional magnitude limit applied to every radius band",
+    )
     return parser.parse_args(argv)
 
 
@@ -295,7 +325,12 @@ def main() -> None:
         pd.DataFrame(split["context_raw"], columns=FLOW_FEATURES)
     )
     context = torch.as_tensor(context_np, dtype=torch.float32, device=device)
-    cuts = make_guard_cuts(RADIUS_THRESHOLDS, MAGNITUDE_THRESHOLDS)
+    if args.radius_band_edges is None:
+        cuts = make_guard_cuts(RADIUS_THRESHOLDS, MAGNITUDE_THRESHOLDS)
+    else:
+        cuts = make_guard_band_cuts(
+            args.radius_band_edges, magnitude_max=args.band_magnitude_max
+        )
 
     conventions = [("hard_catalogue_indicator", True)]
     if not args.skip_soft:
@@ -330,6 +365,12 @@ def main() -> None:
         "cases": list(cases),
         "radius_thresholds_pixels": list(RADIUS_THRESHOLDS),
         "magnitude_thresholds": list(MAGNITUDE_THRESHOLDS),
+        "radius_band_edges": (
+            None
+            if args.radius_band_edges is None
+            else [float(edge) for edge in args.radius_band_edges]
+        ),
+        "band_magnitude_max": args.band_magnitude_max,
         "conventions": results,
         "notes": [
             "Each leg is selected by its own generated or measured row, so the "
@@ -346,14 +387,13 @@ def main() -> None:
         ],
     }
     output.write_text(json.dumps(json_ready(payload), indent=2, sort_keys=True))
-    joint = next(
-        row
-        for row in results["hard_catalogue_indicator"]["rows"]
-        if row["cut"] == "radius_gt_3_magnitude_lt_25.8"
-    )
+    # The same lookup as the per-case progress line, so a band-profile bank
+    # that has no deployment cut still reports a defined headline.
+    joint = results["hard_catalogue_indicator"]["rows"][headline_cut(cuts)]
     print(
         "PER_LEG_HARD_CUT_COMPLETE "
-        f"joint_m={joint['m_percent']:+.4f}%"
+        f"cut={joint['cut']} "
+        f"m={joint['m_percent']:+.4f}%"
         f" +/- {joint['m_standard_error_percentage_points']:.4f} "
         f"output={output}",
         flush=True,

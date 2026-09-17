@@ -1,9 +1,12 @@
 import numpy as np
 import torch
 
+import pytest
+
 from sbsi.flow_guard_response import (
     GuardResponsePopulation,
     fit_guard_response,
+    make_guard_band_cuts,
     make_guard_cuts,
     numpy_guard_weights,
     sampled_guard_response_backward,
@@ -258,3 +261,166 @@ def test_population_records_and_uses_the_hard_convention():
         model, torch.arange(len(pairs)), draws=2, seed=7
     )
     assert torch.isfinite(contribution).all()
+
+
+def _physical(radius, magnitude, zero_point=30.0):
+    radius = np.asarray(radius, dtype=np.float64)
+    magnitude = np.broadcast_to(
+        np.asarray(magnitude, dtype=np.float64), radius.shape
+    )
+    flux = 10.0 ** ((zero_point - magnitude) / 2.5)
+    return np.column_stack(
+        (np.zeros_like(radius), np.zeros_like(radius), radius, flux)
+    )
+
+
+def test_band_guards_partition_the_radius_axis_exactly():
+    edges = (2.6, 2.8, 3.0, 3.2)
+    cuts = make_guard_band_cuts(edges)
+    assert [cut["name"] for cut in cuts] == [
+        "radius_band_2.6_2.8",
+        "radius_band_2.8_3",
+        "radius_band_3_3.2",
+        "radius_gt_3.2",
+    ]
+    radius = np.array([2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1, 3.2, 5.0])
+    weights = numpy_guard_weights(
+        _physical(radius, 24.0),
+        cuts,
+        radius_softness=0.01,
+        magnitude_softness=0.01,
+        hard=True,
+    )
+    # Each object above the first edge lands in exactly one band, and nothing
+    # at or below the first edge is claimed by any of them.
+    total = weights.sum(axis=1)
+    np.testing.assert_allclose(total, (radius > edges[0]).astype(np.float64))
+    assert set(np.unique(weights)) <= {0.0, 1.0}
+
+
+def test_band_guard_soft_weights_converge_to_the_band_indicator():
+    cuts = make_guard_band_cuts((2.8, 3.0))
+    radius = np.array([2.7, 2.9, 3.1])
+    values = _physical(radius, 24.0)
+    hard = numpy_guard_weights(
+        values, cuts, radius_softness=1.0e-4, magnitude_softness=1.0e-4, hard=True
+    )
+    previous = None
+    for softness in (0.1, 0.01, 0.001):
+        soft = numpy_guard_weights(
+            values, cuts, radius_softness=softness, magnitude_softness=0.01
+        )
+        gap = float(np.abs(soft - hard).max())
+        if previous is not None:
+            assert gap < previous
+        previous = gap
+    assert previous < 1.0e-3
+
+
+def test_band_guard_agrees_between_numpy_and_torch():
+    cuts = make_guard_band_cuts((2.8, 3.0, 3.4), magnitude_max=25.8)
+    rng = np.random.default_rng(5)
+    values = _physical(rng.uniform(2.0, 6.0, size=128), rng.uniform(22.0, 27.0, size=128))
+    for hard in (False, True):
+        expected = numpy_guard_weights(
+            values, cuts, radius_softness=0.02, magnitude_softness=0.03, hard=hard
+        )
+        actual = torch_guard_weights(
+            torch.as_tensor(values, dtype=torch.float64),
+            cuts,
+            radius_softness=0.02,
+            magnitude_softness=0.03,
+            hard=hard,
+        )
+        np.testing.assert_allclose(actual.numpy(), expected, atol=1.0e-12)
+
+
+def test_legacy_three_key_cuts_keep_their_meaning():
+    legacy = ({"name": "radius_gt_3", "radius_min": 3.0, "magnitude_max": None},)
+    radius = np.array([2.9, 3.1])
+    values = _physical(radius, 24.0)
+    weights = numpy_guard_weights(
+        values, legacy, radius_softness=0.01, magnitude_softness=0.01, hard=True
+    )
+    np.testing.assert_allclose(weights[:, 0], [0.0, 1.0])
+    # The normalised cut carries the new edges as explicit "no limit" entries.
+    assert make_guard_cuts([3.0], [25.8])[0] == {
+        "name": "global",
+        "radius_min": None,
+        "radius_max": None,
+        "magnitude_min": None,
+        "magnitude_max": None,
+    }
+
+
+def test_inverted_bands_and_unknown_keys_are_rejected():
+    with pytest.raises(ValueError):
+        numpy_guard_weights(
+            _physical([3.0], 24.0),
+            ({"name": "bad", "radius_min": 3.0, "radius_max": 2.5},),
+            radius_softness=0.01,
+            magnitude_softness=0.01,
+        )
+    with pytest.raises(ValueError):
+        numpy_guard_weights(
+            _physical([3.0], 24.0),
+            ({"name": "bad", "radius_floor": 3.0},),
+            radius_softness=0.01,
+            magnitude_softness=0.01,
+        )
+    with pytest.raises(ValueError):
+        make_guard_band_cuts((3.0, 2.8))
+
+
+def test_per_component_response_scale_reweights_the_guard_loss():
+    cuts = make_guard_cuts([3.0], [25.8])
+    rows = 64
+    rng = np.random.default_rng(3)
+    context = torch.as_tensor(
+        np.column_stack(
+            (
+                rng.normal(scale=0.1, size=rows),
+                rng.normal(scale=0.1, size=rows),
+                rng.uniform(3.2, 4.0, size=rows),
+                rng.uniform(80.0, 200.0, size=rows),
+            )
+        ),
+        dtype=torch.float64,
+    )
+    pairs = np.column_stack((np.arange(0, rows, 2), np.arange(1, rows, 2))).astype(
+        np.int64
+    )
+    gamma = rng.normal(scale=0.02, size=(len(pairs), 2))
+
+    def build(scale):
+        return GuardResponsePopulation(
+            context,
+            pairs,
+            context[pairs[:, 0]].numpy(),
+            context[pairs[:, 1]].numpy(),
+            gamma,
+            cuts,
+            radius_softness=0.05,
+            magnitude_softness=0.05,
+            response_scale=scale,
+        )
+
+    flat = build(np.ones(len(cuts)))
+    assert flat.response_scale.shape == (len(cuts), 1)
+    # Sending the off-diagonal scales to a large value drives their share of
+    # the averaged quadratic to zero without touching the diagonal terms.
+    per_component = np.ones((len(cuts), 4))
+    per_component[:, 1:3] = 1.0e6
+    weighted = build(per_component)
+    assert weighted.response_scale.shape == (len(cuts), 4)
+    model = DeterministicPhysicalFlow()
+    flat_loss = sampled_guard_response_backward(
+        model, flat, 16, 2, chunk_size=8, seed=11
+    )["loss"]
+    weighted_loss = sampled_guard_response_backward(
+        model, weighted, 16, 2, chunk_size=8, seed=11
+    )["loss"]
+    assert abs(weighted_loss) < abs(flat_loss)
+
+    with pytest.raises(ValueError):
+        build(np.ones((len(cuts), 3)))
