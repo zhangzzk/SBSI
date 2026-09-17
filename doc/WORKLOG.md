@@ -1,3 +1,103 @@
+## 2026-09-17 — Band-resolved guards; the global bias is cancelling band errors
+
+The per-leg measurement earlier today put the whole residual at the radius
+cut, so the response was profiled along that axis.  Radius bands are disjoint,
+so unlike a cumulative threshold guard their residuals cannot cancel.
+
+Job16546558 and job16546656 profiled the refined checkpoint on the 40 held-out
+cases at `MAG_AUTO < 25.8`, reporting model minus measured self response and
+the ratio `m` per band:
+
+    band (px)   mass   measured     model   model-measured        m
+    2.2--2.6    0.010   -0.1394   -0.1518        -0.0125    +8.9% +/- 11.2
+    2.6--2.8    0.033   -0.2343   -0.2372        -0.0028    +1.2% +/-  2.8
+    2.8--3.0    0.061   -0.3625   -0.3049        +0.0576   -15.9% +/-  2.1
+    3.0--3.2    0.078   -0.2101   -0.1972        +0.0129    -6.1% +/-  4.4
+    3.2--3.5    0.125   +0.3029   +0.2299        -0.0730   -24.1% +/-  2.1
+    3.5--4.0    0.183   +0.6881   +0.6299        -0.0581    -8.5% +/-  0.9
+    4--5        0.227   +0.6971   +0.7199        +0.0228    +3.3% +/-  0.7
+    5--7        0.153   +0.6540   +0.7038        +0.0498    +7.6% +/-  0.7
+    >7          0.060   +0.6754   +0.7201        +0.0447    +6.6% +/-  1.2
+
+The band masses sum to 0.930, matching the `MAG_AUTO < 25.8` pass fraction, so
+the bands partition the population above 2.2 pixels.  The masses above three
+pixels sum to 0.826, matching the deployment cut's pass fraction, and the
+mass-weighted band means reproduce that cut's `m` at -0.735% against the
+-0.726% measured directly.  The global number is therefore the residue of band
+errors roughly fifteen times larger cancelling against one another: the
+largest single band residual is 0.073 in response against a net of 0.004.
+
+Two consequences.  First, the measured response crosses zero between the
+3.0--3.2 and 3.2--3.5 bands, so the `FLUX_RADIUS > 3` cut keeps objects of
+both response signs and averages them.  Second, the sign of the model error
+alternates with size -- too high below 3.2 pixels, too low from 3.2 to 4, too
+high above 4 -- which is a response profile that is too flat across the
+resolution transition rather than a constant calibration offset.  A 0.3% bound
+resting on this cancellation is not robust to a change of depth, seeing or
+selection, because those change the size mix that the cancellation depends on.
+
+`sbsi/flow_guard_response.py` gains optional `radius_max` and `magnitude_min`
+cut edges, normalised through `_validate_cuts`, so a cut written in the
+original lower-radius/upper-magnitude form keeps its meaning; a new
+`make_guard_band_cuts` builds half-open bands that partition the axis exactly;
+and `response_scale` accepts a `(cuts, components)` array so the off-diagonals,
+which are about 0.4% of `R11` and carry no signal, stop taking half of the
+averaged gradient.
+
+`scripts/refine_band_guard_flow.py` is new.  It trains against 25 guards, the
+16 cumulative deployment guards plus 9 bands, and accumulates the guard
+gradient into the same buffer as the likelihood gradient so their sum is
+clipped once.  This is the point that made the earlier "weight the guard loss
+differently" idea unusable: both objectives were clipped separately and both
+sit far above the clip, at gradient norms of 10--20 for the likelihood and
+45--105 for the guard against `GRADIENT_CLIP = 5.0`, so every step of each was
+renormalised to the same length and the relative weight of the two objectives
+was the step count, 489 to 4, not `RESPONSE_SCALE` and not any loss scale at
+all.  Rescaling a gradient that is renormalised immediately afterwards changes
+nothing.  The combined composition is the one
+`scripts/train_fixed_g0_flow.response_epoch` already uses for the paired
+response.
+
+`scripts/evaluate_per_leg_hard_cut_response.py` gains `--radius-band-edges`
+and `--band-magnitude-max`.  Its progress line and its final summary line now
+resolve the headline guard through one `headline_cut` helper; the hard-coded
+`radius_gt_3_magnitude_lt_25.8` in the summary raised `StopIteration` for a
+band bank after the results file had already been written, which is what
+stopped job16546558 between its two variants.  The written result was
+unaffected and the job was resubmitted, the launcher now skipping a variant
+whose output exists.
+
+Validation: 395 passed and 2 skipped, with 20 focused guard and evaluation
+tests covering band partitioning, soft convergence to the band indicator,
+numpy/torch agreement, legacy cut equivalence, rejection of inverted bands and
+unknown keys, per-component reweighting, and both headline lookups.  Ruff and
+`bash -n` pass; the one remaining ruff error is a pre-existing unused import in
+`scripts/prepare_full_parent_classifier.py`, untouched here.  Smoke
+job16546597 ran two epochs end to end and measured the gradient norms at 24.2
+for the likelihood alone and 2323 combined at guard weight one, so the guard
+gradient is about ninety-six times the likelihood's and a weight near 0.01
+makes the two comparable inside the clipped step.  Its band-guard loss fell
+from 1.550 to 0.962 in fifty steps while the validation NLL moved by 0.008,
+against the 0.021 the NLL spanned over the whole previous refinement, so the
+guard objective has headroom the old four-steps-per-epoch budget never used.
+
+Limitations.  The band profile uses the same reused development cases as the
+per-leg measurement and inherits its precision: the narrow low-mass bands have
+uncertainties of several percentage points and the 2.2--2.6 band is consistent
+with zero.  Band ratios are unstable where the measured response passes
+through zero, so the absolute `model_minus_measured` column is the reliable
+one and the ratio column is reported only for orientation.  The guard weight
+is set from a single epoch's gradient-norm ratio.  No retrained checkpoint is
+evaluated yet.
+
+Next steps.  job16546672 refines at guard weight 0.01 for 20 epochs; a second
+run at 0.1 brackets it.  Both are then measured with the per-leg script, on
+the cumulative deployment cuts and on the bands, and the acceptance question
+is whether the band residuals shrink rather than whether the global number
+moves, since the global number can improve by better cancellation.  Beyond
+that, the flow is still not rotation covariant, with `R11` and `R22` residuals
+differing by about a percentage point, and 40 cases cannot resolve 0.3%.
+
 ## 2026-09-17 — Per-leg hard-cut response measured; the quoted bias was a different estimand
 
 The guard training loss and the reported hard-cut bias were measuring two
