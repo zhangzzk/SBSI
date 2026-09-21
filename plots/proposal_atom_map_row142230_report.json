@@ -1,0 +1,475 @@
+{
+  "status": "diagnostic_only",
+  "row": 142230,
+  "n_atoms": 24000000,
+  "observed": {
+    "measured_ngmix_g1": -0.2266772826725126,
+    "measured_ngmix_g2": -0.059069890720890604,
+    "measured_flux_radius": 8.309,
+    "measured_flux_from_mag_auto": 120060.45917612546
+  },
+  "measured_mag_auto": 17.3015,
+  "proposal": {
+    "delta": 0.1,
+    "temperature": 1.0,
+    "seed": 8701,
+    "n_draws": 16384,
+    "n_unique_drawn": 16384,
+    "max_probability": 0.7420288403289281,
+    "top_atom": 9262565,
+    "defensive_floor": 4.166666666666667e-09,
+    "uniform_share": 4.166666666666667e-08,
+    "ranked_share_of_probability": 0.9,
+    "flat_share_of_probability": 0.1,
+    "n_drawn_from_ranked": 3085,
+    "n_drawn_uniformly": 13299,
+    "n_ranked_in_catalogue": 164416,
+    "probability_mass_on_ranked": 0.9004190541937392,
+    "n_above_flat_share_in_catalogue": 71823
+  },
+  "exact_stratum": {
+    "n_atoms": 1024,
+    "probability_mass": 0.876676194338771,
+    "ranked_mass_removed": 0.8766719276721043,
+    "min_probability": 2.1702165413755445e-06,
+    "n_mass_atoms_inside": 11,
+    "mass_inside": 0.14931622667079103
+  },
+  "slots": {
+    "threshold": 7.542885557639111e-06,
+    "expected_draws": 16349.685371594816,
+    "n_saturated": 0,
+    "flat_mass": 0.09999573333333334,
+    "flat_expected_draws": 13257.525815001169,
+    "ranked_mass": 0.023328072328012914,
+    "ranked_draws_if_unconcentrated": 3092.725211028456,
+    "ranked_expected_draws": 3092.1595565936445
+  },
+  "score_decomposition": [
+    {
+      "group": "top 64 by proposal probability",
+      "n": 64,
+      "n_finite": 64,
+      "median_score": -11.173081654484402,
+      "median_log_detection": -0.024775917762437046,
+      "median_log_dispersion": -8.808422588110417,
+      "median_quadratic": -1.7236314249147295,
+      "median_abs_z": [
+        0.7634090807642928,
+        0.47499739550262354,
+        0.7333576387762195,
+        0.7019110088608976
+      ],
+      "median_sigma": [
+        0.15640223586905064,
+        0.18106361540859267,
+        1.7422440986175718,
+        111032.64148253857
+      ],
+      "median_abs_residual": [
+        0.1398131504084935,
+        0.07303257584463367,
+        1.3068538555413083,
+        82764.07354942593
+      ]
+    },
+    {
+      "group": "all atoms the ranking dominates",
+      "n": 164416,
+      "n_finite": 164416,
+      "median_score": -17.16760957470902,
+      "median_log_detection": -2.4052365271169056,
+      "median_log_dispersion": -12.84641846573841,
+      "median_quadratic": -0.6425886625328303,
+      "median_abs_z": [
+        0.5605562822741864,
+        0.15877997807139893,
+        0.5234517408158071,
+        0.3926337779907302
+      ],
+      "median_sigma": [
+        0.42656411442571707,
+        0.31058653345821885,
+        8.891034901642506,
+        246401.21911358237
+      ],
+      "median_abs_residual": [
+        0.2384457668121042,
+        0.05187394894264967,
+        4.8727898671160705,
+        98210.48489248805
+      ]
+    },
+    {
+      "group": "mass-carrying atoms (exact, centre node)",
+      "n": 32,
+      "n_finite": 32,
+      "median_score": -15.951171634101954,
+      "median_log_detection": -0.01755859149387079,
+      "median_log_dispersion": -5.444391938871974,
+      "median_quadratic": -7.505633372942047,
+      "median_abs_z": [
+        1.3411383017842669,
+        0.7775031229546066,
+        1.096117667756488,
+        1.8827390395833201
+      ],
+      "median_sigma": [
+        0.06777718823367201,
+        0.07470852988577717,
+        0.9847385810530691,
+        22686.636498235122
+      ],
+      "median_abs_residual": [
+        0.11942750492751253,
+        0.053743588621790135,
+        1.2896837718651004,
+        35359.81984858115
+      ]
+    },
+    {
+      "group": "drawn from ranked atoms",
+      "n": 3085,
+      "n_finite": 3085,
+      "median_score": -14.11227422406548,
+      "median_log_detection": -0.42839501792008633,
+      "median_log_dispersion": -12.265534922777675,
+      "median_quadratic": -0.8040209678237075,
+      "median_abs_z": [
+        0.56400632760802,
+        0.15273623043317144,
+        0.9152678639354399,
+        0.39410076694140816
+      ],
+      "median_sigma": [
+        0.4195814998132606,
+        0.34139667593696765,
+        5.108896344241642,
+        247602.12132251647
+      ],
+      "median_abs_residual": [
+        0.2356662368310657,
+        0.05340814842631982,
+        4.626992604014648,
+        97828.50620537858
+      ]
+    },
+    {
+      "group": "drawn uniformly (sample)",
+      "n": 4096,
+      "n_finite": 4096,
+      "median_score": -4802155.610241214,
+      "median_log_detection": -0.4197689625689436,
+      "median_log_dispersion": -1.721016266506738,
+      "median_quadratic": -4802154.4435584415,
+      "median_abs_z": [
+        0.6836106313006267,
+        0.19087599215587764,
+        3.72608358857154,
+        3099.079961420505
+      ],
+      "median_sigma": [
+        0.34019883728645406,
+        0.32073739742652396,
+        1.2511297542010196,
+        38.71937606808776
+      ],
+      "median_abs_residual": [
+        0.2339813877773456,
+        0.062248783121840595,
+        4.810453061181894,
+        120010.32817938675
+      ]
+    }
+  ],
+  "true_observation": {
+    "e1": -0.2659709598344094,
+    "e2": -0.06574032561426099,
+    "circularized_Re": 1.4458140476573433,
+    "r": 17.275062561035156,
+    "case": 114,
+    "source_input_index": 613458,
+    "source_truth": "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/case114_0.02/real0/catalogues/input/gals_info_tile180.0_-0.5.feather"
+  },
+  "exact": {
+    "node": 0,
+    "n_atoms": 32,
+    "captured_mass": 0.9350052976449776,
+    "n_drawn": 0,
+    "n_summed_exactly": 11,
+    "n_reached": 11,
+    "reached_mass": 0.14931622667079103,
+    "atoms": [
+      {
+        "atom": 3174964,
+        "mass": 0.32896993870280905,
+        "proposal_probability": 4.166831187145137e-09,
+        "inclusion_probability": 0.0005524187203032861,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 10345387,
+        "mass": 0.18121518527377278,
+        "proposal_probability": 4.166666666666667e-09,
+        "inclusion_probability": 0.000552396908958382,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 9262565,
+        "mass": 0.08571461531214604,
+        "proposal_probability": 0.7420288403289281,
+        "inclusion_probability": 0.0,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 5817145,
+        "mass": 0.06625489742294158,
+        "proposal_probability": 5.34971618753885e-08,
+        "inclusion_probability": 0.007092400045922593,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 21163106,
+        "mass": 0.050585769003868374,
+        "proposal_probability": 4.166666666666667e-09,
+        "inclusion_probability": 0.000552396908958382,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 16506814,
+        "mass": 0.03151900630553238,
+        "proposal_probability": 1.1041061041779019e-08,
+        "inclusion_probability": 0.0014637715178638904,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 8396714,
+        "mass": 0.030680551814319015,
+        "proposal_probability": 4.166666666666667e-09,
+        "inclusion_probability": 0.000552396908958382,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 834652,
+        "mass": 0.024962301065934826,
+        "proposal_probability": 1.3909829280728184e-05,
+        "inclusion_probability": 0.0,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 4498619,
+        "mass": 0.017346143996883803,
+        "proposal_probability": 7.29216425363374e-08,
+        "inclusion_probability": 0.009667605583977805,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 6528493,
+        "mass": 0.01174132070385513,
+        "proposal_probability": 2.05315082518577e-06,
+        "inclusion_probability": 0.272197000669913,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 959426,
+        "mass": 0.009698292983789335,
+        "proposal_probability": 4.166666666667721e-09,
+        "inclusion_probability": 0.0005523969089585219,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 11127057,
+        "mass": 0.008973796559298376,
+        "proposal_probability": 4.166666666666667e-09,
+        "inclusion_probability": 0.000552396908958382,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 19930097,
+        "mass": 0.00733854079157676,
+        "proposal_probability": 4.166666666666667e-09,
+        "inclusion_probability": 0.000552396908958382,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 17552626,
+        "mass": 0.006931355452472661,
+        "proposal_probability": 4.166666695638066e-09,
+        "inclusion_probability": 0.0005523969127992728,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 16136572,
+        "mass": 0.006254946740074654,
+        "proposal_probability": 3.27683989796753e-05,
+        "inclusion_probability": 0.0,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 6467762,
+        "mass": 0.00602615690344548,
+        "proposal_probability": 1.1528156903256284e-07,
+        "inclusion_probability": 0.015283483774430411,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 20979003,
+        "mass": 0.005652405202482745,
+        "proposal_probability": 6.893712706317764e-09,
+        "inclusion_probability": 0.0009139357416520932,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 18869749,
+        "mass": 0.005643923830400597,
+        "proposal_probability": 4.869299842087686e-06,
+        "inclusion_probability": 0.0,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 20118501,
+        "mass": 0.005485003237636453,
+        "proposal_probability": 7.967192632007462e-05,
+        "inclusion_probability": 0.0,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 21333910,
+        "mass": 0.005387391731961412,
+        "proposal_probability": 4.166666666666667e-09,
+        "inclusion_probability": 0.000552396908958382,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 6848168,
+        "mass": 0.004463030467439341,
+        "proposal_probability": 1.420600707356518e-05,
+        "inclusion_probability": 0.0,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 17357099,
+        "mass": 0.004448468861249106,
+        "proposal_probability": 3.064311073502583e-05,
+        "inclusion_probability": 0.0,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 12082327,
+        "mass": 0.004409055133998995,
+        "proposal_probability": 4.166666666666667e-09,
+        "inclusion_probability": 0.000552396908958382,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 12837477,
+        "mass": 0.0039046752252733215,
+        "proposal_probability": 0.00014007983110839986,
+        "inclusion_probability": 0.0,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 5675961,
+        "mass": 0.0035201295290776136,
+        "proposal_probability": 8.531954032972084e-05,
+        "inclusion_probability": 0.0,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 18291425,
+        "mass": 0.0031801634704034186,
+        "proposal_probability": 8.128208426647418e-08,
+        "inclusion_probability": 0.010775993304598818,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 5861840,
+        "mass": 0.0030147290923202346,
+        "proposal_probability": 1.91164326106015e-06,
+        "inclusion_probability": 0.25343659882577957,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 20540695,
+        "mass": 0.0028381529240700276,
+        "proposal_probability": 2.9678308080409178e-06,
+        "inclusion_probability": 0.0,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 22291972,
+        "mass": 0.002435221257951857,
+        "proposal_probability": 2.2656293378602268e-07,
+        "inclusion_probability": 0.03003663943390596,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 19435658,
+        "mass": 0.002304660696062941,
+        "proposal_probability": 4.19053112438334e-09,
+        "inclusion_probability": 0.00055556074560078,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 10750664,
+        "mass": 0.0020809794774890224,
+        "proposal_probability": 7.625520575457435e-06,
+        "inclusion_probability": 0.0,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 1061286,
+        "mass": 0.0020244884744405004,
+        "proposal_probability": 2.4566598169087113e-07,
+        "inclusion_probability": 0.032569230941343286,
+        "drawn": false,
+        "summed_exactly": false
+      }
+    ]
+  },
+  "background": {
+    "n_shown": 59947,
+    "seed": 20260921
+  },
+  "figure": {
+    "path": "proposal_atom_map_row142230.png",
+    "sha256": "dc6f11d9f4693a1e779eef5d921757d9719fef6b640d20787cae5554283e84bb"
+  },
+  "source": {
+    "proposal_coordinates": "06cb5d452ba2ea98cec846c59d96a40af18a0cf249f902b6cac7f1a10f5ffe63",
+    "exact_record": "b8bc223cd3f2386f00f1a0a555f52d310f6490011e316136d5cd2f90d4f46b6b",
+    "prior_manifest": "d096097842205e8ad3aeb9db867f49133a43f02ea2ecb1873afe66ddf81db098"
+  },
+  "note": "Priority race reproduced from the production mixture without excluding the tilted-stratified exact stratum, so the drawn set is the proposal's own race, not the estimator's final bookkeeping."
+}

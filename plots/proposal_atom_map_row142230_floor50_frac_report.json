@@ -1,0 +1,681 @@
+{
+  "status": "diagnostic_only",
+  "row": 142230,
+  "n_atoms": 24000000,
+  "observed": {
+    "measured_ngmix_g1": -0.2266772826725126,
+    "measured_ngmix_g2": -0.059069890720890604,
+    "measured_flux_radius": 8.309,
+    "measured_flux_from_mag_auto": 120060.45917612546
+  },
+  "measured_mag_auto": 17.3015,
+  "proposal": {
+    "delta": 0.1,
+    "temperature": 1.0,
+    "seed": 8701,
+    "n_draws": 16384,
+    "n_unique_usable_draws": 7604,
+    "max_probability": 0.0007864695847290371,
+    "top_atom": 14296026,
+    "defensive_floor": 4.166666666666667e-09,
+    "uniform_share": 4.166666666666667e-08,
+    "ranked_share_of_probability": 0.9,
+    "flat_share_of_probability": 0.1,
+    "n_unique_from_ranked": 5907,
+    "n_unique_uniform": 1697,
+    "n_ranked_in_catalogue": 320567,
+    "probability_mass_on_ranked": 0.9009783694054946,
+    "n_above_flat_share_in_catalogue": 175179
+  },
+  "dispersion_floor": {
+    "percentile": 50.0,
+    "fractional_targets": [
+      "measured_flux_from_mag_auto"
+    ],
+    "shipped_percentile": 1.0,
+    "note": "the proposal divides each residual by the atom's own predicted scatter, so a floor on that scatter sets how tightly a vague atom may be judged; a fractional floor ranks a coordinate on sigma/|x| so it binds at every brightness",
+    "median_dispersion": {
+      "measured_ngmix_g1": 0.341550485296907,
+      "measured_ngmix_g2": 0.32227248427810945,
+      "measured_flux_radius": 1.2391202252819757,
+      "measured_flux_from_mag_auto": 59.56415293451286
+    }
+  },
+  "rank_bands": {
+    "columns": [
+      "measured_ngmix_g1",
+      "measured_ngmix_g2",
+      "measured_flux_radius",
+      "log10_flux_ratio"
+    ],
+    "note": "predicted minus measured; flux as a log10 ratio",
+    "bands": [
+      {
+        "rank_from": 1,
+        "rank_to": 1024,
+        "n_atoms": 1024,
+        "probability_mass": 0.38871640631954674,
+        "mean": [
+          0.16018461215049504,
+          0.0368175059560024,
+          0.15258468499113526,
+          -0.16833028347826637
+        ],
+        "median": [
+          0.17506506982730047,
+          0.038866393450810784,
+          0.2354659659140026,
+          -0.19554879127585673
+        ],
+        "std": [
+          0.1454645649238926,
+          0.1426901519220675,
+          0.8201775442724833,
+          0.14577840762511282
+        ],
+        "probability_weighted_mean": [
+          0.1510382927526611,
+          0.033282433841455066,
+          0.14498401799140828,
+          -0.16835128327681084
+        ]
+      },
+      {
+        "rank_from": 1025,
+        "rank_to": 8192,
+        "n_atoms": 7168,
+        "probability_mass": 0.31965285556094536,
+        "mean": [
+          0.2296076536206548,
+          0.058891853460999184,
+          -2.372654563824873,
+          -0.588666657745733
+        ],
+        "median": [
+          0.23239803475211762,
+          0.054648100709649663,
+          -3.755581372262489,
+          -0.594086616934929
+        ],
+        "std": [
+          0.12071945801200586,
+          0.12323445037377759,
+          2.687777895435118,
+          0.3802402715332109
+        ],
+        "probability_weighted_mean": [
+          0.22046762873898637,
+          0.06418751222843547,
+          -0.8784308101357979,
+          -0.3685670072270321
+        ]
+      },
+      {
+        "rank_from": 8193,
+        "rank_to": 65536,
+        "n_atoms": 57344,
+        "probability_mass": 0.17100219807632144,
+        "mean": [
+          0.23522473948698328,
+          0.05313543309570664,
+          -3.149544859871841,
+          -0.6657597503040739
+        ],
+        "median": [
+          0.23617311481233005,
+          0.053418237101586954,
+          -4.458199557860006,
+          -0.6710238306328083
+        ],
+        "std": [
+          0.04688554639878199,
+          0.04758479206891301,
+          3.9011372703062257,
+          0.38207209880040255
+        ],
+        "probability_weighted_mean": [
+          0.23378631856520793,
+          0.054011019939986,
+          -3.739810272589615,
+          -0.6656635782628046
+        ]
+      },
+      {
+        "rank_from": 65537,
+        "rank_to": 524288,
+        "n_atoms": 458752,
+        "probability_mass": 0.02277529144663825,
+        "mean": [
+          0.2433743143140279,
+          0.046687412149252705,
+          0.5412677311954031,
+          -0.601135785865231
+        ],
+        "median": [
+          0.24348626471352164,
+          0.0481460297885065,
+          -4.228810595184495,
+          -0.658995505523394
+        ],
+        "std": [
+          0.03167094739736308,
+          0.04047854114569162,
+          12.01956015299168,
+          0.5124552493177803
+        ],
+        "probability_weighted_mean": [
+          0.2394457974248611,
+          0.050169028494133495,
+          -0.7912623461866085,
+          -0.6492368185901121
+        ]
+      },
+      {
+        "rank_from": 524289,
+        "rank_to": 4194304,
+        "n_atoms": 3670016,
+        "probability_mass": 0.015329515263285841,
+        "mean": [
+          0.24296480037932205,
+          0.04411441235797624,
+          -2.9369688753521856,
+          -2.6368842994156956
+        ],
+        "median": [
+          0.2370779633994886,
+          0.05671641663316493,
+          -4.856737349933931,
+          -3.183269769140506
+        ],
+        "std": [
+          0.10872370874625276,
+          0.12548395956796604,
+          23.232593610245978,
+          1.3172236937910147
+        ],
+        "probability_weighted_mean": [
+          0.24297974867971348,
+          0.04410771900882007,
+          -2.922553332851037,
+          -2.631571260548278
+        ]
+      },
+      {
+        "rank_from": 4194305,
+        "rank_to": 24000000,
+        "n_atoms": 19805696,
+        "probability_mass": 0.08252373333333457,
+        "mean": [
+          0.23152555382978743,
+          0.058848829489614424,
+          -4.491075152865893,
+          -3.3192931996309323
+        ],
+        "median": [
+          0.23239601342696758,
+          0.06042409333901362,
+          -4.764493827693028,
+          -3.4215215458372876
+        ],
+        "std": [
+          0.10493220539627146,
+          0.10847163346497961,
+          3.683009302522338,
+          0.5408299445472893
+        ],
+        "probability_weighted_mean": [
+          0.23152555382974868,
+          0.058848829489639,
+          -4.491075152865927,
+          -3.3192931996315544
+        ]
+      }
+    ]
+  },
+  "exact_stratum": {
+    "n_atoms": 1024,
+    "probability_mass": 0.38871640631954674,
+    "ranked_mass_removed": 0.3887121396528801,
+    "min_probability": 0.00022915374690008828,
+    "n_mass_atoms_inside": 15,
+    "mass_inside": 0.7923623751988907
+  },
+  "sampler": {
+    "mode": "tilted_stratified",
+    "replacement": true,
+    "note": "draw_tilted -> draw_uniforms_batch: inverse-CDF from the mixture, with replacement.  The exact stratum is not removed from the mixture, so a draw landing inside it contributes nothing (catalogue_null._exact_plus_complement)",
+    "n_draws": 16384,
+    "n_wasted_in_exact_stratum": 6266,
+    "n_usable": 10118,
+    "wasted_fraction": 0.3824462890625,
+    "n_unique_usable": 7604,
+    "worst_weight_on_a_drawn_mass_atom": 4.712545514529578
+  },
+  "score_decomposition": [
+    {
+      "group": "top 64 by proposal probability",
+      "n": 64,
+      "n_finite": 64,
+      "median_score": -9.45308166064117,
+      "median_log_detection": -0.00025299411811481,
+      "median_log_dispersion": -9.06207248636309,
+      "median_quadratic": -0.3588913367497731,
+      "median_abs_z": [
+        0.2994465271374199,
+        0.19518534575331029,
+        0.2119053856971529,
+        0.6091307347871611
+      ],
+      "median_sigma": [
+        0.34155048090393125,
+        0.3222724795320585,
+        1.2391202211685783,
+        63214.47334277767
+      ],
+      "median_abs_residual": [
+        0.10227610534879787,
+        0.06290286534424144,
+        0.262576248391869,
+        38505.870542285
+      ]
+    },
+    {
+      "group": "all atoms the ranking dominates",
+      "n": 320567,
+      "n_finite": 320567,
+      "median_score": -18.91882821223197,
+      "median_log_detection": -3.7307954108029184,
+      "median_log_dispersion": -13.055217315241233,
+      "median_quadratic": -0.6303440058973291,
+      "median_abs_z": [
+        0.5549901599922578,
+        0.1508268181487455,
+        0.44749077698856,
+        0.40438853709251243
+      ],
+      "median_sigma": [
+        0.431244475866783,
+        0.3222724795320585,
+        10.05618877140238,
+        237733.1565705401
+      ],
+      "median_abs_residual": [
+        0.24040775488567584,
+        0.05109158717267396,
+        5.005307216419633,
+        97704.14181254081
+      ]
+    },
+    {
+      "group": "mass-carrying atoms (exact, centre node)",
+      "n": 32,
+      "n_finite": 32,
+      "median_score": -10.630737642208636,
+      "median_log_detection": -0.01755859149387079,
+      "median_log_dispersion": -9.389077134137867,
+      "median_quadratic": -0.9490183525558331,
+      "median_abs_z": [
+        0.34966282176339314,
+        0.16302666989412767,
+        0.8611432157813654,
+        0.3699163630697689
+      ],
+      "median_sigma": [
+        0.34155048090393125,
+        0.3222724795320585,
+        1.2391202211685783,
+        74924.35028618277
+      ],
+      "median_abs_residual": [
+        0.11942750492751253,
+        0.053743588621790135,
+        1.2896837718651004,
+        35359.81984858115
+      ]
+    },
+    {
+      "group": "drawn from ranked atoms",
+      "n": 5907,
+      "n_finite": 5907,
+      "median_score": -13.396396378665678,
+      "median_log_detection": -0.058266271217967555,
+      "median_log_dispersion": -11.326964731358839,
+      "median_quadratic": -1.3782229251371325,
+      "median_abs_z": [
+        0.5722387702542345,
+        0.16852523366850994,
+        0.9790491415919017,
+        0.614209710226493
+      ],
+      "median_sigma": [
+        0.36931746840639795,
+        0.3222724795320585,
+        3.15366094021003,
+        148047.45797627178
+      ],
+      "median_abs_residual": [
+        0.23464869460832344,
+        0.059966862622401335,
+        3.94349762915079,
+        86905.5180903085
+      ]
+    },
+    {
+      "group": "drawn uniformly (sample)",
+      "n": 1697,
+      "n_finite": 1697,
+      "median_score": -2233867.962754536,
+      "median_log_detection": -0.588216184756315,
+      "median_log_dispersion": -2.485113499440311,
+      "median_quadratic": -2233859.324008834,
+      "median_abs_z": [
+        0.6344291087280571,
+        0.17544992145518573,
+        3.391863453670546,
+        2113.6948141160783
+      ],
+      "median_sigma": [
+        0.3464884948890321,
+        0.3262620226120417,
+        1.2626533601029142,
+        56.78166546584189
+      ],
+      "median_abs_residual": [
+        0.23333082826452767,
+        0.06193668743926587,
+        4.798919535593501,
+        120012.15409516824
+      ]
+    }
+  ],
+  "true_observation": {
+    "e1": -0.2659709598344094,
+    "e2": -0.06574032561426099,
+    "circularized_Re": 1.4458140476573433,
+    "r": 17.275062561035156,
+    "case": 114,
+    "source_input_index": 613458,
+    "source_truth": "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/case114_0.02/real0/catalogues/input/gals_info_tile180.0_-0.5.feather"
+  },
+  "exact": {
+    "node": 0,
+    "n_atoms": 32,
+    "captured_mass": 0.9350052976449776,
+    "n_drawn": 10,
+    "n_summed_exactly": 15,
+    "n_reached": 25,
+    "reached_mass": 0.830267316147044,
+    "atoms": [
+      {
+        "atom": 3174964,
+        "mass": 0.32896993870280905,
+        "proposal_probability": 0.000651945986946136,
+        "coverage": 0.9999771135709093,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 10345387,
+        "mass": 0.18121518527377278,
+        "proposal_probability": 0.0002396521853194078,
+        "coverage": 0.9802959675636534,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 9262565,
+        "mass": 0.08571461531214604,
+        "proposal_probability": 0.0006444223850047788,
+        "coverage": 0.9999741091204875,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 5817145,
+        "mass": 0.06625489742294158,
+        "proposal_probability": 1.5579367409966415e-07,
+        "coverage": 0.0025492688365299186,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 21163106,
+        "mass": 0.050585769003868374,
+        "proposal_probability": 0.0006116900633220114,
+        "coverage": 0.9999557208393357,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 16506814,
+        "mass": 0.03151900630553238,
+        "proposal_probability": 0.0003399993870512696,
+        "coverage": 0.9961952202128381,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 8396714,
+        "mass": 0.030680551814319015,
+        "proposal_probability": 0.0006936921243174567,
+        "coverage": 0.9999884565877422,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 834652,
+        "mass": 0.024962301065934826,
+        "proposal_probability": 0.00027302728041171713,
+        "coverage": 0.9885971247108285,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 4498619,
+        "mass": 0.017346143996883803,
+        "proposal_probability": 0.0003193507457574737,
+        "coverage": 0.9946629288843414,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 6528493,
+        "mass": 0.01174132070385513,
+        "proposal_probability": 6.57704891801216e-05,
+        "coverage": 0.6595949792676994,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 959426,
+        "mass": 0.009698292983789335,
+        "proposal_probability": 1.8011753352429068e-05,
+        "coverage": 0.2555482403808145,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 11127057,
+        "mass": 0.008973796559298376,
+        "proposal_probability": 0.0004365630619516341,
+        "coverage": 0.9992184339953822,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 19930097,
+        "mass": 0.00733854079157676,
+        "proposal_probability": 0.0003607133717997039,
+        "coverage": 0.9972905077816899,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 17552626,
+        "mass": 0.006931355452472661,
+        "proposal_probability": 9.040703287222934e-06,
+        "coverage": 0.1376754337626196,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 16136572,
+        "mass": 0.006254946740074654,
+        "proposal_probability": 0.00024379427490562046,
+        "coverage": 0.9815890995871959,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 6467762,
+        "mass": 0.00602615690344548,
+        "proposal_probability": 0.0001324107530354896,
+        "coverage": 0.8857722958054817,
+        "drawn": true,
+        "summed_exactly": false
+      },
+      {
+        "atom": 20979003,
+        "mass": 0.005652405202482745,
+        "proposal_probability": 4.041362075614677e-08,
+        "coverage": 0.0006619176116683057,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 18869749,
+        "mass": 0.005643923830400597,
+        "proposal_probability": 5.271157827372056e-05,
+        "coverage": 0.5783793322564539,
+        "drawn": true,
+        "summed_exactly": false
+      },
+      {
+        "atom": 20118501,
+        "mass": 0.005485003237636453,
+        "proposal_probability": 0.0002723885191352266,
+        "coverage": 0.9884771287865196,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 21333910,
+        "mass": 0.005387391731961412,
+        "proposal_probability": 0.0003937224537055431,
+        "coverage": 0.9984226655557529,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 6848168,
+        "mass": 0.004463030467439341,
+        "proposal_probability": 0.00012433545632282823,
+        "coverage": 0.8696117537307297,
+        "drawn": true,
+        "summed_exactly": false
+      },
+      {
+        "atom": 17357099,
+        "mass": 0.004448468861249106,
+        "proposal_probability": 0.0002216161659953926,
+        "coverage": 0.9735198971208646,
+        "drawn": true,
+        "summed_exactly": false
+      },
+      {
+        "atom": 12082327,
+        "mass": 0.004409055133998995,
+        "proposal_probability": 0.00043947570203404937,
+        "coverage": 0.9992548705226947,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 12837477,
+        "mass": 0.0039046752252733215,
+        "proposal_probability": 0.00014857348889046431,
+        "coverage": 0.9123504578084333,
+        "drawn": true,
+        "summed_exactly": false
+      },
+      {
+        "atom": 5675961,
+        "mass": 0.0035201295290776136,
+        "proposal_probability": 0.00029945251913416737,
+        "coverage": 0.9926051007845512,
+        "drawn": false,
+        "summed_exactly": true
+      },
+      {
+        "atom": 18291425,
+        "mass": 0.0031801634704034186,
+        "proposal_probability": 6.795648340444062e-05,
+        "coverage": 0.6715717418524781,
+        "drawn": true,
+        "summed_exactly": false
+      },
+      {
+        "atom": 5861840,
+        "mass": 0.0030147290923202346,
+        "proposal_probability": 1.295163220425527e-05,
+        "coverage": 0.1911978202290725,
+        "drawn": true,
+        "summed_exactly": false
+      },
+      {
+        "atom": 20540695,
+        "mass": 0.0028381529240700276,
+        "proposal_probability": 7.158514766790567e-05,
+        "coverage": 0.6905296653587487,
+        "drawn": true,
+        "summed_exactly": false
+      },
+      {
+        "atom": 22291972,
+        "mass": 0.002435221257951857,
+        "proposal_probability": 4.7358069913715596e-06,
+        "coverage": 0.07465778291763696,
+        "drawn": false,
+        "summed_exactly": false
+      },
+      {
+        "atom": 19435658,
+        "mass": 0.002304660696062941,
+        "proposal_probability": 0.00017709175713588436,
+        "coverage": 0.945071794036794,
+        "drawn": true,
+        "summed_exactly": false
+      },
+      {
+        "atom": 10750664,
+        "mass": 0.0020809794774890224,
+        "proposal_probability": 7.600351537155901e-05,
+        "coverage": 0.7121422716288022,
+        "drawn": true,
+        "summed_exactly": false
+      },
+      {
+        "atom": 1061286,
+        "mass": 0.0020244884744405004,
+        "proposal_probability": 5.202791399517441e-05,
+        "coverage": 0.5736298949184977,
+        "drawn": false,
+        "summed_exactly": false
+      }
+    ]
+  },
+  "background": {
+    "n_shown": 59979,
+    "seed": 20260921
+  },
+  "figure": {
+    "path": "proposal_atom_map_row142230_floor50_frac.png",
+    "sha256": "b0b9be4c88f0f204e909e6f0fa0b48bce65dcb1ef177b07496650255aa144cd0"
+  },
+  "source": {
+    "proposal_coordinates": "06cb5d452ba2ea98cec846c59d96a40af18a0cf249f902b6cac7f1a10f5ffe63",
+    "exact_record": "b8bc223cd3f2386f00f1a0a555f52d310f6490011e316136d5cd2f90d4f46b6b",
+    "prior_manifest": "d096097842205e8ad3aeb9db867f49133a43f02ea2ecb1873afe66ddf81db098"
+  },
+  "note": "Reproduces the configured tilted_stratified draw: the exact stratum is summed with certainty but is NOT removed from the mixture, so draws landing inside it are simply discarded.  The drawn set reported here is the usable complement.  Diagnostic only; re-flooring the proposal here changes no production default."
+}
