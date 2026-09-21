@@ -566,22 +566,29 @@ def main() -> None:
     background = rng.choice(n_atoms, size=args.background, replace=False)
     drawn_set = np.zeros(n_atoms, dtype=bool)
     drawn_set[drawn] = True
-    background = background[~drawn_set[background]]
+    exact_set = np.zeros(n_atoms, dtype=bool)
+    exact_set[exact_stratum] = True
+    # The exact stratum is neither raced nor grey bulk: it is the part of the
+    # proposal the estimator sums with certainty, and on these rows it holds
+    # most of the probability.  Earlier versions plotted only the raced atoms,
+    # so the atoms the ranking likes best -- the ones expected to sit on the
+    # observation -- were invisible, and the ranking looked worse than it is.
+    background = background[~(drawn_set | exact_set)[background]]
 
-    everything = np.concatenate([heavy, drawn, background])
+    exact_shown = exact_stratum[np.argsort(probability[exact_stratum])[::-1]]
+    everything = np.concatenate([heavy, drawn, exact_shown, background])
     truth = gather_truth(manifest, everything)
-    n_heavy, n_drawn = heavy.size, drawn.size
+    n_heavy, n_drawn, n_exact = heavy.size, drawn.size, exact_shown.size
     truth_heavy = truth[:n_heavy]
     truth_drawn = truth[n_heavy : n_heavy + n_drawn]
-    truth_background = truth[n_heavy + n_drawn :]
+    truth_exact = truth[n_heavy + n_drawn : n_heavy + n_drawn + n_exact]
+    truth_background = truth[n_heavy + n_drawn + n_exact :]
 
     measured_heavy = centred_measurements(coords.values[heavy], observed)
     measured_drawn = centred_measurements(coords.values[drawn], observed)
+    measured_exact = centred_measurements(coords.values[exact_shown], observed)
     measured_background = centred_measurements(coords.values[background], observed)
     heavy_drawn = drawn_set[heavy]
-
-    exact_set = np.zeros(n_atoms, dtype=bool)
-    exact_set[exact_stratum] = True
     heavy_exact = exact_set[heavy]
     # A mass atom inside the exact stratum is summed with certainty; one that
     # is neither summed nor drawn is the only kind the estimator truly misses.
@@ -618,6 +625,35 @@ def main() -> None:
         for label, idx in groups if idx.size
     ]
 
+    # Does the ranking sit on the observation or beside it?  Rank bands answer
+    # that without plotting 24 million atoms.  Band 1 is the exact stratum;
+    # later bands are progressively deeper slices of the same ordering.  A
+    # ranking that is centred has a mean near zero in every measured
+    # coordinate for its leading band; one that is offset does not.
+    rank_order = np.argsort(probability)[::-1]
+    band_edges = [0, PRODUCTION_CANDIDATES, 8192, 65536, 524288, 4194304,
+                  n_atoms]
+    rank_bands = []
+    for lo, hi in zip(band_edges[:-1], band_edges[1:]):
+        band = rank_order[lo:hi]
+        block = centred_measurements(coords.values[band], observed)
+        weight = probability[band]
+        total = float(weight.sum())
+        rank_bands.append(dict(
+            rank_from=int(lo + 1),
+            rank_to=int(hi),
+            n_atoms=int(band.size),
+            probability_mass=total,
+            mean=[float(v) for v in block.mean(axis=0)],
+            median=[float(v) for v in np.median(block, axis=0)],
+            std=[float(v) for v in block.std(axis=0)],
+            probability_weighted_mean=[
+                float(v) for v in
+                (block * weight[:, None]).sum(axis=0) / max(total, 1e-300)
+            ],
+        ))
+        del block, weight
+
     fig, axes = plt.subplots(2, 2, figsize=(13.0, 11.0))
     norm = LogNorm(vmin=max(float(mass.min()), 1e-6), vmax=float(mass.max()))
 
@@ -630,6 +666,7 @@ def main() -> None:
             axes[0][0],
             measured_background[:, [0, 1]],
             measured_drawn[:, [0, 1]],
+            measured_exact[:, [0, 1]],
             measured_heavy[:, [0, 1]],
             r"predicted $g_1$ $-$ measured $g_1$",
             r"predicted $g_2$ $-$ measured $g_2$",
@@ -640,6 +677,7 @@ def main() -> None:
             axes[0][1],
             measured_background[:, [2, 3]],
             measured_drawn[:, [2, 3]],
+            measured_exact[:, [2, 3]],
             measured_heavy[:, [2, 3]],
             r"predicted $R_{\rm flux}$ $-$ measured $R_{\rm flux}$   [pix]",
             r"$\log_{10}$(predicted flux / measured flux)",
@@ -650,6 +688,7 @@ def main() -> None:
             axes[1][0],
             truth_background[:, [0, 1]],
             truth_drawn[:, [0, 1]],
+            truth_exact[:, [0, 1]],
             truth_heavy[:, [0, 1]],
             r"true $e_1$ (intrinsic)",
             r"true $e_2$ (intrinsic)",
@@ -660,6 +699,7 @@ def main() -> None:
             axes[1][1],
             truth_background[:, [3, 2]],
             truth_drawn[:, [3, 2]],
+            truth_exact[:, [3, 2]],
             truth_heavy[:, [3, 2]],
             r"true circularized $R_e$   [arcsec]",
             r"true magnitude $r$",
@@ -669,7 +709,8 @@ def main() -> None:
     ]
 
     handle = None
-    for axis, bulk, sampled, top, xlabel, ylabel, title, marker_at in specs:
+    for axis, bulk, sampled, summed, top, xlabel, ylabel, title, marker_at \
+            in specs:
         # Unsampled bulk: mass unknown, so plain grey at the common size.
         axis.scatter(
             bulk[:, 0], bulk[:, 1], s=unsampled_size, c="0.86", marker=".",
@@ -688,6 +729,13 @@ def main() -> None:
             sampled[ranked, 0], sampled[ranked, 1], s=30.0,
             c="tab:blue", marker="x", linewidths=1.0, alpha=0.65,
             rasterized=True, zorder=4,
+        )
+        # The part of the proposal that is summed with certainty.  It costs no
+        # draw, so it is not a cross; it is what the ranking most prefers.
+        axis.scatter(
+            summed[:, 0], summed[:, 1], s=14.0,
+            c="tab:orange", marker="o", linewidths=0.0, alpha=0.55,
+            rasterized=True, zorder=3,
         )
         for mask, is_drawn in ((~heavy_reached, False), (heavy_reached, True)):
             if not mask.any():
@@ -729,6 +777,10 @@ def main() -> None:
         Line2D([], [], ls="", marker="x", color="tab:blue", ms=8, mew=1.4,
                label=f"drawn from ranked atoms \u2014 {share[1]} "
                      f"({int(ranked.sum()):,})"),
+        Line2D([], [], ls="", marker="o", color="tab:orange", ms=5,
+               label=f"summed exactly, never raced "
+                     f"({PRODUCTION_CANDIDATES:,} atoms, "
+                     f"{probability[exact_stratum].sum():.1%} of the proposal)"),
         Line2D([], [], ls="", marker=".", color="black", ms=7,
                label="carries posterior mass, MISSED"),
         Line2D([], [], ls="", marker="x", color="black", ms=11, mew=2,
@@ -788,6 +840,11 @@ def main() -> None:
             n_ranked_in_catalogue=int(catalogue_ranked.size),
             probability_mass_on_ranked=float(probability[catalogue_ranked].sum()),
             n_above_flat_share_in_catalogue=int((probability > uniform).sum()),
+        ),
+        rank_bands=dict(
+            columns=list(TARGET_ORDER[:3]) + ["log10_flux_ratio"],
+            note="predicted minus measured; flux as a log10 ratio",
+            bands=rank_bands,
         ),
         exact_stratum=dict(
             n_atoms=int(PRODUCTION_CANDIDATES),

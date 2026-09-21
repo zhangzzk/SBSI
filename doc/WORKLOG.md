@@ -1,3 +1,92 @@
+## 2026-09-21 — The atom map hid the exact stratum, and the ranking is blind rather than offset
+
+Owner looked at the fixed-count figures and objected that more of the ranked
+draws should sit on the observation, since that is what the ranking is for, and
+asked whether the ranking is instead simply offset in the `e1`-`e2` plane. Two
+separate things were wrong, one in the figure and one in the proposal.
+
+**The figure omitted most of the proposal.** `scripts/plot_proposal_atom_map.py`
+coloured only the atoms the race drew. The exact stratum — the top 1024 by
+proposal probability, summed with certainty and zeroed before the race — was in
+neither the drawn set nor, except by accident of subsampling, the grey bulk. On
+these rows that stratum holds 87.7%, 89.6% and 89.2% of the whole proposal, so
+the figure was showing the leftovers and hiding the atoms the ranking most
+prefers. It is now drawn as its own orange class, and the background subsample
+excludes it so nothing is plotted twice.
+
+**The ranking is not offset; past the leading atoms it is blind.** A new
+`rank_bands` block in the report gives the mean predicted-minus-measured offset
+per band of proposal rank. Mean *predicted* shape, recovered as observed plus
+that offset:
+
+| band | row 142230 | row 409188 | row 3563 |
+|---|---:|---:|---:|
+| observed `g1` | -0.2267 | -0.1213 | -0.0014 |
+| ranks 1-1024, unweighted | -0.0044 | -0.0090 | +0.0067 |
+| ranks 1-1024, q-weighted | **-0.2448** | **-0.1142** | **-0.0202** |
+| ranks 1025-8192 | +0.0062 | +0.0063 | +0.0065 |
+| ranks 8193-65536 | +0.0097 | +0.0093 | +0.0093 |
+| whole catalogue | +0.0059 | +0.0058 | +0.0058 |
+
+and in `g2` the same pattern: observed -0.0591 / +0.0970 / +0.1612 against
+-0.0055 / -0.0056 / -0.0058 for ranks 1025-8192.
+
+Past rank ~1024 the mean predicted shape is a *constant* to four decimals,
+equal to the catalogue mean, across three observations that span 0.23 in `g1`
+and 0.22 in `g2`. It is not a shift of the ranking towards a wrong centre: the
+band carries no information about the observation at all. The apparent offset
+in the figure is exactly minus the observation's own distance from the
+catalogue centre, which is why it looked largest on row 142230 and why row
+3563, observed at `g1 = -0.0014`, shows no `g1` offset while showing a large
+`g2` one. Only the probability weighting recovers the observation, and it does
+so because one atom carries 0.742 of the proposal on row 142230; the other
+1023 members of the exact stratum are already catalogue-typical by count.
+
+**Why it goes blind: vagueness is cheaper than being wrong.** The score is
+`log Pdet - sum_d log sigma_jd - 0.5 sum_d z_jd^2` with each atom's own sigma.
+Median terms on row 142230:
+
+| group | `log Pdet` | `-sum log sigma` | quadratic | sigma(g1) | sigma(flux) |
+|---|---:|---:|---:|---:|---:|
+| drawn from ranked atoms | -0.41 | -12.27 | **-0.80** | 0.418 | 2.53e5 |
+| mass-carrying atoms (exact) | -0.02 | -5.44 | **-7.51** | 0.068 | 2.27e4 |
+
+The observed flux is 1.20e5, so a drawn atom's predicted flux uncertainty is
+about twice the observation itself, and its `sigma(g1) = 0.42` spans the whole
+ellipticity range. Such an atom fits *any* observation at under one sigma, so
+its quadratic term costs 0.80 while a genuinely matching atom pays 7.51 for
+missing inside its own narrow sigma. The dispersion term claws back 6.8 nats
+of that, leaving the two groups within 0.1 nats of each other — and there are
+twenty million vague atoms against thirty-two real ones. This is the same
+defect the faint/small blue cloud shows in truth space, measured at its source,
+and it is the case for the common-metric score variant that was already next in
+the queue.
+
+Files. `scripts/plot_proposal_atom_map.py`: the exact stratum is carried
+through to all four panels and the legend, excluded from the background
+subsample, and a `rank_bands` block is added to the report. Behaviour of the
+sampler, the draw, and every reached-mass number is unchanged — job 16627577
+reproduces job 16627124 exactly (12/32, 25/32, 27/32 atoms reached).
+
+Validation. `tests/test_proposal_atom_map.py`, 50 passed in 6.7s on the login
+node and 11.2s inside the job. Job 16627577 COMPLETED in 00:01:59 on `cluster`,
+8 CPUs, 96G, no GPU, MaxRSS 5.2G. Figures refreshed in `SBSI/plots/`, which is
+not version-controlled.
+
+Limitations. Three rows, centre node, one seed; the band means are unweighted
+over millions of atoms so their standard errors are negligible, but the claim
+"constant across observations" rests on three observations, not a population.
+No estimator variance is measured. The dispersion/quadratic trade is quantified
+by medians only, at the median atom of each group.
+
+Next steps. The common-metric score variant moves to first, now that the
+mechanism is measured rather than inferred: score with a shared per-coordinate
+metric so a wide predicted sigma cannot buy a cheap quadratic term. Enlarging
+the exact stratum remains the cheap deterministic lever and still needs the
+rank of the missed tail atoms, which `rank_bands` does not yet report per atom.
+The nine-variant comparison still must be redone on inclusion probabilities
+with the exact stratum excluded.
+
 ## 2026-09-21 — A fixed-count stratified draw finds one more mass atom per row, and confirms the ranking is the real defect
 
 Owner asked for the atom map redrawn with a 50/50 split on *draw counts* rather
