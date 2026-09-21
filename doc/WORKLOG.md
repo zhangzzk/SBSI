@@ -1,3 +1,104 @@
+## 2026-09-21 — A shared-metric score fixes the ranking: 17% to 88% of the captured mass on the worst row
+
+The entry below measured why the proposal's ranking failed: dividing each
+residual by the atom's *own* predicted scatter, and then paying
+`- sum_d log sigma_jd` to normalise the density, makes vagueness cheaper than
+closeness. This entry replaces that score with one shared metric and measures
+the result. Diagnostic only; `--score production` remains the default and no
+production path is touched.
+
+**The change.** `common_metric_scale` takes one tolerance per coordinate from
+the proposal cache alone: the catalogue's median predicted scatter for the
+three linear coordinates, and its median *fractional* scatter, in dex, for
+flux, which spans five decades and has no meaningful absolute tolerance. On
+this cache that is `(0.342, 0.322, 1.239 pix, 0.337 dex)`. `common_metric_score`
+then scores `log Pdet_j - 0.5 * squared distance in that metric`. Because the
+metric no longer varies by atom, the normalisation is a constant and cancels in
+the softmax, so a wide prediction can no longer buy a cheap residual. The
+mixture composition, the temperature, `delta`, the exact stratum and the
+fixed-count sampler are all unchanged; only the score differs.
+
+**The ranking now tracks the observation.** Mean predicted shape by rank band,
+against the observed value. Production's deeper bands were a constant
+independent of the observation; they now move with it:
+
+| | row 142230 | row 409188 | row 3563 |
+|---|---:|---:|---:|
+| observed `g1` | -0.2267 | -0.1213 | -0.0014 |
+| ranks 1-1024, production | -0.0044 | -0.0090 | +0.0067 |
+| ranks 1-1024, shared metric | **-0.0391** | **-0.0683** | **-0.0011** |
+| ranks 1025-8192, production | +0.0062 | +0.0063 | +0.0065 |
+| ranks 1025-8192, shared metric | **-0.0195** | **-0.0276** | **+0.0012** |
+
+In `g2`, observed -0.0591 / +0.0970 / +0.1612 against ranks 1-1024 at
+-0.0183 / +0.0591 / +0.0797, where production gave -0.0062 / +0.0068 / +0.0124.
+The leading band now recovers 17%, 61% and 49% of the observation's own
+displacement from the catalogue centre, against 2%, 7% and 8% before, and the
+signature that mattered -- the same number whatever was observed -- is gone at
+every depth.
+
+**Reached mass, fixed-count sampler, same seed, same exact stratum:**
+
+| row | production score | shared metric |
+|---|---:|---:|
+| 142230 | 12 of 32, 17.2% | **22 of 32, 87.5%** |
+| 409188 | 27 of 32, 65.4% | **27 of 32, 92.8%** |
+| 3563 | 25 of 32, 92.0% | 22 of 32, 87.8% |
+
+**Row 3563 gets slightly worse, and the reason is structural.** The shared
+metric spreads the proposal: the exact stratum's share falls from 87.7/89.6/89.2%
+to 16.5/10.0/6.6%. On row 3563 the old, extremely peaked proposal already had
+25 of the 32 mass atoms inside the deterministic top-1024; the flatter one has
+17 there and the draw recovers 5, for 22. The row where the peaked proposal was
+already right pays a little; the row where it was wrong gains 70 points.
+
+**Spreading the proposal did not cost variance where it matters.** The worst
+Horvitz-Thompson weight carried by a drawn mass atom is 2x, 2x and 6x on the
+three rows, because the metric now places real probability on the atoms that
+carry mass, so they are drawn with inclusion near one rather than stumbled on.
+For comparison the production score leaves row 142230's heaviest missed atom,
+0.3290, at the defensive floor with inclusion 3.4e-4 and a weight of 2,930x if
+it is ever hit. Mass reached deterministically versus by draw is 0.549/0.270 on
+row 142230, 0.569/0.091 on row 409188 and 0.590/0.035 on row 3563.
+
+Files. `scripts/plot_proposal_atom_map.py` gains `common_metric_scale`,
+`common_metric_score`, `mixture_from_score` and a `--score` flag, plus a
+`score` block in the report. `scripts/run_proposal_atom_map.sh` takes the score
+as its second argument.
+
+Validation. `tests/test_proposal_atom_map.py`, 61 passed in 6.6s on the login
+node and 12.3s inside the job; eleven new tests cover the scale, the score and
+the mixture. One pins the defect directly: two atoms where the first is closer
+to the observation in *every* coordinate, and production rates it 22 nats worse
+because its narrow errors charge it for the miss. `mixture_from_score` is
+tested to reproduce `WholeCatalogueProxy.mixture` bit for bit when fed the
+production score, so the two paths cannot drift. Job 16627718 raised an
+overflow in the fractional-scatter median where a few atoms carry a denormal
+predicted flux; taking the median in log space is identically the same number
+without the overflow, and job 16627763 reproduces 16627718's reached masses
+exactly (0.8184, 0.6247, 0.6597), which confirms the fix changed nothing but
+the warning. 16627763 COMPLETED in 00:02:42 on `cluster`, 8 CPUs, 96G, no GPU,
+MaxRSS 4.1G.
+
+Limitations. Three rows, centre node, one seed, so the reach numbers carry no
+uncertainty; a seed sweep is needed before any of this is a population claim.
+No estimator variance is measured -- the weight figures above are inclusion
+arithmetic on the mass atoms, not a measured variance. The shared shape
+tolerance, 0.342, is as wide as the whole ellipticity distribution because it
+is a catalogue median dominated by faint atoms, which is why shape is still
+only partly tracked while flux and size are tracked well; that single number is
+the obvious next lever and was deliberately not tuned here. The metric is fixed
+across observations, so a bright row and a faint row are judged on the same
+tolerance.
+
+Next steps. Make the shape tolerance reflect the observation's own brightness
+rather than the catalogue median, which should close the remaining shape gap
+without touching the rest. Re-examine whether the exact stratum should be
+larger now that the proposal is flatter, since 1024 was chosen against a
+proposal that put 88% of its mass there and now holds 7-17%. The nine-variant
+comparison still must be redone on inclusion probabilities with the exact
+stratum excluded.
+
 ## 2026-09-21 — The atom map hid the exact stratum, and the ranking is blind rather than offset
 
 Owner looked at the fixed-count figures and objected that more of the ranked

@@ -5,12 +5,15 @@
 # production setting.  It reproduces the sampler's draw for one observation and
 # plots where the atoms that actually carry posterior mass end up.
 #
-#   sbatch scripts/run_proposal_atom_map.sh [production|fifty-fifty]
+#   sbatch scripts/run_proposal_atom_map.sh [production|fifty-fifty] \
+#                                          [production|common-metric]
 #
 # "production" races one mixture and lets the ranked/flat mass ratio decide how
 # the 16,384 slots are split.  "fifty-fifty" gives each stratum half the slots
-# outright.  No GPU: the proposal coordinates and detection probabilities are
-# read from the prepared cache.
+# outright.  The second argument picks the score: "production" divides each
+# residual by the atom's own predicted scatter, "common-metric" scores every
+# atom against one shared tolerance per coordinate.  No GPU: the proposal
+# coordinates and detection probabilities are read from the prepared cache.
 #SBATCH --job-name=v36_atom_map
 #SBATCH --partition=cluster
 #SBATCH --cpus-per-task=8
@@ -20,6 +23,7 @@
 set -euo pipefail
 
 SAMPLER="${1:-production}"
+SCORE="${2:-production}"
 PY=/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python
 RUN=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/inference_constgold_v36_uncut_size060_n500k_m16384_20260920_v1
 EXACT="$RUN/tail_exact_16617850"
@@ -37,5 +41,6 @@ for ROW in 142230 3563 409188; do
     --exact-dir "$EXACT" \
     --row "$ROW" \
     --sampler "$SAMPLER" \
+    --score "$SCORE" \
     --output "$OUT/row_${ROW}"
 done

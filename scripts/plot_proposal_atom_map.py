@@ -430,6 +430,116 @@ def build_proxy(values: np.ndarray, dispersion: np.ndarray, detection: np.ndarra
     return WholeCatalogueProxy(shim, torch.device("cpu"), score_dtype=torch.float64)
 
 
+def common_metric_scale(values: np.ndarray, dispersion: np.ndarray) -> np.ndarray:
+    """One tolerance per coordinate, shared by every atom.
+
+    Production divides each residual by that atom's *own* predicted scatter and
+    then pays ``- sum_d log sigma_jd`` to normalise the density.  Measured on
+    these rows the pair defeats the ranking: an atom whose predicted flux
+    scatter is twice the observed flux fits any observation at under one sigma
+    and pays almost nothing on the quadratic term, while an atom that genuinely
+    matches pays several nats for a small miss inside its own narrow sigma.
+    Being vague is cheaper than being close, and there are twenty million vague
+    atoms.
+
+    A metric shared by every atom removes both halves at once.  The
+    normalisation becomes a constant and cancels in the softmax, and a wide
+    prediction can no longer buy a cheap residual, so the score measures one
+    thing only: how far the atom's prediction is from the observation.
+
+    The three linear coordinates take the catalogue's median predicted scatter.
+    Flux spans five decades, so an absolute tolerance would be meaningless
+    there; it takes the catalogue's median *fractional* scatter, converted to
+    dex, which is the scale-free analogue.  Both come from the proposal cache
+    alone -- no observation, and nothing fitted to a result.
+    """
+
+    values = np.asarray(values, dtype=np.float64)
+    dispersion = np.asarray(dispersion, dtype=np.float64)
+    if values.shape != dispersion.shape or values.shape[1] != 4:
+        raise ValueError("expected matching (n_atoms, 4) value and dispersion blocks")
+    if not np.all(dispersion > 0.0):
+        raise ValueError("proxy dispersion must be positive")
+    linear = np.median(dispersion[:, :3], axis=0)
+    flux, sigma = values[:, 3], dispersion[:, 3]
+    usable = flux > 0.0
+    if not usable.any():
+        raise ValueError("no atom has a positive predicted flux")
+    # A few atoms carry a predicted flux small enough that the ratio overflows
+    # float64.  The median commutes with the logarithm, so taking it in log
+    # space gives the identical number without the overflow.
+    log_ratio = (np.log10(sigma[usable]) - np.log10(flux[usable])
+                 - np.log10(np.log(10.0)))
+    dex = float(10.0 ** np.median(log_ratio))
+    if not np.isfinite(dex) or dex <= 0.0:
+        raise ValueError("fractional flux scatter must be positive and finite")
+    scale = np.concatenate([linear, [dex]])
+    if not np.all(np.isfinite(scale)) or not np.all(scale > 0.0):
+        raise ValueError("common metric must be positive and finite")
+    return scale
+
+
+def common_metric_score(values: np.ndarray, dispersion: np.ndarray,
+                        detection: np.ndarray, observed: np.ndarray,
+                        scale: np.ndarray) -> np.ndarray:
+    """``log Pdet_j - 0.5 * squared distance in the shared metric``.
+
+    The dispersion argument is unused in the sum and is taken only so callers
+    cannot silently pass a cache that has no scatter at all, which is the one
+    thing that would make the scale meaningless.  Undetectable atoms score
+    ``-inf`` exactly as they do in production, and the defensive component
+    still covers them.
+    """
+
+    values = np.asarray(values, dtype=np.float64)
+    observed = np.asarray(observed, dtype=np.float64)
+    scale = np.asarray(scale, dtype=np.float64)
+    if observed.shape != (4,) or scale.shape != (4,):
+        raise ValueError("expected four measured coordinates")
+    if np.asarray(dispersion).shape != values.shape:
+        raise ValueError("expected matching value and dispersion blocks")
+    if observed[3] <= 0.0:
+        raise ValueError("observed flux must be positive for a log metric")
+
+    distance = np.zeros(values.shape[0], dtype=np.float64)
+    for d in range(3):
+        distance += np.square((values[:, d] - observed[d]) / scale[d])
+    # Flux is compared in dex, so an atom ten times too faint is ten times
+    # too faint whether the observation is bright or not.
+    predicted = np.log10(np.clip(values[:, 3], 1e-12, None))
+    distance += np.square((predicted - np.log10(observed[3])) / scale[3])
+
+    detection = np.asarray(detection, dtype=np.float64)
+    with np.errstate(divide="ignore"):
+        score = np.log(np.where(detection > 0.0, detection, np.nan)) - 0.5 * distance
+    return np.nan_to_num(score, nan=-np.inf)
+
+
+def mixture_from_score(score: np.ndarray, *, delta: float, temperature: float,
+                       n_atoms: int) -> torch.Tensor:
+    """``q = (1 - delta) softmax(s / T) + delta / n_atoms``.
+
+    The same composition ``WholeCatalogueProxy.mixture`` applies, so the only
+    difference between the two scores is the score itself.
+    """
+
+    if not np.isfinite(temperature) or temperature <= 0.0:
+        raise ValueError("temperature must be positive and finite")
+    if not 0.0 < delta < 1.0:
+        raise ValueError("delta must lie strictly between zero and one")
+    if score.shape != (n_atoms,):
+        raise ValueError("expected one score per atom")
+    tilted = torch.as_tensor(np.asarray(score, dtype=np.float64))
+    if temperature != 1.0:
+        tilted = tilted / float(temperature)
+    tilted = torch.where(torch.isfinite(tilted), tilted,
+                         torch.tensor(-np.inf, dtype=torch.float64))
+    mixture = torch.softmax(tilted, dim=0)
+    mixture *= 1.0 - delta
+    mixture += delta / float(n_atoms)
+    return mixture
+
+
 def centred_measurements(block: np.ndarray, observed: np.ndarray) -> np.ndarray:
     """Predicted measurement relative to the observation, one row per atom.
 
@@ -474,6 +584,12 @@ def main() -> None:
     parser.add_argument("--background", type=int, default=60000)
     parser.add_argument("--background-seed", type=int, default=20260921)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--score", choices=("production", "common-metric"),
+                        default="production",
+                        help="production divides each residual by the atom's "
+                             "own predicted scatter and normalises the "
+                             "density; common-metric scores every atom "
+                             "against one shared tolerance per coordinate")
     parser.add_argument("--sampler", choices=("production", "fifty-fifty"),
                         default="production",
                         help="production races one mixture and lets the mass "
@@ -516,12 +632,23 @@ def main() -> None:
     mock_manifest = json.loads((args.run / "input" / "image_mock_manifest.json").read_text())
     true_observation = observation_truth(mock_manifest, mock.truth.iloc[args.row])
 
-    proxy = build_proxy(coords.values, coords.dispersion, detection)
-    mixture = proxy.mixture(
-        observed[None, :],
-        delta=PRODUCTION_DELTA,
-        temperature=PRODUCTION_TEMPERATURE,
-    )[0]
+    if args.score == "production":
+        proxy = build_proxy(coords.values, coords.dispersion, detection)
+        mixture = proxy.mixture(
+            observed[None, :],
+            delta=PRODUCTION_DELTA,
+            temperature=PRODUCTION_TEMPERATURE,
+        )[0]
+        metric = None
+    else:
+        metric = common_metric_scale(coords.values, coords.dispersion)
+        mixture = mixture_from_score(
+            common_metric_score(coords.values, coords.dispersion, detection,
+                                observed, metric),
+            delta=PRODUCTION_DELTA,
+            temperature=PRODUCTION_TEMPERATURE,
+            n_atoms=n_atoms,
+        )
     probability = mixture.numpy()
     # Production sums the top `candidates` atoms exactly and zeroes their
     # weight before racing, so they neither consume a draw nor add variance.
@@ -803,16 +930,26 @@ def main() -> None:
         else f"fixed-count sampler: {strata['n_ranked_slots']:,} ranked "
              f"+ {strata['n_uniform_slots']:,} uniform slots"
     )
+    score_label = (
+        "production score: each atom divides by its own predicted scatter"
+        if args.score == "production"
+        else "shared-metric score: one tolerance per coordinate, "
+             f"({metric[0]:.3f}, {metric[1]:.3f}, {metric[2]:.2f} pix, "
+             f"{metric[3]:.3f} dex)"
+    )
     fig.suptitle(
         f"Row {args.row}: measured mag "
         f"{mock.measurements.iloc[args.row]['measured_mag_auto']:.2f}"
         f"   |   {int(heavy_reached.sum())} of {n_heavy} mass-carrying atoms reached"
         f" ({int(heavy_exact.sum())} summed exactly + {int(heavy_drawn.sum())} drawn)"
         f"   |   {reached / captured:.1%} of the captured mass reached"
-        f"\n{sampler_label}",
+        f"\n{sampler_label}"
+        f"\n{score_label}",
         fontsize=12,
     )
     suffix = "" if strata["kind"] == "production" else "_fifty_fifty"
+    if args.score != "production":
+        suffix += "_common_metric"
     figure_path = args.output / f"proposal_atom_map_row{args.row}{suffix}.png"
     fig.savefig(figure_path, dpi=170, bbox_inches="tight")
     plt.close(fig)
@@ -840,6 +977,14 @@ def main() -> None:
             n_ranked_in_catalogue=int(catalogue_ranked.size),
             probability_mass_on_ranked=float(probability[catalogue_ranked].sum()),
             n_above_flat_share_in_catalogue=int((probability > uniform).sum()),
+        ),
+        score=dict(
+            kind=args.score,
+            common_metric=None if metric is None else
+            [float(v) for v in metric],
+            note="production divides by each atom's own scatter and "
+                 "normalises; common-metric shares one tolerance per "
+                 "coordinate, flux in dex, so the normalisation cancels",
         ),
         rank_bands=dict(
             columns=list(TARGET_ORDER[:3]) + ["log10_flux_ratio"],

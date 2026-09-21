@@ -14,6 +14,9 @@ from scripts.plot_proposal_atom_map import (
     TRUTH_COLUMNS,
     build_proxy,
     centred_measurements,
+    common_metric_scale,
+    common_metric_score,
+    mixture_from_score,
     draw_classes,
     slot_accounting,
     score_terms,
@@ -580,3 +583,165 @@ def test_stratified_race_rejects_a_budget_larger_than_the_eligible_set():
 def test_stratified_race_rejects_a_non_positive_floor():
     with pytest.raises(ValueError, match="defensive floor"):
         _stratified(np.full(256, 1.0 / 256), np.arange(4), 0.0, 16, 16)
+
+
+def _catalogue(n=64, seed=11):
+    """A small catalogue whose atoms span five decades in predicted flux."""
+
+    rng = np.random.default_rng(seed)
+    flux = 10.0 ** rng.uniform(0.0, 5.0, size=n)
+    values = np.column_stack([
+        rng.normal(0.0, 0.2, size=n),
+        rng.normal(0.0, 0.2, size=n),
+        rng.uniform(1.0, 8.0, size=n),
+        flux,
+    ])
+    dispersion = np.column_stack([
+        rng.uniform(0.05, 0.5, size=n),
+        rng.uniform(0.05, 0.5, size=n),
+        rng.uniform(0.5, 5.0, size=n),
+        0.3 * np.log(10.0) * flux,
+    ])
+    detection = rng.uniform(0.2, 1.0, size=n)
+    return values, dispersion, detection
+
+
+def test_common_metric_scale_is_positive_and_per_coordinate():
+    values, dispersion, _ = _catalogue()
+    scale = common_metric_scale(values, dispersion)
+    assert scale.shape == (4,)
+    assert (scale > 0.0).all()
+    # The three linear coordinates are the catalogue's median scatter.
+    assert scale[:3] == pytest.approx(np.median(dispersion[:, :3], axis=0))
+    # Flux is a fractional scatter in dex, so a catalogue built with a
+    # constant 0.3 dex spread reports 0.3 however bright its atoms are.
+    assert scale[3] == pytest.approx(0.3)
+
+
+def test_common_metric_scale_ignores_the_observation_entirely():
+    values, dispersion, _ = _catalogue()
+    first = common_metric_scale(values, dispersion)
+    second = common_metric_scale(values, dispersion)
+    assert first == pytest.approx(second)
+    assert common_metric_scale.__code__.co_argcount == 2
+
+
+def test_common_metric_scale_rejects_a_non_positive_dispersion():
+    values, dispersion, _ = _catalogue()
+    dispersion[3, 1] = 0.0
+    with pytest.raises(ValueError, match="dispersion must be positive"):
+        common_metric_scale(values, dispersion)
+
+
+def test_common_metric_score_prefers_the_closer_atom_not_the_vaguer_one():
+    """The defect the shared metric exists to remove.
+
+    Two atoms and one observation.  The first is closer in *every* coordinate
+    but has narrow predicted errors, so it sits four of its own sigma away.
+    The second is further away everywhere with errors wide enough that it
+    never leaves one sigma.  Production rates the honest atom 22 nats worse
+    for being closer, because the dispersion term cannot pay back what the
+    quadratic term charges it.  The shared metric must reverse that.
+    """
+
+    observed = np.array([0.0, 0.0, 4.0, 1.2e5])
+    values = np.array([
+        [0.20, 0.20, 6.0, 4.0e4],
+        [0.30, 0.30, 7.0, 2.0e4],
+    ])
+    dispersion = np.array([
+        [0.05, 0.05, 0.5, 2.0e4],
+        [0.50, 0.50, 5.0, 2.0e5],
+    ])
+    detection = np.array([1.0, 1.0])
+
+    terms = score_terms(values, dispersion, detection, observed, np.arange(2))
+    # The first atom really is nearer the observation in all four coordinates.
+    assert (np.abs(terms["residual"][0]) < np.abs(terms["residual"][1])).all()
+    # And production prefers the other one anyway.
+    assert terms["score"][1] > terms["score"][0] + 20.0
+
+    scale = np.array([0.2, 0.2, 2.0, 0.3])
+    shared = common_metric_score(values, dispersion, detection, observed, scale)
+    assert shared[0] > shared[1]
+
+
+def test_common_metric_score_measures_flux_in_dex():
+    """A factor-ten miss costs the same whatever the observation's brightness."""
+
+    scale = np.array([0.2, 0.2, 2.0, 0.5])
+    dispersion = np.ones((1, 4))
+    detection = np.ones(1)
+    penalties = []
+    for bright in (1.0e2, 1.0e5):
+        values = np.array([[0.0, 0.0, 0.0, bright / 10.0]])
+        observed = np.array([0.0, 0.0, 0.0, bright])
+        penalties.append(float(
+            common_metric_score(values, dispersion, detection, observed, scale)[0]
+        ))
+    assert penalties[0] == pytest.approx(penalties[1])
+    assert penalties[0] == pytest.approx(-0.5 * (1.0 / 0.5) ** 2)
+
+
+def test_common_metric_score_sends_undetectable_atoms_to_minus_infinity():
+    values, dispersion, detection = _catalogue(n=8)
+    detection[2] = 0.0
+    observed = np.array([0.0, 0.0, 4.0, 1.0e3])
+    scale = common_metric_scale(values, dispersion)
+    score = common_metric_score(values, dispersion, detection, observed, scale)
+    assert score[2] == -np.inf
+    assert np.isfinite(np.delete(score, 2)).all()
+
+
+def test_common_metric_score_rejects_a_non_positive_observed_flux():
+    values, dispersion, detection = _catalogue(n=8)
+    scale = common_metric_scale(values, dispersion)
+    with pytest.raises(ValueError, match="observed flux must be positive"):
+        common_metric_score(values, dispersion, detection,
+                            np.array([0.0, 0.0, 1.0, 0.0]), scale)
+
+
+def test_mixture_from_score_matches_the_production_composition():
+    """Same mixture as `WholeCatalogueProxy.mixture`, only the score differs."""
+
+    values, dispersion, detection = _catalogue(n=32)
+    observed = np.array([0.0, 0.0, 4.0, 1.0e3])
+    proxy = build_proxy(values, dispersion, detection)
+    reference = proxy.mixture(observed[None, :], delta=PRODUCTION_DELTA,
+                              temperature=1.0)[0].numpy()
+    terms = score_terms(values, dispersion, detection, observed, np.arange(32))
+    rebuilt = mixture_from_score(terms["score"], delta=PRODUCTION_DELTA,
+                                 temperature=1.0, n_atoms=32).numpy()
+    assert rebuilt == pytest.approx(reference, rel=1e-10, abs=1e-15)
+
+
+def test_mixture_from_score_keeps_the_defensive_floor_on_every_atom():
+    values, dispersion, detection = _catalogue(n=32)
+    score = np.full(32, -np.inf)
+    score[7] = 0.0
+    mixture = mixture_from_score(score, delta=PRODUCTION_DELTA,
+                                 temperature=1.0, n_atoms=32).numpy()
+    assert mixture.sum() == pytest.approx(1.0)
+    assert (mixture >= PRODUCTION_DELTA / 32).all()
+    assert mixture[7] == pytest.approx(1.0 - PRODUCTION_DELTA
+                                       + PRODUCTION_DELTA / 32)
+
+
+def test_mixture_from_score_rejects_a_non_positive_temperature():
+    with pytest.raises(ValueError, match="temperature must be positive"):
+        mixture_from_score(np.zeros(4), delta=PRODUCTION_DELTA,
+                           temperature=0.0, n_atoms=4)
+
+
+def test_common_metric_scale_survives_a_vanishing_predicted_flux():
+    """Atoms with a denormal flux must not overflow the fractional scatter."""
+
+    values, dispersion, _ = _catalogue(n=64)
+    reference = common_metric_scale(values, dispersion)
+    values[5, 3] = 1e-300
+    dispersion[5, 3] = 1.0
+    with np.errstate(over="raise", divide="raise"):
+        scale = common_metric_scale(values, dispersion)
+    assert np.isfinite(scale).all()
+    # One atom out of 64 cannot move a median.
+    assert scale == pytest.approx(reference, rel=1e-6)
