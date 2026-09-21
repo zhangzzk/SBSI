@@ -31,6 +31,12 @@ PRODUCTION_DELTA = 0.1
 PRODUCTION_TEMPERATURE = 1.0
 PRODUCTION_SEED = 8701
 PRODUCTION_DRAWS = 16384
+# pipeline_config.proposal.candidates in the run's result.json.  These atoms
+# are summed exactly and their weight is zeroed before the race, so they
+# contribute no variance and consume no draw.  Racing them, as an earlier
+# version of this script did, overstates how much of the budget the ranked
+# component wastes on saturation.
+PRODUCTION_CANDIDATES = 1024
 CENTRE_NODE = 0
 
 TARGET_ORDER = [
@@ -420,13 +426,21 @@ def main() -> None:
         delta=PRODUCTION_DELTA,
         temperature=PRODUCTION_TEMPERATURE,
     )[0]
+    probability = mixture.numpy()
+    # Production sums the top `candidates` atoms exactly and zeroes their
+    # weight before racing, so they neither consume a draw nor add variance.
+    # Reproducing that is the difference between measuring the sampler and
+    # measuring a sampler nobody runs.
+    exact_stratum = np.argsort(probability)[::-1][:PRODUCTION_CANDIDATES]
+    raced = mixture.clone()
+    raced[torch.as_tensor(exact_stratum.copy(), dtype=torch.long)] = 0.0
     drawn, threshold = priority_race(
-        mixture,
+        raced,
         seed=PRODUCTION_SEED,
         object_id=args.row,
         n_select=PRODUCTION_DRAWS,
     )
-    probability = mixture.numpy()
+    raced_probability = raced.numpy()
 
     exact_files = sorted(args.exact_dir.glob(f"worker_*/row_{args.row}_exact.json"))
     if len(exact_files) != 1:
@@ -453,9 +467,16 @@ def main() -> None:
     measured_background = centred_measurements(coords.values[background], observed)
     heavy_drawn = drawn_set[heavy]
 
+    exact_set = np.zeros(n_atoms, dtype=bool)
+    exact_set[exact_stratum] = True
+    heavy_exact = exact_set[heavy]
+    # A mass atom inside the exact stratum is summed with certainty; one that
+    # is neither summed nor drawn is the only kind the estimator truly misses.
+    heavy_reached = heavy_drawn | heavy_exact
+
     floor = PRODUCTION_DELTA / n_atoms
     uniform = 1.0 / n_atoms
-    ranked, flat = draw_classes(probability, drawn, floor)
+    ranked, flat = draw_classes(raced_probability, drawn, floor)
 
     # Where the proposal's own preference sits, independent of the draw.
     catalogue_ranked = np.flatnonzero(probability > 2.0 * floor)
@@ -550,7 +571,7 @@ def main() -> None:
             c="tab:blue", marker="x", linewidths=1.0, alpha=0.65,
             rasterized=True, zorder=4,
         )
-        for mask, is_drawn in ((~heavy_drawn, False), (heavy_drawn, True)):
+        for mask, is_drawn in ((~heavy_reached, False), (heavy_reached, True)):
             if not mask.any():
                 continue
             # Unsampled mass atoms keep the common dot size; a hairline edge
@@ -584,9 +605,11 @@ def main() -> None:
                label=f"drawn from ranked atoms \u2014 the 90% "
                      f"({int(ranked.sum()):,})"),
         Line2D([], [], ls="", marker=".", color="black", ms=7,
-               label="carries posterior mass, NOT drawn"),
+               label="carries posterior mass, MISSED"),
         Line2D([], [], ls="", marker="x", color="black", ms=11, mew=2,
-               label="carries posterior mass, drawn"),
+               label=f"carries posterior mass, reached "
+                     f"({int(heavy_exact.sum())} summed exactly, "
+                     f"{int(heavy_drawn.sum())} drawn)"),
         Line2D([], [], ls="--", color="tab:red", lw=0.9,
                label="the observation (measured above, true below)"),
     ]
@@ -596,13 +619,14 @@ def main() -> None:
     bar.set_label("exact posterior mass of the atom")
 
     captured = float(mass.sum())
-    reached = float(mass[heavy_drawn].sum())
+    reached = float(mass[heavy_reached].sum())
     fig.suptitle(
         f"Row {args.row}: measured mag "
         f"{mock.measurements.iloc[args.row]['measured_mag_auto']:.2f}"
-        f"   |   {int(heavy_drawn.sum())} of {n_heavy} mass-carrying atoms drawn"
-        f"   |   {reached / captured:.1%} of the captured mass reached by the draw",
-        fontsize=13,
+        f"   |   {int(heavy_reached.sum())} of {n_heavy} mass-carrying atoms reached"
+        f" ({int(heavy_exact.sum())} summed exactly + {int(heavy_drawn.sum())} drawn)"
+        f"   |   {reached / captured:.1%} of the captured mass reached",
+        fontsize=12,
     )
     figure_path = args.output / f"proposal_atom_map_row{args.row}.png"
     fig.savefig(figure_path, dpi=170, bbox_inches="tight")
@@ -632,7 +656,21 @@ def main() -> None:
             probability_mass_on_ranked=float(probability[catalogue_ranked].sum()),
             n_above_flat_share_in_catalogue=int((probability > uniform).sum()),
         ),
-        slots=slot_accounting(probability, floor, threshold, PRODUCTION_DELTA),
+        exact_stratum=dict(
+            n_atoms=int(PRODUCTION_CANDIDATES),
+            probability_mass=float(probability[exact_stratum].sum()),
+            ranked_mass_removed=float(
+                probability[exact_stratum].sum()
+                - PRODUCTION_CANDIDATES * floor
+            ),
+            min_probability=float(probability[exact_stratum].min()),
+            n_mass_atoms_inside=int(heavy_exact.sum()),
+            mass_inside=float(mass[heavy_exact].sum()),
+        ),
+        slots=slot_accounting(
+            raced_probability, floor, threshold,
+            PRODUCTION_DELTA * (n_atoms - PRODUCTION_CANDIDATES) / n_atoms,
+        ),
         score_decomposition=decomposition,
         true_observation=true_observation,
         exact=dict(
@@ -640,16 +678,21 @@ def main() -> None:
             n_atoms=int(n_heavy),
             captured_mass=captured,
             n_drawn=int(heavy_drawn.sum()),
-            drawn_mass=reached,
+            n_summed_exactly=int(heavy_exact.sum()),
+            n_reached=int(heavy_reached.sum()),
+            reached_mass=reached,
             atoms=[
                 dict(
                     atom=int(a),
                     mass=float(w),
                     proposal_probability=float(probability[a]),
-                    expected_draws=float(probability[a] * PRODUCTION_DRAWS),
+                    inclusion_probability=float(
+                        min(1.0, raced_probability[a] / threshold)
+                    ),
                     drawn=bool(d),
+                    summed_exactly=bool(e),
                 )
-                for a, w, d in zip(heavy, mass, heavy_drawn)
+                for a, w, d, e in zip(heavy, mass, heavy_drawn, heavy_exact)
             ],
         ),
         background=dict(n_shown=int(background.size), seed=args.background_seed),
@@ -668,7 +711,7 @@ def main() -> None:
     write_json(args.output / "report.json", report)
     print(f"FIGURE {figure_path}", flush=True)
     print(
-        f"DRAWN {int(heavy_drawn.sum())}/{n_heavy} captured={captured:.4f} "
+        f"REACHED {int(heavy_reached.sum())}/{n_heavy} captured={captured:.4f} "
         f"reached={reached:.4f}",
         flush=True,
     )

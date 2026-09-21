@@ -1,5 +1,98 @@
 # Work log
 
+## 2026-09-21 — Correction: the exact stratum does all the work, and delta cannot change that
+
+Owner asked whether the 0.9/0.1 split between the ranked and flat components is
+a good choice, and suggested 50/50. Answering it required fixing a defect in
+this diagnostic, which also retracts a claim made in the entry below.
+
+**The diagnostic was reproducing a sampler nobody runs.** The run's
+`pipeline_config.proposal.candidates` is 1024: production takes the top 1024
+atoms by proposal probability, sums them exactly, and zeroes their weight
+before the priority race, so they consume no draw and contribute no variance
+(`DefensiveLocalProposal.draw_priority` passes them as `excluded`). This script
+raced them. `PRODUCTION_CANDIDATES` now reproduces the exclusion.
+
+**Retraction.** The entry below reports that the ranked 90% saturates on tens
+of atoms and wastes ~113,000 slots' worth of probability. That is an artifact
+of racing the exact stratum. With the stratum excluded, **no atom saturates on
+any of the three rows**, and the ranked tail converts its mass exactly
+linearly: 3,092 slots predicted against 3,093 if it were spread thin. The
+saturation argument, and the reading of tempering as "making the 0.9
+spendable", do not survive. The measured split is not waste; it is the mass
+ratio of what remains after the head is removed.
+
+Measured, centre node, exact stratum excluded:
+
+| row | exact stratum mass | ranked tail mass | tau | flat slots | ranked-tail slots | saturated |
+|---|---:|---:|---:|---:|---:|---:|
+| 142230 | 0.8767 | 0.0233 | 7.543e-6 | 13,258 | 3,092 | 0 |
+| 409188 | 0.8960 | 0.0040 | 6.354e-6 | 15,738 | 627 | 0 |
+| 3563 | 0.8919 | 0.0081 | 6.636e-6 | 15,068 | 1,220 | 0 |
+
+**The finding that replaces it, and it is worse.** Counting the exact stratum
+as a reach, which it is:
+
+| row | mass atoms reached | summed exactly | found by the 16,384 draws | mass reached |
+|---|---:|---:|---:|---:|
+| 142230 | 11 of 32 | 11 | 0 | 16.0% |
+| 409188 | 26 of 32 | 26 | 0 | 62.9% |
+| 3563 | 25 of 32 | 25 | 0 | 92.0% |
+
+The random draw found no mass-carrying atom on any row. Everything reached came
+from the deterministic top-1024. On row 142230 that leaves 78.6% of the
+captured posterior on 21 atoms that are neither summed nor drawn, each with
+inclusion probability 5.5e-4.
+
+**Why delta is the wrong knob.** A floor atom is included with
+`(delta/N)/tau`, and when the flat component dominates the race
+`tau ~ delta/M`, so delta cancels. The ceiling at any delta is the budget over
+the catalogue size, `M/N = 16384/24e6 = 0.068%`. Holding the stratum fixed and
+using the measured tail masses:
+
+| delta | floor-atom inclusion, row 142230 | ranked-tail slots |
+|---|---:|---:|
+| 0.1 (production) | 0.055% | 3,096 |
+| 0.25 | 0.063% | 1,181 |
+| 0.5 | 0.067% | 413 |
+| 0.9 | 0.068% | 47 |
+| 1.0 | 0.068% | 0 |
+
+50/50 would raise a heavy floor atom's chance from 0.055% to 0.067% while
+cutting the ranked tail's slots by 87%. Spending the entire budget uniformly
+caps at 0.068%. No delta reaches a specific heavy atom in a 24m catalogue with
+16k draws; delta only divides a budget that is too small under either split.
+This is an argument that delta cannot help on these rows, not a measurement of
+the best delta for the population, and it is analytic rather than a simulated
+sweep.
+
+**Where the leverage is.** The exact stratum is doing 100% of the work at 1024
+atoms. Enlarging it helps only if the heavy atoms rank anywhere near it: on row
+142230 the two heaviest sit at the defensive floor, below roughly 1.2m other
+atoms, so no plausible stratum size reaches them. Only fixing the ranking does,
+which points back at the wide-predicted-scatter defect in the entry below.
+
+Validation. `tests/test_proposal_atom_map.py`, 41 passed in 6.6s on the login
+node and 25.6s inside the job. Job 16626863 COMPLETED in 00:02:23 on `cluster`,
+no GPU. The figure headline and legend now separate "summed exactly" from
+"drawn", and the report carries an `exact_stratum` block and per-atom
+`inclusion_probability` and `summed_exactly` flags. Figures and reports copied
+to `SBSI/plots/`, which is not version-controlled. Diagnostic only: no flow
+evaluation, no change to target, model, cuts, prior or production settings.
+
+Limitations. Three rows from the worst-curvature list, centre node only, one
+seed. The delta table holds the exact stratum membership fixed, which is exact
+here because the top-K by `q` is the top-K by softmax score whatever delta is,
+but it assumes the budget and stratum size stay at 16384 and 1024. Nothing
+here measures estimator variance; the ordering of proposals still needs the
+inclusion-probability rework recorded below.
+
+Next steps. Unchanged in substance, but reprioritised: the proposal's ranking,
+not its defensive share, is what fails on the bright blended rows, so the
+common-metric score variant is now the first thing to test. The nine-variant
+comparison must be redone on inclusion probabilities before any of its numbers
+are used, and it must also exclude the exact stratum, which it does not.
+
 ## 2026-09-21 — The ranked 90% cannot spend its mass: priority sampling caps every atom at one slot
 
 Owner asked why, if the mixture puts 90% of its probability on the ranked
