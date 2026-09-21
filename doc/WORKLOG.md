@@ -1,3 +1,95 @@
+## 2026-09-21 — the bright end is not short of atoms; the neighbour metric is additive in flux
+
+Owner asked how many prior atoms exist and proposed replacing the prior with
+20m original atoms plus 5m extra brighter than mag 20.  Three census jobs were
+run to test that.  The proposal is not supported, and the investigation located
+a different cause for the obstructing rows.
+
+### Files and behaviour changed
+
+No library or driver code changed.  This entry records a diagnosis only.
+Analysis scripts are job-local under `$CLAUDE_JOB_DIR/tmp`
+(`bright_atoms.py`, `gap_axis.py`, `metric_check.py`).
+
+### What was measured
+
+Prior size: **24,000,000** atoms; atom magnitude median 25.76, 1st percentile
+16.97, minimum 7.59.  Counts are exact censuses, so they carry no sampling
+error.
+
+The prior is over-supplied at the bright end relative to the first 10,000
+observations, not starved (job 16629075):
+
+| brighter than | atoms | share of prior | share of obs | atoms per obs |
+|---|---|---|---|---|
+| mag 18 | 440,325 | 1.83% | 0.07% | 26.2 |
+| mag 19 | 718,119 | 2.99% | 0.28% | 10.7 |
+| mag 20 | 1,058,628 | 4.41% | 0.70% | 6.3 |
+| mag 22 | 1,742,794 | 7.26% | 4.53% | 1.6 |
+| mag 24 | 3,925,941 | 16.36% | 26.64% | 0.61 |
+
+Matching the observed mag<20 fraction would need ~168,000 atoms against the
+1,058,628 present.  Adding 5m more would raise the over-supply to ~30x while
+removing 4m atoms from mag>24, where the observations concentrate.
+
+No coordinate is marginally starved for the six obstructing rows (job
+16629254).  The nearest atom on each coordinate independently is 0.000
+standardized units away, each row has 288k-500k atoms within a factor of two
+in flux, and each observation lies inside the 0.1-99.9 percentile range of
+those atoms on every coordinate.  A population difference does exist in the
+joint density — at mag<20 the atoms are round and small (|e| median 0.040,
+flux_radius median 3.94) while the observations are elliptical and large (|e|
+median 0.261, flux_radius median 8.63) — but no observation exceeds the atoms'
+99th percentile |e| (0.869), so this is a density mismatch, not absent support.
+
+### Cause located
+
+`ProposalCoordinateTable.standardized` (`sbsi/catalogue_sampling.py:231`)
+divides every coordinate by one global robust scale, and
+`CatalogueProposal.__init__` (`:682`) builds its KD-tree in that space;
+`:837` queries it for `prefilter_candidates` before any reranking.  The
+scales are g1 0.0237, g2 0.0238, flux_radius 1.056, **flux 81.27**.  The flux
+scale is set by the faint bulk (prior median flux 49.8), so bright
+observations sit 58-1344 standardized units out in flux against 1-22 units in
+the other coordinates.  Flux therefore dominates candidate selection by about
+two orders of magnitude.
+
+The selected neighbours show this directly.  For row 3563 the nearest atom
+matches flux to 0.08% (41706.14 against 41738.67) while missing g2 by 0.049,
+which is 2.04 scale units.  The prefilter spends its resolution on a flux
+match of no scientific value and lets the shear-carrying coordinate drift.
+The heteroscedastic rerank cannot repair this because it only reorders the
+pool the prefilter selected.
+
+Comparing flux fractionally (log10) instead of additively gives the same six
+rows 13-632 atoms within 1.0 unit at nearest distances 0.125-0.347, against
+0.14-0.51 for typical faint rows that already converge (job 16629309).
+
+This is the additive/multiplicative distinction already applied to the
+dispersion floor in the 2026-09-21 cache rebuild
+(`fractional_mask`, `measured_flux_from_mag_auto`).  It was applied to the
+floor but not to the coordinate scale the neighbour search uses.
+
+### Limitations
+
+The link from a flux-dominated candidate pool to the negative curvature
+reported for these rows is inferred, not demonstrated.  A stable but
+shape-mismatched candidate set is consistent with the observed behaviour
+(converged, definite, wrong sign) but no run has yet been made with a
+fractional flux metric to confirm it.  Changing `standardized` alters
+preparation-stage geometry and would invalidate the prepared identity, so a
+test must either go through a fresh `prepare`/`assemble` or be scoped to the
+run stage explicitly.
+
+### Next steps
+
+- Decide whether to compare flux in log space inside `standardized`, or to
+  carry a per-coordinate fractional flag on the table as the floor already
+  does.  Prefer reusing the existing `fractional` knob over adding a new one.
+- Re-run the six obstructing rows under the chosen metric and check whether
+  the combined information becomes positive-definite.
+- Do not change the prior's atom count on the basis of the bright-atom
+  hypothesis; the census does not support it.
 ## 2026-09-21 — 10,000 observations: the proposal collapse is fixed, the curvature obstruction is not, and it is not a sampling artifact
 
 Owner asked whether to run 10,000 observations. Run as job 16628938: rows
