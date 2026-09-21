@@ -1,3 +1,105 @@
+## 2026-09-21 — The faint cluster in Panel 2b is real: both scores omit a different half of the uncertainty
+
+Owner asked why a large cluster of ranked draws still sits in the faint, small
+corner of the truth panel after the shared-metric score. It is not a plotting
+artefact and not blending. The entry below overstated the shared metric's
+effect on row 142230, and this corrects it.
+
+**What the figure is showing.** Blue crosses are draws from the ranked
+stratum; grey crosses are the defensive uniform half, which is a random
+catalogue sample and belongs in the faint corner by construction. On row 142230
+under the shared metric, the ranked draws split almost evenly: 44.5% at true
+`r < 20` holding 0.175 of the tail mass, and 53.6% at true `r > 26` holding
+0.215. The faint half therefore carries *more* proposal weight than the good
+half. The same split holds over the top 200,000 atoms by `q` (43.7% against
+54.2%), so this is a property of the proposal, not of the draw. The previous
+entry's claim that the blue cloud now sits on the observation holds for rows
+409188 and 3563 (median drawn true `r` = 19.31 and 19.93 against observations
+at 18.33 and 18.34) but not for row 142230 (26.44 against 17.28).
+
+**Why faint atoms win.** They are not faint in the coordinates the score sees.
+Measured over a 300,000-atom random sample, with the zero point
+`flux = 10^(-0.4 (r - 30))` that the observations satisfy to 0.05 dex:
+
+| true `r` | n | predicted − implied flux | sigma_flux | sigma_g1 | sigma_Rflux | Pdet |
+|---|---:|---:|---:|---:|---:|---:|
+| 0–20 | 602 | −0.02 dex | 0.01 dex | 0.029 | 0.24 px | 0.999 |
+| 20–22 | 2,899 | −0.00 | 0.02 | 0.029 | 0.24 | 0.998 |
+| 24–26 | 76,018 | +0.12 | 0.16 | 0.297 | 1.06 | 0.991 |
+| 26–27 | 85,210 | +0.18 | 0.29 | 0.359 | 1.39 | 0.879 |
+| 27+ | 119,788 | +0.43 | 0.93 | 0.359 | 1.39 | 0.013 |
+
+A bright atom's predicted measurement is sharp: 0.01 dex in flux, 0.029 in
+ellipticity, 0.24 pix in size. A faint atom's is vague, and at `r > 26` its own
+quoted scatter (0.36 in shape, 1.39 pix in size, 0.29–0.93 dex in flux) equals
+or exceeds the shared tolerance `(0.342, 0.322, 1.239 pix, 0.337 dex)`. The
+shared-metric score discards the per-atom scatter entirely, so it reads each of
+those noisy central values as a real match. There are about 48,000 atoms
+brighter than `r = 20` against roughly 16 million fainter than `r = 26`, a
+340:1 numerical advantage, so even a small per-atom chance of a coincidental
+match dominates the total. Detection suppresses only the `r > 27` end
+(`Pdet = 0.013`); the winning band is `26 < r < 27`, where `Pdet = 0.879`.
+Neighbour light is not the mechanism: the ranked draws sit at the catalogue's
+median crowding (`nbr_flux_near` 0.75, i.e. neighbour-flux-to-noise about 4.8)
+while the mass-carrying atoms are far more crowded (1.17, 2.34, 2.60, i.e. 14,
+217 and 397).
+
+**Both scores omit half the uncertainty, and they omit different halves.**
+Production divides the residual by the atom's own predicted scatter alone. That
+scatter describes the *prediction*; it does not include the noise on the
+*observation*. So a bright atom that quotes 0.01 dex is judged at 8 sigma for a
+0.08 dex miss and is destroyed by its own error bars, while a vague atom fits
+anything — median score −14.05 against −15.95 on row 142230, a 1.9 nat margin
+that the 340:1 count turns into a rout. The shared metric fixed the
+normalisation but replaced per-atom scatter with a single tolerance, which is
+wrong in the opposite direction: it trusts a faint atom's noise-driven central
+value as much as a bright atom's sharp one.
+
+**Adding them in quadrature removes both pathologies.** With
+`sigma_eff^2 = sigma_shared^2 + sigma_atom^2` and the normalisation retained,
+measured on the same three rows (ranking only; the sampler was not rerun):
+
+| row | score | top-8192 median true `r` | frac `r > 26` | top-8192 median true `R_e` | mass atoms in top-1024 |
+|---|---|---:|---:|---:|---:|
+| 142230 (obs 17.28, 1.45") | production | 27.07 | 95.7% | 0.09" | 11/32, 16.0% |
+| | common-metric | 26.39 | 54.0% | 0.17" | 7/32, 58.7% |
+| | quadrature | **18.54** | **0.0%** | **1.57"** | 10/32, 61.1% |
+| 409188 (obs 18.33, 1.59") | production | 27.13 | 91.7% | 0.09" | 26/32, 62.9% |
+| | common-metric | 18.87 | 14.3% | 1.59" | 20/32, 80.1% |
+| | quadrature | **18.80** | **0.0%** | 1.63" | 15/32, 67.2% |
+| 3563 (obs 18.34, 1.17") | production | 27.01 | 91.8% | 0.09" | 25/32, 92.0% |
+| | common-metric | 19.20 | 28.2% | 1.02" | 17/32, 82.8% |
+| | quadrature | **19.06** | **0.0%** | 1.16" | 11/32, 65.6% |
+
+The faint cluster disappears completely on all three rows and the top-8192
+median size matches the observation to better than 0.12 arcsec. The exact
+stratum's share of captured mass becomes more even across rows (61%, 67%, 66%)
+but is lower than the shared metric's best rows, so the reached-mass comparison
+needs the sampler rerun before anything is claimed about it.
+
+Validation. Jobs 16627872 (truth by draw class, both scores), 16627902 (rank
+bands by true magnitude, tail mass by bin) and 16627932 (predicted flux against
+true magnitude, three candidate rankings), all COMPLETED on `cluster`, 8 CPUs,
+no GPU. Scripts under the job scratch directory; no repository code changed, so
+the test suite is unchanged at 61 passed. An earlier version of the first
+diagnostic tested for blending by comparing `nbr_flux_near` against 10% of the
+observed flux; `nbr_flux_near` is `log10(1 + near_flux / aperture_rms)`, not a
+flux, so that test was meaningless and its "0 of 8192 blended" result is
+withdrawn.
+
+Limitations. Three rows, centre node, one seed, ranking only — the quadrature
+score has not been run through the sampler, so no reached-mass or estimator
+variance number exists for it, and nothing here says it is better where it
+matters. The zero point 30.0 is inferred from the observations themselves
+rather than read from a header. The shared shape tolerance 0.342 remains as
+wide as the whole ellipticity distribution under every variant.
+
+Next steps. Wire the quadrature tolerance in as a third `--score` choice, with
+a test pinning that it reduces to production as the shared floor goes to zero
+and to the shared metric as the per-atom scatter goes to zero, then rerun the
+atom map and the reached-mass table. Only then compare the three on captured
+mass and Horvitz-Thompson weights. Making the shape tolerance depend on the
+observation's own brightness remains open and untried.
 ## 2026-09-21 — A shared-metric score fixes the ranking: 17% to 88% of the captured mass on the worst row
 
 The entry below measured why the proposal's ranking failed: dividing each
