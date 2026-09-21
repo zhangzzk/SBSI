@@ -6,6 +6,7 @@ This entry point accepts only the pinned V3.6 artifacts and uncut subset store.
 """
 import argparse
 import ast
+import dataclasses
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -266,6 +267,12 @@ def run(args):
     coords = ProposalCoordinateTable.load(proposal_source)
     if coords.values.shape[0] != response.n_atoms:
         raise ValueError("proposal table does not cover the prepared atoms")
+    # The metric is a property of the table, so declaring it here re-derives the
+    # neighbour normalization from the cached values without rewriting the cache.
+    if args.proposal_fractional:
+        coords = dataclasses.replace(
+            coords, fractional_targets=tuple(args.proposal_fractional)
+        )
     # Keep historical float64 tilted score arithmetic, not the synthetic timing probe's fp32.
     proposal = DefensiveLocalProposal(coords, cache.prior.weights,
         local_base_weights=cache.get(0., 0.).detection_probability, score_dtype=torch.float64)
@@ -307,6 +314,7 @@ def run(args):
         proposal_source=str(proposal_source.resolve()),
         proposal_cache_sha256=file_hash(proposal_source / "coordinates.npz"),
         proposal_metadata=dict(coords.metadata or {}),
+        proposal_fractional_targets=list(coords.fractional_targets),
         mock_input_sha256=frozen["input_sha256"], implementation_sha256=frozen["implementation_sha256"],
         observation_partition=dict(start=args.start, stop=stop, n_partition=stop-args.start, n_total=len(mock.measurements)),
         one_step_moments=dict(path="one_step_moments.npz", sha256=file_hash(args.output / "one_step_moments.npz")),
@@ -340,6 +348,11 @@ def main():
     parser.add_argument("--proposal", type=Path,
         help="proposal table to draw from instead of the prepared one, as written by "
              "scripts/rebuild_proposal_cache.py; the prepared table is still hash-verified")
+    parser.add_argument("--proposal-fractional", action="append", default=[],
+        metavar="TARGET",
+        help="compare this proposal coordinate multiplicatively in the neighbour "
+             "search, through asinh(x / scale), rather than additively; repeatable. "
+             "Leaving it unset reproduces the additive metric exactly")
     parser.add_argument("--shard-index", type=int, default=0)
     parser.add_argument("--limit-atoms", type=int)
     parser.add_argument("--pilot", action="store_true")

@@ -188,6 +188,7 @@ class ProposalCoordinateTable:
     dispersion_statistic: str = "robust_iqr"
     n_flow_samples: int = 0
     metadata: Optional[Mapping] = None
+    fractional_targets: tuple[str, ...] = ()
 
     def __post_init__(self):
         values = np.asarray(self.values, dtype=np.float64)
@@ -226,10 +227,60 @@ class ProposalCoordinateTable:
         object.__setattr__(self, "scale", scale)
         object.__setattr__(self, "dispersion", dispersion)
         object.__setattr__(self, "metadata", dict(self.metadata or {}))
+        # A coordinate spanning decades cannot share one additive scale with a
+        # bounded one.  The prior's flux scale is set by its faint bulk, so a
+        # bright object sits hundreds of units out in flux against a handful in
+        # shape, and a plain Euclidean neighbour search then ranks on flux
+        # alone.  Declaring the coordinate fractional compares it through
+        # ``asinh(x / scale)``: logarithmic once ``|x|`` exceeds the additive
+        # scale, and additive below it, where a ratio means nothing.  This is
+        # the distinction :func:`floored_dispersion` already draws for scatter.
+        fractional = tuple(self.fractional_targets or ())
+        mask = fractional_mask(names, fractional)
+        metric_center = center.copy()
+        metric_scale = scale.copy()
+        for column in np.flatnonzero(mask):
+            transformed = np.arcsinh(values[:, column] / scale[column])
+            low, middle, high = np.percentile(transformed, (25.0, 50.0, 75.0))
+            spread = (high - low) / 1.349
+            if not np.isfinite(spread) or spread <= 0.0:
+                raise ValueError(
+                    "fractional metric target has no usable spread: "
+                    f"{names[column]!r}"
+                )
+            metric_center[column] = middle
+            metric_scale[column] = spread
+        object.__setattr__(self, "fractional_targets", fractional)
+        object.__setattr__(self, "_metric_mask", mask)
+        object.__setattr__(self, "_metric_center", metric_center)
+        object.__setattr__(self, "_metric_scale", metric_scale)
+
+    def _metric_values(self, values: np.ndarray) -> np.ndarray:
+        """Transform the columns that declared a multiplicative comparison."""
+
+        if not self._metric_mask.any():
+            return values
+        transformed = np.array(values, dtype=np.float64, copy=True)
+        for column in np.flatnonzero(self._metric_mask):
+            transformed[:, column] = np.arcsinh(
+                transformed[:, column] / self.scale[column]
+            )
+        return transformed
+
+    def standardize(self, values: np.ndarray) -> np.ndarray:
+        """Map measured values into the space the neighbour search compares.
+
+        With no fractional target this is exactly ``(values - center) / scale``.
+        """
+
+        values = np.asarray(values, dtype=np.float64)
+        if values.ndim != 2 or values.shape[1] != len(self.target_names):
+            raise ValueError("values to standardize have the wrong shape")
+        return (self._metric_values(values) - self._metric_center) / self._metric_scale
 
     @property
     def standardized(self) -> np.ndarray:
-        return (self.values - self.center) / self.scale
+        return self.standardize(self.values)
 
     def with_dispersion_floor(
         self,
@@ -276,6 +327,7 @@ class ProposalCoordinateTable:
             dispersion_statistic=self.dispersion_statistic,
             n_flow_samples=self.n_flow_samples,
             metadata=metadata,
+            fractional_targets=self.fractional_targets,
         )
 
     @classmethod
@@ -396,12 +448,17 @@ class ProposalCoordinateTable:
             arrays["dispersion"] = self.dispersion
         np.savez_compressed(root / "coordinates.npz", **arrays)
         manifest = {
-            "version": 4 if self.dispersion is not None else 2,
+            "version": (
+                5
+                if self.fractional_targets
+                else (4 if self.dispersion is not None else 2)
+            ),
             "target_names": list(self.target_names),
             "statistic": self.statistic,
             "dispersion_statistic": self.dispersion_statistic,
             "n_flow_samples": self.n_flow_samples,
             "metadata": dict(self.metadata or {}),
+            "fractional_targets": list(self.fractional_targets),
         }
         (root / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
 
@@ -409,7 +466,7 @@ class ProposalCoordinateTable:
     def load(cls, path: str | Path) -> "ProposalCoordinateTable":
         root = Path(path)
         manifest = json.loads((root / "manifest.json").read_text())
-        if manifest.get("version") not in (2, 3, 4):
+        if manifest.get("version") not in (2, 3, 4, 5):
             raise ValueError(
                 f"unsupported proposal-coordinate version {manifest.get('version')!r}"
             )
@@ -421,7 +478,7 @@ class ProposalCoordinateTable:
             arrays["scale"],
             dispersion=(
                 arrays["dispersion"]
-                if manifest.get("version") in (3, 4)
+                if manifest.get("version") in (3, 4, 5)
                 else None
             ),
             statistic=manifest["statistic"],
@@ -430,6 +487,7 @@ class ProposalCoordinateTable:
             ),
             n_flow_samples=int(manifest["n_flow_samples"]),
             metadata=manifest.get("metadata"),
+            fractional_targets=tuple(manifest.get("fractional_targets", ())),
         )
 
 
@@ -823,7 +881,7 @@ class DefensiveLocalProposal:
         if n_candidates <= 0:
             raise ValueError("n_candidates must be positive")
         values = self._observed_values(observed)
-        standardized = (values - self.coordinates.center) / self.coordinates.scale
+        standardized = self.coordinates.standardize(values)
         k = min(int(n_candidates), len(self.active_indices))
         prefilter = (
             k

@@ -1,3 +1,111 @@
+## 2026-09-21 — the neighbour metric now compares flux multiplicatively; it is a real repair and it does not move the curvature
+
+Following the census entry below, the flux-dominated neighbour metric was
+fixed and tested on the same 10,000 observations.  The defect it names is
+real and is repaired.  It is **not** the cause of the negative curvature.
+
+### Files and behaviour changed
+
+- `sbsi/catalogue_sampling.py`: `ProposalCoordinateTable` gains a
+  `fractional_targets` declaration.  A declared coordinate is compared through
+  `asinh(x / scale)` — logarithmic once `|x|` exceeds the additive scale,
+  additive below it, and defined at zero and for negatives, where a ratio is
+  meaningless.  The transform reuses the stored `scale` as the changeover
+  point and the existing `fractional_mask` helper, so no new array is stored;
+  the metric centre and spread are re-derived from `values`.  A new
+  `standardize()` method is now the single map used by both the KD-tree
+  (`:682`) and the observation query (`:826`), which previously recomputed the
+  expression inline.  `save`/`load` carry the declaration at manifest
+  version 5; versions 2-4 load unchanged.
+  **With no declaration the metric is bit-identical to the previous
+  expression**, so every existing cache and completed run keeps its meaning.
+- `scripts/run_disk_inference.py`: new repeatable `--proposal-fractional
+  TARGET`, which re-declares the loaded table in memory via
+  `dataclasses.replace`, so no cache rebuild is needed.  The declaration is
+  written to `result.json` as `proposal_fractional_targets`.
+- `tests/test_proposal_fractional_metric.py`: new, 10 tests.
+
+This is run-stage code only.  `sbsi/disk_inference_store.py` constructs the
+table but never reads `standardized`, so the 24m-atom prepared cache stays
+valid; the identity gate's changed-set minus its run-stage whitelist remains
+exactly the audited driver/density pair, and the run recorded
+`audited_two_entry_response_lru_v1+run_stage:sbsi/catalogue_null.py,sbsi/catalogue_sampling.py`.
+
+### Validation
+
+`pytest tests -q` (excluding the six files broken at `a010491`): **295 passed**
+(285 before, 10 new), job 16629385.
+
+Real 24m-atom table, same job.  Declaring flux fractional leaves `values` and
+`dispersion` identical and moves the flux metric centre/scale from
+49.78/81.27 to 0.5795/0.7175.  Nearest-atom distance for the six obstructing
+rows falls from 0.626-4.668 to 0.132-0.832; all six gain 4-144 atoms within
+one unit where five previously had none.  Faint controls barely move
+(row 2743 0.139 -> 0.129; row 8499 0.301 -> 0.301), which is the intent: the
+change bites only where the additive scale was wrong.
+
+10,000 observations, job 16629404, identical to job 16628938 in proposal,
+ladder and seeds and differing only in the metric.  2222 s against 2229 s, so
+the change is free.
+
+The prefilter defect is real (job 16629712).  The production path takes the
+top 131,072 by metric distance and reranks those to 1,024 by the
+dispersion-weighted score.  The two reranked sets overlap only 21-48%, and the
+globally best-scoring atom was **outside** the additive net for five of the
+six rows and inside the fractional net for all six.
+
+The inference answer nevertheless does not move:
+
+| row | additive information diagonal | fractional |
+|---|---|---|
+| 3563 | -2408106, -239622 | -2467302, -253568 |
+| 4708 | -477331, -60001 | -476752, -59928 |
+| 6189 | 53376, -403519 | 53361, -403512 |
+| 2874 | 251862, 75517 | 251674, 75513 |
+| 1165 | -222966, -39695 | -223055, -39702 |
+| 6067 | 7998, -2628 | 7932, -2632 |
+
+Rows carrying a negative curvature diagonal: 6121 -> 6133 of 10,000.  Summed
+information eigenvalues -2502572/+449406 -> -2574626/+612252; not
+positive-definite either way, so neither arm yields an estimate.  Pareto k
+(median 0.564 -> 0.563, >1 at 11.70% -> 11.57%), ESS (median 364.4 -> 365.8)
+and distinct-atom counts are unchanged.
+
+The reason the repair does not propagate is visible in the same job: the best
+score inside the additive net is -8.24 against -8.20 in the fractional net for
+row 3563, and -6.77 against -6.74 for row 4708.  The additive net was missing
+the champion atom while holding atoms within about 4% of it in weight.  A
+better-shaped net therefore buys a better candidate list and an
+indistinguishable likelihood.
+
+### Limitations
+
+- The overlap and champion figures use the Gaussian residual term of the
+  production reranker without its log prior-mass term, which needs the frozen
+  cache.  That term varies far less across candidates than the residual term,
+  but the figures are an approximation of the production ranking, not a replay
+  of it.  A `RuntimeWarning: overflow encountered in square` is raised by
+  atoms whose tiny dispersion makes the residual enormous; those atoms score
+  far below the maximum and do not affect the reported statistics.
+- The metric is left **opt-in**.  It is more correct and costs nothing, but it
+  changes no measured quantity, so promoting it to the `v1.3-infer` default
+  would alter a release identity for no demonstrated benefit.  That is the
+  owner's call.
+- Six rows are not a sample of 10,000, and only flux was declared fractional.
+  `measured_flux_radius` spans a wide range too and was not tested.
+
+### Next steps
+
+- Stop looking for the curvature obstruction in the proposal.  Two independent
+  probes now point away from it: raising the dispersion floor gave the worst
+  rows 7-8x more distinct atoms and moved their information by 0.01-0.05%
+  (entry below), and a metric that recovers the globally best atom moves it by
+  about 0.1% (this entry).  What is proposed is not what is wrong.
+- Look instead at the target the score and information are built from: the
+  `h = 0.001` finite-difference stencil for the 2x2 information, and the
+  disk-likelihood response at these bright, large, elliptical objects.
+- If the metric is wanted as the default, that needs a release-identity
+  decision and a `doc/INFERENCE.md` §v1.3-infer amendment, not just the flag.
 ## 2026-09-21 — the bright end is not short of atoms; the neighbour metric is additive in flux
 
 Owner asked how many prior atoms exist and proposed replacing the prior with
