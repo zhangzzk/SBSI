@@ -1,5 +1,76 @@
 # Work log
 
+## 2026-09-21 — The ranked 90% cannot spend its mass: priority sampling caps every atom at one slot
+
+Owner asked why, if the mixture puts 90% of its probability on the ranked
+component, 76% of the draws land on floor atoms. The two numbers are both
+right and are not in conflict: 90% is a share of *probability*, and shares of
+probability equal shares of *draws* only with replacement. Production draws
+without replacement.
+
+Priority sampling includes atom `j` with probability `min(1, q_j / tau)`.
+The `min` is the whole story: probability an atom holds above `tau` buys
+nothing, because the atom is drawn at most once. A thin component converts its
+mass into slots linearly, at `mass / tau`; a concentrated one saturates and
+converts almost none of it.
+
+Added `slot_accounting` and made `priority_race` return the threshold it
+already computed. Measured, centre node, 16384 draws:
+
+| row | tau | flat 10%: mass -> slots | ranked 90%: mass -> slots | ranked slots if spread thin | saturated atoms | max `q` |
+|---|---:|---:|---:|---:|---:|---:|
+| 142230 | 7.723e-6 | 0.100 -> 12,948 | 0.900 -> 3,411 | 116,532 | 38 | 0.742 |
+| 409188 | 6.454e-6 | 0.100 -> 15,495 | 0.900 -> 881 | 139,453 | 131 | 0.508 |
+| 3563 | 6.765e-6 | 0.100 -> 14,781 | 0.900 -> 1,512 | 133,029 | 126 | 0.745 |
+
+The predicted split matches the realised draw: row 142230 predicts 12,948
+uniform and 3,411 ranked against 12,998 and 3,386 actually drawn, and the
+inclusion probabilities sum to 16,359 against a budget of 16,384.
+
+Findings.
+
+- The ranked component is not getting 90% of the draws; it is getting 3,411 of
+  16,384 on row 142230 and 881 on row 409188. Had its 0.9 been spread thinly
+  enough to stay under `tau` it would have claimed 116,532 slots, seven times
+  the entire budget. Instead it saturates on 38 atoms and the rest evaporates.
+- The flat 10% is not being generous; it is the only component thin enough to
+  convert mass into slots linearly, so it absorbs every slot the ranking cannot
+  use. The 76% figure measures the ranking's waste, not the defence's reach.
+- This is the mechanism behind the tempering result in the proposal-coordinate
+  entry. `T = 2` helps not by ranking atoms better but by flattening the
+  softmax so more of its 0.9 sits below `tau` and becomes spendable.
+
+Legend simplified at the owner's request to three entries -- not drawn, drawn
+uniformly (the flat 10%), drawn from ranked atoms (the 90%) -- and
+`draw_classes` reduced to two classes accordingly, cut at `q > 2 * floor`,
+the point where the ranking supplies more of an atom's probability than the
+flat spread does. The previous three-class split is superseded; its
+`preferred`/`weak` boundary at the flat share is retained in the report as
+`n_above_flat_share_in_catalogue` only.
+
+Validation. `tests/test_proposal_atom_map.py`, 41 passed in 6.6s on the login
+node and 7.5s inside the job. The slot-accounting test caught a real bug in the
+first implementation: it credited a saturated atom a flat share *in addition*
+to its capped single slot, so the two parts did not sum to the realised draws.
+The decomposition now credits a saturated atom's slot entirely to the ranking,
+and a test asserts the parts sum exactly. Job 16626722 COMPLETED in 00:01:47 on
+`cluster`, no GPU; supersedes 16626668, 16626281 and 16626236. Figures and
+reports copied to the owner's checkout at `SBSI/plots/`, which is not
+version-controlled. Diagnostic only: no flow evaluation, no change to target,
+model, cuts, prior or production settings.
+
+Limitations. `tau` and the slot split are exact for this seed and this row;
+they are not averaged over seeds and carry no uncertainty. Three rows from the
+worst-curvature list, centre node only. The accounting describes how the budget
+is spent, not whether spending it differently would lower the variance of the
+estimator -- that still needs the inclusion-probability rework noted below.
+
+Next steps unchanged: redo the nine-variant comparison on inclusion
+probabilities `min(1, q/tau)` rather than the with-replacement second moment
+`S`, which now has a second reason to matter -- `S` cannot see saturation
+at all, and saturation is where this proposal loses its budget. Then test the
+common-metric score proposed in the entry below.
+
 ## 2026-09-21 — Why the proposal prefers vague atoms: wide predicted scatter buys compatibility
 
 Owner looked at the atom map and asked two questions: why the drawn atoms are

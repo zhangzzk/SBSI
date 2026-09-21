@@ -126,35 +126,30 @@ def observation_truth(manifest: dict, truth_row) -> dict:
     )
 
 
-def draw_classes(probability: np.ndarray, subset: np.ndarray, floor: float,
-                 uniform: float):
-    """Split atoms by how much the tilt actually moved them off uniform.
+def draw_classes(probability: np.ndarray, subset: np.ndarray, floor: float):
+    """Split the draws by which half of the mixture actually paid for them.
 
-    An earlier version of this split used ``q > floor`` alone and called the
-    result "ranked by the proxy".  That is far too generous a test: the softmax
-    returns a strictly positive number for every atom scoring within about 745
-    nats of the best one, so ``q > floor`` is satisfied by essentially the
-    whole catalogue and the class is dominated by atoms the proposal does not
-    prefer at all.  The meaningful comparison is against the *uniform* share
-    ``1 / n_atoms``:
+    The proposal is ``q = delta * uniform + (1 - delta) * softmax(score)`` with
+    ``delta = 0.1``: a flat 10% spread over the whole catalogue, and 90%
+    directed by the proxy ranking.  Every atom's probability is a sum of those
+    two contributions, ``floor = delta / n_atoms`` from the flat part and
+    ``q - floor`` from the ranking, so each draw can be attributed to whichever
+    contribution is larger.
 
-    - ``preferred``  ``q > 1 / n_atoms``: the tilt gives the atom more than a
-      flat draw would, so the proposal is genuinely pointing at it.
-    - ``weak``  ``floor < q <= 1 / n_atoms``: the softmax touched the atom but
-      left it at or below the flat share; it is still, in effect, a lottery
-      ticket.
-    - ``at_floor``  ``q <= delta / n_atoms``: the softmax underflowed and only
-      the defensive component keeps the atom reachable.
+    ``ranked`` is ``q > 2 * floor``, the point where the ranking supplies more
+    of the atom's probability than the flat spread does.
+
+    An earlier version cut at ``q > floor`` and called the result "ranked".
+    That is the point where the softmax merely fails to underflow in float64,
+    about 745 nats below the best atom, which nearly every atom clears; it says
+    nothing about the ranking having chosen the atom.
     """
 
     if not np.isfinite(floor) or floor <= 0:
         raise ValueError("defensive floor must be positive and finite")
-    if not np.isfinite(uniform) or uniform <= floor:
-        raise ValueError("uniform share must exceed the defensive floor")
     q = probability[subset]
-    at_floor = q <= floor * (1.0 + 1.0e-9)
-    preferred = q > uniform
-    return preferred, ~at_floor & ~preferred, at_floor
+    ranked = q > 2.0 * floor
+    return ranked, ~ranked
 
 
 def score_terms(values: np.ndarray, dispersion: np.ndarray,
@@ -282,7 +277,45 @@ def priority_race(mixture: torch.Tensor, *, seed: int, object_id: int, n_select:
     threshold = top.values[n_select]
     if not torch.isfinite(threshold) or threshold <= 0.0:
         raise RuntimeError(f"priority threshold not positive finite: {threshold}")
-    return top.indices[:n_select].cpu().numpy().astype(np.int64)
+    return (top.indices[:n_select].cpu().numpy().astype(np.int64),
+            float(threshold))
+
+
+def slot_accounting(probability: np.ndarray, floor: float, threshold: float,
+                    delta: float) -> dict:
+    """How each half of the mixture converts its probability into draws.
+
+    Priority sampling includes atom ``j`` with probability ``min(1, q_j/tau)``.
+    The ``min`` is the point: probability an atom holds above ``tau`` cannot buy
+    a second slot, so a concentrated component converts far less of its mass
+    into draws than a thin one.  Comparing the realised inclusion sum against
+    the uncapped ``mass/tau`` says how much each component wastes.
+    """
+
+    if not np.isfinite(threshold) or threshold <= 0.0:
+        raise ValueError("priority threshold must be positive and finite")
+    inclusion = np.minimum(1.0, probability / threshold)
+    saturated = probability >= threshold
+    ranked_mass = float(probability.sum() - delta)
+    # Below the cap an atom's slots split linearly between the two
+    # contributions.  A saturated atom's single slot is credited entirely to
+    # the ranking, because the flat share alone never reaches tau; crediting it
+    # a flat share as well would count the same slot twice.
+    flat_draws = float((floor / threshold) * np.count_nonzero(~saturated))
+    ranked_draws = float(
+        np.count_nonzero(saturated)
+        + ((probability[~saturated] - floor) / threshold).sum()
+    )
+    return {
+        "threshold": float(threshold),
+        "expected_draws": float(inclusion.sum()),
+        "n_saturated": int(saturated.sum()),
+        "flat_mass": float(delta),
+        "flat_expected_draws": flat_draws,
+        "ranked_mass": ranked_mass,
+        "ranked_draws_if_unconcentrated": float(ranked_mass / threshold),
+        "ranked_expected_draws": ranked_draws,
+    }
 
 
 def build_proxy(values: np.ndarray, dispersion: np.ndarray, detection: np.ndarray):
@@ -387,7 +420,7 @@ def main() -> None:
         delta=PRODUCTION_DELTA,
         temperature=PRODUCTION_TEMPERATURE,
     )[0]
-    drawn = priority_race(
+    drawn, threshold = priority_race(
         mixture,
         seed=PRODUCTION_SEED,
         object_id=args.row,
@@ -422,22 +455,21 @@ def main() -> None:
 
     floor = PRODUCTION_DELTA / n_atoms
     uniform = 1.0 / n_atoms
-    preferred, weak, defensive = draw_classes(probability, drawn, floor, uniform)
+    ranked, flat = draw_classes(probability, drawn, floor)
 
-    # Where the proposal's own preference actually sits, independent of the
-    # draw: the atoms it lifts above a flat share, and the best-scoring atoms.
-    catalogue_preferred = np.flatnonzero(probability > uniform)
-    order = np.argsort(probability[catalogue_preferred])[::-1]
-    catalogue_preferred = catalogue_preferred[order]
-    top_scoring = catalogue_preferred[: min(64, catalogue_preferred.size)]
-    floor_sample = rng.choice(drawn[defensive], size=min(4096, int(defensive.sum())),
-                              replace=False) if defensive.any() else np.empty(0, np.int64)
+    # Where the proposal's own preference sits, independent of the draw.
+    catalogue_ranked = np.flatnonzero(probability > 2.0 * floor)
+    order = np.argsort(probability[catalogue_ranked])[::-1]
+    catalogue_ranked = catalogue_ranked[order]
+    top_scoring = catalogue_ranked[: min(64, catalogue_ranked.size)]
+    flat_sample = rng.choice(drawn[flat], size=min(4096, int(flat.sum())),
+                             replace=False) if flat.any() else np.empty(0, np.int64)
     groups = [
         ("top 64 by proposal probability", top_scoring),
-        ("all atoms above the uniform share", catalogue_preferred),
+        ("all atoms the ranking dominates", catalogue_ranked),
         ("mass-carrying atoms (exact, centre node)", heavy),
-        ("drawn, above the uniform share", drawn[preferred]),
-        ("drawn, at the defensive floor (sample)", floor_sample),
+        ("drawn from ranked atoms", drawn[ranked]),
+        ("drawn uniformly (sample)", flat_sample),
     ]
     decomposition = [
         summarise_terms(
@@ -509,20 +541,13 @@ def main() -> None:
         # Both are kept translucent so the mass-carrying atoms stay readable
         # through what is, on these rows, a very crowded draw.
         axis.scatter(
-            sampled[defensive, 0], sampled[defensive, 1], s=7.0,
+            sampled[flat, 0], sampled[flat, 1], s=8.0,
             c="0.62", marker="x", linewidths=0.4, alpha=0.30,
             rasterized=True, zorder=2,
         )
         axis.scatter(
-            sampled[weak, 0], sampled[weak, 1], s=9.0,
-            c="tab:cyan", marker="x", linewidths=0.5, alpha=0.30,
-            rasterized=True, zorder=3,
-        )
-        # The atoms the tilt genuinely prefers.  On these rows there are very
-        # few of them, so they are drawn opaque and large enough to find.
-        axis.scatter(
-            sampled[preferred, 0], sampled[preferred, 1], s=44.0,
-            c="tab:blue", marker="x", linewidths=1.3, alpha=0.95,
+            sampled[ranked, 0], sampled[ranked, 1], s=30.0,
+            c="tab:blue", marker="x", linewidths=1.0, alpha=0.65,
             rasterized=True, zorder=4,
         )
         for mask, is_drawn in ((~heavy_drawn, False), (heavy_drawn, True)):
@@ -553,14 +578,11 @@ def main() -> None:
         Line2D([], [], ls="", marker=".", color="0.86", ms=7,
                label=f"not drawn ({background.size:,} shown, 1 in {subsample:,.0f})"),
         Line2D([], [], ls="", marker="x", color="0.62", ms=6,
-               label=f"drawn, softmax underflowed to the floor "
-                     f"({int(defensive.sum()):,})"),
-        Line2D([], [], ls="", marker="x", color="tab:cyan", ms=6,
-               label=f"drawn, scored but below a flat share "
-                     f"({int(weak.sum()):,})"),
-        Line2D([], [], ls="", marker="x", color="tab:blue", ms=9, mew=1.6,
-               label=f"drawn, tilt prefers it over uniform "
-                     f"({int(preferred.sum()):,})"),
+               label=f"drawn uniformly \u2014 the flat 10% "
+                     f"({int(flat.sum()):,})"),
+        Line2D([], [], ls="", marker="x", color="tab:blue", ms=8, mew=1.4,
+               label=f"drawn from ranked atoms \u2014 the 90% "
+                     f"({int(ranked.sum()):,})"),
         Line2D([], [], ls="", marker=".", color="black", ms=7,
                label="carries posterior mass, NOT drawn"),
         Line2D([], [], ls="", marker="x", color="black", ms=11, mew=2,
@@ -602,13 +624,15 @@ def main() -> None:
             top_atom=int(np.argmax(probability)),
             defensive_floor=float(floor),
             uniform_share=float(uniform),
-            n_drawn_preferred=int(preferred.sum()),
-            n_drawn_weak=int(weak.sum()),
-            n_drawn_at_floor=int(defensive.sum()),
-            n_above_floor_in_catalogue=int((probability > floor * (1.0 + 1.0e-9)).sum()),
-            n_above_uniform_in_catalogue=int(catalogue_preferred.size),
-            mass_above_uniform=float(probability[catalogue_preferred].sum()),
+            ranked_share_of_probability=1.0 - PRODUCTION_DELTA,
+            flat_share_of_probability=PRODUCTION_DELTA,
+            n_drawn_from_ranked=int(ranked.sum()),
+            n_drawn_uniformly=int(flat.sum()),
+            n_ranked_in_catalogue=int(catalogue_ranked.size),
+            probability_mass_on_ranked=float(probability[catalogue_ranked].sum()),
+            n_above_flat_share_in_catalogue=int((probability > uniform).sum()),
         ),
+        slots=slot_accounting(probability, floor, threshold, PRODUCTION_DELTA),
         score_decomposition=decomposition,
         true_observation=true_observation,
         exact=dict(

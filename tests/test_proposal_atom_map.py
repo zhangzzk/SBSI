@@ -15,6 +15,7 @@ from scripts.plot_proposal_atom_map import (
     build_proxy,
     centred_measurements,
     draw_classes,
+    slot_accounting,
     score_terms,
     summarise_terms,
     exact_centre_node,
@@ -203,47 +204,37 @@ def test_observation_truth_rejects_a_catalogue_not_indexed_by_input_index(tmp_pa
 
 
 FLOOR = 4.1666666666666667e-09
-UNIFORM = 10.0 * FLOOR
 
 
-def test_draw_classes_separate_preference_from_a_bare_softmax_touch():
-    """An atom below the flat share is a lottery ticket, not a proposal pick."""
-    probability = np.array([0.7, FLOOR, 5.0e-8, FLOOR, 2.0e-8, UNIFORM])
-    drawn = np.array([0, 1, 2, 4, 5])
-    preferred, weak, at_floor = draw_classes(probability, drawn, FLOOR, UNIFORM)
-    # 5.0e-8 clears the flat share; 2.0e-8 does not, though both clear the floor.
-    np.testing.assert_array_equal(preferred, [True, False, True, False, False])
-    np.testing.assert_array_equal(weak, [False, False, False, True, True])
-    np.testing.assert_array_equal(at_floor, [False, True, False, False, False])
-    # The classes partition the draw.
-    assert (preferred.astype(int) + weak + at_floor == 1).all()
+def test_draw_classes_attribute_a_draw_to_the_larger_mixture_component():
+    """q = 0.1*uniform + 0.9*softmax; the flat part contributes exactly floor."""
+    # 3*FLOOR: ranking supplies 2*FLOOR against the flat FLOOR, so ranked.
+    # 1.5*FLOOR: ranking supplies 0.5*FLOOR, less than the flat FLOOR.
+    probability = np.array([0.7, FLOOR, 3.0 * FLOOR, 1.5 * FLOOR])
+    ranked, flat = draw_classes(probability, np.array([0, 1, 2, 3]), FLOOR)
+    np.testing.assert_array_equal(ranked, [True, False, True, False])
+    np.testing.assert_array_equal(flat, [False, True, False, True])
+    # The two classes partition the draw.
+    assert (ranked ^ flat).all()
 
 
-def test_draw_classes_do_not_call_a_near_floor_atom_preferred():
-    """The old q>floor rule called this atom ranked; it is not preferred."""
+def test_draw_classes_do_not_call_a_near_floor_atom_ranked():
+    """The old q>floor rule called this ranked; the ranking barely touched it."""
     probability = np.array([FLOOR * 1.0001])
-    preferred, weak, at_floor = draw_classes(
-        probability, np.array([0]), FLOOR, UNIFORM
-    )
-    assert not preferred.any()
-    assert weak.all()
-    assert not at_floor.any()
+    ranked, flat = draw_classes(probability, np.array([0]), FLOOR)
+    assert not ranked.any()
+    assert flat.all()
 
 
-def test_draw_classes_tolerate_floating_point_at_the_floor():
+def test_draw_classes_put_a_floor_atom_in_the_uniform_class():
     probability = np.array([FLOOR * (1.0 + 1.0e-12), FLOOR])
-    _, _, at_floor = draw_classes(probability, np.array([0, 1]), FLOOR, UNIFORM)
-    assert at_floor.all()
+    _, flat = draw_classes(probability, np.array([0, 1]), FLOOR)
+    assert flat.all()
 
 
 def test_draw_classes_rejects_a_non_positive_floor():
     with pytest.raises(ValueError, match="must be positive"):
-        draw_classes(np.array([0.5]), np.array([0]), 0.0, UNIFORM)
-
-
-def test_draw_classes_rejects_a_uniform_share_under_the_floor():
-    with pytest.raises(ValueError, match="uniform share"):
-        draw_classes(np.array([0.5]), np.array([0]), UNIFORM, FLOOR)
+        draw_classes(np.array([0.5]), np.array([0]), 0.0)
 
 
 def test_score_terms_reproduce_the_documented_proxy_score():
@@ -356,8 +347,8 @@ def _mixture(probabilities):
 
 def test_priority_race_is_deterministic_and_returns_distinct_atoms():
     weights = np.full(64, 1.0 / 64.0)
-    first = priority_race(_mixture(weights), seed=8701, object_id=142230, n_select=16)
-    again = priority_race(_mixture(weights), seed=8701, object_id=142230, n_select=16)
+    first, _ = priority_race(_mixture(weights), seed=8701, object_id=142230, n_select=16)
+    again, _ = priority_race(_mixture(weights), seed=8701, object_id=142230, n_select=16)
     np.testing.assert_array_equal(first, again)
     assert first.size == 16
     assert np.unique(first).size == 16
@@ -365,8 +356,8 @@ def test_priority_race_is_deterministic_and_returns_distinct_atoms():
 
 def test_priority_race_depends_on_the_object_id():
     weights = np.full(4096, 1.0 / 4096.0)
-    a = priority_race(_mixture(weights), seed=8701, object_id=1, n_select=64)
-    b = priority_race(_mixture(weights), seed=8701, object_id=2, n_select=64)
+    a, _ = priority_race(_mixture(weights), seed=8701, object_id=1, n_select=64)
+    b, _ = priority_race(_mixture(weights), seed=8701, object_id=2, n_select=64)
     assert not np.array_equal(np.sort(a), np.sort(b))
 
 
@@ -384,7 +375,7 @@ def test_priority_race_reproduces_the_production_key_rule():
     )
     expected = torch.topk(_mixture(weights) / uniform, 33, sorted=True).indices[:32]
     np.testing.assert_array_equal(
-        priority_race(_mixture(weights), seed=8701, object_id=77, n_select=32),
+        priority_race(_mixture(weights), seed=8701, object_id=77, n_select=32)[0],
         expected.numpy(),
     )
 
@@ -393,7 +384,7 @@ def test_priority_race_favours_the_heavy_atoms():
     weights = np.full(2048, 1.0e-6)
     weights[:32] = 1.0
     weights /= weights.sum()
-    chosen = priority_race(_mixture(weights), seed=8701, object_id=5, n_select=64)
+    chosen, _ = priority_race(_mixture(weights), seed=8701, object_id=5, n_select=64)
     # Every one of the 32 heavy atoms should win a place among 64 draws.
     assert set(range(32)).issubset(set(chosen.tolist()))
 
@@ -430,7 +421,7 @@ def test_race_on_a_collapsed_mixture_still_reaches_the_starved_atoms():
     n_atoms = 200000
     weights = np.full(n_atoms, PRODUCTION_DELTA / n_atoms)
     weights[0] += 1.0 - PRODUCTION_DELTA
-    chosen = priority_race(
+    chosen, _ = priority_race(
         _mixture(weights), seed=8701, object_id=142230, n_select=16384
     )
     assert 0 in chosen.tolist()
@@ -446,3 +437,41 @@ def test_report_payload_is_json_serializable_without_nan():
         drawn=bool(True),
     )
     json.dumps(payload, allow_nan=False)
+
+
+def test_slot_accounting_shows_a_concentrated_component_wasting_its_mass():
+    """A mass spike caps at one slot; the same mass spread converts linearly."""
+    delta, n = 0.1, 1000
+    floor = delta / n
+    spike = np.full(n, floor)
+    spike[0] += 0.9
+    threshold = 1.0e-3
+    book = slot_accounting(spike, floor, threshold, delta)
+    # The flat 10% converts linearly over the 999 atoms that do not saturate;
+    # the spike's own flat share is inside its capped single slot, not extra.
+    np.testing.assert_allclose(book["flat_expected_draws"],
+                               (floor / threshold) * (n - 1))
+    # The ranked 0.9 sits on one atom, so it buys one slot, not 0.9/tau = 900.
+    np.testing.assert_allclose(book["ranked_draws_if_unconcentrated"], 900.0)
+    np.testing.assert_allclose(book["ranked_expected_draws"], 1.0, atol=1e-9)
+    assert book["n_saturated"] == 1
+    # The decomposition is exact: the two parts add to the realised draws.
+    np.testing.assert_allclose(
+        book["flat_expected_draws"] + book["ranked_expected_draws"],
+        book["expected_draws"], rtol=1e-12,
+    )
+
+
+def test_slot_accounting_wastes_nothing_when_no_atom_saturates():
+    delta, n = 0.1, 1000
+    floor = delta / n
+    flat = np.full(n, 1.0 / n)
+    book = slot_accounting(flat, floor, 1.0e-2, delta)
+    # No atom reaches tau, so realised draws equal total mass over tau.
+    np.testing.assert_allclose(book["expected_draws"], 1.0 / 1.0e-2)
+    assert book["n_saturated"] == 0
+
+
+def test_slot_accounting_rejects_a_non_positive_threshold():
+    with pytest.raises(ValueError, match="threshold must be positive"):
+        slot_accounting(np.array([0.5]), 0.1, 0.0, 0.1)
