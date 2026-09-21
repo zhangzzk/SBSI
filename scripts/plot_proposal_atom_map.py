@@ -126,19 +126,94 @@ def observation_truth(manifest: dict, truth_row) -> dict:
     )
 
 
-def draw_classes(probability: np.ndarray, drawn: np.ndarray, floor: float):
-    """Split the draws into proxy-ranked atoms and defensive-floor atoms.
+def draw_classes(probability: np.ndarray, subset: np.ndarray, floor: float,
+                 uniform: float):
+    """Split atoms by how much the tilt actually moved them off uniform.
 
-    An atom sitting exactly at ``delta / n_atoms`` got no local score at all:
-    the proxy ruled it out and only the defensive uniform component kept it
-    reachable.  Separating the two says how much of the budget the ranking
-    actually directed and how much was a uniform lottery.
+    An earlier version of this split used ``q > floor`` alone and called the
+    result "ranked by the proxy".  That is far too generous a test: the softmax
+    returns a strictly positive number for every atom scoring within about 745
+    nats of the best one, so ``q > floor`` is satisfied by essentially the
+    whole catalogue and the class is dominated by atoms the proposal does not
+    prefer at all.  The meaningful comparison is against the *uniform* share
+    ``1 / n_atoms``:
+
+    - ``preferred``  ``q > 1 / n_atoms``: the tilt gives the atom more than a
+      flat draw would, so the proposal is genuinely pointing at it.
+    - ``weak``  ``floor < q <= 1 / n_atoms``: the softmax touched the atom but
+      left it at or below the flat share; it is still, in effect, a lottery
+      ticket.
+    - ``at_floor``  ``q <= delta / n_atoms``: the softmax underflowed and only
+      the defensive component keeps the atom reachable.
     """
 
     if not np.isfinite(floor) or floor <= 0:
         raise ValueError("defensive floor must be positive and finite")
-    at_floor = probability[drawn] <= floor * (1.0 + 1.0e-9)
-    return ~at_floor, at_floor
+    if not np.isfinite(uniform) or uniform <= floor:
+        raise ValueError("uniform share must exceed the defensive floor")
+    q = probability[subset]
+    at_floor = q <= floor * (1.0 + 1.0e-9)
+    preferred = q > uniform
+    return preferred, ~at_floor & ~preferred, at_floor
+
+
+def score_terms(values: np.ndarray, dispersion: np.ndarray,
+                detection: np.ndarray, observed: np.ndarray,
+                index: np.ndarray) -> dict:
+    """The three additive parts of the proxy score, for named atoms.
+
+    ``s_j = log(Pdet_j) - sum_d log sigma_jd - 0.5 sum_d z_jd^2``.  Splitting
+    it says whether the proposal prefers an atom because it fits the
+    observation (the quadratic term) or because its predicted scatter is
+    narrow, which inflates a *density* without meaning the atom is a better
+    explanation of the data.
+    """
+
+    index = np.asarray(index, dtype=np.int64)
+    mu = np.asarray(values[index], dtype=np.float64)
+    sigma = np.asarray(dispersion[index], dtype=np.float64)
+    if np.any(sigma <= 0.0):
+        raise ValueError("proxy dispersion must be positive")
+    z = (np.asarray(observed, dtype=np.float64)[None, :] - mu) / sigma
+    residual = np.asarray(observed, dtype=np.float64)[None, :] - mu
+    with np.errstate(divide="ignore"):
+        log_detection = np.log(np.asarray(detection[index], dtype=np.float64))
+    log_dispersion = -np.log(sigma).sum(axis=1)
+    quadratic = -0.5 * np.square(z).sum(axis=1)
+    return {
+        "log_detection": log_detection,
+        "log_dispersion": log_dispersion,
+        "quadratic": quadratic,
+        "score": log_detection + log_dispersion + quadratic,
+        "z": z,
+        "sigma": sigma,
+        "residual": residual,
+    }
+
+
+def summarise_terms(terms: dict, label: str) -> dict:
+    """Median of each score part, plus the per-coordinate median |z|."""
+
+    finite = np.isfinite(terms["score"])
+    summary = {"group": label, "n": int(terms["score"].size),
+               "n_finite": int(finite.sum())}
+    if not finite.any():
+        return summary
+    for key in ("score", "log_detection", "log_dispersion", "quadratic"):
+        summary[f"median_{key}"] = float(np.median(terms[key][finite]))
+    summary["median_abs_z"] = [
+        float(v) for v in np.median(np.abs(terms["z"][finite]), axis=0)
+    ]
+    # The raw scale behind the standardized miss: an atom can sit under one
+    # sigma while being far away in the units of the plot, if its predicted
+    # scatter is wide.  Reporting both separates "fits" from "is vague".
+    summary["median_sigma"] = [
+        float(v) for v in np.median(terms["sigma"][finite], axis=0)
+    ]
+    summary["median_abs_residual"] = [
+        float(v) for v in np.median(np.abs(terms["residual"][finite]), axis=0)
+    ]
+    return summary
 
 
 def exact_centre_node(record: dict, row: int):
@@ -346,7 +421,31 @@ def main() -> None:
     heavy_drawn = drawn_set[heavy]
 
     floor = PRODUCTION_DELTA / n_atoms
-    ranked, defensive = draw_classes(probability, drawn, floor)
+    uniform = 1.0 / n_atoms
+    preferred, weak, defensive = draw_classes(probability, drawn, floor, uniform)
+
+    # Where the proposal's own preference actually sits, independent of the
+    # draw: the atoms it lifts above a flat share, and the best-scoring atoms.
+    catalogue_preferred = np.flatnonzero(probability > uniform)
+    order = np.argsort(probability[catalogue_preferred])[::-1]
+    catalogue_preferred = catalogue_preferred[order]
+    top_scoring = catalogue_preferred[: min(64, catalogue_preferred.size)]
+    floor_sample = rng.choice(drawn[defensive], size=min(4096, int(defensive.sum())),
+                              replace=False) if defensive.any() else np.empty(0, np.int64)
+    groups = [
+        ("top 64 by proposal probability", top_scoring),
+        ("all atoms above the uniform share", catalogue_preferred),
+        ("mass-carrying atoms (exact, centre node)", heavy),
+        ("drawn, above the uniform share", drawn[preferred]),
+        ("drawn, at the defensive floor (sample)", floor_sample),
+    ]
+    decomposition = [
+        summarise_terms(
+            score_terms(coords.values, coords.dispersion, detection, observed, idx),
+            label,
+        )
+        for label, idx in groups if idx.size
+    ]
 
     fig, axes = plt.subplots(2, 2, figsize=(13.0, 11.0))
     norm = LogNorm(vmin=max(float(mass.min()), 1e-6), vmax=float(mass.max()))
@@ -415,9 +514,16 @@ def main() -> None:
             rasterized=True, zorder=2,
         )
         axis.scatter(
-            sampled[ranked, 0], sampled[ranked, 1], s=11.0,
-            c="tab:blue", marker="x", linewidths=0.6, alpha=0.30,
+            sampled[weak, 0], sampled[weak, 1], s=9.0,
+            c="tab:cyan", marker="x", linewidths=0.5, alpha=0.30,
             rasterized=True, zorder=3,
+        )
+        # The atoms the tilt genuinely prefers.  On these rows there are very
+        # few of them, so they are drawn opaque and large enough to find.
+        axis.scatter(
+            sampled[preferred, 0], sampled[preferred, 1], s=44.0,
+            c="tab:blue", marker="x", linewidths=1.3, alpha=0.95,
+            rasterized=True, zorder=4,
         )
         for mask, is_drawn in ((~heavy_drawn, False), (heavy_drawn, True)):
             if not mask.any():
@@ -447,9 +553,14 @@ def main() -> None:
         Line2D([], [], ls="", marker=".", color="0.86", ms=7,
                label=f"not drawn ({background.size:,} shown, 1 in {subsample:,.0f})"),
         Line2D([], [], ls="", marker="x", color="0.62", ms=6,
-               label=f"drawn, defensive floor only ({int(defensive.sum()):,})"),
-        Line2D([], [], ls="", marker="x", color="tab:blue", ms=7,
-               label=f"drawn, ranked by the proxy ({int(ranked.sum()):,})"),
+               label=f"drawn, softmax underflowed to the floor "
+                     f"({int(defensive.sum()):,})"),
+        Line2D([], [], ls="", marker="x", color="tab:cyan", ms=6,
+               label=f"drawn, scored but below a flat share "
+                     f"({int(weak.sum()):,})"),
+        Line2D([], [], ls="", marker="x", color="tab:blue", ms=9, mew=1.6,
+               label=f"drawn, tilt prefers it over uniform "
+                     f"({int(preferred.sum()):,})"),
         Line2D([], [], ls="", marker=".", color="black", ms=7,
                label="carries posterior mass, NOT drawn"),
         Line2D([], [], ls="", marker="x", color="black", ms=11, mew=2,
@@ -490,10 +601,15 @@ def main() -> None:
             max_probability=float(probability.max()),
             top_atom=int(np.argmax(probability)),
             defensive_floor=float(floor),
-            n_drawn_ranked=int(ranked.sum()),
+            uniform_share=float(uniform),
+            n_drawn_preferred=int(preferred.sum()),
+            n_drawn_weak=int(weak.sum()),
             n_drawn_at_floor=int(defensive.sum()),
             n_above_floor_in_catalogue=int((probability > floor * (1.0 + 1.0e-9)).sum()),
+            n_above_uniform_in_catalogue=int(catalogue_preferred.size),
+            mass_above_uniform=float(probability[catalogue_preferred].sum()),
         ),
+        score_decomposition=decomposition,
         true_observation=true_observation,
         exact=dict(
             node=CENTRE_NODE,

@@ -1,5 +1,110 @@
 # Work log
 
+## 2026-09-21 — Why the proposal prefers vague atoms: wide predicted scatter buys compatibility
+
+Owner looked at the atom map and asked two questions: why the drawn atoms are
+not centred on the observation in the predicted `g1`/`g2` plane when the score
+is built to centre them, and why in truth space the draw piles up in the faint,
+small corner. Both are answered by the same measurement, and the answer is a
+defect in the proxy score, not in the figure.
+
+First, a labelling error in the previous entry is corrected. The class drawn
+in blue and called "ranked by the proxy" was defined as `q > delta / n_atoms`.
+That floor is reached only when the softmax underflows in float64, about 745
+nats below the best atom, so the test is satisfied by nearly the whole
+catalogue and does not mean the proposal prefers the atom. `draw_classes` now
+cuts against the flat share `1 / n_atoms` and returns three classes:
+`preferred` (`q > 1/N`), `weak` (scored but at or below the flat share) and
+`at_floor`. Counts, centre node:
+
+| row | preferred | weak | at floor | above the flat share in 24m |
+|---|---:|---:|---:|---:|
+| 142230 | 3,175 | 805 | 12,404 | 71,823 |
+| 409188 | 720 | 1,108 | 14,556 | 28,615 |
+| 3563 | 1,344 | 1,110 | 13,930 | 43,063 |
+
+So the correction does not rescue the picture: on row 142230, 3,175 of the
+3,980 non-floor draws are atoms the tilt genuinely prefers. The offset the
+owner saw is a property of the proposal.
+
+`score_terms` and `summarise_terms` now split the proxy score into its three
+additive parts and report, per coordinate, the median predicted scatter, the
+median raw miss and the median standardized miss. Row 142230, centre node:
+
+| group | median score | median `-sum log sigma` | median `-0.5 sum z^2` | sigma(g1) | \|resid\|(g1) | \|z\|(g1) | sigma(flux) | \|resid\|(flux) | \|z\|(flux) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| top 64 by `q` | -11.17 | -8.81 | -1.72 | 0.156 | 0.140 | 0.76 | 1.11e5 | 8.28e4 | 0.70 |
+| drawn, preferred | -13.79 | -12.03 | -0.87 | 0.415 | 0.235 | 0.57 | 2.27e5 | 9.92e4 | 0.43 |
+| mass-carrying (exact) | -15.95 | -5.44 | -7.51 | 0.068 | 0.119 | 1.34 | 2.27e4 | 3.54e4 | 1.88 |
+
+Findings.
+
+- The preferred atoms are centred, in the units the score actually uses: their
+  median standardized miss is 0.57, 0.15, 0.95 and 0.43 sigma across `g1`,
+  `g2`, `R_flux` and flux. They look off-centre in the figure because the
+  figure is in raw units and the score is in units of each atom's own
+  predicted scatter.
+- They are *further* from the observation than the mass-carrying atoms in raw
+  units in three of the four coordinates (`g1` 0.235 against 0.119, `R_flux`
+  4.57 against 1.29, flux 9.9e4 against 3.5e4), and win anyway because their
+  predicted scatter is 6x wider in `g1` and 10x wider in flux. The `-sum log
+  sigma` penalty does not cover the gap: the preferred atoms pay 6.6 nats more
+  in scatter and gain 6.6 nats in fit, and the residual 2 nats tip the ranking
+  the wrong way. Wide predicted scatter buys compatibility.
+- The faint, small corner in truth space is the same population. Those atoms
+  are true mag ~27 at `Re` ~0.1 arcsec, yet panel 1b puts their predicted flux
+  only about one dex below the observation rather than the four dex their own
+  brightness implies. They are faint galaxies whose predicted measurement is
+  dragged up by a bright neighbour, with correspondingly large predicted
+  scatter. The proposal prefers them for that scatter.
+- The contrast with a working row is sharp. On row 3563 the mass-carrying
+  atoms are the top-scoring atoms: median score -7.66 against -7.28 for the
+  top 64, with near-identical scatter (sigma(g1) 0.090 against 0.086,
+  sigma(flux) 8.7e3 against 9.5e3), and both sit well above the preferred bulk
+  at -12.16. On row 142230 the mass atoms score *below* the generic
+  above-uniform bulk, -15.95 against -15.51. The proposal is not merely
+  under-resolving the right answers on the bright blended object; it ranks
+  them below a cloud of vague ones.
+- The floor class is a numerical underflow, not a judgement: its median
+  standardized flux miss is 3242 sigma on row 142230, because a faint isolated
+  atom predicts a flux near zero with a scatter of ~37 against an observation
+  of 1.2e5.
+
+Two readings of the last point, not separated by this work. Either the flow's
+predicted mean for the correct atoms is genuinely off by 1.3-1.9 sigma on this
+object, which would also put the likelihood off-centre, or the proxy's
+*diagonal* Gaussian is a poor surrogate for the flow likelihood precisely
+where blending correlates flux, size and shape, in which case only the
+proposal is affected. The exact posterior that defines the mass atoms comes
+from the flow, not from the proxy, so the two cannot be told apart from these
+numbers alone. Separating them is the next question, and it decides whether
+this is a proposal-tuning problem or a likelihood problem.
+
+Suggested next variant, on the existing compare harness rather than in
+production: score with a common per-coordinate metric instead of each atom's
+own sigma, which turns the density into a distance and removes the reward for
+vagueness. On row 142230 the mass atoms are closer than the preferred atoms in
+three of four raw coordinates, so a common metric would rank them above; this
+is a prediction the harness can falsify.
+
+Validation. `tests/test_proposal_atom_map.py`, 39 passed in 6.8s on the login
+node and 14.9s inside the job, including a test pinning `score_terms` against
+the score formula in `WholeCatalogueProxy`'s own docstring, one showing a
+narrower sigma raising the score at an equal standardized miss, one confirming
+the old `q > floor` rule mislabels a near-floor atom as preferred, and one
+checking an undetected atom's `-inf` does not poison a summary. Jobs 16626236
+and 16626281 COMPLETED in 00:02:01 and 00:01:53 on `cluster`, no GPU; 16626281
+supersedes it and is the copy in `SBSI/plots/`. Diagnostic only: no flow
+evaluation, no change to target, model, cuts, prior or production settings.
+
+Limitations. Three rows from the worst-curvature list, centre node only, and
+the mass-carrying set is the 32 atoms the exact calculation retained, so
+"mass-carrying" means "retained and heavy", not "all the mass". The medians
+are unweighted over atoms and carry no uncertainty; with n=32 for the mass
+group the quoted medians are indicative, not measured to a stated precision.
+No spread is reported on any median here, so none of these differences has a
+significance attached.
+
 ## 2026-09-21 — Atom map: where the mass is versus where the proposal looks
 
 Owner asked for a picture of the prior atoms of one observation, on their

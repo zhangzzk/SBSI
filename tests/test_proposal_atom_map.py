@@ -15,6 +15,8 @@ from scripts.plot_proposal_atom_map import (
     build_proxy,
     centred_measurements,
     draw_classes,
+    score_terms,
+    summarise_terms,
     exact_centre_node,
     gather_truth,
     observation_truth,
@@ -200,28 +202,102 @@ def test_observation_truth_rejects_a_catalogue_not_indexed_by_input_index(tmp_pa
         observation_truth(manifest, row)
 
 
-def test_draw_classes_split_ranked_from_defensive_floor():
-    floor = 4.1666666666666667e-09
-    probability = np.array([0.7, floor, 5.0e-6, floor, floor])
-    drawn = np.array([0, 1, 2, 4])
-    ranked, defensive = draw_classes(probability, drawn, floor)
-    np.testing.assert_array_equal(ranked, [True, False, True, False])
-    np.testing.assert_array_equal(defensive, [False, True, False, True])
-    # Every draw belongs to exactly one class.
-    assert (ranked ^ defensive).all()
-    assert ranked.sum() + defensive.sum() == drawn.size
+FLOOR = 4.1666666666666667e-09
+UNIFORM = 10.0 * FLOOR
+
+
+def test_draw_classes_separate_preference_from_a_bare_softmax_touch():
+    """An atom below the flat share is a lottery ticket, not a proposal pick."""
+    probability = np.array([0.7, FLOOR, 5.0e-8, FLOOR, 2.0e-8, UNIFORM])
+    drawn = np.array([0, 1, 2, 4, 5])
+    preferred, weak, at_floor = draw_classes(probability, drawn, FLOOR, UNIFORM)
+    # 5.0e-8 clears the flat share; 2.0e-8 does not, though both clear the floor.
+    np.testing.assert_array_equal(preferred, [True, False, True, False, False])
+    np.testing.assert_array_equal(weak, [False, False, False, True, True])
+    np.testing.assert_array_equal(at_floor, [False, True, False, False, False])
+    # The classes partition the draw.
+    assert (preferred.astype(int) + weak + at_floor == 1).all()
+
+
+def test_draw_classes_do_not_call_a_near_floor_atom_preferred():
+    """The old q>floor rule called this atom ranked; it is not preferred."""
+    probability = np.array([FLOOR * 1.0001])
+    preferred, weak, at_floor = draw_classes(
+        probability, np.array([0]), FLOOR, UNIFORM
+    )
+    assert not preferred.any()
+    assert weak.all()
+    assert not at_floor.any()
 
 
 def test_draw_classes_tolerate_floating_point_at_the_floor():
-    floor = 4.1666666666666667e-09
-    probability = np.array([floor * (1.0 + 1.0e-12), floor])
-    ranked, _ = draw_classes(probability, np.array([0, 1]), floor)
-    assert not ranked.any()
+    probability = np.array([FLOOR * (1.0 + 1.0e-12), FLOOR])
+    _, _, at_floor = draw_classes(probability, np.array([0, 1]), FLOOR, UNIFORM)
+    assert at_floor.all()
 
 
 def test_draw_classes_rejects_a_non_positive_floor():
     with pytest.raises(ValueError, match="must be positive"):
-        draw_classes(np.array([0.5]), np.array([0]), 0.0)
+        draw_classes(np.array([0.5]), np.array([0]), 0.0, UNIFORM)
+
+
+def test_draw_classes_rejects_a_uniform_share_under_the_floor():
+    with pytest.raises(ValueError, match="uniform share"):
+        draw_classes(np.array([0.5]), np.array([0]), UNIFORM, FLOOR)
+
+
+def test_score_terms_reproduce_the_documented_proxy_score():
+    values = np.array([[0.0, 0.0], [1.0, 2.0]])
+    dispersion = np.array([[0.5, 2.0], [1.0, 1.0]])
+    detection = np.array([0.25, 1.0])
+    observed = np.array([0.5, 1.0])
+    terms = score_terms(values, dispersion, detection, observed,
+                        np.array([0, 1]))
+    expected = (
+        np.log(detection)
+        - np.log(dispersion).sum(axis=1)
+        - 0.5 * (((observed[None, :] - values) / dispersion) ** 2).sum(axis=1)
+    )
+    np.testing.assert_allclose(terms["score"], expected, rtol=0, atol=1e-12)
+    np.testing.assert_allclose(
+        terms["score"],
+        terms["log_detection"] + terms["log_dispersion"] + terms["quadratic"],
+        rtol=0, atol=1e-12,
+    )
+
+
+def test_score_terms_reward_a_narrow_atom_that_fits_no_better():
+    """A tighter sigma raises the density even at the same standardized miss."""
+    values = np.array([[0.0], [0.0]])
+    dispersion = np.array([[1.0], [0.01]])
+    detection = np.array([1.0, 1.0])
+    # Each atom is one sigma away, so the quadratic term is identical.
+    narrow = score_terms(values, dispersion, detection, np.array([0.0]),
+                         np.array([0, 1]))
+    wide = score_terms(np.array([[1.0], [0.01]]), dispersion, detection,
+                       np.array([0.0]), np.array([0, 1]))
+    np.testing.assert_allclose(wide["quadratic"][0], wide["quadratic"][1])
+    assert wide["score"][1] > wide["score"][0]
+    assert narrow["log_dispersion"][1] > narrow["log_dispersion"][0]
+
+
+def test_score_terms_rejects_a_non_positive_dispersion():
+    with pytest.raises(ValueError, match="dispersion must be positive"):
+        score_terms(np.array([[0.0]]), np.array([[0.0]]), np.array([1.0]),
+                    np.array([0.0]), np.array([0]))
+
+
+def test_summarise_terms_survives_an_undetected_atom():
+    """log(Pdet)=-inf for an undetected atom must not poison the summary."""
+    values = np.array([[0.0], [0.0]])
+    dispersion = np.array([[1.0], [1.0]])
+    detection = np.array([0.0, 1.0])
+    terms = score_terms(values, dispersion, detection, np.array([0.0]),
+                        np.array([0, 1]))
+    summary = summarise_terms(terms, "mixed")
+    assert summary["n"] == 2
+    assert summary["n_finite"] == 1
+    assert np.isfinite(summary["median_score"])
 
 
 def test_zero_point_row_finds_the_zero_shear_point():
