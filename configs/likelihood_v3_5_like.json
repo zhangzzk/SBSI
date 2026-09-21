@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "release": "v3.5-like",
+  "description": "Path-only development model set: lambda10 epoch154 joint four-output flow, trial9 R_blend, and the equal-probability three-seed nine-input coherent-U classifier ensemble. It is not the default likelihood and has not demonstrated 0.3% calibration.",
+  "shear_transform": "intrinsic_ellipticity_only_v1",
+  "measurement_model": {
+    "path": null,
+    "sha256": "9c5bb028437a4714b454d2bcd202243a2eda6263c36b4c70c46de3d12f725a6f",
+    "target_names": [
+      "measured_ngmix_g1",
+      "measured_ngmix_g2",
+      "measured_flux_radius",
+      "measured_flux_from_mag_auto"
+    ]
+  },
+  "emulator": {
+    "model": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/plain_complete_flow_response_re037_v1/physical_circularized_grid_free_shape_radius_lambda10_v2/constgold50_trial9_v1/trial9_base.json",
+      "sha256": "9723589880234fa6825ae242d9b978120a6385faf5ccc9942d1993696952e46d"
+    },
+    "metadata": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/plain_complete_flow_response_re037_v1/physical_circularized_grid_free_shape_radius_lambda10_v2/constgold50_trial9_v1/metadata.json",
+      "sha256": "48908a9cebc7475be83eef767c95175694531d78b1dd789c512fc49c0699f2b4"
+    },
+    "detection_model": {
+      "backend": "sbsi_selection_model_ensemble",
+      "aggregation": "arithmetic_mean_probability",
+      "members": [
+        {
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/minimal_coherent_u_flow_rblend_ablation_v2/models/flow8_rblend/seed20260913/selected.pt",
+          "sha256": "bbbd27a86c18bffb3e8b98e46c455ebcd2a27844ead363913bb5289ae19e6685"
+        },
+        {
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/minimal_coherent_u_flow_rblend_ablation_v2/models/flow8_rblend/seed20260914/selected.pt",
+          "sha256": "031498aa4140be4d2dfc7605f5211a1d2379e14c16f3fbc23b79f2f7f9e028cd"
+        },
+        {
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/minimal_coherent_u_flow_rblend_ablation_v2/models/flow8_rblend/seed20260915/selected.pt",
+          "sha256": "dab1e4cddf3b61da4cc6dee810091209b29df4dbf5dcc86cd20d3e23eebbd702"
+        }
+      ]
+    }
+  },
+  "geometry": {
+    "detection_radius_arcsec": 3.0,
+    "flow_neighbour_radius_arcsec": 7.0,
+    "crowding_radii_arcsec": [3.0, 7.0]
+  },
+  "observing_conditions": {
+    "pixel_size": 0.2,
+    "zero_point": 30.0,
+    "psf_fwhm": 0.73,
+    "moffat_beta": 2.224,
+    "pixel_rms": 0.312
+  },
+  "blend_response": "required_fixed_atom_cache",
+  "measured_selection": {
+    "mode": "output_cut_with_population_normalization",
+    "bounds": [
+      "measured_flux_radius:3.75:",
+      "measured_flux_from_mag_auto:47.8630092322638:"
+    ],
+    "definition": "MAG_AUTO < 25.8 and convolved SExtractor FLUX_RADIUS >= 0.75 arcsec at 0.2 arcsec/pixel; no measured-|e| cut"
+  }
+}

@@ -40,6 +40,19 @@ Both environments need the checkout installed editable after a clean setup.
 Environment names are deployment details, not part of either scientific
 release identity.
 
+### Historical scene-prior runtime compatibility
+
+Fresh full-scene calibration development must generate catalogues and render
+with `sims1`, setting `LD_LIBRARY_PATH` to its `lib` directory for those
+commands. Keep corrected measurement and tests in `py31`. Exact replay of
+original scene0 (seed123) in job16564191 reproduced all699,568 objects only
+with Python3.9.20/NumPy1.26.4/pandas2.2.3. The identical loader and source
+catalogue produce69,956,780 prior rows there, versus69,967,938 in `py31`,
+with position-angle precision also differing. The precise numerical cause
+is not yet isolated. Do not silently substitute a runtime or change cuts to
+match the old count; require full original-scene replay. See
+[runtime replay](../archive/research-2026-09-20/doc/JOINT_CALIBRATION.md#historical-runtime-replay-and-full-scene-restart).
+
 ## Tests
 
 From the repository root:
@@ -52,6 +65,11 @@ The default pytest configuration searches only `tests/`. The suite is CPU
 only and must pass without BlendEMU installed; the optional cross-check against
 BlendEMU skips when that package is unavailable.
 
+The 2026-09-20 cleanup archives experiment-only tests alongside their scripts;
+they are not discovered by default. The retained suite covers core inference,
+model loading, and V3.6-like geometry/disk contracts. Run the full suite via
+Slurm using the py31 interpreter and one CPU thread.
+
 Use targeted tests while editing, then run the whole suite for changes to
 `sbsi/`, production scripts, configuration validation, or artifact loading.
 
@@ -62,10 +80,35 @@ verification, and small CPU tests. Training, simulations, full-catalogue scans,
 response-cache construction, and other substantial CPU/GPU work go through the
 local scheduler.
 
+### Job monitoring
+
+The joint-development chain was cancelled by the owner on 2026-09-20. Do not
+restart its research/recovery/snapshot jobs without a new request. The policy
+below applies to newly authorized work, including cleanup verification jobs.
+
+Follow new jobs through startup and first meaningful progress, using brief
+status/log checks about every 30--60 seconds to catch early failures. Short
+preparation, validation, and test stages (normally under 30 minutes) may be
+followed through completion, including the startup of a dependent stage.
+After a long job demonstrates normal progress, or queue/startup waiting becomes
+prolonged, yield and use a bounded scheduled check about every two hours.
+Do not keep a turn occupied polling an entire long run. Report meaningful
+progress or failures rather than repeated unchanged states. Immediate checks
+requested by the owner remain allowed. This is the owner's 2026-09-10 revision
+to the earlier blanket prohibition, including historical work-log notes.
+
+### Scheduler launchers
+
 `jobs/job_inference.sh` is the cluster-local reference launcher for
-`v1.1-infer` with the `v3.2-like` likelihood. It must resolve every
+`v1.1-infer` with the configured `v3.2-like` likelihood. A V3.5-like run must
+explicitly select `configs/likelihood_v3_5_like.json`. Every launcher resolves
+every
 user-owned catalogue, checkpoint, cache, and output path explicitly. Other
 scheduler wrappers are validation or deployment aids, not public Python APIs.
+
+V3.6-like is a separate model manifest, not a replacement likelihood config.
+Its artifact roots are `SBSI_CACHE_DIR` and `BLENDEMU_RUNS_DIR`; see
+[model loading](API.md#v36-like-model-loading).
 
 `jobs/job_inference_hybrid_chain.sh` is the multi-GPU iterated launcher.  It
 derives its worker count from the Slurm allocation (or `N_GPUS` outside
@@ -100,8 +143,8 @@ positive-definite requirement.
 
 ## Documentation workflow
 
-`doc/WORKLOG.md` is newest-first and intentionally historical. Read its top
-entry for current state and search for a date, keyword, or `cont.NNN` tag when
-older provenance is needed. The maintained operational contract is in
+`doc/WORKLOG.md` is a concise newest-first active log. Detailed pre-cleanup
+provenance is preserved under `archive/research-2026-09-14/`. The maintained
+operational contract is in
 `doc/API.md`, `doc/INFERENCE.md`, `doc/CATALOGUE_PRIOR.md`, and the two
-release configuration files.
+numerical release configurations plus the selected likelihood configuration.

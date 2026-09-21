@@ -36,6 +36,36 @@ from .catalogue_likelihood import CatalogueLikelihood, CatalogueScore
 TILTED_OBJECT_CHUNK = 32
 
 
+def _blocked_cumulative_sum(values: torch.Tensor, block_size: int) -> torch.Tensor:
+    """Parallel prefix sum for very wide, shallow probability matrices.
+
+    The distribution is unchanged; this reassociates float64 addition. The
+    ordinary row scan can expose only a handful of GPU blocks when there are
+    few observations and hundreds of millions of atoms. Scanning tiles first
+    restores parallelism without retaining a second full-size temporary.
+    """
+    if values.ndim != 2 or block_size < 1:
+        raise ValueError("matrix and positive CDF block size required")
+    rows, width = values.shape
+    if width <= block_size:
+        return torch.cumsum(values, dim=1)
+    blocks = width // block_size
+    stop = blocks*block_size
+    output = torch.empty_like(values)
+    # Leading rows may not be contiguous after removing a ragged tail. A
+    # three-dimensional view retains the original row stride without a copy.
+    source_tiles = values[:, :stop].view(rows, blocks, block_size)
+    output_tiles = output[:, :stop].view(rows, blocks, block_size)
+    torch.cumsum(source_tiles, dim=2, out=output_tiles)
+    totals = torch.cumsum(output_tiles[:, :, -1].contiguous(), dim=1)
+    offsets = torch.cat((torch.zeros_like(totals[:, :1]), totals[:, :-1]), dim=1)
+    output_tiles.add_(offsets[:, :, None])
+    if stop < width:
+        torch.cumsum(values[:, stop:], dim=1, out=output[:, stop:])
+        output[:, stop:].add_(totals[:, -1:])
+    return output
+
+
 @dataclass(frozen=True)
 class ProposalCoordinateTable:
     """Flow-predicted location of every prior atom in measured space."""
@@ -1672,7 +1702,7 @@ class WholeCatalogueProxy:
         score.sub_(maximum).exp_()
         score.div_(score.sum(dim=1, keepdim=True))
         score.mul_(1.0 - delta).add_(self.prior.unsqueeze(0), alpha=delta)
-        cumulative = torch.cumsum(score, dim=1)
+        cumulative = self.cumulative_probability(score)
         cumulative[:, -1] = 1.0
         uniform_tensor = torch.as_tensor(
             np.atleast_2d(np.ascontiguousarray(uniforms, dtype=np.float64)),
@@ -1907,7 +1937,7 @@ class WholeCatalogueProxy:
         mixture = self.mixture(
             observations, delta=delta, temperature=temperature
         )
-        cumulative = torch.cumsum(mixture, dim=1)
+        cumulative = self.cumulative_probability(mixture)
         # Guard the inverse-CDF lookup against the cumulative sum finishing a
         # rounding step below one, which would send a uniform near one past the
         # last atom.
@@ -1927,6 +1957,12 @@ class WholeCatalogueProxy:
             self.active[positions].cpu().numpy(),
             torch.gather(mixture, 1, positions).cpu().numpy(),
         )
+
+    def cumulative_probability(self, mixture):
+        """Use the opt-in wide-prior scan; preserve the historical default."""
+        block_size = getattr(self, "cdf_block_size", None)
+        return (torch.cumsum(mixture, dim=1) if block_size is None
+                else _blocked_cumulative_sum(mixture, int(block_size)))
 
 
 def pareto_tail_index(weights, *, minimum_tail: int = 5):
