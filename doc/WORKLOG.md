@@ -1,3 +1,116 @@
+## 2026-09-21 — Sampler and inference review: two corrections to this log, and the floor that already exists
+
+Owner asked for a review of the whole sampler and inference path with an
+explicit instruction to keep any remedy minimal. Two entries below need
+correcting, and the remedy this series has been converging on turns out to be
+an existing configuration value rather than a new score.
+
+**Correction 1: the atom-map diagnostics model a sampler production does not
+run.** The failed production run's own `result.json` pins
+`estimator.estimator_mode = tilted_stratified`, which dispatches to
+`DefensiveLocalProposal.draw_tilted` and thence to
+`WholeCatalogueProxy.draw_uniforms_batch` — inverse-CDF lookup on the
+cumulative mixture, i.e. sampling **with replacement**.
+`scripts/plot_proposal_atom_map.py` reproduces
+`WholeCatalogueProxy.select_priority_batch`, which is priority sampling
+**without replacement** and belongs to the unused `priority_stratified` mode.
+The script's docstring calls this "the production priority race".
+
+The proposal `q` is identical in both, so every statement in this log about
+*where the proposal puts its mass* — the blind ranking, the exact stratum
+holding 88% of `q`, the faint-atom preference, the rank bands — is unaffected.
+What does not carry over is anything derived from inclusion probabilities:
+the Horvitz-Thompson weights (2,930x on row 142230's heaviest missed atom;
+2x/2x/6x under the fixed-count draw), the saturation counts, and the
+"priority sampling caps every atom at one slot" mechanism in the entry of that
+name. With replacement there is no cap and no `tau`; a heavy atom is simply
+redrawn many times, which is why the production final-rung median ESS is
+893.97 out of 16,384 draws. The `--sampler fifty-fifty` variant added in this
+series exists in no production path at all.
+
+**Correction 2: the shared-metric score is a re-derivation of an existing
+knob.** `ProposalCoordinateTable.from_flow` already floors each coordinate's
+dispersion at `dispersion_floor_percentile`, default and production value
+`1.0`, and `doc/V36_INFERENCE_REVIEW.md` already sanctions that floor as a
+proposal-only heuristic that does not modify the target. Measured over the
+production table (24,000,000 atoms):
+
+| coordinate | 1st pct (the floor) | median | ratio | atoms pinned at the floor |
+|---|---:|---:|---:|---:|
+| g1 | 0.02916 | 0.34155 | 11.7 | 240,001 (1.000%) |
+| g2 | 0.02925 | 0.32227 | 11.0 | 240,001 (1.000%) |
+| flux_radius | 0.14543 | 1.2391 | 8.5 | 240,490 (1.002%) |
+| flux | 5.2978 | 39.198 | 7.4 | 241,915 (1.008%) |
+
+By true magnitude, the atoms brighter than `r = 20` sit *exactly* at the shape
+floor (median g1 dispersion 0.02916, a factor 1.0 above it) and near the size
+floor (0.2172, factor 1.5), while atoms fainter than `r = 26` sit a factor
+11-12 above it. So the proposal judges a bright atom's shape on a tolerance
+twelve times tighter than a faint atom's, and the `-sum log sigma` term pays
+the faint atom for the privilege. Flooring at the median instead of the 1st
+percentile gives `sigma_eff = max(sigma_j, median)`, which is the
+quadrature-floor score of the entry above to within a factor of root two, and
+it keeps the normalisation, so it does not inherit the shared metric's defect
+of trusting a faint atom's noise-driven central value.
+
+**Flux is the exception and needs the one real code change.** The flux floor
+is in absolute units, and flux spans five decades across this prior, so it
+cannot bind where it matters: atoms brighter than `r = 20` carry a median
+absolute flux dispersion of 484.9, a factor 92 above the floor of 5.30, and
+raising the floor to the median (39.2) still leaves them untouched. In
+fractional terms the tolerance runs from 0.0106 dex at `r < 20` to 0.5259 dex
+at `r > 26`, a factor of 50. Giving a bright atom a 0.3 dex tolerance requires
+`sigma` of order 17,000, which no percentile of the absolute distribution
+reaches. The flux coordinate therefore needs a *fractional* floor, or
+equivalently carrying log-flux as the proposal coordinate.
+
+**The ordering that matters.** Three problems are separately established in
+this log and only one of them is the sampler's:
+
+1. *Finite-prior resolution / genuine non-concavity.* Exact summation over all
+   24 million atoms on row 142230 gives information
+   `[[-1686130.55, 500735.41], [500735.41, -879639.81]]`. No proposal, score
+   or draw budget can repair a number computed with no sampling at all.
+   Effective posterior atom count is 6.29 and 16.58 on the two bright failures
+   against 11,636.98 and 292,088.13 on rows 0 and 1, with a median 88.88%
+   single-atom mass, and the dominant atom's identity changes across the
+   stencil (8.57% at centre to 97.44% at the +g1/-g2 corner). Measured here,
+   only about 0.2% of the prior — roughly 48,000 of 24,000,000 atoms — is
+   brighter than `r = 20`, while the failing observations are at `r = 17.3`.
+2. *Finite-difference derivative error.* At `h = 0.001` the g1 scores are
+   957.16 and 1520.06 against autodiff 390.91 and 766.12.
+3. *Finite-draw integration error.* Production information -2,707,895 against
+   exact -1,686,131 on the same row.
+
+Everything this series has worked on since the atom map is problem 3, the
+smallest of the three, and it cannot by itself produce positive information.
+
+Validation. Jobs 16628308 (dispersion floor by coordinate and by true
+magnitude) and the three diagnostics of the entry above, all COMPLETED on
+`cluster`, 8 CPUs, no GPU. Production configuration read from
+`production_lru_v1/part_00/result.json`. Call-site audit: `draw_global` and
+`uncertainty_candidates` have no callers outside `tests/`; `draw_priority` has
+two callers but is not the configured mode. No repository code changed; the
+atom-map suite is unchanged at 61 passed.
+
+Limitations. This is a reading and measurement review, not an experiment: the
+median-percentile floor has not been run through the estimator, so there is no
+reached-mass, ESS or information number for it, and no claim is made that it
+produces positive curvature. The re-floor is valid post-hoc on the stored
+dispersions only for percentiles at or above the 1.0 already applied. Three
+rows, centre node, one seed throughout.
+
+Next steps, in the order the three problems deserve. Establish whether the
+bright-object effective atom count can be raised at all — a magnitude
+stratified prior subsample with exact compensating masses `1 / (N p_keep)` is
+the only lever that is not a model change, and the full store holds about six
+times more bright atoms than the uniform 24m subset kept. Replace the
+`h = 0.001` finite differences with the autodiff path that
+`probe_disk_derivative_reference.py` already implements. Only then revisit the
+proposal, and there change `dispersion_floor_percentile` plus a fractional
+flux floor rather than adding a score variant; retire `--sampler fifty-fifty`
+and the `--score common-metric` branch when that happens, and fix the atom
+map's docstring and draw to match `tilted_stratified`.
 ## 2026-09-21 — The faint cluster in Panel 2b is real: both scores omit a different half of the uncertainty
 
 Owner asked why a large cluster of ranked draws still sits in the faint, small
