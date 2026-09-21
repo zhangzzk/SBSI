@@ -21,6 +21,89 @@ marginal discrepancies at their actual truth and shear. This is encouraging
 for those conditional predictions, but does not validate joint calibration,
 shear derivatives or population inference. It does not change the launch gate.
 
+The [independent reviewer assessment](#independent-reviewer-assessment--2026-09-21)
+attributes the indefinite information to the point-atom prior and to a
+proposal built at zero shear, and gives the recommended order of fixes.
+
+## Independent reviewer assessment — 2026-09-21
+
+A read-through of the disk path (`scripts/run_disk_inference.py`, the disk
+likelihood, transport, response pooling, cache, proposal, tilted-stratified
+estimator and combiner) with the algebra rederived by hand. Verdict: the
+mathematics and the code are correct; the recorded failure is a consequence
+of two design choices, not of a coding error or of too few draws.
+
+**Verified correct.** Möbius transport inverse and log-determinant; the
+small-shear response matrix; the constant unit-determinant physical-to-
+standardized map, which cancels in every shear derivative; the selection
+normalizer evaluated on the base flow, valid because transport leaves radius
+and flux unchanged; the stratified complement (exact stratum contributes zero
+to the sampled sum, proposal not renormalized, unbiased); common random
+numbers across the stencil for both the normalizer and the complement draws;
+atom coalescing; the combiner's refusal of a non-positive-definite total
+information; the identity guards.
+
+**1. The negative curvature is a finite-template effect.** Per object the
+information is minus the posterior mean of the second derivative of the
+log-weight minus the posterior variance of the first derivative, both taken
+over the atoms. A bright object has a shape error near 1e-3, so its posterior
+over the 24M point atoms sits on one or a few atoms (the audit records 84–97%
+of the mass on a single atom). Its per-atom first derivatives are of order
+1e3, so the variance term is of order 1e6 and enters with a negative sign.
+This matches the recorded eigenvalue (about −3.7e6) and its independence of
+the draw rung: more draws cannot remove it because the exact stratum already
+holds the mass. The prior atoms are points, but the true population is
+continuous. The simulation prior is isotropic, so each atom can carry a
+continuous intrinsic-orientation angle at no additional assumption (the
+Bernstein–Armstrong 2014 construction). Quadrature over the angle inside the
+exact stratum, one random angle per complement draw, with crowding and
+classifier features recomputed per angle, restores a smooth per-object
+likelihood. This is the one model-representation change the reviewer would
+make; it changes the prior representation, not the likelihood.
+
+**2. The proposal is built at zero shear but evaluated at the centre.**
+Proposal coordinates (mean and spread of 128 flow draws) and the tilted proxy
+score are computed at g = 0 in `prepare`, while the stencil centre is the mean
+observed shape, about (0.0139, 0.0003). For a bright atom that offset is 5 to
+14 standard deviations, so both the exact stratum and the tilted complement
+miss the atoms that dominate at the centre. This is the recorded "over half of
+the centre mass on atoms with negligible proposal probability". Heavier-tailed
+proposals treat the symptom. The minimal fix is proposal-only: sample the
+proposal coordinates from the flow at the centre shear and use centre
+usability as the local base weights. No estimator change.
+
+**3. Finite differences at the bright-object curvature scale.** With
+h = 0.001 the stencil sits where bright-object likelihoods bend; the derivative
+reference records a finite-difference score of 957 against an autodiff score
+of 391 for the same object. The numerator (flow plus transport) is already a
+pure torch graph, so autograd for it is cheap; the normalizer and classifier
+can stay on the stencil since they are smooth at this scale.
+
+**4. Starting point and solve.** The centre is the uncorrected mean observed
+shape, about 30% below the injected 0.02. One full Newton step from a surface
+that is not quadratic at that distance is fragile; the safeguarded step in
+[gate 4](#predeclared-acceptance-checks) is the right remedy and nothing more
+is needed.
+
+**Recommended order.** Fix 2 and 3 first (proposal at the centre; autograd
+numerator), because they are small and change no model, and rerun the
+predeclared checks. If the smallest-rung eigenvalue remains negative on the
+bright tail, that isolates finding 1 cleanly, and the orientation augmentation
+is then the single justified model change. Do not add heavier-tailed
+proposals, weight clipping or curvature floors: they would mask the
+discretization rather than remove it.
+
+**Engineering done in this review** (no scientific behaviour changed; see the
+[work log](WORKLOG.md#2026-09-21--review-the-disk-inference-pipeline-and-bind-its-numerics)):
+sampler and selection numbers now come from `configs/inference_v1_2_16k.json`
+instead of literals in the driver; the prepared-identity check requires exact
+equality and lists differences instead of whitelisting hashes; invalid weight
+slots are −inf rather than zero; the opt-in blocked prefix scan and its
+benchmark flag are gone; the frozen cache no longer fakes a detector; the
+production array throttle is two GPUs. The v1.x sampler-mode pruning is
+already carried on `worktree-proposal-coord-compare` and is not duplicated
+here.
+
 ## Findings by layer
 
 | Layer | Evidence and disposition |

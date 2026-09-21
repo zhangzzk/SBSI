@@ -52,6 +52,13 @@ this without dropping objects or changing the models. New diagnostics respect
 the two-GPU total limit. This does not establish prior-size convergence or
 shear calibration. See [production curvature audit](WORKLOG.md#2026-09-21--diagnose-failed-v36-production-curvature).
 
+Since 2026-09-21 the driver binds every sampler and selection number
+(draw ladder, candidates, prefilter, tilt, seeds, sample counts, `h`) from
+`configs/inference_v1_2_16k.json`; nothing numerical is hard-coded in
+`run()`. `run` accepts a preparation only when its full identity, including
+every implementation hash, matches, and lists the differences otherwise.
+Preparations made before that change must be rebuilt; no whitelist exists.
+
 The owner-requested100k rerun is gated, not submitted. The
 [end-to-end review](V36_INFERENCE_REVIEW.md#findings-by-layer) records the
 likelihood, population-support, finite-prior, QMC, sampling, derivative and

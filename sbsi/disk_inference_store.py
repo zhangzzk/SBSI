@@ -80,8 +80,8 @@ class FrozenDiskCache(CatalogueModelCache):
         zero = zero.copy(deep=False)
         zero.index = pd.RangeIndex(len(zero), name="primary_row")
         prior = SimpleNamespace(galaxies=zero, weights=np.full(len(zero), 1./len(zero)))
-        super().__init__(prior, detector=SimpleNamespace(preprocessor=SimpleNamespace(feature_names=FEATURES)),
-            conditions=conditions, detection_radius_arcsec=10., flow_neighbour_radius_arcsec=7.,
+        super().__init__(prior, detector=None, conditions=conditions,
+            detection_radius_arcsec=10., flow_neighbour_radius_arcsec=7.,
             crowding_radii_arcsec=(3., 7.), flow_features=FLOW_FEATURES, detection_features=FEATURES)
         self.zero_flow = zero
         self.probabilities = {}

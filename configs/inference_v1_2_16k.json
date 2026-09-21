@@ -9,6 +9,7 @@
     "prefilter_candidates": 131072, "seed": 8701, "epsilon": 0.1,
     "method": "initial_center_posterior_adapted"
   },
+  "selection": {"samples": 64, "seed": 8101},
   "estimator": {
     "initial_strategy": "mean_observed_shape", "step": "one_step_full_2d",
     "finite_difference_h": 0.001, "draw_ladder": [512, 1024, 2048, 4096, 8192, 16384],

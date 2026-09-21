@@ -5,7 +5,6 @@ The legacy driver intentionally continues to reject the disk likelihood.
 This entry point accepts only the pinned V3.6 artifacts and uncut subset store.
 """
 import argparse
-import ast
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -41,37 +40,23 @@ def implementation():
 
 
 def check_prepared_identity(saved, current):
-    """Accept only the audited inference-only LRU fix over original v1 caches.
+    """Require the run to reproduce the preparation identity exactly.
 
-    Preserve the producer's full identity; do not rewrite old cache receipts.
-    Every scientific input and every other implementation file must match.
-    The four preparation functions must remain byte-identical to the original.
+    Every scientific input and every implementation file must match the
+    preparation; otherwise rebuild the caches. Differences are listed, never
+    waived by a whitelist.
     """
     if saved == current:
         return "identical"
-    before, after = dict(saved), dict(current)
-    old_code, new_code = before.pop("implementation_sha256"), after.pop("implementation_sha256")
-    if before != after or set(old_code) != set(new_code):
-        raise ValueError("prepared scientific identity differs")
-    changed = {name for name in old_code if old_code[name] != new_code[name]}
-    driver = "scripts/run_disk_inference.py"
-    density = "sbsi/catalogue_disk_likelihood.py"
-    if (changed != {driver, density}
-            or old_code[driver] != "9a32b73a9ae05582cc455037657e1b19ffb8edb829da780208b18fa3f8a55cb4"
-            or old_code[density] != "bfb4e2ba2c8f4be44f844d1001555265b570183f34974c5294b9abc84087dea2"
-            or new_code[density] != "7b6b059d4af4e1a99ca54b60970c55033657290eedf29fd6b193cffddf50784c"):
-        raise ValueError("unapproved preparation/runtime implementation difference")
-    source = Path(__file__).read_text()
-    names = {"identity", "prepare", "assemble", "seed_stream"}
-    parts = [ast.get_source_segment(source, node) for node in ast.parse(source).body
-             if isinstance(node, ast.FunctionDef) and node.name in names]
-    if sha256("\n".join(parts).encode()).hexdigest() != "8a4c398b22e7415d0ed19a4df23b53adc221bb43d7dc3bb0705ec325b8bb8ab1":
-        raise ValueError("preparation functions changed; rebuild caches")
-    return "audited_two_entry_response_lru_v1"
+    keys = sorted(k for k in set(saved) | set(current) if saved.get(k) != current.get(k))
+    old_code, new_code = saved.get("implementation_sha256", {}), current.get("implementation_sha256", {})
+    files = sorted(n for n in set(old_code) | set(new_code) if old_code.get(n) != new_code.get(n))
+    raise ValueError(f"prepared identity differs (keys={keys}, files={files}); rebuild the preparation")
 
 
 def identity(args, subset):
     config = json.loads(CONFIG.read_text())
+    numerics = json.loads(NUMERICS.read_text())
     V36_LIKE.validate()
     models = dict(measurement=file_hash(V36_LIKE.flow_checkpoints[0]),
         emulator=file_hash(V36_LIKE.emulator_model), metadata=file_hash(V36_LIKE.emulator_metadata),
@@ -97,12 +82,13 @@ def identity(args, subset):
         raise ValueError("frozen observations violate requested selection/usability")
     return dict(subset_sha256=file_hash(args.subset), models=models,
         input_sha256={name: file_hash(args.input / name) for name in ("measurements.parquet", "truth.parquet", "image_mock_manifest.json")},
-        center=raw[:, :2].mean(0).tolist(), h=.001, n_observations=len(raw),
+        center=raw[:, :2].mean(0).tolist(), h=numerics["estimator"]["finite_difference_h"], n_observations=len(raw),
         likelihood_config_sha256=file_hash(CONFIG), inference_config_sha256=file_hash(NUMERICS),
         implementation_sha256=implementation(),
-        selection_samples=64, proposal_samples=128,
+        selection_samples=numerics["selection"]["samples"], proposal_samples=numerics["proposal"]["flow_samples"],
         seed_convention="SeedSequence([base_seed, source_shard]); reset per shear for CRN",
-        selection_seed=8101, coordinate_seed=8201, row_chunk=8192)
+        selection_seed=numerics["selection"]["seed"], coordinate_seed=numerics["proposal"]["coordinate_seed"],
+        row_chunk=numerics["proposal"]["row_chunk"])
 
 
 def seed_stream(base, shard):
@@ -127,10 +113,10 @@ def prepare(args):
     n = len(cache.zero_flow)
     cache.zero_flow.to_parquet(args.output / "flow_zero.parquet")
     values, dispersion = np.empty((n, 4)), np.empty((n, 4))
-    seed_stream(8201, args.shard_index)
+    seed_stream(frozen["coordinate_seed"], args.shard_index)
     for start in range(0, n, frozen["row_chunk"]):
         stop = min(start+frozen["row_chunk"], n)
-        draws = np.asarray(flow.sample(cache.zero_flow.iloc[start:stop], n_samples=128,
+        draws = np.asarray(flow.sample(cache.zero_flow.iloc[start:stop], n_samples=frozen["proposal_samples"],
             batch_size=frozen["row_chunk"], qmc=True), dtype=float)
         values[start:stop], dispersion[start:stop] = draws.mean(1), draws.std(1)
         if start == 0 or stop == n or stop % (32*frozen["row_chunk"]) == 0:
@@ -139,8 +125,9 @@ def prepare(args):
     np.save(args.output / "dispersion.npy", dispersion)
     config = json.loads(CONFIG.read_text())
     cut = OutputCut.from_specs(flow.target_transform.target_names, specs=config["measured_selection"]["bounds"])
-    selection = CatalogueSelection(cut, n_samples=64,
-        seed=int(np.random.SeedSequence([8101, args.shard_index]).generate_state(1)[0]), row_chunk=frozen["row_chunk"])
+    selection = CatalogueSelection(cut, n_samples=frozen["selection_samples"],
+        seed=int(np.random.SeedSequence([frozen["selection_seed"], args.shard_index]).generate_state(1)[0]),
+        row_chunk=frozen["row_chunk"])
     points = stencil(frozen["center"], frozen["h"])
     probabilities, masses = [], []
     for i, point in enumerate(points):
@@ -255,14 +242,20 @@ def run(args):
     if args.compile_flow:
         flow.compile_log_prob(mode=None, dynamic=True)
     args.output.mkdir(parents=True)
-    ladder = (512, 1024, 2048, 4096, 8192, 16384)
+    numerics = json.loads(NUMERICS.read_text())
+    sampler, estimator, execution = numerics["proposal"], numerics["estimator"], numerics["execution"]
+    ladder = tuple(estimator["draw_ladder"])
     print(f"INFERENCE_START atoms={response.n_atoms} observations={len(window.measurements)} load_seconds={time.monotonic()-started:.1f}", flush=True)
     moments = run_adaptive_section5(likelihood, window, proposal, center=frozen["center"], h=frozen["h"],
-        draw_ladder=ladder, n_candidates=1024, proposal_prefilter_candidates=131072,
-        epsilon=.1, proposal_seed=8701, min_ess=32., max_weight_fraction=.5,
-        candidate_backend="torch", estimator_mode="tilted_stratified", tilt_delta=.1,
-        retain_full_ladder=True, full_information=True, object_id_offset=args.start,
-        object_chunk=args.object_chunk, atom_chunk=4096,
+        draw_ladder=ladder, n_candidates=sampler["candidates"],
+        proposal_prefilter_candidates=sampler["prefilter_candidates"], epsilon=sampler["epsilon"],
+        proposal_seed=sampler["seed"], min_ess=estimator["minimum_ess"],
+        max_weight_fraction=estimator["maximum_weight_fraction"], allocation_method=estimator["allocation"],
+        bias_correction=estimator["bias_correction"], candidate_backend=execution["candidate_backend"],
+        estimator_mode=estimator["estimator_mode"], tilt_delta=estimator["tilt_delta"],
+        tilt_temperature=estimator["tilt_temperature"], retain_full_ladder=estimator["retain_full_ladder"],
+        full_information=True, object_id_offset=args.start,
+        object_chunk=args.object_chunk, atom_chunk=execution["atom_chunk"],
         progress=lambda done, total, elapsed: print(f"INFERENCE rows={done}/{total} seconds={elapsed:.2f}", flush=True))
     arrays = {name: getattr(moments, name) for name in ("score", "information", "draw_counts", "unique_counts",
         "ladder_score", "ladder_information", "weight_ess", "weight_max_fraction", "weight_relative_error", "weight_pareto_k")}
@@ -287,7 +280,7 @@ def run(args):
         total_seconds=time.monotonic()-started,
         peak_gpu_bytes=torch.cuda.max_memory_allocated() if args.device == "cuda" else None,
         note="Per-object moments only; combine disjoint partitions and require positive-definite total information.")
-    resolved = json.loads(NUMERICS.read_text())
+    resolved = numerics
     resolved["prior"] = {"manifest": str(args.subset.resolve()), "sha256": frozen["subset_sha256"],
                          "n_atoms": response.n_atoms, "pilot_only": args.pilot}
     resolved["execution"].update(compile_flow=args.compile_flow, object_chunk=args.object_chunk,

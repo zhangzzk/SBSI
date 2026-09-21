@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=96G
 #SBATCH --time=04:00:00
-#SBATCH --array=0-19%4
+#SBATCH --array=0-19%2
 #SBATCH --output=logs/v36_production_%A_%a.out
 set -euo pipefail
 cd /home/z/Zekang.Zhang/SBSI

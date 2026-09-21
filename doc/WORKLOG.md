@@ -1,5 +1,57 @@
 # Work log
 
+## 2026-09-21 — Review the disk inference pipeline and bind its numerics
+
+Independent review of the V3.6-like disk path. The algebra (Möbius transport,
+Jacobians, density chain, normalizer, stratified estimator, CRN, combiner) was
+rederived and found correct. The recorded indefinite information is attributed
+to two design choices rather than a code fault: the point-atom prior makes the
+posterior-variance term of the per-object information dominate for bright
+objects, and the proposal is built at zero shear while the likelihood is
+evaluated at the centre. Assessment, evidence and the recommended fix order
+are in [V36_INFERENCE_REVIEW.md](V36_INFERENCE_REVIEW.md#independent-reviewer-assessment--2026-09-21).
+No scientific fix was applied; those are owner decisions.
+
+Engineering changes (behaviour-preserving apart from the identity rule):
+
+- `scripts/run_disk_inference.py`: `identity`, `prepare` and `run` read the
+  draw ladder, candidates, prefilter, epsilon, seeds, tilt, ESS floor, weight
+  fraction, allocation, bias correction, backend, atom chunk, `h`, proposal
+  sample count and selection sample count/seed from
+  `configs/inference_v1_2_16k.json` (new `selection` block) instead of
+  literals. `check_prepared_identity` now requires exact equality and raises
+  with the differing keys and files; the hash whitelist and the AST hash of
+  the preparation functions are removed. Existing prepared caches
+  (`disk_assembled_v1`) no longer pass and must be rebuilt.
+- `sbsi/catalogue_disk_likelihood.py`: unscored weight slots are −inf, not 0,
+  so the tensor is self-contained rather than relying on downstream masking.
+- `sbsi/catalogue_sampling.py`: removed `_blocked_cumulative_sum` and the
+  `cdf_block_size` opt-in that nothing set; the two call sites use
+  `torch.cumsum` directly. `scripts/benchmark_tilted_prior.py` loses the
+  flag; `tests/test_blocked_cdf.py` deleted.
+- `sbsi/disk_inference_store.py`: `FrozenDiskCache` passes `detector=None`
+  instead of a fake namespace; the base cache already accepts that.
+- `jobs/job_disk_production.sh`: array throttle `%4` → `%2` to respect the
+  two-GPU limit on its own.
+- Tests: `tests/test_disk_runtime_compatibility.py` checks the exact-identity
+  rule; the ragged-padding test asserts −inf.
+
+Validation: `python -m pytest tests -q` in py31 on the login node (CPU):
+305 passed, 2 skipped in 35 s. `python -m py_compile` on the edited files.
+Not run: any GPU job; the driver's `run` was not exercised end to end, since
+the existing preparation is intentionally rejected now.
+
+Limitations: the v1.x sampler modes that the disk path never uses
+(`mixture`, `stratified`, `priority_stratified`, `independent_pilot`,
+Richardson, streamed and autograd variants) remain in `sbsi/catalogue_null.py`
+because the shared driver and its tests still use them; their pruning is
+carried on `worktree-proposal-coord-compare` and is not duplicated here. The
+disk probe/plot scripts and jobs stay in place because the investigation is
+open; archive them under `doc/REPOSITORY.md` rules when it closes.
+
+Next steps: owner decision on the fix order in the assessment; rebuild the
+preparation after any of them.
+
 ## 2026-09-21 — Consolidate completed plot diagnostics and current stopping point
 
 Updated this worklog and `doc/V36_INFERENCE_REVIEW.md` after delivering the four

@@ -15,7 +15,6 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--atoms", type=int, default=139936000)
     parser.add_argument("--chunk", type=int, default=2)
-    parser.add_argument("--cdf-block-size", type=int)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if args.output.exists() or args.atoms < 1 or args.chunk < 1:
@@ -25,7 +24,6 @@ def main():
     # avoids making large synthetic host catalogues that carry no science.
     proxy = WholeCatalogueProxy.__new__(WholeCatalogueProxy)
     proxy.score_dtype = torch.float32
-    proxy.cdf_block_size = args.cdf_block_size
     proxy.a1 = torch.full((args.atoms, 4), .2, device="cuda", dtype=torch.float32)
     proxy.a2 = torch.full((args.atoms, 4), .3, device="cuda", dtype=torch.float32)
     proxy.constant = torch.full((args.atoms,), -2., device="cuda", dtype=torch.float64)
@@ -46,7 +44,6 @@ def main():
         times.append(seconds)
         print(f"TILTED atoms={args.atoms} objects={args.chunk} iteration={i} seconds={seconds:.5f}", flush=True)
     result = dict(status="benchmark_complete", synthetic=True, atoms=args.atoms, chunk=args.chunk,
-        cdf_block_size=args.cdf_block_size,
         seconds=times, gpu=torch.cuda.get_device_name(), peak_allocated_bytes=torch.cuda.max_memory_allocated(),
         four_gpu_500k_proposal_hours=float(np.median(times[1:]))/args.chunk*500000/4/3600,
         limitations=["Synthetic uniform proxy at full size; no scientific catalogue or estimate.",

@@ -113,8 +113,8 @@ class DiskCatalogueLikelihood(CatalogueLikelihood):
         device = view.context.device
         if observed_targets is not None and (observed_targets.shape != raw.shape or observed_targets.device != device):
             raise ValueError("observed target tensor has the wrong shape/device")
-        output = torch.zeros(indices.shape, device=device, dtype=torch.float64)
-        output[torch.as_tensor(valid & ~physical_valid[:, None], device=device)] = -torch.inf
+        # Slots outside the scored set carry zero weight on their own.
+        output = torch.full(indices.shape, -torch.inf, device=device, dtype=torch.float64)
         rows, cols = np.nonzero(scored)
         with torch.no_grad():
             for start in range(0, len(rows), object_chunk*atom_chunk):

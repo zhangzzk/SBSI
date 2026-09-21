@@ -105,7 +105,7 @@ def test_ragged_padding_and_invalid_physical_outputs():
     result = likelihood.log_importance_weights_tensor(observed, .02, 0., atom_indices=np.array([[0, 1], [1, 0]]),
         proposal_probability=np.ones((2, 2)), atom_valid=valid)
     assert torch.isneginf(result[0, 0]) and torch.isfinite(result[1, 0])
-    assert torch.equal(result[:, 1], torch.zeros(2, dtype=torch.float64))
+    assert torch.isneginf(result[:, 1]).all()
     conditional = likelihood.conditional_log_likelihood(observed, .02, 0., atom_indices=np.array([0, 1]))
     assert np.isneginf(conditional[0]) and np.isfinite(conditional[1])
 
