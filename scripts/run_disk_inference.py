@@ -24,7 +24,7 @@ from sbsi.catalogue_null import run_adaptive_section5
 from sbsi.catalogue_sampling import DefensiveLocalProposal, ProposalCoordinateTable
 from sbsi.crowding import FLOW_FEATURES
 from sbsi.disk_inference_store import (FrozenDiskCache, ShardedDiskResponse, coordinate_table,
-    file_hash, load_source_shard, load_subset_manifest, stencil, write_json)
+    file_hash, load_source_shard, load_subset_manifest, stencil, subset_weights, write_json)
 from sbsi.measurement_model import load_measurement_model
 from sbsi.models import V36_LIKE, load_detection_classifier, load_disk_response
 from sbsi.output_conditioned_response import TRUTH_FEATURES
@@ -251,7 +251,8 @@ def run(args):
     response = ShardedDiskResponse(responses)
     probability = np.load(args.prepared / "probability.npy", mmap_mode="r")
     zero = pd.DataFrame(np.load(args.prepared / "zero.npy", mmap_mode="r"), columns=FLOW_FEATURES)
-    cache = FrozenDiskCache(zero, dict(zip(map(tuple, prepared["points"]), probability)), subset["conditions"])
+    cache = FrozenDiskCache(zero, dict(zip(map(tuple, prepared["points"]), probability)),
+        subset["conditions"], weights=subset_weights(subset))
     config = json.loads(CONFIG.read_text())
     cut = OutputCut.from_specs(flow.target_transform.target_names, specs=config["measured_selection"]["bounds"])
     likelihood = DiskCatalogueLikelihood(flow, cache, disk_response=response, selection=CatalogueSelection(cut))

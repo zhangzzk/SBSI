@@ -1,5 +1,12 @@
 #!/usr/bin/env python
-"""Uniformly subsample uncut primary atoms, retaining their full pair context."""
+"""Subsample uncut primary atoms, retaining their full pair context.
+
+The draw is uniform by default.  Given ``--bright-cut`` it is uniform plus a
+certain stratum: every source row brighter than the cut on a truth column is
+retained whether or not the uniform draw found it.  That over-samples the
+bright end without changing the population the atoms represent, because each
+atom then carries the inverse of its own inclusion probability as its weight.
+"""
 import argparse
 from hashlib import sha256
 import json
@@ -8,6 +15,7 @@ import time
 
 import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 
 
 def file_hash(path):
@@ -27,6 +35,44 @@ def sample_rows(total, size, seed):
     return drawn[order], order
 
 
+def bright_source_rows(paths, manifests, offsets, *, column, cut):
+    """Global row indices of every source atom brighter than `cut`.
+
+    Read before the per-shard hash verification below, which still runs and
+    still aborts the build, so a corrupted source cannot reach the output.
+    """
+    found = []
+    for i, (path, manifest) in enumerate(zip(paths, manifests)):
+        values = (pq.read_table(path.parent / "galaxies.parquet", columns=[column])
+                    .column(column).to_numpy(zero_copy_only=False).astype(np.float64))
+        if len(values) != manifest["n_rows"] or not np.isfinite(values).all():
+            raise ValueError(f"unusable truth column {column!r} in source shard {i}")
+        found.append(np.flatnonzero(values < cut).astype(np.int64) + offsets[i])
+        print(f"BRIGHT shard={i} rows={len(found[-1])}", flush=True)
+    return np.concatenate(found)
+
+
+def stratified_rows(total, size, seed, bright):
+    """Uniform draw of `size` rows, plus every bright row the draw missed.
+
+    Returns globally sorted row indices, their draw ranks, and the probability
+    with which each was included: one for a bright row, `size/total` otherwise.
+    """
+    drawn, ranks = sample_rows(total, size, seed)
+    uniform = size / total
+    if bright is None:
+        return drawn, ranks, np.full(len(drawn), uniform)
+    bright = np.unique(np.asarray(bright, dtype=np.int64))
+    if len(bright) and (bright[0] < 0 or bright[-1] >= total):
+        raise ValueError("bright row index outside the source population")
+    extra = bright[~np.isin(bright, drawn, assume_unique=True)]
+    rows = np.concatenate([drawn, extra])
+    ranks = np.concatenate([ranks, size+np.arange(len(extra))])
+    probability = np.where(np.isin(rows, bright, assume_unique=True), 1., uniform)
+    order = np.argsort(rows, kind="stable")
+    return rows[order], ranks[order], probability[order]
+
+
 def selected_edges(indptr, rows):
     counts = indptr[rows+1] - indptr[rows]
     offsets = np.r_[0, np.cumsum(counts)]
@@ -35,7 +81,8 @@ def selected_edges(indptr, rows):
     return edges, counts
 
 
-def prepare(source, output, *, size, seed, row_chunk=50000, expected_shards=None):
+def prepare(source, output, *, size, seed, row_chunk=50000, expected_shards=None,
+            bright_cut=None, bright_column="r"):
     source, output = Path(source), Path(output)
     if output.exists() or row_chunk < 1:
         raise ValueError("new output directory and positive row chunk required")
@@ -58,7 +105,14 @@ def prepare(source, output, *, size, seed, row_chunk=50000, expected_shards=None
     if len(set(cases)) != len(cases):
         raise ValueError("overlapping source cases")
     offsets = np.r_[0, np.cumsum([m["n_rows"] for m in manifests])]
-    rows, ranks = sample_rows(int(offsets[-1]), size, seed)
+    total = int(offsets[-1])
+    bright = None if bright_cut is None else bright_source_rows(
+        paths, manifests, offsets, column=bright_column, cut=bright_cut)
+    rows, ranks, probability = stratified_rows(total, size, seed, bright)
+    # Hajek normalization: the inverse-probability weights are scaled to sum to
+    # one over the subset, exactly as the uniform 1/n weights do by construction.
+    weights = (1./probability) / np.sum(1./probability)
+    n_atoms = len(rows)
     output.mkdir(parents=True)
     receipts = []
     for i, (path, manifest) in enumerate(zip(paths, manifests)):
@@ -76,11 +130,12 @@ def prepare(source, output, *, size, seed, row_chunk=50000, expected_shards=None
         target.mkdir()
         np.save(target / "source_atom_ids.npy", rows[lo:hi])
         np.save(target / "sample_rank.npy", ranks[lo:hi])
+        np.save(target / "prior_weight.npy", weights[lo:hi])
         galaxies = pd.read_parquet(root / "galaxies.parquet")
         if len(galaxies) != manifest["n_rows"]:
             raise ValueError("source galaxy count mismatch")
         galaxies = galaxies.iloc[local].copy().reset_index(drop=True)
-        galaxies["prior_weight"] = 1.0 / size
+        galaxies["prior_weight"] = weights[lo:hi]
         galaxies.to_parquet(target / "galaxies.parquet", index=False)
         del galaxies
         zero = pd.read_parquet(root / "flow_zero.parquet")
@@ -117,7 +172,8 @@ def prepare(source, output, *, size, seed, row_chunk=50000, expected_shards=None
         dest.flush()
         dest_secondary.flush()
         del dest, dest_secondary, features, secondary, ptr
-        names = ("source_atom_ids.npy", "sample_rank.npy", "galaxies.parquet", "flow_zero.parquet",
+        names = ("source_atom_ids.npy", "sample_rank.npy", "prior_weight.npy",
+                 "galaxies.parquet", "flow_zero.parquet",
                  "pair_indptr.npy", "pair_features.npy", "pair_secondary.npy")
         receipt = dict(source_shard=i, root=str(target.resolve()), n_rows=len(local),
             n_pairs=int(selected_ptr[-1]), source_row_offset=int(offsets[i]),
@@ -126,16 +182,23 @@ def prepare(source, output, *, size, seed, row_chunk=50000, expected_shards=None
         (target / "manifest.json").write_text(json.dumps(receipt, indent=2)+"\n")
         receipts.append(receipt)
         print(f"SUBSET shard={i} atoms={len(local)} pairs={selected_ptr[-1]} elapsed={time.monotonic()-started:.1f}s", flush=True)
-    result = dict(status="complete", format="uncut_disk_prior_subset_v1", n_rows=size,
-        source_n_rows=int(offsets[-1]), sampling="uniform_without_replacement", seed=seed,
-        numpy_version=np.__version__, prior_weight=1.0/size, truth_cuts=None,
+    stratum = None if bright is None else dict(column=bright_column, cut=bright_cut,
+        source_rows=int(len(bright)), uniform_rows=int(size), extra_rows=int(n_atoms-size),
+        uniform_probability=size/total, weight_bright=float(weights.min()),
+        weight_uniform=float(weights.max()))
+    result = dict(status="complete", n_rows=n_atoms,
+        format="uncut_disk_prior_subset_v1" if bright is None else "uncut_disk_prior_subset_v2",
+        source_n_rows=total, seed=seed,
+        sampling="uniform_without_replacement" if bright is None else "uniform_plus_certain_stratum",
+        numpy_version=np.__version__, prior_weight=1.0/size if bright is None else None,
+        truth_cuts=None, bright_stratum=stratum,
         secondary_identity="global source row; neighbours need not belong to sampled atoms",
-        sample_rank="zero-based original random order, enabling nested subsamples",
+        sample_rank="zero-based original random order; nesting holds below the uniform size",
         source_manifest_sha256=[file_hash(p) for p in paths],
         **{key: reference[key] for key in shared}, shards=receipts,
         implementation_sha256=file_hash(__file__), elapsed_seconds=time.monotonic()-started)
     (output / "manifest.json").write_text(json.dumps(result, indent=2)+"\n")
-    print(f"SUBSET_COMPLETE atoms={size} output={output}", flush=True)
+    print(f"SUBSET_COMPLETE atoms={n_atoms} output={output}", flush=True)
     return result
 
 
@@ -146,5 +209,12 @@ if __name__ == "__main__":
     parser.add_argument("--size", type=int, default=24000000)
     parser.add_argument("--seed", type=int, default=20260920)
     parser.add_argument("--expected-shards", type=int, default=20)
+    parser.add_argument("--bright-cut", type=float, default=None,
+        help="also retain every source row below this truth magnitude, with "
+             "inverse-probability weights; leaving it unset draws uniformly")
+    parser.add_argument("--bright-column", default="r",
+        help="truth magnitude column the bright cut reads (default: r)")
     args = parser.parse_args()
-    prepare(args.source, args.output, size=args.size, seed=args.seed, expected_shards=args.expected_shards)
+    prepare(args.source, args.output, size=args.size, seed=args.seed,
+        expected_shards=args.expected_shards, bright_cut=args.bright_cut,
+        bright_column=args.bright_column)

@@ -1,3 +1,117 @@
+## 2026-09-22 — A bright stratum can be over-sampled if its weight pays it back: 20,231,221-atom prior holds every truth-bright source row
+
+The owner chose the feasible maximum after "20m + 5m bright" was shown
+impossible: 20m uniform atoms plus every remaining source row with truth
+r<20, with inverse-probability weights so the represented population is
+unchanged.  The subset is built and verified; preparation is running.
+
+### Files and behaviour changed
+
+- `scripts/subsample_disk_prior.py`.  New `bright_source_rows` reads the truth
+  magnitude column from each source shard before the draw.  New
+  `stratified_rows` returns the uniform draw plus every bright row it missed,
+  globally sorted and deduplicated, with each row's inclusion probability: one
+  for a bright row, `size/total` otherwise.  Weights are the normalized
+  inverses of those probabilities, written per shard to a new
+  `prior_weight.npy` (hashed into the shard receipt) and into the existing
+  `galaxies["prior_weight"]` column.  New `--bright-cut` and `--bright-column`
+  flags; **leaving `--bright-cut` unset reproduces the previous uniform build
+  exactly**, including its `uncut_disk_prior_subset_v1` manifest.
+- `sbsi/disk_inference_store.py`.  `load_subset_manifest` accepts the new
+  `uncut_disk_prior_subset_v2` format, which carries `prior_weight: null` and
+  a `bright_stratum` block, and still refuses a v1 manifest whose scalar
+  weight disagrees with its row count.  New `subset_weights(manifest, index)`
+  returns the per-atom weights, whole-subset or per shard, and refuses a set
+  that does not sum to one.  `load_source_shard` uses them instead of
+  `1/n_rows`, and refuses to truncate a stratified shard to a pilot, because
+  the assembler's pilot rescaling cannot account for the dropped weight.
+  `FrozenDiskCache` takes an optional `weights=`; omitted, it is uniform as
+  before.
+- `scripts/run_disk_inference.py`.  `run` passes `subset_weights(subset)` to
+  `FrozenDiskCache`, which feeds both the population normalization and the
+  proposal's base weights.
+- `tests/test_stratified_disk_prior.py` (new, 12 tests).
+
+`prepare` and `assemble` needed **no source change** and their hash pin is
+intact.  Both already sum per-atom weights globally — `prepare` through
+`detected_selected_mass_shard(..., cache.prior.weights, ...)` and `assemble`
+through `np.sum(masses, axis=0)`, whose pilot rescaling is a no-op at full
+coverage — so correct weights arriving from the store are enough.
+
+### The weights restore the population exactly
+
+`scripts/subsample_disk_prior.py --size 20000000 --seed 20260920
+--bright-cut 20.0` (job 16630045, 11 min 14 s, CPU):
+
+```
+SUBSET_COMPLETE atoms=20231221 output=.../prior_subset20m_bright20
+```
+
+| | |
+|---|---|
+| atoms | 20,231,221 = 20,000,000 uniform + 231,221 extra |
+| truth r<20 source rows | 269,501 — **all present** (38,280 found by the uniform draw) |
+| inclusion probability | 1.0 bright, 0.14292247884747314 otherwise |
+| weights | 7.146038993487891e-09 bright, 4.9999405629636075e-08 otherwise |
+| weight ratio | 6.9968 = 139,936,000 / 20,000,000, exactly as designed |
+| weight sum | 1.000000000000006 |
+
+The check that matters: the bright stratum is **1.3321% of the atoms and
+carries 0.1926% of the prior mass**, against a true source fraction of
+0.1926%.  Over-sampling by a factor of seven is paid back to four decimal
+places.  This is Hájek normalization — the inverse-probability weights scaled
+to sum to one — which is what the uniform 1/n weights already do by
+construction, not an empirical correction.
+
+Against the 24m uniform subset's 45,975 truth-bright atoms this is a factor
+of **5.86** more intrinsically bright atoms, at 84% of the atom count.
+
+### Validation
+
+- `pytest tests` minus the six files broken at HEAD by `a010491`
+  (`ConditionalMeanFlowRA`, untouched here): **307 passed in 50.07 s**
+  (job 16630044), against 295 before.  The 12 new tests cover the uniform
+  path's exact reproduction, every bright row surviving, no duplication when
+  the uniform draw already found a bright row, per-shard weight alignment
+  against `galaxies.parquet`, and four refusals.
+- The subset build was gated on those tests with `--dependency=afterok`.
+- The bright pre-pass found 13,247–13,524 rows per source shard, summing to
+  269,501 — the same count the 2026-09-21 census measured independently.
+
+### Limitations
+
+- **The 24m prepared cache is no longer runnable without reverting this
+  change.**  `sbsi/disk_inference_store.py` is not on the driver's
+  `RUN_STAGE_IMPLEMENTATION` whitelist, so `check_prepared_identity` now sees
+  a third changed file beyond the audited `{driver, density}` pair and
+  refuses.  The cache is in fact still valid — `subset_weights` returns
+  bit-identical `1/n_rows` weights for a v1 manifest — but proving that to the
+  gate needs a deliberate audited exception, which was not taken unprompted.
+  The baseline result `ten_k_floor50_16628938` is already on disk, so the
+  comparison below does not need it re-run.
+- A stratified subset cannot be truncated to a pilot; `load_source_shard`
+  refuses rather than silently mis-normalizing.
+- The bright pre-pass reads `galaxies.parquet` before the per-shard hash
+  verification.  That verification still runs and still aborts the build, so a
+  corrupted source cannot reach the output; it is only read twice.
+- No result yet.  The two previous interventions on this axis — the median
+  dispersion floor and the multiplicative flux metric — each moved the answer
+  by 0.01–0.1%.  Nothing here predicts this one will do better; it tests a
+  different cause (too few bright atoms) rather than a different metric over
+  the same atoms.
+
+### Next steps
+
+1. `prepare` over 20 shards (job array 16630099, `inter`, throttled `%2` to
+   hold the owner's two-GPU limit), then `assemble` and a median-floored
+   proposal at `--fractional-floor measured_flux_from_mag_auto`, the same
+   recipe as `proposal_floor50_v1`.
+2. A 10,000-observation inference, compared against
+   `ten_k_floor50_16628938` on the same six obstructing rows: negative-curvature
+   row count, combined-information eigenvalues, Pareto k and ESS.
+3. Still open, unchanged: report the flow's >5 mag bright-side predictions
+   (6.9% of prior atoms, flux sigma/|x| median 10.5) to the BlendEMU side.
+
 ## 2026-09-21 — "20m + 5m bright" cannot be built: only 269,501 truth-bright rows exist, and the measured-bright population is a flow artefact
 
 The owner reaffirmed the request to build a 20m + 5m (mag<20) prior.  Three

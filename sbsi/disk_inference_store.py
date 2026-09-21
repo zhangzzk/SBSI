@@ -36,17 +36,50 @@ def stencil(center, h):
                        (1, 1), (1, -1), (-1, 1), (-1, -1))]
 
 
+# A uniform subset carries one scalar weight for every atom.  A stratified
+# subset over-samples a declared stratum and carries the inverse-probability
+# weight of each atom in a per-shard file instead, so the represented
+# population is the same one either way.
+SUBSET_SAMPLING = {"uncut_disk_prior_subset_v1": "uniform_without_replacement",
+                   "uncut_disk_prior_subset_v2": "uniform_plus_certain_stratum"}
+
+
 def load_subset_manifest(path):
     path = Path(path)
     manifest = json.loads(path.read_text())
     shards = manifest["shards"]
-    if (manifest["status"] != "complete" or manifest["format"] != "uncut_disk_prior_subset_v1"
-            or manifest["sampling"] != "uniform_without_replacement" or manifest["truth_cuts"] is not None
+    stratified = manifest["format"] == "uncut_disk_prior_subset_v2"
+    if (manifest["status"] != "complete"
+            or manifest["sampling"] != SUBSET_SAMPLING.get(manifest["format"])
+            or manifest["truth_cuts"] is not None
             or sum(s["n_rows"] for s in shards) != manifest["n_rows"]
             or len({s["source_shard"] for s in shards}) != len(shards)
-            or manifest["prior_weight"] != 1./manifest["n_rows"]):
-        raise ValueError("invalid complete uniform uncut subset manifest")
+            or manifest["prior_weight"] != (None if stratified else 1./manifest["n_rows"])):
+        raise ValueError("invalid complete uncut subset manifest")
     return manifest
+
+
+def subset_weights(manifest, index=None):
+    """Prior weight of every atom, in global subset order.
+
+    A uniform subset reports its one scalar; a stratified subset reports the
+    normalized inverse-probability weights written beside each shard.  Over the
+    whole subset these sum to one, exactly as the uniform 1/n weights do.
+    """
+    receipts = manifest["shards"] if index is None else [manifest["shards"][index]]
+    if manifest["prior_weight"] is not None:
+        return np.full(sum(r["n_rows"] for r in receipts), manifest["prior_weight"])
+    parts = []
+    for receipt in receipts:
+        weights = np.load(Path(receipt["root"]) / "prior_weight.npy").astype(float)
+        if (weights.shape != (receipt["n_rows"],) or not np.isfinite(weights).all()
+                or np.any(weights <= 0)):
+            raise ValueError("positive finite prior weight per atom required")
+        parts.append(weights)
+    weights = np.concatenate(parts) if parts else np.empty(0)
+    if index is None and abs(weights.sum()-1.) > 1e-9:
+        raise ValueError("stratified prior weights must sum to one")
+    return weights
 
 
 def load_source_shard(manifest, index, *, detector, model, limit=None):
@@ -65,7 +98,11 @@ def load_source_shard(manifest, index, *, detector, model, limit=None):
     ptr = np.load(root / "pair_indptr.npy", mmap_mode="r")[:n+1]
     pairs = np.load(root / "pair_features.npy", mmap_mode="r")[:ptr[-1]]
     secondary = np.load(root / "pair_secondary.npy", mmap_mode="r")[:ptr[-1]]
-    prior = SimpleNamespace(galaxies=zero, weights=np.full(n, 1./manifest["n_rows"]))
+    if limit is not None and manifest["prior_weight"] is None:
+        # Truncating a stratified shard would drop weight the assembler cannot
+        # account for, so a pilot is only defined over the uniform subset.
+        raise ValueError("a stratified subset cannot be truncated to a pilot")
+    prior = SimpleNamespace(galaxies=zero, weights=subset_weights(manifest, index)[:n])
     cache = DiskCatalogueModelCache(prior, detector=detector, conditions=manifest["conditions"],
         zero_flow=zero, pair_indptr=ptr, pair_features=pairs, pair_secondary=secondary,
         source_atom_ids=ids)
@@ -74,12 +111,19 @@ def load_source_shard(manifest, index, *, detector, model, limit=None):
 
 class FrozenDiskCache(CatalogueModelCache):
     """State probabilities are frozen; missing shear nodes fail closed."""
-    def __init__(self, zero, probabilities, conditions):
+    def __init__(self, zero, probabilities, conditions, weights=None):
         if tuple(zero.columns) != FLOW_FEATURES or not len(zero):
             raise ValueError("eight-column nonempty disk context required")
         zero = zero.copy(deep=False)
         zero.index = pd.RangeIndex(len(zero), name="primary_row")
-        prior = SimpleNamespace(galaxies=zero, weights=np.full(len(zero), 1./len(zero)))
+        if weights is None:
+            weights = np.full(len(zero), 1./len(zero))
+        else:
+            weights = np.asarray(weights, dtype=float)
+            if (weights.shape != (len(zero),) or not np.isfinite(weights).all()
+                    or np.any(weights <= 0)):
+                raise ValueError("positive finite prior weight per atom required")
+        prior = SimpleNamespace(galaxies=zero, weights=weights)
         super().__init__(prior, detector=SimpleNamespace(preprocessor=SimpleNamespace(feature_names=FEATURES)),
             conditions=conditions, detection_radius_arcsec=10., flow_neighbour_radius_arcsec=7.,
             crowding_radii_arcsec=(3., 7.), flow_features=FLOW_FEATURES, detection_features=FEATURES)
