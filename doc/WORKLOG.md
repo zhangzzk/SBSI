@@ -1,5 +1,88 @@
 # Work log
 
+## 2026-09-21 — Atom map: where the mass is versus where the proposal looks
+
+Owner asked for a picture of the prior atoms of one observation, on their
+predicted measurements centred on the observation and on their true
+properties, with drawn atoms marked separately from undrawn ones and coloured
+by posterior mass. Added `scripts/plot_proposal_atom_map.py`,
+`jobs/job_plot_proposal_atom_map.sh` and `tests/test_proposal_atom_map.py`.
+
+Diagnostic only. No flow was evaluated and no GPU was requested: the figure
+reuses the cached proposal coordinate table, the cached zero-shear detection
+probabilities and the exact 24m centre-node posterior weights already on disk,
+so it does not consume the owner's two-GPU limit. The target, model, cuts and
+prior are untouched.
+
+The draw is reproduced from `DefensiveLocalProposal.select_priority_batch`:
+key `q_j / u_j`, generator seeded by `_priority_row_seed(8701, row)`, keep the
+16384 largest. The tilted-stratified exact stratum is not excluded, so the
+drawn set is the proposal's own race rather than the estimator's final
+bookkeeping.
+
+Results, centre node, worst-curvature rows:
+
+| row | measured mag | atoms drawn | captured mass reached | at defensive floor | mass at floor | mass rank of the proposal's top atom |
+|---|---|---|---|---|---|---|
+| 142230 | 17.30 | 9/32 | 15.1% | 9 | 32.6% | 3 |
+| 409188 | 18.35 | 23/32 | 53.8% | 3 | 32.5% | 3 |
+| 3563 | 18.45 | 24/32 | 89.2% | 3 | 2.6% | 2 |
+
+Findings.
+
+- The failure is a hard priority threshold, not wasted duplicate draws. For
+  row 142230 the race cuts cleanly: every atom with `q >= 7.6e-6` was drawn
+  and every atom with `q <= 4.9e-6` was not. No floor atom was drawn, which is
+  what 16384 draws from 24m predicts.
+- Row 142230's two heaviest atoms, 51.0% of the posterior between them, both
+  sit at the defensive floor `4.1667e-09`, tied with the 24m atoms the
+  proposal treats as impossible. Its single favourite atom, `q = 0.742`, is
+  only the third heaviest and carries 8.6%.
+- The owner's blending argument is visible in the figure. On row 142230 the
+  mass-carrying atoms scatter over roughly +-0.3 in predicted `g1`/`g2`
+  relative to the observation, while the same atoms sit in a tight clump near
+  zero in predicted size and flux. Intrinsic shape shows no concentration at
+  all, and drawn versus missed atoms are interleaved in it.
+- Atoms that matter are bright and large (mag 16.5-18.5, `Re` 0.9-2.9 arcsec)
+  and sit in a sparsely populated corner of a prior whose bulk is mag 24-28 at
+  `Re < 0.5`.
+- Counting atoms found is misleading. Row 409188 drew 23 of 32 yet reached
+  only 53.8% of the mass, because the atoms it missed were the heaviest and
+  the largest in `Re`.
+- Row 3563, a magnitude fainter and less blended, behaves well on the same
+  machinery: mass-carrying atoms cluster around the observation in predicted
+  shape and 89.2% of the mass is reached.
+
+Correction to the 2026-09-21 proposal-coordinate entry. The production draw is
+priority sampling without replacement, so a dominant `q` takes one slot, not a
+proportional share of the 16384 draws. `S = sum_j w_j^2 / q_j` as reported
+there is the with-replacement second moment; the priority estimator's variance
+runs on inclusion probabilities `min(1, q_j / tau)`. The variant ordering is
+expected to be unaffected, since tempering helps by lifting starved atoms over
+`tau`, but the absolute ESS figures in that entry describe a sampler that is
+not the one in production.
+
+Validation. `tests/test_proposal_atom_map.py`, 26 passed in 16.4s inside the
+job. Job 16623681 COMPLETED in 00:02:30, peak RSS 2.45 GiB, partition
+`cluster`, no GPU. Two earlier attempts failed and were repaired: 16623593 on
+the detection cache being point-major `(10, 24000000)` rather than atom-major,
+and 16623655 on `exact/row` being present in only 2 of the 32 panel records.
+Both failure modes are now covered by unit tests.
+
+Limitations. Mass is known only for the 32 atoms the exact calculation
+retained per node, capturing 93.5%, 71.2% and 71.1% of the posterior for the
+three rows; the remainder is spread somewhere across the grey background,
+which is a uniform 60k subsample and is not proven massless. The three rows
+are the top of the worst-curvature list and are not representative. Only the
+centre stencil node is shown. The observation's own true properties are not
+plotted: the mock truth table carries provenance indices only.
+
+Next steps. Redo the nine-variant comparison on priority-sampling inclusion
+probabilities rather than `S`, so the quoted efficiency matches the production
+estimator. Quantify, rather than eyeball, the shape-versus-size split by
+comparing standardized proposal distances in the two coordinate pairs for
+drawn and missed atoms.
+
 ## 2026-09-21 — Proposal-coordinate comparison on the worst-32 exact panel
 
 Owner asked whether the tilted proposal should rank atoms on magnitude and
