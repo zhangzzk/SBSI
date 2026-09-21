@@ -1,3 +1,196 @@
+## 2026-09-21 — Flooring the proposal's predicted scatter: the ranking defect and the wasted draws are one fix
+
+Owner asked to fix the evident problems from the review before the larger
+questions. Three were in scope: the proposal dispersion floor, the atom map
+reproducing a sampler production does not run, and retiring the score and
+sampler variants the floor makes redundant. Prior resolution and the
+finite-difference/autodiff swap are explicitly **not** in this entry; each
+needs its own run.
+
+### The measurement
+
+The floor is the existing `dispersion_floor_percentile` on
+`ProposalCoordinateTable`, production value `1.0`. Re-floored tables were
+compared against the shipped one under the *configured* draw
+(`tilted_stratified`, with replacement, exact stratum left in the mixture),
+16,384 draws, rows 142230 / 409188 / 3563, jobs 16628412 and 16628488:
+
+| proposal scatter | exact-stratum share of `q` | usable draws | posterior mass reached |
+|---|---:|---:|---:|
+| shipped — 1st pct, absolute | 0.88 / 0.90 / 0.89 | 11.1% | 57.0%, sd 31.9 |
+| **50th pct, fractional flux** | **0.39 / 0.18 / 0.16** | **75.7%** | **92.1%, sd 2.9** |
+| 90th pct, fractional flux | 0.031 / 0.015 / 0.011 | 98.1% | 0.4% |
+
+Per row, over 8 independent draw seeds (`+/-` is the standard error on the
+mean; the proposal is deterministic, so only the draw varies, and the
+exact-stratum share has no seed dependence at all):
+
+| row | reached, shipped | reached, floored | usable draws, shipped | usable draws, floored |
+|---|---:|---:|---:|---:|
+| 142230 | 16.1 +/- 0.2% | **89.2 +/- 0.3%** | 12.4 +/- 0.1% | 61.2 +/- 0.1% |
+| 409188 | 62.9 +/- 0.0% | **93.4 +/- 0.9%** | 10.3 +/- 0.1% | 82.3 +/- 0.1% |
+| 3563 | 92.0 +/- 0.0% | **93.7 +/- 0.8%** | 10.7 +/- 0.1% | 83.7 +/- 0.1% |
+
+Seed noise is below 1% everywhere, so the gap is many times its own
+uncertainty. The second effect matters as much as the mean: the row-to-row
+spread collapses from sd 31.9 to sd 2.9. The shipped proposal is erratic —
+adequate on 3563, broken on 142230 — while the floored one is uniformly good.
+The worst importance weight on a drawn mass atom is 4.7x / 1.5x / 1.7x,
+against a shipped run that drew *no* mass atom outside the exact stratum at all.
+
+Two defects with one cause and one fix:
+
+1. **The ranking defect.** The proposal divides each residual by the atom's own
+   predicted scatter, so a vague atom is judged on a loose tolerance and a
+   sharp one on a tight tolerance. Faint atoms are vague and outnumber bright
+   ones ~340:1, so coincidence wins: the shipped top-8192 for row 409188 has a
+   median true `r` of 27.13 against an observation at 18.33, with 91.7% of
+   those atoms fainter than `r = 26`. Flooring the scatter at the median puts
+   the median true `r` at 18.76 with 0% beyond `r = 26`.
+2. **The wasted budget.** The exactly summed stratum is *not* removed from the
+   mixture the sampler draws from, so a draw landing inside it is spent and
+   contributes nothing (`catalogue_null._exact_plus_complement`). With ~88% of
+   `q` inside that stratum, roughly 7 of every 8 draws were thrown away.
+   Flattening the proposal fixes this as a side effect, not by a separate
+   change: waste falls from ~89% to ~24%.
+
+**The faint cluster is not uniformly eliminated.** In the top-8192 by `q`, the
+fraction of atoms fainter than `r = 26` goes 91.7% -> 0% on row 409188 and
+91.8% -> 0% on row 3563, but only 95.7% -> 48.0% on row 142230, and the
+regenerated Panel 2b for that row still shows a visible faint blob. Row 142230
+is the brightest observation of the three (measured mag 17.30) and the one
+whose exact stratum still holds 0.39 of `q` after flooring. So the floor
+removes the faint mode on two of three rows and halves it on the third; it does
+not close that question. It does not need to for the estimator's sake there —
+89.2% of the mass is still reached — the residual cluster costs draws, not
+accuracy.
+
+The 90th percentile is a genuine failure in the other direction — the proposal
+becomes so broad it stops finding the mass at all (0.4% reached). The median is
+therefore bracketed by two failures rather than picked from a list.
+
+Flux needs a **fractional** floor specifically. Its scatter is floored in
+absolute units across five decades of flux, so the floor is set by the faintest
+atoms and cannot bind on a bright one: atoms brighter than `r = 20` carry a
+median absolute flux scatter 92x above the 1st-percentile floor and 12x above
+the median, while in fractional terms their scatter is 0.011 dex against 0.53
+dex for atoms fainter than `r = 26`. Ranking that coordinate on `sigma / |x|`
+makes the floor mean the same thing at every brightness.
+
+### Code
+
+`sbsi/catalogue_sampling.py`
+
+- New `floored_dispersion(values, dispersion, *, percentile, fractional,
+  fallback)` — the floor, lifted out of `from_flow` and given a fractional
+  mode. The percentile is taken on the active atoms' own scatter, so it
+  introduces no hand-chosen scale; a coordinate flagged `fractional` is ranked
+  on `sigma / |x|` and the floor carried back to absolute units per atom.
+- New `_fractional_mask(names, fractional_targets)` — rejects a target name
+  absent from the table rather than silently ignoring it.
+- `ProposalCoordinateTable.from_flow` gained `fractional_floor_targets` and now
+  delegates to `floored_dispersion`. **`dispersion_floor_percentile` keeps its
+  default of 1.0**: no production default changes in this commit.
+- New `ProposalCoordinateTable.with_dispersion_floor(*, percentile,
+  fractional_targets)` — re-floors a cached table with no flow evaluation, and
+  records the re-floor in `metadata["dispersion_refloor"]` so a re-floored
+  cache cannot be mistaken for a freshly summarised one. For an *additive*
+  coordinate this reproduces a fresh build exactly when the new percentile is
+  at least the applied one (tested to `atol=0`); for a *fractional* one the
+  earlier absolute floor can permute the `sigma/|x|` order, so it agrees only
+  up to the atoms that floor already bound — 1% of them at the shipped setting.
+
+`scripts/plot_proposal_atom_map.py`
+
+- New `production_draw` replaces the priority race: one fixed-width uniform
+  record per draw from a generator seeded by `(seed, object_id)`, second column,
+  inverse-CDF on the cumulative mixture — sampling **with replacement**, with
+  the exact stratum left in place and draws landing there counted as wasted.
+  This is what `estimator_mode = tilted_stratified` actually reaches. The
+  previous `select_priority_batch` reproduction belongs to `priority_stratified`,
+  which nothing runs; the correction is in the entry below.
+- Reports coverage `1 - (1 - q)^M` where the priority version reported an
+  inclusion probability. With replacement there is no inclusion probability.
+- `--sampler` and `--score` are gone, and with them `priority_race`,
+  `stratified_race`, `slot_accounting`, `common_metric_scale`,
+  `common_metric_score`, `mixture_from_score` and the `FIFTY_FIFTY_*` constants.
+  The fifty-fifty split and the shared-metric score were both approaching the
+  floor from outside; neither existed in `sbsi/`. Replaced by
+  `--floor-percentile` and a repeatable `--fractional-floor TARGET`.
+- The report now carries a `dispersion_floor` block and a `sampler` block
+  naming the mode, the wasted fraction and the worst weight on a drawn mass
+  atom.
+- **Bug fixed, caught by the first regenerated figure:** `n_drawn` holds the
+  number of *distinct* atoms the draw reached (7,604 on row 142230), and six
+  sites used it as if it were the draw budget (16,384). The figure therefore
+  claimed "82% of draws wasted" where the true share is 38%, and every
+  `1 / (M q)` weight in the report was inflated by 2.2x. Renamed to `n_unique`
+  and the budget sites switched to `PRODUCTION_DRAWS`. The independently
+  written measurement job was never affected, which is why the two disagreed
+  and the error surfaced; job 16628412's numbers stand.
+
+`scripts/run_proposal_atom_map.sh` takes `[FLOOR_PERCENTILE]
+[FRACTIONAL_TARGET...]` instead of the two retired mode arguments.
+
+### Validation
+
+- `pytest tests/test_catalogue_sampling.py tests/test_proposal_atom_map.py -q`
+  → **77 passed**. 9 new floor tests, 7 new `production_draw` tests; 29 tests
+  covering the retired helpers removed. Net −124 lines across the five files.
+- The pivotal test is
+  `test_fractional_floor_binds_on_bright_atoms_where_an_absolute_floor_cannot`:
+  on a toy catalogue spanning five decades, an absolute floor at the median
+  leaves the bright atoms' flux tolerance *bit-for-bit unchanged*, while the
+  fractional floor lifts it by a measured factor of 4.59 and puts those atoms
+  exactly on the median ratio. Every threshold in the new tests was measured
+  first and the measured value recorded in a comment; none was guessed.
+- Job 16628412 — the floor comparison; job 16628488 — the 8-seed error bars.
+- Jobs 16628480 / 16628481, regenerated after the label fix as 16628513 /
+  16628512 — the repaired atom map end to end on all three rows.
+  **Cross-check:** 16628480 reports `REACHED 11/32 captured=0.9350
+  reached=0.1493` for row 142230, i.e. 16.0% of the captured mass, and
+  16628481 reports `reached=0.8303`, i.e. 88.8%. Both match job 16628412's
+  independently written measurement of the same row and settings.
+
+### Limitations
+
+- **Nothing in production changed.** `dispersion_floor_percentile` still
+  defaults to 1.0 and no config was edited. Adopting the median floor means
+  rebuilding or re-flooring the proposal table for a run and is a separate,
+  owner-authorised step.
+- Three rows, chosen as the worst-curvature rows, not a random sample. They
+  are not evidence about the other ~500k. The pooled sd above is a spread over
+  three rows, so it is an indication, not a population estimate.
+- The 50th percentile is the better of three settings tried, not an optimised
+  value. It was not tuned against any target number, and no intermediate
+  percentile was scanned.
+- This addresses the finite-draw integration error only — the smallest of the
+  three problems ordered in the entry below. Exact 24m summation on row 142230
+  is already non-concave, so no amount of sampler repair alone produces a
+  positive information matrix. Reaching 92.1% of the captured mass instead of
+  57.0% does not change that conclusion.
+- The floor is a proposal-only heuristic, as `doc/V36_INFERENCE_REVIEW.md`
+  sanctions: it changes which atoms are proposed, never what they are worth.
+  The likelihood and the target are untouched.
+- An overflow in the first version of the fractional ratio (a shear component
+  passes through zero, where `sigma / |x|` is not finite) was caught by job
+  16628412's own warning output and is fixed with a regression test; atoms that
+  cannot form the quotient keep the absolute floor.
+
+### Next steps
+
+- Run the inference on one row with the median floor to see what the estimator
+  does with 92% of the mass instead of 57% — the first number this series has
+  produced that could plausibly move the Hessian.
+- Prior resolution remains the largest of the three problems and is untouched.
+- Swap the h=0.001 finite differences for autodiff (957.16 / 1520.06 against
+  390.91 / 766.12 — the derivative error is larger than the quantity).
+- Removing the exact stratum from the mixture before drawing would recover the
+  remaining ~24% of wasted draws directly, rather than as a side effect. Not
+  done here: it changes the estimator, not the proposal.
+- Row 142230's residual faint cluster is unexplained; it is the brightest of
+  the three observations and retains the largest exact-stratum share.
+
 ## 2026-09-21 — Sampler and inference review: two corrections to this log, and the floor that already exists
 
 Owner asked for a review of the whole sampler and inference path with an

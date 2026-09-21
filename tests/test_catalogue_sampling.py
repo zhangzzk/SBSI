@@ -1,4 +1,5 @@
 from dataclasses import asdict, replace
+import warnings
 import json
 
 import numpy as np
@@ -1005,3 +1006,215 @@ def test_batched_tilted_draws_match_the_single_row_path():
         proposal.draw_tilted(
             candidates, observed, n_draws=4, delta=delta, seed=99, object_chunk=0
         )
+
+
+def _floor_catalogue(n=4096, seed=17):
+    """Atoms spanning five decades in flux, with a brightness-dependent scatter.
+
+    Mirrors the V3.6 table's structure without touching it: a bright atom's
+    predicted measurement is sharp in every coordinate, a faint one's is vague,
+    and the flux scatter is a fixed fraction of the flux so that it spans the
+    same five decades the flux does.
+    """
+    rng = np.random.default_rng(seed)
+    magnitude = rng.uniform(17.0, 28.0, size=n)
+    flux = 10.0 ** (-0.4 * (magnitude - 30.0))
+    faintness = np.clip((magnitude - 17.0) / 11.0, 0.0, 1.0)
+    values = np.column_stack([
+        rng.normal(0.0, 0.3, size=n),
+        np.full(n, 4.0) + rng.normal(0.0, 0.5, size=n),
+        flux,
+    ])
+    dispersion = np.column_stack([
+        0.02 + 0.35 * faintness,
+        0.2 + 1.2 * faintness,
+        flux * (0.02 + 1.2 * faintness),
+    ])
+    return values, dispersion, magnitude
+
+
+def test_fractional_floor_binds_on_bright_atoms_where_an_absolute_floor_cannot():
+    """The defect the fractional floor exists to remove.
+
+    Flux spans five decades, so the percentile of the *absolute* flux scatter
+    is set by the faintest atoms and leaves a bright atom's tolerance untouched
+    however high the percentile is raised.  Ranking the same atoms on their
+    fractional scatter binds at every brightness.
+    """
+    from sbsi.catalogue_sampling import floored_dispersion
+
+    values, dispersion, magnitude = _floor_catalogue()
+    bright = magnitude < 19.0
+    fallback = np.full(3, 1e-12)
+    absolute = floored_dispersion(
+        values, dispersion, percentile=50.0,
+        fractional=np.array([False, False, False]), fallback=fallback,
+    )
+    # An absolute floor at the median does not move a bright atom's flux
+    # tolerance at all: its own scatter already exceeds the median.
+    np.testing.assert_allclose(absolute[bright, 2], dispersion[bright, 2])
+    fractional = floored_dispersion(
+        values, dispersion, percentile=50.0,
+        fractional=np.array([False, False, True]), fallback=fallback,
+    )
+    # The fractional floor does move it: on this catalogue every bright atom's
+    # flux tolerance is lifted, here by a median factor of 4.59.
+    assert (fractional[bright, 2] > dispersion[bright, 2]).all()
+    assert np.median(fractional[bright, 2] / dispersion[bright, 2]) > 4.0
+    # In fractional terms every atom now sits at or above the same tolerance,
+    # and the bright ones sit exactly on it because their own scatter is below.
+    median_ratio = np.median(dispersion[:, 2] / values[:, 2])
+    ratio = fractional[:, 2] / values[:, 2]
+    assert ratio.min() >= median_ratio - 1e-12
+    np.testing.assert_allclose(ratio[bright], median_ratio, rtol=1e-9)
+
+
+def test_additive_floor_equalizes_bright_and_faint_tolerances():
+    """Shape and size need no fractional treatment, only a higher percentile."""
+    from sbsi.catalogue_sampling import floored_dispersion
+
+    values, dispersion, magnitude = _floor_catalogue()
+    bright, faint = magnitude < 19.0, magnitude > 26.0
+    before = np.median(dispersion[faint, 0]) / np.median(dispersion[bright, 0])
+    floored = floored_dispersion(
+        values, dispersion, percentile=50.0,
+        fractional=np.array([False, False, False]),
+        fallback=np.full(3, 1e-12),
+    )
+    after = np.median(floored[faint, 0]) / np.median(floored[bright, 0])
+    # Measured on this catalogue: 6.38 before, 1.76 after.
+    assert before > 5.0
+    assert after < before / 3.0
+
+
+def test_refloor_of_an_additive_coordinate_matches_a_fresh_build():
+    """Re-flooring a cached table must not differ from building it that way.
+
+    The shipped table was already floored at the 1st percentile.  Applying a
+    higher percentile afterwards has to give exactly what a fresh build at that
+    percentile would, or the cached 24m table cannot be reused.
+    """
+    from sbsi.catalogue_sampling import floored_dispersion
+
+    values, dispersion, _ = _floor_catalogue()
+    flat = np.array([False, False, False])
+    fallback = np.full(3, 1e-12)
+    once = floored_dispersion(values, dispersion, percentile=1.0,
+                              fractional=flat, fallback=fallback)
+    twice = floored_dispersion(values, once, percentile=50.0,
+                               fractional=flat, fallback=fallback)
+    direct = floored_dispersion(values, dispersion, percentile=50.0,
+                                fractional=flat, fallback=fallback)
+    np.testing.assert_allclose(twice, direct, rtol=0.0, atol=0.0)
+
+
+def test_floor_never_lowers_a_dispersion():
+    from sbsi.catalogue_sampling import floored_dispersion
+
+    values, dispersion, _ = _floor_catalogue()
+    for percentile in (0.0, 1.0, 50.0, 100.0):
+        floored = floored_dispersion(
+            values, dispersion, percentile=percentile,
+            fractional=np.array([False, False, True]),
+            fallback=np.full(3, 1e-12),
+        )
+        assert (floored >= dispersion - 1e-12).all()
+        assert np.isfinite(floored).all() and (floored > 0).all()
+
+
+def test_floor_repairs_a_non_positive_dispersion():
+    from sbsi.catalogue_sampling import floored_dispersion
+
+    values, dispersion, _ = _floor_catalogue(n=256)
+    dispersion[3, 0] = 0.0
+    dispersion[7, 1] = np.nan
+    floored = floored_dispersion(
+        values, dispersion, percentile=50.0,
+        fractional=np.array([False, False, True]),
+        fallback=np.full(3, 1e-12),
+    )
+    assert np.isfinite(floored).all() and (floored > 0).all()
+
+
+def test_floor_rejects_a_bad_percentile_and_an_unknown_target():
+    from sbsi.catalogue_sampling import _fractional_mask, floored_dispersion
+
+    values, dispersion, _ = _floor_catalogue(n=64)
+    with pytest.raises(ValueError, match="percentile"):
+        floored_dispersion(values, dispersion, percentile=101.0,
+                           fractional=np.array([False, False, True]),
+                           fallback=np.full(3, 1e-12))
+    with pytest.raises(ValueError, match="absent from targets"):
+        _fractional_mask(("a", "b"), ("c",))
+    assert _fractional_mask(("a", "b"), ("b",)).tolist() == [False, True]
+
+
+def test_with_dispersion_floor_preserves_values_and_records_the_refloor():
+    values, dispersion, _ = _floor_catalogue(n=512)
+    table = ProposalCoordinateTable(
+        values=values,
+        target_names=("g1", "radius", "flux"),
+        center=np.median(values, axis=0),
+        scale=np.std(values, axis=0),
+        dispersion=dispersion,
+        statistic="mean",
+        dispersion_statistic="std",
+        n_flow_samples=128,
+    )
+    floored = table.with_dispersion_floor(
+        percentile=50.0, fractional_targets=("flux",)
+    )
+    np.testing.assert_array_equal(floored.values, table.values)
+    assert floored.target_names == table.target_names
+    assert (floored.dispersion >= table.dispersion - 1e-12).all()
+    assert floored.metadata["dispersion_refloor"]["percentile"] == 50.0
+    assert floored.metadata["dispersion_refloor"]["fractional_targets"] == ["flux"]
+    # The original table is untouched.
+    np.testing.assert_array_equal(table.dispersion, dispersion)
+
+
+def test_with_dispersion_floor_requires_a_dispersion():
+    table = ProposalCoordinateTable(
+        values=np.array([[0.0], [1.0]]),
+        target_names=("g1",),
+        center=np.array([0.5]),
+        scale=np.array([1.0]),
+    )
+    with pytest.raises(ValueError, match="no dispersion"):
+        table.with_dispersion_floor(percentile=50.0)
+
+
+def test_fractional_floor_survives_a_coordinate_that_passes_through_zero():
+    """A shear component sits arbitrarily close to zero, where sigma/|x| is not
+    a finite number.  Such an atom has no fractional scatter, so it keeps the
+    absolute floor instead of poisoning the percentile with an infinity."""
+
+    from sbsi.catalogue_sampling import floored_dispersion
+
+    values = np.array([[0.0, 1.0],
+                       [5.0e-320, 2.0],
+                       [-0.5, 4.0],
+                       [0.25, 8.0]])
+    dispersion = np.array([[0.1, 0.5],
+                           [0.2, 1.0],
+                           [0.3, 2.0],
+                           [0.4, 4.0]])
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        floored = floored_dispersion(
+            values, dispersion, percentile=50.0,
+            fractional=np.array([True, True]),
+            fallback=np.array([1.0e-6, 1.0e-6]),
+        )
+    assert np.isfinite(floored).all()
+    assert (floored >= dispersion).all()
+    # The two atoms that cannot form the quotient fall back to the absolute
+    # floor, the median of the column's own scatter.
+    np.testing.assert_allclose(floored[:2, 0], np.median(dispersion[:, 0]))
+    # The two that can are lifted to the median ratio times their own |x|.
+    ratio = np.median(dispersion[2:, 0] / np.abs(values[2:, 0]))
+    np.testing.assert_allclose(
+        floored[2:, 0],
+        np.maximum(dispersion[2:, 0], np.abs(values[2:, 0]) * ratio),
+    )
+

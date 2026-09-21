@@ -14,6 +14,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 import gc
 import json
+import warnings
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
@@ -34,6 +35,114 @@ from .catalogue_likelihood import CatalogueLikelihood, CatalogueScore
 # which fits the A40s this runs on.  Driving it one observation at a time cost
 # 78% of the estimator's wall clock (cont.328).
 TILTED_OBJECT_CHUNK = 32
+
+
+def _fractional_mask(
+    names: Sequence[str], fractional_targets: Sequence[str]
+) -> np.ndarray:
+    """Which coordinates carry a multiplicative rather than additive scatter."""
+    names = tuple(names)
+    requested = tuple(fractional_targets or ())
+    unknown = sorted(set(requested) - set(names))
+    if unknown:
+        raise ValueError(f"fractional floor names absent from targets: {unknown}")
+    return np.array([name in set(requested) for name in names], dtype=bool)
+
+
+def floored_dispersion(
+    values: np.ndarray,
+    dispersion: np.ndarray,
+    *,
+    percentile: float,
+    fractional: np.ndarray,
+    fallback: np.ndarray,
+) -> np.ndarray:
+    """Raise each coordinate's predicted scatter to a common floor.
+
+    The proposal is not the target.  Its job is to be broad enough that no
+    atom carrying posterior mass is scored out of reach, so a floor on the
+    predicted scatter is a proposal-only heuristic in the sense of
+    ``doc/V36_INFERENCE_REVIEW.md``: it changes which atoms are proposed, never
+    what they are worth.  The floor is a percentile of the active atoms' own
+    scatter, so it introduces no hand-chosen scale.
+
+    ``fractional`` marks, per coordinate, whether that scatter is naturally
+    additive or multiplicative.  Flux spans five decades across this prior, so
+    a floor in absolute flux units is fixed by the faintest atoms and cannot
+    bind on a bright one: on the V3.6 table the atoms brighter than ``r = 20``
+    carry a median absolute flux scatter a factor 92 above the 1st-percentile
+    floor and a factor 12 above the median, while in fractional terms their
+    scatter is 0.011 dex against 0.53 dex for the atoms fainter than ``r=26``.
+    For a coordinate flagged here the percentile is taken on ``sigma / |x|``
+    and multiplied back by each atom's own ``|x|``, so the floor means the same
+    thing at every brightness.  ``fallback`` supplies the floor for a
+    coordinate whose percentile is degenerate.
+    """
+
+    values = np.asarray(values, dtype=np.float64)
+    dispersion = np.asarray(dispersion, dtype=np.float64)
+    fractional = np.asarray(fractional, dtype=bool)
+    fallback = np.asarray(fallback, dtype=np.float64)
+    if values.ndim != 2 or dispersion.shape != values.shape:
+        raise ValueError("values and dispersion must share shape (n_atoms, n_targets)")
+    n_targets = values.shape[1]
+    if fractional.shape != (n_targets,) or fallback.shape != (n_targets,):
+        raise ValueError("fractional and fallback need one entry per target")
+    if not 0 <= percentile <= 100:
+        raise ValueError("percentile must lie in [0, 100]")
+
+    usable = np.isfinite(dispersion) & (dispersion > 0.0)
+    positive = np.where(usable, dispersion, np.nan)
+    # A multiplicative coordinate is ranked on its fractional scatter, so the
+    # percentile is taken there and carried back to absolute units per atom.
+    magnitude = np.abs(values)
+    ratio = np.full(dispersion.shape, np.nan, dtype=np.float64)
+    has_ratio = np.zeros(dispersion.shape, dtype=bool)
+    if fractional.any():
+        # The quotient is formed only on the multiplicative coordinates, and only
+        # where the magnitude is large enough to divide by.  A coordinate such as
+        # a shear component passes through zero, and dividing there overflows to
+        # infinity, which would poison the percentile; an atom sitting at zero has
+        # no fractional scatter, so it is left NaN here and keeps the absolute
+        # floor below.
+        columns = np.flatnonzero(fractional)
+        sub_magnitude = magnitude[:, columns]
+        sub_dispersion = dispersion[:, columns]
+        divisible = (
+            usable[:, columns]
+            & np.isfinite(sub_magnitude)
+            & (sub_magnitude > sub_dispersion / np.finfo(np.float64).max)
+        )
+        ratio[:, columns] = np.where(
+            divisible,
+            sub_dispersion / np.where(divisible, sub_magnitude, 1.0),
+            np.nan,
+        )
+        has_ratio[:, columns] = divisible
+    with warnings.catch_warnings():
+        # An all-NaN column is a degenerate coordinate, not an error; the
+        # fallback below covers it.
+        warnings.simplefilter("ignore", RuntimeWarning)
+        absolute_floor = np.nanpercentile(positive, percentile, axis=0)
+        ratio_floor = np.nanpercentile(ratio, percentile, axis=0)
+    absolute_floor = np.where(
+        np.isfinite(absolute_floor) & (absolute_floor > 0.0),
+        absolute_floor,
+        fallback,
+    )
+    ratio_floor = np.where(np.isfinite(ratio_floor) & (ratio_floor > 0.0),
+                           ratio_floor, 0.0)
+
+    floor = np.broadcast_to(absolute_floor, dispersion.shape).copy()
+    if fractional.any():
+        # A fractional floor replaces the absolute one, but only for an atom
+        # that could form the quotient in the first place: at or near zero
+        # ``sigma / |x|`` means nothing, so such an atom keeps the absolute
+        # floor rather than being handed a floor of essentially zero.
+        scaled = magnitude * ratio_floor
+        floor = np.where(has_ratio & np.isfinite(scaled) & (scaled > 0.0),
+                         scaled, floor)
+    return np.maximum(np.where(usable, dispersion, floor), floor)
 
 
 def _blocked_cumulative_sum(values: torch.Tensor, block_size: int) -> torch.Tensor:
@@ -122,6 +231,53 @@ class ProposalCoordinateTable:
     def standardized(self) -> np.ndarray:
         return (self.values - self.center) / self.scale
 
+    def with_dispersion_floor(
+        self,
+        *,
+        percentile: float,
+        fractional_targets: Sequence[str] = (),
+    ) -> "ProposalCoordinateTable":
+        """Return this table with its scatter re-floored, no flow needed.
+
+        The floor is applied after the per-atom statistic is summarized, so
+        raising it does not require re-drawing the flow.  For an *additive*
+        coordinate the result is exactly what building the table at this
+        percentile would have produced, provided the new percentile is at least
+        the one already applied: the earlier floor only lifted values strictly
+        below it, which cannot move a higher percentile, and the two maxima
+        compose.  A *fractional* floor ranks atoms by ``sigma / |x|`` instead,
+        an order the earlier absolute floor can permute, so there the re-floor
+        reproduces a fresh build only up to the atoms that floor already bound
+        -- 1% of them at the shipped setting.  ``metadata`` records the
+        re-floor so a cache cannot be mistaken for a freshly summarized table.
+        """
+
+        if self.dispersion is None:
+            raise ValueError("this proposal table carries no dispersion to floor")
+        floored = floored_dispersion(
+            self.values,
+            self.dispersion,
+            percentile=percentile,
+            fractional=_fractional_mask(self.target_names, fractional_targets),
+            fallback=np.maximum(1.0e-3 * self.scale, np.finfo(np.float64).eps),
+        )
+        metadata = dict(self.metadata or {})
+        metadata["dispersion_refloor"] = {
+            "percentile": float(percentile),
+            "fractional_targets": list(fractional_targets or ()),
+        }
+        return ProposalCoordinateTable(
+            self.values,
+            self.target_names,
+            self.center,
+            self.scale,
+            dispersion=floored,
+            statistic=self.statistic,
+            dispersion_statistic=self.dispersion_statistic,
+            n_flow_samples=self.n_flow_samples,
+            metadata=metadata,
+        )
+
     @classmethod
     def from_flow(
         cls,
@@ -134,6 +290,7 @@ class ProposalCoordinateTable:
         row_chunk: int = 8192,
         seed: int = 7101,
         dispersion_floor_percentile: float = 1.0,
+        fractional_floor_targets: Sequence[str] = (),
         metadata: Optional[Mapping] = None,
     ) -> "ProposalCoordinateTable":
         """Estimate per-atom measured summaries using full flow draws.
@@ -204,27 +361,12 @@ class ProposalCoordinateTable:
         fallback = np.std(support_values, axis=0)
         scale = np.where(np.isfinite(scale) & (scale > 0), scale, fallback)
         scale = np.where(np.isfinite(scale) & (scale > 0), scale, 1.0)
-        support_dispersion = dispersion[active_indices]
-        positive_dispersion = np.where(
-            np.isfinite(support_dispersion) & (support_dispersion > 0),
-            support_dispersion,
-            np.nan,
-        )
-        dispersion_floor = np.nanpercentile(
-            positive_dispersion, dispersion_floor_percentile, axis=0
-        )
-        dispersion_floor = np.where(
-            np.isfinite(dispersion_floor) & (dispersion_floor > 0),
-            dispersion_floor,
-            np.maximum(1.0e-3 * scale, np.finfo(np.float64).eps),
-        )
-        dispersion[active_indices] = np.maximum(
-            np.where(
-                np.isfinite(support_dispersion) & (support_dispersion > 0),
-                support_dispersion,
-                dispersion_floor,
-            ),
-            dispersion_floor,
+        dispersion[active_indices] = floored_dispersion(
+            values[active_indices],
+            dispersion[active_indices],
+            percentile=dispersion_floor_percentile,
+            fractional=_fractional_mask(names, fractional_floor_targets),
+            fallback=np.maximum(1.0e-3 * scale, np.finfo(np.float64).eps),
         )
         # Inactive rows are retained only for alignment with the full scene.
         # They never enter the active-only proposal tree.

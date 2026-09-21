@@ -8,13 +8,14 @@ Two panel rows, both showing the same atoms of the same observation:
 * row 2 -- the same atoms on their true (input) properties.  This shows what
   the high-mass atoms physically are.
 
-Marker encodes whether the production priority race drew the atom (``x``) or
-not (``.``).  Colour encodes the exact posterior mass of the atom.  Mass is
+Marker encodes whether the production draw reached the atom usefully (``x``)
+or not (``.``).  Colour encodes the exact posterior mass of the atom.  Mass is
 only known for the atoms the exact 24m calculation retained; every other atom
 is drawn in grey and carries, in total, the small remainder.
 
 Diagnostic only.  Nothing here changes the target, the model, the cuts or the
-prior; the proposal is evaluated exactly as production builds it.
+prior; the proposal is built exactly as production builds it, and re-flooring
+its predicted scatter with ``--floor-percentile`` changes no stored default.
 """
 from __future__ import annotations
 
@@ -32,17 +33,11 @@ PRODUCTION_TEMPERATURE = 1.0
 PRODUCTION_SEED = 8701
 PRODUCTION_DRAWS = 16384
 # pipeline_config.proposal.candidates in the run's result.json.  These atoms
-# are summed exactly and their weight is zeroed before the race, so they
-# contribute no variance and consume no draw.  Racing them, as an earlier
-# version of this script did, overstates how much of the budget the ranked
-# component wastes on saturation.
+# are summed exactly -- but they are NOT removed from the mixture the sampler
+# draws from, so a draw landing inside the stratum is spent and contributes
+# nothing (catalogue_null._exact_plus_complement).  Their share of the proposal
+# is therefore the share of the draw budget that is thrown away.
 PRODUCTION_CANDIDATES = 1024
-# The owner's fixed-count alternative.  Production races one mixture, so the
-# split between its ranked and flat components is decided by their mass ratio
-# once the exact stratum is removed -- about 3,100 ranked against 13,300
-# uniform on these rows.  Allocating *counts* instead of mass decouples them.
-FIFTY_FIFTY_RANKED = PRODUCTION_DRAWS // 2
-FIFTY_FIFTY_UNIFORM = PRODUCTION_DRAWS - FIFTY_FIFTY_RANKED
 CENTRE_NODE = 0
 
 TARGET_ORDER = [
@@ -263,156 +258,61 @@ def zero_point_row(manifest: dict, n_atoms: int) -> int:
     return points.index([0.0, 0.0])
 
 
-def priority_race(mixture: torch.Tensor, *, seed: int, object_id: int, n_select: int):
-    """Reproduce the production without-replacement draw for one observation.
+def production_draw(probability: np.ndarray, *, seed: int, object_id: int,
+                    n_draws: int, exact_stratum: np.ndarray) -> dict:
+    """Reproduce the draw production actually runs, for one observation.
 
-    Mirrors ``DefensiveLocalProposal.select_priority_batch``: one uniform per
-    atom from a generator seeded by ``(seed, object_id)``, key ``q_j / u_j``,
-    keep the ``n_select`` largest.  No exact stratum is excluded here, so this
-    is the race as the proposal alone would run it.
+    The configured estimator mode is ``tilted_stratified``, which reaches
+    ``DefensiveLocalProposal.draw_tilted`` and thence
+    ``WholeCatalogueProxy.draw_uniforms_batch``: one fixed-width uniform record
+    per draw from a generator seeded by ``(seed, object_id)``, the second
+    column used, mapped through the cumulative mixture by inverse-CDF.  That is
+    sampling **with replacement**, and the mixture is *not* modified for the
+    exact stratum -- a draw landing inside it simply contributes nothing,
+    because that stratum is already summed exactly
+    (``catalogue_null._exact_plus_complement``).
+
+    An earlier version of this script reproduced ``select_priority_batch``
+    instead, which is sampling without replacement and belongs to the
+    ``priority_stratified`` mode nothing runs.  The proposal is the same in
+    both, so where the mass sits was unaffected, but inclusion probabilities
+    and Horvitz-Thompson weights are not quantities this estimator has.
     """
 
-    from sbsi.catalogue_sampling import _priority_row_seed
-
-    if n_select <= 0 or n_select + 1 > mixture.numel():
-        raise ValueError("priority sampling needs more atoms than draws")
-    generator = torch.Generator(device=mixture.device)
-    generator.manual_seed(_priority_row_seed(int(seed), int(object_id)))
-    tiny = float(np.finfo(np.float64).tiny)
-    uniform = torch.rand(
-        mixture.numel(),
-        generator=generator,
-        device=mixture.device,
-        dtype=torch.float64,
-    ).clamp_min(tiny)
-    top = torch.topk(mixture / uniform, n_select + 1, sorted=True)
-    threshold = top.values[n_select]
-    if not torch.isfinite(threshold) or threshold <= 0.0:
-        raise RuntimeError(f"priority threshold not positive finite: {threshold}")
-    return (top.indices[:n_select].cpu().numpy().astype(np.int64),
-            float(threshold))
-
-
-def stratified_race(probability: np.ndarray, excluded: np.ndarray, floor: float,
-                    *, seed: int, object_id: int,
-                    n_ranked: int, n_uniform: int) -> dict:
-    """Draw a fixed count from each stratum instead of one mixed race.
-
-    Two independent without-replacement draws over the atoms the exact stratum
-    left behind:
-
-    * ``n_ranked`` slots raced on the softmax tail alone, ``q_j - floor``, so
-      the race sees the ranking's preference and nothing else.  Its threshold
-      falls as its budget rises, which is the whole point -- the production
-      race gives this component only as many slots as its *mass* ratio buys.
-    * ``n_uniform`` slots with equal weights, which makes the same race a
-      simple random sample without replacement, so every eligible atom is
-      included with exactly ``n_uniform / n_eligible``.
-
-    An atom can win in both strata; it is credited to the ranking when it
-    does.  Combined inclusion is ``1 - (1 - i_r)(1 - i_u)``, which is what the
-    Horvitz-Thompson weight must divide by.
-    """
-
-    if floor <= 0.0 or not np.isfinite(floor):
-        raise ValueError("defensive floor must be positive and finite")
-    n_atoms = probability.size
-    n_ranked_requested = int(n_ranked)
-    eligible = np.ones(n_atoms, dtype=bool)
-    eligible[excluded] = False
-    n_eligible = int(eligible.sum())
-    if n_ranked + 1 > n_eligible or n_uniform + 1 > n_eligible:
-        raise ValueError("stratified draw needs more eligible atoms than slots")
-
-    tail = np.where(eligible, np.maximum(probability - floor, 0.0), 0.0)
-    positive = tail > 0.0
-    n_positive = int(positive.sum())
-    if n_positive <= n_ranked:
-        # The ranking prefers fewer atoms than it has slots, which happens when
-        # the softmax underflows to the floor on all but a handful.  Racing is
-        # then meaningless: take every preferred atom with certainty and hand
-        # the leftover slots to the uniform stratum rather than leave them
-        # unspent, which would quietly shrink the budget.
-        ranked_idx = np.flatnonzero(positive).astype(np.int64)
-        ranked_tau = float(tail[positive].min()) if n_positive else float("inf")
-        ranked_inclusion = positive.astype(np.float64)
-    else:
-        ranked_idx, ranked_tau = priority_race(
-            torch.as_tensor(tail), seed=seed, object_id=object_id,
-            n_select=n_ranked,
-        )
-        ranked_inclusion = np.minimum(1.0, tail / ranked_tau)
-    n_ranked = int(ranked_idx.size)
-    n_uniform = min(n_uniform + (n_ranked_requested - n_ranked), n_eligible - 1)
-
-    # A distinct seed keeps the two strata independent; reusing the production
-    # seed would make the uniform draw a deterministic function of the ranked
-    # one through the shared uniforms.
-    uniform_idx, _ = priority_race(
-        torch.as_tensor(eligible.astype(np.float64)),
-        seed=seed + 1, object_id=object_id, n_select=n_uniform,
+    if n_draws <= 0:
+        raise ValueError("n_draws must be positive")
+    if probability.ndim != 1 or not probability.size:
+        raise ValueError("expected one proposal probability per atom")
+    rng = np.random.default_rng(
+        np.random.SeedSequence([int(seed), int(object_id)])
     )
-    uniform_inclusion = float(n_uniform) / float(n_eligible)
+    # Fixed-width records keep a smaller draw count an exact prefix of a
+    # larger one, which is what makes the nested ladder free; production reads
+    # the second column.
+    uniforms = rng.random((int(n_draws), 3))[:, 1]
+    cumulative = np.cumsum(probability)
+    cumulative[-1] = 1.0
+    drawn = np.searchsorted(cumulative, uniforms, side="right")
+    drawn = np.clip(drawn, None, probability.size - 1).astype(np.int64)
 
-    drawn = np.union1d(ranked_idx, uniform_idx).astype(np.int64)
-    in_ranked = np.zeros(n_atoms, dtype=bool)
-    in_ranked[ranked_idx] = True
-    inclusion = 1.0 - (1.0 - ranked_inclusion) * (1.0 - uniform_inclusion * eligible)
+    inside = np.zeros(probability.size, dtype=bool)
+    inside[exact_stratum] = True
+    wasted = inside[drawn]
+    complement = drawn[~wasted]
+    unique, multiplicity = np.unique(complement, return_counts=True)
+    # With replacement there is no inclusion probability and no threshold; the
+    # weight a drawn atom carries is 1 / (M q_j), and coverage -- the chance
+    # the atom is seen at all -- is 1 - (1 - q_j)^M.
+    coverage = -np.expm1(np.log1p(-np.clip(probability, 0.0, 1.0)) * n_draws)
     return dict(
-        kind="fifty_fifty",
-        drawn=drawn,
-        from_ranked=in_ranked[drawn],
-        inclusion=inclusion,
-        ranked_indices=ranked_idx,
-        uniform_indices=uniform_idx,
-        ranked_threshold=float(ranked_tau),
-        ranked_inclusion=ranked_inclusion,
-        uniform_inclusion=uniform_inclusion,
-        n_eligible=n_eligible,
-        n_ranked_slots=int(n_ranked),
-        n_ranked_slots_requested=n_ranked_requested,
-        n_uniform_slots=int(n_uniform),
-        n_overlap=int(n_ranked + n_uniform - drawn.size),
-        tail_mass=float(tail.sum()),
-        n_saturated=int(np.count_nonzero(tail >= ranked_tau)),
+        drawn=unique,
+        multiplicity=multiplicity,
+        all_draws=drawn,
+        n_wasted=int(wasted.sum()),
+        n_usable=int((~wasted).sum()),
+        coverage=coverage,
+        exact_mass=float(probability[exact_stratum].sum()),
     )
-
-
-def slot_accounting(probability: np.ndarray, floor: float, threshold: float,
-                    delta: float) -> dict:
-    """How each half of the mixture converts its probability into draws.
-
-    Priority sampling includes atom ``j`` with probability ``min(1, q_j/tau)``.
-    The ``min`` is the point: probability an atom holds above ``tau`` cannot buy
-    a second slot, so a concentrated component converts far less of its mass
-    into draws than a thin one.  Comparing the realised inclusion sum against
-    the uncapped ``mass/tau`` says how much each component wastes.
-    """
-
-    if not np.isfinite(threshold) or threshold <= 0.0:
-        raise ValueError("priority threshold must be positive and finite")
-    inclusion = np.minimum(1.0, probability / threshold)
-    saturated = probability >= threshold
-    ranked_mass = float(probability.sum() - delta)
-    # Below the cap an atom's slots split linearly between the two
-    # contributions.  A saturated atom's single slot is credited entirely to
-    # the ranking, because the flat share alone never reaches tau; crediting it
-    # a flat share as well would count the same slot twice.
-    flat_draws = float((floor / threshold) * np.count_nonzero(~saturated))
-    ranked_draws = float(
-        np.count_nonzero(saturated)
-        + ((probability[~saturated] - floor) / threshold).sum()
-    )
-    return {
-        "threshold": float(threshold),
-        "expected_draws": float(inclusion.sum()),
-        "n_saturated": int(saturated.sum()),
-        "flat_mass": float(delta),
-        "flat_expected_draws": flat_draws,
-        "ranked_mass": ranked_mass,
-        "ranked_draws_if_unconcentrated": float(ranked_mass / threshold),
-        "ranked_expected_draws": ranked_draws,
-    }
 
 
 def build_proxy(values: np.ndarray, dispersion: np.ndarray, detection: np.ndarray):
@@ -428,116 +328,6 @@ def build_proxy(values: np.ndarray, dispersion: np.ndarray, detection: np.ndarra
         prior_weights=np.full(n_atoms, 1.0 / n_atoms),
     )
     return WholeCatalogueProxy(shim, torch.device("cpu"), score_dtype=torch.float64)
-
-
-def common_metric_scale(values: np.ndarray, dispersion: np.ndarray) -> np.ndarray:
-    """One tolerance per coordinate, shared by every atom.
-
-    Production divides each residual by that atom's *own* predicted scatter and
-    then pays ``- sum_d log sigma_jd`` to normalise the density.  Measured on
-    these rows the pair defeats the ranking: an atom whose predicted flux
-    scatter is twice the observed flux fits any observation at under one sigma
-    and pays almost nothing on the quadratic term, while an atom that genuinely
-    matches pays several nats for a small miss inside its own narrow sigma.
-    Being vague is cheaper than being close, and there are twenty million vague
-    atoms.
-
-    A metric shared by every atom removes both halves at once.  The
-    normalisation becomes a constant and cancels in the softmax, and a wide
-    prediction can no longer buy a cheap residual, so the score measures one
-    thing only: how far the atom's prediction is from the observation.
-
-    The three linear coordinates take the catalogue's median predicted scatter.
-    Flux spans five decades, so an absolute tolerance would be meaningless
-    there; it takes the catalogue's median *fractional* scatter, converted to
-    dex, which is the scale-free analogue.  Both come from the proposal cache
-    alone -- no observation, and nothing fitted to a result.
-    """
-
-    values = np.asarray(values, dtype=np.float64)
-    dispersion = np.asarray(dispersion, dtype=np.float64)
-    if values.shape != dispersion.shape or values.shape[1] != 4:
-        raise ValueError("expected matching (n_atoms, 4) value and dispersion blocks")
-    if not np.all(dispersion > 0.0):
-        raise ValueError("proxy dispersion must be positive")
-    linear = np.median(dispersion[:, :3], axis=0)
-    flux, sigma = values[:, 3], dispersion[:, 3]
-    usable = flux > 0.0
-    if not usable.any():
-        raise ValueError("no atom has a positive predicted flux")
-    # A few atoms carry a predicted flux small enough that the ratio overflows
-    # float64.  The median commutes with the logarithm, so taking it in log
-    # space gives the identical number without the overflow.
-    log_ratio = (np.log10(sigma[usable]) - np.log10(flux[usable])
-                 - np.log10(np.log(10.0)))
-    dex = float(10.0 ** np.median(log_ratio))
-    if not np.isfinite(dex) or dex <= 0.0:
-        raise ValueError("fractional flux scatter must be positive and finite")
-    scale = np.concatenate([linear, [dex]])
-    if not np.all(np.isfinite(scale)) or not np.all(scale > 0.0):
-        raise ValueError("common metric must be positive and finite")
-    return scale
-
-
-def common_metric_score(values: np.ndarray, dispersion: np.ndarray,
-                        detection: np.ndarray, observed: np.ndarray,
-                        scale: np.ndarray) -> np.ndarray:
-    """``log Pdet_j - 0.5 * squared distance in the shared metric``.
-
-    The dispersion argument is unused in the sum and is taken only so callers
-    cannot silently pass a cache that has no scatter at all, which is the one
-    thing that would make the scale meaningless.  Undetectable atoms score
-    ``-inf`` exactly as they do in production, and the defensive component
-    still covers them.
-    """
-
-    values = np.asarray(values, dtype=np.float64)
-    observed = np.asarray(observed, dtype=np.float64)
-    scale = np.asarray(scale, dtype=np.float64)
-    if observed.shape != (4,) or scale.shape != (4,):
-        raise ValueError("expected four measured coordinates")
-    if np.asarray(dispersion).shape != values.shape:
-        raise ValueError("expected matching value and dispersion blocks")
-    if observed[3] <= 0.0:
-        raise ValueError("observed flux must be positive for a log metric")
-
-    distance = np.zeros(values.shape[0], dtype=np.float64)
-    for d in range(3):
-        distance += np.square((values[:, d] - observed[d]) / scale[d])
-    # Flux is compared in dex, so an atom ten times too faint is ten times
-    # too faint whether the observation is bright or not.
-    predicted = np.log10(np.clip(values[:, 3], 1e-12, None))
-    distance += np.square((predicted - np.log10(observed[3])) / scale[3])
-
-    detection = np.asarray(detection, dtype=np.float64)
-    with np.errstate(divide="ignore"):
-        score = np.log(np.where(detection > 0.0, detection, np.nan)) - 0.5 * distance
-    return np.nan_to_num(score, nan=-np.inf)
-
-
-def mixture_from_score(score: np.ndarray, *, delta: float, temperature: float,
-                       n_atoms: int) -> torch.Tensor:
-    """``q = (1 - delta) softmax(s / T) + delta / n_atoms``.
-
-    The same composition ``WholeCatalogueProxy.mixture`` applies, so the only
-    difference between the two scores is the score itself.
-    """
-
-    if not np.isfinite(temperature) or temperature <= 0.0:
-        raise ValueError("temperature must be positive and finite")
-    if not 0.0 < delta < 1.0:
-        raise ValueError("delta must lie strictly between zero and one")
-    if score.shape != (n_atoms,):
-        raise ValueError("expected one score per atom")
-    tilted = torch.as_tensor(np.asarray(score, dtype=np.float64))
-    if temperature != 1.0:
-        tilted = tilted / float(temperature)
-    tilted = torch.where(torch.isfinite(tilted), tilted,
-                         torch.tensor(-np.inf, dtype=torch.float64))
-    mixture = torch.softmax(tilted, dim=0)
-    mixture *= 1.0 - delta
-    mixture += delta / float(n_atoms)
-    return mixture
 
 
 def centred_measurements(block: np.ndarray, observed: np.ndarray) -> np.ndarray:
@@ -584,17 +374,16 @@ def main() -> None:
     parser.add_argument("--background", type=int, default=60000)
     parser.add_argument("--background-seed", type=int, default=20260921)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--score", choices=("production", "common-metric"),
-                        default="production",
-                        help="production divides each residual by the atom's "
-                             "own predicted scatter and normalises the "
-                             "density; common-metric scores every atom "
-                             "against one shared tolerance per coordinate")
-    parser.add_argument("--sampler", choices=("production", "fifty-fifty"),
-                        default="production",
-                        help="production races one mixture and lets the mass "
-                             "ratio split the budget; fifty-fifty gives each "
-                             "stratum half the slots outright")
+    parser.add_argument("--floor-percentile", type=float, default=None,
+                        help="re-floor the proposal's predicted scatter at "
+                             "this percentile of the atoms' own scatter "
+                             "before building the mixture; omit to use the "
+                             "table as shipped (floored at the 1st percentile)")
+    parser.add_argument("--fractional-floor", action="append", default=None,
+                        metavar="TARGET",
+                        help="treat this coordinate's scatter as "
+                             "multiplicative when flooring, so the floor binds "
+                             "equally at every brightness; repeatable")
     args = parser.parse_args()
 
     import matplotlib
@@ -632,55 +421,41 @@ def main() -> None:
     mock_manifest = json.loads((args.run / "input" / "image_mock_manifest.json").read_text())
     true_observation = observation_truth(mock_manifest, mock.truth.iloc[args.row])
 
-    if args.score == "production":
-        proxy = build_proxy(coords.values, coords.dispersion, detection)
-        mixture = proxy.mixture(
-            observed[None, :],
-            delta=PRODUCTION_DELTA,
-            temperature=PRODUCTION_TEMPERATURE,
-        )[0]
-        metric = None
-    else:
-        metric = common_metric_scale(coords.values, coords.dispersion)
-        mixture = mixture_from_score(
-            common_metric_score(coords.values, coords.dispersion, detection,
-                                observed, metric),
-            delta=PRODUCTION_DELTA,
-            temperature=PRODUCTION_TEMPERATURE,
-            n_atoms=n_atoms,
+    # The floor is applied after the per-atom summary, so raising it needs no
+    # flow evaluation: the cached table can be re-floored in place.
+    fractional_targets = tuple(args.fractional_floor or ())
+    if args.floor_percentile is not None:
+        coords = coords.with_dispersion_floor(
+            percentile=args.floor_percentile,
+            fractional_targets=fractional_targets,
         )
+    elif fractional_targets:
+        raise ValueError("--fractional-floor needs --floor-percentile")
+
+    proxy = build_proxy(coords.values, coords.dispersion, detection)
+    mixture = proxy.mixture(
+        observed[None, :],
+        delta=PRODUCTION_DELTA,
+        temperature=PRODUCTION_TEMPERATURE,
+    )[0]
     probability = mixture.numpy()
-    # Production sums the top `candidates` atoms exactly and zeroes their
-    # weight before racing, so they neither consume a draw nor add variance.
-    # Reproducing that is the difference between measuring the sampler and
-    # measuring a sampler nobody runs.
+    # Production sums the top `candidates` atoms exactly.  It does not remove
+    # them from the mixture it draws from: a draw that lands inside the stratum
+    # simply contributes nothing, so the stratum's share of `q` is the share of
+    # the budget that is thrown away.
     exact_stratum = np.argsort(probability)[::-1][:PRODUCTION_CANDIDATES]
-    raced = mixture.clone()
-    raced[torch.as_tensor(exact_stratum.copy(), dtype=torch.long)] = 0.0
-    raced_probability = raced.numpy()
     floor = PRODUCTION_DELTA / n_atoms
     uniform = 1.0 / n_atoms
 
-    if args.sampler == "production":
-        drawn, threshold = priority_race(
-            raced,
-            seed=PRODUCTION_SEED,
-            object_id=args.row,
-            n_select=PRODUCTION_DRAWS,
-        )
-        strata = dict(
-            kind="production",
-            threshold=float(threshold),
-            inclusion=np.minimum(1.0, raced_probability / threshold),
-        )
-    else:
-        strata = stratified_race(
-            raced_probability, exact_stratum, floor,
-            seed=PRODUCTION_SEED, object_id=args.row,
-            n_ranked=FIFTY_FIFTY_RANKED, n_uniform=FIFTY_FIFTY_UNIFORM,
-        )
-        drawn = strata["drawn"]
-    inclusion = strata["inclusion"]
+    draw = production_draw(
+        probability,
+        seed=PRODUCTION_SEED,
+        object_id=args.row,
+        n_draws=PRODUCTION_DRAWS,
+        exact_stratum=exact_stratum,
+    )
+    drawn = draw["drawn"]
+    coverage = draw["coverage"]
 
     exact_files = sorted(args.exact_dir.glob(f"worker_*/row_{args.row}_exact.json"))
     if len(exact_files) != 1:
@@ -705,11 +480,13 @@ def main() -> None:
     exact_shown = exact_stratum[np.argsort(probability[exact_stratum])[::-1]]
     everything = np.concatenate([heavy, drawn, exact_shown, background])
     truth = gather_truth(manifest, everything)
-    n_heavy, n_drawn, n_exact = heavy.size, drawn.size, exact_shown.size
+    # `n_unique` counts the distinct atoms the draw reached usefully; the
+    # budget is PRODUCTION_DRAWS and the two are not interchangeable.
+    n_heavy, n_unique, n_exact = heavy.size, drawn.size, exact_shown.size
     truth_heavy = truth[:n_heavy]
-    truth_drawn = truth[n_heavy : n_heavy + n_drawn]
-    truth_exact = truth[n_heavy + n_drawn : n_heavy + n_drawn + n_exact]
-    truth_background = truth[n_heavy + n_drawn + n_exact :]
+    truth_drawn = truth[n_heavy : n_heavy + n_unique]
+    truth_exact = truth[n_heavy + n_unique : n_heavy + n_unique + n_exact]
+    truth_background = truth[n_heavy + n_unique + n_exact :]
 
     measured_heavy = centred_measurements(coords.values[heavy], observed)
     measured_drawn = centred_measurements(coords.values[drawn], observed)
@@ -721,14 +498,9 @@ def main() -> None:
     # is neither summed nor drawn is the only kind the estimator truly misses.
     heavy_reached = heavy_drawn | heavy_exact
 
-    # With one mixed race the class has to be inferred from which mixture
-    # component supplied most of the atom's probability.  With two strata it is
-    # simply which race the atom won, so no inference is needed.
-    if strata["kind"] == "production":
-        ranked, flat = draw_classes(raced_probability, drawn, floor)
-    else:
-        ranked = strata["from_ranked"]
-        flat = ~ranked
+    # Production draws from one mixture, so which half of it paid for a draw has
+    # to be inferred from the atom's own probability.
+    ranked, flat = draw_classes(probability, drawn, floor)
 
     # Where the proposal's own preference sits, independent of the draw.
     catalogue_ranked = np.flatnonzero(probability > 2.0 * floor)
@@ -888,13 +660,9 @@ def main() -> None:
     axes[1][1].invert_yaxis()
 
     subsample = n_atoms / max(background.size, 1)
-    # Production's shares are of probability, so the slot counts they buy vary
-    # row by row; the fixed-count sampler's shares are the slot counts.
-    if strata["kind"] == "production":
-        share = ("the flat 10% of probability", "the ranked 90% of probability")
-    else:
-        share = (f"{strata['n_uniform_slots']:,} slots",
-                 f"{strata['n_ranked_slots']:,} slots")
+    # Both shares are shares of probability, so the draw counts they buy vary
+    # row by row.
+    share = ("the flat 10% of probability", "the ranked 90% of probability")
     legend = [
         Line2D([], [], ls="", marker=".", color="0.86", ms=7,
                label=f"not drawn ({background.size:,} shown, 1 in {subsample:,.0f})"),
@@ -905,9 +673,11 @@ def main() -> None:
                label=f"drawn from ranked atoms \u2014 {share[1]} "
                      f"({int(ranked.sum()):,})"),
         Line2D([], [], ls="", marker="o", color="tab:orange", ms=5,
-               label=f"summed exactly, never raced "
+               label=f"summed exactly "
                      f"({PRODUCTION_CANDIDATES:,} atoms, "
-                     f"{probability[exact_stratum].sum():.1%} of the proposal)"),
+                     f"{draw['exact_mass']:.1%} of the proposal, "
+                     f"{draw['n_wasted'] / PRODUCTION_DRAWS:.0%} of the "
+                     f"draw budget wasted here)"),
         Line2D([], [], ls="", marker=".", color="black", ms=7,
                label="carries posterior mass, MISSED"),
         Line2D([], [], ls="", marker="x", color="black", ms=11, mew=2,
@@ -925,17 +695,17 @@ def main() -> None:
     captured = float(mass.sum())
     reached = float(mass[heavy_reached].sum())
     sampler_label = (
-        "production sampler: one mixed race, mass decides the split"
-        if strata["kind"] == "production"
-        else f"fixed-count sampler: {strata['n_ranked_slots']:,} ranked "
-             f"+ {strata['n_uniform_slots']:,} uniform slots"
+        f"tilted_stratified: {PRODUCTION_DRAWS:,} draws with replacement, "
+        f"{draw['n_usable']:,} usable on {n_unique:,} distinct atoms "
+        f"({draw['n_wasted']:,} landed in the exact stratum and carry nothing)"
     )
     score_label = (
-        "production score: each atom divides by its own predicted scatter"
-        if args.score == "production"
-        else "shared-metric score: one tolerance per coordinate, "
-             f"({metric[0]:.3f}, {metric[1]:.3f}, {metric[2]:.2f} pix, "
-             f"{metric[3]:.3f} dex)"
+        "proposal scatter as shipped (floored at the 1st percentile)"
+        if args.floor_percentile is None
+        else f"proposal scatter re-floored at the "
+             f"{args.floor_percentile:g}th percentile"
+             + (f", fractional on {', '.join(fractional_targets)}"
+                if fractional_targets else "")
     )
     fig.suptitle(
         f"Row {args.row}: measured mag "
@@ -947,9 +717,10 @@ def main() -> None:
         f"\n{score_label}",
         fontsize=12,
     )
-    suffix = "" if strata["kind"] == "production" else "_fifty_fifty"
-    if args.score != "production":
-        suffix += "_common_metric"
+    suffix = ("" if args.floor_percentile is None
+              else f"_floor{args.floor_percentile:g}")
+    if fractional_targets:
+        suffix += "_frac"
     figure_path = args.output / f"proposal_atom_map_row{args.row}{suffix}.png"
     fig.savefig(figure_path, dpi=170, bbox_inches="tight")
     plt.close(fig)
@@ -964,27 +735,35 @@ def main() -> None:
             delta=PRODUCTION_DELTA,
             temperature=PRODUCTION_TEMPERATURE,
             seed=PRODUCTION_SEED,
-            n_draws=int(n_drawn),
-            n_unique_drawn=int(np.unique(drawn).size),
+            n_draws=int(PRODUCTION_DRAWS),
+            n_unique_usable_draws=int(n_unique),
             max_probability=float(probability.max()),
             top_atom=int(np.argmax(probability)),
             defensive_floor=float(floor),
             uniform_share=float(uniform),
             ranked_share_of_probability=1.0 - PRODUCTION_DELTA,
             flat_share_of_probability=PRODUCTION_DELTA,
-            n_drawn_from_ranked=int(ranked.sum()),
-            n_drawn_uniformly=int(flat.sum()),
+            # Over the distinct reached atoms, not over the draws.
+            n_unique_from_ranked=int(ranked.sum()),
+            n_unique_uniform=int(flat.sum()),
             n_ranked_in_catalogue=int(catalogue_ranked.size),
             probability_mass_on_ranked=float(probability[catalogue_ranked].sum()),
             n_above_flat_share_in_catalogue=int((probability > uniform).sum()),
         ),
-        score=dict(
-            kind=args.score,
-            common_metric=None if metric is None else
-            [float(v) for v in metric],
-            note="production divides by each atom's own scatter and "
-                 "normalises; common-metric shares one tolerance per "
-                 "coordinate, flux in dex, so the normalisation cancels",
+        dispersion_floor=dict(
+            percentile=(None if args.floor_percentile is None
+                        else float(args.floor_percentile)),
+            fractional_targets=list(fractional_targets),
+            shipped_percentile=1.0,
+            note="the proposal divides each residual by the atom's own "
+                 "predicted scatter, so a floor on that scatter sets how "
+                 "tightly a vague atom may be judged; a fractional floor "
+                 "ranks a coordinate on sigma/|x| so it binds at every "
+                 "brightness",
+            median_dispersion={
+                name: float(v) for name, v in
+                zip(TARGET_ORDER, np.median(coords.dispersion, axis=0))
+            },
         ),
         rank_bands=dict(
             columns=list(TARGET_ORDER[:3]) + ["log10_flux_ratio"],
@@ -1002,28 +781,25 @@ def main() -> None:
             n_mass_atoms_inside=int(heavy_exact.sum()),
             mass_inside=float(mass[heavy_exact].sum()),
         ),
-        sampler=args.sampler,
-        slots=(
-            slot_accounting(
-                raced_probability, floor, strata["threshold"],
-                PRODUCTION_DELTA * (n_atoms - PRODUCTION_CANDIDATES) / n_atoms,
-            )
-            if strata["kind"] == "production"
-            else dict(
-                threshold=strata["ranked_threshold"],
-                expected_draws=float(inclusion.sum()),
-                n_saturated=strata["n_saturated"],
-                flat_mass=float(PRODUCTION_DELTA
-                                * (n_atoms - PRODUCTION_CANDIDATES) / n_atoms),
-                flat_expected_draws=float(strata["n_uniform_slots"]),
-                ranked_mass=strata["tail_mass"],
-                ranked_draws_if_unconcentrated=float(
-                    strata["tail_mass"] / strata["ranked_threshold"]),
-                ranked_expected_draws=float(strata["n_ranked_slots"]),
-                n_eligible=strata["n_eligible"],
-                uniform_inclusion=strata["uniform_inclusion"],
-                n_overlap=strata["n_overlap"],
-            )
+        sampler=dict(
+            mode="tilted_stratified",
+            replacement=True,
+            note="draw_tilted -> draw_uniforms_batch: inverse-CDF from the "
+                 "mixture, with replacement.  The exact stratum is not removed "
+                 "from the mixture, so a draw landing inside it contributes "
+                 "nothing (catalogue_null._exact_plus_complement)",
+            n_draws=int(PRODUCTION_DRAWS),
+            n_wasted_in_exact_stratum=int(draw["n_wasted"]),
+            n_usable=int(draw["n_usable"]),
+            wasted_fraction=float(draw["n_wasted"] / PRODUCTION_DRAWS),
+            n_unique_usable=int(n_unique),
+            worst_weight_on_a_drawn_mass_atom=(
+                float((1.0 / np.maximum(
+                    PRODUCTION_DRAWS
+                    * probability[heavy][heavy_drawn & ~heavy_exact],
+                    1.0e-300)).max())
+                if (heavy_drawn & ~heavy_exact).any() else 0.0
+            ),
         ),
         score_decomposition=decomposition,
         true_observation=true_observation,
@@ -1040,7 +816,10 @@ def main() -> None:
                     atom=int(a),
                     mass=float(w),
                     proposal_probability=float(probability[a]),
-                    inclusion_probability=float(inclusion[a]),
+                    # With replacement there is no inclusion probability.  The
+                    # comparable quantity is coverage: the chance this atom is
+                    # drawn at least once in the whole budget.
+                    coverage=float(coverage[a]),
                     drawn=bool(d),
                     summed_exactly=bool(e),
                 )
@@ -1055,10 +834,11 @@ def main() -> None:
             prior_manifest=file_hash(subset / "manifest.json"),
         ),
         note=(
-            "The tilted-stratified exact stratum is removed before the race, as "
-            "production does, so the drawn set is what the sampler adds on top "
-            "of the atoms already summed with certainty. Diagnostic only: the "
-            "fifty-fifty sampler is not wired into any production path."
+            "Reproduces the configured tilted_stratified draw: the exact "
+            "stratum is summed with certainty but is NOT removed from the "
+            "mixture, so draws landing inside it are simply discarded.  The "
+            "drawn set reported here is the usable complement.  Diagnostic "
+            "only; re-flooring the proposal here changes no production default."
         ),
     )
     write_json(args.output / "report.json", report)

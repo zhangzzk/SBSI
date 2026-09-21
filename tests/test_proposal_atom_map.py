@@ -14,20 +14,15 @@ from scripts.plot_proposal_atom_map import (
     TRUTH_COLUMNS,
     build_proxy,
     centred_measurements,
-    common_metric_scale,
-    common_metric_score,
-    mixture_from_score,
     draw_classes,
-    slot_accounting,
-    score_terms,
-    summarise_terms,
     exact_centre_node,
     gather_truth,
     observation_truth,
     panel_limits,
-    priority_race,
+    production_draw,
+    score_terms,
     shard_offsets,
-    stratified_race,
+    summarise_terms,
     zero_point_row,
 )
 
@@ -345,59 +340,6 @@ def test_panel_limits_survive_a_degenerate_background():
     assert low < high
 
 
-def _mixture(probabilities):
-    return torch.as_tensor(np.asarray(probabilities, dtype=np.float64))
-
-
-def test_priority_race_is_deterministic_and_returns_distinct_atoms():
-    weights = np.full(64, 1.0 / 64.0)
-    first, _ = priority_race(_mixture(weights), seed=8701, object_id=142230, n_select=16)
-    again, _ = priority_race(_mixture(weights), seed=8701, object_id=142230, n_select=16)
-    np.testing.assert_array_equal(first, again)
-    assert first.size == 16
-    assert np.unique(first).size == 16
-
-
-def test_priority_race_depends_on_the_object_id():
-    weights = np.full(4096, 1.0 / 4096.0)
-    a, _ = priority_race(_mixture(weights), seed=8701, object_id=1, n_select=64)
-    b, _ = priority_race(_mixture(weights), seed=8701, object_id=2, n_select=64)
-    assert not np.array_equal(np.sort(a), np.sort(b))
-
-
-def test_priority_race_reproduces_the_production_key_rule():
-    """key = q/u on a generator seeded by (seed, object_id); keep the top n."""
-
-    from sbsi.catalogue_sampling import _priority_row_seed
-
-    weights = np.linspace(1.0, 2.0, 256)
-    weights /= weights.sum()
-    generator = torch.Generator()
-    generator.manual_seed(_priority_row_seed(8701, 77))
-    uniform = torch.rand(256, generator=generator, dtype=torch.float64).clamp_min(
-        float(np.finfo(np.float64).tiny)
-    )
-    expected = torch.topk(_mixture(weights) / uniform, 33, sorted=True).indices[:32]
-    np.testing.assert_array_equal(
-        priority_race(_mixture(weights), seed=8701, object_id=77, n_select=32)[0],
-        expected.numpy(),
-    )
-
-
-def test_priority_race_favours_the_heavy_atoms():
-    weights = np.full(2048, 1.0e-6)
-    weights[:32] = 1.0
-    weights /= weights.sum()
-    chosen, _ = priority_race(_mixture(weights), seed=8701, object_id=5, n_select=64)
-    # Every one of the 32 heavy atoms should win a place among 64 draws.
-    assert set(range(32)).issubset(set(chosen.tolist()))
-
-
-def test_priority_race_rejects_more_draws_than_atoms():
-    with pytest.raises(ValueError, match="more atoms than draws"):
-        priority_race(_mixture(np.full(8, 0.125)), seed=1, object_id=1, n_select=8)
-
-
 def test_build_proxy_matches_an_explicit_gaussian_mixture():
     values = np.array([[0.0, 1.0, 3.0, 9.0], [2.0, -1.0, 4.0, 8.0]])
     dispersion = np.array([[1.0, 2.0, 0.5, 1.5], [0.5, 1.5, 2.0, 0.25]])
@@ -419,19 +361,6 @@ def test_build_proxy_matches_an_explicit_gaussian_mixture():
     np.testing.assert_allclose(mixture, expected, rtol=1e-12, atol=0)
 
 
-def test_race_on_a_collapsed_mixture_still_reaches_the_starved_atoms():
-    """The defensive floor is what lets a starved heavy atom be drawn at all."""
-
-    n_atoms = 200000
-    weights = np.full(n_atoms, PRODUCTION_DELTA / n_atoms)
-    weights[0] += 1.0 - PRODUCTION_DELTA
-    chosen, _ = priority_race(
-        _mixture(weights), seed=8701, object_id=142230, n_select=16384
-    )
-    assert 0 in chosen.tolist()
-    # Without replacement, the race cannot spend more than one draw on the
-    # dominant atom -- the rest necessarily land on floor atoms.
-    assert chosen.size == 16384
 
 
 def test_report_payload_is_json_serializable_without_nan():
@@ -443,305 +372,103 @@ def test_report_payload_is_json_serializable_without_nan():
     json.dumps(payload, allow_nan=False)
 
 
-def test_slot_accounting_shows_a_concentrated_component_wasting_its_mass():
-    """A mass spike caps at one slot; the same mass spread converts linearly."""
-    delta, n = 0.1, 1000
-    floor = delta / n
-    spike = np.full(n, floor)
-    spike[0] += 0.9
-    threshold = 1.0e-3
-    book = slot_accounting(spike, floor, threshold, delta)
-    # The flat 10% converts linearly over the 999 atoms that do not saturate;
-    # the spike's own flat share is inside its capped single slot, not extra.
-    np.testing.assert_allclose(book["flat_expected_draws"],
-                               (floor / threshold) * (n - 1))
-    # The ranked 0.9 sits on one atom, so it buys one slot, not 0.9/tau = 900.
-    np.testing.assert_allclose(book["ranked_draws_if_unconcentrated"], 900.0)
-    np.testing.assert_allclose(book["ranked_expected_draws"], 1.0, atol=1e-9)
-    assert book["n_saturated"] == 1
-    # The decomposition is exact: the two parts add to the realised draws.
-    np.testing.assert_allclose(
-        book["flat_expected_draws"] + book["ranked_expected_draws"],
-        book["expected_draws"], rtol=1e-12,
-    )
-
-
-def test_slot_accounting_wastes_nothing_when_no_atom_saturates():
-    delta, n = 0.1, 1000
-    floor = delta / n
-    flat = np.full(n, 1.0 / n)
-    book = slot_accounting(flat, floor, 1.0e-2, delta)
-    # No atom reaches tau, so realised draws equal total mass over tau.
-    np.testing.assert_allclose(book["expected_draws"], 1.0 / 1.0e-2)
-    assert book["n_saturated"] == 0
-
-
-def test_slot_accounting_rejects_a_non_positive_threshold():
-    with pytest.raises(ValueError, match="threshold must be positive"):
-        slot_accounting(np.array([0.5]), 0.1, 0.0, 0.1)
-
-
-def _stratified(probability, excluded, floor, n_ranked, n_uniform, seed=8701):
-    return stratified_race(
-        np.asarray(probability, dtype=np.float64),
-        np.asarray(excluded, dtype=np.int64),
-        floor, seed=seed, object_id=142230,
-        n_ranked=n_ranked, n_uniform=n_uniform,
-    )
-
-
-def _tailed(n, floor, seed=7):
-    """A mixture where every atom keeps some softmax preference above floor."""
+def _mixture(n=1024, floor_share=PRODUCTION_DELTA, seed=3):
+    """A defensive mixture: a flat floor everywhere plus a ranked tail."""
 
     rng = np.random.default_rng(seed)
-    return floor + rng.exponential(1e-4, size=n)
+    floor = floor_share / n
+    ranked = rng.exponential(1.0, size=n)
+    ranked /= ranked.sum() / (1.0 - floor_share)
+    return floor + ranked, floor
 
 
-def test_stratified_race_spends_exactly_the_slots_it_is_given():
-    """The point of the design: the counts are fixed, not bought with mass."""
-
-    n, floor = 4096, 0.1 / 4096
-    out = _stratified(_tailed(n, floor), np.arange(8), floor, 512, 512)
-    assert out["ranked_indices"].size == 512
-    assert out["uniform_indices"].size == 512
-    assert out["drawn"].size == 1024 - out["n_overlap"]
-    assert out["n_ranked_slots"] == 512 and out["n_uniform_slots"] == 512
-
-
-def test_stratified_race_never_draws_an_atom_the_exact_stratum_holds():
-    n, floor = 2048, 0.1 / 2048
-    excluded = np.arange(64)
-    out = _stratified(_tailed(n, floor), excluded, floor, 128, 128)
-    assert not np.isin(out["drawn"], excluded).any()
-    assert out["inclusion"][excluded].max() == 0.0
-    assert out["n_eligible"] == n - 64
+def test_production_draw_is_deterministic_and_keyed_on_the_object():
+    q, _ = _mixture()
+    empty = np.array([], dtype=np.int64)
+    first = production_draw(q, seed=8701, object_id=142230, n_draws=512,
+                            exact_stratum=empty)
+    again = production_draw(q, seed=8701, object_id=142230, n_draws=512,
+                            exact_stratum=empty)
+    other = production_draw(q, seed=8701, object_id=409188, n_draws=512,
+                            exact_stratum=empty)
+    np.testing.assert_array_equal(first["all_draws"], again["all_draws"])
+    assert not np.array_equal(first["all_draws"], other["all_draws"])
 
 
-def test_stratified_race_gives_every_eligible_atom_the_uniform_inclusion():
-    """Equal weights make a priority race a simple random sample."""
+def test_production_draw_nests_a_smaller_budget_inside_a_larger_one():
+    """Fixed-width uniform records are what make the draw ladder free.
 
-    n, floor = 1024, 0.1 / 1024
-    out = _stratified(np.full(n, floor), np.arange(4), floor, 32, 256)
-    eligible = np.ones(n, dtype=bool)
-    eligible[:4] = False
-    # No atom carries any preference, so the ranked stratum has nothing to
-    # race and every slot ends up uniform.
-    assert out["n_ranked_slots"] == 0
-    assert out["n_uniform_slots"] == 32 + 256
-    assert out["uniform_inclusion"] == pytest.approx((32 + 256) / (n - 4))
-    np.testing.assert_allclose(out["inclusion"][eligible], out["uniform_inclusion"])
-
-
-def test_stratified_race_hands_unspendable_ranked_slots_to_the_uniform_side():
-    """A budget must never shrink because the ranking ran out of atoms."""
-
-    n, floor = 2048, 0.1 / 2048
-    q = np.full(n, floor)
-    q[:100] += 1e-3
-    out = _stratified(q, np.arange(10), floor, 512, 512)
-    # 90 preferred atoms survive the exact stratum; all are taken outright.
-    assert out["n_ranked_slots"] == 90
-    assert out["n_ranked_slots_requested"] == 512
-    assert out["n_uniform_slots"] == 512 + (512 - 90)
-    np.testing.assert_allclose(out["ranked_inclusion"][10:100], 1.0)
-
-
-def test_stratified_race_reaches_deeper_into_the_tail_than_a_mixed_race():
-    """More ranked slots must lower the ranked threshold, not raise it."""
-
-    n, floor = 8192, 0.1 / 8192
-    q = _tailed(n, floor)
-    narrow = _stratified(q, np.arange(16), floor, 256, 256)
-    wide = _stratified(q, np.arange(16), floor, 2048, 256)
-    assert wide["ranked_threshold"] < narrow["ranked_threshold"]
-    assert (wide["ranked_inclusion"] >= narrow["ranked_inclusion"] - 1e-12).all()
-
-
-def test_stratified_race_credits_a_double_winner_to_the_ranking():
-    n, floor = 512, 0.1 / 512
-    out = _stratified(_tailed(n, floor), np.array([], dtype=np.int64),
-                      floor, 400, 400)
-    assert out["n_overlap"] > 0
-    ranked_members = np.isin(out["drawn"], out["ranked_indices"])
-    np.testing.assert_array_equal(out["from_ranked"], ranked_members)
-
-
-def test_stratified_race_combines_the_two_inclusions_independently():
-    n, floor = 2048, 0.1 / 2048
-    out = _stratified(_tailed(n, floor), np.arange(4), floor, 256, 256)
-    expected = 1.0 - (1.0 - out["ranked_inclusion"][10]) * (1.0 - out["uniform_inclusion"])
-    assert out["inclusion"][10] == pytest.approx(expected)
-    assert (out["inclusion"] <= 1.0).all()
-
-
-def test_stratified_race_rejects_a_budget_larger_than_the_eligible_set():
-    n, floor = 256, 0.1 / 256
-    with pytest.raises(ValueError, match="more eligible atoms"):
-        _stratified(_tailed(n, floor), np.arange(200), floor, 128, 8)
-
-
-def test_stratified_race_rejects_a_non_positive_floor():
-    with pytest.raises(ValueError, match="defensive floor"):
-        _stratified(np.full(256, 1.0 / 256), np.arange(4), 0.0, 16, 16)
-
-
-def _catalogue(n=64, seed=11):
-    """A small catalogue whose atoms span five decades in predicted flux."""
-
-    rng = np.random.default_rng(seed)
-    flux = 10.0 ** rng.uniform(0.0, 5.0, size=n)
-    values = np.column_stack([
-        rng.normal(0.0, 0.2, size=n),
-        rng.normal(0.0, 0.2, size=n),
-        rng.uniform(1.0, 8.0, size=n),
-        flux,
-    ])
-    dispersion = np.column_stack([
-        rng.uniform(0.05, 0.5, size=n),
-        rng.uniform(0.05, 0.5, size=n),
-        rng.uniform(0.5, 5.0, size=n),
-        0.3 * np.log(10.0) * flux,
-    ])
-    detection = rng.uniform(0.2, 1.0, size=n)
-    return values, dispersion, detection
-
-
-def test_common_metric_scale_is_positive_and_per_coordinate():
-    values, dispersion, _ = _catalogue()
-    scale = common_metric_scale(values, dispersion)
-    assert scale.shape == (4,)
-    assert (scale > 0.0).all()
-    # The three linear coordinates are the catalogue's median scatter.
-    assert scale[:3] == pytest.approx(np.median(dispersion[:, :3], axis=0))
-    # Flux is a fractional scatter in dex, so a catalogue built with a
-    # constant 0.3 dex spread reports 0.3 however bright its atoms are.
-    assert scale[3] == pytest.approx(0.3)
-
-
-def test_common_metric_scale_ignores_the_observation_entirely():
-    values, dispersion, _ = _catalogue()
-    first = common_metric_scale(values, dispersion)
-    second = common_metric_scale(values, dispersion)
-    assert first == pytest.approx(second)
-    assert common_metric_scale.__code__.co_argcount == 2
-
-
-def test_common_metric_scale_rejects_a_non_positive_dispersion():
-    values, dispersion, _ = _catalogue()
-    dispersion[3, 1] = 0.0
-    with pytest.raises(ValueError, match="dispersion must be positive"):
-        common_metric_scale(values, dispersion)
-
-
-def test_common_metric_score_prefers_the_closer_atom_not_the_vaguer_one():
-    """The defect the shared metric exists to remove.
-
-    Two atoms and one observation.  The first is closer in *every* coordinate
-    but has narrow predicted errors, so it sits four of its own sigma away.
-    The second is further away everywhere with errors wide enough that it
-    never leaves one sigma.  Production rates the honest atom 22 nats worse
-    for being closer, because the dispersion term cannot pay back what the
-    quadratic term charges it.  The shared metric must reverse that.
+    ``draw_uniforms_batch`` takes a whole row of uniforms per draw and reads one
+    column, so doubling the budget appends draws rather than re-rolling them.
     """
 
-    observed = np.array([0.0, 0.0, 4.0, 1.2e5])
-    values = np.array([
-        [0.20, 0.20, 6.0, 4.0e4],
-        [0.30, 0.30, 7.0, 2.0e4],
-    ])
-    dispersion = np.array([
-        [0.05, 0.05, 0.5, 2.0e4],
-        [0.50, 0.50, 5.0, 2.0e5],
-    ])
-    detection = np.array([1.0, 1.0])
-
-    terms = score_terms(values, dispersion, detection, observed, np.arange(2))
-    # The first atom really is nearer the observation in all four coordinates.
-    assert (np.abs(terms["residual"][0]) < np.abs(terms["residual"][1])).all()
-    # And production prefers the other one anyway.
-    assert terms["score"][1] > terms["score"][0] + 20.0
-
-    scale = np.array([0.2, 0.2, 2.0, 0.3])
-    shared = common_metric_score(values, dispersion, detection, observed, scale)
-    assert shared[0] > shared[1]
+    q, _ = _mixture()
+    empty = np.array([], dtype=np.int64)
+    short = production_draw(q, seed=8701, object_id=7, n_draws=256,
+                            exact_stratum=empty)
+    long = production_draw(q, seed=8701, object_id=7, n_draws=1024,
+                           exact_stratum=empty)
+    np.testing.assert_array_equal(short["all_draws"], long["all_draws"][:256])
 
 
-def test_common_metric_score_measures_flux_in_dex():
-    """A factor-ten miss costs the same whatever the observation's brightness."""
+def test_production_draw_samples_with_replacement():
+    """The estimator this reproduces draws with replacement, so a dominant atom
+    is drawn repeatedly; priority sampling could only ever take it once."""
 
-    scale = np.array([0.2, 0.2, 2.0, 0.5])
-    dispersion = np.ones((1, 4))
-    detection = np.ones(1)
-    penalties = []
-    for bright in (1.0e2, 1.0e5):
-        values = np.array([[0.0, 0.0, 0.0, bright / 10.0]])
-        observed = np.array([0.0, 0.0, 0.0, bright])
-        penalties.append(float(
-            common_metric_score(values, dispersion, detection, observed, scale)[0]
-        ))
-    assert penalties[0] == pytest.approx(penalties[1])
-    assert penalties[0] == pytest.approx(-0.5 * (1.0 / 0.5) ** 2)
-
-
-def test_common_metric_score_sends_undetectable_atoms_to_minus_infinity():
-    values, dispersion, detection = _catalogue(n=8)
-    detection[2] = 0.0
-    observed = np.array([0.0, 0.0, 4.0, 1.0e3])
-    scale = common_metric_scale(values, dispersion)
-    score = common_metric_score(values, dispersion, detection, observed, scale)
-    assert score[2] == -np.inf
-    assert np.isfinite(np.delete(score, 2)).all()
+    n = 1024
+    q = np.full(n, PRODUCTION_DELTA / n)
+    q[0] += 1.0 - PRODUCTION_DELTA
+    out = production_draw(q, seed=8701, object_id=1, n_draws=4096,
+                          exact_stratum=np.array([], dtype=np.int64))
+    hits = out["multiplicity"][out["drawn"] == 0]
+    assert hits.size == 1
+    # ~90% of 4096 draws land on atom 0; the exact count is the sampler's.
+    assert hits[0] > 3000
+    assert out["all_draws"].size == 4096
 
 
-def test_common_metric_score_rejects_a_non_positive_observed_flux():
-    values, dispersion, detection = _catalogue(n=8)
-    scale = common_metric_scale(values, dispersion)
-    with pytest.raises(ValueError, match="observed flux must be positive"):
-        common_metric_score(values, dispersion, detection,
-                            np.array([0.0, 0.0, 1.0, 0.0]), scale)
+def test_production_draw_wastes_the_draws_that_land_in_the_exact_stratum():
+    """A draw inside the exactly summed stratum carries no contribution, so it
+    is spent but unusable -- it is not re-rolled and the atom is not returned."""
+
+    q, _ = _mixture()
+    stratum = np.argsort(q)[::-1][:64]
+    out = production_draw(q, seed=8701, object_id=1, n_draws=4096,
+                          exact_stratum=stratum)
+    assert out["n_wasted"] + out["n_usable"] == 4096
+    assert out["n_wasted"] > 0
+    assert not np.isin(out["drawn"], stratum).any()
+    assert int(out["multiplicity"].sum()) == out["n_usable"]
+    np.testing.assert_allclose(out["exact_mass"], q[stratum].sum(), rtol=1e-12)
 
 
-def test_mixture_from_score_matches_the_production_composition():
-    """Same mixture as `WholeCatalogueProxy.mixture`, only the score differs."""
+def test_production_draw_frequencies_follow_the_proposal():
+    """Inverse-CDF sampling, so an atom is hit in proportion to its own q."""
 
-    values, dispersion, detection = _catalogue(n=32)
-    observed = np.array([0.0, 0.0, 4.0, 1.0e3])
-    proxy = build_proxy(values, dispersion, detection)
-    reference = proxy.mixture(observed[None, :], delta=PRODUCTION_DELTA,
-                              temperature=1.0)[0].numpy()
-    terms = score_terms(values, dispersion, detection, observed, np.arange(32))
-    rebuilt = mixture_from_score(terms["score"], delta=PRODUCTION_DELTA,
-                                 temperature=1.0, n_atoms=32).numpy()
-    assert rebuilt == pytest.approx(reference, rel=1e-10, abs=1e-15)
-
-
-def test_mixture_from_score_keeps_the_defensive_floor_on_every_atom():
-    values, dispersion, detection = _catalogue(n=32)
-    score = np.full(32, -np.inf)
-    score[7] = 0.0
-    mixture = mixture_from_score(score, delta=PRODUCTION_DELTA,
-                                 temperature=1.0, n_atoms=32).numpy()
-    assert mixture.sum() == pytest.approx(1.0)
-    assert (mixture >= PRODUCTION_DELTA / 32).all()
-    assert mixture[7] == pytest.approx(1.0 - PRODUCTION_DELTA
-                                       + PRODUCTION_DELTA / 32)
+    q, _ = _mixture(n=256, seed=5)
+    out = production_draw(q, seed=8701, object_id=11, n_draws=200000,
+                          exact_stratum=np.array([], dtype=np.int64))
+    frequency = np.zeros(q.size)
+    frequency[out["drawn"]] = out["multiplicity"] / 200000.0
+    # Three sigma on a binomial share of 200k draws, summed over 256 atoms.
+    tolerance = 3.0 * np.sqrt(q * (1.0 - q) / 200000.0)
+    assert (np.abs(frequency - q) <= tolerance + 1e-12).mean() > 0.98
 
 
-def test_mixture_from_score_rejects_a_non_positive_temperature():
-    with pytest.raises(ValueError, match="temperature must be positive"):
-        mixture_from_score(np.zeros(4), delta=PRODUCTION_DELTA,
-                           temperature=0.0, n_atoms=4)
+def test_production_draw_coverage_is_the_chance_of_being_seen_at_all():
+    q, _ = _mixture(n=256, seed=5)
+    out = production_draw(q, seed=8701, object_id=11, n_draws=1000,
+                          exact_stratum=np.array([], dtype=np.int64))
+    np.testing.assert_allclose(out["coverage"], 1.0 - (1.0 - q) ** 1000,
+                               rtol=1e-9, atol=1e-12)
 
 
-def test_common_metric_scale_survives_a_vanishing_predicted_flux():
-    """Atoms with a denormal flux must not overflow the fractional scatter."""
+def test_production_draw_rejects_an_empty_budget_or_catalogue():
+    q, _ = _mixture(n=16)
+    empty = np.array([], dtype=np.int64)
+    with pytest.raises(ValueError, match="n_draws must be positive"):
+        production_draw(q, seed=1, object_id=1, n_draws=0, exact_stratum=empty)
+    with pytest.raises(ValueError, match="one proposal probability per atom"):
+        production_draw(np.empty(0), seed=1, object_id=1, n_draws=8,
+                        exact_stratum=empty)
 
-    values, dispersion, _ = _catalogue(n=64)
-    reference = common_metric_scale(values, dispersion)
-    values[5, 3] = 1e-300
-    dispersion[5, 3] = 1.0
-    with np.errstate(over="raise", divide="raise"):
-        scale = common_metric_scale(values, dispersion)
-    assert np.isfinite(scale).all()
-    # One atom out of 64 cannot move a median.
-    assert scale == pytest.approx(reference, rel=1e-6)
