@@ -24,6 +24,7 @@ from scripts.plot_proposal_atom_map import (
     panel_limits,
     priority_race,
     shard_offsets,
+    stratified_race,
     zero_point_row,
 )
 
@@ -475,3 +476,107 @@ def test_slot_accounting_wastes_nothing_when_no_atom_saturates():
 def test_slot_accounting_rejects_a_non_positive_threshold():
     with pytest.raises(ValueError, match="threshold must be positive"):
         slot_accounting(np.array([0.5]), 0.1, 0.0, 0.1)
+
+
+def _stratified(probability, excluded, floor, n_ranked, n_uniform, seed=8701):
+    return stratified_race(
+        np.asarray(probability, dtype=np.float64),
+        np.asarray(excluded, dtype=np.int64),
+        floor, seed=seed, object_id=142230,
+        n_ranked=n_ranked, n_uniform=n_uniform,
+    )
+
+
+def _tailed(n, floor, seed=7):
+    """A mixture where every atom keeps some softmax preference above floor."""
+
+    rng = np.random.default_rng(seed)
+    return floor + rng.exponential(1e-4, size=n)
+
+
+def test_stratified_race_spends_exactly_the_slots_it_is_given():
+    """The point of the design: the counts are fixed, not bought with mass."""
+
+    n, floor = 4096, 0.1 / 4096
+    out = _stratified(_tailed(n, floor), np.arange(8), floor, 512, 512)
+    assert out["ranked_indices"].size == 512
+    assert out["uniform_indices"].size == 512
+    assert out["drawn"].size == 1024 - out["n_overlap"]
+    assert out["n_ranked_slots"] == 512 and out["n_uniform_slots"] == 512
+
+
+def test_stratified_race_never_draws_an_atom_the_exact_stratum_holds():
+    n, floor = 2048, 0.1 / 2048
+    excluded = np.arange(64)
+    out = _stratified(_tailed(n, floor), excluded, floor, 128, 128)
+    assert not np.isin(out["drawn"], excluded).any()
+    assert out["inclusion"][excluded].max() == 0.0
+    assert out["n_eligible"] == n - 64
+
+
+def test_stratified_race_gives_every_eligible_atom_the_uniform_inclusion():
+    """Equal weights make a priority race a simple random sample."""
+
+    n, floor = 1024, 0.1 / 1024
+    out = _stratified(np.full(n, floor), np.arange(4), floor, 32, 256)
+    eligible = np.ones(n, dtype=bool)
+    eligible[:4] = False
+    # No atom carries any preference, so the ranked stratum has nothing to
+    # race and every slot ends up uniform.
+    assert out["n_ranked_slots"] == 0
+    assert out["n_uniform_slots"] == 32 + 256
+    assert out["uniform_inclusion"] == pytest.approx((32 + 256) / (n - 4))
+    np.testing.assert_allclose(out["inclusion"][eligible], out["uniform_inclusion"])
+
+
+def test_stratified_race_hands_unspendable_ranked_slots_to_the_uniform_side():
+    """A budget must never shrink because the ranking ran out of atoms."""
+
+    n, floor = 2048, 0.1 / 2048
+    q = np.full(n, floor)
+    q[:100] += 1e-3
+    out = _stratified(q, np.arange(10), floor, 512, 512)
+    # 90 preferred atoms survive the exact stratum; all are taken outright.
+    assert out["n_ranked_slots"] == 90
+    assert out["n_ranked_slots_requested"] == 512
+    assert out["n_uniform_slots"] == 512 + (512 - 90)
+    np.testing.assert_allclose(out["ranked_inclusion"][10:100], 1.0)
+
+
+def test_stratified_race_reaches_deeper_into_the_tail_than_a_mixed_race():
+    """More ranked slots must lower the ranked threshold, not raise it."""
+
+    n, floor = 8192, 0.1 / 8192
+    q = _tailed(n, floor)
+    narrow = _stratified(q, np.arange(16), floor, 256, 256)
+    wide = _stratified(q, np.arange(16), floor, 2048, 256)
+    assert wide["ranked_threshold"] < narrow["ranked_threshold"]
+    assert (wide["ranked_inclusion"] >= narrow["ranked_inclusion"] - 1e-12).all()
+
+
+def test_stratified_race_credits_a_double_winner_to_the_ranking():
+    n, floor = 512, 0.1 / 512
+    out = _stratified(_tailed(n, floor), np.array([], dtype=np.int64),
+                      floor, 400, 400)
+    assert out["n_overlap"] > 0
+    ranked_members = np.isin(out["drawn"], out["ranked_indices"])
+    np.testing.assert_array_equal(out["from_ranked"], ranked_members)
+
+
+def test_stratified_race_combines_the_two_inclusions_independently():
+    n, floor = 2048, 0.1 / 2048
+    out = _stratified(_tailed(n, floor), np.arange(4), floor, 256, 256)
+    expected = 1.0 - (1.0 - out["ranked_inclusion"][10]) * (1.0 - out["uniform_inclusion"])
+    assert out["inclusion"][10] == pytest.approx(expected)
+    assert (out["inclusion"] <= 1.0).all()
+
+
+def test_stratified_race_rejects_a_budget_larger_than_the_eligible_set():
+    n, floor = 256, 0.1 / 256
+    with pytest.raises(ValueError, match="more eligible atoms"):
+        _stratified(_tailed(n, floor), np.arange(200), floor, 128, 8)
+
+
+def test_stratified_race_rejects_a_non_positive_floor():
+    with pytest.raises(ValueError, match="defensive floor"):
+        _stratified(np.full(256, 1.0 / 256), np.arange(4), 0.0, 16, 16)

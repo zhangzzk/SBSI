@@ -1,3 +1,109 @@
+## 2026-09-21 — A fixed-count stratified draw finds one more mass atom per row, and confirms the ranking is the real defect
+
+Owner asked for the atom map redrawn with a 50/50 split on *draw counts* rather
+than on probability, having noted that the current sampler looks inefficient.
+That is a different design from the `delta = 0.5` mixture weight ruled out in
+the entry below, and unlike that one it is worth something.
+
+**What the current sampler does.** Production races one mixture, so the split
+of the 16,384 slots between the ranked and flat components is not chosen: it
+falls out of their mass ratio once the exact stratum is removed. On row 142230
+that is about 3,100 ranked against 13,300 uniform. The ranked component never
+asked for so few slots; it simply holds little mass after the top-1024 are
+taken out and summed exactly.
+
+**The alternative implemented here.** `stratified_race` in
+`scripts/plot_proposal_atom_map.py` runs two independent without-replacement
+draws over the atoms the exact stratum leaves behind:
+
+- 8,192 slots raced on the softmax tail alone (`q_j - floor`), so the race sees
+  the ranking's preference and nothing else. Its threshold falls as its budget
+  rises, which is the point.
+- 8,192 slots at equal weight, which makes the same race a simple random sample
+  without replacement, so every eligible atom is included with exactly
+  `n_uniform / n_eligible`.
+
+An atom may win in both and is credited to the ranking when it does; combined
+inclusion is `1 - (1 - i_r)(1 - i_u)`, which is what the Horvitz-Thompson
+weight divides by. If the ranking prefers fewer atoms than it has slots the
+leftovers are handed to the uniform stratum rather than left unspent, so the
+budget is never quietly shrunk. Selected with `--sampler fifty-fifty`;
+`production` remains the default and is unchanged.
+
+Measured, centre node, exact stratum still 1024, same seed:
+
+| row | ranked tau | uniform inclusion | mass atoms reached | reached mass | was |
+|---|---:|---:|---:|---:|---:|
+| 142230 | 2.826e-6 | 3.413e-4 | 12 of 32 (11 exact + 1 drawn) | 17.2% | 16.0% |
+| 409188 | 4.980e-7 | 3.413e-4 | 27 of 32 (26 exact + 1 drawn) | 65.4% | 62.9% |
+| 3563 | 9.705e-7 | 3.413e-4 | 25 of 32 (25 exact + 0 drawn) | 92.0% | 92.0% |
+
+No atom saturates in either stratum on any row; the two strata overlap on 1, 3
+and 3 atoms.
+
+Findings.
+
+- **The random draw now finds something.** Under the production sampler the
+  16,384 draws found zero mass-carrying atoms on all three rows; everything
+  reached came from the deterministic top-1024. The fixed-count draw finds one
+  on row 142230 (atom 6528493, mass 0.0117, inclusion 0.272 -> 0.725) and one
+  on row 409188 (atom 21000023, mass 0.0176, inclusion 0.0598 -> 0.755). Small,
+  but it is the first time this budget has contributed anything on these rows.
+- **The realised gain matches the predicted gain.** Before running it, the
+  expected recovered mass from the missed atoms was computed analytically as
+  0.0131, 0.0162 and 0.0010 for rows 142230, 409188 and 3563, against realised
+  0.0118, 0.0176 and 0.0000. The agreement is a check on the inclusion
+  arithmetic, not a tuned result; nothing was adjusted after seeing it.
+- **It is a second-order fix and the entry below says why.** Row 142230 still
+  misses 20 atoms holding 0.774 of the captured mass, and the single heaviest,
+  0.3290, sits at exactly the defensive floor with no softmax preference at
+  all. The ranked stratum cannot see such an atom at any budget, and the
+  uniform stratum now sees it *less* often than before: shrinking the uniform
+  side from about 13,258 slots to 8,192 takes a floor atom's inclusion from
+  5.5e-4 to 3.4e-4, so its Horvitz-Thompson weight on a hit rises from about
+  1,810x to 2,930x. The same holds for the 0.2002 atom on row 409188. The trade
+  is a real one and it is favourable only because the tail holds more of the
+  missed mass than the floor does: 62%, 88% and 67% on the three rows.
+- **The figures show the ranking defect unchanged.** With 8,192 ranked draws
+  instead of about 3,400 the blue cloud is far denser but sits in the same
+  place: the faint, small corner of truth space (true `r` about 26-28,
+  `R_e` about 0.1 arcsec) and about one decade low in predicted flux, for rows
+  whose observation is at `r = 17.3` and `18.35`. More slots spent on a
+  ranking that prefers the wrong atoms buys proportionally more wrong atoms.
+
+Validation. `tests/test_proposal_atom_map.py`, 50 passed in 6.6s on the login
+node and 15.3s inside the job; eight new tests cover the fixed-count draw
+(slot counts, exclusion of the exact stratum, the uniform inclusion identity,
+the leftover-slot reallocation, monotonicity of the ranked threshold in its
+budget, double-winner attribution, independent combination of the two
+inclusions, and two rejection paths). The reallocation path was added because
+the first implementation raised `priority threshold not positive finite` when
+fewer atoms carried softmax mass than the ranked stratum had slots, which five
+tests caught. Job 16627124 COMPLETED in 00:02:12 on `cluster`, 8 CPUs, 96G, no
+GPU, MaxRSS 5.7G. Figures copied to `SBSI/plots/` as
+`proposal_atom_map_row*_fifty_fifty.png`, which is not version-controlled.
+`scripts/run_proposal_atom_map.sh` is added because the equivalent launcher for
+the earlier jobs in this series was never committed and had to be
+reconstructed. Diagnostic only: the fixed-count sampler is not wired into any
+production path, and nothing here changes target, model, cuts, prior or
+production settings.
+
+Limitations. Three rows from the worst-curvature list, centre node only, one
+seed, so "one more atom per row" carries no uncertainty and should not be read
+as a population result; a seed sweep would be needed to attach an error bar to
+the reached-mass change. The 50/50 split itself is the owner's proposal, not an
+optimum: the same arithmetic gives 0.0184 and 0.0214 expected recovered mass at
+12,288 ranked / 4,096 uniform, at the cost of taking floor-atom inclusion down
+to 1.7e-4. No estimator variance is measured here, only inclusion
+probabilities and reached mass.
+
+Next steps. Unchanged in priority. The ranking, not the budget split, is what
+fails on these rows, so the common-metric score variant remains first. If a
+sampler change is wanted before that, enlarging the exact stratum is the
+cheaper and safer lever than reallocating random slots, because it is
+deterministic; that needs the rank of the missed tail atoms measured first,
+which this diagnostic does not yet report. The nine-variant comparison still
+must be redone on inclusion probabilities with the exact stratum excluded.
 # Work log
 
 ## 2026-09-21 — Correction: the exact stratum does all the work, and delta cannot change that

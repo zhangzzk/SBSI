@@ -37,6 +37,12 @@ PRODUCTION_DRAWS = 16384
 # version of this script did, overstates how much of the budget the ranked
 # component wastes on saturation.
 PRODUCTION_CANDIDATES = 1024
+# The owner's fixed-count alternative.  Production races one mixture, so the
+# split between its ranked and flat components is decided by their mass ratio
+# once the exact stratum is removed -- about 3,100 ranked against 13,300
+# uniform on these rows.  Allocating *counts* instead of mass decouples them.
+FIFTY_FIFTY_RANKED = PRODUCTION_DRAWS // 2
+FIFTY_FIFTY_UNIFORM = PRODUCTION_DRAWS - FIFTY_FIFTY_RANKED
 CENTRE_NODE = 0
 
 TARGET_ORDER = [
@@ -287,6 +293,91 @@ def priority_race(mixture: torch.Tensor, *, seed: int, object_id: int, n_select:
             float(threshold))
 
 
+def stratified_race(probability: np.ndarray, excluded: np.ndarray, floor: float,
+                    *, seed: int, object_id: int,
+                    n_ranked: int, n_uniform: int) -> dict:
+    """Draw a fixed count from each stratum instead of one mixed race.
+
+    Two independent without-replacement draws over the atoms the exact stratum
+    left behind:
+
+    * ``n_ranked`` slots raced on the softmax tail alone, ``q_j - floor``, so
+      the race sees the ranking's preference and nothing else.  Its threshold
+      falls as its budget rises, which is the whole point -- the production
+      race gives this component only as many slots as its *mass* ratio buys.
+    * ``n_uniform`` slots with equal weights, which makes the same race a
+      simple random sample without replacement, so every eligible atom is
+      included with exactly ``n_uniform / n_eligible``.
+
+    An atom can win in both strata; it is credited to the ranking when it
+    does.  Combined inclusion is ``1 - (1 - i_r)(1 - i_u)``, which is what the
+    Horvitz-Thompson weight must divide by.
+    """
+
+    if floor <= 0.0 or not np.isfinite(floor):
+        raise ValueError("defensive floor must be positive and finite")
+    n_atoms = probability.size
+    n_ranked_requested = int(n_ranked)
+    eligible = np.ones(n_atoms, dtype=bool)
+    eligible[excluded] = False
+    n_eligible = int(eligible.sum())
+    if n_ranked + 1 > n_eligible or n_uniform + 1 > n_eligible:
+        raise ValueError("stratified draw needs more eligible atoms than slots")
+
+    tail = np.where(eligible, np.maximum(probability - floor, 0.0), 0.0)
+    positive = tail > 0.0
+    n_positive = int(positive.sum())
+    if n_positive <= n_ranked:
+        # The ranking prefers fewer atoms than it has slots, which happens when
+        # the softmax underflows to the floor on all but a handful.  Racing is
+        # then meaningless: take every preferred atom with certainty and hand
+        # the leftover slots to the uniform stratum rather than leave them
+        # unspent, which would quietly shrink the budget.
+        ranked_idx = np.flatnonzero(positive).astype(np.int64)
+        ranked_tau = float(tail[positive].min()) if n_positive else float("inf")
+        ranked_inclusion = positive.astype(np.float64)
+    else:
+        ranked_idx, ranked_tau = priority_race(
+            torch.as_tensor(tail), seed=seed, object_id=object_id,
+            n_select=n_ranked,
+        )
+        ranked_inclusion = np.minimum(1.0, tail / ranked_tau)
+    n_ranked = int(ranked_idx.size)
+    n_uniform = min(n_uniform + (n_ranked_requested - n_ranked), n_eligible - 1)
+
+    # A distinct seed keeps the two strata independent; reusing the production
+    # seed would make the uniform draw a deterministic function of the ranked
+    # one through the shared uniforms.
+    uniform_idx, _ = priority_race(
+        torch.as_tensor(eligible.astype(np.float64)),
+        seed=seed + 1, object_id=object_id, n_select=n_uniform,
+    )
+    uniform_inclusion = float(n_uniform) / float(n_eligible)
+
+    drawn = np.union1d(ranked_idx, uniform_idx).astype(np.int64)
+    in_ranked = np.zeros(n_atoms, dtype=bool)
+    in_ranked[ranked_idx] = True
+    inclusion = 1.0 - (1.0 - ranked_inclusion) * (1.0 - uniform_inclusion * eligible)
+    return dict(
+        kind="fifty_fifty",
+        drawn=drawn,
+        from_ranked=in_ranked[drawn],
+        inclusion=inclusion,
+        ranked_indices=ranked_idx,
+        uniform_indices=uniform_idx,
+        ranked_threshold=float(ranked_tau),
+        ranked_inclusion=ranked_inclusion,
+        uniform_inclusion=uniform_inclusion,
+        n_eligible=n_eligible,
+        n_ranked_slots=int(n_ranked),
+        n_ranked_slots_requested=n_ranked_requested,
+        n_uniform_slots=int(n_uniform),
+        n_overlap=int(n_ranked + n_uniform - drawn.size),
+        tail_mass=float(tail.sum()),
+        n_saturated=int(np.count_nonzero(tail >= ranked_tau)),
+    )
+
+
 def slot_accounting(probability: np.ndarray, floor: float, threshold: float,
                     delta: float) -> dict:
     """How each half of the mixture converts its probability into draws.
@@ -383,6 +474,11 @@ def main() -> None:
     parser.add_argument("--background", type=int, default=60000)
     parser.add_argument("--background-seed", type=int, default=20260921)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--sampler", choices=("production", "fifty-fifty"),
+                        default="production",
+                        help="production races one mixture and lets the mass "
+                             "ratio split the budget; fifty-fifty gives each "
+                             "stratum half the slots outright")
     args = parser.parse_args()
 
     import matplotlib
@@ -434,13 +530,30 @@ def main() -> None:
     exact_stratum = np.argsort(probability)[::-1][:PRODUCTION_CANDIDATES]
     raced = mixture.clone()
     raced[torch.as_tensor(exact_stratum.copy(), dtype=torch.long)] = 0.0
-    drawn, threshold = priority_race(
-        raced,
-        seed=PRODUCTION_SEED,
-        object_id=args.row,
-        n_select=PRODUCTION_DRAWS,
-    )
     raced_probability = raced.numpy()
+    floor = PRODUCTION_DELTA / n_atoms
+    uniform = 1.0 / n_atoms
+
+    if args.sampler == "production":
+        drawn, threshold = priority_race(
+            raced,
+            seed=PRODUCTION_SEED,
+            object_id=args.row,
+            n_select=PRODUCTION_DRAWS,
+        )
+        strata = dict(
+            kind="production",
+            threshold=float(threshold),
+            inclusion=np.minimum(1.0, raced_probability / threshold),
+        )
+    else:
+        strata = stratified_race(
+            raced_probability, exact_stratum, floor,
+            seed=PRODUCTION_SEED, object_id=args.row,
+            n_ranked=FIFTY_FIFTY_RANKED, n_uniform=FIFTY_FIFTY_UNIFORM,
+        )
+        drawn = strata["drawn"]
+    inclusion = strata["inclusion"]
 
     exact_files = sorted(args.exact_dir.glob(f"worker_*/row_{args.row}_exact.json"))
     if len(exact_files) != 1:
@@ -474,9 +587,14 @@ def main() -> None:
     # is neither summed nor drawn is the only kind the estimator truly misses.
     heavy_reached = heavy_drawn | heavy_exact
 
-    floor = PRODUCTION_DELTA / n_atoms
-    uniform = 1.0 / n_atoms
-    ranked, flat = draw_classes(raced_probability, drawn, floor)
+    # With one mixed race the class has to be inferred from which mixture
+    # component supplied most of the atom's probability.  With two strata it is
+    # simply which race the atom won, so no inference is needed.
+    if strata["kind"] == "production":
+        ranked, flat = draw_classes(raced_probability, drawn, floor)
+    else:
+        ranked = strata["from_ranked"]
+        flat = ~ranked
 
     # Where the proposal's own preference sits, independent of the draw.
     catalogue_ranked = np.flatnonzero(probability > 2.0 * floor)
@@ -595,14 +713,21 @@ def main() -> None:
     axes[1][1].invert_yaxis()
 
     subsample = n_atoms / max(background.size, 1)
+    # Production's shares are of probability, so the slot counts they buy vary
+    # row by row; the fixed-count sampler's shares are the slot counts.
+    if strata["kind"] == "production":
+        share = ("the flat 10% of probability", "the ranked 90% of probability")
+    else:
+        share = (f"{strata['n_uniform_slots']:,} slots",
+                 f"{strata['n_ranked_slots']:,} slots")
     legend = [
         Line2D([], [], ls="", marker=".", color="0.86", ms=7,
                label=f"not drawn ({background.size:,} shown, 1 in {subsample:,.0f})"),
         Line2D([], [], ls="", marker="x", color="0.62", ms=6,
-               label=f"drawn uniformly \u2014 the flat 10% "
+               label=f"drawn uniformly \u2014 {share[0]} "
                      f"({int(flat.sum()):,})"),
         Line2D([], [], ls="", marker="x", color="tab:blue", ms=8, mew=1.4,
-               label=f"drawn from ranked atoms \u2014 the 90% "
+               label=f"drawn from ranked atoms \u2014 {share[1]} "
                      f"({int(ranked.sum()):,})"),
         Line2D([], [], ls="", marker=".", color="black", ms=7,
                label="carries posterior mass, MISSED"),
@@ -620,15 +745,23 @@ def main() -> None:
 
     captured = float(mass.sum())
     reached = float(mass[heavy_reached].sum())
+    sampler_label = (
+        "production sampler: one mixed race, mass decides the split"
+        if strata["kind"] == "production"
+        else f"fixed-count sampler: {strata['n_ranked_slots']:,} ranked "
+             f"+ {strata['n_uniform_slots']:,} uniform slots"
+    )
     fig.suptitle(
         f"Row {args.row}: measured mag "
         f"{mock.measurements.iloc[args.row]['measured_mag_auto']:.2f}"
         f"   |   {int(heavy_reached.sum())} of {n_heavy} mass-carrying atoms reached"
         f" ({int(heavy_exact.sum())} summed exactly + {int(heavy_drawn.sum())} drawn)"
-        f"   |   {reached / captured:.1%} of the captured mass reached",
+        f"   |   {reached / captured:.1%} of the captured mass reached"
+        f"\n{sampler_label}",
         fontsize=12,
     )
-    figure_path = args.output / f"proposal_atom_map_row{args.row}.png"
+    suffix = "" if strata["kind"] == "production" else "_fifty_fifty"
+    figure_path = args.output / f"proposal_atom_map_row{args.row}{suffix}.png"
     fig.savefig(figure_path, dpi=170, bbox_inches="tight")
     plt.close(fig)
 
@@ -667,9 +800,28 @@ def main() -> None:
             n_mass_atoms_inside=int(heavy_exact.sum()),
             mass_inside=float(mass[heavy_exact].sum()),
         ),
-        slots=slot_accounting(
-            raced_probability, floor, threshold,
-            PRODUCTION_DELTA * (n_atoms - PRODUCTION_CANDIDATES) / n_atoms,
+        sampler=args.sampler,
+        slots=(
+            slot_accounting(
+                raced_probability, floor, strata["threshold"],
+                PRODUCTION_DELTA * (n_atoms - PRODUCTION_CANDIDATES) / n_atoms,
+            )
+            if strata["kind"] == "production"
+            else dict(
+                threshold=strata["ranked_threshold"],
+                expected_draws=float(inclusion.sum()),
+                n_saturated=strata["n_saturated"],
+                flat_mass=float(PRODUCTION_DELTA
+                                * (n_atoms - PRODUCTION_CANDIDATES) / n_atoms),
+                flat_expected_draws=float(strata["n_uniform_slots"]),
+                ranked_mass=strata["tail_mass"],
+                ranked_draws_if_unconcentrated=float(
+                    strata["tail_mass"] / strata["ranked_threshold"]),
+                ranked_expected_draws=float(strata["n_ranked_slots"]),
+                n_eligible=strata["n_eligible"],
+                uniform_inclusion=strata["uniform_inclusion"],
+                n_overlap=strata["n_overlap"],
+            )
         ),
         score_decomposition=decomposition,
         true_observation=true_observation,
@@ -686,9 +838,7 @@ def main() -> None:
                     atom=int(a),
                     mass=float(w),
                     proposal_probability=float(probability[a]),
-                    inclusion_probability=float(
-                        min(1.0, raced_probability[a] / threshold)
-                    ),
+                    inclusion_probability=float(inclusion[a]),
                     drawn=bool(d),
                     summed_exactly=bool(e),
                 )
@@ -703,9 +853,10 @@ def main() -> None:
             prior_manifest=file_hash(subset / "manifest.json"),
         ),
         note=(
-            "Priority race reproduced from the production mixture without "
-            "excluding the tilted-stratified exact stratum, so the drawn set is "
-            "the proposal's own race, not the estimator's final bookkeeping."
+            "The tilted-stratified exact stratum is removed before the race, as "
+            "production does, so the drawn set is what the sampler adds on top "
+            "of the atoms already summed with certainty. Diagnostic only: the "
+            "fifty-fifty sampler is not wired into any production path."
         ),
     )
     write_json(args.output / "report.json", report)
