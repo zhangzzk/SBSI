@@ -1,3 +1,116 @@
+## 2026-09-21 — "20m + 5m bright" cannot be built: only 269,501 truth-bright rows exist, and the measured-bright population is a flow artefact
+
+The owner reaffirmed the request to build a 20m + 5m (mag<20) prior.  Three
+CPU censuses were run before building.  The request cannot be executed as
+stated, and the reason changes what "bright" means here.
+
+### Files and behaviour changed
+
+None.  This entry records three censuses and a blocked request.  Scripts are
+job-local under `$CLAUDE_JOB_DIR/tmp` (`truth_mag_census.py`,
+`bright_meaning.py`, `spurious_check.py`).
+
+### The request is short by a factor of nineteen
+
+Truth magnitude `r` is carried per atom in each source shard's
+`galaxies.parquet`, so a bright stratum can be selected before `prepare`.
+Over all 139,936,000 source rows (job 16629968, no non-finite values):
+
+| truth cut | source rows | share |
+|---|---|---|
+| r<19 | 93,862 | 0.067% |
+| r<20 | **269,501** | 0.193% |
+| r<21 | 700,560 | 0.501% |
+
+Source `r` has median 26.696 and 1st percentile 21.788.  A uniform 20m draw
+already consumes about 38,518 of the r<20 rows, leaving about 230,983.  The
+request asks for 5,000,000.  They do not exist.
+
+### The measured-bright population is not bright
+
+The earlier census counted 1,058,628 subset atoms at *predicted measured*
+mag<20 (4.41%) while truth r<20 is 0.19% of the source, a factor of 23.  The
+two axes were joined atom by atom over all 24m (job 16629976):
+
+- 1,015,316 of the 1,058,628 measured-bright atoms — **95.9%** — have truth
+  r >= 20, with truth r quartiles 27.805 / 28.148 / 28.452 against a source
+  maximum of 29.0.  They are the faintest objects in the catalogue.
+- They are **not** blend-brightened: `nbr_flux_near` median 0.4868 against
+  0.7806 for the rest, and `nbr_flux_max` is indistinguishable (1.5124 against
+  1.4485).  Neighbour light does not explain an eight-magnitude offset.
+
+Across the whole prior the truth-minus-predicted offset has median +0.487 mag,
+which is ordinary, but a heavy tail: 3,175,825 atoms (13.2%) predicted more
+than 2 mag bright, 1,651,407 (6.9%) more than 5 mag, 987,791 (4.1%) more than
+8 mag; the 99th percentile is +11.248 mag (job 16629983).
+
+### The flow flags them, and the proposal already discards them
+
+Those atoms carry a predicted flux scatter of `sigma/|x|` median **10.53**
+(90th 11.26) against **0.77** (90th 1.58) for atoms whose prediction sits
+within a magnitude of truth.  The flow reports an uncertainty ten times its
+own prediction, and the dispersion-weighted rerank divides by it.
+
+The selected 1,024 candidates were reconstructed for six obstructing rows and
+four faint controls.  In every case **0.0%** of the selected candidates have
+truth r >= 26, and the candidates' median truth `r` tracks the observation:
+
+| row | observed mag | candidate truth r | candidate measured mag |
+|---|---|---|---|
+| 3563 | 18.45 | 18.459 | 18.538 |
+| 2874 | 17.40 | 17.510 | 17.543 |
+| 4708 | 20.03 | 20.122 | 20.188 |
+| 6189 | 19.55 | 19.569 | 19.638 |
+| 1165 | 19.69 | 19.726 | 19.788 |
+| 6067 | 20.81 | 21.063 | 21.088 |
+
+Adding 5m measured-bright atoms would therefore add 5m atoms the sampler
+already throws away, and would leave the prior roughly a quarter composed of
+them.
+
+### What is actually scarce
+
+On the truth axis the subset holds 15,981 atoms at r<19 and 45,975 at r<20.  A
+bright observation's 1,024-atom candidate set is drawn from about 16,000
+available atoms — roughly **6%** of the entire truth-bright population at that
+brightness — against about 0.005% for a faint observation.  That is a real
+resolution limit and it is the defensible form of the owner's instinct.
+
+Its ceiling is fixed by the source: taking every remaining r<20 row gives
+about 269,501 against the 45,975 present, a **5.9x** increase, not 100x.
+
+### Limitations
+
+- The candidate reconstruction uses the Gaussian residual term of the
+  production reranker without its log prior-mass term, as in the entry below.
+- Truth `r` and predicted measured `mag_auto` are different quantities; a
+  sub-magnitude offset is expected and observed (median +0.487).  The claim
+  rests on the 5-to-13 magnitude tail, not on the bulk.
+- Why the flow produces those predictions was not investigated.  It is an
+  emulator/flow-quality question and falls on the BlendEMU side of the
+  boundary in `doc/API.md`.
+- A stratified prior is currently refused by the store:
+  `sbsi/disk_inference_store.py:47` requires `prior_weight == 1/n_rows`, and
+  `:68` and `:82` hardcode uniform weights.  Per-atom inverse-probability
+  weights would have to be threaded through `prepare`, `assemble` and
+  `FrozenDiskCache` before any stratified subset could be run.
+
+### Next steps
+
+- Decide whether to build the feasible version: 20m uniform plus every
+  remaining truth-r<20 source row (about 231k), with inverse-probability
+  weights so the represented population is unchanged.  Cost is about 2.6
+  GPU-hours of `prepare` (20 shards at ~460 s) plus a 37-minute inference,
+  inside the two-GPU limit, plus the weight plumbing above.
+- Weigh that against the evidence: raising the dispersion floor (7-8x more
+  distinct atoms) moved the information 0.01-0.05%, and repairing the
+  neighbour metric moved it 0.1%.  A 5.9x bright pool is the same kind of
+  intervention and the candidates it would refine already match truth
+  magnitude to about 0.1 mag.
+- Report the >5 mag flow predictions to the BlendEMU side regardless.  They do
+  not currently corrupt the inference, because the flow's own scatter flags
+  them, but 6.9% of the prior carrying a ten-fold relative uncertainty is a
+  model-quality finding in its own right.
 ## 2026-09-21 — the neighbour metric now compares flux multiplicatively; it is a real repair and it does not move the curvature
 
 Following the census entry below, the flux-dominated neighbour metric was
