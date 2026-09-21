@@ -1,3 +1,162 @@
+## 2026-09-21 — 10,000 observations: the proposal collapse is fixed, the curvature obstruction is not, and it is not a sampling artifact
+
+Owner asked whether to run 10,000 observations. Run as job 16628938: rows
+0-9999 against the median-floored proposal table, `--compile-flow
+--object-chunk 16` to match the completed 500k production run, whose
+`part_00` supplies the old-proposal answer for exactly those rows. One GPU,
+39 minutes, 0.223 s/row. Only the new arm needed a GPU.
+
+### The hypothesis this run was built to test, and its result
+
+The entry below diagnosed the pathological rows as proposal collapse: the
+rows carrying enormous negative information were the rows where the proposal
+reached only ~1,800 distinct atoms of 16,384 while a healthy row reached
+15,950. The median floor was expected to fix those rows by fixing the
+collapse.
+
+**The collapse is fixed. The curvature obstruction is not.**
+
+| rows 0-9999 | old proposal | median floor |
+|---|---|---|
+| distinct atoms, median | 15,950 (97.4%) | **16,343 (99.7%)** |
+| distinct atoms, 10th pct | 8,434 | **16,020** |
+| rows collapsed below 25% | 4.67% | **0.00%** |
+| summed information, eigenvalues | −2.923e6, +4.309e5 | −2.503e6, +4.494e5 |
+| positive definite | no | **no** |
+| Pareto k, median | 0.469 | 0.564 |
+| Pareto k > 1 | 2.42% | **11.70%** |
+
+No row collapses any more — the proposal defect is gone, completely and as
+designed. The summed information is 14% less negative and still indefinite,
+so **neither arm yields a shear estimate**;
+`combine_inference_partitions.py` refuses both with `non-positive combined
+information`. There is no number to report and therefore no uncertainty to
+attach to one.
+
+### The extreme curvature is real, not a sampling artifact
+
+This is the substantive finding, and it falsifies the diagnosis in the entry
+below. Four of the five rows that dominated the old sum were given five to
+eight times more distinct atoms and did not move:
+
+| row | atoms | g1 information | change |
+|---|---|---|---|
+| 4708 | 1,771 → 14,177 | −477,102 → −477,331 | **0.05%** |
+| 6189 | 1,796 → 12,688 | −403,470 → −403,519 | **0.01%** |
+| 2874 | 1,850 → 6,974 | 252,293 → 251,862 | 0.17% |
+| 3563 | 1,840 → 9,917 | −2,565,207 → −2,408,106 | 6.1% |
+| 6067 | 1,886 → 15,341 | −299,413 → **+7,998** | sign flip |
+
+Drawing an eight-fold more diverse set of atoms and recovering the same
+number to four significant figures is the signature of a *converged*
+estimate, not a broken one. For those rows the old proposal, collapsed as it
+was, was already returning the right answer. Their huge negative curvature is
+a property of the likelihood at those objects.
+
+Row 6067 is the exception that proves the rule: it was genuinely a sampling
+artifact and the floor removed it entirely, from −299,413 to +7,998, which is
+back to the healthy scale (the median row carries about +3).
+
+The collapse and the bad curvature were correlated but not causally linked in
+the direction assumed. Both are consequences of the same objects being
+extreme, not of one another.
+
+### What the obstruction actually is: two objects
+
+Dropping rows by largest `|information|` and re-summing:
+
+```
+            old arm                        new arm
+drop  0   [-2923236,  430851]            [-2502572,  449406]
+drop  1   [ -400281,  754239]            [ -216461,  811022]
+drop  2   [    5146,  885888]  POS DEF   [  116357, 1015537]  POS DEF
+drop  5   [  265592,  934880]  POS DEF   [  501947,  915371]  POS DEF
+drop 25   [  222634,  392882]  POS DEF   [   46762,   80909]  POS DEF
+drop 50   [    5675,  175549]  POS DEF   [  -94810,   39400]
+```
+
+**Two rows out of ten thousand are the entire obstruction, in both arms.**
+This was never a diffuse sampling problem needing a better sampler.
+
+The sum also degrades once too many rows are dropped, because the healthy
+bulk carries very little: 10,000 rows at a median of ~3-5 is about 4e4 of
+information, while single outlier rows carry 1e5 to 1e6. The extremes are ten
+to a hundred times the entire bulk. That imbalance is the real structural
+problem.
+
+### What those objects are
+
+The six largest-`|information|` rows in the new arm are the brightest,
+largest and most elliptical objects in the sample:
+
+| row | mag_auto | flux | flux_radius | measured g |
+|---|---|---|---|---|
+| 3563 | 18.45 | 41,706 | 6.54 | (−0.001, 0.161) |
+| 4708 | 20.03 | 9,709 | 6.90 | (−0.061, 0.308) |
+| 6189 | 19.55 | 15,205 | 6.88 | (−0.506, −0.085) |
+| median of the 10,000 | 24.71 | 131 | 4.18 | (0.010, −0.001) |
+
+They are 4.7 to 6.3 magnitudes brighter than the median object, carry 74 to
+318 times its flux, and reach ellipticities up to 0.51. This is the same
+population that the 2026-07-05 bright-neighbour work identified as outside
+the emulator's training domain, now appearing as the *observed* object rather
+than as a neighbour.
+
+### Cost of the fix that did work
+
+The floor is not free. Broadening the proposal improves coverage and worsens
+the weight tail: Pareto k median 0.469 → 0.564, the fraction above 0.7 goes
+9.10% → 32.13% and above 1 goes 2.42% → 11.70% (both arms finite on
+essentially every row, so this is like for like). More atoms are reachable,
+and some of them arrive with large weights. On the evidence here that trade
+is worth taking — it removed the collapse outright and cost no accuracy on
+the converged rows — but it is a real cost and it argues against pushing the
+percentile higher without measuring this.
+
+### Files and outputs
+
+No code changed. Outputs under
+`$DATA_DIR/.../ten_k_floor50_16628938/` and the comparison scripts in the job
+scratch. The old arm is `production_lru_v1/part_00` rows 0-9999, reused
+rather than re-run.
+
+### Validation
+
+- Job 16628938 COMPLETED, exit 0, 39m03s, 2229.55 s of inference for 10,000
+  rows.
+- The new arm's `result.json` records `proposal_source =
+  proposal_floor50_v1`, its own `proposal_cache_sha256`, and
+  `runtime_cache_compatibility = audited_two_entry_response_lru_v1+run_stage:
+  ...`, so the run states which proposal and which code it used.
+- Reusing production as the old arm is sound but not bit-exact: the current
+  tree reproduces production on row 142230 to 5e-5 relative, with
+  `draw_counts` and `unique_counts` identical, the difference being
+  compiled/chunked floating-point reduction order. Irrelevant at the scale of
+  the effects here, and the 10k arm used production's own settings.
+
+### Limitations
+
+- No shear estimate exists from either arm, so nothing here constrains `m`.
+- One injected shear, one draw seed per arm, 10,000 of 500,000 rows.
+- The claim that the extreme rows are converged rests on their stability
+  under a five- to eight-fold change in the atom set, which is strong but is
+  not a proof that both arms are not wrong in the same way.
+
+### Next steps
+
+- The obstruction is two objects, and they are bright, large and very
+  elliptical. Establish whether the likelihood or the response emulator is
+  out of domain there, the way the bright neighbours were in the 2026-07-05
+  work. That is a likelihood/emulator question, not a sampler one, and it is
+  where the next effort belongs.
+- Do not pursue a better sampler for this. The rows that matter are already
+  converged.
+- Decide the policy question a principled cut implies: if these objects are
+  outside the model's domain they must be rejected by a stated rule and
+  reported, not dropped because they are inconvenient.
+- The weight tail (Pareto k > 1 on 11.7% of rows) is now the sampler's
+  leading defect, and removing the exact stratum from the mixture before
+  drawing remains the candidate v1.4 for it.
 ## 2026-09-21 — the proposal cache is rebuilt at the median, and the disk driver stops refusing its own cache
 
 Owner asked to rebuild the proposal cache and run inference on one row under
