@@ -31,7 +31,7 @@ from .catalogue_sampling import (
 # Both stratified modes sum the candidate stratum exactly and estimate only
 # its complement; they differ solely in the proposal that complement is drawn
 # from.  Every downstream branch treats them identically.
-STRATIFIED_MODES = ("stratified", "tilted_stratified", "priority_stratified")
+STRATIFIED_MODES = ("stratified", "tilted_stratified")
 CANDIDATE_SOURCES = ("location_prefilter", "whole_catalogue_gaussian_proxy")
 
 
@@ -1822,19 +1822,8 @@ def run_adaptive_section5(
                 "stratified estimation and finite-draw bias correction are "
                 "separate modes"
             )
-    if estimator_mode in ("tilted_stratified", "priority_stratified") and not (
-        0.0 < tilt_delta < 1.0
-    ):
+    if estimator_mode == "tilted_stratified" and not (0.0 < tilt_delta < 1.0):
         raise ValueError("tilt_delta must lie strictly between zero and one")
-    if estimator_mode == "priority_stratified" and len(ladder) > 1:
-        # Priority sampling nests its retained set in M but not its weights:
-        # tau is the (M+1)-th largest key, so a shorter prefix of the same
-        # draw carries the wrong inclusion probabilities.  Refusing the ladder
-        # is the honest option until the reduction carries a per-rung tau.
-        raise ValueError(
-            "priority_stratified needs a single-rung ladder: tau depends on M, "
-            f"so the nested prefixes of {list(ladder)} are not valid rungs"
-        )
     if bias_correction != "none" and retain_full_ladder:
         raise ValueError(
             "finite-draw bias correction and retained raw ladder are separate modes"
@@ -2056,24 +2045,7 @@ def run_adaptive_section5(
             # exactly and every draw estimates only its complement.  The whole
             # budget therefore reaches the tail that carries the mass the
             # mixture proposal covers with epsilon of its draws.
-            if estimator_mode == "priority_stratified":
-                # cont.343: without replacement, so the ratio is capped by
-                # tau / q_j rather than left to the luck of the draw.
-                draw = proposal.draw_priority(
-                    candidates,
-                    observed,
-                    n_draws=ladder[-1],
-                    delta=tilt_delta,
-                    temperature=tilt_temperature,
-                    seed=proposal_seed,
-                    object_ids=chunk_object_ids,
-                    device=(
-                        likelihood.flow_model.device
-                        if candidate_backend == "torch"
-                        else None
-                    ),
-                )
-            elif estimator_mode == "tilted_stratified":
+            if estimator_mode == "tilted_stratified":
                 # cont.317: drawing that complement from the flat prior is what
                 # leaves the tail index above 0.7.  The tilted proposal uses
                 # the same uniform stream, so the arms stay paired.

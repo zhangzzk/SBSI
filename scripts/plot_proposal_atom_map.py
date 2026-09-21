@@ -272,11 +272,10 @@ def production_draw(probability: np.ndarray, *, seed: int, object_id: int,
     because that stratum is already summed exactly
     (``catalogue_null._exact_plus_complement``).
 
-    An earlier version of this script reproduced ``select_priority_batch``
-    instead, which is sampling without replacement and belongs to the
-    ``priority_stratified`` mode nothing runs.  The proposal is the same in
-    both, so where the mass sits was unaffected, but inclusion probabilities
-    and Horvitz-Thompson weights are not quantities this estimator has.
+    An earlier version of this script reproduced a draw without replacement
+    instead, and reported inclusion probabilities and Horvitz-Thompson
+    weights, which are not quantities this estimator has.  The proposal is
+    the same in both, so where the mass sits was unaffected.
     """
 
     if n_draws <= 0:

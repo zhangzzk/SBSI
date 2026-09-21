@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Reference Slurm launcher for v1.1-infer with v3.2-like.
+# Reference Slurm launcher for v1.3-infer with v3.2-like.
 
 #SBATCH --job-name=sbsi_inference
 #SBATCH --partition=inter,cip

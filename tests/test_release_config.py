@@ -14,8 +14,8 @@ def test_release_configs_name_and_pin_the_current_pipeline():
     inference = json.loads((ROOT / "configs" / "inference.json").read_text())
     likelihood = json.loads((ROOT / "configs" / "likelihood.json").read_text())
 
-    assert inference["release"] == "v1.1-infer"
-    assert inference["proposal"]["candidates"] == 16384
+    assert inference["release"] == "v1.3-infer"
+    assert inference["proposal"]["candidates"] == 1024
     assert inference["proposal"]["prefilter_candidates"] == 131072
     assert inference["estimator"]["draw_ladder"][-1] == 16384
     assert inference["estimator"]["step"] == "one_step_full_2d"
@@ -55,7 +55,7 @@ def test_runner_consumes_release_defaults():
     source = RUNNER._load_release_config(args.inference_config, kind="inference")
     assert RUNNER._resolved_pipeline_config(args, source) == source
     assert args.proposal_flow_samples == 128
-    assert args.proposal_candidates == 16384
+    assert args.proposal_candidates == 1024
     assert tuple(args.adaptive_draw_ladder) == (512, 1024, 2048, 4096, 8192, 16384)
     assert args.compile_flow and args.retain_full_ladder
 
@@ -91,7 +91,7 @@ def test_whole_catalogue_proxy_shortlist_is_recorded_as_custom():
 
 def test_reference_job_only_supplies_runtime_paths():
     job = (ROOT / "jobs" / "job_inference.sh").read_text()
-    assert "v1.1-infer with v3.2-like" in job
+    assert "v1.3-infer with v3.2-like" in job
     assert '"$repo/configs/inference.json"' in job
     assert '"$repo/configs/likelihood.json"' in job
     assert '"$repo/scripts/run_inference.py"' in job
@@ -130,7 +130,7 @@ def test_v1_2_names_the_tilted_stratified_trimmed_arm():
     assert config["estimator"]["retain_full_ladder"] is True
     assert config["estimator"]["bias_correction"] == "none"
     # Everything outside the estimator is deliberately v1.1.
-    v1_1 = json.loads((ROOT / "configs" / "inference.json").read_text())
+    v1_1 = json.loads((ROOT / "configs" / "inference_v1_1.json").read_text())
     assert config["execution"] == v1_1["execution"]
     assert config["prior"] == v1_1["prior"]
     assert config["proposal"]["method"] == v1_1["proposal"]["method"]
@@ -180,13 +180,20 @@ def test_a_plain_v1_2_run_reports_its_own_release_not_custom():
 
 
 def test_v1_1_still_resolves_to_itself_and_declares_no_mode():
-    """The new optional keys must not perturb the released default."""
+    """The optional keys must not perturb the superseded release.
 
-    args, source, resolved = _resolve("inference.json")
+    v1.1-infer is no longer the default, but completed runs name it, so its
+    document must keep resolving to itself: no estimator mode, no floor.
+    """
+
+    args, source, resolved = _resolve("inference_v1_1.json")
     assert "estimator_mode" not in source["estimator"]
     assert args.estimator_mode == "mixture"
+    assert args.proposal_dispersion_floor_percentile == 1.0
+    assert tuple(args.proposal_fractional_floor) == ()
     assert resolved == source
     assert "estimator_mode" not in resolved["estimator"]
+    assert "dispersion_floor_percentile" not in resolved["proposal"]
 
 
 def test_overriding_the_mode_on_the_command_line_marks_the_run_custom():
@@ -228,7 +235,47 @@ def test_the_draw_budget_follows_the_release_ladder():
     v1.1-infer's ladder top by coincidence.  A release whose ladder stops at
     8,192 must not be handed a deeper production budget than it declares."""
 
-    v1_1_args, _, _ = _resolve("inference.json")
+    v1_1_args, _, _ = _resolve("inference_v1_1.json")
     v1_2_args, _, _ = _resolve("inference_v1_2.json")
     assert v1_1_args.draws == v1_1_args.adaptive_draw_ladder[-1] == 16384
     assert v1_2_args.draws == v1_2_args.adaptive_draw_ladder[-1] == 8192
+
+
+def test_v1_3_is_the_default_and_carries_the_floored_proposal():
+    """cont.345: the default release is the tilted-stratified estimator over a
+    floored proposal.
+
+    The proposal divides each residual by the atom's own predicted scatter, so
+    a vague atom is judged on a loose tolerance.  Faint atoms are vague and
+    outnumber bright ones, so the shipped first-percentile floor let
+    coincidence fill the ranking.  Measured over rows 142230 / 409188 / 3563
+    and eight draw seeds, flooring at the median took the posterior mass the
+    estimator reaches from 57.0% (sd 31.9) to 92.1% (sd 2.9).
+    """
+
+    args, source, resolved = _resolve("inference.json")
+    assert source["release"] == "v1.3-infer"
+    assert args.estimator_mode == "tilted_stratified"
+    assert args.proposal_candidates == 1024
+    assert args.proposal_dispersion_floor_percentile == 50.0
+    # Flux spans five decades, so an absolute floor is fixed by the faintest
+    # atoms and can never bind on a bright one.
+    assert tuple(args.proposal_fractional_floor) == ("measured_flux_from_mag_auto",)
+    assert resolved == source
+    assert args.draws == args.adaptive_draw_ladder[-1] == 16384
+
+
+def test_the_floor_reaches_the_proposal_cache_identity():
+    """A cache is only reusable for a run that asks for the same floor.
+
+    The floor decides which atoms the proposal can reach, so a table built at
+    one percentile is a different proposal from the same table built at
+    another.  Recording it in the cache identity is what stops the older cache
+    from being picked up silently by a v1.3 run.
+    """
+
+    args, _, resolved = _resolve("inference.json")
+    assert resolved["proposal"]["dispersion_floor_percentile"] == 50.0
+    assert resolved["proposal"]["fractional_floor_targets"] == [
+        "measured_flux_from_mag_auto"
+    ]

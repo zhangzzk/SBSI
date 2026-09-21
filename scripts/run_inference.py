@@ -1,5 +1,9 @@
 #!/usr/bin/env python
-"""Run the v1.1-infer one-step full-2D catalogue-likelihood estimator."""
+"""Run the one-step full-2D catalogue-likelihood estimator.
+
+The release configuration decides the estimator; the default is
+`configs/inference.json`, which holds v1.3-infer.
+"""
 
 from __future__ import annotations
 
@@ -224,6 +228,14 @@ def _inference_defaults(config: dict) -> dict:
             "proposal_dispersion_statistic": proposal["dispersion_statistic"],
             "proposal_row_chunk": int(proposal["row_chunk"]),
             "proposal_coordinate_seed": int(proposal["coordinate_seed"]),
+            # A release published before v1.3-infer names no floor and
+            # inherits the one its caches were built with.
+            "proposal_dispersion_floor_percentile": float(
+                proposal.get("dispersion_floor_percentile", 1.0)
+            ),
+            "proposal_fractional_floor": tuple(
+                str(name) for name in proposal.get("fractional_floor_targets", ())
+            ),
             "proposal_candidates": int(proposal["candidates"]),
             "proposal_prefilter_candidates": int(proposal["prefilter_candidates"]),
             "proposal_seed": int(proposal["seed"]),
@@ -259,7 +271,7 @@ def _inference_defaults(config: dict) -> dict:
         mode = estimator.get("estimator_mode")
         if mode is not None:
             defaults["estimator_mode"] = str(mode)
-            if mode in ("tilted_stratified", "priority_stratified"):
+            if mode == "tilted_stratified":
                 defaults["estimator_tilt_delta"] = float(estimator["tilt_delta"])
                 defaults["estimator_tilt_temperature"] = float(estimator["tilt_temperature"])
             elif "tilt_delta" in estimator or "tilt_temperature" in estimator:
@@ -358,6 +370,16 @@ def _resolved_pipeline_config(args, source: dict) -> dict:
             "atom_chunk": args.atom_chunk,
         },
     }
+    if (
+        float(args.proposal_dispersion_floor_percentile) != 1.0
+        or tuple(args.proposal_fractional_floor)
+    ):
+        resolved["proposal"]["dispersion_floor_percentile"] = float(
+            args.proposal_dispersion_floor_percentile
+        )
+        resolved["proposal"]["fractional_floor_targets"] = [
+            str(name) for name in args.proposal_fractional_floor
+        ]
     if args.proposal_candidate_source != "location_prefilter":
         # The released proposal uses a location prefilter followed by the
         # Gaussian reranker.  A direct whole-catalogue proxy shortlist has no
@@ -368,9 +390,10 @@ def _resolved_pipeline_config(args, source: dict) -> dict:
     if args.estimator_mode != "mixture":
         # Screens deviate on purpose.  The key is added only when it is not the
         # release default, so an ordinary run still matches the release
-        # document exactly and reports v1.1-infer rather than custom.
+        # document exactly and reports its own release name rather than
+        # custom.
         resolved["estimator"]["estimator_mode"] = args.estimator_mode
-        if args.estimator_mode in ("tilted_stratified", "priority_stratified"):
+        if args.estimator_mode == "tilted_stratified":
             resolved["estimator"]["tilt_delta"] = float(args.estimator_tilt_delta)
             resolved["estimator"]["tilt_temperature"] = float(args.estimator_tilt_temperature)
     return resolved
@@ -568,6 +591,28 @@ def parse_args(argv=None):
     parser.add_argument("--proposal-flow-samples", type=int, default=16)
     parser.add_argument("--proposal-statistic", choices=("mean", "median"), default="median")
     parser.add_argument(
+        "--proposal-dispersion-floor-percentile",
+        type=float,
+        default=1.0,
+        help=(
+            "percentile of the active atoms' own predicted scatter used as a "
+            "floor on that scatter.  The proposal divides each residual by the "
+            "atom's own scatter, so this sets how tightly a vague atom may be "
+            "judged; v1.3-infer raises it to the median."
+        ),
+    )
+    parser.add_argument(
+        "--proposal-fractional-floor",
+        nargs="*",
+        default=(),
+        metavar="TARGET",
+        help=(
+            "coordinates whose scatter is multiplicative, floored on sigma/|x| "
+            "so the floor binds at every magnitude.  Flux needs this: it spans "
+            "five decades, so an absolute floor is fixed by the faintest atoms."
+        ),
+    )
+    parser.add_argument(
         "--proposal-dispersion-statistic",
         choices=("robust_iqr", "std"),
         default="robust_iqr",
@@ -757,7 +802,7 @@ def parse_args(argv=None):
     parser.add_argument("--adaptive-draw-ladder", nargs="+", type=int, default=(512, 1024, 2048))
     parser.add_argument(
         "--estimator-mode",
-        choices=("mixture", "stratified", "tilted_stratified", "priority_stratified"),
+        choices=("mixture", "stratified", "tilted_stratified"),
         default="mixture",
         help=(
             "'mixture' is the v1.1-infer defensive proposal.  'stratified' "
@@ -766,11 +811,8 @@ def parse_args(argv=None):
             "retained full ladder, and no finite-draw bias correction, and it "
             "marks the run as a custom pipeline.  'tilted_stratified' is "
             "the same split with the complement drawn from the tilted "
-            "whole-catalogue proposal instead of the flat prior.  "
-            "'priority_stratified' draws that complement without replacement "
-            "by priority sampling, which caps the importance ratio by "
-            "construction; it needs a single-rung draw ladder because its "
-            "threshold depends on the rung."
+            "whole-catalogue proposal instead of the flat prior, and is what "
+            "v1.3-infer configures."
         ),
     )
     parser.add_argument("--adaptive-min-ess", type=float, default=32.0)
@@ -1323,6 +1365,12 @@ def main(argv=None):
             "statistic": args.proposal_statistic,
             "dispersion_statistic": args.proposal_dispersion_statistic,
             "seed": int(args.proposal_coordinate_seed),
+            "dispersion_floor_percentile": float(
+                args.proposal_dispersion_floor_percentile
+            ),
+            "fractional_floor_targets": [
+                str(name) for name in args.proposal_fractional_floor
+            ],
         },
     }
     if (proposal_path / "manifest.json").is_file():
@@ -1332,6 +1380,12 @@ def main(argv=None):
             if name == "coordinate_config" and actual is not None:
                 actual = dict(actual)
                 actual.setdefault("dispersion_statistic", coordinates.dispersion_statistic)
+                # A cache written before v1.3-infer carries no floor in
+                # its metadata because it was built with the historical
+                # one.  Naming it here rejects such a cache for a run
+                # that asks for a different floor, rather than reusing it.
+                actual.setdefault("dispersion_floor_percentile", 1.0)
+                actual.setdefault("fractional_floor_targets", [])
             if actual != expected:
                 raise RuntimeError(f"proposal cache {name} does not match the supplied catalogue/models")
     else:
@@ -1347,6 +1401,8 @@ def main(argv=None):
             dispersion_statistic=args.proposal_dispersion_statistic,
             row_chunk=args.proposal_row_chunk,
             seed=args.proposal_coordinate_seed,
+            dispersion_floor_percentile=args.proposal_dispersion_floor_percentile,
+            fractional_floor_targets=args.proposal_fractional_floor,
             metadata=proposal_identity,
         )
         coordinates.save(proposal_path)
@@ -1757,7 +1813,9 @@ def main(argv=None):
         return 0
 
     if args.proposal_method != "initial_center_posterior_adapted":
-        raise ValueError("v1.1-infer requires the initial-center posterior proposal")
+        raise ValueError(
+            "the released estimators require the initial-center posterior proposal"
+        )
     result = estimate_one_step_adaptive_section5(
         likelihood,
         mock,

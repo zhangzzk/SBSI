@@ -32,9 +32,11 @@
 #   done
 #
 # RELEASE LABELLING.  Every arm overrides `proposal.candidates` on the command
-# line, so `_resolved_pipeline_config` will differ from `configs/inference.json`
-# and each manifest is labelled `pipeline_release: "custom"` rather than
-# `v1.1-infer`.  That is correct and intended: this is a deliberate sweep around
+# line, so `_resolved_pipeline_config` will differ from
+# `configs/inference_v1_1.json` and each manifest is labelled
+# `pipeline_release: "custom"` rather than `v1.1-infer`.  This sweep names the
+# v1.1 document explicitly: the default configuration is now v1.3-infer at
+# K=1,024, which would move the anchor below.  That is correct and intended: this is a deliberate sweep around
 # the release point, not the release point itself.  Nothing else is overridden,
 # so the K=16,384 arm differs from the base config in no field at all.
 #
@@ -134,7 +136,7 @@ import sbsi, blendemu  # noqa: F401
 PREFLIGHT
 
 exec "$python" "$repo/scripts/run_inference.py" \
-  --inference-config "$repo/configs/inference.json" \
+  --inference-config "$repo/configs/inference_v1_1.json" \
   --likelihood-config "$repo/configs/likelihood.json" \
   --scene-store "$compact/scene_store" \
   --measurement-model /project/ls-gruen/users/zekang.zhang/sbsi_caches/mixed_shear_cde/measurement_flow_mixed_g0_g005_E_s501_swaavg.pt \

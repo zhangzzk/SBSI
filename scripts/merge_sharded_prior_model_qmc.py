@@ -12,7 +12,11 @@ import numpy as np
 import pandas as pd
 
 from sbsi.catalogue_likelihood import CatalogueModelCache, CatalogueModelView
-from sbsi.catalogue_sampling import ProposalCoordinateTable
+from sbsi.catalogue_sampling import (
+    ProposalCoordinateTable,
+    floored_dispersion,
+    fractional_mask,
+)
 from sbsi.scene_prior import ScenePrior
 
 
@@ -39,22 +43,6 @@ def _robust_location_scale(values: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return center, scale
 
 
-def _global_dispersion_floor(
-    dispersion: np.ndarray, scale: np.ndarray
-) -> np.ndarray:
-    positive = np.where(
-        np.isfinite(dispersion) & (dispersion > 0), dispersion, np.nan
-    )
-    floor = np.nanpercentile(positive, 1, axis=0)
-    floor = np.where(
-        np.isfinite(floor) & (floor > 0),
-        floor,
-        np.maximum(1.0e-3 * scale, np.finfo(np.float64).eps),
-    )
-    return np.maximum(
-        np.where(np.isfinite(dispersion) & (dispersion > 0), dispersion, floor),
-        floor,
-    )
 
 
 def parse_args(argv=None):
@@ -65,6 +53,22 @@ def parse_args(argv=None):
     parser.add_argument("--emulator-metadata", required=True)
     parser.add_argument("--emulator-model", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument(
+        "--dispersion-floor-percentile",
+        type=float,
+        default=50.0,
+        help=(
+            "floor the concatenated per-atom scatter at this percentile of "
+            "itself (v1.3-infer: the median)"
+        ),
+    )
+    parser.add_argument(
+        "--fractional-floor",
+        nargs="*",
+        default=("measured_flux_from_mag_auto",),
+        metavar="TARGET",
+        help="coordinates floored on sigma/|x| rather than on sigma",
+    )
     return parser.parse_args(argv)
 
 
@@ -253,7 +257,13 @@ def main(argv=None):
     values = np.concatenate(coordinate_parts)
     dispersion = np.concatenate(dispersion_parts)
     center, scale = _robust_location_scale(values)
-    dispersion = _global_dispersion_floor(dispersion, scale)
+    dispersion = floored_dispersion(
+        values,
+        dispersion,
+        percentile=args.dispersion_floor_percentile,
+        fractional=fractional_mask(target_names, args.fractional_floor),
+        fallback=np.maximum(1.0e-3 * scale, np.finfo(np.float64).eps),
+    )
     proposal = ProposalCoordinateTable(
         values,
         target_names,

@@ -82,9 +82,12 @@
 #
 # RELEASE LABELLING.  The stratified arm records `estimator_mode` in its
 # resolved config, so `_resolved_pipeline_config` deviates from
-# `configs/inference.json` and that arm is labelled `pipeline_release:
+# its baseline configuration and that arm is labelled `pipeline_release:
 # "custom"`.  That is correct and intended: this is a screen, not a release.
-# The mixture arm overrides nothing and must come back labelled `v1.1-infer`.
+# The mixture arm overrides nothing and must come back labelled `v1.1-infer`,
+# which is why this screen names `configs/inference_v1_1.json` rather than
+# the default configuration: that default is now v1.3-infer and declares a
+# stratified mode of its own.
 #
 # Submit both arms:
 #   for m in mixture stratified; do
@@ -128,13 +131,13 @@ compact="$source_root/compact_global"
 
 # cont.344: `release` runs a named release document with no overrides at all,
 # so the recorded `pipeline_release` is the release's own name rather than
-# `custom`.  Every other MODE keeps overriding the v1.1 default as before.
+# `custom`.  Every other MODE keeps overriding the v1.1 baseline as before.
 case "$MODE" in
-  mixture|stratified|tilted_stratified|priority_stratified|release) ;;
-  *) echo "MODE must be mixture, stratified, tilted_stratified, priority_stratified or release, got $MODE" >&2; exit 2 ;;
+  mixture|stratified|tilted_stratified|release) ;;
+  *) echo "MODE must be mixture, stratified, tilted_stratified or release, got $MODE" >&2; exit 2 ;;
 esac
 
-INFERENCE_CONFIG=${INFERENCE_CONFIG:-$repo/configs/inference.json}
+INFERENCE_CONFIG=${INFERENCE_CONFIG:-$repo/configs/inference_v1_1.json}
 if [[ "$MODE" == release ]]; then
   for forbidden in K LADDER DRAWS TILT_DELTA; do
     if [[ -n "${!forbidden:-}" ]]; then
@@ -199,7 +202,7 @@ fi
 # cont.317: the tilted arm draws its complement from the whole-catalogue
 # Gaussian-proxy proposal instead of the flat prior.  Same window, same seed,
 # same uniform stream as the `stratified` arm, so the two remain paired.
-if [[ "$MODE" == tilted_stratified || "$MODE" == priority_stratified ]]; then
+if [[ "$MODE" == tilted_stratified ]]; then
   args+=(--estimator-tilt-delta "${TILT_DELTA:-0.1}")
 fi
 # cont.324: every object currently receives the deepest rung whatever its own

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "release": "v1.3-infer",
-  "description": "Default catalogue-shear inference: the tilted-stratified estimator of v1.2-infer over a proposal whose predicted scatter is floored at the median, fractionally on flux. The 1,024-atom shortlist is summed exactly and the complement is drawn from the tilted whole-catalogue proposal.",
+  "release": "v1.1-infer",
+  "description": "Canonical one-step, two-component catalogue-shear inference setup.  Superseded as the default by v1.3-infer on 2026-09-21; retained because completed runs name it.",
   "prior": "configs/default_catalogue_prior.json",
   "proposal": {
     "flow_samples": 128,
@@ -9,15 +9,11 @@
     "dispersion_statistic": "std",
     "row_chunk": 8192,
     "coordinate_seed": 8201,
-    "candidates": 1024,
+    "candidates": 16384,
     "prefilter_candidates": 131072,
     "seed": 8701,
     "epsilon": 0.1,
-    "method": "initial_center_posterior_adapted",
-    "dispersion_floor_percentile": 50.0,
-    "fractional_floor_targets": [
-      "measured_flux_from_mag_auto"
-    ]
+    "method": "initial_center_posterior_adapted"
   },
   "estimator": {
     "initial_strategy": "mean_observed_shape",
@@ -38,10 +34,7 @@
     "pilot_seed": 18701,
     "pilot_safety_factor": 1.0,
     "bias_correction": "none",
-    "retain_full_ladder": true,
-    "estimator_mode": "tilted_stratified",
-    "tilt_delta": 0.1,
-    "tilt_temperature": 1.0
+    "retain_full_ladder": true
   },
   "execution": {
     "precision": "fp32",

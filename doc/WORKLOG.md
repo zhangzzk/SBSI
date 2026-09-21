@@ -1,3 +1,191 @@
+## 2026-09-21 — v1.3-infer: the floored proposal becomes the default, and the sampler paths nothing runs are deleted
+
+Owner asked to clean the repository up, delete the variants and dead code, and
+make the floored sampler the default under a new inference identity. The
+measurement that justifies the floor is the entry below; nothing here re-derives
+it and no new science run was made.
+
+### Is it 1.3?
+
+Yes. `v1.1-infer` named the defensive-mixture estimator and was the default.
+`v1.2-infer` named the tilted-stratified estimator and was never made the
+default. This change is neither of those: it keeps `v1.2-infer`'s estimator
+exactly and replaces the proposal that estimator draws from. A different
+proposal is a different numerical result, so it takes its own release string
+rather than quietly redefining `v1.2-infer`, and since it is now what an
+ordinary run gets, it is the default. `v1.3-infer`.
+
+The likelihood is untouched: `v3.2-like`, as for both predecessors.
+
+### Behavior change
+
+`configs/inference.json` is the file every run loads unless told otherwise, so
+that file now holds `v1.3-infer`:
+
+| | v1.1-infer | v1.2-infer | **v1.3-infer** |
+|---|---|---|---|
+| estimator mode | mixture | tilted_stratified | **tilted_stratified** |
+| exact stratum | — | 1,024 | **1,024** |
+| draw ladder top | 16,384 | 8,192 | **16,384** |
+| proposal scatter floor | 1st percentile | 1st percentile | **50th percentile** |
+| fractional floor | none | none | **measured_flux_from_mag_auto** |
+
+The previous default is preserved verbatim as `configs/inference_v1_1.json`;
+`configs/inference_v1_2.json` and `configs/inference_v1_2_16k.json` are
+untouched. No release configuration was deleted: completed runs name them, and
+deleting them would destroy the provenance of results already recorded here.
+
+**This changes what a default run does.** It is the first commit in this series
+that does; the entry below deliberately changed no default.
+
+### Code
+
+`sbsi/catalogue_sampling.py`
+
+- `_fractional_mask` is now public `fractional_mask`: two modules build the
+  mask, and a private name crossing that boundary was the wrong signal.
+- Deleted `draw_global`, `uncertainty_candidates`, `_build_uncertainty_mips_tree`
+  and the MIPS tree state on `DefensiveLocalProposal`, `draw_priority`,
+  `select_priority_batch` and `_priority_row_seed` — 329 lines. Only tests
+  reached any of them.
+- **`from_flow`'s default `dispersion_floor_percentile` deliberately stays at
+  1.0.** The floor is a property of a catalogue, not of the library: 50 was
+  measured on this prior and on three rows of it. Making it a library constant
+  would generalise that measurement further than it goes, and would silently
+  change `run_catalogue_closure.py` and `build_model_cache_from_zero_view.py`,
+  which were never measured. The value that decides a run is the one its
+  release configuration names.
+
+`sbsi/catalogue_null.py`
+
+- `priority_stratified` removed from `STRATIFIED_MODES`, with its tilt check,
+  its single-rung ladder refusal and its draw branch. It is sampling without
+  replacement; no configuration, job script or run ever selected it, and its
+  own validation refused the draw ladder every configuration uses. The
+  three-way branch is now two: the tilted complement or the flat one.
+
+`scripts/run_inference.py`
+
+- `--proposal-dispersion-floor-percentile` and `--proposal-fractional-floor`,
+  read from the `proposal` block of the release configuration, passed to
+  `from_flow`, and echoed into the resolved document only when they differ from
+  the historical setting — so a v1.1 or v1.2 run still resolves to its own
+  release name rather than `custom`.
+- The floor is recorded in the **proposal cache identity**. A cache built at
+  one percentile is a different proposal from the same table built at another,
+  so a v1.3 run refuses a cache floored at 1% instead of reusing it silently.
+  A cache written before this change carries no floor key and is read as the
+  historical 1.0, which is what it was built with.
+- `priority_stratified` removed from the mode choices and its help text.
+
+`scripts/merge_sharded_prior_model_qmc.py`
+
+- `_global_dispersion_floor` deleted. It was a second copy of the floor that
+  predated the shared helper and hardcoded the first percentile, and it is the
+  one that actually built the 24m-atom production cache. It now calls
+  `floored_dispersion` with `--dispersion-floor-percentile` (default 50.0) and
+  `--fractional-floor` (default `measured_flux_from_mag_auto`). The fallback
+  it passes is identical to the one it used before.
+
+`jobs/job_inference.sh` header names v1.3-infer.
+
+### What flipping the default broke, and what was done about it
+
+Eight job scripts pass `configs/inference.json`, so every one of them changed
+meaning at once. Three needed anchoring rather than following:
+
+- `jobs/job_inference_stratified_screen.sh` compares a mixture arm against a
+  stratified one and asserts the mixture arm "overrides nothing and must come
+  back labelled `v1.1-infer`". Against a default that now declares a mode of
+  its own, that arm would have come back `custom` and the screen would have
+  compared two custom arms. It now names `configs/inference_v1_1.json`.
+- `jobs/job_inference_candidate_ladder.sh` sweeps K around the release point
+  and rests on "the K=16,384 arm is the base configuration, so it is checkable
+  rather than merely plausible". The base configuration is now K=1,024, which
+  moves that anchor off the sweep entirely. It now names
+  `configs/inference_v1_1.json`.
+- `priority_stratified` was still a selectable MODE in the screen script and
+  would have failed at run time with `unknown estimator mode`. Removed.
+
+The rest follow the default deliberately. The three `job_prepare_*_mock*.sh`
+jobs build caches from the configuration, so they now build a **floored**
+proposal cache — which is the rebuild v1.3-infer needs, already wired. The
+`job_complement_*` and `job_likelihood_landscape.sh` diagnostics override
+`--proposal-candidates` explicitly, so the K change does not reach them.
+
+Stale wording corrected in `scripts/run_inference.py`: the module docstring no
+longer claims to run v1.1-infer, the resolved-document comment no longer says a
+matching run reports `v1.1-infer` specifically, and the initial-center proposal
+check no longer attributes that requirement to v1.1 alone.
+
+### Validation
+
+- `pytest tests -q` (job 16628677) → **278 passed**, with six test files
+  excluded by `--ignore`. Those six do not collect *at HEAD as well*:
+  `test_api.py`, `test_cli.py`, `test_flow_coupling_target.py`,
+  `test_image_closure.py`, `test_learned_retrieval_diagnostic.py` and
+  `test_measurement_model.py` all fail on `ImportError: cannot import name
+  'ConditionalMeanFlowRA' from sbsi.measurement_model`. The symbol is absent
+  from that module at HEAD and this commit does not touch it; the pickaxe log
+  puts its removal in the bulk import `a010491`, which rewrote
+  `sbsi/measurement_model.py` (-422 lines) without updating the tests that
+  import it. Pre-existing and **not repaired here** — restoring the
+  realisation-aware head or retiring those tests is a measurement-model
+  decision, not a sampler one. A collection error aborts the whole run
+  (job 16628669), which is why they are excluded rather than left to fail.
+- `pytest tests/test_catalogue_sampling.py tests/test_release_config.py
+  tests/test_proposal_atom_map.py tests/test_inference_provenance.py -q` →
+  105 passed.
+- All four release configurations round-trip to their own name, checked
+  directly through the runner's own `_resolved_pipeline_config`:
+  `inference.json` → v1.3-infer (floor 50.0, fractional on
+  `measured_flux_from_mag_auto`), `inference_v1_1.json` → v1.1-infer (floor
+  1.0, none), `inference_v1_2.json` → v1.2-infer, `inference_v1_2_16k.json` →
+  v1.2-infer-16k. None resolves to `custom`.
+- Two new tests in `tests/test_release_config.py`:
+  `test_v1_3_is_the_default_and_carries_the_floored_proposal` and
+  `test_the_floor_reaches_the_proposal_cache_identity`. The v1.1 test now
+  guards `configs/inference_v1_1.json` and additionally asserts that no floor
+  key leaks into its resolved document.
+- `tests/test_priority_sampling.py` deleted (226 lines); the `draw_global` and
+  direct-MIPS tests deleted from `tests/test_catalogue_sampling.py`.
+- Figures regenerated at the committed code under the floored proposal, job
+  16628553: rows 142230 / 409188 / 3563 reach 88.8% / 91.1% / 92.0% of the
+  captured mass with 38% / 18% / 17% of draws wasted. Reports are byte-identical
+  to job 16628512, so the path reproduces exactly. Copies in `SBSI/plots/`.
+
+### Limitations
+
+- **No inference has been run under v1.3-infer.** The identity is defined and
+  defaulted on the strength of the proposal measurement in the entry below —
+  three rows, eight draw seeds, and the mass the estimator *reaches*. What the
+  estimator then *reports* with that mass is unmeasured.
+- The existing prepared caches under the V3.6 run directory were built at the
+  1st percentile. Under v1.3 they are now correctly refused rather than reused,
+  which means a v1.3 run needs its proposal cache rebuilt or re-floored. That
+  rebuild has not been done or costed here.
+- The 50th percentile is the better of three settings tried, not an optimised
+  value, and the three rows were chosen as the worst-curvature rows rather than
+  sampled.
+- `fractional_floor_targets` names a coordinate. A model whose targets do not
+  include `measured_flux_from_mag_auto` will be refused by `fractional_mask`
+  rather than silently left unfloored. That is the intended failure, but it
+  couples the default configuration to the current target set.
+- Deleting `priority_stratified` removes the only without-replacement option.
+  Nothing used it, but recovering it means reverting this commit, not flipping
+  a flag.
+- Prior resolution and the finite-difference/autodiff swap remain untouched;
+  both are larger than the sampler defect this series has been fixing.
+
+### Next steps
+
+- Rebuild or re-floor a proposal cache at the median and run the inference on
+  one row under v1.3-infer. This is the first identity whose proposal reaches
+  most of the mass, and it is still unknown whether that moves the Hessian.
+- Removing the exact stratum from the mixture before drawing would recover the
+  remaining ~24% of wasted draws directly. It changes the estimator, so it
+  would be v1.4, not a proposal change.
+
 ## 2026-09-21 — Flooring the proposal's predicted scatter: the ranking defect and the wasted draws are one fix
 
 Owner asked to fix the evident problems from the review before the larger

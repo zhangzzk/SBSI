@@ -7,8 +7,9 @@ identities:
 
 | Role | Identity | Configuration |
 | --- | --- | --- |
-| Default estimator | `v1.1-infer` | `configs/inference.json` |
-| Tilted-stratified estimator | `v1.2-infer` | `configs/inference_v1_2.json` |
+| Default estimator | `v1.3-infer` | `configs/inference.json` |
+| Superseded estimator | `v1.2-infer` | `configs/inference_v1_2.json` |
+| Superseded estimator | `v1.1-infer` | `configs/inference_v1_1.json` |
 | Default likelihood | `v3.2-like` | `configs/likelihood.json` |
 | Retained development model set | `V3.6-like` | `configs/models_v3_6_like.json` (artifact manifest only) |
 | Historical model set | `V3.5-like` | `configs/likelihood_v3_5_like.json` |
@@ -98,7 +99,8 @@ same atom keys and conditioning convention.
 
 ### v1.1-infer
 
-The default uses a defensive mixture proposal, a 131,072-atom prefilter,
+Superseded as the default on 2026-09-21; retained because completed runs name
+it. It uses a defensive mixture proposal, a 131,072-atom prefilter,
 16,384 candidates, and nested draw ladder
 `512,1024,2048,4096,8192,16384`. It computes the two-dimensional score and
 observed information at the declared expansion point and applies one full 2D
@@ -118,6 +120,41 @@ objects are removed. `minimum_ess` and `maximum_weight_fraction` control stoppin
 in the mixture path; they do not provide an adaptive stopping guarantee for
 this path. Both configurations request one Newton update, not an iterative
 convergence loop.
+
+### v1.3-infer
+
+The default. It is `v1.2-infer`'s estimator — the same 1,024-atom exact
+stratum, the same tilted complement, the same one Newton step — over a
+proposal whose predicted scatter is floored at the **median** of the active
+atoms' own scatter rather than the first percentile, and floored
+**fractionally** on flux. Its production ladder runs to 16,384.
+
+The proposal scores an atom by dividing each residual by that atom's own
+predicted scatter, so a vague atom is judged on a loose tolerance and a sharp
+one on a tight tolerance. Faint atoms are vague and outnumber bright ones by
+roughly 340:1 in this prior, so coincidence wins and the ranking fills with
+atoms nowhere near the observation. Flooring that scatter is a proposal-only
+heuristic in the sense of [`V36_INFERENCE_REVIEW.md`](V36_INFERENCE_REVIEW.md):
+it changes which atoms are proposed, never what they are worth. The likelihood
+and the target are identical to `v1.2-infer`.
+
+Flux needs the fractional form specifically. Its scatter is predicted in
+absolute units across five decades of flux, so an absolute floor is fixed by
+the faintest atoms and cannot bind on a bright one. Ranking that coordinate on
+`sigma / |x|` makes the floor mean the same thing at every brightness.
+
+Measured under the configured draw over rows 142230 / 409188 / 3563 and eight
+draw seeds, the posterior mass the estimator reaches goes from 57.0% (sd 31.9)
+to 92.1% (sd 2.9), and the share of draws not thrown away inside the exactly
+summed stratum goes from 11.1% to 75.7%. The 90th percentile fails in the
+other direction, reaching 0.4%, so the median sits between two failures rather
+than being picked from a list. Three rows are not a sample of the ~500k, and
+the percentile was not scanned; see the limitations in the work log entry for
+2026-09-21.
+
+The floor is recorded in the proposal cache identity, so a cache built at one
+percentile is refused for a run that asks for another instead of being reused
+silently.
 
 Both estimators retain nested draws and common random numbers. Configuration,
 not the release string, controls behavior.

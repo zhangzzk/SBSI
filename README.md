@@ -12,8 +12,9 @@ response-emulator training.
 | Retained development model | `V3.6-like` | single flow, disk-response emulator, single smooth-crowding classifier |
 | Historical model preset | `V3.5-like` | epoch154, trial9, three-classifier ensemble |
 | Default likelihood | `v3.2-like` | `configs/likelihood.json` |
-| Default estimator | `v1.1-infer` | `configs/inference.json` |
-| Tilted-stratified estimator | `v1.2-infer` | `configs/inference_v1_2.json` |
+| Default estimator | `v1.3-infer` | `configs/inference.json` |
+| Superseded estimator | `v1.2-infer` | `configs/inference_v1_2.json` |
+| Superseded estimator | `v1.1-infer` | `configs/inference_v1_1.json` |
 
 V3.6-like pins the original common-descent step2 flow, the physical-moment
 disk-response emulator with Möbius composition, and the epoch99 single

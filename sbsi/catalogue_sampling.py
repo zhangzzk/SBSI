@@ -37,7 +37,7 @@ from .catalogue_likelihood import CatalogueLikelihood, CatalogueScore
 TILTED_OBJECT_CHUNK = 32
 
 
-def _fractional_mask(
+def fractional_mask(
     names: Sequence[str], fractional_targets: Sequence[str]
 ) -> np.ndarray:
     """Which coordinates carry a multiplicative rather than additive scatter."""
@@ -258,7 +258,7 @@ class ProposalCoordinateTable:
             self.values,
             self.dispersion,
             percentile=percentile,
-            fractional=_fractional_mask(self.target_names, fractional_targets),
+            fractional=fractional_mask(self.target_names, fractional_targets),
             fallback=np.maximum(1.0e-3 * self.scale, np.finfo(np.float64).eps),
         )
         metadata = dict(self.metadata or {})
@@ -365,7 +365,7 @@ class ProposalCoordinateTable:
             values[active_indices],
             dispersion[active_indices],
             percentile=dispersion_floor_percentile,
-            fractional=_fractional_mask(names, fractional_floor_targets),
+            fractional=fractional_mask(names, fractional_floor_targets),
             fallback=np.maximum(1.0e-3 * scale, np.finfo(np.float64).eps),
         )
         # Inactive rows are retained only for alignment with the full scene.
@@ -680,8 +680,6 @@ class DefensiveLocalProposal:
         # support and must not consume candidate slots or be sampled.
         self.active_indices = np.flatnonzero(prior > 0).astype(np.int64)
         self.tree = KDTree(coordinates.standardized[self.active_indices])
-        self._uncertainty_mips_tree = None
-        self._uncertainty_mips_indices = None
         self._torch_standardized = {}
         self._torch_reranking_tables = {}
         self._tilted_proxies = {}
@@ -690,69 +688,6 @@ class DefensiveLocalProposal:
         # A reusable atom-id -> local-candidate-position table avoids sorting
         # every 32k--131k candidate row for every observed object.
         self._candidate_lookup = np.full(len(prior), -1, dtype=np.int32)
-
-    def _build_uncertainty_mips_tree(self) -> None:
-        """Build an exact lifted-space index for the Gaussian proxy score."""
-
-        if self._uncertainty_mips_tree is not None:
-            return
-        if self.coordinates.dispersion is None:
-            raise ValueError("direct uncertainty ranking requires a version-3 proposal cache")
-        support = self.active_indices[self.local_base_weights[self.active_indices] > 0]
-        means = self.coordinates.values[support]
-        dispersion = self.coordinates.dispersion[support]
-        inverse_variance = np.reciprocal(np.square(dispersion))
-        constant = (
-            np.log(self.local_base_weights[support])
-            - np.log(dispersion).sum(axis=1)
-            - 0.5 * np.square(means / dispersion).sum(axis=1)
-        )
-        atoms = np.concatenate(
-            (
-                means * inverse_variance,
-                -0.5 * inverse_variance,
-                constant[:, None],
-            ),
-            axis=1,
-        )
-        norm_square = np.square(atoms).sum(axis=1)
-        radius_square = float(np.max(norm_square)) * (1.0 + 8.0 * np.finfo(float).eps)
-        lifted = np.column_stack(
-            (atoms, np.sqrt(np.maximum(0.0, radius_square - norm_square)))
-        )
-        self._uncertainty_mips_tree = KDTree(lifted)
-        self._uncertainty_mips_indices = support
-
-    def uncertainty_candidates(
-        self,
-        observed,
-        *,
-        n_candidates: int,
-    ) -> ProposalCandidates:
-        """Query the heteroscedastic Gaussian proxy directly over all atoms.
-
-        Expanding the proxy log density makes it an inner product between
-        ``[x, x^2, 1]`` and atom-specific coefficients.  One extra coordinate
-        converts maximum-inner-product search to exact Euclidean nearest
-        neighbours, avoiding the broad location-only prefilter.
-        """
-
-        if n_candidates <= 0:
-            raise ValueError("n_candidates must be positive")
-        self._build_uncertainty_mips_tree()
-        values = self._observed_values(observed)
-        query = np.concatenate(
-            (values, np.square(values), np.ones((len(values), 1))), axis=1
-        )
-        query = np.column_stack((query, np.zeros(len(query))))
-        k = min(int(n_candidates), len(self._uncertainty_mips_indices))
-        distances, positions = self._uncertainty_mips_tree.query(
-            query, k=k, workers=-1
-        )
-        distances = np.asarray(distances).reshape(len(values), k)
-        positions = np.asarray(positions, dtype=np.int64).reshape(len(values), k)
-        indices = self._uncertainty_mips_indices[positions]
-        return ProposalCandidates(indices, distances, distances[:, -1].copy())
 
     def _local_positions(
         self, candidates: np.ndarray, drawn: np.ndarray
@@ -1218,53 +1153,6 @@ class DefensiveLocalProposal:
             local_position,
         )
 
-    def draw_global(
-        self,
-        candidates: ProposalCandidates,
-        *,
-        n_draws: int,
-        seed: int,
-        object_offset: int = 0,
-    ) -> ProposalDraw:
-        """Draw catalogue-prior atoms and mark candidate-set membership.
-
-        This supports stratified evidence estimation: candidate atoms are
-        summed exactly, while prior draws contribute only when they fall in
-        the complement.  Per-object streams retain exact nested prefixes.
-        """
-
-        if n_draws <= 0:
-            raise ValueError("n_draws must be positive")
-        if object_offset < 0:
-            raise ValueError("object_offset must be non-negative")
-        n_objects = len(candidates.indices)
-        indices = np.empty((n_objects, n_draws), dtype=np.int64)
-        probability = np.empty((n_objects, n_draws), dtype=np.float64)
-        local_member = np.empty((n_objects, n_draws), dtype=bool)
-        local_position = np.empty((n_objects, n_draws), dtype=np.int32)
-        for row in range(n_objects):
-            rng = np.random.default_rng(
-                np.random.SeedSequence([int(seed), int(object_offset) + row])
-            )
-            indices[row] = np.searchsorted(
-                self.global_cdf, rng.random(n_draws), side="right"
-            )
-            probability[row] = self.prior_weights[indices[row]]
-            position, member = self._local_positions(
-                candidates.indices[row], indices[row]
-            )
-            local_position[row] = position
-            local_member[row] = member
-        return ProposalDraw(
-            indices=indices,
-            probability=probability,
-            local_member=local_member,
-            global_component=np.ones_like(local_member),
-            candidate_radius=candidates.radius,
-            seed=int(seed),
-            local_position=local_position,
-        )
-
     def draw_stratified(
         self,
         candidates: ProposalCandidates,
@@ -1442,125 +1330,6 @@ class DefensiveLocalProposal:
             local_position=local_position,
         )
 
-    def draw_priority(
-        self,
-        candidates: ProposalCandidates,
-        observed,
-        *,
-        n_draws: int,
-        delta: float,
-        seed: int,
-        temperature: float = 1.0,
-        object_offset: int = 0,
-        object_ids: Optional[np.ndarray] = None,
-        device: Optional[str | torch.device] = None,
-        object_chunk: int = TILTED_OBJECT_CHUNK,
-    ) -> ProposalDraw:
-        """Priority-sample the complement without replacement, bounding the ratio.
-
-        :meth:`draw_tilted` still samples with replacement from ``q``, so a
-        single draw contributes ``c_j / (M q_j)`` and nothing caps that ratio:
-        an atom the proxy underrates by a large factor produces an arbitrarily
-        large weight whenever it happens to be drawn.  cont.313 measured the
-        consequence -- a Pareto tail index above 0.7 on a large minority of
-        objects, i.e. infinite weight variance.
-
-        Priority sampling (Duffield, Lund and Thorup) removes the ``1 / M``
-        and the repetition together.  Each atom draws its own uniform
-        ``u_j`` and receives the priority key ``q_j / u_j``; the ``M`` atoms
-        with the largest keys are retained and ``tau`` is the ``(M+1)``-th
-        largest key.  Conditional on ``tau`` an atom is retained exactly when
-        ``u_j < q_j / tau``, so
-
-        ``sum_{j retained} c_j / min(1, q_j / tau)``
-
-        is unbiased for the complement.  Two properties follow that the
-        with-replacement draw does not have.  Every atom with ``q_j >= tau`` is
-        retained with certainty and enters at weight exactly ``c_j``, carrying
-        no variance at all -- the scheme discovers its own exact stratum rather
-        than being handed one.  And no retained atom is inflated by more than
-        ``tau / q_j``, which is bounded by the proxy's own ordering rather than
-        by luck.
-
-        The atoms of ``candidates`` are removed from the race, because the
-        estimator sums that stratum exactly; leaving them in would spend about
-        ``K / M`` of the budget on draws that are then discarded.  Removing
-        them is a deterministic function of the observation and the catalogue,
-        never of the uniforms, so the retained set's inclusion probabilities
-        are unchanged in form and the estimator stays unbiased.
-
-        The returned ``probability`` is ``min(1, q_j / tau) / n_draws``.  The
-        division cancels the ``- log(n_draws)`` that
-        :func:`~sbsi.catalogue_null._stratified_logsumexp` applies to every
-        complement term, so that reduction produces ``log c_j - log p_j`` with
-        no change to the estimator code path.  Retained atoms are distinct by
-        construction, so their coalesced counts are one.
-
-        Two limitations, both recorded in the work log.  The scheme consumes
-        one uniform per active atom rather than one per draw, so it cannot
-        share a uniform stream with :meth:`draw_tilted` and the two arms are
-        paired only by seed and object id, not by common random numbers
-        (``doc/CONVENTIONS.md`` section 6d).  And the retained set is nested in
-        ``M`` while the weights are not, because ``tau`` depends on ``M``; a
-        nested ladder would need a per-rung threshold, so rungs must be run as
-        separate single-rung evaluations until that is implemented.
-        """
-
-        if n_draws <= 0:
-            raise ValueError("n_draws must be positive")
-        if not 0.0 < delta < 1.0:
-            raise ValueError("delta must lie strictly between zero and one")
-        if object_offset < 0:
-            raise ValueError("object_offset must be non-negative")
-        n_objects = len(candidates.indices)
-        if object_ids is None:
-            absolute_ids = object_offset + np.arange(n_objects, dtype=np.int64)
-        else:
-            absolute_ids = np.asarray(object_ids, dtype=np.int64)
-            if object_offset != 0:
-                raise ValueError("object_offset and explicit object_ids cannot be combined")
-            if absolute_ids.shape != (n_objects,) or (absolute_ids < 0).any():
-                raise ValueError("object_ids must contain one non-negative id per row")
-        values = self._observed_values(observed)
-        if len(values) != n_objects:
-            raise ValueError("observations and candidate rows must align")
-        proxy = self._tilted_proxy(device)
-        indices = np.empty((n_objects, n_draws), dtype=np.int64)
-        probability = np.empty((n_objects, n_draws), dtype=np.float64)
-        local_member = np.empty((n_objects, n_draws), dtype=bool)
-        local_position = np.empty((n_objects, n_draws), dtype=np.int32)
-        chunk = int(object_chunk)
-        if chunk <= 0:
-            raise ValueError("object_chunk must be positive")
-        for start in range(0, n_objects, chunk):
-            stop = min(start + chunk, n_objects)
-            drawn, inclusion = proxy.select_priority_batch(
-                values[start:stop],
-                n_select=n_draws,
-                delta=float(delta),
-                temperature=float(temperature),
-                seed=int(seed),
-                object_ids=absolute_ids[start:stop],
-                excluded=[candidates.indices[row] for row in range(start, stop)],
-            )
-            indices[start:stop] = drawn
-            probability[start:stop] = inclusion / float(n_draws)
-            for row in range(start, stop):
-                position, member = self._local_positions(
-                    candidates.indices[row], indices[row]
-                )
-                local_position[row] = position
-                local_member[row] = member
-        return ProposalDraw(
-            indices=indices,
-            probability=probability,
-            local_member=local_member,
-            global_component=np.ones_like(local_member),
-            candidate_radius=candidates.radius,
-            seed=int(seed),
-            local_position=local_position,
-        )
-
     def _tilted_proxy(self, device: Optional[str | torch.device]) -> "WholeCatalogueProxy":
         """Cache the whole-catalogue proxy tables per device."""
 
@@ -1662,23 +1431,6 @@ class DefensiveLocalProposal:
             local_position,
         )
 
-
-
-def _priority_row_seed(seed: int, object_id: int) -> int:
-    """A stable 63-bit generator seed for one object's priority race.
-
-    Derived through ``SeedSequence`` from the same ``(seed, object_id)`` pair
-    the other draws use, so the race is reproducible on a fixed device and
-    independent of how observations are chunked.  It is not reproducible
-    across devices, because the uniforms come from a torch generator rather
-    than from numpy: one uniform per active atom per object is far too many to
-    generate on the host.
-    """
-
-    state = np.random.SeedSequence([int(seed), int(object_id)]).generate_state(
-        2, dtype=np.uint32
-    )
-    return int((int(state[0]) << 31) | (int(state[1]) >> 1))
 
 
 class WholeCatalogueProxy:
@@ -1899,87 +1651,6 @@ class WholeCatalogueProxy:
         mixture *= 1.0 - delta
         mixture += delta * self.prior.unsqueeze(0)
         return mixture
-
-    def select_priority_batch(
-        self,
-        observations: np.ndarray,
-        *,
-        n_select: int,
-        delta: float,
-        temperature: float = 1.0,
-        seed: int,
-        object_ids: np.ndarray,
-        excluded=None,
-    ):
-        """Retain the ``n_select`` atoms with the largest priority keys.
-
-        Returns absolute atom ids and their inclusion probabilities
-        ``min(1, q_j / tau)``, one row per observation.  See
-        :meth:`DefensiveLocalProposal.draw_priority` for the estimator this
-        feeds and why the ratio it produces is bounded.
-
-        The mixture is built for the whole chunk in one pair of matmuls, as in
-        :meth:`draw_uniforms_batch`, but the race itself runs one row at a time
-        so the per-atom uniform buffer stays ``O(n_atoms)`` rather than
-        ``O(B n_atoms)``.  Each row seeds its own generator from its absolute
-        object id, so the retained set does not depend on how observations are
-        chunked.
-        """
-
-        if n_select <= 0:
-            raise ValueError("n_select must be positive")
-        mixture = self.mixture(
-            observations, delta=delta, temperature=temperature
-        )
-        n_rows, n_atoms = mixture.shape
-        if n_select + 1 > n_atoms:
-            raise ValueError(
-                "priority sampling needs more active atoms than draws: "
-                f"n_select={n_select}, active={n_atoms}"
-            )
-        object_ids = np.asarray(object_ids, dtype=np.int64)
-        if object_ids.shape != (n_rows,):
-            raise ValueError("object_ids must carry one id per observation row")
-        device = mixture.device
-        indices = np.empty((n_rows, n_select), dtype=np.int64)
-        inclusion = np.empty((n_rows, n_select), dtype=np.float64)
-        generator = torch.Generator(device=device)
-        tiny = float(np.finfo(np.float64).tiny)
-        for row in range(n_rows):
-            weight = mixture[row]
-            if excluded is not None:
-                # A deterministic removal: the exact stratum is summed with no
-                # proposal correction, so racing it here would only produce
-                # draws the estimator discards.
-                dropped = np.asarray(excluded[row], dtype=np.int64)
-                if dropped.size:
-                    position = torch.searchsorted(
-                        self.active,
-                        torch.as_tensor(dropped, dtype=torch.long, device=device),
-                    ).clamp_max(n_atoms - 1)
-                    present = self.active[position] == torch.as_tensor(
-                        dropped, dtype=torch.long, device=device
-                    )
-                    weight = weight.clone()
-                    weight[position[present]] = 0.0
-            generator.manual_seed(_priority_row_seed(seed, int(object_ids[row])))
-            uniform = torch.rand(
-                n_atoms, generator=generator, device=device, dtype=torch.float64
-            ).clamp_min(tiny)
-            key = weight / uniform
-            top = torch.topk(key, n_select + 1, sorted=True)
-            threshold = top.values[n_select]
-            chosen = top.indices[:n_select]
-            if not torch.isfinite(threshold) or threshold <= 0.0:
-                raise RuntimeError(
-                    "priority threshold is not a positive finite key: "
-                    f"object_id={int(object_ids[row])}, tau={float(threshold)}"
-                )
-            indices[row] = self.active[chosen].cpu().numpy()
-            inclusion[row] = (
-                (weight[chosen] / threshold).clamp_max(1.0).cpu().numpy()
-            )
-        return indices, inclusion
 
     def top_atoms(
         self,

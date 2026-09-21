@@ -1,9 +1,11 @@
 # Agent instructions for SBSI
 
 SBSI is a general shear-calibration library with one inference workflow.
-`v1.1-infer` names the default numerical pipeline, `v1.2-infer` names the
-tilted-stratified trimmed sampler that supersedes its estimator but is not yet
-the default, and `v3.2-like` names the likelihood composition both share.
+`v1.3-infer` names the default numerical pipeline: the tilted-stratified
+trimmed sampler of `v1.2-infer` over a proposal whose predicted scatter is
+floored at the median.  `v1.2-infer` and `v1.1-infer` are superseded and
+retained because completed runs name them.  `v3.2-like` names the likelihood
+composition all three share.
 `V3.6-like` names the retained single common-descent flow, physical-moment
 disk-response emulator with Möbius composition, and single 17-input
 smooth-crowding usable-event classifier. Its artifact identity is pinned in
