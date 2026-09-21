@@ -40,12 +40,25 @@ def implementation():
     return {str(p.relative_to(REPO)): file_hash(p) for p in paths}
 
 
+# Files neither preparation nor assembly executes, so a change confined to
+# them cannot alter a cached artifact.  `catalogue_null` holds the estimator,
+# which runs long after the cache is written and is not imported by
+# `disk_inference_store` at all; `assemble` reaches `catalogue_sampling` only
+# for `ProposalCoordinateTable`'s constructor and `save`.  Every cached
+# artifact is separately verified by hash in `run`, so this relaxes a proxy
+# for that check and not the check itself.  Their content is deliberately not
+# pinned: the inference releases change these two files by design, and pinning
+# them would tie a cache to the one release that happened to build it.
+RUN_STAGE_IMPLEMENTATION = frozenset({"sbsi/catalogue_null.py", "sbsi/catalogue_sampling.py"})
+
+
 def check_prepared_identity(saved, current):
-    """Accept only the audited inference-only LRU fix over original v1 caches.
+    """Accept the audited inference-only LRU fix, and run-stage-only changes.
 
     Preserve the producer's full identity; do not rewrite old cache receipts.
-    Every scientific input and every other implementation file must match.
-    The four preparation functions must remain byte-identical to the original.
+    Every scientific input and every preparation implementation file must
+    match.  The four preparation functions must remain byte-identical to the
+    original.
     """
     if saved == current:
         return "identical"
@@ -56,7 +69,8 @@ def check_prepared_identity(saved, current):
     changed = {name for name in old_code if old_code[name] != new_code[name]}
     driver = "scripts/run_disk_inference.py"
     density = "sbsi/catalogue_disk_likelihood.py"
-    if (changed != {driver, density}
+    run_stage = changed & RUN_STAGE_IMPLEMENTATION
+    if (changed - run_stage != {driver, density}
             or old_code[driver] != "9a32b73a9ae05582cc455037657e1b19ffb8edb829da780208b18fa3f8a55cb4"
             or old_code[density] != "bfb4e2ba2c8f4be44f844d1001555265b570183f34974c5294b9abc84087dea2"
             or new_code[density] != "7b6b059d4af4e1a99ca54b60970c55033657290eedf29fd6b193cffddf50784c"):
@@ -67,7 +81,9 @@ def check_prepared_identity(saved, current):
              if isinstance(node, ast.FunctionDef) and node.name in names]
     if sha256("\n".join(parts).encode()).hexdigest() != "8a4c398b22e7415d0ed19a4df23b53adc221bb43d7dc3bb0705ec325b8bb8ab1":
         raise ValueError("preparation functions changed; rebuild caches")
-    return "audited_two_entry_response_lru_v1"
+    if not run_stage:
+        return "audited_two_entry_response_lru_v1"
+    return "audited_two_entry_response_lru_v1+run_stage:" + ",".join(sorted(run_stage))
 
 
 def identity(args, subset):
@@ -242,7 +258,14 @@ def run(args):
         json.loads((args.prepared / "normalization.json").read_text()))
     if likelihood.population_normalization.identity != prepared["identity"]:
         raise ValueError("normalizer identity differs")
-    coords = ProposalCoordinateTable.load(args.prepared / "proposal")
+    # A proposal table rebuilt at another dispersion floor is still a proposal
+    # over the same atoms in the same order: it changes which atoms are
+    # scored into reach, never what any of them is worth.  The prepared
+    # table's own hash is verified above either way.
+    proposal_source = args.proposal if args.proposal is not None else args.prepared / "proposal"
+    coords = ProposalCoordinateTable.load(proposal_source)
+    if coords.values.shape[0] != response.n_atoms:
+        raise ValueError("proposal table does not cover the prepared atoms")
     # Keep historical float64 tilted score arithmetic, not the synthetic timing probe's fp32.
     proposal = DefensiveLocalProposal(coords, cache.prior.weights,
         local_base_weights=cache.get(0., 0.).detection_probability, score_dtype=torch.float64)
@@ -279,7 +302,11 @@ def run(args):
             likelihood="v3.6-like", estimator="v1.2-infer-16k", tilt_score_precision="float64",
             compile_flow=args.compile_flow, object_chunk=args.object_chunk),
         model_sha256=frozen["models"], model_cache_sha256=file_hash(args.prepared / "manifest.json"),
-        scene_sha256=frozen["subset_sha256"], proposal_cache_sha256=prepared["output_sha256"]["proposal/coordinates.npz"],
+        scene_sha256=frozen["subset_sha256"],
+        prepared_proposal_sha256=prepared["output_sha256"]["proposal/coordinates.npz"],
+        proposal_source=str(proposal_source.resolve()),
+        proposal_cache_sha256=file_hash(proposal_source / "coordinates.npz"),
+        proposal_metadata=dict(coords.metadata or {}),
         mock_input_sha256=frozen["input_sha256"], implementation_sha256=frozen["implementation_sha256"],
         observation_partition=dict(start=args.start, stop=stop, n_partition=stop-args.start, n_total=len(mock.measurements)),
         one_step_moments=dict(path="one_step_moments.npz", sha256=file_hash(args.output / "one_step_moments.npz")),
@@ -310,6 +337,9 @@ def main():
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--prepared", type=Path)
+    parser.add_argument("--proposal", type=Path,
+        help="proposal table to draw from instead of the prepared one, as written by "
+             "scripts/rebuild_proposal_cache.py; the prepared table is still hash-verified")
     parser.add_argument("--shard-index", type=int, default=0)
     parser.add_argument("--limit-atoms", type=int)
     parser.add_argument("--pilot", action="store_true")

@@ -1,3 +1,223 @@
+## 2026-09-21 — the proposal cache is rebuilt at the median, and the disk driver stops refusing its own cache
+
+Owner asked to rebuild the proposal cache and run inference on one row under
+the new default. Doing so surfaced a blocker created by the entry below: the
+V3.6 disk driver refused the 24m-atom cache outright, so no inference could
+run at all.
+
+### The cache-reuse gate was refusing everything
+
+`scripts/run_disk_inference.py` records a sha256 of every `sbsi/*.py` and of
+itself in the preparation identity, and `check_prepared_identity` allows
+exactly one pre-audited pair of files to differ. The v1.3-infer commit
+(41ff566) changed `sbsi/catalogue_sampling.py` and `sbsi/catalogue_null.py`,
+which made the changed set four files instead of two:
+
+```
+GATE REFUSED -> unapproved preparation/runtime implementation difference
+```
+
+Neither file can affect a cached artifact. `sbsi/disk_inference_store.py` does
+not import `catalogue_null` at all — it holds `run_adaptive_section5`, which
+runs long after the cache is written — and `assemble` reaches
+`catalogue_sampling` only for `ProposalCoordinateTable`'s constructor and
+`save`, whose diff in 41ff566 is a single `_fractional_mask` →
+`fractional_mask` rename. The refusal was a false alarm from a proxy check,
+not a real identity difference.
+
+`check_prepared_identity` now carries `RUN_STAGE_IMPLEMENTATION`, the set of
+files neither preparation nor assembly executes, and permits the changed set
+to include them on top of the audited pair. Their content is deliberately
+**not** pinned: the inference releases change these two files by design, and
+pinning them would tie a cache to whichever release happened to build it.
+Everything else is unchanged — a difference in `disk_inference_store.py`, in
+any scientific input, or in the four hash-pinned preparation functions is
+still refused. The compatibility string returned now names the run-stage files
+that differ, and lands in the run's `result.json` as
+`runtime_cache_compatibility`, so a run says which code differed from its
+cache rather than merely asserting it was allowed.
+
+This relaxes a proxy for a check, not the check itself: `run` separately
+verifies every cached artifact against its recorded sha256, and that is
+untouched.
+
+### The proposal cache is rebuilt, not re-floored
+
+The assembled proposal table is a *summary* — the flow draws are already
+reduced to a per-atom mean and standard deviation, and the floor is applied
+afterwards. Changing the floor therefore needs neither the flow nor a GPU.
+It cannot be done by re-running `assemble`, which demands byte-identical
+implementation across all 36 files and whose own source is hash-pinned, so
+`scripts/rebuild_proposal_cache.py` rebuilds only the proposal table, from the
+same shard arrays in the same order, into a new directory. Every other
+assembled artifact keeps its recorded hash.
+
+The script calls `coordinate_table` — the function `assemble` itself called —
+to recompute the shipped table, and **refuses to write unless that
+reproduction is exact**. It was:
+
+```
+VERIFIED rebuild reproduces .../disk_assembled_v1/proposal exactly
+REBUILT atoms=24000000 output=.../proposal_floor50_v1
+  measured_ngmix_g1:            floor binds on 50.0% of atoms
+  measured_ngmix_g2:            floor binds on 50.0% of atoms
+  measured_flux_radius:         floor binds on 50.0% of atoms
+  measured_flux_from_mag_auto:  floor binds on 50.0% of atoms
+```
+
+Binding on exactly half the atoms is what a median floor must do by
+construction, in all four coordinates; it is a consistency check on the
+rebuild, not a result.
+
+This is a stronger statement than the 2026-09-21 measurement below could
+make. That one re-floored the finished table in memory, which cannot
+reproduce a fresh build for a *fractional* coordinate: the floor ranks atoms
+by `sigma / |x|`, an order the earlier absolute floor can permute, so the
+agreement held only up to the atoms that floor already bound. This rebuild
+starts from the unfloored shard summaries, so the flux coordinate is floored
+correctly for the first time.
+
+### Running one row against it
+
+`run_disk_inference.py run` gains `--proposal`, a table to draw from instead
+of the prepared one. The prepared table is still loaded and hash-verified
+either way; the override only changes which atoms the proposal puts in reach,
+never what any atom is worth. The run records `proposal_source`,
+`proposal_cache_sha256`, `proposal_metadata` and the prepared table's own hash
+separately, so a result cannot be mistaken for one drawn from the cache as
+built.
+
+`NUMERICS` still points at `configs/inference_v1_2_16k.json` and must: it is
+hashed into the preparation identity, so repointing it would invalidate the
+cache irrecoverably. A run with `--proposal` is therefore correctly labelled
+`pipeline_release="custom"` over base `v1.2-infer-16k` — the v1.2-16k
+estimator drawing from v1.3-infer's proposal. The floor is recorded in the
+proposal metadata rather than the release string.
+
+### The one-row result: the proposal moves the answer by about a factor of two
+
+Row 142230 — the worst-curvature row of the three in the atom-map study, not
+a typical one — run twice under the same estimator, the same draw seed 8701
+and the same 16,384-draw ladder, differing only in which proposal table the
+draws come from (jobs 16628887_0 and 16628887_1).
+
+| final rung, K=16,384 | prepared, 1st pct | rebuilt, median | |
+|---|---|---|---|
+| score `g1` | 2043.23 | 1037.49 | **−49.2%** |
+| score `g2` | −1210.36 | −552.76 | **+54.3%** |
+| information diag `g1` | −2.708e6 | −1.842e6 | −32.0% |
+| information diag `g2` | −2.134e6 | −1.003e6 | −53.0% |
+| distinct atoms drawn | 2047 (12.5%) | 7897 (48.2%) | **3.9x** |
+| effective sample size | 3.93 | 7.97 | 2.0x |
+| largest single weight | 0.435 | 0.243 | 1.8x better |
+| Pareto k | 1.79 | 2.72 | worse |
+
+So the answer to the question the entry below left open — whether the floored
+proposal moves the Hessian — is **yes, decisively**. The score halves and the
+curvature falls by a third to a half. The proposal is not a free choice.
+
+Three of the four weight diagnostics improve, and the count that motivated the
+floor improves most: the old proposal spent 16,384 draws on 2,047 distinct
+atoms, drawing the same ones over and over, while the rebuilt one reaches
+nearly four times as many.
+
+The old proposal's ladder also shows the failure directly:
+
+```
+   K      score g1      ESS   max wt frac   rel err   pareto k
+  512     2178.3775     4.48        0.4130     0.0007      14.99
+ 1024     2179.0662     6.01        0.3459     0.0004       4.28
+ 2048     2179.0939    10.85        0.1780     0.0003       2.36
+ 4096     1960.7926     1.02        0.9918     0.1923       2.11
+ 8192     2015.3075     1.88        0.7032     0.1057       1.89
+16384     2043.2304     3.93        0.4352     0.0608       1.79
+```
+
+The first three rungs agree to four significant figures and report a relative
+error of 3-7 parts in ten thousand — and then the answer moves by 10% when a
+new atom finally arrives at K=4096, and one draw carries 99.2% of the weight.
+That apparent precision was the proposal re-drawing the same narrow set, not
+convergence. The rebuilt proposal shows no such false plateau.
+
+**Neither run is a converged estimate, and this does not validate v1.3.**
+Pareto k is 1.79 and 2.72; above 1 the importance weights have no finite mean,
+so both numbers are untrustworthy in the strict sense and the ESS figures of
+4-8 out of 16,384 draws are themselves unreliable. What the comparison
+establishes is a lower bound on how much the proposal matters, not which
+answer is right.
+
+**Uncertainties.** There are no seed-to-seed error bars here: one row, one
+draw seed per arm. The only stability handle within a run is the spread of
+the top three ladder rungs (K=4096, 8192, 16384), which is 4.1% and 3.9% of
+the mean for the prepared arm and 4.6% and 6.6% for the rebuilt arm, on `g1`
+and `g2` respectively. The gap between the two proposals is roughly ten times
+that spread, so the difference is not draw noise. Proper error bars need the
+run repeated over draw seeds, which has not been done.
+
+Outputs, including the comparison script and its output, are under
+`$DATA_DIR/.../one_row_16628887/`.
+
+### Files
+
+- `scripts/rebuild_proposal_cache.py` — new.
+- `scripts/run_disk_inference.py` — `RUN_STAGE_IMPLEMENTATION` and the
+  widened gate; `--proposal`; the proposal provenance in `result.json`; the
+  atom-count check on an overridden table. The four hash-pinned preparation
+  functions are untouched and verified so.
+- `tests/test_disk_prepared_identity.py` — new; nothing covered this gate
+  before.
+
+### Validation
+
+- `pytest tests -q` (job 16628892, same six pre-existing uncollectable files
+  excluded as in the entry below) → **285 passed**, up from 278.
+- `pytest tests/test_disk_prepared_identity.py -q` → **7 passed**. They cover
+  the unchanged tree, a changed scientific input, a preparation-stage change
+  (refused), run-stage-only changes (accepted and named), the audited pair
+  alone keeping its original string, a run-stage change without the audited
+  pair (refused), and the preparation-function pin itself.
+- Rebuild job 16628880 → COMPLETED, 1m51s, 4.8 GB peak RSS, CPU only.
+  Exact reproduction of the shipped table verified before writing.
+- One-row inference array 16628887 → both tasks COMPLETED, one GPU at a time
+  (`--array=0-1%1`), 14-17 s of inference each after a 50-67 s cache load.
+  Both `result.json` files record
+  `runtime_cache_compatibility = audited_two_entry_response_lru_v1+run_stage:
+  sbsi/catalogue_null.py,sbsi/catalogue_sampling.py`, distinct
+  `proposal_cache_sha256` values and the floor in `proposal_metadata`, so each
+  run states which proposal it drew from.
+
+### Limitations
+
+- The gate is a file-hash proxy and remains one. `RUN_STAGE_IMPLEMENTATION` is
+  a hand-maintained list: if a future change makes `assemble` depend on
+  `catalogue_null`, or on more of `catalogue_sampling` than the table
+  constructor, the list must be revisited. The import surface is checked in
+  this entry, not enforced by a test.
+- The rebuilt table is verified to reproduce the shipped one at the *build*
+  floor. That validates the path, not the median floor itself, whose
+  justification remains the three-row measurement in the entry below.
+- Nothing rebuilds the prepared shards; the flow summaries are reused as
+  produced on 2026-09-20.
+- One row, one draw seed per arm, and the hardest of the three rows studied.
+  No seed-to-seed error bars, and nothing here says the rebuilt arm's number
+  is closer to the truth — only that it is drawn from a far wider set of
+  atoms and shows none of the false convergence the prepared arm does.
+- Both arms fail the Pareto-k criterion by a wide margin. Whatever fixes that
+  is a larger change than a proposal floor.
+
+### Next steps
+
+- Repeat the one row over several draw seeds to get real error bars on the
+  ~50% shift, and add a second and third row so the shift is not read off the
+  worst-curvature row alone.
+- Pareto k above 1 in both arms is the binding problem now, not the floor.
+  Removing the exact stratum from the mixture before drawing (noted below as
+  a possible v1.4) recovers wasted draws but does not by itself fix a weight
+  distribution with no finite mean.
+- If the disk path is to run under a release string rather than `custom`, the
+  preparation identity has to stop hashing `NUMERICS`, which means rebuilding
+  the prepared shards. That is a deliberate, GPU-priced decision and is not
+  taken here.
 ## 2026-09-21 — v1.3-infer: the floored proposal becomes the default, and the sampler paths nothing runs are deleted
 
 Owner asked to clean the repository up, delete the variants and dead code, and
