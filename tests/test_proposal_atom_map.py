@@ -14,8 +14,10 @@ from scripts.plot_proposal_atom_map import (
     TRUTH_COLUMNS,
     build_proxy,
     centred_measurements,
+    draw_classes,
     exact_centre_node,
     gather_truth,
+    observation_truth,
     panel_limits,
     priority_race,
     shard_offsets,
@@ -125,6 +127,101 @@ def test_exact_centre_node_rejects_a_length_mismatch():
     record["exact"]["top_posterior_weights"][0] = [0.5, 0.5]
     with pytest.raises(ValueError, match="disagree in length"):
         exact_centre_node(record, 1)
+
+
+def _mock_manifest(tmp_path, case=114, index=3):
+    """A miniature case input catalogue in the real column convention."""
+
+    import pandas as pd
+
+    rows = 8
+    ratio = np.linspace(0.3, 0.95, rows)
+    angle = np.linspace(5.0, 170.0, rows)
+    ellipticity = (1.0 - ratio) / (1.0 + ratio)
+    table = pd.DataFrame(
+        {
+            "index_input": np.arange(rows),
+            "Re_input": np.linspace(0.2, 2.0, rows),
+            "axis_ratio_input": ratio,
+            "position_angle_input": angle,
+            "r_input": np.linspace(17.0, 26.0, rows),
+            "e1_input_rot0": ellipticity * np.cos(2 * np.deg2rad(angle)),
+            "e2_input_rot0": ellipticity * np.sin(2 * np.deg2rad(angle)),
+        }
+    )
+    path = tmp_path / "gals_info.feather"
+    table.to_feather(path)
+    manifest = {
+        "per_case": [{"case": case, "sources": {"truth": {"path": str(path)}}}]
+    }
+    return manifest, table, {"source_case": case, "source_input_index": index}
+
+
+def test_observation_truth_matches_the_atom_conventions(tmp_path):
+    """e1/e2 and circularized Re must be built exactly as flow_zero builds them."""
+
+    manifest, table, row = _mock_manifest(tmp_path, index=5)
+    out = observation_truth(manifest, row)
+    record = table.iloc[5]
+    ratio = float(record["axis_ratio_input"])
+    expected_e = (1.0 - ratio) / (1.0 + ratio)
+    angle = np.deg2rad(float(record["position_angle_input"]))
+    assert out["e1"] == pytest.approx(expected_e * np.cos(2 * angle))
+    assert out["e2"] == pytest.approx(expected_e * np.sin(2 * angle))
+    assert out["circularized_Re"] == pytest.approx(
+        float(record["Re_input"]) * np.sqrt(ratio)
+    )
+    assert out["r"] == pytest.approx(float(record["r_input"]))
+    json.dumps(out, allow_nan=False)
+
+
+def test_observation_truth_rejects_an_unknown_case(tmp_path):
+    manifest, _, row = _mock_manifest(tmp_path)
+    row["source_case"] = 999
+    with pytest.raises(ValueError, match="absent from the image-mock manifest"):
+        observation_truth(manifest, row)
+
+
+def test_observation_truth_rejects_an_out_of_range_index(tmp_path):
+    manifest, _, row = _mock_manifest(tmp_path, index=99)
+    with pytest.raises(ValueError, match="outside"):
+        observation_truth(manifest, row)
+
+
+def test_observation_truth_rejects_a_catalogue_not_indexed_by_input_index(tmp_path):
+    import pandas as pd
+
+    manifest, table, row = _mock_manifest(tmp_path)
+    shuffled = table.iloc[::-1].reset_index(drop=True)
+    path = tmp_path / "shuffled.feather"
+    shuffled.to_feather(path)
+    manifest["per_case"][0]["sources"]["truth"]["path"] = str(path)
+    with pytest.raises(ValueError, match="not indexed by source_input_index"):
+        observation_truth(manifest, row)
+
+
+def test_draw_classes_split_ranked_from_defensive_floor():
+    floor = 4.1666666666666667e-09
+    probability = np.array([0.7, floor, 5.0e-6, floor, floor])
+    drawn = np.array([0, 1, 2, 4])
+    ranked, defensive = draw_classes(probability, drawn, floor)
+    np.testing.assert_array_equal(ranked, [True, False, True, False])
+    np.testing.assert_array_equal(defensive, [False, True, False, True])
+    # Every draw belongs to exactly one class.
+    assert (ranked ^ defensive).all()
+    assert ranked.sum() + defensive.sum() == drawn.size
+
+
+def test_draw_classes_tolerate_floating_point_at_the_floor():
+    floor = 4.1666666666666667e-09
+    probability = np.array([floor * (1.0 + 1.0e-12), floor])
+    ranked, _ = draw_classes(probability, np.array([0, 1]), floor)
+    assert not ranked.any()
+
+
+def test_draw_classes_rejects_a_non_positive_floor():
+    with pytest.raises(ValueError, match="must be positive"):
+        draw_classes(np.array([0.5]), np.array([0]), 0.0)
 
 
 def test_zero_point_row_finds_the_zero_shear_point():

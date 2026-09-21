@@ -62,20 +62,63 @@ expected to be unaffected, since tempering helps by lifting starved atoms over
 `tau`, but the absolute ESS figures in that entry describe a sampler that is
 not the one in production.
 
-Validation. `tests/test_proposal_atom_map.py`, 26 passed in 16.4s inside the
-job. Job 16623681 COMPLETED in 00:02:30, peak RSS 2.45 GiB, partition
-`cluster`, no GPU. Two earlier attempts failed and were repaired: 16623593 on
-the detection cache being point-major `(10, 24000000)` rather than atom-major,
-and 16623655 on `exact/row` being present in only 2 of the 32 panel records.
-Both failure modes are now covered by unit tests.
+Revision, same day, at the owner's request. Three changes to the figure and
+one new measurement.
+
+- The observation's own true properties are now plotted, as a dashed crosshair
+  in both truth panels. They are recoverable after all: the case input feather
+  named in `input/image_mock_manifest.json` `per_case[].sources.truth.path`,
+  indexed by `source_input_index` and checked against its `index_input`
+  column. Intrinsic ellipticity and circularized radius are rebuilt from axis
+  ratio and position angle with the atom convention, `|e| = (1-q)/(1+q)` and
+  `Re * sqrt(q)`, and agree with the stored atom columns to 1e-8. Values:
+  142230 `e = (-0.2660, -0.0657)`, `Re_c = 1.446"`, `r = 17.275`, case 114;
+  409188 `e = (-0.1508, +0.1036)`, `Re_c = 1.586"`, `r = 18.329`, case 58;
+  3563 `e = (-0.0214, +0.1610)`, `Re_c = 1.168"`, `r = 18.335`, case 113.
+  In the size/brightness truth panel the crosshair sits among the
+  mass-carrying atoms, so those atoms are not off in an implausible corner.
+- Drawn atoms are now split by why they were drawn. An atom whose mixture
+  probability is at the defensive floor `delta/24m` won the race on its
+  uniform share alone; anything above the floor was ranked by the proxy. They
+  are drawn in two colours at their true counts.
+- Every undrawn atom, background or mass-carrying, is now the same small dot,
+  so size no longer codes for anything but "drawn". Legibility is carried by
+  colour, opacity and a hairline edge instead.
+
+New measurement, the draw-class split:
+
+| row | drawn, ranked by the proxy | drawn on the uniform floor | atoms above the floor in 24m |
+|---|---:|---:|---:|
+| 142230 | 3,980 | 12,404 | 1,231,271 |
+| 409188 | 1,828 | 14,556 | 1,435,576 |
+| 3563 | 2,454 | 13,930 | 1,540,103 |
+
+Most of the draw is the defensive lottery, not the proposal: 76%, 89% and 85%
+of the 16384 slots go to atoms the proxy scored at the floor. The proxy is
+effectively spending only a few thousand slots on its own ranking, which is
+consistent with the concentration defect reported above and means the 0.1
+defensive fraction is doing more of the work than its name suggests. This is a
+count, not a variance statement; it does not by itself say the floor draws are
+wasted.
+
+Validation. `tests/test_proposal_atom_map.py`, 33 passed inside the job. Job
+16625903 COMPLETED in 00:01:34, partition `cluster`, no GPU; supersedes
+16625836 and 16623681, which produced the same numbers with the earlier
+figure. Two earlier attempts failed and were repaired: 16623593 on the
+detection cache being point-major `(10, 24000000)` rather than atom-major, and
+16623655 on `exact/row` being present in only 2 of the 32 panel records. Both
+failure modes are now covered by unit tests. Figures and machine-readable
+reports copied to the owner's checkout at `SBSI/plots/proposal_atom_map_row*.png` and
+`SBSI/plots/proposal_atom_map_row*_report.json` (that directory is not tracked in git).
 
 Limitations. Mass is known only for the 32 atoms the exact calculation
 retained per node, capturing 93.5%, 71.2% and 71.1% of the posterior for the
 three rows; the remainder is spread somewhere across the grey background,
 which is a uniform 60k subsample and is not proven massless. The three rows
 are the top of the worst-curvature list and are not representative. Only the
-centre stencil node is shown. The observation's own true properties are not
-plotted: the mock truth table carries provenance indices only.
+centre stencil node is shown. The background is a uniform subsample, so a
+drawn atom in a sparse region may be a subsample artifact rather than a
+neighbour of the observation.
 
 Next steps. Redo the nine-variant comparison on priority-sampling inclusion
 probabilities rather than `S`, so the quoted efficiency matches the production

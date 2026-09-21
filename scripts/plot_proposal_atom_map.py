@@ -85,6 +85,62 @@ def gather_truth(manifest: dict, atoms: np.ndarray, columns=TRUTH_COLUMNS):
     return out
 
 
+def observation_truth(manifest: dict, truth_row) -> dict:
+    """True properties of the observed galaxy, in the atoms' own conventions.
+
+    The mock truth table carries provenance only, so the physical properties
+    come from the case input catalogue named in the image-mock manifest.  The
+    prior's ``e1_input_p`` / ``circularized_Re_input_p`` are built from axis
+    ratio and position angle exactly as ``e1_input_rot0`` and
+    ``Re_input * sqrt(axis_ratio)`` are here, which the unit tests pin.
+
+    The returned ellipticity is intrinsic, before the injected shear, matching
+    the zero-shear ``flow_zero`` columns the truth panels plot.
+    """
+
+    import pandas as pd
+
+    case = int(truth_row["source_case"])
+    index = int(truth_row["source_input_index"])
+    sources = {int(e["case"]): e for e in manifest["per_case"]}
+    if case not in sources:
+        raise ValueError(f"case {case} absent from the image-mock manifest")
+    path = Path(sources[case]["sources"]["truth"]["path"])
+    table = pd.read_feather(path)
+    if index < 0 or index >= len(table):
+        raise ValueError(f"source_input_index {index} outside {path.name}")
+    record = table.iloc[index]
+    if int(record["index_input"]) != index:
+        raise ValueError("input catalogue is not indexed by source_input_index")
+    ratio = float(record["axis_ratio_input"])
+    if not 0.0 < ratio <= 1.0:
+        raise ValueError(f"axis ratio outside (0, 1]: {ratio}")
+    return dict(
+        e1=float(record["e1_input_rot0"]),
+        e2=float(record["e2_input_rot0"]),
+        circularized_Re=float(record["Re_input"]) * np.sqrt(ratio),
+        r=float(record["r_input"]),
+        case=case,
+        source_input_index=index,
+        source_truth=str(path),
+    )
+
+
+def draw_classes(probability: np.ndarray, drawn: np.ndarray, floor: float):
+    """Split the draws into proxy-ranked atoms and defensive-floor atoms.
+
+    An atom sitting exactly at ``delta / n_atoms`` got no local score at all:
+    the proxy ruled it out and only the defensive uniform component kept it
+    reachable.  Separating the two says how much of the budget the ranking
+    actually directed and how much was a uniform lottery.
+    """
+
+    if not np.isfinite(floor) or floor <= 0:
+        raise ValueError("defensive floor must be positive and finite")
+    at_floor = probability[drawn] <= floor * (1.0 + 1.0e-9)
+    return ~at_floor, at_floor
+
+
 def exact_centre_node(record: dict, row: int):
     """Atom ids and exact posterior weights at the centre stencil node.
 
@@ -247,6 +303,8 @@ def main() -> None:
 
     mock = MockCatalogue.load(args.run / "input")
     observed = mock.measurements.iloc[args.row][TARGET_ORDER].to_numpy(dtype=np.float64)
+    mock_manifest = json.loads((args.run / "input" / "image_mock_manifest.json").read_text())
+    true_observation = observation_truth(mock_manifest, mock.truth.iloc[args.row])
 
     proxy = build_proxy(coords.values, coords.dispersion, detection)
     mixture = proxy.mixture(
@@ -287,8 +345,15 @@ def main() -> None:
     measured_background = centred_measurements(coords.values[background], observed)
     heavy_drawn = drawn_set[heavy]
 
+    floor = PRODUCTION_DELTA / n_atoms
+    ranked, defensive = draw_classes(probability, drawn, floor)
+
     fig, axes = plt.subplots(2, 2, figsize=(13.0, 11.0))
     norm = LogNorm(vmin=max(float(mass.min()), 1e-6), vmax=float(mass.max()))
+
+    # Every unsampled atom is the same small dot; only colour distinguishes an
+    # atom whose mass we know from the grey bulk whose mass we never computed.
+    unsampled_size = 26.0
 
     specs = [
         (
@@ -299,7 +364,7 @@ def main() -> None:
             r"predicted $g_1$ $-$ measured $g_1$",
             r"predicted $g_2$ $-$ measured $g_2$",
             "Panel 1a   measured space: shape",
-            True,
+            (0.0, 0.0),
         ),
         (
             axes[0][1],
@@ -309,7 +374,7 @@ def main() -> None:
             r"predicted $R_{\rm flux}$ $-$ measured $R_{\rm flux}$   [pix]",
             r"$\log_{10}$(predicted flux / measured flux)",
             "Panel 1b   measured space: size and brightness",
-            True,
+            (0.0, 0.0),
         ),
         (
             axes[1][0],
@@ -319,7 +384,7 @@ def main() -> None:
             r"true $e_1$ (intrinsic)",
             r"true $e_2$ (intrinsic)",
             "Panel 2a   truth space: intrinsic shape",
-            False,
+            (true_observation["e1"], true_observation["e2"]),
         ),
         (
             axes[1][1],
@@ -329,52 +394,68 @@ def main() -> None:
             r"true circularized $R_e$   [arcsec]",
             r"true magnitude $r$",
             "Panel 2b   truth space: size and brightness",
-            False,
+            (true_observation["circularized_Re"], true_observation["r"]),
         ),
     ]
 
     handle = None
-    for axis, bulk, sampled, top, xlabel, ylabel, title, centred in specs:
+    for axis, bulk, sampled, top, xlabel, ylabel, title, marker_at in specs:
+        # Unsampled bulk: mass unknown, so plain grey at the common size.
         axis.scatter(
-            bulk[:, 0], bulk[:, 1], s=1.0, c="0.82", marker=".",
-            linewidths=0, rasterized=True, zorder=1,
+            bulk[:, 0], bulk[:, 1], s=unsampled_size, c="0.86", marker=".",
+            linewidths=0, alpha=0.45, rasterized=True, zorder=1,
+        )
+        # The draw, split into the part the proxy ranked and the part only the
+        # defensive uniform component reached, at their true relative counts.
+        # Both are kept translucent so the mass-carrying atoms stay readable
+        # through what is, on these rows, a very crowded draw.
+        axis.scatter(
+            sampled[defensive, 0], sampled[defensive, 1], s=7.0,
+            c="0.62", marker="x", linewidths=0.4, alpha=0.30,
+            rasterized=True, zorder=2,
         )
         axis.scatter(
-            sampled[:, 0], sampled[:, 1], s=9.0, c="0.35", marker="x",
-            linewidths=0.5, rasterized=True, zorder=2,
+            sampled[ranked, 0], sampled[ranked, 1], s=11.0,
+            c="tab:blue", marker="x", linewidths=0.6, alpha=0.30,
+            rasterized=True, zorder=3,
         )
-        for mask, marker in ((~heavy_drawn, "."), (heavy_drawn, "x")):
+        for mask, is_drawn in ((~heavy_drawn, False), (heavy_drawn, True)):
             if not mask.any():
                 continue
-            is_drawn = marker == "x"
-            # 'x' is an unfilled marker, so it takes no edgecolor at all.
-            style = {} if is_drawn else {"edgecolors": "black"}
+            # Unsampled mass atoms keep the common dot size; a hairline edge
+            # makes them findable without making them bigger.
             handle = axis.scatter(
                 top[mask, 0], top[mask, 1], c=mass[mask], cmap="plasma", norm=norm,
-                s=150.0 if is_drawn else 190.0, marker=marker,
-                linewidths=2.0 if is_drawn else 0.8,
-                zorder=4 if is_drawn else 3,
-                **style,
+                s=150.0 if is_drawn else unsampled_size,
+                marker="x" if is_drawn else ".",
+                linewidths=2.0 if is_drawn else 0.6,
+                zorder=5 if is_drawn else 4,
+                **({} if is_drawn else {"edgecolors": "black"}),
             )
-        if centred:
-            axis.axhline(0.0, color="tab:red", lw=0.8, ls="--", zorder=5)
-            axis.axvline(0.0, color="tab:red", lw=0.8, ls="--", zorder=5)
-        axis.set_xlim(*panel_limits(top[:, 0], bulk[:, 0]))
-        axis.set_ylim(*panel_limits(top[:, 1], bulk[:, 1]))
+        axis.axhline(marker_at[1], color="tab:red", lw=0.9, ls="--", zorder=6)
+        axis.axvline(marker_at[0], color="tab:red", lw=0.9, ls="--", zorder=6)
+        # The observation's own marker must stay inside the frame too.
+        axis.set_xlim(*panel_limits(np.append(top[:, 0], marker_at[0]), bulk[:, 0]))
+        axis.set_ylim(*panel_limits(np.append(top[:, 1], marker_at[1]), bulk[:, 1]))
         axis.set_xlabel(xlabel)
         axis.set_ylabel(ylabel)
         axis.set_title(title, fontsize=11)
     axes[1][1].invert_yaxis()
 
+    subsample = n_atoms / max(background.size, 1)
     legend = [
-        Line2D([], [], ls="", marker=".", color="0.82", ms=9,
-               label=f"prior atom, not drawn ({background.size:,} of {n_atoms:,} shown)"),
-        Line2D([], [], ls="", marker="x", color="0.35", ms=7,
-               label=f"drawn by the proposal ({n_drawn:,} draws)"),
-        Line2D([], [], ls="", marker=".", color="black", mfc="none", ms=12,
+        Line2D([], [], ls="", marker=".", color="0.86", ms=7,
+               label=f"not drawn ({background.size:,} shown, 1 in {subsample:,.0f})"),
+        Line2D([], [], ls="", marker="x", color="0.62", ms=6,
+               label=f"drawn, defensive floor only ({int(defensive.sum()):,})"),
+        Line2D([], [], ls="", marker="x", color="tab:blue", ms=7,
+               label=f"drawn, ranked by the proxy ({int(ranked.sum()):,})"),
+        Line2D([], [], ls="", marker=".", color="black", ms=7,
                label="carries posterior mass, NOT drawn"),
         Line2D([], [], ls="", marker="x", color="black", ms=11, mew=2,
                label="carries posterior mass, drawn"),
+        Line2D([], [], ls="--", color="tab:red", lw=0.9,
+               label="the observation (measured above, true below)"),
     ]
     axes[0][0].legend(handles=legend, loc="upper left", fontsize=8, framealpha=0.9)
 
@@ -408,8 +489,12 @@ def main() -> None:
             n_unique_drawn=int(np.unique(drawn).size),
             max_probability=float(probability.max()),
             top_atom=int(np.argmax(probability)),
-            defensive_floor=float(PRODUCTION_DELTA / n_atoms),
+            defensive_floor=float(floor),
+            n_drawn_ranked=int(ranked.sum()),
+            n_drawn_at_floor=int(defensive.sum()),
+            n_above_floor_in_catalogue=int((probability > floor * (1.0 + 1.0e-9)).sum()),
         ),
+        true_observation=true_observation,
         exact=dict(
             node=CENTRE_NODE,
             n_atoms=int(n_heavy),
