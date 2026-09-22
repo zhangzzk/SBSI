@@ -1,3 +1,91 @@
+## 2026-09-22 — The source catalogue caps bright enrichment at 7x for any cut; r<20 is exhausted, but loosening the cut is nearly free
+
+Asked whether more bright atoms are available.  Census of the truth `r` column
+over all 20 source shards (job 16636034, CPU, `bright_census.py` job-local
+under `$CLAUDE_JOB_DIR/tmp`).
+
+### Files and behaviour changed
+
+None.  This entry records a measurement.
+
+### The source population
+
+139,936,000 rows, `r` from 11.520 to 29.000, **median 26.70**; the 0.1th
+percentile is 19.37.  This is an overwhelmingly faint catalogue and the bright
+end is genuinely scarce, not merely under-sampled.
+
+| cut | source rows | % of source | expected in a 20M uniform draw | extra atoms to take all |
+|---|---|---|---|---|
+| r<19.0 | 93,862 | 0.0671% | 13,415 | 80,447 |
+| r<19.5 | 160,852 | 0.1149% | 22,989 | 137,863 |
+| **r<20.0** | **269,501** | **0.1926%** | **38,518** | **230,983** |
+| r<20.5 | 438,210 | 0.3132% | 62,630 | 375,580 |
+| r<21.0 | 700,560 | 0.5006% | 100,126 | 600,434 |
+| r<21.5 | 1,092,865 | 0.7810% | 156,195 | 936,670 |
+| r<22.0 | 1,675,778 | 1.1975% | 239,506 | 1,436,272 |
+| r<23.0 | 3,831,419 | 2.7380% | 547,596 | 3,283,823 |
+| r<24.0 | 8,828,485 | 6.3089% | 1,261,789 | 7,566,696 |
+
+The "extra atoms" column is the expectation `n(1-p)`, `p = 20e6/139936000 =
+0.142922`; the realised r<20 draw took 231,221 against an expected 230,983.
+
+### 7x is a hard ceiling, at every cut
+
+Taking *every* source row in a stratum sets its inclusion probability to 1
+against `p` for the rest, so the enrichment over a uniform draw is `1/p =
+6.997` **regardless of where the cut is placed**.  The r<20 build already
+achieves it.  The weight ratio bright:faint is likewise fixed at 6.997 at any
+cut, so loosening the cut costs nothing in weight dynamic range — a useful
+property, given that weight tails are the current binding constraint.
+
+Going beyond 7x requires one of:
+
+- a **smaller uniform base** (10M uniform + all bright gives 14x), which trades
+  faint coverage for bright coverage within the same atom budget;
+- a **larger source catalogue**, which is BlendEMU's scope, not SBSI's
+  (`doc/API.md`).
+
+### Cost is not the obstacle
+
+Prepare ran 2.2 GPU-hours for 20,231,221 atoms.  Scaling by atom count:
+
+| cut | subset atoms | prepare estimate |
+|---|---|---|
+| r<20.0 (built) | 20,231,221 | 2.20 GPU-h |
+| r<21.0 | 20,600,434 | 2.24 GPU-h |
+| r<22.0 | 21,436,272 | 2.33 GPU-h |
+| r<23.0 | 23,283,823 | 2.53 GPU-h |
+| r<24.0 | 27,566,696 | 3.00 GPU-h |
+
+Reaching r<22 costs about 6% more prepare than the build already completed.
+
+### Why this should not be spent yet
+
+The scarcity argument that motivated the r<20 stratum weakens as the cut
+loosens: at r<20 a uniform 20M draw supplies only 38,518 atoms, but at r<22 it
+already supplies 239,506, so the same 7x boost addresses a far less acute
+starvation.  More importantly the entries above measured what the first 7x
+boost bought: the summed information turned positive definite, but Pareto k was
+unmoved (median 0.563 to 0.557, 31% of rows above 0.7) and the robust error
+stayed 12–17x the model error.  Prior composition is no longer the binding
+constraint, and a second prior intervention would be read through the same
+noisy estimator.
+
+### Limitations
+
+- The cut is on truth `r`, available only because the source catalogue carries
+  it.  This remains a diagnostic instrument, not a shippable prior
+  construction.
+- Prepare cost is extrapolated linearly in atom count from a single measured
+  point; shard-level overhead is not separated out.
+
+### Next steps
+
+1. Unchanged: fix the importance-sampling weight tails (remove the exact
+   stratum from the mixture before drawing) before any further prior work.
+2. If a further bright intervention is ever wanted, the cheap ordering is
+   r<21 then r<22 — but only after (1) makes the result measurable.
+
 ## 2026-09-22 — Second window confirms positive-definiteness is a property of the prior, but it passes only marginally and the estimate is unusable
 
 Rows 10000–19999, never previously run, under the same bright-stratified
