@@ -5,7 +5,81 @@ belongs on the measurements, "as usual, 0.6" and 25.8"", and explicitly **no
 ellipticity cut**.  Asked how far to widen the truth parent, the owner chose
 **no truth cut at all**.  This entry records the chain built to that
 specification.  **No `m` value is claimed here**: both measurements were still
-running when this was written.
+running when this was written.  **Both have since finished; results are below
+and the goal is not met.**
+
+### Results
+
+Cut `mag25.8_radius_gt0.60`, branch `modeled_smooth`, 80 cases, seed 7301:
+
+| run | parent | flow | m (%) |
+|---|---|---|---|
+| archive Main80 | r<26 | r<26 | −0.199979 ± 0.263649 |
+| control A (16647120) | r<26 | r<26 | **−0.199979 ± 0.263649** |
+| control B (16647120) | r<26 | r<26.5 | **+1.129283 ± 0.266528** |
+| headline (16647912) | **no cut** | r<26.5 | **+2.950293 ± 0.270648** |
+
+Control A reproduced the archive **bit-identically across all 24 summary
+entries**, so the restored chain carries no code drift and the other two
+numbers are interpretable.
+
+The headline is **+2.95 % ± 0.27 %**, 95 % CI [+2.41, +3.46].  The target was
+~0.3 %.  The goal is **not met**, by roughly ten times the target and ~11σ from
+zero.  Every branch moves the same way, so this is not a quirk of
+`modeled_smooth`:
+
+| branch | A r26/r26 | B r26/r26.5 | H nocut/r26.5 |
+|---|---|---|---|
+| modeled_usable | −1.140 | +0.157 | +1.210 |
+| modeled_control | −1.122 | +0.179 | +1.487 |
+| modeled_geometry | −0.936 | +0.368 | +1.854 |
+| modeled_transported | −0.609 | +0.704 | +2.171 |
+| modeled_coordinate | −0.604 | +0.709 | +2.179 |
+| modeled_smooth | −0.200 | +1.129 | +2.950 |
+| actual_usable_flags | −0.135 | +1.192 | +2.626 |
+| matched_usable | +0.565 | +1.907 | +3.226 |
+
+(all ± 0.26–0.27; `modeled_smooth` is the configured branch)
+
+**Decomposition.**  −0.200 → +1.129 is the flow retrain alone
+(**+1.329 ± 0.050 pp, 26.8σ**).  The two control runs share parent, pairs,
+geometry, R_blend, classifiers and seed, and their `measured_response` came out
+bit-identical (0.6850254024308094), so the measured-side error cancels in the
+difference rather than adding; treating the runs as independent would give
+±0.375 pp and understate the significance 7.5-fold.  +1.129 → +2.950 is the
+population widening (**+1.821 ± 0.380 pp**, independent samples, so no
+cancellation).
+
+**Mechanism.**  The response decomposition:
+
+| run | measured | model | flow | blend | blend share |
+|---|---|---|---|---|---|
+| A | 0.685025 | 0.686398 | 0.527344 | 0.159054 | 23.2 % |
+| B | 0.685025 | 0.677376 | 0.518393 | 0.158983 | 23.5 % |
+| H | 0.670767 | 0.651544 | 0.467695 | 0.183849 | 28.2 % |
+
+Widening the parent adds ~11.9 % more selected objects per case
+(81.5 k → 91.2 k, from `selection_fraction` × `parent_usable`, case 40), all
+faint.  The measured response falls 2.1 % but the model's flow response falls
+9.8 %.  Treating the shared objects' responses as unchanged — an
+approximation — the added faint objects respond at ~0.55 in the data and
+~0.43 in the model, i.e. **the flow underpredicts their response by ~21 %**.
+
+The predictive diagnostics agree that the flow is off on this population:
+
+| run | generated − observed selection fraction | total variation |
+|---|---|---|
+| A | +0.001110 ± 0.000118 (9.4σ over) | 0.0354 |
+| B | +0.000415 ± 0.000119 (3.5σ over) | 0.0368 |
+| H | **−0.003578 ± 0.000129 (27.8σ under)** | **0.0461** |
+
+On the r<26 parent the flow slightly over-selects; on the no-cut parent it
+under-selects at 27.8σ and its joint distribution match degrades.
+
+**Caution on the obvious fix.**  The flow underpredicts the response (pushing
+m up) while R_blend rises 15.6 % to a 28.2 % share (pushing m down).  The two
+errors partly cancel.  Retraining the flow without also widening the emulator
+could move m further from zero before it moves closer.
 
 ### The measured cuts were already correct
 
@@ -123,15 +197,30 @@ Möbius composition, `truth_parent`, 64 draws, seed 7301, h=0.02, axis 1 and the
   trade the owner accepted against a 0 % selection leak.
 - Both patched scripts live only in the isolated checkout; the repository copies
   still carry the hardcoded bounds.
-- No `m` value is claimed in this entry.
+- The ~21 % flow underprediction on the added faint objects is an estimate from
+  a two-component split of the aggregate responses, assuming the shared
+  objects' responses are unchanged between runs.  It is a diagnosis, not a
+  measurement; a per-magnitude-bin response comparison would measure it.
+- Nothing is deployed.  `configs/models_v3_6_like.json` still names the r<26
+  flow, and on the evidence here it should stay that way: the r<26.5 flow is
+  worse at fixed population by +1.33 ± 0.05 pp.
 
 ### Next steps
 
-- Read the control's run A against the archived
-  `-0.199979 ± 0.263649` before interpreting run B; a mismatch means the
-  restored chain differs from whatever produced the archive.
-- Report the headline `m` from `measurement/main_unbounded_r265flow.json`.
-- Prepend the results to this entry when both land.
+- **Do not deploy the r<26.5 flow.**  It is worse than the deployed r<26 flow
+  on the r<26 population, and does not rescue the no-cut population either.
+- Measure, rather than infer, the flow's response error against true magnitude:
+  bin the measured and modeled responses by `r_input_p` on the no-cut parent
+  and find where the model departs.  That converts the ~21 % estimate above
+  into a number and shows whether the failure is confined to r>26.5.
+- Decide whether to widen the flow's own training population to match the
+  parent.  Note the caution above: the flow and emulator errors currently have
+  opposite signs, so widening the flow alone may not reduce |m|.  Widening the
+  emulator is BlendEMU's responsibility.
+- The retained r<26.5 flow chain, the no-cut parent chain and both measurement
+  JSONs are preserved under
+  `sbsi_caches/constgold_truth_parent_unbounded_20260922_v1/` and
+  `sbsi_caches/joint_m_mag265_control_20260922_v1/`.
 
 ## 2026-09-22 (later) — The r<26.5 flow is retrained: nine stages complete, both stage-9 gates pass, and a launcher bug of mine cost one job
 
