@@ -1,3 +1,138 @@
+## 2026-09-22 (later still) — The measurement sample is cut on measurements only: a no-truth-cut parent chain, two hardcoded bounds exposed, and a third one found
+
+The owner directed that no truth cut be applied to the sample — selection
+belongs on the measurements, "as usual, 0.6" and 25.8"", and explicitly **no
+ellipticity cut**.  Asked how far to widen the truth parent, the owner chose
+**no truth cut at all**.  This entry records the chain built to that
+specification.  **No `m` value is claimed here**: both measurements were still
+running when this was written.
+
+### The measured cuts were already correct
+
+`scripts/evaluate_smooth_classifier_joint.py` applies the only cuts in the
+measurement, per leg, to measured quantities:
+
+    FLUX_RADIUS > 3.0 px  = 0.6 arcsec at 0.2"/px
+    flux > 10**(-0.4*(25.8-30))  = MAG_AUTO < 25.8 at zero point 30
+
+There is no ellipticity cut, only an `|e| < 1` validity test.  Nothing in the
+evaluator was changed.  The truth cut lived one level up, in *parent* and
+*geometry* preparation.
+
+### Two hardcoded truth bounds exposed (isolated checkout only)
+
+Both patches live in `/project/ls-gruen/users/zekang.zhang/sbsi_flow_restore_20260922`,
+not in the repository, because `scripts/run_disk_inference.py::implementation()`
+hashes every `sbsi/*.py` and editing the live worktree would invalidate
+prepared inference shards.  Both defaults are unchanged at 26.0, so existing
+invocations behave exactly as before.
+
+- `scripts/prepare_constgold_truth_parent.py` — `magnitude_max=26.0` was an
+  unreachable default with no CLI route.  Added `--truth-magnitude-max`,
+  relaxed the finiteness guard to admit `+inf` while still rejecting NaN and
+  non-positive bounds, and recorded `truth_analysis_cut` in the manifest.
+- `scripts/prepare_scene_classifier.py` — a **third** hardcoded bound of the
+  same class as the two corrected in `ad53755`:
+  `or np.any(context[:, 3] >= 26.)` raising
+  `'strict true-r<26 finite eight-input anchor required'`.  Same treatment.
+  Pre-patch sha256 `06d33d9a92d5e8c8`, which matched the geometry manifest pin.
+
+### Validation
+
+- `tmp/test_truth_parent_bound.py` — bounds nest
+  (26.0 ⊂ 26.5 ⊂ 27.0 ⊂ inf → 2031/2261/2518/4000 of 4000 synthetic rows),
+  `inf` keeps every finite magnitude, a NaN bound is rejected.
+- **Job 16647788 — byte-level regression on the geometry patch.**  Re-ran the
+  *recorded* r<26 geometry for case 40 through the patched script at the
+  default bound and compared against the 2026-09-18 record:
+
+      recorded prepared_sha256 : b18bb7b57a850ba5bdfe60a1dfdde1ba59e8365b9fb77efdca626a27eba94d92
+      fresh    prepared_sha256 : b18bb7b57a850ba5bdfe60a1dfdde1ba59e8365b9fb77efdca626a27eba94d92
+
+  with `counts`, `anchor_sha256`, `pair_sha256`, `anchor_without_labels` and
+  `unmatched_label_parents` all equal.  The patch is behaviour-preserving.
+- **Cross-node determinism.**  Case 40 of the R_blend/pairs stage was built
+  twice — smoke job 16647706 on `th-cl-rome01n1`, array task 16647732_0 on
+  `th-cl-rome01n4` — and produced identical pair `sha256`.
+- Every reused input was verified by hash against the recorded r<26 build
+  before submission: classifier parent manifest `ee702664b89dcb26`, domain
+  manifest `ce3d1add4c3744a7`, case-40 truth catalogue `6a03f441c3afa248`,
+  emulator model `f04a19d375caa843`, emulator metadata `b3f251d59685e964`,
+  guard flow `6755f4e00fce016c`.
+
+### The chain as it ran
+
+Output root `sbsi_caches/constgold_truth_parent_unbounded_20260922_v1/`.
+
+| # | stage | job | elapsed | result |
+|---|---|---|---|---|
+| 1 | truth parent, no cut | 16647536 | 1:17 | 27,982,713 rows, 0 truth-cut drops |
+| 2 | R_blend + pairs | 16647732 (8 tasks) | ~4:00 each | 398 M + 14 G, 450 M pairs |
+| 3 | geometry | 16647852 | 2:48 | 80 cases, 450,046,601 pairs |
+| 4 | headline measurement | 16647912 | running | r<26.5 flow, ~4.7 h projected |
+| — | flow-only control | 16647120 | running | r<26 parent, both flows |
+
+The headline was built from the frozen Main80 argument list with exactly 13
+tokens changed (flow, parent, pairs, geometry, output, 8 R_blend shards),
+asserted by count.  All five classifiers, the disk-response candidate and its
+Möbius composition, `truth_parent`, 64 draws, seed 7301, h=0.02, axis 1 and the
+80 cases are untouched: this is a population change plus the retrained flow,
+**not** a new estimator.  The configured likelihood is unchanged.
+
+### Three things worth recording about the chain
+
+- The response pairs are **not** a BlendEMU product.
+  `scripts/build_constgold_fixed_g0_blend_lookup.py --pair-output-root` emits
+  them in the same loop as R_blend, from the same emulator call — which is why
+  the evaluator can demand they reproduce the lookup to 1e-12.
+  `blendemu/scripts/prepare_output_conditioned_response.py` builds the emulator
+  *training* catalogue and is not in this chain.  No BlendEMU change was needed
+  and none was made.
+- `sbsi/models.py::load_emulator` never reads `flow_checkpoints`; it forwards
+  only the emulator metadata, model and conditions to `BlendingPredictor.load`.
+  The R_blend builder's `--measurement-model` is therefore provenance, not a
+  model input, and was left at the recorded r<26 guard flow.
+- Geometry must run **without** `--domain-root`.  Supplied, the script requires
+  every anchor to carry a g0/g05 training label and raises otherwise, which the
+  ~238 k unlabelled faint anchors would trigger.  Those arrays exist to *fit*
+  classifiers; `scripts/scene_classifier_joint.py::classifier_frames` reads only
+  `ids`, `base_context` and `geometry`, and the classifiers here are frozen.
+  The manifest records `with_corrected_labels: false`.
+
+### Dropped and unmatched rows
+
+- Parent: **3** g0 keys absent from the parent (cases 105, 106, 118, one each)
+  out of ~7.9 M, dropped and counted in `g0_keys_outside_truth_parent_dropped`.
+- Geometry: **7** parents out of 27,982,713 have no neighbour pair at all.
+  Their crowding features and R_blend are zero, which is the correct value for
+  an isolated object, not a failure.  The recorded r<26 build had none.
+
+### Limitations
+
+- **Leading systematic.**  The R_blend emulator `fixed_g0_m258_r060_v2` is fit
+  at r<26, and its own recorded population string already described it as
+  "extrapolated beyond its fit cohort" there.  With no truth cut it extrapolates
+  across the whole faint tail to the simulation's r=29.000 floor.  Mean R_blend
+  over the parent rises 0.219 → 0.284 (+30 %), so the weight genuinely moves
+  into the extrapolated region.  R_blend is 0.159 of a 0.686 total response
+  (23 %), which makes this larger than the ±0.26 % statistical error unless the
+  emulator is accurate to a few percent out there.  Training a wider emulator is
+  BlendEMU's responsibility, not this chain's.
+- The joint flow is retrained at r<26.5, not unbounded, so it extrapolates on
+  the ~2.8 % of the measured-selected sample with true r>26.5.  This was the
+  trade the owner accepted against a 0 % selection leak.
+- Both patched scripts live only in the isolated checkout; the repository copies
+  still carry the hardcoded bounds.
+- No `m` value is claimed in this entry.
+
+### Next steps
+
+- Read the control's run A against the archived
+  `-0.199979 ± 0.263649` before interpreting run B; a mismatch means the
+  restored chain differs from whatever produced the archive.
+- Report the headline `m` from `measurement/main_unbounded_r265flow.json`.
+- Prepend the results to this entry when both land.
+
 ## 2026-09-22 (later) — The r<26.5 flow is retrained: nine stages complete, both stage-9 gates pass, and a launcher bug of mine cost one job
 
 Continues the entry below.  The chain submitted there has finished.  The
