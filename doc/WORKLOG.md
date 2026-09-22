@@ -1,3 +1,184 @@
+## 2026-09-22 — The r<26.5 emulator is retrained and the re-measurement is a clean superset; every discrepancy traces to the th-cl-dell0* nodes
+
+Owner asked to retrain the flow and the R_blend emulator on a true r<26.5
+parent instead of r<26 and re-verify the bias.  The emulator arm is complete.
+The re-measurement the flow arm needs is complete and verified.  The flow
+itself is not retrained yet.  A separate result, recorded below, is that the
+r<27 bounded prior loses the positive-definiteness the bright stratum bought.
+
+### Files and behaviour changed
+
+- `blendemu/scripts/prepare_output_conditioned_response.py` (BlendEMU, left
+  uncommitted for owner review): the hardcoded truth bound becomes
+  `--truth-magnitude-max`, default 26.0, recorded in the manifest.  No other
+  behaviour change.
+- `harmonized_secondary_mag265_20260922_v1/code_snapshot/remeasure_common_optimizer_targets.py`:
+  a copy of the frozen 20260917 snapshot (sha256
+  `6096fd6953b60dbed6c742ebf5a1255be103e0cdabaad404da519a68611942b5`) differing
+  only in that the truth bound is a parameter.  `diff -r` confirms the frozen
+  `blendemu` package beside it is byte-identical.  The per-object seed formula
+  is untouched, which is what makes the reproduction check below meaningful.
+- Four measurement outputs replaced; see "The dell nodes" below.  Nothing was
+  deleted: the replaced outputs are at
+  `blendemu_runs/harmonized_secondary_mag265_20260922_dell08_quarantine/`.
+
+### The emulator at r<26.5
+
+`prepare_output_conditioned_response.py --truth-magnitude-max 26.5` then
+`prepare_disk_response_moment.py` (job 16637497, CPU), then
+`train_disk_response_moment.py` (job 16637595, CPU, 25:44).
+
+| | r<26 | r<26.5 |
+|---|---|---|
+| fit rows | 128,809,729 | **167,785,890** (+30.3%) |
+| kept rows | 161,012,399 | **209,730,224** |
+| truth-cut dropped | 87,487,614 | **38,761,381** |
+| base parameter | 0.008117317070720933 | **0.00902060410432565** |
+| final train RMSE | — | 0.99702 over 218 rounds |
+
+`baseline_unavailable_dropped: 0` and `invalid_label_dropped: 23,715`; no
+unmatched rows were silently kept.  The faint labels already existed in
+`response_catalogue_train.feather` (248,515,320 rows), so widening the bound
+needed no new rendering or measurement on this arm.  Model at
+`blendemu_runs/disk_response_moment_mag265_20260922_v1/model`.
+
+### The re-measurement the flow needs
+
+Unlike the emulator, the flow trains on a dedicated re-measurement whose
+manifest limitation reads "only secondary true-r<26 ngmix columns
+remeasured", so widening its domain does require new measurement — not new
+rendering.  All 200 cases were re-measured rather than only the increment, so
+every row comes from one script version and the reproduction check below is
+possible.  Job 16637641 (`--array=0-199`, 8 CPUs each, throttle raised 24->40
+mid-run), plus job 16641752 for the six-case recheck.
+
+Truth parent per case: 110,695 -> 154,706 rows (+39.8%); matched 97,494 ->
+129,202 (+32.5%).  Cost ~560 CPU-hours, against ~378 for the original r<26
+campaign.  An increment-only run would have cost ~135, and was rejected in
+favour of the single-version guarantee.
+
+### It is a clean superset
+
+Because the seed is keyed per object and is identical at all amplitudes, every
+identity measured under r<26 must return bit-for-bit identical shapes and
+flags under r<26.5.  Checked, not assumed (`verify_remeasure.py`, job-local):
+
+**198 of 200 cases reproduce every stored value exactly.**  The two exceptions
+are cases 77 and 85, and they are explained below rather than tolerated.
+
+### The dell nodes
+
+The first pass reproduced only 194 of 200.  The six failures were not random:
+97.67% of their disagreeing entries differ by less than 1e-6 relative, which is
+float32 rounding, and only 3,433 entries (0.0044% of the whole 200-case
+parent) differ by more than 1e-3.  The disagreements are spread evenly through
+each file, not clustered by worker.
+
+Cross-tabulating case against the node that measured it settles it:
+
+| campaign | node | cases run | cases disagreeing |
+|---|---|---|---|
+| new (16637641) | th-cl-dell08 | 4 | **4** |
+| new (16637641) | every other node | 196 | 2 |
+| old (16556786) | th-cl-dell07 | 1 | **1** |
+| old (16556786) | th-cl-dell08 | 1 | **1** |
+| old (16556786) | every other node | 192 | 0 |
+
+The two stragglers in the new run are cases 77 and 85 — exactly the two cases
+the *old* campaign happened to run on dell07 and dell08.  Every discrepancy in
+either campaign traces to those machines and there is no unexplained residual.
+
+Repeating the four new dell08 cases with `--exclude=th-cl-dell08` (job
+16641752) reproduced the stored 20260917 values exactly: 0 of ~443,000 shape
+entries differ, against ~27,500 for the dell08 run.  Those four outputs were
+therefore swapped in and the dell08 versions quarantined.  For cases 77 and 85
+the new pipeline produced identical results on two independent nodes each
+(rome01n4 then rome07n1; rome04n3 then rome09n1) while the stored value stands
+alone, so there the *old* value is the defective one and the new is kept.
+
+`--constraint=x86-64-v3` does not prevent this: it is satisfied by both node
+families, but it does not pin FMA contraction or BLAS kernel selection.  Any
+future measurement campaign on this cluster should exclude `th-cl-dell0*`.
+
+### The r<27 prior loses positive-definiteness
+
+Separate from the retrain.  The 10,000,000-atom prior (uniform over truth
+r<27 plus every truth r<20 source row) assembled cleanly — 10,237,320 atoms,
+the median floor binding on exactly 50.0% of atoms in all four target
+coordinates, rebuild verified to reproduce the assembled proposal exactly
+(job 16637779).  Two 10,000-observation windows then ran against it (jobs
+16637857, 16637858, ~33 min each).
+
+| | bright20 w1 | bright20 w2 | f27 w1 | f27 w2 |
+|---|---|---|---|---|
+| eigenvalues | +717,035 / +1,789,237 | +201,607 / +2,420,665 | **−846,701 / +2,765,907** | +201,854 / +2,518,215 |
+| positive definite | yes | yes | **no** | yes |
+| bootstrap positive (400x) | 89.0% | 68.0% | **18.5%** | 61.5% |
+| Pareto k median / >0.7 | 0.557 / 31.31% | 0.568 / 31.35% | 0.546 / 25.19% | 0.552 / 25.60% |
+| worst row, share of \|total g1\| | 30.76% | 104.17% | 66.46% | **386.23%** |
+
+Pooled over all 20,000 observations the r<27 prior is still non-positive
+(−566,425 / +5,205,701) and yields no estimate; the unbounded prior pools to
++935,035 / +4,193,509 and does.  The bright20 columns reproduce the
+2026-09-22 entry below exactly, which is what validates this pipeline.
+
+The r<27 prior's *average* importance-sampling health is better (25.2% of rows
+above Pareto k 0.7 against 31.3%).  It fails on the extremes, not the average.
+
+**Confound, not yet separated:** the r<27 prior has 10,237,320 atoms against
+the unbounded prior's 20,231,221, so "the bound broke it" and "half the atoms
+broke it" are not distinguished.  The better Pareto k argues against the atom
+count, but rebuilding the r<27 prior at 20M atoms is what would settle it.
+
+### These windows cannot verify a 0.3% bias, and never could
+
+Recorded because it was not stated before the windows were run.  Centred at
+the run's own `initial_center` and against the injected g1 = +0.02:
+
+| arm | g1 | m |
+|---|---|---|
+| bright20 w1 | +0.03482 ± 0.01471 | +74.1% ± 73.5% |
+| bright20 w2 | +0.05118 ± 0.08591 | +155.9% ± 429.5% |
+| bright20 pooled 20,000 | +0.03769 ± 0.01724 | **+88.4% ± 86.2%** |
+| f27 w2 | +0.09735 ± 0.39628 | +386.7% ± 1981.4% |
+
+The best arm's uncertainty is ~290x the 0.3% target.  The full
+500,000-observation production run fails the same way — 41.96% of its rows
+carry negative g1 curvature and its net information is −2.12% of its positive
+mass — which is the combiner failure already recorded on 2026-09-20.  The
+0.3% question therefore has to be answered through the m measurement path,
+not through this one.
+
+### Limitations
+
+- The flow is not retrained.  Only its training measurement is ready.
+- The r<26.5 emulator has not been differenced against the r<26 one on a
+  common evaluation set; only its training metrics are reported.
+- The 10M-atom r<27 prior and the 20M-atom unbounded prior differ in two ways
+  at once, as noted above.
+- Cases 77 and 85 keep a value that differs from the 20260917 store.  The
+  evidence that the stored value is the defective one is strong but indirect:
+  the old campaign records no hostname, so the attribution rests on the sacct
+  node map for array 16556786.
+- `m` from the 80-case path was −0.200 ± 0.264 pp; that error bar equals the
+  target, so 80 cases can only bound |m| <= 0.3%, not resolve it.  Resolving
+  to ±0.10 pp needs roughly 560 cases.
+
+### Next steps
+
+1. Restore the 17-module archived flow-training closure into an **isolated
+   checkout**, not the live worktree.  Restoring it into the worktree adds
+   files to `sbsi/`, which `run_disk_inference.py implementation()` hashes,
+   and that invalidated 20 prepared shards earlier today.
+2. `prepare_full_domain_flow.py --truth-magnitude-max 26.5` over the
+   re-measured parent, then the refinement chain, then retrain.
+3. Measure m on both the old r<26 evaluation sample (non-inferiority, isolating
+   the model change) and the new r<26.5 sample (the real target).
+   `doc/V36_INFERENCE_REVIEW.md` §1: do not change the population to pass the
+   gate.
+4. Optional, owner's call: rebuild the r<27 prior at 20M atoms to separate the
+   bound from the atom count.
+
 ## 2026-09-22 — MAG_ERR near 26 is 0.13, but the real truth-to-measured scatter is 0.39; measured directly, r<26.5 captures 97.2% of the selected sample
 
 Owner asked for the mean/typical `MAG_ERR` of objects near `MAG_AUTO` 26, the
