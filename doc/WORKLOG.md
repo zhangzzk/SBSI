@@ -1,3 +1,82 @@
+## 2026-09-22 — Second window confirms positive-definiteness is a property of the prior, but it passes only marginally and the estimate is unusable
+
+Rows 10000–19999, never previously run, under the same bright-stratified
+prior and the same settings as job 16631250.  This was the top caveat of the
+entry below: 86.57% of the first window's improvement came from one
+observation, so the result needed a window that observation is not in.
+
+### Files and behaviour changed
+
+None.  This entry records a measurement.  `window2.py` is job-local under
+`$CLAUDE_JOB_DIR/tmp`.
+
+### It reproduces
+
+| | window 1 (rows 0–9999) | window 2 (rows 10000–19999) |
+|---|---|---|
+| eigenvalues | +717,035 / +1,789,237 | **+201,607 / +2,420,665** |
+| positive definite | yes | **yes** |
+| bootstrap positive (400x) | 89.0% | **68.0%** |
+| Pareto k median / >0.7 | 0.557 / 31.31% | 0.568 / 31.35% |
+| ESS median | 385.0 | 371.7 |
+| negative-curvature rows | 6,464 | 6,471 |
+| per-row g1 10th / median / 90th | −102.6 / +2.2 / +87.6 | −94.9 / +2.2 / +99.4 |
+| worst row, share of \|total g1\| | 27.10% | **104.17%** |
+
+Positive-definiteness is a property of the prior, not of rows 0–9999.  The
+per-row distributions are near-identical between windows (median +2.2 in
+both), which is what a prior-level change should look like.
+
+### It passes only just
+
+Window 2's smallest eigenvalue is 201,607 against window 1's 717,035, its
+bootstrap holds in 68.0% of resamples against 89.0%, and **its single worst
+row (14796, at −275,666) exceeds the whole summed g1 information**.  Dropping
+that one row moves the smallest eigenvalue from 201,607 to 451,187.  The same
+few-rows-dominate structure the entry below identified is still the governing
+behaviour; the bright stratum lowered the ceiling on how bad a single row can
+be, it did not remove the dependence.
+
+### The estimate does not constrain anything yet
+
+```
+window 1 : g1 = +0.020912 +/- 0.001181 (model) +/- 0.014705 (robust)
+window 2 : g1 = +0.037267 +/- 0.002198 (model) +/- 0.085906 (robust)
+pooled   : g1 = +0.023777 +/- 0.001028 (model) +/- 0.017242 (robust)
+           g2 = +0.002258 +/- 0.000500 (model) +/- 0.003530 (robust)
+```
+
+against an injected `[0.02, 0.0]`.  The two windows agree with each other at
+0.19 sigma in g1 and 0.46 sigma in g2, so nothing is inconsistent — but the
+pooled g1 is **+18.9% of signal with a robust uncertainty of ±86.2%**.  The
+robust error is 17x the model error in window 2 and 12x in window 1.  No
+statement about bias can be made from this; it is a working estimator, not a
+measurement.
+
+### Limitations
+
+- Two windows of the same 500,000-observation catalogue under one injected
+  shear.  This tests reproducibility across observations, not across shear
+  values or catalogues.
+- The bootstrap resamples rows only, so it does not capture the Monte Carlo
+  noise inside a row.  68% and 89% are upper bounds on confidence.
+- Both windows use the same prior draw.  Whether a second stratified draw at
+  a different seed also lands positive definite is untested.
+
+### Next steps
+
+1. Importance sampling is unambiguously the binding constraint now: Pareto k
+   median 0.56–0.57 in both windows, 31% of rows above 0.7, robust error 12–17x
+   the model error, and a single row able to exceed the summed information.
+   The candidate v1.4 change — removing the exact stratum from the mixture
+   before drawing — targets this directly and should come before any further
+   prior work.
+2. Do not spend more GPU on prior composition until the weight tails are
+   fixed; the two interventions after it will be measured through the same
+   noisy estimator.
+3. Still open, unchanged: report the flow's >5 mag bright-side predictions
+   (6.9% of prior atoms, flux sigma/|x| median 10.5) to the BlendEMU side.
+
 ## 2026-09-22 — The bright stratum makes the information positive definite and yields the first estimate; the obstruction was a handful of rows, not the catalogue
 
 The 20,231,221-atom bright-stratified prior built above was prepared,
