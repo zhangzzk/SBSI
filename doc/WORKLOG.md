@@ -1,3 +1,130 @@
+## 2026-09-22 — MAG_ERR near 26 is 0.13, but the real truth-to-measured scatter is 0.39; measured directly, r<26.5 captures 97.2% of the selected sample
+
+Owner asked for the mean/typical `MAG_ERR` of objects near `MAG_AUTO` 26, the
+number behind the proposed 26.5 training domain.  Answered from the rendered
+simulation itself, with no model in the loop: SExtractor catalogues,
+crossmatch and generated truth for constant-shear cases 100-109, plus leg.
+`magerr.py`, job-local under `$CLAUDE_JOB_DIR/tmp`, job 16637408 (CPU).
+
+### Files and behaviour changed
+
+None.  This is a measurement, and it corrects the model-based bracket in the
+entry below.
+
+### The reported photometric error
+
+Median `MAGERR_AUTO` by measured `MAG_AUTO`, mean +- s.e. over 10 cases:
+
+| MAG_AUTO | MAGERR_AUTO |
+|---|---:|
+| 25.0-25.5 | 0.0843+-0.0000 |
+| 25.5-26.0 | 0.1137+-0.0000 |
+| 26.0-26.5 | 0.1467+-0.0000 |
+| 26.5-27.0 | 0.1804+-0.0000 |
+
+At `MAG_AUTO` 26.0 the typical reported error is about **0.13 mag**.  Taken
+literally, "26 plus a typical `MAG_ERR` near 26" lands at 26.13, not 26.5.
+
+### But the reported error is not the scatter that matters
+
+`MAGERR_AUTO` is the photometric noise estimate.  What decides how faint a
+truth domain must reach is the full truth-to-measured displacement, which also
+carries blending.  Measured minus true magnitude, by true r, over the same 10
+cases:
+
+| true r | median shift | robust sigma |
+|---|---:|---:|
+| 25.0-25.5 | -0.1517+-0.0005 | 0.2713+-0.0007 |
+| 25.5-26.0 | -0.1518+-0.0010 | 0.3249+-0.0007 |
+| 26.0-26.5 | -0.0886+-0.0005 | **0.3919+-0.0009** |
+| 26.5-27.0 | -0.0006+-0.0007 | 0.4658+-0.0007 |
+
+Near true r 26 the real scatter is **0.39 mag, about 2.7 times the reported
+0.147**, and the median measurement is **brighter** than the truth by roughly
+0.09-0.15 mag.  Blending adds flux; that systematic brightening plus the wider
+scatter, not photometric noise, is what carries faint objects across
+`MAG_AUTO < 25.8`.
+
+So 26.5 is a defensible boundary, but not for the stated reason.  It is about
+26 plus 1.3 robust sigma of the real displacement, not 26 plus a typical
+`MAG_ERR`.
+
+### What each boundary costs, measured rather than modelled
+
+True-magnitude composition of the sample that actually passes
+`FLUX_RADIUS > 3.0` px and `MAG_AUTO < 25.8`, mean +- s.e. over 10 cases:
+
+| true r | share of the selected sample |
+|---|---:|
+| r < 24.0 | 22.341+-0.013 |
+| 24.0-25.0 | 27.402+-0.027 |
+| 25.0-25.5 | 20.264+-0.026 |
+| 25.5-26.0 | 19.119+-0.026 |
+| 26.0-26.5 | 8.066+-0.021 |
+| 26.5-27.0 | 2.134+-0.009 |
+| 27.0-27.5 | 0.505+-0.006 |
+| r >= 27.5 | 0.168+-0.002 |
+
+| prior cut at | misses, % of the selected sample |
+|---|---:|
+| r < 25.0 | 50.257 |
+| r < 26.0 | **10.873** |
+| r < 26.5 | **2.808** |
+| r < 27.0 | **0.674** |
+
+This reproduces the recorded identity join over the frozen 500,000
+observations, 54,231 at true r>=26 or 10.8462%, to within 0.03 points, from an
+independent path.  The two agree, so the rest of the table is trustworthy.
+
+### The model-based bracket in the entry below was 2-4x too pessimistic
+
+| cut at | model bracket (entry below) | measured here |
+|---|---|---:|
+| r < 26.0 | 17.8 to 22.9% | **10.873%** |
+| r < 26.5 | 7.5 to 10.5% | **2.808%** |
+| r < 27.0 | 2.6 to 4.0% | **0.674%** |
+
+The direction was right and the reason stands: the prior and likelihood
+together manufacture faint-truth mass beyond the training domain.  The size is
+now pinned from the simulation rather than bracketed from the model, and the
+manufactured excess is larger than first reported, a factor 1.6-2.1 at r>=26
+and 2.7-3.7 at r>=26.5.  Use the measured column; the bracket is superseded.
+
+### The r<26 limit is a selection, not a generation limit
+
+Each case generates **699,568** galaxies, of which **31.72%** lie at true
+r<26 -- identical to the 31.721% census of the 139,936,000-row source prior
+catalogue, confirming the prior source is the generated population.  The
+V3.6 flow's truth parent is about 110,695 rows per case, close to half of the
+221,921 generated at r<26, consistent with the secondary-role split at
+`input_index < floor(N/2)`.
+
+The renders therefore already contain objects to r~29; `r<26` is applied when
+target rows are chosen, not when images are made.  **Extending the training
+truth domain to 26.5 is a re-selection of existing renders plus a retrain, not
+a new simulation campaign.**  Confirmation still belongs to the BlendEMU side,
+but the counts leave little room for another reading.
+
+### Limitations
+
+- Ten cases of the constant-shear set, plus leg only.  Case-to-case spread is
+  tiny, but a systematic shared by all cases would not show up.
+- Robust sigma is the interquartile range scaled by 0.7413; the displacement
+  distribution has heavy tails, so it understates the extremes that actually
+  carry the faintest objects across the cut.
+- Objects generated but never detected have no measured magnitude and are
+  absent from the displacement table by construction.
+- Extending the domain to 26.5 requires re-establishing the ~0.3% result on
+  the wider parent; it does not carry over from the r<26 evidence.
+
+### Next steps
+
+1. Finish the r<27 prior (job 16637206, preparing): assemble, rebuild the
+   median-floored proposal, run the two 10,000-observation windows.
+2. An r<26.5 prior now looks like the right long-run target: it misses 2.8% of
+   the selected sample and would sit exactly on the proposed training domain.
+3. Ask the BlendEMU side to confirm the target-row selection can be widened to
+   26.5 without re-rendering.
 ## 2026-09-22 — Priced the three population boundaries; under the real cuts r<26 costs 18-23%, and the model claims twice as much faint truth as the catalogue holds
 
 Owner set out the boundary contract: the simulation should hold almost the
