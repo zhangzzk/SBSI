@@ -1,3 +1,142 @@
+## 2026-09-22 — The bright stratum makes the information positive definite and yields the first estimate; the obstruction was a handful of rows, not the catalogue
+
+The 20,231,221-atom bright-stratified prior built above was prepared,
+assembled and run over the same 10,000 observations as job 16629404.  The
+combined information is positive definite for the first time and
+`run_adaptive_section5` returned an estimate.  The cause is narrower than the
+result looks.
+
+### Files and behaviour changed
+
+None.  This entry records a measurement.  Comparison scripts are job-local
+under `$CLAUDE_JOB_DIR/tmp` (`compare_bright.py`, `robustness.py`).
+
+### The controlled pair
+
+Both arms: median-floored proposal, flux compared multiplicatively, identical
+draw ladder, seeds, stencil and observations.  They differ **only** in the
+prior.
+
+| | 24m uniform (16629404) | 20.2m bright-stratified (16631250) |
+|---|---|---|
+| atoms | 24,000,000 | 20,231,221 |
+| truth r<20 atoms | 45,975 | 269,501 |
+| eigenvalues of summed information | −2,574,626 / +612,252 | **+717,035 / +1,789,237** |
+| positive definite | no | **yes** |
+| estimate | refused | **produced** |
+| Pareto k median / >0.7 | 0.563 / 31.89% | 0.557 / 31.31% |
+| ESS median | 365.8 | 385.0 |
+| rows with any negative curvature | 6,133 | 6,464 |
+
+```
+20.2m BRIGHT : g1 = +0.020912 +/- 0.001181 (model) +/- 0.014705 (robust)
+               g2 = -0.000611 +/- 0.000748 (model) +/- 0.004462 (robust)
+```
+against an injected `[0.02, 0.0]`.  In fractional terms g1 recovers
+**+4.6% ± 73.5%** on the robust error, or ±5.9% on the model error.  **The
+robust error is the one to quote**: it is 12x the model error, which is what a
+heavy-tailed weight distribution does, and Pareto k barely moved.  This run
+does not yet constrain the response ratio `m` of `doc/CONVENTIONS.md` §7; it
+is a one-step estimate of the shear, and its honest reading is "consistent
+with no bias, with an uncertainty three quarters the size of the signal".
+
+### The obstruction was a few rows, and the bright stratum removed the worst
+
+Per-row g1 information, both arms:
+
+| percentile | 24m uniform | 20.2m bright |
+|---|---|---|
+| 0.1th | −19,317 | −38,579 |
+| 10th | −106.1 | −102.6 |
+| 50th | +2.1 | +2.2 |
+| 90th | +89.6 | +87.6 |
+| 99.9th | +31,050 | +48,699 |
+
+**The bulk is unchanged.**  What changed is the extreme tail: the single worst
+row went from −2,467,302 to −194,417, a factor of 12.7.  Row 3563 alone — the
+first row the earlier census singled out — moved from **−2,467,302 to
++220,670** and accounts for **86.57%** of the entire change in summed g1
+information; the top five rows account for 93.48%.  Its distinct-atom count
+rose from 9,791 to 14,443 of 16,384.
+
+Dropping the worst rows from the uniform arm confirms the diagnosis:
+
+```
+24m uniform, all rows      : [-2574626, +612252]
+24m uniform, drop worst  1 : [ -187628, +946124]
+24m uniform, drop worst  5 : [ +387704, +1330000]
+```
+
+One row carried almost the whole negative total, and five rows carried all of
+it.  The 2026-09-14 reading of this as a broad curvature property of the
+likelihood was wrong; it was an outlier problem.
+
+### This is not fragile, but it is not fixed either
+
+Bootstrapping the row set 400 times, the smallest eigenvalue of the summed
+information is positive in **89.0%** of resamples (median +543,864), against
+**12.2%** (median −2,273,360) for the uniform arm.  The new result does not
+rest on one lucky row.  That bootstrap resamples rows only, so it captures
+row-to-row variation and not the Monte Carlo noise inside a row; 89% is an
+upper bound on confidence.
+
+Three things say the underlying defect is still live:
+
+- Negative-curvature rows went **up**, 6,133 to 6,464, and 2,048 rows flipped
+  from positive to negative while 1,717 flipped the other way.  The per-row
+  sign is churning, not settling.
+- New catastrophic rows appeared where none were: row 5907 went from +7,183 to
+  −194,417 and row 2874 from +251,674 to −67,443, with Pareto k 1.49 and 2.20.
+  The mechanism — a few atoms dominating a row's weight — is unchanged; it has
+  landed on different rows.
+- Pareto k is essentially identical: median 0.563 to 0.557, and 31.3% of rows
+  still exceed 0.7.  The importance sampling is as bad as it was.
+
+The correct summary is that the bright stratum removed the outliers that were
+poisoning the sum, not that it repaired the estimator.
+
+### Validation
+
+- prepare: 20/20 array tasks COMPLETED (job 16630114), 6m32s–6m55s each,
+  2.2 GPU-hours, throttled `%2` to hold the two-GPU limit.
+- The selected mass is the check that the weights restore the population.
+  Summed over 20 shards it agrees with the 24m uniform run to **+0.025% on
+  every one of the 10 stencil nodes** (0.26778843 against 0.26772120 at node
+  0).  Two independent draws of the same population, one of them over-sampling
+  its bright end sevenfold, land 2.5 parts in 10,000 apart.
+- assemble (job 16631248, 3m28s): `ASSEMBLED atoms=20231221`, the proposal
+  rebuild reported `VERIFIED rebuild reproduces .../disk_assembled20m/proposal
+  exactly`, and the median floor binds on exactly 50.0% of atoms in all four
+  coordinates.
+- The run recorded `runtime_cache_compatibility: identical` — a fresh
+  preparation under the current implementation, not a whitelisted exception.
+- Inference 2,148 s (job 16631250) against 2,222 s for the uniform arm;
+  20.2m atoms cost no more than 24m did.
+
+### Limitations
+
+- The estimate's robust error is 12x its model error.  Quoting the model error
+  would overstate the precision by an order of magnitude.
+- 86.57% of the improvement is one observation.  A different 10,000-row window
+  could behave differently; this was rows 0–9999, the same window as every
+  earlier arm, chosen for comparability and not resampled.
+- The bright stratum is defined on truth `r`, which exists only because the
+  source catalogue carries it.  A real survey has no such column, so this is a
+  diagnostic instrument, not a shippable prior construction.
+- The 24m prepared cache remains unrunnable without reverting the store change
+  (recorded in the entry above); the uniform arm's results were read from disk.
+
+### Next steps
+
+1. The binding constraint is now importance sampling, not curvature: 31.3% of
+   rows have Pareto k above 0.7 and the robust error is 12x the model error.
+   The candidate v1.4 change already noted — removing the exact stratum from
+   the mixture before drawing — targets exactly this.
+2. Confirm on a second, disjoint 10,000-row window that positive-definiteness
+   is a property of the prior and not of rows 0–9999.
+3. Still open, unchanged: report the flow's >5 mag bright-side predictions
+   (6.9% of prior atoms, flux sigma/|x| median 10.5) to the BlendEMU side.
+
 ## 2026-09-22 — A bright stratum can be over-sampled if its weight pays it back: 20,231,221-atom prior holds every truth-bright source row
 
 The owner chose the feasible maximum after "20m + 5m bright" was shown
