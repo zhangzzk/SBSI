@@ -1,3 +1,143 @@
+## 2026-09-22 — The r<26.5 flow retrain: the deployed lineage is nine stages, two scripts had the old bound hardcoded, and the dell08 swap had to be repaired
+
+Owner: "go ahead with the flow retrain, park the prior", then "chain the rest
+and report when the flow is retrained".  This entry covers restoring the
+retired flow chain, correcting two hardcoded truth bounds, establishing what
+the deployed flow actually descends from, and submitting the chain.  The
+retrained flow does not exist yet; the chain is running.
+
+### What the deployed flow actually descends from
+
+`configs/models_v3_6_like.json` deploys
+`flow_shape_augmentation_20260918_v1/joint_probability_refinement_full/selected.pt`.
+Its `protocol.json` records `initial_flow_sha256 = fade8aebfb482534…`, which is
+the sha256 of `harmonized_secondary_20260917_v1/refinement/selected.pt` — the
+control-variate refinement.  It is **not** either shape-augmentation arm
+(`control` 1829b31cfeca33ab…, `augmented` a88af411e3d7875d…).  Those two arms
+are siblings that share the deployed artifact's directory, not ancestors, so
+they are not rebuilt.
+
+Reproducing the deployed artifact at r<26.5 therefore takes nine stages, not
+the six previously assumed; the three missing ones are the audits that produce
+the reference each refinement optimises against.  Every producer below was
+identified by matching a recorded sha256 against the archived sources, not by
+directory or script name.
+
+| # | stage | script | resource |
+|---|---|---|---|
+| 1 | base training domain | `prepare_full_domain_flow.py` | CPU |
+| 2 | base guard flow | `train_full_domain_guard_flow.py` | 1 GPU |
+| 3 | harmonized domain | `prepare_harmonized_flow_domain.py` | CPU |
+| 4 | control-variate reference | `audit_guard_control_variate.py` | 1 GPU |
+| 5 | control-variate refinement | `refine_guard_control_variate_flow.py` | 1 GPU |
+| 6 | target banks + label audit | `per_leg_guard_response.py`, `audit_harmonized_usability_response.py` | CPU |
+| 7 | per-leg gradient reference | `audit_per_leg_guard_gradient.py` | 1 GPU |
+| 8 | joint probability gradient | `audit_joint_guard_probability_gradient.py` | 1 GPU |
+| 9 | joint refinement → deployed | `refine_joint_guard_probability_flow.py` | 1 GPU |
+
+Stages 4–9 are strictly serial, so the chain never holds more than one GPU,
+inside the owner's two-GPU limit.  Queue state was checked as empty before the
+first GPU submission.
+
+### Files and behaviour changed
+
+All source edits are in the isolated checkout
+`/project/ls-gruen/users/zekang.zhang/sbsi_flow_restore_20260922`, built with
+`git archive HEAD`, holding 19 restored modules and 4 restored tests, each
+verified against `archive/research-2026-09-20/manifest.json` before copying.
+Nothing was restored into the live worktree, because
+`scripts/run_disk_inference.py::implementation()` hashes every `sbsi/*.py` and
+restoring there would invalidate prepared inference shards.
+
+- `scripts/prepare_full_domain_flow.py`: the population name is derived from
+  `--truth-magnitude-max` rather than fixed at `lt26_v1`.  At 26.0 the name is
+  unchanged.
+- `scripts/prepare_harmonized_flow_domain.py`: the truth bound is **inherited
+  from the baseline domain's manifest** instead of being hardcoded as `r < 26.`
+  in four places (parent selection, population name, recorded
+  `truth_analysis_cut`, limitations text).  The script already refused a
+  baseline whose feature/target contract differed, so the bound belongs in the
+  same check; this adds no new flag and makes the two domains incapable of
+  disagreeing.  It raises if the baseline cut is not a finite strict
+  `r_input_p` upper bound.  At a 26.0 baseline every output string is
+  byte-identical to before.
+- `scripts/train_full_domain_guard_flow.py`: the domain-validity check pinned
+  `{"column": "r_input_p", "operator": "<", "value": 26.0}` and so rejected the
+  26.5 domain as "not independently valid".  The magnitude literal becomes a
+  column/operator/finiteness check; the three structural conditions it actually
+  guards — no measured selection cut, independent per-leg validity, no anchor
+  leg — are kept exactly as they were, and the accepted bound is now printed.
+  The measured-magnitude guard thresholds `(25.6, 25.8, 26.0)` are a different
+  quantity and are untouched: the primary selection stays `MAG_AUTO < 25.8`.
+  Only the truth *parent* widens.
+- `tests/test_harmonized_flow_domain.py`: the existing case is unchanged apart
+  from passing the bound it always implied (26.), and a new case
+  `test_widening_the_truth_bound_admits_the_objects_it_excluded` checks that a
+  26.5 baseline admits the r=26.0 secondary a 26.0 bound drops while the role
+  boundary and rendered-row-loss accounting stay put.
+- `tmp/write_bank_receipt.py` (new, job-local): `per_leg_guard_target_banks.json`
+  is written by no archived script — it is a receipt pinning the two bank files.
+  Stage 9 checks exactly three of its fields, so the generator computes all of
+  them from the artifacts on disk and refuses to pin banks that disagree with
+  each other or with the domain they name.  Nothing is copied from the r<26 run.
+
+### Repairing the dell08 swap
+
+Stage 3 failed at case 1 with `FileNotFoundError` on a path inside
+`harmonized_secondary_mag265_20260922_recheck`.  Cause: the script reads each
+leg from `receipt['output']` — the absolute path the measuring job wrote — not
+from `--measurement-root`.  Yesterday's swap moved the four rechecked cases'
+shape catalogues into the main tree, so four receipts named files that were no
+longer there.
+
+The repair restores the file at the path its own receipt names rather than
+rewriting any receipt: the receipt's claim is true, and it was the move that
+made it unresolvable.  `tmp/repair_recheck_paths.py` copies only when the
+candidate's sha256 already equals the recorded `output_sha256`, re-hashes the
+restored copy, and refuses wholesale on any mismatch.  Restored 8 files
+(cases 1, 64, 106, 182 × two shear legs), 8 verified, 0 problems.  Nothing was
+deleted and the main tree was not modified.
+
+The partial stage-3 output from the failed run (2 files, case 0 only, 15 MB)
+was removed before resubmission.
+
+### Validation
+
+- `pytest tests/test_full_domain_flow.py tests/test_harmonized_flow_domain.py
+  tests/test_guard_density_gate.py tests/test_flow_shape_augmentation.py -q`
+  → **9 passed** in 5.87s, after the trainer patch.
+- Stage 1 (job 16642808, CPU, 1:31, empty stderr):
+  `FULL_DOMAIN_FLOW_PREPARED cases=200 g0=25,897,563 g05=25,890,802`, against
+  19,601,305 / 19,597,500 at r<26 — **+32%**.  The manifest declares
+  `truth_analysis_cut {r_input_p, <, 26.5}`, `independent_per_leg_validity
+  True`, `measured_selection_cut None`, `anchor_leg None`.
+- Stage 2 (job 16642889) trains cleanly; validation NLL improving through
+  epoch 13, empty stderr.  Its first submission (16642869) failed instantly on
+  the hardcoded-26.0 check described above.
+
+### Limitations
+
+- The retrained flow does not exist yet, so no bias number is claimed here.
+- Stage 9's own gates (independent gradient halves cosine ≥ 0.99, reference
+  bank agreement ≥ 0.99) have not yet been exercised on r<26.5 data; they are
+  the point of the run and may legitimately fail.
+- The r<27 bounded-prior confound (10.2M vs 20.2M atoms) is parked at owner
+  request and remains unseparated.
+- The shape-augmentation arms are deliberately not reproduced at 26.5, on the
+  evidence above that they are not ancestors of the deployed artifact.  Any
+  future claim that depends on them would need them rebuilt.
+
+### Next steps
+
+1. Let stages 3–9 complete; report when
+   `flow_joint_mag265_20260922_v1/joint_probability_refinement_full/selected.pt`
+   exists.
+2. Then measure `m` twice: on the old r<26 evaluation sample, to isolate the
+   model change as a non-inferiority check, and on the new r<26.5 sample, which
+   is the actual target.
+3. The BlendEMU change to `scripts/prepare_output_conditioned_response.py`
+   remains uncommitted for owner review.
+
 ## 2026-09-22 — The r<26.5 emulator is retrained and the re-measurement is a clean superset; every discrepancy traces to the th-cl-dell0* nodes
 
 Owner asked to retrain the flow and the R_blend emulator on a true r<26.5
