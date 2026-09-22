@@ -1,3 +1,134 @@
+## 2026-09-22 — Priced the three population boundaries; under the real cuts r<26 costs 18-23%, and the model claims twice as much faint truth as the catalogue holds
+
+Owner set out the boundary contract: the simulation should hold almost the
+whole catalogue; the likelihood should reach about 0.3% under the realistic
+measured cuts while being trained on a wider truth domain than those cuts
+imply; the prior should cover as much mass as possible without leaving the
+training domain.  This entry checks where each boundary actually sits and
+measures what moving the last one costs.  No new GPU work; `selmass.py`,
+job-local under `$CLAUDE_JOB_DIR/tmp`, job 16637313 (CPU).
+
+### Files and behaviour changed
+
+None.  This is a measurement and a correction to a stated premise.
+
+### Where the boundaries actually sit
+
+| boundary | contract | today |
+|---|---|---|
+| simulation | almost the whole catalogue | renders the whole scene; the source prior catalogue spans r 11.52-29.00 |
+| likelihood, truth domain | wider than the measured cuts, to be extended | **true r<26**, inherited from the simulator's target-role parent (`CONVENTIONS.md` "Fixed-g0 retraining domain") |
+| likelihood, measured cuts | 0.6 arcsec and 25.8 | `FLUX_RADIUS > 3.0` px and `MAG_AUTO < 25.8`, unchanged |
+| prior | as much mass as possible, inside the training domain | uncut to r=29, i.e. **three magnitudes outside** the training domain |
+
+The truth training domain is **r<26, not 25.8**.  25.8 is the measured
+`MAG_AUTO` cut and is correctly a measured cut, not a truth cut; the two are
+separate boundaries that happen to sit near each other.  The extension the
+owner has in mind is therefore +0.5 mag from 26, not +0.7 from 25.8.
+
+### What a truth boundary costs under the realistic cuts
+
+Earlier entries priced truth cuts against *detected* mass only, because the
+per-atom measured-selection probability is not cached.  It can be bracketed
+from what `prepare` already stored for the 20.2m prior: per-atom flow mean and
+scatter in the four measured coordinates, per-atom detection probability, and
+per-atom prior weight.  Treating the radius and flux cuts as independent
+bounds the joint pass probability from below; treating them as perfectly
+dependent (`min` of the two tails) bounds it from above.
+
+The bracket is checked, not assumed.  Against the exact 64-sample Monte-Carlo
+`selected_mass` the same preparation stage wrote into each shard manifest:
+
+```
+CHECK exact selected mass  = 0.267788431
+CHECK bracket              = [0.247981217, 0.285121594]
+CHECK exact inside bracket = True
+CHECK exact sits at        = 0.533 of the way up
+```
+
+Containment holds in all 20 shards individually, and the exact value sits near
+the middle of the bracket in every one.  Nothing was tuned to make them agree.
+
+Share of each quantity by truth magnitude, mean +- s.e. over the 20 shards:
+
+| truth bin | % atoms | % detected | % selected (indep) | % selected (dep) |
+|---|---:|---:|---:|---:|
+| r < 24.0 | 7.377+-0.006 | 11.390+-0.010 | 22.713+-0.017 | 19.791+-0.016 |
+| 24.0-25.0 | 8.731+-0.005 | 15.224+-0.011 | 26.008+-0.016 | 23.078+-0.015 |
+| 25.0-25.5 | 7.174+-0.005 | 11.918+-0.007 | 17.659+-0.009 | 16.746+-0.008 |
+| 25.5-26.0 | 9.224+-0.005 | 14.342+-0.010 | 15.864+-0.011 | 17.439+-0.011 |
+| 26.0-26.5 | 12.328+-0.007 | 17.283+-0.010 | 10.271+-0.008 | 12.437+-0.009 |
+| 26.5-27.0 | 15.767+-0.009 | 17.499+-0.013 | 4.888+-0.006 | 6.491+-0.008 |
+| 27.0-27.5 | 17.781+-0.008 | 10.415+-0.007 | 2.067+-0.002 | 3.149+-0.004 |
+| 27.5-28.0 | 13.390+-0.007 | 1.829+-0.002 | 0.485+-0.001 | 0.796+-0.001 |
+| r >= 28.0 | 8.229+-0.006 | 0.101+-0.000 | 0.046+-0.000 | 0.072+-0.000 |
+
+Mass a truth cut would lose, as a percentage of the measured-cut population:
+
+| cut at | % detected lost | % selected lost |
+|---|---:|---:|
+| r < 25.0 | 73.386 | 51.3 to 57.1 |
+| r < 26.0 | 47.127 | **17.8 to 22.9** |
+| r < 26.5 | 29.844 | **7.5 to 10.5** |
+| r < 27.0 | 12.345 | **2.6 to 4.0** |
+| r < 27.5 | 1.930 | 0.53 to 0.87 |
+
+The measured cuts do most of the work a truth cut would do.  Cutting at the
+current training boundary r<26 costs 18-23% of the population that survives
+selection, not the 47% the detection-only accounting suggested.  Extending the
+training domain to 26.5 takes the prior from representing about 80% of the
+selected population to about 91%; extending to 27 takes it to about 97%.  The
+owner's own heuristic, 26 plus a typical `MAG_ERR` near 26, lands at 26.5,
+where the curve has already flattened by more than half.
+
+### The model claims about twice as much faint truth as the catalogue has
+
+The same table predicts what fraction of the *observed* sample should be at
+true r>=26: 17.8-22.9%.  The completed identity join over the frozen 500,000
+observations, recorded in `doc/V36_INFERENCE_REVIEW.md`, finds 54,231
+(10.8462%) at true r>=26 with zero unmatched rows, consistent with the 10.89%
+eligible-population fraction.
+
+So the prior and likelihood together put **1.6 to 2.1 times more faint-truth
+mass into the selected sample than the catalogue actually contains.**  Both
+the detection classifier and the flow are extrapolating beyond r<26 there, and
+this is the same region where the flow already produces greater-than-5-mag
+bright-side errors on 6.9% of prior atoms.  The excess is therefore at least
+partly manufactured mass, which makes the case for bounding the prior at the
+training domain stronger than the loss table alone: some of the 18-23% that a
+r<26 prior would discard was never real.
+
+This comparison does not separate the classifier's contribution from the
+flow's; that needs the per-atom selection probability recomputed at truth-bin
+resolution, which is a small GPU job and was not run.
+
+### Limitations
+
+- The per-atom selection probability is bracketed, not exact.  The bracket is
+  validated on the total but its *shape* across truth bins is not separately
+  validated, so the bin-by-bin numbers carry the bracket width and no more.
+- `probability.npy` is read at the zero-shear node while `values.npy` and
+  `dispersion.npy` are the proposal-coordinate summaries at the centre node.
+  The offset is far smaller than the bracket.
+- The 10.85% observed fraction comes from the recorded identity join, not
+  recomputed here; the input `truth.parquet` carries identity keys only.
+- Whether the r<26 parent can be widened by re-selecting existing renders or
+  needs new simulation is not settled here.  The per-case counts in
+  `initial_main_truth_parent.json` (about 110.7k truth-parent rows against
+  about 313.5k crossmatched rows) are consistent with the renders already
+  containing fainter objects, but that is an inference from counts and belongs
+  to the BlendEMU side to confirm.
+
+### Next steps
+
+1. The r<27 prior the owner asked for is preparing (job 16637206, 8/20 shards
+   complete, no errors).  Finish it: assemble, rebuild the median-floored
+   proposal, and run the same two 10,000-observation windows.
+2. Offer an r<26 arm.  It is the only prior that respects the current training
+   domain exactly, and uncut/r<27/r<26 together measure how much the estimate
+   is driven by extrapolation rather than by population.
+3. Extending the training domain to r<26.5 requires re-establishing the 0.3%
+   result on the wider parent; it does not carry over from the r<26 evidence.
 ## 2026-09-22 — A truth cut narrows the population, so it gets its own format; r<27 discards 39.9% of the catalogue but 12.3% of what contributes
 
 Owner asked for a prior of 10,000,000 uniform atoms drawn only from truth
