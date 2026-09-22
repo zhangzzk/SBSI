@@ -6,6 +6,13 @@ certain stratum: every source row brighter than the cut on a truth column is
 retained whether or not the uniform draw found it.  That over-samples the
 bright end without changing the population the atoms represent, because each
 atom then carries the inverse of its own inclusion probability as its weight.
+
+``--faint-cut`` is different in kind.  It restricts the uniform draw to rows
+below a truth magnitude, so rows above it have inclusion probability zero and
+no weight can bring them back.  The prior then represents that truth-selected
+frame rather than the source, and every result read from it is conditional on
+the cut.  Such a subset is written in a distinct format that declares the cut,
+so a reader cannot mistake it for the uncut population.
 """
 import argparse
 from hashlib import sha256
@@ -16,6 +23,8 @@ import time
 import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
+
+from sbsi.disk_inference_store import TRUTH_CUT_SUBSET
 
 
 def file_hash(path):
@@ -35,36 +44,53 @@ def sample_rows(total, size, seed):
     return drawn[order], order
 
 
-def bright_source_rows(paths, manifests, offsets, *, column, cut):
-    """Global row indices of every source atom brighter than `cut`.
+def source_rows_below(paths, manifests, offsets, *, column, cuts):
+    """Global row indices below each cut, from one pass over the truth column.
 
     Read before the per-shard hash verification below, which still runs and
     still aborts the build, so a corrupted source cannot reach the output.
     """
-    found = []
+    found = {cut: [] for cut in cuts}
     for i, (path, manifest) in enumerate(zip(paths, manifests)):
         values = (pq.read_table(path.parent / "galaxies.parquet", columns=[column])
                     .column(column).to_numpy(zero_copy_only=False).astype(np.float64))
         if len(values) != manifest["n_rows"] or not np.isfinite(values).all():
             raise ValueError(f"unusable truth column {column!r} in source shard {i}")
-        found.append(np.flatnonzero(values < cut).astype(np.int64) + offsets[i])
-        print(f"BRIGHT shard={i} rows={len(found[-1])}", flush=True)
-    return np.concatenate(found)
+        for cut in cuts:
+            found[cut].append(np.flatnonzero(values < cut).astype(np.int64) + offsets[i])
+        print(f"TRUTH shard={i} "
+              + " ".join(f"{column}<{cut}={len(found[cut][-1])}" for cut in cuts), flush=True)
+    return {cut: np.concatenate(parts) for cut, parts in found.items()}
 
 
-def stratified_rows(total, size, seed, bright):
-    """Uniform draw of `size` rows, plus every bright row the draw missed.
+def stratified_rows(total, size, seed, bright, eligible=None):
+    """Uniform draw of `size` rows from `eligible`, plus every bright row missed.
+
+    `eligible` defaults to the whole source.  When it is a truth-selected frame
+    the uniform probability is taken against that frame, so the weights below
+    represent the frame and not the source: that is a genuine narrowing of the
+    population, unlike the bright stratum, which leaves it unchanged.
 
     Returns globally sorted row indices, their draw ranks, and the probability
-    with which each was included: one for a bright row, `size/total` otherwise.
+    with which each was included: one for a bright row, `size/frame` otherwise.
     """
-    drawn, ranks = sample_rows(total, size, seed)
-    uniform = size / total
+    if eligible is None:
+        drawn, ranks = sample_rows(total, size, seed)
+        frame = total
+    else:
+        eligible = np.unique(np.asarray(eligible, dtype=np.int64))
+        if len(eligible) and (eligible[0] < 0 or eligible[-1] >= total):
+            raise ValueError("eligible row index outside the source population")
+        local, ranks = sample_rows(len(eligible), size, seed)
+        drawn, frame = eligible[local], len(eligible)
+    uniform = size / frame
     if bright is None:
         return drawn, ranks, np.full(len(drawn), uniform)
     bright = np.unique(np.asarray(bright, dtype=np.int64))
     if len(bright) and (bright[0] < 0 or bright[-1] >= total):
         raise ValueError("bright row index outside the source population")
+    if eligible is not None and not np.isin(bright, eligible, assume_unique=True).all():
+        raise ValueError("bright stratum must lie inside the eligible frame")
     extra = bright[~np.isin(bright, drawn, assume_unique=True)]
     rows = np.concatenate([drawn, extra])
     ranks = np.concatenate([ranks, size+np.arange(len(extra))])
@@ -82,10 +108,12 @@ def selected_edges(indptr, rows):
 
 
 def prepare(source, output, *, size, seed, row_chunk=50000, expected_shards=None,
-            bright_cut=None, bright_column="r"):
+            bright_cut=None, bright_column="r", faint_cut=None):
     source, output = Path(source), Path(output)
     if output.exists() or row_chunk < 1:
         raise ValueError("new output directory and positive row chunk required")
+    if faint_cut is not None and bright_cut is not None and not bright_cut < faint_cut:
+        raise ValueError("the bright stratum must be strictly inside the eligible frame")
     started = time.monotonic()
     paths = sorted(source.glob("shard_*/manifest.json"))
     if not paths:
@@ -106,9 +134,12 @@ def prepare(source, output, *, size, seed, row_chunk=50000, expected_shards=None
         raise ValueError("overlapping source cases")
     offsets = np.r_[0, np.cumsum([m["n_rows"] for m in manifests])]
     total = int(offsets[-1])
-    bright = None if bright_cut is None else bright_source_rows(
-        paths, manifests, offsets, column=bright_column, cut=bright_cut)
-    rows, ranks, probability = stratified_rows(total, size, seed, bright)
+    wanted = [cut for cut in (bright_cut, faint_cut) if cut is not None]
+    below = (source_rows_below(paths, manifests, offsets, column=bright_column, cuts=wanted)
+             if wanted else {})
+    bright = below.get(bright_cut)
+    eligible = below.get(faint_cut)
+    rows, ranks, probability = stratified_rows(total, size, seed, bright, eligible)
     # Hajek normalization: the inverse-probability weights are scaled to sum to
     # one over the subset, exactly as the uniform 1/n weights do by construction.
     weights = (1./probability) / np.sum(1./probability)
@@ -182,16 +213,27 @@ def prepare(source, output, *, size, seed, row_chunk=50000, expected_shards=None
         (target / "manifest.json").write_text(json.dumps(receipt, indent=2)+"\n")
         receipts.append(receipt)
         print(f"SUBSET shard={i} atoms={len(local)} pairs={selected_ptr[-1]} elapsed={time.monotonic()-started:.1f}s", flush=True)
+    frame = total if eligible is None else int(len(eligible))
     stratum = None if bright is None else dict(column=bright_column, cut=bright_cut,
         source_rows=int(len(bright)), uniform_rows=int(size), extra_rows=int(n_atoms-size),
-        uniform_probability=size/total, weight_bright=float(weights.min()),
+        uniform_probability=size/frame, weight_bright=float(weights.min()),
         weight_uniform=float(weights.max()))
-    result = dict(status="complete", n_rows=n_atoms,
-        format="uncut_disk_prior_subset_v1" if bright is None else "uncut_disk_prior_subset_v2",
-        source_n_rows=total, seed=seed,
-        sampling="uniform_without_replacement" if bright is None else "uniform_plus_certain_stratum",
-        numpy_version=np.__version__, prior_weight=1.0/size if bright is None else None,
-        truth_cuts=None, bright_stratum=stratum,
+    # Only a truth cut narrows the represented population, so only it declares
+    # cuts; the bright stratum is paid back in weight and leaves it unchanged.
+    truth_cuts = None if faint_cut is None else dict(column=bright_column,
+        keep_below=faint_cut, frame_rows=frame, source_rows=total,
+        frame_fraction=frame/total, discarded_rows=total-frame)
+    if faint_cut is not None:
+        fmt, sampling = TRUTH_CUT_SUBSET, "truth_frame_uniform_plus_certain_stratum"
+    elif bright is None:
+        fmt, sampling = "uncut_disk_prior_subset_v1", "uniform_without_replacement"
+    else:
+        fmt, sampling = "uncut_disk_prior_subset_v2", "uniform_plus_certain_stratum"
+    result = dict(status="complete", n_rows=n_atoms, format=fmt,
+        source_n_rows=total, seed=seed, sampling=sampling,
+        numpy_version=np.__version__,
+        prior_weight=1.0/size if fmt == "uncut_disk_prior_subset_v1" else None,
+        truth_cuts=truth_cuts, bright_stratum=stratum,
         secondary_identity="global source row; neighbours need not belong to sampled atoms",
         sample_rank="zero-based original random order; nesting holds below the uniform size",
         source_manifest_sha256=[file_hash(p) for p in paths],
@@ -213,8 +255,13 @@ if __name__ == "__main__":
         help="also retain every source row below this truth magnitude, with "
              "inverse-probability weights; leaving it unset draws uniformly")
     parser.add_argument("--bright-column", default="r",
-        help="truth magnitude column the bright cut reads (default: r)")
+        help="truth magnitude column both cuts read (default: r)")
+    parser.add_argument("--faint-cut", type=float, default=None,
+        help="draw the uniform part only from source rows below this truth "
+             "magnitude.  Unlike the bright stratum this NARROWS the population "
+             "the prior represents to that frame, so the result is conditional "
+             "on it; leaving it unset keeps the full source")
     args = parser.parse_args()
     prepare(args.source, args.output, size=args.size, seed=args.seed,
         expected_shards=args.expected_shards, bright_cut=args.bright_cut,
-        bright_column=args.bright_column)
+        bright_column=args.bright_column, faint_cut=args.faint_cut)

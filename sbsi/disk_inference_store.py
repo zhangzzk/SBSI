@@ -40,22 +40,28 @@ def stencil(center, h):
 # subset over-samples a declared stratum and carries the inverse-probability
 # weight of each atom in a per-shard file instead, so the represented
 # population is the same one either way.
+# A truth-cut subset draws its uniform part from a truth-selected frame rather
+# than the whole source, so it does narrow the population the atoms represent
+# and must say so; the uncut formats must not.
 SUBSET_SAMPLING = {"uncut_disk_prior_subset_v1": "uniform_without_replacement",
-                   "uncut_disk_prior_subset_v2": "uniform_plus_certain_stratum"}
+                   "uncut_disk_prior_subset_v2": "uniform_plus_certain_stratum",
+                   "truth_cut_disk_prior_subset_v3": "truth_frame_uniform_plus_certain_stratum"}
+TRUTH_CUT_SUBSET = "truth_cut_disk_prior_subset_v3"
 
 
 def load_subset_manifest(path):
     path = Path(path)
     manifest = json.loads(path.read_text())
     shards = manifest["shards"]
-    stratified = manifest["format"] == "uncut_disk_prior_subset_v2"
+    scalar = manifest["format"] == "uncut_disk_prior_subset_v1"
+    truth_cut = manifest["format"] == TRUTH_CUT_SUBSET
     if (manifest["status"] != "complete"
             or manifest["sampling"] != SUBSET_SAMPLING.get(manifest["format"])
-            or manifest["truth_cuts"] is not None
+            or (manifest["truth_cuts"] is None) == truth_cut
             or sum(s["n_rows"] for s in shards) != manifest["n_rows"]
             or len({s["source_shard"] for s in shards}) != len(shards)
-            or manifest["prior_weight"] != (None if stratified else 1./manifest["n_rows"])):
-        raise ValueError("invalid complete uncut subset manifest")
+            or manifest["prior_weight"] != (1./manifest["n_rows"] if scalar else None)):
+        raise ValueError("invalid complete subset manifest")
     return manifest
 
 

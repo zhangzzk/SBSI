@@ -1,3 +1,165 @@
+## 2026-09-22 — A truth cut narrows the population, so it gets its own format; r<27 discards 39.9% of the catalogue but 12.3% of what contributes
+
+Owner asked for a prior of 10,000,000 uniform atoms drawn only from truth
+r<27, plus every source row at r<20.  Unlike the bright stratum, this is a
+genuine change to the represented population and is recorded as one.
+
+### Files and behaviour changed
+
+- `scripts/subsample_disk_prior.py`: `bright_source_rows` generalized to
+  `source_rows_below(..., cuts=...)`, which returns the rows below each of
+  several cuts from **one** pass over the truth column, so the bright stratum
+  and the eligible frame cost a single read between them.  `stratified_rows`
+  gained an optional `eligible` frame: the uniform draw is taken inside it and
+  the inclusion probability is `size/len(eligible)`, not `size/total`.  New
+  `--faint-cut`; `--bright-column` now names the column both cuts read, and
+  `prepare` refuses `bright_cut >= faint_cut`.
+- `sbsi/disk_inference_store.py`: added
+  `truth_cut_disk_prior_subset_v3`/`truth_frame_uniform_plus_certain_stratum`
+  to `SUBSET_SAMPLING` and exported `TRUTH_CUT_SUBSET`.  The manifest guard
+  now requires `truth_cuts` to be **non-null for v3 and null for v1/v2**, so
+  a cut subset cannot be read as the uncut population and an uncut subset
+  cannot claim a cut it does not have.  Message is now "invalid complete
+  subset manifest".
+- `tests/test_stratified_disk_prior.py`: +7 tests (19 total) covering the
+  frame-restricted draw, frame-relative weights, the refused inverted cut
+  pair, an undeclared cut, a falsely declared cut, and an out-of-range frame.
+
+`subset_weights`, `load_source_shard`'s pilot guard and the `run` stage needed
+no change: they already branch on `prior_weight is None`.  The four pinned
+preparation functions are untouched.
+
+### What the cut costs, measured rather than assumed
+
+Truth `r` census over all 139,936,000 source rows, joined to the 20.2m prior's
+per-atom weight and the per-atom detection probability `prepare` already
+stored (jobs 16636034 and 16636395, CPU).  "Detected mass" is
+`sum(weight * detection_probability)` at the centre node — what
+`detected_selected_mass_shard` integrates, without the measured
+flux-radius/MAG_AUTO factor, which is not stored per atom.
+
+| cut | source rows | % atoms | % prior weight | % detected mass | **mass a cut here loses** |
+|---|---|---|---|---|---|
+| r<24 | 8,828,485 | 7.38% | 6.31% | 11.39% | 88.61% |
+| r<25 | 21,183,426 | 16.11% | 15.14% | 26.61% | 73.39% |
+| r<26 | 44,388,838 | 32.51% | 31.73% | 52.87% | **47.13%** |
+| r<26.5 | 61,833,660 | 44.83% | 44.20% | 70.16% | 29.84% |
+| **r<27** | **84,156,318** | **60.60%** | **60.15%** | **87.66%** | **12.35%** |
+| r<27.5 | 109,335,187 | 78.38% | 78.13% | 98.07% | 1.93% |
+
+The r<26 row is a check, not a new number: the 2026-09-21 population audit
+(job 16617937) independently reported r>=26 atoms carrying "approximately
+47.14%" of usability-weighted mass, against 47.13% here.  The two agree, so
+the decomposition is trustworthy at the other cuts.
+
+r<27 therefore discards **39.86% of the catalogue by count but 12.35% of the
+detected mass**: the discarded objects are the ones that are almost never
+detected.  This is also the region where the retained model evidence stops —
+`doc/V36_INFERENCE_REVIEW.md` records the support gap at true r>=26 — and
+where the flow's own predictions are least credible (95.9% of atoms it calls
+measured-bright have truth r near 28).
+
+### The built subset
+
+```
+SUBSET_COMPLETE atoms=10237320
+format       truth_cut_disk_prior_subset_v3
+truth_cuts   r < 27.0; frame 84,156,318 of 139,936,000 (60.139%); 55,779,682 discarded
+bright       r < 20.0; 269,501 source rows, 237,320 beyond the uniform draw
+uniform p    0.11882649143466567     weight ratio 8.4157
+```
+
+Bright atoms are 2.632% of the subset and carry 0.3202% of its weight; their
+true share **of the frame** is 0.3203%.  The weights restore the frame, which
+is now what the prior represents.  Enrichment rises from 7.00x to 8.42x
+because the uniform frame shrank, and the subset is half the size of the
+20.2m build, so preparation should cost about 1.1 GPU-hours.
+
+### Limitations
+
+- **The population is no longer the source.** Rows at r>=27 have inclusion
+  probability zero and no weight can restore them, so every number from this
+  prior is conditional on r<27 while the 500,000 observations still contain
+  those objects.  This is a deliberate diagnostic, not a step toward the
+  documented uncut inference, and `doc/V36_INFERENCE_REVIEW.md` §1 explicitly
+  forbids changing the population to pass the domain gate.
+- Changing `sbsi/disk_inference_store.py` again retires the 20.2m prepared
+  cache under `check_prepared_identity`, exactly as the 24m cache was retired.
+  Both remain valid on disk and re-runnable from commit `e2f8b9e`; the
+  comparisons below read their stored moments instead.
+- The mass decomposition omits the measured flux-radius/MAG_AUTO factor.
+- A fresh seed (20260922) was used, so the frame and the draw both differ from
+  the 20.2m arm; the two are not a controlled single-variable pair.
+
+### Next steps
+
+1. Prepare (job 16637206), assemble, rebuild the median-floored proposal, and
+   run the same two 10,000-observation windows for comparison against the
+   stored 20.2m moments.
+2. Unchanged and still the binding constraint: the weight tails.  The draw
+   budget is not — see the entry below.
+
+## 2026-09-22 — 16,384 draws is the right budget: the loss is the weights, not the sample size
+
+Owner asked whether the draw budget should change.  Answered from the three
+completed runs, no new compute (`draws.py`, job-local under
+`$CLAUDE_JOB_DIR/tmp`).
+
+### Files and behaviour changed
+
+None.  This entry records a measurement and a decision not to change a setting.
+
+### The budget is spent, not wasted, and then discarded by the weights
+
+| | 20.2m w1 | 20.2m w2 | 24m uniform |
+|---|---|---|---|
+| distinct atoms drawn, median | 16,334 | 16,334 | 16,343 |
+| as a share of the 16,384 budget | 99.7% | 99.7% | 99.7% |
+| ESS 10th / median / 90th | 19 / 385 / 2,536 | 19 / 372 / 2,345 | 20 / 366 / 2,513 |
+| median ESS as a share of budget | 2.35% | 2.27% | 2.23% |
+| 1st-percentile ESS | 2 | 2 | 3 |
+| rows with ESS < 100 | 27.70% | 27.90% | 28.27% |
+| Pareto k >0.5 / >0.7 / >1.0 | 58.6 / 31.3 / 11.6% | 60.0 / 31.4 / 11.2% | 59.2 / 31.9 / 11.6% |
+
+Duplication is not the problem: 99.7% of the 16,384 draws are distinct atoms.
+The budget is then thrown away by the weighting — the median row retains 2.3%
+of it.
+
+### The loss is attributable to the weight tails
+
+Rank correlation between ESS and Pareto k is **-0.82** in all three runs.
+Splitting on the k=0.5 threshold, above which the importance-sampling variance
+is no longer finite and extra draws stop paying at the usual rate:
+
+| | share of rows | median ESS |
+|---|---|---|
+| k < 0.5 (well behaved) | 41.4% | **1,211** |
+| k > 0.7 (heavy tailed) | 31.3% | **38** |
+
+A well-behaved row already converts the budget 32x better than a heavy-tailed
+one.  Doubling to 32,768 draws would buy about sqrt(2) in noise on the 41% that
+behave and close to nothing on the 31% that do not, for twice the GPU.  Making
+every row behave like the k<0.5 population would raise the median ESS by about
+3.1x at no extra cost.
+
+### Decision
+
+Keep 16,384.  It is not the binding constraint in either direction, and it
+should not be revisited until the weight tails are fixed, at which point the
+same budget will deliver several times the effective sample.
+
+### Limitations
+
+- ESS and Pareto k are the final-rung diagnostics; they summarize the weight
+  distribution and are not a direct measure of estimator error.
+- The comparison assumes the standard importance-sampling rate argument; it
+  does not prove what a 32,768-draw run would return, which was not run.
+
+### Next steps
+
+Unchanged: remove the exact stratum from the mixture before drawing, then
+re-measure ESS at the same 16,384 budget.
+
 ## 2026-09-22 — The source catalogue caps bright enrichment at 7x for any cut; r<20 is exhausted, but loosening the cut is nearly free
 
 Asked whether more bright atoms are available.  Census of the truth `r` column
