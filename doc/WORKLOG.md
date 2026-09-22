@@ -1,3 +1,128 @@
+## 2026-09-22 (later) — The r<26.5 flow is retrained: nine stages complete, both stage-9 gates pass, and a launcher bug of mine cost one job
+
+Continues the entry below.  The chain submitted there has finished.  The
+retrained artifact is
+
+    sbsi_caches/flow_joint_mag265_20260922_v1/joint_probability_refinement_full/selected.pt
+    sha256 9babb174b9aad738c5dcd887a833628cb757e888389e5e516311e05e33a56767
+
+It is **not** deployed: `configs/models_v3_6_like.json` is unchanged and still
+names the r<26 artifact.  No bias number is claimed here — the two `m`
+measurements are the next step, not this entry.
+
+### The chain as it ran
+
+| # | stage | job | elapsed | state |
+|---|---|---|---|---|
+| 1 | base training domain | 16642808 | 1:31 | COMPLETED |
+| 2 | base guard flow | 16642889 | 39:47 | COMPLETED |
+| 3 | harmonized domain | 16642973 | 12:07 | COMPLETED |
+| 4 | control-variate reference | 16642979 | 12:00 | COMPLETED |
+| 5 | control-variate refinement | 16642981 | 7:57 | COMPLETED |
+| 6 | target banks + label audit | 16642978 | 4:59 | COMPLETED |
+| 7 | per-leg gradient reference | 16642983 | 13:34 | COMPLETED |
+| 8 | joint probability gradient | 16642985 → **16644387** | 5:02 | COMPLETED |
+| 9 | joint refinement → artifact | 16642987 → **16644389** | 20:19 | COMPLETED |
+
+Stages 4–9 ran strictly serially, never holding more than one GPU.
+
+### The launcher bug
+
+Job 16642985 (stage 8) failed after three seconds, exit 4, with
+`ERROR: file or directory not found: tests/test_selection_probability_gradient.py`.
+The cause was mine: I had written a pytest gate into the stage-8 and stage-9
+launchers naming test files that do not exist in the restored checkout
+(`test_selection_probability_gradient.py`, `test_per_leg_refinement_selection.py`,
+`test_guard_selection_mass.py`).  Under `set -e` the job died before the audit
+ran, and 16642987 then sat on `DependencyNeverSatisfied` and was cancelled.
+
+Checking rather than simply deleting the line: **no restored test covers either
+script.**  The only relevant test, `tests/test_guard_density_gate.py`, imports
+`refine_guard_control_variate_flow` (stage 5) and nothing else.  So the gate was
+replaced with an import check, and the functional gate left where it already
+was — each launcher runs the audit on CPU in `--smoke` mode before the GPU full
+run, and both scripts refuse a reference whose smoke flag, flow hash, domain
+manifest or helper hashes differ from their own.
+
+Before resubmitting, every command-line flag in both launchers was checked
+against the scripts' `add_argument` lists; all matched.  Resubmitted as
+16644387 with 16644389 chained `afterok`.  Both completed, stderr empty.
+
+### The two stage-9 gates
+
+Both are enforced only when `--smoke` is absent, so the full run exercised
+them.  Values read from the audit outputs rather than inferred from exit zero:
+
+| gate | threshold | r<26.5 (new) | r<26 (deployed) |
+|---|---|---|---|
+| `independent_half_direction_cosine` | ≥ 0.99 | **0.99965** | 0.99943 |
+| `reference_bank_mean_gradient_cosine` | ≥ 0.99 | **0.9999962** | 0.9999987 |
+| `strict_common_descent` (4 banks) | all true | true | true |
+
+### Refinement result
+
+| | r<26.5 (new) | r<26 (deployed) |
+|---|---|---|
+| baseline guard loss | 0.367922 | 0.456960 |
+| selected guard loss | **0.109785** | 0.318071 |
+| guard reduction | 70.2% | 30.4% |
+| baseline full validation NLL | −4.398843 | −4.768710 |
+| selected full validation NLL | −4.397954 | −4.768034 |
+| best step | 5 of 6 | 2 of 6 |
+| `production_accepted` | False | False |
+| `calibration_claim` | False | False |
+
+The NLL columns are **not comparable between runs**: the r<26.5 validation set
+contains fainter parents the r<26 set never held, so a harder set scores worse
+by construction.  Within each run the NLL is flat across refinement (the
+density gate's job), and the guard loss is what the refinement moves.
+
+`production_accepted: False` and `calibration_claim: False` hold for the
+deployed artifact too; they are not a new failure introduced by the retrain.
+
+### Ancestry, verified by hash
+
+The lineage reconstruction checks out end to end and with identical structure
+on both sides — each stage-9 protocol records its own stage-5 output as
+`initial_flow_sha256`:
+
+| run | stage 5 `selected.pt` | stage 9 `initial_flow_sha256` | match |
+|---|---|---|---|
+| r<26.5 | `af28f4ee38ee4710…` | `af28f4ee38ee4710…` | yes |
+| r<26 | `fade8aebfb482534…` | `fade8aebfb482534…` | yes |
+
+### Validation
+
+- Both `selected.pt` load: 99 tensors, 1,390,218 parameters, all finite,
+  byte-identical architecture (same `state_dict` shapes, same
+  `model_config` / `condition_preprocessor` / `target_transform` keys).
+- Stage 9 stderr empty; `FLOW9_JOINTREFINE265_COMPLETE` printed.
+- Stage 8 `soft_mass_residual` 0.001318 (new) against 0.003451 (deployed).
+
+### Limitations
+
+- **No bias number is claimed.** The retrained flow has not been measured.
+- The r<26.5 selected guard loss being much lower than the deployed one is not
+  evidence of a better model: the two guard losses are computed on different
+  populations, as the NLLs are. Only the matched-sample `m` measurement settles
+  whether this model is non-inferior.
+- Stages 8 and 9 have no unit-test coverage in the restored checkout. The smoke
+  run and the scripts' own identity checks are the whole gate.
+- The r<27 bounded-prior confound (10.2M vs 20.2M atoms) stays parked.
+- The shape-augmentation arms are still not reproduced at 26.5, on the ancestry
+  evidence above.
+
+### Next steps
+
+1. Measure `m` on the **old r<26 evaluation sample** with the new flow — the
+   non-inferiority check that isolates the model change from the population
+   change. This is the one that decides whether the retrain is safe.
+2. Measure `m` on the **new r<26.5 sample** — the actual target.
+3. Only then consider whether `configs/models_v3_6_like.json` should change;
+   it is untouched so far.
+4. The BlendEMU change to `scripts/prepare_output_conditioned_response.py`
+   remains uncommitted for owner review.
+
 ## 2026-09-22 — The r<26.5 flow retrain: the deployed lineage is nine stages, two scripts had the old bound hardcoded, and the dell08 swap had to be repaired
 
 Owner: "go ahead with the flow retrain, park the prior", then "chain the rest
