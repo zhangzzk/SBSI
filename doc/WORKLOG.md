@@ -1,3 +1,105 @@
+## 2026-09-23 — Localizing the no-cut m (+2.39 %): it is flow/emulator shape response, concentrated in faint and small galaxies, not the classifier
+
+Development diagnostics on the run of the entry below (cases 40–119, cut
+`mag25.8_radius_gt0.60`).  No model was changed.  Code lives only in the
+isolated checkout `/project/ls-gruen/users/zekang.zhang/sbsi_flow_restore_20260922`
+(not this repository):
+
+- `scripts/evaluate_smooth_classifier_joint.py`: new optional `--dump-rows DIR`
+  writes one `caseNNN.npz` per case with every truth parent's measured legs,
+  usability, classifier probabilities and model mass/flow/blend moments.
+  Without the flag the evaluator is unchanged.
+- `scripts/localize_nocut_bias.py` (new): exact additive split of m into bins
+  of truth properties, with selection/shape and flow/blend terms.
+- `scripts/matched_pair_m.py` (new): m on matched pairs (usable and passing the
+  cut in both shear legs).
+- `scripts/flow_validation_g0cut_m.py` (new): flow-only m on the flow's own 40
+  validation cases, cut on the g=0 leg only.
+
+Uncertainties are 10000-replicate case bootstraps (seed 20260914).
+
+### Reproduction
+
+Row dumps: jobs 16662786/16662787 (A40), outputs under
+`sbsi_caches/joint_m_unbounded_retrain_20260923_v1/rows/`.  Row sums reproduce
+those runs' per-case statistics to 2.6e-14.  Against the earlier V100 run
+16661106, m differs by −0.0003 pp (GPU nondeterminism near the cut thresholds,
+about 2 draws per 91k per case).
+
+### Where m sits (job 16662826, `rows/localize_nocut_bias.json`)
+
+Contribution to the headline m (the bins sum exactly to +2.39):
+
+| true r | share of selected | contribution (pp) | m within bin |
+|---|---|---|---|
+| < 24 | 22 % | −1.05 ± 0.14 | −2 % to −4 % |
+| 24–25.5 | 48 % | +0.78 ± 0.21 | +1.4 %, +3.4 % |
+| 25.5–26 | 19 % | +0.95 ± 0.13 | +6.7 % ± 1.0 % |
+| > 26 | 11 % | +1.72 ± 0.10 | +20 % to +58 % |
+
+- Size: galaxies with Re < 0.26″ contribute +3.2 pp (m within +6 % to +31 %);
+  larger ones contribute −0.8 pp.
+- Crowding (truth `nbr_flux_near`): the most isolated quarter contributes
+  +1.32 ± 0.15 pp and the most crowded eighth −1.22 ± 0.08 pp.  The R_blend bins
+  show the same sign pattern, but those bins use the emulator's own noisy
+  prediction and are not used for conclusions.
+- Classifier vs flags: `actual_usable_flags` (the simulation's own usability,
+  no classifier) matches `modeled_smooth` bin by bin within about 0.05 pp.
+  The classifier is not the source.
+- Split: smooth arm selection +0.63 pp, shape +1.76 pp; flags arm selection
+  −0.01 pp, shape +2.50 pp.
+- At true r > 27 the flow passes the cut 30–54 % less often than the
+  simulation does (per-bin count excess).  At 26–27 it passes 2.6–5.4 % more
+  often.
+
+### Matched pairs (job 16664689, `rows/matched_pair_m.json`)
+
+7,137,706 rows are usable and pass the cut in both legs.
+
+- Measured R: 0.67077 ± 0.00176 (per leg) vs 0.68395 ± 0.00169 (matched).
+  Selection lowers the simulation's response by 0.0132 ± 0.0006.
+- Model on the same rows, flow draws cut per leg: R = 0.67561.  The model's
+  selection term is −0.0205 ± 0.0001.
+- m on matched pairs is +1.28 % ± 0.25 %.  m_full = +2.39 splits into
+  selection +1.07 ± 0.10 and shape +1.32 ± 0.25.
+- Without cutting the flow draws, matched m is +4.69 % ± 0.26 %.  This is not
+  a like-for-like comparison, because failing draws respond less.
+- An exact version (draws passing in both legs) needs a GPU rerun and was
+  not done.
+
+### Flow alone on its validation cases (job 16665787, `flow_joint_unbounded_20260922_v1/validation_g0cut_m.json`)
+
+Rows are usable in both legs; the cut is on the g=0 leg; forward |g| = 0.05;
+16 CRN draws; no blend term.
+
+| | R11 | R22 | mean |
+|---|---|---|---|
+| simulation | 0.4788 ± 0.0017 | 0.4793 ± 0.0014 | 0.4791 ± 0.0012 |
+| flow (own g=0 cut) | 0.4820 ± 0.0004 | 0.4676 ± 0.0004 | 0.4748 ± 0.0003 |
+| m | −0.65 ± 0.33 | +2.50 ± 0.31 | +0.90 ± 0.25 |
+
+The flow's response is anisotropic (R22 about 3 % below R11).  The
+simulation's is not.
+
+### Stored validation metrics (no rerun)
+
+- The flow's per-leg guard at radius > 3 and mag < 25.8 is +1.25 % (R11) and
+  +0.99 % (R22) too high.
+- The emulator's held-out amplitude slope (cases 0–39) is 1.041 ± 0.004: the
+  emulator is about 4 % too low.
+- The emulator was fitted on cases 40–199, and the flow's validation cases
+  include some of 40–119.  The m cases are therefore not independent of
+  either model.
+
+### Next
+
+- Faint and small galaxies: the flow under-produces cut-passing draws at
+  r > 27, and the matched-pair shape response is too low.
+- The flow's R11/R22 anisotropy.
+- The exact both-leg matched rerun, if needed.
+- Any joint flow+emulator fine-tune needs held-out simulations kept separate
+  from cases 40–119.
+
 ## 2026-09-23 — Flow and 17-input classifier retrained with no truth cut: the no-cut m falls from +2.95 % to +2.39 % ± 0.27 %; the goal is still not met
 
 The owner asked that neither the classifier nor the flow carry a truth cut,
