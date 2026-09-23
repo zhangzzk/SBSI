@@ -1,3 +1,68 @@
+## 2026-09-23 — Flux/size shear-response term added to the flow: flux fixed, selection response not
+
+The owner asked to supervise the flux (and size) shear response while keeping
+the shape response (guard) and the density NLL.  Fine-tune of the deployed
+flow `flow_joint_unbounded_20260922_v1/joint_probability_refinement_full/selected.pt`;
+the deployed flow is unchanged.  All code is in the isolated checkout
+`sbsi_flow_restore_20260922/scripts/`:
+
+- `refine_flux_size_response_flow.py` — loss = NLL + guard (unchanged
+  per-leg soft-cut shape-response term, 4 steps/epoch) + scale × paired
+  flux/size term.  Paired term, per galaxy usable in both legs (simulation
+  flags): with q = (ln FLUX_RADIUS, ln flux) and d = measured Δq between the
+  sheared and unsheared legs, score = mean Σ_q (Δμ_A − d)(Δμ_C − d)/(4h²s²),
+  where Δμ_A, Δμ_C are the flow's Δq from two independent latent replicas
+  (8 CRN draws each), h = 0.05.  The two replicas make the score unbiased for
+  the squared mean error; measurement noise adds only a constant.  Flow draws
+  are floored at the smallest positive measured training value before the log
+  (≈1.4k floored of 8×6.2M validation draws).  8192 pairs/step.  No empirical
+  offsets; nothing is rescaled to the simulation.
+- `nll_change_breakdown.py` — per-row NLL change vs the initial flow on 500k
+  validation rows, by true r and measured flux/size decile, with standard errors.
+- `plot_flux_size_finetune_comparison.py` — before/after plot.
+- Launchers in `sbsi_caches/flow_joint_unbounded_20260922_v1/`:
+  `job_flux_size_refine.sh`, `job_nll_breakdown.sh`, `job_eval_finetune.sh`.
+
+Runs (A40; validation NLL on the 500k subset, initial −4.2484):
+
+| job | setting | outcome |
+|---|---|---|
+| 16671538 | smoke | 3.7k pairs reused ~40× damaged NLL → pair batch raised to 8192 |
+| 16671556 | scale 0.1, lr 1e-5 | NLL −4.197 after 1 epoch; cancelled |
+| 16671557 / 16671656 | scale 0.03, lr 1e-5 | OOM on 16 GB GPU; rerun, NLL also degraded; cancelled |
+| 16671913 | flux term off, lr 1e-5 (control) | NLL −4.197 as well → the damage is the 1e-5 learning rate with a fresh optimizer, not the flux term |
+| 16671914 | **scale 0.1, lr 1e-6, 8 epochs** | **epoch08: NLL −4.2440, guard 0.049 (was 0.141), primary mass 0.2583 (target 0.2588)** |
+| 16672712 | 8 more epochs from epoch08 | running; epochs 1–3 guard 0.07–0.09, flux unchanged |
+
+Evaluation of epoch08 (job 16672708, own data, 16 CRN draws, per true-r bin,
+validation; train agrees; the standard errors below are the model-side errors):
+
+- Flux response d ln flux/d g+ — fixed.  26–26.5: before −0.048, after
+  −0.075 ± 0.0001, simulation −0.075 ± 0.001; 26.5–27: −0.017 → −0.073 vs
+  −0.081; 27–27.5: +0.052 → −0.034 vs −0.043; r < 25 excess halved (23.5–24
+  +0.015 → +0.009 vs +0.008).  Whole sample −0.0096 → −0.0294 vs −0.0296.
+- Size response — r < 21 0.456 → 0.259 ± 0.010 vs 0.225; r 21–26 unchanged
+  within 1 %; 26.5–27.5 overshoots to −0.025/−0.028 vs −0.011/−0.005.
+- Shape response (passing galaxies, cut size > 3 px, mag < 25.8) — mostly
+  unchanged; whole sample 0.4747 → 0.4694 ± 0.0003 vs sim 0.4789.
+- Selection response — **worse at the faint end**: 26–26.5 0.026 → 0.036
+  ± 0.0004 vs 0.011 ± 0.003; 26.5–27 0.025 → 0.041 vs 0.013 ± 0.007.
+  Pass fraction at 27–27.5 0.070 → 0.059 vs 0.099.  Own-data m:
+  −0.48 ± 0.25 % → +0.32 ± 0.25 % (train −0.36 ± 0.13 → +0.44 ± 0.13 %).
+- NLL change +0.0044 per galaxy: r < 22 improves (−0.030 ± 0.015,
+  −0.009 ± 0.005); 22–23.5 +0.010–0.012; 26.5–27 +0.0065 ± 0.0005;
+  27–27.5 +0.025 ± 0.002; > 27.5 +0.13 ± 0.01 (few galaxies).
+- Plot: `/home/z/Zekang.Zhang/SBSI/plots/flow_fluxsize_finetune_before_after.png`.
+
+So matching the average flux change is not enough: the flow now gets the
+mean Δ ln flux right, but which galaxies cross the cut between the legs still
+differs from the images (selection response 3× too high at r 26–27).  The
+guard loss improves because it pools all magnitudes under soft cuts.
+
+Next: joint m with the epoch08 flow, everything else as in
+`joint_m_unbounded_retrain_20260923_v1` rows a/b (jobs 16672944, 16672945 →
+`sbsi_caches/joint_m_fluxsize_ep08_20260923_v1/`).
+
 ## 2026-09-23 — Shear response of flux and size: flow vs simulation on the flow's own data
 
 Diagnostic only; no model changed.  The flow's loss supervises only the shape
