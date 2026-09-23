@@ -1,3 +1,34 @@
+## 2026-09-23 — Selection response vs true magnitude: the model has almost none for faint galaxies
+
+Diagnostic only; no model changed.  In the isolated checkout,
+`scripts/localize_nocut_bias.py` now also writes each side's selection response
+per bin (`selection_response_{measured,model}` as the bin's share of total R,
+and `..._within` per selected galaxy of the bin); new
+`scripts/plot_selection_response_vs_mag.py` plots them.  CPU job 16668674
+(1 min 43 s) → `sbsi_caches/joint_m_unbounded_retrain_20260923_v1/rows/localize_nocut_bias_v2.json`;
+totals reproduce the entry below (m +2.3929 ± 0.2697).  Plot:
+`/home/z/Zekang.Zhang/SBSI/plots/selection_response_vs_true_mag_nocut_retrain.png`.
+
+Selection response per selected galaxy (simulation vs headline model; flags arm
+in brackets), case-bootstrap ±:
+
+- r 23–25: sim −0.018 to −0.019 ± 0.001; model −0.008 to −0.010 (−0.005 to −0.008).
+- r 25–25.5: sim −0.013 ± 0.001; model −0.003 (+0.001).
+- r 26–26.5: sim +0.062 ± 0.004; model −0.003 (+0.005).
+- r 26.5–27: sim +0.106 ± 0.010; model +0.001 (+0.017).
+- r 27–27.5: sim +0.18 ± 0.02; model +0.002 (+0.044).
+- r > 27.5: sim +0.31 ± 0.05–0.07; model ≤ +0.004 (+0.05–0.06).
+
+Whole-sample selection response: sim −0.0013, model −0.0054.  The two errors
+partly cancel: bright/intermediate bins pull m down (−0.95 pp for r 23–25.5),
+faint bins push it up (+1.36 pp for r > 26 headline, +1.17 pp flags arm).
+Using the simulation's usable flags instead of the classifier raises the faint
+model selection response only to about one fifth of the simulation's, so the
+missing shear dependence is mainly in the flow's measured magnitude/size draws.
+
+Next: check how the flow's MAG_AUTO/FLUX_RADIUS pass probability depends on
+the shear-shape alignment for faint galaxies, against the simulation.
+
 ## 2026-09-23 — Blend emulator vs its own training data, by true primary magnitude: no magnitude trend within errors
 
 Diagnostic only; no model changed.  New script in the isolated checkout
