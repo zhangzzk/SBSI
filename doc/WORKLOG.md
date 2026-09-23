@@ -1,3 +1,36 @@
+## 2026-09-23 — Shape response vs true magnitude, with the model split into flow and blend-emulator parts
+
+Diagnostic only; no model changed.  In the isolated checkout,
+`scripts/localize_nocut_bias.py` now also writes `shape_response_{measured,model_flow,model_blend}`
+(bin share of total R and `_within` per selected galaxy); the plot script
+(`scripts/plot_selection_response_vs_mag.py`) gained `--kind shape`.  CPU job
+16668769 → `rows/localize_nocut_bias_v3.json` (m reproduces +2.3929 ± 0.2697).
+Plot: `/home/z/Zekang.Zhang/SBSI/plots/shape_response_vs_true_mag_nocut_retrain.png`.
+
+Shape response per selected galaxy, sim vs headline model (flow part + blend part):
+
+- r < 23: sim 1.121–1.125 ± 0.006–0.008; model 1.153–1.173 (+3–4 %).
+- r 23–24: sim 0.984 ± 0.006; model 0.999.
+- r 24–25: sim 0.705 ± 0.004; model 0.685 (0.546 + 0.138), −3 %.
+- r 25–25.5: sim 0.528 ± 0.004; model 0.500 (0.303 + 0.197), −5 %.
+- r 25.5–26: sim 0.454 ± 0.004; model 0.434 (0.168 + 0.266), −4 %.
+- r 26–27: sim 0.474–0.476 ± 0.006–0.010; model 0.443–0.451 (flow only
+  0.03–0.07, blend 0.38–0.41), −5 to −7 %.
+- r > 27: consistent within errors.
+
+Shape part of m by magnitude: r < 24 −0.84 pp; r 24–26 +2.26 pp; r > 26 +0.35 pp.
+So the shape deficit sits mostly at r 24–26, where flow and blend parts are
+comparable; the data cannot say which is short.  Past r ≈ 25.5 the model
+assigns most of the response to the blend emulator.
+
+Scale check (CPU job 16668807, ad hoc): the model blend shape response per
+galaxy equals the stored lookup `R_blend` (ratio 0.93–1.02 for r 22–27.5).  The
+lookup (`constgold_truth_parent_unbounded_20260922_v1/rblend`, same emulator
+sha256) sums ~16 neighbour pairs per galaxy, versus ~8.5 per primary in the
+emulator's half-shear training table, so per-galaxy `R_blend` in SBSI is ~2× the
+per-primary label sum plotted in the entry below; per-pair calibration is what
+that entry tests.
+
 ## 2026-09-23 — Selection response vs true magnitude: the model has almost none for faint galaxies
 
 Diagnostic only; no model changed.  In the isolated checkout,
