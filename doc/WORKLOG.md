@@ -1,3 +1,34 @@
+## 2026-09-23 — Blend emulator vs its own training data, by true primary magnitude: no magnitude trend within errors
+
+Diagnostic only; no model changed.  New script in the isolated checkout
+(`/project/ls-gruen/users/zekang.zhang/sbsi_flow_restore_20260922/scripts/emulator_rblend_vs_mag.py`)
+rebuilds the `fixed_g0_m258_r060_v2` pair population with BlendEMU's own
+training helpers (g=0 cohort MAG_AUTO<25.8, FLUX_RADIUS>3 px; valid shapes in
+both legs), predicts every pair, sums pairs per primary (measured
+`delta_et1/shear` vs predicted), and bins by true `r_input_p`.  Case-bootstrap
+errors (10000, seed 20260923).  CPU job 16668489 (4 min 46 s), outputs
+`sbsi_caches/fixed_g0_m258_r060_v2/rblend_vs_mag_v1/rblend_vs_mag.{png,json}`.
+
+Counts: 149,750,534 pairs, 17,577,624 primaries; 21,378 pairs with invalid
+shapes dropped (same as training); 581,078 cohort primaries (3.2 %) have no
+neighbour pair (R_blend = 0 on both sides) and are not plotted.
+
+- Overall measured/predicted: fitted cases 40–199 1.002 ± 0.009; held-out
+  cases 0–39 1.004 ± 0.017.
+- Per bin (fitted cases), r 24–27: ratios 0.99–1.01, each ± 0.016–0.05.
+  r 27.5–29.5 (19.5k primaries): 0.86 ± 0.10 and 0.88 ± 0.15; held-out
+  r 27–28: 0.86 ± 0.11, 0.74 ± 0.17 — a hint of over-prediction at the very
+  faint end, 1–1.5σ per bin.  r < 22.5 is noise-dominated.
+- Mean R_blend per primary rises from ~0.01 at r=22 to ~0.2 at r>26.
+- The held-out total ratio (1.004 ± 0.017) differs from the training record's
+  development slope (1.041 ± 0.0035) because the slope projects on the predicted
+  vector and weights by predicted power; this plot is an unweighted per-primary
+  mean.
+
+Limitations: this is the emulator's pair population on the g=0 cohort, not the
+SBSI measurement population after per-leg cuts, and does not test Möbius
+composition.  Next: the same comparison in bins of true neighbour flux.
+
 ## 2026-09-23 — Localizing the no-cut m (+2.39 %): it is flow/emulator shape response, concentrated in faint and small galaxies, not the classifier
 
 Development diagnostics on the run of the entry below (cases 40–119, cut
