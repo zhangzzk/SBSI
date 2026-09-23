@@ -30,7 +30,22 @@ r 24.5–26.  Fine-tune in the isolated checkout
 - Joint m with that flow: rows jobs 16676037/8 in
   `sbsi_caches/joint_m_guardstrata_20260923_v1/` (same protocol as
   `joint_m_unbounded_retrain_20260923_v1`, flow path swapped by
-  `make_rows_jobs.py`).  Result pending.
+  `make_rows_jobs.py`).  Decomposition (CPU job 16676042,
+  `joint_m_guardstrata_20260923_v1/decomposition.json`):
+  **m = +4.71 ± 0.27 %** (shape +4.36 ± 0.26, selection +0.35 ± 0.10),
+  worse than the deployed flow's +2.57 ± 0.27 %.  Not adopted.
+- Why: per-bin joint shape response, simulation / old flow / new flow:
+  21–22 1.164/1.213/1.182, 22–23 1.125/1.173/1.139, 24–24.5
+  0.799/0.784/0.769, 25–25.5 0.528/0.498/0.498, 25.5–26 0.454/0.431/0.426,
+  26–26.5 0.474/0.445/0.415, 26.5–27 0.476/0.433/0.383 (sim ± 0.004–0.011).
+  The guard removed the bright (r < 24) excess, which had been cancelling
+  ≈ −1 % of m; it did not move the r 24–26 deficit (≈ 0.03 absolute), and the
+  flow part at r > 26 fell (26–26.5: 0.074 → 0.045).  The per-leg soft-cut
+  guard target measures shape + selection together, and at r 24.5–26 its
+  start residual was only −0.004 to −0.010, so it had little to correct
+  there.  Conclusion: the +2.6 % hid a larger faint-end deficit behind a
+  bright-end excess; the faint end (r > 25.5, where the model response is
+  mostly the blend term) is the real target.
 
 ## 2026-09-23 — Where the joint +2.6 % comes from: the flow's cut-conditional shape response by magnitude, then faint neighbour terms
 
