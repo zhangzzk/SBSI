@@ -1,3 +1,37 @@
+## 2026-09-23 — Per-magnitude shape-response guard for the flow, interleaved with the density fit
+
+The decomposition below showed the joint bias is mostly the flow's
+cut-selected shape response being wrong in opposite directions at r < 24 and
+r 24.5–26.  Fine-tune in the isolated checkout
+`sbsi_flow_restore_20260922/scripts/`:
+
+- `per_leg_guard_response.py`: `fit_per_leg_guard_response` and
+  `PerLegGuardResponsePopulation` take optional `strata`/`n_strata`; the soft
+  cut weights are split by a one-hot stratum, so the guard target and model
+  response are per (cut, stratum) column.  `n_strata=1` reproduces the old
+  behaviour.
+- `refine_flux_size_response_flow.py`: `--guard-strata` (strata = truth r
+  bins, edges 22, 23, 24, 24.5, 25, 25.5, 26, 26.5), `--guard-steps`,
+  `--pair-weight` (0 skips the flux/size pair term), `--interleave-guard`
+  (guard steps spread evenly through the density-fit epoch instead of in a
+  burst at its end).  Validation prints `FLUXSIZE_GUARD` per-stratum
+  primary-cut residuals, model − simulation of (e1g1+e2g2)/2.
+- Burst guard steps (jobs 16675427/8, 16/64 steps) removed the per-stratum
+  residuals (within ±0.007) but damaged the density fit: validation NLL
+  −4.248 → −4.111 / −3.881, cut mass 0.2594 → 0.2571 / 0.2489 (sim 0.2588).
+  Cancelled.
+- Interleaved (jobs 16675894 i16, 16675895 i64; scale 0.1, lr as launcher):
+  NLL stays −4.241 to −4.248, cut mass 0.2592–0.2600.  Start residuals
+  [+0.023, +0.032, +0.030, +0.015, −0.004, −0.009, −0.010, +0.012, +0.019];
+  i64 epoch 2: [+0.005, +0.004, +0.008, +0.003, −0.006, −0.005, −0.008,
+  −0.003, −0.006].  Residuals move by ~0.01 between epochs, i.e. at the noise
+  level of this validation check, so training was stopped after epoch 2.
+  Selected `flow_joint_unbounded_20260922_v1/guard_strata_i64/epoch02.pt`.
+- Joint m with that flow: rows jobs 16676037/8 in
+  `sbsi_caches/joint_m_guardstrata_20260923_v1/` (same protocol as
+  `joint_m_unbounded_retrain_20260923_v1`, flow path swapped by
+  `make_rows_jobs.py`).  Result pending.
+
 ## 2026-09-23 — Where the joint +2.6 % comes from: the flow's cut-conditional shape response by magnitude, then faint neighbour terms
 
 Diagnostic only; nothing deployed changes.  Deployed-flow joint rows
