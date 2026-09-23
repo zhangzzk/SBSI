@@ -1,3 +1,35 @@
+## 2026-09-23 — Joint m with the simulation's own pass/fail flags
+
+Diagnostic only; no model changed.  Direct test of the entry below: in the
+joint "flags" arm only the usable flag comes from the simulation, while the
+cut MAG_AUTO < 25.8 & FLUX_RADIUS > 3 px is applied to the flow's predicted
+flux and size.  New script `sbsi_flow_restore_20260922/scripts/sim_flag_selection_test.py`
+(CPU job 16670525, 1.5 min) re-weights the existing row dumps (cases 40–119)
+→ `joint_m_unbounded_retrain_20260923_v1/rows/sim_flag_selection_test.json`.
+R_meas = 0.6708.
+
+- flow cut (current): R = 0.6544, m = +2.49 ± 0.27 %.
+- simulation pass flag per leg, model shape = flow mean over its own passing
+  draws + blend shift: R = 0.6664, **m = +0.65 ± 0.26 %**.  (18,115
+  sim-passed rows had no passing flow draw and used the all-draw mean.)
+- simulation pass flag, flow mean over all draws + blend: m = +4.26 ± 0.27 %
+  (passing draws have different shapes from the rest, so the shape must be
+  taken given passing).
+
+So the flow's cut choosing different galaxies than the images' cut
+accounts for 1.84 of the 2.49 %, consistent with the R_blend-mix estimate
+below (−1.79 ± 0.02 % on cases 40–59).  With the flow's cut, the model
+selects 2.7–5.8 % too many galaxies at r 26–27 but 30–50 % too few at r > 27,
+and at 25.5–27 the wrong ones (too few crowded).  Remaining +0.65 %, per bin (selection | shape):
+bright r < 24 shape −0.86 (flow shape response too high there), 24–26
+shape +2.12 (flow shape response too low, 3–12 % on its own data), 23–25.5
+selection −1.27 and 26–27 selection +0.60 (shapes of galaxies whose pass/fail
+flips between legs, which the model's mean shape does not reproduce).
+
+Next: make the model's pass/fail depend on crowding the way the images do
+(e.g. emulator shifts of flux and size, or a crowding-aware selection model);
+then the flow's own shape response error at 24–26 is the leading term.
+
 ## 2026-09-23 — Why the joint is biased when flow and emulator are each fine: same cut, different galaxies
 
 Diagnostic only; no model changed.  Question: flow (m −0.36 ± 0.13 % on its
