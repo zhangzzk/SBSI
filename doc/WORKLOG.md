@@ -1,3 +1,92 @@
+## 2026-09-23 — Flow and 17-input classifier retrained with no truth cut: the no-cut m falls from +2.95 % to +2.39 % ± 0.27 %; the goal is still not met
+
+The owner asked that neither the classifier nor the flow carry a truth cut,
+matching the R_blend emulator, whose training sample is cut on measurements
+only.  Both were retrained from the same code with only the input population
+widened; everything else in the measurement is identical to the headline run
+(16647912) of the entry below.
+
+### Correction to the entry below
+
+The entry below says the R_blend emulator `fixed_g0_m258_r060_v2` "is fit at
+r<26".  That is wrong.  It has **no truth cut**: it is trained on measured
+`MAG_AUTO < 25.8` and `FLUX_RADIUS > 3 px` only.  Its "extrapolated" population
+string refers to that measured selection, not to a truth-magnitude bound.
+
+### Result
+
+Cut `mag25.8_radius_gt0.60`, 80 cases (40–119), seed 7301, 64 draws, same
+R_blend tables, parent, pairs and geometry as 16647912.  The simulation side
+is bit-identical between the two runs (all per-case sums equal), so the change
+is a paired case-bootstrap difference (10000 replicates, seed 20260914):
+
+| branch | H: r<26.5 flow, old classifier | new: no-cut flow, no-cut classifier | change (pp) |
+|---|---|---|---|
+| **modeled_smooth** (headline) | +2.950 ± 0.271 | **+2.393 ± 0.270** | **−0.557 ± 0.007** |
+| actual_usable_flags (flow only) | +2.626 ± 0.271 | +2.494 ± 0.271 | −0.132 ± 0.009 |
+| matched_usable | +3.226 ± 0.269 | +3.072 ± 0.269 | −0.154 ± 0.007 |
+| modeled_usable | +1.210 ± 0.266 | +1.064 ± 0.266 | −0.146 ± 0.006 |
+| modeled_control | +1.487 ± 0.267 | +1.470 ± 0.267 | −0.017 ± 0.006 |
+| modeled_geometry | +1.854 ± 0.267 | +1.903 ± 0.268 | +0.049 ± 0.007 |
+| modeled_transported | +2.171 ± 0.268 | +2.252 ± 0.268 | +0.081 ± 0.007 |
+| modeled_coordinate | +2.179 ± 0.268 | +2.266 ± 0.268 | +0.086 ± 0.007 |
+
+Measured response R11 = 0.67077 in both runs; the modeled response for
+`modeled_smooth` rises 0.65154 → 0.65509.
+
+- The no-cut flow alone (the `actual_usable_flags` branch, which uses the
+  simulation's own usability flags and no classifier) moves m by
+  −0.13 ± 0.01 pp.
+- The rest of the headline change, about −0.4 pp, comes from the retrained
+  17-input classifier.  Only `modeled_smooth` uses it; the other branches keep
+  their frozen classifiers and move by less than 0.1 pp.
+- **+2.39 % ± 0.27 % is ~9σ from zero and ~8× the ~0.3 % target.  The goal is
+  not met.**  Retraining the flow and classifier on the emulator's domain
+  explains about a fifth of the no-cut excess.
+- ± values are the case bootstrap only; they exclude training-seed and
+  latent-stream uncertainty (one seed each).
+
+### What was run
+
+- Re-measurement with no truth cut: `harmonized_secondary_unbounded_20260922_v1`
+  (job 16659529, 200 cases × 349,784 truth rows).  **Bit-for-bit check:** all
+  30,911,361 objects of the r<26.5 re-measurement are present, with identical
+  shapes and flags, in all 200 cases.
+- Flow: the same nine-stage chain as the r<26.5 retrain, with
+  `--truth-magnitude-max 30` (the simulation floor is r = 28.99999, so this
+  keeps every object; `inf` would break stage 1's strict JSON writer).  Jobs
+  16659740–16659748.  Stage 2 trained on 24.9 M pairs.  Stage 9 selected
+  step 3: validation NLL −4.2465 → −4.2456, guard loss 0.194 → 0.143,
+  `eligible_for_joint_validation: true`, `production_accepted: false` (same
+  flags as the r<26.5 flow).  Output
+  `sbsi_caches/flow_joint_unbounded_20260922_v1/joint_probability_refinement_full/selected.pt`
+  (sha256 da73a8db…).
+- Classifier: prepare → transported geometry → smooth prepare → smooth train
+  (jobs 16659896–16659899), with `--truth-magnitude-max inf` and cases 40–119.
+  Seed, split and hyperparameters are unchanged; protocols are derived from the
+  archived ones by `scripts/write_unbounded_classifier_protocol.py`, which
+  records `derived_from`.  0 unmatched pair primaries.  Best tune BCE 0.18304 at
+  epoch 98.  Output
+  `sbsi_caches/scene_classifier_unbounded_20260922_v1/smooth_classifier_full/selected.pt`.
+- The measurement: job 16661106, launcher
+  `sbsi_caches/joint_m_unbounded_retrain_20260923_v1/job_m_nocut_retrained.sh`,
+  whose diff against the headline launcher changes only `--flow`,
+  `--classifier-smooth`, the output path and the GPU request.  Output
+  `main_unbounded_retrained_flow_classifier.json` in the same directory.
+- GPU stages were switched from A40-only to any single large GPU (they ran on a
+  V100) by `scontrol update` on the queued jobs; the launcher files still say
+  `a40`.  At most one SBSI GPU job ran at a time.
+- All code ran from the isolated checkout `sbsi_flow_restore_20260922`; no
+  repository code changed.  The three restored classifier scripts and the new
+  protocol writer live only there.
+
+### Next steps
+
+- The remaining +2.4 % sits in the faint objects that the no-cut sample adds.
+  Bin the measured and modeled responses by true magnitude (`r_input_p`) to see
+  where the model departs, and whether the flow or the R_blend term carries it.
+- Nothing is deployed; `configs/models_v3_6_like.json` is unchanged.
+
 ## 2026-09-22 (later still) — The measurement sample is cut on measurements only: a no-truth-cut parent chain, two hardcoded bounds exposed, and a third one found
 
 The owner directed that no truth cut be applied to the sample — selection
