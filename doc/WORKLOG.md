@@ -1,3 +1,53 @@
+## 2026-09-23 — Where the joint +2.6 % comes from: the flow's cut-conditional shape response by magnitude, then faint neighbour terms
+
+Diagnostic only; nothing deployed changes.  Deployed-flow joint rows
+(`joint_m_unbounded_retrain_20260923_v1/rows`, cases 40–119, flow-cut arm
+with simulation usable flags).  New scripts in the isolated checkout
+`sbsi_flow_restore_20260922/scripts/`; outputs and launchers in
+`sbsi_caches/neighbour_orientation_20260923_v1/`.
+
+- `joint_response_decomposition.py` (CPU job 16675261): exact per-bin split
+  R = Σ w̄ Δe/2h (shape) + Σ Δw ē/2h (selection), simulation vs model.  The
+  row dumps store the flow/blend shape for the cut as a sum over passing draws;
+  it is divided by the cut mass here (an earlier run, 16675152, forgot this and
+  is void).  Reproduces m = +2.57 ± 0.27 % (reference +2.49 ± 0.27; this
+  version normalises the two legs jointly).  Shape +2.29 ± 0.25, selection
+  +0.28 ± 0.10.  Per-bin total (shape+selection) contribution to m, %:
+  21–22 −0.21, 22–23 −0.46, 23–24 −0.49, 24–24.5 +0.02, 24.5–25 +0.23,
+  25–25.5 +0.53, 25.5–26 +1.05, 26–26.5 +1.06, 26.5–27 +0.44, >27 +0.41
+  (per-bin ± 0.02–0.13).  Model shape response per selected galaxy splits into
+  flow and blend parts: the blend part is 0.19 of 0.50 at 25–25.5 and 0.37 of
+  0.44 at 26–26.5.  The r 24–26 shape deficit appears in every quartile of
+  the neighbour spin-2 moment (least crowded quartile 24.5–25: +0.30 ± 0.06 %),
+  so it is not a neighbour-geometry effect.
+- The flow's own validation data (`flow_response_vs_mag.json`, secondaries
+  sheared alone, cut applied) shows the same magnitude pattern for the cut-
+  selected shape response, simulation − flow: 21–22 −0.040 ± 0.007,
+  22–23 −0.032 ± 0.005, 23–23.5 −0.036 ± 0.005, 24.5–25 +0.014 ± 0.003,
+  25–25.5 +0.021 ± 0.002, 25.5–26 +0.020 ± 0.003; it cancels to
+  −0.48 ± 0.24 % over the own-data population.  Projected with the constant-
+  shear bin weights it gives ≈ −1.0 % (r < 24) and ≈ +1.7 % (24.5–26), most
+  of the joint's r < 26 terms.  Without the cut the flow's shape response is
+  nearly right (0.4747 vs 0.4789 ± 0.0012; fine-tune metric 24–25.5 within
+  +3.7/+0.5/−0.9 %), so the error is in how the flow's shape response co-varies
+  with its predicted size/flux (the cut variables).
+- `neighbour_orientation_selection.py` (CPU job 16675136): spin-2 neighbour
+  moment N1 from truth positions (flux-ratio × Gaussian weights, 0.5/1/2″).
+  Simulation measured e1 is pulled toward neighbours (slope at 1″: +1.4 to
+  +1.8 for r 22–25.5, ± ≤ 0.02); the model's slope is ≈ 0 (it has no
+  orientation input).  Pass flips under shear depend on N1 in the simulation
+  (slope −0.3 to −0.8 bright, +0.02 to +0.07 at r > 26), ≈ 0 in the model.
+  The selection response carried by N1 is −0.5 to −0.6 % of R (2″: −0.63 ±
+  0.04 %), and it has the same sign pattern as the per-bin selection gaps
+  (bright negative, r > 26 positive).
+- V2.2 constgold-q3 self/deployed/other sims cannot check the secondaries:
+  shapes were measured only for primary anchors (secondary anchors have
+  NGMIX_G1 = −1), and the images were deleted.
+
+Next: supervise the flow's cut-conditional shape response per magnitude on its
+own paired g05 data, without empirical offsets, and then the r 26–27
+neighbour/selection terms (neighbour orientation as a flow/classifier input).
+
 ## 2026-09-23 — Joint m with the flux/size-supervised flow: worse by +0.62 pp, from the shape response at r 24–25.5
 
 Diagnostic of the fine-tune below; the deployed flow is unchanged.  Joint row
