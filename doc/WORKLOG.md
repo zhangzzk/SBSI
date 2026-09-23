@@ -1,3 +1,28 @@
+## 2026-09-24 — Dropping test targets with bright close neighbours does not reduce the joint m
+
+Owner question: does applying the emulator catalogue's bright-neighbour
+rejection to the test population remove the bias?  `joint_response_decomposition.py`
+gained `--reject-ratio/--reject-radius` (drop, on both sides, targets with a
+truth object within the radius brighter than ratio × the target in true r
+flux; the catalogue rule `blendemu.utils.remove_detection_w_bright_neighbour`
+is 5× in 3″ on detections).  CPU jobs 16677088–93, outputs
+`sbsi_caches/bright_reject_20260924_v1/decomp_{dep,gs}_{r5x3,r2x3,r1x2}.json`.
+
+| rejection | targets dropped | m deployed flow | m per-magnitude-guard flow |
+|---|---|---|---|
+| none | 0 | +2.57 ± 0.27 % | +4.71 ± 0.27 % |
+| >5× within 3″ | 21.4 % | +3.06 ± 0.28 % | +5.15 ± 0.28 % |
+| >2× within 3″ | 36.3 % | +3.23 ± 0.28 % | +5.16 ± 0.28 % |
+| >1× within 2″ | 27.4 % | +2.39 ± 0.27 % | +4.38 ± 0.28 % |
+
+The strongly blended targets are where the model over-predicts (negative
+contributions, see the entry below), so removing them does not lower m; the
+r 24–26 per-bin contributions (+0.3 to +1.2 % each) are unchanged by every
+variant.  The cut is applied in truth for this test only; on real data it
+would use measured fluxes and its own shear response would need modelling.
+Limitation: the variants share cases, so their differences are more precise
+than the quoted ± (not separately bootstrapped).
+
 ## 2026-09-24 — Joint response gap by blending strength: two opposite errors, not one scale
 
 Diagnostic only.  `sbsi_flow_restore_20260922/scripts/faint_blend_response_bins.py`
