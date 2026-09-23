@@ -1,3 +1,36 @@
+## 2026-09-23 — Joint m with the flux/size-supervised flow: worse by +0.62 pp, from the shape response at r 24–25.5
+
+Diagnostic of the fine-tune below; the deployed flow is unchanged.  Joint row
+dumps with `flux_size_refine_s0.1_lr1e-6/epoch08.pt` and everything else as in
+`joint_m_unbounded_retrain_20260923_v1/job_m_rows_{a,b}.sh` (GPU jobs
+16672944, 16672945, 2.0 h / 2.2 h) →
+`sbsi_caches/joint_m_fluxsize_ep08_20260923_v1/`.
+`scripts/sim_flag_selection_test.py` now takes the rows directory and an
+optional reference rows directory (default unchanged); with a reference it
+reports paired changes on the same 10000 case-bootstrap weights.  CPU job
+16673695 → `joint_m_fluxsize_ep08_20260923_v1/rows/sim_flag_selection_test.json`.
+
+| arm (cases 40–119) | deployed flow | epoch08 | paired change (pp) |
+|---|---|---|---|
+| headline (classifier × flow cut) | +2.39 ± 0.27 | +3.01 ± 0.27 | +0.619 ± 0.005 |
+| flow cut, simulation usable flags | +2.49 ± 0.27 | +3.11 ± 0.27 | +0.619 ± 0.005 |
+| simulation pass flags, flow shape given passing | +0.65 ± 0.26 | +1.39 ± 0.26 | +0.735 ± 0.014 |
+| simulation pass flags, flow shape over all draws | +4.26 ± 0.27 | +5.42 ± 0.27 | +1.163 ± 0.004 |
+
+Per true-r bin, flow-cut arm, the change is the shape term at 24–25
+(+0.286 ± 0.002) and 25–25.5 (+0.232 ± 0.002); selection-term changes are
+≤ +0.036 per bin.  The fine-tune lowered the flow's shape response by ≈ 2 %
+at r 24–25.5, where it was already too low (own data 24.5–25: 0.4686 →
+0.4600 vs simulation 0.4828).  The guard term did not prevent it (its cuts
+sit at magnitude 25.6–26 and it pools all galaxies).  The flux fix did not
+move the joint's selection term.  Epoch08 is not adopted.
+
+Next (running): the same fine-tune with the per-galaxy change of the
+measured shape (g1, g2) added to the paired term (`--shape-scale`).  Measured
+per-galaxy shape changes are noisy: the unscaled score constant is ≈ 5700 at
+shape scale 0.02 (flux+size ≈ 37 at 0.1), so shape scales 0.1 and 0.25 are
+being tried (jobs 16675000, 16675001; smoke 16674995 passed).
+
 ## 2026-09-23 — Flux/size shear-response term added to the flow: flux fixed, selection response not
 
 The owner asked to supervise the flux (and size) shear response while keeping
