@@ -1,3 +1,35 @@
+## 2026-09-23 — Flow vs simulation on the flow's own data, by true magnitude
+
+Diagnostic only; no model changed.  New scripts in the isolated checkout:
+`scripts/flow_response_vs_mag.py` (flow-only selection and shape response per
+true-r bin, rows usable in both legs by simulation flags, forward |g| = 0.05
+leg, hard cut MAG<25.8 & FLUX_RADIUS>3 px on each leg separately, 16 CRN draw
+pairs) and `scripts/plot_flow_response_vs_mag.py`.  GPU job 16668856 (A40,
+10 min) → `sbsi_caches/flow_joint_unbounded_20260922_v1/flow_response_vs_mag.json`.
+Plot: `/home/z/Zekang.Zhang/SBSI/plots/flow_response_vs_true_mag_own_data.png`.
+
+Whole sample (train 160 cases / 24.9M rows; validation 40 / 6.2M):
+shape sim 0.4802 vs flow 0.4751 (validation 0.4789 vs 0.4747); selection sim
+−0.0067 vs flow +0.0001 (validation −0.0064 vs +0.0001); flow-only m
+−0.36 ± 0.13 % (validation −0.48 ± 0.24 %).
+
+Per selected galaxy (train; validation agrees):
+
+- Shape: flow too high at r 21–24 by 3–3.5 % (e.g. 22–23: 1.134 vs
+  1.096 ± 0.003), right at 24–24.5, too low at 24.5–26 (−3 %, −7 %, −12 %:
+  0.470 vs 0.484, 0.303 vs 0.325, 0.158 vs 0.179 ± 0.001).  Same pattern as the
+  constant-shear likelihood (bright high, 24–26 low), so that pattern is the flow's.
+- Selection: sim −0.008 to −0.014 at r 23–25.5; flow about 60–70 % of that at
+  23–24.5, −0.0015 vs −0.0087 at 25–25.5, wrong sign at 25.5–26 (+0.006 vs
+  −0.003 ± 0.001) and too positive at 26–27 (+0.026 vs +0.009 ± 0.002).
+- Pass fraction: agrees to < 1 % up to r 27; beyond, flow passes about half as
+  often (27.5–28: 0.106 vs 0.214; > 28: 0.167 vs 0.333).
+
+Limitation: rows usable in only one leg are excluded, so this does not contain
+the large positive faint selection response of the constant-shear test (entry
+below), which may come from galaxies whose usability flips between legs.  Next:
+split that constant-shear selection term into usable-in-both vs one-leg rows.
+
 ## 2026-09-23 — Shape response vs true magnitude, with the model split into flow and blend-emulator parts
 
 Diagnostic only; no model changed.  In the isolated checkout,
