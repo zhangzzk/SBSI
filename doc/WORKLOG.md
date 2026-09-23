@@ -8,7 +8,11 @@ flux and size.  New script `sbsi_flow_restore_20260922/scripts/sim_flag_selectio
 → `joint_m_unbounded_retrain_20260923_v1/rows/sim_flag_selection_test.json`.
 R_meas = 0.6708.
 
-- flow cut (current): R = 0.6544, m = +2.49 ± 0.27 %.
+- classifier-predicted usability × flow cut (headline; rerun job 16670835):
+  R = 0.6551, m = +2.39 ± 0.27 % (reproduces the headline).
+- simulation usability (detection, unique match, valid shape/flux/size) ×
+  flow cut (flags arm): R = 0.6544, m = +2.49 ± 0.27 %.  Real detections do
+  not help; the bias sits in the predicted cut.
 - simulation pass flag per leg, model shape = flow mean over its own passing
   draws + blend shift: R = 0.6664, **m = +0.65 ± 0.26 %**.  (18,115
   sim-passed rows had no passing flow draw and used the all-draw mean.)
