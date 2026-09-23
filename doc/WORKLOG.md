@@ -1,3 +1,40 @@
+## 2026-09-24 — Joint response gap by blending strength: two opposite errors, not one scale
+
+Diagnostic only.  `sbsi_flow_restore_20260922/scripts/faint_blend_response_bins.py`
+(CPU job 16676995) on the deployed-flow joint rows
+(`joint_m_unbounded_retrain_20260923_v1/rows`, cases 40–119): galaxies passing
+the simulation cut in both legs, binned by true r and by quintile of the stored
+pair-summed blend response `r_blend`; per cell the shape response of the
+simulation vs the model's flow and blend parts on the same galaxies.  Output
+`sbsi_caches/neighbour_orientation_20260923_v1/faint_blend_bins.json`; plot
+`SBSI/plots/joint_gap_by_blend_quintile.png`.  Case bootstrap (1000).
+
+- The constant-shear simulations do not shear positions: both legs have
+  identical RA/DEC and differ only in `g1`/`gamma1_input` (checked on case 48;
+  MultiBand_ImSim `modules/ImSimObject.py` shears profiles in place).  The
+  position-shift channel is therefore not part of this bias.
+- Most-blended quintile: the model over-predicts at every magnitude, gap
+  (sim − model) −0.21 ± 0.03 (r 21–22), −0.16 ± 0.02 (22–23), −0.10 ± 0.01
+  (23.5–24), −0.04 to −0.07 ± 0.01–0.02 (r 24.5–27).  For bright primaries the
+  simulation's response beyond the flow is about a third of the modelled blend
+  term (r 22–23: 0.07 vs 0.23), so flow + pair-summed blend double-counts
+  there.
+- Middle quintiles at r 24.5–27: the model under-predicts, +0.03 to +0.14
+  (± 0.01–0.04), including where `r_blend` ≈ 0 (r 25–25.5 q1: +0.074 ±
+  0.008).  This is the flow's own faint-end shape response, not missing
+  neighbours.
+- Consequence: the joint m (+2.57 ± 0.27 % deployed, +4.71 ± 0.27 % with the
+  per-magnitude guard) is a sum of cells with 5–20 % errors of both signs.  A
+  global or per-magnitude correction of the flow cannot reach ~0.3 %; the
+  composition of the flow response with the pair-summed blend response has to
+  be fixed where blending is strong, and the flow's faint-end response where
+  it is weak.
+- Next (needs owner decision; touches the BlendEMU-trained response
+  emulator): supervise the total response in crowded scenes directly, e.g. by
+  training the blend term (or a correction to flow + blend) on pairs/scenes in
+  which primary and neighbour are sheared together, and add the faint
+  weak-blend cells to the flow's guard target.
+
 ## 2026-09-23 — Per-magnitude shape-response guard for the flow, interleaved with the density fit
 
 The decomposition below showed the joint bias is mostly the flow's
