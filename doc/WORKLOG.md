@@ -1,3 +1,39 @@
+## 2026-09-23 — Shear response of flux and size: flow vs simulation on the flow's own data
+
+Diagnostic only; no model changed.  The flow's loss supervises only the shape
+response (guard term under soft cuts); the shear response of measured flux and
+FLUX_RADIUS is never a training target.  New scripts in the isolated checkout:
+`scripts/flow_flux_radius_response_vs_mag.py` and
+`scripts/plot_flow_flux_radius_response_vs_mag.py`.  Same population and CRN
+draws as `flow_response_vs_mag.py` (rows usable in both legs by simulation
+flags, forward |g| = 0.05 leg, 16 draws), no measurement cut.  Response =
+d ln q / d g+, with g+ the shear along the true intrinsic major axis
+(flux and size are spin-0, so they respond at first order only through g+);
+also the isotropic mean Δ ln q.  GPU job 16671016 (A40, 10 min) →
+`sbsi_caches/flow_joint_unbounded_20260922_v1/flow_flux_radius_response_vs_mag.json`.
+Dropped: 0 simulation rows; ~61 (train) / 14 (validation) row-equivalents of
+flow draws with non-positive flux or radius.
+Plot: `/home/z/Zekang.Zhang/SBSI/plots/flow_flux_radius_response_vs_true_mag_own_data.png`.
+
+Whole sample (train; validation agrees): flux sim −0.0307 ± 0.0002 vs flow
+−0.0096 ± 0.0000; size sim +0.0875 ± 0.0002 vs flow +0.0988 ± 0.0003.
+
+- Flux, faint end (the magnitude-cut region): flow far too weak / wrong sign.
+  26–26.5: −0.048 vs −0.076 ± 0.001; 26.5–27: −0.017 vs −0.083 ± 0.001;
+  27–27.5: +0.052 vs −0.048 ± 0.002; 27.5–28: +0.104 vs −0.032 ± 0.007.
+  Bright end r < 25: flow +0.005–0.007 too high (e.g. 23.5–24 +0.016 vs
+  +0.009 ± 0.001).
+- Size: right to 3–5 % at r 21–26 (e.g. 24–24.5 0.176 vs 0.171 ± 0.001),
+  too high at 26–27.5 (26.5–27 +0.007 vs −0.013 ± 0.001; 27–27.5 +0.028 vs
+  −0.007 ± 0.002) and at r < 21 (0.45 ± 0.02 vs 0.226 ± 0.001, noisy draw tail).
+- Isotropic mean shifts are ≲ 10⁻³ and agree except r < 21 size.
+
+So the pass/fail of galaxies at the magnitude cut responds to shear wrongly
+in the flow: where the images make faint galaxies lose flux when sheared
+along their major axis, the flow's flux barely changes or grows.  Consistent
+with the entries below (selection bias sits at r 26–27+).  Next: restore an
+explicit flux/size shear-response term in the loss (by true r), and re-check.
+
 ## 2026-09-23 — Joint m with the simulation's own pass/fail flags
 
 Diagnostic only; no model changed.  Direct test of the entry below: in the
