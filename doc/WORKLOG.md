@@ -1,3 +1,63 @@
+## 2026-09-23 — Why the joint is biased when flow and emulator are each fine: same cut, different galaxies
+
+Diagnostic only; no model changed.  Question: flow (m −0.36 ± 0.13 % on its
+own data) and emulator (label/prediction ≈ 1 on its own data) are each good,
+yet the constant-shear joint gives m ≈ +2.5 %.  Are the same cuts and
+selection applied?
+
+**Cuts and selection are the same.**  All three datasets (flow training,
+emulator training, constant-shear test) use the same detection, crossmatch,
+usability rule, stamp, and cut MAG_AUTO < 25.8 & FLUX_RADIUS > 3 px applied to
+each sheared leg separately.  The emulator's g0 cohort cut gives the same
+answer as the per-leg cut (ratios identical), and dropping BlendEMU's
+bright-neighbour rejection changes nothing (measured/predicted 0.993 ± 0.011).
+
+**Cause: the cut picks different galaxies.**  In the images, a faint galaxy
+with neighbours looks brighter and bigger, so crowded faint galaxies pass the
+cut more often.  The flow sees only the target's truth plus three neighbour-flux
+summaries, and the emulator changes shape only, so the model under-selects
+crowded faint galaxies.  Mean lookup R_blend over selected galaxies,
+simulation vs model (flags arm, cases 40–59, case bootstrap):
+25–25.5: 0.207 vs 0.202 (1.027 ± 0.001); 25.5–26: 0.283 vs 0.266
+(1.064 ± 0.001); 26–26.5: 0.436 vs 0.376 (1.158 ± 0.002); 26.5–27: 0.490 vs
+0.398 (1.230 ± 0.004); ≤ 25: within 0.6 %.  The differences (0.017, 0.060,
+0.092) match the sim-only unexplained neighbour-shape gap measured
+independently (constant response − self response at ±0.02 − joint blend:
+0.014, 0.063, 0.087).  Giving the model the simulation's mix moves m from
++1.80 ± 0.63 % to +0.02 ± 0.61 % on these 20 cases (shift −1.79 ± 0.02 %).
+This is a counterfactual using simulation selection, not a fix.
+
+Remaining budget (full 80 cases, m = +2.49 ± 0.27 %): wrong crowded mix
+≈ −1.8 of it; neighbour-shear-induced selection the model lacks (a neighbour's
+shear changes whether the target passes; training-sim value ×2 = 0.048 and
+0.080 per galaxy at r 25.5–26.5 vs constant excess 0.048, 0.081) ≈ +1.5;
+flow's own error −0.27 (shape +0.76, selection −1.03, cancelling);
+rows usable in only one leg −0.48.
+
+Ruled out: emulator nonlinearity (label/pred at shear 0.2, 0.05, 0.02, ±0.02
+all 0.99–1.05 ± 0.01–0.05); target self-response step size (0.4904 / 0.4864 /
+0.4880); a (1 − e²) factor in the blend shift (d e_true/dg = 1.0008);
+the lookup's k = 20 neighbour cap (reproduced the stored lookup exactly;
+keeping every neighbour within 10″ raises R_blend 0.1–0.3 % and m by
++0.07 ± 0.07 %); primary/secondary asymmetry (same neighbour counts 8.46
+within 10″, same magnitude and size distributions).
+
+New scripts (isolated checkout `sbsi_flow_restore_20260922/scripts/`):
+`split_usability_selection.py` (job 16669649),
+`emulator_linearity_selection.py` (16669773, 16670126; sims1 from blendemu),
+`self_response_step.py` (16670088), `rblend_neighbour_cap.py`
+(16670315–6; outputs `constgold_truth_parent_unbounded_20260922_v1/rblend_cap/`),
+`rblend_cap_m.py`, `crowding_selection_mix.py`
+(→ `joint_m_unbounded_retrain_20260923_v1/rows/crowding_selection_mix.txt`).
+Plot: `/home/z/Zekang.Zhang/SBSI/plots/rblend_selected_mix_sim_vs_model_nocut_retrain.png`.
+
+Limitations: the mix and cap numbers use cases 40–59 only (20-case m is
++1.80 ± 0.63 %, lower than the 80-case +2.49 ± 0.27 %).  Next: make the
+model's selection see crowding properly — e.g. let the emulator (or a
+neighbour-aware selection model) also shift flux/size, or condition the flow
+on richer crowding inputs — and model the neighbour-shear-induced selection
+term.
+
 ## 2026-09-23 — Flow vs simulation on the flow's own data, by true magnitude
 
 Diagnostic only; no model changed.  New scripts in the isolated checkout:
