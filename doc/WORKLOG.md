@@ -1,3 +1,53 @@
+## 2026-09-24 — Half-shear only: the flow's selection cannot follow close-range crowding
+
+Diagnostic only, half-shear data only (flow domain
+`harmonized_secondary_unbounded_20260922_v1`, validation cases); no constant-shear
+data used.  Truth crowding C_i = Σ_j F_j/(F_j+F_i)·exp(−d²/2·(1″)²) over every
+rendered object within 4″ (truth catalogue; positions identical in both legs).
+
+1. `sbsi_flow_restore_20260922/scripts/flow_response_vs_crowding.py` (GPU job
+   16677237; output `sbsi_caches/flow_joint_unbounded_20260922_v1/flow_response_vs_crowding.json`):
+   deployed flow vs simulation on 40 validation cases, 6.24M rows, by true r ×
+   C quartile, 16 draws, case bootstrap (10000).  Flow-only m on these rows
+   −0.48 ± 0.24 %.  Pass fraction sim/flow, least → most crowded quartile:
+
+   | true r | q0 | q1 | q2 | q3 |
+   |---|---|---|---|---|
+   | 25–25.5 | 0.68/0.71 | 0.80/0.84 | 0.91/0.89 | 0.95/0.91 |
+   | 25.5–26 | 0.39/0.42 | 0.54/0.65 | 0.77/0.73 | 0.90/0.78 |
+   | 26–26.5 | 0.07/0.08 | 0.11/0.23 | 0.22/0.30 | 0.53/0.34 |
+   | 27.5–28 | 0.11/0.08 | 0.07/0.08 | 0.12/0.10 | 0.53/0.16 |
+   | > 28 | 0.15/0.12 | 0.13/0.14 | 0.42/0.20 | 0.85/0.26 |
+
+   The flow's pass fraction is too flat in crowding.  Selection response at
+   r 25–26 is too weak in the least crowded quartile (25.5–26 q0 sim
+   −0.022 vs flow +0.002, ± 0.003).  Shape response agrees within a few percent
+   except crowded bright galaxies (22–23 q3 sim 0.927 vs flow 1.001 ± 0.009;
+   23–23.5 q3 0.769 vs 0.843 ± 0.009).
+2. `scripts/crowding_information_check.py` (CPU job 16677286, simulation only,
+   20 validation cases; output `.../crowding_information_check.json`): rows
+   grouped by true r (0.5 mag) × 10 deciles of the flow input `nbr_flux_near`
+   × 3 terciles of `nbr_flux_max`; inside each group, pass fraction of the
+   most- minus least-crowded C quartile (row-weighted mean, case bootstrap 1000):
+   r 23–23.5 +0.021 ± 0.002, 24–24.5 +0.053 ± 0.002, 25–25.5 +0.112 ± 0.001,
+   25.5–26 +0.243 ± 0.002, 26–26.5 +0.304 ± 0.001, 27.5–28 +0.316 ± 0.013.
+   Even at fixed flow crowding inputs, close-range crowding changes the pass
+   probability by up to 30 percentage points.  The flow cannot learn this,
+   because its inputs (log flux sums in 3″ and 3–7″, brightest neighbour)
+   cannot tell a neighbour at 0.5″ from one at 2.9″, or a neighbour 10× brighter
+   from one of equal flux at the same summed flux.
+
+Reading: this is the "wrong crowded mix" term of the 2026-09-23 budget
+(≈ 1.8 pp), now traced to a missing flow input and visible on the flow's own
+half-shear data.  V3.6-like looked good because its true r < 26 population
+drops the rows where the effect is largest (faint galaxies selected only
+because a close neighbour lifts them over the cut).  Next: add a close-range,
+flux-ratio-weighted crowding input (C at a few scales, from the scene catalogue
+as the other neighbour inputs are) to the flow, retrain on half-shear data,
+recheck with `flow_response_vs_crowding.py`; constant-shear data stays a final
+frozen check only.  Limitation: C uses truth positions and fluxes; on real data
+the input must come from the same scene prior the other neighbour inputs use.
+
 ## 2026-09-24 — Dropping test targets with bright close neighbours does not reduce the joint m
 
 Owner question: does applying the emulator catalogue's bright-neighbour
