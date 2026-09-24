@@ -1,3 +1,56 @@
+## 2026-09-24 — Close-crowding flow inputs: choice, implementation, retrain launched
+
+Owner request: fix the selection error below with half-shear data only.
+
+**Choice of inputs (simulation only).** `scripts/crowding_feature_gain.py`
+(CPU job 16677343; output `sbsi_caches/flow_joint_unbounded_20260922_v1/crowding_feature_gain.json`)
+fits a gradient-boosted pass/fail classifier (MAG_AUTO < 25.8 and
+FLUX_RADIUS > 3 px, g=0 leg) on 40 half-shear train cases (6.24M rows) and
+scores 20 validation cases (3.12M rows).  Held-out log-loss (row-level
+± 0.0003; paired differences are much tighter):
+flow's 8 inputs 0.2869; + C at 1″ 0.2523; + C at 0.5/1/2″ 0.2463.  With the
+three scales the crowded-minus-quiet residual (C1 quartiles) is within
+± 0.005 in every true-r bin up to r = 28 (0.069 above r = 28), against
++0.13 to +0.37 with the 8 inputs alone.
+
+**Inputs.** `nbr_close_050/100/200 = log1p(Σ_j F_j/F_i · exp(−d²/2s²))`,
+s = 0.5, 1, 2″, over all rendered objects in the truth scene (same source as
+`nbr_flux_*`); the same form as `sbsi.crowding.smooth_crowding` but in
+physical arcsec over all objects.
+
+**Implementation** (isolated checkout
+`/project/ls-gruen/users/zekang.zhang/sbsi_flow_closecrowd_20260924`, a copy of
+`sbsi_flow_restore_20260922`; the old checkout is untouched so earlier runs stay
+reproducible):
+- `sbsi/fixed_g0_domain.py`: `CLOSE_CROWDING_FEATURES` appended to
+  `FLOW_FEATURES` (11 inputs); `PARENT_FEATURES` = first 8, the classifiers'
+  contract (the frozen classifiers are not retrained).
+- `scripts/build_close_crowding_lookup.py` (new): copies
+  `crowd_flux_conc_c0-199.feather` and adds the three columns →
+  `sbsi_caches/crowd_flux_conc_close_c0-199.feather` (job 16677431: 139,913,563
+  rows, 200 cases, all identities matched; the 140 constant-shear scenes present
+  have identical truth positions and fluxes, so the frozen check can reuse it).
+- `prepare_full_domain_flow.py`: `--crowd-catalogue` joins the new columns
+  (unmatched rows raise); `prepare_harmonized_flow_domain.py`: reads
+  `FLOW_FEATURES[5:]` from the lookup.
+- Classifier modules (`scene_classifier_joint`, `transported_classifier_joint`,
+  `smooth_scene_classifier_features`) use `PARENT_FEATURES`;
+  `evaluate_smooth_classifier_joint.py` passes the classifiers the first 8
+  columns and the flow all 11.
+- `scripts/extend_parent_close_crowding.py` (new): appends the columns to the
+  evaluation parent → `constgold_truth_parent_closecrowd_20260924_v1/parent`.
+
+**Retrain.** The 2026-09-22 nine-stage chain, cloned into
+`sbsi_caches/flow_closecrowd_launchers_20260924/` with only the checkout, the
+crowd lookup and the output roots changed (`full_domain_closecrowd_20260924_v1`,
+`harmonized_closecrowd_20260924_v1`, `flow_joint_closecrowd_20260924_v1`).
+Jobs: 0=16677431 1=16677439 2=16677440 3=16677441 4=16677442 5=16677443
+6=16677444 7=16677445 8=16677446 9=16677447.  Frozen evaluation
+(`sbsi_caches/joint_m_closecrowd_20260924_v1/`): parent 16677451, joint row
+dumps 16677452/53, half-shear crowding check 16677454, decomposition 16677455,
+one-case code smoke with the stage-2 flow 16677457.  Nothing is selected on
+constant-shear data.
+
 ## 2026-09-24 — Half-shear only: the flow's selection cannot follow close-range crowding
 
 Diagnostic only, half-shear data only (flow domain
