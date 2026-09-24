@@ -1,3 +1,60 @@
+## 2026-09-24 — Per-magnitude shape guard on the close-crowding flow: flow fixed on half-shear, joint m +0.93 → +2.74 ± 0.27 %
+
+**What was run.** Job 16680642 (`flow_joint_closecrowd_20260924_v1/job_guard_strata.sh`)
+fine-tuned the close-crowding flow with `scripts.refine_flux_size_response_flow
+--scale 0.1 --guard-strata --guard-steps 64 --pair-weight 0 --interleave-guard
+--epochs 6` (half-shear data only).  Output
+`flow_joint_closecrowd_20260924_v1/guard_strata_i64/epoch01–06.pt`.
+Half-shear validation per epoch (ΔNLL vs epoch 0 at −4.6599; soft pass mass −
+target 0.25880; RMS over 9 true-r strata of the primary-cut guard residual,
+epoch 0: 0.0157):
+
+| epoch | ΔNLL | mass diff | RMS |
+|---|---|---|---|
+| 1 | +0.0087 | +0.0006 | 0.0045 |
+| 2 | +0.0063 | −0.0009 | 0.0096 |
+| 3 | +0.0055 | −0.0002 | 0.0041 |
+| 4 | +0.0083 | −0.0025 | 0.0062 |
+| 5 | +0.0301 | +0.0003 | 0.0036 |
+| 6 | +0.0067 | −0.0008 | 0.0087 |
+
+No epoch met the pre-set ΔNLL ≤ 0.005 rule; epoch 3 (misses by 0.0005; the
+2026-09-23 adopted guard epoch had 0.0073) was chosen on half-shear numbers
+only and is the only epoch run on the constant-shear set.  Deviation from the
+written rule, recorded here.
+
+**Half-shear crowding check (job 16681140,
+`guard_strata_i64/flow_response_vs_crowding.json`, 40 validation cases, 6.24M
+rows).**  Flow-only m = **+0.48 ± 0.25 %** (close-crowding flow −1.88 ± 0.24).
+The flow now matches the simulations on its own domain within 2σ.  Its faint
+flux response is still wrong (not addressed by this guard).
+
+**Constant-shear test (frozen, jobs 16681138/39/41,
+`joint_m_cc_gstrata_20260924_v1/decomp.json`, cases 40–119):**
+m = **+2.74 ± 0.27 %** (shape +2.27 ± 0.25, selection +0.47 ± 0.10).
+Blend term and all simulation terms are identical to the previous run; only
+the flow's shape response moved (down 1–3 % at r < 25).  Per-bin contribution,
+close-crowding → guard (%, ± 0.03–0.13): 21–22 −0.15 → −0.03, 22–23 −0.38 →
+−0.08, 23–23.5 −0.20 → +0.04, 23.5–24 −0.40 → −0.10, 24–24.5 −0.09 → +0.24,
+24.5–25 +0.04 → +0.31, 25–25.5 +0.18 → +0.30, 25.5–26 +0.49 → +0.57, 26–26.5
++0.72 → +0.76, 26.5–27 +0.44 → +0.41, 27–27.5 +0.23 → +0.22, > 27.5 +0.10 →
++0.10.
+
+**Reading.** The previous entry predicted that removing the bright shape
+excess alone would give ≈ +2 %; it gave +2.74.  The +0.93 was a cancellation.
+With the flow now right on half-shear data, the remaining ≈ +2.3 % is outside
+the flow: (a) r 24–25.5, +0.85 % (shape +1.7, selection −0.9), where
+flow + blend emulator fall short of the constant-shear response; (b) r
+25.5–27.5, +2.0 %, almost all neighbour-shear selection (unchanged).  Both are
+effects of sheared neighbours, which the flow (conditioned on unsheared
+neighbours) and the blend emulator (shape shift only) do not model.
+
+**Status.** Not adopted as the reported model; the close-crowding flow's
++0.93 ± 0.26 % stays the headline, with the caveat that it relies on this
+cancellation.  Next: model the neighbour-sheared change in shape and pass
+probability from the half-shear legs where only neighbours are sheared, then
+re-test the guard-tuned flow with it.
+
 ## 2026-09-24 — Close-crowding flow: joint m +2.57 → +0.93 ± 0.26 %; what is left
 
 Result of the retrain launched in the entry below.  All training and
