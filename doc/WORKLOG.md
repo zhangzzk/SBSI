@@ -1,3 +1,65 @@
+## 2026-09-24 — Close-crowding flow: joint m +2.57 → +0.93 ± 0.26 %; what is left
+
+Result of the retrain launched in the entry below.  All training and
+selection used half-shear data; the constant-shear set was run once, frozen.
+
+**Retrain chain.** All ten stages completed.  Stage 2 validation NLL
+−4.645 (previous flow −3.56 at its selected epoch); stage 5 density-guard
+fine-tune changed the full NLL by +0.0008 only; stage 8 found a common descent
+direction; stage 9 kept step 1.  Selected flow
+`flow_joint_closecrowd_20260924_v1/joint_probability_refinement_full/selected.pt`.
+
+**Evaluator fix.** The first one-case smoke (job 16677457) stopped on
+"candidate response-pair provenance mismatch": the pair files record the hash
+of the 8-input parent they were built from, and the 11-input parent is a new
+file.  `evaluate_smooth_classifier_joint.py` (run checkout
+`sbsi_flow_closecrowd_20260924`) now checks the pair anchor against the
+`eight_input_source_sha256` that `extend_parent_close_crowding.py` recorded per
+case (the 11-input parent's own hash is still checked against its manifest).
+All 80 anchors match.  Smoke rerun 16677601 passed; the row dumps
+(16677452/53) had not started yet and use the fixed code.
+
+**Constant-shear test (frozen; `joint_m_closecrowd_20260924_v1/decomp.json`,
+cases 40–119, case bootstrap):**
+m = **+0.93 ± 0.26 %** (shape +0.51 ± 0.25, selection +0.42 ± 0.10;
+previous flow +2.57 ± 0.27, shape +2.29, selection +0.28).
+Per true-r-bin contribution to m, previous → new (%, ± 0.03–0.13):
+21–22 −0.21 → −0.15, 22–23 −0.46 → −0.38, 23–23.5 −0.18 → −0.20,
+23.5–24 −0.31 → −0.40, 24–24.5 +0.02 → −0.09, 24.5–25 +0.23 → +0.04,
+25–25.5 +0.53 → +0.18, 25.5–26 +1.05 → +0.49, 26–26.5 +1.06 → +0.72,
+26.5–27 +0.44 → +0.44, 27–27.5 +0.27 → +0.23, > 27.5 +0.14 → +0.10.
+Plot: `SBSI/plots/closecrowd_flow_joint_m_and_crowding.png`.
+
+**Half-shear crowding check (job 16677454,
+`flow_joint_closecrowd_20260924_v1/flow_response_vs_crowding.json`, 40
+validation cases, 6.24M rows).**  Pass fraction sim/flow now follows crowding:
+25.5–26 q0 0.390/0.395, q1 0.543/0.566, q3 0.902/0.886 (previous flow
+0.419, 0.649, 0.782); 26–26.5 q1 0.112/0.121 (previous 0.226), q3
+0.525/0.501 (previous 0.344).  Flow-only m on these rows is −1.88 ± 0.24 %
+(previous −0.48 ± 0.24).  An approximate per-bin split (rows-weighted, cells
+≥ 500 rows) shows why: the previous flow's +2.0 % at r 24.5–26 cancelled a
+−1.3 % shape excess at r 21–24.5 that both flows share; the new flow removes
+the first and leaves the second, plus ≈ −1.1 % at r 26–27 where shape and
+selection errors of ±1.5–2 % nearly cancel.
+
+**What is left (+0.93 %).**
+- r < 24.5: ≈ −1.2 %, both flows, mostly the flow's shape response being too
+  large for bright galaxies (also seen on the flow's half-shear validation).
+- r 25.5–27.5: ≈ +1.9 %, of which selection +1.6 %, identical for both flows
+  (26–26.5 selection +0.78 → +0.79).  This is the neighbour-shear term of the
+  2026-09-23 budget: on constant-shear scenes the neighbours are sheared too,
+  which changes whether a faint galaxy passes; the flow is conditioned on
+  unsheared neighbours and the blend emulator only models the shape shift.
+- The two nearly cancel.  Fixing only the bright shape excess would raise m
+  to ≈ +2 %; the neighbour-shear selection term has to be modelled first.
+
+**Next.** Model the change of a galaxy's pass probability when its neighbours
+are sheared, from half-shear data (legs in which the neighbours, not the
+primary, are sheared), and add it next to the blend-emulator shape term; then
+apply the per-magnitude shape guard to the bright end.  Limitation: the close
+crowding inputs use truth positions and fluxes; on real data they must come
+from the scene prior like the other neighbour inputs.
+
 ## 2026-09-24 — Close-crowding flow inputs: choice, implementation, retrain launched
 
 Owner request: fix the selection error below with half-shear data only.
