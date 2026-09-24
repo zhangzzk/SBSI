@@ -1,3 +1,51 @@
+## 2026-09-24 — Flow vs simulation by magnitude on its own data (close-crowding and guard flows): r 24–25.5 residual is the flow's
+
+Corrects the "Reading" of the entry below, which put the whole remaining
++2.3 % on sheared neighbours.  The blend emulator's R_blend was already shown
+to match simulation on its g=0 population (measured/predicted 1.002 ± 0.009;
+`plots/emulator_rblend_vs_true_mag_fixed_g0_m258_r060_v2.png`).
+
+**Run.** GPU job 16688333 (`flow_joint_closecrowd_20260924_v1/job_response_vs_mag.sh`,
+same `scripts/flow_response_vs_mag.py` as 2026-09-23: rows usable in both legs,
+forward |g| = 0.05 leg, hard cut per leg, 16 CRN draw pairs, no blend term) for
+the close-crowding flow and its guard epoch 3 →
+`flow_joint_closecrowd_20260924_v1/flow_response_vs_mag.json` and
+`.../guard_strata_i64/flow_response_vs_mag.json`.  Plot (three flows, flow − sim
+rows): `SBSI/plots/flow_response_vs_true_mag_own_data_closecrowd.png`.
+
+**Whole-sample flow-only m** (train / validation): Sept-22 −0.36 ± 0.13 /
+−0.48 ± 0.24 %; close-crowding −1.76 ± 0.12 / −1.88 ± 0.24 %; guard ep3
++0.60 ± 0.13 / +0.48 ± 0.25 %.  The guard's small total hides per-bin errors
+of 5–10σ that cancel (guard, validation, flow − sim per selected galaxy):
+shape −0.006 to −0.012 ± 0.003 at r 24–25.5 and +0.022 to +0.026 ± 0.003–0.007
+at r 26–27; selection +0.004 to +0.006 ± 0.001 at r 24–25.5 and −0.023 to
+−0.033 ± 0.003–0.007 at r 26–27.  The per-stratum guard residual RMS of
+0.004 (soft cuts) does not reflect these hard-cut errors.
+
+**Per-bin contribution to m, own data (validation, guard) vs constant-shear
+joint (%):**
+
+| r | own shape | own sel | joint shape | joint sel |
+|---|---|---|---|---|
+| < 24 | −0.02 ± 0.12 | −0.05 ± 0.02 | +0.12 | −0.27 |
+| 24–25.5 | +0.99 ± 0.16 | −0.54 ± 0.05 | +1.74 | −0.89 |
+| 25.5–27.5 | −0.38 ± 0.13 | +0.71 ± 0.08 | +0.41 | +1.64 |
+
+(joint per-bin errors 0.01–0.13; own-data column weights rows × sim pass
+fraction, normalised by the flow's total response; bins treated as
+independent.)  So at r 24–25.5 the flow's own errors reproduce the joint
+pattern (shape too low, selection too high) and about 60 % of its size; the
+bright end matches; at r 25.5–27.5 the constant-shear set has ≈ +1.7 % more
+than the flow's own error (selection +0.9, shape +0.8) — not seen on
+half-shear rows usable in both legs.  The R_blend check covers the blend
+shape shift only, not selection; the faint remainder is therefore not yet
+attributed.  Limitation: the two columns differ in normalisation (joint
+includes the blend term and rows usable in one leg only), so the comparison
+is approximate.
+
+**Next.** Make the flow's hard-cut response right per magnitude on its own
+data (the guard target as built does not constrain it), then re-test.
+
 ## 2026-09-24 — Per-magnitude shape guard on the close-crowding flow: flow fixed on half-shear, joint m +0.93 → +2.74 ± 0.27 %
 
 **What was run.** Job 16680642 (`flow_joint_closecrowd_20260924_v1/job_guard_strata.sh`)
