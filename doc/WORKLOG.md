@@ -1,5 +1,36 @@
 # Work log
 
+## 2026-10-02 — Fresh 10k GalSBI mock and MH on its 1,098 bright members
+
+The owner asked for MH on the bright galaxies of a fresh 10k GalSBI mock. Details in
+[the 10k section](HYBRID_SAMPLING.md#fresh-10k-galsbi-mock-mh-on-the-bright-members).
+
+Changed:
+- `jobs/job_galsbi_shared_gpu.sh` takes an optional `SBSI_OBS_LIST` index file (commit 3518934).
+- Without it, behaviour is identical. A dry test confirmed the old range split (0–7 over 3 → 0–1, 2–4, 5–7)
+  and the list mode.
+
+Mock:
+- `prepare_galsbi_population.py`, same parent and selection as the 1024 panel, seed 2026100601.
+- 10,000 observations; job 16803064 took 65 s.
+- Bright (measured mag < 23): 1,098.
+
+Run:
+- 32k-step untempered MH on 4 GPUs (jobs 16803065–68, 23.5–28 min), analysis job 16803069. All COMPLETED 0:0.
+- The analysis asserts that every bright galaxy was covered exactly once.
+
+Result:
+- 42% of bright galaxies have a stuck chain.
+- Sampling noise is 30–95% of the score scatter per bin.
+- The ten noisiest galaxies (mag < 20.8) hold 70% of the noise.
+- Mean scores lack the selection term, so they are not a bias measurement.
+
+Limits:
+- No replica run.
+- The 22–23 stuck rate differs from the 1024 panel by 2.9σ.
+
+Next: targeted reruns (more chains or tempering) of the about 100 noisiest galaxies.
+
 ## 2026-10-02 — Rough panel g1 from the 1024 MH run
 
 The owner asked whether these galaxies have a shear estimate. They did not: the run saves only g1

@@ -388,3 +388,62 @@ Notes on the table:
 - The faint-only estimates agree with each other and sit 1.25σ below the truth.
 - The information is about 5–6 per galaxy, so 1024 galaxies give a shape-noise error of about ±0.013 on g1,
   i.e. ±65% on m. This panel cannot measure calibration; it only checks the sampler.
+
+## Fresh 10k GalSBI mock: MH on the bright members
+
+October 2, 2026. The owner asked for MH on the bright galaxies of a fresh 10k mock. The old August 10k sets
+(`infer_v1_contrastive_stencil_v1/*10k*`) were not used: they were made with the FS2 model at zero shear, while
+MH uses the current GalSBI model.
+
+Mock:
+- Made with `scripts/prepare_galsbi_population.py`, using the same parent (`galsbi_summary_mh_20260930_v2`)
+  and selection as the 1024 panel: C8, measured radius > 0.6", mag < 25.8, no truth cuts, shear (0.02, 0).
+- New seed 2026100601. Five chunks of 8,192 inputs gave 10,000 observations in 65 s on one GPU (job 16803064).
+- Bright = measured mag < 23: 1,098 galaxies (11.0%; the 1024 panel had 12.6 ± 1.0%).
+  - mag < 20: 75
+  - 20–21: 106
+  - 21–22: 275
+  - 22–23: 642
+
+Run:
+- Untempered MH, 32,768 steps (8,192 warmup), 4 chains.
+- 4 GPUs × 6 processes, code at commit 3518934. That commit adds the `SBSI_OBS_LIST` index-list option to
+  `jobs/job_galsbi_shared_gpu.sh`; the sampler itself is unchanged from 2758f68.
+- Jobs 16803065–68 took 23.5–28 minutes, about 5.6 GPU-s per galaxy. Analysis job 16803069. All COMPLETED 0:0.
+
+| Measured mag | n | Mean score | Median MC error | rms MC error | Between-galaxy spread | MC share of score variance | Share of bright MC variance | Stuck |
+| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| < 20 | 75 | +3.4 ± 4.3 | 7.2 | 25.5 | 27.6 | 0.46 | 0.61 | 29/75 (39 ± 6%) |
+| 20–21 | 106 | +2.7 ± 1.4 | 3.9 | 14.2 | 3.2 | 0.95 | 0.27 | 57/106 (54 ± 5%) |
+| 21–22 | 275 | −0.60 ± 0.40 | 2.6 | 4.7 | 4.6 | 0.51 | 0.077 | 160/275 (58 ± 3%) |
+| 22–23 | 642 | +0.54 ± 0.17 | 1.13 | 2.3 | 3.6 | 0.30 | 0.044 | 213/642 (33 ± 2%) |
+
+Findings:
+- **The 1024-panel picture holds with ten times more bright galaxies.**
+  - 459/1098 (42%) have a stuck chain.
+  - At 32k steps, sampling noise is 30–95% of the score scatter between bright galaxies.
+  - The MC-share values agree with the 1024 panel within its small-n noise.
+  - One tension: the 22–23 stuck rate, 33 ± 2% here against 51 ± 6% there (2.9σ).
+- **The noise is concentrated in very few galaxies.**
+  - The ten noisiest galaxies (all brighter than 20.8, nine of them stuck) hold 70% of the bright MC variance.
+  - The single worst galaxy, obs 9223 at mag 18.4, has an MC error of 165.
+  - The score distribution is heavy-tailed at the bright end: the between-galaxy spread is 28 below mag 20.
+- **The mean scores are not a bias measurement.**
+  - The 20–21 bin is +2.7 ± 1.4 (1.9σ) and the 22–23 bin is +0.54 ± 0.17 (3.2σ).
+  - Without the selection term, the expected score at the true shear need not be zero.
+  - The rough bright-only g1 (0.02 + Σs/Σ(s² − e²)) is unstable: 0.030 ± 0.39 for all mag < 23, with the
+    bootstrap error blown up by the heavy tail, and 0.061 ± 0.013 for 22–23. Neither is a calibration
+    statement.
+- **Implication:** plain MH at this length is not enough for mag < 21. The cheap fix is targeted: rerun the
+  roughly 100 noisiest galaxies with more chains and steps (or tempering), rather than everything. This run has
+  no independent replica, so its error bars are not checked; the 1024-panel replica check (rms z 0.8–1.3 per
+  bin) is the best evidence that they are honest.
+
+Receipts: `$DATA_DIR/sbsi/catalogue_prior/galsbi_mock10k_20261002/`:
+- `prepare.sh`, `make_snapshot.sh`, `source_commit.txt`;
+- `select_bright.py` → `bright_ids.txt`, `bright_selection.json`;
+- `submit_bright.sh`;
+- `analyse_bright10k.py` → `bright10k_analysis.json`;
+- `plot_bright10k.py`.
+
+Figure: `SBSI/plots/galsbi_bright10k_mh.png`.
