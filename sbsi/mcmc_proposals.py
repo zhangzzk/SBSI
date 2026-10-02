@@ -75,6 +75,37 @@ def gaussian_block_delta(cholesky, scale, rng):
     return np.einsum('nij,nj->ni', factor, rng.normal(size=factor.shape[:2]))*scale[:, None]
 
 
+def adjacent_swap_permutation(log_likelihood, betas, slots, parity, uniforms):
+    """Replica-exchange swaps between adjacent likelihood temperatures.
+
+    Rows are level-major, row = level*slots + slot, and level l targets
+    prior*likelihood**betas[l]. Pair levels (l, l+1) with l % 2 == parity, as in
+    deterministic even/odd swapping; each pass leaves the product target
+    invariant. Accept with exp((b_l-b_{l+1})*(L_{l+1}-L_l)); the prior cancels.
+    Returns perm (new row r holds old row perm[r]) and the accepted swaps,
+    shape (levels-1, slots), False for pairs not attempted this pass.
+    Warmup adaptation state belongs to rows (levels), not to swapped states.
+    """
+    ll, b, u = (np.asarray(v, float) for v in (log_likelihood, betas, uniforms))
+    levels = len(b)
+    if (b.ndim != 1 or levels < 2 or not np.isfinite(b).all() or b[0] != 1 or np.any(np.diff(b) >= 0)
+            or b[-1] <= 0 or not isinstance(slots, (int, np.integer)) or slots < 1
+            or ll.shape != (levels*slots,) or not np.isfinite(ll).all() or parity not in (0, 1)
+            or u.shape != (levels-1, slots) or not np.isfinite(u).all() or np.any((u <= 0) | (u >= 1))):
+        raise ValueError('decreasing betas from 1, finite level-major likelihoods and open uniforms required')
+    grid = ll.reshape(levels, slots)
+    accepted = np.zeros((levels-1, slots), dtype=bool)
+    attempted = np.arange(levels-1) % 2 == parity
+    accepted[attempted] = (np.log(u[attempted])
+        < (b[:-1]-b[1:])[attempted, None]*(grid[1:]-grid[:-1])[attempted])
+    # Same-parity pairs are disjoint, so the swaps cannot conflict.
+    rows = np.arange(levels*slots).reshape(levels, slots)
+    perm = rows.copy()
+    perm[:-1][accepted] = rows[1:][accepted]
+    perm[1:][accepted] = rows[:-1][accepted]
+    return perm.ravel(), accepted
+
+
 def pooled_block_cholesky(history, baseline_scales, chains_per_observation, *, shrinkage=.05):
     """Pool discarded warmup states only within each observation.
 

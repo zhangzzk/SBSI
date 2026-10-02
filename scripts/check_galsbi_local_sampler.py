@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 import shutil
 import time
+from collections import deque
 
 import numpy as np
 import pandas as pd
@@ -23,8 +24,8 @@ from sbsi.galsbi_scene_prior import GalSBISceneBatch, GalSBIScenePrior
 from sbsi.galsbi_summary import SummaryBatch, SummaryLikelihood, compress_scenes, scene_model_inputs
 from sbsi.galsbi_target_coordinates import GalSBITargetCoordinates
 from sbsi.measurement_model import load_measurement_model
-from sbsi.mcmc_proposals import (complementary_stretch_proposal, empirical_block_cholesky,
-                                gaussian_block_delta, pooled_block_cholesky)
+from sbsi.mcmc_proposals import (adjacent_swap_permutation, complementary_stretch_proposal,
+                                empirical_block_cholesky, gaussian_block_delta, pooled_block_cholesky)
 from sbsi.models import V39_LIKE, load_detection_classifier, load_disk_response
 from sbsi.pseudo_marginal import metropolis_accept, retained
 
@@ -71,6 +72,10 @@ def main():
                         help='occasionally pair a broad morphology step with a full prior environment refresh')
     parser.add_argument('--reuse-invariant-work', action='store_true',
                         help='cache likelihood for z/SED moves and target prior for environment-only moves')
+    parser.add_argument('--betas', type=float, nargs='+', default=[1.],
+                        help='likelihood-tempering ladder, starting at the posterior (1) and strictly decreasing')
+    parser.add_argument('--narrow-step-probability', type=float, default=0.,
+                        help='state-independent share of morphology steps at a quarter of the frozen scale')
     parser.add_argument('--local-positions', action='store_true')
     parser.add_argument('--position-scale', type=float, default=.2)
     parser.add_argument('--observation-indices', type=int, nargs='+')
@@ -108,6 +113,13 @@ def main():
         raise ValueError('invariant cache requires persistent joint morphology with separate z/SED block')
     if args.local_positions and not (args.sed_jump and np.isfinite(args.position_scale) and args.position_scale > 0):
         raise ValueError('local positions require persistent SED pilot and positive finite position scale')
+    betas = np.asarray(args.betas)
+    if (betas[0] != 1 or np.any(np.diff(betas) >= 0) or betas[-1] <= 0
+            or (len(betas) > 1 and not args.joint_morphology) or (len(betas) > 1 and (
+                args.ensemble_morphology or args.pooled_morphology))):
+        raise ValueError('tempering requires persistent per-chain joint morphology and betas decreasing from 1 to >0')
+    if not 0 <= args.narrow_step_probability < 1 or (args.narrow_step_probability and not args.joint_morphology):
+        raise ValueError('narrow steps require joint morphology and probability in [0, 1)')
     if (args.output/'result.json').exists():
         raise ValueError('fresh output required')
     args.output.mkdir(parents=True, exist_ok=True)
@@ -127,7 +139,11 @@ def main():
         raise ValueError('population observation checksum mismatch')
     observations = pd.read_parquet(args.reference/'observations.parquet').iloc[indices].reset_index(drop=True)
     nobs, nchains, m = len(observations), 4, args.environments
-    owner = np.repeat(np.arange(nobs), nchains)
+    # Level-major rows: level*ncold + 4*observation + chain; level 0 is the posterior.
+    levels, ncold = len(betas), nobs*nchains
+    beta = np.repeat(betas, ncold)
+    cold = slice(0, ncold)
+    owner = np.tile(np.repeat(np.arange(nobs), nchains), levels)
     observed = observations.iloc[owner].reset_index(drop=True)
     repeated = observed.iloc[np.repeat(np.arange(len(owner)), m)].reset_index(drop=True)
     aux = repeated.iloc[:, 2:4].to_numpy()
@@ -201,6 +217,14 @@ def main():
             active='random half per observation, frozen complementary partners',
             correction='(dimension-1)*log(z)', coupled_walkers=True,
             diagnostics='per-walker Rhat/ESS are descriptive only; use independent ensembles')
+    if levels > 1:
+        protocol['tempering'] = dict(levels=levels, betas=betas.tolist(), target='target prior times kernel**beta',
+            swaps='deterministic even/odd adjacent-level exchange after every step',
+            adaptation='per level row during warmup, not carried by swapped states; then frozen',
+            stored='posterior level only')
+    if args.narrow_step_probability:
+        protocol['narrow_morphology_steps'] = dict(probability=args.narrow_step_probability, scale=.25,
+            choice='independent of state, so the mixture of symmetric kernels stays exact')
     save(args.output/'protocol.json', protocol)
     for source in sources:
         destination = args.output/'source'/source.resolve().relative_to(Path.cwd().resolve())
@@ -273,6 +297,11 @@ def main():
         elapsed_seconds=time.monotonic()-initialization_started, uses_generating_truth=False))
     if args.initial_bank_seed is not None and args.initialization == 'prior-bank':
         del zero, ptr, features, initial_response, summary
+    # Every temperature level of a chain starts from that chain's selected state.
+    starts = np.tile(np.asarray(starts), levels)
+    reference_kernels = np.tile(np.asarray(reference_kernels), levels)
+    measurement_coordinates = [np.tile(np.concatenate(measurement_coordinates), (levels, 1))] \
+        if args.initialization == 'measurement' else measurement_coordinates
     targets = {k: v[starts] for k, v in bank.targets.items()}
     x = np.concatenate(measurement_coordinates) if args.initialization == 'measurement' else coords.encode(targets)
     kinds = targets['type'].copy()
@@ -336,6 +365,9 @@ def main():
     scales = np.array(protocol['base_scales'])
     morphology_factor = np.broadcast_to(np.diag(scales[blocks[0]]),
         (len(owner), len(blocks[0]), len(blocks[0]))).copy()
+    recent = deque(maxlen=protocol['morphology_covariance']['window']) if args.joint_morphology else None
+    swap_attempts, swap_accepts = np.zeros((2, max(levels-1, 1))), np.zeros((2, max(levels-1, 1)))
+    cold_exchanges = np.zeros(ncold, dtype=int)
     trace, type_trace, summary_trace, kernel_trace, accepted_trace, block_trace = [], [], [], [], [], []
     type_probability_trace = []
     count_trace, refresh_trace = [], []
@@ -362,9 +394,11 @@ def main():
         if block < 3:
             columns = blocks[block]
             if args.joint_morphology and block == 0:
-                proposal[:, columns] += gaussian_block_delta(morphology_factor,
-                    np.exp(log_scales[:, 0])*(protocol['joint_environment']['morphology_scale']
-                                             if joint_environment else 1.), rng)
+                multiplier = np.exp(log_scales[:, 0])*(protocol['joint_environment']['morphology_scale']
+                                                      if joint_environment else 1.)
+                if args.narrow_step_probability:
+                    multiplier = multiplier*np.where(rng.random(len(owner)) < args.narrow_step_probability, .25, 1.)
+                proposal[:, columns] += gaussian_block_delta(morphology_factor, multiplier, rng)
             else:
                 proposal[:, columns] += (rng.normal(size=(len(owner), len(columns)))*scales[columns]
                                          *np.exp(log_scales[scale_owner, block, None]))
@@ -435,11 +469,11 @@ def main():
                         or sed_audit['maximum_log_kernel_change'] > protocol['sed_replay_tolerances']['log_kernel_absolute']):
                     save(args.output/'sed_replay_failure.json', sed_audit)
                     raise ValueError('SED jump changed fixed physical summaries or likelihood; inspect replay')
-        accepted = metropolis_accept(logprior+loglike, newprior+newlike+log_hastings,
+        accepted = metropolis_accept(logprior+beta*loglike, newprior+beta*newlike+log_hastings,
                                      rng.uniform(np.finfo(float).tiny, 1., len(owner)))
         accepted &= active_proposal
         sed_switches += accepted & sed_cross
-        sed_cross_trace.append(sed_cross)
+        sed_cross_trace.append(sed_cross[cold])
         x, kinds, logprior, loglike, summaries, kernels, type_probability = [retained(old, new, accepted) for old, new in
             ((x, proposal), (kinds, newkinds), (logprior, newprior), (loglike, newlike),
              (summaries, newsummary), (kernels, newkernel), (type_probability, new_type_probability))]
@@ -451,37 +485,52 @@ def main():
                     scene.neighbours, scene.indptr, scene.offset_arcsec)
             else:
                 scene = scene.retained(newscene, accepted)
-            count_trace.append(scene.counts)
+            count_trace.append(scene.counts[cold])
         refresh_trace.append(fraction)
         joint_environment_trace.append(joint_environment)
         if step < args.warmup and block < 3 and not joint_environment:
             rate = accepted if args.scale_adaptation == 'per-chain' else accepted.reshape(nobs, nchains).mean(1)
             log_scales[:, block] += .05*(rate-.3)
-        trace.append(x.copy())
+        if levels > 1:
+            parity = step % 2
+            perm, exchanged = adjacent_swap_permutation(loglike, betas, ncold, parity,
+                rng.uniform(np.finfo(float).tiny, 1., (levels-1, ncold)))
+            x, kinds, logprior, loglike, summaries, kernels, type_probability = [value[perm] for value in
+                (x, kinds, logprior, loglike, summaries, kernels, type_probability)]
+            scene = scene.take(perm)
+            stage = int(step >= args.warmup)
+            swap_attempts[stage, parity::2] += ncold
+            swap_accepts[stage] += exchanged.sum(1)
+            if stage:
+                cold_exchanges += exchanged[0]
+        trace.append(x[cold].copy())
         if args.joint_morphology:
+            recent.append(x.copy())
             tuning = protocol['morphology_covariance']
             freeze = tuning.get('freeze_step', args.warmup)
             if step < freeze and ((step+1) % tuning['update_interval'] == 0
                                   or (args.pooled_morphology and step+1 == freeze)):
-                history = np.array(trace[-tuning['window']:])[:, :, blocks[0]]
+                history = np.array(recent)[:, :, blocks[0]]
                 if args.pooled_morphology:
                     morphology_factor = pooled_block_cholesky(history, scales[blocks[0]], nchains,
                                                              shrinkage=tuning['shrinkage'])
                 else:
                     morphology_factor = empirical_block_cholesky(history, scales[blocks[0]],
                         shrinkage=tuning['shrinkage'], circular_indices=tuple(tuning['circular_indices']))
-        type_trace.append(kinds.copy())
-        type_probability_trace.append(type_probability.copy())
-        logprior_trace.append(logprior.copy())
-        summary_trace.append(summaries.copy())
-        kernel_trace.append(kernels.copy())
-        accepted_trace.append(accepted)
+        type_trace.append(kinds[cold].copy())
+        type_probability_trace.append(type_probability[cold].copy())
+        logprior_trace.append(logprior[cold].copy())
+        summary_trace.append(summaries[cold].copy())
+        kernel_trace.append(kernels[cold].copy())
+        accepted_trace.append(accepted[cold])
         block_trace.append(block)
         if (step+1) % 128 == 0 or time.monotonic()-last_progress > 45:
             report = dict(step=step+1, steps=args.steps, elapsed_seconds=time.monotonic()-started,
                 acceptance_last128=np.mean(accepted_trace[-128:], axis=0).tolist(),
                 proposal_scale_multipliers=np.exp(log_scales).tolist(),
-                accepted_sed_region_jumps=sed_switches.tolist() if args.sed_jump else None)
+                accepted_sed_region_jumps=sed_switches.tolist() if args.sed_jump else None,
+                swap_acceptance=(swap_accepts.sum(0)/np.maximum(swap_attempts.sum(0), 1)).tolist()
+                if levels > 1 else None)
             save(args.output/'progress.json', report)
             print('LOCAL_PROGRESS', report, flush=True)
             last_progress = time.monotonic()
@@ -499,6 +548,7 @@ def main():
         joint_environment=np.array(joint_environment_trace),
         log_prior=np.array(logprior_trace), sed_cross_proposed=np.array(sed_cross_trace))
     if persistent:
+        scene = scene.take(np.arange(ncold))
         np.savez_compressed(args.output/'final_scenes.npz',
             **{'target_'+k: v for k, v in scene.targets.items()},
             **{'neighbour_'+k: v for k, v in scene.neighbours.items()},
@@ -575,6 +625,10 @@ def main():
         protocol_sha256=digest(args.output/'protocol.json'),
         all_exploration_checks_pass=all(r['exploration_checks_pass'] for r in reports),
         sed_replay=sed_audit if args.sed_jump else None,
+        tempering=dict(betas=betas.tolist(),
+            swap_acceptance_warmup=(swap_accepts[0]/np.maximum(swap_attempts[0], 1)).tolist(),
+            swap_acceptance_post_warmup=(swap_accepts[1]/np.maximum(swap_attempts[1], 1)).tolist(),
+            posterior_level_exchanges_per_chain=cold_exchanges.tolist()) if levels > 1 else None,
         limitations=['Short bright/faint stress panel; no measured-selection normalization or shear estimate.',
             'Native target analytic prior and numerical neighbour generator retain their audited approximation difference.',
             'No learned compressed density; target redshift/SED latents are retained in ten fixed coordinates.',
