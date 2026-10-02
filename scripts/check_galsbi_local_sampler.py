@@ -79,6 +79,8 @@ def main():
                         help='state-independent share of morphology steps at a quarter of the frozen scale')
     parser.add_argument('--light-transfer-probability', type=float, default=0.,
                         help='share of steps that move r flux between the target and one neighbour within 4 arcsec')
+    parser.add_argument('--light-transfer-scales', type=float, nargs='+', default=[.05, .3],
+                        help='equal-weight normal mixture of target m_r step sizes for light transfer')
     parser.add_argument('--local-positions', action='store_true')
     parser.add_argument('--position-scale', type=float, default=.2)
     parser.add_argument('--observation-indices', type=int, nargs='+')
@@ -123,8 +125,8 @@ def main():
         raise ValueError('tempering requires persistent per-chain joint morphology and betas decreasing from 1 to >0')
     if not 0 <= args.narrow_step_probability < 1 or (args.narrow_step_probability and not args.joint_morphology):
         raise ValueError('narrow steps require joint morphology and probability in [0, 1)')
-    if not 0 <= args.light_transfer_probability < 1 or (args.light_transfer_probability and not (
-            args.joint_morphology and args.reuse_invariant_work)):
+    if not 0 <= args.light_transfer_probability < 1 or min(args.light_transfer_scales) <= 0 or (
+            args.light_transfer_probability and not (args.joint_morphology and args.reuse_invariant_work)):
         raise ValueError('light transfer requires persistent joint morphology, the invariant cache and probability in [0, 1)')
     if (args.output/'result.json').exists():
         raise ValueError('fresh output required')
@@ -235,7 +237,7 @@ def main():
         protocol['proposal_block_probabilities'] = [(1-args.light_transfer_probability)*p
             for p in protocol['proposal_block_probabilities']]+[args.light_transfer_probability]
         protocol['light_transfer'] = dict(probability=args.light_transfer_probability, radius_arcsec=4.,
-            neighbour='uniform among neighbours within radius', target_m_r_step_scales=[.05, .3],
+            neighbour='uniform among neighbours within radius', target_m_r_step_scales=args.light_transfer_scales,
             overlap_scales_arcsec=[.5, 4.], flux="F_n'=F_n+(F_t-F_t')/exp(-d^2/2s^2)",
             acceptance="target prior, neighbour prior, likelihood and Jacobian F_n/F_n'; involution with -delta")
     if args.narrow_step_probability:
@@ -407,6 +409,7 @@ def main():
     invariant_audit = dict(likelihood_calls_skipped=0, target_prior_calls_skipped=0,
                            checked_proposals=0, maximum_summary_change=0., maximum_log_kernel_change=0.)
     invariant_visits = {2: 0, 5: 0}
+    light_audit = dict(attempts=0, active=np.zeros(ncold, dtype=int), accepted=np.zeros(ncold, dtype=int))
     sampling_started = time.monotonic()
     last_progress = time.monotonic()
     for step in range(args.steps):
@@ -441,7 +444,7 @@ def main():
                 x, [1, 6, 7], nchains, rng)
         elif block == light_block:
             light_scene, proposal[:, 1], log_hastings, active_proposal = prior.transfer_light(
-                scene, x[:, 1], int(rng.integers(0, 2**63)))
+                scene, x[:, 1], int(rng.integers(0, 2**63)), step_scales=args.light_transfer_scales)
         environment_only = block == 4 or (args.local_positions and block == 6)
         invariant_likelihood = args.reuse_invariant_work and block in (2, 5)
         if args.reuse_invariant_work and environment_only:
@@ -509,6 +512,10 @@ def main():
         accepted = metropolis_accept(logprior+beta*loglike, newprior+beta*newlike+log_hastings,
                                      rng.uniform(np.finfo(float).tiny, 1., len(owner)))
         accepted &= active_proposal
+        if block == light_block and step >= args.warmup:
+            light_audit['attempts'] += 1
+            light_audit['active'] += active_proposal[cold]
+            light_audit['accepted'] += accepted[cold]
         sed_switches += accepted & sed_cross
         sed_cross_trace.append(sed_cross[cold])
         x, kinds, logprior, loglike, summaries, kernels, type_probability = [retained(old, new, accepted) for old, new in
@@ -662,6 +669,9 @@ def main():
         protocol_sha256=digest(args.output/'protocol.json'),
         all_exploration_checks_pass=all(r['exploration_checks_pass'] for r in reports),
         sed_replay=sed_audit if args.sed_jump else None,
+        light_transfer=dict(attempts_post_warmup=light_audit['attempts'],
+            active_per_chain=light_audit['active'].tolist(),
+            accepted_per_chain=light_audit['accepted'].tolist()) if light_block is not None else None,
         tempering=dict(betas=betas.tolist(),
             swap_acceptance_warmup=(swap_accepts[0]/np.maximum(swap_attempts[0], 1)).tolist(),
             swap_acceptance_post_warmup=(swap_accepts[1]/np.maximum(swap_attempts[1], 1)).tolist(),
