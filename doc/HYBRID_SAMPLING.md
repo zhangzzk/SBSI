@@ -292,3 +292,74 @@ and sibling `ensemble_report.md`; magnitude counts use
 The distinct1024-object throughput job16788845 remains active. The ensemble
 proposal experiment and the atom/continuous hybrid proposed here are separate
 ideas despite both using the word hybrid.
+
+## 1024-panel MH: noise and stuck chains vs magnitude
+
+October 2, 2026. The owner asked whether to sample bright observations with
+MH and faint ones with the old atom method (threshold about 20 or 21). As a
+first step, untempered MH ran on all 1024 GalSBI panel observations, binned by
+measured magnitude, to see where MH has trouble. No code changed.
+
+Setup:
+- Code frozen at 2758f68; 32,768 steps (8,192 warmup), 4 chains per galaxy.
+- 4 GPUs, each running 6 processes × 8 cores (`jobs/job_galsbi_shared_gpu.sh`).
+- Same reference and sampler flags as the earlier 16,384-step `throughput1024`
+  run, but with new seeds, so that run serves as an independent replica.
+- Definitions follow the 238-galaxy check:
+  - score s = (r.022 − r.018)/.004 per draw;
+  - per-galaxy Monte Carlo (MC) error = sd(s)/√ESS_bulk;
+  - "stuck" means rank R-hat of the log posterior ≥ 1.1.
+
+Cost: 1480 s of sampling plus 46 s of setup for the slowest job, so 1024
+galaxies took about 25 minutes on 4 GPUs. That is about 6.0 GPU seconds per
+galaxy at 32k steps (mixed A40/other nodes).
+
+| Measured mag | n | Mean score | Median MC error | Between-galaxy spread | MC share of score variance | Share of MC variance of panel mean | Stuck | Replica rms z |
+| --- | ---: | --- | ---: | ---: | ---: | ---: | --- | --- |
+| < 20 | 5 | −6.8 ± 5.1 | 5.2 | 8.6 | 0.43 | 0.09 | 4/5 | 0.78 ± 0.25 |
+| 20–21 | 15 | −1.1 ± 2.9 | 3.6 | 5.0 | 0.80 | 0.49 | 6/15 | 0.96 ± 0.18 |
+| 21–22 | 31 | +0.5 ± 1.0 | 3.3 | 2.0 | 0.88 | 0.29 | 14/31 | 1.11 ± 0.14 |
+| 22–23 | 78 | −0.41 ± 0.44 | 1.18 | 3.4 | 0.24 | 0.094 | 40/78 | 1.26 ± 0.10 |
+| 23–24 | 163 | −0.31 ± 0.23 | 0.44 | 2.9 | 0.038 | 0.018 | 13/163 | 1.14 ± 0.06 |
+| 24–25 | 358 | −0.12 ± 0.12 | 0.14 | 2.2 | 0.008 | 0.005 | 1/358 | 1.07 ± 0.04 |
+| 25–25.8 | 374 | +0.04 ± 0.08 | 0.067 | 1.6 | 0.003 | 0.001 | 0/374 | 0.97 ± 0.04 |
+
+Whole panel: mean score −0.14 ± 0.09 (galaxy-to-galaxy spread), of which the
+MC part is ±0.053 at 32k steps and ±0.058 at 16k. 78/1024 galaxies are stuck.
+Replica rms z is 1.06 ± 0.02.
+
+Findings:
+- **The trouble is all bright.**
+  - Galaxies brighter than 22 are 5.0% of the panel but carry about 88% of the
+    MC variance of the panel mean.
+  - Galaxies brighter than 23 are 12.6% of the panel and carry about 98%.
+  - Ten galaxies (all brighter than 22.3) carry 75%, so these shares are
+    themselves uncertain.
+- **Faint galaxies are easy for MH.**
+  - Fainter than 23, MC noise is at most 4% of the galaxy-to-galaxy score
+    variance, and stuck chains are rare (13/163 at 23–24, 1/732 fainter).
+  - Doubling the steps cut their MC error by the ideal 1/√2: median ratios
+    0.71–0.76.
+  - For brighter galaxies the median ratio was only 0.80–0.83, and the panel
+    mean barely improved (0.058 → 0.053).
+- **The error bars are roughly honest at every magnitude**: replica rms z is
+  0.8–1.3 per bin, and no bin shows a 32k − 16k shift. The largest is
+  22–23: −0.04 ± 0.06.
+- **Implications for the hybrid proposal:**
+  - Faint galaxies need no rescue from atoms: MH already handles them with
+    small, correctly sized errors, and stays in the GalSBI prior used for
+    bright ones.
+  - The open problem is the about 50–130 bright galaxies. A cut at 20–21
+    would cover only 20 panel galaxies and about 60% of the MC variance.
+  - A simpler split is by step count, not by method: fewer steps for faint
+    galaxies, many more chains/steps (or tempering) for those brighter than 22–23.
+  - This is an estimate from one panel. The bright bins hold only 5–31
+    galaxies.
+
+Projection (extrapolated, not run): all-MH 20k at 32k steps ≈ 33 GPU-hours ≈
+8 h on 4 GPUs. The faint 87% would probably cost about half that at 16k steps.
+
+Receipts: `$DATA_DIR/sbsi/catalogue_prior/galsbi_mh1024_20261002/`
+(`submit_mh1024.sh`, `analyse_mh1024.py` → `mh1024_analysis.json`,
+`step_gain.py`, `plot_mh1024.py`). Jobs 16800304–07 (sampling) and 16800313
+(analysis), all COMPLETED. Figure: `SBSI/plots/galsbi_mh1024_noise_vs_mag.png`.

@@ -1,5 +1,40 @@
 # Work log
 
+## 2026-10-02 — 1024-panel MH: shear-score noise and stuck chains vs magnitude
+
+The owner proposed MH for bright observations and the old atom method for faint
+ones (cut about 20–21), and asked for a 1024-galaxy MH run on 4 GPUs first. No
+code changed. Details in
+[the 1024-panel section](HYBRID_SAMPLING.md#1024-panel-mh-noise-and-stuck-chains-vs-magnitude).
+
+Run:
+- Untempered MH on all 1024 GalSBI panel observations, 32,768 steps.
+- 4 GPUs × 6 processes, code frozen at 2758f68.
+- Wall time 23–28 min per GPU job (about 6.0 GPU seconds per galaxy).
+- Root: `$DATA_DIR/sbsi/catalogue_prior/galsbi_mh1024_20261002/`.
+
+Result:
+- Brighter than 22: 5.0% of galaxies, about 88% of the Monte Carlo variance
+  of the panel mean.
+- Brighter than 23: 12.6% of galaxies, about 98%.
+- Stuck chains: 64/129 brighter than 23, 13/163 at 23–24, 1/732 fainter than 24.
+- Fainter than 23, Monte Carlo noise is at most 4% of the galaxy-to-galaxy
+  spread, and doubling the steps shrinks it by the ideal 1/√2.
+- Replica check against the earlier independent 16k run: rms z 1.06 ± 0.02, and
+  no per-bin shift.
+
+Validation: jobs 16800304–07 and 16800313, all COMPLETED 0:0. The analysis
+asserts that both runs cover galaxies 0–1023 exactly once.
+
+Limits:
+- One panel only; the bright bins hold 5–31 galaxies.
+- Ten galaxies carry 75% of the Monte Carlo variance.
+- GPU types are mixed.
+
+Next: route by step count rather than by method (fewer steps for faint
+galaxies, more effort for those brighter than 22–23). The atom/MH prior
+mismatch remains open.
+
 ## 2026-10-02 — 238-galaxy bias check: tempered vs untempered shear score
 
 The owner asked for diagnosis item 3 on 4 GPUs. No code changed. Details in
