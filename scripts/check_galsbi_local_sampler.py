@@ -7,6 +7,7 @@ states remain unchanged. No learned prior or generating-truth starts.
 """
 import argparse
 import json
+import os
 from pathlib import Path
 import shutil
 import time
@@ -234,13 +235,26 @@ def main():
     V39_LIKE.validate()
     flow = load_measurement_model(V39_LIKE.flow_checkpoints[0], device=args.device)
     detector = load_detection_classifier(V39_LIKE, device=args.device)
-    model = load_disk_response(V39_LIKE, device='cpu', nthread=1)
+    # Tree prediction parallelizes over rows only, so results do not depend on threads.
+    model = load_disk_response(V39_LIKE, device='cpu', nthread=len(os.sched_getaffinity(0)))
     likelihood = SummaryLikelihood(flow, detector)
     galaxy, cosmo, _ = build_prior()
     prior = GalSBIScenePrior(galaxy)
 
+    distance_cache = {}
+
     def angular_distance(z):
-        return cosmo.background.dist_ang_a(a=1/(1+z))
+        # PyCosmo distances are elementwise (checked batch-independent), so
+        # remembered values are exact; unchanged neighbours dominate the calls.
+        unique, inverse = np.unique(np.asarray(z, float), return_inverse=True)
+        values = np.array([distance_cache.get(v, np.nan) for v in unique.tolist()])
+        missing = np.isnan(values)
+        if missing.any():
+            if len(distance_cache) > 2_000_000:
+                distance_cache.clear()
+            values[missing] = cosmo.background.dist_ang_a(a=1/(1+unique[missing]))
+            distance_cache.update(zip(unique[missing].tolist(), values[missing].tolist()))
+        return values[inverse].reshape(np.shape(z))
 
     coords = GalSBITargetCoordinates(galaxy, angular_distance)
     # Reproduce only the prior-proposal bank, not the independently generated
