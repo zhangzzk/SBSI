@@ -1,5 +1,19 @@
 # Work log
 
+## 2026-10-02 — Rough panel g1 from the 1024 MH run
+
+The owner asked whether these galaxies have a shear estimate. They did not: the run saves only g1
+likelihood ratios at 0.018 and 0.022. Two rough estimates, without the selection term and g1 only,
+are in [the 1024-panel subsection](HYBRID_SAMPLING.md#rough-panel-shear-from-the-same-run-no-selection-correction).
+
+- Parabola fit: fails, because the bright-galaxy curvature is dominated by Monte Carlo noise.
+- Score-based estimate, all 1024 galaxies: -0.006 ± 0.018 (32k run) and +0.018 ± 0.015 (16k run).
+- Score-based estimate, fainter than 23: +0.000 ± 0.016 and -0.001 ± 0.016. True g1 = 0.02.
+- Shape noise limits the panel to about ±0.013 on g1, i.e. ±65% on m.
+
+Validation: job 16803055 COMPLETED. Scripts `shear_estimate.py` and `shear_from_score.py` live in
+`$DATA_DIR/sbsi/catalogue_prior/galsbi_mh1024_20261002/`.
+
 ## 2026-10-02 — 1024-panel MH: shear-score noise and stuck chains vs magnitude
 
 The owner proposed MH for bright observations and the old atom method for faint

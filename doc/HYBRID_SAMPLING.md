@@ -363,3 +363,28 @@ Receipts: `$DATA_DIR/sbsi/catalogue_prior/galsbi_mh1024_20261002/`
 (`submit_mh1024.sh`, `analyse_mh1024.py` → `mh1024_analysis.json`,
 `step_gain.py`, `plot_mh1024.py`). Jobs 16800304–07 (sampling) and 16800313
 (analysis), all COMPLETED. Figure: `SBSI/plots/galsbi_mh1024_noise_vs_mag.png`.
+
+### Rough panel shear from the same run (no selection correction)
+
+The run saves no shear estimate. Its protocol says so explicitly, and it only saves g1 likelihood ratios at
+0.018 and 0.022 around the true shear (0.02, 0). Two rough g1 estimates were made from them.
+Neither has the selection term, and neither covers g2.
+
+- **Parabola through L(0.018), L(0.02), L(0.022)** (`shear_estimate.py`): this fails.
+  - For galaxies brighter than about 23, the curvature is swamped by Monte Carlo noise and comes out negative.
+  - For example, it averages −240 per galaxy below 22.
+- **Score with information from its spread** (`shear_from_score.py`): ĝ1 = 0.02 + Σs/Σ(s² − e²).
+  - s is each galaxy's mean score and e its MC error. The error bar is a bootstrap over galaxies.
+
+| Galaxies | 32k run | 16k run | MC part of the error |
+| --- | --- | --- | --- |
+| All 1024 | −0.006 ± 0.018 | +0.018 ± 0.015 | ±0.009–0.010 |
+| Fainter than 23 (895) | +0.000 ± 0.016 | −0.001 ± 0.016 | ±0.002–0.003 |
+
+Notes on the table:
+- True g1 = 0.02.
+- The two runs use the same galaxies, so they differ only by Monte Carlo noise. That noise comes almost
+  entirely from the bright galaxies: the all-galaxy difference is 0.023 ± 0.013.
+- The faint-only estimates agree with each other and sit 1.25σ below the truth.
+- The information is about 5–6 per galaxy, so 1024 galaxies give a shape-noise error of about ±0.013 on g1,
+  i.e. ±65% on m. This panel cannot measure calibration; it only checks the sampler.
