@@ -1,5 +1,45 @@
 # Work log
 
+## 2026-10-02 — Diagnosis: what limits the bright sampler now
+
+The owner asked what to improve next. This was read-only analysis of the
+8-rung and same-seed untempered panel runs (40 galaxies, 2 × 4 chains). Only
+docs changed: a new section in
+[what to improve](TEMPERED_MH.md#what-to-improve-next-diagnosis-of-the-8-rung-and-untempered-runs)
+and the figure `plots/galsbi_improve_diagnosis.png`.
+
+Findings:
+- **R-hat fails on spread, not average.** The pass rule fails mostly on the
+  spread half of rank R-hat. Score R-hat ≥ 1.01 for 44/80 overall, against
+  10/80 for the average half (8 rungs).
+- **The average shear score is reliable.** Replica differences: rms 1.14 ±
+  0.13 error bars (8 rungs), 1.24 ± 0.14 (untempered). Tempered against
+  untempered, galaxy by galaxy: rms 1.07, weighted difference -0.55 ± 0.45
+  score units.
+- **Noise, not trapping, is the limit.** Per-galaxy Monte Carlo noise is 26–44%
+  of the between-galaxy variance. Untempered runs give 1.6 ± 0.6 to 1.8 ± 0.5x
+  more precision per GPU second.
+- **The GPU is under-used.** 8x the chain-rows cost 3.6x the time.
+- **Slowest quantities:** Sérsic, size and magnitude (600–1400 steps per
+  independent draw). The score itself takes 29–35 steps.
+- **Ruled out:** heavy tails (clipping changes nothing), the estimator choice,
+  and a hidden slow part (block-average effective draws match the standard
+  count).
+
+Validation: CPU jobs 16799151, 16799358 and 16799375 on `cluster`, all
+COMPLETED 0:0. Light summaries were run on the login node from the saved JSON.
+
+Limits:
+- The panel was chosen for stuck chains.
+- A trap bias up to about 1.4 score units (2σ) is not excluded at this size.
+- The GPU packing gain is projected from two timings, not tested.
+
+Next, ranked:
+1. Gate on the average part of R-hat plus replica/sampler agreement.
+2. Spend GPU on more untempered chains in fuller jobs.
+3. Run a 238-galaxy tempered-vs-untempered bias check.
+4. Optionally, average each draw over the target's orientation.
+
 ## 2026-10-02 — Light-transfer joint move tested on the panel: no gain, code removed
 
 The owner asked for joint target+neighbour sampling. Built

@@ -178,6 +178,114 @@ Root `$DATA_DIR/sbsi/catalogue_prior/galsbi_light_transfer_20261002/`:
 
 All jobs exited 0:0.
 
+## What to improve next: diagnosis of the 8-rung and untempered runs
+
+Read-only analysis of the saved chains of the 8-rung run (`ladder8_32k`) and
+its same-seed untempered control (`plain_nolt_32k`): 40 galaxies, 2 replicas
+× 4 chains, 24576 kept draws per chain. "Score" is the per-galaxy shear score,
+the finite difference of the shear log ratio between g1=.018 and .022. Unless
+stated otherwise, numbers are medians over 80 galaxy-replicas ± bootstrap or
+binomial errors. Figure: `plots/galsbi_improve_diagnosis.png`.
+
+**1. The average shear score is already reliable; the R-hat rule fails on spread.**
+Rank R-hat is the larger of two checks: chains agree on the average (bulk part),
+and chains agree on the spread (tail part).
+
+| 80 galaxy-replicas | 8 rungs | untempered |
+| --- | --- | --- |
+| Score R-hat ≥ 1.01: rule used / average part / spread part | 44 / 10 / 44 | 56 / 15 / 56 |
+| Median score R-hat, average part | 1.0016 ± 0.0015 | 1.0022 ± 0.0018 |
+| Ratio .022 R-hat ≥ 1.01: rule used / average part | 44 / 13 | 54 / 25 |
+
+The replicas' average scores agree as well as their error bars allow. Replica
+difference / error, rms over 40 galaxies: 1.14 ± 0.13 (8 rungs) and
+1.24 ± 0.14 (untempered); 1/40 and 0/40 beyond 3σ. Chain means within a
+replica: median χ²/dof 0.90 and 0.87. Effective draws counted from 512–4096-draw
+block averages match the standard count (8 rungs: 2360–2580 against 2530 ±
+290). So there is no hidden slow part in the score.
+
+**2. Tempering does not change the shear score.** Both replicas start from the
+same measurement-based state and could share a trap, so the two samplers were
+compared directly, galaxy by galaxy. 8 rungs minus untempered: rms 1.07
+error bars, none beyond 3σ. Weighted average difference -0.55 ± 0.45 score
+units (log-mean-exp) or -0.32 ± 0.45 (plain mean), on a panel chosen for stuck
+chains. For scale, the 238-galaxy original run has a mean score of -0.83 ±
+0.88, and the between-galaxy spread on the panel is 7.6–9.6. The trap shows up in
+log posterior, magnitude and size, not in the shear score. This panel cannot
+rule out a bias as large as the full-sample statistical error (2σ bound about
+1.4); a larger comparison would.
+
+**3. The real limit is Monte Carlo noise per galaxy, and untempered runs buy
+less noise per GPU hour.** Each draw's score scatters by 135 ± 20 units. The
+target's shape, size, brightness and environment explain only 2–10% of it in
+low-order fits. The likelihood is deterministic, so this is real posterior
+spread, not numerical noise. The score forgets itself in 29 ± 1 (8 rungs) to
+35 ± 1 (untempered) steps. Per-galaxy score error from one 4-chain replica: about 4–6 units.
+That noise adds 36% (8 rungs), 44% (untempered, panel) and 26% (original 238)
+of the between-galaxy variance. Untempered runs cost 50 GPU s per galaxy against
+182. Precision per GPU second is higher untempered by 1.6 ± 0.6 (replica
+differences) or 1.8 ± 0.5 (ESS error bars).
+
+**4. The GPU is mostly idle in small jobs.** 80 chain-rows took 1000 s for 32k
+steps; 640 rows (8 rungs) took 3340–3690 s. 8x the rows cost 3.6x the time.
+Packing more chains per galaxy, or more galaxies per job, should cut the cost
+per draw by about 2x. This is projected from these two timings, not tested.
+
+**5. Slow quantities (matter for log posterior, not for shear).** Steps per
+independent draw, 8 rungs / untempered:
+- Sérsic: 1046 / 1367;
+- size: 681 / 1398;
+- magnitude: 617 / 1332;
+- ellipticity strength: 530 / 1082;
+- log posterior: 437 / 659;
+- blend response b: 134 / 273;
+- neighbour count: 64 / 108.
+
+The joint magnitude/size/Sérsic move is far slower than a well-tuned
+random walk in 3 dimensions would be: roughly 30x, a rough estimate. Moves per attempt (untempered; mean squared change / variance):
+- the shape move does most of the score mixing (0.39);
+- the magnitude/size/Sérsic move: 0.09;
+- the environment refresh: 0.02.
+
+The environment refresh is accepted 88% of the time, so its 10% partial
+refresh steps are too timid. The redshift/SED moves never change the score;
+they skip the likelihood and cost little.
+
+**Ruled out.**
+- *Heavy tails.* Excess kurtosis is 1.2 ± 0.2, and the top 1% of draws carry
+  11% of the variance (8.5% for a Gaussian). Clipping the top and bottom 0.5%
+  leaves R-hat at 1.0146 against 1.0145. The -174/+142 chain means noted
+  earlier were short last-quarter windows.
+- *A better estimator.* The log-mean-exp score and the plain average of
+  per-draw scores agree: difference -1.3 ± 0.9, replica scatter 9.1 against 8.7.
+- *Chain states predicting the score.* Correlations of chain-mean score with
+  chain-mean magnitude, b, crowding, neighbour count, size or log posterior are
+  all |r| < 0.08 ± 0.16.
+
+**Ranked improvements.**
+1. Judge convergence by what the shear uses. Use the average part of R-hat for
+   the ratios, plus replica and sampler agreement of the score. Keep the
+   log-posterior and magnitude R-hat as trap flags, not as a gate.
+2. Spend GPU on more untempered chains, packed into fuller GPU jobs. Do this
+   rather than on temperature rungs: Monte Carlo noise, not trapping, sets
+   the shear error.
+3. Bound the trap bias at full-sample precision. Run tempered and untempered
+   on all 238 galaxies and compare the summed score (expected error about 0.2
+   against the 0.88 statistical error).
+4. Optional precision gain: average each stored draw over the target's
+   orientation analytically. This costs extra likelihood calls only at
+   post-processing, which takes about 1% of the sampling time. Untested.
+5. Lower priority: a larger environment refresh fraction, and a better
+   magnitude/size/Sérsic move. These help the log-posterior diagnostics,
+   not the shear.
+
+Receipts, under `galsbi_tempering_20261002/`:
+- `improve_diagnostics.py` (job 16799151, 31 min, 0:0);
+- `improve_followup.py` (job 16799358);
+- `improve_rhat_split.py` (job 16799375);
+- `improve_summary.py`, `improve_ztest.py`, `improve_arms.py`, `improve_plot.py`;
+- the JSON outputs of the same names.
+
 ## Receipts
 
 Root `$DATA_DIR/sbsi/catalogue_prior/galsbi_tempering_20261002/`:
