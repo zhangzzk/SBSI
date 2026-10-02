@@ -235,9 +235,9 @@ def main():
         protocol['proposal_block_probabilities'] = [(1-args.light_transfer_probability)*p
             for p in protocol['proposal_block_probabilities']]+[args.light_transfer_probability]
         protocol['light_transfer'] = dict(probability=args.light_transfer_probability, radius_arcsec=4.,
-            neighbour='uniform among neighbours within radius', step_scales=[.3, 3.],
-            overlap_scales_arcsec=[.5, 4.], flux="F_t'=F_t+exp(-d^2/2s^2)(F_n-F_n')",
-            acceptance="target prior, neighbour prior, likelihood and Jacobian F_t/F_t'; involution with -delta")
+            neighbour='uniform among neighbours within radius', target_m_r_step_scales=[.05, .3],
+            overlap_scales_arcsec=[.5, 4.], flux="F_n'=F_n+(F_t-F_t')/exp(-d^2/2s^2)",
+            acceptance="target prior, neighbour prior, likelihood and Jacobian F_n/F_n'; involution with -delta")
     if args.narrow_step_probability:
         protocol['narrow_morphology_steps'] = dict(probability=args.narrow_step_probability, scale=.25,
             choice='independent of state, so the mixture of symmetric kernels stays exact')

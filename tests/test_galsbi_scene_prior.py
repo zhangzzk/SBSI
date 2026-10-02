@@ -255,16 +255,16 @@ def light_scenes(n, rng, offsets=((1.5, 0.), (0., 6.))):
 
 
 def test_light_transfer_map_is_an_involution_with_flux_jacobian():
-    m_t, m_n, m_new, w = np.array([20., 18.3]), np.array([21., 18.6]), np.array([19.2, 22.]), np.array([.4, .3])
-    forward, log_jacobian = light_transfer_map(m_t, m_n, m_new, w)
-    back, back_log_jacobian = light_transfer_map(forward, m_new, m_n, w)
-    np.testing.assert_allclose(back, m_t, atol=1e-12)
+    m_t, m_t_new, m_n, w = np.array([20., 18.3]), np.array([19.9, 18.5]), np.array([21., 18.6]), np.array([.4, .3])
+    forward, log_jacobian = light_transfer_map(m_t, m_t_new, m_n, w)
+    back, back_log_jacobian = light_transfer_map(m_t_new, m_t, forward, w)
+    np.testing.assert_allclose(back, m_n, atol=1e-12)
     np.testing.assert_allclose(log_jacobian+back_log_jacobian, 0, atol=1e-12)
     h = 1e-6
-    derivative = (light_transfer_map(m_t+h, m_n, m_new, w)[0]-light_transfer_map(m_t-h, m_n, m_new, w)[0])/(2*h)
+    derivative = (light_transfer_map(m_t, m_t_new, m_n+h, w)[0]-light_transfer_map(m_t, m_t_new, m_n-h, w)[0])/(2*h)
     np.testing.assert_allclose(np.log(derivative), log_jacobian, atol=1e-7)
-    # Brightening a neighbour by more than the target can lose is invalid.
-    assert np.isnan(light_transfer_map([25.], [19.], [18.], [1.])[0]).all()
+    # Brightening the target by more than the neighbour can give is invalid.
+    assert np.isnan(light_transfer_map([20.], [19.], [25.], [1.])[0]).all()
 
 
 def test_light_transfer_moves_one_near_neighbour_and_leaves_others_alone():
@@ -295,7 +295,8 @@ def test_light_transfer_mh_preserves_joint_target_and_neighbour_prior(jacobian):
     for _ in range(3):
         new, m_new, correction, active = prior.transfer_light(scenes, m_t, int(rng.integers(0, 2**63)))
         if not jacobian:
-            correction = correction-.4*np.log(10)*(m_new-m_t)
+            shift = np.bincount(scenes.owner, weights=new.neighbours['m_r']-scenes.neighbours['m_r'], minlength=n)
+            correction = correction-.4*np.log(10)*shift
         accepted = metropolis_accept(-.5*((m_t-20)/.5)**2,
             np.where(active, -.5*((m_new-20)/.5)**2+correction, -np.inf), rng.uniform(1e-15, 1, n))
         accepted_total += accepted.mean()
