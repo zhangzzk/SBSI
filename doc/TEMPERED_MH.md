@@ -52,7 +52,9 @@ jobs (4 inter GPUs total).
 ## Speed-ups (exact)
 
 Disk-response emulator on all allotted CPU threads: tree prediction splits
-rows only, and the output is identical. A memo of PyCosmo angular distances is
+rows only, and the output is identical. (Correction: in GPU jobs this stayed
+single-threaded until the fix in [Speed](#speed-thread-fix-and-shared-gpus).)
+A memo of PyCosmo angular distances is
 exact because the call is elementwise. Step time went from 0.37 s (2560-row
 full replica, before speed-ups) to 0.19 s (1280-row half replica, after). The flow
 uses fixed padded density batches, so halving the rows does not halve GPU time.
@@ -285,6 +287,65 @@ Receipts, under `galsbi_tempering_20261002/`:
 - `improve_rhat_split.py` (job 16799375);
 - `improve_summary.py`, `improve_ztest.py`, `improve_arms.py`, `improve_plot.py`;
 - the JSON outputs of the same names.
+
+## Speed: thread fix and shared GPUs
+
+Test: all 238 bright galaxies × 4 untempered chains, 512 steps, same seeds.
+Times are seconds per step; the spread between processes in one job is
+about ±4%, and between nodes about ±10%.
+
+**1. The tree emulator ran on one core in GPU jobs.** The job script sets
+`OMP_NUM_THREADS=1`, which also capped xgboost, whatever `nthread` or
+`--cpus-per-task` said. `torch.set_num_threads(<allotted cores>)` lifts the
+cap. GPU step 0.154 → 0.070 s (8 cores; 16 cores give no more), setup
+306 → 118 s. The sorted-array distance memo cut its lookup from 10 s to 3 s
+per run. Both are exact: chains, profiles and final scenes match the old code
+with maximum difference 0.0 (GPU 8 and 16 cores; CPU-only 32 cores on the same
+node).
+
+**2. The rest is single-core Python, so share each GPU.** One GPU process
+costs about 0.020 s per step plus 0.0052 s per 100 chain rows (two-point
+fit). The GPU idles most of the time. `jobs/job_galsbi_shared_gpu.sh` runs P
+processes on one GPU, each with its own cores and galaxies, with seeds
+seed+k and bank seed+k. Results are unchanged: a shared-GPU process equals a
+standalone run of the same galaxies and seeds (difference 0.0).
+
+| one GPU, 238 galaxies | s/step |
+|---|---|
+| 1 process × 8 cores | 0.070 |
+| 4 processes × 8 cores (2080 Ti) | 0.048 |
+| 8 processes × 4 cores (2080 Ti) | 0.049 |
+| 6 processes × 8 cores (P5000) | 0.044 |
+
+The gain stops near 4–6 processes (about 1.5x per GPU).
+
+**3. CPU-only jobs do not help much.** They have a high floor: 0.10 s per
+step for 60 galaxies on 8 cores, and 0.13 s for 30 galaxies on 4 cores.
+Node th-cl-hua28 also fails the initial-replay check (error 2.0e-5 against
+1e-6, the same in two runs), so its CPU arithmetic depends on batch size. The
+check stops such a run within 2 minutes.
+
+**Projected 32k-step runs** (from the measured rates, not yet run at this
+length):
+- 238 galaxies: about 84 min on one GPU before; now about 25 min on one GPU,
+  or 15–20 min split over 4.
+- 1000 galaxies: about 6 h on one GPU before; now about 26 ± 3 min on
+  4 GPUs × 48 cores (192 cores), at about 21,000 chain-row steps per second
+  per GPU.
+
+Limits:
+- Shard outputs are separate run directories. The analysis scripts read one
+  run at a time, so they must combine the shards.
+- Throughput above 952 rows per GPU is extrapolated.
+
+Receipts, under `galsbi_cpu_scaling_20261002/`:
+- `submit_bench*.sh`: old-code arms 16799949–52 and 16799980–83.
+- `fast/submit_fast.sh`: 16800041–45.
+- `fast/submit_shards.sh`: 16800065–68.
+- `fast/submit_replay_node.sh`: 16800079–80 (80 cancelled while waiting).
+- `fast/job_shared_gpu.sh`: 16800083, 16800124 and 16800125.
+- Launcher test: 16800133.
+- `compare_arms.py`, `bench_summary.py`, `read_profiles.py`.
 
 ## Receipts
 

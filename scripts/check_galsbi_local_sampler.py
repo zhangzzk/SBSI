@@ -16,6 +16,7 @@ from collections import deque
 import numpy as np
 import pandas as pd
 from scipy.special import logsumexp
+import torch
 
 from check_galsbi_continuous_prior import build_prior, digest, save
 from check_galsbi_summary_sampler import diagnostics
@@ -236,24 +237,34 @@ def main():
     flow = load_measurement_model(V39_LIKE.flow_checkpoints[0], device=args.device)
     detector = load_detection_classifier(V39_LIKE, device=args.device)
     # Tree prediction parallelizes over rows only, so results do not depend on threads.
+    # Raising torch's OpenMP limit is what lets xgboost use them under OMP_NUM_THREADS=1.
+    torch.set_num_threads(len(os.sched_getaffinity(0)))
     model = load_disk_response(V39_LIKE, device='cpu', nthread=len(os.sched_getaffinity(0)))
     likelihood = SummaryLikelihood(flow, detector)
     galaxy, cosmo, _ = build_prior()
     prior = GalSBIScenePrior(galaxy)
 
-    distance_cache = {}
+    cache_z, cache_d = np.empty(0), np.empty(0)
 
     def angular_distance(z):
         # PyCosmo distances are elementwise (checked batch-independent), so
         # remembered values are exact; unchanged neighbours dominate the calls.
+        # Sorted arrays with exact-match lookup avoid a Python loop per redshift.
+        nonlocal cache_z, cache_d
         unique, inverse = np.unique(np.asarray(z, float), return_inverse=True)
-        values = np.array([distance_cache.get(v, np.nan) for v in unique.tolist()])
-        missing = np.isnan(values)
+        where = np.searchsorted(cache_z, unique)
+        found = where < len(cache_z)
+        found[found] = cache_z[where[found]] == unique[found]
+        values = np.full(len(unique), np.nan)
+        values[found] = cache_d[where[found]]
+        missing = ~found
         if missing.any():
-            if len(distance_cache) > 2_000_000:
-                distance_cache.clear()
             values[missing] = cosmo.background.dist_ang_a(a=1/(1+unique[missing]))
-            distance_cache.update(zip(unique[missing].tolist(), values[missing].tolist()))
+            if len(cache_z) > 2_000_000:
+                cache_z, cache_d = unique[missing], values[missing]
+            else:
+                at = where[missing]
+                cache_z, cache_d = np.insert(cache_z, at, unique[missing]), np.insert(cache_d, at, values[missing])
         return values[inverse].reshape(np.shape(z))
 
     coords = GalSBITargetCoordinates(galaxy, angular_distance)

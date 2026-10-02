@@ -1,5 +1,43 @@
 # Work log
 
+## 2026-10-02 — Sampler speed: thread fix, faster distance memo, shared GPUs
+
+The owner said 238-galaxy and 1000-galaxy runs are too slow and allowed up to
+200 CPU cores (the GPU cap stays at 4). Details in
+[Speed](TEMPERED_MH.md#speed-thread-fix-and-shared-gpus).
+
+Changed:
+- `scripts/check_galsbi_local_sampler.py`: `torch.set_num_threads(<allotted
+  cores>)`. Under `OMP_NUM_THREADS=1` this is what lets xgboost use the cores.
+  The distance memo is now a sorted array with exact-match lookup instead of a
+  dict loop.
+- `jobs/job_galsbi_tempered.sh`: default 16 cores (was 4).
+- New `jobs/job_galsbi_shared_gpu.sh`: P processes share one GPU, each with its
+  own cores, galaxies and seeds (seed+k, bank seed+k).
+
+Results (238 galaxies × 4 chains, 512 steps):
+- One GPU process: 0.154 → 0.070 s per step.
+- Four processes sharing one GPU: 0.048 s per step for all 238 galaxies.
+- Six processes on a P5000 GPU: 0.044 s per step.
+- Identity: every saved array matches the old code (maximum difference 0.0),
+  and a shared-GPU process matches its standalone run.
+- Projected 32k steps: 1000 galaxies in about 26 min on 4 GPUs × 48 cores
+  (before: about 6 h on one GPU).
+
+Validation: Slurm jobs 16800041–45, 16800065–68, 16800079, 16800083,
+16800124–25 and 16800133. All COMPLETED except two intentional failures of the
+initial-replay check on th-cl-hua28 (16800066, 16800079). Identity was checked
+with `compare_arms.py`.
+
+Limits:
+- CPU-only jobs have a high per-step floor (0.10 s), so they add little.
+- One CPU node (th-cl-hua28) fails the replay check deterministically.
+- Shard outputs are separate directories; the analysis must combine them.
+- Projections beyond 952 rows per GPU are untested.
+
+Next: launch the 238-galaxy tempered-vs-untempered check (diagnosis item 3)
+with the shared-GPU launcher.
+
 ## 2026-10-02 — Diagnosis: what limits the bright sampler now
 
 The owner asked what to improve next. This was read-only analysis of the

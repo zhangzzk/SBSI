@@ -2,7 +2,7 @@
 #SBATCH --job-name=sbsi-tempered
 #SBATCH --partition=inter
 #SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
 #SBATCH --time=08:00:00
 # Tempered persistent-scene MH on bright-run observations, from a frozen source snapshot.
