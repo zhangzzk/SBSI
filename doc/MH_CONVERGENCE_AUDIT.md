@@ -231,6 +231,9 @@ intervals are saved separately in `profiles/corrected_intervals.json`.
 
 ## Recommended next bounded experiment
 
+Follow-up: a later deep dive found a two-mode trap. Tempering was tried
+first; see [tempered MH](TEMPERED_MH.md#finding--october-2-2026).
+
 Use a discarded pilot to learn a **frozen curved proposal**, then test it with
 fresh independent chains against the original sampler on a small stress panel.
 A concrete transformation is u=Sersic logit and r=y-f(u), with y=(magnitude,

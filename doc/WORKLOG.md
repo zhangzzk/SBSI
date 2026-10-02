@@ -1,5 +1,34 @@
 # Work log
 
+## 2026-10-02 — Tempered MH frees the two-mode trap on a 40-galaxy panel
+
+Owner asked to "work it" after the sampling deep dive
+(`galsbi_sampling_deepdive_20261002/README.md`). That dive found chains stuck
+in either a clean-target mode or a faint-neighbour-shares-light mode, in
+85/238 galaxies. Added replica exchange (`--betas`) and a state-independent
+narrow-step mixture (`--narrow-step-probability`) to
+`scripts/check_galsbi_local_sampler.py`, and
+`sbsi.mcmc_proposals.adjacent_swap_permutation` with two tests. One test
+recovers the 0.7/0.3 weights of a bimodal toy to within 0.03. Added exact
+speed-ups: emulator on all allotted CPU threads, and a PyCosmo distance memo.
+Added `jobs/job_galsbi_tempered.sh`. With `--betas 1` the output is bit-identical
+to the unmodified sampler before and after the speed-ups (identity2, max
+difference 0.0). `tests/test_mcmc_proposals.py`: 10 passed.
+
+Panel results: 16 rungs, 16384 steps, 2 replicas split over 4 inter GPUs, jobs
+16795122–5, all 0:0 in 53–57 min.
+- Shear-ratio check passes 15/40 (38% ± 8%), against 2/40 for the original at
+  32k steps.
+- Median log-posterior R-hat 1.04, against 1.25.
+- Galaxies with a chain 8+ log units below the best: 6/40, against 32/40.
+- Swap acceptance 0.66–0.78.
+- Shear score, tempered minus original: -0.01 ± 1.31.
+
+Costs about 7.5x GPU per galaxy, and 25/40 still fail R-hat < 1.01 (mostly
+1.01–1.05). Details: [tempered MH](TEMPERED_MH.md#finding--october-2-2026);
+figure `plots/galsbi_tempering_panel16k.png`. Next: sparser ladder and longer
+runs, or a joint target+environment jump move. No 20k run.
+
 ## 2026-10-02 — Deep MH convergence audit isolates geometry and shear-overlap failures
 
 Owner requested a deep investigation. Added `scripts/diagnose_galsbi_convergence.py`,
