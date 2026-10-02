@@ -1,0 +1,294 @@
+# Hybrid atom integration and continuous MH
+
+## Assessment — October 2, 2026
+
+The subsequent owner-authorized [bright MH test](BRIGHT_MH_TEST.md#owner-request-and-scope--october-2-2026)
+tests the proposed continuous fallback on measured-mag<20 and<22 cohorts.
+
+The owner's proposal is a strong candidate for reducing population inference
+cost: use cached atom integration for observations it resolves, and continuous
+posterior sampling for narrow or poorly covered observations. Brightness is a
+useful initial routing variable. It is not yet an adequate acceptance rule.
+
+The essential condition is a common underlying scene prior and likelihood.
+The existing FS2 atom catalogue and the current fixed-F24 GalSBI continuous
+prior are different population models. Directly joining their results would
+confound a numerical improvement with a population change. The recommended
+first experiment uses a GalSBI atom bank approximating the same scene law as
+the continuous sampler. Reuse the old integration algorithm and cache design;
+do not assume the old atom contents represent the new prior.
+
+This is an evaluation and proposed experiment, not an implemented hybrid or
+authorization receipt for another production run. Existing benchmarks continue;
+the paused20k population run remains paused. F8, C8 and the original disk
+response are unchanged. No shear-accuracy claim is made.
+
+## Evidence for concentrating work on bright observations
+
+The [actual ConstGold20k audit](V39_ACTUAL20K_BFGS.md#status-on-september-27-stopped-at-the-first-solve)
+found an indefinite first-pass information matrix at every draw rung through
+16384. Along its negative eigenvector:
+
+| Measured magnitude | Observations | Fraction of20k | Curvature contribution |
+| --- | ---: | ---: | ---: |
+| <20 | 135 | 0.675% | -2.239340 million |
+| 20–22 | 774 | 3.870% | -0.216479 million |
+| 22–24 | See original audit | — | +0.034884 million |
+| 24–25.8 | See original audit | — | +0.033766 million |
+
+The135 brightest rows contribute93.8% of the net negative curvature. Removing
+the selection-normalizer term algebraically leaves the matrix indefinite.
+This establishes concentration of the observed problem, not its cause:
+local non-concavity, finite-prior support, proposal failure and model mismatch
+remain distinct possibilities. Positive faint-bin curvature does not prove
+accurate faint-bin scores. No rows were removed from inference.
+
+The [historical bright-extension study](BRIGHT_PRIOR_EXTENSION.md#results-and-decision)
+separates two numerical problems. It used V3.6 models and three inspected
+observations, so its numerical values are not V3.9 population results:
+
+- Posterior atom ESS was only1.15–1.74 under the original prior. A narrow
+  posterior can depend on one or two allowed scenes even with perfect summation.
+- Adding7.78million bright atoms did not reliably improve integration: candidate
+  ranking missed dominant atoms. Under the original prior, an8192-exact plus
+  8192-sampled estimator instead captured>99.8% of the posterior mass in all
+  three cases, with numerator RMSE0.00930%,0.04321%,0.00491% across16 seeds.
+
+Thus more proposal draws can fix integration of a finite sum without fixing
+its approximation to a continuous population. Conversely, sparse posterior
+support alone does not prove an error if the declared target really is finite.
+Treat the atom bank as quadrature only when a parent scene law is specified.
+
+Brightness has a plausible mechanism: higher signal-to-noise can constrain a
+smaller volume of latent scenes, leaving fewer bank atoms inside the likelihood.
+Size, morphology, crowding and unusual shapes also matter. This is a working
+explanation to test, not proof that all faint observations are safe.
+
+## One target with two numerical methods
+
+Use the [continuous-scene target](CONTINUOUS_SAMPLING.md#exact-statistical-target):
+
+```text
+I_i(g) = integral K(y_i,s,g) p(ds)
+Z(g)   = integral p(ds) integral_W K(y,s,g) dy
+log L(g) = sum_i log I_i(g) - N log Z(g).
+```
+
+K includes C8 usability, F8 density and the retained disk transformation and
+Jacobian. W is the existing measured radius/magnitude selection. The same
+prior includes target properties, environment marks, neighbour counts and
+positions, with matching units, support and shape conventions.
+
+For well-resolved observations, use a weighted bank from p and the existing
+exact-stratum/defensive-complement algorithm to approximate I_i. For difficult
+observations, draw from p(ds)K(y_i,s,g0)/I_i(g0) and estimate
+
+```text
+R_i(g) = I_i(g)/I_i(g0)
+       = E_posterior_at_g0 [K(y_i,s,g)/K(y_i,s,g0)]
+
+log L(g)-log L(g0)
+       = sum_i log R_i(g) - N log[Z(g)/Z(g0)].
+```
+
+This identity requires posterior exploration and adequate support/overlap
+across the shear range. Average likelihood ratios before taking logs. Absolute
+MCMC evidence is unnecessary for a shear profile. At large centre changes,
+check reweighting overlap and refresh the reference; do not assume local draws
+or a carried Taylor expansion remain accurate indefinitely.
+
+Let r_i be a fixed observed-data routing decision. Replacing an integral by
+either consistent numerical estimator does not introduce a new selection cut.
+Keep every selected observation and one common Z. Sum likelihood contributions
+or score/information at a common centre; do not average separately fitted
+bright/faint shear estimates. A measured-bright observation must still integrate
+over the full latent prior, including intrinsically fainter scenes that could
+produce its measurement. Routing is not a truth-magnitude truncation.
+
+Fix routes across the shear stencil. Prefer a separate pilot stream for any
+noisy routing diagnostic, followed by fresh production estimates; selecting
+between noisy estimates using those same estimates can introduce selection
+bias. This does not remove finite-bank or finite-log bias, which require
+independent checks.
+
+## Why directly joining the current priors is a different model
+
+The old bank is an FS2-based weighted empirical scene population. The new MH
+target uses a fixed GalSBI F24 population and explicit uniform Poisson neighbour
+environments. [Prior compatibility](GALSBI_PRIOR_FEASIBILITY.md#compatibility-and-a-bounded-next-step)
+has not established their equivalence. Matching a magnitude histogram would
+not match conditional sizes, shapes, Sérsic indices or environment correlations.
+
+For distinct priors A and C, a measured-brightness switch r(y) would give
+
+```text
+H(y,g) = r(y) I_C(y,g) + [1-r(y)] I_A(y,g)
+Z_H(g) = integral_W H(y,g) dy.
+```
+
+H/Z_H could be defined as a new observed-data model, but neither original
+normalizer generally equals Z_H. Normalizing both original models separately
+and then selecting pieces by y does not generally yield a normalized density.
+Such a splice requires a new statistical specification and validation; it is
+not simply accelerating one prior integral. Smooth routing weights do not
+resolve this population mismatch.
+
+Practical options:
+
+1. **Common continuous population:** generate new weighted atoms from the
+   chosen continuous scene law; use atom quadrature and continuous MH under
+   that law. This is the preferred GalSBI model-closure experiment.
+2. **Retain the exact FS2 finite target:** improve retrieval, exact strata or
+   discrete atom-index MCMC. Continuous off-catalogue moves cannot preserve
+   a purely discrete target. This addresses integration but cannot fill gaps
+   between its allowed scenes.
+3. **Define a continuous FS2 population model:** possible future modelling
+   work, with its own validation. Jittering catalogue coordinates or fitting
+   a density silently is not an exact implementation of the old prior.
+
+Old atoms may supply initialization locations or centres of an explicitly
+evaluable continuous proposal. They cannot be turned into an exact continuous
+prior by a naive density ratio: finite point masses and a continuous target
+have incompatible support measures. Proposal corrections require the actual
+sampling law and full target support.
+
+Even a new GalSBI bank needs a consistency check: the numerical scene generator
+uses interpolated CDFs, while local MH uses analytic native prior factors.
+[Existing approximation limits](CONTINUOUS_SAMPLING.md#a-simple-count-changing-move-partial-poisson-refresh)
+must be checked through grid refinement or proposal-density correction. Sharing
+the GalSBI name alone does not prove the two numerical targets agree.
+
+## Routing and error accounting
+
+A practical candidate policy is: route measured-bright objects directly to MH;
+apply atom integration to the remainder; escalate any unresolved remainder.
+Compare thresholds20 and22 rather than treating either as already validated.
+The magnitude21.255 stress case demonstrates why a threshold20 alone is weak.
+
+For the atom route, assess independent sampling-seed changes in shear ratios,
+scores and curvature, candidate-list expansion, largest posterior atom mass,
+distinct-atom ESS, and independent-bank/size sensitivity. Draw ESS can be large
+while repeatedly selecting the same few atoms. No single ESS threshold proves
+coverage, and two proposal seeds on one bank cannot measure bank discretization.
+Audit faint objects throughout magnitude, size and crowding space, including
+a random sample of objects whose cheap diagnostics look good.
+
+For MH, assess independent complete replicas, starts, step ladders and the
+actual shear-ratio functionals. Do not treat interacting ensemble walkers as
+independent chains. Rank-based Rhat and functional ESS are useful exploration
+screens ([Vehtari et al.](https://arxiv.org/abs/1903.08008)); Rhat<1.01 is not a
+direct bound on aggregate shear error. Failed observations remain flagged for
+more work, not silently dropped from the selected population.
+
+Numerical error should be propagated through the combined score. If J is the
+total observed information at a stable solution, the first-order perturbation is
+
+```text
+delta_g approximately J^{-1} [sum_i delta_score_i - N delta_grad_log_Z].
+```
+
+Measure covariance across shear nodes and observations. Reusing one atom bank
+creates shared numerical error; the selection estimate is shared as well.
+Both require independent population/bank replicas. An unbiased positive
+numerator estimate also generally gives a biased log estimate:
+E[log(Ihat)] approximately log(I)-Var(Ihat)/(2 I^2) for small relative error.
+The expansion is unreliable for severe weight tails. Neither coherent bias
+nor common-bank error is guaranteed to cancel across20k observations.
+
+Use the existing proposed numerical budget of absolute shear error<=1e-5
+for the combined estimator, including normalization, as a design target rather
+than an achieved result. It is below6e-5, corresponding to0.3% of injected
+g1=0.02. Independent finite panels cannot establish population calibration bias.
+
+## Runtime consequences
+
+Let f be the routed fraction, t_A atom cost per faint observation and t_M
+the cost of a converged MH observation, in GPU seconds per replica. Then
+
+```text
+T = N[(1-f)t_A + f t_M] + T_bank/cache + T_selection + T_other.
+```
+
+If every observation first receives atom evaluation, replace (1-f)t_A by t_A.
+Account separately for CPU work, queueing, output and shared setup. Multiply
+replicated observation work by two for the owner's two-replica comparison;
+bank and selection replication have their own budgets.
+
+The table uses actual ConstGold20k counts and the **unverified target**
+t_M=10 GPU seconds per galaxy per replica:
+
+| Direct MH route | Galaxies | Fraction | MH GPU time, two replicas |
+| --- | ---: | ---: | ---: |
+| Measured magnitude<20 | 135 | 0.675% | 0.75 GPU hours |
+| Measured magnitude<22 | 909 | 4.545% | 5.05 GPU hours |
+| All observations | 20000 | 100% | 111.11 GPU hours |
+
+These are only MH components, not end-to-end wall times. Even at100 seconds
+per difficult galaxy, the two-replica MH components would be7.5 and50.5 GPU
+hours respectively. This is why a small difficult subset could afford longer
+chains. Conversely,10 seconds averaged over representative1024-galaxy batches
+need not hold for a smaller, exclusively difficult batch. Batch efficiency and
+mixing can both worsen. Benchmark the actual routed workload.
+
+The fresh1024-observation GalSBI throughput panel contains5 measured-mag<20
+and51 mag<22 objects (0.488% and4.980%). These are descriptive counts from
+the saved measurements, not estimates proving equality to FS2. The historical
+finite-prior model mock had142/20k below20, also a different population.
+
+The [pop-cosmos paper](https://arxiv.org/html/2602.03930v2#S3.SS3) demonstrates
+8.2 GPU seconds per galaxy on a GH200 with batches of1000 and512 walkers. It
+supports the feasibility of batched posterior inference, but its SED target,
+hardware and validation metrics do not establish SBSI throughput or shear
+precision. The present1024-object full-process timing is still pending.
+
+## Proposed bounded comparison and decision criteria
+
+1. Pin a common scene law, all likelihood artifacts and W. Resolve or bound
+   numerical generator/native-density differences. Generate independent atom
+   banks with explicit weights and complete neighbour information.
+2. Use the existing1024 independent GalSBI measurements for a representative
+   comparison after their MH run completes. That MH run is a candidate
+   comparator, not ground truth. Use an additional predeclared32-object panel
+   (eight per existing magnitude band) to examine bright tails, crowding and
+   both sides of proposed thresholds. Keep stratified diagnostic results
+   separate from population calibration estimates.
+3. Compare atom, MH, threshold20 hybrid and threshold22 hybrid on identical
+   observations and shear nodes. Use both independent atom banks and independent
+   integration seeds, plus longer/multiple-start MH references on difficult
+   cases. Examine common-bank errors, not just sampler-seed differences.
+4. Freeze a brightness-plus-diagnostic routing rule on the pilot; test it on
+   fresh data. Record route counts, escapes among apparently safe faint rows,
+   residual score/information differences and induced shear shifts. Require
+   overlap checks around both routing boundaries; do not tune to injected shear.
+5. Include an independently replicated common-prior selection calculation,
+   combine all rows, and benchmark actual routed batch sizes. Advance to20k
+   only after the combined numerical error and complete resource cost are
+   understood. Model closure remains distinct from FS2/image-level calibration.
+
+No fixed bank size, magnitude threshold or per-object ESS value is accepted
+by this assessment. The useful outcome is a cost-versus-shear-error comparison,
+with unresolved rows visible and no empirical corrections to force agreement.
+
+## Current MH comparison relevant to the fallback
+
+Array16788846_0–3 and report16788848 completed successfully. At16384 steps,
+after averaging four walkers within each of two independent replicas:
+
+| Observation | Measured magnitude | Control ratio Rhat at g1=.018/.022 | Stretch ratio Rhat |
+| --- | ---: | --- | --- |
+| 0 | 19.745 | 1.00396 / 1.00471 | 1.05724 / 1.05999 |
+| 1 | 21.255 | 1.07745 / 1.04877 | 1.00445 / 1.00710 |
+| 2 | 23.971 | 1.00486 / 1.00457 | 1.03128 / 1.03029 |
+| 3 | 25.118 | 1.01682 / 1.01661 | 1.00422 / 1.00424 |
+
+Stretch improves the difficult obs1 but worsens obs0 and obs2; obs1 stretch
+bulk ESS remains346/265. There is no uniformly accepted fallback and no
+population shear estimate. These results support continued algorithm checks,
+not selecting whichever proposal gives a preferred shear.
+
+Receipts: `/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_throughput_20261002/ensemble_report.json`
+and sibling `ensemble_report.md`; magnitude counts use
+`reference/observations.parquet` and `30-2.5*log10(measured_flux_from_mag_auto)`.
+The distinct1024-object throughput job16788845 remains active. The ensemble
+proposal experiment and the atom/continuous hybrid proposed here are separate
+ideas despite both using the word hybrid.

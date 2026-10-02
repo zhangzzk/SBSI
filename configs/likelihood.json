@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "release": "v3.2-like",
-  "description": "Catalogue likelihood used by v1.1-infer; distinct from the transition-aware V3.2 path preset.",
+  "description": "Configured default catalogue likelihood used by v1.1-infer and v1.2-infer; distinct from the path-only V3.5-like development model set.",
   "shear_transform": "intrinsic_ellipticity_only_v1",
   "measurement_model": {
     "path": null,

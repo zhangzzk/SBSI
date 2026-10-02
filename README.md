@@ -1,129 +1,93 @@
-# Simulation-Based Shear Inference (SBSI)
+# Simulation-Based Shear Inference
 
-SBSI is a scientific library for weak-lensing shear inference with a finite
-scene prior, a conditional measurement flow, detection probabilities, measured
-selection, and an optional atom-aligned blending response.
+SBSI provides model loading and prediction, finite-scene likelihoods,
+selection normalization, importance sampling, and Bayesian shear inference.
+BlendEMU owns image simulation, measurement, catalogue production, and
+response-emulator training.
 
-The current releases are:
+## Model and numerical identities
 
-| role | release | definition |
+| Role | Identity | Status |
 | --- | --- | --- |
-| numerical inference pipeline | `v1.1-infer` | [`configs/inference.json`](configs/inference.json) |
-| catalogue likelihood | `v3.2-like` | [`configs/likelihood.json`](configs/likelihood.json) |
+| Retained development model | `V3.9-like` | F8 flow, C8 classifier, physical-moment disk emulator |
+| Historical development model | `V3.6-like` | original common-descent flow and17-input classifier |
+| Historical model preset | `V3.5-like` | epoch154, trial9, three-classifier ensemble |
+| Default likelihood | `v3.2-like` | `configs/likelihood.json` |
+| Default estimator | `v1.1-infer` | `configs/inference.json` |
+| Tilted-stratified estimator | `v1.2-infer` | `configs/inference_v1_2.json` |
 
-These are independent scientific release labels. `v1.1-infer` identifies how
-an explicit likelihood and prior are sampled and solved; `v3.2-like` identifies
-the flow, detector, response artifact, and geometry used by that likelihood.
-Neither label replaces the SBSI package version, and neither should control code
-behavior without validating its configuration and artifact hashes.
+V3.9-like uses the same eight raw target/crowding inputs for its flow and
+classifier. Its constant-shear development bias is **+0.021% ±0.265 percentage
+points**, with measured radius>0.6 arcsec and magnitude<25.8 independently in
+each shear leg, without truth-property cuts. The classifier replicate gives
++0.062% ±0.265 percentage points. These reused development results do not
+establish robust 0.3% calibration; classifier probability losses worsened.
 
-`v3.2-like` is also not the same thing as the path-only
-`get_model("V3.2")` preset. The distinction and frozen hashes are documented in
-[`models/README.md`](models/README.md).
+The owner wrapped up the investigation on 2026-09-25. The exact artifacts,
+feature contract, original evidence and limitations are recorded in
+[the V3.9-like model guide](doc/V39_MODEL.md#decision-and-identity) and
+[manifest](configs/models_v3_9_like.json).
 
-The validated seed-501 500/500 Flow-E plus transition-aware detector set is
-named `V3.3-like` and is available as the path-only
-`get_model("V3.3-like")` preset. It is not yet the likelihood selected by
-`configs/likelihood.json`; see [`models/README.md`](models/README.md) for the
-exact artifacts and promotion boundary.
+## Inspect models
 
-## Inference workflow
+Set `SBSI_CACHE_DIR` to the external SBSI cache root and `BLENDEMU_RUNS_DIR`
+to the external BlendEMU runs root, then:
 
-The production workflow has one entry point:
+```bash
+python -m sbsi show-model V3.9-like
+python -m sbsi validate-model V3.9-like
+```
+
+`get_model("V3.9-like")` returns pinned paths. This names a model set, not a
+likelihood or numerical release. The default additive workflow is unchanged;
+the dedicated V3.6 disk driver cannot reuse its old feature stores for V3.9.
+See [loading and inference scope](doc/V39_MODEL.md#loading-and-inference-boundary).
+
+## Run inference
 
 ```bash
 python scripts/run_inference.py \
   --inference-config configs/inference.json \
   --likelihood-config configs/likelihood.json \
   --scene-store /path/to/scene \
-  --measurement-model /path/to/measurement_flow_mixed_g0_g005_E_s501_swaavg.pt \
+  --measurement-model /path/to/configured-flow.pt \
+  --blend-response-cache /path/to/rblend-cache \
   --model-cache /path/to/model-cache \
   --proposal-cache /path/to/proposal-cache \
   --output /new/output/path
 ```
 
-All catalogues, checkpoints, caches, and outputs are explicit user inputs. The
-repository configurations define the named scientific setup; they do not hide
-project data paths. The cluster-local reference wrapper is
-[`jobs/job_inference.sh`](jobs/job_inference.sh).
+Inputs and model/cache identities must match the selected likelihood config.
+See [the inference workflow](doc/INFERENCE.md#active-workflow).
 
-Supporting commands prepare reusable inputs:
+## Repository
 
-- `scripts/build_scene_prior.py` builds a guarded finite scene prior.
-- `scripts/build_catalogue_blend_response.py` builds the optional fixed
-  atom-aligned `R_blend` cache.
-- `scripts/prepare_image_closure_mock.py` maps one declared image leg into the
-  measurement-flow target convention.
+- `sbsi/`: supported model, likelihood, and inference modules.
+- `scripts/`: scene preparation, cache construction, inference, and reporting.
+- `jobs/`: reusable inference/cache launchers and the CPU test launcher.
+- `tests/`: core regression tests, model loading, and retained feature contracts.
+- `configs/`: numerical/likelihood configurations and model manifests.
+- `doc/`: current documentation; start with [the repository map](doc/REPOSITORY.md#active-layout).
+- `archive/`: dated, hash-indexed research snapshots; excluded from imports and tests.
 
-The inference result records the release labels, complete effective
-configuration, model/cache/input hashes, random streams, object partition, and
-per-object score/information moments needed for exact partition combination.
-Common random numbers are retained across every finite-difference view and
-nested draw rung.
-
-## Library areas
-
-Reusable behavior lives in `sbsi/`:
-
-1. `sbsi.flow` trains and tunes conditional measurement flows.
-2. `sbsi.scene_prior`, `sbsi.catalogue_likelihood`, and
-   `sbsi.catalogue_sampling` implement the finite-prior likelihood and defensive
-   importance sampler.
-3. `sbsi.catalogue_blend` and `sbsi.response` handle the external blending
-   response without copying BlendEMU's simulation or training implementation.
-4. `sbsi.catalogue_closure` and `sbsi.image_closure` provide likelihood- and
-   image-closure adapters and validation.
-
-## Image simulation and measurement
-
-BlendEMU owns image rendering, measurement, simulation-catalogue construction,
-and emulator training. SBSI consumes its supported catalogues and trained
-artifacts; it does not carry a second copy of that implementation. The example
-Slurm wrapper [`examples/job_blendemu.sh`](examples/job_blendemu.sh) runs the
-BlendEMU production steps from a user-owned configuration.
-
-## Flow training and tuning
-
-Copy [`examples/flow_training.yaml`](examples/flow_training.yaml), replace its
-catalogue and artifact paths, and run inside an appropriate compute allocation:
+## Installation and tests
 
 ```bash
-python -m sbsi flow --config my_flow.yaml --mode train
-python -m sbsi flow --config my_flow.yaml --mode tune
-```
-
-An editable install provides the equivalent `sbsi` command. Training writes the
-declared checkpoint and averaged `*_swaavg.pt` checkpoint. Tuning evaluates an
-explicit candidate list against a separate validation catalogue and writes a
-ranked JSON manifest. Existing artifacts are never overwritten.
-
-## Installation
-
-Use one Python environment for SBSI and its BlendEMU dependency:
-
-```bash
-python -m pip install --config-settings editable_mode=compat -e /path/to/blendemu
 python -m pip install -e /path/to/SBSI
+python -m pytest tests -q
 ```
 
-BlendEMU is required only when its classifier or response emulator is loaded.
-The measurement-flow checkpoint itself needs SBSI and PyTorch. Do not add
-checkout paths to `PYTHONPATH` or depend on the process working directory.
-
-The repository bundles only three small JSON likelihood artifacts. The
-seed-501 measurement flow is supplied externally and verified by SHA-256; see
-[`models/README.md`](models/README.md).
+Install BlendEMU in the same environment for the historical additive emulator.
+The disk-response loader also requires XGBoost. Heavy work and full
+test runs use the scheduler; see [environment and resources](doc/ENVIRONMENT.md#tests).
 
 ## Documentation
 
-- [`doc/API.md`](doc/API.md) defines the scope and public contract.
-- [`doc/INFERENCE.md`](doc/INFERENCE.md) defines the current releases and the
-  estimator.
-- [`doc/CATALOGUE_PRIOR.md`](doc/CATALOGUE_PRIOR.md) documents the finite-prior
-  likelihood and caches.
-- [`doc/CONVENTIONS.md`](doc/CONVENTIONS.md) fixes catalogue, shear, response,
-  seed, and reported-`m` conventions.
-- [`doc/ENVIRONMENT.md`](doc/ENVIRONMENT.md) gives local interpreter, test, and
-  scheduler instructions.
-- [`doc/WORKLOG.md`](doc/WORKLOG.md) is the preserved, newest-first scientific
-  record.
+- [API and scope](doc/API.md#scope-boundary)
+- [Inference](doc/INFERENCE.md#current-identities)
+- [Finite catalogue prior](doc/CATALOGUE_PRIOR.md)
+- [Mathematical derivation](doc/MATH.md)
+- [Scientific conventions](doc/CONVENTIONS.md)
+- [V3.9-like evidence](doc/V39_MODEL.md#development-evidence)
+- [Historical V3.6-like evidence](doc/JOINT_CALIBRATION.md#retained-evidence)
+- [Change log](doc/WORKLOG.md)
