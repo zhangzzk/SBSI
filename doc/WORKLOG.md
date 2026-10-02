@@ -1,69 +1,43 @@
 # Work log
 
-## 2026-10-02 — Light-transfer joint move (target + one near neighbour)
+## 2026-10-02 — Light-transfer joint move tested on the panel: no gain, code removed
 
-The owner asked for joint sampling across the target and its neighbours. Existing moves
-change either the target or the environment, never both. Added
-`GalSBIScenePrior.transfer_light` and the pure helper `light_transfer_map`
-(`sbsi/galsbi_scene_prior.py`).
+The owner asked for joint target+neighbour sampling. Built
+`GalSBIScenePrior.transfer_light` and `--light-transfer-probability`
+(commits 4853720, 50eeb5c, b2b72cc).
 
-**Final move (commit 50eeb5c).**
-- Pick one neighbour within 4" uniformly.
-- Step the target m_r by delta: an equal-weight normal mixture, by default sd
-  .05 and .3 mag.
-- The neighbour's r flux becomes F_n' = F_n + (F_t - F_t')/w, changing only
-  its native M_B. Here w = exp(-d^2/2s^2), with s log-uniform in [.5, 4]".
-- Repeating the move with -delta undoes it. The acceptance ratio is therefore
-  target prior × neighbour prior × likelihood × Jacobian F_n/F_n'.
-- If the neighbour would need negative flux, the move is rejected.
+**The move.** Step the target m_r and let one neighbour within 4" absorb the
+flux through a distance weight. Repeating the move with the opposite step
+undoes it. Tests:
+- exact undo and a Jacobian check;
+- toy stationarity within 5σ, failing by more than 10σ without the Jacobian.
 
-**Sampler changes.**
-- `--light-transfer-probability p` adds a block with probability p and scales
-  the others by 1-p.
-- `--light-transfer-scales` sets the step sizes.
-- `result.json` records attempts, plus active and accepted counts per chain
-  (commit b2b72cc).
-- The move requires the invariant cache.
-- Two block-condition fixes let a seventh block coexist: `block == 6` meant
-  local positions only when ensemble moves were off.
+With p=0 the output was identical to the unmodified sampler (difference 0.0).
 
-Tests (`tests/test_galsbi_scene_prior.py`):
-- exact undo and a finite-difference check of the Jacobian;
-- only one near neighbour changes, and far neighbours stay fixed;
-- three MH steps keep a toy joint prior (100k scenes) within 5σ in mean,
-  variance and correlation;
-- the same test with the Jacobian removed misses by more than 10σ.
+**Panel result, 40 galaxies, 32k steps, against same-seed controls.**
+- Plain: 6/40 against 5/40 passes. Log-posterior R-hat 1.149 against 1.137.
+  Stuck 17 against 15.
+- 8 rungs: 15/40 against 16/40 passes. Log-posterior R-hat 1.042 against 1.037.
+  Stuck 9 against 7.
 
-Scene-prior and summary tests: 21 passed.
+Light-transfer acceptance had a median of about 2%. Accepted target changes
+had a median of 0.010 mag. Obs 42 and 155 kept their bright-companion chains
+in every arm. No measurable gain, so the code was reverted (sbsi, scripts and
+tests now match 60a3646). Tests after the revert: 27 passed (scene prior,
+summary, MCMC proposals). Details:
+[light transfer](TEMPERED_MH.md#light-transfer-joint-move-no-gain-removed).
 
-**First version dropped.** Commit 4853720 stepped the neighbour's M_B (sd .3/3
-mag) and moved the matching flux onto the target. A CPU smoke run accepted
-56% of these moves, but the target moved by a median of 0.000 mag (99th
-percentile 0.010). Neighbours within 4" are mostly m_r 24–27, so those moves
-did nothing useful.
+Also recorded the 8-rung 32k ladder: 16/40 passes for the same GPU time as
+16 rungs at 16k (15/40)
+([sparser ladder](TEMPERED_MH.md#sparser-ladder-8-rungs-32k-steps)).
 
-CPU checks under `$DATA_DIR/sbsi/catalogue_prior/galsbi_light_transfer_20261002/`:
-- Identity: p=0 against the unmodified sampler gives a max difference of 0.0
-  over all saved arrays, for every version (`identity/identity.json`).
-- Step-size scan (`scan_summary.json`): p=.3, untempered, 512 steps, obs 4,
-  24, 42 and 155.
-  - About half of attempts are possible; the rest need more light than the
-    neighbour has.
-  - Of possible attempts, 7–36% are accepted for obs 4/24, 10–16% for obs 42,
-    and only 1.5–3.5% for obs 155.
-  - Accepted target changes have a median of 0.001–0.03 mag, no larger than
-    the within-chain m_r spread of 0.02–0.07 mag.
-  - So the likelihood does not treat target light and light from a neighbour
-    3" away as interchangeable along this simple weight. The 0.3 mag change
-    needed to leave the bright-companion mode is almost never accepted.
+GPU use stayed within 4 inter GPUs throughout: plain jobs followed the ladder
+jobs, then tempered jobs, then controls. All jobs exited 0:0.
 
-Panel runs queued with p=.1, default scales, and the same seeds and split as
-ladder8, 32768 steps:
-- plain (no tempering): 16795780/2/4/6, which wait for the ladder8 jobs;
-- 8-rung tempered: 16795781/3/5/7, each waiting for one plain job;
-- comparisons and stuck traces: 16795790–3.
-
-At most 4 GPUs at once. The scan predicts a small effect. Results pending.
+Next: the bright-companion state (obs 42, 155) and the fainter-target chains
+(obs 125, 234) need a move that matches how the measurement model actually
+splits light between neighbours. Alternatively, estimate how much mass that
+state carries, rather than relying on more proposal tuning.
 
 ## 2026-10-02 — Tempering follow-up: more draws help; bright-companion mode found
 

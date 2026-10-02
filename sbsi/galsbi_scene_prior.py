@@ -14,18 +14,6 @@ from scipy.special import gammaln
 ARCSEC2_PER_SR = (180 / np.pi * 3600)**2
 
 
-def light_transfer_map(target_m_r, new_target_m_r, neighbour_m_r, weight):
-    """Neighbour m_r' with F_n' = F_n + (F_t - F_t')/weight, and log|dm_n'/dm_n|.
-
-    Returns nan where the neighbour flux would not stay positive.
-    """
-    flux = (10**(-.4*np.asarray(neighbour_m_r, dtype=float))
-            + (10**(-.4*np.asarray(target_m_r)) - 10**(-.4*np.asarray(new_target_m_r)))/weight)
-    with np.errstate(invalid='ignore', divide='ignore'):
-        new = np.where(flux > 0, -2.5*np.log10(flux), np.nan)
-    return new, .4*np.log(10)*(new-neighbour_m_r)
-
-
 @dataclass
 class GalSBISceneBatch:
     """Native targets and a CSR list of neighbours with physical sky offsets."""
@@ -188,62 +176,6 @@ estimated post-cut surface density never enters the sampling algorithm.
         outside = np.square(proposed).sum(axis=1) > self.aperture_arcsec**2
         proposed[outside] = scenes.offset_arcsec[outside]
         return GalSBISceneBatch(scenes.targets, scenes.neighbours, scenes.indptr.copy(), proposed)
-
-    def transfer_light(self, scenes, target_m_r, seed, *, radius_arcsec=4., step_scales=(.05, .3),
-                       overlap_scales=(.5, 4.)):
-        """Joint target/neighbour flux move for the shared-light posterior modes.
-
-        In every scene with a neighbour inside ``radius_arcsec``, choose one such
-        neighbour uniformly and shift the target m_r by delta. The neighbour
-        takes or returns the r flux, seen through a weight w=exp(-d^2/2s^2):
-        F_n' = F_n + (F_t - F_t')/w, changing only its native M_B. The neighbour
-        choice, normal-mixture delta and log-uniform s are independent of marks.
-        Repeating the move with -delta restores the old state, so it is an
-        involution with symmetric auxiliaries. ``log_correction`` is the
-        neighbour prior ratio plus the Jacobian log(F_n/F_n'). The caller adds
-        the target prior ratio at m_r'. Rows without a near neighbour, with
-        F_n' <= 0, or with an off-support neighbour are inactive and must be
-        rejected. Returns (scenes, target m_r', log_correction, active).
-        """
-        if (not 0 < radius_arcsec <= self.aperture_arcsec or min(step_scales) <= 0
-                or not 0 < overlap_scales[0] <= overlap_scales[1]):
-            raise ValueError('radius inside aperture and positive step/overlap scales required')
-        rng = np.random.default_rng(seed)
-        n = len(scenes.counts)
-        distance = np.sqrt(np.square(scenes.offset_arcsec).sum(axis=1))
-        near = np.flatnonzero(distance < radius_arcsec)
-        k = np.bincount(scenes.owner[near], minlength=n)
-        # Owner-sorted CSR keeps each scene's near neighbours contiguous.
-        rank = np.minimum((rng.random(n)*k).astype(int), np.maximum(k-1, 0))
-        delta = rng.normal(size=n)*np.asarray(step_scales)[rng.integers(0, len(step_scales), n)]
-        s = np.exp(rng.uniform(*np.log(overlap_scales), n))
-        rows = np.flatnonzero(k > 0)
-        target = np.array(target_m_r, dtype=float)
-        if not len(rows):
-            return scenes.take(np.arange(n)), target, np.zeros(n), np.zeros(n, dtype=bool)
-        chosen = near[(np.r_[0, np.cumsum(k)[:-1]]+rank)[rows]]
-        old = {key: v[chosen] for key, v in scenes.neighbours.items()}
-        weight = np.exp(-np.square(distance[chosen])/(2*np.square(s[rows])))
-        new_target = target[rows]+delta[rows]
-        new_m_r, log_jacobian = light_transfer_map(target[rows], new_target, old['m_r'], weight)
-        ok = np.isfinite(new_m_r)
-        new = {key: v.copy() for key, v in old.items()}
-        # m_r = M_B + offset(z, SED), so the native shift equals the m_r shift.
-        new['M_B'] = np.where(ok, old['M_B']+new_m_r-old['m_r'], old['M_B'])
-        new.update({key: value for key, value in self.galaxy.photometry(new['z'], new['M_B'], new['c']).items()
-                    if key in new})
-        log_neighbour = self.galaxy.log_intensity(new)-self.galaxy.log_intensity(old)
-        ok &= np.isfinite(log_neighbour)
-        active = np.zeros(n, dtype=bool)
-        active[rows[ok]] = True
-        target[rows[ok]] = new_target[ok]
-        log_correction = np.zeros(n)
-        log_correction[rows[ok]] = log_neighbour[ok]+log_jacobian[ok]
-        neighbours = {key: v.copy() for key, v in scenes.neighbours.items()}
-        for key, value in new.items():
-            neighbours[key][chosen[ok]] = value[ok]
-        return (GalSBISceneBatch(scenes.targets, neighbours, scenes.indptr.copy(), scenes.offset_arcsec),
-                target, log_correction, active)
 
     def _with_neighbours(self, targets, rng, *, target_proposals, intensity_fraction=1.):
         n_scenes = len(targets['z'])

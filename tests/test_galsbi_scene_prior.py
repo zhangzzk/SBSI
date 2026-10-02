@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 from scipy.stats import poisson
 
-from sbsi.galsbi_scene_prior import ARCSEC2_PER_SR, GalSBISceneBatch, GalSBIScenePrior, light_transfer_map
+from sbsi.galsbi_scene_prior import ARCSEC2_PER_SR, GalSBISceneBatch, GalSBIScenePrior
 from sbsi.v39_inference import physical_close_crowding
 from sbsi.pseudo_marginal import metropolis_accept
 
@@ -229,88 +229,3 @@ def test_local_position_mh_recovers_nonuniform_disk_likelihood():
     values = scenes.offset_arcsec
     assert abs(values[:, 0].mean()-expected_x) < 5*values[:, 0].std(ddof=1)/np.sqrt(n)
     assert abs(values[:, 1].mean()) < 5*values[:, 1].std(ddof=1)/np.sqrt(n)
-
-
-class MagnitudeMarks:
-    """Truncated-normal M_B marks with a fixed z-dependent m_r offset."""
-
-    def photometry(self, z, M_B, c):
-        m_r = M_B+20+z
-        return dict(m_r=m_r, m_i=m_r-.3, M_i=M_B-.3)
-
-    def log_intensity(self, data):
-        M = np.asarray(data['M_B'])
-        return np.where(M < 3.5, -.5*(M-1)**2, -np.inf)
-
-
-def light_scenes(n, rng, offsets=((1.5, 0.), (0., 6.))):
-    from scipy.stats import truncnorm
-    k = len(offsets)
-    z = rng.random(n*k)
-    M = truncnorm.rvs(-np.inf, 2.5, loc=1, scale=1, size=n*k, random_state=rng)
-    neighbours = dict(z=z, M_B=M, c=np.full((n*k, 5), .2)) | MagnitudeMarks().photometry(z, M, None)
-    scenes = GalSBISceneBatch(dict(z=np.full(n, .1)), neighbours, np.arange(n+1)*k,
-                              np.tile(np.asarray(offsets, dtype=float), (n, 1)))
-    return scenes, rng.normal(20, .5, n)
-
-
-def test_light_transfer_map_is_an_involution_with_flux_jacobian():
-    m_t, m_t_new, m_n, w = np.array([20., 18.3]), np.array([19.9, 18.5]), np.array([21., 18.6]), np.array([.4, .3])
-    forward, log_jacobian = light_transfer_map(m_t, m_t_new, m_n, w)
-    back, back_log_jacobian = light_transfer_map(m_t_new, m_t, forward, w)
-    np.testing.assert_allclose(back, m_n, atol=1e-12)
-    np.testing.assert_allclose(log_jacobian+back_log_jacobian, 0, atol=1e-12)
-    h = 1e-6
-    derivative = (light_transfer_map(m_t, m_t_new, m_n+h, w)[0]-light_transfer_map(m_t, m_t_new, m_n-h, w)[0])/(2*h)
-    np.testing.assert_allclose(np.log(derivative), log_jacobian, atol=1e-7)
-    # Brightening the target by more than the neighbour can give is invalid.
-    assert np.isnan(light_transfer_map([20.], [19.], [25.], [1.])[0]).all()
-
-
-def test_light_transfer_moves_one_near_neighbour_and_leaves_others_alone():
-    prior = GalSBIScenePrior(MagnitudeMarks(), aperture_arcsec=10.)
-    scenes, m_t = light_scenes(2000, np.random.default_rng(5), offsets=((1.5, 0.), (3., 0.), (0., 6.)))
-    empty = GalSBISceneBatch(dict(z=np.array([.1])), {k: v[:0] for k, v in scenes.neighbours.items()},
-                             np.array([0, 0]), np.empty((0, 2)))
-    new, m_new, correction, active = prior.transfer_light(scenes, m_t, 6)
-    assert .5 < active.mean() < 1
-    changed = new.neighbours['M_B'] != scenes.neighbours['M_B']
-    np.testing.assert_array_equal(np.bincount(scenes.owner[changed], minlength=2000), active)
-    assert not changed[2::3].any() and changed[0::3].any() and changed[1::3].any()
-    np.testing.assert_array_equal(new.neighbours['m_r'], new.neighbours['M_B']+20+new.neighbours['z'])
-    np.testing.assert_array_equal(m_new[~active], m_t[~active])
-    assert (correction[~active] == 0).all() and (m_new[active] != m_t[active]).all()
-    assert new.targets is scenes.targets
-    empty_new, empty_m, _, empty_active = prior.transfer_light(empty, np.array([20.]), 7)
-    assert not empty_active.any() and empty_m[0] == 20 and empty_new.indptr[-1] == 0
-
-
-@pytest.mark.parametrize('jacobian', [True, False])
-def test_light_transfer_mh_preserves_joint_target_and_neighbour_prior(jacobian):
-    prior = GalSBIScenePrior(MagnitudeMarks(), aperture_arcsec=10.)
-    rng = np.random.default_rng(91)
-    n = 100000
-    scenes, m_t = light_scenes(n, rng)
-    accepted_total = 0
-    for _ in range(3):
-        new, m_new, correction, active = prior.transfer_light(scenes, m_t, int(rng.integers(0, 2**63)))
-        if not jacobian:
-            shift = np.bincount(scenes.owner, weights=new.neighbours['m_r']-scenes.neighbours['m_r'], minlength=n)
-            correction = correction-.4*np.log(10)*shift
-        accepted = metropolis_accept(-.5*((m_t-20)/.5)**2,
-            np.where(active, -.5*((m_new-20)/.5)**2+correction, -np.inf), rng.uniform(1e-15, 1, n))
-        accepted_total += accepted.mean()
-        scenes = scenes.retained(new, accepted)
-        m_t = np.where(accepted, m_new, m_t)
-    near, far = scenes.neighbours['M_B'][0::2], scenes.neighbours['M_B'][1::2]
-    from scipy.stats import truncnorm
-    mean, var = truncnorm.stats(-np.inf, 2.5, loc=1, scale=1, moments='mv')
-    z = np.array([(m_t.mean()-20)/(.5/np.sqrt(n)), (near.mean()-mean)/np.sqrt(var/n),
-                  ((m_t-20)**2).mean()/.25-1, np.corrcoef(m_t, near)[0, 1]*np.sqrt(n)])
-    z[2] /= np.sqrt(2/n)
-    assert accepted_total/3 > .2
-    np.testing.assert_array_equal(far, light_scenes(n, np.random.default_rng(91))[0].neighbours['M_B'][1::2])
-    if jacobian:
-        assert np.all(np.abs(z) < 5), z
-    else:
-        assert np.max(np.abs(z)) > 10, z

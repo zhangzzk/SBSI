@@ -131,6 +131,53 @@ m_r 18.75 against about 18.32 (bright companion). Obs 125 and 234 have chains
 with the target 1–2 mag fainter (m_r 21.6–22.6 against 20.2; 20.7–20.8
 against 19.8). The sparser ladder is not a cost cut per result.
 
+## Light-transfer joint move: no gain, removed
+
+The owner asked for joint target+neighbour sampling.
+
+**The move.** Pick one neighbour within 4". Step the target m_r by delta
+(equal mix of sd .05 and .3 mag). The neighbour's r flux changes by
+(F_t - F_t')/w, with w = exp(-d^2/2s^2) and s log-uniform in [.5, 4]".
+Repeating the move with -delta undoes it. The acceptance ratio is target
+prior × neighbour prior × likelihood × F_n/F_n'. A toy stationarity test
+passed, and the same test failed by more than 10σ without the Jacobian. An
+earlier version stepped the neighbour's brightness instead; it was accepted
+56% of the time but moved the target by a median of 0.000 mag, because near
+neighbours are mostly m_r 24–27.
+
+**Panel test.** p=.1, 32768 steps, same seeds and split as the 8-rung run.
+Each arm was compared with a same-seed control, because the panel was chosen
+from the original run's stuck chains.
+
+| 40 galaxies | plain + LT | plain control | 8 rungs + LT | 8 rungs control |
+| --- | --- | --- | --- | --- |
+| Shear-ratio check passes | 6/40 (15% ± 6%) | 5/40 (13% ± 5%) | 15/40 (38% ± 8%) | 16/40 (40% ± 8%) |
+| Median R-hat: ratio .022 / log posterior | 1.061 / 1.149 | 1.038 / 1.137 | 1.018 / 1.042 | 1.016 / 1.037 |
+| Galaxies with a chain >= 8 below the best | 17 | 15 | 9 | 7 |
+
+"Plain" means no tempering and no narrow steps.
+
+Light-transfer acceptance had a median of 1.8–1.9% per galaxy (range
+0.2–13%, counting impossible attempts). About half of attempts need more
+light than the neighbour has. In the plain arm, accepted target changes had
+a median of 0.010 mag, and 1.7% exceeded 0.3 mag. Obs 42 and 155 kept their
+bright-companion chains in every arm (obs 155: target 18.80 next to a
+neighbour of 19.12 at 2.7", log posterior about 10 below the other chains).
+
+The likelihood does not treat target light and light from a neighbour 3"
+away as interchangeable along this simple weight. A CPU step-size scan
+(`scan_summary.json`) showed accepted changes no larger than the ordinary
+within-chain m_r spread of 0.02–0.07 mag. The code was removed again. It is
+kept in commit b2b72cc and the study's `source_snapshot/`; reverting the
+removal commit restores it.
+
+Root `$DATA_DIR/sbsi/catalogue_prior/galsbi_light_transfer_20261002/`:
+- `plain_32k`, `plain_nolt_32k` and `ladder8_32k` runs, plus their `*_comparison.json`;
+- `light_moves_*.json`, `stuck_galaxies_*`, and `identity/` (max difference 0.0);
+- `v1_neighbour_step/` and `v2_target_step/` (earlier checks).
+
+All jobs exited 0:0.
+
 ## Receipts
 
 Root `$DATA_DIR/sbsi/catalogue_prior/galsbi_tempering_20261002/`:
