@@ -20,12 +20,14 @@ from sbsi.models import V39_LIKE, load_detection_classifier
 from sbsi.shear_map import apply_shear_to_ellipticity
 
 
-def selected_reference(root):
-    reference = root/'reference'
+def selected_reference(root, reference=None):
+    """The study's cohort reference, or an explicit population reference (no cohorts file)."""
+    cohort = reference is None
+    reference = root/'reference' if cohort else Path(reference)
     receipt = json.loads((reference/'result.json').read_text())
     if (not receipt['preparation_checks_pass']
             or receipt['observations_sha256'] != digest(reference/'observations.parquet')
-            or receipt['cohorts_sha256'] != digest(reference/'cohorts.json')):
+            or (cohort and receipt['cohorts_sha256'] != digest(reference/'cohorts.json'))):
         raise ValueError('bright reference failed validation')
     return reference, receipt
 
@@ -40,9 +42,9 @@ def prepare(root, plan):
     selected_reference(root)
 
 
-def selection(root, plan, replica, *, smoke=False):
+def selection(root, plan, replica, *, smoke=False, reference=None):
     """Independent scenes; common random numbers across shear nodes and nested draws."""
-    reference, _ = selected_reference(root)
+    reference, _ = selected_reference(root, reference)
     protocol = json.loads((reference/'protocol.json').read_text())
     flow = load_measurement_model(V39_LIKE.flow_checkpoints[0], device='cuda')
     detector = load_detection_classifier(V39_LIKE, device='cuda')
@@ -93,9 +95,9 @@ def selection(root, plan, replica, *, smoke=False):
         uncertainty='Independent scene chunks and replicas; CRN over shear nodes; nested conditional draw ladder'))
 
 
-def profiles(root, plan, replica, *, smoke=False):
-    reference, receipt = selected_reference(root)
-    runroot = root/('smoke' if smoke else f'runs/replica{replica}')
+def profiles(root, plan, replica, *, smoke=False, reference=None, runroot=None):
+    reference, receipt = selected_reference(root, reference)
+    runroot = runroot or root/('smoke' if smoke else f'runs/replica{replica}')
     protocol, _ = checked_run(runroot)
     observed = pd.read_parquet(reference/'observations.parquet').iloc[protocol['observations']].reset_index(drop=True)
     stride = 1 if smoke else plan['profile_stride']
