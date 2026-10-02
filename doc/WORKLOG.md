@@ -1,5 +1,23 @@
 # Work log
 
+## 2026-10-02 — Tempering follow-up: more draws help; bright-companion mode found
+
+Owner chose a sparser ladder, longer runs, and a diagnosis of the six
+still-stuck galaxies. Doc-only change plus experiment scripts in the data
+root: `make_ladder.py`, `stuck_galaxies.py`, `submit_ladder8.sh`, and an
+optional draw limit in deep-dive `compare_tempering.py`.
+
+The first-half rerun of panel16k (job 16795404) shows doubling the draws
+lowers R-hat for 39/40 galaxies and raises passes from 9/40 to 15/40. Of the
+six stuck galaxies, four move between states within the run, and two (42, 155)
+stay in a bright-companion mode for the whole run. That mode is also present
+in the original sampler: a neighbour as bright as the target about 3" away,
+with the target about 0.3 mag fainter. Details:
+[follow-up](TEMPERED_MH.md#follow-up-more-draws-and-the-still-stuck-galaxies).
+
+Submitted 8-rung, 32768-step runs on 4 inter GPUs (jobs 16795399–402), plus
+dependent comparison 16795418 and trace job 16795419. Results are pending.
+
 ## 2026-10-02 — Tempered MH frees the two-mode trap on a 40-galaxy panel
 
 Owner asked to "work it" after the sampling deep dive

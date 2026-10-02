@@ -72,6 +72,47 @@ are still needed. Swap rates are high everywhere, so a sparser ladder (about
 target+environment mode-jump move remains the cheaper alternative
 (`galsbi_sampling_deepdive_20261002/README.md`). No 20k run was launched.
 
+## Follow-up: more draws and the still-stuck galaxies
+
+**More draws help.** The panel16k comparison was rerun on only the first 6144
+kept draws (`compare_tempering.py ... 6144`, job 16795404). Going from 6144 to
+12288 draws gave:
+- worst shear-ratio R-hat lower for 39/40 galaxies;
+- median R-hat - 1 from 0.036 to 0.023;
+- pass rate from 9/40 to 15/40;
+- median ratio ESS from 1026 to 1340.
+
+The remaining failures are mostly too few effective draws, not a hard trap.
+
+**Two kinds of stuck galaxy.** `stuck_galaxies.py` (job 16795409) tracked the
+six galaxies with a chain 8+ log units low (10, 42, 125, 149, 155, 234). It
+uses 1536-draw block means of log posterior, magnitude, radius, b and
+neighbour count; figure `stuck_galaxies.png`.
+- 10, 125, 149, 234: chains go down into the low state and come back within
+  the run. The last-quarter flag catches whichever chain is on an excursion.
+  These should improve with more steps.
+- 42, 155: one chain sits in the same low state for all 12288 draws. The
+  original run has the same state in its own chains (obs 155: 2/8 chains, lp
+  about -1 against about 10; obs 42: 1/8). Final scenes (one snapshot per chain) show a **bright
+  companion**: a neighbour about as bright as the target, 3.1"/m_r 18.6 for
+  obs 155 and 3.5"/m_r 20.6 for obs 42. The target is about 0.3 mag fainter to
+  compensate. No healthy chain has a neighbour brighter than m_r 21.5 within 4".
+  This is a different mode from the faint-neighbour mode in the deep dive.
+  Likelihood tempering did not remove it in 16k steps. Only cold levels are
+  saved, so whether the hot levels leave it is untested. Removing the
+  companion while brightening the target in one step is the natural joint move
+  for it.
+
+Per-chain shear scores are heavy-tailed: last-quarter chain means reach -174
+and +142 against typical values of about 10. This drives the large score
+errors of obs 42 and 125, and has not been investigated.
+
+**Sparser ladder running.** 8 rungs (`make_ladder.py 8`: 1, .7883, .6167,
+.4449, .2849, .1473, .05014, .005), 32768 steps, 8192 warmup, fresh seeds,
+same panel and split (`submit_ladder8.sh`, jobs 16795399–16795402). The
+equal-rejection prediction was 0.45 swap acceptance; early warmup gives
+0.56–0.66. The step time is 0.11 s, against 0.19 s for 16 rungs.
+
 ## Receipts
 
 Root `$DATA_DIR/sbsi/catalogue_prior/galsbi_tempering_20261002/`:
