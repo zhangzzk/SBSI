@@ -107,11 +107,29 @@ Per-chain shear scores are heavy-tailed: last-quarter chain means reach -174
 and +142 against typical values of about 10. This drives the large score
 errors of obs 42 and 125, and has not been investigated.
 
-**Sparser ladder running.** 8 rungs (`make_ladder.py 8`: 1, .7883, .6167,
-.4449, .2849, .1473, .05014, .005), 32768 steps, 8192 warmup, fresh seeds,
-same panel and split (`submit_ladder8.sh`, jobs 16795399–16795402). The
-equal-rejection prediction was 0.45 swap acceptance; early warmup gives
-0.56–0.66. The step time is 0.11 s, against 0.19 s for 16 rungs.
+## Sparser ladder: 8 rungs, 32k steps
+
+8 rungs (`make_ladder.py 8`: 1, .7883, .6167, .4449, .2849, .1473, .05014,
+.005), 32768 steps, 8192 warmup, fresh seeds, same panel and split
+(`submit_ladder8.sh`, jobs 16795399–16795402, 58–63 min each, all 0:0).
+Comparison: `ladder8_32k_comparison.json`; traces: `stuck_galaxies_ladder8.*`.
+
+| 40 galaxies | 8 rungs, 32k | 16 rungs, 16k | original, 32k |
+| --- | --- | --- | --- |
+| Shear-ratio check passes | 16/40 (40% ± 8%) | 15/40 (38% ± 8%) | 2/40 |
+| Median R-hat: ratio .022 / log posterior / magnitude | 1.016 / 1.037 / 1.064 | 1.021 / 1.037 / 1.047 | 1.103 / 1.249 / 1.255 |
+| Median spread of chain-mean log posteriors | 3.9 | 4.3 | 11.2 |
+| Galaxies with a chain >= 8 below the best | 7/40 | 6/40 | 32/40 |
+| Replica score disagreement abs(z) < 2 | 38/40 | 40/40 | 35/40 |
+| Adjacent swap acceptance after warmup | 0.43–0.52 | 0.66–0.78 | — |
+
+Same GPU time per galaxy (about 180 against 170 GPU s per replica), twice
+the stored draws, nearly the same quality. Only 10 galaxies pass in both runs,
+so passes near R-hat 1.01 move between runs by chance. Stuck in the 8-rung
+run: 10, 42, 76, 79, 125, 155, 234. Obs 155 still has one chain at
+m_r 18.75 against about 18.32 (bright companion). Obs 125 and 234 have chains
+with the target 1–2 mag fainter (m_r 21.6–22.6 against 20.2; 20.7–20.8
+against 19.8). The sparser ladder is not a cost cut per result.
 
 ## Receipts
 
