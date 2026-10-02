@@ -77,6 +77,8 @@ def main():
                         help='likelihood-tempering ladder, starting at the posterior (1) and strictly decreasing')
     parser.add_argument('--narrow-step-probability', type=float, default=0.,
                         help='state-independent share of morphology steps at a quarter of the frozen scale')
+    parser.add_argument('--light-transfer-probability', type=float, default=0.,
+                        help='share of steps that move r flux between the target and one neighbour within 4 arcsec')
     parser.add_argument('--local-positions', action='store_true')
     parser.add_argument('--position-scale', type=float, default=.2)
     parser.add_argument('--observation-indices', type=int, nargs='+')
@@ -121,6 +123,9 @@ def main():
         raise ValueError('tempering requires persistent per-chain joint morphology and betas decreasing from 1 to >0')
     if not 0 <= args.narrow_step_probability < 1 or (args.narrow_step_probability and not args.joint_morphology):
         raise ValueError('narrow steps require joint morphology and probability in [0, 1)')
+    if not 0 <= args.light_transfer_probability < 1 or (args.light_transfer_probability and not (
+            args.joint_morphology and args.reuse_invariant_work)):
+        raise ValueError('light transfer requires persistent joint morphology, the invariant cache and probability in [0, 1)')
     if (args.output/'result.json').exists():
         raise ValueError('fresh output required')
     args.output.mkdir(parents=True, exist_ok=True)
@@ -223,6 +228,16 @@ def main():
             swaps='deterministic even/odd adjacent-level exchange after every step',
             adaptation='per level row during warmup, not carried by swapped states; then frozen',
             stored='posterior level only')
+    light_block = None
+    if args.light_transfer_probability:
+        light_block = len(protocol['proposal_block_probabilities'])
+        protocol['proposal_blocks']['light_transfer'] = [1]
+        protocol['proposal_block_probabilities'] = [(1-args.light_transfer_probability)*p
+            for p in protocol['proposal_block_probabilities']]+[args.light_transfer_probability]
+        protocol['light_transfer'] = dict(probability=args.light_transfer_probability, radius_arcsec=4.,
+            neighbour='uniform among neighbours within radius', step_scales=[.3, 3.],
+            overlap_scales_arcsec=[.5, 4.], flux="F_t'=F_t+exp(-d^2/2s^2)(F_n-F_n')",
+            acceptance="target prior, neighbour prior, likelihood and Jacobian F_t/F_t'; involution with -delta")
     if args.narrow_step_probability:
         protocol['narrow_morphology_steps'] = dict(probability=args.narrow_step_probability, scale=.25,
             choice='independent of state, so the mixture of symmetric kernels stays exact')
@@ -424,20 +439,28 @@ def main():
         elif ensemble_move:
             proposal, log_hastings, active_proposal = complementary_stretch_proposal(
                 x, [1, 6, 7], nchains, rng)
-        environment_only = block == 4 or (block == 6 and not ensemble_move)
+        elif block == light_block:
+            light_scene, proposal[:, 1], log_hastings, active_proposal = prior.transfer_light(
+                scene, x[:, 1], int(rng.integers(0, 2**63)))
+        environment_only = block == 4 or (args.local_positions and block == 6)
         invariant_likelihood = args.reuse_invariant_work and block in (2, 5)
         if args.reuse_invariant_work and environment_only:
             newprior, newdata, new_type_probability = logprior, scene.targets, type_probability
             invariant_audit['target_prior_calls_skipped'] += 1
         else:
             newprior, newdata, new_type_probability = target_prior(proposal, newkinds)
+        if block == light_block:
+            newprior = np.where(active_proposal, newprior, -np.inf)
         fraction = 0.
         if persistent:
             newscene = GalSBISceneBatch(newdata, scene.neighbours, scene.indptr, scene.offset_arcsec)
             if block == 4 or joint_environment:
                 fraction = 1. if joint_environment or rng.random() < .1 else args.refresh_fraction
                 newscene = prior.refresh(newscene, fraction, int(rng.integers(0, 2**63)))
-            elif block == 6 and not ensemble_move:
+            elif block == light_block:
+                newscene = GalSBISceneBatch(newdata, light_scene.neighbours, light_scene.indptr,
+                                            light_scene.offset_arcsec)
+            elif args.local_positions and block == 6:
                 newscene = prior.move_positions(newscene, args.position_scale, int(rng.integers(0, 2**63)))
             if invariant_likelihood:
                 # At fixed m_r, angular circularized radius, n, a, phase and
@@ -492,7 +515,7 @@ def main():
             ((x, proposal), (kinds, newkinds), (logprior, newprior), (loglike, newlike),
              (summaries, newsummary), (kernels, newkernel), (type_probability, new_type_probability))]
         if persistent:
-            if args.reuse_invariant_work and not (environment_only or joint_environment):
+            if args.reuse_invariant_work and not (environment_only or joint_environment or block == light_block):
                 # Replacing target marks does not replace or copy neighbours.
                 scene = GalSBISceneBatch(
                     {key: retained(value, newscene.targets[key], accepted) for key, value in scene.targets.items()},
