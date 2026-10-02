@@ -1,5 +1,37 @@
 # Work log
 
+## 2026-10-03 — Selection-corrected bright-only g1 on the 10k mock: not stable yet
+
+The owner asked for the bright-only estimate first. Details in
+[the estimate section](HYBRID_SAMPLING.md#selection-corrected-bright-only-g1-from-the-same-chains-2026-10-03).
+
+Code:
+- `scripts/run_galsbi_bright.py`: `selection()`/`profiles()` take an explicit population reference and run
+  folder (commit e77ce80). `tests/test_galsbi_bright.py` has a new test; `pytest tests/test_galsbi_bright.py -q`
+  → 6 passed.
+- The study driver lives in `$DATA_DIR/.../galsbi_mock10k_20261002/` (`estimate_bright10k.py`). It reuses
+  `profiles`, `selection`, `profile_fit`, `selected_log_profile`, `peak_gradient` and `conditional_mcse`
+  unchanged.
+
+Run:
+- Profiles: jobs 16803116 and 16803122–24. Selection replicas: 16803116–17. Report: 16803125. Diagnostic: 16803138.
+- The fixed-shear replay (1e-6) fails across GPU models, so each MH batch was replayed on its own node.
+  Jobs 16803117–19 failed for this reason and are superseded.
+
+Result for the true g1 = 0.02:
+- Mag < 23 gives 0.0147 at 16k steps and 0.0258 at 32k steps. The quoted errors are ±0.0012 statistical and
+  ±0.0004 sampling.
+- The likelihood has two peaks (0.015 and 0.025), and which one wins flips with chain length and chain half.
+- About ten galaxies at mag 18–21, with ratio ESS 1–25, drive the flip.
+- The galaxy bootstrap gives ±0.005–0.007. The selection term changes the fit by less than 0.0001.
+
+Limits:
+- No usable calibration number.
+- The quoted MCSE misses the peak flip.
+- There is no MH replica; chain halves stand in for it.
+
+Next: resample about 100 low-ESS bright galaxies with many more chains (or tempering), then rerun the report.
+
 ## 2026-10-02 — Fresh 10k GalSBI mock and MH on its 1,098 bright members
 
 The owner asked for MH on the bright galaxies of a fresh 10k GalSBI mock. Details in

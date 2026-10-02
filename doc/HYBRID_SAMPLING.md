@@ -447,3 +447,74 @@ Receipts: `$DATA_DIR/sbsi/catalogue_prior/galsbi_mock10k_20261002/`:
 - `plot_bright10k.py`.
 
 Figure: `SBSI/plots/galsbi_bright10k_mh.png`.
+
+### Selection-corrected bright-only g1 from the same chains (2026-10-03)
+
+Question: with the selection correction, do the 1,098 bright (measured mag < 23) galaxies of the fresh 10k mock
+give back the true g1 = 0.02? The answer is **no usable answer yet**. The combined likelihood has two bumps,
+and the chains do not settle which one wins.
+
+Method:
+- Same likelihood and fit as the earlier bright study (`doc/BRIGHT_MH_TEST.md`, "Selection and uncertainty"):
+  per-galaxy log E_post[K(g)/K(0.02)] on the 35-node g1 grid, minus N_c log[Z_c(g)/Z_c(0.02)].
+- Z_c uses 2 × 16 × 8192 forward prior scenes with C8 × (radius > 3 px) × (mag < cut), seed 2026104301.
+- Cuts at measured mag 20, 21, 22 and 23 are nested subsets of the same chains.
+- Code frozen at commit e77ce80 (`estimate_snapshot/`). Driver `estimate_bright10k.py`.
+- There is only one MH run per galaxy, so chains 1–2 and chains 3–4 are fitted separately in place of a replica.
+
+Fixed-shear replay depends on the GPU model:
+- The profile stage recomputes each saved draw's likelihood at g1 = 0.02 and requires it to match the saved
+  value to 1e-6.
+- It failed on the first galaxy whenever it ran on a different GPU model from the one that sampled it. For
+  example, chains made on V100 nodes failed when replayed on P5000 or RTX2080Ti nodes.
+- The tolerance was kept. Each MH batch was replayed on the node that sampled it (`resubmit_profiles.sh`);
+  every batch then passed.
+- Jobs: 16803116 and 16803122–24 (profiles), 16803116–17 (selection), 16803125 (report), 16803138 (diagnostic).
+  Jobs 16803117–19 failed on the wrong-node replay and are superseded.
+
+| Cut | n | g1, 16k steps | g1, 32k steps | Quoted errors at 32k (stat, sampling) | Chains 1–2 / 3–4 | Galaxy bootstrap 16–50–84% | Bootstrap sd |
+| --- | ---: | --- | --- | --- | --- | --- | ---: |
+| < 20 | 75 | 0.0242 | 0.0250 | ±0.0013, ±0.0003 | 0.0253 / 0.0151 | 0.014 / 0.025 / 0.026 | 0.0057 |
+| < 21 | 181 | 0.0140 | 0.0255 | ±0.0013, ±0.0004 | 0.0264 / 0.0141 | 0.013 / 0.025 / 0.026 | 0.0055 |
+| < 22 | 456 | 0.0136 | 0.0253 | ±0.0012, ±0.0003 | 0.0260 / 0.0138 | 0.011 / 0.025 / 0.026 | 0.0070 |
+| < 23 | 1098 | 0.0147 | 0.0258 | ±0.0012, ±0.0004 | 0.0265 / 0.0240 | 0.025 / 0.026 / 0.027 | 0.0048 |
+
+Findings:
+- **The quoted errors are far too small.**
+  - Doubling the chain length moves the estimate by 0.011, about 25 times the quoted sampling error.
+  - Chain halves differ by up to 0.012.
+  - The combined log likelihood has two near-equal peaks, at g1 = 0.015 and 0.025, with a dip of 3–7 units at
+    the true 0.020 (figure, left).
+  - The quadratic fit describes only whichever peak is higher, so its curvature error and influence-function
+    sampling error ignore the flip.
+- **A few galaxies cause it.**
+  - Ten galaxies at mag 18–21 (e.g. obs 5367, 7319, 964, 7156) carry 83–95% of the slope shift between 16k and
+    32k steps, and 66–81% of the shift between chain halves.
+  - Several have likelihood-ratio effective sample sizes of 1–25 out of 6144 draws.
+  - At 32k steps, 108/1098 galaxies have ESS < 400 at the peak nodes.
+  - The spikes sit exactly on grid nodes. That is the pattern of a stuck chain in a poor state: there, K(g)/K(0.02)
+    can be huge for one g, and that single draw dominates the log-mean. It is not real shear information.
+- **The selection correction is negligible for the bright galaxies.** The fit with and without the N log Z term
+  differs by less than 0.0001 at every cut.
+- **Honest range:**
+  - The galaxy bootstrap sd is ±0.005–0.007 (m ≈ ±25–35%). Its distribution is two-humped, at about 0.014 and
+    0.025.
+  - The truth lies inside the 16–84% range for the cuts at 20, 21 and 22. At 23 it lies outside that range
+    (0.025–0.027) but inside the bootstrap mean ± sd (0.024 ± 0.005).
+  - The bootstrap resamples galaxies only, not chain noise, so even this range is optimistic.
+  - So this neither confirms nor rules out the 30–45% low result of the earlier bright study.
+- Dropping the ten galaxies with the largest score MC error does not stabilise the answer (mag < 23: 0.025 at
+  32k, 0.014 at 16k).
+
+Next: a stable bright-only number needs the roughly 100 galaxies with low ratio ESS resampled with many more
+independent chains (or tempering, which cut stuck chains from 32/40 to 6/40). Then rerun this report unchanged.
+
+Receipts (`$DATA_DIR/sbsi/catalogue_prior/galsbi_mock10k_20261002/`):
+- `plan.json`, `estimate_snapshot/` with `estimate_snapshot.commit`;
+- `estimate_bright10k.py` → `estimate_bright10k.json`;
+- `estimate_gpu.sh`, `submit_estimate.sh`, `resubmit_profiles.sh`;
+- `selection0/`, `selection1/`, and `bright_g*_k*/shear_profiles.npz`;
+- `diagnose_estimate.py` → `diagnose_estimate.json`;
+- `plot_estimate.py`.
+
+Figure: `SBSI/plots/galsbi_bright10k_estimate.png`.
