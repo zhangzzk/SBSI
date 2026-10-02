@@ -347,6 +347,65 @@ Receipts, under `galsbi_cpu_scaling_20261002/`:
 - Launcher test: 16800133.
 - `compare_arms.py`, `bench_summary.py`, `read_profiles.py`.
 
+## 238-galaxy bias check: tempered vs untempered
+
+Question (diagnosis item 3): do stuck chains shift the shear score?
+
+**Setup.** All 238 bright galaxies, 4 chains, 32,768 steps (8,192 warmup).
+Two arms repeat the 40-galaxy pairing:
+- 8 rungs plus narrow steps;
+- untempered with no narrow steps.
+
+Each arm has fresh seeds. The shared-GPU launcher ran 3 GPUs for tempered (34–35
+min) and 1 GPU for untempered (21 min), each with 6 processes × 8 cores. The
+score is the same per-draw score as in [the diagnosis](#what-to-improve-next-diagnosis-of-the-8-rung-and-untempered-runs).
+Each galaxy's error is sd/√(effective draws).
+
+| | tempered | untempered |
+|---|---|---|
+| average score per galaxy | -0.59 ± 0.68 | +1.21 ± 1.11 |
+| Monte Carlo error of that average | 0.48 | 0.90 |
+| galaxies with log-posterior R-hat ≥ 1.1 | 19 | 112 |
+| galaxies with score R-hat ≥ 1.01 | 109 | 185 |
+
+Tempered minus untempered, galaxy by galaxy:
+- Plain average: -1.80 ± 1.11 (1.6σ).
+- Error-weighted average: -0.24 ± 0.11. With the error bars widened by the
+  measured spread factor 1.13 ± 0.05, that is -0.24 ± 0.13 (1.9σ).
+- Log-mean-exp score: -2.11 ± 1.20 and -0.25 ± 0.11.
+
+**Reading.**
+- *No sign that stuck chains move the score.* Galaxies whose untempered chains
+  were stuck show the same weighted shift as healthy ones: -0.19 ± 0.22
+  (112 galaxies) against -0.26 ± 0.13 (126).
+- *The plain average is set by about 10 very noisy galaxies.* Their
+  differences are 44–99 score units, with error bars of 26–91. Without those
+  ten the plain average is -0.31 ± 0.57.
+- *Tempering halves the Monte Carlo error of the plain average* (0.48 against
+  0.90), because it unsticks exactly those noisy galaxies. It costs about 5x
+  the GPU time, on mixed GPU types, so per GPU second the two are roughly even.
+- *The error bars are about 13% too small* (spread 1.13 ± 0.05), and 4 of 238
+  galaxies are beyond 3σ.
+
+**Limits.**
+- One replica per arm.
+- The arms ran on different GPU types: A40 for untempered; P5000, 2080 Ti and
+  V100 for tempered.
+- The weighted shift (1.9σ) is not explained. It may be chance, or the
+  narrow steps, which only the tempered arm used.
+- The plain-average bound is weak: a 2σ range of about ±2.2 score units.
+
+**Next.** Spend chains where the noise is. A second pass with more chains on
+the 20 or so noisiest galaxies would shrink the plain-average error most per
+GPU second.
+
+Figure: `plots/galsbi_bias238_tempered_vs_plain.png`. Receipts, under
+`galsbi_bias238_20261002/`:
+- `submit_bias238.sh`: jobs 16800157–60, all 0:0;
+- `compare_bias238.py`: job 16800163, output `bias238_comparison.json`;
+- `split_trapped.py`: output `bias238_split.json`;
+- `plot_bias238.py`.
+
 ## Receipts
 
 Root `$DATA_DIR/sbsi/catalogue_prior/galsbi_tempering_20261002/`:

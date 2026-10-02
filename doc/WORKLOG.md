@@ -1,5 +1,37 @@
 # Work log
 
+## 2026-10-02 — 238-galaxy bias check: tempered vs untempered shear score
+
+The owner asked for diagnosis item 3 on 4 GPUs. No code changed. Details in
+[the bias check](TEMPERED_MH.md#238-galaxy-bias-check-tempered-vs-untempered).
+
+Run: all 238 bright galaxies, 32,768 steps.
+- Tempered: 8 rungs plus narrow steps, 3 GPUs.
+- Untempered: 1 GPU.
+- Each GPU ran 6 processes × 8 cores via `jobs/job_galsbi_shared_gpu.sh`, with
+  code frozen at 2758f68.
+- Root: `$DATA_DIR/sbsi/catalogue_prior/galsbi_bias238_20261002/`.
+
+Result:
+- Tempered minus untempered score: weighted -0.24 ± 0.13 (1.9σ), plain
+  average -1.80 ± 1.11 (1.6σ).
+- Stuck and healthy galaxies give the same weighted shift (-0.19 ± 0.22 and
+  -0.26 ± 0.13), so stuck chains do not visibly move the score.
+- The plain average is dominated by about 10 galaxies with Monte Carlo errors
+  of 26–91 score units. Without them: -0.31 ± 0.57.
+- Tempering halves the Monte Carlo error of the plain average (0.48 against
+  0.90) at about 5x the GPU time.
+
+Validation: jobs 16800157–60 and 16800163, all COMPLETED 0:0. The comparison
+checks that each arm covers galaxies 0–237 exactly once.
+
+Limits:
+- One replica per arm, on mixed GPU types.
+- The 1.9σ weighted shift is unexplained (chance, or the narrow steps).
+- Error bars are about 13% small.
+
+Next: more chains on the about 20 noisiest galaxies.
+
 ## 2026-10-02 — Sampler speed: thread fix, faster distance memo, shared GPUs
 
 The owner said 238-galaxy and 1000-galaxy runs are too slow and allowed up to
