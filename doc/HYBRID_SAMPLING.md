@@ -554,6 +554,14 @@ The owner asked to fix the noisy bright-only estimate autonomously.
 - Errors: statistical 1/√I, sampling √(Σe²)/I.
 - Replica check: the A − B score difference is −1.0σ to −1.4σ of its prediction, so these errors pass.
 
+**This is a closure check, not a blind estimate.** Every MH chain in this mock, including the original run
+and both reruns, sampled the scenes at the mock's true shear. The sampler reads it from `reference/protocol.json`
+(`shear` = [0.02, 0]), and the start-point picker hard-codes g1 = 0.02. All likelihoods are reweighted from those
+samples, so they are reliable only near the truth. The grid-peak fits above are truth-anchored in the same way.
+The table answers one question: starting from the truth, do the data push the shear away? They do not, at
+these errors. A blind estimate must choose the sampling shear without the truth, for example by starting at
+g1 = 0 and iterating.
+
 | Cut | n | g1 (score test) | ± stat | ± sampling | Total | Pull vs 0.02 | m |
 | --- | ---: | --- | ---: | ---: | ---: | ---: | --- |
 | < 20 | 75 | 0.011 | 0.010 | 0.005 | 0.012 | −0.8σ | −45% ± 58% |
@@ -566,15 +574,17 @@ alone gives 0.030 ± 0.008. The original untempered chains give 0.029, but their
 trustworthy, because stuck chains inflate the score spread.
 
 Reading:
-- **No bias is detected.** Every cut is within 1.3σ of the truth.
+- **The closure check finds no bias.** Every cut is within 1.3σ of the truth. This does not test a blind
+  inference.
 - **The bright galaxies alone cannot test m better than about ±40%.** Shape noise gives ±0.0065 at
   mag < 23 and sampling gives ±0.005. Earlier peak-fit errors of ±0.0012 were five to seven times too small.
 - **The "30–45% low" result of the earlier bright study is not reproduced, and not excluded.** That study used
   the same grid-peak fit, which these checks show is unreliable for bright galaxies.
 
 Limits:
-- The score test is valid here because the chains were run at the true shear, which is a closure test. On real
-  data the chains would have to be run at, or iterated towards, the estimated shear.
+- The sampling shear is the truth (see above). A blind version must start without it, for example at g1 = 0,
+  and iterate. That also needs the hard-coded 0.02 in the start-point picker of
+  `scripts/check_galsbi_local_sampler.py` replaced by the sampling shear.
 - For the 22–23 galaxies, the sampling error comes from untempered chain halves. Their ratio ESS is healthy.
 - One-step estimate only; generator and native-density approximations remain.
 
