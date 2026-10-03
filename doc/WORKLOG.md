@@ -5,15 +5,16 @@
 The owner pointed out that the score test leans on the true shear. Confirmed:
 - Every MH chain on the 10k mock sampled at the mock's true shear, read from `reference/protocol.json`
   (`shear` = [0.02, 0]).
-- The start-point picker in `scripts/check_galsbi_local_sampler.py` hard-codes g1 = 0.02.
+- The start-point picker in `scripts/check_galsbi_local_sampler.py` scores candidates at that same shear.
+  (Corrected later the same day: an earlier version of this entry said the picker hard-codes 0.02; the
+  hard-coded 0.02 is only in `environment_noise_audit`, used without persistent scenes.)
 - So both the grid-peak fits and the score test are anchored at the truth.
 
 Doc fix: [the rerun section](HYBRID_SAMPLING.md#tempered-rerun-of-the-mag--22-galaxies-and-a-score-test-at-the-true-shear-2026-10-03)
 now calls the 0.026 ± 0.008 result a closure check ("starting from the truth, do the data push away?"),
 not an estimate.
 
-Next: a blind version would start from g1 = 0, replace the hard-coded 0.02 with the sampling shear, and
-iterate. Not launched; it waits for an owner decision.
+Next: a blind version would start from g1 = 0 and iterate (also replacing the audit's hard-coded 0.02). Not launched; it waits for an owner decision.
 
 ## 2026-10-03 — Tempered rerun of the bright mag < 22 galaxies and a score test at the true shear
 

@@ -34,7 +34,7 @@ from sbsi.pseudo_marginal import metropolis_accept, retained
 
 
 def environment_noise_audit(data, prior, angular_distance, conditions, model, likelihood, observed,
-                            *, seed, stored_log_estimate, draws=1024):
+                            *, seed, stored_log_estimate, shear, draws=1024):
     """Independent fixed-target noise probe; does not change the retained chains."""
     target = {k: np.repeat(v, draws, axis=0) for k, v in data.items()}
     scene, _ = prior.sample_given_targets(target, seed)
@@ -42,7 +42,7 @@ def environment_noise_audit(data, prior, angular_distance, conditions, model, li
         response_radius_arcsec=10., response_neighbours=20)
     repeated = observed.iloc[np.repeat(np.arange(len(observed)), draws)].reset_index(drop=True)
     summary = compress_scenes(zero, CatalogueDiskResponse(ptr, features, model), repeated.iloc[:, 2:4].to_numpy())
-    logk = likelihood.log_kernel(summary, repeated, .02, 0.).reshape(len(observed), draws)
+    logk = likelihood.log_kernel(summary, repeated, *shear).reshape(len(observed), draws)
     mean = logsumexp(logk, axis=1)-np.log(draws)
     weights = np.exp(logk-logsumexp(logk, axis=1, keepdims=True))
     return dict(draws_per_fixed_target=draws, seed=seed,
@@ -88,6 +88,10 @@ def main():
     parser.add_argument('--initialization', choices=['prior-bank', 'measurement'], default='prior-bank',
                         help='measurement-centred candidates change starting states only')
     parser.add_argument('--device', choices=['cpu', 'cuda'], default='cuda')
+    parser.add_argument('--shear', type=float, nargs=2,
+                        help='sampling shear g1 g2 (default: the reference protocol shear, i.e. the mock truth)')
+    parser.add_argument('--profile-stride', type=int, default=1,
+                        help='use every k-th retained step for the saved likelihood-ratio profiles')
     args = parser.parse_args()
     if args.steps <= args.warmup or args.warmup < 1 or args.environments < 1:
         raise ValueError('positive environment count and warmup shorter than run required')
@@ -151,7 +155,7 @@ def main():
     repeated = observed.iloc[np.repeat(np.arange(len(owner)), m)].reset_index(drop=True)
     aux = repeated.iloc[:, 2:4].to_numpy()
     conditions = previous['conditions']
-    g0 = previous['shear']
+    g0 = previous['shear'] if args.shear is None else list(args.shear)
     rng = np.random.default_rng(args.seed)
     sources = [Path(__file__), Path('sbsi/pseudo_marginal.py'), Path('sbsi/galsbi_target_coordinates.py'),
         Path('sbsi/galsbi_scene_prior.py'), Path('sbsi/galsbi_summary.py'), Path('sbsi/galsbi_prior.py'),
@@ -160,7 +164,7 @@ def main():
         Path('sbsi/mcmc_proposals.py'), Path('sbsi/galsbi_initialization.py')]
     protocol = dict(steps=args.steps, warmup=args.warmup, environments=m, chains_per_observation=nchains,
         seed=args.seed, reference=str(args.reference.resolve()), reference_protocol_sha256=digest(args.reference/'protocol.json'),
-        observations=indices, fixed_shear=g0, density_batch_size=4096,
+        observations=indices, fixed_shear=g0, profile_stride=args.profile_stride, density_batch_size=4096,
         target_coordinates=GalSBITargetCoordinates.names,
         environment_update=args.environment_update,
         refresh_fraction=args.refresh_fraction if persistent else None,
@@ -582,18 +586,24 @@ def main():
             for col in (6, 7):
                 checks[f'crowding_{col}'] = diagnostics(moments[:, :, col].T)
         profile = []
-        flat = retained_summary.reshape(-1, 9)
+        stride = args.profile_stride
+        flat = retained_summary[::stride].reshape(-1, 9)
         observed_i = observations.iloc[[i]]
         summary = SummaryBatch(flat, np.broadcast_to(observed_i.iloc[0, 2:4].to_numpy(), (len(flat), 2)))
         # Extended-target bridge is sum K_g / sum K_g0 for each retained
         # bank, then average over chain states; not an unweighted bank mean.
-        for g1 in (.018, .022):
-            shifted = likelihood.log_kernel(summary, observed_i, g1, 0.).reshape(retained_kernel.shape)
-            ratios = logsumexp(shifted, axis=2)-logsumexp(retained_kernel, axis=2)
-            profile_samples[f'observation_{protocol["observations"][i]}_g1_{g1:g}'] = ratios
-            values = logsumexp(ratios, axis=0)-np.log(len(ratios))
-            checks[f'log_ratio_{g1}'] = diagnostics(ratios.T)
-            profile.append(dict(g1=g1, log_numerator_ratio_per_chain=values.tolist()))
+        # Only nodes 0.002 from the sampling shear are reliable for bright galaxies.
+        for axis in (0, 1):
+            for delta in (-.002, .002):
+                node = list(g0)
+                node[axis] = round(node[axis]+delta, 12)
+                name = f'g{axis+1}_{node[axis]:g}'
+                shifted = likelihood.log_kernel(summary, observed_i, *node).reshape(retained_kernel[::stride].shape)
+                ratios = logsumexp(shifted, axis=2)-logsumexp(retained_kernel[::stride], axis=2)
+                profile_samples[f'observation_{protocol["observations"][i]}_{name}'] = ratios
+                values = logsumexp(ratios, axis=0)-np.log(len(ratios))
+                checks[f'log_ratio_{name}'] = diagnostics(ratios.T)
+                profile.append(dict(g1=node[0], g2=node[1], log_numerator_ratio_per_chain=values.tolist()))
         by_block = {}
         for block in range(len(protocol['proposal_block_probabilities'])):
             select = block_trace[args.warmup:] == block
@@ -646,7 +656,7 @@ def main():
     if not persistent:
         final_data, _ = coords.decode(x, kinds)
         result['environment_noise_audit'] = environment_noise_audit(final_data, prior, angular_distance, conditions,
-            model, likelihood, observed, seed=args.seed+10000, stored_log_estimate=loglike)
+            model, likelihood, observed, seed=args.seed+10000, stored_log_estimate=loglike, shear=g0)
     save(args.output/'result.json', result)
     print('LOCAL_COMPLETE', result['all_exploration_checks_pass'], result['elapsed_seconds'], flush=True)
 

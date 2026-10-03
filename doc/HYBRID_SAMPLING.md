@@ -556,8 +556,9 @@ The owner asked to fix the noisy bright-only estimate autonomously.
 
 **This is a closure check, not a blind estimate.** Every MH chain in this mock, including the original run
 and both reruns, sampled the scenes at the mock's true shear. The sampler reads it from `reference/protocol.json`
-(`shear` = [0.02, 0]), and the start-point picker hard-codes g1 = 0.02. All likelihoods are reweighted from those
-samples, so they are reliable only near the truth. The grid-peak fits above are truth-anchored in the same way.
+(`shear` = [0.02, 0]), and the start-point picker scores its candidates at that same shear. All likelihoods are
+reweighted from those samples, so they are reliable only near the truth. The grid-peak fits above are
+truth-anchored in the same way.
 The table answers one question: starting from the truth, do the data push the shear away? They do not, at
 these errors. A blind estimate must choose the sampling shear without the truth, for example by starting at
 g1 = 0 and iterating.
@@ -583,8 +584,8 @@ Reading:
 
 Limits:
 - The sampling shear is the truth (see above). A blind version must start without it, for example at g1 = 0,
-  and iterate. That also needs the hard-coded 0.02 in the start-point picker of
-  `scripts/check_galsbi_local_sampler.py` replaced by the sampling shear.
+  and iterate. The start-point picker already uses the sampling shear. (A hard-coded 0.02 sits only in
+  `environment_noise_audit`, which runs only without persistent scenes; a blind run should replace it too.)
 - For the 22–23 galaxies, the sampling error comes from untempered chain halves. Their ratio ESS is healthy.
 - One-step estimate only; generator and native-density approximations remain.
 

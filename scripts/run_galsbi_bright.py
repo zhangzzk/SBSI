@@ -53,7 +53,9 @@ def selection(root, plan, replica, *, smoke=False, reference=None):
     def distance(z):
         return cosmo.background.dist_ang_a(a=1/(1+z))
 
-    grid = np.array([.018, .02, .022]) if smoke else np.asarray(plan['g1_grid'])
+    # Shear nodes are (g1, g2) pairs from 'shear_nodes', or a g1 grid at g2 = 0.
+    grid = np.array([.018, .02, .022]) if smoke else np.asarray(plan.get('shear_nodes', plan.get('g1_grid')))
+    nodes = grid if grid.ndim == 2 else np.column_stack((grid, np.zeros(len(grid))))
     chunks = 1 if smoke else plan['selection_chunks']
     depth = plan['selection_flow_draws']
     values = np.zeros((chunks, len(grid), len(plan['magnitude_limits']), 2))
@@ -65,10 +67,10 @@ def selection(root, plan, replica, *, smoke=False, reference=None):
         scenes, _ = prior.sample(plan['selection_chunk_size'], seed)
         zero, _, _ = scene_model_inputs(scenes, prior, distance, protocol['conditions'],
             response_radius_arcsec=10., response_neighbours=20)
-        for j, g in enumerate(grid):
+        for j, g in enumerate(nodes):
             context = zero.copy()
             context['e1_input_p'], context['e2_input_p'] = apply_shear_to_ellipticity(
-                zero.e1_input_p.to_numpy(), zero.e2_input_p.to_numpy(), g, 0.)
+                zero.e1_input_p.to_numpy(), zero.e2_input_p.to_numpy(), *g)
             q = detector.predict_proba(context, batch_size=4096).astype(float)
             torch.manual_seed(seed+1)
             samples = flow.sample(context, n_samples=depth, batch_size=4096, qmc=True)
