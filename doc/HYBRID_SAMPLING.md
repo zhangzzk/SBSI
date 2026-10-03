@@ -518,3 +518,76 @@ Receipts (`$DATA_DIR/sbsi/catalogue_prior/galsbi_mock10k_20261002/`):
 - `plot_estimate.py`.
 
 Figure: `SBSI/plots/galsbi_bright10k_estimate.png`.
+
+### Tempered rerun of the mag < 22 galaxies and a score test at the true shear (2026-10-03)
+
+The owner asked to fix the noisy bright-only estimate autonomously.
+
+**Rerun.**
+- Rule, fixed in advance in `rerun_plan.json`: rerun every bright galaxy with measured mag < 22 (456 galaxies).
+  The choice is by magnitude only.
+  - The basis is `rerun_candidates.json`, the smallest likelihood-ratio ESS over g1 in [0.010, 0.030].
+  - That ESS is below 400 for 54/75 (< 20), 47/106 (20–21) and 24/275 (21–22), and for 0/642 at 22–23 (median 5037).
+- Sampler: the tempered settings of the 238-galaxy check (8 rungs plus narrow steps), 32k steps (8k warmup),
+  4 chains.
+- Two independent replicas, A and B (`submit_rerun.sh`, seeds in the plan):
+  - jobs 16803344/46/48/50 (A) and 16803345/47/49/51 (B), each 39–45 min on 4 GPUs, about 23 GPU-s per galaxy;
+  - each job ran its profile stage on its own node (`rerun_job.sh`), and all 48 shards passed the 1e-6 replay.
+- Galaxies with a stuck chain (log-posterior R-hat ≥ 1.1 in either replica): 62/456, against 246/456 in the
+  original run.
+
+**The grid-peak fit is still unusable** (`estimate_rerun.py`, job 16803442):
+- Replica A gives 0.015 at every cut; replica B gives 0.024–0.026.
+- The A − B difference is 4–5 times its predicted sampling error.
+- With per-node sampling errors, the summed likelihood is nearly flat between 0.015 and 0.025, within about
+  2.5 log units. The nodes 0.005 away from the sampled shear carry errors of ±0.7–0.9; the nodes 0.002 away
+  carry ±0.2–0.3. The peak hops between nodes.
+- Its curvature claims about 10–25 times more information than the score variance (below). So the likelihood
+  more than about 0.002 from the sampled shear is badly estimated for bright galaxies, both in level and in shape.
+- Stuck chains were not the root cause. The cause is estimating the likelihood far from where we sampled.
+
+**Score test at the true shear** (`score_test.py`, job 16803446). It uses only the reliable nodes 0.018 and 0.022:
+- Per-galaxy selected score s_i = [L_i(.022) − L_i(.018)]/.004 − d log Z_c/dg.
+- Per-galaxy sampling variance e_i² from independent halves: A vs B for rerun galaxies, chains 1–2 vs 3–4
+  otherwise.
+- Information I = Σ(s_i² − e_i²). One-step offset Δg = Σ s_i / I.
+- Errors: statistical 1/√I, sampling √(Σe²)/I.
+- Replica check: the A − B score difference is −1.0σ to −1.4σ of its prediction, so these errors pass.
+
+| Cut | n | g1 (score test) | ± stat | ± sampling | Total | Pull vs 0.02 | m |
+| --- | ---: | --- | ---: | ---: | ---: | ---: | --- |
+| < 20 | 75 | 0.011 | 0.010 | 0.005 | 0.012 | −0.8σ | −45% ± 58% |
+| < 21 | 181 | 0.010 | 0.010 | 0.007 | 0.012 | −0.8σ | −49% ± 60% |
+| < 22 | 456 | 0.006 | 0.008 | 0.007 | 0.011 | −1.3σ | −68% ± 54% |
+| < 23 | 1098 | 0.026 | 0.007 | 0.005 | 0.008 | +0.7σ | +29% ± 41% |
+
+The cuts are nested, so the rows are correlated. Replica A alone gives 0.021 ± 0.010 at mag < 23, and replica B
+alone gives 0.030 ± 0.008. The original untempered chains give 0.029, but their half-split errors are not
+trustworthy, because stuck chains inflate the score spread.
+
+Reading:
+- **No bias is detected.** Every cut is within 1.3σ of the truth.
+- **The bright galaxies alone cannot test m better than about ±40%.** Shape noise gives ±0.0065 at
+  mag < 23 and sampling gives ±0.005. Earlier peak-fit errors of ±0.0012 were five to seven times too small.
+- **The "30–45% low" result of the earlier bright study is not reproduced, and not excluded.** That study used
+  the same grid-peak fit, which these checks show is unreliable for bright galaxies.
+
+Limits:
+- The score test is valid here because the chains were run at the true shear, which is a closure test. On real
+  data the chains would have to be run at, or iterated towards, the estimated shear.
+- For the 22–23 galaxies, the sampling error comes from untempered chain halves. Their ratio ESS is healthy.
+- One-step estimate only; generator and native-density approximations remain.
+
+Next: the error is now set by the number of galaxies, not sampling. To test m below ±40%, the estimate needs
+the faint galaxies too: about 8,900 more MH runs, or the old sampler for them.
+
+Receipts (`$DATA_DIR/sbsi/catalogue_prior/galsbi_mock10k_20261002/`):
+- `rerun_candidates.py` → `rerun_candidates.json` (job 16803343);
+- `make_rerun_plan.py` → `rerun_plan.json`, `rerun_ids.txt`;
+- `rerun_job.sh`, `submit_rerun.sh`, `tempA_g*_k*/`, `tempB_g*_k*/`;
+- `estimate_rerun.py` → `estimate_rerun.json`, with a dry run on replica A only in `estimate_rerun_dry.json`
+  (job 16803387);
+- `score_test.py` → `score_test.json`;
+- `plot_rerun.py`.
+
+Figure: `SBSI/plots/galsbi_bright10k_rerun.png`.

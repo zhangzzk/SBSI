@@ -1,5 +1,42 @@
 # Work log
 
+## 2026-10-03 — Tempered rerun of the bright mag < 22 galaxies and a score test at the true shear
+
+The owner asked to fix the unstable bright-only estimate autonomously. Details in
+[the rerun section](HYBRID_SAMPLING.md#tempered-rerun-of-the-mag--22-galaxies-and-a-score-test-at-the-true-shear-2026-10-03).
+
+Code: no repository code changed. The study scripts live in `$DATA_DIR/.../galsbi_mock10k_20261002/`
+(`rerun_candidates.py`, `make_rerun_plan.py`, `rerun_job.sh`, `submit_rerun.sh`, `estimate_rerun.py`,
+`score_test.py`, `plot_rerun.py`). They run the frozen snapshot of commit e77ce80.
+
+Run:
+- The rule was fixed in advance in `rerun_plan.json`: rerun all 456 galaxies with mag < 22, using tempered MH
+  (8 rungs, 32k steps).
+- Two independent replicas, A (jobs 16803344/46/48/50) and B (16803345/47/49/51), each 39–45 min on 4 GPUs.
+- All 48 profile shards passed the fixed-shear replay on their own node.
+- Reports: 16803387 (dry run), 16803442 (rerun), 16803446 (score test).
+
+Result (true g1 = 0.02):
+- Galaxies with a stuck chain dropped from 246 to 62 out of 456.
+- The grid-peak fit still flips: replica A gives 0.015 and replica B gives 0.025 at every cut. The A − B
+  difference is 4–5 times its predicted sampling error, because the likelihood more than 0.002 from the
+  sampled shear is too noisy for bright galaxies.
+- A score test at the true shear, using only the nodes 0.018 and 0.022, gives errors that pass the A-vs-B
+  check (|z| ≤ 1.4):
+  - mag < 23: g1 = 0.026 ± 0.0065 (stat) ± 0.0049 (sampling), m = +29% ± 41%;
+  - mag < 22: g1 = 0.006 ± 0.008 ± 0.007;
+  - every cut is within 1.3σ of the truth.
+- Figure: `SBSI/plots/galsbi_bright10k_rerun.png`.
+
+Limits:
+- This is a closure test, because the chains were run at the true shear. Real data would need sampling at,
+  or iteration towards, the estimate.
+- The nested cuts are correlated.
+- Bright galaxies alone constrain m only to about ±40%.
+
+Next: add the faint galaxies to bring the error down. That means MH for about 8,900 more galaxies, or the
+old sampler for them.
+
 ## 2026-10-03 — Selection-corrected bright-only g1 on the 10k mock: not stable yet
 
 The owner asked for the bright-only estimate first. Details in
