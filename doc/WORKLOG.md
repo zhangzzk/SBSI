@@ -1,5 +1,36 @@
 # Work log
 
+## 2026-10-03 — Faster exact MH loop; sampler can run at a chosen shear (for a blind estimate)
+
+The owner asked to make MH cheaper per GPU, then to run a blind hybrid estimate on the 10k mock.
+Details in [the speed section](TEMPERED_MH.md#speed-exact-prior-memo-and-skipped-sérsic-draws-2026-10-03).
+
+Code:
+- a5588b8 (`sbsi/galsbi_prior.py`, `scripts/check_galsbi_continuous_prior.py`,
+  `scripts/check_galsbi_local_sampler.py`, `tests/test_galsbi_prior.py`):
+  - an exact per-redshift memo (`ExactMemo`) for the Sérsic mass, distances and volume;
+  - Sérsic cdf/ppf skipped for window-rejected neighbour proposals, with their uniforms still drawn.
+- d31ea79:
+  - `check_galsbi_local_sampler.py --shear g1 g2` samples at a chosen shear, instead of the reference
+    (truth) shear.
+  - Saved likelihood ratios now sit at ±0.002 around that shear, in g1 and in g2; the g1 key names are
+    unchanged.
+  - `--profile-stride` thins the saved ratios.
+  - The non-persistent noise audit uses the sampling shear (the hard-coded 0.02 is gone).
+  - `run_galsbi_bright.selection` accepts (g1, g2) nodes.
+
+Validation:
+- Bit-identical outputs against the old code: the loop runs (2096 and 304 items) and 12 benchmark shards
+  (job 16805404), all with 0 differences.
+- Tests (16805402): 386 passed, 3 skipped.
+- Speed: 1.23x (plain) and 1.21x (tempered) per GPU on the same node.
+- At 6 processes per GPU, the GPU is busy only 12–18%. Production should use all allowed cores at
+  2 per process (smoke test 16805601).
+
+Limitations:
+- xgboost and scene-input building remain the main per-step cost.
+- Disk use at 1M scale is about 2.5 TB for the bright galaxies' chains.
+
 ## 2026-10-03 — Correction: the bright score test is a truth-anchored closure check
 
 The owner pointed out that the score test leans on the true shear. Confirmed:

@@ -347,6 +347,78 @@ Receipts, under `galsbi_cpu_scaling_20261002/`:
 - Launcher test: 16800133.
 - `compare_arms.py`, `bench_summary.py`, `read_profiles.py`.
 
+## Speed: exact prior memo and skipped Sérsic draws (2026-10-03)
+
+Commit a5588b8 removes repeated per-redshift prior work:
+- **Memo:** `ExactMemo` (in `sbsi/galsbi_prior.py`) remembers values of
+  elementwise functions of redshift exactly: the Sérsic-index mass between
+  its limits, the luminosity and angular distances, and the volume factor.
+  It is a sorted-array lookup with a bounded reset.
+- **Skipped Sérsic draws:** neighbour proposals rejected by the i-band
+  window skip the Sérsic cdf/ppf. They still draw their uniform numbers, so
+  the random stream is unchanged.
+
+**Exact.** Same seeds, same node (met-cl-vis01):
+- The 1024-step loop runs (plain, 1024 galaxies; tempered, 128 bright)
+  match the old code in all 2096 and 304 saved items (difference 0).
+- The 12 benchmark shards below also match.
+- Test job 16805402: 386 passed, 3 skipped.
+
+**Speed.** Same node and layout as the old benchmark (16805078): 6
+processes × 4096 chain rows on one 2080 Ti, 1024 steps. GPU-seconds per
+galaxy for a 32k-step loop:
+
+| arm | old | new (16805404) | gain |
+|---|---|---|---|
+| plain, 4096 rows | 1.52 | 1.24 | 1.23x |
+| tempered (8 rungs), 4096 rows | 12.66 | 10.45 | 1.21x |
+
+Setup for 1024 galaxies went from 572 to 461 s. The spread between
+processes is ±4%.
+
+**Where the loop time goes now** (cProfile, 1024 steps, 4096 rows; 204 s,
+was 255 s):
+
+| part | seconds |
+|---|---|
+| tree emulator (xgboost) | 58.6 |
+| scene inputs | 45.5 |
+| environment refresh | 41.8 |
+| target prior | 24.6 (was 60.4) |
+| GPU likelihood | 15.3 |
+
+The memo itself costs about 16 s. A smaller table only halves the search
+cost (about 2%), so I did not pursue it.
+
+**Production layout: cores, not GPUs, set the speed.** At 6 processes per
+GPU the GPU is busy only 12–18% of the time. A smoke test (job 16805601,
+V100) ran 15 processes × 2 cores at production size:
+- Bright tempered: 0.14 s per step at 880 rows, about 3100 rows per second
+  per core.
+- Faint plain: 0.147 s per step at 1780 rows, about 6000 rows per second
+  per core.
+- Both are better per core than 8 cores per process (about 2100).
+
+So use all allowed cores, at 2 cores per process. Give about 3/4 of them to
+the bright tempered chains, which are about 80% of the work. Faint setup is
+slow: about 0.9 s per galaxy on 2 cores.
+
+**Memory and disk:**
+- Stored traces take about 200 B per stored chain row per step, and they are
+  copied once when stacked.
+- A plain 4096-row process at 32k steps needs about 27 GB. Keep plain
+  processes under about 2000 rows at 16k steps. Tempered runs store only the
+  cold rows.
+- The 15-process smoke test peaked at 21 GB.
+- At 1M observations, the bright 11% (about 110k galaxies) would need about
+  2.5 TB of chain files at 32k steps. The group filesystem had 18 TB free
+  on 2026-10-03.
+
+Receipts: `galsbi_speedup_20261003/` (`exact_job.sh` 16805403,
+`speed_job.sh` 16805404, `compare_runs.py`, `summarize_speed.py`,
+`speed_summary.json`, `logs/loop_*`); smoke test in
+`galsbi_blind10k_20261003/smoke/`.
+
 ## 238-galaxy bias check: tempered vs untempered
 
 Question (diagnosis item 3): do stuck chains shift the shear score?
