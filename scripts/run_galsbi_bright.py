@@ -78,7 +78,8 @@ def selection(root, plan, replica, *, smoke=False, reference=None):
                     or np.any((q < 0) | (q > 1))):
                 raise ValueError('invalid forward selection draw')
             for c, limit in enumerate(plan['magnitude_limits']):
-                passed = (samples[:, :, 2] > 3.) & (samples[:, :, 3] > 10**(.4*(30-limit)))
+                passed = ((samples[:, :, 2] > 3.) & (samples[:, :, 2] < plan.get('max_radius_pixels', np.inf))
+                          & (samples[:, :, 3] > 10**(.4*(30-limit))))
                 for d, n in enumerate((depth//2, depth)):
                     values[chunk, j, c, d] = np.mean(q*passed[:, :n].mean(1))
         np.savez_compressed(output/'chunks.npz', values=values[:chunk+1], grid=grid)
@@ -93,7 +94,8 @@ def selection(root, plan, replica, *, smoke=False, reference=None):
         reference_protocol_sha256=digest(reference/'protocol.json'),
         plan_sha256=digest(root/'plan.json'), data_sha256=digest(output/'chunks.npz'),
         process_seconds=time.monotonic()-started,
-        selection='C8 probability times measured radius>3 pixels and flux threshold; no disk response needed',
+        selection='C8 probability times measured radius>3 pixels (and < max_radius_pixels if the plan sets it) '
+                  'and flux threshold; no disk response needed',
         uncertainty='Independent scene chunks and replicas; CRN over shear nodes; nested conditional draw ladder'))
 
 
