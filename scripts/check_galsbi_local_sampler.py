@@ -22,6 +22,7 @@ from check_galsbi_continuous_prior import build_prior, digest, save
 from check_galsbi_summary_sampler import diagnostics
 from sbsi.catalogue_disk_response import CatalogueDiskResponse
 from sbsi.galsbi_initialization import measurement_seed_coordinates
+from sbsi.galsbi_prior import ExactMemo
 from sbsi.galsbi_scene_prior import GalSBISceneBatch, GalSBIScenePrior
 from sbsi.galsbi_summary import SummaryBatch, SummaryLikelihood, compress_scenes, scene_model_inputs
 from sbsi.galsbi_target_coordinates import GalSBITargetCoordinates
@@ -244,28 +245,9 @@ def main():
     galaxy, cosmo, _ = build_prior()
     prior = GalSBIScenePrior(galaxy)
 
-    cache_z, cache_d = np.empty(0), np.empty(0)
-
-    def angular_distance(z):
-        # PyCosmo distances are elementwise (checked batch-independent), so
-        # remembered values are exact; unchanged neighbours dominate the calls.
-        # Sorted arrays with exact-match lookup avoid a Python loop per redshift.
-        nonlocal cache_z, cache_d
-        unique, inverse = np.unique(np.asarray(z, float), return_inverse=True)
-        where = np.searchsorted(cache_z, unique)
-        found = where < len(cache_z)
-        found[found] = cache_z[where[found]] == unique[found]
-        values = np.full(len(unique), np.nan)
-        values[found] = cache_d[where[found]]
-        missing = ~found
-        if missing.any():
-            values[missing] = cosmo.background.dist_ang_a(a=1/(1+unique[missing]))
-            if len(cache_z) > 2_000_000:
-                cache_z, cache_d = unique[missing], values[missing]
-            else:
-                at = where[missing]
-                cache_z, cache_d = np.insert(cache_z, at, unique[missing]), np.insert(cache_d, at, values[missing])
-        return values[inverse].reshape(np.shape(z))
+    # PyCosmo distances are elementwise (checked batch-independent), so
+    # remembered values are exact; unchanged neighbours dominate the calls.
+    angular_distance = ExactMemo(lambda z: cosmo.background.dist_ang_a(a=1/(1+z)))
 
     coords = GalSBITargetCoordinates(galaxy, angular_distance)
     # Reproduce only the prior-proposal bank, not the independently generated

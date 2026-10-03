@@ -24,6 +24,38 @@ def upper_gamma(shape, x):
     return (upper_gamma(shape + 1, x) - np.exp(shape * np.log(x) - x)) / shape
 
 
+class ExactMemo:
+    """Remember an elementwise function by exact argument value.
+
+    Only valid for functions whose value at one element does not depend on the
+    rest of the batch (checked for the PyCosmo distances and scipy betaprime),
+    so remembered values are bit-identical. Sorted arrays with exact-match
+    lookup avoid a Python loop per value; memory restarts after ``limit``.
+    """
+
+    def __init__(self, function, limit=2_000_000):
+        self.function, self.limit = function, limit
+        self.keys, self.values = np.empty(0), np.empty(0)
+
+    def __call__(self, z):
+        unique, inverse = np.unique(np.asarray(z, float), return_inverse=True)
+        where = np.searchsorted(self.keys, unique)
+        found = where < len(self.keys)
+        found[found] = self.keys[where[found]] == unique[found]
+        values = np.full(len(unique), np.nan)
+        values[found] = self.values[where[found]]
+        missing = ~found
+        if missing.any():
+            values[missing] = self.function(unique[missing])
+            if len(self.keys) > self.limit:
+                self.keys, self.values = unique[missing], values[missing]
+            else:
+                at = where[missing]
+                self.keys = np.insert(self.keys, at, unique[missing])
+                self.values = np.insert(self.values, at, values[missing])
+        return values[inverse].reshape(np.shape(z))
+
+
 class GalSBIContinuousPrior:
     """Fixed-parameter, native-coordinate prior with explicit support.
 
@@ -76,6 +108,9 @@ class GalSBIContinuousPrior:
             self.tables[t] = dict(z=z, cdf=cdf/rate, rate=rate,
                                   log_g=log_g, inverse_y=inverse_y)
         self.parent_rate = sum(v['rate'] for v in self.tables.values())
+        # MH moves mostly keep z, so the Sersic truncation mass is remembered.
+        self.log_sersic_mass = {t: ExactMemo(lambda z, t=t: self.sersic_log_mass(z, t))
+                                for t in self.types}
 
     def luminosity_parameters(self, z, t):
         p = self.p
@@ -114,6 +149,11 @@ class GalSBIContinuousPrior:
             f'sersic_betaprime_{t}_mode_alpha']
         b = self.p[f'sersic_betaprime_{t}_size']
         return mode*(b+1)+1, b
+
+    def sersic_log_mass(self, z, t):
+        """Log betaprime mass inside the Sersic support (truncation normalizer)."""
+        a, b = self.sersic_parameters(z, t)
+        return np.log(betaprime.cdf(self.p['sersic_n_max'], a, b)-betaprime.cdf(self.p['sersic_n_min'], a, b))
 
     def shape_parameters(self, t):
         total, mode = self.p[f'ell_beta_ab_sum_{t}'], self.p[f'ell_beta_mode_{t}']
@@ -160,8 +200,7 @@ class GalSBIContinuousPrior:
             R = d['R_kpc'][use]
             factors['size'][use] = norm.logpdf(np.log(R), mean, sigma)-np.log(R)
             a, b = self.sersic_parameters(z, t)
-            mass = betaprime.cdf(p['sersic_n_max'], a, b)-betaprime.cdf(p['sersic_n_min'], a, b)
-            factors['sersic'][use] = betaprime.logpdf(d['n'][use], a, b)-np.log(mass)
+            factors['sersic'][use] = betaprime.logpdf(d['n'][use], a, b)-self.log_sersic_mass[t](z)
             a, b = self.shape_parameters(t)
             factors['shape'][use] = (beta.logpdf(d['a'][use], a, b, scale=p['ell_beta_emax'])
                                      - np.log(2*np.pi))
@@ -215,9 +254,13 @@ class GalSBIContinuousPrior:
             photo = self.photometry(z, M, c)
             mean, sigma = self.size_parameters(z, photo['M_i'], t)
             d['R_kpc'][use] = np.exp(rng.normal(mean, sigma))
-            a, b = self.sersic_parameters(z, t)
+            # Rows outside the i-band window are discarded below: draw their
+            # uniforms to keep the stream, but skip their costly inversion.
+            kept = (photo['m_i'] >= p['gals_mag_min']) & (photo['m_i'] <= p['gals_mag_max'])
+            q = rng.random(n)[kept]
+            a, b = self.sersic_parameters(z[kept], t)
             low, high = betaprime.cdf(p['sersic_n_min'], a, b), betaprime.cdf(p['sersic_n_max'], a, b)
-            d['n'][use] = betaprime.ppf(low+rng.random(n)*(high-low), a, b)
+            d['n'][use[kept]] = betaprime.ppf(low+q*(high-low), a, b)
             a, b = self.shape_parameters(t)
             d['a'][use] = rng.beta(a, b, n)*p['ell_beta_emax']
             d['psi'][use] = rng.uniform(0, 2*np.pi, n)
