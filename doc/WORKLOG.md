@@ -1,5 +1,40 @@
 # Work log
 
+## 2026-10-03 — Blind hybrid MH estimate on the 10k mock recovers the shear within 1σ
+
+The owner asked for the following while away for 10 h: more efficient sampling, hybrid sampling on the 10k
+mock, and debugging until the shear is recovered, keeping it simple.
+Details in [the blind section](HYBRID_SAMPLING.md#blind-hybrid-mh-estimate-on-the-10k-mock-2026-10-03).
+
+Code: none beyond d31ea79 (`--shear`, g1/g2 ratio stencils, `--profile-stride`, 2-D selection nodes). The
+study scripts are in `$DATA_DIR/.../galsbi_blind10k_20261003/`.
+
+Run:
+- Bright galaxies (mag < 23) ran tempered MH at 32k steps; faint galaxies ran plain MH at 16k steps.
+- One selection term at g0 and g0 ± 0.002 in g1 and g2.
+- Newton iterations from g = (0, 0) with no truth input: it0 (16805631–34), it1 (16806051–54),
+  it2 (16806315–18).
+- Each iteration took 80–91 min on 4 GPUs × 44 cores.
+
+Result:
+- it2 converged (step inside its errors): g = (0.0240 ± 0.0051, −0.0038 ± 0.0044), against the truth
+  (0.02, 0). That is +0.8σ and −0.85σ, or m = +20% ± 25%.
+- The decision rule was written before it2 finished (`final_rule.md`).
+- it1 and it2 agree at 0.9σ. Bootstrap errors match.
+
+Debugging:
+- The stencil-curvature cross-check is unusable at these chain lengths, because of bright-galaxy chain noise.
+  The chain-noise-corrected score step is used instead.
+
+Limitations:
+- One mock with 10k galaxies, so the test of m is only ±25%.
+- One-step Newton estimator.
+- Bright chain noise is 35–55% of their score variance.
+
+Next:
+- A sharper test of m needs more galaxies, or several mocks.
+- Halving the faint steps would save about 13% of the core time.
+
 ## 2026-10-03 — Faster exact MH loop; sampler can run at a chosen shear (for a blind estimate)
 
 The owner asked to make MH cheaper per GPU, then to run a blind hybrid estimate on the 10k mock.

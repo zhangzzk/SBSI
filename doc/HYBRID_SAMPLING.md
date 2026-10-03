@@ -602,3 +602,89 @@ Receipts (`$DATA_DIR/sbsi/catalogue_prior/galsbi_mock10k_20261002/`):
 - `plot_rerun.py`.
 
 Figure: `SBSI/plots/galsbi_bright10k_rerun.png`.
+
+## Blind hybrid MH estimate on the 10k mock (2026-10-03)
+
+The owner asked for a blind estimate, more efficient sampling, the hybrid on the 10k mock, and debugging
+until the shear comes out right, keeping things simple ("Occam's razor").
+
+**Design: one sampler, one prior, one selection term.**
+- Bright galaxies (measured mag < 23, 1098) run tempered MH: 8 rungs, narrow steps 0.5, 32k steps, 8k warmup.
+- Faint galaxies (the other 8902) run plain MH: 16k steps, 4k warmup, with saved ratios thinned by 4.
+- The "hybrid" is only a split by brightness. No atom bank is used; a GalSBI atom bank does not exist and
+  would need the same scene law.
+
+**Blind iteration.** No input uses the mock truth.
+- Start at g = (0, 0).
+- Each iteration samples every galaxy at the current shear g0 (`--shear`). On the same GPU, it saves the
+  per-draw likelihood ratios at g0 ± 0.002 in g1 and in g2.
+- One selection integral Z(g) at the same five shears: 2 replicas × 16 chunks × 8192 scenes, with the cuts
+  C8 × radius > 3 px × mag < 25.8.
+- Per galaxy, the score s_i is the central difference of log E[K(g)/K(g0)] minus d log Z/dg.
+- Chain noise E_i comes from the chain halves (chains 1–2 vs 3–4).
+- Information I = Σ(s_i s_iᵀ − E_i). Newton step Δg = I⁻¹ Σ s_i.
+- Errors:
+  - statistical: I⁻¹;
+  - chain: I⁻¹ΣE_i I⁻¹;
+  - selection: the scatter over chunks;
+  - plus a bootstrap over galaxies.
+- The rule for the final answer was written before iteration 2 finished (`final_rule.md`): use an
+  iteration's estimate only if its sampling shear lies within one total error of it.
+
+| iteration | sampling shear | Newton estimate g1 | g2 | ± stat | ± chains | ± selection | total | bootstrap |
+|---|---|---|---|---|---|---|---|---|
+| it0 | (0, 0) | 0.0215 | −0.0016 | 0.0039, 0.0040 | 0.0019, 0.0024 | 0.0007, 0.0009 | 0.0044, 0.0048 | 0.0044, 0.0048 |
+| it1 | (0.0215, −0.0016) | 0.0272 | −0.0038 | 0.0040, 0.0042 | 0.0021, 0.0022 | 0.0007, 0.0008 | 0.0046, 0.0048 | 0.0046, 0.0047 |
+| it2 | (0.0272, −0.0038) | **0.0240** | **−0.0038** | 0.0042, 0.0038 | 0.0028, 0.0022 | 0.0010, 0.0007 | **0.0051, 0.0044** | 0.0053, 0.0045 |
+
+**Result.** it2's step (−0.0033, +0.0000) is inside its errors, so it2 has converged.
+- **Primary: g = (0.0240 ± 0.0051, −0.0038 ± 0.0044).**
+  - Against the mock truth (0.02, 0), used only now: +0.8σ in g1 and −0.85σ in g2.
+  - In terms of m: +20% ± 25%.
+- it1's g1 step was 1.25 errors long, so by the rule it is not used.
+- it1 and it2 agree within their independent errors: g1 differs by 0.0033 against 0.0037 (0.9σ).
+- Their mean, (0.0256 ± 0.0045, −0.0038 ± 0.0043), is +1.2σ and −0.9σ from the truth.
+- The bootstrap over galaxies matches the error budget in every iteration.
+- No single galaxy dominates: the top 10 carry 12–31% of the score variance.
+
+**Debugging notes.**
+- **The stencil-curvature check is unusable at these chain lengths.**
+  - It gave a nonsense step in it1 (−5.4). Single bright galaxies show curvatures of ±10,000–25,000 from
+    chain noise alone, when the expected value is about 6.6 per galaxy.
+  - The chain-half difference in a bright galaxy's log ratio is 0.05–0.1, and the curvature multiplies it by
+    1/0.002².
+  - The score-based step corrects for chain noise and is the one used.
+- **The it0 → it1 → it2 path is consistent with noise.**
+  - The first step from (0, 0) was five errors long. A one-step estimate from that far away is only a
+    starting move.
+  - it1 and it2, both close to the answer, agree.
+- **The chain noise is the bright galaxies'.** It makes up 35–55% of their score variance, against 4.5% for the
+  faint galaxies.
+- **Stuck chains** (log-posterior R-hat ≥ 1.1): 22–29 bright and 456–475 faint galaxies per iteration. The
+  faint ones barely matter, given their 4.5% chain-noise share.
+
+**Cost.** Each iteration took 80–91 min on 4 GPUs × 44 cores (176 cores): 2080 Ti, P5000 and 2× V100. That is
+about 5.4 GPU-hours per iteration.
+- Layout per GPU: 13 bright + 7 faint processes at 2 cores each, with the selection on the spare cores
+  (it0 used 15 + 5, and the faint processes then took longest).
+- Bright: 0.13 s per step at about 690 rows.
+- Faint: 0.21 s per step at about 1270 rows, plus 451 s of setup and 630 s of output.
+- The speed limit is CPU cores; the GPU was busy 45–67% of the time.
+- A projection, not a run: halving the faint steps to 8k would raise the faint chain share to about 9% and the
+  total chain error by about 4%, while saving about 13% of the core time.
+
+**Limits:**
+- One mock realisation, with 10k galaxies. The test of m is ±25%, set mostly by shape noise; it is not a
+  0.3% test.
+- Two iterations near the answer; the estimator is the one-step Newton estimate.
+- The generator and native-density approximations of the continuous prior remain.
+- Disk: about 96 GB of chains and ratio files per iteration.
+
+Receipts (`$DATA_DIR/sbsi/catalogue_prior/galsbi_blind10k_20261003/`):
+- `source_snapshot/` (d31ea79), `bright_ids.txt`, `faint_ids.txt`;
+- `make_plan.py`, `iter_job.sh`, `blind_step.py`, `outliers.py`, `timing.py`, `plot_blind.py`, `final_rule.md`;
+- `smoke/` (job 16805601);
+- `it0/` (jobs 16805631–34), `it1/` (16806051–54), `it2/` (16806315–18), each with `plan.json` and
+  `blind_step.json`.
+
+Figure: `SBSI/plots/blind10k_iterations.png`.
