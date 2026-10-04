@@ -92,12 +92,17 @@ def main():
                         help='sampling shear g1 g2 (default: the reference protocol shear, i.e. the mock truth)')
     parser.add_argument('--profile-stride', type=int, default=1,
                         help='use every k-th retained step for the saved likelihood-ratio profiles')
+    parser.add_argument('--comoving-profiles', action='store_true',
+                        help='profile ratios with intrinsic shapes mapped so the sheared shape is unchanged '
+                             '(exact change of variables, b recomputed in the retained scene); persistent only')
     args = parser.parse_args()
     if args.steps <= args.warmup or args.warmup < 1 or args.environments < 1:
         raise ValueError('positive environment count and warmup shorter than run required')
     if args.initial_bank_seed is not None and args.initial_bank_seed < 0:
         raise ValueError('initial bank seed must be nonnegative')
     persistent = args.environment_update == 'persistent'
+    if args.comoving_profiles and not persistent:
+        raise ValueError('co-moving profiles need the retained scenes of persistent environments')
     if args.initialization == 'measurement' and not (
             persistent and args.marginalize_type and args.initial_bank_seed is not None):
         raise ValueError('measurement initialization requires a fresh bank, persistent scenes and type marginalization')
@@ -165,6 +170,8 @@ def main():
     protocol = dict(steps=args.steps, warmup=args.warmup, environments=m, chains_per_observation=nchains,
         seed=args.seed, reference=str(args.reference.resolve()), reference_protocol_sha256=digest(args.reference/'protocol.json'),
         observations=indices, fixed_shear=g0, profile_stride=args.profile_stride, density_batch_size=4096,
+        profile_shapes='co-moving: eps -> M_node^-1(M_g0(eps)), circularized radius kept, prior and Jacobian '
+                       'included, b recomputed' if args.comoving_profiles else 'fixed intrinsic shapes',
         target_coordinates=GalSBITargetCoordinates.names,
         environment_update=args.environment_update,
         refresh_fraction=args.refresh_fraction if persistent else None,
@@ -355,6 +362,36 @@ def main():
             values[valid] = summary.values.reshape(-1, m, 9)
         return logsumexp(logk, axis=1)-np.log(m), values, logk
 
+    # Only nodes 0.002 from the sampling shear are reliable for bright galaxies.
+    profile_nodes = []
+    for axis in (0, 1):
+        for delta in (-.002, .002):
+            node = list(g0)
+            node[axis] = round(node[axis]+delta, 12)
+            profile_nodes.append((f'g{axis+1}_{node[axis]:g}', node))
+
+    def comoving_ratios(x, kinds, logprior, kernel, scene, nodes=profile_nodes):
+        """log[p(x') K(x'; node) |dx'/dx| / (p(x) K(x; g0))] per cold state, x' = coords.comove(x, g0, node).
+
+        Same retained scene (common random numbers); b changes only through
+        the target semimajor axis and is recomputed. Off-support x' give -inf.
+        """
+        n = len(x)
+        ratios = np.full((n, len(nodes)), -np.inf)
+        for k, (_, node) in enumerate(nodes):
+            moved, logj, valid = coords.comove(x, g0, node)
+            newprior, newdata, _ = target_prior(moved, kinds)
+            valid &= np.isfinite(newprior)
+            if valid.any():
+                selected = GalSBISceneBatch(newdata, scene.neighbours, scene.indptr,
+                                            scene.offset_arcsec).take(np.flatnonzero(valid))
+                zero, ptr, features = scene_model_inputs(selected, prior, angular_distance, conditions,
+                    response_radius_arcsec=10., response_neighbours=20)
+                summary = compress_scenes(zero, CatalogueDiskResponse(ptr, features, model), aux[:n][valid])
+                ratios[valid, k] = (newprior[valid]+logj[valid]-logprior[valid]-kernel[valid]
+                                    + likelihood.log_kernel(summary, observed.iloc[:n].loc[valid], *node))
+        return ratios
+
     if persistent:
         scene = GalSBISceneBatch(data, scene.neighbours, scene.indptr, scene.offset_arcsec)
         loglike, summaries, kernels = evaluate_scene(scene, np.ones(len(owner), dtype=bool))
@@ -380,6 +417,7 @@ def main():
     swap_attempts, swap_accepts = np.zeros((2, max(levels-1, 1))), np.zeros((2, max(levels-1, 1)))
     cold_exchanges = np.zeros(ncold, dtype=int)
     trace, type_trace, summary_trace, kernel_trace, accepted_trace, block_trace = [], [], [], [], [], []
+    comoving_trace, comoving_identity_replay = [], None
     type_probability_trace = []
     count_trace, refresh_trace = [], []
     joint_environment_trace = []
@@ -533,6 +571,14 @@ def main():
         logprior_trace.append(logprior[cold].copy())
         summary_trace.append(summaries[cold].copy())
         kernel_trace.append(kernels[cold].copy())
+        if args.comoving_profiles and step >= args.warmup and (step-args.warmup) % args.profile_stride == 0:
+            state = (x[cold], kinds[cold], logprior[cold], kernels[cold, 0], scene.take(np.arange(ncold)))
+            if comoving_identity_replay is None:
+                # node = g0 must reproduce the stored prior and kernel exactly
+                comoving_identity_replay = float(np.max(np.abs(comoving_ratios(*state, nodes=[('g0', g0)]))))
+                if not comoving_identity_replay < 1e-6:
+                    raise ValueError(f'co-moving identity replay failed: {comoving_identity_replay}')
+            comoving_trace.append(comoving_ratios(*state))
         accepted_trace.append(accepted[cold])
         block_trace.append(block)
         if (step+1) % 128 == 0 or time.monotonic()-last_progress > 45:
@@ -565,6 +611,7 @@ def main():
             **{'neighbour_'+k: v for k, v in scene.neighbours.items()},
             indptr=scene.indptr, offset_arcsec=scene.offset_arcsec)
     histories_saved = time.monotonic()
+    comoving_trace = np.array(comoving_trace)
     reports, profile_samples = [], {}
     for i in range(nobs):
         rows = slice(i*nchains, (i+1)*nchains)
@@ -592,18 +639,16 @@ def main():
         summary = SummaryBatch(flat, np.broadcast_to(observed_i.iloc[0, 2:4].to_numpy(), (len(flat), 2)))
         # Extended-target bridge is sum K_g / sum K_g0 for each retained
         # bank, then average over chain states; not an unweighted bank mean.
-        # Only nodes 0.002 from the sampling shear are reliable for bright galaxies.
-        for axis in (0, 1):
-            for delta in (-.002, .002):
-                node = list(g0)
-                node[axis] = round(node[axis]+delta, 12)
-                name = f'g{axis+1}_{node[axis]:g}'
+        for k, (name, node) in enumerate(profile_nodes):
+            if args.comoving_profiles:
+                ratios = comoving_trace[:, rows, k]
+            else:
                 shifted = likelihood.log_kernel(summary, observed_i, *node).reshape(retained_kernel[::stride].shape)
                 ratios = logsumexp(shifted, axis=2)-logsumexp(retained_kernel[::stride], axis=2)
-                profile_samples[f'observation_{protocol["observations"][i]}_{name}'] = ratios
-                values = logsumexp(ratios, axis=0)-np.log(len(ratios))
-                checks[f'log_ratio_{name}'] = diagnostics(ratios.T)
-                profile.append(dict(g1=node[0], g2=node[1], log_numerator_ratio_per_chain=values.tolist()))
+            profile_samples[f'observation_{protocol["observations"][i]}_{name}'] = ratios
+            values = logsumexp(ratios, axis=0)-np.log(len(ratios))
+            checks[f'log_ratio_{name}'] = diagnostics(ratios.T)
+            profile.append(dict(g1=node[0], g2=node[1], log_numerator_ratio_per_chain=values.tolist()))
         by_block = {}
         for block in range(len(protocol['proposal_block_probabilities'])):
             select = block_trace[args.warmup:] == block
@@ -637,7 +682,7 @@ def main():
         elapsed_seconds=time.monotonic()-started, frozen_scale_multipliers=np.exp(log_scales).tolist(),
         timing_seconds=dict(setup=sampling_started-started, sampling=sampling_finished-sampling_started,
             history_output=histories_saved-sampling_finished, profiles_and_diagnostics=time.monotonic()-histories_saved),
-        coupled_walkers=bool(args.ensemble_morphology),
+        coupled_walkers=bool(args.ensemble_morphology), comoving_identity_replay_max_abs=comoving_identity_replay,
         frozen_morphology_cholesky=morphology_factor.tolist() if args.joint_morphology else None,
         protocol_sha256=digest(args.output/'protocol.json'),
         all_exploration_checks_pass=all(r['exploration_checks_pass'] for r in reports),
