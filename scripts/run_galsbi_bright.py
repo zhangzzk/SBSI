@@ -90,7 +90,9 @@ def selection(root, plan, replica, *, smoke=False, reference=None):
                 raise ValueError('invalid forward selection draw')
             shaped = True
             if max_shape is not None:
-                b, _ = response.predict(atoms, samples[:, :, 2], samples[:, :, 3])
+                # b only where the radius/flux are positive; other draws fail the radius cut below anyway
+                b, kept = np.zeros(atoms.shape), (samples[:, :, 2] > 3.) & (samples[:, :, 3] > 0)
+                b[kept], _ = response.predict(atoms[kept], samples[:, :, 2][kept], samples[:, :, 3][kept])
                 measured, _ = disk_response_transport(torch.as_tensor(samples[:, :, :2]),
                                                       torch.as_tensor(b[..., None]*np.asarray(g, float)))
                 shaped = measured.square().sum(-1).sqrt().numpy() < max_shape
