@@ -87,6 +87,41 @@ paths are in the model manifest. Detailed [experiment history](../archive/resear
 and [model comparison](../archive/research-2026-09-25/doc/V36_MODEL_COMPARISON.md)
 remain available. No scientific result or old decision was overwritten.
 
+## Measured |e| < 0.7 cut on ConstGold (2026-10-05)
+
+The owner asked whether V3.9-like still gives an unbiased m on ConstGold when the common survey cut on measured
+|e| < 0.7 is added, both with C8 and with the simulation's true usable flags in place of C8. It does not.
+Nothing was trained or tuned; ConstGold stays test-only.
+
+Setup (study `$DATA_DIR/../sbsi_caches/v39_constgold_ecut07_20261005/`):
+- Same cases (40–119), legs, 64 draws, seeds, batching and main cut as
+  [the development evidence](#development-evidence). The new cut is added per leg on the measured shape:
+  - simulation side: ngmix |e| < 0.7;
+  - model side: |e| < 0.7 of the F8 draw after the Möbius disk shift (the model's measured shape).
+- `f8_e07_rows.py` rebuilds every F8 draw on A40 GPUs, as in the saved run. The saved rows are reproduced
+  exactly (max difference 0).
+- `c8_probabilities.py` recomputes the C8 probabilities and checks them against the saved C8 sums.
+- `summary.py` reproduces the published +0.020770% ± 0.265152 exactly before reporting anything new. It uses the
+  same 10,000-resample case bootstrap, seed 20260925.
+- The cut removes 1,167,947 of 7,264,215 selected simulation galaxies (16.1%) in the plus leg.
+
+| weights on the model side | without the cut | with \|e\| < 0.7 | change from the cut |
+| --- | ---: | ---: | ---: |
+| C8 (V3.9-like) | +0.021% ± 0.265 | **−6.384% ± 0.352** | −6.405 ± 0.261 pp |
+| true usable flags | +0.228% ± 0.266 | **−6.248% ± 0.355** | −6.476 ± 0.261 pp |
+
+The C8 95% interval with the cut is [−7.08, −5.70]%.
+
+- With the cut, the simulated response is 0.46442. The model predicts 0.49609 (C8) or 0.49537 (true flags), even
+  though the selected counts agree to 0.1%.
+- The classifier is not the cause: the same bias appears with the true flags.
+- The cause is the F8 flow + disk response. They get the overall response right, but not how shear moves
+  measured shapes across |e| = 0.7, i.e. the shape distribution and its shear response near that boundary.
+- The same cut on the model-generated paired mock is unbiased
+  ([−1.3% ± 4.4%](HYBRID_SAMPLING.md#paired-mock-with-a-measured-e--07-cut-m--13--44-2026-10-05)),
+  because that mock comes from the model itself.
+- Limitations of this check: g1 only, development cases only, 80 cases.
+
 ## Loading and inference boundary
 
 Set `SBSI_CACHE_DIR` and `BLENDEMU_RUNS_DIR` to the external artifact roots:

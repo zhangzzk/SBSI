@@ -912,3 +912,37 @@ Receipts (`$DATA_DIR/sbsi/catalogue_prior/galsbi_twin100k_20261005/`):
 - The pipeline scripts copied from the 100k study by `copy_scripts.py` (code from its `source_cut`, 8f16643).
 - `pair_step.py`, `pair_check.py`, `pair_step_comoving_circ.json`, `plot_pair.py`.
 - Logs in `logs/` and `it0/logs/`.
+
+### Paired mock with a measured |e| < 0.7 cut: m = −1.3% ± 4.4% (2026-10-05)
+The owner asked for the |e| < 0.7 cut that real surveys often use, applied to the same 2 × 100k paired mock.
+The rule was written down before any result existed (`e07_rule.md`).
+- The cut acts on the measured shape. It is applied to the data and also inside the selection integral Z
+  (plan key `max_measured_ellipticity: 0.7`), so the model knows which galaxies a shear would push across it.
+- The chains are reused unchanged: `make_e07.py` writes `it0_e07/` and `one_e07/` with plan copies and
+  symlinks to the existing runs.
+- New selection chunks (`selection_e07.sh`, code from `source_cut`, 8f16643) reuse the seeds of the 0.99 run,
+  so the two results differ only by the cut.
+- `pair_step.py` takes an optional iteration name (`pair_step.py comoving_circ it0_e07`); the defaults are
+  unchanged.
+- The cut drops 18,413 originals and 18,266 twins; 75,602 scenes keep both members.
+
+| one step from g = 0, \|e\| < 0.7 | g1 | g2 | m |
+|---|---|---|---|
+| original 100k | 0.02352 ± 0.00185 | +0.00291 ± 0.00192 | +17.6% ± 9.2% |
+| rotated twin 100k | 0.01601 ± 0.00188 | −0.00019 ± 0.00185 | −19.9% ± 9.4% |
+| **paired** | **0.01975 ± 0.00088** | **+0.00131 ± 0.00092** | **−1.3% ± 4.4%** |
+
+- Paired error budget, g1: stat 0.00053, chains 0.00035, selection 0.00061. The bootstrap over scenes gives 0.00062.
+  Selection noise is now the largest term; the cut makes Z noisier.
+- The paired error is 1.7× larger than with |e| < 0.99. The cut removes about 18% of galaxies, and the pairs
+  cancel less of the shape noise.
+- Slope check on the original (`final_report.py it0_e07:comoving_circ one_e07:comoving_circ`):
+  0.96 ± 0.06, so one step from g = 0 is still enough.
+- Conclusion: on a mock drawn from the model itself, the |e| < 0.7 cut causes no bias detectable at the ±4%
+  level. This is a self-consistency test. It cannot show whether the model reproduces how real images put
+  galaxies across the cut; [the ConstGold check](V39_MODEL.md#measured-e--07-cut-on-constgold-2026-10-05)
+  tests that, and the model fails it.
+
+Receipts, both study directories: `make_e07.py`, `selection_e07.sh`, `analyse_e07.sh`, `e07_rule.md`,
+`it0_e07/`, `one_e07/`, `pair_step_comoving_circ_it0_e07.json`, and
+`final_report_it0_e07-comoving_circ_one_e07-comoving_circ.json`.

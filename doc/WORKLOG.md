@@ -1,5 +1,41 @@
 # Work log
 
+## 2026-10-05 — Measured |e| < 0.7 cut: unbiased on the paired mock, −6.4% on ConstGold
+
+The owner asked to try the |e| < 0.7 cut that real data often uses, first on the 2 × 100k paired mock and then
+with V3.9-like on ConstGold, both with C8 and with the true usable flags.
+Details: [paired mock](HYBRID_SAMPLING.md#paired-mock-with-a-measured-e--07-cut-m--13--44-2026-10-05),
+[ConstGold](V39_MODEL.md#measured-e--07-cut-on-constgold-2026-10-05).
+
+Code: no repository code changed. All new scripts are in the study directories.
+- Paired mock (`galsbi_blind100k_20261003/`, `galsbi_twin100k_20261005/`): `make_e07.py`, `selection_e07.sh`,
+  `analyse_e07.sh`, `e07_rule.md`. `pair_step.py` takes an optional iteration name; the defaults are unchanged
+  (backup `pair_step_before_e07.py.bak`).
+- ConstGold (`sbsi_caches/v39_constgold_ecut07_20261005/`): `f8_e07_rows.py`, `c8_probabilities.py`,
+  `summary.py`, `job.sh`.
+
+Results:
+- Paired mock, one step from g = 0: g = (0.01975 ± 0.00088, 0.00131 ± 0.00092), so m = −1.3% ± 4.4%.
+  The slope check gives 0.96 ± 0.06. The cut drops 18,413 originals and 18,266 twins.
+- ConstGold, V3.9-like + |e| < 0.7: m = −6.384% ± 0.352 with C8 and −6.248% ± 0.355 with the true flags.
+  Without the cut the same code gives +0.021% ± 0.265 and +0.228% ± 0.266. The cut shifts m by
+  −6.405 ± 0.261 pp (C8) and −6.476 ± 0.261 pp (true flags).
+- The model overpredicts the response with the cut (0.496 against 0.464), while the selected counts agree to 0.1%.
+  This points to the F8 flow + disk model near the cut boundary, not to C8.
+
+Validation:
+- F8 draws rebuilt on A40 match the saved rows exactly (max difference 0).
+- The C8 probabilities match the saved sums.
+- `summary.py` reproduces the published +0.020770% ± 0.265152 before reporting.
+- The paired-mock selection seeds equal those of the 0.99 run.
+
+Limitations:
+- The mock test is self-consistent by construction.
+- The ConstGold check covers g1 only, on 80 development cases.
+
+Next, only if the owner wants the |e| < 0.7 cut in production: find where the model's measured-shape
+distribution near |e| ≈ 0.7 departs from ConstGold's, and train on half-shear data, never ConstGold.
+
 ## 2026-10-05 — Rotated-twin paired mock: one-step m = −2.0% ± 2.5%
 
 The owner noted that m = +9% ± 7% on the blind 100k mock is too loose a test and asked for a rotated-twin
