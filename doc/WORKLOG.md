@@ -1,5 +1,60 @@
 # Work log
 
+## 2026-10-05 — Blind 100k run: two fixes make the one-step (BFD) Newton estimate work
+
+The owner said that "in principle we need only one iteration (see BFD)" and asked me to debug autonomously why the 100k blind run needed four.
+Details are in [the 100k section](HYBRID_SAMPLING.md#blind-100k-run-and-why-one-newton-step-was-not-enough-2026-10-03-to-10-05).
+
+Code:
+- 5847c44: plan key `max_radius_pixels` (selection Z). It removes one 858-px flow-tail galaxy.
+- a7b4468: `--comoving-profiles` in `check_galsbi_local_sampler.py`, plus
+  `GalSBITargetCoordinates.comove` in `sbsi/galsbi_target_coordinates.py`.
+  - The intrinsic shape moves with the shear: ε' = M_g'⁻¹(M_g0(ε)).
+  - The circularized radius is kept, and the exact Jacobian is included.
+- cc76c1d and 8f16643: plan key `max_measured_ellipticity` in `run_galsbi_bright.py selection()`.
+  - Z cuts on the model's measured shape: the flow draw moved by radial_tanh(b g), with b predicted per draw by
+    `CatalogueDiskResponse`.
+  - b is predicted only for draws with radius > 3 px and flux > 0.
+- The study scripts are kept with the study in `$DATA_DIR/.../galsbi_blind100k_20261003/`:
+  - new: `comoving.py`, `make_cut.py`, `make_one.py`, `groups.py`, `g2check.py`, `zcheck.py`, `zscan.py`,
+    `c0check.py`;
+  - now variant-aware: `blind_step.py`, `onestep.py`, `final_report.py`, `plot_blind.py`.
+
+Result:
+- The old iteration (fixed-shape ratios, all galaxies) took 4 steps and ended at g1 +2.5σ. The step used
+  information about 1/0.68 too large.
+- Cause 1: noisy fixed-shape ratios for bright galaxies. Co-moving ratios fix it: bright chain noise falls from
+  80% to 1.3% of the bright score variance.
+- Cause 2: 492 galaxies with measured |e| ≥ 0.99 have strongly non-linear likelihoods. The |e| < 0.99 cut on
+  data and Z removes them.
+- One step from g = 0 now gives (0.02180 ± 0.00142, 0.00140 ± 0.00145).
+- The test iteration `one`:
+  - g1 step +0.00002; measured slope / I = 0.98 ± 0.03.
+  - g2 step −0.00152, just outside the pre-declared total error of 0.00141. That is about 2.2σ of the chain
+    and selection noise.
+- Truth, read once at the end: the one-step g1 is +1.3σ, m = +9.0% ± 7.1%.
+
+Validation:
+- `pytest tests/test_galsbi_target_coordinates.py`: 7 passed.
+- Co-moving replay: a node at g0 reproduces the stored kernel to < 0.01 in every unit, except the 858-px
+  galaxy, which is cut.
+- c0, a rerun of it0's bright chains on other GPUs:
+  - Half-split chain noise is honest: Σ difference² / predicted = 0.72 co-moving, 1.03 fixed.
+  - Recomputing b vs keeping it moves the one-step estimate by 0.0001.
+- Selection chunk values are Gaussian (kurtosis 2.8–3.3).
+- The g2 scan shows no real change of the selection slope across g2 = 0 (1.4σ).
+
+Limitations:
+- One mock.
+- The g2 confirmation is noise-limited: selection ±0.0003 and short chains ±0.0004 per iteration.
+- The |e| cut is a modelling choice for the owner to confirm (0.5% of galaxies).
+- With the cut, selection costs about 19 s per chunk, against 3 s without it.
+
+Next:
+- Use the same selection seeds across iterations, so selection noise cancels in the confirmation step.
+- More selection chunks.
+- Decide on the |e| cut.
+
 ## 2026-10-03 — Blind hybrid MH estimate on the 10k mock recovers the shear within 1σ
 
 The owner asked for the following while away for 10 h: more efficient sampling, hybrid sampling on the 10k

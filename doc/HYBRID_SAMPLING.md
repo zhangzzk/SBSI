@@ -688,3 +688,155 @@ Receipts (`$DATA_DIR/sbsi/catalogue_prior/galsbi_blind10k_20261003/`):
   `blind_step.json`.
 
 Figure: `SBSI/plots/blind10k_iterations.png`.
+
+## Blind 100k run and why one Newton step was not enough (2026-10-03 to 10-05)
+
+**Run.** A fresh 100k GalSBI mock (`galsbi_blind100k_20261003`, seed 2026100701), with the same blind Newton
+iteration as the 10k study.
+- 4 GPU workers pull units from a shared queue. The selection term uses 2 replicas × 160 chunks.
+- it0 and it1 run short chains: bright 8192 steps (2048 warm-up), faint 4096 (1024). it2 and it3 run full
+  chains: 32768 and 16384.
+- The rule (`final_rule.md`, written before sampling): accept an iteration when its own step is inside its
+  total error.
+- An amendment, made before any estimate: a measured-size cut of radius < 100 px. It removes one 858-px
+  flow-tail galaxy whose ratios moved by 6000 per 0.002 in g.
+
+| iteration | sampling shear g1 | next g1 | next g2 | total error | step inside error? |
+|---|---|---|---|---|---|
+| it0 | 0 | 0.01388 | −0.0007 | 0.00152, 0.00202 | no |
+| it1 | 0.01388 | 0.01927 | 0.00228 | 0.00158, 0.00192 | no |
+| it2 | 0.01927 | 0.02266 | −0.00019 | 0.00149, 0.00155 | no |
+| it3 | 0.02266 | **0.02364** | **0.00114** | 0.00147, 0.0015 | yes |
+
+**Pre-declared answer:** g = (0.02364 ± 0.00147, 0.00114 ± 0.0015).
+- The truth (0.02, 0), read afterwards, puts it at +2.5σ and +0.8σ.
+- The score's measured slope between iterations was only 0.68 ± 0.10 of the information I used for the step.
+  So each step covered about two thirds of the distance, and the error bars were too small by that factor.
+
+### Why the step fell short (no truth used)
+BFD's one-step argument: if every galaxy's likelihood is close to linear in g over the step, then the
+information at g = 0 equals the slope of the total score, and one Newton step lands on the root. Two things
+broke it.
+
+1. **Fixed-shape likelihood ratios are very noisy for bright galaxies.**
+   - The sampler re-evaluates each saved draw at g0 ± 0.002, holding the intrinsic shape fixed. A bright
+     galaxy's measured shape pins its sheared shape, so at the neighbouring shear a fixed intrinsic shape puts
+     the draw in the tail.
+   - Bright chain noise was 35–80% of the bright score variance.
+   - Fix (a7b4468: `--comoving-profiles` in the sampler, `comoving.py` to post-process saved chains): move the
+     intrinsic shape with the shear, ε' = M_g'⁻¹(M_g0(ε)), keep the circularized radius, and include the exact
+     Jacobian.
+   - Bright chain noise drops to about 1% of the bright score variance.
+2. **492 galaxies with measured |e| ≥ 0.99 claim information that their score does not show.**
+   - 368 of them are bright and 124 faint. They are flow-tail draws; the mock contains them because it is
+     generated from the same model.
+
+| group (co-moving ratios) | n | information at g = 0 | at it2 | measured slope −ΔS/Δg1 |
+|---|---|---|---|---|
+| faint, \|e\| < 0.99 | 88,872 | 400k | 388k | 400k ± 14k |
+| bright, \|e\| < 0.99 | 10,635 | 167k | 179k | 154k ± 3k |
+| bright, \|e\| ≥ 0.99 | 368 | 233k | 13k | 43k ± 14k |
+
+("Information" here is the outer product minus chain noise.) The last group adds about 40% to I at g = 0
+and almost nothing at it2.
+- A rerun of it0's bright chains on other GPUs (c0, same seeds) shows its chain noise is not underestimated:
+  Σ(run difference)² / Σ(predicted) = 0.02–0.6.
+- So these galaxies' likelihoods are far from linear over 0.02 in g, unless both runs got stuck in the same
+  mode (their chains coincide for the first 500–1600 steps).
+
+**Fix: a measured-shape cut, |e| < 0.99, on the data and in Z** (`max_measured_ellipticity`, cc76c1d and 8f16643).
+- Observed galaxies are cut on their measured ngmix shape.
+- Z(g) applies the same cut to the model's measured shape: the flow draw moved by radial_tanh(b g).
+- b is predicted per selection draw from its measured radius and flux and the scene's neighbour pairs,
+  exactly as in the mock generator and the likelihood.
+- Cost: selection takes about 19 s per chunk with the cut (3 s without), about 50 min per replica on 6 cores.
+- Each iteration's cut Z uses that iteration's own seeds, so cut and uncut results differ only by the cut.
+
+### One step from g = 0
+All rows are from it0 (short chains); the stat error is about ±0.0013 throughout.
+
+| variant | next g1 | next g2 | ± chains (g1) | total (g1, g2) | galaxy bootstrap (g1, g2) |
+|---|---|---|---|---|---|
+| original (fixed ratios, all galaxies) | 0.01388 | −0.0007 | 0.0011 | 0.00152, 0.00202 | 0.0035, 0.0022 |
+| co-moving, no cut | 0.01659 | 0.00117 | | 0.0012 (g1) | 0.0030 (g1) |
+| fixed ratios + cut | 0.01940 | −0.00054 | 0.00159 | 0.0021, 0.0021 | 0.0027, 0.0022 |
+| **co-moving + cut** | **0.02180** | **0.00140** | 0.00041 | **0.00142, 0.00145** | 0.00136, 0.00143 |
+
+With both fixes, the galaxy bootstrap matches the error budget, and bright chain noise is 1.3% of the bright
+score variance.
+
+**Converged values for comparison** (same cut and Z, co-moving):
+- The Newton step at it2 gives (0.02214, −0.00047) ± (0.00137, 0.00139).
+- The straight line through the it0 and it2 g1 scores crosses zero at g1 = 0.02229.
+- The one step from g = 0 is 0.0005 short in g1 (0.4 stat σ). The remaining non-linearity: I at g = 0 is
+  566k, against a measured slope of 554k (2%).
+
+**The g2 difference between the two steps (0.0019) is selection Monte Carlo noise.**
+- d log Z/dg2 per galaxy at it2 is 0.0077 ± 0.0016. The other iterations give 0.0021–0.0025.
+- That one fluctuation moves it2's g2 by −0.0009. The rest (about 1.7σ) is chain noise.
+- The chunk values are Gaussian (kurtosis 2.8–3.3), so the selection error bars hold.
+- The small positive mean of dlogZ/dg2 is allowed: the scene layout is not mirror-symmetric.
+
+### Checks of the co-moving numbers
+- **Replay.** Re-evaluating the saved draws on CPU matches the sampler's fixed-shape ratios to < 0.01 in
+  every unit except obs 99194 (the 858-px galaxy, already cut).
+- **b recomputation.** c0 was sampled with in-sampler co-moving ratios, with b recomputed from the retained
+  scene. Against `comoving_circ` (b kept) on the same chains, the one-step estimate moves by (+0.00011, +0.00005)
+  against chain noise of 0.00012, so the post-processing is a faithful stand-in.
+- **Chain noise.** it0 against the c0 rerun, both co-moving: the one-step estimate moves by (−0.00004,
+  +0.00001) ± 0.00012. Σ(difference)² / Σ(half-split prediction) = 0.72, so the half-split error is not too
+  small. It is not a fully independent rerun (same seeds).
+
+### Confirmation iteration `one`
+The test iteration was declared in `final_rule.md` (amendment 2) before it was sampled.
+- It sampled at the one-step shear (0.0218, 0.0014) with short chains like it0 (jobs 16818772–75, about 2 h on
+  4 GPUs).
+- It used co-moving post-processing and the same cut, with new selection seeds.
+- The rule: one iteration suffices if `one`'s own step is inside its total error in both components.
+
+| at `one` | step | next | ± stat | ± chains | ± selection | total | bootstrap |
+|---|---|---|---|---|---|---|---|
+| g1 | **+0.00002** | 0.02182 | 0.00131 | 0.00040 | 0.00028 | 0.00140 | 0.00136 |
+| g2 | **−0.00152** | −0.00012 | 0.00132 | 0.00040 | 0.00029 | 0.00141 | 0.00140 |
+
+- **g1: one step is enough.** The measured score slope between g = 0 and `one` (Δg1 = 0.0218) is
+  0.98 ± 0.03 of I, against 0.68 ± 0.10 before the fixes (`final_report.py it0_cut:comoving_circ one:comoving_circ`).
+- **g2 fails the pre-declared test narrowly:** a step of 0.00152 against a total error of 0.00141.
+  - Both estimates use the same galaxies, so shape noise cancels in the step. Its own noise is chains plus
+    selection at both iterations, about ±0.0007, so the step is about 2.2σ.
+  - The largest single piece is the selection Monte Carlo. d log Z/dg2 per galaxy was 0.0032 ± 0.0016 at
+    it0_cut and 0.0080 ± 0.0016 at `one`, which by itself moves g2 by about −0.0009.
+  - A dedicated scan on common scenes (`zscan/`, g1 = 0.02 and g2 from −0.004 to +0.004; `zscan.py`) shows no
+    real change of that slope across g2 = 0: +0.0033 ± 0.0023 per galaxy, 1.4σ. The interval-to-interval
+    scatter matches the quoted errors.
+
+**Against the truth** (0.02, 0), read once, after the test:
+- The one-step estimate from g = 0 is (0.02180 ± 0.00142, 0.00140 ± 0.00145): +1.3σ and +1.0σ, m = +9.0% ± 7.1%.
+- `one`'s next shear is (0.02182 ± 0.00140, −0.00012 ± 0.00141): +1.3σ and −0.1σ, m = +9.1% ± 7.0%.
+- The old pre-declared it3 answer was +2.5σ, m = +18.2% ± 7.4%.
+
+**Conclusions:**
+- With co-moving ratios and the |e| < 0.99 cut, the BFD one-step estimate works on this mock. The remaining
+  g2 step is Monte Carlo noise.
+- Where the remaining noise comes from:
+  - selection: 320 chunks give ±0.0003 in g per iteration;
+  - short chains: ±0.0004.
+  - Both are small next to shape noise (±0.0013), but they set how cleanly a second iteration can confirm the first.
+- Cheap improvements, not run here:
+  - more selection chunks;
+  - the same selection seeds in every iteration, so the selection noise cancels in the step.
+- The measured-shape cut is a modelling choice the owner should confirm. It is applied identically to the
+  data and to Z and uses only measured quantities, but it removes 0.5% of galaxies.
+- Cost of the cut: about 19 s per selection chunk, against 3 s without it.
+
+Figure: `SBSI/plots/blind100k_onestep.png` (it0–it3, then the one-step estimate and `one`).
+
+Receipts (`$DATA_DIR/sbsi/catalogue_prior/galsbi_blind100k_20261003/`):
+- `final_rule.md`, including amendment 2 (the one-step test), written before `one` was sampled.
+- `blind_step.py`, `onestep.py`, `groups.py`, `g2check.py`, `zcheck.py`, `zscan.py`, `c0check.py`, `comoving.py`,
+  `final_report.py`, `plot_blind.py`.
+- `make_cut.py` (it0_cut and it2_cut), `make_one.py`.
+- `source_cut/` (8f16643), `cut_selection.sh`.
+- Logs in `<iteration>/logs/` and `logs/`.
+
+Figures: `SBSI/plots/blind100k_iterations.png`, `SBSI/plots/blind100k_onestep.png`.
