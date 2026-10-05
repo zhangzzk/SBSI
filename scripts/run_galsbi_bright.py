@@ -1,6 +1,7 @@
 """Scheduled bright-cohort MH, independent selection integrals and shear profiles."""
 import argparse
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -13,10 +14,12 @@ import torch
 from check_galsbi_continuous_prior import build_prior, digest, save
 from report_galsbi_population import checked_run
 from run_galsbi_throughput import run
+from sbsi.catalogue_disk_response import CatalogueDiskResponse
+from sbsi.disk_response_transport import disk_response_transport
 from sbsi.galsbi_scene_prior import GalSBIScenePrior
 from sbsi.galsbi_summary import SummaryBatch, SummaryLikelihood, scene_model_inputs
 from sbsi.measurement_model import load_measurement_model
-from sbsi.models import V39_LIKE, load_detection_classifier
+from sbsi.models import V39_LIKE, load_detection_classifier, load_disk_response
 from sbsi.shear_map import apply_shear_to_ellipticity
 
 
@@ -58,6 +61,11 @@ def selection(root, plan, replica, *, smoke=False, reference=None):
     nodes = grid if grid.ndim == 2 else np.column_stack((grid, np.zeros(len(grid))))
     chunks = 1 if smoke else plan['selection_chunks']
     depth = plan['selection_flow_draws']
+    # Optional cut on measured |e|: the measured shape is the flow draw moved by radial_tanh(b g), with b
+    # predicted from that draw's measured radius/flux and the scene's neighbour pairs, as in the likelihood.
+    max_shape = plan.get('max_measured_ellipticity')
+    if max_shape is not None:
+        response_model = load_disk_response(V39_LIKE, device='cpu', nthread=len(os.sched_getaffinity(0)))
     values = np.zeros((chunks, len(grid), len(plan['magnitude_limits']), 2))
     output = root/('smoke_selection' if smoke else f'selection{replica}')
     output.mkdir(exist_ok=False)
@@ -65,8 +73,11 @@ def selection(root, plan, replica, *, smoke=False, reference=None):
     for chunk in range(chunks):
         seed = plan['selection_seed_base']+replica*10000+chunk*10+(100000 if smoke else 0)
         scenes, _ = prior.sample(plan['selection_chunk_size'], seed)
-        zero, _, _ = scene_model_inputs(scenes, prior, distance, protocol['conditions'],
+        zero, ptr, features = scene_model_inputs(scenes, prior, distance, protocol['conditions'],
             response_radius_arcsec=10., response_neighbours=20)
+        if max_shape is not None:
+            response = CatalogueDiskResponse(ptr, features, response_model)
+            atoms = np.repeat(np.arange(len(zero)), depth).reshape(len(zero), depth)
         for j, g in enumerate(nodes):
             context = zero.copy()
             context['e1_input_p'], context['e2_input_p'] = apply_shear_to_ellipticity(
@@ -77,8 +88,14 @@ def selection(root, plan, replica, *, smoke=False, reference=None):
             if (not np.isfinite(samples).all() or not np.isfinite(q).all()
                     or np.any((q < 0) | (q > 1))):
                 raise ValueError('invalid forward selection draw')
+            shaped = True
+            if max_shape is not None:
+                b, _ = response.predict(atoms, samples[:, :, 2], samples[:, :, 3])
+                measured, _ = disk_response_transport(torch.as_tensor(samples[:, :, :2]),
+                                                      torch.as_tensor(b[..., None]*np.asarray(g, float)))
+                shaped = measured.square().sum(-1).sqrt().numpy() < max_shape
             for c, limit in enumerate(plan['magnitude_limits']):
-                passed = ((samples[:, :, 2] > 3.) & (samples[:, :, 2] < plan.get('max_radius_pixels', np.inf))
+                passed = (shaped & (samples[:, :, 2] > 3.) & (samples[:, :, 2] < plan.get('max_radius_pixels', np.inf))
                           & (samples[:, :, 3] > 10**(.4*(30-limit))))
                 for d, n in enumerate((depth//2, depth)):
                     values[chunk, j, c, d] = np.mean(q*passed[:, :n].mean(1))
@@ -95,7 +112,7 @@ def selection(root, plan, replica, *, smoke=False, reference=None):
         plan_sha256=digest(root/'plan.json'), data_sha256=digest(output/'chunks.npz'),
         process_seconds=time.monotonic()-started,
         selection='C8 probability times measured radius>3 pixels (and < max_radius_pixels if the plan sets it) '
-                  'and flux threshold; no disk response needed',
+                  'and flux threshold; measured |e| < max_measured_ellipticity (disk response per draw) if set',
         uncertainty='Independent scene chunks and replicas; CRN over shear nodes; nested conditional draw ladder'))
 
 
