@@ -840,3 +840,75 @@ Receipts (`$DATA_DIR/sbsi/catalogue_prior/galsbi_blind100k_20261003/`):
 - Logs in `<iteration>/logs/` and `logs/`.
 
 Figures: `SBSI/plots/blind100k_iterations.png`, `SBSI/plots/blind100k_onestep.png`.
+
+### Rotated-twin paired mock: m = −2.0% ± 2.5% (2026-10-05)
+The owner noted that m = +9% ± 7% is too loose a test for a mock and asked for a rotated-twin paired mock.
+Almost all of the ±0.0014 is the shape and pixel noise of these particular 100k galaxies; chain and selection
+noise are only ±0.0004 and ±0.0003.
+
+**The twin** (`scripts/prepare_galsbi_twin.py`, commit 8cd45c5):
+- Every scene of the original mock is drawn again with the same seed and turned by 90° about its target.
+- The model sees a scene only through quantities that do not change under rotation (magnitudes, sizes,
+  Sérsic index, neighbour distances, crowding), plus the target's intrinsic shape. So the rotation is exactly
+  e → −e for the target, and nothing else changes.
+- Each twin goes through the same steps as the original: shear, the detection draw (same random numbers),
+  the measurement draw, the measured cuts and the disk-response shift. Its selection is its own; pairs are
+  not forced to be complete, and no truth cuts are applied.
+- The original's 50 chunks were rebuilt and reproduce the stored mock bit for bit (difference 0.0), on the
+  node and GPU model that made it (met-cl-vis01).
+- Size: 99,922 twins. 98,630 scenes have both members selected; 1,370 have only the original and 1,292 only
+  the twin (`reference/pairs.parquet`).
+
+**Measurement-noise coupling.** The noise of the measurement flow comes from four standard-normal draws:
+two drive the shape, two drive size and flux. The twin can reuse them, negate the shape pair ("antithetic"),
+or draw fresh ones; each choice gives a correctly distributed twin. A 2-chunk test (`coupling_test/`), using
+the scatter of the pair-mean measured shape relative to two independent galaxies (1 = no gain):
+
+| coupling | e1 | e2 | both members selected |
+|---|---|---|---|
+| antithetic | **0.12** | **0.22** | 98.5% |
+| same draws | 1.42 | 1.46 | 98.9% |
+| fresh draws | 0.73 | 0.78 | 87% |
+
+Antithetic was used. The choice was made on this variance proxy alone, without the truth.
+
+**Analysis**, the same recipe as the original's one-step result (`it0_cut:comoving_circ`):
+- Sampling at g = 0 with the same chains (bright 8192 steps, faint 4096), co-moving bright ratios, and the
+  measured radius < 100 px and |e| < 0.99 cuts.
+- 2 × 160 new selection chunks (seed 2026807001).
+- Run on 4 GPUs (340 cores): all 805 units done with no failures, in about 2 h. Co-moving replay < 0.005.
+- `pair_step.py` (fixed before the twin was sampled):
+  - one Newton step from g = 0 over both catalogues;
+  - Z from the 640 pooled selection chunks;
+  - errors with the scene as the unit (an original and its twin are deliberately correlated); bootstrap
+    over scenes.
+  - Check: on the original alone it reproduces `blind_step.py` exactly.
+
+| one step from g = 0 | g1 | g2 | m |
+|---|---|---|---|
+| original 100k | 0.02180 ± 0.00142 | +0.00140 ± 0.00145 | +9.0% ± 7.1% |
+| rotated twin 100k | 0.01741 ± 0.00141 | +0.00055 ± 0.00144 | −12.9% ± 7.0% |
+| **paired** | **0.01959 ± 0.00051** | **+0.00096 ± 0.00056** | **−2.0% ± 2.5%** |
+
+- Paired error budget, g1: stat 0.00037, chains 0.00029, selection 0.00020. The bootstrap over scenes gives
+  0.00046, consistent with stat plus chains (0.00047).
+- If the 200k galaxies were independent, the stat error would be 0.00094: the twin removes about 85% of the
+  shape-noise variance.
+- Dropped by the cuts: 493 originals and 464 twins.
+- The truth was read only in the last printed block of `pair_step.py`.
+
+**Conclusions:**
+- The +9% of the original was mostly the shape noise of that one draw. The twin lands at −13%, and the pair
+  at −2.0% ± 2.5%, consistent with no multiplicative bias.
+- g2 is +0.00096 ± 0.00056 (1.7σ), also consistent with zero.
+- Chain and selection noise are now as large as the shape noise. The next factor in precision needs longer
+  bright chains and more selection chunks, not more galaxies.
+
+Figure: `SBSI/plots/twin100k_paired.png`.
+
+Receipts (`$DATA_DIR/sbsi/catalogue_prior/galsbi_twin100k_20261005/`):
+- `prepare_twin.sh`, `source_twin/` (8cd45c5), `reference/`, `coupling_test/`.
+- `make_twin_plan.py`, `launch_it0.sh`, `make_lists.py`.
+- The pipeline scripts copied from the 100k study by `copy_scripts.py` (code from its `source_cut`, 8f16643).
+- `pair_step.py`, `pair_check.py`, `pair_step_comoving_circ.json`, `plot_pair.py`.
+- Logs in `logs/` and `it0/logs/`.

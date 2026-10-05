@@ -1,5 +1,41 @@
 # Work log
 
+## 2026-10-05 — Rotated-twin paired mock: one-step m = −2.0% ± 2.5%
+
+The owner noted that m = +9% ± 7% on the blind 100k mock is too loose a test and asked for a rotated-twin
+paired mock. Details are in
+[the twin section](HYBRID_SAMPLING.md#rotated-twin-paired-mock-m--20--25-2026-10-05).
+
+Code:
+- 8cd45c5: `scripts/prepare_galsbi_twin.py`.
+  - It rebuilds every chunk of a population mock and checks it matches the stored rows bit for bit.
+  - It then draws the same scenes turned by 90° (target intrinsic e → −e), with the same detection random
+    numbers.
+  - The twin's measurement noise is antithetic: the flow's two shape draws are negated.
+  - `--test-chunks` compares the noise couplings.
+- The study scripts live in `$DATA_DIR/.../galsbi_twin100k_20261005/`. The pipeline scripts are copies from
+  the 100k study (`copy_scripts.py`); new are `make_twin_plan.py`, `launch_it0.sh`, `make_lists.py`,
+  `pair_step.py`, `pair_check.py`, `plot_pair.py`.
+
+Result:
+- 99,922 twins; 98,630 scenes have both members selected.
+- Each catalogue alone gives m = +9.0% ± 7.1% (original) and −12.9% ± 7.0% (twin).
+- **Paired:** g = (0.01959 ± 0.00051, 0.00096 ± 0.00056), so m = −2.0% ± 2.5% and g2 is 1.7σ from zero.
+- The paired stat error is 0.00037, against 0.00094 if the galaxies were independent.
+
+Validation:
+- The original rebuild matches exactly in all 50 chunks.
+- `pair_step.py` on the original alone reproduces `blind_step.py` (0.021804, 0.001403) and its errors.
+- The bootstrap over scenes (0.00046) agrees with stat plus chains (0.00047).
+- Co-moving replay < 0.005 in every bright unit; 805/805 units done.
+
+Limitations:
+- One mock pair.
+- Chain noise (±0.00029) and selection noise (±0.00020) are now comparable to the shape noise (±0.00037).
+- The |e| < 0.99 cut still awaits the owner's decision.
+
+Next: for ±1% on m, longer bright chains and more selection chunks, then more twin pairs.
+
 ## 2026-10-05 — Blind 100k run: two fixes make the one-step (BFD) Newton estimate work
 
 The owner said that "in principle we need only one iteration (see BFD)" and asked me to debug autonomously why the 100k blind run needed four.
