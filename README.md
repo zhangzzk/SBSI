@@ -48,9 +48,17 @@ prints one and `python -m sbsi validate-model <name>` checks its files and hashe
   > 0.6 arcsec and magnitude < 25.8; it has not been independently validated.
 - **V3.5-like**, **V3.6-like** — earlier presets kept so older results stay reproducible.
 
-The disk emulator predicts a response per flow draw and is combined with
-`sbsi.disk_response_transport`; it is deliberately not usable through the additive
-`load_emulator` path that V3 uses.
+The disk emulator predicts a response per flow draw, so V3.9-like has its own short API
+instead of the additive `load_emulator` path that V3 uses:
+
+```python
+inputs, pairs = sbsi.prepare_disk_inputs(catalogue, observing_conditions)
+predictor = sbsi.DiskResponsePredictor(sbsi.get_model("V3.9-like"))
+prediction = predictor.predict(inputs, pairs)   # +-0.02 shear legs, 64 paired draws
+prediction.summary()                             # R_flow, R_blend, R_model with 1-sigma errors
+```
+
+The [V3.9 tutorial](examples/sbsi_api_tutorial_v39.ipynb) walks through it.
 
 Flow, classifier and emulator training are not part of this release. Emulator training
 lives in BlendEMU.

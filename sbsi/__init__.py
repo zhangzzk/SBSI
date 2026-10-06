@@ -13,6 +13,7 @@ from typing import Any
 
 
 _EXPORTS = {
+    "DiskResponsePredictor": (".disk_predictor", "DiskResponsePredictor"),
     "EmulatorPairingConfig": (".forward_catalogue", "EmulatorPairingConfig"),
     "ModelPaths": (".models", "ModelPaths"),
     "ResponsePredictor": (".response", "ResponsePredictor"),
@@ -25,6 +26,7 @@ _EXPORTS = {
         "prepare_forward_catalogue",
     ),
     "predict_blend_response": (".response", "predict_blend_response"),
+    "prepare_disk_inputs": (".disk_predictor", "prepare_disk_inputs"),
     "sample_measurement": (".response", "sample_measurement"),
 }
 
