@@ -1,5 +1,35 @@
 # Work log
 
+## 2026-10-06 — F8 retrained on measured unsheared |e| < 0.7: ConstGold m worse (−10.4% vs −6.4%)
+
+The owner asked to train the likelihood on data cut at measured |e| < 0.7 (unsheared), per galaxy, from both legs.
+Details: [V39_MODEL.md](V39_MODEL.md#f8-retrained-on-measured-unsheared-e--07-2026-10-05).
+
+Code: no repository code changed. All new scripts are in `sbsi_caches/v39_f8_measured07_20261005/`:
+`prepare_measured07.py`, `run_stage.py`, `f8_rows.py`, `nll_compare.py`, `summary.py`, `make_experiment.py`,
+`job.sh` and `rule.md`. The control (`v39_f8_control_20261005/`) and the cancelled truth-|e| variant
+(`v39_f8_truthe07_20261005/`) are kept for the record.
+
+Results:
+- ConstGold, |e| < 0.7 with C8 (the pre-declared primary): −10.386% ± 0.338, against F8's −6.384% ± 0.352.
+  The paired difference is −4.002 ± 0.038 pp.
+- Without the |e| cut: +4.148% ± 0.277 (F8: +0.021% ± 0.265).
+- With the true flags in place of C8: −10.227% ± 0.341.
+- Training checks: guard loss 0.954 vs 0.006. On the same kept validation galaxies the new flow is 0.040 ± 0.001
+  nats per galaxy worse than F8.
+
+Validation:
+- `summary.py` reproduces the published +0.020770% ± 0.265152 before reporting.
+- The control retraining is byte-identical to F8 at the base stage and within 1.5e-8 after refinement.
+
+Limitations:
+- One seed, g1 only, 80 development cases.
+- The control's last refinement step ran out of memory on a 16 GB GPU and was not rerun, because it would
+  reproduce F8.
+
+Next: none planned. Cutting the training data on one leg's measured shape is not a fix. A per-leg cut that the flow
+models explicitly would be a different experiment.
+
 ## 2026-10-05 — Measured |e| < 0.7 cut: unbiased on the paired mock, −6.4% on ConstGold
 
 The owner asked to try the |e| < 0.7 cut that real data often uses, first on the 2 × 100k paired mock and then

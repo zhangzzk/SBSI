@@ -122,6 +122,51 @@ The C8 95% interval with the cut is [−7.08, −5.70]%.
   because that mock comes from the model itself.
 - Limitations of this check: g1 only, development cases only, 80 cases.
 
+## F8 retrained on measured unsheared |e| < 0.7 (2026-10-05)
+
+The owner asked to retrain the likelihood on training data cut at measured |e| < 0.7 (unsheared). It makes
+ConstGold worse, so V3.9-like is unchanged. Study: `$DATA_DIR/../sbsi_caches/v39_f8_measured07_20261005/`
+(`rule.md` was fixed before training).
+
+Training:
+- The F8 recipe is unchanged: same frozen checkout, cases, split, seeds, and the base → labels → refine chain.
+- `prepare_measured07.py` drops a galaxy from both legs of a training domain if its g = 0 ngmix |e| ≥ 0.7 in that
+  domain. Galaxies without a g = 0 measurement are kept. This removes 4.76M of 31.41M g = 0 flow rows (15.2%).
+- No ConstGold data were used for training or checkpoint selection.
+
+Training checks, against F8:
+- The trainer's shear-response check (guard loss) stayed near 1.0, with the best value 0.954. For F8 it is 0.006.
+- On the same 10.67M validation galaxies that pass the cut, the final flow's log density is
+  −3.0931 nats per galaxy. F8 scores −3.0534, so the new flow is 0.040 worse (each value ± 0.001).
+- It assigns much less density to the removed galaxies (−6.83 vs −4.80): it learned that measured |e| ≥ 0.7 is
+  rare.
+- Likely cause (not tested): the cut uses only the g = 0 leg. The g = 0 measured distribution is truncated at 0.7,
+  but the g = 0.05 leg is not. The flow then mistakes the noise selection for shear response.
+
+ConstGold, same setup and bootstrap as [above](#measured-e--07-cut-on-constgold-2026-10-05). The pre-declared
+primary is the new flow with the |e| < 0.7 cut and C8. "Main cut" below means without the |e| cut.
+
+| flow | main cut, C8 | \|e\| < 0.7, C8 | \|e\| < 0.7, true flags |
+| --- | ---: | ---: | ---: |
+| F8 (V3.9-like) | +0.021% ± 0.265 | −6.384% ± 0.352 | −6.248% ± 0.355 |
+| retrained on measured \|e\| < 0.7 | +4.148% ± 0.277 | **−10.386% ± 0.338** | −10.227% ± 0.341 |
+| paired difference | +4.127 ± 0.015 pp | −4.002 ± 0.038 pp | −3.979 ± 0.039 pp |
+
+- With the |e| cut, the new model selects 10.0% more galaxies than the simulation (count ratio 1.100; F8: 1.001).
+  It also predicts a response of 0.518, against 0.464 in the simulation.
+- Restricting both sides to true |e| < 0.7 changes little: −10.25% ± 0.34 (new) vs −6.30% ± 0.36 (F8).
+
+Controls:
+- Retraining F8 with the same code on the uncut data reproduces it. The base flow file is byte-identical, and the
+  refined weights differ by at most 1.5 × 10⁻⁸ (GPU rounding). The difference above is therefore due to the cut,
+  not retraining noise.
+- The control's last refinement step ran out of memory on a 16 GB GPU. It was not rerun, because it would
+  reproduce F8.
+- A first variant cut on true unsheared |e| < 0.7 (`v39_f8_truthe07_20261005/`) was cancelled during refinement at
+  the owner's request. Its base flow was 0.134 nats per galaxy worse than F8 on the kept validation rows.
+
+Limitations: one training seed, g1 only, 80 development cases.
+
 ## Loading and inference boundary
 
 Set `SBSI_CACHE_DIR` and `BLENDEMU_RUNS_DIR` to the external artifact roots:
