@@ -8,7 +8,7 @@
 # This branch has its OWN history, unrelated to dev's, so that publishing it does
 # not expose the internal working history. Do not merge between the two branches
 # in either direction. Publish with:
-#     git checkout dev -- sbsi examples tests models README.md pyproject.toml
+#     git checkout dev -- sbsi examples tests models configs README.md pyproject.toml
 # See doc/BRANCHES.md on the dev branch.
 #
 # This is a WHITELIST: every top-level entry is ignored, then the public tree is
@@ -24,6 +24,7 @@
 !/examples/
 !/tests/
 !/models/
+!/configs/
 
 # ---- caches and build junk, anywhere in the public tree ----
 __pycache__/

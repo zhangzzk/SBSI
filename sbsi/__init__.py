@@ -1,78 +1,47 @@
-"""SBSI: flow training, response prediction, and Bayesian inference."""
+"""Simulation-based shear inference.
 
-from .catalogue import Catalogue, load_catalogue
-from .domain import Domain
-from .forward_catalogue import (
-    DEFAULT_CROWDING_RADII_ARCSEC,
-    EmulatorPairingConfig,
-    INPUT_CATALOGUE_COLUMNS,
-    PreparedForwardCatalogue,
-    find_neighbours,
-    make_pair_catalogue,
-    prepare_emulator_pairs,
-    prepare_flow_inputs,
-    prepare_forward_catalogue,
-    validate_input_catalogue,
-)
-from .flow import FlowTrainingConfig, FlowTrial, load_flow, train_flow, tune_flow
-from .inference import BayesianInference, PosteriorResult, RadialShapePrior, ShearInferenceResult
-from .models import (
-    MODEL_PRESETS,
-    SHAPE_SEEDS,
-    V3,
-    V3B,
-    ModelPaths,
-    get_model,
-    load_emulator,
-    validate_models,
-)
-from .paths import example_path, repository_path
-from .response import (
-    MeasurementSample,
-    ResponsePrediction,
-    ResponsePredictor,
-    predict_blend_response,
-    sample_measurement,
-)
+The package root intentionally exposes only the small prediction API used by
+the bundled example. Imports are resolved lazily so importing :mod:`sbsi`
+does not load PyTorch, model checkpoints, or the catalogue-inference stack.
+Specialized code should import its implementation module directly.
+"""
 
-__version__ = "3.0.0"
+from __future__ import annotations
 
-__all__ = [
-    "BayesianInference",
-    "Catalogue",
-    "FlowTrainingConfig",
-    "FlowTrial",
-    "DEFAULT_CROWDING_RADII_ARCSEC",
-    "EmulatorPairingConfig",
-    "INPUT_CATALOGUE_COLUMNS",
-    "MODEL_PRESETS",
-    "MeasurementSample",
-    "ModelPaths",
-    "PosteriorResult",
-    "PreparedForwardCatalogue",
-    "RadialShapePrior",
-    "ResponsePrediction",
-    "ResponsePredictor",
-    "ShearInferenceResult",
-    "SHAPE_SEEDS",
-    "Domain",
-    "V3",
-    "V3B",
-    "get_model",
-    "find_neighbours",
-    "example_path",
-    "load_catalogue",
-    "load_flow",
-    "load_emulator",
-    "make_pair_catalogue",
-    "prepare_emulator_pairs",
-    "prepare_flow_inputs",
-    "prepare_forward_catalogue",
-    "repository_path",
-    "train_flow",
-    "tune_flow",
-    "predict_blend_response",
-    "sample_measurement",
-    "validate_models",
-    "validate_input_catalogue",
-]
+from importlib import import_module
+from typing import Any
+
+
+_EXPORTS = {
+    "EmulatorPairingConfig": (".forward_catalogue", "EmulatorPairingConfig"),
+    "ModelPaths": (".models", "ModelPaths"),
+    "ResponsePredictor": (".response", "ResponsePredictor"),
+    "example_path": (".paths", "example_path"),
+    "get_model": (".models", "get_model"),
+    "load_catalogue": (".catalogue", "load_catalogue"),
+    "load_emulator": (".models", "load_emulator"),
+    "prepare_forward_catalogue": (
+        ".forward_catalogue",
+        "prepare_forward_catalogue",
+    ),
+    "predict_blend_response": (".response", "predict_blend_response"),
+    "sample_measurement": (".response", "sample_measurement"),
+}
+
+__all__ = tuple(_EXPORTS)
+
+
+def __getattr__(name: str) -> Any:
+    """Load a supported root-level export on first access."""
+
+    try:
+        module_name, attribute = _EXPORTS[name]
+    except KeyError as exc:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}") from exc
+    value = getattr(import_module(module_name, __name__), attribute)
+    globals()[name] = value
+    return value
+
+
+def __dir__() -> list[str]:
+    return sorted((*globals(), *_EXPORTS))

@@ -65,9 +65,9 @@ is what fixes the emulator's identity.
 
 ## What is *not* here
 
-- **V3b.** `get_model("V3b")` names a different flow ensemble
-  (`..._dom6x6_s{seed}_swaavg.pt`) and a different emulator. Those files are not in
-  this directory, so V3b resolves only against the original cluster paths.
+- **V3.x-like.** `get_model("V3.9-like")` (and the older V3.5-/V3.6-like presets) name a
+  flow, a detection classifier and an emulator outside this directory. Their hashes are
+  pinned in `configs/`; set `SBSI_CACHE_DIR` and `BLENDEMU_RUNS_DIR` to the model store.
 - **Training data and intermediate caches.** They live under `$DATA_DIR` and are not
   redistributable at this size.
 - **Superseded checkpoints.** 77 earlier experimental flows that used to sit here were

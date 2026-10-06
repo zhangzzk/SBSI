@@ -1,0 +1,274 @@
+{
+  "format": "sbsi_model_set_v1",
+  "name": "V3.9-like",
+  "status": "owner-retained development model; investigation wrapped up 2026-09-25",
+  "configured_likelihood": false,
+  "flow": {
+    "root": "SBSI_CACHE_DIR",
+    "path": "v36_f8_20260924_v1/joint/joint_probability_refinement_full/selected.pt",
+    "sha256": "bd51dbbbeeb72763f6982a958cb8f3a0b2d3906d4f78935d9d959fa85a17797e",
+    "feature_names": [
+      "e1_input_p",
+      "e2_input_p",
+      "sersic_n_input_p",
+      "r_input_p",
+      "circularized_Re_input_p",
+      "nbr_close_050",
+      "nbr_close_100",
+      "nbr_close_200"
+    ],
+    "selection": "F8 selected common-descent probability refinement; unchanged artifact"
+  },
+  "classifier": {
+    "root": "SBSI_CACHE_DIR",
+    "path": "v36_classifier_f8_inputs_20260925_v1/C8_20260913/selected.pt",
+    "sha256": "231bbbdf1f885ab22ccfca2525ae46b6bdfd068474c42ebac24973feb861cb6a",
+    "training_seed": 20260913,
+    "selected_epoch": 99,
+    "checkpoint_selection": "minimum mean-case tuning BCE; first predeclared seed, not best shear bias",
+    "feature_names": [
+      "e1_input_p",
+      "e2_input_p",
+      "sersic_n_input_p",
+      "r_input_p",
+      "circularized_Re_input_p",
+      "nbr_close_050",
+      "nbr_close_100",
+      "nbr_close_200"
+    ],
+    "feature_coordinate": "physical_arcsec",
+    "add_missing_indicators": false
+  },
+  "emulator": {
+    "root": "BLENDEMU_RUNS_DIR",
+    "path": "disk_response_moment_20260918_v1/model/model.json",
+    "sha256": "194c1d11b67d6fd52039060270663e8e1cd610b478b9e9a66e34271701761fe7",
+    "metadata_path": "disk_response_moment_20260918_v1/model/metadata.json",
+    "metadata_sha256": "e9c28e921fa0430d4ef5feef9cb1d0954c4431b2258b5edfc0ed7c99fe59b589",
+    "backend": "disk_response_moment",
+    "composition": "mobius",
+    "response_coordinate": "disk_velocity"
+  },
+  "feature_contract": {
+    "crowding": "log1p(sum_j (F_j/F_i)*exp(-d_ij^2/(2*s^2)))",
+    "scales_arcsec": [
+      0.5,
+      1.0,
+      2.0
+    ],
+    "neighbour_support": "all rendered nonself neighbours within 10 arcsec; no top-k truncation",
+    "shear_convention": "target ellipticity changes; circularized radius, physical positions and fluxes fixed",
+    "emulator_conditioning": "same joint F8 draw radius and flux used for measured cuts; ln(radius_pixels), 30-2.5*log10(flux)"
+  },
+  "population": "generated target-role parent; no truth-property or g0-usability cuts at evaluation; not every rendered identity is a target",
+  "primary_selection": {
+    "measured_flux_radius_arcsec_strictly_greater_than": 0.6,
+    "measured_flux_radius_pixels_strictly_greater_than": 3.0,
+    "MAG_AUTO_strictly_less_than": 25.8,
+    "independent_selection_per_leg": true
+  },
+  "joint_bias_definition": "100*(R_sim/R_model-1), percent; own selected normalization on each antithetic leg",
+  "evaluation": {
+    "cases": [
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119
+    ],
+    "axis": 1,
+    "h": 0.02,
+    "draws": 64,
+    "latent_seed": 7301,
+    "bootstrap_replicates": 10000,
+    "bootstrap_seed": 20260925,
+    "development_only": true
+  },
+  "results": {
+    "primary": {
+      "case_se_pp": 0.26515217441748873,
+      "ci95_pp": [
+        -0.5021314413429425,
+        0.5336444606873236
+      ],
+      "data_response": [
+        0.6707665225158052,
+        0.00042612780683493507
+      ],
+      "m_percent": 0.020769635769424255,
+      "model_response": [
+        0.6706272356815836,
+        -0.0009383910786065939
+      ],
+      "selected_count_ratio": [
+        0.9997115660873364,
+        0.9997921388447043
+      ],
+      "selected_data": [
+        7264215.0,
+        7263821.0
+      ],
+      "selected_model": [
+        7262119.75404512,
+        7262311.133775079
+      ]
+    },
+    "classifier_seed_replicate": {
+      "case_se_pp": 0.265271760778666,
+      "ci95_pp": [
+        -0.4607760799845928,
+        0.5754030281262384
+      ],
+      "data_response": [
+        0.6707665225158052,
+        0.00042612780683493507
+      ],
+      "m_percent": 0.06242304325667636,
+      "model_response": [
+        0.6703480708495684,
+        -0.0009310990282933784
+      ],
+      "selected_count_ratio": [
+        0.9994650726177097,
+        0.9994717072010117
+      ],
+      "selected_data": [
+        7264215.0,
+        7263821.0
+      ],
+      "selected_model": [
+        7260329.172485656,
+        7259983.57567256
+      ]
+    }
+  },
+  "replicate_classifier": {
+    "root": "SBSI_CACHE_DIR",
+    "path": "v36_classifier_f8_inputs_20260925_v1/C8_20260914/selected.pt",
+    "sha256": "286895ac092ac3f3ea4e920bb18c9b525603f87150cdd8f8260cf0c19f37038e",
+    "training_seed": 20260914,
+    "role": "diagnostic replicate; not averaged into primary model"
+  },
+  "decision": {
+    "owner_retained": true,
+    "development_non_degradation_screen_pass": false,
+    "independent_acceptance": false,
+    "robust_absolute_0p3_percent_established": false,
+    "emulator_simplification_tested": false
+  },
+  "evidence": {
+    "comparison": {
+      "path": "doc/evidence/v3_9_like/comparison.json",
+      "source": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_classifier_f8_inputs_20260925_v1/comparison.json",
+      "sha256": "57ee57b7158d15c253ffd7278eab2c233a153f853697576cb01985fe197eb959"
+    },
+    "protocol": {
+      "path": "doc/evidence/v3_9_like/protocol.json",
+      "source": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_classifier_f8_inputs_20260925_v1/protocol.json",
+      "sha256": "a7380fddd7772a17b17a471c263b0216fd0e29ef2a951fde6f013e0559a75823"
+    },
+    "working_selection": {
+      "path": "doc/evidence/v3_9_like/working_selection.json",
+      "source": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_classifier_f8_inputs_20260925_v1/working_selection.json",
+      "sha256": "daa0cefbd7dce413d605394b5019f87c1f9c73273a26c2f3376fafe356b2a58d"
+    },
+    "classifier_training": {
+      "path": "doc/evidence/v3_9_like/classifier_training.json",
+      "source": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_classifier_f8_inputs_20260925_v1/C8_20260913/completed.json",
+      "sha256": "84410a8d8cf1f85a6498331e11772f8d9844d2515c00ef136366745c9d5c9744"
+    },
+    "flow_selection": {
+      "path": "doc/evidence/v3_9_like/flow_selection.json",
+      "source": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_f8_20260924_v1/trained_candidate.json",
+      "sha256": "f7d9e1701c5a17966e0f84a4dcdcaa4e3c9f9d501ffd8c87e32d18bffd7b4808"
+    },
+    "flow_comparison": {
+      "path": "doc/evidence/v3_9_like/flow_comparison.json",
+      "source": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_f8_20260924_v1/development_comparison.json",
+      "sha256": "df7c269656abe43ab3343c6fe36029e8d48949e5a87beb144af5c48aabec908f"
+    }
+  },
+  "limitations": [
+    "Reused development scenes, g1 only; no untouched two-axis validation.",
+    "Case-bootstrap errors exclude training and finite-draw uncertainty.",
+    "C8 has worse BCE/Brier losses than C17; owner retention does not change failed broader checks.",
+    "Regional response errors still cancel; population-shift robustness is unestablished.",
+    "The unchanged disk emulator was trained on a true-magnitude-limited target population.",
+    "V3.9-like is a model preset. Existing disk inference preparation remains V3.6-specific; old caches cannot be relabelled."
+  ]
+}

@@ -25,7 +25,6 @@ from __future__ import annotations
 import os
 
 import numpy as np
-import pandas as pd
 import pyarrow.feather as pf
 
 __all__ = ["DEFAULT_KEY", "join_blend"]
