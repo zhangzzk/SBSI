@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#SBATCH --job-name=sbsi_cross_contributions
+#SBATCH --partition=cluster
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=6G
+#SBATCH --time=00:10:00
+#SBATCH --output=/project/ls-gruen/users/zekang.zhang/sbsi_caches/flow_shape_augmentation_20260918_v1/logs/%x_%j.out
+#SBATCH --error=/project/ls-gruen/users/zekang.zhang/sbsi_caches/flow_shape_augmentation_20260918_v1/logs/%x_%j.err
+set -euo pipefail
+cd /home/z/Zekang.Zhang/SBSI
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+PY=/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python
+"$PY" -m pytest tests/test_measured_cross_contributions.py -q
+exec "$PY" -u -m scripts.audit_measured_cross_contributions \
+ --prepared-root /project/ls-gruen/users/zekang.zhang/sbsi_caches/fresh_fullscene_joint_20260918_v1/full \
+ --result-root /project/ls-gruen/users/zekang.zhang/sbsi_caches/scene_classifier_geometry_20260918_v1 \
+ --output /project/ls-gruen/users/zekang.zhang/sbsi_caches/scene_classifier_geometry_20260918_v1/measured_cross_contributions.json

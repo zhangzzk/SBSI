@@ -16,6 +16,11 @@ data/
 *.hdf5
 *.png
 *.pdf
+# Published README figure and its reproducibility receipt.
+!doc/figures/
+doc/figures/*
+!doc/figures/measurement_flow_contours.png
+!doc/figures/measurement_flow_contours.json
 *.stale_bak
 
 # Python and tool caches

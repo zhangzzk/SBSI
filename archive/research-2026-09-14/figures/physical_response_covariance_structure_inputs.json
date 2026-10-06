@@ -1,0 +1,6 @@
+{
+  "train_targets": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/plain_complete_flow_response_re037_v1/grid_physical_response_gate_recovery_v4/train_targets.npz",
+  "train_sha256": "36b271587d0861bc000275e0534754ddd1462fbe01e7830921d1a6f5690d4ca5",
+  "validation_targets": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/plain_complete_flow_response_re037_v1/grid_physical_response_gate_recovery_v4/validation_targets.npz",
+  "validation_sha256": "91435d4add9b394f39e78a3dc22d5d81a6af1dc4e32ba2f642ae8803c1698018"
+}

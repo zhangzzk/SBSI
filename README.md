@@ -1,5 +1,13 @@
 # Simulation-Based Shear Inference
 
+![v3.9-like conditional measurement contours and galaxy stamps with recognized and unrecognized neighbours](doc/figures/measurement_flow_contours.png)
+
+**v3.9-like** flow predictions for three simulated galaxies. In the first stamp,
+dashed ellipses and curved-arrow labels mark recognized (cyan) and unrecognized
+(gold) neighbours. Input-truth radius
+markers include the PSF and pixel response; ellipticity truth corresponds to
+the PSF-corrected shape measurements. [Figure conventions and reproduction](doc/README_FIGURE.md#figure-conventions).
+
 SBSI provides model loading and prediction, finite-scene likelihoods,
 selection normalization, importance sampling, and Bayesian shear inference.
 BlendEMU owns image simulation, measurement, catalogue production, and

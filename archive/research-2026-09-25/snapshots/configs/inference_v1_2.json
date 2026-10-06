@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "release": "v1.2-infer",
+  "description": "Tilted-stratified trimmed catalogue-shear inference: the 1,024-atom candidate shortlist is summed exactly and an 8,192-draw complement is taken from the tilted whole-catalogue proposal.",
+  "prior": "configs/default_catalogue_prior.json",
+  "proposal": {
+    "flow_samples": 128,
+    "location_statistic": "mean",
+    "dispersion_statistic": "std",
+    "row_chunk": 8192,
+    "coordinate_seed": 8201,
+    "candidates": 1024,
+    "prefilter_candidates": 131072,
+    "seed": 8701,
+    "epsilon": 0.1,
+    "method": "initial_center_posterior_adapted"
+  },
+  "estimator": {
+    "initial_strategy": "mean_observed_shape",
+    "step": "one_step_full_2d",
+    "finite_difference_h": 0.001,
+    "draw_ladder": [
+      512,
+      1024,
+      2048,
+      4096,
+      8192
+    ],
+    "minimum_ess": 32.0,
+    "maximum_weight_fraction": 0.5,
+    "allocation": "production_prefix",
+    "pilot_draws": 512,
+    "pilot_seed": 18701,
+    "pilot_safety_factor": 1.0,
+    "bias_correction": "none",
+    "retain_full_ladder": true,
+    "estimator_mode": "tilted_stratified",
+    "tilt_delta": 0.1,
+    "tilt_temperature": 1.0
+  },
+  "execution": {
+    "precision": "fp32",
+    "compile_flow": true,
+    "candidate_backend": "torch",
+    "object_chunk": 128,
+    "atom_chunk": 4096
+  }
+}

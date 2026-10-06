@@ -157,6 +157,83 @@ Next:
 - More selection chunks.
 - Decide on the |e| cut.
 
+## 2026-10-03 — Thicken README blending ellipses and arrows
+
+In `scripts/plot_readme_figure.py`, increased dashed ellipse strokes from
+1.1 to 2.0 points and curved arrows from 1.25 to 2.2 points, with proportionally
+larger arrowheads and ellipse outlines. Regenerated
+`doc/figures/measurement_flow_contours.png` and its receipt. Layout, neighbour
+choices and scientific settings are unchanged.
+
+Validation: syntax compilation passed; Slurm CPU job 16805406 completed with
+exit 0 in 32 seconds. Visually checked the regenerated figure. Scoped
+`git diff --check` passed. No outstanding work for this styling change.
+
+## 2026-10-03 — Simplify README figure labels and confine blending guides to the first stamp
+
+Updated `scripts/plot_readme_figure.py` and regenerated the README PNG/JSON:
+removed the overall model title, retained all eight neighbour ellipses only
+in the bright stamp, and added two curved-arrow labels beside that stamp.
+The arrows identify recognized neighbour 184965 and unrecognized neighbour
+629505, with their catalogue recognition states checked before rendering.
+The typical and faint stamps have no ellipses. Moved the measurement and
+input-truth legend inside the ellipticity panel and removed the separate
+legend strip. The receipt distinguishes displayed overlays from the full
+neighbour inventory. Updated `README.md` and
+[figure conventions](README_FIGURE.md#figure-conventions) accordingly.
+
+Validation: syntax compilation and scoped `git diff --check` passed. Slurm
+CPU job 16805381 completed successfully in 46 seconds. Visually checked the
+PNG for label placement, curved arrows, legend placement and absence of an
+overall title. Receipt checks confirm displayed ellipse counts `[8, 0, 0]`
+and two callouts with opposite recognition states. The model, examples,
+random seed, draw count and PSF reference method are unchanged. These remain
+illustrative guides, as described in the figure conventions; no further work
+is required for this layout revision.
+
+## 2026-10-03 — Restore the README figure with v3.9-like contours and blending guides
+
+Restored the original three ConstGold case 40/+0.02 examples and plotting layout
+from Git `18b4218` into `scripts/plot_readme_figure.py`. The README now embeds
+`doc/figures/measurement_flow_contours.png`; `.gitignore` admits only this new
+PNG and its JSON receipt within the otherwise ignored figure directory.
+`jobs/job_readme_figure.sh` provides a bounded CPU regeneration job.
+
+The figure samples the pinned F8 checkpoint (SHA-256
+`bd51dbbbeeb72763f6982a958cb8f3a0b2d3906d4f78935d9d959fa85a17797e`),
+rebuilding its eight physical inputs from the complete scene. It uses the
+requested lowercase `v3.9-like` display label and removes `R_blend` from stamp
+titles. Dashed cyan/gold ellipses mark recognized/unrecognized neighbours by
+unique detection crossmatch, with illustrative PSF-broadened footprints and
+the renderer's pixel-coordinate orientation. The three stamps contain 8/11/10
+neighbours, of which 3/7/2 have their own matched detections.
+
+Input-truth radius markers now integrate isolated sheared Sérsic profiles
+convolved with the simulation's truncated Moffat PSF and pixel response.
+The bright/typical/faint circular half-light radii are 0.972757/0.811249/0.784618
+arcsec; halving numerical sampling from 0.05 to 0.025 arcsec changes them by at
+most 0.003475 arcsec (required tolerance 0.005). Total input flux and the
+sheared pre-PSF truth appropriate to PSF-corrected ngmix shapes are retained.
+
+Validation: `python -m py_compile scripts/plot_readme_figure.py`,
+`bash -n jobs/job_readme_figure.sh`, local Markdown-link checks and scoped
+`git diff --check` passed. Final Slurm CPU job 16805330 completed with exit 0
+in 41 seconds. The launcher uses a job-local bytecode cache after shared stale
+bytecode delayed an overlay-orientation edit; final receipt angles confirm
+the corrected source executed. Visually inspected
+the final PNG. All 314,869 crossmatches joined to shapes and truth; 3,168 shape
+rows lacking crossmatches were reported and dropped. The run rejects ambiguous
+identities and invalid draws, checks artifact identity, and verifies radius
+integration convergence. No GPU allocation or model training was needed.
+
+Limitations and reproduction are documented in
+[README figure conventions](README_FIGURE.md#figure-conventions). Ellipses are
+guides, not segmentation or measured contamination. The three examples are
+illustrative; contours use the conditional F8 flow alone, without C8 weighting
+or disk-response transport. No likelihood setting, model artifact, archived
+investigation or inference cache changed. No further work is required for
+this figure revision.
+
 ## 2026-10-03 — Blind hybrid MH estimate on the 10k mock recovers the shear within 1σ
 
 The owner asked for the following while away for 10 h: more efficient sampling, hybrid sampling on the 10k

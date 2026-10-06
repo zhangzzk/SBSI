@@ -1,0 +1,123 @@
+{
+  "counts": {
+    "zero_rows": 6283382,
+    "sheared_rows": 6280324,
+    "matched_rows": 6237193,
+    "unmatched_zero": 46189,
+    "unmatched_sheared": 43131,
+    "dropped_domain_detection_or_nonfinite": 5117032,
+    "validation_rows": 1120160,
+    "dropped_zero_primary_shear": 1
+  },
+  "validation_cases": [
+    4,
+    10,
+    13,
+    21,
+    22,
+    23,
+    25,
+    33,
+    38,
+    41,
+    51,
+    62,
+    66,
+    68,
+    69,
+    75,
+    78,
+    81,
+    84,
+    91,
+    96,
+    98,
+    99,
+    110,
+    113,
+    114,
+    115,
+    120,
+    129,
+    130,
+    131,
+    137,
+    138,
+    141,
+    145,
+    151,
+    154,
+    180,
+    183,
+    185
+  ],
+  "models": {
+    "r10t10": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/plain_complete_flow_response_re037_v1/measurement_flow_plain_direct_r10_t10_d16_re037_s501_swaavg.pt",
+      "sha256": "0ca0a9847e17dfb0e15dc1c13df5a633ff3342c45f3e8bf53fb4b3a40c99700b",
+      "condition_features": [
+        "e1_input_p",
+        "e2_input_p",
+        "sersic_n_input_p",
+        "r_input_p",
+        "Re_input_p",
+        "nbr_flux_near",
+        "nbr_flux_far",
+        "nbr_flux_max"
+      ]
+    },
+    "r100t100": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/plain_complete_flow_response_re037_v1/r100_t100_v1/measurement_flow_plain_direct_r100_t100_d16_re037_s501_swaavg.pt",
+      "sha256": "b5fdad5486b2be781da81f3d8ef3c0f884eb9d9894bd44a0f7f9ad4863caaac8",
+      "condition_features": [
+        "e1_input_p",
+        "e2_input_p",
+        "sersic_n_input_p",
+        "r_input_p",
+        "Re_input_p",
+        "nbr_flux_near",
+        "nbr_flux_far",
+        "nbr_flux_max"
+      ]
+    },
+    "old500": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/mixed_shear_e_photometric/measurement_flow_mixed_g0_g005_E_r500_t500_s501_swaavg.pt",
+      "sha256": "4e816ba5cd4be86771008fbbf5f7fec26d3d39cfb2fd90afe52acd0012373d73",
+      "condition_features": [
+        "e1_input_p",
+        "e2_input_p",
+        "sersic_n_input_p",
+        "r_input_p",
+        "Re_input_p",
+        "nbr_flux_near",
+        "nbr_flux_far",
+        "nbr_flux_max"
+      ]
+    }
+  },
+  "primary_re_min": 0.5,
+  "arguments": {
+    "g0_catalogue": "/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_crowd_conc_g0.0_train_full.feather",
+    "sheared_catalogue": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/mixed_shear_cde/det_meas_crowd_conc_g0.05_all200.feather",
+    "response_target": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/mixed_shear_cde/response_target_mixed_train160_6x6x5_matrix.npz",
+    "model_10": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/plain_complete_flow_response_re037_v1/measurement_flow_plain_direct_r10_t10_d16_re037_s501_swaavg.pt",
+    "model_100": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/plain_complete_flow_response_re037_v1/r100_t100_v1/measurement_flow_plain_direct_r100_t100_d16_re037_s501_swaavg.pt",
+    "output_dir": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/plain_complete_flow_response_re037_v1/theta_old_overlay_v1/artifacts",
+    "render_existing": null,
+    "model_old": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/mixed_shear_e_photometric/measurement_flow_mixed_g0_g005_E_r500_t500_s501_swaavg.pt",
+    "device": "cuda",
+    "draws": 64,
+    "batch_size": 2048,
+    "seed": 7301,
+    "bins": 10,
+    "bootstrap": 1000
+  },
+  "definitions": {
+    "R_theta": "forward delta of measured mag or log radius divided by actual shear magnitude 0.05",
+    "model": "complete-flow conditional means, primary-only analytic shear, frozen g0 conditioners, CRN",
+    "coupling": "intercept-fitted slope of R_theta against intrinsic e_parallel within each property bin",
+    "error_bars": "1 SE of 1000 paired whole-case bootstrap replicates; excludes training-seed uncertainty",
+    "population": "both detected and four-output finite, primary shear |g|=0.05; true domain from response target; no measured cuts",
+    "limitations": "Measured-realization bins condition on g0 outcomes; flow prediction is a conditional mean, not a realization predictor. Random neighbour shear in simulation is not applied in the primary-only model response."
+  }
+}
