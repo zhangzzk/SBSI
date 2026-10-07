@@ -946,3 +946,74 @@ The rule was written down before any result existed (`e07_rule.md`).
 Receipts, both study directories: `make_e07.py`, `selection_e07.sh`, `analyse_e07.sh`, `e07_rule.md`,
 `it0_e07/`, `one_e07/`, `pair_step_comoving_circ_it0_e07.json`, and
 `final_report_it0_e07-comoving_circ_one_e07-comoving_circ.json`.
+
+### Unpaired 500k mock: m = −4.1% ± 3.2% (2026-10-07)
+The owner asked for a 500k mock without a rotated twin. The rule was fixed before the mock was generated
+(`rule.md`): the recipe of the original's one-step result, applied once, with the truth read only at the end.
+- Mock: same generator and settings as the 100k mock, new seed 2026100801, 500,000 selected galaxies at true
+  shear (0.02, 0). Code 8cd45c5 (= 8f16643 + the twin script).
+- Sampling at g = 0 with the same chains: bright (measured mag < 23) tempered MH, 8192 steps; faint plain MH,
+  4096 steps. Co-moving bright ratios (`comoving_circ`), cuts measured radius < 100 px and |e| < 0.99 on the data
+  and in Z.
+- Selection: 2 × 640 chunks (4× the 100k run), new seeds (base 2026907001).
+- Pass rule: m and c2 both within 2σ of zero.
+
+**Run.** 4,062 units (2,660 bright of 21 galaxies, 1,402 faint of 317) on 4 GPUs.
+- The large H200/H100 nodes had no free GPU, so it ran on 132 cores (3 V100 + 1 A40) in about 25 h.
+- Per unit: bright 20 min, faint 24 min. Selection: 17 s per chunk, both replicas done in 3 h.
+- Co-moving post-processing: about 2 h.
+  - 64 tasks, at most 32 at a time.
+  - Each task spends about 40 min on setup, then about 1 min per unit.
+  - One task landed on a crowded node; helper tasks finished its last 20 units.
+
+**One failure, outside the cuts.** Bright unit 2292 stopped at initialisation ("measurement candidate stream has
+no finite posterior starting state").
+- Its row 431089 has a broken measurement: radius 13,139 px, flux 7.7 × 10⁶, |e| = 1.0.
+- The other three rows with radius ≥ 100 px (858, 424 and 104 px) sampled normally.
+- The unit was rerun with its own seeds without that row (`rerun_u2292.sh`).
+- `blind_step.py` now accepts a galaxy with no result only if it is outside the cuts, and lists it as
+  `unsampled_outside_cuts`. The row was always excluded from the data and from Z, so the result's definition
+  does not change (`rule.md` addendum, written before any result).
+- Worker slots read `units.txt` from the top, so a freed unit can be re-claimed by a slot that has not yet
+  passed its line. That happened once here, and the unit failed again the same way. Free a unit only after every
+  running slot is past it.
+
+| one step from g = 0 | g1 | g2 | m |
+|---|---|---|---|
+| **unpaired 500k** | **0.01918 ± 0.00063** | **+0.00028 ± 0.00065** | **−4.1% ± 3.2%** |
+| original + twin, paired (for comparison) | 0.01959 ± 0.00051 | +0.00096 ± 0.00056 | −2.0% ± 2.5% |
+
+- **Error budget, g1:**
+  - stat 0.00059, chains 0.00018, selection 0.00015, total 0.00063;
+  - the galaxy bootstrap gives 0.00062;
+  - the rule predicted 0.00064.
+- **Galaxies:** 497,482 used; 2,517 dropped by the cuts, plus the one unsampled row.
+- **Against the truth:**
+  - m is −1.3σ and c2 is +0.4σ, so **the pre-declared test passes**.
+  - Combined with the paired 2 × 100k result as an inverse-variance mean of two independent mocks, not
+    pre-declared: m = −2.8% ± 2.0% (1.4σ).
+- **Checks:**
+  - Bright chain noise is 1.4% of the bright score variance.
+  - The faint chains flagged as slow-mixing (R-hat ≥ 1.1, 51%) match the 100k runs.
+  - The 10 largest galaxies carry 2.2% of the g1 score variance.
+- **The stencil Hessian is a noisy cross-check, not an alternative estimate.**
+  - Here I/H is 1.05 in g1 and 0.96 in g2, and the Hessian step would give m = +0.4%.
+  - In the 100k runs the same ratio was 0.70–0.72 in g1, in the opposite direction.
+  - The measured slope between iterations, 0.98 ± 0.03 of I on the 100k mock, is the check that supports the
+    one-step estimate.
+
+**Conclusions:**
+- At 5× the galaxies, the one-step estimate from g = 0 is consistent with no bias at the ±3% level.
+- The unpaired 500k is slightly less precise than the paired 2 × 100k (±3.2% against ±2.5%), at about 2.5×
+  the compute.
+- Chains and selection are now small: together ±0.00023, against ±0.00059 shape noise. Pairing remains the
+  cheaper way to gain precision on mocks.
+
+Figure: `SBSI/plots/mock500k_onestep.png`.
+
+Receipts (`$DATA_DIR/sbsi/catalogue_prior/galsbi_mock500k_20261006/`):
+- `rule.md` and its addendum; `prepare.sh`, `reference/`.
+- `copy_scripts.py`, which copies the twin study's pipeline with only the root path changed.
+- `make_500k_plan.py`, `launch_it0.sh`, `rerun_u2292.sh`, `units_rerun_u2292.txt`.
+- `it0/blind_step_comoving_circ.json`, `plot_m.py`.
+- Logs in `logs/` and `it0/logs/`; failed attempts in `it0/failed_attempts/`.

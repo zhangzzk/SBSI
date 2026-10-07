@@ -1,5 +1,27 @@
 # Work log
 
+## 2026-10-07 — Unpaired 500k mock: one step from g = 0 gives m = −4.1% ± 3.2%
+
+The owner asked for a 500k mock without pairing.
+Details: [HYBRID_SAMPLING.md](HYBRID_SAMPLING.md#unpaired-500k-mock-m--41--32-2026-10-07).
+
+Code: no repository code changed. Study scripts are in `$DATA_DIR/sbsi/catalogue_prior/galsbi_mock500k_20261006/`
+(code snapshot 8cd45c5). `blind_step.py` there now accepts a galaxy with no result only if it is outside the
+cuts, and reports it.
+
+Results (rule fixed before the mock was generated):
+- g1 = 0.01918 ± 0.00063, g2 = +0.00028 ± 0.00065, so m = −4.1% ± 3.2% (−1.3σ) and c2 at +0.4σ. Pass.
+- Error budget for g1: stat 0.00059, chains 0.00018, selection 0.00015; the galaxy bootstrap gives 0.00062.
+- 497,482 galaxies used; 2,517 cut, and 1 not sampled (row 431089, measured radius 13,139 px, outside the cuts).
+
+Validation: all 4,062 units sampled. Unit 2292 was rerun without the broken row, with the same seeds. All 2,660
+bright units were co-moving processed. The bootstrap matches the error budget.
+
+Limitations: a model-closure test (the mock is drawn from the likelihood model), not an image-simulation test.
+One mock and one seed. The stencil Hessian cross-check is noisy (I/H 1.05 here, 0.70 in the 100k runs).
+
+Next: none planned. Pairing gives more precision per CPU hour than size on mocks.
+
 ## 2026-10-06 — F8 retrained on measured unsheared |e| < 0.7: ConstGold m worse (−10.4% vs −6.4%)
 
 The owner asked to train the likelihood on data cut at measured |e| < 0.7 (unsheared), per galaxy, from both legs.
