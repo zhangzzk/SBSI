@@ -29,7 +29,7 @@ def test_the_named_model_is_the_bundled_v39_path_preset():
     model = get_model("v3.9-LIKE")
     assert isinstance(model, ModelPaths)
     assert model.name == "V3.9-like"
-    paths = (*model.flow_checkpoints, *model.detection_classifiers,
+    paths = (model.flow_checkpoint, model.detection_classifier,
              model.emulator_model, model.emulator_metadata)
     assert all(path.is_relative_to(RELEASE_MODELS_ROOT) for path in paths)
     assert not hasattr(model, "domain")

@@ -9,24 +9,19 @@ from .models import MODEL_PRESETS, get_model
 
 
 def _model_payload(model):
+    def text(value):
+        return None if value is None else str(value)
+
     return {
         "name": model.name,
-        "flow_checkpoints": [str(path) for path in model.flow_checkpoints],
-        "flow_sha256s": list(model.flow_sha256s),
-        "emulator_model": (
-            None if model.emulator_model is None else str(model.emulator_model)
-        ),
-        "emulator_metadata": (
-            None if model.emulator_metadata is None else str(model.emulator_metadata)
-        ),
+        "flow_checkpoint": text(model.flow_checkpoint),
+        "flow_sha256": model.flow_sha256,
+        "emulator_model": text(model.emulator_model),
+        "emulator_metadata": text(model.emulator_metadata),
         "emulator_sha256": model.emulator_sha256,
         "emulator_metadata_sha256": model.emulator_metadata_sha256,
-        "detection_classifiers": [
-            str(path) for path in model.detection_classifiers
-        ],
-        "detection_classifier_sha256s": list(
-            model.detection_classifier_sha256s
-        ),
+        "detection_classifier": text(model.detection_classifier),
+        "detection_classifier_sha256": model.detection_classifier_sha256,
     }
 
 

@@ -10,6 +10,8 @@ models/
     classifier.pt           probability that a galaxy is detected with a usable measurement
     blending/model.json     blending-response emulator (xgboost)
     blending/metadata.json  its feature and target description
+    classifier_replicate.pt same classifier retrained with another seed (check only, not used)
+    evidence/               training and validation records behind the choice of these files
   SHA256SUMS
 ```
 

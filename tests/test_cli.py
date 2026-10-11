@@ -16,8 +16,8 @@ def test_show_model_reports_the_bundled_model(capsys):
     assert cli.main(["show-model", "v3.9-like"]) == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["name"] == "V3.9-like"
-    assert len(payload["flow_checkpoints"]) == 1
-    assert len(payload["detection_classifiers"]) == 1
+    assert payload["flow_checkpoint"].endswith("v3_9_like/flow.pt")
+    assert payload["detection_classifier"].endswith("v3_9_like/classifier.pt")
     assert payload["emulator_model"].endswith("v3_9_like/blending/model.json")
 
 

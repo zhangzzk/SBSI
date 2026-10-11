@@ -44,17 +44,18 @@ def test_v39_pins_owner_selected_model(capsys):
     root = Path(__file__).resolve().parents[1]
     spec = json.loads((root / 'configs/models_v3_9_like.json').read_text())
     model = get_model('v3.9-LIKE')
-    assert model.flow_sha256s == ('bd51dbbbeeb72763f6982a958cb8f3a0b2d3906d4f78935d9d959fa85a17797e',)
-    assert model.detection_classifier_sha256s == ('231bbbdf1f885ab22ccfca2525ae46b6bdfd068474c42ebac24973feb861cb6a',)
+    assert model.flow_sha256 == 'bd51dbbbeeb72763f6982a958cb8f3a0b2d3906d4f78935d9d959fa85a17797e'
+    assert model.detection_classifier_sha256 == '231bbbdf1f885ab22ccfca2525ae46b6bdfd068474c42ebac24973feb861cb6a'
     assert model.emulator_sha256 == '194c1d11b67d6fd52039060270663e8e1cd610b478b9e9a66e34271701761fe7'
-    assert len(model.detection_classifiers) == 1
     assert spec['classifier']['training_seed'] == 20260913
     assert spec['flow']['feature_names'] == spec['classifier']['feature_names']
     assert len(spec['flow']['feature_names']) == 8
     assert spec['decision']['development_non_degradation_screen_pass'] is False
     assert spec['decision']['independent_acceptance'] is False
+    for entry in (spec['replicate_classifier'], *spec['evidence'].values()):
+        assert sha256((root / 'models' / entry['path']).read_bytes()).hexdigest() == entry['sha256']
     assert cli.main(['show-model', 'V3.9-like']) == 0
-    assert json.loads(capsys.readouterr().out)['flow_sha256s'] == list(model.flow_sha256s)
+    assert json.loads(capsys.readouterr().out)['flow_sha256'] == model.flow_sha256
 
 
 def test_v39_bundled_artifacts_load_and_predict_together():
@@ -63,13 +64,13 @@ def test_v39_bundled_artifacts_load_and_predict_together():
     from sbsi.output_conditioned_response import TRUTH_FEATURES
 
     model = get_model('V3.9-like')
-    artifacts = (*model.flow_checkpoints, *model.detection_classifiers,
+    artifacts = (model.flow_checkpoint, model.detection_classifier,
                  model.emulator_model, model.emulator_metadata)
     if not all(path.is_file() for path in artifacts):
         pytest.skip('bundled V3.9-like artifacts are missing from this checkout')
     pytest.importorskip('xgboost')
     model.validate()
-    flow = load_measurement_model(model.flow_checkpoints[0])
+    flow = load_measurement_model(model.flow_checkpoint)
     classifier = load_detection_classifier(model)
     disk = load_disk_response(model)
     names = ['e1_input_p', 'e2_input_p', 'sersic_n_input_p', 'r_input_p',

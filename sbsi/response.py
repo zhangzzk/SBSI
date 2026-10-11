@@ -33,14 +33,11 @@ from .domain import Domain
 from .models import ModelPaths
 
 
-def _flow_checkpoint(flow_checkpoints: Union[Sequence[Union[str, Path]], ModelPaths]):
-    if isinstance(flow_checkpoints, ModelPaths):
-        paths, label = flow_checkpoints.flow_checkpoints, flow_checkpoints.name
+def _flow_checkpoint(flow_checkpoint: Union[str, Path, ModelPaths]):
+    if isinstance(flow_checkpoint, ModelPaths):
+        path, label = flow_checkpoint.flow_checkpoint, flow_checkpoint.name
     else:
-        paths, label = tuple(flow_checkpoints), None
-    if len(paths) != 1:
-        raise ValueError("exactly one flow checkpoint is required")
-    path = Path(paths[0])
+        path, label = Path(flow_checkpoint), None
     if not path.is_file():
         raise FileNotFoundError(f"missing flow checkpoint: {path}")
     return path, label
@@ -216,7 +213,7 @@ class ResponsePredictor:
 
     def __init__(
         self,
-        flow_checkpoints: Union[Sequence[Union[str, Path]], ModelPaths],
+        flow_checkpoint: Union[str, Path, ModelPaths],
         device: Optional[str] = None,
         *,
         domain: Optional[Domain] = None,
@@ -224,8 +221,8 @@ class ResponsePredictor:
     ):
         import torch
 
-        checkpoint, model_label = _flow_checkpoint(flow_checkpoints)
-        self.checkpoints = (checkpoint,)
+        checkpoint, model_label = _flow_checkpoint(flow_checkpoint)
+        self.checkpoint = checkpoint
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.label = label or model_label or "custom"
         self._flow = load_flow(checkpoint, self.device)
@@ -234,15 +231,15 @@ class ResponsePredictor:
     @classmethod
     def load(
         cls,
-        flow_checkpoints: Union[Sequence[Union[str, Path]], ModelPaths],
+        flow_checkpoint: Union[str, Path, ModelPaths],
         *,
         device: Optional[str] = None,
         domain: Optional[Domain] = None,
         label: Optional[str] = None,
     ) -> "ResponsePredictor":
-        """Load the flow from explicit paths or a path-only preset."""
+        """Load the flow from one checkpoint path or a model preset."""
 
-        return cls(flow_checkpoints, device=device, domain=domain, label=label)
+        return cls(flow_checkpoint, device=device, domain=domain, label=label)
 
     @property
     def condition_features(self):
@@ -337,7 +334,7 @@ class ResponsePredictor:
 
 
 def sample_measurement(
-    flow_checkpoints: Union[Sequence[Union[str, Path]], ModelPaths],
+    flow_checkpoint: Union[str, Path, ModelPaths],
     catalogue: Catalogue,
     *,
     n_samples: int = 256,
@@ -355,7 +352,7 @@ def sample_measurement(
     ``random_seed`` makes repeat calls reproducible.
     """
 
-    checkpoint, label = _flow_checkpoint(flow_checkpoints)
+    checkpoint, label = _flow_checkpoint(flow_checkpoint)
     if n_samples <= 0 or batch_size <= 0:
         raise ValueError("n_samples and batch_size must be positive")
 

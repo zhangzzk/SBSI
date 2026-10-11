@@ -11,7 +11,7 @@ import json
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 
 from .paths import RELEASE_MODELS_ROOT
 
@@ -26,70 +26,44 @@ def _file_sha256(path: Path, block_size: int = 8 * 1024 * 1024) -> str:
 
 @dataclass(frozen=True)
 class ModelPaths:
-    """Paths and optional hashes for one flow, emulator, and classifier set."""
+    """Paths and optional hashes for one flow, emulator, and classifier."""
 
-    flow_checkpoints: Tuple[Path, ...]
+    flow_checkpoint: Path
     emulator_model: Optional[Path] = None
     emulator_metadata: Optional[Path] = None
-    detection_classifiers: Tuple[Path, ...] = ()
+    detection_classifier: Optional[Path] = None
     name: Optional[str] = None
-    flow_sha256s: Tuple[str, ...] = ()
+    flow_sha256: Optional[str] = None
     emulator_sha256: Optional[str] = None
     emulator_metadata_sha256: Optional[str] = None
-    detection_classifier_sha256s: Tuple[str, ...] = ()
+    detection_classifier_sha256: Optional[str] = None
 
     def __post_init__(self):
-        object.__setattr__(
-            self, "flow_checkpoints", tuple(Path(path) for path in self.flow_checkpoints)
+        for field in ("flow_checkpoint", "emulator_model", "emulator_metadata", "detection_classifier"):
+            value = getattr(self, field)
+            if value is not None:
+                object.__setattr__(self, field, Path(value))
+        if self.flow_checkpoint is None:
+            raise ValueError("a flow checkpoint is required")
+
+    def _pinned(self):
+        return (
+            (self.flow_checkpoint, self.flow_sha256),
+            (self.detection_classifier, self.detection_classifier_sha256),
+            (self.emulator_model, self.emulator_sha256),
+            (self.emulator_metadata, self.emulator_metadata_sha256),
         )
-        object.__setattr__(
-            self,
-            "detection_classifiers",
-            tuple(Path(path) for path in self.detection_classifiers),
-        )
-        if self.emulator_model is not None:
-            object.__setattr__(self, "emulator_model", Path(self.emulator_model))
-        if self.emulator_metadata is not None:
-            object.__setattr__(self, "emulator_metadata", Path(self.emulator_metadata))
-        if not self.flow_checkpoints:
-            raise ValueError("at least one flow checkpoint is required")
-        for paths, hashes, label in (
-            (self.flow_checkpoints, self.flow_sha256s, "flow"),
-            (
-                self.detection_classifiers,
-                self.detection_classifier_sha256s,
-                "detection classifier",
-            ),
-        ):
-            if hashes and len(hashes) != len(paths):
-                raise ValueError(
-                    f"{label} hashes must be empty or match the number of paths"
-                )
 
     def validate(self, verify_hashes: bool = True) -> None:
-        paths = [*self.flow_checkpoints, *self.detection_classifiers]
-        if self.emulator_model is not None:
-            paths.append(self.emulator_model)
-        if self.emulator_metadata is not None:
-            paths.append(self.emulator_metadata)
-        missing = [path for path in paths if not path.is_file()]
+        missing = [path for path, _ in self._pinned() if path is not None and not path.is_file()]
         if missing:
             rendered = "\n  ".join(str(path) for path in missing)
             raise FileNotFoundError(f"missing model artifacts:\n  {rendered}")
         if not verify_hashes:
             return
-        expected = [
-            *zip(self.flow_checkpoints, self.flow_sha256s),
-            *zip(self.detection_classifiers, self.detection_classifier_sha256s),
-        ]
-        if self.emulator_model is not None and self.emulator_sha256 is not None:
-            expected.append((self.emulator_model, self.emulator_sha256))
-        if (
-            self.emulator_metadata is not None
-            and self.emulator_metadata_sha256 is not None
-        ):
-            expected.append((self.emulator_metadata, self.emulator_metadata_sha256))
-        for path, expected_hash in expected:
+        for path, expected_hash in self._pinned():
+            if path is None or expected_hash is None:
+                continue
             actual = _file_sha256(path)
             if actual != expected_hash:
                 raise RuntimeError(
@@ -101,14 +75,14 @@ def _model_preset(filename: str) -> ModelPaths:
     spec = json.loads((RELEASE_MODELS_ROOT.parent / "configs" / filename).read_text())
     return ModelPaths(
         name=spec["name"],
-        flow_checkpoints=(RELEASE_MODELS_ROOT / spec["flow"]["path"],),
-        flow_sha256s=(spec["flow"]["sha256"],),
+        flow_checkpoint=RELEASE_MODELS_ROOT / spec["flow"]["path"],
+        flow_sha256=spec["flow"]["sha256"],
         emulator_model=RELEASE_MODELS_ROOT / spec["emulator"]["path"],
         emulator_metadata=RELEASE_MODELS_ROOT / spec["emulator"]["metadata_path"],
         emulator_sha256=spec["emulator"]["sha256"],
         emulator_metadata_sha256=spec["emulator"]["metadata_sha256"],
-        detection_classifiers=(RELEASE_MODELS_ROOT / spec["classifier"]["path"],),
-        detection_classifier_sha256s=(spec["classifier"]["sha256"],),
+        detection_classifier=RELEASE_MODELS_ROOT / spec["classifier"]["path"],
+        detection_classifier_sha256=spec["classifier"]["sha256"],
     )
 
 
@@ -164,14 +138,14 @@ def load_disk_response(models: ModelPaths, *, device: str = "cpu", nthread: int 
 def load_detection_classifier(models: ModelPaths, *, device: str = "cpu"):
     """Load the preset's detection classifier."""
 
-    if len(models.detection_classifiers) != 1:
-        raise ValueError("exactly one detection classifier path is required")
-    path = models.detection_classifiers[0]
+    path = models.detection_classifier
+    if path is None:
+        raise ValueError("a detection classifier path is required")
     if not path.is_file():
         raise FileNotFoundError(f"missing detection-classifier artifact: {path}")
-    if models.detection_classifier_sha256s:
+    expected = models.detection_classifier_sha256
+    if expected is not None:
         actual = _file_sha256(path)
-        expected = models.detection_classifier_sha256s[0]
         if actual != expected:
             raise RuntimeError(
                 f"detection-classifier hash mismatch for {path}: "

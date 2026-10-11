@@ -219,11 +219,11 @@
     }
   },
   "replicate_classifier": {
-    "root": "SBSI_CACHE_DIR",
-    "path": "v36_classifier_f8_inputs_20260925_v1/C8_20260914/selected.pt",
+    "path": "v3_9_like/classifier_replicate.pt",
     "sha256": "286895ac092ac3f3ea4e920bb18c9b525603f87150cdd8f8260cf0c19f37038e",
     "training_seed": 20260914,
-    "role": "diagnostic replicate; not averaged into primary model"
+    "role": "diagnostic replicate; not averaged into primary model",
+    "origin": "$SBSI_CACHE_DIR/v36_classifier_f8_inputs_20260925_v1/C8_20260914/selected.pt"
   },
   "decision": {
     "owner_retained": true,
@@ -234,32 +234,32 @@
   },
   "evidence": {
     "comparison": {
-      "path": "doc/evidence/v3_9_like/comparison.json",
+      "path": "v3_9_like/evidence/comparison.json",
       "source": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_classifier_f8_inputs_20260925_v1/comparison.json",
       "sha256": "57ee57b7158d15c253ffd7278eab2c233a153f853697576cb01985fe197eb959"
     },
     "protocol": {
-      "path": "doc/evidence/v3_9_like/protocol.json",
+      "path": "v3_9_like/evidence/protocol.json",
       "source": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_classifier_f8_inputs_20260925_v1/protocol.json",
       "sha256": "a7380fddd7772a17b17a471c263b0216fd0e29ef2a951fde6f013e0559a75823"
     },
     "working_selection": {
-      "path": "doc/evidence/v3_9_like/working_selection.json",
+      "path": "v3_9_like/evidence/working_selection.json",
       "source": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_classifier_f8_inputs_20260925_v1/working_selection.json",
       "sha256": "daa0cefbd7dce413d605394b5019f87c1f9c73273a26c2f3376fafe356b2a58d"
     },
     "classifier_training": {
-      "path": "doc/evidence/v3_9_like/classifier_training.json",
+      "path": "v3_9_like/evidence/classifier_training.json",
       "source": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_classifier_f8_inputs_20260925_v1/C8_20260913/completed.json",
       "sha256": "84410a8d8cf1f85a6498331e11772f8d9844d2515c00ef136366745c9d5c9744"
     },
     "flow_selection": {
-      "path": "doc/evidence/v3_9_like/flow_selection.json",
+      "path": "v3_9_like/evidence/flow_selection.json",
       "source": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_f8_20260924_v1/trained_candidate.json",
       "sha256": "f7d9e1701c5a17966e0f84a4dcdcaa4e3c9f9d501ffd8c87e32d18bffd7b4808"
     },
     "flow_comparison": {
-      "path": "doc/evidence/v3_9_like/flow_comparison.json",
+      "path": "v3_9_like/evidence/flow_comparison.json",
       "source": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_f8_20260924_v1/development_comparison.json",
       "sha256": "df7c269656abe43ab3343c6fe36029e8d48949e5a87beb144af5c48aabec908f"
     }

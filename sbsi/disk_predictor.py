@@ -274,12 +274,10 @@ class DiskResponsePredictor:
 
         import torch
 
-        if len(models.flow_checkpoints) != 1:
-            raise ValueError("a model with one flow checkpoint is required")
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.label = models.name
         self.conditions = dict(conditions)
-        self.flow = load_flow(models.flow_checkpoints[0], self.device)
+        self.flow = load_flow(models.flow_checkpoint, self.device)
         self.classifier = load_detection_classifier(models, device=self.device)
         nthread = nthread or len(os.sched_getaffinity(0))
         self.disk = load_disk_response(models, device=self.device, nthread=nthread)
