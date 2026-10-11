@@ -1,13 +1,10 @@
-"""Response prediction with the V3.9-like disk models.
+"""The V3.9-like blending model: flow draws moved by a per-draw disk emulator.
 
-The V3.9-like preset has one physical-disk measurement flow, one usable-detection
-classifier, and an output-conditioned blending emulator that acts on every flow
-draw.  This module wraps the three into the same few calls as the V3 API:
-
-    inputs, pairs = prepare_disk_inputs(catalogue, conditions)
-    predictor = DiskResponsePredictor(get_model("V3.9-like"))
-    prediction = predictor.predict(inputs, pairs)
-    prediction.summary()
+:func:`sbsi.load_emulator` returns a :class:`DiskResponsePredictor`.  It holds
+the measurement flow, the usable-detection classifier and the
+output-conditioned blending emulator together, because the blending response
+of a galaxy depends on each simulated measurement of it (its measured size and
+flux), not only on its true properties.
 
 ``predict`` reproduces the ConstGold evaluation of the published V3.9-like bias
 (``scripts/evaluate_smooth_classifier_joint.py`` in the frozen F8 checkout):
@@ -25,12 +22,8 @@ from typing import Mapping, Optional
 import numpy as np
 import pandas as pd
 
-from .catalogue import load_catalogue
-from .coordinates import ellipticity_from_axis_ratio_angle
-from .crowding import V39_FEATURES, physical_close_crowding
-from .forward_catalogue import make_pair_catalogue, rescale_emulator_pairs
+from .crowding import V39_FEATURES
 from .models import ModelPaths, load_detection_classifier, load_disk_response
-from .response import MeasurementSample
 from .shear_map import apply_shear_to_ellipticity
 
 LEGS = ("plus", "minus")
@@ -40,46 +33,23 @@ LEGS = ("plus", "minus")
 CUTS = ("uncut", "main", "r075")
 FLUX_MINIMUM = 10 ** (-0.4 * (25.8 - 30))
 BLOCK_SEED_STRIDE = 1000003
+RANDOM_SEED = 7301
+# Pair search of the emulator's training tables: every neighbour within
+# 10 arcsec, at most k - 1 = 19 per primary.
+PAIR_RADIUS_ARCSEC = 10.0
+PAIR_NEIGHBOURS = 20
 
 
-def prepare_disk_inputs(
-    catalogue,
-    conditions: Mapping[str, float],
-    *,
-    r_max_arcsec: float = 10.0,
-    k: int = 20,
-    workers: int = 1,
-):
-    """Build the eight flow/classifier inputs and the blending pair table.
+def load_flow(checkpoint, device):
+    """Load the V3.9-like measurement flow and check its inputs."""
 
-    ``catalogue`` is one independent scene with the input-catalogue columns
-    (``index``, ``RA``, ``DEC``, ``r``, ``Re``, ``axis_ratio``,
-    ``position_angle``, ``sersic_n``).  Returns ``(inputs, pairs)``: ``inputs``
-    has the ``V39_FEATURES`` columns, indexed by the catalogue ``index`` in
-    increasing order, and stored at float32 precision as in training; ``pairs``
-    lists up to ``k - 1`` neighbours within ``r_max_arcsec`` per galaxy, scaled
-    by ``conditions`` and sorted by primary.  Every galaxy is a primary; one
-    without neighbours gets zero blending response.
-    """
+    from .measurement_model import load_measurement_model
 
-    cat = load_catalogue(catalogue).sort_values("index", kind="stable").reset_index(drop=True)
-    ids = cat["index"].to_numpy(np.int64)
-    if np.any(np.diff(ids) == 0):
-        raise ValueError("catalogue index values must be unique")
-    q = cat["axis_ratio"].to_numpy(float)
-    e1, e2 = ellipticity_from_axis_ratio_angle(q, cat["position_angle"].to_numpy(float))
-    inputs = pd.DataFrame({
-        "e1_input_p": e1,
-        "e2_input_p": e2,
-        "sersic_n_input_p": cat["sersic_n"].to_numpy(float),
-        "r_input_p": cat["r"].to_numpy(float),
-        "circularized_Re_input_p": cat["Re"].to_numpy(float) * np.sqrt(q),
-    }, index=pd.Index(ids, name="index"))
-    inputs[["nbr_close_050", "nbr_close_100", "nbr_close_200"]] = physical_close_crowding(cat, workers=workers)
-    inputs = inputs[list(V39_FEATURES)].astype(np.float32).astype(np.float64)
-    pairs = rescale_emulator_pairs(make_pair_catalogue(cat, r_max_arcsec=r_max_arcsec, k=k), conditions)
-    pairs = pairs.sort_values("index_input_p", kind="stable").reset_index(drop=True)
-    return inputs, pairs
+    flow = load_measurement_model(str(checkpoint), device=device)
+    flow.model.eval()
+    if tuple(flow.condition_preprocessor.feature_names) != V39_FEATURES:
+        raise ValueError("the flow does not take the V3.9 inputs")
+    return flow
 
 
 def sheared_inputs(inputs: pd.DataFrame, g1: float, g2: float = 0.0) -> pd.DataFrame:
@@ -132,6 +102,60 @@ def selected_draw_moments(values, blend_shift):
     flow = (keep[..., None] * values[..., None, :2]).mean(1)
     blend = (keep[..., None] * blend_shift[:, :, None, :]).mean(1)
     return mass, flow, blend
+
+
+def draw_moments(flow, inputs, *, shear, n_draws, batch_size, random_seed, disk=None, pairs=None):
+    """Per-galaxy draw averages ``(mass, flow, blend)`` in the ``+shear`` and ``-shear`` legs.
+
+    Both legs use the same antithetic draws (common random numbers).  With a
+    ``disk`` emulator, each draw's shape is moved by the emulator's response to
+    the applied shear; the move is the blend part, the unmoved shape the flow
+    part.  Without one the blend part is zero.  Block ``b`` of ``batch_size``
+    galaxies uses seed ``random_seed + 1000003 * b``.  ``pairs`` is keyed by
+    ``primary_row`` and ``secondary_row``, matching the ``inputs`` index.
+    """
+
+    import torch
+
+    from .disk_response_transport import disk_response_transport
+    from .output_conditioned_response import TRUTH_FEATURES, predict_scene_draw_responses
+
+    ids = inputs.index.to_numpy(np.int64)
+    if len(ids) == 0 or np.any(np.diff(ids) <= 0):
+        raise ValueError("inputs must be indexed by unique increasing ids")
+    if not 0 < shear < 1:
+        raise ValueError("shear must lie in (0, 1)")
+    if disk is not None:
+        pairs = pairs.sort_values("primary_row", kind="stable")
+        pair_ids = pairs["primary_row"].to_numpy(np.int64)
+        keyed = pairs[list(TRUTH_FEATURES)].assign(index_input_p=pair_ids,
+                                                    index_input_s=pairs["secondary_row"].to_numpy(np.int64))
+    legs = [sheared_inputs(inputs[list(V39_FEATURES)], sign * shear) for sign in (1, -1)]
+    contexts = [flow.context_tensor(leg) for leg in legs]
+    n = len(ids)
+    mass = np.zeros((2, n, len(CUTS)))
+    kept = np.zeros((2, n, len(CUTS), 2))
+    blend = np.zeros((2, n, len(CUTS), 2))
+    with torch.no_grad():
+        for block, start in enumerate(range(0, n, batch_size)):
+            stop = min(n, start + batch_size)
+            draws = paired_draws(flow.model, [c[start:stop] for c in contexts], n_draws,
+                                 random_seed + BLOCK_SEED_STRIDE * block)
+            for leg, (sign, values) in enumerate(zip((1, -1), draws)):
+                shift = torch.zeros_like(values[..., :2])
+                if disk is not None:
+                    lo = np.searchsorted(pair_ids, ids[start], side="left")
+                    hi = np.searchsorted(pair_ids, ids[stop - 1], side="right")
+                    response, _ = predict_scene_draw_responses(
+                        disk, keyed.iloc[lo:hi], ids[start:stop], values.cpu().numpy())
+                    vector = torch.tensor([sign * shear, 0.0], dtype=torch.float64, device=values.device)
+                    velocity = torch.as_tensor(response, dtype=torch.float64, device=values.device)[..., None] * vector
+                    moved, _ = disk_response_transport(values[..., :2], velocity)
+                    shift = moved - values[..., :2]
+                moments = selected_draw_moments(values, shift)
+                for out, x in zip((mass, kept, blend), moments):
+                    out[leg, start:stop] = x.cpu().numpy()
+    return mass, kept, blend
 
 
 @dataclass(frozen=True)
@@ -240,96 +264,63 @@ class DiskResponsePrediction:
 
 
 class DiskResponsePredictor:
-    """Flow, usable classifier and per-draw blending of a disk model preset."""
+    """Flow, usable classifier and per-draw blending emulator of the V3.9-like model."""
 
-    def __init__(self, models: ModelPaths, device: Optional[str] = None, *, nthread: int = 1):
+    r_max_arcsec = PAIR_RADIUS_ARCSEC
+    k = PAIR_NEIGHBOURS
+
+    def __init__(self, models: ModelPaths, device: Optional[str] = None, *,
+                 conditions: Mapping[str, float], nthread: Optional[int] = None):
+        import os
+
         import torch
 
-        from .measurement_model import load_measurement_model
-
-        if models.response_backend != "disk_response_moment" or len(models.flow_checkpoints) != 1:
-            raise ValueError("a disk model preset with one flow checkpoint is required")
+        if len(models.flow_checkpoints) != 1:
+            raise ValueError("a model with one flow checkpoint is required")
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.label = models.name
-        self.flow = load_measurement_model(str(models.flow_checkpoints[0]), device=self.device)
-        self.flow.model.eval()
-        if tuple(self.flow.condition_preprocessor.feature_names) != V39_FEATURES:
-            raise ValueError("the flow does not take the V3.9 inputs")
+        self.conditions = dict(conditions)
+        self.flow = load_flow(models.flow_checkpoints[0], self.device)
         self.classifier = load_detection_classifier(models, device=self.device)
+        nthread = nthread or len(os.sched_getaffinity(0))
         self.disk = load_disk_response(models, device=self.device, nthread=nthread)
 
     def predict(self, inputs: pd.DataFrame, pairs: pd.DataFrame, *, shear: float = 0.02,
-                n_draws: int = 64, batch_size: int = 1024, random_seed: int = 7301) -> DiskResponsePrediction:
+                n_draws: int = 64, batch_size: int = 1024,
+                random_seed: int = RANDOM_SEED) -> DiskResponsePrediction:
         """Draw measurements at ``+shear`` and ``-shear`` along g1 and average them.
 
-        Both legs use the same antithetic draws (common random numbers).  Each
-        draw's shape is moved by the blending emulator's response to the
-        applied shear; the move is the blend part, the unmoved shape the flow
-        part.  Block ``b`` of ``batch_size`` galaxies uses seed
-        ``random_seed + 1000003 * b``.
+        ``inputs`` holds the ``V39_FEATURES`` indexed by ``primary_row``
+        (``prepare_forward_catalogue(...).flow_inputs``); ``pairs`` is the
+        matching ``emulator_pairs``.  See :func:`draw_moments`.
         """
 
-        import torch
-
-        from .disk_response_transport import disk_response_transport
-        from .output_conditioned_response import predict_scene_draw_responses
-
-        ids = inputs.index.to_numpy(np.int64)
-        pair_ids = pairs["index_input_p"].to_numpy(np.int64)
-        if len(ids) == 0 or np.any(np.diff(ids) <= 0):
-            raise ValueError("inputs must be indexed by unique increasing ids")
-        if np.any(np.diff(pair_ids) < 0):
-            raise ValueError("pairs must be sorted by index_input_p")
-        if not 0 < shear < 1:
-            raise ValueError("shear must lie in (0, 1)")
-        legs = [sheared_inputs(inputs, sign * shear) for sign in (1, -1)]
-        contexts = [self.flow.context_tensor(leg) for leg in legs]
+        mass, flow, blend = draw_moments(self.flow, inputs, shear=shear, n_draws=n_draws,
+                                         batch_size=batch_size, random_seed=random_seed,
+                                         disk=self.disk, pairs=pairs)
+        legs = [sheared_inputs(inputs[list(V39_FEATURES)], sign * shear) for sign in (1, -1)]
         p_usable = np.stack([self.classifier.predict_proba(leg) for leg in legs]).astype(np.float64)
-        n = len(ids)
-        mass = np.zeros((2, n, len(CUTS)))
-        flow = np.zeros((2, n, len(CUTS), 2))
-        blend = np.zeros((2, n, len(CUTS), 2))
-        with torch.no_grad():
-            for block, start in enumerate(range(0, n, batch_size)):
-                stop = min(n, start + batch_size)
-                draws = paired_draws(self.flow.model, [c[start:stop] for c in contexts], n_draws,
-                                     random_seed + BLOCK_SEED_STRIDE * block)
-                lo = np.searchsorted(pair_ids, ids[start], side="left")
-                hi = np.searchsorted(pair_ids, ids[stop - 1], side="right")
-                for leg, (sign, values) in enumerate(zip((1, -1), draws)):
-                    response, _ = predict_scene_draw_responses(
-                        self.disk, pairs.iloc[lo:hi], ids[start:stop], values.cpu().numpy())
-                    vector = torch.tensor([sign * shear, 0.0], dtype=torch.float64, device=values.device)
-                    velocity = torch.as_tensor(response, dtype=torch.float64, device=values.device)[..., None] * vector
-                    moved, _ = disk_response_transport(values[..., :2], velocity)
-                    moments = selected_draw_moments(values, moved - values[..., :2])
-                    for out, x in zip((mass, flow, blend), moments):
-                        out[leg, start:stop] = x.cpu().numpy()
-        return DiskResponsePrediction(self.label, ids, float(shear), mass, flow, blend, p_usable)
+        return DiskResponsePrediction(self.label, inputs.index.to_numpy(np.int64), float(shear),
+                                      mass, flow, blend, p_usable)
 
-    def sample(self, inputs: pd.DataFrame, *, n_samples: int = 256, random_seed: int = 12345) -> MeasurementSample:
-        """Flow draws of the measured ``(g1, g2, FLUX_RADIUS px, flux at ZP 30)``.
+    def predict_detection(self, catalogue) -> pd.DataFrame:
+        """Probability that each galaxy is detected with a usable measurement, at zero shear.
 
-        No shear and no blending shift are applied: this is the flow's direct
-        distribution of measurements given each galaxy's inputs.
+        Returns a ``detection_prob`` column indexed by catalogue row.
         """
 
-        import torch
+        from .forward_catalogue import prepare_flow_inputs
 
-        torch.manual_seed(random_seed)
-        samples = self.flow.sample(inputs, n_samples=n_samples)
-        return MeasurementSample(
-            model=self.label,
-            index=inputs.index.to_numpy(copy=True),
-            target_names=tuple(self.flow.target_transform.target_names),
-            samples=samples,
-        )
+        inputs = prepare_flow_inputs(catalogue)
+        p = self.classifier.predict_proba(inputs[list(V39_FEATURES)]).astype(np.float64)
+        return pd.DataFrame({"detection_prob": p}, index=inputs.index)
 
 
 __all__ = [
     "CUTS",
     "DiskResponsePrediction",
     "DiskResponsePredictor",
-    "prepare_disk_inputs",
+    "draw_moments",
+    "load_flow",
     "sheared_inputs",
 ]

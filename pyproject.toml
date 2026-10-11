@@ -21,6 +21,7 @@ dependencies = [
     "pyarrow",
     "scipy",
     "torch",
+    "xgboost",
 ]
 
 [project.optional-dependencies]

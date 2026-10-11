@@ -30,23 +30,23 @@ class Domain:
 
     @classmethod
     def from_flow_metadata(cls, metadata) -> "Domain":
-        """Read the training support stored in a flow checkpoint."""
+        """Read the training support stored in a flow checkpoint.
 
-        cuts = metadata.get("selection_cuts")
-        if cuts is None or len(cuts) < 4:
-            raise ValueError("flow checkpoint does not record primary selection_cuts")
-        magnitude = cuts[1]
-        radius = cuts[3]
-        if len(magnitude) != 2 or len(radius) != 2:
-            raise ValueError("flow checkpoint has malformed primary selection_cuts")
-        values = [*magnitude, *radius]
-        if not np.isfinite(np.asarray(values, dtype=float)).all():
-            raise ValueError("flow checkpoint has non-finite primary selection_cuts")
+        The flow records its training population as one true-magnitude cut,
+        ``r_input_p < value``; it sets no size limit.
+        """
+
+        cut = (metadata.get("population") or {}).get("truth_analysis_cut") or {}
+        if cut.get("column") != "r_input_p" or cut.get("operator") != "<":
+            raise ValueError("flow checkpoint does not record its r_input_p < value training cut")
+        magnitude_max = float(cut["value"])
+        if not np.isfinite(magnitude_max):
+            raise ValueError("flow checkpoint has a non-finite magnitude cut")
         return cls(
-            magnitude_min=float(magnitude[0]),
-            magnitude_max=float(magnitude[1]),
-            half_light_radius_min=float(radius[0]),
-            half_light_radius_max=float(radius[1]),
+            magnitude_min=-np.inf,
+            magnitude_max=magnitude_max,
+            half_light_radius_min=0.0,
+            half_light_radius_max=np.inf,
         )
 
 

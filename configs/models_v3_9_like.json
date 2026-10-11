@@ -4,8 +4,7 @@
   "status": "owner-retained development model; investigation wrapped up 2026-09-25",
   "configured_likelihood": false,
   "flow": {
-    "root": "SBSI_CACHE_DIR",
-    "path": "v36_f8_20260924_v1/joint/joint_probability_refinement_full/selected.pt",
+    "path": "v3_9_like/flow.pt",
     "sha256": "bd51dbbbeeb72763f6982a958cb8f3a0b2d3906d4f78935d9d959fa85a17797e",
     "feature_names": [
       "e1_input_p",
@@ -17,11 +16,11 @@
       "nbr_close_100",
       "nbr_close_200"
     ],
-    "selection": "F8 selected common-descent probability refinement; unchanged artifact"
+    "selection": "F8 selected common-descent probability refinement; unchanged artifact",
+    "origin": "$SBSI_CACHE_DIR/v36_f8_20260924_v1/joint/joint_probability_refinement_full/selected.pt"
   },
   "classifier": {
-    "root": "SBSI_CACHE_DIR",
-    "path": "v36_classifier_f8_inputs_20260925_v1/C8_20260913/selected.pt",
+    "path": "v3_9_like/classifier.pt",
     "sha256": "231bbbdf1f885ab22ccfca2525ae46b6bdfd068474c42ebac24973feb861cb6a",
     "training_seed": 20260913,
     "selected_epoch": 99,
@@ -37,17 +36,19 @@
       "nbr_close_200"
     ],
     "feature_coordinate": "physical_arcsec",
-    "add_missing_indicators": false
+    "add_missing_indicators": false,
+    "origin": "$SBSI_CACHE_DIR/v36_classifier_f8_inputs_20260925_v1/C8_20260913/selected.pt"
   },
   "emulator": {
-    "root": "BLENDEMU_RUNS_DIR",
-    "path": "disk_response_moment_20260918_v1/model/model.json",
+    "path": "v3_9_like/blending/model.json",
     "sha256": "194c1d11b67d6fd52039060270663e8e1cd610b478b9e9a66e34271701761fe7",
-    "metadata_path": "disk_response_moment_20260918_v1/model/metadata.json",
+    "metadata_path": "v3_9_like/blending/metadata.json",
     "metadata_sha256": "e9c28e921fa0430d4ef5feef9cb1d0954c4431b2258b5edfc0ed7c99fe59b589",
     "backend": "disk_response_moment",
     "composition": "mobius",
-    "response_coordinate": "disk_velocity"
+    "response_coordinate": "disk_velocity",
+    "origin": "$BLENDEMU_RUNS_DIR/disk_response_moment_20260918_v1/model/model.json",
+    "metadata_origin": "$BLENDEMU_RUNS_DIR/disk_response_moment_20260918_v1/model/metadata.json"
   },
   "feature_contract": {
     "crowding": "log1p(sum_j (F_j/F_i)*exp(-d_ij^2/(2*s^2)))",
@@ -269,6 +270,6 @@
     "C8 has worse BCE/Brier losses than C17; owner retention does not change failed broader checks.",
     "Regional response errors still cancel; population-shift robustness is unestablished.",
     "The unchanged disk emulator was trained on a true-magnitude-limited target population.",
-    "V3.9-like is a model preset. Existing disk inference preparation remains V3.6-specific; old caches cannot be relabelled."
+    "The release covers forward response prediction only; inference sampling is not part of it."
   ]
 }

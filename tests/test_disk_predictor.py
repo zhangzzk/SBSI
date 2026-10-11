@@ -10,16 +10,14 @@ from sbsi.disk_predictor import (
     CUTS,
     FLUX_MINIMUM,
     DiskResponsePrediction,
+    draw_moments,
     output_cuts,
     paired_draws,
-    prepare_disk_inputs,
     selected_draw_moments,
     sheared_inputs,
 )
+from sbsi.forward_catalogue import prepare_flow_inputs
 from sbsi.shear_map import apply_shear_to_ellipticity
-
-CONDITIONS = {"pixel_size": 0.2, "zero_point": 30.0, "psf_fwhm": 0.73,
-              "moffat_beta": 2.224, "pixel_rms": 0.312}
 
 
 def scene():
@@ -37,31 +35,24 @@ def scene():
     })
 
 
-def test_prepare_disk_inputs_orders_and_scales():
-    cat = scene()
-    inputs, pairs = prepare_disk_inputs(cat, CONDITIONS)
-    assert tuple(inputs.columns) == V39_FEATURES
-    assert inputs.index.tolist() == [1, 3, 5, 7]
-    np.testing.assert_array_equal(inputs.to_numpy(), inputs.to_numpy().astype(np.float32))
-    row = cat.set_index("index").loc[7]
-    q = row["axis_ratio"]
-    assert inputs.loc[7, "circularized_Re_input_p"] == np.float32(row["Re"] * np.sqrt(q))
-    assert np.hypot(inputs.loc[7, "e1_input_p"], inputs.loc[7, "e2_input_p"]) == pytest.approx((1 - q) / (1 + q), rel=1e-6)
-    # The far galaxy has no neighbours; the close trio pairs among itself.
-    assert inputs.loc[1, ["nbr_close_050", "nbr_close_100", "nbr_close_200"]].eq(0).all()
-    assert 1 not in set(pairs["index_input_p"])
-    assert len(pairs) == 6 and pairs["index_input_p"].is_monotonic_increasing
-    assert {"r_input_p_scaled", "distance_scaled"} <= set(pairs.columns)
+def inputs():
+    return prepare_flow_inputs(scene())[list(V39_FEATURES)]
+
+
+def test_far_galaxy_has_no_crowding():
+    crowding = inputs()[["nbr_close_050", "nbr_close_100", "nbr_close_200"]]
+    assert crowding.loc[3].eq(0).all()
+    assert crowding.loc[:2].gt(0).all().all()
 
 
 def test_sheared_inputs_moves_only_shapes():
-    inputs, _ = prepare_disk_inputs(scene(), CONDITIONS)
-    out = sheared_inputs(inputs, 0.02)
-    e1, e2 = apply_shear_to_ellipticity(inputs["e1_input_p"].to_numpy(), inputs["e2_input_p"].to_numpy(), 0.02, 0.0)
+    inputs_ = inputs()
+    out = sheared_inputs(inputs_, 0.02)
+    e1, e2 = apply_shear_to_ellipticity(inputs_["e1_input_p"].to_numpy(), inputs_["e2_input_p"].to_numpy(), 0.02, 0.0)
     np.testing.assert_array_equal(out["e1_input_p"], e1)
     np.testing.assert_array_equal(out["e2_input_p"], e2)
     pd.testing.assert_frame_equal(out.drop(columns=["e1_input_p", "e2_input_p"]),
-                                  inputs.drop(columns=["e1_input_p", "e2_input_p"]))
+                                  inputs_.drop(columns=["e1_input_p", "e2_input_p"]))
 
 
 def test_output_cuts_and_moments():
@@ -96,6 +87,36 @@ def test_paired_draws_share_antithetic_latents():
     np.testing.assert_array_equal(again.numpy(), first.numpy())
     with pytest.raises(ValueError):
         paired_draws(IdentityFlow(), contexts, 3, seed=11)
+
+
+class ShapeFlow:
+    """Measured shape = input shape + antithetic noise; size and flux pass every cut."""
+
+    class model:
+        target_dim, context_dim = 4, 2
+
+        @staticmethod
+        def forward_physical(z, context):
+            size = torch.full_like(z[:, :2], 4.0)
+            size[:, 1] = 2 * FLUX_MINIMUM
+            return torch.cat((context + 0.1 * z[:, :2], size), dim=1), None
+
+    @staticmethod
+    def context_tensor(frame):
+        return torch.tensor(frame[["e1_input_p", "e2_input_p"]].to_numpy(), dtype=torch.float64)
+
+
+def test_draw_moments_without_emulator_give_the_sheared_flow_mean():
+    inputs_ = inputs()
+    mass, kept, blend = draw_moments(ShapeFlow(), inputs_, shear=0.02, n_draws=4, batch_size=2, random_seed=1)
+    for leg, sign in enumerate((1, -1)):
+        e1, _ = apply_shear_to_ellipticity(inputs_["e1_input_p"].to_numpy(), inputs_["e2_input_p"].to_numpy(),
+                                           sign * 0.02, 0.0)
+        np.testing.assert_allclose(kept[leg, :, 0, 0], e1, rtol=0, atol=1e-12)
+    np.testing.assert_array_equal(mass[..., :2], 1.0)
+    np.testing.assert_array_equal(blend, 0.0)
+    with pytest.raises(ValueError, match="increasing"):
+        draw_moments(ShapeFlow(), inputs_[::-1], shear=0.02, n_draws=4, batch_size=2, random_seed=1)
 
 
 def prediction():

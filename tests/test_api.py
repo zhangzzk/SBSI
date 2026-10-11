@@ -1,56 +1,40 @@
 import numpy as np
 import pandas as pd
 import pytest
-import torch
 
 from sbsi.catalogue import load_catalogue
+from sbsi.crowding import V39_FEATURES
+from sbsi.disk_predictor import DiskResponsePrediction
 from sbsi.domain import Domain
-from sbsi.models import (
-    ModelPaths,
-    V35_LIKE_CLASSIFIER_SEEDS,
-    get_model,
-    load_detection_classifier,
-)
-from sbsi.paths import REPOSITORY_ROOT, example_path
+from sbsi.models import ModelPaths, get_model
+from sbsi.paths import RELEASE_MODELS_ROOT, REPOSITORY_ROOT, example_path
 from sbsi.forward_catalogue import (
     EmulatorPairingConfig,
     make_pair_catalogue,
     prepare_emulator_pairs,
     prepare_forward_catalogue,
 )
-from sbsi.response import ResponsePrediction, predict_blend_response
-from sbsi.selection_model import TabularPreprocessor
+from sbsi.response import MeasurementSample, ResponsePrediction, predict_blend_response
+
+CONDITIONS = {
+    "pixel_size": 0.2,
+    "zero_point": 30.0,
+    "psf_fwhm": 0.73,
+    "moffat_beta": 2.224,
+    "pixel_rms": 0.312,
+}
 
 
-def test_named_models_are_path_presets_not_pipeline_configuration():
-    model = get_model("v3.5-LIKE")
+def test_the_named_model_is_the_bundled_v39_path_preset():
+    model = get_model("v3.9-LIKE")
     assert isinstance(model, ModelPaths)
-    assert model.name == "V3.5-like"
-    assert V35_LIKE_CLASSIFIER_SEEDS == (20260913, 20260914, 20260915)
-    assert len(model.flow_checkpoints) == 1
-    assert model.flow_checkpoints[0].name == "epoch154.pt"
-    assert len(model.detection_classifiers) == 3
-    assert [path.parent.name for path in model.detection_classifiers] == [
-        "seed20260913",
-        "seed20260914",
-        "seed20260915",
-    ]
-    assert model.emulator_model.name == "trial9_base.json"
-    assert model.emulator_metadata.name == "metadata.json"
+    assert model.name == "V3.9-like"
+    paths = (*model.flow_checkpoints, *model.detection_classifiers,
+             model.emulator_model, model.emulator_metadata)
+    assert all(path.is_relative_to(RELEASE_MODELS_ROOT) for path in paths)
     assert not hasattr(model, "domain")
-    assert not hasattr(model, "blend_lookup")
-    assert not hasattr(model, "evaluation_result")
-
-
-def test_v35_detection_classifier_loads_as_equal_probability_ensemble():
-    models = get_model("V3.5-like")
-    if not all(path.is_file() for path in models.detection_classifiers):
-        pytest.skip("external V3.5-like detection checkpoints are not configured")
-    detector = load_detection_classifier(models)
-    assert detector.metadata["aggregation"] == "arithmetic_mean_probability"
-    assert detector.metadata["n_members"] == 3
-    assert detector.preprocessor.feature_names[-1] == "R_blend"
-    assert detector.preprocessor.add_missing_indicators is False
+    with pytest.raises(KeyError, match="V3.9-like"):
+        get_model("V3")
 
 
 def test_checkout_resources_do_not_depend_on_working_directory(tmp_path, monkeypatch):
@@ -70,24 +54,29 @@ def test_catalogue_loader_accepts_dataframe_and_external_feather(tmp_path):
 
 
 def test_domain_is_read_from_flow_metadata():
-    domain = Domain.from_flow_metadata(
-        {"selection_cuts": [[18, 28], [18, 25.8], [0.1, 1.5], [0.5, 1.5], [0, 5]]}
-    )
-    assert domain == Domain(18.0, 25.8, 0.5, 1.5)
-    assert domain.mask([24.0, 25.8], [0.8, 0.8]).tolist() == [True, False]
+    cut = {"column": "r_input_p", "operator": "<", "value": 30.0}
+    domain = Domain.from_flow_metadata({"population": {"truth_analysis_cut": cut}})
+    assert domain.magnitude_max == 30.0
+    assert domain.mask([24.0, 30.0], [0.8, 0.8]).tolist() == [True, False]
+    with pytest.raises(ValueError, match="training cut"):
+        Domain.from_flow_metadata({"population": {}})
 
 
 def test_response_prediction_uses_sum_and_sbsi_bias_sign():
     prediction = ResponsePrediction(
         model="custom",
         index=np.arange(3),
-        flow_by_seed=np.array([[0.7, 0.8, 0.9], [0.8, 0.9, 1.0]]),
+        flow=np.array([0.75, 0.85, 0.95]),
         blend=np.array([0.1, 0.1, 0.1]),
     )
     np.testing.assert_allclose(prediction.total, [0.85, 0.95, 1.05])
     assert np.isclose(prediction.total_mean, 0.95)
     assert np.isclose(prediction.multiplicative_bias(0.95), 0.0)
     assert prediction.multiplicative_bias(1.0) > 0.0
+    summary = prediction.summary()
+    assert summary["R_total"] == pytest.approx(0.95)
+    assert summary["R_total_err"] == pytest.approx(0.1 / np.sqrt(3))
+    assert summary["R_blend_err"] == pytest.approx(0.0, abs=1e-15)
 
 
 def _input_catalogue(case=(1, 1, 1)):
@@ -96,7 +85,6 @@ def _input_catalogue(case=(1, 1, 1)):
         {
             "RA": [10.0, 10.0 + arcsec, 10.0 + 2 * arcsec],
             "DEC": [0.0, 0.0, 0.0],
-            "redshift": [0.4, 0.5, 0.6],
             "r": [23.0, 24.0, 25.0],
             "Re": [0.7, 0.6, 0.8],
             "sersic_n": [1.0, 2.0, 3.0],
@@ -108,18 +96,16 @@ def _input_catalogue(case=(1, 1, 1)):
 
 
 def _pairing_config():
-    return EmulatorPairingConfig(
-        cuts=((18, 29), (18, 29), (0.1, 2), (0.1, 2), (0, 10)),
-        r_max_arcsec=10,
-        k=3,
-        conditions={
-            "pixel_size": 0.2,
-            "zero_point": 30.0,
-            "psf_fwhm": 0.73,
-            "moffat_beta": 2.224,
-            "pixel_rms": 0.312,
-        },
-    )
+    return EmulatorPairingConfig(r_max_arcsec=10, k=3, conditions=CONDITIONS)
+
+
+def test_pairing_config_is_read_from_the_emulator():
+    class Emulator:
+        r_max_arcsec, k, conditions = 10.0, 20, CONDITIONS
+
+    assert EmulatorPairingConfig.from_emulator(Emulator()) == EmulatorPairingConfig(10.0, 20, CONDITIONS)
+    with pytest.raises(TypeError, match="pairing settings"):
+        EmulatorPairingConfig.from_emulator(object())
 
 
 def test_forward_pair_catalogue_is_sbs_owned_and_group_aware():
@@ -146,7 +132,7 @@ def test_prepared_pairs_match_blendemu_catalogue_conversion():
         reason="BlendEMU not on PYTHONPATH; skipping the cross-check against its converter",
     )
 
-    catalogue = _input_catalogue().drop(columns="case")
+    catalogue = _input_catalogue().drop(columns="case").assign(redshift=0.5)
     config = _pairing_config()
     actual = prepare_emulator_pairs(catalogue, config=config)
     expected = nz_utils.icat2reg(
@@ -154,7 +140,7 @@ def test_prepared_pairs_match_blendemu_catalogue_conversion():
         catalogue,
         model=None,
         conditions=config.conditions,
-        cuts=config.cuts,
+        apply_truth_cuts=False,  # SBSI keeps every pair
         r_max=config.r_max_arcsec,
         k=config.k,
     )
@@ -171,124 +157,61 @@ def test_prepared_pairs_match_blendemu_catalogue_conversion():
     np.testing.assert_allclose(actual[columns], expected[columns], rtol=0, atol=1e-12)
 
 
-def test_blendemu_pair_predictions_are_summed_and_aligned_by_primary():
-    class FakeEmulator:
-        def predict_on_pairs(self, pairs, task, rescaled):
-            assert task == "response"
-            assert rescaled
-            assert "distance_scaled" in pairs
-            out = pairs.copy()
-            out["response"] = 0.1
-            return out
-
-    catalogue = _input_catalogue()
-    emulator = FakeEmulator()
-    pairs = prepare_emulator_pairs(
-        catalogue,
-        config=_pairing_config(),
-        group_column="case",
-    )
-    response = predict_blend_response(emulator, pairs)
-    assert response.index.name == "primary_row"
-    np.testing.assert_allclose(response, [0.2, 0.2, 0.2])
-
-
 def test_forward_catalogue_builds_aligned_object_and_pair_views():
-    catalogue = _input_catalogue()
-    prepared = prepare_forward_catalogue(
-        catalogue,
-        config=_pairing_config(),
-        group_column="case",
-    )
+    catalogue = _input_catalogue(case=(1, 1, 2))
+    prepared = prepare_forward_catalogue(catalogue, config=_pairing_config(), group_column="case")
+    flow, pairs = prepared.flow_inputs, prepared.emulator_pairs
+    features = list(V39_FEATURES)
 
-    assert prepared.flow_inputs.index.name == "primary_row"
-    assert prepared.flow_inputs.index.tolist() == [0, 1, 2]
-    assert set(prepared.emulator_pairs["primary_row"]) == {0, 1, 2}
-    required = {
-        "e1_input_rot0_p",
-        "e2_input_rot0_p",
-        "nbr_flux_near",
-        "nbr_flux_far",
-        "nbr_flux_max",
-        "r_input_p",
-        "Re_input_p",
-    }
-    assert required.issubset(prepared.flow_inputs.columns)
-    assert (prepared.flow_inputs["nbr_flux_near"] > 0).all()
-    np.testing.assert_allclose(prepared.flow_inputs["nbr_flux_far"], 0.0)
-    assert np.isfinite(prepared.flow_inputs[["e1_input_rot0_p", "e2_input_rot0_p"]]).all().all()
+    # The third galaxy is alone in its scene: no pair, so it is dropped.
+    assert flow.index.name == "primary_row"
+    assert flow.index.tolist() == [0, 1]
+    assert {"r_input_p", "Re_input_p", *features} <= set(flow.columns)
+    np.testing.assert_array_equal(flow[features], flow[features].astype(np.float32))
+    assert flow.loc[0, "circularized_Re_input_p"] == np.float32(0.7 * np.sqrt(0.8))
+    assert np.hypot(flow.loc[0, "e1_input_p"], flow.loc[0, "e2_input_p"]) == pytest.approx(0.2 / 1.8, rel=1e-6)
+    assert (flow[["nbr_close_050", "nbr_close_100", "nbr_close_200"]] > 0).all().all()
+
+    # Crowding never crosses scenes.
+    same_scene = prepare_forward_catalogue(_input_catalogue(), config=_pairing_config(), group_column="case")
+    assert same_scene.flow_inputs.loc[1, "nbr_close_200"] > flow.loc[1, "nbr_close_200"]
+
+    # Every pair row carries its primary's flow inputs.
+    carried = pairs.set_index("primary_row")[features]
+    np.testing.assert_array_equal(carried.to_numpy(), flow.loc[carried.index, features].to_numpy())
 
 
-def test_sample_measurement_pools_ensemble_draws(tmp_path):
-    from sbsi.measurement_model import (
-        TargetStandardizer,
-        build_flow,
-        save_measurement_model,
-    )
-    from sbsi.preprocessing import rescale
-    from sbsi.response import sample_measurement
+def test_blend_response_runs_the_emulator_once_per_primary():
+    prepared = prepare_forward_catalogue(_input_catalogue(), config=_pairing_config())
 
-    catalogue = pd.DataFrame(
-        {
-            "RA": [10.0, 10.0 + 0.5 / 3600.0],
-            "DEC": [0.0, 0.0],
-            "redshift": [0.5, 0.6],
-            "r": [22.0, 23.0],
-            "Re": [0.8, 0.7],
-            "sersic_n": [1.5, 2.0],
-            "axis_ratio": [0.7, 0.6],
-            "position_angle": [0.3, 1.1],
-        }
-    )
-    config = EmulatorPairingConfig(
-        cuts=((13.0, 29.0), (18.0, 25.8), (0.0, 10.0), (0.5, 1.5), (0.0, 5.0)),
-        r_max_arcsec=5.0,
-        k=3,
-        conditions={
-            "pixel_size": 0.2,
-            "zero_point": 30.0,
-            "psf_fwhm": 0.73,
-            "moffat_beta": 2.224,
-            "pixel_rms": 0.312,
-        },
-    )
-    prepared = prepare_forward_catalogue(catalogue, config=config)
+    class FakeEmulator:
+        def predict(self, inputs, pairs, **kwargs):
+            self.inputs, self.kwargs = inputs, kwargs
+            n = len(inputs)
+            blend = np.zeros((2, n, 3, 2))
+            blend[0, :, :, 0] = 0.002 * np.arange(1, n + 1)[:, None]
+            blend[1] = -blend[0]
+            return DiskResponsePrediction("fake", inputs.index.to_numpy(), kwargs["shear"],
+                                          np.ones((2, n, 3)), np.zeros((2, n, 3, 2)), blend,
+                                          np.ones((2, n)))
 
-    features = ["e1_input_p", "e2_input_p", "sersic_n_input_p", "r_input_p_scaled", "Re_input_p_scaled"]
-    preprocessor = TabularPreprocessor.fit(
-        rescale(prepared.flow_inputs.copy()), features, add_missing_indicators=False
-    )
-    targets = ["measured_ngmix_g1", "measured_ngmix_g2", "measured_mag_auto", "measured_log_flux_radius"]
-    rng = np.random.default_rng(4)
-    standardizer = TargetStandardizer.fit(
-        pd.DataFrame({name: rng.normal(size=len(prepared.flow_inputs)) for name in targets}),
-        targets,
-    )
-    model_config = {
-        "flow_type": "affine",
-        "target_dim": 4,
-        "context_dim": len(features),
-        "hidden_dim": 8,
-        "n_layers": 1,
-        "n_flows": 2,
-    }
-    metadata = {"selection_cuts": [[18, 28], [18, 25.8], [0.1, 1.5], [0.5, 1.5], [0, 5]]}
-    checkpoints = []
-    for seed in (1, 2):
-        torch.manual_seed(seed)
-        model = build_flow(model_config)
-        path = tmp_path / f"flow_s{seed}.pt"
-        save_measurement_model(path, model, preprocessor, standardizer, model_config, metadata)
-        checkpoints.append(path)
+    emulator = FakeEmulator()
+    response = predict_blend_response(emulator, prepared.emulator_pairs)
+    assert response.name == "R_blend"
+    assert response.index.name == "primary_row"
+    assert response.index.tolist() == [0, 1, 2]
+    np.testing.assert_allclose(response, [0.1, 0.2, 0.3])
+    pd.testing.assert_frame_equal(emulator.inputs, prepared.flow_inputs[list(V39_FEATURES)])
+    assert emulator.kwargs == {"shear": 0.02, "n_draws": 64, "batch_size": 1024, "random_seed": 7301}
 
-    sample = sample_measurement(checkpoints, prepared.flow_inputs, n_samples=8, random_seed=7)
-    n_objects = len(prepared.flow_inputs)
-    assert sample.target_names == tuple(targets)
-    assert sample.samples.shape == (n_objects, 2 * 8, 4)
-    assert sample.column("measured_mag_auto").shape == (n_objects, 16)
-    assert sample.index.tolist() == prepared.flow_inputs.index.tolist()
 
-    repeat = sample_measurement(checkpoints, prepared.flow_inputs, n_samples=8, random_seed=7)
-    np.testing.assert_array_equal(sample.samples, repeat.samples)
-    with pytest.raises(KeyError):
+def test_measurement_sample_gives_magnitude_and_log_radius():
+    names = ("measured_ngmix_g1", "measured_ngmix_g2", "measured_flux_radius", "measured_flux_from_mag_auto")
+    samples = np.array([[[0.1, -0.2, np.e, 10 ** (-0.4 * (24 - 30))],
+                         [0.0, 0.0, 1.0, 0.0]]])
+    sample = MeasurementSample("m", np.array([5]), names, samples)
+    np.testing.assert_allclose(sample.column("measured_log_flux_radius"), [[1.0, 0.0]])
+    np.testing.assert_allclose(sample.column("measured_mag_auto"), [[24.0, np.inf]])
+    np.testing.assert_array_equal(sample.column("measured_ngmix_g2"), [[-0.2, 0.0]])
+    with pytest.raises(KeyError, match="measured_mag_auto"):
         sample.column("not_a_target")

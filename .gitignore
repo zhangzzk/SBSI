@@ -2,7 +2,7 @@
 # master -- the PUBLIC branch.
 #
 # It tracks only the shipped library, the runnable examples, the test suite, the
-# frozen V3 model artifacts and packaging. Working material (doc/, archive/,
+# frozen V3.9-like model artifacts and packaging. Working material (doc/, archive/,
 # notebooks/, slides/, agent instruction files) is tracked on the `dev` branch.
 #
 # This branch has its OWN history, unrelated to dev's, so that publishing it does

@@ -11,7 +11,6 @@ from .models import MODEL_PRESETS, get_model
 def _model_payload(model):
     return {
         "name": model.name,
-        "response_backend": model.response_backend,
         "flow_checkpoints": [str(path) for path in model.flow_checkpoints],
         "flow_sha256s": list(model.flow_sha256s),
         "emulator_model": (

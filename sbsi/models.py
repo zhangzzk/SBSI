@@ -1,24 +1,19 @@
 """Named model identities: artifact paths plus verified hashes.
 
-Model names are path conveniences only. V3 is the bundled tutorial model under
-``models/``; the V3.x-like presets point at external artifact stores.
+Model names are path conveniences only. The one preset, V3.9-like, is bundled
+under ``models/v3_9_like/``; its hashes and provenance are pinned in
+``configs/models_v3_9_like.json``.
 """
 
 from __future__ import annotations
 
-import os
 import json
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 from typing import Optional, Tuple
 
-from .blendemu_checkout import import_blendemu
 from .paths import RELEASE_MODELS_ROOT
-
-
-SHAPE_SEEDS: Tuple[int, ...] = (501, 502, 503, *range(505, 518))
-V35_LIKE_CLASSIFIER_SEEDS: Tuple[int, ...] = (20260913, 20260914, 20260915)
 
 
 def _file_sha256(path: Path, block_size: int = 8 * 1024 * 1024) -> str:
@@ -27,10 +22,6 @@ def _file_sha256(path: Path, block_size: int = 8 * 1024 * 1024) -> str:
         for block in iter(lambda: handle.read(block_size), b""):
             digest.update(block)
     return digest.hexdigest()
-
-
-def _root(variable: str, default: Path) -> Path:
-    return Path(os.environ.get(variable) or default).expanduser().resolve()
 
 
 @dataclass(frozen=True)
@@ -46,7 +37,6 @@ class ModelPaths:
     emulator_sha256: Optional[str] = None
     emulator_metadata_sha256: Optional[str] = None
     detection_classifier_sha256s: Tuple[str, ...] = ()
-    response_backend: str = "blendemu"
 
     def __post_init__(self):
         object.__setattr__(
@@ -107,78 +97,23 @@ class ModelPaths:
                 )
 
 
-V3 = ModelPaths(
-    name="V3",
-    flow_checkpoints=tuple(
-        RELEASE_MODELS_ROOT / "ablation" / f"measurement_flow_g0_ngmix_ablate_s2c_lt500_v22_s{seed}_swaavg.pt"
-        for seed in SHAPE_SEEDS
-    ),
-    emulator_model=(
-        RELEASE_MODELS_ROOT / "derisk" / "v22_reweighted_vector_optuna30_all40_v1" / "best_weighted_model.json"
-    ),
-    emulator_metadata=RELEASE_MODELS_ROOT / "blendemu" / "emulator_metadata_lsst_r_extnbr_v22.json",
-    emulator_sha256="01decd1335ce1c23aac1ef6ba055ae01c3950e47c4046345dcb6a1813033c21f",
-)
-
-_CACHE_ROOT = _root("SBSI_CACHE_DIR", RELEASE_MODELS_ROOT)
-_V35_FLOW_ROOT = (
-    _CACHE_ROOT
-    / "plain_complete_flow_response_re037_v1"
-    / "physical_circularized_grid_free_shape_radius_lambda10_v2"
-)
-_V35_CLASSIFIER_ROOT = (
-    _CACHE_ROOT
-    / "minimal_coherent_u_flow_rblend_ablation_v2"
-    / "models"
-    / "flow8_rblend"
-)
-_V35_EMULATOR_ROOT = _V35_FLOW_ROOT / "constgold50_trial9_v1"
-
-V35_LIKE = ModelPaths(
-    name="V3.5-like",
-    flow_checkpoints=(_V35_FLOW_ROOT / "paired" / "epoch154.pt",),
-    flow_sha256s=(
-        "9c5bb028437a4714b454d2bcd202243a2eda6263c36b4c70c46de3d12f725a6f",
-    ),
-    emulator_model=_V35_EMULATOR_ROOT / "trial9_base.json",
-    emulator_metadata=_V35_EMULATOR_ROOT / "metadata.json",
-    emulator_sha256="9723589880234fa6825ae242d9b978120a6385faf5ccc9942d1993696952e46d",
-    emulator_metadata_sha256=(
-        "48908a9cebc7475be83eef767c95175694531d78b1dd789c512fc49c0699f2b4"
-    ),
-    detection_classifiers=tuple(
-        _V35_CLASSIFIER_ROOT / f"seed{seed}" / "selected.pt"
-        for seed in V35_LIKE_CLASSIFIER_SEEDS
-    ),
-    detection_classifier_sha256s=(
-        "bbbd27a86c18bffb3e8b98e46c455ebcd2a27844ead363913bb5289ae19e6685",
-        "031498aa4140be4d2dfc7605f5211a1d2379e14c16f3fbc23b79f2f7f9e028cd",
-        "dab1e4cddf3b61da4cc6dee810091209b29df4dbf5dcc86cd20d3e23eebbd702",
-    ),
-)
-
-def _disk_model_preset(filename: str) -> ModelPaths:
+def _model_preset(filename: str) -> ModelPaths:
     spec = json.loads((RELEASE_MODELS_ROOT.parent / "configs" / filename).read_text())
-    runs_root = _root("BLENDEMU_RUNS_DIR", RELEASE_MODELS_ROOT)
     return ModelPaths(
         name=spec["name"],
-        flow_checkpoints=(_CACHE_ROOT / spec["flow"]["path"],),
+        flow_checkpoints=(RELEASE_MODELS_ROOT / spec["flow"]["path"],),
         flow_sha256s=(spec["flow"]["sha256"],),
-        emulator_model=runs_root / spec["emulator"]["path"],
-        emulator_metadata=runs_root / spec["emulator"]["metadata_path"],
+        emulator_model=RELEASE_MODELS_ROOT / spec["emulator"]["path"],
+        emulator_metadata=RELEASE_MODELS_ROOT / spec["emulator"]["metadata_path"],
         emulator_sha256=spec["emulator"]["sha256"],
         emulator_metadata_sha256=spec["emulator"]["metadata_sha256"],
-        detection_classifiers=(_CACHE_ROOT / spec["classifier"]["path"],),
+        detection_classifiers=(RELEASE_MODELS_ROOT / spec["classifier"]["path"],),
         detection_classifier_sha256s=(spec["classifier"]["sha256"],),
-        response_backend="disk_response_moment",
     )
 
 
-V36_LIKE = _disk_model_preset("models_v3_6_like.json")
-V39_LIKE = _disk_model_preset("models_v3_9_like.json")
-MODEL_PRESETS: dict[str, ModelPaths] = {
-    model.name: model for model in (V3, V35_LIKE, V36_LIKE, V39_LIKE)
-}
+V39_LIKE = _model_preset("models_v3_9_like.json")
+MODEL_PRESETS: dict[str, ModelPaths] = {V39_LIKE.name: V39_LIKE}
 
 
 def get_model(name: str) -> ModelPaths:
@@ -192,48 +127,23 @@ def get_model(name: str) -> ModelPaths:
     raise KeyError(f"unknown model preset {name!r}; choose one of: {choices}")
 
 
-def load_emulator(models: ModelPaths, *, conditions: dict, device: str = "cpu"):
-    """Load the companion BlendEMU response model from explicit paths."""
+def load_emulator(models: ModelPaths, *, conditions: dict, device: str = "cpu", nthread: Optional[int] = None):
+    """Load the blending model: flow, usable classifier and per-draw disk emulator.
 
-    if models.response_backend != "blendemu":
-        raise ValueError(
-            "disk-response models require load_disk_response and disk transport; "
-            "they cannot be used as a fixed additive R_blend"
-        )
-    if models.emulator_model is None or models.emulator_metadata is None:
-        raise ValueError("emulator_model and emulator_metadata paths are required")
-    missing = [
-        path
-        for path in (models.emulator_metadata, models.emulator_model)
-        if not path.is_file()
-    ]
-    if missing:
-        rendered = "\n  ".join(str(path) for path in missing)
-        raise FileNotFoundError(
-            f"missing emulator artifacts:\n  {rendered}\n"
-            "V3 uses the checkout's models/ directory; set SBSI_CACHE_DIR to the "
-            "external model store for the V3.x-like presets."
-        )
-    BlendingPredictor = import_blendemu().BlendingPredictor
+    The blending response acts on each simulated measurement, so the returned
+    :class:`~sbsi.disk_predictor.DiskResponsePredictor` carries the flow too.
+    """
 
-    return BlendingPredictor.load(
-        model_dir=str(models.emulator_metadata.parent),
-        metadata_file=models.emulator_metadata.name,
-        reg_file=str(models.emulator_model.resolve()),
-        conditions=dict(conditions),
-        device=device,
-        load_self=False,
-    )
+    from .disk_predictor import DiskResponsePredictor
+
+    return DiskResponsePredictor(models, device=device, conditions=conditions, nthread=nthread)
 
 
 def load_disk_response(models: ModelPaths, *, device: str = "cpu", nthread: int = 1):
     """Load the pinned output-conditioned disk velocity predictor.
 
-    Use its per-draw predictions with ``sbsi.disk_response_transport``; this
-    object does not implement the additive BlendEMU predictor interface.
+    Use its per-draw predictions with ``sbsi.disk_response_transport``.
     """
-    if models.response_backend != "disk_response_moment":
-        raise ValueError("a disk_response_moment model preset is required")
     for path, expected in (
         (models.emulator_model, models.emulator_sha256),
         (models.emulator_metadata, models.emulator_metadata_sha256),
@@ -281,11 +191,6 @@ def load_detection_classifier(models: ModelPaths, *, device: str = "cpu"):
 __all__ = [
     "MODEL_PRESETS",
     "ModelPaths",
-    "SHAPE_SEEDS",
-    "V3",
-    "V35_LIKE",
-    "V35_LIKE_CLASSIFIER_SEEDS",
-    "V36_LIKE",
     "V39_LIKE",
     "get_model",
     "load_detection_classifier",
