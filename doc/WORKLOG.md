@@ -1,6 +1,6 @@
 # Work log
 
-## 2026-10-11 — Faint chains no longer saved (`--no-chain`); old faint chains inventoried
+## 2026-10-11 — Faint chains no longer saved (`--no-chain`); old faint chains deleted
 
 The owner asked to stop keeping the faint units' chains, which nothing reads, and to remove the old ones.
 Details: [TEMPERED_MH.md](TEMPERED_MH.md#disk-faint-chains-are-not-saved-2026-10-11).
@@ -13,9 +13,11 @@ Validation: job 17131270, same GPU, one faint unit: all other outputs bitwise id
 units only (co-moving lists: 2,680 / 2,094 / 524 bright, 0 faint).
 
 Old faint chains: 3,172 files, 4.12 TB (blind 100k 2.49, 500k mock 1.13, twin 100k 0.23, blind 10k 0.27 TB),
-listed in `$DATA_DIR/sbsi/catalogue_prior/faint_chain_cleanup_20261011/inventory.tsv`. The deletion was not
-run from the agent session (blocked as an irreversible action); it is left to the owner. Bright chains
-(6,504 files, about 0.38 TB) and every result, profile and final-scene file stay.
+listed in `$DATA_DIR/sbsi/catalogue_prior/faint_chain_cleanup_20261011/inventory.tsv`. Deleted by the owner
+on 2026-10-12 from `faint_list.txt` (only `faint_*/chain.npz`; 1,408 / 1,402 / 281 / 81 per study) with
+`xargs rm -fv`; `deleted.log` lists all 3,172 removals, none of the listed files remains, and
+/project/ls-gruen free space went 13T → 17T (df -h). Bright chains (6,504 files, about 0.38 TB) and every
+result, profile and final-scene file stay.
 
 ## 2026-10-11 — Sampler speed: b from the pair table only, after warm-up only (exact; sampling 1.16-1.21x)
 

@@ -584,8 +584,9 @@ profiles are computed from them afterwards.
   in `protocol.json` and the study's source snapshot, on the same GPU model.
 
 Faint chains of finished studies (3,172 files, 4.12 TB: blind 100k 2.49,
-500k mock 1.13, twin 100k 0.23, blind 10k 0.27): inventory in
-`$DATA_DIR/sbsi/catalogue_prior/faint_chain_cleanup_20261011/inventory.tsv`.
+500k mock 1.13, twin 100k 0.23, blind 10k 0.27) were deleted on 2026-10-12;
+inventory, file list and removal log (`inventory.tsv`, `faint_list.txt`,
+`deleted.log`) in `$DATA_DIR/sbsi/catalogue_prior/faint_chain_cleanup_20261011/`.
 
 ## 238-galaxy bias check: tempered vs untempered
 
