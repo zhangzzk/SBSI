@@ -1,5 +1,30 @@
 # Work log
 
+## 2026-10-12 — 1M rotated-twin paired mock launched (`galsbi_pair1m_20261012`)
+
+The owner asked for the 1M paired mock with `--no-chain`, on about 500 cores "with enough GPUs" (AGENTS.md rule
+added). The rule (`rule.md`) was written before the mock existed: the 100k pair's recipe at 10x the galaxies and 10x
+the selection chunks; expected sigma(m) about 0.8%; pass if m and c2 are within 2 sigma of zero.
+
+- Study dir `$DATA_DIR/sbsi/catalogue_prior/galsbi_pair1m_20261012/`, code snapshot of 4a506ca (`source_snapshot/`).
+- Mock (`prepare.sh`, job 17144346, cip A40): original 1,000,000 selected galaxies at (0.02, 0), seed 2027101201;
+  then the antithetic rotated twin in the same job. Original: 110,792 bright (mag < 23) in 5,276 units of 20-21,
+  889,208 faint in 2,806 units of 316-317.
+- Sides `original/` and `twin/` carry the 500k study's scripts with only the path changed (`copy_scripts.py`);
+  `blind_step.py` now reads the plan's `selection_replicas` (default 2), because one replica holds at most 1000
+  chunks before its seeds reach the next replica's. Selection: 4 x 800 chunks per side, bases 2027207001 (original)
+  and 2027307001 (twin). `pair_step.py` is the twin study's, pointed at the two sides.
+- `worker.sh`: one queue over both sides (original units first), MPS, `--no-chain` for faint units, selection
+  replicas claimed by workers started with SEL=1; a side's plan is read when a slot reaches it.
+- Workers (`launch.sh`, jobs 17146034-44): 4 x 16 cores on met-cl-vis01 (RTX 2080 Ti, the only free inter GPUs),
+  4 x 96 cores queued on inter for the H200/H100/A40 nodes (all GPUs busy at launch), 3 x 12 cores on cip A40
+  slices. Per-user limits: inter 8 GPUs / 512 cores, cip 3 GPUs / 64 cores.
+- Startup: MPS starts on all GPU kinds (including the cip virtual A40s). Bright units run at about 30 s per 1000
+  steps on a cip A40 slice and about 140 s on met-cl-vis01, where the GPU is only 20-37% busy, so that node's
+  hyperthreaded cores limit it. Selection: 17 s per chunk (about 3.8 h per replica).
+
+Next: twin plan once the twin exists; co-moving post-processing of the bright units; `pair_step.py`.
+
 ## 2026-10-11 — Faint chains no longer saved (`--no-chain`); old faint chains deleted
 
 The owner asked to stop keeping the faint units' chains, which nothing reads, and to remove the old ones.

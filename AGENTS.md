@@ -95,6 +95,11 @@ All project documentation lives in `doc/`. Only this file, `CLAUDE.md`, and
   both partitions, superseding the earlier two-GPU cap for this work. Keep the
   initialization array throttled to two; retain dependencies needed for actual
   prerequisites or the combined resource limit, not unrelated scientific work.
+- On 2026-10-12 the owner asked for the 1M rotated-twin paired mock
+  (`galsbi_pair1m_20261012`, `--no-chain`) on "500 CPUs with enough GPUs".
+  Its workers may use about 500 cores in total and as many GPUs as the
+  per-user scheduler limits allow (`inter` 8, `cip` 3), superseding the
+  four-GPU cap for this study. Settings and seeds stay as in its `rule.md`.
 - On 2026-09-24 the owner explicitly authorized more GPUs for the F8
   simplification experiment, superseding its historical two-GPU limit. Its
   evaluation array permits six concurrent workers; the `cip` partition QoS
