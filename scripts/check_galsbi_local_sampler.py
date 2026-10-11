@@ -96,6 +96,9 @@ def main():
     parser.add_argument('--comoving-profiles', action='store_true',
                         help='profile ratios with intrinsic shapes mapped so the sheared shape is unchanged '
                              '(exact change of variables, b recomputed in the retained scene); persistent only')
+    parser.add_argument('--no-chain', action='store_true',
+                        help='do not write chain.npz (the per-step history); result.json, profiles and final '
+                             'scenes are unchanged')
     args = parser.parse_args()
     if args.steps <= args.warmup or args.warmup < 1 or args.environments < 1:
         raise ValueError('positive environment count and warmup shorter than run required')
@@ -178,6 +181,7 @@ def main():
         disk_coefficient=('computed for stored posterior-level states from the last warm-up step on (NaN before); '
                           'the kernel at zero shear does not depend on b' if lazy_b else 'computed for every evaluated state'),
         observations=indices, fixed_shear=g0, profile_stride=args.profile_stride, density_batch_size=4096,
+        chain_saved=not args.no_chain,
         profile_shapes='co-moving: eps -> M_node^-1(M_g0(eps)), circularized radius kept, prior and Jacobian '
                        'included, b recomputed' if args.comoving_profiles else 'fixed intrinsic shapes',
         target_coordinates=GalSBITargetCoordinates.names,
@@ -628,12 +632,13 @@ def main():
     type_probability_trace = np.array(type_probability_trace)
     summary_trace, kernel_trace = np.array(summary_trace), np.array(kernel_trace)
     accepted_trace, block_trace = np.array(accepted_trace), np.array(block_trace)
-    np.savez_compressed(args.output/'chain.npz', target_coordinates=trace, types=types,
-        type_probability=type_probability_trace,
-        summaries=summary_trace, log_kernel=kernel_trace, accepted=accepted_trace, block=block_trace,
-        neighbour_counts=np.array(count_trace), refresh_fraction=np.array(refresh_trace),
-        joint_environment=np.array(joint_environment_trace),
-        log_prior=np.array(logprior_trace), sed_cross_proposed=np.array(sed_cross_trace))
+    if not args.no_chain:
+        np.savez_compressed(args.output/'chain.npz', target_coordinates=trace, types=types,
+            type_probability=type_probability_trace,
+            summaries=summary_trace, log_kernel=kernel_trace, accepted=accepted_trace, block=block_trace,
+            neighbour_counts=np.array(count_trace), refresh_fraction=np.array(refresh_trace),
+            joint_environment=np.array(joint_environment_trace),
+            log_prior=np.array(logprior_trace), sed_cross_proposed=np.array(sed_cross_trace))
     if persistent:
         scene = scene.take(np.arange(ncold))
         np.savez_compressed(args.output/'final_scenes.npz',

@@ -565,6 +565,28 @@ unit, so expect about 1.13x per iteration on top of the 2.4x above.
 Receipts: `optimize_20261011/` `code_opt3`, `runs/cp_opt3`, `logs/cp_opt3`,
 `crowd_profile.sh`, `crowd_summary.py`, `zip_level.py`, `code_probe`.
 
+## Disk: faint chains are not saved (2026-10-11)
+
+The per-step history `chain.npz` of a faint unit is about 805 MB, 92% of a
+study's disk (500k mock: faint 1.13 TB, bright 0.10 TB). No analysis reads
+it: faint profiles are written during sampling to `local_profiles.npz`, the
+diagnostics to `result.json`, and the only chain readers (`comoving.py`,
+`bcheck.py`) take bright units. Bright chains stay, because the co-moving
+profiles are computed from them afterwards.
+
+- `--no-chain` skips writing `chain.npz`; protocol key `chain_saved` records
+  it. The launcher template `optimize_20261011/prod_check/worker.sh` passes
+  it for faint units.
+- Check (job 17131270, one faint unit, 512 steps, same GPU): every other
+  output is bit-for-bit equal to the run that writes the chain; history output
+  3.7 s → 0.15 s (about 38 s, 7% of a production faint unit).
+- A deleted faint chain can be regenerated bit for bit from the unit's seeds
+  in `protocol.json` and the study's source snapshot, on the same GPU model.
+
+Faint chains of finished studies (3,172 files, 4.12 TB: blind 100k 2.49,
+500k mock 1.13, twin 100k 0.23, blind 10k 0.27): inventory in
+`$DATA_DIR/sbsi/catalogue_prior/faint_chain_cleanup_20261011/inventory.tsv`.
+
 ## 238-galaxy bias check: tempered vs untempered
 
 Question (diagnosis item 3): do stuck chains shift the shear score?

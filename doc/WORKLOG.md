@@ -1,5 +1,22 @@
 # Work log
 
+## 2026-10-11 — Faint chains no longer saved (`--no-chain`); old faint chains inventoried
+
+The owner asked to stop keeping the faint units' chains, which nothing reads, and to remove the old ones.
+Details: [TEMPERED_MH.md](TEMPERED_MH.md#disk-faint-chains-are-not-saved-2026-10-11).
+
+Code: `scripts/check_galsbi_local_sampler.py` gains `--no-chain` (skip `chain.npz`; protocol `chain_saved`).
+Launcher template `optimize_20261011/prod_check/worker.sh` passes it for faint units.
+
+Validation: job 17131270, same GPU, one faint unit: all other outputs bitwise identical; history output
+3.7 → 0.15 s. Readers of `chain.npz` in the four finished studies (`comoving.py`, `bcheck.py`) take bright
+units only (co-moving lists: 2,680 / 2,094 / 524 bright, 0 faint).
+
+Old faint chains: 3,172 files, 4.12 TB (blind 100k 2.49, 500k mock 1.13, twin 100k 0.23, blind 10k 0.27 TB),
+listed in `$DATA_DIR/sbsi/catalogue_prior/faint_chain_cleanup_20261011/inventory.tsv`. The deletion was not
+run from the agent session (blocked as an irreversible action); it is left to the owner. Bright chains
+(6,504 files, about 0.38 TB) and every result, profile and final-scene file stay.
+
 ## 2026-10-11 — Sampler speed: b from the pair table only, after warm-up only (exact; sampling 1.16-1.21x)
 
 The owner asked whether the sampler could be made faster still.
