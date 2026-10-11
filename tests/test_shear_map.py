@@ -1,23 +1,17 @@
-"""Tests for the analytic shear-distortion map S_gamma."""
+"""Tests for the reduced-shear map of an intrinsic ellipticity."""
 
 import numpy as np
 
-from sbsi.shear_map import (
-    apply_shear_to_ellipticity,
-    inverse_shear_to_ellipticity,
-    magnification,
-    shear_jacobian_at_zero,
-    shear_separation,
-)
+from sbsi.shear_map import apply_shear_to_ellipticity
 
 
-def test_inverse_round_trip():
+def test_opposite_shear_undoes_the_map():
     rng = np.random.default_rng(0)
     e1 = rng.uniform(-0.6, 0.6, 1000)
     e2 = rng.uniform(-0.6, 0.6, 1000)
     g1, g2 = 0.07, -0.03
     s1, s2 = apply_shear_to_ellipticity(e1, e2, g1, g2)
-    b1, b2 = inverse_shear_to_ellipticity(s1, s2, g1, g2)
+    b1, b2 = apply_shear_to_ellipticity(s1, s2, -g1, -g2)
     assert np.allclose(b1, e1, atol=1e-10)
     assert np.allclose(b2, e2, atol=1e-10)
 
@@ -30,50 +24,12 @@ def test_zero_shear_identity():
     assert np.allclose(s2, e2)
 
 
-def test_jacobian_matches_finite_difference():
-    rng = np.random.default_rng(1)
-    e1 = rng.uniform(-0.5, 0.5, 500)
-    e2 = rng.uniform(-0.5, 0.5, 500)
-    J = shear_jacobian_at_zero(e1, e2)
-    h = 1e-6
-    # d/dg1
-    sp1 = np.stack(apply_shear_to_ellipticity(e1, e2, h, 0.0), axis=-1)
-    sm1 = np.stack(apply_shear_to_ellipticity(e1, e2, -h, 0.0), axis=-1)
-    dg1 = (sp1 - sm1) / (2 * h)
-    # d/dg2
-    sp2 = np.stack(apply_shear_to_ellipticity(e1, e2, 0.0, h), axis=-1)
-    sm2 = np.stack(apply_shear_to_ellipticity(e1, e2, 0.0, -h), axis=-1)
-    dg2 = (sp2 - sm2) / (2 * h)
-    assert np.allclose(J[:, :, 0], dg1, atol=1e-5)
-    assert np.allclose(J[:, :, 1], dg2, atol=1e-5)
-
-
 def test_orientation_average_responsivity_is_unity():
-    # Fixed |e|, uniform orientation -> <J> = identity (unit responsivity for eps).
+    # Fixed |e|, uniform orientation: the mean d e'/d g at g = 0 is the identity.
     rng = np.random.default_rng(2)
     theta = rng.uniform(0, np.pi, 200000)
-    e_abs = 0.3
-    e1 = e_abs * np.cos(2 * theta)
-    e2 = e_abs * np.sin(2 * theta)
-    J = shear_jacobian_at_zero(e1, e2).mean(axis=0)
-    assert np.allclose(J, np.eye(2), atol=2e-3)
-
-
-def test_magnification_positive_weak():
-    assert np.isclose(magnification(0.0, 0.0), 1.0)
-    assert magnification(0.05, 0.0) > 1.0
-
-
-def test_source_to_image_separation_matches_positive_ellipticity_convention():
-    x, y = shear_separation((1.0, 1.0), 0.1, 0.0)
-    assert np.isclose(x, 1.0 / 0.9)
-    assert np.isclose(y, 1.0 / 1.1)
-
-
-if __name__ == "__main__":
-    test_inverse_round_trip()
-    test_zero_shear_identity()
-    test_jacobian_matches_finite_difference()
-    test_orientation_average_responsivity_is_unity()
-    test_magnification_positive_weak()
-    print("all shear_map tests passed")
+    e1, e2 = 0.3 * np.cos(2 * theta), 0.3 * np.sin(2 * theta)
+    h = 1e-6
+    plus = np.stack(apply_shear_to_ellipticity(e1, e2, h, 0.0))
+    minus = np.stack(apply_shear_to_ellipticity(e1, e2, -h, 0.0))
+    assert np.allclose(((plus - minus) / (2 * h)).mean(axis=1), [1.0, 0.0], atol=2e-3)

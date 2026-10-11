@@ -17,7 +17,8 @@ python -m pip install -e /path/to/SBSI
 ```
 
 Prediction with the bundled model needs SBSI alone. BlendEMU is needed only to simulate
-new training data (and for the tutorial's optional import check). Clone [BlendEMU](https://github.com/zhangzzk/blendemu) and tell SBSI where it is:
+new training data. Clone [BlendEMU](https://github.com/zhangzzk/blendemu) and tell the
+[Slurm wrapper](examples/job_blendemu.sh) where it is:
 
 ```bash
 git clone https://github.com/zhangzzk/blendemu.git

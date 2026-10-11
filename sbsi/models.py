@@ -162,30 +162,24 @@ def load_disk_response(models: ModelPaths, *, device: str = "cpu", nthread: int 
 
 
 def load_detection_classifier(models: ModelPaths, *, device: str = "cpu"):
-    """Load the preset's one classifier or equal-probability ensemble."""
+    """Load the preset's detection classifier."""
 
-    if not models.detection_classifiers:
-        raise ValueError("detection classifier paths are required")
-    missing = [path for path in models.detection_classifiers if not path.is_file()]
-    if missing:
-        rendered = "\n  ".join(str(path) for path in missing)
-        raise FileNotFoundError(f"missing detection-classifier artifacts:\n  {rendered}")
+    if len(models.detection_classifiers) != 1:
+        raise ValueError("exactly one detection classifier path is required")
+    path = models.detection_classifiers[0]
+    if not path.is_file():
+        raise FileNotFoundError(f"missing detection-classifier artifact: {path}")
     if models.detection_classifier_sha256s:
-        for path, expected in zip(
-            models.detection_classifiers,
-            models.detection_classifier_sha256s,
-        ):
-            actual = _file_sha256(path)
-            if actual != expected:
-                raise RuntimeError(
-                    f"detection-classifier hash mismatch for {path}: "
-                    f"expected {expected}, found {actual}"
-                )
-    from .selection_model import load_selection_model, load_selection_model_ensemble
+        actual = _file_sha256(path)
+        expected = models.detection_classifier_sha256s[0]
+        if actual != expected:
+            raise RuntimeError(
+                f"detection-classifier hash mismatch for {path}: "
+                f"expected {expected}, found {actual}"
+            )
+    from .selection_model import load_selection_model
 
-    if len(models.detection_classifiers) == 1:
-        return load_selection_model(models.detection_classifiers[0], device=device)
-    return load_selection_model_ensemble(models.detection_classifiers, device=device)
+    return load_selection_model(path, device=device)
 
 
 __all__ = [

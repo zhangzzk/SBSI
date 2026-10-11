@@ -26,7 +26,6 @@ from .crowding import V39_FEATURES
 from .models import ModelPaths, load_detection_classifier, load_disk_response
 from .shear_map import apply_shear_to_ellipticity
 
-LEGS = ("plus", "minus")
 # Cuts on each generated measurement, in the flow's output units (pixels of
 # 0.2 arcsec, flux at zero point 30): "main" is FLUX_RADIUS > 0.6 arcsec and
 # MAG_AUTO < 25.8, "r075" is FLUX_RADIUS >= 0.75 arcsec and MAG_AUTO < 25.8.

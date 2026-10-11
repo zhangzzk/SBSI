@@ -3,7 +3,6 @@
 import torch
 from torch.nn import functional as F
 from .flow_disk import ConditionalDiskAffineFlow, radial_tanh
-from .measurement_model import _qmc_normal
 
 
 def positive_inverse(value):
@@ -52,7 +51,7 @@ class ConditionalPhysicalDiskFlow(ConditionalDiskAffineFlow):
                 raise ValueError(name)
             self.register_buffer(name, value.clone())
 
-    def forward_physical(self, z, context, *, return_shape_log_gap=False):
+    def forward_physical(self, z, context):
         """Return physical draws directly, avoiding subtract/add cancellation.
 
         The determinant here is with respect to physical e1,e2,r,F. No draw
@@ -65,37 +64,18 @@ class ConditionalPhysicalDiskFlow(ConditionalDiskAffineFlow):
         u = w[..., 2:].double() * self.physical_coordinate_scales + self.physical_coordinate_means
         p = self.physical_units * torch.logaddexp(u, torch.zeros_like(u))
         extra = (self.physical_units.log() + self.physical_coordinate_scales.log() + F.logsigmoid(u)).sum(-1)
-        result = torch.cat(
-            (e, p), dim=-1
-        ), ld.double() + shape_ld + self.disk_coordinate_scales.log().sum() + extra
-        if return_shape_log_gap:
-            from .disk_precision import radial_log_gap
-            return (*result, radial_log_gap(shape_coordinates))
-        return result
+        return torch.cat((e, p), dim=-1), ld.double() + shape_ld + self.disk_coordinate_scales.log().sum() + extra
 
-    def forward(self, z, context):
-        physical, ld = self.forward_physical(z, context)
-        means = torch.cat((self.disk_shape_means, self.physical_means))
-        scales = torch.cat((self.disk_shape_scales, self.physical_scales))
-        return (physical - means) / scales, ld - scales.log().sum()
-
-    def sample_physical(self, context, n_samples=1, qmc=False, *, return_shape_log_gap=False):
-        """Physical samples using the same base draw convention as sample()."""
+    def sample_physical(self, context, n_samples=1):
+        """Physical draws, shape ``(batch, n_samples, target_dim)``."""
         if n_samples < 1 or context.ndim != 2:
             raise ValueError("positive draws and matrix contexts required")
         batch = len(context)
         expanded = (
             context[:, None, :].expand(batch, n_samples, self.context_dim).reshape(-1, self.context_dim)
         )
-        z = (
-            _qmc_normal(batch, n_samples, self.target_dim, context.dtype, context.device)
-            if qmc
-            else torch.randn(batch * n_samples, self.target_dim, dtype=context.dtype, device=context.device)
-        )
-        result = self.forward_physical(z, expanded, return_shape_log_gap=return_shape_log_gap)
-        physical = result[0]
-        if return_shape_log_gap:
-            return physical.reshape(batch, n_samples, self.target_dim), result[2].reshape(batch, n_samples)
+        z = torch.randn(batch * n_samples, self.target_dim, dtype=context.dtype, device=context.device)
+        physical, _ = self.forward_physical(z, expanded)
         return physical.reshape(batch, n_samples, self.target_dim)
 
     def inverse(self, y, context):

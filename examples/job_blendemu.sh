@@ -34,8 +34,8 @@ conda activate sims1
 module load sextractor
 
 export BLENDEMU_SIM_RUN
-# BlendEMU is a checkout on the import path, not an installed package; this is how SBSI
-# finds it. Its own scripts add their repository root to sys.path themselves.
+# BlendEMU is a checkout, not an installed package. Its own scripts add their repository
+# root to sys.path themselves.
 export BLENDEMU_ROOT
 
 if [[ -z "${SBSI_PYTHON:-}" ]]; then
@@ -46,13 +46,13 @@ if [[ -z "${SBSI_PYTHON:-}" ]]; then
     fi
 fi
 
-# SBSI is editable-installed into this environment and BlendEMU is resolved from
-# BLENDEMU_ROOT. This check fails early if a batch job picked up a different checkout or
-# an incomplete installation.
-"${SBSI_PYTHON}" -c 'import sbsi
-from sbsi.blendemu_checkout import import_blendemu
-print("SBSI:", sbsi.__file__)
-print("BlendEMU:", import_blendemu().__file__)'
+# Fail early if a batch job picked up a different SBSI checkout or a wrong BLENDEMU_ROOT.
+"${SBSI_PYTHON}" -c 'import sbsi; print("SBSI:", sbsi.__file__)'
+if [[ ! -f "${BLENDEMU_ROOT}/blendemu/__init__.py" ]]; then
+    echo "BLENDEMU_ROOT=${BLENDEMU_ROOT} is not a BlendEMU checkout" >&2
+    exit 1
+fi
+echo "BlendEMU: ${BLENDEMU_ROOT}"
 
 # BlendEMU owns all four operations:
 #   1  generate realization catalogues and simulator configs

@@ -1,8 +1,8 @@
-"""Experimental disk-preserving response transport with an exact density.
+"""The disk-preserving move of a measured shape by the blending emulator.
 
-The velocity is a newly fitted transport parameter, not an existing physical
-R_blend coefficient. For fixed auxiliary outputs it must not depend on shape;
-that restriction gives the triangular joint-density Jacobian used here.
+The emulator predicts a velocity for each simulated measurement; the measured
+shape is moved by the Mobius map with the bounded shift radial_tanh(velocity),
+so it always stays inside the unit disk.
 """
 import torch
 
@@ -44,51 +44,3 @@ velocity with the sign of its disk shift reversed.
 """
     shift, _ = radial_tanh(velocity)
     return mobius_translate(shape, -shift if inverse else shift)
-
-
-def infinitesimal_response_matrix(shape):
-    """Derivative with respect to the two velocity components at velocity=0."""
-    shape = shape.double()
-    if shape.shape[-1] != 2:
-        raise ValueError('two-component shapes required')
-    a, b = shape.unbind(-1)
-    return torch.stack((1-a*a+b*b, -2*a*b, -2*a*b, 1+a*a-b*b), dim=-1).reshape(*shape.shape[:-1], 2, 2)
-
-
-def directional_response_gain(shape, direction):
-    """uᵀ L(e) u; positive for interior e and a nonzero direction u.
-
-For unit u the gain lies in [1-|e|², 1+|e|²]. This is the physical derivative
-needed when fitting transport response coefficients from measured labels.
-"""
-    matrix = infinitesimal_response_matrix(shape)
-    direction = direction.double()
-    return torch.einsum('...i,...ij,...j->...', direction, matrix, direction)
-
-
-def transported_physical_log_prob(physical, velocity, base_log_prob):
-    """Evaluate a transported four-output density in physical coordinates.
-
-``base_log_prob`` accepts (..., 4) tensors ordered e1,e2,radius,flux and
-returns their normalized physical log density. ``velocity`` must be the
-same coefficient used to generate the forward draw, depending only on the
-unchanged radius/flux and external conditions, never on measured shape.
-The radius/flux dependence leaves the joint Jacobian triangular, including
-piecewise constant tree coefficients. Invalid physical outputs get -inf.
-This experimental primitive does not include usability or selection factors.
-"""
-    physical = physical.double()
-    if physical.shape[-1] != 4:
-        raise ValueError('four physical outputs required')
-    valid = (torch.isfinite(physical).all(-1)
-             & (physical[..., :2].square().sum(-1) < 1)
-             & (physical[..., 2:] > 0).all(-1))
-    placeholder = physical.new_tensor([0., 0., 1., 1.])
-    safe = torch.where(valid[..., None], physical, placeholder)
-    shape, inverse_logdet = disk_response_transport(safe[..., :2], velocity, inverse=True)
-    original = torch.cat((shape, safe[..., 2:]), dim=-1)
-    log_prob = base_log_prob(original)
-    if log_prob.shape != physical.shape[:-1]:
-        raise ValueError('base density must return one value per physical row')
-    result = log_prob+inverse_logdet
-    return torch.where(valid, result, torch.full_like(result, -torch.inf))

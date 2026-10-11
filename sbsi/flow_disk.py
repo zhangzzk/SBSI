@@ -12,7 +12,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from .measurement_model import ConditionalAffineFlow, _qmc_normal
+from .measurement_model import ConditionalAffineFlow
 
 
 def _radius_parts(x):
@@ -104,16 +104,6 @@ class ConditionalDiskAffineFlow(nn.Module):
         if any(getattr(self, name).dtype != torch.float64 for name in self.coordinate_buffer_names):
             raise ValueError("disk coordinate buffers must remain float64; do not call model.float()")
 
-    def forward(self, z, context):
-        self._require_precision()
-        w, logdet = self.base.forward(z, context)
-        u = w[..., :2].double() * self.disk_coordinate_scales + self.disk_coordinate_means
-        e, disk_ldj = radial_tanh(u)
-        yshape = (e - self.disk_shape_means) / self.disk_shape_scales
-        y = torch.cat((yshape, w[..., 2:].double()), dim=-1)
-        scale_ldj = (self.disk_coordinate_scales.log() - self.disk_shape_scales.log()).sum()
-        return y, logdet.double() + disk_ldj + scale_ldj
-
     def inverse(self, y, context):
         self._require_precision()
         if y.dtype != torch.float64:
@@ -136,15 +126,3 @@ class ConditionalDiskAffineFlow(nn.Module):
         z, logdet = self.inverse(y, context)
         log_base = -.5 * (z.double().square() + math.log(2 * math.pi)).sum(dim=-1)
         return log_base + logdet
-
-    def sample(self, context, n_samples=1, qmc=False):
-        if n_samples < 1 or context.ndim != 2:
-            raise ValueError("positive n_samples and a matrix of contexts are required")
-        batch = len(context)
-        flat_context = context[:, None, :].expand(batch, n_samples, self.context_dim).reshape(-1, self.context_dim)
-        if qmc:
-            z = _qmc_normal(batch, n_samples, self.target_dim, context.dtype, context.device)
-        else:
-            z = torch.randn(batch * n_samples, self.target_dim, dtype=context.dtype, device=context.device)
-        y, _ = self.forward(z, flat_context)
-        return y.reshape(batch, n_samples, self.target_dim)

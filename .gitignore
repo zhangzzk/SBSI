@@ -7,8 +7,8 @@
 #
 # This branch has its OWN history, unrelated to dev's, so that publishing it does
 # not expose the internal working history. Do not merge between the two branches
-# in either direction. Publish with:
-#     git checkout dev -- sbsi examples tests models configs README.md pyproject.toml
+# in either direction. The library here is the trimmed V3.9-like version and no
+# longer matches dev's, so do not copy dev's sbsi/ or tests/ over it wholesale.
 # See doc/BRANCHES.md on the dev branch.
 #
 # This is a WHITELIST: every top-level entry is ignored, then the public tree is

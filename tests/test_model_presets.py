@@ -87,7 +87,7 @@ def test_v39_bundled_artifacts_load_and_predict_together():
     assert np.all(np.square(draws[..., :2]).sum(-1) < 1)
     assert np.all(draws[..., 2:] >= 0)
     pairs = pd.DataFrame([[.6, .5, 24., 25., 1., 1., 2.]] * 4, columns=TRUTH_FEATURES)
-    response = disk.predict_pairs(pairs, draws[0, :, 2], draws[0, :, 3], allow_zero_limit=True)
+    response = disk.predict_pairs(pairs, draws[0, :, 2], draws[0, :, 3])
     assert response.shape == (4,) and np.isfinite(response).all()
 
 
