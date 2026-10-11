@@ -482,6 +482,27 @@ nvidia-cuda-mps-control -d
 echo quit | nvidia-cuda-mps-control
 ```
 
+**Production check** (job 17129330, comparison 17129408). 38 units of the
+500k mock it0 (19 bright, 19 faint, evenly spread among those its A40 worker
+w3 ran on kng-cl-nv02) were rerun with commit c903adf and MPS. The node, the
+19 two-core slots, the seeds and the chain lengths (bright 8192, faint 4096
+steps) were the same as in production. All 38 match the production outputs
+bit for bit. Per unit, mean ± error of the mean (old = production, code 8cd45c5,
+no MPS):
+
+| | setup s | sampling s/step | post s | total s | gain (total) |
+|---|---|---|---|---|---|
+| bright, old | 41.1 ± 1.3 | 0.1152 ± 0.0019 | 30.9 ± 0.7 | 1016 ± 17 | |
+| bright, new | 24.5 ± 0.01 | 0.0431 ± 0.0002 | 20.6 ± 0.1 | 398 ± 2 | 2.55 ± 0.04 |
+| faint, old | 387 ± 2 | 0.179 ± 0.002 | 170 ± 4 | 1292 ± 12 | |
+| faint, new | 53.5 ± 2.2 | 0.097 ± 0.001 | 118 ± 0.5 | 570 ± 7 | 2.27 ± 0.03 |
+
+Weighted by the 500k mix (2660 bright, 1402 faint units), a full iteration
+needs 2.4x less slot time. The MPS launcher is
+`optimize_20261011/prod_check/worker.sh`; use it as the template for the next
+study. In this check the bright units ran first and the faint units after,
+whereas production mixed them; the slot count was the same.
+
 **Not used:** the xgboost CUDA predictor is about 9x faster than CPU trees but
 not bit-for-bit equal to them (job 17129157). The earlier "CUDA failure"
 (WORKLOG, 9.1e-5 / 4.9e-4) was exactly this comparison of a CPU-b reference

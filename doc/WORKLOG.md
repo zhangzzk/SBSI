@@ -32,7 +32,16 @@ Limitations: gain only at zero sampling shear with persistent environments. Fain
 faster but not bitwise equal to CPU (job 17129157), so it is not used; the old "CUDA replay failure" was this
 CPU-vs-GPU comparison. Timings are single runs; per-process spread was not measured here (±4% in 2026-10-03).
 
-Next: add MPS start/stop to the production launcher (`worker.sh`) for the next run.
+Production check (same day, owner's step 1):
+- `optimize_20261011/prod_check/`: `prepare.sh` freezes c903adf and pre-claims every unit except 38 that the
+  500k A40 worker ran (19 bright, 19 faint), so they keep their seeds. `worker.sh` is the 500k launcher plus MPS
+  start/stop. `check.py` does the comparison.
+- Job 17129330 (kng-cl-nv02, 40 cores, 19 slots, production chain lengths): 17.5 min, no failures. Job 17129408:
+  38 of 38 units bitwise identical to production.
+- Per unit total: bright 1016 ± 17 → 398 ± 2 s (2.55 ± 0.04x); faint 1292 ± 12 → 570 ± 7 s (2.27 ± 0.03x);
+  bright s/step 0.115 → 0.043. A 500k-sized iteration needs about 2.4x less slot time.
+
+Next: use `prod_check/worker.sh` as the template for the next study.
 
 ## 2026-10-07 — Unpaired 500k mock: one step from g = 0 gives m = −4.1% ± 3.2%
 
