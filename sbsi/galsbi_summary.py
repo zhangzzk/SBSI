@@ -39,6 +39,13 @@ def native_shapes(data, angular_diameter_distance):
                 circularized=radius*(1-rendered_a**2)**.25)
 
 
+def _check_response_contract(prior, response_radius_arcsec, response_neighbours):
+    if (not np.isfinite(response_radius_arcsec) or response_radius_arcsec <= 0
+            or response_radius_arcsec > prior.aperture_arcsec
+            or not isinstance(response_neighbours, (int, np.integer)) or response_neighbours < 1):
+        raise ValueError('covered response aperture and positive integer neighbour count required')
+
+
 def scene_model_inputs(scenes, prior, angular_diameter_distance, conditions, *,
                        response_radius_arcsec, response_neighbours, response=True):
     """Map native scenes to F8/C8 features and the retained response pair CSR.
@@ -48,17 +55,24 @@ def scene_model_inputs(scenes, prior, angular_diameter_distance, conditions, *,
     applied. Input photometry must belong to the current native marks.
     response=False returns (features, None, None) without building pairs.
     """
-    if (not np.isfinite(response_radius_arcsec) or response_radius_arcsec <= 0
-            or response_radius_arcsec > prior.aperture_arcsec
-            or not isinstance(response_neighbours, (int, np.integer)) or response_neighbours < 1):
-        raise ValueError('covered response aperture and positive integer neighbour count required')
+    _check_response_contract(prior, response_radius_arcsec, response_neighbours)
     target = native_shapes(scenes.targets, angular_diameter_distance)
     zero = pd.DataFrame(np.column_stack((target['e1'], target['e2'], scenes.targets['n'],
         scenes.targets['m_r'], target['circularized'], prior.v39_crowding(scenes))), columns=FEATURES)
+    if not np.isfinite(zero.to_numpy()).all():
+        raise ValueError('nonfinite mapped model inputs')
     if not response:
-        if not np.isfinite(zero.to_numpy()).all():
-            raise ValueError('nonfinite mapped model inputs')
         return zero, None, None
+    return (zero, *response_pairs(scenes, prior, angular_diameter_distance, conditions,
+        response_radius_arcsec=response_radius_arcsec, response_neighbours=response_neighbours, target=target))
+
+
+def response_pairs(scenes, prior, angular_diameter_distance, conditions, *,
+                   response_radius_arcsec, response_neighbours, target=None):
+    """The response pair CSR (indptr, features) of scene_model_inputs alone."""
+    _check_response_contract(prior, response_radius_arcsec, response_neighbours)
+    if target is None:
+        target = native_shapes(scenes.targets, angular_diameter_distance)
     neighbour = native_shapes(scenes.neighbours, angular_diameter_distance)
     owner, distance = scenes.owner, np.linalg.norm(scenes.offset_arcsec, axis=1)
     rows = np.flatnonzero(distance < response_radius_arcsec)
@@ -72,10 +86,10 @@ def scene_model_inputs(scenes, prior, angular_diameter_distance, conditions, *,
         r_input_s=scenes.neighbours['m_r'][rows], sersic_n_input_p=scenes.targets['n'][primary],
         sersic_n_input_s=scenes.neighbours['n'][rows], distance=distance[rows]))
     features = rescale_emulator_pairs(pairs, conditions).loc[:, TRUTH_FEATURES].to_numpy(float)
-    indptr = np.r_[0, np.cumsum(np.bincount(primary, minlength=len(zero)))]
-    if not np.isfinite(zero.to_numpy()).all() or not np.isfinite(features).all():
+    indptr = np.r_[0, np.cumsum(np.bincount(primary, minlength=len(scenes.counts)))]
+    if not np.isfinite(features).all():
         raise ValueError('nonfinite mapped model inputs')
-    return zero, indptr, features
+    return indptr, features
 
 
 @dataclass

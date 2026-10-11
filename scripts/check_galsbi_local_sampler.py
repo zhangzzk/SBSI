@@ -24,7 +24,8 @@ from sbsi.catalogue_disk_response import CatalogueDiskResponse
 from sbsi.galsbi_initialization import measurement_seed_coordinates
 from sbsi.galsbi_prior import ExactMemo
 from sbsi.galsbi_scene_prior import GalSBISceneBatch, GalSBIScenePrior
-from sbsi.galsbi_summary import SummaryBatch, SummaryLikelihood, compress_scenes, scene_model_inputs
+from sbsi.galsbi_summary import (SummaryBatch, SummaryLikelihood, compress_scenes, response_pairs,
+                                 scene_model_inputs)
 from sbsi.galsbi_target_coordinates import GalSBITargetCoordinates
 from sbsi.measurement_model import load_measurement_model
 from sbsi.mcmc_proposals import (adjacent_swap_permutation, complementary_stretch_proposal,
@@ -163,7 +164,8 @@ def main():
     g0 = previous['shear'] if args.shear is None else list(args.shear)
     # b enters the kernel only as the transport velocity b*g, so at zero
     # sampling shear the MH target does not depend on b. Then b is computed
-    # only for stored posterior-level states (once per state), not proposals.
+    # only for stored posterior-level states after warm-up (and the last
+    # warm-up state, so step-to-step differences stay defined), not proposals.
     lazy_b = persistent and not any(g0)
     rng = np.random.default_rng(args.seed)
     sources = [Path(__file__), Path('sbsi/pseudo_marginal.py'), Path('sbsi/galsbi_target_coordinates.py'),
@@ -173,8 +175,8 @@ def main():
         Path('sbsi/mcmc_proposals.py'), Path('sbsi/galsbi_initialization.py')]
     protocol = dict(steps=args.steps, warmup=args.warmup, environments=m, chains_per_observation=nchains,
         seed=args.seed, reference=str(args.reference.resolve()), reference_protocol_sha256=digest(args.reference/'protocol.json'),
-        disk_coefficient=('computed for stored posterior-level states only; the kernel at zero shear does not '
-                          'depend on b' if lazy_b else 'computed for every evaluated state'),
+        disk_coefficient=('computed for stored posterior-level states from the last warm-up step on (NaN before); '
+                          'the kernel at zero shear does not depend on b' if lazy_b else 'computed for every evaluated state'),
         observations=indices, fixed_shear=g0, profile_stride=args.profile_stride, density_batch_size=4096,
         profile_shapes='co-moving: eps -> M_node^-1(M_g0(eps)), circularized radius kept, prior and Jacobian '
                        'included, b recomputed' if args.comoving_profiles else 'fixed intrinsic shapes',
@@ -364,7 +366,10 @@ def main():
         """Compute the missing b of posterior-level states in place (row-wise, so bitwise the full-evaluation b)."""
         missing = np.flatnonzero(np.isnan(summaries[cold, 0, 8]))
         if len(missing):
-            summaries[missing, 0, 8] = summarize(scene.take(missing), aux[missing]).values[:, 8]
+            ptr, features = response_pairs(scene.take(missing), prior, angular_distance, conditions,
+                                           response_radius_arcsec=10., response_neighbours=20)
+            summaries[missing, 0, 8] = CatalogueDiskResponse(ptr, features, model).predict(
+                np.arange(len(missing)), aux[missing, 0], aux[missing, 1])[0]
 
     def change(new, old):
         """Largest summary difference, skipping b where it is not computed."""
@@ -592,7 +597,7 @@ def main():
         type_trace.append(kinds[cold].copy())
         type_probability_trace.append(type_probability[cold].copy())
         logprior_trace.append(logprior[cold].copy())
-        if lazy_b:
+        if lazy_b and step+1 >= args.warmup:
             fill_b(summaries, scene)
         summary_trace.append(summaries[cold].copy())
         kernel_trace.append(kernels[cold].copy())

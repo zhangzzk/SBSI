@@ -517,6 +517,54 @@ Receipts: `$DATA_DIR/sbsi/catalogue_prior/optimize_20261011/` (`profile.sh`,
 `bench_all.sh`, `val_shear.sh`, frozen code copies `code_b1`, `code_lazy1`,
 `code_lazy2`, `runs/`, `logs/`); old-code profile job 17129137.
 
+## Speed: b straight from the pair table, after warm-up only (2026-10-11)
+
+Two further exact changes to `fill_b` (zero sampling shear, persistent
+environments):
+
+- It builds only the neighbour pair table (`galsbi_summary.response_pairs`),
+  not the eight model features again; b is row-by-row, so the value is the
+  same bit for bit.
+- It runs from the last warm-up step on. Warm-up b is not used by anything:
+  the kernel at zero shear does not depend on b, and every reader of the
+  stored summaries starts at the warm-up (`run_galsbi_bright.py`, the result
+  moments and diagnostics, the convergence reports). The last warm-up step
+  is filled so step-to-step differences after warm-up stay defined. In
+  `chain.npz`, warm-up b is now NaN; protocol key `disk_coefficient` says so.
+
+**Check** (19 processes, one A40 on kng-cl-nv02, MPS, 13 bright units of
+1024 steps and 6 faint of 512, warm-up a quarter as in production; new job
+17130336 vs c903adf job 17130300, comparison 17130356): all 19 units are
+bit-for-bit equal in every stored array and diagnostic, apart from the
+warm-up b now left empty (about 21,300 values per bright unit). Sampling
+time per unit, mean ± error of the mean of the per-unit ratio:
+
+| | old s | new s | speed-up |
+|---|---|---|---|
+| bright | 53.5 | 46.7 | 1.16 ± 0.06 |
+| faint | 48.3 | 40.0 | 1.21 ± 0.04 |
+
+`fill_b` went from 15.8 to 10.8 s per bright unit and from 27.6 to 19.2 s
+per faint unit. In production, sampling is 85% (bright) and 69% (faint) of a
+unit, so expect about 1.13x per iteration on top of the 2.4x above.
+
+**Looked at, not done:**
+- Reusing tree outputs for neighbour pairs seen before (probe job 17130318):
+  only 21% (bright) and 16% (faint) of pairs repeat, so at most a few
+  percent after the cache cost.
+- Faster file compression (job 17130343, one 1046 MB faint chain): deflate
+  level 1 writes in 34.9 s instead of 41.0 s; storing uncompressed takes
+  1.9 s but the file grows from 805 to 1046 MB. A disk-space choice for the
+  owner: about 7% of a faint unit for 30% more disk.
+- Start-up: about 21 s (bright) and 10 s (faint) of a unit is importing
+  Python libraries from the shared disk (astropy and torch scan every loaded
+  module), plus about 10 s building the prior. Only a long-lived process per
+  slot, running several units, would avoid it (about 5% bright, 3% faint),
+  at the risk of state carried from one unit to the next.
+
+Receipts: `optimize_20261011/` `code_opt3`, `runs/cp_opt3`, `logs/cp_opt3`,
+`crowd_profile.sh`, `crowd_summary.py`, `zip_level.py`, `code_probe`.
+
 ## 238-galaxy bias check: tempered vs untempered
 
 Question (diagnosis item 3): do stuck chains shift the shear score?

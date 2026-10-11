@@ -11,7 +11,7 @@ from sbsi.catalogue_disk_response import CatalogueDiskResponse
 from sbsi.flow_size_condition import circularized_radius
 from sbsi.galsbi_scene_prior import GalSBISceneBatch, GalSBIScenePrior
 from sbsi.galsbi_summary import (SummaryBatch, SummaryLikelihood, compress_scenes, native_shapes,
-                                scene_model_inputs)
+                                response_pairs, scene_model_inputs)
 from sbsi.output_conditioned_response import output_features
 from sbsi.v39_inference import FEATURES, V39CatalogueCache
 
@@ -106,6 +106,10 @@ def test_only_response_uses_nearest_twenty_and_empty_neighbours_work():
         conditions, response_radius_arcsec=10., response_neighbours=20, response=False)
     pd.testing.assert_frame_equal(features_only[0], zero, check_exact=True)
     assert features_only[1:] == (None, None)
+    pair_only = response_pairs(scenes, prior, lambda z: np.full(len(z), 1000.),
+        conditions, response_radius_arcsec=10., response_neighbours=20)
+    np.testing.assert_array_equal(pair_only[0], ptr)
+    np.testing.assert_array_equal(pair_only[1], pairs)
     empty =GalSBISceneBatch(marks([.2]), marks([]), [0, 0], np.empty((0, 2)))
     _, ptr, pairs = scene_model_inputs(empty, prior, lambda z: np.full(len(z), 1000.),
         conditions, response_radius_arcsec=10., response_neighbours=20)

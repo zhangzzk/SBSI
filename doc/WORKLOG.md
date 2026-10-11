@@ -1,5 +1,30 @@
 # Work log
 
+## 2026-10-11 — Sampler speed: b from the pair table only, after warm-up only (exact; sampling 1.16-1.21x)
+
+The owner asked whether the sampler could be made faster still.
+Details: [TEMPERED_MH.md](TEMPERED_MH.md#speed-b-straight-from-the-pair-table-after-warm-up-only-2026-10-11).
+
+Code:
+- `sbsi/galsbi_summary.py`: new `response_pairs` builds only the response pair table; `scene_model_inputs`
+  calls it (same output). The aperture/neighbour check is shared.
+- `scripts/check_galsbi_local_sampler.py`: `fill_b` uses `response_pairs` + the disk response directly instead
+  of recomputing the eight features; it runs from the last warm-up step on, so warm-up b in `chain.npz` is NaN
+  (no reader uses it). `disk_coefficient` protocol text updated.
+- `tests/test_galsbi_summary.py`: `response_pairs` equals the pair output of `scene_model_inputs` bit for bit.
+
+Validation (`$DATA_DIR/sbsi/catalogue_prior/optimize_20261011/`):
+- 19 crowded units with MPS on kng-cl-nv02 (job 17130336) vs c903adf (job 17130300), comparison 17130356:
+  every array and diagnostic bitwise identical except warm-up b, now NaN.
+- Tests, job 17130363: 389 passed, 1 skipped (BlendEMU not on PYTHONPATH).
+
+Results: sampling time per unit 53.5 → 46.7 s bright (1.16 ± 0.06x), 48.3 → 40.0 s faint (1.21 ± 0.04x);
+expected about 1.13x per production iteration on top of the earlier 2.4x.
+
+Not done: per-pair tree-output reuse (probe 17130318: only 16-21% of pairs repeat); uncompressed chain files
+(job 17130343: 41 → 1.9 s per faint unit but 805 → 1046 MB, owner's call); a long-lived process per slot to
+skip about 20-30 s of start-up per unit (about 3-5%, risk of carried state).
+
 ## 2026-10-11 — Sampler speed: b only for stored states at zero shear (exact; ~2.3x per bright step with MPS)
 
 The owner asked for a deep look at the sampler's efficiency.
