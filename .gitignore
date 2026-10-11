@@ -36,6 +36,3 @@ __pycache__/
 # ---- editor / agent scratch ----
 *.orig
 *.swp
-*.rblendbak
-*.swabak
-*.stale_bak

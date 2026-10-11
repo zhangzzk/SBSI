@@ -6,9 +6,8 @@ output-conditioned blending emulator together, because the blending response
 of a galaxy depends on each simulated measurement of it (its measured size and
 flux), not only on its true properties.
 
-``predict`` reproduces the ConstGold evaluation of the published V3.9-like bias
-(``scripts/evaluate_smooth_classifier_joint.py`` in the frozen F8 checkout):
-the same sheared inputs, antithetic common random draws, per-draw Mobius
+``predict`` reproduces the development constant-shear evaluation behind the
+published V3.9-like bias: the same sheared inputs, antithetic common random draws, per-draw Mobius
 blending shift, output cuts and per-block seeds.  Calling it with
 ``random_seed = 7301 + 10000019 * case`` on the same GPU model replays the saved
 per-galaxy rows exactly.
@@ -279,7 +278,7 @@ class DiskResponsePredictor:
         self.conditions = dict(conditions)
         self.flow = load_flow(models.flow_checkpoint, self.device)
         self.classifier = load_detection_classifier(models, device=self.device)
-        nthread = nthread or len(os.sched_getaffinity(0))
+        nthread = nthread or (len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else os.cpu_count())
         self.disk = load_disk_response(models, device=self.device, nthread=nthread)
 
     def predict(self, inputs: pd.DataFrame, pairs: pd.DataFrame, *, shear: float = 0.02,

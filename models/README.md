@@ -16,7 +16,7 @@ models/
 ```
 
 Total about 30 MB. The flow and classifier take eight inputs per galaxy: its true
-ellipticity, Sersic index, magnitude, circularized radius and three counts of how crowded
+ellipticity, Sersic index, magnitude, circularized radius and three flux-weighted measures of how crowded
 its surroundings are (`sbsi.crowding.V39_FEATURES`). The blending emulator adds, for every
 neighbour within 10 arcsec, how much that neighbour shifts the measured shape. It is
 applied to every flow draw, so the flow and blending parts of the response come from the

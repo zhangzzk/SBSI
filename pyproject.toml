@@ -26,8 +26,10 @@ dependencies = [
 
 [project.optional-dependencies]
 notebook = ["ipykernel", "matplotlib"]
+test = ["pytest"]
 # BlendEMU itself is a source checkout with no dependency metadata, so its
-# import-time requirements are declared here.
+# import-time requirements are declared here (examples/job_blendemu.sh runs it
+# with SBSI's interpreter).
 blendemu = ["xgboost", "joblib"]
 
 [project.scripts]

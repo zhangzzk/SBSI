@@ -23,12 +23,13 @@ set -euo pipefail
 : "${BLENDEMU_CONFIG:?set BLENDEMU_CONFIG to a BlendEMU pipeline YAML}"
 : "${BLENDEMU_SIM_RUN:?set BLENDEMU_SIM_RUN to MultiBand_ImSim modules/Run.py}"
 
-BLENDEMU_ROOT="${BLENDEMU_ROOT:-/home/z/Zekang.Zhang/blendemu}"
+: "${BLENDEMU_ROOT:?set BLENDEMU_ROOT to your BlendEMU clone}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SBSI_ROOT="${SBSI_ROOT:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 N_MPI="${N_MPI:-50}"
 N_JOBS="${N_JOBS:-16}"
 
+# Site-specific: adjust the environment, module and partition for your cluster.
 eval "$(conda shell.bash hook)"
 conda activate sims1
 module load sextractor

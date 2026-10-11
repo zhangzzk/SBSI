@@ -13,7 +13,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Optional
 
-from .paths import RELEASE_MODELS_ROOT
+from .paths import RELEASE_MODELS_ROOT, repository_path
 
 
 def _file_sha256(path: Path, block_size: int = 8 * 1024 * 1024) -> str:
@@ -72,7 +72,7 @@ class ModelPaths:
 
 
 def _model_preset(filename: str) -> ModelPaths:
-    spec = json.loads((RELEASE_MODELS_ROOT.parent / "configs" / filename).read_text())
+    spec = json.loads(repository_path("configs", filename).read_text())
     return ModelPaths(
         name=spec["name"],
         flow_checkpoint=RELEASE_MODELS_ROOT / spec["flow"]["path"],
