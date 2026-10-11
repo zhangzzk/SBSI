@@ -22,6 +22,12 @@ the selection chunks; expected sigma(m) about 0.8%; pass if m and c2 are within 
 - Startup: MPS starts on all GPU kinds (including the cip virtual A40s). Bright units run at about 30 s per 1000
   steps on a cip A40 slice and about 140 s on met-cl-vis01, where the GPU is only 20-37% busy, so that node's
   hyperthreaded cores limit it. Selection: 17 s per chunk (about 3.8 h per replica).
+- CPU-only supplement (rule.md addendum, before any result): the 96-core inter workers wait for busy GPU nodes, so
+  `CPU=1 worker.sh` runs the same queue, seeds and settings with `--device cpu` on `cluster` (array 17146079,
+  21 x 20 cores, th-cl-hua28 excluded). Task i takes a new unit only while 20 (i+1) <= 520 - (cores of running
+  p1m-w* GPU workers), so the total stays about 500 cores and CPU tasks drain as GPU workers start. First check:
+  270 units started on 13 hosts, initial replay max error 0.0 on every host; CPU bright units at about 140-900 s
+  per 1000 steps depending on the node (cip A40 about 26, met-cl-vis01 about 80); 40 units done, 0 failed.
 
 Next: twin plan once the twin exists; co-moving post-processing of the bright units; `pair_step.py`.
 
