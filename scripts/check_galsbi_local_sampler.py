@@ -161,6 +161,10 @@ def main():
     aux = repeated.iloc[:, 2:4].to_numpy()
     conditions = previous['conditions']
     g0 = previous['shear'] if args.shear is None else list(args.shear)
+    # b enters the kernel only as the transport velocity b*g, so at zero
+    # sampling shear the MH target does not depend on b. Then b is computed
+    # only for stored posterior-level states (once per state), not proposals.
+    lazy_b = persistent and not any(g0)
     rng = np.random.default_rng(args.seed)
     sources = [Path(__file__), Path('sbsi/pseudo_marginal.py'), Path('sbsi/galsbi_target_coordinates.py'),
         Path('sbsi/galsbi_scene_prior.py'), Path('sbsi/galsbi_summary.py'), Path('sbsi/galsbi_prior.py'),
@@ -169,6 +173,8 @@ def main():
         Path('sbsi/mcmc_proposals.py'), Path('sbsi/galsbi_initialization.py')]
     protocol = dict(steps=args.steps, warmup=args.warmup, environments=m, chains_per_observation=nchains,
         seed=args.seed, reference=str(args.reference.resolve()), reference_protocol_sha256=digest(args.reference/'protocol.json'),
+        disk_coefficient=('computed for stored posterior-level states only; the kernel at zero shear does not '
+                          'depend on b' if lazy_b else 'computed for every evaluated state'),
         observations=indices, fixed_shear=g0, profile_stride=args.profile_stride, density_batch_size=4096,
         profile_shapes='co-moving: eps -> M_node^-1(M_g0(eps)), circularized radius kept, prior and Jacobian '
                        'included, b recomputed' if args.comoving_profiles else 'fixed intrinsic shapes',
@@ -261,6 +267,16 @@ def main():
     angular_distance = ExactMemo(lambda z: cosmo.background.dist_ang_a(a=1/(1+z)))
 
     coords = GalSBITargetCoordinates(galaxy, angular_distance)
+
+    def summarize(scene, auxiliary, with_b=True):
+        """Nine summaries per scene; without b, column 8 is 0 (exact only for the kernel at zero shear)."""
+        zero, ptr, features = scene_model_inputs(scene, prior, angular_distance, conditions,
+            response_radius_arcsec=10., response_neighbours=20, response=with_b)
+        if with_b:
+            return compress_scenes(zero, CatalogueDiskResponse(ptr, features, model), auxiliary)
+        auxiliary = np.broadcast_to(np.asarray(auxiliary, float), (len(zero), 2))
+        return SummaryBatch(np.column_stack((zero.to_numpy(), np.zeros(len(zero)))), auxiliary)
+
     # Reproduce only the prior-proposal bank, not the independently generated
     # mock scene. Reference likelihood chooses dispersed starts per stream.
     seeds = previous['seed']+10 if args.initial_bank_seed is None else args.initial_bank_seed
@@ -283,10 +299,7 @@ def main():
             candidate_prior, candidate_data, _ = coords.log_mixture_prior(candidates)
             valid = np.isfinite(candidate_prior)
             candidate_scene = GalSBISceneBatch(candidate_data, bank.neighbours, bank.indptr, bank.offset_arcsec)
-            valid_scene = candidate_scene.take(np.flatnonzero(valid))
-            zero, ptr, features = scene_model_inputs(valid_scene, prior, angular_distance, conditions,
-                response_radius_arcsec=10., response_neighbours=20)
-            summary = compress_scenes(zero, CatalogueDiskResponse(ptr, features, model), obs.iloc[0, 2:4].to_numpy())
+            summary = summarize(candidate_scene.take(np.flatnonzero(valid)), obs.iloc[0, 2:4].to_numpy(), not lazy_b)
             flat_kernel = np.full(len(bank.counts), -np.inf)
             flat_kernel[valid] = likelihood.log_kernel(summary, obs, *g0)
             scores = (candidate_prior+flat_kernel).reshape(nchains, previous['draws_per_chain'])
@@ -335,17 +348,27 @@ def main():
     if not np.isfinite(logprior).all():
         raise ValueError('invalid initial target')
 
-    def evaluate_scene(scene, valid):
+    def evaluate_scene(scene, valid, with_b=not lazy_b):
+        """Kernels and summaries; without b, column 8 is NaN until fill_b computes it."""
         values = np.zeros((len(owner), 1, 9))
         logk = np.full((len(owner), 1), -np.inf)
         if valid.any():
-            selected = scene.take(np.flatnonzero(valid))
-            zero, ptr, features = scene_model_inputs(selected, prior, angular_distance, conditions,
-                response_radius_arcsec=10., response_neighbours=20)
-            summary = compress_scenes(zero, CatalogueDiskResponse(ptr, features, model), aux[valid])
+            summary = summarize(scene.take(np.flatnonzero(valid)), aux[valid], with_b)
             logk[valid, 0] = likelihood.log_kernel(summary, observed.loc[valid], *g0)
             values[valid, 0] = summary.values
+            if not with_b:
+                values[valid, 0, 8] = np.nan
         return logk[:, 0], values, logk
+
+    def fill_b(summaries, scene):
+        """Compute the missing b of posterior-level states in place (row-wise, so bitwise the full-evaluation b)."""
+        missing = np.flatnonzero(np.isnan(summaries[cold, 0, 8]))
+        if len(missing):
+            summaries[missing, 0, 8] = summarize(scene.take(missing), aux[missing]).values[:, 8]
+
+    def change(new, old):
+        """Largest summary difference, skipping b where it is not computed."""
+        return float(np.nanmax(np.abs(new-old)))
 
     def estimate(data, valid):
         values = np.zeros((len(owner), m, 9))
@@ -394,7 +417,7 @@ def main():
 
     if persistent:
         scene = GalSBISceneBatch(data, scene.neighbours, scene.indptr, scene.offset_arcsec)
-        loglike, summaries, kernels = evaluate_scene(scene, np.ones(len(owner), dtype=bool))
+        loglike, summaries, kernels = evaluate_scene(scene, np.ones(len(owner), dtype=bool), with_b=True)
         reference_kernels = np.asarray(reference_kernels)
         replay_error = float(np.max(np.abs(loglike-reference_kernels)))
         save(args.output/'initial_replay.json', dict(max_abs_error=replay_error, tolerance=1e-6))
@@ -482,13 +505,13 @@ def main():
                 check = invariant_visits[block] % 1024 == 0
                 invariant_visits[block] += 1
                 if check:
-                    audit_like, audit_summary, _ = evaluate_scene(newscene, np.isfinite(newprior))
+                    audit_like, audit_summary, _ = evaluate_scene(newscene, np.isfinite(newprior), with_b=True)
                     valid = np.isfinite(newprior)
                     invariant_audit['checked_proposals'] += int(valid.sum())
                     if valid.any():
                         invariant_audit['maximum_summary_change'] = max(
                             invariant_audit['maximum_summary_change'],
-                            float(np.max(np.abs(audit_summary[valid]-summaries[valid]))))
+                            change(audit_summary[valid], summaries[valid]))
                         invariant_audit['maximum_log_kernel_change'] = max(
                             invariant_audit['maximum_log_kernel_change'],
                             float(np.max(np.abs(audit_like[valid]-loglike[valid]))))
@@ -511,7 +534,7 @@ def main():
                 checked_like = audit_like if invariant_likelihood else newlike
                 sed_audit['valid_proposals'] += int(valid.sum())
                 sed_audit['maximum_summary_change'] = max(sed_audit['maximum_summary_change'],
-                    float(np.max(np.abs(checked_summary[valid]-summaries[valid]))))
+                    change(checked_summary[valid], summaries[valid]))
                 sed_audit['maximum_log_kernel_change'] = max(sed_audit['maximum_log_kernel_change'],
                     float(np.max(np.abs(checked_like[valid]-loglike[valid]))))
                 if (sed_audit['maximum_summary_change'] > protocol['sed_replay_tolerances']['summary_absolute']
@@ -569,6 +592,8 @@ def main():
         type_trace.append(kinds[cold].copy())
         type_probability_trace.append(type_probability[cold].copy())
         logprior_trace.append(logprior[cold].copy())
+        if lazy_b:
+            fill_b(summaries, scene)
         summary_trace.append(summaries[cold].copy())
         kernel_trace.append(kernels[cold].copy())
         if args.comoving_profiles and step >= args.warmup and (step-args.warmup) % args.profile_stride == 0:

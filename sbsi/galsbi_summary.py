@@ -40,21 +40,26 @@ def native_shapes(data, angular_diameter_distance):
 
 
 def scene_model_inputs(scenes, prior, angular_diameter_distance, conditions, *,
-                       response_radius_arcsec, response_neighbours):
+                       response_radius_arcsec, response_neighbours, response=True):
     """Map native scenes to F8/C8 features and the retained response pair CSR.
 
     All neighbours within 10 arcsec enter crowding. Only the response uses
     its explicitly supplied nearest-k/aperture contract. No truth cuts are
     applied. Input photometry must belong to the current native marks.
+    response=False returns (features, None, None) without building pairs.
     """
     if (not np.isfinite(response_radius_arcsec) or response_radius_arcsec <= 0
             or response_radius_arcsec > prior.aperture_arcsec
             or not isinstance(response_neighbours, (int, np.integer)) or response_neighbours < 1):
         raise ValueError('covered response aperture and positive integer neighbour count required')
     target = native_shapes(scenes.targets, angular_diameter_distance)
-    neighbour = native_shapes(scenes.neighbours, angular_diameter_distance)
     zero = pd.DataFrame(np.column_stack((target['e1'], target['e2'], scenes.targets['n'],
         scenes.targets['m_r'], target['circularized'], prior.v39_crowding(scenes))), columns=FEATURES)
+    if not response:
+        if not np.isfinite(zero.to_numpy()).all():
+            raise ValueError('nonfinite mapped model inputs')
+        return zero, None, None
+    neighbour = native_shapes(scenes.neighbours, angular_diameter_distance)
     owner, distance = scenes.owner, np.linalg.norm(scenes.offset_arcsec, axis=1)
     rows = np.flatnonzero(distance < response_radius_arcsec)
     rows = rows[np.lexsort((rows, distance[rows], owner[rows]))]

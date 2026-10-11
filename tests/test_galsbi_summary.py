@@ -10,7 +10,7 @@ from sbsi.catalogue_disk_likelihood import DiskCatalogueLikelihood
 from sbsi.catalogue_disk_response import CatalogueDiskResponse
 from sbsi.flow_size_condition import circularized_radius
 from sbsi.galsbi_scene_prior import GalSBISceneBatch, GalSBIScenePrior
-from sbsi.galsbi_summary import (SummaryLikelihood, compress_scenes, native_shapes,
+from sbsi.galsbi_summary import (SummaryBatch, SummaryLikelihood, compress_scenes, native_shapes,
                                 scene_model_inputs)
 from sbsi.output_conditioned_response import output_features
 from sbsi.v39_inference import FEATURES, V39CatalogueCache
@@ -65,6 +65,11 @@ def test_nine_summaries_replay_full_pair_likelihood_and_reject_stale_auxiliaries
         expected = reference.conditional_log_likelihood(obs, g1, g2, atom_indices=np.arange(2))
         expected += np.log(cache.get(g1, g2).detection_probability)
         np.testing.assert_allclose(compressed.log_kernel(summary, obs, g1, g2), expected, atol=1e-12)
+    # b enters only as the velocity b*g: at zero shear the kernel is bitwise independent of b.
+    no_b = SummaryBatch(np.column_stack((summary.values[:, :8], np.zeros(2))), summary.auxiliary)
+    assert summary.values[1, -1] != 0
+    np.testing.assert_array_equal(compressed.log_kernel(no_b, obs, 0., 0.), compressed.log_kernel(summary, obs, 0., 0.))
+    assert not np.array_equal(compressed.log_kernel(no_b, obs, .02, -.01), compressed.log_kernel(summary, obs, .02, -.01))
     changed = obs.copy()
     changed.iloc[0, 2] += .1
     with pytest.raises(ValueError, match='different observed'):
@@ -97,7 +102,11 @@ def test_only_response_uses_nearest_twenty_and_empty_neighbours_work():
     np.testing.assert_array_equal(ptr, [0, 20, 20])
     np.testing.assert_allclose(zero.iloc[:, 5:], prior.v39_crowding(scenes))
     assert pairs.shape == (20, 7)
-    empty = GalSBISceneBatch(marks([.2]), marks([]), [0, 0], np.empty((0, 2)))
+    features_only = scene_model_inputs(scenes, prior, lambda z: np.full(len(z), 1000.),
+        conditions, response_radius_arcsec=10., response_neighbours=20, response=False)
+    pd.testing.assert_frame_equal(features_only[0], zero, check_exact=True)
+    assert features_only[1:] == (None, None)
+    empty =GalSBISceneBatch(marks([.2]), marks([]), [0, 0], np.empty((0, 2)))
     _, ptr, pairs = scene_model_inputs(empty, prior, lambda z: np.full(len(z), 1000.),
         conditions, response_radius_arcsec=10., response_neighbours=20)
     np.testing.assert_array_equal(ptr, [0, 0])

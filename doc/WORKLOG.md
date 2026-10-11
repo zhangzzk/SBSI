@@ -1,5 +1,39 @@
 # Work log
 
+## 2026-10-11 — Sampler speed: b only for stored states at zero shear (exact; ~2.3x per bright step with MPS)
+
+The owner asked for a deep look at the sampler's efficiency.
+Details: [TEMPERED_MH.md](TEMPERED_MH.md#speed-b-only-for-stored-states-at-zero-shear-2026-10-11).
+
+Code:
+- `sbsi/galsbi_summary.py`: `scene_model_inputs(..., response=False)` returns the eight features without
+  building the neighbour pair table.
+- `scripts/check_galsbi_local_sampler.py`: when sampling is persistent at g = (0, 0), the kernel does not depend
+  on b, so proposals and measurement-initialization candidates skip the tree emulator. `fill_b` computes b for
+  cold rows before each trace is stored. The initial evaluation and the audits still compute b everywhere.
+  Protocol key `disk_coefficient` records which mode ran. Non-zero sampling shear is unchanged.
+- `tests/test_galsbi_summary.py`: the kernel at (0, 0) is bitwise equal with b set to 0, and differs at
+  non-zero shear; `response=False` returns the same features.
+
+Validation (study dir `$DATA_DIR/sbsi/catalogue_prior/optimize_20261011/`):
+- Same seeds and node, job 17129212 vs 17129137: bright and faint units bitwise identical in chain,
+  initial state, final scenes, local profiles and diagnostics; audits unchanged (replay 0.0, invariant
+  2.8e-14 / 0.0). g = (0.02, 0), job 17129232: bitwise identical.
+- `compare_all.sh`: all 19 crowding-benchmark units of new code + MPS match old code without MPS bitwise.
+- Tests, job 17129230: 389 passed, 1 skipped.
+
+Results (seconds; one process; cProfile):
+- Bright: setup 43.1 → 15.3, sampling 45.6 → 22.6 (2.0x), total 91.6 → 40.7.
+- Faint: setup 190.2 → 34.2 (5.6x), sampling 44.8 → 34.7 (1.3x), total 270 → 104.
+- 19 processes on one A40 (job 17129219), s/step: old 0.098, new 0.062, new + MPS 0.043 (≈2.3x).
+
+Limitations: gain only at zero sampling shear with persistent environments. Faint sampling gains less
+(about 40% of rows change per step, so b is still computed often). The xgboost CUDA predictor is about 9x
+faster but not bitwise equal to CPU (job 17129157), so it is not used; the old "CUDA replay failure" was this
+CPU-vs-GPU comparison. Timings are single runs; per-process spread was not measured here (±4% in 2026-10-03).
+
+Next: add MPS start/stop to the production launcher (`worker.sh`) for the next run.
+
 ## 2026-10-07 — Unpaired 500k mock: one step from g = 0 gives m = −4.1% ± 3.2%
 
 The owner asked for a 500k mock without pairing.

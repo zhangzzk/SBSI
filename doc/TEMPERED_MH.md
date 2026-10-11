@@ -419,6 +419,83 @@ Receipts: `galsbi_speedup_20261003/` (`exact_job.sh` 16805403,
 `speed_summary.json`, `logs/loop_*`); smoke test in
 `galsbi_blind10k_20261003/smoke/`.
 
+## Speed: b only for stored states at zero shear (2026-10-11)
+
+**Idea.** The disk response b enters the likelihood only as the velocity
+b·g (`catalogue_disk_likelihood._density`). The classifier and the flow
+context never see b. So when chains sample at g = (0, 0), the MH kernel does
+not depend on b at all, and the tree emulator (xgboost, the largest CPU cost)
+does not need to run for proposals. With `lazy_b = persistent and not any(g0)`:
+- proposals and measurement-initialization candidates skip the neighbour
+  pair table and the trees; their b slot holds NaN (0 inside the kernel);
+- `fill_b` computes b only for posterior-level (cold) rows still missing it,
+  just before each trace is stored, so each distinct stored state is computed
+  once, row by row, exactly as the full evaluation does;
+- the initial evaluation and both audits still compute b for every row; the
+  audits compare with `nanmax`.
+
+At non-zero sampling shear nothing changes. Code: `scene_model_inputs(...,
+response=False)` in `sbsi/galsbi_summary.py`, and `summarize`, `fill_b` in
+`scripts/check_galsbi_local_sampler.py`.
+
+**Exact.** Same seeds, same node (cip-cl-h01g02n3, job 17129212): the chain,
+initial state, final scenes, local profiles and per-observation diagnostics
+match the old code bit for bit, for bright (768 steps) and faint (512 steps)
+units. Initial replay 0.0; invariant-audit summary change 2.8e-14 and
+log-kernel change 0.0, both as before. At g = (0.02, 0) (job 17129232) old and
+new code are also bit-for-bit equal. Test job 17129230: 389 passed, 1 skipped.
+
+**Speed, one process alone** (job 17129212, cProfile, seconds):
+
+| unit | setup | sampling | post | total |
+|---|---|---|---|---|
+| bright, old | 43.1 | 45.6 | 2.7 | 91.6 |
+| bright, new | 15.3 | 22.6 (2.0x) | 2.5 | 40.7 |
+| faint, old | 190.2 | 44.8 | 31.3 | 270 |
+| faint, new | 34.2 (5.6x) | 34.7 (1.3x) | 31.3 | 104 |
+
+Faint gains less in sampling because about 40% of its rows change each step,
+so `fill_b` still runs the trees on many stored states (about 20 of 35 s).
+
+**Speed under production crowding** (job 17129219, kng-cl-nv01, one A40,
+2 cores per process, bright unit, 384 steps; median seconds per step):
+
+| layout | old code | new code |
+|---|---|---|
+| 1 process | 0.0643 | 0.0343 |
+| 19 processes | 0.0983 | 0.0622 |
+| 19 processes + MPS | 0.0932 | 0.0427 |
+
+MPS is NVIDIA's multi-process service, which lets the processes share the GPU
+at the same time instead of taking turns. The old code barely gained from it
+(5%) because the trees on the CPU were the bottleneck; once they are gone,
+GPU sharing is, and MPS gives 1.46x. Together: about 2.3x per bright step at
+production crowding. MPS does not change any number: all 19 units of the
+new-code MPS run match the old-code no-MPS run bit for bit.
+
+To use MPS in a job, start it before the workers and stop it after:
+```
+export CUDA_MPS_PIPE_DIRECTORY=$TMPDIR/mps_pipe CUDA_MPS_LOG_DIRECTORY=$TMPDIR/mps_log
+mkdir -p $CUDA_MPS_PIPE_DIRECTORY $CUDA_MPS_LOG_DIRECTORY
+nvidia-cuda-mps-control -d
+... workers ...
+echo quit | nvidia-cuda-mps-control
+```
+
+**Not used:** the xgboost CUDA predictor is about 9x faster than CPU trees but
+not bit-for-bit equal to them (job 17129157). The earlier "CUDA failure"
+(WORKLOG, 9.1e-5 / 4.9e-4) was exactly this comparison of a CPU-b reference
+with GPU b, not a bug.
+
+**Where time goes now** (bright, one process): log-kernel about 6.7 s,
+the target prior's betaprime cdf about 4 s (real work), faint `fill_b` as
+above, and in faint post-processing the arviz diagnostics about 15 s.
+
+Receipts: `$DATA_DIR/sbsi/catalogue_prior/optimize_20261011/` (`profile.sh`,
+`profile_unit.py`, `compare.py`, `compare_all.sh`, `bench.sh`,
+`bench_all.sh`, `val_shear.sh`, frozen code copies `code_b1`, `code_lazy1`,
+`code_lazy2`, `runs/`, `logs/`); old-code profile job 17129137.
+
 ## 238-galaxy bias check: tempered vs untempered
 
 Question (diagnosis item 3): do stuck chains shift the shear score?
