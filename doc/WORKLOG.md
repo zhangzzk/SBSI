@@ -53,6 +53,15 @@ the selection chunks; expected sigma(m) about 0.8%; pass if m and c2 are within 
   initialisation because of twin row 823385 (measured radius 2791 px, outside the cuts); rerun without it
   (replay 0.0; rule.md addendum ~12:00). Twin co-moving array 17150029 (`p1m-wc-t`) queued after the original's
   and after that rerun.
+- 12:20: owner noted 4 GPUs would have been enough; at that point 10 GPUs were in use (4 RTX 2080 Ti, 3 cip A40
+  slices, 3 H100-class). The pending eleventh worker (w7) was cancelled; the rest released their GPUs at about
+  13:15 when the queue emptied. Original co-moving complete (5,276 units).
+- Twin faint_u2601 (H100) failed the invariant-cache audit (cached vs full log-kernel 1.27e-6 > 1e-6); a CPU rerun
+  failed the same audit at the same proposal (1.17e-6), so it is this unit's state, not a device. Tolerance
+  unchanged; rerun with its own seeds without `--reuse-invariant-work` (the default full-likelihood path) via
+  `job_galsbi_tempered_noreuse.sh` and `rerun_unit.sh` `JOB=...`, on one GPU: done (rule.md addendum ~13:20).
+- 13:33: twin sampling complete (8,082 units, 2 by rerun). `pair.sh pair_step.py comoving_circ` (job 17155372)
+  waits for the twin co-moving array.
 
 Next: twin plan once the twin exists; co-moving post-processing of the bright units; `pair_step.py`.
 
