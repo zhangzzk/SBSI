@@ -28,6 +28,18 @@ the selection chunks; expected sigma(m) about 0.8%; pass if m and c2 are within 
   p1m-w* GPU workers), so the total stays about 500 cores and CPU tasks drain as GPU workers start. First check:
   270 units started on 13 hosts, initial replay max error 0.0 on every host; CPU bright units at about 140-900 s
   per 1000 steps depending on the node (cip A40 about 26, met-cl-vis01 about 80); 40 units done, 0 failed.
+- Twin (same job): 1,000,086 selected galaxies, all 500 chunks replay the original with error 0.0; planned with
+  `make_pair_plan.py twin` (110,788 bright, 889,298 faint, 8,082 units, selection base 2027307001).
+- 05:00: w4 started on an H100 NVL (45 slots, GPU 87-95% busy, about 31 s per 1000 steps); five CPU tasks drained
+  as designed. 3,295 of 8,082 original units done; original selection replicas 0-3 done, twin replicas running.
+- Two failed units, handled per a rule.md addendum written before any result, with `rerun_unit.sh` (own seeds,
+  failed attempt moved to it0/failed_attempts/, claim kept so no worker re-claims it):
+  - bright_u2752: no finite starting state, caused by mock row 521886 (measured radius 1807 px, flux 1.1e6), outside
+    the radius < 100 px cut, as in the 500k study's unit 2292. Rerun without that row (replay 0.0).
+    `pair_step.py` now accepts a missing row only if it is outside the cuts, like `blind_step.py`.
+  - bright_u3144: initial replay 7.3e-6 > 1e-6 on CPU, identical on two different CPU machines, so the CPU path for
+    that unit, not a node fault. Tolerance unchanged; rerun on one inter GPU (`DEVICE=cuda`), replay 0.0.
+  - First `rerun_unit.sh` version stopped at its attempt count under `pipefail` before touching anything; fixed.
 
 Next: twin plan once the twin exists; co-moving post-processing of the bright units; `pair_step.py`.
 
