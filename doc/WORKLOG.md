@@ -1,5 +1,22 @@
 # Work log
 
+## 2026-10-12 — 1M rotated-twin paired mock: m = −3.2% ± 0.8%, the pre-declared test fails
+
+Details: [HYBRID_SAMPLING.md](HYBRID_SAMPLING.md#rotated-twin-paired-1m-mock-m--32--08-the-pre-declared-test-fails-2026-10-12).
+
+- Paired 2 × 1M one step from g = 0 (`pair_step.py comoving_circ`, job 17155372, 2.3 h):
+  g1 = 0.01936 ± 0.00016, g2 = +0.00037 ± 0.00018. Against the truth (0.02, 0): m = −3.2% ± 0.8% (−4.0σ),
+  c2 +2.06σ. The rule needed both within 2σ, so the test fails. The error matches the rule's prediction (0.00016).
+- Single sides: original m = −6.5% ± 2.2%, twin +0.0% ± 2.2% (anti-correlated; difference 1.6σ).
+- Inverse-variance mean with the 2 × 100k pair and the 500k mock (not pre-declared): m = −3.1% ± 0.7%,
+  χ² = 0.3 for 2 degrees of freedom. The earlier passes were consistent with a −3% bias, only too noisy.
+- Not retuned. Candidate causes, not yet tested: the single Newton step (slope/I = 0.98 ± 0.03 on the 100k
+  mock allows 3%) and finite-sample bias of the log-mean ratios.
+- Plot `SBSI/plots/pair1m_paired.png`. `plot_pair.py`'s save to SBSI/plots from the compute node did not appear;
+  the file was copied from the study dir.
+- Run: sampling 01:15–13:33, co-moving about 2.5 h per side, 23 units rerun with their own seeds (rule.md addenda;
+  entry below).
+
 ## 2026-10-12 — 1M rotated-twin paired mock launched (`galsbi_pair1m_20261012`)
 
 The owner asked for the 1M paired mock with `--no-chain`, on about 500 cores "with enough GPUs" (AGENTS.md rule

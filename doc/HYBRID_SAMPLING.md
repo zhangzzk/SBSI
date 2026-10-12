@@ -1017,3 +1017,80 @@ Receipts (`$DATA_DIR/sbsi/catalogue_prior/galsbi_mock500k_20261006/`):
 - `make_500k_plan.py`, `launch_it0.sh`, `rerun_u2292.sh`, `units_rerun_u2292.txt`.
 - `it0/blind_step_comoving_circ.json`, `plot_m.py`.
 - Logs in `logs/` and `it0/logs/`; failed attempts in `it0/failed_attempts/`.
+
+### Rotated-twin paired 1M mock: m = −3.2% ± 0.8%, the pre-declared test fails (2026-10-12)
+
+**Question.** Does the 100k pair's recipe stay unbiased at 10× the galaxies, where its precision is about ±0.8%?
+The owner asked for it on about 500 cores "with enough GPUs", with `--no-chain`.
+
+**Rule** (`rule.md`, written before the mock existed):
+- Same recipe as the 2 × 100k pair: one Newton step from g = 0, co-moving bright ratios (`comoving_circ`), cuts
+  measured radius < 100 px and |e| < 0.99 on the data and in Z, `pair_step.py`.
+- Original 1M at (0.02, 0), seed 2027101201, plus its antithetic 90-degree rotated twin.
+- Selection: 4 × 800 chunks per side (10× the 100k pair).
+- Expected σ(g1) about 0.00016 (m ±0.8%). Pass: m and c2 both within 2σ of zero.
+
+**Run** (code 4a506ca: exact speed-ups and `--no-chain` over the 100k code).
+- 2 × 8,082 units (5,276 bright of 20–21 galaxies, 2,806 faint of 316–317 per side).
+- Sampling took about 12 h (01:15–13:33), on GPU workers plus CPU-only workers:
+  - GPUs: 4 RTX 2080 Ti, 3 cip A40 slices, and later 3 H100-class cards. The owner noted afterwards that 4 GPUs
+    would have been enough.
+  - CPU-only workers on `cluster` (`--device cpu`, same seeds and settings) filled the rest of the ~500-core
+    budget and gave their cores up as GPU workers or co-moving jobs started.
+- Selection: 17 s per chunk, both sides done by about 09:00.
+- Co-moving post-processing: about 2.5 h per side (32 tasks of 4 cores).
+- `pair_step.py`: 2.3 h.
+- Mock generation: about 40 min per side; all 500 twin chunks replay the original with error 0.0.
+
+**Failed units** (each handled by a `rule.md` addendum written before any result; every unit rerun with its own
+seeds, failed attempts kept in `it0/failed_attempts/`):
+- Two units stopped at initialisation, each because of one broken measurement outside the radius cut:
+  original row 521886 (1,807 px) and twin row 823385 (2,791 px), as in the 500k study. Both were rerun without
+  that row. `pair_step.py` now accepts a missing row only if it is outside the cuts, as `blind_step.py` does.
+- The CPU node th-cl-hua26 failed the initial replay check (errors 1.1e-6 to 1.2e-5 against a 1e-6 tolerance) on
+  9 units; no other node failed it. The node was removed. Its failed and interrupted units (18) were rerun
+  elsewhere with replay 0.0. One of them (bright_u3144) failed again on CPU on another machine, with the same
+  7.3e-6, and was rerun on a GPU (replay 0.0).
+- Twin faint_u2601 failed the invariant-cache audit (cached against full log-kernel 1.27e-6 on an H100; 1.17e-6
+  on CPU, at the same proposal). It was rerun without `--reuse-invariant-work`, the default full-likelihood
+  path.
+- No tolerance was changed.
+
+| one step from g = 0 | g1 | g2 | m |
+|---|---|---|---|
+| original 1M | 0.01870 ± 0.00045 | +0.00001 ± 0.00046 | −6.5% ± 2.2% |
+| rotated twin 1M | 0.02001 ± 0.00045 | +0.00072 ± 0.00046 | +0.0% ± 2.2% |
+| **paired 2 × 1M** | **0.01936 ± 0.00016** | **+0.00037 ± 0.00018** | **−3.2% ± 0.8%** |
+
+- **Error budget, paired g1:**
+  - stat 0.00012, chains 0.00009, selection 0.00007, total 0.00016, matching the rule's prediction;
+  - bootstrap over scenes 0.00015;
+  - 0.00029 if the galaxies were independent, so the pairing halves the error.
+- **Galaxies:** 995,015 original and 995,057 twin, in 1,010,119 scenes. 4,985 and 5,029 were dropped by the cuts,
+  including the one unsampled row on each side.
+- **Against the truth:**
+  - m is −4.0σ, so **the pre-declared test fails**;
+  - c2 is +2.06σ, just past the 2σ line.
+- **The two sides agree with each other.** Their m values are anti-correlated (ρ ≈ −0.74, from the paired and
+  single-side errors). The difference, 6.5% ± 4.1%, is 1.6σ.
+
+**Agreement with the earlier mocks** (inverse-variance mean of three independent mocks, not pre-declared):
+- m: 2 × 100k paired −2.0% ± 2.5%, 500k −4.1% ± 3.2%, 1M paired −3.2% ± 0.8% → **−3.1% ± 0.7%**
+  (χ² = 0.3 for 2 degrees of freedom).
+- c2: +0.00042 ± 0.00017.
+- So the earlier passes were not in tension with a bias of about −3%. They were too noisy to see it.
+
+**Not yet tested — candidate causes, none tested here:**
+- **The single Newton step.** It assumes the score falls linearly with slope equal to the information I. The
+  100k measurement of that slope, 0.98 ± 0.03 of I, allows a 3% shortfall. A second iteration sampled at the
+  one-step estimate would remove this.
+- **Finite-sample bias of the per-galaxy log-mean likelihood ratios.**
+
+Figure: `SBSI/plots/pair1m_paired.png`.
+
+Receipts (`$DATA_DIR/sbsi/catalogue_prior/galsbi_pair1m_20261012/`):
+- `rule.md` and its addenda; `prepare.sh`, `original/reference/`, `twin/reference/`.
+- `source_snapshot/` (4a506ca); `copy_scripts.py`, `make_pair_plan.py`, `worker.sh`, `launch.sh`.
+- `rerun_unit.sh`, `rerun_failed.sh`, `job_galsbi_tempered_noreuse.sh`.
+- `pair.sh`, `pair_step.py`, `pair_step_comoving_circ.json`, `plot_pair.py`.
+- Logs in `logs/` and `<side>/it0/logs/`; failed attempts in `<side>/it0/failed_attempts/`.

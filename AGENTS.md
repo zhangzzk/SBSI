@@ -100,6 +100,8 @@ All project documentation lives in `doc/`. Only this file, `CLAUDE.md`, and
   Its workers may use about 500 cores in total and as many GPUs as the
   per-user scheduler limits allow (`inter` 8, `cip` 3), superseding the
   four-GPU cap for this study. Settings and seeds stay as in its `rule.md`.
+  The study finished on 2026-10-12. The owner then noted that four GPUs would have been enough, so its
+  follow-ups keep to four GPUs unless the owner says otherwise.
 - On 2026-09-24 the owner explicitly authorized more GPUs for the F8
   simplification experiment, superseding its historical two-GPU limit. Its
   evaluation array permits six concurrent workers; the `cip` partition QoS
