@@ -45,6 +45,14 @@ the selection chunks; expected sigma(m) about 0.8%; pass if m and c2 are within 
   cancelled and replaced by one that avoids th-cl-hua nodes (17146852_0, th-cl-rome01n2); its 10 unfinished
   units were marked failed. `rerun_failed.sh original 17146081` reran all 18 on th-cl-rome nodes: replay 0.0 for
   all 18 (rule.md addendum ~07:50).
+- 09:50: original sampling complete (8,082 units, 20 by rerun); selection of both sides complete (4 x 800 chunks
+  each). w6 started (kng-cl-nv03). Co-moving post-processing of the 5,276 original bright units: array 17147361,
+  32 lists, 4 cores each, named `p1m-wc-o` so the CPU sampling tasks give it their cores (they drained to 0).
+  Its replay checks match the 500k study (kernel replay median 4e-4, max 3e-3; 500k: 3e-4, 2e-3).
+- 12:00: twin 6,410 of 8,082 units done, all bright units done except twin bright_u4341, which stopped at
+  initialisation because of twin row 823385 (measured radius 2791 px, outside the cuts); rerun without it
+  (replay 0.0; rule.md addendum ~12:00). Twin co-moving array 17150029 (`p1m-wc-t`) queued after the original's
+  and after that rerun.
 
 Next: twin plan once the twin exists; co-moving post-processing of the bright units; `pair_step.py`.
 
