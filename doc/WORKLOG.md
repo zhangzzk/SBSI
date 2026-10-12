@@ -1,5 +1,39 @@
 # Work log
 
+## 2026-10-12 (evening) — debugging the 1M pair's −3.2%: small tests
+
+The owner asked to debug the −3.2% ± 0.74% "carefully, maybe on smaller sets first". All scripts, rule files and
+outputs are in `$DATA_DIR/sbsi/catalogue_prior/galsbi_pair1m_20261012/debug/`. Truth is used throughout: this is
+a diagnosis after the pre-declared result, which stays as published.
+
+- Where the shortfall sits (`groups1m.py`, reproduces m = −3.22%): by measured magnitude, mag < 21 gives
+  −1.39% (±0.35%), 21–23 +0.11%, 23–25 −1.82% ± 0.58%, 25–26 −0.12% ± 0.21%. Splits by measured |e| are shown
+  but are not interpretable (see the toy below).
+- Cause candidate 1, the GalSBI shape prior: the red population's distortion prior, Beta(α = 1.23) times uniform
+  angle, has a 2-D density ∝ |e|^−0.77, an integrable spike at round shapes (blue ∝ |e|^−0.13). Toy
+  (`toy_spike.py`, exact likelihood, Möbius shear, antithetic twins): for the red prior one Newton step from g = 0
+  gives m = −36% ± 4% (noise 0.003), −12% ± 5% (0.01), −2.4% ± 3% (0.03), while the root of the score sum is
+  unbiased (|m| < 0.8%); the blue and smooth priors are fine. So a curved score makes one step fall short.
+- Cause candidate 2, hidden Monte-Carlo noise, **ruled out** (`rule_seedrerun.md`, written first): 80 bright + 16
+  faint random original units rerun at g = 0 with new seeds (`seedrerun.sh`, job 17159750, 3 GPUs, 25 min;
+  6,691 galaxies). Run-to-run score differences match the chain-half noise estimate: ratio 0.94 / 1.27 (g1 / g2,
+  mag < 21), 0.99 / 1.06 (21–23), 1.02 / 1.09 (≥ 23). Scaled to the 1M pair: m shift −0.16% ± 0.61% (rule:
+  a cause only if |m| > 0.5%). Faint galaxies are the least constrained: up to about −1.4% is not excluded at 2σ.
+- Score at the true shear (`rule_truth.md`): 252 bright round galaxies (mag < 21, measured |e| < 0.02) and 252
+  bright elongated controls resampled at (0.02, 0) (`truth.sh`, job 17159853, 19 min). Round group: score sum
+  −5,740 ± 470, control +79 ± 73. The rule's decision "biased score" is **withdrawn** (addendum): a group chosen
+  by measured shape need not sum to zero even for an exact likelihood. `toy_group.py` (job 17159977) confirms it:
+  the toy's exact-likelihood |e| < 0.02 group gives S_T/(I_0 g) = −0.8 to −19 (1M: −1.18) and one-step ratios
+  0.29–0.77 (1M: 0.36), while the toy's full sample sums to 0.000 ± 0.02 at the truth.
+- Valid replacement running: all 34,338 mag < 21 galaxies of both sides at the truth (group M, 1,692 more units,
+  job 17159970, 4 GPUs, about 9 h). Pre-declared: zero sum (|S_T| < 2σ, > −1.6e3) means the bright part is a
+  curved score (iterate the Newton step); −3.2e3 means a biased score.
+- Side finding: the selection term dlogZ/dg1 = 0.00055 ± 0.00036 per galaxy shifts m by −0.48% ± 0.31%. At g = 0
+  it should vanish by symmetry for a population with no preferred direction (not verified for the measurement
+  model), so it adds noise, not signal. Not changed.
+- Next: the M result; the faint (23–25) part needs a different test, since a valid score-at-truth test there would
+  resample about half the mock.
+
 ## 2026-10-12 — 1M rotated-twin paired mock: m = −3.2% ± 0.8%, the pre-declared test fails
 
 Details: [HYBRID_SAMPLING.md](HYBRID_SAMPLING.md#rotated-twin-paired-1m-mock-m--32--08-the-pre-declared-test-fails-2026-10-12).
