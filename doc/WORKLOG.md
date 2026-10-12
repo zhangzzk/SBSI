@@ -40,6 +40,11 @@ the selection chunks; expected sigma(m) about 0.8%; pass if m and c2 are within 
   - bright_u3144: initial replay 7.3e-6 > 1e-6 on CPU, identical on two different CPU machines, so the CPU path for
     that unit, not a node fault. Tolerance unchanged; rerun on one inter GPU (`DEVICE=cuda`), replay 0.0.
   - First `rerun_unit.sh` version stopped at its attempt count under `pipefail` before touching anything; fixed.
+- 07:40: 6,089 original units done; w5 started (second H100 worker on usm-cl-nv01). 8 more units failed the initial
+  replay (1.07e-6 to 1.21e-5), all on the CPU task on th-cl-hua26; no other node failed it. That task was
+  cancelled and replaced by one that avoids th-cl-hua nodes (17146852_0, th-cl-rome01n2); its 10 unfinished
+  units were marked failed. `rerun_failed.sh original 17146081` reran all 18 on th-cl-rome nodes: replay 0.0 for
+  all 18 (rule.md addendum ~07:50).
 
 Next: twin plan once the twin exists; co-moving post-processing of the bright units; `pair_step.py`.
 
