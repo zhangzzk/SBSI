@@ -1,5 +1,35 @@
 # Work log
 
+## 2026-10-13 (late afternoon) — bright-only second Newton step launched (GPU emulator, 30 one-core slots)
+
+Owner chose the GPU emulator with 30 one-core slots per GPU. Files in `.../galsbi_pair1m_20261012/debug/`.
+
+- Code (27d244f): `scripts/check_galsbi_local_sampler.py` loads the disk-response emulator on `--device` instead of
+  always on the CPU (GPU on cuda). GPU and CPU trees agree to float32 rounding (≤ 1.2e-7), not bitwise, so runs
+  with this commit do not replay older cuda runs bit for bit. New read-only snapshot `debug/step2/source_snapshot`
+  (`git archive 27d244f`; manifest over all files except `SHA256SUMS`, the recipe that reproduces the 1M snapshot's
+  manifest exactly); it differs from that snapshot only in docs and the sampler line.
+- Rule written first: `rule_step2.md`. The mag < 21 galaxies (`truth_units.txt`, 34,338 galaxies, 1,720 units)
+  are resampled at the one-step estimate (0.01936, 0.00037) with the production bright command, seeds
+  2027807001 + k and bank 2032807001 + k. Their actual score there replaces their straight-line prediction
+  from g = 0; every other galaxy keeps its it0 score: g2 = I⁻¹ Σ t, fixed it0 information, same errors as
+  `pair_step.py`, same 2σ test. Expected beforehand: m ≈ −1.8% ± 0.8% if the bright shortfall is one-step
+  curvature, so the faint part could still fail.
+- Launcher `step2.sh` (truth.sh with one-core slots, cores − 2 = 30 per 32-core job; comoving with 1 thread);
+  analysis `step2.py` (refuses until all units are done; with a run dir argument it is a code test only);
+  progress `step2_status.py`; `step2_reset.py` releases a dead job's units (moved to `step2/failed_attempts/`).
+- Launch: array 17178786 (4 × 1 GPU, inter). Task 0 landed on met-cl-vis02 (Quadro P5000): every slot past the
+  ~16th failed with "CUDA-capable device(s) is/are busy or unavailable". Pre-Volta GPUs take at most 16 MPS
+  clients, which the truth run's 15 slots fit under. Cancelled after ~3 min, 156 units released, node excluded in
+  `step2.sh`, replacement job 17178859 (th-cl-nv02, V100). The others run on met-cl-vis01 (2080 Ti, ×2) and
+  th-cl-nv01 (V100).
+- First units: 932–989 s per 20-galaxy unit on one core (truth run: ~1,100 s on two cores), i.e. ~2× per GPU;
+  ~340 units/h on three GPUs, so about 4–5 h for all 1,720 units.
+- Code test of `step2.py` on the truth run (job 17178893, ~45 min CPU, mostly the bootstrap): reproduces the it0
+  paired one step to 2e-16 and `truth_result_M.txt`; a step from samples at the truth would give m = −1.83% ± 0.81%
+  (code check only). Note: the 1M one-step total error is ±0.81% (±0.74% was stat + chains without selection).
+- Next: when all units are done, `step2.py` (CPU job), then report m against the pre-declared test.
+
 ## 2026-10-13 (afternoon) — resource audit of the last bright run and speed benchmark for the bright second step
 
 Owner: run the second Newton step on bright galaxies only; first check resource use and speed. Files in
