@@ -18,6 +18,12 @@ bright settings (`truth.sh`, job 17159970, 4 GPUs, 1,720 units, ~9 h, none faile
   short at noise 0.03–0.3 (−3% to −19%), blue does not (−0.2% to +2%), but the toy's own score at the truth is off
   by up to 0.10 I g at noise 0.3, so it is qualitative only. The faint (23–25) −1.8% ± 0.6% is not yet tested on
   the mock.
+- Straight or curved? (`localslope.py`, owner questioned the curvature reading). Relative to I_0: secant 0.847 ±
+  0.041; local slope −d²logL/dg² at g = 0 0.74 ± 0.10, at the truth 1.88 ± 0.40 (30% from 5 galaxies);
+  outer-product information at the truth minus at 0: +0.17 ± 0.05. So the slope and information do change between
+  0 and 0.02 (about 3σ), but the pieces are noisy and not fully consistent with a smooth bend (a linearly changing
+  slope would give a secant near 1.3). Stated as: the one-step formula's assumptions fail for these bright
+  galaxies; "curved" is the likely reading, not proven.
 - Next (owner decision; large): a second Newton iteration of the 1M pair at the one-step estimate
   (0.01936, 0.00037), which the curved-score finding predicts removes at least the bright part. No retuning.
 
