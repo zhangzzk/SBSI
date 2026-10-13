@@ -1,5 +1,26 @@
 # Work log
 
+## 2026-10-13 — 1M pair debug: bright scores are right at the truth; one Newton step is the problem
+
+Valid test of `rule_truth.md` (addendum, group M), study dir `.../galsbi_pair1m_20261012/debug/`:
+all 34,338 galaxies with measured mag < 21 of both sides resampled at the true shear (0.02, 0) with the production
+bright settings (`truth.sh`, job 17159970, 4 GPUs, 1,720 units, ~9 h, none failed; `truth_result_M.txt`).
+
+- Score sum at the truth S_T = −8 ± 462 (scene-paired; ±1,113 unpaired); original +8 ± 769, twin −16 ± 804.
+  The same galaxies at g = 0 give S_0/(I_0 g) = 0.847 and a secant slope (S_0 − S_T)/0.02 = 0.847 ± 0.049 of I_0.
+- Pre-declared decision: **(a) curved score** — the one step from g = 0 falls short, the score is zero at the truth.
+  So the bright share of the shortfall (−1.39% of m) is the single Newton step, not a biased likelihood or sampler.
+  Consistent with the red prior's spike at round shapes (toy, entry below).
+- Interim reads during the run were misleading and are not results: an incomplete M over-weights the R/C galaxies
+  chosen by measured |e|. `truth.py` now warns when M is incomplete. A shape-blind contiguous range (9,775
+  original galaxies) gave +620 ± 573 at the time, consistent with the final result.
+- Faint toy (`toy_faint.py`, job 17160179, |e| < 0.99 cut normalized exactly): the red prior also makes one step
+  short at noise 0.03–0.3 (−3% to −19%), blue does not (−0.2% to +2%), but the toy's own score at the truth is off
+  by up to 0.10 I g at noise 0.3, so it is qualitative only. The faint (23–25) −1.8% ± 0.6% is not yet tested on
+  the mock.
+- Next (owner decision; large): a second Newton iteration of the 1M pair at the one-step estimate
+  (0.01936, 0.00037), which the curved-score finding predicts removes at least the bright part. No retuning.
+
 ## 2026-10-12 (evening) — debugging the 1M pair's −3.2%: small tests
 
 The owner asked to debug the −3.2% ± 0.74% "carefully, maybe on smaller sets first". All scripts, rule files and
