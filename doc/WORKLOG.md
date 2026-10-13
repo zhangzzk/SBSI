@@ -1,5 +1,19 @@
 # Work log
 
+## 2026-10-13 (night) — speed benchmark for a faint second step
+
+Owner asked how long a faint second step would take on 4 GPUs. `debug/bench/bench_faint.sh` (job 17184055,
+met-cl-vis01 / 2080 Ti, 30 one-core slots, step-2 snapshot 27d244f, the first 30 original faint units of 317
+galaxies, 1024 steps / 256 warm-up; no science output) and `bench_faint_report.py`:
+
+- Shear 0 (as the first step): 418 s for the 1024-step run; projected full unit (4096 steps) 1,158 s.
+- Shear (0.01936, 0.00037): 550 s; projected full unit 1,498 s (1.29× slower: the disk emulator now runs every
+  step and set-up doubles, 122 → 245 s). GPU busy 62%.
+- All 5,612 faint units (both sides) on 4 such GPUs: ~19.5 h (balanced load, no tail). First-step faint units
+  ran ~2× faster per unit on H100/H200/A40 than on the 2080 Ti, so faster cards could give roughly 10–15 h
+  (not benchmarked). Mag 21–23 galaxies (tempered bright units) are not included; at the bright step-2 rate they
+  would add ~25 h on 4 GPUs.
+
 ## 2026-10-13 (evening) — 1M pair, bright-only second Newton step: m = −1.68% ± 0.82%, still fails
 
 Result of `rule_step2.md` (`step2.py`, CPU job 17182222, 24 min; `debug/step2_result.txt` / `.json`).
