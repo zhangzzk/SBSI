@@ -1,5 +1,25 @@
 # Work log
 
+## 2026-10-13 (evening) — 1M pair, bright-only second Newton step: m = −1.68% ± 0.82%, still fails
+
+Result of `rule_step2.md` (`step2.py`, CPU job 17182222, 24 min; `debug/step2_result.txt` / `.json`).
+
+- Run: all 1,720 units done, 0 failed; the four GPU jobs (17178786_1–3, 17178859) took 4.9–5.0 h each (truth run
+  with the old layout: 9.0 h). Chains kept: `debug/step2/` is 71 GB.
+- Paired, all 1,990,072 galaxies (34,338 resampled at g1 = (0.01936, 0.00037)): g = (0.019664 ± 0.000163,
+  0.000415 ± 0.000178) → **m = −1.68% ± 0.82%, c2 = +0.000415 ± 0.000178. Pre-declared test: FAIL** (|m| 2.05σ,
+  |c2| 2.33σ). One step was m = −3.22% ± 0.81%, c2 = +0.000370 ± 0.000178. The step moved m by +1.54%, close to
+  the expected +1.4% (bright mag < 21 deficit) and to the code test from samples at the truth (−1.83%).
+- Bright galaxies at g1: summed g1 score S_B(g1) = +1,002 ± 1,105 (zero within 1σ; the straight line from g = 0
+  predicted −2,531). Secant slope / I_B = 0.825 (original 0.931, twin 0.720). So the bright part has converged:
+  a third step would move g1 by about S_B(g1)/I = 0.00009 ± 0.0001, i.e. ≤ 0.5% ± 0.5% of m.
+- Not applied (rule): the bright selection-curvature correction would shift g1 by −0.000022 ± 0.000022
+  (−0.11% ± 0.11% of m).
+- Per side (no test): original m = −5.89% ± 2.25%, twin +2.51% ± 2.26% (one step −6.49% / +0.04%).
+- Reading: what remains is about the faint 23–25 share found before (−1.82% ± 0.56%), which keeps its g = 0
+  straight-line value here. c2 also sits at 2.3σ (2.1σ after one step). Neither is explained by the bright
+  galaxies. Next, if wanted: a second step for the faint galaxies too (the ±0.011 slope test of the faint dig).
+
 ## 2026-10-13 (late afternoon) — bright-only second Newton step launched (GPU emulator, 30 one-core slots)
 
 Owner chose the GPU emulator with 30 one-core slots per GPU. Files in `.../galsbi_pair1m_20261012/debug/`.
