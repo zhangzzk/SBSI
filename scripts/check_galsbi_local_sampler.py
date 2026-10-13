@@ -262,8 +262,10 @@ def main():
     detector = load_detection_classifier(V39_LIKE, device=args.device)
     # Tree prediction parallelizes over rows only, so results do not depend on threads.
     # Raising torch's OpenMP limit is what lets xgboost use them under OMP_NUM_THREADS=1.
+    # On cuda the emulator runs on the GPU too (2026-10-13 benchmark: it was ~2/3 of a step's CPU time);
+    # GPU and CPU trees agree to float32 rounding (<= 1.2e-7), not bitwise.
     torch.set_num_threads(len(os.sched_getaffinity(0)))
-    model = load_disk_response(V39_LIKE, device='cpu', nthread=len(os.sched_getaffinity(0)))
+    model = load_disk_response(V39_LIKE, device=args.device, nthread=len(os.sched_getaffinity(0)))
     likelihood = SummaryLikelihood(flow, detector)
     galaxy, cosmo, _ = build_prior()
     prior = GalSBIScenePrior(galaxy)
