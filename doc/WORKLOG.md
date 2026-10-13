@@ -1,5 +1,42 @@
 # Work log
 
+## 2026-10-13 (late night) — faint 23–25 shortfall: not the single step; closure test at g = 0.05 launched
+
+Owner: "look for the faint bias then, skip the second step", then "dig into this autonomously". Files in
+`.../galsbi_pair1m_20261012/debug/` unless stated.
+
+- BFD reading (Bernstein & Armstrong 2014; Bernstein et al. 2016): one Newton step is enough there because the
+  error is α g² with α ≈ 0.5–2. Our mag < 21 galaxies break that (α ≈ −80; fixed by the bright second step), but
+  for the faint ones the question was whether their shape prior bends the step.
+- Exact toy (`rule_toyexact.md` written first; `toy_exact.py`, job 17184710, ~25 min; `toy_exact.json`): GalSBI
+  red/blue |e| priors, Möbius shear, Gaussian noise 0.05–0.45, measured |e| < 0.99 cut, rotated twins, all
+  integrals by fixed quadrature (no random integration; converged to < 4e-13). The old `toy_faint.py` is invalid at
+  noise ≥ 0.1 (its random selection term is off by up to 8σ). Secant slope / I at noise 0.05/0.1/0.2/0.3/0.45:
+  red 1.004/1.012/1.021/1.003/0.999 (± 0.003–0.012), blue 0.995–1.001 (± 0.002–0.003). Validity 2 failed in one of
+  10 cases (blue 0.05: score at the truth +0.0051 ± 0.0020, just over the 0.005 threshold); reported, not retuned.
+- Red share of the GalSBI prior by true r magnitude (`redfrac.py`, 16M draws): 20–20.5 0.46, 23–24 ≈ 0.11,
+  24–25 ≈ 0.065, 25–26 ≈ 0.04. Toy prediction for the mock's 23–25 one-step ratio ≈ 1.00; observed
+  0.966 ± 0.010. So the faint shortfall is not the single step (in the toy's terms): a biased score, or chance.
+- Same pattern in earlier, independent mocks (`oldmocks.py`, truth used, diagnosis only): 2 × 100k rotated-twin
+  pair 23–25 one-step ratio 0.961, −2.13% ± 1.82% of its m (1M: −1.82% ± 0.56%; combined ≈ −1.85% ± 0.54%).
+  Bins 0–21 0.969, 21–23 1.004, 23–24 1.016, 24–25 0.912, 25–26 1.018. Unpaired 500k: see below.
+- Already ruled out (earlier entries): averaging over 1/2/4 chains, hidden chain noise in I (seed rerun:
+  −0.16% ± 0.61%), a pull from the starting point (time split), selection-term noise (0.33% of m, in the error).
+- Closure test at a larger shear, `.../galsbi_faintg05_20261013/` (`rule.md` written before the mock existed). At
+  0.02 the faint shortfall is 0.004 per galaxy against a noise of 1.2, so testing the score at the truth would need
+  ~1M faint galaxies. If the root sits at c × truth, the signal grows with the shear, so at 0.05 about 1/6 suffices.
+  - Code (60bf987): `scripts/prepare_galsbi_population.py --shear g1 g2` sets the true shear (default unchanged: the
+    parent's). Snapshot `source_snapshot/` = `git archive 60bf987` with the usual manifest.
+  - Mock (`prepare.sh`, job 17185272, met-cl-vis01, 9 min): 160,000 original galaxies at (0.05, 0), seed
+    2028101301, antithetic twin 160,067 (replay 0.0).
+  - `make_units.py`: every 23 ≤ mag < 25 galaxy of both sides, 82,770 + 82,782 in 524 units; plan at the truth,
+    selection limits 23/24/25/25.8 so each band has its own Z (8 replicas × 400 chunks, seed base 2028307001).
+  - `worker.sh` (array 17185329, 4 GPUs on inter, 30 one-core slots + 2 six-core selection streams per GPU),
+    production faint command at `--shear 0.05 0`, seeds 2028207001 + k / 2033207001 + k.
+  - `closure.py`: m_band = (I⁻¹ S)₁ / 0.05 for 23–25, errors as `pair_step.py` (scenes, chains, selection).
+    Decision fixed in `rule.md`: (a) biased score if m_band < −2σ and within 2σ of −3.4%; (b) score fine if
+    |m_band| ≤ 2σ and m_band > −3.4% + 2σ; (c) otherwise report as is.
+
 ## 2026-10-13 (night) — speed benchmark for a faint second step
 
 Owner asked how long a faint second step would take on 4 GPUs. `debug/bench/bench_faint.sh` (job 17184055,
