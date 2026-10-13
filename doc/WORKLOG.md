@@ -1,5 +1,25 @@
 # Work log
 
+## 2026-10-14 (night) — faint closure test: the faint score is biased at the truth (−6.6% ± 1.1%); long-chain test launched
+
+Result of `.../galsbi_faintg05_20261013/rule.md` (`closure.py`, `closure_result.txt` / `.json`).
+
+- Run: all 524 units and 8 × 400 selection chunks done, nothing failed. Array 17185329 (task 3 started late and
+  computed selection replicas 6–7). Sampling took 1.6 h, selection ran until 00:45.
+- 23–25, 165,351 galaxies at the truth (0.05, 0): **m_band = (I⁻¹S)₁/g = −6.61% ± 1.09%** (stat 0.74, chains 0.77,
+  selection 0.24); S/(I g) = −0.066; g2 offset −0.58% ± 1.26% of g. I/galaxy 6.24, chain E/galaxy 0.95.
+  23–24: −7.95% ± 1.79%; 24–25: −5.34% ± 1.37%. Band selection term dlogZ/dg1 = +0.0073 ± 0.0007.
+- Pre-declared decision: **(c)**. It is 6σ from 0 (so not (b)), but 2.9σ beyond the −3.4% of the 1M one-step (so
+  not (a)). Plain reading: the faint score is biased (its root is off), more strongly at 0.05 than the 0.02 shortfall.
+  The single step is not the cause.
+- Addendum diagnostic (written before results): early half of the kept draws −8.18%, late half −4.93%,
+  D = +3.52% ± 1.39% (23–24 +4.6 ± 2.5, 24–25 +2.5 ± 1.3). The bias shrinks along the chain, which points to
+  chains that start at the most likely state (`--initialization measurement`) and do not move far enough.
+- Follow-up `rule_long.md` (written before the run): every second unit (262, ~82,700 galaxies) again at the truth
+  with 4× longer chains (16384 steps / 4096 warm-up / stride 16, same 768 kept draws), same starting points (bank
+  seed unchanged), new sampler seed 2028407001 + k; `long.sh` (array 17185664, 4 GPUs), `long.py` (dM = long −
+  short on the same galaxies; decision (a) dM > 2σ, (b) dM + 2σ < 3%, (c) otherwise).
+
 ## 2026-10-13 (late night) — faint 23–25 shortfall: not the single step; closure test at g = 0.05 launched
 
 Owner: "look for the faint bias then, skip the second step", then "dig into this autonomously". Files in
