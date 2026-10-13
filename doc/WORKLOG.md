@@ -18,8 +18,12 @@ Owner: "look for the faint bias then, skip the second step", then "dig into this
   24–25 ≈ 0.065, 25–26 ≈ 0.04. Toy prediction for the mock's 23–25 one-step ratio ≈ 1.00; observed
   0.966 ± 0.010. So the faint shortfall is not the single step (in the toy's terms): a biased score, or chance.
 - Same pattern in earlier, independent mocks (`oldmocks.py`, truth used, diagnosis only): 2 × 100k rotated-twin
-  pair 23–25 one-step ratio 0.961, −2.13% ± 1.82% of its m (1M: −1.82% ± 0.56%; combined ≈ −1.85% ± 0.54%).
-  Bins 0–21 0.969, 21–23 1.004, 23–24 1.016, 24–25 0.912, 25–26 1.018. Unpaired 500k: see below.
+  pair 23–25 one-step ratio 0.961, −2.13% ± 1.82% of its m (1M: −1.82% ± 0.56%).
+  Bins 0–21 0.969, 21–23 1.004, 23–24 1.016, 24–25 0.912, 25–26 1.018. Unpaired 500k (job 17185186; `side_cut()`
+  accepts its one unsampled row 431089, which is outside the radius cut; reproduces m = −4.09%): 23–25 ratio 0.906,
+  −5.11% ± 2.32% of its m; bins 0–21 1.031, 21–23 1.041, 23–24 0.962, 24–25 0.855, 25–26 0.990. Three independent
+  mocks, inverse-variance mean of the 23–25 share: −2.0% ± 0.5% of m (about 4σ); 24–25 is the shortest bin in all
+  three (0.963, 0.912, 0.855).
 - Already ruled out (earlier entries): averaging over 1/2/4 chains, hidden chain noise in I (seed rerun:
   −0.16% ± 0.61%), a pull from the starting point (time split), selection-term noise (0.33% of m, in the error).
 - Closure test at a larger shear, `.../galsbi_faintg05_20261013/` (`rule.md` written before the mock existed). At
