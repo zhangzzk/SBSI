@@ -1,5 +1,39 @@
 # Work log
 
+## 2026-10-13 (later) — 1M pair debug: the faint (mag 23–25) shortfall, without a correction step
+
+Owner asked to dig into the faint share (−1.82% ± 0.58% of m) before any second Newton step. Light scripts unless
+noted, all in `.../galsbi_pair1m_20261012/debug/`; the published result is unchanged.
+
+- Error bars hold: a leave-one-chunk-out jackknife over the 500 generation chunks gives the same errors as the
+  scene pairing (23–25: ±0.56% vs ±0.57%; total ±0.73% vs ±0.74%). The faint shortfall is a real 3σ.
+- Finite-sample (averaging) bias ruled out (`chaincount.py` → `chaincount_result.txt`): the same estimator built
+  from 1, 2 or 4 chains gives 23–25 deficits −1.85 / −1.92 / −1.82%; 2-vs-4-chain difference −0.09% ± 0.06%,
+  1/n extrapolation −1.73%. All other bins also unchanged (bright < 21: −1.40 / −1.37 / −1.39%).
+- Starting point (`rule_timesplit.md` written first; `timesplit_extract.py`/`timesplit.sh`, CPU job 17175379,
+  3 min; `timesplit.py` → `timesplit_result.txt`): early vs late half of every faint chain's kept draws.
+  23–25: early −2.00%, late −1.63%, D = +0.37% ± 0.79% → pre-declared **(b) no sign of a start pull**, but weak
+  (2σ bound 1.95%, as large as the shortfall). Per bin: 24–25 D = +0.87% ± 0.37%, 23–24 −0.50% ± 0.69%,
+  25–26 +0.08% ± 0.17%; not interpreted (bins not pre-declared, opposite signs).
+- Slope-vs-information identity (`faint_local.py` → `faint_local_result.txt`) is unusable for faint: the
+  noise-corrected local slope / information falls from 0.96 (25–26) to 0.04 (23.0–23.25) in step with the chain
+  noise (E/I 0.02 → 0.47), and disagrees with the one-step ratio there (1.007 ± 0.051). The selection curvature
+  d²logZ/dg² is also only known to ±0.37 per galaxy (orig 0.60 ± 0.52, twin 0.14 ± 0.54).
+- Selection term: dlogZ/dg1 = 0.00062 ± 0.00054 (orig) / 0.00047 ± 0.00055 (twin), consistent with 0; it moves the
+  faint share by −0.25% of m. dlogZ/dg2 is clearly nonzero on both sides (0.0037 ± 0.0005, 0.0049 ± 0.0005), so the
+  selection is not round in g2 (PSF or detection); harmless for m (g2 truth 0), not followed up.
+- Mag 23.0–23.25 (plain MH, no tempering) has chains stuck in different modes (one of four chains at ±0.15 log
+  ratio, chain noise up to ~600), like the bright two-mode trap; that slice is not short (one-step 1.007 ± 0.051).
+- 100k blind per-bin slopes (23–24 1.09 ± 0.08, 24–25 0.92 ± 0.04, 25–26 1.00 ± 0.03) predict a faint deficit of
+  +0.1% ± 2.4%: too imprecise to separate "slope below the information" from "biased score".
+- Faint per-draw ratios hold the intrinsic shapes fixed (`profile_shapes`), so the red prior's spike enters only
+  through the posterior, not the ratios themselves.
+- Not possible here: a red/blue split (the mock stores measured columns only, no truth type).
+- Left: a slope below the information (step problem, fixed by iterating), a real faint score bias, or chance. Only
+  scores at a second shear separate them: all faint units at 0.0194 measure the faint slope/I to about ±0.011
+  (shape noise cancels), against the one-step ratio 0.967 ± 0.010. This is the faint part of a correction step:
+  owner decision.
+
 ## 2026-10-13 — 1M pair debug: bright scores are right at the truth; one Newton step is the problem
 
 Valid test of `rule_truth.md` (addendum, group M), study dir `.../galsbi_pair1m_20261012/debug/`:
