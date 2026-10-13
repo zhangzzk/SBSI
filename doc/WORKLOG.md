@@ -1,5 +1,31 @@
 # Work log
 
+## 2026-10-13 (afternoon) — resource audit of the last bright run and speed benchmark for the bright second step
+
+Owner: run the second Newton step on bright galaxies only; first check resource use and speed. Files in
+`.../galsbi_pair1m_20261012/debug/bench/`; no science output, no code change.
+
+- Audit of the truth run (job 17159970, 1,720 units of 20 mag < 21 galaxies, 4 GPUs × 32 cores, 15 two-core
+  slots each, 9.0 h): slots busy 98–99%, end tail ~15 min, unit time 92% sampling / 5% comoving / 3% start-up,
+  CPUs 64–68% busy (ceiling ~94%). Median sampling per unit was the same on P5000, 2080 Ti and V100
+  (989–1,117 s), so the GPUs were not the limit. Production step rate on the 2080 Ti: 0.268 s/step for the first
+  256 steps, then 0.109 (warm-up) and 0.111 (sampling).
+- Profile (`profile_wrap.py`, one unit alone): the disk-response emulator (xgboost `inplace_predict` on the CPU,
+  ~16,000 neighbour pairs per call, ~46 ms) is called about once per step and takes ~2/3 of a step's CPU time;
+  Python start-up from the project disk costs ~40 s per unit.
+- Benchmarks (`bench.sh` job 17178399, `bench2.sh` job 17178664, both on met-cl-vis01 / 2080 Ti, 1 GPU, 1024 steps,
+  mag < 21 galaxies at shear 0.02; `bench_report.py` projects a full 8192-step unit). Galaxies/h per GPU vs the
+  production layout (1,193; reproduced to <1% by the repeat): 30 one-core slots 1.37×; 30 two-core slots 1.46×;
+  40 galaxies per unit 1.17×; emulator on the GPU (`gpu_wrap.py`, bench only) 1.37× with the production layout,
+  1.87× with 30 one-core slots on the same 30 cores, 2.19× with 45 one-core slots. GPU-vs-CPU emulator
+  predictions differ by at most 1.2e-7 (values ~0.02, max 1.9; 33 checked calls), i.e. float32 rounding, not
+  bitwise. GPU memory ~220 MB per slot.
+- Projection for the bright-only second step (1,720 units like the truth run, 4 GPUs): ~9 h now; ~6.6 h with
+  one-core slots only (exact, launcher change); ~4.8 h with the GPU emulator and 30 one-core slots (sampler change
+  `device='cpu'` → the existing `--device`, not bitwise); ~4.1 h with 45 slots (needs ~48 cores per GPU). Only the
+  2080 Ti was benchmarked; with the GPU busier, GPU type may now matter.
+- Next: owner chooses the variant, then the bright-only second step at (0.01936, 0.00037).
+
 ## 2026-10-13 (later) — 1M pair debug: the faint (mag 23–25) shortfall, without a correction step
 
 Owner asked to dig into the faint share (−1.82% ± 0.58% of m) before any second Newton step. Light scripts unless
