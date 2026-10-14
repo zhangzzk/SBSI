@@ -1,5 +1,43 @@
 # Work log
 
+## 2026-10-14 (afternoon) — sampler memory fix; likelihood-weighted starts make 4096-step faint chains match 4× longer ones
+
+Owner: "fix the memory issue. and then we should try to improve the sampling from beginning (to see if shorter
+chains can deliver good convergence). note: occam's razor." Study dir `.../galsbi_faintg05_20261013/`
+(`rule_draw.md`, `draw.sh`, `draw.py`, `draw_result.txt` / `.json`, check job in `memtest/`).
+
+- Code (400ef6a, `scripts/check_galsbi_local_sampler.py`):
+  - Memory: with `--no-chain` the per-step state history (trace, counts, types, log-prior, summaries, kernels) is
+    now kept only at the profile draws (after warm-up, every `--profile-stride` steps) instead of every step.
+    Protocol field `diagnostic_draws` says which. Acceptance/move counters stay full.
+  - `--initialization prior-draw`: same per-chain prior bank as `prior-bank`, but the start is drawn with probability
+    proportional to the likelihood instead of taking the best bank state (importance resampling, seed stream
+    `[seeds, 992]`). `initialization.json` records each chain's effective number of bank draws. Nothing else changed.
+- Check (job 17188270, unit original_u0000, 2048 steps, measurement start): old code (60bf987 snapshot) vs new code,
+  same arguments: **all 1260 profile arrays bitwise identical**; peak memory 2.90 GB → 2.11 GB (the saving grows
+  with chain length; the 16384-step run had reached ~4–5 GB per process). `prior-draw` run: start replay error 0.0.
+- Start test (pre-declared `rule_draw.md`; snapshot `snapshot_400ef6a`; arrays 17188290 and 17188292, three GPUs
+  at a time, pending tasks moved to `inter,cip`; 262 + 262 units, none failed): same 82,677 faint (23–25, in cuts)
+  galaxies at the truth (0.05, 0) as the long-chain test.
+
+  | 23–25 | m_band | vs production 4096 (D_short) | vs long 16384 (D_long) | late − early (D_el) |
+  |---|---|---|---|---|
+  | production, best start, 4096 | −6.12% ± 1.70% | | | |
+  | long, best start, 16384 | −2.06% ± 1.49% | | | |
+  | **drawn start, 4096** | **−2.42% ± 1.95%** | +3.96 ± 1.66 | −0.16 ± 1.39 | +0.11 ± 2.12 |
+  | drawn start, 2048 | −4.70% ± 2.17% | +2.19 ± 1.80 | −1.94 ± 1.56 | +3.15 ± 2.34 |
+
+  Decisions: **draw4096 (a)**, drawn starts work at 4096 steps (same answer as 4× longer chains, no start memory
+  left inside the run); **draw2048 (b)**, no help (still remembers its start, D_el +3.2 ± 2.3).
+  Sub-bands (reported alongside, not part of the decision): 23–24 draw4096 −0.15% ± 3.44% (D_long +2.50 ± 2.59);
+  24–25 draw4096 −4.29% ± 2.24% (D_long −2.69 ± 1.19, 2.3σ); 24–25 draw2048 −7.85% ± 2.41% (D_long −5.87 ± 1.44).
+  Effective bank draws per chain: median 7.8, 35.5% of chains below 5.
+- Limitations: the long run and draw4096 are both ~1σ from zero, so this shows "matches 4× longer chains", not a
+  sub-percent faint result. With ~8 effective bank draws a drawn start is only an approximate posterior draw; the
+  faintest band at 2048 steps is pulled the other way. A bigger start bank was not tried (no retuning).
+- Next (owner decision): use `--initialization prior-draw` at 4096 steps for faint production (same cost as now),
+  e.g. rerun the faint part of the 1M pair; optionally test a larger start bank before going below 4096 steps.
+
 ## 2026-10-14 (early morning) — long-chain test: the faint bias is chain length (long − short +4.1% ± 1.3%)
 
 Result of `.../galsbi_faintg05_20261013/rule_long.md` (`long.py`, `long_result.txt` / `.json`).
