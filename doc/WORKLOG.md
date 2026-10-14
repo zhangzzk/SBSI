@@ -1,5 +1,29 @@
 # Work log
 
+## 2026-10-15 (night) — 1M pair with drawn faint starts: m = −0.43% ± 0.89% passes, c2 = +0.00070 ± 0.00019 fails
+
+Result of `.../galsbi_pair1m_20261012/debug/rule_faintdraw.md` (`step2_result_faintdraw.json`,
+`faintdraw_diff_result.txt`).
+
+- Run: all 5612 faint units (array 17190708, 4 GPUs, 14:30–23:10, none failed); `faintdraw.py` found exactly the
+  it0 faint galaxies on both sides (889,208 / 889,298). Estimate (`PERGAL=_faintdraw step2.py`, job 17195372).
+- Paired, bright second step + faint drawn starts: **m = −0.43% ± 0.89%** (was −1.68% ± 0.82%),
+  **c2 = +0.000702 ± 0.000193** (was +0.000415 ± 0.000178). Pre-declared test: **fails on c2 (3.6σ)**; m passes.
+  One step with the new faint values: m = −2.07% ± 0.88%, c2 = +0.000653 ± 0.000194. Per side (no test):
+  original −5.28% ± 2.35%, twin +4.40% ± 2.36%.
+- Why m moved (diagnostic written after the result, same galaxies, no selection term): the drawn start lowers
+  the faint score sum (−5.06% ± 0.72% of m at fixed information) and lowers the faint information estimate more
+  (I11 −8.6%: sum s² −4.9%, chain-noise correction +24%). Net +1.2% of m. Each faint band's own one-step g1 moves
+  toward 0.02: 23–24 0.01948 → 0.01999, 24–25 0.01938 → 0.01979, 25+ unchanged 0.02007. Consistent with the
+  faint-g05 finding (best-fit starts make short faint chains overconfident), but here the effect enters mostly
+  through the information's chain-noise correction, which is large for 23–24 (28% of sum s²).
+- c2: the faint g2 score sum moved by +0.000301 ± 0.000149 (23–24 +0.000187 ± 0.000130, 24–25
+  +0.000129 ± 0.000068). The old c2 already failed narrowly (2.3σ). Cause not investigated.
+- Code: `debug/faintdraw.py`, `debug/faintdraw_diff.py`, `step2.py` (`PERGAL`; default output unchanged apart from
+  its description text, rerun job 17190959).
+- Next (owner decision): look for the source of c2 (g2 offset) — e.g. the same truth-closure test at g = (0, 0.05)
+  or a g2 check in the existing faint-g05 runs; the m fix is in hand.
+
 ## 2026-10-14 (late afternoon) — 1M pair: faint part rerun with drawn starts launched
 
 Owner: "rerun the 1M pair faint part with drawn starts on 4 GPUs". Pre-declared
