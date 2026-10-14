@@ -1,5 +1,20 @@
 # Work log
 
+## 2026-10-14 (late afternoon) — 1M pair: faint part rerun with drawn starts launched
+
+Owner: "rerun the 1M pair faint part with drawn starts on 4 GPUs". Pre-declared
+`.../galsbi_pair1m_20261012/debug/rule_faintdraw.md`.
+
+- Run: all 2 x 2806 faint units, the it0 faint command of `worker.sh` with the same per-unit seeds plus
+  `--initialization prior-draw` (code `snapshot_d776abb`), launcher `debug/faintdraw/fd.sh`, array 17190708
+  (4 GPUs, `inter`/`cip`, 30 one-core slots each). Seeds, galaxy lists and settings checked against the it0
+  protocols (first, middle and last faint unit of each side).
+- Analysis: `debug/faintdraw.py <side>` swaps the faint galaxies' inputs into `pergal_<side>_faintdraw.npz`
+  (refuses unless the faint galaxies are exactly those of it0; test mode on 6 finished units: 1901 galaxies found,
+  none extra); `PERGAL=_faintdraw step2.py` gives the primary number (bright second step + faint drawn starts).
+  `step2.py`'s default output is unchanged (rerun: result identical apart from its description text).
+- Expected about 5–8 h; the result goes in a new entry.
+
 ## 2026-10-14 (evening) — bigger start pool: 2048-step faint chains pass the rule only by cancellation between bands
 
 Owner: "try a bigger candidate pool first". Study dir `.../galsbi_faintg05_20261013/` (`rule_bank.md`,
