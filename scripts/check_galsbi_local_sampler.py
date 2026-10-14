@@ -86,6 +86,8 @@ def main():
     parser.add_argument('--seed', type=int, default=2026093061)
     parser.add_argument('--initial-bank-seed', type=int,
                         help='draw a new prior bank for initialization while keeping the reference observations')
+    parser.add_argument('--initial-bank-draws', type=int,
+                        help='prior-bank states per chain for a fresh bank (default: the reference value)')
     parser.add_argument('--initialization', choices=['prior-bank', 'prior-draw', 'measurement'], default='prior-bank',
                         help='starting states only: best prior-bank state, a likelihood-weighted prior-bank draw, or best measurement-centred candidate')
     parser.add_argument('--device', choices=['cpu', 'cuda'], default='cuda')
@@ -104,6 +106,8 @@ def main():
         raise ValueError('positive environment count and warmup shorter than run required')
     if args.initial_bank_seed is not None and args.initial_bank_seed < 0:
         raise ValueError('initial bank seed must be nonnegative')
+    if args.initial_bank_draws is not None and (args.initial_bank_seed is None or args.initial_bank_draws < 1):
+        raise ValueError('initial bank draws require a fresh bank and must be positive')
     persistent = args.environment_update == 'persistent'
     if args.comoving_profiles and not persistent:
         raise ValueError('co-moving profiles need the retained scenes of persistent environments')
@@ -193,6 +197,7 @@ def main():
         type='exact red/blue prior sum' if args.marginalize_type else 'binary red/blue',
         initial_state='best of each independent reference prior stream, selected by likelihood; never generating truth',
         initial_bank_seed=args.initial_bank_seed,
+        initial_bank_draws=args.initial_bank_draws,
         initialization=args.initialization,
         reuse_invariant_work=args.reuse_invariant_work,
         proposal_blocks=dict(photometry_size=[1, 6], shape=[8, 9], structure=[0, 2, 3, 4, 5, 7],
@@ -293,7 +298,8 @@ def main():
     # mock scene. Reference likelihood chooses dispersed starts per stream.
     seeds = previous['seed']+10 if args.initial_bank_seed is None else args.initial_bank_seed
     initialization_started = time.monotonic()
-    bank, _ = prior.sample(previous['chains']*previous['draws_per_chain'], seeds)
+    draws = args.initial_bank_draws or previous['draws_per_chain']
+    bank, _ = prior.sample(previous['chains']*draws, seeds)
     starts, reference_kernels = [], []
     draw_rng = np.random.default_rng([seeds, 992])
     measurement_coordinates, initialization_details = [], []
@@ -307,7 +313,7 @@ def main():
         if args.initialization == 'measurement':
             obs = observations.iloc[[position]]
             candidates, details = measurement_seed_coordinates(bank_coordinates, obs.iloc[0, :4].to_numpy(),
-                np.repeat(np.arange(nchains), previous['draws_per_chain']), conditions, galaxy.p, g0,
+                np.repeat(np.arange(nchains), draws), conditions, galaxy.p, g0,
                 np.random.default_rng(seeds+991+i))
             candidate_prior, candidate_data, _ = coords.log_mixture_prior(candidates)
             valid = np.isfinite(candidate_prior)
@@ -315,7 +321,7 @@ def main():
             summary = summarize(candidate_scene.take(np.flatnonzero(valid)), obs.iloc[0, 2:4].to_numpy(), not lazy_b)
             flat_kernel = np.full(len(bank.counts), -np.inf)
             flat_kernel[valid] = likelihood.log_kernel(summary, obs, *g0)
-            scores = (candidate_prior+flat_kernel).reshape(nchains, previous['draws_per_chain'])
+            scores = (candidate_prior+flat_kernel).reshape(nchains, draws)
             if not np.isfinite(scores).any(axis=1).all():
                 raise ValueError('measurement candidate stream has no finite posterior starting state')
             selected = np.argmax(scores, axis=1)+np.arange(nchains)*scores.shape[1]
@@ -331,7 +337,7 @@ def main():
         else:
             obs = observations.iloc[[position]]
             summary = compress_scenes(zero, initial_response, obs.iloc[0, 2:4].to_numpy())
-            logk = likelihood.log_kernel(summary, obs, *g0).reshape(nchains, previous['draws_per_chain'])
+            logk = likelihood.log_kernel(summary, obs, *g0).reshape(nchains, draws)
         if args.initialization == 'prior-draw':
             # Bank states are prior draws, so one picked with probability proportional to its likelihood is an
             # approximate posterior draw (importance resampling), not the best-fitting state.
