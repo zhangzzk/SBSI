@@ -1,5 +1,29 @@
 # Work log
 
+## 2026-10-14 (early morning) — long-chain test: the faint bias is chain length (long − short +4.1% ± 1.3%)
+
+Result of `.../galsbi_faintg05_20261013/rule_long.md` (`long.py`, `long_result.txt` / `.json`).
+
+- Run: the first array (17185664, 110G) ran out of memory: the sampler keeps every step's state in memory even with
+  `--no-chain` (it only skips writing it), so each process grows to ~4–5 GB at 16384 steps, and turning the lists
+  into arrays at the end roughly doubles that for a moment. Unclaimed units were marked `held`, the array was
+  cancelled, and `long2.sh` (same settings and seeds, 220G, pass number `PASS`, claims/logs in `long/claims$P`,
+  `long/logs$P`) reran everything not done: pass 2 (17185687) finished 228 of 262 (34 killed when many slots ended
+  together), pass 3 (17185985) the last 34. All 262 units done 04:50; procedure note appended to `rule_long.md`.
+  `long.py` needed `sys.modules['closure'] = c` so its worker pool can pickle `closure.one`.
+- Same 82,677 galaxies (23–25, in cuts) at the truth (0.05, 0):
+  production chains (4096 steps) m_band = −6.12% ± 1.70%; 4× longer chains −2.06% ± 1.49%.
+  23–24: −7.56 ± 2.75 → −2.76 ± 2.30; 24–25: −4.83 ± 2.13 → −1.40 ± 2.01.
+  Paired difference (same galaxies, short-run information) **dM = +4.13% ± 1.29%** (23–24 +4.88 ± 2.36,
+  24–25 +3.49 ± 1.19). Chain noise E/galaxy 0.95 → 0.34.
+- Pre-declared decision: **(a), chain length alone** (dM 3.2σ; long run within 2σ of 0).
+- Caveat: inside the long run the early half still gives −3.05% and the late half −1.06%, so 16384 steps still
+  remember the start a little. The start is `--initialization measurement` (best candidate of each chain's bank).
+- Reading for the 1M pair: its faint 23–25 shortfall (−1.8% ± 0.6% of m at g = 0.02) is expected to be mostly the
+  same short-chain effect. Not rerun here.
+- Next (owner decision): longer or better-started faint chains (4× steps costs ~4× faint sampling time), and/or
+  a sampler memory fix (do not keep per-step traces under `--no-chain`) before any long production run.
+
 ## 2026-10-14 (night) — faint closure test: the faint score is biased at the truth (−6.6% ± 1.1%); long-chain test launched
 
 Result of `.../galsbi_faintg05_20261013/rule.md` (`closure.py`, `closure_result.txt` / `.json`).
