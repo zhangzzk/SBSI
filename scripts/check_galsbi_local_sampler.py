@@ -86,8 +86,8 @@ def main():
     parser.add_argument('--seed', type=int, default=2026093061)
     parser.add_argument('--initial-bank-seed', type=int,
                         help='draw a new prior bank for initialization while keeping the reference observations')
-    parser.add_argument('--initialization', choices=['prior-bank', 'measurement'], default='prior-bank',
-                        help='measurement-centred candidates change starting states only')
+    parser.add_argument('--initialization', choices=['prior-bank', 'prior-draw', 'measurement'], default='prior-bank',
+                        help='starting states only: best prior-bank state, a likelihood-weighted prior-bank draw, or best measurement-centred candidate')
     parser.add_argument('--device', choices=['cpu', 'cuda'], default='cuda')
     parser.add_argument('--shear', type=float, nargs=2,
                         help='sampling shear g1 g2 (default: the reference protocol shear, i.e. the mock truth)')
@@ -97,8 +97,8 @@ def main():
                         help='profile ratios with intrinsic shapes mapped so the sheared shape is unchanged '
                              '(exact change of variables, b recomputed in the retained scene); persistent only')
     parser.add_argument('--no-chain', action='store_true',
-                        help='do not write chain.npz (the per-step history); result.json, profiles and final '
-                             'scenes are unchanged')
+                        help='do not write or keep the per-step history (chain.npz); profiles and final scenes are '
+                             'unchanged, result.json diagnostics use the profile draws only')
     args = parser.parse_args()
     if args.steps <= args.warmup or args.warmup < 1 or args.environments < 1:
         raise ValueError('positive environment count and warmup shorter than run required')
@@ -182,6 +182,7 @@ def main():
                           'the kernel at zero shear does not depend on b' if lazy_b else 'computed for every evaluated state'),
         observations=indices, fixed_shear=g0, profile_stride=args.profile_stride, density_batch_size=4096,
         chain_saved=not args.no_chain,
+        diagnostic_draws='profile draws after warm-up' if args.no_chain else 'every step after warm-up',
         profile_shapes='co-moving: eps -> M_node^-1(M_g0(eps)), circularized radius kept, prior and Jacobian '
                        'included, b recomputed' if args.comoving_profiles else 'fixed intrinsic shapes',
         target_coordinates=GalSBITargetCoordinates.names,
@@ -205,6 +206,9 @@ def main():
         implementation_sha256={str(p.resolve()): digest(p) for p in sources})
     if args.initial_bank_seed is not None:
         protocol['initial_state'] = 'best of each fresh prior-bank stream, selected by likelihood; never generating truth'
+    if args.initialization == 'prior-draw':
+        protocol['initial_state'] = ('one state of each prior-bank stream drawn with probability proportional to '
+                                     'its likelihood (importance resampling); never generating truth')
     if args.initialization == 'measurement':
         protocol['initial_state'] = ('measurement-centred physical coordinates with four Sersic centres; '
             'native redshift/SED and neighbours from fresh bank; maximize target log prior plus full likelihood per stream')
@@ -291,6 +295,7 @@ def main():
     initialization_started = time.monotonic()
     bank, _ = prior.sample(previous['chains']*previous['draws_per_chain'], seeds)
     starts, reference_kernels = [], []
+    draw_rng = np.random.default_rng([seeds, 992])
     measurement_coordinates, initialization_details = [], []
     if args.initialization == 'measurement':
         bank_coordinates = coords.encode(bank.targets)
@@ -327,14 +332,22 @@ def main():
             obs = observations.iloc[[position]]
             summary = compress_scenes(zero, initial_response, obs.iloc[0, 2:4].to_numpy())
             logk = likelihood.log_kernel(summary, obs, *g0).reshape(nchains, previous['draws_per_chain'])
-        starts.extend(np.argmax(logk, axis=1)+np.arange(nchains)*logk.shape[1])
-        reference_kernels.extend(np.max(logk, axis=1))
+        if args.initialization == 'prior-draw':
+            # Bank states are prior draws, so one picked with probability proportional to its likelihood is an
+            # approximate posterior draw (importance resampling), not the best-fitting state.
+            weights = np.exp(logk-logk.max(axis=1, keepdims=True))
+            pick = np.array([draw_rng.choice(len(w), p=w/w.sum()) for w in weights])
+            initialization_details.append(dict(effective_draws_per_chain=(weights.sum(1)**2/(weights**2).sum(1)).tolist()))
+        else:
+            pick = np.argmax(logk, axis=1)
+        starts.extend(pick+np.arange(nchains)*logk.shape[1])
+        reference_kernels.extend(logk[np.arange(nchains), pick])
     save(args.output/'initialization.json', dict(bank_seed=seeds, bank_size=len(bank.counts),
         source='fresh prior' if args.initial_bank_seed is not None else 'reference prior replay',
         selected_indices=[int(i) for i in starts], selected_log_kernels=reference_kernels,
         initialization=args.initialization, measurement_details=initialization_details,
         elapsed_seconds=time.monotonic()-initialization_started, uses_generating_truth=False))
-    if args.initial_bank_seed is not None and args.initialization == 'prior-bank':
+    if args.initial_bank_seed is not None and args.initialization != 'measurement':
         del zero, ptr, features, initial_response, summary
     # Every temperature level of a chain starts from that chain's selected state.
     starts = np.tile(np.asarray(starts), levels)
@@ -461,9 +474,14 @@ def main():
     invariant_audit = dict(likelihood_calls_skipped=0, target_prior_calls_skipped=0,
                            checked_proposals=0, maximum_summary_change=0., maximum_log_kernel_change=0.)
     invariant_visits = {2: 0, 5: 0}
+    # Without a saved chain, per-state histories are kept only at the profile draws (every profile-stride step
+    # after warm-up): the profiles use exactly these states, and the diagnostics describe them. Memory then
+    # no longer grows with every step (2026-10-14: ~5 GB per process at 16384 steps).
+    first, stride = (0, 1) if args.no_chain else (args.warmup, args.profile_stride)
     sampling_started = time.monotonic()
     last_progress = time.monotonic()
     for step in range(args.steps):
+        stored = not args.no_chain or (step >= args.warmup and (step-args.warmup) % args.profile_stride == 0)
         # State-independent mixture: local symmetric steps and an optional
         # SED independence step with an explicit reverse/forward correction.
         block = int(rng.choice(len(protocol['proposal_block_probabilities']),
@@ -568,7 +586,8 @@ def main():
                     scene.neighbours, scene.indptr, scene.offset_arcsec)
             else:
                 scene = scene.retained(newscene, accepted)
-            count_trace.append(scene.counts[cold])
+            if stored:
+                count_trace.append(scene.counts[cold])
         refresh_trace.append(fraction)
         joint_environment_trace.append(joint_environment)
         if step < args.warmup and block < 3 and not joint_environment:
@@ -586,7 +605,8 @@ def main():
             swap_accepts[stage] += exchanged.sum(1)
             if stage:
                 cold_exchanges += exchanged[0]
-        trace.append(x[cold].copy())
+        if stored:
+            trace.append(x[cold].copy())
         if args.joint_morphology:
             recent.append(x.copy())
             tuning = protocol['morphology_covariance']
@@ -600,13 +620,14 @@ def main():
                 else:
                     morphology_factor = empirical_block_cholesky(history, scales[blocks[0]],
                         shrinkage=tuning['shrinkage'], circular_indices=tuple(tuning['circular_indices']))
-        type_trace.append(kinds[cold].copy())
-        type_probability_trace.append(type_probability[cold].copy())
-        logprior_trace.append(logprior[cold].copy())
         if lazy_b and step+1 >= args.warmup:
             fill_b(summaries, scene)
-        summary_trace.append(summaries[cold].copy())
-        kernel_trace.append(kernels[cold].copy())
+        if stored:
+            type_trace.append(kinds[cold].copy())
+            type_probability_trace.append(type_probability[cold].copy())
+            logprior_trace.append(logprior[cold].copy())
+            summary_trace.append(summaries[cold].copy())
+            kernel_trace.append(kernels[cold].copy())
         if args.comoving_profiles and step >= args.warmup and (step-args.warmup) % args.profile_stride == 0:
             state = (x[cold], kinds[cold], logprior[cold], kernels[cold, 0], scene.take(np.arange(ncold)))
             if comoving_identity_replay is None:
@@ -652,25 +673,24 @@ def main():
     reports, profile_samples = [], {}
     for i in range(nobs):
         rows = slice(i*nchains, (i+1)*nchains)
-        retained_summary = summary_trace[args.warmup:, rows]
-        retained_kernel = kernel_trace[args.warmup:, rows]
+        retained_summary = summary_trace[first:, rows]
+        retained_kernel = kernel_trace[first:, rows]
         weights = np.exp(retained_kernel-logsumexp(retained_kernel, axis=2, keepdims=True))
         # Environment draws are NOT equally weighted posterior scenes. Under
         # the extended target, K-weighted sums give posterior scene moments.
         moments = (weights[..., None]*retained_summary).sum(2)
         checks = {name: diagnostics(moments[:, :, col].T) for name, col in
                   (('e1', 0), ('e2', 1), ('m_r', 3), ('Re_circularized', 4), ('crowding_050', 5), ('b', 8))}
-        checks['type'] = diagnostics(type_probability_trace[args.warmup:, rows, 0].T
-                                    if args.marginalize_type else types[args.warmup:, rows].T)
-        checks['log_z'] = diagnostics(trace[args.warmup:, rows, 0].T)
+        checks['type'] = diagnostics(type_probability_trace[first:, rows, 0].T
+                                    if args.marginalize_type else types[first:, rows].T)
+        checks['log_z'] = diagnostics(trace[first:, rows, 0].T)
         if persistent:
-            checks['neighbour_count'] = diagnostics(np.array(count_trace)[args.warmup:, rows].T)
+            checks['neighbour_count'] = diagnostics(np.array(count_trace)[first:, rows].T)
             for col in (2, 3, 4, 5, 7, 8):
-                checks[coords.names[col]] = diagnostics(trace[args.warmup:, rows, col].T)
+                checks[coords.names[col]] = diagnostics(trace[first:, rows, col].T)
             for col in (6, 7):
                 checks[f'crowding_{col}'] = diagnostics(moments[:, :, col].T)
         profile = []
-        stride = args.profile_stride
         flat = retained_summary[::stride].reshape(-1, 9)
         observed_i = observations.iloc[[i]]
         summary = SummaryBatch(flat, np.broadcast_to(observed_i.iloc[0, 2:4].to_numpy(), (len(flat), 2)))
@@ -697,9 +717,9 @@ def main():
         reports.append(dict(reference_observation=protocol['observations'][i],
             measured_magnitude=float(30-2.5*np.log10(observed_i.iloc[0, 3])),
             diagnostics=checks, acceptance_by_block_per_chain=by_block,
-            type_switches_per_chain=np.sum(np.diff(types[args.warmup:, rows], axis=0) != 0, axis=0).tolist(),
-            red_probability_mean_per_chain=type_probability_trace[args.warmup:, rows, 0].mean(0).tolist(),
-            sed_region_switches_per_chain=np.sum(np.diff(type_probability_trace[args.warmup:, rows, 0] >= .5,
+            type_switches_per_chain=np.sum(np.diff(types[first:, rows], axis=0) != 0, axis=0).tolist(),
+            red_probability_mean_per_chain=type_probability_trace[first:, rows, 0].mean(0).tolist(),
+            sed_region_switches_per_chain=np.sum(np.diff(type_probability_trace[first:, rows, 0] >= .5,
                                                           axis=0) != 0, axis=0).tolist(),
             sed_cross_proposals_per_chain=np.sum(np.array(sed_cross_trace)[args.warmup:, rows], axis=0).tolist(),
             sed_cross_accepts_per_chain=np.sum(np.array(sed_cross_trace)[args.warmup:, rows]
