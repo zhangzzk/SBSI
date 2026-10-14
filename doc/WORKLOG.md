@@ -1,5 +1,37 @@
 # Work log
 
+## 2026-10-14 (evening) — bigger start pool: 2048-step faint chains pass the rule only by cancellation between bands
+
+Owner: "try a bigger candidate pool first". Study dir `.../galsbi_faintg05_20261013/` (`rule_bank.md`,
+`banktest/`, `draw.sh` with `BANK`, `draw.py bank8192`, `bank8192_result.txt` / `.json`).
+
+- Code (d776abb, `scripts/check_galsbi_local_sampler.py`): `--initial-bank-draws N` sets the prior-bank states per
+  chain for a fresh start bank (default: the reference 2048). Check job 17189684 (unit original_u0000, 2048 steps):
+  default reproduces `draw2048` bitwise (1260 arrays). Pool size vs one-unit cost (one process, A40):
+
+  | per chain | start pick | effective draws median | below 5 | total |
+  |---|---|---|---|---|
+  | 2048 | 32 s | 7.6 | 37% | 4:34 |
+  | 8192 | 126 s | 20.3 | 16% | 6:09 |
+  | 16384 | 241 s | 31.7 | 13% | 7:45 |
+
+  Effective draws grow much slower than the pool (heavy-tailed weights); pick time grows in proportion. 8192 was
+  chosen (pre-declared): 2048 steps + 8192 pool costs about the same as 4096 steps + 2048 pool, so no speed-up was
+  possible at this pool size. In production (30 slots per GPU) the pick took ~324 s per unit vs ~93 s.
+- Run `bank8192` (array 17189997, 262 units, none failed; same seeds as draw2048). 23–25, 82,677 galaxies at the
+  truth: **m_band = −2.37% ± 2.09%**; D_short +4.00 ± 1.79, D_long −0.13 ± 1.55, D_el −1.58 ± 2.34;
+  vs draw2048 (same seeds, small pool) +1.81 ± 1.94. Effective draws median 19.9, 17.6% below 5.
+  Pre-declared decision: **(a)**.
+- But the sub-bands disagree with the long run in opposite directions: 23–24 +3.01% ± 3.71% (D_long +5.04 ± 2.84),
+  24–25 −6.67% ± 2.37% (D_long −4.92 ± 1.42, 3.5σ). The 23–25 agreement is a cancellation. The faintest band at 2048
+  steps is low with both pools (draw2048 D_long −5.87 ± 1.44), and the pool size itself changed little
+  (+1.8 ± 1.9 vs the small pool). D_short passes 2σ only narrowly (2.2σ; small pool 1.2σ).
+- Reading: 2048-step faint chains are not shown to work, with or without the bigger pool; a bigger pool costs as
+  much as doubling the steps. The 4096-step drawn start (`rule_draw.md`, (a)) remains the best option, with its
+  own 24–25 caveat (D_long −2.69 ± 1.19, 2.3σ).
+- Next (owner decision): faint production with `--initialization prior-draw` at 4096 steps and the default pool,
+  e.g. rerun the faint part of the 1M pair to see whether its −1.8% ± 0.6% faint shortfall goes away.
+
 ## 2026-10-14 (afternoon) — sampler memory fix; likelihood-weighted starts make 4096-step faint chains match 4× longer ones
 
 Owner: "fix the memory issue. and then we should try to improve the sampling from beginning (to see if shorter
