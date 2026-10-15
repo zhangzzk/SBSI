@@ -1,5 +1,24 @@
 # Work log
 
+## 2026-10-15 — Where the 1M c2 comes from: a g2 tilt fixed to the image frame, and the scores over-correct it
+
+Owner: "break down the 1M c2 first". Pre-declared `galsbi_pair1m_20261012/debug/rule_c2split.md`; `c2split.py`
+(job 17200258, CPU, no new sampling; reproduces the step2 c2 of both input sets exactly) -> `c2split_result.txt/.json`;
+`meane.py` (mean measured shapes, written after the result).
+
+- The paired c2 = +0.00070 is the difference of two bigger pieces: galaxy scores +0.00154 (spread over all bands:
+  < 21 +0.00021 ± 0.00005, 21–23 +0.00006 ± 0.00006, 23–24 +0.00041 ± 0.00012, 24–25 +0.00042 ± 0.00009,
+  ≥ 25 +0.00045 ± 0.00007) and the selection term −0.00084 ± 0.00007.
+- Selection gradient in g2 is clearly nonzero: dlogZ/dg2 = 0.0043 ± 0.0004 (both sides, 7 of 8 replicas), while
+  g1's is 0.0006 ± 0.0004. Mean measured e2 of the mock galaxies is −0.0028 ± 0.0004 (original) and −0.0020 ± 0.0004
+  (twin, same sign although the twin is turned 90°) -> a g2 tilt fixed to the image frame, with a round PSF.
+- Bright galaxies (mag < 21, nearly free of selection) alone point to g2 = +0.0018 ± 0.0006 (own g1 0.0203 ± 0.0008);
+  the existing bright run at the truth gives the same (+0.0017 ± 0.0012, unpaired error).
+- Pre-declared reading: (a) and (b) both met — scores and selection disagree about the g2 tilt, and the bright
+  band shows it by itself. Not one band; nothing corrected.
+- Next (owner decision): find where the frame-fixed g2 tilt enters (mirror test of the disk emulator / classifier /
+  flow: flip x and compare e2), and whether the mock generator and the likelihood treat it the same way.
+
 ## 2026-10-15 — g2 in the existing g = (0.05, 0) truth runs: no sign, but too few galaxies to test the 1M c2
 
 Owner: "check g2 in the existing g05 truth runs first". Pre-declared `.../galsbi_faintg05_20261013/rule_g2.md`;
