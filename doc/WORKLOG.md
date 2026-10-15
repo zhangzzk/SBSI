@@ -1,5 +1,18 @@
 # Work log
 
+## 2026-10-15 (night) — 1M pair: bright second step rerun with drawn starts launched
+
+Pre-declared `galsbi_pair1m_20261012/debug/rule_brightdraw.md`: the step-2 bright run (34,338 mag < 21 galaxies,
+same seeds, shear and settings) with `--initialization prior-draw`, code `galsbi_faintg05_20261013/snapshot_d776abb`
+(library identical to step 2). Launcher `debug/brightdraw/bd.sh`, array 17208117 (4 GPUs, `inter,cip`, 30 one-core
+slots each); analysis `step2.py debug/brightdraw` (with `PERGAL=_faintdraw`), `brightdraw_diff.py`, `g2time.py` (BD).
+
+- Startup check (first 25 units, 444 galaxies): no failures; ~11 min sampling per unit. Only ~2 useful bank draws
+  per chain at the start (median 1.9). Chains disagree more than in step 2: largest rhat per galaxy median 1.44
+  (> 1.1 for 98%) vs 1.22 (83%). The pre-declared stop rule (twice the step-2 fraction) cannot trigger, so the run
+  continues; recorded in the rule file before any science number.
+- Next: when all 1720 units are done, the three measurements of the rule.
+
 ## 2026-10-15 (evening) — 1M c2: bright chains remember their start in g2; faint shows no sign
 
 Owner: "work on this autonomously". Pre-declared `galsbi_pair1m_20261012/debug/rule_g2time.md`: split every chain's
