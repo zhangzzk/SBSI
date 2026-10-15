@@ -1,5 +1,25 @@
 # Work log
 
+## 2026-10-15 — Mirror test: F8/C8 are not left-right symmetric; this explains the g2 tilt but not the 1M c2
+
+Owner: "run the mirror test on the bright galaxies first"; "while waiting, check how the sampler handles the e2 tilt".
+Pre-declared `galsbi_pair1m_20261012/debug/rule_mirror.md` (one amendment after the 2-chunk smoke run: band membership
+by the g = 0 draw; 8000 chunks). `mirror.py` / `mirror.sh` (job 17200347, one GPU, 5 h 41 min) -> `mirror_result.json`.
+New scenes from the mock's prior; each scene and its mirror (e2 -> -e2), mirrored base draws.
+
+- The model is not mirror symmetric: mean measured e2 of mirror pairs (exactly 0 if symmetric) is −0.00234 ± 0.00002
+  over all galaxies, −0.0040 ± 0.0001 for mag < 21; C8's g2 slope is nonzero in every band; bright per-galaxy kernel
+  score asymmetry −2.8 ± 0.1. F8 stores shape-coordinate means (−0.0002, +0.0026).
+- Code check passes: the model alone gives dlogZ/dg2 = 0.0048 ± 0.0005 (selection runs 0.0043 ± 0.0004) and the
+  mock's tilt (−0.0020 / −0.0028). So the frame-fixed g2 tilt is a property of the trained F8/C8.
+- Correction to the c2 split: the bright band is not selection-free (own slope +0.020 ± 0.007), so the bright excess
+  is +0.042 ± 0.017 per galaxy (2.4σ), not 3σ. The 1M c2 itself stays: the scores imply 0.0079 per galaxy vs 0.0043–0.0048.
+- Sampler survey (read-only): no step assumes mirror symmetry; proposals, swaps and caches exact; comoving_circ keeps b
+  frozen (second order). The only approximation that could matter is start memory of the measurement-centred start.
+- Limitation: band-wise expected scores ignore band-edge crossing; a model asymmetry alone cannot bias a same-model mock.
+- Next (owner decision): posterior intrinsic e2 means over all bright/faint units vs the truth (read-only), or
+  the faint chains' start memory in g2.
+
 ## 2026-10-15 — Where the 1M c2 comes from: a g2 tilt fixed to the image frame, and the scores over-correct it
 
 Owner: "break down the 1M c2 first". Pre-declared `galsbi_pair1m_20261012/debug/rule_c2split.md`; `c2split.py`
