@@ -1,5 +1,22 @@
 # Work log
 
+## 2026-10-16 — 1M pair, bright drawn starts: m −0.10% ± 0.88% passes, c2 +0.00090 ± 0.00019 fails; bright g2 depends on the start
+
+Result of `galsbi_pair1m_20261012/debug/rule_brightdraw.md` (GPU array 17208117: 1720/1720 units, 0 failed, ~4 h on
+4 GPUs; CPU analysis 17208623 via `debug/brightdraw/analysis.sh`).
+
+- 1M pair with bright and faint drawn starts: **m = −0.10% ± 0.88%** (pass), **c2 = +0.000903 ± 0.000192** (4.7σ,
+  fail; with measurement-start bright chains +0.000702 ± 0.000193).
+- New bright chains still drift: late − early half D2 = −0.63 ± 0.27e-4 -> (b) start memory remains.
+- Same galaxies, drawn − measurement start: **Δg2 = +2.01 ± 0.27e-4** (7σ; expected −0.4 to −0.8e-4), Δg1 =
+  +0.33% ± 0.12% of m. So the measurement start does not explain the bright part of c2; the drawn start raises it.
+- Reading: the bright g2 score depends on the start by ~2e-4 (both runs' late halves still differ by ~2.1e-4), so
+  the 8192-step bright chains are not converged in g2. Drawn starts mix worse (rhat median 1.43 vs 1.22; > 1.1 for
+  97% vs 84%); only ~2 useful bank states per chain at the start.
+- Limitation: mag 21–23 chains keep their measurement starts (their own D2 −1.21 ± 0.33e-4).
+- Next (owner decision): longer bright chains from both starts on a subset, to see whether they meet; the
+  1M c2 cannot be attributed until they do.
+
 ## 2026-10-15 (night) — 1M pair: bright second step rerun with drawn starts launched
 
 Pre-declared `galsbi_pair1m_20261012/debug/rule_brightdraw.md`: the step-2 bright run (34,338 mag < 21 galaxies,
