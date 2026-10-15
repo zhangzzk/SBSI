@@ -1,5 +1,22 @@
 # Work log
 
+## 2026-10-15 (evening) — 1M c2: bright chains remember their start in g2; faint shows no sign
+
+Owner: "work on this autonomously". Pre-declared `galsbi_pair1m_20261012/debug/rule_g2time.md`: split every chain's
+kept draws into early and late halves (no new sampling); `g2time_extract.py` / `g2time.sh` (job 17208073, CPU,
+6 tasks, < 15 min) and `g2time.py` -> `g2time_result.txt/.json`. c2 per half = I^-1 sum of raw scores (production I).
+
+- D2 = c2(late) − c2(early), in 1e-4 (the 1M c2 is +7.0 ± 1.9): faint drawn start (current inputs) −1.6 ± 1.9;
+  **bright step 2, mag < 21: −0.79 ± 0.22 (3.6σ)**; it0 tempered mag 21–23 (also current inputs): −1.21 ± 0.33
+  (3.7σ); old it0 faint −0.7 ± 1.8; old it0 bright < 21 −0.68 ± 0.20.
+- Pre-declared decision: **(a) start memory in g2** for the bright chains. The measurement-centred start pushes c2 up.
+- Size: if the late halves were converged, the bright chains overstate c2 by about +1.0 ± 0.2e-4 (< 21 and 21–23
+  together), a part of +7.0 ± 1.9e-4; more if the late half still remembers. Faint is not resolved (2σ bound 5.4e-4).
+- Limitation: the rule named only faint and bright < 21 as deciding; the 21–23 tempered chains are current inputs too
+  (noted after the result). D1 is the raw-score change only, not the information-corrected deficit of `timesplit.py`.
+- Next: bright chains with drawn starts (`--initialization prior-draw`, works with tempering), checked on a unit
+  first because a sharp bright likelihood may leave few useful bank draws.
+
 ## 2026-10-15 — Mirror test: F8/C8 are not left-right symmetric; this explains the g2 tilt but not the 1M c2
 
 Owner: "run the mirror test on the bright galaxies first"; "while waiting, check how the sampler handles the e2 tilt".
