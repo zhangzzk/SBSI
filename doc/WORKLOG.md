@@ -1,5 +1,18 @@
 # Work log
 
+## 2026-10-15 — g2 in the existing g = (0.05, 0) truth runs: no sign, but too few galaxies to test the 1M c2
+
+Owner: "check g2 in the existing g05 truth runs first". Pre-declared `.../galsbi_faintg05_20261013/rule_g2.md`;
+`g2check.py` -> `g2check_result.txt` / `.json` (no new sampling; reproduces every run's m exactly).
+
+- 23–25, same 82,677 galaxies at the truth: c2 = production −0.00093 ± 0.00096, long −0.00034 ± 0.00088,
+  drawn start 4096 −0.00092 ± 0.00110, 2048 −0.00008 ± 0.00122, bigger pool −0.00140 ± 0.00118.
+  Paired drawn start − production +0.00012 ± 0.00087; long − production +0.00060 ± 0.00067.
+- Reading (pre-declared): **(b) no sign at this precision**. Errors are 3–6x the 1M effect (faint drawn-start g2
+  shift +0.00030 ± 0.00015, total c2 +0.00070 ± 0.00019), so this neither confirms nor clears it.
+- Next (owner decision): break the 1M c2 down with data already in hand (bright / faint bands / selection term,
+  per side), or a dedicated g2 truth test with ~1M faint galaxies.
+
 ## 2026-10-15 (night) — 1M pair with drawn faint starts: m = −0.43% ± 0.89% passes, c2 = +0.00070 ± 0.00019 fails
 
 Result of `.../galsbi_pair1m_20261012/debug/rule_faintdraw.md` (`step2_result_faintdraw.json`,
