@@ -1,5 +1,21 @@
 # Work log
 
+## 2026-10-17 — bright sampler switches: none speeds up the slow directions; bigger start pool passes by a hair
+
+Result of `galsbi_pair1m_20261012/debug/rule_samplertest.md` (array 17315027, 756 runs, none failed, ~2.6 h on 4 GPUs;
+analysis 17315066, `debug/samplertest.py` -> `samplertest_result.txt/.json`). 108 bright units, 2,160 galaxies.
+
+- Between-start agreement A (ln 8-chain rhat vs the current sampler) and speed B (ln independent draws per second):
+  joint shape A +0.0084 ± 0.0022, B x0.92; joint environment A +0.0028 ± 0.0021, B x0.84; 4x start pool
+  A −0.0131 ± 0.0027, B x1.01. Pre-declared decision: **the bigger start pool helps (only one to pass)**.
+- But the gain is tiny (median between-start rhat 1.387 -> 1.365) and no arm moves the slow quantities: median ESS of
+  magnitude / size / Sérsic stay at 10–19 / 13–25 / 14–17 at 8192 steps. The sampler already steps jointly in these
+  three; the remaining slowness likely needs a different kind of move (untested guess: the valley is curved).
+- g2 (reported only, too few galaxies): start gaps all within 1.5σ of 0 (base −0.02 ± 0.08e-4); rerun of the
+  current sampler vs the earlier drawn-start runs −0.06 ± 0.04e-4 (same code and seeds, other GPUs).
+- Next (owner decision): long chains for the bright set (the start pool can be added for ~4% cost), or new sampler
+  code aimed at the magnitude–size–Sérsic valley.
+
 ## 2026-10-16 (night) — bright sampler switches tested before longer chains (launched)
 
 Owner: explore a better bright sampling algorithm before longer chains. Read-only diagnosis (1/16 of the brightlong
