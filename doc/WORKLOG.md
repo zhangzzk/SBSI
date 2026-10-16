@@ -1,5 +1,17 @@
 # Work log
 
+## 2026-10-16 — 1M pair: 4x longer bright chains from both starts launched (subset)
+
+Owner: "run the longer bright chains from both starts on a subset". Pre-declared
+`galsbi_pair1m_20261012/debug/rule_brightlong.md`: every 4th step-2 unit (430 units, 8,582 mag < 21 galaxies), the
+step-2 bright command with `--steps 32768 --warmup 8192` from the measurement start and from the drawn start (same
+seeds as the short runs, snapshot_d776abb), comoving stride 64 (same 384 kept draws per chain). Launcher
+`debug/brightlong/bl.sh` (array 17284374, 4 GPUs, 30 one-core slots, 320G), analysis `debug/brightlong.py`
+(refuses until all 860 runs are done). Decision on g2: do the gaps between starts (2.0e-4 at 8192 steps) close?
+
+- Startup: all 4 jobs running, both starts sampling with the intended settings; ~9 steps/s per slot, so ~1 h per
+  unit and ~8 h in all; 45 GB per job at start.
+
 ## 2026-10-16 — 1M pair, bright drawn starts: m −0.10% ± 0.88% passes, c2 +0.00090 ± 0.00019 fails; bright g2 depends on the start
 
 Result of `galsbi_pair1m_20261012/debug/rule_brightdraw.md` (GPU array 17208117: 1720/1720 units, 0 failed, ~4 h on
