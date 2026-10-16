@@ -1,5 +1,23 @@
 # Work log
 
+## 2026-10-16 (night) — bright sampler switches tested before longer chains (launched)
+
+Owner: explore a better bright sampling algorithm before longer chains. Read-only diagnosis (1/16 of the brightlong
+subset): slowest are Sérsic index, magnitude and size (median bulk ESS 16 / 19 / 26 at 8192 steps), then e1/e2 (64–72);
+the drawn start also leaves crowding/b slow. Pre-declared `galsbi_pair1m_20261012/debug/rule_samplertest.md`:
+108 bright units (every 4th of the brightlong subset, 2,160 galaxies), the step-2 command (snapshot_d776abb, same
+seeds) with one existing switch per arm: `--joint-shape`, `--joint-environment`, `--initial-bank-draws 8192` (drawn
+start only), and the unchanged sampler rerun in the same jobs. Pooled morphology and ensemble moves are refused by
+the code with tempering, so not tested. Decision: a switch helps if the two starts agree better (8-chain rhat over
+e1, e2, magnitude, size, Sérsic; > 2σ) without being slower per independent draw (> 2σ). Scores reported only
+(1/16 of the bright set is too small to resolve the start gap).
+
+- Launcher `debug/samplertest/st.sh` (array 17315027, 4 GPUs, 30 one-core slots, arms interleaved per unit),
+  analysis `debug/samplertest.py` via job 17315066 (refuses until all 756 runs are done). Chain reading checked
+  against the sampler's own rhat on one unit (agree; size differs at 1e-2 because a different size variable is used).
+- Startup: first task (2080 Ti) has all 30 slots sampling, every arm included, no failures; ~4 steps/s per slot,
+  ~35 min per run; ~4 h with all 4 tasks running (3 still queued at launch).
+
 ## 2026-10-16 (evening) — 4x longer bright chains: bright g2 falls from both starts; the start gap is not resolved
 
 Result of `galsbi_pair1m_20261012/debug/rule_brightlong.md` (array 17284374, ~8 h on 4 GPUs; one run tripped the
