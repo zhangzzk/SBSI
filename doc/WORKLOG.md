@@ -1,5 +1,22 @@
 # Work log
 
+## 2026-10-16 (evening) — 4x longer bright chains: bright g2 falls from both starts; the start gap is not resolved
+
+Result of `galsbi_pair1m_20261012/debug/rule_brightlong.md` (array 17284374, ~8 h on 4 GPUs; one run tripped the
+sampler's 1e-6 invariant audit by 1.42e-6 (GPU rounding) and passed on rerun 17303991; analysis 17293385,
+`debug/brightlong.py` -> `brightlong_result.txt/.json`). Quarter subset: 430 units, 8,582 mag < 21 galaxies.
+
+- Bright g2 contribution (1e-4): measurement start 8192 / 32768 steps +0.78 / +0.33; drawn start +1.15 / +0.52.
+- Start gap: +0.37 ± 0.15 (short) vs +0.20 ± 0.08 (long); change +0.17 ± 0.15 -> pre-declared **(c)**.
+- Not in the rule's cases: longer chains lower g2 from both starts, −0.46 ± 0.08 (5.8σ) and −0.63 ± 0.14 (4.5σ);
+  rhat median 1.22 -> 1.08; drawn-start long chains have equal halves (+0.03 ± 0.10), measurement-start long chains
+  still drift (−0.21 ± 0.10). g1 moves ≤ 0.15% ± 0.07% of m.
+- Reading: 8192-step bright chains overstate g2 whatever the start; chain length matters. Rough scaling to all bright
+  galaxies (not a 1M result): about −2e-4 on the 1M c2, leaving roughly +5–6.5e-4.
+- Limitations: the rule's power estimate was wrong (subset gap ~2.5σ, not 3.7σ); mag 21–23 chains untested.
+- Next (owner decision): long drawn-start chains for all bright galaxies (~4x the step-2 cost, ~16 h on 4 GPUs) and
+  a look at the mag 21–23 chains and the faint part for the rest of c2.
+
 ## 2026-10-16 — 1M pair: 4x longer bright chains from both starts launched (subset)
 
 Owner: "run the longer bright chains from both starts on a subset". Pre-declared
