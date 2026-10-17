@@ -147,12 +147,17 @@ class SummaryLikelihood:
         self.flow, self.detector = flow, detector
         self.batch_size = density_batch_size
         # One compiled log-gap density shared by every per-batch backend; fused kernels round differently
-        # from eager ones, so a run must not mix the two.
+        # from eager ones, so a run must not mix the two. 'reduce-overhead' compiles for the fixed padded
+        # batch shape and replays recorded CUDA graphs (one launch per call instead of thousands).
         self.compiled_density = None
+        if compile_density not in (False, True, 'reduce-overhead'):
+            raise ValueError('compile_density must be False, True or reduce-overhead')
         if compile_density:
             if not isinstance(getattr(flow, 'model', None), ConditionalPhysicalDiskFlow):
                 raise ValueError('compiled log-gap density requires a physical disk flow')
-            self.compiled_density = torch.compile(physical_log_prob_with_gap, dynamic=True)
+            self.compiled_density = (torch.compile(physical_log_prob_with_gap, dynamic=False, mode='reduce-overhead')
+                                     if compile_density == 'reduce-overhead'
+                                     else torch.compile(physical_log_prob_with_gap, dynamic=True))
 
     def log_kernel(self, summary, observed, g1, g2):
         observed = observed.reset_index(drop=True)

@@ -157,5 +157,8 @@ def test_redshift_sed_moves_preserve_full_likelihood_summaries_with_neighbours()
 
 
 def test_compiled_density_requires_the_physical_disk_flow():
-    with pytest.raises(ValueError, match='physical disk flow'):
-        SummaryLikelihood(Flow(), Detector(), compile_density=True)
+    for mode in (True, 'reduce-overhead'):
+        with pytest.raises(ValueError, match='physical disk flow'):
+            SummaryLikelihood(Flow(), Detector(), compile_density=mode)
+    with pytest.raises(ValueError, match='compile_density must be'):
+        SummaryLikelihood(Flow(), Detector(), compile_density='max-autotune')

@@ -93,8 +93,9 @@ def main():
     parser.add_argument('--device', choices=['cpu', 'cuda'], default='cuda')
     parser.add_argument('--density-batch-size', type=int, default=4096,
                         help='fixed padded F8/C8 batch; rows per step are levels x observations x chains')
-    parser.add_argument('--compile-density', action='store_true',
-                        help='torch.compile the log-gap F8 density (fused kernels; not bitwise the eager values)')
+    parser.add_argument('--compile-density', nargs='?', const=True, default=False, choices=[True, 'reduce-overhead'],
+                        help='torch.compile the log-gap F8 density (fused kernels; not bitwise the eager values); '
+                             '"reduce-overhead" also replays CUDA graphs for the fixed padded batch')
     parser.add_argument('--shear', type=float, nargs=2,
                         help='sampling shear g1 g2 (default: the reference protocol shear, i.e. the mock truth)')
     parser.add_argument('--profile-stride', type=int, default=1,
