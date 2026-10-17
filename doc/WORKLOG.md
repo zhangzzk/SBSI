@@ -1,5 +1,20 @@
 # Work log
 
+## 2026-10-17 (evening) — 1M pair: all bright units with the w8 setting launched
+
+Owner: "run w8 on all bright units on 4 GPUs". Pre-declared `galsbi_pair1m_20261012/debug/rule_brightw8.md`: the
+bright drawn-start run of `rule_brightdraw.md` (1,720 units, 34,338 mag < 21 galaxies, same seeds, shear and
+`snapshot_d776abb`) with `--steps 14336 --warmup 8192`; all units rerun, including Test 1's 430.
+
+- Launcher `debug/brightw8/bw.sh` (copy of `brightdraw/bd.sh`; only steps/warm-up, paths and memory 200G differ),
+  array 17337490 (4 GPUs, `inter,cip`, 30 one-core slots each); analysis `brightw8/analysis.sh` job 17337491
+  (afterany): `PERGAL=_faintdraw step2.py debug/brightw8`, and `brightdraw_diff.py` vs the 8192-step drawn-start
+  run (all galaxies) and vs Test 1's w8 (430 units, repeat check). Test 1 seeds checked to be the same per unit.
+- `brightdraw_diff.py` takes optional `NEW OLD` run names and compares the units OLD has (default unchanged:
+  brightdraw vs step2; reproduction check job 17337492). Test 1 analysis rerun 17337125: text identical to the first
+  run, `opt1_result.json` written.
+- Expected: ~6.7 h (Test 1: 28 min per w8 unit per slot), ~110 GB of chains. Expected readings in the rule file.
+
 ## 2026-10-17 (afternoon) — Test 1: a longer warm-up (w8) replaces 4x long bright chains; speed switches not adopted
 
 Result of `galsbi_pair1m_20261012/debug/rule_opt1.md` (array 17331485: 1,290/1,290 runs done, none failed, 4.5 h on
