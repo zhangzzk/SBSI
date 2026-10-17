@@ -1,5 +1,36 @@
 # Work log
 
+## 2026-10-17 (evening) — where bright sampling time goes; longer warm-up / fewer levels test launched
+
+Owner: before the mag 21–23 long-chain test, optimise the sampling and the computing efficiency. Read-only
+diagnostics in `galsbi_pair1m_20261012/debug/opt/` (CPU jobs via `opt/cpu.sh`, profile `opt/profile.sh` job 17331447):
+
+- `opt/window.py` (`window_result.txt`): drawn-start long chains (D32) are flat after 8192 steps — bright g2 per
+  6144-step window +0.47 / +0.55 / +0.50 / +0.57e-4 (window 1 − 4: −0.10 ± 0.14e-4) — while the normal run (sampling
+  steps 2048–8192) is +0.58 ± 0.16e-4 above window 4. Measurement-start long chains still drift (window 1 − 4
+  +0.18 ± 0.13, 2 − 4 +0.19 ± 0.13) and the start gap in window 4 is +0.33 ± 0.14e-4. So the short drawn-start run is
+  mostly a too-short warm-up.
+- `opt/geometry.py` (`geometry_result.txt`, every 8th D32 unit, 1,080 galaxies): integrated autocorrelation of
+  magnitude / size / Sérsic ~743 / 666 / 974 steps (median). Step shape vs posterior: variance ratio along the
+  narrowest posterior direction 0.015 (median; ideal ~1.9 for a 3-d block), widest 0.29 — steps are 3–11x too short
+  (in sd) because the per-chain covariance is learned from a short window. The valley is bent (median R² of a
+  quadratic bend 0.28, 48% above 0.3). Chain means spread by 0.33 posterior sd.
+- Profile (A40, one unit, 1024 steps): the GPU is the limit; F8 flow inverse ~43% of a step, transport ~14%,
+  C8 ~7%, emulator ~6%, summaries ~8%. Every step evaluates 20 galaxies x 4 chains x 8 levels; level swaps are
+  accepted 45–55%, more than needed.
+
+Test 1 (no code change), pre-declared `debug/rule_opt1.md`: all 430 brightlong units (8,582 galaxies), drawn start,
+snapshot_d776abb, same seeds as D8/D32; arms `w8` (14336 steps / 8192 warm-up), `w4` (10240 / 4096), `w8l5`
+(14336 / 8192, 5 levels = every second rung). Reference D32 steps 8192–32768; control D8. An arm matches if g2 and g1
+differences to the reference are both within 2σ; the cheapest matching arm is the candidate (5 levels only if its
+slow-quantity ESS per second is not below w8); if D8 also matches nothing is adopted. Launcher `debug/opt1/o1.sh`
+(array 17331485, 4 GPUs, 30 slots each, 1,290 runs), analysis `debug/opt1.py` via job 17331496 (afterany; refuses
+until all runs are done). Rule text corrected before any result: the long runs keep 384 draws per chain (stride
+64), not 1,536.
+
+Next: code track — step shapes pooled over the 4 chains and a longer window, compatible with tempering; a compiled
+F8 flow with an exactness check; each with its own pre-declared test.
+
 ## 2026-10-17 — bright sampler switches: none speeds up the slow directions; bigger start pool passes by a hair
 
 Result of `galsbi_pair1m_20261012/debug/rule_samplertest.md` (array 17315027, 756 runs, none failed, ~2.6 h on 4 GPUs;
