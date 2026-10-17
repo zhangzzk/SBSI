@@ -2,7 +2,8 @@
 import numpy as np
 
 from sbsi.mcmc_proposals import (adjacent_swap_permutation, complementary_stretch_proposal, empirical_block_cholesky,
-                                gaussian_block_delta, pooled_block_cholesky)
+                                fit_mixture_jump, gaussian_block_delta, mixture_jump_log_density,
+                                mixture_jump_proposal, pooled_block_cholesky)
 from sbsi.pseudo_marginal import metropolis_accept, retained
 
 
@@ -218,3 +219,49 @@ def test_tempered_swaps_recover_unequal_mode_weights_from_wrong_mode_start():
         if t >= 500:
             right.append(x[:slots] > 0)
     assert abs(np.mean(right)-.7) < .03
+
+
+def test_mixture_jump_density_matches_direct_sum_and_draws_ignore_the_state():
+    rng = np.random.default_rng(31)
+    history = rng.normal(size=(300, 8, 2))*[.5, 2.]+np.repeat([[0, 0], [3, -1]], 4, axis=0)
+    mixture = fit_mixture_jump(history, 4, components=2)
+    group = np.arange(8)//4
+    x = rng.normal(size=(8, 2))
+    weights, means, factors = (v[group] for v in mixture)
+    direct = np.zeros(8)
+    for k in range(weights.shape[1]):
+        cov = factors[:, k]@factors[:, k].transpose(0, 2, 1)
+        delta = x-means[:, k]
+        quad = np.einsum('ni,nij,nj->n', delta, np.linalg.inv(cov), delta)
+        direct += weights[:, k]*np.exp(-.5*quad)/(2*np.pi*np.sqrt(np.linalg.det(cov)))
+    np.testing.assert_allclose(mixture_jump_log_density(x, mixture, group), np.log(direct), rtol=1e-12)
+    a, ha = mixture_jump_proposal(x, mixture, group, np.random.default_rng(5))
+    b, hb = mixture_jump_proposal(x+10, mixture, group, np.random.default_rng(5))
+    np.testing.assert_array_equal(a, b)
+    np.testing.assert_allclose(ha, mixture_jump_log_density(x, mixture, group)-mixture_jump_log_density(a, mixture, group))
+
+
+def test_frozen_mixture_jumps_alone_recover_a_bent_target():
+    rng = np.random.default_rng(4411)
+    def density(v):   # banana: x ~ N(0, 1), y | x ~ N(x^2, 0.3^2)
+        return -.5*v[:, 0]**2-.5*((v[:, 1]-v[:, 0]**2)/.3)**2
+    def draw(n):
+        a = rng.normal(size=n)
+        return np.column_stack((a, a**2+.3*rng.normal(size=n)))
+    # Independence moves alone are exact but mix only where the frozen mixture covers the target; with
+    # warm-up chains on one arm only they stick in the other (the sampler keeps its local moves for this).
+    history = draw(16*600).reshape(600, 16, 2)
+    mixture = fit_mixture_jump(history, 4)
+    group = np.arange(16)//4
+    x = history[-1].copy()
+    samples = []
+    for step in range(12000):
+        proposed, log_q = mixture_jump_proposal(x, mixture, group, rng)
+        accepted = metropolis_accept(density(x), density(proposed)+log_q, rng.uniform(1e-15, 1, len(x)))
+        x = retained(x, proposed, accepted)
+        if step >= 500:
+            samples.append(x.copy())
+    samples = np.array(samples)
+    for value, truth in ((samples[..., 0], 0.), (samples[..., 1], 1.), (samples[..., 0]**2, 1.)):
+        chain_means = value.mean(0)
+        assert abs(chain_means.mean()-truth) < 6*chain_means.std(ddof=1)/np.sqrt(len(chain_means))+.02
