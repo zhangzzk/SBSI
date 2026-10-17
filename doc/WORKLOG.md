@@ -1,5 +1,38 @@
 # Work log
 
+## 2026-10-17 (night) — mixture jumps tried and removed; bright likelihood is smooth; speed switches queued
+
+Code (owner: optimise sampling and computing efficiency before the mag 21–23 long-chain test):
+- d884b6c: opt-in `--density-batch-size` (default 4096, unchanged) and `--compile-density` (torch.compile of the
+  log-gap density; refuses a non-physical-disk flow); pooled morphology allowed with tempering (pooled per level).
+  Full suite 388 passed, 3 skipped (job 17331540). CPU smoke of pooled + tempering ran (job 17331530, 77 s).
+- 2bb9a79, reverted in this commit: `--mixture-jump-probability` (a frozen per-galaxy, per-level Gaussian-mixture
+  independence jump for magnitude / size / Sérsic, fitted at 3/4 of warm-up). Kept in `debug/snapshot_2bb9a79`.
+
+Diagnostics (no decisions; `galsbi_pair1m_20261012/debug/`):
+- `opt/jump.py` (offline, 1,080 galaxies): mixture-jump acceptance 26% median, single Gaussian 2% — an upper bound
+  using a smoothed stand-in posterior.
+- `smoke/jump8.sh` (array 17331691, CPU, 8 bright galaxies of unit k=1, 8 levels, 8192 / 2048 warm-up, same seeds):
+  real jump acceptance at the posterior level 0.8–11.5% (median ~2.4%). Paired jump/base ratio of independent
+  draws per step (4 chains): magnitude 1.11 (×/÷ 1.55), size 1.11 (×/÷ 1.28), Sérsic 2.1 (×/÷ 1.45). No gain in the
+  slow magnitude / size directions, so removed.
+- Why the slow directions are slow (long D32 chains, 80 galaxies; scripts kept in the job tmp only):
+  other target coordinates, type and neighbour count barely pin magnitude / size / Sérsic (conditional/marginal
+  sd 0.89); neighbour light within 1" is ~0.1% of the target flux and mixes ~4x faster than magnitude, so blending
+  is not the cause; the three are not a thin sheet (each keeps ~60% of its spread given the other two). On accepted
+  tiny steps log K changes ~15–20 per posterior sd.
+- `opt/scan.py` + `opt/scan.sh` (job 17331720, CPU): exact log K along each coordinate through 32 chain states,
+  everything else fixed. Smooth: cubic-fit residual 1e-4 median (90%: 0.05 / 0.01 / 0.003 for m_r / size / Sérsic).
+  Single-coordinate half-width (log posterior within 0.5) 0.05–2.8 posterior sd for m_r, median 0.5–0.7 — the
+  narrow direction differs between galaxies and states. Plot `SBSI/plots/galsbi_bright_likelihood_scan.png`.
+
+Queued (pre-declared `debug/rule_speed1.md`): e4096 / e1024 / c1024 exactness and speed, array 17331527 after
+Test 1 (17331485, 4 GPUs, 134/1,290 runs at ~45 min, none failed); analysis 17331528.
+
+Next: Test 1 and speed1 results. A gradient-based move would suit a smooth, steep target but needs gradients
+through the tree emulator (b) and the numpy prior — not started. More parallel chains per galaxy would fill the
+padded GPU batch cheaply, but helps only if Test 1 shows a short warm-up is enough (chain count is fixed at 4 now).
+
 ## 2026-10-17 (evening) — where bright sampling time goes; longer warm-up / fewer levels test launched
 
 Owner: before the mag 21–23 long-chain test, optimise the sampling and the computing efficiency. Read-only

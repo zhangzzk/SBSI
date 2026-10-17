@@ -29,8 +29,7 @@ from sbsi.galsbi_summary import (SummaryBatch, SummaryLikelihood, compress_scene
 from sbsi.galsbi_target_coordinates import GalSBITargetCoordinates
 from sbsi.measurement_model import load_measurement_model
 from sbsi.mcmc_proposals import (adjacent_swap_permutation, complementary_stretch_proposal,
-                                empirical_block_cholesky, fit_mixture_jump, gaussian_block_delta,
-                                mixture_jump_proposal, pooled_block_cholesky)
+                                empirical_block_cholesky, gaussian_block_delta, pooled_block_cholesky)
 from sbsi.models import V39_LIKE, load_detection_classifier, load_disk_response
 from sbsi.pseudo_marginal import metropolis_accept, retained
 
@@ -81,9 +80,6 @@ def main():
                         help='likelihood-tempering ladder, starting at the posterior (1) and strictly decreasing')
     parser.add_argument('--narrow-step-probability', type=float, default=0.,
                         help='state-independent share of morphology steps at a quarter of the frozen scale')
-    parser.add_argument('--mixture-jump-probability', type=float, default=0.,
-                        help='share of steps (taken from the magnitude/size/Sersic block) proposing that block from '
-                             'a Gaussian mixture fitted per observation and level at 3/4 of warmup, then frozen')
     parser.add_argument('--local-positions', action='store_true')
     parser.add_argument('--position-scale', type=float, default=.2)
     parser.add_argument('--observation-indices', type=int, nargs='+')
@@ -135,11 +131,6 @@ def main():
         raise ValueError('ensemble morphology requires plain three-coordinate joint morphology')
     if args.pooled_morphology and (not args.joint_morphology or args.joint_shape or args.warmup < 2048):
         raise ValueError('pooled morphology requires three-coordinate morphology and at least2048 warmup steps')
-    if args.mixture_jump_probability and not (
-            0 < args.mixture_jump_probability < .3 and args.joint_morphology and not args.joint_shape
-            and not args.ensemble_morphology and not args.local_positions and args.warmup >= 2048):
-        raise ValueError('mixture jumps require three-coordinate joint morphology, probability in (0, 0.3), '
-                         'no ensemble or position moves, and at least 2048 warmup steps')
     if args.joint_environment and not args.joint_morphology:
         raise ValueError('joint environment requires the persistent joint morphology pilot')
     if args.reuse_invariant_work and not args.joint_morphology:
@@ -266,14 +257,6 @@ def main():
             active='random half per observation, frozen complementary partners',
             correction='(dimension-1)*log(z)', coupled_walkers=True,
             diagnostics='per-walker Rhat/ESS are descriptive only; use independent ensembles')
-    if args.mixture_jump_probability:
-        protocol['proposal_blocks']['mixture_jump'] = [1, 6, 7]
-        protocol['proposal_block_probabilities'][0] -= args.mixture_jump_probability
-        protocol['proposal_block_probabilities'].append(args.mixture_jump_probability)
-        protocol['mixture_jump'] = dict(probability=args.mixture_jump_probability, components=4, inflation=2.,
-            broad_weight=.1, broad_inflation=4., fit_step=3*args.warmup//4, history_steps=args.warmup//2,
-            groups='the chains of one observation at one level', before_fit='attempts move nothing',
-            correction='independence ratio q(x)/q(x\'); frozen after the fit, so the target is unchanged')
     if levels > 1:
         protocol['tempering'] = dict(levels=levels, betas=betas.tolist(), target='target prior times kernel**beta',
             swaps='deterministic even/odd adjacent-level exchange after every step',
@@ -490,9 +473,6 @@ def main():
     morphology_factor = np.broadcast_to(np.diag(scales[blocks[0]]),
         (len(owner), len(blocks[0]), len(blocks[0]))).copy()
     recent = deque(maxlen=protocol['morphology_covariance']['window']) if args.joint_morphology else None
-    jump_block = len(protocol['proposal_block_probabilities'])-1 if args.mixture_jump_probability else None
-    jump_history = deque(maxlen=args.warmup//2) if jump_block else None
-    jump_mixture, jump_group = None, np.arange(len(owner))//nchains
     swap_attempts, swap_accepts = np.zeros((2, max(levels-1, 1))), np.zeros((2, max(levels-1, 1)))
     cold_exchanges = np.zeros(ncold, dtype=int)
     trace, type_trace, summary_trace, kernel_trace, accepted_trace, block_trace = [], [], [], [], [], []
@@ -540,17 +520,10 @@ def main():
             newkinds = 1-kinds
         elif block == 5:
             proposal, log_hastings = coords.propose_sed(x, rng)
-        elif block == jump_block:
-            if jump_mixture is None:
-                active_proposal[:] = False
-            else:
-                columns = protocol['proposal_blocks']['mixture_jump']
-                proposal[:, columns], log_hastings = mixture_jump_proposal(x[:, columns], jump_mixture, jump_group,
-                                                                          rng)
         elif ensemble_move:
             proposal, log_hastings, active_proposal = complementary_stretch_proposal(
                 x, [1, 6, 7], nchains, rng)
-        environment_only = block == 4 or (args.local_positions and block == 6)
+        environment_only = block == 4 or (block == 6 and not ensemble_move)
         invariant_likelihood = args.reuse_invariant_work and block in (2, 5)
         if args.reuse_invariant_work and environment_only:
             newprior, newdata, new_type_probability = logprior, scene.targets, type_probability
@@ -563,7 +536,7 @@ def main():
             if block == 4 or joint_environment:
                 fraction = 1. if joint_environment or rng.random() < .1 else args.refresh_fraction
                 newscene = prior.refresh(newscene, fraction, int(rng.integers(0, 2**63)))
-            elif args.local_positions and block == 6:
+            elif block == 6 and not ensemble_move:
                 newscene = prior.move_positions(newscene, args.position_scale, int(rng.integers(0, 2**63)))
             if invariant_likelihood:
                 # At fixed m_r, angular circularized radius, n, a, phase and
@@ -646,10 +619,6 @@ def main():
                 cold_exchanges += exchanged[0]
         if stored:
             trace.append(x[cold].copy())
-        if jump_block:
-            jump_history.append(x[:, protocol['proposal_blocks']['mixture_jump']].copy())
-            if step+1 == protocol['mixture_jump']['fit_step']:
-                jump_mixture = fit_mixture_jump(np.array(jump_history), nchains, seed=int(rng.integers(0, 2**31)))
         if args.joint_morphology:
             recent.append(x.copy())
             tuning = protocol['morphology_covariance']
