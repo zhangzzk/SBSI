@@ -1,5 +1,24 @@
 # Work log
 
+## 2026-10-18 — 1M pair with w8 bright chains: m = −0.50% ± 0.89% passes, c2 = +0.00072 ± 0.00019 still fails
+
+Result of `galsbi_pair1m_20261012/debug/rule_brightw8.md` (array 17337490: 1,720/1,720 units, 0 failed, 7.8 h on
+4 GPUs; analysis 17337491, 37 min). 34,338 mag < 21 galaxies, drawn start, 14336 steps / 8192 warm-up.
+
+- Repeat check (430 Test 1 units, same seeds, other GPUs): Δg2 +0.07 ± 0.07e-4, Δg1 −0.01% ± 0.04% of m ->
+  reproducible.
+- w8 − 8192-step drawn start, all bright galaxies: **Δg2 = −1.84 ± 0.25e-4** (expected about −2.3e-4 from Test 1),
+  Δg1 = −0.40% ± 0.11% of m. Largest rhat per galaxy median 1.43 -> 1.29.
+- 1M pair (w8 bright + drawn-start faint): **m = −0.50% ± 0.89%** (pass), **c2 = +0.000719 ± 0.000193** (3.7σ,
+  fail). Before: drawn 8192 bright m −0.10% / c2 +0.000903; measurement-start bright m −0.43% / c2 +0.000702.
+  Bright g1 score at g1 +843 ± 1,088 (zero within 1σ).
+- Reading: the bright chains' extra +2e-4 is gone; c2 is back near the measurement-start value and still fails.
+  Not final (rule): mag 21–23 chains are still the short measurement-start it0 chains. Where the rest of c2 sits
+  is not resolved by this run.
+- Outputs: `brightw8/` (~110 GB chains), `step2_result_brightw8_faintdraw.json`, `diff_brightw8_vs_*.json`.
+
+Next (owner decision): the mag 21–23 long-chain test with drawn starts and the w8 setting.
+
 ## 2026-10-17 (evening) — 1M pair: all bright units with the w8 setting launched
 
 Owner: "run w8 on all bright units on 4 GPUs". Pre-declared `galsbi_pair1m_20261012/debug/rule_brightw8.md`: the
