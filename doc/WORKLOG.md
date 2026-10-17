@@ -1,5 +1,33 @@
 # Work log
 
+## 2026-10-17 (afternoon) — Test 1: a longer warm-up (w8) replaces 4x long bright chains; speed switches not adopted
+
+Result of `galsbi_pair1m_20261012/debug/rule_opt1.md` (array 17331485: 1,290/1,290 runs done, none failed, 4.5 h on
+4 GPUs; analysis 17331496 -> `debug/opt1_result.txt`). 430 units, 8,582 mag < 21 galaxies, drawn start; reference
+D32 steps 8192–32768. Arm − reference, same galaxies:
+
+- Control D8: g2 +0.63 ± 0.14e-4 (4.6σ), g1 +0.15% ± 0.07% of m -> does not match (as expected; the test can
+  tell arms apart).
+- **w8** (14336 steps / 8192 warm-up, 8 levels): g2 +0.05 ± 0.09e-4 (0.6σ), g1 +0.03% ± 0.04% -> **matches**.
+- w4 (10240 / 4096): g2 +0.38 ± 0.11e-4 (3.3σ) -> does not match. w8l5 (5 levels): g2 +0.27 ± 0.12e-4 (2.3σ) -> does
+  not match.
+- Mixing (median rhat m_r / log size / Sérsic; slow ESS per s; s per galaxy): w8 1.23 / 1.20 / 1.24, 0.136, 78 s;
+  w4 1.31 / 1.25 / 1.22, 0.169, 57 s; w8l5 1.41 / 1.34 / 1.32, 0.117, 67 s.
+- Pre-declared decision: **w8 is the candidate production setting** for bright drawn-start chains (~1.75x the
+  8192-step cost instead of 4x). The short warm-up was the problem, consistent with the flat D32 windows.
+- `opt1.py` stopped after printing the verdict, when writing `opt1_result.json` (numpy bool not JSON
+  serialisable); the match flag is now cast to `bool`, no number changed. First text kept as
+  `opt1_result_17331496.txt`; rerun job 17337125 writes the JSON.
+
+Result of `debug/rule_speed1.md` (array 17331998, 2 GPUs, 20–23 min; analysis 17331999). Speed vs e4096: 2080 Ti
+e1024 x1.06, c1024 x1.12, g1024 x1.15; V100 x1.04, x1.21, x1.29. Exactness: starting log kernels differ from e4096 by
+up to 4.5e-4 (e1024) and 4.0e-4 (compiled), above the 1e-4 limit; stored chains identical for a median 0–3 of 2048
+steps. Pre-declared decision: **nothing adopted**. Note: even the batch size alone changes the start kernels by
+~3–5e-4, so the fixed 4096 batch is what keeps runs comparable.
+
+Next (owner decision): w8 bright drawn-start chains for all 1,720 bright units (~7 h on 4 GPUs), then the mag 21–23
+long-chain test.
+
 ## 2026-10-17 (late night) — CUDA-graph density mode added; pooled geometry gives no gain
 
 Code: a424768 `--compile-density reduce-overhead` (bare `--compile-density` unchanged): compiles the log-gap F8
