@@ -91,6 +91,10 @@ def main():
     parser.add_argument('--initialization', choices=['prior-bank', 'prior-draw', 'measurement'], default='prior-bank',
                         help='starting states only: best prior-bank state, a likelihood-weighted prior-bank draw, or best measurement-centred candidate')
     parser.add_argument('--device', choices=['cpu', 'cuda'], default='cuda')
+    parser.add_argument('--density-batch-size', type=int, default=4096,
+                        help='fixed padded F8/C8 batch; rows per step are levels x observations x chains')
+    parser.add_argument('--compile-density', action='store_true',
+                        help='torch.compile the log-gap F8 density (fused kernels; not bitwise the eager values)')
     parser.add_argument('--shear', type=float, nargs=2,
                         help='sampling shear g1 g2 (default: the reference protocol shear, i.e. the mock truth)')
     parser.add_argument('--profile-stride', type=int, default=1,
@@ -135,8 +139,7 @@ def main():
         raise ValueError('local positions require persistent SED pilot and positive finite position scale')
     betas = np.asarray(args.betas)
     if (betas[0] != 1 or np.any(np.diff(betas) >= 0) or betas[-1] <= 0
-            or (len(betas) > 1 and not args.joint_morphology) or (len(betas) > 1 and (
-                args.ensemble_morphology or args.pooled_morphology))):
+            or (len(betas) > 1 and not args.joint_morphology) or (len(betas) > 1 and args.ensemble_morphology)):
         raise ValueError('tempering requires persistent per-chain joint morphology and betas decreasing from 1 to >0')
     if not 0 <= args.narrow_step_probability < 1 or (args.narrow_step_probability and not args.joint_morphology):
         raise ValueError('narrow steps require joint morphology and probability in [0, 1)')
@@ -184,7 +187,8 @@ def main():
         seed=args.seed, reference=str(args.reference.resolve()), reference_protocol_sha256=digest(args.reference/'protocol.json'),
         disk_coefficient=('computed for stored posterior-level states from the last warm-up step on (NaN before); '
                           'the kernel at zero shear does not depend on b' if lazy_b else 'computed for every evaluated state'),
-        observations=indices, fixed_shear=g0, profile_stride=args.profile_stride, density_batch_size=4096,
+        observations=indices, fixed_shear=g0, profile_stride=args.profile_stride,
+        density_batch_size=args.density_batch_size, compiled_density=args.compile_density,
         chain_saved=not args.no_chain,
         diagnostic_draws='profile draws after warm-up' if args.no_chain else 'every step after warm-up',
         profile_shapes='co-moving: eps -> M_node^-1(M_g0(eps)), circularized radius kept, prior and Jacobian '
@@ -234,7 +238,8 @@ def main():
     if args.pooled_morphology:
         protocol['morphology_covariance'] = dict(window=8192, update_interval=1024, shrinkage=.05,
             circular_indices=[], freeze_step=args.warmup//2,
-            adaptation='pool same-observation chains; freeze halfway through warmup; then scalar tuning only')
+            adaptation='pool same-observation chains (per temperature level); freeze halfway through warmup; '
+                       'then scalar tuning only')
     if args.joint_environment:
         protocol['joint_environment'] = dict(probability_given_morphology=.2, morphology_scale=4.,
             refresh_fraction=1., adaptation='use local morphology scale; joint attempts do not tune it',
@@ -275,7 +280,8 @@ def main():
     # GPU and CPU trees agree to float32 rounding (<= 1.2e-7), not bitwise.
     torch.set_num_threads(len(os.sched_getaffinity(0)))
     model = load_disk_response(V39_LIKE, device=args.device, nthread=len(os.sched_getaffinity(0)))
-    likelihood = SummaryLikelihood(flow, detector)
+    likelihood = SummaryLikelihood(flow, detector, density_batch_size=args.density_batch_size,
+                                   compile_density=args.compile_density)
     galaxy, cosmo, _ = build_prior()
     prior = GalSBIScenePrior(galaxy)
 

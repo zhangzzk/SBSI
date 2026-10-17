@@ -8,8 +8,11 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+import torch
 
 from .catalogue_disk_likelihood import DiskCatalogueLikelihood
+from .disk_precision import physical_log_prob_with_gap
+from .flow_physical_disk import ConditionalPhysicalDiskFlow
 from .forward_catalogue import rescale_emulator_pairs
 from .output_conditioned_response import TRUTH_FEATURES
 from .v39_inference import FEATURES, V39CatalogueCache
@@ -136,13 +139,20 @@ class SummaryLikelihood:
     Returns log(C8 * disk density) in the existing standardized-output units.
     No empirical prior weight or measured-selection normalizer is included.
     """
-    def __init__(self, flow, detector, *, density_batch_size=4096):
+    def __init__(self, flow, detector, *, density_batch_size=4096, compile_density=False):
         if (tuple(flow.condition_preprocessor.feature_names) != FEATURES
                 or tuple(detector.preprocessor.feature_names) != FEATURES
                 or not isinstance(density_batch_size, int) or density_batch_size < 1):
             raise ValueError('retained F8/C8 feature contract and positive density batch required')
         self.flow, self.detector = flow, detector
         self.batch_size = density_batch_size
+        # One compiled log-gap density shared by every per-batch backend; fused kernels round differently
+        # from eager ones, so a run must not mix the two.
+        self.compiled_density = None
+        if compile_density:
+            if not isinstance(getattr(flow, 'model', None), ConditionalPhysicalDiskFlow):
+                raise ValueError('compiled log-gap density requires a physical disk flow')
+            self.compiled_density = torch.compile(physical_log_prob_with_gap, dynamic=True)
 
     def log_kernel(self, summary, observed, g1, g2):
         observed = observed.reset_index(drop=True)
@@ -162,6 +172,8 @@ class SummaryLikelihood:
             zero = pd.DataFrame(block.values[:, :8], columns=FEATURES)
             cache = V39CatalogueCache(zero, np.ones(len(zero)), {}, detector=self.detector)
             backend = DiskCatalogueLikelihood(self.flow, cache, disk_response=_SummedResponse(block))
+            if self.compiled_density is not None:
+                backend._precision_density = self.compiled_density
             values = backend.conditional_log_likelihood(observed.iloc[rows], g1, g2,
                 atom_indices=np.arange(len(rows)), object_chunk=self.batch_size)
             probability = cache.get(g1, g2).detection_probability
