@@ -1,5 +1,30 @@
 # Work log
 
+## 2026-10-17 (late night) — CUDA-graph density mode added; pooled geometry gives no gain
+
+Code: a424768 `--compile-density reduce-overhead` (bare `--compile-density` unchanged): compiles the log-gap F8
+density for the fixed padded batch shape and replays recorded CUDA graphs, one launch per call instead of the
+~40,000 small linear/activation calls per 1,024 steps seen in the profile. Test extended to both modes and to a
+refused bad value; full suite 388 passed, 3 skipped. CPU check (`debug/smoke/compile_check.py`, job 17331982,
+256 real starting rows): both compiled modes repeat bitwise; max |compiled − eager| log K 2.6e-5 (`True`) and
+4.8e-5 (`reduce-overhead`); eager equals the stored start kernel exactly.
+
+`debug/rule_speed1.md` amended before any speed run: fourth arm `g1024` (batch 1024 + CUDA graphs), all arms on
+`snapshot_a424768`, time limit 8 h; adopt the fastest arm that is exact enough and >10% faster than e4096 (compiled
+arms also >10% faster than e1024) on both GPUs. Resubmitted as array 17331998 after Test 1, analysis 17331999 (old
+17331527/17331528 cancelled unstarted).
+
+Diagnostic (no decision): `debug/smoke/pool.sh` (array 17331971, CPU 16 cores, units k=1 and k=5 = 40 bright
+galaxies, 8 levels, 8192 / 2048 warm-up, batch 256, same seeds), pooled vs per-chain morphology geometry. Paired
+ESS-per-step ratio pooled/base (geometric mean over 40 galaxies, ± in log): magnitude 0.81 ± 0.11, size 1.02 ± 0.12,
+Sérsic 0.95 ± 0.15, e1 0.89 ± 0.12, e2 0.85 ± 0.20. No gain; not pursued. Per-second ratios looked better but the
+base k=5 run sat on a slow shared node (33 min vs ~15 min), so wall time is not comparable. Caveat: bulk ESS here is
+5–170 with R-hat often >1.3, so each ratio is rough; the 40-galaxy average is the usable number.
+Throughput aside: CPU-only (16 cores, batch 256) ~150–245 galaxy-steps/s per job, i.e. ~13 per core; a GPU slot
+(one core + shared GPU, Test 1) ~190–220 per core. 500 extra CPU cores would add roughly one GPU's worth.
+
+Next: speed1 after Test 1 (748/1,290 runs done at 12:20, none failed).
+
 ## 2026-10-17 (night) — mixture jumps tried and removed; bright likelihood is smooth; speed switches queued
 
 Code (owner: optimise sampling and computing efficiency before the mag 21–23 long-chain test):
