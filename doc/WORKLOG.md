@@ -1,5 +1,29 @@
 # Work log
 
+## 2026-10-18 — 1M pair c2: reflection, and per-band selection test (Stage 0a–0c) launched
+
+Reflection `galsbi_pair1m_20261012/debug/reflection_c2_20261018.md`: the c2 excess (+0.000719 ± 0.000193) is not
+localised. Bright and mid chains are converged, yet every band shows some excess, and earlier per-band slopes
+(`rule_mirror.md`) put band membership at the g = 0 draw, unlike the data. Earlier claims corrected there: the faint
+start effect is only 2.0σ, and the half-split predictor failed for mid. The faint long-chain rule
+(`rule_faintlong.md`, ~75 GPU-hours) stays a draft on hold.
+
+Owner: "go" (Stage 0). Pre-declared `debug/rule_bandsel.md`: each measured-magnitude band gets its own c2 with its
+own selection term. The production `selection()` (source_snapshot, unchanged) runs with plan
+`debug/bandsel/plan.json`: limits [21, 23, 24, 25, 25.8], new seed family 2029107001, 8 replicas × 800 chunks. Band
+Z = Z(hi) − Z(lo), so membership follows the measured magnitude at each shear node, as in the data. The same run
+re-checks the all-galaxy selection slope with new seeds (0c). It also compares band fractions and mean measured e2,
+data vs model (0b).
+- Files (data dir, not in git): `debug/bandsel.sh` (1 GPU, 16 cores, replica = array id), `debug/bandsel.py`
+  (analysis; `BANDSEL_TEST=1` = code test), `debug/bandsel_analysis.sh`.
+- Timing test 17347393 (3 chunks, `bandsel_timing/`, not a result): 9.3 s per chunk on an A40. The array runs at
+  5–7 s per chunk (production, sharing GPUs: ~17 s).
+- Code test 17347455 on the timing chunks: reproduces the paired step2 g (0.019899, +0.000719) to 1e-9 and runs
+  every section; its band numbers mean nothing (3 chunks).
+- Jobs: array 17347485 (0–7, at most 4 GPUs), analysis 17347604 (afterok, CPU). Expected ~3–4 h.
+
+Next: apply the rule's readings when `debug/bandsel_result.txt` exists.
+
 ## 2026-10-18 — 1M pair mag 21–23 long-chain test: w8 is enough; these chains are not the c2 source
 
 Result of `galsbi_pair1m_20261012/debug/rule_midlong.md` (array 17340158: 2,250/2,250 runs, 0 failed, 11.2 h on
