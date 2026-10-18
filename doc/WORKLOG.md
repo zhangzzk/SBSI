@@ -1,5 +1,29 @@
 # Work log
 
+## 2026-10-18 — 1M pair per-band selection test (Stage 0): c2 excess is spread over all bands, selection re-check agrees
+
+Result of `galsbi_pair1m_20261012/debug/rule_bandsel.md` (array 17347485: 8/8 replicas, 0 failed, 1.5–1.9 h each
+on ≤ 4 GPUs; analysis 17347604, 3 min; result appended to the rule; `debug/bandsel_result.txt`, `.json`). Check:
+the paired step2 g (0.019899, +0.000719) is reproduced (1,990,072 galaxies).
+
+- Per measured-magnitude band with its own selection term, c2 in 1e-4: < 21 +11.3 ± 6.1, 21–23 +6.2 ± 2.9,
+  23–24 +15.4 ± 5.2, 24–25 +2.3 ± 3.7, 25–25.8 +3.1 ± 5.6. Weighted mean **+6.57 ± 1.86 (3.5σ)**; χ² about the
+  common mean 5.2/4 (p 0.27) -> **spread (common cause), not one band**. m per band within 1σ of 0.
+- The `rule_mirror.md` 23–25 / ≥ 25 sign flip is an edge artefact (the two bands differ by 0.8σ).
+- Selection re-check with new seeds: dlogZ/dg2 0.00430 ± 0.00037 vs production 0.00431 ± 0.00038 (0.0σ) -> the
+  selection Monte Carlo is fine. Pooling all 16 replicas: m −0.41% ± 0.85%, c2 +0.000720 ± 0.000186.
+- Closure, data vs model: band fractions and mean measured e2 all within 3σ (largest: 24–25 fraction +2.4σ) -> no
+  mock–model mismatch flag from these checks.
+- Limitations: band χ² treats bands as independent although their selection terms share chunks (selection is the
+  smaller part of each error); the 23–25 mirror e2 comparison was not printed. Not measured.
+
+Validation: all 8 replicas exit 0 with `result.json`; analysis exit 0, step2 reproduction check passed. No code,
+models, settings or the 1M result changed; nothing retuned.
+
+Next (per the rule): the faint long-chain run (`rule_faintlong.md`, ~75 GPU-hours) is not the next step. Next is
+Stage 1b (faint g1→g2 leak, posterior calibration) and the selection/likelihood side as a common cause; the source
+review's twin chunk cutoff and shape-support gap act on all bands and are unmeasured candidates. Owner decision.
+
 ## 2026-10-18 — 1M pair c2: reflection, and per-band selection test (Stage 0a–0c) launched
 
 Reflection `galsbi_pair1m_20261012/debug/reflection_c2_20261018.md`: the c2 excess (+0.000719 ± 0.000193) is not
