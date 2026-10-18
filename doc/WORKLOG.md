@@ -1,5 +1,33 @@
 # Work log
 
+## 2026-10-19 — 1M pair faint posterior calibration from final chain states: faint calibrated in e2, shape posteriors do not carry most of c2
+
+Pre-declared `galsbi_pair1m_20261012/debug/rule_faintcalib.md` (result appended there). Faint chains are not kept,
+but every faint unit stores each chain's final state (`final_scenes.npz`) and start. A converged chain's final
+state is a posterior draw, so the calibration identity of `rule_calib.md` applies to it. `calib/faintcalib.py`
+(job 17349935, CPU) compares these states against the regenerated truth.
+- Faint, production chains (1,778,506 galaxies): final − truth e2 **−0.73 ± 0.96e-4**; starts −0.30 ± 0.96e-4.
+  Bands: 23–24 +3.2 ± 2.2, 24–25 −2.7 ± 1.6, ≥ 25 −0.5 ± 1.6 (1e-4). → faint calibrated; no start offset to
+  remember; H1 (faint g2 non-convergence) disfavoured as the c2 source.
+- Method check: bright w8 final states +21.3 ± 4.8e-4, the same sign and size as the chain mean (+26.3 raw).
+- Approximate conversion to c2 (Gaussian intrinsic prior, score ≈ E_post[e]/σ², step2 information):
+  - bright non-convergence +1.8 ± 0.2;
+  - mid −1.6 ± 3.1;
+  - faint −2.0 ± 2.7;
+  - sum ≈ −1.8 ± 4.1e-4, against the 1M c2 of +7.2 ± 1.9e-4.
+
+  The shape posteriors do not carry most of c2. The bright non-convergence plausibly carries ~+1.3–1.8e-4. The
+  conversion ignores the measured-shape response path and selection; it is a budget, not a correction.
+- Faint leak test (`rule_faintleak.md`): code check on partial outputs passes. The analysis reproduces the 1M
+  step2 g to 1e-9, and selection at node (0, 0) reproduces bandsel to 1.9e-9 relative. The full run continues
+  (~13 h).
+
+Validation: convention check e(a, ψ) vs truth < 1e-12; `faintcalib.py test` then full, exit 0. No production code,
+models, settings or the 1M result changed; nothing retuned.
+
+Next: the faint leak result. What is left of c2 points at the step from posteriors to the score (profile-ratio
+estimate, H3) or the selection term (H2), not at the shape posteriors.
+
 ## 2026-10-19 — 1M pair Stage 1b: posterior calibration finds unconverged bright chains (blend mode); faint leak test running
 
 Owner: "go with Stage 1b" (`galsbi_pair1m_20261012/debug/reflection_c2_20261018.md` §4). Two pre-declared rules,
