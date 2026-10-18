@@ -1,5 +1,21 @@
 # Work log
 
+## 2026-10-18 — 1M pair: mag 21–23 long-chain test launched
+
+Owner: "run the mag 21–23 long-chain test on 4 GPUs". Pre-declared `galsbi_pair1m_20261012/debug/rule_midlong.md`.
+
+- `debug/mid_prep.py` -> `debug/mid_units.txt`: every it0 bright galaxy with measured mag >= 21 after the step2.py
+  cuts, 179,947 galaxies in 8,998 units (asserted disjoint from `truth_units.txt` and, with it, all bright
+  galaxies). Test subset: every 8th unit, 1,125 units / 22,500 galaxies.
+- Two arms, both drawn start, 8 rungs, narrow .5, `--shear 0 0` (as it0), `snapshot_d776abb`, the same seeds per
+  unit (2027907001 + k − 1, bank 2032907001 + k − 1): D32 (32768 / 8192, reference) and w8 (14336 / 8192).
+  Launcher `debug/midlong/ml.sh` (from `opt1/o1.sh`; arms, steps, `--shear 0 0`, seeds, paths, 320G differ), array
+  17340158 (4 GPUs, `inter,cip`, 30 one-core slots each), 2,250 runs, all D32 first.
+- `debug/mid.py` (analysis 17340161, afterany; refuses before all runs are done): w8 − D32, and D32 − it0 /
+  w8 − it0 against the current `pergal_<side>.npz` scores, scene-paired errors, also scaled ×179,947/22,500;
+  mixing per arm. Readings stated in the rule before any number; no 1M m/c2 from the subset; nothing retuned.
+- Expected about 13–15 h on 4 GPUs. Checked: `py_compile`, `bash -n`; mid.py refusal path.
+
 ## 2026-10-18 — 1M pair with w8 bright chains: m = −0.50% ± 0.89% passes, c2 = +0.00072 ± 0.00019 still fails
 
 Result of `galsbi_pair1m_20261012/debug/rule_brightw8.md` (array 17337490: 1,720/1,720 units, 0 failed, 7.8 h on
