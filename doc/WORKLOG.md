@@ -1,5 +1,30 @@
 # Work log
 
+## 2026-10-18 — 1M pair mag 21–23 long-chain test: w8 is enough; these chains are not the c2 source
+
+Result of `galsbi_pair1m_20261012/debug/rule_midlong.md` (array 17340158: 2,250/2,250 runs, 0 failed, 11.2 h on
+4 GPUs; result appended to the rule; `debug/midlong_result.txt`, `midlong_result.json`). 1,125 units, 22,500
+mag 21–23 galaxies, drawn start, same seeds in both arms; scaled ×7.998 to all 179,947 mag 21–23 galaxies.
+
+- w8 − D32: **g2 +0.05 ± 0.07e-4 (+0.7σ), g1 −0.05% ± 0.03% of m (−1.5σ) -> w8 is enough for mag 21–23**.
+- D32 − it0 (current step2.py input), scaled: **g2 +0.13 ± 0.67e-4 (+0.2σ) -> not the source of c2** (≤ 1.46e-4
+  at 2σ; expected −1 to −3e-4 did not appear). **g1 +1.07% ± 0.31% of m (+3.4σ)**: converged mag 21–23 chains
+  would raise the 1M g1 by about 1% of m (scaled, not a measurement). w8 − it0: g2 +0.52 ± 0.77e-4, g1 +0.68% ±
+  0.36%.
+- Mixing (median rhat of e1 e2 m_r log size Sérsic / bulk ESS / s per galaxy): D32 1.02–1.03, ESS 115–506, 148 s;
+  w8 1.06–1.10, ESS 31–165, 50 s.
+- Analysis fix: the first analysis job 17340161 ran `debug/mid.py` on one of its 8 cores (~8 MB/s through ~200 GB
+  of chain archives, projected ~5.9 h against the 6 h limit; the limit cannot be raised by the user). `mid.py` now
+  loads units in a `multiprocessing.Pool(SLURM_CPUS_PER_TASK)` (`load(unit)`, the same scores/mixing code; results
+  combined in the original unit order). With owner approval 17340161 was cancelled and rerun as 17343398: 62 min.
+  Checked: `py_compile`; job exit 0, `midlong_result.json` written.
+- Limitations: a subset (every 8th unit) with no pair partners, so errors are per galaxy rather than paired; the
+  scaled numbers assume the subset is representative.
+
+Next (owner decision): the remaining c2 (+0.000719 ± 0.000193) is not in the mag < 21 (w8) or the mag 21–23
+chains; what is left is the faint drawn-start band and the F8/C8 frame tilt. A full mag 21–23 w8 rerun would
+mainly move m (about +1% of m), not c2.
+
 ## 2026-10-18 — 1M pair: mag 21–23 long-chain test launched
 
 Owner: "run the mag 21–23 long-chain test on 4 GPUs". Pre-declared `galsbi_pair1m_20261012/debug/rule_midlong.md`.
