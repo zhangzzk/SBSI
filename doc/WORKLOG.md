@@ -1,5 +1,54 @@
 # Work log
 
+## 2026-10-19 — 1M pair Stage 1b: posterior calibration finds unconverged bright chains (blend mode); faint leak test running
+
+Owner: "go with Stage 1b" (`galsbi_pair1m_20261012/debug/reflection_c2_20261018.md` §4). Two pre-declared rules,
+written before any of their numbers existed.
+
+**Part 2, posterior calibration** (`debug/rule_calib.md`, result appended there). The mock is model-generated, so
+for converged chains the average of (posterior mean − truth) over the observed galaxies is zero for any split made
+from the data or the chains. The true latents were regenerated exactly from the mock seeds (`debug/calib/
+regen_truth.py`, job 17349896, 2,000,086 rows). Gate: the truth features equal the generator's `prepared` features
+exactly (chunks 0 and 250, max |diff| 0.0). Measured mag vs true m_r corr 0.94; posterior vs true e2 corr 0.91.
+The GPU replay of the measured columns waits for the GPU cap. `calib/calib.py` ran on the kept chains (job
+17349917, ~5 min, 32 CPUs).
+- Bright, production w8 chains: posterior e2 − truth (minus the small shear-offset prediction) **+30.0 ± 3.8e-4
+  (7.9σ)**. The exact-shear measurement-start chains give +21.7 ± 3.7e-4. e1 is fine (+6.1 ± 3.8e-4).
+- Mid 21–23 (w8, D32): e2 is calibrated, −5.6 ± 10.8e-4. That is too weak to test the mid c2 (+6.2 ± 2.9e-4).
+- Where (exploratory; split by chain output only):
+  - The excess is entirely in the 44% of bright w8 galaxies whose chains visit the blend mode, where the target is
+    made fainter and its light is given to neighbours. Their posterior magnitude is **0.42 ± 0.01 mag fainter
+    than the truth**, and their e2 excess is +62.8 ± 7.0e-4.
+  - These chains start 3.4 mag too faint (the drawn start) and are still relaxing. Magnitude error goes +0.51 →
+    +0.34 mag, and e2 error +0.0066 → +0.0052, from the first to the second half of the kept steps.
+  - The other bright galaxies are calibrated: e2 −0.0002 ± 0.0006.
+  - Measurement starts reach that mode in only 12% of galaxies.
+- Reading: the bright posterior e2 excess is chain non-convergence in the blend direction, not a mismatch between
+  the sampler's likelihood and the generator. The earlier shear-score checks (w8 vs 4× longer chains) did not show
+  it. It does not by itself explain the 1M c2: bright's own c2 is +11.3 ± 6.1e-4, the excess is spread over all
+  bands, and faint chains are not kept, so faint is not measured.
+- Correction to the rule text: its "pair sum" check is not valid. Being in a pair depends on the twin's data,
+  which the chain does not condition on, so the check is not used.
+
+**Part 1, faint g1→g2 leak** (`debug/rule_faintleak.md`; running).
+- Run A: every faint unit at g* = (0.01990, 0.00072), with the same per-unit seeds as `faintdraw/`
+  (`faintleak/fl.sh`; array 17349882 tasks 0–1, plus 17349883 tasks 2–3 after the selection array and the GPU
+  replay).
+- Run B: selection at g* with the `bandsel` seeds (`faintleak/sel`, array 17349881, 2 at a time).
+- Startup checks:
+  - Run A profile nodes sit at g* ± 0.002, and seeds and galaxies equal `faintdraw/` (the only other change is
+    the disk term, which must be computed away from g = 0).
+  - Run B node (0, 0) reproduces `bandsel` to 7e-9 relative.
+- Units take ~750 s (vs 560 s at g = 0), so the run needs ~13–14 h wall within the 4-GPU cap.
+- Analysis: `debug/faintleak.py` (CPU).
+
+Validation: truth gate as above; `calib.py test` (40 units/run) then full run, exit 0; both rules pre-declared.
+No production code, models, settings or the 1M result changed; nothing retuned.
+
+Next: finish the faint leak test and the GPU replay. The bright drawn-start non-convergence is a separate finding.
+Fixing it (longer warm-up, a measurement or mixed start, or moves between the two modes) and checking whether
+bright c2 moves is an owner decision.
+
 ## 2026-10-18 — 1M pair per-band selection test (Stage 0): c2 excess is spread over all bands, selection re-check agrees
 
 Result of `galsbi_pair1m_20261012/debug/rule_bandsel.md` (array 17347485: 8/8 replicas, 0 failed, 1.5–1.9 h each
