@@ -1,5 +1,34 @@
 # Work log
 
+## 2026-10-19 — 1M pair faint g1→g2 leak test: no faint leak (Δc2 −0.21 ± 1.79e-4); calibration replay gate passes exactly
+
+Pre-declared `galsbi_pair1m_20261012/debug/rule_faintleak.md` (result appended there). All 5612 faint units of both
+sides were re-run at g* = (0.0199, 0.00072), the current 1M estimate, with the production faint command and the same
+per-unit seeds (jobs 17349882/17349883, 0 failed). The selection was re-run at g* with the bandsel seeds (job
+17349881, 8 replicas × 800 chunks). `faintleak.py` (job 17354580) compares the faint scores at g* with their
+straight-line prediction from g = 0.
+- Checks: the analysis reproduces the 1M step2 g to 1e-9. Selection node (0, 0) repeats bandsel to ≤ 3e-9 in 6385
+  of 6400 chunks, but 15 chunks (replicas 3, 5) differ by up to 3.2e-5 relative. That fails the declared 1e-6, so,
+  as declared, the unpaired selection error is used (5.4 vs 5.0e-4 per component; immaterial).
+- All faint (1,775,787 galaxies): **Δc2 −0.21 ± 1.79e-4** (score −0.14 ± 1.54, selection −0.07 ± 0.92). Bands:
+  23–24 −1.03 ± 1.35, 24–25 +0.18 ± 0.78, ≥ 25 +0.64 ± 0.48. **Δg1 +0.01% ± 0.89% of m**, secant/I 1.000.
+- 1M with faint evaluated at g*: m −0.49% ± 0.90%, c2 +0.000698 ± 0.000195 (still FAIL, 3.6σ).
+- Reading: no faint leak. Bound |Δc2| + 2σ = 3.8e-4 (at most ~half the +7.2e-4 excess; measured zero). With bright
+  checked earlier, the one-step evaluation at g = 0 is cleared as the c2 source for ≥ 91% of galaxies.
+- Calibration gate: the GPU replay (job 17349897, A40) rebuilds chunks 0 and 250 of the stored mock bit for bit:
+  same scenes (1996, 1951), measured columns and features max |diff| 0.0 (`rule_calib.md` gate section).
+- Code fix on the way: the full-mode analysis ran out of memory twice (96G, 360G). `x['L'][i]` on an `NpzFile`
+  re-read the whole array for every galaxy, and each row kept it alive. It now reads each array once (peak 1.5 GB);
+  no number depends on it.
+
+Validation: the step2 reproduction (1e-9), the node-0 comparison per replica, and the unpaired-error recomputation
+(`faintleak_result_unpaired_errors.json`; it reproduces the paired selection errors to 1e-6 first). No production
+code, models, settings or the 1M result changed; nothing retuned.
+
+Next (owner's decision): Stage 1b is complete. The one-step evaluation, the faint chains and the shape posteriors
+do not explain c2; the bright non-convergence carries ~+1.3–1.8e-4. What is left points at the posterior-to-score
+step (profile-ratio score estimate, H3) or the selection term (H2).
+
 ## 2026-10-19 — 1M pair faint posterior calibration from final chain states: faint calibrated in e2, shape posteriors do not carry most of c2
 
 Pre-declared `galsbi_pair1m_20261012/debug/rule_faintcalib.md` (result appended there). Faint chains are not kept,
