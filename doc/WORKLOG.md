@@ -1,5 +1,31 @@
 # Work log
 
+## 2026-10-20 — 1M pair c2, true-parameter (oracle) score test: precision gate fails (projected σ c2 33.5e-4); selection-only version projected at 1.8e-4
+
+Owner: "go with the true-parameter score test". Pre-declared in `galsbi_pair1m_20261012/debug/rule_oracle.md`
+(test result and planning estimate appended there).
+- Idea: the mock is reproduced bit for bit, so every galaxy's true nine-value summary is known. Score each galaxy at
+  its truth and the true shear (0.02, 0): ∂ log K − ∂ log Z. With the generator's K and Z its sum is zero. No chains,
+  prior or Newton step are involved, so this splits "likelihood/selection" from "posterior side".
+- New scripts:
+  - `oracle/oracle_kernel.py`: CPU, source_snapshot; rebuilds z_i with `prepared()` and checks it against
+    `calib/truth_*`; b from `response.predict` as `mock_panel`; log K at 5 nodes.
+  - `oracle/oracle.py`: the step2 loader from `halfchain.py`; bands as bandsel; posterior-side part P.
+  - `oracle/oracle.sh`; `oracle/sel/plan.json` (written, unused).
+- Test (chunks 0 and 250; jobs 17376565, 17376642):
+  - code checks pass: features exact, 0 nonfinite log K, step2 reproduced to 1e-9;
+  - one bug fixed before any number: a parquet row count read with `columns=[]`.
+- **Gate fails:** projected σ(c2) = 33.5e-4 (needs ≤ 3.6e-4); bright band 2518e-4, faintest band 14e-4. With the
+  true shape known, each score carries the galaxy's full measurement noise, and the antithetic twin does not cancel
+  it. As declared, the full run and the GPU selection run were not started; no central value was computed.
+- Planning estimate (errors only, `oracle/selnoise.py`, job 17376692, CPU 2 min):
+  - The oracle score's selection part, ∂ log P_sel(z_i) − ∂ log Z (C8 probability × cut-pass probability at the
+    true summary, 64 QMC draws), is projected at σ(c2) ≈ 1.8e-4 (m ±0.87%). The C8 part alone is 0.05e-4.
+  - That is a galaxy-by-galaxy H2 test at ~1/7 the error of the 70–100 GPU-h brute-force generator test.
+  - Cost: ~7 CPU-h + the selection at the truth (4 GPUs × ~1.6 h). Needs a new rule; the owner decides.
+
+Validation: the code checks above. No production code, models, settings or the 1M result changed; nothing retuned.
+
 ## 2026-10-20 — 1M pair c2, H3 step 1: profile-ratio log-mean bias cleared (Δc2 +0.0065 ± 0.0046e-4); H2 code paths match the generator; independent mocks show the same c2 sign
 
 Pre-declared `galsbi_pair1m_20261012/debug/rule_halfchain.md` (result and follow-ups appended there). Each
