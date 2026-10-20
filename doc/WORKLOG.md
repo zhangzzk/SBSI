@@ -1,5 +1,41 @@
 # Work log
 
+## 2026-10-20 — 1M pair c2, selection-only true-parameter test: selection cleared (c2 −0.99 ± 1.14e-4 vs production +7.20 ± 1.93e-4)
+
+Owner: "work autonomously" (the follow-up proposed after the full oracle failed its gate). Pre-declared in
+`galsbi_pair1m_20261012/debug/rule_seloracle.md`; Test and Result sections appended there.
+- **Idea.** Every mock galaxy's true summary is known.
+  - At the true shear (0.02, 0), the selected galaxies' summed ∂ log P_sel(z_i) must equal N ∂ log Z, if the
+    generator's selection is what the model's selection describes.
+  - P_sel is the C8 probability × the fraction of 256 QMC flow draws passing the cuts, with b per draw and the
+    disk transport.
+  - This tests H2 galaxy by galaxy, with no chains and no measurement-density term.
+- **New scripts:**
+  - `oracle/selpart.py`: CPU array, source_snapshot; features asserted against `calib/truth_*`; rows with a zero
+    band count are rerun with 4096 draws.
+  - `oracle/seloracle.py`: the step2 loader; per-scene errors plus the selection error; draw-count check.
+  - `oracle/selnoise.py`: planning.
+  - `oracle/oracle.sh`: modes `selpart`, `selanalysis`, `selnoise`.
+  - Selection at the truth: `oracle/sel`, 4 replicas, 4 GPUs.
+- **Runs:**
+  - per-galaxy 17377008 + 17377084: 25 × 16 cores. Tasks 16–22 failed the exact-feature assert on th-cl-dell
+    nodes (CPU rounding) and were rerun with those nodes excluded.
+  - selection 17376940: 4 × ~1.55 h GPU;
+  - analysis 17377695.
+  - Check node vs faintleak/sel: replicas 0–2 agree to 1e-8; replica 3 (different GPU model) agrees to 3e-4.
+- **Result.** All 1,990,072 galaxies; step2 reproduced to 1e-9; draw check +0.07 ± 0.76e-4.
+  - **O c2 = −0.99 ± 1.14e-4 (−0.9σ)**; g1: m −0.13% ± 0.56%.
+  - Bands (c2, 1e-4): < 21 −9.99 ± 3.65 (−2.7σ; draw-sensitive); 21–23 +2.41 ± 2.63; 23–24 −4.98 ± 4.19;
+    24–25 −0.12 ± 3.85; 25–25.8 −3.51 ± 7.01. None is positive beyond 1σ.
+- **Reading (as declared): selection cleared.**
+  - H2 can account for at most +1.3e-4 of the +7.2e-4 (O + 2σ; |O| + 2σ = 3.3e-4).
+  - Cleared before: the half-chain log-mean bias, the faint g1→g2 leak; shape posteriors ≤ ~1.8e-4.
+  - What remains: the measurement density versus the generator (not testable at true parameters with this
+    noise), or the posterior side (the sampler's scene prior, the score step).
+
+Validation: the code checks above; the full-mode asserts (500 files, every galaxy present). No production code,
+models, settings or the 1M result changed; nothing retuned.
+
 ## 2026-10-20 — 1M pair c2, true-parameter (oracle) score test: precision gate fails (projected σ c2 33.5e-4); selection-only version projected at 1.8e-4
 
 Owner: "go with the true-parameter score test". Pre-declared in `galsbi_pair1m_20261012/debug/rule_oracle.md`
