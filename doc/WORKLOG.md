@@ -1,5 +1,55 @@
 # Work log
 
+## 2026-10-20 — 1M pair c2, measurement-only true-parameter test: measurement side cleared for the positive c2 (21–25.8: −2.96 ± 1.11e-4)
+
+Owner: "go on" (step 1 of the proposed plan). Pre-declared in `galsbi_pair1m_20261012/debug/rule_measoracle.md`
+(planning choice, result and three exploratory follow-ups appended there, each written before its run).
+- **Idea.** The selection half of the true-parameter score is cleared. The measurement half,
+  Σ [∂ log K(y_i | z_i) − ∂ log P_sel(z_i)], was far too noisy with one real draw per galaxy (σ c2 33.5e-4).
+  - Instead, redraw each galaxy's measurement 128 times from its true summary at the true shear, exactly as
+    `mock_panel` does, and check E[1_A ∂ log f] = ∂ P_A per galaxy and band.
+  - C8 cancels, so this tests only the flow/transport density against the generator.
+  - No chains, prior or score step are involved.
+- **New scripts** (data dir `debug/oracle/`, outside git):
+  - `measpart.py`: CPU array; truth asserted against `calib/truth_*`; log f = log_kernel − log C8, constant
+    difference checked to 9e-16; env MEAS_DRAWS, MEAS_QMC, MEAS_D, MEAS_NCHUNK.
+  - `measoracle.py`: analysis on the seloracle loader.
+  - `measbright.py`, `measbrightcut.py`, `measdstep.py`: follow-ups.
+  - `oracle.sh`: modes `measpart`, `measanalysis`, `measbright`, `measbrightcut`, `measdstep`.
+- **Planning** (2 chunks, errors only): QMC redraws project σ 1.65e-4 at 64 draws vs 3.88e-4 iid. 128 QMC redraws
+  chosen (projected ≤ 1.17e-4).
+- **Runs:**
+  - 17386608 + 17386652 + 17386712: 25 × 16 cores, ~110 core-h. The exact-truth assert stopped tasks, before any
+    output, on x86-64-v4 nodes (th-cl-262h*, usm-cl-1116cs*) and on usm-cl-826bac02 / usm-cl-seitz3. They were
+    rerun on th-cl-hua/rome only.
+  - Analysis 17386675.
+- **Result.** All 1,990,072 galaxies; step2 reproduced; redraw acceptance equals the selpart acceptance in every
+  band (|z| ≤ 0.9).
+  - **Primary (mag 21–25.8, total I): c2 −2.96 ± 1.11e-4 (−2.7σ), m +0.51% ± 0.49%.**
+  - Bands: 23–24 −0.5 ± 4.6; 24–25 +0.7 ± 3.5; 25–25.8 +0.7 ± 5.7; 21–23 −12.0 ± 5.1; < 21 −228 ± 15 (in their
+    own I_B).
+- **Follow-ups (exploratory):**
+  1. 145 bright galaxies, 2048 redraws, no cuts: the mean score at the truth is 0 to ~1e-5 of its own Fisher
+     information, with and without the disk transport (b = 0), at d = 0.001/0.002/0.004.
+  2. The same galaxies with each cut region: the identity holds to ~1e-5, and the selpart and redraw code paths give
+     the same pass-fraction slopes.
+  3. The same redraws with d = 0.001 on 50 chunks:
+     - primary Δ +0.18 ± 0.07e-4 → −2.72e-4 at zero step, stable;
+     - bright Δ +10,020 ± 822e-4 and 21–23 Δ +17.7 ± 3.5e-4: these bands are not converged in the step.
+     Known-truth bright scores are so sharp, compared with the production information, that tiny numerical errors
+     of log f dominate. The bright measurement side stays untested at production precision.
+- **Reading.**
+  - The measurement density does not carry the positive c2 (bound ≤ −0.7e-4 on the positive side). With the
+    selection cleared, the true-parameter score at 21–25.8 is, if anything, negative.
+  - The +7.2e-4 sits between the true-parameter score and the production score: the posterior side (the scene
+    prior vs the generator tables, bank size or step inside the production score), or bright galaxies (untested,
+    +2.1 ± 0.5e-4 of c2).
+  - Next (cheap): the production score step and bank size on saved states (d = 0.001/0.004), then a sampler run
+    with no data against the generator population.
+
+Validation: the code checks above; full-mode asserts (500 files, every galaxy); compile checks. No production code,
+models, settings or the 1M result changed; nothing retuned.
+
 ## 2026-10-20 — 1M pair c2, selection-only true-parameter test: selection cleared (c2 −0.99 ± 1.14e-4 vs production +7.20 ± 1.93e-4)
 
 Owner: "work autonomously" (the follow-up proposed after the full oracle failed its gate). Pre-declared in
