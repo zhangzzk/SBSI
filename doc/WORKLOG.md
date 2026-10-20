@@ -1,5 +1,32 @@
 # Work log
 
+## 2026-10-20 — 1M pair c2, H3 step 1: profile-ratio log-mean bias cleared (Δc2 +0.0065 ± 0.0046e-4); H2 code paths match the generator; independent mocks show the same c2 sign
+
+Pre-declared `galsbi_pair1m_20261012/debug/rule_halfchain.md` (result and follow-ups appended there). Each
+galaxy's score is a central difference of log-means of likelihood ratios over (states × 4 chains). The bias of a
+log-mean scales as 1/n, so the score from 2 chains against 4 estimates it (jackknife over chain halves;
+`halfchain/halfchain.py`, job 17375738, CPU, 4 min).
+- Checks: the analysis reproduces the 1M step2 g to 1e-9. The chain halves agree in every band (largest 1.8σ).
+- All 1,990,072 galaxies: **Δc2 = +0.65 ± 0.46e-6**, Δg1 = +0.24 ± 0.16e-6 (0.001% of m). Faint is significant
+  (+0.16 ± 0.04e-6) but negligible. → this H3 mechanism is cleared (bound 1.6e-6, 1/450 of the excess). Still
+  untested in H3: the bank-size bias inside each state's ratio and the finite-difference step d = 0.002.
+- Follow-ups (exploratory):
+  - H2 by code reading: the generator (`mock_panel`) and the selection (`run_galsbi_bright.selection`) use the
+    same sheared shape, detection probability, flow, cuts and shape transport. The QMC draws are randomly shifted
+    per galaxy, so they are unbiased.
+  - Selection tilt from 16 vs 8 draws: dlogZ/dg2 differs by +0.0005 ± 0.0004, against the ~0.0037 c2 would need.
+  - A brute-force generator test would cost ~70–100 GPU-h (flow-draw noise dominates), so it goes to the owner.
+  - Earlier independent mocks show the same c2 sign: twin 2×100k +0.00096 ± 0.00056, unpaired 500k
+    +0.00028 ± 0.00065. Combined with the 1M (not pre-declared): +0.00071 ± 0.00018. The c2 looks common to the
+    method, not a fluke of one mock.
+
+Validation: step2 reproduction and the chain-half check above. No production code, models, settings or the 1M
+result changed; nothing retuned.
+
+Next (owner's decision): either the truth-parameter score test (each galaxy's score at its true regenerated
+parameters, no chains; a few GPU-h, new script) to split "likelihood/selection" from "chains/score step", or the
+brute-force generator test of the selection tilt (~70–100 GPU-h).
+
 ## 2026-10-19 — 1M pair faint g1→g2 leak test: no faint leak (Δc2 −0.21 ± 1.79e-4); calibration replay gate passes exactly
 
 Pre-declared `galsbi_pair1m_20261012/debug/rule_faintleak.md` (result appended there). All 5612 faint units of both
