@@ -46,6 +46,19 @@ strict report source-identity gate. Eight populations cannot establish rare-mode
 coverage or exactness. Cost comparisons use recorded inference runtime and
 exclude pilots, phase diagnostics, queueing and startup outside driver timing.
 
+## Preserved reporting failure and numerical repair
+
+CPU 17422693 passed all six initial tests, then stopped before writing a result:
+baseline observation 8 raw-report and phase weight arrays differ by
+1.3877787807814457e-17 (one float64 ULP), while their log normalizers agree
+exactly. All other arrays agree bitwise. Requiring exact equality across
+independently computed aggregates was a reporting implementation error.
+The v2 summary permits at most eight ULPs per finite weight and records the
+maximum observed difference, without changing either weight array or any
+scientific gate. A focused regression accepts one ULP but rejects a 1e-8
+perturbation, missing entries and NaNs. The failed source, receipt and log are
+preserved. Scientific inputs and the n16 hypothesis remain unchanged.
+
 ## Reproduction and result
 
 Pending focused CPU tests and the frozen completed-data summary. No GPU,

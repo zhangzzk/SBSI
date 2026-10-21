@@ -1,5 +1,10 @@
 # Work log
 
+## 2026-10-22 — Preserve n16 reporting failure and repair one-ULP replay check
+
+- CPU 17422693 passed six tests, then failed before output because baseline observation-8 raw/phase normalized weights differed by 1.3877787807814457e-17; log Z and every other weight array match exactly. This was the new summary's bitwise-equality implementation error, not a changed scientific outcome.
+- Summary v2 now allows eight float64 ULPs for finite replay weights, records the maximum difference and leaves the original weights untouched. Regression accepts one ULP and rejects substantive perturbations, missing entries and NaNs. First snapshot/receipt/log preserved. No input, sampler, phase-derivative criterion or acceptance-gate changes. Fresh CPU execution pending.
+
 ## 2026-10-22 — Prepare completed n16 baseline/informed comparison
 
 - **Scope:** new isolated `codex/v8-comparison-20261022` from bdfdb89. `scripts/summarize_v8_particle_comparison.py` reuses v9 signed-MCSE/normalizer arithmetic, verifies all eight declared populations per arm and source hashes, preserves all-state whole-Z weighting, and reports raw/frozen-control/F64 scores, raw regions, normalizer precision and cost.

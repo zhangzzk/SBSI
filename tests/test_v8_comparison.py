@@ -34,3 +34,13 @@ def test_incomplete_or_changed_panel_rejected(defect):
     if defect=='wrong_observation':report['observations'][0]['observation']=-1
     if defect=='wrong_coefficients':phase['coefficients']['sha256']='changed'
     with pytest.raises(ValueError):m.validate_panel(report,phase,seeds)
+
+
+def test_weight_replay_allows_one_ulp_but_rejects_substantive_or_missing_weights():
+    weights=[.12,.13]
+    roundoff=[m.math.nextafter(.12,1.),.13]
+    assert m.vectors_match_ulps(weights,roundoff)
+    assert not m.vectors_match_ulps(weights,[.12+1e-8,.13])
+    assert not m.vectors_match_ulps(weights,[.12])
+    assert not m.vectors_match_ulps(weights,[float('nan'),.13])
+    assert weights==[.12,.13]

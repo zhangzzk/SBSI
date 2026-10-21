@@ -19,6 +19,12 @@ def comparison_status(report):
                        else 'pass' if report['comparison_gate'] else 'fail')}
 
 
+def vectors_match_ulps(left, right, max_ulps=8):
+    """Replay tolerance only: finite float64 roundoff, without altering weights."""
+    return len(left)==len(right) and all(math.isfinite(x) and math.isfinite(y)
+        and abs(x-y)<=max_ulps*max(math.ulp(x),math.ulp(y)) for x,y in zip(left,right))
+
+
 def validate_panel(report, phase, expected_seeds):
     if report['seeds'] != expected_seeds or phase['seeds'] != expected_seeds:
         raise ValueError('expected all eight declared populations in order')
@@ -86,14 +92,16 @@ def build_summary(root, endpoint_receipt):
         if any(c != configurations[0] for c in configurations):
             raise ValueError('within-arm settings differ')
         observations = []
+        weight_replay_errors = []
         for raw, row in zip(report['observations'], phase['observations']):
             a = row[MEASURES[0]]
             for key in ('mean','mcse'):
                 if any(not math.isclose(x,y,abs_tol=1e-11,rel_tol=1e-11) for x,y in zip(raw['score'][key],a[key][1:3])):
                     raise ValueError('raw score/MCSE replay mismatch')
-            if raw['score']['weights'] != a['weights'] or raw['score']['log_mean_normalizer'] != a['log_mean_normalizer']:
+            weight_replay_errors.append(max(abs(x-y) for x,y in zip(raw['score']['weights'],a['weights'])))
+            if not vectors_match_ulps(raw['score']['weights'],a['weights']) or raw['score']['log_mean_normalizer'] != a['log_mean_normalizer']:
                 raise ValueError('raw normalizer/weight replay mismatch')
-            if raw['region']['weights'] != a['weights']:
+            if not vectors_match_ulps(raw['region']['weights'],a['weights']):
                 raise ValueError('region population weights differ')
             for measure in MEASURES:
                 if row[measure]['independent_populations'] != 8 or row[measure]['extinct_populations'] != 0:
@@ -115,7 +123,8 @@ def build_summary(root, endpoint_receipt):
             'informed_environment':report['informed_environment'],
             'target_source_sha256':report['target_source_sha256'],
             'bridge':report['bridge'],'endpoint_target':report['endpoint_target'],
-            'numerical_checks':{'maximum_logK_F64_minus_F32_absolute':max(c['sampled_float32_float64_max'] for c in checks),
+            'numerical_checks':{'maximum_raw_phase_weight_replay_error':max(weight_replay_errors),
+                'weight_replay_max_ulps':8,'maximum_logK_F64_minus_F32_absolute':max(c['sampled_float32_float64_max'] for c in checks),
                 'maximum_phase_scaled_error':max(d['max_scaled_error'] for c in checks for d in c['phase_differences'])}}
         identities.append(phase['target_identity'])
         reports[arm] = report
