@@ -18,14 +18,14 @@ nonuniform phase parameters. It remains independent of the current target.
 The ordered insertion is uniform among the original N+1 slots. With the ordered
 Poisson 1/N! convention, explicitly summing those histories gives
 Q/qEnv=(1−a)+a sum h/lambda, without another N or expected-count factor.
-`informed_environment.py:205–241` preserves old neighbour order and native fields
+`informed_environment.py:236–272` preserves old neighbour order and native fields
 while inserting only valid sampled points. Invalid raw points remain recorded
 in the payload and contribute zero target mass before ordinary resampling.
 
 The target potential subtracts log R. The reduced bridge adds
 (1−beta)log R, and every environment-changing mutation recomputes R. Target-only
 physical/nuisance/SED/independence moves reuse R; the independence Hastings term
-uses qtarget alone. `galsbi_particle_target.py:19–68,132–177,250–298` and
+uses qtarget alone. `galsbi_particle_target.py:19–68,132–177,250–310` and
 `particle_populations.py:58–66` preserve the tilt and every origin-evidence field
 through acceptance, repeated ancestors and partial-observation scatter.
 
@@ -63,14 +63,53 @@ The source hashes were unchanged during the CPU check. Reproducer:
 `/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/smc_informed_review_20261021/result.json`.
 Those hashes identify the tested files independently of subsequent edits.
 
-## Integration gates still outside this CPU check
+After the support-boundary fix below, independent rerun **17420432** completed
+**0:0 in 29 seconds** against the frozen final implementation. The explicit
+mixture error remained **7.11e−15** and the maximum mutation-ratio error was
+**2.14e−14**; all other checks passed. Source hashes were unchanged during this
+rerun. Its separate pinned receipt is
+`doc/evidence/informed_environment_review_final_20261022.json`.
 
-The optional driver must save the original invalid raw draws and classifications
-before resampling, because surviving ancestry cannot reconstruct their initial
-frequency. Its artifact/protocol hashes and all-extinct receipts need the same
-explicitness as the mathematical payload. The implementation author's broader
-test suite covers additional blocks, extinction and default bitwise replay;
-their final receipt is separate from this independent check.
+## Final driver and support-boundary review
+
+The driver saves every original raw environment draw and classification in
+`initial_environment.npz` before resampling, with its hash and per-observation
+counts in the result. Final particles retain all environment payload fields.
+`scripts/check_galsbi_particles.py:126–143,182–196,245–254` also records the
+source artifact and continuous-measure qualification. The source pilot's seed,
+observation order, native target identity and original bridge are validated
+before the optional R bridge suffix is recorded. No optional artifact or new
+payload keys are introduced on the disabled path.
+
+This review identified a narrow mismatch between the older native-exchange
+q/p helper and the new continuous native intensity: the old helper can assign
+a finite density to the inverse-table strip with log U < log(float.tiny),
+where the continuous component has zero density. Sending such an exchanged
+target into the environment would previously raise while computing R.
+The author fixed this with the optional-law-specific
+`continuous_exchange_support` guard (`informed_environment.py:204–234`),
+called after the existing native support gate
+(`galsbi_particle_target.py:252–266`). The guard restores the old safe payload
+and gives the proposal a minus-infinity Hastings correction. Conditional-cap
+failures, clamp atoms and unexplained density errors still raise; they are not
+classified as support zeros.
+
+The regression exposes that actual inverse-table strip by widening only the
+toy intrinsic magnitude window. It verifies finite analytic target density,
+finite old q/p correction, zero new continuous environment density and unchanged
+retained state after rejection. This is a support-boundary correctness fix,
+not an observed production failure or explanation of the score residual.
+
+Author CPU **17420200** passed **173 tests** before this fix. Final CPU
+**17420283**, cluster, **COMPLETED 0:0**, passed **174 tests in 31.29 seconds**,
+including the new support regression, driver raw receipts and partial extinction,
+payload ancestry/scatter, mutation ratios and disabled-path bitwise state/RNG
+replay. The frozen final source hashes and JUnit receipt are in
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/informed_environment_validation/final_input_v2.json`
+and `final_junit_v2.xml` in the same directory. This broader author test receipt
+is distinct from the independent mathematical checks above.
+
+## Remaining report aggregation gate
 
 The existing reporter fingerprints physical geometry and target initial proposal
 artifacts only. It must also fingerprint the informed-environment artifact and
@@ -82,6 +121,8 @@ use explicitly reviewed compatibility evidence or a fresh baseline under the
 same source. This review does not authorize weakening identity checks.
 
 The generic Poisson helper's former global h<<lambda/full-off-support-density
-wording needs the valid-scene/zero-initial-weight qualification documented in
+wording now includes the valid-scene/zero-initial-weight qualification documented in
 [the bridge audit](PARTICLE_BRIDGE_AUDIT.md#addendum-off-support-informed-poisson-draws-need-not-be-truncated).
-No modification to its finite-tilt formula is required.
+No modification to its finite-tilt formula was required. Reporter integration
+and explicit comparison compatibility remain pending in this review receipt;
+the coordinator assigned those changes as a separate bounded follow-up.

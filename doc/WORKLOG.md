@@ -1,5 +1,20 @@
 # Work log
 
+## 2026-10-22 — Final informed-environment driver and support-boundary review
+
+- Updated `doc/INFORMED_ENVIRONMENT_REVIEW.md` and added the final independent
+  receipt. Driver preserves raw draws before resampling, validates source/pilot
+  identity and retains complete final payloads. Reviewer changed no core code.
+- Found the old native q/p helper's finite inverse-table strip below log tiny;
+  the implementation author added an optional continuous-support exchange gate
+  and actual-table regression. Known zero-density proposals now reject safely;
+  unknown failures and clamp atoms still raise.
+- Author CPU17420283: 174 tests passed. Independent CPU17420432: COMPLETED0:0
+  in29s, explicit mixture error7.11e-15, MH ratio error2.14e-14 across
+  beta=.001,.4,1; denominator, invalid-row and complete-payload checks pass.
+- No convergence or performance claim. Reporter environment provenance and
+  explicit endpoint compatibility are a separately assigned follow-up.
+
 ## 2026-10-22 — Independent informed-environment mathematical review
 
 - Added `doc/INFORMED_ENVIRONMENT_REVIEW.md`, independent CPU reviewer script and
