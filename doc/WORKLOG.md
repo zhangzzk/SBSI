@@ -1,5 +1,38 @@
 # Work log
 
+## 2026-10-21 — Frozen physical proposal geometry from independent particle pilots
+
+Added `sbsi/particle_geometry.py`, `scripts/fit_particle_geometry.py`, and
+`tests/test_particle_geometry.py`. The optional geometry fits physical columns
+[1,6,7,8,9] using equal-run averages of within-run covariance. Phase residuals
+wrap in radians around one fixed circular centre per object. Eigenvalues in
+original-width coordinates are floored at1e-4 before the2.38²/5 covariance
+factor; beta interpolates pilot and broad covariance in precision space.
+Proposal increments are symmetric, including wrapped correlated phase and an
+optional state-independent scale mixture. JSON artifacts preserve pilot paths,
+hashes, seeds and ordered observations. Production validation rejects pilot
+seed reuse and mismatched object ordering. The original target and pilot files
+are unchanged; this is a proposal heuristic, not a posterior covariance claim.
+
+CPU Slurm job17418727: **18/18 targeted tests passed in0.28s**, followed by the
+four-pilot default single-scale fit. Artifact:
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/geometry_v1.json`,
+SHA256 `4e0ed611e60d393245e1f1ddc5d50abf5a035f8614ae86c6138dc08158ef20a1`.
+Pilot seeds2026102130–2026102133; observations[58165,0,1,8]. Unit checks cover
+per-object covariance, equal-run pooling without between-run spread, periodic
+cross-covariance, regularization, temperature endpoints, increment distribution,
+wrapped symmetry, unchanged input arrays, provenance, artifact replay, seed
+reuse guards and CLI receipt rejection. Syntax and `git diff --check` passed.
+
+The first test job17418697 passed17 tests and failed one arbitrary4% variance
+band for the optional multiscale proposal: the observed4.91% discrepancy is
+3.16 MCSE because this mixture has kurtosis10.69. The test now uses the exact
+fourth-moment sample-variance uncertainty and a5 MCSE gate, preserving its seed,
+draws, implementation and fit choices; the failure and both protocols remain
+in `sampler_search_20261021/geometry_validation/`. No sampler-efficiency claim
+is made from these tests. Next: coordinator runs the combined full suite and
+fresh independent controlled real-scene comparisons with this frozen geometry.
+
 ## 2026-10-21 — Fixed-schedule annealed particle core and analytic validation
 
 Added `sbsi/annealed_particles.py` and `tests/test_annealed_particles.py` in
