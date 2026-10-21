@@ -1,0 +1,37 @@
+{
+  "source": "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/smc-bridge-audit-20261021",
+  "sha256": {
+    "scripts/report_galsbi_particles.py": "9709f3f182b54071f2e7fa606f0e9e3b58f62c247c7cb7acbe948fb0f134a045",
+    "tests/test_particle_report.py": "0a0e3d275fa07f021c05479078d2941208ab449b36f3afad68fbcc018ff20946",
+    "sbsi/particle_diagnostics.py": "bbd2756da751d025db8ae41ddc18a3dd0e6ec5a8d2967852b6e849762d205f6a",
+    "sbsi/particle_populations.py": "5b10168a3f44170810ccda30018b139b85dc4dbf667deaa04ce126b55db5e979",
+    "tests/test_particle_extinction.py": "5e59738aa2fb1861ee1dd0939a25be02990b99275c1f8f417fa31808034bcc19",
+    "scripts/check_galsbi_particles.py": "318f7ab331ee8fbd77b50194650cd8343c87aa620bdb8d0610bfb8bce543fc04",
+    "sbsi/galsbi_particle_target.py": "9de76a6089b31f73d632e6c3cf768df7667e96f1608e20dff43ee8ab9ce7e5ec"
+  },
+  "baseline_report_sha256": "b0becd8b8be7b9265c276bd9fe0c6a79a1613ee5325c6438649a4b2cb340ff60",
+  "targeted_job": 17420642,
+  "targeted_result": "68 passed in22.68s; final full suite also includes two additional regression cases",
+  "full_job": 17420682,
+  "state": "COMPLETED",
+  "exit_code": "0:0",
+  "elapsed_seconds": 69,
+  "pytest": "495 passed, 3 skipped in 60.88s",
+  "source_hashes_verified_before_and_after": true,
+  "junit": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/report_endpoint_validation_20261022/full_junit.xml",
+  "stdout": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/report_endpoint_validation_20261022/full-17420682.out",
+  "skips": [
+    {
+      "test": "test_v35_detection_classifier_loads_as_equal_probability_ensemble",
+      "reason": "external V3.5-like detection checkpoints are not configured"
+    },
+    {
+      "test": "test_prepared_pairs_match_blendemu_catalogue_conversion",
+      "reason": "BlendEMU not on PYTHONPATH; skipping the cross-check against its converter"
+    },
+    {
+      "test": "test_v39_external_artifacts_load_and_predict_together",
+      "reason": "external V3.9-like artifact roots are not configured"
+    }
+  ]
+}

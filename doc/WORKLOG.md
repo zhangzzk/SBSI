@@ -1,5 +1,23 @@
 # Work log
 
+## 2026-10-22 — Strict informed-proposal reporting and explicit endpoint comparison
+
+- Updated `scripts/report_galsbi_particles.py` to fingerprint the entire informed
+  environment configuration/artifact (excluding only its path), retain that
+  provenance and enforce its pilot-seed exclusions within/across report groups.
+- Bumped reports to `independent-populations-v5-explicit-endpoint`. Distinct
+  bridges compare only with the exact shared declared endpoint and identical
+  existing target-source hashes. Absent declarations retain literal-bridge
+  equality; conflicting endpoints and old report versions reject. Receipts
+  preserve both bridges and the compatibility mode. All scientific gates stay.
+- Added regression tests and `doc/PARTICLE_REPORT_ENDPOINTS.md`. CPU17420642:
+  68 focused tests passed. Final CPU17420682: full isolated checkout suite
+  495 passed,3 optional skips in60.88s, COMPLETED0:0; source hashes verified
+  before/after. Receipt: `doc/evidence/particle_report_endpoint_validation_20261022.json`.
+- No sampler/driver, target, weights or uncertainty changes. Parent coordinator
+  owns adding the explicit endpoint to newly frozen drivers and integrated
+  validation; historical run snapshots remain unchanged. No efficiency claim.
+
 ## 2026-10-22 — Final informed-environment driver and support-boundary review
 
 - Updated `doc/INFORMED_ENVIRONMENT_REVIEW.md` and added the final independent
