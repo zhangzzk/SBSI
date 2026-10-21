@@ -165,3 +165,35 @@ blocking correction while retaining evidence when a phase derivative fails.
 The initial trained-model run failed before diagnostics or coefficient fitting.
 The F64 adapter repair added two real untrained-network replay tests; CPU
 Slurm 17420296 passed all 32 tests in 17.16 seconds.
+
+## Real diagnostic outcome: original phase gate failed
+
+Repair job **17420413** ran on the authorized V100 and completed all four v1
+pilot diagnostics in a 49-second job. The strict loader then rejected all
+four, so **no coefficients were fitted and none of the 24 evaluation
+populations were processed**. Raw score/normalizer gates remain unchanged.
+All JSON/NPZ, source manifests, logs and receipts are retained at
+`sampler_search_20261021/phase_n15_20261022_repair1*`; the consolidated outcome
+is `phase_n15_20261022_failure_receipt.json`.
+
+| Pilot | Max scaled phase error h=1e-4 | h=1e-5 | h=1e-6 | Max abs F64−F32 logK |
+|---|---:|---:|---:|---:|
+| v1_0 | 7.519e-4 | 7.515e-6 | 1.144e-7 | 4.463e-4 |
+| v1_1 | 2.811e-4 | 2.811e-6 | 9.994e-8 | 3.266e-4 |
+| v1_2 | 1.550e-2 | 1.550e-4 | 1.584e-6 | 5.838e-4 |
+| v1_3 | 1.268e-3 | 1.268e-5 | 1.696e-7 | 9.232e-4 |
+
+Every pilot has exact saved F32-kernel replay and exact stored F64-score
+replay. Independent F64 density replay differs by at most 1.78e-15, and
+periodic wrap by at most 3.20e-13. The failing checks are phase finite
+differences against the fixed 1e-4 scaled-error limit at every declared step.
+The approximately 100-fold error reduction per tenfold step reduction is
+consistent with second-order central-difference truncation at sharp phase
+profiles. It does not make the original all-step check pass. No thresholds
+were changed and no failed diagnostic was dropped or used for fitting.
+Separately, the sampled F32/F64 logK gaps exceed the 1e-5 diagnostic flag;
+this flag was never an acceptance gate or a global-equivalence certificate.
+
+A new, separately declared numerical-check protocol could investigate
+truncation explicitly, but is not part of this failed experiment. There is
+no real-data variance-reduction result or all-group T/MCSE summary from n15.
