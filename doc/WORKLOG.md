@@ -1,5 +1,55 @@
 # Work log
 
+## 2026-10-22 — Optional informed initial environment: continuous-law implementation gates pass
+
+Arbor n16, isolated branch `codex/informed-environment-20261021`; the running v7
+snapshot and parent worktree were not edited. Fixed law and support contract
+were written before implementation in
+[`INFORMED_ENVIRONMENT_PROPOSAL.md`](INFORMED_ENVIRONMENT_PROPOSAL.md#initial-law-and-reference-measure).
+
+- **Behavior.** New `sbsi/informed_environment.py` optionally mixes the numerical
+  Poisson environment with one independent observation-frozen Student-t point,
+  uniform native type and phase, and normalized central/disk positions. Native
+  Jacobian and arcsec/sr factors enter the all-neighbour density tilt. Changes
+  in `galsbi_particle_target.py` and `particle_populations.py` carry this tilt
+  through the bridge, all affected MH ratios, resampling, scatter, and extinction.
+  The default branch retains its original random stream and saved payload.
+- **Support.** Proven unsupported raw draws keep their original initial
+  denominator with zero target weight, skip likelihood evaluation, and cannot
+  mutate before positive-beta weighting. Unknown numerical errors, generator
+  failures, and clamp atoms raise. A dedicated guard rejects an exchange into
+  the finite inverse-table strip excluded by the continuous density, even when
+  the older numerical/analytic correction is finite. `poisson_augmentation.py`
+  changes only its documentation to explain the audited zero-weight contract.
+- **Driver and evidence.** `scripts/check_galsbi_particles.py` adds optional
+  informed-artifact/probability flags, frozen source identity and seed guards,
+  actual bridge/source hashes, every raw initial draw in
+  `initial_environment.npz`, and the retained final payload. Raw evidence is
+  saved before any ancestry selection. Two new test files cover the exact toy
+  mixture density/normalization, units, phase override, support/error paths,
+  complete state transport, actual mutation ratios, extinction, driver receipts,
+  and bitwise default replay.
+- **Validation.** CPU Slurm job **17420283 completed 0:0**, **174 passed**,
+  including all **40 new implementation cases**, in 31.29 s pytest time. The
+  hash-pinned command is `sbatch .../informed_environment_validation/final_run_v2.sh`;
+  its complete location, hashes, XML, and stdout are recorded in
+  [`evidence/informed_environment_implementation_20261021.json`](evidence/informed_environment_implementation_20261021.json).
+  Earlier job17420009's one fixture failure/99 passes is preserved; changing
+  only the toy redshift yielded 100 passes in17420067. Job17420200 passed173
+  checks before the final support-edge regression. Independent reviewer17420035
+  derived the ordered mixture through explicit insertion histories (maximum
+  error7.11e-15) and full MH ratios (maximum error1.60e-14); the final-source
+  review **17420432 completed 0:0**, with unchanged density error and maximum
+  MH error2.14e-14; its frozen-source receipt is linked in the implementation
+  receipt.
+- **Limits and next step.** `dev_score=1` measures implementation correctness,
+  not scientific acceptance. No GPU or real-data inference was run. The measure
+  is the numerical continuous interpolation component, with the tiny clamp atom
+  and discrete RNG law excluded explicitly. Root owns the new report artifact
+  and seed gates and a compatible fresh comparison; existing strict target and
+  bridge report gates were not relaxed. A controlled development run is required
+  before any exploration or efficiency claim.
+
 ## 2026-10-20 — 1M pair c2, measurement-only true-parameter test: measurement side cleared for the positive c2 (21–25.8: −2.96 ± 1.11e-4)
 
 Owner: "go on" (step 1 of the proposed plan). Pre-declared in `galsbi_pair1m_20261012/debug/rule_measoracle.md`
