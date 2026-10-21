@@ -1,5 +1,37 @@
 # Work log
 
+## 2026-10-21 — Audit independent-population uncertainty and report compatibility
+
+Copied the coordinator's current `sbsi/particle_diagnostics.py`,
+`scripts/report_galsbi_particles.py` and diagnostic tests into this isolated
+revision. The independent-run ratio influence covariance is correct. Added
+`empirical_second_moment` to convert stored ddof=1 variance using `(N-1)/N`;
+the report now uses the exact empirical second moment. Existing N256 v1/v2
+score variances/effective-count diagnostics decrease by 0.31–0.39%, while score
+means and replicate MCSE stay unchanged. These four-run groups remain below
+the eight-run acceptance requirement.
+
+Strengthened run-group block/geometry/source compatibility, normalized source
+basenames across snapshot paths, validated completed receipt arrays, and
+included target-source/report versions in comparison checks. Changed target
+wrapper hashes conservatively block comparisons even if the reviewed change
+only affects mutation geometry. Existing v1/v2 run protocols have the required
+fields; old report files need fresh audited outputs. No driver, target,
+scientific threshold, or promotion gate changed.
+
+Added `tests/test_particle_report.py` and extended the diagnostic tests.
+Slurm 17418880: `python -m pytest tests/test_particle_diagnostics.py
+tests/test_particle_report.py -q` — **16 passed in 2.84 s**. Log:
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/inference_components_20261021/particle_audit_tests_17418880.out`.
+The tests retain all four helper populations when two have zero mass, and
+ensure missing/failed report runs are never converted to zero.
+
+[The audit](PARTICLE_DIAGNOSTICS_AUDIT.md#extinction-remains-blocked-end-to-end)
+records that helper support does not constitute end-to-end extinction
+reporting. The driver still aborts and complete extinction receipts need a
+future per-object schema. No observed extinction was silently dropped here.
+The coordinator will preserve original reports and regenerate audited outputs.
+
 ## 2026-10-21 — Optional Student-t particle proposal, pending scientific comparison
 
 Added `component_family='student_t', student_df=5.` to
