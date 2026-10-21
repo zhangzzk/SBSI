@@ -1,5 +1,11 @@
 # Work log
 
+## 2026-10-22 — Prepare completed n16 baseline/informed comparison
+
+- **Scope:** new isolated `codex/v8-comparison-20261022` from bdfdb89. `scripts/summarize_v8_particle_comparison.py` reuses v9 signed-MCSE/normalizer arithmetic, verifies all eight declared populations per arm and source hashes, preserves all-state whole-Z weighting, and reports raw/frozen-control/F64 scores, raw regions, normalizer precision and cost.
+- **Correctness semantics:** baseline `comparison_gate=false` with no comparator is explicitly not a failed comparison. New tests verify this distinction and reject missing populations, wrong observations and changed coefficient artifacts. Syntax/diff checks pass; scheduler tests and result pending.
+- **Limits:** [required qualifications](V8_PARTICLE_COMPARISON.md#required-limitations) preserve the baseline/informed support confound. Correct wording is zero continuous numerical environment density despite finite analytic target intensity, not zero analytic prior density. No fits, new forwards, GPUs, held-out/v10 outcomes, sampler changes or strict-gate bypass.
+
 ## 2026-10-22 — N18 higher effort reduces primary discrepancy, with mixed efficiency
 
 - **Result:** all eight v9 populations and all-state frozen phase diagnostics compared with eight v6v100 and eight v7 populations. Observation-0 corrected g1 becomes 0.568624±0.154248; v9−v6 is +0.163937±0.181294 (0.904 MCSE), versus old v7−v6 4.544 MCSE. V9−v7 remains −2.637 MCSE. Faint observation-8 v9−v6 raw/corrected g1 differences remain 2.642/2.318 MCSE. Narrow directional support for the effort hypothesis; no blanket convergence or acceptance claim.
