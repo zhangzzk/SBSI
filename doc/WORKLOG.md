@@ -1,5 +1,55 @@
 # Work log
 
+## 2026-10-22 — Localize the score discrepancy and validate scene-proposal startup
+
+Added the read-only localization script, nine focused tests, and
+[results](PHASE_SCORE_LOCALIZATION.md#completed-cpu-evidence) from isolated
+commit 4dd75d5. CPU 17420920: 9 passed; analysis 17420950: exit 0 in 5 seconds.
+No single run explains the corrected-score discrepancy; fixed top-5% tails
+account for 54%, and 46% remains in the complement. No particles are dropped,
+coefficients refit, or held-out outcomes inspected.
+
+Informed-environment smoke 17420872 completed in 30 seconds; both paired
+development arms reached startup. Held-out pilot preparation completed,
+while its production remains cancelled. Repaired the queued phase diagnostic
+launcher to validate the frozen JSON manifest, preserving the original
+launcher and cancelled pending job 17420835. New v9 diagnostic 17421115 and
+v8 diagnostic 17421116 retain frozen coefficients and measures. Validation:
+`bash -n` passes both launchers; source hashes are checked before model imports.
+[Search record](SAMPLER_SEARCH.md#score-localization-and-diagnostic-launch-repair)
+records the v8 addendum timing and limitations. No candidate is accepted.
+
+## 2026-10-22 — Phase diagnostic reveals disagreement; pause held-out production
+
+Integrated the standalone phase-control diagnostics and preserved both failed
+original checks and the separately predeclared finer-step v2 protocol. CPU
+checks32/32; V10017420604 completes28/28 saved populations with exact saved
+kernel/score replay. Fixed coefficients expose observation0 corrected-g1
+v7-v6 disagreement of4.55 combined MCSE. The original raw gate pass remains
+recorded, but scientific acceptance is withheld. F64 reweighting is far too
+small to explain this difference. [Evidence](SAMPLER_SEARCH.md#phase-control-exposes-a-hidden-score-disagreement).
+
+Cancelled pending held-out production17420233/report17420234 before any task
+started; retain fixed warmup17420232 and do not tune on its outcomes. Declared
+higher-effort fitted-q0 v9 before launch:17420804 -> raw17420827 and frozen
+phase diagnostic17421115 (replaces pending cancelled17420835 after a launcher manifest-format repair). This is still development on the original four
+objects, with unchanged proposal/geometry and fresh seeds.
+
+Integrated optional informed-environmentf84ba7a and strict endpoint reporterd98942a.
+Author174 tests and independent final density/MH audit pass; reporter isolated
+suite495 passed,3 optional skips. Added explicit canonical endpoint metadata
+to new protocols. Integrated source_v8 validation/smoke/science/report chain:
+17420828 ->17420872 ->17420873 ->17420874. Integrated full suite17420828
+passes782 tests,1 skipped in81.91seconds. No existing immutable trial changes.
+[Fresh comparison](SAMPLER_SEARCH.md#informed-environment-integration-and-fresh-comparison)
+records seeds, target measure, corrections and continuous-density limitations.
+
+Documented the remaining finite-ratio bias boundary and an isolated coupled
+whole-population MH prototype3b32f33. Its41 exact/finite-law tests and full
+718-test suite pass (3 optional skips); it has no real-SMC adapter or scientific
+efficiency result. [Contract](COUPLED_POPULATION_IMH.md#interface-and-target-identity).
+No production default, V3.9 artifact or catalogue shear estimate changes.
+
 ## 2026-10-22 — First development-pass sampler; freeze held-out evaluation
 
 Eight fitted-proposal v7 populations pass all four precision and independent

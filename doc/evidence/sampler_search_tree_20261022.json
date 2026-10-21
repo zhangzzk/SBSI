@@ -1,5 +1,5 @@
 {
-  "_counter": 16,
+  "_counter": 18,
   "root": "n0",
   "nodes": {
     "n0": {
@@ -8,7 +8,7 @@
       "depth": 0,
       "status": "root",
       "hypothesis": "Reproducible posterior scores and scene-region weights at minimum measured compute cost; baseline fails convergence, no candidate is accepted without held-out replication.",
-      "insight": "[from n3] Proposal density and support must be explicit before using measurement-informed starts for reference weights. Proposal quality must be measured independently.\n[from n2] Assess complete independent populations on the normalizer scale; particle count and weight ESS cannot stand in for convergence.\n[from n4] Use independent full-population score and normalizer variation to judge progress; a gradual schedule can make every incremental ESS look healthy despite a poorly explored posterior.\n[from n5] Check movement at the posterior temperature separately from the annealing average. Changing initial tails cannot by itself repair an ill-scaled final kernel.\n[from n6] For strongly heterogeneous or mixed posteriors, a global pilot covariance can overestimate narrow local directions. Test geometry with independent score replication, not covariance plausibility or acceptance averages.\n[from n7] Correct global scene proposals still need demonstrated mode access and stable weights. Diagnose target/environment support and proposal-density cost before increasing their mixture frequency.\n[from n9] Keep legitimate zero-mass realizations and their replicate denominator; unknown failures must remain errors. No-redraw behavior needs end-to-end tests, not only an aggregation helper.\n[from n8] Useful final-temperature movement does not guarantee stable annealing normalizers. Independently test proposal-to-posterior distance and early loss of particle diversity.\n[from n11] Informed scene initialization requires a normalized native point law and the true numerical Poisson intensity, including explicit singular-support accounting. A generic density-ratio identity alone does not supply a usable sampler.\n[from n14] Known-density scene proposals require the numerical native mark measure itself, not merely an analytic-support correction. Account separately for support slivers, zero-target initial draws, and genuine generator failures.\n[from n13] Local geometry and a normalized joint proposal solve different problems: local movement can improve while whole-population normalizing mass stays unstable. Test the combination with independent pilots, changed proposals and increased effort, then on untouched observations including all preparation costs.",
+      "insight": "[from n3] Proposal density and support must be explicit before using measurement-informed starts for reference weights. Proposal quality must be measured independently.\n[from n2] Assess complete independent populations on the normalizer scale; particle count and weight ESS cannot stand in for convergence.\n[from n4] Use independent full-population score and normalizer variation to judge progress; a gradual schedule can make every incremental ESS look healthy despite a poorly explored posterior.\n[from n5] Check movement at the posterior temperature separately from the annealing average. Changing initial tails cannot by itself repair an ill-scaled final kernel.\n[from n6] For strongly heterogeneous or mixed posteriors, a global pilot covariance can overestimate narrow local directions. Test geometry with independent score replication, not covariance plausibility or acceptance averages.\n[from n7] Correct global scene proposals still need demonstrated mode access and stable weights. Diagnose target/environment support and proposal-density cost before increasing their mixture frequency.\n[from n9] Keep legitimate zero-mass realizations and their replicate denominator; unknown failures must remain errors. No-redraw behavior needs end-to-end tests, not only an aggregation helper.\n[from n8] Useful final-temperature movement does not guarantee stable annealing normalizers. Independently test proposal-to-posterior distance and early loss of particle diversity.\n[from n11] Informed scene initialization requires a normalized native point law and the true numerical Poisson intensity, including explicit singular-support accounting. A generic density-ratio identity alone does not supply a usable sampler.\n[from n14] Known-density scene proposals require the numerical native mark measure itself, not merely an analytic-support correction. Account separately for support slivers, zero-target initial draws, and genuine generator failures.\n[from n13] Local geometry and a normalized joint proposal solve different problems: local movement can improve while whole-population normalizing mass stays unstable. Test the combination with independent pilots, changed proposals and increased effort, then on untouched observations including all preparation costs.\n[from n15] Remove analytically known zero-mean score fluctuations for diagnosis as well as efficiency: a raw comparison can pass because its noise is too large to expose a smaller systematic discrepancy. Preserve failed original checks and predeclare repaired numerical validation.",
       "metadata": {
         "dev_score": null,
         "test_score": null,
@@ -16,7 +16,7 @@
         "branch_ref": null
       },
       "created_at": 1792614888,
-      "updated_at": 1792620302
+      "updated_at": 1792621303
     },
     "n1": {
       "id": "n1",
@@ -24,7 +24,7 @@
       "depth": 1,
       "status": "pending",
       "hypothesis": "Replicated annealed particles with an evaluable measurement-informed initial law can estimate competing scene weights more reliably than the current tempered chains at useful cost.",
-      "insight": "[from n3] Proposal density and support must be explicit before using measurement-informed starts for reference weights. Proposal quality must be measured independently.\n[from n2] Assess complete independent populations on the normalizer scale; particle count and weight ESS cannot stand in for convergence.\n[from n4] Use independent full-population score and normalizer variation to judge progress; a gradual schedule can make every incremental ESS look healthy despite a poorly explored posterior.\n[from n5] Check movement at the posterior temperature separately from the annealing average. Changing initial tails cannot by itself repair an ill-scaled final kernel.\n[from n6] For strongly heterogeneous or mixed posteriors, a global pilot covariance can overestimate narrow local directions. Test geometry with independent score replication, not covariance plausibility or acceptance averages.\n[from n7] Correct global scene proposals still need demonstrated mode access and stable weights. Diagnose target/environment support and proposal-density cost before increasing their mixture frequency.\n[from n9] Keep legitimate zero-mass realizations and their replicate denominator; unknown failures must remain errors. No-redraw behavior needs end-to-end tests, not only an aggregation helper.\n[from n8] Useful final-temperature movement does not guarantee stable annealing normalizers. Independently test proposal-to-posterior distance and early loss of particle diversity.",
+      "insight": "[from n3] Proposal density and support must be explicit before using measurement-informed starts for reference weights. Proposal quality must be measured independently.\n[from n2] Assess complete independent populations on the normalizer scale; particle count and weight ESS cannot stand in for convergence.\n[from n4] Use independent full-population score and normalizer variation to judge progress; a gradual schedule can make every incremental ESS look healthy despite a poorly explored posterior.\n[from n5] Check movement at the posterior temperature separately from the annealing average. Changing initial tails cannot by itself repair an ill-scaled final kernel.\n[from n6] For strongly heterogeneous or mixed posteriors, a global pilot covariance can overestimate narrow local directions. Test geometry with independent score replication, not covariance plausibility or acceptance averages.\n[from n7] Correct global scene proposals still need demonstrated mode access and stable weights. Diagnose target/environment support and proposal-density cost before increasing their mixture frequency.\n[from n9] Keep legitimate zero-mass realizations and their replicate denominator; unknown failures must remain errors. No-redraw behavior needs end-to-end tests, not only an aggregation helper.\n[from n8] Useful final-temperature movement does not guarantee stable annealing normalizers. Independently test proposal-to-posterior distance and early loss of particle diversity.\n[from n15] Remove analytically known zero-mean score fluctuations for diagnosis as well as efficiency: a raw comparison can pass because its noise is too large to expose a smaller systematic discrepancy. Preserve failed original checks and predeclare repaired numerical validation.",
       "metadata": {
         "dev_score": null,
         "test_score": null,
@@ -32,7 +32,7 @@
         "branch_ref": null
       },
       "created_at": 1792614888,
-      "updated_at": 1792618109
+      "updated_at": 1792621303
     },
     "n2": {
       "id": "n2",
@@ -40,7 +40,7 @@
       "depth": 2,
       "status": "executed",
       "hypothesis": "Fixed-schedule SMC bookkeeping and invariant mutations recover analytic correlated Gaussian and separated-mixture targets, including normalizing constants and genealogical diagnostics.",
-      "insight": "Fixed annealing can estimate normalizing mass correctly when zero-target draws remain in the original denominator. Finite normalized estimates and ancestry ESS still do not certify posterior integration.\n[from n9] Keep legitimate zero-mass realizations and their replicate denominator; unknown failures must remain errors. No-redraw behavior needs end-to-end tests, not only an aggregation helper.",
+      "insight": "Fixed annealing can estimate normalizing mass correctly when zero-target draws remain in the original denominator. Finite normalized estimates and ancestry ESS still do not certify posterior integration.\n[from n9] Keep legitimate zero-mass realizations and their replicate denominator; unknown failures must remain errors. No-redraw behavior needs end-to-end tests, not only an aggregation helper.\n[from n15] Remove analytically known zero-mean score fluctuations for diagnosis as well as efficiency: a raw comparison can pass because its noise is too large to expose a smaller systematic discrepancy. Preserve failed original checks and predeclare repaired numerical validation.",
       "metadata": {
         "dev_score": 1.0,
         "test_score": null,
@@ -48,7 +48,7 @@
         "branch_ref": "codex/smc-core-20261021:5dcbffb"
       },
       "created_at": 1792614888,
-      "updated_at": 1792617799
+      "updated_at": 1792621303
     },
     "n3": {
       "id": "n3",
@@ -216,15 +216,15 @@
       "depth": 2,
       "status": "running",
       "hypothesis": "A frozen mixture of independent-pilot coordinate moments and circular phase distributions, retaining broad measurement components, improves replicated score and normalizer accuracy without changing the target.",
-      "insight": "Independent pilot-fitted joint proposals combined with local gradient geometry stabilize normalizing mass where geometry alone fails. Starts, bridge and joint refresh all change, so the gain cannot be localized to initialization; rare missed modes remain possible.",
+      "insight": "Stable normalizers and noisy raw-score agreement can hide a persistent physical-score discrepancy. Independent zero-mean controls may reveal disagreement instead of certifying convergence.",
       "metadata": {
-        "dev_score": 0.0007122507122507123,
+        "dev_score": 0.0,
         "test_score": null,
-        "result": "Eight v7 populations pass all four development precision and v6 higher-effort score/region/normalizer comparisons. Bright normalizer relative MCSE0.027818, runESS7.9569/8. Declared successful recipe allocated cost1404 seconds including four pilots and both fits; inverse cost used as dev score. Frozen20-object heldout evaluation pending; no promotion.",
+        "result": "Original raw four-object gates pass, but independently fitted periodic-phase control exposes obs0 corrected-g1 v7-v6 disagreement4.55 combined MCSE. Pending heldout production cancelled before start; fixed warmup preserved. Higher-effort fitted-q0 n18 declared independently.",
         "branch_ref": "worktree-galsbi-tempering"
       },
       "created_at": 1792618059,
-      "updated_at": 1792620302
+      "updated_at": 1792621303
     },
     "n14": {
       "id": "n14",
@@ -246,17 +246,17 @@
       "id": "n15",
       "parent": "n2",
       "depth": 3,
-      "status": "running",
+      "status": "executed",
       "hypothesis": "A frozen periodic-phase Stein control variate has exactly zero posterior expectation and can reduce shear-score Monte Carlo variance without changing the sampled distribution or hiding normalizer failures.",
-      "insight": "",
+      "insight": "An independent zero-mean control can uncover integration error hidden by dominant score noise. Retain raw estimates, normalizing masses and explicit precision-measure distinctions; small corrected variance alone is not convergence.",
       "metadata": {
-        "dev_score": null,
+        "dev_score": 1.0,
         "test_score": null,
-        "result": "",
-        "branch_ref": null
+        "result": "32 correctness tests and28/28 separately predeclared fine-step phase diagnostics pass; original dtype and coarse-step failures preserved. Frozen v1 coefficients reduce variance unevenly and expose obs0 corrected-g1 v7-v6 discrepancy4.55 combinedMCSE; F64 reweighting negligible.",
+        "branch_ref": "codex/phase-stein-20261021"
       },
       "created_at": 1792619091,
-      "updated_at": 1792619092
+      "updated_at": 1792621303
     },
     "n16": {
       "id": "n16",
@@ -273,6 +273,38 @@
       },
       "created_at": 1792619249,
       "updated_at": 1792619250
+    },
+    "n17": {
+      "id": "n17",
+      "parent": "n2",
+      "depth": 3,
+      "status": "executed",
+      "hypothesis": "Coupled independent MH on whole fixed-recipe particle populations can remove finite-ratio and initialization bias in score expectations, with practical cost controlled by stable normalizer estimates rather than local proposal acceptance.",
+      "insight": "The coupled estimator targets E_Q[Zhat*fhat]/E_Q[Zhat]; identifying that ratio with the actual scientific expectation and proving usable meeting tails are separate obligations. A finite empirical pool validates only its own law.",
+      "metadata": {
+        "dev_score": 1.0,
+        "test_score": null,
+        "result": "Isolated generic uncapped coupled population-IMH:41 exact rational and finite-law tests pass; full suite718pass3optional skips. Includes extinct Q mass, strict failure/cancellation semantics and faithful lag-one coupling. No real SMC adapter or scientific result.",
+        "branch_ref": "codex/coupled-population-imh-20261022"
+      },
+      "created_at": 1792620640,
+      "updated_at": 1792621303
+    },
+    "n18": {
+      "id": "n18",
+      "parent": "n13",
+      "depth": 3,
+      "status": "running",
+      "hypothesis": "Increasing fixed fitted-proposal SMC effort to1024 particles and64 mutations resolves the phase-controlled score discrepancy that was hidden by raw phase noise at256 particles.",
+      "insight": "",
+      "metadata": {
+        "dev_score": null,
+        "test_score": null,
+        "result": "",
+        "branch_ref": null
+      },
+      "created_at": 1792621067,
+      "updated_at": 1792621303
     }
   }
 }

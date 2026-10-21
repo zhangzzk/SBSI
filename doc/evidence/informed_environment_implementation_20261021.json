@@ -1,0 +1,97 @@
+{
+  "node": "n16",
+  "date": "2026-10-22",
+  "branch": "codex/informed-environment-20261021",
+  "base_commit": "96eb5abdbee3aa60195bb68862944893d55e55d5",
+  "scope": "Optional informed initial environment and driver; CPU implementation validation only",
+  "dev_score": 1.0,
+  "dev_score_definition": "40/40 new implementation checks passed; not a scientific acceptance or efficiency score",
+  "final_validation": {
+    "job_id": 17420283,
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "checks": 174,
+    "new_checks": 40,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "pytest_seconds": 31.285,
+    "slurm_elapsed_seconds": 46,
+    "directory": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/informed_environment_validation",
+    "input_record": "final_input_v2.json",
+    "launcher": "final_run_v2.sh",
+    "stdout": "final_v2_17420283.out",
+    "junit": "final_junit_v2.xml"
+  },
+  "preserved_earlier_jobs": [
+    {
+      "job_id": 17420009,
+      "status": "FAILED",
+      "passed": 99,
+      "failed": 1,
+      "reason": "Finite-ratio assertion used a high-redshift toy nuisance fixture; only fixture redshift changed before rerun; failure and original test retained."
+    },
+    {
+      "job_id": 17420067,
+      "status": "COMPLETED",
+      "passed": 100,
+      "failed": 0
+    },
+    {
+      "job_id": 17420200,
+      "status": "COMPLETED",
+      "passed": 173,
+      "failed": 0,
+      "note": "Before continuous-tail exchange regression and explicit support guard."
+    }
+  ],
+  "sha256": {
+    "sbsi/informed_environment.py": "bf181baf7afa0282e6bba44c04652ab85126aada0c8a2d2501764c8210183b28",
+    "sbsi/galsbi_particle_target.py": "9de76a6089b31f73d632e6c3cf768df7667e96f1608e20dff43ee8ab9ce7e5ec",
+    "sbsi/particle_populations.py": "5e142612b28847ee2c37a488b4289819a26e8be7c5efde085fd9b774db6f62af",
+    "sbsi/poisson_augmentation.py": "33f9ff12a6444de98827349dacc7da64cc73a794d4380e17895432c9cc69e5ad",
+    "scripts/check_galsbi_particles.py": "7227795857df649c97bc27d49587abcbf94f110b666fd0c47d7592aaab848ba9",
+    "tests/test_informed_environment.py": "8f04f4dc528aaf6547c7087ea6a1cc10c5576fbb37fc71e810d480f85c14fb6a",
+    "tests/test_informed_environment_driver.py": "c25f38380f47c0022970b122dcd27d4e6f856985c4c05e508002519b14d4df4e"
+  },
+  "validation_artifact_sha256": {
+    "final_input_v2.json": "0b96656bb99eec70f964b1d5de3ed2a5046d30908c50fb5dedf01b2e2c61b87b",
+    "final_run_v2.sh": "4f18abf6e03f929d3f67dc938d599984d4976f0cd56848d7f3e298a8d55be8ab",
+    "final_v2_17420283.out": "c3d1ed7f4bb49ace81d0d328e99dd504383cedebf012f8974ecd510506fd140c",
+    "final_junit_v2.xml": "9ec6e307994d746424bb66323fba431641596a0e91489485a044c9594d7dde47",
+    "baseline_galsbi_particle_target.py": "9d2b091267335579bd8155180698e9dc7311fb3937cbcc87e281bb219dfa7387"
+  },
+  "independent_review": {
+    "initial_job": 17420035,
+    "initial_status": "passed",
+    "initial_native_mixture_max_error": 7.105427357601002e-15,
+    "initial_mh_ratio_max_error": 1.5987211554602254e-14,
+    "final_status": "passed",
+    "final_job": 17420432,
+    "final_receipt": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/smc_informed_review_final_20261022/result.json",
+    "final_receipt_sha256": "093e81649661e503c8c5d89deefa41fdcb94858b080a2764b464f8e70dc42893",
+    "final_native_mixture_max_error": 7.105427357601002e-15,
+    "final_mh_ratio_max_error": 2.1316282072803006e-14,
+    "review_document_commit": "b849c1f",
+    "review_document_branch": "codex/smc-bridge-audit-20261021"
+  },
+  "limitations": [
+    "No GPU or real inference run; no posterior convergence or efficiency claim.",
+    "Density is the continuous interpolation component; tiny clamp atoms and discrete RNG exactness are not implemented. Clamp encounters, table-generator failures and unknown numerical errors raise.",
+    "Optional report aggregation requires new informed-artifact seed/identity gates and compatible same-source baseline; existing gates remain unchanged here.",
+    "Default bitwise replay requires SBSI_ENVIRONMENT_BASELINE_TARGET pointing to the preserved frozen original module."
+  ],
+  "files_to_integrate": [
+    "sbsi/informed_environment.py",
+    "sbsi/galsbi_particle_target.py",
+    "sbsi/particle_populations.py",
+    "sbsi/poisson_augmentation.py",
+    "scripts/check_galsbi_particles.py",
+    "tests/test_informed_environment.py",
+    "tests/test_informed_environment_driver.py",
+    "doc/INFORMED_ENVIRONMENT_PROPOSAL.md",
+    "doc/evidence/informed_environment_source_receipt_20261021.json",
+    "doc/evidence/informed_environment_implementation_20261021.json"
+  ],
+  "worklog_integration": "Prepend only the new n16 entry; do not replace parent worklog with this older isolated worktree history."
+}

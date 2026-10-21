@@ -190,7 +190,7 @@ def test_normalizer_comparison_matches_mass_standard_errors(reporter, common_log
     assert reporter.compare_normalizers(first, second)['normalizer_agreement'] is True
 
 
-@pytest.mark.parametrize('artifact', ['physical_geometry', 'initial_proposal'])
+@pytest.mark.parametrize('artifact', ['physical_geometry', 'initial_proposal', 'informed_environment'])
 def test_report_rejects_production_pilot_overlap(tmp_path, reporter, monkeypatch, artifact):
     def add_pilot(index, protocol, result):
         protocol[artifact] = dict(sha256='c'*64, metadata=dict(pilot_seeds=[101]))
@@ -199,7 +199,7 @@ def test_report_rejects_production_pilot_overlap(tmp_path, reporter, monkeypatch
         run_report(reporter, monkeypatch, paths, tmp_path/'report.json')
 
 
-@pytest.mark.parametrize('artifact', ['physical_geometry', 'initial_proposal'])
+@pytest.mark.parametrize('artifact', ['physical_geometry', 'initial_proposal', 'informed_environment'])
 @pytest.mark.parametrize('pilot_in_first', [True, False])
 def test_comparison_rejects_other_groups_pilot_seeds(tmp_path, reporter, monkeypatch, artifact, pilot_in_first):
     def add_pilot(index, protocol, result):
@@ -220,3 +220,152 @@ def test_changed_initial_proposal_is_rejected_within_group(tmp_path, reporter, m
     paths, _ = make_runs(tmp_path/'runs', reporter, alter=change_proposal)
     with pytest.raises(ValueError, match='same frozen initial proposal'):
         run_report(reporter, monkeypatch, paths, tmp_path/'report.json')
+
+
+def informed_environment_record(path='/environment.json'):
+    return dict(path=path, sha256='c'*64,
+        source_metadata=dict(pilot_seeds=[12, 13, 14, 15], observations=[11]),
+        source_pilot_validation_bridge='q0**(1-beta)*(p*K)**beta',
+        metadata=dict(pilot_seeds=[12, 13, 14, 15], observations=[11],
+            source_artifact_sha256='c'*64, mixture_probability=.5,
+            position=dict(scale=.1, aperture_arcsec=10., central_weight=.9),
+            phase_override='independent uniform', proposals=[dict(student_df=5.)]))
+
+
+def test_copied_environment_artifact_preserves_full_fingerprint(tmp_path, reporter, monkeypatch):
+    def add_environment(index, protocol, result):
+        protocol['informed_environment'] = informed_environment_record(f'/copy{index}/environment.json')
+    paths, _ = make_runs(tmp_path/'runs', reporter, alter=add_environment)
+    report = run_report(reporter, monkeypatch, paths, tmp_path/'report.json')
+    expected = informed_environment_record()
+    del expected['path']
+    assert report['informed_environment'] == expected
+
+
+@pytest.mark.parametrize('change', ['artifact', 'mixture', 'position', 'source', 'bridge', 'proposal', 'missing'])
+def test_environment_configuration_cannot_change_within_group(tmp_path, reporter, monkeypatch, change):
+    def alter(index, protocol, result):
+        environment = informed_environment_record()
+        protocol['informed_environment'] = environment
+        if index != 1:
+            return
+        if change == 'artifact':
+            environment['sha256'] = 'd'*64
+        elif change == 'mixture':
+            environment['metadata']['mixture_probability'] = .6
+        elif change == 'position':
+            environment['metadata']['position']['central_weight'] = .8
+        elif change == 'source':
+            environment['source_metadata']['observations'] = [12]
+        elif change == 'bridge':
+            environment['source_pilot_validation_bridge'] += ' * R'
+        elif change == 'proposal':
+            environment['metadata']['proposals'][0]['student_df'] = 6.
+        else:
+            del protocol['informed_environment']
+    paths, _ = make_runs(tmp_path/'runs', reporter, alter=alter)
+    output = tmp_path/'report.json'
+    with pytest.raises(ValueError, match='same frozen informed environment'):
+        run_report(reporter, monkeypatch, paths, output)
+    assert not output.exists()
+
+
+@pytest.mark.parametrize('change', ['missing', 'inconsistent'])
+def test_environment_pilot_provenance_is_required(tmp_path, reporter, monkeypatch, change):
+    def alter(index, protocol, result):
+        environment = informed_environment_record()
+        protocol['informed_environment'] = environment
+        if change == 'missing':
+            del environment['metadata']['pilot_seeds']
+        else:
+            environment['source_metadata']['pilot_seeds'] = [101, 102, 103, 104]
+    paths, _ = make_runs(tmp_path/'runs', reporter, alter=alter)
+    with pytest.raises(ValueError, match='pilot seeds'):
+        run_report(reporter, monkeypatch, paths, tmp_path/'report.json')
+
+
+@pytest.mark.parametrize('mass_factor', [1., 2.])
+def test_cross_bridge_comparison_requires_same_declared_endpoint_and_sources(tmp_path, reporter, monkeypatch, mass_factor):
+    def original(index, protocol, result):
+        protocol['endpoint_target'] = reporter.ENDPOINT_TARGET
+    paths, _ = make_runs(tmp_path/'first', reporter, alter=original)
+    first = tmp_path/'first.json'
+    run_report(reporter, monkeypatch, paths, first)
+
+    def informed(index, protocol, result):
+        original(index, protocol, result)
+        protocol['informed_environment'] = informed_environment_record()
+        protocol['bridge'] += ' * R_frozen_environment(E)**(1-beta)'
+        result['log_normalizer'] = [np.log(mass_factor)]
+        result['final_stage']['log_normalizer'] = [np.log(mass_factor)]
+    paths, _ = make_runs(tmp_path/'second', reporter, seed_start=200, alter=informed)
+    report = run_report(reporter, monkeypatch, paths, tmp_path/'second.json', first)
+    assert report['comparison_gate'] is (mass_factor == 1.)
+    assert report['comparison']['observations'][0]['normalizer_agreement'] is (mass_factor == 1.)
+    compatibility = report['comparison']['bridge_compatibility']
+    assert compatibility['mode'] == 'identical_explicit_endpoint'
+    assert compatibility['endpoint_target'] == reporter.ENDPOINT_TARGET
+    assert compatibility['current_bridge'] != compatibility['comparison_bridge']
+    assert report['target_source_sha256'] == json.loads(first.read_text())['target_source_sha256']
+
+
+@pytest.mark.parametrize('failure', ['endpoint', 'missing_first', 'missing_second', 'target_source', 'old_report'])
+def test_cross_bridge_comparison_rejects_unproven_identity(tmp_path, reporter, monkeypatch, failure):
+    def original(index, protocol, result):
+        if failure != 'missing_first':
+            protocol['endpoint_target'] = reporter.ENDPOINT_TARGET
+    paths, _ = make_runs(tmp_path/'first', reporter, alter=original)
+    first = tmp_path/'first.json'
+    run_report(reporter, monkeypatch, paths, first)
+    if failure == 'old_report':
+        report = json.loads(first.read_text())
+        report['diagnostics_version'] = 'independent-populations-v4-normalizer-comparison'
+        write_json(first, report)
+
+    def changed(index, protocol, result):
+        if failure != 'missing_second':
+            protocol['endpoint_target'] = reporter.ENDPOINT_TARGET
+        if failure == 'endpoint':
+            protocol['endpoint_target'] = 'a different posterior'
+        if failure == 'target_source':
+            protocol['implementation_sha256'][f'/snapshot_{index}/galsbi_particle_target.py'] = 'f'*64
+        protocol['bridge'] += ' * R_frozen_environment(E)**(1-beta)'
+    paths, _ = make_runs(tmp_path/'second', reporter, seed_start=200, alter=changed)
+    output = tmp_path/'second.json'
+    with pytest.raises(ValueError, match='comparison|endpoint'):
+        run_report(reporter, monkeypatch, paths, output, first)
+    assert not output.exists()
+
+
+def test_same_bridge_does_not_require_new_endpoint_field(tmp_path, reporter, monkeypatch):
+    paths, _ = make_runs(tmp_path/'first', reporter)
+    first = tmp_path/'first.json'
+    run_report(reporter, monkeypatch, paths, first)
+    def declare_endpoint(index, protocol, result):
+        protocol['endpoint_target'] = reporter.ENDPOINT_TARGET
+    paths, _ = make_runs(tmp_path/'second', reporter, seed_start=200, alter=declare_endpoint)
+    report = run_report(reporter, monkeypatch, paths, tmp_path/'second.json', first)
+    assert report['comparison_gate'] is True
+    assert report['comparison']['bridge_compatibility']['mode'] == 'identical_literal_bridge'
+
+
+def test_endpoint_declaration_cannot_change_within_group(tmp_path, reporter, monkeypatch):
+    def alter(index, protocol, result):
+        if index:
+            protocol['endpoint_target'] = reporter.ENDPOINT_TARGET
+    paths, _ = make_runs(tmp_path/'runs', reporter, alter=alter)
+    with pytest.raises(ValueError, match='same endpoint target'):
+        run_report(reporter, monkeypatch, paths, tmp_path/'report.json')
+
+
+def test_literal_bridge_match_cannot_hide_conflicting_endpoint(tmp_path, reporter, monkeypatch):
+    def declare(index, protocol, result):
+        protocol['endpoint_target'] = reporter.ENDPOINT_TARGET
+    paths, _ = make_runs(tmp_path/'first', reporter, alter=declare)
+    first = tmp_path/'first.json'
+    run_report(reporter, monkeypatch, paths, first)
+    def conflict(index, protocol, result):
+        protocol['endpoint_target'] = 'q_environment(E) * p_other(x) * K(y|x,E)'
+    paths, _ = make_runs(tmp_path/'second', reporter, seed_start=200, alter=conflict)
+    with pytest.raises(ValueError, match='endpoint target identities'):
+        run_report(reporter, monkeypatch, paths, tmp_path/'second.json', first)

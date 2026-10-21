@@ -1,0 +1,565 @@
+{
+  "created_utc": "2026-10-21T22:10:36.016088+00:00",
+  "hypothesis": "Frozen independent-v1 phase Stein control reduces score variance; raw score/normalizer gates unchanged",
+  "code_commit": "a1029f0a59242bd670846143583333ecb92f786e",
+  "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_phase_n15_20261022_v2",
+  "source_manifest_sha256": "ee2c3d983520f67b818d4349aef24a9933fa9848198f88632883a73ff94a48dd",
+  "source_files": 293,
+  "cache_files": 0,
+  "output": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2",
+  "input_runs": [
+    {
+      "group": "v1",
+      "index": 0,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v1_0",
+      "seed": 2026102130,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "10b383bfcbc8670ac1235a8636b05d010f69e1cdd1a5b6dcc4aa9bbbd72c95de",
+        "result.json": "2de16b47a345c724fde9a70c8b2532c4e8d6d46002f29c81d6bc957a26809c6c",
+        "particles.npz": "a03f8ab8855b14cbd4b603fef17da29f9d5ddc3b50c68d8f6a961f6033da8abd"
+      }
+    },
+    {
+      "group": "v1",
+      "index": 1,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v1_1",
+      "seed": 2026102131,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "0c02cc4a908e6c407952c94d09341242fc49d685c913baf9d0c1a128784b4c32",
+        "result.json": "c5243a1c5dac825244464f7f7ef6a3cd3983cd99a9690c83b5c84a1928200f45",
+        "particles.npz": "7d20771753d9d6a2d6c5eedf4fbacb90151c525b99324d47a37a42541049bd1c"
+      }
+    },
+    {
+      "group": "v1",
+      "index": 2,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v1_2",
+      "seed": 2026102132,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "ef9f8d80962ddaa7410aeb1549c052bef91477615caef2c1e87a36ad3be6818d",
+        "result.json": "6ef28582599ab2bb36d6329d81d9130540a72ca8e6113a119c93abf68b81b469",
+        "particles.npz": "f1db6bedb747c7aedeaf16eb40edc1c26a98b0233047c8b069fa389139078ffb"
+      }
+    },
+    {
+      "group": "v1",
+      "index": 3,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v1_3",
+      "seed": 2026102133,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "b64887e1b9a230a463fe98beffed3b0e54a5b00d77aa259b3ab3c0fa5f97de5d",
+        "result.json": "44ed5c5c9eae7f3098645a21ed15dac9d9b0bb4264160636f0062c11fa166271",
+        "particles.npz": "24acff0e3a061163535745c1ade1715a594c53ea847c5f15c684bf36e66865d1"
+      }
+    },
+    {
+      "group": "v5",
+      "index": 0,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v5_0",
+      "seed": 2026102170,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "c6f0d787a49cb884e36971a7eb429b4fac958a07b455f0fad59ff942c0b9f87c",
+        "result.json": "266704c6030b6ce4be0fbbb513bfce0eaeeead43bb981ac252680f07e3dbb227",
+        "particles.npz": "eedb0bd671363707dfe50320c3249a325a167efd2ff762377913e29f5399b22d"
+      }
+    },
+    {
+      "group": "v5",
+      "index": 1,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v5_1",
+      "seed": 2026102171,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "0696a4c213f0a8e62567a265c8f1fcf317e2a680a78f0d83529033c34b6e25e8",
+        "result.json": "618e48efc3e21b7d2c8f5594753ce3c89d889029cb4a18a18d5d5e694568a1e7",
+        "particles.npz": "2032d78bc9f50ad2f86ce4abf32888ebdf44b7665c97d6167c4699171c5cef4b"
+      }
+    },
+    {
+      "group": "v5",
+      "index": 2,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v5_2",
+      "seed": 2026102172,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "9d8acd522069159dd4f1ee7ec38bc7aee9a8ebc5c8232dd3db54ab8f481399fd",
+        "result.json": "daf7e9caaa9a03a112c97354fca2de1938294a71b6a2619f0c8acf16f8fb1b49",
+        "particles.npz": "0ca2650fca1c3c86f8be6b0a60eb832497b0a182bcddf84d7794f88d7ed66ab7"
+      }
+    },
+    {
+      "group": "v5",
+      "index": 3,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v5_3",
+      "seed": 2026102173,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "dfb2961d2aee50f9685fc527e015a8d4f739e2ef950cfae1df2bcba88335662d",
+        "result.json": "615cc9b0c878938eb58d726bb5ff6a960191503d8a43d86f9b765237da2a745c",
+        "particles.npz": "57d8ae1adffd0a33183a0132aa5b0cd4a8c69d0c5e9caefa7a29ffe3bcf1ef0a"
+      }
+    },
+    {
+      "group": "v5",
+      "index": 4,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v5_4",
+      "seed": 2026102174,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "67ea4762ea097e72596d0404294e7ce654e9f4be904a8e17562f84e6aa0661b2",
+        "result.json": "5cc171db8c1c4dbba14c40b8c160ace805ce2e2fbbfa79b9bc9ec51ca7c49fb6",
+        "particles.npz": "e7179a30e4a3ecd9addeaf7c4047832c4c441d831a89bb93db1bedf9412d99f8"
+      }
+    },
+    {
+      "group": "v5",
+      "index": 5,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v5_5",
+      "seed": 2026102175,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "0f8d3bb30aabbbf1ead8693c7684309fb21911425553221089edd6f5055385de",
+        "result.json": "ad49150d0a0bb034ecb0dfe8e3ebbecfc8c5fb36a32086b745eda9d3971d67f6",
+        "particles.npz": "20ec138cd5fcc63a32c20d645af5c51dcfa8e4afc861df9dc41d19bd53bae833"
+      }
+    },
+    {
+      "group": "v5",
+      "index": 6,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v5_6",
+      "seed": 2026102176,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "ac46f3f6c591e461094b05c1c306a6d1ab082f46224f13e9b3178307f6b01726",
+        "result.json": "5863f035a7dde5f62f8a9703992a1289944b691c28a417947e86661fc5654da7",
+        "particles.npz": "56ea1cc252ba16d0b744e0b29bfd7c1354f6ced042af64a13a6a58a65a96edb5"
+      }
+    },
+    {
+      "group": "v5",
+      "index": 7,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v5_7",
+      "seed": 2026102177,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "0b866d0c5690ffc584069017afe8f7baeaebb03bf65db8e0771dde67132b8ea8",
+        "result.json": "df22f675269a9bcc82fbfa17fb24960f633aa789b308c7200f5bdb43269f1fc3",
+        "particles.npz": "a6d0548931fd7e6b4d7463a0cf19685ce25f200c554de30e6422db1598d0f871"
+      }
+    },
+    {
+      "group": "v6v100",
+      "index": 0,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v6v100_0",
+      "seed": 2026102180,
+      "particles": 1024,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "0b63ccac25d157bfdea97e369309ba1adda4bf1f835499a04b56c96a8728cb50",
+        "result.json": "fcea8b3e380a5e1e5a8f6d2b08f797d8def4bb9ab47b24734d9d302e6fbcea26",
+        "particles.npz": "90aa7c480bfb0867b8316572acfa4727445091d810eee73b936409cf0279a57c"
+      }
+    },
+    {
+      "group": "v6v100",
+      "index": 1,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v6v100_1",
+      "seed": 2026102181,
+      "particles": 1024,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "9963d55abb0116ed48cd2c6748625b9c40ca0a1c51275c6e8bb9288b49478108",
+        "result.json": "b9e0794c2f553e589ba8db1f3d3153c113e6027398062e05ee31a69eda0a9c80",
+        "particles.npz": "2a82d18bc0b9c75161ed829c6af9769810372bcf39cc8bc9132f05e19e96aba6"
+      }
+    },
+    {
+      "group": "v6v100",
+      "index": 2,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v6v100_2",
+      "seed": 2026102182,
+      "particles": 1024,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "691ed229bcc3fc739181a0293151f3b97f0067539efc3e0387521892cf9dbbb0",
+        "result.json": "7c58bb1e9684427ef85a231877d786cf262ddcfd3f59d4ea2173eae5152116ea",
+        "particles.npz": "814ed07ee2c9835e3d01680a1e13792e299c5f28aea8616bf3e193c6c743f6c9"
+      }
+    },
+    {
+      "group": "v6v100",
+      "index": 3,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v6v100_3",
+      "seed": 2026102183,
+      "particles": 1024,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "017de5ffe2cd67bccf6fb1641ea25a4c0df889c13802752d035a4c985743ce4b",
+        "result.json": "25be226bc7738ec552e8935c7254ae9e9fafef013de673e1657255c5f60a50dc",
+        "particles.npz": "bdb5a3be17deffe29668ca8dbd12501b60692702919a44de42c376fdf3c1f89a"
+      }
+    },
+    {
+      "group": "v6v100",
+      "index": 4,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v6v100_4",
+      "seed": 2026102184,
+      "particles": 1024,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "228d66e673099fe46d50c15ec4144024db48f88dc427852f43d04d2e089ca668",
+        "result.json": "44d1b39cc96ed5c062a28dd2f13f7fe97786d870354ec88546856c788feb0ef2",
+        "particles.npz": "c8d1ba6e0abb10e54353cd116274c2bb949f2daaadd93ca0a197419953c00a3b"
+      }
+    },
+    {
+      "group": "v6v100",
+      "index": 5,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v6v100_5",
+      "seed": 2026102185,
+      "particles": 1024,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "427574c609b16fd2d8b4d985d7e47698abe0865ea784f85e8d8cb4e6d6d08e3d",
+        "result.json": "2590204c960ec767b46f8aaf2890a18a7ac0db8dc3e5558930228a4bbf06a168",
+        "particles.npz": "10707dde9f333e48ca048e954b54909102512d22bafad280a105586f2e16be14"
+      }
+    },
+    {
+      "group": "v6v100",
+      "index": 6,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v6v100_6",
+      "seed": 2026102186,
+      "particles": 1024,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "15c0c8764623b431bb00d45a1893c5ee70d7e8dd7fae097c1bb8df1e0a3d8259",
+        "result.json": "d301d1f98f4261722b4061cc70d66a1994de55f13c3bbbea7eb6fa9f3a84093b",
+        "particles.npz": "29adf322fd4d0b441b7733381d2e91bebee4ab36625edeacb55ef88521e85ec2"
+      }
+    },
+    {
+      "group": "v6v100",
+      "index": 7,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v6v100_7",
+      "seed": 2026102187,
+      "particles": 1024,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "46c6400ffc3e4a7c1d2e74952ebaf3973b93156c71bb83d97207d58689f6cd45",
+        "result.json": "85a712dc481fd458d5cae6deebd2f96ee98789db4d5fb2a7690b4cb9a04a0329",
+        "particles.npz": "fe74b6d1ee59ef1919ee9b850f3e00ae5384d0b61c6107f323cab5df3696e7c0"
+      }
+    },
+    {
+      "group": "v7",
+      "index": 0,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v7_0",
+      "seed": 2026102190,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "c7c182c774c4fb082e7ca3813b9f2567db6799523293c16281dfcfa1df52b931",
+        "result.json": "6b89f0e3b1c650002606708c339bc63479095dd3f8100b050a1d496dffac431c",
+        "particles.npz": "d5d6883b9cd5a6a88cef9ce1a28e11f671ab964b0f137695866da84f502946dc"
+      }
+    },
+    {
+      "group": "v7",
+      "index": 1,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v7_1",
+      "seed": 2026102191,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "4ea181023cadda4c763dbefdf7027d57e97d975e63841f7233bb4c2d10745a6c",
+        "result.json": "f956186588ff639e6c82eea0c1a9a4e67d2a35f8d104c18e1bc77c027f9d5486",
+        "particles.npz": "862607e6e57cedf8e7bfbd9cddddca288ecf8ad2c4271dd2aa1ff31624f910ac"
+      }
+    },
+    {
+      "group": "v7",
+      "index": 2,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v7_2",
+      "seed": 2026102192,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "0336290f0d8f5b1742b06fdc87552ebd80b44c3682f7619a8a7531835ba69934",
+        "result.json": "485d6e7e8f464569f2266929cdfdfd3e16057be93c548cc1368d60170f512895",
+        "particles.npz": "e0d94c0168ca76491929883ea46ac12e0f3e0b4ea3214ad96dd7df84f83a16d9"
+      }
+    },
+    {
+      "group": "v7",
+      "index": 3,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v7_3",
+      "seed": 2026102193,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "b3608178d10569b352805d8bbd52dbe77b96ccd06b1d0906bbfe67cc7f072445",
+        "result.json": "2b500a39732cfa0d08892a009b25eb7fc973ba81caa24ace61f4e0b1ffe6998d",
+        "particles.npz": "cbde91a93a06f89de3c29ab153864734c94e48cc63fc626c70f78124e710ab85"
+      }
+    },
+    {
+      "group": "v7",
+      "index": 4,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v7_4",
+      "seed": 2026102194,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "17f832fcc7f222fad729e372b10fc7835c6805486e2581e42cea6cac8e202cf2",
+        "result.json": "141953c09ba874126899225765e9d25c4fa46990c9aebe0e165cab12ee601e07",
+        "particles.npz": "dfbf8faf415be9608e8522b4ec19593270010ed497c924946f6fc6241ee07046"
+      }
+    },
+    {
+      "group": "v7",
+      "index": 5,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v7_5",
+      "seed": 2026102195,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "950230d1785c73a0322c741aae41fbd27bdfe08739173d6fad0ab735f2311271",
+        "result.json": "826ff0a10a7e186fe6795c36542ffa11e43a2571c1cfd9d36e2a493e1a389d65",
+        "particles.npz": "a937268318d2b98b0ccfede4fc03b7ac185930045a3be139ac9974169d01e29f"
+      }
+    },
+    {
+      "group": "v7",
+      "index": 6,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v7_6",
+      "seed": 2026102196,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "fc1ca5bf9169440ef842576ca5bf2cb0072b4dd984d14ae6e6c457dde78bf75f",
+        "result.json": "0fe503593c64faaff13a0e61835f6d562f747d4c03a43eb467b3bb60e96487fe",
+        "particles.npz": "60bf28b033ec9800f8f2821f35d56632a2878d041ab44593d39ce408d891f9d6"
+      }
+    },
+    {
+      "group": "v7",
+      "index": 7,
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v7_7",
+      "seed": 2026102197,
+      "particles": 256,
+      "observations": [
+        58165,
+        0,
+        1,
+        8
+      ],
+      "sources": {
+        "protocol.json": "b9978d1a0a2e59ec8e651a27cdec219ca8341dc8cad0a05c1d49a390b100586a",
+        "result.json": "8aac09233382f2363c24cb61165f295f68156f435b9494e3e40d18348e6cef6e",
+        "particles.npz": "051e8b0ca8391aab0f2c5f3178912955024243966605b8987d9ccc4c835c4a94"
+      }
+    }
+  ],
+  "total_saved_states": 53248,
+  "coefficient_fit_groups": [
+    "v1"
+  ],
+  "evaluation_groups": [
+    "v5",
+    "v6v100",
+    "v7"
+  ],
+  "resource": {
+    "partition": "inter",
+    "node": "th-cl-nv02",
+    "gpu": "v100",
+    "gpus": 1,
+    "cpus": 2,
+    "memory_gb": 24,
+    "time_limit": "00:30:00"
+  },
+  "precision_limits": {
+    "sampling_replay_atol": 1e-06,
+    "float64_replay_atol": 1e-10,
+    "saved_score_atol": 1e-06,
+    "phase_gradient_scaled_atol": 0.0001,
+    "sampled_float32_float64_atol": 1e-05
+  },
+  "failure_policy": "Preserve failed receipts; no outcome-driven tolerance changes; fix only demonstrable implementation defects",
+  "derivative_protocol": "phase-fine-difference-v2",
+  "phase_difference_steps": [
+    2e-06,
+    1e-06,
+    5e-07
+  ],
+  "original_coarse_steps": [
+    0.0001,
+    1e-05,
+    1e-06
+  ],
+  "original_experiment_status": "failed gate; no fit/science pass",
+  "original_failure_receipt": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_failure_receipt.json",
+    "sha256": "e81b87ef75fbd0e6439e965bbc4ffb0400787b55f5713ef07be5dbf91f06744c"
+  },
+  "authorization": "Root explicitly authorized separately declared v2 fine steps and unchanged per-step threshold, fitting recipe, populations, replay thresholds, and production raw-score/normalizer gates",
+  "motivation": "Preserved O(h^2) central-difference truncation; new finer derivative check only",
+  "cpu_test": {
+    "job": 17420583,
+    "passed": 32,
+    "seconds": 10.88
+  }
+}

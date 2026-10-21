@@ -55,6 +55,12 @@ def replace_particles(state, rows, replacement):
             raise ValueError('replacement particle payload shapes differ')
         fields[name] = value.copy()
         fields[name][rows] = updated
+    if state.environment_payload is not None:
+        if replacement.environment_payload is None:
+            raise ValueError('replacement lost its environment payload')
+        fields['environment_payload'] = state.environment_payload.scatter(rows, replacement.environment_payload)
+    elif replacement.environment_payload is not None:
+        raise ValueError('replacement introduces an incompatible environment payload')
     return type(state)(scene=combined.take(selected), **fields)
 
 

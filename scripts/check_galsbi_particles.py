@@ -45,6 +45,10 @@ def main():
     parser.add_argument('--proposal-df', type=float)
     parser.add_argument('--initial-proposal', type=Path,
                         help='Frozen independent-pilot proposal; owns the complete initial law')
+    parser.add_argument('--informed-environment', type=Path,
+                        help='Optional frozen proposal artifact for one-point initial environment augmentation')
+    parser.add_argument('--environment-mixture-probability', type=float,
+                        help='Fixed augmentation probability, default0.5; requires --informed-environment')
     parser.add_argument('--physical-geometry', type=Path)
     parser.add_argument('--relocate-exchanges', action='store_true')
     parser.add_argument('--seed', type=int, required=True)
@@ -52,6 +56,11 @@ def main():
     parser.add_argument('--device', choices=['cpu', 'cuda'], default='cuda')
     parser.add_argument('--density-batch-size', type=int, default=4096)
     args = parser.parse_args()
+    if args.environment_mixture_probability is not None and not args.informed_environment:
+        parser.error('--environment-mixture-probability requires --informed-environment')
+    environment_probability = .5 if args.environment_mixture_probability is None else args.environment_mixture_probability
+    if args.informed_environment and (not np.isfinite(environment_probability) or not 0 < environment_probability < 1):
+        parser.error('--environment-mixture-probability must lie strictly between zero and one')
     if args.initial_proposal and any(value is not None for value in
             (args.faint_shift, args.proposal_family, args.proposal_df)):
         parser.error('--initial-proposal cannot be combined with --faint-shift, --proposal-family, or --proposal-df')
@@ -92,6 +101,7 @@ def main():
         reference=str(args.reference.resolve()), reference_protocol_sha256=digest(args.reference/'protocol.json'),
         observation_sha256=receipt['observations_sha256'], density_batch_size=args.density_batch_size,
         bridge='q_environment(E) * q0(x)**(1-beta) * (p_analytic(x)*K(y|x,E))**beta',
+        endpoint_target='q_environment(E) * p_analytic(x) * K(y|x,E)',
         selection='none in fixed-y posterior; no population shear fit', extinction_schema=EXTINCTION_SCHEMA,
         exactness='Known q0; off-prior-support particles retain zero weight; fixed schedules/kernels; '
                   'native target and numerical environment measures unchanged. Finite-particle ratios are not exact posterior expectations.',
@@ -113,6 +123,24 @@ def main():
             sha256=digest(args.initial_proposal), metadata=initial.metadata,
             effective_law='artifact-owned normalized Student-t/von-Mises mixture')
         protocol['implementation_sha256'][str(Path('sbsi/particle_initial_proposal.py').resolve())] = digest('sbsi/particle_initial_proposal.py')
+    environment_source = None
+    if args.informed_environment:
+        from sbsi.particle_initial_proposal import FrozenParticleProposal
+        environment_source = FrozenParticleProposal.load(args.informed_environment)
+        # Validate the pilot's scientific target identity before recording the
+        # different initial bridge; no existing identity gate is bypassed.
+        environment_source.validate_production(args.seed, protocol)
+        protocol['informed_environment'] = dict(path=str(args.informed_environment.resolve()),
+            sha256=digest(args.informed_environment), source_metadata=environment_source.metadata,
+            source_pilot_validation_bridge=protocol['bridge'])
+        protocol['bridge'] += ' * R_frozen_environment(E)**(1-beta)'
+        protocol['exactness'] += (' Optional initial environment uses the continuous numerical interpolation '
+            'density and retains proven off-support raw draws as zero-target initial rows; '
+            'unknown numerical failures raise. Clamp atoms and finite-RNG exactness are not implemented.')
+        for name in ('particle_initial_proposal.py', 'informed_environment.py', 'poisson_augmentation.py',
+                     'numerical_native_intensity.py', 'galsbi_prior.py', 'galsbi_scene_prior.py'):
+            path = Path('sbsi')/name
+            protocol['implementation_sha256'][str(path.resolve())] = digest(path)
     save(args.output/'protocol.json', protocol)
     started = time.monotonic()
     torch.set_num_threads(min(2, len(os.sched_getaffinity(0))))
@@ -131,18 +159,42 @@ def main():
     distance = ExactMemo(lambda z: cosmo.background.dist_ang_a(a=1/(1+z)))
     prior = GalSBIScenePrior(galaxy)
     coordinates = GalSBITargetCoordinates(galaxy, distance)
+    informed = None
+    if environment_source is not None:
+        from sbsi.informed_environment import InformedEnvironmentProposal
+        informed = InformedEnvironmentProposal(prior, coordinates, environment_source,
+            protocol['informed_environment']['sha256'], mixture_probability=environment_probability)
+        protocol['informed_environment']['metadata'] = informed.metadata
     proposals = (list(initial.proposals) if initial is not None else [MeasurementParticleProposal.from_measurement(row.iloc[:4].to_numpy(),
         reference['conditions'], galaxy.p, args.shear, faint_magnitude_shift=args.faint_shift,
         component_family=args.proposal_family, student_df=args.proposal_df)
         for _, row in observations.iterrows()])
     protocol['proposals'] = [p.metadata for p in proposals]
     save(args.output/'protocol.json', protocol)
+    target_options = dict(physical_geometry=geometry)
+    if informed is not None:
+        target_options['informed_environment'] = informed
     target = GalSBIParticleTarget(prior, coordinates, likelihood, response_model, distance,
-        reference['conditions'], observations, proposals, owner, args.shear, physical_geometry=geometry)
+        reference['conditions'], observations, proposals, owner, args.shear, **target_options)
     rng = np.random.default_rng(args.seed)
     initialization_started = time.monotonic()
     state = target.initialize(rng)
     initial_valid = np.isfinite(state.potential).reshape(nobs, particles).sum(1)
+    initial_environment = None
+    if informed is not None:
+        payload = state.environment_payload
+        # Preserve every raw draw before ordinary weighting/resampling removes
+        # zero-target rows. Final surviving ancestry cannot reconstruct this.
+        path = args.output/'initial_environment.npz'
+        np.savez_compressed(path, **vars(payload), target_coordinates=state.x,
+                            log_potential=state.potential)
+        reasons = payload.classification.reshape(nobs, particles)
+        initial_environment = dict(path=path.name, sha256=digest(path),
+            original_particles_per_observation=particles,
+            augmented=payload.augmented.reshape(nobs, particles).sum(1).tolist(),
+            supported_environment=payload.valid.reshape(nobs, particles).sum(1).tolist(),
+            zero_target_environment=(~payload.valid).reshape(nobs, particles).sum(1).tolist(),
+            classifications=[{str(k):int(v) for k,v in zip(*np.unique(row,return_counts=True))} for row in reasons])
     populations = ParticlePopulations(target, nobs, particles)
     logz, labels = populations.logz, populations.labels
     history = []
@@ -191,10 +243,14 @@ def main():
     full, score, replay_error = survivor_diagnostics(target, state, populations.alive,
         particles, likelihood, evaluate_scores)
     score = score.reshape(nobs, particles, 2)
+    environment_arrays = {}
+    if state.environment_payload is not None:
+        environment_arrays = {'environment_'+name:value.reshape((nobs, particles)+value.shape[1:])
+                              for name,value in vars(state.environment_payload).items()}
     np.savez_compressed(args.output/'particles.npz', coordinates=state.x.reshape(nobs, particles, 10),
         summaries=full.reshape(nobs, particles, 9), log_prior=state.log_prior.reshape(nobs, particles),
         log_kernel=state.log_kernel.reshape(nobs, particles), scores=score, ancestor_labels=labels,
-        extinct=~populations.alive, log_normalizer=logz)
+        extinct=~populations.alive, log_normalizer=logz, **environment_arrays)
     np.savez_compressed(args.output/'scenes.npz', indptr=state.scene.indptr,
         offset_arcsec=state.scene.offset_arcsec,
         **{'target_'+k:v for k,v in state.scene.targets.items()},
@@ -205,6 +261,7 @@ def main():
         particles=particles, score_mean=score_mean,
         score_variance=masked_rows(score.var(1, ddof=1), populations.alive),
         **populations.receipt(), initial_valid=initial_valid.tolist(),
+        **({} if initial_environment is None else {'informed_environment_initialization':initial_environment}),
         timing_seconds=dict(initialization=initialization_seconds, sampling=sampling_seconds,
                             total=time.monotonic()-started),
         acceptance={b:dict(attempted=attempted[b].tolist(), accepted=accepted[b].tolist()) for b in sorted(attempted)},

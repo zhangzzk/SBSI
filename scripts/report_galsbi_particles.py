@@ -12,7 +12,8 @@ from sbsi.particle_populations import EXTINCTION_SCHEMA
 
 TARGET_SOURCES = ('galsbi_particle_target.py', 'galsbi_target_coordinates.py',
                   'galsbi_summary.py', 'summary_gradients.py', 'models_v3_9_like.json')
-REPORT_VERSION = 'independent-populations-v4-normalizer-comparison'
+REPORT_VERSION = 'independent-populations-v5-explicit-endpoint'
+ENDPOINT_TARGET = 'q_environment(E) * p_analytic(x) * K(y|x,E)'
 
 
 def implementation_fingerprint(protocol):
@@ -57,15 +58,56 @@ def proposal_fingerprint(protocol):
     return dict(sha256=proposal['sha256'], metadata=proposal['metadata'])
 
 
+def environment_fingerprint(protocol):
+    """Keep the full frozen environment law/provenance, excluding only its path."""
+    proposal = protocol.get('informed_environment')
+    if proposal is None:
+        return None
+    if (not isinstance(proposal, dict) or not isinstance(proposal.get('metadata'), dict)
+            or not isinstance(proposal.get('sha256'), str) or len(proposal['sha256']) != 64
+            or any(c not in '0123456789abcdef' for c in proposal['sha256'])):
+        raise ValueError('frozen informed environment requires valid artifact hash and metadata')
+    return {key:value for key,value in proposal.items() if key != 'path'}
+
+
 def pilot_seeds(record):
     seeds = set()
-    for key in ('physical_geometry', 'initial_proposal'):
+    for key in ('physical_geometry', 'initial_proposal', 'informed_environment'):
         if record.get(key) is not None:
             values = record[key]['metadata'].get('pilot_seeds', [])
+            if key == 'informed_environment':
+                if not values:
+                    raise ValueError('informed environment pilot seeds must be recorded')
+                source = record[key].get('source_metadata')
+                if source is not None and (not isinstance(source, dict)
+                                           or source.get('pilot_seeds') != values):
+                    raise ValueError('informed environment source and effective pilot seeds disagree')
             if not isinstance(values, list) or any(type(v) is not int for v in values):
                 raise ValueError('integer frozen-artifact pilot seeds required')
             seeds.update(values)
     return seeds
+
+
+def comparison_target_identity(first, second):
+    """Permit different bridges only to the declared same endpoint under same code.
+
+    A changed bridge requires both new reports to record the supported endpoint
+    explicitly. Literal bridge equality remains the fallback for older protocols
+    rendered with this report version. Old report versions never pass this gate.
+    """
+    for key in ('centre', 'reference_protocol_sha256', 'observation_sha256',
+                'density_batch_size', 'target_source_sha256', 'selection', 'diagnostics_version'):
+        if first.get(key) != second[key]:
+            raise ValueError('comparison targets or numerical likelihood batches disagree')
+    endpoints = (first.get('endpoint_target'), second.get('endpoint_target'))
+    if any(value is not None and value != ENDPOINT_TARGET for value in endpoints):
+        raise ValueError('comparison endpoint target identities disagree or are unsupported')
+    same_bridge = first.get('bridge') == second['bridge']
+    if not same_bridge and endpoints != (ENDPOINT_TARGET, ENDPOINT_TARGET):
+        raise ValueError('changed comparison bridge requires identical explicit endpoint targets')
+    return dict(mode='identical_literal_bridge' if same_bridge else 'identical_explicit_endpoint',
+        endpoint_target=ENDPOINT_TARGET if endpoints == (ENDPOINT_TARGET, ENDPOINT_TARGET) else None,
+        current_bridge=second['bridge'], comparison_bridge=first.get('bridge'))
 
 
 def _masked_array(value, shape, extinct, name):
@@ -206,6 +248,10 @@ def main():
                 raise ValueError('each group must use the same frozen physical geometry')
             if proposal_fingerprint(p) != proposal_fingerprint(protocols[0]):
                 raise ValueError('each group must use the same frozen initial proposal')
+            if environment_fingerprint(p) != environment_fingerprint(protocols[0]):
+                raise ValueError('each group must use the same frozen informed environment configuration')
+            if p.get('endpoint_target') != protocols[0].get('endpoint_target'):
+                raise ValueError('each group must declare the same endpoint target')
             if fingerprint != implementations[0]:
                 raise ValueError('each group must use identical recorded implementation versions')
         protocols.append(p); results.append(r); implementations.append(fingerprint)
@@ -259,9 +305,11 @@ def main():
         comparison_gate=False, heldout_gate=False, accepted_sampler=False,
         diagnostics_version=REPORT_VERSION,
         target_source_sha256={name:implementations[0][name] for name in TARGET_SOURCES},
-        bridge=protocols[0]['bridge'], selection=protocols[0]['selection'],
+        bridge=protocols[0]['bridge'], endpoint_target=protocols[0].get('endpoint_target'),
+        selection=protocols[0]['selection'],
         implementation_sha256=implementations[0], physical_geometry=geometry_fingerprint(protocols[0]),
         initial_proposal=proposal_fingerprint(protocols[0]),
+        informed_environment=environment_fingerprint(protocols[0]),
         sources=sources, script_sha256=digest(__file__),
         limitations=['Delta-method errors from complete independent runs; finite-run uncertainty can miss rare events.',
                     'No nominal particle ESS/Rhat is used as an independent posterior sample count.',
@@ -270,10 +318,7 @@ def main():
                     'Passing precision alone does not establish accuracy or held-out efficiency.'])
     if args.comparison:
         other = json.loads(args.comparison.read_text())
-        for key in ['centre', 'reference_protocol_sha256', 'observation_sha256', 'density_batch_size',
-                    'target_source_sha256', 'bridge', 'selection', 'diagnostics_version']:
-            if other.get(key) != output[key]:
-                raise ValueError('comparison targets or numerical likelihood batches disagree')
+        bridge_compatibility = comparison_target_identity(other, output)
         if set(seeds) & set(other['seeds']):
             raise ValueError('unpaired comparison requires disjoint population seeds')
         if set(seeds) & pilot_seeds(other) or set(other['seeds']) & pilot_seeds(output):
@@ -305,7 +350,7 @@ def main():
                 score_combined_mcse=score_se.tolist(), region_difference=region_difference.tolist(),
                 region_combined_mcse=region_se.tolist(), **normalizer, agreement=agreement))
         output['comparison'] = dict(path=str(args.comparison.resolve()), sha256=digest(args.comparison),
-                                    observations=comparisons)
+                                    observations=comparisons, bridge_compatibility=bridge_compatibility)
         output['comparison_gate'] = (output['all_precision_gates'] and other['all_precision_gates']
                                      and all(c['agreement'] for c in comparisons))
     save(args.output, output)

@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-22",
+  "previous_job": 17420835,
+  "previous_state": "CANCELLED while pending; no diagnostic executed",
+  "reason": "Launcher assumed SHA256SUMS, but frozen phase source uses source_manifest.json. Repair validates manifest digest and every source digest. Source and science unchanged.",
+  "replacement_v9_phase": 17421115,
+  "v8_phase": 17421116,
+  "v8_phase_addendum": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/experiment_v8_phase_addendum.json",
+  "v8_phase_addendum_sha256": "c03075a8eaf96705e3899d327d6177a20427e0a449334e78c16e6b2b4535a205",
+  "launchers": {
+    "run_phase_v9.sh": "6129311ad2583ad5428a987c9c6552a4f236d6330404cfbd00ffb4a4e64d7633",
+    "run_phase_v9_v2.sh": "b469f688c354732f2ca27f4fc58f7196e455c3011baf75cd7c079e50919a9791",
+    "run_phase_v8.sh": "40cf7c076c1f887ecffb661d25adb0d401af6db247699627e8e769e1515fea10"
+  }
+}

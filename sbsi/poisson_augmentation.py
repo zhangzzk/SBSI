@@ -1,10 +1,12 @@
 """Exact density tilt for one-point augmentation of an ordered Poisson law.
 
-For normalized h absolutely continuous with respect to the base point
-intensity lambda, uniform insertion of one independent h point gives
-q_aug(E)/q_env(E) = sum_{u in E} h(u)/lambda(u). This module evaluates the
-mixture tilt only; it neither draws h nor establishes its normalization or
-global support. It is not a complete environment proposal implementation.
+For normalized h, on positive-base-density scenes, uniform insertion of one
+independent h point gives q_aug(E)/q_env(E) = sum_{u in E} h(u)/lambda(u).
+This module evaluates that valid-scene tilt only. It neither draws h nor
+establishes normalization or global support. If h has mass outside lambda,
+that mass requires separate handling: the explicitly flagged zero-target
+initialization/positive-beta-resampling contract in informed_environment is
+one allowed path. Never discard, retry, or renormalize such raw initial draws.
 """
 from __future__ import annotations
 
@@ -18,7 +20,8 @@ def point_log_augmentation_ratio(log_h, log_intensity):
     measure. ``log_h=-inf`` is allowed and contributes zero to the augmented
     law. A zero base intensity is rejected, whether h is positive (singular
     augmentation mass) or zero (a point outside both laws). Such configurations
-    require a full joint-density treatment, not the finite tilt formula.
+    cannot use this finite tilt. Handle them separately, for example as the
+    explicit zero-target initial rows in the informed_environment contract.
     Pointwise checks cannot certify global h << lambda or integral(h)=1.
     """
     proposal, intensity = np.asarray(log_h, float), np.asarray(log_intensity, float)
@@ -42,7 +45,8 @@ def poisson_augmentation_log_tilt(log_h_over_intensity, indptr, mixture_probabil
     indptr=[0] is permitted. The sum is invariant to neighbour ordering.
 
     ``0 < a < 1`` preserves all base-law configurations, including N=0.
-    The caller must supply a known normalized h and certify h << lambda.
+    The caller must supply a known normalized h, and either certify h << lambda
+    or separately retain off-support draws under an audited execution contract.
     -inf ratios mean h=0 on positive lambda support; +inf or NaN may indicate
     singular augmentation mass and are rejected, never silently removed.
     """

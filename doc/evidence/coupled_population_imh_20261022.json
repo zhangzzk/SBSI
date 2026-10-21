@@ -1,0 +1,172 @@
+{
+  "node": "n17",
+  "date": "2026-10-22",
+  "branch": "codex/coupled-population-imh-20261022",
+  "base_commit": "b57e62e15a351bdcc14cb5b064f2513246caeaa7",
+  "scope": "Standalone coupled independence-MH on complete population summaries; no real SMC integration",
+  "source_paper": "https://proceedings.mlr.press/v89/middleton19a/middleton19a.pdf",
+  "source_sections": [
+    "Algorithm 3",
+    "Equation (2)",
+    "Proposition 7"
+  ],
+  "dev_score": 1.0,
+  "dev_score_definition": "41/41 implementation correctness checks; not scientific acceptance or efficiency",
+  "focused_validation": {
+    "job": 17420741,
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "tests": 41,
+    "failures": 0,
+    "skipped": 0,
+    "seconds": 8.819,
+    "directory": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/coupled_population_imh_validation",
+    "launcher": "run_v1.sh",
+    "input": "input_v1.json",
+    "stdout": "slurm-v1-17420741.out",
+    "junit": "junit_v1.xml"
+  },
+  "full_validation": {
+    "job": 17420767,
+    "status": "COMPLETED",
+    "exit_code": "0:0",
+    "passed": 718,
+    "skipped": 3,
+    "failures": 0,
+    "errors": 0,
+    "pytest_seconds": 68.595,
+    "slurm_seconds": 77,
+    "directory": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/coupled_population_imh_validation",
+    "launcher": "run_full_v1.sh",
+    "input": "input_full_v1.json",
+    "stdout": "slurm-full-v1-17420767.out",
+    "junit": "junit_full_v1.xml",
+    "skip_reasons": [
+      {
+        "test": "tests.test_api.test_v35_detection_classifier_loads_as_equal_probability_ensemble",
+        "reason": "external V3.5-like detection checkpoints are not configured"
+      },
+      {
+        "test": "tests.test_api.test_prepared_pairs_match_blendemu_catalogue_conversion",
+        "reason": "BlendEMU not on PYTHONPATH; skipping the cross-check against its converter"
+      },
+      {
+        "test": "tests.test_model_presets.test_v39_external_artifacts_load_and_predict_together",
+        "reason": "external V3.9-like artifact roots are not configured"
+      }
+    ]
+  },
+  "sha256": {
+    "sbsi/coupled_population_imh.py": "dd01104c05d2b2b0ee07aecf846192738d92a9ba3380c93489e86018a67cbfe4",
+    "tests/test_coupled_population_imh.py": "95be77bed77a6e2c627e99c121ec137235bfe1b8e19eb5fb465fa7a07db0fac5"
+  },
+  "finite_state_exact": {
+    "proposal_probabilities": [
+      "1/3",
+      "1/2",
+      "1/6"
+    ],
+    "weights": [
+      0,
+      1,
+      4
+    ],
+    "observables": [
+      [
+        0,
+        0
+      ],
+      [
+        2,
+        -1
+      ],
+      [
+        -3,
+        5
+      ]
+    ],
+    "tilted_expectation": [
+      "-6/7",
+      "17/7"
+    ],
+    "windows": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        3
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        2,
+        5
+      ]
+    ],
+    "method": "Rational uniform-interval laws checked against implemented transition; exact rational absorption linear system sums infinite correction tail"
+  },
+  "finite_state_simulations": [
+    {
+      "finite_law_only": true,
+      "k": 0,
+      "m": 0,
+      "seed": 2026102202,
+      "replicas": 12000,
+      "mean": [
+        -0.902,
+        2.49325
+      ],
+      "target": [
+        -0.8571428571428571,
+        2.4285714285714284
+      ],
+      "standard_error": [
+        0.07970836570320333,
+        0.09649997122132396
+      ],
+      "max_meeting_time": 30
+    },
+    {
+      "finite_law_only": true,
+      "k": 2,
+      "m": 5,
+      "seed": 2026102203,
+      "replicas": 12000,
+      "mean": [
+        -0.7603125,
+        2.3096041666666665
+      ],
+      "target": [
+        -0.8571428571428571,
+        2.4285714285714284
+      ],
+      "standard_error": [
+        0.04126093844099978,
+        0.049580194506252055
+      ],
+      "max_meeting_time": 20
+    }
+  ],
+  "limitations": [
+    "Requires independent draws from one fixed Q and 0 < E_Q[Zhat] < infinity.",
+    "Scientific target identification requires E_Q[Zhat*fhat]/E_Q[Zhat] to match the intended expectation; not established by generic code.",
+    "Observable moment and meeting-tail conditions for real SBSI populations remain unproved.",
+    "A finite empirical pool defines its own Q; finite-pool unbiasedness is not unbiasedness for the underlying SMC law.",
+    "No F32/F64 target equivalence claim, no GPU run, no real sampler adapter.",
+    "Cancellation/errors raise and return no estimate; omitting unfinished replicates can bias averages."
+  ],
+  "validation_artifact_sha256": {
+    "input_v1.json": "14a5444516742383462fdb40491af5a4412076881789070130a473bf7aeee795",
+    "input_full_v1.json": "32648e26e26aea68721d261cb5d0e383d2c9551ebcbb84dc952ac79dfbbc3d4d",
+    "run_v1.sh": "14bec397240a0c7ecd70ea7599bf8242ca9e286343d95bcd4f08166cf5494a7d",
+    "run_full_v1.sh": "53153db2e5932d3da9e4bd0879df6bc9c3cda8fae9d0bcdac622bf7c505fc46f",
+    "junit_v1.xml": "98417e5c35c71b6694992272132a91bccea3f5ecb539456e3becd8fe6ee51889",
+    "junit_full_v1.xml": "72ee0061673e021804be9ee0c0859df000365d955bd3e76594583715ec5ee904",
+    "slurm-v1-17420741.out": "f67e7b5cd27184cc5b68f79a159a1266c8794b6e8244ea895a11879458146eb4",
+    "slurm-full-v1-17420767.out": "85fae3131b7dbc4ca43175feff482e2e17eb92994d12c8f7678da541e9560c05"
+  }
+}

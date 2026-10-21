@@ -16,7 +16,7 @@ from .pseudo_marginal import metropolis_accept, retained
 from .scene_exchange import propose_native_exchange
 
 
-def bridge_log_density(log_prior, log_kernel, log_proposal, beta):
+def bridge_log_density(log_prior, log_kernel, log_proposal, beta, log_environment_tilt=None):
     """Reduced bridge density, with endpoint arithmetic safe for -inf support."""
     if not np.isfinite(beta) or not 0 <= beta <= 1:
         raise ValueError('bridge beta must be in [0,1]')
@@ -26,8 +26,15 @@ def bridge_log_density(log_prior, log_kernel, log_proposal, beta):
     if np.isposinf(lp).any() or np.isposinf(lk).any():
         raise ValueError('positive infinite target density')
     if beta == 0:
-        return lq.copy()
-    return beta*(lp+lk)+(1-beta)*lq
+        result = lq.copy()
+    else:
+        result = beta*(lp+lk)+(1-beta)*lq
+    if log_environment_tilt is not None:
+        tilt = np.asarray(log_environment_tilt)
+        if tilt.shape != result.shape or not np.isfinite(tilt).all():
+            raise ValueError('aligned finite environment log tilt required')
+        result = result+(1-beta)*tilt
+    return result
 
 
 @dataclass
@@ -39,10 +46,14 @@ class ParticleScenes:
     log_proposal: np.ndarray
     type_probability: np.ndarray
     summaries: np.ndarray
+    environment_payload: object = None
 
     @property
     def potential(self):
-        return self.log_prior+self.log_kernel-self.log_proposal
+        result = self.log_prior+self.log_kernel-self.log_proposal
+        if self.environment_payload is not None:
+            result = result-self.environment_payload.log_tilt
+        return result
 
     def take(self, rows):
         """Copy complete particle payloads, including repeated ancestors.
@@ -53,13 +64,14 @@ class ParticleScenes:
         return ParticleScenes(self.x[rows].copy(), self.scene.take(rows),
             self.log_prior[rows].copy(), self.log_kernel[rows].copy(),
             self.log_proposal[rows].copy(), self.type_probability[rows].copy(),
-            self.summaries[rows].copy())
+            self.summaries[rows].copy(),
+            None if self.environment_payload is None else self.environment_payload.take(rows))
 
 
 class GalSBIParticleTarget:
     def __init__(self, prior, coordinates, likelihood, response_model,
                  angular_distance, conditions, observations, proposals, owner, shear,
-                 physical_geometry=None):
+                 physical_geometry=None, informed_environment=None):
         self.prior, self.coordinates, self.likelihood = prior, coordinates, likelihood
         self.response_model, self.angular_distance = response_model, angular_distance
         self.conditions, self.observations = conditions, observations
@@ -68,6 +80,7 @@ class GalSBIParticleTarget:
         self.auxiliary = self.observed.iloc[:, 2:4].to_numpy()
         self.shear = np.asarray(shear, float)
         self.physical_geometry = physical_geometry
+        self.informed_environment = informed_environment
         self.lazy_response = bool(np.all(self.shear == 0))
         self.audit = dict(likelihood_calls=0, likelihood_rows=0, nuisance_replay_max=0.,
                           summary_replay_max=0., nuisance_checks=0)
@@ -116,13 +129,24 @@ class GalSBIParticleTarget:
         return SummaryBatch(np.column_stack((zero.to_numpy(), np.zeros(len(zero)))),
                             self.auxiliary[rows])
 
-    def evaluate(self, x, scene, *, reuse=None):
+    def evaluate(self, x, scene, *, reuse=None, environment_payload=None):
         lp, data, probabilities = self.native_prior(x)
         scene = GalSBISceneBatch(data, scene.neighbours, scene.indptr, scene.offset_arcsec)
         lq = self.log_proposal(x)
         lk = np.full(len(x), -np.inf)
         summaries = np.zeros((len(x), 9))
-        valid = np.flatnonzero(np.isfinite(lp))
+        eligible = np.isfinite(lp)
+        if self.informed_environment is not None:
+            if environment_payload is None:
+                from .informed_environment import EnvironmentPayload
+                environment_payload = EnvironmentPayload.reference(
+                    self.informed_environment.log_tilt(scene, self.owner))
+            if environment_payload.valid.shape != (len(x),):
+                raise ValueError('environment validity must align with particle rows')
+            eligible &= environment_payload.valid
+        elif environment_payload is not None:
+            raise ValueError('environment payload requires the optional informed law')
+        valid = np.flatnonzero(eligible)
         if len(valid):
             if reuse is not None:
                 # An off-prior initial q0 draw has never had its likelihood
@@ -137,7 +161,7 @@ class GalSBIParticleTarget:
                 summaries[valid] = summary.values
                 self.audit['likelihood_calls'] += 1
                 self.audit['likelihood_rows'] += len(valid)
-        return ParticleScenes(x, scene, lp, lk, lq, probabilities, summaries)
+        return ParticleScenes(x, scene, lp, lk, lq, probabilities, summaries, environment_payload)
 
     def initialize(self, rng):
         x = np.empty((len(self.owner), 10))
@@ -146,6 +170,9 @@ class GalSBIParticleTarget:
             x[selected] = proposal.sample(int(selected.sum()), rng)
         _, data, _ = self.native_prior(x)
         scene, _ = self.prior.sample_given_targets(data, int(rng.integers(0, 2**63)))
+        if self.informed_environment is not None:
+            scene, payload = self.informed_environment.augment(scene, self.owner, rng)
+            return self.evaluate(x, scene, environment_payload=payload)
         # Invalid prior draws are retained with zero target weight, not retried.
         return self.evaluate(x, scene)
 
@@ -156,6 +183,10 @@ class GalSBIParticleTarget:
         Their proposal-density correction is independent of beta, so the
         original native ratio minus delta log p is added to the bridge ratio.
         """
+        if self.informed_environment is not None:
+            if (beta <= 0 or state.environment_payload is None
+                    or not state.environment_payload.valid.all()):
+                raise ValueError('informed initial environments require positive-beta weighting/resampling before mutation')
         x, scene = state.x.copy(), state.scene
         hastings = np.zeros(len(x))
         active = np.ones(len(x), dtype=bool)
@@ -217,13 +248,29 @@ class GalSBIParticleTarget:
         else:
             raise ValueError('unknown particle mutation block')
         reuse = state if block in ('nuisance', 'sed') else None
-        proposed = self.evaluate(x, scene, reuse=reuse)
+        payload = state.environment_payload
+        if payload is not None and block in ('exchange', 'exchange_relocate'):
+            # The existing native correction proves these swaps off support.
+            # Retain safe old payloads for their certain rejections; never
+            # evaluate a likelihood or finite tilt on a zero-base scene.
+            supported = np.isfinite(native_ratio)
+            if not supported.all():
+                scene = state.scene.retained(scene, supported)
+                x[~supported] = state.x[~supported]
+            continuous = self.informed_environment.continuous_exchange_support(scene)
+            if not continuous.all():
+                native_ratio[~continuous] = -np.inf
+                scene = state.scene.retained(scene, continuous)
+                x[~continuous] = state.x[~continuous]
+        if payload is not None and block in ('environment', 'positions', 'exchange', 'exchange_relocate'):
+            payload = payload.with_tilt(self.informed_environment.log_tilt(scene, self.owner))
+        proposed = self.evaluate(x, scene, reuse=reuse, environment_payload=payload)
         if block in ('exchange', 'exchange_relocate'):
             hastings[:] = -np.inf
             valid = np.isfinite(proposed.log_prior) & np.isfinite(native_ratio)
             hastings[valid] = native_ratio[valid]-(proposed.log_prior[valid]-state.log_prior[valid])
         if reuse is not None and check_reuse:
-            actual = self.evaluate(x, scene)
+            actual = self.evaluate(x, scene, environment_payload=payload)
             if not np.array_equal(np.isfinite(proposed.log_kernel), np.isfinite(actual.log_kernel)):
                 raise ValueError('particle nuisance cache changes likelihood support')
             valid = np.isfinite(proposed.log_kernel) & np.isfinite(actual.log_kernel)
@@ -235,8 +282,10 @@ class GalSBIParticleTarget:
                 self.audit['nuisance_checks'] += int(valid.sum())
                 if kernel_error > 1e-6 or summary_error > 1e-10:
                     raise ValueError('particle nuisance cache fails full replay')
-        old_density = bridge_log_density(state.log_prior, state.log_kernel, state.log_proposal, beta)
-        new_density = bridge_log_density(proposed.log_prior, proposed.log_kernel, proposed.log_proposal, beta)
+        old_density = bridge_log_density(state.log_prior, state.log_kernel, state.log_proposal, beta,
+            None if state.environment_payload is None else state.environment_payload.log_tilt)
+        new_density = bridge_log_density(proposed.log_prior, proposed.log_kernel, proposed.log_proposal, beta,
+            None if proposed.environment_payload is None else proposed.environment_payload.log_tilt)
         accepted = metropolis_accept(old_density, new_density+hastings,
             rng.uniform(np.finfo(float).tiny, 1., len(x))) & active
         if block in ('environment', 'positions', 'exchange', 'exchange_relocate'):
@@ -249,7 +298,9 @@ class GalSBIParticleTarget:
             *[retained(old, new, accepted) for old, new in [
                 (state.log_prior, proposed.log_prior), (state.log_kernel, proposed.log_kernel),
                 (state.log_proposal, proposed.log_proposal),
-                (state.type_probability, proposed.type_probability), (state.summaries, proposed.summaries)]])
+                (state.type_probability, proposed.type_probability), (state.summaries, proposed.summaries)]],
+            environment_payload=(None if state.environment_payload is None else
+                state.environment_payload.retained(proposed.environment_payload, accepted)))
         return updated, accepted, active
 
     def full_summaries(self, state):

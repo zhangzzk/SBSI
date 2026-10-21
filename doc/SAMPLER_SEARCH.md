@@ -44,26 +44,31 @@ proof or a population shear-calibration claim.
 
 ## Current status
 
-V7 is the first candidate to pass all four development precision and
-higher-effort comparison gates. Eight independent populations use256 particles,
-64 stages,32 mutations, frozen gradient geometry and a frozen pilot-fitted
-Student-t/von-Mises proposal. Mean per-population total is101.44seconds before
-pilot costs; the1024-particle/64-mutation broad-Student-t reference takes477.61.
-Bright-object normalizer relative MCSE is2.78% with run-weight ESS7.957/8,
-versus50.34% and2.884/8 for gradient geometry alone. No candidate is promoted.
+No candidate is accepted. V7 passed the original raw-score, region and
+normalizer gates on four development objects, but the independently fitted
+periodic-phase control exposes a new disagreement: observation0 corrected-g1
+(measured magnitude22.47366) is1.06998+/-0.11117 for v7 versus0.40469+/-0.09526 for higher-effort v6,
+about4.55 combined reported MCSE. The small F32/F64 reweighting effect cannot
+explain it. This is finite-eight-population evidence requiring replication,
+not a proof of the mechanism; the old raw gate remains recorded as passed.
 
-The untouched20-object panel now has a frozen validation declaration and
-scheduler graph: warmup17420232, paired candidate/reference17420233,
-report17420234. Each recipe includes its independent warmup/fitting cost.
-No tuning or replacements are permitted after held-out outcomes. See
-[development result](#fitted-proposal-development-result) and
-[held-out declaration](#frozen-held-out-validation).
+Queued held-out production17420233 and report17420234 were cancelled while
+both were pending. Fixed pilot preparation17420232 is preserved; no held-out
+production or comparison has run, and no held-out result is used for tuning.
+V9 now tests1024 particles/64 mutations with the same fitted proposal, eight
+fresh seeds2026102800..07 (array17420804, raw report17420827, frozen phase
+diagnostic17421115 (replaces pending cancelled17420835 after a launcher manifest-format repair)). This separates increased effort from the changed initial
+proposal in the previous reference comparison.
 
-The optional informed-environment kernel remains a separate development
-prototype. A periodic-phase diagnostic is being evaluated read-only and is
-not used in candidate estimates or acceptance gates. Production defaults and
-population shear estimates are unchanged. No result here establishes that
-the measured catalogue-level additive shear residual has disappeared.
+The optional informed-environment branch separately tests alternative light
+assignments using a known-density neighbour proposal. It has independent
+implementation review, but no scientific acceptance. Source_v8 full suite17420828 passes782 tests,1 skipped in81.91seconds.
+Smoke and paired development experiments are gated as17420828 ->17420872 ->
+17420873 ->17420874. Both arms use the same new source and explicit endpoint;
+old report hashes/versions cannot silently bypass compatibility checks.
+
+The experiment record and original successful raw comparison are retained
+below. Production defaults and the catalogue shear estimate remain unchanged.
 
 ## First direction: fixed annealed particles
 
@@ -559,3 +564,123 @@ exchange moves. This is not a16-observation benchmark: repeated-state cache
 reuse can overstate gains for distinct observations. It does not authorize
 changing numerical likelihood batches, nor enter the held-out speed claim.
 Receipt: `sampler_search_20261021/throughput_v100.json`.
+
+## Remaining finite-population bias boundary
+
+The current ratio of sums, sum(Zhat*Sbar)/sum(Zhat), is not an exactly
+unbiased posterior expectation at finite replication. Improved normalizer
+stability and effort comparisons reduce a visible concern; they do not prove
+that residual integration bias vanishes when many galaxy scores are averaged.
+This distinction matters for a catalogue-level additive-shear requirement.
+
+A possible later direction is coupled particle independent Metropolis-Hastings.
+Treat a complete independently piloted SMC population as a proposal Q, with
+extended target proportional to Zhat*Q, and use its particle-average score as
+the observable. Whole-population independence acceptance uses the ratio of
+normalizer estimates. Coupled chains with an uncapped telescoping correction
+can remove initialization bias under appropriate moment and meeting-time
+conditions; see [Middleton et al., Algorithm3 and Proposition7](https://proceedings.mlr.press/v89/middleton19a/middleton19a.pdf).
+
+This is not implemented or validated for SBSI. Zero normalizing estimates,
+unknown failures, score moments and meeting-time tails require explicit
+handling; finite-state empirical replays would test only their finite pool.
+No finite-pool reweighting, discarded long meetings or imposed iteration cap
+would establish an unbiased SBSI estimator. Current acceptance gates retain
+their empirical finite-panel scope.
+
+## Phase control exposes a hidden score disagreement
+
+N15's original diagnostic failed first on F32-only legacy forward wrappers,
+then on its predeclared requirement that all three finite-difference steps
+(including1e-4) meet1e-4 scaled error. Both failures and source snapshots are
+preserved. The independent F64 adapter repaired the wrapper mismatch without
+changing sampling code. A separately declared v2 protocol checks steps2e-6,
+1e-6,5e-7 against the same threshold, motivated by observed second-order
+truncation;32 CPU tests include deliberately wrong derivative rejection.
+
+V2 GPU17420604 completes all28 fixed saved populations in223seconds. Saved
+F32 likelihood and saved F64 score replay errors are0; independent F64 forward
+error is at most1.78e-15. All fine-step scaled errors are below8.11e-6. Four
+v1 pilots alone fit frozen coefficients; all eight v5/v6/v7 populations are
+then evaluated. Maximum sampled |logK64-logK32| is9.23e-4, so exact F32/F64
+identity is not asserted. Full original normalizer weighting is retained in
+both the F32-sampled and explicitly F64-reweighted diagnostics.
+
+The control reduces noise unequally. On observation0, corrected g1 is
+0.47868+/-0.18701 (v5),0.40469+/-0.09526 (v6), and1.06998+/-0.11117 (v7).
+V7-v6 differs by about4.55 combined MCSE; the raw difference had been below
+1.2. F64 reweighting changes any evaluated mean by less than0.000790 of its
+raw MCSE. Noise reduction therefore exposes an unresolved accuracy concern.
+A correction cannot rescue failed normalizers or establish mode coverage.
+See [complete control evidence](PHASE_STEIN_CONTROL.md#v2-real-result-score-noise-reduction-and-remaining-disagreement).
+
+The original held-out declaration is preserved along with
+`heldout_v7_20261022/pause_before_production.json`. The panel is not an oracle
+for repairing this development failure. New work uses only the original four
+objects. V9 preserves the fitted proposal/geometry and usesN1024/T64/M64,
+eight fresh seeds, unchanged source_v7 and V100 hardware. Its declaration is
+`experiment_v9_higher_effort_fitted.json`, SHA256
+`0abb076980d17a262a5652982f776ce58ae1dfd8e29fa70ada4f0a0728ef4f18`.
+Raw comparisons with both v6 and v7 and the same frozen phase coefficients
+are queued before seeing v9 results. No outcome-driven coefficient refit.
+
+## Informed-environment integration and fresh comparison
+
+Optional n16 implementationf84ba7a retains every original off-support raw
+draw and its zero mass, corrects the bridge by the complete scene density
+ratio, and updates that ratio for all environment-changing moves. Default
+bitwise replay and174 implementation tests pass CPU17420283. Independent
+final review17420432 finds density/MH ratio errors below2.15e-14; a tiny
+continuous inverse-table support edge now rejects explicitly. Numerical
+clamp atoms and unknown representation failures still raise. This is not a
+claim of full discrete-RNG measure exactness.
+
+Reporter d98942a fingerprints the entire informed-proposal law and pilot
+seeds. Different bridges compare only under the same target-source hashes
+and explicit endpoint, with a recorded compatibility mode. Old report
+versions remain incompatible. Full isolated suite17420682 passes495 tests,
+3 optional skips. The integrated parent snapshot is separately tested.
+
+The fresh baseline/informed comparison usesN256/T64/M32, eight seeds per
+arm (2026102600..07 and2026102700..07), same frozen target proposal/geometry,
+and one V100 worker. The informed arm uses augmentation probability0.5,
+uniform native type/phase, and the declared0.1arcsec central position mixture.
+Declaration `experiment_v8_informed_environment.json`, SHA256
+`b7b5a991854f9a400f0d2ed9ba22a5d240c90985d760762ba62e9d721b76bfc7`,
+predates any real-model run. No historical-report hash bypass or held-out
+promotion is used. [Implementation](INFORMED_ENVIRONMENT_PROPOSAL.md) and
+[independent review](INFORMED_ENVIRONMENT_REVIEW.md) retain limitations.
+
+
+The n16 integrated snapshot passes782 tests,1 skipped (CPU17420828,
+81.91seconds), including explicit pre-extension default replay. The single
+warning is the pre-existing NumPy scalar-conversion deprecation in a test.
+Native target support/likelihood and artifact defaults remain unchanged when
+the optional environment proposal is absent. Scientific runs remain pending.
+
+## Score localization and diagnostic launch repair
+
+The fixed read-only localization of observation 0 used all particles and
+original normalizer weights. CPU 17420950 completed in 5 seconds after
+9 focused tests passed (17420920). No single population closes the
+0.665288 +/- 0.146402 v7-minus-v6 corrected-g1 gap. Fixed upper 5%
+absolute-score tails contribute 53.99% of it; 46.01% remains elsewhere.
+About 72% lies within the same dominant phase bin, with little occupancy
+change. These overlapping marginal descriptions do not establish a cause.
+See [localization evidence](PHASE_SCORE_LOCALIZATION.md#completed-cpu-evidence).
+
+Source_v8 smoke 17420872 completed successfully in 30 seconds, and both
+baseline and informed-environment production started. The held-out pilot
+preparation 17420232 completed all five groups; its outcomes are not inspected
+for tuning and held-out production remains cancelled.
+
+The frozen phase source uses a JSON manifest, whereas the initially prepared
+v9 follow-up launcher expected SHA256SUMS. Job 17420835 was cancelled while
+pending, before execution. Replacement 17421115 verifies the original manifest
+digest and each file digest. Neither frozen source nor scientific settings
+changed. Independent v8 phase diagnostics 17421116 depend on all 16 paired
+runs. Its timestamped addendum was written after the first baseline task
+started but before inspecting v8 scientific outcomes, using the already
+frozen v1 coefficients without refitting. It supplements the original raw
+gates and cannot override a failure. The separate repair receipt preserves
+both launchers and their hashes.
