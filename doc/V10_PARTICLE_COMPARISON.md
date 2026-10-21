@@ -88,7 +88,52 @@ costs remain null/unknown unless a future receipt provides them. Full end-to-end
 cost is therefore unknown; driver-only timings cannot establish a full-cost
 acceptance claim.
 
-## Prepared command and validation
+## Prepared command and completed validation
 
-Pending focused CPU tests and a frozen runnable source receipt. No v10
-numerical outcome has been read or evaluation submitted by this subtask.
+Runnable code is commit **73bff31** on `codex/v10-comparison-20261022`.
+The immutable 406-file snapshot is
+`R/source_v10_comparison_20261022_v2`, manifest SHA256
+`090b9272823f2a88a72bf327bc61f150a2df52b4fee117ffaddd82f41ccbb5a0`.
+No cache files are included. The prepared launcher verifies this manifest and
+every file, then asserts local package imports before running the guarded
+comparison. `R` denotes
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021`.
+
+Focused original CPU **17423323** passed 28 tests in 2.79 seconds. Review then
+added six regressions requiring nonempty differences and exactly five finite
+phase moments before slicing corrected columns. Final full CPU suite
+**17423438 passed 882 tests, 1 skipped, in 85.43 seconds** (95 seconds
+allocation; exit 0). Both requested frozen legacy-source checks were enabled.
+The one warning is the existing NumPy scalar-conversion deprecation in a
+scene-exchange test. Tests include threshold boundaries, independent MCSE,
+raw absolute score/region limits, mean-Z disagreement, zero-mass run counting,
+missing completion tasks, protocol/seed/proposal drift, phase thinning/index
+reordering, altered corrected scores/deltas, precision-law changes, and
+finite eight-ULP weight replay.
+
+Full-suite attempts 17423354 and 17423380 stopped at collection because a
+tracked legacy test imports its script by a bare name and the runner lacked
+`cwd/scripts` on `sys.path`. The script was present and hashed in both
+snapshots. Both failures/logs are preserved; adding that frozen directory to
+the test process repaired the runner without changing source or thresholds.
+
+The [preparation receipt](evidence/v10_comparison_preparation_20261022.json)
+records exact source/launcher hashes, test jobs, failed attempts and the
+unsubmitted command. Its external copy is
+`R/v10_comparison_preparation_result_20261022.json`.
+
+**No v10 outcome has been read, no scientific gate result calculated, and no
+comparison evaluation submitted by this subtask.** The parent can run this
+prepared CPU command after all sampling and report jobs complete:
+
+```bash
+sbatch --parsable --partition=cluster --cpus-per-task=2 --mem=8G --time=00:10:00 --job-name=v10-comparison --output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/v10_comparison_evaluation_%j.log /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_v10_comparison_evaluate_20261022.sh
+```
+
+Launcher: `R/run_v10_comparison_evaluate_20261022.sh`, SHA256
+`1f0e9953818cd5ce2d870562f419a1c12f8f9b17983c3922dcf80256c2fb77ce`.
+It writes the fresh path `R/v10_corrected_comparison_20261022.json` and refuses
+to overwrite an existing file. The runtime completion guard remains mandatory
+regardless of when this launcher is submitted. Source/declaration/input
+integrity failures raise; scientific gate failures are retained in the output
+with `development_checks_pass=false`, never converted into sampler acceptance.

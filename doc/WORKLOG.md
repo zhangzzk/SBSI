@@ -1,5 +1,11 @@
 # Work log
 
+## 2026-10-22 — N23 comparison helper fully tested and frozen; evaluation withheld
+
+- **Validation:** final immutable source 73bff31 full CPU 17423438: **882 passed, 1 skipped, 1 existing warning in 85.43 seconds**, exit 0, 95-second allocation. Both legacy frozen-source checks enabled. Original focused CPU 17423323 passed 28 tests; six additional guard regressions reject empty/incomplete corrected-score inputs. Two earlier full-suite collection failures (17423354/17423380) are preserved; adding the present frozen scripts directory to the test runner import path fixed collection without source changes.
+- **Delivery:** new gate module, guarded comparison script, tests, [prepared command](V10_PARTICLE_COMPARISON.md#prepared-command-and-completed-validation) and pinned preparation evidence. Snapshot source_v10_comparison_20261022_v2 manifest 090b9272823f2a88a72bf327bc61f150a2df52b4fee117ffaddd82f41ccbb5a0; unsubmitted evaluation launcher hash 1f0e9953818cd5ce2d870562f419a1c12f8f9b17983c3922dcf80256c2fb77ce. Exact source/file hashes and validation receipt in doc/evidence/v10_comparison_preparation_20261022.json.
+- **Boundary:** no numerical v10 outcome or interim protocol was read; no scientific gate result or evaluation submission. All 24 sampling tasks and both raw/phase jobs must complete before the evaluator opens outcomes. Development gate pass never sets accepted_sampler=true. Preparation/full end-to-end costs remain explicitly unknown; explicit extinction cannot be silently dropped to complete the unsupported phase assessment. Root controls eventual evaluation and held-out preparation.
+
 ## 2026-10-22 — Harden n23 gate APIs against incomplete moments
 
 - Root review identified vacuous success for empty difference vectors and raw-only vectors sliced to empty corrected columns. The caller already required the declared five-column schema, but the reusable gate API now also rejects empty vectors and requires exactly five finite phase moments with nonnegative MCSE before corrected-column slicing.
