@@ -1,5 +1,11 @@
 # Work log
 
+## 2026-10-22 — Predeclare read-only observation 0 score-discrepancy localization
+
+- **Scope:** isolated branch `codex/phase-localization-20261022`; observation 0 only, all eight saved v5/v6v100/v7 populations plus existing phase-v2 arrays. No fits, likelihood evaluations, new sampling/GPU jobs, heldout data, higher-effort arm outcomes or target/gate changes.
+- **Files/rule:** `scripts/localize_particle_phase_score.py` preserves whole-population Zhat weighting, reports per-run corrected g1/Zhat and descriptive leave-one-population shifts, native morphology/phase and scene summaries, empirical weighted covariance/correlation, fixed 1%/5% absolute-score tail accounting without dropping any particle, initial-ancestor concentration and fixed physical-bin contribution decompositions. Phase uses circular summaries/sin/cos. Full predeclared bins and limits are in [localization protocol](PHASE_SCORE_LOCALIZATION.md#predeclared-accounting).
+- **Validation:** `tests/test_phase_score_localization.py` exercises weighted accounting, unequal N/Z, exact tail boundary mass, signed cancellation, genealogy, fixed-bin/unmatched-support accounting and native/CSR alignment. CPU Slurm 17420920 passed 9 focused tests in 0.97 seconds; no real-array localization has executed yet. Syntax checks and `git diff --check` passed. After tests, freeze source and input hashes and run only a CPU Slurm analysis.
+
 ## 2026-10-22 — Arbor n15 v2 completed: phase control reduces score noise and exposes cross-group disagreement
 
 - **Execution/provenance:** Slurm 17420604 completed in **3m43s**, exit0, one V100/th-cl-nv02/inter and two CPUs, within the combined three-GPU cap. Frozen code `a1029f0a59242bd670846143583333ecb92f786e`, source manifest SHA256 `ee2c3d983520f67b818d4349aef24a9933fa9848198f88632883a73ff94a48dd`, pre-execution receipt `phase_n15_20261022_v2_experiment.json`. All28 populations/53,248 states passed the separately declared v2 checks. Frozen coefficients used only v1 seeds2026102130..33; evaluation used all eight v5, v6v100 and v7 populations. Original coarse-step failures remain immutable.
