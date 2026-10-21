@@ -1,5 +1,56 @@
 # Work log
 
+## 2026-10-21 — Bright normalizer disagreement accumulates in the late bridge
+
+Added read-only `doc/evidence/diagnose_particle_normalizer_stages_20261021.py`
+and `doc/evidence/particle_normalizer_stage_summary_20261021.json`. CPU job
+17419480 completed in 10s, validating all 13 frozen input runs: baseline v1_0–3,
+gradient-geometry v5_0–7, and only v6v100_0, the higher-effort run completed when
+the original manifest was frozen. Later reference completions were not added.
+The script verifies hashes, completed status, all 64 beta stages, final logZ,
+coordinate dimensions, and available stage-counter sums against final totals.
+The first job17419416 failed because v1 predates stage acceptance fields; its
+script, manifest and failure log are preserved. The repaired script explicitly
+marks those historical counters unavailable and retains their overall totals.
+
+For bright object58165, v5 cumulative logZ SD across eight independent runs is
+0.05022 at beta0.09766, 0.03669 at beta0.25, 0.13844 at beta0.49438, and 1.29227
+at beta1. The final window contributes95.792% under the descriptive allocation
+Cov(window increment, final logZ)/Var(final logZ), including cross-window
+covariances; baseline v1 gives91.914% with four runs. These are not causal
+variance components. Final normalizer run-weight ESS is2.884/8 and its estimated
+relative MCSE is50.34%; one run contributes55.52% of estimated normalizer mass.
+
+During the final19 stages, bright physical acceptance is56.01%, SED40.43%, but
+only5/77,824 independence proposals and28/77,824 exchanges accept. Final-stage
+physical acceptance remains32.26%. Genealogical ESS falls from mean15.11 at
+beta0.49438 to2.040 at beta1 even while final pre-resampling weight ESS is249.4
+of256. Neither acceptance nor particle-weight/genealogical ESS establishes
+independent posterior information. Early independence moves replace coordinates
+without resetting genealogy labels, so low initial ancestry ESS is not proof
+that initial q0 draws caused the disagreement.
+
+Final coordinate summaries retain every physical/SED/redshift/phase association.
+The lowest-logZ v5 run has a broad physical/phase cloud: m_r SD0.544 versus
+0.044–0.072 in the other runs, radius mean4.382 versus3.446–3.562, and phase
+resultant0.852 versus0.979–1.000. Redshift and SED between-run mean dispersion
+is smaller relative to their within-run spread. These are descriptive
+differences and exploratory associations, not identification of the correct
+mode. The single frozen V100 reference has logZ3.868 and genealogical ESS4.663;
+one run cannot measure reference variation or certify convergence.
+
+The evidence contradicts an explanation in which large *observed cumulative
+normalizer scatter* is already established by beta0.1, but does not exclude
+earlier missed modes whose importance appears late. Proposed next mechanism
+test: fixed q0, geometry, target, N256/T64 and original four-observation groups;
+fork four fresh independent beta0.494 checkpoints into two continuation seeds
+per M32/M128 arm, with extra invariant moves before late reweighting. Treat
+prefixes as independent units and compare conditional late scatter and jump
+distances. No sampler edit, target change, new GPU job, efficiency claim or
+convergence acceptance is part of this diagnosis. Full immutable evidence:
+`sampler_search_20261021/normalizer_stage_diagnostic/manifest_v2.json` and
+`results_v2.json`; syntax and `git diff --check` passed.
+
 ## 2026-10-21 — Bright exchange zero-acceptance: numerical support exclusion rejected on saved final states
 
 Added read-only evidence script
