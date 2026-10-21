@@ -1,5 +1,30 @@
 # Work log
 
+## 2026-10-21 — Read-only bridge, conditioning and nuisance-prior audit
+
+- Added `doc/PARTICLE_BRIDGE_AUDIT.md` with source/line evidence for the actual
+  analytic-target/numerical-environment posterior, mock conditioning, ordered
+  Poisson scene law, coordinate Jacobians and beta-dependent mutation ratios.
+- Added the CPU-only reproducible audit
+  `doc/evidence/audit_bridge_nuisance_20261021.py` and pinned JSON receipt. Slurm
+  **17419483**, partition cluster, **COMPLETED 0:0**, **37 seconds**; all checks
+  passed. No production code, likelihood model, GPU run or sampler changed.
+- All eight original v5 populations/all8192 particles were retained and weighted
+  by their saved normalizing masses. Counterfactual numerical target-prior
+  reweighting changed the bright score by[-0.04143,-0.05589], versus MCSE
+  [4.8511,7.2778]; maximum effect below0.009 MCSE. This is a conditional diagnostic,
+  not a calibration correction or bound on unvisited modes.
+- On128 native scenes, nuisance changes preserved likelihood/response inputs
+  within1.42e-14 and same-seed environments bitwise. Independently derived the
+  three-dimensional per-type nuisance-integrated prior representation; its
+  pointwise factorization identity passed within1.82e-12. No marginal integrator
+  or speed improvement was implemented or claimed.
+- Documented the exact zero-weight-first-positive-beta alternative for extended
+  informed-Poisson proposals, including R^(1-beta) mutation terms, ordered
+  insertion, actual numerical mark support and finite-table/clamp qualifications.
+  Next: finish native numerical-intensity support/coverage checks independently;
+  continue independent-population stability tests without altering the target.
+
 ## 2026-10-20 — 1M pair c2, measurement-only true-parameter test: measurement side cleared for the positive c2 (21–25.8: −2.96 ± 1.11e-4)
 
 Owner: "go on" (step 1 of the proposed plan). Pre-declared in `galsbi_pair1m_20261012/debug/rule_measoracle.md`
