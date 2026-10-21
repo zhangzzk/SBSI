@@ -1,5 +1,75 @@
 # Work log
 
+## 2026-10-22 — Final reporting and legacy-audit integration validated
+
+CPU17422839 passes854 tests with8 optional skips in97.55 seconds; seven skipped
+checks require explicitly located frozen legacy sources. Follow-up17422922
+sets that source and passes all26 legacy-harness checks in13.00 seconds,
+including those seven. One existing NumPy warning remains. Both jobs verify
+the311-file manifest before and after; the
+[integration receipt](evidence/reporting_audit_integration_20261022.json)
+pins the source and logs. No running inference source was modified.
+
+Corrected array17422526 continues with its first three arms having passed
+startup and meaningful stage progress. Raw report17422589, phase17422590 and
+optimization replay17422901 retain their afterok dependency on the full array.
+The longer comparison is healthy; no interim aggregate is used for tuning.
+No candidate is accepted and held-out production remains paused. No suitable
+thread-wakeup automation is available in the connected tools; the active goal
+and documented job graph retain the outstanding checks.
+
+## 2026-10-22 — Batch categorical draws passes CPU replay; trained-model check queued
+
+Recorded isolated1c0e0c6 documentation/evidence; its20-line runtime change and
+benchmark/test harness remain on `codex/exchange-categorical-20261022`.
+Full CPU17422591:872 tests pass,4 optional skips; stronger focused17422766:
+67 checks pass. Paired CPU17422592:20 cases/520 calls preserve proposed payload
+and RNG bits. Ordinary proposal speedups are1.341/1.381 at1024/4096 rows
+(geometric mean1.360951); relocation gains1.080/1.071. These are proposal CPU
+costs, not full-sampler efficiency or posterior convergence evidence.
+
+Queued trained-model replay17422901 after corrected array17422526, using one
+pinned V100 and frozen manifest. It checks full18-step mixed trajectories,
+decisions, RNG and paired timings under both corrected controls. The future
+phase job and this benchmark use at most2 GPUs after inference completes.
+[Results and pending gate](EXCHANGE_CATEGORICAL_RESULTS.md#root-scheduling-receipt)
+record commands/limitations. Core integration waits for that result.
+
+## 2026-10-22 — Informed environments show mixed gains at higher cost
+
+Integrated the v8 summary helper/tests and evidence from060cd95, keeping the
+root's corrected v9 helper. CPU17422725 passes7 tests and104 input hashes in
+7 seconds. Original17422693 failed a bitwise comparison of independently
+computed weights differing by1.39e-17; the reporting-only repair permits8
+float64 ULP with tests rejecting larger differences. Original failed snapshot
+and receipt remain preserved; scientific inputs and thresholds are unchanged.
+
+[Full results](V8_PARTICLE_COMPARISON.md) show1.713 times baseline cost,
+worse normalizer precision for every object, and mixed score precision.
+Bright phase-controlled MCSE improves4.215/6.670 to1.315/2.081; coarse faint-
+target mass remains0–0.000973 with region contrasts<=1.46 MCSE. Observation0
+baseline corrected-g1 is0.400543+/-0.249085, descriptively consistent with v6
+and v9. Observation1 baseline F64 phase residual is-3.393 MCSE. The old support-
+guard difference prevents attributing any effect solely to informed mass.
+No held-out outcomes or v10 results entered this summary; no general adoption.
+
+## 2026-10-22 — Prepare complete historical exchange-support replay
+
+Integrated the isolated trajectory-audit harness from fbee440 and its tests.
+It instruments original corrections while returning them unchanged, pairs
+old/new native marks, and separates proposed from **old accepted** support
+violations. Counts become trusted only after matching every persisted field
+and complete stage history, including informed-environment payloads. Original
+intermediate full states/final RNG were not saved; the receipt states that
+limit. [Guide](LEGACY_PARTICLE_TRAJECTORY_AUDIT.md) contains exact commands.
+
+CPU17422670 passes26 tests in13.37 seconds. The initial fixture-dispatch failure
+17422503 and its repairs are preserved. No real historical trajectory has
+been replayed and no GPU is submitted for this harness. Fresh corrected v10
+comparisons take priority; this preparation makes later causal checks possible
+without rewriting saved runs or using final particles as proof of history.
+Integrated full-suite validation follows the remaining reporting merge.
+
 ## 2026-10-22 — Higher effort narrows the score discrepancy; corrected comparison starts
 
 Integrated v9 report helper, six tests and full signed evidence from bdfdb89.

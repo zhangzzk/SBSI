@@ -88,10 +88,27 @@ The optional informed-environment branch separately tests alternative light
 assignments using a known-density neighbour proposal. It has independent
 implementation review, but no scientific acceptance. Source_v8 full suite17420828 passes782 tests,1 skipped in81.91seconds.
 Smoke, paired array17420873, raw report17420874 and phase17421116 completed.
-The raw comparison passes; the complete phase/cost summary is being recorded.
+The raw comparison passes. Informed cost is1.713 times baseline; normalizer
+relative MCSE worsens on all four objects, while bright corrected-score MCSE
+improves and other gains are mixed. Coarse alternative-light regions show no
+clear increase. [Completed phase/cost results](V8_PARTICLE_COMPARISON.md#completed-result-n16-benefit-remains-unestablished)
+preserve the baseline observation1 F64 phase residual of-3.393 MCSE and all
+signed comparisons; no sampler is accepted.
 Both arms declare the same endpoint, but the known support-guard difference
 prevents isolating informed proposal mass without trajectory evidence.
 Old report hashes/versions cannot silently bypass compatibility checks.
+
+The categorical-draw optimization remains isolated after a1.361-times CPU
+proposal speedup with bitwise payload/RNG tests. Trained-model replay17422901
+waits for v10; no active runtime change is promoted on that microbenchmark.
+The [historical trajectory audit](LEGACY_PARTICLE_TRAJECTORY_AUDIT.md#required-replay-agreement)
+is implemented and tested, but no historical inference trajectory has yet
+been replayed. Its preparation is not evidence that the old defect occurred.
+
+The next scheduled stages after array17422526 are raw report17422589, frozen
+phase17422590 and optimization replay17422901. Check each stage's startup and
+output before any held-out restart. No suitable task-wakeup automation tool
+is available in this session; the active goal remains unfinished.
 
 The experiment record and original successful raw comparison are retained
 below. Production defaults and the catalogue shear estimate remain unchanged.

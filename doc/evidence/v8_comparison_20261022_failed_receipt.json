@@ -1,0 +1,13 @@
+{
+  "job": 17422693,
+  "state": "FAILED",
+  "exit_code": "1:0",
+  "elapsed_seconds": 8,
+  "tests_passed": 6,
+  "test_seconds": 0.12,
+  "exception": "raw normalizer/weight replay mismatch",
+  "diagnosis": "baseline obs8 weights differ by one float64 ULP=1.3877787807814457e-17; logZ exactly equal; every other array equal",
+  "result_written": false,
+  "original_experiment": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/v8_comparison_20261022_experiment.json",
+  "repair": "eight-ULP replay tolerance, no weights or scientific thresholds changed"
+}

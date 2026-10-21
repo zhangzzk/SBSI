@@ -1,0 +1,20 @@
+{
+  "created_utc": "2026-10-21T23:12:49.535938+00:00",
+  "job": 17422725,
+  "state": "COMPLETED",
+  "exit_code": "0:0",
+  "elapsed_seconds": 7,
+  "tests_passed": 7,
+  "test_elapsed_seconds": 0.11,
+  "source_commit": "1e173dd",
+  "source_manifest_sha256": "8b9670be5ccbd97e7c81e836e3c0011e3d2488a9647f1f56a17d16170f562eec",
+  "experiment_sha256": "4898e379058b161c3f8f6e4843e4fd49e7d0a8fc345255845aaabedb2eefcb3b",
+  "output": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/v8_comparison_20261022_v2.json",
+  "output_sha256": "981042a8eaa62d763769caed74af06212879c61687df30d379c5345557749c7e",
+  "inputs_verified": 104,
+  "all_top_level_receipt_hashes_match": true,
+  "original_failure_preserved": 17422693,
+  "phase_job": 17421116,
+  "accepted_sampler": false,
+  "interpretation": "n16 alternative-assignment benefit unestablished on coarse regions; mixed score precision, all Z relative MCSE worse, 1.713x cost; old baseline/support-guard confound prevents causal isolation."
+}

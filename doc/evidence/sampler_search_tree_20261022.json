@@ -168,7 +168,7 @@
       "depth": 1,
       "status": "pending",
       "hypothesis": "An evaluable initial law that deliberately seeds measurement-like neighbours can test and improve rare scene-mode coverage that target-only initial proposals may share a blind spot for.",
-      "insight": "[from n11] Informed scene initialization requires a normalized native point law and the true numerical Poisson intensity, including explicit singular-support accounting. A generic density-ratio identity alone does not supply a usable sampler.\n[from n14] Known-density scene proposals require the numerical native mark measure itself, not merely an analytic-support correction. Account separately for support slivers, zero-target initial draws, and genuine generator failures.\n[from n14] Endpoint equality is not kernel validity: the old native exchange omitted the numerical lower-uniform support bound. Real allowed prior marks demonstrate a zero-environment-density swap. Correct every caller, and require corrected runs or full trajectory evidence before interpreting old proposal/effort comparisons as same-target convergence.",
+      "insight": "[from n11] Informed scene initialization requires a normalized native point law and the true numerical Poisson intensity, including explicit singular-support accounting. A generic density-ratio identity alone does not supply a usable sampler.\n[from n14] Known-density scene proposals require the numerical native mark measure itself, not merely an analytic-support correction. Account separately for support slivers, zero-target initial draws, and genuine generator failures.\n[from n14] Endpoint equality is not kernel validity: the old native exchange omitted the numerical lower-uniform support bound. Real allowed prior marks demonstrate a zero-environment-density swap. Correct every caller, and require corrected runs or full trajectory evidence before interpreting old proposal/effort comparisons as same-target convergence.\n[from n16] Adding informed environment mass has mixed benefits and higher cost; judge joint score, normalizer and region stability on matched support before treating mode-seeding proposals as a general improvement.",
       "metadata": {
         "dev_score": null,
         "test_score": null,
@@ -176,7 +176,7 @@
         "branch_ref": null
       },
       "created_at": 1792617168,
-      "updated_at": 1792623442
+      "updated_at": 1792624463
     },
     "n11": {
       "id": "n11",
@@ -262,17 +262,17 @@
       "id": "n16",
       "parent": "n10",
       "depth": 2,
-      "status": "running",
+      "status": "executed",
       "hypothesis": "A known-density mixture of ordinary environments and one centrally placed measurement-informed neighbour seeds alternate light-assignment modes, with exact bridge tilt and zero-weight off-support accounting, improving whole-population agreement.",
-      "insight": "",
+      "insight": "Known-density environment proposals can improve one score component while worsening normalizer uncertainty and total cost. Compare complete observations and corrected kernels; raw gates alone do not establish useful general efficiency.",
       "metadata": {
-        "dev_score": null,
+        "dev_score": 0.0,
         "test_score": null,
-        "result": "Integrated commit766c1b2: full CPU782 passed1skip, smoke17420872 completed30s; both v8 baseline and informed arms reached meaningful progress. Array17420873 and raw report17420874; frozen phase diagnostic17421116 adds old v1 coefficients without refitting. No science acceptance.",
-        "branch_ref": "worktree-galsbi-tempering/766c1b2"
+        "result": "All8+8 v8 populations completed; rawcomparison passes. Informed cost1.713x baseline, Z precision worsens onall4, bright constant-CV MCSE improves4.215/6.670 to1.315/2.081 with mixed other gains. Coarse alternative-light mass shows no clear increase. Old guard difference prevents causal isolation; no adoption.",
+        "branch_ref": "codex/v8-comparison-20261022@060cd95"
       },
       "created_at": 1792619249,
-      "updated_at": 1792621948
+      "updated_at": 1792624463
     },
     "n17": {
       "id": "n17",
@@ -360,15 +360,15 @@
       "depth": 2,
       "status": "running",
       "hypothesis": "Batch the categorical draws inside native exchanges without changing their numerical CDFs or RNG ordering, reducing exchange CPU cost while preserving full trajectories bitwise.",
-      "insight": "",
+      "insight": "Batch type CDF draws preserves tested RNG streams while avoiding per-row Python choice overhead; relocation is dominated by remaining ragged work. CPU proposal gains require full trained-model replay and actual mutation-cost measurement.",
       "metadata": {
-        "dev_score": null,
+        "dev_score": 1.3609505278392875,
         "test_score": null,
-        "result": "",
-        "branch_ref": null
+        "result": "CPU ordinary-proposal speedup1.360951 geometricmean;20 cases/520 calls preserve payload/RNG bits.872 fullsuite tests and67 focusedchecks pass. Trained-model GPU replay17422901 waitsarray17422526. Runtime remainsisolated.",
+        "branch_ref": "codex/exchange-categorical-20261022@1c0e0c6"
       },
       "created_at": 1792623594,
-      "updated_at": 1792623594
+      "updated_at": 1792624603
     },
     "n23": {
       "id": "n23",
