@@ -1,5 +1,11 @@
 # Work log
 
+## 2026-10-22 — Predeclare n19 analytic periodic product-rule control
+
+- **Scope/rule:** new isolated branch/worktree `codex/analytic-phase-control-20261022` from parent `766c1b2`. Fix epsilon=0.1, F=(1+r²)/(r²+0.01), C=(-F(e2*T+e1), F(e1*T-e2)), candidate S-C, with no fit, recentering or parameter search. External declaration saved before new outcomes. Full derivation/protocol: [analytic control](ANALYTIC_PHASE_CONTROL.md#predeclared-candidate-and-scope).
+- **Validation plan:** verify the native Möbius shear convention and periodic product rule with analytic nonuniform targets, origin/wrap checks, g=0 radial/tangential finite differences and deliberately omitted a_prime failure. Then CPU-only saved-state evaluation of exactly four v1 and eight each v5/v6v100/v7, stride 1/all states, original whole-run Z and full N denominators. No GPU, new model forward, heldout/higher-effort arm input, target/sampler/gate changes. Raw F32 and explicit F64-reweighted measures remain separately qualified; v1 constant-control comparison is in-sample only.
+- **Status:** declaration only, no new tests or scientific evaluation yet. Existing worktrees remain intact. Root maintains Arbor cycle/GPU budget; this node changes neither.
+
 ## 2026-10-22 — Localize the score discrepancy and validate scene-proposal startup
 
 Added the read-only localization script, nine focused tests, and
