@@ -1,5 +1,19 @@
 # Work log
 
+## 2026-10-21 — Prepared fixed-density-batch throughput benchmark; not submitted
+
+- Added `doc/evidence/benchmark_particle_batch_20261021.py` and its explicit
+  one-GPU launcher. It pins immutable v5 source/inputs, replays1024 saved rows
+  and their fourfold duplication under the unchanged4096 density batch, then
+  times complete final-beta physical/nuisance/environment/position/exchange
+  calls with GPU synchronization. Same retained states start each call.
+- Validation: Python AST and shell syntax passed; stdlib-only source/input hash
+  preflight passed against `source_v5b/dev_v5_0`. No GPU job was submitted and
+  no timing, replay, accuracy or efficiency result is claimed yet.
+- Limitation: duplicated work is a throughput probe, not16 distinct observations
+  or an independent inference population. Root must coordinate any launch with
+  the shared four-GPU ceiling and require replay before interpreting timings.
+
 ## 2026-10-21 — Read-only bridge, conditioning and nuisance-prior audit
 
 - Added `doc/PARTICLE_BRIDGE_AUDIT.md` with source/line evidence for the actual
