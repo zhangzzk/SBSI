@@ -126,3 +126,15 @@ wording now includes the valid-scene/zero-initial-weight qualification documente
 No modification to its finite-tilt formula was required. Reporter integration
 and explicit comparison compatibility remain pending in this review receipt;
 the coordinator assigned those changes as a separate bounded follow-up.
+
+## 2026-10-22 addendum: common endpoint does not clear the old default kernel
+
+The [frozen endpoint audit](PARTICLE_ENDPOINT_COMPATIBILITY_AUDIT.md#why-the-old-native-exchange-violates-continuous-support)
+establishes that the missing lower uniform-clamp restriction is a real
+target-preservation error in the default exchange, not just an optional-law
+edge check. Actual red and blue prior marks pass i14–28 while having finite
+old corrections and zero continuous environment density. The informed guard
+correctly rejected them; a new unconditional helper restriction fixes future
+default exchanges too. Existing snapshots are preserved. Their declared
+endpoints match, but practical impact requires trajectory evidence; no prior
+tail-mass argument or final-state-only check establishes absence of impact.

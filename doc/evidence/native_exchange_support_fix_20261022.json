@@ -1,0 +1,44 @@
+{
+  "status": "passed",
+  "ordinary_full_payload_and_rng_bitwise": true,
+  "ordinary_sequence": {
+    "particles": 4,
+    "betas": [
+      0.001,
+      0.4,
+      1.0
+    ],
+    "blocks": [
+      "physical",
+      "nuisance",
+      "sed",
+      "environment",
+      "positions",
+      "exchange",
+      "exchange_relocate",
+      "independence"
+    ]
+  },
+  "ordinary_production_marks": 268,
+  "ordinary_production_ratios_bitwise": true,
+  "production_support_examples": [
+    {
+      "type": "red",
+      "legacy_correction": -8.501598579613301e-05,
+      "fixed_rejects": true,
+      "proposal_payload_and_rng_identical": true
+    },
+    {
+      "type": "blue",
+      "legacy_correction": -0.0001135821439035567,
+      "fixed_rejects": true,
+      "proposal_payload_and_rng_identical": true
+    }
+  ],
+  "inputs": {
+    "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/endpoint-compatibility-audit-20261022/sbsi/scene_exchange.py": "c5102579e3dfd1cd3c3e9ae5a267cf8ac0df9a6a82d60417fd2772e56aebd5ad",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_v7/sbsi/scene_exchange.py": "c47763c55228257721135811b68f800945f64513c052945331974bb976b67c37",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_v7/sbsi/galsbi_particle_target.py": "9d2b091267335579bd8155180698e9dc7311fb3937cbcc87e281bb219dfa7387",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/endpoint_audit_20261022/production_support.json": "2dd1df017c79a403b16df0269a3a3f8e52e2c8063ec91e153982aafa4b21e417"
+  }
+}

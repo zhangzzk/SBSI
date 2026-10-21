@@ -1,5 +1,38 @@
 # Work log
 
+## 2026-10-22 — Frozen endpoint receipt and unconditional native exchange support fix
+
+- Added [the explicit endpoint audit](PARTICLE_ENDPOINT_COMPATIBILITY_AUDIT.md#frozen-identity-evidence)
+  and reproducible CPU scripts/receipts under `doc/evidence/`. Verified all
+  286 v7 and 298 v8 frozen manifest files, 21 shared endpoint factor sources,
+  actual model/reference artifacts, and available startup protocol settings
+  (8 v7, 8 v9, 4 default-v8, 4 informed-v8). No v8/v9 numerical outcomes,
+  heldout outcomes, GPU work or frozen snapshot edits were used.
+- Found a [production-prior support error](PARTICLE_ENDPOINT_COMPATIBILITY_AUDIT.md#why-the-old-native-exchange-violates-continuous-support):
+  the old `scene_exchange.numerical_over_analytic` omitted the numerical
+  generator's lower uniform-clamp bound. CPU 17421563 constructed red and blue
+  marks passing the actual i14–28 cut with finite old exchange corrections and
+  zero continuous environment density. The optional informed guard already
+  rejected these; default v7/v9 and v8 baseline did not. Common declared
+  endpoints therefore do not certify equal target-preserving kernels.
+- Fixed the helper unconditionally, preserving supported-path arithmetic and
+  RNG. Added optional aligned support-audit masks for later isolated trajectory
+  instrumentation; no production bypass. Updated the informed guard docstring
+  and regression to reflect the common check; added 16 focused support tests.
+- CPU 17421564: 118 passed, 1 optional skip. Final CPU 17421627: 795 passed,
+  3 optional skips in 60.21 s, one existing NumPy deprecation warning;
+  before/after input hashes passed. Independent frozen-v7 comparison reproduced
+  ordinary full states/decisions/RNG over 24 block transitions, and 268 generated
+  production-mark ratios bitwise. Both actual-prior counterexamples now reject
+  with unchanged proposed payload/RNG. Two earlier audit-harness import-order
+  failures are preserved and explained in the receipt.
+- Limits/next steps: no old trajectory was replayed, so occurrence and effect
+  on score discrepancies are unknown; small prior tail mass is not an impact
+  bound. Clamp atoms/finite-RNG laws remain explicitly qualified. Historical
+  external prior/table provenance is incomplete; recommend a shared fail-closed
+  endpoint identity rather than changing old protocol/report gates. Root owns
+  future corrected-source comparisons and any trajectory replay.
+
 ## 2026-10-22 — Independent phase-control audit and estimator interface guards
 
 - Audited endpoint identity/sign, smoothness, fixed-pilot score/control pairing,

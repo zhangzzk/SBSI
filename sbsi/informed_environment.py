@@ -205,10 +205,10 @@ class InformedEnvironmentProposal:
     def continuous_exchange_support(self, scene):
         """Known continuous-support gate after the older native swap correction.
 
-        The older q/p helper deliberately omits the U>=float.tiny restriction.
-        Its finite correction can therefore propose a neighbour in the tiny
-        continuous-zero strip below that bound. Reject that proposal, rather
-        than attempting its undefined finite tilt. Cap-normalization failures
+        The native q/p helper now enforces the U>=float.tiny restriction for
+        every exchange. This additional optional-law check also rejects any
+        continuous-zero neighbour before evaluating its undefined finite tilt.
+        Cap-normalization failures
         and clamp atoms still raise; remaining density failures are checked by
         log_tilt and must never be converted to support zeros.
         """
