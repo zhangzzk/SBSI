@@ -44,7 +44,18 @@ proof or a population shear-calibration claim.
 
 ## Current status
 
-No candidate is accepted. V7 passed the original raw-score, region and
+No candidate is accepted. The 2026-10-22 endpoint audit found a native
+exchange support defect: the default correction allowed an analytic target
+to enter a neighbour region where the numerical continuous density is zero.
+The common helper now rejects those swaps. This is reachable under the real
+prior; occurrence in historical trajectories and impact on scores remain
+unknown. The old v8 baseline and informed arm also differ in this support
+guard, so their comparison cannot isolate proposal quality without a replay.
+See [support evidence and limits](PARTICLE_ENDPOINT_COMPATIBILITY_AUDIT.md#actual-prior-counterexamples-and-practical-limits).
+Corrected fresh runs or complete trajectory evidence are required before
+promoting any earlier development result.
+
+V7 passed the original raw-score, region and
 normalizer gates on four development objects, but the independently fitted
 periodic-phase control exposes a new disagreement: observation0 corrected-g1
 (measured magnitude22.47366) is1.06998+/-0.11117 for v7 versus0.40469+/-0.09526 for higher-effort v6,
@@ -88,7 +99,10 @@ zero mass rather than being discarded from the denominator. Each observation
 resamples within its own particle block. Native scene payloads, numerical
 likelihood values and ancestry follow resampling and rejection exactly.
 
-Every mutation preserves the current bridge. The physical random walk moves
+The intended mutation construction preserves the current bridge. Historical
+v7/v8/v9 exchange implementations omitted a numerical-support bound, as
+documented in the current-status erratum above; their results do not by
+themselves establish invariant mutation. The corrected physical random walk moves
 all five physical coordinates jointly; nuisance and SED steps reuse the
 invariant likelihood after replay checks. Environment refreshes/position moves
 are reversible for q_environment. Native exchanges use the original
@@ -724,3 +738,34 @@ replay and retained-state fingerprints remain mandatory. Profiles include
 instrumentation overhead and cache effects; only later uninstrumented replay
 can establish a speedup. Four-observation groups and 4096-row density shape
 remain unchanged.
+
+## Analytic-control development outcome
+
+The n19 fixed formula passed 12 correctness tests (17421399); read-only CPU
+17421436 processed 28 saved populations in 10 seconds. It reduces estimated
+MCSE in 18/24 evaluation components versus raw and 13/24 versus the constant
+control, but consistently worsens the faint object's g2 uncertainty. Its
+observation 0 g1 means are 0.39301 (v5), 0.47179 (v6), and 0.84211 (v7);
+the last two differ by 0.37032 +/- 0.10477, still 3.534 combined MCSE.
+[Full evidence](ANALYTIC_PHASE_CONTROL.md#saved-state-result-mixed-variance-benefit-discrepancy-remains)
+records every component and both measures. The implementation is retained as
+a standalone diagnostic; it is not adopted as a general score replacement
+and does not remove the unresolved sampling concern.
+
+## Waste-free matched-cost result
+
+The n20 isolated prototype passes its correctness checks, including exact
+unnormalized expectations with extinction. Its predeclared CPU experiment
+(17421484) uses 128 independent populations per arm/target and exactly 13,560
+density rows per population. Waste-free/standard primary variance is 1.089
+for the Gaussian and 2.755 for the separated mixture, with CPU time 15–16%
+higher. The mixture mode-mass variance increases 3.408-fold. This recipe is
+rejected without further tuning; active scene sampling is unchanged.
+[Full result](WASTE_FREE_SMC_RESULTS.md#matched-cost-evidence) records intervals,
+all observables, source identity and the separate limitations of real batching.
+
+V8's scheduling throttle increased from one to two while v9 finishes, within
+the four-GPU total and the existing dependency graph. The timestamped external
+`v8_resource_addendum_20261022.json` records unchanged scientific settings
+and the runtime-concurrency caveat. This is an operational allocation change,
+not a result-driven alteration of either comparison arm.

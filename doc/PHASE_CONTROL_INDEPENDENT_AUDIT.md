@@ -161,3 +161,13 @@ Final CPU Slurm17421249 completed0:0 in78s: **778 passed,4 skipped** in68.07s,
 with one existing NumPy deprecation warning in a scene-exchange test. Source
 hashes were verified before and after the full suite. Validation receipt:
 `doc/evidence/phase_control_audit_validation_20261022.json`.
+
+## 2026-10-22 endpoint-kernel qualification
+
+The later [endpoint audit](PARTICLE_ENDPOINT_COMPATIBILITY_AUDIT.md#why-the-old-native-exchange-violates-continuous-support)
+confirms matching declared endpoint factors but finds a reachable continuous
+support error in the old default native exchange. This does not alter the
+phase arithmetic or invalidate the reproduced discrepancy. It does mean that
+sampling error cannot yet be attributed exclusively to non-equilibration:
+the old kernel itself could violate the intended target. No old trajectory
+was replayed and no v8/v9 outcome was inspected in that audit.

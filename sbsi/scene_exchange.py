@@ -14,7 +14,7 @@ from .galsbi_prior import upper_gamma
 from .galsbi_scene_prior import GalSBISceneBatch
 
 
-def numerical_over_analytic(prior, data):
+def numerical_over_analytic(prior, data, *, return_support_audit=False):
     """log(q/p) on analytic support; -inf where either support fails.
 
 q includes the type intensity, the piecewise-linear redshift inverse CDF,
@@ -22,9 +22,20 @@ and the piecewise-linear inverse log-gamma luminosity CDF. Other conditional
 densities and the intrinsic photometric cut are shared. The unused global
 normalization cancels between marks. This function is intentionally restricted
 to analytic support, as required by exchanging a mark into the target slot.
+The numerical continuous part also requires log(U)>=log(float.tiny), matching
+sample()'s lower uniform clamp. Singular clamp atoms and the discrete RNG law
+are not represented by this Lebesgue density.
+
+With return_support_audit=True, also return aligned legacy_finite and
+below_uniform_clamp masks. A separate frozen-trajectory replay can compare
+these masks while returning its original ratios; this diagnostic draws no RNG
+and does not provide a production switch to disable the support restriction.
 """
     lp, factors = prior.log_intensity(data, return_factors=True)
     result = np.full(len(lp), -np.inf)
+    if return_support_audit:
+        legacy_finite = np.zeros(len(lp), dtype=bool)
+        below_uniform_clamp = np.zeros(len(lp), dtype=bool)
     for kind, name in enumerate(prior.types):
         ix = np.flatnonzero((data['type'] == kind) & np.isfinite(lp))
         if not len(ix):
@@ -45,6 +56,17 @@ to analytic support, as required by exchanging a mark into the target slot.
         with np.errstate(divide='ignore'):
             logq = np.log(tab['rate'])+np.log(qz)+value-logmax+np.log(np.abs(slope))
         result[ix[valid]] = (logq-factors['luminosity'][ix])[valid]
+        # Keep the existing finite-path arithmetic exactly. The omitted lower
+        # bound formerly let an analytic target enter a zero-density numerical
+        # environment, even when its intrinsic photometric cut passed.
+        below = valid & (value-logmax < np.log(np.finfo(float).tiny))
+        if return_support_audit:
+            legacy_finite[ix] = np.isfinite(result[ix])
+            below_uniform_clamp[ix[below]] = True
+        result[ix[below]] = -np.inf
+    if return_support_audit:
+        return result, dict(legacy_finite=legacy_finite,
+                           below_uniform_clamp=below_uniform_clamp)
     return result
 
 

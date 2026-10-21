@@ -213,7 +213,7 @@ def test_known_off_support_exchange_rejects_without_evaluating_bad_environment(m
     assert_state_equal(moved,state);assert_payload_equal(moved.environment_payload,state.environment_payload)
 
 
-def test_old_exchange_helper_continuous_tail_strip_gets_known_zero_rejection():
+def test_exchange_helper_continuous_tail_strip_gets_known_zero_rejection():
     target,state,informed=fixture(1)
     galaxy=target.prior.galaxy
     galaxy.p['gals_mag_min']=0.  # Expose the actual finite-table tail in the toy prior.
@@ -228,7 +228,9 @@ def test_old_exchange_helper_continuous_tail_strip_gets_known_zero_rejection():
     target.informed_environment=informed
     state=target.evaluate(x,state.scene)
     assert np.isfinite(state.log_prior).all()
-    assert np.isfinite(numerical_over_analytic(galaxy,state.scene.targets)).all()
+    ratio,audit=numerical_over_analytic(galaxy,state.scene.targets,return_support_audit=True)
+    assert audit['legacy_finite'].all() and audit['below_uniform_clamp'].all()
+    assert np.isneginf(ratio).all()
     assert np.isneginf(numerical_native_log_intensity(galaxy,state.scene.targets)).all()
     moved,accepted,active=target.mutate(state,.4,np.random.default_rng(2),block='exchange')
     assert not accepted.any() and active.all()

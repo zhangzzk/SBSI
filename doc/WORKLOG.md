@@ -1,5 +1,91 @@
 # Work log
 
+## 2026-10-22 — Integrated support correction and controls pass validation
+
+Frozen 304-file `source_support_fix_20261022` combines the unconditional
+exchange bound, phase-report interface guards, and standalone analytic phase
+control. CPU job17421864 passes **822 tests, 1 optional skip**, with one
+existing NumPy warning, in104.98 seconds. Before/after SHA256 manifests agree.
+The [integration receipt](evidence/support_fix_integration_20261022.json) pins
+all overlaid source paths, manifest and output. Historical inference snapshots
+remain unchanged. This validates implementation, not sampler convergence.
+
+Mutation profiler17421460 completed successfully against immutable source_v5b;
+all original saved-state/K/prior replay checks passed. Profiles separate five
+blocks at1024/4096 rows, with density batches fixed4096. Exchange categorical
+loops and numerical neighbour generation incur substantial CPU cost; profiled
+times include warmup/caches and instrumentation and are not speedup evidence.
+Next: assess completed v9/v8 comparisons with the support caveat, instrument
+legacy trajectories, and test probability-preserving overhead reductions.
+
+## 2026-10-22 — Frozen endpoint receipt and unconditional native exchange support fix
+
+- Added [the explicit endpoint audit](PARTICLE_ENDPOINT_COMPATIBILITY_AUDIT.md#frozen-identity-evidence)
+  and reproducible CPU scripts/receipts under `doc/evidence/`. Verified all
+  286 v7 and 298 v8 frozen manifest files, 21 shared endpoint factor sources,
+  actual model/reference artifacts, and available startup protocol settings
+  (8 v7, 8 v9, 4 default-v8, 4 informed-v8). No v8/v9 numerical outcomes,
+  heldout outcomes, GPU work or frozen snapshot edits were used.
+- Found a [production-prior support error](PARTICLE_ENDPOINT_COMPATIBILITY_AUDIT.md#why-the-old-native-exchange-violates-continuous-support):
+  the old `scene_exchange.numerical_over_analytic` omitted the numerical
+  generator's lower uniform-clamp bound. CPU 17421563 constructed red and blue
+  marks passing the actual i14–28 cut with finite old exchange corrections and
+  zero continuous environment density. The optional informed guard already
+  rejected these; default v7/v9 and v8 baseline did not. Common declared
+  endpoints therefore do not certify equal target-preserving kernels.
+- Fixed the helper unconditionally, preserving supported-path arithmetic and
+  RNG. Added optional aligned support-audit masks for later isolated trajectory
+  instrumentation; no production bypass. Updated the informed guard docstring
+  and regression to reflect the common check; added 16 focused support tests.
+- CPU 17421564: 118 passed, 1 optional skip. Final CPU 17421627: 795 passed,
+  3 optional skips in 60.21 s, one existing NumPy deprecation warning;
+  before/after input hashes passed. Independent frozen-v7 comparison reproduced
+  ordinary full states/decisions/RNG over 24 block transitions, and 268 generated
+  production-mark ratios bitwise. Both actual-prior counterexamples now reject
+  with unchanged proposed payload/RNG. Two earlier audit-harness import-order
+  failures are preserved and explained in the receipt.
+- Limits/next steps: no old trajectory was replayed, so occurrence and effect
+  on score discrepancies are unknown; small prior tail mass is not an impact
+  bound. Clamp atoms/finite-RNG laws remain explicitly qualified. Historical
+  external prior/table provenance is incomplete; recommend a shared fail-closed
+  endpoint identity rather than changing old protocol/report gates. Root owns
+  future corrected-source comparisons and any trajectory replay.
+
+## 2026-10-22 — Reject the matched-cost waste-free SMC recipe
+
+Preserved documentation/evidence from isolated e826f50; its implementation
+remains on `codex/waste-free-smc-20261022`. CPU 17421477 passed 793 tests
+with 4 skips, including exact normalizer/weighted-moment and extinction checks.
+CPU experiment 17421484 ran 128 populations per target/arm at exactly 13,560
+density rows each. Waste-free/standard variance was 1.089 on the Gaussian
+and 2.755 on the mixture; CPU time increased 15–16%. The recipe is rejected
+without further tuning. [Results](WASTE_FREE_SMC_RESULTS.md#matched-cost-evidence)
+retain all observables, whole-population bootstrap intervals and limitations.
+No real sampler, GPU experiment, or held-out evaluation used this prototype.
+
+For efficient scheduled use, v8 array throttle increased from 1 to 2 within
+the existing four-GPU total. Frozen source, seeds, effort and density batches
+remain unchanged. Slurm warned about already-finished indices but confirmed
+ArrayTaskThrottle=2 for pending work. The timestamped resource addendum
+records that concurrency can affect runtime; no aggregate outcome informed
+this operational change.
+
+## 2026-10-22 — Fixed analytic phase control has mixed benefits
+
+Added the standalone analytic control, saved-state diagnostic and tests from
+77ae6b0; production sampling and score reporting are unchanged. The fixed
+regularizer is 0.1, declared before outcomes, with no fitted coefficients.
+The periodic product rule includes the essential derivative of its coefficient.
+CPU 17421399: 12 tests passed; evaluation 17421436: all 28 populations in
+10 seconds, with every particle and original denominator retained.
+
+Estimated MCSE improves in 18/24 evaluation components versus raw and 13/24
+versus the constant control. Observation 0 g1 improves, but v7-v6 still differs
+by 3.534 combined MCSE. Faint g2 worsens consistently, so blanket adoption
+is rejected. [Full signed means and MCSEs](ANALYTIC_PHASE_CONTROL.md#saved-state-result-mixed-variance-benefit-discrepancy-remains)
+preserve both numerical measures and negative outcomes. Integrated validation
+with the pending support correction remains to run. No accepted sampler yet.
+
 ## 2026-10-22 — Independent phase audit confirms the gap and hardens diagnostics
 
 Integrated isolated audit 0883de4: phase diagnostics now reject deterministic

@@ -8,7 +8,7 @@
       "depth": 0,
       "status": "root",
       "hypothesis": "Reproducible posterior scores and scene-region weights at minimum measured compute cost; baseline fails convergence, no candidate is accepted without held-out replication.",
-      "insight": "[from n3] Proposal density and support must be explicit before using measurement-informed starts for reference weights. Proposal quality must be measured independently.\n[from n2] Assess complete independent populations on the normalizer scale; particle count and weight ESS cannot stand in for convergence.\n[from n4] Use independent full-population score and normalizer variation to judge progress; a gradual schedule can make every incremental ESS look healthy despite a poorly explored posterior.\n[from n5] Check movement at the posterior temperature separately from the annealing average. Changing initial tails cannot by itself repair an ill-scaled final kernel.\n[from n6] For strongly heterogeneous or mixed posteriors, a global pilot covariance can overestimate narrow local directions. Test geometry with independent score replication, not covariance plausibility or acceptance averages.\n[from n7] Correct global scene proposals still need demonstrated mode access and stable weights. Diagnose target/environment support and proposal-density cost before increasing their mixture frequency.\n[from n9] Keep legitimate zero-mass realizations and their replicate denominator; unknown failures must remain errors. No-redraw behavior needs end-to-end tests, not only an aggregation helper.\n[from n8] Useful final-temperature movement does not guarantee stable annealing normalizers. Independently test proposal-to-posterior distance and early loss of particle diversity.\n[from n11] Informed scene initialization requires a normalized native point law and the true numerical Poisson intensity, including explicit singular-support accounting. A generic density-ratio identity alone does not supply a usable sampler.\n[from n14] Known-density scene proposals require the numerical native mark measure itself, not merely an analytic-support correction. Account separately for support slivers, zero-target initial draws, and genuine generator failures.\n[from n13] Local geometry and a normalized joint proposal solve different problems: local movement can improve while whole-population normalizing mass stays unstable. Test the combination with independent pilots, changed proposals and increased effort, then on untouched observations including all preparation costs.\n[from n15] Remove analytically known zero-mean score fluctuations for diagnosis as well as efficiency: a raw comparison can pass because its noise is too large to expose a smaller systematic discrepancy. Preserve failed original checks and predeclare repaired numerical validation.",
+      "insight": "[from n3] Proposal density and support must be explicit before using measurement-informed starts for reference weights. Proposal quality must be measured independently.\n[from n2] Assess complete independent populations on the normalizer scale; particle count and weight ESS cannot stand in for convergence.\n[from n4] Use independent full-population score and normalizer variation to judge progress; a gradual schedule can make every incremental ESS look healthy despite a poorly explored posterior.\n[from n5] Check movement at the posterior temperature separately from the annealing average. Changing initial tails cannot by itself repair an ill-scaled final kernel.\n[from n6] For strongly heterogeneous or mixed posteriors, a global pilot covariance can overestimate narrow local directions. Test geometry with independent score replication, not covariance plausibility or acceptance averages.\n[from n7] Correct global scene proposals still need demonstrated mode access and stable weights. Diagnose target/environment support and proposal-density cost before increasing their mixture frequency.\n[from n9] Keep legitimate zero-mass realizations and their replicate denominator; unknown failures must remain errors. No-redraw behavior needs end-to-end tests, not only an aggregation helper.\n[from n8] Useful final-temperature movement does not guarantee stable annealing normalizers. Independently test proposal-to-posterior distance and early loss of particle diversity.\n[from n11] Informed scene initialization requires a normalized native point law and the true numerical Poisson intensity, including explicit singular-support accounting. A generic density-ratio identity alone does not supply a usable sampler.\n[from n14] Known-density scene proposals require the numerical native mark measure itself, not merely an analytic-support correction. Account separately for support slivers, zero-target initial draws, and genuine generator failures.\n[from n13] Local geometry and a normalized joint proposal solve different problems: local movement can improve while whole-population normalizing mass stays unstable. Test the combination with independent pilots, changed proposals and increased effort, then on untouched observations including all preparation costs.\n[from n15] Remove analytically known zero-mean score fluctuations for diagnosis as well as efficiency: a raw comparison can pass because its noise is too large to expose a smaller systematic discrepancy. Preserve failed original checks and predeclare repaired numerical validation.\n[from n14] Endpoint equality is not kernel validity: the old native exchange omitted the numerical lower-uniform support bound. Real allowed prior marks demonstrate a zero-environment-density swap. Correct every caller, and require corrected runs or full trajectory evidence before interpreting old proposal/effort comparisons as same-target convergence.",
       "metadata": {
         "dev_score": null,
         "test_score": null,
@@ -16,7 +16,7 @@
         "branch_ref": null
       },
       "created_at": 1792614888,
-      "updated_at": 1792621303
+      "updated_at": 1792623442
     },
     "n1": {
       "id": "n1",
@@ -72,7 +72,7 @@
       "depth": 2,
       "status": "executed",
       "hypothesis": "The fixed-schedule measurement-proposal bridge with invariant physical, nuisance and scene moves produces stable direct scores and scene weights on the four-object real-model development panel.",
-      "insight": "Fine temperature steps give final weight ESS near N while bright score estimates still vary widely. Weight stability does not diagnose mutation or mode-weight accuracy; physical geometry needs independent pilot calibration.\n[from n6] For strongly heterogeneous or mixed posteriors, a global pilot covariance can overestimate narrow local directions. Test geometry with independent score replication, not covariance plausibility or acceptance averages.\n[from n7] Correct global scene proposals still need demonstrated mode access and stable weights. Diagnose target/environment support and proposal-density cost before increasing their mixture frequency.\n[from n8] Useful final-temperature movement does not guarantee stable annealing normalizers. Independently test proposal-to-posterior distance and early loss of particle diversity.",
+      "insight": "Fine temperature steps give final weight ESS near N while bright score estimates still vary widely. Weight stability does not diagnose mutation or mode-weight accuracy; physical geometry needs independent pilot calibration.\n[from n6] For strongly heterogeneous or mixed posteriors, a global pilot covariance can overestimate narrow local directions. Test geometry with independent score replication, not covariance plausibility or acceptance averages.\n[from n7] Correct global scene proposals still need demonstrated mode access and stable weights. Diagnose target/environment support and proposal-density cost before increasing their mixture frequency.\n[from n8] Useful final-temperature movement does not guarantee stable annealing normalizers. Independently test proposal-to-posterior distance and early loss of particle diversity.\n[from n20] Evaluate retained-path proposals at matched total cost and mode-mass accuracy; extra retained states did not compensate for dependence in the tested recipe.",
       "metadata": {
         "dev_score": 0.0,
         "test_score": null,
@@ -80,7 +80,7 @@
         "branch_ref": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_v1"
       },
       "created_at": 1792615470,
-      "updated_at": 1792618109
+      "updated_at": 1792622988
     },
     "n5": {
       "id": "n5",
@@ -168,7 +168,7 @@
       "depth": 1,
       "status": "pending",
       "hypothesis": "An evaluable initial law that deliberately seeds measurement-like neighbours can test and improve rare scene-mode coverage that target-only initial proposals may share a blind spot for.",
-      "insight": "[from n11] Informed scene initialization requires a normalized native point law and the true numerical Poisson intensity, including explicit singular-support accounting. A generic density-ratio identity alone does not supply a usable sampler.\n[from n14] Known-density scene proposals require the numerical native mark measure itself, not merely an analytic-support correction. Account separately for support slivers, zero-target initial draws, and genuine generator failures.",
+      "insight": "[from n11] Informed scene initialization requires a normalized native point law and the true numerical Poisson intensity, including explicit singular-support accounting. A generic density-ratio identity alone does not supply a usable sampler.\n[from n14] Known-density scene proposals require the numerical native mark measure itself, not merely an analytic-support correction. Account separately for support slivers, zero-target initial draws, and genuine generator failures.\n[from n14] Endpoint equality is not kernel validity: the old native exchange omitted the numerical lower-uniform support bound. Real allowed prior marks demonstrate a zero-environment-density swap. Correct every caller, and require corrected runs or full trajectory evidence before interpreting old proposal/effort comparisons as same-target convergence.",
       "metadata": {
         "dev_score": null,
         "test_score": null,
@@ -176,7 +176,7 @@
         "branch_ref": null
       },
       "created_at": 1792617168,
-      "updated_at": 1792619249
+      "updated_at": 1792623442
     },
     "n11": {
       "id": "n11",
@@ -248,7 +248,7 @@
       "depth": 3,
       "status": "executed",
       "hypothesis": "A frozen periodic-phase Stein control variate has exactly zero posterior expectation and can reduce shear-score Monte Carlo variance without changing the sampled distribution or hiding normalizer failures.",
-      "insight": "An independent zero-mean control can uncover integration error hidden by dominant score noise. Retain raw estimates, normalizing masses and explicit precision-measure distinctions; small corrected variance alone is not convergence.",
+      "insight": "An independent zero-mean control can uncover integration error hidden by dominant score noise. Retain raw estimates, normalizing masses and explicit precision-measure distinctions; small corrected variance alone is not convergence.\n[from n19] Analytic product-rule controls can reduce selected score components but may worsen others; retain raw and fixed-control comparisons and require replicated sampler agreement.",
       "metadata": {
         "dev_score": 1.0,
         "test_score": null,
@@ -256,7 +256,7 @@
         "branch_ref": "codex/phase-stein-20261021"
       },
       "created_at": 1792619091,
-      "updated_at": 1792621303
+      "updated_at": 1792622741
     },
     "n16": {
       "id": "n16",
@@ -310,33 +310,33 @@
       "id": "n19",
       "parent": "n15",
       "depth": 4,
-      "status": "running",
+      "status": "executed",
       "hypothesis": "The analytic phase product-rule control with fixed epsilon0.1, C=(-F e2*T-F e1, F e1*T-F e2), F=(1+|e|^2)/(|e|^2+0.01), removes more orientation score noise than a fitted constant control while preserving the continuous endpoint expectation, without fitting or hiding cross-population disagreements.",
-      "insight": "",
+      "insight": "State-dependent periodic controls require the derivative of the coefficient. Exact zero-mean identities do not imply uniform variance reduction or posterior coverage; a phase-flat likelihood can acquire extra coefficient-derivative noise.",
       "metadata": {
-        "dev_score": null,
+        "dev_score": 0.0,
         "test_score": null,
-        "result": "",
-        "branch_ref": null
+        "result": "12 correctness tests pass17421399; CPU17421436 processes28 populations. Fixed analytic control improves estimated MCSE18/24 versus raw,13/24 versus constant but worsens faint g2 consistently. Obs0 v7-v6 still3.534 combinedMCSE. Reject blanket adoption; retained standalone diagnostic only.",
+        "branch_ref": "codex/analytic-phase-control-20261022/77ae6b0"
       },
       "created_at": 1792622123,
-      "updated_at": 1792622123
+      "updated_at": 1792622741
     },
     "n20": {
       "id": "n20",
       "parent": "n4",
       "depth": 3,
-      "status": "running",
+      "status": "executed",
       "hypothesis": "Retaining fixed invariant mutation paths in waste-free SMC reduces density-evaluation cost for replicated normalizer and score accuracy, with correct original denominators, full extinction accounting, and no particle-independence assumption.",
-      "insight": "",
+      "insight": "More retained correlated states can worsen mode-allocation uncertainty at matched compute even when local moments improve. Preserve whole-population variance and original denominators; retained count is not independent information.",
       "metadata": {
-        "dev_score": null,
+        "dev_score": 0.5772146510222352,
         "test_score": null,
-        "result": "",
-        "branch_ref": null
+        "result": "Isolated CPU793 tests4skip pass;128 independent populations perarm/target at13560 densityrows. Waste-free/standard primaryvariance1.089 Gaussian,2.755 mixture, CPU15\u201316%slower. Toy efficiency0.577 vsbaseline1; recipe rejected, no real driver or GPU integration.",
+        "branch_ref": "codex/waste-free-smc-20261022/e826f50"
       },
       "created_at": 1792622233,
-      "updated_at": 1792622233
+      "updated_at": 1792622988
     }
   }
 }
