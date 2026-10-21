@@ -1,5 +1,36 @@
 # Work log
 
+## 2026-10-21 — Full-support measurement-informed particle proposal (arbor n3)
+
+Implemented `sbsi/galsbi_particle_proposal.py` with
+`MeasurementParticleProposal.from_measurement`, `sample`, `log_prob`, and
+serializable metadata. The proposal is a normalized two-component diagonal
+Gaussian mixture on the first nine `GalSBITargetCoordinates`, multiplied by
+independent uniform periodic phase. Its two magnitude centres use measured
+flux and measured flux plus five magnitudes. Radius uses the documented
+Moffat half-light quadrature heuristic only to set a centre. Broad nuisance
+and morphology coordinates retain the full real support. No generating scene
+fields, target likelihood, native-prior truncation, clipping, or draw retries
+enter this distribution. Native-prior-invalid particles must retain zero
+weight in the consuming sampler.
+
+`tests/test_galsbi_particle_proposal.py` checks the normalized mixture against
+SciPy densities and numerical quadrature, sample moments and independent
+uniform phase, periodic evaluation, unit conversions, immutable metadata,
+empty/invalid inputs, and exact retention of deliberately off-support draws.
+Full CPU suite ran through `jobs/job_tests.sh` on `cluster`. First run
+17418246 passed 400 tests with three skips but failed the quadrature error
+assertion: SciPy's default relative tolerance reported error 1.009e-8 against
+a 1e-8 requirement, while the integral itself met 1e-10 accuracy. Requesting
+`epsrel=1e-11` fixed the test precision without changing proposal code or
+relaxing its assertion. Rerun 17418324: **401 passed, 3 skipped in 74.76 s**,
+including all 13 new proposal tests. Logs:
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/inference_components_20261021/proposal_tests_17418324.out`.
+This is a mathematically evaluable initialization distribution, not evidence
+of efficient posterior sampling. Next: evaluate
+importance weights and independent particle repetitions against the unchanged
+scene prior and likelihood before making any convergence claim.
+
 ## 2026-10-20 — 1M pair c2, measurement-only true-parameter test: measurement side cleared for the positive c2 (21–25.8: −2.96 ± 1.11e-4)
 
 Owner: "go on" (step 1 of the proposed plan). Pre-declared in `galsbi_pair1m_20261012/debug/rule_measoracle.md`
