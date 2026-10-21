@@ -19,6 +19,9 @@ from sbsi.models import V39_LIKE, load_detection_classifier
 from sbsi.phase_control import (FrozenPhaseControl, digest, phase_stein_control,
                                 rotate_summary_phase)
 from sbsi.summary_gradients import SummaryGradients
+from sbsi.disk_precision import (LOG_GAP_COLUMN, physical_log_prob_with_gap,
+                                 transport_with_log_gap)
+from sbsi.shear_map import apply_shear_to_ellipticity
 
 
 NATIVE_SOURCES = ('galsbi_target_coordinates.py', 'galsbi_summary.py',
@@ -26,6 +29,51 @@ NATIVE_SOURCES = ('galsbi_target_coordinates.py', 'galsbi_summary.py',
 PRECISION_LIMITS = dict(sampling_replay_atol=1e-6, float64_replay_atol=1e-10,
                         saved_score_atol=1e-6, phase_gradient_scaled_atol=1e-4,
                         sampled_float32_float64_atol=1e-5)
+
+
+@torch.no_grad()
+def float64_log_kernel(flow, detector, values, observed, shear, batch_size):
+    """Independent F64 forward replay; native dataframe wrappers require F32.
+
+    Keep the original F32 SummaryLikelihood replay unchanged. Here NumPy
+    applies intrinsic shear independently of the gradient path, then explicit
+    F64 preprocessing avoids the legacy dataframe-to-F32 conversions. Shared
+    physical transport/density primitives define the same continuous model;
+    this function neither calls autograd nor SummaryGradients/tensor_log_kernel.
+    """
+    members = getattr(detector, 'members', (detector,))
+    if any(next(model.parameters()).dtype != torch.float64 for model in
+           [flow.model, *[member.model for member in members]]):
+        raise ValueError('float64 forward replay requires float64 networks')
+    values = np.asarray(values, float)
+    raw = observed[list(flow.target_transform.target_names)].to_numpy(float)
+    gaps = observed[LOG_GAP_COLUMN].to_numpy(float)
+    if values.ndim != 2 or values.shape[1] != 9 or len(values) != len(raw):
+        raise ValueError('aligned nine-column summaries and observations required')
+    result = np.empty(len(values))
+    for start in range(0, len(values), batch_size):
+        stop = min(len(values), start+batch_size)
+        rows = np.minimum(np.arange(start, start+batch_size), stop-1)
+        context = values[rows, :8].copy()
+        context[:, 0], context[:, 1] = apply_shear_to_ellipticity(
+            context[:, 0], context[:, 1], *shear)
+        tensor = lambda value: torch.as_tensor(value, device=flow.device, dtype=torch.float64)
+        context = tensor(context)
+        standard = flow.condition_preprocessor.transform_tensor(context)
+        physical = tensor(raw[rows])
+        shape, gap, ld = transport_with_log_gap(physical[:, :2], tensor(gaps[rows]),
+            tensor(values[rows, 8, None]*np.asarray(shear)), inverse=True)
+        density = physical_log_prob_with_gap(flow.model,
+            torch.cat((shape, physical[:, 2:]), -1), gap, standard)+ld
+        density += tensor(flow.target_transform.scales).log().sum()
+        # Use probabilities and log(mean(p)), independently of the gradient
+        # path's log-sigmoid/logsumexp expression, at the same F64 precision.
+        probability = torch.stack([torch.sigmoid(member.logits_from_raw_tensor(context))
+                                   for member in members]).mean(0)
+        result[start:stop] = (density+probability.log()).cpu().numpy()[:stop-start]
+    if not np.isfinite(result).all():
+        raise FloatingPointError('nonfinite independent float64 kernel replay')
+    return result
 
 
 def validate_saved_run(run, *, stride=1):
@@ -111,16 +159,17 @@ def main():
     evaluator = SummaryGradients(flow, detector, batch_size=batch_size)
     density64, gradient = evaluator.evaluate(values, observed, shear, wrt='context')
     shear_density64, raw_scores = evaluator.evaluate(values, observed, shear, wrt='shear')
-    independent64 = likelihood.log_kernel(SummaryBatch(values, auxiliary), observed, *shear)
+    replay64 = lambda x: float64_log_kernel(flow, detector, x, observed, shear, batch_size)
+    independent64 = replay64(values)
     control = phase_stein_control(values, gradient)
     phase_checks = []
     for step in (1e-4, 1e-5, 1e-6):
-        upper = likelihood.log_kernel(SummaryBatch(rotate_summary_phase(values, step), auxiliary), observed, *shear)
-        lower = likelihood.log_kernel(SummaryBatch(rotate_summary_phase(values, -step), auxiliary), observed, *shear)
+        upper = replay64(rotate_summary_phase(values, step))
+        lower = replay64(rotate_summary_phase(values, -step))
         finite = (upper-lower)/(2*step)
         phase_checks.append(dict(step=step, max_absolute_error=float(np.max(np.abs(finite-control))),
             max_scaled_error=float(np.max(np.abs(finite-control)/np.maximum(1., np.abs(control))))))
-    wrap = likelihood.log_kernel(SummaryBatch(rotate_summary_phase(values, 2*np.pi), auxiliary), observed, *shear)
+    wrap = replay64(rotate_summary_phase(values, 2*np.pi))
     checks = dict(
         sampling_replay_max=float(np.max(np.abs(density32-saved['log_kernel'].ravel()))),
         float64_replay_max=float(max(np.max(np.abs(density64-independent64)),

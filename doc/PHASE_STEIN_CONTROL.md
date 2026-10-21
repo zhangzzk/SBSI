@@ -96,6 +96,14 @@ global equivalence certificates. Failed replay blocks fitting/application;
 failed outputs remain preserved. The sampled float32/float64 density gap is
 reported against1e-5 as a diagnostic flag, not a replacement acceptance gate.
 
+The F64 replay is a diagnostic-only no-grad forward path: NumPy applies
+intrinsic shear, then F64 tensor preprocessing and the retained physical
+transport/density evaluate the likelihood. It does not call the gradient
+evaluator. The legacy dataframe classifier and flow wrappers hard-code F32
+inputs, so they cannot replay converted F64 networks. The original F32
+`SummaryLikelihood` replay stays unchanged. This distinction was established
+by a preserved startup failure, not by changing precision thresholds.
+
 Store every pointwise `Delta = logK_F64 - saved_logK_F32`. Report E[T] and
 independent-population ratio MCSE both under the original sampled measure
 and under an explicit diagnostic change to the float64 measure. For run r,
@@ -122,7 +130,7 @@ results rather than silently declaring the control exactly zero in F32.
 
 ## Prepared experiment and execution boundary
 
-`jobs/job_particle_phase_control_n15.sh` is prepared but **not submitted**.
+`jobs/job_particle_phase_control_n15.sh` defines the frozen experiment.
 It requests one V100, checks the GPU model, reads exactly4 v1 plus8 v5,
 8 v6v100 and8 v7 completed runs (53,248 saved states), fits only v1, and
 evaluates all three fresh groups with that one frozen coefficient artifact.
@@ -130,12 +138,21 @@ It keeps every particle, raw/corrected score, T and Delta. Missing runs,
 unknown failures, and extinctions are rejected rather than silently dropped.
 Extinction-aware estimator integration is outside this prototype.
 
-The root coordinator must review tests and scripts, freeze source without
-caches, and set scheduler dependencies/resource limits after jobs17419615
-and17419751 before any submission. Required environment variables are
+The root coordinator reviewed tests and scripts and authorized one V100 on
+th-cl-nv02, inter, two CPUs and 30 minutes after both prerequisite studies
+completed. The first source snapshot contained 293 files, referenced V39
+receipts and no caches, with import assertions and a hash manifest. Required
+environment variables are
 `SBSI_PHASE_SOURCE`, `SBSI_PHASE_ROOT`, `SBSI_PHASE_OUTPUT`, `SBSI_CACHE_DIR`
 and `BLENDEMU_RUNS_DIR`. The launcher reads existing models and saved states;
 it performs no new posterior sampling. It refuses existing output directories.
+
+Initial job 17420174 failed after 26 seconds at the legacy dataframe F32/F64
+dtype mismatch before any scientific diagnostic output or coefficient fit.
+The original `source_phase_n15_20261022`, experiment receipt, output directory
+and log are preserved under the sampler-search data root. Repair is limited
+to the diagnostic forward adapter described above; target files, pilot
+selection, input populations and numerical thresholds remain unchanged.
 
 ## Correctness evidence
 
@@ -145,4 +162,6 @@ job 17419937 passed the first 28 checks. The final additions exercised the
 complete saved-state diagnostic with analytic model doubles, preserving raw
 and pointwise precision arrays, applying independent coefficients, and
 blocking correction while retaining evidence when a phase derivative fails.
-No trained-model evaluation or real-data coefficient fit was performed.
+The initial trained-model run failed before diagnostics or coefficient fitting.
+The F64 adapter repair added two real untrained-network replay tests; CPU
+Slurm 17420296 passed all 32 tests in 17.16 seconds.

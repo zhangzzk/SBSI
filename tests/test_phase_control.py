@@ -329,6 +329,8 @@ def test_full_diagnostic_retains_delta_raw_and_corrected_and_blocks_failed_repla
             return 10*v[:, 0], result
     monkeypatch.setattr(diagnostic, 'SummaryLikelihood', Likelihood)
     monkeypatch.setattr(diagnostic, 'SummaryGradients', Gradients)
+    monkeypatch.setattr(diagnostic, 'float64_log_kernel',
+                        lambda flow, detector, v, observed, shear, batch_size: 10*v[:, 0])
     output = tmp_path/'first.json'
     argv = ['diagnostic', '--run', str(run), '--output', str(output)]
     monkeypatch.setattr(sys, 'argv', argv); diagnostic.main()
@@ -353,3 +355,32 @@ def test_full_diagnostic_retains_delta_raw_and_corrected_and_blocks_failed_repla
             np.testing.assert_allclose(arrays['corrected_scores'], 0., atol=1e-14)
     assert digest(run/'particles.npz') == receipt['particles_sha256']
     assert digest(run/'protocol.json') == receipt['protocol_sha256']
+
+
+@pytest.mark.parametrize('shear', [[0., 0.], [.02, -.01]])
+def test_independent_float64_forward_replay_avoids_legacy_float32_wrappers(shear):
+    diagnostic = load_script('check_particle_phase_control')
+    flow, detector, values, observed = gradient_fixture()
+    # The real legacy classifier wrapper makes F32 inputs even for an F64
+    # model. This was the actual saved-state diagnostic startup failure.
+    frame = pd.DataFrame(values[:, :8], columns=detector.preprocessor.feature_names)
+    with pytest.raises(RuntimeError, match='same dtype'):
+        detector.predict_proba(frame)
+    density, gradient = SummaryGradients(flow, detector, batch_size=3).evaluate(
+        values, observed, shear, wrt='context')
+    control = phase_stein_control(values, gradient)
+    replay = diagnostic.float64_log_kernel(flow, detector, values, observed, shear, 3)
+    np.testing.assert_allclose(replay, density, atol=1e-12, rtol=0.)
+    for step in (1e-4, 1e-5, 1e-6):
+        upper = diagnostic.float64_log_kernel(flow, detector,
+            rotate_summary_phase(values, step), observed, shear, 3)
+        lower = diagnostic.float64_log_kernel(flow, detector,
+            rotate_summary_phase(values, -step), observed, shear, 3)
+        np.testing.assert_allclose((upper-lower)/(2*step), control, atol=1e-8, rtol=1e-6)
+    wrapped = diagnostic.float64_log_kernel(flow, detector,
+        rotate_summary_phase(values, 2*np.pi), observed, shear, 3)
+    np.testing.assert_allclose(wrapped, replay, atol=1e-12, rtol=0.)
+    assert all(p.grad is None for p in flow.model.parameters())
+    flow.model.float()
+    with pytest.raises(ValueError, match='float64 networks'):
+        diagnostic.float64_log_kernel(flow, detector, values, observed, shear, 3)
