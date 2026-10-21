@@ -1,5 +1,11 @@
 # Work log
 
+## 2026-10-22 — Prepare n18 completed higher-effort comparison
+
+- **Scope:** new isolated branch `codex/v9-comparison-20261022` from 77ae6b0. New standalone summary script consumes only completed v6v100/v7/v9 development reports and frozen constant phase aggregates; no fit, model forward, GPU or held-out input. All eight populations, all states and original whole-population Z weighting remain mandatory.
+- **Accounting:** retain signed raw/corrected score contrasts, independent-group combined MCSE, normalizer precision, F64 numerical-measure counterparts and recorded inference costs. Hash/seed/identity/replay validations reject incomplete or inconsistent inputs. New focused tests cover contrast signs, combined errors, stable normalizer comparison and the historical F32 known-zero metadata erratum.
+- **Limits/next:** syntax and diff checks pass; scheduler tests and frozen summary pending. [Comparison scope](V9_PARTICLE_COMPARISON.md#question-and-accounting) explicitly qualifies the shared old native support defect and F32/F64 identity. No acceptance gate changes or exactness claim.
+
 ## 2026-10-22 — N19 analytic phase control: mixed gains, faint-score degradation, residual discrepancy
 
 - **Execution/provenance:** cluster CPU Slurm 17421436 completed in 10 seconds, exit 0, two CPUs/no GPU. All 28 allowed populations/53,248 saved states used; no new model forward or fit. Frozen code `cdb6fbe5de67a9334ac500250306e46fb7d6a1db`, source manifest SHA256 `89359c8d11bffb3a99318dcb4623708bde242ca63a0be4fe744d5725cbcd1cfd`, 141-input receipt `analytic_phase_n19_20261022_experiment.json`. Epsilon=0.1 and both product-rule signs stayed exactly predeclared.
