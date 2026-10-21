@@ -1,5 +1,11 @@
 # Work log
 
+## 2026-10-22 — Prepare n23 corrected three-way gates without outcome access
+
+- **Scope:** new isolated `codex/v10-comparison-20261022` from 3edb2ee. Read only the v10 declaration/launcher and prior code/artifact schemas; no v10 numerical run/phase outcomes. New gate module and summary executable implement all original raw precision/score/region/Z gates plus all three pairwise corrected components <=3.5 combined MCSE separately in F32/F64. Always leaves accepted_sampler=false.
+- **Integrity/cost:** evaluator refuses outcome reads until all 24 array tasks and both report jobs complete successfully. It pins source/artifacts/seeds/protocol, replays complete particle/phase arrays and recomputes whole-population aggregates. Eight-ULP weight replay tolerance only; no altered weights. Explicit extinction blocks unsupported phase aggregation, never drops a run. Costs separate driver, per-arm Slurm elapsed and shared diagnostic wall time; unknown preparation/full cost stays null.
+- **Validation:** syntax/diff checks pass; focused synthetic CPU tests pending. [Declared scope/gates](V10_PARTICLE_COMPARISON.md#gates-all-retained). No GPU job, fitting, new model forward, held-out input, sampler change or evaluation submission.
+
 ## 2026-10-22 — Final reporting and legacy-audit integration validated
 
 CPU17422839 passes854 tests with8 optional skips in97.55 seconds; seven skipped
