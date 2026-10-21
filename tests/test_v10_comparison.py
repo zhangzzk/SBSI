@@ -149,3 +149,21 @@ def test_weight_replay_is_finite_eight_ulps_without_renormalization():
     assert m.vectors_match_ulps([.125],[math.nextafter(.125,1.)])
     assert not m.vectors_match_ulps([.125],[.125+1e-8])
     assert not m.vectors_match_ulps([.125],[float('nan')])
+
+
+def test_empty_comparisons_cannot_pass_vacuously():
+    with pytest.raises(ValueError,match='finite aligned'):
+        difference_gate({'mean':[],'mcse':[]},{'mean':[],'mcse':[]})
+
+
+@pytest.mark.parametrize('count',[0,3,4,6])
+def test_corrected_gate_requires_exactly_five_complete_moments(count):
+    good={'mean':[0.]*5,'mcse':[1.]*5}
+    bad={'mean':[0.]*count,'mcse':[1.]*count}
+    with pytest.raises(ValueError,match='exactly five'):corrected_phase_gate(good,bad)
+
+
+def test_corrected_gate_rejects_nonfinite_unselected_moments():
+    a={'mean':[float('nan'),0.,0.,0.,0.],'mcse':[1.]*5}
+    b={'mean':[0.]*5,'mcse':[1.]*5}
+    with pytest.raises(ValueError,match='exactly five'):corrected_phase_gate(a,b)

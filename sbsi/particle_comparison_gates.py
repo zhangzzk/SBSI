@@ -10,7 +10,7 @@ SIGMA_LIMIT = 3.5
 def difference_gate(first, second):
     a,b = (np.asarray(x['mean'],float) for x in (first,second))
     sa,sb = (np.asarray(x['mcse'],float) for x in (first,second))
-    if (a.ndim != 1 or a.shape != b.shape or sa.shape != a.shape or sb.shape != a.shape
+    if (a.ndim != 1 or not a.size or a.shape != b.shape or sa.shape != a.shape or sb.shape != a.shape
             or not np.isfinite([a,b,sa,sb]).all() or np.any(sa<0) or np.any(sb<0)):
         raise ValueError('finite aligned means and nonnegative independent MCSE required')
     delta=a-b;se=np.hypot(sa,sb);passed=np.abs(delta)<=SIGMA_LIMIT*se
@@ -73,5 +73,9 @@ def raw_pair_gate(a,b):
 
 def corrected_phase_gate(a,b):
     """Only corrected g1/g2 gate; preserve raw/T contrasts separately in reports."""
+    for value in (a,b):
+        mean,se=np.asarray(value['mean'],float),np.asarray(value['mcse'],float)
+        if mean.shape!=(5,) or se.shape!=(5,) or not np.isfinite([mean,se]).all() or np.any(se<0):
+            raise ValueError('exactly five finite phase moments and nonnegative MCSE required')
     return difference_gate(dict(mean=a['mean'][3:5],mcse=a['mcse'][3:5]),
                            dict(mean=b['mean'][3:5],mcse=b['mcse'][3:5]))

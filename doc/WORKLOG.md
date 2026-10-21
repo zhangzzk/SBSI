@@ -1,5 +1,10 @@
 # Work log
 
+## 2026-10-22 — Harden n23 gate APIs against incomplete moments
+
+- Root review identified vacuous success for empty difference vectors and raw-only vectors sliced to empty corrected columns. The caller already required the declared five-column schema, but the reusable gate API now also rejects empty vectors and requires exactly five finite phase moments with nonnegative MCSE before corrected-column slicing.
+- Added six regressions for empty, missing/extra corrected columns and nonfinite unselected moments. Existing 28 focused tests passed on frozen dafff0e (CPU 17423323); its full-suite job 17423354 is preserved. Amended-source full CPU validation pending; no v10 outcome read, threshold change or evaluation submission.
+
 ## 2026-10-22 — Prepare n23 corrected three-way gates without outcome access
 
 - **Scope:** new isolated `codex/v10-comparison-20261022` from 3edb2ee. Read only the v10 declaration/launcher and prior code/artifact schemas; no v10 numerical run/phase outcomes. New gate module and summary executable implement all original raw precision/score/region/Z gates plus all three pairwise corrected components <=3.5 combined MCSE separately in F32/F64. Always leaves accepted_sampler=false.
