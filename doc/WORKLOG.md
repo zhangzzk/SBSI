@@ -1,5 +1,43 @@
 # Work log
 
+## 2026-10-22 — Standalone coupled population independence MH: exact finite-law development checks
+
+Arbor n17, isolated branch `codex/coupled-population-imh-20261022`, based on
+`b57e62e`. No parent files, real sampler adapter, model settings, or GPU runs
+were changed. Source indexing and the integration contract are in
+[`COUPLED_POPULATION_IMH.md`](COUPLED_POPULATION_IMH.md#source-and-indexing).
+
+- **Behavior.** New `sbsi/coupled_population_imh.py` accepts a fixed independent
+  proposal callback returning a complete population's log normalizer and vector
+  observable. It implements shared-proposal/shared-uniform lag-one coupling,
+  including first-step meeting, and the uncapped H_{k:m} estimator for all
+  integer 0 <= k <= m. It simulates through X_m and the first meeting, retains
+  that first meeting time, and excludes the meeting transition from correction.
+- **Support and failures.** Known zero normalizers remain proposals with a
+  canonical zero observable, including at initialization; no filtering/refill
+  occurs. Positive-weight states reject zero weight, while zero-weight states
+  accept any proposal under an explicit 0/0=1 transient convention. NaN/+inf,
+  nonfinite observables, dimension changes, callback failures, and accumulator
+  overflow raise. Optional cancellation raises without a partial estimate.
+- **Evidence.** New `tests/test_coupled_population_imh.py` checks the invariant
+  tilted law and detailed balance, exact rational infinite-tail expectations for
+  four averaging windows, scripted coupling/indexing paths, zeros, errors,
+  replay, and cancellation. CPU job **17420741 passed all 41 checks** in8.83 s.
+  The finite-law exact expectation is (-6/7,17/7), including proposal mass1/3
+  on zero normalizer. Two independent 12,000-replicate checks passed their
+  predeclared six-standard-error bounds, with maximum observed meetings30/20;
+  this is evidence only for that small finite law. The source subsequently
+  added postponed annotations for Python>=3.9 compatibility. Full-suite CPU
+  **17420767 passed 718 tests, with 3 skips**, in68.61 s (Slurm1:17, exit0:0);
+  no failures. Receipts, skip reasons, and source hashes are recorded in
+  [`evidence/coupled_population_imh_20261022.json`](evidence/coupled_population_imh_20261022.json).
+- **Limits and next step.** `dev_score=1` is implementation correctness only.
+  The extended invariant expectation is E_Q[Zhat fhat]/E_Q[Zhat]. Its
+  identification with an SBSI expectation, real observable moments and meeting
+  tails, and target consistency across numerical precision need separate
+  evidence. Finite-pool tests do not establish these properties for the actual
+  SMC law. Root owns any subsequent real-population adapter or experiment.
+
 ## 2026-10-22 — First development-pass sampler; freeze held-out evaluation
 
 Eight fitted-proposal v7 populations pass all four precision and independent
