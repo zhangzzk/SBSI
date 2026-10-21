@@ -80,8 +80,8 @@ def float64_log_kernel(flow, detector, values, observed, shear, batch_size):
 
 def validate_saved_run(run, *, stride=1):
     """Reject changed inputs, missing/failed populations, and intermediate beta."""
-    if not isinstance(stride, int) or stride < 1:
-        raise ValueError('positive integer stride required')
+    if type(stride) is not int or stride != 1:
+        raise ValueError('phase estimator requires the complete population with stride=1; deterministic thinning is unsupported')
     protocol = json.loads((run/'protocol.json').read_text())
     receipt = json.loads((run/'result.json').read_text())
     if (receipt.get('status') != 'completed'
@@ -103,14 +103,14 @@ def validate_saved_run(run, *, stride=1):
         for name, dimensions in [('summaries', (9,)), ('scores', (2,)), ('log_kernel', ())]:
             if fields[name].shape != expected+dimensions or not np.isfinite(fields[name]).all():
                 raise ValueError('finite aligned saved summary, score, and kernel arrays required')
-    return protocol, receipt, {name: value[:, ::stride] for name, value in fields.items()}
+    return protocol, receipt, fields
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--stride', type=int, default=1)
+    parser.add_argument('--stride', type=int, default=1, help='Must be1: complete populations are required')
     parser.add_argument('--device', choices=['cpu', 'cuda'], default='cpu')
     parser.add_argument('--coefficients', type=Path)
     args = parser.parse_args()

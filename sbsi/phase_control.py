@@ -214,7 +214,11 @@ def summarize_phase_populations(log_normalizers, controls, raw_scores, deltas, c
                                  ('precision_reweighted_float64', adjusted_logz, moments64)]:
             summary = combine_populations(z[:, obj], moments[:, obj])
             mean, se = summary['mean'][0], summary['mcse'][0]
-            row[name] = dict(summary, control_known_expectation=0.,
+            continuous = name == 'precision_reweighted_float64'
+            row[name] = dict(summary, control_known_expectation=0. if continuous else None,
+                control_expectation_status=('intended_continuous_float64_periodic_identity' if continuous
+                    else 'unestablished_for_rounded_float32_target'),
+                control_reference_value=0.,
                 control_standardized_residual=float(mean/se) if se > 0 else None,
                 control_nonzero_with_zero_estimated_mcse=bool(se == 0 and mean != 0))
         results.append(row)
@@ -230,12 +234,16 @@ def load_phase_diagnostic(path):
             or report.get('numerical_checks_pass') is not True
             or report.get('arrays_sha256') != digest(arrays_path)):
         raise ValueError('unchanged successfully replayed phase diagnostic required')
+    if report.get('stride') != 1:
+        raise ValueError('phase estimator requires the complete population with stride=1; deterministic thinning is unsupported')
     sources = report.get('source_hashes')
     if not isinstance(sources, dict) or not sources or any(digest(p) != h for p, h in sources.items()):
         raise ValueError('phase diagnostic original input receipts changed or missing')
     with np.load(arrays_path, allow_pickle=False) as stored:
         arrays = {name: stored[name].copy() for name in ('raw_scores', 'phase_control', 'delta_log_kernel')}
     _aligned(arrays['raw_scores'], arrays['phase_control'], objects=len(report['observations']))
+    if report.get('retained_particles') != arrays['phase_control'].shape[1]:
+        raise ValueError('phase diagnostic retained particle count differs from complete arrays')
     if (arrays['delta_log_kernel'].shape != arrays['phase_control'].shape
             or not np.isfinite(arrays['delta_log_kernel']).all()):
         raise ValueError('finite aligned diagnostic precision differences required')

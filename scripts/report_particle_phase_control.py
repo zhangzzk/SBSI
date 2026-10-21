@@ -47,7 +47,7 @@ def main():
         [a['delta_log_kernel'] for a in arrays], None if frozen is None else frozen.coefficients)
     for oid, row in zip(reports[0]['observations'], rows):
         row['observation'] = oid
-    output = dict(schema='sbsi-independent-phase-diagnostics-v1', observations=serial(rows),
+    output = dict(schema='sbsi-independent-phase-diagnostics-v2', observations=serial(rows),
         seeds=[r['seed'] for r in reports], target_identity=reports[0]['target_identity'],
         moment_columns=['T', 'raw_g1', 'raw_g2']+([] if frozen is None else ['corrected_g1', 'corrected_g2']),
         precision_measure='F64 diagnostic: Z64hat=Z32hat*mean(exp(logK64-saved_logK32)); whole-run weights retained',

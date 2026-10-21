@@ -297,3 +297,29 @@ or modes with the same phase expectation.
 heldout estimation, or existing reports/gates. No raw score or normalizer
 gate is relaxed. Lower score MCSE and small T residuals cannot establish
 normalizer accuracy, full posterior coverage, or calibrated shear.
+
+## Independent audit and metadata erratum — 2026-10-22
+
+The independent audit reproduced all24 evaluation populations directly from
+per-particle Z/N weights and whole-population joint influences, without reusing
+the production aggregation helper. Observation0 v7−v6v100 corrected-g1 is
+0.6652878792 ±0.146401785 (4.54426 reported MCSEs); explicit F64 reweighting
+gives4.54458. The retained model's reviewed phase mapping has no identified
+phase-dependent support discontinuity that explains this discrepancy.
+
+Old standalone population reports misleadingly store
+`control_known_expectation=0` in their raw-F32 rows. That field is **not an
+established exact expectation for the rounded F32 target**. Its zero was the
+intended-continuous comparison reference. New report schema v2 stores null
+and an explicit unestablished qualifier there; F64 retains the intended
+continuous identity qualifier. Original numerical results and immutable
+source snapshots remain unchanged, including old-source jobs queued before
+this correction.
+
+Deterministic stride>1 is now rejected for these estimator diagnostics: ordered
+stratified-resampled particle slots cannot generally be thinned this way while
+retaining an unbiased unnormalized moment. All original v2 populations used
+stride1 and every particle, so this does not change their estimates. See the
+[independent audit](PHASE_CONTROL_INDEPENDENT_AUDIT.md#remaining-provenance-limitation-and-fail-closed-follow-up)
+for the remaining endpoint-provenance limitation and the bounded evidence
+supporting this specific development comparison. No thresholds were weakened.

@@ -1,5 +1,32 @@
 # Work log
 
+## 2026-10-22 — Independent phase-control audit and estimator interface guards
+
+- Audited endpoint identity/sign, smoothness, fixed-pilot score/control pairing,
+  F64 importance weights, original-N denominators and whole-population MCSE.
+  Added `doc/PHASE_CONTROL_INDEPENDENT_AUDIT.md`, a CPU-only independent
+  saved-array reproducer and pinned receipts. No fit, model forward, GPU,
+  new inference sample or heldout outcome was used.
+- Direct sums over all24 evaluation populations/49,152 states reproduce means
+  within1.34e-14 and covariance within1.14e-13. Observation0 v7−v6 corrected-g1
+  gap is0.6652878792 ±0.146401785 (4.54426 descriptive MCSEs); explicit F64
+  reweighting gives4.54458. No identified sign or phase-support error explains
+  the discrepancy. Eight-population errors do not establish which estimate is
+  closer or certify a Gaussian significance level.
+- Fixed `phase_control.py`, diagnostic/report scripts and tests: reject
+  deterministic stride>1 in estimator diagnostics/loaders; verify retained
+  counts; raw-F32 known expectation is null/unestablished, while F64 retains
+  the intended-continuous identity qualifier. Population report schema is v2.
+  Appended an explicit metadata erratum to `doc/PHASE_STEIN_CONTROL.md`;
+  immutable old reports/snapshots and all scientific thresholds remain intact.
+- The reduced generic target identity still omits prior/environment/target
+  factors. Current source snapshots were independently checked; documented
+  a fail-closed endpoint-provenance follow-up without granting automatic
+  cross-version compatibility or altering historical identities.
+- CPU17421220: audit passed and40 focused tests passed in10.59s. Final
+  CPU17421249:778 passed,4 optional skips,1 existing NumPy warning in68.07s,
+  COMPLETED0:0; source hashes verified before/after. No efficiency claim.
+
 ## 2026-10-22 — Localize the score discrepancy and validate scene-proposal startup
 
 Added the read-only localization script, nine focused tests, and

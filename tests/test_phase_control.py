@@ -170,6 +170,11 @@ def test_independent_population_mcse_and_precision_reweighting_use_whole_run_nor
     logz = np.log([[1.], [5.]])
     row = summarize_phase_populations(logz, controls, scores, delta, np.array([[1., 2.]]))[0]
     raw = row['raw_float32_sampled']; weighted = row['precision_reweighted_float64']
+    assert raw['control_known_expectation'] is None
+    assert raw['control_expectation_status'] == 'unestablished_for_rounded_float32_target'
+    assert weighted['control_known_expectation'] == 0.
+    assert weighted['control_expectation_status'] == 'intended_continuous_float64_periodic_identity'
+    assert raw['control_reference_value'] == weighted['control_reference_value'] == 0.
     raw_means = np.array([t.mean() for t in controls])
     expected_raw = np.average(raw_means, weights=[1., 5.])
     assert raw['mean'][0] == pytest.approx(expected_raw)
@@ -209,7 +214,8 @@ def write_diagnostic(tmp_path, *, passed=True):
     np.savez(path.with_suffix('.npz'), raw_scores=np.ones((1, 3, 2)),
              phase_control=np.ones((1, 3)), delta_log_kernel=np.zeros((1, 3)))
     report = dict(schema='sbsi-phase-diagnostic-v1', numerical_checks_pass=passed,
-        arrays_sha256=digest(path.with_suffix('.npz')), source_hashes={str(source):digest(source)}, observations=[11])
+        arrays_sha256=digest(path.with_suffix('.npz')), source_hashes={str(source):digest(source)},
+        observations=[11], stride=1, retained_particles=3)
     path.write_text(json.dumps(report))
     return path
 
@@ -256,11 +262,13 @@ def test_fit_and_report_cli_keep_pilot_and_evaluation_seeds_separate(tmp_path, m
     argv = ['report', '--diagnostics', *map(str, evaluation), '--coefficients', str(coefficients), '--output', str(output)]
     monkeypatch.setattr(sys, 'argv', argv); reporter.main()
     report = json.loads(output.read_text())
+    assert report['schema'] == 'sbsi-independent-phase-diagnostics-v2'
     assert report['raw_score_and_normalizer_gates_unchanged'] is True and report['accepted_sampler'] is False
     assert report['moment_columns'] == ['T', 'raw_g1', 'raw_g2', 'corrected_g1', 'corrected_g2']
     row = report['observations'][0]['raw_float32_sampled']
     assert row['independent_populations'] == 8 and row['control_nonzero_with_zero_estimated_mcse']
     assert row['control_standardized_residual'] is None
+    assert row['control_known_expectation'] is None
     changed = json.loads(evaluation[0].read_text()); changed['seed'] = 2
     evaluation[0].write_text(json.dumps(changed))
     argv[-1] = str(tmp_path/'invalid.json'); monkeypatch.setattr(sys, 'argv', argv)
@@ -269,7 +277,7 @@ def test_fit_and_report_cli_keep_pilot_and_evaluation_seeds_separate(tmp_path, m
     with pytest.raises(ValueError, match='dev_v1'): fitter.main()
 
 
-def test_saved_state_validator_rejects_extinction_and_preserves_fixed_stride(tmp_path):
+def test_saved_state_validator_rejects_extinction_and_deterministic_thinning(tmp_path):
     diagnostic = load_script('check_particle_phase_control')
     protocol = dict(observations=[11], particles=4, stages=3)
     (tmp_path/'protocol.json').write_text(json.dumps(protocol))
@@ -278,11 +286,36 @@ def test_saved_state_validator_rejects_extinction_and_preserves_fixed_stride(tmp
     receipt = dict(status='completed', observations=[11], particles=4, final_stage=dict(stage=3, beta=1.),
         log_normalizer=[0.], protocol_sha256=digest(tmp_path/'protocol.json'), particles_sha256=digest(tmp_path/'particles.npz'))
     (tmp_path/'result.json').write_text(json.dumps(receipt))
-    _, _, arrays = diagnostic.validate_saved_run(tmp_path, stride=2)
-    assert arrays['summaries'].shape == (1, 2, 9)
+    _, _, arrays = diagnostic.validate_saved_run(tmp_path)
+    assert arrays['summaries'].shape == (1, 4, 9)
+    with pytest.raises(ValueError, match='complete population with stride=1'):
+        diagnostic.validate_saved_run(tmp_path, stride=2)
     receipt['status'] = 'completed_with_extinction'
     (tmp_path/'result.json').write_text(json.dumps(receipt))
     with pytest.raises(ValueError, match='no dropping'): diagnostic.validate_saved_run(tmp_path)
+
+
+@pytest.mark.parametrize('consumer', ['fit', 'report'])
+def test_old_thinned_diagnostics_cannot_enter_estimators(tmp_path, monkeypatch, consumer):
+    paths = diagnostic_group(tmp_path, 'dev_v1', [1, 2, 3, 4])
+    for path in paths:
+        report = json.loads(path.read_text())
+        report['stride'] = 2
+        path.write_text(json.dumps(report))
+    output = tmp_path/'unsupported.json'
+    monkeypatch.setattr(sys, 'argv', [consumer, '--diagnostics', *map(str, paths), '--output', str(output)])
+    script = load_script(consumer+'_particle_phase_control')
+    with pytest.raises(ValueError, match='complete population with stride=1'):
+        script.main()
+    assert not output.exists()
+
+
+def test_diagnostic_loader_rejects_retained_count_mismatch(tmp_path):
+    path = write_diagnostic(tmp_path)
+    report = json.loads(path.read_text()); report['retained_particles'] = 4
+    path.write_text(json.dumps(report))
+    with pytest.raises(ValueError, match='retained particle count'):
+        load_phase_diagnostic(path)
 
 
 @pytest.mark.parametrize('bad_gradient', [False, True])
