@@ -1,5 +1,35 @@
 # Work log
 
+## 2026-10-21 — Fixed-schedule annealed particle core and analytic validation
+
+Added `sbsi/annealed_particles.py` and `tests/test_annealed_particles.py` in
+isolated branch `codex/smc-core-20261021`. The core normalizes log weights,
+reweights without dropping zero-target-mass proposal draws, performs stratified
+resampling, tracks initial ancestry, and supplies a fixed-schedule driver.
+An extinct population has normalizing constant zero and is retained as a failed
+replicate; it is not silently restarted. The normalizer guarantee requires
+normalized full-proposal initialization, a fixed schedule, and invariant kernels
+fixed independently of production particles. Weight and ancestry ESS are not
+independent posterior effective sample counts.
+
+Validation is predeclared in external `sampler_smc_20261021/core_validation/protocol.json`:
+64 independent populations of 512 particles each for an analytic correlated
+Gaussian and a separated unequal-weight mixture, checking normalizing constants,
+moments, and region masses against independent-population Monte Carlo error.
+Validation: CPU Slurm job17418336 ran the full suite under py31 with an explicit
+worktree import assertion: **417 passed, 1 skipped in 63.18 s**, including
+**27/27 core correctness tests**. `git diff --check` passed. The separated-mixture
+left-mode mass is 0.301453 ±0.002411 versus exact 0.300000, and its normalizer is
+0.368194 ±0.001970 versus 0.370000. The Gaussian normalizer is
+0.076434 ±0.000442 versus exact 0.077395 (2.17 independent-population MCSE).
+Gaussian first/second/cross moments, Gaussian region mass, and mixture first/second
+moments pass their predeclared checks. These are development checks of numerical
+correctness, not acceptance of a galaxy-scene sampler. The final source and
+results are recorded in `sampler_smc_20261021/core_validation/protocol_v2.json`
+and `results.json`. No schedules, seeds, or gates were tuned after results.
+The final revision also rejects a mutation that returns zero-target-mass particles.
+Next: integrate these primitives into an independently validated scene adapter.
+
 ## 2026-10-20 — 1M pair c2, measurement-only true-parameter test: measurement side cleared for the positive c2 (21–25.8: −2.96 ± 1.11e-4)
 
 Owner: "go on" (step 1 of the proposed plan). Pre-declared in `galsbi_pair1m_20261012/debug/rule_measoracle.md`
