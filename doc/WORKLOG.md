@@ -1,5 +1,39 @@
 # Work log
 
+## 2026-10-21 — Independent-pilot likelihood-gradient proposal metric
+
+Added `sbsi/particle_gradient_geometry.py`,
+`scripts/fit_particle_gradient_geometry.py`, and
+`tests/test_particle_gradient_geometry.py`; the prior covariance-geometry module
+is unchanged. The zero-shear raw-context chain rule maps F8+C8 likelihood
+gradients to physical columns[1,6,7,8,9], including all three target-magnitude
+crowding derivatives and the renderer's circularity threshold. It checks stored
+physical-summary replay and rejects nonzero shear, where the omitted response
+coefficient derivative would matter. The native prior remains in production
+acceptance and is absent only from this proposal heuristic.
+
+The frozen metric is the equal-run mean of uncentred GGᵀ plus fixed broad
+precision; proposal covariance is(2.38²/5) times its inverse. Computation uses
+broad-width-normalized coordinates for numerical conditioning. Artifacts use
+the existing `FrozenParticleGeometry` schema and preserve pilot identities,
+hashes, seeds, gradient means/quantiles and metric eigenvalues/condition numbers.
+The CLI loads retained V3.9 models and F24 row0 shape bounds, evaluates a separate
+float64 diagnostic, and leaves the production float32 likelihood unchanged.
+Non-equilibrated pilot gradients can make the metric too stiff; no efficiency
+or posterior-information claim follows from fitting it.
+
+CPU Slurm job17418949: **35 targeted tests passed in30.07s**, comprising
+**17 new gradient-geometry tests** and18 unchanged covariance-geometry tests.
+Validation includes independent finite differences through the actual native
+scene forward map, magnitude/crowding coupling, circle-threshold branches,
+periodic phase, an exact rank-one inverse, equal-run weighting, particle/object
+permutations, positive definiteness, unchanged pilot inputs, metadata/seed
+contracts and receipt/shear rejection. Syntax and `git diff --check` passed.
+Receipts: `sampler_search_20261021/gradient_geometry_validation/`.
+No GPU job was submitted by this executor. Next: coordinator integrates the
+three files, runs the combined full suite and schedules the frozen pilot fit
+and independent real-scene comparison within the shared four-GPU limit.
+
 ## 2026-10-21 — Frozen physical proposal geometry from independent particle pilots
 
 Added `sbsi/particle_geometry.py`, `scripts/fit_particle_geometry.py`, and
