@@ -45,3 +45,23 @@ decomposition against finite differences of `apply_shear_to_ellipticity`,
 nonuniform periodic integration, product-rule signs, origin/wrap behaviour,
 and an intentionally missing a_prime term. Evaluation follows only after
 those tests, with frozen code/source/input hashes and no outcome selection.
+
+## Correctness evidence before saved-state evaluation
+
+CPU Slurm 17421399 on cluster passed **12 tests in 4.17 seconds**. They
+integrate both control components to zero for nonuniform periodic targets
+at three radii and two phase centres, prove the missing-product-term variant
+has nonzero mean, check the exact g=0 shear map/Jacobian and radial/tangential
+score decomposition, and cover origin, phase wrap, component signs, fixed
+regularization, invalid-domain rejection and unequal-N/Z precision weighting.
+Raw-measure metadata explicitly leaves the known expectation unspecified;
+only the separately qualified F64 continuous-model diagnostic references zero.
+Cip test job 17421396 was cancelled during a queue-switch/startup race before
+any test output, then rerun unchanged on cluster; no outcome selection.
+
+Code confirms native phase is uniform and the retained summaries change only
+intrinsic e1/e2 under phase rotation. Crowding uses fluxes/distances; retained
+response pairs use magnitudes, semimajor radii, Sersic indices and separation,
+not orientation. Therefore fixed-radius a and a_prime introduce no omitted
+phase derivative through response or other native latent factors. The saved
+comparison protocol uses g=(0,0), so the tangent motivation applies directly.

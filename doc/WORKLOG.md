@@ -1,5 +1,12 @@
 # Work log
 
+## 2026-10-22 — Implement and validate n19 fixed analytic phase control
+
+- **Files/behavior:** new `sbsi/analytic_phase_control.py` implements the predeclared epsilon=0.1 vector product-rule control and independent-population comparisons with full-N F64 precision reweighting. New `scripts/check_analytic_phase_control.py` reads only four v1 and eight v5/v6v100/v7 saved populations, requires stride 1/all ordered states, verifies source/array hashes and exact frozen constant-score replay, retains raw/constant/analytic scores and both signed control components, and labels v1 constant-CV results in-sample. No raw F32 zero-expectation metadata claim; the F64 result is explicitly a continuous-model numerical diagnostic.
+- **Math:** actual Möbius code gives phase tangent (1+r²)(-e2,e1)/r² at g=0; regularization multiplies by r²/(r²+0.01). Product-rule derivative is (-F e1,-F e2), essential for zero conditional phase mean. Native phase factors, crowding and retained response inputs preserve the phase-invariance assumptions.
+- **Validation:** `tests/test_analytic_phase_control.py`, cluster CPU Slurm 17421399: **12 passed in 4.17 seconds**. Includes nonuniform periodic integrals, omitted-derivative failure, actual shear finite differences/decomposition, zero/near-zero radius, wrap, signs, domain rejection and unequal-N/Z precision weighting. Cip 17421396 was cancelled in a startup race while switching to cluster; rerun source/settings unchanged. Syntax checks and `git diff --check` passed.
+- **Next:** freeze source/allowed input hashes and execute the declared saved-state CPU comparison. No new scientific outcome, fit, model forward or GPU evaluation has occurred yet. Predeclaration remains `analytic_phase_n19_20261022_declaration.json`, SHA256 `b06ec4e4aea7cc352dc1771ca3e1918fbc978219963f8f205c5606713d4ac500`.
+
 ## 2026-10-22 — Predeclare n19 analytic periodic product-rule control
 
 - **Scope/rule:** new isolated branch/worktree `codex/analytic-phase-control-20261022` from parent `766c1b2`. Fix epsilon=0.1, F=(1+r²)/(r²+0.01), C=(-F(e2*T+e1), F(e1*T-e2)), candidate S-C, with no fit, recentering or parameter search. External declaration saved before new outcomes. Full derivation/protocol: [analytic control](ANALYTIC_PHASE_CONTROL.md#predeclared-candidate-and-scope).
