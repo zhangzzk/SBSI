@@ -1,5 +1,12 @@
 # Work log
 
+## 2026-10-22 — N18 higher effort reduces primary discrepancy, with mixed efficiency
+
+- **Result:** all eight v9 populations and all-state frozen phase diagnostics compared with eight v6v100 and eight v7 populations. Observation-0 corrected g1 becomes 0.568624±0.154248; v9−v6 is +0.163937±0.181294 (0.904 MCSE), versus old v7−v6 4.544 MCSE. V9−v7 remains −2.637 MCSE. Faint observation-8 v9−v6 raw/corrected g1 differences remain 2.642/2.318 MCSE. Narrow directional support for the effort hypothesis; no blanket convergence or acceptance claim.
+- **Precision/cost:** v9 Z relative MCSE is [1.295%,2.110%,0.966%,0.745%], all v9 mean-Z contrasts below 0.86 MCSE. Runtime totals v9/v6/v7 are 4102.95/3820.86/811.54 seconds. V9 costs 5.056× v7, with mixed score variance gains and worse observation-0 corrected-g1 MCSE. F64 reweighting changes any moment by at most 0.001122 sampled-F32 MCSE; all signed per-object raw/corrected/F64 results retained in [comparison evidence](V9_PARTICLE_COMPARISON.md#completed-result-narrower-discrepancy-mixed-precision-and-cost).
+- **Validation/provenance:** cluster CPU job 17422294 completed in 11 seconds, exit 0; six tests passed in 0.19 seconds, source assertion and 145 source/array hashes passed. Runnable commit e7203d2; manifest fa4c8695556103048d14e3a14e9f3160e6cfa673485d45b13ac7b20aafab3de8; fresh result v9_comparison_20261022.json SHA256 92efbd83fa70bbfa98e62d012e14412816f6aa13b2018cf0ef3c2acf00815df4. Top-level pre-execution receipt hashes match the result; originals preserved. Final update is documentation only.
+- **Limits:** all trajectories share old native uniform-lower-clamp support defect; occurrence unknown. No exactness certification or exclusive equilibration attribution. F32 control-known-expectation corrected to null in this new summary; F64 identity remains continuous-model qualified. No fitting, held-out inputs, new forwards, GPU use, sampler edits or gate changes. Root separately integrates support fix dca103e; old evidence cannot validate the fixed implementation.
+
 ## 2026-10-22 — Prepare n18 completed higher-effort comparison
 
 - **Scope:** new isolated branch `codex/v9-comparison-20261022` from 77ae6b0. New standalone summary script consumes only completed v6v100/v7/v9 development reports and frozen constant phase aggregates; no fit, model forward, GPU or held-out input. All eight populations, all states and original whole-population Z weighting remain mandatory.
