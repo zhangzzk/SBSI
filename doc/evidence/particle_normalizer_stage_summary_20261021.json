@@ -1,0 +1,3460 @@
+{
+  "purpose": "Read-only diagnosis of where independent-run normalizer scatter becomes visible; no sampler, target, geometry, or model changes.",
+  "validation": {
+    "failed_job": 17419416,
+    "failed_log": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/normalizer_stage_diagnostic/run_17419416.out",
+    "failure": "Baseline v1 stage schema has no acceptance counters. Original script/manifest/log preserved.",
+    "completed_job": 17419480,
+    "elapsed_seconds": 10,
+    "input_runs_validated": 13,
+    "expected_input_runs": 13,
+    "checks": [
+      "All frozen protocol/result/progress/particle SHA256 values match.",
+      "Completed result links the frozen protocol and particles.",
+      "All 64 ordered beta stages agree with protocol and final normalizer.",
+      "Available per-stage acceptance sums match final aggregate counters.",
+      "Saved coordinate shapes match observation and population dimensions."
+    ],
+    "scope_change": "None: v6 V100 includes only run0, the one complete run at original manifest freeze.",
+    "dev_score": 1.0,
+    "dev_score_definition": "13/13 frozen input-run audits and analysis completion; implementation correctness only, not a scientific sampler acceptance score."
+  },
+  "artifacts": {
+    "manifest.json": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/normalizer_stage_diagnostic/manifest.json",
+      "sha256": "b44e492f0cb743ecd8cbd7274a50cda6a8161797fc03b8dd7bbe748693e4a989"
+    },
+    "manifest_v2.json": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/normalizer_stage_diagnostic/manifest_v2.json",
+      "sha256": "db379cd3b3635928d48f1a2b7bd544a779d01f22ddad2e1b4bbcacd37c678a5c"
+    },
+    "diagnose_particle_normalizer_stages_20261021.py": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/normalizer_stage_diagnostic/diagnose_particle_normalizer_stages_20261021.py",
+      "sha256": "8ea92fd243a584a9c3f293f7a9d6184b5f1857a96f8dca53c1d9db822a45f69e"
+    },
+    "diagnose_particle_normalizer_stages_20261021_v2.py": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/normalizer_stage_diagnostic/diagnose_particle_normalizer_stages_20261021_v2.py",
+      "sha256": "e6b98f71355aeea35565d21af8f15526d7122c2f1ec15abff7c86fb506f4aa2d"
+    },
+    "results_v2.json": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/normalizer_stage_diagnostic/results_v2.json",
+      "sha256": "77259e113bcc731e871d7b19d0aa420a8c9171c4d2f89dc7b6a23764c1d55feb"
+    },
+    "run_v2_17419480.out": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/normalizer_stage_diagnostic/run_v2_17419480.out",
+      "sha256": "9a94f91e54f38545ac78248a4cd1267f7d73d117f4ba64b5dfc23e4c78e7e914"
+    }
+  },
+  "window_definition": "cov(window_logZ_increment, final_logZ)/var(final_logZ); sums to1, may be negative, includes cross-window covariance; not causal variance contribution.",
+  "findings": [
+    "Bright v5 logZ scatter is small through beta=.25 (SD .03669), rises to .13844 at beta=.49438, and reaches 1.29227 at beta=1. The final window accounts for .95792 of Cov(window increment, final logZ)/Var(final logZ). Baseline v1 has the same late pattern (.91914), with only four replicas.",
+    "The hypothesis that large measured cumulative-normalizer scatter is already established by beta=.1 is contradicted in these runs (v5 SD .05022, normalizer run-weight ESS 7.983/8). This does not rule out initial mode-coverage errors whose importance appears only at colder targets.",
+    "For v5 bright beta>.49438, physical moves accept 56.01% and SED moves 40.43%, while only 5/77824 independence proposals accept (.006425%) and 28/77824 exchange proposals accept (.03598%). Physical acceptance at beta=1 is still 32.26%; high local acceptance alone does not establish substantial movement or mode exploration.",
+    "Genealogical ESS drops from mean15.11 at beta=.49438 to2.040 at beta=1, despite mean final pre-resampling weight ESS249.4/256. Accepted independence proposals can change coordinates while retaining genealogy labels, so these labels do not prove dependence on initial q0 draws.",
+    "Bright v5 final normalizer run-weight ESS is2.884/8 and one run contributes55.52% of estimated normalizer mass. Estimated relative MCSE of the mean normalizer is50.34%; eight runs do not establish a reliable reference normalizer.",
+    "One v5 run (seed2026102172, logZ1.1595) retains a broad physical/phase cloud: m_r SD.5442, radius mean4.382/SD1.946, phase resultant.8521. Other runs have m_r SD.04388\u2013.07239, radius means3.446\u20133.562, and phase resultants.9792\u2013.9998. This is a descriptive population discrepancy, not proof of the correct mode.",
+    "Redshift and SED run means are comparatively stable relative to within-run dispersion: v5 redshift between-mean SD / RMS within SD .1188; SED fractions .0702\u2013.1173. Sersic-logit mean has exploratory Pearson correlation-.7661 with logZ (leave-one-out range-.8611 to-.5449). All tested coordinate associations are retained; none identify a cause.",
+    "The single frozen higher-effort V100 run has bright logZ3.8680, final genealogical ESS4.663/1024, final physical acceptance29.46%, and zero final independence acceptance. One run cannot estimate between-run variation or verify convergence."
+  ],
+  "assessment": "The evidence localizes the visible failure to the late bridge and shows that accepted local moves coexist with population disagreement and effectively absent global refreshes. It weakens an explanation based solely on immediate q0 rejection/weight collapse. It cannot distinguish inherited missing modes from insufficient late invariant exploration, because intermediate coordinates and move distances were not saved and early selection can affect later increments.",
+  "controlled_next_test": {
+    "status": "Proposed only; no sampler changes or GPU jobs submitted.",
+    "hypothesis": "More invariant mutation at fixed late bridge temperatures reduces bright late-increment dispersion while leaving q0, target and geometry fixed.",
+    "design": "Keep the existing four-observation likelihood grouping, N256, T64, q0, model artifacts, and frozen gradient geometry. For four fresh independent prefixes, checkpoint after stage45 at beta=.494384765625. Fork each checkpoint into two independent continuation seeds per arm: baseline M32 versus M128 for stages46\u201364. In the M128 arm also apply96 extra invariant moves at the checkpoint before the first new reweighting. All schedules and moves are fixed before running. This is16 short tails from4 independent prefixes, not16 independent complete populations.",
+    "measurements": [
+      "Preserve logZ at the fork and each late logZ increment.",
+      "Compare within-prefix continuation variance and across-prefix arm means of late logZ increments; treat prefixes as the independent units.",
+      "Compare final physical/phase and score summaries with normalizer weighting; retain all normalizer estimates, including extinct populations.",
+      "Save checkpoints and accepted squared jump distances by block; acceptance fraction alone is inadequate.",
+      "Report actual likelihood-call cost and wall time; no efficiency claim from variance alone."
+    ],
+    "falsification": "A consistent reduction in late dispersion with unchanged prefix supports inadequate late mutation effort. Persistent prefix-dependent outcomes despite added moves leaves inherited mode loss or an ineffective local move family plausible. Four prefixes give a small mechanism test, not a convergence or efficiency acceptance result."
+  },
+  "groups": [
+    {
+      "name": "v1",
+      "partial_reference": false,
+      "completed_replicas": 4,
+      "seeds": [
+        2026102130,
+        2026102131,
+        2026102132,
+        2026102133
+      ],
+      "particles": 256,
+      "stages": 64,
+      "moves": 32,
+      "sampling_seconds": {
+        "count": 4,
+        "mean": 80.919972558273,
+        "sd": 3.2030681905223304,
+        "minimum": 78.1803449060535,
+        "median": 80.0304575645132,
+        "maximum": 85.4386301980121
+      },
+      "observation_normalizers": [
+        {
+          "observation": 58165,
+          "final_log_normalizer_by_run": [
+            3.9717555833071527,
+            3.6094340298911787,
+            2.631845547966863,
+            3.9318277621916007
+          ],
+          "final_log_normalizer_sd": 0.6243530490097163,
+          "final_normalizer": {
+            "extinct": 0,
+            "run_weight_ess": 3.440309005859205,
+            "max_run_weight": 0.3426081318930132,
+            "run_weights": [
+              0.3426081318930132,
+              0.2384753064368134,
+              0.08971852649022413,
+              0.32919803517994917
+            ],
+            "relative_mcse": 0.23287067707569234,
+            "log_mean_normalizer": 3.656629179737914
+          },
+          "initial_valid": [
+            248,
+            242,
+            245,
+            249
+          ],
+          "initial_valid_vs_final_logZ": {
+            "paired_runs": 4,
+            "pearson": 0.45067580654041567,
+            "spearman": 0.6000000000000001,
+            "leave_one_run_out_pearson_range": [
+              0.261378026422005,
+              0.9729516687350096
+            ]
+          }
+        },
+        {
+          "observation": 0,
+          "final_log_normalizer_by_run": [
+            16.390804496669986,
+            16.582083551738265,
+            16.595237563160495,
+            16.867269819033382
+          ],
+          "final_log_normalizer_sd": 0.19598161952567789,
+          "final_normalizer": {
+            "extinct": 0,
+            "run_weight_ess": 3.8818690362597303,
+            "max_run_weight": 0.3190119978314051,
+            "run_weights": [
+              0.19809830363069356,
+              0.23985688801313892,
+              0.2430328105247624,
+              0.3190119978314051
+            ],
+            "relative_mcse": 0.10071654204188048,
+            "log_mean_normalizer": 16.623502024061295
+          },
+          "initial_valid": [
+            213,
+            214,
+            208,
+            214
+          ],
+          "initial_valid_vs_final_logZ": {
+            "paired_runs": 4,
+            "pearson": 0.17747645524518357,
+            "spearman": 0.21081851067789195,
+            "leave_one_run_out_pearson_range": [
+              -0.4122607843812798,
+              0.8039419048930039
+            ]
+          }
+        },
+        {
+          "observation": 1,
+          "final_log_normalizer_by_run": [
+            18.942792755911313,
+            19.18712987896778,
+            19.309660510883713,
+            19.389340308724044
+          ],
+          "final_log_normalizer_sd": 0.19492498131949085,
+          "final_normalizer": {
+            "extinct": 0,
+            "run_weight_ess": 3.9002469816792193,
+            "max_run_weight": 0.2958432558634399,
+            "run_weights": [
+              0.18929037661837542,
+              0.24168116157273214,
+              0.2731852059454525,
+              0.2958432558634399
+            ],
+            "relative_mcse": 0.09233287119122527,
+            "log_mean_normalizer": 19.220971453520477
+          },
+          "initial_valid": [
+            151,
+            165,
+            162,
+            172
+          ],
+          "initial_valid_vs_final_logZ": {
+            "paired_runs": 4,
+            "pearson": 0.9139760256173163,
+            "spearman": 0.7999999999999999,
+            "leave_one_run_out_pearson_range": [
+              0.5881887722043088,
+              0.9908051269163549
+            ]
+          }
+        },
+        {
+          "observation": 8,
+          "final_log_normalizer_by_run": [
+            22.74546875179847,
+            22.676860451453685,
+            22.473561503335393,
+            22.771755704652573
+          ],
+          "final_log_normalizer_sd": 0.134965121302441,
+          "final_normalizer": {
+            "extinct": 0,
+            "run_weight_ess": 3.951515707391057,
+            "max_run_weight": 0.27581025980048024,
+            "run_weights": [
+              0.2686545119569145,
+              0.2508406586917443,
+              0.20469456955086088,
+              0.27581025980048024
+            ],
+            "relative_mcse": 0.06395257683144848,
+            "log_mean_normalizer": 22.673503457700754
+          },
+          "initial_valid": [
+            133,
+            124,
+            126,
+            143
+          ],
+          "initial_valid_vs_final_logZ": {
+            "paired_runs": 4,
+            "pearson": 0.6653890453360978,
+            "spearman": 0.7999999999999999,
+            "leave_one_run_out_pearson_range": [
+              0.5273039005225579,
+              0.9603922789122662
+            ]
+          }
+        }
+      ],
+      "bright": {
+        "variance_windows": [
+          {
+            "stage_start_exclusive": 0,
+            "stage_end_inclusive": 6,
+            "beta_start": 0.0,
+            "beta_end": 0.0087890625,
+            "logZ_increment_by_run": [
+              -1.4400148640621335,
+              -1.5454636217784534,
+              -1.5099385656476771,
+              -1.614202742748807
+            ],
+            "increment_vs_final": {
+              "paired_runs": 4,
+              "pearson": -0.09853368010448159,
+              "spearman": 0.19999999999999998,
+              "leave_one_run_out_pearson_range": [
+                -0.8937977661298556,
+                0.4355124681957354
+              ]
+            },
+            "covariance_share_of_final_logZ_variance": -0.011453834060185034,
+            "mutation_acceptance": null,
+            "acceptance_available_by_run": [
+              false,
+              false,
+              false,
+              false
+            ]
+          },
+          {
+            "stage_start_exclusive": 6,
+            "stage_end_inclusive": 20,
+            "beta_start": 0.0087890625,
+            "beta_end": 0.09765625,
+            "logZ_increment_by_run": [
+              -2.8197106036946,
+              -2.83201443622921,
+              -2.852998319351613,
+              -2.7822546221223456
+            ],
+            "increment_vs_final": {
+              "paired_runs": 4,
+              "pearson": 0.7913915658543726,
+              "spearman": 0.7999999999999999,
+              "leave_one_run_out_pearson_range": [
+                0.615160534124058,
+                0.9939865287724206
+              ]
+            },
+            "covariance_share_of_final_logZ_variance": 0.03764297886337623,
+            "mutation_acceptance": null,
+            "acceptance_available_by_run": [
+              false,
+              false,
+              false,
+              false
+            ]
+          },
+          {
+            "stage_start_exclusive": 20,
+            "stage_end_inclusive": 45,
+            "beta_start": 0.09765625,
+            "beta_end": 0.494384765625,
+            "logZ_increment_by_run": [
+              -1.240166818086224,
+              -1.2839817978855637,
+              -1.274107232245104,
+              -1.1480453728850106
+            ],
+            "increment_vs_final": {
+              "paired_runs": 4,
+              "pearson": 0.5511242817627442,
+              "spearman": 0.6000000000000001,
+              "leave_one_run_out_pearson_range": [
+                0.540922962687431,
+                0.6893520951969433
+              ]
+            },
+            "covariance_share_of_final_logZ_variance": 0.05466756336533527,
+            "mutation_acceptance": null,
+            "acceptance_available_by_run": [
+              false,
+              false,
+              false,
+              false
+            ]
+          },
+          {
+            "stage_start_exclusive": 45,
+            "stage_end_inclusive": 64,
+            "beta_start": 0.494384765625,
+            "beta_end": 1.0,
+            "logZ_increment_by_run": [
+              9.471647869150111,
+              9.270893885784407,
+              8.268889665211258,
+              9.476330499947764
+            ],
+            "increment_vs_final": {
+              "paired_runs": 4,
+              "pearson": 0.9950818118691205,
+              "spearman": 0.7999999999999999,
+              "leave_one_run_out_pearson_range": [
+                0.9927336848605052,
+                0.9995632531528684
+              ]
+            },
+            "covariance_share_of_final_logZ_variance": 0.9191432918314729,
+            "mutation_acceptance": null,
+            "acceptance_available_by_run": [
+              false,
+              false,
+              false,
+              false
+            ]
+          }
+        ],
+        "all_stage_aggregate_acceptance": {
+          "environment": 0.9816970825195312,
+          "exchange": 0.00012969970703125,
+          "independence": 0.08547210693359375,
+          "nuisance": 0.5807304382324219,
+          "physical": 0.40503692626953125,
+          "positions": 0.9866790771484375,
+          "sed": 0.18975830078125
+        },
+        "coordinate_dispersion_and_logZ_associations": {
+          "log_z": {
+            "mean_by_run": [
+              -2.888808722258003,
+              -2.8836749982546253,
+              -2.8462165261627224,
+              -2.6372569812742865
+            ],
+            "within_run_sd_by_run": [
+              0.47259513073594167,
+              0.4934075854073365,
+              0.5513766795052238,
+              0.6813058166665432
+            ],
+            "between_run_mean_sd": 0.11934117629240719,
+            "rms_within_run_sd": 0.5556507584487516,
+            "between_mean_sd_over_within_sd": 0.21477731196764702,
+            "relation_to_final_logZ": {
+              "paired_runs": 4,
+              "pearson": 0.27456189077073984,
+              "spearman": -0.39999999999999997,
+              "leave_one_run_out_pearson_range": [
+                -0.9881922395801664,
+                0.5830745606238128
+              ]
+            }
+          },
+          "m_r": {
+            "mean_by_run": [
+              17.07677751350826,
+              17.114072573863083,
+              17.072920582423393,
+              17.028574157054692
+            ],
+            "within_run_sd_by_run": [
+              0.08681057793617819,
+              0.0744138175272367,
+              0.16824502484035914,
+              0.05262334646591101
+            ],
+            "between_run_mean_sd": 0.034999323965886286,
+            "rms_within_run_sd": 0.10505843333282974,
+            "between_mean_sd_over_within_sd": 0.33314149902661205,
+            "relation_to_final_logZ": {
+              "paired_runs": 4,
+              "pearson": -0.19603227553403266,
+              "spearman": 0.0,
+              "leave_one_run_out_pearson_range": [
+                -0.7662660627043093,
+                0.33735175031884995
+              ]
+            }
+          },
+          "sed_alr0": {
+            "mean_by_run": [
+              -1.2177767920481637,
+              -1.0988105562671615,
+              -0.9468030500122575,
+              -0.2821879934120267
+            ],
+            "within_run_sd_by_run": [
+              1.2912624992929975,
+              1.309734939421704,
+              1.4381212641527261,
+              1.5706623439189784
+            ],
+            "between_run_mean_sd": 0.41779161470800885,
+            "rms_within_run_sd": 1.4069414897780634,
+            "between_mean_sd_over_within_sd": 0.29695024117450186,
+            "relation_to_final_logZ": {
+              "paired_runs": 4,
+              "pearson": 0.1709544316899722,
+              "spearman": -0.39999999999999997,
+              "leave_one_run_out_pearson_range": [
+                -0.9822178152202334,
+                0.5547990653959995
+              ]
+            }
+          },
+          "sed_alr1": {
+            "mean_by_run": [
+              -1.896481529217325,
+              -1.8908471400315408,
+              -2.0268583650007717,
+              -2.5178782215596263
+            ],
+            "within_run_sd_by_run": [
+              1.233907988068247,
+              1.326416020164709,
+              1.4317288702000703,
+              1.491661540775446
+            ],
+            "between_run_mean_sd": 0.29663828211017973,
+            "rms_within_run_sd": 1.374482638264409,
+            "between_mean_sd_over_within_sd": 0.21581813684074738,
+            "relation_to_final_logZ": {
+              "paired_runs": 4,
+              "pearson": -0.22949192629901513,
+              "spearman": 0.0,
+              "leave_one_run_out_pearson_range": [
+                -0.5281019518900054,
+                0.9550203541206171
+              ]
+            }
+          },
+          "sed_alr2": {
+            "mean_by_run": [
+              -1.1503773999579354,
+              -1.2430320890985471,
+              -1.0244016408116905,
+              -0.6323632030098785
+            ],
+            "within_run_sd_by_run": [
+              1.0583462711282057,
+              1.1812232681582793,
+              1.1862344153585844,
+              1.1950324796439953
+            ],
+            "between_run_mean_sd": 0.26882512742501846,
+            "rms_within_run_sd": 1.1565725176609876,
+            "between_mean_sd_over_within_sd": 0.23243257411016574,
+            "relation_to_final_logZ": {
+              "paired_runs": 4,
+              "pearson": 0.16726051097263914,
+              "spearman": 0.0,
+              "leave_one_run_out_pearson_range": [
+                -0.7646608059029124,
+                0.5347213977599468
+              ]
+            }
+          },
+          "sed_alr3": {
+            "mean_by_run": [
+              -0.15019123848942442,
+              -0.14005187427889432,
+              0.09523709916427274,
+              0.8243656779965207
+            ],
+            "within_run_sd_by_run": [
+              1.1208973028457416,
+              1.2324471203575034,
+              1.370230163177679,
+              1.521525687515913
+            ],
+            "between_run_mean_sd": 0.45891081738280226,
+            "rms_within_run_sd": 1.3198397427204052,
+            "between_mean_sd_over_within_sd": 0.3477019235963543,
+            "relation_to_final_logZ": {
+              "paired_runs": 4,
+              "pearson": 0.19117850950491097,
+              "spearman": -0.39999999999999997,
+              "leave_one_run_out_pearson_range": [
+                -0.97413551277277,
+                0.50370481683384
+              ]
+            }
+          },
+          "log_circularized_radius": {
+            "mean_by_run": [
+              1.2291772504685847,
+              1.232501180182917,
+              1.2528143643732537,
+              1.3069686335294293
+            ],
+            "within_run_sd_by_run": [
+              0.10424213734556302,
+              0.07073647334171179,
+              0.14375057152940812,
+              0.08109368227851514
+            ],
+            "between_run_mean_sd": 0.03595364245422173,
+            "rms_within_run_sd": 0.10381532158081745,
+            "between_mean_sd_over_within_sd": 0.34632308513568283,
+            "relation_to_final_logZ": {
+              "paired_runs": 4,
+              "pearson": 0.14317502545635116,
+              "spearman": -0.39999999999999997,
+              "leave_one_run_out_pearson_range": [
+                -0.9910090272145532,
+                0.4768084819704253
+              ]
+            }
+          },
+          "sersic_logit": {
+            "mean_by_run": [
+              -1.7040459826371261,
+              -1.826169130882387,
+              -1.738324543844967,
+              -1.0983753038145392
+            ],
+            "within_run_sd_by_run": [
+              0.4830964366105266,
+              0.5336421790817991,
+              0.84205292729115,
+              0.5832468389701656
+            ],
+            "between_run_mean_sd": 0.3328990850951917,
+            "rms_within_run_sd": 0.6259764671873146,
+            "between_mean_sd_over_within_sd": 0.5318076677722398,
+            "relation_to_final_logZ": {
+              "paired_runs": 4,
+              "pearson": 0.4196516708920542,
+              "spearman": 0.6000000000000001,
+              "leave_one_run_out_pearson_range": [
+                0.016423923821580675,
+                0.607765386274637
+              ]
+            }
+          },
+          "distortion_logit": {
+            "mean_by_run": [
+              0.8347212266085386,
+              0.8779245109172604,
+              0.8168148685581731,
+              0.8779843347377615
+            ],
+            "within_run_sd_by_run": [
+              0.18531532112576105,
+              0.2051816798337454,
+              0.39615219535991975,
+              0.1780189826505156
+            ],
+            "between_run_mean_sd": 0.031003969530166396,
+            "rms_within_run_sd": 0.2574240713568518,
+            "between_mean_sd_over_within_sd": 0.1204392789172673,
+            "relation_to_final_logZ": {
+              "paired_runs": 4,
+              "pearson": 0.6280562855037801,
+              "spearman": 0.39999999999999997,
+              "leave_one_run_out_pearson_range": [
+                -0.5835230534994083,
+                0.9714366505661438
+              ]
+            }
+          },
+          "redshift": {
+            "mean_by_run": [
+              0.06277211494632769,
+              0.06400372704798599,
+              0.06797653424970013,
+              0.08969206297548683
+            ],
+            "within_run_sd_by_run": [
+              0.03452710834803543,
+              0.03799222319113225,
+              0.04190080714853166,
+              0.05994269766379364
+            ],
+            "between_run_mean_sd": 0.012584793860626291,
+            "rms_within_run_sd": 0.044677552744060406,
+            "between_mean_sd_over_within_sd": 0.2816804656405304,
+            "relation_to_final_logZ": {
+              "paired_runs": 4,
+              "pearson": 0.2559517240690257,
+              "spearman": -0.39999999999999997,
+              "leave_one_run_out_pearson_range": [
+                -0.9993499518467172,
+                0.5809361997426256
+              ]
+            }
+          },
+          "circularized_radius": {
+            "mean_by_run": [
+              3.439528316045874,
+              3.439345415677831,
+              3.542369637842883,
+              3.7075219422869217
+            ],
+            "within_run_sd_by_run": [
+              0.44366049394627055,
+              0.2914074132372382,
+              0.6589337629752168,
+              0.3183655466882712
+            ],
+            "between_run_mean_sd": 0.1265585760518733,
+            "rms_within_run_sd": 0.45202412537525816,
+            "between_mean_sd_over_within_sd": 0.2799819057153372,
+            "relation_to_final_logZ": {
+              "paired_runs": 4,
+              "pearson": 0.05484662752580505,
+              "spearman": 0.0,
+              "leave_one_run_out_pearson_range": [
+                -0.9648331541149849,
+                0.41098097437069336
+              ]
+            }
+          },
+          "phase_sine": {
+            "mean_by_run": [
+              0.8423268310720218,
+              0.8409996556723189,
+              0.83390695093656,
+              0.8442651412957156
+            ],
+            "within_run_sd_by_run": [
+              0.06843663091594741,
+              0.10035021591241454,
+              0.13361631231482418,
+              0.05804306641205016
+            ],
+            "between_run_mean_sd": 0.004515480658266713,
+            "rms_within_run_sd": 0.09483677393279483,
+            "between_mean_sd_over_within_sd": 0.04761318285105908,
+            "relation_to_final_logZ": {
+              "paired_runs": 4,
+              "pearson": 0.9794947545850506,
+              "spearman": 0.7999999999999999,
+              "leave_one_run_out_pearson_range": [
+                0.7439114017980464,
+                0.9973371476824724
+              ]
+            }
+          },
+          "phase_cosine": {
+            "mean_by_run": [
+              0.5251469603651902,
+              0.5302011206863302,
+              0.5275339949586706,
+              0.5303050413753554
+            ],
+            "within_run_sd_by_run": [
+              0.10040059022279628,
+              0.03977059277202638,
+              0.0925036618242515,
+              0.05145326451617973
+            ],
+            "between_run_mean_sd": 0.002460544110047253,
+            "rms_within_run_sd": 0.07560810876948262,
+            "between_mean_sd_over_within_sd": 0.03254338919584762,
+            "relation_to_final_logZ": {
+              "paired_runs": 4,
+              "pearson": 0.05465545074713351,
+              "spearman": -0.19999999999999998,
+              "leave_one_run_out_pearson_range": [
+                -0.5701059937334015,
+                0.9785808484779657
+              ]
+            }
+          },
+          "sed_fraction0": {
+            "mean_by_run": [
+              0.12127237279845753,
+              0.1291553166453841,
+              0.12816755344679548,
+              0.1541381504092484
+            ],
+            "within_run_sd_by_run": [
+              0.08381265842043882,
+              0.07917179307261746,
+              0.07406726219522075,
+              0.07643916905056919
+            ],
+            "between_run_mean_sd": 0.014403220772407428,
+            "rms_within_run_sd": 0.07845642170031651,
+            "between_mean_sd_over_within_sd": 0.1835824329004457,
+            "relation_to_final_logZ": {
+              "paired_runs": 4,
+              "pearson": 0.2722015724278137,
+              "spearman": -0.19999999999999998,
+              "leave_one_run_out_pearson_range": [
+                -0.6231719516203473,
+                0.7156783933109285
+              ]
+            }
+          },
+          "sed_fraction1": {
+            "mean_by_run": [
+              0.08733377508809564,
+              0.09161841316454926,
+              0.08660870757896362,
+              0.056932706643878395
+            ],
+            "within_run_sd_by_run": [
+              0.07714653524728866,
+              0.0804712660616058,
+              0.08219091222029827,
+              0.0757906018479542
+            ],
+            "between_run_mean_sd": 0.01594775121890365,
+            "rms_within_run_sd": 0.07894107603506997,
+            "between_mean_sd_over_within_sd": 0.20202095056088137,
+            "relation_to_final_logZ": {
+              "paired_runs": 4,
+              "pearson": -0.37017692749105613,
+              "spearman": 0.0,
+              "leave_one_run_out_pearson_range": [
+                -0.5891621319497959,
+                0.3833826111189361
+              ]
+            }
+          },
+          "sed_fraction2": {
+            "mean_by_run": [
+              0.12228866476303321,
+              0.11230507741482586,
+              0.11724753393775024,
+              0.10302231492800304
+            ],
+            "within_run_sd_by_run": [
+              0.07899313173268281,
+              0.07652533861605816,
+              0.08127240230554356,
+              0.06010785576600804
+            ],
+            "between_run_mean_sd": 0.00821194081833332,
+            "rms_within_run_sd": 0.07468969141143356,
+            "between_mean_sd_over_within_sd": 0.1099474460685244,
+            "relation_to_final_logZ": {
+              "paired_runs": 4,
+              "pearson": -0.2466563594096208,
+              "spearman": 0.19999999999999998,
+              "leave_one_run_out_pearson_range": [
+                -0.8971439901209083,
+                0.2668816385401718
+              ]
+            }
+          },
+          "sed_fraction3": {
+            "mean_by_run": [
+              0.3048845295845699,
+              0.3058981015357413,
+              0.3364989930807627,
+              0.43704898282640614
+            ],
+            "within_run_sd_by_run": [
+              0.16205795033288778,
+              0.17459713058274504,
+              0.19025071326264426,
+              0.20949534573822715
+            ],
+            "between_run_mean_sd": 0.06239338439522457,
+            "rms_within_run_sd": 0.18495308260255428,
+            "between_mean_sd_over_within_sd": 0.3373470910420116,
+            "relation_to_final_logZ": {
+              "paired_runs": 4,
+              "pearson": 0.20338490355590647,
+              "spearman": -0.39999999999999997,
+              "leave_one_run_out_pearson_range": [
+                -0.9722249553287166,
+                0.5134040500104793
+              ]
+            }
+          },
+          "sed_fraction4": {
+            "mean_by_run": [
+              0.3642206577658437,
+              0.3610230912394994,
+              0.33147721195572794,
+              0.24885784519246404
+            ],
+            "within_run_sd_by_run": [
+              0.16494444529720712,
+              0.16796582275690441,
+              0.17890530082311185,
+              0.19118221032144517
+            ],
+            "between_run_mean_sd": 0.05375166460046997,
+            "rms_within_run_sd": 0.17605179057226927,
+            "between_mean_sd_over_within_sd": 0.3053173411400488,
+            "relation_to_final_logZ": {
+              "paired_runs": 4,
+              "pearson": -0.1615100648883872,
+              "spearman": 0.39999999999999997,
+              "leave_one_run_out_pearson_range": [
+                -0.4856538767844627,
+                0.9845922692692157
+              ]
+            }
+          }
+        },
+        "selected_stage_trace": [
+          {
+            "stage": 1,
+            "beta": 0.000244140625,
+            "cumulative_logZ_sd": 0.04623346634971891,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 4,
+              "pearson": -0.2242174201131911,
+              "spearman": -0.19999999999999998,
+              "leave_one_run_out_pearson_range": [
+                -0.9107051914323826,
+                0.999573282123709
+              ]
+            },
+            "normalizer_run_weight_ess": 3.993868824431251,
+            "pre_resampling_ess_mean": 201.20459416501308,
+            "initial_ancestor_ess_mean": 164.07264622150387,
+            "distinct_initial_ancestors_mean": 185.5,
+            "acceptance_fraction": null
+          },
+          {
+            "stage": 6,
+            "beta": 0.0087890625,
+            "cumulative_logZ_sd": 0.07257656682207538,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 4,
+              "pearson": -0.09853368010448159,
+              "spearman": 0.19999999999999998,
+              "leave_one_run_out_pearson_range": [
+                -0.8937977661298556,
+                0.4355124681957354
+              ]
+            },
+            "normalizer_run_weight_ess": 3.9842580250413215,
+            "pre_resampling_ess_mean": 247.5242616526344,
+            "initial_ancestor_ess_mean": 91.1295122833394,
+            "distinct_initial_ancestors_mean": 111.75,
+            "acceptance_fraction": null
+          },
+          {
+            "stage": 20,
+            "beta": 0.09765625,
+            "cumulative_logZ_sd": 0.06117540574776671,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 4,
+              "pearson": 0.2672850667512948,
+              "spearman": 0.19999999999999998,
+              "leave_one_run_out_pearson_range": [
+                -0.9360868970342738,
+                0.6245502905271676
+              ]
+            },
+            "normalizer_run_weight_ess": 3.9882235207934404,
+            "pre_resampling_ess_mean": 252.38087351207488,
+            "initial_ancestor_ess_mean": 53.67503995657564,
+            "distinct_initial_ancestors_mean": 70.25,
+            "acceptance_fraction": null
+          },
+          {
+            "stage": 32,
+            "beta": 0.25,
+            "cumulative_logZ_sd": 0.06752572027716551,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 4,
+              "pearson": 0.7697114055501166,
+              "spearman": 0.7999999999999999,
+              "leave_one_run_out_pearson_range": [
+                0.5560587460934354,
+                0.9547643930112051
+              ]
+            },
+            "normalizer_run_weight_ess": 3.985925800053908,
+            "pre_resampling_ess_mean": 252.11939036887748,
+            "initial_ancestor_ess_mean": 36.96593786879936,
+            "distinct_initial_ancestors_mean": 53.25,
+            "acceptance_fraction": null
+          },
+          {
+            "stage": 45,
+            "beta": 0.494384765625,
+            "cumulative_logZ_sd": 0.07623636471685581,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 4,
+              "pearson": 0.662192281405393,
+              "spearman": 0.7999999999999999,
+              "leave_one_run_out_pearson_range": [
+                0.5352871074409786,
+                0.9855928182761019
+              ]
+            },
+            "normalizer_run_weight_ess": 3.982546431950694,
+            "pre_resampling_ess_mean": 251.45782722296678,
+            "initial_ancestor_ess_mean": 22.261567864621096,
+            "distinct_initial_ancestors_mean": 38.5,
+            "acceptance_fraction": null
+          },
+          {
+            "stage": 50,
+            "beta": 0.6103515625,
+            "cumulative_logZ_sd": 0.13343582338690316,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 4,
+              "pearson": 0.8154542051659895,
+              "spearman": 1.0,
+              "leave_one_run_out_pearson_range": [
+                0.7962570131481318,
+                0.9540438999879188
+              ]
+            },
+            "normalizer_run_weight_ess": 3.9463468470669394,
+            "pre_resampling_ess_mean": 248.33411351463764,
+            "initial_ancestor_ess_mean": 15.456491516857568,
+            "distinct_initial_ancestors_mean": 35.25,
+            "acceptance_fraction": null
+          },
+          {
+            "stage": 55,
+            "beta": 0.738525390625,
+            "cumulative_logZ_sd": 0.2627442811157783,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 4,
+              "pearson": 0.9815128038135122,
+              "spearman": 1.0,
+              "leave_one_run_out_pearson_range": [
+                0.9781146634043614,
+                0.9957084033719077
+              ]
+            },
+            "normalizer_run_weight_ess": 3.8298531496693813,
+            "pre_resampling_ess_mean": 247.46208867004174,
+            "initial_ancestor_ess_mean": 7.836404687865011,
+            "distinct_initial_ancestors_mean": 27.75,
+            "acceptance_fraction": null
+          },
+          {
+            "stage": 60,
+            "beta": 0.87890625,
+            "cumulative_logZ_sd": 0.4677770072662419,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 4,
+              "pearson": 0.9972427918195791,
+              "spearman": 1.0,
+              "leave_one_run_out_pearson_range": [
+                0.965349203197404,
+                0.9995203635898903
+              ]
+            },
+            "normalizer_run_weight_ess": 3.6069952998393298,
+            "pre_resampling_ess_mean": 250.25556344276302,
+            "initial_ancestor_ess_mean": 4.928468233373265,
+            "distinct_initial_ancestors_mean": 20.25,
+            "acceptance_fraction": null
+          },
+          {
+            "stage": 64,
+            "beta": 1.0,
+            "cumulative_logZ_sd": 0.6243530490097163,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 4,
+              "pearson": 1.0,
+              "spearman": 1.0,
+              "leave_one_run_out_pearson_range": [
+                0.9999999999999999,
+                1.0
+              ]
+            },
+            "normalizer_run_weight_ess": 3.440309005859205,
+            "pre_resampling_ess_mean": 251.31508960388294,
+            "initial_ancestor_ess_mean": 3.888591923690884,
+            "distinct_initial_ancestors_mean": 15.0,
+            "acceptance_fraction": null
+          }
+        ],
+        "phase_by_run": [
+          {
+            "run": "dev_v1_0",
+            "seed": 2026102130,
+            "log_normalizer": 3.9717555833071527,
+            "phase": {
+              "circular_mean": 1.0133138501752195,
+              "resultant": 0.9926196755679553,
+              "circular_variance": 0.007380324432044727
+            }
+          },
+          {
+            "run": "dev_v1_1",
+            "seed": 2026102131,
+            "log_normalizer": 3.6094340298911787,
+            "phase": {
+              "circular_mean": 1.0082935579846957,
+              "resultant": 0.9941798877557317,
+              "circular_variance": 0.005820112244268261
+            }
+          },
+          {
+            "run": "dev_v1_2",
+            "seed": 2026102132,
+            "log_normalizer": 2.631845547966863,
+            "phase": {
+              "circular_mean": 1.0067466829321177,
+              "resultant": 0.9867587945680367,
+              "circular_variance": 0.013241205431963277
+            }
+          },
+          {
+            "run": "dev_v1_3",
+            "seed": 2026102133,
+            "log_normalizer": 3.9318277621916007,
+            "phase": {
+              "circular_mean": 1.0099521270172305,
+              "resultant": 0.9969990299469664,
+              "circular_variance": 0.0030009700530335692
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "v5",
+      "partial_reference": false,
+      "completed_replicas": 8,
+      "seeds": [
+        2026102170,
+        2026102171,
+        2026102172,
+        2026102173,
+        2026102174,
+        2026102175,
+        2026102176,
+        2026102177
+      ],
+      "particles": 256,
+      "stages": 64,
+      "moves": 32,
+      "sampling_seconds": {
+        "count": 8,
+        "mean": 80.7799262930057,
+        "sd": 2.5952293289971986,
+        "minimum": 78.3733125369763,
+        "median": 79.64044186891988,
+        "maximum": 85.81800619408023
+      },
+      "observation_normalizers": [
+        {
+          "observation": 58165,
+          "final_log_normalizer_by_run": [
+            3.608121842162279,
+            4.455035468380843,
+            1.159516293822156,
+            3.851058205525182,
+            3.42216070646917,
+            5.814223243147522,
+            3.4586584927676167,
+            3.4918260963300796
+          ],
+          "final_log_normalizer_sd": 1.292268983165919,
+          "final_normalizer": {
+            "extinct": 0,
+            "run_weight_ess": 2.8842903505812214,
+            "max_run_weight": 0.5551707585545239,
+            "run_weights": [
+              0.061140490469985945,
+              0.1426063396733443,
+              0.005283394506844109,
+              0.07795336021395416,
+              0.050765307741634985,
+              0.5551707585545239,
+              0.05265235616844549,
+              0.054427992671267106
+            ],
+            "relative_mcse": 0.503366646192298,
+            "log_mean_normalizer": 4.323261240953827
+          },
+          "initial_valid": [
+            245,
+            249,
+            246,
+            244,
+            249,
+            250,
+            247,
+            241
+          ],
+          "initial_valid_vs_final_logZ": {
+            "paired_runs": 8,
+            "pearson": 0.3881013599542895,
+            "spearman": 0.2515015150017844,
+            "leave_one_run_out_pearson_range": [
+              0.09465326653121676,
+              0.5594904277235948
+            ]
+          }
+        },
+        {
+          "observation": 0,
+          "final_log_normalizer_by_run": [
+            16.790113005105713,
+            16.677144386627596,
+            16.67452624943206,
+            16.625237835007553,
+            16.69153096078096,
+            16.786689871290324,
+            16.287263788613465,
+            17.184474279626613
+          ],
+          "final_log_normalizer_sd": 0.24664139416017644,
+          "final_normalizer": {
+            "extinct": 0,
+            "run_weight_ess": 7.555458362671123,
+            "max_run_weight": 0.1946009196670513,
+            "run_weights": [
+              0.13118251806227854,
+              0.11716942950032744,
+              0.11686306508580886,
+              0.11124271670212763,
+              0.11886728002853039,
+              0.1307342304606827,
+              0.07933984049319324,
+              0.1946009196670513
+            ],
+            "relative_mcse": 0.09168046219895638,
+            "log_mean_normalizer": 16.74183712125266
+          },
+          "initial_valid": [
+            206,
+            217,
+            210,
+            210,
+            215,
+            216,
+            218,
+            206
+          ],
+          "initial_valid_vs_final_logZ": {
+            "paired_runs": 8,
+            "pearson": -0.6605986519476996,
+            "spearman": -0.6024533658898499,
+            "leave_one_run_out_pearson_range": [
+              -0.739105022485087,
+              -0.47812086999566605
+            ]
+          }
+        },
+        {
+          "observation": 1,
+          "final_log_normalizer_by_run": [
+            19.03851331304948,
+            19.035953372600375,
+            19.314657454445914,
+            18.991091569898707,
+            19.012746407594495,
+            19.06081391016588,
+            19.13522287104881,
+            19.22667900098886
+          ],
+          "final_log_normalizer_sd": 0.11478407458143672,
+          "final_normalizer": {
+            "extinct": 0,
+            "run_weight_ess": 7.900017313051959,
+            "max_run_weight": 0.15370966218678153,
+            "run_weights": [
+              0.11662006825923035,
+              0.11632190962631504,
+              0.15370966218678153,
+              0.11121882176345896,
+              0.11365351358424167,
+              0.11924998073576377,
+              0.12846171588723285,
+              0.14076432795697583
+            ],
+            "relative_mcse": 0.042520597675161274,
+            "log_mean_normalizer": 19.107905679244702
+          },
+          "initial_valid": [
+            153,
+            163,
+            171,
+            173,
+            185,
+            176,
+            163,
+            155
+          ],
+          "initial_valid_vs_final_logZ": {
+            "paired_runs": 8,
+            "pearson": -0.25955293998679363,
+            "spearman": -0.37126414119311024,
+            "leave_one_run_out_pearson_range": [
+              -0.5486915714266215,
+              -0.0723046976839266
+            ]
+          }
+        },
+        {
+          "observation": 8,
+          "final_log_normalizer_by_run": [
+            22.576766901338196,
+            22.5289775383373,
+            22.462844164466773,
+            22.597161145788323,
+            22.38912094721796,
+            22.37526529503401,
+            22.60865516086697,
+            22.52040092375218
+          ],
+          "final_log_normalizer_sd": 0.090388675911692,
+          "final_normalizer": {
+            "extinct": 0,
+            "run_weight_ess": 7.945223961973124,
+            "max_run_weight": 0.13783241861107973,
+            "run_weights": [
+              0.13350652189694884,
+              0.12727638310728173,
+              0.11913146043851307,
+              0.1362572406147301,
+              0.11066464098046443,
+              0.10914188396315525,
+              0.13783241861107973,
+              0.12618945038782683
+            ],
+            "relative_mcse": 0.03138291035887713,
+            "log_mean_normalizer": 22.510930308832805
+          },
+          "initial_valid": [
+            126,
+            129,
+            124,
+            125,
+            118,
+            119,
+            140,
+            122
+          ],
+          "initial_valid_vs_final_logZ": {
+            "paired_runs": 8,
+            "pearson": 0.7531304975308708,
+            "spearman": 0.8571428571428572,
+            "leave_one_run_out_pearson_range": [
+              0.6860473797503758,
+              0.8320088291329142
+            ]
+          }
+        }
+      ],
+      "bright": {
+        "variance_windows": [
+          {
+            "stage_start_exclusive": 0,
+            "stage_end_inclusive": 6,
+            "beta_start": 0.0,
+            "beta_end": 0.0087890625,
+            "logZ_increment_by_run": [
+              -1.5328710690475154,
+              -1.502861063226046,
+              -1.649428471592615,
+              -1.5369997766033192,
+              -1.4559880006398647,
+              -1.553360805398884,
+              -1.557329236753441,
+              -1.5105071002209751
+            ],
+            "increment_vs_final": {
+              "paired_runs": 8,
+              "pearson": 0.5018922839924177,
+              "spearman": 0.1666666666666667,
+              "leave_one_run_out_pearson_range": [
+                -0.3620032408755763,
+                0.7904600202422265
+              ]
+            },
+            "covariance_share_of_final_logZ_variance": 0.02165750155034715,
+            "mutation_acceptance": {
+              "environment": {
+                "accepted": 24357,
+                "attempted": 24576,
+                "fraction": 0.9910888671875,
+                "mean_accepted_moves_per_particle": 11.89306640625
+              },
+              "exchange": {
+                "accepted": 1,
+                "attempted": 24576,
+                "fraction": 4.0690104166666664e-05,
+                "mean_accepted_moves_per_particle": 0.00048828125
+              },
+              "independence": {
+                "accepted": 11665,
+                "attempted": 24576,
+                "fraction": 0.4746500651041667,
+                "mean_accepted_moves_per_particle": 5.69580078125
+              },
+              "nuisance": {
+                "accepted": 25047,
+                "attempted": 49152,
+                "fraction": 0.50958251953125,
+                "mean_accepted_moves_per_particle": 12.22998046875
+              },
+              "physical": {
+                "accepted": 166002,
+                "attempted": 221184,
+                "fraction": 0.7505154079861112,
+                "mean_accepted_moves_per_particle": 81.0556640625
+              },
+              "positions": {
+                "accepted": 24506,
+                "attempted": 24576,
+                "fraction": 0.9971516927083334,
+                "mean_accepted_moves_per_particle": 11.9658203125
+              },
+              "sed": {
+                "accepted": 764,
+                "attempted": 24576,
+                "fraction": 0.031087239583333332,
+                "mean_accepted_moves_per_particle": 0.373046875
+              }
+            },
+            "acceptance_available_by_run": [
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true
+            ]
+          },
+          {
+            "stage_start_exclusive": 6,
+            "stage_end_inclusive": 20,
+            "beta_start": 0.0087890625,
+            "beta_end": 0.09765625,
+            "logZ_increment_by_run": [
+              -2.807806034549615,
+              -2.7995858097288364,
+              -2.779133426012363,
+              -2.7840362735950563,
+              -2.816291064151023,
+              -2.8062950481282005,
+              -2.7573240762784357,
+              -2.76852575723085
+            ],
+            "increment_vs_final": {
+              "paired_runs": 8,
+              "pearson": -0.3802020275314992,
+              "spearman": -0.2380952380952381,
+              "leave_one_run_out_pearson_range": [
+                -0.4876086828223143,
+                -0.23681300491049045
+              ]
+            },
+            "covariance_share_of_final_logZ_variance": -0.006139389448605406,
+            "mutation_acceptance": {
+              "environment": {
+                "accepted": 56680,
+                "attempted": 57344,
+                "fraction": 0.9884207589285714,
+                "mean_accepted_moves_per_particle": 27.67578125
+              },
+              "exchange": {
+                "accepted": 7,
+                "attempted": 57344,
+                "fraction": 0.0001220703125,
+                "mean_accepted_moves_per_particle": 0.00341796875
+              },
+              "independence": {
+                "accepted": 8810,
+                "attempted": 57344,
+                "fraction": 0.15363420758928573,
+                "mean_accepted_moves_per_particle": 4.3017578125
+              },
+              "nuisance": {
+                "accepted": 52358,
+                "attempted": 114688,
+                "fraction": 0.45652553013392855,
+                "mean_accepted_moves_per_particle": 25.5654296875
+              },
+              "physical": {
+                "accepted": 411004,
+                "attempted": 516096,
+                "fraction": 0.7963712177579365,
+                "mean_accepted_moves_per_particle": 200.685546875
+              },
+              "positions": {
+                "accepted": 56970,
+                "attempted": 57344,
+                "fraction": 0.9934779575892857,
+                "mean_accepted_moves_per_particle": 27.8173828125
+              },
+              "sed": {
+                "accepted": 2695,
+                "attempted": 57344,
+                "fraction": 0.0469970703125,
+                "mean_accepted_moves_per_particle": 1.31591796875
+              }
+            },
+            "acceptance_available_by_run": [
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true
+            ]
+          },
+          {
+            "stage_start_exclusive": 20,
+            "stage_end_inclusive": 45,
+            "beta_start": 0.09765625,
+            "beta_end": 0.494384765625,
+            "logZ_increment_by_run": [
+              -1.216610234018975,
+              -1.2268716677887417,
+              -0.9605117892071249,
+              -1.0673333085398884,
+              -1.1289209825673403,
+              -0.7644559261741009,
+              -1.0622259702174723,
+              -1.2511902423948325
+            ],
+            "increment_vs_final": {
+              "paired_runs": 8,
+              "pearson": 0.21050944081763476,
+              "spearman": -0.04761904761904763,
+              "leave_one_run_out_pearson_range": [
+                -0.7232412230802818,
+                0.7592064191349953
+              ]
+            },
+            "covariance_share_of_final_logZ_variance": 0.026558990953202747,
+            "mutation_acceptance": {
+              "environment": {
+                "accepted": 100772,
+                "attempted": 102400,
+                "fraction": 0.9841015625,
+                "mean_accepted_moves_per_particle": 49.205078125
+              },
+              "exchange": {
+                "accepted": 72,
+                "attempted": 102400,
+                "fraction": 0.000703125,
+                "mean_accepted_moves_per_particle": 0.03515625
+              },
+              "independence": {
+                "accepted": 1479,
+                "attempted": 102400,
+                "fraction": 0.014443359375,
+                "mean_accepted_moves_per_particle": 0.72216796875
+              },
+              "nuisance": {
+                "accepted": 125017,
+                "attempted": 204800,
+                "fraction": 0.6104345703125,
+                "mean_accepted_moves_per_particle": 61.04345703125
+              },
+              "physical": {
+                "accepted": 730498,
+                "attempted": 921600,
+                "fraction": 0.7926410590277778,
+                "mean_accepted_moves_per_particle": 356.6884765625
+              },
+              "positions": {
+                "accepted": 101367,
+                "attempted": 102400,
+                "fraction": 0.989912109375,
+                "mean_accepted_moves_per_particle": 49.49560546875
+              },
+              "sed": {
+                "accepted": 15225,
+                "attempted": 102400,
+                "fraction": 0.148681640625,
+                "mean_accepted_moves_per_particle": 7.43408203125
+              }
+            },
+            "acceptance_available_by_run": [
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true
+            ]
+          },
+          {
+            "stage_start_exclusive": 45,
+            "stage_end_inclusive": 64,
+            "beta_start": 0.494384765625,
+            "beta_end": 1.0,
+            "logZ_increment_by_run": [
+              9.165409179778385,
+              9.984354009124466,
+              6.548589980634259,
+              9.239427564263446,
+              8.823360753827398,
+              10.938335022848708,
+              8.835537776016967,
+              9.022049196176738
+            ],
+            "increment_vs_final": {
+              "paired_runs": 8,
+              "pearson": 0.9947526254205856,
+              "spearman": 1.0,
+              "leave_one_run_out_pearson_range": [
+                0.9908188511597504,
+                0.9976641786048749
+              ]
+            },
+            "covariance_share_of_final_logZ_variance": 0.9579228969450554,
+            "mutation_acceptance": {
+              "environment": {
+                "accepted": 76162,
+                "attempted": 77824,
+                "fraction": 0.9786441200657895,
+                "mean_accepted_moves_per_particle": 37.1884765625
+              },
+              "exchange": {
+                "accepted": 28,
+                "attempted": 77824,
+                "fraction": 0.0003597861842105263,
+                "mean_accepted_moves_per_particle": 0.013671875
+              },
+              "independence": {
+                "accepted": 5,
+                "attempted": 77824,
+                "fraction": 6.424753289473684e-05,
+                "mean_accepted_moves_per_particle": 0.00244140625
+              },
+              "nuisance": {
+                "accepted": 100544,
+                "attempted": 155648,
+                "fraction": 0.6459703947368421,
+                "mean_accepted_moves_per_particle": 49.09375
+              },
+              "physical": {
+                "accepted": 392314,
+                "attempted": 700416,
+                "fraction": 0.5601157026681286,
+                "mean_accepted_moves_per_particle": 191.5595703125
+              },
+              "positions": {
+                "accepted": 76733,
+                "attempted": 77824,
+                "fraction": 0.9859811883223685,
+                "mean_accepted_moves_per_particle": 37.46728515625
+              },
+              "sed": {
+                "accepted": 31465,
+                "attempted": 77824,
+                "fraction": 0.4043097245065789,
+                "mean_accepted_moves_per_particle": 15.36376953125
+              }
+            },
+            "acceptance_available_by_run": [
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true
+            ]
+          }
+        ],
+        "all_stage_aggregate_acceptance": {
+          "environment": 0.9840812683105469,
+          "exchange": 0.0004119873046875,
+          "independence": 0.08376693725585938,
+          "nuisance": 0.5778617858886719,
+          "physical": 0.7204767862955729,
+          "positions": 0.990203857421875,
+          "sed": 0.19130325317382812
+        },
+        "coordinate_dispersion_and_logZ_associations": {
+          "log_z": {
+            "mean_by_run": [
+              -2.6069652057971684,
+              -2.7123002549422424,
+              -2.7590387368910054,
+              -2.724310587861097,
+              -2.8080636470508304,
+              -2.736830503494614,
+              -2.7281340851377887,
+              -2.685597214119884
+            ],
+            "within_run_sd_by_run": [
+              0.5958591137685878,
+              0.5711779141171824,
+              0.7573020872725694,
+              0.5317935531865459,
+              0.4972885589886592,
+              0.5605390632673833,
+              0.5324469361977935,
+              0.6390868233048222
+            ],
+            "between_run_mean_sd": 0.05814605925027254,
+            "rms_within_run_sd": 0.590660095525809,
+            "between_mean_sd_over_within_sd": 0.09844250473448792,
+            "relation_to_final_logZ": {
+              "paired_runs": 8,
+              "pearson": 0.14750889777259074,
+              "spearman": 0.4285714285714286,
+              "leave_one_run_out_pearson_range": [
+                -0.10569480701935828,
+                0.30765344394497135
+              ]
+            }
+          },
+          "m_r": {
+            "mean_by_run": [
+              17.05971089888361,
+              17.063636243208688,
+              16.894895536306564,
+              17.068774950839604,
+              17.07104271004424,
+              17.070478135276524,
+              17.068021674694492,
+              17.05439653058429
+            ],
+            "within_run_sd_by_run": [
+              0.04526914936683101,
+              0.055670077538881146,
+              0.5441594759160426,
+              0.05471733734966222,
+              0.04387731925705724,
+              0.059378169669274485,
+              0.07113235798837837,
+              0.0723906962117068
+            ],
+            "between_run_mean_sd": 0.060469291056878635,
+            "rms_within_run_sd": 0.20000099596092694,
+            "between_mean_sd_over_within_sd": 0.30234494966561154,
+            "relation_to_final_logZ": {
+              "paired_runs": 8,
+              "pearson": 0.7977791096283923,
+              "spearman": 0.30952380952380953,
+              "leave_one_run_out_pearson_range": [
+                0.3405386514732897,
+                0.9328704129004082
+              ]
+            }
+          },
+          "sed_alr0": {
+            "mean_by_run": [
+              -0.39716744985134844,
+              -0.7232350074704668,
+              -0.5346506811782532,
+              -0.8219076643839944,
+              -0.9914579030707495,
+              -0.7932970036673769,
+              -0.711313694275544,
+              -0.6160924124084253
+            ],
+            "within_run_sd_by_run": [
+              1.5628680040051695,
+              1.5143661438256935,
+              1.6106670294136245,
+              1.5395971018098025,
+              1.4260000646694706,
+              1.5231931352159933,
+              1.4616181928078287,
+              1.566959895379086
+            ],
+            "between_run_mean_sd": 0.18332446882949371,
+            "rms_within_run_sd": 1.526669303497387,
+            "between_mean_sd_over_within_sd": 0.12008132239871651,
+            "relation_to_final_logZ": {
+              "paired_runs": 8,
+              "pearson": -0.370491017997244,
+              "spearman": -0.2380952380952381,
+              "leave_one_run_out_pearson_range": [
+                -0.5487119203514526,
+                -0.15144377132150968
+              ]
+            }
+          },
+          "sed_alr1": {
+            "mean_by_run": [
+              -2.4299694774693608,
+              -2.1182166425457982,
+              -2.345037035047456,
+              -2.2180176321209393,
+              -2.090755228695543,
+              -2.1232397579457274,
+              -2.16090442247942,
+              -2.2395591250387508
+            ],
+            "within_run_sd_by_run": [
+              1.5911058519960013,
+              1.3841194949271562,
+              1.4402574018335754,
+              1.4308394478605038,
+              1.4137390979709288,
+              1.3652399557263593,
+              1.4101638187714336,
+              1.4158280883113963
+            ],
+            "between_run_mean_sd": 0.11945098108575554,
+            "rms_within_run_sd": 1.43286064669817,
+            "between_mean_sd_over_within_sd": 0.08336538613228989,
+            "relation_to_final_logZ": {
+              "paired_runs": 8,
+              "pearson": 0.5312381240907196,
+              "spearman": 0.2142857142857143,
+              "leave_one_run_out_pearson_range": [
+                0.33756480847686643,
+                0.7548476426159373
+              ]
+            }
+          },
+          "sed_alr2": {
+            "mean_by_run": [
+              -0.7268698260480044,
+              -0.894480379526938,
+              -0.7246132919321217,
+              -0.8552555314622972,
+              -1.0621706776917308,
+              -0.9134652033599826,
+              -0.885000066355254,
+              -0.7760744864075437
+            ],
+            "within_run_sd_by_run": [
+              1.2301778695171388,
+              1.1308141164866041,
+              1.1778571427602467,
+              1.0987903973382467,
+              1.119798202881237,
+              1.189671377306882,
+              1.1499280656917863,
+              1.2007351784929938
+            ],
+            "between_run_mean_sd": 0.11240448343082127,
+            "rms_within_run_sd": 1.1629774003084032,
+            "between_mean_sd_over_within_sd": 0.09665233683905927,
+            "relation_to_final_logZ": {
+              "paired_runs": 8,
+              "pearson": -0.44061447385286523,
+              "spearman": -0.3333333333333334,
+              "leave_one_run_out_pearson_range": [
+                -0.7456375588477315,
+                -0.13634078966648916
+              ]
+            }
+          },
+          "sed_alr3": {
+            "mean_by_run": [
+              0.6745505299854374,
+              0.2831860854239998,
+              0.47308076332175253,
+              0.28373461668426925,
+              0.05498857329130745,
+              0.29227786669356814,
+              0.3386086378550807,
+              0.4594434057054795
+            ],
+            "within_run_sd_by_run": [
+              1.5869525494950107,
+              1.5061173663443963,
+              1.5913680520641282,
+              1.4028847051948303,
+              1.3415092583582604,
+              1.4066048249466174,
+              1.4094795214538083,
+              1.4660854269777526
+            ],
+            "between_run_mean_sd": 0.1818006248949429,
+            "rms_within_run_sd": 1.466354702705449,
+            "between_mean_sd_over_within_sd": 0.12398134268572104,
+            "relation_to_final_logZ": {
+              "paired_runs": 8,
+              "pearson": -0.280032311807299,
+              "spearman": -0.2380952380952381,
+              "leave_one_run_out_pearson_range": [
+                -0.44634633528309825,
+                -0.13150105767481482
+              ]
+            }
+          },
+          "log_circularized_radius": {
+            "mean_by_run": [
+              1.2553172505831387,
+              1.251272652947815,
+              1.403879483168935,
+              1.2442097580706497,
+              1.2356950006370861,
+              1.2438069090684918,
+              1.2483056554358876,
+              1.265096562635839
+            ],
+            "within_run_sd_by_run": [
+              0.06328766030537894,
+              0.08104150342384843,
+              0.3610450511268055,
+              0.07701211617855026,
+              0.05673576440390289,
+              0.08366085152103771,
+              0.0861047535712145,
+              0.0963678332782949
+            ],
+            "between_run_mean_sd": 0.05541206242870087,
+            "rms_within_run_sd": 0.14738398875200787,
+            "between_mean_sd_over_within_sd": 0.3759707068448164,
+            "relation_to_final_logZ": {
+              "paired_runs": 8,
+              "pearson": -0.7918632973079383,
+              "spearman": -0.30952380952380953,
+              "leave_one_run_out_pearson_range": [
+                -0.9233052739729537,
+                -0.20876325186552877
+              ]
+            }
+          },
+          "sersic_logit": {
+            "mean_by_run": [
+              -1.5044832416092866,
+              -1.627349104813291,
+              -1.5059644559027725,
+              -1.71768310629994,
+              -1.6791989117265915,
+              -1.8299769805499,
+              -1.6254552829075628,
+              -1.5734538463488617
+            ],
+            "within_run_sd_by_run": [
+              0.6248827496910874,
+              0.7545917944787129,
+              0.7294721602859136,
+              0.7487681713551234,
+              0.6130237943880089,
+              0.9015359332653129,
+              0.6717599693425852,
+              0.8123616424892572
+            ],
+            "between_run_mean_sd": 0.10980154928750831,
+            "rms_within_run_sd": 0.7375998864794701,
+            "between_mean_sd_over_within_sd": 0.14886329472145934,
+            "relation_to_final_logZ": {
+              "paired_runs": 8,
+              "pearson": -0.7660501942356933,
+              "spearman": -0.523809523809524,
+              "leave_one_run_out_pearson_range": [
+                -0.8611274309560405,
+                -0.544925863141458
+              ]
+            }
+          },
+          "distortion_logit": {
+            "mean_by_run": [
+              0.8611078984427658,
+              0.8735556113459116,
+              0.52542889407317,
+              0.8416017384722488,
+              0.8509547862513642,
+              0.8531318070355086,
+              0.810815294450727,
+              0.8393716168161192
+            ],
+            "within_run_sd_by_run": [
+              0.11477609219050638,
+              0.06203396511356291,
+              1.0337028507365418,
+              0.17354038901305613,
+              0.18835296538013166,
+              0.11614913256328986,
+              0.37814384089976344,
+              0.25459015745696073
+            ],
+            "between_run_mean_sd": 0.11523858905061779,
+            "rms_within_run_sd": 0.4141943969401581,
+            "between_mean_sd_over_within_sd": 0.27822343783966547,
+            "relation_to_final_logZ": {
+              "paired_runs": 8,
+              "pearson": 0.8091572702087528,
+              "spearman": 0.7142857142857144,
+              "leave_one_run_out_pearson_range": [
+                0.38271511468143743,
+                0.9607112380165759
+              ]
+            }
+          },
+          "redshift": {
+            "mean_by_run": [
+              0.08809204830933151,
+              0.07883394460121304,
+              0.08201220019147291,
+              0.07603711745688138,
+              0.06875343730083014,
+              0.07662619280201216,
+              0.07578336017047126,
+              0.08379019768269763
+            ],
+            "within_run_sd_by_run": [
+              0.05400767437954371,
+              0.050437497326624725,
+              0.05680777651169363,
+              0.044618631892471596,
+              0.03828214344184941,
+              0.04976974581938008,
+              0.044729584466451144,
+              0.05586487317429419
+            ],
+            "between_run_mean_sd": 0.0059031265735763165,
+            "rms_within_run_sd": 0.049677567497020104,
+            "between_mean_sd_over_within_sd": 0.11882881692889681,
+            "relation_to_final_logZ": {
+              "paired_runs": 8,
+              "pearson": -0.2161348118894493,
+              "spearman": 0.11904761904761905,
+              "leave_one_run_out_pearson_range": [
+                -0.36609188880407806,
+                -0.06777583399209663
+              ]
+            }
+          },
+          "circularized_radius": {
+            "mean_by_run": [
+              3.5161069002268004,
+              3.5071486140710872,
+              4.382011921660341,
+              3.4811301243011488,
+              3.4464139904731423,
+              3.48210859635546,
+              3.4985127060840933,
+              3.5615120115240306
+            ],
+            "within_run_sd_by_run": [
+              0.22995177231250657,
+              0.3221198255786133,
+              1.94632606220755,
+              0.29662388715423715,
+              0.20239256175506062,
+              0.33873122403014694,
+              0.34949014118892013,
+              0.40129605604148805
+            ],
+            "between_run_mean_sd": 0.3139376814619561,
+            "rms_within_run_sd": 0.7476373908059256,
+            "between_mean_sd_over_within_sd": 0.41990634139304195,
+            "relation_to_final_logZ": {
+              "paired_runs": 8,
+              "pearson": -0.7880485863891937,
+              "spearman": -0.261904761904762,
+              "leave_one_run_out_pearson_range": [
+                -0.9301837813824478,
+                -0.1720255925674898
+              ]
+            }
+          },
+          "phase_sine": {
+            "mean_by_run": [
+              0.8428931623228673,
+              0.849478013019664,
+              0.7709144705241351,
+              0.8506546777422828,
+              0.845497042091442,
+              0.8468169784564687,
+              0.8388152037605109,
+              0.8440534447386541
+            ],
+            "within_run_sd_by_run": [
+              0.11590576211843234,
+              0.010634008182314194,
+              0.35666054319474155,
+              0.013829426358985972,
+              0.029062285657715434,
+              0.022636905456263373,
+              0.09776420046341838,
+              0.09186234654970495
+            ],
+            "between_run_mean_sd": 0.026618695860977006,
+            "rms_within_run_sd": 0.14155334660023888,
+            "between_mean_sd_over_within_sd": 0.18804709673273162,
+            "relation_to_final_logZ": {
+              "paired_runs": 8,
+              "pearson": 0.8099520710858418,
+              "spearman": 0.7380952380952381,
+              "leave_one_run_out_pearson_range": [
+                0.4176479733211678,
+                0.9615719772954014
+              ]
+            }
+          },
+          "phase_cosine": {
+            "mean_by_run": [
+              0.5238604942081297,
+              0.5272361596340946,
+              0.3629495063985654,
+              0.5231533326889791,
+              0.5320735172792157,
+              0.5307316258297575,
+              0.5051556573126406,
+              0.5269586879154415
+            ],
+            "within_run_sd_by_run": [
+              0.04154966434927037,
+              0.017252817181832445,
+              0.38448164984224026,
+              0.050165067439743215,
+              0.034581472778726245,
+              0.026782840858802316,
+              0.1783551857647337,
+              0.038579925887105154
+            ],
+            "between_run_mean_sd": 0.057604051891238024,
+            "rms_within_run_sd": 0.15312531190153242,
+            "between_mean_sd_over_within_sd": 0.37618896037436605,
+            "relation_to_final_logZ": {
+              "paired_runs": 8,
+              "pearson": 0.8071946041100757,
+              "spearman": 0.4047619047619048,
+              "leave_one_run_out_pearson_range": [
+                0.3801758818864815,
+                0.9386174447723346
+              ]
+            }
+          },
+          "sed_fraction0": {
+            "mean_by_run": [
+              0.14701574824177355,
+              0.1395787940155646,
+              0.14602395547833674,
+              0.1357639392607684,
+              0.12894092383517458,
+              0.13745487020373834,
+              0.13991882256813065,
+              0.14408559909681043
+            ],
+            "within_run_sd_by_run": [
+              0.07628963623451752,
+              0.0823291974523275,
+              0.07606228368021713,
+              0.08656883809278529,
+              0.08002806598215131,
+              0.08331793072034098,
+              0.08053913105822619,
+              0.0834709186497516
+            ],
+            "between_run_mean_sd": 0.005963276991161767,
+            "rms_within_run_sd": 0.08114659180576742,
+            "between_mean_sd_over_within_sd": 0.07348770735110446,
+            "relation_to_final_logZ": {
+              "paired_runs": 8,
+              "pearson": -0.3725623146546339,
+              "spearman": -0.2380952380952381,
+              "leave_one_run_out_pearson_range": [
+                -0.6355083339561703,
+                -0.0805694223530756
+              ]
+            }
+          },
+          "sed_fraction1": {
+            "mean_by_run": [
+              0.06633417693248045,
+              0.08166492499818052,
+              0.06749846672044506,
+              0.0723527989801751,
+              0.08287678145809825,
+              0.07653456464684555,
+              0.07626043556381946,
+              0.07209469366666676
+            ],
+            "within_run_sd_by_run": [
+              0.0797244605239906,
+              0.08902033631361746,
+              0.0795340656429352,
+              0.07438977455716612,
+              0.0824861747604503,
+              0.08080148611733605,
+              0.08231985223650767,
+              0.07986636121374013
+            ],
+            "between_run_mean_sd": 0.006033536735261914,
+            "rms_within_run_sd": 0.08110807523817934,
+            "between_mean_sd_over_within_sd": 0.07438885360728911,
+            "relation_to_final_logZ": {
+              "paired_runs": 8,
+              "pearson": 0.4700863719959203,
+              "spearman": 0.2142857142857143,
+              "leave_one_run_out_pearson_range": [
+                0.1924617832583941,
+                0.6213432640457153
+              ]
+            }
+          },
+          "sed_fraction2": {
+            "mean_by_run": [
+              0.10256178125338052,
+              0.11178817052429699,
+              0.11522283790730817,
+              0.1198158763697257,
+              0.11423927278183739,
+              0.11723748286103183,
+              0.114361268084847,
+              0.11842782822345316
+            ],
+            "within_run_sd_by_run": [
+              0.067069580146992,
+              0.07222238938458035,
+              0.07475149505599583,
+              0.07779066174443278,
+              0.0758401496061454,
+              0.08013492241629046,
+              0.07626079640447671,
+              0.08509429254822717
+            ],
+            "between_run_mean_sd": 0.005358269092010392,
+            "rms_within_run_sd": 0.07630830308093181,
+            "between_mean_sd_over_within_sd": 0.07021869017749571,
+            "relation_to_final_logZ": {
+              "paired_runs": 8,
+              "pearson": 0.06173632336673367,
+              "spearman": 0.09523809523809526,
+              "leave_one_run_out_pearson_range": [
+                -0.12849719983341262,
+                0.19528108042433331
+              ]
+            }
+          },
+          "sed_fraction3": {
+            "mean_by_run": [
+              0.417090904915221,
+              0.35951846309511226,
+              0.38374973343095214,
+              0.36337660851475806,
+              0.3337546408129224,
+              0.3625308501429973,
+              0.36958184402035343,
+              0.3809182475620121
+            ],
+            "within_run_sd_by_run": [
+              0.21698435206599997,
+              0.21137171268867214,
+              0.21708592066889495,
+              0.19544542453889566,
+              0.18906292945258396,
+              0.19841508628220858,
+              0.19990585077580222,
+              0.2080821433651194
+            ],
+            "between_run_mean_sd": 0.024010118321771752,
+            "rms_within_run_sd": 0.20477404810292846,
+            "between_mean_sd_over_within_sd": 0.11725176380604249,
+            "relation_to_final_logZ": {
+              "paired_runs": 8,
+              "pearson": -0.25608006206498835,
+              "spearman": -0.28571428571428575,
+              "leave_one_run_out_pearson_range": [
+                -0.3915799544999514,
+                -0.1517053537774331
+              ]
+            }
+          },
+          "sed_fraction4": {
+            "mean_by_run": [
+              0.2669973886571445,
+              0.30744964736684566,
+              0.28750500646295785,
+              0.3086907768745728,
+              0.34018838111196736,
+              0.306242232145387,
+              0.2998776297628494,
+              0.28447363145105753
+            ],
+            "within_run_sd_by_run": [
+              0.19868604098537274,
+              0.18730760072039462,
+              0.19900128518888385,
+              0.18005179782345787,
+              0.17853621713670395,
+              0.17853763476285325,
+              0.17889957201112333,
+              0.18638071466361014
+            ],
+            "between_run_mean_sd": 0.021617535480642235,
+            "rms_within_run_sd": 0.18610284021772688,
+            "between_mean_sd_over_within_sd": 0.11615908416739519,
+            "relation_to_final_logZ": {
+              "paired_runs": 8,
+              "pearson": 0.24068986244553636,
+              "spearman": 0.14285714285714288,
+              "leave_one_run_out_pearson_range": [
+                0.09176431153801339,
+                0.44668586387418724
+              ]
+            }
+          }
+        },
+        "selected_stage_trace": [
+          {
+            "stage": 1,
+            "beta": 0.000244140625,
+            "cumulative_logZ_sd": 0.04102449524148685,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 8,
+              "pearson": 0.5544476463899968,
+              "spearman": 0.07142857142857144,
+              "leave_one_run_out_pearson_range": [
+                -0.3364656352817838,
+                0.9534875274311113
+              ]
+            },
+            "normalizer_run_weight_ess": 7.988691495243938,
+            "pre_resampling_ess_mean": 201.12770947073108,
+            "initial_ancestor_ess_mean": 166.81139347160098,
+            "distinct_initial_ancestors_mean": 188.375,
+            "acceptance_fraction": {
+              "environment": 0.991455078125,
+              "exchange": 0.0,
+              "independence": 0.7236328125,
+              "nuisance": 0.5286865234375,
+              "physical": 0.7176649305555556,
+              "positions": 0.995849609375,
+              "sed": 0.030029296875
+            }
+          },
+          {
+            "stage": 6,
+            "beta": 0.0087890625,
+            "cumulative_logZ_sd": 0.0557635939005674,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 8,
+              "pearson": 0.5018922839924177,
+              "spearman": 0.1666666666666667,
+              "leave_one_run_out_pearson_range": [
+                -0.3620032408755763,
+                0.7904600202422265
+              ]
+            },
+            "normalizer_run_weight_ess": 7.979059885083948,
+            "pre_resampling_ess_mean": 249.0120504944237,
+            "initial_ancestor_ess_mean": 88.1829389679508,
+            "distinct_initial_ancestors_mean": 110.75,
+            "acceptance_fraction": {
+              "environment": 0.993408203125,
+              "exchange": 0.0,
+              "independence": 0.31103515625,
+              "nuisance": 0.491455078125,
+              "physical": 0.7708604600694444,
+              "positions": 0.99658203125,
+              "sed": 0.036865234375
+            }
+          },
+          {
+            "stage": 20,
+            "beta": 0.09765625,
+            "cumulative_logZ_sd": 0.05021908246032289,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 8,
+              "pearson": 0.39932181083189794,
+              "spearman": -0.11904761904761905,
+              "leave_one_run_out_pearson_range": [
+                -0.6549961362881025,
+                0.8063784471579576
+              ]
+            },
+            "normalizer_run_weight_ess": 7.98313814440398,
+            "pre_resampling_ess_mean": 252.37190743783583,
+            "initial_ancestor_ess_mean": 50.93408578563542,
+            "distinct_initial_ancestors_mean": 69.125,
+            "acceptance_fraction": {
+              "environment": 0.986083984375,
+              "exchange": 0.0,
+              "independence": 0.063720703125,
+              "nuisance": 0.483154296875,
+              "physical": 0.8106011284722222,
+              "positions": 0.9892578125,
+              "sed": 0.071533203125
+            }
+          },
+          {
+            "stage": 32,
+            "beta": 0.25,
+            "cumulative_logZ_sd": 0.03668616486039506,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 8,
+              "pearson": -0.014493129166732501,
+              "spearman": -0.261904761904762,
+              "leave_one_run_out_pearson_range": [
+                -0.5205282166666803,
+                0.14684639017298556
+              ]
+            },
+            "normalizer_run_weight_ess": 7.990504045455133,
+            "pre_resampling_ess_mean": 252.14428517503873,
+            "initial_ancestor_ess_mean": 31.13886387863088,
+            "distinct_initial_ancestors_mean": 49.0,
+            "acceptance_fraction": {
+              "environment": 0.96484375,
+              "exchange": 0.001220703125,
+              "independence": 0.009521484375,
+              "nuisance": 0.614013671875,
+              "physical": 0.8017306857638888,
+              "positions": 0.9892578125,
+              "sed": 0.1337890625
+            }
+          },
+          {
+            "stage": 45,
+            "beta": 0.494384765625,
+            "cumulative_logZ_sd": 0.1384415705277295,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 8,
+              "pearson": 0.39276450687540776,
+              "spearman": 0.14285714285714288,
+              "leave_one_run_out_pearson_range": [
+                -0.4346691787537596,
+                0.7145200112680795
+              ]
+            },
+            "normalizer_run_weight_ess": 7.84941973905067,
+            "pre_resampling_ess_mean": 252.11854575521107,
+            "initial_ancestor_ess_mean": 15.106612161877223,
+            "distinct_initial_ancestors_mean": 32.125,
+            "acceptance_fraction": {
+              "environment": 0.988037109375,
+              "exchange": 0.0009765625,
+              "independence": 0.0,
+              "nuisance": 0.67236328125,
+              "physical": 0.7590603298611112,
+              "positions": 0.98974609375,
+              "sed": 0.263916015625
+            }
+          },
+          {
+            "stage": 50,
+            "beta": 0.6103515625,
+            "cumulative_logZ_sd": 0.2987951626104122,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 8,
+              "pearson": 0.7077730480322338,
+              "spearman": 0.5714285714285715,
+              "leave_one_run_out_pearson_range": [
+                0.29356169100800206,
+                0.8868121475241945
+              ]
+            },
+            "normalizer_run_weight_ess": 7.106865475735979,
+            "pre_resampling_ess_mean": 249.43268193506088,
+            "initial_ancestor_ess_mean": 10.144864905639524,
+            "distinct_initial_ancestors_mean": 26.625,
+            "acceptance_fraction": {
+              "environment": 0.9638671875,
+              "exchange": 0.0009765625,
+              "independence": 0.0,
+              "nuisance": 0.6708984375,
+              "physical": 0.7025282118055556,
+              "positions": 0.985595703125,
+              "sed": 0.328857421875
+            }
+          },
+          {
+            "stage": 55,
+            "beta": 0.738525390625,
+            "cumulative_logZ_sd": 0.6354587903234922,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 8,
+              "pearson": 0.8931538486732801,
+              "spearman": 0.8571428571428572,
+              "leave_one_run_out_pearson_range": [
+                0.8678599038808401,
+                0.9758307568604192
+              ]
+            },
+            "normalizer_run_weight_ess": 4.588945969049725,
+            "pre_resampling_ess_mean": 245.9031419792663,
+            "initial_ancestor_ess_mean": 5.204142489994869,
+            "distinct_initial_ancestors_mean": 20.25,
+            "acceptance_fraction": {
+              "environment": 0.9873046875,
+              "exchange": 0.0,
+              "independence": 0.0,
+              "nuisance": 0.64111328125,
+              "physical": 0.5856391059027778,
+              "positions": 0.988525390625,
+              "sed": 0.4052734375
+            }
+          },
+          {
+            "stage": 60,
+            "beta": 0.87890625,
+            "cumulative_logZ_sd": 1.032044314287909,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 8,
+              "pearson": 0.9866514053557554,
+              "spearman": 0.9047619047619048,
+              "leave_one_run_out_pearson_range": [
+                0.9858066814285098,
+                0.9976189514876401
+              ]
+            },
+            "normalizer_run_weight_ess": 3.1231436564435526,
+            "pre_resampling_ess_mean": 247.26409935300893,
+            "initial_ancestor_ess_mean": 2.7282287214339895,
+            "distinct_initial_ancestors_mean": 13.875,
+            "acceptance_fraction": {
+              "environment": 0.96630859375,
+              "exchange": 0.0,
+              "independence": 0.0,
+              "nuisance": 0.623046875,
+              "physical": 0.4084743923611111,
+              "positions": 0.986328125,
+              "sed": 0.49072265625
+            }
+          },
+          {
+            "stage": 64,
+            "beta": 1.0,
+            "cumulative_logZ_sd": 1.292268983165919,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 8,
+              "pearson": 1.0,
+              "spearman": 1.0,
+              "leave_one_run_out_pearson_range": [
+                0.9999999999999999,
+                1.0
+              ]
+            },
+            "normalizer_run_weight_ess": 2.8842903505812214,
+            "pre_resampling_ess_mean": 249.40808343657505,
+            "initial_ancestor_ess_mean": 2.0399155200512435,
+            "distinct_initial_ancestors_mean": 7.25,
+            "acceptance_fraction": {
+              "environment": 0.982666015625,
+              "exchange": 0.0,
+              "independence": 0.0,
+              "nuisance": 0.5762939453125,
+              "physical": 0.3225911458333333,
+              "positions": 0.98779296875,
+              "sed": 0.52587890625
+            }
+          }
+        ],
+        "phase_by_run": [
+          {
+            "run": "dev_v5_0",
+            "seed": 2026102170,
+            "log_normalizer": 3.608121842162279,
+            "phase": {
+              "circular_mean": 1.0147157766995225,
+              "resultant": 0.9924206267922031,
+              "circular_variance": 0.007579373207796891
+            }
+          },
+          {
+            "run": "dev_v5_1",
+            "seed": 2026102171,
+            "log_normalizer": 4.455035468380843,
+            "phase": {
+              "circular_mean": 1.0153247337259088,
+              "resultant": 0.9997954103863176,
+              "circular_variance": 0.00020458961368241546
+            }
+          },
+          {
+            "run": "dev_v5_2",
+            "seed": 2026102172,
+            "log_normalizer": 1.159516293822156,
+            "phase": {
+              "circular_mean": 1.1307772295510705,
+              "resultant": 0.8520806681638011,
+              "circular_variance": 0.14791933183619888
+            }
+          },
+          {
+            "run": "dev_v5_3",
+            "seed": 2026102173,
+            "log_normalizer": 3.851058205525182,
+            "phase": {
+              "circular_mean": 1.0194197600341117,
+              "resultant": 0.9986504845382155,
+              "circular_variance": 0.0013495154617845229
+            }
+          },
+          {
+            "run": "dev_v5_4",
+            "seed": 2026102174,
+            "log_normalizer": 3.42216070646917,
+            "phase": {
+              "circular_mean": 1.0091089625107514,
+              "resultant": 0.9989832210679285,
+              "circular_variance": 0.001016778932071527
+            }
+          },
+          {
+            "run": "dev_v5_5",
+            "seed": 2026102175,
+            "log_normalizer": 5.814223243147522,
+            "phase": {
+              "circular_mean": 1.010948828787908,
+              "resultant": 0.9993873391523634,
+              "circular_variance": 0.0006126608476365591
+            }
+          },
+          {
+            "run": "dev_v5_6",
+            "seed": 2026102176,
+            "log_normalizer": 3.4586584927676167,
+            "phase": {
+              "circular_mean": 1.0287422531468933,
+              "resultant": 0.9791798528231437,
+              "circular_variance": 0.02082014717685632
+            }
+          },
+          {
+            "run": "dev_v5_7",
+            "seed": 2026102177,
+            "log_normalizer": 3.4918260963300796,
+            "phase": {
+              "circular_mean": 1.0126867964476949,
+              "resultant": 0.9950435549988512,
+              "circular_variance": 0.004956445001148779
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "v6v100_partial",
+      "partial_reference": true,
+      "completed_replicas": 1,
+      "seeds": [
+        2026102180
+      ],
+      "particles": 1024,
+      "stages": 64,
+      "moves": 64,
+      "sampling_seconds": {
+        "count": 1,
+        "mean": 450.8833582850639,
+        "sd": null,
+        "minimum": 450.8833582850639,
+        "median": 450.8833582850639,
+        "maximum": 450.8833582850639
+      },
+      "observation_normalizers": [
+        {
+          "observation": 58165,
+          "final_log_normalizer_by_run": [
+            3.8680476025363415
+          ],
+          "final_log_normalizer_sd": null,
+          "final_normalizer": {
+            "extinct": 0,
+            "run_weight_ess": 1.0,
+            "max_run_weight": 1.0,
+            "run_weights": [
+              1.0
+            ],
+            "relative_mcse": null,
+            "log_mean_normalizer": 3.8680476025363415
+          },
+          "initial_valid": [
+            939
+          ],
+          "initial_valid_vs_final_logZ": {
+            "paired_runs": 1,
+            "pearson": null,
+            "spearman": null
+          }
+        },
+        {
+          "observation": 0,
+          "final_log_normalizer_by_run": [
+            16.977191189725033
+          ],
+          "final_log_normalizer_sd": null,
+          "final_normalizer": {
+            "extinct": 0,
+            "run_weight_ess": 1.0,
+            "max_run_weight": 1.0,
+            "run_weights": [
+              1.0
+            ],
+            "relative_mcse": null,
+            "log_mean_normalizer": 16.977191189725033
+          },
+          "initial_valid": [
+            842
+          ],
+          "initial_valid_vs_final_logZ": {
+            "paired_runs": 1,
+            "pearson": null,
+            "spearman": null
+          }
+        },
+        {
+          "observation": 1,
+          "final_log_normalizer_by_run": [
+            19.0821165532468
+          ],
+          "final_log_normalizer_sd": null,
+          "final_normalizer": {
+            "extinct": 0,
+            "run_weight_ess": 1.0,
+            "max_run_weight": 1.0,
+            "run_weights": [
+              1.0
+            ],
+            "relative_mcse": null,
+            "log_mean_normalizer": 19.0821165532468
+          },
+          "initial_valid": [
+            644
+          ],
+          "initial_valid_vs_final_logZ": {
+            "paired_runs": 1,
+            "pearson": null,
+            "spearman": null
+          }
+        },
+        {
+          "observation": 8,
+          "final_log_normalizer_by_run": [
+            22.606929614957796
+          ],
+          "final_log_normalizer_sd": null,
+          "final_normalizer": {
+            "extinct": 0,
+            "run_weight_ess": 1.0,
+            "max_run_weight": 1.0,
+            "run_weights": [
+              1.0
+            ],
+            "relative_mcse": null,
+            "log_mean_normalizer": 22.606929614957796
+          },
+          "initial_valid": [
+            511
+          ],
+          "initial_valid_vs_final_logZ": {
+            "paired_runs": 1,
+            "pearson": null,
+            "spearman": null
+          }
+        }
+      ],
+      "bright": {
+        "variance_windows": [
+          {
+            "stage_start_exclusive": 0,
+            "stage_end_inclusive": 6,
+            "beta_start": 0.0,
+            "beta_end": 0.0087890625,
+            "logZ_increment_by_run": [
+              -1.6031770409556918
+            ],
+            "increment_vs_final": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            },
+            "covariance_share_of_final_logZ_variance": null,
+            "mutation_acceptance": {
+              "environment": {
+                "accepted": 24342,
+                "attempted": 24576,
+                "fraction": 0.990478515625,
+                "mean_accepted_moves_per_particle": 23.771484375
+              },
+              "exchange": {
+                "accepted": 2,
+                "attempted": 24576,
+                "fraction": 8.138020833333333e-05,
+                "mean_accepted_moves_per_particle": 0.001953125
+              },
+              "independence": {
+                "accepted": 11094,
+                "attempted": 24576,
+                "fraction": 0.451416015625,
+                "mean_accepted_moves_per_particle": 10.833984375
+              },
+              "nuisance": {
+                "accepted": 25495,
+                "attempted": 49152,
+                "fraction": 0.5186971028645834,
+                "mean_accepted_moves_per_particle": 24.8974609375
+              },
+              "physical": {
+                "accepted": 167095,
+                "attempted": 221184,
+                "fraction": 0.7554569950810185,
+                "mean_accepted_moves_per_particle": 163.1787109375
+              },
+              "positions": {
+                "accepted": 24464,
+                "attempted": 24576,
+                "fraction": 0.9954427083333334,
+                "mean_accepted_moves_per_particle": 23.890625
+              },
+              "sed": {
+                "accepted": 723,
+                "attempted": 24576,
+                "fraction": 0.0294189453125,
+                "mean_accepted_moves_per_particle": 0.7060546875
+              }
+            },
+            "acceptance_available_by_run": [
+              true
+            ]
+          },
+          {
+            "stage_start_exclusive": 6,
+            "stage_end_inclusive": 20,
+            "beta_start": 0.0087890625,
+            "beta_end": 0.09765625,
+            "logZ_increment_by_run": [
+              -2.8806792561279506
+            ],
+            "increment_vs_final": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            },
+            "covariance_share_of_final_logZ_variance": null,
+            "mutation_acceptance": {
+              "environment": {
+                "accepted": 56456,
+                "attempted": 57344,
+                "fraction": 0.9845145089285714,
+                "mean_accepted_moves_per_particle": 55.1328125
+              },
+              "exchange": {
+                "accepted": 3,
+                "attempted": 57344,
+                "fraction": 5.231584821428571e-05,
+                "mean_accepted_moves_per_particle": 0.0029296875
+              },
+              "independence": {
+                "accepted": 8074,
+                "attempted": 57344,
+                "fraction": 0.14079938616071427,
+                "mean_accepted_moves_per_particle": 7.884765625
+              },
+              "nuisance": {
+                "accepted": 53592,
+                "attempted": 114688,
+                "fraction": 0.46728515625,
+                "mean_accepted_moves_per_particle": 52.3359375
+              },
+              "physical": {
+                "accepted": 411786,
+                "attempted": 516096,
+                "fraction": 0.7978864397321429,
+                "mean_accepted_moves_per_particle": 402.134765625
+              },
+              "positions": {
+                "accepted": 56888,
+                "attempted": 57344,
+                "fraction": 0.9920479910714286,
+                "mean_accepted_moves_per_particle": 55.5546875
+              },
+              "sed": {
+                "accepted": 2612,
+                "attempted": 57344,
+                "fraction": 0.04554966517857143,
+                "mean_accepted_moves_per_particle": 2.55078125
+              }
+            },
+            "acceptance_available_by_run": [
+              true
+            ]
+          },
+          {
+            "stage_start_exclusive": 20,
+            "stage_end_inclusive": 45,
+            "beta_start": 0.09765625,
+            "beta_end": 0.494384765625,
+            "logZ_increment_by_run": [
+              -1.2223947136605862
+            ],
+            "increment_vs_final": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            },
+            "covariance_share_of_final_logZ_variance": null,
+            "mutation_acceptance": {
+              "environment": {
+                "accepted": 101149,
+                "attempted": 102400,
+                "fraction": 0.987783203125,
+                "mean_accepted_moves_per_particle": 98.7783203125
+              },
+              "exchange": {
+                "accepted": 86,
+                "attempted": 102400,
+                "fraction": 0.00083984375,
+                "mean_accepted_moves_per_particle": 0.083984375
+              },
+              "independence": {
+                "accepted": 1355,
+                "attempted": 102400,
+                "fraction": 0.013232421875,
+                "mean_accepted_moves_per_particle": 1.3232421875
+              },
+              "nuisance": {
+                "accepted": 125228,
+                "attempted": 204800,
+                "fraction": 0.61146484375,
+                "mean_accepted_moves_per_particle": 122.29296875
+              },
+              "physical": {
+                "accepted": 729717,
+                "attempted": 921600,
+                "fraction": 0.7917936197916666,
+                "mean_accepted_moves_per_particle": 712.6142578125
+              },
+              "positions": {
+                "accepted": 101276,
+                "attempted": 102400,
+                "fraction": 0.9890234375,
+                "mean_accepted_moves_per_particle": 98.90234375
+              },
+              "sed": {
+                "accepted": 15701,
+                "attempted": 102400,
+                "fraction": 0.153330078125,
+                "mean_accepted_moves_per_particle": 15.3330078125
+              }
+            },
+            "acceptance_available_by_run": [
+              true
+            ]
+          },
+          {
+            "stage_start_exclusive": 45,
+            "stage_end_inclusive": 64,
+            "beta_start": 0.494384765625,
+            "beta_end": 1.0,
+            "logZ_increment_by_run": [
+              9.57429861328057
+            ],
+            "increment_vs_final": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            },
+            "covariance_share_of_final_logZ_variance": null,
+            "mutation_acceptance": {
+              "environment": {
+                "accepted": 75813,
+                "attempted": 77824,
+                "fraction": 0.9741596422697368,
+                "mean_accepted_moves_per_particle": 74.0361328125
+              },
+              "exchange": {
+                "accepted": 19,
+                "attempted": 77824,
+                "fraction": 0.000244140625,
+                "mean_accepted_moves_per_particle": 0.0185546875
+              },
+              "independence": {
+                "accepted": 4,
+                "attempted": 77824,
+                "fraction": 5.139802631578947e-05,
+                "mean_accepted_moves_per_particle": 0.00390625
+              },
+              "nuisance": {
+                "accepted": 101370,
+                "attempted": 155648,
+                "fraction": 0.6512772409539473,
+                "mean_accepted_moves_per_particle": 98.994140625
+              },
+              "physical": {
+                "accepted": 376098,
+                "attempted": 700416,
+                "fraction": 0.5369637472587719,
+                "mean_accepted_moves_per_particle": 367.283203125
+              },
+              "positions": {
+                "accepted": 76754,
+                "attempted": 77824,
+                "fraction": 0.9862510279605263,
+                "mean_accepted_moves_per_particle": 74.955078125
+              },
+              "sed": {
+                "accepted": 32594,
+                "attempted": 77824,
+                "fraction": 0.4188168174342105,
+                "mean_accepted_moves_per_particle": 31.830078125
+              }
+            },
+            "acceptance_available_by_run": [
+              true
+            ]
+          }
+        ],
+        "all_stage_aggregate_acceptance": {
+          "environment": 0.9832763671875,
+          "exchange": 0.00041961669921875,
+          "independence": 0.07830429077148438,
+          "nuisance": 0.5830478668212891,
+          "physical": 0.7140672471788194,
+          "positions": 0.9894638061523438,
+          "sed": 0.19695281982421875
+        },
+        "coordinate_dispersion_and_logZ_associations": {
+          "log_z": {
+            "mean_by_run": [
+              -2.7016824724433746
+            ],
+            "within_run_sd_by_run": [
+              0.5583463458328829
+            ],
+            "between_run_mean_sd": null,
+            "rms_within_run_sd": 0.5583463458328829,
+            "between_mean_sd_over_within_sd": null,
+            "relation_to_final_logZ": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            }
+          },
+          "m_r": {
+            "mean_by_run": [
+              17.061956023834803
+            ],
+            "within_run_sd_by_run": [
+              0.10541768635781684
+            ],
+            "between_run_mean_sd": null,
+            "rms_within_run_sd": 0.10541768635781684,
+            "between_mean_sd_over_within_sd": null,
+            "relation_to_final_logZ": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            }
+          },
+          "sed_alr0": {
+            "mean_by_run": [
+              -0.7158241600757193
+            ],
+            "within_run_sd_by_run": [
+              1.5758399908137144
+            ],
+            "between_run_mean_sd": null,
+            "rms_within_run_sd": 1.5758399908137144,
+            "between_mean_sd_over_within_sd": null,
+            "relation_to_final_logZ": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            }
+          },
+          "sed_alr1": {
+            "mean_by_run": [
+              -2.1860216110904913
+            ],
+            "within_run_sd_by_run": [
+              1.3817089953859227
+            ],
+            "between_run_mean_sd": null,
+            "rms_within_run_sd": 1.3817089953859227,
+            "between_mean_sd_over_within_sd": null,
+            "relation_to_final_logZ": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            }
+          },
+          "sed_alr2": {
+            "mean_by_run": [
+              -0.8374078706432402
+            ],
+            "within_run_sd_by_run": [
+              1.1657146889584542
+            ],
+            "between_run_mean_sd": null,
+            "rms_within_run_sd": 1.1657146889584542,
+            "between_mean_sd_over_within_sd": null,
+            "relation_to_final_logZ": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            }
+          },
+          "sed_alr3": {
+            "mean_by_run": [
+              0.36727885942081506
+            ],
+            "within_run_sd_by_run": [
+              1.511830171949942
+            ],
+            "between_run_mean_sd": null,
+            "rms_within_run_sd": 1.511830171949942,
+            "between_mean_sd_over_within_sd": null,
+            "relation_to_final_logZ": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            }
+          },
+          "log_circularized_radius": {
+            "mean_by_run": [
+              1.2518422655587227
+            ],
+            "within_run_sd_by_run": [
+              0.09004602060302253
+            ],
+            "between_run_mean_sd": null,
+            "rms_within_run_sd": 0.09004602060302253,
+            "between_mean_sd_over_within_sd": null,
+            "relation_to_final_logZ": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            }
+          },
+          "sersic_logit": {
+            "mean_by_run": [
+              -1.638500977879962
+            ],
+            "within_run_sd_by_run": [
+              0.7023225883301302
+            ],
+            "between_run_mean_sd": null,
+            "rms_within_run_sd": 0.7023225883301302,
+            "between_mean_sd_over_within_sd": null,
+            "relation_to_final_logZ": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            }
+          },
+          "distortion_logit": {
+            "mean_by_run": [
+              0.8523305069633316
+            ],
+            "within_run_sd_by_run": [
+              0.17764978013289465
+            ],
+            "between_run_mean_sd": null,
+            "rms_within_run_sd": 0.17764978013289465,
+            "between_mean_sd_over_within_sd": null,
+            "relation_to_final_logZ": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            }
+          },
+          "redshift": {
+            "mean_by_run": [
+              0.07885608591102425
+            ],
+            "within_run_sd_by_run": [
+              0.04772372641623556
+            ],
+            "between_run_mean_sd": null,
+            "rms_within_run_sd": 0.04772372641623556,
+            "between_mean_sd_over_within_sd": null,
+            "relation_to_final_logZ": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            }
+          },
+          "circularized_radius": {
+            "mean_by_run": [
+              3.513684691957259
+            ],
+            "within_run_sd_by_run": [
+              0.42656958124816896
+            ],
+            "between_run_mean_sd": null,
+            "rms_within_run_sd": 0.42656958124816896,
+            "between_mean_sd_over_within_sd": null,
+            "relation_to_final_logZ": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            }
+          },
+          "phase_sine": {
+            "mean_by_run": [
+              0.8443279351670019
+            ],
+            "within_run_sd_by_run": [
+              0.09098992531184623
+            ],
+            "between_run_mean_sd": null,
+            "rms_within_run_sd": 0.09098992531184623,
+            "between_mean_sd_over_within_sd": null,
+            "relation_to_final_logZ": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            }
+          },
+          "phase_cosine": {
+            "mean_by_run": [
+              0.5235378422137296
+            ],
+            "within_run_sd_by_run": [
+              0.06893493259193027
+            ],
+            "between_run_mean_sd": null,
+            "rms_within_run_sd": 0.06893493259193027,
+            "between_mean_sd_over_within_sd": null,
+            "relation_to_final_logZ": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            }
+          },
+          "sed_fraction0": {
+            "mean_by_run": [
+              0.13804155087457293
+            ],
+            "within_run_sd_by_run": [
+              0.0812195832064361
+            ],
+            "between_run_mean_sd": null,
+            "rms_within_run_sd": 0.0812195832064361,
+            "between_mean_sd_over_within_sd": null,
+            "relation_to_final_logZ": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            }
+          },
+          "sed_fraction1": {
+            "mean_by_run": [
+              0.07340005245948872
+            ],
+            "within_run_sd_by_run": [
+              0.07953629109396138
+            ],
+            "between_run_mean_sd": null,
+            "rms_within_run_sd": 0.07953629109396138,
+            "between_mean_sd_over_within_sd": null,
+            "relation_to_final_logZ": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            }
+          },
+          "sed_fraction2": {
+            "mean_by_run": [
+              0.11389167500809602
+            ],
+            "within_run_sd_by_run": [
+              0.07150678174337527
+            ],
+            "between_run_mean_sd": null,
+            "rms_within_run_sd": 0.07150678174337527,
+            "between_mean_sd_over_within_sd": null,
+            "relation_to_final_logZ": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            }
+          },
+          "sed_fraction3": {
+            "mean_by_run": [
+              0.3735464157673737
+            ],
+            "within_run_sd_by_run": [
+              0.2070338508662409
+            ],
+            "between_run_mean_sd": null,
+            "rms_within_run_sd": 0.2070338508662409,
+            "between_mean_sd_over_within_sd": null,
+            "relation_to_final_logZ": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            }
+          },
+          "sed_fraction4": {
+            "mean_by_run": [
+              0.3011203058904687
+            ],
+            "within_run_sd_by_run": [
+              0.18969628082230772
+            ],
+            "between_run_mean_sd": null,
+            "rms_within_run_sd": 0.18969628082230772,
+            "between_mean_sd_over_within_sd": null,
+            "relation_to_final_logZ": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            }
+          }
+        },
+        "selected_stage_trace": [
+          {
+            "stage": 1,
+            "beta": 0.000244140625,
+            "cumulative_logZ_sd": null,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            },
+            "normalizer_run_weight_ess": 1.0,
+            "pre_resampling_ess_mean": 758.6969654815621,
+            "initial_ancestor_ess_mean": 637.8199513381995,
+            "distinct_initial_ancestors_mean": 724.0,
+            "acceptance_fraction": {
+              "environment": 0.982666015625,
+              "exchange": 0.0,
+              "independence": 0.680419921875,
+              "nuisance": 0.5364990234375,
+              "physical": 0.7229817708333334,
+              "positions": 0.996337890625,
+              "sed": 0.025634765625
+            }
+          },
+          {
+            "stage": 6,
+            "beta": 0.0087890625,
+            "cumulative_logZ_sd": null,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            },
+            "normalizer_run_weight_ess": 1.0,
+            "pre_resampling_ess_mean": 994.8094028375424,
+            "initial_ancestor_ess_mean": 360.83138334480384,
+            "distinct_initial_ancestors_mean": 451.0,
+            "acceptance_fraction": {
+              "environment": 0.99462890625,
+              "exchange": 0.000244140625,
+              "independence": 0.3046875,
+              "nuisance": 0.5,
+              "physical": 0.7781032986111112,
+              "positions": 0.995361328125,
+              "sed": 0.029541015625
+            }
+          },
+          {
+            "stage": 20,
+            "beta": 0.09765625,
+            "cumulative_logZ_sd": null,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            },
+            "normalizer_run_weight_ess": 1.0,
+            "pre_resampling_ess_mean": 1008.7440422322558,
+            "initial_ancestor_ess_mean": 214.25745811197385,
+            "distinct_initial_ancestors_mean": 277.0,
+            "acceptance_fraction": {
+              "environment": 0.989990234375,
+              "exchange": 0.0,
+              "independence": 0.0537109375,
+              "nuisance": 0.498291015625,
+              "physical": 0.8077799479166666,
+              "positions": 0.992431640625,
+              "sed": 0.06396484375
+            }
+          },
+          {
+            "stage": 32,
+            "beta": 0.25,
+            "cumulative_logZ_sd": null,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            },
+            "normalizer_run_weight_ess": 1.0,
+            "pre_resampling_ess_mean": 1008.3957703640416,
+            "initial_ancestor_ess_mean": 146.8593837535014,
+            "distinct_initial_ancestors_mean": 209.0,
+            "acceptance_fraction": {
+              "environment": 0.9892578125,
+              "exchange": 0.0,
+              "independence": 0.005615234375,
+              "nuisance": 0.61181640625,
+              "physical": 0.7973361545138888,
+              "positions": 0.987548828125,
+              "sed": 0.12841796875
+            }
+          },
+          {
+            "stage": 45,
+            "beta": 0.494384765625,
+            "cumulative_logZ_sd": null,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            },
+            "normalizer_run_weight_ess": 1.0,
+            "pre_resampling_ess_mean": 1006.9913875244814,
+            "initial_ancestor_ess_mean": 75.54582132564842,
+            "distinct_initial_ancestors_mean": 150.0,
+            "acceptance_fraction": {
+              "environment": 0.991943359375,
+              "exchange": 0.00146484375,
+              "independence": 0.000732421875,
+              "nuisance": 0.6669921875,
+              "physical": 0.7556423611111112,
+              "positions": 0.992431640625,
+              "sed": 0.28076171875
+            }
+          },
+          {
+            "stage": 50,
+            "beta": 0.6103515625,
+            "cumulative_logZ_sd": null,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            },
+            "normalizer_run_weight_ess": 1.0,
+            "pre_resampling_ess_mean": 996.0320374485757,
+            "initial_ancestor_ess_mean": 37.38772017399986,
+            "distinct_initial_ancestors_mean": 127.0,
+            "acceptance_fraction": {
+              "environment": 0.972900390625,
+              "exchange": 0.0,
+              "independence": 0.000244140625,
+              "nuisance": 0.68115234375,
+              "physical": 0.7077365451388888,
+              "positions": 0.985595703125,
+              "sed": 0.343994140625
+            }
+          },
+          {
+            "stage": 55,
+            "beta": 0.738525390625,
+            "cumulative_logZ_sd": null,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            },
+            "normalizer_run_weight_ess": 1.0,
+            "pre_resampling_ess_mean": 979.5542690413904,
+            "initial_ancestor_ess_mean": 11.060461583899414,
+            "distinct_initial_ancestors_mean": 96.0,
+            "acceptance_fraction": {
+              "environment": 0.96533203125,
+              "exchange": 0.0,
+              "independence": 0.000244140625,
+              "nuisance": 0.661865234375,
+              "physical": 0.5428873697916666,
+              "positions": 0.986572265625,
+              "sed": 0.428955078125
+            }
+          },
+          {
+            "stage": 60,
+            "beta": 0.87890625,
+            "cumulative_logZ_sd": null,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            },
+            "normalizer_run_weight_ess": 1.0,
+            "pre_resampling_ess_mean": 995.1822985892884,
+            "initial_ancestor_ess_mean": 5.581747915979091,
+            "distinct_initial_ancestors_mean": 55.0,
+            "acceptance_fraction": {
+              "environment": 0.984130859375,
+              "exchange": 0.0,
+              "independence": 0.0,
+              "nuisance": 0.6402587890625,
+              "physical": 0.3674045138888889,
+              "positions": 0.987548828125,
+              "sed": 0.489013671875
+            }
+          },
+          {
+            "stage": 64,
+            "beta": 1.0,
+            "cumulative_logZ_sd": null,
+            "cumulative_logZ_vs_final": {
+              "paired_runs": 1,
+              "pearson": null,
+              "spearman": null
+            },
+            "normalizer_run_weight_ess": 1.0,
+            "pre_resampling_ess_mean": 1005.5941682875963,
+            "initial_ancestor_ess_mean": 4.662990501262941,
+            "distinct_initial_ancestors_mean": 26.0,
+            "acceptance_fraction": {
+              "environment": 0.98486328125,
+              "exchange": 0.0,
+              "independence": 0.0,
+              "nuisance": 0.580810546875,
+              "physical": 0.2946234809027778,
+              "positions": 0.987548828125,
+              "sed": 0.53125
+            }
+          }
+        ],
+        "phase_by_run": [
+          {
+            "run": "dev_v6v100_0",
+            "seed": 2026102180,
+            "log_normalizer": 3.8680476025363415,
+            "phase": {
+              "circular_mean": 1.0157539561060616,
+              "resultant": 0.9934694430797462,
+              "circular_variance": 0.006530556920253838
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

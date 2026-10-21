@@ -1,5 +1,546 @@
 # Work log
 
+## 2026-10-22 — First development-pass sampler; freeze held-out evaluation
+
+Eight fitted-proposal v7 populations pass all four precision and independent
+higher-effort score/region/normalizer comparisons (report17419615). Bright
+normalizer relative MCSE falls from50.34% to2.78%, run-weight ESS7.957/8.
+Mean production cost101.44seconds versus477.61 for the reference; this excludes
+pilot costs and is a threshold-matched comparison, not equal variance.
+[Full evidence](SAMPLER_SEARCH.md#fitted-proposal-development-result) preserves
+cost accounting, scores, uncertainty and the remaining finite-mode limitation.
+
+Added `doc/evidence/run_particle_heldout_20261022.py` and
+`tests/test_particle_heldout.py`: frozen20-object evaluation, independent
+warmup, original four-observation groups, strict all-object gates, immutable
+seeds, and complete subprocess/pilot/fit timing. CPU17420215:25 passed in6.73s.
+Declaration predates inference; warmup17420232 -> paired production17420233 ->
+report17420234, with two V100 inference workers. No candidate promotion yet.
+[Protocol](SAMPLER_SEARCH.md#frozen-held-out-validation) records exact settings
+and rejection policy. No model identity, production default or shear estimate
+changes. Read-only throughput17419751 replays K/summaries exactly; its repeated
+states limit generalization of the measured1.23–2.16-times throughput gains.
+
+## 2026-10-21 — Integrated proposal suite passes; fresh GPU trial starts
+
+Source_v7 full suite17419607:660 passed,1 skipped,69.37seconds; smoke17419608
+passes and array17419609 reaches meaningful late-stage progress. Frozen fitted
+proposal trials retain their declared seeds/settings. No accuracy claim yet.
+Integrated unused numerical native intensity helperefd794c with29 new/34 total
+CPU tests passing17419657; it does not alter any running target. Continuous
+support/tail limitations and prospective informed-environment work are in the
+[search log](SAMPLER_SEARCH.md#numerical-native-measure-and-throughput-preparation).
+
+Prepared immutable complete-mutation throughput benchmarka97c6d1, submitted
+as17419751 after v6 resource release. It must first reproduce saved/duplicated
+likelihoods with fixed4096 batches; repeated-state cache effects limit its cost
+interpretation. Read-only periodic-phase zero-mean/variance-reduction work is
+also being prepared independently, with no estimator or acceptance-gate change.
+
+## 2026-10-21 — Freeze pilot-informed joint proposals and audit the target measure
+
+Integratede513b995 proposal phase law, frozen pilot fitter/loader, optional
+driver flag and tests. Corrected a pre-sampling scale-floor specification
+ambiguity; preserved superseded artifact,70 tests pass17419552, and fit17419561
+uses only four original v1 pilots. [Launch evidence](SAMPLER_SEARCH.md#fitted-proposal-implementation-and-launch)
+records immutable artifact/hash, source_v7, full-suite/smoke/array/report stages.
+Added runtime hardware/library metadata. Target and production defaults remain
+unchanged; scientific acceptance is still pending.
+
+Integrated read-only bridge audit05ed93b (CPU17419483): no new conditioning or
+Jacobian error found; represented-state numerical/analytic target-prior mismatch
+has <0.009-MCSE bright score effect. Nuisance-input invariance and a possible
+3D marginal-prior identity pass bounded checks. Added the exact first-positive-
+temperature zero-weight alternative to the informed-Poisson support discussion.
+No collapsed sampler, informed-environment sampler or empirical correction is
+introduced. See [audit](PARTICLE_BRIDGE_AUDIT.md#finding).
+
+## 2026-10-21 — Locate the visible normalizer disagreement in late annealing
+
+Preserved read-only stage diagnostic script/JSON fromd79f095. CPU17419480
+completes13 frozen input audits; earlier17419416 schema failure is retained.
+The [stage-resolved diagnosis](SAMPLER_SEARCH.md#stage-resolved-normalizer-diagnosis)
+finds bright v5 logZ SD grows from0.138 at beta0.494 to1.292 at1, despite
+32.3% final physical acceptance. Late broad joint proposals accept0.00643%.
+The covariance allocation is descriptive, and inherited missing modes remain
+possible. This motivates testing the fitted q0 as both initial law and joint
+proposal; it does not identify initial redshift as the sole cause. No sampler
+or target code changes in this diagnostic.
+
+## 2026-10-21 — Require cross-algorithm normalizer agreement
+
+`report_galsbi_particles.py` now requires mean normalizing masses to agree
+within3.5 combined independent standard errors as well as score/region checks.
+The stable mass-scale calculation rejects an otherwise invisible factor-two
+mass error with identical scores. Frozen proposal/geometry identities are
+checked within groups, and production/pilot seed overlap is rejected across
+both groups. CPU17419419:44 passed. Immutable new reports17419420/17419428
+preserve earlier reports and raw runs. [Audit and next trial](SAMPLER_SEARCH.md#mean-normalizer-comparison-audit-and-v7-declaration)
+records the stricter criterion before n13/v7 outcomes, eight fixed fresh seeds,
+and full-cost/held-out requirements. No scientific target or sampler defaults
+change; all previous candidates still fail their original gates.
+
+## 2026-10-21 — Gradient movement improves; normalizer gate still fails
+
+Eight v5 runs complete at97.85seconds mean total. Three of four precision
+checks pass, but bright normalizer MCSE50.3% and run-weight ESS2.884/8 fail.
+[Search evidence](SAMPLER_SEARCH.md#gradient-result-and-next-initial-proposal)
+records full values and the independently fitted q0 hypothesis. V6 increased
+effort/changed-q0 comparison runs as17419248 on explicitly pinned V100 hardware;
+partial A40 attempt17419221 remains preserved and excluded.
+
+Integrated `particle_populations.py`, extinction-aware driver/report and tests
+fromfa15521: CPU17419141 passes607 tests,1 skip;33 targeted tests include actual
+mocked driver paths. Frozen v5/v6 source remains unchanged. Added generic
+`poisson_augmentation.py`,16 tests passing17419159 and mathematical documentation;
+no native informed-point law or sampler uses it yet. Native exchange support
+CPU17419184 finds all saved bright corrections finite and nearzero; relocating
+proposals instead pay roughly9.6 log units before the likelihood. Script and
+JSON receipt are preserved under `doc/evidence/`.
+
+No sampler is promoted and no shear estimate is recomputed. Next steps are
+independent effort/proposal comparisons, then held-out accuracy and full-cost
+validation if the development checks pass.
+
+## 2026-10-21 — Preserve failed startup packaging and reject relocating-exchange pilot
+
+V4 audited report fails precision and costs114.64seconds per population;
+no bright exchanges accepted. Source_v5a full suite17419085 passes590 tests,
+1skip. Array17419086 then failed its pre-Python manifest check because pytest
+mutated a tracked cache. New source_v5b excludes ephemeral caches, disables
+pytest cacheprovider, and byte-verifies all retained source/fixtures against
+the passing snapshot. No science setting, seed, code or target changed and no
+population output was retried. Verified completed prerequisite receipts before
+replacement array17419140 because old jobs had aged out of Slurm's dependency
+registry. Both packaging failures remain preserved and documented in the
+[search log](SAMPLER_SEARCH.md#gradient-trial-startup-correction-and-relocation-outcome).
+
+Audited reports17418948 complete for v1–v4. Node n9 explicit extinction path
+passes33 isolated targeted tests, with integrated checks pending; not yet in
+these real trials. No sampler or shear-calibration claim is accepted.
+
+## 2026-10-21 — Reject global covariance candidate; validate local and scene proposals
+
+Eight v3 populations completed; bright and object0 still fail precision.
+Added optional native exchange/position block with exact position and changed
+neighbour-choice Hastings corrections;77 targeted tests pass in17418889.
+Source_v4/array17418921 isolates this change. Added physical likelihood-gradient
+chain rule and frozen local metric,35 targeted tests pass in17418949; GPU
+fit17418998 completes with recorded hash. [Search log](SAMPLER_SEARCH.md#covariance-result-and-local-gradient-trial)
+contains results, settings, scales, limitations and job identities.
+
+Integrated report audita7d1b83: correct empirical second moments, strict source/
+geometry/configuration/receipt checks. Sixteen tests pass; audit changes prior
+variance/effective-count diagnostics by<0.4%, not means or MCSE. Separate
+re-reports17418948 preserve raw outputs. Added [audit limits](PARTICLE_DIAGNOSTICS_AUDIT.md).
+
+Frozen full suite17419013:589 pass,1 skip,1 failure from11 omitted pinned
+V3.9 evidence receipts. New source_v5a copies those unchanged files, with no
+code/science change; original failure preserved. Replacement suite17419085
+and eight-run gradient array17419086 replace cancelled pending17419016/17419026.
+No accepted sampler, target change, or shear-calibration result. Explicit
+extinction bookkeeping and informed-environment proposal mathematics continue
+in isolated worktrees; neither is in these numerical trials.
+
+## 2026-10-21 — Diagnose late-temperature movement and freeze pilot geometry
+
+Student-t array17418636/report17418639 completed: bright normalizer relative
+MCSE0.293, intermediate0.215; no demonstrated accuracy gain. Per-stage
+counters expose bright physical acceptance1–3% at beta=1, hidden by aggregate
+acceptance. Added optional frozen physical geometry and fitting CLI from
+independent pilots, with covariance provenance/seed guards and3 actual bridge
+integration tests. Geometry18/18 tests and fit17418727 pass; original failed
+stochastic variance test preserved with its analytic uncertainty correction.
+Full suite17418779:522 passed,3 skipped,one preexisting warning,83.82seconds.
+
+Source_v3 and geometry hashes were frozen before eight fresh populations
+array17418793/report17418795. Gaussian q0, N256/T64/M32, same target; optional
+geometry is the experimental change. Independent structural relocation and
+local-gradient metrics are being developed separately. The [search log](SAMPLER_SEARCH.md#geometry-and-structural-experiments)
+records settings, costs and limitations, including strict failure on extinct
+real populations and a small raw-second-moment reporting correction pending.
+Production defaults remain unchanged; no sampler is accepted yet.
+
+## 2026-10-21 — First particle populations fail the bright-object precision check
+
+Full suite17418421 passed489 tests,1 skip; smoke17418432 and all four
+N256/T64/M32 Gaussian populations17418434 completed. Report17418436 gives
+bright score effective counts41.45/11.35 and normalizer relative MCSE0.233,
+despite final incremental weight ESS near N. Mean cost99.13 seconds per
+four-object population. Four populations are exploratory and not a promotion
+sample. Exact sources/results remain under sampler_search_20261021/source_v1
+and dev_v1_report.json; [search log](SAMPLER_SEARCH.md#current-status) records
+the results and acceptance limits.
+
+Integrated optional Student-t proposal commitb0dbcc8 (27 targeted tests pass,
+Gaussian default bitwise replay). Added proposal CLI controls and per-stage
+acceptance diagnostics. AST checks pass; source_v2/launcher/manifest frozen
+before array17418636 (same effort, four fresh seeds), report17418639. Its
+unchanged numerical scales increase t5 covariance by5/3, documented explicitly.
+A separate independent-pilot physical geometry is under implementation.
+No production-default or posterior-target change; no accuracy/efficiency claim.
+
+## 2026-10-21 — Integrate particle implementation gates and launch frozen small checks
+
+Integrated the isolated Arbor implementations: `annealed_particles.py`,
+`galsbi_particle_proposal.py` and audited `galsbi_particle_target.py`, with
+27/13/34 mathematical tests respectively. Added `particle_diagnostics.py`
+and its ratio-influence/bootstrap checks, the independent-population report
+CLI and a measured-only held-out panel preparer. The normalized ratio of
+summed Zhat*fhat to summed Zhat retains all populations and cross-component
+errors; neither particle weight ESS nor ancestry is treated as posterior ESS.
+
+Bridge tests found/fixed zero-support cache entry, external redshift-domain
+handling and undefined auxiliary proposals at beta=0. Gaussian/mixture tests
+use 64 independent populations per target. Source/commit/test receipts are
+in `doc/evidence/sampler_search_implementation_20261021.json`. Root AST checks
+pass. Full integrated suite17418421 gates smoke17418432, development
+array17418434 and report17418436. Snapshot source_v1 contains261 hashed
+files. Panel17418433 completed before any development particle result.
+The four-replica development run is exploratory, not an acceptance gate.
+
+A separate optional Student-t initial proposal is being tested against the
+Gaussian tail concern described in [the search log](SAMPLER_SEARCH.md#subsequent-hypothesis-proposal-tails).
+It does not alter the frozen first experiment. No posterior or efficiency
+improvement has been established yet; monitor each dependent stage at startup.
+
+## 2026-10-21 — Start autonomous sampler search with independent particle construction
+
+Owner authorized autonomous work until a good and efficient sampler is
+established. Added [search protocol and acceptance gates](SAMPLER_SEARCH.md#objective-and-acceptance-boundary)
+and the Arbor tree under `doc/sampler_search/.arbor/`. Development stays on the
+same four objects; promotion requires new objects/seeds and matched-accuracy
+cost. Initial tree nodes separate mathematical implementation from science.
+
+Added `sbsi/galsbi_particle_target.py` and `scripts/check_galsbi_particles.py`
+for a normalized-proposal bridge, fixed MH kernels, within-observation
+resampling, scene-state retention and direct-score diagnostics. Isolated
+Arbor executors implement/test the SMC primitives, normalized proposal and
+independent bridge-balance checks. Initial syntax checks pass; CPU tests and
+integration are pending. No real-posterior or efficiency result is claimed.
+All new numerical work is scheduled, with the existing four-GPU ceiling.
+
+## 2026-10-21 — Component fixes validated on small mocks and saved histories
+
+Completed the [full component audit](INFERENCE_COMPONENT_REVIEW.md#component-audit)
+and its [predeclared checks](INFERENCE_COMPONENT_REVIEW.md#validation-results).
+Added the summary script/receipt under `doc/evidence/` and updated the current
+evidence index and sampler design status. The source snapshot contains 250
+hashed files; historical catalogues, likelihood acceptance and defaults stay
+fixed. Source changes are the full-chunk twin fix, optional full shear
+Hessians, mathematical moment/covariance helpers and diagnostic report CLIs.
+
+Job 17416810 replayed four chunks / 7,915 original observations exactly on
+A40-16Q. The original-node request 17416799 was cancelled before startup due
+to occupancy. Restoring 22 parents adds one selected antithetic twin and two
+each for same/independent coupling; no full-catalogue bias extrapolation.
+Job 17416798 reused 6,400 selection chunks: point gradients unchanged, bright
+g2 selection error down 2.8%, full-population selection error down 0.03%; full
+cross-band/axis covariance now retained (largest |correlation| 0.314).
+
+Jobs 17416800_0–2 validate direct scores/full Hessians at zero and nonzero
+shear: maximum scaled Hessian-versus-gradient error 1.71e-7, below 1e-4.
+Matched-state stencil convergence confirms the bright .002 score distortion.
+Both benchmark histories still pass only 1/4 score gates, failing the bright
+and intermediate objects. Individual nonconcave numerator terms do not
+establish indefinite curvature for the assembled selected objective.
+
+Final full suite: `sbatch --partition=cluster ... jobs/job_tests.sh`, job
+17416801, 412 passed / 1 skipped / one existing scalar-conversion deprecation
+warning, 85.64 seconds. Summary/provenance job 17416863 completed. All executed
+checks succeeded; no study jobs remain. Python AST, source/artifact SHA256,
+document-anchor and scoped whitespace checks complete the final audit.
+
+No new shear fit or convergence claim. Next numerical priorities remain an
+independent replicated particle reference for relative scene weights,
+replacement/validation of the old support-changing score path, and full
+selection curvature plus an iterated common-centre solve. Retained catalogue
+c2 is not explained by the fixes tested here.
+
+## 2026-10-21 — Review all inference components and implement bounded fixes
+
+Owner requested improvement across the inference pipeline. Added
+[component audit and small-check protocol](INFERENCE_COMPONENT_REVIEW.md#component-audit).
+Corrected complete-chunk twin parent coverage in `prepare_galsbi_twin.py` with
+`sbsi/mock_population.py`. Added full direct shear Hessians to the optional
+`SummaryGradients` evaluator and `sbsi/inference_moments.py` for Louis moments,
+common-centre assembly, bounded Newton proposals and full selection covariance.
+Added two report CLIs and mathematical/coverage tests. Production defaults,
+model identities, MH acceptance and frozen catalogues remain unchanged.
+
+Core validation job17416756:412 passed,1 skipped, one existing test deprecation
+warning (104.94s). Final report scripts and trained-model/data checks remain
+pending. Predeclared checks reuse four mock chunks,6,400 existing selection
+chunks and three small saved-chain runs; no full catalogue regeneration or
+new shear claim. Unresolved priorities are relative scene-mode weights,
+common-centre selection curvature/root solving and full correlated error
+propagation. See the protocol for exact datasets, thresholds and limitations.
+
+## 2026-10-21 — Native exchanges improve region access, not general score convergence
+
+Completed the four-object/two-start corrected native-exchange pilot. Full
+results and the next independent-reference experiment are recorded in
+[SAMPLER_EXCHANGE_PILOT](SAMPLER_EXCHANGE_PILOT.md#decision-and-observed-results)
+and `doc/evidence/sampler_exchange_results_20261021.json`. Updated the design
+status and current-evidence index to point to measured outcomes rather than
+leave the original gradient recommendation current. Added standalone smoke
+validation, final-scene replay and direct-score summary scripts under
+`doc/evidence/`. No production default or model artifact identity changes.
+
+All eight jobs completed:17414989 tests (401 passed,1 skipped; one test scalar
+conversion deprecation warning),17414996 smoke,17415003 validation,
+17415005_0–3 benchmark,17415013 final scene replay and score summary. Disabled
+exchanges replay all12 saved arrays bitwise. All seven reconstructed final
+scenes reproduce priors/responses/likelihoods exactly; physical summaries
+agree within2.84e-14. Source snapshot `sampler_exchange_20261021/source_v1`
+contains249 hashed files. Python syntax, scoped whitespace and receipt hashes
+checked after documentation updates.
+
+Sampling cost rises115.9->124.3s and112.0->119.9s (about7%). Score passes are
+1/4->1/4 from prior starts,1/4->0/4 from measurement starts; finite-difference
+and direct-score gates agree. Bright prior-start chains accept101/1660 cold
+exchanges,13 changing magnitude by>3; three chains spend substantial time
+in the bright-target region. One remains faint/crowded. Measurement starts
+accept0/1824 retained cold exchanges and stay bright. Pooled bright direct
+score Rhat remains1.381/1.605; intermediate objects also fail. The observed
+region access is useful but does not establish relative weights or a shear
+correction. Mean score differences alone remain inconclusive given the large
+conditional MCSE and failed stationarity.
+
+Keep the proposal optional. Next priority is a replicated annealed particle
+reference with evaluable initial proposals, exact analytic/numerical density
+corrections and region/ancestry diagnostics; it has not been launched. Do not
+expand the panel or simply extend chains on these acceptance counts. The
+catalogue residual remains positive across magnitude-bin central estimates
+and is not localized to this bright stress object.
+
+## 2026-10-21 — Add corrected native target/neighbour exchange pilot
+
+Owner asked to continue general sampling improvement after the failed gradient
+candidate. Added `sbsi/scene_exchange.py`, opt-in exchange controls and separate
+warmup/retained acceptance counters in `scripts/check_galsbi_local_sampler.py`,
+and four measure/support tests in `tests/test_scene_exchange.py`. Complete
+native mark exchanges include conditional target-type draws, numerical versus
+analytic prior corrections, and transformed-coordinate Jacobian cancellation.
+Defaults remain unchanged. The fast unchanged-environment cache is bypassed
+when an exchange changes neighbours.
+
+[Protocol and derivation](SAMPLER_EXCHANGE_PILOT.md#exact-target-and-exchange-measure)
+predeclare the same four-object/two-start comparison, 15% exchanges and fixed
+1 arcsec neighbour selection. Python AST checks passed. Full suite submitted
+as17414989; trained-model smoke and benchmark follow only if gates pass.
+No convergence improvement or shear correction is claimed yet. Limits and
+results will be updated after validation.
+
+## 2026-10-21 — Gradient pilot finishes: no general gain; scene separation and stencil error exposed
+
+The four-object comparison (17413930_0–3) and direct-score summary (17413954)
+completed. [Results and decision](SAMPLER_GRADIENT_PILOT.md#decision-and-observed-results)
+are recorded with `doc/evidence/sampler_gradient_results_20261021.json`.
+All 13 pilot job outcomes and source hashes are retained, including failed
+test attempts; no jobs remain from this pilot. Defaults and model identities
+remain unchanged.
+
+Baseline/gradient score-gate passes: 1/4 versus 0/4 for prior-draw starts,
+1/4 versus 1/4 for measurement starts. Sampling cost rises about 40%
+(120.0->169.3s and 118.7->166.6s). All full latent gates fail. Some morphology
+diagnostics improve, but this candidate does not earn a broader 20-object
+run or production adoption. Preserve it as an opt-in experimental proposal.
+
+Transport histories reveal separated bright scene explanations: prior-draw
+chains' mean target magnitudes span about 22–26 with large crowding, while
+measurement starts stay near 17 with little crowding. Draw-start ladders
+make dozens of trips despite magnitude ESS about 9; measurement ladders make
+0–1 trips. Raw score means also differ, but conditional direct-score MCSE is
+large, so do not interpret the means alone as statistically established bias.
+This is one bright stress case, not localization of the full c2 residual.
+
+Predeclared follow-up 17414397 isolates finite-step error using identical
+bright saved states and float64 arithmetic: gradient/measurement g2 is
+-6.002975 at d=.002, -2.721982 at .0005, -2.485471 at .000125, versus direct
+autodiff -2.469571. Added `doc/evidence/check_gradient_score_spacing_20261021.py`;
+no additional sampling or target modification. Direct score noise and failed
+posterior convergence remain, and no population shear is inferred.
+
+Validation: unchanged sampler code has the preceding 397-pass/1-skip full
+suite and bitwise diagnostic replay. Final receipt hashes, terminal job
+states, local document anchors, Python syntax and scoped whitespace checked.
+Next algorithm work should test transitions and relative mass between scene
+explanations with corrected proposals or an independent annealed particle
+reference; the present configuration is not a solved sampling algorithm.
+
+## 2026-10-21 — Implement and validate opt-in gradient morphology proposals
+
+Owner authorized proceeding with the sampler design. Added
+`sbsi/gradient_proposals.py` (bounded drift, exact forward/reverse Gaussian
+correction and RNG-free replica tracking), `sbsi/summary_gradients.py`
+(differentiable summary kernel, context gradients and direct shear scores),
+and opt-in flags in `scripts/check_galsbi_local_sampler.py`. Acceptance uses
+the unchanged full target and recomputed response at each endpoint. The
+proposal uses an approximate deterministic gradient, with prior-boundary
+fallbacks counted; defaults retain the original trajectory. Added independent
+tests in `tests/test_gradient_proposals.py` and `tests/test_summary_gradients.py`.
+
+Predeclared [the small pilot](SAMPLER_GRADIENT_PILOT.md#frozen-initial-rules)
+before trained-model results; source and launchers are frozen under
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_gradient_20261021`.
+The two `doc/evidence/*gradient_pilot_20261021.py` scripts validate replay and
+derivatives, and summarize score precision/transport/cost on four objects.
+
+Validation: targeted job 17413816 passes seven tests, including probability
+flux with deliberately wrong drift, curved-target moments and context/shear
+finite differences. Initial short toy test failed variance tolerance; its
+longer repeat passes without relaxed tolerances. An earlier direct-worktree
+repeat printed identical old numerical results despite edited bounds and is
+retained as suspected stale shared bytecode. Jobs now use fresh bytecode and
+hash-checked snapshots. Snapshot full-suite 17413835 lacked two fixture files;
+complete-checkout job 17413893 gives **397 passed, 1 skipped**. Python and
+shell syntax checks passed.
+
+GPU smoke 17413836 / validation 17413858: all initial kernel replays exactly
+zero, diagnostics off/on bitwise equal in every saved chain field, float64
+independent density difference <=1.43e-14, shear derivative/finite-difference
+agreement <=2.64e-8 absolute. New proposal sampling cost is about 1.5 times
+baseline in the zero-shear smoke; there is no measured efficiency gain yet.
+The declared four-object comparison is array 17413930 with summary 17413954.
+No production configuration or model identity changed; no catalogue rerun.
+
+## 2026-10-21 — General sampler redesign grounded in earlier failed proposals
+
+Owner asked for a deeper assessment of improving sampling across magnitude
+bins. Added [the algorithm design](SAMPLER_IMPROVEMENT_DESIGN.md#decision-and-evidence-boundary)
+after reviewing actual target measures, proposal blocks, covariance adaptation,
+temperature initialization/exchanges, and the October 16–21 results. Consulted
+primary sources on MH/Langevin proposals, parallel tempering, MCMC diagnostics,
+SMC and simulation-based calibration; links are retained in the design.
+
+Recommendation: test a Metropolis-corrected, gradient-guided three-coordinate
+morphology update within tempering, with full target evaluation and explicit
+reverse proposal density. Approximate deterministic proposal gradients need
+not change the target; usefulness is untested. Preserve exact type summation,
+explicit environments and cheap invariant z/SED moves. Existing joint blocks,
+pooled covariance and frozen mixture jumps already failed useful-efficiency
+tests, and existing tempering already uses even/odd exchanges. Proposed lineage
+diagnostics should measure actual transport, not swap acceptance alone.
+
+The design derives a direct shear-score reference: at fixed scene and observed
+data, b is shear independent, so shear autodiff does not need tree-emulator
+derivatives. This still requires an independently validated numerical path;
+it is not implemented or claimed lower variance. The benchmark spans all five
+magnitude bins, with a separate known-failure stress panel, matched hardware,
+independent starts and score-error-per-cost decisions. Replicated SMC and
+matched-prior/selection calibration are later independent checks. The analytic
+target prior versus numerical environment/proposal measure remains explicit.
+
+Validation: source-backed design review; local links/anchors, referenced source
+paths and scoped whitespace checked. No numerical tests were needed for this
+documentation-only change. No sampler source, settings, model identity or
+scientific outputs changed; no jobs launched. Next implementation order is
+recorded in [the design](SAMPLER_IMPROVEMENT_DESIGN.md#status-and-immediate-implementation-order).
+Sampler improvement remains a justified priority, not attribution of the
+entire broadly distributed c2 residual to sampling.
+
+## 2026-10-21 — Complete small posterior-score, tempering and precision pilot
+
+Owner requested autonomous investigation starting with small data. Added
+[the result report](SCORE_PILOT_RESULTS.md#outcome), completed the sequential
+[pilot declarations](SCORE_PILOT.md#question-and-frozen-initial-design), and
+retained `doc/evidence/score_pilot_results_20261021.json` with 60 source
+hashes and all 21 Slurm job outcomes. Diagnostic scripts under `doc/evidence/`
+cover prior-table density, matched-state scores, two support-complete maps,
+independent map invariants, influential-state localization, exact chain-prefix
+comparison and covariance-preserving score MCSE. Production code, model
+identities, old scientific outputs and the full-catalogue result are unchanged.
+
+Measured findings:
+
+- Four original faint objects, four chains each: both-score Rhat<1.01 and
+  bulk ESS>400 passes are 0/4 versus 0/4 at 4k plain MH; 1/4 versus 0/4 in
+  the late 8k of 16k plain MH; 3/4 versus 3/4 at 8k eight-temperature sampling
+  (prior-draw/measurement starts). Tempered between-run differences are <=1.40
+  conditional Monte Carlo errors; each run still has a failed object and all
+  runs fail the broader latent-state gate. Extensions replay their 4k prefixes
+  exactly. Different GPU models and warm-ups limit causal/time comparisons.
+- Near-origin transformed-score instability is localized to a near-circular
+  retained state. A tapered valid map reduces one matched-state spacing change
+  from -1.680 to -.00104; this is diagnostic only and production faint uses
+  fixed-coordinate scores. No reference map is promoted or state deleted.
+- First CPU score run 17411708 fails the 1e-6 replay gate and is preserved.
+  Matching GPU kernels and historical CPU ratios identifies backend arithmetic
+  as a replay issue. Float64 diagnostic 17412375 removes much tiny-step jitter,
+  but large finite-step effects remain; these are not float64 posterior draws.
+- 20k prior proposals / 10,664 retained: no analytic support failures, relative
+  importance ESS .999999852, reweighted intrinsic e2 shift 3.59e-7. This is
+  unconditional evidence, not a selected posterior-score bound.
+
+Sampling jobs 17411723/24, 17411792/93, 17412254/55 and diagnostic jobs are
+finished; final summaries 17412481/17412706 succeeded. All numerical work
+used Slurm and stayed within the four-GPU ceiling. No jobs remain from this
+pilot. Exact launchers, prior protocol versions and results are retained in
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/score_pilot_20261021`.
+
+Validation: `PYTHONPYCACHEPREFIX=/tmp/sbsi-score-pilot-pycache python -m
+py_compile` on the five diagnostic Python files passed. Single-thread py31
+`python -I doc/evidence/test_score_pilot_bounded_map_20261021.py` passed inverse,
+Jacobian, semimajor, identity and normalization checks; normalizations were
+0.9999999999999947 / 0.9999999999999949. Standard-library receipt validation
+passed all 60 hashes, 21 terminal job states (20 completed, one retained replay
+failure), and pilot/result links and anchors. Scoped whitespace checks passed.
+
+Limitations/next step: no new shear estimate, twin-tail replay, common-shear
+root, independent mock coverage test, or attribution of the full +7.19e-4 c2.
+The next bounded test should extend tempering to pass both-start score gates,
+then add bright/mid/faintest objects and an explicit precision/spacing budget
+before any larger recovery run. Full experiment details and the direct
+problems are in [the report](SCORE_PILOT_RESULTS.md#direct-problems-on-the-surface).
+
+## 2026-10-21 — Start bounded posterior-score and prior-density diagnostics
+
+Owner authorized autonomous work starting with small data. Predeclared
+[the pilot](SCORE_PILOT.md#question-and-frozen-initial-design) before results;
+added `doc/evidence/score_pilot_20261021.py`. Stage A holds saved bright/mid
+posterior states fixed and varies shear spacing, state count and score
+calculation. Stage B compares the numerical generator's table density with
+the analytic target density on 20,000 proposal galaxies. Current production
+uses one persistent environment, so a multi-environment bank-size test does
+not apply. Faint histories require a fresh small run.
+
+Resource inspection: no active user jobs; login host has no GPU, so numerical
+work goes through Slurm. Existing four-GPU follow-up ceiling retained.
+No production source, models or old outputs changed. Initial validation:
+Python syntax and launcher shell syntax checks; numerical gates are specified
+in the pilot, with results and adaptive follow-ups to be recorded below.
+
+## 2026-10-21 — Summarize latest experiments, evidence and visible inference problems
+
+Owner requested the latest branch logs, a written experiment/evidence account,
+and the direct problems visible in the results. Fresh `git fetch origin --prune`
+and commit-date comparison identify `worktree-galsbi-tempering` at `96eb5ab`,
+matching origin. Added [the current evidence report](CURRENT_EXPERIMENT_EVIDENCE.md#scope-and-current-result)
+and `doc/evidence/current_experiment_review_20261021.json`. Preserved existing
+uncommitted October 18 reviews and their work-log entries.
+
+The report records the successive recovery analyses and October 18–20
+localization tests. Retained m is −0.5033% ±0.8875 percentage points;
+c2 is +7.1918 ±1.9334 ×10^-4 (3.72σ), still failing the joint rule.
+Separates measured bright non-convergence from small tested selection/log-mean
+effects, untested production score/prior approximations, and the earlier
+support/twin-cutoff defects whose shear effects remain unmeasured. Explicitly
+qualifies the measurement oracle: its restricted primary is negative at
+2.68σ, not a zero-consistency pass, and its bright diagnostic is not
+step-converged. Faint final-state calibration uses a broader cohort than the
+final inference sample and is not a full convergence test.
+
+Validation: lightweight standard-library Python JSON/hash checks passed for
+34 source identities, 11 unchanged earlier science reports, current population
+counts, four saved report reproductions within 1e-9, and oracle decision labels.
+Local document links/anchors and scoped patch whitespace checked. No numerical
+suite was needed for this documentation-only change. No raw chains, model
+evaluations, large catalogue scans or scheduler jobs were run; no scientific
+settings or outputs changed. Remaining discriminating checks are documented
+under [evidence priorities](CURRENT_EXPERIMENT_EVIDENCE.md#what-the-evidence-now-prioritizes);
+this review does not execute them or claim a cause for the full c2.
+
 ## 2026-10-20 — 1M pair c2, measurement-only true-parameter test: measurement side cleared for the positive c2 (21–25.8: −2.96 ± 1.11e-4)
 
 Owner: "go on" (step 1 of the proposed plan). Pre-declared in `galsbi_pair1m_20261012/debug/rule_measoracle.md`
@@ -268,6 +809,93 @@ models, settings or the 1M result changed; nothing retuned.
 Next (per the rule): the faint long-chain run (`rule_faintlong.md`, ~75 GPU-hours) is not the next step. Next is
 Stage 1b (faint g1→g2 leak, posterior calibration) and the selection/likelihood side as a common cause; the source
 review's twin chunk cutoff and shape-support gap act on all bands and are unmeasured candidates. Owner decision.
+
+## 2026-10-18 — Mock and inference source audit: support coverage and twin chunk cutoff
+
+Owner requested another review of mock generation and inference on the latest
+branch. Verified `worktree-galsbi-tempering` at21ed49e against origin, traced
+the frozen4a506ca generation snapshot and the actual production
+`original/comoving.py`, `twin/comoving.py`, `pair_step.py` and `debug/step2.py`.
+Added [the pipeline review](MOCK_INFERENCE_PIPELINE_REVIEW.md#conclusion-and-scope--october-18-2026)
+and linked it from the earlier inference diagnosis.
+
+Two concrete findings, with no measured attribution of c2:
+
+- The effective intrinsic distortion support is a<0.98. The co-moving
+  Möbius map does not cover that smaller ellipticity disk; discarding mapped
+  off-support states does not restore the missing incoming region. A
+  deterministic allowed-node/disallowed-preimage witness passes for both
+  the current method and production postprocessor (b=0). A constant-kernel
+  uniform-disk example gives ratio0.999481586 instead of1. Actual F24
+  per-type shape-prior missing masses in the simplified b=0,K=1 case are
+  4.43e-5 red and6.81e-7 blue; these are not posterior or shear-error bounds.
+- The frozen twin generator clips every chunk at the last original-selected
+  scene, including499 complete chunks. Pair metadata confirms389 complete
+  chunks exclude1554 parent positions (maximum21 per chunk). Missing
+  selected twins are not counted yet; their selection/score effect requires
+  replay. An exhaustive two-parent example demonstrates the induced
+  selection bias, without estimating its size in the scientific mock.
+
+Also qualified the frozen-b approximation: an older100k comparison supports
+it at the tested precision, but its zero-centre cancellation argument is
+insufficient at the current bright correction's nonzero centre. This
+supersedes the October15 claim that start memory is the only approximation
+that could matter. The model mapping and measured cuts otherwise agree at
+source level; replay tests do not constitute integrated distribution closure.
+
+Validation: scheduler CPU audit17348387 completed in38s; extended audit17348743
+completed in20s, both exit0. The first launcher17348384 failed before execution
+because its temporary script was not on the shared filesystem; the corrected
+launchers read the preserved audit from `doc/evidence/`. Added
+`mock_pipeline_review_20261018.py` and its JSON receipt there, including16
+SHA256 records, actual configuration checks, analytic counterexamples and
+pair-table counts. Post-write verification passed all16 source hashes,
+16 document links/anchors, JSON assertions, audit syntax and whitespace;
+`git diff --check` passed. No F8/C8/emulator evaluation, MCMC or mock regeneration.
+No scientific code, models, results or running selection jobs changed.
+
+Next: verify a full-support likelihood-ratio construction and recomputed
+response at the actual centre; replay only the omitted twin tails; then
+measure a matched selection-normalized score on a controlled subset. The
+remaining c2 is still unlocalized. These findings do not establish that either
+defect explains it or that the quoted uncertainty covers these systematics.
+
+## 2026-10-18 — Latest-branch review of context, evidence and the unlocalized c2 residual
+
+Owner clarified that the requested review concerns the most up-to-date branch,
+not the old `dev` checkout. Verified `worktree-galsbi-tempering` at21ed49e
+against the remote head and added
+[the current inference diagnosis](INFERENCE_DIAGNOSIS.md#scope-and-conclusion--october-18-2026).
+The review covers the model-closure target, successive1M estimates, bright
+step correction, faint start/length tests, w8/mid controls and mirror evidence.
+It distinguishes matched aggregate results from full convergence and the
+experiment's two-sigma rule from sub-percent calibration acceptance.
+
+Read-only small-report audit reproduces current m=-0.50330% ±0.88749 percentage
+points and c2=+0.000719179 ±0.000193342 (3.72sigma). The successive versions
+reuse one mock. Bright/mid reference agreement does not exclude common bias;
+the mid test still indicates g1 sensitivity. Added
+`doc/evidence/inference_review_20261018.json` with16 source hashes, extracted
+comparisons and branch identity. No raw chains or large arrays were reduced.
+
+Stage0 production result is absent at review time: four array17347485 workers
+running, remaining replicas and analysis17347604 pending. Source inspection of
+`debug/bandsel.py` finds that its between-band chi-square omits cross-band
+covariance, selection covariance drops cross-component terms, and the forward
+comparison extrapolates from zero shear without propagating slope uncertainty
+while comparing mean e2 directly to the zero-shear mirror run. Documented these
+as analysis limitations to resolve before causal readings, not explanations
+of the current c2. Band-conditioned likelihoods also omit band-count information;
+the review gives the exact score decomposition to check. Original rules,
+analysis scripts, outputs and running jobs are unchanged.
+
+Validation: lightweight JSON assertions and SHA256 checks passed16 sources;
+all10 review links/anchors resolve; documentation whitespace checks pass.
+No inference-code or model changes, numerical suite or new experiment.
+Next: qualify Stage0 with joint covariance and matched-shear checks, then choose
+a bounded sampler/score-transport diagnostic from its evidence; the full faint
+long-run draft stays on hold. See
+[next steps](INFERENCE_DIAGNOSIS.md#where-to-look-next).
 
 ## 2026-10-18 — 1M pair c2: reflection, and per-band selection test (Stage 0a–0c) launched
 

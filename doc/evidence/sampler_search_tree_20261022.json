@@ -1,0 +1,278 @@
+{
+  "_counter": 16,
+  "root": "n0",
+  "nodes": {
+    "n0": {
+      "id": "n0",
+      "parent": null,
+      "depth": 0,
+      "status": "root",
+      "hypothesis": "Reproducible posterior scores and scene-region weights at minimum measured compute cost; baseline fails convergence, no candidate is accepted without held-out replication.",
+      "insight": "[from n3] Proposal density and support must be explicit before using measurement-informed starts for reference weights. Proposal quality must be measured independently.\n[from n2] Assess complete independent populations on the normalizer scale; particle count and weight ESS cannot stand in for convergence.\n[from n4] Use independent full-population score and normalizer variation to judge progress; a gradual schedule can make every incremental ESS look healthy despite a poorly explored posterior.\n[from n5] Check movement at the posterior temperature separately from the annealing average. Changing initial tails cannot by itself repair an ill-scaled final kernel.\n[from n6] For strongly heterogeneous or mixed posteriors, a global pilot covariance can overestimate narrow local directions. Test geometry with independent score replication, not covariance plausibility or acceptance averages.\n[from n7] Correct global scene proposals still need demonstrated mode access and stable weights. Diagnose target/environment support and proposal-density cost before increasing their mixture frequency.\n[from n9] Keep legitimate zero-mass realizations and their replicate denominator; unknown failures must remain errors. No-redraw behavior needs end-to-end tests, not only an aggregation helper.\n[from n8] Useful final-temperature movement does not guarantee stable annealing normalizers. Independently test proposal-to-posterior distance and early loss of particle diversity.\n[from n11] Informed scene initialization requires a normalized native point law and the true numerical Poisson intensity, including explicit singular-support accounting. A generic density-ratio identity alone does not supply a usable sampler.\n[from n14] Known-density scene proposals require the numerical native mark measure itself, not merely an analytic-support correction. Account separately for support slivers, zero-target initial draws, and genuine generator failures.\n[from n13] Local geometry and a normalized joint proposal solve different problems: local movement can improve while whole-population normalizing mass stays unstable. Test the combination with independent pilots, changed proposals and increased effort, then on untouched observations including all preparation costs.",
+      "metadata": {
+        "dev_score": null,
+        "test_score": null,
+        "result": "",
+        "branch_ref": null
+      },
+      "created_at": 1792614888,
+      "updated_at": 1792620302
+    },
+    "n1": {
+      "id": "n1",
+      "parent": "n0",
+      "depth": 1,
+      "status": "pending",
+      "hypothesis": "Replicated annealed particles with an evaluable measurement-informed initial law can estimate competing scene weights more reliably than the current tempered chains at useful cost.",
+      "insight": "[from n3] Proposal density and support must be explicit before using measurement-informed starts for reference weights. Proposal quality must be measured independently.\n[from n2] Assess complete independent populations on the normalizer scale; particle count and weight ESS cannot stand in for convergence.\n[from n4] Use independent full-population score and normalizer variation to judge progress; a gradual schedule can make every incremental ESS look healthy despite a poorly explored posterior.\n[from n5] Check movement at the posterior temperature separately from the annealing average. Changing initial tails cannot by itself repair an ill-scaled final kernel.\n[from n6] For strongly heterogeneous or mixed posteriors, a global pilot covariance can overestimate narrow local directions. Test geometry with independent score replication, not covariance plausibility or acceptance averages.\n[from n7] Correct global scene proposals still need demonstrated mode access and stable weights. Diagnose target/environment support and proposal-density cost before increasing their mixture frequency.\n[from n9] Keep legitimate zero-mass realizations and their replicate denominator; unknown failures must remain errors. No-redraw behavior needs end-to-end tests, not only an aggregation helper.\n[from n8] Useful final-temperature movement does not guarantee stable annealing normalizers. Independently test proposal-to-posterior distance and early loss of particle diversity.",
+      "metadata": {
+        "dev_score": null,
+        "test_score": null,
+        "result": "",
+        "branch_ref": null
+      },
+      "created_at": 1792614888,
+      "updated_at": 1792618109
+    },
+    "n2": {
+      "id": "n2",
+      "parent": "n1",
+      "depth": 2,
+      "status": "executed",
+      "hypothesis": "Fixed-schedule SMC bookkeeping and invariant mutations recover analytic correlated Gaussian and separated-mixture targets, including normalizing constants and genealogical diagnostics.",
+      "insight": "Fixed annealing can estimate normalizing mass correctly when zero-target draws remain in the original denominator. Finite normalized estimates and ancestry ESS still do not certify posterior integration.\n[from n9] Keep legitimate zero-mass realizations and their replicate denominator; unknown failures must remain errors. No-redraw behavior needs end-to-end tests, not only an aggregation helper.",
+      "metadata": {
+        "dev_score": 1.0,
+        "test_score": null,
+        "result": "27/27 core tests passed,417 full-suite passes and1skip;64 independent populations per analytic Gaussian/mixture target validate normalization,moments,region mass.",
+        "branch_ref": "codex/smc-core-20261021:5dcbffb"
+      },
+      "created_at": 1792614888,
+      "updated_at": 1792617799
+    },
+    "n3": {
+      "id": "n3",
+      "parent": "n1",
+      "depth": 2,
+      "status": "executed",
+      "hypothesis": "A normalized full-support measurement-informed proposal on transformed physical coordinates can seed bright and faint scene explanations with evaluable importance weights, unlike heuristic initial guesses.",
+      "insight": "A normalized full-support measurement proposal permits exact weights; its density correctness does not establish useful posterior overlap.\n[from n5] Check movement at the posterior temperature separately from the annealing average. Changing initial tails cannot by itself repair an ill-scaled final kernel.",
+      "metadata": {
+        "dev_score": 1.0,
+        "test_score": null,
+        "result": "13/13 proposal correctness tests passed; full isolated suite401 passed,3 skipped. No real posterior run yet.",
+        "branch_ref": "codex/smc-proposal-20261021:021b2ba"
+      },
+      "created_at": 1792614888,
+      "updated_at": 1792616468
+    },
+    "n4": {
+      "id": "n4",
+      "parent": "n1",
+      "depth": 2,
+      "status": "executed",
+      "hypothesis": "The fixed-schedule measurement-proposal bridge with invariant physical, nuisance and scene moves produces stable direct scores and scene weights on the four-object real-model development panel.",
+      "insight": "Fine temperature steps give final weight ESS near N while bright score estimates still vary widely. Weight stability does not diagnose mutation or mode-weight accuracy; physical geometry needs independent pilot calibration.\n[from n6] For strongly heterogeneous or mixed posteriors, a global pilot covariance can overestimate narrow local directions. Test geometry with independent score replication, not covariance plausibility or acceptance averages.\n[from n7] Correct global scene proposals still need demonstrated mode access and stable weights. Diagnose target/environment support and proposal-density cost before increasing their mixture frequency.\n[from n8] Useful final-temperature movement does not guarantee stable annealing normalizers. Independently test proposal-to-posterior distance and early loss of particle diversity.",
+      "metadata": {
+        "dev_score": 0.0,
+        "test_score": null,
+        "result": "Four frozen Gaussian runs N256/T64/M32 completed; 99.13 s mean total each. Bright replicate score effective counts 41.45/11.35, normalizer relative MCSE0.233; fails even exploratory precision. Other objects counts252/674,395/1548,1945/5594. Four runs cannot pass promotion regardless. Receipt dev_v1_report.json.",
+        "branch_ref": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_v1"
+      },
+      "created_at": 1792615470,
+      "updated_at": 1792618109
+    },
+    "n5": {
+      "id": "n5",
+      "parent": "n3",
+      "depth": 3,
+      "status": "executed",
+      "hypothesis": "A Student-t initial proposal reduces unstable normalizer weights caused by insufficient proposal tail mass while leaving the final posterior target unchanged.",
+      "insight": "Heavier initial proposal tails alone do not resolve poor final physical mutation. Bright beta1 physical acceptance1-3percent was hidden by acceptable aggregate acceptance. Preserve t as a robustness control, not an accepted improvement.",
+      "metadata": {
+        "dev_score": 0.0,
+        "test_score": null,
+        "result": "Student-t df5 q0 passed27 density/replay tests. Four N256/T64/M32 populations completed in97.75s mean. Bright score effectivecounts44.29/257.79 but normalizer relative MCSE0.293; intermediate ZrelativeMCSE0.215. Not a stable or demonstrably better reference. Receipt dev_v2_report.json.",
+        "branch_ref": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_v2"
+      },
+      "created_at": 1792615723,
+      "updated_at": 1792616430
+    },
+    "n6": {
+      "id": "n6",
+      "parent": "n4",
+      "depth": 3,
+      "status": "executed",
+      "hypothesis": "A physical-coordinate covariance estimated from separate pilot populations and frozen before fresh particle runs improves late-temperature movement and independent score agreement, especially for bright narrow likelihoods.",
+      "insight": "Whole-pilot covariance mixes broad and narrow regions and does not supply usable local physical scales. Correlation alone is insufficient; test a local sensitivity metric, while retaining fixed-kernel exactness.",
+      "metadata": {
+        "dev_score": 0.0,
+        "test_score": null,
+        "result": "Eight fresh N256/T64/M32 Gaussian populations with frozen within-run covariance completed;95.32s mean total excluding pilot. Bright effectivecounts221.67/24.31 and ZrelativeMCSE.180; object0 counts125.40/60.57. Only2of4observations passprecision; noaccuracygain. Full reportdev_v3_report.json; upcomingaudited secondmomentcorrection<0.4percent.",
+        "branch_ref": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_v3"
+      },
+      "created_at": 1792615991,
+      "updated_at": 1792617078
+    },
+    "n7": {
+      "id": "n7",
+      "parent": "n4",
+      "depth": 3,
+      "status": "executed",
+      "hypothesis": "A joint native target-neighbour exchange and reversible central position proposal can access alternate light assignments that fixed-position swaps reject, improving scene-weight agreement without changing the posterior.",
+      "insight": "Position relocation alone does not produce usable native bright scene exchanges. Its nonuniform proposal corrections substantially reduce acceptance; distinguish numerical native support from likelihood rejection before further tuning.",
+      "metadata": {
+        "dev_score": 0.0,
+        "test_score": null,
+        "result": "Relocating-exchange correctness77tests passed; four real populations source_v4 completed,114.64s mean vs99.13baseline. Bright exchangesaccepted0, bright effectivecounts11.10/97.15 and normalizerrelativeMCSE.544; object0ZrelativeMCSE.716. Noaccuracygain andhighercost. dev_v4_report_audited.json.",
+        "branch_ref": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_v4"
+      },
+      "created_at": 1792616267,
+      "updated_at": 1792617421
+    },
+    "n8": {
+      "id": "n8",
+      "parent": "n4",
+      "depth": 3,
+      "status": "executed",
+      "hypothesis": "A frozen metric estimated from physical likelihood gradients on independent pilots gives useful local step scales when global covariance is inflated by broad or mixed posterior regions.",
+      "insight": "Local metric repairs narrow physical movement but not stable normalizing mass. Score precision can look good while a single independent population dominates the normalization; preserve both gates and inspect initial proposal mismatch.",
+      "metadata": {
+        "dev_score": 0.0,
+        "test_score": null,
+        "result": "Eight gradient-metric runs complete at 97.85s mean total. Physical bright acceptance rises to roughly30percent and3of4 precision gates pass; bright normalizer relativeMCSE0.503/runESS2.884of8 fails despite score effectivecounts2902/1430. Higher-effort changed-q0 reference remains pending.",
+        "branch_ref": "worktree-galsbi-tempering; source_v5b; array17419140/report17419148"
+      },
+      "created_at": 1792616541,
+      "updated_at": 1792618108
+    },
+    "n9": {
+      "id": "n9",
+      "parent": "n2",
+      "depth": 3,
+      "status": "executed",
+      "hypothesis": "Explicit per-observation extinction bookkeeping can retain zero normalizing mass without discarding a seed or preventing the other observations from completing, while keeping the no-extinction run bitwise unchanged.",
+      "insight": "Absorbing zero normalizing mass must be represented explicitly at the observation level; undefined moments are masked, not substituted or retried. This improves bookkeeping only, not measured sampler efficiency.",
+      "metadata": {
+        "dev_score": 1.0,
+        "test_score": null,
+        "result": "Explicit per-observation extinction implemented;33targeted and607fulltests pass1skip. No-extinction state/RNG replay bitwise; deadobjectsretainzeroZ andnullmoments, otherobjectscomplete; mixed/all-extinct reports retainseed count andrefuseunknown failures. Receipt smc_extinction_20261021/result.json.",
+        "branch_ref": "codex/smc-extinction-20261021:fa15521c368ede9629e44318dcfc7c3bb6c743a7"
+      },
+      "created_at": 1792616908,
+      "updated_at": 1792617692
+    },
+    "n10": {
+      "id": "n10",
+      "parent": "n0",
+      "depth": 1,
+      "status": "pending",
+      "hypothesis": "An evaluable initial law that deliberately seeds measurement-like neighbours can test and improve rare scene-mode coverage that target-only initial proposals may share a blind spot for.",
+      "insight": "[from n11] Informed scene initialization requires a normalized native point law and the true numerical Poisson intensity, including explicit singular-support accounting. A generic density-ratio identity alone does not supply a usable sampler.\n[from n14] Known-density scene proposals require the numerical native mark measure itself, not merely an analytic-support correction. Account separately for support slivers, zero-target initial draws, and genuine generator failures.",
+      "metadata": {
+        "dev_score": null,
+        "test_score": null,
+        "result": "",
+        "branch_ref": null
+      },
+      "created_at": 1792617168,
+      "updated_at": 1792619249
+    },
+    "n11": {
+      "id": "n11",
+      "parent": "n10",
+      "depth": 2,
+      "status": "executed",
+      "hypothesis": "A mixture of the original marked-Poisson environment and that environment augmented by one informed point has an evaluable density ratio, enabling exact initial weights without truncating neighbour counts.",
+      "insight": "Uniform insertion exactly cancels the Poisson count factorial ratio. The hard SBSI requirement is a normalized native informed point law and the true numerical environment intensity; support singularities cannot be hidden by a finite tilt.",
+      "metadata": {
+        "dev_score": 1.0,
+        "test_score": null,
+        "result": "Generic ordered marked-Poisson augmentation tilt implemented and16CPUtests passed17419159.160kbase and180kaugmented scenes verify tilt normalizationand importance recovery. Prototypeonly: noSBSI informedpointlaworrealGPUexperiment.",
+        "branch_ref": "codex/poisson-augmentation-20261021:bc3a8b2630fc381498314a9092104c305a46aa8a"
+      },
+      "created_at": 1792617168,
+      "updated_at": 1792617799
+    },
+    "n12": {
+      "id": "n12",
+      "parent": "n0",
+      "depth": 1,
+      "status": "pending",
+      "hypothesis": "A normalized initial proposal learned from independent pilots reduces the annealing distance to the posterior while retaining broad support, improving normalizer stability at fixed cost.",
+      "insight": "[from n13] Local geometry and a normalized joint proposal solve different problems: local movement can improve while whole-population normalizing mass stays unstable. Test the combination with independent pilots, changed proposals and increased effort, then on untouched observations including all preparation costs.",
+      "metadata": {
+        "dev_score": null,
+        "test_score": null,
+        "result": "",
+        "branch_ref": null
+      },
+      "created_at": 1792618058,
+      "updated_at": 1792620302
+    },
+    "n13": {
+      "id": "n13",
+      "parent": "n12",
+      "depth": 2,
+      "status": "running",
+      "hypothesis": "A frozen mixture of independent-pilot coordinate moments and circular phase distributions, retaining broad measurement components, improves replicated score and normalizer accuracy without changing the target.",
+      "insight": "Independent pilot-fitted joint proposals combined with local gradient geometry stabilize normalizing mass where geometry alone fails. Starts, bridge and joint refresh all change, so the gain cannot be localized to initialization; rare missed modes remain possible.",
+      "metadata": {
+        "dev_score": 0.0007122507122507123,
+        "test_score": null,
+        "result": "Eight v7 populations pass all four development precision and v6 higher-effort score/region/normalizer comparisons. Bright normalizer relative MCSE0.027818, runESS7.9569/8. Declared successful recipe allocated cost1404 seconds including four pilots and both fits; inverse cost used as dev score. Frozen20-object heldout evaluation pending; no promotion.",
+        "branch_ref": "worktree-galsbi-tempering"
+      },
+      "created_at": 1792618059,
+      "updated_at": 1792620302
+    },
+    "n14": {
+      "id": "n14",
+      "parent": "n10",
+      "depth": 2,
+      "status": "executed",
+      "hypothesis": "A standalone density evaluator for the actual numerical native-mark generator, including interpolation support, supplies the missing exact measure for informed environment proposals and quantifies mock/prior mismatch.",
+      "insight": "The numerical native support is wider than analytic support in interpolation-edge slivers. Density evaluation must use the actual inverse-CDF slopes and rates; clamp atoms and failed-table tail events must be reported separately, never silently renormalized.",
+      "metadata": {
+        "dev_score": 1.0,
+        "test_score": null,
+        "result": "Standalone continuous numerical native intensity implemented;29 new and5 existing tests pass CPU17419657. Includes type rates, interpolation support slivers and shared native factors/cuts. No real sampler change.",
+        "branch_ref": "codex/numerical-native-intensity-20261021;efd794cafc7f0280eccba0cc654527983abac1ee"
+      },
+      "created_at": 1792618626,
+      "updated_at": 1792619208
+    },
+    "n15": {
+      "id": "n15",
+      "parent": "n2",
+      "depth": 3,
+      "status": "running",
+      "hypothesis": "A frozen periodic-phase Stein control variate has exactly zero posterior expectation and can reduce shear-score Monte Carlo variance without changing the sampled distribution or hiding normalizer failures.",
+      "insight": "",
+      "metadata": {
+        "dev_score": null,
+        "test_score": null,
+        "result": "",
+        "branch_ref": null
+      },
+      "created_at": 1792619091,
+      "updated_at": 1792619092
+    },
+    "n16": {
+      "id": "n16",
+      "parent": "n10",
+      "depth": 2,
+      "status": "running",
+      "hypothesis": "A known-density mixture of ordinary environments and one centrally placed measurement-informed neighbour seeds alternate light-assignment modes, with exact bridge tilt and zero-weight off-support accounting, improving whole-population agreement.",
+      "insight": "",
+      "metadata": {
+        "dev_score": null,
+        "test_score": null,
+        "result": "",
+        "branch_ref": null
+      },
+      "created_at": 1792619249,
+      "updated_at": 1792619250
+    }
+  }
+}

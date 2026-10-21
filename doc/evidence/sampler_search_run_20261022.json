@@ -1,0 +1,15 @@
+{
+  "objective": "Reproducible posterior scores and scene-region weights at minimum measured compute cost; baseline fails convergence, no candidate is accepted without held-out replication.",
+  "metric_direction": "max",
+  "dev_eval": "Small panel observations 58165,0,1,8; replicated particle/chain runs, particle-count and effort doubling, direct-score and scene-region comparisons; score is inverse GPU-seconds only after accuracy gates pass, otherwise zero.",
+  "test_eval": "Frozen 20-object measured-magnitude-stratified panel excluding development IDs, independent seeds; matched-accuracy cost against baseline; evaluator defined before first candidate validation.",
+  "material": "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/galsbi-tempering",
+  "branching": 3,
+  "max_depth": 3,
+  "budget_cycles": 16,
+  "cycles_used": 4,
+  "best_node": null,
+  "best_test_score": null,
+  "best_branch_ref": null,
+  "created_at": 1792614888
+}
