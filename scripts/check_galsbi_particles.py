@@ -39,9 +39,11 @@ def main():
     parser.add_argument('--moves', type=int, default=32)
     parser.add_argument('--power', type=float, default=2.)
     parser.add_argument('--scale', type=float, default=1.)
-    parser.add_argument('--faint-shift', type=float, default=5.)
-    parser.add_argument('--proposal-family', choices=['gaussian', 'student_t'], default='gaussian')
-    parser.add_argument('--proposal-df', type=float, default=5.)
+    parser.add_argument('--faint-shift', type=float)
+    parser.add_argument('--proposal-family', choices=['gaussian', 'student_t'])
+    parser.add_argument('--proposal-df', type=float)
+    parser.add_argument('--initial-proposal', type=Path,
+                        help='Frozen independent-pilot proposal; owns the complete initial law')
     parser.add_argument('--physical-geometry', type=Path)
     parser.add_argument('--relocate-exchanges', action='store_true')
     parser.add_argument('--seed', type=int, required=True)
@@ -49,6 +51,12 @@ def main():
     parser.add_argument('--device', choices=['cpu', 'cuda'], default='cuda')
     parser.add_argument('--density-batch-size', type=int, default=4096)
     args = parser.parse_args()
+    if args.initial_proposal and any(value is not None for value in
+            (args.faint_shift, args.proposal_family, args.proposal_df)):
+        parser.error('--initial-proposal cannot be combined with --faint-shift, --proposal-family, or --proposal-df')
+    args.faint_shift = 5. if args.faint_shift is None else args.faint_shift
+    args.proposal_family = 'gaussian' if args.proposal_family is None else args.proposal_family
+    args.proposal_df = 5. if args.proposal_df is None else args.proposal_df
     if args.output.exists() and any(args.output.iterdir()):
         raise ValueError('fresh output directory required')
     if (args.particles < 4 or args.stages < 2 or args.moves < 1 or not np.isfinite(args.power)
@@ -95,6 +103,15 @@ def main():
         protocol['physical_geometry'] = dict(path=str(args.physical_geometry.resolve()),
             sha256=digest(args.physical_geometry), metadata=geometry.metadata)
         protocol['implementation_sha256'][str(Path('sbsi/particle_geometry.py').resolve())] = digest('sbsi/particle_geometry.py')
+    initial = None
+    if args.initial_proposal:
+        from sbsi.particle_initial_proposal import FrozenParticleProposal
+        initial = FrozenParticleProposal.load(args.initial_proposal)
+        initial.validate_production(args.seed, protocol)
+        protocol['initial_proposal'] = dict(path=str(args.initial_proposal.resolve()),
+            sha256=digest(args.initial_proposal), metadata=initial.metadata,
+            effective_law='artifact-owned normalized Student-t/von-Mises mixture')
+        protocol['implementation_sha256'][str(Path('sbsi/particle_initial_proposal.py').resolve())] = digest('sbsi/particle_initial_proposal.py')
     save(args.output/'protocol.json', protocol)
     started = time.monotonic()
     torch.set_num_threads(min(2, len(os.sched_getaffinity(0))))
@@ -107,10 +124,10 @@ def main():
     distance = ExactMemo(lambda z: cosmo.background.dist_ang_a(a=1/(1+z)))
     prior = GalSBIScenePrior(galaxy)
     coordinates = GalSBITargetCoordinates(galaxy, distance)
-    proposals = [MeasurementParticleProposal.from_measurement(row.iloc[:4].to_numpy(),
+    proposals = (list(initial.proposals) if initial is not None else [MeasurementParticleProposal.from_measurement(row.iloc[:4].to_numpy(),
         reference['conditions'], galaxy.p, args.shear, faint_magnitude_shift=args.faint_shift,
         component_family=args.proposal_family, student_df=args.proposal_df)
-        for _, row in observations.iterrows()]
+        for _, row in observations.iterrows()])
     protocol['proposals'] = [p.metadata for p in proposals]
     save(args.output/'protocol.json', protocol)
     target = GalSBIParticleTarget(prior, coordinates, likelihood, response_model, distance,

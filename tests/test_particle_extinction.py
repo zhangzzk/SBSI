@@ -142,13 +142,36 @@ def driver(monkeypatch):
 
 
 @pytest.mark.parametrize('extinct', [(0,), (0,1), ()])
-def test_driver_writes_complete_finite_receipt_and_artifacts_for_every_observation(tmp_path,monkeypatch,driver,reporter,extinct):
+@pytest.mark.parametrize('pilot_initial', [False, True])
+def test_driver_writes_complete_finite_receipt_and_artifacts_for_every_observation(tmp_path,monkeypatch,driver,reporter,extinct,pilot_initial):
     target,state=population_fixture(extinct=extinct)
     reference=tmp_path/'reference'; reference.mkdir()
     target.observations.to_parquet(reference/'observations.parquet')
     write_json(reference/'protocol.json',dict(conditions=dict(zero_point=30.)))
     write_json(reference/'result.json',dict(preparation_checks_pass=True,
         observations_sha256=digest(reference/'observations.parquet')))
+    extra = []
+    initial_path = tmp_path/'initial.json'
+    if pilot_initial:
+        from sbsi.galsbi_particle_proposal import MeasurementParticleProposal
+        from sbsi.particle_initial_proposal import (NATIVE_TARGET_SOURCES,
+            fit_initial_proposal, target_identity)
+        root = Path(driver.__file__).resolve().parents[1]
+        identity = dict(observations=[0,1], fixed_shear=[0.,0.],
+            reference_protocol_sha256=digest(reference/'protocol.json'),
+            observation_sha256=digest(reference/'observations.parquet'), density_batch_size=4096,
+            bridge='q_environment(E) * q0(x)**(1-beta) * (p_analytic(x)*K(y|x,E))**beta',
+            selection='none in fixed-y posterior; no population shear fit',
+            implementation_sha256={str(root/('configs' if name.endswith('.json') else 'sbsi')/name):
+                digest(root/('configs' if name.endswith('.json') else 'sbsi')/name) for name in NATIVE_TARGET_SOURCES})
+        broad = [MeasurementParticleProposal(np.tile(state.x[4*i,:9],(2,1)), np.ones(9), [.5,.5])
+                 for i in range(2)]
+        fitted = fit_initial_proposal([state.x.reshape(2,4,10).copy() for _ in range(4)], broad,
+            dict(target_identity(identity), pilot_seeds=[801,802,803,804]))
+        fitted.save(initial_path)
+        target.proposals = list(fitted.proposals)
+        state = target.evaluate(state.x, state.scene)
+        extra = ['--initial-proposal', str(initial_path)]
     doubles=[]
     class Model:
         def double(self): doubles.append(1)
@@ -162,7 +185,12 @@ def test_driver_writes_complete_finite_receipt_and_artifacts_for_every_observati
     monkeypatch.setattr(driver,'GalSBITargetCoordinates',lambda *a:None)
     monkeypatch.setattr(driver,'MeasurementParticleProposal',SimpleNamespace(
         from_measurement=lambda *a,**k:SimpleNamespace(metadata={'fixture':True})))
-    monkeypatch.setattr(driver,'GalSBIParticleTarget',lambda *a,**k:target)
+    def make_target(*args, **kwargs):
+        if pilot_initial:
+            assert all(p.component_family == 'student_t' and len(p.means) == 6 for p in args[7])
+            np.testing.assert_array_equal(args[7][0].log_prob(state.x[:4]), target.proposals[0].log_prob(state.x[:4]))
+        return target
+    monkeypatch.setattr(driver,'GalSBIParticleTarget',make_target)
     monkeypatch.setattr(target,'initialize',lambda rng:state)
     class Scores:
         def __init__(self,*a,**k): pass
@@ -171,10 +199,17 @@ def test_driver_writes_complete_finite_receipt_and_artifacts_for_every_observati
     output=tmp_path/'run'
     monkeypatch.setattr(sys,'argv',['check_galsbi_particles.py','--reference',str(reference),
         '--output',str(output),'--observation-indices','0','1','--particles','4',
-        '--stages','2','--moves','2','--seed','929','--device','cpu'])
+        '--stages','2','--moves','2','--seed','929','--device','cpu']+extra)
     monkeypatch.chdir(Path(driver.__file__).resolve().parents[1])
     driver.main()
     protocol=json.loads((output/'protocol.json').read_text())
+    if pilot_initial:
+        assert protocol['initial_proposal']['sha256'] == digest(initial_path)
+        assert protocol['initial_proposal']['metadata']['pilot_seeds'] == [801,802,803,804]
+        assert protocol['proposals'][0]['component_family'] == 'student_t'
+        assert 'particle_initial_proposal.py' in [Path(p).name for p in protocol['implementation_sha256']]
+    else:
+        assert 'initial_proposal' not in protocol
     result=json.loads((output/'result.json').read_text())
     decoded=reporter.validate_completed_result(protocol,result)
     assert decoded[4].tolist() == [i in extinct for i in range(2)]

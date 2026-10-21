@@ -10,13 +10,13 @@ from __future__ import annotations
 from copy import deepcopy
 
 import numpy as np
-from scipy.special import betaln, gammaln, logsumexp, logit
+from scipy.special import betaln, gammaln, i0e, logsumexp, logit
 
 from .shear_map import inverse_shear_to_ellipticity
 
 
 class MeasurementParticleProposal:
-    """An elliptical mixture times independent uniform periodic phase.
+    """An elliptical mixture with component-conditional periodic phase.
 
     Every component has positive weight and strictly positive finite scales,
     giving full support on R**9 times the circle. Means may use measured
@@ -28,6 +28,8 @@ class MeasurementParticleProposal:
     chi-squared radial scale shared by the nine coordinates of each draw.
     Its shape matrix is diag(scales**2), so its covariance is
     student_df/(student_df-2) times that matrix when student_df > 2.
+    Phase is uniform by default. Optional centres and concentrations give
+    one independent-within-component von Mises law per mixture component.
     """
 
     coordinate_names = ('log_z', 'm_r', 'sed_alr0', 'sed_alr1', 'sed_alr2',
@@ -35,7 +37,8 @@ class MeasurementParticleProposal:
                         'distortion_logit', 'phase')
 
     def __init__(self, means, scales, weights, *, metadata=None,
-                 component_family='gaussian', student_df=5.):
+                 component_family='gaussian', student_df=5.,
+                 phase_centres=None, phase_concentrations=None):
         if component_family not in ('gaussian', 'student_t'):
             raise ValueError('component family must be gaussian or student_t')
         student_df = float(student_df)
@@ -60,9 +63,20 @@ class MeasurementParticleProposal:
         weights = np.exp(log_weights)
         if np.any(weights == 0):
             raise ValueError('component weights underflow after normalization')
+        centres = np.zeros(len(means)) if phase_centres is None else np.asarray(phase_centres, float)
+        concentrations = (np.zeros(len(means)) if phase_concentrations is None
+                          else np.asarray(phase_concentrations, float))
+        if (centres.shape != (len(means),) or concentrations.shape != (len(means),)
+                or not np.isfinite(centres).all() or not np.isfinite(concentrations).all()
+                or np.any(concentrations < 0)):
+            raise ValueError('finite phase centres and nonnegative concentrations per component required')
+        self.phase_centres = centres.copy() % (2*np.pi)
+        self.phase_concentrations = concentrations.copy()
+        self._uniform_phase = not np.any(concentrations)
         self.means, self.scales = means.copy(), scales.copy()
         self.weights, self.log_weights = weights, log_weights
-        for array in (self.means, self.scales, self.weights, self.log_weights):
+        for array in (self.means, self.scales, self.weights, self.log_weights,
+                      self.phase_centres, self.phase_concentrations):
             array.setflags(write=False)
         self._metadata = deepcopy({} if metadata is None else metadata)
         self.component_family, self.student_df = component_family, student_df
@@ -150,7 +164,7 @@ class MeasurementParticleProposal:
     @property
     def metadata(self):
         """Independent JSON-compatible description of the frozen proposal."""
-        return dict(deepcopy(self._metadata), coordinate_names=list(self.coordinate_names),
+        result = dict(deepcopy(self._metadata), coordinate_names=list(self.coordinate_names),
                     means=self.means.tolist(), scales=self.scales.tolist(), weights=self.weights.tolist(),
                     component_family=self.component_family,
                     student_df=self.student_df if self.component_family == 'student_t' else None,
@@ -159,6 +173,11 @@ class MeasurementParticleProposal:
                     density_measure='Lebesgue in coordinates 0..8 times phase on [0, 2pi)',
                     phase='independent uniform periodic', support='R**9 times circle',
                     retry_or_clip_draws=False)
+        if not self._uniform_phase:
+            result.update(phase='component-conditional von Mises periodic',
+                          phase_centres=self.phase_centres.tolist(),
+                          phase_concentrations=self.phase_concentrations.tolist())
+        return result
 
     def sample(self, n, rng):
         """Draw exactly n points, including any outside the native prior.
@@ -180,6 +199,10 @@ class MeasurementParticleProposal:
                 raise FloatingPointError('Student-t radial draw is not representable; do not retry')
             x[:, :9] = self.means[choices]+self.scales[choices]*normal/radial[:, None]
         x[:, 9] = rng.uniform(0., 2*np.pi, n)
+        if not self._uniform_phase:
+            informed = self.phase_concentrations[choices] > 0
+            x[informed, 9] = rng.vonmises(self.phase_centres[choices[informed]],
+                self.phase_concentrations[choices[informed]]) % (2*np.pi)
         if not np.isfinite(x).all():
             raise FloatingPointError('proposal draw is outside finite numerical support; do not retry')
         return x
@@ -218,4 +241,12 @@ class MeasurementParticleProposal:
             normalizer = gammaln(4.5)-betaln(self.student_df/2, 4.5)-4.5*(log_df+np.log(np.pi))
             terms = (normalizer-np.log(self.scales).sum(axis=1)+self.log_weights
                      -(self.student_df+9)/2*np.logaddexp(0., log_radius_squared-log_df))
-        return logsumexp(terms, axis=1)-np.log(2*np.pi)
+        if self._uniform_phase:
+            # Keep the default arithmetic and RNG path exactly as before.
+            return logsumexp(terms, axis=1)-np.log(2*np.pi)
+        # Conditional phase densities belong INSIDE the component sum. i0e
+        # avoids overflowing the Bessel normalizer for concentrated pilots.
+        phase = x[:, None, 9] % (2*np.pi)
+        log_phase = (self.phase_concentrations*(np.cos(phase-self.phase_centres)-1)
+                     -np.log(i0e(self.phase_concentrations))-np.log(2*np.pi))
+        return logsumexp(terms+log_phase, axis=1)
