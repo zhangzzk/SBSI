@@ -684,3 +684,43 @@ started but before inspecting v8 scientific outcomes, using the already
 frozen v1 coefficients without refitting. It supplements the original raw
 gates and cannot override a failure. The separate repair receipt preserves
 both launchers and their hashes.
+
+## Independent audit and further efficiency hypotheses
+
+An independent saved-array calculation reproduces the observation 0 phase
+discrepancy to numerical precision, including separate F64 reweighting.
+Model phase regularity, sign, pairing, original denominators and whole-run
+influence covariance were reviewed. [Full audit](PHASE_CONTROL_INDEPENDENT_AUDIT.md#conclusion-for-the-existing-development-comparison)
+fixes unsupported deterministic thinning and misleading F32 expectation
+metadata for future diagnostics. All evaluated old runs retained every
+particle; the fixes do not explain their difference. Original queued phase
+snapshots and reports are preserved with the documented metadata erratum.
+
+Cycle 6 adds two bounded hypotheses while the frozen development arrays run:
+
+- n19: for r squared=e1 squared+e2 squared, set
+  F=(1+r squared)/(r squared+0.01), a=(-F e2,F e1), and
+  C=a*T+derivative_phase(a). The fixed analytic candidate score is S-C,
+  with epsilon=0.1 and no fitting or recentering. The derivative term is
+  essential; omitting it changes the expectation. CPU validation and all-state
+  development comparisons must precede any efficiency conclusion.
+- n20: retain invariant mutation paths instead of discarding their intermediate
+  states, following [waste-free SMC](https://arxiv.org/html/2011.02328v2).
+  The isolated prototype must verify the normalizer/weighted-moment identities
+  and compare accuracy at counted density-evaluation cost on known targets.
+  Correlated path points are never independent precision replicates. Real scene
+  integration, fixed numerical batching and mode coverage remain separate gates.
+
+The tree's advisory depth and sibling limits are now 4; its 16-cycle budget,
+resource ceiling and scientific requirements are unchanged. Neither hypothesis
+is an accepted improvement. Endpoint compatibility of current v8/v9 snapshots
+is receiving a separate explicit audit before cross-version interpretation.
+
+A bounded mutation profiler (17421460, after phase 17421115) reuses the original
+read-only throughput benchmark and saved v5 states. It records each physical,
+nuisance, environment, position and exchange call separately at 1024/4096 rows,
+including explicit device synchronization. Source and input hashes, kernel
+replay and retained-state fingerprints remain mandatory. Profiles include
+instrumentation overhead and cache effects; only later uninstrumented replay
+can establish a speedup. Four-observation groups and 4096-row density shape
+remain unchanged.

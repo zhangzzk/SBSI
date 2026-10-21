@@ -1,5 +1,5 @@
 {
-  "_counter": 18,
+  "_counter": 20,
   "root": "n0",
   "nodes": {
     "n0": {
@@ -268,11 +268,11 @@
       "metadata": {
         "dev_score": null,
         "test_score": null,
-        "result": "",
-        "branch_ref": null
+        "result": "Integrated commit766c1b2: full CPU782 passed1skip, smoke17420872 completed30s; both v8 baseline and informed arms reached meaningful progress. Array17420873 and raw report17420874; frozen phase diagnostic17421116 adds old v1 coefficients without refitting. No science acceptance.",
+        "branch_ref": "worktree-galsbi-tempering/766c1b2"
       },
       "created_at": 1792619249,
-      "updated_at": 1792619250
+      "updated_at": 1792621948
     },
     "n17": {
       "id": "n17",
@@ -300,11 +300,43 @@
       "metadata": {
         "dev_score": null,
         "test_score": null,
+        "result": "V9 array17420804 higher-effort fitted-q0 runs started normally; first two completed8m48s and9m07s. Raw report17420827; phase followup17421115 replaces pending-cancelled17420835 after JSON-manifest launcher repair, with frozen source and coefficients unchanged. Await full8 populations; no interim scientific interpretation.",
+        "branch_ref": "worktree-galsbi-tempering/766c1b2"
+      },
+      "created_at": 1792621067,
+      "updated_at": 1792621948
+    },
+    "n19": {
+      "id": "n19",
+      "parent": "n15",
+      "depth": 4,
+      "status": "running",
+      "hypothesis": "The analytic phase product-rule control with fixed epsilon0.1, C=(-F e2*T-F e1, F e1*T-F e2), F=(1+|e|^2)/(|e|^2+0.01), removes more orientation score noise than a fitted constant control while preserving the continuous endpoint expectation, without fitting or hiding cross-population disagreements.",
+      "insight": "",
+      "metadata": {
+        "dev_score": null,
+        "test_score": null,
         "result": "",
         "branch_ref": null
       },
-      "created_at": 1792621067,
-      "updated_at": 1792621303
+      "created_at": 1792622123,
+      "updated_at": 1792622123
+    },
+    "n20": {
+      "id": "n20",
+      "parent": "n4",
+      "depth": 3,
+      "status": "running",
+      "hypothesis": "Retaining fixed invariant mutation paths in waste-free SMC reduces density-evaluation cost for replicated normalizer and score accuracy, with correct original denominators, full extinction accounting, and no particle-independence assumption.",
+      "insight": "",
+      "metadata": {
+        "dev_score": null,
+        "test_score": null,
+        "result": "",
+        "branch_ref": null
+      },
+      "created_at": 1792622233,
+      "updated_at": 1792622233
     }
   }
 }

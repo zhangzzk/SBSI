@@ -1,5 +1,35 @@
 # Work log
 
+## 2026-10-22 — Independent phase audit confirms the gap and hardens diagnostics
+
+Integrated isolated audit 0883de4: phase diagnostics now reject deterministic
+thinning and verify full retained counts. Raw F32 rows no longer claim an exact
+zero expectation; F64 rows state the intended continuous-model qualification.
+New reports use schema v2. Frozen old reports and queued v8/v9 snapshots remain
+unchanged, with an explicit metadata erratum.
+
+CPU 17421220 independently recomputed all 24 old evaluation populations:
+maximum mean/covariance differences 1.34e-14/1.14e-13. Observation 0's gap
+remains 4.54426 reported MCSE, or 4.54458 after explicit F64 reweighting.
+All old inputs used every particle, so the thinning issue did not affect them.
+The same job passed 40 focused tests; full suite 17421249 passed 778 tests
+with 4 optional skips in 68.07 seconds. No sign, boundary, or weighting error
+was found to explain the gap. [Audit](PHASE_CONTROL_INDEPENDENT_AUDIT.md#conclusion-for-the-existing-development-comparison)
+records the remaining generic endpoint-provenance limitation.
+
+Started two bounded CPU directions: analytic phase product-rule control with
+fixed regularizer 0.1 (n19), and waste-free fixed-schedule SMC (n20). Both
+retain frozen hypotheses and require scientific evidence beyond unit tests.
+The advisory tree depth/sibling limits extend from 3 to 4 for these concrete
+refinements; the 16-cycle budget, four-GPU ceiling and acceptance gates remain.
+No production default, likelihood, existing run, or shear estimate changes.
+
+Added a read-only profiler around frozen mutation calls, preserving source,
+input and retained-state checks. Syntax and launcher validation pass; V100
+job 17421460 depends on phase job 17421115. It attributes host/native/model
+cost with fixed 4096-row density batches; profiler timings cannot establish
+a speedup. No new posterior population or broader observation batch is used.
+
 ## 2026-10-22 — Localize the score discrepancy and validate scene-proposal startup
 
 Added the read-only localization script, nine focused tests, and
