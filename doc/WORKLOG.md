@@ -1,5 +1,26 @@
 # Work log
 
+## 2026-10-22 — Prepare held-out phase fitting with strict pilot provenance
+
+Added `scripts/fit_declared_particle_phase_control.py`, its focused tests and
+[conditional validation design](CORRECTED_HELDOUT_PREPARATION.md#status-and-launch-condition).
+The historical n15 fitter remains unchanged. New fitting is bound to a frozen
+panel, complete source manifest, exact four fresh pilots, globally disjoint
+seeds, declared proposal laws and preproduction timing. Diagnostic hashes must
+bind the declared pilot artifacts; mandatory implementation maps and the actual
+imported phase module must match the source. Pilot and production outcomes are
+not used to choose the fitting rule.
+
+Initial CPU17423221 passes878 tests with1 optional skip in102.93 seconds.
+Independent review then finds provenance/source-map/full-proposal validation
+gaps; the strengthened code and seven additional rejection checks are frozen
+for CPU17423307, which passes885 tests with1 optional skip in90.37 seconds.
+Both before/after manifest checks pass; both snapshots are preserved in the
+[validation receipt](evidence/declared_phase_fit_validation_20261022.json).
+No inference source, running v10 job, old held-out receipt, or scientific gate
+was changed. The new full held-out launcher/report remain future work, conditional
+on complete v10 evidence. No held-out science was launched or inspected.
+
 ## 2026-10-22 — Final reporting and legacy-audit integration validated
 
 CPU17422839 passes854 tests with8 optional skips in97.55 seconds; seven skipped

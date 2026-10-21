@@ -1,0 +1,112 @@
+# Corrected held-out validation preparation
+
+## Status and launch condition
+
+This is preparation, not a launched experiment or an accepted sampler. The
+complete corrected v10 comparison must pass its declared raw score, normalizer,
+scene-region and both-measure phase-controlled score comparisons before a new
+held-out declaration is frozen. No v10 interim aggregates or held-out pilot
+numerical outcomes were used in this preparation. The earlier held-out v7
+production remains cancelled; its declaration and warmup receipts are preserved.
+
+## Conditional fixed procedure
+
+If the v10 small arm passes, test its N256/T64/M64 fitted-proposal procedure
+against N1024/T64/M64 broad Student-t5 on the unchanged twenty-object measured-
+magnitude panel. Preserve its five original four-observation groups, density
+batch4096, V100 hardware and independent eight-population production groups.
+Use fresh, globally disjoint pilot/candidate/reference seeds. Freeze the actual
+source, declarations, seeds, model/reference/prior inputs and job graph before
+starting; none is authorized by this document alone to bypass the v10 gate.
+
+Use four fresh Gaussian N256/T64/M32 pilots per group, from the corrected source.
+Apply the existing frozen gradient-geometry and initial-proposal fitting rules.
+Evaluate every pilot's complete phase diagnostic, then fit the existing pooled
+covariance phase coefficient rule once. This fitting is a fixed part of the
+inference procedure, not an opportunity to tune on held-out results. Freeze all
+fits before production in that group. The old v7 pilots are not reused.
+
+The final wrapper must verify that declaration groups equal the ordered IDs in
+the hashed panel, every run uses the frozen complete source and required external
+inputs, all declared seeds are present, and every diagnostic uses all particles.
+The phase checker's zero process exit alone is insufficient: its
+`numerical_checks_pass` must be true. Any pilot/production extinction or unknown
+failure rejects the panel and preserves its seed and cost; do not omit, replace,
+extend, or refit a failed population.
+
+## Separate declaration-bound fitter
+
+`scripts/fit_declared_particle_phase_control.py` calls the existing
+`fit_frozen_phase_control` API without relaxing the historical n15 fitter's
+`dev_v1_0..3` restriction. It requires schema
+`sbsi-heldout-corrected-declaration-v1`, an exact `source` and
+`source_manifest_sha256`, `output`, `panel` and `panel_sha256`, ordered `groups`,
+`development_ids`, `shear`, `density_batch_size`, reference/observation hashes,
+and pilot/candidate/reference settings. Pilot settings also explicitly record
+`blocks`, `scale`, and schedule `power`. A `pilot_proposal_metadata` array pins
+the complete four proposal laws for each group, including means/scales. Generate
+that array from frozen measured inputs during preflight before launching pilots;
+checking only Gaussian labels and mixture weights is insufficient.
+
+Each group's inputs must be `group_N/pilot_0..3` and
+`group_N/pilot_0_phase.json` through `pilot_3_phase.json`; the only allowed output
+is `group_N/phase_coefficients.json`. Global seed construction remains
+`seed_base + 10*group + replica`. The fitter rejects seed overlaps, development
+IDs, changed recipes or input hashes, mixed frozen implementations, incomplete
+diagnostics, and any already-started production in that group. It preserves
+the declaration, source and pilot hashes in the coefficient artifact. It does
+not read production outcomes, choose coefficients against truth, or apply an
+empirical offset. The full launch wrapper and final cost/accuracy report still
+need to be prepared and frozen after the development decision.
+
+Diagnostic provenance must bind exactly the declared pilot's protocol, result
+and particle artifacts. Target identity is checked against that protocol and
+the pinned native sources. Mandatory inference/diagnostic source maps and the
+actually imported phase module are checked against the manifest. The manifest
+also covers transitive SBSI files omitted by the older phase identity. External
+dependency/artifact pinning remains the full workflow's responsibility.
+
+## Accuracy, cost and interpretation
+
+Require all original raw score/Z/region gates for every object. Additionally
+require both corrected score components to agree within3.5 combined whole-
+population MCSE under both recorded F32 sampling and F64 reweighting. No good
+cost or phase-control result rescues failed raw gates. Production uncertainty is
+conditional on the shared frozen fits; independent production populations justify
+the conditional combined MCSE. The F32 correction remains a qualified diagnostic;
+the zero-mean identity concerns the intended continuous F64 model.
+
+Charge all four pilots, their phase evaluations, geometry and coefficient fits
+to both recipes. Charge proposal fitting to the candidate only. Charge each
+recipe its production, production-phase and report costs; charge joint comparison
+and verification costs equally and explicitly. Also report actual total study
+work separately, without double-counting shared preparation. Include process and
+model loading through timed subprocesses. Record failures rather than subtracting
+their costs. Report GPU and CPU seconds separately where possible; summed process
+seconds are not panel wall time. No development/search amortization is claimed.
+
+This requires20 pilots,80 production populations,100 phase evaluations, five
+each of geometry/proposal/coefficient fits, and the complete reports. Both
+numerical measures come from each phase evaluation. Acceptance is accuracy AND
+lower all-inclusive candidate cost. It establishes a bounded fixed-y validation
+at the declared tolerance, not global rare-mode coverage or a population shear-
+bias result. A failed held-out gate rejects promotion; further tuning requires
+a new held-out panel.
+
+## Validation
+
+The declaration-bound fitter has synthetic checks for independent fitting,
+coefficient provenance, changed recipes, missing independence, production leakage,
+changed panels/sources/original artifacts, numerical failure, and unsafe manifest
+paths. CPU17423221 passed878 tests, one optional skip, in102.93 seconds on
+the initial frozen313-file snapshot
+`source_declared_phase_fit_20261022`; manifest SHA256
+`dd9f33f159e23f0ab0b72e78e08050e4eebe95cd150799d20a043e48994ec817`.
+Independent review then identified the provenance, mandatory-source and full-law
+gaps described above. CPU17423307 tests the strengthened313-file snapshot
+`source_declared_phase_fit_v2_20261022`, manifest SHA256
+`33b9e92c5967818039afb3fbf0b946dece535b52ab21aa67e41c887ce4e8b989`.
+It passes885 tests with one optional skip in90.37 seconds. Before/after source
+checks pass. The earlier passing tests did not cover these gaps. The
+[validation receipt](evidence/declared_phase_fit_validation_20261022.json) preserves
+both snapshots and results. No scientific held-out computation was run.
