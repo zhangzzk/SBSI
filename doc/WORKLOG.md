@@ -1,5 +1,60 @@
 # Work log
 
+## 2026-10-21 — Standalone numerical native-mark intensity, including interpolation-edge support
+
+Added `sbsi/numerical_native_intensity.py` and
+`tests/test_numerical_native_intensity.py`. The public evaluator
+`numerical_native_log_intensity(prior, data, return_factors=False)` gives the
+continuous part of the actual numerical generator intensity per steradian,
+with counting measure in native type and Lebesgue measure in
+z, M_B, c[:4], R_kpc, n, a, psi. It uses absolute pre-cut type rates, exact
+piecewise redshift-CDF slopes, inverse-log-gamma interpolation slopes, shared
+Dirichlet/size/truncated-Sersic/shape factors, and the inclusive intrinsic
+i-band window. Stored derived photometry is ignored and recomputed. Inputs
+are neither repaired nor retried; invalid rows return minus infinity.
+
+The evaluator never invokes analytic intensity or its luminosity support
+mask. Numerical inverse-table boundary slivers with M_B beyond the analytic
+cap therefore remain supported. It does not divide by parent_rate, estimated
+post-cut surface density, conditional cut acceptance, or an analytic type
+normalization. Production prior, target, model artifacts and defaults are
+unchanged; no proposal or real inference was run.
+
+The numerical limitation is explicit: the finite inverse table leaves a
+failed-draw tail, and sample() raises rather than retrying on overflow. Under
+idealized continuous uniforms, max(U,float.tiny) also produces a tiny singular
+clamp atom if table-covered. `luminosity_table_coverage` reports continuous
+mass, clamp mass and lower/upper failed mass separately. The evaluator returns
+the continuous density without renormalizing these events away. Neither this
+density nor any Lebesgue density represents the fully discrete floating-point
+random generator exactly. This must be accounted for before claiming a fully
+normalized future proposal law; the current change supplies a density on its
+declared continuous support, not a complete marked-process proposal.
+
+Validation: scheduler CPU job17419657 completed; **29 new tests plus five
+existing prior tests passed (34 total, 4.16s pytest runtime)**. Tests compare
+logq-logp with the existing exchange helper on shared continuous support,
+verify all retained rows from 6,000 proposals without modifying them, check both types'
+interpolation-edge slivers, independently integrate conditional luminosity
+densities and redshift densities, and differentiate actual forward inverse
+maps. Deliberately truncated tables verify nontrivial missing probability is
+not renormalized. Additional checks cover the clamp atom, zero-CDF-slope gaps,
+absolute-rate scaling, inclusive cuts, invalid/native-domain rows, no input
+mutation, permutation, empty inputs and unchanged overflow exceptions.
+
+The comparison helper was copied unmodified from the parent solely as an
+untracked test dependency (SHA256
+`c47763c55228257721135811b68f800945f64513c052945331974bb976b67c37`);
+it is not included in this commit. Syntax and `git diff --check` passed.
+Frozen hashes, JUnit and log receipt are under
+`sampler_search_20261021/numerical_native_intensity_validation/`.
+Implementation correctness score29/29 is not a scientific improvement or
+convergence claim. Next: audit the explicit numerical limitations when
+constructing a future known-density environment proposal.
+Independent target-audit review found no objection to the continuous/atom/
+failure decomposition. Overflow exceptions must not be reinterpreted as known
+zero-mass scientific populations.
+
 ## 2026-10-20 — 1M pair c2, measurement-only true-parameter test: measurement side cleared for the positive c2 (21–25.8: −2.96 ± 1.11e-4)
 
 Owner: "go on" (step 1 of the proposed plan). Pre-declared in `galsbi_pair1m_20261012/debug/rule_measoracle.md`
