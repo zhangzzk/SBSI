@@ -1,5 +1,12 @@
 # Work log
 
+## 2026-10-22 — N16 completed: mixed score gains, worse normalizer precision, support confound
+
+- **Evidence:** informed arm costs 1.713× baseline (1391.55 vs 812.18 recorded inference seconds); Z relative MCSE worsens on every object. Coarse target-over-three-mag-fainter mass remains 0–0.000973 and all region contrasts stay below 1.461 MCSE. Bright constant-CV MCSE improves 4.215/6.670→1.315/2.081, but raw and other corrected-score gains are mixed. Observation-1 corrected-g1 informed−baseline is −0.616510±0.295816 (−2.084 MCSE). No uniform efficiency/alternative-mode claim or acceptance.
+- **Residual/history:** baseline observation-1 F64 phase residual is −3.393 MCSE; informed is +0.043. F64 precision reweighting changes any moment by at most 0.001022 sampled-F32 MCSE. Baseline observation-0 corrected g1 is 0.400543±0.249085: descriptive differences from v6/v9/v7 are −0.016/−0.574/−2.454 MCSE under the endpoint receipt, without strict-gate bypass. Full signed raw/control/F64/region/Z evidence in [n16 result](V8_PARTICLE_COMPARISON.md#completed-result-n16-benefit-remains-unestablished).
+- **Validation/provenance:** fresh cluster CPU 17422725 completed in 7 seconds, exit 0; 7 tests passed in 0.11 seconds; frozen source/input assertions and 104 hashes passed. Runnable 1e173dd, snapshot manifest 8b9670be5ccbd97e7c81e836e3c0011e3d2488a9647f1f56a17d16170f562eec; output v8_comparison_20261022_v2.json SHA256 981042a8eaa62d763769caed74af06212879c61687df30d379c5345557749c7e. Failed first reporting job preserved; successful roundoff-only repair leaves all weights and scientific criteria unchanged. Final change is documentation only.
+- **Limits:** baseline can admit zero continuous numerical-environment-density marks despite finite analytic target intensity; informed guards that region, so proposal mass is confounded with support handling. Production occurrence unknown. F32 expectation stays null/unknown; F64 identity remains continuous-model qualified. No fitting, GPU/new forward, held-out/v10 input, sampler modification or gate change. Baseline comparison false is no-comparator, not failed comparison.
+
 ## 2026-10-22 — Preserve n16 reporting failure and repair one-ULP replay check
 
 - CPU 17422693 passed six tests, then failed before output because baseline observation-8 raw/phase normalized weights differed by 1.3877787807814457e-17; log Z and every other weight array match exactly. This was the new summary's bitwise-equality implementation error, not a changed scientific outcome.
