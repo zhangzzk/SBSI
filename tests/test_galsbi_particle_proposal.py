@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from scipy.integrate import quad
 from scipy.special import logsumexp
-from scipy.stats import norm, multivariate_normal
+from scipy.stats import f, norm, multivariate_normal, multivariate_t, t
 
 from sbsi.galsbi_particle_proposal import MeasurementParticleProposal
 from sbsi.galsbi_target_coordinates import GalSBITargetCoordinates
@@ -140,3 +140,101 @@ def test_empty_samples_and_nonfinite_inputs():
     with pytest.raises(ValueError):
         MeasurementParticleProposal.from_measurement(
             [0., 0., 4., -1000.], CONDITIONS, PARAMETERS, (.02, -.01))
+
+
+@pytest.mark.parametrize('degrees', [3.5, 5., 30.])
+def test_student_density_matches_scipy_multivariate_mixture(degrees):
+    q = proposal(component_family='student_t', student_df=degrees,
+                 component_weights=(.3, .7))
+    x = q.sample(200, np.random.default_rng(9281))
+    reference = np.column_stack([
+        multivariate_t.logpdf(x[:, :9], loc=mean, shape=np.diag(scale**2), df=degrees)+np.log(weight)
+        for mean, scale, weight in zip(q.means, q.scales, q.weights)])
+    np.testing.assert_allclose(q.log_prob(x), logsumexp(reference, axis=1)-np.log(2*np.pi),
+                               rtol=0, atol=2e-13)
+    wrapped = x.copy()
+    wrapped[:, 9] += 14*np.pi
+    np.testing.assert_array_equal(q.log_prob(wrapped), q.log_prob(x))
+
+
+def test_student_finite_mixture_quadrature_normalization():
+    # Integrating a nine-dimensional Student-t over magnitude leaves an
+    # eight-dimensional Student-t marginal, not eight independent t factors.
+    q = proposal(component_family='student_t', student_df=5.)
+    fixed = np.r_[q.means[0], .4]
+    other = np.arange(9) != 1
+    log_marginal = multivariate_t.logpdf(fixed[:9][other], loc=q.means[0, other],
+                                        shape=np.diag(q.scales[0, other]**2), df=5.)
+
+    def conditional(magnitude):
+        point = fixed.copy()
+        point[1] = magnitude
+        return np.exp(q.log_prob(point[None, :])[0]-log_marginal)*2*np.pi
+
+    total, error = quad(conditional, -np.inf, np.inf, epsabs=1e-10, epsrel=1e-11)
+    assert abs(total-1) < 1e-10
+    assert error < 1e-8
+
+
+def test_student_radial_and_marginal_tails_match_common_scale_law():
+    # Identical components remove label ambiguity. The radial F law detects
+    # an incorrect implementation with nine independent Student-t draws.
+    q = MeasurementParticleProposal(np.zeros((2, 9)), np.ones(9), [.5, .5],
+                                    component_family='student_t', student_df=5.)
+    size = 160000
+    x = q.sample(size, np.random.default_rng(9282))
+    radial = np.sum(x[:, :9]**2, axis=1)/9
+    for probability in (.5, .9, .99):
+        fraction = np.mean(radial <= f.ppf(probability, 9, 5))
+        assert abs(fraction-probability) < 5*np.sqrt(probability*(1-probability)/size)
+    expected_tail = 2*t.sf(5., df=5.)
+    measured_tail = np.mean(np.abs(x[:, 0]) > 5.)
+    assert abs(measured_tail-expected_tail) < 5*np.sqrt(expected_tail*(1-expected_tail)/size)
+    assert measured_tail > 1000*(2*norm.sf(5.))
+    np.testing.assert_allclose(x[:, :9].var(axis=0), 5/3, rtol=.04)
+    assert abs(np.exp(1j*x[:, 9]).mean()) < .009
+    assert q.metadata['student_df'] == 5.
+    assert 'shape' in q.metadata['scale_semantics']
+    assert q.sample(0, np.random.default_rng(1)).shape == (0, 10)
+
+
+@pytest.mark.parametrize('count', [0, 1, 137])
+def test_disabled_student_preserves_v1_gaussian_samples_density_and_rng(count):
+    q = proposal()
+    explicit = proposal(component_family='gaussian', student_df=17.)
+    rng, legacy_rng, explicit_rng = (np.random.default_rng(9283) for _ in range(3))
+    # The exact v1 expressions are intentionally frozen here as a numerical
+    # replay contract, including their random-number consumption order.
+    choices = legacy_rng.choice(len(q.weights), size=count, p=q.weights)
+    legacy = np.empty((count, 10))
+    legacy[:, :9] = q.means[choices]+q.scales[choices]*legacy_rng.standard_normal((count, 9))
+    legacy[:, 9] = legacy_rng.uniform(0., 2*np.pi, count)
+    actual, configured = q.sample(count, rng), explicit.sample(count, explicit_rng)
+    np.testing.assert_array_equal(actual, legacy)
+    np.testing.assert_array_equal(configured, legacy)
+    assert rng.bit_generator.state == legacy_rng.bit_generator.state == explicit_rng.bit_generator.state
+    standardized = (legacy[:, None, :9]-q.means[None, :, :])/q.scales[None, :, :]
+    terms = (-.5*np.sum(standardized**2, axis=2)-np.log(q.scales).sum(axis=1)
+             -4.5*np.log(2*np.pi)+q.log_weights)
+    legacy_log_prob = logsumexp(terms, axis=1)-np.log(2*np.pi)
+    np.testing.assert_array_equal(q.log_prob(legacy), legacy_log_prob)
+    np.testing.assert_array_equal(explicit.log_prob(legacy), legacy_log_prob)
+
+
+def test_student_log_density_remains_finite_when_radius_square_overflows():
+    q = proposal(component_family='student_t')
+    points = np.r_[q.means[0], 0.][None, :].repeat(2, axis=0)
+    points[:, 2] = [1e200, -1e200]
+    density = q.log_prob(points)
+    assert np.isfinite(density).all()
+    expected_slope = -(q.student_df+9)*np.log(2.)
+    twice = points.copy()
+    twice[:, 2] *= 2
+    np.testing.assert_allclose(q.log_prob(twice)-density, expected_slope, rtol=0, atol=2e-12)
+
+
+@pytest.mark.parametrize('kwargs', [dict(component_family='independent_t'), dict(student_df=0.),
+                                   dict(student_df=-1.), dict(student_df=np.inf), dict(student_df=np.nan)])
+def test_invalid_student_family_or_degrees_rejected(kwargs):
+    with pytest.raises(ValueError):
+        proposal(**kwargs)

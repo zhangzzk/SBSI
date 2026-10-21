@@ -1,5 +1,34 @@
 # Work log
 
+## 2026-10-21 — Optional Student-t particle proposal, pending scientific comparison
+
+Added `component_family='student_t', student_df=5.` to
+`sbsi/galsbi_particle_proposal.py`; the default remains Gaussian. Student-t
+components have a common chi-squared radial scale across all nine Cartesian
+coordinates, exact normalized multivariate density, and independent uniform
+phase. Coordinates are never clipped or retried. Density evaluation uses a
+log radius to retain finite Student-t log densities when coordinate squares
+overflow. Metadata identifies the family and distinguishes shape scales from
+standard deviations. Gaussian arithmetic and random-number order are retained.
+
+Expanded `tests/test_galsbi_particle_proposal.py` with SciPy mixture agreement,
+conditional-slice normalization, radial F and marginal-tail checks, extreme
+coordinate evaluation, input validation, and bitwise Gaussian replay.
+Targeted command `python -m pytest tests/test_galsbi_particle_proposal.py -q`
+ran as Slurm 17418551: **27 passed in 19.67 s**, including 14 new tests. Log:
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/inference_components_20261021/student_proposal_tests_17418551.out`.
+No real-model GPU runs or production driver changes were made. The full
+integration suite is owned by the coordinator and is not duplicated here.
+
+The derivation and its limits are recorded in
+[the proposal tail note](SMC_PROPOSAL_TAILS.md#consequence-for-the-implemented-geometric-bridge).
+A surviving exponential posterior tail would make the ideal last Gaussian
+bridge increment have infinite second moment, but only the native SED factor
+has established exponential tails; the full target tail bounds are unproven.
+This motivates a later paired comparison and supplies no observed efficiency
+or variance result. At unchanged scales Student-t(5) also increases component
+covariance by 5/3, a confound to distinguish from tail shape if a benefit appears.
+
 ## 2026-10-21 — Full-support measurement-informed particle proposal (arbor n3)
 
 Implemented `sbsi/galsbi_particle_proposal.py` with
