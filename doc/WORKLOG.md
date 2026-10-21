@@ -1,5 +1,34 @@
 # Work log
 
+## 2026-10-21 — Ordered Poisson environment augmentation prototype (Arbor n11)
+
+Added `sbsi/poisson_augmentation.py` with stable CSR evaluation of
+`log[(1-a)+a*sum(h/lambda)]` and a strict point-density ratio helper. Uniform
+insertion among N slots cancels the Poisson factorial ratio, leaving no extra
+N factor. Empty scenes retain ratio 1-a; h=0 on positive-intensity support is
+allowed. Singular or undefined point ratios are rejected instead of silently
+conditioning the initial proposal.
+
+[The derivation](POISSON_AUGMENTATION_PROPOSAL.md#ordered-density-and-the-insertion-factorial)
+records normalization, outside-support mass, numerical versus analytic native
+intensities, type/Jacobian requirements, and separate target-proposal and
+environment-tilt accounting for every bridge mutation. If h has outside-support
+mass b, the finite tilt integrates to 1-a*b, so a full singular initial-density
+representation is needed to retain those zero-target draws. No real SBSI h,
+sampler/driver changes, or GPU runs are included.
+
+`tests/test_poisson_augmentation.py` checks analytic density/count identities,
+numerical integrals, stable/empty/zero-support cases, and independent toy
+Poisson Monte Carlo. Slurm 17419159:
+`python -m pytest tests/test_poisson_augmentation.py -q` — **16 passed in
+3.25 s**. The 160k original-scene normalization test and 180k augmented-scene
+importance recovery test both pass their predeclared five-MCSE checks. Log:
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/inference_components_20261021/poisson_tilt_tests_17419159.out`.
+This is correctness evidence for a candidate initial law, not a measured
+sampling-efficiency result. Next: design a normalized real-model h with an
+explicit support treatment before testing whether environmental seeding
+reveals rare posterior mass missed by target-only proposal changes.
+
 ## 2026-10-21 — Audit independent-population uncertainty and report compatibility
 
 Copied the coordinator's current `sbsi/particle_diagnostics.py`,
