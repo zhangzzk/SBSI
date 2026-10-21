@@ -1,5 +1,19 @@
 # Work log
 
+## 2026-10-22 — Independent informed-environment mathematical review
+
+- Added `doc/INFORMED_ENVIRONMENT_REVIEW.md`, independent CPU reviewer script and
+  pinned receipt. Reviewer made no changes to core implementation files.
+- Slurm17420035, cluster, COMPLETED0:0 in17s: explicit ordered-mixture density
+  agrees within7.11e-15; actual position/environment/native-exchange MH ratios at
+  beta=.001,.4,1 agree within1.60e-14. Uniform-phase override, zero-weight
+  denominator, invalid-row K/mutation guards and complete payload scatter pass.
+- Source hashes stayed fixed during the check. Native fixture only; no GPU,
+  posterior convergence, performance or finite-RNG exactness result is claimed.
+- Driver raw-initial receipts and reporter informed-artifact/seed identity remain
+  integration gates. Existing historical-report source/bridge checks must be
+  preserved. These limits are explicit in the review document.
+
 ## 2026-10-21 — Prepared fixed-density-batch throughput benchmark; not submitted
 
 - Added `doc/evidence/benchmark_particle_batch_20261021.py` and its explicit
