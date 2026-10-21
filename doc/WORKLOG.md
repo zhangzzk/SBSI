@@ -1,5 +1,29 @@
 # Work log
 
+## 2026-10-22 — Isolated n22 type-draw batching passes CPU replay; GPU check prepared
+
+Only temporary target-type categorical draws in `scene_exchange.py` are
+batched with NumPy 2.2.6's float64 cumulative-probability arithmetic. Neighbour
+selection, ragged sums, relocation, and the unconditional native support fix
+remain unchanged. Custom RNGs and other dtypes retain scalar calls. Added
+bitwise proposal/trajectory tests, a frozen corrected 55f1220 control,
+CPU benchmark, manifest guard, and standalone trained-model replay launcher.
+The [design](EXCHANGE_CATEGORICAL_BATCHING.md#fixed-candidate-and-numerical-contract)
+and [results](EXCHANGE_CATEGORICAL_RESULTS.md#validation-receipts) pin scope and
+[receipts](evidence/exchange_categorical_20261022.json).
+
+Scheduled CPU 17422591: **872 passed, 4 skipped**, one existing warning.
+17422592: all 20 cases/520 calls preserve full proposal and RNG bits; ordinary
+1024/4096-row median speedups are 1.341x/1.381x, geometric mean **1.36095x**.
+Relocation gains are 1.071–1.080x. Final 17422766: **67 passed** after stronger
+byte assertions and manifest checks; saved-input preflight passed. Runtime
+code remained unchanged after the full suite. This is proposal CPU cost only.
+Prepared one-V100 frozen trained-model check for parent submission after
+17422526, retaining four-observation groups and density batch 4096; no GPU
+job was submitted here. Integrate docs/evidence first and hold runtime changes
+until that replay and cost check passes. No convergence or scientific
+efficiency claim; existing snapshots and the parent worktree are untouched.
+
 ## 2026-10-22 — Integrated support correction and controls pass validation
 
 Frozen 304-file `source_support_fix_20261022` combines the unconditional

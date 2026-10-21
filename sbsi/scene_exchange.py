@@ -120,6 +120,24 @@ def draw_relocation_positions(count, rng, *, scale=.1,
     return radius[:, None]*np.column_stack((np.cos(phase), np.sin(phase)))
 
 
+def _draw_type_categories(probability, rng):
+    """Batch Generator.choice's float64 CDF without changing draw order.
+
+    Rows have already passed the caller's probability checks. NumPy choice
+    accumulates in float64 and normalizes by the final cumulative entry. The
+    comparison counts entries <= u, i.e. searchsorted(side='right'), including
+    zero-probability categories. Custom RNGs keep their original choice calls.
+    Ragged neighbour probabilities deliberately keep their existing reductions.
+    """
+    if (type(rng) is not np.random.Generator
+            or probability.dtype not in (np.dtype('float32'), np.dtype('float64'))):
+        return np.array([rng.choice(probability.shape[1], p=row) for row in probability])
+    cumulative = np.asarray(probability, dtype=np.float64).cumsum(axis=1)
+    cumulative /= cumulative[:, -1, None]
+    uniforms = rng.random(len(probability))
+    return np.count_nonzero(cumulative <= uniforms[:, None], axis=1)
+
+
 def propose_native_exchange(prior, scene, type_probability, rng, *, radius_scale=1.,
                             relocation_scale=None, aperture_arcsec=None, central_weight=.9):
     """Propose a mark swap and return its native prior/proposal log correction.
@@ -170,7 +188,7 @@ With relocation_scale=None, the original arithmetic and RNG sequence are kept.
     logratio = np.zeros(len(active))
     if len(rows):
         old = {k: v[rows].copy() for k, v in targets.items()}
-        old['type'] = np.array([rng.choice(len(prior.types), p=probability[row]) for row in rows])
+        old['type'] = _draw_type_categories(probability[rows], rng)
         new = {k: v[selected].copy() for k, v in neighbours.items()}
         old_correction = numerical_over_analytic(prior, old)
         new_correction = numerical_over_analytic(prior, new)
