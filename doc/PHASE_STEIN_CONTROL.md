@@ -226,3 +226,74 @@ authorized. Use a fresh source/receipt/output on one V100 with two CPUs and a
 remain immutable and available separately.
 
 CPU Slurm 17420583 validated v2: 32 focused tests passed in 10.88 seconds.
+
+## V2 real result: score noise reduction and remaining disagreement
+
+Slurm **17420604 completed successfully in 3m43s** on one V100, with two
+CPUs and no new sampling. All **28 populations / 53,248 saved states** passed
+the separately declared v2 numerical checks. Four v1 pilots alone produced
+the frozen coefficients, then all eight populations in each evaluation group
+used that same artifact. Original coarse-step failures remain preserved.
+
+Coefficient artifact: `phase_n15_20261022_v2/frozen_v1_coefficients.json`,
+SHA256 `a31062ffe9c970d8c3ae9214f5f9b7a67781829cd14d37f8ee2461fb155412c7`.
+Full means, independent-population MCSEs, raw/F64-reweighted comparisons and
+hashes: `phase_n15_20261022_v2_summary.json` under the sampler-search data root,
+SHA256 `ca5a07670fae46109614d788f9dc750b897916a2c6199a54a343578cd2b7159f`.
+
+The table reports **shear-score MCSE**, not shear-estimate uncertainty. Each
+evaluation group has eight independent populations; within-population
+particle variability is not treated as independent replicate evidence.
+The coefficients are fixed from different v1 runs.
+
+| Group | Observation | g1 MCSE raw → corrected | g2 MCSE raw → corrected | T mean ± MCSE | T/MCSE raw → F64-reweighted |
+|---|---:|---:|---:|---:|---:|
+| v5 | 58165 | 4.8511 → 1.4819 | 7.2778 → 2.4932 | 4.2204 ± 2.5364 | 1.6639 → 1.6641 |
+| v5 | 0 | 1.4158 → 0.18701 | 0.67347 → 0.64694 | -0.45751 ± 0.46387 | -0.9863 → -0.98629 |
+| v5 | 1 | 0.37969 → 0.25041 | 0.3956 → 0.34594 | -0.11283 ± 0.16581 | -0.68049 → -0.68049 |
+| v5 | 8 | 0.095123 → 0.092607 | 0.040085 → 0.037664 | 0.028271 ± 0.010462 | 2.7023 → 2.7023 |
+| v6v100 | 58165 | 1.4846 → 1.1212 | 2.8027 → 1.7952 | 0.013845 ± 0.71049 | 0.019486 → 0.019539 |
+| v6v100 | 0 | 0.56655 → 0.095263 | 0.41244 → 0.41684 | 0.02595 ± 0.18272 | 0.14202 → 0.14223 |
+| v6v100 | 1 | 0.10821 → 0.10453 | 0.14272 → 0.1282 | -0.026121 ± 0.05352 | -0.48806 → -0.48806 |
+| v6v100 | 8 | 0.035424 → 0.036406 | 0.026269 → 0.023142 | 0.017356 ± 0.0096674 | 1.7953 → 1.7953 |
+| v7 | 58165 | 4.6116 → 2.9045 | 4.9461 → 4.7625 | 0.26747 ± 1.3599 | 0.19668 → 0.19688 |
+| v7 | 0 | 1.1675 → 0.11117 | 1.2185 → 1.1772 | -0.68086 ± 0.41398 | -1.6446 → -1.6445 |
+| v7 | 1 | 0.24184 → 0.19046 | 0.54728 → 0.3526 | 0.22631 ± 0.20644 | 1.0963 → 1.0963 |
+| v7 | 8 | 0.068893 → 0.066715 | 0.03667 → 0.037775 | 0.018147 ± 0.014424 | 1.2581 → 1.2582 |
+
+Benefits vary: the bright v5 score MCSE decreases by factors about3.27 and
+2.92; bright v7 decreases by about1.59 and1.04. Observation0 g1 improves
+substantially in every group. Three evaluated components increase slightly
+(v6 observation0 g2, v6 observation8 g1, v7 observation8 g2). This frozen
+one-control estimator is useful for some components, not a uniform sampler
+efficiency improvement.
+
+The more precise control exposes a disagreement. Observation0 corrected
+g1 score means are v5 **0.478684 ±0.187010**, v6v100 **0.404688 ±0.095263**,
+and v7 **1.069976 ±0.111169**. The v7−v6 difference is about**4.55 combined
+reported MCSEs** (quadrature of the two independent-group errors); the raw
+difference was below1.2 combined MCSEs. This descriptive comparison uses
+finite eight-population errors and is not an added acceptance gate. It
+shows why score variance reduction cannot be equated with convergence.
+
+Global saved F32-kernel and stored F64-score replays were exact. Independent
+F64 forward replay maximum error was1.78e-15; periodic wrap5.45e-13. Maximum
+scaled phase errors at [2e-6,1e-6,5e-7] were [8.10e-6,2.08e-6,8.74e-7], all
+below the unchanged1e-4 limit. The global sampled F64−F32 logK maximum was
+9.23e-4. Evaluation-group maxima were6.21e-4 (v5),7.04e-4 (v6v100), and
+6.26e-4 (v7), so the1e-5 diagnostic gap flag fails even though the separate
+derivative/replay checks pass.
+
+Explicit F64 precision reweighting changes evaluated score means by at
+most0.000790 of their corresponding raw reported MCSE. It has negligible
+effect on the observed T residuals in these states and cannot explain the
+observation0 cross-group discrepancy. This finite-state evidence is not a
+global target-equivalence bound and does not establish an exact F32 Stein
+identity. The largest evaluated absolute T residual is2.70 MCSEs (v5,
+observation8); none of these single-control checks can rule out rare modes
+or modes with the same phase expectation.
+
+**Scope remains diagnostic.** No CV is integrated into production sampling,
+heldout estimation, or existing reports/gates. No raw score or normalizer
+gate is relaxed. Lower score MCSE and small T residuals cannot establish
+normalizer accuracy, full posterior coverage, or calibrated shear.
