@@ -1,5 +1,46 @@
 # Work log
 
+## 2026-10-22 — Waste-free SMC prototype: correct identities, rejected matched-cost recipe
+
+Arbor n20, isolated branch `codex/waste-free-smc-20261022` from `766c1b2`.
+The frozen pre-result protocol and our direct finite-population derivation are
+in [`WASTE_FREE_SMC_PROTOTYPE.md`](WASTE_FREE_SMC_PROTOTYPE.md#own-finite-population-derivation);
+the decision and numerical evidence are in
+[`WASTE_FREE_SMC_RESULTS.md`](WASTE_FREE_SMC_RESULTS.md#decision).
+
+- **Implementation, isolated only.** New `sbsi/waste_free_particles.py` resamples
+  M=N/P ancestors and retains each ancestor plus P-1 invariant composite-kernel
+  iterates. It reuses existing weight/normalizer bookkeeping, keeps the original
+  zero-support denominator, and returns absorbing total extinction without
+  refill. Complete NumPy states and ancestry are retained without aliasing.
+  No active driver or frozen snapshot was modified.
+- **Correctness.** New `tests/test_waste_free_particles.py` has 18 checks,
+  including exact finite-state enumeration recovering E[Zhat]=5/3 and
+  E[Zhat*fhat]=10/3, extinction, stratified smaller offspring counts, retained
+  states/rejections, original-driver identity replay, and numerical failures.
+  CPU job **17421477 passed 793 tests with 4 skips** in 84.14 seconds.
+- **Experiment.** New `scripts/check_waste_free_synthetic.py` runs fixed seeded
+  correlated-Gaussian and separated-mixture comparisons. CPU job **17421484**
+  completed in 30 seconds, with 128 independent populations per target/arm and
+  exactly **13,560 counted target density rows per population** in both arms.
+  All predeclared normalizer and weighted-moment checks pass. Whole-population
+  uncertainty, count assertions, seeds, source hashes, and raw arrays are
+  preserved in
+  [`evidence/waste_free_smc_20261022.json`](evidence/waste_free_smc_20261022.json).
+- **Negative result.** Waste-free/standard primary variance is **1.0894**
+  (95% bootstrap 0.8342–1.3728) for the Gaussian and **2.7551**
+  (2.0077–3.7195) for the mixture. Mixture mode-mass variance worsens 3.408-fold;
+  local second moments modestly improve. Median initial ancestors fall 34→13,
+  consistent with stronger dependence/genealogical loss, without establishing
+  causation. CPU time rises 15–16%. The predeclared synthetic efficiency score
+  is **0.5772146510222352**, where the baseline is 1 and higher is better.
+- **Decision and limits.** Preserve the isolated prototype, integrate only its
+  documentation/evidence, and do not promote this configuration. No tuning
+  followed the negative result. Real scene payloads are not supported; actual
+  likelihood evaluations pad to 4096 and preserve fixed observation groups,
+  so counted density rows do not establish GPU savings. No GPU, held-out, or
+  real sampler experiment was run. Other waste-free settings remain untested.
+
 ## 2026-10-22 — Localize the score discrepancy and validate scene-proposal startup
 
 Added the read-only localization script, nine focused tests, and
