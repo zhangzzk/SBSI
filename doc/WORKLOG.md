@@ -1,5 +1,40 @@
 # Work log
 
+## 2026-10-21 — Bright exchange zero-acceptance: numerical support exclusion rejected on saved final states
+
+Added read-only evidence script
+`doc/evidence/diagnose_particle_exchange_support_20261021.py` and concise receipt
+`doc/evidence/particle_exchange_support_summary_20261021.json`. CPU job17419184
+used frozen source_v5a, whose `scene_exchange.py` SHA256 matched the parent's
+current implementation (`c47763c55228257721135811b68f800945f64513c052945331974bb976b67c37`).
+All v1_0–3 and v4_0–3 protocol, particle and scene hashes were verified before
+analysis. No production code, model, target, pilot output or GPU work changed.
+
+For each of the four observations, all2,048 saved final particles have
+conditional p(type|x) mass1 (to floating precision) on finite numerical qEnv/p
+support. For the bright object58165, all43,952 neighbours are supported under
+both measures. Across all objects, all176,186 neighbours are supported. No
+inverse-luminosity table boundary, conditional-cutoff or redshift-CDF-flat
+exclusion occurred for bright targets. Their per-run median z=0.0478–0.0715,
+M_B=−20.00 to−19.10 and m_r=17.034–17.118 are inside the numerical domain.
+
+Four fixed seeds per run replayed8,192 bright proposals for each exchange mode:
+**8,192/8,192 finite native corrections for fixed swaps and for relocation**.
+Fixed-swap corrections span−0.04146 to+0.03797, with per-replay medians between
+−0.001292 and+0.000853. The numerical-prior correction therefore cannot explain
+fixed-swap zero acceptance at these final states. Relocation corrections are
+finite but costly: per-replay medians−9.721 to−9.446, a roughly6–8×10⁻⁵ factor
+before the likelihood ratio. Other observations also have full native support.
+
+Validation: saved-coordinate replay max2.85e−14 and analytic-prior-density replay
+max3.19e−12; all8 runs completed,33.28s numerical runtime after initialization.
+Syntax and `git diff --check` passed. Full frozen inputs, script and results:
+`sampler_search_20261021/exchange_support_diagnostic/`. No K was evaluated, so
+this is not a full-acceptance estimate. It only tests saved final beta1 states;
+earlier annealing stages also contain bridge/proposal-density terms. Next:
+compare matched old/proposed likelihoods at beta1 to locate the remaining
+fixed-swap barrier, while retaining the measured relocation proposal penalty.
+
 ## 2026-10-21 — Independent-pilot likelihood-gradient proposal metric
 
 Added `sbsi/particle_gradient_geometry.py`,
