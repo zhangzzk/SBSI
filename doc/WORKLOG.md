@@ -1,5 +1,34 @@
 # Work log
 
+## 2026-10-22 — Frozen legacy trajectory audit harness prepared without inference submission
+
+- Added `sbsi/legacy_exchange_audit.py` and
+  `scripts/audit_legacy_particle_trajectory.py`; usage, exact commands, cost and
+  limits are in [the harness guide](LEGACY_PARTICLE_TRAJECTORY_AUDIT.md#commands-and-resource-expectations).
+  The wrapper returns original native corrections unchanged, pairs old/new
+  mark checks, maps owner/finite-prior/nonempty subsets, and records proposed
+  versus **old accepted** support violations by observation/beta/block.
+- Counts become trusted only after complete NPZ payload/archive, all saved
+  stage diagnostics and scientific protocol/result comparisons pass. Only
+  explicit timing and scheduler execution identifiers may differ. Original
+  source and artifacts remain immutable; unknown failures/files reject.
+  Final RNG and unpersisted cache fields are saved as replay-only receipts,
+  without inventing missing historical intermediate/RNG evidence.
+- CPU job 17422503: 19 tests passed; five real-source fixtures failed because
+  their MRO selected the real summary builder without observing conditions.
+  Repaired the fixture summary dispatch only. Jobs 17422593 and 17422638 then
+  passed 24 and 26 tests; final 17422670 passed all 26 in 13.37 s. Tests cover
+  ordinary frozen-code state/decision/RNG equality over 24 transitions,
+  forced old accept/reject counts, both blocks, actual v8 informed rejection,
+  owner subsets/extinction zeros, malformed pairing, and strict artifact gates.
+  Failed logs and final source hashes are retained in the validation receipt.
+- Plan-only commands passed against one real startup protocol per group.
+  No old inference trajectory, GPU replay, heldout or v8/v9 scientific outcome
+  was inspected. Cost is one original full inference run plus CPU checks:
+  2,048 mutation calls for v7/v8 or 4,096 for v9, zero extra likelihood calls.
+  Root can choose representative historical runs after the corrected-source
+  results; this preparation makes no claim that any old history is cleared.
+
 ## 2026-10-22 — Frozen endpoint receipt and unconditional native exchange support fix
 
 - Added [the explicit endpoint audit](PARTICLE_ENDPOINT_COMPATIBILITY_AUDIT.md#frozen-identity-evidence)
