@@ -1,0 +1,15 @@
+{
+  "smoke": 17422524,
+  "array": 17422526,
+  "report": 17422589,
+  "phase": 17422590,
+  "array_throttle": 3,
+  "maximum_study_gpus": 4,
+  "source": "source_support_fix_20261022",
+  "declaration": "experiment_v10_corrected_three_way.json",
+  "launcher": "run_v10_corrected.sh",
+  "submission_note": "The initial smoke submission referenced completed CPU job17421864, which Slurm had removed from its active dependency database; sbatch rejected without creating a job. The resubmission omitted the satisfied dependency after verifying822 passed and COMPLETED0:0. No settings changed.",
+  "launcher_sha256": "d1e468b9c9cf0abe8187b078643ab74eba8fd27aeb3f4430d44f758b6e145df3",
+  "declaration_sha256": "9102eb816c20ae4d0a8dbc6f698db194f4ed4ea0eea726138a3f73fb4545d72e",
+  "startup": "Smoke sampler and phase replay passed; first small/large/broad tasks all reached stage1 with finite nonzero population ESS and normal progress."
+}

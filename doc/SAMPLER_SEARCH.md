@@ -66,17 +66,32 @@ not a proof of the mechanism; the old raw gate remains recorded as passed.
 Queued held-out production17420233 and report17420234 were cancelled while
 both were pending. Fixed pilot preparation17420232 is preserved; no held-out
 production or comparison has run, and no held-out result is used for tuning.
-V9 now tests1024 particles/64 mutations with the same fitted proposal, eight
-fresh seeds2026102800..07 (array17420804, raw report17420827, frozen phase
-diagnostic17421115 (replaces pending cancelled17420835 after a launcher manifest-format repair)). This separates increased effort from the changed initial
-proposal in the previous reference comparison.
+V9 completed1024 particles/64 mutations with the same fitted proposal and
+eight fresh seeds2026102800..07. The observation0 corrected-g1 mean is now
+0.568624+/-0.154248: its difference from v6 is0.904 combined MCSE, down from
+4.544 for v7. All original raw gates pass, but the cost is5.056 times v7 and
+corrected-g1 MCSE does not uniformly improve. The support defect remains a
+shared qualification; see [complete comparisons](V9_PARTICLE_COMPARISON.md#completed-result-narrower-discrepancy-mixed-precision-and-cost).
+
+Corrected-source v10 is declared before viewing v8 aggregate outcomes: a
+256-particle/64-mutation fitted candidate versus1024-particle/64-mutation
+fitted and broad Student-t references, eight new independent populations each.
+All arms use `source_support_fix_20261022` (822 tests pass) and the same fixed
+geometry/phase coefficients. Smoke17422524 passes sampling and phase replay;
+array17422526 is throttled to3 GPUs, followed by raw report17422589 and frozen
+phase diagnostic17422590. The study remains within four GPUs total. This
+compares effort and proposals under the common corrected kernel without
+using held-out outcomes. [Declaration](evidence/experiment_v10_corrected_three_way.json)
+preserves all gates, seeds, costs and finite-precision qualifications.
 
 The optional informed-environment branch separately tests alternative light
 assignments using a known-density neighbour proposal. It has independent
 implementation review, but no scientific acceptance. Source_v8 full suite17420828 passes782 tests,1 skipped in81.91seconds.
-Smoke and paired development experiments are gated as17420828 ->17420872 ->
-17420873 ->17420874. Both arms use the same new source and explicit endpoint;
-old report hashes/versions cannot silently bypass compatibility checks.
+Smoke, paired array17420873, raw report17420874 and phase17421116 completed.
+The raw comparison passes; the complete phase/cost summary is being recorded.
+Both arms declare the same endpoint, but the known support-guard difference
+prevents isolating informed proposal mass without trajectory evidence.
+Old report hashes/versions cannot silently bypass compatibility checks.
 
 The experiment record and original successful raw comparison are retained
 below. Production defaults and the catalogue shear estimate remain unchanged.

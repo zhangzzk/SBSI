@@ -1,0 +1,128 @@
+{
+  "job": 17421460,
+  "status": "completed",
+  "gpu": "Tesla V100-SXM2-32GB",
+  "source_receipt": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/mutation_profile_20261022/receipt.json",
+  "receipt_sha256": "1770c14746962fd4861bfc32f998d8cf2a02664e24a2ee77adf5aea45b36fb3a",
+  "rows": [
+    {
+      "block": "physical",
+      "rows": 1024,
+      "profile_sha256": "984de38eb270ffa6b3bbe316659448f0558e6a401c25ed3747008b3694a132bf",
+      "cumulative_seconds": {
+        "log_kernel": 0.102796619,
+        "native_prior": 0.054621184,
+        "mutate": 0.198559703
+      },
+      "calls": 6
+    },
+    {
+      "block": "physical",
+      "rows": 4096,
+      "profile_sha256": "587f9f1513aebcf09ac33290512fba9ddfeb701b610dc68e1676be75a95bfac5",
+      "cumulative_seconds": {
+        "log_kernel": 0.106121585,
+        "native_prior": 0.118693716,
+        "mutate": 0.342103148
+      },
+      "calls": 6
+    },
+    {
+      "block": "nuisance",
+      "rows": 1024,
+      "profile_sha256": "8ac6f41f2813d39e3c6ff0c7ef6e1ff05279ba88249c9bda8158c5307870d263",
+      "cumulative_seconds": {
+        "native_prior": 0.107846494,
+        "mutate": 0.120252019
+      },
+      "calls": 6
+    },
+    {
+      "block": "nuisance",
+      "rows": 4096,
+      "profile_sha256": "b056295545e5f5ba9eee0aa477daae8be8d607b95dd945f1c9fea28b77c2e2a9",
+      "cumulative_seconds": {
+        "native_prior": 0.36464382700000003,
+        "mutate": 0.390266759
+      },
+      "calls": 6
+    },
+    {
+      "block": "environment",
+      "rows": 1024,
+      "profile_sha256": "ba0eb2d7d71d44812087ff880db89dc8c0db73bc39c14ba64710dc18f156f933",
+      "cumulative_seconds": {
+        "log_kernel": 0.122778117,
+        "refresh": 0.8012474700000001,
+        "native_prior": 0.08435956500000001,
+        "mutate": 1.0809374740000002
+      },
+      "calls": 6
+    },
+    {
+      "block": "environment",
+      "rows": 4096,
+      "profile_sha256": "b9574f33523b4de117911dff17e1fa4c33ab9289e8fec339e88b1926ddecb5fe",
+      "cumulative_seconds": {
+        "log_kernel": 0.12375535800000001,
+        "refresh": 3.1037552130000003,
+        "native_prior": 0.167105105,
+        "mutate": 3.6173425470000002
+      },
+      "calls": 6
+    },
+    {
+      "block": "positions",
+      "rows": 1024,
+      "profile_sha256": "d7e4c00330d069d16c4d8481912b65f8c693de2819f65d84dacc9bf61ead7e85",
+      "cumulative_seconds": {
+        "log_kernel": 0.12687415600000002,
+        "native_prior": 0.083719314,
+        "mutate": 0.297178039
+      },
+      "calls": 6
+    },
+    {
+      "block": "positions",
+      "rows": 4096,
+      "profile_sha256": "ea9f54aef6095a2687dc6ba90b06486d3068f313bd3f22efb8eb94fb997df134",
+      "cumulative_seconds": {
+        "log_kernel": 0.131571154,
+        "native_prior": 0.17835788500000002,
+        "mutate": 0.574596124
+      },
+      "calls": 6
+    },
+    {
+      "block": "exchange",
+      "rows": 1024,
+      "profile_sha256": "d258b704460ad22dc62d623fb2b4d69c382cabf749802c2915889e94e94e409c",
+      "cumulative_seconds": {
+        "propose_native_exchange": 0.6936127860000001,
+        "log_kernel": 0.126112689,
+        "native_prior": 0.08896266,
+        "mutate": 1.0271385240000002
+      },
+      "calls": 6
+    },
+    {
+      "block": "exchange",
+      "rows": 4096,
+      "profile_sha256": "ced235b62037b5ed0141dca0e96ead4d36b491b43c8af9b71369b9f47aa503a7",
+      "cumulative_seconds": {
+        "propose_native_exchange": 2.6094761490000002,
+        "log_kernel": 0.129269628,
+        "native_prior": 0.19466048200000002,
+        "mutate": 3.298120217
+      },
+      "calls": 6
+    }
+  ],
+  "limitations": [
+    "Profiling changes timing; these are cost attribution clues, not speedup measurements.",
+    "Warmup and five measured calls share each profile; native caches affect their costs.",
+    "Each call restarts from saved beta=1 states; no posterior accuracy claim.",
+    "4096 rows duplicate four observations; no larger observation grouping is validated.",
+    "Frozen benchmark checks original source/input hashes and full retained-state fingerprints."
+  ]
+}

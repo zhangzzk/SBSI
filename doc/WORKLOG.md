@@ -1,5 +1,29 @@
 # Work log
 
+## 2026-10-22 — Higher effort narrows the score discrepancy; corrected comparison starts
+
+Integrated v9 report helper, six tests and full signed evidence from bdfdb89.
+CPU17422294: six tests pass,145 input hashes verified,11 seconds total.
+V9 phase17421115: all eight populations pass numerical checks in73 seconds.
+Observation0 corrected-g1 v9-v6 is0.163937+/-0.181294 (0.904 MCSE), versus
+v7-v6 at4.544 MCSE. V9 costs5.056 times v7, with nonuniform precision gains;
+old shared support errors prevent exact-target acceptance. See
+[all results](V9_PARTICLE_COMPARISON.md#completed-result-narrower-discrepancy-mixed-precision-and-cost).
+
+Predeclared corrected v10 under the tested304-file snapshot:256 particles,
+64 mutations versus1024-particle fitted and broad-proposal references, eight
+fresh populations each. Smoke17422524 passes sampler and phase checks;
+array17422526 (three GPUs max), report17422589 and phase17422590 retain fixed
+four-observation groups and4096 density batches. The declaration predates v8
+aggregate inspection. [Job receipt](evidence/v10_jobs_20261022.json) records
+the rejected stale completed-job dependency and successful resubmission.
+No held-out production is resumed and no candidate is accepted.
+
+Added [cost attribution](MUTATION_COST_PROFILE.md#measured-cumulative-time)
+and pinned profiler evidence. Arbor cycle7 now tests batched categorical
+exchange draws in an isolated branch; root production code is not changed by
+that experiment. All old snapshots and failed hypotheses remain preserved.
+
 ## 2026-10-22 — Integrated support correction and controls pass validation
 
 Frozen 304-file `source_support_fix_20261022` combines the unconditional

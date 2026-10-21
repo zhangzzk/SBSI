@@ -1,0 +1,19 @@
+{
+  "created_utc": "2026-10-21T23:04:58.428443+00:00",
+  "job": 17422294,
+  "state": "COMPLETED",
+  "exit_code": "0:0",
+  "elapsed_seconds": 11,
+  "tests_passed": 6,
+  "test_elapsed_seconds": 0.19,
+  "source_commit": "e7203d2",
+  "source_manifest_sha256": "fa4c8695556103048d14e3a14e9f3160e6cfa673485d45b13ac7b20aafab3de8",
+  "experiment_sha256": "a8791019b946823d70b1e95be54462c11520b960c0c9b2ab9b2ea94131ed38ac",
+  "output": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/v9_comparison_20261022.json",
+  "output_sha256": "92efbd83fa70bbfa98e62d012e14412816f6aa13b2018cf0ef3c2acf00815df4",
+  "input_hashes_verified": 145,
+  "all_top_level_receipt_hashes_match": true,
+  "phase_job": 17421115,
+  "accepted_sampler": false,
+  "scientific_interpretation": "Directional support for higher effort moving obs0 corrected g1 toward v6; remaining contrasts and mixed efficiency, shared old support defect; no exactness or acceptance claim."
+}

@@ -1,5 +1,5 @@
 {
-  "_counter": 20,
+  "_counter": 23,
   "root": "n0",
   "nodes": {
     "n0": {
@@ -216,7 +216,7 @@
       "depth": 2,
       "status": "running",
       "hypothesis": "A frozen mixture of independent-pilot coordinate moments and circular phase distributions, retaining broad measurement components, improves replicated score and normalizer accuracy without changing the target.",
-      "insight": "Stable normalizers and noisy raw-score agreement can hide a persistent physical-score discrepancy. Independent zero-mean controls may reveal disagreement instead of certifying convergence.",
+      "insight": "Stable normalizers and noisy raw-score agreement can hide a persistent physical-score discrepancy. Independent zero-mean controls may reveal disagreement instead of certifying convergence.\n[from n18] More effort moves the phase-controlled score toward the independent broad-proposal reference, while some precision/cost worsens. Separate mutation effort, particle count, proposal law, and support correctness in the next fixed comparison.",
       "metadata": {
         "dev_score": 0.0,
         "test_score": null,
@@ -224,7 +224,7 @@
         "branch_ref": "worktree-galsbi-tempering"
       },
       "created_at": 1792618059,
-      "updated_at": 1792621303
+      "updated_at": 1792623996
     },
     "n14": {
       "id": "n14",
@@ -294,17 +294,17 @@
       "id": "n18",
       "parent": "n13",
       "depth": 3,
-      "status": "running",
+      "status": "executed",
       "hypothesis": "Increasing fixed fitted-proposal SMC effort to1024 particles and64 mutations resolves the phase-controlled score discrepancy that was hidden by raw phase noise at256 particles.",
-      "insight": "",
+      "insight": "Higher effort narrows the diagnostic discrepancy but precision gains are heterogeneous; comparison noise and corrected support must be controlled before selecting a lower-cost recipe. No uniform cost or convergence improvement follows from larger N/M.",
       "metadata": {
-        "dev_score": null,
+        "dev_score": 0.0,
         "test_score": null,
-        "result": "V9 array17420804 higher-effort fitted-q0 runs started normally; first two completed8m48s and9m07s. Raw report17420827; phase followup17421115 replaces pending-cancelled17420835 after JSON-manifest launcher repair, with frozen source and coefficients unchanged. Await full8 populations; no interim scientific interpretation.",
-        "branch_ref": "worktree-galsbi-tempering/766c1b2"
+        "result": "All8 v9 populations and phase diagnostics complete. Obs0 corrected-g1 v9-v6=0.163937+/-0.181294 (0.904MCSE), versus v7-v6 4.544. Both raw comparisons pass. V9 cost5.056x v7 and1.074x v6; shared support defect prevents acceptance.",
+        "branch_ref": "worktree-galsbi-tempering@55f1220"
       },
       "created_at": 1792621067,
-      "updated_at": 1792621948
+      "updated_at": 1792623996
     },
     "n19": {
       "id": "n19",
@@ -337,6 +337,54 @@
       },
       "created_at": 1792622233,
       "updated_at": 1792622988
+    },
+    "n21": {
+      "id": "n21",
+      "parent": "n0",
+      "depth": 1,
+      "status": "pending",
+      "hypothesis": "Reduce deterministic implementation overhead while preserving all proposal laws, RNG streams, target arithmetic and full retained payloads, to lower matched-accuracy sampler cost.",
+      "insight": "",
+      "metadata": {
+        "dev_score": null,
+        "test_score": null,
+        "result": "",
+        "branch_ref": null
+      },
+      "created_at": 1792623586,
+      "updated_at": 1792623586
+    },
+    "n22": {
+      "id": "n22",
+      "parent": "n21",
+      "depth": 2,
+      "status": "running",
+      "hypothesis": "Batch the categorical draws inside native exchanges without changing their numerical CDFs or RNG ordering, reducing exchange CPU cost while preserving full trajectories bitwise.",
+      "insight": "",
+      "metadata": {
+        "dev_score": null,
+        "test_score": null,
+        "result": "",
+        "branch_ref": null
+      },
+      "created_at": 1792623594,
+      "updated_at": 1792623594
+    },
+    "n23": {
+      "id": "n23",
+      "parent": "n13",
+      "depth": 3,
+      "status": "running",
+      "hypothesis": "With the common exchange-support correction, keeping256 fitted-proposal particles but doubling mutation effort to64 reaches replicated raw and phase-controlled score agreement with1024-particle fitted and broad-proposal references at lower total cost.",
+      "insight": "Next comparison holds mutation count fixed across particle effort and changes q0 independently under a common corrected exchange kernel; acceptance remains pending all populations and heldout.",
+      "metadata": {
+        "dev_score": 0.0,
+        "test_score": null,
+        "result": "Corrected-source304-file manifest f22761b passes822 tests. Smoke17422524 passes sampler and phase checks. Fresh 3-arm8-replica array17422526 has all first arms progressing; report17422589 and phase17422590 depend on its completion. No aggregate inspected.",
+        "branch_ref": "worktree-galsbi-tempering@55f1220"
+      },
+      "created_at": 1792623825,
+      "updated_at": 1792624139
     }
   }
 }
