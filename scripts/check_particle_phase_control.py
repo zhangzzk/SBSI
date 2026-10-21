@@ -29,6 +29,8 @@ NATIVE_SOURCES = ('galsbi_target_coordinates.py', 'galsbi_summary.py',
 PRECISION_LIMITS = dict(sampling_replay_atol=1e-6, float64_replay_atol=1e-10,
                         saved_score_atol=1e-6, phase_gradient_scaled_atol=1e-4,
                         sampled_float32_float64_atol=1e-5)
+DERIVATIVE_PROTOCOL = 'phase-fine-difference-v2'
+PHASE_DIFFERENCE_STEPS = (2e-6, 1e-6, 5e-7)
 
 
 @torch.no_grad()
@@ -131,6 +133,7 @@ def main():
         'reference_protocol_sha256', 'observation_sha256', 'density_batch_size', 'selection')}
     identity.update(native_source_sha256=actual_sources,
         sampling_precision='recorded float32 network target', derivative_precision='float64 network diagnostic',
+        phase_derivative_protocol=DERIVATIVE_PROTOCOL,
         phase_control='intrinsic phase; uniform analytic prior; retained phase-independent response/crowding; beta=1')
     frozen = None
     if args.coefficients:
@@ -163,7 +166,7 @@ def main():
     independent64 = replay64(values)
     control = phase_stein_control(values, gradient)
     phase_checks = []
-    for step in (1e-4, 1e-5, 1e-6):
+    for step in PHASE_DIFFERENCE_STEPS:
         upper = replay64(rotate_summary_phase(values, step))
         lower = replay64(rotate_summary_phase(values, -step))
         finite = (upper-lower)/(2*step)
@@ -189,6 +192,7 @@ def main():
         observations=np.asarray(protocol['observations']), sampled_particle_indices=np.arange(protocol['particles'])[::args.stride])
     report = dict(schema='sbsi-phase-diagnostic-v1', run=str(args.run.resolve()), seed=protocol['seed'], observations=protocol['observations'],
         target_identity=identity, retained_particles=particles, stride=args.stride,
+        derivative_protocol=DERIVATIVE_PROTOCOL,
         numerical_checks=checks, precision_limits=PRECISION_LIMITS, numerical_checks_pass=passed,
         sampled_float32_float64_agreement=checks['sampled_float32_float64_max'] <= PRECISION_LIMITS['sampled_float32_float64_atol'],
         exact_zero_mean_for_float32_target_established=False,

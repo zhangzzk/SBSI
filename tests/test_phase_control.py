@@ -336,6 +336,11 @@ def test_full_diagnostic_retains_delta_raw_and_corrected_and_blocks_failed_repla
     monkeypatch.setattr(sys, 'argv', argv); diagnostic.main()
     report = json.loads(output.read_text())
     assert report['numerical_checks_pass'] is (not bad_gradient)
+    assert report['derivative_protocol'] == 'phase-fine-difference-v2'
+    assert [v['step'] for v in report['numerical_checks']['phase_differences']] == [2e-6, 1e-6, 5e-7]
+    if bad_gradient:
+        assert all(v['max_scaled_error'] > report['precision_limits']['phase_gradient_scaled_atol']
+                   for v in report['numerical_checks']['phase_differences'])
     assert report['exact_zero_mean_for_float32_target_established'] is False
     with np.load(output.with_suffix('.npz')) as arrays:
         np.testing.assert_array_equal(arrays['delta_log_kernel'], np.zeros((1, 4)))
@@ -371,12 +376,15 @@ def test_independent_float64_forward_replay_avoids_legacy_float32_wrappers(shear
     control = phase_stein_control(values, gradient)
     replay = diagnostic.float64_log_kernel(flow, detector, values, observed, shear, 3)
     np.testing.assert_allclose(replay, density, atol=1e-12, rtol=0.)
-    for step in (1e-4, 1e-5, 1e-6):
+    for step in diagnostic.PHASE_DIFFERENCE_STEPS:
         upper = diagnostic.float64_log_kernel(flow, detector,
             rotate_summary_phase(values, step), observed, shear, 3)
         lower = diagnostic.float64_log_kernel(flow, detector,
             rotate_summary_phase(values, -step), observed, shear, 3)
         np.testing.assert_allclose((upper-lower)/(2*step), control, atol=1e-8, rtol=1e-6)
+        wrong_sign_control = -control
+        assert np.max(np.abs((upper-lower)/(2*step)-wrong_sign_control)
+                      /np.maximum(1., np.abs(wrong_sign_control))) > 1e-4
     wrapped = diagnostic.float64_log_kernel(flow, detector,
         rotate_summary_phase(values, 2*np.pi), observed, shear, 3)
     np.testing.assert_allclose(wrapped, replay, atol=1e-12, rtol=0.)

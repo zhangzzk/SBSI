@@ -1,5 +1,11 @@
 # Work log
 
+## 2026-10-22 — Arbor n15 v2: predeclare finer derivative checks after preserved failure
+
+- **New protocol:** coordinator explicitly authorized a separate numerical diagnostic with phase finite-difference steps `[2e-6, 1e-6, 5e-7]` and the same 1e-4 scaled-error threshold at every step. The original all-three-coarse-step experiment remains failed with no fit/science pass; observed roughly O(h²) error scaling motivates testing smaller truncation. Other density/score/wrap thresholds, four-v1-only coefficient recipe, 28 input populations, F32/F64 qualification and all production gates are unchanged.
+- **Files:** `scripts/check_particle_phase_control.py` records `phase-fine-difference-v2` in receipts and diagnostic target identity, and uses the declared fine steps. `tests/test_phase_control.py` checks protocol metadata, rejects deliberately wrong gradient magnitude at every step and a reversed chain-rule sign, and exercises independent F64 forward checks at zero/nonzero shear. `doc/PHASE_STEIN_CONTROL.md` records the authorization, interpretation and boundaries before execution.
+- **Validation/execution:** focused CPU Slurm 17420583 passed all 32 tests in 10.88 seconds; syntax checks and `git diff --check` passed. No v2 GPU execution or coefficient fit yet. After validation, freeze a fresh source manifest and receipt; one V100 on th-cl-nv02/inter, two CPUs, <=30 minutes, total <=3 GPUs with the two heldout jobs. Retain all original diagnostics and never apply CVs to the sampler or heldout study.
+
 ## 2026-10-22 — Arbor n15 real evaluation blocked by predeclared finite-difference gate
 
 - **Execution/provenance:** source repair commit `0738260`, 293-file frozen snapshot `source_phase_n15_20261022_repair1`, manifest SHA256 `5b6b6a2f76630a667ba5423f85397b42608034df0682f22129ff018a724aa612`. Separate pre-execution receipt retains hashes of all 28 completed input populations (53,248 states), unchanged four-v1-only fit rule and precision limits. Slurm 17420413 used one V100 on th-cl-nv02/inter, two CPUs, 30-minute limit; failed after 49 seconds at strict pilot-report loading. Original dtype failure 17420174 remains preserved.

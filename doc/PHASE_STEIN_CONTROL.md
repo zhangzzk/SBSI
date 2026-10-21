@@ -197,3 +197,32 @@ this flag was never an acceptance gate or a global-equivalence certificate.
 A new, separately declared numerical-check protocol could investigate
 truncation explicitly, but is not part of this failed experiment. There is
 no real-data variance-reduction result or all-group T/MCSE summary from n15.
+
+## Separately declared v2 fine-step protocol
+
+After preserving the original failed experiment, the coordinator authorized
+**a new numerical diagnostic protocol** before execution. It replaces the
+three phase central-difference steps by **[2e-6, 1e-6, 5e-7]** and retains the
+**same 1e-4 scaled-error threshold at every step**. All F32/F64 density,
+saved-score and periodic-wrap replay tolerances are unchanged. Receipts and
+target diagnostic identity explicitly record `phase-fine-difference-v2`.
+This is a finer derivative check, not a changed phase identity, a claim that
+the original gate passed, or a change to any sampling/score/normalizer gate.
+
+The motivation is the preserved approximately O(h²) central-difference
+truncation evidence in all four pilots. Fine steps test the derivative with
+smaller truncation while retaining three independent step comparisons. They
+can still fail because of rounding or a wrong derivative; tests deliberately
+alter the gradient magnitude and reverse the chain-rule sign to verify that
+such errors remain rejected at the same threshold. F64 independent forward
+checks exercise the exact new steps at zero and nonzero shear.
+
+The experiment remains 4 v1 pilots and 8 each v5/v6v100/v7. Freeze coefficients
+from v1 only by the original covariance/variance recipe, then apply unchanged
+to all evaluation groups. Keep raw and precision-reweighted diagnostics and
+qualify the F32/F64 difference. No production or heldout CV integration is
+authorized. Use a fresh source/receipt/output on one V100 with two CPUs and a
+30-minute limit, alongside at most two heldout GPUs. Old coarse-step files
+remain immutable and available separately.
+
+CPU Slurm 17420583 validated v2: 32 focused tests passed in 10.88 seconds.
