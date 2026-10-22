@@ -1,5 +1,11 @@
 # Work log
 
+## 2026-10-22 — Repair n23 source whitelist before authorized completed evaluation
+
+- Root's evaluation 17423550 stopped in five seconds before reading outcomes: the held-out data guard also rejected a legitimate filename inside the pinned support-fix source manifest. Original source_v10_comparison_20261022_v2, launcher, output log and failure remain preserved.
+- Guard now permits only resolved paths inside the declared immutable source whose expected hash matches an entry in the already verified pinned manifest; actual file hashes remain mandatory. Actual held-out data, unlisted files, missing/wrong hash proof and symlink escapes remain forbidden. Added focused regressions; no scientific threshold, sampling setting or aggregate change.
+- Root confirmed the entire v10 science graph complete and authorized CPU evaluation after focused tests. No sampling rerun or held-out outcome access. Fresh frozen reporting snapshot/test/evaluation pending.
+
 ## 2026-10-22 — N23 comparison helper fully tested and frozen; evaluation withheld
 
 - **Validation:** final immutable source 73bff31 full CPU 17423438: **882 passed, 1 skipped, 1 existing warning in 85.43 seconds**, exit 0, 95-second allocation. Both legacy frozen-source checks enabled. Original focused CPU 17423323 passed 28 tests; six additional guard regressions reject empty/incomplete corrected-score inputs. Two earlier full-suite collection failures (17423354/17423380) are preserved; adding the present frozen scripts directory to the test runner import path fixed collection without source changes.

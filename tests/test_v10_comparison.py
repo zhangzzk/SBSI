@@ -167,3 +167,32 @@ def test_corrected_gate_rejects_nonfinite_unselected_moments():
     a={'mean':[float('nan'),0.,0.,0.,0.],'mcse':[1.]*5}
     b={'mean':[0.]*5,'mcse':[1.]*5}
     with pytest.raises(ValueError,match='exactly five'):corrected_phase_gate(a,b)
+
+
+def test_pinned_source_filename_may_contain_heldout_without_allowing_data(tmp_path):
+    source=tmp_path/'source_support_fix';code=source/'doc/evidence/run_particle_heldout_20261022.py'
+    code.parent.mkdir(parents=True);code.write_text('# pinned source only\n')
+    digest=m.sha256(code);manifest={str(code.resolve()):digest}
+    m.guard_input_path(code,digest,source,manifest)
+    # Omitted/mismatching proof and unlisted source files remain forbidden.
+    for expected in (None,'changed'):
+        with pytest.raises(ValueError,match='heldout data'):
+            m.guard_input_path(code,expected,source,manifest)
+    with pytest.raises(ValueError,match='heldout data'):
+        m.guard_input_path(source/'heldout_results.json',digest,source,manifest)
+
+
+def test_even_matching_hash_cannot_authorize_actual_heldout_data_outside_source(tmp_path):
+    source=tmp_path/'source_support_fix';source.mkdir()
+    data=tmp_path/'heldout_panel/result.json';data.parent.mkdir();data.write_text('{}')
+    digest=m.sha256(data)
+    with pytest.raises(ValueError,match='heldout data'):
+        m.guard_input_path(data,digest,source,{str(data.resolve()):digest})
+
+
+def test_source_symlink_cannot_escape_to_heldout_data(tmp_path):
+    source=tmp_path/'source_support_fix';source.mkdir()
+    data=tmp_path/'heldout_panel/result.json';data.parent.mkdir();data.write_text('{}')
+    link=source/'heldout.py';link.symlink_to(data);digest=m.sha256(data)
+    with pytest.raises(ValueError,match='heldout data'):
+        m.guard_input_path(link,digest,source,{str(link.resolve()):digest})

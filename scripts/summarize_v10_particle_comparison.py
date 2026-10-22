@@ -119,13 +119,26 @@ def check_phase_arrays(d,a,p,saved,coefficients):
     if d.get('exact_zero_mean_for_float32_target_established') is not False:raise ValueError('invalid F32 phase identity claim')
 
 
+def guard_input_path(path,expected,source_root,source_manifest):
+    """Permit pinned source filenames, never arbitrary held-out data paths.
+
+    The caller populates source_manifest only after checking its pinned hash;
+    record() still verifies the actual file bytes against expected afterwards.
+    """
+    path=Path(path).resolve()
+    if 'heldout' not in str(path).lower():return
+    pinned=(source_root is not None and Path(source_root).resolve() in path.parents
+            and expected is not None and source_manifest.get(str(path))==expected)
+    if not pinned:raise ValueError('heldout data inputs forbidden; only pinned source-code manifest entries are allowed')
+
+
 def build_summary(root,completion):
     # No bypass: reconstruct and validate the required successful job set first.
     completion=completion_records('\n'.join(f'{j}|{r["state"]}|{r["exit_code"]}|{r["elapsed_seconds"]}|{r["allocated_tres"]}' for j,r in completion.items()))
-    root=Path(root).resolve();sources={}
+    root=Path(root).resolve();sources={};source=None;declared_sources={}
     def record(path,expected=None):
         path=Path(path).resolve()
-        if 'heldout' in str(path).lower():raise ValueError('heldout inputs forbidden')
+        guard_input_path(path,expected,source,declared_sources)
         value=sources.get(str(path)) or sha256(path)
         if expected is not None and value!=expected:raise ValueError(f'hash mismatch: {path}')
         sources[str(path)]=value;return path
@@ -136,11 +149,12 @@ def build_summary(root,completion):
         raise ValueError('n23 declaration differs from fixed task')
     source=Path(declaration['source']).resolve()
     manifest=record(source/'SHA256SUMS',declaration['source_manifest_sha256'])
-    declared_sources={}
     for line in manifest.read_text().splitlines():
         digest,name=line.split(None,1);name=name.lstrip('*');p=(source/name).resolve()
         if source not in p.parents:raise ValueError('unsafe source manifest path')
-        record(p,digest);declared_sources[str(p)]=digest
+        if str(p) in declared_sources:raise ValueError('duplicate pinned source path')
+        declared_sources[str(p)]=digest
+    for path,digest in declared_sources.items():record(path,digest)
     for local in [Path(raw_report.__file__),REPO/'sbsi/phase_control.py',REPO/'sbsi/particle_diagnostics.py']:
         record(local,declared_sources[str(source/local.relative_to(REPO))])
     artifacts={key:read(declaration[key]['path'],declaration[key]['sha256']) for key in ('initial_proposal','physical_geometry','phase_control')}
