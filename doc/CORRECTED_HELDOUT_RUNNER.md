@@ -2,6 +2,13 @@
 
 ## Current launch
 
+While the independent speed benchmark is pending/running, held-out array
+17435350 has temporary Nice=20 to allow that one-worker benchmark to share
+capacity. Its node pin, four-worker throttle, running allocations and science
+remain unchanged. Restore job 17439409 resets Nice=0 after benchmark termination
+unless the owner has changed the setting; see the
+[scheduling record](evidence/benchmark_priority_window_20261022.json).
+
 The first complete production group (indices 0–7, observations
 560126, 270602, 745801, 623219) finishes all eight candidate/reference pairs:
 16 populations and 16 phase diagnostics, with no extinction and all recorded
@@ -198,10 +205,11 @@ integration, not additional convergence.
 
 ## Bounded long-run status check
 
-After groups0 and1 complete (471/467 allocated seconds) and group2 starts,
-CPU-only one-shot17436101 is scheduled for2026-10-22 16:12:03 Europe/Berlin.
-It checks authoritative job/stage status, preserves failure flags and never
-reads posterior moments. The [scheduling receipt](evidence/heldout_scheduled_status_20261022.json)
-pins its executable and output path. This provides a local status artifact,
-not a Codex wakeup or external notification. Full science/report results remain
-required before acceptance.
+CPU-only one-shot 17436101 completes at 14:12 UTC on 2026-10-22, exit 0 in
+two allocated seconds. It records 14 completed stages, no failed jobs, and no
+final result yet. No posterior moments are read. The
+[scheduling and completion receipt](evidence/heldout_scheduled_status_20261022.json)
+preserves the original submission, verifies unchanged executable/launcher bytes,
+and pins the output hash. A later check of both workflows, 17439000, is scheduled
+for 16:00 UTC. These checks write local artifacts and do not wake or message
+this thread. Full science/report results remain required before acceptance.

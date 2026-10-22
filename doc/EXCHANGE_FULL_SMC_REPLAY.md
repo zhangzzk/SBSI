@@ -18,6 +18,20 @@ single-source difference before submission. The [launch receipt](evidence/exchan
 preserves commands, identities and limits. No full-run timing or replay result
 exists yet; no runtime optimization is promoted.
 
+The older held-out array still had higher queue priority and consumed released
+slots. Before any benchmark task started, a [temporary priority window](evidence/benchmark_priority_window_20261022.json)
+sets only held-out array 17435350's Nice from 0 to 20. Its throttle stays four;
+the one-worker benchmark can run while held-out tasks use remaining capacity.
+Running allocations and scientific configuration are unchanged. CPU job 17439409,
+dependent afterany on the benchmark array, restores Nice to 0 if the same live
+array still has the temporary setting. It preserves any subsequent owner change.
+Eight isolated subprocess-fixture checks cover restoration, changed owner/node
+settings, absent/terminal jobs, failed updates and unconfirmed restoration.
+The first benchmark task 17437046_0 starts at 14:13:39 UTC on th-cl-nv02;
+its baseline records meaningful annealing progress without extinction. The
+priority receipt records startup evidence. Full four-pair replay/cost results
+and priority restoration remain required.
+
 Bounded CPU status check 17439000 is scheduled for 18:00 Europe/Berlin
 (16:00 UTC), covering both workflows and their final-report existence without
 reading science values. Its [receipt](evidence/sampler_workflows_scheduled_status_20261022.json)

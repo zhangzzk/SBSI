@@ -22,5 +22,17 @@
     "warmup_3_4": "PENDING",
     "production": "PENDING afterok warmup",
     "report": "PENDING afterok production"
+  },
+  "completion": {
+    "scheduler_state": "COMPLETED",
+    "exit_code": "0:0",
+    "allocated_wall_seconds": 2,
+    "checked_utc": "2026-10-22T14:12:08.980712+00:00",
+    "output_sha256": "8bb34803de4923458d076a184ceb949406ae4e6a81989eb41830bfda0b941e70",
+    "action_required": false,
+    "failed_jobs": [],
+    "completed_stages": 14,
+    "final_result_exists": false,
+    "script_and_launcher_unchanged": true
   }
 }

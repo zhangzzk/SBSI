@@ -1,5 +1,40 @@
 # Work log
 
+## 2026-10-22 — Let the independent benchmark share queue capacity and restore priority automatically
+
+After dependency removal, scheduler priority still favored every older held-out
+task (544 versus benchmark 536 at inspection), so both available slots continued
+to go to that array. Changed only held-out array 17435350's Nice from 0 to 20;
+the verified priorities become 525 versus benchmark 537. Existing allocations
+continue, throttle four is retained, and the one-worker benchmark may take a
+released slot while held-out work uses remaining capacity. Both arrays remain
+pinned to the same four-GPU node. No code, seeds, data, runtime, within-pair order,
+acceptance gate, declaration or source manifest changed.
+
+Before changing Nice, submitted CPU restore job 17439409 afterany benchmark
+17437046. Its hash-pinned script restores Nice=0 only if the same live array
+retains Nice=20 and the original node pin, preserving later owner changes.
+Local Slurm documentation, AST/Bash syntax, live one-line scheduler parsing, and
+eight pure-stdlib subprocess-fixture checks pass, covering normal restoration,
+owner/node changes, absent/terminal jobs, failed update and unconfirmed update.
+The [priority receipt](evidence/benchmark_priority_window_20261022.json) preserves
+before/after states, unchanged scientific hashes, restoration job and test scope.
+No scientific outcomes were read. Updated both workflow documents; verify
+benchmark startup and eventual priority restoration. Scientific acceptance stays
+pending the complete frozen reports.
+
+Benchmark task 17437046_0 starts at 14:13:39 UTC on the declared V100 node
+while held-out work continues on another GPU. Its baseline enters annealing
+and records progress without extinction; the priority receipt preserves the
+startup observation. No complete pair replay or speed result is claimed yet.
+
+The original scheduled check 17436101 completes at 14:12 UTC, exit 0 in two
+allocated seconds: 14 stages complete, no failed jobs, no final result yet.
+Verified its original script/launcher hashes and recorded the output hash in
+the [existing receipt](evidence/heldout_scheduled_status_20261022.json), retaining
+the original submission state. The later both-workflow check 17439000 remains
+scheduled for 16:00 UTC. No posterior moments or comparisons were read.
+
 ## 2026-10-22 — First complete held-out production group finishes
 
 All eight Slurm pairs 17435350_0–7 complete with exit 0, covering the first
