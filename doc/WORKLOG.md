@@ -1,5 +1,21 @@
 # Work log
 
+## 2026-10-22 — Combined replay harness passes full scheduled validation
+
+Frozen source 4385cb8 passes Slurm job **17446023**: **1,123 tests passed,
+nine skipped**, one existing NumPy warning, 84.70 test seconds. All 483 source
+hashes match before/after. Preparation verifies the original and optimized
+320-file samplers, exactly three known runtime changes and all frozen inputs;
+parent independently checks 1,129 snapshot/prepared manifest entries and
+successful scheduler completion (123 seconds, eight logical CPUs).
+
+Full paired GPU replay/timing job **17446115** is queued after CPU success and
+current concurrency benchmark 17445452, using one V100/two physical cores,
+four unchanged fresh seed pairs and no requeue. Complete GPU replay and
+performance remain unmeasured. Updated [comparison status](PARTICLE_PRIOR_REUSE_CANDIDATE.md#paired-full-gpu-replay-and-timing);
+no production adoption or scientific-accuracy claim. Bounded status job
+17446128 will check scheduler states/result presence in about two hours.
+
 ## 2026-10-22 — Validate native prior reuse and prepare complete GPU replay
 
 Full scheduled CPU/native validation 17445720 passes: **1,092 tests, nine
