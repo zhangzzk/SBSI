@@ -1,5 +1,42 @@
 # Work log
 
+## 2026-10-22 — Freeze and queue the predeclared four-worker confirmation
+
+Isolated commit a556047 implements the unchanged development selection's fresh
+seed check: 2026103800–2026103803, worker order1/4/4/1, same four observations,
+unchanged 320-file sampler and fixed eight physical cores/one V100. All16
+original populations must replay; both internal-inclusive and outer-process
+ratios must reach1.25 in both repetitions. The original development harness is
+unchanged. All55 focused tests pass; full scheduled job17447788 then passes
+**1,086 tests, nine skips**, one existing warning, with all483source hashes
+unchanged and full frozen preparation preflight.
+
+Parent independently verifies810manifest entries,657external evidence pins,
+JUnit and scheduler completion. GPU17447826 is queued on the four-GPU study
+node after this success; no unnecessary dependency on other studies. Added
+[confirmation protocol/status](SMC_CPU_CONCURRENCY_CONFIRMATION.md#scheduled-validation-and-launch)
+and [preparation receipt](evidence/smc_cpu_concurrency_confirmation_preparation_20261022.json).
+No fresh-seed performance result or production promotion yet. One-shot metadata
+check17447926 replaces17446128 at the same20:55Berlin time and includes the
+new confirmation; it does not send chat notifications.
+
+## 2026-10-22 — Audit scientific acceptance separately from numerical mock-prior closure
+
+A read-only audit of the frozen held-out declaration, complete source, runner,
+gate functions and tests confirms all-object raw precision/agreement,
+both-measure controlled agreement, complete original-run accounting and strict
+inclusive process-cost improvement. No partial held-out outcomes were read or
+used to tune settings. Recorded [source-bound checklist](evidence/heldout_acceptance_contract_audit_20261022.json)
+and [interpretation boundary](CORRECTED_HELDOUT_RUNNER.md#acceptance-audit-and-target-law-boundary).
+
+A pass concerns p_A(target) q_E(environment) K32. The F64 phase reweight changes
+likelihood precision only; it does not apply q_N/p_A. Existing numerical-prior
+sensitivity on represented development states therefore remains separate from
+exact numerical mock-prior inference and absent-mode coverage. Held-out effort
+increases N256 to N1024 while T64/M64 remain fixed. Controlled precision and
+other supplemental diagnostics are not reclassified as gates. No target, source,
+threshold, seed or live scientific job was changed.
+
 ## 2026-10-22 — Four CPU workers per GPU deliver exact development replay and 3.47–3.57x throughput
 
 Concurrency job 17445452 completes all 24 original populations and every

@@ -153,6 +153,48 @@ corrected scores remain qualified diagnostics; the periodic identity applies
 to the intended continuous F64 target. Passing is bounded fixed-y evidence,
 not proof of global rare-mode coverage or population shear-calibration accuracy.
 
+## Acceptance audit and target-law boundary
+
+Read-only review of the frozen declaration, runner, gate functions and tests
+confirms the following contract. No partial held-out scientific outcomes were
+used. [Pinned source audit](evidence/heldout_acceptance_contract_audit_20261022.json).
+
+| Requirement | Mandatory evidence |
+| --- | --- |
+| Identity/completeness | All 320 pinned source files, external inputs, original 20 pilots, 80 production populations, 100 phase checks and complete costs; no extinction, missing run or replacement. |
+| Raw precision | Every observation, both arms: score effective count at least 400, normalizer relative MCSE below 0.1 and run-weight ESS at least 6.4/8. |
+| Raw agreement | Both scores within 3.5 combined MCSE and 0.1 pooled posterior SD; both regions within 3.5 combined MCSE and 0.05 absolute mass; mean normalizers within 3.5 combined standard errors. |
+| Controlled agreement | Both corrected scores within 3.5 combined whole-population MCSE in both F32-sampled and F64-likelihood-reweighted measures. |
+| Cost | Strictly smaller inclusive candidate process-wall recipe cost, with initialization, pilots/fits, production, phase checks, reporting, verification and preparation counted as declared. |
+
+The panel must pass for every observation. Independent production populations
+are conditional on shared independent-pilot fits. The held-out contrast changes
+fitted versus broad proposal and N256 versus N1024, keeping T64/M64 fixed.
+It does not demonstrate an additional increase in mutation depth on this panel.
+Controlled-score precision/absolute-SD bounds, T=0, all-five-moment contrasts,
+F64 normalizer gates and F32–F64 likelihood equivalence are supplemental
+diagnostics, not acceptance gates. This is the original declared distinction;
+no threshold has been relaxed or added in response to outcomes.
+
+The endpoint is **analytic target prior p_A × numerical environment law q_E ×
+K32**. F64 phase reweighting uses only `exp(logK64-logK32)` and therefore does
+not test equality to the numerical mock-target prior q_N. Corrected exchange
+support establishes the intended common target for these arms; it does not
+replace p_A with q_N. The [development prior-sensitivity study](CORRECTED_PRIOR_SENSITIVITY.md#limits-and-next-implication)
+covers represented states only and cannot bound absent modes or numerical-only
+support. A pass here must not be described as exact mock-prior posterior closure
+or resolution of catalogue-wide additive shear bias.
+
+A direct numerical-target candidate would require the full numerical type sum
+and numerical conditional type probabilities in target coordinates, together
+with consistent native-exchange corrections. Replacing only the target prior
+while keeping the existing analytic-target exchange correction would be wrong.
+The existing numerical-intensity tests establish continuous inverse-table
+laws on explicit fixtures, not installed-mock posterior closure. A separate
+future experiment can compare those target laws on the four development
+objects; any further tuning would require a fresh scientific held-out panel.
+The current frozen study and acceptance gates remain unchanged.
+
 ## Synthetic validation
 
 CPU job17434665 tested the runner and declaration-bound fitter from an immutable

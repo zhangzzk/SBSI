@@ -396,11 +396,11 @@
       "metadata": {
         "dev_score": 3.4738186577882697,
         "test_score": null,
-        "result": "Development17445452 completes24original runs, exact fullsaved replay. Independent audit17447670 reruns all checks and verifies7costreceipts. Inclusive k2 ratios1.959/1.904; k4 ratios3.570/3.474; shared prep/report cost sensitivity3.544/3.448. Fixed ranking selects4 workers; confirmation on predeclared3800-3803seeds being prepared, not adopted. This dev_score is implementation throughput ratio, not scientific acceptance.",
-        "branch_ref": "codex/smc-cpu-concurrency-20261022@13a1fcaaa52af407a526ac45690ad1325ae14845"
+        "result": "Development17445452/all24saved replay independently audited17447670; inclusive4worker speedups3.570/3.474, sharedprep/report sensitivity3.544/3.448. Selected4 per originalrule. Confirmationa556047 uses predeclared3800-3803seeds/order1,4,4,1;55focusedtests and fullCPU17447788(1086pass9skip) pass,483sourcehashes beforeafter and complete preflight. Parent810manifest entries657externalpins verified. GPU17447826 queued; freshseed gate pending. No scientific acceptance or promotion.",
+        "branch_ref": "codex/smc-concurrency-confirmation-20261022@a556047b3c47fb5478865c58f728559b6dc323ba"
       },
       "created_at": 1792686024,
-      "updated_at": 1792692943
+      "updated_at": 1792693696
     },
     "n25": {
       "id": "n25",

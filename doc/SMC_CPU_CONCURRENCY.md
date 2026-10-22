@@ -24,7 +24,8 @@ Including evenly split new preparation/report cost leaves the four-worker
 ratios at **3.544/3.448**. Existing scientific pilot/geometry fits are excluded.
 
 The predeclared ranking selects **four workers** for confirmation on untouched
-seeds 2026103800–2026103803. No runtime adoption yet: both fresh timing repeats
+seeds 2026103800–2026103803. [Fresh-seed confirmation](SMC_CPU_CONCURRENCY_CONFIRMATION.md#scheduled-validation-and-launch)
+is queued as17447826 after full CPU validation. No runtime adoption yet: both fresh timing repeats
 must clear the fixed gate with exact replay. This is development throughput
 for one four-observation group, not catalogue throughput, four-GPU scaling,
 500-CPU capacity or posterior-accuracy acceptance. See
