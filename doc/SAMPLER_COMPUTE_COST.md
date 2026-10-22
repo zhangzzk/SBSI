@@ -103,3 +103,21 @@ Earlier MH workers benefited from CPU concurrency, as recorded in
 Those timing gains use a different sampler and sampling budget and cannot be
 substituted for the current SMC rate. No extra benchmark was launched for this
 estimate, and the running scientific experiment was not changed.
+
+
+## Measured local CPU concurrency follow-up
+
+The unchanged sampler now has a completed one-V100 development benchmark.
+Four two-core workers achieve **3.47–3.57 times** the serial setting-inclusive
+throughput, with exact saved-output replay for all 24 original runs. Two workers
+achieve 1.90–1.96 times. The primary timing includes process/model startup,
+sampling, saving and verification; the same eight physical cores are reserved
+throughout. New preparation/report overhead sensitivity remains 3.45–3.54 times
+for four workers. Fresh-seed confirmation remains required before adoption.
+See [measured comparison](SMC_CPU_CONCURRENCY.md#completed-development-result).
+
+Do not multiply the earlier full-catalogue rate by this factor: pilot fitting,
+phase diagnostics, shared costs, different galaxy groups and four-GPU contention
+have not been benchmarked under this concurrency layout. The result establishes
+that overlapping independent host computations is effective for this measured
+production workload; distributed 500-CPU capacity is still unmeasured.

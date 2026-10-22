@@ -344,7 +344,7 @@
       "depth": 1,
       "status": "pending",
       "hypothesis": "Reduce deterministic implementation overhead while preserving all proposal laws, RNG streams, target arithmetic and full retained payloads, to lower matched-accuracy sampler cost.",
-      "insight": "[from n22] Optimize measured bottlenecks while preserving full proposal/decision/RNG trajectories; count complete inference and diagnostic cost before promoting a local speedup.\n[from n22] Local proposal speed gains need not produce dependable complete-run gains. Four exact whole-run saved-output replays support numerical equivalence, but counterbalanced timing reversals and a1.24percent aggregate reduction leave runtime benefit uncertain. Preserve the candidate without promoting it; correctness and efficiency require separate evidence.",
+      "insight": "[from n22] Optimize measured bottlenecks while preserving full proposal/decision/RNG trajectories; count complete inference and diagnostic cost before promoting a local speedup.\n[from n22] Local proposal speed gains need not produce dependable complete-run gains. Four exact whole-run saved-output replays support numerical equivalence, but counterbalanced timing reversals and a1.24percent aggregate reduction leave runtime benefit uncertain. Preserve the candidate without promoting it; correctness and efficiency require separate evidence.\n[from n24] Host-side scene/prior work materially limits this sampler: four independent two-core workers per GPU preserve all saved results and improve development setting throughput about3.5fold. Confirm on untouched seeds and measure shared preparation/diagnostic costs before catalogue scaling; GPU count alone is not a throughput model.",
       "metadata": {
         "dev_score": null,
         "test_score": null,
@@ -352,7 +352,7 @@
         "branch_ref": null
       },
       "created_at": 1792623586,
-      "updated_at": 1792680462
+      "updated_at": 1792692943
     },
     "n22": {
       "id": "n22",
@@ -392,15 +392,15 @@
       "depth": 2,
       "status": "running",
       "hypothesis": "Multiple independent two-CPU sampler processes sharing one V100 overlap host-side prior and scene work, increasing complete fixed-recipe production throughput while preserving every saved scientific output bitwise.",
-      "insight": "Host-side prior and scene work motivates sharing each GPU between independent CPU workers. Keep all original population work, numerical grouping, seeds and CPU threads fixed; whole-setting throughput and exact saved-output replay must both improve.",
+      "insight": "Independent host-side work can overlap nearly linearly across four CPU worker processes sharing one GPU without changing saved numerics. Judge scaling by complete process/verification cost and fresh-seed replication; local throughput does not establish whole-catalogue or distributed capacity.",
       "metadata": {
-        "dev_score": null,
+        "dev_score": 3.4738186577882697,
         "test_score": null,
-        "result": "CPU17445433 passed1064 tests11skips; physical-affinity tests subsequently pass in4physicalCPU full suite17445720. GPU17445452 running on oneV100/eightphysicalcores (16Slurm logicalCPUs). Fourserial populations complete; two concurrent workers progress normally pinned32-33 and34-35. Full1,2,4,4,2,1 timing and saved-output replay pending; no speedup claim.",
+        "result": "Development17445452 completes24original runs, exact fullsaved replay. Independent audit17447670 reruns all checks and verifies7costreceipts. Inclusive k2 ratios1.959/1.904; k4 ratios3.570/3.474; shared prep/report cost sensitivity3.544/3.448. Fixed ranking selects4 workers; confirmation on predeclared3800-3803seeds being prepared, not adopted. This dev_score is implementation throughput ratio, not scientific acceptance.",
         "branch_ref": "codex/smc-cpu-concurrency-20261022@13a1fcaaa52af407a526ac45690ad1325ae14845"
       },
       "created_at": 1792686024,
-      "updated_at": 1792687986
+      "updated_at": 1792692943
     },
     "n25": {
       "id": "n25",

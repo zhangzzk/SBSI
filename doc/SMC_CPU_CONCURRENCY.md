@@ -1,5 +1,41 @@
 # SMC CPU concurrency — October 22, 2026
 
+## Completed development result
+
+GPU job **17445452** completes all 24 original runs in 3,091 allocated seconds
+on one V100 and eight physical cores (16 logical Slurm CPUs). Every setting
+preserves the full 64-stage scientific history and saved particle/scene bytes.
+Independent scheduled audit **17447670** replays the complete checks and
+reproduces the report, allowing only the new audit's elapsed time to differ.
+
+| Workers per GPU | Active physical cores | Forward speedup | Reverse speedup |
+| --- | ---: | ---: | ---: |
+| 1 | 2 | 1.00 | 1.00 |
+| 2 | 4 | 1.959 | 1.904 |
+| 4 | 8 | 3.570 | 3.474 |
+
+These are predeclared setting-inclusive ratios: verification, model/process
+startup, sampling, saving and saved-output comparison all count. All settings
+held the same eight-core reservation. The four-worker settings took
+242.263/243.089 seconds for the same four populations, versus
+864.905/844.449 seconds serially. Original setting/report process timers sum
+to 3,088.90 seconds; preparation adds 6.149 seconds outside the GPU allocation.
+Including evenly split new preparation/report cost leaves the four-worker
+ratios at **3.544/3.448**. Existing scientific pilot/geometry fits are excluded.
+
+The predeclared ranking selects **four workers** for confirmation on untouched
+seeds 2026103800–2026103803. No runtime adoption yet: both fresh timing repeats
+must clear the fixed gate with exact replay. This is development throughput
+for one four-observation group, not catalogue throughput, four-GPU scaling,
+500-CPU capacity or posterior-accuracy acceptance. See
+[full timing and independent audit](evidence/smc_cpu_concurrency_development_20261022.json).
+
+The restoration controller 17445497 returned failure because Slurm included an
+already-finished array task in its update response. The update did restore the
+live array limit: independent current-state inspection confirms all pending
+and running records have `ArrayTaskThrottle=4`. The original failed receipt is
+preserved; no rerun or additional scheduler mutation was needed.
+
 ## Hypothesis and fixed experiment
 
 Independent two-CPU processes sharing one V100 can overlap host-side prior and

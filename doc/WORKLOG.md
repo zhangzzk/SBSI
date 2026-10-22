@@ -1,5 +1,31 @@
 # Work log
 
+## 2026-10-22 — Four CPU workers per GPU deliver exact development replay and 3.47–3.57x throughput
+
+Concurrency job 17445452 completes all 24 original populations and every
+64-stage/saved-array comparison. Independent scheduled parent audit 17447670
+reruns the frozen source/protocol/worker/result checks and exactly reproduces
+the report except for the audit's elapsed time. All seven outer process-cost
+receipts pass. Four workers give 3.570/3.474 setting-inclusive speedups; two give
+1.959/1.904. Adding shared preparation/report costs leaves four-worker ratios
+3.544/3.448. The unchanged predeclared ranking selects four workers for the
+fresh-seed confirmation; no runtime promotion or scientific gate is waived.
+
+Added the [audit script](evidence/audit_smc_concurrency_20261022.py),
+[complete timing evidence](evidence/smc_cpu_concurrency_development_20261022.json),
+and [result/limits](SMC_CPU_CONCURRENCY.md#completed-development-result).
+Updated computation-cost notes without extrapolating to complete catalogue or
+500-CPU throughput. Previous goal turn made progress through implementation,
+full CPU/native validation and queued GPU replay; this turn adds measured
+performance evidence and an independent complete replay audit.
+
+Resource controller17445497 returned1 for an already-finished array task;
+current scheduler inspection verifies all live held-out records were restored
+to throttle4. Preserve the original failed controller receipt and successful
+current-state verification. No extra mutation/restart was required. Prior-reuse
+GPU17446115 remains pending on scheduler priority; held-out science remains
+untouched while the original 40 paired tasks finish.
+
 ## 2026-10-22 — Complete GPU benchmark preflight and queue prior-reuse comparison
 
 Isolated source 4385cb8 passes combined CPU job **17446023**: **1,123 passed,
