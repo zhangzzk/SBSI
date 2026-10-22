@@ -1,5 +1,22 @@
 # Work log
 
+## 2026-10-22 — Validate native prior reuse and prepare complete GPU replay
+
+Full scheduled CPU/native validation 17445720 passes: **1,092 tests, nine
+optional skips**, one existing warning; all 479 frozen source hashes unchanged.
+Actual installed photometry preserves all compared bytes on 73,728 development
+coordinates and 15 support probes. Parent independently checked all native
+input/source identities, JUnit and scheduler completion. This proves the
+checked native calculations, not a sampler speedup or global convergence.
+
+Added the paired GPU harness (31 focused tests), immutable two-source preparation
+and single-allocation launcher. Exactly three known runtime files may differ;
+all original science, 64 stages and saved array bytes must replay for four fresh
+counterbalanced seed pairs. Complete process timing retains verification costs.
+Full combined scheduled validation and GPU comparison are next; no adoption.
+See [CPU evidence](PARTICLE_PRIOR_REUSE_CANDIDATE.md#scheduled-full-cpu-and-native-replay-results)
+and [GPU comparison](PARTICLE_PRIOR_REUSE_CANDIDATE.md#paired-full-gpu-replay-and-timing).
+
 ## 2026-10-22 — Add pinned installed-photometry replay for prior reuse
 
 Added `scripts/check_particle_prior_reuse_native.py` to compare the n25 candidate

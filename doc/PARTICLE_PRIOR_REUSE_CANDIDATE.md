@@ -59,8 +59,8 @@ nonfinite-coordinate tests. `git diff --check` passes.
 
 ## Limits and next checks
 
-This candidate is not adopted. The parent executor must run the full CPU suite
-through Slurm and compare independent baseline/optimized saved GPU results on
+This candidate is not adopted. Full CPU and installed-photometry checks pass;
+independent baseline/optimized saved GPU replay and timing remain required on
 the same native data, models, settings, seeds and original observation groups.
 Actual installed photometry must replay exactly: reusing a whole decoded
 photometry array replaces evaluations on type-specific subsets, and toy
@@ -111,5 +111,48 @@ The output directory must be fresh. Five small checker tests pass in 0.12
 seconds: byte-level signed-zero/NaN distinctions, dtype/shape and native-schema
 failures, complete population identity/hash enforcement, seed rejection and
 fixed support-probe coverage. Syntax compilation and `git diff --check` pass.
-The actual-data replay has not been executed by this implementation agent;
-the parent runs it with the full CPU suite in a scheduled job.
+The parent completed the actual-data replay and full CPU suite in Slurm job
+17445720; see the results below.
+
+
+## Scheduled full CPU and native replay results
+
+Job **17445720** tested immutable source commit
+`e513592aad467cd113920d2fb948dca2d8821c4e`: **1,092 passed, nine skipped**, one
+existing NumPy warning, in 87.13 test seconds. All 479 snapshot hashes matched
+before and after. Four physical CPU cores were requested; Slurm allocated eight
+logical CPUs for 156 seconds, with no GPU.
+
+The installed-photometry comparison passed byte-for-byte on **73,728 saved
+coordinates plus 15 support probes**. All 25 cases preserve prior values, native
+fields and type probabilities, including dtype, shape and nonfinite bit
+patterns. Native-check process cost was 34.077 seconds wall and 21.516 CPU
+seconds; this includes both implementations and is not a speed measurement.
+The parent independently rechecked all 10 source and 73 input identities and
+JUnit/scheduler completion. Results are retained under
+`sampler_search_20261021/prior_reuse_native_replay_20261022/result.json` and
+`smc_prior_reuse_validation_v1_20261022/validation.json` on project storage.
+
+## Paired full GPU replay and timing
+
+`scripts/prepare_prior_reuse_smc.py` freezes two complete 320-file sources that
+may differ only in the three declared runtime files. It binds the successful
+native replay, audited development protocol, external inputs and executed
+harnesses. `scripts/benchmark_prior_reuse_smc.py` compares four complete pairs
+with fresh seeds 2026103900–2026103903, alternating baseline-first and
+optimized-first. Each arm uses the original four observations, N256/T64/M64,
+two physical CPU cores, one V100, original likelihood grouping and saved fits.
+
+All scientific JSON, all 64 stage histories and saved particle/scene bytes
+must agree. Every original pair must finish without extinction; failures are
+retained without replacement. `/usr/bin/time` receipts include the complete
+pair and report processes, with shared verification costs divided equally;
+source verification and copying are also counted. Preparation declaration/manifest
+serialization and permission changes, existing fits, queueing, launcher setup
+and final JSON serialization remain outside this conditional comparison.
+The full sampler's unsaved intermediate states and terminal RNG are not
+observed by this driver; focused transition tests cover RNG preservation.
+
+The 31 focused harness tests pass in 0.88 seconds. The combined scheduled suite,
+preparation preflight and GPU comparison remain pending. No runtime speedup or
+sampler acceptance is claimed.
