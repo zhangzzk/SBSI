@@ -1,5 +1,29 @@
 # Work log
 
+## 2026-10-22 — Version and validate the complete frozen sampler candidate
+
+An independent source-to-commit audit finds 311 of the 320 held-out source paths
+identical at root b7f559a, two older scripts different, and seven older modules,
+diagnostic scripts and tests absent from Git. The active particle sampler and
+held-out runner already match. Preserved the exact nine frozen files in isolated
+branch `codex/frozen-sampler-candidate-20261022`, implementation commit 862db49
+and final documentation commit 0301993. Every actual frozen file and all 320
+candidate Git blobs pass SHA256 checks. Root's original dirty/untracked files
+and all live scientific sources/settings remain untouched; no runtime
+optimization or scientific change is introduced.
+
+CPU job 17443057 tests a complete 469-file Git archive plus source receipt with
+two CPUs and no GPU: **1,031 passed, nine optional skips**, one existing NumPy
+warning, 83.45 test seconds and 108 allocated seconds. All 470 snapshot hashes
+match before and after, confirmed again by parent review together with JUnit
+and scheduler receipts. There are no failures or retries. Copied only the
+[candidate documentation](FROZEN_SAMPLER_CANDIDATE.md#validation), inventories,
+launcher and receipts into the root worktree; the complete candidate code stays
+on its isolated branch. Updated the search evidence and candidate pointer.
+External model/data/package dependencies remain pinned separately. The held-out
+accuracy and inclusive-cost gates are still pending; these implementation and
+provenance checks do not establish convergence or shear calibration.
+
 ## 2026-10-22 — Complete exact categorical replays; full-run speed benefit remains uncertain
 
 All four fixed benchmark pairs in GPU array 17437046 and CPU report 17437047

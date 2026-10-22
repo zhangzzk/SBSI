@@ -54,6 +54,16 @@ Allocated inference totals are1667/3944/3820 seconds: small fitted is2.29 times
 cheaper than broad at this stage. Full preparation cost and held-out reliability
 are still required. See the [audited complete result](V10_PARTICLE_COMPARISON.md#completed-audited-development-comparison).
 
+The complete experiment source is now preserved on
+`codex/frozen-sampler-candidate-20261022`, commit
+`0301993445398ef0942eac0e2777138d5b405862`. All 320 frozen source paths match
+the candidate's committed files. This closes a versioning gap involving nine
+older local files while preserving the original working tree. Its complete
+Git archive passes 1,031 CPU tests with nine optional skips; the inactive
+categorical optimization is absent. See the
+[source and validation record](FROZEN_SAMPLER_CANDIDATE.md#validation).
+This is a reproducible candidate for the still-pending scientific gate.
+
 ![Completed development precision, score agreement, inference allocation, and prior sensitivity](evidence/sampler_development_20261022.svg)
 
 This development snapshot shows maxima over the two score components. The
