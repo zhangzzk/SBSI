@@ -103,3 +103,24 @@ then started on the same GPU: workers are pinned to physical cores 32–33 and
 34–35 and both reached stage 17/64. This establishes actual concurrent CPU
 execution and normal startup, not a measured speedup or replay result. Four
 workers and reverse-order repetitions remain required.
+
+
+## Path to many CPU workers
+
+The next scaling boundary is independent CPU scene/proposal work calling a
+small pool of persistent GPU likelihood evaluators. CPU workers should retain
+per-population RNG, target/prior state, acceptance and resampling; a GPU service
+should own resident models and evaluate explicitly identified requests. The
+candidate interface is the existing summary/auxiliary-array to log-likelihood
+boundary. Preserve each original four-observation group, row order, padding,
+dtype and numerical batch size rather than implicitly combining requests.
+
+Start with local processes and measured memory/contention. A remote service
+would then need bounded request queues, deterministic request/result matching,
+explicit failures, and shared-data placement. Its validation must compare a
+single request, a full population, and concurrent populations against the
+original saved GPU results before a throughput test. Measure serialization,
+network, model loading and queue costs together. Five hundred allocated CPU
+cores are useful only if their extra proposal work increases complete accepted
+catalogue throughput; they are not a proportional speed multiplier. This is a
+follow-up design, not an implemented or measured distributed service.

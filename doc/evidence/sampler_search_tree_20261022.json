@@ -412,11 +412,11 @@
       "metadata": {
         "dev_score": null,
         "test_score": null,
-        "result": "CPU17445720 full1092pass9skip; installed photometry native replay byte-exact on73728savedstates+15supportprobes, all83input/source pins rechecked. Runtime49918c6 plus nativechecker104a1c9. FullGPU paired replay harness31tests pass; complete source4385cb8 under combined scheduled validation17446023. Fourfreshcounterbalanced seedpairs3900-3903 will follow n24benchmark. No efficiency/adoption claim.",
+        "result": "CPU17445720 native replay byte-exact on73728states+15probes;1092tests pass9skip. Complete candidate4385cb8 with GPU harness/preparation passes CPU17446023:1123tests9skip,483sourcehashes beforeafter,320filesperarm preflight; parent1129manifest entries independently verified. GPU17446115 queued after n24benchmark17445452; four fresh counterbalanced seedpairs3900-3903,oneV100/twophysicalcores. FullGPU replay/timing pending; no adoption.",
         "branch_ref": "codex/smc-prior-reuse-20261022@4385cb8b246d87379c21795a33940232ef347916"
       },
       "created_at": 1792686304,
-      "updated_at": 1792687986
+      "updated_at": 1792688175
     }
   }
 }

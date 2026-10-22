@@ -153,6 +153,19 @@ and final JSON serialization remain outside this conditional comparison.
 The full sampler's unsaved intermediate states and terminal RNG are not
 observed by this driver; focused transition tests cover RNG preservation.
 
-The 31 focused harness tests pass in 0.88 seconds. The combined scheduled suite,
-preparation preflight and GPU comparison remain pending. No runtime speedup or
-sampler acceptance is claimed.
+The 31 focused harness tests pass in 0.88 seconds. Combined scheduled validation
+**17446023** passed **1,123 tests, nine skips**, one existing warning, in 84.70
+test seconds. All 483 frozen source hashes match before/after, and the prepared
+baseline and candidate pass complete 320-file source/input/protocol preflight.
+The parent independently checked 1,129 snapshot/prepared manifest entries,
+JUnit and successful scheduler completion (123 seconds, eight logical CPUs).
+
+GPU job **17446115** is queued after this successful test and concurrency job
+17445452, on one V100 with two physical CPU cores and requeue disabled. Prepared
+declaration SHA256 is
+`da9358a05bb3a46714ea92c40030dd04d0161327b9454ecf0fd714c6a08175ef`;
+optimized source manifest is
+`f95d439d723e25375ca683a7134562f8a5262cd35d04c2b44a0e345bc52039c2`.
+All four original paired comparisons remain required. No runtime speedup or
+sampler acceptance is claimed. A bounded read-only scheduler/result-presence
+check is scheduled as 17446128 about two hours later; it sends no chat message.

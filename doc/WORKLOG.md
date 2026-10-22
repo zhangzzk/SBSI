@@ -1,5 +1,24 @@
 # Work log
 
+## 2026-10-22 — Complete GPU benchmark preflight and queue prior-reuse comparison
+
+Isolated source 4385cb8 passes combined CPU job **17446023**: **1,123 passed,
+nine skips**, one existing warning, 84.70 test seconds. All 483 source hashes
+match before/after; prepared baseline/candidate each contain all 320 pinned
+sampler files and differ in exactly three declared implementations. Parent
+independently rechecked 1,129 manifest entries, JUnit and scheduler success.
+
+Queued full paired GPU replay/timing **17446115** after successful tests and
+current concurrency benchmark 17445452. It uses one V100/two physical cores,
+original fixed scientific settings and four fresh alternating-order pairs.
+No speedup, GPU replay or scientific acceptance result yet. Added
+[preparation evidence](evidence/particle_prior_reuse_gpu_preparation_20261022.json)
+and updated [comparison status](PARTICLE_PRIOR_REUSE_CANDIDATE.md#paired-full-gpu-replay-and-timing).
+The one-shot read-only status check 17446128 replaces 17445739 and includes
+both efficiency experiments; it does not notify chat. Documented the
+[remote CPU/GPU service boundary](SMC_CPU_CONCURRENCY.md#path-to-many-cpu-workers)
+as future work, separate from the actual local concurrency implementation.
+
 ## 2026-10-22 — Prior reuse passes native replay; concurrent CPU workers start
 
 The isolated prior-reuse implementation passes full scheduled validation
