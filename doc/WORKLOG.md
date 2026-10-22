@@ -1,5 +1,26 @@
 # Work log
 
+## 2026-10-22 — Prepare corrected-development prior-sensitivity follow-up
+
+The earlier [bridge audit](PARTICLE_BRIDGE_AUDIT.md#new-evidence-on-the-numerical-target-prior-difference)
+used old v5 populations with large raw-score uncertainty. Registered a bounded
+CPU follow-up under Arbor n14 using all24 corrected v10 development populations,
+their original normalizers, full phase diagnostics and frozen coefficients.
+The numerical-to-analytic ratio must sum complete native type intensities;
+a saved auxiliary type or support-restricted per-type ratio is insufficient.
+Each measure's paired population influence functions provide the contrast error,
+including covariance and retaining zero-mass populations. Reproduce audited
+baseline moments and native-coordinate priors before interpreting any tilt.
+
+The isolated executor works from7eda30d; tests and a frozen design precede the
+CPU-only run. No learned likelihood evaluation, new sampler, held-out input or
+production-target modification is authorized by this diagnostic. Both priors
+are phase invariant, so the continuous F64 control identity persists on the
+represented analytic-support domain; the F32 qualification and missing-support/
+mode limitations remain. This is a represented-state sensitivity check, not an
+empirical calibration correction. No new numerical evidence yet. Updated
+hypothesis-tree status only; independent held-out validation remains live.
+
 ## 2026-10-22 — Queue isolated full-run categorical replay and cost check
 
 Integrated the independently tested benchmark/preparation/fixture scripts,

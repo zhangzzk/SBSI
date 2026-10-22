@@ -230,17 +230,17 @@
       "id": "n14",
       "parent": "n10",
       "depth": 2,
-      "status": "executed",
+      "status": "running",
       "hypothesis": "A standalone density evaluator for the actual numerical native-mark generator, including interpolation support, supplies the missing exact measure for informed environment proposals and quantifies mock/prior mismatch.",
       "insight": "The numerical native support is wider than analytic support in interpolation-edge slivers. Density evaluation must use the actual inverse-CDF slopes and rates; clamp atoms and failed-table tail events must be reported separately, never silently renormalized.",
       "metadata": {
         "dev_score": 1.0,
         "test_score": null,
-        "result": "Standalone continuous numerical native intensity implemented;29 new and5 existing tests pass CPU17419657. Includes type rates, interpolation support slivers and shared native factors/cuts. No real sampler change.",
+        "result": "Standalone continuous numerical native intensity implemented;29 new and5 existing tests pass CPU17419657. Includes type rates, interpolation support slivers and shared native factors/cuts. No real sampler change. Corrected-development posterior-sensitivity follow-up is preparing in codex/corrected-prior-sensitivity-20261022 from7eda30d: all24 v10 populations/4observations, full type-summed native intensity, F32/F64 raw and frozen controlled scores, paired whole-population influence errors, prior/coordinate and audited-baseline replay. No held-out data or target mutation; no new scientific result yet.",
         "branch_ref": "codex/numerical-native-intensity-20261021;efd794cafc7f0280eccba0cc654527983abac1ee"
       },
       "created_at": 1792618626,
-      "updated_at": 1792619208
+      "updated_at": 1792674019
     },
     "n15": {
       "id": "n15",
