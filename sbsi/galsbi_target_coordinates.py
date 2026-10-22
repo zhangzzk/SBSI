@@ -14,8 +14,21 @@ class GalSBITargetCoordinates:
     names = ('log_z', 'm_r', 'sed_alr0', 'sed_alr1', 'sed_alr2', 'sed_alr3',
              'log_circularized_radius', 'sersic_logit', 'distortion_logit', 'phase')
 
-    def __init__(self, galaxy_prior, angular_diameter_distance):
+    def __init__(self, galaxy_prior, angular_diameter_distance, *, target_prior='analytic'):
+        if target_prior not in ('analytic', 'numerical'):
+            raise ValueError("target_prior must be 'analytic' or 'numerical'")
         self.prior, self.angular_distance = galaxy_prior, angular_diameter_distance
+        self._target_prior = target_prior
+
+    @property
+    def target_prior(self):
+        """Read-only target-law identity; numerical means the continuous law.
+
+        Numerical interpolation support is evaluated directly, including marks
+        outside analytic support. Clamp atoms and the literal finite-RNG law
+        are not represented by this continuous native density.
+        """
+        return self._target_prior
 
     def encode(self, data):
         p = self.prior.p
@@ -56,6 +69,9 @@ class GalSBITargetCoordinates:
 
     def log_prior(self, coordinates, kinds):
         data, logj = self.decode(coordinates, kinds)
+        if self.target_prior == 'numerical':
+            from .numerical_native_intensity import numerical_native_log_intensity
+            return numerical_native_log_intensity(self.prior, data)+logj, data
         return self.prior.log_intensity(data)+logj, data
 
     def log_mixture_prior(self, coordinates):
@@ -64,13 +80,18 @@ class GalSBITargetCoordinates:
         All native-to-physical conversions here are type independent at fixed
         coordinates; type affects only the native population factors. Returned
         red/blue probabilities are conditional on these coordinates, not extra
-        classifier weights. No relative type normalization is discarded.
+        classifier weights. No relative type normalization is discarded. The
+        explicitly selected target law supplies every type's absolute intensity.
         """
         data, logj = self.decode(coordinates, np.zeros(len(coordinates), dtype=int))
         terms = []
         for kind in range(len(self.prior.types)):
             data['type'] = np.full(len(coordinates), kind, dtype=int)
-            terms.append(self.prior.log_intensity(data))
+            if self.target_prior == 'numerical':
+                from .numerical_native_intensity import numerical_native_log_intensity
+                terms.append(numerical_native_log_intensity(self.prior, data))
+            else:
+                terms.append(self.prior.log_intensity(data))
         terms = np.column_stack(terms)
         total = logsumexp(terms, axis=1)
         probabilities = np.zeros_like(terms)
