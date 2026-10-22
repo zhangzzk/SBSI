@@ -44,74 +44,78 @@ proof or a population shear-calibration claim.
 
 ## Current status
 
-No candidate is accepted. The 2026-10-22 endpoint audit found a native
-exchange support defect: the default correction allowed an analytic target
-to enter a neighbour region where the numerical continuous density is zero.
-The common helper now rejects those swaps. This is reachable under the real
-prior; occurrence in historical trajectories and impact on scores remain
-unknown. The old v8 baseline and informed arm also differ in this support
-guard, so their comparison cannot isolate proposal quality without a replay.
-See [support evidence and limits](PARTICLE_ENDPOINT_COMPATIBILITY_AUDIT.md#actual-prior-counterexamples-and-practical-limits).
-Corrected fresh runs or complete trajectory evidence are required before
-promoting any earlier development result.
+No candidate is accepted yet. **Corrected v10 passes the complete development
+comparison.** Eight independent populations per arm compare fitted N256/T64/M64,
+fitted N1024/T64/M64 and broad Student-t5 N1024/T64/M64, with the same corrected
+support, frozen geometry and phase coefficients. All12 precision gates and all
+three pairwise raw-score/region/normalizer and both-measure controlled-score
+comparisons pass. The largest controlled contrast is1.929 combined MCSE.
+Allocated inference totals are1667/3944/3820 seconds: small fitted is2.29 times
+cheaper than broad at this stage. Full preparation cost and held-out reliability
+are still required. See the [audited complete result](V10_PARTICLE_COMPARISON.md#completed-audited-development-comparison).
 
-V7 passed the original raw-score, region and
-normalizer gates on four development objects, but the independently fitted
-periodic-phase control exposes a new disagreement: observation0 corrected-g1
-(measured magnitude22.47366) is1.06998+/-0.11117 for v7 versus0.40469+/-0.09526 for higher-effort v6,
-about4.55 combined reported MCSE. The small F32/F64 reweighting effect cannot
-explain it. This is finite-eight-population evidence requiring replication,
-not a proof of the mechanism; the old raw gate remains recorded as passed.
+The fresh twenty-object workflow is now submitted with four Gaussian pilots
+per four-observation group, eight paired production populations per arm,
+independent fitted geometry/proposals/phase coefficients, unchanged raw gates,
+and both F32/F64 controlled-score comparisons. It counts preparation, fitting,
+sampling, phase diagnostics, reporting and verification costs. All-inclusive
+cost must be lower; no accuracy gate is waived for speed. The
+[current launch](CORRECTED_HELDOUT_RUNNER.md#current-launch) is warmup17435348,
+paired production17435350 and CPU report17435351, with at most four V100s.
+Its first pilot completes and the next begins; no interim score comparison is
+used for tuning. Full scientific results remain pending.
 
-Queued held-out production17420233 and report17420234 were cancelled while
-both were pending. Fixed pilot preparation17420232 is preserved; no held-out
-production or comparison has run, and no held-out result is used for tuning.
-V9 completed1024 particles/64 mutations with the same fitted proposal and
-eight fresh seeds2026102800..07. The observation0 corrected-g1 mean is now
-0.568624+/-0.154248: its difference from v6 is0.904 combined MCSE, down from
-4.544 for v7. All original raw gates pass, but the cost is5.056 times v7 and
-corrected-g1 MCSE does not uniformly improve. The support defect remains a
-shared qualification; see [complete comparisons](V9_PARTICLE_COMPARISON.md#completed-result-narrower-discrepancy-mixed-precision-and-cost).
+The first launch failed before any pilot because the preflight pinned changing
+OS telemetry as immutable input. The repaired declaration records those reads
+and generated font inventories separately while preserving scientific caches.
+All993 integration tests pass. Both original preflight and failed launch costs
+remain charged; source, settings and seeds are unchanged. The
+[startup failure](CORRECTED_HELDOUT_RUNNER.md#startup-harness-repair-before-any-science)
+is preserved. This is a pre-science orchestration repair, not replacement of a
+failed scientific population. The earlier historical v7 production remains
+cancelled and its old pilots are not reused.
 
-Corrected-source v10 is declared before viewing v8 aggregate outcomes: a
-256-particle/64-mutation fitted candidate versus1024-particle/64-mutation
-fitted and broad Student-t references, eight new independent populations each.
-All arms use `source_support_fix_20261022` (822 tests pass) and the same fixed
-geometry/phase coefficients. Smoke17422524 passes sampling and phase replay;
-array17422526 is throttled to3 GPUs, followed by raw report17422589 and frozen
-phase diagnostic17422590. The study remains within four GPUs total. This
-compares effort and proposals under the common corrected kernel without
-using held-out outcomes. [Declaration](evidence/experiment_v10_corrected_three_way.json)
-preserves all gates, seeds, costs and finite-precision qualifications.
+The candidate combines corrected exchange support, independent-pilot gradient
+geometry, a normalized fitted initial proposal with broad tails, and64 fixed
+mutations per temperature. These address different failures; neither acceptance
+rates, local geometry nor stable incremental particle weights alone established
+reliable score expectations. Physical coordinates move jointly in their
+correlated block. Separate nuisance/SED/environment/exchange moves permit
+appropriate proposal laws and cheaper valid likelihood updates; every block
+must preserve the same bridge. The mixture is an implementation choice to be
+judged by independent accuracy per total cost, not an assumption of parameter
+independence.
 
-The optional informed-environment branch separately tests alternative light
-assignments using a known-density neighbour proposal. It has independent
-implementation review, but no scientific acceptance. Source_v8 full suite17420828 passes782 tests,1 skipped in81.91seconds.
-Smoke, paired array17420873, raw report17420874 and phase17421116 completed.
-The raw comparison passes. Informed cost is1.713 times baseline; normalizer
-relative MCSE worsens on all four objects, while bright corrected-score MCSE
-improves and other gains are mixed. Coarse alternative-light regions show no
-clear increase. [Completed phase/cost results](V8_PARTICLE_COMPARISON.md#completed-result-n16-benefit-remains-unestablished)
-preserve the baseline observation1 F64 phase residual of-3.393 MCSE and all
-signed comparisons; no sampler is accepted.
-Both arms declare the same endpoint, but the known support-guard difference
-prevents isolating informed proposal mass without trajectory evidence.
-Old report hashes/versions cannot silently bypass compatibility checks.
+## Earlier failures and unresolved scope
 
-The categorical-draw optimization remains isolated after a1.361-times CPU
-proposal speedup with bitwise payload/RNG tests. Trained-model replay17422901
-waits for v10; no active runtime change is promoted on that microbenchmark.
-The [historical trajectory audit](LEGACY_PARTICLE_TRAJECTORY_AUDIT.md#required-replay-agreement)
-is implemented and tested, but no historical inference trajectory has yet
-been replayed. Its preparation is not evidence that the old defect occurred.
+V7 passed the original raw gates, but a separately fitted periodic phase control
+exposed a4.544-MCSE corrected-g1 disagreement at object0 (measured magnitude22.47).
+V9 narrowed that gap at substantially higher cost. The subsequent native
+exchange audit found a missing lower-uniform support bound: some allowed
+analytic target marks have zero numerical environment density, and the old
+swap correction failed to reject them. The common helper now does. Historical
+trajectory occurrence and score impact remain unknown; the prepared replay
+harness has not been run. See [support evidence](PARTICLE_ENDPOINT_COMPATIBILITY_AUDIT.md#actual-prior-counterexamples-and-practical-limits)
+and [v9 comparison](V9_PARTICLE_COMPARISON.md#completed-result-narrower-discrepancy-mixed-precision-and-cost).
 
-The next scheduled stages after array17422526 are raw report17422589, frozen
-phase17422590 and optimization replay17422901. Check each stage's startup and
-output before any held-out restart. No suitable task-wakeup automation tool
-is available in this session; the active goal remains unfinished.
+The optional informed-environment v8 costs1.713 times its baseline and worsens
+normalizer precision on all four objects. Bright controlled-score precision
+improves, other results are mixed, and the two historical arms differ in their
+support guard. It is not adopted. See [v8 evidence](V8_PARTICLE_COMPARISON.md#completed-result-n16-benefit-remains-unestablished).
 
-The experiment record and original successful raw comparison are retained
-below. Production defaults and the catalogue shear estimate remain unchanged.
+The isolated categorical optimization passes full state/decision/RNG GPU replay.
+Ordinary exchange blocks improve1.132–1.169 times; relocation is0.993–1.055 times,
+including the slower case. Runtime integration is deferred to retain the
+scientific source used in corrected development. These are block timings, not
+full-sampler efficiency. See [trained-model results](EXCHANGE_CATEGORICAL_RESULTS.md#trained-model-comparison).
+
+Passing fixed-object integration checks would not prove population shear
+calibration or explain the catalogue-wide additive residual. The target uses
+an analytic target prior and numerical environment law; matching the conditional
+likelihood alone does not establish that every mock-generation/inference prior
+is the same. F32 controls remain qualified diagnostics; the zero-mean identity
+concerns the intended continuous F64 measure. Rare shared modes can evade finite
+replication. Production defaults and the catalogue shear estimate are unchanged.
 
 ## First direction: fixed annealed particles
 

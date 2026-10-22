@@ -1,5 +1,17 @@
 # Work log
 
+## 2026-10-22 — Update sampler-search overview to completed development and live validation
+
+Replaced stale queued-v10 status in [search overview](SAMPLER_SEARCH.md#current-status)
+with the audited development pass, current held-out graph, inclusive cost
+requirement and preserved pre-science startup repair. First pilot completes;
+no interim held-out comparison is used for tuning. Explained the distinct
+roles of corrected support, geometry, normalized initial proposal and mutation
+effort, and why physical joint blocks coexist with other invariant moves.
+Retained links to negative experiments, unknown historical defect impact,
+F32/continuous-measure limits and the unresolved population shear question.
+Documentation-only update; no running source, scientific setting or gate changes.
+
 ## 2026-10-22 — Relaunch after input-classification repair without changing science
 
 Corrected preflight17435258 passes in55 allocated seconds. Root verifies unchanged
