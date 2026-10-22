@@ -49,7 +49,7 @@ def test_content_identity_is_portable_and_actual_changed_bytes_fail(tmp_path):
     with pytest.raises(ValueError, match='changed'): inputs.verify_prior_input_files(a, paths_b)
 
 
-@pytest.mark.parametrize('change', [None, 'abc', 'local_copy'])
+@pytest.mark.parametrize('change', [None, 'abc', 'local_copy', 'ufig_seed'])
 def test_factory_built_once_and_input_changes_are_not_relabelled(tmp_path, monkeypatch, change):
     identity, paths = file_fixture(tmp_path/'inputs')
     original = deepcopy(identity)
@@ -60,6 +60,7 @@ def test_factory_built_once_and_input_changes_are_not_relabelled(tmp_path, monke
     def factory(**kwargs):
         calls.append(kwargs)
         if change == 'abc': Path(paths['data/abc_posterior.h5']).write_text('changed')
+        if change == 'ufig_seed': Path(paths['packages/ufig/config/common.py']).write_text('seed_ngal = 501')
         if change == 'local_copy': local.write_text('wrong cached table')
         return objects
     if change is not None:
@@ -77,6 +78,10 @@ def test_discovery_binds_actual_cached_or_remote_photometry_table(tmp_path, monk
     for name in inputs.PACKAGES:
         root = tmp_path/name; root.mkdir(); (root/'__init__.py').write_text(name)
         mod = ModuleType(name); mod.__file__ = str(root/'__init__.py'); modules[name] = mod
+    for name, logical in inputs.CONFIG_SOURCES.items():
+        path = tmp_path/Path(logical).relative_to('packages')
+        path.parent.mkdir(parents=True, exist_ok=True); path.write_text('seed_ngal = 500')
+        mod = ModuleType(name); mod.__file__ = str(path); modules[name] = mod
     config_path = tmp_path/'galsbi/configs/config_Fischbacher+24_intrinsic.py'
     config_path.parent.mkdir(); config_path.write_text('fixed toy config')
     remote = tmp_path/'remote'; remote.mkdir(); (remote/'table.h5').write_text('remote table')
@@ -95,6 +100,9 @@ def test_discovery_binds_actual_cached_or_remote_photometry_table(tmp_path, monk
     assert paths['data/photometry_integrals'] == str(actual)
     assert identity['files_sha256']['data/photometry_integrals'] == inputs.digest(actual)
     assert local == (None if copy_mode == 'remote' else work/'table.h5')
+    for name, logical in inputs.CONFIG_SOURCES.items():
+        assert paths[logical] == modules[name].__file__
+        assert identity['files_sha256'][logical] == inputs.digest(modules[name].__file__)
     inputs.verify_prior_input_files(identity, paths)
     if copy_mode == 'create':
         monkeypatch.setattr(inputs, '_installed_inputs', lambda: (identity, paths, local))

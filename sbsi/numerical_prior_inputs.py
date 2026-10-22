@@ -13,9 +13,14 @@ INPUT_SCHEMA = 'sbsi-numerical-prior-inputs-v1'
 FACTORY_ARGUMENTS = dict(model_index=0, grid_size=8193)
 PACKAGES = ('galsbi', 'PyCosmo', 'cosmo_torrent', 'cosmic_toolbox')
 CONFIG_MODULE = 'galsbi.configs.config_Fischbacher+24_intrinsic'
+# F24 overlays these defaults, including seed_ngal used to construct z_max.
+# Pin just the consumed configuration and its import authority, not all UFig.
+CONFIG_SOURCES = {'ufig': 'packages/ufig/__init__.py',
+    'ufig.config': 'packages/ufig/config/__init__.py',
+    'ufig.config.common': 'packages/ufig/config/common.py'}
 REQUIRED_INPUTS = ('data/abc_posterior.h5', 'data/photometry_integrals',
     'packages/galsbi/configs/config_Fischbacher+24_intrinsic.py',
-    *(f'packages/{name}/__init__.py' for name in PACKAGES))
+    *(f'packages/{name}/__init__.py' for name in PACKAGES), *CONFIG_SOURCES.values())
 
 
 def digest(path):
@@ -70,6 +75,9 @@ def _installed_inputs():
             if (path.is_file() and '__pycache__' not in path.parts and '.git' not in path.parts
                     and path.suffix not in ('.pyc', '.pyo', '.log', '.lock')):
                 paths[f'packages/{name}/{path.relative_to(root).as_posix()}'] = str(path.resolve())
+    for name, logical in CONFIG_SOURCES.items():
+        module = importlib.import_module(name)
+        paths[logical] = str(Path(module.__file__).resolve())
     from galsbi import load
     abc = Path(load.data_path('Fischbacher+24_abc_posterior'))/'abc_posterior.h5'
     # Pin before the metadata read as well as before/after the actual factory.
