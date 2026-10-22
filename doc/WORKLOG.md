@@ -1,5 +1,25 @@
 # Work log
 
+## 2026-10-22 — Prepare an independent completed-only prior-reuse v2 audit
+
+Added `scripts/audit_prior_reuse_completed.py`, focused tests and
+[the audit contract and command](PRIOR_REUSE_COMPLETED_AUDIT.md#authority-and-completion-barrier)
+in an isolated branch based on complete frozen candidate `0301993`. The checker
+pins the original v2 declaration, waits for its finalized report and all four
+original pairs, imports only hash-verified frozen validators, and repeats exact
+scientific JSON/NPZ replay without calling the original report/finalizer. It
+independently recomputes all paired and inclusive cost arithmetic, checks worker
+and GPU identities, retains failed-v1 startup cost separately, and records all
+evidence hashes before/after. Only the declared implementation/proposal
+provenance normalization is allowed; no numerical proposal values change.
+
+Validation: AST parsing passed; py31 `python -m pytest
+tests/test_prior_reuse_completed_audit.py -q` reports **21 passed in 0.08 s**.
+No current run outcomes were read and no jobs were submitted. Parent will freeze
+the checker and schedule its actual audit after original job 17448787 completes.
+An audit pass establishes reproducible replay and descriptive timing, without a
+new speed threshold, automatic adoption or scientific accuracy acceptance.
+
 ## 2026-10-22 — Complete-source candidate passes full CPU validation
 
 Implementation commit 862db49 preserves all 320 frozen experiment paths;
