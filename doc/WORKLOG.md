@@ -1,5 +1,24 @@
 # Work log
 
+## 2026-10-22 — Frozen final-report adapter replays audited development
+
+CPU17435839 completes exit0 in27 seconds, exercising the actual frozen held-out
+runner on all three previously completed v10 arms. All three pairwise comparisons
+match the audited receipt through1908 recursive checks; all complete report
+formats pass and incomplete denominators reject. Input hashes match the old
+v10 source map; source manifest checks pass before/after. The
+[audit receipt](evidence/heldout_report_development_audit_20261022.json) and
+preserved executable pin the output/log. Replay tolerance1e-12 applies only to
+report arithmetic, not scientific acceptance thresholds. No held-out output or
+new model evaluation is used. Running source, settings and gates remain fixed.
+
+Warmup group1 also completes exit0 in467 seconds; group2 is live. To avoid
+continuous long-run polling, CPU-only one-shot status17436101 is scheduled for
+16:12:03 Europe/Berlin (about two hours later). It records scheduler/stage status
+and flags failures without reading moments. This is a local status receipt, not
+a thread-wakeup service; see [scheduled check](evidence/heldout_scheduled_status_20261022.json).
+The autonomous objective remains active pending independent acceptance.
+
 ## 2026-10-22 — First complete held-out preparation group passes
 
 Warmup17435348_0 completes exit0 in471 allocated seconds (466.55 measured wrapper

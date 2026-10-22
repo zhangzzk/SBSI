@@ -163,3 +163,28 @@ CPU report17435177. Both arrays use one V100 per task on th-cl-nv02, with two
 CPUs and fixed batch4096; the afterok graph enforces at most four GPUs in total.
 The [launch receipt](evidence/corrected_heldout_launch_20261022.json) preserves
 input, source and launcher hashes. No scientific acceptance result exists yet.
+
+## Report integration on audited development
+
+While held-out jobs run, CPU17435839 exercises the actual frozen runner's
+comparison and report-validation functions on the three completed v10 arms.
+All three pairs reproduce the audited raw and both-measure phase comparisons
+(1908 recursive checks, numerical replay tolerance1e-12 only). All three
+complete report formats pass and incomplete population counts reject. All32
+read artifact hashes are checked against the original audited v10 source map.
+The job completes in27 seconds with before/after source checks; the
+[receipt](evidence/heldout_report_development_audit_20261022.json) preserves
+script/output/log hashes. Temporary diagnostic path rebinding is an explicit
+format fixture, not a scientific declaration. No held-out input, new model
+evaluation or changed threshold enters this audit. It validates reporting
+integration, not additional convergence.
+
+## Bounded long-run status check
+
+After groups0 and1 complete (471/467 allocated seconds) and group2 starts,
+CPU-only one-shot17436101 is scheduled for2026-10-22 16:12:03 Europe/Berlin.
+It checks authoritative job/stage status, preserves failure flags and never
+reads posterior moments. The [scheduling receipt](evidence/heldout_scheduled_status_20261022.json)
+pins its executable and output path. This provides a local status artifact,
+not a Codex wakeup or external notification. Full science/report results remain
+required before acceptance.

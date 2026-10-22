@@ -1,0 +1,26 @@
+{
+  "schema": "sbsi-heldout-scheduled-status-receipt-v1",
+  "job": 17436101,
+  "state": "PENDING",
+  "reason": "BeginTime",
+  "eligible_time_scheduler_local": "2026-10-22T16:12:03",
+  "timezone": "Europe/Berlin",
+  "cpus": 1,
+  "gpus": 0,
+  "minutes_limit": 2,
+  "files": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/check_corrected_heldout_once_20261022.py": "8f372dcd70b26c71a74084b95fa568028e6a5ba5a6210d262b58a100a5e4352d",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_status_once_20261022.sh": "59478daf67fdc92f23c45f3a7c141e31c4d98ce213ee386e4d1a1eb9252c97da"
+  },
+  "output": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-status-17436101.json",
+  "checks": "Authoritative sacct states and stage statuses only; no heldout moments or tuning.",
+  "notification_scope": "Local scheduler receipt; this does not wake or message a Codex thread.",
+  "science_state_at_submission": {
+    "warmup_0": "COMPLETED 0:0 471s",
+    "warmup_1": "COMPLETED 0:0 467s",
+    "warmup_2": "RUNNING",
+    "warmup_3_4": "PENDING",
+    "production": "PENDING afterok warmup",
+    "report": "PENDING afterok production"
+  }
+}
