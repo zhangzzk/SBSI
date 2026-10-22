@@ -1,5 +1,28 @@
 # Work log
 
+## 2026-10-22 — Render the completed development evidence as a reproducible figure
+
+Added `doc/evidence/plot_sampler_development_20261022.py`, a versioned SVG,
+a local PNG preview (covered by the existing PNG ignore rule), and a
+machine-readable plotted-data receipt; embedded the figure in
+[current sampler status](SAMPLER_SEARCH.md#current-status). The four panels
+show raw-score precision, maximum pairwise score contrasts, summed inference
+allocation, and numerical-prior sensitivity. Every point is computed from the
+pinned corrected-v10 comparison and completed prior audit. No interim held-out
+outcome is read. The figure preserves the distinction between score expectations
+and shear estimates, and between inference allocation and total operational cost.
+
+CPU render 17438391 completed in 12 allocated seconds. Visual inspection found
+overlapping legends/annotations; layout-only revision 17438461 completed in
+9 seconds. All plotted numbers match exactly across revisions; the initial
+snapshot and outputs remain preserved. Final PNG inspected with clear labels;
+input/source/output SHA256 checks, AST syntax and static F821/F823 checks pass.
+Versioned SVG trailing whitespace was normalized; parsed XML structure, text
+and normalized attribute values match the preserved renderer output.
+Both CPU jobs total 42 allocated CPU seconds and zero GPU seconds. This adds a
+view of existing evidence; acceptance still requires the frozen independent
+held-out accuracy and complete-cost report.
+
 ## 2026-10-22 — Audit corrected-v10 target-prior sensitivity on all development populations
 
 Added `sbsi/prior_sensitivity.py`, a read-only audit executable and focused

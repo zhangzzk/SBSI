@@ -1,0 +1,109 @@
+{
+  "schema": "sampler-development-figure-v1",
+  "status": "rendered",
+  "original_observations": [
+    58165,
+    0,
+    1,
+    8
+  ],
+  "original_populations_per_arm": 8,
+  "development_checks_pass": true,
+  "accepted_sampler": false,
+  "heldout_outcomes_read": false,
+  "inputs": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/v10_corrected_comparison_20261022_v3.json": "09601af0a43c0b5801bc0467b090e588c745713a3c9fd6d86b58f2f9172d1574",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/audit_v2/result.json": "9d59a54255a2c5f8c2248f663aa430a2e5e2ccf9f30f89c125ec9e4f7ec86598"
+  },
+  "script_sha256": "7d5e8c38e58a4df8c39e6206d3f8e24d97919e45091db7a0a3521dd6368e4717",
+  "raw_precision": {
+    "small": [
+      0.02878845459365365,
+      0.027559831992134406,
+      0.02408283774524065,
+      0.02333019674082751
+    ],
+    "large": [
+      0.011528273931897601,
+      0.010131450486656524,
+      0.016970054815393966,
+      0.009493287130469099
+    ],
+    "broad": [
+      0.010121367281011963,
+      0.015278771454850905,
+      0.013858625313694401,
+      0.00877771586478666
+    ]
+  },
+  "max_raw_standardized_contrast": [
+    1.6546901572664483,
+    1.9989388491507525,
+    2.239035845959112,
+    1.138051929832041
+  ],
+  "max_controlled_standardized_contrast": [
+    0.9029958115650322,
+    1.9293066561740233,
+    1.6435836273933644,
+    0.646973648959084
+  ],
+  "inference_allocation_minutes": {
+    "small": 27.783333333333335,
+    "large": 65.73333333333333,
+    "broad": 63.666666666666664
+  },
+  "max_prior_shift_over_original_mcse": {
+    "small": [
+      0.002446725851016973,
+      0.0021205822983543163,
+      0.0006459179399787116,
+      0.000241166287701864
+    ],
+    "large": [
+      0.005965262298429728,
+      0.0013025116136384475,
+      0.0002985994929612011,
+      0.0005075395922286571
+    ],
+    "broad": [
+      0.00473283184086786,
+      0.0004881018872841232,
+      0.0005521011268585345,
+      0.0003036339278577384
+    ]
+  },
+  "outputs": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/development_evidence_figure_20261022/v2/rendered/development_evidence.png": "04e93b9d9e4c9b89d3250098642f4be419fc57c760fd0a4e573027dbb778e0d6",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/development_evidence_figure_20261022/v2/rendered/development_evidence.svg": "c71d1a20dcf657d9a2f8f79ebbe9c85393a73cdc0906f5fc27498f7c9b452088"
+  },
+  "slurm_job_id": "17438461",
+  "runtime": {
+    "python": "3.10.14",
+    "numpy": "2.2.6",
+    "matplotlib": "3.10.9"
+  },
+  "repository_outputs_sha256": {
+    "doc/evidence/sampler_development_20261022.png": "04e93b9d9e4c9b89d3250098642f4be419fc57c760fd0a4e573027dbb778e0d6",
+    "doc/evidence/sampler_development_20261022.svg": "297b07ba635c0de00e046ca590eb017d24adb9940190251e51b821a92bce8af8"
+  },
+  "render_validation": {
+    "final_job": 17438461,
+    "final_state": "COMPLETED",
+    "final_exit_code": "0:0",
+    "final_allocated_wall_seconds": 9,
+    "initial_job": 17438391,
+    "initial_state": "COMPLETED",
+    "initial_allocated_wall_seconds": 12,
+    "total_cpu_allocated_seconds": 42,
+    "gpu_seconds": 0,
+    "visual_inspection": "Final PNG inspected: legends clear of gate lines; cost annotations clear of bars; no clipping observed.",
+    "layout_revision": "Legend anchors and cost-axis headroom only; every plotted value exactly unchanged.",
+    "original_plotted_data_sha256": "88d21b4e9df6b3d9d39b2fd816e9ccd8b53dc3f25b93447e8afeca8841fc54cc",
+    "frozen_launcher_sha256": "8f77ad4f1073f9ccb7a59f7d3ce753c9b653cb739b3c8cdb1b6f8778e2f4ff9f",
+    "frozen_manifest_sha256": "83d40c748a7dd8ed2b5c743204fcd73aeca4b2195b6b4fb7e15e055770a2ceaf",
+    "initial_outputs_preserved": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/development_evidence_figure_20261022/rendered",
+    "final_log_sha256": "aacfb1a97e2b1daa5531397e85865c2045e3d24e2a5b142825562a53d609bc72",
+    "svg_repository_normalization": "Trailing whitespace removed from the versioned SVG. Parsed XML structure, text, and whitespace-normalized attributes match the preserved original renderer output exactly."
+  }
+}

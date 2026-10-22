@@ -54,6 +54,17 @@ Allocated inference totals are1667/3944/3820 seconds: small fitted is2.29 times
 cheaper than broad at this stage. Full preparation cost and held-out reliability
 are still required. See the [audited complete result](V10_PARTICLE_COMPARISON.md#completed-audited-development-comparison).
 
+![Completed development precision, score agreement, inference allocation, and prior sensitivity](evidence/sampler_development_20261022.svg)
+
+This development snapshot shows maxima over the two score components. The
+agreement panel also spans all three arm pairs and both numerical measures for
+controlled scores. Cost is summed inference allocation only; preparation and
+shared diagnostics are excluded. Prior sensitivity concerns represented states.
+These are posterior scores for four fixed observations, not shear estimates.
+The [vector figure](evidence/sampler_development_20261022.svg) and
+[plotted data with provenance](evidence/sampler_development_figure_20261022.json)
+are generated directly from the two pinned completed audits.
+
 The fresh twenty-object workflow is now submitted with four Gaussian pilots
 per four-observation group, eight paired production populations per arm,
 independent fitted geometry/proposals/phase coefficients, unchanged raw gates,
