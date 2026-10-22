@@ -147,7 +147,8 @@ def main():
     if (digest(reference/'protocol.json') != protocol['reference_protocol_sha256']
             or digest(reference/'observations.parquet') != protocol['observation_sha256']):
         raise ValueError('reference or observation identity changed')
-    identity = phase_target_identity(protocol, Path(__file__).resolve().parents[1])
+    root = Path(__file__).resolve().parents[1]
+    identity = phase_target_identity(protocol, root)
     frozen = None
     if args.coefficients:
         frozen = FrozenPhaseControl.load(args.coefficients)

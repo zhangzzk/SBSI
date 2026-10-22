@@ -319,7 +319,8 @@ def test_diagnostic_loader_rejects_retained_count_mismatch(tmp_path):
 
 
 @pytest.mark.parametrize('bad_gradient', [False, True])
-def test_full_diagnostic_retains_delta_raw_and_corrected_and_blocks_failed_replay(tmp_path, monkeypatch, bad_gradient):
+@pytest.mark.parametrize('target_prior', ['analytic', 'numerical'])
+def test_full_diagnostic_retains_delta_raw_and_corrected_and_blocks_failed_replay(tmp_path, monkeypatch, bad_gradient, target_prior):
     diagnostic = load_script('check_particle_phase_control')
     root = Path(diagnostic.__file__).resolve().parents[1]
     run, reference = tmp_path/'run', tmp_path/'reference'; run.mkdir(); reference.mkdir()
@@ -336,6 +337,14 @@ def test_full_diagnostic_retains_delta_raw_and_corrected_and_blocks_failed_repla
         observation_sha256=digest(reference/'observations.parquet'),
         implementation_sha256={str(root/('configs' if n.endswith('.json') else 'sbsi')/n):
             digest(root/('configs' if n.endswith('.json') else 'sbsi')/n) for n in diagnostic.NATIVE_SOURCES})
+    if target_prior == 'numerical':
+        from sbsi.particle_target_measure import (NUMERICAL_BRIDGE, NUMERICAL_ENDPOINT,
+            NUMERICAL_MEASURE, NUMERICAL_SOURCES)
+        protocol.update(target_prior='numerical', numerical_prior_measure=NUMERICAL_MEASURE,
+                        bridge=NUMERICAL_BRIDGE, endpoint_target=NUMERICAL_ENDPOINT)
+        for name in NUMERICAL_SOURCES:
+            path = root/'sbsi'/name
+            protocol['implementation_sha256'][str(path)] = digest(path)
     # Reference IDs index the complete table, not its diagnostic subset.
     observed = pd.concat([observed]*12, ignore_index=True)
     observed.to_parquet(reference/'observations.parquet')
@@ -369,6 +378,7 @@ def test_full_diagnostic_retains_delta_raw_and_corrected_and_blocks_failed_repla
     monkeypatch.setattr(sys, 'argv', argv); diagnostic.main()
     report = json.loads(output.read_text())
     assert report['numerical_checks_pass'] is (not bad_gradient)
+    assert report['target_identity'].get('target_prior', 'analytic') == target_prior
     assert report['derivative_protocol'] == 'phase-fine-difference-v2'
     assert [v['step'] for v in report['numerical_checks']['phase_differences']] == [2e-6, 1e-6, 5e-7]
     if bad_gradient:

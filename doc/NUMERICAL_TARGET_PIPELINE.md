@@ -73,8 +73,19 @@ remains pending.
 routing, the full type sum/conditional probabilities and native log-density
 roundtrip against the existing numerical density helper. It verifies every
 external-input hash from the frozen prior/model environment before and after,
-retains all draws and does not replace failed or off-support draws. The
+retains every returned native row and the sampling counts, without replacing failed or off-support draws. The
 2e-8 absolute log-density tolerance applies only to coordinate roundtrip;
 decoded density/type-sum comparisons are exact array comparisons. These are
 installed-environment consistency checks, supplementing the independent toy
 forward-density tests; they do not constitute posterior validation.
+
+## First combined validation failure and repair
+
+Full job17448810 finds a phase diagnostic refactor error: the main function
+still uses the local source root when writing provenance, but it had been
+moved into the new identity helper. Two complete diagnostic tests fail with
+NameError;1,089 other tests pass and nine skip. Installed-prior validation
+does not run after that failure. Restore the local root and extend the existing
+end-to-end diagnostic test across both analytic/numerical laws and both
+valid/invalid derivative replay. Preserve the failed frozen source/job; a new
+snapshot and complete scheduled suite are required.

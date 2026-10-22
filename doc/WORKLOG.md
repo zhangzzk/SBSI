@@ -1,5 +1,15 @@
 # Work log
 
+## 2026-10-22 — Repair source-root scope caught by full phase diagnostic tests
+
+Full combined job17448810 reports2failed,1089passed,9skipped: extracting
+phase_target_identity moved root out of main, while report provenance still
+uses it. Restored main's root variable; no mathematical target or thresholds
+change. Extended the existing complete diagnostic test across analytic and
+numerical priors, retaining both successful and blocked bad-gradient replay.
+The failed v1 snapshot/job is preserved; native validation had not started.
+New full scheduled validation is required before any numerical sampling run.
+
 ## 2026-10-22 — Integrate numerical target core and prepare installed-prior validation
 
 Integrated cored65bf00 as43438c8 on the explicit numerical-driver branch.
