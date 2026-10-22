@@ -1,5 +1,29 @@
 # Work log
 
+## 2026-10-22 — Estimate sampler cost and scaling from completed timing receipts
+
+Added [computation-cost evidence](SAMPLER_COMPUTE_COST.md#measured-recipe-and-evidence)
+and `doc/evidence/sampler_compute_cost_20261022.json` for the first two complete
+held-out four-observation groups. Verified all 18 stage cost identities and
+their referenced step-timing hashes. Only operational receipts were used; no
+interim held-out posterior comparison or acceptance decision was made.
+
+At the fixed eight-population budget, inference processes cost 1,647.24 seconds
+per four observations on average. Fresh pilots/fitting and phase diagnostics
+raise this to 2,147.30 seconds; charging all paired verification raises it to
+2,356.85 seconds. Four fully available V100s therefore project to roughly
+0.007 galaxies/s, about 25/hour. This is an allocation-time projection excluding
+the reference arm, final panel reporting, global preflight/search, queueing and
+other shear centres. Observation scaling is approximately linear at fixed
+settings; the 500-CPU saturation rate has not been measured. Current workers
+use two CPUs each, and profiled host costs motivate a later concurrency study.
+
+Validation: receipt arithmetic/status/hash assertions passed, JSON parse and
+`git diff --check` passed. No runtime code, scientific settings, live sources,
+or jobs changed; no additional computational experiment or test suite needed
+for this documentation-only analysis. Held-out scientific acceptance and the
+full final cost comparison remain pending.
+
 ## 2026-10-22 — Version and validate the complete frozen sampler candidate
 
 An independent source-to-commit audit finds 311 of the 320 held-out source paths

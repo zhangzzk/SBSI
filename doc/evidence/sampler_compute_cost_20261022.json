@@ -1,0 +1,157 @@
+{
+  "created_utc": "2026-10-22T16:11:20.333293+00:00",
+  "scope": "Descriptive timing-only projection from first two complete held-out groups. No posterior outcomes inspected; no scientific gate evaluated.",
+  "hardware": "Four fully available Tesla V100-SXM2-32GB GPUs, one two-CPU worker per GPU",
+  "observations": 8,
+  "recipe": {
+    "particles": 256,
+    "stages": 64,
+    "moves": 64,
+    "independent_production_populations": 8,
+    "pilot_populations": 4,
+    "pilot_particles": 256,
+    "pilot_stages": 64,
+    "pilot_moves": 32,
+    "observations_per_group": 4,
+    "density_batch_size": 4096,
+    "shear": [
+      0,
+      0
+    ]
+  },
+  "groups": [
+    {
+      "group": 0,
+      "observations": 4,
+      "pilot_and_fitting_seconds": 443.1442218400771,
+      "candidate_eight_populations_seconds": 1618.5936399879865,
+      "candidate_phase_seconds": 58.353774950955994,
+      "verification_seconds": 209.95093242172152,
+      "operational_seconds_without_verification": 2120.0916367790196,
+      "operational_seconds_all_verification": 2330.042569200741
+    },
+    {
+      "group": 1,
+      "observations": 4,
+      "pilot_and_fitting_seconds": 439.8399651958607,
+      "candidate_eight_populations_seconds": 1675.895575625007,
+      "candidate_phase_seconds": 58.772563309874386,
+      "verification_seconds": 209.14151280885562,
+      "operational_seconds_without_verification": 2174.508104130742,
+      "operational_seconds_all_verification": 2383.6496169395978
+    }
+  ],
+  "projection": {
+    "one_population_inference_only_gal_per_second": 0.07770552071829047,
+    "eight_population_inference_only_gal_per_second": 0.009713190089786309,
+    "operational_no_verification_gal_per_second": 0.00745121825793739,
+    "operational_all_verification_gal_per_second": 0.006788733488811498,
+    "operational_all_verification_allocated_gpu_seconds_per_galaxy": 589.2115232675424,
+    "operational_all_verification_wall_seconds_per_galaxy_on_four_gpus": 147.3028808168856,
+    "operational_all_verification_galaxies_per_hour": 24.439440559721394,
+    "scaling": {
+      "100": {
+        "wall_hours": 4.091746689357933,
+        "wall_days": 0.17048944538991387
+      },
+      "1000": {
+        "wall_hours": 40.91746689357933,
+        "wall_days": 1.7048944538991389
+      },
+      "20000": {
+        "wall_hours": 818.3493378715866,
+        "wall_days": 34.09788907798278
+      },
+      "500000": {
+        "wall_hours": 20458.733446789665,
+        "wall_days": 852.4472269495694
+      }
+    },
+    "production_particle_proposals_per_galaxy": 8388608,
+    "pilot_particle_proposals_per_galaxy": 2097152
+  },
+  "formula": "Rate = GPUs * observations_per_group / summed GPU-allocated process seconds per group. Wall = N / rate. Work is linear in observations at fixed per-observation recipe.",
+  "inputs": [
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/warmup_0_stage.json",
+      "sha256": "cde1c3e5acba8226f3b1ae2c01e33094ea4b975b06fc4fd6d3261dbab911eed7"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_0_stage.json",
+      "sha256": "bc151e220eac0574706c643ccc023a0510ea549e4db173d93903b31833062fca"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_1_stage.json",
+      "sha256": "804f38323eb34b838fa7946a736ccb9077b98b6e2d19859618ba0b952ad5fed8"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_2_stage.json",
+      "sha256": "2da2c31051aa3fe96eada8db48268fb01c7ddf6ba6b788f5ef6ef3158373da90"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_3_stage.json",
+      "sha256": "5b1a1de4c6d6c61838f492bec92f28580447f85a98f5447bf025cc7811d4e99b"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_4_stage.json",
+      "sha256": "6064b93cee730577ad3aa426f6dbbe1aab93d61657b6d21c83d04c9ddcff1e5d"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_5_stage.json",
+      "sha256": "9156cb00d74ab58d1b9fabf8336b8bc1ad3974ca9572d7df31141ac8cfaaeb00"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_6_stage.json",
+      "sha256": "be09c557ee6dd8729c41a8c2bb12f814f52634a36e1a47e9798ae9eade5ef525"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_7_stage.json",
+      "sha256": "f5ef5a1569b72f05a1b5eaa1ab0949106cbd70181f4a0480be4f35c2f926b146"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/warmup_1_stage.json",
+      "sha256": "1fc50f44c65dbc91596d3b8c2a19eeef5834bcd4a51fab557dbad8e004193cf7"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_8_stage.json",
+      "sha256": "b6da0e3b5b5a7a0c165560f749c9adfdaa03e4c1029f0a1b9db77360e7721f24"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_9_stage.json",
+      "sha256": "2a967f7c7e5d1941546391dc36c52c0292542f2b5b0a7939b48dacbe0f55982d"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_10_stage.json",
+      "sha256": "3368ddb992ae7a8939ec6206848ec63daee6c8e09d1ee2dda6f0b3468d44d6b1"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_11_stage.json",
+      "sha256": "552580e4cdea385f71bec3edc4d496f47806bbb832ac13574adc62983cb58614"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_12_stage.json",
+      "sha256": "40d960fae46150f6c5f549e5c4705eacaca517cd0b1a8ca82fa7107cec0c107f"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_13_stage.json",
+      "sha256": "e4171a860b263ec23eb9459dfff4d49774cc41d8a037b285f2089836112426b6"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_14_stage.json",
+      "sha256": "f917ba2bff4d725ea0f88fa842ff3bac528b5ad3316f36e841681ada4e09c702"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_15_stage.json",
+      "sha256": "ecd4f4cf1a7c1682fd4e2ec751dfbb7a1f904f943cc32bf40ecc41221a8e89ee"
+    }
+  ],
+  "limitations": [
+    "Capacity extrapolation; no four-GPU saturation or 500-CPU benchmark of this recipe.",
+    "500 CPUs do not imply 62.5x speedup: each current worker uses two CPU threads; GPU contention, memory and I/O limit concurrent workers.",
+    "Verification attribution spans none to all paired-stage overhead; this is not a confidence interval or the final paired cost gate.",
+    "GPU allocation seconds include CPU work and waiting, not measured GPU busy time.",
+    "Excludes reference arm, global preflight/search/test costs, final panel reporting, queue time, data generation, selection normalization and additional shear centres.",
+    "Held-out scientific acceptance still pending. Eight populations are the current validation budget, not a demonstrated universal minimum.",
+    "Only first two groups used, selected by index and completeness; no magnitude-specific or catalogue-scale scaling measurement."
+  ]
+}
