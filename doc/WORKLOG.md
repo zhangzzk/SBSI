@@ -21,6 +21,23 @@ See [recipe, evidence and cost limits](SMC_CPU_CONCURRENCY_CONFIRMATION.md#confi
 
 # Work log
 
+## 2026-10-22 — Full confirmation validation passes and GPU job is queued
+
+Immutable candidate a556047 passes full Slurm job17447788: **1,086 tests,
+nine skips**, one existing warning,98.08test seconds. All483source hashes
+match before/after. Preparation verifies complete development replay and the
+fixed selection, freezes the unchanged320-file sampler and passes confirmation
+preflight. Parent independently verifies810manifest entries and657external
+pins plus JUnit/scheduler completion (150seconds,eight logical CPUs).
+
+Full fresh-seed GPU confirmation17447826 is queued on oneV100/eightphysical
+cores with requeue disabled; no unnecessary dependency on other scientific
+work. All16runs and both timing repeats remain required. Recorded
+[validation and submission](evidence/smc_cpu_concurrency_confirmation_preparation_20261022.json)
+and [status](SMC_CPU_CONCURRENCY_CONFIRMATION.md#scheduled-validation-and-launch).
+No confirmation performance result or promotion yet. Bounded metadata check
+17447926 is scheduled for20:55Berlin; it does not send chat notifications.
+
 ## 2026-10-22 — Prepare a fixed-recipe CPU concurrency experiment
 
 The owner requested substantial efficiency improvements and more CPU use.

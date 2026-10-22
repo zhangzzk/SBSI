@@ -36,7 +36,7 @@ physical GPU remain fixed across all four settings. No MPS change is made.
 
 Each population uses observations 58165, 0, 1, 8; 256 particles; 64 stages;
 64 moves; the original 16-block schedule; density batch 4096; shear (0,0);
-two Torch threads;and the original frozen development geometry and proposal.
+two Torch threads; and the original frozen development geometry and proposal.
 The exact 320-file source has manifest
 `fd96ec78e4b95886a3355082102a25d7a40ffa3dd1a5f4d52443a46458a64df1`.
 The separate prior-reuse candidate is not part of this experiment.
@@ -49,7 +49,7 @@ paths may differ. No retry, replacement seed, omitted run or shorter history
 is permitted. An incomplete or failed run prevents a successful report.
 
 Both counterbalanced speedups must be at least 1.25 using complete internal
-setting times. Both must also exceed 1.25 using the outer subprocess timers.
+setting times. Both must also be at least 1.25 using the outer subprocess timers.
 A complete report may record a failed efficiency gate; it cannot silently
 select another worker count. Reporting keeps the two timing repetitions
 separate. The repeated seeds within each timing setting are not additional
@@ -127,5 +127,29 @@ seven outer costs, independent audit, unchanged development validation,
 wrong phase/seeds/order, all 16 saved outputs, both timing gates, failed or
 missing workers, changed allocations, shortened histories and byte corruption.
 Twenty confirmation tests passed in 10.47 seconds; the combined original and
-confirmation suite passed all 55 tests in 12.45 seconds. Full scheduled suite and
-GPU confirmation remain pending; no confirmation speedup is claimed.
+confirmation suite passed all 55 tests in 12.45 seconds. Full scheduled validation is complete below; GPU confirmation remains pending.
+No confirmation speedup is claimed.
+
+
+## Scheduled validation and launch
+
+CPU job **17447788** validates immutable commit
+`a556047b3c47fb5478865c58f728559b6dc323ba`: **1,086 passed, nine skipped**, one
+existing NumPy warning, in 98.08 test seconds. All 483 source hashes match
+before/after. Preparation repeats the original development proof, freezes the
+confirmation and passes its full 320-file source/protocol/evidence preflight.
+The parent independently checks 810 manifest entries, all 657 external pins,
+JUnit and scheduler completion (150 seconds, eight logical CPUs).
+
+GPU job **17447826** is queued after successful CPU validation with requeue
+disabled: one V100, eight physical cores, 64 GiB requested, one-hour limit,
+pinned to the original four-GPU study node. It has no unnecessary dependency on
+the independent prior-reuse or scientific tests. Declaration SHA256 is
+`9a26daf6a7bc1b756485a64f620f43549f8520c1a315051d60d8a1def25b3268`.
+The [preparation receipt](evidence/smc_cpu_concurrency_confirmation_preparation_20261022.json)
+preserves source, launcher, validation and submission identities. Results and
+operational confirmation remain pending; no implementation is promoted.
+
+A bounded read-only status check is scheduled as **17447926** at 20:55 Berlin
+time, replacing17446128 while retaining its check time and adding this job. It
+records scheduler/result-presence metadata and does not send a chat message.
