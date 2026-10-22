@@ -1,5 +1,20 @@
 # Work log
 
+## 2026-10-22 — Prepare a fixed-recipe CPU concurrency experiment
+
+The owner requested substantial efficiency improvements and more CPU use.
+Added an isolated [SMC concurrency experiment](SMC_CPU_CONCURRENCY.md#hypothesis-and-fixed-experiment)
+with unchanged numerical source and fresh fixed seeds. It compares one, two
+and four two-core workers sharing one V100, then reverses the order. All
+settings reserve eight physical CPU cores and perform identical work.
+Frozen preparation, the Slurm launcher, complete cost receipts and strict
+saved-output checks separate performance evidence from scientific accuracy.
+
+The current GPU node has 48 physical cores; 500-core use needs other hosts
+or a distributed service. Running held-out jobs/source are unchanged, and
+the categorical optimization remains inactive. Tests and execution are
+pending; no speed gain or adoption is claimed.
+
 ## 2026-10-22 — Complete-source candidate passes full CPU validation
 
 Implementation commit 862db49 preserves all 320 frozen experiment paths;
