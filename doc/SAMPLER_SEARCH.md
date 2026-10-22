@@ -127,7 +127,12 @@ share the same four-GPU node with the held-out work, with one benchmark worker.
 The verified node capacity preserves the combined four-GPU ceiling; its original
 completion dependency was removed before any benchmark task started. It compares every saved scientific output and
 all64 stages while timing complete new processes, conditional on the existing
-frozen fits; no speed result yet. See [frozen design and launch](EXCHANGE_FULL_SMC_REPLAY.md#current-status).
+frozen fits. The first two pairs pass exact saved-output replay in opposite arm
+orders; all four remain required for a speed conclusion. An isolated integration
+candidate passes 1,084 tests, including all 66 categorical replay cases, with nine
+optional skips. Independent code and receipt review passes. Runtime integration
+remains conditional on the full benchmark and held-out result. See the
+[current evidence](EXCHANGE_FULL_SMC_REPLAY.md#tested-integration-candidate).
 
 Passing fixed-object integration checks would not prove population shear
 calibration or explain the catalogue-wide additive residual. The target uses

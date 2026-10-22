@@ -15,8 +15,11 @@ preserves before/after scheduler state and unchanged scientific identities.
 Root verified both304-file scientific
 copies, all168 external inputs, harness/test/fixture receipts and the declared
 single-source difference before submission. The [launch receipt](evidence/exchange_full_smc_launch_20261022.json)
-preserves commands, identities and limits. No full-run timing or replay result
-exists yet; no runtime optimization is promoted.
+preserves commands, identities and limits. Pairs 0 and 1 now pass exact saved
+output replay, including all 64 stage records, in opposite arm orders. The
+remaining two pairs and complete cost report are pending; no runtime optimization
+is promoted. The [parent review](evidence/categorical_parent_review_20261022.json)
+pins the completed receipts and metadata, without selecting timing results.
 
 The older held-out array still had higher queue priority and consumed released
 slots. Before any benchmark task started, a [temporary priority window](evidence/benchmark_priority_window_20261022.json)
@@ -36,7 +39,26 @@ Bounded CPU status check 17439000 is scheduled for 18:00 Europe/Berlin
 (16:00 UTC), covering both workflows and their final-report existence without
 reading science values. Its [receipt](evidence/sampler_workflows_scheduled_status_20261022.json)
 pins source/launcher hashes. It writes a status artifact and does not wake this
-thread. The earlier held-out-only check 17436101 remains scheduled separately.
+thread. The earlier held-out-only check 17436101 completed successfully at
+14:12 UTC; its result is preserved in the original monitoring receipt.
+
+## Tested integration candidate
+
+An isolated candidate on `codex/categorical-integration-20261022`, commit
+`8b3d85468b29507d63c84d2ab56f4e6a7727eefb`, contains the exact benchmarked
+optimization. CPU job 17440535 passes 1,084 tests, including all 66 categorical
+replay cases, with nine documented optional skips. All 454 frozen source hashes
+match before and after. The [candidate record](CATEGORICAL_INTEGRATION_CANDIDATE.md#validation-result)
+preserves the complete source inventory, launcher and validation receipt.
+
+Independent parent review confirms the caller's existing probability validation
+and contiguous target-type draw order. The replacement follows NumPy 2.2.6's
+float64 CDF, normalization and right-sided search; neighbour draws, support
+corrections and relocation arithmetic are unchanged. Parent review independently
+checks the JUnit counts and receipt hashes. Only these review documents are
+copied to the root worktree: runtime integration still requires the complete
+four-pair result and held-out scientific gate. No live source or scheduling
+configuration changes.
 
 ## Fixed design and decision boundary
 

@@ -1,5 +1,26 @@
 # Work log
 
+## 2026-10-22 — Review the tested categorical candidate and first two full replays
+
+The isolated exact optimization, implementation commit 413fe75 and reviewed
+candidate commit 8b3d854, passes the complete CPU suite in job 17440535:
+1,084 passed, nine optional skips, one existing NumPy warning, 93.48 test seconds
+and 137 allocated seconds on two CPUs. All 66 categorical replay cases pass;
+the complete 454-file snapshot matches before and after. Copied its candidate
+note, inventory, launcher and validation receipt into `doc/`; runtime code stays
+on the isolated branch. Parent review independently verifies external receipt
+hashes and JUnit counts, and checks probability validation, CDF arithmetic and
+the unchanged ordering of random draws against NumPy 2.2.6's source.
+
+Full benchmark pairs 0 and 1 complete exact saved-output replay in opposite arm
+orders. Both arms finish all 64 stages without extinction; each comparison covers
+eight particle arrays and 24 scene arrays. The [parent review receipt](evidence/categorical_parent_review_20261022.json)
+pins the harness receipts and scientific metadata. Parent inspection does not
+repeat NPZ decoding; the frozen pair harness performs the byte comparison and
+the final CPU report will repeat it. No partial timing result is used. Updated
+the experiment and search status; all four pairs, the complete cost report and
+held-out validation remain required. No live source or scheduler changes.
+
 ## 2026-10-22 — Let the independent benchmark share queue capacity and restore priority automatically
 
 After dependency removal, scheduler priority still favored every older held-out
