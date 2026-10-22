@@ -130,9 +130,19 @@ class GalSBIParticleTarget:
                             self.auxiliary[rows])
 
     def evaluate(self, x, scene, *, reuse=None, environment_payload=None):
-        lp, data, probabilities = self.native_prior(x)
+        return self._evaluate_prepared(x, scene, self.native_prior(x),
+            reuse=reuse, environment_payload=environment_payload)
+
+    def _evaluate_prepared(self, x, scene, native, *, log_proposal=None,
+                           reuse=None, environment_payload=None):
+        """Internal evaluation with target quantities owned by this transition.
+
+        native is either freshly decoded or copied from an unchanged target.
+        No scene photometry supplied through the public evaluate API is trusted.
+        """
+        lp, data, probabilities = native
         scene = GalSBISceneBatch(data, scene.neighbours, scene.indptr, scene.offset_arcsec)
-        lq = self.log_proposal(x)
+        lq = self.log_proposal(x) if log_proposal is None else log_proposal
         lk = np.full(len(x), -np.inf)
         summaries = np.zeros((len(x), 9))
         eligible = np.isfinite(lp)
@@ -168,13 +178,14 @@ class GalSBIParticleTarget:
         for i, proposal in enumerate(self.proposals):
             selected = self.owner == i
             x[selected] = proposal.sample(int(selected.sum()), rng)
-        _, data, _ = self.native_prior(x)
+        native = self.native_prior(x)
+        _, data, _ = native
         scene, _ = self.prior.sample_given_targets(data, int(rng.integers(0, 2**63)))
         if self.informed_environment is not None:
             scene, payload = self.informed_environment.augment(scene, self.owner, rng)
-            return self.evaluate(x, scene, environment_payload=payload)
+            return self._evaluate_prepared(x, scene, native, environment_payload=payload)
         # Invalid prior draws are retained with zero target weight, not retried.
-        return self.evaluate(x, scene)
+        return self._evaluate_prepared(x, scene, native)
 
     def mutate(self, state, beta, rng, *, block, scale=1., check_reuse=False):
         """One fixed MH kernel; no covariance/scale fit to these particles.
@@ -244,7 +255,6 @@ class GalSBIParticleTarget:
             for i, proposal in enumerate(self.proposals):
                 selected = self.owner == i
                 x[selected] = proposal.sample(int(selected.sum()), rng)
-            hastings = state.log_proposal-self.log_proposal(x)
         else:
             raise ValueError('unknown particle mutation block')
         reuse = state if block in ('nuisance', 'sed') else None
@@ -264,7 +274,21 @@ class GalSBIParticleTarget:
                 x[~continuous] = state.x[~continuous]
         if payload is not None and block in ('environment', 'positions', 'exchange', 'exchange_relocate'):
             payload = payload.with_tilt(self.informed_environment.log_tilt(scene, self.owner))
-        proposed = self.evaluate(x, scene, reuse=reuse, environment_payload=payload)
+        if block in ('environment', 'positions'):
+            # These transitions only change E. Keep independently owned arrays
+            # just as native_prior/evaluate did, including off-support rows.
+            checked_x = np.asarray(x, float)
+            if checked_x.ndim != 2 or checked_x.shape[1] != 10 or not np.isfinite(checked_x).all():
+                raise ValueError('finite ten-coordinate particle matrix required')
+            native = (state.log_prior.copy(),
+                      {key: value.copy() for key, value in state.scene.targets.items()},
+                      state.type_probability.copy())
+            proposed = self._evaluate_prepared(x, scene, native,
+                log_proposal=state.log_proposal.copy(), environment_payload=payload)
+        else:
+            proposed = self.evaluate(x, scene, reuse=reuse, environment_payload=payload)
+        if block == 'independence':
+            hastings = state.log_proposal-proposed.log_proposal
         if block in ('exchange', 'exchange_relocate'):
             hastings[:] = -np.inf
             valid = np.isfinite(proposed.log_prior) & np.isfinite(native_ratio)

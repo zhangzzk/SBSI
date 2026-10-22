@@ -1,5 +1,30 @@
 # Work log
 
+## 2026-10-22 — Isolate deterministic target-prior reuse candidate
+
+Hypothesis n25 on `codex/smc-prior-reuse-20261022` removes repeated native
+target/prior/proposal evaluations from environment/position moves,
+initialization and independence moves in `sbsi/galsbi_particle_target.py`.
+`sbsi/galsbi_target_coordinates.py` and `sbsi/galsbi_prior.py` add a private
+freshly decoded photometry path for the two type-density calculations. Public
+native-density semantics, type support, RNG, kernel schedules, likelihood
+batches and retained-payload ownership stay unchanged. No live source changes.
+
+Added `tests/test_particle_prior_reuse.py`: uncached native-density comparisons
+check every output byte, support masks, accepted/rejected payloads, informed
+environments, initialization, mixed mutations, duplicate ancestors, RNG state,
+audit counters, stale photometry rejection and custom prior dispatch. Focused
+five-file pytest command: **104 passed, one optional historical-source skip in
+13.26 seconds**. Final coordinate validation adjustment checked separately with
+the two nonfinite-coordinate tests; `git diff --check` passes. See
+[candidate scope and validation](PARTICLE_PRIOR_REUSE_CANDIDATE.md#focused-validation).
+
+Limitations: no performance result or adoption claim. Parent must run full CPU
+tests through Slurm, then independent saved-output GPU replay and matched
+complete-process timing. In particular, actual external photometry must prove
+whole-array versus type-subset numerical equality; toy native fixtures alone
+do not establish it. See [remaining gates](PARTICLE_PRIOR_REUSE_CANDIDATE.md#limits-and-next-checks).
+
 ## 2026-10-22 — Complete-source candidate passes full CPU validation
 
 Implementation commit 862db49 preserves all 320 frozen experiment paths;

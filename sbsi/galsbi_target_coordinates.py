@@ -67,10 +67,13 @@ class GalSBITargetCoordinates:
         classifier weights. No relative type normalization is discarded.
         """
         data, logj = self.decode(coordinates, np.zeros(len(coordinates), dtype=int))
+        # decode just evaluated these type-independent photometric values.
+        # Keep the public arbitrary-native-data prior path unchanged.
+        intensity = getattr(self.prior, '_log_intensity_from_decoded', self.prior.log_intensity)
         terms = []
         for kind in range(len(self.prior.types)):
             data['type'] = np.full(len(coordinates), kind, dtype=int)
-            terms.append(self.prior.log_intensity(data))
+            terms.append(intensity(data))
         terms = np.column_stack(terms)
         total = logsumexp(terms, axis=1)
         probabilities = np.zeros_like(terms)

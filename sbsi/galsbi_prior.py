@@ -162,6 +162,24 @@ class GalSBIContinuousPrior:
 
     def log_intensity(self, data, *, return_factors=False):
         """Evaluate arbitrary native latent galaxies, returning -inf off support."""
+        # Arbitrary callers can supply stale derived photometry. Only the
+        # private coordinate-decoder path below owns a freshly evaluated copy.
+        return self._log_intensity(data, return_factors=return_factors)
+
+    def _log_intensity_from_decoded(self, data):
+        """Internal: consume photometry from the immediately preceding decode.
+
+        GalSBITargetCoordinates alone uses this path, before native fields are
+        changed. Type is the only field varied between these evaluations.
+        This is not a cache attached to arbitrary native scene dictionaries.
+        """
+        if getattr(self.log_intensity, '__func__', None) is not GalSBIContinuousPrior.log_intensity:
+            # A custom prior/subclass keeps its public intensity semantics.
+            return self.log_intensity(data)
+        photo = {key: data[key] for key in ('m_r', 'm_i', 'M_i')}
+        return self._log_intensity(data, photometry=photo)
+
+    def _log_intensity(self, data, *, return_factors=False, photometry=None):
         keys = ('type', 'z', 'M_B', 'R_kpc', 'n', 'a', 'psi')
         d = {k: np.atleast_1d(np.asarray(data[k])) for k in keys}
         nrow = len(d['z'])
@@ -185,7 +203,8 @@ class GalSBIContinuousPrior:
             if not len(use):
                 continue
             z, M, c = d['z'][use], d['M_B'][use], d['c'][use]
-            photo = self.photometry(z, M, c)
+            photo = (self.photometry(z, M, c) if photometry is None else
+                     {key: value[use] for key, value in photometry.items()})
             inside = ((M <= np.minimum(self.magnitude_cap(z), p['lum_fct_m_max']))
                       & (photo['m_i'] >= p['gals_mag_min']) & (photo['m_i'] <= p['gals_mag_max']))
             valid[use] &= inside
