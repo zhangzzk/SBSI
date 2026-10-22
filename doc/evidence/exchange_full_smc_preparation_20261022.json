@@ -1,0 +1,63 @@
+{
+  "schema": "sbsi-n22-full-smc-preparation-v1",
+  "base_commit": "ce3de962b389d7d94f8c77da07cd41a8af0a9a26",
+  "candidate_implementation_commit": "1c0e0c6aca59e23d360935f1ad768c4345a7e789",
+  "source": "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/exchange-full-smc-20261022",
+  "prepared": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_20261022",
+  "declaration_sha256": "fb2f43a99db049e39d6a80304aeda8198af6db7686b97f6c985ea1cbba69b86d",
+  "prepared_manifest_sha256": "4c447831f6e3cfd3538118ae45951d692b6aaf18ac4a2ffc30e12811365f71bc",
+  "arms": {
+    "baseline": {
+      "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_20261022/baseline",
+      "manifest_sha256": "f22761b42d5816ba126baa82a966cb5d1a9620efc1811b42e41931620bff225a"
+    },
+    "optimized": {
+      "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_20261022/optimized",
+      "manifest_sha256": "e094aee17ef5a2ada2acd9f6e2050a7f44a953075454fdc7b4236cf950a7b807"
+    }
+  },
+  "external_files": 168,
+  "seeds": [
+    2026103600,
+    2026103601,
+    2026103602,
+    2026103603
+  ],
+  "source_preparation_seconds": 11.883378896862268,
+  "science_submitted": false,
+  "heldout_outcomes_read": false,
+  "commands": {
+    "pairs": "sbatch --parsable --dependency=afterany:17435348:17435350 --partition=inter --nodelist=th-cl-nv02 --gres=gpu:v100:1 --cpus-per-task=2 --mem=16G --time=00:30:00 --array=0-3%1 --job-name=exchange-full-pair --output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange-full-pair-%A_%a.out /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_20261022/run_exchange_full_smc.sh /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_20261022/declaration.json /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_20261022 /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_20261022 pair",
+    "report": "sbatch --dependency=afterany:PAIR_ARRAY_JOB_ID --partition=cluster --cpus-per-task=2 --mem=8G --time=00:15:00 --job-name=exchange-full-report --output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange-full-report-%j.out /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_20261022/run_exchange_full_smc.sh /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_20261022/declaration.json /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_20261022 /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_20261022 report"
+  },
+  "tests": [
+    {
+      "job": 17436600,
+      "passed": 12
+    },
+    {
+      "job": 17436699,
+      "passed": 13,
+      "seconds": 0.29,
+      "file_copy_hash_preparation_pass": true
+    }
+  ],
+  "source_sha256": {
+    "scripts/benchmark_exchange_full_smc.py": "7ad371fd24b84ca3fb98c6f39a1e3ca611a5c2aaa93c8feb935c4f73ea52b639",
+    "scripts/prepare_exchange_full_smc.py": "2395cd30174eb203b0ae20a2c1fdb14d9a406a7b461f78539c574534030e9bbd",
+    "scripts/run_exchange_full_smc.sh": "1735347243862b66f9fda5b0957dab4bf2c12862f6d722b4b17af7c6f1ad21c0",
+    "tests/test_exchange_full_smc.py": "6f227e00fce3239c367f492fde4675b292b6ad54395324b283a76eb9dce07e58",
+    "doc/EXCHANGE_FULL_SMC_REPLAY.md": "907277c89c6e0e8c346f712a58f2d395255a8c34741f16221b6cf110eeb043ba"
+  },
+  "test_receipts": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_tests/junit.xml": "687566b4b06c127046ae6a937acff07069e83aed41892e5d76a3cbd37b144d0c",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_tests/junit_final.xml": "d06e4e8f6cb0e7b2a26147c532f4926443891ec1d5c074e604dae0993d9cb0e9",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_tests/final-17436699.out": "9726e843559a4a877b42a70f189835ae8ed563d4e2b7329717d1bade771c5b54"
+  },
+  "limitations": [
+    "Prepared only; no full-run correctness or efficiency result.",
+    "Source preparation charges copy/hash through declaration assembly; final tiny metadata writes excluded.",
+    "JSON-only final report bookkeeping excluded from measured subprocess window and explicitly disclosed.",
+    "Four pairs provide descriptive timing variability only."
+  ]
+}

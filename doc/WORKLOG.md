@@ -1,5 +1,28 @@
 # Work log
 
+## 2026-10-22 — Prepared isolated n22 saved whole-run replay/cost experiment
+
+Added standalone preparation, paired-run/report harness, launcher and13 focused
+tests, with [fixed design](EXCHANGE_FULL_SMC_REPLAY.md#fixed-design-and-decision-boundary)
+and [command/source receipt](evidence/exchange_full_smc_preparation_20261022.json).
+Frozen baseline copies corrected v10 source_support_fix_20261022; optimized
+copy differs only in the already validated20-line categorical change. Existing
+development/held-out sources remain untouched. Four paired development seeds,
+N256/T64/M64, original fitted geometry/proposal, four-observation groups and
+density4096 stay fixed. Exact comparisons cover all saved array bytes and
+scientific result/protocol/64-stage values, with explicit timing/provenance
+exceptions. Driver does not save every mutation or terminal RNG; this is saved
+whole-run-output replay only. Both arms retain failures and costs without retries.
+
+CPU17436600 passed12 checks; final17436699 passed13 in0.29s and prepared the
+immutable copies without science execution. Before any GPU work, root reviews
+the concrete declaration and commands: one-V100 array0–3%1 on th-cl-nv02 waits
+afterany:17435348:17435350; CPU report waits afterany on that array. No GPU job
+was submitted. The report charges complete arm subprocess costs and shared
+measured preparation/verification/report overhead; tiny metadata finalization
+is explicitly outside measured windows. Four pairs support bounded descriptive
+timing evidence, not convergence or promotion. No full-run score yet.
+
 ## 2026-10-22 — Frozen final-report adapter replays audited development
 
 CPU17435839 completes exit0 in27 seconds, exercising the actual frozen held-out
