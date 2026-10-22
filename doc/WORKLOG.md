@@ -1,5 +1,24 @@
 # Work log
 
+## 2026-10-22 — Add bounded immutable sampler task pool candidate
+
+Added `scripts/run_sampler_task_pool.py` and a complete-process timing launcher
+for arbitrary predeclared independent four-observation sampler tasks. The pool
+preserves exact source-bound argv/cwd, seeds, recipe/target/input identities and
+ordered records, with four processes on eight distinct physical cores sharing
+one V100. It rejects duplicate/overlapping tasks, changed or incomplete source
+snapshots and existing outputs. Failures terminate/reap siblings, retain partial
+outputs and leave pending tasks explicitly unstarted, without retry or replacement.
+Before/after hashes, CPU/GPU identity and child/full-process costs are retained.
+
+Synthetic process tests exercise multiple waves, exact seed/RNG/group/command
+payloads, affinity/concurrency bounds, failure cleanup and tampering. Focused pool plus unchanged concurrency
+harness tests passed: **64 tests in 11.51 seconds**. Syntax and diff checks passed. Original sampler and concurrency
+benchmark files remain unchanged. No jobs or scientific experiments submitted;
+full scheduled suite, n24 confirmation and separate real saved-output replay
+remain prerequisites to adoption. See [task pool scope and gates](SAMPLER_TASK_POOL.md#scope-and-acceptance-boundary)
+and [manifest schema](SAMPLER_TASK_POOL.md#immutable-declaration).
+
 ## 2026-10-22 — Prepare a fixed-recipe CPU concurrency experiment
 
 The owner requested substantial efficiency improvements and more CPU use.
