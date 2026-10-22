@@ -1,5 +1,71 @@
 # Work log
 
+## 2026-10-22 — Measurement-only preflight validated before fresh held-out launch
+
+Added `scripts/prepare_corrected_particle_heldout.py` and focused tests. It requires
+the complete passing development receipt before opening the panel, preserves
+scientific source bytes, constructs exact proposal metadata from measurements,
+and pins model/prior/package/reference inputs. Explicit HDF paths, actual imports,
+read/write audit classification and JSON-safe inherited infinities are covered.
+The reference preparation result is also pinned because the driver reads it.
+
+Initial CPU17423593 passes935 tests in91.31 seconds; strengthened17434394 passes
+945 tests in110.42 seconds, both with one optional skip and one existing warning.
+Before/after source checks pass; [receipts](evidence/heldout_preflight_validation_20261022.json)
+retain both snapshots and review limitations. The later integrated runner will
+be tested before launch. No fresh held-out pilot or production has run.
+Updated [Arbor evidence](evidence/sampler_search_tree_20261022.json): corrected n23
+passes development gates; n22 passes bounded GPU replay. Neither is an accepted
+full-cost held-out sampler. Runtime optimization stays isolated.
+
+## 2026-10-22 — Corrected three-way development gates pass after audited reporting repair
+
+- Authorized CPU **17434348** completed exit 0 in 31 seconds: **37 focused tests passed in 4.77 seconds**, followed by full source/protocol/artifact/seed/particle replay and comparison over all 24 completed v10 populations. All 12 precision and all three pairwise raw-score/region/Z and controlled F32/F64 gates pass. No sampling rerun, new model forward, held-out outcome access or threshold change.
+- Largest controlled contrast is small minus large, object 0 g2, +1.158843 ± 0.600652 (+1.929307 combined MCSE); F64 +1.929200 MCSE. All signed means/errors and costs retained in [completed evidence](V10_PARTICLE_COMPARISON.md#completed-audited-development-comparison). Small/large/broad inference totals 1566.072/3843.086/3717.636 seconds; summed Slurm task times 1667/3944/3820. Shared phase 177 seconds and report 11 seconds; preparation/full cost unknown.
+- Repaired immutable source 5285f5b, manifest 4767d2a3eef142ab4f5a387cccc7267d4eaeac59bf7247a2fa2ac6eedf2d0f99. Full result SHA256 09601af0a43c0b5801bc0467b090e588c745713a3c9fd6d86b58f2f9172d1574; [pinned receipt](evidence/v10_comparison_result_20261022.json) includes failed 17423550 and successful log/source hashes. Prior failed snapshot/log remain unchanged.
+- Development comparison passes; **sampler remains unaccepted** pending independent assessment. F32 control expectation is unknown; F64 reweighting explicitly changes measure and qualifies the continuous identity. Eight populations cannot exclude shared rare modes. No population shear-calibration conclusion follows from fixed-object score agreement.
+
+## 2026-10-22 — Repair n23 source whitelist before authorized completed evaluation
+
+- Root's evaluation 17423550 stopped in five seconds before reading outcomes: the held-out data guard also rejected a legitimate filename inside the pinned support-fix source manifest. Original source_v10_comparison_20261022_v2, launcher, output log and failure remain preserved.
+- Guard now permits only resolved paths inside the declared immutable source whose expected hash matches an entry in the already verified pinned manifest; actual file hashes remain mandatory. Actual held-out data, unlisted files, missing/wrong hash proof and symlink escapes remain forbidden. Added focused regressions; no scientific threshold, sampling setting or aggregate change.
+- Root confirmed the entire v10 science graph complete and authorized CPU evaluation after focused tests. No sampling rerun or held-out outcome access. Fresh frozen reporting snapshot/test/evaluation pending.
+
+## 2026-10-22 — N23 comparison helper fully tested and frozen; evaluation withheld
+
+- **Validation:** final immutable source 73bff31 full CPU 17423438: **882 passed, 1 skipped, 1 existing warning in 85.43 seconds**, exit 0, 95-second allocation. Both legacy frozen-source checks enabled. Original focused CPU 17423323 passed 28 tests; six additional guard regressions reject empty/incomplete corrected-score inputs. Two earlier full-suite collection failures (17423354/17423380) are preserved; adding the present frozen scripts directory to the test runner import path fixed collection without source changes.
+- **Delivery:** new gate module, guarded comparison script, tests, [prepared command](V10_PARTICLE_COMPARISON.md#prepared-command-and-completed-validation) and pinned preparation evidence. Snapshot source_v10_comparison_20261022_v2 manifest 090b9272823f2a88a72bf327bc61f150a2df52b4fee117ffaddd82f41ccbb5a0; unsubmitted evaluation launcher hash 1f0e9953818cd5ce2d870562f419a1c12f8f9b17983c3922dcf80256c2fb77ce. Exact source/file hashes and validation receipt in doc/evidence/v10_comparison_preparation_20261022.json.
+- **Boundary:** no numerical v10 outcome or interim protocol was read; no scientific gate result or evaluation submission. All 24 sampling tasks and both raw/phase jobs must complete before the evaluator opens outcomes. Development gate pass never sets accepted_sampler=true. Preparation/full end-to-end costs remain explicitly unknown; explicit extinction cannot be silently dropped to complete the unsupported phase assessment. Root controls eventual evaluation and held-out preparation.
+
+## 2026-10-22 — Harden n23 gate APIs against incomplete moments
+
+- Root review identified vacuous success for empty difference vectors and raw-only vectors sliced to empty corrected columns. The caller already required the declared five-column schema, but the reusable gate API now also rejects empty vectors and requires exactly five finite phase moments with nonnegative MCSE before corrected-column slicing.
+- Added six regressions for empty, missing/extra corrected columns and nonfinite unselected moments. Existing 28 focused tests passed on frozen dafff0e (CPU 17423323); its full-suite job 17423354 is preserved. Amended-source full CPU validation pending; no v10 outcome read, threshold change or evaluation submission.
+
+## 2026-10-22 — Prepare n23 corrected three-way gates without outcome access
+
+- **Scope:** new isolated `codex/v10-comparison-20261022` from 3edb2ee. Read only the v10 declaration/launcher and prior code/artifact schemas; no v10 numerical run/phase outcomes. New gate module and summary executable implement all original raw precision/score/region/Z gates plus all three pairwise corrected components <=3.5 combined MCSE separately in F32/F64. Always leaves accepted_sampler=false.
+- **Integrity/cost:** evaluator refuses outcome reads until all 24 array tasks and both report jobs complete successfully. It pins source/artifacts/seeds/protocol, replays complete particle/phase arrays and recomputes whole-population aggregates. Eight-ULP weight replay tolerance only; no altered weights. Explicit extinction blocks unsupported phase aggregation, never drops a run. Costs separate driver, per-arm Slurm elapsed and shared diagnostic wall time; unknown preparation/full cost stays null.
+- **Validation:** syntax/diff checks pass; focused synthetic CPU tests pending. [Declared scope/gates](V10_PARTICLE_COMPARISON.md#gates-all-retained). No GPU job, fitting, new model forward, held-out input, sampler change or evaluation submission.
+
+## 2026-10-22 — N22 trained-model replay passes; runtime integration remains deferred
+
+Parent-submitted GPU 17422901 completed in45 s on one V100 at th-cl-nv02,
+after development array17422526. The immutable n22 snapshot reproduces saved
+kernel/prior values exactly and preserves full state/decision/RNG bytes over
+18 mixed-block transitions and all paired timing calls. Ordinary complete
+exchange-block median speedups are **1.169x at beta0.001** and **1.132x at
+beta1**. Relocation is **0.993x/1.055x**; the slightly slower low-beta case is
+preserved without tuning. See [results](EXCHANGE_CATEGORICAL_RESULTS.md#trained-model-comparison)
+and [full receipt](evidence/exchange_categorical_trained_20261022.json), including
+all source/input hashes, timing samples and scheduler record. This update is
+documentation/evidence only; receipt hashes match the frozen265-file manifest.
+
+The primary CPU proposal score remains1.36095x. Seven timing pairs on one saved
+population establish a bounded full-block saving, not full-SMC wall time or
+convergence. Runtime integration stays deferred to keep current corrected
+development and held-out scientific source byte-identical. No new job, source
+snapshot edit, or sampler change was made in this follow-up.
 ## 2026-10-22 — Prepare held-out phase fitting with strict pilot provenance
 
 Added `scripts/fit_declared_particle_phase_control.py`, its focused tests and

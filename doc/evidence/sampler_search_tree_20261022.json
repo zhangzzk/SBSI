@@ -8,7 +8,7 @@
       "depth": 0,
       "status": "root",
       "hypothesis": "Reproducible posterior scores and scene-region weights at minimum measured compute cost; baseline fails convergence, no candidate is accepted without held-out replication.",
-      "insight": "[from n3] Proposal density and support must be explicit before using measurement-informed starts for reference weights. Proposal quality must be measured independently.\n[from n2] Assess complete independent populations on the normalizer scale; particle count and weight ESS cannot stand in for convergence.\n[from n4] Use independent full-population score and normalizer variation to judge progress; a gradual schedule can make every incremental ESS look healthy despite a poorly explored posterior.\n[from n5] Check movement at the posterior temperature separately from the annealing average. Changing initial tails cannot by itself repair an ill-scaled final kernel.\n[from n6] For strongly heterogeneous or mixed posteriors, a global pilot covariance can overestimate narrow local directions. Test geometry with independent score replication, not covariance plausibility or acceptance averages.\n[from n7] Correct global scene proposals still need demonstrated mode access and stable weights. Diagnose target/environment support and proposal-density cost before increasing their mixture frequency.\n[from n9] Keep legitimate zero-mass realizations and their replicate denominator; unknown failures must remain errors. No-redraw behavior needs end-to-end tests, not only an aggregation helper.\n[from n8] Useful final-temperature movement does not guarantee stable annealing normalizers. Independently test proposal-to-posterior distance and early loss of particle diversity.\n[from n11] Informed scene initialization requires a normalized native point law and the true numerical Poisson intensity, including explicit singular-support accounting. A generic density-ratio identity alone does not supply a usable sampler.\n[from n14] Known-density scene proposals require the numerical native mark measure itself, not merely an analytic-support correction. Account separately for support slivers, zero-target initial draws, and genuine generator failures.\n[from n13] Local geometry and a normalized joint proposal solve different problems: local movement can improve while whole-population normalizing mass stays unstable. Test the combination with independent pilots, changed proposals and increased effort, then on untouched observations including all preparation costs.\n[from n15] Remove analytically known zero-mean score fluctuations for diagnosis as well as efficiency: a raw comparison can pass because its noise is too large to expose a smaller systematic discrepancy. Preserve failed original checks and predeclare repaired numerical validation.\n[from n14] Endpoint equality is not kernel validity: the old native exchange omitted the numerical lower-uniform support bound. Real allowed prior marks demonstrate a zero-environment-density swap. Correct every caller, and require corrected runs or full trajectory evidence before interpreting old proposal/effort comparisons as same-target convergence.",
+      "insight": "[from n3] Proposal density and support must be explicit before using measurement-informed starts for reference weights. Proposal quality must be measured independently.\n[from n2] Assess complete independent populations on the normalizer scale; particle count and weight ESS cannot stand in for convergence.\n[from n4] Use independent full-population score and normalizer variation to judge progress; a gradual schedule can make every incremental ESS look healthy despite a poorly explored posterior.\n[from n5] Check movement at the posterior temperature separately from the annealing average. Changing initial tails cannot by itself repair an ill-scaled final kernel.\n[from n6] For strongly heterogeneous or mixed posteriors, a global pilot covariance can overestimate narrow local directions. Test geometry with independent score replication, not covariance plausibility or acceptance averages.\n[from n7] Correct global scene proposals still need demonstrated mode access and stable weights. Diagnose target/environment support and proposal-density cost before increasing their mixture frequency.\n[from n9] Keep legitimate zero-mass realizations and their replicate denominator; unknown failures must remain errors. No-redraw behavior needs end-to-end tests, not only an aggregation helper.\n[from n8] Useful final-temperature movement does not guarantee stable annealing normalizers. Independently test proposal-to-posterior distance and early loss of particle diversity.\n[from n11] Informed scene initialization requires a normalized native point law and the true numerical Poisson intensity, including explicit singular-support accounting. A generic density-ratio identity alone does not supply a usable sampler.\n[from n14] Known-density scene proposals require the numerical native mark measure itself, not merely an analytic-support correction. Account separately for support slivers, zero-target initial draws, and genuine generator failures.\n[from n13] Local geometry and a normalized joint proposal solve different problems: local movement can improve while whole-population normalizing mass stays unstable. Test the combination with independent pilots, changed proposals and increased effort, then on untouched observations including all preparation costs.\n[from n15] Remove analytically known zero-mean score fluctuations for diagnosis as well as efficiency: a raw comparison can pass because its noise is too large to expose a smaller systematic discrepancy. Preserve failed original checks and predeclare repaired numerical validation.\n[from n14] Endpoint equality is not kernel validity: the old native exchange omitted the numerical lower-uniform support bound. Real allowed prior marks demonstrate a zero-environment-density swap. Correct every caller, and require corrected runs or full trajectory evidence before interpreting old proposal/effort comparisons as same-target convergence.\n[from n22] Optimize measured bottlenecks while preserving full proposal/decision/RNG trajectories; count complete inference and diagnostic cost before promoting a local speedup.\n[from n23] Reliable development agreement required jointly checking corrected target support, frozen physical geometry, informed initialization and sufficient mutation effort. Preserve that complete recipe when testing transfer; raw noisy-score agreement alone was insufficient.",
       "metadata": {
         "dev_score": null,
         "test_score": null,
@@ -16,7 +16,7 @@
         "branch_ref": null
       },
       "created_at": 1792614888,
-      "updated_at": 1792623442
+      "updated_at": 1792668209
     },
     "n1": {
       "id": "n1",
@@ -200,7 +200,7 @@
       "depth": 1,
       "status": "pending",
       "hypothesis": "A normalized initial proposal learned from independent pilots reduces the annealing distance to the posterior while retaining broad support, improving normalizer stability at fixed cost.",
-      "insight": "[from n13] Local geometry and a normalized joint proposal solve different problems: local movement can improve while whole-population normalizing mass stays unstable. Test the combination with independent pilots, changed proposals and increased effort, then on untouched observations including all preparation costs.",
+      "insight": "[from n13] Local geometry and a normalized joint proposal solve different problems: local movement can improve while whole-population normalizing mass stays unstable. Test the combination with independent pilots, changed proposals and increased effort, then on untouched observations including all preparation costs.\n[from n23] Reliable development agreement required jointly checking corrected target support, frozen physical geometry, informed initialization and sufficient mutation effort. Preserve that complete recipe when testing transfer; raw noisy-score agreement alone was insufficient.",
       "metadata": {
         "dev_score": null,
         "test_score": null,
@@ -208,7 +208,7 @@
         "branch_ref": null
       },
       "created_at": 1792618058,
-      "updated_at": 1792620302
+      "updated_at": 1792668209
     },
     "n13": {
       "id": "n13",
@@ -216,7 +216,7 @@
       "depth": 2,
       "status": "running",
       "hypothesis": "A frozen mixture of independent-pilot coordinate moments and circular phase distributions, retaining broad measurement components, improves replicated score and normalizer accuracy without changing the target.",
-      "insight": "Stable normalizers and noisy raw-score agreement can hide a persistent physical-score discrepancy. Independent zero-mean controls may reveal disagreement instead of certifying convergence.\n[from n18] More effort moves the phase-controlled score toward the independent broad-proposal reference, while some precision/cost worsens. Separate mutation effort, particle count, proposal law, and support correctness in the next fixed comparison.",
+      "insight": "Stable normalizers and noisy raw-score agreement can hide a persistent physical-score discrepancy. Independent zero-mean controls may reveal disagreement instead of certifying convergence.\n[from n18] More effort moves the phase-controlled score toward the independent broad-proposal reference, while some precision/cost worsens. Separate mutation effort, particle count, proposal law, and support correctness in the next fixed comparison.\n[from n23] Reliable development agreement required jointly checking corrected target support, frozen physical geometry, informed initialization and sufficient mutation effort. Preserve that complete recipe when testing transfer; raw noisy-score agreement alone was insufficient.",
       "metadata": {
         "dev_score": 0.0,
         "test_score": null,
@@ -224,7 +224,7 @@
         "branch_ref": "worktree-galsbi-tempering"
       },
       "created_at": 1792618059,
-      "updated_at": 1792623996
+      "updated_at": 1792668209
     },
     "n14": {
       "id": "n14",
@@ -344,7 +344,7 @@
       "depth": 1,
       "status": "pending",
       "hypothesis": "Reduce deterministic implementation overhead while preserving all proposal laws, RNG streams, target arithmetic and full retained payloads, to lower matched-accuracy sampler cost.",
-      "insight": "",
+      "insight": "[from n22] Optimize measured bottlenecks while preserving full proposal/decision/RNG trajectories; count complete inference and diagnostic cost before promoting a local speedup.",
       "metadata": {
         "dev_score": null,
         "test_score": null,
@@ -352,39 +352,39 @@
         "branch_ref": null
       },
       "created_at": 1792623586,
-      "updated_at": 1792623586
+      "updated_at": 1792668115
     },
     "n22": {
       "id": "n22",
       "parent": "n21",
       "depth": 2,
-      "status": "running",
+      "status": "executed",
       "hypothesis": "Batch the categorical draws inside native exchanges without changing their numerical CDFs or RNG ordering, reducing exchange CPU cost while preserving full trajectories bitwise.",
-      "insight": "Batch type CDF draws preserves tested RNG streams while avoiding per-row Python choice overhead; relocation is dominated by remaining ragged work. CPU proposal gains require full trained-model replay and actual mutation-cost measurement.",
+      "insight": "Exact categorical batching saves CPU proposal work, but realized complete-block gains are smaller and relocation is not uniformly faster. Bitwise replay and local timing do not replace posterior validation or end-to-end cost measurement.",
       "metadata": {
         "dev_score": 1.3609505278392875,
         "test_score": null,
-        "result": "CPU ordinary-proposal speedup1.360951 geometricmean;20 cases/520 calls preserve payload/RNG bits.872 fullsuite tests and67 focusedchecks pass. Trained-model GPU replay17422901 waitsarray17422526. Runtime remainsisolated.",
-        "branch_ref": "codex/exchange-categorical-20261022@1c0e0c6"
+        "result": "CPU proposals preserve payload and RNG bits; V100 job17422901 additionally preserves complete18-step mixed trajectories, decisions and RNG. Ordinary trained exchange gains1.132-1.169x; relocation0.993-1.055x includes slowdown. Full sampler efficiency unmeasured; runtime integration deferred to preserve corrected development/heldout source identity.",
+        "branch_ref": "codex/exchange-categorical-20261022@2b1198a4b5c156dd1b1adc75f8d83667353c2035"
       },
       "created_at": 1792623594,
-      "updated_at": 1792624603
+      "updated_at": 1792668114
     },
     "n23": {
       "id": "n23",
       "parent": "n13",
       "depth": 3,
-      "status": "running",
+      "status": "executed",
       "hypothesis": "With the common exchange-support correction, keeping256 fitted-proposal particles but doubling mutation effort to64 reaches replicated raw and phase-controlled score agreement with1024-particle fitted and broad-proposal references at lower total cost.",
-      "insight": "Next comparison holds mutation count fixed across particle effort and changes q0 independently under a common corrected exchange kernel; acceptance remains pending all populations and heldout.",
+      "insight": "Doubling mutation effort at256 fitted particles can match both1024-particle fitted and broad references on the corrected-source development panel. This resolves the predeclared development discrepancy at the stated tolerance, but transfer and full-cost efficiency require independent heldout validation.",
       "metadata": {
-        "dev_score": 0.0,
+        "dev_score": 0.0005998800239952009,
         "test_score": null,
-        "result": "Corrected-source304-file manifest f22761b passes822 tests. Smoke17422524 passes sampler and phase checks. Fresh 3-arm8-replica array17422526 has all first arms progressing; report17422589 and phase17422590 depend on its completion. No aggregate inspected.",
-        "branch_ref": "worktree-galsbi-tempering@55f1220"
+        "result": "Audited corrected v10 evaluation17434348: all three pairwise raw score, normalizer, scene-region and both-measure corrected-phase gates pass on4development observations,8independent populations perarm. Small N256/M64 allocated1667s versus large3944s and broad3820s; maximum corrected contrast1.92931combinedMCSE. Full preparation/diagnostic cost remains unknown and heldout pending; no accepted sampler.",
+        "branch_ref": "codex/v10-comparison-20261022@5285f5b; evidence=v10_corrected_comparison_20261022_v3.json#09601af0a43c0b5801bc0467b090e588c745713a3c9fd6d86b58f2f9172d1574"
       },
       "created_at": 1792623825,
-      "updated_at": 1792624139
+      "updated_at": 1792668208
     }
   }
 }

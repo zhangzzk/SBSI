@@ -2,12 +2,13 @@
 
 ## Status and launch condition
 
-This is preparation, not a launched experiment or an accepted sampler. The
-complete corrected v10 comparison must pass its declared raw score, normalizer,
-scene-region and both-measure phase-controlled score comparisons before a new
-held-out declaration is frozen. No v10 interim aggregates or held-out pilot
-numerical outcomes were used in this preparation. The earlier held-out v7
-production remains cancelled; its declaration and warmup receipts are preserved.
+The complete corrected v10 comparison now passes its declared raw score,
+normalizer, scene-region and both-measure phase-controlled score comparisons
+(audited CPU17434348). This authorizes the next validation stage, not sampler
+acceptance. No v10 interim aggregates or held-out pilot numerical outcomes were
+used to prepare the procedure. The earlier held-out v7 production remains
+cancelled; its declaration and warmup receipts are preserved. New held-out
+science has not yet launched.
 
 ## Conditional fixed procedure
 
@@ -66,6 +67,33 @@ actually imported phase module are checked against the manifest. The manifest
 also covers transitive SBSI files omitted by the older phase identity. External
 dependency/artifact pinning remains the full workflow's responsibility.
 
+## Measurement-only preflight
+
+`scripts/prepare_corrected_particle_heldout.py` requires the hashed successful
+complete development receipt and rechecks its evidence before opening the fixed
+panel. It requires the existing development scientific sources to remain byte
+identical, including all SBSI/config files and the driver, prior factory, fitting
+and diagnostic programs. Reporting/preparation helpers may be added. The optional
+categorical optimization therefore remains isolated during this validation.
+
+The worker constructs full Gaussian pilot and Student-t5 reference proposal
+metadata from the same four measured columns as inference. It pins package and
+model/reference inputs, explicitly includes the ABC posterior and photometry
+HDF files (C-level HDF reads may not emit Python open audit events), and records
+actual constructed prior parameters/tables. Nonfinite configuration defaults are
+tagged in JSON metadata without changing the prior. Read-only input opens and
+generated/write-capable paths are separated; logs/locks/bytecode are excluded
+from immutable input candidates. Actual scientific imports must come from the
+declared frozen source.
+
+This is bounded provenance, not a whole-system trace or container image. The
+constructed tables are not asserted to be independently checked in every later
+sampler process. The preflight emits an explicitly nonlaunchable declaration
+draft. After its scheduler job completes, attach a hashed allocation-cost
+receipt and freeze the actual declaration before warmup. Global fresh seed
+bases are2026103200/2026103300/2026103400 for pilot/candidate/reference, with
+the existing `base+10*group+replica` rule. No posterior outcomes enter preflight.
+
 ## Accuracy, cost and interpretation
 
 Require all original raw score/Z/region gates for every object. Additionally
@@ -110,3 +138,15 @@ It passes885 tests with one optional skip in90.37 seconds. Before/after source
 checks pass. The earlier passing tests did not cover these gaps. The
 [validation receipt](evidence/declared_phase_fit_validation_20261022.json) preserves
 both snapshots and results. No scientific held-out computation was run.
+
+Initial preflight/reporting integration CPU17423593 passes935 tests with one
+optional skip in91.31 seconds. Independent installed-source review then exposes
+real inherited infinite configuration defaults and C-level HDF input reads;
+the strengthened preflight adds explicit metadata encoding, input paths and
+actual-import checks. CPU17434394 validates this revised318-file snapshot,
+manifest `6cc595ccf72d540a58856a92bcf4ea6156aa5731bdf0d90e55397bd99e5128b6`;
+it passes945 tests with one optional skip and one existing warning in110.42
+seconds (137-second allocation), with before/after manifest checks. The
+[preflight receipt](evidence/heldout_preflight_validation_20261022.json) preserves
+both runs. Final integration also pins the reference preparation result read by
+the sampling driver. These are code checks, not a held-out result.

@@ -1,0 +1,45 @@
+{
+  "schema": "sbsi-corrected-heldout-preflight-tests-v1",
+  "results": [
+    {
+      "job": 17423593,
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "passed": 935,
+      "skipped": 1,
+      "warnings": 1,
+      "test_seconds": 91.31,
+      "allocation_wall_seconds": 99,
+      "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_heldout_preflight_20261022",
+      "manifest_sha256": "d04fbd1a72134e8c00ce72efedb9f02a0a0b52d8f25afedde8e914fbc9e6279b",
+      "source_files": 318,
+      "log": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout-preflight-tests-17423593.out",
+      "log_sha256": "72944ddc619208b46b87ae77638bca46ff2b5f73da478aad6125835092d8f619",
+      "launcher": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_heldout_preflight_tests_20261022.sh",
+      "launcher_sha256": "06095bb56c6441182d8bcdbf1a76ca9b9b2c19b81cac616d0c427825658ab916"
+    },
+    {
+      "job": 17434394,
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "passed": 945,
+      "skipped": 1,
+      "warnings": 1,
+      "test_seconds": 110.42,
+      "allocation_wall_seconds": 137,
+      "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_heldout_preflight_v2_20261022",
+      "manifest_sha256": "6cc595ccf72d540a58856a92bcf4ea6156aa5731bdf0d90e55397bd99e5128b6",
+      "source_files": 318,
+      "log": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout-preflight-v2-tests-17434394.out",
+      "log_sha256": "e0b52e59ace13de225b870a62c63a33801178292afe1cb7f787faca3a2ff9c94",
+      "launcher": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_heldout_preflight_v2_tests_20261022.sh",
+      "launcher_sha256": "bc80628008602bce6721a03dc887d4d9a0d3100e54eedc56150bf74b4d479c91"
+    }
+  ],
+  "scientific_heldout_launched": false,
+  "limitations": [
+    "One optional BlendEMU converter test skipped; existing NumPy warning.",
+    "Initial passing suite did not cover real nonfinite inherited configuration, C-level HDF inputs, or actual import identity; v2 addresses those.",
+    "Final integration will additionally pin reference/result.json, which is read by the sampling driver."
+  ]
+}
