@@ -1,0 +1,266 @@
+{
+  "schema": "corrected-prior-sensitivity-validation-v1",
+  "status": "passed",
+  "scope": "All 24 corrected v10 development populations only; no heldout data, new samplers, likelihood recomputation or acceptance-gate changes.",
+  "branch": "codex/corrected-prior-sensitivity-20261022",
+  "base_commit": "7eda30d",
+  "worktree": "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/corrected-prior-sensitivity-20261022",
+  "implementation_sha256": {
+    "sbsi/prior_sensitivity.py": "a6bfc90af8141050b94a993ab5f2995285186b6055f57bb6a9098fa41d2da140",
+    "scripts/audit_corrected_prior_sensitivity.py": "81cc9e0f47e0ff370079cf6d7afecb4cdadeab6ddcb2d87ed0f06a0d60a4c13e",
+    "tests/test_prior_sensitivity.py": "3d0ac0d8884afec50f404cdc7f6176ac6ec9d036e7317b9e452f7424767d3c0d"
+  },
+  "frozen_sources": {
+    "source_v1": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/source_v1",
+      "manifest_sha256": "f7238c7a56266cfba330f9cdbe846318b9d1639d73891a06d87470c5797fb42c",
+      "preserved_manifest_verified_after_completion": true
+    },
+    "source_v2": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/source_v2",
+      "manifest_sha256": "b5aa5b2c7e13ce3490124ee8b6ad6cbccc9b24da07142a7f6282f4435e1f2cd3",
+      "preserved_manifest_verified_after_completion": true
+    },
+    "source_v3": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/source_v3",
+      "manifest_sha256": "6f14d70cd8f5577c76e1390b243cd1861d01032d595ce6e4ce2a4b51fc66cb93",
+      "preserved_manifest_verified_after_completion": true
+    },
+    "source_v4": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/source_v4",
+      "manifest_sha256": "46d96746487098d37ad37e813708a20cc8aa2f7a3689a4676ef4878fb331c0d6",
+      "preserved_manifest_verified_after_completion": true
+    },
+    "source_v5": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/source_v5",
+      "manifest_sha256": "7fd05890419f38e9ca4329c0e5afcd77f9b55e63827670332ee9c80e44d4a2df",
+      "preserved_manifest_verified_after_completion": true
+    }
+  },
+  "predeclared_design": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/source_v5/doc/CORRECTED_PRIOR_SENSITIVITY.md",
+    "sha256": "d199bc7ba65e24ea8fd5b18f766be41226ddefc4a180ce871fec10f044fb8664"
+  },
+  "final_source_checks": "Final test and audit shell launchers completed both before/after SHA256SUMS checks. All preserved snapshots reverified during receipt creation.",
+  "authoritative_development_audit": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/v10_corrected_comparison_20261022_v3.json",
+    "sha256": "09601af0a43c0b5801bc0467b090e588c745713a3c9fd6d86b58f2f9172d1574"
+  },
+  "original_source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022",
+  "original_input_count": 466,
+  "native_input_count": 554,
+  "frozen_coefficients": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/frozen_v1_coefficients.json",
+    "sha256": "a31062ffe9c970d8c3ae9214f5f9b7a67781829cd14d37f8ee2461fb155412c7"
+  },
+  "outputs": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/audit_v1/result.json": "22cc772b9bcf991c029782f15f7cb39bfa049a34ae800b577afbf621ae26c7e2",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/audit_v2/result.json": "9d59a54255a2c5f8c2248f663aa430a2e5e2ccf9f30f89c125ec9e4f7ec86598",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/audit_v2/prior_ratios.npz": "b2de4de5e66bfbf2aeeba6dc3e9cd3bf5aa25868406108187b80421d08f5ba2e",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/tests_v5_full.xml": "432a4f5789fbec8115a447ef120289916be7bd98fff12471aa9492b4c5c6ad1f",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/static_check_v5.txt": "c3e1bfa96597b406c0eea0341ab136f6babfbdbf7c376601213ae45ac0e9895d",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/slurm_receipt_20261022.txt": "a6b54e259a12a46a35956e5d5c80f21aae0a19a1280bc4f549e99178d94119a1"
+  },
+  "jobs": [
+    {
+      "job_id": 17437469,
+      "kind": "focused tests",
+      "source": "source_v1",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "allocated_wall_seconds": 17,
+      "cpus": 2,
+      "allocated_tres": "billing=18,cpu=2,mem=16G,node=1",
+      "output_path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/tests-v1-17437469.out",
+      "output_sha256": "5655a91d933826dc5eb09b0a09d060e495924ac7fc7427109297bd95288dacc0",
+      "outcome": "40 passed in 6.95 s"
+    },
+    {
+      "job_id": 17437595,
+      "kind": "full tests, packaging failure",
+      "source": "source_v2",
+      "state": "FAILED",
+      "exit_code": "2:0",
+      "allocated_wall_seconds": 44,
+      "cpus": 2,
+      "allocated_tres": "billing=18,cpu=2,mem=16G,node=1",
+      "output_path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/tests-v2-full-17437595.out",
+      "output_sha256": "ea8d7488f106612a2082fa6f10e7228f44b7ef4fb548c5ab68b7895704c80341",
+      "outcome": "missing historical wrapper source during collection"
+    },
+    {
+      "job_id": 17437644,
+      "kind": "full tests, packaging failure",
+      "source": "source_v3",
+      "state": "FAILED",
+      "exit_code": "1:0",
+      "allocated_wall_seconds": 87,
+      "cpus": 2,
+      "allocated_tres": "billing=18,cpu=2,mem=16G,node=1",
+      "output_path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/tests-v3-full-17437644.out",
+      "output_sha256": "e5e127cfe523621f179c352e3d4bb128d9ec0287ad058fe07147011e79efd237",
+      "outcome": "1017 passed, 9 skipped; missing jobs/job_inference.sh fixture"
+    },
+    {
+      "job_id": 17437696,
+      "kind": "full tests before entry-path repair",
+      "source": "source_v4",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "allocated_wall_seconds": 105,
+      "cpus": 2,
+      "allocated_tres": "billing=18,cpu=2,mem=16G,node=1",
+      "output_path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/tests-v4-full-17437696.out",
+      "output_sha256": "c39f15d577138da12964661dd4a3187a620df5e9279dee5710d3ba7e534578a1",
+      "outcome": "1018 passed, 9 skipped in 79.08 s"
+    },
+    {
+      "job_id": 17437709,
+      "kind": "audit attempt 1, failed before prior evaluation",
+      "source": "source_v4",
+      "state": "FAILED",
+      "exit_code": "1:0",
+      "allocated_wall_seconds": 43,
+      "cpus": 2,
+      "allocated_tres": "billing=18,cpu=2,mem=16G,node=1",
+      "output_path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/audit-v1-17437709.out",
+      "output_sha256": "6bdf8490704d74f767c0a66ab655e85bee48dc3f42293aafd373e542badd8291",
+      "outcome": "redundant local importlib import caused UnboundLocalError"
+    },
+    {
+      "job_id": 17437783,
+      "kind": "final full tests",
+      "source": "source_v5",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "allocated_wall_seconds": 83,
+      "cpus": 2,
+      "allocated_tres": "billing=18,cpu=2,mem=16G,node=1",
+      "output_path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/tests-v5-full-17437783.out",
+      "output_sha256": "e8e717c54261b2076e7eea3c6ebcc9026abdce44f4651625e0ef756c6e939170",
+      "outcome": "1018 passed, 9 skipped in 73.95 s"
+    },
+    {
+      "job_id": 17437804,
+      "kind": "final saved-state prior sensitivity audit",
+      "source": "source_v5",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "allocated_wall_seconds": 85,
+      "cpus": 2,
+      "allocated_tres": "billing=18,cpu=2,mem=16G,node=1",
+      "output_path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_prior_sensitivity_20261022/audit-v2-17437804.out",
+      "output_sha256": "9a633193f4f89e17af9da22dff18a9d82bb4b5eccd18696d8e021738575f62b2",
+      "outcome": "passed, 24 populations and 73728 states, process elapsed 65.990261864 s"
+    }
+  ],
+  "cost": {
+    "kind": "scheduler_allocation_wall_upper_bound",
+    "allocated_wall_seconds": 464,
+    "cpu_allocated_seconds": 928,
+    "gpu_allocated_seconds": 0,
+    "compute_busy_time_measured": false
+  },
+  "full_test_skips": [
+    {
+      "test": "test_prepared_pairs_match_blendemu_catalogue_conversion",
+      "reason": "BlendEMU not on PYTHONPATH; skipping the cross-check against its converter"
+    },
+    {
+      "test": "test_disabled_default_replays_frozen_original_bitwise",
+      "reason": "set frozen pre-extension target path for independent bitwise replay"
+    },
+    {
+      "test": "test_real_legacy_support_proposals_follow_old_acceptance_unchanged[exchange-False]",
+      "reason": "set untouched source_v7 for real frozen-code instrumentation checks"
+    },
+    {
+      "test": "test_real_legacy_support_proposals_follow_old_acceptance_unchanged[exchange-True]",
+      "reason": "set untouched source_v7 for real frozen-code instrumentation checks"
+    },
+    {
+      "test": "test_real_legacy_support_proposals_follow_old_acceptance_unchanged[exchange_relocate-False]",
+      "reason": "set untouched source_v7 for real frozen-code instrumentation checks"
+    },
+    {
+      "test": "test_real_legacy_support_proposals_follow_old_acceptance_unchanged[exchange_relocate-True]",
+      "reason": "set untouched source_v7 for real frozen-code instrumentation checks"
+    },
+    {
+      "test": "test_real_frozen_full_block_sequence_is_bitwise_with_instrumentation",
+      "reason": "set untouched source_v7 for real frozen-code instrumentation checks"
+    },
+    {
+      "test": "test_frozen_v8_informed_guard_counts_proposal_but_not_old_acceptance[exchange]",
+      "reason": "set untouched source_v7 for real frozen-code instrumentation checks"
+    },
+    {
+      "test": "test_frozen_v8_informed_guard_counts_proposal_but_not_old_acceptance[exchange_relocate]",
+      "reason": "set untouched source_v7 for real frozen-code instrumentation checks"
+    }
+  ],
+  "static_check": {
+    "command": "ruff check scripts/audit_corrected_prior_sensitivity.py sbsi/prior_sensitivity.py --select F821,F823",
+    "version": "0.15.20",
+    "result": "passed"
+  },
+  "maxima": {
+    "raw_float32_sampled": {
+      "raw_scores": {
+        "max_abs_shift_over_analytic_mcse": 0.0036105684574491456,
+        "arm": "large",
+        "observation": 58165,
+        "column": "raw_g2"
+      },
+      "controlled_scores": {
+        "max_abs_shift_over_analytic_mcse": 0.005965262298429728,
+        "arm": "large",
+        "observation": 58165,
+        "column": "corrected_g2"
+      }
+    },
+    "precision_reweighted_float64": {
+      "raw_scores": {
+        "max_abs_shift_over_analytic_mcse": 0.0036096006470827855,
+        "arm": "large",
+        "observation": 58165,
+        "column": "raw_g2"
+      },
+      "controlled_scores": {
+        "max_abs_shift_over_analytic_mcse": 0.005964517637699519,
+        "arm": "large",
+        "observation": 58165,
+        "column": "corrected_g2"
+      }
+    }
+  },
+  "zero_numerical_states": 0,
+  "q_only_type_counts": [
+    0,
+    0
+  ],
+  "p_only_type_counts": [
+    0,
+    0
+  ],
+  "log_ratio_range": [
+    -0.0644180058241055,
+    0.03062586055789751
+  ],
+  "baseline_max_abs_error": 3.552713678800501e-15,
+  "replay_max_abs_error": {
+    "coordinate_max_error": 7.94031507211912e-13,
+    "phase_max_error": 0.0,
+    "prior_max_error": 0.0,
+    "helper_shared_max_error": 1.6981971384666394e-12
+  },
+  "limitations": [
+    "Sensitivity is conditional on represented analytic-support states; numerical-only coordinate support and missing modes are not bounded.",
+    "Full numerical type intensities include q-only type mass at represented x; saved placeholder target type is never used for the ratio.",
+    "Intensity-mass ratios are not normalized model evidence ratios; omitted global prior normalization cancels from posterior means.",
+    "Paired delta-method MCSE uses eight whole original populations and both ratio denominators, conditional on frozen pilot coefficients.",
+    "Numerical continuous density omits clamp atoms and failed inverse-table draws; it is not literal finite-RNG exactness.",
+    "F64 phase identity also holds under phase-independent numerical-prior tilting on analytic support; sampled F32 correction remains qualified.",
+    "No calibration offset, acceptance gate, heldout estimate or current sampler target is changed."
+  ]
+}
