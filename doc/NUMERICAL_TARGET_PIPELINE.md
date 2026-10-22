@@ -60,3 +60,21 @@ phase-fit declaration and a small real-model development experiment remain
 required. The old analytic held-out runner/fitter retains its frozen contract;
 it is not reused by relabeling its declaration. No GPU experiment is launched
 by this change, and no production default changes.
+
+## Combined implementation and installed-prior check
+
+Core commitd65bf00 is integrated as43438c8 after driver commitbf89b0d.
+The core's165 focused tests pass, including47 new forward-law/support and
+complete mutation probability-balance tests. Combined full-suite validation
+remains pending.
+
+`check_numerical_target_native.py` declares4096 fresh parent draws at seed
+2026104200 from the installed native generator. It checks numerical-coordinate
+routing, the full type sum/conditional probabilities and native log-density
+roundtrip against the existing numerical density helper. It verifies every
+external-input hash from the frozen prior/model environment before and after,
+retains all draws and does not replace failed or off-support draws. The
+2e-8 absolute log-density tolerance applies only to coordinate roundtrip;
+decoded density/type-sum comparisons are exact array comparisons. These are
+installed-environment consistency checks, supplementing the independent toy
+forward-density tests; they do not constitute posterior validation.

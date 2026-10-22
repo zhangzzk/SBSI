@@ -1,5 +1,16 @@
 # Work log
 
+## 2026-10-22 — Integrate numerical target core and prepare installed-prior validation
+
+Integrated cored65bf00 as43438c8 on the explicit numerical-driver branch.
+The analytic default remains intact; the optional numerical law now reaches
+target evaluation, exchanges, proposal compatibility and both diagnostic paths.
+Added a fixed fresh4096-parent-draw CPU check at seed2026104200, using the
+installed prior and verifying its existing external input manifest before/after.
+It checks generated support, coordinate roundtrip and exact decoded type-sum
+routing; no posterior or performance claim. Full scheduled suite and this
+installed check are next. Frozen scientific and efficiency runs remain untouched.
+
 ## 2026-10-22 — Add an optional continuous numerical target law and consistent exchanges
 
 Arbor n26 adds `GalSBITargetCoordinates(..., target_prior='analytic'|'numerical')`
