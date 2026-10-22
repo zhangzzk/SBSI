@@ -253,6 +253,8 @@ def audit(declaration_path, output):
     if output.exists():
         raise FileExistsError('original replay report cannot be overwritten')
     d, manifest, hashes, phases = verify_replay(declaration_path)
+    if pool.absolute(str(output)) != pool.absolute(d['report']):
+        raise ValueError('audit report path must match the replay declaration')
     root = Path(manifest['output_root'])
     receipt = pool.load(root / 'receipt.json')
     if (receipt['status'] != 'completed_execution' or receipt['manifest_sha256'] != d['manifest_sha256'] or
@@ -305,21 +307,69 @@ def audit(declaration_path, output):
     pool.save(output, dict(status='pending_audit_process_cost', all_eight_original_saved_outputs_equal=True,
         comparisons=comparisons, maximum_active_tasks=maximum, pool_process_cost=cost,
         preparation_seconds=d['preparation_seconds'], audit_internal_seconds=time.monotonic() - started,
-        proof_sha256=proof, scientific_accuracy_accepted=False, limitations=d['limitations']))
+        proof_sha256=proof, replay_declaration=dict(path=str(Path(declaration_path).resolve()),
+            sha256=proof[str(Path(declaration_path).resolve())]),
+        scientific_accuracy_accepted=False, limitations=d['limitations']))
+
+
+def finalization_proof(result, output, cost_path):
+    """Recheck the small proof chain, without repeating source/array replay."""
+    output, cost_path = pool.absolute(str(output)), pool.absolute(str(cost_path))
+    item = result.get('replay_declaration')
+    pool.fields(item, 'path sha256', 'audited replay declaration')
+    declaration_path = pool.absolute(item['path'])
+    pool.checksum(item['sha256'])
+    proof = result.get('proof_sha256')
+    if not isinstance(proof, dict) or proof.get(str(declaration_path)) != item['sha256']:
+        raise ValueError('pinned audited replay declaration required')
+    if pool.digest(declaration_path) != item['sha256']:
+        raise ValueError('audited replay declaration changed')
+    d = pool.load(declaration_path)
+    if d.get('schema') != 'sbsi-sampler-task-pool-replay-v1':
+        raise ValueError('unknown audited replay declaration')
+    if pool.absolute(d['report']) != output or pool.absolute(d['audit_process_cost']) != cost_path:
+        raise ValueError('report and audit-cost paths must match the audited declaration')
+    manifest_path = pool.absolute(d['manifest'])
+    if pool.digest(manifest_path) != pool.checksum(d['manifest_sha256']):
+        raise ValueError('audited task manifest changed')
+    manifest = pool.load(manifest_path)
+    receipt_path = pool.absolute(manifest['output_root']) / 'receipt.json'
+    pool_cost_path = pool.absolute(d['pool_process_cost'])
+    required = {str(declaration_path), str(receipt_path), str(pool_cost_path)}
+    if set(proof) != required:
+        raise ValueError('exact declaration, pool receipt and pool cost proof required')
+    for path, checksum in proof.items():
+        if pool.digest(pool.absolute(path)) != pool.checksum(checksum):
+            raise ValueError('audited proof changed: ' + path)
+    receipt = pool.load(receipt_path)
+    if (receipt.get('status') != 'completed_execution' or receipt.get('hashes_unchanged') is not True or
+            receipt.get('manifest_sha256') != d['manifest_sha256']):
+        raise ValueError('original completed pool receipt required')
+    pool_cost = successful_cost(pool_cost_path, receipt['internal_cost']['wall_seconds'])
+    if pool_cost != result['pool_process_cost']:
+        raise ValueError('reported pool cost differs from its pinned original receipt')
+    pool._cpu.nonnegative(d['preparation_seconds'], 'preparation seconds')
+    if result['preparation_seconds'] != d['preparation_seconds']:
+        raise ValueError('preparation cost differs from the audited declaration')
+    return successful_cost(cost_path, result['audit_internal_seconds'])
 
 
 def finalize(output, cost_path):
+    started = time.monotonic()
     result = pool.load(output)
     expected = [(f'{phase}_{i}', seed) for phase, definition in PHASES.items() for i, seed in enumerate(definition['seeds'])]
     if (result['status'] != 'pending_audit_process_cost' or result['all_eight_original_saved_outputs_equal'] is not True or
             [(row['id'], row['seed']) for row in result['comparisons']] != expected or
             any(row['all_scientific_json_equal'] is not True or row['complete_64_stages'] is not True for row in result['comparisons'])):
         raise ValueError('original complete eight-task pending replay report required')
-    cost = successful_cost(cost_path, result['audit_internal_seconds'])
-    result.update(status='completed', audit_process_cost=cost, audit_process_cost_sha256=pool.digest(cost_path),
-        complete_new_work_seconds=result['preparation_seconds'] + result['pool_process_cost']['wall_seconds'] + cost['wall_seconds'],
+    cost = finalization_proof(result, output, cost_path)
+    audit_cost_sha256 = pool.digest(cost_path)
+    validation_seconds = time.monotonic() - started
+    result.update(status='completed', audit_process_cost=cost, audit_process_cost_sha256=audit_cost_sha256,
+        finalization_validation_seconds=validation_seconds,
+        complete_new_work_seconds=result['preparation_seconds'] + result['pool_process_cost']['wall_seconds'] + cost['wall_seconds'] + validation_seconds,
         generic_pool_replay_passed=True,
-        cost_scope='Measured source/evidence preparation plus complete pool and audit Python processes; launcher metadata, queueing and final JSON-only finalization excluded.')
+        cost_scope='Measured source/evidence preparation, complete pool and audit Python processes, and measured finalization proof validation; launcher metadata, queueing, finalizer interpreter startup and final report serialization excluded.')
     pool.save(output, result)
 
 

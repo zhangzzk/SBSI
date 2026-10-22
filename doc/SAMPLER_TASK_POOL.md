@@ -243,7 +243,7 @@ In a CPU scheduler allocation, using this candidate snapshot:
 PYTHONDONTWRITEBYTECODE=1 /project/ls-gruen/users/zekang.zhang/envs/py31/bin/python \
   scripts/benchmark_sampler_task_pool_replay.py prepare \
   --root /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021 \
-  --destination /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/sampler_task_pool_replay_prepared_v1_20261022
+  --destination /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/sampler_task_pool_replay_prepared_v2_20261022
 ```
 
 Preparation saves `tasks.json`, `replay.json`, six pinned harness files, a complete
@@ -255,8 +255,8 @@ After full scheduled CPU validation, the parent may execute in the specified
 one-V100/eight-physical-core allocation:
 
 ```bash
-bash /absolute/sampler_task_pool_replay_prepared_v1_20261022/run_sampler_task_pool_replay.sh \
-  /absolute/sampler_task_pool_replay_prepared_v1_20261022
+bash /absolute/sampler_task_pool_replay_prepared_v2_20261022/run_sampler_task_pool_replay.sh \
+  /absolute/sampler_task_pool_replay_prepared_v2_20261022
 ```
 
 The fresh outputs under the study root are fixed as:
@@ -275,9 +275,20 @@ It also checks all eight worker records, exact commands, four simultaneous
 workers without CPU overlap, unchanged outputs/inputs and complete outer costs.
 A mismatch remains a failed replay; it is never converted to a tolerance result.
 
-The reported new work includes measured preparation plus complete pool and audit
-processes. Preparation's interpreter startup/final freeze bookkeeping, launcher
-metadata, queueing and final JSON-only finalization remain excluded explicitly.
+The pending audit report pins its exact replay declaration, pool receipt and pool
+cost receipt. Finalization rechecks all three hashes, the declaration's task-manifest
+hash, the exact declared report/audit-cost paths and the original pool/preparation
+cost content before marking replay passed. A stale receipt or identically copied
+cost supplied at a different path is rejected. Finalization does not repeat the
+source or array replay.
+
+The reported new work includes measured preparation, complete pool and audit
+processes, and measured finalization proof-validation time. Preparation's
+interpreter startup/final freeze bookkeeping, launcher metadata, queueing,
+finalizer interpreter startup and final report serialization remain excluded
+explicitly. The first prepared v1 snapshot is preserved; use the fresh v2
+preparation after this repair. The fixed actual replay output names stay v1,
+because no task-pool GPU execution or output directory existed at this repair.
 The comparison uses historical serial saved outputs; it does **not** claim a new
 paired speedup from timings collected in different allocations. All eight saved
 outputs must agree before `generic_pool_replay_passed` can become true. This

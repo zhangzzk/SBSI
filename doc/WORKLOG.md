@@ -1,5 +1,24 @@
 # Work log
 
+## 2026-10-22 — Bind replay finalization to audited evidence and declared paths
+
+Review found that the pending task-pool replay report recorded proof hashes but
+its finalizer did not recheck them. Added an explicit audited-declaration identity
+and require the exact three mandatory proof paths/hashes (declaration, pool
+receipt and pool cost), the declaration's task-manifest hash, exact declared
+report/audit-cost paths, and unchanged pool/preparation cost content before
+promotion. Audit also rejects an undeclared report destination before replay.
+Small finalization proof-validation time is now measured and charged separately;
+source/array comparisons are not repeated.
+
+Preserved scheduled validation/preparation v1 (17449209: 1,124 passed, nine skips)
+and every frozen artifact. No task-pool GPU run/output existed. Parent will freeze
+and validate fresh prepared v2; existing unused actual-run v1 paths remain fixed.
+Added tests for stale proof files, missing/extra proof keys, changed manifest,
+wrong hash/declaration identity, swapped output/cost paths and successful bounded
+finalization. Focused replay tests passed: **27 tests in 0.18 seconds**; Python
+syntax and diff checks passed. No jobs submitted or runtime sampler changes. See [replay proof and timing boundary](SAMPLER_TASK_POOL.md#fixed-eight-task-real-replay-preparation).
+
 ## 2026-10-22 — Close task-pool allocation and cancellation review gaps
 
 Independent review found four adoption blockers in core 654687e: coordinator
