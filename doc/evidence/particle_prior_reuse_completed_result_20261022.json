@@ -1,0 +1,97 @@
+{
+  "validation": {
+    "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_completed_audit_source_v1_20261022",
+    "commit": "6fdcf01e75d0b18b25498d4d925ab1e5a6204999",
+    "manifest_sha256": "67804998aa7617c9cc42d9a05fa4c54d036028c35d0ef7f00a384075d4c72f39",
+    "source_file_count": 475,
+    "archive_sha256": "f003de0ee8acb804cb442113a479dc4180ba322a26ae8641bcb7a6f93224f753",
+    "job": "17449393",
+    "source_before_after_pass": true,
+    "pytest_exit_code": 0,
+    "audit_exit_code": 0,
+    "elapsed_seconds": 101.55840578099014,
+    "requested_physical_cpus": 4,
+    "gpus": 0,
+    "affinity": [
+      69,
+      5,
+      6,
+      8,
+      7,
+      70,
+      71,
+      72
+    ]
+  },
+  "junit": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "9",
+    "tests": "1061",
+    "time": "76.221",
+    "timestamp": "2026-10-22T21:40:54.678006+02:00",
+    "hostname": "th-cl-rome09n2.hpc.physik.uni-muenchen.de"
+  },
+  "audit": {
+    "status": "audit_passed",
+    "declaration_sha256": "ce259bd7d64a32086d01ce30b59ffe278599382bb87e5452fe519ad936571093",
+    "original_report_sha256": "6e4f0fc027ab554db351ef96b3f19fce085a74b8faae4c1c4811fa374360ed8b",
+    "all_four_original_pairs_replayed_again": true,
+    "all_reported_costs_recomputed": true,
+    "summary": {
+      "ratio_range": [
+        1.0702756853514659,
+        1.0885151062877756
+      ],
+      "ratio_mean": 1.0776430467908398,
+      "ratio_mean_standard_error": 0.004095189668105576,
+      "new_work_seconds_by_arm": {
+        "baseline": 871.9650178199715,
+        "optimized": 810.3863210000179
+      },
+      "total_baseline_to_optimized_ratio": 1.075986841367171
+    },
+    "report_process_cost": {
+      "wall_seconds": 5.27,
+      "user_seconds": 2.97,
+      "system_seconds": 0.88,
+      "max_rss_kib": 66876,
+      "exit_code": 0
+    },
+    "successful_experiment_wall_seconds": 1682.3513388199895,
+    "preserved_failed_startup_cost": {
+      "wall_seconds": 248.06,
+      "user_seconds": 224.64,
+      "system_seconds": 8.9,
+      "max_rss_kib": 1880364,
+      "exit_code": 1
+    },
+    "experiment_plus_preserved_failed_startup_wall_seconds": 1930.4113388199894,
+    "source_preparation_seconds": 29.83133881998947,
+    "checker_sha256": "4e8b07f78a22bb23533d008d95670c2f7c87ad68fe960c01cfdb88673a3331d2",
+    "internal_audit_seconds": 13.163961595972069,
+    "scientific_accuracy_accepted": false,
+    "automatic_adoption": false,
+    "limitations": [
+      "Audit pass verifies recorded replay and descriptive timing arithmetic; no speed threshold was declared.",
+      "Exactly the frozen implementation hashes and validated derived-proposal provenance exception are normalized; proposal values and pilot metadata stay exact.",
+      "Four development pairs at the declared analytic target law; no numerical mock-target-law or posterior-convergence acceptance.",
+      "Recorded scientific JSON and NPZ dtype/shape/bytes are compared; unrecorded mutation states and terminal RNG are unavailable.",
+      "Successful costs include pair/report processes and declared preparation (including startup preflight), conditional on existing fits and prior native replay.",
+      "Previous failed startup is retained separately and is not added to paired speedups. Audit process cost is separate; queueing, launcher setup and JSON-only finalization remain excluded."
+    ]
+  },
+  "audit_path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_completed_audit_validation_v1_20261022/audit.json",
+  "audit_sha256": "47d4c6c066e19714b65a83806e4f2a1741cdbeb49de03f31fa36a33fdfaa9982",
+  "auditor_evidence_entries": 906,
+  "parent_checked_source_entries": 475,
+  "parent_checked_report_cost_entries": 7,
+  "pair_ratios": [
+    1.0792541628274699,
+    1.072527232696648,
+    1.0702756853514659,
+    1.0885151062877756
+  ],
+  "scheduler": "17448787|COMPLETED|0:0|1654|4\n17448787.batch|COMPLETED|0:0|1654|4\n17448787.extern|COMPLETED|0:0|1654|4\n17448787.0|COMPLETED|0:0|1653|4\n17449393|COMPLETED|0:0|114|8\n17449393.batch|COMPLETED|0:0|114|8\n17449393.extern|COMPLETED|0:0|114|8\n"
+}

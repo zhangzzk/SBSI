@@ -1,5 +1,14 @@
 # Sampler computation cost — October 22, 2026
 
+## Deterministic prior reuse — October 22
+
+Four complete counterbalanced pairs and independent exact-output audit support
+**7.06% less runtime** from reusing unchanged prior evaluations and decoded
+photometry. The inclusive ratio is1.07599 (871.965/810.386 seconds); each pair
+favors the optimization. See [paired evidence](PARTICLE_PRIOR_REUSE_CANDIDATE.md#completed-paired-replay-and-independent-audit).
+This is a one-GPU/two-core comparison. Its combination with CPU sharing below
+has not been benchmarked, so their product is not a measured throughput.
+
 ## Confirmed local CPU sharing — October 22
 
 One V100 with four independent workers, each pinned to two physical CPU cores,

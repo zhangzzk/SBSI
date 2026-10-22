@@ -1,5 +1,64 @@
 # Work log
 
+## 2026-10-22 — Preserve the queued pool replay and schedule one bounded follow-up
+
+PoolGPU17449412 remains pending Priority. The required th-cl-nv02 node is only
+in inter and all four GPUs are allocated; the scheduler estimates a two-day wait,
+which is not a promised start time. No scientific settings, resource binding or
+validated source are changed to bypass that queue. A single status/result-presence
+check17449573 is scheduled about two hours later; it sends no chat message.
+[Queue evidence](evidence/sampler_task_pool_queue_20261022.json) and
+[monitor declaration](evidence/efficiency_followup_v2_20261022.json) preserve this
+operational state. No repeated long-run polling is needed.
+
+Updated Arbor n25 with the completed independently audited7.06%runtime reduction,
+n27 with full validation/queued real replay, and the versioned tree. Goal remains
+active: no accepted posterior sampler, combined throughput, four-GPU scaling or
+500-core execution claim. Next useful work is numerical-pilot/control preparation
+and, after exact pool replay, a combined runtime benchmark; the old held-out
+rejection and all failed validation artifacts remain intact.
+
+## 2026-10-22 — Complete and independently audit prior-reuse speed evidence
+
+GPU17448787 completes all four original v2 pairs with exact saved scientific JSON,
+64-stage and array replay. Counterbalanced ratios1.0793/1.0725/1.0703/1.0885 all
+favor reuse. Inclusive baseline871.965s versus optimized810.386s gives7.06% lower
+runtime, conditional on existing fits/native validation. Failedv1 cost248.06s is
+preserved separately. No undeclared performance threshold or automatic adoption.
+
+CPU auditor17449393 passes1,052 tests/nine skips, then independently replays all
+four pairs and recomputes costs, checking906 evidence pins and end-of-pair GPU
+identity.475source hashes matchbefore/after; parent verifies source/JUnit and
+report/cost receipts. Added [completed result](PARTICLE_PRIOR_REUSE_CANDIDATE.md#completed-paired-replay-and-independent-audit)
+and [versioned evidence](evidence/particle_prior_reuse_completed_result_20261022.json).
+The3.25fold concurrency gain is separate; combined throughput is unmeasured.
+Scientific acceptance remains failed and the general pool's real replay is queued.
+
+## 2026-10-22 — Validate the reusable CPU pool and launch mandatory real replay
+
+Isolated pool commitac16d107 preserves original sampler/defaults and both frozen
+benchmark helpers. Independent review drives fixes for exact physical affinity,
+deferred cancellation across threads/child launch/reap, child signal masks,
+artifact pins, duplicate source aliases and final report proof/path validation.
+Focused tests and fresh full CPU17449328 pass:1,138 tests/nine skips,484 source
+hashes before/after, original eight-control preparation. Parent checks812 manifest
+entries and JUnit. The old passed v1 preparation remains intact.
+
+GPU17449412 is queued on oneV100/eight physical cores after the CPU gate. Prior
+benchmark17448787 completed before submission, preserving its timing isolation.
+All eight old development/confirmation tasks must replay exactly; no new seed,
+scientific setting, likelihood grouping or runtime optimization is introduced.
+Added [pool contract and launch](SAMPLER_TASK_POOL.md#candidate-validation-and-real-replay-launch)
+and [preparation evidence](evidence/sampler_task_pool_v2_preparation_20261022.json).
+Pool receipts currently rewrite the full ledger; use bounded manifests. GPU
+replay/adoption remains pending and scientific convergence remains unaccepted.
+
+Independent prior-reuse auditor6fdcf01 is frozen separately; CPU17449393 starts
+only after completed benchmark17448787. It checks the original four pairs and
+recomputes descriptive timing/cost without calling the old report/finalizer.
+[Audit scope](PRIOR_REUSE_COMPLETED_AUDIT.md#authority-and-completion-barrier)
+keeps correctness, speed evidence and scientific acceptance distinct.
+
 ## 2026-10-22 — Close inherited prior-configuration identity and pass fresh validation
 
 Commit1d6171a on the isolated numerical-target driver branch adds the specific

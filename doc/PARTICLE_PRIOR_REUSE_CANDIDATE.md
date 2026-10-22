@@ -1,5 +1,30 @@
 # Particle prior reuse candidate
 
+## Completed paired replay and independent audit
+
+GPU17448787 completes all four original v2 pairs. Every saved scientific JSON
+value, all64 stages and particle/scene array bytes replay exactly. Baseline to
+optimized time ratios are **1.0793,1.0725,1.0703,1.0885**: each counterbalanced
+pair favors the optimization. Inclusive new-work times are **871.965 versus
+810.386 seconds**, ratio1.07599, or **7.06% less runtime**. These are conditional
+on existing scientific fits and the earlier native replay; the failed startup's
+248.06 process seconds remain a separate retained experiment cost.
+
+Independent CPU audit17449393 passes **1,052 tests,nine skips**, then replays all
+four pairs and independently recomputes the timing/cost arithmetic. It checks906
+source/input/output pins and the end-of-pair GPU identity. All475 audit-source
+hashes match before/after; parent checks them, JUnit and the report/cost receipts.
+The [completed evidence](evidence/particle_prior_reuse_completed_result_20261022.json)
+records exact scope and costs; the [audit contract](PRIOR_REUSE_COMPLETED_AUDIT.md#independent-checks-and-interpretation)
+defines what passed.
+
+This supports a modest complete-run efficiency gain for the existing analytic
+recipe on one GPU/two physical cores. No timing acceptance threshold was declared,
+and no automatic adoption follows. Combined performance with the four-worker
+pool is unmeasured; do not multiply their speedups into a measured capacity.
+Posterior convergence, numerical-target production and catalogue calibration
+remain unaccepted. Earlier preparation/failure entries below are historical.
+
 ## Original GPU startup failure and repair
 
 Job17446115 fails1:0 after249allocated seconds. Its baseline population

@@ -344,7 +344,7 @@
       "depth": 1,
       "status": "pending",
       "hypothesis": "Reduce deterministic implementation overhead while preserving all proposal laws, RNG streams, target arithmetic and full retained payloads, to lower matched-accuracy sampler cost.",
-      "insight": "[from n22] Optimize measured bottlenecks while preserving full proposal/decision/RNG trajectories; count complete inference and diagnostic cost before promoting a local speedup.\n[from n22] Local proposal speed gains need not produce dependable complete-run gains. Four exact whole-run saved-output replays support numerical equivalence, but counterbalanced timing reversals and a1.24percent aggregate reduction leave runtime benefit uncertain. Preserve the candidate without promoting it; correctness and efficiency require separate evidence.\n[from n24] Host-side scene/prior work materially limits this sampler: four independent two-core workers per GPU preserve all saved results and improve development setting throughput about3.5fold. Confirm on untouched seeds and measure shared preparation/diagnostic costs before catalogue scaling; GPU count alone is not a throughput model.\n[from n24] Predeclared fresh-seed confirmation reproduces every saved output and confirms3.27-3.34fold complete-setting gain from four independent two-core workers sharing oneV100 (3.25 including shared preparation/report). This establishes a local execution layout, not scientific convergence or distributed/multi-GPU capacity.",
+      "insight": "[from n22] Optimize measured bottlenecks while preserving full proposal/decision/RNG trajectories; count complete inference and diagnostic cost before promoting a local speedup.\n[from n22] Local proposal speed gains need not produce dependable complete-run gains. Four exact whole-run saved-output replays support numerical equivalence, but counterbalanced timing reversals and a1.24percent aggregate reduction leave runtime benefit uncertain. Preserve the candidate without promoting it; correctness and efficiency require separate evidence.\n[from n24] Host-side scene/prior work materially limits this sampler: four independent two-core workers per GPU preserve all saved results and improve development setting throughput about3.5fold. Confirm on untouched seeds and measure shared preparation/diagnostic costs before catalogue scaling; GPU count alone is not a throughput model.\n[from n24] Predeclared fresh-seed confirmation reproduces every saved output and confirms3.27-3.34fold complete-setting gain from four independent two-core workers sharing oneV100 (3.25 including shared preparation/report). This establishes a local execution layout, not scientific convergence or distributed/multi-GPU capacity.\n[from n25] Prior reuse reduces complete fixed-recipe time7.06percent with exact saved-output replay in allfourcounterbalancedpairs; CPUsharing separatelygives3.25foldthroughput. Treat these as different component experiments; measure their combination before claiming cataloguecapacity or scientificacceptance.",
       "metadata": {
         "dev_score": null,
         "test_score": null,
@@ -352,7 +352,7 @@
         "branch_ref": null
       },
       "created_at": 1792623586,
-      "updated_at": 1792696501
+      "updated_at": 1792698503
     },
     "n22": {
       "id": "n22",
@@ -406,17 +406,17 @@
       "id": "n25",
       "parent": "n21",
       "depth": 2,
-      "status": "running",
+      "status": "executed",
       "hypothesis": "Reusing owned unchanged target evaluations and freshly decoded type-independent photometry removes redundant deterministic prior work while preserving sampler target values, proposal laws, saved outputs and RNG exactly.",
-      "insight": "Avoid repeated native prior work when only neighbours change, and reuse freshly decoded type-independent photometry only through an explicit ownership boundary. Public arbitrary-native-data intensity must still recompute derived values.",
+      "insight": "Removing repeated owned prior work preserves all saved numerical outputs and gives a modest consistent complete-run gain across counterbalanced pairs. Its gain cannot be multiplied by independently measured CPU-sharing speedup without a combined benchmark.",
       "metadata": {
-        "dev_score": null,
+        "dev_score": 1.075986841367171,
         "test_score": null,
-        "result": "CPU17445720 native replay byte-exact on73728states+15probes;1092tests pass9skip. Complete candidate4385cb8 with GPU harness/preparation passes CPU17446023:1123tests9skip,483sourcehashes beforeafter,320filesperarm preflight; parent1129manifest entries independently verified. GPU17446115 queued after n24benchmark17445452; four fresh counterbalanced seedpairs3900-3903,oneV100/twophysicalcores. FullGPU replay/timing pending; no adoption. Original GPU17446115 failed1:0 after249allocatedseconds. Baseline completed; optimized rejected frozen initial-proposal native_target_source_sha256 before sampling. Public validation correctly rejectedchangedimplementationprovenance. Originalv1 preserved, no speedup claimed. Separatev2 explicit derivedproposal provenance and actualCPU productionstartup preflight being implemented; same scientificfit,seeds,order. Repaired v2 commit519b920: CPU17448718 passes1139tests9skip,485sourcehashes,8actual startups plusnegativecontrol; parent1135manifest189externalpins. GPU17448787 queued for all4originalpairs; declarationce259bd7. No speedup or adoption.",
+        "result": "V2GPU17448787 completes all4originalpairs with exact savedscience/64stage/arrayreplay. Ratios1.079254/1.072527/1.070276/1.088515 allfavorreuse. Inclusive871.965018s baseline vs810.386321s optimized,ratio1.07598684 (7.06percentlessruntime), conditionalonexistingfits/nativevalidation. V1failedstartup248.06s remainsseparate. IndependentCPU17449393/6fdcf01 passes1052tests9skip then replaysall4pairs and recomputescosts,906evidencepins;475sourcehashesbeforeafter; parent source/JUnit/report/costverified. No predeclared speedthreshold orautomaticadoption; combined4workerperformance andscientificacceptance remainunmeasured. Receipt doc/evidence/particle_prior_reuse_completed_result_20261022.json.",
         "branch_ref": "codex/smc-prior-reuse-20261022@519b9206eeed7eaf90bf440abf93798d8cecff76"
       },
       "created_at": 1792686304,
-      "updated_at": 1792696332
+      "updated_at": 1792698503
     },
     "n26": {
       "id": "n26",
@@ -444,11 +444,11 @@
       "metadata": {
         "dev_score": null,
         "test_score": null,
-        "result": "Reusable4worker exactmanifestpool implemented; originalruntime/helpersunchanged. Independentreviewfourblockers repaired:exact8physicalaffinity,deferredsignalcleanup/childunmask,nullartifactpins,duplicatealiases.93focusedtests and fullCPU17449209 pass1124tests9skip with8physicalcores;484sourcehashesbeforeafter and8originalcontrolpreparation pass. Reviewer finds finalizerneedsproof/pathrevalidation; narrowhardeningpending beforefreshv2fullvalidation/GPUlaunch. No GPU poolrun or adoption yet.",
-        "branch_ref": "codex/sampler-task-pool-20261022@26d0b8b7db067ebf11a1e72ba21d09ffec474cb6"
+        "result": "Reusable exactmanifest4worker/eightphysical-core pool plusall8originaltaskreplayimplemented; originalsampler/helpersunchanged. Independentreview closesallocation,signal/threadcleanup/childmask,artifactpins,duplicatealias andfinalizerproof/pathgaps. V1CPU17449209 passed1124tests9skip; preserved. V2CPU17449328 passes1138tests9skip,484sourcehashesbeforeafter andfull8controlpreparation; parent812manifestentries/JUnit/seedschecked,1017inputpins. Preparedv2replaySHAe37b087e taskmanifestimmutable. GPU17449412 queuedPriority ononeV100/eightphysicalcores afterpriorbenchmarkterminated, with estimatedstart2026-10-24T21:40:58 local (estimateonly). Requirednodeinteronly, allfourGPUsallocated. Boundedone-shotmetadata17449573 scheduledabout2h; nochatnotification. No GPUreplayorpooladoptionyet. Source/preparationreceipt doc/evidence/sampler_task_pool_v2_preparation_20261022.json.",
+        "branch_ref": "codex/sampler-task-pool-20261022@ac16d107b41d2a397d42f829d484886329b55242"
       },
       "created_at": 1792695900,
-      "updated_at": 1792697601
+      "updated_at": 1792698503
     }
   }
 }

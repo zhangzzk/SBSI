@@ -1,0 +1,23 @@
+{
+  "created_utc": "2026-10-22T19:47:17.980704+00:00",
+  "job": "17449573",
+  "command": [
+    "sbatch",
+    "--parsable",
+    "--begin=now+2hours",
+    "--partition=cluster",
+    "--cpus-per-task=1",
+    "--mem=512M",
+    "--time=00:03:00",
+    "--job-name=efficiency-status-once",
+    "--no-requeue",
+    "--output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/efficiency_followup_v2_20261022/status-%j.out",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/efficiency_followup_v2_20261022/run.sh"
+  ],
+  "pins": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/efficiency_followup_v2_20261022/check.py": "c183a891eca35936f26c7b31343c3024c0ba0f55ad0a7ffd5cd1c3e13c5525cd",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/efficiency_followup_v2_20261022/declaration.json": "3d3cfd4db664bb918a6b464fc63b09a9fe578da1b47754f48e9c864104c2b940"
+  },
+  "launcher_sha256": "ec206067ca3492f644ae337950d9a9396a0c77b73e58b98c3466f99054a2217d",
+  "behavior": "One scheduler/result-presence check only; no scientific outcome reads, no retries, no chat notification."
+}
