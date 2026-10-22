@@ -1,5 +1,37 @@
 # Work log
 
+## 2026-10-22 — Audit corrected-v10 target-prior sensitivity on all development populations
+
+Added `sbsi/prior_sensitivity.py`, a read-only audit executable and focused
+math/provenance tests. The diagnostic sums full numerical native type
+intensities, preserves original particle/population denominators, and uses
+paired whole-population influences with both ratio denominators. It replays
+the authoritative raw and frozen phase summaries before reporting F32 and
+F64 numerical-minus-analytic score shifts; no sampler, likelihood or gate
+changes are made. See [design and results](CORRECTED_PRIOR_SENSITIVITY.md#result-and-interpretation)
+and [receipt](evidence/corrected_prior_sensitivity_20261022.json).
+
+CPU job 17437783 passes the full suite: 1018 passed, 9 optional skips in
+73.95 s; static F821/F823 checks pass. CPU audit 17437804 passes all 24
+corrected development populations / 73,728 states in 85 allocated seconds.
+Baseline replay differs by at most 3.55e−15 and saved prior replay is exact.
+Largest raw-or-controlled |score change| / original MCSE is 0.00596526
+(F32), 0.00596452 (F64). No numerical-only or analytic-only type support and
+no zero-numerical state occur in the saved particles. Numerical-only coordinate
+support and missing modes remain unbounded; this is not a global calibration
+or convergence result. All original data and frozen coefficients are preserved.
+
+Root integrated the exact tested implementation from isolated commit 6abfe6cb,
+verified hashes and AST syntax, and updated the search overview and n14 evidence.
+The hypothesis tree validates; no candidate is marked accepted.
+
+The receipt retains two snapshot-packaging test failures and one pre-evaluation
+import-scoping failure, followed by corrected complete checks. Total scheduled
+cost including failures is 464 allocation-wall seconds / 928 CPU-allocated
+seconds / zero GPU seconds. No heldout outcomes were read. The next scientific
+conclusion must come from independent sampler/heldout evidence; this result
+alone does not authorize a numerical-prior target or calibration correction.
+
 ## 2026-10-22 — Prepare corrected-development prior-sensitivity follow-up
 
 The earlier [bridge audit](PARTICLE_BRIDGE_AUDIT.md#new-evidence-on-the-numerical-target-prior-difference)

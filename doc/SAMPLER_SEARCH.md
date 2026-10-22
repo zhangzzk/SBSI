@@ -62,8 +62,8 @@ sampling, phase diagnostics, reporting and verification costs. All-inclusive
 cost must be lower; no accuracy gate is waived for speed. The
 [current launch](CORRECTED_HELDOUT_RUNNER.md#current-launch) is warmup17435348,
 paired production17435350 and CPU report17435351, with at most four V100s.
-All five preparation groups pass; the first independent production population
-is progressing with no extinction. No interim score comparison is used for
+All five preparation groups pass; the first independent candidate/reference
+pair and both phase diagnostics complete without extinction. No interim score comparison is used for
 tuning. Full scientific results remain pending.
 
 The first launch failed before any pilot because the preflight pinned changing
@@ -121,6 +121,18 @@ likelihood alone does not establish that every mock-generation/inference prior
 is the same. F32 controls remain qualified diagnostics; the zero-mean identity
 concerns the intended continuous F64 measure. Rare shared modes can evade finite
 replication. Production defaults and the catalogue shear estimate are unchanged.
+
+The corrected-development prior audit now evaluates all 73,728 saved target
+particles from all 24 populations. Replacing the analytic target prior with the
+continuous numerical prior on represented states changes every raw or controlled
+score by less than 0.006 of its original MCSE, in both F32 and F64 measures. The
+largest relative shift is the bright object's controlled g2 in the large arm:
+F64 change -0.012961 with paired MCSE 0.011399. This is small compared with its
+original score MCSE of 2.173028. The audited baselines and coordinate/prior
+densities replay; no numerical-only type or zero-density state occurs in this
+sample. These observations do not bound missing coordinate support, shared
+unvisited modes, or catalogue shear bias. The actual sampler target is unchanged.
+See [paired prior-sensitivity evidence](CORRECTED_PRIOR_SENSITIVITY.md#result-and-interpretation).
 
 ## First direction: fixed annealed particles
 
