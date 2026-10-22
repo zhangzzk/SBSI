@@ -1,5 +1,17 @@
 # Work log
 
+## 2026-10-22 — First complete held-out preparation group passes
+
+Warmup17435348_0 completes exit0 in471 allocated seconds (466.55 measured wrapper
+seconds): four pilots, gradient geometry, initial proposal, all four phase
+checks and declared coefficient fit. Before/after input checks pass. The
+[startup receipt](evidence/corrected_heldout_first_group_20261022.json) pins stage,
+warmup and log hashes. Group1 starts next; remaining groups queue on the matched
+node. Production17435350 and report17435351 retain afterok dependencies.
+No interim accuracy contrast is used for tuning. No sampler accepted; allow the
+longer graph to run and check dependent startup/results on continuation. There
+is no available thread-wakeup automation tool; the autonomous goal stays active.
+
 ## 2026-10-22 — Update sampler-search overview to completed development and live validation
 
 Replaced stale queued-v10 status in [search overview](SAMPLER_SEARCH.md#current-status)

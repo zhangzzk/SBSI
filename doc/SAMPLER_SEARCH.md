@@ -62,8 +62,8 @@ sampling, phase diagnostics, reporting and verification costs. All-inclusive
 cost must be lower; no accuracy gate is waived for speed. The
 [current launch](CORRECTED_HELDOUT_RUNNER.md#current-launch) is warmup17435348,
 paired production17435350 and CPU report17435351, with at most four V100s.
-Its first pilot completes and the next begins; no interim score comparison is
-used for tuning. Full scientific results remain pending.
+Its first complete group passes all pilots, phase checks and fitting stages;
+the next group starts. No interim score comparison is used for tuning. Full scientific results remain pending.
 
 The first launch failed before any pilot because the preflight pinned changing
 OS telemetry as immutable input. The repaired declaration records those reads

@@ -12,7 +12,10 @@ Preparation accounting includes both preflights and failed startup:153 process,
 Warmup17435348 (`0-4%4`) precedes paired production17435350 (`0-39%4`) and CPU
 report17435351. The [current launch receipt](evidence/corrected_heldout_v3_launch_20261022.json)
 pins all inputs and jobs. Original failed launch evidence remains below.
-Startup monitoring and independent scientific results are pending.
+First group17435348_0 completes all11 steps and frozen-input checks in471
+allocated seconds; four pilots and all four phase checks pass, geometry/proposal/
+coefficient fits complete. The [startup receipt](evidence/corrected_heldout_first_group_20261022.json)
+preserves evidence. Group1 starts next; independent production results are pending.
 
 ## Startup harness repair before any science
 

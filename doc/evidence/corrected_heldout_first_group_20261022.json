@@ -1,0 +1,25 @@
+{
+  "schema": "sbsi-heldout-first-group-startup-v1",
+  "job": "17435348_0",
+  "state": "COMPLETED",
+  "exit_code": "0:0",
+  "allocation_wall_seconds": 471,
+  "stage_wall_seconds": 466.54781308490783,
+  "pilot_populations": 4,
+  "all_four_phase_checks_pass": true,
+  "geometry_proposal_and_coefficient_fits_completed": true,
+  "before_after_frozen_input_checks_pass": true,
+  "files": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/warmup_0_stage.json": "cde1c3e5acba8226f3b1ae2c01e33094ea4b975b06fc4fd6d3261dbab911eed7",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/warmup_complete.json": "f029b7e74f48dc1c87371ed9176eede2f5ce844c46c80c88e8ccc189ffba383e",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-warmup-17435348_0.out": "b28a73307e02cf2f429eb10d4c31e9f2d62dcb8e7820f5bcff0bc35b2210715c"
+  },
+  "next_warmup_job": "17435348_1",
+  "next_warmup_state": "RUNNING",
+  "production_job": 17435350,
+  "report_job": 17435351,
+  "production_not_started": true,
+  "accepted_sampler": false,
+  "scope": "Startup/workflow validation only; no interim accuracy contrast or tuning.",
+  "scheduling": "Only one matched-node GPU currently available; remaining tasks queue under four-worker ceiling. No thread-wakeup automation tool available; active autonomous goal remains unfinished."
+}
