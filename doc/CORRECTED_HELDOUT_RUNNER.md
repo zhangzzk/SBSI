@@ -15,7 +15,11 @@ pins all inputs and jobs. Original failed launch evidence remains below.
 First group17435348_0 completes all11 steps and frozen-input checks in471
 allocated seconds; four pilots and all four phase checks pass, geometry/proposal/
 coefficient fits complete. The [startup receipt](evidence/corrected_heldout_first_group_20261022.json)
-preserves evidence. Group1 starts next; independent production results are pending.
+preserves evidence. All five groups now complete successfully (471/467/467/466/466
+allocated seconds), and production17435350_0 has started with no extinction
+in its completed stages. The [all-group startup receipt](evidence/corrected_heldout_all_warmups_20261022.json)
+verifies all55 step receipts and frozen fit-artifact hashes. Independent
+production comparisons and acceptance remain pending.
 
 ## Startup harness repair before any science
 

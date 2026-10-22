@@ -1,5 +1,19 @@
 # Work log
 
+## 2026-10-22 — All held-out preparation groups complete; production starts
+
+All five warmup tasks17435348_0–4 complete exit0 in471/467/467/466/466
+allocated seconds. Independently checked the declaration identity, all55
+successful step-receipt hashes and every frozen fit-artifact hash referenced
+by the five complete-group receipts. Production17435350_0 starts; its first
+population progresses without extinction. The [startup receipt](evidence/corrected_heldout_all_warmups_20261022.json)
+records timestamped scheduler/progress evidence without any interim accuracy
+comparison. Updated [runner](CORRECTED_HELDOUT_RUNNER.md#current-launch) and
+[search overview](SAMPLER_SEARCH.md#current-status). No scientific source,
+proposal, seed, effort or gate changed. Final scientific acceptance and complete
+cost comparison remain pending; existing bounded status check17436101 remains
+scheduled. Validation: metadata, hash and scheduler checks only.
+
 ## 2026-10-22 — Frozen final-report adapter replays audited development
 
 CPU17435839 completes exit0 in27 seconds, exercising the actual frozen held-out
