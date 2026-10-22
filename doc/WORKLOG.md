@@ -1,5 +1,29 @@
 # Work log
 
+## 2026-10-22 — Repair prior-reuse startup with explicit artifact provenance
+
+GPU 17446115 failed before optimized sampling: the original initial proposal
+correctly rejected the changed native coordinate-source hash. Its baseline
+completed, but no paired comparison exists. All original v1 artifacts remain
+unchanged; the failed process cost of 248.06 seconds is separately retained.
+
+Added an explicit derived proposal artifact with unchanged numerical fit and
+pilot metadata, binding original/new implementation identities and native
+replay evidence. Public proposal and geometry validators remain unchanged.
+Added CPU preflight executing the real frozen production driver for both arms
+and all four seeds, with a pre-model sentinel and an original-artifact negative
+control. v2 preparation includes that preflight in measured cost and pins its
+complete evidence. The paired harness validates raw provenance before narrowly
+canonicalizing it for scientific comparison. New GPU runs require v2 evidence;
+all four original seeds/order are preserved in a fresh output directory.
+
+Validation: focused provenance and paired-harness tests passed (47 tests in
+9.24 seconds), including real production startup
+rejection/passage without model loading. Syntax and `git diff --check` passed.
+No scheduler jobs submitted. Next: parent full CPU suite, actual frozen-input
+preparation/preflight, then all four new GPU pairs. No performance or scientific
+acceptance claim. See [v2 provenance and startup boundary](PARTICLE_PRIOR_REUSE_CANDIDATE.md#explicit-proposal-provenance-migration-and-v2-startup-preflight).
+
 ## 2026-10-22 — Combined replay harness passes full scheduled validation
 
 Frozen source 4385cb8 passes Slurm job **17446023**: **1,123 tests passed,

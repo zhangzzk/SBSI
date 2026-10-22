@@ -2,6 +2,8 @@
 import argparse
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 import time
 
 from benchmark_exchange_full_smc import digest, load, manifest, save
@@ -33,7 +35,17 @@ def prepare(root, destination):
                          if path.endswith('/' + name) and checksum != entries[name]}
         if replay_hashes != {digest(worktree / name)}:
             raise ValueError('candidate differs from the native-replay implementation: ' + name)
+    failed_root = root / 'prior_reuse_smc_runs_v1_20261022'
+    failed = dict(job='17446115', optimized_output=str(failed_root / 'pair_0/optimized'),
+        process_cost=load(failed_root / 'pair_0_process_cost.json'))
+    for key, name in [('receipt', 'pair_0/receipt.json'), ('log', 'pair_0/optimized_runtime/population_0.log'),
+                      ('cost', 'pair_0_process_cost.json')]:
+        path = failed_root / name
+        failed[key] = dict(path=str(path), sha256=digest(path))
+    from prior_reuse_proposal_provenance import validate_failed_startup
+    validate_failed_startup(failed)
     external = dict(previous['external_files'])
+    external.update({failed[key]['path']: failed[key]['sha256'] for key in ('receipt', 'log', 'cost')})
     external.update({str(previous_path): digest(previous_path),
                      str(native_path): digest(native_path)})
     for path, checksum in external.items():
@@ -56,7 +68,13 @@ def prepare(root, destination):
         (folder / 'SHA256SUMS').write_text(''.join(
             f'{checksum}  {name}\n' for name, checksum in sorted(arm_entries.items())))
         arms[arm] = dict(source=str(folder), manifest_sha256=digest(folder / 'SHA256SUMS'))
-    files = ['benchmark_prior_reuse_smc.py', 'benchmark_smc_concurrency.py',
+    from benchmark_prior_reuse_smc import HASHES
+    from prior_reuse_proposal_provenance import derived_payload
+    copied_sources = {arm: manifest(item['source']) for arm, item in arms.items()}
+    derived_path = destination / 'optimized_initial_proposal.json'
+    save(derived_path, derived_payload(previous['initial_proposal'], native_path, arms, copied_sources, HASHES))
+    external[str(derived_path)] = digest(derived_path)
+    files = ['prior_reuse_proposal_provenance.py', 'check_prior_reuse_startup.py', 'benchmark_prior_reuse_smc.py', 'benchmark_smc_concurrency.py',
              'benchmark_exchange_full_smc.py', 'prepare_prior_reuse_smc.py',
              'run_prior_reuse_smc.sh']
     harness = {}
@@ -64,21 +82,39 @@ def prepare(root, destination):
         output = destination / name
         shutil.copyfile(worktree / 'scripts' / name, output)
         harness[str(output)] = digest(output)
-    declaration = dict(schema_version=1, arms=arms,
+    declaration = dict(schema_version=2, arms=arms, previous_failed_startup=failed,
         external_files=external, harness_files=harness,
         protocol_template=previous['protocol_template'],
         reference=previous['reference'], initial_proposal=previous['initial_proposal'],
+        initial_proposals=dict(baseline=previous['initial_proposal'], optimized=str(derived_path)),
+        proposal_migration=dict(original=previous['initial_proposal'], derived=str(derived_path),
+            native_replay=str(native_path), native_replay_sha256=digest(native_path)),
         physical_geometry=previous['physical_geometry'], settings=previous['settings'],
         expected_runtime=previous['expected_runtime'],
         seeds=[2026103900, 2026103901, 2026103902, 2026103903],
         observations=[58165, 0, 1, 8], python=previous['python'],
-        output=str(root / 'prior_reuse_smc_runs_v1_20261022'),
+        output=str(root / 'prior_reuse_smc_runs_v2_20261022'),
         source_preparation_seconds=time.monotonic() - start,
         cost_scope='Source verification/copy preparation, paired full production processes and diagnostics/reporting, conditional on existing frozen fits; no new pilot/phase fit. Preparation timer excludes final declaration/manifest serialization and permission changes.',
         limitations=['Development efficiency only; no posterior-accuracy acceptance.',
                     'Exactly three runtime files differ; original observations, seeds by pair, model and numerical grouping fixed.',
-                    'Native CPU replay is a prerequisite, not a replacement for full saved GPU replay.',
+                    'Native CPU replay and actual CPU production startup preflight are prerequisites, not replacements for full saved GPU replay.',
+                    'Original failed v1 process cost retained separately and excluded from successful paired speedup.',
                     'No automatic promotion, retries, replacement seeds or discarded failed pairs.'])
+    provisional = destination / 'declaration_preflight.json'
+    save(provisional, declaration)
+    preflight_root = destination / 'startup_preflight'
+    subprocess.run([sys.executable, str(destination / 'check_prior_reuse_startup.py'), 'preflight',
+        '--declaration', str(provisional), '--output', str(preflight_root)], check=True)
+    preflight = load(preflight_root / 'result.json')
+    if preflight['status'] != 'passed':
+        raise ValueError('real production startup preflight failed')
+    for arm in preflight['arms'].values():
+        external.update(arm['evidence_sha256'])
+    preflight_path = preflight_root / 'result.json'
+    external[str(preflight_path)] = digest(preflight_path)
+    declaration['startup_preflight'] = dict(path=str(preflight_path), sha256=digest(preflight_path))
+    declaration['source_preparation_seconds'] = time.monotonic() - start
     save(destination / 'declaration.json', declaration)
     top = sorted(p for p in destination.iterdir() if p.is_file())
     (destination / 'SHA256SUMS').write_text(''.join(f'{digest(p)}  {p.name}\n' for p in top))

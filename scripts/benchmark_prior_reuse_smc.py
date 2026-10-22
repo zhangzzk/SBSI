@@ -23,6 +23,7 @@ def module(name, filename):
 
 _exact = module('_prior_replay_exact', 'benchmark_exchange_full_smc.py')
 _cpu = module('_prior_replay_cpu', 'benchmark_smc_concurrency.py')
+_provenance = module('_prior_replay_provenance', 'prior_reuse_proposal_provenance.py')
 digest, load, save = _exact.digest, _exact.load, _exact.save
 compare_json, compare_npz = _exact.compare_json, _exact.compare_npz
 BASE_MANIFEST = 'fd96ec78e4b95886a3355082102a25d7a40ffa3dd1a5f4d52443a46458a64df1'
@@ -84,8 +85,8 @@ def expected_protocol(d, sources, replica):
     return p
 
 
-def verify(d):
-    if (type(d['schema_version']) is not int or d['schema_version'] != 1 or
+def verify(d, require_preflight=True):
+    if (type(d['schema_version']) is not int or d['schema_version'] not in (1, 2) or
             d['seeds'] != SEEDS or d['observations'] != OBSERVATIONS or
             set(d['arms']) != {'baseline', 'optimized'}):
         raise ValueError('unknown prior-reuse declaration')
@@ -120,11 +121,29 @@ def verify(d):
             if not Path(path).is_absolute() or digest(path) != checksum:
                 raise ValueError('changed ' + mapping + ': ' + path)
     expected_protocol(d, sources, 0)
+    if d['schema_version'] == 2:
+        required_v2 = {str(Path(_provenance.__file__).resolve()),
+                       str(Path(__file__).with_name('check_prior_reuse_startup.py').resolve())}
+        if not required_v2 <= d['harness_files'].keys():
+            raise ValueError('provenance migration and actual startup preflight must be pinned')
+        _provenance.validate_migration(d, sources, HASHES)
+        _provenance.validate_failed_startup(d['previous_failed_startup'])
+        for key in ('receipt', 'log', 'cost'):
+            item = d['previous_failed_startup'][key]
+            if d['external_files'].get(item['path']) != item['sha256']:
+                raise ValueError('all original failed-startup evidence must remain pinned')
+        for path in (d['proposal_migration']['derived'], d['proposal_migration']['native_replay']):
+            if d['external_files'].get(path) != digest(path):
+                raise ValueError('derived proposal and native evidence must be pinned')
+        if require_preflight:
+            preflight = module('_prior_replay_startup', 'check_prior_reuse_startup.py')
+            preflight.validate_receipt(d, sources)
     return sources
 
 
 def driver_command(d, arm, seed, output):
-    adapted = dict(d, source=dict(path=d['arms'][arm]['source']))
+    adapted = dict(d, source=dict(path=d['arms'][arm]['source']),
+        initial_proposal=d['initial_proposals'][arm] if d['schema_version'] == 2 else d['initial_proposal'])
     return _cpu.driver_command(adapted, seed, output)
 
 
@@ -174,6 +193,8 @@ def saved_run(d, sources, arm, folder, replica):
         if result[key] != digest(folder / name):
             raise ValueError('changed saved artifact: ' + name)
         del result[key]
+    if d['schema_version'] == 2:
+        protocol = _provenance.normalize_initial_protocol(protocol, d, arm, sources, HASHES)
     protocol = normalized_protocol(protocol, d['arms'][arm]['source'], sources[arm])
     _exact.validate_saved_run(result, protocol, progress, expected_protocol(d, sources, replica))
     if any(any(stage.get('extinct', [])) for stage in progress['stages']):
@@ -216,6 +237,8 @@ def validate_workers(d, receipt, directory):
 def run_pair(declaration_path, replica):
     started = time.monotonic()
     d = load(declaration_path)
+    if d['schema_version'] != 2:
+        raise ValueError('new GPU runs require explicit v2 proposal provenance and startup preflight')
     root = Path(d['output'])
     root.mkdir(parents=True, exist_ok=True)
     lock = root / '.running'
@@ -311,6 +334,8 @@ def report(declaration_path, output):
     ratios = [p['baseline_to_optimized_ratio'] for p in pairs]
     save(output, dict(status='pending_report_process_cost', declaration_sha256=digest(declaration_path),
         all_four_saved_output_replay=True, pairs=pairs,
+        previous_failed_startup=d.get('previous_failed_startup'),
+        failed_startup_included_in_pair_speedups=False,
         ratio_range=[min(ratios), max(ratios)], ratio_mean=statistics.mean(ratios),
         ratio_mean_standard_error=statistics.stdev(ratios) / 2,
         source_preparation_seconds=d.get('source_preparation_seconds', 0.),

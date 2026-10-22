@@ -160,12 +160,89 @@ baseline and candidate pass complete 320-file source/input/protocol preflight.
 The parent independently checked 1,129 snapshot/prepared manifest entries,
 JUnit and successful scheduler completion (123 seconds, eight logical CPUs).
 
-GPU job **17446115** is queued after this successful test and concurrency job
-17445452, on one V100 with two physical CPU cores and requeue disabled. Prepared
-declaration SHA256 is
+GPU job **17446115** failed after completing its first baseline population and
+before the optimized arm produced any protocol or sampled artifacts. The
+original proposal's native-source fingerprint correctly rejected the changed
+coordinate implementation. The failed process used **248.06 seconds**; its
+receipt, log, baseline outputs and failed optimized directory remain unchanged.
+The completed CPU tests and metadata/source checks had not exercised this
+actual production startup boundary. There is no paired speed result.
+
+The original prepared declaration SHA256 is
 `da9358a05bb3a46714ea92c40030dd04d0161327b9454ecf0fd714c6a08175ef`;
 optimized source manifest is
 `f95d439d723e25375ca683a7134562f8a5262cd35d04c2b44a0e345bc52039c2`.
-All four original paired comparisons remain required. No runtime speedup or
-sampler acceptance is claimed. A bounded read-only scheduler/result-presence
-check is scheduled as 17446128 about two hours later; it sends no chat message.
+These v1 artifacts are preserved. See the v2 repair below.
+
+## Explicit proposal provenance migration and v2 startup preflight
+
+`prior_reuse_proposal_provenance.py` creates a separate optimized proposal
+artifact. It preserves every proposal component, mean, scale, weight, phase
+parameter, coordinate name, fit rule, pilot seed and other original pilot
+metadata. It changes only the declared native coordinate implementation hash
+from `519c9cd4930a2a0a22d9989bad55b8dc436fe16760f8ed6d5dff3d8160047209`
+to `2305ce98548f807b6acba8f1d4869a47f619639d80cae5fd0bcf76eda4bfabd8`
+and appends an explicit implementation-provenance migration record. That record
+binds the original proposal, both complete source manifests, all three known
+runtime changes, the successful native replay and hashes of the unchanged
+numerical proposal and pilot metadata. No fit or empirical correction is made.
+The original artifact is never edited.
+
+The public `FrozenParticleProposal.validate_production` remains unchanged.
+It accepts the derived artifact against its new declared implementation and
+continues to reject the original artifact, unknown target hashes and reused
+pilot seeds. Geometry remains the original byte-identical artifact: its public
+validator checks independent seeds and observation order, and has no native
+source-hash gate. Both geometry and proposal checks run in the new preflight.
+
+Preparation now executes the actual frozen `check_galsbi_particles.py` startup
+in isolated CPU subprocesses for both arms and all four seeds. An explicit
+sentinel at the first `torch.set_num_threads` call stops execution after public
+geometry/proposal validation and initial protocol saving, before model loading,
+CUDA initialization or particle draws. CUDA visibility is empty. The optimized
+source must also reject the original proposal in a negative control. The
+captured protocol and exact driver arguments are checked against the frozen
+recipe; the completed receipt and every command/worker/protocol artifact are
+pinned and revalidated before a GPU run. This preflight does not claim to test
+GPU numerical results, which still require all four complete paired replays.
+
+The v2 declaration uses `schema_version=2`, retains `initial_proposal` as the
+original artifact for comparison, and adds explicit `initial_proposals` by arm,
+`proposal_migration`, `startup_preflight` and `previous_failed_startup` records.
+The optimized raw production protocol records the derived artifact's own
+path, hash and full metadata. Comparison validates that entire artifact and
+raw protocol first, then maps only the proven provenance differences to the
+original artifact for scientific comparison. No shared comparison exclusions
+or public target-identity checks are relaxed.
+
+A new preparation/output directory is required. Run preparation in a CPU
+scheduler allocation before requesting a GPU:
+
+```bash
+/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python \
+  scripts/prepare_prior_reuse_smc.py \
+  --root /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021 \
+  --destination /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_prepared_v2_20261022
+```
+
+The existing frozen launcher interface is unchanged. It now writes to
+`prior_reuse_smc_runs_v2_20261022`, rerunning all four original seeds
+2026103900–2026103903 with the original alternating order and exact science.
+The original optimized arm failed before sampling, so this is a startup repair
+without outcome-based seed selection. Every v2 pair must complete and replay;
+the successful v1 baseline is not substituted for a v2 population.
+
+Preparation time includes the new CPU startup preflight, its evidence checks
+and source/proposal copies. Final declaration/manifest serialization and
+permission writes retain their stated exclusion. The failed v1 process cost
+is pinned and reported separately and is excluded from successful paired speed
+ratios. No failed attempt is removed or classified as a successful comparison.
+
+Focused validation covers byte-identical proposal draws, log densities and RNG
+states; strict pilot/native identity; numerical/metadata/evidence tampering;
+raw protocol provenance; geometry seed/order checks; preservation of the failed
+attempt; and an integration test executing real `driver.main` through the exact
+original rejection and derived-artifact pre-model checkpoint. The public
+validators and all three runtime candidate files are unchanged by this repair.
+Full scheduled tests, actual-data CPU preflight and fresh v2 GPU replay remain
+pending. No runtime speedup or posterior-accuracy acceptance is claimed.
