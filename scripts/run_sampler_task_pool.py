@@ -5,6 +5,7 @@ Every invocation is preserved. There are no retries, merged observations or
 replacement tasks. Use the shell launcher to capture complete outer CLI cost.
 """
 import argparse
+from contextlib import contextmanager
 import hashlib
 import importlib.util
 import json
@@ -74,6 +75,8 @@ def canonical(value):
 
 
 def absolute(value):
+    if not isinstance(value, str):
+        raise ValueError('canonical absolute string path required')
     path = Path(value)
     if not path.is_absolute() or str(path.resolve()) != value:
         raise ValueError('canonical absolute path required: ' + value)
@@ -203,7 +206,9 @@ def verify(manifest, expected_digest, fresh=True):
         for key in ('recipe', 'target_law'):
             item = identity[key]
             fields(item, 'path sha256', key)
-            if pins.get(item['path']) != item['sha256']:
+            absolute(item['path'])
+            checksum(item['sha256'])
+            if item['path'] not in pins or pins[item['path']] != item['sha256']:
                 raise ValueError('recipe and target-law artifacts must be pinned')
         binding = task['argument_indices']
         fields(binding, 'seed output observations', 'argument index')
@@ -216,7 +221,7 @@ def verify(manifest, expected_digest, fresh=True):
         # Reject identical invocations even if task IDs/output labels were changed.
         logical = list(argv)
         logical[binding['output']] = '<TASK_OUTPUT>'
-        invocation = canonical([logical, task['cwd'], task['source']])
+        invocation = canonical([logical, task['cwd'], str(source)])
         if invocation in invocations:
             raise ValueError('duplicate original task invocation')
         invocations.add(invocation)
@@ -245,6 +250,40 @@ def validate_slots(slots):
         raise ValueError('worker cores exceed allocation')
     if len(set(_cpu.physical_topology(flat).values())) != 8:
         raise ValueError('eight distinct physical cores required')
+
+
+STOP_SIGNALS = {signal.SIGTERM, signal.SIGINT}
+
+
+@contextmanager
+def guard_interruptions(ignore=False):
+    """Atomic child bookkeeping; discard repeated cancellation during cleanup."""
+    previous_mask = signal.pthread_sigmask(signal.SIG_BLOCK, STOP_SIGNALS)
+    previous_handlers = {}
+    try:
+        if ignore:
+            previous_handlers = {sig: signal.signal(sig, signal.SIG_IGN) for sig in STOP_SIGNALS}
+        yield
+    finally:
+        # Release queued cancellation while handlers still ignore it. Restoring
+        # handlers first can enqueue two Python exceptions and interrupt final
+        # receipt saving even though every child has already been reaped.
+        signal.pthread_sigmask(signal.SIG_SETMASK, previous_mask)
+        for sig, handler in previous_handlers.items():
+            signal.signal(sig, handler)
+
+
+def require_eight_physical_cores(affinity, topology):
+    if len({tuple(topology[cpu]) for cpu in affinity}) != 8:
+        raise ValueError('actual coordinator affinity must contain exactly eight physical cores')
+
+
+def resources():
+    affinity = os.sched_getaffinity(0)
+    require_eight_physical_cores(affinity, _cpu.physical_topology(affinity))
+    value = _cpu.resources()
+    require_eight_physical_cores(value['affinity'], {int(k): v for k, v in value['cpu_topology'].items()})
+    return value
 
 
 def usage(value):
@@ -285,7 +324,7 @@ def finish_task(task, record, runtime):
     record['status'] = 'completed_execution'
 
 
-def execute_tasks(d, slots, root, update):
+def execute_tasks(d, slots, root, update, check_cancel=lambda: None):
     """Scheduling kernel; tests supply tiny processes and real physical affinity."""
     validate_slots(slots)
     started = time.monotonic()
@@ -326,13 +365,16 @@ def execute_tasks(d, slots, root, update):
 
     try:
         while next_index < len(records) or active:
+            check_cancel()
             # Reap all completed processes before launching any replacement. A
             # simultaneous failure cannot be hidden by an earlier free slot.
             for slot, (process, *_rest) in list(active.items()):
-                result = reap(process)
-                if result is not None:
-                    finish(slot, result)
+                with guard_interruptions():
+                    result = reap(process)
+                    if result is not None:
+                        finish(slot, result)
             for slot, cpus in enumerate(slots):
+                check_cancel()
                 if slot in active or next_index == len(records):
                     continue
                 record = records[next_index]
@@ -345,21 +387,23 @@ def execute_tasks(d, slots, root, update):
                     record.update(status='failed', error='output collision before launch')
                     raise FileExistsError('task output collision before launch')
                 output.parent.mkdir(parents=True, exist_ok=True)
-                wrapper = [d['python'], '-u', str(Path(_cpu.__file__).resolve()), 'affinity-worker',
+                wrapper = [d['python'], '-u', str(HERE), 'affinity-worker',
                            '--cpus', ','.join(map(str, cpus)), '--worker-receipt', str(runtime / 'worker.json'),
                            '--', *task['argv']]
                 stream = (runtime / 'stdout.log').open('x')
                 launch_time = time.monotonic()
                 record.update(status='starting', cpus=cpus, start_offset_seconds=launch_time - started)
-                try:
-                    process = subprocess.Popen(wrapper, cwd=task['cwd'], env=child_environment(d),
-                        stdout=stream, stderr=subprocess.STDOUT, start_new_session=True)
-                except BaseException as error:
-                    stream.close()
-                    record.update(status='failed', error=repr(error), launch_failed=True)
-                    raise
-                record.update(status='running', pid=process.pid)
-                active[slot] = (process, stream, record, launch_time, runtime)
+                with guard_interruptions():
+                    try:
+                        process = subprocess.Popen(wrapper, cwd=task['cwd'], env=child_environment(d),
+                            stdout=stream, stderr=subprocess.STDOUT, start_new_session=True)
+                    except BaseException as error:
+                        stream.close()
+                        record.update(status='failed', error=repr(error), launch_failed=True)
+                        raise
+                    record.update(status='running', pid=process.pid)
+                    active[slot] = (process, stream, record, launch_time, runtime)
+                check_cancel()
                 update(records)
             if active:
                 time.sleep(.025)
@@ -367,38 +411,39 @@ def execute_tasks(d, slots, root, update):
         failure = repr(error)
         raise
     finally:
-        for process, *_ in active.values():
-            terminate_group(process)
-        deadline = time.monotonic() + 3
-        for slot, (process, stream, record, launch_time, runtime) in list(active.items()):
-            result = reap(process)
-            while result is None and time.monotonic() < deadline:
-                time.sleep(.025)
+        with guard_interruptions(ignore=True):
+            for process, *_ in active.values():
+                terminate_group(process)
+            deadline = time.monotonic() + 3
+            for slot, (process, stream, record, launch_time, runtime) in list(active.items()):
                 result = reap(process)
-            # Kill remaining process-group members even if their leader exited.
-            try:
-                os.killpg(process.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-            if result is None:
-                result = reap(process, block=True)
-            stream.close()
-            record.update(status='terminated', returncode=result[0], cost=result[1],
-                process_seconds=time.monotonic() - launch_time,
-                end_offset_seconds=time.monotonic() - started, termination_reason=failure)
-        for record in records:
-            runtime = root / 'tasks' / record['id']
-            if runtime.is_dir():
-                record['runtime_sha256'] = tree_hashes(runtime)
-            output = Path(record['task']['output'])
-            if record['status'] != 'completed_execution' and output.is_dir():
+                while result is None and time.monotonic() < deadline:
+                    time.sleep(.025)
+                    result = reap(process)
+                # Kill remaining process-group members even if their leader exited.
                 try:
-                    record['partial_output_sha256'] = tree_hashes(output)
-                except ValueError as error:
-                    record['partial_output_error'] = repr(error)
-            if record['status'] == 'unstarted':
-                record['not_started_reason'] = failure
-        update(records)
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                if result is None:
+                    result = reap(process, block=True)
+                stream.close()
+                record.update(status='terminated', returncode=result[0], cost=result[1],
+                    process_seconds=time.monotonic() - launch_time,
+                    end_offset_seconds=time.monotonic() - started, termination_reason=failure)
+            for record in records:
+                runtime = root / 'tasks' / record['id']
+                if runtime.is_dir():
+                    record['runtime_sha256'] = tree_hashes(runtime)
+                output = Path(record['task']['output'])
+                if record['status'] != 'completed_execution' and output.is_dir():
+                    try:
+                        record['partial_output_sha256'] = tree_hashes(output)
+                    except ValueError as error:
+                        record['partial_output_error'] = repr(error)
+                if record['status'] == 'unstarted':
+                    record['not_started_reason'] = failure
+            update(records)
     return records
 
 
@@ -416,11 +461,19 @@ def run(manifest, expected_digest):
     def update(records):
         receipt['tasks'] = records
         save(root / 'receipt.json', receipt)
+    cancelled = None
     def interrupted(signum, _frame):
-        raise RuntimeError('pool interrupted by signal ' + str(signum))
+        # Never raise inside child bookkeeping or while entering cleanup. The
+        # scheduler raises cancellation only at explicit safe checkpoints.
+        nonlocal cancelled
+        if cancelled is None:
+            cancelled = signum
+    def check_cancel():
+        if cancelled is not None:
+            raise RuntimeError('pool interrupted by signal ' + str(cancelled))
     handlers = {sig: signal.signal(sig, interrupted) for sig in (signal.SIGTERM, signal.SIGINT)}
     try:
-        receipt['resources_before'] = _cpu.resources()
+        receipt['resources_before'] = resources()
         receipt['effective_environment'] = child_environment(d)
         # Environment can include site credentials; persist only names and hashes
         # outside the explicitly declared operational values.
@@ -430,37 +483,45 @@ def run(manifest, expected_digest):
         selected = receipt['resources_before']['selected_cpus']
         slots = [selected[2 * i:2 * i + 2] for i in range(4)]
         receipt['status'] = 'running'
-        execute_tasks(d, slots, root, update)
+        check_cancel()
+        execute_tasks(d, slots, root, update, check_cancel=check_cancel)
+        check_cancel()
         receipt['status'] = 'completed_execution'
     except BaseException as error:
         receipt.update(status='failed', error=repr(error))
         raise
     finally:
-        # Diagnostics cannot turn a failed run into success, and failure must
-        # still leave every original task and the source recheck on disk.
         try:
-            _, after = verify(manifest, expected_digest, fresh=False)
-            receipt['hashes_after'] = after
-            receipt['hashes_unchanged'] = after == before
-        except BaseException as error:
-            receipt.update(status='failed', post_hash_error=repr(error), hashes_unchanged=False)
-        try:
-            receipt['resources_after'] = _cpu.resources()
-            if 'resources_before' in receipt:
-                for key in ('uuid', 'name', 'cuda_visible_devices'):
-                    if receipt['resources_after']['gpu'][key] != receipt['resources_before']['gpu'][key]:
-                        raise ValueError('GPU identity changed')
-        except BaseException as error:
-            receipt.update(status='failed', post_resource_error=repr(error))
-        own, children = resource.getrusage(resource.RUSAGE_SELF), resource.getrusage(resource.RUSAGE_CHILDREN)
-        receipt['internal_cost'] = dict(wall_seconds=time.monotonic() - started,
-            user_seconds=own.ru_utime - before_self.ru_utime + children.ru_utime - before_children.ru_utime,
-            system_seconds=own.ru_stime - before_self.ru_stime + children.ru_stime - before_children.ru_stime,
-            coordinator_max_rss_kib=own.ru_maxrss, maximum_child_rss_kib=children.ru_maxrss,
-            scope='verification, dispatch, complete child processes, output hashing and final source/resource rechecks; excludes imports and final receipt serialization')
-        save(root / 'receipt.json', receipt)
-        for sig, handler in handlers.items():
-            signal.signal(sig, handler)
+            with guard_interruptions(ignore=True):
+                # Diagnostics cannot turn a failed run into success, and failure must
+                # still leave every original task and the source recheck on disk.
+                try:
+                    _, after = verify(manifest, expected_digest, fresh=False)
+                    receipt['hashes_after'] = after
+                    receipt['hashes_unchanged'] = after == before
+                except BaseException as error:
+                    receipt.update(status='failed', post_hash_error=repr(error), hashes_unchanged=False)
+                try:
+                    receipt['resources_after'] = resources()
+                    if 'resources_before' in receipt:
+                        for field in ('node', 'slurm_job_id', 'affinity', 'selected_cpus', 'cpu_topology'):
+                            if receipt['resources_after'][field] != receipt['resources_before'][field]:
+                                raise ValueError('CPU allocation changed: ' + field)
+                        for key in ('uuid', 'name', 'cuda_visible_devices'):
+                            if receipt['resources_after']['gpu'][key] != receipt['resources_before']['gpu'][key]:
+                                raise ValueError('GPU identity changed')
+                except BaseException as error:
+                    receipt.update(status='failed', post_resource_error=repr(error))
+                own, children = resource.getrusage(resource.RUSAGE_SELF), resource.getrusage(resource.RUSAGE_CHILDREN)
+                receipt['internal_cost'] = dict(wall_seconds=time.monotonic() - started,
+                    user_seconds=own.ru_utime - before_self.ru_utime + children.ru_utime - before_children.ru_utime,
+                    system_seconds=own.ru_stime - before_self.ru_stime + children.ru_stime - before_children.ru_stime,
+                    coordinator_max_rss_kib=own.ru_maxrss, maximum_child_rss_kib=children.ru_maxrss,
+                    scope='verification, dispatch, complete child processes, output hashing and final source/resource rechecks; excludes imports and final receipt serialization')
+                save(root / 'receipt.json', receipt)
+        finally:
+            for sig, handler in handlers.items():
+                signal.signal(sig, handler)
     if receipt['status'] != 'completed_execution':
         raise RuntimeError('post-execution identity checks failed')
     return receipt
@@ -468,12 +529,29 @@ def run(manifest, expected_digest):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('mode', choices=['validate', 'run'])
-    parser.add_argument('--manifest', type=Path, required=True)
-    parser.add_argument('--manifest-sha256', required=True)
-    args = parser.parse_args()
-    if args.mode == 'validate':
-        declaration, checked = verify(args.manifest, args.manifest_sha256)
-        print(json.dumps(dict(status='validated_only', tasks=len(declaration['tasks']), hashes=checked)))
+    parser.add_argument('mode', choices=['validate', 'run', 'affinity-worker'])
+    parser.add_argument('--manifest', type=Path)
+    parser.add_argument('--manifest-sha256')
+    parser.add_argument('--cpus')
+    parser.add_argument('--worker-receipt', type=Path)
+    # Preserve all sampler flags following the explicit -- separator.
+    raw, command_argv = sys.argv[1:], []
+    if '--' in raw:
+        split = raw.index('--')
+        raw, command_argv = raw[:split], raw[split + 1:]
+    args = parser.parse_args(raw)
+    if args.mode == 'affinity-worker':
+        if not args.cpus or not args.worker_receipt or not command_argv:
+            parser.error('worker CPUs, receipt and exact command required')
+        # The parent blocks cancellation while Popen is registered. The child
+        # inherits that mask, and must release it before executing its task.
+        signal.pthread_sigmask(signal.SIG_UNBLOCK, STOP_SIGNALS)
+        _cpu.affinity_worker([int(value) for value in args.cpus.split(',')], args.worker_receipt, command_argv)
     else:
-        run(args.manifest, args.manifest_sha256)
+        if args.manifest is None or args.manifest_sha256 is None or command_argv:
+            parser.error('manifest and SHA256 required')
+        if args.mode == 'validate':
+            declaration, checked = verify(args.manifest, args.manifest_sha256)
+            print(json.dumps(dict(status='validated_only', tasks=len(declaration['tasks']), hashes=checked)))
+        else:
+            run(args.manifest, args.manifest_sha256)

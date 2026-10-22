@@ -15,6 +15,15 @@ Production use requires the n24 fresh-seed confirmation and the separate real
 replay gate. There are no new experiments, scheduled jobs, GPU service, MPS,
 network/RPC layer or multi-GPU scheduler in this change.
 
+## Manifest size limit
+
+Receipt updates currently rewrite the full ordered task list after each launch
+and completion. For N tasks this produces O(N²) cumulative receipt bytes. The
+current real replay is bounded to eight tasks. Use bounded-size manifests for
+any later adoption, retaining every original group and seed; do not treat this
+implementation as a catalogue-sized queue. A journal or other receipt-persistence
+optimization needs a separate implementation and replay gate.
+
 ## Immutable declaration
 
 `run_sampler_task_pool.py` accepts one JSON manifest and its independently
@@ -144,10 +153,12 @@ wall/user/system/maxRSS even when startup or a worker fails.
 
 The resource check resolves CUDA-visible ordinal zero to its physical UUID in
 a short subprocess, then queries that UUID. It requires one visible V100, the
-specified node and eight distinct allocated physical cores. SMT siblings do
-not count as separate cores. Each child receives two nonoverlapping cores via
+specified node and an actual coordinator affinity containing exactly eight
+distinct physical cores. Wider affinity is rejected; multiple SMT IDs for those
+same eight cores are allowed. SMT siblings do not count as separate cores. Each child receives two nonoverlapping cores via
 the proven fresh-process affinity wrapper; no threaded `preexec_fn` is used.
-The coordinator remains on the allocated CPUs. Four is the maximum number of
+The pool worker entrypoint releases inherited TERM/INT masks before invoking
+the unchanged affinity helper. The coordinator remains on the allocated CPUs. Four is the maximum number of
 active tasks, including multiple waves for longer manifests.
 
 ## Failure behavior and receipts
@@ -155,8 +166,11 @@ active tasks, including multiple waves for longer manifests.
 Launches preserve manifest order. Every original task has a record from the
 start; completion order may differ. A nonzero exit, missing expected output,
 incorrect worker command/affinity, launch error or cancellation stops dispatch.
-Live sibling process groups receive TERM, then KILL if needed, and their leaders
-are reaped. Tasks left with live descendants are rejected and those descendants
+Parent TERM/INT handlers record cancellation without raising asynchronously;
+the scheduler handles it at explicit safe bookkeeping checkpoints. Launch/registration
+and reap/bookkeeping are also guarded. Repeated cancellation is ignored during
+cleanup and final receipt saving. Live sibling process groups receive TERM, then
+KILL if needed, and their leaders are reaped. Tasks left with live descendants are rejected and those descendants
 are killed. Pending tasks remain explicitly `unstarted` with the failure reason.
 There are no retries, replacement seeds, resubmissions or dropped failures.
 
@@ -195,8 +209,76 @@ They cover nine tasks over multiple waves, unchanged command/seed/group/RNG
 payloads, bounded concurrency, SMT/overlap rejection, failure and forced sibling
 termination, unstarted records, interruption, launch failure, output collisions,
 missing outputs, live descendants, source/input/manifest tampering and final
-source drift. No scientific target, GPU or model is loaded.
+source drift. Fault injection sends actual TERM/INT immediately after Popen and
+reap, during cleanup and final receipt saving, including signals delivered through
+an unblocked background thread. Child masks must leave TERM/INT unblocked.
+Source aliases cannot bypass duplicate-task rejection, and recipe/target-law
+artifacts require canonical paths, valid SHA256 values and explicit input pins. No scientific target, GPU or model is loaded.
 
 The complete scheduled repository suite and a predeclared real sequential versus
 pooled saved-output replay remain for the parent workflow. This candidate is
 not adopted by any existing launcher or running scientific experiment.
+
+## Fixed eight-task real replay preparation
+
+`benchmark_sampler_task_pool_replay.py` prepares the separate execution replay.
+It hard-pins both completed declarations/reports and independent parent audits:
+development audit 17447670 and confirmation audit 17448939. The latter rechecked
+all 16 saved outputs and the confirmation timing gate. All original report/cost
+receipts remain pinned; preparation revalidates both source/recipe declarations
+and all eight original serial setting-0 populations.
+
+The replay consists of exactly two fixed groups of four independent tasks:
+seeds **2026103700–2026103703**, then **2026103800–2026103803**, each retaining
+observations `[58165, 0, 1, 8]`, N256/T64/M64, density4096, zero shear, original
+proposal/geometry and the original 320-file source manifest `fd96ec78…64df1`.
+The source is copied to a fresh immutable directory. Original driver arguments
+are preserved, with only the new output destination and the explicit checked
+source bootstrap prepared into the manifest. There is no scientific selection
+among tasks and no new fitted artifact.
+
+In a CPU scheduler allocation, using this candidate snapshot:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 /project/ls-gruen/users/zekang.zhang/envs/py31/bin/python \
+  scripts/benchmark_sampler_task_pool_replay.py prepare \
+  --root /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021 \
+  --destination /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/sampler_task_pool_replay_prepared_v1_20261022
+```
+
+Preparation saves `tasks.json`, `replay.json`, six pinned harness files, a complete
+source copy and top-level `SHA256SUMS`. It validates the copied pool using the
+copied paths. The final directory is read-only. No source freezing or scientific
+replay work is performed on the login node by this command.
+
+After full scheduled CPU validation, the parent may execute in the specified
+one-V100/eight-physical-core allocation:
+
+```bash
+bash /absolute/sampler_task_pool_replay_prepared_v1_20261022/run_sampler_task_pool_replay.sh \
+  /absolute/sampler_task_pool_replay_prepared_v1_20261022
+```
+
+The fresh outputs under the study root are fixed as:
+
+- `sampler_task_pool_replay_runs_v1_20261022/` — all eight task outputs/receipts.
+- `sampler_task_pool_replay_process_cost_v1_20261022.json` — complete pool process.
+- `sampler_task_pool_replay_audit_cost_v1_20261022.json` — complete replay audit.
+- `sampler_task_pool_replay_report_v1_20261022.json` — final audit and charged work.
+
+The launcher submits nothing and cannot overwrite the original attempt.
+The audit loads each original phase's pinned validation helper and requires its
+original recipe, full 64-stage checks, all scientific JSON and full saved array
+bytes. Only existing named timing/job differences and checked implementation
+root relocation are normalized. No new scientific/runtime exclusions are added.
+It also checks all eight worker records, exact commands, four simultaneous
+workers without CPU overlap, unchanged outputs/inputs and complete outer costs.
+A mismatch remains a failed replay; it is never converted to a tolerance result.
+
+The reported new work includes measured preparation plus complete pool and audit
+processes. Preparation's interpreter startup/final freeze bookkeeping, launcher
+metadata, queueing and final JSON-only finalization remain excluded explicitly.
+The comparison uses historical serial saved outputs; it does **not** claim a new
+paired speedup from timings collected in different allocations. All eight saved
+outputs must agree before `generic_pool_replay_passed` can become true. This
+still makes no claim about posterior accuracy or catalogue-scale queue efficiency.

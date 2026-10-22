@@ -1,5 +1,46 @@
 # Work log
 
+## 2026-10-22 — Close task-pool allocation and cancellation review gaps
+
+Independent review found four adoption blockers in core 654687e: coordinator
+affinity could span more than eight physical cores, asynchronous cancellation
+could interrupt child registration/cleanup, source aliases bypassed duplicate
+invocation detection, and null missing recipe/target pins could compare equal.
+The pool now requires exactly eight physical cores (SMT IDs for those cores are
+allowed), canonicalizes duplicate identity by actual source path, and validates
+artifact paths/checksums/membership explicitly. Original benchmark helpers remain
+unchanged.
+
+Parent cancellation handlers now record a flag and raise only at safe scheduling
+checkpoints. Launch and reap bookkeeping are guarded; the fresh worker wrapper
+unblocks inherited TERM/INT before executing the unchanged affinity helper.
+Cleanup and final receipt saving ignore repeated cancellation. Actual signal
+fault injection first exposed a queued-signal restoration-order bug that left a
+receipt marked running; releasing ignored signals before restoring handlers and
+using deferred parent handlers fixed it. Tests additionally deliver simultaneous
+TERM/INT through an unblocked background thread and immediately after reap.
+Combined focused pool, replay and unchanged concurrency tests pass: **93 tests
+in 15.01 seconds**. Python/shell syntax and diff checks pass. No jobs submitted;
+parent scheduled suite and real eight-task replay remain required.
+
+## 2026-10-22 — Predeclare complete eight-task generic-pool replay
+
+Added `benchmark_sampler_task_pool_replay.py` and a frozen sequential launcher
+for all four original development seeds 2026103700–03 plus all four original
+confirmation seeds 2026103800–03. Preparation pins both completed reports and
+independent audits 17447670/17448939, original source/recipe and all eight serial
+setting-0 populations. New output cannot replace any prior attempt. The audit
+uses unchanged original phase validators for complete scientific JSON, all64
+stages and full array bytes; only existing named timing/job/path differences
+are permitted. Complete pool and audit process costs are separate receipts.
+No new timing acceptance or scientific decision is made from historical controls.
+
+Added focused manifest/recipe/seed/completeness/cost/CPU-overlap gate tests.
+Recorded the core's O(N²) cumulative receipt-writing limitation; keep manifests
+small until a separately validated persistence improvement. No jobs submitted.
+Full scheduled suite/preparation and the actual eight-task GPU replay remain for
+the parent. See [fixed replay CLI and evidence](SAMPLER_TASK_POOL.md#fixed-eight-task-real-replay-preparation).
+
 ## 2026-10-22 — Add bounded immutable sampler task pool candidate
 
 Added `scripts/run_sampler_task_pool.py` and a complete-process timing launcher

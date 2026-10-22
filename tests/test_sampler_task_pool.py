@@ -7,6 +7,7 @@ from pathlib import Path
 import random
 import signal
 import sys
+import threading
 import time
 
 import pytest
@@ -38,7 +39,8 @@ if mode != 'missing':
     (root / 'data.json').write_text(json.dumps(dict(seed=int(seed),
         observations=list(map(int, [a,b,c,d])), draw=random.Random(int(seed)).random(),
         argv=sys.argv[1:], cwd=os.getcwd(), cpus=sorted(os.sched_getaffinity(0)),
-        threads=os.environ['OMP_NUM_THREADS'])))
+        threads=os.environ['OMP_NUM_THREADS'],
+        blocked_signals=sorted(int(value) for value in signal.pthread_sigmask(signal.SIG_BLOCK, [])))))
 '''
 
 
@@ -92,10 +94,10 @@ def cpus():
 def resource_fixture(monkeypatch, slots):
     selected = sum(slots, [])
     def resources():
-        return dict(slurm_job_id='synthetic-test', selected_cpus=selected,
+        return dict(slurm_job_id='synthetic-test', node='synthetic-node', affinity=selected, selected_cpus=selected,
             cpu_topology={str(k): list(v) for k, v in m._cpu.physical_topology(selected).items()},
             gpu=dict(uuid='synthetic-no-gpu', name='synthetic-no-gpu', cuda_visible_devices=None))
-    monkeypatch.setattr(m._cpu, 'resources', resources)
+    monkeypatch.setattr(m, 'resources', resources)
 
 
 def test_multiwave_keeps_order_commands_seeds_groups_affinity_and_bounded_concurrency(tmp_path):
@@ -117,6 +119,7 @@ def test_multiwave_keeps_order_commands_seeds_groups_affinity_and_bounded_concur
         assert output['cwd'] == task['cwd']
         assert output['cpus'] == record['cpus'] == record['worker']['affinity']
         assert output['threads'] == '2'
+        assert not set(output['blocked_signals']).intersection({int(sig) for sig in m.STOP_SIGNALS})
         assert record['worker']['command'] == task['argv']
         assert record['cost']['user_seconds'] >= 0 and record['process_seconds'] > 0
         assert record['output_sha256']['data.json'] == m.digest(Path(task['output']) / 'data.json')
@@ -288,3 +291,126 @@ def test_interrupted_receipt_save_preserves_previous_and_allows_final_save(tmp_p
     monkeypatch.setattr(m.json, 'dump', original)
     m.save(path, {'status': 'final'})
     assert m.load(path) == {'status': 'final'}
+
+
+def test_actual_allocation_requires_exactly_eight_physical_cores_but_allows_smt():
+    topology = {i: (0, i % 8) for i in range(16)}
+    m.require_eight_physical_cores(range(16), topology)
+    with pytest.raises(ValueError, match='exactly eight'):
+        m.require_eight_physical_cores(range(9), {i: (0, i) for i in range(9)})
+    with pytest.raises(ValueError, match='exactly eight'):
+        m.require_eight_physical_cores(range(7), topology)
+
+
+def test_source_alias_cannot_bypass_duplicate_task_rejection(tmp_path):
+    d, manifest = make_fixture(tmp_path, count=2)
+    d['sources']['alias'] = copy.deepcopy(d['sources']['original'])
+    replacement = copy.deepcopy(d['tasks'][0])
+    replacement.update(id='alias_task', source='alias', output=d['tasks'][1]['output'])
+    replacement['argv'][7] = replacement['output']
+    d['tasks'][1] = replacement
+    m.save(manifest, d)
+    with pytest.raises(ValueError, match='duplicate original'):
+        m.verify(manifest, m.digest(manifest))
+
+
+@pytest.mark.parametrize('key', ['recipe', 'target_law'])
+@pytest.mark.parametrize('identity', [dict(path='/missing', sha256=None), dict(path=None, sha256=None),
+    dict(path='/missing', sha256='a' * 64)])
+def test_null_or_unpinned_scientific_artifact_is_rejected(tmp_path, key, identity):
+    d, manifest = make_fixture(tmp_path, count=1)
+    d['tasks'][0]['identity'][key] = identity
+    m.save(manifest, d)
+    with pytest.raises(ValueError): m.verify(manifest, m.digest(manifest))
+
+
+@pytest.mark.parametrize('repeat_during_cleanup', [False, True])
+@pytest.mark.parametrize('launch_signals', ['term', 'pair', 'unblocked_thread_pair'])
+def test_actual_sigterm_after_popen_cannot_lose_child_and_cleanup_ignores_repeated_signals(tmp_path, monkeypatch, repeat_during_cleanup, launch_signals):
+    d, manifest = make_fixture(tmp_path, count=5, modes={i: 'slow' for i in range(5)})
+    resource_fixture(monkeypatch, cpus())
+    real_popen, real_terminate, real_save = m.subprocess.Popen, m.terminate_group, m.save
+    caller_handlers = {sig: signal.getsignal(sig) for sig in m.STOP_SIGNALS}
+    spawned, phases = [], []
+    ready, stop = threading.Event(), threading.Event()
+    def background():
+        signal.pthread_sigmask(signal.SIG_UNBLOCK, m.STOP_SIGNALS)
+        ready.set()
+        stop.wait()
+    thread = threading.Thread(target=background, daemon=True) if launch_signals == 'unblocked_thread_pair' else None
+    if thread is not None:
+        thread.start()
+        assert ready.wait(timeout=2)
+    def launch_and_signal(*args, **kwargs):
+        process = real_popen(*args, **kwargs)
+        spawned.append(process)
+        phases.append('after_popen_before_registration')
+        signals = [signal.SIGTERM] if launch_signals == 'term' else [signal.SIGTERM, signal.SIGINT]
+        for sig in signals:
+            if thread is not None:
+                signal.pthread_kill(thread.ident, sig)
+            else:
+                os.kill(os.getpid(), sig)
+        return process
+    def terminate_and_signal(process):
+        real_terminate(process)
+        if repeat_during_cleanup:
+            phases.append('cleanup')
+            os.kill(os.getpid(), signal.SIGTERM)
+            os.kill(os.getpid(), signal.SIGINT)
+    def save_and_signal(path, value):
+        if repeat_during_cleanup and value.get('status') == 'failed' and 'internal_cost' in value:
+            phases.append('final_receipt')
+            os.kill(os.getpid(), signal.SIGTERM)
+            os.kill(os.getpid(), signal.SIGINT)
+        real_save(path, value)
+    monkeypatch.setattr(m.subprocess, 'Popen', launch_and_signal)
+    monkeypatch.setattr(m, 'terminate_group', terminate_and_signal)
+    monkeypatch.setattr(m, 'save', save_and_signal)
+    try:
+        with pytest.raises(RuntimeError, match='interrupted by signal'):
+            m.run(manifest, m.digest(manifest))
+        receipt = m.load(Path(d['output_root']) / 'receipt.json')
+        assert len(spawned) == 1 and receipt['status'] == 'failed'
+        assert receipt['tasks'][0]['status'] == 'terminated'
+        # The wrapper must unmask inherited TERM/INT; otherwise only KILL would
+        # reap this child after the deadline.
+        assert receipt['tasks'][0]['returncode'] == -signal.SIGTERM
+        assert all(row['status'] == 'unstarted' for row in receipt['tasks'][1:])
+        assert receipt['hashes_unchanged'] is True and 'internal_cost' in receipt
+        assert {sig: signal.getsignal(sig) for sig in m.STOP_SIGNALS} == caller_handlers
+        if repeat_during_cleanup: assert phases == ['after_popen_before_registration', 'cleanup', 'final_receipt']
+        for process in spawned:
+            with pytest.raises(ProcessLookupError): os.kill(process.pid, 0)
+    finally:
+        stop.set()
+        if thread is not None:
+            thread.join(timeout=2)
+        for process in spawned:
+            if process.returncode is None:
+                try: os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError: pass
+                process.wait(timeout=3)
+
+
+def test_signal_after_reap_before_bookkeeping_cannot_double_reap_or_lose_sibling(tmp_path, monkeypatch):
+    d, manifest = make_fixture(tmp_path, count=5)
+    resource_fixture(monkeypatch, cpus())
+    real_reap = m.reap
+    injected = False
+    def reap_then_signal(process, block=False):
+        nonlocal injected
+        result = real_reap(process, block)
+        if result is not None and not injected:
+            injected = True
+            os.kill(os.getpid(), signal.SIGTERM)
+        return result
+    monkeypatch.setattr(m, 'reap', reap_then_signal)
+    with pytest.raises(RuntimeError, match='interrupted by signal'):
+        m.run(manifest, m.digest(manifest))
+    receipt = m.load(Path(d['output_root']) / 'receipt.json')
+    assert receipt['status'] == 'failed' and receipt['hashes_unchanged']
+    assert receipt['tasks'][4]['status'] == 'unstarted'
+    for row in receipt['tasks'][:4]:
+        assert row['status'] in ('terminated', 'completed_execution')
+        with pytest.raises(ProcessLookupError): os.kill(row['pid'], 0)
