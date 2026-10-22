@@ -122,17 +122,16 @@ Ordinary exchange blocks improve1.132–1.169 times; relocation is0.993–1.055 
 including the slower case. Runtime integration is deferred to retain the
 scientific source used in corrected development. These are block timings, not
 full-sampler efficiency. See [trained-model results](EXCHANGE_CATEGORICAL_RESULTS.md#trained-model-comparison).
-A separate four-pair full-run replay and cost experiment is now eligible to
-share the same four-GPU node with the held-out work, with one benchmark worker.
-The verified node capacity preserves the combined four-GPU ceiling; its original
-completion dependency was removed before any benchmark task started. It compares every saved scientific output and
-all64 stages while timing complete new processes, conditional on the existing
-frozen fits. The first two pairs pass exact saved-output replay in opposite arm
-orders; all four remain required for a speed conclusion. An isolated integration
-candidate passes 1,084 tests, including all 66 categorical replay cases, with nine
-optional skips. Independent code and receipt review passes. Runtime integration
-remains conditional on the full benchmark and held-out result. See the
-[current evidence](EXCHANGE_FULL_SMC_REPLAY.md#tested-integration-candidate).
+The completed four-pair full-run comparison preserves every saved scientific
+output and all 64 stages. Complete measured new-work totals are 852.338 seconds
+baseline and 841.762 seconds optimized, conditional on existing fits: only
+1.24% lower time. Both baseline-first pairs favor optimized and both reversed
+pairs favor baseline; four timings do not establish a dependable benefit.
+Leave the optimization inactive. Its isolated implementation passes 1,084 tests,
+including all 66 categorical replay cases, with nine optional skips; correctness
+is supported independently of the uncertain full-run gain. All benchmark jobs
+and reporting complete successfully, and the temporary held-out Nice setting
+is restored to zero. See the [complete result](EXCHANGE_FULL_SMC_REPLAY.md#current-status).
 
 Passing fixed-object integration checks would not prove population shear
 calibration or explain the catalogue-wide additive residual. The target uses

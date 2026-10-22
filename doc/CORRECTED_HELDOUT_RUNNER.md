@@ -2,11 +2,11 @@
 
 ## Current launch
 
-While the independent speed benchmark is pending/running, held-out array
-17435350 has temporary Nice=20 to allow that one-worker benchmark to share
-capacity. Its node pin, four-worker throttle, running allocations and science
-remain unchanged. Restore job 17439409 resets Nice=0 after benchmark termination
-unless the owner has changed the setting; see the
+The independent speed benchmark has finished. Restore job 17439409 completes
+successfully at 14:44 UTC and resets held-out array 17435350 from temporary
+Nice=20 to its original Nice=0. Independent scheduler inspection confirms the
+restoration, unchanged node pin and four-worker throttle. Task 17435350_12
+starts on the released GPU. Scientific sources/settings remain unchanged; see the
 [scheduling record](evidence/benchmark_priority_window_20261022.json).
 
 The first complete production group (indices 0–7, observations

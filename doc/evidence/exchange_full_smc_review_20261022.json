@@ -1,0 +1,113 @@
+{
+  "schema": "sbsi-full-categorical-benchmark-parent-review-v1",
+  "reviewed_at_utc": "2026-10-22T14:45:57.099928+00:00",
+  "report_sha256": "ee0d723f7de052fbfcb68baeb393b4fba7456506a4989e5b39f57ccf13c34301",
+  "independent_cost_and_receipt_checks_pass": true,
+  "pairs": [
+    {
+      "replica": 0,
+      "seed": 2026103600,
+      "order": [
+        "baseline",
+        "optimized"
+      ],
+      "charged_seconds": {
+        "baseline": 219.02936716254334,
+        "optimized": 209.12063283745664
+      },
+      "baseline_to_optimized_ratio": 1.047382863138084,
+      "all_saved_arrays_replay": true,
+      "all_64_stages_complete_without_extinction": true
+    },
+    {
+      "replica": 1,
+      "seed": 2026103601,
+      "order": [
+        "optimized",
+        "baseline"
+      ],
+      "charged_seconds": {
+        "baseline": 208.8167670520395,
+        "optimized": 213.2032329479605
+      },
+      "baseline_to_optimized_ratio": 0.9794258940858009,
+      "all_saved_arrays_replay": true,
+      "all_64_stages_complete_without_extinction": true
+    },
+    {
+      "replica": 2,
+      "seed": 2026103602,
+      "order": [
+        "baseline",
+        "optimized"
+      ],
+      "charged_seconds": {
+        "baseline": 212.37463340695714,
+        "optimized": 199.81536659304285
+      },
+      "baseline_to_optimized_ratio": 1.062854359141924,
+      "all_saved_arrays_replay": true,
+      "all_64_stages_complete_without_extinction": true
+    },
+    {
+      "replica": 3,
+      "seed": 2026103603,
+      "order": [
+        "optimized",
+        "baseline"
+      ],
+      "charged_seconds": {
+        "baseline": 204.85238734198035,
+        "optimized": 212.35761265801963
+      },
+      "baseline_to_optimized_ratio": 0.9646576111772094,
+      "all_saved_arrays_replay": true,
+      "all_64_stages_complete_without_extinction": true
+    }
+  ],
+  "new_work_seconds_by_arm": {
+    "baseline": 852.3384234409081,
+    "optimized": 841.7621135138673
+  },
+  "total_baseline_to_optimized_ratio": 1.0125644879440947,
+  "optimized_time_reduction_percent": 1.2408580484197684,
+  "ratio_mean": 1.0135801818857546,
+  "ratio_mean_standard_error": 0.024376387317739893,
+  "ratio_range": [
+    0.9646576111772094,
+    1.062854359141924
+  ],
+  "timing_order_pattern": "Both baseline-first pairs favor optimized; both optimized-first pairs favor baseline.",
+  "decision": "Exact saved-output replay passed. Leave optimization inactive: four timings do not establish a dependable end-to-end benefit. No additional benchmark or runtime integration is planned now.",
+  "cost_scope": "Complete new run processes and measured source-copy/hash/report overhead, conditional on existing frozen fits; historical pilot generation, fitting and search costs are excluded.",
+  "scheduler_record": "JobID|State|ExitCode|ElapsedRaw|AllocCPUS|AllocTRES\n17437047|COMPLETED|0:0|8|2|billing=10,cpu=2,mem=8G,node=1\n17437046_0|COMPLETED|0:0|428|2|billing=2,cpu=2,gres/gpu:v100=1,gres/gpu=1,mem=16G,node=1\n17437046_1|COMPLETED|0:0|422|2|billing=2,cpu=2,gres/gpu:v100=1,gres/gpu=1,mem=16G,node=1\n17437046_2|COMPLETED|0:0|413|2|billing=2,cpu=2,gres/gpu:v100=1,gres/gpu=1,mem=16G,node=1\n17437046_3|COMPLETED|0:0|418|2|billing=2,cpu=2,gres/gpu:v100=1,gres/gpu=1,mem=16G,node=1\n17439409|COMPLETED|0:0|1|2|billing=4,cpu=2,mem=2G,node=1\n",
+  "benchmark_gpu_allocation_seconds": 1681,
+  "priority_restoration": {
+    "receipt": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/benchmark_priority_window_20261022/restoration-17439409.json",
+    "sha256": "d4c5022a94c77804fcfe374f8f5be7c6bea2435d438abbaf0a9420623bce4670",
+    "status": "restored",
+    "live_array_nice_zero_verified": true,
+    "live_scheduler_record": "JobId=17435350 ArrayJobId=17435350 ArrayTaskId=13-39%4 ArrayTaskThrottle=4 JobName=corrected-heldout-v3-pairs UserId=zekang.zhang(27188) GroupId=nobody(10000) MCS_label=N/A Priority=548 Nice=0 Account=ls-gruen QOS=normal JobState=PENDING Reason=Priority Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=00:45:00 TimeMin=N/A SubmitTime=2026-10-22T13:53:08 EligibleTime=2026-10-22T14:33:57 AccrueTime=2026-10-22T14:33:57 StartTime=2026-10-22T17:29:16 EndTime=2026-10-22T18:14:16 Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-22T16:45:48 Scheduler=Main Partition=inter AllocNode:Sid=kng-sv-clhead02:2928372 ReqNodeList=th-cl-nv02 ExcNodeList=(null) NodeList= SchedNodeList=th-cl-nv02 NumNodes=1 NumCPUs=2 NumTasks=1 CPUs/Task=2 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1 AllocTRES=(null) Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=2 MinMemoryNode=16G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_v3_workflow_20261022.sh WorkDir=/home/z/Zekang.Zhang/SBSI StdErr=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_4294967294.out StdIn=/dev/null StdOut=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_4294967294.out Power= KillOInInvalidDependent=Yes TresPerNode=gres:gpu:v100:1 \nJobId=17441732 ArrayJobId=17435350 ArrayTaskId=12 ArrayTaskThrottle=4 JobName=corrected-heldout-v3-pairs UserId=zekang.zhang(27188) GroupId=nobody(10000) MCS_label=N/A Priority=548 Nice=0 Account=ls-gruen QOS=normal JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:01:41 TimeLimit=00:45:00 TimeMin=N/A SubmitTime=2026-10-22T13:53:08 EligibleTime=2026-10-22T14:33:57 AccrueTime=2026-10-22T14:33:57 StartTime=2026-10-22T16:44:16 EndTime=2026-10-22T17:29:16 Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-22T16:44:16 Scheduler=Backfill Partition=inter AllocNode:Sid=kng-sv-clhead02:2928372 ReqNodeList=th-cl-nv02 ExcNodeList=(null) NodeList=th-cl-nv02 BatchHost=th-cl-nv02 NumNodes=1 NumCPUs=2 NumTasks=1 CPUs/Task=2 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1 AllocTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=2 MinMemoryNode=16G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_v3_workflow_20261022.sh WorkDir=/home/z/Zekang.Zhang/SBSI StdErr=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_12.out StdIn=/dev/null StdOut=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_12.out Power= KillOInInvalidDependent=Yes TresPerNode=gres:gpu:v100:1 \n"
+  },
+  "checked_receipt_sha256": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/report.json": "ee0d723f7de052fbfcb68baeb393b4fba7456506a4989e5b39f57ccf13c34301",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/declaration.json": "04ac6f6d122839a603f129c4ca2adab39d7505b968c293ab7fa7659bd8df8412",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/SHA256SUMS": "8b0665f7b27b2d7119ee51752b19f9e1adc7427af003283d9f744d56c884859b",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_0/receipt.json": "04d17692b9fb8bcc0161a470d9f03076c61f96ed3ed2522bf8d77432a45a5a18",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_0_process_cost.json": "6391d1b90f4a1d8790cff4c53fd81b57366c890f29bb6089cb8285a8fe3dce7f",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_1/receipt.json": "8bd207b61454bc3331c825d928f47628caadee2a5c76e40e99f7c2a78304faeb",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_1_process_cost.json": "f831d466bb297f517cf4b8ce08a3484166630bd9332115243bde7b254cf088b8",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_2/receipt.json": "8a409a8e536fac3a4d1ea9672e2c0aea087eca6eee73506769ec60f8e1a3ea29",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_2_process_cost.json": "94d56d8b23dfa98f787eae837429bde15b4961f1787d68d3b5c7370e4f231ab8",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_3/receipt.json": "1dba13d0a550e228fb24fb411190ed8bc0782eb567ce0b1d7134bc853911a755",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_3_process_cost.json": "7b6d4422f2f8637b59f307ea12a934588b1855cf2d1507cbb05cab17b2b409cc",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/report_process_cost.json": "d32290d992121a7244bd7328ad5d93aa8867525cf9d68cc29f343e76874fe74d"
+  },
+  "limitations": [
+    "Parent recomputed scalar cost arithmetic and checked stage/receipt provenance; frozen pair and final CPU report perform NPZ byte comparisons.",
+    "Saved outputs and64 scientific stage records match; intermediate mutation states and terminal RNG are not saved by the driver.",
+    "Four development pairs on one V100 give descriptive timing evidence only; the order pattern does not identify its physical cause.",
+    "Historical pilot generation, fitting, implementation tests and search cost are outside this runtime benchmark.",
+    "Held-out sampler acceptance and population shear calibration remain unresolved."
+  ]
+}

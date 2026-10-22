@@ -1,5 +1,35 @@
 # Work log
 
+## 2026-10-22 — Complete exact categorical replays; full-run speed benefit remains uncertain
+
+All four fixed benchmark pairs in GPU array 17437046 and CPU report 17437047
+complete with exit 0. Every saved particle/scene array and all 64 scientific
+stage records match exactly in each pair; all eight runs complete without
+extinction. The final reporter repeats the frozen source/input/recipe and output
+comparisons. Parent review independently checks all scheduler exits, receipt
+identities, stage counts, original orders/seeds, and scalar cost arithmetic.
+The [complete report](evidence/exchange_full_smc_result_20261022.json) and
+[parent review](evidence/exchange_full_smc_review_20261022.json) preserve evidence.
+
+Measured totals are 852.338 seconds baseline versus 841.762 seconds optimized:
+1.24% lower optimized time, conditional on existing fits. Pair ratios are
+1.04738/0.97943/1.06285/0.96466, mean 1.01358 with descriptive SE 0.02438.
+Both baseline-first pairs favor optimized; both reversed pairs favor baseline.
+This does not identify the physical cause of the order pattern or establish a
+dependable full-run benefit. Leave the tested optimization inactive, preserving
+the isolated candidate and all results; no further timing experiment is planned
+now. The passed replay checks remain valid. Historical pilot/fitting/test/search
+costs are outside this benchmark, and sampler acceptance still requires the
+separate held-out scientific and inclusive-cost gates.
+
+Restore job 17439409 completes successfully at 14:44 UTC; its receipt and an
+independent live scheduler check confirm held-out Nice=0, throttle four and the
+unchanged node pin. Updated the priority receipt, experiment/current-candidate
+notes, held-out runner and Arbor evidence. The held-out array resumes with task
+12. Runtime code and scientific settings remain unchanged. Documentation JSON,
+cost identities, tree validation and whitespace checks pass; no additional
+implementation test is needed for these evidence-only changes.
+
 ## 2026-10-22 — Review the tested categorical candidate and first two full replays
 
 The isolated exact optimization, implementation commit 413fe75 and reviewed

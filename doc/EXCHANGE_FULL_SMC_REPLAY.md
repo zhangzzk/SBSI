@@ -2,9 +2,44 @@
 
 ## Current status
 
-Reviewed v2 is submitted as GPU array17437046 (`0-3%1`) and CPU report17437047.
-The GPU array is eligible for scheduling on the same four-GPU node as the
-held-out work; the CPU report retains its afterany dependency on this benchmark.
+All four GPU pairs in array 17437046 and CPU report 17437047 complete with exit 0.
+Every pair reproduces all saved particle/scene arrays and all 64 scientific stage
+records exactly. All eight runs finish without extinction. These are saved-output
+checks; the unchanged driver does not save every intermediate state or terminal RNG.
+
+The full measured new-work totals are **852.338 seconds baseline and 841.762
+seconds optimized**, a ratio of 1.01256 and 1.24% lower optimized time. These
+totals include measured source preparation, full run processes, verification
+and report overhead, conditional on the existing frozen fits. They exclude
+historical pilot generation, fitting, tests and search costs.
+
+| Pair | Order | Baseline charged seconds | Optimized charged seconds | Baseline / optimized |
+| --- | --- | ---: | ---: | ---: |
+| 0 | Baseline first | 219.029 | 209.121 | 1.04738 |
+| 1 | Optimized first | 208.817 | 213.203 | 0.97943 |
+| 2 | Baseline first | 212.375 | 199.815 | 1.06285 |
+| 3 | Optimized first | 204.852 | 212.358 | 0.96466 |
+
+Pair charges include shared pair overhead; totals additionally split source
+preparation and final-report cost. The mean pair ratio is 1.01358 with descriptive
+standard error 0.02438. Both baseline-first pairs favor optimized; both reversed
+pairs favor baseline. The design does not identify the cause of this order pattern.
+Four timings do not establish a dependable full-run speed benefit. **Leave the
+optimization inactive**; preserve the tested candidate without further timing
+experiments or integration for now. This decision does not reject its passed
+replay checks or change the separate sampler acceptance gates.
+
+The [complete frozen report](evidence/exchange_full_smc_result_20261022.json)
+and [parent review](evidence/exchange_full_smc_review_20261022.json) preserve
+individual costs, identities, successful scheduler exits and independently
+recomputed cost arithmetic. GPU allocation totals 1,681 seconds; CPU reporting
+takes eight allocated seconds. Held-out accuracy and inclusive sampler cost
+remain pending, and no population shear-calibration claim follows.
+
+## Scheduling history
+
+GPU array 17437046 (`0-3%1`) shared the same four-GPU node as held-out work;
+CPU report 17437047 retained its afterany dependency on the benchmark.
 Before any benchmark task started, root removed the original dependency on
 held-out completion after verifying that both arrays are pinned to th-cl-nv02
 and that no other study GPU jobs run elsewhere. The node has exactly four GPUs,
@@ -15,15 +50,13 @@ preserves before/after scheduler state and unchanged scientific identities.
 Root verified both304-file scientific
 copies, all168 external inputs, harness/test/fixture receipts and the declared
 single-source difference before submission. The [launch receipt](evidence/exchange_full_smc_launch_20261022.json)
-preserves commands, identities and limits. Pairs 0 and 1 now pass exact saved
-output replay, including all 64 stage records, in opposite arm orders. The
-remaining two pairs and complete cost report are pending; no runtime optimization
-is promoted. The [parent review](evidence/categorical_parent_review_20261022.json)
-pins the completed receipts and metadata, without selecting timing results.
+preserves commands, identities and limits. The earlier
+[partial parent review](evidence/categorical_parent_review_20261022.json)
+pins the first two completed receipts without selecting timing results.
 
 The older held-out array still had higher queue priority and consumed released
 slots. Before any benchmark task started, a [temporary priority window](evidence/benchmark_priority_window_20261022.json)
-sets only held-out array 17435350's Nice from 0 to 20. Its throttle stays four;
+changed only held-out array 17435350's Nice from 0 to 20. Its throttle stayed four;
 the one-worker benchmark can run while held-out tasks use remaining capacity.
 Running allocations and scientific configuration are unchanged. CPU job 17439409,
 dependent afterany on the benchmark array, restores Nice to 0 if the same live
@@ -32,8 +65,11 @@ Eight isolated subprocess-fixture checks cover restoration, changed owner/node
 settings, absent/terminal jobs, failed updates and unconfirmed restoration.
 The first benchmark task 17437046_0 starts at 14:13:39 UTC on th-cl-nv02;
 its baseline records meaningful annealing progress without extinction. The
-priority receipt records startup evidence. Full four-pair replay/cost results
-and priority restoration remain required.
+priority receipt records startup evidence. After all four pairs finish, restore
+job 17439409 completes successfully at 14:44 UTC. Its receipt records Nice=20
+before and Nice=0 after; an independent live scheduler check confirms Nice=0,
+throttle four and the original node pin. Held-out task 17435350_12 starts on the
+released GPU. The temporary priority window is closed.
 
 Bounded CPU status check 17439000 is scheduled for 18:00 Europe/Berlin
 (16:00 UTC), covering both workflows and their final-report existence without
@@ -56,9 +92,9 @@ and contiguous target-type draw order. The replacement follows NumPy 2.2.6's
 float64 CDF, normalization and right-sided search; neighbour draws, support
 corrections and relocation arithmetic are unchanged. Parent review independently
 checks the JUnit counts and receipt hashes. Only these review documents are
-copied to the root worktree: runtime integration still requires the complete
-four-pair result and held-out scientific gate. No live source or scheduling
-configuration changes.
+copied to the root worktree. The completed four-pair timing result above does
+not establish sufficient benefit for integration, so runtime code remains on
+the isolated branch. The held-out scientific source remains unchanged.
 
 ## Fixed design and decision boundary
 

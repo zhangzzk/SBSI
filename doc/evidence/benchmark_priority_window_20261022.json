@@ -115,5 +115,15 @@
     ],
     "baseline_completed": true,
     "scope": "Second-arm startup only; final bitwise replay and complete four-pair cost report remain pending."
+  },
+  "completion": {
+    "checked_at_utc": "2026-10-22T14:45:57.099928+00:00",
+    "restore_job": "17439409",
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "receipt": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/benchmark_priority_window_20261022/restoration-17439409.json",
+    "receipt_sha256": "d4c5022a94c77804fcfe374f8f5be7c6bea2435d438abbaf0a9420623bce4670",
+    "live_array_nice_zero_verified": true,
+    "benchmark_jobs_all_completed": true
   }
 }

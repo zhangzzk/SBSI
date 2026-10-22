@@ -1,5 +1,14 @@
 # Conditional categorical-exchange integration candidate
 
+## Current decision
+
+The completed [four-pair full-run benchmark](EXCHANGE_FULL_SMC_REPLAY.md#current-status)
+passes exact saved-output replay but records only 1.24% lower aggregate measured
+time, with both optimized-first pairs slower. This is insufficient evidence of
+a dependable full-run benefit. Leave this tested candidate inactive; no further
+timing experiment or integration is planned now. The historical preparation
+and validation boundary below remains preserved.
+
 ## Scope and promotion boundary
 
 This isolated candidate starts from root commit
