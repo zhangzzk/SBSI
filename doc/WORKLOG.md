@@ -1,5 +1,35 @@
 # Work log
 
+## 2026-10-22 — Make the independent speed benchmark eligible within the four-GPU ceiling
+
+Removed only GPU benchmark array 17437046's dependency on held-out completion.
+All four benchmark tasks were pending before the change. Current scheduler state
+shows both study arrays pinned to th-cl-nv02, one GPU per task, and no study GPU
+jobs elsewhere; the node has exactly four GPUs. This physical capacity preserves
+the combined ceiling with held-out throttle four and benchmark throttle one.
+The independent benchmark can now use scheduler backfill without waiting for
+all forty held-out pairs; availability and priority still govern its start.
+
+The original declaration's allocation dependency is superseded by a separate
+[scheduling receipt](evidence/exchange_full_smc_scheduling_amendment_20261022.json),
+which preserves before/after scheduler output. Both experiment declarations and
+source manifests remain byte-identical; seeds, data, code, runtime, settings,
+within-pair order and CPU report dependency are unchanged. No held-out or benchmark
+outcome was read. Local Slurm documentation confirms empty `Dependency=` removes
+the dependency. Scheduler verification confirms it is cleared and the node pin,
+one-worker throttle and dependent report remain intact. Updated the experiment
+and search overviews. Recheck combined capacity before any future GPU submission
+elsewhere; no speed or acceptance result follows from this scheduling change.
+
+Benchmark eligibility now shows `PENDING/Priority`. Added bounded CPU status
+check 17439000 for 18:00 Europe/Berlin (16:00 UTC), covering both GPU workflows
+and their reports; the earlier held-out check 17436101 stays unchanged. The
+[monitor receipt](evidence/sampler_workflows_scheduled_status_20261022.json)
+pins its source and launcher. It reads scheduler state and report-file existence,
+handles observation timeout separately from scientific-job failure, and writes
+a receipt; it does not wake or message this thread. AST/Bash syntax checks and
+the scheduler's pending BeginTime were verified.
+
 ## 2026-10-22 — Render the completed development evidence as a reproducible figure
 
 Added `doc/evidence/plot_sampler_development_20261022.py`, a versioned SVG,

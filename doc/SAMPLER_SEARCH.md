@@ -120,8 +120,10 @@ Ordinary exchange blocks improve1.132–1.169 times; relocation is0.993–1.055 
 including the slower case. Runtime integration is deferred to retain the
 scientific source used in corrected development. These are block timings, not
 full-sampler efficiency. See [trained-model results](EXCHANGE_CATEGORICAL_RESULTS.md#trained-model-comparison).
-A separate four-pair full-run replay and cost experiment is now queued after
-the current held-out GPU work. It compares every saved scientific output and
+A separate four-pair full-run replay and cost experiment is now eligible to
+share the same four-GPU node with the held-out work, with one benchmark worker.
+The verified node capacity preserves the combined four-GPU ceiling; its original
+completion dependency was removed before any benchmark task started. It compares every saved scientific output and
 all64 stages while timing complete new processes, conditional on the existing
 frozen fits; no speed result yet. See [frozen design and launch](EXCHANGE_FULL_SMC_REPLAY.md#current-status).
 

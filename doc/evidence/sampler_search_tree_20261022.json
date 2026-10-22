@@ -358,17 +358,17 @@
       "id": "n22",
       "parent": "n21",
       "depth": 2,
-      "status": "executed",
+      "status": "running",
       "hypothesis": "Batch the categorical draws inside native exchanges without changing their numerical CDFs or RNG ordering, reducing exchange CPU cost while preserving full trajectories bitwise.",
       "insight": "Exact categorical batching saves CPU proposal work, but realized complete-block gains are smaller and relocation is not uniformly faster. Bitwise replay and local timing do not replace posterior validation or end-to-end cost measurement.",
       "metadata": {
         "dev_score": 1.3609505278392875,
         "test_score": null,
-        "result": "CPU proposals preserve payload and RNG bits; V100 job17422901 additionally preserves complete18-step mixed trajectories, decisions and RNG. Ordinary trained exchange gains1.132-1.169x; relocation0.993-1.055x includes slowdown. Full sampler efficiency unmeasured; runtime integration deferred to preserve corrected development/heldout source identity. Full saved-output replay/cost follow-up queued as17437046 with CPU report17437047 after current held-out GPU arrays; four fixed paired seeds, corrected-v10 sources differing only in categorical code. V2 harness35 tests and existing-development-output fixture pass; exact runtime/recipe/64-stage guards added. Full-run result pending; cost conditional on existing fits.",
+        "result": "CPU proposals preserve payload and RNG bits; V100 job17422901 additionally preserves complete18-step mixed trajectories, decisions and RNG. Ordinary trained exchange gains1.132-1.169x; relocation0.993-1.055x includes slowdown. Full sampler efficiency unmeasured; runtime integration deferred to preserve corrected development/heldout source identity. Full saved-output replay/cost follow-up queued as17437046 with CPU report17437047 after current held-out GPU arrays; four fixed paired seeds, corrected-v10 sources differing only in categorical code. V2 harness35 tests and existing-development-output fixture pass; exact runtime/recipe/64-stage guards added. Full-run result pending; cost conditional on existing fits. Pre-start resource amendment: removed benchmark17437046 dependence on held-out completion after verifying both arrays are pinned to the same four-GPU node and no other study GPU jobs exist elsewhere. Four-GPU ceiling is enforced by node capacity; benchmark throttle1 and report dependency remain. All scientific declarations/manifests/settings/seeds unchanged. Eligible for backfill, not guaranteed earlier execution; no speed result yet.",
         "branch_ref": "codex/exchange-full-smc-20261022@254245be0db80aafb144dd104890be40da6bbceb"
       },
       "created_at": 1792623594,
-      "updated_at": 1792673287
+      "updated_at": 1792677495
     },
     "n23": {
       "id": "n23",

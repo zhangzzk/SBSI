@@ -3,13 +3,26 @@
 ## Current status
 
 Reviewed v2 is submitted as GPU array17437046 (`0-3%1`) and CPU report17437047.
-Its afterany dependencies wait for both held-out GPU arrays; Slurm has already
-satisfied completed warmup17435348 and retains production17435350. Both new
-jobs are pending their prerequisites. Root verified both304-file scientific
+The GPU array is eligible for scheduling on the same four-GPU node as the
+held-out work; the CPU report retains its afterany dependency on this benchmark.
+Before any benchmark task started, root removed the original dependency on
+held-out completion after verifying that both arrays are pinned to th-cl-nv02
+and that no other study GPU jobs run elsewhere. The node has exactly four GPUs,
+so scheduler capacity enforces the combined ceiling while the benchmark remains
+throttled to one worker. Eligibility permits backfill but does not promise an
+earlier start. The [scheduling amendment](evidence/exchange_full_smc_scheduling_amendment_20261022.json)
+preserves before/after scheduler state and unchanged scientific identities.
+Root verified both304-file scientific
 copies, all168 external inputs, harness/test/fixture receipts and the declared
 single-source difference before submission. The [launch receipt](evidence/exchange_full_smc_launch_20261022.json)
 preserves commands, identities and limits. No full-run timing or replay result
 exists yet; no runtime optimization is promoted.
+
+Bounded CPU status check 17439000 is scheduled for 18:00 Europe/Berlin
+(16:00 UTC), covering both workflows and their final-report existence without
+reading science values. Its [receipt](evidence/sampler_workflows_scheduled_status_20261022.json)
+pins source/launcher hashes. It writes a status artifact and does not wake this
+thread. The earlier held-out-only check 17436101 remains scheduled separately.
 
 ## Fixed design and decision boundary
 
@@ -89,9 +102,13 @@ normalizer-accuracy, held-out acceptance or promotion follows from this check.
 
 ## Command graph
 
-After root review only, the GPU array must use inter/th-cl-nv02, one V100,
-two CPUs, array0–3%1 and afterany:17435348:17435350. The dependency enforces the
-resource ceiling regardless of the held-out experiment's scientific outcome.
+The GPU array uses inter/th-cl-nv02, one V100, two CPUs and array0–3%1.
+Its original declaration recorded afterany:17435348:17435350 as a resource
+guard. The pre-start scheduling amendment above supersedes only that allocation
+dependency; the original declaration and all scientific inputs remain immutable.
+The combined four-GPU ceiling now follows from both arrays' mandatory node pin
+and that node's four-GPU capacity. Recheck the limit before submitting study GPU
+work on any other node.
 The CPU report depends afterany on the new GPU array;17435351 is not a
 prerequisite. The prepared declaration and exact commands are recorded in
 [evidence](evidence/exchange_full_smc_preparation_20261022.json).
