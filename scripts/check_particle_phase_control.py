@@ -19,7 +19,7 @@ from sbsi.models import V39_LIKE, load_detection_classifier
 from sbsi.phase_control import (FrozenPhaseControl, digest, phase_stein_control,
                                 rotate_summary_phase)
 from sbsi.summary_gradients import SummaryGradients
-from sbsi.particle_target_measure import NUMERICAL_SOURCES, numerical_identity
+from sbsi.particle_target_measure import NUMERICAL_SOURCES, numerical_identity, source_path
 from sbsi.disk_precision import (LOG_GAP_COLUMN, physical_log_prob_with_gap,
                                  transport_with_log_gap)
 from sbsi.shear_map import apply_shear_to_ellipticity
@@ -115,7 +115,7 @@ def phase_target_identity(protocol, root):
     root = Path(root)
     prior_identity = numerical_identity(protocol, recorded)
     required_sources = (*NATIVE_SOURCES, *(NUMERICAL_SOURCES if prior_identity else ()))
-    actual_sources = {name: digest(root/('configs' if name.endswith('.json') else 'sbsi')/name)
+    actual_sources = {name: digest(source_path(root, name))
                       for name in required_sources}
     if any(recorded.get(name) != value for name, value in actual_sources.items()):
         raise ValueError('native target or derivative source identity changed')

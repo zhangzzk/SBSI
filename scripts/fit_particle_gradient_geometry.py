@@ -14,6 +14,7 @@ from pathlib import Path
 
 import numpy as np
 
+from sbsi.particle_geometry import geometry_target_identity
 from sbsi.particle_gradient_geometry import fit_gradient_geometry, physical_likelihood_gradients
 
 
@@ -40,6 +41,7 @@ def load_pilots(paths):
             raise ValueError(f"incomplete or inconsistent pilot receipt: {path}")
         current = {key: protocol[key] for key in (
             "observations", "fixed_shear", "reference", "reference_protocol_sha256", "observation_sha256")}
+        current.update(geometry_target_identity(protocol))
         if current["fixed_shear"] != [0.0, 0.0]:
             raise ValueError("gradient-metric pilots require exactly zero shear")
         if identity is not None and current != identity:

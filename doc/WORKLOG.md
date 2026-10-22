@@ -1,3 +1,40 @@
+## 2026-10-22 — Bind numerical-prior construction inputs and geometry provenance (n26)
+
+- On isolated `codex/numerical-target-provenance-20261022`, based on combined
+  driver/phase repair `2fe1aac`, added `sbsi/numerical_prior_inputs.py` and
+  expanded `particle_target_measure.py` source identity to include the actual
+  factory, input helper and identity helper. The numerical driver builds the
+  prior once with explicit F24 row0/grid8193 settings, pins declared installed
+  package/data contents before/after construction, and preserves input paths
+  separately from portable content compatibility. Existing local photometry
+  copies and newly copied files are checked as the actual consumed input.
+  Construction/hash time remains inside reported total run time. Analytic
+  construction, arithmetic and protocol fields retain their existing path.
+- `particle_geometry.py`, both geometry fitting scripts and the particle driver
+  now preserve complete numerical target identities and reject mixed pilot laws
+  or cross-law production reuse. Legacy analytic geometry remains compatible.
+  Phase diagnostics resolve the new script/helper source pins and retain the
+  sampling input identity; they consume saved summaries, so no current prior is
+  constructed. The installed native checker now exercises the bound factory.
+  Details and limitations: [numerical pipeline](NUMERICAL_TARGET_PIPELINE.md#construction-inputs-and-geometry-provenance).
+- Validation: with `OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1`,
+  `/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python -m pytest
+  tests/test_numerical_prior_inputs.py tests/test_particle_target_measure.py
+  tests/test_numerical_geometry_identity.py tests/test_particle_geometry.py
+  tests/test_particle_gradient_geometry.py tests/test_phase_control.py -q
+  -p no:cacheprovider` → **112 passed in10.71s**. Tests cover missing/changed
+  inputs, portable content identity, local-table selection/copy checks, one
+  factory call, proposal/report/control identity differences, both geometry
+  fitters, actual driver rejection and unchanged geometry values/RNG.
+  Syntax checks and `git diff --check` pass. No jobs or heavy native/model work
+  were run and no scientific outcomes were inspected.
+- Limits/next: declared package/data pins do not claim closure over system
+  libraries, compiler/generated native-code caches or all environment settings.
+  Fresh-process full-source/environment provenance remains required. Early
+  numerical artifacts without the new identity are deliberately rejected.
+  Parent will freeze and run the full suite plus installed native check; fresh
+  numerical pilots and independent scientific acceptance remain outstanding.
+
 # Work log
 
 ## 2026-10-22 — Repair source-root scope caught by full phase diagnostic tests

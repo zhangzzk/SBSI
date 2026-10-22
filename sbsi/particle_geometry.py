@@ -28,6 +28,32 @@ PILOT_SCALE = 2.38**2 / len(PHYSICAL_COLUMNS)
 EIGENVALUE_FLOOR = 1e-4
 
 
+def geometry_target_identity(protocol):
+    """Add complete numerical provenance; preserve the legacy analytic schema."""
+    from .particle_target_measure import numerical_identity
+    if not numerical_identity(protocol):
+        return {}
+    from .particle_initial_proposal import target_identity
+    return {'geometry_target_identity': target_identity(protocol)}
+
+
+def _validate_geometry_target(metadata):
+    identity = metadata.get('geometry_target_identity')
+    if identity is None:
+        return
+    if not isinstance(identity, dict) or identity.get('target_prior') != 'numerical':
+        raise ValueError('explicit numerical geometry target identity required')
+    from .particle_target_measure import numerical_identity
+    from .particle_initial_proposal import source_fingerprint, IDENTITY_KEYS
+    if any(key not in identity for key in IDENTITY_KEYS):
+        raise ValueError('complete numerical geometry target identity required')
+    sources = identity.get('native_target_source_sha256', {})
+    source_fingerprint({'implementation_sha256': sources})
+    numerical_identity(identity, dict(sources, **identity.get('numerical_prior_source_sha256', {})))
+    if identity['observations'] != metadata['observations']:
+        raise ValueError('geometry target observations differ from artifact')
+
+
 def phase_residual(phase: np.ndarray, centre: np.ndarray) -> np.ndarray:
     """Return phase residuals in radians on [-pi, pi)."""
     return (np.asarray(phase) - np.asarray(centre) + np.pi) % (2 * np.pi) - np.pi
@@ -70,6 +96,7 @@ class FrozenParticleGeometry:
                 or any(type(v) is not int or v < 0 for v in seeds)
                 or len(set(seeds)) != len(seeds)):
             raise ValueError("metadata requires distinct integer pilot seeds")
+        _validate_geometry_target(self._metadata)
         self._pilot_covariance = covariance
         self._phase_centres = centres % (2 * np.pi)
         self._precision = np.linalg.inv(covariance)
@@ -86,14 +113,24 @@ class FrozenParticleGeometry:
         """Return a copy so callers cannot alter the frozen provenance."""
         return deepcopy(self._metadata)
 
-    def validate_production(self, seed: int, observations: list[int]) -> None:
-        """Reject reuse of a pilot RNG seed or a changed observation ordering."""
+    def validate_production(self, seed: int, observations: list[int], *, protocol=None) -> None:
+        """Reject pilot reuse, changed ordering, and undeclared cross-law geometry.
+
+        Numerical artifacts require the production protocol. The original
+        two-argument analytic contract remains supported without new fields.
+        """
         if isinstance(seed, (bool, np.bool_)) or not isinstance(seed, (int, np.integer)) or seed < 0:
             raise ValueError("production seed must be a nonnegative integer")
         if int(seed) in self._metadata["pilot_seeds"]:
             raise ValueError("production seed reuses an independent pilot seed")
         if list(observations) != self._metadata["observations"]:
             raise ValueError("production observations or their order differ from the pilot")
+        recorded = self._metadata.get('geometry_target_identity')
+        if protocol is None:
+            if recorded is not None:
+                raise ValueError('numerical geometry requires an explicit production protocol')
+        elif geometry_target_identity(protocol).get('geometry_target_identity') != recorded:
+            raise ValueError('geometry target law, inputs, or source identity differs from production')
 
     def covariance(self, beta: float) -> np.ndarray:
         """Base covariance, excluding the optional mixture's squared scale."""
