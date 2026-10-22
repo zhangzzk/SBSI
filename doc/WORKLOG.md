@@ -1,5 +1,27 @@
 # Work log
 
+## 2026-10-22 — Bind n22 replay to audited recipe/runtime and validate saved-output fixture
+
+Strengthened the isolated full-SMC harness to compare each arm against the
+complete pinned dev_v10_small_0 protocol, with only declared seed and validated
+source/job provenance changes. Python/NumPy/Torch/device/node/threads, fixed
+settings and all65 temperatures now must match the audited template. Exactly64
+requested/completed stages, ordered indices/betas and final-stage consistency
+are required; two arms sharing the same incorrect setup no longer pass.
+Renamed timing totals to `new_work_seconds_by_arm` and state that historical
+pilot generation/fitting/search are excluded because existing frozen fits
+are reused. No scientific driver or sampler source changed.
+
+CPU17436954 passed35 focused tests in0.22s, prepared fresh immutable v2, and
+passed a CPU-only integration fixture using copies of audited development
+outputs. Only top-level implementation paths/hash and the result protocol hash
+were rebound; scientific values, original seed/history and NPZ bytes stayed
+unchanged. A documented test-only expected-seed mapping exercised the actual
+comparators without adding a production bypass. The [v2 receipt](evidence/exchange_full_smc_preparation_v2_20261022.json)
+records original/copy hashes and precise rebinding. Prior prepared v1 remains
+unchanged. No GPU/science submission; updated commands retain the same resource
+dependencies and four paired seeds. Initial13 tests did not cover these gaps.
+
 ## 2026-10-22 — Prepared isolated n22 saved whole-run replay/cost experiment
 
 Added standalone preparation, paired-run/report harness, launcher and13 focused

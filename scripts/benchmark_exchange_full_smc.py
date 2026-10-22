@@ -80,6 +80,7 @@ def verify(declaration):
             raise ValueError('changed harness: '+name)
     if declaration['seeds'] != SEEDS or declaration['observations'] != OBSERVATIONS:
         raise ValueError('undeclared seed or observation recipe')
+    expected_protocol(declaration, sources, 0)
     return sources
 
 
@@ -137,6 +138,13 @@ def comparable(run, source, expected_manifest):
         if result[key] != digest(run/(name+suffix)):
             raise ValueError('changed saved artifact: '+name)
         del result[key]
+    protocol = normalized_protocol(protocol, source, expected_manifest)
+    return result, protocol, load(run/'progress.json')
+
+
+def normalized_protocol(protocol, source, expected_manifest):
+    """Normalize only checked source locations and the known categorical hash."""
+    protocol, source = copy.deepcopy(protocol), Path(source).resolve()
     sources = {}
     for path, checksum in protocol['implementation_sha256'].items():
         relative = Path(path).resolve().relative_to(source).as_posix()
@@ -148,14 +156,59 @@ def comparable(run, source, expected_manifest):
     # Paths become relative; only the validated candidate source hash is replaced.
     sources['sbsi/scene_exchange.py'] = 'validated categorical arm'
     protocol['implementation_sha256'] = sources
-    return result, protocol, load(run/'progress.json')
+    return protocol
 
 
-def compare_runs(declaration, pair_directory, sources):
+def expected_protocol(declaration, sources, replica):
+    if type(replica) is not int or replica not in range(4):
+        raise ValueError('one of the four declared replicas required')
+    item = declaration['protocol_template']
+    if digest(item['path']) != item['sha256']:
+        raise ValueError('audited development protocol template changed')
+    expected = normalized_protocol(load(item['path']), item['source'], sources['baseline'])
+    fixed = dict(observations=OBSERVATIONS, particles=256, stages=64, moves=64,
+        scale=1., fixed_shear=[0.,0.], density_batch_size=4096,
+        betas=[(i/64)**2 for i in range(65)])
+    for key,value in fixed.items():
+        compare_json(expected[key], value, 'protocol')
+    compare_json(declaration['settings'], dict(particles=256,stages=64,moves=64,
+        power=2.,scale=1.,shear=[0.,0.],density_batch_size=4096), 'protocol')
+    if (expected['reference'] != declaration['reference']
+            or expected['initial_proposal']['path'] != declaration['initial_proposal']
+            or expected['physical_geometry']['path'] != declaration['physical_geometry']):
+        raise ValueError('declared inputs differ from the audited development recipe')
+    runtime = {k:v for k,v in expected['runtime'].items() if k != 'slurm_job_id'}
+    compare_json(runtime, declaration['expected_runtime'], 'protocol')
+    if (runtime['device'] != 'cuda' or runtime['cuda_device_name'] != 'Tesla V100-SXM2-32GB'
+            or runtime['slurm_node_list'] != 'th-cl-nv02' or runtime['torch_num_threads'] != 2):
+        raise ValueError('declared V100 runtime required')
+    expected['seed'] = SEEDS[replica]
+    return expected
+
+
+def validate_saved_run(result, protocol, progress, expected):
+    """Both arms must match the audited recipe, not merely each other."""
+    compare_json(protocol, expected, 'protocol')
+    for key in ('particles', 'observations'):
+        compare_json(result[key], expected[key], 'result')
+    if (set(progress) != {'requested', 'stages'} or type(progress['requested']) is not int
+            or progress['requested'] != 64 or len(progress['stages']) != 64):
+        raise ValueError('exactly 64 requested and completed stages required')
+    for index,stage in enumerate(progress['stages'], 1):
+        compare_json(stage['stage'], index, 'protocol')
+        compare_json(stage['beta'], expected['betas'][index], 'protocol')
+    # The result's final stage must be the actual last progress record, including
+    # its recorded timestamp; no reconstruction or shortened history is allowed.
+    compare_json(result['final_stage'], progress['stages'][-1], 'protocol')
+
+
+def compare_runs(declaration, pair_directory, sources, replica):
+    expected = expected_protocol(declaration, sources, replica)
     values = {}
     for arm in ('baseline','optimized'):
         values[arm] = comparable(Path(pair_directory)/arm,
             declaration['arms'][arm]['source'], sources[arm])
+        validate_saved_run(*values[arm], expected)
     for i,kind in enumerate(('result','protocol','progress')):
         compare_json(values['baseline'][i],values['optimized'][i],kind)
     return {name:compare_npz(Path(pair_directory)/'baseline'/name,
@@ -202,7 +255,7 @@ def run_pair(declaration_path, replica):
             save(receipt_path,receipt)
         if any(a['returncode'] != 0 for a in receipt['arms'].values()):
             raise ValueError('an arm failed; original outputs and costs retained')
-        receipt['arrays'] = compare_runs(d,directory,sources)
+        receipt['arrays'] = compare_runs(d,directory,sources,replica)
         verify(d)
         receipt.update(status='completed',bitwise_scientific_replay=True)
     except Exception as error:
@@ -224,7 +277,7 @@ def report(declaration_path, output):
         r=load(folder/'receipt.json')
         if r['status'] != 'completed' or r['declaration_sha256'] != digest(declaration_path):
             raise ValueError('all four original pairs must complete and replay')
-        compare_runs(d,folder,sources)
+        compare_runs(d,folder,sources,i)
         process=load(Path(d['output'])/f'pair_{i}_process_cost.json')
         arm_total=sum(r['arms'][a]['subprocess_seconds'] for a in ('baseline','optimized'))
         common=max(0.,process['seconds']-arm_total)
@@ -253,7 +306,8 @@ def finalize(report_path, cost_path):
         raise ValueError('successful original report process cost required')
     total={arm:sum(p['charged_seconds'][arm] for p in r['pairs'])+cost['seconds']/2+r.get('source_preparation_seconds',0.)/2
            for arm in ('baseline','optimized')}
-    r.update(status='completed',report_process_cost=cost,all_inclusive_seconds=total,
+    r.update(status='completed',report_process_cost=cost,new_work_seconds_by_arm=total,
+        cost_scope='Complete new run processes and measured source-copy/hash/report overhead, conditional on existing frozen fits; historical pilot generation, fitting and search costs are excluded.',
         total_baseline_to_optimized_ratio=total['baseline']/total['optimized'],
         bookkeeping_finalization_cost='Not measured; JSON-only finalization, no scientific work.')
     save(report_path,r)

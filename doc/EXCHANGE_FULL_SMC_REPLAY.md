@@ -21,6 +21,17 @@ files are hashed. This is not a complete runtime/container image.
 
 ## Exact comparison boundary
 
+Each arm must first match the complete audited dev_v10_small_0 protocol,
+with only its declared replica seed, checked implementation locations/hash,
+and Slurm job ID changed. The original protocol is pinned as the recipe/runtime
+template. Python, NumPy, Torch, device, GPU model, node and thread count must
+match that template. Fixed settings, observation order, proposal/geometry
+metadata, all65 beta values and all other protocol fields must match as well.
+Progress requires exactly64 requested and completed stages numbered1–64,
+each at its declared beta, ending at1. The result's final stage must equal the
+last progress record, including its within-run timestamp. Both arms agreeing
+on an incorrect runtime, truncated history or wrong recipe therefore fails.
+
 Compare every particles.npz/scenes.npz array by field name, dtype, shape and
 bytes, including signed zero and NaN representation. Validate each archive's
 own original SHA256 before comparing decoded arrays. Compare all result,
@@ -47,6 +58,10 @@ The outer /usr/bin/time records each pair process, including harness/import,
 source verification and array comparison. Each arm has its own subprocess wall
 time and unchanged driver timing fields. Shared pair overhead is split equally;
 report subprocess cost and source-copy/hash preparation are also charged equally.
+The report calls the resulting totals `new_work_seconds_by_arm`: these cover
+complete new run processes and measured copy/hash/report overhead, conditional
+on the existing frozen geometry and initial proposal. Historical pilot
+generation, fitting and search costs are neither recreated nor included.
 Time's hundredth-second rounding can yield a tiny negative remainder, clipped
 at zero and visible from raw costs. No scientific warmup/report is hidden.
 Tiny final declaration/manifest serialization and JSON-only report finalization
@@ -69,6 +84,10 @@ resource ceiling regardless of the held-out experiment's scientific outcome.
 The CPU report depends afterany on the new GPU array;17435351 is not a
 prerequisite. The prepared declaration and exact commands are recorded in
 [evidence](evidence/exchange_full_smc_preparation_20261022.json).
+The first prepared snapshot is retained but superseded for submission by
+`exchange_full_smc_prepared_v2_20261022`; the v2 receipt records its fresh
+declaration, manifests, unchanged scientific sources and updated commands in the
+[v2 receipt](evidence/exchange_full_smc_preparation_v2_20261022.json).
 
 ## Focused validation
 
@@ -79,3 +98,18 @@ audit counters and source-map normalization. Tests cover explicit timing
 exceptions, signed-zero/type/shape differences, unexpected source changes,
 fixed command settings, both-arm failure preservation, retry rejection and
 shared report costs. No full suite or GPU science run is requested here.
+
+The initial13 tests did not enforce agreement with the audited runtime/recipe
+or a complete64-stage history. V2 adds explicit failures for each runtime
+field, seed/settings, requested count, missing/misnumbered stages, beta/endpoints
+and final-stage consistency. A separate scheduled CPU fixture exercises the
+real comparators on copies of audited dev_v10_small_0 outputs. It changes only
+top-level protocol implementation roots/hash and the result's protocol hash.
+All scientific values, original seed, stage history and NPZ files remain
+unchanged. A disclosed temporary test-only seed mapping in the imported harness
+allows the existing development seed to exercise the comparator; production
+has no alternate-seed flag. Original/copy hashes and exact rebinding are saved
+in the fixture receipt. This checks the verification path, not new inference.
+CPU17436954 passed all35 focused tests in0.22s, prepared v2, and passed this
+audited-output integration fixture in the same20-second allocation. No inference
+or GPU job was submitted; the prior prepared snapshot remains unchanged.

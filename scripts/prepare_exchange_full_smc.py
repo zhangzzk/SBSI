@@ -64,10 +64,11 @@ def prepare(root, destination, candidate):
         harness_files[str(target.resolve())]=digest(target)
     d=dict(schema='sbsi-n22-full-smc-paired-v1',arms=arms,seeds=SEEDS,observations=OBSERVATIONS,
         reference=str(reference),initial_proposal=dev['initial_proposal']['path'],
-        physical_geometry=dev['physical_geometry']['path'],output=str(root/'exchange_full_smc_runs_20261022'),
+        physical_geometry=dev['physical_geometry']['path'],output=str(root/'exchange_full_smc_runs_v2_20261022'),
         external_files={str(p.resolve()):digest(p) for p in sorted(set(external))},harness_files=harness_files,
         settings=dict(particles=256,stages=64,moves=64,power=2.,scale=1.,shear=[0.,0.],density_batch_size=4096),
-        expected_runtime=dict(node='th-cl-nv02',gpu='Tesla V100-SXM2-32GB',threads=2),
+        protocol_template=dict(path=str(protocol_path),sha256=digest(protocol_path),source=str(original)),
+        expected_runtime={k:v for k,v in protocol['runtime'].items() if k != 'slurm_job_id'},
         allocation_dependencies='afterany:17435348:17435350',array='0-3%1',
         hypothesis='Identical saved whole-run scientific outputs with lower full-process cost; no efficiency conclusion in advance.',
         exclusions=dict(result=['timing_seconds.initialization','timing_seconds.sampling','timing_seconds.total',
