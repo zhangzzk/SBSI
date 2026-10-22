@@ -1,0 +1,412 @@
+{
+  "schema": "heldout-first-group-completion-v1",
+  "checked_utc": "2026-10-22T14:05:27.971371+00:00",
+  "group": 0,
+  "observations": [
+    560126,
+    270602,
+    745801,
+    623219
+  ],
+  "completed_pairs": 8,
+  "completed_populations": 16,
+  "completed_phase_diagnostics": 16,
+  "completed_subprocess_steps": 32,
+  "verified_metadata_and_log_hashes": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/declaration.json": "ad718136d4ac00a37ffcaddf09dcfad92b15e68e4ebbf82ead597ed1b7c1f758",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_corrected_heldout_v3_20261022/SHA256SUMS": "fd96ec78e4b95886a3355082102a25d7a40ffa3dd1a5f4d52443a46458a64df1",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/warmup_complete.json": "f029b7e74f48dc1c87371ed9176eede2f5ce844c46c80c88e8ccc189ffba383e",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/geometry.json": "115a02434d4ade3ba0ffaab78b1f47c6a837f9eccd3b41e4c076116223d1b9f7",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/initial_proposal.json": "cdb0f642798e73e3a6ed6bd9cf4db0ae661d9cd3c0b1579fd4814024e1d93480",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/phase_coefficients.json": "b3a49b6075b9b51f183b23e67eb435cd0aa643f59c4edecc4652836585434882",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_0_stage.json": "bc151e220eac0574706c643ccc023a0510ea549e4db173d93903b31833062fca",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_0_timing.json": "259ed0d6bddae01387816919ea365ddf252ccc3944cca8581ac08dca14134396",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_0.out": "310ab66ddd411f0659d2d5a3a8f0c4a1af000e8cc6f8561424a676a1b91c6b90",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_0_phase_timing.json": "4102bd3a24529b2667177fb6c9b927b1e84b2b8d9f83dfaa961e435ffdf7ed8e",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_0_phase.out": "09eed8389d74bd52d4571b52b19b3e14a407e25f2c5d766eb7df7271c4612322",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_0_timing.json": "8537a97b29110125943e2d4ecff5375d10b53d97a526334f610a6762c062f154",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_0.out": "e68877f0f53e5bfb3c135b8b55ed2e46fa18af0e09c0ae97723f8cb42ec09212",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_0_phase_timing.json": "cc3f5962fc7beb8ab70dcdd3a39d36738632627db39556809552e2f39b64c521",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_0_phase.out": "8d4b13c5959477343e6ed2362e19ba9150ee638dfc98733efb1e296e07aaaf44",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_0/protocol.json": "37f7870b96d9259f975d54cf19b253654e62607dea2008a0ade6fb4b0f6aca50",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_0/result.json": "47df384c1cd4acce29f57ce0a9258cba8050f6425a1017f7653a427d37fe44f4",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_0_phase.json": "3b0c696339730547ccb7a7742f4a8e90750a5f1af9d543dca7637a372e665abf",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_0/protocol.json": "80bfea6d3114b5f38609c4d3c1464ce13aff3eb1be6b9fa7a4c9514eec4d05ba",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_0/result.json": "7dc10c1d3ce7bedec7fdf0a13d035a0f9314112a6173cd02323b16e1894a5020",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_0_phase.json": "7a77adfade2d9141d967848ec0b4695952d6596df6d59f6388cd07c5f7d769b6",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_1_stage.json": "804f38323eb34b838fa7946a736ccb9077b98b6e2d19859618ba0b952ad5fed8",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_1_timing.json": "d3e864a7d55b42f79131e86fdac03b1f97eab9d3a5a1296552f30b63aa0368ca",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_1.out": "9680f52f00ca4d1ca9a38d1295e2e491be0a56391061bd118d70f1c11e9dac38",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_1_phase_timing.json": "a1afd7c52401b5557c69dcd7320f29ed77c957d941709258d4f064067ccbdcbe",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_1_phase.out": "28398918e5cb85ff30d8f53376d40aad52fdcf1a612179ad544a08823a79dc2c",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_1_timing.json": "60e8e086fc4cd1cbfb8c75caaadba449b2fbc5aae9ad2290acf80451f6b93dbd",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_1.out": "3cd5228a6df73bf516943fd5e4a3584663428912144472922bc56b443f1d0224",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_1_phase_timing.json": "bcfbb7f1df6238b00450bd2be7be836adf35df8111f3048bb3f1a63fe03561a8",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_1_phase.out": "afde543ff24195ffb90518f130a9f1773ca34aec39c15aa852fca0f22b029c62",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_1/protocol.json": "9547be543f4bb5d6a2e7dd2eb4393f72d64ca6d97e8077dc1d259f8c5fc580e8",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_1/result.json": "8f18f34b2cfd92f5a57e6ae8ea83cf07fc0ab95ae88af54f0219453a19ec8681",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_1_phase.json": "01ce90e921c8c1f5bd3297070dc44a677c7e83839b12c1afd1c0cbb5eb93b2ab",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_1/protocol.json": "7b91d41419007315316efe5ac6b0b8c86e6ccd6b097c158bab92a21b0d23b7b3",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_1/result.json": "001ee426a2a11004a32f1fba25bf8facec3143ad6b54bef4edeeaeb8574d16f5",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_1_phase.json": "64fcfdc2a688d13eaf7a1b614545ac8e6b8d61bdcd8b774e4a36a6dda631b3d3",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_2_stage.json": "2da2c31051aa3fe96eada8db48268fb01c7ddf6ba6b788f5ef6ef3158373da90",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_2_timing.json": "55c8455bbb477dca11033a09f60eda5f5cd8766985e251aa7aba1a8b22916b57",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_2.out": "d7bca7de8c0c1992bc3a85f74d9ec9b1e178ab7f883096c6f47756ca3e3f4dca",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_2_phase_timing.json": "a20cf200560e33a2be01dc4af62d036dfee1b1910e6ccf4fde1844802e79e7ba",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_2_phase.out": "f2d657c55d7f0a9e4ae1471789c0869b04084da34cc7c74ee529e46e0ef5f79a",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_2_timing.json": "756ae59454008444537068abe26ed46e5c6788403653c6be8a41aefbe63cd478",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_2.out": "378de4a239d9d7f09f57338b429452362d1ad5a8fd5b442d4fab76ca4d8278b1",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_2_phase_timing.json": "ba136baf54030291a8972b9f9d4cd25441f5b3df0e741230af512540dc8541f5",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_2_phase.out": "9e8327b571818cbf3cbf32c4b80dae47e6a11b287ae6b408c5db6d1001cbe9b2",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_2/protocol.json": "51090d3b1f6634f48fb907c654a468a1c97d2dd7a84a77dc5c63f4df6b7bf4b7",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_2/result.json": "1a27c9627bb100ba2c64c876ba1c99efa9aea1ccfda68bac8e0beaf307ee39c9",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_2_phase.json": "f8233c99fc7acefc0fcc5f416c70ec9934144644abd797145f9eaaa1aadc5150",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_2/protocol.json": "58fcb81422a04dd2d02fd770cdf2792cfe5420612d2f46d269e13b41797631f7",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_2/result.json": "762d32000cf54163cb23a7cf569159c8845614e1c69586c741505d8317c2a5c7",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_2_phase.json": "af89d9521c6faaa7a7eafe2e2721c44dafc0e495e046bc0c831a5c71dad8958b",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_3_stage.json": "5b1a1de4c6d6c61838f492bec92f28580447f85a98f5447bf025cc7811d4e99b",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_3_timing.json": "65da0d12ae77ea97e94532ac5d1b5793b4a6ffd5d41c6602d9f964fd4ac7066e",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_3.out": "821714f1e20167f3394aac41a4ae461fe8a569794d50b7d6dcbf0552e1e3588a",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_3_phase_timing.json": "a87d476c35620ccaeb5e6b45f8ebb3e05a097b58e8ca6696aaa3dccf62d5852c",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_3_phase.out": "2e554c94cdbeec61c4458802b2b98b4fa71edc6536a2c5624fd7c1db660ef152",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_3_timing.json": "a76540a6192dc704b0513443c7d23e9c7024b5ae035e7ce4acf961c1eec50a1b",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_3.out": "dcfbc3ace0c56a6cd534b7b260de9ca951017d2313b3018a254f0933ec7621a9",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_3_phase_timing.json": "432c5da4b5faa6459d325d689f178dc10ebd3416ee12f475f98c281e05e7e973",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_3_phase.out": "48b8c1fd5b2b667a73ddcec3f43ef2c36767817b0fc63e7f9ecfad4c887e2022",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_3/protocol.json": "5b5e4a76015f7854bf451e060e8b7fcef5780277fe3a286b4c9e0f532728a302",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_3/result.json": "638cdf7abe4557dd9a3b8a3bd177e38fcc824195c31a09521afbd01c6d22d245",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_3_phase.json": "929cdf6966e689bc856996f7fcbbc752a387dcc00d5f06e39a8105536084e489",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_3/protocol.json": "11f49a1a07346aecaf510a2e7063576d21ff0812f049f9353ae5daa16545cdba",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_3/result.json": "7936ce12c60500e91d38c809597fe0cea1d706e270fed3469a3c6d477d5f0199",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_3_phase.json": "e0d08ba1acb59e6c60684d4514ee8217c754caa9af0d70bb032f63635639b423",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_4_stage.json": "6064b93cee730577ad3aa426f6dbbe1aab93d61657b6d21c83d04c9ddcff1e5d",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_4_timing.json": "cb3466eb682dc9269caf59e2fbd045969b497b92b66577220077fe37344540c8",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_4.out": "dfc9a37340c939a8a68c7f097e285f55c3dd269e8b9a0b3d2c52db2d044d3556",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_4_phase_timing.json": "8f132c13c75778578dd3893a86327a4756d169a55c7959166fa4308fd1586559",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_4_phase.out": "f601201dc9c388175bee8d6c0e1ea6edfee89d63c38b46db4baf681f181e9c10",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_4_timing.json": "eaf8255233acc49e19078ce259d1854ad514e43e87de310165cf198262d71bca",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_4.out": "ba8b93252f08c3c5d6f4db47c6f2e0e2bb59c350991b1b42e52b8065241cb7f4",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_4_phase_timing.json": "09939dfe67bbaf5356b83df6a0e1500c32898d5f22d592e9bb9b5cd88feea1bd",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_4_phase.out": "a262fbdeb21da4458a2c714edc3510df3cbd21b61dbc1a4128ec03767327058c",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_4/protocol.json": "dddce5f9c4fe2f8ff37f91da26ed0aa80197627f17ec5bd05a24ece7d7585b39",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_4/result.json": "651af4d4b78d50373292428dddb33a426ba1e20752b53cc78c003ce3639a256f",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_4_phase.json": "0192ff9721499292a38fa17d7a3a25b8abe309b6c3da7350b6f2e1eeca435a66",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_4/protocol.json": "962b4f92735e23990729e83700ce51857ea576df012b5d13d89c133189978913",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_4/result.json": "6a38a9d09d10a8be093b5fa3d34b7157aaf7aff33cf29ed99e6f379fc54306bc",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_4_phase.json": "cd2b3383477395f596a27a5ebfe5e9aadd5e1bb1e53579824fc2e821a2dc5428",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_5_stage.json": "9156cb00d74ab58d1b9fabf8336b8bc1ad3974ca9572d7df31141ac8cfaaeb00",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_5_timing.json": "25f45d8cb66be1f07f3ea248cecb78ee73995d5bce5f1164d369d2a252ecb3b3",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_5.out": "6b004836fb7bbbc9d9aff9782c1434871d9c1145a3c5ae6289caa4ed5ebcc476",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_5_phase_timing.json": "3836b1cc849cc1d64e5b0300dd3cb7fc1b2b9117a05a3fb25ec50944b1debf0b",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_5_phase.out": "1a1be05880651235b6311259010c78a97b9e7de094b097d9eb332e49c5f6ecd9",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_5_timing.json": "b6f8e9d182ab665212c1dff64adf24f119d22afffb159feb8b03287fb2deebf3",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_5.out": "6543a5ed18e5d7b466a3928689e109eb8d36307d449aadde6a26d957a824c962",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_5_phase_timing.json": "910659ddace93cabe4b73cf0d1a81619526eca04c0d5b490fe3b1fc0f1ce93a0",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_5_phase.out": "a8e9d16fb5408f04e50e1a47ac2cbb075a21bed7b1bf0ea2278d09b035241cbd",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_5/protocol.json": "9e53ace8af881f80b2de879d6efd3fdbeb5fb4fdd5f340f57a22216c54acb99e",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_5/result.json": "048e21a211f67de8349599a56931caef1d71dede360f0d7bba3c7542e7df528a",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_5_phase.json": "ded91ab3ed3aea4c0449e7bfede716f57a4ec6cfef1d95f8a426f9ee14e705e7",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_5/protocol.json": "caa893dd283acd5c0eec93ddd9425259ad5b9a707477176c38df2c6b84784b60",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_5/result.json": "d95c36567df57a157dd12cf8632509d172249591aba784c2586eb0c7927f647e",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_5_phase.json": "4d3ada33db8e8f8a8841f0634053e5d138e33cd52bf66e5b3d0e69918d959d4f",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_6_stage.json": "be09c557ee6dd8729c41a8c2bb12f814f52634a36e1a47e9798ae9eade5ef525",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_6_timing.json": "0d9f06fc7c6f0dc9f681f485c957284873bc7984e2e90ced1beacaa37f45b34c",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_6.out": "0bda1163a496b95ac23485318e9614a3666326f147573e0e64d712fafa85b30b",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_6_phase_timing.json": "9e16f50411f2aca2b328130d6f438d4e1a22365e01e103872c0d2d0e533e5e95",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_6_phase.out": "749984b7c543f32c74a67d5cef8c5ee0077cad2b12e88285837302f8ab3745de",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_6_timing.json": "2bdf2ab69af6be339672f4f26d09697673cc5e22173e4a4dd987d1e8ac79d497",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_6.out": "4558a8f7a3cf82c96154bb596cb2d7c2136d3a1fae09b5778a66dbb33a9ddddc",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_6_phase_timing.json": "613f128f7ba0487a46118dea72384fd4dd6e13b863cca55ebbe231422556a4ea",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_6_phase.out": "45e32082b9ed6844b501b78ec917e0e301a7cba1586a2089bc985915ceef95c1",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_6/protocol.json": "c0c62e196a0ca565d00b9c05d412215156f0b40a7807d24a807728a1bed66cf4",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_6/result.json": "2e20508f199676f9a8818194ccc4fc96caeb6cc9df890ae12d61197fdcacf7f3",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_6_phase.json": "520e76305f5e82549a9e249b6a5f15f47d5c38c0adc6a5fd9fcaef159397dc10",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_6/protocol.json": "5e6aa6553aba8c935edefc8da8ba09b0a8facbe7deaec66fe90e189896357dea",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_6/result.json": "700b0178d70a7ac2b5b61ed3ed52b3b44d7522bcde78304be1e4defd91bbf624",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_6_phase.json": "c3abf9274a8661d3322cdc2ab6fdfa0a59f1cca073c854d32f9a7dc14d949c29",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_7_stage.json": "f5ef5a1569b72f05a1b5eaa1ab0949106cbd70181f4a0480be4f35c2f926b146",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_7_timing.json": "37237499253b6e542587165c5516e34beaaf99920364eaced291ef8e98daf7fd",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_7.out": "4996fe9f319bd543820e4f18ca01ff6de72a236ef8f6c0fbbb2c34c1e2b1fcec",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_7_phase_timing.json": "38cba9f3ebd2871f7ab7667fd6b8a245d4f0f61aa760335eb523023eefd227d0",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_7_phase.out": "03327b110d6f148bb0150c8166347bb01b4b94b6c233dbd3ead8eab5988fe4b5",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_7_timing.json": "42d628e23f05a113de2fe85029e3633bf7df5aa0cda964761d586f6a04c8ecc7",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_7.out": "d233b882f0532ef663689fde2520035abfca718c3ebfecdb6bded1b67e9b9c00",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_7_phase_timing.json": "225be20ad782925b4cfd7d30566e2764aee9da3668a8f35d049837eaf7f8857b",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_7_phase.out": "5cd411aa3c0a8cfddf1aae66b9760f229c9136527b780b33b11dd6189d991d88",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_7/protocol.json": "46b797dc63c4d5cb7d8658a50f901eeadcb787d62047bbfdd076032d2d0370aa",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_7/result.json": "70a1ae82e7915d3646899e30f81b1d573451059b1bf8a2edd66d5dcd67311db4",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_7_phase.json": "57156f03ddcbc78aa54acfeceb95e2e6e67708044a99298323e72a77da0c7516",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_7/protocol.json": "041b963629cdc61845261aa520c6f5d1667610cee5e6c12b6ff4c8a82fd246c8",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_7/result.json": "eddb6295500b45364b23c85b644150ff94ad0c6d01cc0ee6e85ce0b81c905140",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_7_phase.json": "963a47a7318abe9d9e64f1988e72f9b69f93cd84c4b67d1bf45d6893c3efd72d"
+  },
+  "verified_file_count": 126,
+  "pairs": [
+    {
+      "replica": 0,
+      "job_id": "17435350_0",
+      "scheduler_state": "COMPLETED",
+      "scheduler_exit_code": "0:0",
+      "allocated_wall_seconds": 705,
+      "stage_status": "completed",
+      "step_order": [
+        "candidate_0",
+        "candidate_0_phase",
+        "reference_0",
+        "reference_0_phase"
+      ],
+      "runs": [
+        {
+          "kind": "candidate",
+          "seed": 2026103300,
+          "particles": 256,
+          "stage_count": 64,
+          "extinct": false,
+          "phase_numerical_checks_pass": true
+        },
+        {
+          "kind": "reference",
+          "seed": 2026103400,
+          "particles": 1024,
+          "stage_count": 64,
+          "extinct": false,
+          "phase_numerical_checks_pass": true
+        }
+      ]
+    },
+    {
+      "replica": 1,
+      "job_id": "17435350_1",
+      "scheduler_state": "COMPLETED",
+      "scheduler_exit_code": "0:0",
+      "allocated_wall_seconds": 714,
+      "stage_status": "completed",
+      "step_order": [
+        "reference_1",
+        "reference_1_phase",
+        "candidate_1",
+        "candidate_1_phase"
+      ],
+      "runs": [
+        {
+          "kind": "candidate",
+          "seed": 2026103301,
+          "particles": 256,
+          "stage_count": 64,
+          "extinct": false,
+          "phase_numerical_checks_pass": true
+        },
+        {
+          "kind": "reference",
+          "seed": 2026103401,
+          "particles": 1024,
+          "stage_count": 64,
+          "extinct": false,
+          "phase_numerical_checks_pass": true
+        }
+      ]
+    },
+    {
+      "replica": 2,
+      "job_id": "17435350_2",
+      "scheduler_state": "COMPLETED",
+      "scheduler_exit_code": "0:0",
+      "allocated_wall_seconds": 709,
+      "stage_status": "completed",
+      "step_order": [
+        "candidate_2",
+        "candidate_2_phase",
+        "reference_2",
+        "reference_2_phase"
+      ],
+      "runs": [
+        {
+          "kind": "candidate",
+          "seed": 2026103302,
+          "particles": 256,
+          "stage_count": 64,
+          "extinct": false,
+          "phase_numerical_checks_pass": true
+        },
+        {
+          "kind": "reference",
+          "seed": 2026103402,
+          "particles": 1024,
+          "stage_count": 64,
+          "extinct": false,
+          "phase_numerical_checks_pass": true
+        }
+      ]
+    },
+    {
+      "replica": 3,
+      "job_id": "17435350_3",
+      "scheduler_state": "COMPLETED",
+      "scheduler_exit_code": "0:0",
+      "allocated_wall_seconds": 715,
+      "stage_status": "completed",
+      "step_order": [
+        "reference_3",
+        "reference_3_phase",
+        "candidate_3",
+        "candidate_3_phase"
+      ],
+      "runs": [
+        {
+          "kind": "candidate",
+          "seed": 2026103303,
+          "particles": 256,
+          "stage_count": 64,
+          "extinct": false,
+          "phase_numerical_checks_pass": true
+        },
+        {
+          "kind": "reference",
+          "seed": 2026103403,
+          "particles": 1024,
+          "stage_count": 64,
+          "extinct": false,
+          "phase_numerical_checks_pass": true
+        }
+      ]
+    },
+    {
+      "replica": 4,
+      "job_id": "17435350_4",
+      "scheduler_state": "COMPLETED",
+      "scheduler_exit_code": "0:0",
+      "allocated_wall_seconds": 722,
+      "stage_status": "completed",
+      "step_order": [
+        "candidate_4",
+        "candidate_4_phase",
+        "reference_4",
+        "reference_4_phase"
+      ],
+      "runs": [
+        {
+          "kind": "candidate",
+          "seed": 2026103304,
+          "particles": 256,
+          "stage_count": 64,
+          "extinct": false,
+          "phase_numerical_checks_pass": true
+        },
+        {
+          "kind": "reference",
+          "seed": 2026103404,
+          "particles": 1024,
+          "stage_count": 64,
+          "extinct": false,
+          "phase_numerical_checks_pass": true
+        }
+      ]
+    },
+    {
+      "replica": 5,
+      "job_id": "17435350_5",
+      "scheduler_state": "COMPLETED",
+      "scheduler_exit_code": "0:0",
+      "allocated_wall_seconds": 742,
+      "stage_status": "completed",
+      "step_order": [
+        "reference_5",
+        "reference_5_phase",
+        "candidate_5",
+        "candidate_5_phase"
+      ],
+      "runs": [
+        {
+          "kind": "candidate",
+          "seed": 2026103305,
+          "particles": 256,
+          "stage_count": 64,
+          "extinct": false,
+          "phase_numerical_checks_pass": true
+        },
+        {
+          "kind": "reference",
+          "seed": 2026103405,
+          "particles": 1024,
+          "stage_count": 64,
+          "extinct": false,
+          "phase_numerical_checks_pass": true
+        }
+      ]
+    },
+    {
+      "replica": 6,
+      "job_id": "17435350_6",
+      "scheduler_state": "COMPLETED",
+      "scheduler_exit_code": "0:0",
+      "allocated_wall_seconds": 739,
+      "stage_status": "completed",
+      "step_order": [
+        "candidate_6",
+        "candidate_6_phase",
+        "reference_6",
+        "reference_6_phase"
+      ],
+      "runs": [
+        {
+          "kind": "candidate",
+          "seed": 2026103306,
+          "particles": 256,
+          "stage_count": 64,
+          "extinct": false,
+          "phase_numerical_checks_pass": true
+        },
+        {
+          "kind": "reference",
+          "seed": 2026103406,
+          "particles": 1024,
+          "stage_count": 64,
+          "extinct": false,
+          "phase_numerical_checks_pass": true
+        }
+      ]
+    },
+    {
+      "replica": 7,
+      "job_id": "17435350_7",
+      "scheduler_state": "COMPLETED",
+      "scheduler_exit_code": "0:0",
+      "allocated_wall_seconds": 733,
+      "stage_status": "completed",
+      "step_order": [
+        "reference_7",
+        "reference_7_phase",
+        "candidate_7",
+        "candidate_7_phase"
+      ],
+      "runs": [
+        {
+          "kind": "candidate",
+          "seed": 2026103307,
+          "particles": 256,
+          "stage_count": 64,
+          "extinct": false,
+          "phase_numerical_checks_pass": true
+        },
+        {
+          "kind": "reference",
+          "seed": 2026103407,
+          "particles": 1024,
+          "stage_count": 64,
+          "extinct": false,
+          "phase_numerical_checks_pass": true
+        }
+      ]
+    }
+  ],
+  "summed_pair_allocation_seconds": 5779,
+  "scope": "Metadata, timing-receipt arithmetic, source/declaration/fit identities, subprocess-log hashes, declared seed/runtime/settings, completion/extinction/phase-check flags only.",
+  "limitations": [
+    "No posterior score, region-mass, normalizer or comparative cost assessment performed.",
+    "NPZ archives were not rehashed or decoded in this lightweight review; their frozen production validators succeeded and the final panel report will validate them again.",
+    "First-group completion cannot establish the all-five-group held-out accuracy/cost gate."
+  ],
+  "review_correction": "Initial metadata reader required an explicit initial_proposal field for broad reference; corrected optional lookup matches the unchanged frozen validator. No production data, program or scientific outcome was changed.",
+  "accepted_sampler": false,
+  "scientific_gate_evaluated": false
+}

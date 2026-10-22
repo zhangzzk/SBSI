@@ -73,8 +73,10 @@ sampling, phase diagnostics, reporting and verification costs. All-inclusive
 cost must be lower; no accuracy gate is waived for speed. The
 [current launch](CORRECTED_HELDOUT_RUNNER.md#current-launch) is warmup17435348,
 paired production17435350 and CPU report17435351, with at most four V100s.
-All five preparation groups pass; the first independent candidate/reference
-pair and both phase diagnostics complete without extinction. No interim score comparison is used for
+All five preparation groups pass. The first production group completes all
+eight independent candidate/reference pairs and 16 phase diagnostics without
+extinction; a [metadata review](evidence/heldout_first_group_complete_20261022.json)
+verifies the complete first-group receipts. No interim score comparison is used for
 tuning. Full scientific results remain pending.
 
 The first launch failed before any pilot because the preflight pinned changing

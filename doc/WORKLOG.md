@@ -1,5 +1,22 @@
 # Work log
 
+## 2026-10-22 — First complete held-out production group finishes
+
+All eight Slurm pairs 17435350_0–7 complete with exit 0, covering the first
+four held-out observations. A light [completion review](evidence/heldout_first_group_complete_20261022.json)
+verifies 126 metadata/log identities, all 32 subprocess receipts, declared
+seed/runtime/settings and frozen fit identities, counterbalanced order, and
+cost arithmetic. All 16 population runs finish 64 stages without extinction;
+all 16 phase diagnostics report passed numerical checks. Summed paired task
+allocation is 5,779 seconds; no comparative cost or posterior inference is made.
+
+The first metadata-reader attempt expected an explicit null initial-proposal
+field in broad-reference protocols. Using the frozen validator's optional-field
+lookup completes the review; production source/data are unchanged. The receipt
+records that correction. This review does not decode or re-hash the NPZ archives
+and is not the final all-group scientific gate. Updated current workflow and
+search status; the untouched remaining groups and final report stay active.
+
 ## 2026-10-22 — Make the independent speed benchmark eligible within the four-GPU ceiling
 
 Removed only GPU benchmark array 17437046's dependency on held-out completion.

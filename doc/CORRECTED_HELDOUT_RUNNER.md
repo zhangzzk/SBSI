@@ -2,6 +2,16 @@
 
 ## Current launch
 
+The first complete production group (indices 0–7, observations
+560126, 270602, 745801, 623219) finishes all eight candidate/reference pairs:
+16 populations and 16 phase diagnostics, with no extinction and all recorded
+phase numerical checks passing. All eight Slurm tasks exit 0. The
+[completion receipt](evidence/heldout_first_group_complete_20261022.json)
+verifies 126 metadata/log identities, declared settings/seeds/runtime, fit
+identities, counterbalanced step order and receipt-cost arithmetic. This light
+review does not decode/re-hash NPZ archives or compare posterior estimates;
+the frozen final reporter still must validate every group and every gate.
+
 Corrected preflight17435258 completes exit0 in55 allocated seconds. Declaration
 `ad718136d4ac00a37ffcaddf09dcfad92b15e68e4ebbf82ead597ed1b7c1f758`
 pins320 source and1826 external files. It preserves exact scientific settings,
