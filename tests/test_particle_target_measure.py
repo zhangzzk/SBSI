@@ -11,11 +11,12 @@ import pytest
 
 from sbsi.particle_target_measure import (
     NUMERICAL_BRIDGE, NUMERICAL_ENDPOINT, NUMERICAL_MEASURE, NUMERICAL_SOURCES,
-    ENVIRONMENT_TILT, numerical_identity,
+    ENVIRONMENT_TILT, numerical_identity, source_path,
 )
 from sbsi.particle_initial_proposal import FrozenParticleProposal, target_identity
 from test_particle_initial_proposal import identity_protocol, fitted_fixture
 from test_particle_report import make_runs
+from test_numerical_prior_inputs import input_identity
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -30,6 +31,7 @@ def module(name, monkeypatch):
 
 def numerical(protocol=None):
     result = deepcopy(identity_protocol() if protocol is None else protocol)
+    result['numerical_prior_inputs'] = input_identity()
     result.update(target_prior='numerical', numerical_prior_measure=NUMERICAL_MEASURE,
                   bridge=NUMERICAL_BRIDGE, endpoint_target=NUMERICAL_ENDPOINT)
     result['implementation_sha256'].update({f'/source/{name}':hashlib.sha256(name.encode()).hexdigest()
@@ -45,7 +47,7 @@ def test_legacy_analytic_identity_remains_unextended():
     fitted.validate_production(9, p)
 
 
-@pytest.mark.parametrize('field', ['target_prior', 'numerical_prior_measure', 'bridge', 'endpoint_target'])
+@pytest.mark.parametrize('field', ['target_prior', 'numerical_prior_measure', 'bridge', 'endpoint_target', 'numerical_prior_inputs'])
 def test_partial_numerical_identity_fails(field):
     p = numerical();p.pop(field)
     with pytest.raises(ValueError):numerical_identity(p)
@@ -90,6 +92,9 @@ def test_actual_driver_records_numerical_measure_before_model_loading(tmp_path, 
     class BeforeModels(Exception):pass
     def stop(*args, **kwargs):raise BeforeModels
     monkeypatch.setattr(driver.torch, 'set_num_threads', stop)
+    import sbsi.numerical_prior_inputs as inputs
+    monkeypatch.setattr(inputs, 'build_bound_numerical_prior',
+        lambda factory: (None, None, None, input_identity(), {'audit-only': '/toy/path'}))
     monkeypatch.chdir(ROOT)
     for law in ['analytic', 'numerical']:
         output = tmp_path/law
@@ -102,7 +107,7 @@ def test_actual_driver_records_numerical_measure_before_model_loading(tmp_path, 
         assert bool(identity) == (law == 'numerical')
         if law == 'numerical':
             for name, checksum in identity['numerical_prior_source_sha256'].items():
-                assert checksum == hashlib.sha256((ROOT/'sbsi'/name).read_bytes()).hexdigest()
+                assert checksum == hashlib.sha256(source_path(ROOT, name).read_bytes()).hexdigest()
     # Exercise the actual driver's frozen-proposal validation, before model load.
     fitted, _ = fitted_fixture()
     for pilot_law in ['analytic', 'numerical']:
@@ -118,6 +123,26 @@ def test_actual_driver_records_numerical_measure_before_model_loading(tmp_path, 
             with pytest.raises(BeforeModels):driver.main()
         else:
             with pytest.raises(ValueError, match='target_prior'):driver.main()
+            assert not (output/'protocol.json').exists()
+
+
+    # Geometry uses the same production guard, including an old analytic artifact.
+    import numpy as np
+    from sbsi.particle_geometry import FrozenParticleGeometry, geometry_target_identity
+    for pilot_law in ['analytic', 'numerical']:
+        pilot = json.loads((tmp_path/pilot_law/'protocol.json').read_text())
+        metadata = dict(observations=[0, 1, 2, 3], pilot_seeds=[1, 2, 3, 4],
+                        **geometry_target_identity(pilot))
+        geometry = FrozenParticleGeometry(np.broadcast_to(np.eye(5), (4, 5, 5)), np.zeros(4), metadata)
+        artifact = tmp_path/f'{pilot_law}_geometry.json';geometry.save(artifact)
+        output = tmp_path/f'numerical_geometry_from_{pilot_law}'
+        monkeypatch.setattr(sys, 'argv', ['check_galsbi_particles','--reference',str(reference),
+            '--output',str(output),'--observation-indices','0','1','2','3','--seed','5500',
+            '--device','cpu','--target-prior','numerical','--physical-geometry',str(artifact)])
+        if pilot_law == 'numerical':
+            with pytest.raises(BeforeModels):driver.main()
+        else:
+            with pytest.raises(ValueError, match='geometry target law'):driver.main()
             assert not (output/'protocol.json').exists()
 
 
@@ -145,7 +170,7 @@ def test_phase_control_identity_binds_prior_law_and_density_bytes(tmp_path, monk
     phase = module('check_particle_phase_control', monkeypatch)
     p = numerical()
     for name in (*phase.NATIVE_SOURCES, *NUMERICAL_SOURCES):
-        path = ROOT/('configs' if name.endswith('.json') else 'sbsi')/name
+        path = source_path(ROOT, name)
         p['implementation_sha256'] = {k:v for k,v in p['implementation_sha256'].items() if Path(k).name != name}
         p['implementation_sha256'][str(path)] = hashlib.sha256(path.read_bytes()).hexdigest()
     identity = phase.phase_target_identity(p, ROOT)
@@ -153,3 +178,36 @@ def test_phase_control_identity_binds_prior_law_and_density_bytes(tmp_path, monk
     assert 'uniform numerical' in identity['phase_control']
     p['implementation_sha256'][str(ROOT/'sbsi/numerical_native_intensity.py')] = 'a'*64
     with pytest.raises(ValueError, match='source identity changed'):phase.phase_target_identity(p, ROOT)
+
+
+@pytest.mark.parametrize('changed', ['factory', 'inputs'])
+def test_factory_and_input_changes_reject_proposal_report_and_control_identity(tmp_path, monkeypatch, changed):
+    p = numerical(); q = deepcopy(p)
+    if changed == 'factory':
+        q['implementation_sha256']['/source/check_galsbi_continuous_prior.py'] = 'd'*64
+    else:
+        q['numerical_prior_inputs']['files_sha256']['data/photometry_integrals'] = 'd'*64
+    fitted, _ = fitted_fixture()
+    proposal = FrozenParticleProposal(fitted.proposals, dict(fitted.metadata, **target_identity(p)))
+    with pytest.raises(ValueError, match='numerical_prior'): proposal.validate_production(9, q)
+    reporter = module('report_galsbi_particles', monkeypatch)
+    def report(protocol):
+        record = dict(centre=[0., 0.], reference_protocol_sha256='a'*64, observation_sha256='b'*64,
+            density_batch_size=4096, target_source_sha256={Path(k).name:v for k,v in protocol['implementation_sha256'].items()},
+            selection='none', diagnostics_version=reporter.REPORT_VERSION, bridge=NUMERICAL_BRIDGE)
+        record.update(numerical_identity(protocol))
+        return record
+    with pytest.raises(ValueError): reporter.comparison_target_identity(report(p), report(q))
+    if changed == 'inputs':
+        phase = module('check_particle_phase_control', monkeypatch)
+        for protocol in (p, q):
+            protocol['implementation_sha256'] = {str(source_path(ROOT, name)):hashlib.sha256(source_path(ROOT, name).read_bytes()).hexdigest()
+                for name in (*phase.NATIVE_SOURCES, *NUMERICAL_SOURCES)}
+        assert phase.phase_target_identity(p, ROOT) != phase.phase_target_identity(q, ROOT)
+
+
+def test_input_paths_are_audit_only_and_do_not_break_content_compatibility():
+    p = numerical(); q = deepcopy(p)
+    p['numerical_prior_input_paths'] = {'data/photometry_integrals':'/host-a/table'}
+    q['numerical_prior_input_paths'] = {'data/photometry_integrals':'/host-b/table'}
+    assert target_identity(p) == target_identity(q)

@@ -26,7 +26,7 @@ from sbsi.galsbi_scene_prior import GalSBIScenePrior
 from sbsi.galsbi_summary import SummaryLikelihood
 from sbsi.galsbi_target_coordinates import GalSBITargetCoordinates
 from sbsi.particle_target_measure import (NUMERICAL_BRIDGE, NUMERICAL_ENDPOINT,
-    NUMERICAL_MEASURE, NUMERICAL_SOURCES, numerical_identity)
+    NUMERICAL_MEASURE, NUMERICAL_SOURCES, numerical_identity, source_path)
 from sbsi.measurement_model import load_measurement_model
 from sbsi.models import V39_LIKE, load_detection_classifier, load_disk_response
 from sbsi.summary_gradients import SummaryGradients
@@ -110,11 +110,18 @@ def main():
         exactness='Known q0; off-prior-support particles retain zero weight; fixed schedules/kernels; '
                   'native target and numerical environment measures unchanged. Finite-particle ratios are not exact posterior expectations.',
         implementation_sha256={str(p.resolve()):digest(p) for p in source_paths})
+    started = None
+    bound_prior = None
     if args.target_prior == 'numerical':
+        # The one construction and all provenance I/O belong to the full run cost.
+        started = time.monotonic()
+        from sbsi.numerical_prior_inputs import build_bound_numerical_prior
+        bound_prior = build_bound_numerical_prior(build_prior)
+        protocol.update(numerical_prior_inputs=bound_prior[3], numerical_prior_input_paths=bound_prior[4])
         protocol.update(target_prior='numerical', numerical_prior_measure=NUMERICAL_MEASURE,
                         bridge=NUMERICAL_BRIDGE, endpoint_target=NUMERICAL_ENDPOINT)
-        for name in (*NUMERICAL_SOURCES, 'particle_target_measure.py'):
-            path = Path('sbsi')/name
+        for name in NUMERICAL_SOURCES:
+            path = source_path(Path(__file__).resolve().parents[1], name)
             protocol['implementation_sha256'][str(path.resolve())] = digest(path)
         protocol.update(numerical_identity(protocol))
         protocol['exactness'] = ('Known q0 and continuous numerical target/environment laws; '
@@ -125,7 +132,7 @@ def main():
     if args.physical_geometry:
         from sbsi.particle_geometry import FrozenParticleGeometry
         geometry = FrozenParticleGeometry.load(args.physical_geometry)
-        geometry.validate_production(args.seed, args.observation_indices)
+        geometry.validate_production(args.seed, args.observation_indices, protocol=protocol)
         protocol['physical_geometry'] = dict(path=str(args.physical_geometry.resolve()),
             sha256=digest(args.physical_geometry), metadata=geometry.metadata)
         protocol['implementation_sha256'][str(Path('sbsi/particle_geometry.py').resolve())] = digest('sbsi/particle_geometry.py')
@@ -157,7 +164,7 @@ def main():
             path = Path('sbsi')/name
             protocol['implementation_sha256'][str(path.resolve())] = digest(path)
     save(args.output/'protocol.json', protocol)
-    started = time.monotonic()
+    started = time.monotonic() if started is None else started
     torch.set_num_threads(min(2, len(os.sched_getaffinity(0))))
     protocol['runtime'] = dict(python=sys.version.split()[0], numpy=np.__version__,
         torch=str(torch.__version__), device=args.device,
@@ -170,7 +177,7 @@ def main():
     detector = load_detection_classifier(V39_LIKE, device=args.device)
     response_model = load_disk_response(V39_LIKE, device=args.device, nthread=torch.get_num_threads())
     likelihood = SummaryLikelihood(flow, detector, density_batch_size=args.density_batch_size)
-    galaxy, cosmo, _ = build_prior()
+    galaxy, cosmo, _ = build_prior() if bound_prior is None else bound_prior[:3]
     distance = ExactMemo(lambda z: cosmo.background.dist_ang_a(a=1/(1+z)))
     prior = GalSBIScenePrior(galaxy)
     coordinates = (GalSBITargetCoordinates(galaxy, distance) if args.target_prior == 'analytic'

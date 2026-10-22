@@ -339,11 +339,13 @@ def test_full_diagnostic_retains_delta_raw_and_corrected_and_blocks_failed_repla
             digest(root/('configs' if n.endswith('.json') else 'sbsi')/n) for n in diagnostic.NATIVE_SOURCES})
     if target_prior == 'numerical':
         from sbsi.particle_target_measure import (NUMERICAL_BRIDGE, NUMERICAL_ENDPOINT,
-            NUMERICAL_MEASURE, NUMERICAL_SOURCES)
+            NUMERICAL_MEASURE, NUMERICAL_SOURCES, source_path)
+        from test_numerical_prior_inputs import input_identity
+        protocol['numerical_prior_inputs'] = input_identity()
         protocol.update(target_prior='numerical', numerical_prior_measure=NUMERICAL_MEASURE,
                         bridge=NUMERICAL_BRIDGE, endpoint_target=NUMERICAL_ENDPOINT)
         for name in NUMERICAL_SOURCES:
-            path = root/'sbsi'/name
+            path = source_path(root, name)
             protocol['implementation_sha256'][str(path)] = digest(path)
     # Reference IDs index the complete table, not its diagnostic subset.
     observed = pd.concat([observed]*12, ignore_index=True)

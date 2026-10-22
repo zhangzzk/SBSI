@@ -89,3 +89,48 @@ does not run after that failure. Restore the local root and extend the existing
 end-to-end diagnostic test across both analytic/numerical laws and both
 valid/invalid derivative replay. Preserve the failed frozen source/job; a new
 snapshot and complete scheduled suite are required.
+
+
+## Construction inputs and geometry provenance
+
+Numerical runs now bind `check_galsbi_continuous_prior.py`,
+`numerical_prior_inputs.py` and `particle_target_measure.py` alongside the
+numerical density sources. The driver builds the prior once with explicit
+`model_index=0, grid_size=8193` before validating fitted artifacts. This
+construction and the input hashing remain inside reported total run time.
+The analytic factory call, protocol fields and numerical calculations retain
+the original path.
+
+`numerical_prior_inputs` records content hashes under logical names for the
+installed GalSBI, PyCosmo, cosmo_torrent and cosmic_toolbox package files, the
+actual ABC posterior and the photometry integral table consumed by the factory.
+The configured working-directory table copy is handled explicitly: an existing
+copy is the input; a newly created copy must match the source pinned before
+construction. The helper verifies input bytes after construction and never
+rebuilds the prior or draws random values. NumPy and SciPy versions and the
+factory arguments also enter this identity. Actual absolute paths are retained
+separately in `numerical_prior_input_paths`; they do not affect compatibility.
+This is the declared package/data scope, not a claim to capture every system
+library, compiler, generated native-code cache or runtime environment setting.
+The fresh-process, complete source/environment declaration remains required for
+scientific runs. The installed native checker exercises this input binding.
+
+Initial proposals, raw reports and phase-control identities carry the new
+content identity and reject missing or changed construction inputs. Phase
+controls consume saved summaries and do not construct a current prior; their
+identity retains the sampling input hashes while checking actual declared
+source bytes. No redundant prior construction is added to the phase diagnostic.
+
+Both geometry fitters reject mixed analytic/numerical pilots. Numerical geometry
+artifacts preserve the full numerical target identity and require an explicit
+matching production protocol; the particle driver supplies it. Cross-law reuse
+is rejected in either direction. Existing analytic geometry artifacts and their
+two-argument validation API remain supported. These checks govern proposal
+provenance: the frozen symmetric increment law and RNG consumption are unchanged.
+No cross-law exception flag is introduced by this candidate.
+
+These fields intentionally reject early numerical artifacts that lack the
+construction identity; no numerical scientific study has yet been accepted.
+New pilots, a numerical-law phase-fit declaration and independent scientific
+acceptance remain necessary. This change does not alter the frozen analytic
+held-out study or constitute posterior/efficiency validation.

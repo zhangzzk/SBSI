@@ -6,12 +6,22 @@ This is a measure identity, not a posterior-convergence assertion.
 """
 from pathlib import Path
 
+from .numerical_prior_inputs import validate_prior_inputs
+
 ANALYTIC_ENDPOINT = 'q_environment(E) * p_analytic(x) * K(y|x,E)'
 NUMERICAL_ENDPOINT = 'q_environment(E) * q_numerical(x) * K(y|x,E)'
 NUMERICAL_BRIDGE = 'q_environment(E) * q0(x)**(1-beta) * (q_numerical(x)*K(y|x,E))**beta'
 ENVIRONMENT_TILT = ' * R_frozen_environment(E)**(1-beta)'
 NUMERICAL_MEASURE = 'continuous-native-inverse-table-v1'
-NUMERICAL_SOURCES = ('numerical_native_intensity.py', 'galsbi_prior.py', 'galsbi_scene_prior.py')
+NUMERICAL_SOURCES = ('numerical_native_intensity.py', 'galsbi_prior.py', 'galsbi_scene_prior.py',
+                     'check_galsbi_continuous_prior.py', 'numerical_prior_inputs.py', 'particle_target_measure.py')
+
+
+def source_path(root, name):
+    """Resolve declared sources without assuming every dependency is in sbsi/."""
+    directory = ('scripts' if name == 'check_galsbi_continuous_prior.py' else
+                 'configs' if name.endswith('.json') else 'sbsi')
+    return Path(root)/directory/name
 
 
 def numerical_identity(protocol, sources=None):
@@ -28,7 +38,8 @@ def numerical_identity(protocol, sources=None):
         if (protocol.get('endpoint_target') == NUMERICAL_ENDPOINT
                 or 'q_numerical' in protocol.get('bridge', '')
                 or 'numerical_prior_measure' in protocol
-                or 'numerical_prior_source_sha256' in protocol):
+                or 'numerical_prior_source_sha256' in protocol
+                or 'numerical_prior_inputs' in protocol or 'numerical_prior_input_paths' in protocol):
             raise ValueError('numerical target requires explicit numerical prior identity')
         return {}
     if protocol.get('endpoint_target') != NUMERICAL_ENDPOINT:
@@ -58,4 +69,5 @@ def numerical_identity(protocol, sources=None):
         raise ValueError('numerical prior source identity differs from implementation')
     return dict(target_prior='numerical', endpoint_target=NUMERICAL_ENDPOINT,
                 numerical_prior_measure=NUMERICAL_MEASURE,
-                numerical_prior_source_sha256=selected)
+                numerical_prior_source_sha256=selected,
+                numerical_prior_inputs=validate_prior_inputs(protocol.get('numerical_prior_inputs')))

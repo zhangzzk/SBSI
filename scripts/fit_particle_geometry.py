@@ -12,7 +12,7 @@ from pathlib import Path
 
 import numpy as np
 
-from sbsi.particle_geometry import fit_particle_geometry
+from sbsi.particle_geometry import fit_particle_geometry, geometry_target_identity
 
 
 def digest(path):
@@ -43,6 +43,7 @@ def main():
             raise ValueError(f"incomplete or inconsistent pilot receipt: {path}")
         identity = {key: protocol[key] for key in (
             "observations", "fixed_shear", "reference_protocol_sha256", "observation_sha256")}
+        identity.update(geometry_target_identity(protocol))
         if identities and identity != identities[0]:
             raise ValueError("pilot observations, order, shear, or reference identity differ")
         identities.append(identity)

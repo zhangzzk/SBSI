@@ -19,6 +19,7 @@ from scipy.special import logsumexp
 from check_galsbi_continuous_prior import build_prior
 from sbsi.galsbi_target_coordinates import GalSBITargetCoordinates
 from sbsi.numerical_native_intensity import numerical_native_log_intensity
+from sbsi.numerical_prior_inputs import build_bound_numerical_prior
 
 DECLARATION_SHA256 = 'ad718136d4ac00a37ffcaddf09dcfad92b15e68e4ebbf82ead597ed1b7c1f758'
 SEED = 2026104200
@@ -55,7 +56,8 @@ def run(declaration, output):
         roundtrip_log_density_atol=ROUNDTRIP_ATOL,
         scope='Installed-law routing and coordinate roundtrip only; no likelihood, posterior, convergence or efficiency validation.')
     try:
-        galaxy, cosmo, _ = build_prior()
+        galaxy, cosmo, _, inputs, input_paths = build_bound_numerical_prior(build_prior)
+        receipt.update(numerical_prior_inputs=inputs, numerical_prior_input_paths=input_paths)
         sample, metadata = galaxy.sample(PARENT_DRAWS, SEED)
         if not len(sample['z']):
             raise ValueError('native generator retained no rows; no replacement draws permitted')
