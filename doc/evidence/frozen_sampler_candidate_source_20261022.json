@@ -1,9 +1,7 @@
 {
-  "commit": "b7f559a437ad1667bd4efc403d021987114377ce",
   "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_corrected_heldout_v3_20261022",
   "manifest_sha256": "fd96ec78e4b95886a3355082102a25d7a40ffa3dd1a5f4d52443a46458a64df1",
   "manifest_count": 320,
-  "matched_count": 311,
   "compared_bytes": 19180859,
   "changed": [
     {
@@ -53,5 +51,10 @@
   "promotion_status": "candidate only; held-out accuracy and inclusive cost pending",
   "runtime_optimization_included": false,
   "root_working_files_modified": false,
-  "validation_status": "CPU full suite pending"
+  "validation_status_at_preparation": "CPU full suite pending",
+  "validation_status": "CPU1031passed9skipped; held-out scientific acceptance pending",
+  "implementation_commit": "862db4920fc8ad5997bc737f58332ae189cf31d9",
+  "base_commit": "b7f559a437ad1667bd4efc403d021987114377ce",
+  "base_matched_count": 311,
+  "candidate_matched_count": 320
 }

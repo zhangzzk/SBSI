@@ -1,5 +1,22 @@
 # Work log
 
+## 2026-10-22 — Complete-source candidate passes full CPU validation
+
+Implementation commit 862db49 preserves all 320 frozen experiment paths;
+independent Git-blob checks confirm the match. CPU job 17443057 tests its complete
+469-file archive plus source receipt with two CPUs and no GPU. All 470 snapshot
+hashes match before and after; parent review verifies them again alongside JUnit
+and scheduler evidence. Result: **1,031 passed, nine optional skips**, one existing
+NumPy warning, 83.45 test seconds and 108 allocated seconds. No failures or retries.
+
+Added the [validation receipt](evidence/frozen_sampler_candidate_validation_20261022.json),
+complete test-snapshot inventory and exact launcher; updated the candidate note
+and original preparation receipt with the completed status while retaining its
+initial pending status. Nine skips are documented external/historical checks.
+The scalar exchange and all running scientific code/settings remain unchanged;
+the original worktree's local files are preserved. Scientific acceptance still
+requires the complete held-out accuracy and inclusive-cost gates.
+
 ## 2026-10-22 — Preserve the complete frozen sampler source in an isolated candidate
 
 Audited root commit b7f559a against all 320 paths in the actual verified

@@ -46,7 +46,18 @@ original read-only snapshot.
 
 ## Validation
 
-The full CPU suite will run on a complete Git archive of this candidate,
-including packaging and example-data fixtures, with two CPUs and no GPU. Its
-source manifest will be checked before and after. Scientific promotion remains
-conditional on the unchanged held-out report regardless of implementation tests.
+Implementation commit `862db4920fc8ad5997bc737f58332ae189cf31d9` contains all
+320 frozen paths exactly, verified directly against committed Git blobs.
+CPU job 17443057 runs a complete archive of that commit: 469 tracked files plus
+a source receipt, including packaging and example-data fixtures. All 470
+snapshot hashes match before and after, and parent review repeats that check.
+
+**1,031 tests pass, nine optional checks skip**, with one existing NumPy
+deprecation warning, in 83.45 test seconds and 108 allocated seconds on two CPUs
+with no GPU. The skips concern the unavailable BlendEMU catalogue converter
+and optional historical frozen-baseline checks; exact names/reasons are in the
+[validation receipt](evidence/frozen_sampler_candidate_validation_20261022.json).
+The [complete test-source inventory](evidence/frozen_sampler_candidate_test_snapshot_20261022.sha256)
+and [launcher](evidence/frozen_sampler_candidate_tests_20261022.sh) preserve the
+test command, interpreter, environment and source identity. Scientific promotion
+remains conditional on the unchanged held-out report regardless of these tests.
