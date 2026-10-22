@@ -1,0 +1,111 @@
+{
+  "schema": "sbsi-n22-categorical-integration-candidate-v1",
+  "base_commit": "fefd702476251c5b620a29967197b9cfa21df2bf",
+  "implementation_commit": "413fe75bc2d5c7af619617df10827dba5f535684",
+  "validated_optimization_commit": "1c0e0c6aca59e23d360935f1ad768c4345a7e789",
+  "branch": "codex/categorical-integration-20261022",
+  "worktree": "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/categorical-integration-20261022",
+  "changed_implementation_files": [
+    "sbsi/scene_exchange.py",
+    "tests/test_exchange_categorical_replay.py"
+  ],
+  "baseline_and_test_helpers_already_tracked_and_unchanged": true,
+  "file_sha256": {
+    "sbsi/scene_exchange.py": "738df16601bbebbabc15ac7f15e4c2f47255919a7cc0e02e8c0e1df0b5d4508e",
+    "tests/test_exchange_categorical_replay.py": "60d1e1d798be575d160f893b534e7816c5de1937809a95f917941767e019cb58",
+    "doc/evidence/scene_exchange_baseline_55f1220.py": "c5102579e3dfd1cd3c3e9ae5a267cf8ac0df9a6a82d60417fd2772e56aebd5ad",
+    "tests/test_galsbi_prior.py": "6d80146ffdbb361f1030f683cddeec0b41aaf01921b1fc0c6f960f0caad71891",
+    "tests/test_galsbi_particle_target.py": "48be767c56d6fa62d223907d4b2cda18e3bae59d4cee6ff1de1b80d25143540e",
+    "tests/test_informed_environment.py": "be5a052aecae71b0ad5748acbc319d13d15354ad29c6412de4bc3ab9298a7b81",
+    "examples/data/example_catalog.feather": "382adcac48ba7a6aab6705630c7e2e936c467cc47a5b66c6aa5d116651dbbd68",
+    "pyproject.toml": "211f9a8258450becfab81d51908615961829cc246d56b5aa93d5aa805977f372"
+  },
+  "snapshot": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/categorical_integration_source_20261022",
+  "snapshot_complete_tracked_git_archive": true,
+  "tracked_files": 453,
+  "manifest_files": 454,
+  "source_manifest_sha256": "2d34a06931edde2a6293373acf4271028c5b9f1f5a53f56ff5565cb8a8dcabcd",
+  "full_inventory": "doc/evidence/categorical_integration_source_20261022.sha256",
+  "validation": {
+    "job": "17440535",
+    "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/categorical_integration_source_20261022",
+    "manifest_sha256": "2d34a06931edde2a6293373acf4271028c5b9f1f5a53f56ff5565cb8a8dcabcd",
+    "files": 454,
+    "source_before_after_pass": true,
+    "pytest_exit_code": 0,
+    "elapsed_seconds": 104.13000254007056,
+    "python": "3.10.14 | packaged by conda-forge | (main, Mar 20 2024, 12:45:18) [GCC 12.3.0]",
+    "torch": "2.9.1+cu126",
+    "cpus": 2,
+    "gpus": 0
+  },
+  "pytest": {
+    "passed": 1084,
+    "skipped": 9,
+    "warnings": 1,
+    "seconds": 93.48,
+    "categorical_replay_cases_passed": 66,
+    "skips": [
+      {
+        "test": "tests.test_api.test_prepared_pairs_match_blendemu_catalogue_conversion",
+        "reason": "BlendEMU not on PYTHONPATH; skipping the cross-check against its converter"
+      },
+      {
+        "test": "tests.test_informed_environment.test_disabled_default_replays_frozen_original_bitwise",
+        "reason": "set frozen pre-extension target path for independent bitwise replay"
+      },
+      {
+        "test": "tests.test_legacy_exchange_audit.test_real_legacy_support_proposals_follow_old_acceptance_unchanged[exchange-False]",
+        "reason": "set untouched source_v7 for real frozen-code instrumentation checks"
+      },
+      {
+        "test": "tests.test_legacy_exchange_audit.test_real_legacy_support_proposals_follow_old_acceptance_unchanged[exchange-True]",
+        "reason": "set untouched source_v7 for real frozen-code instrumentation checks"
+      },
+      {
+        "test": "tests.test_legacy_exchange_audit.test_real_legacy_support_proposals_follow_old_acceptance_unchanged[exchange_relocate-False]",
+        "reason": "set untouched source_v7 for real frozen-code instrumentation checks"
+      },
+      {
+        "test": "tests.test_legacy_exchange_audit.test_real_legacy_support_proposals_follow_old_acceptance_unchanged[exchange_relocate-True]",
+        "reason": "set untouched source_v7 for real frozen-code instrumentation checks"
+      },
+      {
+        "test": "tests.test_legacy_exchange_audit.test_real_frozen_full_block_sequence_is_bitwise_with_instrumentation",
+        "reason": "set untouched source_v7 for real frozen-code instrumentation checks"
+      },
+      {
+        "test": "tests.test_legacy_exchange_audit.test_frozen_v8_informed_guard_counts_proposal_but_not_old_acceptance[exchange]",
+        "reason": "set untouched source_v7 for real frozen-code instrumentation checks"
+      },
+      {
+        "test": "tests.test_legacy_exchange_audit.test_frozen_v8_informed_guard_counts_proposal_but_not_old_acceptance[exchange_relocate]",
+        "reason": "set untouched source_v7 for real frozen-code instrumentation checks"
+      }
+    ],
+    "warning": "Existing NumPy scalar-conversion deprecation in tests/test_scene_exchange.py:58"
+  },
+  "scheduler_record": "JobID|State|ExitCode|Elapsed|AllocCPUS|AllocTRES|NodeList\n17440535|COMPLETED|0:0|00:02:17|2|billing=14,cpu=2,mem=12G,node=1|th-cl-rome08n4\n17440535.batch|COMPLETED|0:0|00:02:17|2|cpu=2,mem=12G,node=1|th-cl-rome08n4\n17440535.extern|COMPLETED|0:0|00:02:17|2|billing=14,cpu=2,mem=12G,node=1|th-cl-rome08n4\n",
+  "external_receipts": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/categorical_integration_validation/tests.sh": "002e4d5923d5f3a02f854b54132198fc3e441a5871ce05cb1f876bdbcd014659",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/categorical_integration_validation/validation.json": "c0c8d1ee2bba8c8f6f345c63da6f26e1837791e92cdec0ca67810f3c113b6f65",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/categorical_integration_validation/junit.xml": "a890cb6bef35b10ed8bfef523249a570266467f3cefbef37afb2494edbb58702",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/categorical_integration_validation/slurm-17440535.out": "58e5037a228685d84ad5d4c4cb16d92dbdc2b7fd373c7b0ae768018cc906d943"
+  },
+  "promotion_status": "conditional; candidate only, not merged or promoted",
+  "promotion_requires": [
+    "all four complete saved-output benchmark replays",
+    "complete four-pair cost report",
+    "held-out outcome",
+    "parent independent review"
+  ],
+  "new_gpu_jobs": 0,
+  "existing_jobs_or_frozen_sources_modified": false,
+  "limitations": [
+    "Nine optional external/frozen-baseline checks were skipped; exact names/reasons preserved above.",
+    "All66 categorical replay cases ran, including the corrected scalar control and full synthetic state/RNG checks.",
+    "Implementation correctness does not establish convergence or full-run speed.",
+    "Root unrelated dirty/untracked files excluded from isolated complete tracked snapshot and left untouched."
+  ],
+  "heldout_scientific_outcomes_read": false
+}

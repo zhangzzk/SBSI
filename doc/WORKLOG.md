@@ -1,5 +1,28 @@
 # Work log
 
+## 2026-10-22 — Isolated categorical integration candidate passes complete CPU suite
+
+From rootfefd702, candidate implementation413fe75 copies exact optimized
+`scene_exchange.py` SHA738df166… and the unchanged66-case categorical replay
+tests from1c0e0c6. The corrected scalar baseline fixture and imported test helpers
+were already tracked and byte-identical; no dependency or algorithm edits were
+needed. Root's unrelated dirty/untracked files, all live frozen sources/harnesses
+and existing scheduling remain untouched. No held-out scientific outcome was inspected.
+
+CPU17440535 used2 CPUs/no GPU on a read-only complete453-file git archive plus
+receipt, including packaging/example-data resources. **1084 passed,9 optional
+skips**, one existing NumPy warning,93.48 test seconds/137 allocated seconds.
+All66 categorical cases passed, and454 manifest hashes matched before/after.
+The [candidate note](CATEGORICAL_INTEGRATION_CANDIDATE.md#validation-result),
+[exact inventory](evidence/categorical_integration_source_20261022.sha256),
+[launcher](evidence/categorical_integration_tests_20261022.sh) and
+[receipt](evidence/categorical_integration_validation_20261022.json) preserve
+commands, source identities, skips and outputs. No new GPU job or source change
+to running inference. This is a tested candidate, **not promotion**: all four
+full-run saved-output replays/costs, the held-out outcome and independent parent
+review remain required. No convergence or full-run efficiency claim follows
+from these implementation tests.
+
 ## 2026-10-22 — Let the independent benchmark share queue capacity and restore priority automatically
 
 After dependency removal, scheduler priority still favored every older held-out
