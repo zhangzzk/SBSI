@@ -1,0 +1,32 @@
+{
+  "schema": "sbsi-corrected-heldout-integration-v1",
+  "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_corrected_heldout_20261022",
+  "source_files": 320,
+  "manifest_sha256": "b9ccc31f9b701526dace7f1a45da7208141941678060aa23f48af062d7f68b6c",
+  "validation": {
+    "job": 17434704,
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "passed": 982,
+    "skipped": 1,
+    "warnings": 1,
+    "test_seconds": 187.79,
+    "allocation_wall_seconds": 205,
+    "before_after_manifest_pass": true
+  },
+  "files": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_corrected_heldout_20261022/SHA256SUMS": "b9ccc31f9b701526dace7f1a45da7208141941678060aa23f48af062d7f68b6c",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_integration_tests_20261022.sh": "047506dba3c3d6c6c6d335669125a311dc48b2282d70125e8a3215ec4222e554",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-integration-tests-17434704.out": "7b14bb807761934d89fbe77cf4dec0e62848f401fd46e7d71e7ff4880622374d",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_preflight_20261022.sh": "91c80d3474020846d104ccd03ee2050c7eac31f9994e4d25e01a327e15f97f65",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_workflow_20261022.sh": "9061b995dcadcad9d6050125a49aca88cb45aa476c36a116e52cd1a06cf15f8a"
+  },
+  "preflight_job": 17434715,
+  "preflight_status_at_receipt": "queued after successful tests",
+  "scientific_heldout_launched": false,
+  "accepted_sampler": false,
+  "limitations": [
+    "Synthetic/code integration; no heldout accuracy claim.",
+    "Optional BlendEMU converter cross-check skipped; existing NumPy warning."
+  ]
+}

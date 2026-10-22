@@ -57,8 +57,8 @@ IDs, changed recipes or input hashes, mixed frozen implementations, incomplete
 diagnostics, and any already-started production in that group. It preserves
 the declaration, source and pilot hashes in the coefficient artifact. It does
 not read production outcomes, choose coefficients against truth, or apply an
-empirical offset. The full launch wrapper and final cost/accuracy report still
-need to be prepared and frozen after the development decision.
+empirical offset. The [launch wrapper](CORRECTED_HELDOUT_RUNNER.md#scheduled-stage-interface)
+now implements the full cost/accuracy report and is under integrated validation.
 
 Diagnostic provenance must bind exactly the declared pilot's protocol, result
 and particle artifacts. Target identity is checked against that protocol and
