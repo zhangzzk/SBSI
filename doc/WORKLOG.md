@@ -1,5 +1,38 @@
 # Work log
 
+## 2026-10-22 — Queue isolated full-run categorical replay and cost check
+
+Integrated the independently tested benchmark/preparation/fixture scripts,
+launcher,35 focused tests and [experiment design](EXCHANGE_FULL_SMC_REPLAY.md#fixed-design-and-decision-boundary)
+from isolated commit254245be. CPU17436954 completes exit0 in20 seconds:
+35 tests pass in0.22s, immutable preparation passes, and copied audited
+v10 development outputs pass the actual verifier. Initial13 tests had lacked
+fixed-runtime/recipe and complete-history checks; v2 now verifies the full
+protocol template, all64 stages, every scientific JSON field/audit counter and
+all saved NPZ array bytes. Only explicit timing/provenance exceptions apply.
+The fixture's source-root rebinding and test-only seed mapping are disclosed;
+it is no inference result. Both prepared snapshots remain preserved.
+
+Root verifies both304-file source copies, all168 external inputs and test/
+fixture hashes before submitting GPU17437046 (`0–3%1`) afterany both held-out
+GPU arrays, then CPU17437047 afterany that array. The [launch receipt](evidence/exchange_full_smc_launch_20261022.json)
+pins exact commands. Same four development observations, four paired seeds,
+fitted N256/T64/M64 recipe, original geometry/q0 and density4096; both arms
+use corrected v10 source, differing only in previously validated categorical
+draw batching. Existing held-out source/settings stay unchanged. Every failure
+and pair cost is retained; new-work totals include full run subprocesses and
+measured copy/hash/report overhead, conditional on existing fits. Historical
+pilot/fitting/search costs are excluded explicitly. Four pairs give descriptive
+cost evidence, not convergence or promotion. Update n22 evidence without changing
+its earlier proposal-only score or declaring a new best.
+
+The first held-out paired task17435350_0 also completes both runs and both phase
+checks without extinction; wrapper701.06 seconds. Preserved its [startup receipt](evidence/corrected_heldout_first_pair_20261022.json)
+without any interim accuracy contrast. All remaining independent repetitions and
+final accuracy/cost gates are still required. New efficiency jobs wait behind
+this work; monitor their startup when prerequisites finish. Existing scheduled
+status17436101 remains pending. No accepted sampler yet.
+
 ## 2026-10-22 — All held-out preparation groups complete; production starts
 
 All five warmup tasks17435348_0–4 complete exit0 in471/467/467/466/466

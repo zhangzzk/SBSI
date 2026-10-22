@@ -19,7 +19,10 @@ preserves evidence. All five groups now complete successfully (471/467/467/466/4
 allocated seconds), and production17435350_0 has started with no extinction
 in its completed stages. The [all-group startup receipt](evidence/corrected_heldout_all_warmups_20261022.json)
 verifies all55 step receipts and frozen fit-artifact hashes. Independent
-production comparisons and acceptance remain pending.
+production comparisons and acceptance remain pending. The first paired
+production task17435350_0 now completes both populations and both phase checks
+without extinction in701.06 measured wrapper seconds. Its [receipt](evidence/corrected_heldout_first_pair_20261022.json)
+records workflow validation only; no interim accuracy comparison is used.
 
 ## Startup harness repair before any science
 

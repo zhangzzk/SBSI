@@ -364,11 +364,11 @@
       "metadata": {
         "dev_score": 1.3609505278392875,
         "test_score": null,
-        "result": "CPU proposals preserve payload and RNG bits; V100 job17422901 additionally preserves complete18-step mixed trajectories, decisions and RNG. Ordinary trained exchange gains1.132-1.169x; relocation0.993-1.055x includes slowdown. Full sampler efficiency unmeasured; runtime integration deferred to preserve corrected development/heldout source identity.",
-        "branch_ref": "codex/exchange-categorical-20261022@2b1198a4b5c156dd1b1adc75f8d83667353c2035"
+        "result": "CPU proposals preserve payload and RNG bits; V100 job17422901 additionally preserves complete18-step mixed trajectories, decisions and RNG. Ordinary trained exchange gains1.132-1.169x; relocation0.993-1.055x includes slowdown. Full sampler efficiency unmeasured; runtime integration deferred to preserve corrected development/heldout source identity. Full saved-output replay/cost follow-up queued as17437046 with CPU report17437047 after current held-out GPU arrays; four fixed paired seeds, corrected-v10 sources differing only in categorical code. V2 harness35 tests and existing-development-output fixture pass; exact runtime/recipe/64-stage guards added. Full-run result pending; cost conditional on existing fits.",
+        "branch_ref": "codex/exchange-full-smc-20261022@254245be0db80aafb144dd104890be40da6bbceb"
       },
       "created_at": 1792623594,
-      "updated_at": 1792668114
+      "updated_at": 1792673287
     },
     "n23": {
       "id": "n23",
@@ -380,11 +380,11 @@
       "metadata": {
         "dev_score": 0.0005998800239952009,
         "test_score": null,
-        "result": "Audited corrected v10 evaluation17434348: all three pairwise raw score, normalizer, scene-region and both-measure corrected-phase gates pass on4development observations,8independent populations perarm. Small N256/M64 allocated1667s versus large3944s and broad3820s; maximum corrected contrast1.92931combinedMCSE. Full preparation/diagnostic cost remains unknown and heldout pending; no accepted sampler. Fresh heldout source fd96ec78, declaration ad718136: warmup17435348 then paired17435350 and report17435351. Two pilots have completed; all-inclusive assessment pending. Prior telemetry-pinning startup failure preceded all science and its cost is retained.",
+        "result": "Audited corrected v10 evaluation17434348: all three pairwise raw score, normalizer, scene-region and both-measure corrected-phase gates pass on4development observations,8independent populations perarm. Small N256/M64 allocated1667s versus large3944s and broad3820s; maximum corrected contrast1.92931combinedMCSE. Full preparation/diagnostic cost remains unknown and heldout pending; no accepted sampler. Fresh heldout source fd96ec78, declaration ad718136: warmup17435348 then paired17435350 and report17435351. Two pilots have completed; all-inclusive assessment pending. Prior telemetry-pinning startup failure preceded all science and its cost is retained. All five corrected held-out warmups complete. First paired production task17435350_0 completes both populations and both phase checks without extinction,701.0634 wrapper seconds. No interim accuracy contrast or tuning; remaining populations and final inclusive gates pending.",
         "branch_ref": "codex/v10-comparison-20261022@5285f5b; evidence=v10_corrected_comparison_20261022_v3.json#09601af0a43c0b5801bc0467b090e588c745713a3c9fd6d86b58f2f9172d1574; workflow=worktree-galsbi-tempering@42a3955"
       },
       "created_at": 1792623825,
-      "updated_at": 1792670284
+      "updated_at": 1792673287
     }
   }
 }

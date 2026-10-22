@@ -1,0 +1,429 @@
+{
+  "schema": "sbsi-n22-full-smc-preparation-v2",
+  "prepared": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022",
+  "declaration_sha256": "04ac6f6d122839a603f129c4ca2adab39d7505b968c293ab7fa7659bd8df8412",
+  "prepared_manifest_sha256": "8b0665f7b27b2d7119ee51752b19f9e1adc7427af003283d9f744d56c884859b",
+  "original_snapshot_preserved": true,
+  "original_snapshot": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_20261022",
+  "arms": {
+    "baseline": {
+      "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/baseline",
+      "manifest_sha256": "f22761b42d5816ba126baa82a966cb5d1a9620efc1811b42e41931620bff225a"
+    },
+    "optimized": {
+      "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/optimized",
+      "manifest_sha256": "e094aee17ef5a2ada2acd9f6e2050a7f44a953075454fdc7b4236cf950a7b807"
+    }
+  },
+  "protocol_template": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v10_small_0/protocol.json",
+    "sha256": "eb7428144a6c409298631f3cee62f9ca0ef28353925fc8a671937ff937fbf9ea",
+    "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022"
+  },
+  "expected_runtime": {
+    "python": "3.10.14",
+    "numpy": "2.2.6",
+    "torch": "2.9.1+cu126",
+    "device": "cuda",
+    "cuda_device_name": "Tesla V100-SXM2-32GB",
+    "torch_num_threads": 2,
+    "slurm_node_list": "th-cl-nv02"
+  },
+  "settings": {
+    "particles": 256,
+    "stages": 64,
+    "moves": 64,
+    "power": 2.0,
+    "scale": 1.0,
+    "shear": [
+      0.0,
+      0.0
+    ],
+    "density_batch_size": 4096
+  },
+  "seeds": [
+    2026103600,
+    2026103601,
+    2026103602,
+    2026103603
+  ],
+  "tests": {
+    "job": 17436954,
+    "passed": 35,
+    "seconds": 0.22,
+    "cpu_only": true
+  },
+  "fixture_path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_fixture_v2_20261022/fixture_receipt.json",
+  "fixture_sha256": "9caa11eda39170191bd88044b1b3fb3659a074cd96da065dc40624a63d408bd6",
+  "fixture": {
+    "status": "passed",
+    "inference_executed": false,
+    "declaration_sha256": "04ac6f6d122839a603f129c4ca2adab39d7505b968c293ab7fa7659bd8df8412",
+    "original_directory": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v10_small_0",
+    "original_sha256": {
+      "protocol.json": "eb7428144a6c409298631f3cee62f9ca0ef28353925fc8a671937ff937fbf9ea",
+      "result.json": "8aad7b137b23464b1412736be88d5d0c98a91a882ce0e5df85016899d69f6e94",
+      "progress.json": "07fa6c47158458ab26c98a9aca99ff478ec7d789a95d2ef9418bb843106eb260",
+      "particles.npz": "c6570be1d67fe43dd94c1053955a8a440db979133e7a6a6e9271ae7bf9ba6c7e",
+      "scenes.npz": "52945e19ce98dbba70f6a4f70698c6a4fdf6bfa356709d5ab4742afaaa78a7a7"
+    },
+    "fixture_rebinding": {
+      "baseline": {
+        "implementation_before": {
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/scripts/check_galsbi_particles.py": "318f7ab331ee8fbd77b50194650cd8343c87aa620bdb8d0610bfb8bce543fc04",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/annealed_particles.py": "a3895d270ae64ab6c023bf6e288b1b7052c0591b6c36a4a754812631fc099e45",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/galsbi_particle_proposal.py": "8f819102b17a111eada267731ed30a8dfeafa7e377010e6354f8e6a6e5b64fab",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/galsbi_particle_target.py": "9de76a6089b31f73d632e6c3cf768df7667e96f1608e20dff43ee8ab9ce7e5ec",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/scene_exchange.py": "c5102579e3dfd1cd3c3e9ae5a267cf8ac0df9a6a82d60417fd2772e56aebd5ad",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/galsbi_target_coordinates.py": "519c9cd4930a2a0a22d9989bad55b8dc436fe16760f8ed6d5dff3d8160047209",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/galsbi_summary.py": "45cf85f62b3d7742f21b020da78085ec8f59bac8e776aaa3978ee2c7487b75b8",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/summary_gradients.py": "111edaf8a0525d2b6830f615dfbadf8aed7c99cc0d017fc415cbd23ab17fd0af",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/configs/models_v3_9_like.json": "98c2db3d84ee972fe2a1f8955011f66fd00d7c44ce775c34ccf9194fca67e9e8",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/particle_populations.py": "5e142612b28847ee2c37a488b4289819a26e8be7c5efde085fd9b774db6f62af",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/particle_geometry.py": "07bda14a74289c0b250e36aa4a78d883513a9ab04f0250a632af20154df42873",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/particle_initial_proposal.py": "1c2041a818ebe52a8a03a53254a5ef51844a8c79cebb3f9778311b072624578b"
+        },
+        "implementation_after": {
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/baseline/scripts/check_galsbi_particles.py": "318f7ab331ee8fbd77b50194650cd8343c87aa620bdb8d0610bfb8bce543fc04",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/baseline/sbsi/annealed_particles.py": "a3895d270ae64ab6c023bf6e288b1b7052c0591b6c36a4a754812631fc099e45",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/baseline/sbsi/galsbi_particle_proposal.py": "8f819102b17a111eada267731ed30a8dfeafa7e377010e6354f8e6a6e5b64fab",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/baseline/sbsi/galsbi_particle_target.py": "9de76a6089b31f73d632e6c3cf768df7667e96f1608e20dff43ee8ab9ce7e5ec",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/baseline/sbsi/scene_exchange.py": "c5102579e3dfd1cd3c3e9ae5a267cf8ac0df9a6a82d60417fd2772e56aebd5ad",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/baseline/sbsi/galsbi_target_coordinates.py": "519c9cd4930a2a0a22d9989bad55b8dc436fe16760f8ed6d5dff3d8160047209",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/baseline/sbsi/galsbi_summary.py": "45cf85f62b3d7742f21b020da78085ec8f59bac8e776aaa3978ee2c7487b75b8",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/baseline/sbsi/summary_gradients.py": "111edaf8a0525d2b6830f615dfbadf8aed7c99cc0d017fc415cbd23ab17fd0af",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/baseline/configs/models_v3_9_like.json": "98c2db3d84ee972fe2a1f8955011f66fd00d7c44ce775c34ccf9194fca67e9e8",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/baseline/sbsi/particle_populations.py": "5e142612b28847ee2c37a488b4289819a26e8be7c5efde085fd9b774db6f62af",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/baseline/sbsi/particle_geometry.py": "07bda14a74289c0b250e36aa4a78d883513a9ab04f0250a632af20154df42873",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/baseline/sbsi/particle_initial_proposal.py": "1c2041a818ebe52a8a03a53254a5ef51844a8c79cebb3f9778311b072624578b"
+        },
+        "protocol_sha256_before": "eb7428144a6c409298631f3cee62f9ca0ef28353925fc8a671937ff937fbf9ea",
+        "protocol_sha256_after": "1d900fd53e59b00d555a4e24638a512e31b63567d4c8b911583f4336689fa3c3",
+        "copied_file_sha256": {
+          "protocol.json": "1d900fd53e59b00d555a4e24638a512e31b63567d4c8b911583f4336689fa3c3",
+          "result.json": "a4e6f23e2d64a8849019168ff394039ad1fd49478d9ce3af50b5e7afd25b3a20",
+          "progress.json": "07fa6c47158458ab26c98a9aca99ff478ec7d789a95d2ef9418bb843106eb260",
+          "particles.npz": "c6570be1d67fe43dd94c1053955a8a440db979133e7a6a6e9271ae7bf9ba6c7e",
+          "scenes.npz": "52945e19ce98dbba70f6a4f70698c6a4fdf6bfa356709d5ab4742afaaa78a7a7"
+        }
+      },
+      "optimized": {
+        "implementation_before": {
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/scripts/check_galsbi_particles.py": "318f7ab331ee8fbd77b50194650cd8343c87aa620bdb8d0610bfb8bce543fc04",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/annealed_particles.py": "a3895d270ae64ab6c023bf6e288b1b7052c0591b6c36a4a754812631fc099e45",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/galsbi_particle_proposal.py": "8f819102b17a111eada267731ed30a8dfeafa7e377010e6354f8e6a6e5b64fab",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/galsbi_particle_target.py": "9de76a6089b31f73d632e6c3cf768df7667e96f1608e20dff43ee8ab9ce7e5ec",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/scene_exchange.py": "c5102579e3dfd1cd3c3e9ae5a267cf8ac0df9a6a82d60417fd2772e56aebd5ad",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/galsbi_target_coordinates.py": "519c9cd4930a2a0a22d9989bad55b8dc436fe16760f8ed6d5dff3d8160047209",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/galsbi_summary.py": "45cf85f62b3d7742f21b020da78085ec8f59bac8e776aaa3978ee2c7487b75b8",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/summary_gradients.py": "111edaf8a0525d2b6830f615dfbadf8aed7c99cc0d017fc415cbd23ab17fd0af",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/configs/models_v3_9_like.json": "98c2db3d84ee972fe2a1f8955011f66fd00d7c44ce775c34ccf9194fca67e9e8",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/particle_populations.py": "5e142612b28847ee2c37a488b4289819a26e8be7c5efde085fd9b774db6f62af",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/particle_geometry.py": "07bda14a74289c0b250e36aa4a78d883513a9ab04f0250a632af20154df42873",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022/sbsi/particle_initial_proposal.py": "1c2041a818ebe52a8a03a53254a5ef51844a8c79cebb3f9778311b072624578b"
+        },
+        "implementation_after": {
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/optimized/scripts/check_galsbi_particles.py": "318f7ab331ee8fbd77b50194650cd8343c87aa620bdb8d0610bfb8bce543fc04",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/optimized/sbsi/annealed_particles.py": "a3895d270ae64ab6c023bf6e288b1b7052c0591b6c36a4a754812631fc099e45",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/optimized/sbsi/galsbi_particle_proposal.py": "8f819102b17a111eada267731ed30a8dfeafa7e377010e6354f8e6a6e5b64fab",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/optimized/sbsi/galsbi_particle_target.py": "9de76a6089b31f73d632e6c3cf768df7667e96f1608e20dff43ee8ab9ce7e5ec",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/optimized/sbsi/scene_exchange.py": "738df16601bbebbabc15ac7f15e4c2f47255919a7cc0e02e8c0e1df0b5d4508e",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/optimized/sbsi/galsbi_target_coordinates.py": "519c9cd4930a2a0a22d9989bad55b8dc436fe16760f8ed6d5dff3d8160047209",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/optimized/sbsi/galsbi_summary.py": "45cf85f62b3d7742f21b020da78085ec8f59bac8e776aaa3978ee2c7487b75b8",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/optimized/sbsi/summary_gradients.py": "111edaf8a0525d2b6830f615dfbadf8aed7c99cc0d017fc415cbd23ab17fd0af",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/optimized/configs/models_v3_9_like.json": "98c2db3d84ee972fe2a1f8955011f66fd00d7c44ce775c34ccf9194fca67e9e8",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/optimized/sbsi/particle_populations.py": "5e142612b28847ee2c37a488b4289819a26e8be7c5efde085fd9b774db6f62af",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/optimized/sbsi/particle_geometry.py": "07bda14a74289c0b250e36aa4a78d883513a9ab04f0250a632af20154df42873",
+          "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/optimized/sbsi/particle_initial_proposal.py": "1c2041a818ebe52a8a03a53254a5ef51844a8c79cebb3f9778311b072624578b"
+        },
+        "protocol_sha256_before": "eb7428144a6c409298631f3cee62f9ca0ef28353925fc8a671937ff937fbf9ea",
+        "protocol_sha256_after": "e91e3d2751b6ab018423abf7fc03f88e0aae8a6beec9eb152b2b248c00211633",
+        "copied_file_sha256": {
+          "protocol.json": "e91e3d2751b6ab018423abf7fc03f88e0aae8a6beec9eb152b2b248c00211633",
+          "result.json": "1d4b7eca05af7ebd4488d434ccddf5517f5c4de696f66555317ed346ea4bb87f",
+          "progress.json": "07fa6c47158458ab26c98a9aca99ff478ec7d789a95d2ef9418bb843106eb260",
+          "particles.npz": "c6570be1d67fe43dd94c1053955a8a440db979133e7a6a6e9271ae7bf9ba6c7e",
+          "scenes.npz": "52945e19ce98dbba70f6a4f70698c6a4fdf6bfa356709d5ab4742afaaa78a7a7"
+        }
+      }
+    },
+    "expected_seed_override": {
+      "production": 2026103600,
+      "fixture": 2026102900,
+      "scope": "Imported test harness constant only; original and copied protocol seed unchanged"
+    },
+    "compared_arrays": {
+      "particles.npz": {
+        "ancestor_labels": {
+          "dtype": "<i8",
+          "shape": [
+            4,
+            256
+          ],
+          "bytes_sha256": "178339fdd32cb3ec979a41f2b716051db7d0486bcfd9ecb8be5251db38f38d48"
+        },
+        "coordinates": {
+          "dtype": "<f8",
+          "shape": [
+            4,
+            256,
+            10
+          ],
+          "bytes_sha256": "6e34a60651b954c6d85d8ec209daa5e6e90c63c0914e3c932245e09d4bc559ad"
+        },
+        "extinct": {
+          "dtype": "|b1",
+          "shape": [
+            4
+          ],
+          "bytes_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+        },
+        "log_kernel": {
+          "dtype": "<f8",
+          "shape": [
+            4,
+            256
+          ],
+          "bytes_sha256": "a58176085d8e45a41654aae8f01f9a244b5f711b5935e87a3d4905fced30d1a1"
+        },
+        "log_normalizer": {
+          "dtype": "<f8",
+          "shape": [
+            4
+          ],
+          "bytes_sha256": "a6b090d4c5f2ed81a59c81de8ec80877175b4db3dd727ef5bb3a262a4f2d6ffd"
+        },
+        "log_prior": {
+          "dtype": "<f8",
+          "shape": [
+            4,
+            256
+          ],
+          "bytes_sha256": "a16508256d2da3f41ff83c4cd8c66f066120702274788033b78bd6466b0e4e29"
+        },
+        "scores": {
+          "dtype": "<f8",
+          "shape": [
+            4,
+            256,
+            2
+          ],
+          "bytes_sha256": "b2d3f77920d45ebcb7dd5886eeaa3ff2d6e5caa13172926c7fc734a078eab0d8"
+        },
+        "summaries": {
+          "dtype": "<f8",
+          "shape": [
+            4,
+            256,
+            9
+          ],
+          "bytes_sha256": "564e1d4510d0be2b2cd765cd3a3275da8ba2e553cdf86423617ee3505fa731e3"
+        }
+      },
+      "scenes.npz": {
+        "indptr": {
+          "dtype": "<i8",
+          "shape": [
+            1025
+          ],
+          "bytes_sha256": "4158b8d795f5916b33ef3f2d290a427155d629136461fe1062409b20a3c310cd"
+        },
+        "neighbour_M_B": {
+          "dtype": "<f8",
+          "shape": [
+            21931
+          ],
+          "bytes_sha256": "9bdd1d7b04ae76c2a60983f6b0a3d45c7defe93ee914d72d27138e389cf2dec2"
+        },
+        "neighbour_M_i": {
+          "dtype": "<f8",
+          "shape": [
+            21931
+          ],
+          "bytes_sha256": "f66e7c8ef3a8558534af0e5c62ea81a8399f7a16e8a2ac10f84c7898691d549e"
+        },
+        "neighbour_R_kpc": {
+          "dtype": "<f8",
+          "shape": [
+            21931
+          ],
+          "bytes_sha256": "4a3bd61570c999d082fe06a97c40f2afa834f2dc26d2faa7556d3be1bc777370"
+        },
+        "neighbour_a": {
+          "dtype": "<f8",
+          "shape": [
+            21931
+          ],
+          "bytes_sha256": "60fb691620332418471e51095cca9234cfcf667052d699916130d2ebbca3d61b"
+        },
+        "neighbour_c": {
+          "dtype": "<f8",
+          "shape": [
+            21931,
+            5
+          ],
+          "bytes_sha256": "529768ece00f6bfc3e42f21fccca8c95330ecaad58daaf303ae61e616e6ec553"
+        },
+        "neighbour_m_i": {
+          "dtype": "<f8",
+          "shape": [
+            21931
+          ],
+          "bytes_sha256": "8af374f6e8fd70720fc3360c4bedf09a18ade9b66079ac5a257fcf389af60b3e"
+        },
+        "neighbour_m_r": {
+          "dtype": "<f8",
+          "shape": [
+            21931
+          ],
+          "bytes_sha256": "d42231c07fe91c5fefcacad798a600311dc7c4a7b631ff29ec6c34867a2ae4b9"
+        },
+        "neighbour_n": {
+          "dtype": "<f8",
+          "shape": [
+            21931
+          ],
+          "bytes_sha256": "0a60d7a7df38607cc25beef947713cfc62b287a5bc0683adf65e2626f5ac746d"
+        },
+        "neighbour_psi": {
+          "dtype": "<f8",
+          "shape": [
+            21931
+          ],
+          "bytes_sha256": "afa2ad5736b21c004cf0a9a47979636add3494bf958fe660f9d9f298655db4da"
+        },
+        "neighbour_type": {
+          "dtype": "<i8",
+          "shape": [
+            21931
+          ],
+          "bytes_sha256": "8ee8b3cd8fa60ff2b8a5b7ed85a457ded66a22515bdba4c7405c1db8e42997fa"
+        },
+        "neighbour_z": {
+          "dtype": "<f8",
+          "shape": [
+            21931
+          ],
+          "bytes_sha256": "b637cdb9157e97f5383089eb79d96b84504be3a27374ca792336407a7a6196f0"
+        },
+        "offset_arcsec": {
+          "dtype": "<f8",
+          "shape": [
+            21931,
+            2
+          ],
+          "bytes_sha256": "5c029f18e4d0b50825b523c38dd1c8e37afd8fc9155f871a87a363bbb393f4f6"
+        },
+        "target_M_B": {
+          "dtype": "<f8",
+          "shape": [
+            1024
+          ],
+          "bytes_sha256": "7a62b54912662395c1138a0d210e5159cfc77594a6d52e862601c91b063fc5b1"
+        },
+        "target_M_i": {
+          "dtype": "<f8",
+          "shape": [
+            1024
+          ],
+          "bytes_sha256": "927257062ff822c9d5355347309b3f8d7adc63406803d3c1e2ae6e827dec7c5e"
+        },
+        "target_R_kpc": {
+          "dtype": "<f8",
+          "shape": [
+            1024
+          ],
+          "bytes_sha256": "e5ca6672d452e0af1dc697841578c9fcad9be5b0f1c67f6bfc76de07f7cb37d3"
+        },
+        "target_a": {
+          "dtype": "<f8",
+          "shape": [
+            1024
+          ],
+          "bytes_sha256": "314b55c332cd160aa14a2f50f1c9e80bad06955d767a66295831f5df60540098"
+        },
+        "target_c": {
+          "dtype": "<f8",
+          "shape": [
+            1024,
+            5
+          ],
+          "bytes_sha256": "3a4d12109b52d52ea3a81bcb3f346326d92bc78995ab459c2ef9794cdcf31a45"
+        },
+        "target_m_i": {
+          "dtype": "<f8",
+          "shape": [
+            1024
+          ],
+          "bytes_sha256": "459f08ea497f66280ae36a84455623dbfd3d989e8565037af6bde353690da299"
+        },
+        "target_m_r": {
+          "dtype": "<f8",
+          "shape": [
+            1024
+          ],
+          "bytes_sha256": "45880d37a692d4fe4d88b4cc062090ca7ae7692b8ecd7977d3e49a62f4697ac4"
+        },
+        "target_n": {
+          "dtype": "<f8",
+          "shape": [
+            1024
+          ],
+          "bytes_sha256": "a2fce6f2a1660acee62a8db60319263ed53b9fc8b1a5d00c1ff0d7c7f3b881ab"
+        },
+        "target_psi": {
+          "dtype": "<f8",
+          "shape": [
+            1024
+          ],
+          "bytes_sha256": "0614e7ba2f8b19c741c48e67941ca2b5b8e6853ff785475ab207bb5f6af9515c"
+        },
+        "target_type": {
+          "dtype": "<i8",
+          "shape": [
+            1024
+          ],
+          "bytes_sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+        },
+        "target_z": {
+          "dtype": "<f8",
+          "shape": [
+            1024
+          ],
+          "bytes_sha256": "82b5912f7ced5d7674564d9b0c09ffbf171929ac12791a72b32f9f1239454865"
+        }
+      }
+    },
+    "complete_stages": 64,
+    "allowed_saved_output_changes": [
+      "protocol.implementation_sha256",
+      "result.protocol_sha256"
+    ],
+    "implementation_sha256": {
+      "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/exchange-full-smc-20261022/scripts/check_exchange_full_smc_fixture.py": "51d1f5046d3de213e25bf8bd4403c185a3322432b199a041310ca2722f9f9d59",
+      "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/exchange-full-smc-20261022/scripts/benchmark_exchange_full_smc.py": "66fb7b6f8285cdfa86a8238370cf23c02ea585c60a85dd2352f19dcec4e10d53"
+    }
+  },
+  "source_sha256": {
+    "scripts/benchmark_exchange_full_smc.py": "66fb7b6f8285cdfa86a8238370cf23c02ea585c60a85dd2352f19dcec4e10d53",
+    "scripts/prepare_exchange_full_smc.py": "ceca64696ff52c00787d1dde27e9952bbad4b3a75ff1155ca08453145de0b1a7",
+    "scripts/run_exchange_full_smc.sh": "1735347243862b66f9fda5b0957dab4bf2c12862f6d722b4b17af7c6f1ad21c0",
+    "scripts/check_exchange_full_smc_fixture.py": "51d1f5046d3de213e25bf8bd4403c185a3322432b199a041310ca2722f9f9d59",
+    "tests/test_exchange_full_smc.py": "5739a1a97549d03df071252ef68594d2f4748abf1d356456817d3589e0742b5b",
+    "doc/EXCHANGE_FULL_SMC_REPLAY.md": "983fbeabd32723d34fbf0b807016132a5117cf4fdc050b573a95a9f97fbbcd71"
+  },
+  "receipt_sha256": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_tests/junit_v2.xml": "8fecd3276296f29a405211ad3fd160219e366748b2dc373c0c9d8cea41e3b45c",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_tests/v2-17436954.out": "edec605eebc7039d7abcb741670ffa1d317f6ff8061328b0017774d9cf67a08c"
+  },
+  "commands": {
+    "pairs": "sbatch --parsable --dependency=afterany:17435348:17435350 --partition=inter --nodelist=th-cl-nv02 --gres=gpu:v100:1 --cpus-per-task=2 --mem=16G --time=00:30:00 --array=0-3%1 --job-name=exchange-full-pair --output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange-full-pair-%A_%a.out /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/run_exchange_full_smc.sh /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/declaration.json /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022 /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022 pair",
+    "report": "sbatch --dependency=afterany:PAIR_ARRAY_JOB_ID --partition=cluster --cpus-per-task=2 --mem=8G --time=00:15:00 --job-name=exchange-full-report --output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange-full-report-%j.out /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/run_exchange_full_smc.sh /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022/declaration.json /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_prepared_v2_20261022 /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022 report"
+  },
+  "science_submitted": false,
+  "cost_scope": "Complete new run processes plus measured copy/hash/report overhead conditional on existing frozen fits; historical pilot generation/fitting/search excluded.",
+  "limitations": [
+    "Saved whole-run outputs and64 stages, not intermediate mutation states or terminal RNG.",
+    "Four pairs provide bounded descriptive timing evidence only."
+  ]
+}
