@@ -1,4 +1,4 @@
-# Native exchange type batching: CPU evidence and pending GPU replay
+# Native exchange type batching: CPU and trained-model replay evidence
 
 ## Decision and scope
 
@@ -6,8 +6,10 @@ The fixed n22 candidate passes correctness checks and exceeds its predeclared
 CPU proposal-time threshold. Its development score is **1.3609505278392875**:
 the geometric mean speedup of ordinary 1024/4096-row proposals without
 relocation. This is a microbenchmark score, not scientific sampler efficiency.
-The parent should integrate documentation and evidence first, holding the
-runtime change until the trained-model replay/cost check finishes.
+The trained-model check also passes bitwise replay, with ordinary full-exchange
+block speedups of 1.132–1.169x. Runtime integration remains deferred to preserve
+the corrected development/held-out scientific source identity; documentation
+and evidence can be integrated independently.
 
 The candidate changes only the temporary target-type categorical draws in
 `sbsi/scene_exchange.py`. The corrected 55f1220 baseline and candidate have
@@ -58,7 +60,7 @@ one process, one CPU allocation and NumPy version; GPU evaluation and complete
 sampler costs were not measured. No sampling-law or convergence improvement is
 claimed.
 
-## Prepared trained-model comparison
+## Trained-model comparison
 
 `scripts/benchmark_exchange_trained.py` compares the corrected scalar control
 against the candidate in the same immutable source tree. It reads completed
@@ -71,10 +73,34 @@ trajectory steps, followed by paired exchange and relocation timings at beta
 differs between arms; the old saved-run source is not used as the control.
 
 The standalone launcher requires a scheduled job and a fresh output. The
-snapshot is prepared at
+immutable snapshot is retained at
 `/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_categorical_source_20261022`.
-The parent may submit one V100 on `th-cl-nv02` after job array 17422526 completes;
-the separately prepared phase job plus this comparison remain within the
-parent's combined GPU limit. **No GPU job was submitted by this task.** A failed
-replay must retain its receipt and block integration; positive timings alone
-are insufficient.
+The parent submitted GPU **17422901**, dependent on completed array 17422526,
+on one V100 at `th-cl-nv02`. It completed successfully in **45 seconds**. The
+[trained-model receipt](evidence/exchange_categorical_trained_20261022.json)
+preserves the full output, scheduler record, source/input hashes and original
+log hash. The source manifest hash is
+`acaa720e64a6017413d19cee8925f27abb0b38383b663c7c671677b5d598cf71`.
+
+Saved kernel and native-prior reconstruction errors were both exactly zero.
+All 18 mixed-block trajectory transitions and all paired timing calls preserve
+full state, acceptance/active decisions and RNG bytes. The input population,
+four-observation grouping, 1024 rows and 4096 density batch remain fixed.
+
+| Full exchange block | Baseline median | Candidate median | Speedup |
+| --- | ---: | ---: | ---: |
+| beta 0.001, no relocation | 83.618 ms | 71.520 ms | 1.169x |
+| beta 1, no relocation | 85.268 ms | 75.316 ms | 1.132x |
+| beta 0.001, relocation | 277.643 ms | 279.469 ms | 0.993x |
+| beta 1, relocation | 268.655 ms | 254.688 ms | 1.055x |
+
+The ordinary full-block improvement survives the actual trained-model path.
+Relocation does not improve uniformly: its low-beta median is slightly slower.
+This negative case is retained without further tuning or another run. Seven
+timed pairs on one fixed population and one allocation do not establish a
+general timing distribution or full-SMC wall-time saving. The complete sampling
+trajectory over all temperatures was not benchmarked. Neither convergence nor
+normalizer accuracy changed by design. The primary predeclared development
+metric remains the CPU proposal score above; these GPU timings are a separate
+feasibility check. The isolated runtime candidate remains available for later
+integration after the current source-frozen held-out procedure.

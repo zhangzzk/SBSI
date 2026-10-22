@@ -1,5 +1,24 @@
 # Work log
 
+## 2026-10-22 — N22 trained-model replay passes; runtime integration remains deferred
+
+Parent-submitted GPU 17422901 completed in45 s on one V100 at th-cl-nv02,
+after development array17422526. The immutable n22 snapshot reproduces saved
+kernel/prior values exactly and preserves full state/decision/RNG bytes over
+18 mixed-block transitions and all paired timing calls. Ordinary complete
+exchange-block median speedups are **1.169x at beta0.001** and **1.132x at
+beta1**. Relocation is **0.993x/1.055x**; the slightly slower low-beta case is
+preserved without tuning. See [results](EXCHANGE_CATEGORICAL_RESULTS.md#trained-model-comparison)
+and [full receipt](evidence/exchange_categorical_trained_20261022.json), including
+all source/input hashes, timing samples and scheduler record. This update is
+documentation/evidence only; receipt hashes match the frozen265-file manifest.
+
+The primary CPU proposal score remains1.36095x. Seven timing pairs on one saved
+population establish a bounded full-block saving, not full-SMC wall time or
+convergence. Runtime integration stays deferred to keep current corrected
+development and held-out scientific source byte-identical. No new job, source
+snapshot edit, or sampler change was made in this follow-up.
+
 ## 2026-10-22 — Isolated n22 type-draw batching passes CPU replay; GPU check prepared
 
 Only temporary target-type categorical draws in `scene_exchange.py` are
