@@ -1,5 +1,34 @@
 # Work log
 
+## 2026-10-22 — Implement and schedule CPU concurrency; isolate redundant-prior work
+
+Following the owner's request for substantially greater CPU use, implemented
+[one/two/four workers per V100](SMC_CPU_CONCURRENCY.md#hypothesis-and-fixed-experiment)
+in isolated branch `codex/smc-cpu-concurrency-20261022`, harness 0ee415b and
+complete experiment 13a1fca. Six fixed settings run all four fresh seeds in
+forward/reverse order. Workers have disjoint physical CPU cores; all saved
+scientific outputs and 64-stage histories must match the unchanged recipe.
+Failures stop and reap children; no dropped populations or retries.
+
+CPU17445433 passes 1,064 tests/11 skips in 101.94 seconds, 138 allocated seconds.
+All 35 focused tests passed earlier; two physical-affinity tests skip on this
+two-CPU full-suite allocation. All 478 source hashes match before/after, and
+frozen preparation verifies the complete 320-file sampler and input pins.
+GPU17445452 is queued with one V100/eight physical cores. Temporarily lowered
+held-out array17435350's throttle from four to one; its running tasks and
+scientific settings remain untouched. Pre-submitted completion restore17445497
+and 20-minute startup guard17445498 prevent an indefinite resource restriction.
+Both experiments stay on the same physical four-GPU node.
+
+Separately, candidate49918c6 on `codex/smc-prior-reuse-20261022` avoids unchanged
+target-prior recalculation for neighbour moves and reuses freshly decoded
+photometry within type calculations. It preserves the public native-prior
+semantics and RNG; focused tests pass. Full CPU, real photometry and GPU replay
+remain pending. The [concurrency preparation evidence](evidence/smc_cpu_concurrency_preparation_20261022.json)
+and Arbor n24/n25 record these separate interventions. No throughput result,
+scientific acceptance or production adoption is claimed. Documentation JSON,
+shell syntax, source hashes and whitespace checks pass.
+
 ## 2026-10-22 — Estimate sampler cost and scaling from completed timing receipts
 
 Added [computation-cost evidence](SAMPLER_COMPUTE_COST.md#measured-recipe-and-evidence)

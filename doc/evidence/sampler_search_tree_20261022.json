@@ -1,5 +1,5 @@
 {
-  "_counter": 23,
+  "_counter": 25,
   "root": "n0",
   "nodes": {
     "n0": {
@@ -385,6 +385,38 @@
       },
       "created_at": 1792623825,
       "updated_at": 1792682456
+    },
+    "n24": {
+      "id": "n24",
+      "parent": "n21",
+      "depth": 2,
+      "status": "running",
+      "hypothesis": "Multiple independent two-CPU sampler processes sharing one V100 overlap host-side prior and scene work, increasing complete fixed-recipe production throughput while preserving every saved scientific output bitwise.",
+      "insight": "Host-side prior and scene work motivates sharing each GPU between independent CPU workers. Keep all original population work, numerical grouping, seeds and CPU threads fixed; whole-setting throughput and exact saved-output replay must both improve.",
+      "metadata": {
+        "dev_score": null,
+        "test_score": null,
+        "result": "Harness 0ee415b plus preparation/launcher13a1fca frozen. CPU17445433 passed1064 tests,11 skips (two new process-affinity tests require four physical cores; all35 focused tests passed independently), all478source hashes and320sampler preflight pass. Counterbalanced GPU job17445452 queued on one V100/eight physical cores. No measured throughput yet.",
+        "branch_ref": "codex/smc-cpu-concurrency-20261022@13a1fcaaa52af407a526ac45690ad1325ae14845"
+      },
+      "created_at": 1792686024,
+      "updated_at": 1792686821
+    },
+    "n25": {
+      "id": "n25",
+      "parent": "n21",
+      "depth": 2,
+      "status": "running",
+      "hypothesis": "Reusing owned unchanged target evaluations and freshly decoded type-independent photometry removes redundant deterministic prior work while preserving sampler target values, proposal laws, saved outputs and RNG exactly.",
+      "insight": "Avoid repeated native prior work when only neighbours change, and reuse freshly decoded type-independent photometry only through an explicit ownership boundary. Public arbitrary-native-data intensity must still recompute derived values.",
+      "metadata": {
+        "dev_score": null,
+        "test_score": null,
+        "result": "Owned-prior reuse candidate49918c6 implemented on isolated branch. Focused104tests pass with1optional skip; fullCPU and actual external photometry/savedGPU replay still pending. No efficiency/adoption claim.",
+        "branch_ref": "codex/smc-prior-reuse-20261022@49918c663f6f75bdd4570ac12ff11a1c84399397"
+      },
+      "created_at": 1792686304,
+      "updated_at": 1792686821
     }
   }
 }
