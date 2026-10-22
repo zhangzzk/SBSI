@@ -1,5 +1,34 @@
 # Work log
 
+## 2026-10-22 — Add an independent audit of the completed corrected heldout panel
+
+Added `scripts/audit_completed_corrected_heldout.py`, focused synthetic tests,
+and the [execution/scope note](COMPLETED_HELDOUT_AUDIT.md#source-authority-and-execution)
+on an isolated branch from complete-source candidate0301993. The script requires
+the original final result before population reads, verifies the exact frozen
+declaration/320-file source authority, and reuses the original strict provenance
+validators. It independently recomputes raw precision, score/region/normalizer
+agreement, both controlled-score comparisons, all twenty object conjunctions,
+and the strict inclusive-cost decision. It checks all46 stages/235 step receipts
+and keeps failed scientific gates failed, with explicit per-object reasons.
+Original reports and frozen science are never overwritten or rerun.
+
+Validation: `python -m pytest tests/test_completed_corrected_heldout_audit.py -q`
+with `/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python`: **44 passed in
+1.45 seconds**. These small CPU tests cover every gate, threshold boundaries,
+supplemental diagnostics remaining nongating, missing/duplicate costs, failed
+final decisions, completion barriers, changed logs/receipts/reservations and
+source rejection. `py_compile`, `ruff check --select F821,F823`, and
+`git diff --check` pass. An initial test fixture supplied a NumPy scalar where
+JSON supplies a Python float; correcting the fixture resolved its sole failure.
+
+No real heldout scientific output was inspected, no actual-panel audit was run,
+and no jobs were submitted for this change. Parent orchestration will freeze
+the script and run full validation plus the completed-panel audit in a CPU
+allocation. The audit preserves the declared p_A(target)*q_E(environment)*K32
+scope and likelihood-only F64 reweighting; it establishes neither numerical
+mock-target q_N equality nor population shear calibration or new CPU throughput.
+
 ## 2026-10-22 — Complete-source candidate passes full CPU validation
 
 Implementation commit 862db49 preserves all 320 frozen experiment paths;
