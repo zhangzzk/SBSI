@@ -1,0 +1,61 @@
+{
+  "reviewed_utc": "2026-10-22T16:44:49.704066+00:00",
+  "status": "cpu_and_real_native_replay_passed_gpu_pending",
+  "test_source_commit": "e513592aad467cd113920d2fb948dca2d8821c4e",
+  "validation": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_prior_reuse_validation_v1_20261022/validation.json",
+    "sha256": "d1fa7ee2fca1caa5f7ac979c190056a97bdcbab77cb518152234dda014c95342",
+    "receipt": {
+      "job": "17445720",
+      "commit": "e513592aad467cd113920d2fb948dca2d8821c4e",
+      "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_prior_reuse_test_source_v1_20261022",
+      "manifest_sha256": "13f99ecca04a84c24ef60a721aa1a478e140e80ef88673ad1d5d2b9df5d4d2b1",
+      "files": 479,
+      "source_before_after_pass": true,
+      "pytest_exit_code": 0,
+      "native_replay_exit_code": 0,
+      "elapsed_seconds": 132.09418779378757,
+      "requested_physical_cpus": 4,
+      "gpus": 0,
+      "affinity": [
+        49,
+        113,
+        52,
+        53,
+        54,
+        116,
+        117,
+        118
+      ]
+    }
+  },
+  "accounting": "17445720|COMPLETED|0:0|156|8",
+  "junit_totals": {
+    "tests": 1101,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 9
+  },
+  "native_replay": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_native_replay_20261022/result.json",
+    "sha256": "a99f34598ce9e68fb6cc0265a466383d915bba60ea406e00ee70540f93916bc6",
+    "development_rows": 73728,
+    "probe_rows": 15,
+    "all25cases_exact": true,
+    "source_pin_count": 10,
+    "input_pin_count": 73,
+    "cost": {
+      "process_elapsed_seconds": 34.07722361013293,
+      "process_cpu_seconds": 21.516130508,
+      "gpu_seconds": 0.0
+    }
+  },
+  "parent_rechecked_native_pins": true,
+  "parent_external_pins_checked_after_run": 170,
+  "external_pin_source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_prepared_v1_20261022/declaration.json",
+  "limitations": [
+    "Exact native-prior replay is not complete GPU sampler replay or a speedup measurement.",
+    "CPU replay ran on th-cl-rome08n4; original GPU recipe remains pinned to th-cl-nv02.",
+    "Full runtime/harness source snapshot hashes verified before and after; native input/source pins rechecked independently."
+  ]
+}

@@ -295,7 +295,7 @@
   },
   "resource_window": {
     "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_resource_window_v1_20261022/submission.json",
-    "sha256": "7c12479807670e0b39a241220a775bf0f86657f80998cbc6809875f4fcd007bf",
+    "sha256": "e29ab5cfe0968859509dd61c93c7232c94e20243a6ad4c570ca653fb899bcbca",
     "receipt": {
       "benchmark_job": "17445452",
       "benchmark_command": [
@@ -328,10 +328,13 @@
       "declaration_sha256": "34383474bb5c5bdce06be6a711ae9b088b1ee5e2d5b48a14a1545892951ff185",
       "controller_sha256": "29b463ba267da9e6b8f908de37ef71345afd6207245ac2853a9b0558cc25b28d",
       "changed_utc": "2026-10-22T16:31:12.251669+00:00",
-      "after_scontrol": "JobId=17435350 ArrayJobId=17435350 ArrayTaskId=26-39%1 ArrayTaskThrottle=1 JobName=corrected-heldout-v3-pairs\n   UserId=zekang.zhang(27188) GroupId=nobody(10000) MCS_label=N/A\n   Priority=559 Nice=0 Account=ls-gruen QOS=normal\n   JobState=PENDING Reason=None Dependency=(null)\n   Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0\n   RunTime=00:00:00 TimeLimit=00:45:00 TimeMin=N/A\n   SubmitTime=2026-10-22T13:53:08 EligibleTime=2026-10-22T14:33:57\n   AccrueTime=2026-10-22T14:33:57\n   StartTime=2026-10-22T19:09:14 EndTime=2026-10-22T19:54:14 Deadline=N/A\n   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-22T18:31:07 Scheduler=Main\n   Partition=inter AllocNode:Sid=kng-sv-clhead02:2928372\n   ReqNodeList=th-cl-nv02 ExcNodeList=(null)\n   NodeList= SchedNodeList=th-cl-nv02\n   NumNodes=1 NumCPUs=2 NumTasks=1 CPUs/Task=2 ReqB:S:C:T=0:0:*:*\n   ReqTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   AllocTRES=(null)\n   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*\n   MinCPUsNode=2 MinMemoryNode=16G MinTmpDiskNode=0\n   Features=(null) DelayBoot=00:00:00\n   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)\n   Command=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_v3_workflow_20261022.sh\n   WorkDir=/home/z/Zekang.Zhang/SBSI\n   StdErr=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_4294967294.out\n   StdIn=/dev/null\n   StdOut=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_4294967294.out\n   Power=\n   KillOInInvalidDependent=Yes\n   TresPerNode=gres:gpu:v100:1\n   \n\nJobId=17445320 ArrayJobId=17435350 ArrayTaskId=25 ArrayTaskThrottle=1 JobName=corrected-heldout-v3-pairs\n   UserId=zekang.zhang(27188) GroupId=nobody(10000) MCS_label=N/A\n   Priority=559 Nice=0 Account=ls-gruen QOS=normal\n   JobState=RUNNING Reason=None Dependency=(null)\n   Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0\n   RunTime=00:06:58 TimeLimit=00:45:00 TimeMin=N/A\n   SubmitTime=2026-10-22T13:53:08 EligibleTime=2026-10-22T14:33:57\n   AccrueTime=2026-10-22T14:33:57\n   StartTime=2026-10-22T18:24:14 EndTime=2026-10-22T19:09:14 Deadline=N/A\n   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-22T18:24:14 Scheduler=Backfill\n   Partition=inter AllocNode:Sid=kng-sv-clhead02:2928372\n   ReqNodeList=th-cl-nv02 ExcNodeList=(null)\n   NodeList=th-cl-nv02\n   BatchHost=th-cl-nv02\n   NumNodes=1 NumCPUs=2 NumTasks=1 CPUs/Task=2 ReqB:S:C:T=0:0:*:*\n   ReqTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   AllocTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*\n   MinCPUsNode=2 MinMemoryNode=16G MinTmpDiskNode=0\n   Features=(null) DelayBoot=00:00:00\n   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)\n   Command=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_v3_workflow_20261022.sh\n   WorkDir=/home/z/Zekang.Zhang/SBSI\n   StdErr=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_25.out\n   StdIn=/dev/null\n   StdOut=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_25.out\n   Power=\n   KillOInInvalidDependent=Yes\n   TresPerNode=gres:gpu:v100:1\n   \n\nJobId=17445308 ArrayJobId=17435350 ArrayTaskId=24 ArrayTaskThrottle=1 JobName=corrected-heldout-v3-pairs\n   UserId=zekang.zhang(27188) GroupId=nobody(10000) MCS_label=N/A\n   Priority=559 Nice=0 Account=ls-gruen QOS=normal\n   JobState=RUNNING Reason=None Dependency=(null)\n   Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0\n   RunTime=00:07:29 TimeLimit=00:45:00 TimeMin=N/A\n   SubmitTime=2026-10-22T13:53:08 EligibleTime=2026-10-22T14:33:57\n   AccrueTime=2026-10-22T14:33:57\n   StartTime=2026-10-22T18:23:43 EndTime=2026-10-22T19:08:43 Deadline=N/A\n   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-22T18:23:43 Scheduler=Backfill\n   Partition=inter AllocNode:Sid=kng-sv-clhead02:2928372\n   ReqNodeList=th-cl-nv02 ExcNodeList=(null)\n   NodeList=th-cl-nv02\n   BatchHost=th-cl-nv02\n   NumNodes=1 NumCPUs=2 NumTasks=1 CPUs/Task=2 ReqB:S:C:T=0:0:*:*\n   ReqTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   AllocTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*\n   MinCPUsNode=2 MinMemoryNode=16G MinTmpDiskNode=0\n   Features=(null) DelayBoot=00:00:00\n   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)\n   Command=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_v3_workflow_20261022.sh\n   WorkDir=/home/z/Zekang.Zhang/SBSI\n   StdErr=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_24.out\n   StdIn=/dev/null\n   StdOut=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_24.out\n   Power=\n   KillOInInvalidDependent=Yes\n   TresPerNode=gres:gpu:v100:1\n   \n\n"
+      "after_scontrol": "JobId=17435350 ArrayJobId=17435350 ArrayTaskId=26-39%1 ArrayTaskThrottle=1 JobName=corrected-heldout-v3-pairs\n   UserId=zekang.zhang(27188) GroupId=nobody(10000) MCS_label=N/A\n   Priority=559 Nice=0 Account=ls-gruen QOS=normal\n   JobState=PENDING Reason=None Dependency=(null)\n   Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0\n   RunTime=00:00:00 TimeLimit=00:45:00 TimeMin=N/A\n   SubmitTime=2026-10-22T13:53:08 EligibleTime=2026-10-22T14:33:57\n   AccrueTime=2026-10-22T14:33:57\n   StartTime=2026-10-22T19:09:14 EndTime=2026-10-22T19:54:14 Deadline=N/A\n   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-22T18:31:07 Scheduler=Main\n   Partition=inter AllocNode:Sid=kng-sv-clhead02:2928372\n   ReqNodeList=th-cl-nv02 ExcNodeList=(null)\n   NodeList= SchedNodeList=th-cl-nv02\n   NumNodes=1 NumCPUs=2 NumTasks=1 CPUs/Task=2 ReqB:S:C:T=0:0:*:*\n   ReqTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   AllocTRES=(null)\n   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*\n   MinCPUsNode=2 MinMemoryNode=16G MinTmpDiskNode=0\n   Features=(null) DelayBoot=00:00:00\n   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)\n   Command=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_v3_workflow_20261022.sh\n   WorkDir=/home/z/Zekang.Zhang/SBSI\n   StdErr=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_4294967294.out\n   StdIn=/dev/null\n   StdOut=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_4294967294.out\n   Power=\n   KillOInInvalidDependent=Yes\n   TresPerNode=gres:gpu:v100:1\n   \n\nJobId=17445320 ArrayJobId=17435350 ArrayTaskId=25 ArrayTaskThrottle=1 JobName=corrected-heldout-v3-pairs\n   UserId=zekang.zhang(27188) GroupId=nobody(10000) MCS_label=N/A\n   Priority=559 Nice=0 Account=ls-gruen QOS=normal\n   JobState=RUNNING Reason=None Dependency=(null)\n   Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0\n   RunTime=00:06:58 TimeLimit=00:45:00 TimeMin=N/A\n   SubmitTime=2026-10-22T13:53:08 EligibleTime=2026-10-22T14:33:57\n   AccrueTime=2026-10-22T14:33:57\n   StartTime=2026-10-22T18:24:14 EndTime=2026-10-22T19:09:14 Deadline=N/A\n   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-22T18:24:14 Scheduler=Backfill\n   Partition=inter AllocNode:Sid=kng-sv-clhead02:2928372\n   ReqNodeList=th-cl-nv02 ExcNodeList=(null)\n   NodeList=th-cl-nv02\n   BatchHost=th-cl-nv02\n   NumNodes=1 NumCPUs=2 NumTasks=1 CPUs/Task=2 ReqB:S:C:T=0:0:*:*\n   ReqTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   AllocTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*\n   MinCPUsNode=2 MinMemoryNode=16G MinTmpDiskNode=0\n   Features=(null) DelayBoot=00:00:00\n   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)\n   Command=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_v3_workflow_20261022.sh\n   WorkDir=/home/z/Zekang.Zhang/SBSI\n   StdErr=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_25.out\n   StdIn=/dev/null\n   StdOut=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_25.out\n   Power=\n   KillOInInvalidDependent=Yes\n   TresPerNode=gres:gpu:v100:1\n   \n\nJobId=17445308 ArrayJobId=17435350 ArrayTaskId=24 ArrayTaskThrottle=1 JobName=corrected-heldout-v3-pairs\n   UserId=zekang.zhang(27188) GroupId=nobody(10000) MCS_label=N/A\n   Priority=559 Nice=0 Account=ls-gruen QOS=normal\n   JobState=RUNNING Reason=None Dependency=(null)\n   Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0\n   RunTime=00:07:29 TimeLimit=00:45:00 TimeMin=N/A\n   SubmitTime=2026-10-22T13:53:08 EligibleTime=2026-10-22T14:33:57\n   AccrueTime=2026-10-22T14:33:57\n   StartTime=2026-10-22T18:23:43 EndTime=2026-10-22T19:08:43 Deadline=N/A\n   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-22T18:23:43 Scheduler=Backfill\n   Partition=inter AllocNode:Sid=kng-sv-clhead02:2928372\n   ReqNodeList=th-cl-nv02 ExcNodeList=(null)\n   NodeList=th-cl-nv02\n   BatchHost=th-cl-nv02\n   NumNodes=1 NumCPUs=2 NumTasks=1 CPUs/Task=2 ReqB:S:C:T=0:0:*:*\n   ReqTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   AllocTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*\n   MinCPUsNode=2 MinMemoryNode=16G MinTmpDiskNode=0\n   Features=(null) DelayBoot=00:00:00\n   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)\n   Command=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_v3_workflow_20261022.sh\n   WorkDir=/home/z/Zekang.Zhang/SBSI\n   StdErr=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_24.out\n   StdIn=/dev/null\n   StdOut=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_24.out\n   Power=\n   KillOInInvalidDependent=Yes\n   TresPerNode=gres:gpu:v100:1\n   \n\n",
+      "automatic_requeue_disabled": true,
+      "requeue_check_utc": "2026-10-22T16:35:55.254369+00:00",
+      "benchmark_scontrol_before_start": "JobId=17445452 JobName=smc-cpu-concurrency\n   UserId=zekang.zhang(27188) GroupId=nobody(10000) MCS_label=N/A\n   Priority=542 Nice=0 Account=ls-gruen QOS=normal\n   JobState=PENDING Reason=Priority Dependency=(null)\n   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0\n   RunTime=00:00:00 TimeLimit=02:00:00 TimeMin=N/A\n   SubmitTime=2026-10-22T18:28:55 EligibleTime=2026-10-22T18:31:14\n   AccrueTime=2026-10-22T18:31:14\n   StartTime=2026-10-22T19:09:14 EndTime=2026-10-22T21:09:14 Deadline=N/A\n   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-22T18:35:55 Scheduler=Main\n   Partition=inter AllocNode:Sid=kng-sv-clhead02:3517736\n   ReqNodeList=th-cl-nv02 ExcNodeList=(null)\n   NodeList= SchedNodeList=th-cl-nv02\n   NumNodes=1 NumCPUs=8 NumTasks=1 CPUs/Task=8 ReqB:S:C:T=0:0:*:1\n   ReqTRES=cpu=8,mem=64G,node=1,billing=8,gres/gpu=1,gres/gpu:v100=1\n   AllocTRES=(null)\n   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*\n   MinCPUsNode=8 MinMemoryNode=64G MinTmpDiskNode=0\n   Features=(null) DelayBoot=00:00:00\n   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)\n   Command=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_resource_window_v1_20261022/run.sh\n   WorkDir=/home/z/Zekang.Zhang/SBSI/.claude/worktrees/galsbi-tempering\n   StdErr=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_resource_window_v1_20261022/benchmark-17445452.out\n   StdIn=/dev/null\n   StdOut=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_resource_window_v1_20261022/benchmark-17445452.out\n   Power=\n   TresPerNode=gres:gpu:v100:1\n   \n\n"
     }
   },
-  "status": "queued",
+  "status": "running_startup_verified",
   "benchmark_job": "17445452",
   "implementation_commit": "0ee415bc81542aa436a660243aa762571282c040",
   "candidate_commit": "13a1fcaaa52af407a526ac45690ad1325ae14845",
@@ -347,5 +350,1756 @@
     "seconds": 2.57
   },
   "validation_scope": "All478test source files hashchecked before and after;320fixed sampler files and all input/harness pins verified. Two process tests require4physical cores and skipped in2CPU fullsuite but passed focused; alloriginal24GPU populations still pending.",
-  "notes": "No speedup or adoption claim; main scientific heldout validation still pending. Resource window changes array throttle only, restore17445497 and pending-start guard17445498 are scheduled."
+  "notes": "No speedup or adoption claim; main scientific heldout validation still pending. Resource window changes array throttle only, restore17445497 and pending-start guard17445498 are scheduled.",
+  "startup": {
+    "checked_utc": "2026-10-22T16:38:07.995652+00:00",
+    "resources": {
+      "slurm_job_id": "17445452",
+      "node": "th-cl-nv02.hpc.physik.uni-muenchen.de",
+      "slurm_node_list": "th-cl-nv02",
+      "affinity": [
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87
+      ],
+      "cpu_topology": {
+        "32": [
+          1,
+          10
+        ],
+        "33": [
+          1,
+          11
+        ],
+        "34": [
+          1,
+          12
+        ],
+        "35": [
+          1,
+          13
+        ],
+        "36": [
+          1,
+          16
+        ],
+        "37": [
+          1,
+          17
+        ],
+        "38": [
+          1,
+          18
+        ],
+        "39": [
+          1,
+          19
+        ],
+        "80": [
+          1,
+          10
+        ],
+        "81": [
+          1,
+          11
+        ],
+        "82": [
+          1,
+          12
+        ],
+        "83": [
+          1,
+          13
+        ],
+        "84": [
+          1,
+          16
+        ],
+        "85": [
+          1,
+          17
+        ],
+        "86": [
+          1,
+          18
+        ],
+        "87": [
+          1,
+          19
+        ]
+      },
+      "selected_cpus": [
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "gpu": {
+        "cuda_visible_devices": "0",
+        "uuid": "GPU-c2e5b616-f13d-a39e-98da-f8979616246d",
+        "name": "Tesla V100-SXM2-32GB",
+        "memory_total_mib": 32768,
+        "memory_used_mib": 0,
+        "utilization_percent": 0
+      },
+      "memory_info": "MemTotal:       1452304744 kB\nMemFree:        1386655160 kB\nMemAvailable:   1413437660 kB\nBuffers:           10436 kB\nCached:         39264168 kB\nSwapCached:            0 kB\nActive:         25830012 kB\nInactive:       27534140 kB\nActive(anon):   19794068 kB\nInactive(anon):     5596 kB\nActive(file):    6035944 kB\nInactive(file): 27528544 kB\nUnevictable:        8772 kB\nMlocked:            5700 kB\nSwapTotal:      20971516 kB\nSwapFree:       20971516 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:             14392 kB\nWriteback:             0 kB\nAnonPages:      13965076 kB\nMapped:          6705512 kB\nShmem:           5704896 kB\nKReclaimable:    2117200 kB\nSlab:            4482400 kB\nSReclaimable:    2117200 kB\nSUnreclaim:      2365200 kB\nKernelStack:       31392 kB\nPageTables:        76588 kB\nSecPageTables:      8224 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    747123888 kB\nCommitted_AS:   53854552 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:     3129108 kB\nVmallocChunk:          0 kB\nPercpu:           141312 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:  10401792 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:         0 kB\nFilePmdMapped:         0 kB\nCmaTotal:              0 kB\nCmaFree:               0 kB\nUnaccepted:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:    14324208 kB\nDirectMap2M:    693108736 kB\nDirectMap1G:    770703360 kB\n",
+      "cgroup": "0::/system.slice/slurmstepd.scope/job_17445452/step_0/user/task_0\n",
+      "thread_environment": {
+        "OMP_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      }
+    },
+    "worker": {
+      "replica": 0,
+      "cpus": [
+        32,
+        33
+      ],
+      "command": [
+        "/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python",
+        "-u",
+        "-c",
+        "import runpy,sys;from pathlib import Path;s=Path(sys.argv.pop(1)).resolve();sys.path[:0]=[str(s),str(s/\"scripts\")];import sbsi;assert Path(sbsi.__file__).resolve().parent==s/\"sbsi\";runpy.run_path(str(s/\"scripts/check_galsbi_particles.py\"),run_name=\"__main__\")",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_prepared_v1_20261022/source",
+        "--reference",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_pair1m_20261012/original/reference",
+        "--output",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_runs_v1_20261022/setting_0/population_0",
+        "--observation-indices",
+        "58165",
+        "0",
+        "1",
+        "8",
+        "--particles",
+        "256",
+        "--stages",
+        "64",
+        "--moves",
+        "64",
+        "--power",
+        "2",
+        "--scale",
+        "1",
+        "--seed",
+        "2026103700",
+        "--shear",
+        "0",
+        "0",
+        "--device",
+        "cuda",
+        "--density-batch-size",
+        "4096",
+        "--physical-geometry",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/geometry_gradient_v1.json",
+        "--initial-proposal",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/pilot_initial_proposal_n13_v2.json"
+      ],
+      "start_offset_seconds": 0.0014059169916436076,
+      "pid": 2335200
+    },
+    "completed_stages": 21,
+    "requested": 64,
+    "extinct": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "accounting": "17445452|RUNNING|16|billing=16,cpu=16,gres/gpu:v100=1,gres/gpu=1,mem=64G,node=1|101",
+    "physical_cores": 8,
+    "slurm_allocated_logical_cpus": 16,
+    "scientific_outcomes_read": false
+  },
+  "first_concurrent_stage": {
+    "serial_receipt": {
+      "status": "completed",
+      "setting_index": 0,
+      "concurrency": 1,
+      "repetition": 0,
+      "seeds": [
+        2026103700,
+        2026103701,
+        2026103702,
+        2026103703
+      ],
+      "declaration_sha256": "34383474bb5c5bdce06be6a711ae9b088b1ee5e2d5b48a14a1545892951ff185",
+      "resources": {
+        "slurm_job_id": "17445452",
+        "node": "th-cl-nv02.hpc.physik.uni-muenchen.de",
+        "slurm_node_list": "th-cl-nv02",
+        "affinity": [
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87
+        ],
+        "cpu_topology": {
+          "32": [
+            1,
+            10
+          ],
+          "33": [
+            1,
+            11
+          ],
+          "34": [
+            1,
+            12
+          ],
+          "35": [
+            1,
+            13
+          ],
+          "36": [
+            1,
+            16
+          ],
+          "37": [
+            1,
+            17
+          ],
+          "38": [
+            1,
+            18
+          ],
+          "39": [
+            1,
+            19
+          ],
+          "80": [
+            1,
+            10
+          ],
+          "81": [
+            1,
+            11
+          ],
+          "82": [
+            1,
+            12
+          ],
+          "83": [
+            1,
+            13
+          ],
+          "84": [
+            1,
+            16
+          ],
+          "85": [
+            1,
+            17
+          ],
+          "86": [
+            1,
+            18
+          ],
+          "87": [
+            1,
+            19
+          ]
+        },
+        "selected_cpus": [
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39
+        ],
+        "gpu": {
+          "cuda_visible_devices": "0",
+          "uuid": "GPU-c2e5b616-f13d-a39e-98da-f8979616246d",
+          "name": "Tesla V100-SXM2-32GB",
+          "memory_total_mib": 32768,
+          "memory_used_mib": 0,
+          "utilization_percent": 0
+        },
+        "memory_info": "MemTotal:       1452304744 kB\nMemFree:        1386655160 kB\nMemAvailable:   1413437660 kB\nBuffers:           10436 kB\nCached:         39264168 kB\nSwapCached:            0 kB\nActive:         25830012 kB\nInactive:       27534140 kB\nActive(anon):   19794068 kB\nInactive(anon):     5596 kB\nActive(file):    6035944 kB\nInactive(file): 27528544 kB\nUnevictable:        8772 kB\nMlocked:            5700 kB\nSwapTotal:      20971516 kB\nSwapFree:       20971516 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:             14392 kB\nWriteback:             0 kB\nAnonPages:      13965076 kB\nMapped:          6705512 kB\nShmem:           5704896 kB\nKReclaimable:    2117200 kB\nSlab:            4482400 kB\nSReclaimable:    2117200 kB\nSUnreclaim:      2365200 kB\nKernelStack:       31392 kB\nPageTables:        76588 kB\nSecPageTables:      8224 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    747123888 kB\nCommitted_AS:   53854552 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:     3129108 kB\nVmallocChunk:          0 kB\nPercpu:           141312 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:  10401792 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:         0 kB\nFilePmdMapped:         0 kB\nCmaTotal:              0 kB\nCmaFree:               0 kB\nUnaccepted:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:    14324208 kB\nDirectMap2M:    693108736 kB\nDirectMap1G:    770703360 kB\n",
+        "cgroup": "0::/system.slice/slurmstepd.scope/job_17445452/step_0/user/task_0\n",
+        "thread_environment": {
+          "OMP_NUM_THREADS": "2",
+          "OPENBLAS_NUM_THREADS": "1",
+          "MKL_NUM_THREADS": "1"
+        }
+      },
+      "source_verification_before_seconds": 3.5665819180430844,
+      "workers": {
+        "0": {
+          "replica": 0,
+          "cpus": [
+            32,
+            33
+          ],
+          "command": [
+            "/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python",
+            "-u",
+            "-c",
+            "import runpy,sys;from pathlib import Path;s=Path(sys.argv.pop(1)).resolve();sys.path[:0]=[str(s),str(s/\"scripts\")];import sbsi;assert Path(sbsi.__file__).resolve().parent==s/\"sbsi\";runpy.run_path(str(s/\"scripts/check_galsbi_particles.py\"),run_name=\"__main__\")",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_prepared_v1_20261022/source",
+            "--reference",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_pair1m_20261012/original/reference",
+            "--output",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_runs_v1_20261022/setting_0/population_0",
+            "--observation-indices",
+            "58165",
+            "0",
+            "1",
+            "8",
+            "--particles",
+            "256",
+            "--stages",
+            "64",
+            "--moves",
+            "64",
+            "--power",
+            "2",
+            "--scale",
+            "1",
+            "--seed",
+            "2026103700",
+            "--shear",
+            "0",
+            "0",
+            "--device",
+            "cuda",
+            "--density-batch-size",
+            "4096",
+            "--physical-geometry",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/geometry_gradient_v1.json",
+            "--initial-proposal",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/pilot_initial_proposal_n13_v2.json"
+          ],
+          "start_offset_seconds": 0.0014059169916436076,
+          "pid": 2335200,
+          "returncode": 0,
+          "process_seconds": 220.29435125703458,
+          "end_offset_seconds": 220.29710900899954,
+          "output_sha256": {
+            "result.json": "e34405abffd143218645e50c953d70b756edf03f0159d9affa65723bd8c4edb0",
+            "protocol.json": "811fde500a6b546169b07f4e8cbee7e82689b198d136948a578471247f3fb48b",
+            "progress.json": "c6d9ab9107e12e55b42f3b0f03133c9d42660edbf217d3777515f9b79b3c88b4",
+            "particles.npz": "b4023c7f8f72ebd139f1cd215b15345d8c4df5dfdbd6c69dc756fcff9a676844",
+            "scenes.npz": "5f1cac20451475426fd2fbe5211d5af7f9729b3b27c51db2b43064c58ca3f3dd"
+          }
+        },
+        "1": {
+          "replica": 1,
+          "cpus": [
+            32,
+            33
+          ],
+          "command": [
+            "/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python",
+            "-u",
+            "-c",
+            "import runpy,sys;from pathlib import Path;s=Path(sys.argv.pop(1)).resolve();sys.path[:0]=[str(s),str(s/\"scripts\")];import sbsi;assert Path(sbsi.__file__).resolve().parent==s/\"sbsi\";runpy.run_path(str(s/\"scripts/check_galsbi_particles.py\"),run_name=\"__main__\")",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_prepared_v1_20261022/source",
+            "--reference",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_pair1m_20261012/original/reference",
+            "--output",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_runs_v1_20261022/setting_0/population_1",
+            "--observation-indices",
+            "58165",
+            "0",
+            "1",
+            "8",
+            "--particles",
+            "256",
+            "--stages",
+            "64",
+            "--moves",
+            "64",
+            "--power",
+            "2",
+            "--scale",
+            "1",
+            "--seed",
+            "2026103701",
+            "--shear",
+            "0",
+            "0",
+            "--device",
+            "cuda",
+            "--density-batch-size",
+            "4096",
+            "--physical-geometry",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/geometry_gradient_v1.json",
+            "--initial-proposal",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/pilot_initial_proposal_n13_v2.json"
+          ],
+          "start_offset_seconds": 220.30307204800192,
+          "pid": 2336440,
+          "returncode": 0,
+          "process_seconds": 209.61278969608247,
+          "end_offset_seconds": 429.9171790279215,
+          "output_sha256": {
+            "result.json": "54dd340929e1a6b6cf64002730e618b103d4af1893a14be584d2850dc55ed276",
+            "protocol.json": "469e877d4c61c4d26c8cb5f77bc2049ec9d45bd21b743dbbe3a109a8606a896f",
+            "progress.json": "7dfc0f083a03cb32d60ea312fa774b58d5c8df6ecd6bdb2d9aead27865831e48",
+            "particles.npz": "60f2d9a1eb4be11f04320ddd994d5af82243fb5995e3e9588673288d381c418a",
+            "scenes.npz": "c1b176e5588ab0f8727bad3ce46bf4c5a34538d80c87e0d96d0652f953090f7e"
+          }
+        },
+        "2": {
+          "replica": 2,
+          "cpus": [
+            32,
+            33
+          ],
+          "command": [
+            "/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python",
+            "-u",
+            "-c",
+            "import runpy,sys;from pathlib import Path;s=Path(sys.argv.pop(1)).resolve();sys.path[:0]=[str(s),str(s/\"scripts\")];import sbsi;assert Path(sbsi.__file__).resolve().parent==s/\"sbsi\";runpy.run_path(str(s/\"scripts/check_galsbi_particles.py\"),run_name=\"__main__\")",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_prepared_v1_20261022/source",
+            "--reference",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_pair1m_20261012/original/reference",
+            "--output",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_runs_v1_20261022/setting_0/population_2",
+            "--observation-indices",
+            "58165",
+            "0",
+            "1",
+            "8",
+            "--particles",
+            "256",
+            "--stages",
+            "64",
+            "--moves",
+            "64",
+            "--power",
+            "2",
+            "--scale",
+            "1",
+            "--seed",
+            "2026103702",
+            "--shear",
+            "0",
+            "0",
+            "--device",
+            "cuda",
+            "--density-batch-size",
+            "4096",
+            "--physical-geometry",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/geometry_gradient_v1.json",
+            "--initial-proposal",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/pilot_initial_proposal_n13_v2.json"
+          ],
+          "start_offset_seconds": 429.92105408594944,
+          "pid": 2337576,
+          "returncode": 0,
+          "process_seconds": 204.74501409602817,
+          "end_offset_seconds": 634.6675520379795,
+          "output_sha256": {
+            "result.json": "1e8846647420e8753081787597e787a10ced4706869eb47f574f79a822c39f3c",
+            "protocol.json": "420b4fa5986e5a71111f3df9b24d488d3317dbbd166e917c6e53ed733538c971",
+            "progress.json": "924ee208cd762b4dd6d1995b81158b5d83d0dc4a7ce458228313e189a1807494",
+            "particles.npz": "59db21a69b47f039174307a18f7aa85163c552cde3e7194e920ee93b7531bdfc",
+            "scenes.npz": "6b2f03acab5afd296bb9f4343f0325899d780f2028a34ac7c4790cffde50a22b"
+          }
+        },
+        "3": {
+          "replica": 3,
+          "cpus": [
+            32,
+            33
+          ],
+          "command": [
+            "/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python",
+            "-u",
+            "-c",
+            "import runpy,sys;from pathlib import Path;s=Path(sys.argv.pop(1)).resolve();sys.path[:0]=[str(s),str(s/\"scripts\")];import sbsi;assert Path(sbsi.__file__).resolve().parent==s/\"sbsi\";runpy.run_path(str(s/\"scripts/check_galsbi_particles.py\"),run_name=\"__main__\")",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_prepared_v1_20261022/source",
+            "--reference",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_pair1m_20261012/original/reference",
+            "--output",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_runs_v1_20261022/setting_0/population_3",
+            "--observation-indices",
+            "58165",
+            "0",
+            "1",
+            "8",
+            "--particles",
+            "256",
+            "--stages",
+            "64",
+            "--moves",
+            "64",
+            "--power",
+            "2",
+            "--scale",
+            "1",
+            "--seed",
+            "2026103703",
+            "--shear",
+            "0",
+            "0",
+            "--device",
+            "cuda",
+            "--density-batch-size",
+            "4096",
+            "--physical-geometry",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/geometry_gradient_v1.json",
+            "--initial-proposal",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/pilot_initial_proposal_n13_v2.json"
+          ],
+          "start_offset_seconds": 634.6715423209826,
+          "pid": 2338160,
+          "returncode": 0,
+          "process_seconds": 210.88532175309956,
+          "end_offset_seconds": 845.5582621699432,
+          "output_sha256": {
+            "result.json": "9af636082a07d9003386c729d721c3b503b61750e54a57253cc9199007f71998",
+            "protocol.json": "a43d1806d539562ff1ccc12edf1bfa1e8e82d7988a75a1528142eea4fd354283",
+            "progress.json": "3af63583654d6022b19516b4d5667159a649ae17d018faa1035f2fe1e395fea6",
+            "particles.npz": "0641bb7fd663e088c9fcc2b04153b2928c43f0b440b37a96a951c7297c4ac29b",
+            "scenes.npz": "0ea39e5e3fb0f6f7eeb887c36ed994dbed90d7a1ce47b1206da782feaee07c1f"
+          }
+        }
+      },
+      "execution_wall_seconds": 845.5655521278968,
+      "replay_arrays": {
+        "0": {
+          "particles.npz": {
+            "ancestor_labels": {
+              "dtype": "<i8",
+              "shape": [
+                4,
+                256
+              ],
+              "bytes_sha256": "d84cebbc403846122954621ac9d58c11b2259cc9d8b1c1d66e0463c901be51f8"
+            },
+            "coordinates": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256,
+                10
+              ],
+              "bytes_sha256": "955e52d4d8174ee09a7d240c22f976220fb0f1877e651be61e1358001f837d66"
+            },
+            "extinct": {
+              "dtype": "|b1",
+              "shape": [
+                4
+              ],
+              "bytes_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+            },
+            "log_kernel": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256
+              ],
+              "bytes_sha256": "4ec140956f58faf1fdbae6c66092f7fadbbbc70998eb0b8eb00170cf208f9d83"
+            },
+            "log_normalizer": {
+              "dtype": "<f8",
+              "shape": [
+                4
+              ],
+              "bytes_sha256": "c399482517a25943be6ba7dfa4197a6b58d5d126a7185fa87098ebbaf743381e"
+            },
+            "log_prior": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256
+              ],
+              "bytes_sha256": "3ef51c745d409ec94c6ce41233eaa1f63430c5ebe548f324eef7965c827dc263"
+            },
+            "scores": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256,
+                2
+              ],
+              "bytes_sha256": "6dced430c46449a38dc5747e098482038f14aaa523d075af4fcf78ad26041567"
+            },
+            "summaries": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256,
+                9
+              ],
+              "bytes_sha256": "a5d1da8c4a91337e55bf9397034ed2ec6fa68ef6443b231d41fa598e6c4b4588"
+            }
+          },
+          "scenes.npz": {
+            "indptr": {
+              "dtype": "<i8",
+              "shape": [
+                1025
+              ],
+              "bytes_sha256": "d25d3cf5fd5d5b7e5aaa9bd0dbcc091ed7bd73d72ceffc64c1eacc82799bc1b4"
+            },
+            "neighbour_M_B": {
+              "dtype": "<f8",
+              "shape": [
+                22130
+              ],
+              "bytes_sha256": "5f3705fb70484d0f4e1bf9102227d668f84d4fdae951813afd38791a436b407e"
+            },
+            "neighbour_M_i": {
+              "dtype": "<f8",
+              "shape": [
+                22130
+              ],
+              "bytes_sha256": "5975d254fc06a598703c7e7457185cbfa53367bd41a6891d1d0cad459ba0f928"
+            },
+            "neighbour_R_kpc": {
+              "dtype": "<f8",
+              "shape": [
+                22130
+              ],
+              "bytes_sha256": "7f83a9c805ca8679fc7e00385da09fc6fb0b8b92e3f844424a5e693cba629d32"
+            },
+            "neighbour_a": {
+              "dtype": "<f8",
+              "shape": [
+                22130
+              ],
+              "bytes_sha256": "84e772d62b44f62a812ea187152ad1ebee0d0e60cb98655430e389e9016db620"
+            },
+            "neighbour_c": {
+              "dtype": "<f8",
+              "shape": [
+                22130,
+                5
+              ],
+              "bytes_sha256": "d2de45ec2a5ee1126f11f484360098e89ca57638cacf682b0c45a7bcbae2fafd"
+            },
+            "neighbour_m_i": {
+              "dtype": "<f8",
+              "shape": [
+                22130
+              ],
+              "bytes_sha256": "1a7737a72fc53b6633a325487f658dd840fd13c71c867565d304a8e8462c076c"
+            },
+            "neighbour_m_r": {
+              "dtype": "<f8",
+              "shape": [
+                22130
+              ],
+              "bytes_sha256": "5bdc9ca7dbb823bd78f1d79c6d7c05a7b04680b27f1b23ae94c0d36c8553358d"
+            },
+            "neighbour_n": {
+              "dtype": "<f8",
+              "shape": [
+                22130
+              ],
+              "bytes_sha256": "d73f443bd019785e6be9e205cd0900afda14e21ce55a4cc84453bbec24bb23b0"
+            },
+            "neighbour_psi": {
+              "dtype": "<f8",
+              "shape": [
+                22130
+              ],
+              "bytes_sha256": "8c524f75a8858bcb31536d5438b2bb6eae9ea86421e219ab5f272db63e376444"
+            },
+            "neighbour_type": {
+              "dtype": "<i8",
+              "shape": [
+                22130
+              ],
+              "bytes_sha256": "dd3935b70be81da21874eb5fa5e40912c9cb3e4862e6bd9a8044213415eefffb"
+            },
+            "neighbour_z": {
+              "dtype": "<f8",
+              "shape": [
+                22130
+              ],
+              "bytes_sha256": "e41511a77be05a188ac381a2e2bbb752addf9195a2e31ca651af7be745c2b090"
+            },
+            "offset_arcsec": {
+              "dtype": "<f8",
+              "shape": [
+                22130,
+                2
+              ],
+              "bytes_sha256": "0a01adfd6981830dd4f0ad9e334a8a72f2414cf6849d22dbbb51570e8f774bae"
+            },
+            "target_M_B": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "77a1fed4f7fd3812cfb4fd480f8a57d46a04a53a90aec0dd370c24b465ed82ad"
+            },
+            "target_M_i": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "859e3b185540010c3c60dfb9cb77187b591dbce6d76dbffd144a2f3213706b47"
+            },
+            "target_R_kpc": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "de47d27dab3c1af884546d8c32f2b218ca8f3e5807c8a7f3c03ba04d56dad55d"
+            },
+            "target_a": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "835f6ba8a4cb3d6d1c8af030fbd2d92a54f1dcc726fba3bb4a47fb2518e1e16b"
+            },
+            "target_c": {
+              "dtype": "<f8",
+              "shape": [
+                1024,
+                5
+              ],
+              "bytes_sha256": "260fb1bd58e4b7c8bbe604bf0f542003ed6ff88d052e10d7401b34a4aff14fb3"
+            },
+            "target_m_i": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "ffe32904258e620f43a6a42bf0a6e0274e4ca555b527e466d322a7e210fc5a20"
+            },
+            "target_m_r": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "833efbdb6ec1f5f660f6ff70761e4268c5568150d2084c9e1c1fbde68a33999c"
+            },
+            "target_n": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "d77a61eeb9050353442a624be67e46a812e153b35b4137c2909e214697a1bfbd"
+            },
+            "target_psi": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "8b95a5ad6e6d2cae8fb6812c8759e6f04726203bfa562579a1726a2dfd0a3c79"
+            },
+            "target_type": {
+              "dtype": "<i8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+            },
+            "target_z": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "2a8febddea1f539194865fc847a434d8129c45f3ea06fb91321f550d2f0b56bb"
+            }
+          }
+        },
+        "1": {
+          "particles.npz": {
+            "ancestor_labels": {
+              "dtype": "<i8",
+              "shape": [
+                4,
+                256
+              ],
+              "bytes_sha256": "5ecd8b9f64796ae268f5b1578610779e8f3d99be905911c0a2144c9b0962e2c7"
+            },
+            "coordinates": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256,
+                10
+              ],
+              "bytes_sha256": "08b49b74662c857474997a59e2fc31427066fa3c0be4de7747215c7c83293734"
+            },
+            "extinct": {
+              "dtype": "|b1",
+              "shape": [
+                4
+              ],
+              "bytes_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+            },
+            "log_kernel": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256
+              ],
+              "bytes_sha256": "40beee481711cb38c49a97aa1da2b6c888de21ff25904af76e4e2819c98ad17a"
+            },
+            "log_normalizer": {
+              "dtype": "<f8",
+              "shape": [
+                4
+              ],
+              "bytes_sha256": "3ffe4df08b9329a5cc9380ce2de09d5ee6b316a9bddc23696de99993d7582b71"
+            },
+            "log_prior": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256
+              ],
+              "bytes_sha256": "9982acb866cee67441e420e9b6778c1409d8f566d88357d08724c83538b607aa"
+            },
+            "scores": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256,
+                2
+              ],
+              "bytes_sha256": "923e97f6dae2dca3eafff4ba89cfa7c0164d9340a52846d2db22f2f6868dd9fb"
+            },
+            "summaries": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256,
+                9
+              ],
+              "bytes_sha256": "2b456b3fc675f63f0c683ebc0d8239ba7d485ab2661ab7e12085e861c2797b85"
+            }
+          },
+          "scenes.npz": {
+            "indptr": {
+              "dtype": "<i8",
+              "shape": [
+                1025
+              ],
+              "bytes_sha256": "c29055511b1176f1557f127cc806168ebc2ba857d5636f1be46638ba736eaed2"
+            },
+            "neighbour_M_B": {
+              "dtype": "<f8",
+              "shape": [
+                21718
+              ],
+              "bytes_sha256": "55505079c75cbb455d56f9b1155c03c32932aeb346d1b06256a5c3e469181626"
+            },
+            "neighbour_M_i": {
+              "dtype": "<f8",
+              "shape": [
+                21718
+              ],
+              "bytes_sha256": "590113211869e5c09c0452d2023bf3e79ef577c2459f2a71eba3c3e68c48c55b"
+            },
+            "neighbour_R_kpc": {
+              "dtype": "<f8",
+              "shape": [
+                21718
+              ],
+              "bytes_sha256": "5fe19d290a293611cd2be1b70af1eb9785ebb50ef8a3dc64e3144f68fe87b8ae"
+            },
+            "neighbour_a": {
+              "dtype": "<f8",
+              "shape": [
+                21718
+              ],
+              "bytes_sha256": "c95d838e80ffc811f81fb73f37bdd3b139528f1a35441a88d70e3808f9a29605"
+            },
+            "neighbour_c": {
+              "dtype": "<f8",
+              "shape": [
+                21718,
+                5
+              ],
+              "bytes_sha256": "537167b12ceba84e93fa20e286e20228aa64c09e29a62132e2071bdd983e3051"
+            },
+            "neighbour_m_i": {
+              "dtype": "<f8",
+              "shape": [
+                21718
+              ],
+              "bytes_sha256": "226364645670013d20ab53dcb89d69ae67387d05e9a3d7f1c10d247830fcf3d1"
+            },
+            "neighbour_m_r": {
+              "dtype": "<f8",
+              "shape": [
+                21718
+              ],
+              "bytes_sha256": "f91ce6d102f993737179365d9957526e827c0b5120d7e6143651470ee9fae67a"
+            },
+            "neighbour_n": {
+              "dtype": "<f8",
+              "shape": [
+                21718
+              ],
+              "bytes_sha256": "f643dce794bc773c91079989a38b4f62f6a3dc669610bd2db660adc2a2943a33"
+            },
+            "neighbour_psi": {
+              "dtype": "<f8",
+              "shape": [
+                21718
+              ],
+              "bytes_sha256": "c8b8641bbb1443c785400d384a226c3cb0054639b9ab3b1f711b9d1b0b22808d"
+            },
+            "neighbour_type": {
+              "dtype": "<i8",
+              "shape": [
+                21718
+              ],
+              "bytes_sha256": "e1541b24a6124fde409989e51842578674115a163d26e0e0f1122bac55e87706"
+            },
+            "neighbour_z": {
+              "dtype": "<f8",
+              "shape": [
+                21718
+              ],
+              "bytes_sha256": "5a2f020d94f3fb564980dc5d4bdd1707b4850399087e67d79250bbade9e8180a"
+            },
+            "offset_arcsec": {
+              "dtype": "<f8",
+              "shape": [
+                21718,
+                2
+              ],
+              "bytes_sha256": "e4d58dff0233f968d64012a30666e42786eca38d4da26deab7e89954c42806b2"
+            },
+            "target_M_B": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "5c821e5f919cf03d6b97a4f41e04585bb15b9ef2d470332c39a40e6d80b65d30"
+            },
+            "target_M_i": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "94e40e67cf9147f3e56391516a6307fa447143b925f07f42a58ab7c9ad45931b"
+            },
+            "target_R_kpc": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "f521abceb8b37db4c519b673d3fce0ccc3cb4a7bbe9eacfa7ca377d77cc612c2"
+            },
+            "target_a": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "6302607ee456c297aa444868f15d272a51618689ae985ad645c942f1b33e1183"
+            },
+            "target_c": {
+              "dtype": "<f8",
+              "shape": [
+                1024,
+                5
+              ],
+              "bytes_sha256": "ba1a810225ce3b789d837af62b511a99220695e93e480e9acb16391346670bbd"
+            },
+            "target_m_i": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "e9d218af4ce6e6b0993a03291c516032f15de38e00595dadca95da3255bfd8e2"
+            },
+            "target_m_r": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "b674daf3e799e818df55942df646d6f4e87ecdd4a7ca168c4dd5cc58ee8c26ed"
+            },
+            "target_n": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "1fa0e1a3d2736354ce5aff968345f7ad1c839246b043f8e2b86b342670f101a8"
+            },
+            "target_psi": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "14d472eb748ceeb91bb4cdf0894c5d5be9d12f10d74336be19daa2a43bb814b2"
+            },
+            "target_type": {
+              "dtype": "<i8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+            },
+            "target_z": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "23645ad35e81d595c50a2a1ab947d73f35ce879a84f7f2b98486089dee4debac"
+            }
+          }
+        },
+        "2": {
+          "particles.npz": {
+            "ancestor_labels": {
+              "dtype": "<i8",
+              "shape": [
+                4,
+                256
+              ],
+              "bytes_sha256": "96088273c4d9b6ced3aa32d3b96092392f8fcb802db8b69faceeee01eac6b921"
+            },
+            "coordinates": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256,
+                10
+              ],
+              "bytes_sha256": "010b67c8cc65ffca66fba59ec73526a71689228beb7096689ebdc01023a356b1"
+            },
+            "extinct": {
+              "dtype": "|b1",
+              "shape": [
+                4
+              ],
+              "bytes_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+            },
+            "log_kernel": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256
+              ],
+              "bytes_sha256": "9a43e23f7fb33c69a1bc753500eb8d43efa1e75bbffb6fb4b3091a05f6fd1d52"
+            },
+            "log_normalizer": {
+              "dtype": "<f8",
+              "shape": [
+                4
+              ],
+              "bytes_sha256": "82535a3c0015b3f528b5c91c4f06204a1d74ff2f74dbae6d6d3c1eeb148b7b79"
+            },
+            "log_prior": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256
+              ],
+              "bytes_sha256": "620e5bf327a142aada65e7b0179ea86506f247009efe1fcdc56b9bca03e5d585"
+            },
+            "scores": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256,
+                2
+              ],
+              "bytes_sha256": "1ddd83fe950c3b5910770136c79ce6a086c8c34bf89ac4ac0a6793a55443ad6d"
+            },
+            "summaries": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256,
+                9
+              ],
+              "bytes_sha256": "da789f45a314b6eaa9972d746b4749e4d8c5a74b9360f1dabcdb7363738ac4bc"
+            }
+          },
+          "scenes.npz": {
+            "indptr": {
+              "dtype": "<i8",
+              "shape": [
+                1025
+              ],
+              "bytes_sha256": "a0adccb143b99582e894c520800ce3e4e581769d04c98910016b4337498c6405"
+            },
+            "neighbour_M_B": {
+              "dtype": "<f8",
+              "shape": [
+                22005
+              ],
+              "bytes_sha256": "6dfe0fbd79b0375d52112d0db4e5e3975e2dacd3d65d35057a5bab3ea6c25622"
+            },
+            "neighbour_M_i": {
+              "dtype": "<f8",
+              "shape": [
+                22005
+              ],
+              "bytes_sha256": "ef2da04d4b44a99027d61dd710e01e00a9c7065258293f192536dadc7a230755"
+            },
+            "neighbour_R_kpc": {
+              "dtype": "<f8",
+              "shape": [
+                22005
+              ],
+              "bytes_sha256": "f9dc6bb660e1ea47ed8e6a747e62ea6bd8726acae784bfb936fbde18eaf6db4c"
+            },
+            "neighbour_a": {
+              "dtype": "<f8",
+              "shape": [
+                22005
+              ],
+              "bytes_sha256": "03e7156819984aed0a5a40f37db5a826816c9102ade3797566d74d884793fa15"
+            },
+            "neighbour_c": {
+              "dtype": "<f8",
+              "shape": [
+                22005,
+                5
+              ],
+              "bytes_sha256": "e89303f2fafb556c4f52fc3bb51b95c91603b3131e57b06315ca83ce6937a459"
+            },
+            "neighbour_m_i": {
+              "dtype": "<f8",
+              "shape": [
+                22005
+              ],
+              "bytes_sha256": "ba3fbaad73733c87489813fa106a6c4edd434c222b6c622b0d93c1d3c401313e"
+            },
+            "neighbour_m_r": {
+              "dtype": "<f8",
+              "shape": [
+                22005
+              ],
+              "bytes_sha256": "643863ae6cbd6fef8bc24e1b04c6903f7cd592905c73e237fe56f1b1141176bd"
+            },
+            "neighbour_n": {
+              "dtype": "<f8",
+              "shape": [
+                22005
+              ],
+              "bytes_sha256": "d262dab309b8f8801b1c8dda60a10614259f9a6dc005ad6b43cdad88cbe00db1"
+            },
+            "neighbour_psi": {
+              "dtype": "<f8",
+              "shape": [
+                22005
+              ],
+              "bytes_sha256": "4460052d47af6a49e96c6d26d08b98795fab17047a653e8ded5af3a0c1d014b8"
+            },
+            "neighbour_type": {
+              "dtype": "<i8",
+              "shape": [
+                22005
+              ],
+              "bytes_sha256": "0abbc6e256793e809ed5dc856dd146edfd0db261933b39efc3bd4fbead99f7ea"
+            },
+            "neighbour_z": {
+              "dtype": "<f8",
+              "shape": [
+                22005
+              ],
+              "bytes_sha256": "a6d425faa838b882d7902088dda31a5c698eb57af86792995e0ce75d996d2b1c"
+            },
+            "offset_arcsec": {
+              "dtype": "<f8",
+              "shape": [
+                22005,
+                2
+              ],
+              "bytes_sha256": "6b5522f2f7465c2e2cbc38b28428fb39939b9c15f4ee251abc589accf2aa45a3"
+            },
+            "target_M_B": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "fb5239edc2a26ce79215ca58100cb2b64f9319add52f455d25ccdf16bb1286e5"
+            },
+            "target_M_i": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "d40c44671ce03881b4c97d98b2b32b3aaa37fd76718beb0e2cd9adef8701633a"
+            },
+            "target_R_kpc": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "7b4a263ac633d2ac8ae5ae988a8c16a48cc48f061eb6f38325e749103fffe7d7"
+            },
+            "target_a": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "ce4e128f053c0e0ff6c8596cfc17501000bd93e7648d2e6301066f4c3a7a0719"
+            },
+            "target_c": {
+              "dtype": "<f8",
+              "shape": [
+                1024,
+                5
+              ],
+              "bytes_sha256": "a3c4095861831aaa4d0da73798451e7d6146afff438fbe3493c8fa7fe2581afa"
+            },
+            "target_m_i": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "ace32bd4253942ecd71a1e5956beaa93dbdb13921dfbc277eeef6db5920c586e"
+            },
+            "target_m_r": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "812bb1efbe13bf58cf21da5e576a2311e8e4cb05a91993a95a032a6e81f70823"
+            },
+            "target_n": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "9419c52eef0bfdd9747272a6dd133d676c87347899e8126f4d468e14558bf933"
+            },
+            "target_psi": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "2b733d37d83eee523c72658805f9dc52a9795a74e6de0754b08ce2474dc9f480"
+            },
+            "target_type": {
+              "dtype": "<i8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+            },
+            "target_z": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "52043ab687c85dfc3f656c3ef193c0e616a0e5758dd72acc65ea4cfe79b85f19"
+            }
+          }
+        },
+        "3": {
+          "particles.npz": {
+            "ancestor_labels": {
+              "dtype": "<i8",
+              "shape": [
+                4,
+                256
+              ],
+              "bytes_sha256": "ee2c9aae97d47316e9f9e5e0f9c10497708137fab196a9d2ba72845c2520e525"
+            },
+            "coordinates": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256,
+                10
+              ],
+              "bytes_sha256": "ca26e453f58d057bcbe276696f7fc100be86df7807511fc43b82b99c4b1c9c90"
+            },
+            "extinct": {
+              "dtype": "|b1",
+              "shape": [
+                4
+              ],
+              "bytes_sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+            },
+            "log_kernel": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256
+              ],
+              "bytes_sha256": "63789ff8b73a7381de20ae7d923c3c3e234082a5004f6029ebeef82a841883ec"
+            },
+            "log_normalizer": {
+              "dtype": "<f8",
+              "shape": [
+                4
+              ],
+              "bytes_sha256": "ae9eedcb94f21af8c28e9d8b66f4080a5f5abb23ab505dc974f6a9182d65720f"
+            },
+            "log_prior": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256
+              ],
+              "bytes_sha256": "0c419070570742b703e28b6df657b624fa54b7c76082331ad6e6c2f40d52b1a7"
+            },
+            "scores": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256,
+                2
+              ],
+              "bytes_sha256": "c6875c3afc78ac923a4cede3b5cb7244f5822cbe248a2fc0fe5bbac2c7600462"
+            },
+            "summaries": {
+              "dtype": "<f8",
+              "shape": [
+                4,
+                256,
+                9
+              ],
+              "bytes_sha256": "6f78eebcb13dfb74921257642e67126bc3cdfdcbd49b521c5fd490746838e2d4"
+            }
+          },
+          "scenes.npz": {
+            "indptr": {
+              "dtype": "<i8",
+              "shape": [
+                1025
+              ],
+              "bytes_sha256": "38449dac1f6ed86b64bfe013c18f10f7514fdb6ebbb1356cdaedda9991e52830"
+            },
+            "neighbour_M_B": {
+              "dtype": "<f8",
+              "shape": [
+                21982
+              ],
+              "bytes_sha256": "528e333f5f043f44f07fe3021ac0e2669339ae34705e7d1a534144e442a98420"
+            },
+            "neighbour_M_i": {
+              "dtype": "<f8",
+              "shape": [
+                21982
+              ],
+              "bytes_sha256": "039c8800883dbe2fc01f6b1079a00fb24986e8bae35a904b69684fd40ebfbe37"
+            },
+            "neighbour_R_kpc": {
+              "dtype": "<f8",
+              "shape": [
+                21982
+              ],
+              "bytes_sha256": "876cf2b2eaf82a3f8a757fb93cbfc4264521ddb248bec45c09166e3ca9e08957"
+            },
+            "neighbour_a": {
+              "dtype": "<f8",
+              "shape": [
+                21982
+              ],
+              "bytes_sha256": "383fc451f3b239e183db2a61557cab34458aae9b7600c26f821d1bd97fe5f110"
+            },
+            "neighbour_c": {
+              "dtype": "<f8",
+              "shape": [
+                21982,
+                5
+              ],
+              "bytes_sha256": "30091dc5f095f4b6dd52adb3c87566dc6a65ad87d1642fedc61a90114e76fb6a"
+            },
+            "neighbour_m_i": {
+              "dtype": "<f8",
+              "shape": [
+                21982
+              ],
+              "bytes_sha256": "8cc3cd3634d5e11e0020ed681d8b766ef3b55d6a276eb300781b10661d06def6"
+            },
+            "neighbour_m_r": {
+              "dtype": "<f8",
+              "shape": [
+                21982
+              ],
+              "bytes_sha256": "c0f7cd50801caf3f21ed6884ef1816233841b28168a4dbbdd3a9e5b7349aa8ef"
+            },
+            "neighbour_n": {
+              "dtype": "<f8",
+              "shape": [
+                21982
+              ],
+              "bytes_sha256": "7e4f1f66aa29147cc2d18da529687abcb3bf2669a5ef3d84a0276bb44733f21e"
+            },
+            "neighbour_psi": {
+              "dtype": "<f8",
+              "shape": [
+                21982
+              ],
+              "bytes_sha256": "67d6d5f1acca0efcfe8cc59117501cc345b1373a41711f141d23005b5fcc9c8b"
+            },
+            "neighbour_type": {
+              "dtype": "<i8",
+              "shape": [
+                21982
+              ],
+              "bytes_sha256": "6857cd31c0c7d00528226caf0c358ad4b8fde15a992564086752a2d54304cb4f"
+            },
+            "neighbour_z": {
+              "dtype": "<f8",
+              "shape": [
+                21982
+              ],
+              "bytes_sha256": "1dd64d2a9ff7d5eab4afdffe73903984f3068bebe284a490de552bbbdc093837"
+            },
+            "offset_arcsec": {
+              "dtype": "<f8",
+              "shape": [
+                21982,
+                2
+              ],
+              "bytes_sha256": "23ad905ecb36843a44c892799c46ceac71fcd26a31faecac2ecb0d1a44021fc1"
+            },
+            "target_M_B": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "fbe5f5fabb314a102b520b3074a7d8bb6ae29bcef783401c9aa6d453e154920f"
+            },
+            "target_M_i": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "9bdcbd67ce667d0798318707de5d30b71c2adb26cf3c0a5b7f582017165c0148"
+            },
+            "target_R_kpc": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "f49ffdead4e2af2a7b49c18e9821207c38a433a254b6b48351423a58fa6c8e12"
+            },
+            "target_a": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "582a3c6cc59dfd70ffb6c5744c8e33547fdf87486484955a6b11f67f0920a8b2"
+            },
+            "target_c": {
+              "dtype": "<f8",
+              "shape": [
+                1024,
+                5
+              ],
+              "bytes_sha256": "0833aee00aece319450d96a8ca112f43dee5cf81d79b88b9b30ab232b123a4be"
+            },
+            "target_m_i": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "4409a812ddc539e03dbc71ed547b702866f7a42fa31a25b184d5abb2606f40b0"
+            },
+            "target_m_r": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "9baf6db97cb4d810ba8369b995aa9e911e7983de00c32258fd3d9d813d2a8d46"
+            },
+            "target_n": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "cc49b4256392e0321ca3f37783d02f125f2f68a7f3c1c12bf34e634cb31a8ce4"
+            },
+            "target_psi": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "06dbd5f8d6159058fef65364f052eeba41257201a6929ba66d6fff9584941d50"
+            },
+            "target_type": {
+              "dtype": "<i8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+            },
+            "target_z": {
+              "dtype": "<f8",
+              "shape": [
+                1024
+              ],
+              "bytes_sha256": "f836cba7ea1e2fa8acce3c70dd26331280995935a17b415b523f46345b7c876f"
+            }
+          }
+        }
+      },
+      "validation_seconds": 0.958826677990146,
+      "source_verification_after_seconds": 2.771864915965125,
+      "gpu_after": {
+        "cuda_visible_devices": "0",
+        "uuid": "GPU-c2e5b616-f13d-a39e-98da-f8979616246d",
+        "name": "Tesla V100-SXM2-32GB",
+        "memory_total_mib": 32768,
+        "memory_used_mib": 0,
+        "utilization_percent": 0
+      },
+      "bitwise_saved_output_replay": true,
+      "setting_wall_seconds": 864.9050420239801
+    },
+    "concurrent_receipt": {
+      "status": "started",
+      "setting_index": 1,
+      "concurrency": 2,
+      "repetition": 0,
+      "seeds": [
+        2026103700,
+        2026103701,
+        2026103702,
+        2026103703
+      ],
+      "declaration_sha256": "34383474bb5c5bdce06be6a711ae9b088b1ee5e2d5b48a14a1545892951ff185",
+      "resources": {
+        "slurm_job_id": "17445452",
+        "node": "th-cl-nv02.hpc.physik.uni-muenchen.de",
+        "slurm_node_list": "th-cl-nv02",
+        "affinity": [
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87
+        ],
+        "cpu_topology": {
+          "32": [
+            1,
+            10
+          ],
+          "33": [
+            1,
+            11
+          ],
+          "34": [
+            1,
+            12
+          ],
+          "35": [
+            1,
+            13
+          ],
+          "36": [
+            1,
+            16
+          ],
+          "37": [
+            1,
+            17
+          ],
+          "38": [
+            1,
+            18
+          ],
+          "39": [
+            1,
+            19
+          ],
+          "80": [
+            1,
+            10
+          ],
+          "81": [
+            1,
+            11
+          ],
+          "82": [
+            1,
+            12
+          ],
+          "83": [
+            1,
+            13
+          ],
+          "84": [
+            1,
+            16
+          ],
+          "85": [
+            1,
+            17
+          ],
+          "86": [
+            1,
+            18
+          ],
+          "87": [
+            1,
+            19
+          ]
+        },
+        "selected_cpus": [
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39
+        ],
+        "gpu": {
+          "cuda_visible_devices": "0",
+          "uuid": "GPU-c2e5b616-f13d-a39e-98da-f8979616246d",
+          "name": "Tesla V100-SXM2-32GB",
+          "memory_total_mib": 32768,
+          "memory_used_mib": 0,
+          "utilization_percent": 0
+        },
+        "memory_info": "MemTotal:       1452304744 kB\nMemFree:        1388708472 kB\nMemAvailable:   1412426020 kB\nBuffers:           10436 kB\nCached:         36215884 kB\nSwapCached:            0 kB\nActive:         27581868 kB\nInactive:       24466184 kB\nActive(anon):   21545648 kB\nInactive(anon):     5596 kB\nActive(file):    6036220 kB\nInactive(file): 24460588 kB\nUnevictable:        8772 kB\nMlocked:            5700 kB\nSwapTotal:      20971516 kB\nSwapFree:       20971516 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:                44 kB\nWriteback:             0 kB\nAnonPages:      15700432 kB\nMapped:          7079104 kB\nShmem:           5724356 kB\nKReclaimable:    2122656 kB\nSlab:            4299828 kB\nSReclaimable:    2122656 kB\nSUnreclaim:      2177172 kB\nKernelStack:       31440 kB\nPageTables:        84416 kB\nSecPageTables:      8224 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    747123888 kB\nCommitted_AS:   57106132 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:     3137196 kB\nVmallocChunk:          0 kB\nPercpu:           142464 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:  11104256 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:         0 kB\nFilePmdMapped:         0 kB\nCmaTotal:              0 kB\nCmaFree:               0 kB\nUnaccepted:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:    14324208 kB\nDirectMap2M:    693108736 kB\nDirectMap1G:    770703360 kB\n",
+        "cgroup": "0::/system.slice/slurmstepd.scope/job_17445452/step_0/user/task_0\n",
+        "thread_environment": {
+          "OMP_NUM_THREADS": "2",
+          "OPENBLAS_NUM_THREADS": "1",
+          "MKL_NUM_THREADS": "1"
+        }
+      },
+      "source_verification_before_seconds": 2.70634707598947,
+      "workers": {
+        "0": {
+          "replica": 0,
+          "cpus": [
+            32,
+            33
+          ],
+          "command": [
+            "/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python",
+            "-u",
+            "-c",
+            "import runpy,sys;from pathlib import Path;s=Path(sys.argv.pop(1)).resolve();sys.path[:0]=[str(s),str(s/\"scripts\")];import sbsi;assert Path(sbsi.__file__).resolve().parent==s/\"sbsi\";runpy.run_path(str(s/\"scripts/check_galsbi_particles.py\"),run_name=\"__main__\")",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_prepared_v1_20261022/source",
+            "--reference",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_pair1m_20261012/original/reference",
+            "--output",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_runs_v1_20261022/setting_1/population_0",
+            "--observation-indices",
+            "58165",
+            "0",
+            "1",
+            "8",
+            "--particles",
+            "256",
+            "--stages",
+            "64",
+            "--moves",
+            "64",
+            "--power",
+            "2",
+            "--scale",
+            "1",
+            "--seed",
+            "2026103700",
+            "--shear",
+            "0",
+            "0",
+            "--device",
+            "cuda",
+            "--density-batch-size",
+            "4096",
+            "--physical-geometry",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/geometry_gradient_v1.json",
+            "--initial-proposal",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/pilot_initial_proposal_n13_v2.json"
+          ],
+          "start_offset_seconds": 0.001152861979790032,
+          "pid": 2339407
+        },
+        "1": {
+          "replica": 1,
+          "cpus": [
+            34,
+            35
+          ],
+          "command": [
+            "/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python",
+            "-u",
+            "-c",
+            "import runpy,sys;from pathlib import Path;s=Path(sys.argv.pop(1)).resolve();sys.path[:0]=[str(s),str(s/\"scripts\")];import sbsi;assert Path(sbsi.__file__).resolve().parent==s/\"sbsi\";runpy.run_path(str(s/\"scripts/check_galsbi_particles.py\"),run_name=\"__main__\")",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_prepared_v1_20261022/source",
+            "--reference",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_pair1m_20261012/original/reference",
+            "--output",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_runs_v1_20261022/setting_1/population_1",
+            "--observation-indices",
+            "58165",
+            "0",
+            "1",
+            "8",
+            "--particles",
+            "256",
+            "--stages",
+            "64",
+            "--moves",
+            "64",
+            "--power",
+            "2",
+            "--scale",
+            "1",
+            "--seed",
+            "2026103701",
+            "--shear",
+            "0",
+            "0",
+            "--device",
+            "cuda",
+            "--density-batch-size",
+            "4096",
+            "--physical-geometry",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/geometry_gradient_v1.json",
+            "--initial-proposal",
+            "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/pilot_initial_proposal_n13_v2.json"
+          ],
+          "start_offset_seconds": 0.005919905030168593,
+          "pid": 2339408
+        }
+      }
+    },
+    "status": "two_workers_progressing_no_final_speedup_or_replay_result"
+  }
 }

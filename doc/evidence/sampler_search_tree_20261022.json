@@ -396,11 +396,11 @@
       "metadata": {
         "dev_score": null,
         "test_score": null,
-        "result": "Harness 0ee415b plus preparation/launcher13a1fca frozen. CPU17445433 passed1064 tests,11 skips (two new process-affinity tests require four physical cores; all35 focused tests passed independently), all478source hashes and320sampler preflight pass. Counterbalanced GPU job17445452 queued on one V100/eight physical cores. No measured throughput yet.",
+        "result": "CPU17445433 passed1064 tests11skips; physical-affinity tests subsequently pass in4physicalCPU full suite17445720. GPU17445452 running on oneV100/eightphysicalcores (16Slurm logicalCPUs). Fourserial populations complete; two concurrent workers progress normally pinned32-33 and34-35. Full1,2,4,4,2,1 timing and saved-output replay pending; no speedup claim.",
         "branch_ref": "codex/smc-cpu-concurrency-20261022@13a1fcaaa52af407a526ac45690ad1325ae14845"
       },
       "created_at": 1792686024,
-      "updated_at": 1792686821
+      "updated_at": 1792687986
     },
     "n25": {
       "id": "n25",
@@ -412,11 +412,11 @@
       "metadata": {
         "dev_score": null,
         "test_score": null,
-        "result": "Owned-prior reuse candidate49918c6 implemented on isolated branch. Focused104tests pass with1optional skip; fullCPU and actual external photometry/savedGPU replay still pending. No efficiency/adoption claim.",
-        "branch_ref": "codex/smc-prior-reuse-20261022@49918c663f6f75bdd4570ac12ff11a1c84399397"
+        "result": "CPU17445720 full1092pass9skip; installed photometry native replay byte-exact on73728savedstates+15supportprobes, all83input/source pins rechecked. Runtime49918c6 plus nativechecker104a1c9. FullGPU paired replay harness31tests pass; complete source4385cb8 under combined scheduled validation17446023. Fourfreshcounterbalanced seedpairs3900-3903 will follow n24benchmark. No efficiency/adoption claim.",
+        "branch_ref": "codex/smc-prior-reuse-20261022@4385cb8b246d87379c21795a33940232ef347916"
       },
       "created_at": 1792686304,
-      "updated_at": 1792686821
+      "updated_at": 1792687986
     }
   }
 }

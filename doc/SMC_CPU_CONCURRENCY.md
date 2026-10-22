@@ -87,5 +87,19 @@ No live scientific settings or sources change.
 The [preparation receipt](evidence/smc_cpu_concurrency_preparation_20261022.json)
 pins declaration SHA256
 `34383474bb5c5bdce06be6a711ae9b088b1ee5e2d5b48a14a1545892951ff185`
-and preserves test, source and scheduling evidence. GPU startup/replay and
-development results remain pending. No speedup or adoption is claimed.
+and preserves test, source and scheduling evidence. Startup confirms the
+CUDA-visible V100 UUID, eight distinct physical cores (CPU IDs 32–39), correct
+two-core worker affinity and progress through the first population without
+extinction. Slurm reserves both SMT siblings and accounts for 16 logical CPUs;
+only eight physical cores are selected for workers. Automatic requeue is
+disabled. Complete replay and timing results remain pending; no speedup or
+adoption is claimed.
+
+
+## First concurrent stage
+
+All four serial baseline populations completed normally. The two-worker stage
+then started on the same GPU: workers are pinned to physical cores 32–33 and
+34–35 and both reached stage 17/64. This establishes actual concurrent CPU
+execution and normal startup, not a measured speedup or replay result. Four
+workers and reverse-order repetitions remain required.

@@ -1,5 +1,29 @@
 # Work log
 
+## 2026-10-22 — Prior reuse passes native replay; concurrent CPU workers start
+
+The isolated prior-reuse implementation passes full scheduled validation
+17445720: **1,092 tests, nine skips**, one existing warning. All 479 source
+hashes match before/after. Actual installed photometry and native-prior outputs
+match byte-for-byte on 73,728 saved development states and 15 support probes;
+parent checks confirm all 83 native source/input identities, JUnit and successful
+scheduler completion. These checks do not establish full sampler replay or
+speedup. Recorded [validation](evidence/particle_prior_reuse_validation_20261022.json)
+and [native output](evidence/particle_prior_reuse_native_20261022.json).
+
+Prior-reuse branch 4385cb8 now contains complete two-source GPU replay/timing
+preparation and launcher: four fresh seed pairs, alternating execution order,
+exactly three known source differences and complete saved-result comparisons.
+Its 31 focused harness tests pass; full combined CPU/preparation job 17446023
+is running. See [remaining comparison](PARTICLE_PRIOR_REUSE_CANDIDATE.md#paired-full-gpu-replay-and-timing).
+
+Concurrency job 17445452 completed all four serial baseline populations and
+started two simultaneous two-core workers on one V100. Both progress normally;
+full counterbalanced speed/replay results remain pending. Actual eight physical
+cores are billed as 16 logical Slurm CPUs. Updated [startup evidence](SMC_CPU_CONCURRENCY.md#first-concurrent-stage)
+and Arbor n24/n25 without claiming an accepted improvement. Live held-out
+scientific sources remain unchanged.
+
 ## 2026-10-22 — Implement and schedule CPU concurrency; isolate redundant-prior work
 
 Following the owner's request for substantially greater CPU use, implemented
