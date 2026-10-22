@@ -1,5 +1,43 @@
 # Corrected heldout runner
 
+## Current launch
+
+Corrected preflight17435258 completes exit0 in55 allocated seconds. Declaration
+`ad718136d4ac00a37ffcaddf09dcfad92b15e68e4ebbf82ead597ed1b7c1f758`
+pins320 source and1826 external files. It preserves exact scientific settings,
+proposal laws and seeds from the first declaration; no science preceded repair.
+Preparation accounting includes both preflights and failed startup:153 process,
+306 CPU-allocation and23 GPU-allocation seconds (conservative allocation bounds).
+
+Warmup17435348 (`0-4%4`) precedes paired production17435350 (`0-39%4`) and CPU
+report17435351. The [current launch receipt](evidence/corrected_heldout_v3_launch_20261022.json)
+pins all inputs and jobs. Original failed launch evidence remains below.
+Startup monitoring and independent scientific results are pending.
+
+## Startup harness repair before any science
+
+The first submitted warmup tasks failed before stage reservation or pilot
+creation: preflight incorrectly treated `/proc/cpuinfo` and `/proc/stat` as
+immutable inputs. No particle populations, pilot fits or numerical outcomes
+exist in that output. Remaining/dependent jobs were cancelled; the original
+source, declaration, logs and allocation costs are preserved in the
+[startup receipt](evidence/corrected_heldout_startup_failure_20261022.json).
+
+The corrected preflight records virtual filesystem reads and the generated
+Matplotlib font inventory separately. Actual scientific caches, including
+HDF5 prior/template inputs and the PyCosmo pickle, remain pinned. Same scientific
+source/settings/seeds are retained because failure preceded every scientific
+computation. The next declaration uses a fresh output and charges both original
+preflight and failed launch costs. Initial 982 passing code tests did not cover
+this host-input classification failure. New full CPU17435254 and dependent
+preflight17435258 use preserved320-file snapshot `source_corrected_heldout_v3_20261022`,
+manifest `fd96ec78e4b95886a3355082102a25d7a40ffa3dd1a5f4d52443a46458a64df1`.
+CPU17435254 passes993 tests in91.63 seconds, one optional skip and one existing
+warning, with before/after manifest checks. See the
+[repair validation receipt](evidence/corrected_heldout_host_input_repair_20261022.json).
+An intermediate v2 snapshot was never executed; review added the font-cache
+exclusion before freezing v3.
+
 ## Scope and immutable inputs
 
 `scripts/run_corrected_particle_heldout.py` executes the fixed procedure in
@@ -109,3 +147,16 @@ The [integration receipt](evidence/corrected_heldout_integration_20261022.json)
 pins the full-suite log and launchers. Measurement-only preflight17434715
 depends on these checks; a completed allocation receipt and immutable declaration
 are still required before scientific warmup.
+
+## Actual launch
+
+Measurement-only preflight17434715 completes in75 allocated seconds using two
+CPUs and no GPU. Its internal work is56.35 seconds; the full allocation upper
+bound is charged. The declaration pins320 source files and1827 external files,
+including the preserved preflight. SHA256:
+`6166d8d3c4288e5b1f35f2663779652b56fbf22d3956bfaecefd720a4aed9ef5`.
+Warmup17435167 (`0-4%4`) precedes paired production17435171 (`0-39%4`), then
+CPU report17435177. Both arrays use one V100 per task on th-cl-nv02, with two
+CPUs and fixed batch4096; the afterok graph enforces at most four GPUs in total.
+The [launch receipt](evidence/corrected_heldout_launch_20261022.json) preserves
+input, source and launcher hashes. No scientific acceptance result exists yet.

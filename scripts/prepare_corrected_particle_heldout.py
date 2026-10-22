@@ -111,6 +111,20 @@ def audited_open(values):
     return path, bool(readonly)
 
 
+def virtual_system_path(path):
+    """Kernel/device telemetry is observed provenance, not immutable file data."""
+    path = Path(path).resolve()
+    return any(path == root or root in path.parents
+               for root in (Path('/proc'), Path('/sys'), Path('/dev')))
+
+
+def generated_font_cache(path):
+    """Matplotlib's discovered-font inventory does not define the scientific model."""
+    path = Path(path).resolve()
+    return (path.parent.parts[-2:] == ('.cache', 'matplotlib')
+            and path.name.startswith('fontlist-') and path.suffix == '.json')
+
+
 def parameter_record(value):
     """Preserve numerical parameters; identify nonnumerical Python bindings."""
     import numpy as np
@@ -199,6 +213,9 @@ def prepare(args):
     files.update([*V39_LIKE.flow_checkpoints, *V39_LIKE.detection_classifiers,
                   V39_LIKE.emulator_model, V39_LIKE.emulator_metadata,
                   reference/'protocol.json', reference/'result.json', reference/'observations.parquet', args.panel.resolve()])
+    dynamic_system_paths = sorted(p for p in opened | written if virtual_system_path(p))
+    generated_font_paths = sorted(p for p in opened | written if generated_font_cache(p))
+    files = {p for p in files if not virtual_system_path(p) and not generated_font_cache(p)}
     external = {str(p.resolve()): digest(p) for p in sorted(files) if source not in p.resolve().parents}
     common = dict(stages=64, blocks=BLOCKS, scale=1., power=2.)
     draft = dict(schema='sbsi-heldout-corrected-declaration-v1', source=str(source),
@@ -224,10 +241,14 @@ def prepare(args):
     result = dict(schema='sbsi-corrected-heldout-preflight-v1', declaration_draft=draft,
         constructed_prior=prior_record, source_script_sha256=digest(__file__),
         generated_or_write_capable_prior_paths=[str(p) for p in sorted(written)],
+        dynamic_system_paths=[str(p) for p in dynamic_system_paths],
+        generated_font_cache_paths=[str(p) for p in generated_font_paths],
         preflight_internal_seconds=time.monotonic()-started,
         launchable=False, production_or_pilot_outcomes_read=False,
         limitations=['The coordinator must attach the completed allocation cost receipt and freeze a declaration before any warmup.',
             'Package files and Python-audited prior inputs are pinned; this is not a whole-system syscall trace or an environment image.',
+            'Virtual /proc, /sys and /dev reads are recorded separately; changing telemetry is not an immutable scientific input.',
+            'Generated Matplotlib font inventories are recorded separately; scientific HDF5 and PyCosmo pickle caches remain pinned.',
             'Constructed prior tables are recorded at preflight, not asserted to be independently verified in each subsequent sampler process.',
             'The preflight internal timer excludes interpreter startup and final serialization; use the completed scheduler cost receipt.'])
     args.output.parent.mkdir(parents=True, exist_ok=True)

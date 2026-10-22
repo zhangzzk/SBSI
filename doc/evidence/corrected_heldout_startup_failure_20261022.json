@@ -1,0 +1,49 @@
+{
+  "schema": "sbsi-heldout-launch-harness-failure-v1",
+  "reason": "Dynamic /proc/cpuinfo and /proc/stat were incorrectly pinned as immutable inputs.",
+  "failure_before": "Stage reservation, pilot output creation, or any sampling",
+  "no_population_runs": true,
+  "unchanged_scientific_settings_and_seeds": true,
+  "original_declaration_sha256": "6166d8d3c4288e5b1f35f2663779652b56fbf22d3956bfaecefd720a4aed9ef5",
+  "cost": {
+    "kind": "scheduler_allocation_wall_upper_bound",
+    "process_wall_seconds": 23,
+    "cpu_allocated_seconds": 46,
+    "gpu_allocated_seconds": 23
+  },
+  "allocated_tasks": [
+    {
+      "job": "17435167_0",
+      "state": "FAILED",
+      "seconds": 7
+    },
+    {
+      "job": "17435167_1",
+      "state": "FAILED",
+      "seconds": 7
+    },
+    {
+      "job": "17435167_2",
+      "state": "FAILED",
+      "seconds": 7
+    },
+    {
+      "job": "17435167_3",
+      "state": "CANCELLED",
+      "seconds": 2,
+      "qualification": "Upper bound from batch step; top allocation elapsed1 second."
+    }
+  ],
+  "cancelled_pending": [
+    "17435167_4",
+    "17435171_[0-39%4]",
+    "17435177"
+  ],
+  "logs": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-warmup-17435167_0.out": "cef8f3344ffd5117847e49b8a8272c5848705b001e51ec7f90025ad56f8628d0",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-warmup-17435167_1.out": "cef8f3344ffd5117847e49b8a8272c5848705b001e51ec7f90025ad56f8628d0",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-warmup-17435167_2.out": "cef8f3344ffd5117847e49b8a8272c5848705b001e51ec7f90025ad56f8628d0",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-warmup-17435167_3.out": "f1cc7ad0847c0bd094c04cae591b9bd8490a1ed432f5a93d6e14c588b4e3649c"
+  },
+  "next": "Preserve original outputs; corrected preflight and fresh declaration/output; charge prior preflight and failed launch cost as well."
+}

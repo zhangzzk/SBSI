@@ -1,0 +1,68 @@
+{
+  "schema": "sbsi-corrected-heldout-launch-v1",
+  "declaration": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/declaration.json",
+    "sha256": "ad718136d4ac00a37ffcaddf09dcfad92b15e68e4ebbf82ead597ed1b7c1f758"
+  },
+  "files": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/declaration.json": "ad718136d4ac00a37ffcaddf09dcfad92b15e68e4ebbf82ead597ed1b7c1f758",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/preflight.json": "15ce6669cfb89baef7f4b140c9f0d00908f702896da48d383824832e852ca732",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/preparation_cost.json": "6e438a897ab7dc2e9b282dc7db8468dd8f243af46f6a20f1751600c091880c9c",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_v3_workflow_20261022.sh": "5c00005009b647791000ff22beb35ced6dbd3a2c4fbb011094cf0437fd2dfd07",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_v3_preflight_20261022.sh": "45661bad196d9aa9f0aabc3508ce4f3f3d1b26b204072bbf8911dac6ce6ada7f",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-preflight-17435258.out": "dd52cad48106ec6b397e0c848d1ef4d61de38ad6ed4e0216d780e965862e1f0e",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_corrected_heldout_v3_20261022/SHA256SUMS": "fd96ec78e4b95886a3355082102a25d7a40ffa3dd1a5f4d52443a46458a64df1"
+  },
+  "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_corrected_heldout_v3_20261022",
+  "source_manifest_sha256": "fd96ec78e4b95886a3355082102a25d7a40ffa3dd1a5f4d52443a46458a64df1",
+  "preflight": {
+    "job": 17435258,
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "allocation_wall_seconds": 55,
+    "cpus": 2,
+    "gpus": 0,
+    "external_files": 1826,
+    "internal_seconds": 52.50342221406754
+  },
+  "total_preparation_including_failed_startup": {
+    "process_wall_seconds": 153,
+    "cpu_allocated_seconds": 306,
+    "gpu_allocated_seconds": 23
+  },
+  "jobs": {
+    "warmup": {
+      "id": 17435348,
+      "array": "0-4%4",
+      "gpu_per_task": 1,
+      "cpus": 2,
+      "node": "th-cl-nv02",
+      "partition": "inter",
+      "minutes": 30
+    },
+    "production": {
+      "id": 17435350,
+      "array": "0-39%4",
+      "gpu_per_task": 1,
+      "cpus": 2,
+      "node": "th-cl-nv02",
+      "partition": "inter",
+      "minutes": 45,
+      "dependency": "afterok:17435348"
+    },
+    "report": {
+      "id": 17435351,
+      "gpus": 0,
+      "cpus": 2,
+      "partition": "cluster",
+      "minutes": 20,
+      "dependency": "afterok:17435350"
+    }
+  },
+  "combined_gpu_ceiling": 4,
+  "old_heldout_outcomes_reused": false,
+  "accepted_sampler": false,
+  "scientific_result_pending": true,
+  "prior_launch_failure": "doc/evidence/corrected_heldout_startup_failure_20261022.json",
+  "unchanged_scientific_recipe_and_seeds": true
+}

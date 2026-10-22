@@ -8,11 +8,17 @@ normalizer, scene-region and both-measure phase-controlled score comparisons
 acceptance. No v10 interim aggregates or held-out pilot numerical outcomes were
 used to prepare the procedure. The earlier held-out v7 production remains
 cancelled; its declaration and warmup receipts are preserved. New held-out
-science has not yet launched.
+workflow was submitted after successful integrated tests and measurement-only
+preflight. The [launch receipt](evidence/corrected_heldout_launch_20261022.json)
+pins the first declaration and dependent jobs. Startup then rejected changing
+OS telemetry before any scientific run; see [repair](CORRECTED_HELDOUT_RUNNER.md#startup-harness-repair-before-any-science).
+The revised preflight passes; the [current launch](CORRECTED_HELDOUT_RUNNER.md#current-launch)
+uses a fresh declaration and retains failed allocation costs. Scientific results
+are pending.
 
 ## Conditional fixed procedure
 
-If the v10 small arm passes, test its N256/T64/M64 fitted-proposal procedure
+The passing v10 small arm is tested with its N256/T64/M64 fitted-proposal procedure
 against N1024/T64/M64 broad Student-t5 on the unchanged twenty-object measured-
 magnitude panel. Preserve its five original four-observation groups, density
 batch4096, V100 hardware and independent eight-population production groups.

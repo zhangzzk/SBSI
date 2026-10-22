@@ -1,5 +1,55 @@
 # Work log
 
+## 2026-10-22 — Relaunch after input-classification repair without changing science
+
+Corrected preflight17435258 passes in55 allocated seconds. Root verifies unchanged
+scientific settings, seeds, measured proposal laws and all ordinary external input
+hashes before allocating GPUs. Frozen declarationad718136 binds320 source and
+1826 external files; prior preflight/failed-startup costs are included, totaling
+153 process/306 CPU/23 GPU allocation seconds. No earlier scientific run exists.
+
+Submitted warmup17435348, afterok paired production17435350, then CPU report
+17435351; arrays `%4`, same V100 node and batch4096. The
+[current launch receipt](evidence/corrected_heldout_v3_launch_20261022.json) retains
+source, input and launcher hashes. Startup/scientific results remain pending;
+no rejected seed was replaced and no sampler is accepted.
+
+## 2026-10-22 — Repair mutable host-input pinning before first held-out pilot
+
+Warmup17435167 tasks0–2 fail before stage reservation on changed `/proc/cpuinfo`;
+remaining/dependent tasks are cancelled. No group directory, stage reservation,
+pilot run, fit or posterior output exists. Preserve original declaration/source
+and [failure receipt](evidence/corrected_heldout_startup_failure_20261022.json).
+Prior preflight75 seconds and failed/cancelled allocation upper bound23 GPU
+seconds/46 CPU seconds will be charged to the repaired launch too.
+
+Preflight now separates virtual `/proc`, `/sys`, `/dev` reads and generated
+Matplotlib font inventories from immutable scientific inputs. Independent input
+review retains scientific HDF5/PyCosmo caches and Astropy configuration. Added
+boundary/symlink/cache regression checks. Scientific source/settings/seeds stay
+fixed; this repairs orchestration before any outcome, not a failed scientific
+gate. Full CPU17435254 passes993 tests, one optional skip and one existing warning
+in91.63 seconds, with before/after manifest checks. The
+[repair receipt](evidence/corrected_heldout_host_input_repair_20261022.json) pins
+the source/log. Afterok preflight17435258 starts on the immutable v3 snapshot. Intermediate v2 was never submitted; original982 passing tests did
+not cover this real runtime classification. No sampler accepted.
+
+## 2026-10-22 — Freeze fresh corrected held-out validation and submit dependent stages
+
+Measurement-only preflight17434715 completed exit0 in75 allocated seconds on
+the comparison node (two CPUs, no GPU); its full cost is preserved. Frozen
+declaration6166d8d3 binds320 source and1827 external inputs, exact measured
+proposal laws, untouched twenty-object panel and new pilot/candidate/reference
+seed bases2026103200/2026103300/2026103400. Old pilot outcomes are not reused.
+
+Submitted warmup17435167, paired production17435171 afterok warmup, and CPU
+report17435177 afterok production. GPU arrays are throttled to four, original
+V100 node/four-observation groups/batch4096 unchanged. The
+[launch receipt](evidence/corrected_heldout_launch_20261022.json) preserves settings,
+cost receipt, source/launcher/input hashes. Monitor startup and dependent stages;
+no scientific result or accepted sampler yet. No thresholds/settings changed
+after development or in response to held-out outcomes.
+
 ## 2026-10-22 — Complete corrected held-out workflow passes integration tests
 
 Integrated isolated runner6b45838 with the tested measurement-only preflight,

@@ -144,3 +144,30 @@ def test_imported_modules_must_resolve_inside_declared_source(tmp_path):
     wrong = SimpleNamespace(__file__=str(tmp_path/'editable/sbsi/__init__.py'))
     with pytest.raises(ValueError, match='actual imported'):
         m.require_source_modules(source, [good, wrong])
+
+
+@pytest.mark.parametrize('path', ['/proc/cpuinfo', '/proc/stat', '/sys/devices/system/cpu/online', '/dev/urandom'])
+def test_dynamic_kernel_inputs_are_not_immutable_scientific_files(path):
+    assert m.virtual_system_path(path)
+
+
+@pytest.mark.parametrize('path', ['/project/data/prior.h5', '/home/user/_cache/PyCosmo/table.pkl',
+                                  '/opt/package/engine.so', '/project/proc/cpuinfo', '/processor/table'])
+def test_real_prior_package_and_cache_files_remain_immutable_inputs(path):
+    assert not m.virtual_system_path(path)
+
+
+def test_virtual_input_classification_resolves_symlinks(tmp_path):
+    link = tmp_path/'cpu'
+    link.symlink_to('/proc/cpuinfo')
+    assert m.virtual_system_path(link)
+
+
+def test_font_inventory_exclusion_keeps_scientific_caches_and_configuration():
+    assert m.generated_font_cache('/home/user/.cache/matplotlib/fontlist-v390.json')
+    for path in ['/home/user/_cache/PyCosmo/parameters.pkl',
+                 '/home/user/.cache/cosmo-torrent/abc_posterior.h5',
+                 '/home/user/.astropy/config/astropy.cfg',
+                 '/project/fontlist-v390.json']:
+        assert not m.generated_font_cache(path)
+        assert not m.virtual_system_path(path)
