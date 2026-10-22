@@ -1,3 +1,25 @@
+## 2026-10-22 — Pin the inherited UFig numerical configuration (n26)
+
+- `sbsi/numerical_prior_inputs.py` now requires and verifies the actual
+  `ufig/config/common.py`, `ufig/config/__init__.py` and `ufig/__init__.py`
+  source bytes under portable logical names. F24 overlays UFig defaults and
+  retains `seed_ngal`; the numerical factory passes that seed to the existing
+  seeded uniform redshift-boundary offset. This closes a direct construction
+  dependency missed by the previous four-package scope without adding the
+  unrelated UFig rendering tree. No factory values, calls or random draws change.
+- Updated `tests/test_numerical_prior_inputs.py` for mandatory missing pins,
+  actual module-path discovery and changed seed-source rejection during the
+  single factory call. Expanded the dependency explanation in
+  [numerical pipeline](NUMERICAL_TARGET_PIPELINE.md#construction-inputs-and-geometry-provenance).
+- Validation: the same six-module focused command listed immediately below
+  (`test_numerical_prior_inputs`, `test_particle_target_measure`,
+  `test_numerical_geometry_identity`, `test_particle_geometry`,
+  `test_particle_gradient_geometry`, `test_phase_control`; py31 interpreter,
+  one BLAS/OpenMP thread, `-q -p no:cacheprovider`) → **116 passed in9.75s**.
+  `git diff --check` passes. No jobs, heavy native construction or scientific
+  outcome reads. Parent preserves the previous validation and will run a fresh
+  full-suite/installed check. System/compiler/cache closure remains excluded.
+
 ## 2026-10-22 — Bind numerical-prior construction inputs and geometry provenance (n26)
 
 - On isolated `codex/numerical-target-provenance-20261022`, based on combined

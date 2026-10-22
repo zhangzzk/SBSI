@@ -103,11 +103,12 @@ the original path.
 
 `numerical_prior_inputs` records content hashes under logical names for the
 installed GalSBI, PyCosmo, cosmo_torrent and cosmic_toolbox package files, the
+consumed `ufig/config/common.py` and its two package initializer files, the
 actual ABC posterior and the photometry integral table consumed by the factory.
 The configured working-directory table copy is handled explicitly: an existing
 copy is the input; a newly created copy must match the source pinned before
 construction. The helper verifies input bytes after construction and never
-rebuilds the prior or draws random values. NumPy and SciPy versions and the
+rebuilds the prior or adds random draws beyond the existing factory. NumPy and SciPy versions and the
 factory arguments also enter this identity. Actual absolute paths are retained
 separately in `numerical_prior_input_paths`; they do not affect compatibility.
 This is the declared package/data scope, not a claim to capture every system
@@ -134,3 +135,14 @@ construction identity; no numerical scientific study has yet been accepted.
 New pilots, a numerical-law phase-fit declaration and independent scientific
 acceptance remain necessary. This change does not alter the frozen analytic
 held-out study or constitute posterior/efficiency validation.
+
+
+The UFig configuration pin is a direct numerical dependency. F24 overlays its
+common defaults after GalSBI's defaults, leaving `seed_ngal` in effect. The
+factory passes that seed to `maximum_redshift`, which adds its deterministic
+seeded uniform offset to the redshift boundary before the prior tables are
+built. A changed UFig default can therefore change support while all four
+previously pinned package trees remain unchanged. The three specific UFig
+source files are mandatory and verified around construction; unrelated UFig
+rendering code is outside this added scope. No effective seed or redshift
+boundary is changed or recomputed by the binding.
