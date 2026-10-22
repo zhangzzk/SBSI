@@ -70,3 +70,46 @@ external implementation. Support-boundary agreement must be included.
 Complete-process matched timing is required before any efficiency claim.
 Removed call counts and earlier profiles do not establish a speedup. The
 candidate neither certifies sampler accuracy nor changes scientific acceptance.
+
+## Installed-photometry CPU replay
+
+`scripts/check_particle_prior_reuse_native.py` prepares no new draws and uses no
+GPU or learned models. It loads the pinned original prior, coordinates and
+particle-target classes directly from the frozen baseline source under separate
+module names. The original prior factory is bound explicitly to the original
+prior and memoization classes; the candidate factory remains byte-identical.
+Both sides construct separate priors with the installed photometry and PyCosmo.
+The compared reference therefore executes the original `native_prior`,
+`log_mixture_prior` and public `log_intensity`, including safe placeholders.
+
+The checker requires the fixed completed development-audit hash and all 24
+declared `small`/`large`/`broad` populations with their original seeds and row
+counts: 73,728 rows total. It binds every particle NPZ, protocol and result to
+that audit before evaluation. It checks the original complete per-population
+coordinate arrays, followed by 15 deterministic support probes based on the
+first saved coordinate: both types' redshift edges, out-of-range safe
+placeholders, shape/SED zero limits, and bright/faint intrinsic support.
+
+Receipt fields preserve dtype, shape, byte hashes, finite/nonfinite counts and
+individual mismatch examples. There is no tolerance fallback. Input and source
+hashes are checked again after evaluation. Mismatch returns a nonzero status;
+exceptions also retain a failure receipt. Costs include both prior
+constructions, evaluations, comparisons and hashing; these are validation
+costs, not timings from which to claim a sampler speedup.
+
+Run through the scheduler, with this candidate checkout as the import authority:
+
+```bash
+/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python \
+  scripts/check_particle_prior_reuse_native.py \
+  --runs-root /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021 \
+  --baseline-source /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_corrected_heldout_v3_20261022 \
+  --output /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_native_replay_20261022
+```
+
+The output directory must be fresh. Five small checker tests pass in 0.12
+seconds: byte-level signed-zero/NaN distinctions, dtype/shape and native-schema
+failures, complete population identity/hash enforcement, seed rejection and
+fixed support-probe coverage. Syntax compilation and `git diff --check` pass.
+The actual-data replay has not been executed by this implementation agent;
+the parent runs it with the full CPU suite in a scheduled job.

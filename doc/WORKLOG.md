@@ -1,5 +1,23 @@
 # Work log
 
+## 2026-10-22 — Add pinned installed-photometry replay for prior reuse
+
+Added `scripts/check_particle_prior_reuse_native.py` to compare the n25 candidate
+with the unmodified, hash-pinned original native prior, coordinate type sum and
+safe-placeholder implementation. Both sides build separate priors with the
+actual installed photometry. The checker binds the 24 corrected development
+populations (73,728 saved rows), all NPZ/protocol/result hashes and the completed
+development audit; it uses original per-run row counts and 15 fixed support
+probes. It records exact dtype/shape/byte comparisons, finite/nonfinite counts,
+mismatch examples, source/input rechecks and full validation-process costs.
+No held-out scientific output, random sampling, GPU or learned model is used.
+
+Five focused metadata/comparison tests pass in **0.12 seconds**; syntax
+compilation and `git diff --check` pass. No actual-data computation or Slurm
+submission was performed here. Parent must run this checker and the full CPU
+suite through Slurm before GPU replay/timing; no efficiency/adoption claim.
+See [command and receipt contract](PARTICLE_PRIOR_REUSE_CANDIDATE.md#installed-photometry-cpu-replay).
+
 ## 2026-10-22 — Isolate deterministic target-prior reuse candidate
 
 Hypothesis n25 on `codex/smc-prior-reuse-20261022` removes repeated native
