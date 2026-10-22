@@ -1,0 +1,99 @@
+{
+  "created_utc": "2026-10-22T19:01:07.239142+00:00",
+  "job": "17448787",
+  "command": [
+    "sbatch",
+    "--parsable",
+    "--partition=inter",
+    "--gres=gpu:v100:1",
+    "--nodelist=th-cl-nv02",
+    "--cpus-per-task=2",
+    "--hint=nomultithread",
+    "--mem=32G",
+    "--time=01:00:00",
+    "--job-name=prior-reuse-v2-replay",
+    "--no-requeue",
+    "--dependency=afterok:17448718",
+    "--output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_launch_v2_20261022/benchmark-%j.out",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_launch_v2_20261022/run.sh"
+  ],
+  "launcher_sha256": "e9b56e36798ba3159838da89080d4448218de898d03531af3f1a03b9feb610c6",
+  "validation": {
+    "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_prior_reuse_benchmark_test_source_v2_20261022",
+    "commit": "519b9206eeed7eaf90bf440abf93798d8cecff76",
+    "manifest_sha256": "e878fbfc761256a6ba59135c32b5ceafcc31d0db37eeae1a44872e931ba4bfcc",
+    "source_file_count": 485,
+    "job": "17448718",
+    "source_before_after_pass": true,
+    "pytest_exit_code": 0,
+    "preparation_exit_code": 0,
+    "preflight_pass": true,
+    "elapsed_seconds": 115.16177376100677,
+    "requested_physical_cpus": 4,
+    "gpus": 0,
+    "affinity": [
+      76,
+      12,
+      13,
+      14,
+      15,
+      77,
+      78,
+      79
+    ]
+  },
+  "junit": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "9",
+    "tests": "1148",
+    "time": "74.984",
+    "timestamp": "2026-10-22T20:57:33.883631+02:00",
+    "hostname": "th-cl-rome09n2.hpc.physik.uni-muenchen.de"
+  },
+  "scheduler_test": "17448718|COMPLETED|0:0|150|8\n",
+  "independently_checked_manifest_entries": 1135,
+  "independently_checked_external_pins": 189,
+  "declaration": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_prepared_v2_20261022/declaration.json",
+  "declaration_sha256": "ce259bd7d64a32086d01ce30b59ffe278599382bb87e5452fe519ad936571093",
+  "startup_preflight": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_prepared_v2_20261022/startup_preflight/result.json",
+    "sha256": "9cdbf8f7a790f344b7dd264c9a62bd43731b5897056795b6671c7801c6b51321"
+  },
+  "startup_validated_populations": 8,
+  "original_mismatched_proposal_negative_control": true,
+  "source_manifest_sha256": {
+    "baseline": "fd96ec78e4b95886a3355082102a25d7a40ffa3dd1a5f4d52443a46458a64df1",
+    "optimized": "f95d439d723e25375ca683a7134562f8a5262cd35d04c2b44a0e345bc52039c2"
+  },
+  "status": "queued_after_full_cpu_validation_and_actual_startup_preflight",
+  "previous_failed_startup": {
+    "job": "17446115",
+    "optimized_output": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_runs_v1_20261022/pair_0/optimized",
+    "process_cost": {
+      "wall_seconds": 248.06,
+      "user_seconds": 224.64,
+      "system_seconds": 8.9,
+      "max_rss_kib": 1880364,
+      "exit_code": 1
+    },
+    "receipt": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_runs_v1_20261022/pair_0/receipt.json",
+      "sha256": "d18e6933b050bf66792746a726004f5e7669d76af3464626b94b221488c4e145"
+    },
+    "log": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_runs_v1_20261022/pair_0/optimized_runtime/population_0.log",
+      "sha256": "0d6774b16183d675eb908353f54145fc8872065f2e4bd20bc6d5fb81388f1f73"
+    },
+    "cost": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_runs_v1_20261022/pair_0_process_cost.json",
+      "sha256": "7e7197644ae3733b8122b2b0ddb7d3f23e17583144c4bd877c629a972b2fac0d"
+    }
+  },
+  "limitations": [
+    "Four pairs required; no speedup or GPU replay claim yet.",
+    "Original failed v1 retained separately; scientific settings and seeds unchanged.",
+    "One V100/two physical cores on the four-GPU study node."
+  ]
+}

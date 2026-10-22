@@ -1,5 +1,27 @@
 # SMC CPU concurrency confirmation — October 22, 2026
 
+## Completed confirmation and independent audit
+
+GPU job **17447826** completes successfully. All 16 original populations reproduce
+all saved scientific values, 64-stage histories and particle/scene arrays exactly.
+Four workers versus one give complete-setting speedups **3.337 and 3.269**;
+outer-process speedups are 3.336 and 3.268. Each parallel setting takes about
+252 seconds, versus 843 and 825 seconds serially. Both predeclared timing gates pass.
+
+Including shared preparation and reporting, total measured costs are
+1,679.700 seconds for serial settings and 516.810 seconds for parallel settings:
+**3.250 times the throughput**. Independent CPU audit **17448939** reruns every
+saved-output check and independently recomputes the gates and cost arithmetic.
+It passes, and the parent rechecks all six pinned reports/cost receipts and
+successful scheduler completion. The [versioned result](evidence/smc_cpu_concurrency_confirmation_result_20261022.json)
+and [audit implementation](evidence/audit_cpu_concurrency_confirmation_20261022.py)
+preserve that evidence.
+
+This confirms the four-worker layout for this fixed one-GPU workload. A reusable
+pool still needs its own real replay before adoption. Scientific accuracy remains
+unaccepted; four-GPU and 500-core scaling are unmeasured. The following preparation
+and launch sections retain the original experiment history.
+
 ## Fixed decision and evidence
 
 The completed development experiment selected four independent two-thread

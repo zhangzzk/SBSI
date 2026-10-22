@@ -187,3 +187,23 @@ optimized source manifest is
 All four original paired comparisons remain required. No runtime speedup or
 sampler acceptance is claimed. A bounded read-only scheduler/result-presence
 check is scheduled as 17446128 about two hours later; it sends no chat message.
+
+## Startup failure and validated v2 repair
+
+Original GPU job 17446115 failed before optimized sampling: its frozen initial
+proposal retained the baseline implementation hash. The strict validator rejected
+that mismatch. Preserve the failed run and its 248.06 seconds of measured process
+cost; it supplies no speedup or numerical comparison.
+
+Commit 519b920 explicitly derives a proposal artifact with identical numerical
+fit and migrated implementation provenance. CPU job **17448718** passes
+**1,139 tests, nine skips**, then exercises all eight actual production startups
+plus the original mismatched-artifact negative control. All 485 source hashes
+match before/after. Parent verification checks 1,135 manifest entries and 189
+external pins. No public validator or runtime algorithm was relaxed.
+
+GPU job **17448787** is queued after that validation, on one V100 and two physical
+CPU cores. It repeats the complete four-pair experiment with the original seeds
+and alternating order in a fresh v2 directory. All pairs remain mandatory; no
+GPU replay or runtime gain is claimed yet. The [v2 preparation receipt](evidence/particle_prior_reuse_v2_preparation_20261022.json)
+binds the declaration, source, migration, startup checks and prior failed cost.

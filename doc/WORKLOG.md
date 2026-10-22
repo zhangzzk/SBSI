@@ -1,5 +1,35 @@
 # Work log
 
+## 2026-10-22 — Confirm CPU sharing with fresh seeds and independent replay
+
+GPU17447826 completes all four original settings and 16 populations. Four workers
+on one V100/eight physical cores preserve every saved scientific value/history/
+array and achieve 3.337/3.269 inclusive speedups; shared preparation/report costs
+give 3.250 overall. CPU17448939 independently reruns strict saved-output checks
+and recomputes both timing gates and complete-cost arithmetic; all pass. Parent
+checks six report/cost hashes and both successful scheduler records. Added the
+[confirmation result](SMC_CPU_CONCURRENCY_CONFIRMATION.md#completed-confirmation-and-independent-audit),
+versioned receipts and audit script; updated search and compute-cost scope.
+
+This validates the fixed local concurrency layout, not posterior convergence or
+four-GPU/500-core scaling. Reusable pool validation remains necessary before its
+execution path is adopted. The failed held-out sampler decision is unchanged.
+
+## 2026-10-22 — Repair prior-reuse provenance and validate every production startup
+
+The separate prior-reuse branch preserves its three-file optimization and strict
+artifact checks. An explicit derived proposal changes implementation provenance
+only; the fit is identical. CPU17448718 passes 1,139 tests and nine skips, all
+485 source hashes before/after, eight real production startups and a mismatched
+artifact negative control. Parent checks 1,135 manifest entries and 189 external
+pins. GPU17448787 is queued for all four original paired replays in a fresh v2
+root, with one V100/two physical cores. Failed v1 artifacts and cost remain intact.
+
+Updated [candidate evidence](PARTICLE_PRIOR_REUSE_CANDIDATE.md#startup-failure-and-validated-v2-repair)
+and its versioned preparation receipt. Runtime speed and GPU equality remain
+unmeasured. Numerical-target development and the reusable worker pool continue
+in isolated branches; neither is adopted as a scientifically accepted sampler.
+
 ## 2026-10-22 — Reject the completed held-out candidate after independent gate and cost audit
 
 All original held-out work finishes: report17435351 records15/20 objects

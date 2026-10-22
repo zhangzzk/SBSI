@@ -1,5 +1,21 @@
 # Sampler computation cost — October 22, 2026
 
+## Confirmed local CPU sharing — October 22
+
+One V100 with four independent workers, each pinned to two physical CPU cores,
+completes the fixed four-population workload in about 252 seconds, compared with
+825–843 seconds serially. Predeclared fresh-seed confirmation and independent
+saved-output replay both pass. Complete-setting speedups are 3.27–3.34;
+including shared preparation/reporting gives **3.25**. See the
+[full scope and receipts](SMC_CPU_CONCURRENCY_CONFIRMATION.md#completed-confirmation-and-independent-audit).
+
+Four GPUs at this layout would require 32 physical CPU cores, but its combined
+throughput is not yet measured. The result does not justify multiplying existing
+full-pipeline catalogue projections by 3.25: this benchmark covers one fixed
+production recipe and excludes pilot fitting and scientific acceptance work.
+Using 500 CPUs across nodes requires a separately validated distributed CPU/GPU
+execution design. The reusable local pool is the next implementation step.
+
 ## Measured recipe and evidence
 
 The current candidate projects to about **0.007 galaxies/s on four V100s**,

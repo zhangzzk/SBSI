@@ -49,6 +49,14 @@ held-out gate:** fifteen objects pass; five fail precision or agreement checks.
 Inclusive recipe cost is 1.9433 times lower, but accuracy is insufficient for
 acceptance. See [final failures and evidence](CORRECTED_HELDOUT_RESULTS.md#direct-failures).
 
+Implementation efficiency has a separate confirmed result: four independent
+two-core workers sharing one V100 give 3.27–3.34 times the complete-setting
+throughput on predeclared fresh seeds, with all 16 saved outputs exactly replayed.
+Including shared preparation/reporting gives 3.25 times. Independent audit17448939
+passes. See [confirmation evidence](SMC_CPU_CONCURRENCY_CONFIRMATION.md#completed-confirmation-and-independent-audit).
+A reusable task pool and redundant-prior optimization are being validated; neither
+changes this failed scientific acceptance decision.
+
 Corrected v10 passed the complete development comparison. Eight independent populations per arm compare fitted N256/T64/M64,
 fitted N1024/T64/M64 and broad Student-t5 N1024/T64/M64, with the same corrected
 support, frozen geometry and phase coefficients. All12 precision gates and all
