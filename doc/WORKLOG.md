@@ -27,6 +27,9 @@ Benchmark task 17437046_0 starts at 14:13:39 UTC on the declared V100 node
 while held-out work continues on another GPU. Its baseline enters annealing
 and records progress without extinction; the priority receipt preserves the
 startup observation. No complete pair replay or speed result is claimed yet.
+The baseline then completes, and the optimized arm also enters annealing
+without extinction. Its separate startup observation is appended to the same
+receipt. All four complete pairs and the frozen final report remain required.
 
 The original scheduled check 17436101 completes at 14:12 UTC, exit 0 in two
 allocated seconds: 14 stages complete, no failed jobs, no final result yet.

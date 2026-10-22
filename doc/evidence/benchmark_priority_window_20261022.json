@@ -101,5 +101,19 @@
       false
     ],
     "scope": "Live startup/progress only; no full pair replay or speed conclusion."
+  },
+  "optimized_arm_startup": {
+    "checked_utc": "2026-10-22T14:19:06.357759+00:00",
+    "job_id": "17437046_0",
+    "completed_stages": 32,
+    "last_stage": 32,
+    "extinct": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "baseline_completed": true,
+    "scope": "Second-arm startup only; final bitwise replay and complete four-pair cost report remain pending."
   }
 }
