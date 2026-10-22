@@ -1,5 +1,12 @@
 # Work log
 
+## 2026-10-22 — Corrected three-way development gates pass after audited reporting repair
+
+- Authorized CPU **17434348** completed exit 0 in 31 seconds: **37 focused tests passed in 4.77 seconds**, followed by full source/protocol/artifact/seed/particle replay and comparison over all 24 completed v10 populations. All 12 precision and all three pairwise raw-score/region/Z and controlled F32/F64 gates pass. No sampling rerun, new model forward, held-out outcome access or threshold change.
+- Largest controlled contrast is small minus large, object 0 g2, +1.158843 ± 0.600652 (+1.929307 combined MCSE); F64 +1.929200 MCSE. All signed means/errors and costs retained in [completed evidence](V10_PARTICLE_COMPARISON.md#completed-audited-development-comparison). Small/large/broad inference totals 1566.072/3843.086/3717.636 seconds; summed Slurm task times 1667/3944/3820. Shared phase 177 seconds and report 11 seconds; preparation/full cost unknown.
+- Repaired immutable source 5285f5b, manifest 4767d2a3eef142ab4f5a387cccc7267d4eaeac59bf7247a2fa2ac6eedf2d0f99. Full result SHA256 09601af0a43c0b5801bc0467b090e588c745713a3c9fd6d86b58f2f9172d1574; [pinned receipt](evidence/v10_comparison_result_20261022.json) includes failed 17423550 and successful log/source hashes. Prior failed snapshot/log remain unchanged.
+- Development comparison passes; **sampler remains unaccepted** pending independent assessment. F32 control expectation is unknown; F64 reweighting explicitly changes measure and qualifies the continuous identity. Eight populations cannot exclude shared rare modes. No population shear-calibration conclusion follows from fixed-object score agreement.
+
 ## 2026-10-22 — Repair n23 source whitelist before authorized completed evaluation
 
 - Root's evaluation 17423550 stopped in five seconds before reading outcomes: the held-out data guard also rejected a legitimate filename inside the pinned support-fix source manifest. Original source_v10_comparison_20261022_v2, launcher, output log and failure remain preserved.

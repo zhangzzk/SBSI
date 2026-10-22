@@ -1,4 +1,88 @@
-# N23 corrected three-way comparison preparation
+# N23 corrected three-way comparison
+
+## Completed audited development comparison
+
+After all 24 sampling tasks, raw report 17422589 and phase report 17422590
+completed with exit 0, authorized CPU **17434348** passed **37 focused tests
+in 4.77 seconds** and completed the audited comparison (31-second allocation).
+All **12 arm/object precision gates**, all three pairwise raw-score/region/Z
+gates, and all pairwise controlled-score component gates in both numerical
+measures pass. All 466 recorded source/input files, protocol/artifact/seed
+checks and full-particle replays passed. No sampler rerun or model forward was
+performed for this report, and no held-out outcome was accessed.
+
+The largest controlled contrast is small minus large for object 0, g2:
+**+1.158843 ± 0.600652**, or **+1.929307 combined MCSE**, in the sampled F32
+measure. Its F64-reweighted counterpart is +1.158957 ± 0.600745
+(+1.929200 MCSE). The largest raw-score contrast is +2.239036 MCSE (small minus
+broad, object 1 g2); the largest absolute mean-Z contrast is 1.738664 MCSE
+(large minus broad, object 8). Broad's original `comparison_gate=false` has
+no comparator and is not a failed comparison.
+
+All entries below are posterior **score expectations for fixed observations**,
+not shear estimates or a population-calibration result. Errors use independent
+whole-population ratio MCSE with every original particle and normalizer.
+Controlled values use the fixed independent-pilot constant coefficients.
+
+| Arm | Object | Raw score g1 ± MCSE | Raw score g2 ± MCSE | Controlled g1 ± MCSE | Controlled g2 ± MCSE | Z relative MCSE |
+|---|---:|---:|---:|---:|---:|---:|
+| small | 58165 | +0.850437 ± 5.610655 | +20.246494 ± 7.183872 | +8.030165 ± 3.566477 | +12.648045 ± 5.739217 | 4.162% |
+| small | 0 | +1.200248 ± 1.624535 | -4.937433 ± 0.527471 | +0.435885 ± 0.124709 | -4.982465 ± 0.489975 | 2.148% |
+| small | 1 | -3.223766 ± 0.288738 | -3.259235 ± 0.214702 | -2.964724 ± 0.225102 | -3.417093 ± 0.230164 | 1.848% |
+| small | 8 | -1.924865 ± 0.069983 | +1.148854 ± 0.026412 | -1.900714 ± 0.062782 | +1.182319 ± 0.026202 | 0.992% |
+| large | 58165 | +5.678681 ± 2.544601 | +7.331446 ± 3.051524 | +5.091120 ± 1.389991 | +7.953274 ± 2.172985 | 1.309% |
+| large | 0 | +0.020628 ± 0.586801 | -6.175250 ± 0.324390 | +0.596762 ± 0.087427 | -6.141308 ± 0.347430 | 1.866% |
+| large | 1 | -2.959995 ± 0.133474 | -3.872036 ± 0.195984 | -2.975285 ± 0.071498 | -3.862719 ± 0.143319 | 1.005% |
+| large | 8 | -1.905141 ± 0.027466 | +1.174746 ± 0.016688 | -1.890582 ± 0.025922 | +1.194919 ± 0.012050 | 1.110% |
+| broad | 58165 | +3.009664 ± 2.675734 | +9.279259 ± 1.664987 | +4.633070 ± 1.197481 | +7.561177 ± 2.003630 | 7.788% |
+| broad | 0 | +1.463304 ± 0.872131 | -5.170575 ± 0.446214 | +0.510743 ± 0.109936 | -5.226695 ± 0.457559 | 3.801% |
+| broad | 1 | -2.875166 ± 0.163342 | -3.857524 ± 0.159070 | -2.971274 ± 0.109623 | -3.798956 ± 0.171847 | 2.495% |
+| broad | 8 | -1.896676 ± 0.023762 | +1.185275 ± 0.018073 | -1.884869 ± 0.028309 | +1.201635 ± 0.014314 | 1.464% |
+
+The full result and compact receipt preserve signed means, MCSE and every
+pairwise contrast separately for F32 and F64. F64 reweighting changes the
+numerical measure. Its largest controlled-mean shift from F32 is 0.000526430
+(small/object 0/g2); the largest raw-mean shift is 0.000722896
+(small/object 58165/g2). The maximum absolute F64 phase-control zero-reference
+residual is 1.654885 MCSE (small/object 58165). This is diagnostic evidence,
+not an exact identity for the rounded F32 sampling program; that expectation
+remains unknown. The F64 identity concerns the intended continuous measure.
+
+Driver inference totals for small/large/broad are **1566.072 / 3843.086 /
+3717.636 seconds**. Corresponding summed Slurm task elapsed times are
+**1667 / 3944 / 3820 seconds**. Shared phase and raw-report jobs took 177 and
+11 wall seconds. These shared costs are not allocated to arms, and reused
+pilot/geometry/proposal/control preparation costs remain unknown. The small
+arm uses 42.1% of broad's recorded inference time while satisfying these
+development checks, with larger MCSE for several scores. This does not
+establish a full end-to-end cost advantage or acceptance.
+
+The lower support clamp is corrected identically in all three arms. The
+result does not prove finite-RNG exactness or exclude shared rare modes with
+eight populations. `development_checks_pass=true` and
+**`accepted_sampler=false`**; independent held-out assessment remains pending.
+
+## Evaluation repair and exact receipt
+
+The first evaluation **17423550** failed after five seconds before outcome
+access because a substring guard rejected a legitimate pinned source filename
+containing `heldout`. Its immutable v2 snapshot and log are preserved. The
+reporting-only repair requires canonical containment in the declared source
+and a matching expected hash from its already verified manifest; actual bytes
+are still hashed. Unlisted files, missing/wrong hash proof, outside-source
+data and symlink escapes remain rejected. Three new regressions pass. No
+scientific threshold or sampling setting changed.
+
+Runnable repaired code is commit **5285f5b**. The fresh immutable snapshot is
+`R/source_v10_comparison_20261022_v3`, manifest SHA256
+`4767d2a3eef142ab4f5a387cccc7267d4eaeac59bf7247a2fa2ac6eedf2d0f99`.
+The authorized launcher is `R/run_v10_comparison_evaluate_20261022_v3.sh`.
+The complete audited result is `R/v10_corrected_comparison_20261022_v3.json`,
+SHA256 **09601af0a43c0b5801bc0467b090e588c745713a3c9fd6d86b58f2f9172d1574**.
+The [result receipt](evidence/v10_comparison_result_20261022.json) pins the
+pre-execution declaration, launcher, source, all input hashes through the
+full result, failed attempt, successful log and compact signed results.
+Its external identical copy is `R/v10_comparison_result_20261022_v3.json`.
 
 ## Frozen scope before outcomes
 
@@ -122,9 +206,10 @@ records exact source/launcher hashes, test jobs, failed attempts and the
 unsubmitted command. Its external copy is
 `R/v10_comparison_preparation_result_20261022.json`.
 
-**No v10 outcome has been read, no scientific gate result calculated, and no
-comparison evaluation submitted by this subtask.** The parent can run this
-prepared CPU command after all sampling and report jobs complete:
+**At the original preparation receipt, no v10 outcome had been read, no
+scientific gate result calculated, and no evaluation submitted by this
+subtask.** The following original command is preserved; the authorized repaired
+v3 evaluation above supersedes it:
 
 ```bash
 sbatch --parsable --partition=cluster --cpus-per-task=2 --mem=8G --time=00:10:00 --job-name=v10-comparison --output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/v10_comparison_evaluation_%j.log /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_v10_comparison_evaluate_20261022.sh
