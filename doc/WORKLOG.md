@@ -1,5 +1,35 @@
 # Work log
 
+## 2026-10-22 — Add an optional continuous numerical target law and consistent exchanges
+
+Arbor n26 adds `GalSBITargetCoordinates(..., target_prior='analytic'|'numerical')`
+with a read-only law identity. Numerical `log_prior`/`log_mixture_prior` evaluate
+the full absolute native type intensities and existing coordinate Jacobian,
+including interpolation support outside the analytic cap. Native exchange and
+relocation accept the same explicit law; `GalSBIParticleTarget` routes the
+coordinate-owned identity. Supported numerical target/environment mark factors
+cancel, while the original transformed bridge and relocation/selection Hastings
+corrections remain necessary. Analytic defaults retain their arithmetic and RNG.
+
+Added independent forward-density and complete probability-flux tests, plus
+the [candidate derivation and scope](NUMERICAL_TARGET_SAMPLER.md#exchange-detailed-balance-at-every-temperature).
+Validation with `/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python`:
+`-m pytest tests/test_numerical_target_sampler.py tests/test_numerical_native_intensity.py tests/test_galsbi_target_coordinates.py tests/test_galsbi_particle_target.py tests/test_scene_exchange.py tests/test_scene_exchange_relocation.py tests/test_scene_exchange_support.py -q`
+passes **165 tests in16.19 seconds**, including47 new checks, with one existing
+NumPy scalar-conversion warning. `ruff check --select F821,F823` and
+`git diff --check` pass. Two initial clamp-boundary probes used a coarse table
+whose failed-draw tail preceded the clamp; the fixture now uses covered fine
+tables. No runtime relaxation was made.
+
+This isolated branch starts from complete frozen baseline0301993. No drivers,
+likelihoods, models, batch sizes or scientific acceptance gates change here;
+driver/provenance integration and full combined validation remain separate.
+No GPU/model run, scheduler submission or heldout-outcome inspection occurred.
+The optional law describes the continuous numerical density, not singular clamp
+atoms or literal finite-RNG equivalence. It is a new scientific candidate with
+no convergence, efficiency or shear-calibration acceptance; fresh development
+and a subsequent untouched acceptance panel remain required.
+
 ## 2026-10-22 — Complete-source candidate passes full CPU validation
 
 Implementation commit 862db49 preserves all 320 frozen experiment paths;

@@ -1,8 +1,9 @@
 """Exact scene bookkeeping for experimental annealing from an evaluable q0.
 
 The bridge is q_environment(E) q0(x)**(1-beta) [p(x) K(y|x,E)]**beta.
-p is the analytic type-marginalized native intensity in transformed target
-coordinates; q_environment is the unchanged numerical Poisson scene law.
+p is the selected type-marginalized native intensity in transformed target
+coordinates (analytic by default); q_environment is the unchanged numerical
+Poisson scene law. The optional numerical target uses its continuous density.
 The normalized initial q0 is a proposal, never a replacement population prior.
 """
 from dataclasses import dataclass
@@ -179,7 +180,7 @@ class GalSBIParticleTarget:
     def mutate(self, state, beta, rng, *, block, scale=1., check_reuse=False):
         """One fixed MH kernel; no covariance/scale fit to these particles.
 
-        Native exchanges use the original p-conditional auxiliary type law.
+        Native exchanges use the selected p-conditional auxiliary type law.
         Their proposal-density correction is independent of beta, so the
         original native ratio minus delta log p is added to the bridge ratio.
         """
@@ -225,6 +226,8 @@ class GalSBIParticleTarget:
             if len(rows):
                 relocation = (dict(relocation_scale=.1, aperture_arcsec=self.prior.aperture_arcsec,
                                    central_weight=.9) if block == 'exchange_relocate' else {})
+                if getattr(self.coordinates, 'target_prior', 'analytic') == 'numerical':
+                    relocation['target_prior'] = 'numerical'
                 swapped, native_ratio[rows], active[rows] = propose_native_exchange(
                     self.prior.galaxy, scene.take(rows), state.type_probability[rows],
                     rng, radius_scale=1., **relocation)
