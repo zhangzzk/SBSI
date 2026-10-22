@@ -1,0 +1,57 @@
+{
+  "commit": "b7f559a437ad1667bd4efc403d021987114377ce",
+  "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_corrected_heldout_v3_20261022",
+  "manifest_sha256": "fd96ec78e4b95886a3355082102a25d7a40ffa3dd1a5f4d52443a46458a64df1",
+  "manifest_count": 320,
+  "matched_count": 311,
+  "compared_bytes": 19180859,
+  "changed": [
+    {
+      "name": "scripts/check_galsbi_local_sampler.py",
+      "frozen_sha256": "9773e4b6fa01dcb9e012207afd93ac222378ced47b6e12157a103fea6fd2fa21",
+      "commit_sha256": "7f4b83848cfe75ea915a8028771464055022db9290ec810d296cc4828552f9df"
+    },
+    {
+      "name": "scripts/prepare_galsbi_twin.py",
+      "frozen_sha256": "0d8703dca2f7eb661522827b7aa543529e58d678c275297b151b1e9e67e3246f",
+      "commit_sha256": "a67f0493b38977ad40ab53da34023aafcf85853cde1990de340141948d83b517"
+    }
+  ],
+  "not_tracked": [
+    "sbsi/gradient_proposals.py",
+    "sbsi/inference_moments.py",
+    "sbsi/mock_population.py",
+    "scripts/report_galsbi_direct_scores.py",
+    "scripts/report_galsbi_selection_covariance.py",
+    "tests/test_gradient_proposals.py",
+    "tests/test_inference_moments.py"
+  ],
+  "new_code_since_snapshot": [
+    "sbsi/prior_sensitivity.py",
+    "scripts/audit_corrected_prior_sensitivity.py",
+    "scripts/benchmark_exchange_full_smc.py",
+    "scripts/check_exchange_full_smc_fixture.py",
+    "scripts/prepare_exchange_full_smc.py",
+    "scripts/run_exchange_full_smc.sh"
+  ],
+  "schema": "sbsi-complete-frozen-source-candidate-v1",
+  "created_at_utc": "2026-10-22T15:13:26.823175+00:00",
+  "candidate_branch": "codex/frozen-sampler-candidate-20261022",
+  "restored_exact_frozen_files": [
+    "scripts/check_galsbi_local_sampler.py",
+    "scripts/prepare_galsbi_twin.py",
+    "sbsi/gradient_proposals.py",
+    "sbsi/inference_moments.py",
+    "sbsi/mock_population.py",
+    "scripts/report_galsbi_direct_scores.py",
+    "scripts/report_galsbi_selection_covariance.py",
+    "tests/test_gradient_proposals.py",
+    "tests/test_inference_moments.py"
+  ],
+  "all_320_paths_match": true,
+  "actual_frozen_source_manifest_verified": true,
+  "promotion_status": "candidate only; held-out accuracy and inclusive cost pending",
+  "runtime_optimization_included": false,
+  "root_working_files_modified": false,
+  "validation_status": "CPU full suite pending"
+}

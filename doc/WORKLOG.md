@@ -1,5 +1,22 @@
 # Work log
 
+## 2026-10-22 — Preserve the complete frozen sampler source in an isolated candidate
+
+Audited root commit b7f559a against all 320 paths in the actual verified
+held-out source. The active particle/held-out code matches. Two older scripts
+differ and seven older modules/diagnostic scripts/tests are absent from Git;
+these correspond to preserved local work. Copied their exact frozen bytes into
+`codex/frozen-sampler-candidate-20261022`, leaving the original working files
+and running experiment unchanged. All 320 candidate paths now match the frozen
+manifest. The scalar exchange remains in place; no inactive optimization is
+adopted and no scientific behavior is changed relative to the frozen source.
+
+The [candidate note](FROZEN_SAMPLER_CANDIDATE.md#status-and-scope), complete
+inventory and source audit preserve provenance and post-freeze additions.
+Full CPU validation of a complete Git archive is pending; the original held-out
+accuracy and inclusive-cost gates remain required. This branch closes a source
+versioning gap and does not establish posterior convergence or shear calibration.
+
 ## 2026-10-22 — Complete exact categorical replays; full-run speed benefit remains uncertain
 
 All four fixed benchmark pairs in GPU array 17437046 and CPU report 17437047
