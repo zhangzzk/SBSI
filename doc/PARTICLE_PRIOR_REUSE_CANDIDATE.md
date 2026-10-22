@@ -1,5 +1,23 @@
 # Particle prior reuse candidate
 
+## Original GPU startup failure and repair
+
+Job17446115 fails1:0 after249allocated seconds. Its baseline population
+completes, but the optimized arm's original proposal artifact pins the old
+native-target implementation hash. Strict production validation rejects the
+new hash before optimized initialization or sampling. This is an artifact
+compatibility failure; it supplies no speedup or full GPU replay result.
+All v1 output, costs and failure logs remain preserved in
+[startup evidence](evidence/particle_prior_reuse_gpu_startup_failure_20261022.json).
+
+The isolated repair prepares a new v2 experiment with an explicitly derived
+proposal artifact: numerical fitted-proposal fields remain identical, while
+implementation provenance binds both source manifests and the completed
+native-prior replay. Public production validation remains strict. A CPU
+preflight must exercise the actual production proposal/geometry validation
+before any GPU launch. Seeds and alternating arm order remain unchanged.
+The repair and v2 GPU result are pending; no optimization is promoted.
+
 ## Scope and ownership
 
 Hypothesis n25 removes repeated deterministic calculations from the fixed

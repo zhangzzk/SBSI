@@ -1,5 +1,52 @@
 # Work log
 
+## 2026-10-22 — Reject the completed held-out candidate after independent gate and cost audit
+
+All original held-out work finishes: report17435351 records15/20 objects
+passing, five failing, accuracy=false, cost=true and accepted_sampler=false.
+Inclusive process costs11,782.2405 versus22,896.6929 seconds give ratio1.9433;
+this is not a matched-accuracy speedup. The five failures concern reference
+normalizer precision, candidate raw-score precision, two scene-region contrasts
+and one raw-score contrast. Both controlled-score measures and all absolute
+bounds pass without replacing the failed mandatory gates.
+
+Independent checker27a5323 on codex/smc-completed-panel-audit-20261022 uses the
+frozen source's provenance validators but recomputes gates and cost allocation.
+CPU17448173 passes1,075 tests, nine skips, one existing warning in85.98s;
+then its fresh-process audit validates1,225 source/output pins and all46stages,
+235steps,20pilots,80production populations,100phase checks,15fits and20reports.
+It reproduces the rejection and each failed requirement. All475archive hashes
+match before/after and in the parent check; JUnit and scheduler completion pass.
+Original reports were neither rewritten nor rerun.
+
+Added [final results](CORRECTED_HELDOUT_RESULTS.md#direct-failures),
+[versioned evidence](evidence/corrected_heldout_final_results_20261022.json), and
+[audit contract](COMPLETED_HELDOUT_AUDIT.md#independent-calculations-and-output).
+Updated current search/compute status and propagated the transfer failure in
+Arbor. This goal turn made progress by completing a scientific decision and
+independent audit; no sampler is accepted and the goal remains active.
+Further development must use a new untouched acceptance panel. Target remains
+p_A q_E K32; no numerical-mock-prior or population-calibration claim.
+
+## 2026-10-22 — Catch prior-reuse startup rejection while CPU concurrency confirmation runs
+
+GPU17446115 fails1:0 after249allocated seconds: the baseline completes, but
+the optimized arm's unchanged production validation rejects the frozen initial
+proposal's native_target_source_sha256 before optimized sampling. Preserve
+all original v1 artifacts and [failure evidence](evidence/particle_prior_reuse_gpu_startup_failure_20261022.json).
+No numerical mismatch or speedup is inferred from a startup failure. An
+isolated v2 repair is underway: explicitly bind a derived proposal with identical
+numerical fit and migrated implementation provenance, retain strict public
+validation, and exercise actual production startup on CPU before GPU launch.
+The original seeds/order remain fixed; v1 is not overwritten or counted as a
+successful benchmark.
+
+Fresh-seed concurrency confirmation17447826 starts on its reserved V100/eight
+physical cores; the first serial population completes and the next progresses.
+Source/settings remain frozen. The bounded metadata check17447926 remains
+scheduled for20:55Berlin; it sends no chat notification. Exact concurrency
+confirmation, prior-reuse GPU replay/timing and wider CPU scaling remain open.
+
 ## 2026-10-22 — Freeze and queue the predeclared four-worker confirmation
 
 Isolated commit a556047 implements the unchanged development selection's fresh

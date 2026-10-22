@@ -44,15 +44,20 @@ proof or a population shear-calibration claim.
 
 ## Current status
 
-No candidate is accepted yet. **Corrected v10 passes the complete development
-comparison.** Eight independent populations per arm compare fitted N256/T64/M64,
+No candidate is accepted yet. **Corrected v10 fails the completed twenty-object
+held-out gate:** fifteen objects pass; five fail precision or agreement checks.
+Inclusive recipe cost is 1.9433 times lower, but accuracy is insufficient for
+acceptance. See [final failures and evidence](CORRECTED_HELDOUT_RESULTS.md#direct-failures).
+
+Corrected v10 passed the complete development comparison. Eight independent populations per arm compare fitted N256/T64/M64,
 fitted N1024/T64/M64 and broad Student-t5 N1024/T64/M64, with the same corrected
 support, frozen geometry and phase coefficients. All12 precision gates and all
 three pairwise raw-score/region/normalizer and both-measure controlled-score
 comparisons pass. The largest controlled contrast is1.929 combined MCSE.
 Allocated inference totals are1667/3944/3820 seconds: small fitted is2.29 times
-cheaper than broad at this stage. Full preparation cost and held-out reliability
-are still required. See the [audited complete result](V10_PARTICLE_COMPARISON.md#completed-audited-development-comparison).
+cheaper than broad at this stage. The subsequent rejection preserves this
+development result while demonstrating its transfer limit. See the
+[audited development result](V10_PARTICLE_COMPARISON.md#completed-audited-development-comparison).
 
 The complete experiment source is now preserved on
 `codex/frozen-sampler-candidate-20261022`, commit
@@ -62,7 +67,7 @@ older local files while preserving the original working tree. Its complete
 Git archive passes 1,031 CPU tests with nine optional skips; the inactive
 categorical optimization is absent. See the
 [source and validation record](FROZEN_SAMPLER_CANDIDATE.md#validation).
-This is a reproducible candidate for the still-pending scientific gate.
+This is the reproducible candidate evaluated by the failed scientific gate.
 
 ![Completed development precision, score agreement, inference allocation, and prior sensitivity](evidence/sampler_development_20261022.svg)
 
@@ -75,7 +80,7 @@ The [vector figure](evidence/sampler_development_20261022.svg) and
 [plotted data with provenance](evidence/sampler_development_figure_20261022.json)
 are generated directly from the two pinned completed audits.
 
-The fresh twenty-object workflow is now submitted with four Gaussian pilots
+The completed twenty-object workflow used four Gaussian pilots
 per four-observation group, eight paired production populations per arm,
 independent fitted geometry/proposals/phase coefficients, unchanged raw gates,
 and both F32/F64 controlled-score comparisons. It counts preparation, fitting,
@@ -87,7 +92,10 @@ All five preparation groups pass. The first production group completes all
 eight independent candidate/reference pairs and 16 phase diagnostics without
 extinction; a [metadata review](evidence/heldout_first_group_complete_20261022.json)
 verifies the complete first-group receipts. No interim score comparison is used for
-tuning. Full scientific results remain pending.
+tuning. All forty production tasks and report17435351 now complete; the
+[final result](CORRECTED_HELDOUT_RESULTS.md#decision-and-complete-evidence)
+rejects the candidate. Separate audit17448173 confirms all evidence, gates
+and costs, including the same five failed objects.
 
 The first launch failed before any pilot because the preflight pinned changing
 OS telemetry as immutable input. The repaired declaration records those reads

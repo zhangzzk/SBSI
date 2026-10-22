@@ -1,0 +1,1636 @@
+{
+  "schema": "sbsi-heldout-final-result-summary-v1",
+  "original_result": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/result.json",
+  "sources": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/result.json": "80351048295e44c65d9b18cf16b86ea45ee1d152d93e2238ee9484d25c9928a8",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/declaration.json": "ad718136d4ac00a37ffcaddf09dcfad92b15e68e4ebbf82ead597ed1b7c1f758",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_report.json": "8e4beb24b67a09f4ab69383321a9750c41793996fdc24386ed2ac6e984cf5234",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_report.json": "426dde6ff9a29d320b3a71f7aa292f54e6ff56699ccc4d0a92b2f2c42d27cdd1",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_1/candidate_report.json": "98e383518940a779d3df50eec84ca7142ca6b076959cd94ff1f385ac3822f00d",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_1/reference_report.json": "de7ddd332379885520cb20f2e59ebaba70d81a44a7b6ba3b3e155eca3ca16365",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_2/candidate_report.json": "a0321bbb30806be6362a4f55b42c949265782a8a298991017d091009d15b0ea2",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_2/reference_report.json": "6381b22f76424eec9fb887509bb121402933beb9790d43767dda341a7de60857",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_3/candidate_report.json": "afa3a7e054dbab636564da72a7fe17ccb219615fd17c41264ffc583faec7cb21",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_3/reference_report.json": "ca8918189acc297a30f583b94b7f8f16dbbabbcfc9eff6c02b94d84c13ba55b6",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_4/candidate_report.json": "58bd76fd5b3c73ca912555cf72a9cfcda84d622c14252f94afd1235b19e163e4",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_4/reference_report.json": "37ab9a8a87c55206ee0122f22b1dab32f26ee91f15522372d92d0ee0ff785e4f"
+  },
+  "decision": {
+    "heldout_accuracy_gate": false,
+    "heldout_cost_gate": true,
+    "heldout_gate": false,
+    "accepted_sampler": false,
+    "reference_to_candidate_cost_ratio": 1.9433224896531835
+  },
+  "objects_passed": 15,
+  "objects_total": 20,
+  "failed_objects": [
+    {
+      "group": 0,
+      "observation": 745801,
+      "accuracy_pass": false,
+      "raw": {
+        "score": {
+          "difference": [
+            25.74561034222166,
+            -8.035847131602047
+          ],
+          "combined_mcse": [
+            12.881246881196832,
+            6.9584373461161375
+          ],
+          "signed_standardized_difference": [
+            1.9986893023379089,
+            -1.1548350199757518
+          ],
+          "nonzero_with_zero_estimated_mcse": [
+            false,
+            false
+          ],
+          "component_pass": [
+            true,
+            true
+          ],
+          "pass_all": true
+        },
+        "region": {
+          "difference": [
+            0.0006140533960716787,
+            -0.0006140533960715529
+          ],
+          "combined_mcse": [
+            0.0003408863030183904,
+            0.00034088630301838733
+          ],
+          "signed_standardized_difference": [
+            1.8013437050257524,
+            -1.8013437050253995
+          ],
+          "nonzero_with_zero_estimated_mcse": [
+            false,
+            false
+          ],
+          "component_pass": [
+            true,
+            true
+          ],
+          "pass_all": true
+        },
+        "normalizer": {
+          "difference": [
+            0.04472596628337655
+          ],
+          "combined_mcse": [
+            0.14629098205072566
+          ],
+          "signed_standardized_difference": [
+            0.3057329006641575
+          ],
+          "nonzero_with_zero_estimated_mcse": [
+            false
+          ],
+          "component_pass": [
+            true
+          ],
+          "pass_all": true,
+          "log_ratio": 0.04575703336249326,
+          "common_log_scale": 11.66925923759106
+        },
+        "score_absolute_pass": [
+          true,
+          true
+        ],
+        "region_absolute_pass": [
+          true,
+          true
+        ],
+        "pass_all": true
+      },
+      "phase": {
+        "raw_float32_sampled": {
+          "corrected": {
+            "difference": [
+              3.697777871405025,
+              -9.639388309325955
+            ],
+            "combined_mcse": [
+              2.7531145529137415,
+              7.098583884073568
+            ],
+            "signed_standardized_difference": [
+              1.3431253223704422,
+              -1.357931168631106
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "all_moments": {
+            "difference": [
+              3.8993305660484303,
+              25.74561034222166,
+              -8.035847131602049,
+              3.697777871405025,
+              -9.639388309325955
+            ],
+            "combined_mcse": [
+              2.211131703256757,
+              12.881246881196832,
+              6.9584373461161375,
+              2.7531145529137415,
+              7.098583884073568
+            ],
+            "signed_standardized_difference": [
+              1.7634999128749953,
+              1.9986893023379089,
+              -1.154835019975752,
+              1.3431253223704422,
+              -1.357931168631106
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true,
+              true,
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        },
+        "precision_reweighted_float64": {
+          "corrected": {
+            "difference": [
+              3.697918354674737,
+              -9.639096769094813
+            ],
+            "combined_mcse": [
+              2.7532748520872157,
+              7.099077285394658
+            ],
+            "signed_standardized_difference": [
+              1.3430981479641968,
+              -1.3577957221181243
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "all_moments": {
+            "difference": [
+              3.8984420990220188,
+              25.74072720109678,
+              -8.035920960102224,
+              3.697918354674737,
+              -9.639096769094813
+            ],
+            "combined_mcse": [
+              2.2112537554259006,
+              12.881844216572759,
+              6.958958350575651,
+              2.7532748520872157,
+              7.099077285394658
+            ],
+            "signed_standardized_difference": [
+              1.7630007815503543,
+              1.9982175508675073,
+              -1.1547591687249408,
+              1.3430981479641968,
+              -1.3577957221181243
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true,
+              true,
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        }
+      },
+      "precision": {
+        "candidate": {
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            2618.021748521528,
+            4367.419518429978
+          ],
+          "score": {
+            "mean": [
+              20.983550034884196,
+              -12.38550024656536
+            ],
+            "covariance": [
+              [
+                112.62184085886497,
+                -22.005954055036934
+              ],
+              [
+                -22.005954055036934,
+                28.83212838083669
+              ]
+            ],
+            "mcse": [
+              10.61234379667682,
+              5.369555696781316
+            ],
+            "weights": [
+              0.1001226029650784,
+              0.12571553195022012,
+              0.09715823581401466,
+              0.1278339914879083,
+              0.11713091842713479,
+              0.12959629988850216,
+              0.17820154741181854,
+              0.12424087205532303
+            ],
+            "run_weight_ess": 7.732957975676616,
+            "log_mean_normalizer": 11.66925923759106,
+            "normalizer_relative_mcse": 0.07023732462900563,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          }
+        },
+        "reference": {
+          "precision_gate": false,
+          "score_effective_count_from_replicates": [
+            5179.098920681986,
+            6757.607937956342
+          ],
+          "score": {
+            "mean": [
+              -4.762060307337464,
+              -4.349653114963313
+            ],
+            "covariance": [
+              [
+                53.304680355478126,
+                -4.617270469730882
+              ],
+              [
+                -4.617270469730882,
+                19.587721918987118
+              ]
+            ],
+            "mcse": [
+              7.3010054345602375,
+              4.425801839100697
+            ],
+            "weights": [
+              0.14769826491207722,
+              0.09175011386569484,
+              0.09593592646227686,
+              0.09024529899385779,
+              0.12400288857521172,
+              0.11872911064541941,
+              0.09969785093644931,
+              0.23194054560901284
+            ],
+            "run_weight_ess": 7.102768453219141,
+            "log_mean_normalizer": 11.623502204228567,
+            "normalizer_relative_mcse": 0.13433507401791536,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          }
+        }
+      }
+    },
+    {
+      "group": 1,
+      "observation": 854064,
+      "accuracy_pass": false,
+      "raw": {
+        "score": {
+          "difference": [
+            -1.424457520791913,
+            -1.0081847194404947
+          ],
+          "combined_mcse": [
+            1.15924949122817,
+            0.6484239260043856
+          ],
+          "signed_standardized_difference": [
+            -1.2287756273093273,
+            -1.5548234403578685
+          ],
+          "nonzero_with_zero_estimated_mcse": [
+            false,
+            false
+          ],
+          "component_pass": [
+            true,
+            true
+          ],
+          "pass_all": true
+        },
+        "region": {
+          "difference": [
+            0.005210348874133852,
+            -0.003939451974123285
+          ],
+          "combined_mcse": [
+            0.0014219287990223383,
+            0.0014060588979542407
+          ],
+          "signed_standardized_difference": [
+            3.6642825419361933,
+            -2.8017688162672485
+          ],
+          "nonzero_with_zero_estimated_mcse": [
+            false,
+            false
+          ],
+          "component_pass": [
+            false,
+            true
+          ],
+          "pass_all": false
+        },
+        "normalizer": {
+          "difference": [
+            0.011655884068698552
+          ],
+          "combined_mcse": [
+            0.058674549461768616
+          ],
+          "signed_standardized_difference": [
+            0.19865314988559626
+          ],
+          "nonzero_with_zero_estimated_mcse": [
+            false
+          ],
+          "component_pass": [
+            true
+          ],
+          "pass_all": true,
+          "log_ratio": 0.011724346398032992,
+          "common_log_scale": 16.668406275984307
+        },
+        "score_absolute_pass": [
+          true,
+          true
+        ],
+        "region_absolute_pass": [
+          true,
+          true
+        ],
+        "pass_all": false
+      },
+      "phase": {
+        "raw_float32_sampled": {
+          "corrected": {
+            "difference": [
+              0.18928721093643386,
+              -0.062472062633860403
+            ],
+            "combined_mcse": [
+              0.34645562593189283,
+              0.487911283108178
+            ],
+            "signed_standardized_difference": [
+              0.5463534050783301,
+              -0.12803979903045062
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "all_moments": {
+            "difference": [
+              -0.463343573678096,
+              -1.4244575207919128,
+              -1.0081847194404938,
+              0.18928721093643386,
+              -0.062472062633860403
+            ],
+            "combined_mcse": [
+              0.2907040178456324,
+              1.15924949122817,
+              0.6484239260043855,
+              0.34645562593189283,
+              0.487911283108178
+            ],
+            "signed_standardized_difference": [
+              -1.593867113058401,
+              -1.228775627309327,
+              -1.5548234403578673,
+              0.5463534050783301,
+              -0.12803979903045062
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true,
+              true,
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        },
+        "precision_reweighted_float64": {
+          "corrected": {
+            "difference": [
+              0.18929694498441307,
+              -0.06252370687084241
+            ],
+            "combined_mcse": [
+              0.3464652357468272,
+              0.48792875728867896
+            ],
+            "signed_standardized_difference": [
+              0.5463663463272782,
+              -0.1281410573508189
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "all_moments": {
+            "difference": [
+              -0.4633518874000616,
+              -1.4244767419853286,
+              -1.0082533324939975,
+              0.18929694498441307,
+              -0.06252370687084241
+            ],
+            "combined_mcse": [
+              0.29070003212003953,
+              1.1592266708867793,
+              0.6484412871275017,
+              0.3464652357468272,
+              0.48792875728867896
+            ],
+            "signed_standardized_difference": [
+              -1.593917565199059,
+              -1.2288163978280793,
+              -1.5548876243837118,
+              0.5463663463272782,
+              -0.1281410573508189
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true,
+              true,
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        }
+      },
+      "precision": {
+        "candidate": {
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            1724.4483788203236,
+            4768.803482853021
+          ],
+          "score": {
+            "mean": [
+              1.9475057991737375,
+              -5.490830846066371
+            ],
+            "covariance": [
+              [
+                0.9806586370153921,
+                0.31422105236197007
+              ],
+              [
+                0.31422105236197007,
+                0.29664308974627934
+              ]
+            ],
+            "mcse": [
+              0.9902820997147187,
+              0.5446495109208117
+            ],
+            "weights": [
+              0.10990925377392957,
+              0.14806320041999463,
+              0.10977404948764573,
+              0.1258316113649962,
+              0.10275040287574845,
+              0.13063224965162382,
+              0.1513206617010902,
+              0.12171857072497126
+            ],
+            "run_weight_ess": 7.860246403536864,
+            "log_mean_normalizer": 16.668406275984307,
+            "normalizer_relative_mcse": 0.050398126955439514,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          }
+        },
+        "reference": {
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            4595.799911938952,
+            10768.06111939453
+          ],
+          "score": {
+            "mean": [
+              3.3719633199656505,
+              -4.482646126625876
+            ],
+            "covariance": [
+              [
+                0.3632007458973789,
+                0.037760604079832207
+              ],
+              [
+                0.037760604079832207,
+                0.1238104980686615
+              ]
+            ],
+            "mcse": [
+              0.6026613857693048,
+              0.35186715969050236
+            ],
+            "weights": [
+              0.11635929742313202,
+              0.12980773595756467,
+              0.10416133361817233,
+              0.14014036481313072,
+              0.12717692770616168,
+              0.12340125336580392,
+              0.12946545714890287,
+              0.12948762996713176
+            ],
+            "run_weight_ess": 7.948580261366246,
+            "log_mean_normalizer": 16.656681929586274,
+            "normalizer_relative_mcse": 0.030399828281773466,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          }
+        }
+      }
+    },
+    {
+      "group": 1,
+      "observation": 120039,
+      "accuracy_pass": false,
+      "raw": {
+        "score": {
+          "difference": [
+            -1.4937471247590137,
+            -0.4062438668109907
+          ],
+          "combined_mcse": [
+            0.9157105264767469,
+            1.031921527265617
+          ],
+          "signed_standardized_difference": [
+            -1.6312438063874821,
+            -0.3936770927605848
+          ],
+          "nonzero_with_zero_estimated_mcse": [
+            false,
+            false
+          ],
+          "component_pass": [
+            true,
+            true
+          ],
+          "pass_all": true
+        },
+        "region": {
+          "difference": [
+            0.0013420941247406226,
+            -0.0022536041710081544
+          ],
+          "combined_mcse": [
+            0.0011754626981354782,
+            0.0005457841981788314
+          ],
+          "signed_standardized_difference": [
+            1.1417581577615823,
+            -4.1291121628804275
+          ],
+          "nonzero_with_zero_estimated_mcse": [
+            false,
+            false
+          ],
+          "component_pass": [
+            true,
+            false
+          ],
+          "pass_all": false
+        },
+        "normalizer": {
+          "difference": [
+            0.02967056095274545
+          ],
+          "combined_mcse": [
+            0.02965086683017565
+          ],
+          "signed_standardized_difference": [
+            1.0006642005673088
+          ],
+          "nonzero_with_zero_estimated_mcse": [
+            false
+          ],
+          "component_pass": [
+            true
+          ],
+          "pass_all": true,
+          "log_ratio": 0.030119637261435628,
+          "common_log_scale": 16.811175992751014
+        },
+        "score_absolute_pass": [
+          true,
+          true
+        ],
+        "region_absolute_pass": [
+          true,
+          true
+        ],
+        "pass_all": false
+      },
+      "phase": {
+        "raw_float32_sampled": {
+          "corrected": {
+            "difference": [
+              -1.5696333610107125,
+              -0.19778140273318168
+            ],
+            "combined_mcse": [
+              0.7079202498093146,
+              0.17251125231612927
+            ],
+            "signed_standardized_difference": [
+              -2.2172460265595015,
+              -1.1464840703303487
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "all_moments": {
+            "difference": [
+              -0.08255660772545025,
+              -1.493747124759012,
+              -0.40624386681099023,
+              -1.5696333610107125,
+              -0.19778140273318168
+            ],
+            "combined_mcse": [
+              0.40782189221912524,
+              0.9157105264767469,
+              1.031921527265617,
+              0.7079202498093146,
+              0.17251125231612927
+            ],
+            "signed_standardized_difference": [
+              -0.20243299661091285,
+              -1.6312438063874801,
+              -0.3936770927605844,
+              -2.2172460265595015,
+              -1.1464840703303487
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true,
+              true,
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        },
+        "precision_reweighted_float64": {
+          "corrected": {
+            "difference": [
+              -1.5696141194243038,
+              -0.1977864751761398
+            ],
+            "combined_mcse": [
+              0.707949014445346,
+              0.17251218554376663
+            ],
+            "signed_standardized_difference": [
+              -2.2171287584234345,
+              -1.146507271661462
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "all_moments": {
+            "difference": [
+              -0.08257265332036107,
+              -1.493713134022416,
+              -0.4062894557473544,
+              -1.5696141194243038,
+              -0.1977864751761398
+            ],
+            "combined_mcse": [
+              0.40783148187739965,
+              0.9157449027688862,
+              1.0319397563748933,
+              0.707949014445346,
+              0.17251218554376663
+            ],
+            "signed_standardized_difference": [
+              -0.20246758033550646,
+              -1.6311454527412161,
+              -0.3937143164002236,
+              -2.2171287584234345,
+              -1.146507271661462
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true,
+              true,
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        }
+      },
+      "precision": {
+        "candidate": {
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            1548.1199899138917,
+            1979.9601111989205
+          ],
+          "score": {
+            "mean": [
+              5.80961515809219,
+              1.7181183382130574
+            ],
+            "covariance": [
+              [
+                0.7220080373520613,
+                -0.5305571708715234
+              ],
+              [
+                -0.5305571708715234,
+                0.9347532979865388
+              ]
+            ],
+            "mcse": [
+              0.8497105609276969,
+              0.9668264053006304
+            ],
+            "weights": [
+              0.12989055905851912,
+              0.11533914436028116,
+              0.11115102561790646,
+              0.13214392455544613,
+              0.12956316171921003,
+              0.12494865386402043,
+              0.12486963360746234,
+              0.13209389721715423
+            ],
+            "run_weight_ess": 7.972495216556732,
+            "log_mean_normalizer": 16.811175992751014,
+            "normalizer_relative_mcse": 0.022200254915173148,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          }
+        },
+        "reference": {
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            9125.093584074137,
+            13030.555152185261
+          ],
+          "score": {
+            "mean": [
+              7.303362282851204,
+              2.124362205024048
+            ],
+            "covariance": [
+              [
+                0.1165177309482595,
+                -0.02724454616146696
+              ],
+              [
+                -0.02724454616146696,
+                0.13010874044766485
+              ]
+            ],
+            "mcse": [
+              0.34134693633934887,
+              0.3607058918948578
+            ],
+            "weights": [
+              0.12571157018976328,
+              0.1273633634342052,
+              0.13607078446429782,
+              0.12336489035945476,
+              0.1236579741347491,
+              0.1323575520118479,
+              0.11601060834585152,
+              0.11546325705983043
+            ],
+            "run_weight_ess": 7.977088467876831,
+            "log_mean_normalizer": 16.78105635548958,
+            "normalizer_relative_mcse": 0.02025610043693328,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          }
+        }
+      }
+    },
+    {
+      "group": 1,
+      "observation": 12634,
+      "accuracy_pass": false,
+      "raw": {
+        "score": {
+          "difference": [
+            0.8167321593290513,
+            -1.0539283586739896
+          ],
+          "combined_mcse": [
+            1.234731128972179,
+            0.7574159523123253
+          ],
+          "signed_standardized_difference": [
+            0.6614655937353094,
+            -1.391478956122376
+          ],
+          "nonzero_with_zero_estimated_mcse": [
+            false,
+            false
+          ],
+          "component_pass": [
+            true,
+            true
+          ],
+          "pass_all": true
+        },
+        "region": {
+          "difference": [
+            -0.002073300730019323,
+            0.0012960465947136832
+          ],
+          "combined_mcse": [
+            0.011950666844958411,
+            0.009657176679613385
+          ],
+          "signed_standardized_difference": [
+            -0.17348828788528897,
+            0.1342055382966825
+          ],
+          "nonzero_with_zero_estimated_mcse": [
+            false,
+            false
+          ],
+          "component_pass": [
+            true,
+            true
+          ],
+          "pass_all": true
+        },
+        "normalizer": {
+          "difference": [
+            0.06923716862953133
+          ],
+          "combined_mcse": [
+            0.03155351547792034
+          ],
+          "signed_standardized_difference": [
+            2.1942774863859538
+          ],
+          "nonzero_with_zero_estimated_mcse": [
+            false
+          ],
+          "component_pass": [
+            true
+          ],
+          "pass_all": true,
+          "log_ratio": 0.07175078026957671,
+          "common_log_scale": 12.106156042895913
+        },
+        "score_absolute_pass": [
+          true,
+          true
+        ],
+        "region_absolute_pass": [
+          true,
+          true
+        ],
+        "pass_all": true
+      },
+      "phase": {
+        "raw_float32_sampled": {
+          "corrected": {
+            "difference": [
+              0.957884151089127,
+              -0.05039083113440734
+            ],
+            "combined_mcse": [
+              1.2817957402725237,
+              0.1886413298593816
+            ],
+            "signed_standardized_difference": [
+              0.7472985913383284,
+              -0.26712508426424925
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "all_moments": {
+            "difference": [
+              -0.42447937089796534,
+              0.8167321593290522,
+              -1.0539283586739896,
+              0.957884151089127,
+              -0.05039083113440734
+            ],
+            "combined_mcse": [
+              0.31957203900357917,
+              1.234731128972179,
+              0.7574159523123253,
+              1.2817957402725237,
+              0.1886413298593816
+            ],
+            "signed_standardized_difference": [
+              -1.328274439220295,
+              0.6614655937353102,
+              -1.391478956122376,
+              0.7472985913383284,
+              -0.26712508426424925
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true,
+              true,
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        },
+        "precision_reweighted_float64": {
+          "corrected": {
+            "difference": [
+              0.9578739447850033,
+              -0.0503908228959834
+            ],
+            "combined_mcse": [
+              1.2817975748897887,
+              0.18863886659449894
+            ],
+            "signed_standardized_difference": [
+              0.7472895592483572,
+              -0.2671285287368923
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "all_moments": {
+            "difference": [
+              -0.42450065135867315,
+              0.8167148766400274,
+              -1.0539786608685038,
+              0.9578739447850033,
+              -0.0503908228959834
+            ],
+            "combined_mcse": [
+              0.3195703656413565,
+              1.234729006014188,
+              0.7574180665027817,
+              1.2817975748897887,
+              0.18863886659449894
+            ],
+            "signed_standardized_difference": [
+              -1.3283479852918418,
+              0.6614527338889151,
+              -1.391541484790597,
+              0.7472895592483572,
+              -0.2671285287368923
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true,
+              true,
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        }
+      },
+      "precision": {
+        "candidate": {
+          "precision_gate": false,
+          "score_effective_count_from_replicates": [
+            352.4490258806785,
+            1848.599410060453
+          ],
+          "score": {
+            "mean": [
+              6.973171818929961,
+              -2.0617020500465557
+            ],
+            "covariance": [
+              [
+                1.4080471920758821,
+                -0.4645996354949213
+              ],
+              [
+                -0.4645996354949213,
+                0.512228831372508
+              ]
+            ],
+            "mcse": [
+              1.1866116433256004,
+              0.7157016357201568
+            ],
+            "weights": [
+              0.1260155788137362,
+              0.1191078547162845,
+              0.11971449430250795,
+              0.13124865785966944,
+              0.12810562800673486,
+              0.1065764715229471,
+              0.13662919161342413,
+              0.13260212316469588
+            ],
+            "run_weight_ess": 7.958942504281672,
+            "log_mean_normalizer": 12.106156042895913,
+            "normalizer_relative_mcse": 0.027146855075958046,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          }
+        },
+        "reference": {
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            3902.566651690533,
+            16349.878319155916
+          ],
+          "score": {
+            "mean": [
+              6.15643965960091,
+              -1.0077736913725661
+            ],
+            "covariance": [
+              [
+                0.11651376877702939,
+                -0.04963838551354484
+              ],
+              [
+                -0.04963838551354484,
+                0.06145009344467856
+              ]
+            ],
+            "mcse": [
+              0.3413411325595399,
+              0.2478912936040283
+            ],
+            "weights": [
+              0.11497558517606686,
+              0.13151435546386547,
+              0.12260907573629566,
+              0.12292208847723017,
+              0.12846442676150321,
+              0.12967454012705226,
+              0.11881921980209652,
+              0.13102070845588976
+            ],
+            "run_weight_ess": 7.983313947328767,
+            "log_mean_normalizer": 12.034405262626336,
+            "normalizer_relative_mcse": 0.01727969930803109,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          }
+        }
+      }
+    },
+    {
+      "group": 3,
+      "observation": 960670,
+      "accuracy_pass": false,
+      "raw": {
+        "score": {
+          "difference": [
+            0.5743850298538091,
+            0.18804727683389144
+          ],
+          "combined_mcse": [
+            0.1303411964340865,
+            0.17810749621907082
+          ],
+          "signed_standardized_difference": [
+            4.406780400732898,
+            1.0558077611881915
+          ],
+          "nonzero_with_zero_estimated_mcse": [
+            false,
+            false
+          ],
+          "component_pass": [
+            false,
+            true
+          ],
+          "pass_all": false
+        },
+        "region": {
+          "difference": [
+            -0.005111765596983897,
+            0.004071544043054077
+          ],
+          "combined_mcse": [
+            0.005282798705900277,
+            0.003722240987465056
+          ],
+          "signed_standardized_difference": [
+            -0.9676245266121242,
+            1.0938421388527306
+          ],
+          "nonzero_with_zero_estimated_mcse": [
+            false,
+            false
+          ],
+          "component_pass": [
+            true,
+            true
+          ],
+          "pass_all": true
+        },
+        "normalizer": {
+          "difference": [
+            -0.06352855224521892
+          ],
+          "combined_mcse": [
+            0.028551542054162993
+          ],
+          "signed_standardized_difference": [
+            -2.2250480245411492
+          ],
+          "nonzero_with_zero_estimated_mcse": [
+            false
+          ],
+          "component_pass": [
+            true
+          ],
+          "pass_all": true,
+          "log_ratio": -0.0656362458118025,
+          "common_log_scale": 20.90980747141172
+        },
+        "score_absolute_pass": [
+          true,
+          true
+        ],
+        "region_absolute_pass": [
+          true,
+          true
+        ],
+        "pass_all": false
+      },
+      "phase": {
+        "raw_float32_sampled": {
+          "corrected": {
+            "difference": [
+              0.2531478066751791,
+              -0.09409205269739696
+            ],
+            "combined_mcse": [
+              0.15317826451691235,
+              0.1808091391759883
+            ],
+            "signed_standardized_difference": [
+              1.6526352970086637,
+              -0.520394340276205
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "all_moments": {
+            "difference": [
+              -0.12529094246188088,
+              0.5743850298538091,
+              0.18804727683389144,
+              0.2531478066751791,
+              -0.09409205269739696
+            ],
+            "combined_mcse": [
+              0.06664545870381838,
+              0.1303411964340865,
+              0.17810749621907082,
+              0.15317826451691235,
+              0.1808091391759883
+            ],
+            "signed_standardized_difference": [
+              -1.8799621894522645,
+              4.406780400732898,
+              1.0558077611881915,
+              1.6526352970086637,
+              -0.520394340276205
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              false,
+              true,
+              true,
+              true
+            ],
+            "pass_all": false
+          }
+        },
+        "precision_reweighted_float64": {
+          "corrected": {
+            "difference": [
+              0.25314462532951776,
+              -0.09408883635106058
+            ],
+            "combined_mcse": [
+              0.153175462583706,
+              0.18081080470820587
+            ],
+            "signed_standardized_difference": [
+              1.6526447582371848,
+              -0.5203717582193277
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "all_moments": {
+            "difference": [
+              -0.12529020366270893,
+              0.5743799542786867,
+              0.1880488294980891,
+              0.25314462532951776,
+              -0.09408883635106058
+            ],
+            "combined_mcse": [
+              0.06664514528167569,
+              0.13034191465089043,
+              0.17810834995162333,
+              0.153175462583706,
+              0.18081080470820587
+            ],
+            "signed_standardized_difference": [
+              -1.8799599450668152,
+              4.406717177794372,
+              1.0558114178766225,
+              1.6526447582371848,
+              -0.5203717582193277
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              false,
+              true,
+              true,
+              true
+            ],
+            "pass_all": false
+          }
+        }
+      },
+      "precision": {
+        "candidate": {
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            9539.932780228664,
+            4772.891568095609
+          ],
+          "score": {
+            "mean": [
+              -1.6305828868856458,
+              2.24350734839608
+            ],
+            "covariance": [
+              [
+                0.00926448833183996,
+                0.001765740824414169
+              ],
+              [
+                0.001765740824414169,
+                0.019582112378569744
+              ]
+            ],
+            "mcse": [
+              0.09625221208803442,
+              0.1399361010553379
+            ],
+            "weights": [
+              0.12210043171189974,
+              0.11796720524409625,
+              0.1420501937246164,
+              0.12022631361346979,
+              0.12948976908752263,
+              0.1197659369739768,
+              0.11999125198519722,
+              0.1284088976592211
+            ],
+            "run_weight_ess": 7.970945808900061,
+            "log_mean_normalizer": 20.84417122559992,
+            "normalizer_relative_mcse": 0.022819201644890652,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          }
+        },
+        "reference": {
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            11453.656203380668,
+            7414.442492462408
+          ],
+          "score": {
+            "mean": [
+              -2.204967916739455,
+              2.0554600715621887
+            ],
+            "covariance": [
+              [
+                0.0077243391560291655,
+                -0.0025243463029556365
+              ],
+              [
+                -0.0025243463029556365,
+                0.012140167830856587
+              ]
+            ],
+            "mcse": [
+              0.08788821966582988,
+              0.11018242977379192
+            ],
+            "weights": [
+              0.11614876006711311,
+              0.12717552451983324,
+              0.13614406133139467,
+              0.12486214422347545,
+              0.11714940041301117,
+              0.13129439068302307,
+              0.12442862437198243,
+              0.12279709439016692
+            ],
+            "run_weight_ess": 7.979972376453902,
+            "log_mean_normalizer": 20.90980747141172,
+            "normalizer_relative_mcse": 0.01893498632203867,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          }
+        }
+      }
+    }
+  ],
+  "all_controlled_agreement_pass": true,
+  "all_absolute_bounds_pass": true,
+  "costs": {
+    "recipes": {
+      "candidate": {
+        "process_wall_seconds": 11782.240499262349,
+        "cpu_allocated_seconds": 23564.480998524697,
+        "gpu_allocated_seconds": 11664.676786751836
+      },
+      "reference": {
+        "process_wall_seconds": 22896.692940719076,
+        "cpu_allocated_seconds": 45793.38588143815,
+        "gpu_allocated_seconds": 22775.721728542703
+      }
+    },
+    "actual_work": {
+      "process_wall_seconds": 32483.533595583518,
+      "cpu_allocated_seconds": 64967.067191167036,
+      "gpu_allocated_seconds": 32244.99867089663
+    },
+    "shared_verification_and_preflight": {
+      "process_wall_seconds": 1290.2689264814835,
+      "cpu_allocated_seconds": 2580.537852962967,
+      "gpu_allocated_seconds": 1089.6568738131318
+    },
+    "shared_allocation": "Shared pilots/phase/geometry/coefficients charged fully to each recipe; proposal fit candidate-only; verification/comparison/preflight split equally; actual work never double counted.",
+    "measure": "Measured process wall and allocated-resource wall, not busy compute or panel elapsed time. Preflight uses a separately recorded scheduler allocation upper bound."
+  },
+  "independent_audit": {
+    "job": "17448173",
+    "status": "audited",
+    "evidence_valid": true,
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/completed_heldout_audit_validation_v1_20261022/audit.json",
+    "sha256": "72d550a4f701131de7e27659b76a7f5e1fe07dc8f423c4977277fe9757c16c86",
+    "counts": {
+      "pilots": 20,
+      "production_populations": 80,
+      "phase_checks": 100,
+      "fits": 15,
+      "reports": 20,
+      "step_receipts": 235
+    },
+    "failed_objects": [
+      {
+        "group": 0,
+        "observation": 745801,
+        "reasons": [
+          "reference.normalizer_relative_mcse_lt_0.1"
+        ]
+      },
+      {
+        "group": 1,
+        "observation": 854064,
+        "reasons": [
+          "region_1.combined_mcse"
+        ]
+      },
+      {
+        "group": 1,
+        "observation": 120039,
+        "reasons": [
+          "region_2.combined_mcse"
+        ]
+      },
+      {
+        "group": 1,
+        "observation": 12634,
+        "reasons": [
+          "candidate.raw_score_1_effective_count_ge_400"
+        ]
+      },
+      {
+        "group": 3,
+        "observation": 960670,
+        "reasons": [
+          "raw_score_1.combined_mcse"
+        ]
+      }
+    ],
+    "source_output_pins": 1225,
+    "full_suite": {
+      "passed": 1075,
+      "skipped": 9,
+      "seconds": 85.98
+    },
+    "script_commit": "27a532325d1e9a0d6c62b5d9b550067a33cf5dcd",
+    "validation": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/completed_heldout_audit_validation_v1_20261022",
+    "validation_receipt": {
+      "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/completed_heldout_audit_test_source_v1_20261022",
+      "commit": "27a532325d1e9a0d6c62b5d9b550067a33cf5dcd",
+      "manifest_sha256": "163fc28defa9c4aafbfd6911995d86481af791f766d8bc97fa33fcbcef86ab82",
+      "source_file_count": 475,
+      "job": "17448173",
+      "source_before_after_pass": true,
+      "pytest_exit_code": 0,
+      "audit_exit_code": 0,
+      "elapsed_seconds": 138.06432392075658,
+      "requested_physical_cpus": 4,
+      "gpus": 0,
+      "affinity": [
+        9,
+        41,
+        12,
+        13,
+        44,
+        45,
+        19,
+        51
+      ]
+    },
+    "scheduler_accounting": "17448173|COMPLETED|0:0|159|8\n",
+    "validation_files_sha256": {
+      "snapshot.json": "10d3db64d2ca9dc9fab2a0c54d5532db7cba1575484d065792215aed23fcafbf",
+      "validation.json": "e3726e87cc7377cc4f491f39de0a92e985b4a0ffc06d8126bb7c2e6411025fd6",
+      "submission.json": "5e3c90f84a2caf420fa331f7c2a4562a5b15256b75d2be4c93b9bd929478b813",
+      "validate.py": "2924e998a18767e0ddd229ff4fe56715bfbdeed09b2e1fa435e8535dfe14b2d3",
+      "validate.sh": "f3d77aac373873a6d1142e52db79dbd48dcc5fca05b28867bd73981526d9417d",
+      "junit.xml": "a96dcd5817163b6d191b14df538d4f81d04618252493519869aafc97cbfc4ee7",
+      "audit.log": "83ea06e94b7cb14648bc9d66ba5f8e4d5ea73b9292f0b41930644035152e7757"
+    },
+    "parent_checks": {
+      "source_file_hashes": 475,
+      "junit_pass": true,
+      "scheduler_completed": true,
+      "audit_decision_consistent": true
+    }
+  }
+}

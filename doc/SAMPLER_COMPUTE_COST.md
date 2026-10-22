@@ -5,8 +5,14 @@
 The current candidate projects to about **0.007 galaxies/s on four V100s**,
 or **25 galaxies/hour**, with its current eight-population validation budget,
 fresh pilots and per-population score diagnostics. This is a timing projection;
-held-out scientific acceptance remains pending. The eventual capacity of four
+held-out scientific acceptance failed on five of twenty objects. The eventual capacity of four
 GPUs with 500 CPU cores is unmeasured.
+
+The complete twenty-object report subsequently measured 11,782.24 candidate
+process seconds and 22,896.69 reference process seconds, including the declared
+preparation/reporting costs. Its 1.9433 cost ratio is not a matched-accuracy
+speedup because the candidate failed acceptance. See
+[complete result and cost scope](CORRECTED_HELDOUT_RESULTS.md#scope-and-cost-convention).
 
 The [timing receipt](evidence/sampler_compute_cost_20261022.json) records the
 first two complete four-observation held-out groups, all 18 stage identities,
