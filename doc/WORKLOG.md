@@ -1,5 +1,23 @@
 # Work log
 
+## 2026-10-22 — Route an explicit numerical target prior through particle artifacts
+
+Added `sbsi/particle_target_measure.py` and optional `--target-prior numerical`
+in the particle driver. Numerical protocols bind the continuous measure,
+bridge/endpoint and numerical intensity/galaxy/environment source hashes.
+Proposal identity/loading/production validation, raw reporting/comparison and
+phase control identity retain and check this law. Analytic protocol fields and
+default coordinate constructor calls remain unchanged; no numerical sampling
+runs until the separately implemented coordinate/exchange law is integrated.
+
+Focused tests:81 passed in11.83s across identity/proposal/report suites; after
+adding the actual-driver proposal startup check,13 identity tests pass in8.11s.
+The actual driver rejects an analytic proposal before model loading and accepts
+a correctly bound numerical one through the same validator. Full combined CPU
+suite and real-model checks remain pending. No archived launcher, live source,
+failed held-out artifact or default is changed. See
+[consumer routing and remaining work](NUMERICAL_TARGET_PIPELINE.md#driver-and-consumer-routing).
+
 ## 2026-10-22 — Complete-source candidate passes full CPU validation
 
 Implementation commit 862db49 preserves all 320 frozen experiment paths;

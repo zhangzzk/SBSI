@@ -8,6 +8,7 @@ import numpy as np
 from check_galsbi_continuous_prior import digest, save
 from sbsi.particle_diagnostics import combine_populations, empirical_second_moment
 from sbsi.particle_populations import EXTINCTION_SCHEMA
+from sbsi.particle_target_measure import NUMERICAL_ENDPOINT, NUMERICAL_SOURCES, numerical_identity
 
 
 TARGET_SOURCES = ('galsbi_particle_target.py', 'galsbi_target_coordinates.py',
@@ -36,6 +37,7 @@ def implementation_fingerprint(protocol):
         raise ValueError('recorded target source hashes are incomplete')
     if protocol.get('extinction_schema') == EXTINCTION_SCHEMA and 'particle_populations.py' not in result:
         raise ValueError('recorded extinction bookkeeping source hash required')
+    numerical_identity(protocol, result)
     return result
 
 
@@ -99,14 +101,19 @@ def comparison_target_identity(first, second):
                 'density_batch_size', 'target_source_sha256', 'selection', 'diagnostics_version'):
         if first.get(key) != second[key]:
             raise ValueError('comparison targets or numerical likelihood batches disagree')
+    first_law = numerical_identity(first, first.get('target_source_sha256'))
+    second_law = numerical_identity(second, second.get('target_source_sha256'))
+    if first_law != second_law:
+        raise ValueError('comparison target prior identities disagree')
+    expected_endpoint = NUMERICAL_ENDPOINT if first_law else ENDPOINT_TARGET
     endpoints = (first.get('endpoint_target'), second.get('endpoint_target'))
-    if any(value is not None and value != ENDPOINT_TARGET for value in endpoints):
+    if any(value is not None and value != expected_endpoint for value in endpoints):
         raise ValueError('comparison endpoint target identities disagree or are unsupported')
     same_bridge = first.get('bridge') == second['bridge']
-    if not same_bridge and endpoints != (ENDPOINT_TARGET, ENDPOINT_TARGET):
+    if not same_bridge and endpoints != (expected_endpoint, expected_endpoint):
         raise ValueError('changed comparison bridge requires identical explicit endpoint targets')
     return dict(mode='identical_literal_bridge' if same_bridge else 'identical_explicit_endpoint',
-        endpoint_target=ENDPOINT_TARGET if endpoints == (ENDPOINT_TARGET, ENDPOINT_TARGET) else None,
+        endpoint_target=expected_endpoint if endpoints == (expected_endpoint, expected_endpoint) else None,
         current_bridge=second['bridge'], comparison_bridge=first.get('bridge'))
 
 
@@ -250,6 +257,8 @@ def main():
                 raise ValueError('each group must use the same frozen initial proposal')
             if environment_fingerprint(p) != environment_fingerprint(protocols[0]):
                 raise ValueError('each group must use the same frozen informed environment configuration')
+            if numerical_identity(p) != numerical_identity(protocols[0]):
+                raise ValueError('each group must use the same target prior law and source')
             if p.get('endpoint_target') != protocols[0].get('endpoint_target'):
                 raise ValueError('each group must declare the same endpoint target')
             if fingerprint != implementations[0]:
@@ -304,7 +313,8 @@ def main():
         all_precision_gates=all(r['precision_gate'] for r in rows),
         comparison_gate=False, heldout_gate=False, accepted_sampler=False,
         diagnostics_version=REPORT_VERSION,
-        target_source_sha256={name:implementations[0][name] for name in TARGET_SOURCES},
+        target_source_sha256={name:implementations[0][name] for name in
+            (*TARGET_SOURCES, *(NUMERICAL_SOURCES if numerical_identity(protocols[0]) else ()))},
         bridge=protocols[0]['bridge'], endpoint_target=protocols[0].get('endpoint_target'),
         selection=protocols[0]['selection'],
         implementation_sha256=implementations[0], physical_geometry=geometry_fingerprint(protocols[0]),
@@ -316,6 +326,7 @@ def main():
                     'Recorded source hashes cover the declared files, not every transitive dependency.',
                     'Explicitly extinct observations retain zero mass and their seed; unknown failures remain errors.',
                     'Passing precision alone does not establish accuracy or held-out efficiency.'])
+    output.update(numerical_identity(protocols[0]))
     if args.comparison:
         other = json.loads(args.comparison.read_text())
         bridge_compatibility = comparison_target_identity(other, output)

@@ -15,6 +15,7 @@ from scipy.optimize import brentq
 from scipy.special import i0e, i1e
 
 from .galsbi_particle_proposal import MeasurementParticleProposal
+from .particle_target_measure import numerical_identity
 
 
 SCHEMA = 'sbsi-frozen-particle-initial-proposal-v2'
@@ -54,6 +55,7 @@ def target_identity(protocol):
     result = {key: deepcopy(protocol[key]) for key in IDENTITY_KEYS}
     sources = source_fingerprint(protocol)
     result['native_target_source_sha256'] = {name: sources[name] for name in NATIVE_TARGET_SOURCES}
+    result.update(numerical_identity(protocol, sources))
     return result
 
 
@@ -75,6 +77,8 @@ def _validate_metadata(metadata, objects):
             raise ValueError(f'missing target identity: {key}')
     sources = metadata.get('native_target_source_sha256', {})
     source_fingerprint({'implementation_sha256': sources})
+    numerical_sources = dict(sources, **metadata.get('numerical_prior_source_sha256', {}))
+    numerical_identity(metadata, numerical_sources)
     for key in ('reference_protocol_sha256', 'observation_sha256'):
         value = metadata[key]
         if not isinstance(value, str) or len(value) != 64 or any(c not in '0123456789abcdef' for c in value):
@@ -103,6 +107,8 @@ class FrozenParticleProposal:
         if int(seed) in self._metadata['pilot_seeds']:
             raise ValueError('production seed reuses an independent pilot seed')
         identity = target_identity(protocol)
+        if identity.get('target_prior', 'analytic') != self._metadata.get('target_prior', 'analytic'):
+            raise ValueError('production target identity differs from pilot: target_prior')
         for key, value in identity.items():
             if value != self._metadata[key]:
                 raise ValueError(f'production target identity differs from pilot: {key}')

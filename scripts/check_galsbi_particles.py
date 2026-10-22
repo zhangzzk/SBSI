@@ -25,6 +25,8 @@ from sbsi.galsbi_prior import ExactMemo
 from sbsi.galsbi_scene_prior import GalSBIScenePrior
 from sbsi.galsbi_summary import SummaryLikelihood
 from sbsi.galsbi_target_coordinates import GalSBITargetCoordinates
+from sbsi.particle_target_measure import (NUMERICAL_BRIDGE, NUMERICAL_ENDPOINT,
+    NUMERICAL_MEASURE, NUMERICAL_SOURCES, numerical_identity)
 from sbsi.measurement_model import load_measurement_model
 from sbsi.models import V39_LIKE, load_detection_classifier, load_disk_response
 from sbsi.summary_gradients import SummaryGradients
@@ -50,6 +52,8 @@ def main():
     parser.add_argument('--environment-mixture-probability', type=float,
                         help='Fixed augmentation probability, default0.5; requires --informed-environment')
     parser.add_argument('--physical-geometry', type=Path)
+    parser.add_argument('--target-prior', choices=['analytic', 'numerical'], default='analytic',
+                        help='Target native law; numerical is the continuous mock inverse-table law')
     parser.add_argument('--relocate-exchanges', action='store_true')
     parser.add_argument('--seed', type=int, required=True)
     parser.add_argument('--shear', type=float, nargs=2, default=[0., 0.])
@@ -106,6 +110,17 @@ def main():
         exactness='Known q0; off-prior-support particles retain zero weight; fixed schedules/kernels; '
                   'native target and numerical environment measures unchanged. Finite-particle ratios are not exact posterior expectations.',
         implementation_sha256={str(p.resolve()):digest(p) for p in source_paths})
+    if args.target_prior == 'numerical':
+        protocol.update(target_prior='numerical', numerical_prior_measure=NUMERICAL_MEASURE,
+                        bridge=NUMERICAL_BRIDGE, endpoint_target=NUMERICAL_ENDPOINT)
+        for name in (*NUMERICAL_SOURCES, 'particle_target_measure.py'):
+            path = Path('sbsi')/name
+            protocol['implementation_sha256'][str(path.resolve())] = digest(path)
+        protocol.update(numerical_identity(protocol))
+        protocol['exactness'] = ('Known q0 and continuous numerical target/environment laws; '
+            'full absolute type intensities and coordinate Jacobian; zero-support draws retained. '
+            'Singular uniform-clamp atoms and literal finite-RNG discreteness are excluded. '
+            'Finite-particle ratios are not exact posterior expectations.')
     geometry = None
     if args.physical_geometry:
         from sbsi.particle_geometry import FrozenParticleGeometry
@@ -158,7 +173,8 @@ def main():
     galaxy, cosmo, _ = build_prior()
     distance = ExactMemo(lambda z: cosmo.background.dist_ang_a(a=1/(1+z)))
     prior = GalSBIScenePrior(galaxy)
-    coordinates = GalSBITargetCoordinates(galaxy, distance)
+    coordinates = (GalSBITargetCoordinates(galaxy, distance) if args.target_prior == 'analytic'
+                   else GalSBITargetCoordinates(galaxy, distance, target_prior='numerical'))
     informed = None
     if environment_source is not None:
         from sbsi.informed_environment import InformedEnvironmentProposal

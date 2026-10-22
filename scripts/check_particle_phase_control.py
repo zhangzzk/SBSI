@@ -19,6 +19,7 @@ from sbsi.models import V39_LIKE, load_detection_classifier
 from sbsi.phase_control import (FrozenPhaseControl, digest, phase_stein_control,
                                 rotate_summary_phase)
 from sbsi.summary_gradients import SummaryGradients
+from sbsi.particle_target_measure import NUMERICAL_SOURCES, numerical_identity
 from sbsi.disk_precision import (LOG_GAP_COLUMN, physical_log_prob_with_gap,
                                  transport_with_log_gap)
 from sbsi.shear_map import apply_shear_to_ellipticity
@@ -106,6 +107,31 @@ def validate_saved_run(run, *, stride=1):
     return protocol, receipt, fields
 
 
+def phase_target_identity(protocol, root):
+    """Bind phase controls to the sampled prior law and actual density source."""
+    recorded = {Path(path).name: value for path, value in protocol['implementation_sha256'].items()}
+    if len(recorded) != len(protocol['implementation_sha256']):
+        raise ValueError('recorded source basenames must be unique')
+    root = Path(root)
+    prior_identity = numerical_identity(protocol, recorded)
+    required_sources = (*NATIVE_SOURCES, *(NUMERICAL_SOURCES if prior_identity else ()))
+    actual_sources = {name: digest(root/('configs' if name.endswith('.json') else 'sbsi')/name)
+                      for name in required_sources}
+    if any(recorded.get(name) != value for name, value in actual_sources.items()):
+        raise ValueError('native target or derivative source identity changed')
+    identity = {key: protocol[key] for key in ('observations', 'fixed_shear',
+        'reference_protocol_sha256', 'observation_sha256', 'density_batch_size', 'selection')}
+    identity.update(native_source_sha256=actual_sources,
+        sampling_precision='recorded float32 network target', derivative_precision='float64 network diagnostic',
+        phase_derivative_protocol=DERIVATIVE_PROTOCOL,
+        phase_control='intrinsic phase; uniform analytic prior; retained phase-independent response/crowding; beta=1')
+    if prior_identity:
+        identity.update(prior_identity)
+        identity['phase_control'] = ('intrinsic phase; uniform numerical native prior; '
+            'retained phase-independent response/crowding; beta=1')
+    return identity
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run', type=Path, required=True)
@@ -121,20 +147,7 @@ def main():
     if (digest(reference/'protocol.json') != protocol['reference_protocol_sha256']
             or digest(reference/'observations.parquet') != protocol['observation_sha256']):
         raise ValueError('reference or observation identity changed')
-    recorded = {Path(path).name: value for path, value in protocol['implementation_sha256'].items()}
-    if len(recorded) != len(protocol['implementation_sha256']):
-        raise ValueError('recorded source basenames must be unique')
-    root = Path(__file__).resolve().parents[1]
-    actual_sources = {name: digest(root/('configs' if name.endswith('.json') else 'sbsi')/name)
-                      for name in NATIVE_SOURCES}
-    if any(recorded.get(name) != value for name, value in actual_sources.items()):
-        raise ValueError('native target or derivative source identity changed')
-    identity = {key: protocol[key] for key in ('observations', 'fixed_shear',
-        'reference_protocol_sha256', 'observation_sha256', 'density_batch_size', 'selection')}
-    identity.update(native_source_sha256=actual_sources,
-        sampling_precision='recorded float32 network target', derivative_precision='float64 network diagnostic',
-        phase_derivative_protocol=DERIVATIVE_PROTOCOL,
-        phase_control='intrinsic phase; uniform analytic prior; retained phase-independent response/crowding; beta=1')
+    identity = phase_target_identity(protocol, Path(__file__).resolve().parents[1])
     frozen = None
     if args.coefficients:
         frozen = FrozenPhaseControl.load(args.coefficients)
