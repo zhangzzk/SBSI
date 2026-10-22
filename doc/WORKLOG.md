@@ -1,5 +1,26 @@
 # Work log
 
+## 2026-10-22 — Corrected heldout execution wrapper prepared and CPU-tested
+
+- Added `scripts/run_corrected_particle_heldout.py` with immutable warmup,
+  counterbalanced paired production and full-panel reporting stages. The wrapper
+  requires passing hashed development evidence, complete source/external inputs,
+  exact recipes/runtime/seeds and complete phase diagnostics. It uses the fixed
+  comparison helpers unchanged from73bff31. Historical launchers and samplers
+  are unchanged. See [runner contract](CORRECTED_HELDOUT_RUNNER.md#scheduled-stage-interface).
+- Extinction, diagnostic failure or unknown failure rejects the panel and
+  preserves the original seed, logs and costs. No retry/replacement/refit path
+  exists. Acceptance is all raw gates AND both-measure corrected-score gates
+  AND strictly lower all-inclusive cost. Shared preparation is charged to each
+  recipe while actual work is separately counted once; allocation wall is
+  distinguished from compute busy time and panel elapsed time.
+- CPU17434665:58 tests passed in4.55s, immutable266-file snapshot; before/after
+  source checks passed. Tests cover runner plus declaration-bound fitter.
+  [Validation receipt](evidence/corrected_heldout_runner_validation_20261022.json)
+  preserves exact hashes/logs. No heldout/scientific execution or GPU job was
+  submitted. Root integrates and runs the full suite before source freeze and
+  a separately validated declaration/preflight can authorize scientific stages.
+
 ## 2026-10-22 — Prepare held-out phase fitting with strict pilot provenance
 
 Added `scripts/fit_declared_particle_phase_control.py`, its focused tests and
