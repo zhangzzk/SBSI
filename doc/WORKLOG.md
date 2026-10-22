@@ -1,3 +1,24 @@
+## 2026-10-22 — Freeze predeclared fresh-seed CPU concurrency confirmation
+
+Added `scripts/benchmark_smc_concurrency_confirmation.py`, preparation and
+launcher scripts, and `tests/test_smc_concurrency_confirmation.py`. The original
+development harness is unchanged. Confirmation binds the completed development
+report, all seven process costs, every original output and the independent
+job 17447670 audit; recomputes the predeclared four-worker selection; then fixes
+fresh seeds 2026103800–2026103803 and order 1,4,4,1 on the unchanged 320-file source.
+All 16 populations must replay and both internal-inclusive and outer-process
+speedups must clear 1.25 in both timing repetitions. Complete preparation and
+report costs are retained with explicit exclusions. No jobs submitted.
+
+Validation: `OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python -m pytest
+tests/test_smc_concurrency_confirmation.py -q` — 20 passed in 10.47s.
+The combined original and confirmation focused suite passed all 55 tests in
+12.45s. Python syntax checks, launcher `bash -n`, and `git diff --check` passed.
+Next: parent-run scheduled full tests/preparation, then fixed GPU confirmation;
+no posterior-accuracy or catalogue-throughput acceptance.
+See [recipe, evidence and cost limits](SMC_CPU_CONCURRENCY_CONFIRMATION.md#confirmation-recipe-and-gates).
+
 # Work log
 
 ## 2026-10-22 — Prepare a fixed-recipe CPU concurrency experiment
