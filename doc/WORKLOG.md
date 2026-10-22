@@ -1,5 +1,43 @@
 # Work log
 
+## 2026-10-22 — Close inherited prior-configuration identity and pass fresh validation
+
+Commit1d6171a on the isolated numerical-target driver branch adds the specific
+UFig common configuration and package initializer pins. This binds seed_ngal,
+which determines the maximum-redshift interpolation support; no factory values,
+random draws or sampler calculations change. Fresh immutable CPU17449171 passes
+1,129 tests/nine skips and installed-native validation. Parent rechecks481 source
+entries,173 direct inputs, JUnit and all saved native arrays, which match v2
+byte-for-byte. Maximum log-density roundtrip error remains2.2773e-12.
+
+Updated [pipeline candidate](NUMERICAL_TARGET_PIPELINE.md#candidate-location-and-current-validation)
+and [versioned evidence](evidence/numerical_target_validation_v3_20261022.json).
+Old validation artifacts remain intact. Next scientific work requires a fresh
+numerical-target pilot/fit/control declaration; no old analytic fit is relabelled,
+and no convergence or shear-calibration claim is made.
+
+## 2026-10-22 — Validate the continuous numerical-target implementation and retain remaining scope
+
+The isolated numerical-target branch now implements the full type sum, coordinate
+Jacobian, native exchange correction and explicit driver/proposal/report/control
+identity. Analytic defaults remain unchanged. Full CPU17448810 originally failed
+two phase-report tests on a missing local root; the failure is preserved. After
+repair and added cross-law/input guards, CPU17449051 passes 1,125 tests/nine skips
+and the installed-law check (2,182 retained rows, max roundtrip log-density error
+2.2773e-12). Parent verifies all481 source entries,170 direct input entries, JUnit
+and saved draw hash. Added candidate documentation and versioned validation.
+
+Review then identifies a direct UFig common-configuration input controlling
+maximum redshift; the completed test's broader external declaration already pins
+it, but the portable target identity needs a narrow follow-up. No numerical
+production, posterior convergence or global shear result is claimed. Native
+validation excludes singular clamp atoms and does not prove posterior exploration.
+
+Separately, prior-reuse GPU17448787 passes the formerly failing optimized startup
+and advances through37 recorded stages; all four original pairs remain required.
+[Startup evidence](evidence/particle_prior_reuse_v2_startup_20261022.json) records
+that operational check without an interim timing or scientific decision.
+
 ## 2026-10-22 — Confirm CPU sharing with fresh seeds and independent replay
 
 GPU17447826 completes all four original settings and 16 populations. Four workers

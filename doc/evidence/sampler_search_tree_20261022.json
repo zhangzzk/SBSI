@@ -428,11 +428,11 @@
       "metadata": {
         "dev_score": null,
         "test_score": null,
-        "result": "Core numerical target, fulltypeprobability and exchange balance implemented;47newcoretests and focused driver/proposal/report/phase tests pass. FullCPU17448810 fails2phase tests on missing localroot with1089pass9skip; failedsource/results retained, native check notrun. Fixed2fe1aac and45focusedphase/identitytests pass. Independentreview found missing factory/input pins and geometry crosslaw provenance; repair in separatebranch underway before fresh fullCPU/native validation. No numerical production or scientificacceptance.",
-        "branch_ref": "codex/numerical-target-driver-20261022@2fe1aac"
+        "result": "Implemented numeric target/fulltypes/Jacobian/exchange plusdriver/proposal/report/phase/geometry lawidentity. FailedCPUv1 phase-root bug retained; repaired. V2CPU17449051 passes1125tests9skip+installednative2182retained4096parentseed4200; review addsdirectUFigconfigseed_ngaldependency. V3CPU17449171 passes1129tests9skip+sameinstallednative;481sourcebeforeafter,173directinputpins,parentJUnit/source/input/drawhash checks.16savedarrays byteidentical v2/v3, maxroundtriplogerror2.2773e-12. Nativechecker validatesrouting/roundtrip only. No numericalproduction or scientificacceptance; freshnumericpilot/phasefitdeclaration needed. Evidence doc/evidence/numerical_target_validation_v3_20261022.json.",
+        "branch_ref": "codex/numerical-target-driver-20261022@1d6171a62a813b32db30edc00becf60f49996371"
       },
       "created_at": 1792694919,
-      "updated_at": 1792696501
+      "updated_at": 1792697601
     },
     "n27": {
       "id": "n27",
@@ -444,11 +444,11 @@
       "metadata": {
         "dev_score": null,
         "test_score": null,
-        "result": "Reusable exact-manifest fourworker/eightphysical-core local pool implemented. Complete source/command/seed/group/affinity/output/failure/cost accounting; no batching or samplerchanges.64focusedpool+originaltests pass plus atomicreceipt test; originalruntime/helpers byteidentical. Eight-task real replay preparation in progress using all four development and four confirmation seeds. Full scheduledtests and GPUreplay pending; no adoption.",
-        "branch_ref": "codex/sampler-task-pool-20261022@654687eee0ce9358ef427be399639fb9a80096e0"
+        "result": "Reusable4worker exactmanifestpool implemented; originalruntime/helpersunchanged. Independentreviewfourblockers repaired:exact8physicalaffinity,deferredsignalcleanup/childunmask,nullartifactpins,duplicatealiases.93focusedtests and fullCPU17449209 pass1124tests9skip with8physicalcores;484sourcehashesbeforeafter and8originalcontrolpreparation pass. Reviewer finds finalizerneedsproof/pathrevalidation; narrowhardeningpending beforefreshv2fullvalidation/GPUlaunch. No GPU poolrun or adoption yet.",
+        "branch_ref": "codex/sampler-task-pool-20261022@26d0b8b7db067ebf11a1e72ba21d09ffec474cb6"
       },
       "created_at": 1792695900,
-      "updated_at": 1792696501
+      "updated_at": 1792697601
     }
   }
 }
