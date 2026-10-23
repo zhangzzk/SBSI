@@ -1,5 +1,28 @@
 # Work log
 
+## 2026-10-23 evening — Faint mag 23–24 short chains carry part of c2; launch the 24–25 stage
+
+**Result of stage 1** (`galsbi_pair1m_20261012/debug/rule_faintlong.md` §Stage 1 result; array 17460309, analysis
+17462028; outputs copied to `debug/faintlong/stage1_result/`). 4x longer drawn-start MH chains (16384 steps / 4096
+warm-up) for 326,718 of the 327,038 faint mag 23–24 galaxies, compared galaxy by galaxy with the production chains:
+- long − current: **g2 −2.77 ± 1.11e-4 (−2.5σ)**, g1 +2.09% ± 0.54% of m. By the reading fixed before the run, the
+  short 23–24 chains carry part of c2.
+- Chain noise per galaxy falls ×0.34 (3.07 → 1.05), median R-hat 1.108 → 1.031.
+- **New 1M (w8 bright + long 23–24): m = −1.02% ± 0.79% (pass), c2 = +0.000437 ± 0.000173 (2.5σ, still FAIL)**, from
+  m −0.50% ± 0.89%, c2 +0.000719 ± 0.000193. The short chains also shrink the faint scores (information +2.6–3.0%
+  with long chains); that cancels most of the g1 change (score part +2.09%, information part −2.60% of m).
+- One unit (L_original_u0394, 320 galaxies) failed the sampler's 1e-6 cache self-check twice (1.06e-4,
+  deterministic on the same GPU) and is excluded and reported (rule amendment written before the result).
+
+**Stage 2 launched**: the same test for the 709,371 faint 24–25 galaxies (array 17467701, 4 GPUs, ~6–7 h; analysis
+17467702 queued after it). `faintlong_prep.py` appends their units after the unchanged stage-1 lines; `faintlong.py`
+reports 23–24, 23–25 and 24–25 (primary). Rule and expected result were written before the run.
+
+**Limitations.** 16384 steps is assumed close to converged (R-hat 1.03, not 1.01). ≥ 25 is not rerun (its g2 did
+not move with the start). The sampler search docs (SMC candidates) are unaffected by this result.
+**Next.** Read the 24–25 result; if c2 then passes, the faint production setting (4096 steps) needs the longer
+setting for mag 23–25; if not, the remaining c2 points to the model side.
+
 ## 2026-10-23 — Prior importance sampling is not a usable faint reference; launch the mag 23–24 long-chain test
 
 **Question.** Is the per-galaxy MH sampler the cause of the 1M paired mock's c2 = +0.000719 ± 0.000193 (3.7σ)?
