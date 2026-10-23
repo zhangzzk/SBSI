@@ -1,5 +1,37 @@
 # Work log
 
+## 2026-10-23 — Prior importance sampling is not a usable faint reference; launch the mag 23–24 long-chain test
+
+**Question.** Is the per-galaxy MH sampler the cause of the 1M paired mock's c2 = +0.000719 ± 0.000193 (3.7σ)?
+The planned independent check (plain importance sampling from the mock's own prior, paired with the production
+scores) was screened first using the prior-bank effective draw counts that the faint drawn-start production
+(`galsbi_pair1m_20261012/debug/faintdraw/original`, 1-in-20 units, 44,683 galaxies) already records. Median
+effective draws per 2,048 prior draws: mag 23–24 3.6 (1%: 1.4), 24–25 11.7 (1%: 2.3), 25–25.8 45.3 (1%: 7.7).
+Importance sampling would need ~10^5–10^6 draws per galaxy at 23–25, 50–100x the production cost, so it is not
+run. The one band where it is cheap (≥ 25) shows no c2 excess (+3.08 ± 5.62e-4, `bandsel_result.txt`), so a check
+there is pointless.
+
+**Why mag 23–24.** Its own-selection c2 is the largest (+15.44 ± 5.22e-4; 24–25 +2.33 ± 3.73), and it is the band
+where the sampler is least settled: the measurement → drawn start switch moved its g1 by −3.86% ± 0.63% of m, and
+chain noise is 28% of its score variance (24–25: 7%; ≥ 25: 2%) (`faintdraw_diff_result.txt`). Bright (w8) and mag
+21–23 chains were already cleared; the faint 23–25 long-chain test (`rule_faintlong.md`) was drafted on 10-18 but
+never run. 23–24 alone gives most of its power (expected σ of Δg2 ≈ 1.07e-4 vs ≈ 1.2e-4 for 23–25) at about a
+third of the cost.
+
+**Launched** (study data dir `debug/`, not repository code): `rule_faintlong.md` §Stage 1 (written before any run),
+`faintlong_prep.py` -> `faintlong_units.txt` (327,038 galaxies, 1,023 units; count asserted equal to bandsel),
+`faintlong/fl.sh` (copy of `faintdraw/fd.sh`: 16384 steps / 4096 warm-up / stride 16, drawn start, seeds
+2028007001 + k − 1, bank 2033007001 + k − 1, snapshot_d776abb), `faintlong.py` (paired long − current with the
+information of `step2_result_brightw8_faintdraw.json`, per-scene errors; writes `pergal_<side>_faintlong.npz` for
+`PERGAL=_faintlong step2.py debug/brightw8`). Array 17460309, 4 GPUs (`inter,cip`), expected ~6 h (~24 GPU-h).
+Reading fixed in the rule: Δg2 < −2σ → 23–24 chains carry part of c2; |Δg2| ≤ 2σ → not the source, bound stated.
+
+**Validation so far.** Prep ran in cluster job 17460276; `faintlong.py` compiles and its input formats (profile key
+names, 768 × 4 draws, information matrix) were checked against existing files. No result yet.
+**Limitations.** A null result clears only 23–24; 24–25 (σ ≈ 0.56e-4, ~50 GPU-h) stays untested. 16384 steps is
+assumed close to converged, as for 21–23 (`rule_midlong.md`), not shown for this band.
+**Next.** When the array is done: `faintlong.py` and the step2 rerun in one CPU job; report Δg2, Δg1 and the 1M c2.
+
 ## 2026-10-22 — Preserve the queued pool replay and schedule one bounded follow-up
 
 PoolGPU17449412 remains pending Priority. The required th-cl-nv02 node is only
