@@ -1,5 +1,21 @@
 # Work log
 
+## 2026-10-24 — Free window check of the faint chains: 23–24 long chains still drift; the check cannot clear a band
+
+`galsbi_pair1m_20261012/debug/rule_faintlong.md` §Stage 3–4 (`faintwindow.py`, `faintwindow_prod.py`; CPU jobs
+17485987, 17486027, 5–8 min each, no sampling): per galaxy the g = 0 score recomputed from the late half or quarters
+of the saved 768 profile rows per chain, compared with the full chain (same chains, per-scene errors).
+- 16384-step chains: **23–24 late − full g2 −1.20 ± 0.51e-4 (−2.4σ)**, same direction as the 4096 → 16384 change →
+  still moving; 24–25 −0.08 ± 0.25e-4 (settled).
+- 4096-step production chains: 23–24 +0.17 ± 0.83e-4, 24–25 −0.76 ± 0.42e-4, 25–25.8 −0.21 ± 0.18e-4 — but at 23–24
+  these chains are known to move by −2.77 ± 1.11e-4 under 4x longer runs, so **the window check failed its
+  calibration**: it can flag drift within a run but cannot certify convergence. Length comparisons stay necessary.
+- Amendment: the faintdraw runs hold no mag 21–23 galaxies (those run with the it0 bright setup: 8192 / 2048,
+  measurement start, untempered, units of 20, ~16 s per galaxy); the count assert stopped the first Stage-4 job.
+- Bright timing: profiles and diagnostics are ~2% of a w8 bright run (33 of 1581 s); sampling dominates.
+**Not done.** Nothing substituted into the 1M estimate (late halves would move c2 by about −1.2e-4, indication only).
+**Next (owner).** Longer warm-up for 23–24; a per-band length-doubling test to set one uniform recipe (see report).
+
 ## 2026-10-24 — Faint mag 24–25 long chains: not a c2 source; 1M c2 with long faint chains is +3.71 ± 1.69e-4
 
 Stage 2 of `galsbi_pair1m_20261012/debug/rule_faintlong.md` (array 17467701, 2,218 units, no failures, 7–10 h on
