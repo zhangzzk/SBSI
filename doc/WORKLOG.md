@@ -1,5 +1,24 @@
 # Work log
 
+## 2026-10-24 — Faint mag 24–25 long chains: not a c2 source; 1M c2 with long faint chains is +3.71 ± 1.69e-4
+
+Stage 2 of `galsbi_pair1m_20261012/debug/rule_faintlong.md` (array 17467701, 2,218 units, no failures, 7–10 h on
+4 GPUs; analysis 17467702). 4x longer drawn-start chains for all 709,371 faint mag 24–25 galaxies:
+- 24–25 long − current: **g2 −0.73 ± 0.55e-4 (−1.3σ)**, g1 +0.41% ± 0.26% of m → not the source (2σ bound
+  1.82e-4), close to the pre-stated expectation of about −1e-4.
+- All of 23–25: g2 −3.50 ± 1.23e-4 (−2.8σ), g1 +2.50% ± 0.60% of m; chain noise per galaxy ×0.33, median R-hat
+  1.103 → 1.028.
+- **1M with w8 bright and long 23–25 faint chains: m = −1.04% ± 0.76% (pass), c2 = +0.000371 ± 0.000169 (2.2σ,
+  still FAIL)**, from c2 +0.000719 ± 0.000193 with production faint chains.
+
+**Reading.** Short production faint chains (4096 steps) carried about half of the c2 excess (−3.5e-4), almost all
+of it in mag 23–24. The remaining +3.7e-4 is 2.2σ: no longer strong evidence of a further bias, but not a pass.
+**Limitations.** 16384 steps is not shown to be converged for 23–24 (its change was the large one); ≥ 25 and the
+21–23 band keep production chains (both previously cleared); one 320-galaxy unit excluded (sampler self-check).
+**Next (owner).** (a) adopt ≥ 16384 steps for faint mag 23–25 in production; (b) optionally test whether 23–24
+needs more than 16384 (a 4x-again run on that band, ~15–20 h on 4 GPUs); (c) otherwise the residual c2 sits with
+the known F8/C8 mirror tilt and is within ~2σ of zero.
+
 ## 2026-10-23 evening — Faint mag 23–24 short chains carry part of c2; launch the 24–25 stage
 
 **Result of stage 1** (`galsbi_pair1m_20261012/debug/rule_faintlong.md` §Stage 1 result; array 17460309, analysis
