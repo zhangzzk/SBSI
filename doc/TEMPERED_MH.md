@@ -1,5 +1,34 @@
 # Tempered continuous MH for the two-mode trap
 
+## Simplified sampler — October 25, 2026
+
+`scripts/check_galsbi_local_sampler.py` (780 → 469 lines) now runs only the recipe of the 1M follow-up
+(`galsbi_pair1m_20261012/debug/rule_one.md`):
+- persistent scene with one environment and an exact type sum;
+- per-chain step sizes, SED jumps, joint morphology, cached invariant work;
+- likelihood-drawn starts from a fresh bank;
+- co-moving readings at g0 ± 0.002, no saved chain.
+
+The defaults are the recipe (20480 steps, 8192 warm-up, stride 16). `--betas` and `--narrow-step-probability`
+add tempering for mag < 23. `--shear`, `--seed`, `--initial-bank-seed` and `--observation-indices` are
+required, and the reference must be a `galsbi_population_v1` reference.
+
+Removed modes: independent pseudo-marginal environments, binary type flips, per-observation adaptation,
+joint shape, ensemble, pooled and joint-environment moves, local positions, measurement and best-of-bank
+starts, chain saving, fixed-shape profiles, and the compiled or resized density batch. Launchers that used
+them are listed in [REPOSITORY.md](REPOSITORY.md#october-25-sampler-simplification).
+
+**Bit-identity** (CPU, same node and cores, job 17495553,
+`galsbi_pair1m_20261012/debug/one/simplify/ident.sh`): new vs snapshot d776abb with the old recipe flags.
+- Case 1: two faint galaxies at g0 = 0, untempered, 2560 steps.
+- Case 2: two bright galaxies at g0 = (0.01936, 0.00037), 8-rung ladder with narrow steps, 1536 steps.
+
+In both cases the final scenes, all co-moving readings, the start states and the frozen step sizes are
+exactly equal. The stored initial summaries are equal; only their layout lost the single-environment axis.
+Diagnostic changes in `result.json`: neighbour counts are now recorded after the tempering swap (before, they
+belonged to the pre-swap state), and progress lines are compact. Run time is unchanged (CPU 370 s → 376 s
+and 273 s → 279 s).
+
 ## Finding — October 2, 2026
 
 Likelihood tempering (replica exchange) plus a narrow-step mixture lets bright

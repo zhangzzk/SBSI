@@ -17,6 +17,26 @@ model and [the inference workflow](INFERENCE.md#active-workflow) for commands.
 The reusable V3.6 disk driver remains explicitly V3.6-specific; naming V3.9
 does not change its feature or prepared-cache contracts.
 
+## October 25 sampler simplification
+
+`scripts/check_galsbi_local_sampler.py` now runs only the production recipe: persistent scene, one
+environment, exact type sum, per-chain scales, SED jumps, joint morphology, cached invariant work,
+likelihood-drawn starts from a fresh bank, and co-moving readings with no saved chain. Tempering and
+narrow steps remain options. The chains are bit-identical to snapshot d776abb on this recipe; see
+[Simplified sampler](TEMPERED_MH.md#simplified-sampler--october-25-2026).
+
+The launchers that drove the removed modes were deleted from the active tree. They remain in git history
+at commit `821e65f` (`git show 821e65f:<path>`):
+
+- `scripts/run_galsbi_population_shard.py`, `scripts/run_galsbi_throughput.py`,
+  `scripts/check_galsbi_cache_replay.py`
+- `jobs/job_galsbi_initialization.sh`, `jobs/job_galsbi_overnight.sh`, `jobs/job_galsbi_local_sampler.sh`,
+  `jobs/job_galsbi_throughput.sh`
+
+`jobs/job_galsbi_population.sh` keeps its prepare/report stages. `scripts/run_galsbi_bright.py` keeps its
+prepare/selection stages, and its old MH+profile stage is gone. Studies run from frozen source snapshots,
+so existing results are unaffected.
+
 ## September 25 cleanup
 
 The owner closed development and named F8+C8+disk V3.9-like on 2026-09-25.

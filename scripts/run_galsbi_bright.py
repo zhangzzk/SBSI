@@ -1,4 +1,4 @@
-"""Scheduled bright-cohort MH, independent selection integrals and shear profiles."""
+"""Bright-cohort reference preparation and independent selection integrals (the MH stage is retired)."""
 import argparse
 import json
 import os
@@ -8,16 +8,13 @@ import sys
 import time
 
 import numpy as np
-import pandas as pd
 import torch
 
 from check_galsbi_continuous_prior import build_prior, digest, save
-from report_galsbi_population import checked_run
-from run_galsbi_throughput import run
 from sbsi.catalogue_disk_response import CatalogueDiskResponse
 from sbsi.disk_response_transport import disk_response_transport
 from sbsi.galsbi_scene_prior import GalSBIScenePrior
-from sbsi.galsbi_summary import SummaryBatch, SummaryLikelihood, scene_model_inputs
+from sbsi.galsbi_summary import scene_model_inputs
 from sbsi.measurement_model import load_measurement_model
 from sbsi.models import V39_LIKE, load_detection_classifier, load_disk_response
 from sbsi.shear_map import apply_shear_to_ellipticity
@@ -118,79 +115,17 @@ def selection(root, plan, replica, *, smoke=False, reference=None):
         uncertainty='Independent scene chunks and replicas; CRN over shear nodes; nested conditional draw ladder'))
 
 
-def profiles(root, plan, replica, *, smoke=False, reference=None, runroot=None):
-    reference, receipt = selected_reference(root, reference)
-    runroot = runroot or root/('smoke' if smoke else f'runs/replica{replica}')
-    protocol, _ = checked_run(runroot)
-    observed = pd.read_parquet(reference/'observations.parquet').iloc[protocol['observations']].reset_index(drop=True)
-    stride = 1 if smoke else plan['profile_stride']
-    grid = np.array([.018, .02, .022]) if smoke else np.asarray(plan['g1_grid'])
-    with np.load(runroot/'chain.npz') as archive:
-        summary = archive['summaries'][protocol['warmup']::stride].copy()
-        kernel = archive['log_kernel'][protocol['warmup']::stride].copy()
-    if protocol['environments'] != 1 or protocol.get('ensemble_morphology'):
-        raise ValueError('independent persistent-scene chains required')
-    flow = load_measurement_model(V39_LIKE.flow_checkpoints[0], device='cuda')
-    detector = load_detection_classifier(V39_LIKE, device='cuda')
-    likelihood = SummaryLikelihood(flow, detector)
-    ratios = np.empty((len(observed), len(grid), len(summary), 4))
-    centre = int(np.flatnonzero(np.isclose(grid, protocol['fixed_shear'][0], atol=1e-12, rtol=0))[0])
-    replay = 0.
-    started = time.monotonic()
-    for i in range(len(observed)):
-        rows = slice(4*i, 4*i+4)
-        flat = summary[:, rows, 0].reshape(-1, 9)
-        obs = observed.iloc[[i]]
-        batch = SummaryBatch(flat, np.broadcast_to(obs.iloc[0, 2:4].to_numpy(), (len(flat), 2)))
-        for j, g in enumerate(grid):
-            shifted = likelihood.log_kernel(batch, obs, g, 0.).reshape(len(summary), 4)
-            ratios[i, j] = shifted-kernel[:, rows, 0]
-        replay = max(replay, float(np.max(np.abs(ratios[i, centre]))))
-        if not np.isfinite(replay) or replay > 1e-6:
-            raise ValueError('saved posterior summaries failed fixed-shear replay')
-        ratios[i, centre] = 0.
-        if np.isnan(ratios[i]).any() or np.isposinf(ratios[i]).any():
-            raise ValueError('invalid profile ratios')
-        save(runroot/'shear_progress.json', dict(observations=i+1, requested=len(observed),
-            elapsed_seconds=time.monotonic()-started))
-        if (i+1) % 16 == 0:
-            print('PROFILE_PROGRESS', replica, i+1, len(observed), flush=True)
-    np.savez_compressed(runroot/'shear_profiles.npz', log_ratios=ratios, grid=grid,
-        steps=np.arange(protocol['warmup'], protocol['steps'], stride)+1)
-    save(runroot/'shear_profiles.json', dict(status='completed_profiles', max_replay_error=replay,
-        protocol_sha256=digest(runroot/'protocol.json'), data_sha256=digest(runroot/'shear_profiles.npz'),
-        observation_sha256=receipt['observations_sha256'], plan_sha256=digest(root/'plan.json'),
-        stride=stride, process_seconds=time.monotonic()-started,
-        interpretation='Conditional g1 likelihood ratios at g2=0; overlap and convergence are checked by the report.'))
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, required=True)
-    parser.add_argument('--stage', choices=['prepare', 'smoke', 'sample'], required=True)
+    parser.add_argument('--stage', choices=['prepare', 'selection'], required=True)
     parser.add_argument('--replica', type=int, default=0)
     args = parser.parse_args()
-    root = args.root
-    plan = json.loads((root/'plan.json').read_text())
+    plan = json.loads((args.root/'plan.json').read_text())
     if args.stage == 'prepare':
-        prepare(root, plan)
-        return
-    reference, receipt = selected_reference(root)
-    smoke = args.stage == 'smoke'
-    if not smoke:
-        if not json.loads((root/'smoke_complete.json').read_text())['passed']:
-            raise ValueError('smoke gate failed')
-    indices = list(range(min(4, receipt['observation_count']) if smoke else receipt['observation_count']))
-    replica = args.replica
-    offset = 100 if smoke else replica
-    run(root, 'smoke' if smoke else f'runs/replica{replica}', reference, indices,
-        plan['mh_seed_base']+offset, plan['initial_bank_seed_base']+offset,
-        steps=256 if smoke else plan['steps'], warmup=128 if smoke else plan['warmup'])
-    profiles(root, plan, replica, smoke=smoke)
-    selection(root, plan, replica, smoke=smoke)
-    if smoke:
-        save(root/'smoke_complete.json', dict(passed=True,
-            limitation='Numerical execution only, no mixing or recovery acceptance.'))
+        prepare(args.root, plan)
+    else:
+        selection(args.root, plan, args.replica)
 
 
 if __name__ == '__main__':

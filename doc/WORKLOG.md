@@ -1,5 +1,26 @@
 # Work log
 
+## 2026-10-25 — Simplified sampler: recipe only, bit-identical, 780 → 469 lines
+
+Owner goals 2026-10-25: simplify the sampler, speed it up, check it on mocks, start on ~100k image-sim galaxies.
+`scripts/check_galsbi_local_sampler.py` now runs only the `galsbi_pair1m_20261012/debug/rule_one.md` recipe
+(persistent scene, one environment, type sum, per-chain scales, SED jump, joint morphology, invariant-work reuse with
+an audit every 1024th visit, likelihood-drawn starts from a fresh bank, co-moving readings, no chain). Defaults are
+the recipe (20480 / 8192 / stride 16); `--betas` and `--narrow-step-probability` add tempering. Removed: independent
+environments, type flips, per-observation adaptation, joint shape, ensemble/pooled/joint-environment moves, local
+positions, measurement and best-of-bank starts, chain saving, profiles, compiled/resized density batches, the
+redundant SED audit. `jobs/job_galsbi_tempered.sh` passes only `--output --device cuda "$@"`.
+`scripts/run_galsbi_bright.py` keeps prepare/selection (MH+profile stage gone), `jobs/job_galsbi_population.sh`
+keeps prepare/report. Seven launchers deleted (listed in `doc/REPOSITORY.md#october-25-sampler-simplification`,
+recoverable from 821e65f). Library code is unchanged.
+**Validation.** Bit-identity job 17495553 (CPU, `galsbi_pair1m_20261012/debug/one/simplify/ident.sh`): faint
+untempered 2560 steps and bright 8-rung tempered 1536 steps, new vs snapshot d776abb. Final scenes, co-moving
+readings, starts and frozen scales exactly equal; initial summaries equal in value (layout (n,1,9) → (n,9)). CPU time
+unchanged (370 → 376 s, 273 → 279 s). `bash -n` and `py_compile` pass on all edited files.
+**Limitations.** No speed gain from the simplification itself; the speed test (unit size 640 vs 1024 per GPU,
+`simplify/speed2.sh`) is queued. Neighbour counts in `result.json` are now recorded after the swap (diagnostic).
+**Next.** Speed test, then the image-sim study `galsbi_constgold100k_20261025` (rule.md) from a frozen snapshot of
+this commit; Stage B mock check of the recipe is running.
 ## 2026-10-25 — Uniform recipe Test 2: mag 23–24 at 32768 steps leaves g2 unchanged; 1M m −0.49% ± 0.74%, c2 +3.32 ± 1.64e-4
 
 `galsbi_pair1m_20261012/debug/rule_uniform.md` §Test 2 result. 326,718 mag 23–24 galaxies rerun with 32768 / 8192
