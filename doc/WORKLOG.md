@@ -1,5 +1,19 @@
 # Work log
 
+## 2026-10-25 — Uniform recipe Test 1: faint-style chains do not converge mag 21–23 in g1 and cost as much as w8
+
+`galsbi_pair1m_20261012/debug/rule_uniform.md` §Test 1 result (array 17488155, 1,125 units of 20, no failures,
+≈10 h on 1 GPU; analysis 17488306, `uniform_mid.py`). Untempered, drawn-start 16384 / 4096 chains (F16) on the
+22,500-galaxy midlong subset, scored by `comoving.py` comoving_circ exactly like the converged reference D32.
+Scaled to all 179,947 mag 21–23 galaxies, per-scene errors:
+- **F16 − D32: g2 +0.04 ± 1.08e-4 (0.0σ), g1 −1.68% ± 0.53% of m (−3.2σ) → FAIL (g1).**
+- F16 − it0 g1 −0.62% ± 0.55% (−1.1σ); D32 − it0 g1 +1.07% ± 0.31% (+3.4σ, reproduces midlong).
+- Cost 48.5 s per galaxy with comoving.py (43.7 s in the sampler), ≈81 GPU-h for the band, the same as w8 (50 s).
+**Reading.** For mag < 23 the uniform recipe has to be tempered (w8, which passed against D32 on 2026-10-18); the faint
+setup is no saving here. g2 is unaffected in all three comparisons.
+**Validation.** The analysis asserts the protocol (steps, warm-up, drawn start, no tempering, chain saved), the same
+22,500 (side, id) pairs in F16 and D32, and finite scores. Its D32 − it0 number matches `midlong_result.txt`.
+**Next.** Test 2 (mag 23–24 at 32768 steps) is running; one unit is queued for its same-seed rerun.
 ## 2026-10-25 — Uniform-recipe tests launched; the online co-moving check failed, Test 1 now reuses midlong's scoring
 
 `galsbi_pair1m_20261012/debug/rule_uniform.md` (owner "go ahead" 2026-10-25). Two tests toward one sampler recipe
