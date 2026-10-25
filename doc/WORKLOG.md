@@ -1,5 +1,25 @@
 # Work log
 
+## 2026-10-25 — 100k ConstGold image-sim run launched with the simplified sampler; 1M Stage C deferred
+
+Owner request 2026-10-25: run on ~100k image-sim galaxies (a different population). Study
+`catalogue_prior/galsbi_constgold100k_20261025` (`rule.md` + amendment 1, written before any chain):
+- 99,932 galaxies, the first 100k of the frozen 500k ConstGold plus-leg sample; 68 dropped for |e| ≥ 0.99, 0 for
+  radius ≥ 100 px; 100 cases.
+- C1 runs blind at g = 0 with the recipe from frozen snapshot 06727be (mag < 23 tempered).
+- Selection Z is reused from the eight 1M mock replicas. Z is model-only; nodes and cuts are asserted, and the
+  slope per galaxy is (0.00055, 0.00430).
+- `estimate.py c1` gives the one-step estimate; C2 reruns mag < 21 at that shear, then `estimate.py c2` reads the
+  truth only after the result is written.
+- Expected precision about ±7% on m (unpaired), so this run can only find gross failures.
+
+Jobs:
+- Unit-size test 17495612: U640 vs U1024 per GPU; `decide_units.py` picks the faint unit size from it.
+- C1 workers 17495614–7, each waiting for one Stage B GPU, so at most four GPUs run in total.
+
+`galsbi_pair1m_20261012/debug/rule_one.md` amendment 2: Stage C is deferred by the new goals; Stage B finishes and
+is reported.
+**Next.** Monitor startup. Report Stage B (B1/B2 sizes, B3 recipe vs w8), then the C1 one-step estimate and C2.
 ## 2026-10-25 — Simplified sampler: recipe only, bit-identical, 780 → 469 lines
 
 Owner goals 2026-10-25: simplify the sampler, speed it up, check it on mocks, start on ~100k image-sim galaxies.
