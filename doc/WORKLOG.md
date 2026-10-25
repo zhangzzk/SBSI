@@ -1,5 +1,21 @@
 # Work log
 
+## 2026-10-25 — Recipe Stage B on the 1M mock: B3 PASS (recipe = w8 at mag < 23), same-chain replay 549/549
+
+`galsbi_pair1m_20261012/debug/rule_one.md` Stage B. Jobs 17495524 (V100 ×2), 17495525 (2080 Ti) and 17495526 (B3, A40).
+A launcher bug skipped one task: its claims had no side, so twin `fd faint_u1279` collided with the original.
+That task was rerun unchanged (17497127), with claims and logs now `<group>_<side>_<label>`. The analysis
+`b_ana` 17497128 is in `one/b_result.txt`.
+- **B3** (recipe 20480 / 8192, units of 640 − w8 rerun, in-run co-moving), scaled to the band: mid 21–23
+  g1 −0.03% ± 0.61% of m, g2 −0.26 ± 1.34e-4; bright < 21 g1 −0.23% ± 0.31%, g2 +0.12 ± 0.59e-4 → **pass**.
+- **Same chains**: 549/549 reruns have final scenes identical to the old runs.
+- **B1/B2**: in-run co-moving − old readings, every band within 2.1σ. The scaled sum is g1 −6.09% ± 4.33% of m and
+  g2 +6.97 ± 9.14e-4, too noisy to say whether the old readings were off (the 25–25.8 subset is scaled ×68.5).
+- **Cost**: one-core slot per galaxy, recipe in 640-units 20–26 s vs w8 in 20-galaxy units 74–104 s. The GPUs
+  differ (A40 vs V100), so this shows that larger units are the main speed gain; it is not a clean ratio.
+**Limitations.** B3 compares chain settings, not the truth. The 1M Stage C with the recipe is deferred
+(amendment 2). The new in-run reading at faint magnitudes is only checked to about ±4% of m when scaled to 1M.
+**Next.** Image-sim C1 is running (26/105 units at 22:42). Then `estimate.py c1`, C2, `estimate.py c2`.
 ## 2026-10-25 — 100k ConstGold image-sim run launched with the simplified sampler; 1M Stage C deferred
 
 Owner request 2026-10-25: run on ~100k image-sim galaxies (a different population). Study
