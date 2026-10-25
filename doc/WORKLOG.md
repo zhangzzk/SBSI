@@ -1,5 +1,27 @@
 # Work log
 
+## 2026-10-25 — Uniform-recipe tests launched; the online co-moving check failed, Test 1 now reuses midlong's scoring
+
+`galsbi_pair1m_20261012/debug/rule_uniform.md` (owner "go ahead" 2026-10-25). Two tests toward one sampler recipe
+for all magnitudes, within the 4-GPU limit:
+- **Smoke (job 17488070).** Gate: the sampler's online `--comoving-profiles` ratios must equal offline `comoving.py`
+  comoving_circ on the same chain to 1e-6. **Failed**: median |difference| 1.5e-3, max 7.6e-2. The kernel replay is exactly 0, so this
+  is not a numerical fault. The two are different quantities: comoving_circ keeps the stored disk coefficient b, while the online
+  version recomputes it. The 320-galaxy no-chain run used 1.9 GB of memory, at 0.17 ms per step per galaxy.
+- **Amendment 1 (before any Test 1 run).** Test 1 (mag 21–23 with the faint sampler settings: untempered, drawn start,
+  16384 / 4096) runs on the same 1,125 D32 units of `midlong/units.txt` as `midlong/ml.sh`, with the chain kept and
+  scored by `comoving.py` comoving_circ (stride 32, 384 draws per chain), so F16 and the converged reference D32 are
+  the same quantity. Launcher `uniform/um.sh` (job 17488155, 1 GPU), analysis `uniform_mid.py`; the unused
+  regrouping `uniform/prep.py` and `uniform/mid_units.txt` are deleted. The truncation reading is dropped.
+- **Test 2** (mag 23–24 at 32768 / 8192 on 326,718 galaxies, the same seeds and drawn starts as the 16384 runs):
+  `fl32/fl32.sh`, job 17488084 tasks 0–2 (3 GPUs), plus 17488156 (task 3, `afterany` on Test 1). Analysis
+  `fl32.py`, then `PERGAL=_fl32 step2.py debug/brightw8` for the 1M estimate.
+**Validation.** `bash -n` on the launchers, `py_compile` on the analyses; protocol fields checked against the smoke and D32
+outputs; all jobs past startup with no errors.
+**Cost seen at startup.** A step costs about the same for 20 or 320 galaxies, so Test 1 in units of 20 takes ≈47 s per galaxy
+including comoving.py (≈10 h on its GPU, not ~1 GPU-h). Test 2 takes ≈10 s per galaxy (≈31 GPU-h, ≈10 h on 3 GPUs).
+The first Test 1 units have 384 draws per chain and worst replay 1.3e-3, the same as midlong.
+**Next.** Analyses when the arrays end (both ≈10 h).
 ## 2026-10-24 — Free window check of the faint chains: 23–24 long chains still drift; the check cannot clear a band
 
 `galsbi_pair1m_20261012/debug/rule_faintlong.md` §Stage 3–4 (`faintwindow.py`, `faintwindow_prod.py`; CPU jobs
