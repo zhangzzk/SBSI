@@ -16,8 +16,9 @@ same-seed rerun (17489814). L_original_u0394 (320 galaxies) is still excluded. A
 21–23 (it0: g1 +1.07% ± 0.31% short, g2 fine) and 25–25.8 (4096 steps, never length-tested). The converged setup
 for each band is w8 for mag < 23, 32768 steps for 23–24, 16384 for 24–25 (10240 enough), and 4096 for 25–25.8.
 That costs about 27 + 83 + 40 + 21–34 + 12 ≈ 185–195 GPU-h (≈2 days on 4 GPUs).
-**Validation.** The analysis asserts protocols, the same galaxy sets, and that only 23–24 rows changed in the 1M input. Its
-"long" contribution reproduces the earlier step2 numbers.
+**Validation.** The analysis asserts protocols, the same galaxy sets, and that only 23–24 rows changed in the 1M input. The 1M
+one-step moved by g2 −0.39e-4 and g1 +0.55% of m, against the band difference −0.50e-4 and +0.91%. These are not
+equal, because step2 recomputes the information.
 **Next (owner).** The c2 remainder is about 2σ. Possible tests: 25–25.8 at 16384 (≈48 GPU-h), or w8 for 21–23
 (≈83 GPU-h, fixes g1 of m, not expected to move c2).
 ## 2026-10-25 — Uniform recipe Test 1: faint-style chains do not converge mag 21–23 in g1 and cost as much as w8
