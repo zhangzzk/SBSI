@@ -1,5 +1,26 @@
 # Work log
 
+## 2026-10-21 — Absorbing per-observation particle extinction and explicit reporting
+
+- Added `sbsi/particle_populations.py` and updated the particle driver/report
+  to retain scientifically known zero-mass populations without dropping their
+  seeds or aborting other observations. Surviving rows preserve their original
+  observation identity; extinct rows are never redrawn or evaluated as posterior
+  states. The all-surviving numeric and RNG path is unchanged.
+- New explicit receipts use Boolean masks, first extinction stages and JSON
+  nulls for undefined moments/log zero. The reporter checks their binary
+  artifacts and source identities, includes zero-mass seeds in normalizer/error
+  denominators, and emits undefined means with failed gates if all runs are
+  extinct. Unknown failures or missing artifacts still fail closed.
+- Added `tests/test_particle_extinction.py` and the
+  [schema/evidence note](PARTICLE_EXTINCTION.md#receipt-and-artifact-contract).
+  Targeted CPU job 17419103 passed 33 tests in 19.43 seconds. Full CPU suite
+  job 17419141 passed 607 tests with one skip and one existing warning in
+  108.26 seconds (`py31 -m pytest tests -q` through `jobs/job_tests.sh`).
+- Scope: no GPU experiment, real-data extinction or efficiency claim. Model
+  identities and numerical likelihood batches remain unchanged; the report
+  version changes so comparison groups must be regenerated consistently.
+
 ## 2026-10-20 — 1M pair c2, measurement-only true-parameter test: measurement side cleared for the positive c2 (21–25.8: −2.96 ± 1.11e-4)
 
 Owner: "go on" (step 1 of the proposed plan). Pre-declared in `galsbi_pair1m_20261012/debug/rule_measoracle.md`

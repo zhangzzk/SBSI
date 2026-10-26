@@ -12,8 +12,8 @@ only in the twin always get fresh draws. Every coupling leaves the twin populati
 the original one; the coupling only changes how much noise cancels between the two mocks.
 
 The original chunks are regenerated with the original functions and must reproduce the stored observations
-row for row. The twin covers the same parent scenes: every scene up to the last one that supplied an
-original observation. Twins are kept by their own selection (no pair-completeness requirement, no truth
+row for row. The twin covers all parents of every complete chunk. Only a partially retained final
+chunk stops at the last retained original observation. Twins are kept by their own selection (no pair-completeness requirement, no truth
 cuts); pairs.parquet links each scene to its original and twin rows (-1 = not selected).
 --test-chunks k: only regenerate k chunks and report, per coupling, how much the pair average of the
 measured shapes scatters compared with independent galaxies (no twin catalogue written).
@@ -31,6 +31,7 @@ from check_galsbi_summary_sampler import mock_panel, prepared
 from sbsi.catalogue_likelihood import predict_detection_probability
 from sbsi.disk_precision import LOG_GAP_COLUMN, transport_with_log_gap
 from sbsi.galsbi_scene_prior import GalSBIScenePrior
+from sbsi.mock_population import last_retained_parent
 from sbsi.measurement_model import load_measurement_model
 from sbsi.models import V39_LIKE, load_detection_classifier, load_disk_response
 from sbsi.shear_map import apply_shear_to_ellipticity
@@ -103,7 +104,7 @@ def main():
     parser.add_argument('--coupling', choices=('antithetic', 'same', 'independent'), default='antithetic')
     parser.add_argument('--test-chunks', type=int, default=0)
     args = parser.parse_args()
-    if (args.output/'result.json').exists():
+    if args.output.exists() and any(args.output.iterdir()):
         raise ValueError('fresh output required')
     original = json.loads((args.original/'protocol.json').read_text())
     receipt = json.loads((args.original/'result.json').read_text())
@@ -127,6 +128,7 @@ def main():
 
     chunks = progress[:args.test_chunks] if args.test_chunks else progress
     frames, pairs, replay, test = [], [], [], {c: [] for c in ('antithetic', 'same', 'independent')}
+    cutoff_audit = []
     offset = twin_rows = 0
     for receipt_chunk in chunks:
         chunk, seed, take = receipt_chunk['chunk'], receipt_chunk['seed'], receipt_chunk['selected']
@@ -142,11 +144,23 @@ def main():
         replay.append(float(np.max(np.abs(frame.iloc[:take].to_numpy()-mine))) if take else 0.)
         if take and (len(frame) < take or replay[-1] != 0.):
             raise ValueError(f'chunk {chunk}: regenerated observations differ from the stored mock ({replay[-1]})')
-        last = ids[take-1] if take else -1
+        legacy_last = int(ids[take-1]) if take else -1
+        last = last_retained_parent(ids, take, len(zero),
+                                    final_chunk=chunk == progress[-1]['chunk'])
+        coverage = dict(chunk=chunk, parents=len(zero), generated_selected_originals=len(ids),
+                        retained_originals=take, last_retained_parent=last, legacy_last_parent=legacy_last,
+                        additional_parents=last-legacy_last, couplings={})
+        cutoff_audit.append(coverage)
         for name in (test if args.test_chunks else [args.coupling]):
             twin, twin_ids, _ = panel(zero, response, flow, detector, seed=seed+1, shear=shear, sign=-1,
                                       latent=coupled(latent, name, seed+3))
             inside = twin_ids <= last
+            added = inside & (twin_ids > legacy_last)
+            final_selected = ((twin.iloc[:, 2].to_numpy() < 100.)
+                              & ((twin.iloc[:, :2].to_numpy()**2).sum(1) < .99**2))
+            coverage['couplings'][name] = dict(additional_selected_twins=int(added.sum()),
+                additional_analysis_selected_twins=int((added & final_selected).sum()),
+                additional_selected_parent_ids=twin_ids[added].tolist())
             if args.test_chunks:
                 common, a, b = np.intersect1d(ids[:take], twin_ids[inside], return_indices=True)
                 test[name].append(dict(original=frame.iloc[a, :4].to_numpy(), twin=twin[inside].iloc[b, :4].to_numpy(),
@@ -177,7 +191,7 @@ def main():
                 report[name][label] = dict(pairs=int(m.sum()), pair_variance_ratio_e1_e2=ratio, correlation_e1_e2=corr,
                                            radius_correlation=float(np.corrcoef(a[m, 2], b[m, 2])[0, 1]))
             print(name, json.dumps(report[name]), flush=True)
-        save(args.output/'coupling_test.json', dict(chunks=len(chunks), replay_errors=replay, report=report))
+        save(args.output/'coupling_test.json', dict(chunks=len(chunks), replay_errors=replay, report=report, parent_cutoff_audit=cutoff_audit))
         return
     if offset != receipt['observation_count']:
         raise ValueError('original chunks do not add up to the stored mock')
@@ -191,9 +205,10 @@ def main():
         twin_of_observations_sha256=receipt['observations_sha256'], coupling=args.coupling,
         twin='each original scene rotated by 90 degrees about its target (target intrinsic e -> -e); same scene, '
              'detection and (coupled) measurement random numbers; own selection; same parent scenes as the original',
-        preparation_sha256=digest(__file__)))
+        parent_coverage='all parents of complete chunks; last retained original only for a partial final chunk',
+        preparation_sha256=digest(__file__), parent_coverage_sha256=digest(Path('sbsi/mock_population.py'))))
     save(args.output/'result.json', dict(status='prepared_population', preparation_checks_pass=True,
-        observation_count=len(observed), original_replay_max_error=max(replay),
+        observation_count=len(observed), original_replay_max_error=max(replay), parent_cutoff_audit=cutoff_audit,
         pairs=dict(scenes=len(pairs), both=int(((pairs.original_row >= 0) & (pairs.twin_row >= 0)).sum()),
                    original_only=int((pairs.twin_row < 0).sum()), twin_only=int((pairs.original_row < 0).sum())),
         observations_sha256=digest(args.output/'observations.parquet'),

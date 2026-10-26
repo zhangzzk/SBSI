@@ -27,6 +27,8 @@ from sbsi.galsbi_scene_prior import GalSBISceneBatch, GalSBIScenePrior
 from sbsi.galsbi_summary import (SummaryBatch, SummaryLikelihood, compress_scenes, response_pairs,
                                  scene_model_inputs)
 from sbsi.galsbi_target_coordinates import GalSBITargetCoordinates
+from sbsi.scene_exchange import propose_native_exchange
+from sbsi.gradient_proposals import bounded_langevin_mean, gaussian_log_hastings, ReplicaTransport
 from sbsi.measurement_model import load_measurement_model
 from sbsi.mcmc_proposals import (adjacent_swap_permutation, complementary_stretch_proposal,
                                 empirical_block_cholesky, gaussian_block_delta, pooled_block_cholesky)
@@ -80,6 +82,16 @@ def main():
                         help='likelihood-tempering ladder, starting at the posterior (1) and strictly decreasing')
     parser.add_argument('--narrow-step-probability', type=float, default=0.,
                         help='state-independent share of morphology steps at a quarter of the frozen scale')
+    parser.add_argument('--mala-morphology-probability', type=float, default=0.,
+                        help='experimental state-independent fraction of morphology moves using corrected bounded drift')
+    parser.add_argument('--mala-max-drift', type=float, default=1.,
+                        help='maximum drift in proposal standard-deviation units')
+    parser.add_argument('--scene-exchange-probability', type=float, default=0.,
+                        help='experimental probability of a corrected complete target/neighbour mark exchange')
+    parser.add_argument('--scene-exchange-radius', type=float, default=1.,
+                        help='fixed positional Gaussian scale in arcsec for neighbour selection')
+    parser.add_argument('--tempering-diagnostics', action='store_true',
+                        help='RNG-free replica round trips and hot-state histories')
     parser.add_argument('--local-positions', action='store_true')
     parser.add_argument('--position-scale', type=float, default=.2)
     parser.add_argument('--observation-indices', type=int, nargs='+')
@@ -144,6 +156,20 @@ def main():
         raise ValueError('tempering requires persistent per-chain joint morphology and betas decreasing from 1 to >0')
     if not 0 <= args.narrow_step_probability < 1 or (args.narrow_step_probability and not args.joint_morphology):
         raise ValueError('narrow steps require joint morphology and probability in [0, 1)')
+    if (not 0 <= args.mala_morphology_probability <= 1 or not np.isfinite(args.mala_max_drift)
+            or args.mala_max_drift <= 0):
+        raise ValueError('MALA probability in [0,1] and positive finite drift bound required')
+    if args.mala_morphology_probability and (not args.joint_morphology or args.joint_shape
+            or args.ensemble_morphology or args.joint_environment or args.narrow_step_probability):
+        raise ValueError('MALA pilot requires plain three-coordinate joint morphology')
+    if (not 0 <= args.scene_exchange_probability <= .15
+            or not np.isfinite(args.scene_exchange_radius) or args.scene_exchange_radius <= 0):
+        raise ValueError('exchange probability in [0,.15] and positive finite radius required')
+    if args.scene_exchange_probability and (not persistent or not args.marginalize_type
+            or not args.sed_jump or args.local_positions or args.ensemble_morphology):
+        raise ValueError('exchange requires persistent marginalized-type SED-jump sampler without block-six alternatives')
+    if args.tempering_diagnostics and len(betas) < 2:
+        raise ValueError('transport diagnostics require multiple temperatures')
     if (args.output/'result.json').exists():
         raise ValueError('fresh output required')
     args.output.mkdir(parents=True, exist_ok=True)
@@ -183,7 +209,8 @@ def main():
         Path('sbsi/galsbi_scene_prior.py'), Path('sbsi/galsbi_summary.py'), Path('sbsi/galsbi_prior.py'),
         Path('scripts/check_galsbi_continuous_prior.py'), Path('scripts/check_galsbi_summary_sampler.py'),
         Path('jobs/job_galsbi_local_sampler.sh'), Path('configs/models_v3_9_like.json'),
-        Path('sbsi/mcmc_proposals.py'), Path('sbsi/galsbi_initialization.py')]
+        Path('sbsi/mcmc_proposals.py'), Path('sbsi/galsbi_initialization.py'),
+        Path('sbsi/gradient_proposals.py'), Path('sbsi/summary_gradients.py'), Path('sbsi/scene_exchange.py')]
     protocol = dict(steps=args.steps, warmup=args.warmup, environments=m, chains_per_observation=nchains,
         seed=args.seed, reference=str(args.reference.resolve()), reference_protocol_sha256=digest(args.reference/'protocol.json'),
         disk_coefficient=('computed for stored posterior-level states from the last warm-up step on (NaN before); '
@@ -266,6 +293,25 @@ def main():
     if args.narrow_step_probability:
         protocol['narrow_morphology_steps'] = dict(probability=args.narrow_step_probability, scale=.25,
             choice='independent of state, so the mixture of symmetric kernels stays exact')
+    if args.mala_morphology_probability:
+        protocol['mala_morphology'] = dict(probability=args.mala_morphology_probability,
+            max_whitened_drift=args.mala_max_drift, prior_difference_step=1e-4,
+            columns=[1, 6, 7], gradient='torch summary derivative plus finite-difference analytic prior; '
+            'response held fixed at its recomputed value at each endpoint',
+            acceptance='unchanged full target and forward/reverse Gaussian densities',
+            adaptation='existing morphology covariance and scale during warmup only')
+    if args.scene_exchange_probability:
+        protocol['proposal_blocks']['scene_exchange'] = list(range(10))
+        for index in (4, 5):
+            protocol['proposal_block_probabilities'][index] -= args.scene_exchange_probability/2
+        protocol['proposal_block_probabilities'].append(args.scene_exchange_probability)
+        protocol['scene_exchange'] = dict(probability=args.scene_exchange_probability,
+            radius_arcsec=args.scene_exchange_radius,
+            selection='position-only Gaussian weights; unchanged by mark exchange',
+            type='temporary analytic conditional Gibbs draw, then marginalize',
+            acceptance='native mark exchange: numerical/analytic prior correction plus beta*kernel difference',
+            environment='same numerical generator law; count and positions fixed')
+    protocol['tempering_diagnostics'] = bool(args.tempering_diagnostics)
     save(args.output/'protocol.json', protocol)
     for source in sources:
         destination = args.output/'source'/source.resolve().relative_to(Path.cwd().resolve())
@@ -291,6 +337,10 @@ def main():
     angular_distance = ExactMemo(lambda z: cosmo.background.dist_ang_a(a=1/(1+z)))
 
     coords = GalSBITargetCoordinates(galaxy, angular_distance)
+    gradient_evaluator = None
+    if args.mala_morphology_probability:
+        from sbsi.summary_gradients import SummaryGradients
+        gradient_evaluator = SummaryGradients(flow, detector, batch_size=args.density_batch_size)
 
     def summarize(scene, auxiliary, with_b=True):
         """Nine summaries per scene; without b, column 8 is 0 (exact only for the kernel at zero shear)."""
@@ -407,6 +457,41 @@ def main():
         """Largest summary difference, skipping b where it is not computed."""
         return float(np.nanmax(np.abs(new-old)))
 
+    mala_audit = dict(proposed=0, accepted=0, gradient_seconds=0., prior_boundary_components=0)
+
+    def morphology_gradient(state, state_kinds, state_summary, valid):
+        """Deterministic endpoint drift; invalid proposals will be rejected.
+
+        Invalid rows use current retained values solely to keep batch grouping
+        fixed. They contribute no reverse correction or acceptance probability.
+        At g=0 missing b is replaced by zero, which leaves the kernel unchanged.
+        """
+        began = time.monotonic()
+        safe = np.where(valid[:, None], state, x)
+        summaries_safe = np.where(valid[:, None], state_summary[:, 0], summaries[:, 0]).copy()
+        if lazy_b:
+            summaries_safe[:, 8] = 0.
+        _, derivatives = gradient_evaluator.evaluate(summaries_safe, observed, g0)
+        gradient = np.empty((len(state), 3))
+        gradient[:, 0] = derivatives[:, 3]+(.4*np.log(10.)*derivatives[:, 5:8]
+            *(-np.expm1(-summaries_safe[:, 5:8]))).sum(1)
+        gradient[:, 1] = derivatives[:, 4]*summaries_safe[:, 4]
+        span = galaxy.p['sersic_n_max']-galaxy.p['sersic_n_min']
+        fraction = (summaries_safe[:, 2]-galaxy.p['sersic_n_min'])/span
+        gradient[:, 2] = derivatives[:, 2]*span*fraction*(1-fraction)
+        gradient *= beta[:, None]
+        for j, column in enumerate((1, 6, 7)):
+            up, down = safe.copy(), safe.copy()
+            up[:, column] += 1e-4
+            down[:, column] -= 1e-4
+            lp, _, _ = target_prior(up, state_kinds)
+            lm, _, _ = target_prior(down, state_kinds)
+            finite = np.isfinite(lp) & np.isfinite(lm)
+            gradient[finite, j] += (lp[finite]-lm[finite])/2e-4
+            mala_audit['prior_boundary_components'] += int((~finite & valid).sum())
+        mala_audit['gradient_seconds'] += time.monotonic()-began
+        return gradient
+
     def estimate(data, valid):
         values = np.zeros((len(owner), m, 9))
         logk = np.full((len(owner), m), -np.inf)
@@ -487,6 +572,11 @@ def main():
     invariant_audit = dict(likelihood_calls_skipped=0, target_prior_calls_skipped=0,
                            checked_proposals=0, maximum_summary_change=0., maximum_log_kernel_change=0.)
     invariant_visits = {2: 0, 5: 0}
+    exchange_audit = dict(attempts=np.zeros((2, levels, ncold), dtype=int),
+                          accepts=np.zeros((2, levels, ncold), dtype=int),
+                          large_magnitude_accepts=np.zeros((2, levels, ncold), dtype=int))
+    transport = None
+    transport_trace, transport_steps, transport_states = [], [], []
     # Without a saved chain, per-state histories are kept only at the profile draws (every profile-stride step
     # after warm-up): the profiles use exactly these states, and the diagnostics describe them. Memory then
     # no longer grows with every step (2026-10-14: ~5 GB per process at 16384 steps).
@@ -502,9 +592,12 @@ def main():
         proposal, newkinds = x.copy(), kinds.copy()
         log_hastings = np.zeros(len(owner))
         active_proposal = np.ones(len(owner), dtype=bool)
+        exchange_move = bool(args.scene_exchange_probability and block == 6)
         ensemble_move = args.ensemble_morphology and block == 6
         joint_environment = bool(args.joint_environment and block == 0
                                  and rng.random() < protocol['joint_environment']['probability_given_morphology'])
+        mala_move = bool(args.mala_morphology_probability and block == 0
+                         and rng.random() < args.mala_morphology_probability)
         if block < 3:
             columns = blocks[block]
             if args.joint_morphology and block == 0:
@@ -512,7 +605,14 @@ def main():
                                                       if joint_environment else 1.)
                 if args.narrow_step_probability:
                     multiplier = multiplier*np.where(rng.random(len(owner)) < args.narrow_step_probability, .25, 1.)
-                proposal[:, columns] += gaussian_block_delta(morphology_factor, multiplier, rng)
+                if mala_move:
+                    mala_factor = morphology_factor*multiplier[:, None, None]
+                    drift = morphology_gradient(x, kinds, summaries, np.ones(len(x), dtype=bool))
+                    mala_forward = bounded_langevin_mean(x[:, columns], drift, mala_factor,
+                                                        max_drift=args.mala_max_drift)
+                    proposal[:, columns] = mala_forward+gaussian_block_delta(morphology_factor, multiplier, rng)
+                else:
+                    proposal[:, columns] += gaussian_block_delta(morphology_factor, multiplier, rng)
             else:
                 proposal[:, columns] += (rng.normal(size=(len(owner), len(columns)))*scales[columns]
                                          *np.exp(log_scales[scale_owner, block, None]))
@@ -524,20 +624,32 @@ def main():
         elif ensemble_move:
             proposal, log_hastings, active_proposal = complementary_stretch_proposal(
                 x, [1, 6, 7], nchains, rng)
-        environment_only = block == 4 or (block == 6 and not ensemble_move)
+        elif exchange_move:
+            exchange_scene, exchange_ratio, active_proposal = propose_native_exchange(
+                galaxy, scene, type_probability, rng, radius_scale=args.scene_exchange_radius)
+            proposal = coords.encode(exchange_scene.targets)
+        environment_only = block == 4 or (block == 6 and not ensemble_move and not exchange_move)
         invariant_likelihood = args.reuse_invariant_work and block in (2, 5)
         if args.reuse_invariant_work and environment_only:
             newprior, newdata, new_type_probability = logprior, scene.targets, type_probability
             invariant_audit['target_prior_calls_skipped'] += 1
         else:
             newprior, newdata, new_type_probability = target_prior(proposal, newkinds)
+        if exchange_move:
+            log_hastings[:] = -np.inf
+            valid_exchange = np.isfinite(newprior) & np.isfinite(exchange_ratio)
+            log_hastings[valid_exchange] = (exchange_ratio[valid_exchange]
+                - (newprior[valid_exchange]-logprior[valid_exchange]))
         fraction = 0.
         if persistent:
             newscene = GalSBISceneBatch(newdata, scene.neighbours, scene.indptr, scene.offset_arcsec)
+            if exchange_move:
+                newscene = GalSBISceneBatch(newdata, exchange_scene.neighbours,
+                                           scene.indptr, scene.offset_arcsec)
             if block == 4 or joint_environment:
                 fraction = 1. if joint_environment or rng.random() < .1 else args.refresh_fraction
                 newscene = prior.refresh(newscene, fraction, int(rng.integers(0, 2**63)))
-            elif block == 6 and not ensemble_move:
+            elif block == 6 and not ensemble_move and not exchange_move:
                 newscene = prior.move_positions(newscene, args.position_scale, int(rng.integers(0, 2**63)))
             if invariant_likelihood:
                 # At fixed m_r, angular circularized radius, n, a, phase and
@@ -583,16 +695,32 @@ def main():
                         or sed_audit['maximum_log_kernel_change'] > protocol['sed_replay_tolerances']['log_kernel_absolute']):
                     save(args.output/'sed_replay_failure.json', sed_audit)
                     raise ValueError('SED jump changed fixed physical summaries or likelihood; inspect replay')
+        if mala_move:
+            valid_mala = np.isfinite(newprior) & np.isfinite(newlike)
+            reverse_drift = morphology_gradient(proposal, newkinds, newsummary, valid_mala)
+            safe_proposal = np.where(valid_mala[:, None], proposal[:, blocks[0]], x[:, blocks[0]])
+            reverse_mean = bounded_langevin_mean(safe_proposal, reverse_drift, mala_factor,
+                                                max_drift=args.mala_max_drift)
+            correction = gaussian_log_hastings(x[:, blocks[0]], safe_proposal, mala_forward,
+                                               reverse_mean, mala_factor)
+            log_hastings[valid_mala] += correction[valid_mala]
         accepted = metropolis_accept(logprior+beta*loglike, newprior+beta*newlike+log_hastings,
                                      rng.uniform(np.finfo(float).tiny, 1., len(owner)))
         accepted &= active_proposal
+        if mala_move:
+            mala_audit['proposed'] += len(accepted)
+            mala_audit['accepted'] += int(accepted.sum())
+        if exchange_move:
+            exchange_audit['attempts'][int(step >= args.warmup)] += active_proposal.reshape(levels, ncold)
+            exchange_audit['accepts'][int(step >= args.warmup)] += accepted.reshape(levels, ncold)
+            exchange_audit['large_magnitude_accepts'][int(step >= args.warmup)] += (accepted & (np.abs(proposal[:, 1]-x[:, 1]) > 3)).reshape(levels, ncold)
         sed_switches += accepted & sed_cross
         sed_cross_trace.append(sed_cross[cold])
         x, kinds, logprior, loglike, summaries, kernels, type_probability = [retained(old, new, accepted) for old, new in
             ((x, proposal), (kinds, newkinds), (logprior, newprior), (loglike, newlike),
              (summaries, newsummary), (kernels, newkernel), (type_probability, new_type_probability))]
         if persistent:
-            if args.reuse_invariant_work and not (environment_only or joint_environment):
+            if args.reuse_invariant_work and not (environment_only or joint_environment or exchange_move):
                 # Replacing target marks does not replace or copy neighbours.
                 scene = GalSBISceneBatch(
                     {key: retained(value, newscene.targets[key], accepted) for key, value in scene.targets.items()},
@@ -618,6 +746,15 @@ def main():
             swap_accepts[stage] += exchanged.sum(1)
             if stage:
                 cold_exchanges += exchanged[0]
+                if args.tempering_diagnostics:
+                    if transport is None:
+                        transport = ReplicaTransport(levels, ncold, 4)
+                    transport_values = np.column_stack((x[:, [1, 6, 7]], summaries[:, 0, 7]))
+                    transport.update(perm, transport_values)
+                    if (step-args.warmup) % args.profile_stride == 0:
+                        transport_steps.append(step)
+                        transport_trace.append(transport.identity.copy())
+                        transport_states.append(transport_values.copy())
         if stored:
             trace.append(x[cold].copy())
         if args.joint_morphology:
@@ -748,6 +885,9 @@ def main():
             exploration_checks_pass=passing and (args.marginalize_type or not checks['type']['constant'])
                                     and not args.ensemble_morphology))
     np.savez_compressed(args.output/'local_profiles.npz', **profile_samples)
+    if transport is not None:
+        np.savez_compressed(args.output/'tempering_trace.npz', steps=transport_steps,
+                            replica_identity=transport_trace, states=transport_states)
     result = dict(status='completed_diagnostic', observations=reports,
         elapsed_seconds=time.monotonic()-started, frozen_scale_multipliers=np.exp(log_scales).tolist(),
         timing_seconds=dict(setup=sampling_started-started, sampling=sampling_finished-sampling_started,
@@ -757,6 +897,9 @@ def main():
         protocol_sha256=digest(args.output/'protocol.json'),
         all_exploration_checks_pass=all(r['exploration_checks_pass'] for r in reports),
         sed_replay=sed_audit if args.sed_jump else None,
+        mala_morphology=mala_audit if args.mala_morphology_probability else None,
+        scene_exchange={k: v.tolist() for k, v in exchange_audit.items()} if args.scene_exchange_probability else None,
+        replica_transport=transport.report() if transport is not None else None,
         tempering=dict(betas=betas.tolist(),
             swap_acceptance_warmup=(swap_accepts[0]/np.maximum(swap_attempts[0], 1)).tolist(),
             swap_acceptance_post_warmup=(swap_accepts[1]/np.maximum(swap_attempts[1], 1)).tolist(),
