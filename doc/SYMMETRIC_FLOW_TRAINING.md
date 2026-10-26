@@ -12,6 +12,43 @@ Current study: `/project/ls-gruen/users/zekang.zhang/sbsi_caches/f8_signsym_2026
 The failed first attempt and diagnostics remain in `f8_signsym_20261026_v1`.
 Branch: `codex/model-symmetry`.
 
+## Completion results — October 27, 2026
+
+Base17516711 and refinement17516727 completed with exit0, in19m25s and39m32s
+respectively:58m57s combined on one H200, excluding the earlier failed attempt
+and diagnostics. Label recovery17516726 also completed. All dependent stages
+finished; the redundant pending two-hour check17516740 was cancelled after
+reviewing the final receipts.
+
+Base fitting selected NLL epoch137, then guard phase epoch12. Selected base
+full-validation NLL was -4.689806082965132. Harmonized refinement selected
+step6 and passed its full-density gate; its full-validation NLL changed from
+-4.703562082533013 to -4.702567884474872. These standardized losses are not a
+direct comparison with the original asymmetric model, or across domains.
+The final joint-probability refinement rejected all six attempted step sizes
+and selected step0, retaining the incoming harmonized model. Its receipt has
+`eligible_for_joint_validation=false` and `production_accepted=false`.
+
+Final candidate, relative to the study directory:
+`joint/joint_probability_refinement_full/selected.pt`.
+Independently verified SHA256:
+`05dc7a986610851208f10d3a336a7805c5b2a643e3e16f9ed3ca1f8a0d33fd57`.
+`trained_candidate.json` pins the unchanged C8 and scalar emulator.
+
+Both selected-checkpoint symmetry audits passed. On1024 real case000 contexts
+including explicit zero/near-zero probes, all four sign actions had exactly
+zero measured generation, density, log-determinant, log-gap and score errors.
+Final inverse error was1.16706e-4 and inverse-logdet error1.71661e-5, both below
+the predeclared2e-4 threshold. See `base_symmetry.json` and `final_symmetry.json`.
+Frozen orchestration/source/domain-manifest/retained-artifact verification
+passed again after completion; the final checkpoint hash matches its receipt.
+
+This establishes the candidate flow's structural symmetry, not removal of c2
+in image-simulation inference. C8 remains unchanged and complete-likelihood
+symmetry is not established. Next scientific validation would require
+candidate-specific normalization/caches and the original/reflected image
+cohort; no such run or production promotion was made during this status review.
+
 ## Architecture and preprocessing
 
 `sbsi/flow_sign_symmetric.py` implements
@@ -84,9 +121,13 @@ The study is training and validation of a candidate, not automatic production
 adoption. Record likelihood and response checks even if unfavorable. Symmetry
 must survive checkpoint reload and all refinement stages. Later image-measurement
 inference must use candidate-specific normalization and cache identities;
-C8 asymmetry remains an explicit limitation. Final training results are pending.
+C8 asymmetry remains an explicit limitation. Final results are recorded in
+[completion results](#completion-results--october-27-2026).
 
 ## Current V2 status
+
+The following records the October26 startup; it is superseded by the
+[completion results](#completion-results--october-27-2026).
 
 Full suite17516696: **663 passed,4 skipped**, exit0; the external retained
 V3.9 flow/C8/emulator prediction smoke also passed with artifact roots set.

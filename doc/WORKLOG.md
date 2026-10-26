@@ -1,5 +1,29 @@
 # Work log
 
+## 2026-10-27 — Symmetric F8 retraining completed; final symmetry audit passed
+
+Reviewed Slurm receipts and selected-checkpoint results for V2. Base17516711
+and refinement17516727 completed exit0, with58m57s combined GPU allocation
+time on one H200. Harmonized refinement selected step6 and passed its density
+gate. Final joint-probability refinement accepted none of six trial step sizes,
+retaining its incoming checkpoint as step0; its eligibility and production
+acceptance flags remain false. C8 and the scalar emulator are unchanged.
+
+Final audit: all four independent e1/e2 sign actions have zero measured error
+in generation, density, determinant, gap and scores on1024 real contexts plus
+axis probes. Inverse error1.16706e-4 and logdet replay1.71661e-5 pass the2e-4
+threshold. Independently recomputed selected checkpoint SHA256 matches the
+receipt; `venv/bin/python verify_inputs.py <study>` again reports
+`SIGN_SYMMETRY_FROZEN_INPUTS_VERIFIED`. `sacct -X` confirms successful stages.
+Cancelled redundant pending check17516740 after final review. Documentation
+only: updated [completion results](SYMMETRIC_FLOW_TRAINING.md#completion-results--october-27-2026);
+`git diff --check` passes. Earlier full suite remains663 passed,4 skipped.
+
+No image-simulation c2 result or full-likelihood symmetry claim follows from
+this architecture audit. Next: candidate-specific normalization and original/
+reflected image validation before considering adoption. No new inference was
+launched in this status review, and no production model identity changed.
+
 ## 2026-10-26 — Stabilize invariant features and restart symmetric F8 successfully
 
 First-epoch replay17516645 isolated raw-quadratic feature amplification at
