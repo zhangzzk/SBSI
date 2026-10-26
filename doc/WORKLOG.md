@@ -1,5 +1,23 @@
 # Work log
 
+## 2026-10-26 — Mirror test: the image-sim c2 comes from the models
+
+`galsbi_constgold100k_20261025/rule.md` "Result of amendment 2". The same 99,932 image-sim galaxies were run with
+measured e2 flipped (same units and seeds), and the result was paired with the original run.
+- All 105 C1m and 30 C2m units finished, none failed, 0 galaxies left out. Stuck chains: 8,373 vs 8,340 original.
+- g2: original +0.00406 ± 0.00125, mirror +0.00106 ± 0.00126.
+- Models' part P = +0.00256 ± 0.00019 (+13.8σ). Data part Δ = +0.00150 ± 0.00125 (+1.2σ).
+- By the pre-stated rule the verdict is **models (mirror asymmetry)**. The forward model adds g2 ≈ +0.0026 to any
+  data. Paired mocks hide this because their data come from the same models.
+- g1/m: P g1 0.01926 ± 0.00141, m −3.68% ± 7.07%. m is unchanged by the mirror and is still too noisy to test.
+- Jobs: C1m 17497723–6, chain 17497747, C2m 17498975, final 17498976 (`estimate.py c2m`, `mirror_pair.py`).
+  Output: `mirror_pair.json`, `c1m/estimate.json`, `c2m/estimate.json`.
+
+Limitations: the test does not split the model part between F8, C8, the emulator and selection. The 2026-10-15
+mock mirror test had already found F8/C8 not mirror-symmetric.
+
+Next: an owner decision on symmetrising the models (e.g. averaging each with its mirror image), which would change
+the frozen V3.9 model and is not started. No code in the repository changed.
 ## 2026-10-26 — Mirror test of the image-sim c2 launched (owner: "try that")
 
 `galsbi_constgold100k_20261025/rule.md` amendment 2, written before any mirror chain. It tests whether
