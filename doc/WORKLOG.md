@@ -1,5 +1,164 @@
 # Work log
 
+## 2026-10-26 — Stabilize invariant features and restart symmetric F8 successfully
+
+First-epoch replay17516645 isolated raw-quadratic feature amplification at
+batch337: finite gradient entries but total float32 norm overflow (float64
+norm4.16e25). Comparison17516647 on the identical checkpoint/batch passed the
+existing clipping check with smooth bounded invariants. Updated
+`SignSymmetricCoupling` to use psi(v)=v/hypot(1,v) before shape squares/products;
+the odd shift factor retains the signed conditioning shape. Flow coordinates,
+data and densities are not clipped. Added an extreme-coordinate finite-gradient
+regression test. Fresh V2 restarts from seed611 with unchanged data, optimizer,
+response losses, selection rules and architecture dimensions.
+
+Validation: full suite17516696 **663 passed,4 skipped**, exit0; retained external
+V3.9 artifact prediction test **1 passed**. V2 frozen-input checks, eight
+architecture tests and GPU preflight pass. Training17516711 on one H200 has
+completed six epochs with finite updates and checkpoint saves. An epoch4
+validation spike recovered by epoch6; full history is retained. Final results
+remain pending. Source in `f8_signsym_20261026_v2/source_snapshot`; all V1
+failure logs, source, diagnostic batch and protocol are preserved separately.
+
+Label-stage17516601 completed calculations but failed its original absolute
+normal-matrix replay threshold (2.51e-10 maximum difference,1.44e-14 relative).
+Responses themselves agree within8e-15. Added
+`scripts/reuse_frozen_flow_labels.py`: recovery17516726 verified original
+hashes/domain/split, recorded regeneration differences, then copied the exact
+retained F8 model-independent banks. It passed. No label values or gate
+thresholds were altered. Cancelled predecessor dependencies are preserved in
+`jobs_initial.json`; refinement17516727 now depends on17516711 and17516726.
+All candidate-dependent references will be recomputed. One-shot status checks
+cover two hours, base termination, refinement startup and final termination.
+Details: [current V2 status](SYMMETRIC_FLOW_TRAINING.md#current-v2-status).
+Final startup check:17516711 reached NLL epoch32/140 with finite updates and
+improving validation loss; selected checkpoints are saving. Scoped whitespace,
+documentation anchors, shell syntax and Python compilation pass. Long training
+continues with the scheduled status checks; no final result claimed.
+
+## 2026-10-26 — Implement both-axis sign-symmetric F8 and launch fresh retraining
+
+Owner: "work on it, retrain the flow", with C8 unchanged. Added
+`sbsi/flow_sign_symmetric.py` and explicit factory/checkpoint support in
+`sbsi/measurement_model.py`: invariant affine conditioners, signed shape shifts,
+unchanged scalar shifts, radial disk/positive physical outputs and strict
+zero-centred shape preprocessing. This enforces independent e1/e2 reflection
+equivariance without folding or averaging density calls. Existing model types
+and V3.9 artifact identities are unchanged.
+
+Added seven substantive architecture tests in `tests/test_flow_sign_symmetric.py`,
+covering nonidentity weights, physical density/forward Jacobian and inverse,
+conditioning scores, all four sign actions including axis boundaries, optimizer
+updates, transport, preprocessing and checkpoint contracts. Initial targeted run:
+6 passed /1 failed because its fixture cast physical buffers to float32; fixed
+the fixture to cast only the neural base. Full Slurm suite17516571:
+**662 passed,4 skipped**, exit0. GPU real-context preflight: all reflection errors
+exactly zero; maximum inverse error7.16e-7 and logdet error3.54e-8.
+
+Added reproducible setup, frozen-input verification and GPU audit scripts plus
+`jobs/job_sign_symmetric_flow.sh`. Restored the retained F8 training source into
+an isolated, hashed study snapshot, with original uncut projected data,160/40
+case split, seed611,10 coupling layers and full NLL/guard/refinement recipe.
+Only symmetry architecture and compatible zero/RMS shape preprocessing change.
+No ConstGold training or checkpoint selection; original unmatched-pair accounting
+is retained. The old datasets/checkpoints and shared Python installation are
+unchanged; the study has its own environment.
+
+Study `sbsi_caches/f8_signsym_20261026_v1`: CPU labels17516601, base17516602,
+dependent refinement17516603. One H200 at a time,8 logical CPUs and96GiB RAM
+for GPU stages. Frozen source/artifact checks and initial density/gradient
+checks passed; labels are progressing and base is loading the full domain.
+See [recipe and evidence](SYMMETRIC_FLOW_TRAINING.md#launch-and-startup-evidence).
+Updated the earlier symmetry design to distinguish this launched candidate from
+the unimplemented joint-average wrapper. Final training results pending. C8 is
+unchanged, so symmetry of the complete usable-event likelihood is not guaranteed.
+Next: first-epoch monitoring, selected-checkpoint audits after base/refinement,
+and candidate-specific validation before any production adoption.
+Startup update: base17516602 failed in the first NLL epoch on a non-finite
+gradient norm after loading the complete domain; no selected epoch checkpoint.
+Dependent refinement17516603 cancelled automatically. Preserved all v1 inputs
+and outputs. Bounded diagnostic17516633 passed64 batches, then stopped as
+designed;17516641 had no failing batch to compare. Full-first-epoch diagnostic
+17516645 and dependent invariant-feature comparison17516647 are investigating
+optimizer stability. The CPU label stage remains independent. No numerical
+failure checks or scientific data/selection rules were weakened.
+
+## 2026-10-26 — Complete concurrency benchmark: 46 processes improve H200 throughput
+
+Updated [completed benchmark results](CONCURRENCY_BENCHMARK.md#completed-results).
+Job 17509905 completed eight phases in 1:15:41 on one H200 NVL, with all
+292 workers finishing and all 180 common-task numerical replays exact.
+Relative to repeated 30-process baselines, 46 processes improved bright
+throughput by 15.35% and faint throughput by 20.46%; 40 processes gave
+8.95% and 11.80%. Baseline drift was 0.063% / 0.258%. Both workloads select
+46 under the predeclared rule, with peak GPU memory 34.29 GiB.
+
+Validation: scheduler `sacct` reports COMPLETED / 0:0;
+`sha256sum -c BENCHMARK_SHA256SUMS` passes all four frozen inputs. Independent
+JSON audit recomputed baseline rates and speedups, checked worker/replay
+counts and all timing-window gates; maximum initial/invariant kernel errors
+were zero and maximum summary change 4.27e-14. Scoped documentation whitespace
+and link/anchor checks passed. Completion receipt 17509923 finished; cancelled
+redundant pending check 17509922. No production numerical code or defaults changed.
+
+Limits: 1024-step runs, one H200, zero shear; the shortest common interval
+was 33.77 seconds. Neither four-GPU scaling, convergence, mirror averaging,
+the bright second step nor 500-CPU utilization was tested. The measured
+memory footprint does not validate 46 processes on a 32 GiB V100. Next
+candidate is 46 processes / 48 logical CPUs per H200, with target-hardware
+and full-run validation before production adoption; do not relabel these
+rates as a measured end-to-end million-galaxy time.
+
+## 2026-10-26 — Freeze and submit the 30/40/46-process concurrency benchmark
+
+Owner requested a benchmark before increasing CPU concurrency. Added
+[benchmark protocol](CONCURRENCY_BENCHMARK.md#workloads-and-measurement) and
+submitted Slurm job17509655: one GPU,48 logical CPUs,320GiB, bright and faint
+workloads at30/40/46 processes with repeated30-process baselines. Study-local
+`galsbi_concurrency_20261026_v1/{plan.json,rule.md,benchmark.py,launch.sh}` and
+their SHA256 manifest pin the existing06727be image-study snapshot, observed
+reference, per-process seeds and fixed batches. No production code changed.
+
+The384-step timing runs report common post-warm-up throughput, complete phase
+time, GPU memory/utilization and exact replay of the common30 tasks. A larger
+concurrency needs at least10% speedup, at most10% baseline drift, exact replay
+and memory below90%; failures stop the job. Light reducer tests and shell/Python
+syntax checks passed. This does not test convergence, the symmetric model,
+four-GPU scaling or the nonzero-shear second step. Results pending; next steps
+are startup monitoring, per-phase audit and an evidence-based throughput report.
+Startup17509655 reached an H200 NVL but failed before sampling because the
+PyTorch UUID omitted nvidia-smi's GPU- prefix. Preserved that attempt's inputs,
+normalized the UUID prefix, rechecked syntax and resubmitted as17509685;
+scientific settings and gates are unchanged.
+The first384-step baseline then completed all30 workers with passing replay
+checks, but only17.2157seconds of common post-warm-up timing overlap. Stopped
+17509685; preserved v1 outputs. Before any valid comparison, froze v2 with
+1024 steps (same128 warm-up, workloads, seeds and gates) and immediate stop
+on an invalid timing window. Job17509905 runs on the same H200 NVL node;
+one-shot CPU checks17509922/17509923 record the two-hour and final status.
+Startup17509905: all30 initial replay errors0; all workers reached sampling
+(steps52–256/1024 observed). H200 NVL, driver580.178.04, PyTorch2.9.1+cu126.
+No speedup accepted yet. Scoped whitespace and local doc-anchor checks pass.
+
+## 2026-10-26 — Branch model-symmetry work and specify a consistent reflected model
+
+Owner requested a copy/new branch and how to make the model symmetric. Created
+`codex/model-symmetry` in a separate `model-symmetry` worktree from the clean
+`sampler-recipe` commit `d7d3a4015818bfa04c860cda1f6483609e8e56e1`.
+Added [model symmetry design](MODEL_SYMMETRY.md#recommended-first-candidate-exact-reflection-of-the-joint-kernel):
+average complete usable-event kernels under reflection, derive the matching
+C8 probability, q-weighted conditional flow and parent-level generator, and
+use the same model in selection normalization. The note traces scalar disk
+response invariance, physical-coordinate preprocessing, the log-gap density
+path, a possible square-image symmetry extension, and validation order.
+
+The baseline code, pinned V3.9 artifacts, defaults and prior remain unchanged;
+this is a design, not an implemented or validated symmetry repair. No science
+jobs were submitted. Validation: base branch identity and clean source tree
+checked; scoped whitespace and local Markdown-link/anchor checks passed.
+Next: implement the joint adapter and test kernel/generator/selection
+consistency before a frozen candidate comparison on image measurements.
+
 ## 2026-10-26 — Repository cleanup: stale scripts, side worktrees and branches
 
 Owner: "clean up the repo first: scripts, worktrees and branches". Before any removal, everything was saved as
