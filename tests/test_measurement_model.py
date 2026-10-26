@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pytest
 import torch
 
 from sbsi.measurement_model import (
@@ -7,11 +8,36 @@ from sbsi.measurement_model import (
     ConditionalMeanFlow,
     ConditionalMeanFlowRA,
     MEASUREMENT_CONDITION_FEATURE_SETS,
+    MeasurementModelBundle,
     TargetStandardizer,
     add_measurement_target_features,
     build_flow,
     raw_columns_for_measurement_targets,
 )
+
+
+def test_bundle_compiles_the_named_log_prob_method(monkeypatch):
+    model = ConditionalAffineFlow(target_dim=2, context_dim=2, hidden_dim=4, n_layers=1, n_flows=1)
+    bundle = MeasurementModelBundle(model, None, None)
+    calls = []
+
+    def fake_compile(function, **kwargs):
+        calls.append(kwargs)
+
+        def wrapped(*args, **inner_kwargs):
+            return function(*args, **inner_kwargs)
+
+        return wrapped
+
+    monkeypatch.setattr(torch, "compile", fake_compile)
+    bundle.compile_log_prob(mode=None, dynamic=True)
+    value = bundle.model.log_prob(torch.zeros(3, 2), torch.zeros(3, 2))
+    assert value.shape == (3,)
+    assert calls == [{"mode": None, "dynamic": True}]
+    assert bundle.compile_log_prob(mode=None, dynamic=True) is bundle
+    assert len(calls) == 1
+    with pytest.raises(RuntimeError, match="different configuration"):
+        bundle.compile_log_prob(mode="reduce-overhead", dynamic=True)
 
 
 def test_rblend_ablation_appends_one_condition_feature():
@@ -22,13 +48,15 @@ def test_rblend_ablation_appends_one_condition_feature():
 
 
 def test_measurement_target_features_are_finite_spin2_shape():
-    frame = pd.DataFrame({
-        "measured_flux_auto": [10.0],
-        "measured_flux_radius": [2.0],
-        "measured_a_image": [3.0],
-        "measured_b_image": [1.0],
-        "measured_theta_image": [0.0],
-    })
+    frame = pd.DataFrame(
+        {
+            "measured_flux_auto": [10.0],
+            "measured_flux_radius": [2.0],
+            "measured_a_image": [3.0],
+            "measured_b_image": [1.0],
+            "measured_theta_image": [0.0],
+        }
+    )
 
     out = add_measurement_target_features(frame)
 
@@ -39,10 +67,12 @@ def test_measurement_target_features_are_finite_spin2_shape():
 
 
 def test_raw_columns_for_engineered_measurement_targets():
-    columns = raw_columns_for_measurement_targets([
-        "measured_log_flux_auto",
-        "measured_e1_image",
-    ])
+    columns = raw_columns_for_measurement_targets(
+        [
+            "measured_log_flux_auto",
+            "measured_e1_image",
+        ]
+    )
 
     assert columns == {
         "measured_flux_auto",
@@ -53,10 +83,12 @@ def test_raw_columns_for_engineered_measurement_targets():
 
 
 def test_target_standardizer_round_trips():
-    frame = pd.DataFrame({
-        "a": [1.0, 2.0, 3.0],
-        "b": [2.0, 4.0, 6.0],
-    })
+    frame = pd.DataFrame(
+        {
+            "a": [1.0, 2.0, 3.0],
+            "b": [2.0, 4.0, 6.0],
+        }
+    )
 
     transform = TargetStandardizer.fit(frame, ["a", "b"])
     scaled = transform.transform_frame(frame)
@@ -92,8 +124,16 @@ def test_conditional_affine_flow_inverse_and_log_prob_are_finite():
 # ConditionalMeanFlow / ConditionalMeanFlowRA (realisation-aware head)
 # ---------------------------------------------------------------------------
 
-_RA_KW = dict(target_dim=4, context_dim=5, base_flow="affine", mean_hidden=8,
-              hidden_dim=8, n_layers=1, n_flows=4, flow_drop_indices=(0, 1))
+_RA_KW = dict(
+    target_dim=4,
+    context_dim=5,
+    base_flow="affine",
+    mean_hidden=8,
+    hidden_dim=8,
+    n_layers=1,
+    n_flows=4,
+    flow_drop_indices=(0, 1),
+)
 
 
 def _make_ra_pair(seed=11, ra_hidden=6):
@@ -148,7 +188,7 @@ def test_ra_head_sample_round_trips_through_closed_form_inverse():
     ctx = context[:, None, :].expand(6, 3, 5).reshape(-1, 5)
 
     resid = x - ra._mu(ctx)
-    z = resid - ra._A(ctx, resid.index_select(-1, ra.ra_indices))          # forward (log_prob) map
+    z = resid - ra._A(ctx, resid.index_select(-1, ra.ra_indices))  # forward (log_prob) map
     back = z + ra._A(ctx, z.index_select(-1, ra.ra_indices)) + ra._mu(ctx)  # closed-form inverse
     torch.testing.assert_close(back, x, rtol=1.0e-5, atol=1.0e-6)
 
@@ -165,7 +205,7 @@ def test_ra_head_gives_per_draw_response_variation():
             p.normal_(0.0, 0.4)
     c0 = torch.randn(4, 5)
     c1 = c0.clone()
-    c1[:, 0] += 0.05          # shift the (flow-blind) shape context columns
+    c1[:, 0] += 0.05  # shift the (flow-blind) shape context columns
     c1[:, 1] -= 0.03
 
     def crn(model):
@@ -177,8 +217,8 @@ def test_ra_head_gives_per_draw_response_variation():
 
     d_plain = crn(plain)
     d_ra = crn(ra)
-    assert float(d_plain.std(dim=1).max()) < 1.0e-6      # realisation-blind: no per-draw spread
-    assert float(d_ra.std(dim=1).min()) > 1.0e-6         # realisation-aware: it varies
+    assert float(d_plain.std(dim=1).max().detach()) < 1.0e-6  # realisation-blind
+    assert float(d_ra.std(dim=1).min().detach()) > 1.0e-6  # realisation-aware
 
 
 def test_flow_context_is_blind_to_the_shifted_shape_columns():
@@ -221,9 +261,18 @@ def test_ra_head_rejects_overlapping_read_and_write_channels():
 
 
 def test_build_flow_dispatches_the_realisation_aware_type():
-    cfg = dict(flow_type="mean_affine_ra", target_dim=4, context_dim=5, mean_hidden=8,
-               hidden_dim=8, n_layers=1, n_flows=4, ra_hidden=6,
-               ra_indices=[2, 3], ra_targets=[0, 1])
+    cfg = dict(
+        flow_type="mean_affine_ra",
+        target_dim=4,
+        context_dim=5,
+        mean_hidden=8,
+        hidden_dim=8,
+        n_layers=1,
+        n_flows=4,
+        ra_hidden=6,
+        ra_indices=[2, 3],
+        ra_targets=[0, 1],
+    )
     model = build_flow(cfg)
     assert isinstance(model, ConditionalMeanFlowRA)
-    assert float(model.ra_net[-1].weight.abs().sum()) == 0.0
+    assert float(model.ra_net[-1].weight.abs().sum().detach()) == 0.0

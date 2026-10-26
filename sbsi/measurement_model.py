@@ -524,6 +524,71 @@ class MeasurementModelBundle:
         targets = self.target_transform.transform_frame(frame)
         return torch.as_tensor(targets, dtype=torch.float32, device=self.device)
 
+    def context_tensor(self, frame):
+        """Return standardized flow conditions on the bundle device.
+
+        Catalogue inference uses this lower-level interface to transform a
+        model view once, keep it resident on the accelerator, and gather rows
+        without rebuilding a pandas frame for every atom block.
+        """
+
+        return self._context_from_frame(frame)
+
+    def target_tensor(self, frame):
+        """Return standardized measurement targets on the bundle device."""
+
+        return self._targets_from_frame(frame)
+
+    def compile_log_prob(self, *, mode=None, dynamic=True):
+        """Compile the named density hot path used by catalogue inference.
+
+        ``torch.compile(module)`` only intercepts ``module(...)``.  SBSI calls
+        ``model.log_prob(...)`` directly, so compiling the module itself is a silent
+        no-op for inference.  This method intentionally compiles that bound method and
+        leaves sampling eager.  Repeating the same request is harmless; changing the
+        compilation contract on an already-compiled bundle is rejected.
+        """
+
+        requested = (mode, bool(dynamic))
+        existing = getattr(self, "_compiled_log_prob_config", None)
+        if existing is not None:
+            if existing != requested:
+                raise RuntimeError(
+                    "measurement log_prob is already compiled with a different configuration"
+                )
+            return self
+        if not hasattr(torch, "compile"):
+            raise RuntimeError("this PyTorch build does not provide torch.compile")
+        self.model.log_prob = torch.compile(
+            self.model.log_prob,
+            mode=mode,
+            dynamic=bool(dynamic),
+        )
+        self._compiled_log_prob_config = requested
+        return self
+
+    def log_prob_tensor(self, target, context, *, batch_size=65536):
+        """Evaluate standardized tensors without a host round trip.
+
+        Unlike :meth:`log_prob`, this method deliberately leaves the result on
+        the device and does not disable autograd.  Callers control graph
+        construction with their surrounding ``torch.no_grad`` context.
+        """
+
+        if target.ndim != 2 or context.ndim != 2 or len(target) != len(context):
+            raise ValueError("target and context must be aligned matrices")
+        if target.device != context.device or target.device.type != self.device.type:
+            raise ValueError("target and context must be on the bundle device")
+        if batch_size <= 0:
+            raise ValueError("batch_size must be positive")
+        values = []
+        for start in range(0, len(target), batch_size):
+            stop = min(start + batch_size, len(target))
+            values.append(self.model.log_prob(target[start:stop], context[start:stop]))
+        if values:
+            return torch.cat(values)
+        return torch.empty(0, dtype=target.dtype, device=target.device)
+
     @torch.no_grad()
     def log_prob(self, frame, batch_size=65536):
         values = []
@@ -842,6 +907,7 @@ def build_flow(model_config):
     # It does not affect the density architecture.
     cfg.pop("response_difference", None)
     cfg.pop("response_error", None)
+    cfg.pop("response_components", None)
     # The OTHER half of the swallow trap: RA keys on a NON-RA flow_type. Those would be eaten by
     # the same **kwargs chain and the model would be built with NO realisation-aware head at all
     # -- the failure mode this whole design is trying to make impossible.

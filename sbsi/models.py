@@ -1,6 +1,6 @@
 """Optional named references to external SBSI model artifacts.
 
-The SBSI workflow is model-name agnostic.  V3 and V3b are convenience path
+The SBSI workflow is model-name agnostic.  V3.1 and V3.2 are convenience path
 presets only; no training, catalogue selection, response logic, or inference
 behavior branches on these names.
 """
@@ -11,24 +11,26 @@ import os
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
-from typing import Dict, Iterable, Optional, Tuple
+from typing import Optional, Tuple
 
-from .blendemu_checkout import import_blendemu
 from .paths import RELEASE_MODELS_ROOT
 
 
-SHAPE_SEEDS: Tuple[int, ...] = (501, 502, 503, *range(505, 518))
+V31_SEEDS: Tuple[int, ...] = (501, 502, 503, 504)
+V32_SEEDS: Tuple[int, ...] = V31_SEEDS
 
 
 @dataclass(frozen=True)
 class ModelPaths:
-    """Paths for one trained flow ensemble and its companion emulator."""
+    """Paths for one trained flow ensemble and its companion models."""
 
     flow_checkpoints: Tuple[Path, ...]
     emulator_model: Optional[Path] = None
     emulator_metadata: Optional[Path] = None
+    detection_classifier: Optional[Path] = None
     name: Optional[str] = None
     emulator_sha256: Optional[str] = None
+    detection_classifier_sha256: Optional[str] = None
 
     def __post_init__(self):
         object.__setattr__(
@@ -38,6 +40,10 @@ class ModelPaths:
             object.__setattr__(self, "emulator_model", Path(self.emulator_model))
         if self.emulator_metadata is not None:
             object.__setattr__(self, "emulator_metadata", Path(self.emulator_metadata))
+        if self.detection_classifier is not None:
+            object.__setattr__(
+                self, "detection_classifier", Path(self.detection_classifier)
+            )
         if not self.flow_checkpoints:
             raise ValueError("at least one flow checkpoint is required")
 
@@ -47,6 +53,11 @@ class ModelPaths:
             missing.append(self.emulator_model)
         if self.emulator_metadata is not None and not self.emulator_metadata.is_file():
             missing.append(self.emulator_metadata)
+        if (
+            self.detection_classifier is not None
+            and not self.detection_classifier.is_file()
+        ):
+            missing.append(self.detection_classifier)
         if missing:
             rendered = "\n  ".join(str(path) for path in missing)
             raise FileNotFoundError(f"missing model artifacts:\n  {rendered}")
@@ -59,6 +70,17 @@ class ModelPaths:
             if actual != self.emulator_sha256:
                 raise RuntimeError(
                     f"emulator hash mismatch: expected {self.emulator_sha256}, found {actual}"
+                )
+        if (
+            verify_emulator_hash
+            and self.detection_classifier is not None
+            and self.detection_classifier_sha256 is not None
+        ):
+            actual = _file_sha256(self.detection_classifier)
+            if actual != self.detection_classifier_sha256:
+                raise RuntimeError(
+                    "detection-classifier hash mismatch: expected "
+                    f"{self.detection_classifier_sha256}, found {actual}"
                 )
 
 
@@ -82,15 +104,17 @@ def _root(variable: str, default: Path) -> Path:
 
 
 _CACHE_ROOT = _root("SBSI_CACHE_DIR", RELEASE_MODELS_ROOT)
-_FLOW_ROOT = _CACHE_ROOT / "ablation"
 _EMU_ROOT = _CACHE_ROOT / "derisk"
+_MIXED_SHEAR_ROOT = _CACHE_ROOT / "mixed_shear_cde"
+_DETECTION_ROOT = _CACHE_ROOT / "detection_classifier_transition_lambda1_v1" / "models"
 _BLENDEMU_MODELS = _root("BLENDEMU_MODELS", RELEASE_MODELS_ROOT / "blendemu")
 
-V3 = ModelPaths(
-    name="V3",
+V31 = ModelPaths(
+    name="V3.1",
     flow_checkpoints=tuple(
-        _FLOW_ROOT / f"measurement_flow_g0_ngmix_ablate_s2c_lt500_v22_s{seed}_swaavg.pt"
-        for seed in SHAPE_SEEDS
+        _MIXED_SHEAR_ROOT
+        / f"measurement_flow_mixed_g0_g005_E_s{seed}_swaavg.pt"
+        for seed in V31_SEEDS
     ),
     emulator_model=(
         _EMU_ROOT / "v22_reweighted_vector_optuna30_all40_v1/best_weighted_model.json"
@@ -99,20 +123,28 @@ V3 = ModelPaths(
     emulator_sha256="01decd1335ce1c23aac1ef6ba055ae01c3950e47c4046345dcb6a1813033c21f",
 )
 
-V3B = ModelPaths(
-    name="V3b",
+V32 = ModelPaths(
+    name="V3.2",
     flow_checkpoints=tuple(
-        _FLOW_ROOT / f"measurement_flow_g0_ngmix_ablate_s2c_lt500_dom6x6_s{seed}_swaavg.pt"
-        for seed in SHAPE_SEEDS
+        _MIXED_SHEAR_ROOT
+        / f"measurement_flow_mixed_g0_g005_E_s{seed}_swaavg.pt"
+        for seed in V32_SEEDS
     ),
-    emulator_model=_EMU_ROOT / "v2_reweighted_vector_fixed_v1/weighted_model.json",
-    emulator_metadata=(
-        _BLENDEMU_MODELS / "emulator_metadata_lsst_r_extnbr_indom_tuned.json"
+    emulator_model=(
+        _EMU_ROOT / "v22_reweighted_vector_optuna30_all40_v1/best_weighted_model.json"
     ),
-    emulator_sha256="3cf70b6e74ad382f3ec59c6e8a2d0a5b9b0615d4c4677c7a71dd2344cbf35553",
+    emulator_metadata=_BLENDEMU_MODELS / "emulator_metadata_lsst_r_extnbr_v22.json",
+    detection_classifier=_DETECTION_ROOT / "transition_aware.pt",
+    emulator_sha256="01decd1335ce1c23aac1ef6ba055ae01c3950e47c4046345dcb6a1813033c21f",
+    detection_classifier_sha256=(
+        "9966cfbc191f11b049bf7419dbdb45d65d1262428889a91bb3c9caf928703455"
+    ),
 )
 
-MODEL_PRESETS: Dict[str, ModelPaths] = {"V3": V3, "V3b": V3B}
+MODEL_PRESETS: dict[str, ModelPaths] = {
+    "V3.1": V31,
+    "V3.2": V32,
+}
 
 
 def get_model(name: str) -> ModelPaths:
@@ -124,11 +156,6 @@ def get_model(name: str) -> ModelPaths:
             return model
     choices = ", ".join(MODEL_PRESETS)
     raise KeyError(f"unknown model preset {name!r}; choose one of: {choices}")
-
-
-def validate_models(names: Iterable[str] = ("V3", "V3b")) -> None:
-    for name in names:
-        get_model(name).validate()
 
 
 def load_emulator(
@@ -153,8 +180,17 @@ def load_emulator(
             "Presets use the checkout's models/ directory by default. Override external "
             "stores with SBSI_CACHE_DIR and BLENDEMU_MODELS."
         )
-    blendemu = import_blendemu()
-    BlendingPredictor = blendemu.BlendingPredictor
+    try:
+        from blendemu import BlendingPredictor
+    except ImportError as error:
+        if isinstance(error, ModuleNotFoundError) and error.name not in {None, "blendemu"}:
+            raise
+        raise ImportError(
+            "BlendEMU is not installed correctly in this Python environment. Install its "
+            "checkout editable (`python -m pip install --config-settings "
+            "editable_mode=compat -e /path/to/blendemu`) and restart "
+            "the Python process or notebook kernel."
+        ) from error
 
     return BlendingPredictor.load(
         model_dir=str(models.emulator_metadata.parent),
@@ -168,13 +204,33 @@ def load_emulator(
     )
 
 
+def load_detection_classifier(models: ModelPaths, *, device: str = "cpu"):
+    """Load a preset's explicit SBSI detection classifier."""
+
+    if models.detection_classifier is None:
+        raise ValueError("detection_classifier path is required")
+    if not models.detection_classifier.is_file():
+        raise FileNotFoundError(models.detection_classifier)
+    if models.detection_classifier_sha256 is not None:
+        actual = _file_sha256(models.detection_classifier)
+        if actual != models.detection_classifier_sha256:
+            raise RuntimeError(
+                "detection-classifier hash mismatch: expected "
+                f"{models.detection_classifier_sha256}, found {actual}"
+            )
+    from .selection_model import load_selection_model
+
+    return load_selection_model(models.detection_classifier, device=device)
+
+
 __all__ = [
     "MODEL_PRESETS",
     "ModelPaths",
-    "SHAPE_SEEDS",
-    "V3",
-    "V3B",
+    "V31_SEEDS",
+    "V32_SEEDS",
+    "V31",
+    "V32",
     "get_model",
+    "load_detection_classifier",
     "load_emulator",
-    "validate_models",
 ]

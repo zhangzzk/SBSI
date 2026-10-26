@@ -14,6 +14,7 @@ from .models import MODEL_PRESETS, get_model
 
 
 _FLOW_PATH_FIELDS = {"catalogue", "output", "response_target", "coupling_target"}
+_FLOW_PATH_SEQUENCE_FIELDS = {"additional_catalogues"}
 
 
 def _model_payload(model):
@@ -24,7 +25,13 @@ def _model_payload(model):
         "emulator_metadata": (
             None if model.emulator_metadata is None else str(model.emulator_metadata)
         ),
+        "detection_classifier": (
+            None
+            if model.detection_classifier is None
+            else str(model.detection_classifier)
+        ),
         "emulator_sha256": model.emulator_sha256,
+        "detection_classifier_sha256": model.detection_classifier_sha256,
     }
 
 
@@ -54,7 +61,13 @@ def _flow_config(payload: Mapping[str, Any]) -> FlowTrainingConfig:
 
     values = dict(payload)
     for name in _FLOW_PATH_FIELDS & values.keys():
-        values[name] = Path(values[name]).expanduser()
+        if values[name] is not None:
+            values[name] = Path(values[name]).expanduser()
+    for name in _FLOW_PATH_SEQUENCE_FIELDS & values.keys():
+        paths = values[name]
+        if not isinstance(paths, (list, tuple)):
+            raise TypeError(f"training.{name} must be a sequence of paths")
+        values[name] = tuple(Path(path).expanduser() for path in paths)
     if "extra_arguments" in values:
         extra = values["extra_arguments"]
         if not isinstance(extra, (list, tuple)) or not all(isinstance(item, str) for item in extra):
@@ -81,7 +94,13 @@ def _candidate_overrides(payload: Any) -> list[dict[str, Any]]:
             raise ValueError(f"unknown options in tuning candidate {index}: {unknown}")
         candidate = dict(item)
         for name in _FLOW_PATH_FIELDS & candidate.keys():
-            candidate[name] = Path(candidate[name]).expanduser()
+            if candidate[name] is not None:
+                candidate[name] = Path(candidate[name]).expanduser()
+        for name in _FLOW_PATH_SEQUENCE_FIELDS & candidate.keys():
+            paths = candidate[name]
+            if not isinstance(paths, (list, tuple)):
+                raise TypeError(f"tuning candidate {index} {name} must be a sequence of paths")
+            candidate[name] = tuple(Path(path).expanduser() for path in paths)
         if "extra_arguments" in candidate:
             extra = candidate["extra_arguments"]
             if not isinstance(extra, (list, tuple)) or not all(
@@ -112,7 +131,9 @@ def _load_callable(reference: str) -> Callable:
 def _json_ready_config(config: FlowTrainingConfig) -> dict[str, Any]:
     payload = asdict(config)
     for name in _FLOW_PATH_FIELDS:
-        payload[name] = str(payload[name])
+        payload[name] = None if payload[name] is None else str(payload[name])
+    for name in _FLOW_PATH_SEQUENCE_FIELDS:
+        payload[name] = [str(path) for path in payload[name]]
     payload["extra_arguments"] = list(payload["extra_arguments"])
     return payload
 
@@ -200,7 +221,7 @@ def main(argv=None) -> int:
         for name in args.names:
             model = get_model(name)
             model.validate()
-            print(f"{model.name}: model paths and emulator hash OK")
+            print(f"{model.name}: model artifact paths and pinned hashes OK")
         return 0
     return args.handler(args)
 
