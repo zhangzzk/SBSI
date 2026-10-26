@@ -91,6 +91,33 @@ def setup_target(n=1, *, shear=(.02, .001)):
     return target, state
 
 
+@pytest.mark.parametrize('beta', [.001, .4, 1.])
+def test_frozen_geometry_uses_symmetric_increments_and_periodic_phase(monkeypatch, beta):
+    target, old = setup_target(n=3)
+    increment = np.tile([.002, -.003, .004, -.005, 2*np.pi+.006], (3, 1))
+
+    class Geometry:
+        def increments(self, owner, called_beta, rng):
+            np.testing.assert_array_equal(owner, target.owner)
+            assert called_beta == beta
+            return increment.copy()
+
+    target.physical_geometry = Geometry()
+    x = old.x.copy()
+    x[:, [1, 6, 7, 8, 9]] += increment
+    x[:, 9] %= 2*np.pi
+    expected = target.evaluate(x, old.scene)
+    ratios = []
+    monkeypatch.setattr(particle_module, 'metropolis_accept',
+        lambda a, b, u: ratios.append(b-a) or np.ones(len(a), dtype=bool))
+    moved, accepted, _ = target.mutate(old, beta, PrescribedRNG(), block='physical')
+    assert accepted.all()
+    np.testing.assert_array_equal(moved.x, x)
+    np.testing.assert_allclose(ratios[0],
+        bridge_log_density(expected.log_prior, expected.log_kernel, expected.log_proposal, beta)
+        -bridge_log_density(old.log_prior, old.log_kernel, old.log_proposal, beta), rtol=0, atol=1e-12)
+
+
 @pytest.mark.parametrize('beta', [0., .001, .4, 1.])
 def test_bridge_endpoints_and_zero_target_support(beta):
     lp = np.array([-.7, -np.inf, -.8])

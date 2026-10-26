@@ -58,7 +58,8 @@ class ParticleScenes:
 
 class GalSBIParticleTarget:
     def __init__(self, prior, coordinates, likelihood, response_model,
-                 angular_distance, conditions, observations, proposals, owner, shear):
+                 angular_distance, conditions, observations, proposals, owner, shear,
+                 physical_geometry=None):
         self.prior, self.coordinates, self.likelihood = prior, coordinates, likelihood
         self.response_model, self.angular_distance = response_model, angular_distance
         self.conditions, self.observations = conditions, observations
@@ -66,6 +67,7 @@ class GalSBIParticleTarget:
         self.observed = observations.iloc[self.owner].reset_index(drop=True)
         self.auxiliary = self.observed.iloc[:, 2:4].to_numpy()
         self.shear = np.asarray(shear, float)
+        self.physical_geometry = physical_geometry
         self.lazy_response = bool(np.all(self.shear == 0))
         self.audit = dict(likelihood_calls=0, likelihood_rows=0, nuisance_replay_max=0.,
                           summary_replay_max=0., nuisance_checks=0)
@@ -160,7 +162,10 @@ class GalSBIParticleTarget:
         temperature_scale = min(4., 1/np.sqrt(max(beta, .01)))
         if block == 'physical':
             columns, widths = [1, 6, 7, 8, 9], np.array([.08, .08, .2, .2, .2])
-            x[:, columns] += rng.normal(size=(len(x), 5))*widths*scale*temperature_scale
+            if self.physical_geometry is None:
+                x[:, columns] += rng.normal(size=(len(x), 5))*widths*scale*temperature_scale
+            else:
+                x[:, columns] += self.physical_geometry.increments(self.owner, beta, rng)*scale
             x[:, 9] %= 2*np.pi
         elif block == 'nuisance':
             columns = [0, 2, 3, 4, 5]
@@ -179,7 +184,7 @@ class GalSBIParticleTarget:
             scene = self.prior.refresh(scene, fraction, int(rng.integers(0, 2**63)))
         elif block == 'positions':
             scene = self.prior.move_positions(scene, .2*scale, int(rng.integers(0, 2**63)))
-        elif block == 'exchange':
+        elif block in ('exchange', 'exchange_relocate'):
             # p(type|x) is undefined outside p support, which q0 can visit at
             # beta=0. Use a null exchange there; the symmetric support gate
             # leaves the bridge invariant and other kernels can enter support.
@@ -187,16 +192,22 @@ class GalSBIParticleTarget:
             active = np.zeros(len(x), dtype=bool)
             native_ratio = np.zeros(len(x))
             if len(rows):
+                relocation = (dict(relocation_scale=.1, aperture_arcsec=self.prior.aperture_arcsec,
+                                   central_weight=.9) if block == 'exchange_relocate' else {})
                 swapped, native_ratio[rows], active[rows] = propose_native_exchange(
                     self.prior.galaxy, scene.take(rows), state.type_probability[rows],
-                    rng, radius_scale=1.)
+                    rng, radius_scale=1., **relocation)
                 targets = {k: v.copy() for k, v in scene.targets.items()}
                 neighbours = {k: v.copy() for k, v in scene.neighbours.items()}
                 selected_neighbours = np.isin(scene.owner, rows)
                 for key in targets:
                     targets[key][rows] = swapped.targets[key]
                     neighbours[key][selected_neighbours] = swapped.neighbours[key]
-                scene = GalSBISceneBatch(targets, neighbours, scene.indptr, scene.offset_arcsec)
+                offsets = scene.offset_arcsec
+                if block == 'exchange_relocate':
+                    offsets = offsets.copy()
+                    offsets[selected_neighbours] = swapped.offset_arcsec
+                scene = GalSBISceneBatch(targets, neighbours, scene.indptr, offsets)
                 x[rows] = self.coordinates.encode(swapped.targets)
         elif block == 'independence':
             for i, proposal in enumerate(self.proposals):
@@ -207,7 +218,7 @@ class GalSBIParticleTarget:
             raise ValueError('unknown particle mutation block')
         reuse = state if block in ('nuisance', 'sed') else None
         proposed = self.evaluate(x, scene, reuse=reuse)
-        if block == 'exchange':
+        if block in ('exchange', 'exchange_relocate'):
             hastings[:] = -np.inf
             valid = np.isfinite(proposed.log_prior) & np.isfinite(native_ratio)
             hastings[valid] = native_ratio[valid]-(proposed.log_prior[valid]-state.log_prior[valid])
@@ -228,7 +239,7 @@ class GalSBIParticleTarget:
         new_density = bridge_log_density(proposed.log_prior, proposed.log_kernel, proposed.log_proposal, beta)
         accepted = metropolis_accept(old_density, new_density+hastings,
             rng.uniform(np.finfo(float).tiny, 1., len(x))) & active
-        if block in ('environment', 'positions', 'exchange'):
+        if block in ('environment', 'positions', 'exchange', 'exchange_relocate'):
             new_scene = state.scene.retained(proposed.scene, accepted)
         else:
             new_scene = GalSBISceneBatch(

@@ -1,5 +1,37 @@
 # Work log
 
+## 2026-10-21 — Optional native mark exchange with neighbour relocation
+
+- Arbor n7 implementation in isolated branch `codex/smc-relocation-20261021`:
+  `sbsi/scene_exchange.py` adds optional `relocation_scale`, `aperture_arcsec`
+  and `central_weight` arguments. The selected neighbour is relocated using
+  an exactly normalized mixture of a central isotropic Gaussian truncated to
+  the aperture and a uniform disk. Sampling uses the radial inverse CDF;
+  no retries or clipped proposal law are used.
+- The returned native correction includes both the reverse/forward position
+  density and the changed neighbour-index selection probability. The original
+  uniform spatial population prior is retained. Disabled relocation reproduces
+  the previous outputs and RNG state bitwise.
+- Validation: Slurm CPU job 17418819 passed all 63 cases in 13.38 seconds:
+  `py31 -m pytest tests/test_scene_exchange_relocation.py
+  tests/test_scene_exchange.py tests/test_galsbi_particle_target.py -q`.
+  The 25 new cases cover normalization, radial CDF, exact inverse draws,
+  native/type/Jacobian probability flux at beta 0, 0.001, 0.4 and 1, reverse
+  moves, ragged-state retention, old spatial support and default replay.
+  The one warning is the existing NumPy scalar-conversion deprecation in
+  `tests/test_scene_exchange.py`.
+- Scope: no target module, sampler default or model identity is changed;
+  no GPU or efficiency experiment was run. Integration must retain the
+  returned neighbour offsets as well as its marks before a separate pilot.
+- Caller integration supplement: copied the coordinator's wired target module
+  unchanged (SHA-256 `9d2b091267335579bd8155180698e9dc7311fb3937cbcc87e281bb219dfa7387`)
+  and added `tests/test_particle_relocation_integration.py`. Its 11 cases use
+  the real proposal, matched RNG seeds, a position-sensitive likelihood,
+  forced accepted/rejected particles and off-support subset rows. Slurm CPU
+  job 17418889 passed all 77 scene, target, relocation and caller tests in
+  24.56 seconds, with the same pre-existing warning. The caller keeps the
+  relocated offsets in both its evaluated likelihood and retained payload.
+
 ## 2026-10-20 — 1M pair c2, measurement-only true-parameter test: measurement side cleared for the positive c2 (21–25.8: −2.96 ± 1.11e-4)
 
 Owner: "go on" (step 1 of the proposed plan). Pre-declared in `galsbi_pair1m_20261012/debug/rule_measoracle.md`
