@@ -1,5 +1,27 @@
 # Work log
 
+## 2026-10-21 — Independent annealed-particle target audit
+
+- Audited `sbsi/galsbi_particle_target.py` in isolated branch
+  `codex/smc-target-audit-20261021`. Added `tests/test_galsbi_particle_target.py`
+  with independent forward/reverse probability-flux checks for the native
+  target/neighbour exchange at beta 0, 0.001, 0.4 and 1, including the
+  numerical environment density, auxiliary type law and coordinate Jacobian.
+- Repaired zero-weight proposal bookkeeping: reject analytically impossible
+  redshifts before external photometry/cosmology calls while retaining original
+  proposal coordinates and density; evaluate previously absent likelihood
+  caches when a proposal enters support; use null exchange/SED kernels where
+  their conditional laws are undefined. Cache replay now detects finite versus
+  zero likelihood mismatches. Resampling ownership requirements are documented.
+- Validation: final Slurm CPU job 17418402 passed all 34 tests in 21.02 seconds,
+  including strict photometry-domain, cache replay, SED support and
+  intermediate-beta Hastings regressions. Earlier jobs 17418337 and 17418387
+  passed their 23-case and 28-case subsets.
+  Command: `py31 -m pytest tests/test_galsbi_particle_target.py -q`.
+- Scope: measure/implementation tests only. No trained-model convergence or
+  sampling-efficiency claim. Root coordinator will run the integrated full
+  suite and independent scheduled GPU pilots before promotion.
+
 ## 2026-10-20 — 1M pair c2, measurement-only true-parameter test: measurement side cleared for the positive c2 (21–25.8: −2.96 ± 1.11e-4)
 
 Owner: "go on" (step 1 of the proposed plan). Pre-declared in `galsbi_pair1m_20261012/debug/rule_measoracle.md`
