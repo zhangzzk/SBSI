@@ -1,5 +1,23 @@
 # Work log
 
+## 2026-10-26 — Mirror test of the image-sim c2 launched (owner: "try that")
+
+`galsbi_constgold100k_20261025/rule.md` amendment 2, written before any mirror chain. It tests whether
+c2 = +0.00406 ± 0.00134 comes from the models (F8/C8 not mirror-symmetric) or from the image data.
+- `reference_mirror` is the same 99,932 galaxies with measured e2 → −e2 (`prepare_mirror.py`; all other columns
+  are asserted unchanged).
+- C1m uses the same units and seeds as C1 (common random numbers) on 4 GPUs (workers 17497723–6, all 105 units
+  started at once).
+- Chain job 17497747 then runs `estimate.py c1m`, the C2m worker at the rounded C1m shear, `estimate.py c2m` and
+  `mirror_pair.py`.
+- The pair P = (Σ I_o + Σ I_m)^-1 Σ(v_o + v_m) keeps the models' part of g2. The half difference (g_o − g_m)/2
+  keeps the data part. Errors come from a paired bootstrap over source cases.
+- The verdict rule is fixed in the amendment. The prediction from the mean-e2 check is "models".
+
+Code changes, all study-local:
+- `worker.sh` takes `REF` (default reference).
+- `estimate.py` adds mirror stages c1m/c2m, asserts each unit's reference, and writes `<stage>/pergal.npz`.
+  Re-running `estimate.py c2` (17497727) reproduced g = (0.01930 ± 0.00140, 0.00406 ± 0.00134) exactly.
 ## 2026-10-26 — 100k ConstGold image-sim result: m −3.49% ± 7.00%, c2 +0.00406 ± 0.00134 (3.0σ, at the failure line)
 
 `galsbi_constgold100k_20261025/rule.md` §Result. C2 (job 17497448, 30/30 units, 1 V100, about 70 min) reran the
