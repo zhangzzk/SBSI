@@ -302,6 +302,53 @@ def fit_joint(flow: np.ndarray, components: np.ndarray, residual: np.ndarray,
     return result
 
 
+def blend_terms(rblend: list[str], blend_column: list[str] | None) -> dict:
+    """Resolve the blending terms and where each one is read from.
+
+    Two shapes.  Without ``--blend-column`` each ``--rblend`` arm is a separate
+    blending MODEL, read from its own file's ``R_blend``, and each gets its own
+    two-term fit.  With ``--blend-column`` there is one file and the named
+    columns are COMPONENTS of a single blending term -- one partition of the
+    same pairs -- fitted jointly.
+
+    Kept separate from ``main`` because every consumer indexes these dicts by a
+    different key: ``blend_paths`` by component label, ``tables`` and
+    ``reference_path`` by arm name.  Confusing the two is invisible until a
+    real run reaches the per-case loop.
+    """
+    rblend_paths = parse_mapping(rblend, "--rblend")
+    reference = list(rblend_paths)[0]
+    joint = bool(blend_column)
+    if joint:
+        if len(rblend_paths) != 1:
+            raise ValueError(
+                "--blend-column needs exactly one --rblend: the components must "
+                "be one partition of the same pairs, not separate models"
+            )
+        blend_columns: dict[str, str] = {}
+        for value in blend_column:
+            label, separator, column = value.partition("=")
+            if not separator or not label or not column:
+                raise ValueError("--blend-column entries must have form LABEL=COLUMN")
+            if label in blend_columns:
+                raise ValueError(f"duplicate --blend-column label {label!r}")
+            blend_columns[label] = column
+        labels = list(blend_columns)
+    else:
+        labels = list(rblend_paths)
+        blend_columns = {label: "R_blend" for label in labels}
+    return {
+        "rblend_paths": rblend_paths,
+        "reference": reference,
+        "reference_path": rblend_paths[reference],
+        "joint": joint,
+        "labels": labels,
+        "blend_columns": blend_columns,
+        "blend_paths": ({label: rblend_paths[reference] for label in labels}
+                        if joint else dict(rblend_paths)),
+    }
+
+
 def summarize(per_case: dict, cases, cells, groups, blend_keys, labels, *,
               h, replicates, seed, joint=False) -> dict:
     """Responses and ``m`` for every reported group, bootstrapped over cases."""
@@ -417,29 +464,14 @@ def main(argv=None):
     if args.h <= 0 or args.draws < 2 or args.draws % 2 or args.batch_size <= 0:
         raise ValueError("positive h/batch and even draws >=2 required")
     cases = tuple(dict.fromkeys(int(case) for case in args.case))
-    rblend_paths = parse_mapping(args.rblend, "--rblend")
-    reference = list(rblend_paths)[0]
-    joint = bool(args.blend_column)
-    if joint:
-        if len(rblend_paths) != 1:
-            raise ValueError(
-                "--blend-column needs exactly one --rblend: the components must "
-                "be one partition of the same pairs, not separate models"
-            )
-        blend_columns = {}
-        for value in args.blend_column:
-            label, separator, column = value.partition("=")
-            if not separator or not label or not column:
-                raise ValueError("--blend-column entries must have form LABEL=COLUMN")
-            if label in blend_columns:
-                raise ValueError(f"duplicate --blend-column label {label!r}")
-            blend_columns[label] = column
-        labels = list(blend_columns)
-    else:
-        labels = list(rblend_paths)
-        blend_columns = {label: "R_blend" for label in labels}
-    blend_paths = {label: rblend_paths[reference] for label in labels} if joint \
-        else dict(rblend_paths)
+    terms = blend_terms(args.rblend, args.blend_column)
+    rblend_paths = terms["rblend_paths"]
+    reference = terms["reference"]
+    reference_path = terms["reference_path"]
+    joint = terms["joint"]
+    labels = terms["labels"]
+    blend_columns = terms["blend_columns"]
+    blend_paths = terms["blend_paths"]
     if not args.flow.is_file():
         raise FileNotFoundError(args.flow)
 
@@ -548,7 +580,7 @@ def main(argv=None):
             #  only at build time, catches a lookup whose shell columns were
             #  written with different edges from the R_blend beside them.
             rebuilt = np.sum([rblend[label] for label in labels], axis=0)
-            whole = load_rblend(tables[reference], blend_paths[reference], case,
+            whole = load_rblend(tables[reference], reference_path, case,
                                 anchor_ids)
             #  The components are float64 sums while R_blend is a float32
             #  accumulation over up to 20 pairs, so they agree only to that
