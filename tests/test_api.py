@@ -5,17 +5,13 @@ import torch
 
 from sbsi.catalogue import load_catalogue
 from sbsi.domain import Domain
-from sbsi.flow import FlowTrainingConfig
-from sbsi.flow_training import parse_args as parse_training_args
 from sbsi.models import (
     ModelPaths,
-    V31_SEEDS,
-    V32_SEEDS,
-    V33_LIKE_SEEDS,
+    V35_LIKE_CLASSIFIER_SEEDS,
     get_model,
     load_detection_classifier,
 )
-from sbsi.paths import RELEASE_MODELS_ROOT, REPOSITORY_ROOT, example_path
+from sbsi.paths import REPOSITORY_ROOT, example_path
 from sbsi.forward_catalogue import (
     EmulatorPairingConfig,
     make_pair_catalogue,
@@ -27,82 +23,40 @@ from sbsi.selection_model import TabularPreprocessor
 
 
 def test_named_models_are_path_presets_not_pipeline_configuration():
-    v31 = get_model("V3.1")
-    v32 = get_model("v3.2")
-    v33_like = get_model("v3.3-LIKE")
-    assert isinstance(v31, ModelPaths)
-    assert len(v31.flow_checkpoints) == 4
-    assert v32.flow_checkpoints == v31.flow_checkpoints
-    assert V31_SEEDS == (501, 502, 503, 504)
-    assert V32_SEEDS == V31_SEEDS
-    assert V33_LIKE_SEEDS == (501,)
-    assert v31.name == "V3.1"
-    assert v32.name == "V3.2"
-    assert v33_like.name == "V3.3-like"
-    assert v32.emulator_model == v31.emulator_model
-    assert v32.emulator_metadata == v31.emulator_metadata
-    assert v32.emulator_sha256 == v31.emulator_sha256
-    assert v31.detection_classifier is None
-    assert v32.detection_classifier.name == "transition_aware.pt"
-    assert v33_like.detection_classifier == v32.detection_classifier
-    assert len(v33_like.flow_checkpoints) == 1
-    assert v33_like.flow_checkpoints[0].name == (
-        "measurement_flow_mixed_g0_g005_E_r500_t500_s501_swaavg.pt"
-    )
-    assert v32.detection_classifier_sha256 == (
-        "9966cfbc191f11b049bf7419dbdb45d65d1262428889a91bb3c9caf928703455"
-    )
-    assert all("mixed_g0_g005_E" in path.name for path in v31.flow_checkpoints)
-    assert not hasattr(v31, "domain")
-    assert not hasattr(v31, "blend_lookup")
-    assert not hasattr(v31, "evaluation_result")
-    assert v31.emulator_metadata.name == "emulator_metadata_lsst_r_extnbr_v22.json"
+    model = get_model("v3.5-LIKE")
+    assert isinstance(model, ModelPaths)
+    assert model.name == "V3.5-like"
+    assert V35_LIKE_CLASSIFIER_SEEDS == (20260913, 20260914, 20260915)
+    assert len(model.flow_checkpoints) == 1
+    assert model.flow_checkpoints[0].name == "epoch154.pt"
+    assert len(model.detection_classifiers) == 3
+    assert [path.parent.name for path in model.detection_classifiers] == [
+        "seed20260913",
+        "seed20260914",
+        "seed20260915",
+    ]
+    assert model.emulator_model.name == "trial9_base.json"
+    assert model.emulator_metadata.name == "metadata.json"
+    assert not hasattr(model, "domain")
+    assert not hasattr(model, "blend_lookup")
+    assert not hasattr(model, "evaluation_result")
 
 
-def test_v32_detection_classifier_loads_with_frozen_transition_metadata():
-    models = get_model("V3.2")
-    if not models.detection_classifier.is_file():
-        pytest.skip("external V3.2 detection checkpoint is not configured")
+def test_v35_detection_classifier_loads_as_equal_probability_ensemble():
+    models = get_model("V3.5-like")
+    if not all(path.is_file() for path in models.detection_classifiers):
+        pytest.skip("external V3.5-like detection checkpoints are not configured")
     detector = load_detection_classifier(models)
-    assert detector.metadata["training_objective"] == "transition_aware"
-    assert detector.metadata["transition_weight"] == 1.0
-    assert detector.metadata["response_supervision"] is False
-    assert "e1_input_p" in detector.preprocessor.feature_names
-    assert "e1_input_s" in detector.preprocessor.feature_names
+    assert detector.metadata["aggregation"] == "arithmetic_mean_probability"
+    assert detector.metadata["n_members"] == 3
+    assert detector.preprocessor.feature_names[-1] == "R_blend"
+    assert detector.preprocessor.add_missing_indicators is False
 
 
 def test_checkout_resources_do_not_depend_on_working_directory(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     assert example_path("data", "example_catalog.feather").is_file()
-    assert get_model("V3.1").emulator_model.is_file()
     assert (REPOSITORY_ROOT / "pyproject.toml").is_file()
-    assert get_model("V3.1").flow_checkpoints[0].is_relative_to(RELEASE_MODELS_ROOT)
-
-
-def test_training_recipe_uses_only_explicit_user_paths(tmp_path):
-    catalogue = tmp_path / "train.feather"
-    response = tmp_path / "response.npz"
-    coupling = tmp_path / "coupling.npz"
-    for path in (catalogue, response, coupling):
-        path.touch()
-    config = FlowTrainingConfig(
-        catalogue=catalogue,
-        output=tmp_path / "flow.pt",
-        response_target=response,
-        coupling_target=coupling,
-        seed=507,
-        primary_magnitude_max=25.4,
-        primary_half_light_radius_min=0.42,
-    )
-    argv = config.to_argv()
-    assert argv[argv.index("--catalogue") + 1] == str(catalogue)
-    assert argv[argv.index("--primary-mag-max") + 1] == "25.4"
-    assert argv[argv.index("--primary-re-min") + 1] == "0.42"
-    assert argv[argv.index("--response-target-npz") + 1] == str(response)
-    assert argv[argv.index("--coupling-target-npz") + 1] == str(coupling)
-    parsed = parse_training_args(argv)
-    assert parsed.catalogue == str(catalogue)
-    config.validate()
 
 
 def test_catalogue_loader_accepts_dataframe_and_external_feather(tmp_path):

@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "release": "v3.6-like",
+  "deployment_status": "preparation_only_pending_catalogue_density_adapter",
+  "description": "Pinned V3.6-like disk flow, output-conditioned disk-moment response and state-major smooth usability classifier. Not the default likelihood.",
+  "shear_transform": "intrinsic_ellipticity_only_v1",
+  "measurement_model": {
+    "path": null,
+    "sha256": "5434cfafb94ecb169b8b6a012752191bb191b82a787b196de8ed6dac2f1501a5",
+    "target_names": ["measured_ngmix_g1", "measured_ngmix_g2", "measured_flux_radius", "measured_flux_from_mag_auto"]
+  },
+  "emulator": {
+    "backend": "disk_response_moment",
+    "model": {
+      "path": "/project/ls-gruen/users/zekang.zhang/blendemu_runs/disk_response_moment_20260918_v1/model/model.json",
+      "sha256": "194c1d11b67d6fd52039060270663e8e1cd610b478b9e9a66e34271701761fe7"
+    },
+    "metadata": {
+      "path": "/project/ls-gruen/users/zekang.zhang/blendemu_runs/disk_response_moment_20260918_v1/model/metadata.json",
+      "sha256": "e9c28e921fa0430d4ef5feef9cb1d0954c4431b2258b5edfc0ed7c99fe59b589"
+    },
+    "detection_model": {
+      "backend": "sbsi_selection_model",
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/scene_classifier_geometry_20260918_v1/smooth_classifier_full/selected.pt",
+      "sha256": "ad975edf7020aacce00ee3efcc30353a87c5bc1eec030b2017f67369c3c78f3c",
+      "geometry": "state_major_axis_17_inputs"
+    }
+  },
+  "geometry": {
+    "detection_radius_arcsec": 3.0,
+    "flow_neighbour_radius_arcsec": 7.0,
+    "crowding_radii_arcsec": [3.0, 7.0],
+    "disk_pair_radius_arcsec": 10.0,
+    "disk_pair_neighbours": 20,
+    "disk_pair_truth_cuts": null
+  },
+  "observing_conditions": {"pixel_size": 0.2, "zero_point": 30.0, "psf_fwhm": 0.73, "moffat_beta": 2.224, "pixel_rms": 0.312},
+  "blend_response": "required_output_conditioned_disk_cache",
+  "usability": "finite_positive_physical_disk",
+  "measured_selection": {
+    "mode": "output_cut_with_population_normalization",
+    "bounds": ["measured_flux_radius:>3.0:", "measured_flux_from_mag_auto:>47.8630092322638:"],
+    "definition": "MAG_AUTO < 25.8 and convolved SExtractor FLUX_RADIUS > 0.6 arcsec at 0.2 arcsec/pixel; physical-disk usability modeled separately"
+  }
+}

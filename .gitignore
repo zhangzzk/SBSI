@@ -16,6 +16,11 @@ data/
 *.hdf5
 *.png
 *.pdf
+# Published README figure and its reproducibility receipt.
+!doc/figures/
+doc/figures/*
+!doc/figures/measurement_flow_contours.png
+!doc/figures/measurement_flow_contours.json
 *.stale_bak
 
 # Python and tool caches
@@ -24,12 +29,14 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .ipynb_checkpoints/
-sbsi.egg-info/
+*.egg-info/
+.arbor/
 
 # Local editor and agent state
 .claude/worktrees/
 .claude/scheduled_tasks.lock
 .claude_resources.json
+.codex_resources.json
 *.orig
 *.swp
 *.rblendbak
