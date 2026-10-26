@@ -38,7 +38,7 @@ is invariant for the realized integer bridge, conditional on the caller's IID
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from hashlib import sha256
 import json
 from typing import Optional
@@ -162,6 +162,12 @@ def _validate_sha256(value: str, name: str) -> str:
     if len(result) != 64 or any(character not in "0123456789abcdef" for character in result):
         raise ValueError(f"{name} must be a lowercase SHA-256")
     return result
+
+
+def _readonly_copy(values, dtype) -> np.ndarray:
+    array = np.ascontiguousarray(values, dtype=dtype).copy()
+    array.setflags(write=False)
+    return array
 
 
 def integer_bridge_score(log_ratio, stage: int) -> np.ndarray:
@@ -894,6 +900,396 @@ class PackedIntegerBridgeSMCResult:
             object.__setattr__(self, name, array)
 
 
+def _compact_trace_sha256(arrays: dict[str, np.ndarray]) -> str:
+    specifications = (
+        ("island_normalizer", ">f8"),
+        ("island_log_normalizer", ">f8"),
+        ("stage_log_normalizer", ">f8"),
+        ("stage_effective_sample_size", ">f8"),
+        ("stage_acceptance_rate", ">f8"),
+        ("stage_movement_rate", ">f8"),
+        ("stage_unique_lineage_count", ">i8"),
+        ("stage_unique_state_count", ">i8"),
+        ("collapsed_stage", ">i8"),
+    )
+    return _record_sha256(
+        "compact_trace",
+        tuple(
+            _array_sha256(name, arrays[name], dtype=dtype)
+            for name, dtype in specifications
+        ),
+    )
+
+
+@dataclass(frozen=True)
+class PackedIntegerBridgeSMCCompactResult:
+    """Small, process-safe summary of one fully validated bridge trace.
+
+    Production target evaluation and the NumPy bridge run in separate process
+    domains: CUDA stays in the parent and spawned CPU workers receive only one
+    object's atom IDs and pre-evaluated log ratios.  Returning the complete
+    trace would move about two MiB per object through multiprocessing pipes.
+    This summary retains every island normalizer and all small stage
+    diagnostics, plus the hashes of the discarded full trace.
+    """
+
+    normalizer: float
+    log_normalizer: float
+    variance: float
+    log_variance: float
+    standard_error: float
+    island_ids: np.ndarray
+    island_normalizer: np.ndarray
+    island_log_normalizer: np.ndarray
+    stage_log_normalizer: np.ndarray
+    stage_effective_sample_size: np.ndarray
+    stage_acceptance_rate: np.ndarray
+    stage_movement_rate: np.ndarray
+    stage_unique_lineage_count: np.ndarray
+    stage_unique_state_count: np.ndarray
+    collapsed_stage: np.ndarray
+    seed: int
+    object_id: int
+    particles_per_island: int
+    island_chunk: int
+    proposal_slot_count: int
+    target_finite_slot_count: int
+    target_zero_slot_count: int
+    target_unique_atom_count: int
+    target_cache_hit_count: int
+    proposal_atom_ids_sha256: str
+    target_log_ratio_sha256: str
+    trace_sha256: str
+    compact_trace_sha256: str
+    record_sha256: str
+    execution_sha256: str
+    version: str = PACKED_BRIDGE_VERSION
+    rng_contract: str = PACKED_BRIDGE_RNG_CONTRACT
+    score_contract: str = PACKED_BRIDGE_SCORE_CONTRACT
+    resampling_contract: str = PACKED_BRIDGE_RESAMPLING_CONTRACT
+    hash_contract: str = PACKED_BRIDGE_HASH_CONTRACT
+    input_contract: str = PACKED_BRIDGE_INPUT_CONTRACT
+
+    def __post_init__(self):
+        if (
+            self.version != PACKED_BRIDGE_VERSION
+            or self.rng_contract != PACKED_BRIDGE_RNG_CONTRACT
+            or self.score_contract != PACKED_BRIDGE_SCORE_CONTRACT
+            or self.resampling_contract != PACKED_BRIDGE_RESAMPLING_CONTRACT
+            or self.hash_contract != PACKED_BRIDGE_HASH_CONTRACT
+            or self.input_contract != PACKED_BRIDGE_INPUT_CONTRACT
+        ):
+            raise ValueError("compact packed bridge uses an unsupported contract")
+        ids = _readonly_copy(self.island_ids, np.int64)
+        islands = len(ids)
+        particles = _positive_integer(
+            self.particles_per_island, "particles_per_island"
+        )
+        if (
+            islands < 2
+            or ids.ndim != 1
+            or (ids < 0).any()
+            or not np.array_equal(ids, np.sort(ids))
+            or len(np.unique(ids)) != islands
+        ):
+            raise ValueError("compact packed bridge island identity is invalid")
+        specifications = {
+            "island_normalizer": (np.float64, (islands,)),
+            "island_log_normalizer": (np.float64, (islands,)),
+            "stage_log_normalizer": (
+                np.float64,
+                (islands, PACKED_BRIDGE_STAGES),
+            ),
+            "stage_effective_sample_size": (
+                np.float64,
+                (islands, PACKED_BRIDGE_STAGES),
+            ),
+            "stage_acceptance_rate": (
+                np.float64,
+                (islands, PACKED_BRIDGE_MOVE_STAGES),
+            ),
+            "stage_movement_rate": (
+                np.float64,
+                (islands, PACKED_BRIDGE_MOVE_STAGES),
+            ),
+            "stage_unique_lineage_count": (
+                np.int64,
+                (islands, PACKED_BRIDGE_STAGES),
+            ),
+            "stage_unique_state_count": (
+                np.int64,
+                (islands, PACKED_BRIDGE_STAGES),
+            ),
+            "collapsed_stage": (np.int64, (islands,)),
+        }
+        arrays = {"island_ids": ids}
+        for name, (dtype, shape) in specifications.items():
+            array = _readonly_copy(getattr(self, name), dtype)
+            if array.shape != shape:
+                raise ValueError(f"compact packed bridge {name} has the wrong shape")
+            arrays[name] = array
+        if (
+            np.isnan(arrays["island_log_normalizer"]).any()
+            or np.isposinf(arrays["island_log_normalizer"]).any()
+            or np.isnan(arrays["stage_log_normalizer"]).any()
+            or np.isposinf(arrays["stage_log_normalizer"]).any()
+            or not np.isfinite(arrays["stage_effective_sample_size"]).all()
+            or (arrays["stage_effective_sample_size"] < 0.0).any()
+            or (arrays["stage_effective_sample_size"] > particles * (1.0 + 1e-12)).any()
+            or not np.isfinite(arrays["stage_acceptance_rate"]).all()
+            or not np.isfinite(arrays["stage_movement_rate"]).all()
+            or (arrays["stage_acceptance_rate"] < 0.0).any()
+            or (arrays["stage_acceptance_rate"] > 1.0).any()
+            or (arrays["stage_movement_rate"] < 0.0).any()
+            or (
+                arrays["stage_movement_rate"]
+                > arrays["stage_acceptance_rate"]
+            ).any()
+            or (arrays["stage_unique_lineage_count"] < 0).any()
+            or (arrays["stage_unique_lineage_count"] > particles).any()
+            or (arrays["stage_unique_state_count"] < 0).any()
+            or (arrays["stage_unique_state_count"] > particles).any()
+            or (arrays["collapsed_stage"] < 0).any()
+            or (arrays["collapsed_stage"] > PACKED_BRIDGE_STAGES).any()
+        ):
+            raise ValueError("compact packed bridge stage diagnostics are invalid")
+        if not np.array_equal(
+            arrays["stage_log_normalizer"][:, -1],
+            arrays["island_log_normalizer"],
+        ):
+            raise ValueError("compact packed bridge final-stage summary is inconsistent")
+        for island, collapsed in enumerate(arrays["collapsed_stage"]):
+            zero_stages = np.flatnonzero(
+                np.isneginf(arrays["stage_log_normalizer"][island])
+            )
+            expected_collapse = int(zero_stages[0] + 1) if len(zero_stages) else 0
+            if int(collapsed) != expected_collapse:
+                raise ValueError(
+                    "compact packed bridge collapse identity is inconsistent"
+                )
+            if collapsed:
+                stage_start = int(collapsed) - 1
+                if (
+                    not np.all(
+                        np.isneginf(
+                            arrays["stage_log_normalizer"][island, stage_start:]
+                        )
+                    )
+                    or arrays["stage_effective_sample_size"][
+                        island, stage_start:
+                    ].any()
+                    or arrays["stage_unique_lineage_count"][
+                        island, stage_start:
+                    ].any()
+                    or arrays["stage_unique_state_count"][
+                        island, stage_start:
+                    ].any()
+                    or arrays["stage_acceptance_rate"][
+                        island, stage_start:
+                    ].any()
+                    or arrays["stage_movement_rate"][
+                        island, stage_start:
+                    ].any()
+                ):
+                    raise ValueError(
+                        "compact packed bridge collapse persistence is inconsistent"
+                    )
+        expected = _summarize_islands(arrays["island_log_normalizer"])
+        observed_scalars = np.asarray(
+            (
+                self.normalizer,
+                self.log_normalizer,
+                self.variance,
+                self.log_variance,
+                self.standard_error,
+            ),
+            dtype=np.float64,
+        )
+        if (
+            np.isnan(observed_scalars).any()
+            or not np.allclose(
+                observed_scalars,
+                np.asarray(expected[:5], dtype=np.float64),
+                rtol=64.0 * np.finfo(np.float64).eps,
+                atol=0.0,
+            )
+            or not np.array_equal(arrays["island_normalizer"], expected[5])
+        ):
+            raise ValueError("compact packed bridge island summary is inconsistent")
+        slots = islands * PACKED_BRIDGE_ROUNDS * particles
+        finite_slots = _exact_nonnegative_integer(
+            self.target_finite_slot_count,
+            "target_finite_slot_count",
+            slots,
+        )
+        zero_slots = _exact_nonnegative_integer(
+            self.target_zero_slot_count,
+            "target_zero_slot_count",
+            slots,
+        )
+        unique_atoms = _positive_integer(
+            self.target_unique_atom_count,
+            "target_unique_atom_count",
+        )
+        cache_hits = _exact_nonnegative_integer(
+            self.target_cache_hit_count,
+            "target_cache_hit_count",
+            slots,
+        )
+        if (
+            _positive_integer(self.proposal_slot_count, "proposal_slot_count")
+            != slots
+            or finite_slots + zero_slots != slots
+            or unique_atoms > slots
+            or cache_hits != slots - unique_atoms
+        ):
+            raise ValueError("compact packed bridge target accounting is invalid")
+        maximum = int(np.iinfo(np.uint64).max)
+        seed = _exact_nonnegative_integer(self.seed, "seed", maximum)
+        object_id = _exact_nonnegative_integer(self.object_id, "object_id", maximum)
+        chunk = _positive_integer(self.island_chunk, "island_chunk")
+        object.__setattr__(self, "seed", seed)
+        object.__setattr__(
+            self,
+            "object_id",
+            object_id,
+        )
+        object.__setattr__(self, "particles_per_island", particles)
+        object.__setattr__(self, "island_chunk", chunk)
+        object.__setattr__(self, "proposal_slot_count", slots)
+        object.__setattr__(self, "target_finite_slot_count", finite_slots)
+        object.__setattr__(self, "target_zero_slot_count", zero_slots)
+        object.__setattr__(self, "target_unique_atom_count", unique_atoms)
+        object.__setattr__(self, "target_cache_hit_count", cache_hits)
+        for name in (
+            "proposal_atom_ids_sha256",
+            "target_log_ratio_sha256",
+            "trace_sha256",
+            "compact_trace_sha256",
+            "record_sha256",
+            "execution_sha256",
+        ):
+            _validate_sha256(getattr(self, name), name)
+        expected_compact_hash = _compact_trace_sha256(arrays)
+        expected_record_hash = _run_record_sha256(
+            proposal_hash=self.proposal_atom_ids_sha256,
+            ratio_hash=self.target_log_ratio_sha256,
+            trace_hash=self.trace_sha256,
+            island_ids=ids,
+            seed=seed,
+            object_id=object_id,
+            particles=particles,
+            slots=slots,
+            finite_slots=finite_slots,
+            unique_atoms=unique_atoms,
+        )
+        expected_execution_hash = _record_sha256(
+            "execution",
+            (expected_record_hash, _text_sha256("island_chunk", chunk)),
+        )
+        if (
+            self.compact_trace_sha256 != expected_compact_hash
+            or self.record_sha256 != expected_record_hash
+            or self.execution_sha256 != expected_execution_hash
+        ):
+            raise ValueError("compact packed bridge hashes do not match retained state")
+        for name, array in arrays.items():
+            array.setflags(write=False)
+            object.__setattr__(self, name, array)
+
+    @classmethod
+    def from_result(
+        cls, result: PackedIntegerBridgeSMCResult
+    ) -> "PackedIntegerBridgeSMCCompactResult":
+        """Discard the bulky trace only after full result validation."""
+
+        if not isinstance(result, PackedIntegerBridgeSMCResult):
+            raise TypeError("result must be a PackedIntegerBridgeSMCResult")
+        names = (
+            "normalizer",
+            "log_normalizer",
+            "variance",
+            "log_variance",
+            "standard_error",
+            "island_ids",
+            "island_normalizer",
+            "island_log_normalizer",
+            "stage_log_normalizer",
+            "stage_effective_sample_size",
+            "stage_acceptance_rate",
+            "stage_movement_rate",
+            "stage_unique_lineage_count",
+            "stage_unique_state_count",
+            "collapsed_stage",
+            "seed",
+            "object_id",
+            "particles_per_island",
+            "island_chunk",
+            "proposal_slot_count",
+            "target_finite_slot_count",
+            "target_zero_slot_count",
+            "target_unique_atom_count",
+            "target_cache_hit_count",
+            "proposal_atom_ids_sha256",
+            "target_log_ratio_sha256",
+            "trace_sha256",
+            "record_sha256",
+            "execution_sha256",
+            "version",
+            "rng_contract",
+            "score_contract",
+            "resampling_contract",
+            "hash_contract",
+            "input_contract",
+        )
+        payload = {name: getattr(result, name) for name in names}
+        payload["compact_trace_sha256"] = _compact_trace_sha256(payload)
+        return cls(**payload)
+
+    def validated_copy(self) -> "PackedIntegerBridgeSMCCompactResult":
+        """Re-run every compact validation after an external transport."""
+
+        return type(self)(
+            **{field.name: getattr(self, field.name) for field in fields(self)}
+        )
+
+    def __reduce__(self):
+        # NumPy's default pickle drops readonly flags and dataclass unpickling
+        # does not call __post_init__.  Force reconstruction through the public
+        # constructor so process-pool results are immutable and revalidated.
+        payload = {
+            field.name: getattr(self, field.name) for field in fields(self)
+        }
+        return (_restore_compact_result, (payload,))
+
+
+def _restore_compact_result(payload: dict) -> PackedIntegerBridgeSMCCompactResult:
+    return PackedIntegerBridgeSMCCompactResult(**payload)
+
+
+def run_packed_integer_bridge_smc_compact(
+    proposal_atom_ids,
+    target_log_ratio,
+    *,
+    seed: int,
+    object_id: int = 0,
+    island_ids=None,
+    island_chunk: Optional[int] = None,
+) -> PackedIntegerBridgeSMCCompactResult:
+    """Run and validate the full trace, then return its compact summary."""
+
+    return PackedIntegerBridgeSMCCompactResult.from_result(
+        run_packed_integer_bridge_smc(
+            proposal_atom_ids,
+            target_log_ratio,
+            seed=seed,
+            object_id=object_id,
+            island_ids=island_ids,
+            island_chunk=island_chunk,
+        )
+    )
+
+
 def _trace_sha256(arrays: dict[str, np.ndarray]) -> str:
     specifications = (
         ("island_log_normalizer", ">f8"),
@@ -1320,7 +1716,9 @@ __all__ = [
     "PACKED_BRIDGE_SCORE_SCALE",
     "PACKED_BRIDGE_TICKS",
     "PACKED_BRIDGE_VERSION",
+    "PackedIntegerBridgeSMCCompactResult",
     "PackedIntegerBridgeSMCResult",
     "integer_bridge_score",
     "run_packed_integer_bridge_smc",
+    "run_packed_integer_bridge_smc_compact",
 ]

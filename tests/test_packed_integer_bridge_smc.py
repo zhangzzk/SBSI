@@ -1,6 +1,7 @@
 from dataclasses import replace
 from fractions import Fraction
 from itertools import product
+import pickle
 
 import numpy as np
 import pytest
@@ -12,11 +13,13 @@ from sbsi.packed_integer_bridge_smc import (
     PACKED_BRIDGE_ROUNDS,
     PACKED_BRIDGE_SCORE_SCALE,
     PACKED_BRIDGE_TICKS,
+    PackedIntegerBridgeSMCCompactResult,
     _inverse_tick_cdf,
     _quantize_resampling_log_weights,
     _unbiased_randbelow,
     integer_bridge_score,
     run_packed_integer_bridge_smc,
+    run_packed_integer_bridge_smc_compact,
 )
 
 
@@ -408,6 +411,112 @@ def test_result_validation_detects_trace_tampering():
     tampered[0, 0, 0] += 1
     with pytest.raises(ValueError, match="audit|record hash"):
         replace(result, stage_atom_ids=tampered)
+
+
+def test_compact_result_retains_small_diagnostics_and_full_trace_hashes():
+    atoms, ratios = _nonconstant_problem(islands=3, particles=5)
+    full = run_packed_integer_bridge_smc(
+        atoms, ratios, seed=71, object_id=29, island_chunk=2
+    )
+    compact = PackedIntegerBridgeSMCCompactResult.from_result(full)
+    for name in (
+        "normalizer",
+        "log_normalizer",
+        "variance",
+        "log_variance",
+        "standard_error",
+        "seed",
+        "object_id",
+        "particles_per_island",
+        "island_chunk",
+        "proposal_slot_count",
+        "target_finite_slot_count",
+        "target_zero_slot_count",
+        "target_unique_atom_count",
+        "target_cache_hit_count",
+        "proposal_atom_ids_sha256",
+        "target_log_ratio_sha256",
+        "trace_sha256",
+        "record_sha256",
+        "execution_sha256",
+    ):
+        assert getattr(compact, name) == getattr(full, name)
+    for name in (
+        "island_ids",
+        "island_normalizer",
+        "island_log_normalizer",
+        "stage_log_normalizer",
+        "stage_effective_sample_size",
+        "stage_acceptance_rate",
+        "stage_movement_rate",
+        "stage_unique_lineage_count",
+        "stage_unique_state_count",
+        "collapsed_stage",
+    ):
+        assert np.array_equal(getattr(compact, name), getattr(full, name))
+        assert getattr(compact, name).flags.writeable is False
+    restored = pickle.loads(pickle.dumps(compact))
+    assert restored.record_sha256 == compact.record_sha256
+    assert np.array_equal(restored.island_log_normalizer, compact.island_log_normalizer)
+    assert restored.island_log_normalizer.flags.writeable is False
+
+
+def test_compact_runner_matches_full_runner_and_revalidates_island_summary():
+    atoms, ratios = _nonconstant_problem(islands=2, particles=4)
+    full = run_packed_integer_bridge_smc(
+        atoms, ratios, seed=83, object_id=37, island_chunk=1
+    )
+    compact = run_packed_integer_bridge_smc_compact(
+        atoms, ratios, seed=83, object_id=37, island_chunk=1
+    )
+    assert compact.record_sha256 == full.record_sha256
+    assert compact.trace_sha256 == full.trace_sha256
+    tampered = compact.island_log_normalizer.copy()
+    tampered[0] += 1.0
+    with pytest.raises(ValueError, match="summary"):
+        replace(compact, island_log_normalizer=tampered)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("seed", 84, "hashes"),
+        ("object_id", 38, "hashes"),
+        ("island_chunk", 2, "hashes"),
+        ("trace_sha256", "0" * 64, "hashes"),
+    ],
+)
+def test_compact_result_binds_rng_identity_and_full_trace_commitment(
+    field, value, message
+):
+    atoms, ratios = _nonconstant_problem(islands=2, particles=4)
+    compact = run_packed_integer_bridge_smc_compact(
+        atoms, ratios, seed=83, object_id=37, island_chunk=1
+    )
+    with pytest.raises(ValueError, match=message):
+        replace(compact, **{field: value})
+
+
+def test_compact_result_binds_retained_stage_arrays():
+    atoms, ratios = _nonconstant_problem(islands=2, particles=4)
+    compact = run_packed_integer_bridge_smc_compact(
+        atoms, ratios, seed=83, object_id=37, island_chunk=1
+    )
+    tampered = compact.stage_effective_sample_size.copy()
+    tampered[0, 0] = np.nextafter(tampered[0, 0], np.inf)
+    with pytest.raises(ValueError, match="hashes"):
+        replace(compact, stage_effective_sample_size=tampered)
+
+
+def test_compact_result_requires_exact_first_collapse_stage():
+    atoms, ratios = _unique_problem(islands=2, particles=4)
+    ratios.fill(-np.inf)
+    compact = run_packed_integer_bridge_smc_compact(
+        atoms, ratios, seed=83, object_id=37, island_chunk=1
+    )
+    assert np.array_equal(compact.collapsed_stage, np.ones(2, dtype=np.int64))
+    with pytest.raises(ValueError, match="collapse identity"):
+        replace(compact, collapsed_stage=np.zeros(2, dtype=np.int64))
 
 
 @pytest.mark.parametrize(
