@@ -1,5 +1,44 @@
 # Work log
 
+## 2026-10-26 — 100k ConstGold image-sim result: m −3.49% ± 7.00%, c2 +0.00406 ± 0.00134 (3.0σ, at the failure line)
+
+`galsbi_constgold100k_20261025/rule.md` §Result. C2 (job 17497448, 30/30 units, 1 V100, about 70 min) reran the
+1,816 mag < 21 galaxies at the step-1 shear (0.01877, 0.00374). `estimate.py c2` (17497592):
+- g = (0.01930 ± 0.00140, 0.00406 ± 0.00134).
+- Bright g1 score 800 → 71 ± 235.
+- Truth read last: **m = −3.49% ± 7.00% (−0.5σ), c2 = +0.00406 ± 0.00134 (+3.0σ)**.
+
+**Reading.**
+- m is fine at this precision; the run is unpaired, so the ±7% is mostly shape noise.
+- c2 sits at the pre-set 3σ failure line. Its score is positive in all bands and strongest when bright.
+- Descriptive check, no fit: measured mean e2 is about 0 on the image sims (21–23: +0.0044 ± 0.0037). On the
+  model's own 1M mock with g2 = 0 it is negative (21–23: −0.0068 ± 0.0014; all bands < 0).
+- So the V3.9-like models (F8/C8 not mirror-symmetric, see 2026-10-15) predict negative e2 at zero shear. Real
+  images do not have it, so it reads as positive g2. It cancels on model-made mocks. This is the leading suspect;
+  it is not proven.
+
+**Limitations.** Plus leg only (unpaired). A single shear. The population differs from GalSBI. No further c2 test.
+**Next (owner).** Test the mirror asymmetry directly: score the image galaxies with e2 → −e2 mirrored (no new
+training, about 8 GPU-h). Or symmetrise F8/C8; that is a model change, and the F8/C8 investigation is closed by
+owner decision.
+## 2026-10-26 — 100k ConstGold image-sim C1 blind one step: g = (0.01877 ± 0.00138, 0.00374 ± 0.00134)
+
+`galsbi_constgold100k_20261025` (rule.md + amendment 1). C1: 105 units (18 bright tempered of ≈610 galaxies,
+87 faint of ≈1023; faint size from the unit-size test 17495612, U1024/U640 = 1.12) on up to three V100s
+(workers 17495614/6/7; 17495615 found nothing left to claim). All 105 done, none failed, 0 galaxies left out.
+`estimate.py c1` (job 17497424, truth not read):
+- g1 = +0.01877 ± 0.00138, g2 = +0.00374 ± 0.00134 (quoted = case bootstrap for g1, analytic total for g2).
+- Error parts: stat 0.00129/0.00133, chains 0.00015/0.00016, selection 0.00006/0.00007.
+- 8,340 galaxies (8.3%) have log-Z R-hat ≥ 1.1. Their chain noise is inside the chain-half term.
+Band score sums (g1, g2) ± stat:
+- < 21: 800 ± 235, 330 ± 222
+- 21–23: 2210 ± 374, 797 ± 365
+- 23–24: 2734 ± 382, 457 ± 371
+- 24–25: 3460 ± 415, 298 ± 405
+- 25–25.8: 2000 ± 290, 160 ± 287
+
+C2 (job 17497448) reruns the 1,816 mag < 21 galaxies at (0.01877, 0.00374) in 30 units of ≈61.
+**Next.** `estimate.py c2`, then the truth.
 ## 2026-10-25 — Recipe Stage B on the 1M mock: B3 PASS (recipe = w8 at mag < 23), same-chain replay 549/549
 
 `galsbi_pair1m_20261012/debug/rule_one.md` Stage B. Jobs 17495524 (V100 ×2), 17495525 (2080 Ti) and 17495526 (B3, A40).
