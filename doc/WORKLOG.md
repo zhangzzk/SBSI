@@ -1,5 +1,33 @@
 # Work log
 
+## 2026-10-26 — Repository cleanup: stale scripts, side worktrees and branches
+
+Owner: "clean up the repo first: scripts, worktrees and branches". Before any removal, everything was saved as
+tags and the tags were pushed to GitHub. Details: [October 26 cleanup](REPOSITORY.md#october-26-cleanup).
+
+- Scripts: 73 scripts, 22 tests and 12 launchers were deleted from the active tree (in history at `99cabbe`).
+  - Groups: the particle/SMC line, early MH diagnostics, the V3.9 closure studies, and the bright-prior/atom-map
+    experiments.
+  - A reference check found no kept script, test, module, job or config that uses them. Two files flagged stale
+    by the audit stay because kept code uses them: `report_galsbi_sampler_runs.py` and `fit_particle_geometry.py`.
+  - `REPOSITORY.md` has an updated layout table and the new section. `V39_MODEL.md` points the removed V3.9
+    study driver to history.
+- Worktrees and branches:
+  - Removed 43 side worktrees and 50 local branches. Kept `master`, `sampler-recipe`, `worktree-galsbi-tempering`
+    (not touched) and `dev`, which the main checkout uses.
+  - Each removed branch is tagged `archive/2026-10-26/branch/<name>`. Uncommitted work in 12 checkouts is saved as
+    snapshot commits under `archive/2026-10-26/wip/<worktree>`. That includes the main checkout, whose files were
+    left unchanged.
+  - 62 tags were pushed to GitHub and checked there with `git ls-remote`.
+  - Ignored figures and logs from four worktrees were copied to
+    `/project/ls-gruen/users/zekang.zhang/sbsi/repo_cleanup_20261026/ignored/`. A file-by-file check found every
+    file present with the same size (for example 393 files, 91.8 MB, from `v36-review-engineering`).
+- Not done: deleting the GitHub branches `worktree-nocut-retrain` and `worktree-perleg-response` (both covered
+  by tags) was blocked by the permission check and is left to the owner.
+- `tests/test_particle_initial_proposal.py`: removed one test (and its import) that ran the deleted
+  `check_galsbi_particles.py` driver. Its tests of the kept `sbsi` module stay.
+- Validation: `jobs/job_tests.sh`. The first run (17506758) stopped at collection on that import. After the fix
+  (17506788): **655 passed, 4 skipped, 0 failed**.
 ## 2026-10-26 — Mirror test: the image-sim c2 comes from the models
 
 `galsbi_constgold100k_20261025/rule.md` "Result of amendment 2". The same 99,932 image-sim galaxies were run with

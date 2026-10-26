@@ -195,7 +195,8 @@ prepared feature stores remain V3.6-specific: they expect legacy flow crowding
 and a 17-input classifier. They must not be relabelled or reused for V3.9.
 The owner subsequently authorized a separate model-generated sampling study.
 Its explicit physical-crowding cache is `sbsi/v39_inference.py`; the study
-driver is `scripts/run_v39_sampling_study.py`. This does not convert the older
+driver was `scripts/run_v39_sampling_study.py` (removed 2026-10-26, in history at `99cabbe`; see
+[October 26 cleanup](REPOSITORY.md#october-26-cleanup)). This does not convert the older
 V3.6 driver or its caches into V3.9 caches. See the
 [20k model-closure study](#20k-model-closure-sampling-study).
 

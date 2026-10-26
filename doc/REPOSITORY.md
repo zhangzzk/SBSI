@@ -5,8 +5,8 @@
 | Directory | Supported contents |
 | --- | --- |
 | `sbsi/` | Model loading/prediction; finite-prior likelihood, selection, sampling and inference |
-| `scripts/` | Reusable scene/prior preparation, caches, inference, combination, audits, atom maps and the bright-prior extension experiment |
-| `jobs/` | Reusable inference/cache launchers, `job_tests.sh`, atom maps and bright-prior experiment launchers |
+| `scripts/` | Reusable scene/prior preparation, caches, inference, combination, audits, and the GalSBI sampler with its mock generator and reports |
+| `jobs/` | Reusable inference/cache launchers, GalSBI sampler launchers and `job_tests.sh` |
 | `tests/` | Core regression and artifact/feature/transport contract tests |
 | `configs/` | Separate numerical, likelihood and frozen model identities |
 | `doc/` | Maintained guides, concise work log and pinned V3.9 evidence |
@@ -16,6 +16,34 @@ Start with [V3.9-like](V39_MODEL.md#decision-and-identity) for the retained
 model and [the inference workflow](INFERENCE.md#active-workflow) for commands.
 The reusable V3.6 disk driver remains explicitly V3.6-specific; naming V3.9
 does not change its feature or prepared-cache contracts.
+
+## October 26 cleanup
+
+The owner asked to clean up scripts, worktrees and branches. 73 scripts, 22 tests and 12 launchers were deleted
+from the active tree; none is used by the kept code. They remain in git history at commit `99cabbe`
+(`git show 99cabbe:<path>`):
+
+- Particle/SMC, exchange and phase-control sampler line (closed 2026-10-22, replaced by the MH recipe):
+  22 scripts such as `check_galsbi_particles.py`, `*_particle_phase_control.py`, `*_exchange_full_smc.*`,
+  `summarize_v{8,9,10}_particle_comparison.py`; 15 tests; `job_particle_phase_control_n15.sh`.
+  `scripts/fit_particle_geometry.py` stays with `sbsi/particle_geometry.py`.
+- Early GalSBI MH diagnostics, overtaken by the October 25 recipe: `benchmark_galsbi_sampler.py`,
+  `check_galsbi_neighbours.py`, `diagnose_`/`plot_galsbi_convergence.py`, `probe_galsbi_{geometry,ridges}.py`,
+  `report_galsbi_{ensemble,initialization}.py`; one test; three launchers. `report_galsbi_sampler_runs.py`
+  stays (the bright and population reports import it).
+- V3.9 model-closure studies (run 09-25 to 09-27 from external snapshots): 36 `*v39*` scripts and helpers plus
+  `audit_disk_precision_mock.py`; six tests; five launchers.
+- Bright-prior extension and atom maps: seven scripts (four no longer imported cleanly) and three launchers.
+
+The study documents in `doc/` that name these files are historical records and are unchanged. Their pinned
+hashes in `doc/evidence/` still match the history copies.
+
+The same day, 43 side worktrees and 50 local branches were removed, keeping `master`, `sampler-recipe`,
+`worktree-galsbi-tempering` and the main checkout's `dev`. Each removed branch is tagged
+`archive/2026-10-26/branch/<name>`. Uncommitted work in 12 checkouts (including the main checkout) is saved as a
+commit under `archive/2026-10-26/wip/<worktree>`. All tags are on GitHub. Ignored figures and logs from four
+worktrees are copied to `/project/ls-gruen/users/zekang.zhang/sbsi/repo_cleanup_20261026/ignored/`.
+Restore a branch with `git branch <name> archive/2026-10-26/branch/<name>`.
 
 ## October 25 sampler simplification
 

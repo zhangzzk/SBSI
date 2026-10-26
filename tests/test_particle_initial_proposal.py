@@ -2,7 +2,6 @@
 from copy import deepcopy
 import json
 from pathlib import Path
-import sys
 
 import numpy as np
 import pytest
@@ -16,7 +15,6 @@ from sbsi.particle_initial_proposal import (FIT_RULE, NATIVE_TARGET_SOURCES,
     phase_moment_parameters, target_identity)
 from test_galsbi_particle_proposal import proposal
 from test_galsbi_particle_target import setup_target, PrescribedRNG
-from test_particle_extinction import driver
 
 
 def identity_protocol():
@@ -229,12 +227,3 @@ def test_nonuniform_phase_enters_bridge_and_independence_hastings(monkeypatch, b
                      +old.log_proposal-proposed.log_proposal)
     np.testing.assert_allclose(ratios[0], expected, atol=1e-12, rtol=0)
     assert abs(float((proposed.log_proposal-old.log_proposal)[0])) > .01
-
-
-@pytest.mark.parametrize('option', ['--proposal-family', '--proposal-df', '--faint-shift'])
-def test_driver_rejects_silent_override_before_loading_models(monkeypatch, driver, option):
-    value = 'student_t' if option == '--proposal-family' else '5'
-    monkeypatch.setattr(sys, 'argv', ['driver', '--reference', 'missing', '--output', 'missing',
-        '--seed', '99', '--initial-proposal', 'missing.json', option, value])
-    with pytest.raises(SystemExit) as error: driver.main()
-    assert error.value.code == 2
