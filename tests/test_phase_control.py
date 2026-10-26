@@ -115,6 +115,26 @@ def test_artifact_provenance_roundtrip_seed_guard_and_no_overwrite(tmp_path):
     with pytest.raises(ValueError, match='distinct'): FrozenPhaseControl([[1., 1.]], bad)
 
 
+def test_declared_production_seed_guard_roundtrip_preserves_legacy_behavior(tmp_path):
+    legacy = FrozenPhaseControl([[1., 2.]], metadata())
+    legacy.validate_production(9876, [11], metadata()['target_identity'])
+    fitted = fit_frozen_phase_control([np.zeros((1, 3, 2))]*4, [np.zeros((1, 3))]*4,
+        dict(metadata(), production_seeds=[83, 84]))
+    path = tmp_path/'fitted.json'; fitted.save(path)
+    loaded = FrozenPhaseControl.load(path)
+    loaded.validate_production(np.int64(83), [11], metadata()['target_identity'])
+    with pytest.raises(ValueError, match='absent from the frozen declaration'):
+        loaded.validate_production(9876, [11], metadata()['target_identity'])
+    with pytest.raises(ValueError, match='overlaps'):
+        loaded.validate_production(1, [11], metadata()['target_identity'])
+
+
+@pytest.mark.parametrize('production', [[], [1, 83], [83, 83], [True], [-1], '83'])
+def test_invalid_declared_production_seeds_rejected(production):
+    with pytest.raises(ValueError, match='declared production seeds'):
+        FrozenPhaseControl([[1., 2.]], dict(metadata(), production_seeds=production))
+
+
 def test_phase_wrap_chain_rule_and_zero_shape():
     values, gradient, control = periodic_values([0., 1e-9, 2*np.pi-1e-9, 3.])
     for angle in (-4*np.pi, 0., 2*np.pi):

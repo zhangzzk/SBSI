@@ -75,6 +75,12 @@ def _metadata_check(metadata, objects):
     if (not isinstance(seeds, list) or len(seeds) < 2
             or any(type(v) is not int or v < 0 for v in seeds) or len(set(seeds)) != len(seeds)):
         raise ValueError('at least two distinct nonnegative independent pilot seeds required')
+    if 'production_seeds' in metadata:
+        production = metadata['production_seeds']
+        if (not isinstance(production, list) or not production
+                or any(type(v) is not int or v < 0 for v in production)
+                or len(set(production)) != len(production) or set(production).intersection(seeds)):
+            raise ValueError('declared production seeds must be distinct and disjoint from pilots')
     identity = metadata.get('target_identity')
     if not isinstance(identity, dict) or not identity:
         raise ValueError('explicit target/derivative identity required')
@@ -114,6 +120,8 @@ class FrozenPhaseControl:
             raise ValueError('nonnegative integer production seed required')
         if int(seed) in self._metadata['pilot_seeds']:
             raise ValueError('production seed overlaps frozen-coefficient pilot seeds')
+        if 'production_seeds' in self._metadata and int(seed) not in self._metadata['production_seeds']:
+            raise ValueError('production seed is absent from the frozen declaration')
         if list(observations) != self._metadata['observations']:
             raise ValueError('production observations or ordering differ from frozen coefficients')
         if target_identity != self._metadata['target_identity']:
