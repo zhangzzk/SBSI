@@ -1,5 +1,51 @@
 # Work log
 
+## 2026-10-27 — Launch symmetric base-guard F8 with the earlier 100k image inference
+
+Owner requested running the symmetric model with the earlier inference.
+Created `galsbi_constgold100k_signsym_20261027` under the catalogue-prior root,
+using the same 99,932 observations, original 105 C1/30 C2 units, seeds,
+20480/8192 MH recipe, prior and estimator. C8 and disk emulator remain fixed.
+The base-guard checkpoint is hash-pinned in a separate candidate identity;
+V3.9's manifest is unchanged. Recompute all eight 800-chunk selection replicas
+with the new F8; old normalization is invalid for this candidate.
+
+Added setup, launch, verification and preflight/status scripts plus pipeline
+template and `doc/SYMMETRIC_FLOW_INFERENCE.md`. Source is restored from the
+hash-verified 06727be snapshot; only flow support, model binding and provenance
+are overlaid. Sampling/selection formulas and original numerical batches remain
+unchanged. Stage estimates reject mismatched model receipts. Failed sampler
+units receive one identical retry; persistent failures block reduction.
+
+Validation: frozen 492-file snapshot and data/model input checks passed;
+generated Python/shell syntax and `git diff --check` pass. Preflight 17530790
+on A40 completed in 2m42s: **16 symmetry tests passed**, short bright/faint/
+nonzero-shear sampler checks and one full-size selection chunk passed.
+Identity replay errors <=3.55e-15. Short chains do not establish convergence.
+Replaced pending H200-only job 17530733 with this eligible request.
+C1 workers 17530830/17530831 started. Initial selection array 17530832 failed
+before computation because its CLI expected a cohort file. Cancelled the rest
+and corrected the launcher to pass the explicit image reference, as preflight
+already did. Replacement array 17530927 (%2) and estimator 17530928 replace
+17530832/17530833. Preserved frozen source and orchestration; a separately
+hashed recovery wrapper records the fix, and the repository template is corrected.
+At most four GPUs total. Estimator waits for both C1 and normalization, then
+launches C2/final reduction. Startup and timed CPU checks are recorded
+in `jobs.json`; they write receipts, not chat notifications.
+
+Startup review: first C1 worker has 23 initialized units, 18 advancing MH up
+to step 211/20480. Second worker has claimed 30 faint units and is still
+initializing with about 99% GPU utilization; no failed C1 receipts. Corrected
+selection task 0 completed 3/800 chunks; the other selection slot is pending
+resources. These are healthy startup receipts, not convergence evidence.
+
+No scientific inference result yet. Compare c2 against +0.00406±0.00134;
+100k unpaired galaxies still only constrain m at roughly seven percentage
+points. Reused development data, finite-chain diagnostics, prior/population
+mismatch and unchanged C8 remain limitations. See the
+[frozen protocol](SYMMETRIC_FLOW_INFERENCE.md#frozen-comparison--october-27-2026)
+and [launch receipts](SYMMETRIC_FLOW_INFERENCE.md#launch-receipts).
+
 ## 2026-10-27 — Remove later refinement from symmetric-flow training
 
 Owner requested removing refinement. New symmetric-flow studies retain the

@@ -1,0 +1,125 @@
+# Symmetric-flow comparison with the earlier image inference
+
+## Frozen comparison — October 27, 2026
+
+Owner requested running the symmetric model with the earlier inference.
+Repeat `galsbi_constgold100k_20261025` with the bounded base-guard checkpoint
+identified in [the stage comparison](SYMMETRIC_FLOW_DIAGNOSIS.md#completed-follow-ups--october-27-2026).
+C8, disk emulator, GalSBI prior, measured rows, chain settings and estimator
+formulas remain fixed. This is a new research candidate; V3.9 is unchanged.
+
+Study root:
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_constgold100k_signsym_20261027`.
+Checkpoint: `f8_signsym_20261026_v2/base/flow/guard/selected.pt` under SBSI caches,
+SHA256 `21f772cfb87339292f9ef1df350d52fa44ed8cd9b3715068623051acb3737591`.
+No later refinement is used.
+
+## Observations, sampler and estimator
+
+Use the same 99,932 plus-leg galaxies from 100 ConstGold cases, in the same
+order. The original first-100k selection dropped 68 for measured |e|>=0.99
+and none for measured radius>=100 pixels. Keep measured radius>3 pixels,
+magnitude<25.8, radius<100 pixels and |e|<0.99; no truth-property cuts.
+Preserve original row hashes, provenance and unmatched-row accounting.
+
+Restore the hash-verified 06727be sampler snapshot. Overlay the already tested
+symmetric flow implementation and compatible loader. Bind a separate named
+candidate with explicit hashes; neither the retained V3.9 preset nor its
+manifest is altered. Record this identity in every sampler and selection receipt.
+
+C1: original 105 units, four chains per galaxy, 20480 steps, 8192 warm-up,
+stride 16, likelihood-drawn initial states from 2048 prior draws per chain.
+Mag<23 uses the original eight-temperature ladder and narrow-step probability
+0.5; fainter objects use plain MH. Unit seeds 2028500001+j, bank seeds
+2033500001+j, unchanged unit ordering and sizes. Two persistent GPU workers
+use 30 CPU slots each; no concurrency tuning is combined with the model test.
+
+C2: after C1 and normalization finish, rerun the same 1816 mag<21 objects
+in the original 30 units at the C1 estimate rounded to five decimals. Seeds
+2028600001+j and 2033600001+j. Keep the original co-moving readings and
+chain-half information correction. Quote the largest of analytic, galaxy-
+bootstrap and source-case-bootstrap uncertainties, with selection uncertainty
+included as in the original estimator.
+
+Definitions: [catalogues](CONVENTIONS.md#2-catalogue-families),
+[selection](CONVENTIONS.md#3-population-and-selection-order),
+[shapes](CONVENTIONS.md#4-shapes-and-shear), and
+[multiplicative bias](CONVENTIONS.md#7-multiplicative-bias).
+Report m=100*(estimated_g1/0.02−1)% and c2=estimated_g2 for injected g=(0.02,0).
+The truth is already known from the preceding investigation; this is not a new
+blind acceptance test. Preserve the estimator's ordering of writing the estimate
+before its truth-comparison block.
+
+## Recompute selection normalization
+
+Old Z cannot be reused after changing F8. Recompute all eight original selection
+replicas (four each from the original/twin seed families), 800 chunks per replica,
+8192 scenes per chunk, 16 conditional draws with the nested eight-draw diagnostic.
+Use the original seeds, five nodes at g=0 and ±0.002 on each axis, unchanged C8,
+disk transport and measured cuts. Common random numbers across nodes remain.
+These are selection integrations, not regenerated mock observations.
+
+Run two selection GPUs alongside the two C1 GPUs: four concurrent GPUs maximum,
+matching the earlier image-inference follow-up ceiling. C2 needs one GPU and
+starts only after C1 and all normalization replicas succeed. Do not drop failed
+units or reduce normalization samples to get an early estimate.
+
+## Preflight and interpretation
+
+Before production, run symmetry architecture tests, short bright/faint sampler
+smokes at zero shear, a nonzero-shear smoke, and one full-size selection chunk
+at the actual five nodes. These validate integration only. Fresh caches and
+hash-checked source/model/data identities prevent reuse of old likelihood values.
+
+Compare c2 and m with the earlier result c2=+0.00406±0.00134 and
+m=−3.49%±7.00 percentage points, report numerical diagnostics and band scores.
+This sample is too noisy for 0.3% inference calibration. Reused observations,
+flow density-fit differences, C8 asymmetry and population mismatch remain
+limitations. No parameter changes based on the observed answer, no automatic
+model promotion, and no claim that flow symmetry makes the full likelihood
+symmetric. A mirrored inference run is not part of this initial comparison.
+
+Setup: `scripts/setup_sign_symmetric_inference.py`; pipeline template:
+`jobs/job_sign_symmetric_inference.sh`. Status snapshots are one-shot CPU jobs;
+they save receipts rather than sending chat notifications. Check each dependent
+stage on startup and report meaningful failures or results.
+
+## Launch receipts
+
+The new snapshot verifies 492 files. The only changes relative to the frozen
+earlier source are the symmetric flow and its loader/tests, a separate candidate
+binding, and model identity/loading in the sampler and selection script.
+`source_changes.json` records every original/new hash. The MH transitions,
+initialization, numerical batches, random streams, selection integration and
+estimator formulas are preserved. Generated-source Python/shell syntax and
+`verify.py` checks passed.
+
+Preflight 17530790 completed on an A40 in 2m42s: 16 symmetry tests passed;
+bright, faint and nonzero-shear sampler smokes completed. Their short chains intentionally
+do not pass convergence diagnostics; these are code-integration checks only.
+Co-moving identity replay errors were 0, 1.78e-15 and 3.55e-15 respectively.
+The full-size one-chunk selection check passed in 29.2 seconds.
+Initial H200-only request 17530733 was cancelled while pending and replaced
+with an eligible generic GPU request excluding the old 11 GB/P5000 nodes.
+
+Full C1 workers 17530830/17530831 started after successful preflight.
+The initial selection array 17530832 failed before computation because the
+historical CLI assumes a cohort file; the image reference has none. Cancelled
+the remaining tasks and used an explicit population reference, exactly as in
+the successful preflight. Replacement array **17530927 (0–7%2)** uses
+`pipeline_selection_recovery.sh`; `selection_launch_recovery.json` records
+its hash and the correction. Frozen source, existing orchestration and scientific
+inputs are unchanged. The repository pipeline template includes this correction
+for future studies. Original dependent estimator 17530833 was cancelled by its
+failed prerequisite; replacement **17530928** depends on both C1 workers and
+all replacement selection replicas. It submits C2 at the measured C1 centre,
+then the final estimator. `jobs.json` records those dynamically submitted IDs.
+Startup checks 17530834/17530835 and timed checks 17530836–17530841 save
+status receipts at two, four, six, eight, twelve and twenty-four hours.
+
+Startup review: worker 17530830 has completed initialization for 23 units;
+18 have begun MH (up to step 211 of 20480). Worker 17530831 has claimed 30
+faint units and is actively computing initial banks (GPU utilization about
+99%, no failed unit receipts). Replacement selection task 0 has completed
+3/800 chunks. The second selection slot is waiting for scheduler resources.
+No shear estimate is available; startup progress does not establish convergence.
