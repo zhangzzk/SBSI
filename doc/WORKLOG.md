@@ -1,5 +1,26 @@
 # Work log
 
+## 2026-10-27 — Symmetric F8 fails measured forward-response target
+
+Reviewed completed80-case ConstGold comparison, confirmed all case receipts
+share the frozen protocol, and recorded results in
+[completed forward check](SYMMETRIC_FLOW_FORWARD.md#completed-result--october-27-2026).
+Symmetric F8 + unchanged C8/disk gives m=+1.587790% ±0.268023 percentage points
+(case-bootstrap SE),95% interval[+1.058476,+2.107470]%. Retained F8 control
+reproduces exactly +0.020770% ±0.265152pp. Paired change is+1.567020 ±0.010556pp.
+True-usable-flag diagnostic also worsens, from+0.228311% to+1.810052%, so the
+discrepancy persists without C8. The largest contribution change is in true
+magnitude24–25.5; no training-stage cause is established. Same independent
+per-leg measured0.6arcsec/25.8 cuts, g1=±0.02,64 CRN draws,80 reused cases and
+10,000 paired case resamples; no independent acceptance or c2 inference claim.
+
+Validation: `sacct -X` reports all eight GPU tasks and summary17518244 completed
+exit0,87m24s combined GPU time.80 case identities and protocol hashes match;
+summary's published-control replay passed exactly. Cancelled redundant pending
+check17518301. Documentation-only update; `git diff --check` passes. No model
+promotion or additional training/inference launched. Next: investigate flow
+fit/refinement response while preserving the failed result and frozen settings.
+
 ## 2026-10-27 — Launch measured ConstGold forward-response check for symmetric F8
 
 Owner requested checking the new model's forward response against approximately

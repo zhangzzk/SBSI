@@ -1,5 +1,41 @@
 # Symmetric F8 forward-model response on measured simulations
 
+## Completed result — October 27, 2026
+
+All80 cases and the aggregate summary completed successfully. The symmetric
+flow **fails the approximately0.3% forward-response target** in this comparison.
+
+| Flow and usability weights | m (%) | Case-bootstrap SE (percentage points) | 95% interval (%) |
+| --- | ---: | ---: | --- |
+| Retained F8 + C8 | +0.020770 | 0.265152 | [−0.502131,+0.533644] |
+| Symmetric F8 + C8 | **+1.587790** | **0.268023** | **[+1.058476,+2.107470]** |
+| Retained F8 + true usable flags | +0.228311 | 0.266074 | [−0.295695,+0.745195] |
+| Symmetric F8 + true usable flags | +1.810052 | 0.268763 | [+1.279010,+2.331723] |
+
+The paired new-minus-old change with C8 is **+1.567020 ±0.010556 percentage
+points** (case-bootstrap SE). The measured response is0.6707665225; the new
+model predicts0.6602826210, compared with0.6706272357 for retained F8.
+The discrepancy persists when the simulation's true usable flags replace C8,
+so C8 alone does not explain it. This localizes a problem to the new flow with
+the fixed disk emulator and measured selection; it does not isolate which
+training stage or modeling constraint caused it.
+
+The largest change in magnitude-bin contributions is in true magnitude24–25.5:
+−0.855839 to+0.534613 percentage points. These are contributions using the
+total selected normalization, not biases independently normalized within bins.
+Selected counts remain close: new C8 model7,262,565/7,262,804 versus measured
+7,264,215/7,263,821 in plus/minus legs. Matching counts and exact flow symmetry
+therefore do not establish accurate shear response.
+
+Validation: all eight GPU tasks and CPU summary17518244 exited0; combined GPU
+allocation time87m24s on one H200 at a time. All80 case receipts match the
+frozen protocol. The retained bias and SE reproduce exactly. Results are in
+the study's `summary.json` and `cases/case*.json`; original logs are retained.
+Cancelled the redundant pending two-hour check17518301 after final review.
+No model promotion, new training, or posterior inference was launched during
+this review. Next investigation should distinguish density fitting from
+response refinement while keeping this failed comparison as test evidence.
+
 ## Request and frozen comparison — October 27, 2026
 
 Owner requested checking whether the newly trained model still delivers a
@@ -60,6 +96,9 @@ differences, additive bin contributions and rejection of a wrong control:
 **2 passed**. Python syntax, shell syntax and `git diff --check` passed.
 
 ## Launch and monitoring
+
+This section preserves startup history; the [completed result](#completed-result--october-27-2026)
+supersedes its pending status.
 
 `jobs/job_sign_symmetric_forward.sh` runs one H200 at a time,8 allocated logical
 CPUs,48GiB host memory. No other user jobs were active at submission.
