@@ -38,6 +38,30 @@ Frozen parent and preliminary input verification passed; shell syntax and
 `git diff --check` passed. Check jobs save receipts at 2/4/6/8 hours; C2 also
 has a startup check. These are file receipts, not chat notifications.
 
+## Preliminary first-stage result — October 27, 2026
+
+All 105 C1 units completed; all 99,932 galaxies are covered with no omissions.
+Capture 17541422 preserved exactly 611 chunks per replica (10,010,624 scenes)
+and completed successfully. Replica 1 had advanced to 612 chunks when captured;
+only the fixed first 611 enter the estimate. Both selection workers stopped as
+planned. C1 reduction 17541432 completed in 7m10s.
+
+At the first inference stage, the symmetric candidate gives
+`g1=+0.0190110 ±0.0014316`, `c2=g2=+0.0015053 ±0.0013408`.
+The retained model at the **same first stage** gave
+`g1=+0.0187690 ±0.0013809`, `c2=+0.0037354 ±0.0013411`.
+These marginal error bars are not an uncertainty on the paired model difference.
+The symmetric candidate's selection-only shear errors are
+`(0.0001556, 0.0001554)`, versus statistical errors `(0.0013228, 0.0013221)`;
+the reduced normalization budget does not dominate the reported uncertainty.
+
+C1 still flags 8217/99932 galaxies (8.22%) with log-Z R-hat >=1.1,
+compared with 8340 for the retained model. This is not evidence of universal
+chain convergence or completed calibration. C2 job 17543059 will rerun the
+1816 mag<21 galaxies at `(0.01901, 0.00151)`; final reduction 17543060 depends
+on it, with startup check 17543061. At this review C2 is pending resources;
+the scheduler's estimated start is provisional. No final two-step result yet.
+
 ## Frozen comparison — October 27, 2026
 
 Owner requested running the symmetric model with the earlier inference.

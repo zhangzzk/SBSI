@@ -1,5 +1,27 @@
 # Work log
 
+## 2026-10-27 — 10M normalization complete; symmetric C1 estimate available
+
+Reviewed successful capture 17541422, all 105 C1 units (99,932 galaxies,
+no omissions), and successful C1 reduction 17541432. Both exact 611-chunk
+prefixes were preserved, selection workers stopped as planned, and selection
+uncertainty was recomputed from 1222 chunks. Preliminary first-stage
+`g=(0.0190110,0.0015053)` with quoted errors `(0.0014316,0.0013408)`;
+old-model first-stage `c2=0.0037354±0.0013411`. This is a same-stage comparison,
+not the completed two-step result or a paired significance calculation.
+Selection contributes only about 0.000155 per shear component; statistical
+errors are about 0.001323. C1 log-Z R-hat >=1.1 flags 8217 galaxies (8.22%),
+so convergence limitations remain.
+
+C2 17543059 is pending GPU resources, rerunning the original 1816 bright
+galaxies at `(0.01901,0.00151)`; final 17543060 and startup check 17543061
+are queued with dependencies. Existing 2/4/6/8-hour checks remain scheduled.
+Recorded results and limitations in
+[the preliminary stage report](SYMMETRIC_FLOW_INFERENCE.md#preliminary-first-stage-result--october-27-2026).
+Validation: scheduler completion receipts, prefix/result metadata, logs, and
+same-stage old-model estimate inspected; `git diff --check` passed. No code,
+scientific settings or jobs changed. Next: C2 startup and final estimate.
+
 ## 2026-10-27 — Fix a 10.01M-scene preliminary normalization budget
 
 Owner requested approximately 10 million normalization scenes for a faster
