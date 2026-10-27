@@ -1,5 +1,49 @@
 # Symmetric-flow comparison with the earlier image inference
 
+## Spare-GPU expansion — October 28, 2026
+
+Owner explicitly requested using additional spare GPUs, including cip,
+superseding the four-GPU ceiling for the 500k extension. Scheduler inspection
+found all full-size inter/cip GPUs allocated and three idle 16GB A40 instances:
+`cip-cl-h01g02n2`, `cip-cl-h01g02n3`, `cip-cl-h01g04n3`. Per-user partition limits
+are inter eight GPUs/512 CPUs, cip three GPUs/64 CPUs/four jobs.
+
+Added three cip C1 workers, jobs 17546090/17546092/17546094, alongside the four
+existing inter workers: **seven GPU workers total**. Each cip allocation uses
+eight CPUs, six sampler slots and 24GB RAM, versus 32 CPUs/30 slots/200GB on
+the full-size workers. Measured full-size process-group memory was approximately
+50–94GB, so copying the 30-slot launch onto a 26GB cip node would be inappropriate.
+These smaller GPU instances do not represent three full-size GPUs of additional
+throughput; measure their contribution before revising the completion estimate.
+
+`jobs/job_sign_symmetric_cip_worker.sh` runs a short faint-chain integration
+smoke on each allocated instance before executing the unchanged frozen worker.
+It shares the same atomic claims, original units, seeds and numeric batches;
+the scientific source and frozen study inputs remain unchanged. A separate
+`resource_amendment.json` records this owner-authorized resource change and
+wrapper hash. Combined C1 reduction 17543236 was held during submission,
+updated to depend on all seven workers, and released. New startup file checks
+17546091/17546093/17546095 supplement the existing two-hourly checks.
+The later C2 launcher remains four inter workers; this amendment accelerates
+the large C1 workload. All three new allocations started on the idle nodes,
+passed frozen input verification and their short faint-chain integration
+smokes, and enabled MPS. Each claimed six distinct new faint units. Initial
+GPU activity is 33–52%, VRAM about 2.2–2.4GB, and initial process-group RSS
+about 8.5GB per worker; none has failed. At review the production prior-bank
+initialization is active, so a measured steady sampling speed is not yet available.
+
+## Completed preliminary 100k result — October 28, 2026
+
+The 10.01M-normalization two-step inference on 99,932 galaxies completed:
+`g1=0.01949692±0.00147115`, `c2=g2=0.00167706±0.00134066`;
+`m1=−2.5154%±7.3558` percentage points for injected g=(0.02,0), using the
+existing m convention. The final bright update flags 539/1816 galaxies with
+log-Z R-hat >=1.1; C1 still flags 8217/99932. The selection-only errors remain
+about 0.000155 per shear component. This is the completed preliminary run,
+not independent acceptance or evidence of robust 0.3% inference calibration.
+Its C2 results are preserved; the combined 500k C2 will use fresh chains at
+its own C1 shear.
+
 ## Extension by the next 400k rows — October 27, 2026
 
 Owner requested another 400k observations. Study

@@ -1,5 +1,41 @@
 # Work log
 
+## 2026-10-28 — Add three spare cip GPU workers to the symmetric 500k extension
+
+Owner requested using spare GPUs including cip, explicitly superseding the
+previous four-GPU ceiling for this extension. Scheduler inspection found no
+free full-size inter/cip GPUs but three idle 16GB A40 instances. Submitted
+17546090/92/94 on cip-cl-h01g02n2/n3 and cip-cl-h01g04n3: eight CPUs, six
+single-core slots, 24GB RAM each. Existing full-size workers use 32 CPUs,
+30 slots and measured 50–94GB process-group RSS. Total seven GPU allocations,
+within actual QoS limits (inter eight GPUs/512 CPUs; cip three GPUs/64 CPUs).
+
+Added `jobs/job_sign_symmetric_cip_worker.sh`, with a short per-node integration
+smoke before invoking the unchanged frozen worker. No sampler parameters,
+units, seeds, numerical batches, likelihood, normalization or estimator formulas
+changed. Shared atomic unit claims prevent duplicate work. Preserved the frozen
+four-GPU study manifest and recorded the explicit override plus wrapper hash
+in `resource_amendment.json`. Held C1 reduction 17543236 during submissions,
+added all three workers to its afterok dependency, then released it. Startup
+checks 17546091/93/95 and existing two-hourly checks cover the continuation.
+The later C2 launcher remains at four inter workers.
+
+Validation: shell syntax passed; all three new allocations started and verified
+the frozen parent, normalization and extension inputs. All three short faint
+GPU integration smokes passed (their short chains are not convergence tests),
+MPS started, and each worker claimed six distinct new faint units. Production
+prior-bank initialization is active: GPU utilization 33–52%, about 2.2–2.4GB
+VRAM and initial process-group RSS about 8.5GB, with no failed claims.
+No steady sampling throughput estimate yet. Smaller instances add fewer CPU processes than
+full-size workers, so a 7/4 throughput gain is not assumed. See the
+[resource amendment](SYMMETRIC_FLOW_INFERENCE.md#spare-gpu-expansion--october-28-2026).
+
+Also inspected the completed preceding 100k two-step result:
+`g=(0.01949692,0.00167706)`, quoted errors `(0.00147115,0.00134066)`;
+`m1=−2.5154%±7.3558` pp. Final bright convergence diagnostic flags 539/1816;
+this remains preliminary reused-data evidence. Recorded in the
+[completed report](SYMMETRIC_FLOW_INFERENCE.md#completed-preliminary-100k-result--october-28-2026).
+
 ## 2026-10-27 — Extend symmetric image inference by the next 400k sample rows
 
 Owner requested another 400k observations. Created
