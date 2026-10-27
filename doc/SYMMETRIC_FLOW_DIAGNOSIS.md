@@ -1,5 +1,74 @@
 # Symmetric F8 response investigation
 
+## Completed follow-ups — October 27, 2026
+
+The symmetric **base-guard checkpoint preserves the retained forward result**
+on all 80 reused development cases. Later harmonized refinement introduces the
+regression; extending the subsequent line search does not repair external
+calibration. C8 and the disk emulator are unchanged throughout.
+
+| Flow checkpoint with C8 | m (%) | Case-bootstrap SE (percentage points) |
+| --- | ---: | ---: |
+| Retained F8 | +0.020770 | 0.265152 |
+| Symmetric base guard | **+0.027957** | **0.264014** |
+| Symmetric original final refinement | +1.587790 | 0.268023 |
+| Symmetric extended-backtracking refinement | +1.636555 | 0.268136 |
+
+These use the unchanged [population, cuts, response and bootstrap](SYMMETRIC_FLOW_FORWARD.md#population-response-and-uncertainty):
+cases 40–119, antithetic g1=±0.02, 64 common-random-number draws,
+independent own-leg measured radius>0.6 arcsec/magnitude<25.8 cuts, no truth
+analysis cuts, and m=100*(R_sim/R_model−1)% as defined in
+[bias conventions](CONVENTIONS.md#7-multiplicative-bias).
+Base guard minus retained F8 is +0.007187 ±0.009915 percentage points;
+its paired 95% interval is [−0.012571,+0.026059] percentage points.
+The base-guard absolute 95% interval remains [−0.493487,+0.538585]%, so this
+does not establish robust absolute 0.3% calibration. Magnitude-bin cancellation
+also remains: absolute contributions sum to 3.453925 percentage points.
+With true usable flags, base guard gives +0.242738% ±0.264874 percentage points.
+
+Retain the base-guard artifact as a development candidate:
+`/project/ls-gruen/users/zekang.zhang/sbsi_caches/f8_signsym_20261026_v2/base/flow/guard/selected.pt`,
+SHA256 `21f772cfb87339292f9ef1df350d52fa44ed8cd9b3715068623051acb3737591`.
+Its original 1024-context symmetry audit passes with zero measured errors for
+all four sign actions. This remains a single-evaluation flow. Its checkpoint
+was selected by the original training rule, but identifying this stage as the
+preferred candidate uses development evidence; it is not independent acceptance.
+No production manifest or V3.9 identity changed. Posterior c2 and independent
+acceptance remain untested; unchanged C8 also prevents a claim that the entire
+likelihood is symmetric.
+
+Extended backtracking selected step 3, improving validation guard loss from
+0.03259707 to 0.02751997 with NLL deterioration of only 0.00009014 nat/row,
+inside the unchanged 0.001 budget. It passed the training screen and exact
+symmetry audit, but its 80-case external bias is still +1.636555%. Thus the
+line-search limitation was real, but fixing it did not fix response transfer.
+
+The asinh candidate completed training and passed symmetry. It improved full
+validation NLL by 0.03884983 nat/row, exceeding the predeclared 0.005 minimum,
+but worsened the per-leg guard to 0.32736388 versus 0.03259707. Its screen
+correctly rejected it; no external forward run was launched and no gate relaxed.
+
+Validation: `sacct` reports COMPLETED/0:0 for base-guard array 17519273 and
+summary 17519274, backtracking 17519144, external array 17519510 and summary
+17519511, and asinh training/screen 17519334–17519336. Both external summaries
+reproduce the retained control exactly. An independent metadata audit verified
+all 80 case IDs, protocol hashes, checkpoint hashes and zero C8 replay error
+in each array. `squeue` is empty at completion review.
+
+Preserved result receipts, relative to `/project/ls-gruen/users/zekang.zhang/sbsi_caches`:
+
+- Base guard: `f8_signsym_guard_forward_20261027_v1/summary.json`, SHA256
+  `3ffa6fcb185a1843f3083d23005d9f8a720898b2472da8820432880b9068e07a`;
+  protocol `91df23259aeddb80d56d319bf895987662a3350c9dcc194bdccfd5f56300a054`.
+- Backtracking: `f8_signsym_diagnosis_20261027_v1/forward_validation/summary.json`,
+  SHA256 `2a425d1cb77c48741baab8fd223c62e024e3383931f633e92977152005e69516`;
+  protocol `70d8fb3ad419866dfc31e3ca5044b3a539beeea56e79364eb82e21d7e377e46b`.
+- Asinh rejection: `f8_signsym_asinh_20261027_v1/validation_screen.json`.
+
+The sections below preserve the setup and startup evidence; this completion
+section supersedes their pending states. The next scientific check is the
+base-guard candidate in posterior inference, followed by independent calibration.
+
 ## Authorization and separation of evidence — October 27, 2026
 
 Owner requested autonomous investigation after the symmetric candidate's

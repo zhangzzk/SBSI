@@ -1,5 +1,34 @@
 # Work log
 
+## 2026-10-27 — Symmetric base guard preserves forward response; follow-ups complete
+
+All 80-case stage checks completed. With unchanged C8 and disk emulator,
+base guard gives m=+0.027957% ±0.264014 percentage points versus retained
+F8 +0.020770% ±0.265152; paired change +0.007187 ±0.009915 percentage points.
+The later refinement remains the source of the observed stage regression.
+Extended backtracking accepts step 3 and improves training-validation guard
+loss, but its external m=+1.636555% ±0.268136 still fails. Asinh improves
+validation NLL by 0.038850 nat/row but worsens guard loss to 0.327364 versus
+0.032597, so its predeclared screen rejects it without external evaluation.
+
+Updated `doc/SYMMETRIC_FLOW_DIAGNOSIS.md` with completed results, checkpoint
+and receipt hashes, and limitations; linked the outcome from
+`doc/SYMMETRIC_FLOW_FORWARD.md` and `doc/SYMMETRIC_FLOW_TRAINING.md`.
+Validation: `sacct -X` confirms all training/evaluation/summary jobs completed
+with exit 0; `squeue` is empty. Python metadata assertions pass for both
+80-case arrays: exact case IDs 40–119, matching protocol/checkpoint hashes,
+and zero C8 replay error. Both summaries exactly reproduce the old control.
+`git diff --check` passes; this update changes documentation only, so the
+previous 673-passed/4-skipped suite and four screen tests were not repeated.
+
+Retain the original base-guard checkpoint as a development candidate, without
+changing production manifests. Its point estimate is within 0.3%, but its
+95% interval is [−0.493487,+0.538585]% and magnitude-bin cancellation persists.
+Reused development cases do not provide independent acceptance. Next scientific
+work is posterior c2 validation of this candidate and independent calibration.
+See [completed evidence](SYMMETRIC_FLOW_DIAGNOSIS.md#completed-follow-ups--october-27-2026)
+for population/response conventions and exact artifact identity.
+
 ## 2026-10-27 — Locate response regression in later refinement; queue bounded follow-ups
 
 Completed stage attribution17519143 on fixed cases40/60/80/100: old control

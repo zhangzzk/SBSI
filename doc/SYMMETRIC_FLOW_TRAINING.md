@@ -14,6 +14,11 @@ Branch: `codex/model-symmetry`.
 
 ## Completion results — October 27, 2026
 
+Subsequent [80-case stage validation](SYMMETRIC_FLOW_DIAGNOSIS.md#completed-follow-ups--october-27-2026)
+retains `base/flow/guard/selected.pt` as a development candidate: its forward
+bias is +0.027957% ±0.264014 percentage points, while the final refined
+checkpoint described below gives +1.587790%. No production promotion occurred.
+
 Base17516711 and refinement17516727 completed with exit0, in19m25s and39m32s
 respectively:58m57s combined on one H200, excluding the earlier failed attempt
 and diagnostics. Label recovery17516726 also completed. All dependent stages

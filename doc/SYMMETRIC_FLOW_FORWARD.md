@@ -1,5 +1,11 @@
 # Symmetric F8 forward-model response on measured simulations
 
+Follow-up: the failure below concerns the final refined checkpoint. The
+[completed stage investigation](SYMMETRIC_FLOW_DIAGNOSIS.md#completed-follow-ups--october-27-2026)
+finds that the earlier symmetric base-guard checkpoint preserves the original
+80-case result: +0.027957% ±0.264014 percentage points. Neither result is
+independent acceptance.
+
 ## Completed result — October 27, 2026
 
 All80 cases and the aggregate summary completed successfully. The symmetric
