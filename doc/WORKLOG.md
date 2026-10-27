@@ -1,5 +1,34 @@
 # Work log
 
+## 2026-10-27 — Launch measured ConstGold forward-response check for symmetric F8
+
+Owner requested checking the new model's forward response against approximately
+0.3%. Added `scripts/evaluate_sign_symmetric_forward.py` and scheduler launcher:
+same80 ConstGold cases, g1=±0.02,64 CRN draws, original seeds/batch1024,
+own-leg measured0.6arcsec/25.8 cuts and no additional shape/truth cuts. C8 and
+disk emulator unchanged. Compare new and retained F8 with C8 weights and true
+usable-flag diagnostic weights; report paired case-bootstrap differences and
+magnitude-bin cancellation. Frozen99-file protocol and training-source checks;
+original measured/flow row hashes, parent identities and C8 per-case sums must
+replay. The final aggregate must reproduce the published retained m and SE.
+
+Validation: targeted summary tests **2 passed**, covering own-leg denominators,
+bias sign, paired differences, bin contributions and fail-closed control replay;
+Python/shell syntax and `git diff --check` pass. First chunk17518242 is running
+on one H200, with frozen inputs and case40 C8 replay passed. Remaining array
+17518243 is throttled1 after the first chunk; summary17518244 follows both.
+No other user GPU jobs were active; this study uses one GPU at a time.
+Case40 completed349,784 parents in71.5s and case41 is progressing. Scheduled
+one-shot CPU status receipts cover two hours, first-chunk end and summary end;
+these record results to disk, not chat notifications. Initial runtime estimate
+is1.5–2hours plus queue delays for the full comparison.
+
+Details and limitations: [frozen comparison](SYMMETRIC_FLOW_FORWARD.md#request-and-frozen-comparison--october-27-2026).
+This is forward-model validation using the original antithetic response,
+not a one-sided derivative or posterior run. Results pending; no production
+promotion or independent0.3% acceptance claimed. Next: monitor startup and
+evaluate the complete80-case summary, retaining unfavorable results too.
+
 ## 2026-10-27 — Symmetric F8 retraining completed; final symmetry audit passed
 
 Reviewed Slurm receipts and selected-checkpoint results for V2. Base17516711
