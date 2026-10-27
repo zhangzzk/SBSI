@@ -27,6 +27,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--reference", type=Path, required=True)
     parser.add_argument("--root", type=Path, required=True)
+    parser.add_argument("--invariant-features", choices=("bounded", "asinh"), default="bounded")
     args = parser.parse_args()
     repo = Path(__file__).resolve().parents[1]
     root, reference = args.root.resolve(), args.reference.resolve()
@@ -50,7 +51,8 @@ def main():
         shutil.copy2(repo / name, checkout / name)
     trainer = checkout / "scripts/train_fixed_g0_flow.py"
     replace_once(trainer, '"flow_type": "physical_disk_affine",',
-                 '"flow_type": "sign_symmetric_physical_disk_affine",')
+                 '"flow_type": "sign_symmetric_physical_disk_affine",\n'
+                 f'        "invariant_features": "{args.invariant_features}",')
     replace_once(trainer, '    physical = torch.as_tensor(train["target_raw"], dtype=torch.float64)',
         '''    # Fit shape coordinates to the conceptual four-reflection orbit.
     # No reflected rows are materialized and no training labels are changed.
@@ -90,6 +92,7 @@ def main():
             disk_emulator_sha256=fixed["emulator"]["sha256"]),
         symmetry=dict(group="Z2 x Z2 independent e1/e2 sign actions",
             flow_type="sign_symmetric_physical_disk_affine",
+            invariant_features=args.invariant_features,
             conditioning="first two signed shapes, zero means/fills; invariant conditioner features",
             physical_shape_centres=[0, 0], preprocessing="shape RMS about zero",
             full_joint_symmetry_claim=False),

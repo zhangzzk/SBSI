@@ -15,20 +15,28 @@ from .flow_physical_disk import ConditionalPhysicalDiskFlow
 
 
 class SignSymmetricCoupling(ConditionalAffineCoupling):
-    def __init__(self, target_dim, context_dim, **kwargs):
+    def __init__(self, target_dim, context_dim, invariant_features="bounded", **kwargs):
         if target_dim != 4 or context_dim < 2:
             raise ValueError("sign symmetry requires four outputs and two shape conditions")
+        if invariant_features not in ("bounded", "asinh"):
+            raise ValueError("unknown sign-symmetric invariant feature map")
         # Two extra invariants retain relative signs between unchanged shape
         # coordinates and their corresponding conditioning shapes.
         super().__init__(target_dim, context_dim + 2, **kwargs)
+        self.invariant_features = invariant_features
 
     def _shift_log_scale(self, x, context):
         masked = x * self.mask
         # A smooth odd bijection to (-1, 1) prevents quadratic amplification
         # of internal tail coordinates. Only conditioner features are mapped;
         # the invertible flow coordinates, density and data are not clipped.
-        odd_x = masked[..., :2] / torch.hypot(masked[..., :2], torch.ones_like(masked[..., :2]))
-        odd_c = context[..., :2] / torch.hypot(context[..., :2], torch.ones_like(context[..., :2]))
+        if self.invariant_features == "asinh":
+            # Logarithmic growth preserves tail distinctions while avoiding
+            # raw quadratic amplification. Oddness preserves both symmetries.
+            odd_x, odd_c = torch.asinh(masked[..., :2]), torch.asinh(context[..., :2])
+        else:
+            odd_x = masked[..., :2] / torch.hypot(masked[..., :2], torch.ones_like(masked[..., :2]))
+            odd_c = context[..., :2] / torch.hypot(context[..., :2], torch.ones_like(context[..., :2]))
         invariant_x = torch.cat((odd_x.square(), masked[..., 2:]), -1)
         invariant_context = torch.cat((odd_c.square(), context[..., 2:]), -1)
         relative = odd_x * odd_c
@@ -41,7 +49,7 @@ class SignSymmetricCoupling(ConditionalAffineCoupling):
 
 class SignSymmetricAffineFlow(ConditionalAffineFlow):
     def __init__(self, target_dim, context_dim, hidden_dim=256, n_layers=3,
-                 n_flows=8, scale_limit=3.0, activation="silu", **kwargs):
+                 n_flows=8, scale_limit=3.0, activation="silu", invariant_features="bounded", **kwargs):
         nn.Module.__init__(self)
         if n_flows < 1 or target_dim != 4:
             raise ValueError("positive layer count and four targets required")
@@ -50,7 +58,7 @@ class SignSymmetricAffineFlow(ConditionalAffineFlow):
         self.layers = nn.ModuleList([
             SignSymmetricCoupling(target_dim, context_dim, hidden_dim=hidden_dim,
                 n_layers=n_layers, mask=mask if i % 2 == 0 else 1 - mask,
-                scale_limit=scale_limit, activation=activation)
+                scale_limit=scale_limit, activation=activation, invariant_features=invariant_features)
             for i in range(n_flows)
         ])
 
@@ -58,9 +66,11 @@ class SignSymmetricAffineFlow(ConditionalAffineFlow):
 class SignSymmetricPhysicalDiskFlow(ConditionalPhysicalDiskFlow):
     """Four physical outputs with Z2 x Z2 conditional shape equivariance."""
 
-    def __init__(self, target_dim, context_dim, **kwargs):
+    def __init__(self, target_dim, context_dim, invariant_features="bounded", **kwargs):
         super().__init__(target_dim, context_dim, **kwargs)
-        self.base = SignSymmetricAffineFlow(target_dim, context_dim, **kwargs)
+        self.invariant_features = invariant_features
+        self.base = SignSymmetricAffineFlow(target_dim, context_dim,
+            invariant_features=invariant_features, **kwargs)
         self.validate_symmetry_coordinates()
 
     def validate_symmetry_coordinates(self):

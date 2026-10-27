@@ -1,5 +1,62 @@
 # Work log
 
+## 2026-10-27 — Locate response regression in later refinement; queue bounded follow-ups
+
+Completed stage attribution17519143 on fixed cases40/60/80/100: old control
+m=+0.068015%, symmetric NLL-only+0.624179%, base guard+0.076369%, final+1.629657%.
+About99.3% of the guard→final response drop is in the flow contribution;
+disk contribution changes little. This identifies the later refinement as
+the main regression in this subset. Its matched-pair guard improves while
+external calibration worsens; no training-stage causal mechanism beyond
+this transfer failure is claimed. Full80-case base-guard diagnostic17519273
+and summary17519274 are queued; no test-based checkpoint promotion.
+
+Backtracking17519144 reproduces baseline and rejects all six original rates,
+then accepts1.5625e-7 at its training gate. Full validation still pending.
+Screen17519337 can launch an external replay only for an eligible selected
+update, with a dependency on the base-guard array to retain two GPUs total.
+
+Asinh implementation full suite17519213: **673 passed,4 skipped**, one existing
+deprecation warning. Automated-screen tests: **4 passed**; syntax and scoped
+whitespace checks pass. Frozen asinh study/environment created; exact-label
+reuse17519333 passed. Base17519334 follows the backtracking diagnostic for
+the resource ceiling, then refinement17519335 and screen17519336. The
+screen uses only training-validation density/guard metrics, unchanged target
+scales and symmetry checks before scheduling any80-case external test.
+All original failures, checkpoint identities and response results remain
+preserved. See [stage attribution](SYMMETRIC_FLOW_DIAGNOSIS.md#completed-stage-attribution)
+and [autonomous chain](SYMMETRIC_FLOW_DIAGNOSIS.md#autonomous-candidate-chain).
+Startup continuation: backtracking step1 also passes full validation and is
+selected, guard0.032597→0.029495 with NLL change+0.0000668nat (inside0.001
+budget). Step2 accepts a smaller training step; final result pending.
+Scheduled one-shot receipts cover two/four hours and dependent-stage starts/
+ends, including dynamic external-run receipts. They save status to disk and
+do not send automatic chat notifications. Long jobs continue with fixed gates.
+
+## 2026-10-27 — Trace symmetric-flow response stages and investigate density loss
+
+Owner authorized autonomous investigation. Added stage/physical-density and
+reflection-projection diagnostics, with fixed four-case subsets and unchanged
+forward settings. GPU17519143 compares NLL/base-guard/final checkpoints and
+flow/disk contributions. CPU17519194 completed the validation projection:
+symmetrizing retained F8 improves physical NLL by0.019508 nat/row, whereas the
+new flow stages lose approximately0.04 nat/row. A fit loss is therefore not
+required by the symmetry constraint. These are diagnostics, not new acceptance.
+
+Training-only refinement17519144 extends the existing six backtracking
+halvings to12: even the smallest old step overshot the training probability
+target. All density/probability/response acceptance thresholds, reference banks
+and seeds remain fixed. No ConstGold tuning; original failed receipts retained.
+
+Added optional asinh invariant features to `sbsi/flow_sign_symmetric.py`,
+configuration validation in `sbsi/measurement_model.py`, setup support and
+tests for both maps. Old checkpoints retain the bounded-map default. This
+candidate preserves exact symmetry and one network call while retaining more
+tail detail than bounded features. Full suite17519213 running; no training
+or calibration success claimed. Details:
+[investigation](SYMMETRIC_FLOW_DIAGNOSIS.md#authorization-and-separation-of-evidence--october-27-2026).
+Related GPU work is capped at two, with scheduler dependencies for follow-ups.
+
 ## 2026-10-27 — Symmetric F8 fails measured forward-response target
 
 Reviewed completed80-case ConstGold comparison, confirmed all case receipts

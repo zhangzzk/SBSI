@@ -666,6 +666,11 @@ def _validate_disk_contract(model, target_transform, model_config=None):
         if not np.array_equal(getattr(model, name).detach().cpu().numpy(), value):
             raise ValueError(f"disk flow {name} differs from the target transform")
     from .flow_physical_disk import ConditionalPhysicalDiskFlow
+    from .flow_sign_symmetric import SignSymmetricPhysicalDiskFlow
+
+    if isinstance(model, SignSymmetricPhysicalDiskFlow) and model_config is not None:
+        if model_config.get("invariant_features", "bounded") != model.invariant_features:
+            raise ValueError("sign-symmetric invariant feature map differs from config")
 
     if isinstance(model, ConditionalPhysicalDiskFlow):
         if target_transform.target_names[2:] != ["measured_flux_radius", "measured_flux_from_mag_auto"]:

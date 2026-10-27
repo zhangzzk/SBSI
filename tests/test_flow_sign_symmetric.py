@@ -17,7 +17,7 @@ FEATURES = ["e1_input_p", "e2_input_p", "sersic_n_input_p", "r_input_p",
 TARGETS = ["measured_ngmix_g1", "measured_ngmix_g2", "measured_flux_radius", "measured_flux_from_mag_auto"]
 
 
-def fixture_model():
+def fixture_model(invariant_features="bounded"):
     torch.manual_seed(611)
     cfg = dict(flow_type="sign_symmetric_physical_disk_affine",
         target_dim=4, context_dim=16, hidden_dim=12, n_layers=2, n_flows=4,
@@ -25,7 +25,7 @@ def fixture_model():
         disk_coordinate_means=[0., 0.], disk_coordinate_scales=[.5, .7],
         physical_map="softplus", physical_means=[3., 100.], physical_scales=[1., 50.],
         physical_units=[1., 100.], physical_coordinate_means=[.2, -.1],
-        physical_coordinate_scales=[.8, 1.2])
+        physical_coordinate_scales=[.8, 1.2], invariant_features=invariant_features)
     model = build_flow(cfg).double()
     # Exercise a nonidentity flow, including nonzero odd/even shifts.
     with torch.no_grad():
@@ -36,8 +36,9 @@ def fixture_model():
 
 
 @pytest.mark.parametrize("signs", list(itertools.product((-1., 1.), repeat=2)))
-def test_physical_generation_density_gradient_and_transport_equivariance(signs):
-    model, _ = fixture_model()
+@pytest.mark.parametrize("invariant_features", ["bounded", "asinh"])
+def test_physical_generation_density_gradient_and_transport_equivariance(signs, invariant_features):
+    model, _ = fixture_model(invariant_features)
     context = torch.randn(12, 16, dtype=torch.float64)
     context[:4, :2] = torch.tensor([[0, 0], [0, .3], [.2, 0], [1e-12, -1e-12]])
     context[:, 8:] = 0
@@ -77,8 +78,9 @@ def test_physical_generation_density_gradient_and_transport_equivariance(signs):
     torch.testing.assert_close(ld_m, moved_ld, atol=1e-13, rtol=0)
 
 
-def test_full_physical_jacobian_and_training_step():
-    model, _ = fixture_model()
+@pytest.mark.parametrize("invariant_features", ["bounded", "asinh"])
+def test_full_physical_jacobian_and_training_step(invariant_features):
+    model, _ = fixture_model(invariant_features)
     context = torch.randn(1, 16, dtype=torch.float64) * .2
     z = torch.tensor([.2, -.1, .4, -.5], dtype=torch.float64, requires_grad=True)
     jac = torch.autograd.functional.jacobian(lambda value: model.forward_physical(value[None], context)[0][0], z)
@@ -99,14 +101,19 @@ def test_full_physical_jacobian_and_training_step():
     torch.testing.assert_close(actual, expected, rtol=0, atol=1e-13)
 
 
-def test_checkpoint_preprocessing_and_contract(tmp_path):
-    model, cfg = fixture_model()
+@pytest.mark.parametrize("invariant_features", ["bounded", "asinh"])
+def test_checkpoint_preprocessing_and_contract(tmp_path, invariant_features):
+    model, cfg = fixture_model(invariant_features)
     model.base.float()  # Physical coordinate buffers must remain float64.
     pre = TabularPreprocessor(FEATURES, np.zeros(8, np.float32), np.zeros(8, np.float32), np.ones(8, np.float32))
     target = TargetStandardizer(TARGETS, np.array([0., 0., 3., 100.]), np.array([.3, .4, 1., 50.]), "float64")
     path = tmp_path / "candidate.pt"
     save_measurement_model(path, model, pre, target, cfg)
+    wrong_cfg = dict(cfg, invariant_features="asinh" if invariant_features == "bounded" else "bounded")
+    with pytest.raises(ValueError, match="differs from config"):
+        save_measurement_model(tmp_path / "wrong.pt", model, pre, target, wrong_cfg)
     bundle = load_measurement_model(path)
+    assert bundle.model.invariant_features == invariant_features
     raw = np.random.default_rng(1).normal(size=(8, 8)).astype(np.float32)
     raw[0, :2] = np.nan
     mirrored = raw.copy()
@@ -140,8 +147,9 @@ def test_nonzero_physical_centres_rejected():
             build_flow(dict(cfg, **{key: [.01, 0.]}))
 
 
-def test_extreme_internal_shape_coordinates_have_finite_training_gradients():
-    model, _ = fixture_model()
+@pytest.mark.parametrize("invariant_features", ["bounded", "asinh"])
+def test_extreme_internal_shape_coordinates_have_finite_training_gradients(invariant_features):
+    model, _ = fixture_model(invariant_features)
     model.base.float()
     context = torch.randn(4, 16) * .2
     # Stress the base inverse directly: a small physical disk gap can encode
@@ -153,3 +161,11 @@ def test_extreme_internal_shape_coordinates_have_finite_training_gradients():
     loss.backward()
     norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 5., error_if_nonfinite=True)
     assert torch.isfinite(norm)
+
+
+def test_original_feature_map_is_the_checkpoint_default():
+    _, cfg = fixture_model()
+    cfg.pop("invariant_features")
+    assert build_flow(cfg).invariant_features == "bounded"
+    with pytest.raises(ValueError, match="invariant feature map"):
+        build_flow(dict(cfg, invariant_features="unknown"))
