@@ -82,6 +82,44 @@ buffers remain float64. Both zero-component boundaries are included in tests.
 
 ## Frozen training recipe
 
+### Current recipe: stop after base response training
+
+On October 27 the owner requested removing the later refinement after the
+[completed comparison](SYMMETRIC_FLOW_DIAGNOSIS.md#completed-follow-ups--october-27-2026).
+New studies created by `scripts/setup_sign_symmetric_flow.py` now run:
+
+1. The original NLL fit and base response-guard training, with unchanged data,
+   seeds, epochs and checkpoint-selection rules.
+2. The real-context symmetry/inverse audit on `base/flow/guard/selected.pt`.
+3. Write `trained_candidate.json` pointing to that exact checkpoint, including
+   its hash, audit hash, unchanged component identities and
+   `production_accepted=false`.
+
+`scripts/run_sign_symmetric_flow.py` implements this base-only path. The
+launcher accepts only `train` (also its default); labels, harmonized refinement,
+joint-probability refinement and their dependencies are removed. Setup links
+only the base domain and freezes the runner, audit and launcher. The usual
+isolated environment, resource detector, input verifier and launch-input hashes
+must still be prepared before submission. Candidate publication requires a
+passing audit whose checkpoint path and hash match the selected base artifact.
+
+The already trained V2 base-guard checkpoint can be reused; removing the later
+stage does not require retraining it. Frozen historical study runners, manifests,
+failed-refinement evidence and V3.9 identities are preserved. Historical
+refinement diagnostics are separate from this training path. The base response
+guard remains: removing that too would instead choose the NLL-only model,
+which has different measured behavior.
+
+Validation: seven small orchestration tests pass, covering rejection of removed
+stages and candidate publication with matching, stale, failed and wrong-path
+audits. Setup against the real frozen reference passes in a disposable directory;
+Python and shell syntax checks pass. No new training was launched for this change.
+
+### Historical full-chain recipe
+
+The following describes the completed V1/V2/asinh experiments, not the current
+training path.
+
 Reference: `sbsi_caches/v36_f8_20260924_v1` and its hashed
 `sbsi_flow_f8_20260924` source. Restore its training modules deliberately into
 the study's isolated `source_snapshot`, overlay current compatible flow density

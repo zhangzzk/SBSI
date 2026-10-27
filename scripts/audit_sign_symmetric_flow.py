@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Audit physical generation, density, inverse and scores on real F8 contexts."""
 import argparse
+import hashlib
 import itertools
 import json
 import os
@@ -77,7 +78,8 @@ def main():
         if not all(np.isfinite(v) and v <= 1e-5 for v in errors.values()):
             raise ValueError(f"reflection {signs} failed: {errors}")
         records.append(dict(signs=signs, maximum_errors=errors))
-    result = dict(status="passed", flow=str(path), device=torch.cuda.get_device_name(),
+    result = dict(status="passed", flow=str(path.resolve()),
+        flow_sha256=hashlib.sha256(path.read_bytes()).hexdigest(), device=torch.cuda.get_device_name(),
         observations=len(raw), cases="case000 contexts with explicit zero/near-zero shape probes",
         inverse_max_error=inverse_error, inverse_logdet_max_error=ld_error,
         reflections=records, full_joint_symmetry_claim=False,

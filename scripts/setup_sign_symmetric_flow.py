@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Freeze the retained F8 training recipe with a new sign-symmetric flow.
+"""Freeze symmetric F8 density and base-response training without later refinement.
 
 Restores the historical training modules into a study-local source snapshot;
 the active library never imports archived experiment code. Input domains are
@@ -70,14 +70,14 @@ def main():
         '''    disk_scales = torch.hypot(shape_coordinate.std(0, correction=1)
         * np.sqrt((len(shape_coordinate) - 1) / len(shape_coordinate)), disk_means)
     disk_means = torch.zeros_like(disk_means)''')
-    for part in ("base", "harmonized"):
+    for part in ("base",):
         (root / part).mkdir(exist_ok=True)
         (root / part / "domain").symlink_to(reference / part / "domain", target_is_directory=True)
-    for folder in ("joint", "status", "logs"):
+    for folder in ("status", "logs"):
         (root / folder).mkdir(exist_ok=True)
-    shutil.copy2(reference / "run_v36_f8_stage.py", root / "run_stage.py")
-    # Keep the original label regeneration/replay and complete refinement chain.
-    # Its evaluate entry point is deliberately not launched by this study.
+    shutil.copy2(repo / "scripts/run_sign_symmetric_flow.py", root / "run_stage.py")
+    shutil.copy2(repo / "scripts/audit_sign_symmetric_flow.py", root / "audit_sign_symmetric_flow.py")
+    shutil.copy2(repo / "jobs/job_sign_symmetric_flow.sh", root / "job.sh")
     fixed = json.loads((repo / "configs/models_v3_9_like.json").read_text())
     experiment = dict(old)
     experiment.update(name="F8 independent shape-sign symmetry; C8 unchanged",
@@ -87,6 +87,8 @@ def main():
             for p in sorted(checkout.rglob("*")) if p.is_file()},
         overlay_hashes={name: digest(repo / name) for name in overlays},
         runner_sha256=digest(root / "run_stage.py"),
+        audit_sha256=digest(root / "audit_sign_symmetric_flow.py"),
+        launcher_sha256=digest(root / "job.sh"),
         fixed_components=dict(flow_control_sha256=fixed["flow"]["sha256"],
             classifier_sha256=fixed["classifier"]["sha256"],
             disk_emulator_sha256=fixed["emulator"]["sha256"]),
@@ -102,7 +104,10 @@ def main():
             "C8 unchanged: symmetry of the full usable-event kernel is not guaranteed.",
             "No ConstGold rows used for training or checkpoint selection.",
             "Retained training truth-domain bounds and guard losses are unchanged."])
-    experiment["training"] = dict(old["training"], recipe="retained full base/labels/refinement chain with sign-symmetric architecture")
+    experiment["training"] = dict(old["training"],
+        recipe="retained NLL and base response guard with sign-symmetric architecture",
+        stages=["base"], later_refinement=False,
+        candidate_checkpoint="base/flow/guard/selected.pt")
     (root / "experiment.json").write_text(json.dumps(experiment, indent=2) + "\n")
     print(json.dumps(dict(root=str(root), snapshot=str(checkout), files=len(experiment["checkout_hashes"]))))
 

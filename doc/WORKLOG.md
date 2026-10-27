@@ -1,5 +1,26 @@
 # Work log
 
+## 2026-10-27 — Remove later refinement from symmetric-flow training
+
+Owner requested removing refinement. New symmetric-flow studies retain the
+original NLL and base response-guard training and stop at
+`base/flow/guard/selected.pt`. Added `scripts/run_sign_symmetric_flow.py` to
+run that stage, audit it, and write a hash-bound `trained_candidate.json` with
+unchanged fixed components and no production acceptance. Setup now freezes this
+runner/audit/launcher, records the base-only recipe and links only the base
+domain. The launcher rejects removed labels/refine/evaluate stages before work.
+The audit now records the checkpoint SHA256; publication rejects stale, failed
+or wrong-checkpoint audits. Historical frozen experiments are not rewritten.
+
+Validation: `python -m pytest tests/test_sign_symmetric_training.py -q` using
+py31: **7 passed**. Disposable setup using the real retained reference passes;
+runner/audit/launcher copies match and no harmonized/joint directories are
+created. Python AST parsing, `bash -n jobs/job_sign_symmetric_flow.sh` and
+`git diff --check` pass. This changes research orchestration, not model math;
+no heavy training or full-suite rerun was needed. The existing base checkpoint
+can be reused. Posterior c2 and independent acceptance remain outstanding.
+See [current recipe](SYMMETRIC_FLOW_TRAINING.md#current-recipe-stop-after-base-response-training).
+
 ## 2026-10-27 — Symmetric base guard preserves forward response; follow-ups complete
 
 All 80-case stage checks completed. With unchanged C8 and disk emulator,
