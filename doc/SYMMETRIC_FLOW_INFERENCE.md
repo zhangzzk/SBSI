@@ -1,5 +1,75 @@
 # Symmetric-flow comparison with the earlier image inference
 
+## Extension by the next 400k rows — October 27, 2026
+
+Owner requested another 400k observations. Study
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_constgold500k_signsym_20261027`
+extends the same frozen, randomly ordered 500,000-row ConstGold plus-leg sample.
+Keep rows 100000–499999 (zero-based positions before the additional model cuts)
+as new data; retain the first 100000-row prefix already processed. Apply the
+same measured radius<100 pixels and |e|<0.99 cuts to the full prefix; retain
+the original measured radius>3 pixels and magnitude<25.8 selection, without
+truth-property cuts. Report retained and dropped counts separately for the
+previous, additional and combined samples.
+
+Preparation verifies the source catalogue hashes, exact equality of the old
+retained measurement/provenance prefix, unique catalogue identities and zero
+old/new overlap. Input matching is inherited from the source manifest; no new
+unmatched rows may be silently introduced. This is additional sampling from
+the same 100 cases, not new image simulations or independent acceptance.
+
+Reuse the 105 completed C1 units by links, pinning protocol/result/profile
+hashes and their exact old reference. Their original unit indices and seeds
+remain unchanged. Append new bright/faint units with maximum sizes 640/1024;
+new seeds continue at the original C1 unit offset 105. Four chains, 20480
+steps, 8192 warmup, stride 16, prior-bank initialization and bright tempering
+remain fixed. Each of four GPU workers uses 32 CPUs and 30 slots. Three may
+start after the extension preflight while the preceding 100k C2 uses one GPU;
+the fourth additionally waits for that older GPU job to end. This enforces
+the four-GPU combined ceiling without blocking on its unrelated CPU reduction.
+
+The combined estimator reuses the exact candidate-specific 10,010,624-scene
+normalization. Model, prior, conditions and measured cuts are identical.
+Selection errors are propagated for the larger population with the existing
+formula. Do not divide the old normalization uncertainty by sqrt(5).
+Combined C1 uses all retained old/new galaxies. C2 reruns **all** combined
+mag<21 galaxies at the combined C1 shear, with the existing C2 sampler settings
+and seed bases, units of at most 61 galaxies and four workers. Previous 100k
+C2 chains cannot substitute for chains at the combined estimate. Reduction
+formulas and galaxy/case bootstrap seeds are unchanged.
+
+The frozen sampler snapshot is reused intact. New orchestration is in
+`scripts/extend_sign_symmetric_inference.py` and
+`jobs/job_sign_symmetric_extension.sh`. The estimator copy changes only its
+root and verified per-unit reference handling; its selection reader is the
+already tested preliminary reader. Preparation, bright/faint short integration
+smokes and production are sequentially gated. Code smokes do not establish
+posterior convergence. No C1 observation can be duplicated, omitted or
+silently dropped: preparation verifies exact unit coverage, and the existing
+estimator verifies it again. Frozen setup/preparation manifests guard inputs.
+Scheduled one-shot file checks cover startup and every two hours through 24h.
+
+Validation before launch: ten lightweight tests passed for exact old-prefix
+reuse, changed-prefix/overlap/duplicate rejection, and bounded units covering
+all rows exactly once. Shell syntax and `git diff --check` passed. Preparation
+job 17543229 and preflight 17543231 gate C1 workers 17543232–17543235; combined
+C1 estimate 17543236 waits for all four workers. Exact preparation counts and
+startup receipts follow.
+
+Preparation 17543229 completed in 1m09s, passing source/prefix/coverage and
+frozen-input checks. The additional 400,000 raw rows retain **399,702**:
+298 fail |e|<0.99, none fail the upper radius cut. Combined with the previous
+99,932, this yields **499,634 galaxies** from all 100 cases. There are zero
+new unmatched rows, duplicate catalogue identities or old/new overlaps.
+The extension adds 418 C1 units (45,106 bright, 354,596 faint galaxies);
+combined C2 has 9343 mag<21 galaxies in 154 units. Observation SHA256 is
+`ea612f50129f2c1f112a8e31dd99ce5ad910867f57334f503df15c0e375e7bda`;
+truth bookkeeping SHA256 is
+`423bd585c613121c0334ba86b51be66f700e2ef364ee2cdc0d091e40a0672810`.
+Generated estimator syntax also passed. At submission review GPU preflight
+17543231 is pending resources; production remains dependency-gated. No new
+production chains or combined estimates have completed yet.
+
 ## Preliminary 10-million-scene amendment — October 27, 2026
 
 Owner requested a faster evaluation using approximately 10 million normalization

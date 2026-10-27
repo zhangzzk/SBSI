@@ -1,5 +1,52 @@
 # Work log
 
+## 2026-10-27 — Extend symmetric image inference by the next 400k sample rows
+
+Owner requested another 400k observations. Created
+`galsbi_constgold500k_signsym_20261027` with the same symmetric base-guard flow,
+C8, disk, prior, conditions and cuts. Select the next 400,000 raw rows from
+the frozen 500k ConstGold plus-leg sample, apply the existing model cuts,
+and combine with the exact retained first-100k prefix. Reuse all old C1
+chains, not the old C2 chains. Preparation rejects any changed old row,
+duplicate catalogue identity, overlap or incomplete unit coverage. Preserve
+source matching/drop accounting and report new cut counts separately.
+
+Added `scripts/extend_sign_symmetric_inference.py` and
+`jobs/job_sign_symmetric_extension.sh`. Frozen sampler source is unchanged.
+New C1 units append after the original 105 unit indices, continuing its seed
+schedule; maximum bright/faint sizes 640/1024 and all sampler settings stay
+fixed. The combined estimator uses the same formulas and bootstrap seeds,
+with explicit validated references for cached versus new units. Reuse the
+hash-pinned 10,010,624-scene normalization and propagate its uncertainty for
+the combined sample. C2 resamples all combined mag<21 galaxies at its new
+C1 shear. Four GPUs maximum including the still-running 100k C2: three
+workers after preflight, the fourth also after that prior GPU job ends.
+
+Validation: `py31 -m pytest tests/test_sign_symmetric_extension.py -q`:
+**10 passed** (exact prefix, changed measurement rejection, both catalogue
+identity duplicate checks, overlap rejection, bounded/exhaustive batching).
+Shell syntax and `git diff --check` passed. Submitted CPU preparation
+17543229, GPU preflight 17543231, four C1 workers 17543232–17543235 and
+combined C1 reduction 17543236. Startup checks 17543237–17543240 and
+two-hourly checks 17543241–17543252 save receipts through 24 hours.
+Parent and normalization verifiers passed at preparation startup.
+Preparation then completed in 1m09s with all source, exact-prefix and unit
+coverage checks passed: 399,702 new retained galaxies, 298 removed by
+|e|>=0.99 and zero by radius>=100; **499,634 combined**. No new unmatched
+rows, duplicate catalogue identities or old/new overlap. Added 418 C1 units;
+combined bright C2 covers 9343 galaxies in 154 units. Generated estimator
+AST validation passed. Preflight 17543231 remains pending GPU resources;
+production jobs are correctly gated, with startup/timed checks scheduled.
+Meanwhile preceding 100k C2 17543059 has all 30 units initialized and
+advancing (steps 4480–6784), without a final result yet.
+
+Limits: same 100 cases and known shear, not independent acceptance; unchanged
+chain-convergence limitations; fixed normalization noise becomes relatively
+more important for the larger sample. See the
+[extension protocol](SYMMETRIC_FLOW_INFERENCE.md#extension-by-the-next-400k-rows--october-27-2026).
+Next: inspect preparation counts, preflight and production startup, then
+combined C1/C2 results.
+
 ## 2026-10-27 — 10M normalization complete; symmetric C1 estimate available
 
 Reviewed successful capture 17541422, all 105 C1 units (99,932 galaxies,
