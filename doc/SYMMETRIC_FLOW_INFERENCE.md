@@ -1,5 +1,43 @@
 # Symmetric-flow comparison with the earlier image inference
 
+## Preliminary 10-million-scene amendment — October 27, 2026
+
+Owner requested a faster evaluation using approximately 10 million normalization
+scenes. The 99,932 observed galaxies and all sampler settings remain unchanged.
+Use exactly the first 611 chunks from each already running original-seed
+replica 0 and 1: **10,010,624 scenes**, 1222 independent scene chunks, 16
+conditional draws and the same five shear nodes. The cutoff was fixed from
+the requested sample budget before inspecting shear estimates or selection
+values. The eight-draw nested values are retained as diagnostics, not used
+for the main estimate. This supersedes the full normalization budget below
+for the current preliminary evaluation only.
+
+Outputs live under the study's `preliminary_10m/`. Existing C1 chains and
+reference files are reused through links; C1 estimates and fresh C2 runs
+are written separately. The frozen estimator is imported unchanged, with
+only the output root and selection reader replaced. C2 uses the preliminary
+C1 shear, original units/seeds/settings and one eligible inter GPU. Selection
+uncertainty is recalculated from the 1222 chunks using the existing estimator;
+its expected Monte Carlo error is about 2.29 times the 52.4M-budget error.
+This does not multiply the entire inference uncertainty by 2.29.
+
+Cancel the six unstarted normalization replicas and original full-budget
+estimator. A CPU capture job waits for each running replica to reach 611
+chunks, validates and preserves that exact prefix with hashes, and only then
+cancels that selection worker. Keep all original files and the frozen 52.4M
+plan; that original run remains incomplete, never relabelled as complete.
+The preliminary estimator requires both prefixes and all C1 units. A separate
+receipt records the owner-authorized budget change and launch jobs. Total
+concurrent GPUs remain below four.
+
+Implementation: `scripts/run_sign_symmetric_preliminary.py` and
+`jobs/job_sign_symmetric_preliminary.sh`. Ten lightweight tests validate the
+fixed count/full draw choice and reject incomplete prefixes, changed model,
+seed, plan or depth, corrupted archives, incorrect nodes and nonfinite values.
+Frozen parent and preliminary input verification passed; shell syntax and
+`git diff --check` passed. Check jobs save receipts at 2/4/6/8 hours; C2 also
+has a startup check. These are file receipts, not chat notifications.
+
 ## Frozen comparison — October 27, 2026
 
 Owner requested running the symmetric model with the earlier inference.

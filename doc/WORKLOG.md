@@ -1,5 +1,47 @@
 # Work log
 
+## 2026-10-27 — Fix a 10.01M-scene preliminary normalization budget
+
+Owner requested approximately 10 million normalization scenes for a faster
+evaluation. Added `scripts/run_sign_symmetric_preliminary.py` and
+`jobs/job_sign_symmetric_preliminary.sh`; documented the
+[budget amendment](SYMMETRIC_FLOW_INFERENCE.md#preliminary-10-million-scene-amendment--october-27-2026).
+Use the first 611 chunks from each existing original-seed selection replica
+0/1, exactly 10,010,624 scenes with the original 16 draws/five shear nodes.
+This count was fixed by requested budget before inspecting estimate values.
+Reuse all 99,932 observations and the original C1 sampler results. Separate
+`preliminary_10m/` estimates and C2 runs preserve the original study's inputs
+and outputs. The estimator's formulas, bootstraps and sampler seeds stay
+unchanged; its selection reader uses the validated prefix, and uncertainty
+is recomputed from all 1222 chunks. The new model's own normalization is used.
+
+Cancelled original pending full-budget estimator 17530928 and selection
+array 17530927 tasks 2–7. CPU capture job 17541422 preserves each exact
+prefix with checksums before cancelling its corresponding running worker.
+No original source/plan/result is rewritten or represented as full completion.
+The first preliminary estimator submission was rejected by Slurm because
+completed worker 17530831 was no longer accepted as a dependency. Verified
+its accounting state COMPLETED/0:0 and retained active worker/capture
+dependencies on resubmission. Launch IDs and the amendment are recorded in
+the study directory. Replacement estimator 17541432 waits on active C1 worker
+17530830 and capture 17541422; checks 17541434/35/36/38 are scheduled at
+2/4/6/8 hours. Capture startup passed both input verifiers and resource
+detection, then read advancing source prefixes at 409/440 of 611 chunks.
+At setup, 97/105 C1 units were done; normalization had
+408/440 chunks. Estimated normalization duration is roughly six hours total,
+followed by reduction and C2; queue time remains uncertain.
+
+Validation: `py31 -m pytest tests/test_sign_symmetric_preliminary.py -q`:
+**10 passed**. These reject incorrect budgets/identities/seeds, corruption,
+wrong nodes, incomplete prefixes and nonfinite values. Parent's frozen
+492-file source verification and the new frozen input manifest passed;
+pipeline shell syntax and `git diff --check` passed. No likelihood/model
+implementation changed. Scheduled file checks and C2 startup check cover
+the continuation. Limits: a preliminary reused-data result, increased
+normalization noise (approximately 2.29x its former standard error), no
+independent acceptance or 0.3% calibration claim. Next: inspect capture,
+C1 estimate, C2 startup and final uncertainty components.
+
 ## 2026-10-27 — Launch symmetric base-guard F8 with the earlier 100k image inference
 
 Owner requested running the symmetric model with the earlier inference.
