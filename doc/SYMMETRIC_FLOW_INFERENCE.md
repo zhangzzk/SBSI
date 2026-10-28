@@ -1,5 +1,31 @@
 # Symmetric-flow comparison with the earlier image inference
 
+## Million-observation replay failure — October 28, 2026
+
+At 16:32 local the run had stopped with 1043/1045 first-stage units complete,
+covering 997,625/999,285 retained galaxies. Of 522 new units, 520 completed.
+The remaining two units, comprising 1660 galaxies, failed an invariant-cache
+audit on both the initial attempt and its identical retry:
+
+| Unit | Original GPU | Maximum log-kernel difference | Maximum summary difference |
+| --- | --- | --- | --- |
+| `bright_ext523_add0041` | V100 | 3.1509817262e-6 | 4.2632564146e-14 |
+| `faint_ext523_add0028` | A40 | 1.1639255817e-6 | 4.2632564146e-14 |
+
+The frozen log-kernel tolerance is 1e-6. Failure receipts match exactly across
+attempts; initial-state replay was zero. These are numerical replay failures,
+not measured shear results. No combined C1 estimate or C2 result exists;
+reduction 17559917 was cancelled by its failed-worker dependency. All scientific
+artifacts are preserved. The previous completion estimate no longer applies.
+
+Separate diagnostics 17574583/17574584 capture the offending coordinates,
+summaries, cached/recomputed kernels and observation identities after the same
+guard fails. Their source is an independently verified copy with instrumentation
+added only at the failure branch. No tolerance/seed/batch/target changes; no
+diagnostic output may be substituted into production. Both diagnostic jobs use
+A40 GPUs, so the original bright V100 trajectory is not assumed identical.
+Root: `galsbi_constgold1m_signsym_20261028/replay_diagnostic_v1`.
+
 ## Extension to one million raw observations — October 28, 2026
 
 Owner requested another 500,000 observations after the completed 500k result.

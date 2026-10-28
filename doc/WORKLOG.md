@@ -1,5 +1,35 @@
 # Work log
 
+## 2026-10-28 — Million-observation run stops at two invariant replay failures
+
+Status check at 16:32 local found 1043/1045 C1 units complete: 997,625/999,285
+galaxies, including 520/522 new units. Two units failed both their original
+attempt and identical permitted retry. `bright_ext523_add0041` on V100
+reports maximum log-kernel replay discrepancy 3.1509817262e-6;
+`faint_ext523_add0028` on A40 reports 1.1639255817e-6. Both exceed the frozen
+1e-6 limit; maximum summary differences are 4.2632564146e-14. Initial replay
+was exactly zero; each failure report is identical across its two attempts.
+Completed outputs and all failed artifacts remain intact. Workers 17559910
+and 17559913 exited 1; the other five completed. Dependent reduction 17559917
+was cancelled, and C2 never started. The file-only monitor recorded the failure
+and stopped; there was no automatic chat notification. Earlier ETA is withdrawn.
+
+Added `scripts/setup_sign_symmetric_replay_diagnostic.py` to create a separate
+verified source copy and capture states/summaries/likelihoods only after the
+original guard fails. It preserves the fatal guard, seeds, observation batches,
+and sampling recipe. Diagnostic outputs are never eligible for production.
+Submitted two isolated A40 diagnostics 17574583/17574584 under
+`galsbi_constgold1m_signsym_20261028/replay_diagnostic_v1`; the bright diagnostic
+uses different GPU hardware from its original V100 failure, so exact path replay
+must be checked. Original and instrumented source manifests passed SHA checks;
+Python AST and shell syntax checks passed. A synthetic execution of the failure
+capture verified the observation/chain/temperature mapping and pickle-free NPZ
+output (`FAILURE_CAPTURE_SMOKE_PASSED`). Both diagnostic jobs started; the bright
+run has recorded sampler steps. Two-hour status check 17574634 was scheduled.
+Production remains stopped pending
+diagnosis; no tolerance relaxation, galaxy exclusion or additional production
+retry. See [million-run failure](SYMMETRIC_FLOW_INFERENCE.md#million-observation-replay-failure--october-28-2026).
+
 ## 2026-10-28 — Launch another 500k observations with completed C1 reuse
 
 Owner requested another 500k. Added `scripts/freeze_constgold_extension.py`
