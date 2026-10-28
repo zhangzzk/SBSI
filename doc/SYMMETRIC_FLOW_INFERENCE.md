@@ -1,5 +1,27 @@
 # Symmetric-flow comparison with the earlier image inference
 
+## Combined 500k first-stage result — October 28, 2026
+
+All 523 C1 units completed successfully, including the 105 reused units and
+418 new units. All seven workers exited 0:0. The combined estimate covers
+499,634 galaxies in 100 cases with no omissions. C1 reduction 17543236
+completed in 17m15s:
+
+* `g1=0.0190182842 ±0.0006432921`, or `m1=−4.9086% ±3.2165` percentage points.
+* `c2=g2=0.0007706967 ±0.0006087584` for injected g=(0.02,0).
+* Selection-only shear uncertainties `(0.0001549563, 0.0001519856)` versus
+  statistical uncertainties `(0.0005903236, 0.0005848092)`.
+* 41,363 galaxies (8.28%) have log-Z R-hat >=1.1; convergence limitations remain.
+
+These are first-stage estimates, not the final two-step result. C2 workers
+17548532/34/36/38 are advancing on four inter GPUs at the combined C1 shear
+`(0.01902,0.00077)`, covering all 9343 mag<21 galaxies. At 06:23 Berlin time,
+90/154 units were done with no failed claims and all remaining units active;
+the slowest active units projected about 35–40 minutes remaining. Final CPU
+reduction 17548540 waits for all four workers. Allow roughly another hour to
+90 minutes including reduction and scheduling. The normalization is reused
+unchanged; no scientific settings were altered for this status review.
+
 ## Spare-GPU expansion — October 28, 2026
 
 Owner explicitly requested using additional spare GPUs, including cip,

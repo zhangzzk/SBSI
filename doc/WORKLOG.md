@@ -1,5 +1,25 @@
 # Work log
 
+## 2026-10-28 — Combined 500k C1 complete; final bright update progressing
+
+Status review verified all seven C1 worker jobs completed 0:0 and all
+523 units done (105 reused +418 new), with no failed claims or omitted
+observations. C1 reduction 17543236 completed in 17m15s on 499,634 galaxies
+from 100 cases. First-stage `g=(0.0190182842,0.0007706967)`, quoted errors
+`(0.0006432921,0.0006087584)`; `m1=−4.9086%±3.2165` pp. Selection-only errors
+are approximately 0.000155/0.000152; 41,363 galaxies (8.28%) retain log-Z
+R-hat >=1.1 flags. This remains preliminary reused-case evidence.
+
+Inspected C2 workers 17548532/34/36/38: all four are advancing on inter;
+90/154 bright units done at 06:23 Berlin time, all remaining units active,
+no failures, recent progress receipts. Estimated remaining chains ~35–40
+minutes plus final CPU reduction 17548540. Existing monitoring jobs remain.
+Recorded the [combined first-stage report](SYMMETRIC_FLOW_INFERENCE.md#combined-500k-first-stage-result--october-28-2026).
+Validation used scheduler accounting, unit completion receipts, estimates,
+logs and progress timestamps; `git diff --check` passed. No code, model,
+sampler settings or jobs changed. Next: completed two-step estimate and
+its uncertainty/convergence diagnostics.
+
 ## 2026-10-28 — Add three spare cip GPU workers to the symmetric 500k extension
 
 Owner requested using spare GPUs including cip, explicitly superseding the
