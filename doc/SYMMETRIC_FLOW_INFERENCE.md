@@ -1,5 +1,29 @@
 # Symmetric-flow comparison with the earlier image inference
 
+## Faint failure isolated to flow-context rounding — October 28, 2026
+
+The diagnostic reproduced the faint failure exactly at step 6711, SED block 4,
+reference observation 532570, chain 1. Only one of 4088 valid states has a
+different log-kernel. Its `nbr_close_200` crowding feature moves from
+0.46843497455120103 to 0.46843497455119126: a float64 change of about 9.77e-15
+that crosses a float32 rounding boundary (0.46843498945236206 versus
+0.4684349596500397). This is the only changed float32 context entry.
+
+`scripts/audit_sign_symmetric_replay_capture.py` re-evaluated both saved
+summary arrays on A40 and reproduced both stored kernels exactly. Replacing
+only that crowding feature reproduces the entire −1.1639255817e-6 log-kernel
+change; restoring it alone gives zero discrepancy. The other changed features
+give zero effect individually, and the C8 log-probability change is zero.
+Thus the faint failure is due to F8 input rounding sensitivity after a tiny
+numerical change in a mathematically invariant feature. The guard was correct
+to detect the numerical inconsistency; no tolerance was changed.
+
+Receipt: `replay_diagnostic_v1/faint_ext523_add0028/capture_audit.json` under
+the 1M study root. The bright A40 diagnostic has passed the original V100
+failure point without reproducing that failure; the different trajectory is
+not eligible for production. No million-observation estimate exists, and a
+validated production repair is still required.
+
 ## Million-observation replay failure — October 28, 2026
 
 At 16:32 local the run had stopped with 1043/1045 first-stage units complete,

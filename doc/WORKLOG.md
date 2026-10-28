@@ -1,5 +1,34 @@
 # Work log
 
+## 2026-10-28 — Capture faint replay failure at a float32 rounding boundary
+
+Diagnostic 17574584 reproduced the original faint failure exactly at step 6711,
+SED-only block 4, reference observation 532570, chain 1. Of 4088 valid states,
+only one log-kernel differs: 3.339973776218273 cached versus 3.339972612292691
+recomputed (absolute difference 1.1639255817e-6). Its `nbr_close_200` context
+changes from 0.46843497455120103 to 0.46843497455119126, crossing one float32
+rounding boundary. Across all finite context entries this is the only float32
+change. The GPU intervention confirms this feature alone accounts for the
+full discrepancy: replacing only `nbr_close_200` reproduces it exactly, and
+restoring only that feature eliminates it. Other changed features give zero
+effect individually; C8 log-probability is unchanged. Both stored kernels
+replay exactly (maximum error 0). The bright failure and production repair
+remain unresolved.
+
+Added `scripts/audit_sign_symmetric_replay_capture.py`: evaluate saved states,
+check original-kernel replay, swap changed features one at a time in both
+directions, and separate the C8 log-probability contribution. GPU audit 17577337
+was cancelled while queued and run successfully in a shared step of active
+allocation 17574583 instead. First shared step failed before evaluation because
+artifact-root environment variables were missing; its log is preserved and
+the corrected wrapper uses the original artifact roots. Python AST and actual
+GPU audit passed; `faint_ext523_add0028/capture_audit.json` records the results.
+Diagnostic 17574583
+on A40 has passed the original bright V100 failure point and reached 15819/20480
+steps without triggering the guard. Its trajectory differs from the original
+V100 run, so it cannot be substituted for production. Production remains
+blocked; no models, tolerances or production outputs changed.
+
 ## 2026-10-28 — Million-observation run stops at two invariant replay failures
 
 Status check at 16:32 local found 1043/1045 C1 units complete: 997,625/999,285
