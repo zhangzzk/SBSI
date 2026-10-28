@@ -1,5 +1,38 @@
 # Work log
 
+## 2026-10-28 — Launch another 500k observations with completed C1 reuse
+
+Owner requested another 500k. Added `scripts/freeze_constgold_extension.py`
+to replay the hash-pinned image catalogues and original 500k sample exactly,
+then draw a disjoint uniform additional 500k with predeclared seed 20261028.
+Generalized `scripts/extend_sign_symmetric_inference.py` to retain the completed
+523 C1 units across their two original reference roots, preserve unit indices
+and seeds, and append noncolliding units. The 1M combined C2 uses fresh bright
+chains; selection normalization and estimator formulas are unchanged.
+Updated `jobs/job_sign_symmetric_extension.sh` to allow eight hours for the
+larger CPU reductions and use extension-neutral job names. Frozen old scripts,
+results and model preset identities are untouched.
+
+Validation: targeted extension and input-adapter tests **16 passed**;
+`bash -n jobs/job_sign_symmetric_extension.sh` passed. Scheduled preparation
+17559903, GPU preflight 17559907, C1 workers 17559910–17559916 and dependent
+reduction 17559917. All 100 source cases replayed exactly; the new draw retains
+499,651 galaxies and the combined reference contains 999,285 without overlap,
+duplicates or new unmatched rows. Completed-chain hashes passed; preparation
+completed 8m36s and both bright/faint GPU integration checks passed. There are
+1045 C1 units (522 new) and 311 C2 units for 18,925 bright galaxies.
+Added `scripts/monitor_sign_symmetric_extension.py` to write
+two-hour receipts with only one future timer and stop on completion/failure;
+first check 17559929; queued seventh-worker startup check 17559949. Python syntax
+and whitespace checks passed. Six GPU workers started with MPS and 132 new units
+claimed. H200/V100 and both small GPUs recorded sampler steps; two full A40s
+are actively evaluating initial banks after loading. Both small-GPU smokes
+passed, no failures/retries observed; seventh worker pending priority. Startup
+receipt preserved. The dependent combined reductions and C2 remain pending.
+Continuation uses up to seven GPUs (4 inter, 3 cip), as previously authorized;
+the same measured cuts and known-shear/convergence limitations apply. See
+[million-observation extension](SYMMETRIC_FLOW_INFERENCE.md#extension-to-one-million-raw-observations--october-28-2026).
+
 ## 2026-10-28 — Complete 500k symmetric inference and remove obsolete checks
 
 User requested status and whether hanging jobs could be removed. Verified

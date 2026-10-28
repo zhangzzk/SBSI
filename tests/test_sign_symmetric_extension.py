@@ -53,3 +53,30 @@ def test_rejects_extension_from_old_raw_prefix(frames):
     frames[1].loc[2, 'parent_sample_row'] = 99999
     with pytest.raises(ValueError, match='overlaps'):
         extension.validate_prefix(*frames, 2)
+
+
+def test_accepts_later_extension_boundary(frames):
+    frames[1].loc[2, 'parent_sample_row'] = 500000
+    extension.validate_prefix(*frames, 2, previous_raw=500000)
+    frames[1].loc[2, 'parent_sample_row'] = 499999
+    with pytest.raises(ValueError, match='overlaps'):
+        extension.validate_prefix(*frames, 2, previous_raw=500000)
+
+
+def test_new_unit_names_do_not_collide_with_previous_extension():
+    previous = extension.units('bright', 'old.txt', 1300, 640)
+    new = extension.units('bright_ext523', 'new.txt', 1300, 640)
+    assert set(x.split()[0] for x in previous).isdisjoint(x.split()[0] for x in new)
+
+
+def test_disjoint_sample_replays_original_and_preserves_random_order(monkeypatch):
+    import sys
+    import numpy as np
+    monkeypatch.syspath_prepend(str(Path(__file__).parents[1]/'scripts'))
+    from freeze_constgold_extension import extension_indices
+    old, new = extension_indices(1000, 200, 42, 300, 20261028)
+    np.testing.assert_array_equal(old, np.random.default_rng(42).choice(1000, 200, replace=False))
+    assert len(new) == len(set(new)) == 300
+    assert set(old).isdisjoint(new)
+    np.testing.assert_array_equal(new, extension_indices(1000, 200, 42, 300, 20261028)[1])
+    assert not np.array_equal(new, np.sort(new))

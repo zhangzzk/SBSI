@@ -1,5 +1,63 @@
 # Symmetric-flow comparison with the earlier image inference
 
+## Extension to one million raw observations — October 28, 2026
+
+Owner requested another 500,000 observations after the completed 500k result.
+Study root: `/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_constgold1m_signsym_20261028`.
+The original source contains only 500,000 raw rows. The extension therefore
+replays the source catalogues for all 100 cases, verifies every recorded source
+hash and matching/selection count, and reproduces the original sample exactly
+using its seed 20260914. It draws 500,000 additional rows uniformly without
+replacement from the remaining eligible population using seed **20261028**,
+fixed before any new inference. The old sample remains the exact first half;
+the new sample excludes all old raw rows, including those later removed by the
+inference cuts. All matching accounting is retained. No truth-property cuts.
+
+`scripts/freeze_constgold_extension.py` freezes the expanded source, while
+`scripts/extend_sign_symmetric_inference.py` preserves all 523 completed C1
+units, their line indices, seeds, and original reference identities. New C1
+unit indices start at 523 with distinct labels. The combined C2 reruns all
+measured mag<21 galaxies at the rounded combined C1 estimate. The unchanged
+model, prior, conditions, cuts and estimator reuse the same 10,010,624-scene
+selection normalization, with its uncertainty propagated without a sample-size
+discount. This remains the same known-shear development population, with the
+convergence limitations of the earlier sampler; not independent acceptance.
+
+Continuing the authorized spare-GPU expansion, C1 requests four 32-CPU `inter`
+workers, one 32-CPU full-A40 `cip` worker and two 8-CPU/16GB-A40 `cip` workers:
+up to seven GPUs, 176 allocated CPUs and 162 sampling processes. Availability
+determines actual concurrency. C2 retains four `inter` workers. All scientific
+settings remain fixed. Preparation and GPU smoke tests gate sampling; all seven
+C1 workers gate reduction; C2 and the final reduction follow automatically.
+Short small-GPU integration tests run before those workers claim units.
+
+Initial jobs: preparation **17559903**, preflight **17559907**, seven C1 workers
+**17559910–17559916**, combined C1 reduction **17559917**. The frozen new draw
+retains **499,651** galaxies after removing 349 with |e|>=0.99 and none by the
+upper-radius cut. Combined: **999,285** galaxies, all 100 cases, no duplicates,
+old/new overlap or newly unmatched rows. Observation SHA-256:
+`2aaf2f84b9745544b1698b095482613f13be753e00a4dd1092582d77499db8c2`;
+truth/provenance SHA-256:
+`e646ad9b16c1e7b0752aca380ebddecdef7019f83c0f8f9bc32aa9fa971a48d9`.
+Preparation completed in 8m36s; both 64-step bright/faint GPU integration checks
+passed. The plan contains 1045 C1 units (523 reused, 522 new) and 311 C2 units
+covering 18,925 measured mag<21 galaxies. There are 56,172 additional mag<23
+galaxies and 443,479 additional faint galaxies.
+
+`scripts/monitor_sign_symmetric_extension.py` writes bounded status receipts
+every two hours, keeping only one future check and stopping on a final estimate
+or recorded job failure. First check 17559929; receipts live in `monitor_latest.json`
+and `logs/monitor_*.json`. These are on-disk checks, not chat notifications.
+The queued full-A40 worker has a separate startup check 17559949.
+Startup: six workers allocated (H200, V100, two full A40s, two 16GB A40
+instances); the remaining full-A40 `cip` worker is pending priority. All six
+enabled MPS and claimed 132 distinct new units. H200/V100 and both small GPUs
+have recorded sampler steps; the two full A40s passed model loading and are
+actively evaluating their initial banks. No failed claims or retries were
+observed. Both small-GPU integration tests passed. `startup_receipt.json`
+records per-worker progress. Planning estimate: 10–14 hours from sampling
+startup, with queue and runtime uncertainty; no completion claim yet.
+
 ## Completed combined 500k result — October 28, 2026
 
 The two-step inference completed successfully on **499,634 galaxies** from

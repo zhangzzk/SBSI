@@ -1,4 +1,4 @@
-"""Extend the frozen 100k ConstGold sample to 500k without resampling its C1 chains."""
+"""Extend a frozen ConstGold sample without resampling its completed C1 chains."""
 import argparse
 import hashlib
 import importlib.util
@@ -39,7 +39,7 @@ def units(kind, filename, n, size):
     return [f'{kind}_add{i:04d} {filename} {edges[i]} {edges[i+1]-1}' for i in range(count)]
 
 
-def validate_prefix(observations, truth, old_obs, old_truth, previous_count):
+def validate_prefix(observations, truth, old_obs, old_truth, previous_count, previous_raw=100000):
     import pandas as pd
     pd.testing.assert_frame_equal(observations.iloc[:previous_count].reset_index(drop=True), old_obs,
                                   check_exact=True)
@@ -48,9 +48,9 @@ def validate_prefix(observations, truth, old_obs, old_truth, previous_count):
     for keys in (['source_case', 'source_input_index'], ['source_case', 'source_detection_id']):
         if truth.duplicated(keys).any():
             raise ValueError('duplicate catalogue identity in combined sample')
-    if not (truth.iloc[:previous_count].parent_sample_row < 100000).all():
+    if not (truth.iloc[:previous_count].parent_sample_row < previous_raw).all():
         raise ValueError('old prefix contains extension rows')
-    if not (truth.iloc[previous_count:].parent_sample_row >= 100000).all():
+    if not (truth.iloc[previous_count:].parent_sample_row >= previous_raw).all():
         raise ValueError('extension overlaps previous prefix')
 
 
@@ -78,18 +78,26 @@ def prepare(root):
     rule = json.loads((root/'rule.json').read_text())
     parent = Path(rule['parent'])
     verify(root, prepared=False)
-    sys.path[:0] = [str(root/'source_snapshot'), str(root/'source_snapshot/scripts')]
+    sys.path[:0] = [str(root), str(root/'source_snapshot'), str(root/'source_snapshot/scripts')]
     from v39_image_input import selected_prefix
     old_protocol = json.loads((parent/'reference/protocol.json').read_text())
     source = Path(old_protocol['source'])
+    total = rule['requested_total_rows']
+    previous_raw = rule['new_raw_rows'][0]
     if digest(source/'image_mock_manifest.json') != old_protocol['source_manifest_sha256']:
         raise ValueError('parent catalogue manifest changed')
     manifest = json.loads((source/'image_mock_manifest.json').read_text())
     for name, sha in manifest['output_sha256'].items():
         if digest(source/name) != sha:
             raise ValueError('parent catalogue file changed: '+name)
+    if rule.get('append_sample'):
+        from freeze_constgold_extension import freeze
+        expanded = root/'input'
+        freeze(source, expanded, total-previous_raw, rule['extension_sample_seed'])
+        source = expanded
+        manifest = json.loads((source/'image_mock_manifest.json').read_text())
     observations, truth = selected_prefix(pd.read_parquet(source/'measurements.parquet'),
-        pd.read_parquet(source/'truth.parquet'), manifest, 500000)
+        pd.read_parquet(source/'truth.parquet'), manifest, total)
     radius = observations.measured_flux_radius.to_numpy()
     ell = np.hypot(observations.measured_ngmix_g1, observations.measured_ngmix_g2).to_numpy()
     keep = (radius < 100) & (ell < .99)
@@ -98,23 +106,24 @@ def prepare(root):
     previous_count = len(old_obs)
     combined = observations.loc[keep, old_obs.columns].reset_index(drop=True)
     provenance = truth.loc[keep].reset_index(drop=True)
-    validate_prefix(combined, provenance, old_obs, old_truth, previous_count)
+    validate_prefix(combined, provenance, old_obs, old_truth, previous_count, previous_raw)
     reference = root/'reference'
     reference.mkdir(exist_ok=False)
     combined.to_parquet(reference/'observations.parquet')
     provenance.to_parquet(reference/'truth.parquet')
     protocol = dict(old_protocol)
-    protocol.update(selection='First 500000 rows of the same frozen uniform plus-leg sample, then '
+    protocol.update(source=str(source), source_manifest_sha256=digest(source/'image_mock_manifest.json'),
+        selection=f'First {total} rows of the frozen uniform plus-leg sample, then '
         'measured radius <100 pixels and |e|<0.99; no truth-property cuts',
         comparison_reference=str(parent/'reference'), reused_c1_prefix=previous_count)
     save(reference/'protocol.json', protocol)
     drops = {}
-    for name, sl in [('previous', slice(0, 100000)), ('additional', slice(100000, 500000)),
-                     ('combined', slice(0, 500000))]:
+    for name, sl in [('previous', slice(0, previous_raw)), ('additional', slice(previous_raw, total)),
+                     ('combined', slice(0, total))]:
         drops[name] = dict(radius_ge_100px=int((radius[sl] >= 100).sum()),
             ellipticity_ge_099=int((ell[sl] >= .99).sum()), total=int((~keep[sl]).sum()))
     result = dict(status='prepared_image_reference', preparation_checks_pass=True,
-        observation_count=len(combined), requested_rows=500000, previous_count=previous_count,
+        observation_count=len(combined), requested_rows=total, previous_count=previous_count,
         additional_count=len(combined)-previous_count, dropped_by_model_cuts=drops,
         observations_sha256=digest(reference/'observations.parquet'),
         truth_sha256=digest(reference/'truth.parquet'), protocol_sha256=digest(reference/'protocol.json'),
@@ -132,6 +141,7 @@ def prepare(root):
         np.savetxt(root/f'{name}_ids.txt', rows, fmt='%d')
     (root/'c1/claims').mkdir()
     reused = {}
+    reused_references = {}
     lines = []
     for line in (parent/'c1/units.txt').read_text().splitlines():
         label, file, first, last = line.split()
@@ -143,13 +153,18 @@ def prepare(root):
         if not (root/renamed).exists():
             shutil.copy2(parent/file, root/renamed)
         lines.append(f'{label} {renamed} {first} {last}')
+        unit_protocol = json.loads((parent/'c1'/label/'protocol.json').read_text())
+        reused_references[label] = unit_protocol['reference']
         reused[label] = {name: digest(parent/'c1'/label/name) for name in
             ('protocol.json', 'result.json', 'local_profiles.npz')}
     old_units = len(lines)
-    if old_units != 105:
+    if old_units != rule['expected_previous_units']:
         raise ValueError('unexpected previous unit count; seed continuation needs review')
-    lines += units('bright', 'additional_bright_ids.txt', len(groups['additional_bright']), 640)
-    lines += units('faint', 'additional_faint_ids.txt', len(groups['additional_faint']), 1024)
+    suffix = f'_ext{old_units}' if rule.get('append_sample') else ''
+    lines += units('bright'+suffix, 'additional_bright_ids.txt', len(groups['additional_bright']), 640)
+    lines += units('faint'+suffix, 'additional_faint_ids.txt', len(groups['additional_faint']), 1024)
+    if len({line.split()[0] for line in lines}) != len(lines):
+        raise ValueError('duplicate unit labels')
     covered = []
     for line in lines:
         label, file, first, last = line.split()
@@ -167,13 +182,15 @@ def prepare(root):
     (root/'c2/units.txt').write_text('\n'.join(units('bright', 'bright21_ids.txt',
                                                     len(groups['bright21']), 61))+'\n')
     save(root/'reused_units.json', reused)
-    estimate = (parent/'estimate.py').read_text()
-    assert estimate.count(f"H = Path('{parent}')") == 1
-    estimate = estimate.replace(f"H = Path('{parent}')", f"H = Path('{root}')")
+    save(root/'reused_references.json', reused_references)
+    origin = Path(rule['estimator_origin'])
+    estimate = (origin/'estimate.py').read_text()
+    assert estimate.count(f"H = Path('{origin}')") == 1
+    estimate = estimate.replace(f"H = Path('{origin}')", f"H = Path('{root}')")
     original = "        if protocol['reference'] != str(reference.resolve()):"
     replacement = ("        expected_reference = str(reference.resolve())\n"
         "        if stage == 'c1' and label in json.loads((H/'reused_units.json').read_text()):\n"
-        f"            expected_reference = {str(parent/'reference')!r}\n"
+        "            expected_reference = json.loads((H/'reused_references.json').read_text())[label]\n"
         "        if (protocol['reference'] != expected_reference\n"
         "                or protocol['reference_protocol_sha256'] != hashlib.sha256(\n"
         "                    (Path(expected_reference)/'protocol.json').read_bytes()).hexdigest()):")
@@ -184,9 +201,11 @@ def prepare(root):
         bright21=len(groups['bright21']), additional_bright=len(groups['additional_bright']),
         additional_faint=len(groups['additional_faint']))
     save(root/'prepared.json', report)
-    files = ['prepared.json', 'reused_units.json', 'estimator_base.py', 'c1/units.txt', 'c2/units.txt']
+    files = ['prepared.json', 'reused_units.json', 'reused_references.json', 'estimator_base.py', 'c1/units.txt', 'c2/units.txt']
     files += [str(p.relative_to(root)) for p in reference.iterdir() if p.is_file()]
     files += [p.name for p in root.glob('*_ids.txt')]
+    if rule.get('append_sample'):
+        files += ['input/image_mock_manifest.json', 'input/measurements.parquet', 'input/truth.parquet']
     save(root/'prepared_manifest.json', {name: digest(root/name) for name in files})
     verify(root)
     print('EXTENSION_PREPARED', json.dumps(report), flush=True)
@@ -226,11 +245,10 @@ def estimate(root, stage):
     norm = Path(rule['normalization'])
     selection = load_module('preliminary_selection', norm/'study.py')
     module.selection = lambda: selection.load_selection(norm)
-    module.__doc__ = ('Combined frozen 500k prefix after cuts: reuse first 100k C1 chains, '
-        'sample only the next 400k rows. Same C1/C2 formulas and bootstrap seeds. '
-        'Reuse candidate-specific 10,010,624-scene normalization (1222 chunks); '
-        'selection uncertainty recomputed for the combined population. C2 reruns all mag<21 '
-        'galaxies at the combined C1 shear; previous 100k C2 chains are not reused.')
+    module.__doc__ = (f"Combined {rule['requested_total_rows']} raw observations after cuts: "
+        "reuse completed C1 chains and sample only new rows. Same C1/C2 formulas and bootstrap seeds. "
+        "Reuse candidate-specific 10,010,624-scene normalization; selection uncertainty recomputed "
+        "for the combined population. C2 reruns all mag<21 galaxies at the combined C1 shear.")
     sys.argv = [str(root/'estimator_base.py'), stage]
     module.main()
     path = root/stage/'estimate.json'
@@ -256,7 +274,7 @@ def status(root):
     print(json.dumps(report), flush=True)
 
 
-def setup(parent, root):
+def setup(parent, root, total=500000, previous_raw=100000, append_sample=False, max_gpus=4):
     root.mkdir(exist_ok=False)
     for name in ('logs', 'c1', 'c2'):
         (root/name).mkdir()
@@ -264,24 +282,32 @@ def setup(parent, root):
         (root/name).symlink_to(parent/name)
     for stage in ('c1', 'c2'):
         (root/stage/'source_snapshot').symlink_to(parent/'source_snapshot')
-    norm = parent/'preliminary_10m'
+    parent_rule = json.loads((parent/'rule.json').read_text())
+    norm = Path(parent_rule['normalization']) if append_sample else parent/'preliminary_10m'
+    origin = Path(parent_rule['parent']) if append_sample else parent
+    expected_previous_units = len((parent/'c1/units.txt').read_text().splitlines())
     identity = json.loads((parent/'reference/protocol.json').read_text())['model_identity']
     norm_rule = json.loads((norm/'rule.json').read_text())
     if norm_rule['model_identity'] != identity:
         raise ValueError('normalization model mismatch')
     save(root/'rule.json', dict(parent=str(parent), normalization=str(norm), model_identity=identity,
-        requested_total_rows=500000, new_raw_rows=[100000, 500000], max_gpus=4,
+        requested_total_rows=total, new_raw_rows=[previous_raw, total], max_gpus=max_gpus,
+        append_sample=append_sample, extension_sample_seed=20261028,
+        expected_previous_units=expected_previous_units, estimator_origin=str(origin),
         c1_seed_base=2028500001, c1_bank_seed_base=2033500001,
         c2_seed_base=2028600001, c2_bank_seed_base=2033600001,
-        c1_seeds='original unit line index retained; additional unit indices start at 105',
+        c1_seeds=f'original unit line index retained; additional unit indices start at {expected_previous_units}',
         c2_policy='all combined mag<21 galaxies, fresh chains at combined C1 shear',
         selection='same measured cuts, prior, conditions, disk and model; reuse exactly 10,010,624 scenes',
         normalization_hashes={name: digest(norm/name) for name in ['rule.json', 'study.py',
             'normalization/complete.json', 'normalization/selection0.npz', 'normalization/selection1.npz',
             'normalization/selection0.json', 'normalization/selection1.json']},
-        authorization='Owner: run another 400k, extending this symmetric inference study',
+        authorization=f'Owner: run another {total-previous_raw} observations; retain prior spare-GPU authorization',
         limitations='Same 100 simulation cases and known injected shear; no independent acceptance'))
     shutil.copy2(__file__, root/'study.py')
+    if append_sample:
+        for name in ('freeze_constgold_extension.py', 'prepare_constgold_inference_input.py'):
+            shutil.copy2(Path(__file__).with_name(name), root/name)
     worker = (parent/'worker.sh').read_text()
     assert worker.count(f'H={parent}\n') == 1
     (root/'worker.sh').write_text(worker.replace(f'H={parent}\n', f'H={root}\n'))
@@ -289,8 +315,10 @@ def setup(parent, root):
     repo = Path(__file__).resolve().parents[1]
     (root/'pipeline.sh').write_text((repo/'jobs/job_sign_symmetric_extension.sh').read_text().replace(
         '@STUDY_ROOT@', str(root)))
-    save(root/'setup_manifest.json', {name: digest(root/name) for name in
-        ('rule.json', 'study.py', 'worker.sh', 'verify.py', 'pipeline.sh')})
+    names = ['rule.json', 'study.py', 'worker.sh', 'verify.py', 'pipeline.sh']
+    if append_sample:
+        names += ['freeze_constgold_extension.py', 'prepare_constgold_inference_input.py']
+    save(root/'setup_manifest.json', {name: digest(root/name) for name in names})
     print(root)
 
 
@@ -299,9 +327,14 @@ def main():
     parser.add_argument('action', choices=['setup', 'prepare', 'preflight', 'c1', 'c2', 'check'])
     parser.add_argument('--parent', type=Path)
     parser.add_argument('--root', type=Path)
+    parser.add_argument('--total-rows', type=int, default=500000)
+    parser.add_argument('--previous-raw-rows', type=int, default=100000)
+    parser.add_argument('--append-sample', action='store_true')
+    parser.add_argument('--max-gpus', type=int, default=4)
     args = parser.parse_args()
     if args.action == 'setup':
-        setup(args.parent.resolve(), args.root.resolve())
+        setup(args.parent.resolve(), args.root.resolve(), args.total_rows, args.previous_raw_rows,
+              args.append_sample, args.max_gpus)
         return
     if not os.environ.get('SLURM_JOB_ID'):
         raise RuntimeError('scheduler required for catalogue and inference work')
