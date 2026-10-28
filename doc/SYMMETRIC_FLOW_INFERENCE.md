@@ -1,5 +1,37 @@
 # Symmetric-flow comparison with the earlier image inference
 
+## Full nuisance likelihood repair validation — October 28, 2026
+
+The bright diagnostic 17574583 completed all 20,480 steps on A40 in 2h56m57s
+without reproducing its original V100 failure. This different-hardware
+diagnostic remains excluded from production. The faint rounding mechanism
+is established by the feature intervention below; the bright cause is not
+yet established to the same standard.
+
+`scripts/setup_sign_symmetric_cacheoff.py` creates an isolated copy under
+`galsbi_constgold1m_signsym_20261028/cacheoff_validation_v1`. It disables
+likelihood reuse for redshift/SED proposals, evaluating each proposed scene
+with the frozen numerical likelihood. No random draws, model artifacts,
+prior, selection normalization, proposal settings, or tolerances change.
+Every 1024th nuisance visit still audits the retained state against a fresh
+evaluation, with the original 1e-10 summary and 1e-6 log-kernel thresholds.
+This is a replacement for the invalid proposed-state invariance assumption,
+not a claim that the old invariance test passed. Environment-prior reuse
+is unaffected.
+
+GPU preflight 17578223 passed: it compared cached and full evaluation for two bright
+and two faint observations at zero shear, and two bright observations at
+nonzero shear. Initial and final states must agree exactly; local profile
+differences must be at most 1e-6. All three comparisons had exactly zero
+profile differences and current-state replay differences. Dependent jobs
+17578224 and 17578225 started on separate small A40s and run
+the original full failed batches (638 and 1022 galaxies) with their original
+seeds and observation ordering. Outputs are validation only and cannot be
+automatically substituted into production. The original frozen source and
+failed attempts remain untouched. The million-observation production result
+still requires validated recovery, combined first-stage estimation, and the
+bright second stage.
+
 ## Faint failure isolated to flow-context rounding — October 28, 2026
 
 The diagnostic reproduced the faint failure exactly at step 6711, SED block 4,

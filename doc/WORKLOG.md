@@ -1,5 +1,39 @@
 # Work log
 
+## 2026-10-28 — Validate full nuisance-move likelihoods after cache failure
+
+The bright diagnostic 17574583 completed all 20,480 steps on A40 in
+2h56m57s without reproducing its original V100 failure. It is not promoted
+to production. Production remains at 1043/1045 first-stage units and
+997,625/999,285 galaxies, with no combined million-observation estimate.
+
+Added `scripts/setup_sign_symmetric_cacheoff.py`, which copies and verifies
+the frozen source, then removes only the redshift/SED likelihood-reuse
+shortcut. Every proposal gets its own numerical likelihood. The periodic
+audit now compares the retained state with itself using the original strict
+tolerances. Models, prior, normalization, seeds, observation batches, proposal
+law, warmup and chain lengths remain fixed. The copy has a new source
+manifest and explicit validation-only policy; failed production artifacts
+are preserved.
+
+Validation: `python -m pytest tests/test_sign_symmetric_cacheoff.py -q`
+passed 5 tests (0.12s), checking proposal-specific kernels, invalid-proposal
+masks, current-state replay rejection, and preservation of surrounding RNG
+code. `python -m py_compile scripts/setup_sign_symmetric_cacheoff.py` passed.
+Both original and amended frozen SHA256 manifests verified. GPU paired
+preflight job 17578223 passed all three comparisons: exact initial/final
+states and zero profile and current-state replay differences, including at
+nonzero shear. Full CPU suite 17578227 passed 714 tests, with 2 skipped and
+one deprecation warning, in 104.80s. Full failed-unit validations
+17578224/17578225 started on separate small A40s. File-only two-hour and
+completion checks are 17578243/17578244; they do not send chat notifications.
+
+Limitations and next steps: full-unit replay is still required; a short
+paired run does not establish convergence. The faint rounding mechanism is
+confirmed, while the bright V100 discrepancy remains hardware-dependent
+evidence. No production promotion or C2 launch is automatic. See
+[repair validation](SYMMETRIC_FLOW_INFERENCE.md#full-nuisance-likelihood-repair-validation--october-28-2026).
+
 ## 2026-10-28 — Capture faint replay failure at a float32 rounding boundary
 
 Diagnostic 17574584 reproduced the original faint failure exactly at step 6711,
