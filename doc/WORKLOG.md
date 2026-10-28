@@ -24,11 +24,11 @@ completed 8m36s and both bright/faint GPU integration checks passed. There are
 Added `scripts/monitor_sign_symmetric_extension.py` to write
 two-hour receipts with only one future timer and stop on completion/failure;
 first check 17559929; queued seventh-worker startup check 17559949. Python syntax
-and whitespace checks passed. Six GPU workers started with MPS and 132 new units
-claimed. H200/V100 and both small GPUs recorded sampler steps; two full A40s
-are actively evaluating initial banks after loading. Both small-GPU smokes
-passed, no failures/retries observed; seventh worker pending priority. Startup
-receipt preserved. The dependent combined reductions and C2 remain pending.
+and whitespace checks passed. Seven GPU workers started with MPS and 162 new
+units claimed; the seventh joined at 08:37 local after queueing. The first six
+workers recorded sampler steps; the last worker is evaluating initial banks.
+Both small-GPU smokes passed; no failures/retries observed. Startup receipt
+preserved. The dependent combined reductions and C2 remain pending.
 Continuation uses up to seven GPUs (4 inter, 3 cip), as previously authorized;
 the same measured cuts and known-shear/convergence limitations apply. See
 [million-observation extension](SYMMETRIC_FLOW_INFERENCE.md#extension-to-one-million-raw-observations--october-28-2026).

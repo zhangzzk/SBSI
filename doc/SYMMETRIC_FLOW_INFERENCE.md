@@ -49,12 +49,12 @@ every two hours, keeping only one future check and stopping on a final estimate
 or recorded job failure. First check 17559929; receipts live in `monitor_latest.json`
 and `logs/monitor_*.json`. These are on-disk checks, not chat notifications.
 The queued full-A40 worker has a separate startup check 17559949.
-Startup: six workers allocated (H200, V100, two full A40s, two 16GB A40
-instances); the remaining full-A40 `cip` worker is pending priority. All six
-enabled MPS and claimed 132 distinct new units. H200/V100 and both small GPUs
-have recorded sampler steps; the two full A40s passed model loading and are
-actively evaluating their initial banks. No failed claims or retries were
-observed. Both small-GPU integration tests passed. `startup_receipt.json`
+Startup: all seven workers allocated (H200, V100, three full A40s, two 16GB
+A40 instances), with MPS enabled and 162 distinct new units claimed. The seventh
+worker joined at 08:37 local after a short queue wait. The first six workers
+have recorded sampler steps; the last worker passed loading and is actively
+evaluating initial banks. No failed claims or retries were observed. Both
+small-GPU integration tests passed. `startup_receipt.json`
 records per-worker progress. Planning estimate: 10–14 hours from sampling
 startup, with queue and runtime uncertainty; no completion claim yet.
 
