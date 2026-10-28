@@ -27,6 +27,10 @@ nonzero shear. Full CPU suite 17578227 passed 714 tests, with 2 skipped and
 one deprecation warning, in 104.80s. Full failed-unit validations
 17578224/17578225 started on separate small A40s. File-only two-hour and
 completion checks are 17578243/17578244; they do not send chat notifications.
+Both full units passed initial replay with exactly zero error and reached
+sampling (bright step 256, faint step 512) without failure before yielding.
+`protocol_comparison.json` confirms only the implementation hash, cache flag,
+and invariant-work description differ from each original failed-unit protocol.
 
 Limitations and next steps: full-unit replay is still required; a short
 paired run does not establish convergence. The faint rounding mechanism is
