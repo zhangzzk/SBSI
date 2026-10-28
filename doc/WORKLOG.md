@@ -1,5 +1,31 @@
 # Work log
 
+## 2026-10-28 — Complete 500k symmetric inference and remove obsolete checks
+
+User requested status and whether hanging jobs could be removed. Verified
+all 523 C1/154 C2 units complete, no failed claims, all four final sampler
+jobs completed 0:0, and final reduction 17548540 completed 0:0 in 1h00m16s.
+The two-step result covers 499,634 galaxies in 100 cases without omissions:
+`g=(0.0195177394,0.0006283667)`, quoted errors `(0.0006301855,0.0006086737)`;
+`m1=−2.4113%±3.1509` percentage points, c2=+0.0006284±0.0006087.
+The m convention assumes c1=0. The same 10.01M-scene normalization and
+original uncertainty/estimator formulas were retained.
+
+Recorded the [completed combined result](SYMMETRIC_FLOW_INFERENCE.md#completed-combined-500k-result--october-28-2026),
+including uncertainty components and convergence limitations: 41,363/499,634
+C1 galaxies and 2835/9343 bright C2 galaxies have log-Z R-hat >=1.1. Consistency
+with zero within quoted errors is not independent acceptance, robust 0.3%
+calibration or proof of convergence for all galaxies.
+
+All nine remaining user jobs were recognized study status checks pending
+on BeginTime. Cancelled only these obsolete checks: 17530841 and
+17543245–17543252. Saved `monitor_cleanup.json` in the 500k study root with
+the final accounting receipt, prior queue and cancelled IDs. Verified the
+user queue is empty afterward. All scientific artifacts remain intact.
+Validation: scheduler accounting, completion markers, result metadata and
+final logs inspected; `git diff --check` passed. No model, sampler, numerical
+settings or scientific data changed. This authorized run is complete.
+
 ## 2026-10-28 — Combined 500k C1 complete; final bright update progressing
 
 Status review verified all seven C1 worker jobs completed 0:0 and all

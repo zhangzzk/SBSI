@@ -1,5 +1,45 @@
 # Symmetric-flow comparison with the earlier image inference
 
+## Completed combined 500k result — October 28, 2026
+
+The two-step inference completed successfully on **499,634 galaxies** from
+the same 100 ConstGold plus-leg cases, with no omissions. All 523 C1 units
+(105 reused, 418 new) and all 154 C2 units completed without failed claims.
+C2 covers 9343 mag<21 galaxies at the combined first-stage shear
+`(0.01902,0.00077)`. Its four worker jobs and final reduction 17548540 all
+completed with exit status 0:0; final reduction took 1h00m16s.
+
+Final estimates and quoted one-sigma uncertainties:
+
+| Quantity | Estimate | Quoted uncertainty |
+|---|---:|---:|
+| g1 | 0.0195177394 | 0.0006301855 |
+| g2 = c2 | 0.0006283667 | 0.0006086737 |
+| m1 = 100*(g1/0.02−1)% | −2.4113% | 3.1509 percentage points |
+
+The m convention assumes c1=0; this single injected shear cannot separately
+identify m1 and c1, or constrain m2 at injected g2=0. The quoted errors use
+the original maximum-of-total/galaxy-bootstrap/case-bootstrap prescription.
+Selection-only uncertainties are `(0.0001549563,0.0001519856)`; statistical
+uncertainties are `(0.0005903236,0.0005848092)` and chain components
+`(0.0000704279,0.0000733640)`. The same hash-pinned 10,010,624-scene selection
+normalization was reused with its error propagated, not treated as exact.
+
+The additive c2 estimate is 1.03 quoted standard deviations from zero and
+m1 is within one quoted standard deviation of zero. These uncertainties do
+not establish robust 0.3% calibration or independent model acceptance.
+Convergence remains a material limitation: log-Z R-hat >=1.1 flags
+41,363/499,634 C1 galaxies (8.28%) and 2835/9343 bright C2 galaxies (30.34%).
+Do not interpret completed jobs as convergence of every posterior chain.
+
+Results: `galsbi_constgold500k_signsym_20261027/c2/estimate.json`, `pergal.npz`,
+and `logs/final_17548540.out` under the catalogue-prior root. The source,
+models, reference and settings remain frozen. On user request, removed nine
+obsolete timed checks after verifying final completion: 17530841 and
+17543245–17543252. They were pending on BeginTime, not hung computations.
+`monitor_cleanup.json` preserves the queue/cancellation receipt. Subsequent
+queue inspection showed no remaining user jobs; scientific outputs were preserved.
+
 ## Combined 500k first-stage result — October 28, 2026
 
 All 523 C1 units completed successfully, including the 105 reused units and
