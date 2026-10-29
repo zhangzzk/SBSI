@@ -142,6 +142,18 @@ jobs are in `jobs.json`. Two-hour bounded
 checks write on-disk status receipts and stop on failure or the final
 paired result; they do not send chat messages. Replacement monitor 17600133.
 
+Preflight 17600119 completed 0:0 in 2m13s. Bright, faint and nonzero-shear
+checks evaluated 128, 16 and 128 retained states respectively, with zero
+summary or log-kernel replay differences and no skipped likelihood calls.
+These short chains test integration, not convergence. Both cip workers
+17600128/130 then passed their own faint integration checks and started
+six MPS processes each on cip-cl-h01g02n2/n3. The four inter workers remain
+queued as of startup.
+All first 12 production units subsequently wrote sampling progress (about
+128/20,480 steps), with no failed claims. The frozen run's
+`startup_receipt.json` records integration audits, first progress and scheduler
+state. This completes startup monitoring; bounded later checks remain queued.
+
 At submission nine GPU slots were unallocated: four A40-8GB, two
 A40-16GB, one H200 with only two free CPU cores, and two RTX2080Ti with
 ten free CPU cores total. Only the two A40-16GB slots immediately fit our

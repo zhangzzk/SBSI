@@ -30,6 +30,19 @@ input-property equality and exact frozen plus replay. C1 has 1,043 units;
 C2 has 311 units for 18,929 mag<21 galaxies. GPU preflight 17600119 started
 on cip-cl-h01g02n2; production remains dependent on successful integration.
 
+Preflight subsequently completed 0:0 in 2m13s: all three short integration
+checks passed, with 272 retained-state replays and zero discrepancies or
+skipped likelihood calls. Cip workers 17600128/130 passed their per-device
+checks and started six MPS processes each on cip-cl-h01g02n2/n3. Four inter
+workers are queued. Initial 12 batches claimed with no failures; GPU memory
+around 2.2 GiB per device during initialization. This is startup evidence,
+not posterior convergence or a calibration result.
+All 12 initial units subsequently wrote progress, reaching roughly
+128/20,480 steps without failed claims. Saved `startup_receipt.json` with
+integration audits, progress and scheduler state. Both cip workers are
+sampling; four inter workers await resources. Startup monitoring is complete,
+with the bounded two-hour checks and downstream dependencies retained.
+
 ## 2026-10-29 — Launch negative-shear measurements for paired inference
 
 Owner authorized running both measurement shear legs. Added
