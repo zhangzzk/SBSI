@@ -1,5 +1,30 @@
 # Work log
 
+## 2026-10-29 — Complete million-galaxy symmetric-flow inference
+
+Verified the completed recovery pipeline: all 1045 C1 and 311 C2 units done,
+no failed recovery claims, and no omitted galaxies. Final reduction 17581297
+completed 0:0 at 09:01:49 Europe/Berlin after 1h02m13s. All four C2 workers
+completed 0:0; all 18,925 mag<21 galaxies were rerun at `(0.01886,0.00122)`.
+The bounded monitor recorded `result_written` and stopped, and `squeue`
+showed no remaining user jobs.
+
+Final 999,285-galaxy result: g1=0.019427222142569794 ±0.00044745736650516114;
+c2=0.0011840807891115796 ±0.00044398636705328046. For injected g1=0.02,
+assuming c1=0, m1=−2.8638893% ±2.2372868 percentage points. The c2 residual
+is 2.67 quoted standard deviations. The same 10.01M-scene normalization and
+maximum-of-total/galaxy-bootstrap/case-bootstrap error convention remain.
+Finite-chain limitations persist: 8.26% C1 and 30.44% bright C2 galaxies
+have log-Z R-hat >=1.1. No independent acceptance or 0.3% claim.
+
+Updated `doc/SYMMETRIC_FLOW_INFERENCE.md` with the complete result, component
+errors, definition caveats, recovery provenance and final estimate SHA-256.
+Validation: scheduler accounting, complete claim counts, final JSON/log,
+monitor termination and direct scalar conversion of m/error/significance.
+This was a documentation/status update; no code, model, data or sampler
+settings changed, and no new scientific runs were launched. See
+[completed result](SYMMETRIC_FLOW_INFERENCE.md#completed-million-observation-result--october-29-2026).
+
 ## 2026-10-29 — Review successful cache-off validation and resume 1M inference
 
 Jobs 17578224/17578225 completed the two full original failed batches in

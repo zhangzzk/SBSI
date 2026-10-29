@@ -1,5 +1,47 @@
 # Symmetric-flow comparison with the earlier image inference
 
+## Completed million-observation result — October 29, 2026
+
+The recovery pipeline completed at 09:01:49 Europe/Berlin. All 1045 C1 units
+and all 311 C2 units completed, covering **999,285 galaxies in 100 ConstGold
+plus-leg cases**, with no left-out galaxies or failed recovery claims. C2
+reran all 18,925 measured mag<21 galaxies at `(0.01886,0.00122)`. C1 reduction
+17581214 took 1h04m06s; C2 workers 17581289/91/93/95 and final reduction
+17581297 all exited 0:0. Final reduction took 1h02m13s. The bounded monitor
+recorded `result_written` and stopped; no user jobs remained at inspection.
+
+| Quantity | Final estimate | Quoted one-sigma uncertainty |
+|---|---:|---:|
+| g1 | 0.0194272221 | 0.0004474574 |
+| g2 = c2 | 0.0011840808 | 0.0004439864 |
+| m1 = 100*(g1/0.02−1)% | −2.8639% | 2.2373 percentage points |
+
+This inference m1 convention assumes c1=0 at the single injected shear
+`(0.02,0)`; m1 and c1 cannot be separated, and m2 cannot be measured here.
+It is distinct from a directly measured finite-difference response ratio;
+see [multiplicative-bias convention](CONVENTIONS.md#7-multiplicative-bias)
+and the [frozen observations and estimator](#observations-sampler-and-estimator).
+Quoted errors retain the maximum of total, galaxy-bootstrap and case-bootstrap
+uncertainties. Shear-error components are statistical
+`(0.0004169136,0.0004138760)`, chain
+`(0.0000500568,0.0000514891)`, and selection
+`(0.0001545815,0.0001522478)`. The same 10,010,624-scene normalization is
+reused with its uncertainty propagated.
+
+The remaining c2 is **2.67 quoted standard deviations above zero**; m1 is
+1.28 standard deviations below zero. This result does not establish 0.3%
+calibration or independent acceptance. Log-Z R-hat >=1.1 flags remain for
+82,551/999,285 C1 galaxies (**8.26%**) and 5760/18,925 bright C2 galaxies
+(**30.44%**). Completion does not establish convergence of every chain.
+The [reviewed recovery](#reviewed-recovery-and-final-stage-continuation--october-29-2026)
+retains the mixed cached/full C1 provenance and preserved failed artifacts.
+
+Final artifacts: `recovery_v1/c2/estimate.json`, `pergal.npz`, and
+`logs/final_17581297.out` under `galsbi_constgold1m_signsym_20261028`.
+Final estimate SHA-256:
+`1e743366386503a12b9830c2aafd9b25d25eb5241fcee8bb66021f6081a0af5b`.
+No new runs or model changes were initiated after completion.
+
 ## Reviewed recovery and final-stage continuation — October 29, 2026
 
 Full-unit validations completed: bright job 17578224 in 2h58m43s and faint
