@@ -1,5 +1,44 @@
 # Work log
 
+## 2026-10-29 — Why the measured 1M c2 fails while mocks pass: the images carry a faint e2 excess the symmetric F8 cannot model
+
+Owner question: m and c look good on mocks but not on the 1M measured image run (symmetric F8, branch
+`codex/model-symmetry`, `galsbi_constgold1m_signsym_20261028/recovery_v1`: m1 −2.86% ± 2.24, c2 +11.8 ± 4.4e-4).
+Read-only diagnosis; no model, sampler or data changed. Scripts and outputs: `doc/evidence/e2_excess_20261029/`.
+Units below are 1e-4 unless stated.
+- **m is not worse.** The run is unpaired. The mock's two unpaired sides alone give −5.4% ± 2.2 and +4.4% ± 2.2;
+  only the rotated-twin pairing brings the mock to ±0.74. The galaxies' intrinsic e1 draw alone moves the measured m
+  by +1.55 points.
+- **c2 tracks the data, not a model invention.** Model-free <e2>/R on the same 999,285 galaxies gives +10.0 ± 5.2,
+  close to the inferred +11.8; per-galaxy score vs measured e2 correlation 0.76; 100 cases scatter as expected
+  (chi2/dof 0.73). The selection term pulls c2 down (−2.9). R-hat ≥ 1.1 galaxies carry only +2.5 ± 1.6.
+- Split with the true intrinsic shapes (`e*_input_rot0`, diagnosis only): the sample's intrinsic e2 draw gives
+  +3.2; the remainder +9.0 ± 3.4 sits at mag 24–25.8.
+- **All 140 ConstGold cases, both legs (25.4M galaxies per leg, `allcases.py`):** mean (measured − intrinsic) e2 =
+  +3.98 ± 0.83, rising to +6.47 ± 1.34 at mag 25–25.8, ~0 at mag < 23. Same sign in both legs and both case sets
+  (0–39, 40–139). The additive e1 is +0.66 ± 0.62 (none). In inference weighting this is c2 ≈ +4.3 ± 1.2.
+- **The g = 0 training catalogue has the same excess** (`train_e2.py`, `det_meas_ngmix_np7_g0.0_train.feather`,
+  18.1M selected, 200 cases): measured − intrinsic e2 +4.10 ± 0.86 (25–25.8: +6.45 ± 1.40), e1 +0.17 ± 0.91.
+- Budget of the measured c2: pipeline e2 excess ≈ +4.3, intrinsic draw +3.2, remainder +4.7 ± 3.4 (1.4σ, noise).
+
+**Reading.** The image pipeline puts a small positive e2 (≈ +4e-4, mostly faint) on galaxies at zero shear, in the
+training sims and in ConstGold alike. The sign-symmetric F8 is forbidden by construction from predicting a mean e2
+at g2 = 0, so on images it reads the excess as shear g2. Mocks made by the symmetric model do not contain it, so they
+pass. The paired minus leg will sharpen m but not remove this c2 (it is the same in both legs).
+
+Source of the excess, not yet tested (code survey only): PSF is exactly round and identical everywhere (ruled out).
+Candidates: (1) the 48-px measurement cutout still sits 0.5–1.5 px off the source along (+x, +y)
+(`blendemu/blendemu/shape.py:248-251`); a diagonal offset can make c2 but not c1, as seen. (2) Every sim shares one
+pixel-noise realization, so its own e2 pattern is common to all cases; the case jackknife errors above do not include
+that.
+
+**Limitations.** Errors are case jackknifes and understate the shared-noise part. Intrinsic shapes were used only to
+diagnose. The cause is not identified.
+
+**Next (owner).** Re-measure a few cases with a centred cutout (odd 49-px stamp) on the same images and compare
+galaxy by galaxy; that separates the cutout from the noise field. If the cutout is the cause, fix the measurement and
+re-measure training and ConstGold catalogues. Otherwise, re-render a few cases with a new noise seed.
+
 ## 2026-10-26 — Repository cleanup: stale scripts, side worktrees and branches
 
 Owner: "clean up the repo first: scripts, worktrees and branches". Before any removal, everything was saved as
