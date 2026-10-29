@@ -1,5 +1,44 @@
 # Work log
 
+## 2026-10-29 — Launch negative-shear measurements for paired inference
+
+Owner authorized running both measurement shear legs. Added
+`scripts/run_sign_symmetric_minus.py`, `scripts/paired_sign_symmetric_estimate.py`
+and `tests/test_sign_symmetric_minus.py`; extended the existing input adapter's
+`read_case` to accept a declared negative leg while retaining the positive CLI
+default. Frozen run: `galsbi_constgold1m_minus_signsym_20261029` under the
+catalogue-prior project directory. Reuse all 999,285 completed positive-leg
+measurements; new negative count follows its own measured cuts.
+
+Negative selection couples to the original raw plus draw at probability
+1,000,000/18,157,963 and independently includes minus-only eligible identities
+at that same probability. This avoids requiring detection/selection on both
+legs. Preparation verifies source hashes, exact plus-sample replay and shared
+unsheared input properties. All minus chains use the validated full-likelihood
+sampler, unchanged scientific settings and new fixed seeds. Reuse the same
+10.01M-scene normalization. Paired reduction separates m1, c1, c2 and cross
+response, retains shared-case/galaxy covariance and propagates shared
+normalization covariance. Definitions, seeds, caveats and jobs are in the
+[paired protocol](PAIRED_MEASUREMENT_INFERENCE.md#estimands-and-uncertainty).
+
+Validation: initial adapter/selection tests 8 passed; additional synthetic
+paired-reduction test suite 6 passed. Full Slurm test job 17599987:
+729 passed, 4 skipped, one existing NumPy deprecation warning, 126.72s.
+Generated wrappers passed `bash -n`; `git diff --check` passed. Setup manifest
+was amended before preparation started to give the new minus estimator its
+own accurate provenance text; initial manifest is retained.
+
+Submitted preparation 17599986 (CPU-only, moved from cluster to inter to use
+available CPU capacity), preflight 17600000, six dependent C1 workers
+17600001/003/006/008/010/012, reduction 17600014 and two-hour monitor 17600015.
+Four standard inter workers plus two small cip workers cap C1 at six GPUs;
+C2 depends on completed C1 and uses four inter workers. At submission only
+two idle A40-16GB slots fit validated workers immediately; seven other free
+GPU slots had insufficient memory/CPU capacity or unvalidated hardware for
+these workers. Preparation and preflight must pass before sampling starts.
+No result or convergence claim yet. Follow preparation, integration checks,
+and workers through first meaningful progress; preserve failed attempts.
+
 ## 2026-10-29 — Audit mock and measured inference endpoints against saved summaries
 
 Owner requested careful review of both runs. Added

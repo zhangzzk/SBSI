@@ -44,8 +44,10 @@ def selection_thresholds(config):
 
 def read_case(root, case, *, pixel_size, zero_point, primary_mag, primary_re,
               measured_radius_min=0.75, measured_mag_max=25.8,
-              strict_radius=False, physical_disk_usability=False):
-    base = root / f"case{case}_0.02" / "real0" / "catalogues"
+              strict_radius=False, physical_disk_usability=False, shear=0.02):
+    if shear not in (-0.02, 0.02):
+        raise ValueError('ConstGold adapter requires a declared +/-0.02 leg')
+    base = root / f"case{case}_{shear:g}" / "real0" / "catalogues"
     paths = {
         "truth": base / "input/gals_info_tile180.0_-0.5.feather",
         "crossmatch": base / "CrossMatch/tile180.0_-0.5_rot0_matched.feather",
@@ -62,8 +64,8 @@ def read_case(root, case, *, pixel_size, zero_point, primary_mag, primary_re,
         for key in keys:
             if frame[key].isna().any() or frame[key].duplicated().any():
                 raise ValueError(f"case {case}: missing or duplicate {key}")
-    if not np.allclose(truth[["gamma1_input", "gamma2_input"]], [0.02, 0.0], rtol=0, atol=1e-14):
-        raise ValueError(f"case {case}: input is not the plus (0.02, 0) shear")
+    if not np.allclose(truth[["gamma1_input", "gamma2_input"]], [shear, 0.0], rtol=0, atol=1e-14):
+        raise ValueError(f"case {case}: input is not the declared ({shear}, 0) shear")
     joined = cross.merge(shape, left_on="id_detec", right_on="NUMBER", validate="one_to_one")
     matched = joined.merge(truth, left_on="id_input", right_on="index_input", validate="one_to_one")
     domain = np.ones(len(matched), dtype=bool)

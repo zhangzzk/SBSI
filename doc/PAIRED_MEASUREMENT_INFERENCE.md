@@ -1,0 +1,129 @@
+# Paired positive- and negative-shear measurement inference
+
+## Purpose and fixed endpoints
+
+On October 29, 2026 the owner authorized inference on both measured shear
+legs. The completed positive leg is frozen at
+`galsbi_constgold1m_signsym_20261028/recovery_v1` under
+`/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/`.
+It contains **999,285 final measurements in 100 cases**, from one million
+sampled raw rows. Its final estimate SHA-256 is
+`1e743366386503a12b9830c2aafd9b25d25eb5241fcee8bb66021f6081a0af5b`.
+The new negative leg is `galsbi_constgold1m_minus_signsym_20261029` under
+the same parent. No positive-leg chains are rerun.
+
+This varies injected shear between `(0.02,0)` and `(-0.02,0)`, unlike the
+earlier model-generated rotated-pair test, which kept injected shear fixed.
+See [the endpoint audit](MOCK_MEASUREMENT_REVIEW.md#conclusion-and-scope).
+
+## Population and paired sampling
+
+Read actual `case40` through `case139` negative-shear measurement catalogues.
+Match underlying identities by `(source_case, source_input_index)`, and
+verify equality of unsheared position, redshift, size, axis ratio,
+position angle, Sersic index and magnitude across the input catalogues.
+Detection IDs are local to each leg. Reject duplicate identities; report
+unmatched catalogue rows. Apply each leg's own detection/usability and
+measured cuts: `MAG_AUTO<25.8`, `FLUX_RADIUS>3` pixels (0.6 arcsec), then
+the inference support bounds `FLUX_RADIUS<100` and `|e|<0.99`. No
+truth-property population cuts. Shape and selection definitions follow
+[Conventions sections 3–5](CONVENTIONS.md#3-population-and-selection-order).
+
+The plus raw draw is a uniform one-million-row sample from 18,157,963
+base-eligible rows, before its last support cuts. Let
+`q=1,000,000/18,157,963`. A minus-base-eligible identity that was also
+plus-base-eligible is included exactly when it belonged to that frozen raw
+plus draw. A minus-base-eligible identity absent from the plus-base-eligible
+population is included independently with probability `q`.
+
+Thus every minus-eligible identity has the same marginal inclusion
+probability. This preserves pairing where possible **without conditioning
+the minus population on plus detection or final selection**. In particular,
+the 715 raw plus draws removed by its final support cuts remain eligible
+for the minus draw. Final minus count is determined by its own measurements,
+not forced to one million. Both populations and their overlap are reported.
+
+The new Bernoulli seed is 2026102901, split by case; ordering seed is
+2026102902. Preparation exactly replays the plus source hashes, eligibility
+reports, sampled IDs and measurement values before freezing minus inputs.
+
+## Model, inference and normalization
+
+Use symmetric F8 `f8_signsym_20261026_v2/base/flow/guard/selected.pt`, old C8,
+and the unchanged physical disk emulator. Artifact identities are frozen in
+the run's `rule.json`. The validated recovery sampler evaluates the
+likelihood for every proposal and audits retained states; it does not reuse
+likelihoods across redshift/SED proposals.
+
+Every minus chain is new. Preserve 20,480 steps, 8,192 warmup, stride 16,
+four chains, original likelihood grouping, starts, temperatures and prior.
+C1 samples at zero shear; C2 reruns `mag<21` at the rounded C1 shear.
+C1 seeds/bank seeds start at 2028700001/2033700001; C2 at
+2028800001/2033800001, each plus the declared unit index. These differ from
+the plus seeds. The plus endpoint retains its historical mixture of cached
+C1 and repaired full-likelihood C1 units; its final C2 is full-likelihood.
+
+Reuse the same candidate-specific 10,010,624-scene normalization from
+`galsbi_constgold100k_signsym_20261027/preliminary_10m`. The model, prior,
+observing conditions and measured selection are unchanged. Injected truth
+does not enter the likelihood or change its selection integration grid.
+Propagate this shared normalization uncertainty jointly between legs.
+
+## Estimands and uncertainty
+
+For estimates `g+` and `g-`, report
+
+- `m1=(g1+ - g1-)/0.04 - 1`;
+- `c1=(g1+ + g1-)/2`;
+- `c2=(g2+ + g2-)/2`;
+- cross response `R21=(g2+ - g2-)/0.04`.
+
+These are a central slope and even intercept at these two shears, with the
+usual linear-response interpretation. They do not measure `m2`, and cannot
+separate curvature from the even intercept. Report `m1` in percent with
+errors in percentage points; stored values are dimensionless. This is an
+inferred-shear calibration slope, not a direct forward-response ratio;
+see [bias conventions](CONVENTIONS.md#7-multiplicative-bias).
+
+Predeclare 2,000 shared-case bootstrap draws (seed 2026102903) over the same
+100 cases, recomputing both ratios of summed score to information. Also
+compute a joint galaxy influence covariance, joining the selected identities
+across legs and giving absent identities zero influence. For each leg,
+the influence is `I_total^-1 (v_i - I_i g_hat)`.
+
+The shared selection-gradient covariance comes from all 1,222 normalization
+chunks, retaining its off-diagonal element. Its leg response is
+`-N I_total^-1`, holding information fixed as in the existing marginal-error
+approximation. A separately reported chain-half covariance floor assumes
+independent chain noise between legs. Quote the largest marginal uncertainty
+among case-plus-selection, galaxy-influence-plus-selection, and
+chain-floor-plus-selection. Do not add chain scatter again to empirical
+bootstrap/influence scatter. Preserve all three covariance estimates.
+
+This is known-shear development, not independent acceptance. No
+finite-population correction is applied. Finite-chain bias is not bounded
+by these errors; pairing does not cure the existing convergence flags.
+
+## Execution and verification
+
+Entry points are `scripts/run_sign_symmetric_minus.py` and
+`scripts/paired_sign_symmetric_estimate.py`. Setup freezes scripts and
+configuration; preparation freezes measured inputs and unit lists.
+Preparation and reductions run through Slurm. GPU sampling depends on
+preparation, the test suite, and short bright/faint/nonzero-shear integration
+checks. Four standard `inter` workers and two 8-CPU A40-16GB `cip` workers
+share atomic C1 claims, at most six GPUs. C2 starts only after all C1 workers
+and its reduction finish, then uses four `inter` workers. Each unit has
+one identical retry with its failed attempt preserved; failed selected
+units are not silently omitted.
+
+Initial jobs: preparation 17599986, tests 17599987, preflight 17600000,
+C1 workers 17600001/003/006/008/010/012, C1 reduction 17600014.
+Full IDs and future C2/final jobs are in `jobs.json`. Two-hour bounded
+checks write on-disk status receipts and stop on failure or the final
+paired result; they do not send chat messages. Initial monitor 17600015.
+
+At submission nine GPU slots were unallocated: four A40-8GB, two
+A40-16GB, one H200 with only two free CPU cores, and two RTX2080Ti with
+ten free CPU cores total. Only the two A40-16GB slots immediately fit our
+validated small-worker configuration. The four standard workers must queue.
