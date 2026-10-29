@@ -43,6 +43,17 @@ def coupled_selection(minus_ids, plus_eligible, plus_sample, uniforms, probabili
     return take, shared
 
 
+def observation_frame(chosen, columns):
+    """Use the same interior-disk encoding as the frozen plus input adapter."""
+    import numpy as np
+    frame = chosen.copy()
+    norm2 = np.square(frame[['measured_ngmix_g1', 'measured_ngmix_g2']].to_numpy(float)).sum(1)
+    if not (np.isfinite(norm2) & (norm2 < 1)).all():
+        raise ValueError('measurement outside physical disk')
+    frame['measured_shape_log_disk_gap'] = np.log1p(-norm2)
+    return frame[columns]
+
+
 def setup(plus, root):
     root.mkdir(exist_ok=False)
     for stage in ['c1', 'c2', 'logs']:
@@ -173,7 +184,7 @@ def prepare(root):
     reference = root/'reference'
     reference.mkdir()
     obs_columns = pd.read_parquet(plus/'reference/observations.parquet').columns
-    chosen[obs_columns].to_parquet(reference/'observations.parquet', index=False)
+    observation_frame(chosen, obs_columns).to_parquet(reference/'observations.parquet', index=False)
     truth = chosen[['source_case', 'source_input_index', 'source_detection_id', 'shared_base_eligibility']].copy()
     truth['injected_g1'], truth['injected_g2'] = -.02, 0.
     truth.to_parquet(reference/'truth.parquet', index=False)

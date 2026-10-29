@@ -31,6 +31,17 @@ def test_inconsistent_plus_replay_is_rejected():
         study.coupled_selection([1,2],[1],[2],[.2,.4],.5)
 
 
+def test_observation_frame_retains_shapes_and_encodes_disk_gap():
+    frame=pd.DataFrame(dict(measured_ngmix_g1=[.3,0], measured_ngmix_g2=[.4,0]))
+    columns=[*frame.columns,'measured_shape_log_disk_gap']
+    observed=study.observation_frame(frame,columns)
+    pd.testing.assert_frame_equal(observed[frame.columns],frame)
+    np.testing.assert_array_equal(observed.measured_shape_log_disk_gap,np.log1p(-np.array([.25,0])))
+    frame.loc[0,'measured_ngmix_g1']=1.
+    with pytest.raises(ValueError,match='physical disk'):
+        study.observation_frame(frame,columns)
+
+
 def test_paired_parameters_separate_slope_offset_and_cross_response():
     m,c1,c2,cross=.03,.0004,-.0002,.005
     g=[(1+m)*.02+c1,cross*.02+c2,-(1+m)*.02+c1,-cross*.02+c2]

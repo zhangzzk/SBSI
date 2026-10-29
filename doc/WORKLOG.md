@@ -1,5 +1,35 @@
 # Work log
 
+## 2026-10-29 — Repair minus input disk encoding before GPU sampling
+
+Preparation 17599986 verified all 100 positive/negative catalogue identities
+and exact raw plus measurements, then failed with missing
+`measured_shape_log_disk_gap` while creating its output table. No inference
+started. Added `observation_frame` to the minus launcher, deriving the same
+interior-disk `np.log1p(-sum(e**2))` metadata as frozen plus
+`v39_image_input.selected_prefix`; measured Cartesian shapes are unchanged.
+Added a regression test for unchanged shapes, exact disk encoding and
+rejection of boundary/exterior shapes. Targeted adapter/paired tests:
+10 passed in 18.13s. Full pre-repair suite remains 729 passed, 4 skipped.
+
+Preserved failed log, empty reference directory, attempt-one launcher and
+setup manifest; updated frozen launcher hash. Cancelled six unusable
+dependent status checks. Replacement preparation 17600115 and preflight
+17600119 gate new C1 workers 17600120/122/124/126/128/130, reduction
+17600132 and bounded monitor 17600133. Scientific settings, selected rows,
+random seeds, model and estimator are unchanged. The scheduler had already
+purged the successful test job from dependency eligibility, so its completed
+0:0 accounting was verified and saved before submission instead. See
+[execution record](PAIRED_MEASUREMENT_INFERENCE.md#execution-and-verification).
+
+Replacement preparation completed 0:0 in 1m39s, retaining 999,299 minus
+measurements from 1,000,052 raw draws (753 final support-cut removals).
+981,640 identities overlap the 999,285 plus measurements, with 17,645
+plus-only and 17,659 minus-only selected identities. All 100 cases passed
+input-property equality and exact frozen plus replay. C1 has 1,043 units;
+C2 has 311 units for 18,929 mag<21 galaxies. GPU preflight 17600119 started
+on cip-cl-h01g02n2; production remains dependent on successful integration.
+
 ## 2026-10-29 — Launch negative-shear measurements for paired inference
 
 Owner authorized running both measurement shear legs. Added

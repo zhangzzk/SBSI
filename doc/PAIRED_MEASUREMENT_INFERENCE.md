@@ -12,6 +12,15 @@ sampled raw rows. Its final estimate SHA-256 is
 The new negative leg is `galsbi_constgold1m_minus_signsym_20261029` under
 the same parent. No positive-leg chains are rerun.
 
+Preparation 17600115 completed successfully in 1m39s: **999,299 minus
+measurements** from 1,000,052 sampled raw rows, with 753 removed by final
+support cuts. The selected populations share 981,640 identities; 17,645
+are plus-only and 17,659 minus-only. Of the latter, 17,393 were absent
+from the plus base-eligible population, and 266 belonged to the raw plus
+sample but failed its final support cuts. Minus C1 contains 112,318 bright
+and 886,981 faint galaxies in 1,043 units; C2 reruns 18,929 mag<21 galaxies
+in 311 units.
+
 This varies injected shear between `(0.02,0)` and `(-0.02,0)`, unlike the
 earlier model-generated rotated-pair test, which kept injected shear fixed.
 See [the endpoint audit](MOCK_MEASUREMENT_REVIEW.md#conclusion-and-scope).
@@ -117,11 +126,21 @@ and its reduction finish, then uses four `inter` workers. Each unit has
 one identical retry with its failed attempt preserved; failed selected
 units are not silently omitted.
 
-Initial jobs: preparation 17599986, tests 17599987, preflight 17600000,
-C1 workers 17600001/003/006/008/010/012, C1 reduction 17600014.
-Full IDs and future C2/final jobs are in `jobs.json`. Two-hour bounded
+The first preparation (17599986) passed all 100 catalogue/identity checks,
+then failed before writing observations because the new adapter omitted the
+derived `measured_shape_log_disk_gap` column. Added the identical
+`log1p(-e1**2-e2**2)` encoding used by the frozen plus adapter; Cartesian
+measurements are unchanged. Added a regression test; all ten targeted
+adapter/paired tests passed. The failed attempt, initial job list and source
+manifest are retained, and its unused dependent checks were cancelled.
+
+Replacement jobs: preparation 17600115, preflight 17600119,
+C1 workers 17600120/122/124/126/128/130, C1 reduction 17600132.
+Full test job 17599987 passed (729 passed, 4 skipped) before the repair;
+the repair then passed the targeted suite. Full IDs and future C2/final
+jobs are in `jobs.json`. Two-hour bounded
 checks write on-disk status receipts and stop on failure or the final
-paired result; they do not send chat messages. Initial monitor 17600015.
+paired result; they do not send chat messages. Replacement monitor 17600133.
 
 At submission nine GPU slots were unallocated: four A40-8GB, two
 A40-16GB, one H200 with only two free CPU cores, and two RTX2080Ti with
