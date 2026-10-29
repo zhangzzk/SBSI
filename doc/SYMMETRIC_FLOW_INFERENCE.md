@@ -1,5 +1,39 @@
 # Symmetric-flow comparison with the earlier image inference
 
+## Reviewed recovery and final-stage continuation — October 29, 2026
+
+Full-unit validations completed: bright job 17578224 in 2h58m43s and faint
+job 17578225 in 56m27s. Both reached 20,480 steps, used zero cached nuisance
+likelihoods, and had exactly zero maximum summary and log-kernel replay
+differences across 122,496 and 28,616 checked states respectively. The
+repair preserves the original scientific protocol, seeds, observation order,
+model and selection normalization. It does not establish posterior convergence.
+
+After review, `scripts/recover_sign_symmetric_inference.py` promotes only
+these two validated full-likelihood runs into a separate `recovery_v1`
+overlay beneath the 1M study root. It retains the other 1043 C1 units, all
+999,285 galaxies and the original failed attempts. The old diagnostic run
+that merely avoided the V100 failure is not used. Promotion requires exact
+protocol differences limited to cache policy/source identity, matching result
+hashes, complete original observation lists, and successful replay receipts.
+
+Preparation job 17581210 verified original inputs, normalization and repaired
+outputs and launched combined C1 reduction 17581214, which passed startup
+checks and began reducing the complete C1 sample. Its unchanged estimator then
+launches four `inter` GPU workers for all 311 C2 units (18,925 mag<21 galaxies)
+at the rounded combined C1 shear. Every C2 unit uses the repaired sampler;
+original C2 seeds, groups, tempering and chain lengths are retained. The final
+reduction depends on successful completion of all four workers. Startup and
+two-hour on-disk status checks remain enabled. No final 1M result exists yet.
+
+The C1 combination deliberately contains 1043 original cached-likelihood
+units and two repaired full-likelihood units. This numerical recovery is
+recorded explicitly; it is not an assertion that every original trajectory
+would be identical if rerun without the cache. The short paired checks had
+identical states and profile values; model artifacts and the physical target
+remain fixed. Earlier finite-chain and known-shear development limitations
+still apply.
+
 ## Full nuisance likelihood repair validation — October 28, 2026
 
 The bright diagnostic 17574583 completed all 20,480 steps on A40 in 2h56m57s

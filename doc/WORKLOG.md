@@ -1,5 +1,40 @@
 # Work log
 
+## 2026-10-29 — Review successful cache-off validation and resume 1M inference
+
+Jobs 17578224/17578225 completed the two full original failed batches in
+2h58m43s/56m27s. All 1660 galaxies reached 20,480 steps, with zero summary
+or log-kernel replay discrepancies across 151,112 retained-state checks.
+No nuisance likelihood evaluations were skipped. The validation output
+hashes and protocol comparisons preserve models, seeds, observation order,
+warmup, chain length and proposal settings.
+
+Added `scripts/recover_sign_symmetric_inference.py` to review and promote
+these outputs into an isolated `recovery_v1` overlay, preserving all failed
+attempts and the other 1043 C1 units. It verifies receipts and hashes, records
+the mixed cached/full C1 provenance, reuses the existing estimator and
+normalization, and schedules all 311 C2 units with the repaired sampler and
+original seeds/groups on four `inter` GPUs. The old diagnostic trajectory
+is not promoted. Final reduction and startup checks retain their dependency
+gates. On-disk two-hour checks stop after a failure or final estimate.
+
+Validation: syntax compilation passed; targeted recovery rejection tests
+passed 11/11 in 0.06s, covering altered seeds, model, ordering, steps, cache
+flag, missing checks, nonzero/NaN errors and incomplete observations.
+Scheduler preparation 17581210 completed successfully and launched combined
+C1 reduction 17581214. Its log reached `RECOVERY_REDUCTION_STARTED c1`
+after all source/input/repaired-output checks passed. Full-suite job 17581211
+passed 723 tests with 4 skipped and one deprecation warning in 116.61s.
+The frozen driver SHA and preparation job are in `recovery_launch.json`.
+First bounded two-hour on-disk monitor is 17581215. C2 and final reduction
+will be submitted by the existing pipeline after their prerequisites pass.
+
+Next: follow C2 when its prerequisite finishes, then report the complete
+estimator and convergence limitations. Long reduction is left running under
+the scheduled checks after successful startup.
+No independent acceptance or 0.3% claim is implied. See
+[reviewed recovery](SYMMETRIC_FLOW_INFERENCE.md#reviewed-recovery-and-final-stage-continuation--october-29-2026).
+
 ## 2026-10-28 — Validate full nuisance-move likelihoods after cache failure
 
 The bright diagnostic 17574583 completed all 20,480 steps on A40 in
