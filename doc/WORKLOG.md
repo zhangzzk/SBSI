@@ -1,5 +1,39 @@
 # Work log
 
+## 2026-10-29 — Audit mock and measured inference endpoints against saved summaries
+
+Owner requested careful review of both runs. Added
+`doc/MOCK_MEASUREMENT_REVIEW.md` and reproducible evidence script/JSON
+`doc/evidence/audit_mock_measurement_20261029.*`. Endpoints are the October 25
+`step2_result_brightw8_fl32.json` mock aggregate and October 29 recovery C2
+measurement result. This distinguishes model-generated rotated pairs from
+unpaired image measurements, retained from symmetric F8, mixed from uniform
+chain settings/starts, fixed-shape faint scores from all-co-moving scores,
+and 52.43M from 10.01M selection scenes. The full recipe mock truth test was
+deferred; neither endpoint proves zero c2 bias.
+
+Read-only CPU audit 17599211 completed 0:0 in 14s. From saved per-galaxy
+summaries and selection chunks it reproduced mock C1, then final g using
+saved bright sums to 3.02e-16. Recomputed measured final g and total covariance
+error from pergal.npz; g agreed to 2.17e-19, errors within 1e-12, and all
+999,285 observation IDs appeared exactly once. Eight core prior/proposal/disk
+likelihood files match byte-for-byte. Source and result hashes are in the
+receipt. This does not rerun chains or establish convergence.
+
+Clarified earlier shorthand: failed mock long-chain unit L_original_u0394
+was excluded from the long-chain *comparison*, but all its 320 galaxies
+remained in the aggregate with exactly their earlier short faintdraw values
+(verified L/h1/h2/ndraw arrays). The cache-replay problem already occurred
+with the old flow. The mock paired m=−0.49±0.74 percentage points was
+consistent with zero, but c2 remained 2.02 sigma, narrowly failing its
+declared joint 2-sigma gate. Current c2 is 2.67 sigma with unresolved chain
+diagnostics; this comparison does not isolate its cause.
+
+Recommended next control: current symmetric-model generated data through
+the exact current inference and a predeclared convergence comparison.
+No new sampling/training or scientific-setting changes were made. See
+[full review](MOCK_MEASUREMENT_REVIEW.md#conclusion-and-scope).
+
 ## 2026-10-29 — Complete million-galaxy symmetric-flow inference
 
 Verified the completed recovery pipeline: all 1045 C1 and 311 C2 units done,

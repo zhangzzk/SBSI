@@ -1,0 +1,61 @@
+{
+  "job": "17599211",
+  "scope": "Saved-summary replay and source comparison; no new sampling",
+  "mock_failed_long_unit": {
+    "label": "L_original_u0394",
+    "observations": 320,
+    "retained_after_cuts": 320,
+    "policy": "earlier faintdraw values retained exactly"
+  },
+  "mock_replay": {
+    "galaxies": 1990072,
+    "selection_chunks": 6400,
+    "one_step": [
+      0.019600225138255812,
+      0.000268176571140564
+    ],
+    "final_from_saved_bright_sums": [
+      0.019902482356227557,
+      0.00033189406791787565
+    ],
+    "max_final_error": 3.0184188481996443e-16,
+    "limitation": "Replays saved per-galaxy summaries and saved bright sums; does not rerun chains or bootstrap"
+  },
+  "measurement_replay": {
+    "galaxies": 999285,
+    "all_rows_exactly_once": true,
+    "g": [
+      0.019427222142569794,
+      0.0011840807891115798
+    ],
+    "total_errors": [
+      0.00044745736650516114,
+      0.0004439863670532804
+    ],
+    "max_g_error": 2.168404344971009e-19
+  },
+  "identical_core_files": {
+    "sbsi/galsbi_prior.py": "f6612ec614f966993946e3beb94221e6e6ad3adcf1782393f18cb8facc782652",
+    "sbsi/galsbi_scene_prior.py": "575e4057c94db07f0b14b792628f02e6a21f28443121198e16c669e72f7515ae",
+    "sbsi/galsbi_target_coordinates.py": "519c9cd4930a2a0a22d9989bad55b8dc436fe16760f8ed6d5dff3d8160047209",
+    "sbsi/mcmc_proposals.py": "0b2f4e2d90dd931895cd4c29f8e983735a32d5eb16ec6affeefcc99f1496bd40",
+    "sbsi/pseudo_marginal.py": "631e755a790cb510f27a5d80dbba0ac7c8d24275a49845dc651c0bb8ea84b188",
+    "sbsi/catalogue_disk_likelihood.py": "694e4514499809d7aa10ba1c2da53f441ad308472925951c38cdabb449ec50f8",
+    "sbsi/catalogue_likelihood.py": "f04d2453163a577b108fb4901dba1a0edd850e8a088c7a158140e29820bc0102",
+    "sbsi/catalogue_disk_response.py": "60297da38d241a4fa4d8af3ff77ef8ceeae10dd74163a0fda33bc1d4564477e5"
+  },
+  "evidence_sha256": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_pair1m_20261012/debug/step2.py": "275f45258aba1755c4e94393158620ca7307af08a7d1db310b07d32ffb457b66",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_pair1m_20261012/debug/step2_result_brightw8_fl32.json": "f7d01315ddc80f69d78e5fa20bdac7e8401e08edfaefdf687be525fb7fe6273e",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_pair1m_20261012/debug/rule_one.md": "66103606a4f8ff640bebe91071c62d12f29c4bb3ad420ec476d93d5fab136d39",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_pair1m_20261012/debug/one/b_result.txt": "656d4a60f1652951832f36a776061ae74a9c87f0681ffd30e556abe5fdf81548",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_pair1m_20261012/debug/fl32.py": "c679697ad33f7be52a11582e838efb838e1e981a51e11a0c15849be69154a630",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_pair1m_20261012/debug/faintlong.py": "4fb58fc4e476ed099906284c268b9581b5f4a1c27a6c7540716822523a867b13",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_constgold1m_signsym_20261028/recovery_v1/estimator_base.py": "35e6e4a2bc3a704e3221717fc96ab177a99c1a0215bbe95d2d679ff3e5bdb7a4",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_constgold1m_signsym_20261028/recovery_v1/c1/estimate.json": "da9c9a9d64a4d68de92f409a835ec129360ad7d38906e82afb557a8cfa491970",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_constgold1m_signsym_20261028/recovery_v1/c2/estimate.json": "1e743366386503a12b9830c2aafd9b25d25eb5241fcee8bb66021f6081a0af5b",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_constgold1m_signsym_20261028/recovery_v1/rule.json": "7e74b2c56f05836aa1355f9e674700c066242fb2ad31dec7969050bd57495bb8",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_constgold1m_signsym_20261028/recovery_v1/source_snapshot/scripts/check_galsbi_local_sampler.py": "5b133e2ff2637f608422c14a6a5c80c6dbae510dadd1acc6b4fca6dbcaeba5db"
+  },
+  "status": "passed"
+}

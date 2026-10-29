@@ -1,5 +1,9 @@
 # Symmetric-flow comparison with the earlier image inference
 
+For the audited comparison to the earlier model-generated mock, including
+chain settings, score evaluation, normalization and replay evidence, see
+[mock versus measured inference](MOCK_MEASUREMENT_REVIEW.md#conclusion-and-scope).
+
 ## Completed million-observation result — October 29, 2026
 
 The recovery pipeline completed at 09:01:49 Europe/Berlin. All 1045 C1 units
