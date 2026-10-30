@@ -1,5 +1,27 @@
 # Work log
 
+## 2026-10-30 — Minus million-galaxy C1 complete; bright C2 progressing
+
+Owner-requested status check at approximately 14:45 Europe/Berlin confirmed
+all 1,043 C1 units complete: 112,318 bright and 886,981 faint measurements,
+999,299 total, with no failed claims or omitted measurements. All six C1
+workers completed 0:0. Reduction 17600132 completed 0:0 in 1h08m47s and
+automatically submitted C2 workers 17613341/343/345/347 and final reduction
+17613349. All four C2 workers are running, with 120 active units out of 311
+and fresh progress reports; no C2 units or paired result are complete yet.
+C2 covers 18,929 mag<21 galaxies. Three workers are on kng-cl-nv02 and one
+on usm-cl-nv01. Their first-unit projections are about 1.5h and 0.76h
+respectively. Planning estimate: another 4–6h including final reduction,
+subject to later sampling rates and scheduling of the reduction.
+
+Intermediate C1 g=(-0.0178608761,0.0009729185); this is not the final minus
+estimate and must not be paired with final plus C2 to report calibration.
+82,952/999,299 (8.30%) have log-Z R-hat >=1.1, so the existing convergence
+limitation remains. The bounded monitor is active (next 17611923); startup
+checks and all four C2 progress streams were inspected. No scientific code,
+settings, models or jobs were changed. See
+[paired protocol](PAIRED_MEASUREMENT_INFERENCE.md#execution-and-verification).
+
 ## 2026-10-29 — Repair minus input disk encoding before GPU sampling
 
 Preparation 17599986 verified all 100 positive/negative catalogue identities
