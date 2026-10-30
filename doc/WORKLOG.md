@@ -1,5 +1,30 @@
 # Work log
 
+## 2026-10-30 — Complete paired plus/minus measurement inference
+
+Owner-requested status check verified final job 17613349 completed 0:0 at
+19:02:46 Europe/Berlin (1h10m53s). All four C2 workers completed 0:0; all
+1,043 C1 and 311 C2 minus units are done, with no failed claims or omitted
+measurements. Minus C2 reran all 18,929 mag<21 galaxies. The bounded monitor
+recorded `result_written` and stopped; no user jobs remained.
+
+Final paired m1=−5.539104% ±0.519981 percentage points;
+c1=0.000535043±0.000435911; c2=0.001014857±0.000433398;
+cross response=0.008461197±0.004973010. Same independent per-leg selection,
+981,640 matched identities, predeclared paired covariance/error convention
+and shared normalization. The m1 deficit is 10.65 quoted standard deviations;
+c2 is 2.34. This diagnoses a calibration failure of the current combined
+pipeline without isolating model error from finite-chain bias. Minus log-Z
+R-hat flags remain 8.30% in C1 and 30.58% in bright C2; no acceptance claim.
+
+Validation: complete claims and scheduler accounting, final verification
+markers, paired JSON, scalar recomputation of all four parameters from both
+final g vectors within 1e-14, and monitor termination. The final reducer also
+checked full observation coverage and reconstructed both g vectors from saved
+per-galaxy summaries. Recorded exact endpoints, errors, limitations and paired
+JSON SHA-256 in the [completed result](PAIRED_MEASUREMENT_INFERENCE.md#completed-paired-result--october-30-2026).
+No model, inference or scientific settings changed, and no further jobs launched.
+
 ## 2026-10-30 — Minus million-galaxy C1 complete; bright C2 progressing
 
 Owner-requested status check at approximately 14:45 Europe/Berlin confirmed

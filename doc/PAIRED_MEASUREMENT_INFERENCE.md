@@ -1,5 +1,44 @@
 # Paired positive- and negative-shear measurement inference
 
+## Completed paired result — October 30, 2026
+
+Final job 17613349 completed 0:0 at 19:02:46 Europe/Berlin. All 1,043 minus
+C1 units and 311 C2 units completed, with no failed claims or omitted
+measurements. All four C2 workers completed 0:0. The bounded monitor recorded
+`result_written` and stopped; no user jobs remained at the completion check.
+
+| Quantity | Estimate | Quoted uncertainty |
+| --- | ---: | ---: |
+| m1 | −5.539104% | 0.519981 percentage points |
+| c1 | +0.000535043 | 0.000435911 |
+| c2 | +0.001014857 | 0.000433398 |
+| g1-to-g2 response | +0.008461197 | 0.004973010 |
+
+These use the predeclared [paired definitions and uncertainty calculation](#estimands-and-uncertainty).
+The paired case-bootstrap error on m1 is 0.463871 percentage points; the
+galaxy-influence error is 0.519981 points and sets the quoted error. Both
+include shared normalization uncertainty. The independent chain-plus-selection
+floor is 0.179645 points. Pairing cancels much of the shared shape scatter;
+its smaller slope uncertainty must not be replaced by an independent-leg
+quadrature calculation.
+
+Final plus shear is `(0.019427222142569794, 0.0011840807891115796)`;
+final minus shear is `(-0.01835713610926805, 0.0008456329024757582)`.
+There are 999,285 plus and 999,299 minus measurements, with 981,640 shared
+identities and independent measured selection on each leg. Scalar recomputation
+from these endpoints reproduces all four reported paired parameters within
+1e-14. The paired JSON SHA-256 is
+`8f87c7947596008ee72b87e1b04a5637d2cc737d93439df078932885764df3e4`.
+
+The m1 deficit is 10.65 quoted standard deviations from zero; c1 is 1.23,
+c2 2.34 and cross response 1.70. This is evidence of a substantial calibration
+failure in the current model-plus-inference pipeline, not evidence that the
+flow alone causes it. Finite-chain bias remains unresolved: minus C1 has
+82,952/999,299 (8.30%) log-Z R-hat flags at >=1.1, and minus bright C2 has
+5,789/18,929 (30.58%); plus has comparable flags. The quoted statistical errors
+do not bound such bias. This reused development result does not establish
+independent acceptance or 0.3% accuracy.
+
 ## Purpose and fixed endpoints
 
 On October 29, 2026 the owner authorized inference on both measured shear
