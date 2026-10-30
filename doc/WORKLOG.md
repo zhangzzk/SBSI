@@ -1,5 +1,57 @@
 # Work log
 
+## 2026-10-30 — Paired 1M measured run: m −5.5% comes from mag 21–25 galaxies whose score responds ~6% less than the model expects
+
+Owner request: review the paired ± run (branch `codex/model-symmetry`, commit 986a821,
+`galsbi_constgold1m_minus_signsym_20261029/paired_estimate.json`): m1 = −5.539% ± 0.520 (10.6σ),
+c1 = +0.000535 ± 0.000436, c2 = +0.001015 ± 0.000433 (2.3σ). The pairing arithmetic (`pair.py`) was checked and
+is correct. Read-only; no model, sampler or data changed. Scripts and logs: `doc/evidence/paired_m_curvature_20261030/`;
+per-galaxy readings (256 MB): `$DATA_DIR/sbsi_caches/paired_m_curvature_20261030/curvature_readings.npz`.
+
+**Correction to the 2026-10-29 entry below:** "m is not worse, the run is unpaired" was wrong. With the minus leg
+the noise falls to ±0.52 and m = −5.5% is a real 10σ failure.
+
+Method (`curvature.py`, job 17622148, 7.5 min on `cluster`): from both legs' first-stage readings (every galaxy scored at
+g = 0, ±0.002 steps; selection from the run's own normalization, checked against `c1/estimate.json` to 1e-12; first-stage
+g reproduced exactly: plus (0.018855, 0.001222), minus (−0.017861, 0.000973)), per magnitude band:
+true slope S = (Σs₊ − Σs₋)/0.04, production score-scatter information I, and the likelihood's own curvature H
+(second difference of the selected log-likelihood). Errors: 2000 case-bootstrap replicates over cases 40–139.
+`curv_jk.py` (job 17622220) corrects H for finite chain length with the two chain halves; the change is 1–2%.
+
+| band | one-step m, production (S/I − 1) | m with curvature (S/H − 1, chain-corrected) | H/I |
+|---|---|---|---|
+| < 21 | −29.6% ± 3.1 | +7.8% ± 10.8 | 0.65 ± 0.06 |
+| 21–23 | −8.6% ± 0.9 | −5.5% ± 2.0 | 0.97 ± 0.02 |
+| 23–24 | −5.8% ± 1.1 | −4.3% ± 1.9 | 0.99 ± 0.02 |
+| 24–25 | −6.1% ± 1.2 | −9.7% ± 2.0 | 1.04 ± 0.02 |
+| 25–25.8 | −1.4% ± 1.7 | −27.4% ± 1.9 | 1.36 ± 0.03 |
+| all | −8.2% ± 0.5 | −9.9% ± 1.0 | 1.02 ± 0.01 |
+
+Reading:
+- **Bright (< 21):** the one-step deficit is the known one-step problem (score scatter 1.5× the curvature).
+  The run's second bright step already repairs it; this is why first-stage −8.2% becomes −5.5%.
+- **Mag 21–25 carries the remaining −5.5%.** Without the bright band, 21–25.8 gives S/I − 1 = −5.9% overall.
+  Here the score scatter and the curvature agree to 1–4%, so another Newton step or a curvature-based step would not
+  help. The scores of these galaxies move ~6% less with the true shear than the model's own information says.
+  If the data came from the model, the two would be equal, and on the 1M paired mock they are (m −0.49% ± 0.74).
+  So this is a model-vs-image mismatch, not an estimator or pairing error.
+- **Mag 25–25.8** passes with the production estimator (−1.4% ± 1.7). Its curvature is 36% above its score scatter,
+  which is another sign that the model's likelihood is not the images' distribution.
+- The truth-conditioned forward test (symmetric F8 + C8/disk reproduces the ConstGold mean response, +0.03% ± 0.26)
+  checks only the mean shape response. The likelihood also uses the full measured-shape distribution and the
+  catalogue prior. This repeats the 2026-10-05 finding: V3.9 got the mean right but gave −6.4% ± 0.35 on ConstGold
+  once the shape distribution near a measured |e| boundary mattered. Suspects: (1) the F8/disk measured-shape
+  distribution (width or tails) at mag 21–25, (2) the GalSBI scene prior vs the ConstGold input population.
+  Neither is tested here.
+
+Limitations: the curvature uses ±0.002 second differences from the same chains; chain-half correction is small but
+does not cover chains stuck in one mode. Pixel noise is shared by all sims, so the case bootstrap misses that part
+of the error (see 2026-10-29).
+
+Next (owner to choose): a posterior-predictive check of the measured-shape distribution at mag 21–25 (model draws
+from the prior vs ConstGold measured shapes, both legs), and a run with the prior replaced by the true input
+catalogue for a few cases to separate (1) from (2). ConstGold stays test-only.
+
 ## 2026-10-29 — Why the measured 1M c2 fails while mocks pass: the images carry a faint e2 excess the symmetric F8 cannot model
 
 Owner question: m and c look good on mocks but not on the 1M measured image run (symmetric F8, branch
