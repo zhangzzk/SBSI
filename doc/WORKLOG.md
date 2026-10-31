@@ -1,5 +1,51 @@
 # Work log
 
+## 2026-10-31 — Paired m −5.5%: the GalSBI prior does not describe the ConstGold galaxies
+
+Owner question: the forward likelihood gives |m| < 0.3%, so could the paired m −5.5% (entry below) come from a
+different population? Read-only; scripts and logs added to `doc/evidence/paired_m_curvature_20261030/`.
+
+- **The prior is not the ConstGold population.** The image runs use the continuous GalSBI F24 row-0 scene prior
+  (`reference/protocol.json`: "fixed F24 row0, native i14-28 support, uniform neighbours"). ConstGold resamples
+  Flagship-2 (`FS2_25876_IA_Griffith_UDF_i_25.feather`, sizes and Sérsic indices rank-matched to COSMOS/UDF;
+  `blendemu/configs/fs2_lsst_r_constant_g002.yaml`). The 1M paired mock that passed (`galsbi_pair1m_20261012`) drew
+  its galaxies from the same GalSBI prior, so its prior matched by construction. The forward test conditions on true
+  FS2 properties, so the prior never enters. The measured image run is the first test with a prior that differs from
+  the data.
+- **The difference is visible in the measured galaxies** (`observables.py`). The table compares the 1M mock (GalSBI
+  prior through the V3.9 model, g = (0.02, 0)) with the ConstGold plus leg (same g, same cuts). Errors are bootstrap
+  over mock galaxies and over ConstGold cases. Mean g1 agrees in all bands (|Δ| ≤ 1.6σ).
+
+  | measured mag | median flux radius (px), mock → images | mean measured \|e\|, mock → images | fraction \|e\| > 0.7, mock → images |
+  |---|---|---|---|
+  | < 21 | 4.99 → 6.96 (+67σ) | 0.461 → 0.320 (−58σ) | 0.256 → 0.047 |
+  | 21–23 | 4.15 → 5.16 (+122σ) | 0.524 → 0.440 (−63σ) | 0.333 → 0.182 |
+  | 23–24 | 3.94 → 4.56 (+134σ) | 0.493 → 0.478 (−15σ) | 0.246 → 0.204 |
+  | 24–25 | 3.97 → 4.15 (+56σ) | 0.440 → 0.456 (+33σ) | 0.144 → 0.146 |
+  | 25–25.8 | 3.84 → 3.86 (+8σ) | 0.425 → 0.427 (+3σ) | 0.158 → 0.152 |
+
+  ConstGold galaxies brighter than mag 24 are much larger and rounder than the prior predicts. The mismatch fades
+  toward 25–25.8, the band where the paired m passes (−1.4% ± 1.7). The mock used V3.9 F8, not the symmetric F8. The
+  differences are far larger than any F8 change has produced, but this was not checked with the symmetric model.
+- Split of the paired response by true galaxy properties (`popsplit.py`). Matching galaxies by (case, input index)
+  across the legs gives 981,640 matched. Dropped: 17,645 in the plus leg only and 17,659 in the minus leg only.
+  - Per-bin m swings strongly with true size, |e|, Sérsic index and neighbour count (e.g. +50% at true |e| < 0.16,
+    −47% at > 0.46).
+  - **Not a valid diagnostic on its own.** Score-scatter information conditioned on a hidden true property is not
+    expected to match the response even for a perfect model; a Gaussian toy gives the same |e| pattern. Only the
+    totals are tests. Kept for the record.
+
+Reading: the population mismatch is large where m fails and absent where m passes. That is consistent with the prior
+causing the −5.5%, but it is not proof.
+
+The causal test (owner to decide, GPU): either
+- (a) a model-made paired ±0.02 mock built from ConstGold-like FS2 truth, inferred with the GalSBI prior (should
+  reproduce ≈ −6% if the prior is the cause), or
+- (b) the image run's first stage on ~150k paired galaxies with an FS2 prior drawn from the training-sim
+  catalogues (never ConstGold cases). This would be optimistic, since ConstGold resamples the same FS2 catalogue.
+
+About 150k paired galaxies give ±1.5% on m.
+
 ## 2026-10-30 — Paired 1M measured run: m −5.5% comes from mag 21–25 galaxies whose score responds ~6% less than the model expects
 
 Owner request: review the paired ± run (branch `codex/model-symmetry`, commit 986a821,
