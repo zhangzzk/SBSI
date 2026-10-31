@@ -1,5 +1,37 @@
 # Work log
 
+## 2026-10-31 — Test (a) launched: model mock of the true ConstGold galaxies, inferred like the measured run
+
+Owner request: "run (a) with 4 GPUs" (option (a) in the entry below). Study directory
+`$DATA_DIR/sbsi/catalogue_prior/fs2truth_mock_signsym_20261031/`; scripts copied to `doc/evidence/fs2truth_mock_20261031/`.
+No library code changed.
+
+- **Question.** Does the GalSBI prior alone give the measured paired m −5.5% on the ConstGold population?
+  If m ≈ −6%, the prior/population mismatch is the cause. If m ≈ 0, the cause lies between the models and the images.
+- **Mock** (`make_mock.py`, job 17635249, 2 min on one GPU, run inside the measured run's frozen source snapshot):
+  - **Scene:** ConstGold cases 40–119. Each case uses the full true catalogue (~699,568 galaxies) as the scene. Both legs
+    share the same properties and differ only in the applied shear, ±0.02.
+  - **Targets:** 11,000 uniformly drawn targets per case (seed [2026103101, case]).
+  - **Model inputs** are rebuilt from truth and agree with the cached ConstGold parent to ≤ 6e-8 relative.
+  - **Measurements** come from the symmetric F8 + C8 + disk models, using the `mock_panel` recipe. The two legs share
+    uniforms and flow latents. The cuts are the same as the image run's.
+  - **Size:** plus leg 227,344 galaxies, minus leg 227,354.
+  - **Smoke check (cases 40–41):** the mock now looks like the images. At mag 21–23 the median radius is 5.28 px against
+    5.16, and mean |e| is 0.424 against 0.441. The GalSBI-prior mock had 4.15 px and 0.524.
+- **Inference copied from the measured paired run.** It uses the same `worker.sh` and estimator and the 10.01M-scene
+  normalization. Stage C1 runs at g = 0 (bright tempered, faint plain, sampler defaults). Stage C2 reruns mag < 21 at
+  the rounded C1 shear. The pairing is the same, with 80 cases. The seeds are new (`rule.json`).
+- **First preflight failed (job 17635251), now fixed.** The legs pointed at the 100k run's snapshot. Its sampler skips
+  some likelihood calls (the nuisance cache). The measured 1M legs ran the `cacheoff_validation_v1` snapshot instead, which
+  differs only in `scripts/check_galsbi_local_sampler.py`. All snapshot links now point there. The preflight also asserts
+  `nuisance_likelihood_cache is False`, as the measured run's did. The mock builder never uses that file, so the mock was
+  kept.
+- **Preflight passed** (job 17635263). In all four leg/group smokes, 0 likelihood calls were skipped and the replay change
+  was exactly 0.
+- **Jobs.** C1 runs on 4 workers (one GPU each, `inter`): plus 17635271/2, minus 17635274/5. Each leg's C1 estimate
+  (17635273, 17635276) then submits its own 2 C2 workers, so at most 4 GPUs are in use at any time. Pairing runs when both
+  legs finish. Expected: C1 about 9 h, C2 about 1–3 h, paired m to about ±1.2%.
+
 ## 2026-10-31 — Paired m −5.5%: the GalSBI prior does not describe the ConstGold galaxies
 
 Owner question: the forward likelihood gives |m| < 0.3%, so could the paired m −5.5% (entry below) come from a
