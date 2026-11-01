@@ -1,5 +1,34 @@
 # Work log
 
+## 2026-11-01 — Plan for re-simulating everything with the GalSBI population; disk audit
+
+Owner request: rerun the image sims (F8/C8 training, R_self/R_blend emulator training, constant shear) with the
+GalSBI population. The request was to study how many sims are needed, how much space there is, and what can be
+cleaned up. Read-only study; nothing was rendered, deleted or launched.
+- Plan: [GALSBI_RESIMULATION_PLAN.md](GALSBI_RESIMULATION_PLAN.md).
+- Disk tables and scan scripts: `doc/evidence/disk_audit_20261101/`, from `du` jobs 17640619, 17640620 and 17641126
+  on `cluster`.
+
+**Sizes.** Keep 200 training cases and 140 constant-shear cases, as now. That is about 3,100–3,500 CPU-h (~7 h at
+500 cores) and 1.6–1.7 TB with images. Including downstream caches and inference the total is about 2.3–2.7 TB.
+Paired-inference precision is limited by GPU time, not images: ±0.3% needs about 3M pairs, roughly 550–650 GPU-h.
+
+**Space.** The group project disk has 13 of 120 TB free. This account holds 9.42 TB, 3.98 TB of it sampler output in
+`sbsi/catalogue_prior`. Tier-1 cleanup frees about 2.8 TB with no conclusion lost; the largest item is 1.89 TB of
+saved chains in `galsbi_pair1m_20261012`. That covers the rerun.
+
+**Blocker.** BlendEMU's existing GalSBI catalogue mode does not match the SBSI prior: about 9% larger radii from a
+different radius convention, n and Re cuts, and an unrecorded filter. A writer from `GalSBIContinuousPrior` is needed.
+The owner must also choose the band (LSST-r vs the prior's HSC r2/i2).
+
+**Recommended in the same pass:**
+- a noise seed per case;
+- the centred cutout, tested first on existing FS2 cases;
+- a single measurement pass;
+- a 10-case pilot before the full run.
+
+Keep the FS2 ConstGold sims as the out-of-population stress test.
+
 ## 2026-11-01 — Test (a) result: the prior/population mismatch gives m −3.3%, the images add −2.2% at mag 24–25.8
 
 Result of the test launched in the entry below. Logs, `paired_estimate.json` and the band script are in
