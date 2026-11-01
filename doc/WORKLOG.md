@@ -1,5 +1,55 @@
 # Work log
 
+## 2026-11-01 — Test (a) result: the prior/population mismatch gives m −3.3%, the images add −2.2% at mag 24–25.8
+
+Result of the test launched in the entry below. Logs, `paired_estimate.json` and the band script are in
+`doc/evidence/fs2truth_mock_20261031/`. The per-galaxy readings (band split) are in
+`$DATA_DIR/sbsi_caches/fs2truth_mock_curvature_20261101/curvature_readings.npz`.
+
+- **Run.** All jobs completed 0:0 with no failed units. First stage: −0.02 leg 9.1 h on A40s; +0.02 leg 11.5 h on V100s.
+  Second stage: 70 bright mag < 21 units per leg, at shear (−0.01825, 0.0006) and (+0.01911, 0.00079). Log-Z R-hat
+  ≥ 1.1 flags in the first stage are 8.4%/8.3% (minus/plus), as in the measured run (8.3%).
+- **Paired result** (226,715 matched; 629 plus-only and 639 minus-only selected galaxies dropped):
+  - m1 = −3.29% ± 0.65 (galaxy influence; case bootstrap ±0.57), −5.0σ
+  - c1 = +0.00049 ± 0.00089
+  - c2 = +0.00056 ± 0.00088
+  - Measured image run: m1 −5.54% ± 0.52, c2 +0.00101 ± 0.00043. Mock − measured m = +2.25 ± 0.83 (2.7σ). The two
+    errors are treated as independent: the target draws and measurement noise differ, only the parent population is
+    shared.
+- **Per band** (`curvature_mock.py`, job 17638629, the 2026-10-30 script with only the leg paths and 80 cases
+  changed). These are first-stage one-step paired m = S/I − 1 with case-bootstrap errors.
+
+  | measured mag | mock of true galaxies | measured images | images − mock |
+  |---|---|---|---|
+  | < 21 | −31.7 ± 8.1% | −29.6 ± 3.1% | — (the second stage fixes this band in both) |
+  | 21–23 | −8.8 ± 1.6% | −8.6 ± 0.9% | +0.1 ± 1.8 |
+  | 23–24 | −3.9 ± 1.4% | −5.8 ± 1.1% | −1.9 ± 1.8 |
+  | 24–25 | −2.3 ± 0.9% | −6.1 ± 1.2% | −3.8 ± 1.5 |
+  | 25–25.8 | +2.0 ± 1.4% | −1.4 ± 1.7% | −3.4 ± 2.2 |
+  | all | −6.6 ± 1.1% | −8.2 ± 0.5% | −1.6 ± 1.2 |
+
+**Reading.**
+- **Inference on the true galaxies** reproduces the measured deficit at mag 21–23 exactly and brings m to −3.3%,
+  about 60% of the measured −5.5%. At 21–23 the population mismatch (galaxies larger and rounder than the prior) was
+  largest, so that part is explained without the images.
+- **The remaining −2.2% ± 0.8% (2.7σ)** sits at mag 24–25.8, where the prior and the images already agree in size and
+  |e| (2026-10-31 entry). That part comes from the step between the models and the images. It is the same faint range
+  that carries the image-side e2 excess (2026-10-29), though no link between the two is shown.
+- **The test reads neither ≈ −6% nor ≈ 0, but in between.** Both causes contribute.
+
+**Limitation (important).** The symmetric models have never had a closure mock, i.e. galaxies drawn from the GalSBI
+prior and inferred with this exact pipeline. The symmetric branch recommended one on 2026-10-29, but it was not run.
+The 1M closure that passed (m −0.49% ± 0.74, 2026-10-25) used V3.9 F8. Part of the −3.3% could therefore be the
+symmetric pipeline itself rather than the prior mismatch. The band errors are case bootstraps of the first stage, and
+the bright second stage is not split by band.
+
+**Next (owner to choose; nothing launched).**
+1. A symmetric closure mock: the same pipeline on galaxies drawn from the prior. It costs the same, about 4 GPUs for
+   14 h, and separates "prior mismatch" from "symmetric pipeline" in the −3.3%.
+2. Option (b) from 2026-10-31: an FS2-like prior from the training-sim catalogues. This is the direct fix if (1)
+   closes.
+3. The faint image-vs-model gap: the centred-cutout re-measure already proposed for the e2 excess.
+
 ## 2026-10-31 — Test (a) launched: model mock of the true ConstGold galaxies, inferred like the measured run
 
 Owner request: "run (a) with 4 GPUs" (option (a) in the entry below). Study directory

@@ -1,0 +1,2176 @@
+{
+  "cases": [
+    {
+      "case": 40,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5461,
+      "parent_max_relative_difference": [
+        2.950739486085041e-08,
+        2.9801717316146892e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.82754916828524e-08,
+        5.52884635060851e-08,
+        5.833884524862073e-08,
+        5.774549360590865e-08
+      ],
+      "response_pairs": 180175,
+      "plus": {
+        "usable": 4926,
+        "measured_cuts": 2860,
+        "final": 2854
+      },
+      "minus": {
+        "usable": 4931,
+        "measured_cuts": 2866,
+        "final": 2861
+      }
+    },
+    {
+      "case": 41,
+      "scene_rows": 699567,
+      "targets": 11000,
+      "parent_overlap": 5508,
+      "parent_max_relative_difference": [
+        2.9794974931718343e-08,
+        2.9782119437271604e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.330605105840579e-08,
+        5.876966382683007e-08,
+        5.73057689151116e-08,
+        5.844067484173072e-08
+      ],
+      "response_pairs": 179359,
+      "plus": {
+        "usable": 5048,
+        "measured_cuts": 2894,
+        "final": 2885
+      },
+      "minus": {
+        "usable": 5046,
+        "measured_cuts": 2889,
+        "final": 2880
+      }
+    },
+    {
+      "case": 42,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5495,
+      "parent_max_relative_difference": [
+        2.9750171770537293e-08,
+        2.9790042210819934e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.513097827636608e-08,
+        5.479936222104167e-08,
+        5.7249659940605696e-08,
+        5.8292367059749014e-08
+      ],
+      "response_pairs": 180041,
+      "plus": {
+        "usable": 4929,
+        "measured_cuts": 2833,
+        "final": 2827
+      },
+      "minus": {
+        "usable": 4932,
+        "measured_cuts": 2842,
+        "final": 2835
+      }
+    },
+    {
+      "case": 43,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5516,
+      "parent_max_relative_difference": [
+        2.9726514028105555e-08,
+        2.9773762677542948e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.8548581312586166e-08,
+        5.390225808373851e-08,
+        5.8268278375845934e-08,
+        5.7990886358776954e-08
+      ],
+      "response_pairs": 179673,
+      "plus": {
+        "usable": 4834,
+        "measured_cuts": 2797,
+        "final": 2794
+      },
+      "minus": {
+        "usable": 4839,
+        "measured_cuts": 2799,
+        "final": 2796
+      }
+    },
+    {
+      "case": 44,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5509,
+      "parent_max_relative_difference": [
+        2.9775760634898063e-08,
+        2.9724003369757668e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.4640170973758605e-08,
+        5.605083599283466e-08,
+        5.817020591892536e-08,
+        5.856091410775198e-08
+      ],
+      "response_pairs": 179554,
+      "plus": {
+        "usable": 4975,
+        "measured_cuts": 2884,
+        "final": 2876
+      },
+      "minus": {
+        "usable": 4974,
+        "measured_cuts": 2883,
+        "final": 2874
+      }
+    },
+    {
+      "case": 45,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5607,
+      "parent_max_relative_difference": [
+        2.9557882808006752e-08,
+        2.97033468932284e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.3740687979360425e-08,
+        5.781808553636523e-08,
+        5.8158690057728576e-08,
+        5.8655648830285954e-08
+      ],
+      "response_pairs": 179690,
+      "plus": {
+        "usable": 4880,
+        "measured_cuts": 2858,
+        "final": 2854
+      },
+      "minus": {
+        "usable": 4878,
+        "measured_cuts": 2857,
+        "final": 2851
+      }
+    },
+    {
+      "case": 46,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5483,
+      "parent_max_relative_difference": [
+        2.9708352000668015e-08,
+        2.9318311112191964e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.537346064953468e-08,
+        5.799994749311711e-08,
+        5.8396599429486386e-08,
+        5.859981874195455e-08
+      ],
+      "response_pairs": 179873,
+      "plus": {
+        "usable": 4972,
+        "measured_cuts": 2870,
+        "final": 2864
+      },
+      "minus": {
+        "usable": 4970,
+        "measured_cuts": 2867,
+        "final": 2860
+      }
+    },
+    {
+      "case": 47,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5598,
+      "parent_max_relative_difference": [
+        2.980151303511036e-08,
+        2.9282400615393556e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.825940933450147e-08,
+        5.7867996844369106e-08,
+        5.860106662083196e-08,
+        5.870940093058696e-08
+      ],
+      "response_pairs": 179984,
+      "plus": {
+        "usable": 4963,
+        "measured_cuts": 2902,
+        "final": 2895
+      },
+      "minus": {
+        "usable": 4964,
+        "measured_cuts": 2903,
+        "final": 2896
+      }
+    },
+    {
+      "case": 48,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5522,
+      "parent_max_relative_difference": [
+        2.97526021597605e-08,
+        2.9681188395969116e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.8455651975754184e-08,
+        5.4357009996015416e-08,
+        5.922400281427252e-08,
+        5.864960998794612e-08
+      ],
+      "response_pairs": 179475,
+      "plus": {
+        "usable": 5004,
+        "measured_cuts": 2904,
+        "final": 2899
+      },
+      "minus": {
+        "usable": 5004,
+        "measured_cuts": 2905,
+        "final": 2900
+      }
+    },
+    {
+      "case": 49,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5377,
+      "parent_max_relative_difference": [
+        2.9786822230981613e-08,
+        2.9769737341922564e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.351384278498781e-08,
+        5.776227574867517e-08,
+        5.803538465723862e-08,
+        5.834534547854456e-08
+      ],
+      "response_pairs": 179531,
+      "plus": {
+        "usable": 4918,
+        "measured_cuts": 2811,
+        "final": 2803
+      },
+      "minus": {
+        "usable": 4915,
+        "measured_cuts": 2810,
+        "final": 2802
+      }
+    },
+    {
+      "case": 50,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5569,
+      "parent_max_relative_difference": [
+        2.962322964705777e-08,
+        2.949727195833418e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.46222339650647e-08,
+        5.498063963237983e-08,
+        5.896102315107421e-08,
+        5.848014719917854e-08
+      ],
+      "response_pairs": 179393,
+      "plus": {
+        "usable": 4990,
+        "measured_cuts": 2843,
+        "final": 2832
+      },
+      "minus": {
+        "usable": 4991,
+        "measured_cuts": 2845,
+        "final": 2835
+      }
+    },
+    {
+      "case": 51,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5477,
+      "parent_max_relative_difference": [
+        2.9623678510226625e-08,
+        2.959701639326795e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.44805022866767e-08,
+        5.6613196019405646e-08,
+        5.775555029061243e-08,
+        5.9101006127198795e-08
+      ],
+      "response_pairs": 179199,
+      "plus": {
+        "usable": 4967,
+        "measured_cuts": 2929,
+        "final": 2920
+      },
+      "minus": {
+        "usable": 4966,
+        "measured_cuts": 2932,
+        "final": 2923
+      }
+    },
+    {
+      "case": 52,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5497,
+      "parent_max_relative_difference": [
+        2.965074041849647e-08,
+        2.9590238481702613e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.7844591219763464e-08,
+        5.717485824049992e-08,
+        5.595779179026119e-08,
+        5.8881110160969286e-08
+      ],
+      "response_pairs": 179615,
+      "plus": {
+        "usable": 4967,
+        "measured_cuts": 2884,
+        "final": 2874
+      },
+      "minus": {
+        "usable": 4964,
+        "measured_cuts": 2883,
+        "final": 2874
+      }
+    },
+    {
+      "case": 53,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5547,
+      "parent_max_relative_difference": [
+        2.9532678080812502e-08,
+        2.9473598117668587e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.645547229310199e-08,
+        5.724301752545273e-08,
+        5.7797951192899366e-08,
+        5.873347055614635e-08
+      ],
+      "response_pairs": 179911,
+      "plus": {
+        "usable": 4980,
+        "measured_cuts": 2847,
+        "final": 2837
+      },
+      "minus": {
+        "usable": 4986,
+        "measured_cuts": 2849,
+        "final": 2841
+      }
+    },
+    {
+      "case": 54,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5477,
+      "parent_max_relative_difference": [
+        2.9746113017203868e-08,
+        2.9687417857360288e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.567497122114364e-08,
+        5.7143694852771966e-08,
+        5.832407620757565e-08,
+        5.8706084819130534e-08
+      ],
+      "response_pairs": 179922,
+      "plus": {
+        "usable": 4878,
+        "measured_cuts": 2840,
+        "final": 2831
+      },
+      "minus": {
+        "usable": 4873,
+        "measured_cuts": 2837,
+        "final": 2828
+      }
+    },
+    {
+      "case": 55,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5492,
+      "parent_max_relative_difference": [
+        2.980221458503962e-08,
+        2.9786887290050856e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.703608685934808e-08,
+        5.871510610953764e-08,
+        5.7798575801504914e-08,
+        5.905821275401488e-08
+      ],
+      "response_pairs": 179688,
+      "plus": {
+        "usable": 4975,
+        "measured_cuts": 2873,
+        "final": 2868
+      },
+      "minus": {
+        "usable": 4977,
+        "measured_cuts": 2873,
+        "final": 2868
+      }
+    },
+    {
+      "case": 56,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5520,
+      "parent_max_relative_difference": [
+        2.979470969943776e-08,
+        2.96799433918693e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.801653910726815e-08,
+        5.779178838137544e-08,
+        5.60553256980035e-08,
+        5.830089603604275e-08
+      ],
+      "response_pairs": 179271,
+      "plus": {
+        "usable": 4945,
+        "measured_cuts": 2861,
+        "final": 2851
+      },
+      "minus": {
+        "usable": 4941,
+        "measured_cuts": 2858,
+        "final": 2846
+      }
+    },
+    {
+      "case": 57,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5538,
+      "parent_max_relative_difference": [
+        2.977302027140638e-08,
+        2.9760363839947956e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.769086475508157e-08,
+        5.5510886652310737e-08,
+        5.848472009772553e-08,
+        5.8744199575294395e-08
+      ],
+      "response_pairs": 179428,
+      "plus": {
+        "usable": 4922,
+        "measured_cuts": 2822,
+        "final": 2816
+      },
+      "minus": {
+        "usable": 4924,
+        "measured_cuts": 2829,
+        "final": 2823
+      }
+    },
+    {
+      "case": 58,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5544,
+      "parent_max_relative_difference": [
+        2.9569902637582857e-08,
+        2.9793005285050356e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.832362340844068e-08,
+        5.772580737695057e-08,
+        5.70152392514478e-08,
+        5.899602926579439e-08
+      ],
+      "response_pairs": 179850,
+      "plus": {
+        "usable": 4999,
+        "measured_cuts": 2923,
+        "final": 2913
+      },
+      "minus": {
+        "usable": 5005,
+        "measured_cuts": 2931,
+        "final": 2921
+      }
+    },
+    {
+      "case": 59,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5504,
+      "parent_max_relative_difference": [
+        2.9462823181169995e-08,
+        2.9422269731682604e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.700818166872964e-08,
+        5.496985267991615e-08,
+        5.72556281522964e-08,
+        5.807135883504703e-08
+      ],
+      "response_pairs": 179956,
+      "plus": {
+        "usable": 5068,
+        "measured_cuts": 2910,
+        "final": 2899
+      },
+      "minus": {
+        "usable": 5068,
+        "measured_cuts": 2914,
+        "final": 2905
+      }
+    },
+    {
+      "case": 60,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5502,
+      "parent_max_relative_difference": [
+        2.9750466201683423e-08,
+        2.956574995938155e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.470658459887677e-08,
+        5.3906236063114723e-08,
+        5.743060143997134e-08,
+        5.862321160309813e-08
+      ],
+      "response_pairs": 180392,
+      "plus": {
+        "usable": 5002,
+        "measured_cuts": 2897,
+        "final": 2883
+      },
+      "minus": {
+        "usable": 5002,
+        "measured_cuts": 2894,
+        "final": 2880
+      }
+    },
+    {
+      "case": 61,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5461,
+      "parent_max_relative_difference": [
+        2.973921331417273e-08,
+        2.9478518071002213e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.606920720713043e-08,
+        5.541000913061885e-08,
+        5.846879994852062e-08,
+        5.82698645076298e-08
+      ],
+      "response_pairs": 179684,
+      "plus": {
+        "usable": 4962,
+        "measured_cuts": 2852,
+        "final": 2845
+      },
+      "minus": {
+        "usable": 4959,
+        "measured_cuts": 2857,
+        "final": 2851
+      }
+    },
+    {
+      "case": 62,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5469,
+      "parent_max_relative_difference": [
+        2.9710585436326653e-08,
+        2.978515523111014e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.8563703149686374e-08,
+        5.8706939683360785e-08,
+        5.7023421032350854e-08,
+        5.866897340574038e-08
+      ],
+      "response_pairs": 179736,
+      "plus": {
+        "usable": 4905,
+        "measured_cuts": 2814,
+        "final": 2806
+      },
+      "minus": {
+        "usable": 4907,
+        "measured_cuts": 2815,
+        "final": 2808
+      }
+    },
+    {
+      "case": 63,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5547,
+      "parent_max_relative_difference": [
+        2.9721584859920824e-08,
+        2.97465382326223e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.1153490170208656e-08,
+        5.5969798723747334e-08,
+        5.757617068521435e-08,
+        5.918118312548269e-08
+      ],
+      "response_pairs": 179709,
+      "plus": {
+        "usable": 4905,
+        "measured_cuts": 2846,
+        "final": 2838
+      },
+      "minus": {
+        "usable": 4901,
+        "measured_cuts": 2847,
+        "final": 2840
+      }
+    },
+    {
+      "case": 64,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5546,
+      "parent_max_relative_difference": [
+        2.979539359682093e-08,
+        2.9761314190857036e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.1872275926738034e-08,
+        5.665615403778691e-08,
+        5.6974571929103946e-08,
+        5.896687838392801e-08
+      ],
+      "response_pairs": 180067,
+      "plus": {
+        "usable": 4826,
+        "measured_cuts": 2794,
+        "final": 2787
+      },
+      "minus": {
+        "usable": 4830,
+        "measured_cuts": 2802,
+        "final": 2796
+      }
+    },
+    {
+      "case": 65,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5536,
+      "parent_max_relative_difference": [
+        2.9755027219913188e-08,
+        2.9665849221593987e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.614757056170257e-08,
+        5.716447610284356e-08,
+        5.7992366713852916e-08,
+        5.8533795541851513e-08
+      ],
+      "response_pairs": 179486,
+      "plus": {
+        "usable": 5052,
+        "measured_cuts": 2892,
+        "final": 2884
+      },
+      "minus": {
+        "usable": 5050,
+        "measured_cuts": 2894,
+        "final": 2885
+      }
+    },
+    {
+      "case": 66,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5497,
+      "parent_max_relative_difference": [
+        2.944949584193779e-08,
+        2.9749808061474425e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.474597683534322e-08,
+        5.583077415265262e-08,
+        5.802916979979054e-08,
+        5.89175884452951e-08
+      ],
+      "response_pairs": 179402,
+      "plus": {
+        "usable": 5040,
+        "measured_cuts": 2905,
+        "final": 2897
+      },
+      "minus": {
+        "usable": 5041,
+        "measured_cuts": 2905,
+        "final": 2897
+      }
+    },
+    {
+      "case": 67,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5397,
+      "parent_max_relative_difference": [
+        2.9679620316969135e-08,
+        2.975673329963513e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.6824596850482043e-08,
+        5.798089499006632e-08,
+        5.880126637992542e-08,
+        5.76364632688645e-08
+      ],
+      "response_pairs": 178881,
+      "plus": {
+        "usable": 4979,
+        "measured_cuts": 2893,
+        "final": 2886
+      },
+      "minus": {
+        "usable": 4975,
+        "measured_cuts": 2899,
+        "final": 2891
+      }
+    },
+    {
+      "case": 68,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5473,
+      "parent_max_relative_difference": [
+        2.9639777521239807e-08,
+        2.9661916256529253e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.3223854764011305e-08,
+        5.4220325163798893e-08,
+        5.672670187091691e-08,
+        5.89553992401586e-08
+      ],
+      "response_pairs": 179299,
+      "plus": {
+        "usable": 4941,
+        "measured_cuts": 2784,
+        "final": 2782
+      },
+      "minus": {
+        "usable": 4933,
+        "measured_cuts": 2784,
+        "final": 2782
+      }
+    },
+    {
+      "case": 69,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5460,
+      "parent_max_relative_difference": [
+        2.9724933847674606e-08,
+        2.9660867095770982e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.577165787127302e-08,
+        5.705302052602057e-08,
+        5.9093676246941294e-08,
+        5.920400569127182e-08
+      ],
+      "response_pairs": 180091,
+      "plus": {
+        "usable": 4898,
+        "measured_cuts": 2816,
+        "final": 2811
+      },
+      "minus": {
+        "usable": 4896,
+        "measured_cuts": 2815,
+        "final": 2809
+      }
+    },
+    {
+      "case": 70,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5521,
+      "parent_max_relative_difference": [
+        2.9778420618242762e-08,
+        2.9719262495397913e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.20348749246755e-08,
+        5.6399234795241173e-08,
+        5.822999421269182e-08,
+        5.888926168219176e-08
+      ],
+      "response_pairs": 179630,
+      "plus": {
+        "usable": 4984,
+        "measured_cuts": 2871,
+        "final": 2863
+      },
+      "minus": {
+        "usable": 4987,
+        "measured_cuts": 2877,
+        "final": 2869
+      }
+    },
+    {
+      "case": 71,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5429,
+      "parent_max_relative_difference": [
+        2.968166157302221e-08,
+        2.947857702384482e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.4073953192883596e-08,
+        5.663956793944405e-08,
+        5.80767910642598e-08,
+        5.9198240235329287e-08
+      ],
+      "response_pairs": 180380,
+      "plus": {
+        "usable": 4947,
+        "measured_cuts": 2836,
+        "final": 2823
+      },
+      "minus": {
+        "usable": 4949,
+        "measured_cuts": 2836,
+        "final": 2822
+      }
+    },
+    {
+      "case": 72,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5441,
+      "parent_max_relative_difference": [
+        2.9801255907457858e-08,
+        2.9714399274460845e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.825528133493776e-08,
+        5.6413288088256806e-08,
+        5.8584292688350295e-08,
+        5.854811822471804e-08
+      ],
+      "response_pairs": 180342,
+      "plus": {
+        "usable": 5031,
+        "measured_cuts": 2906,
+        "final": 2898
+      },
+      "minus": {
+        "usable": 5025,
+        "measured_cuts": 2905,
+        "final": 2896
+      }
+    },
+    {
+      "case": 73,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5377,
+      "parent_max_relative_difference": [
+        2.9697486692015218e-08,
+        2.9752348140732465e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.7137302187782414e-08,
+        5.507286323522854e-08,
+        5.664196557306785e-08,
+        5.8398115842146895e-08
+      ],
+      "response_pairs": 179731,
+      "plus": {
+        "usable": 4937,
+        "measured_cuts": 2927,
+        "final": 2921
+      },
+      "minus": {
+        "usable": 4938,
+        "measured_cuts": 2927,
+        "final": 2921
+      }
+    },
+    {
+      "case": 74,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5432,
+      "parent_max_relative_difference": [
+        2.9626912478875056e-08,
+        2.964054324205989e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.5432926247277134e-08,
+        5.717441808913099e-08,
+        5.845713483280948e-08,
+        5.7989179841191224e-08
+      ],
+      "response_pairs": 179823,
+      "plus": {
+        "usable": 4897,
+        "measured_cuts": 2778,
+        "final": 2769
+      },
+      "minus": {
+        "usable": 4903,
+        "measured_cuts": 2776,
+        "final": 2767
+      }
+    },
+    {
+      "case": 75,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5503,
+      "parent_max_relative_difference": [
+        2.9775897525397e-08,
+        2.976480761862632e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.457372543689324e-08,
+        5.4759627288421004e-08,
+        5.7482922827813824e-08,
+        5.882360420811404e-08
+      ],
+      "response_pairs": 179765,
+      "plus": {
+        "usable": 4850,
+        "measured_cuts": 2826,
+        "final": 2822
+      },
+      "minus": {
+        "usable": 4847,
+        "measured_cuts": 2826,
+        "final": 2821
+      }
+    },
+    {
+      "case": 76,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5501,
+      "parent_max_relative_difference": [
+        2.972832890968391e-08,
+        2.978754021221164e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.440507580571662e-08,
+        5.422884449686802e-08,
+        5.777438426690749e-08,
+        5.87526706319542e-08
+      ],
+      "response_pairs": 180102,
+      "plus": {
+        "usable": 4957,
+        "measured_cuts": 2832,
+        "final": 2823
+      },
+      "minus": {
+        "usable": 4958,
+        "measured_cuts": 2833,
+        "final": 2825
+      }
+    },
+    {
+      "case": 77,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5519,
+      "parent_max_relative_difference": [
+        2.972242274523751e-08,
+        2.9022376391019122e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.8521279219466175e-08,
+        5.7054215322112655e-08,
+        5.607192574285845e-08,
+        5.903128260729371e-08
+      ],
+      "response_pairs": 179853,
+      "plus": {
+        "usable": 4933,
+        "measured_cuts": 2797,
+        "final": 2790
+      },
+      "minus": {
+        "usable": 4935,
+        "measured_cuts": 2799,
+        "final": 2792
+      }
+    },
+    {
+      "case": 78,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5487,
+      "parent_max_relative_difference": [
+        2.9321337691179394e-08,
+        2.9668959955486685e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.7695058875415274e-08,
+        5.686006658617791e-08,
+        5.808330656814285e-08,
+        5.767211175410178e-08
+      ],
+      "response_pairs": 179860,
+      "plus": {
+        "usable": 4947,
+        "measured_cuts": 2836,
+        "final": 2826
+      },
+      "minus": {
+        "usable": 4948,
+        "measured_cuts": 2836,
+        "final": 2827
+      }
+    },
+    {
+      "case": 79,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5451,
+      "parent_max_relative_difference": [
+        2.9600376261207373e-08,
+        2.955275202332075e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.269451668224484e-08,
+        5.827374554872426e-08,
+        5.7253161599641747e-08,
+        5.8253696029328214e-08
+      ],
+      "response_pairs": 179668,
+      "plus": {
+        "usable": 4897,
+        "measured_cuts": 2825,
+        "final": 2819
+      },
+      "minus": {
+        "usable": 4896,
+        "measured_cuts": 2824,
+        "final": 2818
+      }
+    },
+    {
+      "case": 80,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5515,
+      "parent_max_relative_difference": [
+        2.9705927495626838e-08,
+        2.9787203592590572e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.524163715636487e-08,
+        5.835342909614966e-08,
+        5.8289240033776336e-08,
+        5.849268117285058e-08
+      ],
+      "response_pairs": 179819,
+      "plus": {
+        "usable": 4982,
+        "measured_cuts": 2961,
+        "final": 2952
+      },
+      "minus": {
+        "usable": 4971,
+        "measured_cuts": 2955,
+        "final": 2948
+      }
+    },
+    {
+      "case": 81,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5544,
+      "parent_max_relative_difference": [
+        2.978105484441329e-08,
+        2.9762318276560507e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.445331666352587e-08,
+        5.514842559850722e-08,
+        5.837592003599346e-08,
+        5.9112907533301375e-08
+      ],
+      "response_pairs": 180261,
+      "plus": {
+        "usable": 4960,
+        "measured_cuts": 2817,
+        "final": 2809
+      },
+      "minus": {
+        "usable": 4960,
+        "measured_cuts": 2817,
+        "final": 2808
+      }
+    },
+    {
+      "case": 82,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5474,
+      "parent_max_relative_difference": [
+        2.9713801752428992e-08,
+        2.949926325435115e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.7761473266854175e-08,
+        5.489960591709865e-08,
+        5.7648220412280375e-08,
+        5.941462959528089e-08
+      ],
+      "response_pairs": 179666,
+      "plus": {
+        "usable": 4986,
+        "measured_cuts": 2852,
+        "final": 2845
+      },
+      "minus": {
+        "usable": 4988,
+        "measured_cuts": 2853,
+        "final": 2846
+      }
+    },
+    {
+      "case": 83,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5442,
+      "parent_max_relative_difference": [
+        2.9671461843072677e-08,
+        2.970511958633182e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.1527377334437565e-08,
+        5.586747093927797e-08,
+        5.6495125871067455e-08,
+        5.8290162256093774e-08
+      ],
+      "response_pairs": 180143,
+      "plus": {
+        "usable": 5024,
+        "measured_cuts": 2893,
+        "final": 2886
+      },
+      "minus": {
+        "usable": 5025,
+        "measured_cuts": 2888,
+        "final": 2880
+      }
+    },
+    {
+      "case": 84,
+      "scene_rows": 699567,
+      "targets": 11000,
+      "parent_overlap": 5514,
+      "parent_max_relative_difference": [
+        2.97866141751868e-08,
+        2.976940216559143e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.227027252652711e-08,
+        5.6842073010545144e-08,
+        5.6611867892752224e-08,
+        5.844038697694411e-08
+      ],
+      "response_pairs": 179548,
+      "plus": {
+        "usable": 4933,
+        "measured_cuts": 2821,
+        "final": 2814
+      },
+      "minus": {
+        "usable": 4929,
+        "measured_cuts": 2818,
+        "final": 2811
+      }
+    },
+    {
+      "case": 85,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5485,
+      "parent_max_relative_difference": [
+        2.976639268403858e-08,
+        2.9684478208835685e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.6771749113801156e-08,
+        5.3517392461147806e-08,
+        5.854360941891081e-08,
+        5.854290028301861e-08
+      ],
+      "response_pairs": 179314,
+      "plus": {
+        "usable": 4956,
+        "measured_cuts": 2838,
+        "final": 2833
+      },
+      "minus": {
+        "usable": 4957,
+        "measured_cuts": 2841,
+        "final": 2833
+      }
+    },
+    {
+      "case": 86,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5465,
+      "parent_max_relative_difference": [
+        2.9399845002942016e-08,
+        2.9794867573151862e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.419517864479437e-08,
+        5.498074948814143e-08,
+        5.716176773546338e-08,
+        5.8172905761851205e-08
+      ],
+      "response_pairs": 179915,
+      "plus": {
+        "usable": 4994,
+        "measured_cuts": 2926,
+        "final": 2921
+      },
+      "minus": {
+        "usable": 4989,
+        "measured_cuts": 2923,
+        "final": 2918
+      }
+    },
+    {
+      "case": 87,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5525,
+      "parent_max_relative_difference": [
+        2.9764710918200876e-08,
+        2.9717826199870956e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.5809335925960686e-08,
+        5.8077641671539315e-08,
+        5.6766609882468987e-08,
+        5.9232609454144195e-08
+      ],
+      "response_pairs": 179952,
+      "plus": {
+        "usable": 5037,
+        "measured_cuts": 2870,
+        "final": 2866
+      },
+      "minus": {
+        "usable": 5043,
+        "measured_cuts": 2870,
+        "final": 2865
+      }
+    },
+    {
+      "case": 88,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5465,
+      "parent_max_relative_difference": [
+        2.9678572155411587e-08,
+        2.947294630573083e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.491477385607997e-08,
+        5.262498734166675e-08,
+        5.878982274590591e-08,
+        5.821435665593736e-08
+      ],
+      "response_pairs": 179637,
+      "plus": {
+        "usable": 4895,
+        "measured_cuts": 2779,
+        "final": 2773
+      },
+      "minus": {
+        "usable": 4892,
+        "measured_cuts": 2782,
+        "final": 2775
+      }
+    },
+    {
+      "case": 89,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5456,
+      "parent_max_relative_difference": [
+        2.9590780048494025e-08,
+        2.9741099472069266e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.5903568717934184e-08,
+        5.694130455618089e-08,
+        5.844925117684624e-08,
+        5.734164197382157e-08
+      ],
+      "response_pairs": 180140,
+      "plus": {
+        "usable": 4914,
+        "measured_cuts": 2796,
+        "final": 2790
+      },
+      "minus": {
+        "usable": 4913,
+        "measured_cuts": 2786,
+        "final": 2780
+      }
+    },
+    {
+      "case": 90,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5526,
+      "parent_max_relative_difference": [
+        2.9517629229758313e-08,
+        2.9589493855119997e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.495326250875169e-08,
+        5.5741962090121525e-08,
+        5.9178918161732164e-08,
+        5.9386245366302973e-08
+      ],
+      "response_pairs": 179458,
+      "plus": {
+        "usable": 4880,
+        "measured_cuts": 2851,
+        "final": 2839
+      },
+      "minus": {
+        "usable": 4876,
+        "measured_cuts": 2844,
+        "final": 2833
+      }
+    },
+    {
+      "case": 91,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5446,
+      "parent_max_relative_difference": [
+        2.96180958647696e-08,
+        2.969171730704545e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.804403513917087e-08,
+        5.9438728364662685e-08,
+        5.867961917929467e-08,
+        5.851921349582255e-08
+      ],
+      "response_pairs": 179623,
+      "plus": {
+        "usable": 4991,
+        "measured_cuts": 2923,
+        "final": 2916
+      },
+      "minus": {
+        "usable": 4996,
+        "measured_cuts": 2922,
+        "final": 2915
+      }
+    },
+    {
+      "case": 92,
+      "scene_rows": 699567,
+      "targets": 11000,
+      "parent_overlap": 5443,
+      "parent_max_relative_difference": [
+        2.973798385319526e-08,
+        2.9704941284514064e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.785434831350839e-08,
+        5.45884278570683e-08,
+        5.807054597363879e-08,
+        5.7735367980781966e-08
+      ],
+      "response_pairs": 179708,
+      "plus": {
+        "usable": 4854,
+        "measured_cuts": 2781,
+        "final": 2775
+      },
+      "minus": {
+        "usable": 4856,
+        "measured_cuts": 2786,
+        "final": 2780
+      }
+    },
+    {
+      "case": 93,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5567,
+      "parent_max_relative_difference": [
+        2.9757792008311412e-08,
+        2.9637648113478576e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.733344697764297e-08,
+        5.68424714288787e-08,
+        5.768108378802626e-08,
+        5.907326302458444e-08
+      ],
+      "response_pairs": 179753,
+      "plus": {
+        "usable": 4946,
+        "measured_cuts": 2871,
+        "final": 2864
+      },
+      "minus": {
+        "usable": 4947,
+        "measured_cuts": 2872,
+        "final": 2866
+      }
+    },
+    {
+      "case": 94,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5518,
+      "parent_max_relative_difference": [
+        2.9437906667872937e-08,
+        2.972392543210134e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.5693514562905135e-08,
+        5.692151329872584e-08,
+        5.6657671271132746e-08,
+        5.898063425522372e-08
+      ],
+      "response_pairs": 180063,
+      "plus": {
+        "usable": 4812,
+        "measured_cuts": 2729,
+        "final": 2726
+      },
+      "minus": {
+        "usable": 4813,
+        "measured_cuts": 2733,
+        "final": 2728
+      }
+    },
+    {
+      "case": 95,
+      "scene_rows": 699567,
+      "targets": 11000,
+      "parent_overlap": 5418,
+      "parent_max_relative_difference": [
+        2.971042301069815e-08,
+        2.9713814186926868e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.7446964862471373e-08,
+        5.796749277510866e-08,
+        5.868226287897731e-08,
+        5.873384965940225e-08
+      ],
+      "response_pairs": 179553,
+      "plus": {
+        "usable": 4971,
+        "measured_cuts": 2861,
+        "final": 2848
+      },
+      "minus": {
+        "usable": 4971,
+        "measured_cuts": 2856,
+        "final": 2847
+      }
+    },
+    {
+      "case": 96,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5407,
+      "parent_max_relative_difference": [
+        2.979199875685623e-08,
+        2.923721587055894e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.4606229209308144e-08,
+        5.88156765147323e-08,
+        5.7528089587740144e-08,
+        5.834867795703174e-08
+      ],
+      "response_pairs": 179638,
+      "plus": {
+        "usable": 4781,
+        "measured_cuts": 2813,
+        "final": 2804
+      },
+      "minus": {
+        "usable": 4785,
+        "measured_cuts": 2807,
+        "final": 2797
+      }
+    },
+    {
+      "case": 97,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5477,
+      "parent_max_relative_difference": [
+        2.936054566138324e-08,
+        2.9792044942134055e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.492985698720852e-08,
+        5.451372776031418e-08,
+        5.74864846425231e-08,
+        5.8450363966928116e-08
+      ],
+      "response_pairs": 179469,
+      "plus": {
+        "usable": 4846,
+        "measured_cuts": 2847,
+        "final": 2843
+      },
+      "minus": {
+        "usable": 4847,
+        "measured_cuts": 2846,
+        "final": 2842
+      }
+    },
+    {
+      "case": 98,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5534,
+      "parent_max_relative_difference": [
+        2.9590932371093004e-08,
+        2.969287815624e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.79471015588196e-08,
+        5.5718417674675666e-08,
+        5.8457215705112436e-08,
+        5.85230210075572e-08
+      ],
+      "response_pairs": 179789,
+      "plus": {
+        "usable": 5018,
+        "measured_cuts": 2827,
+        "final": 2822
+      },
+      "minus": {
+        "usable": 5019,
+        "measured_cuts": 2825,
+        "final": 2820
+      }
+    },
+    {
+      "case": 99,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5513,
+      "parent_max_relative_difference": [
+        2.9679592894460427e-08,
+        2.977464097497773e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.437331981183488e-08,
+        5.5542487145793443e-08,
+        5.633662740984302e-08,
+        5.8315768041120554e-08
+      ],
+      "response_pairs": 180274,
+      "plus": {
+        "usable": 4911,
+        "measured_cuts": 2821,
+        "final": 2810
+      },
+      "minus": {
+        "usable": 4901,
+        "measured_cuts": 2822,
+        "final": 2812
+      }
+    },
+    {
+      "case": 100,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5461,
+      "parent_max_relative_difference": [
+        2.934872878057604e-08,
+        2.9790570676979655e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.125010641824352e-08,
+        5.799654756434497e-08,
+        5.691517002647451e-08,
+        5.858356627696926e-08
+      ],
+      "response_pairs": 179721,
+      "plus": {
+        "usable": 4898,
+        "measured_cuts": 2889,
+        "final": 2877
+      },
+      "minus": {
+        "usable": 4897,
+        "measured_cuts": 2887,
+        "final": 2877
+      }
+    },
+    {
+      "case": 101,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5561,
+      "parent_max_relative_difference": [
+        2.975962232198981e-08,
+        2.937318066553729e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.710918490176802e-08,
+        5.865611436756908e-08,
+        5.669653645685695e-08,
+        5.8798994190323956e-08
+      ],
+      "response_pairs": 180334,
+      "plus": {
+        "usable": 4940,
+        "measured_cuts": 2844,
+        "final": 2839
+      },
+      "minus": {
+        "usable": 4939,
+        "measured_cuts": 2840,
+        "final": 2835
+      }
+    },
+    {
+      "case": 102,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5501,
+      "parent_max_relative_difference": [
+        2.966114198699188e-08,
+        2.9365095022271248e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.146670676634223e-08,
+        5.7968321819818017e-08,
+        5.8920177569189174e-08,
+        5.810744377648652e-08
+      ],
+      "response_pairs": 179842,
+      "plus": {
+        "usable": 4917,
+        "measured_cuts": 2815,
+        "final": 2805
+      },
+      "minus": {
+        "usable": 4916,
+        "measured_cuts": 2821,
+        "final": 2811
+      }
+    },
+    {
+      "case": 103,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5523,
+      "parent_max_relative_difference": [
+        2.9715550686759684e-08,
+        2.964615763989542e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.5362093083286774e-08,
+        5.7067815883374296e-08,
+        5.7767375710327277e-08,
+        5.8851753517453957e-08
+      ],
+      "response_pairs": 179782,
+      "plus": {
+        "usable": 5052,
+        "measured_cuts": 2909,
+        "final": 2897
+      },
+      "minus": {
+        "usable": 5049,
+        "measured_cuts": 2908,
+        "final": 2897
+      }
+    },
+    {
+      "case": 104,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5476,
+      "parent_max_relative_difference": [
+        2.9771550669188684e-08,
+        2.977305624263238e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.623536381610435e-08,
+        5.675135315957407e-08,
+        5.842004881688286e-08,
+        5.828823925002788e-08
+      ],
+      "response_pairs": 180293,
+      "plus": {
+        "usable": 4884,
+        "measured_cuts": 2828,
+        "final": 2823
+      },
+      "minus": {
+        "usable": 4879,
+        "measured_cuts": 2830,
+        "final": 2825
+      }
+    },
+    {
+      "case": 105,
+      "scene_rows": 699567,
+      "targets": 11000,
+      "parent_overlap": 5499,
+      "parent_max_relative_difference": [
+        2.9646602062172178e-08,
+        2.9791151767710744e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.7522313284944154e-08,
+        5.7310372766209614e-08,
+        5.649353493573632e-08,
+        5.7945475104260825e-08
+      ],
+      "response_pairs": 179731,
+      "plus": {
+        "usable": 4792,
+        "measured_cuts": 2706,
+        "final": 2702
+      },
+      "minus": {
+        "usable": 4796,
+        "measured_cuts": 2709,
+        "final": 2704
+      }
+    },
+    {
+      "case": 106,
+      "scene_rows": 699567,
+      "targets": 11000,
+      "parent_overlap": 5486,
+      "parent_max_relative_difference": [
+        2.905323825963535e-08,
+        2.9752839414420862e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.6713842465761186e-08,
+        5.6358197315220036e-08,
+        5.6925585867593434e-08,
+        5.924595471774789e-08
+      ],
+      "response_pairs": 179676,
+      "plus": {
+        "usable": 4897,
+        "measured_cuts": 2832,
+        "final": 2826
+      },
+      "minus": {
+        "usable": 4897,
+        "measured_cuts": 2834,
+        "final": 2827
+      }
+    },
+    {
+      "case": 107,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5492,
+      "parent_max_relative_difference": [
+        2.9723255745572885e-08,
+        2.9627162168033294e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.103389493741685e-08,
+        5.468968574457129e-08,
+        5.943810388227224e-08,
+        5.813626912840852e-08
+      ],
+      "response_pairs": 179765,
+      "plus": {
+        "usable": 4949,
+        "measured_cuts": 2792,
+        "final": 2789
+      },
+      "minus": {
+        "usable": 4948,
+        "measured_cuts": 2790,
+        "final": 2785
+      }
+    },
+    {
+      "case": 108,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5440,
+      "parent_max_relative_difference": [
+        2.9781425547881213e-08,
+        2.976765700601902e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.575752741786342e-08,
+        5.550075154790704e-08,
+        5.771855771239519e-08,
+        5.9013249417303874e-08
+      ],
+      "response_pairs": 179480,
+      "plus": {
+        "usable": 4992,
+        "measured_cuts": 2865,
+        "final": 2854
+      },
+      "minus": {
+        "usable": 4993,
+        "measured_cuts": 2862,
+        "final": 2851
+      }
+    },
+    {
+      "case": 109,
+      "scene_rows": 699567,
+      "targets": 11000,
+      "parent_overlap": 5539,
+      "parent_max_relative_difference": [
+        2.979801705382812e-08,
+        2.9631826325982047e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.804247478871671e-08,
+        5.545522324394649e-08,
+        5.816242544662108e-08,
+        5.813448982111566e-08
+      ],
+      "response_pairs": 179816,
+      "plus": {
+        "usable": 4913,
+        "measured_cuts": 2846,
+        "final": 2835
+      },
+      "minus": {
+        "usable": 4909,
+        "measured_cuts": 2836,
+        "final": 2827
+      }
+    },
+    {
+      "case": 110,
+      "scene_rows": 699567,
+      "targets": 11000,
+      "parent_overlap": 5572,
+      "parent_max_relative_difference": [
+        2.9690548353222823e-08,
+        2.958817801879121e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.6462709422405045e-08,
+        5.3001971789269596e-08,
+        5.9291958336860926e-08,
+        5.784621923329473e-08
+      ],
+      "response_pairs": 179279,
+      "plus": {
+        "usable": 4926,
+        "measured_cuts": 2870,
+        "final": 2860
+      },
+      "minus": {
+        "usable": 4922,
+        "measured_cuts": 2872,
+        "final": 2862
+      }
+    },
+    {
+      "case": 111,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5438,
+      "parent_max_relative_difference": [
+        2.9684913305239036e-08,
+        2.9555713432216635e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.499684460451569e-08,
+        5.8017990173066004e-08,
+        5.514734569803002e-08,
+        5.820547223429441e-08
+      ],
+      "response_pairs": 179622,
+      "plus": {
+        "usable": 4939,
+        "measured_cuts": 2901,
+        "final": 2896
+      },
+      "minus": {
+        "usable": 4936,
+        "measured_cuts": 2902,
+        "final": 2896
+      }
+    },
+    {
+      "case": 112,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5496,
+      "parent_max_relative_difference": [
+        2.978803526065832e-08,
+        2.9664616096880536e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.657441822448572e-08,
+        5.634260345971597e-08,
+        5.86090630007256e-08,
+        5.809318360775661e-08
+      ],
+      "response_pairs": 180531,
+      "plus": {
+        "usable": 4935,
+        "measured_cuts": 2852,
+        "final": 2847
+      },
+      "minus": {
+        "usable": 4933,
+        "measured_cuts": 2850,
+        "final": 2844
+      }
+    },
+    {
+      "case": 113,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5368,
+      "parent_max_relative_difference": [
+        2.9751680896694666e-08,
+        2.9732714401653482e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.487167933549453e-08,
+        5.907317890811676e-08,
+        5.9320155950820666e-08,
+        5.7486593266913505e-08
+      ],
+      "response_pairs": 180152,
+      "plus": {
+        "usable": 4992,
+        "measured_cuts": 2849,
+        "final": 2845
+      },
+      "minus": {
+        "usable": 4991,
+        "measured_cuts": 2854,
+        "final": 2850
+      }
+    },
+    {
+      "case": 114,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5529,
+      "parent_max_relative_difference": [
+        2.9738893125852428e-08,
+        2.9766250131402217e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.156140247656701e-08,
+        5.3129213948538766e-08,
+        5.712036487583504e-08,
+        5.8811748115900395e-08
+      ],
+      "response_pairs": 180082,
+      "plus": {
+        "usable": 4854,
+        "measured_cuts": 2756,
+        "final": 2747
+      },
+      "minus": {
+        "usable": 4851,
+        "measured_cuts": 2759,
+        "final": 2750
+      }
+    },
+    {
+      "case": 115,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5539,
+      "parent_max_relative_difference": [
+        2.979586155582581e-08,
+        2.9572414739220676e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.49762911741729e-08,
+        5.641333310648545e-08,
+        5.818242524314825e-08,
+        5.9544547786382866e-08
+      ],
+      "response_pairs": 179451,
+      "plus": {
+        "usable": 4921,
+        "measured_cuts": 2842,
+        "final": 2836
+      },
+      "minus": {
+        "usable": 4920,
+        "measured_cuts": 2842,
+        "final": 2835
+      }
+    },
+    {
+      "case": 116,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5563,
+      "parent_max_relative_difference": [
+        2.9781925148242294e-08,
+        2.941492294183945e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.520656836159202e-08,
+        5.7691066099220696e-08,
+        5.654247571600754e-08,
+        5.8321967458833695e-08
+      ],
+      "response_pairs": 179671,
+      "plus": {
+        "usable": 4853,
+        "measured_cuts": 2808,
+        "final": 2797
+      },
+      "minus": {
+        "usable": 4853,
+        "measured_cuts": 2807,
+        "final": 2796
+      }
+    },
+    {
+      "case": 117,
+      "scene_rows": 699568,
+      "targets": 11000,
+      "parent_overlap": 5415,
+      "parent_max_relative_difference": [
+        2.976118584907539e-08,
+        2.975107793456999e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.67580540035617e-08,
+        5.5521219150174725e-08,
+        5.616220558118596e-08,
+        5.8205194636303504e-08
+      ],
+      "response_pairs": 180196,
+      "plus": {
+        "usable": 4974,
+        "measured_cuts": 2893,
+        "final": 2890
+      },
+      "minus": {
+        "usable": 4969,
+        "measured_cuts": 2891,
+        "final": 2888
+      }
+    },
+    {
+      "case": 118,
+      "scene_rows": 699567,
+      "targets": 11000,
+      "parent_overlap": 5500,
+      "parent_max_relative_difference": [
+        2.9493423370219318e-08,
+        2.9406153179145633e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.7129834944810886e-08,
+        5.855286036950928e-08,
+        5.868773027491717e-08,
+        5.877051396229033e-08
+      ],
+      "response_pairs": 179813,
+      "plus": {
+        "usable": 4893,
+        "measured_cuts": 2804,
+        "final": 2794
+      },
+      "minus": {
+        "usable": 4895,
+        "measured_cuts": 2801,
+        "final": 2792
+      }
+    },
+    {
+      "case": 119,
+      "scene_rows": 699567,
+      "targets": 11000,
+      "parent_overlap": 5458,
+      "parent_max_relative_difference": [
+        2.9600341067137492e-08,
+        2.9703718151807834e-08,
+        5.3893920281308086e-08,
+        0.0,
+        5.723375223353879e-08,
+        5.374412204266228e-08,
+        5.878911623782691e-08,
+        5.906131020812565e-08
+      ],
+      "response_pairs": 179587,
+      "plus": {
+        "usable": 4946,
+        "measured_cuts": 2893,
+        "final": 2884
+      },
+      "minus": {
+        "usable": 4943,
+        "measured_cuts": 2891,
+        "final": 2882
+      }
+    }
+  ],
+  "targets_per_case": 11000,
+  "seed": 2026103101,
+  "model_identity": {
+    "name": "symmetric-F8-base-guard-with-retained-C8-and-disk",
+    "flow": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/f8_signsym_20261026_v2/base/flow/guard/selected.pt",
+    "flow_sha256": "21f772cfb87339292f9ef1df350d52fa44ed8cd9b3715068623051acb3737591",
+    "classifier_sha256": "231bbbdf1f885ab22ccfca2525ae46b6bdfd068474c42ebac24973feb861cb6a",
+    "disk_sha256": "194c1d11b67d6fd52039060270663e8e1cd610b478b9e9a66e34271701761fe7",
+    "disk_metadata_sha256": "e9c28e921fa0430d4ef5feef9cb1d0954c4431b2258b5edfc0ed7c99fe59b589",
+    "production_accepted": false
+  },
+  "builder_sha256": "aa5d3d16eff7eb7d1c31233325f3a9b8adf426651d12eed35fbe6b8e74b3ac8d"
+}

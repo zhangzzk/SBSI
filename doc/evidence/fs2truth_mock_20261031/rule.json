@@ -1,0 +1,35 @@
+{
+  "plus_root": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/fs2truth_mock_signsym_20261031/plus",
+  "normalization": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_constgold100k_signsym_20261027/preliminary_10m",
+  "bootstrap_seed": 2026103103,
+  "cases": [
+    40,
+    120
+  ],
+  "seeds": {
+    "plus": {
+      "c1": [
+        2031000001,
+        2031500001
+      ],
+      "c2": [
+        2031100001,
+        2031600001
+      ]
+    },
+    "minus": {
+      "c1": [
+        2032000001,
+        2032500001
+      ],
+      "c2": [
+        2032100001,
+        2032600001
+      ]
+    }
+  },
+  "template": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_constgold1m_minus_signsym_20261029",
+  "question": "Does the GalSBI prior alone produce the measured paired m = -5.5% on the ConstGold population?",
+  "reading": "paired m ~ -6%: prior/population mismatch is the cause; ~ 0: the cause is model vs images",
+  "authorization": "Owner 2026-10-31: run (a) with 4 GPUs"
+}
