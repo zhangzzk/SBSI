@@ -39,7 +39,7 @@ the user's `main` checkout is untouched):
 - `shape_measurement.centering: centred` gives an odd stamp centred on the source pixel, using the convention tested
   in the cutout entry below.
 
-**Pilot run (job 17641934, running):** config `galsbi_lsst_i_pilot.yaml`. LSST-i noise (rms 0.6159, seeing 0.71″,
+**Pilot run (jobs 17642023 step 1 → array 17642025 steps 2–3, one case per core → 17642026 step 4):** config `galsbi_lsst_i_pilot.yaml`. LSST-i noise (rms 0.6159, seeing 0.71″,
 β 2.458), constant shear ±0.02, centred 65 px stamps, steps 1–4. Next checks:
 - render inputs equal the scenes;
 - noise differs between cases;
