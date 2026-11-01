@@ -51,15 +51,22 @@ def build_prior(model_index=0, grid_size=8193):
     # add fresh z, so this memory restarts sooner to keep insertions cheap.
     luminosity_distance = ExactMemo(lambda z: cosmo.background.dist_lum_a(a=1/(1+z)), limit=500_000)
 
+    def scaled_coeffs(z, M_B, c, absolute_B):
+        coeff = c * 10 ** (.4*(absolute_B-M_B))[:, None]
+        return coeff * ((1e-5/luminosity_distance(z))**2/(1+z))[:, None]
+
     def photometry(z, M_B, c):
         zero = np.zeros(len(z))
         absolute = mag(redshifts=zero, excess_b_v=zero, coeffs=c, filter_names=['B', 'i'])
-        coeff = c * 10 ** (.4*(absolute['B']-M_B))[:, None]
-        distance = luminosity_distance(z)
-        coeff *= ((1e-5/distance)**2/(1+z))[:, None]
+        coeff = scaled_coeffs(z, M_B, c, absolute['B'])
         apparent = mag(redshifts=z, excess_b_v=zero, coeffs=coeff, filter_names=['r', 'i'])
         return dict(m_r=apparent['r'], m_i=apparent['i'],
                     M_i=M_B+absolute['i']-absolute['B'])
+
+    def apparent_coeffs(z, M_B, c):
+        """Template coefficients whose E(B-V)=0 table fluxes give apparent magnitudes in any band."""
+        zero = np.zeros(len(z))
+        return scaled_coeffs(z, M_B, c, mag(redshifts=zero, excess_b_v=zero, coeffs=c, filter_names=['B'])['B'])
 
     @ExactMemo
     def volume(z):
@@ -75,6 +82,7 @@ def build_prior(model_index=0, grid_size=8193):
             p[f'lum_fct_z_const_{t}'], p[f'lum_fct_alpha_{t}'],
             (p[f'lum_fct_m_star_{t}_slope'], p[f'lum_fct_m_star_{t}_intcpt']), p['seed_ngal'])
     prior = GalSBIContinuousPrior(p, photometry, volume, cap, zmax, grid_size=grid_size)
+    prior.apparent_coeffs = apparent_coeffs
     return prior, cosmo, config
 
 

@@ -1,5 +1,51 @@
 # Work log
 
+## 2026-11-01 — GalSBI re-simulation build: LSST-i table, scene writer, BlendEMU branch, 10-case pilot launched
+
+Owner: "go on" (continue the GalSBI rerun in LSST-i; see `doc/GALSBI_RESIMULATION_PLAN.md`). Evidence:
+`doc/evidence/galsbi_resim_pilot_20261101/`. Data: `$DATA_DIR/sbsi/galsbi_resim/`.
+
+**LSST-i magnitudes (jobs 17641871 failed on a GalSBI API detail, 17641879 done).**
+`scripts/build_lsst_template_integrals.py` tabulates GalSBI template integrals for the Rubin v1.9 `total_r/total_i`
+throughputs on the production z grid at E(B-V) = 0. Output: `$DATA_DIR/lsst_filters/LSST_template_integrals_ebv0.h5`.
+Check: recomputing GalSBI's HSC r2/i2 the same way reproduces the shipped table to 2.6e-16 (relative). For single
+templates over all z, LSST-i − HSC-i2 has median +0.066 mag (1st–99th percentile −0.06 to +1.05).
+
+**Scene writer.** `scripts/write_galsbi_scenes.py` (job `jobs/job_write_galsbi_scenes.sh`) writes one full prior draw
+per case: Poisson proposals over RA 180–181°, Dec 0–1° (3.046e-4 sr), the prior's own HSC-i 14–28 support, and
+positions uniform on the sphere. Nothing else is cut or resampled. Renderer columns:
+- Re = semi-major axis r50·√(1+a), q = (1−ε)/(1+ε), position angle psi/2 in degrees (GalSim beta, the same frame as
+  the applied shear);
+- 'r' = LSST-i;
+- `sersic_n` = n clipped to GalSim's 0.3–6.2 (native `n` kept).
+
+The truth columns are kept. `build_prior` gains `apparent_coeffs`, so any band can be read from the table; the
+prior's own photometry is unchanged. **Model features must use the clipped n on both the simulation and the model
+side.** About 1.6% of galaxies are clipped, mostly n > 6.2.
+
+**Pilot scenes (array 17641914, cases 9000–9009, seed 20261101).** Pilot case numbers are reserved and never become
+training or test cases. `scripts/check_galsbi_scenes.py` → `scene_check.json`:
+- 8,845,780 galaxies (885k per case; FS2 cases had 699,568), +0.23σ from the prior expectation;
+- convention identities exact to 1e-15;
+- positions uniform (KS p ≥ 0.05);
+- intrinsic mean e1 −1.5 ± 0.8e-4, e2 +0.4 ± 0.8e-4;
+- LSST-i 14.4–28.3; the LSST table reproduces the prior's HSC-i to 1.4e-14 mag.
+
+**BlendEMU branch `galsbi-resim`** (5be6893, from `dev` 46107b8; worktree `/home/z/Zekang.Zhang/blendemu_galsbi_resim`;
+the user's `main` checkout is untouched):
+- `catalog.type: sbsi_scene` reads `scene{case}.feather` and applies the existing half/constant shear rule. The
+  random stream is unchanged for old catalogues.
+- The render seed is 1000·case + realization, shared by both shear legs of a case. Before, every sim used seed 9990.
+- `shape_measurement.centering: centred` gives an odd stamp centred on the source pixel, using the convention tested
+  in the cutout entry below.
+
+**Pilot run (job 17641934, running):** config `galsbi_lsst_i_pilot.yaml`. LSST-i noise (rms 0.6159, seeing 0.71″,
+β 2.458), constant shear ±0.02, centred 65 px stamps, steps 1–4. Next checks:
+- render inputs equal the scenes;
+- noise differs between cases;
+- e2 at zero shear, and m from the paired legs;
+- cost per case.
+
 ## 2026-11-01 — Centred-cutout test: the lopsided 48 px stamp causes the faint e2 excess
 
 Owner: "run the cutout test first". Scripts, results and figure are in `doc/evidence/cutout_test_20261101/`; data are

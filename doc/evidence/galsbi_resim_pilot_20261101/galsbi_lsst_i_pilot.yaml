@@ -1,0 +1,57 @@
+# GalSBI re-simulation pilot (2026-11-01): 10 SBSI prior scenes, LSST-i, constant shear +-0.02.
+# Pilot cases 9000-9009 are reserved: never training or test data.
+# BlendEMU branch galsbi-resim (worktree /home/z/Zekang.Zhang/blendemu_galsbi_resim).
+
+catalog:
+  type: sbsi_scene
+  path: /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/pilot_20261101/scenes
+  mag_cut: 99           # render every scene galaxy; the scene's own limit is HSC i 14-28 (LSST-i is fainter at high z)
+
+simulation:
+  output_path: /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/pilot_20261101/sims/
+  base_config: /home/z/Zekang.Zhang/blendemu_galsbi_resim/configs/base_sim_config.ini
+  n_cases: 10
+  case_offset: 9000
+  pixel_scale: 0.2
+  shear_mode: constant
+  constant_shear: 0.02
+  constant_shear_angle: 0.0
+  constant_two_sided: true
+
+noise:
+  source: csv
+  csv_path: /project/ls-gruen/users/zekang.zhang/lsst_sims/Euclid_Q1_median_LSST10yr.csv
+  band: LSST_i          # internal band label stays 'r'
+
+shape_measurement:
+  stamp_size: 65
+  centering: centred
+  pixel_scale: 0.2
+  use_pos: detect
+  tile_name: tile180.0_-0.5
+
+catalogues:
+  constant_shear:
+    r_max: 3
+    r_min: 0
+    k: 2
+    include_isolated: true
+    shape_suffix: _all
+    output_prefix: constant_shear_catalogue
+    response_output_prefix: constant_response_catalogue
+  batch_size: 100
+  n_jobs: 10
+
+training:
+  model_dir: /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/pilot_20261101/models_unused
+  model_tag: lsst_i
+  rescale:
+    pixel_rms: 0.6159
+    pixel_size: 0.2
+    zero_mag: 30
+    psf_fwhm: 0.71
+    moffat_beta: 2.458
+
+cluster:
+  n_mpi: 10
+  realizations: "d,0,1"
