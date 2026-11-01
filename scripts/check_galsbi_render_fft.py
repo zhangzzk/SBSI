@@ -3,9 +3,10 @@
 The renderer draws an untruncated Sersic (n clipped to 0.3-6.2, q clipped at 0.05, hlr = Re*sqrt(q), then sheared to
 axis ratio q and by the constant shear), convolved with the trunc=4.5*FWHM Moffat PSF, with method 'auto' (pixel
 included) on a stamp GalSim sizes itself. drawFFT refuses FFTs above gsparams.maximum_fft_size (default 8192) and the
-whole tile then fails (the galsbi-resim renderer branch retries such galaxies at 32768). Re above 100 arcsec would send a
-galaxy to the renderer's bulge+disk branch, which scenes do not support, so max_Re is reported too. Galaxies are ranked by Re/stepk(n, hlr=1), which orders their drawn extent; the top --top per
-scene get GalSim's exact size (same steps as GSObject.drawFFT_makeKImage). Needs galsim: run in the sims1 env.
+whole tile then fails (the galsbi-resim renderer branch retries such galaxies at 32768). Re above 100 arcsec would
+send a galaxy to the renderer's bulge+disk branch, which scenes do not support, so max_Re is reported too. Galaxies
+are ranked by Re/stepk(n, hlr=1), which orders their drawn extent; the top --top per scene get GalSim's exact size
+(same steps as GSObject.drawFFT_makeKImage). Needs galsim: run in the sims1 env.
 """
 import argparse
 import json
