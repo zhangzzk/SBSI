@@ -13,7 +13,8 @@
 #   STEPS=2,3 CASE0=9000 NCASES=1  --array=0-9           render + measure, one case per task
 #   STEPS=4   CASE0=9000 NCASES=10                      paired catalogues
 # BlendEMU code: branch galsbi-resim. Renderer: MultiBand_ImSim branch galsbi-resim (local worktree) = the FS2
-# renderer plus a 32768 FFT limit for galaxies and a hard failure when an image worker crashes.
+# renderer plus a retry at a 32768 FFT limit for galaxies GalSim refuses, and a hard failure when an image worker
+# crashes.
 set -eo pipefail
 : "${STEPS:?}" "${CASE0:?}" "${NCASES:?}"
 CASE=$((CASE0 + ${SLURM_ARRAY_TASK_ID:-0}))

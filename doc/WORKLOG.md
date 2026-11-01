@@ -65,19 +65,28 @@ renderer nor BlendEMU checked exit codes.
 - the largest Re in any pilot scene is 36.7″, below the renderer's 100″ switch to its bulge+disk path.
 
 Expect about 30 such galaxies in the full 340 cases, so they are drawn rather than cut:
-- Renderer: new local branch `galsbi-resim` (6af917a, worktree `/home/z/Zekang.Zhang/MultiBand_ImSim_galsbi_resim`,
-  from the owner's 1266a74; not pushed, because the remote is KiDS-WL). Galaxy Sérsic profiles get
-  `maximum_fft_size` 32768. A test on a compute node drew the 9004 galaxy in 12.7 s at 2.5 GB peak memory, and a
-  normal galaxy came out bit-for-bit the same. A crashed image worker now raises an error. Config files still come
-  from the owner's checkout, unchanged.
+- Renderer: new local branch `galsbi-resim` (6af917a + 328fcf6, worktree
+  `/home/z/Zekang.Zhang/MultiBand_ImSim_galsbi_resim`, from the owner's 1266a74; not pushed, because the remote is
+  KiDS-WL). Changes:
+  - When GalSim refuses a galaxy's FFT, the renderer retries that one galaxy with `maximum_fft_size` 32768. A test on
+    a compute node drew the 9004 galaxy in 12.7 s at 2.5 GB peak memory.
+  - A crashed image worker now raises an error.
+  - Config files still come from the owner's checkout, unchanged.
+- The first version (6af917a alone) put the raised limit on every galaxy. That rebuilds the truncated Moffat PSF for
+  each galaxy and drew 2.4× slower: 98.4 s vs 41.9 s for 2000 galaxies, with identical images. The 9004 rerun with it
+  (17642233) had no image after 2 h, against 73–88 min per leg for the other cases on the same CPU model, so it was
+  cancelled and moved to `case9004_fft_failed/slow_rerun_17642233`.
+- Test of 328fcf6 on 1925 scene-9004 galaxies around the large one:
+  - without that galaxy, the old and new `GalaxiesImage` give identical arrays;
+  - with it, the old one fails at 12288 and the new one draws it. 93% of its flux falls inside the ±108″ test patch.
 - BlendEMU `galsbi-resim` aa22e77: `run_sim.py` raises on a non-zero renderer or SExtractor exit, and
   `run_pipeline.py` raises instead of warning.
 - `jobs/job_galsbi_resim_pilot.sh` uses the new renderer and logs its commit.
 
 The other nine cases render with the old renderer. Their galaxies are all under 8192, where the two renderers give
-identical images. Failed 9004 output was moved to `pilot_20261101/case9004_fft_failed`. Rerun: job 17642233; step 4
-(17642096) was held, then made to wait for both. For the full run, check the FFT size on every scene before
-rendering.
+identical images. Failed 9004 output was moved to `pilot_20261101/case9004_fft_failed`. Rerun: job 17642582; step 4
+(17642096) was held, then made to wait for both. Rendering one leg takes 73–88 min on one core. For the full run,
+check the FFT size on every scene before rendering.
 
 ## 2026-11-01 — Centred-cutout test: the lopsided 48 px stamp causes the faint e2 excess
 
