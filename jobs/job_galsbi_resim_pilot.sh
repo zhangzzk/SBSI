@@ -12,7 +12,8 @@
 #   STEPS=1   CASE0=9000 NCASES=10                      catalogues + noise.csv, once
 #   STEPS=2,3 CASE0=9000 NCASES=1  --array=0-9           render + measure, one case per task
 #   STEPS=4   CASE0=9000 NCASES=10                      paired catalogues
-# BlendEMU code: branch galsbi-resim. Renderer: MultiBand_ImSim as used for the FS2 sims.
+# BlendEMU code: branch galsbi-resim. Renderer: MultiBand_ImSim branch galsbi-resim (local worktree) = the FS2
+# renderer plus a 32768 FFT limit for galaxies and a hard failure when an image worker crashes.
 set -eo pipefail
 : "${STEPS:?}" "${CASE0:?}" "${NCASES:?}"
 CASE=$((CASE0 + ${SLURM_ARRAY_TASK_ID:-0}))
@@ -24,11 +25,12 @@ elif [[ -f /usr/share/Modules/init/bash ]]; then source /usr/share/Modules/init/
 module load sextractor
 export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
 export PYTHONPATH="/home/z/Zekang.Zhang/blendemu_galsbi_resim"
-export BLENDEMU_SIM_RUN="/home/z/Zekang.Zhang/MultiBand_ImSim/modules/Run.py"
+export BLENDEMU_SIM_RUN="/home/z/Zekang.Zhang/MultiBand_ImSim_galsbi_resim/modules/Run.py"
 CONFIG=/home/z/Zekang.Zhang/SBSI/.claude/worktrees/sampler-recipe/doc/evidence/galsbi_resim_pilot_20261101/galsbi_lsst_i_pilot.yaml
 
 python -c "import blendemu, sys; print('blendemu from', blendemu.__file__); assert blendemu.__file__.startswith('/home/z/Zekang.Zhang/blendemu_galsbi_resim/')"
 git -C /home/z/Zekang.Zhang/blendemu_galsbi_resim log --oneline -1
+git -C /home/z/Zekang.Zhang/MultiBand_ImSim_galsbi_resim log --oneline -1
 python run_pipeline.py --config "$CONFIG" --steps "$STEPS" --case-offset "$CASE" --n-cases "$NCASES" --n-mpi 1
 
 echo "FINISH GalSBI pilot"; date

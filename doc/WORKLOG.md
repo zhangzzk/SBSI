@@ -53,6 +53,32 @@ stamps, steps 1–4. A single 10-core, 150 GB job sat in the queue, so the run i
 - e2 at zero shear, and m from the paired legs;
 - cost per case.
 
+**Case 9004 render failure and fix.** Task 17642095_4 exited "COMPLETED" after 3.5 min, but its render had crashed.
+GalSim refused a 12288-pixel FFT, above its default limit of 8192, and SExtractor then found no image. Neither the
+renderer nor BlendEMU checked exit codes.
+
+`scripts/check_galsbi_render_fft.py` reproduces GalSim's FFT sizing for the most extended 3000 galaxies per scene
+(`render_fft_check.json`):
+- exactly one galaxy in the 10 scenes is over the limit. It is case 9004 row 12960: LSST-i 16.7, Re 16.9″, n 6.2,
+  q 0.46, needing 12288 (the size in the error);
+- every other case needs at most 4096;
+- the largest Re in any pilot scene is 36.7″, below the renderer's 100″ switch to its bulge+disk path.
+
+Expect about 30 such galaxies in the full 340 cases, so they are drawn rather than cut:
+- Renderer: new local branch `galsbi-resim` (6af917a, worktree `/home/z/Zekang.Zhang/MultiBand_ImSim_galsbi_resim`,
+  from the owner's 1266a74; not pushed, because the remote is KiDS-WL). Galaxy Sérsic profiles get
+  `maximum_fft_size` 32768. A test on a compute node drew the 9004 galaxy in 12.7 s at 2.5 GB peak memory, and a
+  normal galaxy came out bit-for-bit the same. A crashed image worker now raises an error. Config files still come
+  from the owner's checkout, unchanged.
+- BlendEMU `galsbi-resim` aa22e77: `run_sim.py` raises on a non-zero renderer or SExtractor exit, and
+  `run_pipeline.py` raises instead of warning.
+- `jobs/job_galsbi_resim_pilot.sh` uses the new renderer and logs its commit.
+
+The other nine cases render with the old renderer. Their galaxies are all under 8192, where the two renderers give
+identical images. Failed 9004 output was moved to `pilot_20261101/case9004_fft_failed`. Rerun: job 17642233; step 4
+(17642096) was held, then made to wait for both. For the full run, check the FFT size on every scene before
+rendering.
+
 ## 2026-11-01 — Centred-cutout test: the lopsided 48 px stamp causes the faint e2 excess
 
 Owner: "run the cutout test first". Scripts, results and figure are in `doc/evidence/cutout_test_20261101/`; data are
