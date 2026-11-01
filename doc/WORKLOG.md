@@ -17,15 +17,22 @@ positions uniform on the sphere. Nothing else is cut or resampled. Renderer colu
 - Re = semi-major axis r50·√(1+a), q = (1−ε)/(1+ε), position angle psi/2 in degrees (GalSim beta, the same frame as
   the applied shear);
 - 'r' = LSST-i;
-- `sersic_n` = n clipped to GalSim's 0.3–6.2 (native `n` kept).
+- `sersic_n` = n clipped to GalSim's 0.3–6.2 and rounded to the nearest of 122 log-spaced values (native `n` kept).
+  Owner, 2026-11-01: round n as the FS2 catalogue does, so GalSim reuses its Sérsic tables. FS2 uses 100 log-spaced
+  values over 0.5–6; the new grid keeps that step (2.5%) over 0.3–6.2, so n moves by at most 1.26%.
 
 The truth columns are kept. `build_prior` gains `apparent_coeffs`, so any band can be read from the table; the
-prior's own photometry is unchanged. **Model features must use the clipped n on both the simulation and the model
-side.** About 1.6% of galaxies are clipped, mostly n > 6.2.
+prior's own photometry is unchanged. **Model features must use the rendered (clipped, rounded) n on both the
+simulation and the model side.** About 1.6% of galaxies are clipped, mostly n > 6.2.
 
-**Pilot scenes (array 17641914, cases 9000–9009, seed 20261101).** Pilot case numbers are reserved and never become
-training or test cases. `scripts/check_galsbi_scenes.py` → `scene_check.json`:
-- 8,845,780 galaxies (885k per case; FS2 cases had 699,568), +0.23σ from the prior expectation;
+**Pilot scenes (cases 9000–9009, seed 20261101).** The first write (array 17641914) had unrounded n. It was rewritten
+with the grid (array 17642093; same draws otherwise), and the first render (array 17642025) was cancelled after
+17 min. Superseded outputs are in `pilot_20261101/{scenes_unrounded_superseded,sims_unrounded_killed}`. Pilot case
+numbers are reserved and never become training or test cases. `scripts/check_galsbi_scenes.py` →
+`scene_check.json`:
+- 8,846,370 galaxies (885k per case; FS2 cases had 699,568), +0.23σ from the prior expectation;
+- every case uses exactly the 122 grid values; all 20 render inputs equal their scenes row for row, with shear
+  ±0.02 along g1;
 - convention identities exact to 1e-15;
 - positions uniform (KS p ≥ 0.05);
 - intrinsic mean e1 −1.5 ± 0.8e-4, e2 +0.4 ± 0.8e-4;
@@ -39,9 +46,9 @@ the user's `main` checkout is untouched):
 - `shape_measurement.centering: centred` gives an odd stamp centred on the source pixel, using the convention tested
   in the cutout entry below.
 
-**Pilot run (jobs 17642023 step 1 → array 17642025 steps 2–3, one case per core → 17642026 step 4):** config `galsbi_lsst_i_pilot.yaml`. LSST-i noise (rms 0.6159, seeing 0.71″,
-β 2.458), constant shear ±0.02, centred 65 px stamps, steps 1–4. Next checks:
-- render inputs equal the scenes;
+**Pilot run (jobs 17642094 step 1 → array 17642095 steps 2–3, one case per core → 17642096 step 4):** config
+`galsbi_lsst_i_pilot.yaml`. LSST-i noise (rms 0.6159, seeing 0.71″, β 2.458), constant shear ±0.02, centred 65 px
+stamps, steps 1–4. A single 10-core, 150 GB job sat in the queue, so the run is split into 1-core tasks. Next checks:
 - noise differs between cases;
 - e2 at zero shear, and m from the paired legs;
 - cost per case.

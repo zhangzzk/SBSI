@@ -34,7 +34,9 @@ def main():
                    ks_ra_p=float(kstest(s['RA']-180.0, 'uniform').pvalue),
                    ks_sindec_p=float(kstest(np.sin(np.deg2rad(s['DEC']))/np.sin(np.deg2rad(1.0)), 'uniform').pvalue),
                    mean_e1=float(s['e1_intrinsic'].mean()), mean_e2=float(s['e2_intrinsic'].mean()),
-                   frac_n_clipped=float(np.mean(s['n'] != s['sersic_n'])),
+                   n_render_values=int(s['sersic_n'].nunique()),
+                   max_render_n_rel_change_in_range=float(np.max(np.abs(
+                       (s['sersic_n']/s['n']-1)[(s['n'] > 0.3) & (s['n'] < 6.2)]))),
                    frac_lsst_i_lt_25=float(np.mean(s['r'] < 25)), lsst_i_max=float(s['r'].max()))
         p = meta['prior']
         expected += p['surface_density_sr']*meta['area_sr']

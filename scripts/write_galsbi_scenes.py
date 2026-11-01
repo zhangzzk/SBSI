@@ -5,8 +5,9 @@ a Poisson number of proposals, thinned by the prior's own HSC-i 14-28 support, a
 Nothing else is cut or resampled. Shapes follow the UFig convention of ``native_shapes`` (semi-axes
 r50*sqrt(1 +- a)); the renderer gets the semi-major axis as Re, q = (1-eps)/(1+eps) and position angle psi/2 in
 degrees (GalSim beta, same frame as the applied shear). The rendered magnitude 'r' is Rubin LSST-i from the same SED
-coefficients. Sersic n is written natively ('n') and clipped to GalSim's range for rendering ('sersic_n'); features
-must use the clipped value on both the simulation and the model side. Run through the scheduler.
+coefficients. Sersic n is written natively ('n') and, for rendering ('sersic_n'), clipped to GalSim's range and rounded
+to a log grid so GalSim reuses its Sersic tables (as the FS2 catalogue does, 0.5-6 in 100 steps). Features must use
+the rendered value on both the simulation and the model side. Run through the scheduler.
 """
 import argparse
 import json
@@ -21,6 +22,13 @@ from sbsi.galsbi_summary import native_shapes
 RA_DEG, DEC_DEG = (180.0, 181.0), (0.0, 1.0)
 # MultiBand_ImSim/modules/ImSimObject.py SERSIC_N_MIN, SERSIC_N_MAX (GalSim Sersic support).
 RENDER_N = (0.3, 6.2)
+# Same log step as FS2's 100-value 0.5-6 grid (about 2.5%); nearest node in log n.
+N_GRID = np.geomspace(*RENDER_N, 122)
+
+
+def render_sersic_n(n):
+    k = np.rint(np.log(np.clip(n, *RENDER_N)/RENDER_N[0])/np.log(N_GRID[1]/N_GRID[0])).astype(int)
+    return N_GRID[k]
 
 
 def main():
@@ -59,7 +67,7 @@ def main():
             'RA': ra, 'DEC': dec,
             'Re': shapes['semimajor'], 'axis_ratio': (1-eps)/(1+eps),
             'position_angle': np.rad2deg(d['psi']/2) % 180.0,
-            'sersic_n': np.clip(d['n'], *RENDER_N),
+            'sersic_n': render_sersic_n(d['n']),
             'redshift': d['z'], 'r': mags['LSST_i'],
             'e1_intrinsic': shapes['e1'], 'e2_intrinsic': shapes['e2'], 'r50_circ': shapes['circularized'],
             'type': d['type'], 'M_B': d['M_B'], **{f'c{j}': d['c'][:, j] for j in range(d['c'].shape[1])},
