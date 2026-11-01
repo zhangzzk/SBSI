@@ -1,0 +1,30 @@
+files: 147990
+apparent bytes 2557.1 GB
+     72 galsbi_bias238_20261002
+  12258 galsbi_blind100k_20261003
+    684 galsbi_blind10k_20261003
+      9 galsbi_bright_mh_20261002
+     60 galsbi_concurrency_20261026_v1
+    584 galsbi_concurrency_20261026_v2
+    540 galsbi_constgold100k_20261025
+    126 galsbi_cpu_scaling_20261002
+   3156 galsbi_faintg05_20261013
+     75 galsbi_light_transfer_20261002
+     24 galsbi_long_mh_20261001
+     72 galsbi_mh1024_20261002
+    216 galsbi_mock10k_20261002
+  10784 galsbi_mock500k_20261006
+ 116474 galsbi_pair1m_20261012
+    108 galsbi_speed_20261003
+     42 galsbi_speedup_20261003
+     42 galsbi_tempering_20261002
+     33 galsbi_throughput_20261002
+   2134 galsbi_twin100k_20261005
+    497 optimize_20261011
+pycache dirs: 2
+5
+stale dirs: 77
+64172	total
+/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_crowd_conc_g0.0_train_full.feather.oldcats_bak
+/project/ls-gruen/users/zekang.zhang/sbsi_catalogues/det_meas_crowd_g0.05_val_full.feather.oldcats_bak
+MANIFEST_DONE

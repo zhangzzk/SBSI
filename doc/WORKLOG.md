@@ -1,5 +1,63 @@
 # Work log
 
+## 2026-11-01 — Centred-cutout test: the lopsided 48 px stamp causes the faint e2 excess
+
+Owner: "run the cutout test first". Scripts, results and figure are in `doc/evidence/cutout_test_20261101/`; data are
+in `$DATA_DIR/sbsi/cutout_test_20261101/`; the figure is also at `SBSI/plots/cutout_test_20261101.png`.
+
+**Background.** The catalogues used since July are already subpixel-centred: the ngmix fit centre sits on the source
+(BlendEMU 46107b8). That fixed the old +2–3.5e-3. But `shape.cutout` still puts the source at pixel 24+frac of a
+48 px stamp, 0.5–1.5 px toward +x/+y, so the window holds more sky on the low side in both directions.
+
+**Free check (job 17641547).** 280 ConstGold case-legs, 87,966,047 galaxies (905,338 unmatched detections and 6,402
+failed fits dropped). Fit g = a + b·(0.5+frac x)(0.5+frac y) + c·e_true per MAG_AUTO band, with jackknife over
+case-legs. g2 slope: 23–24 +4.9 ± 2.4, 24–25 +6.0 ± 1.6, 25–25.8 +4.5 ± 1.6, combined about +5.2 ± 1.0 (e-4,
+5σ). The mean product in production is 1. No faint g1 slope. A bright g1 slope of +7.6 ± 2.2e-4 is not confirmed by
+the direct test below.
+
+**Direct test (array 17641548).** ConstGold cases 40–55, +0.02 leg, all matched detections (16 × 32 cores, 13–42 min
+each). Each galaxy is measured with the production 48 px stamp, a centred odd 49 px stamp and a centred 65 px stamp.
+All use the subpixel fit centre and one seed per galaxy. The fit code is copied from BlendEMU 46107b8, with the seed
+as the only change; BlendEMU itself is unchanged. Mag 23–25.8, 2.9M galaxies, errors are the larger of case and
+galaxy errors:
+- Centred 49 − production: Δe2 −2.8 ± 0.6e-4. It is negative in every band (−1.1 to −3.5). Δe1 +0.7 ± 0.6e-4.
+- Centred 65 − production: Δe2 −5.8 ± 1.0e-4. Δe1 +5.0 ± 0.9e-4: on the sheared leg a bigger stamp gives about 2.5%
+  more shear response.
+- Measured − true e2 on the same galaxies: catalogue +5.2 ± 2.4, production replay +6.3 ± 2.6, centred 49 +3.5 ± 2.6,
+  **centred 65 +0.6 ± 2.6** (e-4).
+- Replay − catalogue: +1.0 ± 1.0e-4 faint, but −7.8 ± 2.9e-4 at mag < 23. The fits start from an unseeded random guess
+  and have heavy tails, so the errors here may be somewhat too small.
+
+**Reading.** The faint e2 excess comes from the stamp: its lopsided position plus its size. A centred 65 px stamp
+removes it within errors; a centred 49 px stamp removes about half. This is the image-side cause of the measured c2
+failure, and it is in both the training and the ConstGold catalogues.
+
+**Limitations.**
+- Only the +0.02 leg and 16 cases, all sharing one noise field.
+- Why a bigger centred stamp lowers e2 further is not explained.
+- The shear-response change with stamp size affects m only if training and test are measured differently.
+
+**Next.** Measure the GalSBI rerun with centred odd stamps (65 px recommended) and a noise seed per case. Training
+and test must use the same stamp.
+
+## 2026-11-01 — Tier-1 cleanup done (about 3 TB freed)
+
+Owner approved Tier 1 of the [disk plan](GALSBI_RESIMULATION_PLAN.md#tier-1-no-conclusion-lost--28-tb-14m-files).
+The scripts, manifest and logs are in `doc/evidence/disk_audit_20261101/` (`manifest.sh`, `delete.sh`, `manifest_17641482.txt`,
+`delete_17641544.txt`). The full deleted-file list is `$DATA_DIR/sbsi/tier1_deleted_files_20261101.txt.gz`.
+- Deleted:
+  - `chain.npz`, `local_profiles.npz` and `final_scenes.npz` in 21 closed GalSBI sampler studies: 147,990 files,
+    2,557 GB apparent.
+  - Generated `*.pyc` bytecode in `galsbi_concurrency_20261026_v1/_v2` (`bytecode/`, `__pycache__/`; no non-pyc file
+    there).
+  - 77 stale sim dirs (anchorblend pilots and smoke, v22cgq3 failed and pilot, v22decomp pilots, constant_REPRO).
+  - Two `.oldcats_bak` catalogues.
+- Kept: every `result.json`, report and `reference/` dir, `pilot_c2fix`, and the five active runs.
+- The job checked every path against the approved patterns before deleting. All lists now report 0 remaining.
+- The project disk went from 108 to 105 TB used, and free space from 13 to 16 TB.
+- The first submission (17641534) stopped before deleting anything. Its check treated "no bad paths" as an error;
+  that was fixed and the job resubmitted.
+
 ## 2026-11-01 — Plan for re-simulating everything with the GalSBI population; disk audit
 
 Owner request: rerun the image sims (F8/C8 training, R_self/R_blend emulator training, constant shear) with the

@@ -1,0 +1,11 @@
+df before
+10.163.52.14@tcp:/project/ls-gruen  120T  108T   13T  90% /project/ls-gruen
+non-pyc files in bytecode/__pycache__: 0 (left in place)
+checks passed
+sampler files remaining: 0
+bytecode done
+stale dirs remaining: 0
+bak remaining: 0
+df after
+10.163.52.14@tcp:/project/ls-gruen  120T  105T   16T  88% /project/ls-gruen
+DELETE_DONE
