@@ -9,11 +9,13 @@
 #SBATCH --exclude=usm-cl-183r01,usm-cl-826bac01,usm-cl-826bac02,usm-cl-826bac03,usm-cl-1116cs01,usm-cl-1116cs02,usm-cl-1116cs03,usm-cl-seitz3
 # GalSBI re-simulation (SBSI scenes, LSST-i, centred 65 px stamps). Chained submissions, small jobs schedule soonest:
 #   STEPS=1 CASE0=c NCASES=n                                 catalogues + noise.csv, once
-#   STEPS=2-3 CASE0=c NCASES=1 LEGS="0.02 -0.02" --array=0-(2n-1)%500
-#                                                            render + measure; task i = case c+i/2, leg LEGS[i%2]
+#   STEPS=2-3 CASE0=c NCASES=k LEGS="0.02 -0.02" --array=0-(2n/k-1) --ntasks=k --nodes=1
+#                                                            render + measure k cases side by side (one MPI rank
+#                                                            each); task i = cases c+(i/2)k.., leg LEGS[i%2]
 #   STEPS=2-3 CASE0=c NCASES=1 --array=0-(n-1)               (pilot) one case per task, both legs in turn
+# The cluster QoS runs at most 50 jobs per user, so packing k=10 cases per job is what reaches ~500 cores.
 #   STEPS=4 CASE0=c NCASES=n                                 paired catalogues
-# Training (half mode): STEPS=2,3all LEGS="0.0 0.05 0.2" --array=0-(3n-1) renders a leg, then measures primaries and
+# Training (half mode): STEPS=2,3all LEGS="0.0 0.05 0.2" --array=0-(3n/k-1) renders a leg, then measures primaries and
 #   secondaries on it; values with commas go through env (env STEPS=2,3all ... sbatch --export=ALL ...), because
 #   --export splits on commas. Then STEPS=4 and STEPS=4b once.
 # CONFIG = BlendEMU yaml (the pilot's is doc/evidence/galsbi_resim_pilot_20261101/galsbi_lsst_i_pilot.yaml).
@@ -26,10 +28,10 @@ TASK=${SLURM_ARRAY_TASK_ID:-0}
 LEG_ARGS=()
 if [[ -n "${LEGS:-}" ]]; then
   read -ra LEG <<< "$LEGS"
-  CASE=$((CASE0 + TASK / ${#LEG[@]}))
+  CASE=$((CASE0 + TASK / ${#LEG[@]} * NCASES))
   LEG_ARGS=("--shear-label=${LEG[TASK % ${#LEG[@]}]}")
 else
-  CASE=$((CASE0 + TASK))
+  CASE=$((CASE0 + TASK * NCASES))
 fi
 echo "START GalSBI resim config=$CONFIG steps=$STEPS cases=$CASE..$((CASE + NCASES - 1)) ${LEG_ARGS[*]}"; date
 
@@ -44,7 +46,7 @@ export BLENDEMU_SIM_RUN="/home/z/Zekang.Zhang/MultiBand_ImSim_galsbi_resim/modul
 python -c "import blendemu, sys; print('blendemu from', blendemu.__file__); assert blendemu.__file__.startswith('/home/z/Zekang.Zhang/blendemu_galsbi_resim/')"
 git -C /home/z/Zekang.Zhang/blendemu_galsbi_resim log --oneline -1
 git -C /home/z/Zekang.Zhang/MultiBand_ImSim_galsbi_resim log --oneline -1
-python run_pipeline.py --config "$CONFIG" --steps "$STEPS" --case-offset "$CASE" --n-cases "$NCASES" --n-mpi 1 \
+python run_pipeline.py --config "$CONFIG" --steps "$STEPS" --case-offset "$CASE" --n-cases "$NCASES" --n-mpi "${SLURM_NTASKS:-1}" \
   "${LEG_ARGS[@]}"
 
 echo "FINISH GalSBI resim"; date

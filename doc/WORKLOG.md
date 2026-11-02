@@ -1,5 +1,43 @@
 # Work log
 
+## 2026-11-02 — GalSBI full re-simulation launched: 140 constant-shear and 200 training cases on 500 cores
+
+Settings as the passed pilot (entry below): LSST-i noise, centred 65 px stamps, per-case noise seed, BlendEMU branch
+`galsbi-resim` b13faf2, local renderer branch `galsbi-resim` 328fcf6 (FFT retry at 32768, fail loudly).
+
+- **Configs.** `configs/galsbi_resim_constant_g002.yaml`: cases 1000–1139, constant ±0.02 on g1, test-only.
+  `configs/galsbi_resim_training.yaml`: cases 0–199, half-shear legs 0.0/0.2 (response) and 0.0/0.05
+  (self_response) from one scene and one noise seed per case, FS2 catalogue blocks and training cuts.
+- **Job script.** `jobs/job_galsbi_resim_pilot.sh` → `jobs/job_galsbi_resim.sh` (CONFIG, STEPS, CASE0, NCASES,
+  LEGS). The cluster QoS runs at most **50 jobs per user** (cpu cap 3500), so one-core tasks stalled at 50 cores.
+  The script now passes `--n-mpi $SLURM_NTASKS` and steps cases by NCASES: one job = one leg of 10 cases as 10 MPI
+  ranks on one node (80 GB), so 50 jobs = 500 cores, the owner's allowance. The first one-core array 17643368 (25
+  min in) and the unstarted 17643735 were cancelled; the 100 partial render folders of cases 1000–1024 are kept in
+  `constant_g002/sims/cancelled_1core_17643368/`.
+- **Jobs.** Scenes 17643366 (constant, seed 20261101) and 17643519 (training); step 1 17643367 (6.6 min, 280 leg
+  inputs) and 17643520 (14.3 min, 600 leg inputs). Constant steps 2–3: array 17643819 (28 × 10 cases), step 4
+  17643820 (afterok). Training steps 2 + 3all: array 17643821 (60 × 10 cases), steps 4 + 4b 17643869 (afterok).
+  At launch 28 + 22 jobs ran (500 cores); after 5 min each rank had 4:41 CPU, i.e. fully busy.
+- **Scene checks** (`scripts/check_galsbi_scenes.py`, now also reporting |g| per row half and the shear-angle
+  agreement between legs; evidence `doc/evidence/galsbi_resim_runs_20261102/*_scene_check.json`):
+  - constant: 123,862,753 galaxies vs 123,858,452 expected from the prior (+0.39σ); shape identities ≤1.1e-15;
+    122 rendered n values; 3 of 280 position KS tests p<0.01 (2.8 expected); all 280 render inputs equal their
+    scene row for row, every row at g1 = ±0.02, g2 = 0.
+  - training: 176,936,690 vs 176,926,145 (+0.79σ); identities ≤1.1e-15; 2 of 400 KS tests p<0.01 (4 expected);
+    all 600 render inputs equal their scene; leg 0.0 unsheared, legs 0.05/0.2 shear exactly the second half of the
+    rows at 0.05/0.2, first half at 0; the 0.05 and 0.2 legs of a case share the shear angles exactly.
+- **FFT checks** (`scripts/check_galsbi_render_fft.py`, evidence `*_render_fft_check.json`): constant (shear 0.02)
+  3 galaxies need 12288 (cases 1000, 1035, 1129), largest 3.4 GB; training at shear 0.2 5 galaxies above 8192
+  (16384 in cases 24, 41, 105; 12288 in 22, 84), largest 6.0 GB, all inside the 32768 retry and the 80 GB job.
+  Max Re 45″ (constant), 57″ (training), below the renderer's 100″ bulge+disk switch. At shear 0.2 the top-ranked
+  galaxy is not always the largest FFT (19 cases), but every checked list reaches 256-pixel FFTs, so the 3000-galaxy
+  check covers the tail.
+
+Limitations: run time per 10-case job is extrapolated from the one-core pilot (about 4 h constant, more for the
+training legs, which measure primaries and secondaries); the training step-4/4b memory (250 GB) is a guess. Next:
+watch the FFT-retry cases render, then analyse the constant family with `scripts/analyze_galsbi_pilot.py`; the
+F8/C8 training builders and the emulator preparation still have to be pointed at the new paths and leg labels.
+
 ## 2026-11-02 — GalSBI pilot results: noise paired per case, no zero-shear e2 excess
 
 Cases 9000–9009 (LSST-i, ±0.02 on g1, centred 65 px stamps, renderer 328fcf6 for 9004 and the FS2 renderer

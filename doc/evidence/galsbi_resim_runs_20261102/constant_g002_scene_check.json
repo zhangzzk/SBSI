@@ -1,0 +1,6449 @@
+{
+  "cases": [
+    {
+      "case": 1000,
+      "n": 883944,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.9820846523277321,
+      "ks_sindec_p": 0.2421250322017876,
+      "mean_e1": 3.7665774924655206e-05,
+      "mean_e2": -0.000264885892792997,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593174140171914,
+      "frac_lsst_i_lt_25": 0.17429837184256017,
+      "lsst_i_max": 28.229905878744596,
+      "render_input_equals_scene[gals1000_-0.02.feather]": true,
+      "shear[gals1000_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1000_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1000_0.02.feather]": true,
+      "shear[gals1000_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1000_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1001,
+      "n": 886466,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.9209673353849519,
+      "ks_sindec_p": 0.2727834971767428,
+      "mean_e1": -0.0002755246533543543,
+      "mean_e2": -9.965744912636672e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593105949312067,
+      "frac_lsst_i_lt_25": 0.1749711776875819,
+      "lsst_i_max": 28.23652358222241,
+      "render_input_equals_scene[gals1001_-0.02.feather]": true,
+      "shear[gals1001_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1001_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1001_0.02.feather]": true,
+      "shear[gals1001_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1001_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1002,
+      "n": 885209,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.8797498533364685,
+      "ks_sindec_p": 0.15866624328945755,
+      "mean_e1": 0.00030194651807651283,
+      "mean_e2": 0.0002916927339427023,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259312574959992,
+      "frac_lsst_i_lt_25": 0.17440965918783022,
+      "lsst_i_max": 28.249967863164848,
+      "render_input_equals_scene[gals1002_-0.02.feather]": true,
+      "shear[gals1002_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1002_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1002_0.02.feather]": true,
+      "shear[gals1002_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1002_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1003,
+      "n": 884869,
+      "circ_identity": 9.992007221626409e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.827071507775442,
+      "ks_sindec_p": 0.8180934461758115,
+      "mean_e1": 4.7151355314725304e-05,
+      "mean_e2": 0.0001816407010715962,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593156233901226,
+      "frac_lsst_i_lt_25": 0.17463375934742884,
+      "lsst_i_max": 28.241514915013035,
+      "render_input_equals_scene[gals1003_-0.02.feather]": true,
+      "shear[gals1003_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1003_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1003_0.02.feather]": true,
+      "shear[gals1003_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1003_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1004,
+      "n": 883795,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.7784622509587334,
+      "ks_sindec_p": 0.29028512360527114,
+      "mean_e1": 4.589287515321897e-05,
+      "mean_e2": 1.2515990654954396e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593134827598496,
+      "frac_lsst_i_lt_25": 0.17542190213793923,
+      "lsst_i_max": 28.21372202965994,
+      "render_input_equals_scene[gals1004_-0.02.feather]": true,
+      "shear[gals1004_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1004_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1004_0.02.feather]": true,
+      "shear[gals1004_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1004_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1005,
+      "n": 883627,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.4955555376071433,
+      "ks_sindec_p": 0.5279057221866787,
+      "mean_e1": 2.7084097264502262e-05,
+      "mean_e2": -0.00019918331763139451,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259315414178519,
+      "frac_lsst_i_lt_25": 0.1739240652447243,
+      "lsst_i_max": 28.238725702845578,
+      "render_input_equals_scene[gals1005_-0.02.feather]": true,
+      "shear[gals1005_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1005_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1005_0.02.feather]": true,
+      "shear[gals1005_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1005_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1006,
+      "n": 884922,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.771561172376096e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.27713663062595195,
+      "ks_sindec_p": 0.6626537252385183,
+      "mean_e1": 2.291195897865838e-05,
+      "mean_e2": -0.00016458608451338917,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593143650668992,
+      "frac_lsst_i_lt_25": 0.17494762250232224,
+      "lsst_i_max": 28.24097486912691,
+      "render_input_equals_scene[gals1006_-0.02.feather]": true,
+      "shear[gals1006_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1006_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1006_0.02.feather]": true,
+      "shear[gals1006_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1006_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1007,
+      "n": 884762,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.17889794260086966,
+      "ks_sindec_p": 0.16846513413475583,
+      "mean_e1": -2.056638721032732e-05,
+      "mean_e2": -0.00031585927783062676,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259314902626918,
+      "frac_lsst_i_lt_25": 0.17494874327785326,
+      "lsst_i_max": 28.21450221851547,
+      "render_input_equals_scene[gals1007_-0.02.feather]": true,
+      "shear[gals1007_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1007_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1007_0.02.feather]": true,
+      "shear[gals1007_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1007_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1008,
+      "n": 885110,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.3951473911038459,
+      "ks_sindec_p": 0.6830356409152474,
+      "mean_e1": 8.431058945559566e-05,
+      "mean_e2": -0.00023647775629812205,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593105649646663,
+      "frac_lsst_i_lt_25": 0.17382698195704488,
+      "lsst_i_max": 28.192930008317994,
+      "render_input_equals_scene[gals1008_-0.02.feather]": true,
+      "shear[gals1008_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1008_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1008_0.02.feather]": true,
+      "shear[gals1008_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1008_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1009,
+      "n": 885779,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.355227538141662e-16,
+      "ks_ra_p": 0.7037234582728006,
+      "ks_sindec_p": 0.6334379928774203,
+      "mean_e1": -0.0005921159715066346,
+      "mean_e2": -0.0002253899233216822,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593176782307314,
+      "frac_lsst_i_lt_25": 0.17481561427850514,
+      "lsst_i_max": 28.258105129330936,
+      "render_input_equals_scene[gals1009_-0.02.feather]": true,
+      "shear[gals1009_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1009_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1009_0.02.feather]": true,
+      "shear[gals1009_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1009_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1010,
+      "n": 885353,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.355227538141662e-16,
+      "ks_ra_p": 0.11938845034803547,
+      "ks_sindec_p": 0.5286427850918622,
+      "mean_e1": 5.638649722905189e-07,
+      "mean_e2": 0.00026764190452379635,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593186953988589,
+      "frac_lsst_i_lt_25": 0.17481501728689008,
+      "lsst_i_max": 28.200296344922968,
+      "render_input_equals_scene[gals1010_-0.02.feather]": true,
+      "shear[gals1010_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1010_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1010_0.02.feather]": true,
+      "shear[gals1010_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1010_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1011,
+      "n": 885097,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.424616477180734e-16,
+      "ks_ra_p": 0.7755845391294394,
+      "ks_sindec_p": 0.49359306178046203,
+      "mean_e1": -4.606458300890214e-05,
+      "mean_e2": 0.00014031835536711047,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593187640334014,
+      "frac_lsst_i_lt_25": 0.17431196806677687,
+      "lsst_i_max": 28.27248396443172,
+      "render_input_equals_scene[gals1011_-0.02.feather]": true,
+      "shear[gals1011_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1011_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1011_0.02.feather]": true,
+      "shear[gals1011_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1011_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1012,
+      "n": 886992,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.4347425086864046,
+      "ks_sindec_p": 0.7113968643109132,
+      "mean_e1": -0.0005017666440252351,
+      "mean_e2": 4.8709999899765854e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593180079757182,
+      "frac_lsst_i_lt_25": 0.1743600844201526,
+      "lsst_i_max": 28.225483064327115,
+      "render_input_equals_scene[gals1012_-0.02.feather]": true,
+      "shear[gals1012_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1012_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1012_0.02.feather]": true,
+      "shear[gals1012_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1012_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1013,
+      "n": 885134,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.718218241365502,
+      "ks_sindec_p": 0.16908340915428977,
+      "mean_e1": -0.0001499426054104016,
+      "mean_e2": -0.0003624432067571959,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259317468297616,
+      "frac_lsst_i_lt_25": 0.17521979722844225,
+      "lsst_i_max": 28.22667095840874,
+      "render_input_equals_scene[gals1013_-0.02.feather]": true,
+      "shear[gals1013_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1013_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1013_0.02.feather]": true,
+      "shear[gals1013_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1013_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1014,
+      "n": 883091,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.736328264916956,
+      "ks_sindec_p": 0.7432303682589163,
+      "mean_e1": -0.0002750297015560041,
+      "mean_e2": 0.0001255204419083696,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593141171142852,
+      "frac_lsst_i_lt_25": 0.17443728902230915,
+      "lsst_i_max": 28.249237146361146,
+      "render_input_equals_scene[gals1014_-0.02.feather]": true,
+      "shear[gals1014_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1014_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1014_0.02.feather]": true,
+      "shear[gals1014_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1014_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1015,
+      "n": 885477,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.16050033901632765,
+      "ks_sindec_p": 0.9503505652228027,
+      "mean_e1": 3.059405831479926e-06,
+      "mean_e2": 0.0003526319870003562,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593166340576945,
+      "frac_lsst_i_lt_25": 0.17440091611639827,
+      "lsst_i_max": 28.226549754473048,
+      "render_input_equals_scene[gals1015_-0.02.feather]": true,
+      "shear[gals1015_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1015_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1015_0.02.feather]": true,
+      "shear[gals1015_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1015_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1016,
+      "n": 884324,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.5536568609622212,
+      "ks_sindec_p": 0.324682285652094,
+      "mean_e1": 0.0003396667369295041,
+      "mean_e2": 5.8607068765943274e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593125899004631,
+      "frac_lsst_i_lt_25": 0.1745661092540743,
+      "lsst_i_max": 28.26107285928051,
+      "render_input_equals_scene[gals1016_-0.02.feather]": true,
+      "shear[gals1016_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1016_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1016_0.02.feather]": true,
+      "shear[gals1016_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1016_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1017,
+      "n": 881851,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.28583859910259e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.5799395540941004,
+      "ks_sindec_p": 0.6975032023243806,
+      "mean_e1": -0.00036500143190473935,
+      "mean_e2": 0.0001136357209473425,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593185979856703,
+      "frac_lsst_i_lt_25": 0.1745884508834259,
+      "lsst_i_max": 28.2572934808206,
+      "render_input_equals_scene[gals1017_-0.02.feather]": true,
+      "shear[gals1017_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1017_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1017_0.02.feather]": true,
+      "shear[gals1017_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1017_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1018,
+      "n": 885486,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.37004535142268413,
+      "ks_sindec_p": 0.14564871220022424,
+      "mean_e1": 0.0003077831867388293,
+      "mean_e2": 0.00010758053006808903,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593141667187169,
+      "frac_lsst_i_lt_25": 0.17518741120695303,
+      "lsst_i_max": 28.19485737291044,
+      "render_input_equals_scene[gals1018_-0.02.feather]": true,
+      "shear[gals1018_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1018_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1018_0.02.feather]": true,
+      "shear[gals1018_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1018_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1019,
+      "n": 886346,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.7241353111125871,
+      "ks_sindec_p": 0.8587684353536698,
+      "mean_e1": -0.00016866022884396415,
+      "mean_e2": 0.000398798086981209,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593103535390338,
+      "frac_lsst_i_lt_25": 0.17473650244938208,
+      "lsst_i_max": 28.20697749186605,
+      "render_input_equals_scene[gals1019_-0.02.feather]": true,
+      "shear[gals1019_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1019_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1019_0.02.feather]": true,
+      "shear[gals1019_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1019_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1020,
+      "n": 884703,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.251144129583054e-16,
+      "e2_identity": 7.355227538141662e-16,
+      "ks_ra_p": 0.21571280273889926,
+      "ks_sindec_p": 0.6528836001263917,
+      "mean_e1": 5.745681650201068e-05,
+      "mean_e2": -0.00019367725313469618,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593145235584968,
+      "frac_lsst_i_lt_25": 0.17475921297881888,
+      "lsst_i_max": 28.214351916301275,
+      "render_input_equals_scene[gals1020_-0.02.feather]": true,
+      "shear[gals1020_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1020_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1020_0.02.feather]": true,
+      "shear[gals1020_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1020_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1021,
+      "n": 883767,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.7054662883593964,
+      "ks_sindec_p": 0.8247473603562399,
+      "mean_e1": -0.0002806037743171833,
+      "mean_e2": -8.289660865381028e-06,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593185485225256,
+      "frac_lsst_i_lt_25": 0.17416694671785662,
+      "lsst_i_max": 28.22061834771845,
+      "render_input_equals_scene[gals1021_-0.02.feather]": true,
+      "shear[gals1021_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1021_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1021_0.02.feather]": true,
+      "shear[gals1021_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1021_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1022,
+      "n": 884514,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.6575458090814189,
+      "ks_sindec_p": 0.8180936427196654,
+      "mean_e1": -0.00020695957882899734,
+      "mean_e2": -0.00023105115380420035,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593178813889327,
+      "frac_lsst_i_lt_25": 0.17486438880560398,
+      "lsst_i_max": 28.23051990231675,
+      "render_input_equals_scene[gals1022_-0.02.feather]": true,
+      "shear[gals1022_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1022_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1022_0.02.feather]": true,
+      "shear[gals1022_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1022_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1023,
+      "n": 883368,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.7090015976757087,
+      "ks_sindec_p": 0.8647439229265332,
+      "mean_e1": 0.0002121206415221648,
+      "mean_e2": -0.0004565759573040942,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593176682274665,
+      "frac_lsst_i_lt_25": 0.1746452214705536,
+      "lsst_i_max": 28.226556213611495,
+      "render_input_equals_scene[gals1023_-0.02.feather]": true,
+      "shear[gals1023_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1023_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1023_0.02.feather]": true,
+      "shear[gals1023_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1023_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1024,
+      "n": 885789,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.5471492233161872,
+      "ks_sindec_p": 0.5402801278286408,
+      "mean_e1": -0.00024207420680590923,
+      "mean_e2": -0.00039161021840129735,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593143973445908,
+      "frac_lsst_i_lt_25": 0.1746544605995333,
+      "lsst_i_max": 28.21457576129091,
+      "render_input_equals_scene[gals1024_-0.02.feather]": true,
+      "shear[gals1024_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1024_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1024_0.02.feather]": true,
+      "shear[gals1024_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1024_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1025,
+      "n": 884784,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.9568151629819475,
+      "ks_sindec_p": 0.8135873475610406,
+      "mean_e1": 7.481328283912562e-05,
+      "mean_e2": -0.000146730297809484,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593137556026424,
+      "frac_lsst_i_lt_25": 0.1748223295177128,
+      "lsst_i_max": 28.196223076356922,
+      "render_input_equals_scene[gals1025_-0.02.feather]": true,
+      "shear[gals1025_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1025_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1025_0.02.feather]": true,
+      "shear[gals1025_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1025_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1026,
+      "n": 882452,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.932041797353737,
+      "ks_sindec_p": 0.17819915178635226,
+      "mean_e1": 0.00022823391033362477,
+      "mean_e2": 0.0004871499469242136,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593167005938488,
+      "frac_lsst_i_lt_25": 0.17498288858770789,
+      "lsst_i_max": 28.27734850711078,
+      "render_input_equals_scene[gals1026_-0.02.feather]": true,
+      "shear[gals1026_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1026_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1026_0.02.feather]": true,
+      "shear[gals1026_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1026_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1027,
+      "n": 883548,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.28583859910259e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.24931119456420825,
+      "ks_sindec_p": 0.790391333223904,
+      "mean_e1": -8.338428532024936e-05,
+      "mean_e2": 0.0004284114149375274,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259314342570983,
+      "frac_lsst_i_lt_25": 0.17485184732465017,
+      "lsst_i_max": 28.200902279636843,
+      "render_input_equals_scene[gals1027_-0.02.feather]": true,
+      "shear[gals1027_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1027_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1027_0.02.feather]": true,
+      "shear[gals1027_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1027_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1028,
+      "n": 885009,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.28583859910259e-16,
+      "ks_ra_p": 0.9255965512889703,
+      "ks_sindec_p": 0.7071212849194262,
+      "mean_e1": 0.0003354260596654037,
+      "mean_e2": 2.0589869762969643e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593177117184773,
+      "frac_lsst_i_lt_25": 0.17482195096321054,
+      "lsst_i_max": 28.238423926277953,
+      "render_input_equals_scene[gals1028_-0.02.feather]": true,
+      "shear[gals1028_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1028_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1028_0.02.feather]": true,
+      "shear[gals1028_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1028_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1029,
+      "n": 884701,
+      "circ_identity": 7.771561172376096e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.6614662537853737,
+      "ks_sindec_p": 0.8135684838714318,
+      "mean_e1": 0.00012686998334368225,
+      "mean_e2": -4.183030265439516e-06,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259312024117043,
+      "frac_lsst_i_lt_25": 0.17363606461392042,
+      "lsst_i_max": 28.25286751853303,
+      "render_input_equals_scene[gals1029_-0.02.feather]": true,
+      "shear[gals1029_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1029_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1029_0.02.feather]": true,
+      "shear[gals1029_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1029_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1030,
+      "n": 885519,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.12517385741548948,
+      "ks_sindec_p": 0.2615662151078496,
+      "mean_e1": -1.9289212594521115e-06,
+      "mean_e2": 0.0006036804931102358,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259316946097555,
+      "frac_lsst_i_lt_25": 0.1746117248754685,
+      "lsst_i_max": 28.213475861662836,
+      "render_input_equals_scene[gals1030_-0.02.feather]": true,
+      "shear[gals1030_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1030_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1030_0.02.feather]": true,
+      "shear[gals1030_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1030_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1031,
+      "n": 883838,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.771561172376096e-16,
+      "ks_ra_p": 0.29337967738857484,
+      "ks_sindec_p": 0.6651085538506938,
+      "mean_e1": 3.9246245930681286e-05,
+      "mean_e2": -0.00020264362226883985,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593148598465165,
+      "frac_lsst_i_lt_25": 0.17364833827013548,
+      "lsst_i_max": 28.216529031641663,
+      "render_input_equals_scene[gals1031_-0.02.feather]": true,
+      "shear[gals1031_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1031_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1031_0.02.feather]": true,
+      "shear[gals1031_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1031_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1032,
+      "n": 883663,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.771561172376096e-16,
+      "ks_ra_p": 0.6701250490093498,
+      "ks_sindec_p": 0.6906798539145178,
+      "mean_e1": 0.00023168111984230106,
+      "mean_e2": -2.79483838575972e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593139314687418,
+      "frac_lsst_i_lt_25": 0.1752296972941042,
+      "lsst_i_max": 28.196363664348404,
+      "render_input_equals_scene[gals1032_-0.02.feather]": true,
+      "shear[gals1032_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1032_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1032_0.02.feather]": true,
+      "shear[gals1032_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1032_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1033,
+      "n": 886222,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.251144129583054e-16,
+      "ks_ra_p": 0.020811844138550858,
+      "ks_sindec_p": 0.1634664041429963,
+      "mean_e1": 0.0001363039869116774,
+      "mean_e2": -0.0005875187461838795,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593168861662951,
+      "frac_lsst_i_lt_25": 0.17427010387916347,
+      "lsst_i_max": 28.20470191208971,
+      "render_input_equals_scene[gals1033_-0.02.feather]": true,
+      "shear[gals1033_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1033_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1033_0.02.feather]": true,
+      "shear[gals1033_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1033_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1034,
+      "n": 883933,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.28583859910259e-16,
+      "ks_ra_p": 0.940830791328194,
+      "ks_sindec_p": 0.4605280262453253,
+      "mean_e1": 0.0005595437637966927,
+      "mean_e2": -1.414954538692357e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593183181687007,
+      "frac_lsst_i_lt_25": 0.1745143579886711,
+      "lsst_i_max": 28.2348088876549,
+      "render_input_equals_scene[gals1034_-0.02.feather]": true,
+      "shear[gals1034_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1034_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1034_0.02.feather]": true,
+      "shear[gals1034_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1034_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1035,
+      "n": 884945,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.251144129583054e-16,
+      "ks_ra_p": 0.6382967263104597,
+      "ks_sindec_p": 0.04866861409587431,
+      "mean_e1": 0.00010725688749094329,
+      "mean_e2": 3.150881390786786e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593161642665995,
+      "frac_lsst_i_lt_25": 0.1741125154670629,
+      "lsst_i_max": 28.229768633022495,
+      "render_input_equals_scene[gals1035_-0.02.feather]": true,
+      "shear[gals1035_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1035_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1035_0.02.feather]": true,
+      "shear[gals1035_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1035_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1036,
+      "n": 884548,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.8419567167049935,
+      "ks_sindec_p": 0.08464784084438615,
+      "mean_e1": -0.0002008304474639267,
+      "mean_e2": -0.0003615994941711499,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593152298338017,
+      "frac_lsst_i_lt_25": 0.17453094687908402,
+      "lsst_i_max": 28.22220985946111,
+      "render_input_equals_scene[gals1036_-0.02.feather]": true,
+      "shear[gals1036_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1036_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1036_0.02.feather]": true,
+      "shear[gals1036_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1036_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1037,
+      "n": 885704,
+      "circ_identity": 9.992007221626409e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.49963065484576774,
+      "ks_sindec_p": 0.20323616402577604,
+      "mean_e1": -6.729711834929399e-05,
+      "mean_e2": 6.563247933539842e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593176095246905,
+      "frac_lsst_i_lt_25": 0.17385040600471488,
+      "lsst_i_max": 28.215901843039255,
+      "render_input_equals_scene[gals1037_-0.02.feather]": true,
+      "shear[gals1037_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1037_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1037_0.02.feather]": true,
+      "shear[gals1037_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1037_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1038,
+      "n": 884625,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.355227538141662e-16,
+      "ks_ra_p": 0.5374307452482754,
+      "ks_sindec_p": 0.7017368021732368,
+      "mean_e1": -3.84187727080136e-05,
+      "mean_e2": 0.00011870247602853609,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593187359106528,
+      "frac_lsst_i_lt_25": 0.17453497244595167,
+      "lsst_i_max": 28.209110287988786,
+      "render_input_equals_scene[gals1038_-0.02.feather]": true,
+      "shear[gals1038_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1038_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1038_0.02.feather]": true,
+      "shear[gals1038_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1038_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1039,
+      "n": 885523,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.06587681945700463,
+      "ks_sindec_p": 0.6751912545646049,
+      "mean_e1": 0.0001655379390472662,
+      "mean_e2": 0.000143357931124383,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593179660416398,
+      "frac_lsst_i_lt_25": 0.1748017838045991,
+      "lsst_i_max": 28.21776471295437,
+      "render_input_equals_scene[gals1039_-0.02.feather]": true,
+      "shear[gals1039_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1039_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1039_0.02.feather]": true,
+      "shear[gals1039_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1039_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1040,
+      "n": 883991,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.03652397151475173,
+      "ks_sindec_p": 0.8742160179924774,
+      "mean_e1": -0.00013750273706173954,
+      "mean_e2": 0.0002540384509636957,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593164586623518,
+      "frac_lsst_i_lt_25": 0.17492033289931685,
+      "lsst_i_max": 28.239007268339712,
+      "render_input_equals_scene[gals1040_-0.02.feather]": true,
+      "shear[gals1040_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1040_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1040_0.02.feather]": true,
+      "shear[gals1040_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1040_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1041,
+      "n": 884198,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.9792348893540316,
+      "ks_sindec_p": 0.6275832952948817,
+      "mean_e1": -0.000194978588635469,
+      "mean_e2": 3.21505207825387e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593186861366679,
+      "frac_lsst_i_lt_25": 0.17442812582702064,
+      "lsst_i_max": 28.280143307065394,
+      "render_input_equals_scene[gals1041_-0.02.feather]": true,
+      "shear[gals1041_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1041_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1041_0.02.feather]": true,
+      "shear[gals1041_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1041_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1042,
+      "n": 885441,
+      "circ_identity": 1.1102230246251565e-15,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.32976031027836405,
+      "ks_sindec_p": 0.21743313085924,
+      "mean_e1": -0.00011820657651379376,
+      "mean_e2": -0.00018472183908382745,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593169077672384,
+      "frac_lsst_i_lt_25": 0.17384105773281336,
+      "lsst_i_max": 28.222334553865984,
+      "render_input_equals_scene[gals1042_-0.02.feather]": true,
+      "shear[gals1042_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1042_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1042_0.02.feather]": true,
+      "shear[gals1042_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1042_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1043,
+      "n": 885185,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.4343575828614886,
+      "ks_sindec_p": 0.6252065831567073,
+      "mean_e1": -0.00020758774380749128,
+      "mean_e2": -0.0004623056601726046,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593185047355071,
+      "frac_lsst_i_lt_25": 0.17402463891728848,
+      "lsst_i_max": 28.235143255516654,
+      "render_input_equals_scene[gals1043_-0.02.feather]": true,
+      "shear[gals1043_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1043_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1043_0.02.feather]": true,
+      "shear[gals1043_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1043_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1044,
+      "n": 884796,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.7092696921240591,
+      "ks_sindec_p": 0.05992836177875249,
+      "mean_e1": 1.933463365296121e-05,
+      "mean_e2": 0.00016781965164423907,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593110697440846,
+      "frac_lsst_i_lt_25": 0.17427746056718157,
+      "lsst_i_max": 28.2160017562202,
+      "render_input_equals_scene[gals1044_-0.02.feather]": true,
+      "shear[gals1044_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1044_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1044_0.02.feather]": true,
+      "shear[gals1044_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1044_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1045,
+      "n": 884909,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.9411803848460081,
+      "ks_sindec_p": 0.9361150384169629,
+      "mean_e1": -0.00030733850292738376,
+      "mean_e2": -0.00024737241546757407,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593174797930429,
+      "frac_lsst_i_lt_25": 0.17389810703699476,
+      "lsst_i_max": 28.249395778351747,
+      "render_input_equals_scene[gals1045_-0.02.feather]": true,
+      "shear[gals1045_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1045_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1045_0.02.feather]": true,
+      "shear[gals1045_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1045_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1046,
+      "n": 885069,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.831735753104311,
+      "ks_sindec_p": 0.6137197417998842,
+      "mean_e1": 0.000190148589172734,
+      "mean_e2": -2.7144450645376914e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593090073501845,
+      "frac_lsst_i_lt_25": 0.17518634140389056,
+      "lsst_i_max": 28.198591473560462,
+      "render_input_equals_scene[gals1046_-0.02.feather]": true,
+      "shear[gals1046_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1046_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1046_0.02.feather]": true,
+      "shear[gals1046_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1046_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1047,
+      "n": 886686,
+      "circ_identity": 7.771561172376096e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.6629045113625713,
+      "ks_sindec_p": 0.5263791477927819,
+      "mean_e1": -9.47823894668893e-06,
+      "mean_e2": 9.12074919390217e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593162016091952,
+      "frac_lsst_i_lt_25": 0.1744416851061142,
+      "lsst_i_max": 28.21795248853592,
+      "render_input_equals_scene[gals1047_-0.02.feather]": true,
+      "shear[gals1047_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1047_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1047_0.02.feather]": true,
+      "shear[gals1047_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1047_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1048,
+      "n": 885262,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.203680560902614,
+      "ks_sindec_p": 0.5561406618329061,
+      "mean_e1": 0.0002995981511190159,
+      "mean_e2": -0.00044954239212357215,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259317682053207,
+      "frac_lsst_i_lt_25": 0.17464999062424458,
+      "lsst_i_max": 28.222671730835422,
+      "render_input_equals_scene[gals1048_-0.02.feather]": true,
+      "shear[gals1048_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1048_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1048_0.02.feather]": true,
+      "shear[gals1048_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1048_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1049,
+      "n": 883884,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.8643995634853814,
+      "ks_sindec_p": 0.868252968492136,
+      "mean_e1": 0.0002154411159471,
+      "mean_e2": 0.00011607182895648846,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593177214687223,
+      "frac_lsst_i_lt_25": 0.1753555896475103,
+      "lsst_i_max": 28.225648065333168,
+      "render_input_equals_scene[gals1049_-0.02.feather]": true,
+      "shear[gals1049_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1049_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1049_0.02.feather]": true,
+      "shear[gals1049_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1049_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1050,
+      "n": 884892,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.1706832774573218,
+      "ks_sindec_p": 0.8423556441662341,
+      "mean_e1": -0.0001288190474660697,
+      "mean_e2": 0.0002527584515270503,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593139917621787,
+      "frac_lsst_i_lt_25": 0.17484167559430983,
+      "lsst_i_max": 28.21144161618208,
+      "render_input_equals_scene[gals1050_-0.02.feather]": true,
+      "shear[gals1050_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1050_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1050_0.02.feather]": true,
+      "shear[gals1050_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1050_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1051,
+      "n": 884367,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.771561172376096e-16,
+      "ks_ra_p": 0.23036877968049374,
+      "ks_sindec_p": 0.21556304782680702,
+      "mean_e1": 0.0005571162070300833,
+      "mean_e2": -3.1703950177026684e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259317268722615,
+      "frac_lsst_i_lt_25": 0.17482447897761902,
+      "lsst_i_max": 28.26838653752295,
+      "render_input_equals_scene[gals1051_-0.02.feather]": true,
+      "shear[gals1051_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1051_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1051_0.02.feather]": true,
+      "shear[gals1051_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1051_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1052,
+      "n": 883693,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.24474542423655254,
+      "ks_sindec_p": 0.6794550703447765,
+      "mean_e1": -0.0004691517213831292,
+      "mean_e2": 8.417774172655723e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593187273735484,
+      "frac_lsst_i_lt_25": 0.17494763452918605,
+      "lsst_i_max": 28.20605222249808,
+      "render_input_equals_scene[gals1052_-0.02.feather]": true,
+      "shear[gals1052_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1052_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1052_0.02.feather]": true,
+      "shear[gals1052_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1052_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1053,
+      "n": 884540,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.28583859910259e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.4181511535410779,
+      "ks_sindec_p": 0.6927140494318744,
+      "mean_e1": -0.0001964194969720802,
+      "mean_e2": -0.00029238859498980496,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593143740322166,
+      "frac_lsst_i_lt_25": 0.17524136839487192,
+      "lsst_i_max": 28.192344616587953,
+      "render_input_equals_scene[gals1053_-0.02.feather]": true,
+      "shear[gals1053_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1053_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1053_0.02.feather]": true,
+      "shear[gals1053_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1053_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1054,
+      "n": 884505,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.233796894823286e-16,
+      "ks_ra_p": 0.606108413468513,
+      "ks_sindec_p": 0.35520651917235124,
+      "mean_e1": -0.00029670493765325854,
+      "mean_e2": 7.904729815149242e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593161142162579,
+      "frac_lsst_i_lt_25": 0.1739718825783913,
+      "lsst_i_max": 28.22980002316003,
+      "render_input_equals_scene[gals1054_-0.02.feather]": true,
+      "shear[gals1054_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1054_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1054_0.02.feather]": true,
+      "shear[gals1054_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1054_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1055,
+      "n": 886831,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.4264173648505082,
+      "ks_sindec_p": 0.9244403907460591,
+      "mean_e1": -0.0003360398616537711,
+      "mean_e2": -0.00025761697748546535,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593140934079816,
+      "frac_lsst_i_lt_25": 0.17483940006607798,
+      "lsst_i_max": 28.19717627752518,
+      "render_input_equals_scene[gals1055_-0.02.feather]": true,
+      "shear[gals1055_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1055_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1055_0.02.feather]": true,
+      "shear[gals1055_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1055_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1056,
+      "n": 883503,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.3012934822181492,
+      "ks_sindec_p": 0.8196942804066224,
+      "mean_e1": 0.0002409123107210093,
+      "mean_e2": -0.0003082676050140159,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593164414293145,
+      "frac_lsst_i_lt_25": 0.17462306296639626,
+      "lsst_i_max": 28.26052441253335,
+      "render_input_equals_scene[gals1056_-0.02.feather]": true,
+      "shear[gals1056_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1056_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1056_0.02.feather]": true,
+      "shear[gals1056_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1056_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1057,
+      "n": 885134,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.771561172376096e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.1254985367133753,
+      "ks_sindec_p": 0.6472958136881319,
+      "mean_e1": -0.00027797104543915646,
+      "mean_e2": -5.50304464714219e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593180987057861,
+      "frac_lsst_i_lt_25": 0.17507066726619924,
+      "lsst_i_max": 28.216448697166776,
+      "render_input_equals_scene[gals1057_-0.02.feather]": true,
+      "shear[gals1057_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1057_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1057_0.02.feather]": true,
+      "shear[gals1057_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1057_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1058,
+      "n": 885121,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.8656957491022035,
+      "ks_sindec_p": 0.71651308526268,
+      "mean_e1": -1.4283799134672029e-05,
+      "mean_e2": -7.402764639277107e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593151467415353,
+      "frac_lsst_i_lt_25": 0.1744269992464307,
+      "lsst_i_max": 28.219954382538198,
+      "render_input_equals_scene[gals1058_-0.02.feather]": true,
+      "shear[gals1058_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1058_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1058_0.02.feather]": true,
+      "shear[gals1058_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1058_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1059,
+      "n": 885386,
+      "circ_identity": 7.771561172376096e-16,
+      "e1_identity": 7.28583859910259e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.8141478689769887,
+      "ks_sindec_p": 0.8815273478917953,
+      "mean_e1": -0.00013613396355153444,
+      "mean_e2": -0.0004906369017840727,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593118603967834,
+      "frac_lsst_i_lt_25": 0.17436801575809874,
+      "lsst_i_max": 28.26664859909473,
+      "render_input_equals_scene[gals1059_-0.02.feather]": true,
+      "shear[gals1059_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1059_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1059_0.02.feather]": true,
+      "shear[gals1059_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1059_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1060,
+      "n": 882441,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.771561172376096e-16,
+      "ks_ra_p": 0.5223617055342715,
+      "ks_sindec_p": 0.8236791465832921,
+      "mean_e1": -7.13941275514419e-05,
+      "mean_e2": -0.0003538551507587464,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593180413865701,
+      "frac_lsst_i_lt_25": 0.17303253135337093,
+      "lsst_i_max": 28.26464392044104,
+      "render_input_equals_scene[gals1060_-0.02.feather]": true,
+      "shear[gals1060_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1060_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1060_0.02.feather]": true,
+      "shear[gals1060_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1060_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1061,
+      "n": 885732,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.28583859910259e-16,
+      "e2_identity": 7.771561172376096e-16,
+      "ks_ra_p": 0.971879225034462,
+      "ks_sindec_p": 0.9039336274678549,
+      "mean_e1": 0.0003826182192115518,
+      "mean_e2": 5.319703397395443e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593162226331112,
+      "frac_lsst_i_lt_25": 0.17375120239530692,
+      "lsst_i_max": 28.207219221959583,
+      "render_input_equals_scene[gals1061_-0.02.feather]": true,
+      "shear[gals1061_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1061_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1061_0.02.feather]": true,
+      "shear[gals1061_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1061_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1062,
+      "n": 882995,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.7625778431872786,
+      "ks_sindec_p": 0.801628086019506,
+      "mean_e1": 0.00014393281297396575,
+      "mean_e2": -0.0001940241393300199,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593183476691916,
+      "frac_lsst_i_lt_25": 0.1740553457267595,
+      "lsst_i_max": 28.202149551580725,
+      "render_input_equals_scene[gals1062_-0.02.feather]": true,
+      "shear[gals1062_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1062_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1062_0.02.feather]": true,
+      "shear[gals1062_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1062_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1063,
+      "n": 884309,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.48801762473052157,
+      "ks_sindec_p": 0.4714040209972671,
+      "mean_e1": 0.0001393551234643204,
+      "mean_e2": 0.00019392692959744617,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593179097653673,
+      "frac_lsst_i_lt_25": 0.17509038130336793,
+      "lsst_i_max": 28.242304152099187,
+      "render_input_equals_scene[gals1063_-0.02.feather]": true,
+      "shear[gals1063_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1063_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1063_0.02.feather]": true,
+      "shear[gals1063_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1063_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1064,
+      "n": 884355,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.8890329910914367,
+      "ks_sindec_p": 0.8606171701905001,
+      "mean_e1": 0.0008387002059838013,
+      "mean_e2": 0.0003407853982117822,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593181061866243,
+      "frac_lsst_i_lt_25": 0.17433835959541136,
+      "lsst_i_max": 28.192793718923546,
+      "render_input_equals_scene[gals1064_-0.02.feather]": true,
+      "shear[gals1064_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1064_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1064_0.02.feather]": true,
+      "shear[gals1064_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1064_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1065,
+      "n": 885165,
+      "circ_identity": 7.771561172376096e-16,
+      "e1_identity": 7.771561172376096e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.2854104273647865,
+      "ks_sindec_p": 0.6120701069668268,
+      "mean_e1": 0.00022841304492438914,
+      "mean_e2": -0.00024610132906323725,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593172279113052,
+      "frac_lsst_i_lt_25": 0.1746521834912135,
+      "lsst_i_max": 28.229950066888357,
+      "render_input_equals_scene[gals1065_-0.02.feather]": true,
+      "shear[gals1065_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1065_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1065_0.02.feather]": true,
+      "shear[gals1065_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1065_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1066,
+      "n": 885634,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.09917633531010128,
+      "ks_sindec_p": 0.318248150963089,
+      "mean_e1": 8.341437317989982e-05,
+      "mean_e2": 0.0002317326912679464,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259316542065525,
+      "frac_lsst_i_lt_25": 0.17456421049779028,
+      "lsst_i_max": 28.223964027303175,
+      "render_input_equals_scene[gals1066_-0.02.feather]": true,
+      "shear[gals1066_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1066_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1066_0.02.feather]": true,
+      "shear[gals1066_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1066_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1067,
+      "n": 883834,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.233796894823286e-16,
+      "e2_identity": 7.355227538141662e-16,
+      "ks_ra_p": 0.17097956392605873,
+      "ks_sindec_p": 0.8731827224560652,
+      "mean_e1": 9.598304461879613e-05,
+      "mean_e2": -9.01125598757205e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593153356932563,
+      "frac_lsst_i_lt_25": 0.17479187268197421,
+      "lsst_i_max": 28.21201602511365,
+      "render_input_equals_scene[gals1067_-0.02.feather]": true,
+      "shear[gals1067_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1067_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1067_0.02.feather]": true,
+      "shear[gals1067_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1067_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1068,
+      "n": 884368,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.9915061767261079,
+      "ks_sindec_p": 0.03311183824282293,
+      "mean_e1": 0.0001180134863256077,
+      "mean_e2": -0.00041502255270718495,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593175765869047,
+      "frac_lsst_i_lt_25": 0.17519064461852984,
+      "lsst_i_max": 28.21097909463503,
+      "render_input_equals_scene[gals1068_-0.02.feather]": true,
+      "shear[gals1068_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1068_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1068_0.02.feather]": true,
+      "shear[gals1068_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1068_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1069,
+      "n": 886024,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.355227538141662e-16,
+      "ks_ra_p": 0.25705448529583397,
+      "ks_sindec_p": 0.6250921902598822,
+      "mean_e1": -3.0498776679947182e-05,
+      "mean_e2": -8.713237581342235e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593184679080993,
+      "frac_lsst_i_lt_25": 0.17414765288524917,
+      "lsst_i_max": 28.214755130339036,
+      "render_input_equals_scene[gals1069_-0.02.feather]": true,
+      "shear[gals1069_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1069_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1069_0.02.feather]": true,
+      "shear[gals1069_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1069_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1070,
+      "n": 883850,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.38115285677638555,
+      "ks_sindec_p": 0.5838083192570149,
+      "mean_e1": -8.09301459220896e-05,
+      "mean_e2": 0.0001978092179092322,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593186210724028,
+      "frac_lsst_i_lt_25": 0.17427504667081517,
+      "lsst_i_max": 28.2334371567078,
+      "render_input_equals_scene[gals1070_-0.02.feather]": true,
+      "shear[gals1070_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1070_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1070_0.02.feather]": true,
+      "shear[gals1070_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1070_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1071,
+      "n": 884059,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.771561172376096e-16,
+      "ks_ra_p": 0.5126586337597056,
+      "ks_sindec_p": 0.29792935009505217,
+      "mean_e1": 0.00024290775064172713,
+      "mean_e2": -0.00018986174168973818,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593111217028996,
+      "frac_lsst_i_lt_25": 0.17477000969392315,
+      "lsst_i_max": 28.258837605901128,
+      "render_input_equals_scene[gals1071_-0.02.feather]": true,
+      "shear[gals1071_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1071_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1071_0.02.feather]": true,
+      "shear[gals1071_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1071_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1072,
+      "n": 883619,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.355227538141662e-16,
+      "ks_ra_p": 0.2634778528633813,
+      "ks_sindec_p": 0.5615959858997766,
+      "mean_e1": 0.0003243820916208678,
+      "mean_e2": -0.000304805392691124,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259317969427487,
+      "frac_lsst_i_lt_25": 0.17529727178795385,
+      "lsst_i_max": 28.25409079200582,
+      "render_input_equals_scene[gals1072_-0.02.feather]": true,
+      "shear[gals1072_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1072_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1072_0.02.feather]": true,
+      "shear[gals1072_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1072_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1073,
+      "n": 885427,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.34830837431128814,
+      "ks_sindec_p": 0.9143558071945788,
+      "mean_e1": 0.00017330335055560332,
+      "mean_e2": -0.0002581264665746979,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593164445762639,
+      "frac_lsst_i_lt_25": 0.17458017431137746,
+      "lsst_i_max": 28.230724862148044,
+      "render_input_equals_scene[gals1073_-0.02.feather]": true,
+      "shear[gals1073_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1073_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1073_0.02.feather]": true,
+      "shear[gals1073_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1073_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1074,
+      "n": 884734,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.7655232020304983,
+      "ks_sindec_p": 0.12579221073222546,
+      "mean_e1": -0.0004159207283719562,
+      "mean_e2": 5.19670551063105e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259311005739483,
+      "frac_lsst_i_lt_25": 0.17481977633955517,
+      "lsst_i_max": 28.24201614188683,
+      "render_input_equals_scene[gals1074_-0.02.feather]": true,
+      "shear[gals1074_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1074_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1074_0.02.feather]": true,
+      "shear[gals1074_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1074_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1075,
+      "n": 883380,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.2845883739918471,
+      "ks_sindec_p": 0.24185125333151614,
+      "mean_e1": -0.00014690236493136174,
+      "mean_e2": -0.00016215084691746583,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593169580605634,
+      "frac_lsst_i_lt_25": 0.17461454866535353,
+      "lsst_i_max": 28.21783599263059,
+      "render_input_equals_scene[gals1075_-0.02.feather]": true,
+      "shear[gals1075_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1075_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1075_0.02.feather]": true,
+      "shear[gals1075_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1075_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1076,
+      "n": 883545,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.4032001772202689,
+      "ks_sindec_p": 0.04970735996015341,
+      "mean_e1": -0.000240425361593589,
+      "mean_e2": 1.5167573560227857e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593169935071646,
+      "frac_lsst_i_lt_25": 0.17466795692352965,
+      "lsst_i_max": 28.209605112986388,
+      "render_input_equals_scene[gals1076_-0.02.feather]": true,
+      "shear[gals1076_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1076_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1076_0.02.feather]": true,
+      "shear[gals1076_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1076_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1077,
+      "n": 886429,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.355227538141662e-16,
+      "ks_ra_p": 0.15707129572247713,
+      "ks_sindec_p": 0.6878685351796651,
+      "mean_e1": 0.00020920178866421304,
+      "mean_e2": 7.78811482439531e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593118682507232,
+      "frac_lsst_i_lt_25": 0.17405567733005126,
+      "lsst_i_max": 28.24241302609672,
+      "render_input_equals_scene[gals1077_-0.02.feather]": true,
+      "shear[gals1077_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1077_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1077_0.02.feather]": true,
+      "shear[gals1077_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1077_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1078,
+      "n": 885628,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.7544369853891965,
+      "ks_sindec_p": 0.08542149990036718,
+      "mean_e1": 0.0003723405404458623,
+      "mean_e2": -0.0002132247855196881,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593171433643358,
+      "frac_lsst_i_lt_25": 0.17426842873079892,
+      "lsst_i_max": 28.2035826186815,
+      "render_input_equals_scene[gals1078_-0.02.feather]": true,
+      "shear[gals1078_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1078_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1078_0.02.feather]": true,
+      "shear[gals1078_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1078_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1079,
+      "n": 884013,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.355227538141662e-16,
+      "ks_ra_p": 0.5310049760945899,
+      "ks_sindec_p": 0.5316572184790911,
+      "mean_e1": -0.00010152526999825187,
+      "mean_e2": 0.00019459577971828526,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593177923861054,
+      "frac_lsst_i_lt_25": 0.1743673452765966,
+      "lsst_i_max": 28.24271347385247,
+      "render_input_equals_scene[gals1079_-0.02.feather]": true,
+      "shear[gals1079_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1079_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1079_0.02.feather]": true,
+      "shear[gals1079_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1079_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1080,
+      "n": 884739,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.03553602150906199,
+      "ks_sindec_p": 0.580105874335427,
+      "mean_e1": 8.298932239254508e-05,
+      "mean_e2": 0.00023957269098759696,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593182177870643,
+      "frac_lsst_i_lt_25": 0.17473288732609277,
+      "lsst_i_max": 28.200209196955093,
+      "render_input_equals_scene[gals1080_-0.02.feather]": true,
+      "shear[gals1080_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1080_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1080_0.02.feather]": true,
+      "shear[gals1080_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1080_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1081,
+      "n": 885267,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.38961926030579797,
+      "ks_sindec_p": 0.8603833093712563,
+      "mean_e1": -0.00026184739819666,
+      "mean_e2": 6.364060699767176e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593158931862414,
+      "frac_lsst_i_lt_25": 0.17497771858659592,
+      "lsst_i_max": 28.217328109246445,
+      "render_input_equals_scene[gals1081_-0.02.feather]": true,
+      "shear[gals1081_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1081_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1081_0.02.feather]": true,
+      "shear[gals1081_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1081_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1082,
+      "n": 883309,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.355227538141662e-16,
+      "ks_ra_p": 0.35396021858661464,
+      "ks_sindec_p": 0.2664573668846799,
+      "mean_e1": -9.439291081000522e-05,
+      "mean_e2": 6.809765026043158e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593173497399635,
+      "frac_lsst_i_lt_25": 0.17426744208425365,
+      "lsst_i_max": 28.233721924283294,
+      "render_input_equals_scene[gals1082_-0.02.feather]": true,
+      "shear[gals1082_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1082_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1082_0.02.feather]": true,
+      "shear[gals1082_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1082_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1083,
+      "n": 885264,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.8903930586111258,
+      "ks_sindec_p": 0.1208193929433784,
+      "mean_e1": -0.0002860333943711232,
+      "mean_e2": -0.0001591432199070499,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593156502411551,
+      "frac_lsst_i_lt_25": 0.1742587521914367,
+      "lsst_i_max": 28.23391810617388,
+      "render_input_equals_scene[gals1083_-0.02.feather]": true,
+      "shear[gals1083_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1083_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1083_0.02.feather]": true,
+      "shear[gals1083_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1083_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1084,
+      "n": 883496,
+      "circ_identity": 7.771561172376096e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.6335548513709096,
+      "ks_sindec_p": 0.16983692273541728,
+      "mean_e1": -0.00031810834597406434,
+      "mean_e2": 0.000455498317066777,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593182868769537,
+      "frac_lsst_i_lt_25": 0.17457464436737688,
+      "lsst_i_max": 28.217249191073215,
+      "render_input_equals_scene[gals1084_-0.02.feather]": true,
+      "shear[gals1084_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1084_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1084_0.02.feather]": true,
+      "shear[gals1084_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1084_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1085,
+      "n": 885570,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.9520615472720405,
+      "ks_sindec_p": 0.06970937578382308,
+      "mean_e1": 3.6857982134485606e-05,
+      "mean_e2": -0.00015288376154323454,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593186514558319,
+      "frac_lsst_i_lt_25": 0.1750420633038608,
+      "lsst_i_max": 28.202630059824536,
+      "render_input_equals_scene[gals1085_-0.02.feather]": true,
+      "shear[gals1085_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1085_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1085_0.02.feather]": true,
+      "shear[gals1085_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1085_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1086,
+      "n": 882701,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.4043579820456106,
+      "ks_sindec_p": 0.7466289727585594,
+      "mean_e1": -0.0006204705696977112,
+      "mean_e2": 1.4971574658484765e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593180428448036,
+      "frac_lsst_i_lt_25": 0.17435349002663417,
+      "lsst_i_max": 28.235007156948704,
+      "render_input_equals_scene[gals1086_-0.02.feather]": true,
+      "shear[gals1086_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1086_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1086_0.02.feather]": true,
+      "shear[gals1086_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1086_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1087,
+      "n": 885221,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.5103091241847195,
+      "ks_sindec_p": 0.4611809737896878,
+      "mean_e1": 1.8568821121843333e-06,
+      "mean_e2": -0.00030618221052110473,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593185035562282,
+      "frac_lsst_i_lt_25": 0.17435081183116985,
+      "lsst_i_max": 28.23171153055015,
+      "render_input_equals_scene[gals1087_-0.02.feather]": true,
+      "shear[gals1087_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1087_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1087_0.02.feather]": true,
+      "shear[gals1087_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1087_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1088,
+      "n": 884135,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.251144129583054e-16,
+      "e2_identity": 7.771561172376096e-16,
+      "ks_ra_p": 0.12419311728485904,
+      "ks_sindec_p": 0.31520560138013065,
+      "mean_e1": 8.412534548028539e-06,
+      "mean_e2": 0.00012960501655733434,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259314340049178,
+      "frac_lsst_i_lt_25": 0.17478439378601685,
+      "lsst_i_max": 28.214023607157067,
+      "render_input_equals_scene[gals1088_-0.02.feather]": true,
+      "shear[gals1088_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1088_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1088_0.02.feather]": true,
+      "shear[gals1088_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1088_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1089,
+      "n": 885640,
+      "circ_identity": 1.1102230246251565e-15,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.14986003161650097,
+      "ks_sindec_p": 0.9337315757434083,
+      "mean_e1": -0.0002693023956546162,
+      "mean_e2": 7.91226406482438e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593162020896775,
+      "frac_lsst_i_lt_25": 0.17495709317555666,
+      "lsst_i_max": 28.24490286883826,
+      "render_input_equals_scene[gals1089_-0.02.feather]": true,
+      "shear[gals1089_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1089_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1089_0.02.feather]": true,
+      "shear[gals1089_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1089_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1090,
+      "n": 884438,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.771561172376096e-16,
+      "ks_ra_p": 0.9536142806262377,
+      "ks_sindec_p": 0.7001857351539233,
+      "mean_e1": 0.0002422206841442136,
+      "mean_e2": -0.00010717195544792021,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593144062148065,
+      "frac_lsst_i_lt_25": 0.17512702982006653,
+      "lsst_i_max": 28.202891093809804,
+      "render_input_equals_scene[gals1090_-0.02.feather]": true,
+      "shear[gals1090_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1090_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1090_0.02.feather]": true,
+      "shear[gals1090_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1090_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1091,
+      "n": 885301,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.771561172376096e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.5818731493852795,
+      "ks_sindec_p": 0.41886765764615597,
+      "mean_e1": -4.6128665708082134e-05,
+      "mean_e2": 0.0004101633995291008,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259318236796858,
+      "frac_lsst_i_lt_25": 0.17488515205562855,
+      "lsst_i_max": 28.19862249466899,
+      "render_input_equals_scene[gals1091_-0.02.feather]": true,
+      "shear[gals1091_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1091_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1091_0.02.feather]": true,
+      "shear[gals1091_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1091_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1092,
+      "n": 882819,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.355227538141662e-16,
+      "ks_ra_p": 0.8827428152301573,
+      "ks_sindec_p": 0.29379042164267866,
+      "mean_e1": -9.792603833615567e-05,
+      "mean_e2": -0.0001206994098626792,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593151720634355,
+      "frac_lsst_i_lt_25": 0.17477535032662414,
+      "lsst_i_max": 28.22613732213214,
+      "render_input_equals_scene[gals1092_-0.02.feather]": true,
+      "shear[gals1092_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1092_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1092_0.02.feather]": true,
+      "shear[gals1092_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1092_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1093,
+      "n": 884793,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.6752674799450005,
+      "ks_sindec_p": 0.9417572229824339,
+      "mean_e1": 4.5653253933602076e-05,
+      "mean_e2": 3.364505160907001e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593185174889276,
+      "frac_lsst_i_lt_25": 0.17455608260915265,
+      "lsst_i_max": 28.27820964434708,
+      "render_input_equals_scene[gals1093_-0.02.feather]": true,
+      "shear[gals1093_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1093_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1093_0.02.feather]": true,
+      "shear[gals1093_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1093_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1094,
+      "n": 883913,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.004958207467857711,
+      "ks_sindec_p": 0.046999722464293625,
+      "mean_e1": -1.4918825758690903e-05,
+      "mean_e2": -4.1524462174502775e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593188527669552,
+      "frac_lsst_i_lt_25": 0.17406237944232067,
+      "lsst_i_max": 28.205656039111282,
+      "render_input_equals_scene[gals1094_-0.02.feather]": true,
+      "shear[gals1094_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1094_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1094_0.02.feather]": true,
+      "shear[gals1094_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1094_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1095,
+      "n": 884560,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.771561172376096e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.9087125857303889,
+      "ks_sindec_p": 0.6611834444908606,
+      "mean_e1": 6.203904512329584e-05,
+      "mean_e2": -0.0002704165003036695,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593137099999652,
+      "frac_lsst_i_lt_25": 0.17423577824002895,
+      "lsst_i_max": 28.215089205814287,
+      "render_input_equals_scene[gals1095_-0.02.feather]": true,
+      "shear[gals1095_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1095_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1095_0.02.feather]": true,
+      "shear[gals1095_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1095_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1096,
+      "n": 884436,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.28583859910259e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.8657072511675424,
+      "ks_sindec_p": 0.6908275661337101,
+      "mean_e1": -0.00018631681713008968,
+      "mean_e2": 0.0003600975944397766,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259312773058463,
+      "frac_lsst_i_lt_25": 0.17526536685526142,
+      "lsst_i_max": 28.227444167227993,
+      "render_input_equals_scene[gals1096_-0.02.feather]": true,
+      "shear[gals1096_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1096_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1096_0.02.feather]": true,
+      "shear[gals1096_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1096_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1097,
+      "n": 885972,
+      "circ_identity": 9.992007221626409e-16,
+      "e1_identity": 7.259817746962938e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.5296957142795772,
+      "ks_sindec_p": 0.32280761297569927,
+      "mean_e1": -0.00025599202377119175,
+      "mean_e2": -0.0002607254486969669,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593185236495108,
+      "frac_lsst_i_lt_25": 0.17451567318154523,
+      "lsst_i_max": 28.24920637587166,
+      "render_input_equals_scene[gals1097_-0.02.feather]": true,
+      "shear[gals1097_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1097_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1097_0.02.feather]": true,
+      "shear[gals1097_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1097_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1098,
+      "n": 885696,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.234881096995771e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.18476471666420746,
+      "ks_sindec_p": 0.14241911541123842,
+      "mean_e1": 0.00023987827338906828,
+      "mean_e2": 0.00019067153328584705,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259316111285158,
+      "frac_lsst_i_lt_25": 0.17394117168870582,
+      "lsst_i_max": 28.23119923598889,
+      "render_input_equals_scene[gals1098_-0.02.feather]": true,
+      "shear[gals1098_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1098_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1098_0.02.feather]": true,
+      "shear[gals1098_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1098_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1099,
+      "n": 886022,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.5369910267499576,
+      "ks_sindec_p": 0.3570339071716657,
+      "mean_e1": 9.797044038616066e-05,
+      "mean_e2": -0.00017155352376389777,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593094958898599,
+      "frac_lsst_i_lt_25": 0.17540196518822332,
+      "lsst_i_max": 28.21346052995144,
+      "render_input_equals_scene[gals1099_-0.02.feather]": true,
+      "shear[gals1099_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1099_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1099_0.02.feather]": true,
+      "shear[gals1099_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1099_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1100,
+      "n": 884693,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.233796894823286e-16,
+      "e2_identity": 7.771561172376096e-16,
+      "ks_ra_p": 0.5619735547645139,
+      "ks_sindec_p": 0.26093629015334885,
+      "mean_e1": -0.0001311318392859207,
+      "mean_e2": 0.00018734011812888905,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593142222848686,
+      "frac_lsst_i_lt_25": 0.17395186804914248,
+      "lsst_i_max": 28.212344889783743,
+      "render_input_equals_scene[gals1100_-0.02.feather]": true,
+      "shear[gals1100_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1100_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1100_0.02.feather]": true,
+      "shear[gals1100_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1100_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1101,
+      "n": 885774,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.28583859910259e-16,
+      "e2_identity": 7.771561172376096e-16,
+      "ks_ra_p": 0.5951434362777133,
+      "ks_sindec_p": 0.011672585536652751,
+      "mean_e1": -0.00018504805265813737,
+      "mean_e2": -0.00036513515347956043,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593169422452144,
+      "frac_lsst_i_lt_25": 0.17468790007383372,
+      "lsst_i_max": 28.207878582244497,
+      "render_input_equals_scene[gals1101_-0.02.feather]": true,
+      "shear[gals1101_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1101_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1101_0.02.feather]": true,
+      "shear[gals1101_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1101_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1102,
+      "n": 884448,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.25061191812074346,
+      "ks_sindec_p": 0.8168865933322427,
+      "mean_e1": 2.8966054198106683e-05,
+      "mean_e2": -0.00010627492130844283,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593173329191742,
+      "frac_lsst_i_lt_25": 0.17482542783747604,
+      "lsst_i_max": 28.213650907136604,
+      "render_input_equals_scene[gals1102_-0.02.feather]": true,
+      "shear[gals1102_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1102_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1102_0.02.feather]": true,
+      "shear[gals1102_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1102_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1103,
+      "n": 885451,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.08774077859186102,
+      "ks_sindec_p": 0.918889514519255,
+      "mean_e1": -0.00019644875351846025,
+      "mean_e2": 7.323311500723625e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593177334127459,
+      "frac_lsst_i_lt_25": 0.17452800889038467,
+      "lsst_i_max": 28.212766654250892,
+      "render_input_equals_scene[gals1103_-0.02.feather]": true,
+      "shear[gals1103_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1103_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1103_0.02.feather]": true,
+      "shear[gals1103_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1103_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1104,
+      "n": 885581,
+      "circ_identity": 9.992007221626409e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.6310688950783964,
+      "ks_sindec_p": 0.5940889886429084,
+      "mean_e1": 0.00011043462717960992,
+      "mean_e2": -5.708855289173551e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593167628583535,
+      "frac_lsst_i_lt_25": 0.17418847061985296,
+      "lsst_i_max": 28.217362182627532,
+      "render_input_equals_scene[gals1104_-0.02.feather]": true,
+      "shear[gals1104_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1104_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1104_0.02.feather]": true,
+      "shear[gals1104_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1104_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1105,
+      "n": 883804,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.4818505200055325,
+      "ks_sindec_p": 0.11536402053732586,
+      "mean_e1": 6.007900303188599e-05,
+      "mean_e2": 0.00021453837668375473,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593114018597085,
+      "frac_lsst_i_lt_25": 0.1739865400020819,
+      "lsst_i_max": 28.23682663141843,
+      "render_input_equals_scene[gals1105_-0.02.feather]": true,
+      "shear[gals1105_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1105_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1105_0.02.feather]": true,
+      "shear[gals1105_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1105_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1106,
+      "n": 885129,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.09548568067619845,
+      "ks_sindec_p": 0.25442716604876026,
+      "mean_e1": -0.0002598907028198703,
+      "mean_e2": 0.00016637724586872387,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593151979072514,
+      "frac_lsst_i_lt_25": 0.17393509872572246,
+      "lsst_i_max": 28.28486479668002,
+      "render_input_equals_scene[gals1106_-0.02.feather]": true,
+      "shear[gals1106_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1106_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1106_0.02.feather]": true,
+      "shear[gals1106_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1106_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1107,
+      "n": 883413,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.233796894823286e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.41748916265856184,
+      "ks_sindec_p": 0.7195109957824102,
+      "mean_e1": -0.0002766192445086515,
+      "mean_e2": 0.0004174845890398776,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593122762837083,
+      "frac_lsst_i_lt_25": 0.17351567160546652,
+      "lsst_i_max": 28.235127231056047,
+      "render_input_equals_scene[gals1107_-0.02.feather]": true,
+      "shear[gals1107_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1107_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1107_0.02.feather]": true,
+      "shear[gals1107_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1107_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1108,
+      "n": 882880,
+      "circ_identity": 6.661338147750939e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.10530907513903343,
+      "ks_sindec_p": 0.8490630269249285,
+      "mean_e1": -0.00012630860804703113,
+      "mean_e2": -9.283449968060453e-06,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593132350094738,
+      "frac_lsst_i_lt_25": 0.1734788419717289,
+      "lsst_i_max": 28.213500318659577,
+      "render_input_equals_scene[gals1108_-0.02.feather]": true,
+      "shear[gals1108_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1108_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1108_0.02.feather]": true,
+      "shear[gals1108_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1108_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1109,
+      "n": 886362,
+      "circ_identity": 7.771561172376096e-16,
+      "e1_identity": 7.771561172376096e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.6909757974861093,
+      "ks_sindec_p": 0.08718552770700994,
+      "mean_e1": 0.000597972258120547,
+      "mean_e2": 0.00022395612995255388,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259312715501193,
+      "frac_lsst_i_lt_25": 0.17469950200933704,
+      "lsst_i_max": 28.21401027609054,
+      "render_input_equals_scene[gals1109_-0.02.feather]": true,
+      "shear[gals1109_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1109_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1109_0.02.feather]": true,
+      "shear[gals1109_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1109_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1110,
+      "n": 885021,
+      "circ_identity": 9.992007221626409e-16,
+      "e1_identity": 7.28583859910259e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.04713710650726477,
+      "ks_sindec_p": 0.5853181312128124,
+      "mean_e1": -0.0003349727609148845,
+      "mean_e2": -8.876570801352939e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593145661395466,
+      "frac_lsst_i_lt_25": 0.1737235613618208,
+      "lsst_i_max": 28.19035026258691,
+      "render_input_equals_scene[gals1110_-0.02.feather]": true,
+      "shear[gals1110_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1110_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1110_0.02.feather]": true,
+      "shear[gals1110_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1110_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1111,
+      "n": 883806,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.27164437790472584,
+      "ks_sindec_p": 0.781792770034708,
+      "mean_e1": -3.0062627594936602e-05,
+      "mean_e2": -0.00040060565868811913,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593165894185576,
+      "frac_lsst_i_lt_25": 0.17479062147122784,
+      "lsst_i_max": 28.202165720502954,
+      "render_input_equals_scene[gals1111_-0.02.feather]": true,
+      "shear[gals1111_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1111_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1111_0.02.feather]": true,
+      "shear[gals1111_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1111_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1112,
+      "n": 886373,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.28583859910259e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.9141589572796414,
+      "ks_sindec_p": 0.8878766731984197,
+      "mean_e1": -0.00016281551091597258,
+      "mean_e2": -4.289136406396929e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259316355121598,
+      "frac_lsst_i_lt_25": 0.1740610329962668,
+      "lsst_i_max": 28.23590292406849,
+      "render_input_equals_scene[gals1112_-0.02.feather]": true,
+      "shear[gals1112_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1112_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1112_0.02.feather]": true,
+      "shear[gals1112_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1112_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1113,
+      "n": 884205,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.771561172376096e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.7795849626671915,
+      "ks_sindec_p": 0.3516538349746807,
+      "mean_e1": -4.6713131219286906e-05,
+      "mean_e2": -0.00010082589102589163,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593170436603796,
+      "frac_lsst_i_lt_25": 0.1750906181258871,
+      "lsst_i_max": 28.2191977730616,
+      "render_input_equals_scene[gals1113_-0.02.feather]": true,
+      "shear[gals1113_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1113_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1113_0.02.feather]": true,
+      "shear[gals1113_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1113_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1114,
+      "n": 884508,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.11703743177591674,
+      "ks_sindec_p": 0.1369906319740739,
+      "mean_e1": -5.5066904911383576e-05,
+      "mean_e2": 9.320426357814322e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593180658548864,
+      "frac_lsst_i_lt_25": 0.1736185540436039,
+      "lsst_i_max": 28.238355042193668,
+      "render_input_equals_scene[gals1114_-0.02.feather]": true,
+      "shear[gals1114_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1114_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1114_0.02.feather]": true,
+      "shear[gals1114_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1114_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1115,
+      "n": 884333,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.771561172376096e-16,
+      "ks_ra_p": 0.3551603182955535,
+      "ks_sindec_p": 0.490771925656444,
+      "mean_e1": 2.1352472170902537e-05,
+      "mean_e2": 0.00020633899525347913,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593106342414728,
+      "frac_lsst_i_lt_25": 0.17425901781342548,
+      "lsst_i_max": 28.248702237695504,
+      "render_input_equals_scene[gals1115_-0.02.feather]": true,
+      "shear[gals1115_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1115_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1115_0.02.feather]": true,
+      "shear[gals1115_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1115_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1116,
+      "n": 883890,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.5447378043617996,
+      "ks_sindec_p": 0.9944631615393966,
+      "mean_e1": -0.0003759180397617751,
+      "mean_e2": -0.00020562539243035137,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593167855368126,
+      "frac_lsst_i_lt_25": 0.17461901367817262,
+      "lsst_i_max": 28.217814585192194,
+      "render_input_equals_scene[gals1116_-0.02.feather]": true,
+      "shear[gals1116_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1116_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1116_0.02.feather]": true,
+      "shear[gals1116_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1116_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1117,
+      "n": 885046,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.6855898987723279,
+      "ks_sindec_p": 0.6689593208854152,
+      "mean_e1": 5.061751559418533e-05,
+      "mean_e2": -0.00035571206148385566,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593168283057121,
+      "frac_lsst_i_lt_25": 0.1742338816287515,
+      "lsst_i_max": 28.26701512682981,
+      "render_input_equals_scene[gals1117_-0.02.feather]": true,
+      "shear[gals1117_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1117_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1117_0.02.feather]": true,
+      "shear[gals1117_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1117_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1118,
+      "n": 884406,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.771561172376096e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.855781819174772,
+      "ks_sindec_p": 0.24514311806826306,
+      "mean_e1": -0.00012817437771815376,
+      "mean_e2": 0.00048504875885155117,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259317548998573,
+      "frac_lsst_i_lt_25": 0.17411573417638507,
+      "lsst_i_max": 28.226256424693098,
+      "render_input_equals_scene[gals1118_-0.02.feather]": true,
+      "shear[gals1118_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1118_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1118_0.02.feather]": true,
+      "shear[gals1118_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1118_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1119,
+      "n": 884591,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.9289898735751565,
+      "ks_sindec_p": 0.6705137790604251,
+      "mean_e1": 0.00023631282702980754,
+      "mean_e2": -0.00013209394129623793,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593087530701208,
+      "frac_lsst_i_lt_25": 0.17465133604117608,
+      "lsst_i_max": 28.193878980686527,
+      "render_input_equals_scene[gals1119_-0.02.feather]": true,
+      "shear[gals1119_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1119_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1119_0.02.feather]": true,
+      "shear[gals1119_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1119_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1120,
+      "n": 886209,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.28583859910259e-16,
+      "ks_ra_p": 0.8450771097574351,
+      "ks_sindec_p": 0.03175909223560469,
+      "mean_e1": -8.801911988783145e-05,
+      "mean_e2": 0.0002918843292249635,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593181620930372,
+      "frac_lsst_i_lt_25": 0.17481993525229375,
+      "lsst_i_max": 28.21397361406934,
+      "render_input_equals_scene[gals1120_-0.02.feather]": true,
+      "shear[gals1120_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1120_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1120_0.02.feather]": true,
+      "shear[gals1120_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1120_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1121,
+      "n": 885534,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.12013202618869845,
+      "ks_sindec_p": 0.14754858388025205,
+      "mean_e1": 0.0003682573213024497,
+      "mean_e2": -4.714954889794974e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593167485792645,
+      "frac_lsst_i_lt_25": 0.17369745261051522,
+      "lsst_i_max": 28.262544733671156,
+      "render_input_equals_scene[gals1121_-0.02.feather]": true,
+      "shear[gals1121_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1121_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1121_0.02.feather]": true,
+      "shear[gals1121_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1121_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1122,
+      "n": 886009,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.43400111805390207,
+      "ks_sindec_p": 0.07190359808952984,
+      "mean_e1": 1.1689675765475915e-05,
+      "mean_e2": -0.00027048941384105307,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593184612315289,
+      "frac_lsst_i_lt_25": 0.17397791670287774,
+      "lsst_i_max": 28.254418409965716,
+      "render_input_equals_scene[gals1122_-0.02.feather]": true,
+      "shear[gals1122_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1122_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1122_0.02.feather]": true,
+      "shear[gals1122_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1122_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1123,
+      "n": 883737,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.26460141432904194,
+      "ks_sindec_p": 0.9262105483190728,
+      "mean_e1": 0.0003717222234247631,
+      "mean_e2": 0.0001312155074089245,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593187704599496,
+      "frac_lsst_i_lt_25": 0.17463906116865086,
+      "lsst_i_max": 28.255416778004992,
+      "render_input_equals_scene[gals1123_-0.02.feather]": true,
+      "shear[gals1123_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1123_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1123_0.02.feather]": true,
+      "shear[gals1123_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1123_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1124,
+      "n": 884340,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.251144129583054e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.9074780947348006,
+      "ks_sindec_p": 0.007977540266795537,
+      "mean_e1": 0.0005256826142527556,
+      "mean_e2": 0.000409402204162342,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593155111044751,
+      "frac_lsst_i_lt_25": 0.17490671008887984,
+      "lsst_i_max": 28.19587372534864,
+      "render_input_equals_scene[gals1124_-0.02.feather]": true,
+      "shear[gals1124_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1124_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1124_0.02.feather]": true,
+      "shear[gals1124_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1124_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1125,
+      "n": 886662,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.355227538141662e-16,
+      "ks_ra_p": 0.38555432152495783,
+      "ks_sindec_p": 0.5399922309819355,
+      "mean_e1": -5.243307495569037e-05,
+      "mean_e2": -8.56343216365746e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593176211696866,
+      "frac_lsst_i_lt_25": 0.17503738741482097,
+      "lsst_i_max": 28.221519083002583,
+      "render_input_equals_scene[gals1125_-0.02.feather]": true,
+      "shear[gals1125_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1125_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1125_0.02.feather]": true,
+      "shear[gals1125_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1125_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1126,
+      "n": 882781,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.4197310404274278,
+      "ks_sindec_p": 0.8752897987260059,
+      "mean_e1": 0.0003953164201232183,
+      "mean_e2": 0.0005084651835589443,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593174422339315,
+      "frac_lsst_i_lt_25": 0.17548859796484065,
+      "lsst_i_max": 28.21125714496008,
+      "render_input_equals_scene[gals1126_-0.02.feather]": true,
+      "shear[gals1126_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1126_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1126_0.02.feather]": true,
+      "shear[gals1126_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1126_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1127,
+      "n": 885520,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.9017221774095877,
+      "ks_sindec_p": 0.7101415799750731,
+      "mean_e1": -0.00016053992999152253,
+      "mean_e2": -8.235510602715298e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593151503250244,
+      "frac_lsst_i_lt_25": 0.1745155388924022,
+      "lsst_i_max": 28.25610041243896,
+      "render_input_equals_scene[gals1127_-0.02.feather]": true,
+      "shear[gals1127_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1127_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1127_0.02.feather]": true,
+      "shear[gals1127_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1127_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1128,
+      "n": 883583,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.8506238659303027,
+      "ks_sindec_p": 0.81360794639756,
+      "mean_e1": -5.9160982731777644e-05,
+      "mean_e2": -0.00018928558349839256,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593173732950769,
+      "frac_lsst_i_lt_25": 0.17502826559587498,
+      "lsst_i_max": 28.20402745905634,
+      "render_input_equals_scene[gals1128_-0.02.feather]": true,
+      "shear[gals1128_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1128_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1128_0.02.feather]": true,
+      "shear[gals1128_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1128_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1129,
+      "n": 884076,
+      "circ_identity": 7.771561172376096e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.006490967219468817,
+      "ks_sindec_p": 0.7376625859428105,
+      "mean_e1": -2.8984279651818974e-05,
+      "mean_e2": 0.0002174042235776474,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593178430240437,
+      "frac_lsst_i_lt_25": 0.17516254258683642,
+      "lsst_i_max": 28.199394906961224,
+      "render_input_equals_scene[gals1129_-0.02.feather]": true,
+      "shear[gals1129_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1129_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1129_0.02.feather]": true,
+      "shear[gals1129_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1129_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1130,
+      "n": 884929,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.8474637790077445,
+      "ks_sindec_p": 0.533894072293975,
+      "mean_e1": 0.000325275205300626,
+      "mean_e2": 1.830696884587837e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.0125931744038843,
+      "frac_lsst_i_lt_25": 0.17399700992961017,
+      "lsst_i_max": 28.255427419142485,
+      "render_input_equals_scene[gals1130_-0.02.feather]": true,
+      "shear[gals1130_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1130_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1130_0.02.feather]": true,
+      "shear[gals1130_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1130_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1131,
+      "n": 885035,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.8113495047179736,
+      "ks_sindec_p": 0.03592441778593025,
+      "mean_e1": 0.0003533882563642356,
+      "mean_e2": 1.726568100050006e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593155305846704,
+      "frac_lsst_i_lt_25": 0.1751388363172078,
+      "lsst_i_max": 28.221075123850987,
+      "render_input_equals_scene[gals1131_-0.02.feather]": true,
+      "shear[gals1131_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1131_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1131_0.02.feather]": true,
+      "shear[gals1131_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1131_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1132,
+      "n": 885783,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.771561172376096e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.2332051657145232,
+      "ks_sindec_p": 0.6928231702818298,
+      "mean_e1": 0.00017656554903288442,
+      "mean_e2": -0.0003423647646400965,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593166727899785,
+      "frac_lsst_i_lt_25": 0.17465112787217638,
+      "lsst_i_max": 28.210444880735757,
+      "render_input_equals_scene[gals1132_-0.02.feather]": true,
+      "shear[gals1132_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1132_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1132_0.02.feather]": true,
+      "shear[gals1132_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1132_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1133,
+      "n": 885756,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.771561172376096e-16,
+      "ks_ra_p": 0.8302542672586657,
+      "ks_sindec_p": 0.5855234834815459,
+      "mean_e1": -9.009224263071988e-05,
+      "mean_e2": 2.291992315335247e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259317559612172,
+      "frac_lsst_i_lt_25": 0.17426695387894633,
+      "lsst_i_max": 28.25357062115983,
+      "render_input_equals_scene[gals1133_-0.02.feather]": true,
+      "shear[gals1133_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1133_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1133_0.02.feather]": true,
+      "shear[gals1133_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1133_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1134,
+      "n": 885186,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.216449660063518e-16,
+      "ks_ra_p": 0.881865239787467,
+      "ks_sindec_p": 0.17766044188601804,
+      "mean_e1": -0.0001790458482789116,
+      "mean_e2": -9.76038556558296e-06,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593182500805655,
+      "frac_lsst_i_lt_25": 0.17499937866165982,
+      "lsst_i_max": 28.19824639328916,
+      "render_input_equals_scene[gals1134_-0.02.feather]": true,
+      "shear[gals1134_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1134_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1134_0.02.feather]": true,
+      "shear[gals1134_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1134_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1135,
+      "n": 884211,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.46080578600055677,
+      "ks_sindec_p": 0.8159601103235841,
+      "mean_e1": 0.00031868378657023543,
+      "mean_e2": 0.0003383768201488836,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259316810751554,
+      "frac_lsst_i_lt_25": 0.17418806144687185,
+      "lsst_i_max": 28.200782977602323,
+      "render_input_equals_scene[gals1135_-0.02.feather]": true,
+      "shear[gals1135_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1135_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1135_0.02.feather]": true,
+      "shear[gals1135_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1135_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1136,
+      "n": 885939,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.494005416219807e-16,
+      "e2_identity": 7.355227538141662e-16,
+      "ks_ra_p": 0.08229826456913769,
+      "ks_sindec_p": 0.8916974876135073,
+      "mean_e1": 0.00018464699042132103,
+      "mean_e2": 0.0001348251037446004,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593173070148289,
+      "frac_lsst_i_lt_25": 0.17391377961688106,
+      "lsst_i_max": 28.22428869587967,
+      "render_input_equals_scene[gals1136_-0.02.feather]": true,
+      "shear[gals1136_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1136_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1136_0.02.feather]": true,
+      "shear[gals1136_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1136_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1137,
+      "n": 885061,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.355227538141662e-16,
+      "e2_identity": 7.771561172376096e-16,
+      "ks_ra_p": 0.23666343362994513,
+      "ks_sindec_p": 0.32190811284823806,
+      "mean_e1": -0.00010460233769870365,
+      "mean_e2": -0.0001871646326156428,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.01259313805793627,
+      "frac_lsst_i_lt_25": 0.17463429074380185,
+      "lsst_i_max": 28.257630128501198,
+      "render_input_equals_scene[gals1137_-0.02.feather]": true,
+      "shear[gals1137_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1137_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1137_0.02.feather]": true,
+      "shear[gals1137_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1137_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1138,
+      "n": 885215,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.8611341108081842,
+      "ks_sindec_p": 0.22131383661132598,
+      "mean_e1": 0.0004205318344401548,
+      "mean_e2": -0.00022787458516440598,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593171031784145,
+      "frac_lsst_i_lt_25": 0.17474963709381336,
+      "lsst_i_max": 28.22000563311186,
+      "render_input_equals_scene[gals1138_-0.02.feather]": true,
+      "shear[gals1138_-0.02.feather]": [
+        -0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1138_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1138_0.02.feather]": true,
+      "shear[gals1138_0.02.feather]": [
+        0.020000000000000014,
+        0.0
+      ],
+      "abs_g_halves[gals1138_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    },
+    {
+      "case": 1139,
+      "n": 884458,
+      "circ_identity": 8.881784197001252e-16,
+      "e1_identity": 7.216449660063518e-16,
+      "e2_identity": 7.494005416219807e-16,
+      "ks_ra_p": 0.7856535708527654,
+      "ks_sindec_p": 0.1844737679708658,
+      "mean_e1": -0.00039624294712573027,
+      "mean_e2": -2.518478537831788e-05,
+      "n_render_values": 122,
+      "max_render_n_rel_change_in_range": 0.012593168037646985,
+      "frac_lsst_i_lt_25": 0.17494782115148486,
+      "lsst_i_max": 28.305807427513294,
+      "render_input_equals_scene[gals1139_-0.02.feather]": true,
+      "shear[gals1139_-0.02.feather]": [
+        -0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1139_-0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "render_input_equals_scene[gals1139_0.02.feather]": true,
+      "shear[gals1139_0.02.feather]": [
+        0.02000000000000001,
+        0.0
+      ],
+      "abs_g_halves[gals1139_0.02.feather]": [
+        [
+          0.02,
+          0.02
+        ],
+        [
+          0.02,
+          0.02
+        ]
+      ],
+      "max_shear_angle_diff_between_legs": 3.141592653589793
+    }
+  ],
+  "n_total": 123862753,
+  "n_expected_from_prior": 123858451.580542,
+  "count_z": 0.386499531817858,
+  "mean_e1_all": 2.7780610170680643e-06,
+  "mean_e2_all": -1.5575527531736582e-05
+}

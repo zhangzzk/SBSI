@@ -42,11 +42,21 @@ def main():
         expected += p['surface_density_sr']*meta['area_sr']
         observed += len(s)
         if a.sims is not None:
+            angles = []
             for path in sorted(a.sims.glob(f'gals{case}_*.feather')):
                 g = pd.read_feather(path)
                 same = len(g) == len(s) and all(np.array_equal(g[c].to_numpy(), s[c].to_numpy()) for c in s.columns)
                 row[f'render_input_equals_scene[{path.name}]'] = bool(same)
                 row[f'shear[{path.name}]'] = [float(g['g1'].mean()), float(g['g2'].mean())]
+                # Half mode shears one half of the rows: report |g| per half; legs of a case share the shear angles.
+                h, amp = len(g)//2, np.hypot(g['g1'], g['g2']).to_numpy()
+                row[f'abs_g_halves[{path.name}]'] = [[float(amp[:h].min()), float(amp[:h].max())],
+                                                     [float(amp[h:].min()), float(amp[h:].max())]]
+                if amp.max() > 0:
+                    angles.append(np.where(amp > 0, np.arctan2(g['g2'], g['g1']), np.nan))
+            if len(angles) > 1:
+                row['max_shear_angle_diff_between_legs'] = float(max(
+                    np.nanmax(np.abs(np.angle(np.exp(1j*(x-angles[0]))))) for x in angles[1:]))
         rows.append(row)
 
     report = dict(cases=rows, n_total=observed, n_expected_from_prior=expected,

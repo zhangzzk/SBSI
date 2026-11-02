@@ -1,0 +1,1587 @@
+{
+  "limit": 8192,
+  "cases": [
+    {
+      "case": 1000,
+      "max_Re": 13.55262434419941,
+      "n_checked": 3000,
+      "n_over_limit": 1,
+      "max_fft": 12288,
+      "max_fft_mem_gb": 3.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1001,
+      "max_Re": 15.024590857480938,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1002,
+      "max_Re": 18.33012230378656,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1003,
+      "max_Re": 14.688560092068828,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1004,
+      "max_Re": 31.003768562897985,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 8192,
+      "max_fft_mem_gb": 1.5,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1005,
+      "max_Re": 15.056634622722472,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1006,
+      "max_Re": 14.40715175681348,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 2048,
+      "max_fft_mem_gb": 0.09375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1007,
+      "max_Re": 15.489199370488349,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1008,
+      "max_Re": 13.387871030939602,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1009,
+      "max_Re": 26.177647622504374,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1010,
+      "max_Re": 18.224944820923632,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1011,
+      "max_Re": 16.283410539866853,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1012,
+      "max_Re": 12.48812294033645,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 2048,
+      "max_fft_mem_gb": 0.09375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1013,
+      "max_Re": 11.465831844981768,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1014,
+      "max_Re": 12.90066453650825,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1015,
+      "max_Re": 21.282642273069676,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1016,
+      "max_Re": 19.187226395572086,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1017,
+      "max_Re": 14.704078037122397,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1018,
+      "max_Re": 13.11407381352737,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1019,
+      "max_Re": 23.246898820452202,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 8192,
+      "max_fft_mem_gb": 1.5,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1020,
+      "max_Re": 22.919958030887194,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1021,
+      "max_Re": 10.97178483881416,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 2048,
+      "max_fft_mem_gb": 0.09375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1022,
+      "max_Re": 8.4359397507961,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1023,
+      "max_Re": 21.486810365263594,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1024,
+      "max_Re": 10.956631249312382,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1025,
+      "max_Re": 17.222908194778423,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1026,
+      "max_Re": 21.83944920128512,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1027,
+      "max_Re": 9.645813036406494,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 2048,
+      "max_fft_mem_gb": 0.09375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1028,
+      "max_Re": 9.205060570370422,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1029,
+      "max_Re": 14.519894441326878,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1030,
+      "max_Re": 13.631591854328775,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1031,
+      "max_Re": 16.928740558415583,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1032,
+      "max_Re": 15.816839023976714,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1033,
+      "max_Re": 17.68878570162405,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1034,
+      "max_Re": 13.709423874463853,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1035,
+      "max_Re": 20.109035311046814,
+      "n_checked": 3000,
+      "n_over_limit": 1,
+      "max_fft": 12288,
+      "max_fft_mem_gb": 3.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1036,
+      "max_Re": 32.13931587534365,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1037,
+      "max_Re": 13.76841006610032,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1038,
+      "max_Re": 9.930263006440676,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1039,
+      "max_Re": 13.388879389623835,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 8192,
+      "max_fft_mem_gb": 1.5,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1040,
+      "max_Re": 12.99217749843337,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1041,
+      "max_Re": 13.279338183451387,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 8192,
+      "max_fft_mem_gb": 1.5,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1042,
+      "max_Re": 13.570269427314216,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1043,
+      "max_Re": 19.758491009356863,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1044,
+      "max_Re": 11.366205782424634,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1045,
+      "max_Re": 15.529985537831704,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1046,
+      "max_Re": 15.693656695581042,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1047,
+      "max_Re": 16.73612660916696,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1048,
+      "max_Re": 13.043285586051377,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1049,
+      "max_Re": 16.935063977239082,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1050,
+      "max_Re": 45.43166620237758,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1051,
+      "max_Re": 27.330074351450392,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1052,
+      "max_Re": 14.181754920126016,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1053,
+      "max_Re": 12.9226132624061,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1054,
+      "max_Re": 18.040210469041412,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1055,
+      "max_Re": 14.713018785626383,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1056,
+      "max_Re": 12.440979128903981,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1057,
+      "max_Re": 10.241732920910279,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1058,
+      "max_Re": 14.845416481729695,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1059,
+      "max_Re": 19.894394665108116,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1060,
+      "max_Re": 16.068552890356223,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1061,
+      "max_Re": 17.433759626101086,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1062,
+      "max_Re": 14.403255592401022,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1063,
+      "max_Re": 14.809455899765656,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1064,
+      "max_Re": 24.93115592050901,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1065,
+      "max_Re": 19.707823798224247,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1066,
+      "max_Re": 16.137707935889672,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1067,
+      "max_Re": 20.414708628161947,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1068,
+      "max_Re": 11.711285414639113,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1069,
+      "max_Re": 28.685385081218918,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1070,
+      "max_Re": 12.029661297838006,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1071,
+      "max_Re": 33.866943400394234,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 8192,
+      "max_fft_mem_gb": 1.5,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1072,
+      "max_Re": 11.359617266076123,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1073,
+      "max_Re": 12.216500894272626,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1074,
+      "max_Re": 16.244593507147417,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 2048,
+      "max_fft_mem_gb": 0.09375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1075,
+      "max_Re": 11.583072341895088,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1076,
+      "max_Re": 22.70451530394364,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1077,
+      "max_Re": 36.41325236837864,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1078,
+      "max_Re": 18.69020003385758,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1079,
+      "max_Re": 19.85705816853651,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1080,
+      "max_Re": 10.962860781487077,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1081,
+      "max_Re": 18.20772896457485,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1082,
+      "max_Re": 14.845711565742565,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 2048,
+      "max_fft_mem_gb": 0.09375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1083,
+      "max_Re": 19.719582007627942,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1084,
+      "max_Re": 10.039607243200647,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1085,
+      "max_Re": 13.703532671336434,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1086,
+      "max_Re": 19.732119822545194,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 2048,
+      "max_fft_mem_gb": 0.09375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1087,
+      "max_Re": 13.672881788915037,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1088,
+      "max_Re": 11.569375349557273,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1089,
+      "max_Re": 32.321599298691716,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1090,
+      "max_Re": 12.788919056219635,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 2048,
+      "max_fft_mem_gb": 0.09375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1091,
+      "max_Re": 9.770860324870629,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1092,
+      "max_Re": 27.32022749635364,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1093,
+      "max_Re": 18.588139097900807,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1094,
+      "max_Re": 15.762925680028685,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1095,
+      "max_Re": 17.158006885617986,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1096,
+      "max_Re": 14.742077193214868,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1097,
+      "max_Re": 20.596177690309922,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1098,
+      "max_Re": 23.56815634910355,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1099,
+      "max_Re": 14.28321330486618,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1100,
+      "max_Re": 11.33581034576489,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 8192,
+      "max_fft_mem_gb": 1.5,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1101,
+      "max_Re": 12.732762223794731,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1102,
+      "max_Re": 15.497792995688073,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1103,
+      "max_Re": 21.079576871899516,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1104,
+      "max_Re": 16.048117326719296,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1105,
+      "max_Re": 8.891451359041408,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1106,
+      "max_Re": 34.9292986947714,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1107,
+      "max_Re": 26.929014023518302,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1108,
+      "max_Re": 20.95848147148433,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1109,
+      "max_Re": 15.651358953805875,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1110,
+      "max_Re": 21.65117974044147,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1111,
+      "max_Re": 12.980859001054645,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1112,
+      "max_Re": 14.480424004691427,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1113,
+      "max_Re": 13.644194888276036,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1114,
+      "max_Re": 14.448553180657493,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1115,
+      "max_Re": 23.926925320067138,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1116,
+      "max_Re": 13.613500489102151,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1117,
+      "max_Re": 10.071492981485184,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1118,
+      "max_Re": 8.815514710514917,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1119,
+      "max_Re": 20.38356323153366,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1120,
+      "max_Re": 14.297326719622866,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1121,
+      "max_Re": 11.513878085485045,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1122,
+      "max_Re": 16.11318074469863,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1123,
+      "max_Re": 16.287043594122615,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1124,
+      "max_Re": 27.804928116082817,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1125,
+      "max_Re": 17.864462549760848,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1126,
+      "max_Re": 15.968822758846573,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 8192,
+      "max_fft_mem_gb": 1.5,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1127,
+      "max_Re": 22.228656337899984,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1128,
+      "max_Re": 14.285867353068614,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1129,
+      "max_Re": 16.087826758529367,
+      "n_checked": 3000,
+      "n_over_limit": 1,
+      "max_fft": 12288,
+      "max_fft_mem_gb": 3.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1130,
+      "max_Re": 13.167272417541543,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1131,
+      "max_Re": 19.346544204148305,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1132,
+      "max_Re": 12.659976374949395,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 4096,
+      "max_fft_mem_gb": 0.375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1133,
+      "max_Re": 21.057125033563466,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1134,
+      "max_Re": 18.362975511410966,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1135,
+      "max_Re": 12.334298683491,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 2048,
+      "max_fft_mem_gb": 0.09375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1136,
+      "max_Re": 17.33242123224712,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 2048,
+      "max_fft_mem_gb": 0.09375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1137,
+      "max_Re": 20.092638848125365,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1138,
+      "max_Re": 10.254535830344123,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 6144,
+      "max_fft_mem_gb": 0.84375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    },
+    {
+      "case": 1139,
+      "max_Re": 16.65244300680392,
+      "n_checked": 3000,
+      "n_over_limit": 0,
+      "max_fft": 3072,
+      "max_fft_mem_gb": 0.2109375,
+      "smallest_checked_fft": 256,
+      "monotone_top": true
+    }
+  ],
+  "largest": [
+    {
+      "case": 1000,
+      "row": 863837,
+      "fft": 12288,
+      "Re": 13.55262434419941,
+      "q": 0.6004398938702442,
+      "n": 6.2,
+      "mag": 14.704740433914004
+    },
+    {
+      "case": 1035,
+      "row": 399834,
+      "fft": 12288,
+      "Re": 20.109035311046814,
+      "q": 0.6811008807923614,
+      "n": 6.2,
+      "mag": 16.42149504884977
+    },
+    {
+      "case": 1129,
+      "row": 631107,
+      "fft": 12288,
+      "Re": 15.984797833351772,
+      "q": 0.9391722061473462,
+      "n": 6.2,
+      "mag": 19.18311957842912
+    },
+    {
+      "case": 1004,
+      "row": 227743,
+      "fft": 8192,
+      "Re": 31.003768562897985,
+      "q": 0.36762424711228125,
+      "n": 3.7583015027901387,
+      "mag": 17.0107999023137
+    },
+    {
+      "case": 1019,
+      "row": 154760,
+      "fft": 8192,
+      "Re": 21.840246593322608,
+      "q": 0.4665983349684987,
+      "n": 4.827159549600453,
+      "mag": 14.272885668652428
+    },
+    {
+      "case": 1039,
+      "row": 659581,
+      "fft": 8192,
+      "Re": 12.68382680008386,
+      "q": 0.5914470779218255,
+      "n": 6.2,
+      "mag": 16.16169110999254
+    },
+    {
+      "case": 1041,
+      "row": 781275,
+      "fft": 8192,
+      "Re": 11.29864366950644,
+      "q": 0.4404449996221907,
+      "n": 6.2,
+      "mag": 15.06904715132498
+    },
+    {
+      "case": 1071,
+      "row": 722683,
+      "fft": 8192,
+      "Re": 33.866943400394234,
+      "q": 0.2826376431344112,
+      "n": 3.665402013127948,
+      "mag": 21.42641704325471
+    },
+    {
+      "case": 1100,
+      "row": 528152,
+      "fft": 8192,
+      "Re": 11.33581034576489,
+      "q": 0.23580980943564123,
+      "n": 6.2,
+      "mag": 21.315326571066144
+    },
+    {
+      "case": 1126,
+      "row": 478997,
+      "fft": 8192,
+      "Re": 10.994530207849428,
+      "q": 0.553217948497744,
+      "n": 6.2,
+      "mag": 16.08060394358194
+    },
+    {
+      "case": 1003,
+      "row": 520180,
+      "fft": 6144,
+      "Re": 8.5285503561678,
+      "q": 0.5060790695051928,
+      "n": 6.2,
+      "mag": 16.342219207841687
+    },
+    {
+      "case": 1009,
+      "row": 191709,
+      "fft": 6144,
+      "Re": 7.52652357648591,
+      "q": 0.33966875879251374,
+      "n": 6.2,
+      "mag": 16.112189552671417
+    },
+    {
+      "case": 1017,
+      "row": 38563,
+      "fft": 6144,
+      "Re": 11.913576679636716,
+      "q": 0.7182392284469857,
+      "n": 5.203573152949151,
+      "mag": 16.900569258073155
+    },
+    {
+      "case": 1019,
+      "row": 577403,
+      "fft": 6144,
+      "Re": 23.246898820452202,
+      "q": 0.2183387704373102,
+      "n": 3.4002559031513626,
+      "mag": 14.789924397721286
+    },
+    {
+      "case": 1023,
+      "row": 382133,
+      "fft": 6144,
+      "Re": 8.262211680399718,
+      "q": 0.7231859544126092,
+      "n": 6.2,
+      "mag": 16.947348967351395
+    },
+    {
+      "case": 1032,
+      "row": 356879,
+      "fft": 6144,
+      "Re": 12.870878970081858,
+      "q": 0.3433868465932246,
+      "n": 5.470684528239846,
+      "mag": 14.936331686220257
+    },
+    {
+      "case": 1036,
+      "row": 28804,
+      "fft": 6144,
+      "Re": 9.83615590692449,
+      "q": 0.7092075345883115,
+      "n": 5.609338841997539,
+      "mag": 18.1680440152601
+    },
+    {
+      "case": 1042,
+      "row": 555719,
+      "fft": 6144,
+      "Re": 7.006996064673767,
+      "q": 0.7799663719582631,
+      "n": 6.2,
+      "mag": 15.566945321746537
+    },
+    {
+      "case": 1048,
+      "row": 78541,
+      "fft": 6144,
+      "Re": 7.79599528179198,
+      "q": 0.4687125318984855,
+      "n": 6.2,
+      "mag": 21.269480946764354
+    },
+    {
+      "case": 1048,
+      "row": 451150,
+      "fft": 6144,
+      "Re": 13.043285586051377,
+      "q": 0.42720249819199596,
+      "n": 4.827159549600453,
+      "mag": 16.986834414238324
+    }
+  ]
+}
