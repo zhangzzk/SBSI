@@ -1,5 +1,35 @@
 # Work log
 
+## 2026-11-02 — F8/C8 retraining on the GalSBI re-simulation launched
+
+Owner: "go ahead, restore the F8/C8 builders and retrain". Experiment root
+`$DATA_DIR/sbsi_caches/galsbi_f8c8_20261102/` (`rule.md` fixed before training, `experiment.json`,
+`c8/protocol.json`, `make_experiment.py`). The archived FS2 builders read FS2-specific catalogues, so instead of
+restoring them a new builder writes the frozen trainers' input format directly from the new sims; the frozen
+trainers themselves run unchanged from their external checkouts (all 212 F8 and 227 C8 pinned hashes match).
+
+- `scripts/prepare_galsbi_f8c8_domain.py` (new). Per case and leg (0.0, 0.05): parent = the sheared half of the
+  scene as rendered; inputs = Möbius-sheared intrinsic e1, e2 at that leg, rendered Sérsic n, LSST-i magnitude,
+  Re·√q, and the three close-crowding sums of all rendered objects (`sbsi.v39_inference.physical_close_crowding`,
+  same formula as the frozen builder); targets = ngmix g1, g2 from the secondaries shape catalogue, FLUX_RADIUS,
+  flux from MAG_AUTO (zero point 30). Usable = detected, finite, inside the unit disk, positive radius and flux.
+  Writes `flow/`, `usability/`, `manifest.json`, `completed_projection.json` and, with `--c8-out`, the C8 prepared
+  cases 40–119 (the usability arrays unchanged; the frozen C8 trainer fixes these cases). One directory is both the
+  base and the harmonized domain (one centred 65 px measurement).
+- `scripts/run_galsbi_f8_stage.py` (new): the 2026-10-05 control runner with the data changed only (no FS2
+  label-bank equality, no ConstGold evaluation stage). `jobs/job_galsbi_f8c8.sh` (new): stages domain, finalize,
+  base, labels, refine, c8smoke, c8.
+- Checks on case 0 against FS2. In FS2 the sheared leg differs from the zero leg only in e1, e2 (Möbius shear,
+  6e-8), and the C8 inputs and labels equal the F8 usability arrays exactly, so the builder does the same. Each
+  BlendEMU shape catalogue lists all detections but measures only its own half (others −1), so the secondaries
+  catalogue is the right one for the parents; failed fits (−1, −1) fall outside the unit disk. MAG_AUTO − true
+  mag = +0.031 for r < 21. 122 rendered n values.
+- Domain (array 17666711, 50 s and 1 GB per case; finalize 17666773): 88,468,382 parents, usable 29,274,152 (g0)
+  and 29,262,560 (g05), 33% (FS2: 45%; GalSBI is fainter). 17 parents the renderer omitted at the patch edge are
+  dropped and listed in the manifest. Case split = FS2's (seed 501: 160 train, 40 validation).
+- Training jobs (≤ 3 GPUs at once): F8 base 17666775 (inter A40) and labels 17666776 (CPU) → refine 17666780;
+  C8 CPU smoke 17666777 → C8 seeds 20260913 (17666778) and 20260914 (17666779).
+
 ## 2026-11-02 — GalSBI full re-simulation done: constant-shear family passes, training catalogues built
 
 Both families of the launch entry below finished (all array jobs exit 0, no error lines in any log).
