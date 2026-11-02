@@ -1,0 +1,166 @@
+{
+  "stage": "refine",
+  "job_id": "17666804",
+  "started_at": "2026-11-02T20:21:30.464030+00:00",
+  "state": "completed",
+  "commands": [
+    {
+      "command": [
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_f8_20260924_v1/venv/bin/python",
+        "-u",
+        "-m",
+        "scripts.audit_guard_control_variate",
+        "--domain-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/domain",
+        "--flow",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/base/flow/guard/selected.pt",
+        "--output-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/guard_reference"
+      ],
+      "state": "completed"
+    },
+    {
+      "command": [
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_f8_20260924_v1/venv/bin/python",
+        "-u",
+        "-m",
+        "scripts.refine_guard_control_variate_flow",
+        "--domain-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/domain",
+        "--flow",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/base/flow/guard/selected.pt",
+        "--reference-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/guard_reference",
+        "--output-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/refinement"
+      ],
+      "state": "completed"
+    },
+    {
+      "command": [
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_f8_20260924_v1/venv/bin/python",
+        "-u",
+        "-m",
+        "scripts.audit_per_leg_guard_gradient",
+        "--domain-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/domain",
+        "--flow",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/refinement/selected.pt",
+        "--target-bank",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/joint/per_leg_guard_train_targets.json",
+        "--output-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/joint/per_leg_cv_smoke",
+        "--device",
+        "cpu",
+        "--smoke"
+      ],
+      "state": "completed"
+    },
+    {
+      "command": [
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_f8_20260924_v1/venv/bin/python",
+        "-u",
+        "-m",
+        "scripts.audit_per_leg_guard_gradient",
+        "--domain-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/domain",
+        "--flow",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/refinement/selected.pt",
+        "--target-bank",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/joint/per_leg_guard_train_targets.json",
+        "--output-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/joint/per_leg_cv_full",
+        "--device",
+        "cuda"
+      ],
+      "state": "completed"
+    },
+    {
+      "command": [
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_f8_20260924_v1/venv/bin/python",
+        "-u",
+        "-m",
+        "scripts.audit_joint_guard_probability_gradient",
+        "--domain-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/domain",
+        "--flow",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/refinement/selected.pt",
+        "--reference-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/joint/per_leg_cv_smoke",
+        "--output-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/joint/joint_gradient_smoke",
+        "--device",
+        "cpu",
+        "--smoke"
+      ],
+      "state": "completed"
+    },
+    {
+      "command": [
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_f8_20260924_v1/venv/bin/python",
+        "-u",
+        "-m",
+        "scripts.audit_joint_guard_probability_gradient",
+        "--domain-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/domain",
+        "--flow",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/refinement/selected.pt",
+        "--reference-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/joint/per_leg_cv_full",
+        "--output-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/joint/joint_gradient_full",
+        "--device",
+        "cuda"
+      ],
+      "state": "completed"
+    },
+    {
+      "command": [
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_f8_20260924_v1/venv/bin/python",
+        "-u",
+        "-m",
+        "scripts.refine_joint_guard_probability_flow",
+        "--domain-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/domain",
+        "--flow",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/refinement/selected.pt",
+        "--reference-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/joint/per_leg_cv_smoke",
+        "--target-bank-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/joint",
+        "--probability-audit-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/joint/joint_gradient_smoke",
+        "--output-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/joint/joint_probability_refinement_smoke",
+        "--device",
+        "cpu",
+        "--smoke"
+      ],
+      "state": "completed"
+    },
+    {
+      "command": [
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_f8_20260924_v1/venv/bin/python",
+        "-u",
+        "-m",
+        "scripts.refine_joint_guard_probability_flow",
+        "--domain-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/domain",
+        "--flow",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/refinement/selected.pt",
+        "--reference-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/joint/per_leg_cv_full",
+        "--target-bank-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/joint",
+        "--probability-audit-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/joint/joint_gradient_full",
+        "--output-root",
+        "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/joint/joint_probability_refinement_full",
+        "--device",
+        "cuda"
+      ],
+      "state": "completed"
+    }
+  ],
+  "updated_at": "2026-11-02T23:47:57.175684+00:00"
+}

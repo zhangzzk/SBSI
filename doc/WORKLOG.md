@@ -1,5 +1,38 @@
 # Work log
 
+## 2026-11-03 — F8/C8 retrained on the GalSBI re-simulation; preset GalSBI-F8C8-dev
+
+All training jobs of the launch entry below finished without errors (frozen code, recipe and seeds unchanged;
+`rule.md`). GPU jobs ran on `cip` A40 slices (the `inter` A40 queue had 30+ jobs from other users; cip GPU nodes
+have at most 40 GB RAM, so base/refine used 36 GB, C8 24 GB). At most three GPUs at once.
+
+- **C8** (17666802, 17666803; 4 min each): both seeds select epoch 99 of 100, tune mean-case BCE 0.132987
+  (20260913, `selected.pt` ad5c05d2…) and 0.133012 (20260914, 07d8507d…); V3.9's C8 also selected epoch 99.
+- **F8 labels** (17666776, 7.7 min). Measured response of the selected population on the 40 validation cases
+  (primary cut radius > 0.6″, MAG_AUTO < 25.8, case-bootstrap errors): R11 0.603±0.003, R22 0.613±0.003 (constant
+  family 0.6166±0.0010), R12 −0.0088±0.0034 (2.6σ), R21 +0.0026±0.0026 (1.0σ). FS2 control R12 +0.0018±0.0017. One
+  2.6σ value among four off-diagonal entries; noted, not acted on.
+- **F8 base** (17666801, 72 min, 15 GB): selected guard flow, validation NLL −3.699, guard 0.065. Training-loss
+  spikes (+100) also occur in the FS2 control (+432); selection is on validation.
+- **F8 refine** (17666804, 3 h 27 min). Both refinement steps select step 0: the density-guard step lowers the
+  train guard 0.193→0.12 but raises the validation guard 0.193→0.249; the joint-probability step raises the
+  validation guard 0.184→0.218 at its first step. The final flow (`joint/joint_probability_refinement_full/
+  selected.pt`, abac069f…) has weights identical to the base guard flow (checked tensor by tensor, max |Δ| 0).
+  In the FS2 control the density-guard step was accepted (validation guard 0.432→0.319). The new base flow's
+  validation guard (0.193) is already below the FS2 control's refined value, but guard values on different data
+  are not directly comparable. A possible reason refinement no longer transfers: FS2 cases shared one noise
+  field, so train and validation targets shared noise; the new cases have independent noise. Not tested.
+- **Preset `GalSBI-F8C8-dev`** (`configs/models_galsbi_f8c8_dev.json`, `sbsi/models.py`): new F8 and C8 (seed
+  20260913) with the unchanged V3.9 disk emulator; evidence in `doc/evidence/galsbi_f8c8_20261102/` (hashes pinned).
+  New test `test_galsbi_f8c8_dev_pins_retrained_models_and_v39_emulator`. `pytest tests/test_model_presets.py`
+  (py31, srun): 8 passed. Both presets load and predict; for one test galaxy (true e1 0.1, Re 0.3″) the new C8's
+  p(usable) falls from 0.992 at true mag 25 to 0.445 at 26 (V3.9: 0.990 at 26), and the new flow's mean measured
+  e1 at mag 25 is 0.048 (V3.9 0.074; ±0.007 from 2000 draws): the new sims' depth and band differ from FS2's.
+
+Limitations: not evaluated (no constant-shear or closure test yet); the emulator is still FS2-trained; one F8
+seed. Next: retrain the disk emulator on the new sims (BlendEMU prep hard-codes legs 0.0/0.2 and truth mag < 26),
+then evaluate the full preset on the GalSBI constant-shear family (test only) and a closure mock.
+
 ## 2026-11-02 — F8/C8 retraining on the GalSBI re-simulation launched
 
 Owner: "go ahead, restore the F8/C8 builders and retrain". Experiment root

@@ -1,0 +1,334 @@
+{
+ "population": {
+  "name": "galsbi_resim_full_valid_measurement_domain_true_mag_lt30_centred65_v1",
+  "anchor_leg": null,
+  "predicate": null,
+  "measured_selection_cut": null,
+  "sheared_leg_recut": null,
+  "independent_per_leg_validity": true,
+  "inherited_parent_support_only": false,
+  "truth_analysis_cut": {
+   "column": "r_input_p",
+   "operator": "<",
+   "value": 30.0
+  }
+ },
+ "split": {
+  "seed": 501,
+  "validation_size": 0.2,
+  "train_cases": [
+   136,
+   149,
+   11,
+   80,
+   135,
+   166,
+   155,
+   111,
+   153,
+   106,
+   50,
+   128,
+   89,
+   47,
+   72,
+   36,
+   101,
+   142,
+   179,
+   158,
+   122,
+   18,
+   116,
+   190,
+   67,
+   42,
+   37,
+   191,
+   117,
+   133,
+   169,
+   174,
+   44,
+   164,
+   35,
+   17,
+   12,
+   197,
+   86,
+   49,
+   189,
+   97,
+   118,
+   73,
+   156,
+   95,
+   140,
+   108,
+   105,
+   28,
+   119,
+   170,
+   176,
+   0,
+   16,
+   194,
+   196,
+   85,
+   74,
+   29,
+   2,
+   163,
+   3,
+   63,
+   192,
+   48,
+   8,
+   1,
+   24,
+   150,
+   171,
+   43,
+   20,
+   88,
+   5,
+   30,
+   173,
+   168,
+   61,
+   121,
+   70,
+   82,
+   56,
+   139,
+   6,
+   92,
+   15,
+   107,
+   39,
+   125,
+   26,
+   188,
+   27,
+   148,
+   7,
+   64,
+   34,
+   165,
+   100,
+   198,
+   134,
+   31,
+   103,
+   127,
+   161,
+   14,
+   123,
+   146,
+   94,
+   32,
+   193,
+   40,
+   60,
+   93,
+   132,
+   54,
+   71,
+   53,
+   109,
+   195,
+   104,
+   144,
+   76,
+   182,
+   172,
+   157,
+   143,
+   102,
+   184,
+   124,
+   112,
+   57,
+   9,
+   147,
+   19,
+   46,
+   52,
+   126,
+   55,
+   162,
+   59,
+   58,
+   45,
+   90,
+   177,
+   186,
+   187,
+   65,
+   152,
+   175,
+   178,
+   160,
+   199,
+   181,
+   83,
+   77,
+   79,
+   167,
+   159,
+   87
+  ],
+  "validation_cases": [
+   4,
+   96,
+   145,
+   81,
+   62,
+   120,
+   151,
+   131,
+   21,
+   66,
+   22,
+   130,
+   10,
+   68,
+   98,
+   183,
+   91,
+   115,
+   154,
+   110,
+   51,
+   78,
+   23,
+   137,
+   33,
+   141,
+   138,
+   25,
+   13,
+   99,
+   41,
+   185,
+   38,
+   129,
+   180,
+   75,
+   113,
+   114,
+   69,
+   84
+  ]
+ },
+ "counts": {
+  "g0": {
+   "truth_parent_rows": 88468382,
+   "usable_rows": 29274152,
+   "detected_rows": 29277943,
+   "invalid_rows_after_truth_cut": 59194230
+  },
+  "g05": {
+   "truth_parent_rows": 88468382,
+   "usable_rows": 29262560,
+   "detected_rows": 29266361,
+   "invalid_rows_after_truth_cut": 59205822
+  }
+ },
+ "unrendered_parents_dropped": {
+  "rows": 17,
+  "by_case": {
+   "18": [
+    576532
+   ],
+   "36": [
+    614670
+   ],
+   "38": [
+    553438
+   ],
+   "48": [
+    694121
+   ],
+   "54": [
+    746894
+   ],
+   "75": [
+    648844
+   ],
+   "93": [
+    767152
+   ],
+   "95": [
+    734443
+   ],
+   "101": [
+    482048
+   ],
+   "105": [
+    854676
+   ],
+   "116": [
+    878909
+   ],
+   "120": [
+    767662
+   ],
+   "121": [
+    529200
+   ],
+   "130": [
+    688095
+   ],
+   "131": [
+    507085
+   ],
+   "132": [
+    658244
+   ],
+   "155": [
+    792522
+   ]
+  }
+ },
+ "measurement": {
+  "stamp_size": 65,
+  "centering": "centred",
+  "pixel_scale": 0.2,
+  "band": "LSST-i",
+  "shape_catalogue": "shape_catalogue_detect_position_secondaries",
+  "noise": "per-case noise field shared by the two legs"
+ },
+ "sources": {
+  "sims": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/training/sims",
+  "legs": {
+   "g0": "0.0",
+   "g05": "0.05"
+  },
+  "script_sha256": "dc98b461e4d96a3c7cac659e6508aa1da0d450a32d2ba519d48f21795a8e9647"
+ },
+ "limitations": [
+  "GalSBI training family 0-199 only; no calibration acceptance",
+  "renderer-omitted parents at the patch edge are dropped and listed",
+  "usability records cover rendered parents (all have true r < 30)"
+ ],
+ "flow": {
+  "features": [
+   "e1_input_p",
+   "e2_input_p",
+   "sersic_n_input_p",
+   "r_input_p",
+   "circularized_Re_input_p",
+   "nbr_close_050",
+   "nbr_close_100",
+   "nbr_close_200"
+  ],
+  "targets": [
+   "measured_ngmix_g1",
+   "measured_ngmix_g2",
+   "measured_flux_radius",
+   "measured_flux_from_mag_auto"
+  ],
+  "per_leg_validity": "detected; finite inputs/targets/gamma; open shape disk; positive radius and flux"
+ }
+}
