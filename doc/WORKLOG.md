@@ -1,5 +1,45 @@
 # Work log
 
+## 2026-11-02 — GalSBI pilot results: noise paired per case, no zero-shear e2 excess
+
+Cases 9000–9009 (LSST-i, ±0.02 on g1, centred 65 px stamps, renderer 328fcf6 for 9004 and the FS2 renderer
+for the rest; see the build entry below). Jobs: step 1 17642094 (30 s), steps 2–3 array 17642095 plus rerun
+17642582, step 4 17642096 (2 min). All exit 0. Analysis: `scripts/analyze_galsbi_pilot.py` →
+`doc/evidence/galsbi_resim_pilot_20261101/pilot_analysis.json`.
+
+- **Pairing.** Step 4 matched 2,782,007 galaxies found in both legs, 277–280k per case. The leg catalogues have
+  2,800,732 and 2,800,565 rows.
+- **Noise.** Pixel correlation over a 400×400 sky patch:
+  - same case, opposite legs: 0.99986, so both legs share one noise field;
+  - different cases: −0.0012, consistent with zero (scatter ±0.0025), so cases are independent. All FS2 sims shared
+    one field.
+- **Zero-shear offsets** c = ½(e(+g)+e(−g)) − e_intrinsic, with errors from the case-to-case scatter (10 cases):
+
+  | LSST-i band (mean of legs' MAG_AUTO) | n | raw R | c1 [1e-4] | c2 [1e-4] |
+  |---|---|---|---|---|
+  | 14–23 | 357,520 | 1.084 ± 0.013 | +1.3 ± 4.2 | +4.0 ± 3.8 |
+  | 23–24 | 445,373 | 0.875 ± 0.011 | +0.9 ± 6.1 | −2.6 ± 6.2 |
+  | 24–25 | 819,288 | 0.537 ± 0.004 | −0.6 ± 4.5 | −6.5 ± 5.4 |
+  | 25–25.8 | 708,824 | 0.305 ± 0.005 | −4.2 ± 4.0 | −3.7 ± 3.9 |
+  | 14–25.8 | 2,331,005 | 0.615 ± 0.004 | −1.1 ± 2.7 | −3.3 ± 2.7 |
+
+  Every offset is within 1.2σ of zero. The FS2 faint e2 excess (about +4e-4 in every FS2 catalogue; +6.3e-4 in the
+  cutout test) does not appear: 24–25.8 shows c2 −6.5 ± 5.4 and −3.7 ± 3.9 (×1e-4). Ten cases cannot test offsets
+  much below 3e-4. Raw R is the ngmix response to the applied shear, before any calibration model. It is an image
+  check, not m.
+- **Cost (one core per case).** Per shear leg: render + SExtractor 75–93 min, ngmix shapes 2.0–2.7 h. A case takes
+  6.5–8.5 h, about the FS2 cost (~9 CPU-h). Disk: 3.6 GB per case for both legs, plus 0.16 GB of scene.
+- **Owner, 2026-11-02:** "we should use up to 500" CPUs. With one 1-core task per case-leg, 340 cases need about
+  2,300–2,900 CPU-h, roughly 6–8 h of wall time at 500 cores, and about 1.3 TB.
+
+Limitations:
+- c1 and c2 are tested only to about ±3e-4 overall.
+- Nine cases were rendered by the FS2 renderer and 9004 by 328fcf6. They draw identical images for every galaxy under
+  the old FFT limit, checked bit-for-bit on a 1925-galaxy patch.
+
+Next: the full run (constant-shear cases 1000+, training cases 0–199). Training needs the half-shear and g = 0.2
+neighbour legs, which this pilot did not exercise.
+
 ## 2026-11-01 — GalSBI re-simulation build: LSST-i table, scene writer, BlendEMU branch, 10-case pilot launched
 
 Owner: "go on" (continue the GalSBI rerun in LSST-i; see `doc/GALSBI_RESIMULATION_PLAN.md`). Evidence:
