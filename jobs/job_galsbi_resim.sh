@@ -13,6 +13,9 @@
 #                                                            render + measure; task i = case c+i/2, leg LEGS[i%2]
 #   STEPS=2-3 CASE0=c NCASES=1 --array=0-(n-1)               (pilot) one case per task, both legs in turn
 #   STEPS=4 CASE0=c NCASES=n                                 paired catalogues
+# Training (half mode): STEPS=2,3all LEGS="0.0 0.05 0.2" --array=0-(3n-1) renders a leg, then measures primaries and
+#   secondaries on it; values with commas go through env (env STEPS=2,3all ... sbatch --export=ALL ...), because
+#   --export splits on commas. Then STEPS=4 and STEPS=4b once.
 # CONFIG = BlendEMU yaml (the pilot's is doc/evidence/galsbi_resim_pilot_20261101/galsbi_lsst_i_pilot.yaml).
 # BlendEMU code: branch galsbi-resim. Renderer: MultiBand_ImSim branch galsbi-resim (local worktree) = the FS2
 # renderer plus a retry at a 32768 FFT limit for galaxies GalSim refuses, and a hard failure when an image worker
