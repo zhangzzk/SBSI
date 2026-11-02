@@ -1,0 +1,68 @@
+# GalSBI re-simulation, training family (2026-11-02): 200 SBSI prior scenes, cases 0-199, LSST-i, half-shear legs
+# 0.0 / 0.05 (F8, C8) and 0.0 / 0.2 (disk emulator) as in the FS2 training config (BlendEMU main
+# configs/fs2_lsst_r.yaml), all three legs of a case from one scene and one noise seed. Image settings as the passed
+# pilot (doc/evidence/galsbi_resim_pilot_20261101/galsbi_lsst_i_pilot.yaml): LSST-i noise, centred 65 px stamps, no
+# magnitude cut. BlendEMU branch galsbi-resim; run via jobs/job_galsbi_resim.sh.
+
+catalog:
+  type: sbsi_scene
+  path: /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/training/scenes
+  mag_cut: 99           # render every scene galaxy; the scene's own limit is HSC i 14-28 (LSST-i is fainter at high z)
+
+simulation:
+  output_path: /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/training/sims/
+  base_config: /home/z/Zekang.Zhang/blendemu_galsbi_resim/configs/base_sim_config.ini
+  case_offset: 0
+  response:
+    n_cases: 200
+    shear_values: [0.0, 0.2]
+  self_response:
+    n_cases: 200
+    shear_values: [0.0, 0.05]
+  pixel_scale: 0.2
+
+noise:
+  source: csv
+  csv_path: /project/ls-gruen/users/zekang.zhang/lsst_sims/Euclid_Q1_median_LSST10yr.csv
+  band: LSST_i          # internal band label stays 'r'
+
+shape_measurement:
+  stamp_size: 65
+  centering: centred
+  pixel_scale: 0.2
+  use_pos: detect
+  tile_name: tile180.0_-0.5
+
+catalogues:
+  response:
+    r_max: 10    # arcsec
+    k: 20
+  self_response:
+    r_max: 3    # arcsec
+    k: 2
+    shape_suffix: _secondaries
+  detection:
+    r_max: 3    # arcsec
+    k: 2
+  batch_size: 100
+  n_jobs: 8
+
+training:
+  model_dir: /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/training/models
+  model_tag: lsst_i
+  n_trials: 100
+  early_stopping_rounds: 30
+  classification_early_stopping_min_delta: 1.0e-4
+  regression_cuts:      [[18, 28], [18, 28], [0.1, 1.5], [0.1, 1.5], [0, 10]]
+  self_response_cuts:   [[18, 28], [18, 28], [0.1, 1.5], [0.1, 1.5], [0, 3]]
+  classification_cuts:  [[18, 28], [18, 28], [0.1, 1.5], [0.1, 1.5], [0, 3]]
+  rescale:
+    pixel_rms: 0.6159
+    pixel_size: 0.2
+    zero_mag: 30
+    psf_fwhm: 0.71
+    moffat_beta: 2.458
+
+cluster:
+  n_mpi: 1
+  realizations: "d,0,1"
