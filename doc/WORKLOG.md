@@ -7,7 +7,7 @@ Both families of the launch entry below finished (all array jobs exit 0, no erro
 - **Run times.** 10-case jobs (one leg each): render + SExtractor about 76–92 min, about 15% slower per case than
   the one-core pilot because ten cases share a node. Constant jobs (one shape run on all galaxies) took about 4 h;
   training jobs (shapes of primaries 66 min and secondaries 69 min, each half the galaxies) 3.5 h. All 88 jobs
-  finished between 10:40 and 15:20; the FFT-retry cases (constant 1000, 1035, 1129; training 22, 24, 41, 84, 105)
+  finished between 10:20 and 15:22; the FFT-retry cases (constant 1000, 1035, 1129; training 22, 24, 41, 84, 105)
   rendered.
 - **Constant family, steps 4** (17643820, 18 min, 65 GB) and paired summary (`scripts/analyze_galsbi_pilot.py`,
   job 17664190, evidence `doc/evidence/galsbi_resim_runs_20261102/constant_g002_analysis.json`). 38,919,860 galaxies
