@@ -1,5 +1,46 @@
 # Work log
 
+## 2026-11-02 — GalSBI full re-simulation done: constant-shear family passes, training catalogues built
+
+Both families of the launch entry below finished (all array jobs exit 0, no error lines in any log).
+
+- **Run times.** 10-case jobs (one leg each): render + SExtractor about 76–92 min, about 15% slower per case than
+  the one-core pilot because ten cases share a node. Constant jobs (one shape run on all galaxies) took about 4 h;
+  training jobs (shapes of primaries 66 min and secondaries 69 min, each half the galaxies) 3.5 h. All 88 jobs
+  finished between 10:40 and 15:20; the FFT-retry cases (constant 1000, 1035, 1129; training 22, 24, 41, 84, 105)
+  rendered.
+- **Constant family, steps 4** (17643820, 18 min, 65 GB) and paired summary (`scripts/analyze_galsbi_pilot.py`,
+  job 17664190, evidence `doc/evidence/galsbi_resim_runs_20261102/constant_g002_analysis.json`). 38,919,860 galaxies
+  found and measured in both legs, 276.6k–279.2k per case, 140 cases. Errors are the case-to-case scatter /
+  sqrt(140). Raw response R and zero-shear offsets (1e-4):
+
+  | measured mag | galaxies | R | c1 | c2 |
+  |---|---|---|---|---|
+  | 14–23 | 5.0M | 1.0899±0.0031 | +1.10±1.39 (0.8σ) | −0.44±1.25 (0.4σ) |
+  | 23–24 | 6.2M | 0.8695±0.0026 | +0.65±1.32 (0.5σ) | −0.70±1.15 (0.6σ) |
+  | 24–25 | 11.5M | 0.5348±0.0016 | +0.71±1.09 (0.7σ) | −0.32±1.11 (0.3σ) |
+  | 25–25.8 | 9.9M | 0.3135±0.0014 | +1.27±1.13 (1.1σ) | −0.62±1.26 (0.5σ) |
+  | 14–25.8 | 32.6M | 0.6166±0.0010 | +0.93±0.64 (1.5σ) | −0.50±0.69 (0.7σ) |
+
+  All offsets are within 1.5σ of zero; the FS2 faint e2 excess (+4e-4) would show at more than 3σ in every band.
+  R agrees with the pilot (0.615±0.004). Noise: same case, opposite legs correlate at 0.99992; different cases at
+  −0.0016.
+- **Training steps 4 + 4b.** The first try (17643869, 250 GB) was killed for memory while merging the two
+  17.4 GB response batches; the rerun 17664251 (700 GB) peaked at 283 GB and took 16.5 min. Outputs in
+  `training/sims/`: response 294,680,615 galaxy–neighbour rows (0→0.2, r_max 10″, k 20; mean Δe1/γ 0.0071,
+  Δe2/γ −0.0000); detection 176,936,653 rows at leg 0.05 (33.1% detected); self-response 23,268,990 rows (0→0.05,
+  r_max 3″; mean Δe1/γ 0.392, Δe2/γ 0.001).
+- **Dropped rows.** The detection catalogue has 37 rows fewer than the 176,936,690 scene galaxies, one each in 37
+  cases. The renderer leaves these galaxies out of its own input list, identically in all three legs; the
+  constant family loses 22 the same way. All 59 lie on the lower DEC edge of the patch, within 0.014″ of it (no
+  other edge), so the renderer's boundary cut drops them. That is 2–3 per 10 million galaxies, all at the image
+  edge, and the leg pairing is unaffected; no fix. (Checked by comparing `gals_info` `index_input` with the
+  scene rows for every case.)
+
+Next: point the F8/C8 training builders (archived `run_v36_f8_stage.py`) and BlendEMU's emulator preparation at
+`training/sims/` and the new leg labels, which needs an owner decision on restoring archived code. The acceptance
+set (cases 2000+) and the symmetric-model closure mock are still open.
+
 ## 2026-11-02 — GalSBI full re-simulation launched: 140 constant-shear and 200 training cases on 500 cores
 
 Settings as the passed pilot (entry below): LSST-i noise, centred 65 px stamps, per-case noise seed, BlendEMU branch
