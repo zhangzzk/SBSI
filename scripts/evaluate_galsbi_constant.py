@@ -97,8 +97,7 @@ def pair_table(scene, parent_rows, conditions):
     """Up to K nearest rendered neighbours within R_MAX of each parent row, scaled emulator features."""
     from sbsi.forward_catalogue import make_pair_catalogue, rescale_emulator_pairs
     from sbsi.output_conditioned_response import TRUTH_FEATURES
-    catalogue = scene[['index', 'RA', 'DEC', 'Re', 'r', 'sersic_n']]
-    pairs = make_pair_catalogue(catalogue.iloc[parent_rows], catalogue, r_max_arcsec=R_MAX, k=K)
+    pairs = make_pair_catalogue(scene.iloc[parent_rows], scene, r_max_arcsec=R_MAX, k=K)
     pairs = rescale_emulator_pairs(pairs, conditions)
     pairs = pairs[['index_input_p', 'index_input_s', *TRUTH_FEATURES]]
     pairs = pairs.sort_values(['index_input_p', 'index_input_s'], kind='stable').reset_index(drop=True)
@@ -110,8 +109,7 @@ def pair_table(scene, parent_rows, conditions):
 
 def scene_frame(t):
     import pandas as pd
-    return pd.DataFrame({'index': t['index_input'].to_numpy(np.int64), 'RA': t['RA_input'], 'DEC': t['DEC_input'],
-                         'Re': t['Re_input'], 'r': t['r_input'], 'sersic_n': t['sersic_n_input']})
+    return pd.DataFrame({name.replace('_input', ''): t[name] for name in t.columns})
 
 
 def prep(chunk):
