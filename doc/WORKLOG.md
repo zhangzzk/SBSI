@@ -21,6 +21,22 @@ Script, figures and summary: `doc/evidence/fs2_galsbi_population_20261103/` (`po
 
 Limitations: densities only (no per-case error bands); magnitudes are in different bands (r vs i); one shear leg.
 
+**Number density** (owner: "what about their number density"; `number_density.py`, job 17693434, < 1 min;
+`number_density.{json,png}`, also `SBSI/plots/fs2_galsbi_number_density.png`). Full scenes (not the half-scene
+evaluation rows), both one 18181² px image, galaxies placed over 3600 arcmin²; per arcmin², ± case scatter/√20:
+
+| stage | FS2 | GalSBI |
+|---|---|---|
+| input (rendered) | 194.34 ± 0.00 (fixed count) | 245.81 ± 0.07 |
+| SExtractor detections | 88.23 ± 0.03 | 81.74 ± 0.04 |
+| usable matched | 87.33 ± 0.03 | 81.33 ± 0.04 |
+| MAG_AUTO < 25.8 | 56.16 ± 0.03 | 67.29 ± 0.04 |
+| main cut (also FLUX_RADIUS > 3 px) | 50.45 ± 0.03 | 50.36 ± 0.04 |
+
+GalSBI has 26% more input galaxies and 20% more at MAG_AUTO < 25.8 (it is shallower in i, so fewer faint
+detections overall), but the 3 px size cut removes 25% of those against FS2's 10%, so the main-cut samples end up
+with the same density.
+
 ## 2026-11-03 — Stronger guard, no-global arm: dropping the global term barely changes the main cut
 
 Owner: "what if we remove the global cut in the guard?" Arm `steps4_noglobal` (rule addendum, commit 24cca2f):
