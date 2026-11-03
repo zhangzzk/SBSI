@@ -5,7 +5,11 @@ Same estimator as the V3.9-like ConstGold evaluation (doc/V39_MODEL.md#developme
 Mobius disk transport by the summed neighbour-pair emulator response, the same output cuts on draws and on the
 measured legs, each leg normalized by its own selected count, galaxy weights = C8 usable probability (or, as a
 diagnostic, the simulation's own usable flag), m = 100 (R_sim/R_model - 1). The draw stage runs the frozen V3.9
-evaluation code (checkout sbsi_flow_f8_20260924) unchanged; C8 runs in its frozen checkout.
+evaluation code (checkout sbsi_flow_f8_20260924) for flow draws and measured legs; the cuts (CUTS: the three frozen
+rows plus separate size and magnitude limits) are applied here. C8 runs in its frozen checkout.
+
+Shape/selection split (true usable flags): the shape part is the response of galaxies (simulation) or draws (model)
+kept in both legs, the selection part is the rest; their contributions to m add up to m.
 
 Parent = every rendered galaxy of a case (gals_info rows; the renderer's edge drops are absent and reported), no
 truth cut. Inputs as in scripts/prepare_galsbi_f8c8_domain.py: intrinsic e1, e2 (sheared by +-h in the draw
@@ -46,9 +50,17 @@ FEATURES = ['e1_input_p', 'e2_input_p', 'sersic_n_input_p', 'r_input_p', 'circul
             'nbr_close_050', 'nbr_close_100', 'nbr_close_200']
 LEGS = (('plus', H), ('minus', -H))
 MAG_EDGES = (24., 25.5, 27.5)
-# EVAL_MAG_LIMIT moves the MAG_AUTO limit of both cut rows (sim and model sides); default 25.8 as in V3.9.
-MAG_LIMIT = float(os.environ.get('EVAL_MAG_LIMIT', '25.8'))
-CUTS = ('uncut', f'mag{MAG_LIMIT:g}_radius_gt0.60', f'mag{MAG_LIMIT:g}_radius_ge0.75')
+# Output cuts on both sides: name, FLUX_RADIUS bound in pixels (0.2", '>' or '>='), MAG_AUTO upper limit.
+# Rows 0-2 are the frozen V3.9 rows (evaluate_smooth_classifier_joint.output_cuts); the rest separate the limits.
+CUTS = (('uncut', None, None),
+        ('mag25.8_radius_gt0.60', ('>', 3.0), 25.8),
+        ('mag25.8_radius_ge0.75', ('>=', 3.75), 25.8),
+        ('mag25_radius_gt0.60', ('>', 3.0), 25.0),
+        ('radius_gt0.60', ('>', 3.0), None),
+        ('radius_ge0.75', ('>=', 3.75), None),
+        ('mag25.8', None, 25.8),
+        ('mag25', None, 25.0))
+CUT_NAMES = tuple(c[0] for c in CUTS)
 
 
 def sha256(path):
@@ -57,6 +69,27 @@ def sha256(path):
         for block in iter(lambda: stream.read(1 << 23), b''):
             h.update(block)
     return h.hexdigest()
+
+
+def output_cuts(values):
+    """Keep mask (..., cut) for measured (numpy) or generated (torch) joint outputs: radius in pixels, flux."""
+    radius, flux = values[..., 2], values[..., 3]
+    rows = []
+    for _, size, mag in CUTS:
+        keep = radius == radius   # all true for finite rows; nonfinite measured rows are not usable anyway
+        if size is not None:
+            keep = keep & ((radius > size[1]) if size[0] == '>' else (radius >= size[1]))
+        if mag is not None:
+            keep = keep & (flux > 10**(-0.4*(mag-30)))
+        rows.append(keep)
+    return (np if isinstance(values, np.ndarray) else __import__('torch')).stack(rows, -1)
+
+
+def draw_moments(keep, values, shift):
+    """Selected mass, flow shape and disk shift over draws (as the frozen selected_draw_moments)."""
+    keep = keep.to(values.dtype)
+    return (keep.mean(1), (keep[..., None]*values[..., None, :2]).mean(1),
+            (keep[..., None]*shift[:, :, None, :]).mean(1))
 
 
 def chunk_cases(chunk):
@@ -223,9 +256,8 @@ def draws(chunk):
     from sbsi.output_conditioned_response import DiskResponseMoment, predict_scene_draw_responses
     if Path(ev.__file__).resolve().parents[1] != F8_CHECKOUT:
         raise ValueError(f'expected the frozen F8 checkout, got {ev.__file__}')
-    if ev.CUTS[1] != 'mag25.8_radius_gt0.60' or ev.FLUX_MINIMUM != 10**(-0.4*(25.8-30)):
+    if ev.CUTS != CUT_NAMES[:3] or ev.FLUX_MINIMUM != 10**(-0.4*(25.8-30)):
         raise ValueError('unexpected frozen cut definition')
-    ev.FLUX_MINIMUM = 10**(-0.4*(MAG_LIMIT-30))   # read by the frozen output_cuts on every call
     _, paths, conditions = preset()
     device = torch.device('cuda')
     candidate = DiskResponseMoment(paths['emulator'].parent, nthread=4, device='cuda')
@@ -251,7 +283,8 @@ def draws(chunk):
         pair_ids = pairs['index_input_p'].to_numpy()
         frames = dict(zip(('plus', 'minus'), axes.shear_frames(full_context(context), H, AXIS)))
         contexts = [bundle.context_tensor(frames[d]) for d in ('plus', 'minus')]
-        rows = {d: np.zeros((len(ids), 3, 5)) for d, _ in LEGS}   # mass, flow e1, e2, blend e1, e2 per cut
+        # per cut: mass, flow e1, e2, blend e1, e2 over all draws, then the same over draws kept in both legs
+        rows = {d: np.zeros((len(ids), len(CUTS), 10)) for d, _ in LEGS}
         with torch.no_grad():
             for block, start in enumerate(range(0, len(ids), BATCH)):
                 stop = min(len(ids), start+BATCH)
@@ -259,7 +292,9 @@ def draws(chunk):
                                                    SEED+10000019*case+1000003*block)
                 lo = np.searchsorted(pair_ids, ids[start], side='left')
                 hi = np.searchsorted(pair_ids, ids[stop-1], side='right')
-                for direction, values in zip(('plus', 'minus'), generated):
+                keep = [output_cuts(values) for values in generated]
+                both = keep[0] & keep[1]
+                for direction, values, kept in zip(('plus', 'minus'), generated, keep):
                     if not bool(torch.isfinite(values).all()):
                         raise ValueError('nonfinite generated measurements')
                     response, _ = predict_scene_draw_responses(candidate, pairs.iloc[lo:hi], ids[start:stop],
@@ -270,26 +305,36 @@ def draws(chunk):
                     transformed, logdet = disk_response_transport(values[..., :2], velocity)
                     if not bool(torch.isfinite(transformed).all() and torch.isfinite(logdet).all()):
                         raise ValueError('nonfinite disk-response transport')
-                    mass, flow, blend = (x.cpu().numpy() for x in
-                                         ev.selected_draw_moments(values, transformed-values[..., :2]))
-                    rows[direction][start:stop] = np.concatenate([mass[..., None], flow, blend], axis=-1)
+                    shift = transformed-values[..., :2]
+                    rows[direction][start:stop] = np.concatenate(
+                        [np.concatenate([mass[..., None], flow, blend], axis=-1)
+                         for mass, flow, blend in ((x.cpu().numpy() for x in draw_moments(k, values, shift))
+                                                   for k in (kept, both))], axis=-1)
         bins = np.digitize(context[:, 3], MAG_EDGES)
-        model_sums = np.zeros((2, 2, 3, 4, 5))   # weight (C8, true flags), leg, cut, true-mag bin, quantity
-        sim_sums = np.zeros((2, 3, 4, 3))        # leg, cut, bin, (count, e1, e2)
-        reports = {}
-        for l, (direction, shear) in enumerate(LEGS):
+        measured, reports = {}, {}
+        for direction, shear in LEGS:
             values, usable, reports[direction] = ev.measured_leg(SIMS, case, shear, ids)
-            keep = ev.output_cuts(values) & usable[:, None]
+            measured[direction] = values, usable, output_cuts(values) & usable[:, None]
+        usable_both = (measured['plus'][1] & measured['minus'][1]).astype(float)
+        sim_both = measured['plus'][2] & measured['minus'][2]
+        # weight (C8, true flags), leg, cut, true-mag bin, quantity; the both-leg part (5:) uses the true
+        # usable flags of both legs for either weight, as C8 gives no joint probability
+        model_sums = np.zeros((2, 2, len(CUTS), 4, 10))
+        sim_sums = np.zeros((2, len(CUTS), 4, 6))   # leg, cut, bin, (count, e1, e2) all then kept in both legs
+        for l, (direction, _) in enumerate(LEGS):
+            values, usable, keep = measured[direction]
             for w, weight in enumerate((probability[direction], usable.astype(float))):
-                for k in range(3):
+                for k in range(len(CUTS)):
                     for b in range(4):
                         sel = bins == b
-                        model_sums[w, l, k, b] = weight[sel] @ rows[direction][sel, k]
-            for k in range(3):
+                        model_sums[w, l, k, b, :5] = weight[sel] @ rows[direction][sel, k, :5]
+                        model_sums[w, l, k, b, 5:] = usable_both[sel] @ rows[direction][sel, k, 5:]
+            for k in range(len(CUTS)):
                 for b in range(4):
-                    sel = keep[:, k] & (bins == b)
-                    sim_sums[l, k, b] = sel.sum(), *values[sel, :2].sum(0)
-        np.savez(OUT/f'sums/case{case}.npz', model=model_sums, sim=sim_sums)
+                    sel, common = keep[:, k] & (bins == b), sim_both[:, k] & (bins == b)
+                    sim_sums[l, k, b] = (sel.sum(), *values[sel, :2].sum(0),
+                                         common.sum(), *values[common, :2].sum(0))
+        np.savez(OUT/f'sums/case{case}.npz', model=model_sums, sim=sim_sums, cuts=np.array(CUT_NAMES))
         record = {'case': case, 'parents': len(ids), 'pairs': len(pairs), 'measured': reports,
                   'gpu': torch.cuda.get_device_name(0), 'seconds': time.monotonic()-started}
         (OUT/f'sums/case{case}.json').write_text(json.dumps(record, indent=1)+'\n')
@@ -334,26 +379,55 @@ def summary():
                 'R21_sim_minus_model': [float(r_sim[1]-r_model[1]), float(diff21.std(ddof=1))],
                 'selected_count_ratio_model_over_sim': (model_sel.sum(0)[:, 0]/sim_sel.sum(0)[:, 0]).tolist()}
 
-    def model_view(w, k, b, part):
-        x = model[:, w, :, k].sum(-2) if b is None else model[:, w, :, k, b]
+    def model_view(w, k, b, part, both=False):
+        x = model[:, w, :, k] if b is None else model[:, w, :, k, b][..., None, :]
+        x = x[..., 5:] if both else x[..., :5]
         shape = {'total': x[..., 1:3]+x[..., 3:5], 'flow only': x[..., 1:3]}[part]
-        return np.concatenate([x[..., :1], shape], axis=-1)
+        return np.concatenate([x[..., :1], shape], axis=-1).sum(-2)
 
-    out = {'definitions': __doc__, 'cases': [CASES[0], CASES[-1]], 'results': {}}
+    def sim_view(k, b, both=False):
+        x = sim[:, :, k] if b is None else sim[:, :, k, b][..., None, :]
+        return (x[..., 3:] if both else x[..., :3]).sum(-2)
+
+    def split(k):
+        """True-flag m at cut k as shape part (galaxies/draws kept in both legs) + selection part (the rest)."""
+        parts = []
+        for sums in (lambda s, m: (s.sum(0), m.sum(0)), lambda s, m: (np.einsum('bc,c...->b...', weights, s),
+                                                         np.einsum('bc,c...->b...', weights, m))):
+            rs, rm = (response(x)[..., 0] for x in sums(sim_view(k, None), model_view(1, k, None, 'total')))
+            bs, bm = (response(x)[..., 0] for x in sums(sim_view(k, None, True),
+                                                        model_view(1, k, None, 'total', True)))
+            parts.append((100*(bs-bm)/rm, 100*((rs-bs)-(rm-bm))/rm, bs, bm))
+        (shape, selection, bs, bm), (boot_shape, boot_selection, _, _) = parts
+        both = sim_view(k, None, True).sum(0)[0, 0]/sim_view(k, None).sum(0)[0, 0]
+        return {'shape_part_pp': [float(shape), float(boot_shape.std(ddof=1))],
+                'selection_part_pp': [float(selection), float(boot_selection.std(ddof=1))],
+                'R11_both_legs_sim': float(bs), 'R11_both_legs_model': float(bm),
+                'sim_fraction_kept_in_both_legs': float(both)}
+
+    out = {'definitions': __doc__, 'cases': [CASES[0], CASES[-1]], 'cuts': CUTS, 'results': {}, 'split': {}}
     labels = ('<24', '24-25.5', '25.5-27.5', '>=27.5')
     for w, weight in enumerate(('C8', 'true flags')):
-        for k, cut in enumerate(CUTS):
-            out['results'][f'{weight}/{cut}'] = estimate(sim[:, :, k].sum(-2), model_view(w, k, None, 'total'))
-        k = 1
-        out['results'][f'{weight}/{CUTS[k]}/flow only (no emulator)'] = estimate(
-            sim[:, :, k].sum(-2), model_view(w, k, None, 'flow only'))
-        for b, label in enumerate(labels):
-            out['results'][f'{weight}/{CUTS[k]}/true mag {label}'] = estimate(sim[:, :, k, b], model_view(w, k, b, 'total'))
+        for k, cut in enumerate(CUT_NAMES):
+            out['results'][f'{weight}/{cut}'] = estimate(sim_view(k, None), model_view(w, k, None, 'total'))
+            for b, label in enumerate(labels):
+                out['results'][f'{weight}/{cut}/true mag {label}'] = estimate(sim_view(k, b),
+                                                                              model_view(w, k, b, 'total'))
+        out['results'][f'{weight}/{CUT_NAMES[1]}/flow only (no emulator)'] = estimate(
+            sim_view(1, None), model_view(w, 1, None, 'flow only'))
+    for k, cut in enumerate(CUT_NAMES):
+        out['split'][cut] = split(k)
     (OUT/'summary.json').write_text(json.dumps(out, indent=1)+'\n')
     for name, r in out['results'].items():
+        if '/true mag' in name:
+            continue
         print(f"{name:55s} m = {r['m_percent']:+.3f}% +- {r['case_se_pp']:.3f} ({r['sigma_from_zero']:+.1f} sigma)  "
               f"R11 sim {r['R11_sim'][0]:.4f} model {r['R11_model'][0]:.4f}  "
               f"R21 sim-model {r['R21_sim_minus_model'][0]:+.5f} +- {r['R21_sim_minus_model'][1]:.5f}", flush=True)
+    for cut, r in out['split'].items():
+        print(f"split {cut:25s} shape {r['shape_part_pp'][0]:+.3f} +- {r['shape_part_pp'][1]:.3f} pp  "
+              f"selection {r['selection_part_pp'][0]:+.3f} +- {r['selection_part_pp'][1]:.3f} pp  "
+              f"kept in both legs {r['sim_fraction_kept_in_both_legs']:.3f}", flush=True)
 
 
 if __name__ == '__main__':
