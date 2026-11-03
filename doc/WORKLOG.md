@@ -1,5 +1,41 @@
 # Work log
 
+## 2026-11-03 — Stronger guard, 40-step arm fails the gate; 160-step arm cancelled; extra mag < 25 / 25.4 cuts
+
+Rule: `$DATA_DIR/sbsi_caches/galsbi_guard_strength_20261103/rule.md` (addendum: owner cancelled `steps160` at guard
+epoch 10, jobs 17692347/17693021/17692747). `steps40` trained in job 17692346 (1 h 53 min, selected guard epoch 13;
+validation NLL fell to −0.63 after the first 40-step epoch, then recovered). Checks: 17692678 (`check_steps40.json`)
+and 17693441 (`check --tag _mag25 --extra 2.8,25 3.2,25 2.8,25.4 3.2,25.4`, all four flows, `check_mag25.json`;
+it reproduces every earlier number exactly). New `--extra` option in `scripts/run_galsbi_guard_strength.py`:
+extra cuts are reported but kept out of the held-out RMS. Evidence: `doc/evidence/galsbi_guard_strength_20261103/`.
+
+m_eq (flow alone, validation cases, ± case bootstrap; paired changes vs `steps4` have ± ≤ 0.01):
+
+| cut | density only | steps4 (GalSBI-dev) | no global | steps40 |
+|---|---|---|---|---|
+| radius > 2.8, mag < 25.8 | −1.85 ± 0.38 | −0.22 ± 0.38 | −0.51 ± 0.38 | +0.57 ± 0.39 |
+| radius > 3.0, mag < 25.8 (main) | +0.29 ± 0.36 | +1.49 ± 0.36 | +1.28 ± 0.36 | +1.52 ± 0.36 |
+| radius > 3.2, mag < 25.8 | +0.43 ± 0.35 | +1.14 ± 0.35 | +0.99 ± 0.35 | +0.48 ± 0.35 |
+| radius > 2.8, mag < 25.4 (extra) | −2.18 ± 0.36 | −0.71 ± 0.37 | −0.94 ± 0.37 | +0.12 ± 0.37 |
+| radius > 3.0, mag < 25.4 | +0.27 ± 0.35 | +1.37 ± 0.35 | +1.20 ± 0.35 | +1.52 ± 0.35 |
+| radius > 3.2, mag < 25.4 (extra) | +0.51 ± 0.34 | +1.16 ± 0.34 | +1.04 ± 0.34 | +0.64 ± 0.34 |
+| radius > 2.8, mag < 25.0 (extra) | −2.86 ± 0.35 | −1.63 ± 0.36 | −1.78 ± 0.36 | −0.82 ± 0.36 |
+| radius > 3.0, mag < 25.0 | −0.12 ± 0.34 | +0.80 ± 0.35 | +0.68 ± 0.35 | +1.02 ± 0.35 |
+| radius > 3.2, mag < 25.0 (extra) | +0.58 ± 0.32 | +1.08 ± 0.32 | +1.01 ± 0.32 | +0.70 ± 0.32 |
+| radius > 3.75, mag < 25.8 | −5.36 ± 0.44 | −5.34 ± 0.44 | −5.41 ± 0.44 | −6.56 ± 0.43 |
+| global | −4.44 ± 0.47 | −2.02 ± 0.48 | −2.57 ± 0.48 | +0.14 ± 0.49 |
+| RMS guarded / held out | 2.35 / 5.12 | 1.45 / 4.75 | 1.56 / 4.82 | 0.89 / 5.26 |
+| validation NLL | −3.69950 | −3.69897 | −3.69963 | −3.68066 |
+
+Gate for `steps40`: (1) main |m_eq| not halved (paired +0.03 ± 0.00) — fail; (2) radius > 3.75 & < 25.8 worse by
+1.21 ± 0.01 — fail; (3) NLL worse by 0.0183 ± 0.0001 (< 0.02) — pass. No arm qualifies; no constant-shear run.
+
+Reading: more guard steps fit the guarded cuts on average (2.8 and 3.2 px move toward zero, the uncut by +2.2)
+but leave the 3.0 px cut unchanged and push the unguarded large-size cuts further off, at a real density cost.
+At every magnitude limit the density-only flow's error jumps by about 2–2.7 points between 2.8 and 3.0 px, a
+sharp size feature at the GalSBI size peak that the guard cannot follow. Proposed next (not run): a capacity test,
+guard on the main cut only with real weight (combined loss or looser guard clip), ~1–2 GPU-h.
+
 ## 2026-11-03 — FS2 vs GalSBI population corner plots (input and detected)
 
 Owner: "make a corner contour plot comparing FS2 and GalSBI population both input and detected on the galaxy
