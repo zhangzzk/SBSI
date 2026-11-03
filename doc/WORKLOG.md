@@ -1,5 +1,45 @@
 # Work log
 
+## 2026-11-03 — Flow response map by measured size: a size-migration "wave"; band guard launched
+
+Owner: "we need build a better guard so the model recovers 0.3% at cuts around mag < 25 with radius > 3".
+
+**Map** (`run_galsbi_guard_strength.py map`, jobs 17693659 rerun after the count-array fix 93c30fc; analysis
+`doc/evidence/galsbi_guard_strength_20261103/map_analysis.py`, jobs 17693678/17693775 on `cluster`, outputs
+`map_analysis.{json,png}`, also `SBSI/plots/galsbi_flow_response_map.png`). Validation cases, hard bins of 0.1 px ×
+0.25 mag; response sums agree with the soft-cut check (mag < 25, r > 3: hard +0.19 vs soft −0.12 for density-only,
+the difference being the soft edge). Hard-cut m_eq (flow alone) vs size threshold, MAG_AUTO < 25.0:
+
+| threshold [px] | 2.6 | 2.8 | 2.9 | 3.0 | 3.1 | 3.2 | 3.4 | 3.6 | 4.0 |
+|---|---|---|---|---|---|---|---|---|---|
+| density only | −4.73 | −3.11 | −1.44 | +0.19 | +0.96 | +0.87 | −1.19 | −3.49 | −6.61 |
+| steps4 (GalSBI-dev) | −3.36 | −1.86 | −0.32 | +1.14 | +1.65 | +1.36 | −1.04 | −3.53 | −6.64 |
+| steps40 | −2.23 | −1.01 | +0.24 | +1.34 | +1.54 | +0.93 | −1.84 | −4.50 | −7.57 |
+
+(± ≈ 0.35 each, case bootstrap.) Flow minus simulation response per 0.1 px bin (mag < 25, density-only flow, % of the
+simulated main-cut response): 2.6 +0.48 ± 0.04, 2.7 +1.18 ± 0.08, 2.8 +1.74 ± 0.12, 2.9 +1.66 ± 0.17, 3.0 +0.72 ±
+0.15, 3.1 −0.14 ± 0.21, 3.2 −0.80 ± 0.16, 3.3 −0.84 ± 0.17, 3.4 −0.47 ± 0.14, 3.5 −0.64 ± 0.14, then within ±0.4
+per bin above 3.6. The simulation's per-galaxy response is −0.50 at 2.6–2.7 px (shear moves galaxies across the
+size cut); the flow gives −0.22/−0.02. So the flow models too little shear-induced size migration: too much response
+just below the cut, too little just above. The 3.0 px cut is near zero only because the two cancel; a cut-level
+guard on a few cumulative cuts can only shift the wave (what steps4/steps40 do). The same pattern holds at 25.4 and
+25.8.
+
+**Band guard** (b8e7769, `train --steps 40 --bands`, job 17693674 on `cip`, output `bands40/`): the guard runs on
+112 soft windows tiling measured radius × magnitude instead of the six cumulative cuts — radius edges 2.2–5.0 every
+0.2 px, magnitude edges 24.0, 24.6, 25.0, 25.4, 25.8, 26.4, open ends; window = σ((x−lo)/s) − σ((x−hi)/s), softness
+0.05 as before. Per-band tolerance s_b = 0.003 × 0.6035 × D_main/D_b (0.6035 = simulated main-cut per-galaxy
+response; D = soft galaxy mass from training-case g0 rows), so each band is held to the share it contributes to a
+0.3% error on the main cut. Two-sided windows are added by patching `_validate_cuts`/`torch_guard_weights`/
+`numpy_guard_weights` in the runner; the old one-sided cuts give identical weights (difference 0.0), the 112 windows
+sum to 1 within 4e-16, numpy and torch agree within 3e-16. 40 guard steps per epoch; other trainer settings frozen.
+Rule addendum: gate (1) target grid (radius 2.8–3.2 × mag 24.6/25.0/25.4) RMS ≤ 0.5 and every |m_eq| ≤ 1.0;
+(2) held-out RMS ≤ density-only 5.12; (3) NLL worse than density-only by < 0.02. Pass → constant-shear eval, also at
+MAG_AUTO < 25.0.
+
+Limitations: flow alone. End to end at mag < 25 & r > 3 the error is +2.47 vs +0.80 for the flow alone, so a fixed
+flow need not give 0.3% end to end. Next: check and map of `bands40` with the target-grid extras, then the gate.
+
 ## 2026-11-03 — Stronger guard, 40-step arm fails the gate; 160-step arm cancelled; extra mag < 25 / 25.4 cuts
 
 Rule: `$DATA_DIR/sbsi_caches/galsbi_guard_strength_20261103/rule.md` (addendum: owner cancelled `steps160` at guard
