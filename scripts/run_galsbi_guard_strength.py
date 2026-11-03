@@ -79,7 +79,7 @@ def cut_list(trainer):
     return guarded + held, len(guarded)
 
 
-def check(flows):
+def check(flows, tag=''):
     import pandas as pd
     import torch
     from sbsi.fixed_g0_domain import FLOW_FEATURES
@@ -149,7 +149,7 @@ def check(flows):
         torch.cuda.empty_cache()
     sim, count = sim.cpu().numpy(), count.cpu().numpy()
     rows_per_case = np.bincount(row_case.cpu().numpy(), minlength=len(cases)).astype(float)
-    np.savez(ROOT/'check_sums.npz', sim=sim, count=count, rows=rows_per_case,
+    np.savez(ROOT/f'check{tag}_sums.npz',sim=sim, count=count, rows=rows_per_case,
              **{f'model_{k}': v[0] for k, v in sums.items()}, **{f'nll_{k}': v[1] for k, v in sums.items()})
     weights = np.random.default_rng(BOOTSTRAP_SEED).multinomial(len(cases), np.full(len(cases), 1 / len(cases)),
                                                                 size=BOOTSTRAP).astype(float)
@@ -182,7 +182,7 @@ def check(flows):
                 'abs_m_eq_se': (np.abs(boot[k]) - np.abs(boot['steps4'])).std(0, ddof=1).tolist(),
                 'nll': float(nll_point[k] - nll_point['steps4']),
                 'nll_se': float((nll_boot[k] - nll_boot['steps4']).std(ddof=1))}
-    (ROOT/'check.json').write_text(json.dumps(result, indent=1) + '\n')
+    (ROOT/f'check{tag}.json').write_text(json.dumps(result, indent=1) + '\n')
     names = [c['name'] for c in cuts]
     print(f"{'cut':38s}" + ''.join(f'{k:>20s}' for k in sums))
     for i, n in enumerate(names):
@@ -200,6 +200,7 @@ def main():
     sub.add_parser('train').add_argument('--steps', type=int, required=True)
     c = sub.add_parser('check')
     c.add_argument('--flows', nargs='+', default=['nll_only', 'steps4', 'steps40', 'steps160'])
+    c.add_argument('--tag', default='', help='output suffix: check<tag>.json, check<tag>_sums.npz')
     a = p.parse_args()
     if not os.environ.get('SLURM_JOB_ID'):
         raise RuntimeError('scheduler allocation required')
@@ -207,7 +208,7 @@ def main():
         train(a.steps)
     else:
         known = {'nll_only': SOURCE/'nll/selected.pt', 'steps4': SOURCE/'guard/selected.pt'}
-        check({k: known.get(k, ROOT/k/'guard/selected.pt') for k in a.flows})
+        check({k: known.get(k, ROOT/k/'guard/selected.pt') for k in a.flows}, a.tag)
 
 
 if __name__ == '__main__':
