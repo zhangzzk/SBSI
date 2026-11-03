@@ -1,5 +1,33 @@
 # Work log
 
+## 2026-11-03 — Resume band-guard study and queue the declared validation
+
+Owner: "read latest logs of the latest branch/worktree. pick up where we are".
+Latest worktree is `sampler-recipe`, HEAD `1afd244` at resumption. Read the current
+study's [band-guard rule](evidence/galsbi_guard_strength_20261103/rule.md#addendum-band-guard-2026-11-03-2000-cet-before-any-band-guard-training-or-output).
+Training job 17693674 remains running on one `cip` A40-16GB: `band_scales.json`
+exists, log is at `LOADING_FULL_DOMAIN_FLOW_DATA`, and scheduler accounting shows
+CPU/I/O activity and about 24 GB peak resident memory. No training epoch or
+band-guard result is available yet.
+
+Queued the previously declared next stages using the unchanged launcher and runner:
+
+- Check 17693833, `afterok:17693674`: `check --flows nll_only steps4 steps40 bands40
+  --tag _bands40`, with all 13 extra target cuts. Together with the existing
+  held-out 3.0 × 25.0 and 3.0 × 25.4 rows, these cover the full 5 × 3 target grid.
+  Expected outputs: study-root `check_bands40.json` and `check_bands40_sums.npz`.
+- Map 17693834, `afterok:17693833`: `map --flows bands40 --tag _bands40`, producing
+  `map_bands40.npz` for comparison with the existing baseline map. Each job uses
+  one GPU; serial dependencies keep this continuation to one GPU at a time.
+
+Validation: `squeue`, `sacct`, `scontrol show job`, `sstat`, and the live training
+log were inspected; both `sbatch --parsable` calls returned the IDs above.
+No numerical settings or source code changed. Next: inspect training completion
+and dependent-stage startup, then apply the fixed target-grid, held-out RMS, and
+NLL gates. No end-to-end evaluation is queued before those gates pass. Automated
+chat wakeup tools are unavailable in this session; dependencies launch the checks,
+but their results still require a subsequent review.
+
 ## 2026-11-03 — Flow response map by measured size: a size-migration "wave"; band guard launched
 
 Owner: "we need build a better guard so the model recovers 0.3% at cuts around mag < 25 with radius > 3".

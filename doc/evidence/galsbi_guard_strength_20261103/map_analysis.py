@@ -1,14 +1,15 @@
 """Where in measured (FLUX_RADIUS, MAG_AUTO) the GalSBI flows miss the simulated shear response.
 
-usage (CPU, py31): python map_analysis.py
-Reads $DATA_DIR/sbsi_caches/galsbi_guard_strength_20261103/map.npz (run_galsbi_guard_strength.py map; validation
+usage (CPU, py31): python map_analysis.py [TAG]
+Reads $DATA_DIR/sbsi_caches/galsbi_guard_strength_20261103/map{TAG}.npz (run_galsbi_guard_strength.py map; validation
 cases, hard bins of 0.1 px x 0.25 mag). For a hard cut c, the response is T_c = sum_{bins in c} S / N0_c, with S the
 binned e response (design-scaled) and N0_c the zero-leg count; the mean-shape term mu_c x (count response) is
 dropped (both factors are ~0 for an isotropic population; checked against the soft-cut check numbers).
 m_eq = 100 ((T11 + T22)_sim / (T11 + T22)_flow - 1). Errors: case bootstrap (10,000, seed 20260925).
-Writes map_analysis.json and map_analysis.png (also SBSI/plots/galsbi_flow_response_map.png).
+Writes map_analysis{TAG}.json and map_analysis{TAG}.png (also SBSI/plots/galsbi_flow_response_map{TAG}.png).
 """
 import json
+import sys
 from pathlib import Path
 
 import matplotlib
@@ -17,11 +18,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 S = Path(__file__).resolve().parent
-MAP = Path('/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_guard_strength_20261103/map.npz')
+TAG = sys.argv[1] if len(sys.argv) > 1 else ''
+MAP = Path(f'/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_guard_strength_20261103/map{TAG}.npz')
 PLOTS = Path('/home/z/Zekang.Zhang/SBSI/plots')
-FLOWS = ('nll_only', 'steps4', 'steps40')
-LABEL = {'nll_only': 'no guard', 'steps4': 'GalSBI-dev (4-step guard)', 'steps40': '40-step guard'}
-COLOUR = {'nll_only': '#444444', 'steps4': '#d1661b', 'steps40': '#1f5fa8'}
+FLOWS = ('nll_only', 'steps4', 'steps40') + (('bands40',) if TAG == '_bands' else ())
+LABEL = {'nll_only': 'no guard', 'steps4': 'GalSBI-dev (4-step guard)', 'steps40': '40-step guard',
+         'bands40': 'band guard (size x mag boxes)'}
+COLOUR = {'nll_only': '#444444', 'steps4': '#d1661b', 'steps40': '#1f5fa8', 'bands40': '#2a9d4b'}
 THRESHOLDS = np.round(np.arange(2.0, 4.51, 0.1), 2)
 MAGS = (25.0, 25.4, 25.8)
 
@@ -69,7 +72,7 @@ def main():
             prof[f'{flow}_minus_sim_pct_of_main_se'] = (100*np.einsum('bc,cr->br', W, d).std(0, ddof=1)/total_sim_main).tolist()
         profile[str(mag)] = prof
     result['profile'] = profile
-    (S/'map_analysis.json').write_text(json.dumps(result, indent=1)+'\n')
+    (S/f'map_analysis{TAG}.json').write_text(json.dumps(result, indent=1)+'\n')
 
     fig, ax = plt.subplots(2, 2, figsize=(13, 9))
     for i, mag in enumerate((25.0, 25.8)):
@@ -110,8 +113,8 @@ def main():
     a.legend(fontsize=8)
     fig.suptitle('GalSBI flow vs simulation shear response by measured size (validation cases, flow alone)', fontsize=11)
     fig.tight_layout()
-    fig.savefig(S/'map_analysis.png', dpi=140)
-    (PLOTS/'galsbi_flow_response_map.png').write_bytes((S/'map_analysis.png').read_bytes())
+    fig.savefig(S/f'map_analysis{TAG}.png', dpi=140)
+    (PLOTS/f'galsbi_flow_response_map{TAG}.png').write_bytes((S/f'map_analysis{TAG}.png').read_bytes())
     for mag in MAGS:
         print(f'MAG < {mag}')
         for flow in FLOWS:
