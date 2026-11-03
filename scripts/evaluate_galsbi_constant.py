@@ -33,8 +33,9 @@ import numpy as np
 REPO = Path('/home/z/Zekang.Zhang/SBSI/.claude/worktrees/sampler-recipe')
 DATA = Path('/project/ls-gruen/users/zekang.zhang')
 SIMS = DATA/'sbsi/galsbi_resim/constant_g002/sims'
-OUT = DATA/'sbsi_caches/galsbi_dev_constant_20261103'
-PRESET = REPO/'configs/models_galsbi_dev.json'
+# EVAL_OUT / EVAL_PRESET select another study root and preset file (configs/); defaults are the first study.
+OUT = Path(os.environ.get('EVAL_OUT', DATA/'sbsi_caches/galsbi_dev_constant_20261103'))
+PRESET = REPO/'configs'/os.environ.get('EVAL_PRESET', 'models_galsbi_dev.json')
 F8_CHECKOUT = DATA/'sbsi_flow_f8_20260924'
 C8_CHECKOUT = DATA/'sbsi_classifier_f8_inputs_20260925'
 TILE = 'tile180.0_-0.5'
@@ -45,7 +46,9 @@ FEATURES = ['e1_input_p', 'e2_input_p', 'sersic_n_input_p', 'r_input_p', 'circul
             'nbr_close_050', 'nbr_close_100', 'nbr_close_200']
 LEGS = (('plus', H), ('minus', -H))
 MAG_EDGES = (24., 25.5, 27.5)
-CUTS = ('uncut', 'mag25.8_radius_gt0.60', 'mag25.8_radius_ge0.75')
+# EVAL_MAG_LIMIT moves the MAG_AUTO limit of both cut rows (sim and model sides); default 25.8 as in V3.9.
+MAG_LIMIT = float(os.environ.get('EVAL_MAG_LIMIT', '25.8'))
+CUTS = ('uncut', f'mag{MAG_LIMIT:g}_radius_gt0.60', f'mag{MAG_LIMIT:g}_radius_ge0.75')
 
 
 def sha256(path):
@@ -220,6 +223,9 @@ def draws(chunk):
     from sbsi.output_conditioned_response import DiskResponseMoment, predict_scene_draw_responses
     if Path(ev.__file__).resolve().parents[1] != F8_CHECKOUT:
         raise ValueError(f'expected the frozen F8 checkout, got {ev.__file__}')
+    if ev.CUTS[1] != 'mag25.8_radius_gt0.60' or ev.FLUX_MINIMUM != 10**(-0.4*(25.8-30)):
+        raise ValueError('unexpected frozen cut definition')
+    ev.FLUX_MINIMUM = 10**(-0.4*(MAG_LIMIT-30))   # read by the frozen output_cuts on every call
     _, paths, conditions = preset()
     device = torch.device('cuda')
     candidate = DiskResponseMoment(paths['emulator'].parent, nthread=4, device='cuda')

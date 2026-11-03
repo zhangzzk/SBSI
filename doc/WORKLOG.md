@@ -1,5 +1,37 @@
 # Work log
 
+## 2026-11-03 — Why V3.9 gave +0.02% and GalSBI-dev +2.74%; matched-depth cut (MAG_AUTO < 25.0) launched
+
+Owner: "we need to understand why v3.9 delivers <0.3% bias yet the models deliver 3%", then "let's cut at 25".
+
+Findings (no jobs; reads of saved catalogues and sums):
+- **The V3.9 number is in-sample.** FS2 ConstGold case N renders the same galaxies as FS2 training case N (case 40:
+  all 699,568 `gals_info` rows identical except `gamma1_input`), and FS2 sims share one noise field. The V3.9 test
+  cases 40–119 were C8 training (40–99) and tuning (100–119) cases, emulator fit cases (40–199) and mostly F8
+  training cases (random 160/40 split of 0–199). GalSBI cases 1000–1139 are new galaxies with their own noise.
+- **The errors are similar in size; only the signs differ.** Contributions of true-magnitude bins to the total m
+  (main cut, pp): FS2 (F8 + C17, V36_FEATURE_SIMPLIFICATION.md) <24 −0.99, 24–25.5 −0.89, 25.5–27.5 +1.94,
+  ≥27.5 +0.09 (absolute sum 3.9; C8 3.81, split not saved). GalSBI-dev C8 (from `sums/`, case-bootstrap SE):
+  +0.65 ± 0.09, +1.37 ± 0.10, +0.70 ± 0.06, +0.01 ± 0.01, sum +2.74 (matches the summary exactly).
+- **The GalSBI sims are shallower at the cut.** They use the LSST-i row of `Euclid_Q1_median_LSST10yr.csv`
+  (pixel rms 0.616, PSF 0.71″, β 2.458) instead of LSST-r (0.312, 0.73″, 2.224). SExtractor S/N
+  (FLUX_AUTO/FLUXERR_AUTO, median, one case each): MAG_AUTO 24.8–25.0 16.3 (FS2) vs 10.4 (GalSBI); 25.6–25.8
+  9.8 vs 6.8. FS2's S/N ≈ 10 at its 25.8 cut sits at MAG_AUTO ≈ 24.9–25.0 in GalSBI.
+- An untouched FS2 test exists: `lsst_sims_fs2_25876_constant_g005_c140-239`, cases 200–239 (g1 ±0.05, outside
+  all training). V3.9 was never evaluated there; proposed, not run.
+
+Matched-depth rerun (diagnostic; the cut was chosen after the 25.8 result). Study root
+`$DATA_DIR/sbsi_caches/galsbi_dev_constant_mag25_20261103/`, `rule.md` fixed before output (copy in
+`doc/evidence/galsbi_dev_constant_mag25_20261103/`). Same as the 25.8 study except the MAG_AUTO limit of both cut
+rows. `parent/` and `c8/` are symlinks to the first study (independent of the cut).
+- Code: `scripts/evaluate_galsbi_constant.py` gains `EVAL_MAG_LIMIT` (default 25.8, unchanged behaviour) and the
+  already-present `EVAL_OUT`/`EVAL_PRESET`. The draw stage checks the frozen cut is the 25.8 one, then sets the
+  frozen module's `FLUX_MINIMUM`, which its `output_cuts` reads on every call, so the simulation and model sides
+  move together. Syntax check passed.
+- Jobs: draws 17674931 (array 0–13%3, cip A40), summary 17674932 (afterok).
+
+Next: report m at < 25.0 against the rule; owner call on the untouched FS2 V3.9 test and on LSST-r vs LSST-i.
+
 ## 2026-11-03 — GalSBI-dev on the GalSBI constant-shear family: m = +2.74% ± 0.14 (fails)
 
 Owner: "go ahead, evaluate GalSBI-dev on the constant-shear sims". Test only: nothing was trained, tuned or
