@@ -1,6 +1,6 @@
 # Work log
 
-## 2026-11-03 — Why V3.9 gave +0.02% and GalSBI-dev +2.74%; matched-depth cut (MAG_AUTO < 25.0) launched
+## 2026-11-03 — Why V3.9 gave +0.02% and GalSBI-dev +2.74%; matched-depth cut (MAG_AUTO < 25.0): m = +2.47% ± 0.14, depth is not the cause
 
 Owner: "we need to understand why v3.9 delivers <0.3% bias yet the models deliver 3%", then "let's cut at 25".
 
@@ -28,9 +28,47 @@ rows. `parent/` and `c8/` are symlinks to the first study (independent of the cu
   already-present `EVAL_OUT`/`EVAL_PRESET`. The draw stage checks the frozen cut is the 25.8 one, then sets the
   frozen module's `FLUX_MINIMUM`, which its `output_cuts` reads on every call, so the simulation and model sides
   move together. Syntax check passed.
-- Jobs: draws 17674931 (array 0–13%3, cip A40), summary 17674932 (afterok).
+- Jobs: draws 17674931 tasks 0–12 (cip A40, ~70 min per ten cases); task 13 moved to `inter` (17682286, never
+  started, cancelled) and back to cip (17682978); summary 17682288 (afterany on both, refuses missing cases).
+  The draw logs print commit ed31a51 because they started a minute before the commit; the file they ran is the
+  one committed in 88ae6c9.
+- Check: case 1000 uncut model and simulation sums are identical to the 25.8 study (max |Δ| 0.0); the cut moves
+  both sides together (plus leg, main cut: simulation 181,569 → 139,070, C8-weighted model 182,250 → 139,003).
 
-Next: report m at < 25.0 against the rule; owner call on the untouched FS2 V3.9 test and on LSST-r vs LSST-i.
+Results (m = 100 (R_sim/R_model − 1), ± = case-bootstrap SE, 10,000 resamples seed 20260925; summary in
+`doc/evidence/galsbi_dev_constant_mag25_20261103/summary.json`, contributions and paired change from
+`compare_cuts.py` there):
+
+| cut (per leg, measured) | C8 | true usable flags |
+| --- | ---: | ---: |
+| none | +0.04 ± 0.17 | +0.31 ± 0.17 |
+| **radius > 0.6″ & MAG_AUTO < 25.0 (primary)** | **+2.47 ± 0.14 (17.2σ)** | +2.68 ± 0.15 |
+| radius ≥ 0.75″ & MAG_AUTO < 25.0 | +0.97 ± 0.18 | +1.39 ± 0.18 |
+| primary, flow only | +27.3 ± 0.2 | +27.3 ± 0.2 |
+
+Paired change 25.0 − 25.8 on the same draws: C8 −0.27 ± 0.07 pp, true flags −0.34 ± 0.07 pp. R21 simulation minus
+model −0.0023 ± 0.0012 (1.9σ).
+
+By true magnitude, C8, primary cut: m within the bin and contribution to the total (pp), with the selected fraction:
+
+| true mag | m in bin | contribution | fraction (25.8 study: contribution, fraction) |
+| --- | ---: | ---: | --- |
+| < 24 | +0.30 ± 0.18 | +0.31 ± 0.10 | 0.432 (+0.65, 0.332) |
+| 24–25.5 | +3.69 ± 0.25 | +1.32 ± 0.10 | 0.524 (+1.37, 0.500) |
+| 25.5–27.5 | +30.4 ± 1.2 | +0.82 ± 0.03 | 0.043 (+0.70, 0.167) |
+| ≥ 27.5 | +22.5 ± 7.0 | +0.01 ± 0.00 | 0.001 |
+
+Reading (per `rule.md`): +2.47 is above +1.37, so **depth is not the main explanation** of the 25.8 failure. The
+24–25.5 shortfall (+3.7%) is the same whether the magnitude cut lies above that bin (25.8) or runs through it
+(25.0). The few true 25.5–27.5 galaxies that pass the 25.0 cut are underpredicted by 30%. The size limit matters
+more than the magnitude limit: at ≥ 0.75″ the bias is +0.97 ± 0.18 (25.0) and +0.79 ± 0.18 (25.8).
+
+Limitations: diagnostic only (cut chosen after the 25.8 result); g1 only; one seed per model; errors exclude
+training and finite-draw noise.
+
+Next (owner call): split the response at the cut into a shape part and a selection part, and separate the size
+and magnitude limits (size-only and magnitude-only rows), before changing models; the untouched FS2 V3.9 test;
+LSST-r vs LSST-i.
 
 ## 2026-11-03 — GalSBI-dev on the GalSBI constant-shear family: m = +2.74% ± 0.14 (fails)
 
