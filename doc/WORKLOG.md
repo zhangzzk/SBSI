@@ -1,5 +1,32 @@
 # Work log
 
+## 2026-11-03 — Stronger guard, no-global arm: dropping the global term barely changes the main cut
+
+Owner: "what if we remove the global cut in the guard?" Arm `steps4_noglobal` (rule addendum, commit 24cca2f):
+GalSBI-dev's recipe with the global term removed from the guard (15 cuts). Train 17692745 (22 min, selected
+phase epoch 17 of 37), check 17692746 (19 min, `check_noglobal.json`, copied to the evidence folder).
+
+| m_eq (flow alone, validation cases) | density only | GalSBI-dev | no global | no global − GalSBI-dev |
+|---|---|---|---|---|
+| global | −4.44 ± 0.47 | −2.02 ± 0.48 | −2.57 ± 0.48 | −0.55 ± 0.00 |
+| radius > 3 & < 25.8 (main) | +0.29 ± 0.36 | +1.49 ± 0.36 | +1.28 ± 0.36 | −0.21 ± 0.00 |
+| magnitude < 25.8 | −4.23 ± 0.40 | −2.23 ± 0.41 | −2.60 ± 0.41 | −0.37 ± 0.00 |
+| radius > 3.75 (held out) | −5.37 ± 0.44 | −5.35 ± 0.44 | −5.42 ± 0.44 | −0.07 ± 0.00 |
+| radius > 3 & < 25.0 (held out) | −0.12 ± 0.34 | +0.80 ± 0.35 | +0.68 ± 0.35 | −0.11 ± 0.00 |
+| RMS guarded / held out | 2.35 / 5.12 | 1.45 / 4.75 | 1.56 / 4.82 | |
+| validation NLL | −3.69950 | −3.69897 | −3.69963 | −0.00066 ± 0.00003 |
+
+1. Without the global term the guard still moves the main cut from +0.29 to +1.28: the global term is not what
+   pulls it. The magnitude-only cuts (−4.2% before the guard; they contain the small galaxies below 3 px) push
+   the same way.
+2. The flow's response error depends on measured size: too high below 3 px (m_eq −2% to −4%), about right at
+   3–3.5 px, too high again from 3.75 px (−5% to −10%). The guard behaves like one broad shift of the response
+   for galaxies up to ~3.5 px and never touches the larger ones, so it cannot remove a size-dependent error;
+   it can only trade it between cuts.
+3. Gate (rule): fails condition 1 (main |m_eq| 1.28 is not below half of 1.49). No constant-shear run.
+
+The 40- and 160-step arms are still training; the five-flow check (17692747) follows them.
+
 ## 2026-11-03 — Stronger guard for GalSBI-dev's flow: setup, and what the current 4-step guard does
 
 Owner: "work on the stronger guard tests" (after: can the response guard be made to matter more?). Rule fixed
