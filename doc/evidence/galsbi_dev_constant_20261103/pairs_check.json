@@ -1,0 +1,14 @@
+{
+ "saved_pairs": 5625081,
+ "rebuilt_pairs": 5625081,
+ "identical_pair_identities": true,
+ "max_abs_feature_difference": {
+  "Re_input_p_scaled": 2.220446049250313e-16,
+  "Re_input_s_scaled": 2.220446049250313e-16,
+  "r_input_p_scaled": 0.0,
+  "r_input_s_scaled": 0.0,
+  "sersic_n_input_p": 0.0,
+  "sersic_n_input_s": 0.0,
+  "distance_scaled": 3.552713678800501e-15
+ }
+}

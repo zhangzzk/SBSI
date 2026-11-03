@@ -1,5 +1,58 @@
 # Work log
 
+## 2026-11-03 — GalSBI-dev on the GalSBI constant-shear family: m = +2.74% ± 0.14 (fails)
+
+Owner: "go ahead, evaluate GalSBI-dev on the constant-shear sims". Test only: nothing was trained, tuned or
+selected. Study root `$DATA_DIR/sbsi_caches/galsbi_dev_constant_20261103/`; `rule.md` was fixed before any model
+output existed. Evidence in `doc/evidence/galsbi_dev_constant_20261103/`: rule, summary, pair check, plot (also
+in `SBSI/plots/galsbi_dev_constant_m_20261103.png`).
+
+- Code: `scripts/evaluate_galsbi_constant.py`, `jobs/job_galsbi_constant_eval.sh` (stages prep, pairs-check, c8,
+  draws, summary). The draw stage runs the frozen V3.9 evaluation code (checkout `sbsi_flow_f8_20260924`) in its
+  venv; C8 runs in its frozen checkout. Preset hashes are checked before use. The emulator features are scaled
+  with the preset's `observing_conditions` (LSST-i).
+- Estimator as in [V3.9 development evidence](V39_MODEL.md#development-evidence): g1 = ±0.02, 64 antithetic
+  draws, seed 7301 + 10000019·case + 1000003·block, per-leg measured cuts, case bootstrap (10,000, seed
+  20260925). Differences: all 140 cases 1000–1139, and the parent is every rendered galaxy (~884k per case,
+  no truth cut; FS2 used the target-role half of cases 40–119). Emulator pairs are built on the fly
+  (k = 20 within 10″).
+- Checks: rebuilding the saved FS2 case-40 pair table gives the same 5,625,081 pairs with feature differences
+  ≤ 4e-15. The legs differ only in the shear. All 22 renderer-skipped scene rows (one in each of 22 cases) are
+  absent and recorded. About 1,300 measured shapes per leg have no truth match and are dropped (counts per case
+  in `sums/case*.json`). Simulation usable fraction 33%, equal to the mean C8 probability (0.33).
+- Jobs: prep 17670942, pair check 17670979 (17670941 failed: the pair builder needs `redshift` and
+  `axis_ratio`; fixed by passing the full renamed truth table), C8 17670943, draws 17670966 (cip A40, three at a
+  time, 6–9 min per case, ~5 h in total), summary 17670967.
+
+Results (m = 100 (R_sim/R_model − 1), ± = case-bootstrap SE in percentage points, σ = distance from 0):
+
+| cut (per leg, measured) | C8 | true usable flags |
+| --- | ---: | ---: |
+| none | +0.04 ± 0.17 (0.3σ) | +0.31 ± 0.17 (1.8σ) |
+| **radius > 0.6″ & MAG_AUTO < 25.8 (headline)** | **+2.74 ± 0.14 (19.9σ)** | +3.02 ± 0.14 (21.8σ) |
+| radius ≥ 0.75″ & MAG_AUTO < 25.8 | +0.79 ± 0.18 (4.3σ) | +1.26 ± 0.19 (6.8σ) |
+
+Headline 95% interval [+2.47, +3.01]%; FS2 V3.9-like at the same cut was +0.02 ± 0.27. Headline R11: simulation
+0.8153 ± 0.0011, model 0.7936 ± 0.0001. Without the emulator (flow only) the model gives 0.5861, so m = +39.1 ±
+0.2 (the emulator supplies 0.21 of the response). R21 simulation minus model −0.0020 ± 0.0011 (1.9σ). Selected
+counts model/simulation 1.006.
+
+By true magnitude (C8, headline cut): < 24 +0.30 ± 0.18 (1.7σ); 24–25.5 +3.66 ± 0.24 (15.3σ); 25.5–27.5 +8.08 ±
+0.56 (14.5σ; model selects 2.1% more galaxies than the simulation); ≥ 27.5 +12.9 ± 6.4 (2.0σ). True flags give
+the same pattern.
+
+Reading (per `rule.md`): fails. The models reproduce the response without cuts and for bright galaxies (< 24).
+The shortfall appears once the measured size/magnitude cut is applied and grows toward the faint end. The true
+flags show the same pattern, so C8 is not the cause. So the models get the overall response right but not how
+shear moves faint galaxies across the measured size/magnitude cut. This resembles the FS2 |e| < 0.7 result
+([V3.9](V39_MODEL.md#measured-e--07-cut-on-constgold-2026-10-05)).
+
+Limitations: g1 only; one seed per model; errors exclude training and finite-draw noise. The emulator was trained
+only on primaries with true r < 26, so the faint bins are partly outside its domain (FS2 had the same limit). Its
+development check was 1.021 ± 0.025 at this cut, the opposite sign to the shortfall. Causes are not tested. Next
+(owner call): split the response at the cut into a shape part and a selection part (galaxies crossing the cut),
+on the model and simulation sides, before changing anything.
+
 ## 2026-11-03 — Disk emulator retrained on the GalSBI re-simulation; preset GalSBI-dev
 
 Owner: "go ahead, retrain the emulator on the new sims". Run root
