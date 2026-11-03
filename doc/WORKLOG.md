@@ -1,5 +1,40 @@
 # Work log
 
+## 2026-11-03 — Disk emulator retrained on the GalSBI re-simulation; preset GalSBI-dev
+
+Owner: "go ahead, retrain the emulator on the new sims". Run root
+`$DATA_DIR/blendemu_runs/disk_response_moment_galsbi_20261103/` (`rule.md` fixed before training; copy in
+`doc/evidence/galsbi_disk_response_20261103/`). Same three stages, population, split and frozen recipe as the V3.9
+emulator `disk_response_moment_20260918_v1`; only the feature-scaling conditions change.
+
+- Code (BlendEMU branch `galsbi-resim`, b4605fe, pushed). The FS2 run's pair/gain/train scripts existed only as
+  untracked files in the main BlendEMU checkout; copied with two changes: the scaling conditions are arguments
+  (FS2 defaults .312/.73/2.224), and the frozen trial9 xgboost parameters are written into the training script
+  (identical to `train_output_conditioned_response.PARAMS`). The FS2 pair script itself is the 2026-09-22 version
+  (adds `--truth-magnitude-max`, default 26); the exact 09-17 file (sha d9db9803…) was not found. Launcher
+  `jobs/job_disk_response_galsbi.example.sh`; `tests/test_disk_response_moment.py` copied, 3 passed (srun).
+- Conditions: LSST-i values from `configs/galsbi_resim_training.yaml` (pixel_rms 0.6159, psf_fwhm 0.71,
+  moffat_beta 2.458, pixel 0.2″, zero point 30; FS2 0.312/0.73/2.224).
+- Pairs (17670189, 12 min): 294,680,615 catalogue rows; true r ≥ 26 dropped 28,954,425 (FS2 87.5M of 248.5M:
+  the new images are twice as noisy, so fewer faint primaries are detected); invalid label shapes 53,851; no
+  missing baseline. Kept 265,672,339, fit (cases 40–199) 212,584,886 (FS2 128.8M). Label mean 0.006762, std 1.150
+  (FS2 0.008117, 0.996). Gains (17670190, 5.5 min): mean gain 1.000004 (expected 1).
+- Train (17670191, 22 min, 19 GB, 32 CPUs): 218 trees, train moment RMSE 0.99993 → 0.99831. Model cd32781d…,
+  metadata fda7277e….
+- Development cases 0–39 (53.1M pairs; report only, nothing selected), summed predicted / summed label response,
+  jackknife over cases: uncut 1.025±0.025 (1.0σ), mag < 25.8 & radius > 0.6″ 1.021±0.025 (0.9σ), ≥ 0.75″
+  1.017±0.022 (0.8σ). Cross component minus label per pair +1.0±1.7e-4, +0.0±1.9e-4, −2.1±3.0e-4. FS2 model on FS2
+  development: 0.994±0.022, 0.988±0.021, 0.994±0.019.
+- Preset `GalSBI-F8C8-dev` replaced by **`GalSBI-dev`** (`configs/models_galsbi_dev.json`): the new F8 and C8 and
+  the new emulator; new field `observing_conditions` (the LSST-i values above; the test checks they equal the
+  emulator's training scaling). `pytest tests/test_model_presets.py` (py31, srun): 9 passed, including load and
+  predict of all GalSBI-dev artifacts.
+
+Limitations: not evaluated. SBSI scales emulator features from the caller's conditions, not from the model
+metadata, and the existing likelihood configs carry the FS2 values; a GalSBI-dev evaluation must pass
+`observing_conditions`. One emulator seed. Next (owner call): constant-shear family evaluation (test only) and a
+closure mock with GalSBI-dev.
+
 ## 2026-11-03 — F8/C8 retrained on the GalSBI re-simulation; preset GalSBI-F8C8-dev
 
 All training jobs of the launch entry below finished without errors (frozen code, recipe and seeds unchanged;

@@ -161,9 +161,9 @@ def _disk_model_preset(filename: str) -> ModelPaths:
 
 V36_LIKE = _disk_model_preset("models_v3_6_like.json")
 V39_LIKE = _disk_model_preset("models_v3_9_like.json")
-GALSBI_F8C8_DEV = _disk_model_preset("models_galsbi_f8c8_dev.json")
+GALSBI_DEV = _disk_model_preset("models_galsbi_dev.json")
 MODEL_PRESETS: dict[str, ModelPaths] = {
-    model.name: model for model in (V35_LIKE, V36_LIKE, V39_LIKE, GALSBI_F8C8_DEV)
+    model.name: model for model in (V35_LIKE, V36_LIKE, V39_LIKE, GALSBI_DEV)
 }
 
 
@@ -277,7 +277,7 @@ __all__ = [
     "V35_LIKE_CLASSIFIER_SEEDS",
     "V36_LIKE",
     "V39_LIKE",
-    "GALSBI_F8C8_DEV",
+    "GALSBI_DEV",
     "get_model",
     "load_detection_classifier",
     "load_emulator",

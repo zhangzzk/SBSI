@@ -1,0 +1,151 @@
+{
+ "baseline_counts_all_cases": {
+  "cross_without_shape_dropped": 0,
+  "n_generated": 176936690,
+  "raw_cross": 58557623,
+  "usable_primary_baseline": 29275963
+ },
+ "development_summary": {
+  "mag25.8_radius_ge0.75": {
+   "cases": 40,
+   "mean_label": [
+    0.011617067998062464,
+    0.00024811764184416897
+   ],
+   "pairs": 15195565,
+   "pred_minus_label_null_per_pair": [
+    -0.00021172168591799387,
+    0.00030317222607187323
+   ],
+   "pred_over_label": [
+    1.016857710160013,
+    0.0217715646525445
+   ],
+   "rmse_per_pair": 0.9527355459581004
+  },
+  "mag25.8_radius_gt0.60": {
+   "cases": 40,
+   "mean_label": [
+    0.008037221794190986,
+    0.00019696920838754457
+   ],
+   "pairs": 36134138,
+   "pred_minus_label_null_per_pair": [
+    2.3370414757890498e-06,
+    0.00018658641121305233
+   ],
+   "pred_over_label": [
+    1.021273143202355,
+    0.024756848225403756
+   ],
+   "rmse_per_pair": 1.138896039495464
+  },
+  "uncut": {
+   "cases": 40,
+   "mean_label": [
+    0.006596956836670965,
+    0.00015736662251747443
+   ],
+   "pairs": 53087453,
+   "pred_minus_label_null_per_pair": [
+    9.733874227008055e-05,
+    0.00016966380163804093
+   ],
+   "pred_over_label": [
+    1.0250378340110173,
+    0.024731804788475156
+   ],
+   "rmse_per_pair": 1.1496714790226816
+  }
+ },
+ "fit_rows": 212584886,
+ "fs2_model_development_summary_for_scale": {
+  "mag25.8_radius_ge0.75": {
+   "cases": 40,
+   "mean_label": [
+    0.01147197176165613,
+    0.00022687529107213197
+   ],
+   "pairs": 17387906,
+   "pred_minus_label_null_per_pair": [
+    0.00011131667842021385,
+    0.0001930214377839152
+   ],
+   "pred_over_label": [
+    0.9943076013080536,
+    0.019148887070144373
+   ],
+   "rmse_per_pair": 0.8189917091121205
+  },
+  "mag25.8_radius_gt0.60": {
+   "cases": 40,
+   "mean_label": [
+    0.009262787071784321,
+    0.00019694472744322358
+   ],
+   "pairs": 26892907,
+   "pred_minus_label_null_per_pair": [
+    -0.0001686733141598463,
+    0.00017912661197743603
+   ],
+   "pred_over_label": [
+    0.9884345389363655,
+    0.02058830127279324
+   ],
+   "rmse_per_pair": 1.038469434013931
+  },
+  "uncut": {
+   "cases": 40,
+   "mean_label": [
+    0.00817961306641933,
+    0.0001868622057215961
+   ],
+   "pairs": 32202670,
+   "pred_minus_label_null_per_pair": [
+    -0.00014159965641908788,
+    0.00016382218467273906
+   ],
+   "pred_over_label": [
+    0.9943007800004223,
+    0.022190367936409744
+   ],
+   "rmse_per_pair": 0.9934562475828055
+  }
+ },
+ "gain_totals": {
+  "development": {
+   "gain_sum": 53088928.05743642,
+   "label_sum": 350215.63600979873,
+   "rows": 53087453
+  },
+  "fit": {
+   "gain_sum": 212585738.0927047,
+   "label_sum": 1437504.3442740082,
+   "rows": 212584886
+  }
+ },
+ "metadata_sha256": "fda7277ecd54e2d3cfc7f196d7408c347e72c38e09945fad217447824cd0bf93",
+ "model_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+ "note": "development = cases 0-39 of the same family, never used to fit or choose; errors are jackknife over cases; pred_over_label is summed predicted over summed label response",
+ "pair_counts_all_cases": {
+  "baseline_unavailable_dropped": 0,
+  "invalid_label_dropped": 53851,
+  "kept_rows": 265672339,
+  "raw_rows": 294680615,
+  "truth_cut_dropped": 28954425
+ },
+ "pairs_manifest_sha256": "06841fa3c7e25d625ed81308c4a7676ce4bf6487252a57e29bb6c74b4537f0b9",
+ "population": "structural primary target; true r<26; usable g0 shape and positive radius; both response-label shapes valid; no measured science cut",
+ "prepared_manifest_sha256": "6b8b936b5d8396356f914043fd1fcaae497696dfeac74470b0a9ffe222510210",
+ "rescale": {
+  "moffat_beta": 2.458,
+  "pixel_rms": 0.6159,
+  "pixel_size": 0.2,
+  "psf_fwhm": 0.71,
+  "zero_mag": 30.0
+ },
+ "source": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/training/sims/response_catalogue_train.feather",
+ "source_sha256": "422dec875760ae836eca3546d5931199788dc813b0e2fa6c565b688399f99a98",
+ "y_mean": 0.006762025143565512,
+ "y_std": 1.1499553866782846
+}

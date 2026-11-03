@@ -116,15 +116,22 @@ def test_v39_pins_owner_selected_model_and_preserves_evidence(capsys):
         load_emulator(model, conditions={})
 
 
-def test_galsbi_f8c8_dev_pins_retrained_models_and_v39_emulator():
+def test_galsbi_dev_pins_retrained_models_and_their_conditions():
     root = Path(__file__).resolve().parents[1]
-    spec = json.loads((root / 'configs/models_galsbi_f8c8_dev.json').read_text())
-    model = get_model('galsbi-f8c8-DEV')
+    spec = json.loads((root / 'configs/models_galsbi_dev.json').read_text())
+    model = get_model('galsbi-DEV')
     v39 = json.loads((root / 'configs/models_v3_9_like.json').read_text())
     assert model.flow_sha256s == ('abac069f66cc24fbe19a4127b9acfeb5b87c09414c662dc9380ffb115b9a4dbb',)
     assert model.detection_classifier_sha256s == ('ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6',)
-    assert model.emulator_sha256 == get_model('V3.9-like').emulator_sha256
+    assert model.emulator_sha256 == 'cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43'
     assert model.flow_sha256s != get_model('V3.9-like').flow_sha256s
+    assert model.emulator_sha256 != get_model('V3.9-like').emulator_sha256
+    emulator = json.loads((root / spec['evidence']['emulator_metadata']['path']).read_text())
+    assert emulator['model_sha256'] == model.emulator_sha256
+    conditions = spec['observing_conditions']
+    assert emulator['rescale'] == {'pixel_size': conditions['pixel_size'], 'zero_mag': conditions['zero_point'],
+                                   'psf_fwhm': conditions['psf_fwhm'], 'moffat_beta': conditions['moffat_beta'],
+                                   'pixel_rms': conditions['pixel_rms']}
     assert spec['flow']['feature_names'] == spec['classifier']['feature_names'] == v39['flow']['feature_names']
     assert spec['training_data']['constant_shear_used'] is False
     assert spec['decision']['evaluated'] is False
@@ -137,12 +144,13 @@ def test_galsbi_f8c8_dev_pins_retrained_models_and_v39_emulator():
     assert training['best_epoch'] == spec['classifier']['selected_epoch']
 
 
-def test_v39_external_artifacts_load_and_predict_together():
+@pytest.mark.parametrize('name', ['V3.9-like', 'GalSBI-dev'])
+def test_external_artifacts_load_and_predict_together(name):
     from sbsi.measurement_model import load_measurement_model
     from sbsi.models import load_detection_classifier
     from sbsi.output_conditioned_response import TRUTH_FEATURES
 
-    model = get_model('V3.9-like')
+    model = get_model(name)
     artifacts = (*model.flow_checkpoints, *model.detection_classifiers,
                  model.emulator_model, model.emulator_metadata)
     if not all(path.is_file() for path in artifacts):
