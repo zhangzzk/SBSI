@@ -1,0 +1,50 @@
+FS2 40
+FS2 41
+FS2 42
+FS2 43
+FS2 44
+FS2 45
+FS2 46
+FS2 47
+FS2 48
+FS2 49
+FS2 50
+FS2 51
+FS2 52
+FS2 53
+FS2 54
+FS2 55
+FS2 56
+FS2 57
+FS2 58
+FS2 59
+GalSBI 1000
+GalSBI 1001
+GalSBI 1002
+GalSBI 1003
+GalSBI 1004
+GalSBI 1005
+GalSBI 1006
+GalSBI 1007
+GalSBI 1008
+GalSBI 1009
+GalSBI 1010
+GalSBI 1011
+GalSBI 1012
+GalSBI 1013
+GalSBI 1014
+GalSBI 1015
+GalSBI 1016
+GalSBI 1017
+GalSBI 1018
+GalSBI 1019
+
+FS2: fraction of MAG_AUTO<25.8 usable with radius <3 px by true mag [0.047 0.139 0.089 0.013]  in 3-3.75 px [0.236 0.388 0.312 0.11 ]
+  radius none    R 0.5725+-0.0040  selection part +0.0058+-0.0009  by mag sel part [-0.0011 -0.0019  0.0083  0.0005] +- [0.0002 0.0006 0.0006 0.0001]
+  radius >3.0    R 0.6661+-0.0042  selection part -0.0010+-0.0012  by mag sel part [-0.003  -0.008   0.0095  0.0006] +- [0.0003 0.0008 0.0008 0.0001]
+  radius >=3.75  R 0.8490+-0.0039  selection part +0.0770+-0.0018  by mag sel part [0.0174 0.037  0.0217 0.0009] +- [0.0005 0.0013 0.0015 0.0002]
+
+GalSBI: fraction of MAG_AUTO<25.8 usable with radius <3 px by true mag [0.153 0.291 0.307 0.147]  in 3-3.75 px [0.497 0.45  0.435 0.396]
+  radius none    R 0.6215+-0.0032  selection part +0.0013+-0.0003  by mag sel part [-0.0007 -0.002   0.004   0.0001] +- [0.0002 0.0003 0.0003 0.0001]
+  radius >3.0    R 0.8176+-0.0033  selection part +0.0267+-0.0008  by mag sel part [0.0076 0.0103 0.0087 0.0001] +- [0.0003 0.0006 0.0005 0.0001]
+  radius >=3.75  R 0.9059+-0.0045  selection part +0.1390+-0.0023  by mag sel part [0.0742 0.0452 0.0194 0.0003] +- [0.0011 0.0017 0.0011 0.0001]

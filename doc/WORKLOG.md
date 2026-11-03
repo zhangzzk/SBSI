@@ -1,5 +1,64 @@
 # Work log
 
+## 2026-11-03 — Why FS2 passes and GalSBI fails: FS2's zero is a cancellation, and the 3 px size cut sits on the GalSBI size peak
+
+Owner: "we should first understand why the FS2 model works yet not the GalSBI model ... can the FS2 performance
+after cuts be a lucky internal cancellation (in some dimensions, like size)? or there's sth else in there".
+CPU-only reads of saved outputs (no GPU, nothing trained or redrawn). Study root
+`$DATA_DIR/sbsi_caches/fs2_galsbi_split_20261103/`; scripts, outputs and figure in
+`doc/evidence/fs2_galsbi_split_20261103/` (figure also `SBSI/plots/fs2_galsbi_split_20261103.png`).
+
+- Inputs: the saved per-galaxy V3.9 rows of the FS2 ConstGold evaluation (`v36_f8_20260924_v1/evaluation/
+  chunk*/rows`, cases 40–119; true features, both measured legs, true flags, model mass/flow/disk at the three
+  frozen cuts) with the primary C8 probabilities (`v39_constgold_ecut07_20261005/c8`); the GalSBI-dev sums
+  (`galsbi_dev_constant_20261103/sums`, true-mag bins only); GalSBI parents and measured catalogues.
+- Check: `fs2_split.py` reproduces the published V3.9 m exactly (+0.020770 ± 0.265152) before reporting.
+  Jobs 17690282 (FS2 bins), 17690284 (GalSBI parent bins), 17690289 (split), 17690573 (simulation size check),
+  all on `small`.
+
+Findings (m = 100 (R_sim/R_model − 1); contributions add up to m; ± case bootstrap):
+1. **V3.9 on FS2 is biased without cuts: m = +2.09% ± 0.31.** The main cut moves it by −2.07 pp to +0.02.
+   On GalSBI the cut does the opposite (uncut +0.04 ± 0.17 → main +2.74 ± 0.14).
+2. **FS2's zero is a cancellation in size as well as magnitude.** By true size (main cut, C8): galaxies
+   < 0.25″ are under-predicted (+5% to +24% within their bins, together +1.59 pp), larger ones over-predicted
+   (−1% to −4%, together −1.55 pp); absolute sum 3.14 pp (magnitude 3.81, crowding 2.32, |e| 1.93, Sérsic 0.90).
+   By magnitude the sign flips at 25.5–26 and the faint excess peaks at true r 26–27, just beyond the
+   emulator's training limit r < 26 (within-bin +15.7% at 26–26.5, +23% at 26.5–27). Bright compact galaxies are
+   over-predicted strongly (< 24 and 0.15–0.3″: −15% to −27%); bright large ones by 1–3% only after the FS2
+   emulator is added (flow alone under-predicts them by 3–5%).
+3. **Reweighting FS2 to the GalSBI size mix moves V3.9 to +1.44% ± 0.44** (change +1.42 ± 0.24 pp; weights from
+   the parent fractions per true-size bin). Reweighting by magnitude gives −0.35 ± 0.04 pp, by Sérsic −0.47 ±
+   0.14 pp, by magnitude × size −0.79 ± 0.50 (the magnitude bins compare LSST-r with LSST-i, so these are rough).
+4. **GalSBI-dev has the same pattern without cuts**: < 24 within −2.1% ± 0.2, 25.5–27.5 +6.8% ± 0.5, sum +0.04.
+   The difference between the families is what the size cut does.
+5. **The 3 px (0.6″) cut sits on the peak of the GalSBI measured-size distribution and on the lower tail of
+   FS2's** (simulation only, 20 cases each, MAG_AUTO < 25.8, plus leg). Peak FLUX_RADIUS by true mag < 24 /
+   24–25.5 / 25.5–27.5: FS2 3.8 / 3.3 / 3.5 px, GalSBI 3.3 / 3.0 / 3.0 px. Share below 3 px: FS2 0.05 / 0.14 /
+   0.09, GalSBI 0.15 / 0.29 / 0.31. The simulated selection part of R11 at the main cut (galaxies kept in only
+   one leg) is **−0.0010 ± 0.0012 in FS2 and +0.0267 ± 0.0008 in GalSBI** (3.3% of R; GalSBI-dev's shortfall
+   is 2.7%). At ≥ 3.75 px, where the cut moves onto FS2's peak, V3.9 also fails (+1.14 ± 0.25).
+6. Non-population differences (provenance read by a subagent; file checks marked verified in its report):
+   the V3.9 test cases are the training galaxies with the same shared noise field; V3.9's F8 base was trained
+   with the g0.05 leg measured with the May 27 geometric-centre pipeline and the g0 leg with the July 15
+   subpixel one, then refined two steps on the re-measured (harmonized) shapes; FS2 used 48 px lopsided
+   stamps, GalSBI centred 65 px; LSST-r vs LSST-i depth; 98 vs 122 Sérsic values; GalSBI's F8 trains on the
+   sheared half of each scene but is evaluated on every rendered galaxy (positions are uniform, likely harmless).
+
+Reading: yes, FS2's pass is a cancellation, across size and magnitude, of errors similar in size to
+GalSBI-dev's. The models under-predict faint/small galaxies and over-predict bright ones in both families.
+What changes the total is where the measured size cut falls: in GalSBI it cuts the peak of the size
+distribution, which creates a 3% shear-selection response that the model appears to miss, while in FS2 the
+same cut creates none. The "model misses the size-cut selection response" part is inferred from simulation-only
+numbers plus totals; the model side of the split was never measured (the cut-split run was stopped).
+
+Limitations: FS2 numbers are in-sample (same galaxies and noise as training); GalSBI side has true-mag bins
+only (no size split); simulation-side check uses 20 cases per family; g1 only.
+
+Next (owner call): (a) model-side shape/selection split on GalSBI at the main cut, saving per-galaxy rows so
+later bins and cuts need no new GPU run (~5 GPU-h on cip A40, ≤ 3 GPUs); predicted result if the reading is
+right: model selection part well below the simulated +0.027. (b) V3.9 on the untouched FS2 cases 200–239
+(~10 GPU-h) to see whether FS2's cancellation survives out of sample.
+
 ## 2026-11-03 — Size/magnitude cut-split study launched and stopped by the owner
 
 Owner: "go ahead and split the size and magnitude cuts", then, after asking why every cut needs a new GPU run,

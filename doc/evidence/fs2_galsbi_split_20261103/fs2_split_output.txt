@@ -1,0 +1,151 @@
+/project/ls-gruen/users/zekang.zhang/envs/py31/lib/python3.10/site-packages/numpy/lib/_nanfunctions_impl.py:2019: RuntimeWarning: Degrees of freedom <= 0 for slice.
+  var = nanvar(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+/project/ls-gruen/users/zekang.zhang/envs/py31/lib/python3.10/site-packages/numpy/lib/_nanfunctions_impl.py:1867: RuntimeWarning: invalid value encountered in subtract
+  np.subtract(arr, avg, out=arr, casting='unsafe', where=where)
+replay: C8 main m +0.020770 +- 0.265152 (published +0.020770 +- 0.265152); true flags +0.2283
+
+c8 main by mag: m +0.021 +- 0.265, abs sum of contributions 3.81
+  bin  0: contribution  -0.00 +- 0.00  within   -0.55 +-   0.35  sel.frac 0.001  parent 0.000
+  bin  1: contribution  +0.00 +- 0.00  within   +0.27 +-   0.36  sel.frac 0.001  parent 0.000
+  bin  2: contribution  -0.00 +- 0.00  within   -0.10 +-   0.69  sel.frac 0.001  parent 0.000
+  bin  3: contribution  -0.00 +- 0.00  within   -1.12 +-   0.38  sel.frac 0.002  parent 0.000
+  bin  4: contribution  +0.00 +- 0.00  within   +0.00 +-   0.69  sel.frac 0.003  parent 0.001
+  bin  5: contribution  -0.01 +- 0.01  within   -1.78 +-   0.99  sel.frac 0.005  parent 0.001
+  bin  6: contribution  -0.04 +- 0.01  within   -3.07 +-   1.16  sel.frac 0.007  parent 0.002
+  bin  7: contribution  -0.09 +- 0.02  within   -4.58 +-   1.17  sel.frac 0.011  parent 0.003
+  bin  8: contribution  -0.12 +- 0.04  within   -4.24 +-   1.26  sel.frac 0.016  parent 0.004
+  bin  9: contribution  -0.16 +- 0.04  within   -3.92 +-   0.99  sel.frac 0.023  parent 0.006
+  bin 10: contribution  -0.17 +- 0.05  within   -3.05 +-   0.89  sel.frac 0.033  parent 0.009
+  bin 11: contribution  -0.11 +- 0.06  within   -1.40 +-   0.80  sel.frac 0.049  parent 0.014
+  bin 12: contribution  -0.34 +- 0.09  within   -3.35 +-   0.87  sel.frac 0.073  parent 0.022
+  bin 13: contribution  -0.24 +- 0.10  within   -1.86 +-   0.78  sel.frac 0.109  parent 0.034
+  bin 14: contribution  -0.39 +- 0.12  within   -2.47 +-   0.79  sel.frac 0.166  parent 0.054
+  bin 15: contribution  -0.23 +- 0.12  within   -1.43 +-   0.78  sel.frac 0.203  parent 0.073
+  bin 16: contribution  +0.44 +- 0.12  within   +3.53 +-   0.96  sel.frac 0.191  parent 0.093
+  bin 17: contribution  +0.87 +- 0.09  within  +15.66 +-   1.61  sel.frac 0.081  parent 0.125
+  bin 18: contribution  +0.35 +- 0.04  within  +23.13 +-   2.89  sel.frac 0.021  parent 0.159
+  bin 19: contribution  +0.17 +- 0.02  within  +52.44 +-   6.45  sel.frac 0.005  parent 0.180
+  bin 20: contribution  +0.06 +- 0.01  within  +71.64 +-  14.64  sel.frac 0.001  parent 0.135
+  bin 21: contribution  +0.02 +- 0.01  within  +71.23 +-  22.28  sel.frac 0.000  parent 0.064
+
+c8 main by size: m +0.021 +- 0.265, abs sum of contributions 3.14
+  bin  0: contribution  +0.08 +- 0.02  within  +23.65 +-   6.17  sel.frac 0.006  parent 0.038
+  bin  1: contribution  +0.39 +- 0.06  within  +18.59 +-   2.82  sel.frac 0.041  parent 0.136
+  bin  2: contribution  +0.46 +- 0.09  within  +14.69 +-   2.98  sel.frac 0.082  parent 0.185
+  bin  3: contribution  +0.23 +- 0.11  within   +5.49 +-   2.57  sel.frac 0.127  parent 0.172
+  bin  4: contribution  +0.43 +- 0.12  within   +5.56 +-   1.55  sel.frac 0.139  parent 0.144
+  bin  5: contribution  -0.59 +- 0.13  within   -3.97 +-   0.89  sel.frac 0.142  parent 0.101
+  bin  6: contribution  -0.23 +- 0.09  within   -1.54 +-   0.63  sel.frac 0.105  parent 0.062
+  bin  7: contribution  +0.00 +- 0.06  within   +0.04 +-   0.50  sel.frac 0.072  parent 0.035
+  bin  8: contribution  -0.13 +- 0.05  within   -0.91 +-   0.32  sel.frac 0.097  parent 0.040
+  bin  9: contribution  -0.16 +- 0.04  within   -1.85 +-   0.43  sel.frac 0.060  parent 0.024
+  bin 10: contribution  -0.17 +- 0.04  within   -1.90 +-   0.41  sel.frac 0.063  parent 0.026
+  bin 11: contribution  -0.11 +- 0.02  within   -2.74 +-   0.47  sel.frac 0.028  parent 0.011
+  bin 12: contribution  -0.10 +- 0.02  within   -3.03 +-   0.53  sel.frac 0.024  parent 0.012
+  bin 13: contribution  -0.06 +- 0.01  within   -4.00 +-   0.62  sel.frac 0.012  parent 0.012
+
+c8 main by sersic: m +0.021 +- 0.265, abs sum of contributions 0.90
+  bin  0: contribution  -0.07 +- 0.12  within   -0.46 +-   0.73  sel.frac 0.150  parent 0.181
+  bin  1: contribution  +0.28 +- 0.14  within   +1.41 +-   0.72  sel.frac 0.197  parent 0.181
+  bin  2: contribution  +0.07 +- 0.16  within   +0.25 +-   0.55  sel.frac 0.301  parent 0.270
+  bin  3: contribution  +0.11 +- 0.12  within   +0.73 +-   0.81  sel.frac 0.156  parent 0.145
+  bin  4: contribution  -0.14 +- 0.10  within   -1.19 +-   0.84  sel.frac 0.124  parent 0.132
+  bin  5: contribution  -0.16 +- 0.06  within   -4.00 +-   1.44  sel.frac 0.038  parent 0.045
+  bin  6: contribution  -0.06 +- 0.05  within   -1.72 +-   1.42  sel.frac 0.035  parent 0.047
+
+c8 main by abs_e: m +0.021 +- 0.265, abs sum of contributions 1.93
+  bin  0: contribution  +0.01 +- 0.07  within   +0.17 +-   1.06  sel.frac 0.082  parent 0.090
+  bin  1: contribution  +0.72 +- 0.10  within   +4.35 +-   0.61  sel.frac 0.196  parent 0.210
+  bin  2: contribution  +0.24 +- 0.14  within   +1.13 +-   0.64  sel.frac 0.225  parent 0.232
+  bin  3: contribution  -0.35 +- 0.14  within   -1.66 +-   0.66  sel.frac 0.200  parent 0.199
+  bin  4: contribution  -0.14 +- 0.10  within   -0.83 +-   0.59  sel.frac 0.153  parent 0.144
+  bin  5: contribution  -0.16 +- 0.07  within   -1.44 +-   0.69  sel.frac 0.092  parent 0.081
+  bin  6: contribution  -0.17 +- 0.05  within   -3.68 +-   1.08  sel.frac 0.040  parent 0.034
+  bin  7: contribution  -0.13 +- 0.02  within   -8.77 +-   1.64  sel.frac 0.012  parent 0.012
+
+c8 main by crowd100: m +0.021 +- 0.265, abs sum of contributions 2.32
+  bin  0: contribution  -0.49 +- 0.16  within   -1.22 +-   0.40  sel.frac 0.314  parent 0.215
+  bin  1: contribution  +0.25 +- 0.16  within   +0.76 +-   0.50  sel.frac 0.335  parent 0.233
+  bin  2: contribution  +0.86 +- 0.12  within   +5.71 +-   0.83  sel.frac 0.202  parent 0.169
+  bin  3: contribution  -0.12 +- 0.08  within   -1.62 +-   1.07  sel.frac 0.101  parent 0.124
+  bin  4: contribution  -0.44 +- 0.06  within  -14.25 +-   1.79  sel.frac 0.035  parent 0.093
+  bin  5: contribution  -0.10 +- 0.03  within   -9.42 +-   2.79  sel.frac 0.011  parent 0.106
+  bin  6: contribution  +0.07 +- 0.01  within  +34.45 +-   6.93  sel.frac 0.002  parent 0.058
+
+tf main by mag: m +0.228 +- 0.266, abs sum of contributions 3.97
+  bin  0: contribution  -0.00 +- 0.00  within   -0.55 +-   0.21  sel.frac 0.001  parent 0.000
+  bin  1: contribution  -0.00 +- 0.00  within   -0.49 +-   0.21  sel.frac 0.001  parent 0.000
+  bin  2: contribution  -0.00 +- 0.00  within   -0.03 +-   0.62  sel.frac 0.001  parent 0.000
+  bin  3: contribution  -0.00 +- 0.00  within   -0.73 +-   0.26  sel.frac 0.002  parent 0.000
+  bin  4: contribution  +0.00 +- 0.00  within   +0.18 +-   0.68  sel.frac 0.003  parent 0.001
+  bin  5: contribution  -0.01 +- 0.01  within   -1.55 +-   1.00  sel.frac 0.005  parent 0.001
+  bin  6: contribution  -0.04 +- 0.01  within   -3.01 +-   1.16  sel.frac 0.007  parent 0.002
+  bin  7: contribution  -0.09 +- 0.02  within   -4.50 +-   1.16  sel.frac 0.011  parent 0.003
+  bin  8: contribution  -0.11 +- 0.04  within   -3.99 +-   1.26  sel.frac 0.016  parent 0.004
+  bin  9: contribution  -0.16 +- 0.04  within   -3.91 +-   0.99  sel.frac 0.023  parent 0.006
+  bin 10: contribution  -0.17 +- 0.05  within   -3.02 +-   0.89  sel.frac 0.033  parent 0.009
+  bin 11: contribution  -0.10 +- 0.06  within   -1.30 +-   0.80  sel.frac 0.049  parent 0.014
+  bin 12: contribution  -0.32 +- 0.09  within   -3.13 +-   0.87  sel.frac 0.073  parent 0.022
+  bin 13: contribution  -0.24 +- 0.10  within   -1.84 +-   0.78  sel.frac 0.109  parent 0.034
+  bin 14: contribution  -0.39 +- 0.12  within   -2.47 +-   0.78  sel.frac 0.166  parent 0.054
+  bin 15: contribution  -0.24 +- 0.12  within   -1.54 +-   0.77  sel.frac 0.203  parent 0.073
+  bin 16: contribution  +0.48 +- 0.12  within   +3.82 +-   0.97  sel.frac 0.191  parent 0.093
+  bin 17: contribution  +0.96 +- 0.09  within  +17.37 +-   1.63  sel.frac 0.081  parent 0.125
+  bin 18: contribution  +0.41 +- 0.04  within  +28.04 +-   2.98  sel.frac 0.021  parent 0.159
+  bin 19: contribution  +0.17 +- 0.02  within  +54.80 +-   6.51  sel.frac 0.005  parent 0.180
+  bin 20: contribution  +0.06 +- 0.01  within  +71.50 +-  14.64  sel.frac 0.001  parent 0.135
+  bin 21: contribution  +0.02 +- 0.01  within  +60.34 +-  21.15  sel.frac 0.000  parent 0.064
+
+tf main by size: m +0.228 +- 0.266, abs sum of contributions 3.20
+  bin  0: contribution  +0.09 +- 0.02  within  +25.95 +-   6.34  sel.frac 0.006  parent 0.038
+  bin  1: contribution  +0.41 +- 0.06  within  +20.16 +-   2.83  sel.frac 0.041  parent 0.136
+  bin  2: contribution  +0.48 +- 0.09  within  +15.68 +-   3.00  sel.frac 0.082  parent 0.185
+  bin  3: contribution  +0.26 +- 0.11  within   +6.23 +-   2.57  sel.frac 0.127  parent 0.172
+  bin  4: contribution  +0.46 +- 0.12  within   +5.99 +-   1.56  sel.frac 0.139  parent 0.144
+  bin  5: contribution  -0.58 +- 0.13  within   -3.90 +-   0.89  sel.frac 0.142  parent 0.101
+  bin  6: contribution  -0.22 +- 0.09  within   -1.45 +-   0.63  sel.frac 0.105  parent 0.062
+  bin  7: contribution  +0.01 +- 0.06  within   +0.09 +-   0.50  sel.frac 0.072  parent 0.035
+  bin  8: contribution  -0.13 +- 0.05  within   -0.87 +-   0.32  sel.frac 0.097  parent 0.040
+  bin  9: contribution  -0.16 +- 0.04  within   -1.76 +-   0.43  sel.frac 0.060  parent 0.024
+  bin 10: contribution  -0.15 +- 0.04  within   -1.64 +-   0.42  sel.frac 0.063  parent 0.026
+  bin 11: contribution  -0.10 +- 0.02  within   -2.51 +-   0.48  sel.frac 0.028  parent 0.011
+  bin 12: contribution  -0.09 +- 0.02  within   -2.73 +-   0.54  sel.frac 0.024  parent 0.012
+  bin 13: contribution  -0.06 +- 0.01  within   -3.90 +-   0.56  sel.frac 0.012  parent 0.012
+
+tf main by sersic: m +0.228 +- 0.266, abs sum of contributions 0.93
+  bin  0: contribution  -0.02 +- 0.12  within   -0.11 +-   0.73  sel.frac 0.150  parent 0.181
+  bin  1: contribution  +0.33 +- 0.14  within   +1.68 +-   0.72  sel.frac 0.197  parent 0.181
+  bin  2: contribution  +0.12 +- 0.16  within   +0.40 +-   0.55  sel.frac 0.301  parent 0.270
+  bin  3: contribution  +0.13 +- 0.12  within   +0.85 +-   0.81  sel.frac 0.156  parent 0.145
+  bin  4: contribution  -0.13 +- 0.10  within   -1.06 +-   0.84  sel.frac 0.124  parent 0.132
+  bin  5: contribution  -0.15 +- 0.06  within   -3.76 +-   1.44  sel.frac 0.038  parent 0.045
+  bin  6: contribution  -0.05 +- 0.05  within   -1.46 +-   1.43  sel.frac 0.035  parent 0.047
+
+tf main by abs_e: m +0.228 +- 0.266, abs sum of contributions 1.90
+  bin  0: contribution  +0.03 +- 0.07  within   +0.44 +-   1.05  sel.frac 0.082  parent 0.090
+  bin  1: contribution  +0.75 +- 0.10  within   +4.52 +-   0.61  sel.frac 0.196  parent 0.210
+  bin  2: contribution  +0.29 +- 0.14  within   +1.34 +-   0.64  sel.frac 0.225  parent 0.232
+  bin  3: contribution  -0.32 +- 0.14  within   -1.50 +-   0.66  sel.frac 0.200  parent 0.199
+  bin  4: contribution  -0.11 +- 0.10  within   -0.66 +-   0.60  sel.frac 0.153  parent 0.144
+  bin  5: contribution  -0.15 +- 0.07  within   -1.36 +-   0.69  sel.frac 0.092  parent 0.081
+  bin  6: contribution  -0.17 +- 0.05  within   -3.50 +-   1.07  sel.frac 0.040  parent 0.034
+  bin  7: contribution  -0.09 +- 0.02  within   -6.36 +-   1.57  sel.frac 0.012  parent 0.012
+
+tf main by crowd100: m +0.228 +- 0.266, abs sum of contributions 1.93
+  bin  0: contribution  -0.45 +- 0.16  within   -1.10 +-   0.40  sel.frac 0.314  parent 0.215
+  bin  1: contribution  +0.14 +- 0.16  within   +0.42 +-   0.50  sel.frac 0.335  parent 0.233
+  bin  2: contribution  +0.89 +- 0.12  within   +5.89 +-   0.82  sel.frac 0.202  parent 0.169
+  bin  3: contribution  -0.08 +- 0.08  within   -1.03 +-   1.07  sel.frac 0.101  parent 0.124
+  bin  4: contribution  -0.30 +- 0.06  within  -10.30 +-   1.88  sel.frac 0.035  parent 0.093
+  bin  5: contribution  -0.02 +- 0.03  within   -2.54 +-   2.92  sel.frac 0.011  parent 0.106
+  bin  6: contribution  +0.06 +- 0.01  within  +28.22 +-   6.48  sel.frac 0.002  parent 0.058
+reweighted c8/main/mag            m -0.327 +- 0.258  change -0.348 +- 0.037  abs sum 3.66  GalSBI parent without FS2 support 0.0000  max w 2.16
+reweighted tf/main/mag            m -0.143 +- 0.259  change -0.371 +- 0.037  abs sum 3.79  GalSBI parent without FS2 support 0.0000  max w 2.16
+reweighted c8/main/size           m +1.441 +- 0.435  change +1.420 +- 0.235  abs sum 3.88  GalSBI parent without FS2 support 0.0000  max w 1.77
+reweighted tf/main/size           m +1.718 +- 0.437  change +1.490 +- 0.235  abs sum 4.05  GalSBI parent without FS2 support 0.0000  max w 1.77
+reweighted c8/main/mag_size       m -0.297 +- 1.089  change -0.318 +- 0.983  abs sum 10.35  GalSBI parent without FS2 support 0.0011  max w 1262.58
+reweighted tf/main/mag_size       m -0.107 +- 1.095  change -0.335 +- 0.988  abs sum 10.55  GalSBI parent without FS2 support 0.0011  max w 1262.58
+reweighted c8/main/mag4_size      m -0.785 +- 0.501  change -0.806 +- 0.317  abs sum 6.04  GalSBI parent without FS2 support 0.0000  max w 11.42
+reweighted tf/main/mag4_size      m -0.601 +- 0.505  change -0.829 +- 0.318  abs sum 6.21  GalSBI parent without FS2 support 0.0000  max w 11.42
+reweighted c8/main/sersic         m -0.451 +- 0.294  change -0.472 +- 0.135  abs sum 1.12  GalSBI parent without FS2 support 0.0000  max w 2.28
+reweighted tf/main/sersic         m -0.265 +- 0.293  change -0.493 +- 0.134  abs sum 1.12  GalSBI parent without FS2 support 0.0000  max w 2.28

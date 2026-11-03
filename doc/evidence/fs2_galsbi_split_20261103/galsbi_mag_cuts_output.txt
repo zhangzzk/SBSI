@@ -1,0 +1,30 @@
+uncut: m +0.042 +- 0.167
+   <24        contribution  -0.96 +- 0.10  within   -2.14 +- 0.22  sel.frac 0.242
+   24-25.5    contribution  -0.22 +- 0.09  within   -0.57 +- 0.25  sel.frac 0.439
+   25.5-27.5  contribution  +1.19 +- 0.09  within   +6.84 +- 0.53  sel.frac 0.317
+   >=27.5     contribution  +0.03 +- 0.01  within  +26.39 +- 6.06  sel.frac 0.002
+uncut flow only: m +47.425 +- 0.247
+   <24        contribution  +2.18 +- 0.15  within   +3.49 +- 0.24  sel.frac 0.242
+   24-25.5    contribution +21.26 +- 0.14  within  +62.61 +- 0.41  sel.frac 0.439
+   25.5-27.5  contribution +23.77 +- 0.14  within +663.33 +- 3.78  sel.frac 0.317
+   >=27.5     contribution  +0.21 +- 0.01  within +84759.34 +- 4738.72  sel.frac 0.002
+main 25.8 r>0.6: m +2.738 +- 0.137
+   <24        contribution  +0.65 +- 0.09  within   +1.31 +- 0.18  sel.frac 0.332
+   24-25.5    contribution  +1.37 +- 0.09  within   +3.48 +- 0.24  sel.frac 0.500
+   25.5-27.5  contribution  +0.70 +- 0.06  within   +6.50 +- 0.55  sel.frac 0.167
+   >=27.5     contribution  +0.01 +- 0.01  within  +11.67 +- 6.43  sel.frac 0.001
+main 25.8 r>0.6 flow only: m +39.094 +- 0.186
+   <24        contribution  +4.17 +- 0.12  within   +6.51 +- 0.19  sel.frac 0.332
+   24-25.5    contribution +21.67 +- 0.13  within  +64.56 +- 0.38  sel.frac 0.500
+   25.5-27.5  contribution +13.13 +- 0.08  within +537.11 +- 3.35  sel.frac 0.167
+   >=27.5     contribution  +0.13 +- 0.01  within +3523.20 +- 208.28  sel.frac 0.001
+25.8 r>=0.75: m +0.794 +- 0.185
+   <24        contribution  -0.01 +- 0.08  within   -0.01 +- 0.16  sel.frac 0.360
+   24-25.5    contribution  -0.98 +- 0.13  within   -2.45 +- 0.34  sel.frac 0.476
+   25.5-27.5  contribution  +1.74 +- 0.09  within  +17.08 +- 0.86  sel.frac 0.162
+   >=27.5     contribution  +0.03 +- 0.01  within  +27.22 +- 7.29  sel.frac 0.002
+25.8 r>=0.75 flow only: m +47.860 +- 0.271
+   <24        contribution  +4.75 +- 0.12  within   +6.94 +- 0.17  sel.frac 0.360
+   24-25.5    contribution +26.77 +- 0.20  within  +88.68 +- 0.65  sel.frac 0.476
+   25.5-27.5  contribution +16.14 +- 0.13  within +1147.04 +- 9.57  sel.frac 0.162
+   >=27.5     contribution  +0.21 +- 0.01  within +3290.59 +- 198.45  sel.frac 0.002
