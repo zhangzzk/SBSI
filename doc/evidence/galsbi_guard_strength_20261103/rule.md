@@ -80,3 +80,9 @@ the main cut +0.29 -> +1.49 while halving the global error). Added arm `steps4_n
 (as GalSBI-dev), the global cut removed from the guard (15 cuts, all s = 0.02), everything else as the arms above
 (`train --steps 4 --no-global`; selection metric then also without the global term). It joins the four-flow check
 (now five flows) and the same gate, compared with `steps4`.
+
+## Addendum (2026-11-03 18:58 CET, before any steps40 or steps160 check output)
+
+Owner: "cancel the 160 one". Arm `steps160` cancelled at guard epoch 10 (job 17692347, its resume 17693021 and the
+five-flow check 17692747 cancelled); it is not checked or evaluated. The gate is applied to `steps40` (and was
+applied to `steps4_noglobal`) as written.
