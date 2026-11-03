@@ -231,8 +231,8 @@ def response_map(flows, tag=''):
 
     def bins(values):   # (..., 4) physical -> flat bin index
         mag = 30 - 2.5 * torch.log10(values[..., 3].clamp_min(1e-30))
-        return torch.bucketize(values[..., 2], r_edges, right=True) * (len(M_EDGES) + 1) + \
-            torch.bucketize(mag, m_edges, right=True)
+        return torch.bucketize(values[..., 2].contiguous(), r_edges, right=True) * (len(M_EDGES) + 1) + \
+            torch.bucketize(mag.contiguous(), m_edges, right=True)
 
     def accumulate(legs, rows, weight):
         """legs: [(..., 4) zero, (..., 4) shear] with leading (batch[, draws]); adds into acc with this weight."""
@@ -272,7 +272,7 @@ def response_map(flows, tag=''):
             del bundle, model, context
             torch.cuda.empty_cache()
         shape = (nc, len(R_EDGES) + 1, len(M_EDGES) + 1)
-        out[f'{name}_count'] = torch.stack(acc['count'], 1).reshape(nc, 2, *shape[1:]).cpu().numpy()
+        out[f'{name}_count'] = torch.stack(acc['count']).reshape(2, *shape).transpose(0, 1).cpu().numpy()
         out[f'{name}_shape'] = acc['shape'].reshape(*shape, 2, 2).cpu().numpy()
         out[f'{name}_mass'] = acc['mass'].reshape(*shape, 2).cpu().numpy()
         print(f'MAP_DONE {name}', flush=True)
