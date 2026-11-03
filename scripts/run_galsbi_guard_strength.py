@@ -4,6 +4,8 @@
   train --steps N   rerun only the guard phase of the frozen recipe (scripts.train_full_domain_guard_flow) from the
                     saved GalSBI density-only checkpoint with GUARD_STEPS_PER_EPOCH = N; every other constant, seed
                     and the selection rule are unchanged. Output <root>/steps<N>/.
+  train --bands     the same with the guard on soft windows tiling measured radius x magnitude (make_bands);
+                    output <root>/bands<N>/
   map               shear response per measured (radius, magnitude) bin, simulation and flows (validation cases)
   check             response mismatch of each flow on all matched pairs of the 40 validation cases, at the 16
                     guarded cuts and 15 held-out cuts (plus any --extra cuts, reported but outside the held-out
@@ -32,6 +34,11 @@ HELD_OUT = ((2.5, None), (3.5, None), (3.75, None), (4.0, None), (5.0, None),
             (None, 24.5), (None, 25.0), (None, 25.4),
             (2.5, 25.8), (3.5, 25.8), (3.75, 25.8), (4.0, 25.8), (3.0, 25.0), (3.75, 25.0), (3.0, 25.4))
 MAIN = 'radius_gt_3_magnitude_lt_25.8'
+# Band guard (rule addendum "band guard"): soft windows tiling measured FLUX_RADIUS x MAG_AUTO, open at both ends
+BAND_RADIUS = tuple(float(x) for x in np.round(np.arange(2.2, 5.001, 0.2), 2))
+BAND_MAGNITUDE = (24.0, 24.6, 25.0, 25.4, 25.8, 26.4)
+BAND_TOLERANCE = 0.003   # band scale: 0.3% of the main-cut response, divided by the band's share of the main-cut mass
+MAIN_RESPONSE = 0.6035   # simulated main-cut (R11 + R22)/2 per galaxy, validation cases (check_mag25.json)
 
 
 def sha256(path):
@@ -57,9 +64,87 @@ def frozen():
     return trainer
 
 
-def train(steps, no_global=False):
+def windows(edges):
+    bounds = [None, *edges, None]
+    return list(zip(bounds[:-1], bounds[1:]))
+
+
+def make_bands():
+    return tuple({'name': f'band_r{rl}-{rh}_m{ml}-{mh}', 'radius_min': rl, 'radius_max': rh,
+                  'magnitude_min': ml, 'magnitude_max': mh}
+                 for rl, rh in windows(BAND_RADIUS) for ml, mh in windows(BAND_MAGNITUDE))
+
+
+def allow_bands():
+    """Let the frozen guard module take two-sided windows (extra keys radius_max, magnitude_min).
+
+    A window [lo, hi) is sigmoid((x - lo)/s) - sigmoid((x - hi)/s), so adjacent windows sum exactly; one-sided cuts
+    keep the frozen expressions. Only the band training calls this.
+    """
+    import torch
+    import sbsi.flow_guard_response as guard
+    plain = ('name', 'radius_min', 'magnitude_max')
+    original = guard._validate_cuts
+
+    def validate(cuts):
+        cuts = tuple(dict(c) for c in cuts)
+        original([{k: c[k] for k in plain} for c in cuts])
+        for c in cuts:
+            if not set(c) - set(plain) <= {'radius_max', 'magnitude_min'}:
+                raise ValueError(f'unknown guard keys: {sorted(c)}')
+        return cuts
+
+    def window(sigmoid, x, lo, hi, softness):
+        if hi is None:
+            return sigmoid((x - float(lo)) / softness)
+        if lo is None:
+            return sigmoid((float(hi) - x) / softness)
+        return sigmoid((x - float(lo)) / softness) - sigmoid((x - float(hi)) / softness)
+
+    def weights(values, cuts, radius, magnitude, ones, sigmoid, radius_softness, magnitude_softness):
+        result = []
+        for c in validate(cuts):
+            w = ones
+            for x, lo, hi, s in ((radius, c['radius_min'], c.get('radius_max'), radius_softness),
+                                 (magnitude, c.get('magnitude_min'), c['magnitude_max'], magnitude_softness)):
+                if lo is not None or hi is not None:
+                    w = w * window(sigmoid, x, lo, hi, s)
+            result.append(w)
+        return result
+
+    def torch_weights(values, cuts, *, radius_softness, magnitude_softness, zero_point=30.0):
+        flux = values[..., 3].clamp_min(torch.finfo(values.dtype).tiny)
+        magnitude = float(zero_point) - 2.5 * torch.log10(flux)
+        return torch.stack(weights(values, cuts, values[..., 2], magnitude, torch.ones_like(flux), torch.sigmoid,
+                                   radius_softness, magnitude_softness), dim=-1)
+
+    def numpy_weights(values, cuts, *, radius_softness, magnitude_softness, zero_point=30.0):
+        values = np.asarray(values, dtype=np.float64)
+        magnitude = float(zero_point) - 2.5 * np.log10(values[:, 3])
+        return np.stack(weights(values, cuts, values[:, 2], magnitude, np.ones(len(values)), guard._numpy_sigmoid,
+                                radius_softness, magnitude_softness), axis=-1)
+
+    guard._validate_cuts, guard.torch_guard_weights, guard.numpy_guard_weights = validate, torch_weights, numpy_weights
+
+
+def band_scales(trainer, bands):
+    """BAND_TOLERANCE x MAIN_RESPONSE x D_main / D_band: the loss then weighs each band by its contribution to a
+    cut's response. Masses from the zero-shear rows of the training cases, with the same soft windows."""
+    import sbsi.flow_guard_response as guard
+    cases = json.loads((DOMAIN/'manifest.json').read_text())['split']['train_cases']
+    rows = np.concatenate([np.load(DOMAIN/f'flow/g0/case{int(c):03d}.npz')['target'] for c in cases])
+    kw = dict(radius_softness=trainer.RADIUS_SOFTNESS, magnitude_softness=trainer.MAGNITUDE_SOFTNESS)
+    main = {'name': 'main', 'radius_min': 3.0, 'magnitude_max': 25.8}
+    mass = np.concatenate([guard.numpy_guard_weights(rows[i:i + 1_000_000], (main,) + bands, **kw).sum(0)[None]
+                           for i in range(0, len(rows), 1_000_000)]).sum(0)
+    scales = BAND_TOLERANCE * MAIN_RESPONSE * mass[0] / mass[1:]
+    return scales, {'rows': int(len(rows)), 'main_mass': float(mass[0] / len(rows)),
+                    'band_mass': (mass[1:] / len(rows)).tolist(), 'scales': scales.tolist()}
+
+
+def train(steps, no_global=False, bands=False):
     trainer = frozen()
-    out = ROOT/(f'steps{steps}' + ('_noglobal' if no_global else ''))
+    out = ROOT/(f'{"bands" if bands else "steps"}{steps}' + ('_noglobal' if no_global else ''))
     if not (out/'nll_completed.json').exists():
         (out/'nll').mkdir(parents=True, exist_ok=True)
         for name in ('selected.pt', 'selected_optimizer.pt', 'history.json'):
@@ -72,7 +157,14 @@ def train(steps, no_global=False):
     if no_global:   # the trainer builds its cuts once, through this module-level name
         all_cuts = trainer.make_guard_cuts
         trainer.make_guard_cuts = lambda r, m: tuple(c for c in all_cuts(r, m) if c['name'] != 'global')
-    print(f'GUARD_STRENGTH steps_per_epoch={steps} no_global={no_global} out={out}', flush=True)
+    if bands:   # the trainer builds cuts and scales once, through these module-level names
+        allow_bands()
+        band_cuts = make_bands()
+        scales, record = band_scales(trainer, band_cuts)
+        (out/'band_scales.json').write_text(json.dumps({'bands': list(band_cuts), **record}, indent=1) + '\n')
+        trainer.make_guard_cuts = lambda r, m: band_cuts
+        trainer.guard_scales = lambda cuts: scales
+    print(f'GUARD_STRENGTH steps_per_epoch={steps} no_global={no_global} bands={bands} out={out}', flush=True)
     trainer.train(argparse.Namespace(domain_root=DOMAIN, output_root=out, resume=True))
 
 
@@ -288,6 +380,7 @@ def main():
     t = sub.add_parser('train')
     t.add_argument('--steps', type=int, required=True)
     t.add_argument('--no-global', action='store_true', help='drop the global (uncut) term from the guard')
+    t.add_argument('--bands', action='store_true', help='guard on the band tiling instead of the 16 cuts')
     c = sub.add_parser('check')
     c.add_argument('--flows', nargs='+', default=['nll_only', 'steps4', 'steps4_noglobal', 'steps40'])
     c.add_argument('--extra', nargs='+', default=[], metavar='RADIUS,MAG',
@@ -298,7 +391,7 @@ def main():
         raise RuntimeError('scheduler allocation required')
     known = {'nll_only': SOURCE/'nll/selected.pt', 'steps4': SOURCE/'guard/selected.pt'}
     if a.stage == 'train':
-        train(a.steps, a.no_global)
+        train(a.steps, a.no_global, a.bands)
     elif a.stage == 'map':
         response_map({k: known.get(k, ROOT/k/'guard/selected.pt') for k in a.flows}, a.tag)
     else:

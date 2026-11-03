@@ -86,3 +86,33 @@ the main cut +0.29 -> +1.49 while halving the global error). Added arm `steps4_n
 Owner: "cancel the 160 one". Arm `steps160` cancelled at guard epoch 10 (job 17692347, its resume 17693021 and the
 five-flow check 17692747 cancelled); it is not checked or evaluated. The gate is applied to `steps40` (and was
 applied to `steps4_noglobal`) as written.
+
+## Addendum: band guard (2026-11-03 ~20:00 CET, before any band-guard training or output)
+
+Owner: "we need build a better guard so the model recovers 0.3% at cuts around mag < 25 with radius > 3. work on it".
+
+Why (map stage, `map.npz`, validation cases, flow alone): the flows' response error is a wave in measured
+FLUX_RADIUS. Per 0.1 px bin at MAG_AUTO < 25 the flow-minus-simulation response is about +0.5 to +1.7% of the
+main-cut response at 2.6-3.0 px and -0.1 to -0.8% at 3.1-3.6 px (no-guard flow; the guarded flows similar).
+Cumulative cuts at 2.8/3.0/3.2 px see only sums of this wave, so the cut guard shifts it instead of flattening it.
+
+Arm `bands40` (`train --steps 40 --bands`): the guard phase of the frozen recipe from the same density-only
+checkpoint, 40 guard steps per epoch (as `steps40`), with the 16 cuts replaced by 112 soft windows that tile measured
+FLUX_RADIUS x MAG_AUTO: radius edges 2.2-5.0 px every 0.2 px, magnitude edges 24.0, 24.6, 25.0, 25.4, 25.8, 26.4,
+both axes open-ended (window = sigmoid((x-lo)/s) - sigmoid((x-hi)/s), s = 0.05 as before; tested: windows sum to 1
+within 4e-16, the 16 old cuts give identical weights). Per-window scale = 0.003 x 0.6035 x D_main / D_window (masses
+from the training cases' zero-shear rows), so the loss weights each window by its contribution to a cut's response.
+Everything else unchanged (seeds, clip, lr, shared-row guard steps, selection = validation NLL + guard loss).
+
+Check: `check` with flows nll_only, steps4, steps40, bands40 plus --extra target grid radius 2.8, 2.9, 3.0, 3.1, 3.2
+x magnitude 24.6, 25.0, 25.4 (15 cuts; 3.0x25.0 and 3.0x25.4 are already held-out rows and are not repeated).
+
+Gate for the constant-shear evaluation (same evaluation as above, also reported at MAG_AUTO < 25.0):
+1. target grid: RMS m_eq <= 0.5 and every |m_eq| <= 1.0 (each value carries about +-0.35 from 40 validation cases,
+   so 0.3% itself is only testable in the constant-shear run, +-0.14);
+2. RMS over the 15 held-out cuts not larger than nll_only's (5.12);
+3. validation NLL worse than nll_only by less than 0.02.
+
+Expectation stated in advance: the flow alone accounts for only part of GalSBI-dev's end-to-end error at
+MAG_AUTO < 25 & radius > 3 (flow-alone +0.80 vs end-to-end +2.47); a flow passing this gate need not give 0.3%
+end to end.
