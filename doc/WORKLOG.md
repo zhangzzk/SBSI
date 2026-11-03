@@ -1,5 +1,24 @@
 # Work log
 
+## 2026-11-03 — Size/magnitude cut-split study launched and stopped by the owner
+
+Owner: "go ahead and split the size and magnitude cuts", then, after asking why every cut needs a new GPU run,
+"stop the current run. we need to understand the situation better". Study root
+`$DATA_DIR/sbsi_caches/galsbi_dev_constant_cutsplit_20261103/` (`rule.md` fixed before output; copy and the CPU
+check in `doc/evidence/galsbi_dev_constant_cutsplit_20261103/`).
+
+- Code (8632fc1): `scripts/evaluate_galsbi_constant.py` applies the cuts itself (`CUTS`: the three frozen V3.9 rows,
+  r > 0.6″ & < 25.0, size only r > 0.6″ and ≥ 0.75″, magnitude only < 25.8 and < 25.0), replacing the frozen
+  `output_cuts` call and the `EVAL_MAG_LIMIT` knob. It also stores sums over galaxies (simulation, usable in both
+  legs) or draws (model) kept in both legs, for a shape/selection split (true usable flags only).
+- Checks: on case 1000's measured catalogue and on random torch draws the new cuts equal the frozen ones exactly
+  and the draw moments agree to 2e-16 (`check_cuts.py`). Cases 1000 and 1010 reproduce the first study (rows 0–2)
+  and the matched-depth study (row 3) to a relative 1.5e-14.
+- Jobs 17690091 (draws, cip) and 17690092 (summary) cancelled after two cases (~20 GPU-min). No result.
+- Why each cut costs a full run: cuts act on each of the 64 draws per galaxy, and only per-cut sums are saved, so a
+  new cut needs new draws. Accumulating a grid of size × magnitude limits per block would cost no extra GPU time
+  and make later cut questions free; not implemented.
+
 ## 2026-11-03 — Why V3.9 gave +0.02% and GalSBI-dev +2.74%; matched-depth cut (MAG_AUTO < 25.0): m = +2.47% ± 0.14, depth is not the cause
 
 Owner: "we need to understand why v3.9 delivers <0.3% bias yet the models deliver 3%", then "let's cut at 25".
