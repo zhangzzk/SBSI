@@ -72,3 +72,11 @@ changes the flow path and hash. Reported as for GalSBI-dev: m (C8 and true flags
 At most four GPUs at once (owner, 2026-10-12 follow-ups): two training jobs, then one check job, then the
 evaluation array throttled to three. One training seed per arm; check errors exclude training-seed scatter. No
 constant-shear or ConstGold data in training, early stopping or selection. No empirical offsets.
+
+## Addendum (2026-11-03, before the arm below exists; after the baseline check)
+
+Owner: "what if we remove the global cut in the guard?" (after the baseline check showed the 4-step guard moves
+the main cut +0.29 -> +1.49 while halving the global error). Added arm `steps4_noglobal`: 4 guard steps per epoch
+(as GalSBI-dev), the global cut removed from the guard (15 cuts, all s = 0.02), everything else as the arms above
+(`train --steps 4 --no-global`; selection metric then also without the global term). It joins the four-flow check
+(now five flows) and the same gate, compared with `steps4`.

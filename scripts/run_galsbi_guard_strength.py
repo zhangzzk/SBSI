@@ -55,9 +55,9 @@ def frozen():
     return trainer
 
 
-def train(steps):
+def train(steps, no_global=False):
     trainer = frozen()
-    out = ROOT/f'steps{steps}'
+    out = ROOT/(f'steps{steps}' + ('_noglobal' if no_global else ''))
     if not (out/'nll_completed.json').exists():
         (out/'nll').mkdir(parents=True, exist_ok=True)
         for name in ('selected.pt', 'selected_optimizer.pt', 'history.json'):
@@ -67,7 +67,10 @@ def train(steps):
             raise ValueError('copied density checkpoint differs from its receipt')
         shutil.copy2(SOURCE/'nll_completed.json', out/'nll_completed.json')
     trainer.GUARD_STEPS_PER_EPOCH = steps
-    print(f'GUARD_STRENGTH steps_per_epoch={steps} out={out}', flush=True)
+    if no_global:   # the trainer builds its cuts once, through this module-level name
+        all_cuts = trainer.make_guard_cuts
+        trainer.make_guard_cuts = lambda r, m: tuple(c for c in all_cuts(r, m) if c['name'] != 'global')
+    print(f'GUARD_STRENGTH steps_per_epoch={steps} no_global={no_global} out={out}', flush=True)
     trainer.train(argparse.Namespace(domain_root=DOMAIN, output_root=out, resume=True))
 
 
@@ -197,15 +200,17 @@ def check(flows, tag=''):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     sub = p.add_subparsers(dest='stage', required=True)
-    sub.add_parser('train').add_argument('--steps', type=int, required=True)
+    t = sub.add_parser('train')
+    t.add_argument('--steps', type=int, required=True)
+    t.add_argument('--no-global', action='store_true', help='drop the global (uncut) term from the guard')
     c = sub.add_parser('check')
-    c.add_argument('--flows', nargs='+', default=['nll_only', 'steps4', 'steps40', 'steps160'])
+    c.add_argument('--flows', nargs='+', default=['nll_only', 'steps4', 'steps4_noglobal', 'steps40', 'steps160'])
     c.add_argument('--tag', default='', help='output suffix: check<tag>.json, check<tag>_sums.npz')
     a = p.parse_args()
     if not os.environ.get('SLURM_JOB_ID'):
         raise RuntimeError('scheduler allocation required')
     if a.stage == 'train':
-        train(a.steps)
+        train(a.steps, a.no_global)
     else:
         known = {'nll_only': SOURCE/'nll/selected.pt', 'steps4': SOURCE/'guard/selected.pt'}
         check({k: known.get(k, ROOT/k/'guard/selected.pt') for k in a.flows}, a.tag)
