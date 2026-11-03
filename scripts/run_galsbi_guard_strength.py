@@ -4,6 +4,7 @@
   train --steps N   rerun only the guard phase of the frozen recipe (scripts.train_full_domain_guard_flow) from the
                     saved GalSBI density-only checkpoint with GUARD_STEPS_PER_EPOCH = N; every other constant, seed
                     and the selection rule are unchanged. Output <root>/steps<N>/.
+  map               shear response per measured (radius, magnitude) bin, simulation and flows (validation cases)
   check             response mismatch of each flow on all matched pairs of the 40 validation cases, at the 16
                     guarded cuts and 15 held-out cuts (plus any --extra cuts, reported but outside the held-out
                     RMS), plus validation NLL; per-case sums, case bootstrap.
@@ -199,9 +200,91 @@ def check(flows, tag='', extra=()):
               f"  held out {f['rms_m_eq_held_out']:.2f}")
 
 
+R_EDGES, M_EDGES = np.round(np.arange(1.0, 6.001, 0.1), 2), np.round(np.arange(20.0, 27.001, 0.25), 2)
+
+
+def response_map(flows, tag=''):
+    """Shear response per measured (FLUX_RADIUS, MAG_AUTO) bin, simulation and flows, per validation case.
+
+    Hard bins (np.digitize on R_EDGES x M_EDGES, under/overflow kept), each leg binned by its own measurement. Per
+    case and bin: leg counts, the e response sum_pairs (1[bin(shear)] e_shear - 1[bin(zero)] e_zero) x design and
+    the count response sum_pairs (1[bin(shear)] - 1[bin(zero)]) x design (design as the guard: gamma (G'G)^-1 N).
+    Any hard cut's response follows by summing bins. Flows: 16 antithetic CRN draws per pair, the check's seeds.
+    """
+    import torch
+    from sbsi.flow_guard_response import physical_context_draws
+    from sbsi.measurement_model import load_measurement_model
+    import pandas as pd
+    from sbsi.fixed_g0_domain import FLOW_FEATURES
+    trainer = frozen()
+    device = torch.device('cuda')
+    cases = json.loads((DOMAIN/'manifest.json').read_text())['split']['validation_cases']
+    data = trainer.base.load_split(DOMAIN, cases)
+    case_of = {c: i for i, c in enumerate(cases)}
+    pair_case = torch.as_tensor(np.vectorize(case_of.get)(data['pair_case']), device=device)
+    gamma = data['gamma']
+    design = torch.as_tensor(gamma @ np.linalg.inv(gamma.T @ gamma) * len(gamma), device=device)
+    pairs = torch.as_tensor(data['pairs'], device=device)
+    n_pairs, nc = len(pairs), len(cases)
+    r_edges, m_edges = (torch.as_tensor(e, device=device) for e in (R_EDGES, M_EDGES))
+    nb = (len(R_EDGES) + 1) * (len(M_EDGES) + 1)
+
+    def bins(values):   # (..., 4) physical -> flat bin index
+        mag = 30 - 2.5 * torch.log10(values[..., 3].clamp_min(1e-30))
+        return torch.bucketize(values[..., 2], r_edges, right=True) * (len(M_EDGES) + 1) + \
+            torch.bucketize(mag, m_edges, right=True)
+
+    def accumulate(legs, rows, weight):
+        """legs: [(..., 4) zero, (..., 4) shear] with leading (batch[, draws]); adds into acc with this weight."""
+        d = design[rows]
+        c = pair_case[rows]
+        for sign, (leg, values) in zip((-1, 1), enumerate(legs)):
+            b = bins(values)
+            flat_case = c.view(-1, *([1] * (b.ndim - 1))).expand_as(b)
+            idx = (flat_case * nb + b).reshape(-1)
+            dd = d.view(len(rows), *([1] * (b.ndim - 1)), 2).expand(*b.shape, 2).reshape(-1, 2)
+            e = values[..., :2].reshape(-1, 2)
+            acc['count'][leg].index_add_(0, idx, torch.full((len(idx),), weight, dtype=torch.float64, device=device))
+            acc['shape'].index_add_(0, idx, sign * weight * torch.einsum('no,ni->noi', e, dd))
+            acc['mass'].index_add_(0, idx, sign * weight * dd)
+
+    out = {}
+    for name, path in [('sim', None)] + list(flows.items()):
+        acc = {'count': [torch.zeros(nc * nb, dtype=torch.float64, device=device) for _ in range(2)],
+               'shape': torch.zeros(nc * nb, 2, 2, dtype=torch.float64, device=device),
+               'mass': torch.zeros(nc * nb, 2, dtype=torch.float64, device=device)}
+        if path is None:
+            measured = [torch.as_tensor(data[k], device=device) for k in ('pair_zero_target', 'pair_shear_target')]
+            for start in range(0, n_pairs, BLOCK):
+                rows = torch.arange(start, min(n_pairs, start + BLOCK), device=device)
+                accumulate([m[rows] for m in measured], rows, 1.0)
+        else:
+            bundle = load_measurement_model(path, device=device)
+            model = bundle.model.eval()
+            context = bundle.context_tensor(pd.DataFrame(data['context_raw'], columns=FLOW_FEATURES))
+            with torch.no_grad():
+                for block, start in enumerate(range(0, n_pairs, BLOCK)):
+                    rows = torch.arange(start, min(n_pairs, start + BLOCK), device=device)
+                    p = pairs[rows]
+                    legs = physical_context_draws(model, [context[p[:, 0]], context[p[:, 1]]], DRAWS,
+                                                  CHECK_SEED + block)
+                    accumulate([v.double() for v in legs], rows, 1.0 / DRAWS)
+            del bundle, model, context
+            torch.cuda.empty_cache()
+        shape = (nc, len(R_EDGES) + 1, len(M_EDGES) + 1)
+        out[f'{name}_count'] = torch.stack(acc['count'], 1).reshape(nc, 2, *shape[1:]).cpu().numpy()
+        out[f'{name}_shape'] = acc['shape'].reshape(*shape, 2, 2).cpu().numpy()
+        out[f'{name}_mass'] = acc['mass'].reshape(*shape, 2).cpu().numpy()
+        print(f'MAP_DONE {name}', flush=True)
+    np.savez(ROOT/f'map{tag}.npz', r_edges=R_EDGES, m_edges=M_EDGES, cases=np.asarray(cases), pairs=n_pairs, **out)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     sub = p.add_subparsers(dest='stage', required=True)
+    mp = sub.add_parser('map')
+    mp.add_argument('--flows', nargs='+', default=['nll_only', 'steps4', 'steps40'])
+    mp.add_argument('--tag', default='')
     t = sub.add_parser('train')
     t.add_argument('--steps', type=int, required=True)
     t.add_argument('--no-global', action='store_true', help='drop the global (uncut) term from the guard')
@@ -213,10 +296,12 @@ def main():
     a = p.parse_args()
     if not os.environ.get('SLURM_JOB_ID'):
         raise RuntimeError('scheduler allocation required')
+    known = {'nll_only': SOURCE/'nll/selected.pt', 'steps4': SOURCE/'guard/selected.pt'}
     if a.stage == 'train':
         train(a.steps, a.no_global)
+    elif a.stage == 'map':
+        response_map({k: known.get(k, ROOT/k/'guard/selected.pt') for k in a.flows}, a.tag)
     else:
-        known = {'nll_only': SOURCE/'nll/selected.pt', 'steps4': SOURCE/'guard/selected.pt'}
         extra = [tuple(float(x) if x else None for x in e.split(',')) for e in a.extra]
         check({k: known.get(k, ROOT/k/'guard/selected.pt') for k in a.flows}, a.tag, extra)
 
