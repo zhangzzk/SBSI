@@ -1,5 +1,53 @@
 # Work log
 
+## 2026-11-03 — Stronger guard for GalSBI-dev's flow: setup, and what the current 4-step guard does
+
+Owner: "work on the stronger guard tests" (after: can the response guard be made to matter more?). Rule fixed
+before any output: `doc/evidence/galsbi_guard_strength_20261103/rule.md` (study root
+`$DATA_DIR/sbsi_caches/galsbi_guard_strength_20261103/`).
+
+- **Why the guard scale cannot be the knob.** In GalSBI-dev's flow training (`galsbi_f8c8_20261102/base/flow`)
+  every density step and every guard step was clipped (raw gradient norm 15–77 against a clip of 5), so the
+  guard's push is set by its share of steps (4 per epoch against 489 density steps), not by s = 0.02.
+- **Code** (commit 64bdcff): `scripts/run_galsbi_guard_strength.py` — `train --steps N` sets the frozen
+  trainer's `GUARD_STEPS_PER_EPOCH` and reruns only the guard phase from the saved density checkpoint (copied,
+  hash-checked); `check` compares flows on all 5,817,708 matched pairs of the 40 validation cases at the 16
+  guarded and 15 held-out cuts (16 antithetic draws, common random numbers across flows, case bootstrap 10,000,
+  seed 20260925), plus validation NLL on all 11,703,585 rows. Launcher `jobs/job_galsbi_guard_strength.sh`.
+  The check asserts that its per-case simulation sums reproduce the frozen guard target.
+- **Reproduction check**: the 40-step arm's first epoch reproduces the original run exactly up to the fourth
+  guard step (training NLL −3.689281806, the same first four guard losses).
+- **Jobs**: train 17692346 (40 steps) and 17692347 (160 steps), check 17692348 (density-only and GalSBI-dev
+  flows, 8 min); all on `cip` A40-16GB (moved from 24 GB while pending; data fit).
+
+Check on the training family, m_eq = 100 ((T11+T22)/(M11+M22) − 1) per soft cut, flow alone (no emulator, no
+C8), ± case bootstrap (mostly simulation noise shared by all flows; paired differences are ±0.01 pp or less):
+
+| cut | density only | GalSBI-dev (4 steps) |
+|---|---|---|
+| global (guarded) | −4.44 ± 0.47 | −2.02 ± 0.48 |
+| radius > 3 & < 25.8 (guarded, main) | +0.29 ± 0.36 | +1.49 ± 0.36 |
+| magnitude < 25.8 (guarded) | −4.23 ± 0.40 | −2.23 ± 0.41 |
+| radius > 3.75 (held out) | −5.37 ± 0.44 | −5.35 ± 0.44 |
+| radius > 4 (held out) | −7.35 ± 0.65 | −7.37 ± 0.66 |
+| radius > 3 & < 25.0 (held out) | −0.12 ± 0.34 | +0.80 ± 0.35 |
+| RMS over guarded / held-out cuts | 2.35 / 5.12 | 1.45 / 4.75 |
+| validation NLL | −3.69950 ± 0.00233 | −3.69897 (paired +0.00053 ± 0.00006) |
+
+1. The 4-step guard shifts every cut with a radius limit ≤ 3.2 px by +0.7 to +2.4 pp and leaves cuts ≥ 3.5 px
+   unchanged (paired −0.02 to +0.08). It fixes half of the global error and makes the main cut worse
+   (+0.29 → +1.49): the global term (s = 0.01, the heaviest) and the main cut pull in opposite directions.
+2. Held-out larger-size cuts are off by −5% to −10% for both flows. On this footing (flow alone at g = 0.05,
+   pairs matched in both legs) that is not the constant-shear evaluation's footing (C8, emulator, ±0.02), where
+   GalSBI-dev's ≥ 0.75″ row is +0.97 ± 0.18; the two are not directly comparable.
+3. First sign from the 40-step arm: after its first 40 guard steps the validation guard loss halved (0.160 →
+   0.075) but validation NLL fell to −0.63 (from −3.69); the next density pass recovered it to −3.17, then
+   −3.65. The 160-step arm's first epoch: NLL −3.44, guard 0.071.
+
+Next: both arms finish (≈ 3.5 h and ≈ 10 h), the four-flow check runs, and the rule's gate decides whether one
+arm gets the constant-shear evaluation (~16 GPU-h). Limitations: one training seed per arm; m_eq is the guard's
+own linearized definition (fixed g = 0 baseline mass, soft 0.05 cuts), not the evaluation's own-leg m.
+
 ## 2026-11-03 — Why FS2 passes and GalSBI fails: FS2's zero is a cancellation, and the 3 px size cut sits on the GalSBI size peak
 
 Owner: "we should first understand why the FS2 model works yet not the GalSBI model ... can the FS2 performance
