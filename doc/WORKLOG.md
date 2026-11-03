@@ -1,5 +1,26 @@
 # Work log
 
+## 2026-11-03 — FS2 vs GalSBI population corner plots (input and detected)
+
+Owner: "make a corner contour plot comparing FS2 and GalSBI population both input and detected on the galaxy
+photometric properties". CPU only, reads saved files (jobs 17693374, 17693389 on `cluster`, < 1 min).
+Script, figures and summary: `doc/evidence/fs2_galsbi_population_20261103/` (`population_corner.py`,
+`population_corner_true.png`, `population_corner_measured.png`, `population_summary.json`); figures also in
+`SBSI/plots/fs2_galsbi_population_corner_{true,measured}.png`.
+
+- Samples: 20 cases each, plus leg (g1 = +0.02). FS2 ConstGold cases 40–59 from the saved V3.9 evaluation rows
+  (349,784 rendered galaxies per case, the rows the evaluation used; true magnitude LSST-r). GalSBI constant cases
+  1000–1019 (884,882 per case; LSST-i), measured legs joined CrossMatch → Shapes one-to-one. Detected = usable
+  measurement (finite, |g| < 1, radius > 0, flux > 0).
+- True properties (magnitude, log Re, Sérsic n, |e|): input distributions are similar in size (median log Re
+  −0.72 FS2, −0.77 GalSBI) and |e|; GalSBI has more high-n galaxies (median n 1.73 vs 1.20) and is shallower
+  (detected fraction 0.331 vs 0.449; detected median true mag 25.02 i vs 25.64 r).
+- Measured properties of detected galaxies: GalSBI FLUX_RADIUS peaks right at the 3 px cut (median 3.22 px vs
+  FS2 3.50) with a thinner large-size tail; share of MAG_AUTO < 25.8 galaxies at ≤ 3 px 0.252 (GalSBI) vs 0.102
+  (FS2). Main-cut galaxies per case 181,270 (GalSBI) vs 90,815 (FS2, half-scene rows).
+
+Limitations: densities only (no per-case error bands); magnitudes are in different bands (r vs i); one shear leg.
+
 ## 2026-11-03 — Stronger guard, no-global arm: dropping the global term barely changes the main cut
 
 Owner: "what if we remove the global cut in the guard?" Arm `steps4_noglobal` (rule addendum, commit 24cca2f):
