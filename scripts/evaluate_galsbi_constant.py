@@ -59,7 +59,15 @@ CUTS = (('uncut', None, None),
         ('radius_gt0.60', ('>', 3.0), None),
         ('radius_ge0.75', ('>=', 3.75), None),
         ('mag25.8', None, 25.8),
-        ('mag25', None, 25.0))
+        ('mag25', None, 25.0),
+        # target grid around MAG_AUTO < 25 and radius > 3 px (band-guard diagnostic, 2026-11-04)
+        ('mag25_radius_gt0.56', ('>', 2.8), 25.0),
+        ('mag25_radius_gt0.58', ('>', 2.9), 25.0),
+        ('mag25_radius_gt0.62', ('>', 3.1), 25.0),
+        ('mag25_radius_gt0.64', ('>', 3.2), 25.0),
+        ('mag25_radius_ge0.75', ('>=', 3.75), 25.0),
+        ('mag24.6_radius_gt0.60', ('>', 3.0), 24.6),
+        ('mag25.4_radius_gt0.60', ('>', 3.0), 25.4))
 CUT_NAMES = tuple(c[0] for c in CUTS)
 
 

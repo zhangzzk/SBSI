@@ -1,0 +1,145 @@
+{
+ "format": "sbsi_model_set_v1",
+ "name": "GalSBI-dev with the band-guard flow (diagnostic)",
+ "status": "diagnostic, 2026-11-04: GalSBI-dev C8 and emulator with the band-guard flow (galsbi_guard_strength_20261103 bands40, failed its flow-alone gate); not a model release",
+ "configured_likelihood": false,
+ "flow": {
+  "root": "SBSI_CACHE_DIR",
+  "path": "galsbi_guard_strength_20261103/bands40/guard/selected.pt",
+  "sha256": "1e7ada5b18ed42d08703bb0bd652bf61adfcbfc6a49a5d24a4a34f086c5b656e",
+  "feature_names": [
+   "e1_input_p",
+   "e2_input_p",
+   "sersic_n_input_p",
+   "r_input_p",
+   "circularized_Re_input_p",
+   "nbr_close_050",
+   "nbr_close_100",
+   "nbr_close_200"
+  ],
+  "selection": "band guard, 112 size x magnitude windows, 40 guard steps/epoch, selected guard epoch 39"
+ },
+ "classifier": {
+  "root": "SBSI_CACHE_DIR",
+  "path": "galsbi_f8c8_20261102/c8/C8_20260913/selected.pt",
+  "sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+  "training_seed": 20260913,
+  "selected_epoch": 99,
+  "checkpoint_selection": "minimum mean-case tuning BCE (0.132987); first predeclared seed",
+  "feature_names": [
+   "e1_input_p",
+   "e2_input_p",
+   "sersic_n_input_p",
+   "r_input_p",
+   "circularized_Re_input_p",
+   "nbr_close_050",
+   "nbr_close_100",
+   "nbr_close_200"
+  ],
+  "feature_coordinate": "physical_arcsec",
+  "add_missing_indicators": false
+ },
+ "replicate_classifier": {
+  "root": "SBSI_CACHE_DIR",
+  "path": "galsbi_f8c8_20261102/c8/C8_20260914/selected.pt",
+  "sha256": "07d8507d251ef37ce77b5ee9846462c56161f2399b7440751ca5429b52780385",
+  "training_seed": 20260914,
+  "role": "diagnostic replicate; not averaged into the model"
+ },
+ "emulator": {
+  "root": "BLENDEMU_RUNS_DIR",
+  "path": "disk_response_moment_galsbi_20261103/model/model.json",
+  "sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+  "metadata_path": "disk_response_moment_galsbi_20261103/model/metadata.json",
+  "metadata_sha256": "fda7277ecd54e2d3cfc7f196d7408c347e72c38e09945fad217447824cd0bf93",
+  "backend": "disk_response_moment",
+  "composition": "mobius",
+  "response_coordinate": "disk_velocity",
+  "recipe": "frozen trial9 xgboost, seed 20260816, 218 trees, moment objective; fit cases 40-199, development 0-39 (report only)",
+  "code": "BlendEMU branch galsbi-resim b4605fe, jobs/job_disk_response_galsbi.example.sh"
+ },
+ "feature_contract": "same as V3.9-like (configs/models_v3_9_like.json); rendered Sersic n on the 122-value GalSBI render grid",
+ "training_data": {
+  "sims": "$DATA_DIR/sbsi/galsbi_resim/training/sims",
+  "cases": "0-199 (F8: split seed 501, 160 train / 40 validation; C8: 40-99 train, 100-119 tune; emulator: 40-199 fit, 0-39 development)",
+  "legs": {
+   "F8_C8": [
+    0.0,
+    0.05
+   ],
+   "emulator": [
+    0.0,
+    0.2
+   ]
+  },
+  "measurement": "LSST-i, centred 65 px stamps, per-case noise shared by the legs",
+  "constant_shear_used": false,
+  "experiment_root": "$DATA_DIR/sbsi_caches/galsbi_f8c8_20261102",
+  "emulator_root": "$DATA_DIR/blendemu_runs/disk_response_moment_galsbi_20261103"
+ },
+ "evidence": {
+  "rule": {
+   "path": "doc/evidence/galsbi_f8c8_20261102/rule.md",
+   "sha256": "a833e83eaab8eb6ae3fa4d50ed5b5434764a37f43dd1b036d50659de7f5f859f"
+  },
+  "domain": {
+   "path": "doc/evidence/galsbi_f8c8_20261102/domain_summary.json",
+   "sha256": "3f5936887fff0ff930ef4093264929a24b8a03b9672b4a71e5884e606cb24e0a"
+  },
+  "flow_selection": {
+   "path": "doc/evidence/galsbi_f8c8_20261102/trained_candidate.json",
+   "sha256": "c0d75475309364eea6ee6c8626e8650026c1412bf3606e51fa8647219246e427"
+  },
+  "refine_status": {
+   "path": "doc/evidence/galsbi_f8c8_20261102/refine_status.json",
+   "sha256": "aded701ffac4b6f7f2cc0a934f2c3d0600d795b47435687526c67ad7fbf54d00"
+  },
+  "validation_usability_response": {
+   "path": "doc/evidence/galsbi_f8c8_20261102/validation_usability_response.json",
+   "sha256": "ecb677d0a16758d40ce8149f5fe924a23746b2dc062c434d4e56f3055e90f31b"
+  },
+  "classifier_protocol": {
+   "path": "doc/evidence/galsbi_f8c8_20261102/protocol.json",
+   "sha256": "782009c27d855e722a0398f435816e35d3ee43edc1d6e3c9c0a5e502860852e2"
+  },
+  "classifier_training": {
+   "path": "doc/evidence/galsbi_f8c8_20261102/c8_20260913_completed.json",
+   "sha256": "4f4063989b30c2cb26f72f44cccec903100ccfcf26563b68ebe32f087a84c18d"
+  },
+  "classifier_replicate_training": {
+   "path": "doc/evidence/galsbi_f8c8_20261102/c8_20260914_completed.json",
+   "sha256": "bb9a8ac0de0839644541112419d76beafd2cf1e8b246e5dde4c62e93b6d6a681"
+  },
+  "emulator_rule": {
+   "path": "doc/evidence/galsbi_disk_response_20261103/rule.md",
+   "sha256": "096616c5493c3ed7b990b6565dfe868e43d94587d1f6f3a6330c500cd3142f52"
+  },
+  "emulator_metadata": {
+   "path": "doc/evidence/galsbi_disk_response_20261103/metadata.json",
+   "sha256": "fda7277ecd54e2d3cfc7f196d7408c347e72c38e09945fad217447824cd0bf93"
+  },
+  "emulator_summary": {
+   "path": "doc/evidence/galsbi_disk_response_20261103/summary.json",
+   "sha256": "6882286d7dbdee72fbba15fb0c4007eb00a951a456424c273cb6bcd100791690"
+  }
+ },
+ "decision": {
+  "owner_retained": false,
+  "evaluated": false,
+  "production_accepted": false
+ },
+ "limitations": [
+  "Not yet evaluated on the GalSBI constant-shear family or in a closure mock.",
+  "One F8 training seed; F8 refinement did not transfer to validation cases, so the base flow is used.",
+  "Validation selected-population response off-diagonal R12 -0.0088+-0.0034 (2.6 sigma) at the primary cut, seen in the simulated data itself.",
+  "Emulator development (cases 0-39) predicted/label response 1.025+-0.025 uncut (1.0 sigma; FS2 model 0.994+-0.022 on FS2); one emulator training seed."
+ ],
+ "observing_conditions": {
+  "pixel_size": 0.2,
+  "zero_point": 30.0,
+  "psf_fwhm": 0.71,
+  "moffat_beta": 2.458,
+  "pixel_rms": 0.6159,
+  "note": "emulator truth-pair features were scaled with these LSST-i values (configs/galsbi_resim_training.yaml); likelihood runs with this preset must pass them, not the FS2 0.73 / 2.224 / 0.312"
+ }
+}
