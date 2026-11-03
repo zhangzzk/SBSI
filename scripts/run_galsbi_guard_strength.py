@@ -5,7 +5,8 @@
                     saved GalSBI density-only checkpoint with GUARD_STEPS_PER_EPOCH = N; every other constant, seed
                     and the selection rule are unchanged. Output <root>/steps<N>/.
   check             response mismatch of each flow on all matched pairs of the 40 validation cases, at the 16
-                    guarded cuts and 15 held-out cuts, plus validation NLL; per-case sums, case bootstrap.
+                    guarded cuts and 15 held-out cuts (plus any --extra cuts, reported but outside the held-out
+                    RMS), plus validation NLL; per-case sums, case bootstrap.
 
 Runs under the frozen F8 venv (python -I, cwd /tmp) in a Slurm GPU allocation, like run_galsbi_f8_stage.py.
 """
@@ -74,15 +75,15 @@ def train(steps, no_global=False):
     trainer.train(argparse.Namespace(domain_root=DOMAIN, output_root=out, resume=True))
 
 
-def cut_list(trainer):
+def cut_list(trainer, extra=()):
     from sbsi.flow_guard_response import make_guard_cuts
     guarded = make_guard_cuts(trainer.RADIUS_THRESHOLDS, trainer.MAGNITUDE_THRESHOLDS)
     held = tuple({'name': '_'.join(([f'radius_gt_{r:g}'] if r else []) + ([f'magnitude_lt_{m:g}'] if m else [])),
-                  'radius_min': r, 'magnitude_max': m} for r, m in HELD_OUT)
+                  'radius_min': r, 'magnitude_max': m} for r, m in HELD_OUT + tuple(extra))
     return guarded + held, len(guarded)
 
 
-def check(flows, tag=''):
+def check(flows, tag='', extra=()):
     import pandas as pd
     import torch
     from sbsi.fixed_g0_domain import FLOW_FEATURES
@@ -94,7 +95,8 @@ def check(flows, tag=''):
     manifest = json.loads((DOMAIN/'manifest.json').read_text())
     cases = manifest['split']['validation_cases']
     data = base.load_split(DOMAIN, cases)
-    cuts, n_guarded = cut_list(trainer)
+    cuts, n_guarded = cut_list(trainer, extra)
+    n_held = n_guarded + len(HELD_OUT)
     case_of = {c: i for i, c in enumerate(cases)}
     pair_case = torch.as_tensor(np.vectorize(case_of.get)(data['pair_case']), device=device)
     row_case = np.concatenate([np.full(m[f'{leg}_rows'], case_of[m['case']]) for m in data['per_case_matching']
@@ -104,7 +106,7 @@ def check(flows, tag=''):
     row_case = torch.as_tensor(row_case, device=device)
     n_pairs = len(data['pairs'])
     result = {'cases': cases, 'pairs': n_pairs, 'rows': len(row_case), 'draws': DRAWS, 'seed': CHECK_SEED,
-              'cuts': list(cuts), 'guarded': n_guarded, 'flows': {}}
+              'cuts': list(cuts), 'guarded': n_guarded, 'held_out': len(HELD_OUT), 'flows': {}}
     sums = {}
     sim = None
     for name, path in flows.items():
@@ -176,7 +178,7 @@ def check(flows, tag=''):
             m_eq=point[k].tolist(), m_eq_se=boot[k].std(0, ddof=1).tolist(),
             nll=float(nll_point[k]), nll_se=float(nll_boot[k].std(ddof=1)),
             rms_m_eq_guarded=float(np.sqrt(np.mean(point[k][:n_guarded] ** 2))),
-            rms_m_eq_held_out=float(np.sqrt(np.mean(point[k][n_guarded:] ** 2))))
+            rms_m_eq_held_out=float(np.sqrt(np.mean(point[k][n_guarded:n_held] ** 2))))
         if 'steps4' in sums and k != 'steps4':
             result['flows'][k]['minus_steps4'] = {
                 'm_eq': (point[k] - point['steps4']).tolist(),
@@ -189,7 +191,7 @@ def check(flows, tag=''):
     names = [c['name'] for c in cuts]
     print(f"{'cut':38s}" + ''.join(f'{k:>20s}' for k in sums))
     for i, n in enumerate(names):
-        tag = '' if i < n_guarded else ' (held out)'
+        tag = '' if i < n_guarded else ' (held out)' if i < n_held else ' (extra)'
         print(f'{n + tag:38s}' + ''.join(f"{point[k][i]:+8.2f} +- {boot[k][:, i].std(ddof=1):5.2f}  " for k in sums))
     for k in sums:
         f = result['flows'][k]
@@ -204,7 +206,9 @@ def main():
     t.add_argument('--steps', type=int, required=True)
     t.add_argument('--no-global', action='store_true', help='drop the global (uncut) term from the guard')
     c = sub.add_parser('check')
-    c.add_argument('--flows', nargs='+', default=['nll_only', 'steps4', 'steps4_noglobal', 'steps40', 'steps160'])
+    c.add_argument('--flows', nargs='+', default=['nll_only', 'steps4', 'steps4_noglobal', 'steps40'])
+    c.add_argument('--extra', nargs='+', default=[], metavar='RADIUS,MAG',
+                   help='extra cuts outside the held-out RMS, e.g. 2.8,25 (empty side = no limit)')
     c.add_argument('--tag', default='', help='output suffix: check<tag>.json, check<tag>_sums.npz')
     a = p.parse_args()
     if not os.environ.get('SLURM_JOB_ID'):
@@ -213,7 +217,8 @@ def main():
         train(a.steps, a.no_global)
     else:
         known = {'nll_only': SOURCE/'nll/selected.pt', 'steps4': SOURCE/'guard/selected.pt'}
-        check({k: known.get(k, ROOT/k/'guard/selected.pt') for k in a.flows}, a.tag)
+        extra = [tuple(float(x) if x else None for x in e.split(',')) for e in a.extra]
+        check({k: known.get(k, ROOT/k/'guard/selected.pt') for k in a.flows}, a.tag, extra)
 
 
 if __name__ == '__main__':
