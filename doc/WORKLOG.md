@@ -1,5 +1,48 @@
 # Work log
 
+## 2026-11-04 — Band guard: big gain on held-out cuts, fails the target-grid gate; paired end-to-end diagnostic launched
+
+Band-guard training 17693674 (4 h 27 min, selected guard epoch 39 of 59, lr at its 1e-7 floor from epoch 49).
+Check 17693881 (`check --flows nll_only steps4 steps40 bands40 --tag _bands --extra <target grid>`,
+`doc/evidence/galsbi_guard_strength_20261103/check_bands.json`; it reproduces every earlier number), map 17693882 and
+analysis 17693883 (`map_analysis.py _bands`, `map_analysis_bands.json`, `SBSI/plots/galsbi_flow_response_map_bands.png`).
+
+m_eq (flow alone, validation cases, ± case bootstrap):
+
+| cut | density only | steps4 (GalSBI-dev) | steps40 | bands40 |
+|---|---|---|---|---|
+| radius > 2.8, mag < 25.0 | −2.86 ± 0.35 | −1.63 ± 0.36 | −0.82 ± 0.36 | −0.21 ± 0.36 |
+| radius > 2.9, mag < 25.0 | −1.44 ± 0.35 | −0.34 ± 0.35 | +0.20 ± 0.36 | +0.49 ± 0.36 |
+| **radius > 3.0, mag < 25.0** | −0.12 ± 0.34 | +0.80 ± 0.35 | +1.02 ± 0.35 | **+1.03 ± 0.35** |
+| radius > 3.1, mag < 25.0 | +0.60 ± 0.33 | +1.30 ± 0.33 | +1.20 ± 0.33 | +1.12 ± 0.33 |
+| radius > 3.2, mag < 25.0 | +0.58 ± 0.32 | +1.08 ± 0.32 | +0.70 ± 0.32 | +0.80 ± 0.32 |
+| radius > 3.0, mag < 24.6 | −0.61 ± 0.38 | +0.10 ± 0.38 | +0.37 ± 0.38 | +0.94 ± 0.38 |
+| radius > 3.0, mag < 25.4 | +0.27 ± 0.35 | +1.37 ± 0.35 | +1.52 ± 0.35 | +1.08 ± 0.35 |
+| radius > 3.0, mag < 25.8 (main) | +0.29 ± 0.36 | +1.49 ± 0.36 | +1.52 ± 0.36 | +0.96 ± 0.36 |
+| radius > 3.75, mag < 25.8 | −5.36 ± 0.44 | −5.34 ± 0.44 | −6.56 ± 0.43 | −2.14 ± 0.46 |
+| radius > 4, mag < 25.8 | −7.35 ± 0.65 | −7.37 ± 0.66 | −8.51 ± 0.65 | −2.43 ± 0.69 |
+| mag < 25.0 | −4.72 ± 0.36 | −3.33 ± 0.36 | −2.15 ± 0.37 | −1.13 ± 0.37 |
+| RMS guarded / held out | 2.35 / 5.12 | 1.45 / 4.75 | 0.89 / 5.26 | 0.83 / 1.52 |
+| validation NLL | −3.69950 | −3.69897 | −3.68066 | −3.69131 |
+
+Gate (rule addendum): (1) target grid (2.8–3.2 px × 24.6/25.0/25.4, 15 cuts) RMS 0.78 > 0.5 and max |m_eq| 1.12 >
+1.0 — **fail**; (2) held-out RMS 1.52 ≤ 5.12 — pass; (3) NLL worse by 0.0082 ± 0.0002 < 0.02 — pass.
+
+Map: the band guard roughly halves the size-migration wave (mag < 25 per-bin excess: 2.8 px +1.74 → +0.88, 3.3 px
+−0.84 → −0.53, ± ~0.15) but does not remove it; the cumulative 3.0 px cut keeps the 3.1–3.5 px deficit. Training
+history (`bands40/guard/history.json`): the guard is in a tug-of-war with the density fit. The validation guard loss
+was lowest (0.031) at guard epoch 13, when the validation NLL was −3.35; as the NLL recovered to −3.70 the guard loss
+rose back to 0.08. ~95% of guard steps hit the gradient clip. Per window at the selected epoch the residual sits in
+bright galaxies (MAG_AUTO < 24): 2.8–3.0 px +6.2 tolerances (flow response too high), 3.2–3.4 px −3.7.
+
+Why not tune further on the flow-alone check yet: for GalSBI-dev it disagrees with the end-to-end constant-shear
+result (radius ≥ 3.75 px & < 25.0: flow alone −4.83 ± 0.41, end to end +0.97 ± 0.18; > 3 px & < 25.0: +0.80 vs
++2.47). Diagnostic launched (rule `$DATA_DIR/sbsi_caches/galsbi_bands40_constant_20261104/rule.md`, copy and preset in
+`doc/evidence/galsbi_bands40_constant_20261104/`): end-to-end constant-shear draws for GalSBI-dev with the bands40
+flow (A, job 17697425) and GalSBI-dev unchanged (B, 17697426) on the same 40 cases (chunks 0, 4, 8, 12) and seeds;
+`evaluate_galsbi_constant.py` CUTS gains seven target-grid rows (c20721a). B rows 0–3 must reproduce the earlier
+full studies. Paired comparison: `compare.py` there. 3 GPUs on `cip`.
+
 ## 2026-11-03 — Resume band-guard study and queue the declared validation
 
 Owner: "read latest logs of the latest branch/worktree. pick up where we are".
