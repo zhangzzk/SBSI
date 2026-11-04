@@ -140,3 +140,34 @@ in training, so the target grid is no longer fully held out; held-out RMS (15 cu
 whether fitting near the target costs elsewhere.
 
 Resources: two training GPUs at once, then one check GPU (four-GPU limit).
+
+## Addendum: grid with measured cut (2026-11-04, before any grid training or output)
+
+Owner: "how about we go back to grid-based regularization (understand how we did exactly) but with measurement cuts
+for that regularization term only". Owner choices: target cut only, cells weighted by their simulation error,
+grid = true magnitude x true size x crowding.
+
+What the September grid term was (archive/research-2026-09-14/doc/FLOW_GRID_COVARIANCE.md,
+FLOW_CIRCULARIZED_GRID_SHAPE_RADIUS.md): 6x6x6 cells of leg-invariant truth properties (r_input_p, circularized
+radius, r_blend), quantile edges, membership by the pair; per-cell forward WLS 2x2 shape response of ALL usable pairs
+(no measured cut); flow side the same with CRN antithetic draws and two independent groups; loss
+NLL + lambda/(2 d n_cells) sum_B (A_B - t_B)^T V_B^-1 (C_B - t_B), lambda 1, 12 cells x 128 pairs x 16 draws added to
+every NLL step. Rejected 2026-09-13 (coherent m +1.2 to +1.8%).
+
+Arm `grid_cut` (`train --grid`): the guard phase of the frozen recipe from the same density-only checkpoint, with
+- cells: 6x6x6 on r_input_p, circularized_Re_input_p, nbr_close_100 (r_blend is not in the GalSBI domain), edges =
+  quantiles over training pairs weighted by the soft target-cut weight of the measured g = 0 leg, open end bins;
+- per-cell target: the guard's soft-cut response (influence form, both legs' measured outputs, softness 0.05) of
+  FLUX_RADIUS > 3 px AND MAG_AUTO < 25, restricted to the cell (its own pass mass, mean and shear design);
+- scale: per cell and component, the delete-one-case jackknife SE of the training target (160 cases); cells with
+  pass mass < 200, < 8 cases with pass weight, cond(design) >= 1e8 or nonfinite SE are dropped and reported;
+- loss: NLL + 1 x mean over sampled cells/components of (A - t)(C - t)/SE^2 / 2, 12 cells x 128 pairs x 16 draws,
+  independent groups, inside every NLL step (no separate guard steps); clip, lr, scheduler, seeds as the frozen
+  recipe; selection = validation NLL + grid score on the fixed 200k validation pairs (training cells, training SE).
+Code checked on synthetic data (tests/test_grid_cut_arm.py): cell targets equal the frozen fit_guard_response on the
+cell (4e-15); an exact model reproduces every target (3e-15) and scores 0.
+
+Check: `check --flows nll_only steps4 bands40 steps4_and25 grid_cut --tag _grid` with the AND-only extras. Gate as
+for the band guard (target grid RMS m_eq <= 0.5 and max <= 1.0; held-out RMS <= 5.12; NLL cost < 0.02).
+Limitations: pairs are usable in both legs only (detection transitions not in the target, as in the guard); the cut
+is trained on, so the target cell is not held out; one seed.

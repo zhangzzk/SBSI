@@ -8,7 +8,10 @@
                     output <root>/bands<N>/
   train --and-only  the same with the guard on the 9 joint cuts only (radius 2.8 / 3.0 / 3.2 AND magnitude
                     AND_MAGNITUDE); output <root>/steps<N>_and25/
-  map              shear response per measured (radius, magnitude) bin, simulation and flows (validation cases)
+  train --grid      the September grid response term (6x6x6 truth cells, every NLL step, 12 cells x 128 pairs x 16
+                    draws, cell error scale) with each cell's response taken through the soft measured GRID_CUT on
+                    both legs; output <root>/grid_cut/
+  map            shear response per measured (radius, magnitude) bin, simulation and flows (validation cases)
   check             response mismatch of each flow on all matched pairs of the 40 validation cases, at the 16
                     guarded cuts and 15 held-out cuts (plus any --extra cuts, reported but outside the held-out
                     RMS), plus validation NLL; per-case sums, case bootstrap.
@@ -43,6 +46,13 @@ BAND_TOLERANCE = 0.003   # band scale: 0.3% of the main-cut response, divided by
 MAIN_RESPONSE = 0.6035   # simulated main-cut (R11 + R22)/2 per galaxy, validation cases (check_mag25.json)
 # AND-only guard (rule addendum "AND-only guard"): magnitude limits around the target MAG_AUTO < 25
 AND_MAGNITUDE = (24.8, 25.0, 25.2)
+# Grid arm (rule addendum "grid with measured cut"): truth cells, soft measured cut inside the response term only
+GRID_CUT = {'name': 'radius_gt_3_magnitude_lt_25', 'radius_min': 3.0, 'magnitude_max': 25.0}
+GRID_AXES = {'r_input_p': 3, 'circularized_Re_input_p': 4, 'nbr_close_100': 6}   # context_raw columns
+GRID_BINS = 6
+GRID_CELLS_PER_STEP, GRID_PAIRS_PER_CELL, GRID_DRAWS = 12, 128, 16
+GRID_MIN_MASS, GRID_MIN_CASES = 200.0, 8   # summed soft pass weight of the g = 0 leg; cases with any pass weight
+GRID_SEED = 615_000_000_001
 
 
 def sha256(path):
@@ -146,10 +156,228 @@ def band_scales(trainer, bands):
                     'band_mass': (mass[1:] / len(rows)).tolist(), 'scales': scales.tolist()}
 
 
-def train(steps, no_global=False, bands=False, and_only=False):
+def grid_edges(features, weight):
+    """Per-axis quantile edges weighted by the g = 0 pass weight, open ends (tails go to the end bins)."""
+    edges = []
+    for x in features.T:
+        order = np.argsort(x)
+        cumulative = np.cumsum(weight[order])
+        inner = x[order][np.searchsorted(cumulative / cumulative[-1], np.arange(1, GRID_BINS) / GRID_BINS)]
+        edges.append(np.concatenate([[-np.inf], inner, [np.inf]]))
+    return np.asarray(edges)
+
+
+def grid_cells(features, edges):
+    index = [np.searchsorted(e[1:-1], x, side='right') for e, x in zip(edges, features.T)]
+    return np.ravel_multi_index(index, (GRID_BINS,) * len(edges))
+
+
+def grid_sums(data, edges, kw):
+    """Per case and cell sums from which the soft-cut response and its case jackknife follow exactly:
+    N, sum w0, sum w0 e0 (2), sum (w1 e1 - w0 e0) gamma^T (2x2), sum (w1 - w0) gamma (2), sum gamma gamma^T (2x2)."""
+    import sbsi.flow_guard_response as guard
+    zero, shear, gamma = (np.asarray(data[k], dtype=np.float64)
+                          for k in ('pair_zero_target', 'pair_shear_target', 'gamma'))
+    cell = grid_cells(np.asarray(data['context_raw'])[data['pairs'][:, 0]][:, list(GRID_AXES.values())], edges)
+    cases, case = np.unique(data['pair_case'], return_inverse=True)
+    w0, w1 = (guard.numpy_guard_weights(v, (GRID_CUT,), **kw)[:, 0] for v in (zero, shear))
+    columns = np.column_stack([np.ones(len(zero)), w0, w0[:, None] * zero[:, :2],
+                               np.einsum('no,ni->noi', w1[:, None] * shear[:, :2] - w0[:, None] * zero[:, :2],
+                                         gamma).reshape(-1, 4),
+                               (w1 - w0)[:, None] * gamma, np.einsum('no,ni->noi', gamma, gamma).reshape(-1, 4)])
+    key = case * GRID_BINS ** 3 + cell
+    sums = np.stack([np.bincount(key, c, minlength=len(cases) * GRID_BINS ** 3) for c in columns.T], axis=-1)
+    return sums.reshape(len(cases), GRID_BINS ** 3, -1), cell
+
+
+def grid_response(s):
+    """(..., 14) sums -> (response (..., 4) as R11 R12 R21 R22, pass mass D, pass mean mu (..., 2), inverse normal)."""
+    with np.errstate(divide='ignore', invalid='ignore'):
+        mass = s[..., 1] / s[..., 0]
+        mean = s[..., 2:4] / s[..., 1:2]
+        cross = (s[..., 4:8].reshape(*s.shape[:-1], 2, 2) - mean[..., :, None] * s[..., None, 8:10]) / mass[..., None, None]
+        normal = s[..., 10:14].reshape(*s.shape[:-1], 2, 2)
+        inverse = np.linalg.inv(np.where(np.abs(np.linalg.det(normal))[..., None, None] > 0, normal, np.eye(2)))
+        return (cross @ inverse).reshape(*s.shape[:-1], 4), mass, mean, inverse
+
+
+class GridCutPopulation:
+    """Soft-cut guard response of each truth cell: v = w(y) (e - mu_B) / D_B, R_B = sum_B (v1 - v0) gamma^T G_B^-1."""
+
+    def __init__(self, context, data, edges, kw, scale=None, allowed=None):
+        import torch
+        sums, cell = grid_sums(data, edges, kw)
+        total = sums.sum(0)
+        response, mass, mean, inverse = grid_response(total)
+        deleted, *_ = grid_response(total[None] - sums)
+        n_cases = len(sums)
+        error = np.sqrt((n_cases - 1) / n_cases * ((deleted - deleted.mean(0)) ** 2).sum(0))
+        scale = error if scale is None else scale
+        normal = total[:, 10:14].reshape(-1, 2, 2)
+        with np.errstate(invalid='ignore', divide='ignore'):
+            condition = np.linalg.cond(normal)
+        reasons = {'mass': total[:, 1] < GRID_MIN_MASS, 'cases': (sums[..., 1] > 0).sum(0) < GRID_MIN_CASES,
+                   'design': ~(condition < 1e8),
+                   'nonfinite': ~(np.isfinite(response).all(1) & np.isfinite(scale).all(1) & (scale > 0).all(1))}
+        if allowed is not None:   # validation scores the training cells only
+            reasons['not_in_training'] = ~np.isin(np.arange(GRID_BINS ** 3), allowed)
+        keep = ~np.any(list(reasons.values()), axis=0)
+        self.cells = np.flatnonzero(keep)
+        slot = np.full(GRID_BINS ** 3, -1)
+        slot[self.cells] = np.arange(len(self.cells))
+        pair_slot = slot[cell]
+        device = context.device
+        self.context, self.kw = context, kw
+        self.pairs = torch.as_tensor(data['pairs'], dtype=torch.long, device=device)
+        self.pair_slot = torch.as_tensor(pair_slot, device=device)
+        self.members = [torch.as_tensor(np.flatnonzero(pair_slot == k), device=device) for k in range(len(self.cells))]
+        as64 = lambda x: torch.as_tensor(np.ascontiguousarray(x), dtype=torch.float64, device=device)
+        self.target, self.response_scale = as64(response[keep]), as64(scale[keep])
+        self.mass, self.mean = as64(mass[keep]), as64(mean[keep])
+        design = np.zeros((len(cell), 2))
+        inside = pair_slot >= 0
+        design[inside] = np.einsum('ni,nij->nj', np.asarray(data['gamma'], dtype=np.float64)[inside],
+                                   inverse[cell[inside]]) * total[cell[inside], 0:1]
+        self.design = as64(design)
+        self.scale_all = scale
+        self.statistics = {
+            'cut': GRID_CUT, 'axes': list(GRID_AXES), 'inner_edges': edges[:, 1:-1].tolist(), 'cells_kept': self.cells.tolist(),
+            'cells_dropped': {k: np.flatnonzero(v).tolist() for k, v in reasons.items()},
+            'pairs_in_kept_cells': int(inside.sum()), 'pairs': int(len(cell)), 'cases': int(n_cases),
+            'pairs_per_cell': total[keep, 0].tolist(), 'pass_mass': total[keep, 1].tolist(),
+            'target': response[keep].tolist(), 'scale': scale[keep].tolist(), 'shape_normal': None}
+
+    def contributions(self, model, indices, draws, seed):
+        """Per pair (batch, 4): its cell's response numerator, scaled so the cell mean over its pairs is R_B."""
+        import torch
+        import sbsi.flow_guard_response as guard
+        pair, slot = self.pairs[indices], self.pair_slot[indices]
+        legs = guard.physical_context_draws(model, [self.context[pair[:, 0]], self.context[pair[:, 1]]], draws, seed)
+        influence = []
+        for values in legs:
+            w = guard.torch_guard_weights(values, (GRID_CUT,), **self.kw)[..., 0]
+            influence.append((w[..., None] * (values[..., :2] - self.mean[slot][:, None]) / self.mass[slot][:, None, None])
+                             .mean(dim=1))
+        return torch.einsum('bo,bi->boi', influence[1] - influence[0], self.design[indices]).reshape(len(indices), 4)
+
+
+def grid_backward(model, population, seed, weight):
+    """Independent-group cross score over GRID_CELLS_PER_STEP random cells (as the September grid term), replayed."""
+    import torch
+    rng = np.random.default_rng(seed)
+    chosen = rng.choice(len(population.cells), GRID_CELLS_PER_STEP, replace=False)
+    groups = [torch.cat([m[torch.as_tensor(rng.integers(len(m), size=GRID_PAIRS_PER_CELL), device=m.device)]
+                         for m in (population.members[c] for c in chosen)]) for _ in range(2)]
+    target, scale = population.target[chosen], population.response_scale[chosen]
+    cell_mean = lambda v: v.reshape(GRID_CELLS_PER_STEP, GRID_PAIRS_PER_CELL, 4).mean(dim=1)
+    with torch.no_grad():
+        means = [cell_mean(population.contributions(model, g, GRID_DRAWS, seed + 100_000_000 * s))
+                 for s, g in enumerate(groups)]
+    score = 0.5 * ((means[0] - target) * (means[1] - target) / scale ** 2).mean()
+    if not bool(torch.isfinite(score)):
+        raise ValueError('nonfinite grid score')
+    for s, g in enumerate(groups):
+        coefficient = 0.5 * (means[1 - s] - target) / scale ** 2 / target.numel()
+        ((cell_mean(population.contributions(model, g, GRID_DRAWS, seed + 100_000_000 * s)) * coefficient).sum()
+         * weight).backward()
+    return float(score)
+
+
+def grid_evaluate(model, population, indices, *, draws, groups, batch_size, seed):
+    """Fixed validation pairs, independent latent groups; cross score averaged over cells with pairs."""
+    import torch
+    with torch.no_grad():
+        idx = torch.as_tensor(indices, dtype=torch.long, device=population.context.device)
+        idx = idx[population.pair_slot[idx] >= 0]
+        n = len(population.cells)
+        count = torch.bincount(population.pair_slot[idx], minlength=n).double()
+        means = []
+        for group in range(groups):
+            total = torch.zeros(n, 4, dtype=torch.float64, device=idx.device)
+            for block, start in enumerate(range(0, len(idx), batch_size)):
+                rows = idx[start:start + batch_size]
+                total.index_add_(0, population.pair_slot[rows],
+                                 population.contributions(model, rows, draws, seed + group * 1_000_000_000 + block).double())
+            means.append(total / count.clamp(min=1)[:, None])
+        scored = count > 0
+        z = [((m - population.target) / population.response_scale)[scored] for m in means]
+        loss = torch.stack([0.5 * (z[a] * z[b]).mean() for a in range(groups) for b in range(a + 1, groups)]).mean()
+        mean = torch.stack(means).mean(0)
+    return {'loss': float(loss), 'cells_scored': int(scored.sum()), 'pairs': int(len(idx)), 'draws': int(draws),
+            'groups': int(groups), 'mean_residual': (mean - population.target).cpu().numpy().tolist(),
+            'group_means': None}
+
+
+def use_grid(trainer, out):
+    """Swap the frozen guard phase for the grid term: populations, a combined NLL + grid step, evaluation."""
+    base = trainer.base
+    loaded, nll_pass, made = [], base.nll_pass, {}
+
+    def load_split(*a, **k):
+        loaded.append(base_load(*a, **k))
+        return loaded[-1]
+
+    def population(context, pairs, *a, radius_softness, magnitude_softness, **k):
+        data = next(d for d in loaded if d['pairs'] is pairs)
+        kw = dict(radius_softness=radius_softness, magnitude_softness=magnitude_softness)
+        if 'train' not in made:   # the trainer builds the training population first
+            p = data['pairs'][:, 0]
+            features = np.asarray(data['context_raw'])[p][:, list(GRID_AXES.values())]
+            import sbsi.flow_guard_response as guard
+            weight = guard.numpy_guard_weights(np.asarray(data['pair_zero_target'], dtype=np.float64),
+                                               (GRID_CUT,), **kw)[:, 0]
+            made['edges'] = grid_edges(features, weight)
+            made['train'] = GridCutPopulation(context, data, made['edges'], kw)
+            pop = made['train']
+        else:   # validation: training edges and training error scale
+            pop = GridCutPopulation(context, data, made['edges'], kw, scale=made['train'].scale_all,
+                                    allowed=made['train'].cells)
+            made['validation'] = pop
+        print(f"GRID_POPULATION cells_kept={len(pop.cells)} pairs_in_kept={pop.statistics['pairs_in_kept_cells']:,}/"
+              f"{pop.statistics['pairs']:,} dropped={ {k: len(v) for k, v in pop.statistics['cells_dropped'].items()} }",
+              flush=True)
+        return pop
+
+    def combined_pass(model, values, context, *, optimizer=None, seed=None):
+        if optimizer is None:
+            return nll_pass(model, values, context)
+        import torch
+        model.train()
+        generator = torch.Generator(device=values.device).manual_seed(int(seed))
+        order = torch.randperm(len(values), generator=generator, device=values.device)
+        nll_total, scores, norms = 0.0, [], []
+        for step, rows in enumerate(order.split(base.BATCH_SIZE)):
+            optimizer.zero_grad(set_to_none=True)
+            nll = -model.log_prob(values[rows], context[rows]).mean()
+            if not bool(torch.isfinite(nll)):
+                raise ValueError('non-finite grid-stage NLL')
+            nll.backward()
+            scores.append(grid_backward(model, made['train'], GRID_SEED + int(seed) * 1_000_003 + step * 100_003,
+                                        trainer.GUARD_WEIGHT))
+            norms.append(float(torch.nn.utils.clip_grad_norm_(model.parameters(), trainer.GRADIENT_CLIP,
+                                                              error_if_nonfinite=True)))
+            optimizer.step()
+            nll_total += float(nll.detach()) * len(rows)
+        return {'nll': nll_total / len(values), 'grid_loss_mean': float(np.mean(scores)), 'rows': int(len(values)),
+                'optimizer_steps': len(norms), 'gradient_norm_mean': float(np.mean(norms)),
+                'clipped_step_fraction': float(np.mean(np.asarray(norms) > trainer.GRADIENT_CLIP))}
+
+    if not (out/'nll_completed.json').exists():
+        raise ValueError('grid arm starts from the copied density checkpoint only')
+    base_load = base.load_split
+    base.load_split, base.nll_pass = load_split, combined_pass
+    trainer.make_guard_cuts = lambda r, m: (GRID_CUT,)
+    trainer.GuardResponsePopulation = population
+    trainer.guard_training_epoch = lambda *a, **k: {'steps': 0, 'note': 'grid term is inside every NLL step'}
+    trainer.evaluate_guard_response = grid_evaluate
+    trainer.GUARD_STEPS_PER_EPOCH = 0
+    return made
+
+
+def train(steps, no_global=False, bands=False, and_only=False, grid=False):
     trainer = frozen()
-    out = ROOT/(f'{"bands" if bands else "steps"}{steps}' + ('_noglobal' if no_global else '')
-                + ('_and25' if and_only else ''))
+    out = ROOT/'grid_cut' if grid else ROOT/(f'{"bands" if bands else "steps"}{steps}'
+                                             + ('_noglobal' if no_global else '') + ('_and25' if and_only else ''))
     if not (out/'nll_completed.json').exists():
         (out/'nll').mkdir(parents=True, exist_ok=True)
         for name in ('selected.pt', 'selected_optimizer.pt', 'history.json'):
@@ -173,8 +401,10 @@ def train(steps, no_global=False, bands=False, and_only=False):
         (out/'band_scales.json').write_text(json.dumps({'bands': list(band_cuts), **record}, indent=1) + '\n')
         trainer.make_guard_cuts = lambda r, m: band_cuts
         trainer.guard_scales = lambda cuts: scales
-    print(f'GUARD_STRENGTH steps_per_epoch={steps} no_global={no_global} bands={bands} and_only={and_only} out={out}',
-          flush=True)
+    if grid:
+        use_grid(trainer, out)
+    print(f'GUARD_STRENGTH steps_per_epoch={trainer.GUARD_STEPS_PER_EPOCH} no_global={no_global} bands={bands} '
+          f'and_only={and_only} grid={grid} out={out}', flush=True)
     trainer.train(argparse.Namespace(domain_root=DOMAIN, output_root=out, resume=True))
 
 
@@ -392,6 +622,7 @@ def main():
     t.add_argument('--no-global', action='store_true', help='drop the global (uncut) term from the guard')
     t.add_argument('--bands', action='store_true', help='guard on the band tiling instead of the 16 cuts')
     t.add_argument('--and-only', action='store_true', help='guard on the 9 radius-and-AND_MAGNITUDE cuts only')
+    t.add_argument('--grid', action='store_true', help='grid response term with the measured GRID_CUT (--steps ignored)')
     c = sub.add_parser('check')
     c.add_argument('--flows', nargs='+', default=['nll_only', 'steps4', 'steps4_noglobal', 'steps40'])
     c.add_argument('--extra', nargs='+', default=[], metavar='RADIUS,MAG',
@@ -402,7 +633,7 @@ def main():
         raise RuntimeError('scheduler allocation required')
     known = {'nll_only': SOURCE/'nll/selected.pt', 'steps4': SOURCE/'guard/selected.pt'}
     if a.stage == 'train':
-        train(a.steps, a.no_global, a.bands, a.and_only)
+        train(a.steps, a.no_global, a.bands, a.and_only, a.grid)
     elif a.stage == 'map':
         response_map({k: known.get(k, ROOT/k/'guard/selected.pt') for k in a.flows}, a.tag)
     else:
