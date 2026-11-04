@@ -116,3 +116,27 @@ Gate for the constant-shear evaluation (same evaluation as above, also reported 
 Expectation stated in advance: the flow alone accounts for only part of GalSBI-dev's end-to-end error at
 MAG_AUTO < 25 & radius > 3 (flow-alone +0.80 vs end-to-end +2.47); a flow passing this gate need not give 0.3%
 end to end.
+
+## Addendum: AND-only guard (2026-11-04, before any AND-only training or output)
+
+Owner (after learning the guard mixes 16 cuts: global, 3 radius-only, 3 magnitude-only, 9 radius-AND-magnitude):
+"train a flow with AND only (and use 24.8/25/25.2)".
+
+Arms (`train --steps N --and-only`): the guard phase of the frozen recipe from the same density-only checkpoint,
+with the guard on the 9 joint cuts only, radius > 2.8 / 3.0 / 3.2 px AND MAG_AUTO < 24.8 / 25.0 / 25.2 (no global,
+no single-axis cuts), all scales 0.02 as before; everything else unchanged (seeds, clip, lr, softness 0.05,
+selection = validation NLL + guard loss on these 9 cuts).
+- `steps4_and25`: 4 guard steps per epoch, as GalSBI-dev (only the cuts change);
+- `steps40_and25`: 40 guard steps per epoch, as steps40 / bands40.
+
+Check: `check --flows nll_only steps4 bands40 steps4_and25 steps40_and25 --tag _and25` with --extra the band-guard
+target grid (radius 2.8, 2.9, 3.0, 3.1, 3.2 x magnitude 24.6, 25.0, 25.4; 3.0x25.0 and 3.0x25.4 are held-out rows)
+plus radius 2.8 / 3.0 / 3.2 x magnitude 24.8 / 25.2 (the new guarded cuts not already listed). Same case bootstrap,
+same common random numbers, so arm differences are paired.
+
+Gate for the constant-shear evaluation: the band-guard gate unchanged (target grid RMS m_eq <= 0.5 and every
+|m_eq| <= 1.0; held-out RMS <= 5.12; NLL worse than nll_only by < 0.02). Note the AND-only cuts at 24.8-25.2 are now
+in training, so the target grid is no longer fully held out; held-out RMS (15 cuts, incl. radius > 3.75) tells
+whether fitting near the target costs elsewhere.
+
+Resources: two training GPUs at once, then one check GPU (four-GPU limit).

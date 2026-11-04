@@ -1,6 +1,6 @@
 # Work log
 
-## 2026-11-04 — AND-only guard: two flows training (9 radius-and-magnitude cuts at MAG_AUTO 24.8/25.0/25.2)
+## 2026-11-04 — AND-only guard (9 radius-and-magnitude cuts at MAG_AUTO 24.8/25.0/25.2): fails the gate
 
 Owner, after learning the GalSBI-dev guard mixes 16 cuts (global, 3 radius-only, 3 magnitude-only, 9 radius-AND-
 magnitude, so the main cut is 1/16 of the guard loss and the 4-step guard moved it +0.29 -> +1.49): "train a flow
@@ -10,13 +10,43 @@ with AND only (and use 24.8/25/25.2)". Rule addendum "AND-only guard" in
 Code: `scripts/run_galsbi_guard_strength.py train --steps N --and-only` replaces the frozen trainer's cut list
 with the 9 joint cuts radius > 2.8 / 3.0 / 3.2 px AND MAG_AUTO < 24.8 / 25.0 / 25.2 (scale 0.02 each; no global,
 no single-axis cuts); everything else is the frozen GalSBI-dev recipe from the same density-only checkpoint.
-Login-node check with the frozen interpreter: the patched list has exactly these 9 cuts; `py_compile` passes.
+Login-node check with the frozen interpreter: the patched list has exactly these 9 cuts; `py_compile` passes; both
+training logs report `guards=9`.
 
-Jobs (cip, one A40 each): `steps4_and25` 17709579 (4 guard steps/epoch, as GalSBI-dev: only the cuts change),
-`steps40_and25` 17709580 (40 steps/epoch, as steps40/bands40); check 17709582 (`afterok` both; flows nll_only,
-steps4, bands40 and the two new arms, tag `_and25`, extra cuts: the band-guard target grid plus 2.8/3.0/3.2 x
-24.8/25.2). Gate as for the band guard (target grid RMS m_eq <= 0.5, max <= 1.0; held-out RMS <= 5.12; NLL cost
-< 0.02). Limitation: the target-grid cuts at 25.0 are now trained on, so the gate there is not fully held out.
+Jobs: `steps4_and25` 17709579 (cip, 4 guard steps/epoch as GalSBI-dev, 19 min, selected guard epoch 5 of 35);
+`steps40_and25` 17709633 (inter A40, 40 steps/epoch, 1 h 28 min, selected epoch 30 of 50; first submitted on cip as
+17709580 and moved to inter before it started); check 17709635 (inter, 16 min, `check --tag _and25`, flows nll_only,
+steps4, bands40 and both new arms, extra cuts = band-guard target grid + 2.8/3.0/3.2 x 24.8/25.2). Output
+`doc/evidence/galsbi_guard_strength_20261103/check_and25.json`.
+
+m_eq (flow alone, validation cases, ± case bootstrap; arm differences are paired, SE <= 0.01):
+
+| cut | density only | steps4 (GalSBI-dev) | bands40 | steps4_and25 | steps40_and25 |
+|---|---|---|---|---|---|
+| radius > 2.8, mag < 25.0 | −2.86 ± 0.35 | −1.63 ± 0.36 | −0.21 ± 0.36 | −1.66 ± 0.36 | −0.72 ± 0.36 |
+| radius > 2.9, mag < 25.0 | −1.44 ± 0.35 | −0.34 ± 0.35 | +0.49 ± 0.36 | −0.43 ± 0.35 | +0.43 ± 0.36 |
+| **radius > 3.0, mag < 25.0** | −0.12 ± 0.34 | +0.80 ± 0.35 | +1.03 ± 0.35 | **+0.59 ± 0.35** | **+1.36 ± 0.35** |
+| radius > 3.1, mag < 25.0 | +0.60 ± 0.33 | +1.30 ± 0.33 | +1.12 ± 0.33 | +0.95 ± 0.33 | +1.61 ± 0.33 |
+| radius > 3.2, mag < 25.0 | +0.58 ± 0.32 | +1.08 ± 0.32 | +0.80 ± 0.32 | +0.57 ± 0.32 | +1.12 ± 0.32 |
+| radius > 3.0, mag < 24.8 | −0.44 ± 0.36 | +0.37 ± 0.36 | +0.91 ± 0.36 | +0.20 ± 0.36 | +0.99 ± 0.36 |
+| radius > 3.0, mag < 25.2 | +0.03 ± 0.35 | +1.05 ± 0.35 | +1.00 ± 0.35 | +0.80 ± 0.35 | +1.54 ± 0.35 |
+| radius > 3.0, mag < 25.8 (old main) | +0.29 ± 0.36 | +1.49 ± 0.36 | +0.96 ± 0.36 | +1.14 ± 0.36 | +1.79 ± 0.36 |
+| radius > 3.75, mag < 25.8 | −5.36 ± 0.44 | −5.34 ± 0.44 | −2.14 ± 0.46 | −6.33 ± 0.44 | −6.41 ± 0.44 |
+| RMS / max over the 9 AND-guarded cuts | 1.70 / 3.19 | 1.22 / 2.08 | 0.72 / 1.03 | 1.08 / 2.07 | 1.07 / 1.54 |
+| RMS / max over the target grid (15) | 1.49 / 3.41 | 1.18 / 2.42 | 0.78 / 1.12 | 1.01 / 2.38 | 1.15 / 1.79 |
+| RMS held out (15) | 5.12 | 4.75 | 1.52 | 5.22 | 5.34 |
+| validation NLL (− nll_only) | −3.69950 | +0.00053 | +0.00819 | +0.01175 | +0.00489 |
+
+Gate: (1) target grid RMS 1.01 / 1.15 > 0.5 and max 2.38 / 1.79 > 1.0 — **fail** (both arms); (2) held-out RMS
+5.22 / 5.34 > 5.12 — **fail**; (3) NLL cost 0.012 / 0.005 < 0.02 — pass. No constant-shear run.
+
+Reading: even trained only on these 9 cuts, the flow misses them by about 1% RMS (no better than the band guard,
+which never saw 24.8/25.2). The size wave stays: at mag < 25 the error still runs from −1.7 / −0.7 at 2.8 px to
++1.0 / +1.6 at 3.1 px. 40 steps shift every cut up (+0.56 ± 0.00 at the target vs steps4) rather than flattening
+it; 4 steps move the target by −0.20 ± 0.00 only. The selected 4-step epoch (5) had validation guard loss 0.048 on
+the 200k selection subset, but the guard loss swings 0.05–0.34 between epochs, so selection picks a noisy low.
+Large sizes get worse (radius > 3.75: −1.0 vs steps4). Same conclusion as the band guard: a cut guard cannot pull
+this flow to 0.3% near 3 px / 25 against the density fit.
 
 ## 2026-11-04 — Three GalSBI-dev response figures: emulator and flow vs their training family, joint on constant shear
 
