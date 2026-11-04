@@ -1,5 +1,28 @@
 # Work log
 
+## 2026-11-04 — Grid response term with the measured cut inside it: training launched
+
+Owner: "how about we go back to grid-based regularization (understand how we did exactly) but with measurement cuts
+for that regularization term only"; chose target cut only, cells weighted by their simulation error, grid = true
+magnitude x true size x crowding. Rule addendum "grid with measured cut" in
+`$DATA_DIR/sbsi_caches/galsbi_guard_strength_20261103/rule.md` (copy in `doc/evidence/galsbi_guard_strength_20261103/`),
+written before training; it also records how the September grid term worked (archive docs FLOW_GRID_COVARIANCE.md,
+FLOW_CIRCULARIZED_GRID_SHAPE_RADIUS.md): truth cells, all usable pairs, no measured cut.
+
+Code: `scripts/run_galsbi_guard_strength.py train --grid` (commit 503da21). 6x6x6 cells on r_input_p,
+circularized_Re_input_p, nbr_close_100 (edges: training-pair quantiles weighted by the g = 0 soft pass weight); per
+cell the guard's soft-cut influence response of FLUX_RADIUS > 3 px & MAG_AUTO < 25 on both legs; scale = case-jackknife
+SE per cell and component; 12 cells x 128 pairs x 16 draws inside every NLL step, lambda 1. Test
+`tests/test_grid_cut_arm.py` (frozen interpreter, synthetic): cell targets = frozen fit_guard_response on the cell
+(4e-15), an exact model reproduces all targets (3e-15) and scores 0; passes.
+
+Job 17712830 (inter A40), check 17712831 (afterok, tag `_grid`). All 216 cells pass the gates (train 23.3M pairs,
+validation 5.8M). Cell targets span R 0.07–1.9 (median 0.51; cells straddling the cut are dominated by objects
+crossing it), pass fraction 3%–100%, SE median 6.6% of the response, smallest 0.1%. Epoch ~1 min 47 s. Epoch 1:
+raw gradient norm ~3,500 (NLL alone ~15–77), every step clipped, so the grid term sets the direction; validation NLL
+−3.70 → −3.49 → −3.47, grid score 6.38 → 4.61 (half mean squared residual in SE units; validation-target noise alone
+adds ~2). Expect an NLL cost; the gate's NLL condition decides.
+
 ## 2026-11-04 — AND-only guard (9 radius-and-magnitude cuts at MAG_AUTO 24.8/25.0/25.2): fails the gate
 
 Owner, after learning the GalSBI-dev guard mixes 16 cuts (global, 3 radius-only, 3 magnitude-only, 9 radius-AND-
