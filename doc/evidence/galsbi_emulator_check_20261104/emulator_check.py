@@ -16,7 +16,7 @@ STUDY = D/'sbsi_caches/galsbi_emulator_check_20261104'
 PAIRS = D/'blendemu_runs/disk_response_moment_galsbi_cut_20261103'
 MODELS = {'galsbi_dev': D/'blendemu_runs/disk_response_moment_galsbi_20261103/model',
           'cut_variant': PAIRS/'model'}
-TRUTH = D/'sbsi/galsbi_resim/training/sims/case{}_0.0/real0/catalogues/input/gals_info_tile180.0_-0.5.feather'
+TRUTH = str(D/'sbsi/galsbi_resim/training/sims/case{}_0.0/real0/catalogues/input/gals_info_tile180.0_-0.5.feather')
 CASES = range(40)
 RADIUS_EDGES = (3.2, 3.5, 3.75, 4.5, 6.)          # px, rows all have FLUX_RADIUS > 3
 MAG_EDGES = (22., 23., 24., 25.)                  # MAG_AUTO, rows all < 25.8
