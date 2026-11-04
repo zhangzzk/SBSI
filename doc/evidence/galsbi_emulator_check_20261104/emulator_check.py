@@ -73,6 +73,42 @@ def sums():
     np.savez(STUDY/'sums.npz', sums=out, quantities=np.array(Q), cases=np.array(list(CASES)))
 
 
+PROFILE_EDGES = {'flux_radius': np.arange(3., 8.01, .25), 'mag_auto': np.arange(20., 25.61, .2),
+                 'true_r': np.arange(20., 30.01, .5), 'neighbour_true_r': np.arange(16., 30.01, .5)}
+
+
+def profiles():
+    """Fine one-property profiles for the plot: per case, selection (main, target) and bin: rows, label, gain*b."""
+    import pandas as pd
+    import xgboost as xgb
+    root = MODELS['galsbi_dev']
+    meta = json.loads((root/'metadata.json').read_text())
+    booster = xgb.Booster()
+    booster.load_model(root/'model.json')
+    booster.set_param({'nthread': 8})
+    manifest = json.loads((PAIRS/'pairs/manifest.json').read_text())
+    out = {k: np.zeros((len(CASES), 2, len(e)+1, 3)) for k, e in PROFILE_EDGES.items()}
+    for case in CASES:
+        truth = pd.read_feather(TRUTH.format(case), columns=['index_input', 'r_input'])
+        r_true = np.full(truth['index_input'].max()+1, np.nan)
+        r_true[truth['index_input'].to_numpy()] = truth['r_input'].to_numpy(float)
+        for part in [p for p in manifest['parts'] if p['case'] == case]:
+            with np.load(PAIRS/'pairs'/part['path']) as z, np.load(PAIRS/'prepared/gains'/Path(part['path']).name) as g:
+                x, label, primary, gain = z['x'], z['y'].astype(float), z['primary'], g['gain'].astype(float)
+            b = booster.inplace_predict(np.ascontiguousarray(x)).astype(float)*meta['y_std']+meta['y_mean']
+            rp = r_true[primary]
+            # scaled magnitudes are true magnitudes plus one survey constant (checked 2.6413 for every pair)
+            prop = {'flux_radius': np.exp(x[:, 7]), 'mag_auto': x[:, 8], 'true_r': rp,
+                    'neighbour_true_r': x[:, 3]-(x[:, 2]-rp)}
+            for s, keep in enumerate((np.ones(len(x), bool), x[:, 8] < 25.)):
+                for k, e in PROFILE_EDGES.items():
+                    idx = np.digitize(prop[k][keep], e)
+                    for q, v in enumerate((np.ones(keep.sum()), label[keep], (gain*b)[keep])):
+                        out[k][case, s, :, q] += np.bincount(idx, v, minlength=len(e)+1)
+        print(f'case {case} done', flush=True)
+    np.savez(STUDY/'profiles.npz', **out, **{f'{k}_edges': e for k, e in PROFILE_EDGES.items()})
+
+
 AMPLITUDE_Q = ('rows', 'label20', 'label05', 'null20', 'null05')
 
 
@@ -189,4 +225,4 @@ def report():
 
 
 if __name__ == '__main__':
-    {'sums': sums, 'amplitude': amplitude, 'report': report}[sys.argv[1]]()
+    {'sums': sums, 'amplitude': amplitude, 'profiles': profiles, 'report': report}[sys.argv[1]]()
