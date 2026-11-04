@@ -1,5 +1,23 @@
 # Work log
 
+## 2026-11-04 — AND-only guard: two flows training (9 radius-and-magnitude cuts at MAG_AUTO 24.8/25.0/25.2)
+
+Owner, after learning the GalSBI-dev guard mixes 16 cuts (global, 3 radius-only, 3 magnitude-only, 9 radius-AND-
+magnitude, so the main cut is 1/16 of the guard loss and the 4-step guard moved it +0.29 -> +1.49): "train a flow
+with AND only (and use 24.8/25/25.2)". Rule addendum "AND-only guard" in
+`$DATA_DIR/sbsi_caches/galsbi_guard_strength_20261103/rule.md`, written before any training.
+
+Code: `scripts/run_galsbi_guard_strength.py train --steps N --and-only` replaces the frozen trainer's cut list
+with the 9 joint cuts radius > 2.8 / 3.0 / 3.2 px AND MAG_AUTO < 24.8 / 25.0 / 25.2 (scale 0.02 each; no global,
+no single-axis cuts); everything else is the frozen GalSBI-dev recipe from the same density-only checkpoint.
+Login-node check with the frozen interpreter: the patched list has exactly these 9 cuts; `py_compile` passes.
+
+Jobs (cip, one A40 each): `steps4_and25` 17709579 (4 guard steps/epoch, as GalSBI-dev: only the cuts change),
+`steps40_and25` 17709580 (40 steps/epoch, as steps40/bands40); check 17709582 (`afterok` both; flows nll_only,
+steps4, bands40 and the two new arms, tag `_and25`, extra cuts: the band-guard target grid plus 2.8/3.0/3.2 x
+24.8/25.2). Gate as for the band guard (target grid RMS m_eq <= 0.5, max <= 1.0; held-out RMS <= 5.12; NLL cost
+< 0.02). Limitation: the target-grid cuts at 25.0 are now trained on, so the gate there is not fully held out.
+
 ## 2026-11-04 — Three GalSBI-dev response figures: emulator and flow vs their training family, joint on constant shear
 
 Owner request: plots of (1) emulator vs truth on its training data, (2) flow shape response on its training data,
