@@ -21,7 +21,7 @@ All matched usable pairs of the 40 validation cases of the GalSBI training famil
 nll_only (density only), steps4 (GalSBI-dev, the preset flow), bands40; 16 antithetic CRN draws per pair with
 the check/map seeds (614000000001 + block). Shear enters the flow only through the sheared input ellipticity.
 
-1. Cut split: for hard cuts FLUX_RADIUS > T (T = 2.5..4.0 px step 0.1) AND MAG_AUTO < 25.0 / 25.8 / none, each
+1. Cut split: for hard cuts FLUX_RADIUS >= T (T = 2.5..4.0 px step 0.1) AND MAG_AUTO < 25.0 / 25.8 / none, each
    leg by its own measurement: response sum = kept-in-both shape change + entering - exiting, with
    s = e_measured . design (the map/check projection). m-like ratios use the simulation's total.
 2. Radius transport: slope of y = dln(FLUX_RADIUS)/|g| against x = intrinsic e . shear direction, per own
@@ -52,3 +52,10 @@ cut total); otherwise the result is not reported.
 More than one can hold; the entering/exiting split decides how much of the 3 px error each part carries.
 
 Job: one GPU (cip A40, `jobs/job_galsbi_guard_strength.sh transport`), analysis on CPU. Output transport.npz here.
+
+## Amendment (2026-11-04, after the first run's validation, before reading any result)
+
+Run 17713793 failed the validation for the simulation only (flows reproduced the map to 3e-15; simulation up to
+2.8e-3): simulated FLUX_RADIUS is stored rounded to 0.001 px, so ~0.06% of galaxies sit exactly on each
+threshold, and the map counts them as passing (bucketize, >=) while the first run used >. The cut is now >= T
+(the map convention); the run is repeated with nothing else changed. No result table of the first run was read.

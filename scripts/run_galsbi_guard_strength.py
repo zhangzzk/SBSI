@@ -684,8 +684,8 @@ def transport(flows):
         s0, s1 = (y0[..., :2] * d).sum(-1), (y1[..., :2] * d).sum(-1)                       # (B, D)
         r0, r1 = y0[..., 2], y1[..., 2]
         m0, m1 = (30 - 2.5 * torch.log10(y[..., 3].clamp_min(1e-30)) for y in (y0, y1))
-        p0 = ((r0[..., None, None] > t_r[:, None]) & (m0[..., None, None] < t_m)).flatten(-2)  # (B, D, cuts)
-        p1 = ((r1[..., None, None] > t_r[:, None]) & (m1[..., None, None] < t_m)).flatten(-2)
+        p0 = ((r0[..., None, None] >= t_r[:, None]) & (m0[..., None, None] < t_m)).flatten(-2)  # (B, D, cuts)
+        p1 = ((r1[..., None, None] >= t_r[:, None]) & (m1[..., None, None] < t_m)).flatten(-2)
         both, enter, leave = p0 & p1, ~p0 & p1, p0 & ~p1
         cut = torch.stack((both * (s1 - s0)[..., None], enter * s1[..., None], -(leave * s0[..., None]),
                            enter.double(), leave.double(), p0.double()), -1).sum(1)          # (B, cuts, 6)
