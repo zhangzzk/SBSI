@@ -1,5 +1,71 @@
 # Work log
 
+## 2026-11-04 — Why the flow's response fails around 3 px: it under-models how measured shape and measured size share noise for PSF-sized galaxies
+
+Owner: "we need to understand why current flow fails on shape response in the dimension of size, particularly around
+3px". Diagnostic only (no training, no constant-shear data). Rule (with three amendments, each written before the
+output it governs): `doc/evidence/galsbi_size_transport_20261104/rule.md`; study root
+`$DATA_DIR/sbsi_caches/galsbi_size_transport_20261104/`. Code: `scripts/run_galsbi_guard_strength.py transport`
+(commits 55e7345, 75c4eda, 40b0182, a946cac); analysis `analyse.py`, `shape_by_size.py`, `joint.py`, `alignment.py`,
+`plot.py` and their JSON outputs in the evidence folder; figure `size_wave_cause.png` (also
+`SBSI/plots/galsbi_size_wave_cause_20261104.png`).
+
+Prior work checked first: the 2026-11-03 response map (size wave), and the September FS2 radius-transport audit
+(archive/research-2026-09-14/doc/FLOW_PAIRED_TRANSPORT.md, FLOW_SELECTION_LOCALIZATION.md: wrong-sign radius transport
+near 0.75", fixed by a mean-only ablation). That audit had never been run on the GalSBI-dev flow.
+
+What: all 5,817,708 matched usable pairs of the 40 validation cases of the GalSBI training family; flows nll_only,
+steps4 (GalSBI-dev) and bands40 with the check/map draws (16 antithetic, seeds 614000000001 + block); case bootstrap
+10,000 (seed 20260925). Jobs 17713793 (failed validation, see below), 17713899, 17713980, 17714078 (cip A40, ~6 min
+each). Final run repeats every earlier field to 3e-15; cut totals and the per-leg joint sums reproduce `map.npz` /
+`map_bands.npz` to 3e-15. First run: simulated FLUX_RADIUS is stored rounded to 0.001 px, so ~0.06% of galaxies sit
+exactly on each threshold; the map counts them as passing (>=), the first run did not (>), giving up to 0.28%
+differences; fixed to >= before any result was read.
+
+Pairing caveat (amendment 2): for a flow, which sheared-leg draw "is" a given unsheared draw is a random-number
+choice, not physics. Kept/entering/exiting splits and binning by the unsheared leg's measured size depend on it;
+only cut totals, per-leg binning by each leg's own measurement, and binning by true properties do not. The
+conclusions below use only pairing-free numbers.
+
+Results (± case bootstrap):
+1. Ruled out. Counts per 0.1 px bin near the cut agree within 1–3% (saved map counts). Zero-shear slope of
+   ln FLUX_RADIUS vs |e_in|^2 by true size agrees within ~5% for true Re 0.1–1" (0.2–0.25": sim 0.182 ± 0.002, flow
+   0.174 ± 0.001). Radius change with shear vs intrinsic e along the shear: sim 0.338 ± 0.003, flow 0.339 at 3.0 px
+   (agreement within 0.01 over 2.5–3.6 px). The mean-only ablation makes every cut near 3 px worse (3.0 px & < 25:
+   m +1.14 → +4.62), so the September "wrong spread change" mechanism is not this flow's problem.
+2. Who carries the wave (pairing-free, flow − sim in % of the simulated response at radius >= T & MAG_AUTO < 25,
+   m ~ minus the total): T 2.5: true Re < 0.15" +1.37 ± 0.14, 0.15–0.25" +1.95 ± 0.26, 0.25–0.4" −0.66 ± 0.20,
+   >= 0.4" +0.88 ± 0.07, total +3.55 ± 0.39; T 3.0: −0.17 ± 0.10, −0.98 ± 0.26, −0.82 ± 0.20, +0.86 ± 0.07, total
+   −1.12 ± 0.38; T 3.2: −0.30, −1.61 ± 0.23, −0.40, +0.97, total −1.34 ± 0.32; T 3.6: −0.26, −0.01, +2.25 ± 0.29,
+   +1.67 ± 0.13, total +3.66 ± 0.48. The swing from 2.5 to 3.2 px is mostly galaxies with true Re < 0.25" (about PSF
+   size or smaller), which scatter to measured 2.4–3.3 px; above 3.3 px the larger galaxies take over.
+3. Mechanism. At zero shear, the alignment of measured with intrinsic shape (sum(x s0)/sum(x x), x = intrinsic e
+   along the shear direction, s0 = measured e projected as in the map) depends strongly on where a small galaxy lands
+   in measured size. True Re 0.15–0.25", MAG_AUTO < 25, sim vs flow: 2.5 px −19.8 ± 0.5 vs −8.3 ± 0.1; 2.6 px
+   −19.2 vs −3.9; 2.7 px −13.7 vs +1.8; 2.8 px −4.1 vs +8.0; 2.9 px +7.1 vs +13.8; 3.0 px +16.0 vs +18.7; 3.2 px
+   +24.1 vs +22.9 (sim ± ≤ 0.3, flow ± ≤ 0.1). True Re < 0.15": 2.7 px −16.1 vs −4.2. So in the simulation a small
+   galaxy measured below ~2.8 px has its measured shape pointing ACROSS its true shape, and one measured above ~3 px
+   strongly along it; the flow has a much flatter version. Density-only flow is the same (the guard does not change
+   it). Reading: noise that makes a small galaxy look rounder (or stretched across its true axis) also makes its
+   FLUX_RADIUS smaller, so selecting by measured size selects by the direction of the shape noise. The flow learns
+   this link between measured-size noise and measured-shape noise only weakly.
+4. This zero-shear link predicts the shear response: per measured-size slice, response per galaxy ≈ 0.04–0.05 x
+   alignment on both sides (true 0.15–0.25": sim −0.45/−0.39/−0.18/+0.13/+0.64/+1.07/+1.25 at 2.6–3.2 px, flow
+   −0.13/+0.04/+0.27/+0.55/+0.83/+1.08/+1.16). Because the 3 px cut sits on the GalSBI measured-size peak, where
+   these galaxies pile up, the too-flat profile shows up as the size wave (flow too much response below the cut, too
+   little just above). Also visible for larger galaxies at the low-size end of their own distribution (true >= 0.4"
+   at 3.2–3.4 px: flow/sim 0.86–0.91).
+
+Interpretation and limits: flow alone, training family, g = 0.05, 40 validation cases, one seed per flow. The
+"rounder ↔ smaller" noise explanation is an inference from the measured sign pattern, not shown with images. Why
+the flow under-learns it is not tested: likely the link is a correlation whose direction turns with the galaxy's
+orientation (spin-2) and lives in the noise tail of small galaxies, so it is worth little in NLL; guard losses
+can only shift the wave, which is what every guard did. No record in the logs of training the flow with shapes in
+the galaxy's own frame (shape along/across the intrinsic axis), which would make "rounder and smaller" a plain
+correlation between two outputs. Next (owner call): (a) a zero-shear check of that link alone (sim vs flow
+covariance of measured shape-along-intrinsic-axis with ln FLUX_RADIUS, by true size), and/or (b) a frame-rotated
+flow-output pilot judged on this alignment profile and the size-wave map before any constant-shear run.
+
 ## 2026-11-04 — Grid response term with the measured cut inside it: fails the gate badly (size-cut edge exploited)
 
 Owner: "how about we go back to grid-based regularization (understand how we did exactly) but with measurement cuts
