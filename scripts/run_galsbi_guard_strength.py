@@ -6,7 +6,9 @@
                     and the selection rule are unchanged. Output <root>/steps<N>/.
   train --bands     the same with the guard on soft windows tiling measured radius x magnitude (make_bands);
                     output <root>/bands<N>/
-  map               shear response per measured (radius, magnitude) bin, simulation and flows (validation cases)
+  train --and-only  the same with the guard on the 9 joint cuts only (radius 2.8 / 3.0 / 3.2 AND magnitude
+                    AND_MAGNITUDE); output <root>/steps<N>_and25/
+  map              shear response per measured (radius, magnitude) bin, simulation and flows (validation cases)
   check             response mismatch of each flow on all matched pairs of the 40 validation cases, at the 16
                     guarded cuts and 15 held-out cuts (plus any --extra cuts, reported but outside the held-out
                     RMS), plus validation NLL; per-case sums, case bootstrap.
@@ -39,6 +41,8 @@ BAND_RADIUS = tuple(float(x) for x in np.round(np.arange(2.2, 5.001, 0.2), 2))
 BAND_MAGNITUDE = (24.0, 24.6, 25.0, 25.4, 25.8, 26.4)
 BAND_TOLERANCE = 0.003   # band scale: 0.3% of the main-cut response, divided by the band's share of the main-cut mass
 MAIN_RESPONSE = 0.6035   # simulated main-cut (R11 + R22)/2 per galaxy, validation cases (check_mag25.json)
+# AND-only guard (rule addendum "AND-only guard"): magnitude limits around the target MAG_AUTO < 25
+AND_MAGNITUDE = (24.8, 25.0, 25.2)
 
 
 def sha256(path):
@@ -142,9 +146,10 @@ def band_scales(trainer, bands):
                     'band_mass': (mass[1:] / len(rows)).tolist(), 'scales': scales.tolist()}
 
 
-def train(steps, no_global=False, bands=False):
+def train(steps, no_global=False, bands=False, and_only=False):
     trainer = frozen()
-    out = ROOT/(f'{"bands" if bands else "steps"}{steps}' + ('_noglobal' if no_global else ''))
+    out = ROOT/(f'{"bands" if bands else "steps"}{steps}' + ('_noglobal' if no_global else '')
+                + ('_and25' if and_only else ''))
     if not (out/'nll_completed.json').exists():
         (out/'nll').mkdir(parents=True, exist_ok=True)
         for name in ('selected.pt', 'selected_optimizer.pt', 'history.json'):
@@ -157,6 +162,10 @@ def train(steps, no_global=False, bands=False):
     if no_global:   # the trainer builds its cuts once, through this module-level name
         all_cuts = trainer.make_guard_cuts
         trainer.make_guard_cuts = lambda r, m: tuple(c for c in all_cuts(r, m) if c['name'] != 'global')
+    if and_only:   # keep only the radius-and-magnitude cuts, at the AND_MAGNITUDE limits
+        all_cuts = trainer.make_guard_cuts
+        trainer.make_guard_cuts = lambda r, m: tuple(c for c in all_cuts(r, AND_MAGNITUDE)
+                                                     if c['radius_min'] is not None and c['magnitude_max'] is not None)
     if bands:   # the trainer builds cuts and scales once, through these module-level names
         allow_bands()
         band_cuts = make_bands()
@@ -164,7 +173,8 @@ def train(steps, no_global=False, bands=False):
         (out/'band_scales.json').write_text(json.dumps({'bands': list(band_cuts), **record}, indent=1) + '\n')
         trainer.make_guard_cuts = lambda r, m: band_cuts
         trainer.guard_scales = lambda cuts: scales
-    print(f'GUARD_STRENGTH steps_per_epoch={steps} no_global={no_global} bands={bands} out={out}', flush=True)
+    print(f'GUARD_STRENGTH steps_per_epoch={steps} no_global={no_global} bands={bands} and_only={and_only} out={out}',
+          flush=True)
     trainer.train(argparse.Namespace(domain_root=DOMAIN, output_root=out, resume=True))
 
 
@@ -381,6 +391,7 @@ def main():
     t.add_argument('--steps', type=int, required=True)
     t.add_argument('--no-global', action='store_true', help='drop the global (uncut) term from the guard')
     t.add_argument('--bands', action='store_true', help='guard on the band tiling instead of the 16 cuts')
+    t.add_argument('--and-only', action='store_true', help='guard on the 9 radius-and-AND_MAGNITUDE cuts only')
     c = sub.add_parser('check')
     c.add_argument('--flows', nargs='+', default=['nll_only', 'steps4', 'steps4_noglobal', 'steps40'])
     c.add_argument('--extra', nargs='+', default=[], metavar='RADIUS,MAG',
@@ -391,7 +402,7 @@ def main():
         raise RuntimeError('scheduler allocation required')
     known = {'nll_only': SOURCE/'nll/selected.pt', 'steps4': SOURCE/'guard/selected.pt'}
     if a.stage == 'train':
-        train(a.steps, a.no_global, a.bands)
+        train(a.steps, a.no_global, a.bands, a.and_only)
     elif a.stage == 'map':
         response_map({k: known.get(k, ROOT/k/'guard/selected.pt') for k in a.flows}, a.tag)
     else:
