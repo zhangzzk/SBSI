@@ -1,5 +1,38 @@
 # Work log
 
+## 2026-11-04 — GalSBI-dev emulator matches the half-shear simulations by size and magnitude; not the cause of the target deficit
+
+Rule `doc/evidence/galsbi_emulator_check_20261104/rule.md` (written before output, amended once for the amplitude
+step). Jobs 17709172 (`sums`, 4 min CPU) and 17709207 (`amplitude`, 2 min CPU); 17709131 and 17709146 failed on
+script slips (path type; case 18 skips one truth index → lookup by index value; checked offset r_scaled − r_true
+= 2.6413 for every pair). Code `doc/evidence/galsbi_emulator_check_20261104/emulator_check.py`,
+`jobs/job_galsbi_emulator_check.sh`; outputs `emulator_check.json`, `amplitude_checks.json`.
+
+What: training family development cases 0–39 (never fit), primaries are unsheared so their shape change is pure
+neighbour response. Pair rows of `disk_response_moment_galsbi_cut_20261103` (true r < 30 inside > 3 px & < 25.8),
+GalSBI-dev emulator (sha cd32781d) predictions on the same rows. d = 100 (Σ label / Σ gain·b − 1), positive =
+emulator too low; case bootstrap 10,000.
+
+- Target > 3 px & MAG_AUTO < 25, by true r: < 24 +0.6 ± 10.9, 24–25.5 −3.8 ± 2.6, 25.5–27.5 −3.5 ± 5.9, all
+  −3.1 ± 2.8. The end-to-end split needed about +11% and +22% in the last two bins → excluded at > 4σ.
+- Main cut all −1.9 ± 2.2; ≥ 3.75 px & < 25 all −2.1 ± 2.4. No size or MAG_AUTO bin is significantly off
+  (largest: 3.2–3.75 px, true 24–25.5, about −11 ± 7). Null components consistent with zero. The cut-trained
+  variant agrees within 1 pt everywhere.
+- Amplitude step: same pairs rebuilt at neighbour shear 0.05 (self-check: rebuilt 0.2 labels reproduce stored
+  rows and sums in all 40 cases; 99.9% of pairs found at 0.05). d05 = 100 (Σ label₀.₀₅ / Σ label₀.₂ − 1): target
+  24–25.5 +6.8 ± 8.3, 25.5–27.5 +13.4 ± 19.0, all −1.9 ± 10.3; main all +0.6 ± 7.0. Consistent with zero but too
+  noisy to rule out the faint-bin threshold on its own.
+
+Prior work this repeats in part (owner noted 2026-11-04 the emulator had been checked before): FS2-era
+superposition (self + neighbour, exact in toys), label linearity 0.05/0.2 (+0.001 ± 0.002, 2026-08-03e/08-05b,
+`archive/research-2026-09-14/doc/WORKLOG_FULL.md`), in-domain pred/true 1.020 ± 0.023, Möbius vs linear −2e-5
+(`archive/research-2026-09-20/doc/JOINT_CALIBRATION.md`), and the GalSBI-dev development pair sums 1.021 ± 0.025
+(2026-11-03 entry). This entry adds only the size/magnitude binning on GalSBI images.
+
+Limits: shape only; measured g0 inputs (not flow draws); galaxies with a > 5× brighter neighbour within 3″ are not in
+these pair rows; k = 20 cap untested. No model changed. Next: the target deficit is not the emulator; the
+remaining candidates are on the flow/population side; owner to choose before any new run.
+
 ## 2026-11-04 — Paired end-to-end: flow changes transfer near the cut, but the +2.4% at > 3 px & < 25 is a shape-response deficit that grows with the emulator share
 
 Rule `$DATA_DIR/sbsi_caches/galsbi_bands40_constant_20261104/rule.md` (diagnostic). Draws 17697425 (A: GalSBI-dev with

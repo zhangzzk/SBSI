@@ -1,0 +1,322 @@
+{
+ "0": {
+  "parts_rows": 935615,
+  "parts_label_sum": 6459.327398127469,
+  "rebuilt20_rows": 935615,
+  "rebuilt20_label_sum": 6459.327336604858,
+  "rebuilt05_rows": 934812,
+  "matched_rows": 934812
+ },
+ "1": {
+  "parts_rows": 923314,
+  "parts_label_sum": 9435.741720729127,
+  "rebuilt20_rows": 923314,
+  "rebuilt20_label_sum": 9435.741743046536,
+  "rebuilt05_rows": 922324,
+  "matched_rows": 922324
+ },
+ "2": {
+  "parts_rows": 932564,
+  "parts_label_sum": 7968.380724243811,
+  "rebuilt20_rows": 932564,
+  "rebuilt20_label_sum": 7968.380765701594,
+  "rebuilt05_rows": 931685,
+  "matched_rows": 931685
+ },
+ "3": {
+  "parts_rows": 929095,
+  "parts_label_sum": 9215.573877892044,
+  "rebuilt20_rows": 929095,
+  "rebuilt20_label_sum": 9215.573840791736,
+  "rebuilt05_rows": 928288,
+  "matched_rows": 928288
+ },
+ "4": {
+  "parts_rows": 930347,
+  "parts_label_sum": 4975.289923922041,
+  "rebuilt20_rows": 930347,
+  "rebuilt20_label_sum": 4975.289917329696,
+  "rebuilt05_rows": 929487,
+  "matched_rows": 929487
+ },
+ "5": {
+  "parts_rows": 930478,
+  "parts_label_sum": 6185.1718490599405,
+  "rebuilt20_rows": 930478,
+  "rebuilt20_label_sum": 6185.171879915162,
+  "rebuilt05_rows": 929514,
+  "matched_rows": 929514
+ },
+ "6": {
+  "parts_rows": 934015,
+  "parts_label_sum": 8211.236625485328,
+  "rebuilt20_rows": 934015,
+  "rebuilt20_label_sum": 8211.236642772852,
+  "rebuilt05_rows": 932869,
+  "matched_rows": 932869
+ },
+ "7": {
+  "parts_rows": 935990,
+  "parts_label_sum": 7784.691737905347,
+  "rebuilt20_rows": 935990,
+  "rebuilt20_label_sum": 7784.691728634277,
+  "rebuilt05_rows": 934990,
+  "matched_rows": 934990
+ },
+ "8": {
+  "parts_rows": 927905,
+  "parts_label_sum": 6635.659118196596,
+  "rebuilt20_rows": 927905,
+  "rebuilt20_label_sum": 6635.659094085912,
+  "rebuilt05_rows": 926755,
+  "matched_rows": 926755
+ },
+ "9": {
+  "parts_rows": 934156,
+  "parts_label_sum": 7793.87687248047,
+  "rebuilt20_rows": 934156,
+  "rebuilt20_label_sum": 7793.876931894713,
+  "rebuilt05_rows": 933099,
+  "matched_rows": 933099
+ },
+ "10": {
+  "parts_rows": 932615,
+  "parts_label_sum": 7756.280765772487,
+  "rebuilt20_rows": 932615,
+  "rebuilt20_label_sum": 7756.280785171687,
+  "rebuilt05_rows": 931671,
+  "matched_rows": 931671
+ },
+ "11": {
+  "parts_rows": 937361,
+  "parts_label_sum": 9079.890091709996,
+  "rebuilt20_rows": 937361,
+  "rebuilt20_label_sum": 9079.890073246346,
+  "rebuilt05_rows": 936483,
+  "matched_rows": 936483
+ },
+ "12": {
+  "parts_rows": 929056,
+  "parts_label_sum": 9380.261398488401,
+  "rebuilt20_rows": 929056,
+  "rebuilt20_label_sum": 9380.261412123611,
+  "rebuilt05_rows": 927858,
+  "matched_rows": 927858
+ },
+ "13": {
+  "parts_rows": 933871,
+  "parts_label_sum": 6932.312321218503,
+  "rebuilt20_rows": 933871,
+  "rebuilt20_label_sum": 6932.312302929363,
+  "rebuilt05_rows": 932696,
+  "matched_rows": 932696
+ },
+ "14": {
+  "parts_rows": 925630,
+  "parts_label_sum": 6681.725644734164,
+  "rebuilt20_rows": 925630,
+  "rebuilt20_label_sum": 6681.725619818833,
+  "rebuilt05_rows": 924561,
+  "matched_rows": 924561
+ },
+ "15": {
+  "parts_rows": 929980,
+  "parts_label_sum": 8699.695713383175,
+  "rebuilt20_rows": 929980,
+  "rebuilt20_label_sum": 8699.695674664588,
+  "rebuilt05_rows": 929013,
+  "matched_rows": 929013
+ },
+ "16": {
+  "parts_rows": 929056,
+  "parts_label_sum": 9326.20926097647,
+  "rebuilt20_rows": 929056,
+  "rebuilt20_label_sum": 9326.209257337798,
+  "rebuilt05_rows": 928139,
+  "matched_rows": 928139
+ },
+ "17": {
+  "parts_rows": 930208,
+  "parts_label_sum": 7339.9478264545305,
+  "rebuilt20_rows": 930208,
+  "rebuilt20_label_sum": 7339.947788689809,
+  "rebuilt05_rows": 929169,
+  "matched_rows": 929169
+ },
+ "18": {
+  "parts_rows": 932955,
+  "parts_label_sum": 8479.807361788038,
+  "rebuilt20_rows": 932955,
+  "rebuilt20_label_sum": 8479.807381838422,
+  "rebuilt05_rows": 931911,
+  "matched_rows": 931911
+ },
+ "19": {
+  "parts_rows": 927754,
+  "parts_label_sum": 8392.676030169077,
+  "rebuilt20_rows": 927754,
+  "rebuilt20_label_sum": 8392.676047788322,
+  "rebuilt05_rows": 927003,
+  "matched_rows": 927003
+ },
+ "20": {
+  "parts_rows": 937704,
+  "parts_label_sum": 8495.48525386321,
+  "rebuilt20_rows": 937704,
+  "rebuilt20_label_sum": 8495.485290157394,
+  "rebuilt05_rows": 936368,
+  "matched_rows": 936368
+ },
+ "21": {
+  "parts_rows": 929184,
+  "parts_label_sum": 7218.152937030861,
+  "rebuilt20_rows": 929184,
+  "rebuilt20_label_sum": 7218.152907767785,
+  "rebuilt05_rows": 928271,
+  "matched_rows": 928271
+ },
+ "22": {
+  "parts_rows": 932863,
+  "parts_label_sum": 7175.403532858268,
+  "rebuilt20_rows": 932863,
+  "rebuilt20_label_sum": 7175.40357019761,
+  "rebuilt05_rows": 931938,
+  "matched_rows": 931938
+ },
+ "23": {
+  "parts_rows": 936199,
+  "parts_label_sum": 7628.859458479268,
+  "rebuilt20_rows": 936199,
+  "rebuilt20_label_sum": 7628.85944263083,
+  "rebuilt05_rows": 935109,
+  "matched_rows": 935109
+ },
+ "24": {
+  "parts_rows": 940555,
+  "parts_label_sum": 5946.9418092255255,
+  "rebuilt20_rows": 940555,
+  "rebuilt20_label_sum": 5946.941822961324,
+  "rebuilt05_rows": 939598,
+  "matched_rows": 939598
+ },
+ "25": {
+  "parts_rows": 934289,
+  "parts_label_sum": 8132.123668229155,
+  "rebuilt20_rows": 934289,
+  "rebuilt20_label_sum": 8132.123670618633,
+  "rebuilt05_rows": 933360,
+  "matched_rows": 933360
+ },
+ "26": {
+  "parts_rows": 926438,
+  "parts_label_sum": 5502.839994071162,
+  "rebuilt20_rows": 926438,
+  "rebuilt20_label_sum": 5502.840001897981,
+  "rebuilt05_rows": 925427,
+  "matched_rows": 925427
+ },
+ "27": {
+  "parts_rows": 933908,
+  "parts_label_sum": 7035.873498618721,
+  "rebuilt20_rows": 933908,
+  "rebuilt20_label_sum": 7035.873553868868,
+  "rebuilt05_rows": 932863,
+  "matched_rows": 932863
+ },
+ "28": {
+  "parts_rows": 929234,
+  "parts_label_sum": 8893.495092277028,
+  "rebuilt20_rows": 929234,
+  "rebuilt20_label_sum": 8893.495130957408,
+  "rebuilt05_rows": 928131,
+  "matched_rows": 928131
+ },
+ "29": {
+  "parts_rows": 931033,
+  "parts_label_sum": 8689.735540315278,
+  "rebuilt20_rows": 931033,
+  "rebuilt20_label_sum": 8689.735522592202,
+  "rebuilt05_rows": 929998,
+  "matched_rows": 929998
+ },
+ "30": {
+  "parts_rows": 932347,
+  "parts_label_sum": 7566.187390540693,
+  "rebuilt20_rows": 932347,
+  "rebuilt20_label_sum": 7566.187402649502,
+  "rebuilt05_rows": 931451,
+  "matched_rows": 931451
+ },
+ "31": {
+  "parts_rows": 930380,
+  "parts_label_sum": 8406.422419149289,
+  "rebuilt20_rows": 930380,
+  "rebuilt20_label_sum": 8406.422422534019,
+  "rebuilt05_rows": 929261,
+  "matched_rows": 929261
+ },
+ "32": {
+  "parts_rows": 944581,
+  "parts_label_sum": 9506.851248148838,
+  "rebuilt20_rows": 944581,
+  "rebuilt20_label_sum": 9506.851296622166,
+  "rebuilt05_rows": 943287,
+  "matched_rows": 943287
+ },
+ "33": {
+  "parts_rows": 927067,
+  "parts_label_sum": 7371.59218446739,
+  "rebuilt20_rows": 927067,
+  "rebuilt20_label_sum": 7371.592159162807,
+  "rebuilt05_rows": 926055,
+  "matched_rows": 926055
+ },
+ "34": {
+  "parts_rows": 934925,
+  "parts_label_sum": 8662.088112758667,
+  "rebuilt20_rows": 934925,
+  "rebuilt20_label_sum": 8662.088106867965,
+  "rebuilt05_rows": 933946,
+  "matched_rows": 933946
+ },
+ "35": {
+  "parts_rows": 930528,
+  "parts_label_sum": 8269.988149624925,
+  "rebuilt20_rows": 930528,
+  "rebuilt20_label_sum": 8269.988163477365,
+  "rebuilt05_rows": 929531,
+  "matched_rows": 929531
+ },
+ "36": {
+  "parts_rows": 931877,
+  "parts_label_sum": 8562.327402659663,
+  "rebuilt20_rows": 931877,
+  "rebuilt20_label_sum": 8562.327413801388,
+  "rebuilt05_rows": 930868,
+  "matched_rows": 930868
+ },
+ "37": {
+  "parts_rows": 930946,
+  "parts_label_sum": 7328.141480029344,
+  "rebuilt20_rows": 930946,
+  "rebuilt20_label_sum": 7328.141474687491,
+  "rebuilt05_rows": 929992,
+  "matched_rows": 929992
+ },
+ "38": {
+  "parts_rows": 932650,
+  "parts_label_sum": 8837.53322519777,
+  "rebuilt20_rows": 932650,
+  "rebuilt20_label_sum": 8837.533201066824,
+  "rebuilt05_rows": 931580,
+  "matched_rows": 931580
+ },
+ "39": {
+  "parts_rows": 936437,
+  "parts_label_sum": 6780.547041015483,
+  "rebuilt20_rows": 936437,
+  "rebuilt20_label_sum": 6780.5470890819915,
+  "rebuilt05_rows": 935292,
+  "matched_rows": 935292
+ }
+}
