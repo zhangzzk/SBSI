@@ -70,3 +70,14 @@ Added output `joint`: the map's pairing-free per-leg response per own (FLUX_RADI
 split by true (circularized Re x magnitude) bin, to see which true populations make the size wave at 2.5-3.5 px.
 Validation: summed over true bins it must reproduce map.npz per radius bin (MAG_AUTO < 25) to < 1e-6. The rerun
 repeats everything else unchanged (same seeds).
+
+## Amendment 3 (2026-11-04, after reading run 17713980)
+
+The wave at 2.5-3.3 px is carried mainly by true circularized Re < 0.25" galaxies; their simulated pairing-free
+response per measured-size slice turns from negative to strongly positive across 2.7-3.2 px, the flow's is a
+smoothed copy, while counts, size-shift slope and the zero-shear ln r vs |e|^2 link agree. Added to `joint` (zero
+leg only, pairing-free): alignment of measured with intrinsic shape, slope sum(x s0)/sum(x x) per true bin x own
+measured-size bin. Reading decided now: if the simulation's alignment for small true galaxies drops sharply below
+~3 px and the flow's does not (or drops less), the flow misses how measured-shape quality depends on the noise
+that also sets measured size; if the alignments agree, the wave comes from the shear derivative itself and is not
+visible at zero shear. Everything else unchanged (same seeds); earlier fields must repeat exactly.
