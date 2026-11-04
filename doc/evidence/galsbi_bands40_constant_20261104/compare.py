@@ -30,6 +30,7 @@ FLOW_ROW = {'mag25.8_radius_gt0.60': 'radius_gt_3_magnitude_lt_25.8',
             'mag25_radius_gt0.58': 'radius_gt_2.9_magnitude_lt_25',
             'mag25_radius_gt0.62': 'radius_gt_3.1_magnitude_lt_25',
             'mag25_radius_gt0.64': 'radius_gt_3.2_magnitude_lt_25',
+            'mag25_radius_ge0.75': 'radius_gt_3.75_magnitude_lt_25',
             'mag24.6_radius_gt0.60': 'radius_gt_3_magnitude_lt_24.6',
             'mag25.4_radius_gt0.60': 'radius_gt_3_magnitude_lt_25.4',
             'uncut': 'global'}

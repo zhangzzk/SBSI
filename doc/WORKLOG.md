@@ -1,5 +1,56 @@
 # Work log
 
+## 2026-11-04 — Paired end-to-end: flow changes transfer near the cut, but the +2.4% at > 3 px & < 25 is a shape-response deficit that grows with the emulator share
+
+Rule `$DATA_DIR/sbsi_caches/galsbi_bands40_constant_20261104/rule.md` (diagnostic). Draws 17697425 (A: GalSBI-dev with
+the bands40 flow) and 17697426 (B: GalSBI-dev), cases 1000–1009/1040–1049/1080–1089/1120–1129, ~5.4 min per case
+on cip A40. Check passed: B rows 0–2 and row 3 equal the earlier full studies exactly (max relative difference
+0.0); A and B share the simulation side bit for bit. Evidence in `doc/evidence/galsbi_bands40_constant_20261104/`:
+`compare.py`/`compare.json` (17708487), `split.py`/`split.json` (17708493), `split_by_mag.py`/`split_by_mag.json`
+(17708503); all CPU on `cluster`. m = 100 (R_sim/R_model − 1), ± case bootstrap over the 40 cases.
+
+End to end, C8 weights (true flags give the same changes and m higher by ~0.2):
+
+| cut | A band guard | B GalSBI-dev | A − B | flow-alone change |
+|---|---|---|---|---|
+| > 2.8 px, < 25 | +2.31 ± 0.32 | +1.00 ± 0.32 | +1.31 ± 0.01 | +1.42 |
+| > 2.9 px, < 25 | +2.77 ± 0.30 | +1.76 ± 0.29 | +1.01 ± 0.01 | +0.83 |
+| > 3.0 px, < 25 | +2.92 ± 0.31 | +2.43 ± 0.31 | +0.49 ± 0.01 | +0.23 |
+| > 3.1 px, < 25 | +2.44 ± 0.26 | +2.48 ± 0.26 | −0.04 ± 0.01 | −0.19 |
+| > 3.2 px, < 25 | +1.94 ± 0.26 | +2.35 ± 0.26 | −0.41 ± 0.01 | −0.28 |
+| ≥ 3.75 px, < 25 | +0.88 ± 0.33 | +1.04 ± 0.33 | −0.16 ± 0.01 | +3.09 |
+| > 3.0 px, < 24.6 | +2.96 ± 0.30 | +1.99 ± 0.30 | +0.97 ± 0.01 | +0.84 |
+| > 3.0 px, < 25.4 | +2.75 ± 0.28 | +2.64 ± 0.28 | +0.11 ± 0.01 | −0.29 |
+| > 3.0 px, < 25.8 (main) | +2.52 ± 0.28 | +2.61 ± 0.28 | −0.09 ± 0.01 | −0.53 |
+| ≥ 3.75 px, < 25.8 | +0.73 ± 0.36 | +0.94 ± 0.36 | −0.21 ± 0.01 | +3.21 |
+| mag < 25 only | +1.08 ± 0.35 | −0.02 ± 0.35 | +1.10 ± 0.00 | +2.19 |
+| uncut | −0.07 ± 0.34 | +0.08 ± 0.34 | −0.16 ± 0.00 | +0.65 |
+
+Reading (per rule): at ≥ 3.75 px & < 25.8 the end-to-end change (−0.21) is below 1/3 of the flow-alone change
+(+3.21), so there the flow-alone check is not a usable proxy. Between 2.8 and 3.2 px the changes agree within ~0.3.
+But the flow-alone check misses a large offset at the target: GalSBI-dev > 3 px & < 25 is +0.80 flow alone and
++2.43 end to end.
+
+Shape/selection split (true flags; shape = galaxies or draws kept in both legs): GalSBI-dev > 3 px & < 25: shape
++2.93 ± 0.29, selection −0.27 ± 0.10 (> 3.2 px: +1.89 / +0.71; ≥ 3.75 px: −0.74 / +2.20). Both-leg response 0.8960
+(sim) vs 0.8701 (model = flow 0.7004 + emulator 0.1697). The band guard changes the shape part by −0.16 and the
+selection part by +0.64. By true magnitude at > 3 px & < 25 (both-leg response, sim vs model, emulator share of model):
+
+| true mag | share | sim | model (flow + emulator) | emulator share | m in bin | contribution |
+|---|---|---|---|---|---|---|
+| < 24 | 0.437 | 1.1862 | 1.1743 (1.1156 + 0.0586) | 5% | +1.01 ± 0.34 | +0.59 ± 0.20 pp |
+| 24–25.5 | 0.522 | 0.6736 | 0.6484 (0.4140 + 0.2344) | 36% | +3.90 ± 0.54 | +1.49 ± 0.21 pp |
+| 25.5–27.5 | 0.040 | 0.6317 | 0.5216 (0.0262 + 0.4954) | 95% | +21.1 ± 1.8 | +0.50 ± 0.04 pp |
+
+The faint galaxies are under-responded by 21–24% at every cut. Their response is almost all emulator (neighbour
+shear). Deficit / emulator part: 20%, 11%, 22% in the three bins. So the remaining end-to-end error at the target
+most likely sits in the neighbour-shear (emulator) shape response, which no flow guard changes. Not yet shown:
+the emulator's own response error against simulations by size and magnitude (it would separate emulator error from
+flow error and from domain-vs-constant population differences).
+
+Limitations: 40 of 140 cases, g1 only, one seed per model; the flow/emulator split of the model is exact, but the
+attribution of the deficit to the emulator is an inference from the pattern, not a measurement.
+
 ## 2026-11-04 — Band guard: big gain on held-out cuts, fails the target-grid gate; paired end-to-end diagnostic launched
 
 Band-guard training 17693674 (4 h 27 min, selected guard epoch 39 of 59, lr at its 1e-7 floor from epoch 49).
