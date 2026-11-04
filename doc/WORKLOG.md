@@ -1,5 +1,25 @@
 # Work log
 
+## 2026-11-04 — Three GalSBI-dev response figures: emulator and flow vs their training family, joint on constant shear
+
+Owner request: plots of (1) emulator vs truth on its training data, (2) flow shape response on its training data,
+(3) the joint model on constant-shear sims. Plotting only from existing outputs, plus one 2-min CPU job
+(17709322, `emulator_check.py profiles`: fine one-property bins). Code
+`doc/evidence/galsbi_response_plots_20261104/plots.py`; figures there and in `SBSI/plots/galsbi_dev_*.png`;
+numbers in `plots.json`. "Training data" = held-out cases of the training family (emulator cases 0–39, flow
+validation split), not the fitted cases.
+
+- Emulator (`emulator_vs_sims.png`): prediction follows the simulation per pair versus measured size, MAG_AUTO, true r
+  of the galaxy and of the neighbour; well-populated bins agree within about ±5%. One neighbour bin
+  (true r ≈ 20.25) is −11 ± 2%; bright MAG_AUTO < 23 bins are noise dominated.
+- Flow (`flow_vs_sims.png`): the size wave from the map study (flow +0.45 per galaxy at 2.8–2.9 px, −0.2 at
+  3.1–3.4 px); versus MAG_AUTO the flow is low by 0.03–0.05 per galaxy at 23.5–25.3 → flow-alone m rises from
+  −0.3 ± 0.5% (MAG_AUTO < 24) to +2.0 ± 0.4% (< 25.5) at > 3 px.
+- Joint (`joint_constant_shear.png`): end-to-end m lies above the flow-alone curve at every cut, flat at
+  +2.3 to +2.7% across 2.9–3.2 px where flow alone swings −0.3 to +1.6; at ≥ 3.75 px +1.0 ± 0.3% (C8) vs about −5%
+  flow alone. The two curves come from different simulation families (half-shear vs constant), so the gap mixes
+  model and population differences.
+
 ## 2026-11-04 — GalSBI-dev emulator matches the half-shear simulations by size and magnitude; not the cause of the target deficit
 
 Rule `doc/evidence/galsbi_emulator_check_20261104/rule.md` (written before output, amended once for the amplitude
