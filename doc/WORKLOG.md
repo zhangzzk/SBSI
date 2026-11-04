@@ -1,6 +1,6 @@
 # Work log
 
-## 2026-11-04 — Grid response term with the measured cut inside it: training launched
+## 2026-11-04 — Grid response term with the measured cut inside it: fails the gate badly (size-cut edge exploited)
 
 Owner: "how about we go back to grid-based regularization (understand how we did exactly) but with measurement cuts
 for that regularization term only"; chose target cut only, cells weighted by their simulation error, grid = true
@@ -22,6 +22,41 @@ crossing it), pass fraction 3%–100%, SE median 6.6% of the response, smallest 
 raw gradient norm ~3,500 (NLL alone ~15–77), every step clipped, so the grid term sets the direction; validation NLL
 −3.70 → −3.49 → −3.47, grid score 6.38 → 4.61 (half mean squared residual in SE units; validation-target noise alone
 adds ~2). Expect an NLL cost; the gate's NLL condition decides.
+
+Result (2026-11-04 08:30): **fails every gate condition, by a wide margin; this arm is closed.** Training ran 36 grid
+epochs (stopped at the minimum learning rate); the kept checkpoint is grid epoch 11 (validation grid score 4.04,
+never near the ~2 noise floor). Check 17712831 (`check_grid.json`, 40 validation cases, 16 draws), flow-alone m_eq %
+± case bootstrap:
+
+| cut | nll_only | steps4 | bands40 | steps4_and25 | grid_cut |
+|---|---|---|---|---|---|
+| none (global) | −4.44±0.47 | −2.02±0.48 | −1.38±0.49 | −2.61±0.48 | **−17.26±0.41** |
+| radius > 2.8 | −1.82±0.38 | −0.16±0.38 | +0.11±0.38 | −0.42±0.38 | **−8.72±0.35** |
+| radius > 3 | +0.30±0.36 | +1.51±0.37 | +0.97±0.37 | +1.15±0.37 | +0.30±0.37 |
+| radius > 3.2 | +0.46±0.36 | +1.17±0.36 | +0.49±0.35 | +0.56±0.35 | **+8.48±0.39** |
+| radius > 3.75 | −5.37±0.44 | −5.35±0.44 | −2.14±0.46 | −6.33±0.44 | **+11.67±0.52** |
+| > 3 px & < 25 (grid's own cut) | −0.12±0.34 | +0.80±0.35 | +1.03±0.35 | +0.59±0.35 | +0.79±0.35 |
+| > 2.8 px & < 25 | −2.86±0.35 | −1.63±0.36 | −0.21±0.36 | −1.66±0.36 | −8.32±0.33 |
+| > 3.2 px & < 25 | +0.58±0.32 | +1.08±0.32 | +0.80±0.32 | +0.57±0.32 | +9.31±0.35 |
+| > 3 px & < 25.8 (main) | +0.29±0.36 | +1.49±0.36 | +0.96±0.36 | +1.14±0.36 | +0.31±0.36 |
+
+| flow | target-grid RMS (21 cuts) | max abs | held-out RMS | NLL − nll_only |
+|---|---|---|---|---|
+| nll_only | 1.56 | 3.41 | 5.12 | 0 |
+| steps4 | 1.19 | 2.42 | 4.75 | +0.0005 |
+| bands40 | 0.75 | 1.12 | 1.52 | +0.0082 |
+| steps4_and25 | 1.03 | 2.38 | 5.22 | +0.0118 |
+| grid_cut | **6.58** | **9.81** | **11.39** | **+0.229** (±0.003) |
+
+Gate (target RMS ≤ 0.5, max ≤ 1.0, held-out ≤ 5.12, NLL cost < 0.02): grid_cut fails all four. Reading: at exactly
+3 px the flow looks fine (+0.3%), but m changes by 17 points between the 2.8 px and 3.2 px cuts, so the flow has put a
+sharp, shear-dependent feature into its size distribution right at the 3 px threshold. Matching per-cell responses
+*through* a soft cut lets the flow buy response by moving objects across the cut edge (selection response) instead
+of by fixing shapes. Not separately confirmed by histogramming the flow's FLUX_RADIUS. Same failure family as the
+September grid (coherent m off, NLL cost), now much worse because the cut gives the flow a cheap lever. The grid
+gradient was 50–200x the NLL gradient and every step was clipped; a smaller lambda would cut the NLL cost but not the
+incentive to exploit the cut edge. Next: nothing proposed in this arm; bands40 stays the best guard so far (it still
+fails the target-grid gate). Evidence copy: `doc/evidence/galsbi_guard_strength_20261103/check_grid.json`.
 
 ## 2026-11-04 — AND-only guard (9 radius-and-magnitude cuts at MAG_AUTO 24.8/25.0/25.2): fails the gate
 
