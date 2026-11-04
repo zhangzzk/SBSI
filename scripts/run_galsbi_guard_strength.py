@@ -12,6 +12,8 @@
                     draws, cell error scale) with each cell's response taken through the soft measured GRID_CUT on
                     both legs; output <root>/grid_cut/
   map            shear response per measured (radius, magnitude) bin, simulation and flows (validation cases)
+  transport         size-migration audit: cut responses split into kept / entering / exiting galaxies, radius
+                    transport vs intrinsic ellipticity orientation, mean-only ablation (TRANSPORT_ROOT/rule.md)
   check             response mismatch of each flow on all matched pairs of the 40 validation cases, at the 16
                     guarded cuts and 15 held-out cuts (plus any --extra cuts, reported but outside the held-out
                     RMS), plus validation NLL; per-case sums, case bootstrap.
@@ -611,12 +613,150 @@ def response_map(flows, tag=''):
     np.savez(ROOT/f'map{tag}.npz', r_edges=R_EDGES, m_edges=M_EDGES, cases=np.asarray(cases), pairs=n_pairs, **out)
 
 
+TRANSPORT_ROOT = DATA/'galsbi_size_transport_20261104'
+T_RADIUS = np.round(np.arange(2.5, 4.001, 0.1), 2)            # cut thresholds (px)
+T_MAGNITUDE = (25.0, 25.8, np.inf)                            # MAG_AUTO limits joined with each threshold
+OWN_R_EDGES = np.round(np.arange(1.5, 6.001, 0.1), 2)         # transport bins by own zero-leg FLUX_RADIUS (px)
+OWN_M_EDGES = (24.0, 25.0, 25.8)                              # ... x own zero-leg MAG_AUTO bands
+TRUE_RE_EDGES = (0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.7, 1.0)  # circularized Re (arcsec)
+TRUE_M_EDGES = (22.0, 23.0, 24.0, 24.5, 25.0, 25.5, 26.0, 27.0)  # true LSST-i magnitude
+# per-bin sums: n, x = e_in.u, y = dln r/|g|, xx, xy, z = s0 (measured e.d, zero leg), zy, ds = s1 - s0,
+# q = |e_in|^2, l = ln r0, qq, ql
+T_STATS = ('n', 'x', 'y', 'xx', 'xy', 'z', 'zy', 'ds', 'q', 'l', 'qq', 'ql')
+
+
+def transport(flows):
+    """Size-migration audit (rule: TRANSPORT_ROOT/rule.md): how shear moves measured FLUX_RADIUS, sim vs flow.
+
+    On all matched usable pairs of the 40 validation cases, per case:
+      cuts   for every radius threshold T_RADIUS x T_MAGNITUDE (hard, each leg by its own measurement), the response
+             sum split into kept-in-both-legs shape change sum S0 S1 (s1 - s0), entries sum (1-S0) S1 s1 and exits
+             -sum S0 (1-S1) s0, with s = e_measured . design (as map/check), plus counts;
+      own    radius transport per own zero-leg (FLUX_RADIUS, MAG_AUTO) bin: sums T_STATS;
+      truth  the same per true (circularized Re, magnitude) bin (identical membership for sim and flows).
+    Flows: the check's 16 antithetic CRN draws per pair and seeds; variant 'mean' keeps each leg's per-pair draw mean
+    in (e1, e2, ln r, ln flux) and gives both legs the same mid-point residual (September location-only ablation).
+    """
+    import torch
+    from sbsi.flow_guard_response import physical_context_draws
+    from sbsi.measurement_model import load_measurement_model
+    import pandas as pd
+    from sbsi.fixed_g0_domain import FLOW_FEATURES
+    trainer = frozen()
+    device = torch.device('cuda')
+    cases = json.loads((DOMAIN/'manifest.json').read_text())['split']['validation_cases']
+    data = trainer.base.load_split(DOMAIN, cases)
+    nc = len(cases)
+    case_of = {c: i for i, c in enumerate(cases)}
+    pair_case = torch.as_tensor(np.vectorize(case_of.get)(data['pair_case']), device=device)
+    gamma = data['gamma']
+    design = torch.as_tensor(gamma @ np.linalg.inv(gamma.T @ gamma) * len(gamma), device=device)
+    g = torch.as_tensor(gamma, device=device)
+    gnorm = g.norm(dim=1)
+    unit = g / gnorm[:, None]
+    pairs = torch.as_tensor(data['pairs'], device=device)
+    ctx0 = torch.as_tensor(data['context_raw'][data['pairs'][:, 0]], dtype=torch.float64, device=device)
+    if not np.array_equal(data['context_raw'][data['pairs'][:, 0], 2:5], data['context_raw'][data['pairs'][:, 1], 2:5]):
+        raise ValueError('Sersic n, magnitude or circularized size differ between the legs of a pair')
+    e_in = ctx0[:, :2]
+    x_par = (e_in * unit).sum(1)
+    q_in = (e_in ** 2).sum(1)
+    tensor = lambda a: torch.as_tensor(np.asarray(a, dtype=float), device=device)
+    true_bin = torch.bucketize(ctx0[:, 4].contiguous(), tensor(TRUE_RE_EDGES), right=True) * (len(TRUE_M_EDGES) + 1) \
+        + torch.bucketize(ctx0[:, 3].contiguous(), tensor(TRUE_M_EDGES), right=True)
+    n_true = (len(TRUE_RE_EDGES) + 1) * (len(TRUE_M_EDGES) + 1)
+    n_own = (len(OWN_R_EDGES) + 1) * (len(OWN_M_EDGES) + 1)
+    t_r, t_m = tensor(T_RADIUS), tensor(T_MAGNITUDE)
+    own_r, own_m = tensor(OWN_R_EDGES), tensor(OWN_M_EDGES)
+    n_pairs, n_cut, ns = len(pairs), len(T_RADIUS) * len(T_MAGNITUDE), len(T_STATS)
+
+    def to_log(v):
+        return torch.cat((v[..., :2], v[..., 2:].clamp_min(1e-30).log()), -1)
+
+    def from_log(v):
+        return torch.cat((v[..., :2], v[..., 2:].exp()), -1)
+
+    def accumulate(acc, legs, rows, weight):
+        """legs: [zero, shear] physical values (B, D, 4); adds weight x sums into acc."""
+        y0, y1 = legs
+        c = pair_case[rows]
+        d = design[rows][:, None, :]
+        s0, s1 = (y0[..., :2] * d).sum(-1), (y1[..., :2] * d).sum(-1)                       # (B, D)
+        r0, r1 = y0[..., 2], y1[..., 2]
+        m0, m1 = (30 - 2.5 * torch.log10(y[..., 3].clamp_min(1e-30)) for y in (y0, y1))
+        p0 = ((r0[..., None, None] > t_r[:, None]) & (m0[..., None, None] < t_m)).flatten(-2)  # (B, D, cuts)
+        p1 = ((r1[..., None, None] > t_r[:, None]) & (m1[..., None, None] < t_m)).flatten(-2)
+        both, enter, leave = p0 & p1, ~p0 & p1, p0 & ~p1
+        cut = torch.stack((both * (s1 - s0)[..., None], enter * s1[..., None], -(leave * s0[..., None]),
+                           enter.double(), leave.double(), p0.double()), -1).sum(1)          # (B, cuts, 6)
+        acc['cuts'].index_add_(0, c, weight * cut)
+        x = x_par[rows][:, None].expand_as(r0)
+        l = r0.clamp_min(1e-30).log()
+        y = (r1.clamp_min(1e-30).log() - l) / gnorm[rows][:, None]
+        q = q_in[rows][:, None].expand_as(r0)
+        st = torch.stack((torch.ones_like(y), x, y, x * x, x * y, s0, s0 * y, s1 - s0, q, l, q * q, q * l), -1)
+        own = torch.bucketize(r0.contiguous(), own_r, right=True) * (len(OWN_M_EDGES) + 1) + \
+            torch.bucketize(m0.contiguous(), own_m, right=True)                             # (B, D)
+        acc['own'].index_add_(0, (c[:, None] * n_own + own).reshape(-1), weight * st.reshape(-1, ns))
+        acc['truth'].index_add_(0, c * n_true + true_bin[rows], weight * st.sum(1))
+
+    def fresh():
+        return {'cuts': torch.zeros(nc, n_cut, 6, dtype=torch.float64, device=device),
+                'own': torch.zeros(nc * n_own, ns, dtype=torch.float64, device=device),
+                'truth': torch.zeros(nc * n_true, ns, dtype=torch.float64, device=device)}
+
+    out = {}
+
+    def store(name, acc):
+        out[f'{name}_cuts'] = acc['cuts'].cpu().numpy()
+        out[f'{name}_own'] = acc['own'].reshape(nc, len(OWN_R_EDGES) + 1, len(OWN_M_EDGES) + 1, ns).cpu().numpy()
+        out[f'{name}_truth'] = acc['truth'].reshape(nc, len(TRUE_RE_EDGES) + 1, len(TRUE_M_EDGES) + 1,
+                                                    ns).cpu().numpy()
+        print(f'TRANSPORT_DONE {name}', flush=True)
+
+    acc = fresh()
+    measured = [torch.as_tensor(data[k], device=device) for k in ('pair_zero_target', 'pair_shear_target')]
+    for start in range(0, n_pairs, BLOCK):
+        rows = torch.arange(start, min(n_pairs, start + BLOCK), device=device)
+        accumulate(acc, [m[rows][:, None, :] for m in measured], rows, 1.0)
+    store('sim', acc)
+    for name, path in flows.items():
+        bundle = load_measurement_model(path, device=device)
+        model = bundle.model.eval()
+        context = bundle.context_tensor(pd.DataFrame(data['context_raw'], columns=FLOW_FEATURES))
+        full, mean = fresh(), fresh()
+        with torch.no_grad():
+            for block, start in enumerate(range(0, n_pairs, BLOCK)):
+                rows = torch.arange(start, min(n_pairs, start + BLOCK), device=device)
+                p = pairs[rows]
+                legs = [v.double() for v in physical_context_draws(model, [context[p[:, 0]], context[p[:, 1]]],
+                                                                   DRAWS, CHECK_SEED + block)]
+                accumulate(full, legs, rows, 1.0 / DRAWS)
+                logs = [to_log(v) for v in legs]
+                mu = [v.mean(1, keepdim=True) for v in logs]
+                residual = ((logs[0] - mu[0]) + (logs[1] - mu[1])) / 2
+                accumulate(mean, [from_log(mu[0] + residual), from_log(mu[1] + residual)], rows, 1.0 / DRAWS)
+        store(name, full)
+        store(f'{name}_mean', mean)
+        out[f'flow_{name}'] = str(path)
+        out[f'flow_{name}_sha256'] = sha256(path)
+        del bundle, model, context
+        torch.cuda.empty_cache()
+    TRANSPORT_ROOT.mkdir(parents=True, exist_ok=True)
+    np.savez(TRANSPORT_ROOT/'transport.npz', cases=np.asarray(cases), pairs=n_pairs, draws=DRAWS, seed=CHECK_SEED,
+             t_radius=T_RADIUS, t_magnitude=np.asarray(T_MAGNITUDE), own_r_edges=OWN_R_EDGES,
+             own_m_edges=np.asarray(OWN_M_EDGES), true_re_edges=np.asarray(TRUE_RE_EDGES),
+             true_m_edges=np.asarray(TRUE_M_EDGES), stats=np.asarray(T_STATS), **out)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     sub = p.add_subparsers(dest='stage', required=True)
     mp = sub.add_parser('map')
     mp.add_argument('--flows', nargs='+', default=['nll_only', 'steps4', 'steps40'])
     mp.add_argument('--tag', default='')
+    tp = sub.add_parser('transport')
+    tp.add_argument('--flows', nargs='+', default=['nll_only', 'steps4', 'bands40'])
     t = sub.add_parser('train')
     t.add_argument('--steps', type=int, required=True)
     t.add_argument('--no-global', action='store_true', help='drop the global (uncut) term from the guard')
@@ -636,6 +776,8 @@ def main():
         train(a.steps, a.no_global, a.bands, a.and_only, a.grid)
     elif a.stage == 'map':
         response_map({k: known.get(k, ROOT/k/'guard/selected.pt') for k in a.flows}, a.tag)
+    elif a.stage == 'transport':
+        transport({k: known.get(k, ROOT/k/'guard/selected.pt') for k in a.flows})
     else:
         extra = [tuple(float(x) if x else None for x in e.split(',')) for e in a.extra]
         check({k: known.get(k, ROOT/k/'guard/selected.pt') for k in a.flows}, a.tag, extra)
