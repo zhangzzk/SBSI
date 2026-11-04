@@ -59,3 +59,14 @@ Run 17713793 failed the validation for the simulation only (flows reproduced the
 2.8e-3): simulated FLUX_RADIUS is stored rounded to 0.001 px, so ~0.06% of galaxies sit exactly on each
 threshold, and the map counts them as passing (bucketize, >=) while the first run used >. The cut is now >= T
 (the map convention); the run is repeated with nothing else changed. No result table of the first run was read.
+
+## Amendment 2 (2026-11-04, after reading run 17713899)
+
+Results of 17713899 are kept (validation passed exactly). Reading note: for the flows, which sheared-leg draw
+"is" a given unsheared-leg draw is fixed by the random-number pairing, not by physics; so the kept / entering /
+exiting split and anything binned by the unsheared leg's own measured size depend on that pairing. Pairing-free
+are: cut totals, per-leg binning by each leg's own measurement (the map), and binning by true properties.
+Added output `joint`: the map's pairing-free per-leg response per own (FLUX_RADIUS 0.1 px x MAG_AUTO band) bin,
+split by true (circularized Re x magnitude) bin, to see which true populations make the size wave at 2.5-3.5 px.
+Validation: summed over true bins it must reproduce map.npz per radius bin (MAG_AUTO < 25) to < 1e-6. The rerun
+repeats everything else unchanged (same seeds).

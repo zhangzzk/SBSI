@@ -633,7 +633,9 @@ def transport(flows):
              sum split into kept-in-both-legs shape change sum S0 S1 (s1 - s0), entries sum (1-S0) S1 s1 and exits
              -sum S0 (1-S1) s0, with s = e_measured . design (as map/check), plus counts;
       own    radius transport per own zero-leg (FLUX_RADIUS, MAG_AUTO) bin: sums T_STATS;
-      truth  the same per true (circularized Re, magnitude) bin (identical membership for sim and flows).
+      truth  the same per true (circularized Re, magnitude) bin (identical membership for sim and flows);
+      joint  pairing-free response sum_pairs (1[bin(shear)] s1 - 1[bin(zero)] s0) and leg counts per true bin x
+             own (FLUX_RADIUS, MAG_AUTO) bin, each leg binned by its own measurement (as map).
     Flows: the check's 16 antithetic CRN draws per pair and seeds; variant 'mean' keeps each leg's per-pair draw mean
     in (e1, e2, ln r, ln flux) and gives both legs the same mid-point residual (September location-only ablation).
     """
@@ -699,11 +701,20 @@ def transport(flows):
             torch.bucketize(m0.contiguous(), own_m, right=True)                             # (B, D)
         acc['own'].index_add_(0, (c[:, None] * n_own + own).reshape(-1), weight * st.reshape(-1, ns))
         acc['truth'].index_add_(0, c * n_true + true_bin[rows], weight * st.sum(1))
+        # pairing-free response per (true bin, own radius bin, own MAG_AUTO band), each leg by its own measurement
+        base = (c * n_true + true_bin[rows])[:, None] * n_own
+        for sign, (sv, rv, mv) in ((-1, (s0, r0, m0)), (1, (s1, r1, m1))):
+            b = torch.bucketize(rv.contiguous(), own_r, right=True) * (len(OWN_M_EDGES) + 1) + \
+                torch.bucketize(mv.contiguous(), own_m, right=True)
+            one = torch.ones_like(sv)
+            v = torch.stack((sign * sv, one if sign < 0 else 0 * one, one if sign > 0 else 0 * one), -1)
+            acc['joint'].index_add_(0, (base + b).reshape(-1), weight * v.reshape(-1, 3))
 
     def fresh():
         return {'cuts': torch.zeros(nc, n_cut, 6, dtype=torch.float64, device=device),
                 'own': torch.zeros(nc * n_own, ns, dtype=torch.float64, device=device),
-                'truth': torch.zeros(nc * n_true, ns, dtype=torch.float64, device=device)}
+                'truth': torch.zeros(nc * n_true, ns, dtype=torch.float64, device=device),
+                'joint': torch.zeros(nc * n_true * n_own, 3, dtype=torch.float64, device=device)}
 
     out = {}
 
@@ -712,6 +723,8 @@ def transport(flows):
         out[f'{name}_own'] = acc['own'].reshape(nc, len(OWN_R_EDGES) + 1, len(OWN_M_EDGES) + 1, ns).cpu().numpy()
         out[f'{name}_truth'] = acc['truth'].reshape(nc, len(TRUE_RE_EDGES) + 1, len(TRUE_M_EDGES) + 1,
                                                     ns).cpu().numpy()
+        out[f'{name}_joint'] = acc['joint'].reshape(nc, len(TRUE_RE_EDGES) + 1, len(TRUE_M_EDGES) + 1,
+                                                    len(OWN_R_EDGES) + 1, len(OWN_M_EDGES) + 1, 3).cpu().numpy()
         print(f'TRANSPORT_DONE {name}', flush=True)
 
     acc = fresh()
