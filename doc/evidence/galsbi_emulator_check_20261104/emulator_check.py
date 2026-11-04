@@ -44,9 +44,11 @@ def sums():
     out = np.zeros(shape)
     for case in CASES:
         truth = pd.read_feather(TRUTH.format(case), columns=['index_input', 'r_input'])
-        if not np.array_equal(truth['index_input'].to_numpy(), np.arange(len(truth))):
-            raise ValueError(f'case {case}: truth rows not indexed by input index')
-        r_true = truth['r_input'].to_numpy(float)
+        index = truth['index_input'].to_numpy()
+        if len(np.unique(index)) != len(index):
+            raise ValueError(f'case {case}: duplicate truth input index')
+        r_true = np.full(index.max()+1, np.nan)                 # lookup by input index (some cases skip one)
+        r_true[index] = truth['r_input'].to_numpy(float)
         parts = [p for p in manifest['parts'] if p['case'] == case]
         for part in parts:
             with np.load(PAIRS/'pairs'/part['path']) as z, np.load(PAIRS/'prepared/gains'/Path(part['path']).name) as g:
@@ -54,6 +56,8 @@ def sums():
                 gain, cross = g['gain'].astype(float), g['cross_gain'].astype(float)
             if len(x) != part['rows']:
                 raise ValueError(f'{part["path"]}: row count mismatch')
+            if not np.isfinite(r_true[primary]).all():
+                raise ValueError(f'{part["path"]}: primary without truth row')
             cell = np.ravel_multi_index((np.digitize(np.exp(x[:, 7]), RADIUS_EDGES), np.digitize(x[:, 8], MAG_EDGES),
                                          np.digitize(r_true[primary], TRUE_EDGES)), shape[1:4])
             values = [np.ones(len(x)), label, null]

@@ -19,7 +19,8 @@ GalSBI-dev shape part under-responds more where the emulator carries more of the
   These cover true r < 30 inside g0 FLUX_RADIUS > 3 px and MAG_AUTO < 25.8, so they include the faint bin the
   GalSBI-dev parts (true r < 26) miss. Same 9 features, same label definition, same gain definition.
 - True r of each primary from `case{c}_0.0/real0/catalogues/input/gals_info_tile180.0_-0.5.feather` (`r_input`,
-  row = `primary`, checked against `index_input`).
+  looked up by `index_input` = `primary`; a primary without a truth row stops the run). Amended before any
+  output: case 18 skips one input index, so lookup is by index value, not row position.
 
 ## Measurement
 
