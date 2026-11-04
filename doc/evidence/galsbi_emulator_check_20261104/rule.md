@@ -43,6 +43,22 @@ Errors: case bootstrap, 10,000 resamples, seed 20260925.
   in the constant evaluation), the k = 20 neighbour cap, flow-draw instead of measured inputs, the h = 0.2 vs 0.02
   amplitude, or the Möbius transport. A per-galaxy check (measured Δe from catalogues, leg 0.05) would be next.
 
+## Amendment after the first output (2026-11-04): amplitude step
+
+First output: at the target cut, d = −3.5 ± 5.9% (true r 25.5–27.5) and −3.8 ± 2.6% (24–25.5), not the +22% /
++11% needed. Neither the "confirmed" nor the strict "cleared" condition applies to the faint bin (its ±5.9% is too
+wide for a ±5% statement), but the needed values are excluded at > 4σ.
+
+The emulator was fit to labels at neighbour shear 0.2; the constant evaluation uses 0.02. If the neighbour effect
+is not proportional to shear, the emulator copies that and this check cannot see it. The training family also has
+a neighbour-shear-0.05 leg with the same angles and noise. Step `amplitude` rebuilds the same pairs with the
+production label code (`blendemu.response.retrieve_response`, r_max 10″, k 20, legs 0.0→0.2 and 0.0→0.05), keeps
+primaries of the population above, joins the two on (primary, distance), and reports per bin
+d05 = 100 (Σ label₀.₀₅ / Σ label₀.₂ − 1). Self-check: the rebuilt 0.2 labels must reproduce the stored pair rows
+and label sums per case. Reading: if d05 at the target cut and true r 25.5–27.5 is ≥ +15% at > 3σ, the shear
+amplitude explains the deficit; if it is consistent with zero, the emulator is cleared on this population and the
+deficit lies in the parts this check does not cover (listed above).
+
 ## Limits
 
 Shape only (no detection or cut migration). Measured g0 size/magnitude, not flow draws. Labels at h = 0.2.

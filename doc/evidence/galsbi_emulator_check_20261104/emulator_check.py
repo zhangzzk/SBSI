@@ -2,6 +2,7 @@
 
 usage (py31):
   python emulator_check.py sums      # Slurm CPU job: per-case binned pair sums -> $STUDY/sums.npz
+  python emulator_check.py amplitude # Slurm CPU job: same pairs at neighbour shear 0.2 and 0.05 -> $STUDY/amplitude.npz
   python emulator_check.py report    # login node: case bootstrap -> emulator_check.json (+ printed table)
 """
 import json
@@ -72,6 +73,59 @@ def sums():
     np.savez(STUDY/'sums.npz', sums=out, quantities=np.array(Q), cases=np.array(list(CASES)))
 
 
+AMPLITUDE_Q = ('rows', 'label20', 'label05', 'null20', 'null05')
+
+
+def amplitude_case(case):
+    """Same pairs rebuilt with the production label code at neighbour shear 0.2 and 0.05 (legs share noise)."""
+    sys.path.insert(0, '/home/z/Zekang.Zhang/blendemu_galsbi_resim')
+    import pandas as pd
+    from blendemu import response
+    manifest = json.loads((PAIRS/'pairs/manifest.json').read_text())
+    primary, log_radius, mag, rows, label_sum = [], [], [], 0, 0.
+    for part in [p for p in manifest['parts'] if p['case'] == case]:
+        with np.load(PAIRS/'pairs'/part['path']) as z:
+            primary.append(z['primary'])
+            log_radius.append(z['x'][:, 7])
+            mag.append(z['x'][:, 8])
+            rows += len(z['y'])
+            label_sum += float(z['y'].astype(float).sum())
+    population = pd.DataFrame({'input_index': np.concatenate(primary), 'radius': np.exp(np.concatenate(log_radius)),
+                               'mag': np.concatenate(mag)}).drop_duplicates('input_index')
+    frames = {}
+    for leg, h in (('0.2', .2), ('0.05', .05)):
+        df = response.retrieve_response(case=case, r_max=10, r_min=0, k=20, real='real0', tile_name='tile180.0_-0.5',
+                                        data_path=str(D/'sbsi/galsbi_resim/training/sims'), shear_cases=['0.0', leg])
+        df = df[np.isfinite(df['delta_et1'].to_numpy(float)) & df['input_index'].isin(population['input_index'])]
+        frames[leg] = pd.DataFrame({'input_index': df['input_index'].to_numpy(), 'distance': df['distance'].to_numpy(),
+                                    'angle': df['shear_angle'].to_numpy(float), 'r_true': df['r_input_p'].to_numpy(float),
+                                    'label': df['delta_et1'].to_numpy(float)/h, 'null': df['delta_et2'].to_numpy(float)/h})
+    check = {'parts_rows': rows, 'parts_label_sum': label_sum, 'rebuilt20_rows': len(frames['0.2']),
+             'rebuilt20_label_sum': float(frames['0.2']['label'].sum()), 'rebuilt05_rows': len(frames['0.05'])}
+    both = frames['0.2'].merge(frames['0.05'], on=['input_index', 'distance'], suffixes=('20', '05'))
+    angle = np.abs((both['angle20']-both['angle05']+90) % 180-90)
+    if angle.max() > 1e-3 or not np.allclose(both['r_true20'], both['r_true05']):
+        raise ValueError(f'case {case}: 0.2 and 0.05 pairs disagree (angle {angle.max()})')
+    both = both.merge(population, on='input_index')
+    check['matched_rows'] = len(both)
+    shape = (len(RADIUS_LABELS), len(MAG_LABELS), len(TRUE_LABELS))
+    cell = np.ravel_multi_index((np.digitize(both['radius'], RADIUS_EDGES), np.digitize(both['mag'], MAG_EDGES),
+                                 np.digitize(both['r_true20'], TRUE_EDGES)), shape)
+    out = np.stack([np.bincount(cell, v, minlength=np.prod(shape)).reshape(shape) for v in
+                    (np.ones(len(both)), both['label20'], both['label05'], both['null20'], both['null05'])], -1)
+    print(f'case {case}: {check}', flush=True)
+    return out, check
+
+
+def amplitude():
+    from joblib import Parallel, delayed
+    results = Parallel(n_jobs=int(__import__('os').environ.get('SLURM_CPUS_PER_TASK', '4')))(
+        delayed(amplitude_case)(case) for case in CASES)
+    np.savez(STUDY/'amplitude.npz', sums=np.array([r[0] for r in results]), quantities=np.array(AMPLITUDE_Q),
+             cases=np.array(list(CASES)))
+    (STUDY/'amplitude_checks.json').write_text(json.dumps({c: r[1] for c, r in zip(CASES, results)}, indent=1)+'\n')
+
+
 def report():
     z = np.load(STUDY/'sums.npz')
     x = z['sums']                                              # case, radius, mag, true, q
@@ -117,8 +171,22 @@ def report():
             entry[tl] = row
             print(line)
         out[sel] = entry
+    if (STUDY/'amplitude.npz').exists():
+        a = np.load(STUDY/'amplitude.npz')['sums']
+        qa = {name: k for k, name in enumerate(AMPLITUDE_Q)}
+        print('\namplitude: d05 = 100 (sum label at neighbour shear 0.05 / sum label at 0.2 - 1) [%] on the same pairs; '
+              'positive = response at small shear larger than the emulator was trained on')
+        out['amplitude'] = {}
+        for sel, (rs, ms) in selections.items():
+            sub = a[:, rs, ms].sum((1, 2))
+            full = np.concatenate([sub, sub.sum(1, keepdims=True)], 1)
+            ratio = lambda agg: 100*(agg[..., qa['label05']]/agg[..., qa['label20']]-1)
+            point, se = ratio(full.sum(0)), np.std(ratio(np.einsum('bc,c...->b...', W, full)), axis=0, ddof=1)
+            out['amplitude'][sel] = {tl: {'pairs': int(full[:, t, qa['rows']].sum()), 'd05_percent': [float(point[t]), float(se[t])]}
+                                     for t, tl in enumerate(TRUE_LABELS+('all',))}
+            print(f'  {sel:32s} ' + '  '.join(f'{tl} {point[t]:+.1f}±{se[t]:.1f}' for t, tl in enumerate(TRUE_LABELS+('all',))))
     (S/'emulator_check.json').write_text(json.dumps(out, indent=1)+'\n')
 
 
 if __name__ == '__main__':
-    {'sums': sums, 'report': report}[sys.argv[1]]()
+    {'sums': sums, 'amplitude': amplitude, 'report': report}[sys.argv[1]]()
