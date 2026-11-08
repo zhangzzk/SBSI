@@ -1,5 +1,40 @@
 # Work log
 
+## 2026-11-08 — GalSBI image pilot result (infer-1.0-galsbi, like-1.0-galsbi)
+
+Run: `$DATA_DIR/sbsi/catalogue_prior/galsbi_image_pilot_20261108`
+(`rule.md`, `paired_estimate.json`). Measured catalogues of constant_g002
+cases 1000-1139 (±0.02 legs), 5e-4 identity draw: 9603 plus / 9638 minus
+selected (9422 on both legs, 181 plus-only, 216 minus-only). Sampler recipe
+unchanged. All 219 c1 and 42 c2 units completed with no failures or retries.
+Selection: 4 replicas x 50 x 8192.
+
+| leg | g1 | g2 |
+|---|---|---|
+| plus (truth +0.02) | +0.02296 ±0.00356 | +0.00133 ±0.00357 |
+| minus (truth -0.02) | -0.01576 ±0.00354 | +0.00204 ±0.00361 |
+
+Paired: m1 = -3.20% ±5.19% (-0.6σ), c1 = +0.00360 ±0.00336 (+1.1σ),
+c2 = +0.00168 ±0.00347 (+0.5σ), g1-to-g2 response -0.018 ±0.052. The quoted
+errors are the largest of the case bootstrap and the galaxy influence. The
+chain floor is ±1.8% on m1.
+This is an end-to-end check at 10k galaxies per leg, not an acceptance test.
+
+Finding: redshift mixing collapsed. 69% of c1 galaxies have R-hat(log z)
+>= 1.1, versus 9.5% in galsbi_constgold100k_20261025 (old model). Median log-z
+ESS is 10-30, versus 120-200. Magnitude, shape and size mixing are similar to
+the old run. The shear ratio (R-hat >= 1.1) is flagged in 22% of mag<21
+galaxies in c1 (old: 5%) and 0% after c2; at fainter magnitudes it is 0-11%
+(old: 1-7%). Likely cause: the sampler's magnitude coordinate is HSC-r `m_r`,
+while the model now uses LSST-i. At fixed `m_r`, a redshift move changes the
+model magnitude, so adaptation shrinks redshift steps. Proposed (owner
+decision, not applied): use the model band as the magnitude coordinate. At
+fixed z and SED the two differ by a shift, so the Jacobian is 1.
+
+Also cancelled extra c1 worker 17835427 (all units already claimed).
+Small units are inefficient: a 40-galaxy bright unit takes about 1.7 h.
+Next: decide on the coordinate change; then a larger subset with larger units.
+
 ## 2026-11-08 — GalSBI model scene inputs and image-reference builder for the pilot
 
 Owner request: test infer-1.0-galsbi with like-1.0-galsbi on measured GalSBI
