@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from sbsi.catalogue_closure import MockCatalogue
-from sbsi.scene_prior import SHEAR_TRANSFORM
+from sbsi.finite.closure import MockCatalogue
+from sbsi.finite.prior import SHEAR_TRANSFORM
 from _script_loader import load_script_module
 
 
@@ -201,7 +201,7 @@ def _likelihood_mock(root: Path):
     )
     mock.save(root)
     identity = {"scene": "scene-hash", "selection_cut_key": None}
-    implementation = {"sbsi/catalogue_closure.py": "implementation-hash"}
+    implementation = {"sbsi/finite/closure.py": "implementation-hash"}
     manifest = {
         "mock_kind": "likelihood",
         "generation_identity": identity,
@@ -242,7 +242,7 @@ def test_likelihood_mock_manifest_validation_rejects_mismatch(tmp_path, mutation
         if mutation == "identity":
             identity = {**identity, "scene": "other"}
         elif mutation == "implementation":
-            implementation = {"sbsi/catalogue_closure.py": "other"}
+            implementation = {"sbsi/finite/closure.py": "other"}
         elif mutation == "hash":
             payload["output_sha256"]["truth.parquet"] = "bad"
             path.write_text(json.dumps(payload) + "\n")

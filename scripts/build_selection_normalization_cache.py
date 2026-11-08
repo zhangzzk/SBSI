@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 
-from sbsi.selection_normalization import load_population_normalization
+from sbsi.finite.selection import load_population_normalization
 
 
 def _sha256(path: Path) -> str:

@@ -5,7 +5,7 @@ from scipy.integrate import quad
 from scipy.special import gammaln
 from scipy.stats import beta, betaprime, norm
 
-from sbsi.galsbi_prior import ExactMemo, GalSBIContinuousPrior, upper_gamma
+from sbsi.galsbi.prior import ExactMemo, GalSBIContinuousPrior, upper_gamma
 
 
 def prior_fixture():

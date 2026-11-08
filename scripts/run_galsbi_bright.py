@@ -11,10 +11,10 @@ import numpy as np
 import torch
 
 from check_galsbi_continuous_prior import build_prior, digest, save
-from sbsi.catalogue_disk_response import CatalogueDiskResponse
-from sbsi.disk_response_transport import disk_response_transport
-from sbsi.galsbi_scene_prior import GalSBIScenePrior
-from sbsi.galsbi_summary import scene_model_inputs
+from sbsi.disk.response import CatalogueDiskResponse
+from sbsi.disk.transport import disk_response_transport
+from sbsi.galsbi.scenes import GalSBIScenePrior
+from sbsi.galsbi.likelihood import scene_model_inputs
 from sbsi.measurement_model import load_measurement_model
 from sbsi.models import V39_LIKE, load_detection_classifier, load_disk_response
 from sbsi.shear_map import apply_shear_to_ellipticity

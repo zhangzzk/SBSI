@@ -32,7 +32,7 @@ from pathlib import Path
 
 import numpy as np
 
-from sbsi.selection_normalization import (
+from sbsi.finite.selection import (
     load_population_normalization,
     log_mass_derivatives,
 )

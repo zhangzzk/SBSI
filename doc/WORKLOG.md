@@ -1,5 +1,42 @@
 # Work log
 
+## 2026-11-08 — Review and reorganize the Python package
+
+Trace the dependency closure from all retained entry points and public exports.
+Archive19 unused experimental modules and15 associated tests, preserving their
+bytes and the full original retained source in the
+[package archive](../archive/package-2026-11-08/README.md#contents-and-restoration).
+Move30 retained modules into flows/galsbi/disk/finite subpackages; retain16
+root modules and four lightweight initializers. Update package discovery,
+callers, tests, model-loader source paths and documentation. Public loading
+and prediction paths remain; direct internal imports use the migration map.
+Format the retained factorized-flow implementation without changing its AST.
+
+Review finds a startup source-copy failure: the current inference entry still
+required the launcher archived in the previous cleanup. Replace its partial,
+cwd-dependent source list with recursive package capture from the checkout.
+Add source-snapshot regression coverage outside the checkout and require the
+disk driver's source identity to include nested flow/transport implementations.
+The disk driver now hashes subpackages. Existing cache identity checks remain;
+old caches are not relabelled. Source provenance changes, science does not.
+
+Validation: clean-tree CPU job17835049 passes378 tests/3 skips in59.06s,
+focused12 tests/1 skip, both model validators and direct/module GalSBI plus
+finite CLI help. Wheel build includes all50 Python sources and excludes archive
+code. Its isolated import then fails because the model registry requires the
+checkout manifests, consistent with the existing editable-only resource
+contract; this is not a supported standalone-wheel deployment. Follow-up
+job17835061 completes0:0 after an isolated editable installation: all48 modules
+and10 root exports import from outside the checkout, both bundled model
+validators and the direct inference CLI pass. Full tests were not repeated.
+
+All46 retained package ASTs equal the originals after declared import/path
+mapping; sampling/evaluation body bytes are unchanged. All184 archive hashes,
+305 package imports and99 documentation links pass. Model weights and pinned
+report/source bytes are unchanged. Final runtime/config/package metadata match
+the tested tree. [Verification receipt](evidence/package_cleanup_20261108/validation.json).
+No scientific jobs or closed investigations were restarted.
+
 ## 2026-11-08 — Clean active tree around the GalSBI identities
 
 Owner requested a smaller doc/scripts/jobs/logs/plots tree. Retain core math,

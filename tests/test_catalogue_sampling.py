@@ -6,9 +6,9 @@ import pandas as pd
 import pytest
 from scipy.special import logsumexp
 
-from sbsi.catalogue_closure import generate_mock_catalogue
-from sbsi.catalogue_likelihood import CatalogueLikelihood, CatalogueSelection
-from sbsi.catalogue_sampling import (
+from sbsi.finite.closure import generate_mock_catalogue
+from sbsi.finite.likelihood import CatalogueLikelihood, CatalogueSelection
+from sbsi.finite.sampling import (
     DefensiveLocalProposal,
     ProposalCoordinateTable,
     assess_importance_convergence,
@@ -19,7 +19,7 @@ from sbsi.catalogue_sampling import (
     select_adaptive_draw_counts,
     select_independent_pilot_draw_counts,
 )
-from sbsi.catalogue_likelihood import OutputCut
+from sbsi.finite.likelihood import OutputCut
 from test_catalogue_likelihood import AnalyticGaussianSelection, _likelihood
 
 

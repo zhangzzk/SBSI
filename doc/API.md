@@ -60,21 +60,32 @@ The package root exports only lightweight prediction helpers:
 
 Specialized workflows import their modules directly:
 
-- `sbsi.galsbi_scene_prior` and `sbsi.galsbi_prior` — continuous population prior;
-- `sbsi.galsbi_summary` — compressed disk likelihood;
-- `sbsi.galsbi_target_coordinates` and `sbsi.mcmc_proposals` — posterior sampling coordinates and proposals;
-- `sbsi.scene_prior` — finite scene atoms and model views;
-- `sbsi.catalogue_likelihood` — likelihood and model caches;
-- `sbsi.catalogue_sampling` — proposals and importance sampling;
-- `sbsi.catalogue_null` — score/information inference estimators;
-- `sbsi.catalogue_blend` — atom-aligned response caches;
-- `sbsi.selection_normalization` — exact and fitted selection normalization;
+- `sbsi.galsbi.scenes` and `sbsi.galsbi.prior` — continuous population prior;
+- `sbsi.galsbi.likelihood` — compressed disk likelihood;
+- `sbsi.galsbi.coordinates` and `sbsi.galsbi.proposals` — posterior sampling coordinates and proposals;
+- `sbsi.finite.prior` — finite scene atoms and model views;
+- `sbsi.finite.likelihood` — likelihood and model caches;
+- `sbsi.finite.sampling` — proposals and importance sampling;
+- `sbsi.finite.estimator` — score/information inference estimators;
+- `sbsi.finite.blend` — atom-aligned response caches;
+- `sbsi.finite.selection` — exact and fitted selection normalization;
 - `sbsi.measurement_model` and `sbsi.selection_model` — model loaders;
 - `sbsi.shear_map` — the shared reduced-shear transformation.
 
 `python -m sbsi show-model like-1.0-galsbi` prints the current model identity.
 The continuous inference entry is `scripts/run_galsbi_inference.py`;
 `scripts/run_inference.py` retains the finite-catalogue compatibility interface.
+
+## Internal import migration
+
+The package is organized into `sbsi.flows`, `sbsi.galsbi`, `sbsi.disk` and
+`sbsi.finite`. The model loader, registry, selection loader and root prediction
+API retain their public paths. Older direct imports of the 30 moved internal
+modules must use the [migration map](../archive/package-2026-11-08/manifest.json).
+For example, `sbsi.galsbi.likelihood` replaces `sbsi.galsbi_summary`, and
+`sbsi.finite.likelihood` replaces `sbsi.catalogue_likelihood`.
+The experimental modules listed in that manifest are archived and require
+deliberate restoration rather than an import from `archive/`.
 
 ## Input and cache rules
 

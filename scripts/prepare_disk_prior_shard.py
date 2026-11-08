@@ -14,11 +14,11 @@ import numpy as np
 import pandas as pd
 
 from sbsi.coordinates import ellipticity_from_axis_ratio_angle
-from sbsi.crowding import FLOW_FEATURES
-from sbsi.flow_size_condition import circularized_radius
+from sbsi.finite.crowding import FLOW_FEATURES
+from sbsi.flows.size_condition import circularized_radius
 from sbsi.forward_catalogue import rescale_emulator_pairs
-from sbsi.output_conditioned_response import TRUTH_FEATURES
-from sbsi.scene_prior import ScenePrior
+from sbsi.disk.emulator import TRUTH_FEATURES
+from sbsi.finite.prior import ScenePrior
 
 
 def file_hash(path):

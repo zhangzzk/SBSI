@@ -4,13 +4,13 @@ import pytest
 import torch
 from scipy.stats import norm
 
-from sbsi.catalogue_closure import generate_mock_catalogue, generate_ring_mock_catalogue
-from sbsi.catalogue_blend import CatalogueBlendResponse
-from sbsi.catalogue_likelihood import (
+from sbsi.finite.closure import generate_mock_catalogue, generate_ring_mock_catalogue
+from sbsi.finite.blend import CatalogueBlendResponse
+from sbsi.finite.likelihood import (
     CatalogueLikelihood,
     CatalogueModelCache,
 )
-from sbsi.catalogue_null import (
+from sbsi.finite.estimator import (
     Section5SeedResult,
     _coalesced_logsumexp,
     autograd_exact_section5,
@@ -23,7 +23,7 @@ from sbsi.catalogue_null import (
     summarize_paired_section5,
     summarize_section5,
 )
-from sbsi.catalogue_sampling import (
+from sbsi.finite.sampling import (
     DefensiveLocalProposal,
     ProposalCoordinateTable,
     pareto_tail_index,
@@ -33,9 +33,9 @@ from sbsi.measurement_model import (
     MeasurementModelBundle,
     TargetStandardizer,
 )
-from sbsi.scene_prior import ScenePrior
+from sbsi.finite.prior import ScenePrior
 from sbsi.selection_model import TabularPreprocessor
-from sbsi.catalogue_likelihood import OutputCut
+from sbsi.finite.likelihood import OutputCut
 from test_catalogue_likelihood import CONDITIONS, SpinZeroDetector, _catalogue, _two_shape_likelihood
 
 
@@ -364,7 +364,7 @@ def test_skipping_padded_atom_slots_leaves_the_scored_slots_unchanged():
 
 
 def test_physical_flow_dense_and_ragged_weights_preserve_float64():
-    from sbsi.flow_physical_disk import ConditionalPhysicalDiskFlow
+    from sbsi.flows.physical_disk import ConditionalPhysicalDiskFlow
 
     base = _torch_two_shape_likelihood(blend_values=[0.1, 0.2, 0.3, 0.4])
     model = ConditionalPhysicalDiskFlow(

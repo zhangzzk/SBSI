@@ -1,6 +1,6 @@
 """Allow ``python -m sbsi`` to invoke the installed ``sbsi`` CLI."""
 
-from .cli import main
+from sbsi.cli import main
 
 
 if __name__ == "__main__":

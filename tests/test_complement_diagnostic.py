@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 import torch
 
-from sbsi.complement_diagnostic import (
+from sbsi.finite.complement import (
     ComplementDiagnostic,
     _WholeCatalogueProxy,
     _membership,

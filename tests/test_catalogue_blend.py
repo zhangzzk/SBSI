@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 
-from sbsi.catalogue_blend import CatalogueBlendResponse
+from sbsi.finite.blend import CatalogueBlendResponse
 from sbsi.forward_catalogue import EmulatorPairingConfig
-from sbsi.scene_prior import ScenePrior
+from sbsi.finite.prior import ScenePrior
 
 
 CONDITIONS = {

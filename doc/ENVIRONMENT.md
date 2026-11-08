@@ -11,8 +11,8 @@ Install SBSI into the interpreter that will run it:
 python -m pip install -e /path/to/SBSI
 ```
 
-The package metadata declares the core Python dependencies and installs the
-`sbsi` command. Imports must work from any directory; do not add checkout paths
+The package metadata declares the core Python dependencies, discovers the
+`sbsi` subpackages and installs the `sbsi` command. Imports must work from any directory; do not add checkout paths
 to `PYTHONPATH` or depend on the current working directory.
 
 BlendEMU is required only when loading its response emulator or classifier
@@ -39,6 +39,12 @@ Two project environments are currently available:
 Both environments need the checkout installed editable after a clean setup.
 Environment names are deployment details, not part of either scientific
 release identity.
+
+The package wheel contains the Python modules, but model manifests, examples
+and checkpoint resources live in the source checkout. Standalone wheel
+deployment is not supported; use the editable installation above. The package
+review verified all subpackages and model loading from outside the checkout
+through that installation.
 
 ### Historical scene-prior runtime compatibility
 
@@ -67,7 +73,9 @@ BlendEMU skips when that package is unavailable.
 
 The cleanups archive experiment-only tests alongside their scripts;
 they are not discovered by default. The retained suite covers core inference,
-model loading, and retained feature/disk contracts. V3.9 freeze receipts are
+model loading, and retained feature/disk contracts. The November8 package
+review archives tests belonging only to retired experimental modules; tests
+for current and finite-catalogue runtime behavior remain active. V3.9 freeze receipts are
 checked by `tests/test_model_presets.py`. Run the full suite via
 Slurm using `sbatch jobs/job_tests.sh` from the checkout root. Set the external
 artifact roots first to include the V3.9 artifact prediction smoke test; without

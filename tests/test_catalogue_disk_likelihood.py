@@ -6,9 +6,9 @@ import pytest
 import torch
 from scipy.special import logsumexp
 
-from sbsi.catalogue_disk_likelihood import DiskCatalogueLikelihood
-from sbsi.catalogue_likelihood import CatalogueModelView, CatalogueSelection, OutputCut
-from sbsi.disk_response_transport import disk_response_transport
+from sbsi.disk.likelihood import DiskCatalogueLikelihood
+from sbsi.finite.likelihood import CatalogueModelView, CatalogueSelection, OutputCut
+from sbsi.disk.transport import disk_response_transport
 from sbsi.shear_map import apply_shear_to_ellipticity
 
 

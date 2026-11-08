@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 
-from .models import MODEL_PRESETS, get_model
+from sbsi.models import MODEL_PRESETS, get_model
 
 
 def _model_payload(model):

@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from sbsi.forward_catalogue import EmulatorPairingConfig, prepare_emulator_pairs
-from sbsi.scene_prior import ScenePrior
+from sbsi.finite.prior import ScenePrior
 
 
 CONDITIONS = {

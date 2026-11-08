@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 import torch
 
-from sbsi.disk_precision import physical_log_prob_with_gap, transport_with_log_gap
+from sbsi.disk.precision import physical_log_prob_with_gap, transport_with_log_gap
 from sbsi.measurement_model import (TargetStandardizer, build_flow,
     load_measurement_model, save_measurement_model)
 from sbsi.selection_model import TabularPreprocessor

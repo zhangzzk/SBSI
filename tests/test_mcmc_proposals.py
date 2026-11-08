@@ -1,9 +1,9 @@
 """Correlated-Gaussian posterior closure and degenerate-warmup support."""
 import numpy as np
 
-from sbsi.mcmc_proposals import (adjacent_swap_permutation, complementary_stretch_proposal, empirical_block_cholesky,
+from sbsi.galsbi.proposals import (adjacent_swap_permutation, complementary_stretch_proposal, empirical_block_cholesky,
                                 gaussian_block_delta, pooled_block_cholesky)
-from sbsi.pseudo_marginal import metropolis_accept, retained
+from sbsi.galsbi.metropolis import metropolis_accept, retained
 
 
 def test_complementary_stretch_is_affine_equivariant_and_preserves_nuisance_coordinates():

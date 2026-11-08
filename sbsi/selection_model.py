@@ -10,7 +10,7 @@ import pandas as pd
 import torch
 from torch import nn
 
-from .nn_utils import activation_class as _activation
+from sbsi.nn_utils import activation_class as _activation
 
 
 class SelectionMLP(nn.Module):

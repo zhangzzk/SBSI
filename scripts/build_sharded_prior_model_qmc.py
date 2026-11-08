@@ -11,12 +11,12 @@ from pathlib import Path
 
 import numpy as np
 
-from sbsi.catalogue_likelihood import CatalogueLikelihood, CatalogueModelCache
-from sbsi.catalogue_sampling import ProposalCoordinateTable
+from sbsi.finite.likelihood import CatalogueLikelihood, CatalogueModelCache
+from sbsi.finite.sampling import ProposalCoordinateTable
 from sbsi.forward_catalogue import EmulatorPairingConfig
 from sbsi.measurement_model import load_measurement_model
 from sbsi.models import ModelPaths, load_emulator
-from sbsi.scene_prior import ScenePrior
+from sbsi.finite.prior import ScenePrior
 
 
 def _sha256(path: str | Path) -> str:

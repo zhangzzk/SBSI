@@ -11,10 +11,10 @@ from pathlib import Path
 
 import torch
 
-from sbsi.catalogue_blend import CatalogueBlendResponse
+from sbsi.finite.blend import CatalogueBlendResponse
 from sbsi.forward_catalogue import EmulatorPairingConfig
 from sbsi.models import ModelPaths, load_emulator
-from sbsi.scene_prior import ScenePrior
+from sbsi.finite.prior import ScenePrior
 
 
 def _sha256(path: str | Path) -> str:

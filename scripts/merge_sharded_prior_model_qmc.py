@@ -11,9 +11,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from sbsi.catalogue_likelihood import CatalogueModelCache, CatalogueModelView
-from sbsi.catalogue_sampling import ProposalCoordinateTable
-from sbsi.scene_prior import ScenePrior
+from sbsi.finite.likelihood import CatalogueModelCache, CatalogueModelView
+from sbsi.finite.sampling import ProposalCoordinateTable
+from sbsi.finite.prior import ScenePrior
 
 
 def _sha256(path: str | Path) -> str:

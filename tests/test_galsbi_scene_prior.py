@@ -4,9 +4,9 @@ import pandas as pd
 import pytest
 from scipy.stats import poisson
 
-from sbsi.galsbi_scene_prior import ARCSEC2_PER_SR, GalSBISceneBatch, GalSBIScenePrior
-from sbsi.v39_inference import physical_close_crowding
-from sbsi.pseudo_marginal import metropolis_accept
+from sbsi.galsbi.scenes import ARCSEC2_PER_SR, GalSBISceneBatch, GalSBIScenePrior
+from sbsi.galsbi.features import physical_close_crowding
+from sbsi.galsbi.metropolis import metropolis_accept
 
 
 class UniformMarks:

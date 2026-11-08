@@ -19,9 +19,9 @@ import pandas as pd
 import torch
 from torch import nn
 
-from .nn_utils import activation_class as _activation
-from .coordinates import angle_to_radians
-from .selection_model import TabularPreprocessor
+from sbsi.nn_utils import activation_class as _activation
+from sbsi.coordinates import angle_to_radians
+from sbsi.selection_model import TabularPreprocessor
 
 _ENGINEERED_TARGET_RAW_COLUMNS = {
     "measured_log_flux_auto": {"measured_flux_auto"},
@@ -328,7 +328,7 @@ class ConditionalAffineFlow(nn.Module):
 class MeasurementModelBundle:
     def __init__(self, model, condition_preprocessor, target_transform, metadata=None, device="cpu"):
         _validate_disk_contract(model, target_transform)
-        from .flow_sign_symmetric import validate_symmetric_bundle
+        from sbsi.flows.sign_symmetric import validate_symmetric_bundle
         validate_symmetric_bundle(model, condition_preprocessor)
         self.device = torch.device(device)
         self.model = model.to(self.device)
@@ -628,15 +628,15 @@ def build_flow(model_config):
     if flow_type == "affine":
         return ConditionalAffineFlow(**cfg)
     if flow_type == "physical_disk_affine":
-        from .flow_physical_disk import ConditionalPhysicalDiskFlow
+        from sbsi.flows.physical_disk import ConditionalPhysicalDiskFlow
 
         return ConditionalPhysicalDiskFlow(**cfg)
     if flow_type == "sign_symmetric_physical_disk_affine":
-        from .flow_sign_symmetric import SignSymmetricPhysicalDiskFlow
+        from sbsi.flows.sign_symmetric import SignSymmetricPhysicalDiskFlow
 
         return SignSymmetricPhysicalDiskFlow(**cfg)
     if flow_type == "disk_affine":
-        from .flow_disk import ConditionalDiskAffineFlow
+        from sbsi.flows.disk import ConditionalDiskAffineFlow
 
         return ConditionalDiskAffineFlow(**cfg)
     if flow_type == "mean_affine":
@@ -647,7 +647,7 @@ def build_flow(model_config):
 
 def _validate_disk_contract(model, target_transform, model_config=None):
     # Local import avoids a cycle: flow_disk uses the existing affine base.
-    from .flow_disk import ConditionalDiskAffineFlow
+    from sbsi.flows.disk import ConditionalDiskAffineFlow
 
     if not isinstance(model, ConditionalDiskAffineFlow):
         if model_config is not None and model_config.get("flow_type") == "disk_affine":
@@ -665,8 +665,8 @@ def _validate_disk_contract(model, target_transform, model_config=None):
     ):
         if not np.array_equal(getattr(model, name).detach().cpu().numpy(), value):
             raise ValueError(f"disk flow {name} differs from the target transform")
-    from .flow_physical_disk import ConditionalPhysicalDiskFlow
-    from .flow_sign_symmetric import SignSymmetricPhysicalDiskFlow
+    from sbsi.flows.physical_disk import ConditionalPhysicalDiskFlow
+    from sbsi.flows.sign_symmetric import SignSymmetricPhysicalDiskFlow
 
     if isinstance(model, SignSymmetricPhysicalDiskFlow) and model_config is not None:
         if model_config.get("invariant_features", "bounded") != model.invariant_features:
@@ -701,7 +701,7 @@ def save_measurement_model(
     path, model, condition_preprocessor, target_transform, model_config, metadata=None
 ):
     _validate_disk_contract(model, target_transform, model_config)
-    from .flow_sign_symmetric import validate_symmetric_bundle
+    from sbsi.flows.sign_symmetric import validate_symmetric_bundle
     validate_symmetric_bundle(model, condition_preprocessor)
     checkpoint = {
         "state_dict": model.state_dict(),
@@ -722,7 +722,7 @@ def load_measurement_model(path, device="cpu"):
         "sbsi_experimental_factorized_frame_v1",
         "sbsi_experimental_neighbour_factorized_v1",
     ):
-        from .factorized_flow import load_factorized_checkpoint
+        from sbsi.flows.factorized import load_factorized_checkpoint
         return load_factorized_checkpoint(checkpoint, device=device)
     condition_preprocessor = TabularPreprocessor.from_state(checkpoint["condition_preprocessor"])
     target_transform = TargetStandardizer.from_state(checkpoint["target_transform"])

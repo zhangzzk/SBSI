@@ -12,26 +12,26 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from sbsi.catalogue_blend import CatalogueBlendResponse
-from sbsi.catalogue_closure import MockCatalogue, generate_mock_catalogue
-from sbsi.catalogue_likelihood import (
+from sbsi.finite.blend import CatalogueBlendResponse
+from sbsi.finite.closure import MockCatalogue, generate_mock_catalogue
+from sbsi.finite.likelihood import (
     CatalogueLikelihood,
     CatalogueModelCache,
     CatalogueSelection,
     OutputCut,
 )
-from sbsi.catalogue_null import (
+from sbsi.finite.estimator import (
     estimate_one_step_adaptive_section5,
 )
-from sbsi.catalogue_sampling import DefensiveLocalProposal, ProposalCoordinateTable
-from sbsi.complement_diagnostic import diagnose_complement
+from sbsi.finite.sampling import DefensiveLocalProposal, ProposalCoordinateTable
+from sbsi.finite.complement import diagnose_complement
 from sbsi.forward_catalogue import EmulatorPairingConfig
 from sbsi.measurement_model import load_measurement_model
 from sbsi.models import ModelPaths, load_emulator
 from sbsi.selection_model import load_selection_model, load_selection_model_ensemble
-from sbsi.likelihood_landscape import likelihood_landscape
-from sbsi.scene_prior import SHEAR_TRANSFORM, ScenePrior
-from sbsi.selection_normalization import (
+from sbsi.finite.landscape import likelihood_landscape
+from sbsi.finite.prior import SHEAR_TRANSFORM, ScenePrior
+from sbsi.finite.selection import (
     detected_selected_mass_shard,
     load_population_normalization,
 )
@@ -492,10 +492,10 @@ def _pipeline_implementation_hashes() -> dict[str, str]:
     names = (
         "configs/inference.json",
         "scripts/run_inference.py",
-        "sbsi/catalogue_null.py",
-        "sbsi/catalogue_likelihood.py",
-        "sbsi/catalogue_sampling.py",
-        "sbsi/selection_normalization.py",
+        "sbsi/finite/estimator.py",
+        "sbsi/finite/likelihood.py",
+        "sbsi/finite/sampling.py",
+        "sbsi/finite/selection.py",
     )
     return {name: _sha256(root / name) for name in names}
 
@@ -506,10 +506,10 @@ def _likelihood_implementation_hashes() -> dict[str, str]:
     root = REPOSITORY_ROOT
     names = (
         "configs/likelihood.json",
-        "sbsi/catalogue_likelihood.py",
-        "sbsi/catalogue_blend.py",
-        "sbsi/catalogue_closure.py",
-        "sbsi/scene_prior.py",
+        "sbsi/finite/likelihood.py",
+        "sbsi/finite/blend.py",
+        "sbsi/finite/closure.py",
+        "sbsi/finite/prior.py",
         "sbsi/shear_map.py",
         "sbsi/measurement_model.py",
         "sbsi/models.py",

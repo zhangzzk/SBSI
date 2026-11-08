@@ -83,7 +83,7 @@ def test_configured_selection_uses_pixel_units_and_rejects_unsupported_cuts():
 
 def test_strict_measured_bound_is_shared_by_numpy_and_torch():
     import torch
-    from sbsi.catalogue_likelihood import OutputCut
+    from sbsi.finite.likelihood import OutputCut
 
     values = np.array([[3.], [np.nextafter(3., np.inf)], [2.99]])
     cut = OutputCut.from_specs(["radius"], specs=["radius:>3.0:"])

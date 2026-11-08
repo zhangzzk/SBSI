@@ -26,8 +26,8 @@ dependencies = [
 [project.scripts]
 sbsi = "sbsi.cli:main"
 
-[tool.setuptools]
-packages = ["sbsi"]
+[tool.setuptools.packages.find]
+include = ["sbsi", "sbsi.*"]
 
 [tool.ruff]
 line-length = 110

@@ -7,16 +7,16 @@ import pytest
 import torch
 from scipy.stats import norm
 
-from sbsi.catalogue_blend import CatalogueBlendResponse
-from sbsi.catalogue_closure import MockCatalogue, generate_mock_catalogue, run_exact_closure
-from sbsi.catalogue_likelihood import (
+from sbsi.finite.blend import CatalogueBlendResponse
+from sbsi.finite.closure import MockCatalogue, generate_mock_catalogue, run_exact_closure
+from sbsi.finite.likelihood import (
     CatalogueLikelihood,
     CatalogueModelCache,
     CatalogueSelection,
 )
-from sbsi.scene_prior import ScenePrior
-from sbsi.catalogue_likelihood import OutputCut
-from sbsi.selection_normalization import (
+from sbsi.finite.prior import ScenePrior
+from sbsi.finite.likelihood import OutputCut
+from sbsi.finite.selection import (
     ExactPopulationNormalization,
     QuadraticPopulationNormalization,
     detected_selected_mass_shard,

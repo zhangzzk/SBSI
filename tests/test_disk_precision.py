@@ -5,10 +5,10 @@ import numpy as np
 import pytest
 import torch
 
-from sbsi.disk_precision import (physical_log_prob_with_gap, radial_log_gap,
+from sbsi.disk.precision import (physical_log_prob_with_gap, radial_log_gap,
                                 transport_with_log_gap, validate_shape_encoding)
-from sbsi.flow_disk import radial_tanh
-from sbsi.flow_physical_disk import ConditionalPhysicalDiskFlow
+from sbsi.flows.disk import radial_tanh
+from sbsi.flows.physical_disk import ConditionalPhysicalDiskFlow
 
 
 def model():

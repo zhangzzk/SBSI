@@ -27,7 +27,7 @@
     ],
     "context_contract": "Eight raw inputs, base preprocessing with missing indicators, appended constant-zero control column; use_score=false",
     "neighbour_score_enabled": false,
-    "loader_source": "sbsi/factorized_flow.py",
+    "loader_source": "sbsi/flows/factorized.py",
     "training": {
       "initial_nll_epochs": 140,
       "additional_nll_epochs": 40,

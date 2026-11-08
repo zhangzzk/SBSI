@@ -18,7 +18,7 @@ import numpy as np
 import pytest
 import torch
 
-from sbsi.catalogue_sampling import WholeCatalogueProxy, _priority_row_seed
+from sbsi.finite.sampling import WholeCatalogueProxy, _priority_row_seed
 
 
 class _Coordinates:

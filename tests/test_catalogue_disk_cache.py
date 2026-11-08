@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from sbsi.catalogue_disk_cache import DiskCatalogueModelCache
-from sbsi.crowding import FEATURES, FLOW_FEATURES, classifier_features, major_convolved_scale
-from sbsi.output_conditioned_response import TRUTH_FEATURES
+from sbsi.finite.disk_cache import DiskCatalogueModelCache
+from sbsi.finite.crowding import FEATURES, FLOW_FEATURES, classifier_features, major_convolved_scale
+from sbsi.disk.emulator import TRUTH_FEATURES
 from sbsi.shear_map import apply_shear_to_ellipticity
 
 

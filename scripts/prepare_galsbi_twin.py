@@ -28,9 +28,9 @@ import torch
 
 from check_galsbi_continuous_prior import build_prior, digest, save
 from check_galsbi_summary_sampler import mock_panel, prepared
-from sbsi.catalogue_likelihood import predict_detection_probability
-from sbsi.disk_precision import LOG_GAP_COLUMN, transport_with_log_gap
-from sbsi.galsbi_scene_prior import GalSBIScenePrior
+from sbsi.finite.likelihood import predict_detection_probability
+from sbsi.disk.precision import LOG_GAP_COLUMN, transport_with_log_gap
+from sbsi.galsbi.scenes import GalSBIScenePrior
 from sbsi.measurement_model import load_measurement_model
 from sbsi.models import V39_LIKE, load_detection_classifier, load_disk_response
 from sbsi.shear_map import apply_shear_to_ellipticity

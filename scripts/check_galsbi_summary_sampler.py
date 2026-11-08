@@ -18,18 +18,18 @@ if __package__:
     from .check_galsbi_continuous_prior import build_prior, digest, save
 else:
     from check_galsbi_continuous_prior import build_prior, digest, save
-from sbsi.catalogue_disk_likelihood import DiskCatalogueLikelihood
-from sbsi.catalogue_disk_response import CatalogueDiskResponse
-from sbsi.catalogue_likelihood import predict_detection_probability
-from sbsi.disk_precision import LOG_GAP_COLUMN, transport_with_log_gap
-from sbsi.galsbi_scene_prior import GalSBIScenePrior
-from sbsi.galsbi_summary import (SummaryBatch, SummaryLikelihood, compress_scenes,
+from sbsi.disk.likelihood import DiskCatalogueLikelihood
+from sbsi.disk.response import CatalogueDiskResponse
+from sbsi.finite.likelihood import predict_detection_probability
+from sbsi.disk.precision import LOG_GAP_COLUMN, transport_with_log_gap
+from sbsi.galsbi.scenes import GalSBIScenePrior
+from sbsi.galsbi.likelihood import (SummaryBatch, SummaryLikelihood, compress_scenes,
                                 native_shapes, scene_model_inputs)
 from sbsi.measurement_model import load_measurement_model
 from sbsi.models import V39_LIKE, load_detection_classifier, load_disk_response
 from sbsi.shear_map import apply_shear_to_ellipticity
-from sbsi.summary_sampling import prior_metropolis
-from sbsi.v39_inference import V39CatalogueCache
+from sbsi.galsbi.sampling import prior_metropolis
+from sbsi.galsbi.features import V39CatalogueCache
 
 
 def geometry_replay():
@@ -116,10 +116,10 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
     conditions = dict(pixel_size=.2, zero_point=30., psf_fwhm=.73, moffat_beta=2.224, pixel_rms=.312)
-    sources = [Path(__file__), Path('sbsi/galsbi_summary.py'), Path('sbsi/summary_sampling.py'),
-        Path('sbsi/galsbi_prior.py'), Path('sbsi/galsbi_scene_prior.py'), Path('scripts/check_galsbi_continuous_prior.py'),
-        Path('sbsi/catalogue_disk_likelihood.py'), Path('sbsi/catalogue_likelihood.py'),
-        Path('sbsi/catalogue_disk_response.py'), Path('sbsi/measurement_model.py'), Path('configs/models_v3_9_like.json')]
+    sources = [Path(__file__), Path('sbsi/galsbi/likelihood.py'), Path('sbsi/galsbi/sampling.py'),
+        Path('sbsi/galsbi/prior.py'), Path('sbsi/galsbi/scenes.py'), Path('scripts/check_galsbi_continuous_prior.py'),
+        Path('sbsi/disk/likelihood.py'), Path('sbsi/finite/likelihood.py'),
+        Path('sbsi/disk/response.py'), Path('sbsi/measurement_model.py'), Path('configs/models_v3_9_like.json')]
     protocol = dict(seed=args.seed, mock_inputs=args.mock_inputs, chains=args.chains,
         draws_per_chain=args.draws_per_chain, burnin=args.draws_per_chain//2, shear=[.02, 0.],
         density_batch_size=4096, response_pairing=dict(radius_arcsec=10., nearest_k=20, truth_cuts=None),

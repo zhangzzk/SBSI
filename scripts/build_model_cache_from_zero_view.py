@@ -16,12 +16,12 @@ import time
 import numpy as np
 import pandas as pd
 
-from sbsi.catalogue_blend import CatalogueBlendResponse
-from sbsi.catalogue_likelihood import CatalogueLikelihood, CatalogueModelCache, CatalogueModelView
-from sbsi.catalogue_sampling import ProposalCoordinateTable
-from sbsi.flow_size_condition import CIRCULARIZED_FEATURE, circularized_radius
+from sbsi.finite.blend import CatalogueBlendResponse
+from sbsi.finite.likelihood import CatalogueLikelihood, CatalogueModelCache, CatalogueModelView
+from sbsi.finite.sampling import ProposalCoordinateTable
+from sbsi.flows.size_condition import CIRCULARIZED_FEATURE, circularized_radius
 from sbsi.measurement_model import load_measurement_model
-from sbsi.scene_prior import ScenePrior
+from sbsi.finite.prior import ScenePrior
 from sbsi.selection_model import load_selection_model_ensemble
 from sbsi.coordinates import ellipticity_from_axis_ratio_angle
 

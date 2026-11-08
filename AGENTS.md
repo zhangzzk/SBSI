@@ -27,6 +27,17 @@ reference-neighbour summary and is explicitly rejected by this inference
 entry until that adapter is validated. See `doc/CURRENT_INFERENCE.md`.
 
 
+## Package organization
+
+Keep public model loading/prediction at the package root. Internal code is
+organized into `sbsi/flows/`, `sbsi/galsbi/`, `sbsi/disk/` and `sbsi/finite/`.
+Use the new imports; the exact migration map and retired experimental modules
+are recorded in `archive/package-2026-11-08/manifest.json`. Do not add aliases
+or import archived research to repair a stale internal import. Preserve model
+weights, physical transforms, finite-difference conventions and random streams
+when reorganizing. Source provenance must include subpackages recursively.
+See `doc/REPOSITORY.md` §Package layout.
+
 ## Documentation
 
 Keep active documentation focused on the current GalSBI identities and shared

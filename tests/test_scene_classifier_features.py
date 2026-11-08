@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from sbsi.crowding import geometry_features
+from sbsi.finite.crowding import geometry_features
 
 
 def pairs():

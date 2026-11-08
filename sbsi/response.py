@@ -30,15 +30,15 @@ from typing import Optional, Sequence, Tuple, Union
 import numpy as np
 import pandas as pd
 
-from .catalogue import Catalogue, load_catalogue
-from .domain import Domain
-from .measurement_model import load_measurement_model
-from .models import ModelPaths
-from .blend_lookup import join_blend
-from .preprocessing import (
+from sbsi.catalogue import Catalogue, load_catalogue
+from sbsi.domain import Domain
+from sbsi.measurement_model import load_measurement_model
+from sbsi.models import ModelPaths
+from sbsi.blend_lookup import join_blend
+from sbsi.preprocessing import (
     rescale,
 )
-from .shear_map import apply_shear_to_ellipticity
+from sbsi.shear_map import apply_shear_to_ellipticity
 
 
 def _shape_target_indices(names):

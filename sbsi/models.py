@@ -13,7 +13,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Optional, Tuple
 
-from .paths import RELEASE_MODELS_ROOT
+from sbsi.paths import RELEASE_MODELS_ROOT
 
 
 V35_LIKE_CLASSIFIER_SEEDS: Tuple[int, ...] = (20260913, 20260914, 20260915)
@@ -224,7 +224,7 @@ def load_emulator(models: ModelPaths, *, conditions: dict, device: str = "cpu"):
 def load_disk_response(models: ModelPaths, *, device: str = "cpu", nthread: int = 1):
     """Load the pinned output-conditioned disk velocity predictor.
 
-    Use its per-draw predictions with ``sbsi.disk_response_transport``; this
+    Use its per-draw predictions with ``sbsi.disk.transport``; this
     object does not implement the additive BlendEMU predictor interface.
     """
     if models.response_backend != "disk_response_moment":
@@ -241,7 +241,7 @@ def load_disk_response(models: ModelPaths, *, device: str = "cpu", nthread: int 
             or models.emulator_metadata.name != "metadata.json"
             or models.emulator_model.parent != models.emulator_metadata.parent):
         raise ValueError("disk-response model.json and metadata.json must share a directory")
-    from .output_conditioned_response import DiskResponseMoment
+    from sbsi.disk.emulator import DiskResponseMoment
 
     return DiskResponseMoment(models.emulator_model.parent, device=device, nthread=nthread)
 
@@ -266,7 +266,7 @@ def load_detection_classifier(models: ModelPaths, *, device: str = "cpu"):
                     f"detection-classifier hash mismatch for {path}: "
                     f"expected {expected}, found {actual}"
                 )
-    from .selection_model import load_selection_model, load_selection_model_ensemble
+    from sbsi.selection_model import load_selection_model, load_selection_model_ensemble
 
     if len(models.detection_classifiers) == 1:
         return load_selection_model(models.detection_classifiers[0], device=device)

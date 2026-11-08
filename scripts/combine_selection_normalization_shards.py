@@ -11,7 +11,7 @@ from pathlib import Path
 
 import numpy as np
 
-from sbsi.selection_normalization import ExactPopulationNormalization
+from sbsi.finite.selection import ExactPopulationNormalization
 
 
 def _sha256(path: Path) -> str:

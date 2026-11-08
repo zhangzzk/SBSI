@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .coordinates import (
+from sbsi.coordinates import (
     RAW_SHEAR_FEATURES,
     SHEAR_ALIGNMENT_FEATURES,
     SKY_SHEAR_FEATURES,

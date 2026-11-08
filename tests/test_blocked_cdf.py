@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import torch
 
-from sbsi.catalogue_sampling import _blocked_cumulative_sum
+from sbsi.finite.sampling import _blocked_cumulative_sum
 
 
 @pytest.mark.parametrize("rows,width,block", [(1, 1, 16), (3, 16, 4), (2, 19, 4), (3, 8193, 1024)])

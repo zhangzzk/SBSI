@@ -6,14 +6,14 @@ import pandas as pd
 import pytest
 import torch
 
-from sbsi.catalogue_disk_likelihood import DiskCatalogueLikelihood
-from sbsi.catalogue_disk_response import CatalogueDiskResponse
-from sbsi.flow_size_condition import circularized_radius
-from sbsi.galsbi_scene_prior import GalSBISceneBatch, GalSBIScenePrior
-from sbsi.galsbi_summary import (SummaryBatch, SummaryLikelihood, compress_scenes, native_shapes,
+from sbsi.disk.likelihood import DiskCatalogueLikelihood
+from sbsi.disk.response import CatalogueDiskResponse
+from sbsi.flows.size_condition import circularized_radius
+from sbsi.galsbi.scenes import GalSBISceneBatch, GalSBIScenePrior
+from sbsi.galsbi.likelihood import (SummaryBatch, SummaryLikelihood, compress_scenes, native_shapes,
                                 response_pairs, scene_model_inputs)
-from sbsi.output_conditioned_response import output_features
-from sbsi.v39_inference import FEATURES, V39CatalogueCache
+from sbsi.disk.emulator import output_features
+from sbsi.galsbi.features import FEATURES, V39CatalogueCache
 
 TARGETS = ['measured_ngmix_g1', 'measured_ngmix_g2', 'measured_flux_radius', 'measured_flux_from_mag_auto']
 
@@ -119,7 +119,7 @@ def test_only_response_uses_nearest_twenty_and_empty_neighbours_work():
 
 def test_redshift_sed_moves_preserve_full_likelihood_summaries_with_neighbours():
     from test_galsbi_prior import prior_fixture
-    from sbsi.galsbi_target_coordinates import GalSBITargetCoordinates
+    from sbsi.galsbi.coordinates import GalSBITargetCoordinates
 
     galaxy = prior_fixture()
     # Nontrivial colour and redshift dependence: fixing r magnitude requires

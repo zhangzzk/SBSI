@@ -1,0 +1,54 @@
+{
+  "format": "sbsi_inference_identity_v1",
+  "name": "infer-1.0-galsbi",
+  "named_on": "2026-11-08",
+  "scope": "Core GalSBI-prior continuous-scene shear inference pipeline; each run must separately pin its model, sampler recipe, source, data and seeds.",
+  "runnable_configuration": false,
+  "core": {
+    "prior": "GalSBI F24 continuous target and neighbour scene population; latent target type marginalized",
+    "integration": "Posterior scene sampling with MH and optional likelihood tempering",
+    "selection": "Independent forward-population selection normalization with propagated uncertainty",
+    "estimator": "Selection-corrected score/information solve; bright-only second evaluation in reference mock",
+    "model_identity": "Separate from inference identity; like-1.0-galsbi is the current model fiducial, not the model used for the historical mock result"
+  },
+  "reference_mock": {
+    "endpoint_date": "2026-10-25",
+    "path": "doc/evidence/infer_1_0_galsbi_20261108/mock_reference.json",
+    "sha256": "f7d01315ddc80f69d78e5fa20bdac7e8401e08edfaefdf687be525fb7fe6273e",
+    "model": "V3.9-like retained F8/C8/disk",
+    "injected_shear": [
+      0.02,
+      0.0
+    ],
+    "selected_observations": 1990072,
+    "pairing": "Original and 90-degree-rotated partner scenes; same injected shear, independent selection",
+    "g": [
+      0.019902482356227255,
+      0.00033189406791785396
+    ],
+    "total_standard_errors": [
+      0.00014818221022529817,
+      0.00016430040333073048
+    ],
+    "fractional_g1_error_percent": -0.4875882188637215,
+    "fractional_g1_error_se_pp": 0.7409110511264909,
+    "g2_offset_sigma": 2.02004414590367,
+    "selection_scenes": 52428800,
+    "sampler_recipe": "Historical mixed magnitude-dependent chains and score evaluations, including a bright-only second step; see archive/research-2026-11-08/doc/MOCK_MEASUREMENT_REVIEW.md",
+    "full_uniform_recipe_truth_test_completed": false,
+    "acceptance_passed": false
+  },
+  "current_implementation": {
+    "guide": "doc/CURRENT_INFERENCE.md",
+    "entry_point": "scripts/run_galsbi_inference.py",
+    "variant": "Later full-proposal-likelihood sampler, not the exact mixed mock recipe",
+    "source_receipt": "doc/evidence/dev_consolidation_20261108/production_source.json"
+  },
+  "limitations": [
+    "Single injected shear does not separately identify m1 and c1 or measure m2.",
+    "Mock g2 offset is 2.02 sigma, narrowly failing its declared 2-sigma gate.",
+    "Some magnitude bands and the 320-row short-chain fallback retain convergence limitations.",
+    "No completed end-to-end mock inference result for like-1.0-galsbi or galsbi-multistage.",
+    "The finite-catalogue v1.1-infer/v1.2-infer configurations and likelihood defaults are unchanged."
+  ]
+}

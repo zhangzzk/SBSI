@@ -27,7 +27,7 @@
     ],
     "context_contract": "Eight raw features plus emulator-derived reference neighbour score; base missing indicators; use_score=true",
     "neighbour_score_enabled": true,
-    "loader_source": "sbsi/factorized_flow.py",
+    "loader_source": "sbsi/flows/factorized.py",
     "training": {
       "recipe": "Initial factorized NLL; neighbour-input NLL continuation; weak nine-cut response continuation; photometry-only weighted conditional-cut continuation",
       "arm": "weighted",

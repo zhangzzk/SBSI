@@ -1,0 +1,285 @@
+{
+  "baseline_commit": "7c58bc16ab6128a68116375a2af06e471764d807",
+  "tested_tree": "0749c05c56b52d2193b9d82b8e25d4a039359993",
+  "retired_modules": 19,
+  "retired_tests": 15,
+  "moved_modules": 30,
+  "root_modules": 16,
+  "total_packaged_python_files": 50,
+  "archive_entries_verified": 184,
+  "retained_package_comparisons": [
+    {
+      "original": "sbsi/galsbi_prior.py",
+      "current": "sbsi/galsbi/prior.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/__init__.py",
+      "current": "sbsi/__init__.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/flow_sign_symmetric.py",
+      "current": "sbsi/flows/sign_symmetric.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/complement_diagnostic.py",
+      "current": "sbsi/finite/complement.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/galsbi_target_coordinates.py",
+      "current": "sbsi/galsbi/coordinates.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/coordinates.py",
+      "current": "sbsi/coordinates.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/domain.py",
+      "current": "sbsi/domain.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/factorized_flow.py",
+      "current": "sbsi/flows/factorized.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/response.py",
+      "current": "sbsi/response.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/pseudo_marginal.py",
+      "current": "sbsi/galsbi/metropolis.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/paths.py",
+      "current": "sbsi/paths.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/disk_inference_store.py",
+      "current": "sbsi/finite/disk_store.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/disk_response_transport.py",
+      "current": "sbsi/disk/transport.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/galsbi_scene_prior.py",
+      "current": "sbsi/galsbi/scenes.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/cli.py",
+      "current": "sbsi/cli.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/catalogue_disk_cache.py",
+      "current": "sbsi/finite/disk_cache.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/selection_normalization.py",
+      "current": "sbsi/finite/selection.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/likelihood_landscape.py",
+      "current": "sbsi/finite/landscape.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/measurement_model.py",
+      "current": "sbsi/measurement_model.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/catalogue_disk_response.py",
+      "current": "sbsi/disk/response.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/crowding.py",
+      "current": "sbsi/finite/crowding.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/catalogue_disk_likelihood.py",
+      "current": "sbsi/disk/likelihood.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/forward_catalogue.py",
+      "current": "sbsi/forward_catalogue.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/catalogue_blend.py",
+      "current": "sbsi/finite/blend.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/flow_size_condition.py",
+      "current": "sbsi/flows/size_condition.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/output_conditioned_response.py",
+      "current": "sbsi/disk/emulator.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/models.py",
+      "current": "sbsi/models.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/summary_sampling.py",
+      "current": "sbsi/galsbi/sampling.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/blend_lookup.py",
+      "current": "sbsi/blend_lookup.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/shear_map.py",
+      "current": "sbsi/shear_map.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/__main__.py",
+      "current": "sbsi/__main__.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/galsbi_summary.py",
+      "current": "sbsi/galsbi/likelihood.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/disk_precision.py",
+      "current": "sbsi/disk/precision.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/mcmc_proposals.py",
+      "current": "sbsi/galsbi/proposals.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/nn_utils.py",
+      "current": "sbsi/nn_utils.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/catalogue_sampling.py",
+      "current": "sbsi/finite/sampling.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/catalogue_closure.py",
+      "current": "sbsi/finite/closure.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/selection_model.py",
+      "current": "sbsi/selection_model.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/catalogue.py",
+      "current": "sbsi/catalogue.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/scene_prior.py",
+      "current": "sbsi/finite/prior.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/catalogue_null.py",
+      "current": "sbsi/finite/estimator.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/preprocessing.py",
+      "current": "sbsi/preprocessing.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/catalogue_likelihood.py",
+      "current": "sbsi/finite/likelihood.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/flow_disk.py",
+      "current": "sbsi/flows/disk.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/flow_physical_disk.py",
+      "current": "sbsi/flows/physical_disk.py",
+      "ast_equal_after_import_path_mapping": true
+    },
+    {
+      "original": "sbsi/v39_inference.py",
+      "current": "sbsi/galsbi/features.py",
+      "ast_equal_after_import_path_mapping": true
+    }
+  ],
+  "sampling_evaluation_body_sha256": "ac7c16cb0af3e92ffe70f7e67ba3777775b7dc591f30bb3d2efdf5c912a70ccc",
+  "sampling_evaluation_body_unchanged": true,
+  "model_weights_unchanged": true,
+  "static_package_imports_resolved": 305,
+  "active_doc_links_checked": 99,
+  "tests": {
+    "job": 17835049,
+    "job_state": "FAILED only at unsupported standalone-wheel import after all checkout checks passed",
+    "full_suite": {
+      "passed": 378,
+      "skipped": 3,
+      "seconds": 59.06
+    },
+    "focused_suite": {
+      "passed": 12,
+      "skipped": 1,
+      "seconds": 15.07
+    },
+    "model_validators": [
+      "like-1.0-galsbi",
+      "galsbi-multistage"
+    ],
+    "cli_smokes": [
+      "direct GalSBI entry",
+      "module GalSBI entry",
+      "finite-catalogue entry"
+    ],
+    "wheel_contents": "50/50 Python sources included; no archive/tests/scripts packaged",
+    "standalone_wheel": "Cannot import model registry without external checkout configs; pre-existing editable-checkout deployment contract"
+  },
+  "editable_install": {
+    "job": 17835061,
+    "state": "COMPLETED 0:0",
+    "from_unrelated_working_directory": true,
+    "imported_modules": 48,
+    "root_exports": 10,
+    "model_validators": [
+      "like-1.0-galsbi",
+      "galsbi-multistage"
+    ],
+    "direct_cli": "passed"
+  },
+  "final_runtime_matches_tested_tree": true
+}

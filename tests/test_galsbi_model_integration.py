@@ -70,3 +70,19 @@ def test_inference_requires_matching_model_reference():
         m.validate_reference_identity({'model_identity': a}, b)
     with pytest.raises(ValueError, match='artifact hashes'):
         m.validate_reference_identity({}, a)
+
+
+def test_inference_source_snapshot_is_complete_outside_checkout(tmp_path, monkeypatch):
+    from _script_loader import load_script_module
+    m = load_script_module('run_galsbi_inference.py')
+    monkeypatch.chdir(tmp_path)
+    sources = m.implementation_sources()
+    names = {p.relative_to(ROOT).as_posix() for p in sources}
+    assert {'sbsi/flows/factorized.py', 'sbsi/galsbi/proposals.py',
+            'sbsi/disk/emulator.py', 'sbsi/finite/likelihood.py'} <= names
+    assert not any(name.startswith(('archive/', 'jobs/')) for name in names)
+    output = tmp_path / 'run'
+    m.snapshot_implementation(sources, output)
+    for source in sources:
+        copied = output / 'source' / source.relative_to(ROOT)
+        assert copied.read_bytes() == source.read_bytes()

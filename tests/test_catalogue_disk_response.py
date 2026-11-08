@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from sbsi.catalogue_disk_response import CatalogueDiskResponse
-from sbsi.output_conditioned_response import TRUTH_FEATURES, output_features
+from sbsi.disk.response import CatalogueDiskResponse
+from sbsi.disk.emulator import TRUTH_FEATURES, output_features
 
 
 class Trees:

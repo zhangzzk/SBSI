@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from sbsi.disk_response_transport import (
+from sbsi.disk.transport import (
     directional_response_gain, disk_response_transport, infinitesimal_response_matrix,
     transported_physical_log_prob,
 )

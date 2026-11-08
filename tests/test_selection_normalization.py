@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from sbsi.selection_normalization import (
+from sbsi.finite.selection import (
     ExactPopulationNormalization,
     load_population_normalization,
 )

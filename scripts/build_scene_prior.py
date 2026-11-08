@@ -8,7 +8,7 @@ from hashlib import sha256
 import json
 from pathlib import Path
 
-from sbsi.scene_prior import ScenePrior
+from sbsi.finite.prior import ScenePrior
 
 
 def _sha256(path: Path) -> str:

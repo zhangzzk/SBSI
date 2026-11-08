@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from sbsi.crowding import major_convolved_scale, transport_major_distance
+from sbsi.finite.crowding import major_convolved_scale, transport_major_distance
 
 
 def fixture():

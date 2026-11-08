@@ -11,7 +11,7 @@ import pandas as pd
 import pytest
 
 from sbsi import cli
-from sbsi.crowding import FEATURES, SCALES, classifier_features, major_convolved_scale
+from sbsi.finite.crowding import FEATURES, SCALES, classifier_features, major_convolved_scale
 from sbsi.models import get_model, load_disk_response, load_emulator
 
 
@@ -45,7 +45,7 @@ def test_disk_loader_checks_both_pins_before_loading(tmp_path, monkeypatch):
                     emulator_sha256=sha256(b"model").hexdigest(),
                     emulator_metadata_sha256=sha256(b"metadata").hexdigest())
     calls = []
-    monkeypatch.setitem(sys.modules, "sbsi.output_conditioned_response", SimpleNamespace(
+    monkeypatch.setitem(sys.modules, "sbsi.disk.emulator", SimpleNamespace(
         DiskResponseMoment=lambda *args, **kwargs: calls.append((args, kwargs)) or "loaded"))
     assert load_disk_response(paths, nthread=2) == "loaded"
     assert calls == [((tmp_path,), {"device": "cpu", "nthread": 2})]
@@ -146,7 +146,7 @@ def test_galsbi_fiducial_is_the_evaluated_control_nine_checkpoint(capsys):
 def test_v39_external_artifacts_load_and_predict_together():
     from sbsi.measurement_model import load_measurement_model
     from sbsi.models import load_detection_classifier
-    from sbsi.output_conditioned_response import TRUTH_FEATURES
+    from sbsi.disk.emulator import TRUTH_FEATURES
 
     model = get_model('V3.9-like')
     artifacts = (*model.flow_checkpoints, *model.detection_classifiers,

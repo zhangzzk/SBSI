@@ -44,6 +44,13 @@ provenance. The [source receipt](evidence/dev_consolidation_20261108/production_
 pins the original bytes. Historical study scripts are preserved in the
 [archive](REPOSITORY.md#restoring-an-experiment) for deliberate restoration.
 
+The November8 package review grouped these implementations under
+`sbsi.galsbi`, `sbsi.disk`, `sbsi.flows` and `sbsi.finite`. Source snapshots now
+capture the package recursively from the actual checkout, without relying on
+a removed launcher or the working directory. The sampling/evaluation body
+remains byte-identical to the pre-reorganization entry; internal import paths
+and source provenance changed. See [the package map](REPOSITORY.md#package-layout).
+
 ## Entry points
 
 | Component | Entry point |
@@ -51,7 +58,7 @@ pins the original bytes. Historical study scripts are preserved in the
 | Current continuous-scene sampler | `scripts/run_galsbi_inference.py` |
 | Population/reference preparation | `scripts/prepare_galsbi_population.py`, `scripts/prepare_constgold_inference_input.py` |
 | Selection normalization and bright follow-up | `scripts/run_galsbi_bright.py`, `scripts/report_galsbi_bright.py` |
-| Core likelihood/prior/proposal implementation | `sbsi/galsbi_summary.py`, `sbsi/galsbi_scene_prior.py`, `sbsi/galsbi_target_coordinates.py`, `sbsi/mcmc_proposals.py` |
+| Core likelihood/prior/proposal implementation | `sbsi/galsbi/likelihood.py`, `sbsi/galsbi/scenes.py`, `sbsi/galsbi/coordinates.py`, `sbsi/galsbi/proposals.py` |
 
 The algorithm samples continuous target coordinates and neighbour scenes,
 sums over target type, uses frozen post-warmup proposals and optional

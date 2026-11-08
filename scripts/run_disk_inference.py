@@ -14,19 +14,19 @@ import numpy as np
 import pandas as pd
 import torch
 
-from sbsi.catalogue_closure import MockCatalogue
-from sbsi.catalogue_disk_likelihood import DiskCatalogueLikelihood
-from sbsi.catalogue_disk_response import CatalogueDiskResponse
-from sbsi.catalogue_likelihood import CatalogueSelection, OutputCut
-from sbsi.catalogue_null import run_adaptive_section5
-from sbsi.catalogue_sampling import DefensiveLocalProposal, ProposalCoordinateTable
-from sbsi.crowding import FLOW_FEATURES
-from sbsi.disk_inference_store import (FrozenDiskCache, ShardedDiskResponse, coordinate_table,
+from sbsi.finite.closure import MockCatalogue
+from sbsi.disk.likelihood import DiskCatalogueLikelihood
+from sbsi.disk.response import CatalogueDiskResponse
+from sbsi.finite.likelihood import CatalogueSelection, OutputCut
+from sbsi.finite.estimator import run_adaptive_section5
+from sbsi.finite.sampling import DefensiveLocalProposal, ProposalCoordinateTable
+from sbsi.finite.crowding import FLOW_FEATURES
+from sbsi.finite.disk_store import (FrozenDiskCache, ShardedDiskResponse, coordinate_table,
     file_hash, load_source_shard, load_subset_manifest, stencil, write_json)
 from sbsi.measurement_model import load_measurement_model
 from sbsi.models import V36_LIKE, load_detection_classifier, load_disk_response
-from sbsi.output_conditioned_response import TRUTH_FEATURES
-from sbsi.selection_normalization import ExactPopulationNormalization, detected_selected_mass_shard
+from sbsi.disk.emulator import TRUTH_FEATURES
+from sbsi.finite.selection import ExactPopulationNormalization, detected_selected_mass_shard
 
 
 REPO = Path(__file__).resolve().parents[1]
@@ -35,7 +35,7 @@ NUMERICS = REPO / "configs/inference_v1_2_16k.json"
 
 
 def implementation():
-    paths = sorted((REPO / "sbsi").glob("*.py")) + [Path(__file__)]
+    paths = sorted((REPO / "sbsi").rglob("*.py")) + [Path(__file__)]
     return {str(p.relative_to(REPO)): file_hash(p) for p in paths}
 
 

@@ -16,7 +16,7 @@ import numpy as np
 from scipy.integrate import quad
 from scipy.stats import beta, betaprime, chi2_contingency, kstest, ks_2samp, norm
 
-from sbsi.galsbi_prior import ExactMemo, GalSBIContinuousPrior
+from sbsi.galsbi.prior import ExactMemo, GalSBIContinuousPrior
 
 
 def digest(path):
@@ -232,7 +232,7 @@ def plot_comparison(root, reference, continuous, pits, model_index):
 
 def compare(args):
     import galsbi
-    import sbsi.galsbi_prior as implementation
+    import sbsi.galsbi.prior as implementation
 
     prior, cosmo, config = build_prior(args.model_index)
     print('PRIOR_READY', prior.parent_rate, prior.z_max, flush=True)

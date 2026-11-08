@@ -78,7 +78,7 @@ classifier/disk-emulator loaders accept these companion paths.
 
 The flow checkpoint format is `sbsi_experimental_neighbour_factorized_v1`.
 It now loads through `sbsi.measurement_model.load_measurement_model`, backed
-by the permanent `sbsi/factorized_flow.py` implementation. The original
+by the permanent `sbsi/flows/factorized.py` implementation. The original
 checkpoint bytes and affine arithmetic are preserved; the disabled score
 column is supplied as zero without requiring a placeholder input column.
 Both this model and `galsbi-multistage` are vendored under `models/` with their

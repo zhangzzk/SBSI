@@ -20,9 +20,9 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from sbsi.catalogue_closure import generate_mock_catalogue
-from sbsi.catalogue_null import estimate_one_step_adaptive_section5
-from sbsi.selection_normalization import (
+from sbsi.finite.closure import generate_mock_catalogue
+from sbsi.finite.estimator import estimate_one_step_adaptive_section5
+from sbsi.finite.selection import (
     ExactPopulationNormalization,
     load_population_normalization,
     log_mass_derivatives,

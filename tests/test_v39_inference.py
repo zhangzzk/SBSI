@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 
 from sbsi.shear_map import apply_shear_to_ellipticity
-from sbsi.v39_inference import FEATURES, V39CatalogueCache, physical_close_crowding
+from sbsi.galsbi.features import FEATURES, V39CatalogueCache, physical_close_crowding
 
 
 def test_physical_crowding_matches_bruteforce_without_topk_or_parent_cuts():

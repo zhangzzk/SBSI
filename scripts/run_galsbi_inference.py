@@ -26,18 +26,18 @@ if __name__ == '__main__' and not __package__:
 else:
     from scripts.check_galsbi_continuous_prior import build_prior, digest, save
     from scripts.check_galsbi_summary_sampler import diagnostics
-from sbsi.catalogue_disk_response import CatalogueDiskResponse
-from sbsi.galsbi_prior import ExactMemo
-from sbsi.galsbi_scene_prior import GalSBISceneBatch, GalSBIScenePrior
-from sbsi.galsbi_summary import (SummaryBatch, SummaryLikelihood, compress_scenes, response_pairs,
+from sbsi.disk.response import CatalogueDiskResponse
+from sbsi.galsbi.prior import ExactMemo
+from sbsi.galsbi.scenes import GalSBISceneBatch, GalSBIScenePrior
+from sbsi.galsbi.likelihood import (SummaryBatch, SummaryLikelihood, compress_scenes, response_pairs,
                                  scene_model_inputs)
-from sbsi.galsbi_target_coordinates import GalSBITargetCoordinates
+from sbsi.galsbi.coordinates import GalSBITargetCoordinates
 from sbsi.measurement_model import load_measurement_model
-from sbsi.mcmc_proposals import adjacent_swap_permutation, empirical_block_cholesky, gaussian_block_delta
+from sbsi.galsbi.proposals import adjacent_swap_permutation, empirical_block_cholesky, gaussian_block_delta
 from sbsi.models import load_detection_classifier, load_disk_response
 from sbsi.models import get_model
 from sbsi.cli import _model_payload
-from sbsi.pseudo_marginal import metropolis_accept, retained
+from sbsi.galsbi.metropolis import metropolis_accept, retained
 
 # State-independent mixture; the order fixes the random-number stream (block = rng.choice over these).
 BLOCKS = dict(morphology=[1, 6, 7], shape=[8, 9], redshift_sed=[0, 2, 3, 4, 5], environment=[], sed_independence=[2, 3, 4, 5])
@@ -46,6 +46,30 @@ MORPHOLOGY, SHAPE, REDSHIFT_SED, ENVIRONMENT, SED = range(5)
 BASE_SCALES = [.15, .08, .15, .15, .15, .15, .08, .2, .2, .2]
 REFRESH = dict(fraction=.1, full_probability=.1)
 COVARIANCE = dict(window=1024, update_interval=128, shrinkage=.05)
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+
+
+def implementation_sources():
+    """Capture the package and entry dependencies from this checkout, independent of cwd."""
+    sources = [
+        *sorted((REPOSITORY_ROOT / 'sbsi').rglob('*.py')),
+        Path(__file__).resolve(),
+        REPOSITORY_ROOT / 'scripts/check_galsbi_continuous_prior.py',
+        REPOSITORY_ROOT / 'scripts/check_galsbi_summary_sampler.py',
+        *sorted((REPOSITORY_ROOT / 'configs').glob('models_*.json')),
+    ]
+    for source in sources:
+        if not source.is_file():
+            raise FileNotFoundError(f'missing inference source: {source}')
+    return sources
+
+
+def snapshot_implementation(sources, output):
+    """Preserve the same files hashed in the run protocol, with checkout-relative paths."""
+    for source in sources:
+        destination = output / 'source' / source.resolve().relative_to(REPOSITORY_ROOT)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, destination)
 
 
 def validate_reference_identity(previous, identity):
@@ -117,11 +141,7 @@ def main():
     # warm-up state, so step-to-step differences stay defined), not proposals.
     lazy_b = not any(g0)
     rng = np.random.default_rng(args.seed)
-    sources = [Path(__file__), Path('sbsi/pseudo_marginal.py'), Path('sbsi/galsbi_target_coordinates.py'),
-        Path('sbsi/galsbi_scene_prior.py'), Path('sbsi/galsbi_summary.py'), Path('sbsi/galsbi_prior.py'),
-        Path('scripts/check_galsbi_continuous_prior.py'), Path('scripts/check_galsbi_summary_sampler.py'),
-        Path('jobs/job_galsbi_tempered.sh'), Path('sbsi/models.py'), Path('sbsi/factorized_flow.py'),
-        Path('sbsi/measurement_model.py'), *sorted(Path('configs').glob('models_*.json')), Path('sbsi/mcmc_proposals.py')]
+    sources = implementation_sources()
     protocol = dict(model_identity=IDENTITY, steps=args.steps, warmup=args.warmup, environments=1, chains_per_observation=nchains,
         seed=args.seed, reference=str(args.reference.resolve()), reference_protocol_sha256=digest(args.reference/'protocol.json'),
         disk_coefficient=('computed for stored posterior-level states from the last warm-up step on (NaN before); '
@@ -159,10 +179,7 @@ def main():
         protocol['narrow_morphology_steps'] = dict(probability=args.narrow_step_probability, scale=.25,
             choice='independent of state, so the mixture of symmetric kernels stays exact')
     save(args.output/'protocol.json', protocol)
-    for source in sources:
-        destination = args.output/'source'/source.resolve().relative_to(Path.cwd().resolve())
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source, destination)
+    snapshot_implementation(sources, args.output)
     started = time.monotonic()
     CANDIDATE.validate()
     flow = load_measurement_model(CANDIDATE.flow_checkpoints[0], device=args.device)

@@ -8,12 +8,12 @@ import pandas as pd
 
 from check_galsbi_continuous_prior import build_prior, digest, save
 from check_galsbi_summary_sampler import geometry_replay, mock_panel, prepared
-from sbsi.catalogue_disk_likelihood import DiskCatalogueLikelihood
-from sbsi.galsbi_scene_prior import GalSBIScenePrior
-from sbsi.galsbi_summary import SummaryBatch, SummaryLikelihood, compress_scenes
+from sbsi.disk.likelihood import DiskCatalogueLikelihood
+from sbsi.galsbi.scenes import GalSBIScenePrior
+from sbsi.galsbi.likelihood import SummaryBatch, SummaryLikelihood, compress_scenes
 from sbsi.measurement_model import load_measurement_model
 from sbsi.models import V39_LIKE, load_detection_classifier, load_disk_response
-from sbsi.v39_inference import V39CatalogueCache
+from sbsi.galsbi.features import V39CatalogueCache
 from galsbi_bright_math import bright_cohorts
 
 

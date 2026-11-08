@@ -21,8 +21,8 @@ import numpy as np
 import pandas as pd
 from scipy.spatial import KDTree
 
-from .catalogue import Catalogue, load_catalogue
-from .coordinates import ellipticity_from_axis_ratio_angle
+from sbsi.catalogue import Catalogue, load_catalogue
+from sbsi.coordinates import ellipticity_from_axis_ratio_angle
 
 
 INPUT_CATALOGUE_COLUMNS = (

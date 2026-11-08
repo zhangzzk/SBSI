@@ -16,11 +16,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from sbsi.catalogue_blend import CatalogueBlendResponse
+from sbsi.finite.blend import CatalogueBlendResponse
 from sbsi.coordinates import ellipticity_from_axis_ratio_angle
 from sbsi.forward_catalogue import EmulatorPairingConfig
 from sbsi.models import ModelPaths, load_emulator
-from sbsi.scene_prior import ScenePrior
+from sbsi.finite.prior import ScenePrior
 
 
 def file_hash(path):

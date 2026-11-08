@@ -2,7 +2,7 @@
 import numpy as np
 from scipy.special import logsumexp
 
-from sbsi.pseudo_marginal import metropolis_accept, retained
+from sbsi.galsbi.metropolis import metropolis_accept, retained
 
 
 def test_noisy_likelihood_mh_has_correct_marginal_and_retains_auxiliaries():

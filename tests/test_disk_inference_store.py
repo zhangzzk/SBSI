@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from sbsi.catalogue_sampling import ProposalCoordinateTable
-from sbsi.crowding import FLOW_FEATURES
-from sbsi.disk_inference_store import FrozenDiskCache, ShardedDiskResponse, coordinate_table, stencil
+from sbsi.finite.sampling import ProposalCoordinateTable
+from sbsi.finite.crowding import FLOW_FEATURES
+from sbsi.finite.disk_store import FrozenDiskCache, ShardedDiskResponse, coordinate_table, stencil
 from sbsi.shear_map import apply_shear_to_ellipticity
 
 

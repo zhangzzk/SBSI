@@ -1,0 +1,3 @@
+EDITABLE_IMPORTS_OK 48 ROOT_EXPORTS_OK 10
+like-1.0-galsbi: model artifact paths and pinned hashes OK
+galsbi-multistage: model artifact paths and pinned hashes OK

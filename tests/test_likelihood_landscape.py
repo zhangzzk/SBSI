@@ -12,7 +12,7 @@ import pandas as pd
 import pytest
 import torch
 
-from sbsi.likelihood_landscape import _mass_statistics, likelihood_landscape
+from sbsi.finite.landscape import _mass_statistics, likelihood_landscape
 
 
 class _Coordinates:

@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from sbsi.output_conditioned_response import (
+from sbsi.disk.emulator import (
     OUTPUT_FEATURES, TRUTH_FEATURES, DiskResponseMoment, OutputConditionedResponse, output_features, predict_scene_draw_responses,
 )
 

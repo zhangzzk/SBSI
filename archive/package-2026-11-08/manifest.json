@@ -1,0 +1,1365 @@
+{
+  "format": "sbsi_package_archive_v1",
+  "baseline_commit": "7c58bc16ab6128a68116375a2af06e471764d807",
+  "date": "2026-11-08",
+  "retired_modules": [
+    "analytic_phase_control",
+    "annealed_particles",
+    "galsbi_initialization",
+    "galsbi_particle_proposal",
+    "galsbi_particle_target",
+    "informed_environment",
+    "legacy_exchange_audit",
+    "numerical_native_intensity",
+    "particle_comparison_gates",
+    "particle_diagnostics",
+    "particle_geometry",
+    "particle_gradient_geometry",
+    "particle_initial_proposal",
+    "particle_populations",
+    "phase_control",
+    "poisson_augmentation",
+    "prior_sensitivity",
+    "scene_exchange",
+    "summary_gradients"
+  ],
+  "retired_tests": [
+    "tests/test_analytic_phase_control.py",
+    "tests/test_annealed_particles.py",
+    "tests/test_galsbi_initialization.py",
+    "tests/test_galsbi_particle_proposal.py",
+    "tests/test_galsbi_particle_target.py",
+    "tests/test_informed_environment.py",
+    "tests/test_numerical_native_intensity.py",
+    "tests/test_particle_diagnostics.py",
+    "tests/test_particle_initial_proposal.py",
+    "tests/test_particle_relocation_integration.py",
+    "tests/test_poisson_augmentation.py",
+    "tests/test_scene_exchange.py",
+    "tests/test_scene_exchange_relocation.py",
+    "tests/test_scene_exchange_support.py",
+    "tests/test_summary_gradients.py"
+  ],
+  "module_migration": {
+    "sbsi.factorized_flow": "sbsi.flows.factorized",
+    "sbsi.flow_disk": "sbsi.flows.disk",
+    "sbsi.flow_physical_disk": "sbsi.flows.physical_disk",
+    "sbsi.flow_sign_symmetric": "sbsi.flows.sign_symmetric",
+    "sbsi.flow_size_condition": "sbsi.flows.size_condition",
+    "sbsi.galsbi_prior": "sbsi.galsbi.prior",
+    "sbsi.galsbi_scene_prior": "sbsi.galsbi.scenes",
+    "sbsi.galsbi_summary": "sbsi.galsbi.likelihood",
+    "sbsi.galsbi_target_coordinates": "sbsi.galsbi.coordinates",
+    "sbsi.v39_inference": "sbsi.galsbi.features",
+    "sbsi.summary_sampling": "sbsi.galsbi.sampling",
+    "sbsi.mcmc_proposals": "sbsi.galsbi.proposals",
+    "sbsi.pseudo_marginal": "sbsi.galsbi.metropolis",
+    "sbsi.catalogue_blend": "sbsi.finite.blend",
+    "sbsi.catalogue_closure": "sbsi.finite.closure",
+    "sbsi.catalogue_likelihood": "sbsi.finite.likelihood",
+    "sbsi.catalogue_null": "sbsi.finite.estimator",
+    "sbsi.catalogue_sampling": "sbsi.finite.sampling",
+    "sbsi.scene_prior": "sbsi.finite.prior",
+    "sbsi.selection_normalization": "sbsi.finite.selection",
+    "sbsi.complement_diagnostic": "sbsi.finite.complement",
+    "sbsi.likelihood_landscape": "sbsi.finite.landscape",
+    "sbsi.disk_inference_store": "sbsi.finite.disk_store",
+    "sbsi.catalogue_disk_cache": "sbsi.finite.disk_cache",
+    "sbsi.crowding": "sbsi.finite.crowding",
+    "sbsi.catalogue_disk_likelihood": "sbsi.disk.likelihood",
+    "sbsi.catalogue_disk_response": "sbsi.disk.response",
+    "sbsi.output_conditioned_response": "sbsi.disk.emulator",
+    "sbsi.disk_precision": "sbsi.disk.precision",
+    "sbsi.disk_response_transport": "sbsi.disk.transport"
+  },
+  "entries": [
+    {
+      "original": "sbsi/analytic_phase_control.py",
+      "archived": "archive/package-2026-11-08/sbsi/analytic_phase_control.py",
+      "action": "move",
+      "bytes": 4481,
+      "sha256": "c3436d58a77924ecf0674c08a1c0ae8e02fc341039e0131eb4b9d95060ccca6b"
+    },
+    {
+      "original": "sbsi/annealed_particles.py",
+      "archived": "archive/package-2026-11-08/sbsi/annealed_particles.py",
+      "action": "move",
+      "bytes": 9836,
+      "sha256": "a3895d270ae64ab6c023bf6e288b1b7052c0591b6c36a4a754812631fc099e45"
+    },
+    {
+      "original": "sbsi/galsbi_initialization.py",
+      "archived": "archive/package-2026-11-08/sbsi/galsbi_initialization.py",
+      "action": "move",
+      "bytes": 3747,
+      "sha256": "d46a76aa671fa2f86ba3c8233079356abfb0a712f721bb3bd172a84337e4914d"
+    },
+    {
+      "original": "sbsi/galsbi_particle_proposal.py",
+      "archived": "archive/package-2026-11-08/sbsi/galsbi_particle_proposal.py",
+      "action": "move",
+      "bytes": 15648,
+      "sha256": "8f819102b17a111eada267731ed30a8dfeafa7e377010e6354f8e6a6e5b64fab"
+    },
+    {
+      "original": "sbsi/galsbi_particle_target.py",
+      "archived": "archive/package-2026-11-08/sbsi/galsbi_particle_target.py",
+      "action": "move",
+      "bytes": 17405,
+      "sha256": "9de76a6089b31f73d632e6c3cf768df7667e96f1608e20dff43ee8ab9ce7e5ec"
+    },
+    {
+      "original": "sbsi/informed_environment.py",
+      "archived": "archive/package-2026-11-08/sbsi/informed_environment.py",
+      "action": "move",
+      "bytes": 15437,
+      "sha256": "ea8608d56a8d1b8a9f047b36a875d84ef158bd924bbbde25a09a4ea4aeaee2ad"
+    },
+    {
+      "original": "sbsi/legacy_exchange_audit.py",
+      "archived": "archive/package-2026-11-08/sbsi/legacy_exchange_audit.py",
+      "action": "move",
+      "bytes": 15669,
+      "sha256": "392221f3b73956c1752a769e5e0b3bc09d6ff38735a47a4cc3637300feef2434"
+    },
+    {
+      "original": "sbsi/numerical_native_intensity.py",
+      "archived": "archive/package-2026-11-08/sbsi/numerical_native_intensity.py",
+      "action": "move",
+      "bytes": 8018,
+      "sha256": "af1360912a68b35be138596da4cc095895b485a14443c002a17dcddefcd2e4b5"
+    },
+    {
+      "original": "sbsi/particle_comparison_gates.py",
+      "archived": "archive/package-2026-11-08/sbsi/particle_comparison_gates.py",
+      "action": "move",
+      "bytes": 4752,
+      "sha256": "8c77ad0ff7f2fbf616ea1b2a250ca2119ec6822ba19dd1f063e9584d75e566df"
+    },
+    {
+      "original": "sbsi/particle_diagnostics.py",
+      "archived": "archive/package-2026-11-08/sbsi/particle_diagnostics.py",
+      "action": "move",
+      "bytes": 2841,
+      "sha256": "bbd2756da751d025db8ae41ddc18a3dd0e6ec5a8d2967852b6e849762d205f6a"
+    },
+    {
+      "original": "sbsi/particle_geometry.py",
+      "archived": "archive/package-2026-11-08/sbsi/particle_geometry.py",
+      "action": "move",
+      "bytes": 11790,
+      "sha256": "07bda14a74289c0b250e36aa4a78d883513a9ab04f0250a632af20154df42873"
+    },
+    {
+      "original": "sbsi/particle_gradient_geometry.py",
+      "archived": "archive/package-2026-11-08/sbsi/particle_gradient_geometry.py",
+      "action": "move",
+      "bytes": 7904,
+      "sha256": "4019189e667a7331d07938ce8983e5e27f960dc142e73be596af3ffaec5f5daa"
+    },
+    {
+      "original": "sbsi/particle_initial_proposal.py",
+      "archived": "archive/package-2026-11-08/sbsi/particle_initial_proposal.py",
+      "action": "move",
+      "bytes": 14386,
+      "sha256": "1c2041a818ebe52a8a03a53254a5ef51844a8c79cebb3f9778311b072624578b"
+    },
+    {
+      "original": "sbsi/particle_populations.py",
+      "archived": "archive/package-2026-11-08/sbsi/particle_populations.py",
+      "action": "move",
+      "bytes": 8058,
+      "sha256": "5e142612b28847ee2c37a488b4289819a26e8be7c5efde085fd9b774db6f62af"
+    },
+    {
+      "original": "sbsi/phase_control.py",
+      "archived": "archive/package-2026-11-08/sbsi/phase_control.py",
+      "action": "move",
+      "bytes": 13988,
+      "sha256": "d26e2bbb46fb94dbe8cfb3f74f8704863fce2942765aa481ec09a91c7d084762"
+    },
+    {
+      "original": "sbsi/poisson_augmentation.py",
+      "archived": "archive/package-2026-11-08/sbsi/poisson_augmentation.py",
+      "action": "move",
+      "bytes": 4187,
+      "sha256": "33f9ff12a6444de98827349dacc7da64cc73a794d4380e17895432c9cc69e5ad"
+    },
+    {
+      "original": "sbsi/prior_sensitivity.py",
+      "archived": "archive/package-2026-11-08/sbsi/prior_sensitivity.py",
+      "action": "move",
+      "bytes": 6508,
+      "sha256": "a6bfc90af8141050b94a993ab5f2995285186b6055f57bb6a9098fa41d2da140"
+    },
+    {
+      "original": "sbsi/scene_exchange.py",
+      "archived": "archive/package-2026-11-08/sbsi/scene_exchange.py",
+      "action": "move",
+      "bytes": 10937,
+      "sha256": "c5102579e3dfd1cd3c3e9ae5a267cf8ac0df9a6a82d60417fd2772e56aebd5ad"
+    },
+    {
+      "original": "sbsi/summary_gradients.py",
+      "archived": "archive/package-2026-11-08/sbsi/summary_gradients.py",
+      "action": "move",
+      "bytes": 5438,
+      "sha256": "111edaf8a0525d2b6830f615dfbadf8aed7c99cc0d017fc415cbd23ab17fd0af"
+    },
+    {
+      "original": "tests/test_analytic_phase_control.py",
+      "archived": "archive/package-2026-11-08/tests/test_analytic_phase_control.py",
+      "action": "move",
+      "bytes": 6080,
+      "sha256": "ce6a620d01de130f1fd39f750f789645e6836884d7b3edca68b8762bce62dfed"
+    },
+    {
+      "original": "tests/test_annealed_particles.py",
+      "archived": "archive/package-2026-11-08/tests/test_annealed_particles.py",
+      "action": "move",
+      "bytes": 10945,
+      "sha256": "2d87e7924ca93c4d4f1988a1706ba093f52c39c8b88cefc6056f36dd0f89d69e"
+    },
+    {
+      "original": "tests/test_galsbi_initialization.py",
+      "archived": "archive/package-2026-11-08/tests/test_galsbi_initialization.py",
+      "action": "move",
+      "bytes": 2365,
+      "sha256": "6f60dd2e6e40b19b35d1b26a2343f991d85c802b40a52521430fcdda6e7cf118"
+    },
+    {
+      "original": "tests/test_galsbi_particle_proposal.py",
+      "archived": "archive/package-2026-11-08/tests/test_galsbi_particle_proposal.py",
+      "action": "move",
+      "bytes": 11129,
+      "sha256": "e583879035efc17aebd50f52b89fb50f8a3cb92dbdd7322d21238ff75083a40f"
+    },
+    {
+      "original": "tests/test_galsbi_particle_target.py",
+      "archived": "archive/package-2026-11-08/tests/test_galsbi_particle_target.py",
+      "action": "move",
+      "bytes": 18357,
+      "sha256": "48be767c56d6fa62d223907d4b2cda18e3bae59d4cee6ff1de1b80d25143540e"
+    },
+    {
+      "original": "tests/test_informed_environment.py",
+      "archived": "archive/package-2026-11-08/tests/test_informed_environment.py",
+      "action": "move",
+      "bytes": 16418,
+      "sha256": "be5a052aecae71b0ad5748acbc319d13d15354ad29c6412de4bc3ab9298a7b81"
+    },
+    {
+      "original": "tests/test_numerical_native_intensity.py",
+      "archived": "archive/package-2026-11-08/tests/test_numerical_native_intensity.py",
+      "action": "move",
+      "bytes": 10776,
+      "sha256": "b157db278886e60cd852f8872477e4b60a538d2d5593e6c37a31e9b031c06428"
+    },
+    {
+      "original": "tests/test_particle_diagnostics.py",
+      "archived": "archive/package-2026-11-08/tests/test_particle_diagnostics.py",
+      "action": "move",
+      "bytes": 3099,
+      "sha256": "d1da45d7f33596dc13c05726539ee7471c0949a3700128531690c8271a79d2ca"
+    },
+    {
+      "original": "tests/test_particle_initial_proposal.py",
+      "archived": "archive/package-2026-11-08/tests/test_particle_initial_proposal.py",
+      "action": "move",
+      "bytes": 12515,
+      "sha256": "3cc2d226e5ba4752ed47fa788bd030c1d0829b2e4b69314a80ebbf0c4ddb8316"
+    },
+    {
+      "original": "tests/test_particle_relocation_integration.py",
+      "archived": "archive/package-2026-11-08/tests/test_particle_relocation_integration.py",
+      "action": "move",
+      "bytes": 7004,
+      "sha256": "4d077dfef188e5ffcc7833c0684f87d26e919f1673568d83c94d76fdb8621150"
+    },
+    {
+      "original": "tests/test_poisson_augmentation.py",
+      "archived": "archive/package-2026-11-08/tests/test_poisson_augmentation.py",
+      "action": "move",
+      "bytes": 7955,
+      "sha256": "581c2bd82462a852471d3aa25b704a66fcbce3d4e8b951e2f7ca5c7172ea8cf1"
+    },
+    {
+      "original": "tests/test_scene_exchange.py",
+      "archived": "archive/package-2026-11-08/tests/test_scene_exchange.py",
+      "action": "move",
+      "bytes": 5523,
+      "sha256": "1fe09b4bb5fc3c3cd27656e9d2f721a85ffdb0550e63c7d9cca189144df1bd49"
+    },
+    {
+      "original": "tests/test_scene_exchange_relocation.py",
+      "archived": "archive/package-2026-11-08/tests/test_scene_exchange_relocation.py",
+      "action": "move",
+      "bytes": 13230,
+      "sha256": "57d01e24471620dbbe95260aa60f8fa37d80c25a3ab5be39ca2d07c4f515ae5d"
+    },
+    {
+      "original": "tests/test_scene_exchange_support.py",
+      "archived": "archive/package-2026-11-08/tests/test_scene_exchange_support.py",
+      "action": "move",
+      "bytes": 3888,
+      "sha256": "a9fb0ba22cec7b1ba24ce9deadebc92b7b57db0cbe3ba926c2c7a6e7b4b64c05"
+    },
+    {
+      "original": "tests/test_summary_gradients.py",
+      "archived": "archive/package-2026-11-08/tests/test_summary_gradients.py",
+      "action": "move",
+      "bytes": 4209,
+      "sha256": "14d602f63d4cd265017468cdfc7e2add6eeac64360f1fba7b58d4e87ea2ec95b"
+    },
+    {
+      "original": "sbsi/__init__.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/__init__.py",
+      "action": "snapshot",
+      "bytes": 1561,
+      "sha256": "76b270c5778a01050c2ab43064068c5117911dedd02b29bcd35a39014705ff21"
+    },
+    {
+      "original": "sbsi/__main__.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/__main__.py",
+      "action": "snapshot",
+      "bytes": 150,
+      "sha256": "ef36e90d6e36e5b82d8cac5ee25519e0d8ebe0dec8e43fdffc30426d79fcd81b"
+    },
+    {
+      "original": "sbsi/blend_lookup.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/blend_lookup.py",
+      "action": "snapshot",
+      "bytes": 5154,
+      "sha256": "f4cab834effa06afd369f493b4959bb64d48a673c40786057e9f172aafe2e069"
+    },
+    {
+      "original": "sbsi/catalogue.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/catalogue.py",
+      "action": "snapshot",
+      "bytes": 2275,
+      "sha256": "df3f96f4ffd5a40e8d6261e3a277ef19504135e6a65bc0feabfcbd8b1b7d7a27"
+    },
+    {
+      "original": "sbsi/catalogue_blend.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/catalogue_blend.py",
+      "action": "snapshot",
+      "bytes": 7691,
+      "sha256": "6a62712a17ff3b869a22e34c0853932ead9de70ef7d0c770ddfaa4003519681f"
+    },
+    {
+      "original": "sbsi/catalogue_closure.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/catalogue_closure.py",
+      "action": "snapshot",
+      "bytes": 17612,
+      "sha256": "a682f5f6134ef2917a8f15509afd02e0cbc3b6fe53df78a721ec6fccb9b0e976"
+    },
+    {
+      "original": "sbsi/catalogue_disk_cache.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/catalogue_disk_cache.py",
+      "action": "snapshot",
+      "bytes": 4998,
+      "sha256": "6e7bfa5342041e477cd1519f80e1ef1bd23ed4c8d64d923c7e5cf812b6c1199f"
+    },
+    {
+      "original": "sbsi/catalogue_disk_likelihood.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/catalogue_disk_likelihood.py",
+      "action": "snapshot",
+      "bytes": 12509,
+      "sha256": "694e4514499809d7aa10ba1c2da53f441ad308472925951c38cdabb449ec50f8"
+    },
+    {
+      "original": "sbsi/catalogue_disk_response.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/catalogue_disk_response.py",
+      "action": "snapshot",
+      "bytes": 4751,
+      "sha256": "60297da38d241a4fa4d8af3ff77ef8ceeae10dd74163a0fda33bc1d4564477e5"
+    },
+    {
+      "original": "sbsi/catalogue_likelihood.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/catalogue_likelihood.py",
+      "action": "snapshot",
+      "bytes": 73497,
+      "sha256": "f04d2453163a577b108fb4901dba1a0edd850e8a088c7a158140e29820bc0102"
+    },
+    {
+      "original": "sbsi/catalogue_null.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/catalogue_null.py",
+      "action": "snapshot",
+      "bytes": 128712,
+      "sha256": "42803b74ae5f932aee546420928de43bf61e0940e9abdfd7bfc348873c471c98"
+    },
+    {
+      "original": "sbsi/catalogue_sampling.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/catalogue_sampling.py",
+      "action": "snapshot",
+      "bytes": 113277,
+      "sha256": "819cb3cd0b00b0b4f62250f42c89c98e391c501d935c58239543c297593a0887"
+    },
+    {
+      "original": "sbsi/cli.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/cli.py",
+      "action": "snapshot",
+      "bytes": 1877,
+      "sha256": "8a3ec23ae0e6f8ba71aa7ec7de1746566bbb40ab66de8647450561378d60f526"
+    },
+    {
+      "original": "sbsi/complement_diagnostic.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/complement_diagnostic.py",
+      "action": "snapshot",
+      "bytes": 19330,
+      "sha256": "622fb6d8b051cd12ac8f18ac2c36c35a604b8f51ddc47da0feb7466b7035c920"
+    },
+    {
+      "original": "sbsi/coordinates.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/coordinates.py",
+      "action": "snapshot",
+      "bytes": 4804,
+      "sha256": "0186af211f194471ab9fd1ebcf3ef5d9eaebd1a5ba4126b2440ebfbda2b91e37"
+    },
+    {
+      "original": "sbsi/crowding.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/crowding.py",
+      "action": "snapshot",
+      "bytes": 6530,
+      "sha256": "3268ca537d257c2cc6a893102022259189c5cb5f973e9f691af7b2137b54adc0"
+    },
+    {
+      "original": "sbsi/disk_inference_store.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/disk_inference_store.py",
+      "action": "snapshot",
+      "bytes": 8178,
+      "sha256": "52046f0c0d93957d20c47b4a9bec57271e4690452f0d4bdf023b26bae2d5a78e"
+    },
+    {
+      "original": "sbsi/disk_precision.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/disk_precision.py",
+      "action": "snapshot",
+      "bytes": 4204,
+      "sha256": "d0fe45a439200829b6bf3f225af2c0f12e0bb9d5094394e20001e31fc02f42da"
+    },
+    {
+      "original": "sbsi/disk_response_transport.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/disk_response_transport.py",
+      "action": "snapshot",
+      "bytes": 4421,
+      "sha256": "76b831b2fc43a204b6480982fcafebef97bf403f5ab6ceabbabecf4a93e1d6ef"
+    },
+    {
+      "original": "sbsi/domain.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/domain.py",
+      "action": "snapshot",
+      "bytes": 1809,
+      "sha256": "bbedfd003215ef4738a281763db5a397c31914ab8343385bccba86da666464b5"
+    },
+    {
+      "original": "sbsi/factorized_flow.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/factorized_flow.py",
+      "action": "snapshot",
+      "bytes": 7340,
+      "sha256": "c3ac29fa66b8d984791c6c6c94854de552b1ffc4f09eaff7b9bd73a6b4ad5406"
+    },
+    {
+      "original": "sbsi/flow_disk.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/flow_disk.py",
+      "action": "snapshot",
+      "bytes": 7655,
+      "sha256": "501ec538e89e5476881c6ca883aa4c973e7c8feae6d9fb1c9a40bec5cf990b8c"
+    },
+    {
+      "original": "sbsi/flow_physical_disk.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/flow_physical_disk.py",
+      "action": "snapshot",
+      "bytes": 5183,
+      "sha256": "24246f630acf17adcc027fb10d6e17787a43e526194d5172bba43f3b33974024"
+    },
+    {
+      "original": "sbsi/flow_sign_symmetric.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/flow_sign_symmetric.py",
+      "action": "snapshot",
+      "bytes": 5135,
+      "sha256": "7daf957e84c2b94b965b6f0038b97077ffed88cb82c1886584a2288b3ace8b50"
+    },
+    {
+      "original": "sbsi/flow_size_condition.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/flow_size_condition.py",
+      "action": "snapshot",
+      "bytes": 961,
+      "sha256": "13fb3b103d2dbfcc336d2f43f027f4e208d029249a9a438edf9d98fae27c9281"
+    },
+    {
+      "original": "sbsi/forward_catalogue.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/forward_catalogue.py",
+      "action": "snapshot",
+      "bytes": 22783,
+      "sha256": "318ed777e136a39db4ee3e3a9b40d4e06c0f0f30d3fb1ed346adbcb7be7b6f35"
+    },
+    {
+      "original": "sbsi/galsbi_prior.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/galsbi_prior.py",
+      "action": "snapshot",
+      "bytes": 15487,
+      "sha256": "f6612ec614f966993946e3beb94221e6e6ad3adcf1782393f18cb8facc782652"
+    },
+    {
+      "original": "sbsi/galsbi_scene_prior.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/galsbi_scene_prior.py",
+      "action": "snapshot",
+      "bytes": 13301,
+      "sha256": "575e4057c94db07f0b14b792628f02e6a21f28443121198e16c669e72f7515ae"
+    },
+    {
+      "original": "sbsi/galsbi_summary.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/galsbi_summary.py",
+      "action": "snapshot",
+      "bytes": 10901,
+      "sha256": "45cf85f62b3d7742f21b020da78085ec8f59bac8e776aaa3978ee2c7487b75b8"
+    },
+    {
+      "original": "sbsi/galsbi_target_coordinates.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/galsbi_target_coordinates.py",
+      "action": "snapshot",
+      "bytes": 8192,
+      "sha256": "519c9cd4930a2a0a22d9989bad55b8dc436fe16760f8ed6d5dff3d8160047209"
+    },
+    {
+      "original": "sbsi/likelihood_landscape.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/likelihood_landscape.py",
+      "action": "snapshot",
+      "bytes": 12440,
+      "sha256": "9703f84080a73684fa141914b8579fd1f0aaeb2e2cad3d16196cb80a35bdb3fe"
+    },
+    {
+      "original": "sbsi/mcmc_proposals.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/mcmc_proposals.py",
+      "action": "snapshot",
+      "bytes": 7106,
+      "sha256": "0b2f4e2d90dd931895cd4c29f8e983735a32d5eb16ec6affeefcc99f1496bd40"
+    },
+    {
+      "original": "sbsi/measurement_model.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/measurement_model.py",
+      "action": "snapshot",
+      "bytes": 32864,
+      "sha256": "2d0aad0a2cca42a4771c1706a4b272b78a234ef7f7c77fcf7b7347278afb9eac"
+    },
+    {
+      "original": "sbsi/models.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/models.py",
+      "action": "snapshot",
+      "bytes": 11498,
+      "sha256": "75406ae26718d55b814108ff9b4b6d88feb403f77c18e6217f1dcd1661536cdd"
+    },
+    {
+      "original": "sbsi/nn_utils.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/nn_utils.py",
+      "action": "snapshot",
+      "bytes": 847,
+      "sha256": "4943a2d9ca25982dd7a9f7e840fa16beec5ae63dae086c92946e8887c4205e6e"
+    },
+    {
+      "original": "sbsi/output_conditioned_response.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/output_conditioned_response.py",
+      "action": "snapshot",
+      "bytes": 10229,
+      "sha256": "d6cac44689099ebf34232710dfc672427c13eb22a629530c66d2cf7df55f4fbc"
+    },
+    {
+      "original": "sbsi/paths.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/paths.py",
+      "action": "snapshot",
+      "bytes": 1578,
+      "sha256": "f1611699bb0200aea41d0ffff8675741883d0f5c01a7bd21f0f959b7639caaec"
+    },
+    {
+      "original": "sbsi/preprocessing.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/preprocessing.py",
+      "action": "snapshot",
+      "bytes": 15585,
+      "sha256": "fa0b487bba56de424acf26ed542aeb037cdf17f06eefbf88bdd287539fbbc9cd"
+    },
+    {
+      "original": "sbsi/pseudo_marginal.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/pseudo_marginal.py",
+      "action": "snapshot",
+      "bytes": 1336,
+      "sha256": "631e755a790cb510f27a5d80dbba0ac7c8d24275a49845dc651c0bb8ea84b188"
+    },
+    {
+      "original": "sbsi/response.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/response.py",
+      "action": "snapshot",
+      "bytes": 25133,
+      "sha256": "8fb6cea94c44d6e9fb79260984c158c4d182ffe9456ac4a5ed392d5344cf9dea"
+    },
+    {
+      "original": "sbsi/scene_prior.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/scene_prior.py",
+      "action": "snapshot",
+      "bytes": 31278,
+      "sha256": "7a440bf91c8bd6cbff52d3dd3b2646b6e489ce865561d4d4ef9229a594f45b7f"
+    },
+    {
+      "original": "sbsi/selection_model.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/selection_model.py",
+      "action": "snapshot",
+      "bytes": 9872,
+      "sha256": "14394d1c0550534d9210f915e714c7efcc4c99366004705d4c3e532b1868c4ce"
+    },
+    {
+      "original": "sbsi/selection_normalization.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/selection_normalization.py",
+      "action": "snapshot",
+      "bytes": 12954,
+      "sha256": "6234d671d331e106673dcd2c8674a2580f8708cbe07815579295eaf2c162eb44"
+    },
+    {
+      "original": "sbsi/shear_map.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/shear_map.py",
+      "action": "snapshot",
+      "bytes": 4936,
+      "sha256": "bc5b635de48768a297050820a71ac03fa26f5b18c3aea7c7fb05238156c0d9ca"
+    },
+    {
+      "original": "sbsi/summary_sampling.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/summary_sampling.py",
+      "action": "snapshot",
+      "bytes": 2137,
+      "sha256": "51b37f276f149e0cb9d55c2b8757525dd511be70090bb773d36224d391e462c8"
+    },
+    {
+      "original": "sbsi/v39_inference.py",
+      "archived": "archive/package-2026-11-08/snapshots/sbsi/v39_inference.py",
+      "action": "snapshot",
+      "bytes": 5827,
+      "sha256": "bfb893db8544b58175127831eeefeae991b4398971bb02f95ae86b576da7150b"
+    },
+    {
+      "original": "scripts/audit_disk_population.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/audit_disk_population.py",
+      "action": "snapshot",
+      "bytes": 8937,
+      "sha256": "26e874ec96d4dcab5487ca50399f5654d6b29c80ef8527971010ccecd4eaa304"
+    },
+    {
+      "original": "scripts/audit_inference_uncertainty.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/audit_inference_uncertainty.py",
+      "action": "snapshot",
+      "bytes": 12533,
+      "sha256": "41c6953acf4c7b4670eb3f3110a962a60623e584ae5656a55df119dbedf36fe8"
+    },
+    {
+      "original": "scripts/build_catalogue_blend_response.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/build_catalogue_blend_response.py",
+      "action": "snapshot",
+      "bytes": 3255,
+      "sha256": "ac2a75819ac17d8bc38969fd69f15a618fea4dbd0bf1ea83fd39cfb2894b2ffd"
+    },
+    {
+      "original": "scripts/build_model_cache_from_zero_view.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/build_model_cache_from_zero_view.py",
+      "action": "snapshot",
+      "bytes": 10128,
+      "sha256": "df1ec0c8597a4f32aefea0005816373721a91c211f2f41739480f4483237f457"
+    },
+    {
+      "original": "scripts/build_scene_prior.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/build_scene_prior.py",
+      "action": "snapshot",
+      "bytes": 2492,
+      "sha256": "52a209859221b00c7fd0145b43773566489d9e7305292391cf8e8869b1cbc718"
+    },
+    {
+      "original": "scripts/build_selection_normalization_cache.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/build_selection_normalization_cache.py",
+      "action": "snapshot",
+      "bytes": 17029,
+      "sha256": "8ace88291d8c8e3b043c0710f3e323e0629657c39d3f33adbef3c159620b29e6"
+    },
+    {
+      "original": "scripts/build_sharded_blend_response.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/build_sharded_blend_response.py",
+      "action": "snapshot",
+      "bytes": 12831,
+      "sha256": "4133d18a9d3ea73a38d825ca211035c8647013c13af6754398546eb2193399f9"
+    },
+    {
+      "original": "scripts/build_sharded_prior_model_qmc.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/build_sharded_prior_model_qmc.py",
+      "action": "snapshot",
+      "bytes": 7950,
+      "sha256": "1f800eb2cc84f955427b41b7978a841ee6b90183c7ecffb1afa82a000b670ad6"
+    },
+    {
+      "original": "scripts/check_galsbi_continuous_prior.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/check_galsbi_continuous_prior.py",
+      "action": "snapshot",
+      "bytes": 18932,
+      "sha256": "3d310798e4aabedf297b94c2c6e16964d41e0a971513b59eb3358e66c7ee877b"
+    },
+    {
+      "original": "scripts/check_galsbi_summary_sampler.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/check_galsbi_summary_sampler.py",
+      "action": "snapshot",
+      "bytes": 16135,
+      "sha256": "f8b6c9ae99c680d230bf4bc4cb7488159a67f0cfa7db27795b4b67252906a462"
+    },
+    {
+      "original": "scripts/combine_hybrid_pass.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/combine_hybrid_pass.py",
+      "action": "snapshot",
+      "bytes": 16542,
+      "sha256": "c5cf306899bae5700de8130011328e241e0d84dab5462f6939a6231e65d97622"
+    },
+    {
+      "original": "scripts/combine_inference_partitions.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/combine_inference_partitions.py",
+      "action": "snapshot",
+      "bytes": 9944,
+      "sha256": "b5c4b14e0985590db68d316c88e5bc8689fed63ae0b0de73f4e105ceb5fa6b58"
+    },
+    {
+      "original": "scripts/combine_selection_normalization_shards.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/combine_selection_normalization_shards.py",
+      "action": "snapshot",
+      "bytes": 4578,
+      "sha256": "c463a633685ea6f984659e662f89ad2dea4bb1aa8212e9f36d08bffb87f71537"
+    },
+    {
+      "original": "scripts/diagnose_galsbi_convergence.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/diagnose_galsbi_convergence.py",
+      "action": "snapshot",
+      "bytes": 9850,
+      "sha256": "4d469cbee1a2e6bfde3500bf4fd58fb07e3648fe7b464cd096a8c0c65d8de8b7"
+    },
+    {
+      "original": "scripts/extract_scene_catalogue.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/extract_scene_catalogue.py",
+      "action": "snapshot",
+      "bytes": 6515,
+      "sha256": "28e56cdfd567a797a2b487379b349e81aebfd78283b683f13daa98d9822a4703"
+    },
+    {
+      "original": "scripts/galsbi_bright_math.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/galsbi_bright_math.py",
+      "action": "snapshot",
+      "bytes": 3379,
+      "sha256": "9cf89367b2dc2149fb9bbe4a3c17198a07e1e254deb98a4d1b346513391bf854"
+    },
+    {
+      "original": "scripts/merge_sharded_prior_model_qmc.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/merge_sharded_prior_model_qmc.py",
+      "action": "snapshot",
+      "bytes": 12662,
+      "sha256": "ee1f332acadad7cd36823390c3151bb9e8bca9ee4c5bd9237ea33da02c0cd224"
+    },
+    {
+      "original": "scripts/plot_galsbi_convergence.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/plot_galsbi_convergence.py",
+      "action": "snapshot",
+      "bytes": 6629,
+      "sha256": "610e28176e44c2a3c71116ab063dcf46c7db4e2fb0ff8ac8423d827801c6006c"
+    },
+    {
+      "original": "scripts/prepare_constgold_inference_input.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/prepare_constgold_inference_input.py",
+      "action": "snapshot",
+      "bytes": 11662,
+      "sha256": "a19e79bedce9d4fd673929553e40bd8a1db5ac09b1b3066cf79e4f280ba77699"
+    },
+    {
+      "original": "scripts/prepare_disk_prior_shard.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/prepare_disk_prior_shard.py",
+      "action": "snapshot",
+      "bytes": 9202,
+      "sha256": "0e2f57e4fb07761bb5168ad66dc569f76918811b8a6cfe93e5922e1a972a35ad"
+    },
+    {
+      "original": "scripts/prepare_galsbi_population.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/prepare_galsbi_population.py",
+      "action": "snapshot",
+      "bytes": 7846,
+      "sha256": "1f9f746187b10fb1268c16a1936fda50a61476a0524f5a5671c588cbc65869ad"
+    },
+    {
+      "original": "scripts/prepare_galsbi_twin.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/prepare_galsbi_twin.py",
+      "action": "snapshot",
+      "bytes": 12558,
+      "sha256": "a67f0493b38977ad40ab53da34023aafcf85853cde1990de340141948d83b517"
+    },
+    {
+      "original": "scripts/prepare_prior_domain_cache.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/prepare_prior_domain_cache.py",
+      "action": "snapshot",
+      "bytes": 13177,
+      "sha256": "27df4b5b020f64d209bcaf4552fee25d3f5d53907962cfb9ecc46cf2bbfc67ef"
+    },
+    {
+      "original": "scripts/report_galsbi_bright.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/report_galsbi_bright.py",
+      "action": "snapshot",
+      "bytes": 11600,
+      "sha256": "b76dde6ce7d1a341a2fb757fb5553565014a11f04a7adb75b231d86d109721eb"
+    },
+    {
+      "original": "scripts/report_galsbi_population.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/report_galsbi_population.py",
+      "action": "snapshot",
+      "bytes": 9699,
+      "sha256": "d6916cb5ca5bc7a0d582191edca6df8689c6b9a6d6c6d4d9ccd96570a871b0a6"
+    },
+    {
+      "original": "scripts/report_galsbi_sampler_runs.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/report_galsbi_sampler_runs.py",
+      "action": "snapshot",
+      "bytes": 10041,
+      "sha256": "bb8448517ec4c32bbdc29acf8d57241a5ad4a12247c9e803eb2751896592c0e2"
+    },
+    {
+      "original": "scripts/run_disk_inference.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/run_disk_inference.py",
+      "action": "snapshot",
+      "bytes": 18795,
+      "sha256": "06dc1e4ac9174e3352beade2eaddd4d50e2f6ac5dcf189de7df5176ba5fe037f"
+    },
+    {
+      "original": "scripts/run_galsbi_bright.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/run_galsbi_bright.py",
+      "action": "snapshot",
+      "bytes": 7415,
+      "sha256": "c300407cd3c117207a89d999268cd636268bbf93ad60278c2d5a2017a030840e"
+    },
+    {
+      "original": "scripts/run_galsbi_inference.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/run_galsbi_inference.py",
+      "action": "snapshot",
+      "bytes": 31896,
+      "sha256": "ec48dc22e9f38d605315fe030c313cb55e875d57f9b85bec0093b60e2a05cbda"
+    },
+    {
+      "original": "scripts/run_inference.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/run_inference.py",
+      "action": "snapshot",
+      "bytes": 90377,
+      "sha256": "c7149b8e39afb58d3acf14112198fabb648e57625cfa05573c270f920851fdab"
+    },
+    {
+      "original": "scripts/subsample_disk_prior.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/subsample_disk_prior.py",
+      "action": "snapshot",
+      "bytes": 7980,
+      "sha256": "c7be9b8c89afb20cea6ff3c98b8af60b6f284339df8f67347b044e994c499421"
+    },
+    {
+      "original": "scripts/summarize_inference.py",
+      "archived": "archive/package-2026-11-08/snapshots/scripts/summarize_inference.py",
+      "action": "snapshot",
+      "bytes": 15853,
+      "sha256": "32745e58c358f785523dd34b62c39979f7ec9843f24873f1f187990ae8126dc3"
+    },
+    {
+      "original": "tests/_script_loader.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/_script_loader.py",
+      "action": "snapshot",
+      "bytes": 617,
+      "sha256": "f57666786d8ca55fe75517aceee2a167f38f17e2f61ac0e2765f6da1cf4d89c2"
+    },
+    {
+      "original": "tests/test_api.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_api.py",
+      "action": "snapshot",
+      "bytes": 10348,
+      "sha256": "46bfc86769071b94ce4f5876414fe060fc1f1886388a003ec3d382299f689cee"
+    },
+    {
+      "original": "tests/test_blend_lookup.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_blend_lookup.py",
+      "action": "snapshot",
+      "bytes": 3474,
+      "sha256": "c9bb6a5f9ec3f6130960911f43642cd51955fc1b2ab608e00d6cdcaf0fd2717d"
+    },
+    {
+      "original": "tests/test_blocked_cdf.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_blocked_cdf.py",
+      "action": "snapshot",
+      "bytes": 1023,
+      "sha256": "f097412fa26de829da5c3e745f9e74db475dc4608faa9344a8dddd7fb484bd57"
+    },
+    {
+      "original": "tests/test_catalogue_blend.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_catalogue_blend.py",
+      "action": "snapshot",
+      "bytes": 2741,
+      "sha256": "bca354e63b38a3d71df000cb5fbce68ee6cfc8f372ff02acbb2549a2c78f723e"
+    },
+    {
+      "original": "tests/test_catalogue_disk_cache.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_catalogue_disk_cache.py",
+      "action": "snapshot",
+      "bytes": 2682,
+      "sha256": "31096f7a3960af9a798d993dd442d67d3342dc928606be68a79af3485974f15c"
+    },
+    {
+      "original": "tests/test_catalogue_disk_likelihood.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_catalogue_disk_likelihood.py",
+      "action": "snapshot",
+      "bytes": 7065,
+      "sha256": "07cdd29618a7af52c8b93d8c3a7e86babd2e4b3e2c1f5ab3e8c7b41734b3e74d"
+    },
+    {
+      "original": "tests/test_catalogue_disk_response.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_catalogue_disk_response.py",
+      "action": "snapshot",
+      "bytes": 2090,
+      "sha256": "00be7eb4e7da80e0de3f17d98435280d932a24c39352686791b0ab16584d048d"
+    },
+    {
+      "original": "tests/test_catalogue_likelihood.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_catalogue_likelihood.py",
+      "action": "snapshot",
+      "bytes": 35338,
+      "sha256": "e6b2a5f44ad79fe3a063fee1a41fe71c9d4134c568bcfd9d388f1f47b94afdd5"
+    },
+    {
+      "original": "tests/test_catalogue_null.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_catalogue_null.py",
+      "action": "snapshot",
+      "bytes": 50567,
+      "sha256": "937d67117a84e8f81c11403d6555001a8185655cd27f5be6150b6afa588467c4"
+    },
+    {
+      "original": "tests/test_catalogue_sampling.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_catalogue_sampling.py",
+      "action": "snapshot",
+      "bytes": 36306,
+      "sha256": "8209e84c9f6c623a44bd5de4316d2d101cc2f5d63534360ee638389066e82234"
+    },
+    {
+      "original": "tests/test_cli.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_cli.py",
+      "action": "snapshot",
+      "bytes": 772,
+      "sha256": "66e7033b4880952d7b4395e24455645b7c6bf4aca809ea3b2bc53957e9df4b30"
+    },
+    {
+      "original": "tests/test_combine_inference_partitions.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_combine_inference_partitions.py",
+      "action": "snapshot",
+      "bytes": 7377,
+      "sha256": "2a4f306e9c63ea0196829393ecb1b80fd565a5da204f1421cff32b232798554b"
+    },
+    {
+      "original": "tests/test_complement_diagnostic.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_complement_diagnostic.py",
+      "action": "snapshot",
+      "bytes": 6104,
+      "sha256": "1c089ba0c048f3606131ec52c374af000c673667c0112aa52ecfec4b3b64ed1f"
+    },
+    {
+      "original": "tests/test_constgold_inference_input.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_constgold_inference_input.py",
+      "action": "snapshot",
+      "bytes": 4557,
+      "sha256": "9d214bdfaef14dbe2facb7133597979ab33653c8f78b027427b6218c6f5d8b69"
+    },
+    {
+      "original": "tests/test_coordinates.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_coordinates.py",
+      "action": "snapshot",
+      "bytes": 1054,
+      "sha256": "fba22b3ca316f2d70b004992f1335955eb467b62d562b69923227468a25409f8"
+    },
+    {
+      "original": "tests/test_disk_inference_store.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_disk_inference_store.py",
+      "action": "snapshot",
+      "bytes": 3304,
+      "sha256": "3cd42ae64ccd6dd08c657490159eeabad43b33385ae27f0e295aa06b1c94a295"
+    },
+    {
+      "original": "tests/test_disk_population_audit.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_disk_population_audit.py",
+      "action": "snapshot",
+      "bytes": 1288,
+      "sha256": "5a3cc15be6a274493a1a20a67c13db46fb5e8e3e7155fc43daab6b87fc51a81a"
+    },
+    {
+      "original": "tests/test_disk_precision.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_disk_precision.py",
+      "action": "snapshot",
+      "bytes": 4796,
+      "sha256": "781c7839aa43c2e024a95ddb18b362d73c3860bcf850ee7b03f7e774b16888ae"
+    },
+    {
+      "original": "tests/test_disk_prior_preparation.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_disk_prior_preparation.py",
+      "action": "snapshot",
+      "bytes": 866,
+      "sha256": "420526c89fb36bf38275ae45cab5cd9c8fd1d8e5e60b34dee9e4de6844ef92ed"
+    },
+    {
+      "original": "tests/test_disk_prior_subsample.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_disk_prior_subsample.py",
+      "action": "snapshot",
+      "bytes": 3921,
+      "sha256": "adba84a616f20e7bf42cea06f1629ab66cdde44ac29164f33c71d0cd9124218e"
+    },
+    {
+      "original": "tests/test_disk_response_transport.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_disk_response_transport.py",
+      "action": "snapshot",
+      "bytes": 4682,
+      "sha256": "7f5454eaf965b3b4074fc119c09adadcd334f9c151f0dc8fbfa09475d6ffc463"
+    },
+    {
+      "original": "tests/test_disk_runtime_compatibility.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_disk_runtime_compatibility.py",
+      "action": "snapshot",
+      "bytes": 1029,
+      "sha256": "314d9bb8d27516ca24c2971c1e9281c10022aecdcf8b288bb9a1746defdd871f"
+    },
+    {
+      "original": "tests/test_extract_scene_catalogue.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_extract_scene_catalogue.py",
+      "action": "snapshot",
+      "bytes": 1841,
+      "sha256": "7ebc094b9a6e56b7aea7ba846413fc10c47578ea2eb7a2d44006ca22aa86eafa"
+    },
+    {
+      "original": "tests/test_flow_sign_symmetric.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_flow_sign_symmetric.py",
+      "action": "snapshot",
+      "bytes": 9597,
+      "sha256": "8e91a7cc091360d000305c9c1cc4004e2619d4207a8c052eeaecda7e184019f1"
+    },
+    {
+      "original": "tests/test_galsbi_bright.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_galsbi_bright.py",
+      "action": "snapshot",
+      "bytes": 3690,
+      "sha256": "a8c2b43c1f362ac6c21a9a65a574d6850faff954901c1e5a15991839165353d5"
+    },
+    {
+      "original": "tests/test_galsbi_model_integration.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_galsbi_model_integration.py",
+      "action": "snapshot",
+      "bytes": 3908,
+      "sha256": "a9e79011fcf9256ee33f0fa3b7f7b6c61eeec0e1b8738bb340b6bd408577c31d"
+    },
+    {
+      "original": "tests/test_galsbi_population_report.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_galsbi_population_report.py",
+      "action": "snapshot",
+      "bytes": 2687,
+      "sha256": "65b603a33ee751cf08465f98fefa6b894c3524443dcc8ba67d4be0d9ef59dfe6"
+    },
+    {
+      "original": "tests/test_galsbi_prior.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_galsbi_prior.py",
+      "action": "snapshot",
+      "bytes": 6247,
+      "sha256": "6d80146ffdbb361f1030f683cddeec0b41aaf01921b1fc0c6f960f0caad71891"
+    },
+    {
+      "original": "tests/test_galsbi_sampler_report.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_galsbi_sampler_report.py",
+      "action": "snapshot",
+      "bytes": 3907,
+      "sha256": "bbfb1539fb55b918760a3e1004364154b3f4c8a9b15a7a863e9743485e57abd2"
+    },
+    {
+      "original": "tests/test_galsbi_scene_prior.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_galsbi_scene_prior.py",
+      "action": "snapshot",
+      "bytes": 11978,
+      "sha256": "5cf95daacce2d6aae30341ec65aa92d7405ea9c90e0fd3165225bd5a5f00208e"
+    },
+    {
+      "original": "tests/test_galsbi_summary.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_galsbi_summary.py",
+      "action": "snapshot",
+      "bytes": 8833,
+      "sha256": "fc6e80a81ba9d822c0c3cde914846f7858c33fe2c9cadf14ff80ecbcc0f5d6f6"
+    },
+    {
+      "original": "tests/test_galsbi_target_coordinates.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_galsbi_target_coordinates.py",
+      "action": "snapshot",
+      "bytes": 8478,
+      "sha256": "52b9a8fd516f1f067cd4c84e9aa03d144555e3cc2c6fdd041d68704ca260e59f"
+    },
+    {
+      "original": "tests/test_hybrid_carry.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_hybrid_carry.py",
+      "action": "snapshot",
+      "bytes": 18584,
+      "sha256": "4af631823133103dd6d8fd6e4dcd8e4754d07dc9beb9353f111dba5b43da9578"
+    },
+    {
+      "original": "tests/test_inference_provenance.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_inference_provenance.py",
+      "action": "snapshot",
+      "bytes": 9004,
+      "sha256": "c945dedf0abd0e285e0448a1015735281e19c216248bcda0a54e41e23ff33457"
+    },
+    {
+      "original": "tests/test_inference_summary.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_inference_summary.py",
+      "action": "snapshot",
+      "bytes": 8909,
+      "sha256": "6bfb1db1a27260ca1564b64c666d3316981a455abe697dea90917047bed1ba68"
+    },
+    {
+      "original": "tests/test_inference_uncertainty_audit.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_inference_uncertainty_audit.py",
+      "action": "snapshot",
+      "bytes": 1740,
+      "sha256": "bad94dcd01105f20ba8f6cbcb7cc3dc086580a42e00394d693b0e83c3c72e713"
+    },
+    {
+      "original": "tests/test_likelihood_landscape.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_likelihood_landscape.py",
+      "action": "snapshot",
+      "bytes": 6929,
+      "sha256": "dd53a62d5d0ec83846642240da608700fe53f4481a1b3c2a9c9846b95f353ba8"
+    },
+    {
+      "original": "tests/test_mcmc_proposals.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_mcmc_proposals.py",
+      "action": "snapshot",
+      "bytes": 10688,
+      "sha256": "22d4b60d54dd21826fcac1bed5839a10d304ab75e2692d7815c4b044cd569261"
+    },
+    {
+      "original": "tests/test_measurement_model.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_measurement_model.py",
+      "action": "snapshot",
+      "bytes": 3335,
+      "sha256": "91af9be976f63a458de712c5c60679435134b493d3beca00f54bb3dca9345e8c"
+    },
+    {
+      "original": "tests/test_model_presets.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_model_presets.py",
+      "action": "snapshot",
+      "bytes": 9856,
+      "sha256": "87ff6875be939d6ae3350e3c31565a0f6deda9ced907632e310232185a8140b3"
+    },
+    {
+      "original": "tests/test_output_conditioned_response.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_output_conditioned_response.py",
+      "action": "snapshot",
+      "bytes": 5020,
+      "sha256": "399fbd6b81a73a5dae4e13046012650d9354429c02ef9b24b1042be3fb8620b8"
+    },
+    {
+      "original": "tests/test_prior_domain_cache.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_prior_domain_cache.py",
+      "action": "snapshot",
+      "bytes": 3769,
+      "sha256": "ea7b41db4b424487c00e5bcd0b751d13b31a0580916642937c0436895c6798de"
+    },
+    {
+      "original": "tests/test_priority_sampling.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_priority_sampling.py",
+      "action": "snapshot",
+      "bytes": 9503,
+      "sha256": "d82dd20623ee8906d5c36763a8e0110ae6c5028d927ad6801bef35152ddfa467"
+    },
+    {
+      "original": "tests/test_pseudo_marginal.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_pseudo_marginal.py",
+      "action": "snapshot",
+      "bytes": 1730,
+      "sha256": "198fdb9e841f832d32f140969a65f480af134e0785f44332405984cc3a09c043"
+    },
+    {
+      "original": "tests/test_release_config.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_release_config.py",
+      "action": "snapshot",
+      "bytes": 8651,
+      "sha256": "a0251b1df15eff5128ac0ef8df3ad782794ad3b49bef1931b22350d47b12cf0f"
+    },
+    {
+      "original": "tests/test_scene_classifier_features.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_scene_classifier_features.py",
+      "action": "snapshot",
+      "bytes": 1783,
+      "sha256": "e8ddc9d26573c389db87338556d061dd46d4d36d672a50c05f8b93940c0cf517"
+    },
+    {
+      "original": "tests/test_scene_geometry_coordinates.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_scene_geometry_coordinates.py",
+      "action": "snapshot",
+      "bytes": 1855,
+      "sha256": "b5adc5803ddc4b6ed935311eb7c244bcb83f836b1bc46ac81c8a5905c84bc725"
+    },
+    {
+      "original": "tests/test_scene_prior.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_scene_prior.py",
+      "action": "snapshot",
+      "bytes": 7126,
+      "sha256": "315b4619bdd69dacd43c13b77ca9597eafff572b49d38e5b697248d882d1bd62"
+    },
+    {
+      "original": "tests/test_selection_model.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_selection_model.py",
+      "action": "snapshot",
+      "bytes": 1410,
+      "sha256": "ede625c77f0c753d50f57a0bbeb01a291f9768b58ef8f20662bfeece5acf8858"
+    },
+    {
+      "original": "tests/test_selection_normalization.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_selection_normalization.py",
+      "action": "snapshot",
+      "bytes": 5865,
+      "sha256": "de421668f08074450aad51634ebc269de6e8b36ee3e5e48a9d81a7ed75b8042f"
+    },
+    {
+      "original": "tests/test_shear_map.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_shear_map.py",
+      "action": "snapshot",
+      "bytes": 2541,
+      "sha256": "a4bf06d38f2b0e846341518c00ed40eaf292bafa9893fc73dcdfecf425ba6104"
+    },
+    {
+      "original": "tests/test_summary_sampling.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_summary_sampling.py",
+      "action": "snapshot",
+      "bytes": 2108,
+      "sha256": "c079160ae16f0732bcf61d1202c0f717546ca880dd26dada2d4ff370d77a3d4d"
+    },
+    {
+      "original": "tests/test_tilt_score_precision.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_tilt_score_precision.py",
+      "action": "snapshot",
+      "bytes": 6416,
+      "sha256": "1545f6a870401808d74ee4415ee60fd8e8f5a833a2998814e1a19bb0414b4551"
+    },
+    {
+      "original": "tests/test_v39_inference.py",
+      "archived": "archive/package-2026-11-08/snapshots/tests/test_v39_inference.py",
+      "action": "snapshot",
+      "bytes": 2108,
+      "sha256": "ab5c75a713fa0ed3d69c030994c6e9f635aedbefe607b1647878d808fc83e02e"
+    },
+    {
+      "original": "pyproject.toml",
+      "archived": "archive/package-2026-11-08/snapshots/pyproject.toml",
+      "action": "snapshot",
+      "bytes": 834,
+      "sha256": "211f9a8258450becfab81d51908615961829cc246d56b5aa93d5aa805977f372"
+    },
+    {
+      "original": "AGENTS.md",
+      "archived": "archive/package-2026-11-08/snapshots/AGENTS.md",
+      "action": "snapshot",
+      "bytes": 10030,
+      "sha256": "8a1eb883a8ff53c4d943743e8e9c7c95d508f6be5f2c44ed072ba8abc53da3ff"
+    },
+    {
+      "original": "README.md",
+      "archived": "archive/package-2026-11-08/snapshots/README.md",
+      "action": "snapshot",
+      "bytes": 2430,
+      "sha256": "407ce5f7c9e10fda3e46543c3e5aa4c3a4d7ca223ec1d6a8dc636d4e2b9d7c9c"
+    },
+    {
+      "original": "configs/models_like_1_0_galsbi.json",
+      "archived": "archive/package-2026-11-08/snapshots/configs/models_like_1_0_galsbi.json",
+      "action": "snapshot",
+      "bytes": 6045,
+      "sha256": "92ee5a80e1527682c04e98a0eb2e216b4e8cb912fd6295f1fe176c9beea1f4c8"
+    },
+    {
+      "original": "configs/models_galsbi_multistage.json",
+      "archived": "archive/package-2026-11-08/snapshots/configs/models_galsbi_multistage.json",
+      "action": "snapshot",
+      "bytes": 6119,
+      "sha256": "303bb7a02c6e7be4deb04a1d6549d2409209ca7ef0ca62d371425d5464aabe45"
+    },
+    {
+      "original": "configs/infer_1_0_galsbi.json",
+      "archived": "archive/package-2026-11-08/snapshots/configs/infer_1_0_galsbi.json",
+      "action": "snapshot",
+      "bytes": 2766,
+      "sha256": "40aafec1ac686e3b8def02cbfa4b36cb65dd53e7b09ada4ae130ec7248ee33b6"
+    },
+    {
+      "original": "doc/REPOSITORY.md",
+      "archived": "archive/package-2026-11-08/snapshots/doc/REPOSITORY.md",
+      "action": "snapshot",
+      "bytes": 4185,
+      "sha256": "385e7f3135d46257129d8a98efcd577ac10d3ca629aec19d8071f29e24641405"
+    },
+    {
+      "original": "doc/INFERENCE.md",
+      "archived": "archive/package-2026-11-08/snapshots/doc/INFERENCE.md",
+      "action": "snapshot",
+      "bytes": 3679,
+      "sha256": "9b7426a55d5aea6e0d7c8b253cb9a98de29dbf5adce00f1643aa1d1ad5c5b540"
+    },
+    {
+      "original": "doc/MATH.md",
+      "archived": "archive/package-2026-11-08/snapshots/doc/MATH.md",
+      "action": "snapshot",
+      "bytes": 32841,
+      "sha256": "73d38fdc01a1dda6f6d05acbc501c0259f91033b9c266ef82c591156e2b6a3bf"
+    },
+    {
+      "original": "doc/WORKLOG.md",
+      "archived": "archive/package-2026-11-08/snapshots/doc/WORKLOG.md",
+      "action": "snapshot",
+      "bytes": 2715,
+      "sha256": "ddcdd0396b68ff910307b334e350e0ec889e98532e538e48aa54962f2aa8d9ac"
+    },
+    {
+      "original": "doc/CURRENT_INFERENCE.md",
+      "archived": "archive/package-2026-11-08/snapshots/doc/CURRENT_INFERENCE.md",
+      "action": "snapshot",
+      "bytes": 7340,
+      "sha256": "f44250121fdf4ae6260b4d5172ea66de094bbf767d67f8f26ce51e706b815dab"
+    },
+    {
+      "original": "doc/ENVIRONMENT.md",
+      "archived": "archive/package-2026-11-08/snapshots/doc/ENVIRONMENT.md",
+      "action": "snapshot",
+      "bytes": 7024,
+      "sha256": "a58244dacd1700a251c02db902b1e9556f583cbf1e3131faabbe7d06cd0683a9"
+    },
+    {
+      "original": "doc/LIKE_1_0_GALSBI.md",
+      "archived": "archive/package-2026-11-08/snapshots/doc/LIKE_1_0_GALSBI.md",
+      "action": "snapshot",
+      "bytes": 6081,
+      "sha256": "d3f96ce01497cd34bc97dc16f7ae5a01e8a7fd580243435f58fa5534d630eb35"
+    },
+    {
+      "original": "doc/HISTORY.md",
+      "archived": "archive/package-2026-11-08/snapshots/doc/HISTORY.md",
+      "action": "snapshot",
+      "bytes": 10049,
+      "sha256": "a2fb7fb3298e7453834773e61c856a8d956bfe44e810054c476b0ff40b91d7ff"
+    },
+    {
+      "original": "doc/API.md",
+      "archived": "archive/package-2026-11-08/snapshots/doc/API.md",
+      "action": "snapshot",
+      "bytes": 4269,
+      "sha256": "285d49edfcfb9506bbc0816429f1951328030ae9045140bd7a57996f0b56bfdf"
+    },
+    {
+      "original": "doc/CATALOGUE_PRIOR.md",
+      "archived": "archive/package-2026-11-08/snapshots/doc/CATALOGUE_PRIOR.md",
+      "action": "snapshot",
+      "bytes": 6361,
+      "sha256": "721d8cde5b0f30ee9a284601539da9c8142bcc334ce625b800719e8b9d734005"
+    },
+    {
+      "original": "doc/CONVENTIONS.md",
+      "archived": "archive/package-2026-11-08/snapshots/doc/CONVENTIONS.md",
+      "action": "snapshot",
+      "bytes": 13781,
+      "sha256": "d8f739b032deeb21694305637de0484f09996b2a923491e991498fafce1ab404"
+    }
+  ]
+}

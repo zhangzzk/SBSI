@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from sbsi.summary_sampling import prior_metropolis
+from sbsi.galsbi.sampling import prior_metropolis
 
 
 def test_normal_posterior_and_evidence_ratio_from_fresh_prior_proposals():

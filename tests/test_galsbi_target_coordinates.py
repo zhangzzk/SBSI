@@ -3,11 +3,11 @@ import numpy as np
 import pytest
 from scipy.stats import dirichlet
 
-from sbsi.galsbi_target_coordinates import GalSBITargetCoordinates
+from sbsi.galsbi.coordinates import GalSBITargetCoordinates
 from scipy.special import logsumexp
 from test_galsbi_prior import prior_fixture
-from sbsi.galsbi_summary import native_shapes
-from sbsi.pseudo_marginal import metropolis_accept, retained
+from sbsi.galsbi.likelihood import native_shapes
+from sbsi.galsbi.metropolis import metropolis_accept, retained
 
 
 def test_coordinate_roundtrip_and_full_native_jacobian():
