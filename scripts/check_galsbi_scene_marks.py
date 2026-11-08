@@ -5,7 +5,9 @@ The scene writer stored the native prior marks (redshift, M_B, c0..c4, n,
 R_kpc, a, psi) next to the rendered inputs (r = LSST-i, sersic_n, Re,
 r50_circ). With SceneMarks hooked in, the prior photometry must reproduce
 the rendered magnitude, independently of batching, and freshly drawn scenes
-must carry it. Writes a JSON receipt with differences and photometry cost.
+must carry it. The model band must shift one-for-one with M_B, so the sampler
+magnitude coordinate (sbsi.galsbi.coordinates) keeps a unit Jacobian. Writes a
+JSON receipt with differences and photometry cost.
 """
 import argparse
 import json
@@ -16,6 +18,7 @@ import numpy as np
 import pandas as pd
 
 from check_galsbi_continuous_prior import build_prior
+from sbsi.galsbi.coordinates import GalSBITargetCoordinates
 from sbsi.galsbi.likelihood import native_shapes
 from sbsi.galsbi.model_inputs import SceneMarks
 from sbsi.galsbi.scenes import GalSBIScenePrior
@@ -56,6 +59,10 @@ def main():
             chunked[rows] = galaxy.photometry(data['z'][rows], data['M_B'][rows], data['c'][rows])['m_model']
         magnitude = marks.magnitude(photo)
         shapes = native_shapes(data, distance)
+        shift = galaxy.photometry(data['z'], data['M_B']+.7, data['c'])['m_model']-magnitude-.7
+        coords = GalSBITargetCoordinates(galaxy, distance)
+        kinds = np.zeros(len(scene), dtype=int)
+        decoded, _ = coords.decode(coords.encode(data), kinds)
         receipt = dict(scenes=str(path), rows=len(scene),
             magnitude_max_abs_difference=float(np.abs(magnitude-scene.r.to_numpy(float)).max()),
             magnitude_batch_independent=bool(np.array_equal(chunked, magnitude)),
@@ -66,11 +73,19 @@ def main():
             native_hsc_r_max_abs_difference=float(np.abs(photo['m_r']-scene.m_r_hsc.to_numpy(float)).max()),
             lsst_i_minus_native_hsc_r=dict(mean=float(np.mean(magnitude-photo['m_r'])),
                                            std=float(np.std(magnitude-photo['m_r']))),
+            magnitude_coordinate=coords.names[1],
+            model_band_unit_shift_max_abs=float(np.abs(shift).max()),
+            coordinate_roundtrip_M_B_max_abs=float(np.abs(decoded['M_B']-data['M_B']).max()),
+            coordinate_roundtrip_model_band_max_abs=float(np.abs(decoded['m_model']-magnitude).max()),
             photometry_seconds_per_million=dict(without_model_band=plain_seconds/len(scene)*1e6,
                                                 with_model_band=hooked_seconds/len(scene)*1e6))
         receipt['pass'] = bool(receipt['magnitude_batch_independent'] and receipt['other_photometry_unchanged']
                                and receipt['magnitude_max_abs_difference'] <= args.magnitude_tolerance
-                               and receipt['sersic_n_max_abs_difference'] <= 1e-12)
+                               and receipt['sersic_n_max_abs_difference'] <= 1e-12
+                               and receipt['magnitude_coordinate'] == 'm_model'
+                               and receipt['model_band_unit_shift_max_abs'] <= 1e-9
+                               and receipt['coordinate_roundtrip_M_B_max_abs'] <= 1e-9
+                               and receipt['coordinate_roundtrip_model_band_max_abs'] <= 1e-9)
         receipts.append(receipt)
         print(json.dumps(receipt), flush=True)
     # Freshly drawn scenes (targets and neighbours) carry the hooked magnitude, equal to a direct recomputation.

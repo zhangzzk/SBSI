@@ -162,7 +162,7 @@ def main():
         diagnostic_draws='profile draws after warm-up',
         profile_shapes='co-moving: eps -> M_node^-1(M_g0(eps)), circularized radius kept, prior and Jacobian '
                        'included, b recomputed',
-        target_coordinates=GalSBITargetCoordinates.names,
+        target_coordinates=GalSBITargetCoordinates.coordinate_names('m_model' if CANDIDATE.scene_inputs else 'm_r'),
         environment_update='persistent', refresh_fraction=REFRESH['fraction'],
         refresh_full_probability=REFRESH['full_probability'],
         type='exact red/blue prior sum',
@@ -213,6 +213,8 @@ def main():
     angular_distance = ExactMemo(lambda z: cosmo.background.dist_ang_a(a=1/(1+z)))
 
     coords = GalSBITargetCoordinates(galaxy, angular_distance)
+    if coords.names != tuple(protocol['target_coordinates']):
+        raise RuntimeError(f'magnitude coordinate {coords.magnitude} differs from the protocol')
 
     def summarize(scene, auxiliary, with_b=True):
         """Nine summaries per scene; without b, column 8 is 0 (exact only for the kernel at zero shear)."""

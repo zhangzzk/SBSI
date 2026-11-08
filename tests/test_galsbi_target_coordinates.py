@@ -46,6 +46,52 @@ def test_changing_redshift_preserves_apparent_magnitude_and_angular_size():
     np.testing.assert_allclose(coord.encode(moved), x, atol=1e-12)
 
 
+def model_band_prior():
+    """prior_fixture with a hooked model band whose colour against m_r depends on z and SED."""
+    prior = prior_fixture()
+    plain = prior.photometry
+
+    def photometry(z, M, c):
+        out = plain(z, M, c)
+        if prior.model_band is not None:
+            out['m_model'] = M+39.2+.8*np.log1p(z)-1.5*c[:, 0]+.4*c[:, 3]
+        return out
+
+    prior.photometry, prior.model_band = photometry, object()
+    return prior
+
+
+def test_model_band_is_the_magnitude_coordinate_with_unchanged_jacobian():
+    prior = model_band_prior()
+    coord = GalSBITargetCoordinates(prior, lambda z: 1000*z/(1+z))
+    assert coord.names[1] == 'm_model' and GalSBITargetCoordinates(prior_fixture(), None).names[1] == 'm_r'
+    sample, _ = prior.sample(16, 71)
+    x = coord.encode(sample)
+    np.testing.assert_array_equal(x[:, 1], sample['m_model'])
+    restored, logj = coord.decode(x, sample['type'])
+    for name in ('z', 'M_B', 'c', 'R_kpc', 'n', 'a', 'psi', 'm_model'):
+        np.testing.assert_allclose(restored[name], sample[name], rtol=1e-12, atol=1e-12)
+
+    def native(values):
+        d, _ = coord.decode(values, sample['type'][:1])
+        return np.r_[d['z'], d['M_B'], d['c'][0, :4], d['R_kpc'], d['n'], d['a'], d['psi']]
+
+    derivatives = []
+    for col in range(10):
+        h = np.zeros_like(x[:1])
+        h[0, col] = 1e-5
+        derivatives.append((native(x[:1]+h)-native(x[:1]-h))/(2e-5))
+    _, numeric = np.linalg.slogdet(np.column_stack(derivatives))
+    np.testing.assert_allclose(logj[0], numeric, atol=1e-8)
+    # Moving redshift and SED keeps the model magnitude, not m_r.
+    moved = x.copy()
+    moved[:, 0] += .1
+    moved[:, 2] -= .3
+    decoded, _ = coord.decode(moved, sample['type'])
+    np.testing.assert_allclose(decoded['m_model'], sample['m_model'], atol=1e-12)
+    assert np.abs(decoded['m_r']-sample['m_r']).min() > 1e-3
+
+
 def test_marginal_type_prior_matches_explicit_sum_without_type_reweighting():
     prior = prior_fixture()
     coord = GalSBITargetCoordinates(prior, lambda z: 1000*z/(1+z))

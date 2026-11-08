@@ -3,6 +3,13 @@
 Type can be retained as a binary variable or analytically summed. Coordinates
 aligned with observed summaries preserve the native joint prior and Jacobian.
 This is not a learned or marginalized five-feature density.
+
+The magnitude coordinate is the band the measurement model reads: native HSC-r
+``m_r``, or ``m_model`` when a model band is hooked into the prior photometry
+(sbsi.galsbi.model_inputs.SceneMarks). A redshift or SED move then keeps the
+model's magnitude fixed. Both bands are M_B plus a function of (z, SED),
+because the apparent coefficients scale as 10**(-0.4 M_B). So dM_B/dm = 1 and
+the Jacobian is the same for either band.
 """
 import numpy as np
 from scipy.special import expit, gammaln, log_expit, logsumexp
@@ -11,11 +18,15 @@ from sbsi.galsbi.likelihood import native_shapes
 
 
 class GalSBITargetCoordinates:
-    names = ('log_z', 'm_r', 'sed_alr0', 'sed_alr1', 'sed_alr2', 'sed_alr3',
-             'log_circularized_radius', 'sersic_logit', 'distortion_logit', 'phase')
+    @staticmethod
+    def coordinate_names(magnitude='m_r'):
+        return ('log_z', magnitude, 'sed_alr0', 'sed_alr1', 'sed_alr2', 'sed_alr3',
+                'log_circularized_radius', 'sersic_logit', 'distortion_logit', 'phase')
 
     def __init__(self, galaxy_prior, angular_diameter_distance):
         self.prior, self.angular_distance = galaxy_prior, angular_diameter_distance
+        self.magnitude = 'm_r' if getattr(galaxy_prior, 'model_band', None) is None else 'm_model'
+        self.names = self.coordinate_names(self.magnitude)
 
     def encode(self, data):
         p = self.prior.p
@@ -24,7 +35,7 @@ class GalSBITargetCoordinates:
         a = np.asarray(data['a'])/p['ell_beta_emax']
         shape = native_shapes(data, self.angular_distance)
         photo = self.prior.photometry(data['z'], data['M_B'], c)
-        return np.column_stack((np.log(data['z']), photo['m_r'], np.log(c[:, :4]/c[:, 4:]),
+        return np.column_stack((np.log(data['z']), photo[self.magnitude], np.log(c[:, :4]/c[:, 4:]),
             np.log(shape['circularized']), np.log(n)-np.log1p(-n), np.log(a)-np.log1p(-a), data['psi']))
 
     def decode(self, coordinates, kinds):
@@ -40,13 +51,13 @@ class GalSBITargetCoordinates:
         # Match the renderer's circularity threshold used by native_shapes.
         rendered_a = np.where(a > 1e-7, a, 0.)
         radius = np.exp(x[:, 6])*1e3*self.angular_distance(z)/(180/np.pi*3600)/(1-rendered_a**2)**.25
-        offset = self.prior.photometry(z, np.zeros(len(x)), c)['m_r']
+        offset = self.prior.photometry(z, np.zeros(len(x)), c)[self.magnitude]
         M = x[:, 1]-offset
         data = dict(type=kinds, z=z, M_B=M, c=c, R_kpc=radius,
                     n=p['sersic_n_min']+(p['sersic_n_max']-p['sersic_n_min'])*expit(x[:, 7]),
                     a=a, psi=np.mod(x[:, 9], 2*np.pi))
         data.update(self.prior.photometry(z, M, c))
-        # The triangular Jacobian includes dM/dm_r=1, softmax simplex
+        # The triangular Jacobian includes dM/dm=1 (either band), softmax simplex
         # prod(c), z, R_kpc, and the two bounded-logit derivatives.
         logj = (x[:, 0]+logc.sum(1)+np.log(radius)
                 + np.log(p['sersic_n_max']-p['sersic_n_min'])
