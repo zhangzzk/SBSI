@@ -37,8 +37,26 @@ drawn targets and 5620 neighbours carry the exact hooked magnitude. Full suite:
 5e-4. About 1560 detections per leg have no crossmatch; they are dropped and
 counted.
 
-Limitations: no inference has been calibrated by this. Pilot launched in
-`galsbi_image_pilot_20261108` (rule.md); results to follow.
+Pilot preflight then found a second gap: every nonzero-shear likelihood
+evaluation failed for like-1.0-galsbi. `FactorizedCondition` lacked the
+`TabularPreprocessor` interface that `CatalogueLikelihood._shear_standardized_context`
+uses: the device was keyword-only, and there were no `means`/`scales`/`log_features`.
+The fix delegates these to the base preprocessor, which owns e1/e2. The regression
+test `tests/test_factorized_shear_context.py` on the real checkpoint matches
+standardizing a sheared frame to 2e-6. Suite (job 17835377): 386 passed, 3 skipped.
+
+Pilot `$DATA_DIR/sbsi/catalogue_prior/galsbi_image_pilot_20261108` (rule.md):
+- Reference: 9603 plus and 9638 minus galaxies (fraction 5e-4 over cases
+  1000-1139), 9422 selected on both legs, 219 c1 units.
+- Preflight 17835392 passed. The bright tempered, faint nonzero-shear and selection
+  smokes are all finite; the selected fraction is 0.154 at all five nodes.
+- Running from snapshot e81e8de: selection array 17835393 (4 x 50 chunks), c1
+  workers 17835394-97, plus 17835426-27 after selection (6 GPUs, at most
+  192 CPUs). The c1 estimate 17835398 then submits c2 and the paired estimate.
+- Rate: a 40-galaxy bright unit takes about 1.7 h (fixed per-step overhead
+  dominates small units). Use larger units when scaling up.
+
+Limitations: no inference has been calibrated by this; results to follow.
 
 ## 2026-11-08 — Review and reorganize the Python package
 
