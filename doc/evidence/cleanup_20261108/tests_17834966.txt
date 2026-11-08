@@ -1,0 +1,27 @@
+like-1.0-galsbi: model artifact paths and pinned hashes OK
+galsbi-multistage: model artifact paths and pinned hashes OK
+..........s                                                              [100%]
+---------------------------- pytest-regtest report -----------------------------
+total number of failed regression tests: 0
+total number of failed snapshot tests  : 0
+10 passed, 1 skipped in 26.70s
+........................................s.....s......................... [ 11%]
+........................................................................ [ 22%]
+........................................................................ [ 33%]
+........................................................................ [ 44%]
+........................................................................ [ 55%]
+.............................................................s.......... [ 66%]
+...................s.................................................... [ 77%]
+........................................................................ [ 88%]
+........................................................................ [ 99%]
+.....                                                                    [100%]
+=============================== warnings summary ===============================
+tests/test_scene_exchange.py::test_swap_marginal_type_and_coordinate_measure_detailed_balance
+  /tmp/sbsi-cleanup-17834966.3zF8/tests/test_scene_exchange.py:58: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+    assert abs(float(old_j-new_j)) > .1  # This test needs a nontrivial Jacobian.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+---------------------------- pytest-regtest report -----------------------------
+total number of failed regression tests: 0
+total number of failed snapshot tests  : 0
+649 passed, 4 skipped, 1 warning in 75.68s (0:01:15)

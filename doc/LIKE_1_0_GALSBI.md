@@ -63,8 +63,9 @@ not a stronger validation result.
 
 ## Loading and inference boundary
 
-Set `SBSI_CACHE_DIR` to the external SBSI cache root and `BLENDEMU_RUNS_DIR`
-to the external emulator runs root. Then:
+With no external-root overrides, the included artifacts load directly.
+`SBSI_CACHE_DIR` and `BLENDEMU_RUNS_DIR` optionally select external artifact
+roots. To inspect and verify the fiducial:
 
 ```bash
 python -m sbsi show-model like-1.0-galsbi
@@ -90,3 +91,26 @@ No likelihood, estimator, observing conditions, existing cache identity or
 historical checkpoint is changed by naming the fiducial. Its GalSBI observing
 conditions are pinned in the manifest; do not substitute FS2 defaults.
 The broad evaluation remains held and automated follow-ups remain disabled.
+
+## Retained multistage comparison
+
+`galsbi-multistage` retains the weighted photometry continuation, pinned in
+[`configs/models_galsbi_multistage.json`](../configs/models_galsbi_multistage.json).
+Its flow SHA256 is
+`43673e5db42e90d976d45dc7de1e54682adb0fd18bea74c6602e8dd4630c8cbd`;
+classifier and emulator are shared with the fiducial. The training sequence
+was initial NLL, neighbour-input NLL, weak primary-response continuation,
+then a photometry-only weighted cut-probability objective with shape weights
+fixed. Stage necessity and a simpler equivalent recipe have not been demonstrated.
+
+On 40 paired-seed development scenes it gives central
+m1=+0.55576 ±0.13143%, m2=+0.21011 ±0.16898%, and both-component nine-cut
+RMS=0.63457 ±0.11008%. The initial NLL model has lower RMS on that comparison;
+this retained model is not a universal winner. The fiducial has only a
+four-scene comparison, so the different-cohort totals cannot rank them.
+
+Its extra input is the pinned disk emulator's summed coefficient at reference
+radius3.5 pixels and magnitude24.5, not the coefficient at observed photometry.
+Direct density/sampling with that input is supported. Current inference
+rejects it until an expanded summary adapter is validated. Conditional
+photometry errors and independent acceptance remain unresolved.

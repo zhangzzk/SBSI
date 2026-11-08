@@ -2,153 +2,46 @@
 
 ## Scope boundary
 
-SBSI owns:
+SBSI owns conditional flows, usable-event classifiers, response prediction,
+validation, population priors, selected likelihoods and Bayesian inference.
+BlendEMU owns image simulation, measurement, simulation-catalogue production
+and response-emulator training. Catalogue keys must be aligned explicitly;
+unmatched rows are rejected or dropped and reported.
 
-- finite scene priors and their guarded neighbour graph;
-- conditional measurement-flow loading and evaluation;
-- usable-measurement classifier loading and evaluation;
-- measured-output selection and population normalization;
-- fixed atom-aligned `R_blend` composition;
-- likelihood caches, importance sampling, validation, and inference.
-
-BlendEMU owns image simulation, measurement, simulation-catalogue production,
-and response-emulator training. SBSI accepts the resulting catalogues and model
-artifacts through explicit paths. Unmatched keyed rows are rejected or dropped
-and reported; they are never represented by a zero response.
-
-The archived training and response-development code under `archive/` is
-provenance, not part of the supported API. See the
-[archive map](REPOSITORY.md#research-archive).
-
-## Release and model identities
-
-The configured default is numerical pipeline `v1.1-infer` with likelihood
-`v3.2-like`. `v1.2-infer` is the available tilted-stratified numerical
-estimator.
-
-`V3.6-like` is the historical development model set, pinned in
-`configs/models_v3_6_like.json`: one common-descent flow, one physical-moment
-disk-response emulator, and one 17-input smooth-crowding classifier. Its
-primary cuts are strict measured radius>0.6 arcsec and MAG_AUTO<25.8.
-The owner stopped further validation on 2026-09-20. See
-[retained evidence](JOINT_CALIBRATION.md#retained-evidence).
-
-`V3.5-like` remains the historical path-only model set:
-
-1. lambda10 epoch154 joint four-output measurement flow;
-2. trial9 response emulator used to build fixed atom-aligned `R_blend`;
-3. equal-probability ensemble of three nine-input coherent-`U` classifiers.
-
-It is defined in `configs/likelihood_v3_5_like.json` and `sbsi.models`. The name
-must never select behavior by itself: effective configuration, feature and
-target metadata, paths, and hashes remain authoritative. The model set has not
-demonstrated 0.3% calibration and is not the default likelihood.
-
-## like-1.0-galsbi fiducial
-
-`get_model("like-1.0-galsbi")` returns the current owner-selected GalSBI
-fiducial paths, pinned in `configs/models_like_1_0_galsbi.json`.
-`sbsi.models.CURRENT_FIDUCIAL` names the same set. The factorized flow loads through
-`sbsi.measurement_model.load_measurement_model`. Both retained GalSBI checkpoints
-and their shared companion artifacts are included under `models/`. Naming a model does not change the
-configured likelihood or inference cache contract. See
-[identity and loading boundary](LIKE_1_0_GALSBI.md#loading-and-inference-boundary).
-
-## V3.9-like model loading
-
-V3.9-like is the owner-retained F8+C8+disk model, pinned in
-`configs/models_v3_9_like.json`. Its shared eight-feature contract, loader
-example, development evidence and runtime limitations are maintained in
-[the model guide](V39_MODEL.md#loading-and-inference-boundary).
-`get_model("V3.9-like")`, `load_detection_classifier` and `load_disk_response`
-load the frozen artifacts. The V3.6 state-major crowding helper below does
-not construct V3.9 inputs. Selecting this preset does not select an inference
-configuration or make old prepared caches compatible.
-
-## V3.6-like model loading
-
-Set `SBSI_CACHE_DIR` and `BLENDEMU_RUNS_DIR` before importing `sbsi.models`.
-The first root contains the flow and classifier caches, the second the
-BlendEMU disk-response run. Both default to the checkout's `models/` directory.
+## Current model loading
 
 ```python
 from sbsi.models import get_model, load_detection_classifier, load_disk_response
 from sbsi.measurement_model import load_measurement_model
-from sbsi.crowding import FEATURES, classifier_features
 
-paths = get_model("V3.6-like")
-paths.validate()  # all four pinned artifact files
+paths = get_model("like-1.0-galsbi")
+paths.validate()
 flow = load_measurement_model(paths.flow_checkpoints[0])
 classifier = load_detection_classifier(paths)
-disk_response = load_disk_response(paths)  # optional XGBoost dependency
+disk_response = load_disk_response(paths)
 ```
 
-`classifier_features(ids, context, target_shape, pairs, psf_radius)` builds
-the 17 inputs in `FEATURES` order. Supply the original eight-column context,
-aligned target shapes and the truth neighbour pairs in original convolved
-major-axis coordinates. The helper preserves physical separations while
-recomputing annuli and smooth crowding for the target shape. Parent identities
-must be unique and every pair primary must belong to the parent set.
-
-Use the response predictor on radius/flux from each joint flow draw and
-compose disk velocity using `sbsi.disk_response_transport` with `mobius`.
-`load_emulator` rejects this backend because its fixed additive interface
-cannot represent it. The original six-arm evaluator and training recipes are
-in the research archive. This runtime API does not promote V3.6-like into
-`run_inference.py`; the configured likelihood contract below is unchanged.
+The bundled artifacts resolve under `models/` unless `SBSI_CACHE_DIR` or
+`BLENDEMU_RUNS_DIR` overrides their roots. The physical flow models radius,
+flux and Cartesian shapes jointly. Its eight informative raw inputs match the
+current inference summary; the appended control column is zero.
+`galsbi-multistage` additionally requires its explicit reference-neighbour
+coefficient and is rejected by the current inference entry until that adapter
+is validated. See [model contracts](CURRENT_INFERENCE.md#models-and-compatibility).
 
 ## Likelihood contract
 
-For scene atom `j` and shear `g`, the model composes
+The classifier predicts usability; the flow predicts joint measured outputs.
+The disk emulator uses output-conditioned photometry and Möbius transport.
+Measured-output cuts and population normalization remain explicit. A disk
+velocity coefficient is not an additive response matrix. The continuous
+selected likelihood is defined in [the inference mathematics](INFERENCE.md#selected-likelihood).
 
-```text
-p(U_j(g) | x_j(g))
-p(e1, e2, FLUX_RADIUS, flux-from-MAG_AUTO | U_j(g), x_j(g))
-R_blend,j [e_j(g) - e_j(0)]
-```
-
-`U` is the actual per-leg usable-measurement event. The classifier does not
-replace measured selection. The magnitude and radius cuts are integrated over
-the joint flow outputs (up to invertible coordinate transforms), so
-`MAG_AUTO` and `FLUX_RADIUS` must remain in the measurement target. For the
-historical V3.5-like sample:
-
-```text
-MAG_AUTO < 25.8
-FLUX_RADIUS >= 0.75 arcsec
-no measured-|e| cut
-```
-
-The blend term is evaluated once per atom at zero shear and applied as
-
-```text
-e_model,j(g) = e_flow,j(g) + R_blend,j [e_truth,j(g) - e_truth,j(0)].
-```
-
-Under selection, `R_blend` is averaged over the same passing population as the
-flow outputs.
-
-### Replacement fixed-cohort training contract
-
-The 2026-09-14 replacement training run is deliberately distinct from the
-configured V3.5-like likelihood. Its flow and BlendEMU response emulator use
-objects selected once on the measured g=0 leg by strict
-`MAG_AUTO < 25.8` and `FLUX_RADIUS > 0.60 arcsec`, with exact object keys
-carried to the sheared leg and no analysis truth cut. The usable-event
-classifier instead uses the complete simulation target-role parent and no
-measured selection or analysis truth cut.
-
-The blending-response cohort is additionally restricted to the simulator's
-structural primary target role, identified by stable
-`input_index < floor(N_generated / 2)`. Shape placeholders do not define that
-role. Response-pair rows require finite, strictly interior ngmix shapes in
-both label legs; this only makes the response target well defined and does not
-alter the fixed-g0 cohort predicate.
-
-Because the replacement flow is conditional on fixed cohort membership, it
-must not be combined with the current per-leg measured-selection normalizer.
-New model artifacts do not become a public/configured model set until a
-separate fixed-cohort likelihood contract and rebuilt caches pass validation.
+Older V3.5/V3.6/V3.9 presets, additive response helpers and finite-catalogue
+configurations remain available for compatibility. They do not select the
+current inference model or make old feature caches compatible. Their exact
+contracts are retained in the [historical API](../archive/research-2026-11-08/snapshots/doc/API.md#release-and-model-identities)
+and [history](HISTORY.md#earlier-model-and-finite-catalogue-work).
 
 ## Public Python surface
 
@@ -167,6 +60,9 @@ The package root exports only lightweight prediction helpers:
 
 Specialized workflows import their modules directly:
 
+- `sbsi.galsbi_scene_prior` and `sbsi.galsbi_prior` — continuous population prior;
+- `sbsi.galsbi_summary` — compressed disk likelihood;
+- `sbsi.galsbi_target_coordinates` and `sbsi.mcmc_proposals` — posterior sampling coordinates and proposals;
 - `sbsi.scene_prior` — finite scene atoms and model views;
 - `sbsi.catalogue_likelihood` — likelihood and model caches;
 - `sbsi.catalogue_sampling` — proposals and importance sampling;
@@ -176,8 +72,9 @@ Specialized workflows import their modules directly:
 - `sbsi.measurement_model` and `sbsi.selection_model` — model loaders;
 - `sbsi.shear_map` — the shared reduced-shear transformation.
 
-`python -m sbsi show-model V3.5-like` prints the path preset. The production
-inference entry point remains `scripts/run_inference.py`.
+`python -m sbsi show-model like-1.0-galsbi` prints the current model identity.
+The continuous inference entry is `scripts/run_galsbi_inference.py`;
+`scripts/run_inference.py` retains the finite-catalogue compatibility interface.
 
 ## Input and cache rules
 

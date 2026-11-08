@@ -15,7 +15,7 @@ and recovered shear(0.01990248 ±0.00014818,0.00033189 ±0.00016430).
 Its fractional g1 error is-0.48759 ±0.74091%; the g2 offset is2.02sigma.
 The first component agrees with truth within uncertainty, while the declared
 joint2sigma gate narrowly fails. This is not independent calibration acceptance.
-See the [audited mock comparison](MOCK_MEASUREMENT_REVIEW.md#outcomes-and-pairing).
+See the [audited mock comparison](../archive/research-2026-11-08/doc/MOCK_MEASUREMENT_REVIEW.md#outcomes-and-pairing).
 
 That endpoint used the retained V3.9 model and a mixture of magnitude-dependent
 chain settings and shear-score evaluations. It is not an end-to-end validation
@@ -41,7 +41,8 @@ The integrated `scripts/run_galsbi_inference.py` retains this numerical body,
 proposal order, random streams, replay tolerances and adaptation settings;
 its changes provide named-model selection, reference-identity checks and source
 provenance. The [source receipt](evidence/dev_consolidation_20261108/production_source.json)
-pins the original bytes. Historical scripts remain for replay.
+pins the original bytes. Historical study scripts are preserved in the
+[archive](REPOSITORY.md#restoring-an-experiment) for deliberate restoration.
 
 ## Entry points
 
@@ -50,8 +51,6 @@ pins the original bytes. Historical scripts remain for replay.
 | Current continuous-scene sampler | `scripts/run_galsbi_inference.py` |
 | Population/reference preparation | `scripts/prepare_galsbi_population.py`, `scripts/prepare_constgold_inference_input.py` |
 | Selection normalization and bright follow-up | `scripts/run_galsbi_bright.py`, `scripts/report_galsbi_bright.py` |
-| Completed production orchestration/recovery | `scripts/extend_sign_symmetric_inference.py`, `scripts/recover_sign_symmetric_inference.py` |
-| Independent minus-leg preparation and paired reduction | `scripts/run_sign_symmetric_minus.py`, `scripts/paired_sign_symmetric_estimate.py` |
 | Core likelihood/prior/proposal implementation | `sbsi/galsbi_summary.py`, `sbsi/galsbi_scene_prior.py`, `sbsi/galsbi_target_coordinates.py`, `sbsi/mcmc_proposals.py` |
 
 The algorithm samples continuous target coordinates and neighbour scenes,
@@ -67,10 +66,9 @@ ArviZ and XGBoost environment; these optional research dependencies are not
 bundled model artifacts.
 `--model` defaults to `like-1.0-galsbi`; reference metadata must bind exactly
 the selected flow/classifier/emulator/metadata hashes. Reusing old normalization
-or model-dependent preparations by relabelling them is rejected. Production
-setup/recovery scripts preserve their original study-specific interfaces;
-this consolidation does not turn them into validated generic launchers for
-new model sets. No inference, normalization or new simulation was launched.
+or model-dependent preparations by relabelling them is rejected. The preparation and bright-follow-up helpers retain their
+historical reference assumptions. Archived production setup/recovery scripts
+are study-specific; none is a validated generic launcher for the new models. No inference, normalization or new simulation was launched.
 
 ## Models and compatibility
 
@@ -109,7 +107,7 @@ is validated. Direct density/sampling with explicit correct inputs is supported.
 The latest historical paired **inference** result used the sign-symmetric FS2
 flow, not either newly retained GalSBI model. It gave m1=-5.5391 ±0.5200% and
 retained substantial chain-convergence flags. See the preserved
-[paired inference report](evidence/dev_consolidation_20261108/PAIRED_MEASUREMENT_INFERENCE.md#purpose-and-fixed-endpoints).
+[paired inference report](../archive/research-2026-11-08/doc/PAIRED_MEASUREMENT_INFERENCE.md#purpose-and-fixed-endpoints).
 Thus merging the latest code makes it available; it does not establish an
 accepted calibration pipeline or transfer old results to the new models.
 

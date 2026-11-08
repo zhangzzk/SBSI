@@ -45,37 +45,17 @@ have different feature contracts. All views remain aligned to the same primary
 atom index. Duplicate and unmatched identifiers are rejected or explicitly
 dropped and reported.
 
-Large source catalogues can be assembled, extracted, sharded, finalized, and
-audited with the five active scene-prior scripts listed in `doc/INFERENCE.md`.
+Use `scripts/build_scene_prior.py` and `scripts/extract_scene_catalogue.py`
+for reusable preparation. Completed study-specific assembly/finalization
+programs are archived with their original source and tests.
 
-## V3.6-like uncut 24-million-atom subset
+## Historical preparation
 
-The 2026-09-20 inference preparation uses a uniform sample without replacement
-of24,000,000 primaries from all139,936,000 rows in the200-scene source store,
-seed20260920. This is a finite-prior approximation, not a truth-property cut.
-Each selected atom receives global mass1/24,000,000; old cut-dependent masses
-are discarded. Keep the measured radius>0.6arcsec and magnitude<25.8 selection
-separate from this uncut prior.
-
-`scripts/subsample_disk_prior.py` checks source hashes and writes sharded
-galaxies, unchanged zero-flow contexts, complete per-primary response pairs,
-global source identities and original random draw ranks. Neighbours need not
-be sampled primaries: do not prune them or reinterpret their source IDs as
-compact atom positions. `DiskCatalogueModelCache(source_atom_ids=...)` uses
-those original identities when constructing classifier features. Random ranks
-allow nested smaller-prior comparisons; no prior-size convergence claim has
-yet been established.
-
-`jobs/job_subsample_v36_prior.sh` writes `prior_subset24m/manifest.json` under
-the20260920 V3.6 run root. This disk-specific manifest is not a legacy
-`ScenePrior` store. The dedicated disk driver now implements persistence/loading
-and has passed small and full-prior real-model pilots. Full-prior caches are
-complete and all production observation partitions finished. Combination failed
-the positive-information check and targeted curvature probes are in progress;
-see the [curvature audit](../archive/research-2026-09-25/snapshots/doc/WORKLOG.md#2026-09-21--diagnose-failed-v36-production-curvature).
-The legacy driver's preparation-only guard
-and unbound generic16k config remain intentional. See
-[disk driver](INFERENCE.md#v36-like-disk-driver).
+The V3.6 24-million-atom subset, sampling seed, source identities and failed
+curvature investigation are retained in the
+[original preparation record](../archive/research-2026-11-08/snapshots/doc/CATALOGUE_PRIOR.md#v36-like-uncut-24-million-atom-subset).
+They are not current GalSBI inference inputs. The reusable disk subsampling
+and preparation helpers retain their explicit historical feature contracts.
 
 ## Derived caches
 
@@ -135,8 +115,9 @@ stream.
 
 The v1.2 alternative sums the candidate stratum exactly and samples only the
 complement from a tilted whole-catalogue proposal. The exact stratum enters
-once; the complement retains its importance correction. See `doc/INFERENCE.md`
-for the configured budgets.
+once; the complement retains its importance correction. Configurations pin
+the budgets; the [historical estimator guide](../archive/research-2026-11-08/snapshots/doc/INFERENCE.md#numerical-estimators)
+records their release settings.
 
 ## Diagnostics
 

@@ -34,7 +34,7 @@
     "fractional_g1_error_se_pp": 0.7409110511264909,
     "g2_offset_sigma": 2.02004414590367,
     "selection_scenes": 52428800,
-    "sampler_recipe": "Historical mixed magnitude-dependent chains and score evaluations, including a bright-only second step; see doc/MOCK_MEASUREMENT_REVIEW.md",
+    "sampler_recipe": "Historical mixed magnitude-dependent chains and score evaluations, including a bright-only second step; see archive/research-2026-11-08/doc/MOCK_MEASUREMENT_REVIEW.md",
     "full_uniform_recipe_truth_test_completed": false,
     "acceptance_passed": false
   },

@@ -15,18 +15,22 @@ R_model = R_flow + R_blend.
 `R_flow` is the response of the joint conditional measurement model.
 For the configured additive likelihood, `R_blend` is a fixed atom-aligned
 external response contribution averaged over the same selected population.
-For V3.6-like and V3.9-like, it is the response contribution induced by the output-conditioned
+For the current GalSBI models and historical V3.6/V3.9, it is the response
+contribution induced by the output-conditioned
 disk-velocity predictor and Möbius transport. The disk parameter itself must
 not be interpreted as an additive response or copied into an additive cache.
 
-The retained development identity is `V3.9-like`: F8 joint flow, C8 usable-event
-classifier and the original physical-moment disk emulator. Evaluation applies
-measured radius >0.6 arcsec and magnitude <25.8 independently per shear leg,
-with no truth-property cuts on the generated target-role parent. See
-[the current contract](V39_MODEL.md#development-evidence).
-`V3.6-like` remains the historical common-descent flow/17-input classifier
-identity; `V3.5-like` remains the epoch154/trial9/three-classifier preset.
-None of these names changes the numerical inference release.
+The current GalSBI fiducial is `like-1.0-galsbi`: Cartesian factorized flow,
+GalSBI C8 usable-event classifier and physical-moment disk emulator. The
+retained comparison is `galsbi-multistage`. Their response evaluation uses
+independent per-leg radius>2.8/3.0/3.2 pixels and magnitude<24.9/25.0/25.1
+cuts, with radius>3 pixels/magnitude<25 as the central cut. One pixel is
+0.2 arcsec. These cuts are not the historical inference mock's magnitude<25.8
+selection. See [model evidence](LIKE_1_0_GALSBI.md#paired-seed-development-evidence).
+
+V3.5/V3.6/V3.9 retain their historical model and population contracts in
+[the history](HISTORY.md#earlier-model-and-finite-catalogue-work). No model
+name changes an inference configuration or relabels an old cache.
 
 ## 2. Catalogue families
 
@@ -46,16 +50,19 @@ antithetic catalogues.
 
 ### Inference prior
 
-The inference prior is a finite scene catalogue with one primary atom per row
-and zero-prior-mass neighbours retained for scene context. Its registered
-identity lives in `configs/default_catalogue_prior.json`.
+`infer-1.0-galsbi` uses the continuous GalSBI F24 scene population, with
+latent target type marginalized during inference. Its numerical generator and
+analytic native-target density retain their documented approximation boundary.
+The older finite-scene interface uses one primary atom per row with
+zero-prior-mass neighbours retained for context, registered in
+`configs/default_catalogue_prior.json`. The two priors are not interchangeable.
 
 Catalogue families are not interchangeable. Results never borrow a response,
 selection mask, uncertainty, or case count from another family.
 
 ## 3. Population and selection order
 
-For the configured likelihood, apply operations in this order:
+For the historical configured additive likelihood, apply operations in this order:
 
 1. validate and align explicit catalogue keys;
 2. apply the declared parent support and any explicitly declared analysis
@@ -66,7 +73,11 @@ For the configured likelihood, apply operations in this order:
 6. apply measured-output cuts;
 7. normalize by the corresponding selected population.
 
-The configured V3.5-like development sample is:
+For disk models, step5 instead uses the declared output-conditioned Möbius
+transport. Each run must state its measured cuts and whether a measured-|e|
+cut is applied; do not inherit a historical sample implicitly.
+
+The historical V3.5-like development sample is:
 
 ```text
 MAG_AUTO < 25.8
@@ -199,12 +210,14 @@ effect. See the [measurement centering investigation](../archive/research-2026-0
 - `U`: an actual usable per-leg shape measurement.
 - `S`: the final measured selection event after usability and output cuts.
 
-The V3.5-like classifier estimates `p(U|x)`. It does not estimate `p(S|x)`.
+The usable-event classifier estimates `p(U|x)`. It does not estimate `p(S|x)`.
 In the configured likelihood, final selection is derived from joint flow
 draws. In the replacement fixed-g0 training contract, `S0` is external cohort
 membership and is not folded into the classifier target.
 
 ## 6. Response estimators
+
+### 6a. Antithetic response
 
 For antithetic legs,
 
@@ -212,19 +225,30 @@ For antithetic legs,
 R = [mean(e_plus) - mean(e_minus)] / (2h).
 ```
 
+### 6b. Forward response
+
 For a forward zero/sheared pair,
 
 ```text
 R = [mean(e_g) - mean(e_0)] / h.
 ```
 
+### 6c. Matched extraction
+
 Use the same extraction convention on simulation and model sides. Do not mix a
 forward numerator with an antithetic denominator or reuse a response measured
 on a differently selected population.
 
+### 6d. Common random numbers
+
 Common random numbers are mandatory when differencing stochastic flow
 evaluations. The object set, proposal draw, latent prefix, `R_blend` lookup and
 selection convention must be paired wherever the estimator assumes pairing.
+
+Rows of R index measured shape components; columns index shear components.
+Pairing fitter seeds reduces stochastic finite-difference noise. It does not
+impose R12=R21 or R11=R22. Selected responses use each leg's own mean and
+selected normalization; common seeds do not require a shared selection mask.
 
 ## 7. Multiplicative bias
 
@@ -246,12 +270,12 @@ fresh multi-axis acceptance set remains required.
 The owner retained the existing development model as V3.6-like and stopped
 the investigation on 2026-09-20. This decision does not relabel reused
 endpoints or the incomplete new scene set as fresh acceptance evidence; see
-[the stopping record](JOINT_CALIBRATION.md#independent-validation-stopped).
+[the stopping record](../archive/research-2026-11-08/doc/JOINT_CALIBRATION.md#independent-validation-stopped).
 
 The owner wrapped up F8/C8 development as V3.9-like on 2026-09-25. Its favorable
 aggregate bias, failed broader classifier checks, regional cancellation and
 lack of independent acceptance are preserved in
-[the retained evidence](V39_MODEL.md#development-evidence).
+[the retained evidence](../archive/research-2026-11-08/doc/V39_MODEL.md#development-evidence).
 
 ## 8. Seeds and model selection
 

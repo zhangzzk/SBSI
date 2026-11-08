@@ -65,7 +65,7 @@ The default pytest configuration searches only `tests/`. The suite is CPU
 only and must pass without BlendEMU installed; the optional cross-check against
 BlendEMU skips when that package is unavailable.
 
-The 2026-09-20 cleanup archives experiment-only tests alongside their scripts;
+The cleanups archive experiment-only tests alongside their scripts;
 they are not discovered by default. The retained suite covers core inference,
 model loading, and retained feature/disk contracts. V3.9 freeze receipts are
 checked by `tests/test_model_presets.py`. Run the full suite via
@@ -118,52 +118,30 @@ to the earlier blanket prohibition, including historical work-log notes.
 
 ### Scheduler launchers
 
-`jobs/job_inference.sh` is the cluster-local reference launcher for
-`v1.1-infer` with the configured `v3.2-like` likelihood. A V3.5-like run must
-explicitly select `configs/likelihood_v3_5_like.json`. Every launcher resolves
-every
-user-owned catalogue, checkpoint, cache, and output path explicitly. Other
-scheduler wrappers are validation or deployment aids, not public Python APIs.
-
-V3.9-like is a separate model manifest, not a replacement likelihood config.
-Its artifact roots are `SBSI_CACHE_DIR` and `BLENDEMU_RUNS_DIR`; see
-[model loading](V39_MODEL.md#loading-and-inference-boundary).
-
-`jobs/job_inference_hybrid_chain.sh` is the multi-GPU iterated launcher.  It
-derives its worker count from the Slurm allocation (or `N_GPUS` outside
-Slurm), partitions both prior-atom normalization and observation work across
-all visible GPUs, and strictly combines the resulting shards.  Requesting
-more GPUs therefore changes the partitioning automatically; scientific
-settings such as `K`, `M`, cuts, seeds, and stencil step remain unchanged.
-When `SELECTION_NORMALIZATION_CACHE` names a validated surrogate, the launcher
-skips the atom preparation and reuses that cache for every pass.  Without it,
-exact normalization preparation is automatically sharded and repeated at each
-iteration centre.  Set `BUILD_SELECTION_NORMALIZATION_QUADRATIC=0` when the
-exact chain is intended only as inference/validation and no reusable surrogate
-has yet met the induced-shear accuracy gate.
-Set `SCORE_ROOT_BFGS=1` only for an iterated custom chain that should solve the
-successive catalogue scores with a positive-definite BFGS secant matrix rather
-than require every intermediate observed Hessian to be positive definite.
-Bright-only workers may persist indefinite shard-level moments because those
-shards are not estimators; the combined full-catalogue solve retains the
-positive-definite requirement.
+`jobs/job_tests.sh` runs the retained CPU suite. Current science enters through
+`scripts/run_galsbi_inference.py`; use explicit model-matched inputs, settings
+and allocation limits. The population/bright wrappers preserve their existing
+snapshot-based reference assumptions and are not generic validated launchers
+for the new models. Finite-catalogue cache/inference wrappers are retained for
+compatibility. Completed study launchers live in the archive.
 
 ## Data and models
 
 - Training, validation, simulation, prior, cache, mock, and output catalogues
   are user data. They do not belong in the repository and are never hidden
   defaults.
-- `models/` contains only the three small JSON artifacts described in
-  `models/README.md`. The seed-501 measurement flow is supplied externally and
-  verified by its recorded SHA-256.
+- `models/` bundles both GalSBI flow checkpoints and their classifier/disk
+  companions, plus small historical compatibility artifacts. Exact identities
+  are in the model manifests; external roots may override bundled locations.
 - `configs/inference.json` and `configs/likelihood.json` contain portable
   scientific settings and artifact identities. They intentionally omit
   machine-specific data and output paths.
 
 ## Documentation workflow
 
-`doc/WORKLOG.md` is a concise newest-first active log. Detailed pre-cleanup
-provenance is preserved under `archive/research-2026-09-14/`. The maintained
-operational contract is in
-`doc/API.md`, `doc/INFERENCE.md`, `doc/CATALOGUE_PRIOR.md`, and the two
-numerical release configurations plus the selected likelihood configuration.
+`doc/WORKLOG.md` is the short active log. Start with
+[the current inference guide](CURRENT_INFERENCE.md#entry-points),
+[model guide](LIKE_1_0_GALSBI.md#decision-and-identity), and
+[history](HISTORY.md#how-to-read-this-history). Old full logs, completed
+experiments and output artifacts are indexed in the
+[repository map](REPOSITORY.md#research-archive).

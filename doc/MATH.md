@@ -2,6 +2,11 @@
 
 **Zekang's derivation** (draft, 2026-07-29), written out and carried to the end.
 
+Equation and section references below to `INFERENCE.md` use the preserved
+[original full derivation](../archive/research-2026-09-14/doc/INFERENCE_FULL.md).
+The [current inference guide](INFERENCE.md#selected-likelihood) summarizes the
+active implementation; the mathematical derivation below is unchanged.
+
 This reaches the same estimator as `INFERENCE.md` §5C by a different and shorter road. `INFERENCE.md`
 gets the denominator from **Louis** — the curvature of the complete-data likelihood minus the
 posterior spread. Here it comes from **Bartlett** — the score's own variance. The two denominators

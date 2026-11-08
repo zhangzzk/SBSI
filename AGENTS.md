@@ -27,56 +27,27 @@ reference-neighbour summary and is explicitly rejected by this inference
 entry until that adapter is validated. See `doc/CURRENT_INFERENCE.md`.
 
 
-SBSI is a general shear-calibration library with one inference workflow.
-`v1.1-infer` names the default numerical pipeline, `v1.2-infer` names the
-tilted-stratified trimmed sampler that supersedes its estimator but is not yet
-the default, and `v3.2-like` names the likelihood composition both share.
-`V3.9-like` is the retained F8 flow, C8 usable-event classifier (first
-predeclared seed20260913), and original physical-moment disk emulator with
-Möbius composition. Its identity is pinned in `configs/models_v3_9_like.json`.
-The owner wrapped up this investigation on 2026-09-25. Main development bias
-is +0.020770% ±0.265152 percentage points after independent per-leg measured
-radius>0.6 arcsec/magnitude<25.8 cuts, without truth-property cuts. Broader
-classifier checks failed; no independent acceptance or robust 0.3% claim.
-No emulator simplification was run. See `doc/V39_MODEL.md`.
-The dedicated disk inference preparation remains V3.6-specific; do not
-relabel old 17-input feature stores as V3.9.
+## Documentation
 
-`V3.6-like` names the historical single common-descent flow, physical-moment
-disk-response emulator with Möbius composition, and single 17-input
-smooth-crowding usable-event classifier. Its artifact identity is pinned in
-`configs/models_v3_6_like.json`. The owner closed the investigation on
-2026-09-20 and cancelled the unfinished independent validation. Existing
-development results are retained; no independent result was produced.
-`V3.5-like` remains the distinct historical epoch154/trial9/three-classifier
-model preset. No model preset changes the configured likelihood.
+Keep active documentation focused on the current GalSBI identities and shared
+contracts. Read headings first, then relevant sections; use section anchors.
 
-All project documentation lives in `doc/`. Only this file, `CLAUDE.md`, and
-`README.md` stay at the repository root:
+- `doc/CURRENT_INFERENCE.md` — infer-1.0-galsbi implementation and evidence limits.
+- `doc/LIKE_1_0_GALSBI.md` — fiducial and retained multistage model contracts.
+- `doc/INFERENCE.md`, `doc/MATH.md` — selected likelihood and estimator derivations.
+- `doc/CONVENTIONS.md` — catalogue, selection, shape, response and bias definitions.
+- `doc/API.md`, `doc/CATALOGUE_PRIOR.md` — runtime and finite-prior compatibility contracts.
+- `doc/ENVIRONMENT.md` — interpreters, tests and scheduler policy.
+- `doc/HISTORY.md` — important older findings, failed attempts and stopping points.
+- `doc/REPOSITORY.md` — archive inventory and restoration rules.
+- `doc/WORKLOG.md` — concise newest-first changes; full old logs are archived.
 
-- `doc/API.md` — the BlendEMU scope boundary, the general API contract, and the
-  public API.
-- `doc/INFERENCE.md` — the current inference/likelihood release boundary and
-  the estimator derivation.
-- `doc/CATALOGUE_PRIOR.md` — the finite scene prior, likelihood, caches, and
-  scalable importance-sampling workflow.
-- `doc/MATH.md` — the detailed Bartlett/score derivation used by the inference
-  implementation.
-- `doc/CONVENTIONS.md` — the definitions every reported number must cite:
-  catalogues, population-cut order, shape kinds, response estimators, seeds,
-  and the definition of `m`.
-- `doc/ENVIRONMENT.md` — interpreters, running the test suite, the BlendEMU
-  import boundary, and the login-node/scheduler policy.
-- `doc/WORKLOG.md` — the dated record of every substantive change, newest
-  first, linking to preserved historical logs.
-- `doc/V39_MODEL.md` — retained September model identity, features, evidence and stopping point.
-- `doc/LIKE_1_0_GALSBI.md` — current GalSBI fiducial identity, evidence and loading boundary.
-- `doc/JOINT_CALIBRATION.md` — historical V3.6-like evidence and stopping point.
-- `doc/REPOSITORY.md` — active layout, archive inventory, and restoration rules.
-  Completed experiments are preserved under `archive/research-2026-09-14/`,
-  `archive/research-2026-09-20/`, and `archive/research-2026-09-25/`; they are not active documentation.
-
-`doc/` is pulled on demand, and by section, not cover to cover. Read headlines first and then the relevant entries. When writing a doc, keep it navigable this way: greppable headings, and cite sections by anchor, not by file alone.
+Historical V3.5/V3.6/V3.9 presets retain their identities. The V3.6-specific
+17-input preparation must never be relabelled as V3.9. The closed V3.9 and
+V3.6 investigations produced development evidence, not independent acceptance.
+The old finite-catalogue defaults remain v1.1-infer/v3.2-like; v1.2-infer is a
+separate numerical option. See `doc/HISTORY.md` for context and preserved sources.
+Only README.md, AGENTS.md and CLAUDE.md are root-level documentation.
 
 ## Rules
 
