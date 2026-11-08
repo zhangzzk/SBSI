@@ -10,6 +10,15 @@ Four-scene paired-seed development results: m1=+0.38554 ±0.39755%,
 m2=+0.04296 ±0.66616%, nine-cut RMS=0.53431%. No independent acceptance or
 full40 paired-seed evaluation of this checkpoint. See `doc/LIKE_1_0_GALSBI.md`.
 Naming this fiducial does not change the configured likelihood or resume jobs.
+The retained multistage comparison is `galsbi-multistage` (flow43673e5d), pinned
+in `configs/models_galsbi_multistage.json`. Both models and shared companion
+artifacts are included under `models/`; load through `load_measurement_model`.
+Current continuous inference is `scripts/run_galsbi_inference.py`, integrated
+from the October production cache-off sampler. It requires matching model
+identity in reference metadata. The multistage model requires an extra
+reference-neighbour summary and is explicitly rejected by this inference
+entry until that adapter is validated. See `doc/CURRENT_INFERENCE.md`.
+
 
 SBSI is a general shear-calibration library with one inference workflow.
 `v1.1-infer` names the default numerical pipeline, `v1.2-infer` names the

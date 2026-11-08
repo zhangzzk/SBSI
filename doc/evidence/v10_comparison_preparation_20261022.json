@@ -1,0 +1,58 @@
+{
+  "created_utc": "2026-10-21T23:38:10.150753+00:00",
+  "node": "n23_reporting_preparation",
+  "branch": "codex/v10-comparison-20261022",
+  "runnable_commit": "73bff31",
+  "source_snapshot": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_v10_comparison_20261022_v2",
+  "source_manifest_sha256": "090b9272823f2a88a72bf327bc61f150a2df52b4fee117ffaddd82f41ccbb5a0",
+  "implementation_sha256": {
+    "sbsi/particle_comparison_gates.py": "8c77ad0ff7f2fbf616ea1b2a250ca2119ec6822ba19dd1f063e9584d75e566df",
+    "scripts/summarize_v10_particle_comparison.py": "b002d48971ee2916db322a4025a0a132067fa2414cda487e480e15a182485fb6",
+    "tests/test_v10_comparison.py": "ce49166ebc05d36614d5ef3ebcffbb96cc9e7c9e0ec26b8dd6d2521bfeec6a07"
+  },
+  "focused_original": {
+    "job": 17423323,
+    "passed": 28,
+    "test_seconds": 2.79
+  },
+  "full_final": {
+    "job": 17423438,
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "elapsed_seconds": 95,
+    "passed": 882,
+    "skipped": 1,
+    "warnings": 1,
+    "test_seconds": 85.43,
+    "frozen_optional_checks_enabled": [
+      "SBSI_LEGACY_AUDIT_SOURCE=R/source_v7",
+      "SBSI_ENVIRONMENT_BASELINE_TARGET=R/source_v7/sbsi/galsbi_particle_target.py"
+    ]
+  },
+  "preserved_collection_failures": [
+    {
+      "job": 17423354,
+      "elapsed_seconds": 28,
+      "exit_code": "2:0"
+    },
+    {
+      "job": 17423380,
+      "elapsed_seconds": 57,
+      "exit_code": "2:0"
+    }
+  ],
+  "collection_repair": "Tracked frozen scripts directory added to test process sys.path; no source/gate/science change",
+  "prepared_launcher": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_v10_comparison_evaluate_20261022.sh",
+  "prepared_launcher_sha256": "1f0e9953818cd5ce2d870562f419a1c12f8f9b17983c3922dcf80256c2fb77ce",
+  "exact_parent_submission_command": "sbatch --parsable --partition=cluster --cpus-per-task=2 --mem=8G --time=00:10:00 --job-name=v10-comparison --output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/v10_comparison_evaluation_%j.log /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_v10_comparison_evaluate_20261022.sh",
+  "preparation_receipt_sha256": "1f05d9adadcafb9c8c7e6679d08964102262e1f8b5584e0bdffeb8176e24a890",
+  "numerical_v10_outcomes_read": false,
+  "evaluation_submitted": false,
+  "accepted_sampler": false,
+  "limitations": [
+    "Unit/full tests validate implementation, not v10 scientific outcomes.",
+    "Runtime guard requires completed sampling/report/phase graph before reading outcomes.",
+    "Explicit extinction blocks existing phase pipeline; no zero-mass population is silently discarded.",
+    "Preparation/full end-to-end cost remains unknown; no full-cost or heldout acceptance claim."
+  ]
+}

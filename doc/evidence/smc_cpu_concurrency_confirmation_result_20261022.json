@@ -1,0 +1,143 @@
+{
+  "report": {
+    "status": "completed",
+    "phase": "predeclared-fresh-seed-concurrency-confirmation-v1",
+    "declaration_sha256": "9a26daf6a7bc1b756485a64f620f43549f8520c1a315051d60d8a1def25b3268",
+    "all_16_saved_output_replay": true,
+    "confirmation_passed": true,
+    "selected_workers": 4,
+    "order": [
+      1,
+      4,
+      4,
+      1
+    ],
+    "seeds": [
+      2026103800,
+      2026103801,
+      2026103802,
+      2026103803
+    ],
+    "ratios": [
+      {
+        "repetition": 0,
+        "setting_inclusive_speedup": 3.3369907149984748,
+        "outer_process_speedup": 3.336063951877795
+      },
+      {
+        "repetition": 1,
+        "setting_inclusive_speedup": 3.2693604177158107,
+        "outer_process_speedup": 3.268132303426421
+      }
+    ],
+    "setting_process_costs": [
+      {
+        "wall_seconds": 842.99,
+        "user_seconds": 786.86,
+        "system_seconds": 21.73,
+        "max_rss_kib": 1905612,
+        "exit_code": 0
+      },
+      {
+        "wall_seconds": 252.69,
+        "user_seconds": 882.0,
+        "system_seconds": 19.68,
+        "max_rss_kib": 1896784,
+        "exit_code": 0
+      },
+      {
+        "wall_seconds": 252.45,
+        "user_seconds": 880.62,
+        "system_seconds": 19.99,
+        "max_rss_kib": 1889824,
+        "exit_code": 0
+      },
+      {
+        "wall_seconds": 825.04,
+        "user_seconds": 776.39,
+        "system_seconds": 18.59,
+        "max_rss_kib": 1903376,
+        "exit_code": 0
+      }
+    ],
+    "source_preparation_seconds": 13.889580844901502,
+    "internal_report_seconds": 9.2885713649448,
+    "limitations": [
+      "Repeated seeds across timing settings are not independent scientific replicates.",
+      "Same four development observations; seeds are untouched confirmation seeds.",
+      "Saved-output replay does not establish posterior accuracy or catalogue shear calibration.",
+      "One V100/eight reserved physical cores; no claim about500 CPUs or multiple GPU scaling.",
+      "Original mutation states and terminal RNG are not saved.",
+      "Original development/pilot costs and launcher setup are excluded; confirmation preparation/report costs retained."
+    ],
+    "report_process_cost": {
+      "wall_seconds": 9.45,
+      "user_seconds": 6.28,
+      "system_seconds": 1.35,
+      "max_rss_kib": 43236,
+      "exit_code": 0
+    },
+    "complete_new_work_seconds_by_concurrency": {
+      "1": 1679.6997904224506,
+      "4": 516.8097904224508
+    },
+    "total_baseline_to_four_worker_ratio": 3.2501315214044806,
+    "cost_scope": "All four original setting subprocess wall times plus measured confirmation preparation and report processes; shared preparation/report charged half to each level. Source freeze bookkeeping, launcher setup, queueing and final JSON-only finalization excluded.",
+    "scientific_accuracy_accepted": false
+  },
+  "audit": {
+    "status": "audit_passed",
+    "confirmation_passed": true,
+    "job": "17448939",
+    "all_16_saved_outputs_rechecked": true,
+    "ratios": [
+      {
+        "repetition": 0,
+        "setting_inclusive_speedup": 3.3369907149984748,
+        "outer_process_speedup": 3.336063951877795
+      },
+      {
+        "repetition": 1,
+        "setting_inclusive_speedup": 3.2693604177158107,
+        "outer_process_speedup": 3.268132303426421
+      }
+    ],
+    "complete_new_work_seconds_by_concurrency": {
+      "1": 1679.6997904224506,
+      "4": 516.8097904224508
+    },
+    "total_baseline_to_four_worker_ratio": 3.2501315214044806,
+    "pinned_reports_and_costs": {
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_runs_v1_20261022/report.json": "6f562b2dfd1df339300b193e98828168667eec84410cd45a7666ec808c43989c",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_runs_v1_20261022/setting_0_process_cost.json": "94bd6772260efd9125feeaead2d1ccecac081550777c209b867b2136c035b085",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_runs_v1_20261022/setting_1_process_cost.json": "578b45c247b49f086775b663102f71ee6412150be97d258d44cd995764a3d89d",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_runs_v1_20261022/setting_2_process_cost.json": "aefd65aa2f77ce058c287ba7ab77ce66eddf7d323899a6d3e517ca41c76e18c2",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_runs_v1_20261022/setting_3_process_cost.json": "164b021ef6ff8af97b8728964cd65c6c203afda13fe79e479930f1eb0986b31b",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_runs_v1_20261022/report_process_cost.json": "07134eb067ec98b17dac4677274aee403854be8eb02bd9c7a3564bc135cec26f"
+    },
+    "elapsed_seconds": 11.67987997084856,
+    "limitations": [
+      "Validation cost is separate from original benchmark timing.",
+      "One GPU, original four observations and recipe; no posterior convergence or multi-GPU/500-core claim."
+    ]
+  },
+  "submission": {
+    "job": "17448939",
+    "command": [
+      "sbatch",
+      "--parsable",
+      "--partition=cluster",
+      "--cpus-per-task=4",
+      "--hint=nomultithread",
+      "--mem=8G",
+      "--time=00:10:00",
+      "--job-name=confirm-concurrency-audit",
+      "--no-requeue",
+      "--dependency=afterok:17447826",
+      "--output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_parent_audit_v1_20261022/audit-%j.out",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_parent_audit_v1_20261022/run.sh"
+    ],
+    "script_sha256": "5a8e02afda379ec2e80a34f77411e8e3ce1b4c1e8cb0c260420883850b0a6c4e"
+  },
+  "scheduler": "17447826|COMPLETED|0:0|2184|16\n17447826.batch|COMPLETED|0:0|2184|16\n17447826.extern|COMPLETED|0:0|2184|16\n17447826.0|COMPLETED|0:0|2183|16\n17448939|COMPLETED|0:0|28|8\n17448939.batch|COMPLETED|0:0|28|8\n17448939.extern|COMPLETED|0:0|28|8\n"
+}

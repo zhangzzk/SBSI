@@ -1,0 +1,48 @@
+like-1.0-galsbi: model artifact paths and pinned hashes OK
+galsbi-multistage: model artifact paths and pinned hashes OK
+..F.......s                                                              [100%]
+=================================== FAILURES ===================================
+_______________ test_inference_requires_matching_model_reference _______________
+
+    def test_inference_requires_matching_model_reference():
+        from _script_loader import load_script_module
+>       m = load_script_module('run_galsbi_inference.py')
+
+tests/test_galsbi_model_integration.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/_script_loader.py:18: in load_script_module
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:883: in exec_module
+    ???
+<frozen importlib._bootstrap>:241: in _call_with_frames_removed
+    ???
+scripts/run_galsbi_inference.py:28: in <module>
+    from scripts.check_galsbi_summary_sampler import diagnostics
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """Small fixed-summary independence-MH pilot; run under Slurm.
+    
+    No fitted summary prior, tuning on injected shear, finite-atom reuse, or
+    catalogue shear estimate. A failed mixing diagnostic is a scientific result,
+    not grounds for increasing the run automatically.
+    """
+    import argparse
+    from pathlib import Path
+    import time
+    
+    import arviz as az
+    import numpy as np
+    import pandas as pd
+    import torch
+    from scipy.special import logsumexp
+    
+>   from check_galsbi_continuous_prior import build_prior, digest, save
+E   ModuleNotFoundError: No module named 'check_galsbi_continuous_prior'
+
+scripts/check_galsbi_summary_sampler.py:17: ModuleNotFoundError
+---------------------------- pytest-regtest report -----------------------------
+total number of failed regression tests: 0
+total number of failed snapshot tests  : 0
+=========================== short test summary info ============================
+FAILED tests/test_galsbi_model_integration.py::test_inference_requires_matching_model_reference
+1 failed, 9 passed, 1 skipped in 16.72s

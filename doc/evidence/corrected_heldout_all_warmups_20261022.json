@@ -1,0 +1,114 @@
+{
+  "schema": "sbsi-heldout-all-warmups-startup-v1",
+  "checked_at_utc": "2026-10-22T12:38:22.386545+00:00",
+  "groups": [
+    {
+      "group": 0,
+      "stage": "warmup_0",
+      "status": "completed",
+      "slurm_job_id": "17435353",
+      "steps": 11,
+      "all_step_receipt_hashes_pass": true,
+      "all_frozen_fit_artifact_hashes_pass": true,
+      "cost": {
+        "process_wall_seconds": 466.54781308490783,
+        "cpu_allocated_seconds": 933.0956261698157,
+        "gpu_allocated_seconds": 466.54781308490783
+      },
+      "completed_artifact_count": 31
+    },
+    {
+      "group": 1,
+      "stage": "warmup_1",
+      "status": "completed",
+      "slurm_job_id": "17435545",
+      "steps": 11,
+      "all_step_receipt_hashes_pass": true,
+      "all_frozen_fit_artifact_hashes_pass": true,
+      "cost": {
+        "process_wall_seconds": 462.9580855909735,
+        "cpu_allocated_seconds": 925.916171181947,
+        "gpu_allocated_seconds": 462.9580855909735
+      },
+      "completed_artifact_count": 31
+    },
+    {
+      "group": 2,
+      "stage": "warmup_2",
+      "status": "completed",
+      "slurm_job_id": "17435963",
+      "steps": 11,
+      "all_step_receipt_hashes_pass": true,
+      "all_frozen_fit_artifact_hashes_pass": true,
+      "cost": {
+        "process_wall_seconds": 462.503776794998,
+        "cpu_allocated_seconds": 925.007553589996,
+        "gpu_allocated_seconds": 462.503776794998
+      },
+      "completed_artifact_count": 31
+    },
+    {
+      "group": 3,
+      "stage": "warmup_3",
+      "status": "completed",
+      "slurm_job_id": "17436376",
+      "steps": 11,
+      "all_step_receipt_hashes_pass": true,
+      "all_frozen_fit_artifact_hashes_pass": true,
+      "cost": {
+        "process_wall_seconds": 461.810603528982,
+        "cpu_allocated_seconds": 923.621207057964,
+        "gpu_allocated_seconds": 461.810603528982
+      },
+      "completed_artifact_count": 31
+    },
+    {
+      "group": 4,
+      "stage": "warmup_4",
+      "status": "completed",
+      "slurm_job_id": "17435348",
+      "steps": 11,
+      "all_step_receipt_hashes_pass": true,
+      "all_frozen_fit_artifact_hashes_pass": true,
+      "cost": {
+        "process_wall_seconds": 461.32896405505016,
+        "cpu_allocated_seconds": 922.6579281101003,
+        "gpu_allocated_seconds": 461.32896405505016
+      },
+      "completed_artifact_count": 31
+    }
+  ],
+  "all_five_warmups_completed": true,
+  "production_job": 17435350,
+  "report_job": 17435351,
+  "production_first_population": {
+    "group": 0,
+    "arm": "candidate",
+    "replica": 0,
+    "completed_stages": 64,
+    "requested": 64,
+    "last_stage": 64,
+    "extinct": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "files": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/declaration.json": "ad718136d4ac00a37ffcaddf09dcfad92b15e68e4ebbf82ead597ed1b7c1f758",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/warmup_0_stage.json": "cde1c3e5acba8226f3b1ae2c01e33094ea4b975b06fc4fd6d3261dbab911eed7",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/warmup_complete.json": "f029b7e74f48dc1c87371ed9176eede2f5ce844c46c80c88e8ccc189ffba383e",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/warmup_1_stage.json": "1fc50f44c65dbc91596d3b8c2a19eeef5834bcd4a51fab557dbad8e004193cf7",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_1/warmup_complete.json": "dc042ae753bd7e9687224673cff341d361a599c64ef513210a547359e79e667e",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/warmup_2_stage.json": "c83020ee706acc587242a4f2229c80f92dfb38cfa0fa9001e81c97597e888bb5",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_2/warmup_complete.json": "10431221e1b096e6b41a1bda03d80789e4857cff057f5b3e2c202099bca3c801",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/warmup_3_stage.json": "6e3702e1c63e3e1493595f867ecc0c2591d6a808331574f4c63f630ff1b73883",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_3/warmup_complete.json": "c5db5770655e74fcfff8f6c0cba896a903d13571deffb76ab3bc30ffca4983f0",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/warmup_4_stage.json": "3479836a56f8375a775cdbda491f6220b66fcd5f9667812b9001ebdf63e94e4b",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_4/warmup_complete.json": "450eafde7984ae67ab9575c884e6bd757a20888c20386c67d5ed5a4d5f039b82"
+  },
+  "accepted_sampler": false,
+  "scope": "Workflow/input/startup verification only; no interim accuracy contrast or tuning; live progress is a timestamped snapshot, not a completed-result hash.",
+  "scheduler": "17435348_0    COMPLETED      0:0   00:07:51      th-cl-nv02 \n17435348_1    COMPLETED      0:0   00:07:47      th-cl-nv02 \n17435348_2    COMPLETED      0:0   00:07:47      th-cl-nv02 \n17435348_3    COMPLETED      0:0   00:07:46      th-cl-nv02 \n17435348_4    COMPLETED      0:0   00:07:46      th-cl-nv02 \n17435350_0      RUNNING      0:0   00:04:01      th-cl-nv02 \n17435350_[1+    PENDING      0:0   00:00:00   None assigned \n17435351        PENDING      0:0   00:00:00   None assigned \n"
+}

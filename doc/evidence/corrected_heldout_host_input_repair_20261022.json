@@ -1,0 +1,26 @@
+{
+  "schema": "sbsi-corrected-heldout-host-input-repair-v1",
+  "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_corrected_heldout_v3_20261022",
+  "source_files": 320,
+  "manifest_sha256": "fd96ec78e4b95886a3355082102a25d7a40ffa3dd1a5f4d52443a46458a64df1",
+  "validation": {
+    "job": 17435254,
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "passed": 993,
+    "skipped": 1,
+    "warnings": 1,
+    "test_seconds": 91.63,
+    "allocation_wall_seconds": 105,
+    "before_after_manifest_pass": true
+  },
+  "files": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_corrected_heldout_v3_20261022/SHA256SUMS": "fd96ec78e4b95886a3355082102a25d7a40ffa3dd1a5f4d52443a46458a64df1",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_v3_integration_tests_20261022.sh": "16ab894e1dbe4a791dc2f66180ffaaa7e9ec56dd8e6913eaa8df6b7fac761e20",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-integration-tests-17435254.out": "a55dfa21f2d314de93d3bfa8cd7db5af73880b710e5d6d75ce7b90f613dc457c"
+  },
+  "previous_failure": "doc/evidence/corrected_heldout_startup_failure_20261022.json",
+  "scientific_source_or_settings_changed": false,
+  "scientific_populations_started": false,
+  "accepted_sampler": false
+}

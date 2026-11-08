@@ -1,0 +1,304 @@
+{
+  "source": "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/waste-free-smc-20261022",
+  "sha256": {
+    "scripts/check_waste_free_synthetic.py": "7eee6fb11f7a9c0572ad9d07a0c1c7fbb12ff91717908f3e6f4b87bc7124c909",
+    "sbsi/waste_free_particles.py": "dce5d57ce4bdc73e367aefa2a61dd5d1baf50e632d79c419325aa07b093c0354",
+    "sbsi/annealed_particles.py": "a3895d270ae64ab6c023bf6e288b1b7052c0591b6c36a4a754812631fc099e45",
+    "doc/WASTE_FREE_SMC_PROTOTYPE.md": "6d618d4e8ae600234d94ead500e75b6e0999b34d2e148898c4e8cca94712593c"
+  },
+  "settings": "doc/WASTE_FREE_SMC_PROTOTYPE.md",
+  "populations_per_arm": 128,
+  "stages": 16,
+  "counted_target_density_rows": 13560,
+  "cache": "Exact per-population bytes-key memoization, identical in both arms",
+  "no_real_scene_integration": true,
+  "targets": {
+    "gaussian": {
+      "standard": {
+        "mean_normalizer": 2.476976363989002,
+        "normalizer_se": 0.02379372287333473,
+        "normalizer_relative_variance": 0.011811118936365843,
+        "normalizer_standardized_error": 0.9676348730109876,
+        "weighted_observable_standardized_errors": [
+          0.6628871733970603,
+          0.6948930163948954,
+          0.40199573908117403,
+          0.5004697512021242,
+          0.983109932983344
+        ],
+        "unnormalized_moment_gate": true,
+        "estimate": [
+          1.000275560044109,
+          -0.4960437884498505,
+          2.006430504934436,
+          1.7528564019644084,
+          0.8405861248436306
+        ],
+        "truth": [
+          1.0,
+          -0.5,
+          2.0,
+          1.75,
+          0.8413447460685429
+        ],
+        "mcse": [
+          0.008456443222317854,
+          0.011645066095978419,
+          0.021097789280374646,
+          0.021099066687103485,
+          0.0029880523674418206
+        ],
+        "ratio_influence_variance": [
+          0.009153463292452554,
+          0.017357768240602374,
+          0.05697493920244369,
+          0.05698183872855552,
+          0.0011428424896735576
+        ],
+        "primary_metric": 0.009655952847722265,
+        "seed_start": 2026103000,
+        "seed_stop": 2026103127,
+        "density_rows_per_population": 13560,
+        "total_seconds": 5.873219766188413,
+        "median_seconds": 0.04579424485564232,
+        "potential_calls_per_population": 241,
+        "density_batch_calls_per_population": 113,
+        "median_initial_ancestors": 34.0
+      },
+      "waste_free": {
+        "mean_normalizer": 2.527993120837505,
+        "normalizer_se": 0.0317016069048445,
+        "normalizer_relative_variance": 0.02012893266132608,
+        "normalizer_standardized_error": 0.8830189876976565,
+        "weighted_observable_standardized_errors": [
+          0.6773995371720816,
+          0.5952594655658757,
+          0.9154256941431407,
+          0.34745840271845596,
+          0.6984090402405209
+        ],
+        "unnormalized_moment_gate": true,
+        "estimate": [
+          0.9994848261750435,
+          -0.48609158059193247,
+          2.0064398820149765,
+          1.740259874696576,
+          0.8396800648835697
+        ],
+        "truth": [
+          1.0,
+          -0.5,
+          2.0,
+          1.75,
+          0.8413447460685429
+        ],
+        "mcse": [
+          0.010044675966754346,
+          0.012416601088498442,
+          0.02225185327617384,
+          0.019726597668803893,
+          0.002826570053167403
+        ],
+        "ratio_influence_variance": [
+          0.012914625955467824,
+          0.019734013771635292,
+          0.06337855670071915,
+          0.049809747915117976,
+          0.001022655777979235
+        ],
+        "primary_metric": 0.010519325441690089,
+        "seed_start": 2026104000,
+        "seed_stop": 2026104127,
+        "density_rows_per_population": 13560,
+        "total_seconds": 6.841071447823197,
+        "median_seconds": 0.053332561859861016,
+        "potential_calls_per_population": 241,
+        "density_batch_calls_per_population": 113,
+        "median_initial_ancestors": 13.0
+      },
+      "comparison": {
+        "primary_variance_ratio_waste_free_over_standard": 1.0894135055942702,
+        "bootstrap_interval95": [
+          0.8341931807537095,
+          1.3728191479824094
+        ],
+        "observable_variance_ratios": [
+          1.4109005021210408,
+          1.1368981022269056,
+          1.1123935819487598,
+          0.8741337420225548,
+          0.8948352788942483
+        ],
+        "median_walltime_ratio": 1.1646127592666242,
+        "outcome": "inconclusive"
+      }
+    },
+    "mixture": {
+      "standard": {
+        "mean_normalizer": 1.7146404638759993,
+        "normalizer_se": 0.01575186435418074,
+        "normalizer_relative_variance": 0.010802586667334307,
+        "normalizer_standardized_error": 0.9294432421971445,
+        "weighted_observable_standardized_errors": [
+          1.3945611922911254,
+          1.1206831235251402,
+          1.021278153303181,
+          0.1267117130079512,
+          1.3936445214830393
+        ],
+        "unnormalized_moment_gate": true,
+        "estimate": [
+          1.6844556915346993,
+          0.008370630889726309,
+          16.441241802087177,
+          0.8016285747855856,
+          0.7115083832397635
+        ],
+        "truth": [
+          1.5999999999999999,
+          0.0,
+          16.4225,
+          0.8099999999999999,
+          0.6999999998487478
+        ],
+        "mcse": [
+          0.060444576668714035,
+          0.0074632444916069495,
+          0.04349702036890572,
+          0.00869473971556786,
+          0.0076066684837365435
+        ],
+        "ratio_influence_variance": [
+          0.4676539966284863,
+          0.007129602347712189,
+          0.24217481996454393,
+          0.009676607836348551,
+          0.007406259893948264
+        ],
+        "primary_metric": 0.018803773417041612,
+        "seed_start": 2026105000,
+        "seed_stop": 2026105127,
+        "density_rows_per_population": 13560,
+        "total_seconds": 6.296633987221867,
+        "median_seconds": 0.04918169090524316,
+        "potential_calls_per_population": 241,
+        "density_batch_calls_per_population": 113,
+        "median_initial_ancestors": 34.0
+      },
+      "waste_free": {
+        "mean_normalizer": 1.6607875057763613,
+        "normalizer_se": 0.02153007252308213,
+        "normalizer_relative_variance": 0.021511605124040663,
+        "normalizer_standardized_error": 1.8212894629871528,
+        "weighted_observable_standardized_errors": [
+          2.6025919766870316,
+          0.1807133633818109,
+          1.8391891139657923,
+          2.5936405951702812,
+          2.5243798326973996
+        ],
+        "unnormalized_moment_gate": true,
+        "estimate": [
+          1.322276983322456,
+          0.0013480483853374103,
+          16.41864295560839,
+          0.7965050814333281,
+          0.6666805167123429
+        ],
+        "truth": [
+          1.5999999999999999,
+          0.0,
+          16.4225,
+          0.8099999999999999,
+          0.6999999998487478
+        ],
+        "mcse": [
+          0.11203940655426246,
+          0.007458841006987619,
+          0.03995064178654738,
+          0.008265458588612575,
+          0.014043420354381986
+        ],
+        "ratio_influence_variance": [
+          1.606762063492008,
+          0.007121191573442569,
+          0.20429488373209928,
+          0.00874467912704888,
+          0.025243859871983396
+        ],
+        "primary_metric": 0.051805701934654724,
+        "seed_start": 2026106000,
+        "seed_stop": 2026106127,
+        "density_rows_per_population": 13560,
+        "total_seconds": 7.267139038071036,
+        "median_seconds": 0.056722843553870916,
+        "potential_calls_per_population": 241,
+        "density_batch_calls_per_population": 113,
+        "median_initial_ancestors": 13.0
+      },
+      "comparison": {
+        "primary_variance_ratio_waste_free_over_standard": 2.7550694632229455,
+        "bootstrap_interval95": [
+          2.0077035988320184,
+          3.71952335853908
+        ],
+        "observable_variance_ratios": [
+          3.435792434312182,
+          0.9988203024713828,
+          0.8435843320210147,
+          0.9036926240000098,
+          3.408449100282105
+        ],
+        "median_walltime_ratio": 1.1533325209000451,
+        "outcome": "regression"
+      }
+    }
+  },
+  "dev_score": 0.5772146510222352,
+  "dev_score_definition": "Geometric mean standard/waste-free normalized influence variance at matched counted density rows; synthetic development only",
+  "all_unnormalized_moment_gates_pass": true,
+  "node": "n20",
+  "date": "2026-10-22",
+  "base_commit": "766c1b2edb058780057d2f1bbb48cff19bdd49ef",
+  "branch": "codex/waste-free-smc-20261022",
+  "validation": {
+    "tests_job": 17421477,
+    "tests_exit_code": "0:0",
+    "tests_passed": 793,
+    "tests_skipped": 4,
+    "new_tests": 18,
+    "tests_seconds": 84.115,
+    "tests_slurm_seconds": 94,
+    "experiment_job": 17421484,
+    "experiment_exit_code": "0:0",
+    "experiment_slurm_seconds": 30,
+    "directory": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/waste_free_validation",
+    "launchers": [
+      "tests_v1.sh",
+      "experiment_v1.sh"
+    ],
+    "junit": "junit_v1.xml"
+  },
+  "validation_artifact_sha256": {
+    "input_v1.json": "dd4ccc5baca52132ce58315db7fc6fff21d37365e85df25e4ecf2724c20a3ffb",
+    "tests_v1.sh": "e3ad92d01d14a3deeb3b3ac3eec3cfb34e436fd429409df18b8855e961991649",
+    "experiment_v1.sh": "3996093072ecd6d93923e7be7a1a25cdf2b6fd3336ddffd4abea183dc79c507f",
+    "tests-v1-17421477.out": "cf4a450db79748f65a9f0a4cddf9a6328423f6964a1aee994c06a53f4646f701",
+    "experiment-v1-17421484.out": "b63ab647c65ca51221bb244bfc9d5d13e06da5b6b895c2b0069cdafbd2592968",
+    "junit_v1.xml": "6fbb8f49edf6de3ec98c5b0ab5c55a5345298327a3fada30a4543b2920d7b90c",
+    "experiment_v1/source.json": "d04140c978e73168165507c121fd99bbf86528145f87ee2e5a8deb4e9b33bba5",
+    "experiment_v1/result.json": "4ac2bd06fa3244befb8a642fe0843e987aad9f18dba5a30c7002d9b2659b55d2",
+    "experiment_v1/gaussian_standard.npz": "e92c193d6999e2960912eef0729d72c8f7327438ff018ac26022d50ed4e4134d",
+    "experiment_v1/gaussian_waste_free.npz": "f58515bcb7773aaf895f0c41c357e101658e8a69dc9d3d248c31d3b2ed557d5c",
+    "experiment_v1/mixture_standard.npz": "c2728ccc17be79774da37489afab563cd1fbac688266d6634966a14654c40d57",
+    "experiment_v1/mixture_waste_free.npz": "4d3fcfae57f935ce31e41a5412e649d29c600a5d7ccd47ebba000e7c69f0e06c"
+  },
+  "decision": "Do not integrate this fixed configuration: Gaussian inconclusive; separated-mixture variance regression at matched counted density rows. No post-result retuning.",
+  "limitations": [
+    "Synthetic development only; no real sampler, GPU, adaptation, or held-out use.",
+    "Actual density pads to4096 and fixed observation groups must be preserved; counted-row results do not imply real GPU speed.",
+    "Retained path points are dependent; all uncertainty calculations use complete independent populations.",
+    "Implementation supports only NumPy arrays; native scene payloads and caches require full retention/scatter integration.",
+    "Asymptotic assumptions from the paper are not established for SBSI."
+  ]
+}

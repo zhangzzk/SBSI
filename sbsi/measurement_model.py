@@ -328,6 +328,8 @@ class ConditionalAffineFlow(nn.Module):
 class MeasurementModelBundle:
     def __init__(self, model, condition_preprocessor, target_transform, metadata=None, device="cpu"):
         _validate_disk_contract(model, target_transform)
+        from .flow_sign_symmetric import validate_symmetric_bundle
+        validate_symmetric_bundle(model, condition_preprocessor)
         self.device = torch.device(device)
         self.model = model.to(self.device)
         self.model.eval()
@@ -616,12 +618,12 @@ def build_flow(model_config):
     cfg.pop("response_difference", None)
     cfg.pop("response_error", None)
     cfg.pop("response_components", None)
-    if flow_type not in ("disk_affine", "physical_disk_affine") and any(k.startswith("disk_") for k in cfg):
+    if flow_type not in ("disk_affine", "physical_disk_affine", "sign_symmetric_physical_disk_affine") and any(k.startswith("disk_") for k in cfg):
         raise ValueError("disk coordinate metadata requires flow_type='disk_affine'")
     retired = sorted(k for k in cfg if k.startswith("ra"))
     if retired or flow_type.endswith("_ra"):
         raise ValueError("realisation-aware experimental flows are archived")
-    if flow_type != "physical_disk_affine" and any(k.startswith("physical_") for k in cfg):
+    if flow_type not in ("physical_disk_affine", "sign_symmetric_physical_disk_affine") and any(k.startswith("physical_") for k in cfg):
         raise ValueError("physical coordinate metadata requires physical_disk_affine")
     if flow_type == "affine":
         return ConditionalAffineFlow(**cfg)
@@ -629,6 +631,10 @@ def build_flow(model_config):
         from .flow_physical_disk import ConditionalPhysicalDiskFlow
 
         return ConditionalPhysicalDiskFlow(**cfg)
+    if flow_type == "sign_symmetric_physical_disk_affine":
+        from .flow_sign_symmetric import SignSymmetricPhysicalDiskFlow
+
+        return SignSymmetricPhysicalDiskFlow(**cfg)
     if flow_type == "disk_affine":
         from .flow_disk import ConditionalDiskAffineFlow
 
@@ -660,6 +666,11 @@ def _validate_disk_contract(model, target_transform, model_config=None):
         if not np.array_equal(getattr(model, name).detach().cpu().numpy(), value):
             raise ValueError(f"disk flow {name} differs from the target transform")
     from .flow_physical_disk import ConditionalPhysicalDiskFlow
+    from .flow_sign_symmetric import SignSymmetricPhysicalDiskFlow
+
+    if isinstance(model, SignSymmetricPhysicalDiskFlow) and model_config is not None:
+        if model_config.get("invariant_features", "bounded") != model.invariant_features:
+            raise ValueError("sign-symmetric invariant feature map differs from config")
 
     if isinstance(model, ConditionalPhysicalDiskFlow):
         if target_transform.target_names[2:] != ["measured_flux_radius", "measured_flux_from_mag_auto"]:
@@ -671,13 +682,13 @@ def _validate_disk_contract(model, target_transform, model_config=None):
             if not np.array_equal(getattr(model, name).detach().cpu().numpy(), value):
                 raise ValueError("physical transform and target metadata differ")
         if model_config is not None and (
-            model_config.get("flow_type") != "physical_disk_affine"
+            model_config.get("flow_type") not in ("physical_disk_affine", "sign_symmetric_physical_disk_affine")
             or model_config.get("physical_map") != "softplus"
         ):
             raise ValueError("physical flow requires explicit physical config")
     if model_config is not None:
         if (
-            model_config.get("flow_type") not in ("disk_affine", "physical_disk_affine")
+            model_config.get("flow_type") not in ("disk_affine", "physical_disk_affine", "sign_symmetric_physical_disk_affine")
             or model_config.get("disk_map") != "radial_tanh"
         ):
             raise ValueError("disk flow requires an explicit disk_affine / radial_tanh config")
@@ -690,6 +701,8 @@ def save_measurement_model(
     path, model, condition_preprocessor, target_transform, model_config, metadata=None
 ):
     _validate_disk_contract(model, target_transform, model_config)
+    from .flow_sign_symmetric import validate_symmetric_bundle
+    validate_symmetric_bundle(model, condition_preprocessor)
     checkpoint = {
         "state_dict": model.state_dict(),
         "condition_preprocessor": condition_preprocessor.to_state(),
@@ -705,6 +718,12 @@ def load_measurement_model(path, device="cpu"):
         checkpoint = torch.load(path, map_location=device, weights_only=False)
     except TypeError:
         checkpoint = torch.load(path, map_location=device)
+    if checkpoint.get("format") in (
+        "sbsi_experimental_factorized_frame_v1",
+        "sbsi_experimental_neighbour_factorized_v1",
+    ):
+        from .factorized_flow import load_factorized_checkpoint
+        return load_factorized_checkpoint(checkpoint, device=device)
     condition_preprocessor = TabularPreprocessor.from_state(checkpoint["condition_preprocessor"])
     target_transform = TargetStandardizer.from_state(checkpoint["target_transform"])
     model = build_flow(checkpoint["model_config"])

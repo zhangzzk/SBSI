@@ -1,0 +1,36 @@
+{
+  "schema": "corrected-heldout-runner-validation-v1",
+  "date": "2026-10-22",
+  "base_commit": "a3df1a1",
+  "branch": "codex/corrected-heldout-runner-20261022",
+  "worktree": "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/corrected-heldout-runner-20261022",
+  "source_sha256": {
+    "scripts/run_corrected_particle_heldout.py": "a949a7b92ff79ae2a1615c98b80986e2844cd3ef44714a90db40df77992f3d39",
+    "tests/test_corrected_heldout_runner.py": "31ff7bd24abcd039080754765f8e90571f6640a1d995f1f2f633145a73d508f2",
+    "doc/CORRECTED_HELDOUT_RUNNER.md": "4a87d6e3dc0e4e60f8f074382adb580ac5370884ac7bd874fcd5bcbc8a82a3bc"
+  },
+  "unchanged_gate_dependency": {
+    "commit": "73bff31",
+    "path": "sbsi/particle_comparison_gates.py",
+    "sha256": "8c77ad0ff7f2fbf616ea1b2a250ca2119ec6822ba19dd1f063e9584d75e566df"
+  },
+  "validation": {
+    "job": 17434665,
+    "passed": 58,
+    "failed": 0,
+    "pytest_seconds": 4.55,
+    "snapshot": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_heldout_runner_20261022/source_v1",
+    "manifest_sha256": "eeaf99c3302d535ce27227c3a9caf2388454c0c5a0596253beb681a68b5254b5",
+    "before_after_source_checks": true,
+    "artifacts": {
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_heldout_runner_20261022/focused_v1.xml": "b1c24622421424a38d1c7628701553101cc49c6404cf3175c45e3c148c2e2c71",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_heldout_runner_20261022/focused-v1-17434665.out": "49c61149cba3236bff1828bd6ed014ad4d0c218404018cc87b58944285c5dfb3",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/corrected_heldout_runner_20261022/tests_v1.sh": "d4f27fbfd7ca5634082d665a594ca9cafad210c8524066086d9ff6245d032e88"
+    }
+  },
+  "scope": "Synthetic CPU validation only; no heldout/science run, GPU submission, or numerical heldout input read. Root handles integrated full suite.",
+  "limitations": [
+    "Fixed-y conditional heldout validation, not global convergence or shear-calibration certification",
+    "Cost is process wall times allocated resources, not busy compute or Slurm time outside wrapper; preflight separately uses scheduler allocation upper bound"
+  ]
+}

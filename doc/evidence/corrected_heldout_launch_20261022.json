@@ -1,0 +1,61 @@
+{
+  "schema": "sbsi-corrected-heldout-launch-v1",
+  "declaration": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_20261022/declaration.json",
+    "sha256": "6166d8d3c4288e5b1f35f2663779652b56fbf22d3956bfaecefd720a4aed9ef5"
+  },
+  "files": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_20261022/declaration.json": "6166d8d3c4288e5b1f35f2663779652b56fbf22d3956bfaecefd720a4aed9ef5",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_20261022/preflight.json": "7eac9a65f62613259b5a0fd376c23552a34d2f9438463a14ca83cbf2deab07fe",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_20261022/preparation_cost.json": "f4be46ff099af3efe4b9badbeffa911a5c0910364fbee087dd2978b18e52b3a6",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_workflow_20261022.sh": "9061b995dcadcad9d6050125a49aca88cb45aa476c36a116e52cd1a06cf15f8a",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_preflight_20261022.sh": "91c80d3474020846d104ccd03ee2050c7eac31f9994e4d25e01a327e15f97f65",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-preflight-17434715.out": "6250d670760be7bde35b1d11658a8b8fa153bdc93406b9b413a819ba9ad8729f",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_corrected_heldout_20261022/SHA256SUMS": "b9ccc31f9b701526dace7f1a45da7208141941678060aa23f48af062d7f68b6c"
+  },
+  "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_corrected_heldout_20261022",
+  "source_manifest_sha256": "b9ccc31f9b701526dace7f1a45da7208141941678060aa23f48af062d7f68b6c",
+  "preflight": {
+    "job": 17434715,
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "allocation_wall_seconds": 75,
+    "cpus": 2,
+    "gpus": 0,
+    "external_files": 1827,
+    "internal_seconds": 56.34948978293687
+  },
+  "jobs": {
+    "warmup": {
+      "id": 17435167,
+      "array": "0-4%4",
+      "gpu_per_task": 1,
+      "cpus": 2,
+      "node": "th-cl-nv02",
+      "partition": "inter",
+      "minutes": 30
+    },
+    "production": {
+      "id": 17435171,
+      "array": "0-39%4",
+      "gpu_per_task": 1,
+      "cpus": 2,
+      "node": "th-cl-nv02",
+      "partition": "inter",
+      "minutes": 45,
+      "dependency": "afterok:17435167"
+    },
+    "report": {
+      "id": 17435177,
+      "gpus": 0,
+      "cpus": 2,
+      "partition": "cluster",
+      "minutes": 20,
+      "dependency": "afterok:17435171"
+    }
+  },
+  "combined_gpu_ceiling": 4,
+  "old_heldout_outcomes_reused": false,
+  "accepted_sampler": false,
+  "scientific_result_pending": true
+}

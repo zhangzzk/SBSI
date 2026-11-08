@@ -14,7 +14,10 @@ import pandas as pd
 import torch
 from scipy.special import logsumexp
 
-from check_galsbi_continuous_prior import build_prior, digest, save
+if __package__:
+    from .check_galsbi_continuous_prior import build_prior, digest, save
+else:
+    from check_galsbi_continuous_prior import build_prior, digest, save
 from sbsi.catalogue_disk_likelihood import DiskCatalogueLikelihood
 from sbsi.catalogue_disk_response import CatalogueDiskResponse
 from sbsi.catalogue_likelihood import predict_detection_probability

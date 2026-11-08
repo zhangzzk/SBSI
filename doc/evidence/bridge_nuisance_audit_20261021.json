@@ -1,0 +1,247 @@
+{
+  "status": "passed",
+  "cpu_only": true,
+  "likelihood_models_loaded": false,
+  "source_sha256": {
+    "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/smc-bridge-audit-20261021/doc/evidence/audit_bridge_nuisance_20261021.py": "a4bd0d7bddcdad72988a97aa4423f6f6e975d6dce7ac29ff22e4fbc787080d83",
+    "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/smc-bridge-audit-20261021/sbsi/galsbi_prior.py": "f6612ec614f966993946e3beb94221e6e6ad3adcf1782393f18cb8facc782652",
+    "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/smc-bridge-audit-20261021/sbsi/galsbi_scene_prior.py": "575e4057c94db07f0b14b792628f02e6a21f28443121198e16c669e72f7515ae",
+    "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/smc-bridge-audit-20261021/sbsi/galsbi_summary.py": "45cf85f62b3d7742f21b020da78085ec8f59bac8e776aaa3978ee2c7487b75b8",
+    "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/smc-bridge-audit-20261021/sbsi/galsbi_target_coordinates.py": "519c9cd4930a2a0a22d9989bad55b8dc436fe16760f8ed6d5dff3d8160047209",
+    "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/smc-bridge-audit-20261021/sbsi/scene_exchange.py": "c47763c55228257721135811b68f800945f64513c052945331974bb976b67c37",
+    "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/smc-bridge-audit-20261021/sbsi/particle_diagnostics.py": "bbd2756da751d025db8ae41ddc18a3dd0e6ec5a8d2967852b6e849762d205f6a",
+    "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/smc-bridge-audit-20261021/scripts/check_galsbi_continuous_prior.py": "3d310798e4aabedf297b94c2c6e16964d41e0a971513b59eb3358e66c7ee877b"
+  },
+  "input_receipts": [
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v5_0",
+      "seed": 2026102170,
+      "sha256": {
+        "protocol.json": "c6f0d787a49cb884e36971a7eb429b4fac958a07b455f0fad59ff942c0b9f87c",
+        "result.json": "266704c6030b6ce4be0fbbb513bfce0eaeeead43bb981ac252680f07e3dbb227",
+        "particles.npz": "eedb0bd671363707dfe50320c3249a325a167efd2ff762377913e29f5399b22d"
+      }
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v5_1",
+      "seed": 2026102171,
+      "sha256": {
+        "protocol.json": "0696a4c213f0a8e62567a265c8f1fcf317e2a680a78f0d83529033c34b6e25e8",
+        "result.json": "618e48efc3e21b7d2c8f5594753ce3c89d889029cb4a18a18d5d5e694568a1e7",
+        "particles.npz": "2032d78bc9f50ad2f86ce4abf32888ebdf44b7665c97d6167c4699171c5cef4b"
+      }
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v5_2",
+      "seed": 2026102172,
+      "sha256": {
+        "protocol.json": "9d8acd522069159dd4f1ee7ec38bc7aee9a8ebc5c8232dd3db54ab8f481399fd",
+        "result.json": "daf7e9caaa9a03a112c97354fca2de1938294a71b6a2619f0c8acf16f8fb1b49",
+        "particles.npz": "0ca2650fca1c3c86f8be6b0a60eb832497b0a182bcddf84d7794f88d7ed66ab7"
+      }
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v5_3",
+      "seed": 2026102173,
+      "sha256": {
+        "protocol.json": "dfb2961d2aee50f9685fc527e015a8d4f739e2ef950cfae1df2bcba88335662d",
+        "result.json": "615cc9b0c878938eb58d726bb5ff6a960191503d8a43d86f9b765237da2a745c",
+        "particles.npz": "57d8ae1adffd0a33183a0132aa5b0cd4a8c69d0c5e9caefa7a29ffe3bcf1ef0a"
+      }
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v5_4",
+      "seed": 2026102174,
+      "sha256": {
+        "protocol.json": "67ea4762ea097e72596d0404294e7ce654e9f4be904a8e17562f84e6aa0661b2",
+        "result.json": "5cc171db8c1c4dbba14c40b8c160ace805ce2e2fbbfa79b9bc9ec51ca7c49fb6",
+        "particles.npz": "e7179a30e4a3ecd9addeaf7c4047832c4c441d831a89bb93db1bedf9412d99f8"
+      }
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v5_5",
+      "seed": 2026102175,
+      "sha256": {
+        "protocol.json": "0f8d3bb30aabbbf1ead8693c7684309fb21911425553221089edd6f5055385de",
+        "result.json": "ad49150d0a0bb034ecb0dfe8e3ebbecfc8c5fb36a32086b745eda9d3971d67f6",
+        "particles.npz": "20ec138cd5fcc63a32c20d645af5c51dcfa8e4afc861df9dc41d19bd53bae833"
+      }
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v5_6",
+      "seed": 2026102176,
+      "sha256": {
+        "protocol.json": "ac46f3f6c591e461094b05c1c306a6d1ab082f46224f13e9b3178307f6b01726",
+        "result.json": "5863f035a7dde5f62f8a9703992a1289944b691c28a417947e86661fc5654da7",
+        "particles.npz": "56ea1cc252ba16d0b744e0b29bfd7c1354f6ced042af64a13a6a58a65a96edb5"
+      }
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/dev_v5_7",
+      "seed": 2026102177,
+      "sha256": {
+        "protocol.json": "0b866d0c5690ffc584069017afe8f7baeaebb03bf65db8e0771dde67132b8ea8",
+        "result.json": "df22f675269a9bcc82fbfa17fb24960f633aa789b308c7200f5bdb43269f1fc3",
+        "particles.npz": "a6d0548931fd7e6b4d7463a0cf19685ce25f200c554de30e6422db1598d0f871"
+      }
+    }
+  ],
+  "factorization": {
+    "scene_count": 128,
+    "maximum_log_density_error_by_type": [
+      1.8189894035458565e-12,
+      5.329070518200751e-15
+    ],
+    "shape_free_core_max_error_by_type": [
+      5.684341886080802e-14,
+      7.105427357601002e-15
+    ],
+    "nuisance_feature_max_error": 1.4210854715202004e-14,
+    "nuisance_response_pair_max_error": 1.4210854715202004e-14,
+    "sample_given_targets_environment_bitwise_independent": true
+  },
+  "saved_particle_sensitivity": {
+    "populations": 8,
+    "target_particles": 8192,
+    "maximum_prior_replay_error": 2.0463630789890885e-12,
+    "maximum_conditional_type_probability_change": 4.2766062902099833e-07,
+    "observations": [
+      {
+        "observation_index": 58165,
+        "particle_count": 2048,
+        "log_q_over_p_quantiles": [
+          -0.05368117334283792,
+          -0.01663769214910793,
+          -5.558322240712586e-06,
+          0.01744611080202194,
+          0.0660546852672646
+        ],
+        "run_weighted_intensity_mass_ratio": 1.0000317085578831,
+        "analytic_score": [
+          -3.7771991439979207,
+          17.715480982428197
+        ],
+        "numeric_prior_score": [
+          -3.818633862000174,
+          17.659587814677685
+        ],
+        "score_shift": [
+          -0.0414347180022534,
+          -0.05589316775051145
+        ],
+        "analytic_score_mcse": [
+          4.851123984494027,
+          7.2778140821755555
+        ],
+        "absolute_shift_over_mcse": [
+          0.008541261393172793,
+          0.007679938937627178
+        ]
+      },
+      {
+        "observation_index": 0,
+        "particle_count": 2048,
+        "log_q_over_p_quantiles": [
+          -0.0022404934497685697,
+          -0.0013527790181763076,
+          1.8181275276803337e-06,
+          0.0014391571006952182,
+          0.0023006660224177376
+        ],
+        "run_weighted_intensity_mass_ratio": 1.000001344100815,
+        "analytic_score": [
+          -0.9099996231671175,
+          -6.176905378244958
+        ],
+        "numeric_prior_score": [
+          -0.9102324667390967,
+          -6.175848044003202
+        ],
+        "score_shift": [
+          -0.00023284357197927985,
+          0.0010573342417554699
+        ],
+        "analytic_score_mcse": [
+          1.4158453789687535,
+          0.6734663393921609
+        ],
+        "absolute_shift_over_mcse": [
+          0.00016445550865792563,
+          0.0015699882531764989
+        ]
+      },
+      {
+        "observation_index": 1,
+        "particle_count": 2048,
+        "log_q_over_p_quantiles": [
+          -0.0029496482665010075,
+          -0.0007218720263476599,
+          -2.805803621420537e-06,
+          0.0008282942026603779,
+          0.0022070758526416875
+        ],
+        "run_weighted_intensity_mass_ratio": 0.9999996538599453,
+        "analytic_score": [
+          -3.188689689152026,
+          -3.6476682701950414
+        ],
+        "numeric_prior_score": [
+          -3.1887061392630924,
+          -3.6477263843282834
+        ],
+        "score_shift": [
+          -1.645011106621297e-05,
+          -5.811413324208203e-05
+        ],
+        "analytic_score_mcse": [
+          0.37969093342142757,
+          0.3956034593034784
+        ],
+        "absolute_shift_over_mcse": [
+          4.332500362328805e-05,
+          0.00014689996226120223
+        ]
+      },
+      {
+        "observation_index": 8,
+        "particle_count": 2048,
+        "log_q_over_p_quantiles": [
+          -0.001781242015692166,
+          -0.0004840800106614695,
+          1.0163906178894296e-06,
+          0.0004922203437498993,
+          0.001342554612012587
+        ],
+        "run_weighted_intensity_mass_ratio": 1.000001298029011,
+        "analytic_score": [
+          -1.8394430749279542,
+          1.09091679403937
+        ],
+        "numeric_prior_score": [
+          -1.8394325510496032,
+          1.0909238783410742
+        ],
+        "score_shift": [
+          1.0523878350987559e-05,
+          7.084301704152196e-06
+        ],
+        "analytic_score_mcse": [
+          0.09512321768512061,
+          0.04008455909636952
+        ],
+        "absolute_shift_over_mcse": [
+          0.00011063417120543566,
+          0.00017673393106608536
+        ]
+      }
+    ]
+  },
+  "elapsed_seconds": 18.304413174279034,
+  "limitations": [
+    "The ratio uses numerical/analytic target INTENSITIES; omitted global constants cancel from score means.",
+    "All eight predeclared v5 populations included with normalizer weighting; no production sampler was rerun.",
+    "Sensitivity is conditional on represented saved states; unvisited modes and missing support are not bounded.",
+    "Scores are the saved F64 diagnostic observable, evaluated under the F32 production posterior.",
+    "Factorization identity does not supply or validate a numerical marginal-prior integrator."
+  ]
+}

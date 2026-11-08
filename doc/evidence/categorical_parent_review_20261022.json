@@ -1,0 +1,100 @@
+{
+  "schema": "sbsi-categorical-parent-review-v1",
+  "reviewed_at_utc": "2026-10-22T14:30:08.875966+00:00",
+  "candidate_commit": "8b3d85468b29507d63c84d2ab56f4e6a7727eefb",
+  "runtime_promoted": false,
+  "independent_code_review": {
+    "caller_probability_checks": "Shape, finite, nonnegative, row sum within1e-12 checked before helper.",
+    "rng_order": "All neighbour choices precede the existing contiguous target-type choice block; the new helper replaces only that block.",
+    "cdf": "Float64 row cumsum, final-entry normalization and count of CDF entries <= uniform match right-sided search.",
+    "numpy_source": "https://github.com/numpy/numpy/blob/v2.2.6/numpy/random/_generator.pyx#L806-L846",
+    "fallback": "Custom RNGs and non-float32/64 arrays retain scalar choice.",
+    "support": "No change to numerical_over_analytic or relocation/neighbour arithmetic.",
+    "findings": []
+  },
+  "cpu_test_junit_counts": {
+    "passed": 1084,
+    "skipped": 9,
+    "failed": 0
+  },
+  "verified_external_receipts": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/categorical_integration_validation/tests.sh": "002e4d5923d5f3a02f854b54132198fc3e441a5871ce05cb1f876bdbcd014659",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/categorical_integration_validation/validation.json": "c0c8d1ee2bba8c8f6f345c63da6f26e1837791e92cdec0ca67810f3c113b6f65",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/categorical_integration_validation/junit.xml": "a890cb6bef35b10ed8bfef523249a570266467f3cefbef37afb2494edbb58702",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/categorical_integration_validation/slurm-17440535.out": "58e5037a228685d84ad5d4c4cb16d92dbdc2b7fd373c7b0ae768018cc906d943"
+  },
+  "completed_benchmark_pairs": [
+    {
+      "replica": 0,
+      "seed": 2026103600,
+      "order": [
+        "baseline",
+        "optimized"
+      ],
+      "receipt": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_0/receipt.json",
+      "receipt_sha256": "04d17692b9fb8bcc0161a470d9f03076c61f96ed3ed2522bf8d77432a45a5a18",
+      "bitwise_saved_output_replay_reported_by_frozen_harness": true,
+      "array_fields": {
+        "particles.npz": 8,
+        "scenes.npz": 24
+      },
+      "both_arms_64_stages_no_extinction": true,
+      "metadata_sha256": {
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_0/baseline/result.json": "9be46e2d55ea09d6caa1a23f5df2544c7b437a2a6af93d968a7586f9b50af6c5",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_0/baseline/protocol.json": "0f5f5e4a108e2494d1c3fa1124ffb8aa4c3a174af22928c0bdbcb961026fc323",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_0/baseline/progress.json": "bb2e9b00ba16b20c7382ef42cf9d3f3098b5833527da044ae7fe02e87bc29f95",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_0/optimized/result.json": "49945b5dea29b7f4d17ebea6384b65edfafc4bd0da76b7bf14451eb935c3297c",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_0/optimized/protocol.json": "a0d959223a1d40bcc32be643b6fd4d6738b6f5f8645e72226869a180e9b61502",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_0/optimized/progress.json": "f65db283d4371f0e663d06114784b58d64193469e880c70d1a128374f14fcf41"
+      }
+    },
+    {
+      "replica": 1,
+      "seed": 2026103601,
+      "order": [
+        "optimized",
+        "baseline"
+      ],
+      "receipt": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_1/receipt.json",
+      "receipt_sha256": "8bd207b61454bc3331c825d928f47628caadee2a5c76e40e99f7c2a78304faeb",
+      "bitwise_saved_output_replay_reported_by_frozen_harness": true,
+      "array_fields": {
+        "particles.npz": 8,
+        "scenes.npz": 24
+      },
+      "both_arms_64_stages_no_extinction": true,
+      "metadata_sha256": {
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_1/baseline/result.json": "b1d897aad927bf22f053d401647cd0688f779e48655f942f25c97559890786ec",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_1/baseline/protocol.json": "b899ba65d92851e7f787f0ba94ab0b514b5e9aa91e7b7de9d3390ba5e3c83c5b",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_1/baseline/progress.json": "08576b8a396895ecc6283cf8b483ba0b5ec662ef38635f0bf09ff157e54f3791",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_1/optimized/result.json": "0e9ea86cc6402d3028ce6dc9c3b066990c80ef5ba79a7a4b46109549d9d86641",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_1/optimized/protocol.json": "dccc31beaaab60d0b3052758d6f5ec75e85def9f0c39ee8f609de81af5bc153b",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_full_smc_runs_v2_20261022/pair_1/optimized/progress.json": "31fe64fb669d89119f9ddb305971397e13f007b709a153824ef2dfb339ae6fe7"
+      }
+    }
+  ],
+  "limitations": [
+    "Only two of four fixed benchmark pairs complete at review; no timing selection or speed conclusion.",
+    "Parent reviewed hashes and stage/receipt metadata; NPZ byte comparison is performed by frozen GPU pair harness and will be repeated by CPU report.",
+    "Saved output equivalence is not an audit of every intermediate mutation or terminal RNG.",
+    "Held-out scientific outcome and complete cost report pending."
+  ],
+  "next_pair_startup": {
+    "checked_at_utc": "2026-10-22T14:31:34.851220+00:00",
+    "job": "17437046_2",
+    "seed": 2026103602,
+    "order": [
+      "baseline",
+      "optimized"
+    ],
+    "baseline_stage": 23,
+    "beta": 0.129150390625,
+    "extinct": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "status": "running; complete replay and cost pending"
+  }
+}

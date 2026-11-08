@@ -1,0 +1,25 @@
+{
+  "schema": "sbsi-heldout-first-production-pair-v1",
+  "checked_at_utc": "2026-10-22T12:48:07.343723+00:00",
+  "job": "17435350_0",
+  "internal_slurm_job_id": "17436775",
+  "status": "completed",
+  "all_four_run_and_phase_steps_pass": true,
+  "both_populations_completed_without_extinction": true,
+  "cost": {
+    "process_wall_seconds": 701.0633838339709,
+    "cpu_allocated_seconds": 1402.1267676679417,
+    "gpu_allocated_seconds": 701.0633838339709
+  },
+  "files": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/production_0_stage.json": "bc151e220eac0574706c643ccc023a0510ea549e4db173d93903b31833062fca",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_0_timing.json": "259ed0d6bddae01387816919ea365ddf252ccc3944cca8581ac08dca14134396",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_0_phase_timing.json": "4102bd3a24529b2667177fb6c9b927b1e84b2b8d9f83dfaa961e435ffdf7ed8e",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_0_timing.json": "8537a97b29110125943e2d4ecff5375d10b53d97a526334f610a6762c062f154",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_0_phase_timing.json": "cc3f5962fc7beb8ab70dcdd3a39d36738632627db39556809552e2f39b64c521",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/candidate_0/result.json": "47df384c1cd4acce29f57ce0a9258cba8050f6425a1017f7653a427d37fe44f4",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_corrected_v10_v3_20261022/group_0/reference_0/result.json": "7dc10c1d3ce7bedec7fdf0a13d035a0f9314112a6173cd02323b16e1894a5020"
+  },
+  "accepted_sampler": false,
+  "scope": "First paired-task workflow and replay/phase validation only; no independent-population accuracy comparison or tuning."
+}

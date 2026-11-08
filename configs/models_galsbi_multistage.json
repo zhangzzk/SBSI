@@ -1,0 +1,181 @@
+{
+  "format": "sbsi_model_set_v1",
+  "name": "galsbi-multistage",
+  "status": "Retained multistage comparison model, 2026-11-08; not the current fiducial",
+  "configured_likelihood": false,
+  "decision": {
+    "date": "2026-11-08",
+    "current_fiducial": false,
+    "owner_retained": true,
+    "independent_acceptance": false
+  },
+  "flow": {
+    "root": "SBSI_CACHE_DIR",
+    "path": "conditional_cut_probability_20261107/weighted/final.pt",
+    "sha256": "43673e5db42e90d976d45dc7de1e54682adb0fd18bea74c6602e8dd4630c8cbd",
+    "format": "sbsi_experimental_neighbour_factorized_v1",
+    "architecture": "Cartesian photometry-first factorized flow: p(radius,flux|x) p(shape1,shape2|radius,flux,x)",
+    "feature_names": [
+      "e1_input_p",
+      "e2_input_p",
+      "sersic_n_input_p",
+      "r_input_p",
+      "circularized_Re_input_p",
+      "nbr_close_050",
+      "nbr_close_100",
+      "nbr_close_200"
+    ],
+    "context_contract": "Eight raw features plus emulator-derived reference neighbour score; base missing indicators; use_score=true",
+    "neighbour_score_enabled": true,
+    "loader_source": "sbsi/factorized_flow.py",
+    "training": {
+      "recipe": "Initial factorized NLL; neighbour-input NLL continuation; weak nine-cut response continuation; photometry-only weighted conditional-cut continuation",
+      "arm": "weighted",
+      "constant_shear_used": false
+    },
+    "public_loader": "sbsi.measurement_model.load_measurement_model"
+  },
+  "classifier": {
+    "root": "SBSI_CACHE_DIR",
+    "path": "galsbi_f8c8_20261102/c8/C8_20260913/selected.pt",
+    "sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+    "training_seed": 20260913,
+    "selected_epoch": 99,
+    "checkpoint_selection": "minimum mean-case tuning BCE (0.132987); first predeclared seed",
+    "feature_names": [
+      "e1_input_p",
+      "e2_input_p",
+      "sersic_n_input_p",
+      "r_input_p",
+      "circularized_Re_input_p",
+      "nbr_close_050",
+      "nbr_close_100",
+      "nbr_close_200"
+    ],
+    "feature_coordinate": "physical_arcsec",
+    "add_missing_indicators": false
+  },
+  "emulator": {
+    "root": "BLENDEMU_RUNS_DIR",
+    "path": "disk_response_moment_galsbi_20261103/model/model.json",
+    "sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+    "metadata_path": "disk_response_moment_galsbi_20261103/model/metadata.json",
+    "metadata_sha256": "fda7277ecd54e2d3cfc7f196d7408c347e72c38e09945fad217447824cd0bf93",
+    "backend": "disk_response_moment",
+    "composition": "mobius",
+    "response_coordinate": "disk_velocity",
+    "recipe": "frozen trial9 xgboost, seed 20260816, 218 trees, moment objective; fit cases 40-199, development 0-39 (report only)",
+    "code": "BlendEMU branch galsbi-resim b4605fe, jobs/job_disk_response_galsbi.example.sh"
+  },
+  "observing_conditions": {
+    "pixel_size": 0.2,
+    "zero_point": 30.0,
+    "psf_fwhm": 0.71,
+    "moffat_beta": 2.458,
+    "pixel_rms": 0.6159,
+    "note": "emulator truth-pair features were scaled with these LSST-i values (configs/galsbi_resim_training.yaml); likelihood runs with this preset must pass them, not the FS2 0.73 / 2.224 / 0.312"
+  },
+  "evaluation": {
+    "population": "40 reused development scenes, new paired-seed measurements",
+    "cases": [
+      1000,
+      1040,
+      1080,
+      1120,
+      1001,
+      1041,
+      1081,
+      1121,
+      1002,
+      1042,
+      1082,
+      1122,
+      1003,
+      1043,
+      1083,
+      1123,
+      1004,
+      1044,
+      1084,
+      1124,
+      1005,
+      1045,
+      1085,
+      1125,
+      1006,
+      1046,
+      1086,
+      1126,
+      1007,
+      1047,
+      1087,
+      1127,
+      1008,
+      1048,
+      1088,
+      1128,
+      1009,
+      1049,
+      1089,
+      1129
+    ],
+    "selection": "Independent per-leg measured/generated radius>3 pixels and magnitude<25, predicted usability for model",
+    "m_definition": "100*(Rmeasured_ii/Rmodel_ii-1), percent",
+    "uncertainty": "Whole-scene delete-one jackknife standard error, fixed models",
+    "central_m_percent": [
+      0.5557647064006188,
+      0.21011319080019852
+    ],
+    "central_m_jackknife_se_pp": [
+      0.13142707492986716,
+      0.1689831330576193
+    ],
+    "nine_cut_rms_percent": {
+      "value": 0.6345722375760954,
+      "jackknife_se": 0.11008079806884263,
+      "bootstrap_ci95": [
+        0.44249912037299316,
+        0.8570950602576763
+      ]
+    },
+    "target_cuts": [
+      "mag24.9_radius_gt0.56",
+      "mag25_radius_gt0.56",
+      "mag25.1_radius_gt0.56",
+      "mag24.9_radius_gt0.60",
+      "mag25_radius_gt0.60",
+      "mag25.1_radius_gt0.60",
+      "mag24.9_radius_gt0.64",
+      "mag25_radius_gt0.64",
+      "mag25.1_radius_gt0.64"
+    ]
+  },
+  "evidence": {
+    "report_0": {
+      "path": "doc/evidence/training_stage_audit_20261108/report.json",
+      "sha256": "c8afe524bb9a0a54714a54bf0e9170165560324b81e971884750914586b7415d"
+    },
+    "model_1": {
+      "path": "doc/evidence/neighbour_conditioned_flow_20261106/model.py",
+      "sha256": "7a6287d8ec1ccdda55829df09094470a5225415516697771343b82c9e89b8bde"
+    },
+    "train_2": {
+      "path": "doc/evidence/neighbour_conditioned_flow_20261106/train.py",
+      "sha256": "4e78b1a8d1b734e75cbb842fcb56c8322c0b6420264b666af72d6755d15d3ee5"
+    },
+    "common_3": {
+      "path": "doc/evidence/neighbour_conditioned_flow_20261106/common.py",
+      "sha256": "72c4e22d6671ed27ca991bf9d904eb5bfa4c4f9d19ec1fc2374f51f1ec9861c4"
+    },
+    "frame_model_4": {
+      "path": "doc/evidence/alignment_factorized_20261105/frame_model.py",
+      "sha256": "162af73b1b1e4e027ff9327c89ae5eebfca86a464e5f32b63446992330c7d3a1"
+    }
+  },
+  "limitations": [
+    "Reused development scenes; no independent acceptance.",
+    "Conditional photometry errors remain.",
+    "Neighbour-reference feature must be computed at radius 3.5 pixels, magnitude 24.5 with the pinned emulator, not at the observation photometry.",
+    "Existing nine-summary inference does not contain that additional reference coefficient; it rejects this model until a separately validated adapter is supplied."
+  ]
+}

@@ -1,0 +1,2159 @@
+{
+  "schema": "sbsi-n23-corrected-comparison-evaluation-receipt-v1",
+  "created_utc": "2026-10-22T11:25:25.155891+00:00",
+  "code_commit": "5285f5b5d75c76dcc036988b296b7c4f6958c64d",
+  "source_snapshot": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_v10_comparison_20261022_v3",
+  "source_manifest_sha256": "4767d2a3eef142ab4f5a387cccc7267d4eaeac59bf7247a2fa2ac6eedf2d0f99",
+  "pre_execution_receipt": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/v10_comparison_evaluation_v3_experiment_20261022.json",
+    "sha256": "3499b46d8b141f071cc896da81fabbb61a4ebf1c99aab14cf08ea5900b6560cc"
+  },
+  "launcher": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_v10_comparison_evaluate_20261022_v3.sh",
+    "sha256": "e1fdb23ad15d80da5177cf1277bb681d2b0b219578dc062b2a5c61d12dd8224a"
+  },
+  "validation": {
+    "job": 17434348,
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "elapsed_seconds": 31,
+    "focused_tests_passed": 37,
+    "pytest_elapsed_seconds": 4.77,
+    "log": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/v10_comparison_evaluation_v3_17434348.log",
+    "log_sha256": "a0081da10b216c29e43739bf6c84fbc5f3f92b27ce9d9af178cff494841db844"
+  },
+  "previous_full_validation": {
+    "job": 17423438,
+    "passed": 882,
+    "skipped": 1,
+    "pytest_elapsed_seconds": 85.43,
+    "comment": "Prior complete gate implementation; localized path-guard repair used the authorized focused regression suite."
+  },
+  "preserved_failure": {
+    "job": 17423550,
+    "state": "FAILED",
+    "exit_code": "1:0",
+    "elapsed_seconds": 5,
+    "outcomes_read": false,
+    "log": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/v10_comparison_evaluation_17423550.log",
+    "log_sha256": "266e00576c49990f4e57acdec958f6d001cb4e40c9bff53aded0b885369161e3",
+    "cause": "Substring guard rejected hash-pinned source filename containing heldout before opening outcomes"
+  },
+  "repair": "Heldout-named paths require resolved containment inside declared source and expected hash equal to entry from verified pinned manifest; actual file bytes remain checked. Actual heldout outcomes remain forbidden.",
+  "source_files": {
+    "scripts/summarize_v10_particle_comparison.py": "3a30f0e10e8d90831a65232befe274aed3f8167a904ffeb23a646cea6738e679",
+    "tests/test_v10_comparison.py": "fde014aa14b12b309c71fa9f5ed56bc6c8f81abcbd0e41c3bc20705b86d446c4",
+    "sbsi/particle_comparison_gates.py": "8c77ad0ff7f2fbf616ea1b2a250ca2119ec6822ba19dd1f063e9584d75e566df"
+  },
+  "audited_output": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/v10_corrected_comparison_20261022_v3.json",
+    "sha256": "09601af0a43c0b5801bc0467b090e588c745713a3c9fd6d86b58f2f9172d1574",
+    "verified_input_files": 466
+  },
+  "declared_science": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/experiment_v10_corrected_three_way.json",
+    "sha256": "9102eb816c20ae4d0a8dbc6f698db194f4ed4ea0eea726138a3f73fb4545d72e",
+    "source_manifest_sha256": "f22761b42d5816ba126baa82a966cb5d1a9620efc1811b42e41931620bff225a"
+  },
+  "development_checks_pass": true,
+  "accepted_sampler": false,
+  "heldout_status": "pending; development cannot authorize acceptance",
+  "scientific_thresholds_unchanged": true,
+  "new_sampling_or_model_forward": false,
+  "actual_heldout_outcomes_read": false,
+  "timing": {
+    "recorded_inference_seconds": 9126.794633375248,
+    "scheduler_task_elapsed_seconds_by_arm": {
+      "small": 1667,
+      "large": 3944,
+      "broad": 3820
+    },
+    "shared_phase_job_wall_seconds": 177,
+    "shared_raw_report_job_wall_seconds": 11,
+    "pilot_generation_seconds": null,
+    "proposal_geometry_fit_seconds": null,
+    "phase_coefficient_fit_seconds": null,
+    "full_end_to_end_cost_seconds": null,
+    "preparation_cost_status": "unknown reused one-off preparation; not zero",
+    "allocation": "scheduler records preserve AllocTRES; elapsed seconds are not CPU core-seconds or summed full cost"
+  },
+  "qualifications": [
+    "All three arms use frozen support-corrected source; no full mixed-measure finite-RNG exactness claim.",
+    "Corrected phase agreement is a predeclared diagnostic gate, not proof of exact F32 zero-mean control.",
+    "F32 control expectation unknown; F64 reweighting explicitly changes numerical measure and uses intended continuous identity.",
+    "Eight population ratio MCSE can miss shared rare modes; no fit, empirical recentering, dropped populations or heldout inputs.",
+    "Complete phase diagnostics cannot currently represent extinct populations; explicit zero mass blocks this phase gate, never masquerades as a valid zero control."
+  ],
+  "groups": {
+    "small": {
+      "configuration": {
+        "name": "small",
+        "particles": 256,
+        "proposal": "fitted",
+        "seed_base": 2026102900
+      },
+      "seeds": [
+        2026102900,
+        2026102901,
+        2026102902,
+        2026102903,
+        2026102904,
+        2026102905,
+        2026102906,
+        2026102907
+      ],
+      "all_raw_precision_gates": true,
+      "original_comparison": {
+        "historical_boolean": true,
+        "status": "pass"
+      },
+      "total_recorded_inference_seconds": 1566.0719607280334,
+      "median_recorded_inference_seconds": 199.4604242964997,
+      "observations": [
+        {
+          "observation": 58165,
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            2154.9156223278683,
+            1206.5999309256422
+          ],
+          "raw": {
+            "mean": [
+              0.850436581692326,
+              20.246493518673063
+            ],
+            "mcse": [
+              5.6106549426549615,
+              7.183872206254144
+            ],
+            "log_mean_normalizer": 4.5359398907964525,
+            "normalizer_relative_mcse": 0.04162405785469623,
+            "run_weight_ess": 7.904139111884971,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          },
+          "region": {
+            "mean": [
+              1.0,
+              0.0
+            ],
+            "mcse": [
+              0.0,
+              0.0
+            ]
+          },
+          "raw_float32_sampled": {
+            "mean": [
+              3.385565752680715,
+              0.8504365816923265,
+              20.246493518673063,
+              8.030164759331392,
+              12.648045257336904
+            ],
+            "mcse": [
+              2.045918938470397,
+              5.6106549426549615,
+              7.183872206254144,
+              3.566476551938842,
+              5.739217318955203
+            ],
+            "control_standardized_residual": 1.6547897812666452,
+            "control_known_expectation": null,
+            "control_expectation_qualification": "unknown for rounded F32 sampling program"
+          },
+          "precision_reweighted_float64": {
+            "mean": [
+              3.385825699622906,
+              0.8499714388678248,
+              20.247216414868756,
+              8.0302508828304,
+              12.648184737484819
+            ],
+            "mcse": [
+              2.0459579806910186,
+              5.610642404658892,
+              7.184123727265604,
+              3.5665011769463755,
+              5.739307190169455
+            ],
+            "control_standardized_residual": 1.6548852574574133,
+            "control_known_expectation": 0.0,
+            "control_expectation_qualification": "zero for intended continuous F64 posterior; numerically evaluated, not an exact rounded-program identity"
+          }
+        },
+        {
+          "observation": 0,
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            1316.5788329675324,
+            5428.473836186769
+          ],
+          "raw": {
+            "mean": [
+              1.2002475686336713,
+              -4.937433232142945
+            ],
+            "mcse": [
+              1.624534921614576,
+              0.5274707751746172
+            ],
+            "log_mean_normalizer": 16.830585823048796,
+            "normalizer_relative_mcse": 0.021481884186716007,
+            "run_weight_ess": 7.9742408143829655,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          },
+          "region": {
+            "mean": [
+              0.9994678929882768,
+              0.0005321070117231616
+            ],
+            "mcse": [
+              0.0005253643026625277,
+              0.0005253643026625287
+            ]
+          },
+          "raw_float32_sampled": {
+            "mean": [
+              0.2518254996906379,
+              1.2002475686336715,
+              -4.937433232142945,
+              0.4358854234206112,
+              -4.98246516692159
+            ],
+            "mcse": [
+              0.5565800036378811,
+              1.6245349216145757,
+              0.5274707751746172,
+              0.1247089277080124,
+              0.4899754502998201
+            ],
+            "control_standardized_residual": 0.45245157577468265,
+            "control_known_expectation": null,
+            "control_expectation_qualification": "unknown for rounded F32 sampling program"
+          },
+          "precision_reweighted_float64": {
+            "mean": [
+              0.251832132307394,
+              1.200228178683227,
+              -4.936905616562175,
+              0.4358459015884528,
+              -4.981938737398488
+            ],
+            "mcse": [
+              0.5565369477201201,
+              1.6243936519254332,
+              0.5275826936923838,
+              0.12470424386295131,
+              0.4900975214206621
+            ],
+            "control_standardized_residual": 0.4524984968905231,
+            "control_known_expectation": 0.0,
+            "control_expectation_qualification": "zero for intended continuous F64 posterior; numerically evaluated, not an exact rounded-program identity"
+          }
+        },
+        {
+          "observation": 1,
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            1724.1882480094594,
+            2727.0960258338687
+          ],
+          "raw": {
+            "mean": [
+              -3.2237664529555126,
+              -3.2592349606901814
+            ],
+            "mcse": [
+              0.2887376132109349,
+              0.21470167042377764
+            ],
+            "log_mean_normalizer": 19.09157462835729,
+            "normalizer_relative_mcse": 0.018480531703961522,
+            "run_weight_ess": 7.980919932000897,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          },
+          "region": {
+            "mean": [
+              0.9995566802271072,
+              0.00044331977289282354
+            ],
+            "mcse": [
+              0.0004491882590375811,
+              0.0004491882590375813
+            ]
+          },
+          "raw_float32_sampled": {
+            "mean": [
+              -0.14450393293783986,
+              -3.223766452955512,
+              -3.259234960690181,
+              -2.9647237499901813,
+              -3.417092546392175
+            ],
+            "mcse": [
+              0.09335399929969776,
+              0.2887376132109349,
+              0.21470167042377766,
+              0.22510162165220815,
+              0.23016397572453548
+            ],
+            "control_standardized_residual": -1.5479136836327023,
+            "control_known_expectation": null,
+            "control_expectation_qualification": "unknown for rounded F32 sampling program"
+          },
+          "precision_reweighted_float64": {
+            "mean": [
+              -0.14450069119970238,
+              -3.2237482260668218,
+              -3.259224128655667,
+              -2.9647113343523834,
+              -3.4170781730495086
+            ],
+            "mcse": [
+              0.0933558066682149,
+              0.28873521468292757,
+              0.21469762125283337,
+              0.2250987435258282,
+              0.23015813567713325
+            ],
+            "control_standardized_residual": -1.547848991474688,
+            "control_known_expectation": 0.0,
+            "control_expectation_qualification": "zero for intended continuous F64 posterior; numerically evaluated, not an exact rounded-program identity"
+          }
+        },
+        {
+          "observation": 8,
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            1837.2286010323294,
+            6132.770311657145
+          ],
+          "raw": {
+            "mean": [
+              -1.924865201302869,
+              1.1488535137662894
+            ],
+            "mcse": [
+              0.06998317971535169,
+              0.02641169480715346
+            ],
+            "log_mean_normalizer": 22.58605168351157,
+            "normalizer_relative_mcse": 0.009918901512728596,
+            "run_weight_ess": 7.994494253760493,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          },
+          "region": {
+            "mean": [
+              0.999521077549423,
+              0.0
+            ],
+            "mcse": [
+              0.00048025550050155666,
+              0.0
+            ]
+          },
+          "raw_float32_sampled": {
+            "mean": [
+              0.02411379459384286,
+              -1.9248652013028686,
+              1.1488535137662894,
+              -1.9007135687723902,
+              1.1823187406692526
+            ],
+            "mcse": [
+              0.02028789318523155,
+              0.06998317971535169,
+              0.02641169480715346,
+              0.06278227355902101,
+              0.026201860609378007
+            ],
+            "control_standardized_residual": 1.1885805181287308,
+            "control_known_expectation": null,
+            "control_expectation_qualification": "unknown for rounded F32 sampling program"
+          },
+          "precision_reweighted_float64": {
+            "mean": [
+              0.024113977557848672,
+              -1.9248653033969916,
+              1.1488532170016994,
+              -1.900713487615411,
+              1.1823186978228897
+            ],
+            "mcse": [
+              0.02028785516375614,
+              0.06998277018916717,
+              0.026411814801294585,
+              0.06278192993185756,
+              0.0262017580193839
+            ],
+            "control_standardized_residual": 1.1885917640484651,
+            "control_known_expectation": 0.0,
+            "control_expectation_qualification": "zero for intended continuous F64 posterior; numerically evaluated, not an exact rounded-program identity"
+          }
+        }
+      ]
+    },
+    "large": {
+      "configuration": {
+        "name": "large",
+        "particles": 1024,
+        "proposal": "fitted",
+        "seed_base": 2026103000
+      },
+      "seeds": [
+        2026103000,
+        2026103001,
+        2026103002,
+        2026103003,
+        2026103004,
+        2026103005,
+        2026103006,
+        2026103007
+      ],
+      "all_raw_precision_gates": true,
+      "original_comparison": {
+        "historical_boolean": true,
+        "status": "pass"
+      },
+      "total_recorded_inference_seconds": 3843.086230346118,
+      "median_recorded_inference_seconds": 473.64274506195216,
+      "observations": [
+        {
+          "observation": 58165,
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            10859.689004616677,
+            7524.392206965654
+          ],
+          "raw": {
+            "mean": [
+              5.678680582381288,
+              7.331446473056059
+            ],
+            "mcse": [
+              2.5446014138925994,
+              3.051524378188653
+            ],
+            "log_mean_normalizer": 4.542046441062755,
+            "normalizer_relative_mcse": 0.013087580446112976,
+            "run_weight_ess": 7.990419540239109,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          },
+          "region": {
+            "mean": [
+              1.0,
+              0.0
+            ],
+            "mcse": [
+              0.0,
+              0.0
+            ]
+          },
+          "raw_float32_sampled": {
+            "mean": [
+              -0.2770614957895475,
+              5.67868058238129,
+              7.331446473056058,
+              5.091119632875599,
+              7.953273840992514
+            ],
+            "mcse": [
+              1.0068032796504267,
+              2.5446014138925994,
+              3.051524378188653,
+              1.3899914709440737,
+              2.172985084465115
+            ],
+            "control_standardized_residual": -0.2751893059841306,
+            "control_known_expectation": null,
+            "control_expectation_qualification": "unknown for rounded F32 sampling program"
+          },
+          "precision_reweighted_float64": {
+            "mean": [
+              -0.27692005164942596,
+              5.678256560273963,
+              7.331570353073884,
+              5.090995569638536,
+              7.953080268608277
+            ],
+            "mcse": [
+              1.0067958631316893,
+              2.544621686497689,
+              3.051516372801561,
+              1.3900188811118785,
+              2.1730275695811843
+            ],
+            "control_standardized_residual": -0.2750508437609707,
+            "control_known_expectation": 0.0,
+            "control_expectation_qualification": "zero for intended continuous F64 posterior; numerically evaluated, not an exact rounded-program identity"
+          }
+        },
+        {
+          "observation": 0,
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            9742.193410955964,
+            15002.649402798637
+          ],
+          "raw": {
+            "mean": [
+              0.020627535784462858,
+              -6.175250302598572
+            ],
+            "mcse": [
+              0.5868008264726329,
+              0.32439043067099
+            ],
+            "log_mean_normalizer": 16.855042973863824,
+            "normalizer_relative_mcse": 0.01866461934253024,
+            "run_weight_ess": 7.980538848647406,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          },
+          "region": {
+            "mean": [
+              0.9981658205254872,
+              0.0014540979907160037
+            ],
+            "mcse": [
+              0.0007558197354058774,
+              0.0006947552525056062
+            ]
+          },
+          "raw_float32_sampled": {
+            "mean": [
+              -0.18981215368024054,
+              0.020627535784462858,
+              -6.17525030259857,
+              0.5967615061439926,
+              -6.141307717216141
+            ],
+            "mcse": [
+              0.1796861510797801,
+              0.5868008264726329,
+              0.32439043067099,
+              0.08742727039670617,
+              0.347429542636848
+            ],
+            "control_standardized_residual": -1.0563538288265997,
+            "control_known_expectation": null,
+            "control_expectation_qualification": "unknown for rounded F32 sampling program"
+          },
+          "precision_reweighted_float64": {
+            "mean": [
+              -0.1898037549971711,
+              0.020617168502886307,
+              -6.174836950982464,
+              0.5967256464662318,
+              -6.140895867469178
+            ],
+            "mcse": [
+              0.17967819953407038,
+              0.5867790395033312,
+              0.3243827387524967,
+              0.08742776865372998,
+              0.3474176544923877
+            ],
+            "control_standardized_residual": -1.0563538341844343,
+            "control_known_expectation": 0.0,
+            "control_expectation_qualification": "zero for intended continuous F64 posterior; numerically evaluated, not an exact rounded-program identity"
+          }
+        },
+        {
+          "observation": 1,
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            8341.639172370677,
+            3472.4300804704267
+          ],
+          "raw": {
+            "mean": [
+              -2.9599949140499113,
+              -3.8720361749660652
+            ],
+            "mcse": [
+              0.13347370118770463,
+              0.19598448610866057
+            ],
+            "log_mean_normalizer": 19.085913239374825,
+            "normalizer_relative_mcse": 0.010049589961884875,
+            "run_weight_ess": 7.99434831704219,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          },
+          "region": {
+            "mean": [
+              0.9992628067289931,
+              0.000616470119541452
+            ],
+            "mcse": [
+              0.00030526762015134983,
+              0.00025784840446955824
+            ]
+          },
+          "raw_float32_sampled": {
+            "mean": [
+              0.00852913778411862,
+              -2.959994914049911,
+              -3.8720361749660657,
+              -2.9752845387725277,
+              -3.8627188569433075
+            ],
+            "mcse": [
+              0.08960423782803015,
+              0.13347370118770463,
+              0.19598448610866057,
+              0.07149796224428633,
+              0.1433185107555289
+            ],
+            "control_standardized_residual": 0.09518676784559983,
+            "control_known_expectation": null,
+            "control_expectation_qualification": "unknown for rounded F32 sampling program"
+          },
+          "precision_reweighted_float64": {
+            "mean": [
+              0.008531196629700113,
+              -2.959988580849379,
+              -3.872025473012485,
+              -2.975281896329153,
+              -3.8627059058855986
+            ],
+            "mcse": [
+              0.08960424700789585,
+              0.13347299274720806,
+              0.19598212387119124,
+              0.07149730885581296,
+              0.14331666884436453
+            ],
+            "control_standardized_residual": 0.09520973519199766,
+            "control_known_expectation": 0.0,
+            "control_expectation_qualification": "zero for intended continuous F64 posterior; numerically evaluated, not an exact rounded-program identity"
+          }
+        },
+        {
+          "observation": 8,
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            11096.00814437212,
+            15492.1377054904
+          ],
+          "raw": {
+            "mean": [
+              -1.9051414102321744,
+              1.1747455188304414
+            ],
+            "mcse": [
+              0.02746639239833419,
+              0.016688063733679606
+            ],
+            "log_mean_normalizer": 22.58010351461805,
+            "normalizer_relative_mcse": 0.011101788526322553,
+            "run_weight_ess": 7.9931039658643215,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          },
+          "region": {
+            "mean": [
+              0.9988933564062951,
+              0.0
+            ],
+            "mcse": [
+              0.0003393674715232733,
+              0.0
+            ]
+          },
+          "raw_float32_sampled": {
+            "mean": [
+              0.014536466122989101,
+              -1.9051414102321742,
+              1.1747455188304414,
+              -1.8905821343484916,
+              1.194919288465904
+            ],
+            "mcse": [
+              0.011378685585701076,
+              0.02746639239833419,
+              0.016688063733679606,
+              0.025921940974398483,
+              0.012050040703528926
+            ],
+            "control_standardized_residual": 1.2775171625496202,
+            "control_known_expectation": null,
+            "control_expectation_qualification": "unknown for rounded F32 sampling program"
+          },
+          "precision_reweighted_float64": {
+            "mean": [
+              0.01453657913881543,
+              -1.9051416321568513,
+              1.1747455637671567,
+              -1.8905822430800052,
+              1.1949194902464657
+            ],
+            "mcse": [
+              0.011378685932916981,
+              0.02746626981102986,
+              0.016688023898526964,
+              0.02592175998599762,
+              0.012050095585846174
+            ],
+            "control_standardized_residual": 1.2775270558055476,
+            "control_known_expectation": 0.0,
+            "control_expectation_qualification": "zero for intended continuous F64 posterior; numerically evaluated, not an exact rounded-program identity"
+          }
+        }
+      ]
+    },
+    "broad": {
+      "configuration": {
+        "name": "broad",
+        "particles": 1024,
+        "proposal": "student_t",
+        "df": 5,
+        "seed_base": 2026103100
+      },
+      "seeds": [
+        2026103100,
+        2026103101,
+        2026103102,
+        2026103103,
+        2026103104,
+        2026103105,
+        2026103106,
+        2026103107
+      ],
+      "all_raw_precision_gates": true,
+      "original_comparison": {
+        "historical_boolean": false,
+        "status": "not_evaluated_no_comparator"
+      },
+      "total_recorded_inference_seconds": 3717.6364423010964,
+      "median_recorded_inference_seconds": 465.9923213205184,
+      "observations": [
+        {
+          "observation": 58165,
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            9761.614002649698,
+            24891.201211134183
+          ],
+          "raw": {
+            "mean": [
+              3.0096642051592646,
+              9.279259322520947
+            ],
+            "mcse": [
+              2.675733952130015,
+              1.664986989013993
+            ],
+            "log_mean_normalizer": 4.543823764505198,
+            "normalizer_relative_mcse": 0.07787739272004153,
+            "run_weight_ess": 7.674197927606866,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          },
+          "region": {
+            "mean": [
+              0.9998607669847743,
+              0.0
+            ],
+            "mcse": [
+              0.00013683810229153401,
+              0.0
+            ]
+          },
+          "raw_float32_sampled": {
+            "mean": [
+              0.7655090442158871,
+              3.0096642051592646,
+              9.279259322520947,
+              4.633069938940235,
+              7.561176942507016
+            ],
+            "mcse": [
+              0.8289603052929869,
+              2.675733952130015,
+              1.664986989013993,
+              1.1974806512871772,
+              2.003630235680667
+            ],
+            "control_standardized_residual": 0.9234568161201956,
+            "control_known_expectation": null,
+            "control_expectation_qualification": "unknown for rounded F32 sampling program"
+          },
+          "precision_reweighted_float64": {
+            "mean": [
+              0.7656746395956231,
+              3.009275390903207,
+              9.279589832691006,
+              4.633032300795001,
+              7.561135796056849
+            ],
+            "mcse": [
+              0.828923398979377,
+              2.675616157553203,
+              1.6650603475907193,
+              1.1974762548864653,
+              2.0036188505231163
+            ],
+            "control_standardized_residual": 0.9236977029944748,
+            "control_known_expectation": 0.0,
+            "control_expectation_qualification": "zero for intended continuous F64 posterior; numerically evaluated, not an exact rounded-program identity"
+          }
+        },
+        {
+          "observation": 0,
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            4283.740267769921,
+            7754.895177591909
+          ],
+          "raw": {
+            "mean": [
+              1.4633036793358727,
+              -5.170575211265114
+            ],
+            "mcse": [
+              0.8721314892134375,
+              0.4462138533462769
+            ],
+            "log_mean_normalizer": 16.875588838866868,
+            "normalizer_relative_mcse": 0.038014119680678665,
+            "run_weight_ess": 7.919886286787313,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          },
+          "region": {
+            "mean": [
+              0.997433807851184,
+              0.0015969188298885803
+            ],
+            "mcse": [
+              0.0008883183519641591,
+              0.000666477659653528
+            ]
+          },
+          "raw_float32_sampled": {
+            "mean": [
+              0.3138291518715395,
+              1.4633036793358727,
+              -5.170575211265114,
+              0.5107427828039033,
+              -5.226694761970178
+            ],
+            "mcse": [
+              0.26319977797691496,
+              0.8721314892134375,
+              0.4462138533462769,
+              0.1099358298487984,
+              0.4575589022902738
+            ],
+            "control_standardized_residual": 1.1923610053313387,
+            "control_known_expectation": null,
+            "control_expectation_qualification": "unknown for rounded F32 sampling program"
+          },
+          "precision_reweighted_float64": {
+            "mean": [
+              0.31383256360481815,
+              1.4632842615937727,
+              -5.170113077331999,
+              0.5107130094791829,
+              -5.226233238129963
+            ],
+            "mcse": [
+              0.2632068951474474,
+              0.872154589278701,
+              0.4462552218007283,
+              0.10993453176477207,
+              0.4576036477862735
+            ],
+            "control_standardized_residual": 1.1923417258085525,
+            "control_known_expectation": 0.0,
+            "control_expectation_qualification": "zero for intended continuous F64 posterior; numerically evaluated, not an exact rounded-program identity"
+          }
+        },
+        {
+          "observation": 1,
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            5577.699341531953,
+            5206.665692944687
+          ],
+          "raw": {
+            "mean": [
+              -2.8751662323326066,
+              -3.85752358388533
+            ],
+            "mcse": [
+              0.16334242690600972,
+              0.1590703851465004
+            ],
+            "log_mean_normalizer": 19.096758276244767,
+            "normalizer_relative_mcse": 0.02495254776380144,
+            "run_weight_ess": 7.965284046436992,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          },
+          "region": {
+            "mean": [
+              0.9987979118295094,
+              0.0007273341243113865
+            ],
+            "mcse": [
+              0.00045404636428591,
+              0.0002973221159772637
+            ]
+          },
+          "raw_float32_sampled": {
+            "mean": [
+              0.05361282102052307,
+              -2.8751662323326066,
+              -3.85752358388533,
+              -2.9712744128395494,
+              -3.7989563856304995
+            ],
+            "mcse": [
+              0.04266806322454273,
+              0.16334242690600972,
+              0.1590703851465004,
+              0.10962264435557639,
+              0.17184743865278795
+            ],
+            "control_standardized_residual": 1.2565093648235923,
+            "control_known_expectation": null,
+            "control_expectation_qualification": "unknown for rounded F32 sampling program"
+          },
+          "precision_reweighted_float64": {
+            "mean": [
+              0.05361334854880738,
+              -2.8751629664526868,
+              -3.857517838661985,
+              -2.9712720926249117,
+              -3.798950064129821
+            ],
+            "mcse": [
+              0.04266739237425024,
+              0.16334170667160652,
+              0.15907363738055544,
+              0.10962382783621971,
+              0.1718493404234712
+            ],
+            "control_standardized_residual": 1.2565414843856972,
+            "control_known_expectation": 0.0,
+            "control_expectation_qualification": "zero for intended continuous F64 posterior; numerically evaluated, not an exact rounded-program identity"
+          }
+        },
+        {
+          "observation": 8,
+          "precision_gate": true,
+          "score_effective_count_from_replicates": [
+            14708.219342350096,
+            12978.872401769662
+          ],
+          "raw": {
+            "mean": [
+              -1.896675917757744,
+              1.185275051377451
+            ],
+            "mcse": [
+              0.02376169640361,
+              0.01807319433368973
+            ],
+            "log_mean_normalizer": 22.61219978151056,
+            "normalizer_relative_mcse": 0.014644466112122764,
+            "run_weight_ess": 7.988008220619877,
+            "independent_populations": 8,
+            "extinct_populations": 0
+          },
+          "region": {
+            "mean": [
+              0.9994054797715926,
+              0.0
+            ],
+            "mcse": [
+              0.00025124696924352463,
+              0.0
+            ]
+          },
+          "raw_float32_sampled": {
+            "mean": [
+              0.011788411904176961,
+              -1.8966759177577437,
+              1.185275051377451,
+              -1.884869008176608,
+              1.2016350596566796
+            ],
+            "mcse": [
+              0.009138446052275082,
+              0.02376169640361,
+              0.01807319433368973,
+              0.028309429920269916,
+              0.014314070874955473
+            ],
+            "control_standardized_residual": 1.289979919643138,
+            "control_known_expectation": null,
+            "control_expectation_qualification": "unknown for rounded F32 sampling program"
+          },
+          "precision_reweighted_float64": {
+            "mean": [
+              0.011788342204934698,
+              -1.896675887650743,
+              1.1852753069243263,
+              -1.8848690478782162,
+              1.2016352184746486
+            ],
+            "mcse": [
+              0.009138463382111628,
+              0.02376162853912297,
+              0.018073192344810945,
+              0.02830938014247889,
+              0.014314066120121169
+            ],
+            "control_standardized_residual": 1.2899698463540554,
+            "control_known_expectation": 0.0,
+            "control_expectation_qualification": "zero for intended continuous F64 posterior; numerically evaluated, not an exact rounded-program identity"
+          }
+        }
+      ]
+    }
+  },
+  "comparisons": {
+    "small_minus_large": {
+      "all_raw_gates": true,
+      "all_corrected_phase_gates": true,
+      "observations": [
+        {
+          "observation": 58165,
+          "raw": {
+            "score": {
+              "difference": [
+                -4.8282440006889615,
+                12.915047045617005
+              ],
+              "combined_mcse": [
+                6.160717916048645,
+                7.8051150476127145
+              ],
+              "signed_standardized_difference": [
+                -0.7837145064070221,
+                1.6546901572664483
+              ],
+              "pass_all": true
+            },
+            "region": {
+              "difference": [
+                0.0,
+                0.0
+              ],
+              "combined_mcse": [
+                0.0,
+                0.0
+              ],
+              "signed_standardized_difference": [
+                0.0,
+                0.0
+              ],
+              "pass_all": true
+            },
+            "normalizer": {
+              "difference": [
+                -0.006087943182522038
+              ],
+              "combined_mcse": [
+                0.043391424128436155
+              ],
+              "signed_standardized_difference": [
+                -0.1403029124949223
+              ],
+              "pass_all": true
+            }
+          },
+          "raw_float32_sampled": {
+            "difference": [
+              2.9390451264557926,
+              4.694771416344389
+            ],
+            "combined_mcse": [
+              3.8277710596150913,
+              6.136813473742151
+            ],
+            "signed_standardized_difference": [
+              0.7678215548114139,
+              0.765017779411434
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "precision_reweighted_float64": {
+            "difference": [
+              2.9392553131918637,
+              4.695104468876542
+            ],
+            "combined_mcse": [
+              3.8278039572328413,
+              6.136912565882841
+            ],
+            "signed_standardized_difference": [
+              0.7678698663859164,
+              0.7650596971151594
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        },
+        {
+          "observation": 0,
+          "raw": {
+            "score": {
+              "difference": [
+                1.1796200328492086,
+                1.2378170704556268
+              ],
+              "combined_mcse": [
+                1.7272663145833191,
+                0.6192370872083017
+              ],
+              "signed_standardized_difference": [
+                0.6829404492461122,
+                1.9989388491507525
+              ],
+              "pass_all": true
+            },
+            "region": {
+              "difference": [
+                0.001302072462789572,
+                -0.0009219909789928421
+              ],
+              "combined_mcse": [
+                0.0009204733146273684,
+                0.0008710295697599557
+              ],
+              "signed_standardized_difference": [
+                1.4145683987771929,
+                -1.0585070943652701
+              ],
+              "pass_all": true
+            },
+            "normalizer": {
+              "difference": [
+                -0.024160498050104118
+              ],
+              "combined_mcse": [
+                0.02806795294836661
+              ],
+              "signed_standardized_difference": [
+                -0.860785896803711
+              ],
+              "pass_all": true
+            }
+          },
+          "raw_float32_sampled": {
+            "difference": [
+              -0.1608760827233814,
+              1.1588425502945512
+            ],
+            "combined_mcse": [
+              0.15230181961848333,
+              0.600652336209026
+            ],
+            "signed_standardized_difference": [
+              -1.0562978375857663,
+              1.9293066561740233
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "precision_reweighted_float64": {
+            "difference": [
+              -0.160879744877779,
+              1.1589571300706902
+            ],
+            "combined_mcse": [
+              0.15229827040777766,
+              0.6007450433883482
+            ],
+            "signed_standardized_difference": [
+              -1.0563464998454972,
+              1.9291996543723273
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        },
+        {
+          "observation": 1,
+          "raw": {
+            "score": {
+              "difference": [
+                -0.26377153890560123,
+                0.6128012142758839
+              ],
+              "combined_mcse": [
+                0.3180953287797419,
+                0.29070040605069025
+              ],
+              "signed_standardized_difference": [
+                -0.829221667345653,
+                2.1080163684705275
+              ],
+              "pass_all": true
+            },
+            "region": {
+              "difference": [
+                0.00029387349811405006,
+                -0.00017315034664862843
+              ],
+              "combined_mcse": [
+                0.0005431007383258486,
+                0.0005179342542685415
+              ],
+              "signed_standardized_difference": [
+                0.541103109194693,
+                -0.33430950979128027
+              ],
+              "pass_all": true
+            },
+            "normalizer": {
+              "difference": [
+                0.0056453935196065785
+              ],
+              "combined_mcse": [
+                0.021009217608793134
+              ],
+              "signed_standardized_difference": [
+                0.2687103168108351
+              ],
+              "pass_all": true
+            }
+          },
+          "raw_float32_sampled": {
+            "difference": [
+              0.010560788782346453,
+              0.44562631055113266
+            ],
+            "combined_mcse": [
+              0.23618361220783132,
+              0.27113769794424974
+            ],
+            "signed_standardized_difference": [
+              0.04471431647447841,
+              1.6435424285514166
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "precision_reweighted_float64": {
+            "difference": [
+              0.010570561976769532,
+              0.44562773283609003
+            ],
+            "combined_mcse": [
+              0.23618067133135617,
+              0.27113176683490803
+            ],
+            "signed_standardized_difference": [
+              0.04475625341050569,
+              1.6435836273933644
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        },
+        {
+          "observation": 8,
+          "raw": {
+            "score": {
+              "difference": [
+                -0.019723791070694663,
+                -0.025892005064152013
+              ],
+              "combined_mcse": [
+                0.07518010477812918,
+                0.031242104502827103
+              ],
+              "signed_standardized_difference": [
+                -0.2623538651469472,
+                -0.828753551535206
+              ],
+              "pass_all": true
+            },
+            "region": {
+              "difference": [
+                0.0006277211431279239,
+                0.0
+              ],
+              "combined_mcse": [
+                0.0005880609037252013,
+                0.0
+              ],
+              "signed_standardized_difference": [
+                1.067442401206212,
+                0.0
+              ],
+              "pass_all": true
+            },
+            "normalizer": {
+              "difference": [
+                0.005930513559908701
+              ],
+              "combined_mcse": [
+                0.014838355110387617
+              ],
+              "signed_standardized_difference": [
+                0.3996745943731347
+              ],
+              "pass_all": true
+            }
+          },
+          "raw_float32_sampled": {
+            "difference": [
+              -0.010131434423898522,
+              -0.012600547796651318
+            ],
+            "combined_mcse": [
+              0.06792319851950399,
+              0.028839919908869003
+            ],
+            "signed_standardized_difference": [
+              -0.1491601491792131,
+              -0.43691341156520797
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "precision_reweighted_float64": {
+            "difference": [
+              -0.010131244535405814,
+              -0.012600792423576035
+            ],
+            "combined_mcse": [
+              0.0679228118288719,
+              0.02883984963439265
+            ],
+            "signed_standardized_difference": [
+              -0.1491582027100258,
+              -0.4369229584522208
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        }
+      ]
+    },
+    "small_minus_broad": {
+      "all_raw_gates": true,
+      "all_corrected_phase_gates": true,
+      "observations": [
+        {
+          "observation": 58165,
+          "raw": {
+            "score": {
+              "difference": [
+                -2.1592276234669385,
+                10.967234196152116
+              ],
+              "combined_mcse": [
+                6.216027756382677,
+                7.374293291521341
+              ],
+              "signed_standardized_difference": [
+                -0.3473645402001017,
+                1.4872251160340735
+              ],
+              "pass_all": true
+            },
+            "region": {
+              "difference": [
+                0.00013923301522567044,
+                0.0
+              ],
+              "combined_mcse": [
+                0.00013683810229153401,
+                0.0
+              ],
+              "signed_standardized_difference": [
+                1.0175017987974875,
+                0.0
+              ],
+              "pass_all": true
+            },
+            "normalizer": {
+              "difference": [
+                -0.00785287748667296
+              ],
+              "combined_mcse": [
+                0.08814956684518464
+              ],
+              "signed_standardized_difference": [
+                -0.08908583181656259
+              ],
+              "pass_all": true
+            }
+          },
+          "raw_float32_sampled": {
+            "difference": [
+              3.397094820391157,
+              5.086868314829887
+            ],
+            "combined_mcse": [
+              3.762142329276862,
+              6.0789102276254345
+            ],
+            "signed_standardized_difference": [
+              0.902968182238902,
+              0.8368059609949098
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "precision_reweighted_float64": {
+            "difference": [
+              3.397218582035398,
+              5.08704894142797
+            ],
+            "combined_mcse": [
+              3.762164274214617,
+              6.07899132433189
+            ],
+            "signed_standardized_difference": [
+              0.9029958115650322,
+              0.8368245108471282
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        },
+        {
+          "observation": 0,
+          "raw": {
+            "score": {
+              "difference": [
+                -0.26305611070220136,
+                0.23314197912216894
+              ],
+              "combined_mcse": [
+                1.8438348749340123,
+                0.6908923371853564
+              ],
+              "signed_standardized_difference": [
+                -0.14266793316381743,
+                0.3374505209769324
+              ],
+              "pass_all": true
+            },
+            "region": {
+              "difference": [
+                0.0020340851370928004,
+                -0.0010648118181654188
+              ],
+              "combined_mcse": [
+                0.0010320451273798078,
+                0.0008486460518551471
+              ],
+              "signed_standardized_difference": [
+                1.970926544905073,
+                -1.2547184021391857
+              ],
+              "pass_all": true
+            },
+            "normalizer": {
+              "difference": [
+                -0.044005401277034784
+              ],
+              "combined_mcse": [
+                0.043206756502696245
+              ],
+              "signed_standardized_difference": [
+                -1.0184842566066883
+              ],
+              "pass_all": true
+            }
+          },
+          "raw_float32_sampled": {
+            "difference": [
+              -0.07485735938329208,
+              0.244229595048588
+            ],
+            "combined_mcse": [
+              0.1662474160239076,
+              0.6703999485095384
+            ],
+            "signed_standardized_difference": [
+              -0.4502768294006268,
+              0.36430431653756773
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "precision_reweighted_float64": {
+            "difference": [
+              -0.07486710789073003,
+              0.24429450073147585
+            ],
+            "combined_mcse": [
+              0.16624304410040774,
+              0.6705197081145193
+            ],
+            "signed_standardized_difference": [
+              -0.450347311046059,
+              0.3643360482549043
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        },
+        {
+          "observation": 1,
+          "raw": {
+            "score": {
+              "difference": [
+                -0.34860022062290597,
+                0.5982886231951485
+              ],
+              "combined_mcse": [
+                0.3317380860110768,
+                0.2672081486658227
+              ],
+              "signed_standardized_difference": [
+                -1.0508296614795871,
+                2.239035845959112
+              ],
+              "pass_all": true
+            },
+            "region": {
+              "difference": [
+                0.0007587683975978088,
+                -0.000284014351418563
+              ],
+              "combined_mcse": [
+                0.0006386925653070234,
+                0.0005386747930861539
+              ],
+              "signed_standardized_difference": [
+                1.1880025521090327,
+                -0.5272464111257174
+              ],
+              "pass_all": true
+            },
+            "normalizer": {
+              "difference": [
+                -0.005170235968995018
+              ],
+              "combined_mcse": [
+                0.030994148473583432
+              ],
+              "signed_standardized_difference": [
+                -0.1668132929479141
+              ],
+              "pass_all": true
+            }
+          },
+          "raw_float32_sampled": {
+            "difference": [
+              0.006550662849368116,
+              0.3818638392383247
+            ],
+            "combined_mcse": [
+              0.2503754465317297,
+              0.2872403138364256
+            ],
+            "signed_standardized_difference": [
+              0.02616335962695112,
+              1.3294228589925028
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "precision_reweighted_float64": {
+            "difference": [
+              0.006560758272528222,
+              0.3818718910803125
+            ],
+            "combined_mcse": [
+              0.2503733771118082,
+              0.28723677205809806
+            ],
+            "signed_standardized_difference": [
+              0.026203897348073123,
+              1.329467283538032
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        },
+        {
+          "observation": 8,
+          "raw": {
+            "score": {
+              "difference": [
+                -0.028189283545125177,
+                -0.036421537611161625
+              ],
+              "combined_mcse": [
+                0.0739071286077909,
+                0.03200340569391845
+              ],
+              "signed_standardized_difference": [
+                -0.3814149470576727,
+                -1.138051929832041
+              ],
+              "pass_all": true
+            },
+            "region": {
+              "difference": [
+                0.00011559777783043401,
+                0.0
+              ],
+              "combined_mcse": [
+                0.000542005890480959,
+                0.0
+              ],
+              "signed_standardized_difference": [
+                0.2132777149854519,
+                0.0
+              ],
+              "pass_all": true
+            },
+            "normalizer": {
+              "difference": [
+                -0.02580919678384186
+              ],
+              "combined_mcse": [
+                0.017545143914455726
+              ],
+              "signed_standardized_difference": [
+                -1.4710165336733
+              ],
+              "pass_all": true
+            }
+          },
+          "raw_float32_sampled": {
+            "difference": [
+              -0.01584456059578221,
+              -0.019316318987427028
+            ],
+            "combined_mcse": [
+              0.06886971537367076,
+              0.029856827098781333
+            ],
+            "signed_standardized_difference": [
+              -0.2300657191599149,
+              -0.6469648942775792
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "precision_reweighted_float64": {
+            "difference": [
+              -0.01584443973719485,
+              -0.01931652065175893
+            ],
+            "combined_mcse": [
+              0.06886938165847034,
+              0.029856734787942724
+            ],
+            "signed_standardized_difference": [
+              -0.23006507907634333,
+              -0.646973648959084
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        }
+      ]
+    },
+    "large_minus_broad": {
+      "all_raw_gates": true,
+      "all_corrected_phase_gates": true,
+      "observations": [
+        {
+          "observation": 58165,
+          "raw": {
+            "score": {
+              "difference": [
+                2.6690163772220235,
+                -1.9478128494648876
+              ],
+              "combined_mcse": [
+                3.6924989557433223,
+                3.4762023393734616
+              ],
+              "signed_standardized_difference": [
+                0.7228211596568304,
+                -0.5603278115899187
+              ],
+              "pass_all": true
+            },
+            "region": {
+              "difference": [
+                0.00013923301522567044,
+                0.0
+              ],
+              "combined_mcse": [
+                0.00013683810229153401,
+                0.0
+              ],
+              "signed_standardized_difference": [
+                1.0175017987974875,
+                0.0
+              ],
+              "pass_all": true
+            },
+            "normalizer": {
+              "difference": [
+                -0.0017757449384429025
+              ],
+              "combined_mcse": [
+                0.07896559556423355
+              ],
+              "signed_standardized_difference": [
+                -0.0224875773525756
+              ],
+              "pass_all": true
+            }
+          },
+          "raw_float32_sampled": {
+            "difference": [
+              0.4580496939353642,
+              0.392096898485498
+            ],
+            "combined_mcse": [
+              1.8346760475638286,
+              2.955739890220658
+            ],
+            "signed_standardized_difference": [
+              0.2496624374333467,
+              0.1326560905385441
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "precision_reweighted_float64": {
+            "difference": [
+              0.45796326884353444,
+              0.39194447255142784
+            ],
+            "combined_mcse": [
+              1.834693944739676,
+              2.955763406690644
+            ],
+            "signed_standardized_difference": [
+              0.24961289601275416,
+              0.13260346605016668
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        },
+        {
+          "observation": 0,
+          "raw": {
+            "score": {
+              "difference": [
+                -1.44267614355141,
+                -1.004675091333458
+              ],
+              "combined_mcse": [
+                1.0511653268761358,
+                0.5516665246587317
+              ],
+              "signed_standardized_difference": [
+                -1.3724540818319892,
+                -1.821163776350148
+              ],
+              "pass_all": true
+            },
+            "region": {
+              "difference": [
+                0.0007320126743032285,
+                -0.00014282083917257658
+              ],
+              "combined_mcse": [
+                0.0011663502762315145,
+                0.0009627446866648356
+              ],
+              "signed_standardized_difference": [
+                0.6276096377053781,
+                -0.148347574544753
+              ],
+              "pass_all": true
+            },
+            "normalizer": {
+              "difference": [
+                -0.020336236837386723
+              ],
+              "combined_mcse": [
+                0.04218312925007323
+              ],
+              "signed_standardized_difference": [
+                -0.4820940788159147
+              ],
+              "pass_all": true
+            }
+          },
+          "raw_float32_sampled": {
+            "difference": [
+              0.08601872334008931,
+              -0.9146129552459632
+            ],
+            "combined_mcse": [
+              0.14046143347397083,
+              0.5745149573004429
+            ],
+            "signed_standardized_difference": [
+              0.6124010072560565,
+              -1.591974140314098
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "precision_reweighted_float64": {
+            "difference": [
+              0.08601263698704897,
+              -0.9146626293392144
+            ],
+            "combined_mcse": [
+              0.14046072762914838,
+              0.5745434057756611
+            ],
+            "signed_standardized_difference": [
+              0.6123607533498185,
+              -1.5919817722115808
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        },
+        {
+          "observation": 1,
+          "raw": {
+            "score": {
+              "difference": [
+                -0.08482868171730473,
+                -0.014512591080735326
+              ],
+              "combined_mcse": [
+                0.21094069625439704,
+                0.2524149484993544
+              ],
+              "signed_standardized_difference": [
+                -0.40214469385746365,
+                -0.057494974711342996
+              ],
+              "pass_all": true
+            },
+            "region": {
+              "difference": [
+                0.00046489489948375873,
+                -0.00011086400476993457
+              ],
+              "combined_mcse": [
+                0.0005471255987742871,
+                0.0003935558922652466
+              ],
+              "signed_standardized_difference": [
+                0.8497041639529426,
+                -0.28169824654845993
+              ],
+              "pass_all": true
+            },
+            "normalizer": {
+              "difference": [
+                -0.01078644147196739
+              ],
+              "combined_mcse": [
+                0.026859949951620464
+              ],
+              "signed_standardized_difference": [
+                -0.40158084774527447
+              ],
+              "pass_all": true
+            }
+          },
+          "raw_float32_sampled": {
+            "difference": [
+              -0.004010125932978337,
+              -0.06376247131280799
+            ],
+            "combined_mcse": [
+              0.1308781217797481,
+              0.2237671506202516
+            ],
+            "signed_standardized_difference": [
+              -0.030640154965907048,
+              -0.2849500971705062
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "precision_reweighted_float64": {
+            "difference": [
+              -0.00400980370424131,
+              -0.06375584175577753
+            ],
+            "combined_mcse": [
+              0.13087875611835809,
+              0.2237674314385973
+            ],
+            "signed_standardized_difference": [
+              -0.030637544420235086,
+              -0.2849201125735422
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        },
+        {
+          "observation": 8,
+          "raw": {
+            "score": {
+              "difference": [
+                -0.008465492474430514,
+                -0.010529532547009612
+              ],
+              "combined_mcse": [
+                0.03631832770594762,
+                0.024599427322656662
+              ],
+              "signed_standardized_difference": [
+                -0.23309147224430643,
+                -0.4280397429135133
+              ],
+              "pass_all": true
+            },
+            "region": {
+              "difference": [
+                -0.0005121233652974899,
+                0.0
+              ],
+              "combined_mcse": [
+                0.0004222503052481506,
+                0.0
+              ],
+              "signed_standardized_difference": [
+                -1.2128430907741374,
+                0.0
+              ],
+              "pass_all": true
+            },
+            "normalizer": {
+              "difference": [
+                -0.03158664855225368
+              ],
+              "combined_mcse": [
+                0.018167194995144388
+              ],
+              "signed_standardized_difference": [
+                -1.7386640348549107
+              ],
+              "pass_all": true
+            }
+          },
+          "raw_float32_sampled": {
+            "difference": [
+              -0.005713126171883687,
+              -0.00671577119077571
+            ],
+            "combined_mcse": [
+              0.03838451310477798,
+              0.018710855297659496
+            ],
+            "signed_standardized_difference": [
+              -0.14883935498383424,
+              -0.35892379498096877
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          },
+          "precision_reweighted_float64": {
+            "difference": [
+              -0.005713195201789034,
+              -0.006715728228182893
+            ],
+            "combined_mcse": [
+              0.038384354167069756,
+              0.018710887005143027
+            ],
+            "signed_standardized_difference": [
+              -0.1488417696679766,
+              -0.35892089062036203
+            ],
+            "nonzero_with_zero_estimated_mcse": [
+              false,
+              false
+            ],
+            "component_pass": [
+              true,
+              true
+            ],
+            "pass_all": true
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,5 +1,50 @@
 # Work log
 
+## 2026-11-08 — Consolidate both GalSBI models and latest continuous inference on dev
+
+Owner requests consolidation before worktree cleanup. Preserve the previous
+uncommitted dev tree as ccdb4de2 and recovery ref
+`refs/codex-snapshots/pre-galsbi-integration-20261108`. Integrate the retained
+inference modules, scripts, tests and evidence from model-symmetry986a821
+(shared simplified sampler ancestry with sampler-recipe4b211ca); preserve
+source worktrees and their uncommitted experiments. The path inventory records
+incoming replacements and source identity. Existing historical preset pins
+and current fiducial registry are kept.
+
+Add [current pipeline guide](CURRENT_INFERENCE.md#entry-points). The actual
+latest execution used a frozen cache-off sampler; retain its full-proposal
+likelihood numerical body as `scripts/run_galsbi_inference.py`, adding explicit
+model selection and reference artifact identity gates. Preserve historical
+setup/recovery scripts separately. No inference, scientific rerun, normalization
+or broad held-array resumption. Previous paired inference failure is recorded
+without attributing it to either new GalSBI model.
+
+Vendor the exact like-1.0-galsbi9bc10a65 and multistage43673e5d checkpoints,
+shared GalSBI C8ad5c05d2 and emulatorcd32781d plus metadata under models/.
+Register `galsbi-multistage` as comparison, keeping the current fiducial unchanged.
+Add permanent `sbsi/factorized_flow.py` and standard-loader format dispatch.
+Cartesian wrapper removal preserves original state/density/draw arithmetic;
+reference-score-disabled inputs are zero, enabled scores must be supplied.
+Do not substitute the observed-photometry response. Current nine-summary
+inference explicitly rejects multistage until an expanded adapter is validated.
+The fiducial still requires fresh model-matched preparation/normalization.
+
+Validation: source/dependency inspection and original artifact SHA256 replay;
+public validators pass for both repository-local model sets. First full-suite
+job17834750 found a missing incoming held-out test fixture during collection;
+restore its original branch evidence/dependencies. Replacement17834752 passes
+758 tests,4 skips in87.86s (one existing NumPy deprecation warning), including
+exact physical draws/Jacobians/density versus original research source for
+both real checkpoints, score-input rejection, sampling radial metadata and
+reference model-identity mismatch rejection. Clean-export validation17834777 also passed all758 tests but failed the direct
+CLI smoke; isolated targeted17834797 then exposed an inherited helper import
+that the full suite masked by test order. Fix explicit file/module entry-point
+imports in the new driver and summary helper. Final clean-tree17834811 completes
+0:0: both local model validators, isolated10 tests (1 skip), both CLI forms,
+then758 tests (4 skips) pass in71.67s. All runtime/test/config/model paths
+still match the tested Git tree. Receipts and failed-attempt logs are retained.
+No weights or old results changed.
+
 ## 2026-11-08 — Retain control_nine as like-1.0-galsbi fiducial
 
 Owner names the discussed factorized NLL-plus-response control as the current

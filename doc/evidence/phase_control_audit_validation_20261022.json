@@ -1,0 +1,38 @@
+{
+  "source": "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/phase-control-audit-20261022",
+  "sha256": {
+    "sbsi/phase_control.py": "d26e2bbb46fb94dbe8cfb3f74f8704863fce2942765aa481ec09a91c7d084762",
+    "scripts/check_particle_phase_control.py": "43c9bc85a6da3fb229e9af51609efa1ace07236d66be583f861ac55b8eb7340e",
+    "scripts/fit_particle_phase_control.py": "25964afa96e80542752b6370b1008a1fed69cff1bf7a9beb93a3c9b7c2ca42ed",
+    "scripts/report_particle_phase_control.py": "01b943b7e3975a002f0bc7516d02d0f0ab673e18a9e76ee4d431bae17cb77625",
+    "tests/test_phase_control.py": "7e7c224b5324af4881f0f51981ec9ab792390a9d02b1bbdea2208cf13c245ca5"
+  },
+  "focused_job": 17421220,
+  "focused_result": "independent audit passed; 40 tests passed in10.59s",
+  "full_job": 17421249,
+  "full_result": "778 passed,4 skipped,1 existing NumPy deprecation warning in68.07s",
+  "state": "COMPLETED",
+  "exit_code": "0:0",
+  "elapsed_seconds": 78,
+  "source_hashes_verified_before_and_after": true,
+  "full_junit": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/phase_independent_audit_20261022/full_junit.xml",
+  "stdout": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/phase_independent_audit_20261022/full-17421249.out",
+  "skips": [
+    {
+      "test": "test_v35_detection_classifier_loads_as_equal_probability_ensemble",
+      "reason": "external V3.5-like detection checkpoints are not configured"
+    },
+    {
+      "test": "test_prepared_pairs_match_blendemu_catalogue_conversion",
+      "reason": "BlendEMU not on PYTHONPATH; skipping the cross-check against its converter"
+    },
+    {
+      "test": "test_disabled_default_replays_frozen_original_bitwise",
+      "reason": "set frozen pre-extension target path for independent bitwise replay"
+    },
+    {
+      "test": "test_v39_external_artifacts_load_and_predict_together",
+      "reason": "external V3.9-like artifact roots are not configured"
+    }
+  ]
+}

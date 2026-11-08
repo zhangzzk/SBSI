@@ -1,0 +1,50 @@
+{
+  "status": "passed",
+  "scope": "Frozen endpoint audit and future continuous-support correctness fix; no GPU or scientific outcome inspection",
+  "jobs": {
+    "production_support": 17421563,
+    "focused": 17421564,
+    "final": 17421627
+  },
+  "full_suite": {
+    "passed": 795,
+    "skipped": 3,
+    "seconds": 60.21
+  },
+  "focused_suite": {
+    "passed": 118,
+    "skipped": 1,
+    "seconds": 15.86
+  },
+  "known_warnings": [
+    "Existing NumPy scalar-array conversion deprecation in test_scene_exchange.py:58"
+  ],
+  "failed_harness_jobs": [
+    17421485,
+    17421519
+  ],
+  "failed_harness_reason": "Prior harness imported PyCosmo before torch, unlike production; import-order issue repaired without science changes",
+  "external_receipts": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/endpoint_audit_20261022/final_input.sha256": "44d546455e115f6099457c1af20edc5c344c024c1c424205fcee65a77b9ba094",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/endpoint_audit_20261022/full_junit.xml": "a12c7a5f45900865e413abaac435b743edd064f263154198a324b39562c1abcb",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/endpoint_audit_20261022/final-17421627.out": "e7585d5abd12d3a0300fcb808879bda7c7f3e941d05c55d246bacfc79b5e28e4",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/endpoint_audit_20261022/focused_junit.xml": "1acbb41b8a415d2336b789b47ddc6a64394f27b0e9e66030754668f8bd87549f",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/endpoint_audit_20261022/tests-17421564.out": "05a977f675a6085421dc1741b52258bc419daa4c4f1722804f19c278522bf454",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/endpoint_audit_20261022/support-17421485.out": "8a6dc7314406d53850481c561faebcc3a61f09699dd33e16f0d3a28068d7e5fb",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/endpoint_audit_20261022/support-17421519.out": "ba8338e1ad5ea32e910606e3d0933a4cdf01ac354d51fdb91a0545b66c0442a9",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/endpoint_audit_20261022/support-17421563.out": "0f86ea118d707eb2f5bab36e078ebc7721e276c71f9dd20581d27b6de3f1e459",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/endpoint_audit_20261022/run_support.sh": "3b71bf18935bc2a4f723435399c5a88436afba5feec5a74ee29e46943f8c9f5f",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/endpoint_audit_20261022/run_tests.sh": "b67c77ae9e1c24240c0069a83e660de275bbbcdec923c463eb322cfd25f6053a",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/endpoint_audit_20261022/run_final.sh": "a636a7c3a481c82694d1042988a63663f2150a63849a05b7f439866e52630d46"
+  },
+  "input_sha256": {
+    "sbsi/scene_exchange.py": "c5102579e3dfd1cd3c3e9ae5a267cf8ac0df9a6a82d60417fd2772e56aebd5ad",
+    "sbsi/informed_environment.py": "ea8608d56a8d1b8a9f047b36a875d84ef158bd924bbbde25a09a4ea4aeaee2ad",
+    "tests/test_scene_exchange_support.py": "a9fb0ba22cec7b1ba24ce9deadebc92b7b57db0cbe3ba926c2c7a6e7b4b64c05",
+    "tests/test_informed_environment.py": "be5a052aecae71b0ad5748acbc319d13d15354ad29c6412de4bc3ab9298a7b81",
+    "doc/evidence/audit_endpoint_identity_20261022.py": "5a0eee5b3d4420f64d4003b9278072f6e65c8424c9e58464576a6ff64358b747",
+    "doc/evidence/audit_native_exchange_support_20261022.py": "eee47b31ca71df13c680c5b17f3358d700f0b5aeed6ffca58fd36766ae481e5d",
+    "doc/evidence/check_exchange_support_fix_20261022.py": "af7b59f96e2b722a4f6115a9fc977978084c5cfffcdcf756ebae9e0ab703fc74"
+  },
+  "no_scientific_impact_or_convergence_claim": true
+}

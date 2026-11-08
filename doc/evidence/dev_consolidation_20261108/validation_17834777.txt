@@ -1,0 +1,27 @@
+like-1.0-galsbi: model artifact paths and pinned hashes OK
+galsbi-multistage: model artifact paths and pinned hashes OK
+........................................s.....s......................... [  9%]
+........................................................................ [ 18%]
+........................................................................ [ 28%]
+........................................................................ [ 37%]
+........................................................................ [ 47%]
+....................................................................s... [ 56%]
+..........................s............................................. [ 66%]
+........................................................................ [ 75%]
+........................................................................ [ 85%]
+........................................................................ [ 94%]
+..........................................                               [100%]
+=============================== warnings summary ===============================
+tests/test_scene_exchange.py::test_swap_marginal_type_and_coordinate_measure_detailed_balance
+  /tmp/sbsi-consolidation-17834777.7a9e/tests/test_scene_exchange.py:58: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+    assert abs(float(old_j-new_j)) > .1  # This test needs a nontrivial Jacobian.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+---------------------------- pytest-regtest report -----------------------------
+total number of failed regression tests: 0
+total number of failed snapshot tests  : 0
+758 passed, 4 skipped, 1 warning in 79.97s (0:01:19)
+Traceback (most recent call last):
+  File "/tmp/sbsi-consolidation-17834777.7a9e/scripts/run_galsbi_inference.py", line 23, in <module>
+    from scripts.check_galsbi_continuous_prior import build_prior, digest, save
+ModuleNotFoundError: No module named 'scripts.check_galsbi_continuous_prior'

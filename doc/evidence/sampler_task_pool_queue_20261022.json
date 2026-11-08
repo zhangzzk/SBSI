@@ -1,0 +1,9 @@
+{
+  "checked_utc": "2026-10-22T19:48:24.071247+00:00",
+  "job": "17449412",
+  "scheduler": "             JOBID                           NAME     STATE           START_TIME     NODELIST(REASON)\n          17449412      sampler-pool-exact-replay   PENDING  2026-10-24T21:40:58           (Priority)\n",
+  "reason": "Priority; required th-cl-nv02 is inter-only and all four GPUs allocated at check time",
+  "estimated_start_is_not_guaranteed": true,
+  "followup_job": "17449573",
+  "scientific_outcomes_read": false
+}

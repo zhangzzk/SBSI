@@ -8,8 +8,11 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+import torch
 
 from .catalogue_disk_likelihood import DiskCatalogueLikelihood
+from .disk_precision import physical_log_prob_with_gap
+from .flow_physical_disk import ConditionalPhysicalDiskFlow
 from .forward_catalogue import rescale_emulator_pairs
 from .output_conditioned_response import TRUTH_FEATURES
 from .v39_inference import FEATURES, V39CatalogueCache
@@ -39,22 +42,41 @@ def native_shapes(data, angular_diameter_distance):
                 circularized=radius*(1-rendered_a**2)**.25)
 
 
+def _check_response_contract(prior, response_radius_arcsec, response_neighbours):
+    if (not np.isfinite(response_radius_arcsec) or response_radius_arcsec <= 0
+            or response_radius_arcsec > prior.aperture_arcsec
+            or not isinstance(response_neighbours, (int, np.integer)) or response_neighbours < 1):
+        raise ValueError('covered response aperture and positive integer neighbour count required')
+
+
 def scene_model_inputs(scenes, prior, angular_diameter_distance, conditions, *,
-                       response_radius_arcsec, response_neighbours):
+                       response_radius_arcsec, response_neighbours, response=True):
     """Map native scenes to F8/C8 features and the retained response pair CSR.
 
     All neighbours within 10 arcsec enter crowding. Only the response uses
     its explicitly supplied nearest-k/aperture contract. No truth cuts are
     applied. Input photometry must belong to the current native marks.
+    response=False returns (features, None, None) without building pairs.
     """
-    if (not np.isfinite(response_radius_arcsec) or response_radius_arcsec <= 0
-            or response_radius_arcsec > prior.aperture_arcsec
-            or not isinstance(response_neighbours, (int, np.integer)) or response_neighbours < 1):
-        raise ValueError('covered response aperture and positive integer neighbour count required')
+    _check_response_contract(prior, response_radius_arcsec, response_neighbours)
     target = native_shapes(scenes.targets, angular_diameter_distance)
-    neighbour = native_shapes(scenes.neighbours, angular_diameter_distance)
     zero = pd.DataFrame(np.column_stack((target['e1'], target['e2'], scenes.targets['n'],
         scenes.targets['m_r'], target['circularized'], prior.v39_crowding(scenes))), columns=FEATURES)
+    if not np.isfinite(zero.to_numpy()).all():
+        raise ValueError('nonfinite mapped model inputs')
+    if not response:
+        return zero, None, None
+    return (zero, *response_pairs(scenes, prior, angular_diameter_distance, conditions,
+        response_radius_arcsec=response_radius_arcsec, response_neighbours=response_neighbours, target=target))
+
+
+def response_pairs(scenes, prior, angular_diameter_distance, conditions, *,
+                   response_radius_arcsec, response_neighbours, target=None):
+    """The response pair CSR (indptr, features) of scene_model_inputs alone."""
+    _check_response_contract(prior, response_radius_arcsec, response_neighbours)
+    if target is None:
+        target = native_shapes(scenes.targets, angular_diameter_distance)
+    neighbour = native_shapes(scenes.neighbours, angular_diameter_distance)
     owner, distance = scenes.owner, np.linalg.norm(scenes.offset_arcsec, axis=1)
     rows = np.flatnonzero(distance < response_radius_arcsec)
     rows = rows[np.lexsort((rows, distance[rows], owner[rows]))]
@@ -67,10 +89,10 @@ def scene_model_inputs(scenes, prior, angular_diameter_distance, conditions, *,
         r_input_s=scenes.neighbours['m_r'][rows], sersic_n_input_p=scenes.targets['n'][primary],
         sersic_n_input_s=scenes.neighbours['n'][rows], distance=distance[rows]))
     features = rescale_emulator_pairs(pairs, conditions).loc[:, TRUTH_FEATURES].to_numpy(float)
-    indptr = np.r_[0, np.cumsum(np.bincount(primary, minlength=len(zero)))]
-    if not np.isfinite(zero.to_numpy()).all() or not np.isfinite(features).all():
+    indptr = np.r_[0, np.cumsum(np.bincount(primary, minlength=len(scenes.counts)))]
+    if not np.isfinite(features).all():
         raise ValueError('nonfinite mapped model inputs')
-    return zero, indptr, features
+    return indptr, features
 
 
 @dataclass
@@ -117,13 +139,25 @@ class SummaryLikelihood:
     Returns log(C8 * disk density) in the existing standardized-output units.
     No empirical prior weight or measured-selection normalizer is included.
     """
-    def __init__(self, flow, detector, *, density_batch_size=4096):
+    def __init__(self, flow, detector, *, density_batch_size=4096, compile_density=False):
         if (tuple(flow.condition_preprocessor.feature_names) != FEATURES
                 or tuple(detector.preprocessor.feature_names) != FEATURES
                 or not isinstance(density_batch_size, int) or density_batch_size < 1):
             raise ValueError('retained F8/C8 feature contract and positive density batch required')
         self.flow, self.detector = flow, detector
         self.batch_size = density_batch_size
+        # One compiled log-gap density shared by every per-batch backend; fused kernels round differently
+        # from eager ones, so a run must not mix the two. 'reduce-overhead' compiles for the fixed padded
+        # batch shape and replays recorded CUDA graphs (one launch per call instead of thousands).
+        self.compiled_density = None
+        if compile_density not in (False, True, 'reduce-overhead'):
+            raise ValueError('compile_density must be False, True or reduce-overhead')
+        if compile_density:
+            if not isinstance(getattr(flow, 'model', None), ConditionalPhysicalDiskFlow):
+                raise ValueError('compiled log-gap density requires a physical disk flow')
+            self.compiled_density = (torch.compile(physical_log_prob_with_gap, dynamic=False, mode='reduce-overhead')
+                                     if compile_density == 'reduce-overhead'
+                                     else torch.compile(physical_log_prob_with_gap, dynamic=True))
 
     def log_kernel(self, summary, observed, g1, g2):
         observed = observed.reset_index(drop=True)
@@ -143,6 +177,8 @@ class SummaryLikelihood:
             zero = pd.DataFrame(block.values[:, :8], columns=FEATURES)
             cache = V39CatalogueCache(zero, np.ones(len(zero)), {}, detector=self.detector)
             backend = DiskCatalogueLikelihood(self.flow, cache, disk_response=_SummedResponse(block))
+            if self.compiled_density is not None:
+                backend._precision_density = self.compiled_density
             values = backend.conditional_log_likelihood(observed.iloc[rows], g1, g2,
                 atom_indices=np.arange(len(rows)), object_chunk=self.batch_size)
             probability = cache.get(g1, g2).detection_probability

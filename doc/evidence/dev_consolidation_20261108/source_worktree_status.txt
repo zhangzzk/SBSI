@@ -1,0 +1,53 @@
+.claude/worktrees/galsbi-tempering
+ M scripts/check_galsbi_local_sampler.py
+ M scripts/prepare_galsbi_twin.py
+?? doc/CURRENT_EXPERIMENT_EVIDENCE.md
+?? doc/INFERENCE_COMPONENT_REVIEW.md
+?? doc/INFERENCE_DIAGNOSIS.md
+?? doc/MOCK_INFERENCE_PIPELINE_REVIEW.md
+?? doc/SAMPLER_EXCHANGE_PILOT.md
+?? doc/SAMPLER_GRADIENT_PILOT.md
+?? doc/SAMPLER_IMPROVEMENT_DESIGN.md
+?? doc/SCORE_PILOT.md
+?? doc/SCORE_PILOT_RESULTS.md
+?? doc/evidence/check_gradient_score_spacing_20261021.py
+?? doc/evidence/compare_score_pilot_chains_20261021.py
+?? doc/evidence/current_experiment_review_20261021.json
+?? doc/evidence/inference_components_results_20261021.json
+?? doc/evidence/inference_review_20261018.json
+?? doc/evidence/localize_score_pilot_20261021.py
+?? doc/evidence/mock_pipeline_review_20261018.json
+?? doc/evidence/mock_pipeline_review_20261018.py
+?? doc/evidence/replay_exchange_scenes_20261021.py
+?? doc/evidence/sampler_exchange_results_20261021.json
+?? doc/evidence/sampler_gradient_results_20261021.json
+?? doc/evidence/score_pilot_20261021.py
+?? doc/evidence/score_pilot_results_20261021.json
+?? doc/evidence/summarize_exchange_pilot_20261021.py
+?? doc/evidence/summarize_gradient_pilot_20261021.py
+?? doc/evidence/summarize_inference_components_20261021.py
+?? doc/evidence/summarize_score_pilot_20261021.py
+?? doc/evidence/test_score_pilot_bounded_map_20261021.py
+?? doc/evidence/validate_exchange_pilot_20261021.py
+?? doc/evidence/validate_gradient_pilot_20261021.py
+?? sbsi/gradient_proposals.py
+?? sbsi/inference_moments.py
+?? sbsi/mock_population.py
+?? scripts/report_galsbi_direct_scores.py
+?? scripts/report_galsbi_selection_covariance.py
+?? tests/test_gradient_proposals.py
+?? tests/test_inference_moments.py
+
+.claude/worktrees/model-symmetry
+
+.claude/worktrees/sampler-recipe
+ M doc/WORKLOG.md
+?? doc/evidence/galsbi_target_guard_20261103/
+?? doc/evidence/galsbi_target_guard_repeat_20261103/
+?? doc/evidence/stage_simplification_20261108/
+?? jobs/job_galsbi_target_guard.sh
+?? jobs/job_galsbi_target_guard_repeat.sh
+?? scripts/run_galsbi_target_guard.py
+?? scripts/run_galsbi_target_guard_repeat.py
+?? tests/test_target_guard_pilot.py
+?? tests/test_target_guard_repeat.py

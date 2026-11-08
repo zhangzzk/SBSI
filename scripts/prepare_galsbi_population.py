@@ -25,6 +25,7 @@ def main():
     parser.add_argument('--seed', type=int, default=2026100301)
     parser.add_argument('--magnitude-limits', type=float, nargs='+',
                         help='optional measured cuts; observations is the requested count per cut')
+    parser.add_argument('--shear', type=float, nargs=2, help='true shear (g1 g2); default the parent reference shear')
     args = parser.parse_args()
     if args.observations < 1 or (args.output/'result.json').exists():
         raise ValueError('positive population and fresh output required')
@@ -43,6 +44,9 @@ def main():
         parent_protocol_sha256=digest(args.reference/'protocol.json'),
         parent_result_sha256=digest(args.reference/'result.json'),
         preparation_sha256=digest(__file__))
+    if args.shear:
+        protocol['shear'] = args.shear
+    shear = protocol['shear']
     if args.magnitude_limits:
         protocol.update(magnitude_limits=args.magnitude_limits,
             cohort_count=args.observations,
@@ -69,19 +73,19 @@ def main():
         seed = args.seed+10*chunk
         zero, response, sampling = prepared(prior, distance, old['conditions'], model, n=8192, seed=seed)
         frame, retention, ids = mock_panel(zero, response, flow, detector, seed=seed+1,
-            shear=old['shear'], retain_population=True)
+            shear=shear, retain_population=True)
         if len(frame) and not replay_errors:
             # Replay the existing full-pair implementation, including order and padding.
             obs = frame.iloc[[0]]
             summary = compress_scenes(zero, response, obs.iloc[0, 2:4].to_numpy())
-            kernel = likelihood.log_kernel(summary, obs, *old['shear'])
+            kernel = likelihood.log_kernel(summary, obs, *shear)
             cache = V39CatalogueCache(zero, np.ones(len(zero)), {}, detector=detector)
             full = DiskCatalogueLikelihood(flow, cache, disk_response=response)
             density = full.conditional_log_likelihood(obs.iloc[np.zeros(len(zero), dtype=int)].reset_index(drop=True),
-                *old['shear'], atom_indices=np.arange(len(zero)), object_chunk=4096)
-            probability = detector.predict_proba(cache.get(*old['shear']).flow, batch_size=4096)
-            partial = likelihood.log_kernel(SummaryBatch(summary.values[:128], summary.auxiliary[:128]), obs, *old['shear'])
-            reverse = likelihood.log_kernel(SummaryBatch(summary.values[::-1], summary.auxiliary[::-1]), obs, *old['shear'])[::-1]
+                *shear, atom_indices=np.arange(len(zero)), object_chunk=4096)
+            probability = detector.predict_proba(cache.get(*shear).flow, batch_size=4096)
+            partial = likelihood.log_kernel(SummaryBatch(summary.values[:128], summary.auxiliary[:128]), obs, *shear)
+            reverse = likelihood.log_kernel(SummaryBatch(summary.values[::-1], summary.auxiliary[::-1]), obs, *shear)[::-1]
             replay_errors = [float(np.max(np.abs(density+np.log(probability.astype(float))-kernel))),
                 float(np.max(np.abs(partial-kernel[:128]))), float(np.max(np.abs(reverse-kernel)))]
             if not np.isfinite(replay_errors).all() or max(replay_errors) > 1e-6:

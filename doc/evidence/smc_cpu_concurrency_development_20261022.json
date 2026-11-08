@@ -1,0 +1,297 @@
+{
+  "status": "development_pass_confirmation_pending",
+  "original_report": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_runs_v1_20261022/report.json",
+  "original_report_sha256": "2d8f7c2f0d106f9da849114b97a9bc16eb0e3f9471988de3bc0ed22b89860c30",
+  "audit_script_sha256": "b7dd9c7115e89c67c98ca101a46ab56602a5f860f8c4bbb9d9079a4334073feb",
+  "parent_audit": {
+    "status": "passed",
+    "job": "17447670",
+    "original_report_sha256": "2d8f7c2f0d106f9da849114b97a9bc16eb0e3f9471988de3bc0ed22b89860c30",
+    "all_24_saved_output_replayed_again": true,
+    "strict_replayed_report_equal_except_its_elapsed_time": true,
+    "process_costs": [
+      {
+        "wall_seconds": 865.12,
+        "user_seconds": 809.14,
+        "system_seconds": 19.39,
+        "max_rss_kib": 1908828,
+        "exit_code": 0
+      },
+      {
+        "wall_seconds": 441.64,
+        "user_seconds": 813.63,
+        "system_seconds": 18.38,
+        "max_rss_kib": 1889420,
+        "exit_code": 0
+      },
+      {
+        "wall_seconds": 242.41,
+        "user_seconds": 849.29,
+        "system_seconds": 19.64,
+        "max_rss_kib": 1893640,
+        "exit_code": 0
+      },
+      {
+        "wall_seconds": 243.26,
+        "user_seconds": 856.99,
+        "system_seconds": 19.56,
+        "max_rss_kib": 1889424,
+        "exit_code": 0
+      },
+      {
+        "wall_seconds": 443.69,
+        "user_seconds": 815.13,
+        "system_seconds": 18.41,
+        "max_rss_kib": 1899600,
+        "exit_code": 0
+      },
+      {
+        "wall_seconds": 844.6,
+        "user_seconds": 794.53,
+        "system_seconds": 17.56,
+        "max_rss_kib": 1886960,
+        "exit_code": 0
+      }
+    ],
+    "report_process_cost": {
+      "wall_seconds": 8.18,
+      "user_seconds": 5.11,
+      "system_seconds": 1.1,
+      "max_rss_kib": 44576,
+      "exit_code": 0
+    },
+    "original_process_seconds": 3088.8999999999996,
+    "source_preparation_seconds": 6.149440533015877,
+    "ratios": [
+      {
+        "repetition": 0,
+        "concurrency": 2,
+        "execution_speedup": 1.9853018944661318,
+        "setting_inclusive_speedup": 1.959107923693027
+      },
+      {
+        "repetition": 0,
+        "concurrency": 4,
+        "execution_speedup": 3.748659169063852,
+        "setting_inclusive_speedup": 3.570103127829621
+      },
+      {
+        "repetition": 1,
+        "concurrency": 2,
+        "execution_speedup": 1.9404178837047739,
+        "setting_inclusive_speedup": 1.90392733541205
+      },
+      {
+        "repetition": 1,
+        "concurrency": 4,
+        "execution_speedup": 3.646204093058923,
+        "setting_inclusive_speedup": 3.4738186577882697
+      }
+    ],
+    "outer_ratios": [
+      {
+        "repetition": 0,
+        "process_speedup": 3.5688296687430388,
+        "charged_speedup": 3.5437682876070595
+      },
+      {
+        "repetition": 1,
+        "process_speedup": 3.4720052618597386,
+        "charged_speedup": 3.447971944690229
+      }
+    ],
+    "selected_concurrency": 4,
+    "selected_worst_speedup": 3.4738186577882697,
+    "pinned_reports_and_costs": {
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_runs_v1_20261022/report.json": "2d8f7c2f0d106f9da849114b97a9bc16eb0e3f9471988de3bc0ed22b89860c30",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_runs_v1_20261022/setting_0_process_cost.json": "50e7c0e48250852e4616ababe9919ca0688e44cd127050b1c1d260c782f0c258",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_runs_v1_20261022/setting_1_process_cost.json": "f306155373718423b5d19fe1535f6e83cc3eea2676fc6e57565918282eaf1f2d",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_runs_v1_20261022/setting_2_process_cost.json": "66d5ffbf73fa9834edce56b14c333b483d366eb8c5441c3f526e4b17767ae022",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_runs_v1_20261022/setting_3_process_cost.json": "aa491e4470fc55f5c0e39334e765046e39860355b3fcb61d9d4bbe362965c0c6",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_runs_v1_20261022/setting_4_process_cost.json": "2edf7d99df60d971262841ad5314e407ddd850361df9da9448f0f4a90e30123f",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_runs_v1_20261022/setting_5_process_cost.json": "5cd75266cb8fe3d33d654bbe97a748f16e9f6e5dfd6b2e2924bb60a59cd86b61",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_runs_v1_20261022/report_process_cost.json": "19a0462ee6da16b9b9ee95390643b2dfef80b07eb0671f071e85bf6face25846"
+    },
+    "elapsed_seconds": 14.178842513356358,
+    "cost_scope": "Original complete setting/report process timers; shared new preparation/report cost sensitivity split equally. Existing scientific fits, queueing and final serialization excluded.",
+    "limitations": [
+      "Development performance confirmation pending on predeclared fresh seeds.",
+      "No posterior-accuracy acceptance or four-GPU/500-CPU extrapolation.",
+      "This separate parent audit is validation work, not included in original benchmark timings."
+    ]
+  },
+  "parent_submission": {
+    "job": "17447670",
+    "command": [
+      "sbatch",
+      "--parsable",
+      "--partition=cluster",
+      "--cpus-per-task=2",
+      "--mem=4G",
+      "--time=00:10:00",
+      "--no-requeue",
+      "--job-name=smc-concurrency-parent-audit",
+      "--output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_parent_audit_v1_20261022/slurm-%j.out",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_parent_audit_v1_20261022/run.sh"
+    ],
+    "script_sha256": "b7dd9c7115e89c67c98ca101a46ab56602a5f860f8c4bbb9d9079a4334073feb",
+    "launcher_sha256": "aa93071bc967bcfdc3304203dffe8b81d062e8cc7a2f4138a634fe7da716ed42"
+  },
+  "settings": [
+    {
+      "index": 0,
+      "workers": 1,
+      "execution_seconds": 845.5655521278968,
+      "setting_inclusive_seconds": 864.9050420239801,
+      "process_cost": {
+        "wall_seconds": 865.12,
+        "user_seconds": 809.14,
+        "system_seconds": 19.39,
+        "max_rss_kib": 1908828,
+        "exit_code": 0
+      },
+      "physical_cores": [
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "gpu_uuid": "GPU-c2e5b616-f13d-a39e-98da-f8979616246d"
+    },
+    {
+      "index": 1,
+      "workers": 2,
+      "execution_seconds": 425.9128319399897,
+      "setting_inclusive_seconds": 441.47901785501745,
+      "process_cost": {
+        "wall_seconds": 441.64,
+        "user_seconds": 813.63,
+        "system_seconds": 18.38,
+        "max_rss_kib": 1889420,
+        "exit_code": 0
+      },
+      "physical_cores": [
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "gpu_uuid": "GPU-c2e5b616-f13d-a39e-98da-f8979616246d"
+    },
+    {
+      "index": 2,
+      "workers": 4,
+      "execution_seconds": 225.56479903694708,
+      "setting_inclusive_seconds": 242.2633215499809,
+      "process_cost": {
+        "wall_seconds": 242.41,
+        "user_seconds": 849.29,
+        "system_seconds": 19.64,
+        "max_rss_kib": 1893640,
+        "exit_code": 0
+      },
+      "physical_cores": [
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "gpu_uuid": "GPU-c2e5b616-f13d-a39e-98da-f8979616246d"
+    },
+    {
+      "index": 3,
+      "workers": 4,
+      "execution_seconds": 227.36866384802852,
+      "setting_inclusive_seconds": 243.08948009298183,
+      "process_cost": {
+        "wall_seconds": 243.26,
+        "user_seconds": 856.99,
+        "system_seconds": 19.56,
+        "max_rss_kib": 1889424,
+        "exit_code": 0
+      },
+      "physical_cores": [
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "gpu_uuid": "GPU-c2e5b616-f13d-a39e-98da-f8979616246d"
+    },
+    {
+      "index": 4,
+      "workers": 2,
+      "execution_seconds": 427.2443372729467,
+      "setting_inclusive_seconds": 443.5299371739384,
+      "process_cost": {
+        "wall_seconds": 443.69,
+        "user_seconds": 815.13,
+        "system_seconds": 18.41,
+        "max_rss_kib": 1899600,
+        "exit_code": 0
+      },
+      "physical_cores": [
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "gpu_uuid": "GPU-c2e5b616-f13d-a39e-98da-f8979616246d"
+    },
+    {
+      "index": 5,
+      "workers": 1,
+      "execution_seconds": 829.0325527560199,
+      "setting_inclusive_seconds": 844.4487714590505,
+      "process_cost": {
+        "wall_seconds": 844.6,
+        "user_seconds": 794.53,
+        "system_seconds": 17.56,
+        "max_rss_kib": 1886960,
+        "exit_code": 0
+      },
+      "physical_cores": [
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "gpu_uuid": "GPU-c2e5b616-f13d-a39e-98da-f8979616246d"
+    }
+  ],
+  "scheduler_accounting": "17445452|COMPLETED|0:0|3091|16\n17445497|FAILED|1:0|1|2\n17447670|COMPLETED|0:0|15|2\n",
+  "restoration_review": {
+    "checked_utc": "2026-10-22T18:12:37.852343+00:00",
+    "controller_status": "failed_preserved",
+    "controller_receipt_sha256": "2703d519a24cca80f5d747eef7c392678ae259d7ede30ee8adaa6a678b29f854",
+    "original_error": "17435350_29: Job has already finished\n",
+    "live_active_records": 3,
+    "live_throttles_all_four": true,
+    "current_scontrol_output": "JobId=17435350 ArrayJobId=17435350 ArrayTaskId=38-39%4 ArrayTaskThrottle=4 JobName=corrected-heldout-v3-pairs\n   UserId=zekang.zhang(27188) GroupId=nobody(10000) MCS_label=N/A\n   Priority=569 Nice=0 Account=ls-gruen QOS=normal\n   JobState=PENDING Reason=Priority Dependency=(null)\n   Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0\n   RunTime=00:00:00 TimeLimit=00:45:00 TimeMin=N/A\n   SubmitTime=2026-10-22T13:53:08 EligibleTime=2026-10-22T19:27:58\n   AccrueTime=2026-10-22T14:33:57\n   StartTime=2026-10-22T20:52:53 EndTime=2026-10-22T21:37:53 Deadline=N/A\n   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-22T20:12:37 Scheduler=Main\n   Partition=inter AllocNode:Sid=kng-sv-clhead02:2928372\n   ReqNodeList=th-cl-nv02 ExcNodeList=(null)\n   NodeList= SchedNodeList=th-cl-nv02\n   NumNodes=1 NumCPUs=2 NumTasks=1 CPUs/Task=2 ReqB:S:C:T=0:0:*:*\n   ReqTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   AllocTRES=(null)\n   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*\n   MinCPUsNode=2 MinMemoryNode=16G MinTmpDiskNode=0\n   Features=(null) DelayBoot=00:00:00\n   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)\n   Command=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_v3_workflow_20261022.sh\n   WorkDir=/home/z/Zekang.Zhang/SBSI\n   StdErr=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_4294967294.out\n   StdIn=/dev/null\n   StdOut=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_4294967294.out\n   Power=\n   KillOInInvalidDependent=Yes\n   TresPerNode=gres:gpu:v100:1\n   \n\nJobId=17447616 ArrayJobId=17435350 ArrayTaskId=37 ArrayTaskThrottle=4 JobName=corrected-heldout-v3-pairs\n   UserId=zekang.zhang(27188) GroupId=nobody(10000) MCS_label=N/A\n   Priority=568 Nice=0 Account=ls-gruen QOS=normal\n   JobState=RUNNING Reason=None Dependency=(null)\n   Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0\n   RunTime=00:03:43 TimeLimit=00:45:00 TimeMin=N/A\n   SubmitTime=2026-10-22T13:53:08 EligibleTime=2026-10-22T19:27:58\n   AccrueTime=2026-10-22T14:33:57\n   StartTime=2026-10-22T20:08:54 EndTime=2026-10-22T20:53:54 Deadline=N/A\n   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-22T20:08:54 Scheduler=Backfill\n   Partition=inter AllocNode:Sid=kng-sv-clhead02:2928372\n   ReqNodeList=th-cl-nv02 ExcNodeList=(null)\n   NodeList=th-cl-nv02\n   BatchHost=th-cl-nv02\n   NumNodes=1 NumCPUs=2 NumTasks=1 CPUs/Task=2 ReqB:S:C:T=0:0:*:*\n   ReqTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   AllocTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*\n   MinCPUsNode=2 MinMemoryNode=16G MinTmpDiskNode=0\n   Features=(null) DelayBoot=00:00:00\n   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)\n   Command=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_v3_workflow_20261022.sh\n   WorkDir=/home/z/Zekang.Zhang/SBSI\n   StdErr=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_37.out\n   StdIn=/dev/null\n   StdOut=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_37.out\n   Power=\n   KillOInInvalidDependent=Yes\n   TresPerNode=gres:gpu:v100:1\n   \n\nJobId=17447598 ArrayJobId=17435350 ArrayTaskId=36 ArrayTaskThrottle=4 JobName=corrected-heldout-v3-pairs\n   UserId=zekang.zhang(27188) GroupId=nobody(10000) MCS_label=N/A\n   Priority=568 Nice=0 Account=ls-gruen QOS=normal\n   JobState=RUNNING Reason=None Dependency=(null)\n   Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0\n   RunTime=00:04:44 TimeLimit=00:45:00 TimeMin=N/A\n   SubmitTime=2026-10-22T13:53:08 EligibleTime=2026-10-22T19:27:58\n   AccrueTime=2026-10-22T14:33:57\n   StartTime=2026-10-22T20:07:53 EndTime=2026-10-22T20:52:53 Deadline=N/A\n   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-22T20:07:53 Scheduler=Backfill\n   Partition=inter AllocNode:Sid=kng-sv-clhead02:2928372\n   ReqNodeList=th-cl-nv02 ExcNodeList=(null)\n   NodeList=th-cl-nv02\n   BatchHost=th-cl-nv02\n   NumNodes=1 NumCPUs=2 NumTasks=1 CPUs/Task=2 ReqB:S:C:T=0:0:*:*\n   ReqTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   AllocTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*\n   MinCPUsNode=2 MinMemoryNode=16G MinTmpDiskNode=0\n   Features=(null) DelayBoot=00:00:00\n   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)\n   Command=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_v3_workflow_20261022.sh\n   WorkDir=/home/z/Zekang.Zhang/SBSI\n   StdErr=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_36.out\n   StdIn=/dev/null\n   StdOut=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_36.out\n   Power=\n   KillOInInvalidDependent=Yes\n   TresPerNode=gres:gpu:v100:1\n   \n\nJobId=17447452 ArrayJobId=17435350 ArrayTaskId=35 ArrayTaskThrottle=4 JobName=corrected-heldout-v3-pairs\n   UserId=zekang.zhang(27188) GroupId=nobody(10000) MCS_label=N/A\n   Priority=567 Nice=0 Account=ls-gruen QOS=normal\n   JobState=COMPLETED Reason=None Dependency=(null)\n   Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0\n   RunTime=00:13:27 TimeLimit=00:45:00 TimeMin=N/A\n   SubmitTime=2026-10-22T13:53:08 EligibleTime=2026-10-22T19:27:58\n   AccrueTime=2026-10-22T14:33:57\n   StartTime=2026-10-22T19:55:11 EndTime=2026-10-22T20:08:38 Deadline=N/A\n   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-22T19:55:11 Scheduler=Backfill\n   Partition=inter AllocNode:Sid=kng-sv-clhead02:2928372\n   ReqNodeList=th-cl-nv02 ExcNodeList=(null)\n   NodeList=th-cl-nv02\n   BatchHost=th-cl-nv02\n   NumNodes=1 NumCPUs=2 NumTasks=1 CPUs/Task=2 ReqB:S:C:T=0:0:*:*\n   ReqTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   AllocTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*\n   MinCPUsNode=2 MinMemoryNode=16G MinTmpDiskNode=0\n   Features=(null) DelayBoot=00:00:00\n   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)\n   Command=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_v3_workflow_20261022.sh\n   WorkDir=/home/z/Zekang.Zhang/SBSI\n   StdErr=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_35.out\n   StdIn=/dev/null\n   StdOut=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_35.out\n   Power=\n   KillOInInvalidDependent=Yes\n   TresPerNode=gres:gpu:v100:1\n   \n\nJobId=17447448 ArrayJobId=17435350 ArrayTaskId=34 ArrayTaskThrottle=4 JobName=corrected-heldout-v3-pairs\n   UserId=zekang.zhang(27188) GroupId=nobody(10000) MCS_label=N/A\n   Priority=567 Nice=0 Account=ls-gruen QOS=normal\n   JobState=COMPLETED Reason=None Dependency=(null)\n   Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0\n   RunTime=00:13:11 TimeLimit=00:45:00 TimeMin=N/A\n   SubmitTime=2026-10-22T13:53:08 EligibleTime=2026-10-22T19:27:58\n   AccrueTime=2026-10-22T14:33:57\n   StartTime=2026-10-22T19:54:41 EndTime=2026-10-22T20:07:52 Deadline=N/A\n   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-22T19:54:41 Scheduler=Backfill\n   Partition=inter AllocNode:Sid=kng-sv-clhead02:2928372\n   ReqNodeList=th-cl-nv02 ExcNodeList=(null)\n   NodeList=th-cl-nv02\n   BatchHost=th-cl-nv02\n   NumNodes=1 NumCPUs=2 NumTasks=1 CPUs/Task=2 ReqB:S:C:T=0:0:*:*\n   ReqTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   AllocTRES=cpu=2,mem=16G,node=1,billing=2,gres/gpu=1,gres/gpu:v100=1\n   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*\n   MinCPUsNode=2 MinMemoryNode=16G MinTmpDiskNode=0\n   Features=(null) DelayBoot=00:00:00\n   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)\n   Command=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_corrected_heldout_v3_workflow_20261022.sh\n   WorkDir=/home/z/Zekang.Zhang/SBSI\n   StdErr=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_34.out\n   StdIn=/dev/null\n   StdOut=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/corrected-heldout-v3-production-17435350_34.out\n   Power=\n   KillOInInvalidDependent=Yes\n   TresPerNode=gres:gpu:v100:1\n   \n\n",
+    "interpretation": "Slurm applied the active-array throttle change but returned a nonzero aggregate status for an already-completed task. Current active records independently confirm restoration; no additional mutation or rerun was needed."
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "branch": "worktree-galsbi-tempering",
+  "source_snapshot": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_v1",
+  "executors": [
+    {
+      "node": "n2",
+      "branch": "codex/smc-core-20261021",
+      "commit": "5dcbffb",
+      "tests": 27,
+      "job": 17418336
+    },
+    {
+      "node": "n3",
+      "branch": "codex/smc-proposal-20261021",
+      "commit": "021b2ba",
+      "tests": 13,
+      "job": 17418324
+    },
+    {
+      "scope": "bridge measure and support audit",
+      "branch": "codex/smc-target-audit-20261021",
+      "commit": "43d1c5532fa5bab1c1aa5e22ecb8c3b9eba87d8d",
+      "tests": 34,
+      "job": 17418402
+    }
+  ],
+  "source_hashes": {
+    "sbsi/annealed_particles.py": "a3895d270ae64ab6c023bf6e288b1b7052c0591b6c36a4a754812631fc099e45",
+    "sbsi/galsbi_particle_proposal.py": "e1966bd753b6c8e6b4a73d78b83f4d33157eaac89927a9cb320c7d6699983d68",
+    "sbsi/galsbi_particle_target.py": "63c58de0dcdcdf3872f25eba6852be7155dc10373f7ed6a728bd0e49f8c71926",
+    "sbsi/particle_diagnostics.py": "66181460eb857fe69aed75ff60d1002f5bd0b3e42899b09b20cfe9eec0b97d26",
+    "scripts/check_galsbi_particles.py": "81d90316dcd0e62b8744b05dbcbc7aed19db0bc397f2dd7315c169be7aa9b27d",
+    "scripts/report_galsbi_particles.py": "16bb9f61c2f7d6df0e4fad4d5947bcb609eac4bae64265bb64ad2acb57f481f7",
+    "scripts/prepare_galsbi_sampler_panel.py": "a91d2fe58ed4825144d592b14e7d8d55a666e86e8aecab536c5844342d73718d"
+  },
+  "integrated_tests_job": 17418421,
+  "smoke_job": 17418432,
+  "heldout_panel_job": 17418433,
+  "dev_array_job": 17418434,
+  "science_acceptance": false
+}

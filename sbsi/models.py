@@ -162,10 +162,11 @@ def _disk_model_preset(filename: str) -> ModelPaths:
 V36_LIKE = _disk_model_preset("models_v3_6_like.json")
 V39_LIKE = _disk_model_preset("models_v3_9_like.json")
 LIKE_1_0_GALSBI = _disk_model_preset("models_like_1_0_galsbi.json")
+GALSBI_MULTISTAGE = _disk_model_preset("models_galsbi_multistage.json")
 # Scientific comparison reference; this does not select an inference likelihood.
 CURRENT_FIDUCIAL = LIKE_1_0_GALSBI
 MODEL_PRESETS: dict[str, ModelPaths] = {
-    model.name: model for model in (V35_LIKE, V36_LIKE, V39_LIKE, LIKE_1_0_GALSBI)
+    model.name: model for model in (V35_LIKE, V36_LIKE, V39_LIKE, LIKE_1_0_GALSBI, GALSBI_MULTISTAGE)
 }
 
 
@@ -274,6 +275,7 @@ def load_detection_classifier(models: ModelPaths, *, device: str = "cpu"):
 
 __all__ = [
     "CURRENT_FIDUCIAL",
+    "GALSBI_MULTISTAGE",
     "LIKE_1_0_GALSBI",
     "MODEL_PRESETS",
     "ModelPaths",

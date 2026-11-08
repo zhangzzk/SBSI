@@ -1,0 +1,25 @@
+{
+  "source": "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/galsbi-tempering",
+  "sha256": {
+    "sbsi/annealed_particles.py": "a3895d270ae64ab6c023bf6e288b1b7052c0591b6c36a4a754812631fc099e45",
+    "sbsi/poisson_augmentation.py": "0ce98f78c5cebf0934cf2afba0ef93d949a5e9fc9f740be93a67399f734974c4",
+    "sbsi/numerical_native_intensity.py": "af1360912a68b35be138596da4cc095895b485a14443c002a17dcddefcd2e4b5",
+    "sbsi/scene_exchange.py": "c47763c55228257721135811b68f800945f64513c052945331974bb976b67c37",
+    "sbsi/galsbi_particle_proposal.py": "8f819102b17a111eada267731ed30a8dfeafa7e377010e6354f8e6a6e5b64fab",
+    "sbsi/particle_initial_proposal.py": "1c2041a818ebe52a8a03a53254a5ef51844a8c79cebb3f9778311b072624578b",
+    "sbsi/galsbi_particle_target.py": "9d2b091267335579bd8155180698e9dc7311fb3937cbcc87e281bb219dfa7387",
+    "sbsi/particle_populations.py": "5b10168a3f44170810ccda30018b139b85dc4dbf667deaa04ce126b55db5e979",
+    "sbsi/particle_geometry.py": "07bda14a74289c0b250e36aa4a78d883513a9ab04f0250a632af20154df42873",
+    "sbsi/summary_gradients.py": "111edaf8a0525d2b6830f615dfbadf8aed7c99cc0d017fc415cbd23ab17fd0af",
+    "scripts/check_galsbi_particles.py": "3a6bfdbfc21f5b1516eac4b53a5e2d6491c38f64d16e2cff399ac25e54e62f02",
+    "tests/test_galsbi_particle_target.py": "48be767c56d6fa62d223907d4b2cda18e3bae59d4cee6ff1de1b80d25143540e",
+    "tests/test_particle_extinction.py": "5e59738aa2fb1861ee1dd0939a25be02990b99275c1f8f417fa31808034bcc19",
+    "tests/test_poisson_augmentation.py": "581c2bd82462a852471d3aa25b704a66fcbce3d4e8b951e2f7ca5c7172ea8cf1",
+    "tests/test_galsbi_particle_proposal.py": "e583879035efc17aebd50f52b89fb50f8a3cb92dbdd7322d21238ff75083a40f",
+    "tests/test_particle_initial_proposal.py": "c38c8b7af93441e0015eae9d0fac721b1f38104f107863304d6c7035536d0a96",
+    "tests/test_particle_relocation_integration.py": "4d077dfef188e5ffcc7833c0684f87d26e919f1673568d83c94d76fdb8621150",
+    "scripts/report_galsbi_particles.py": "b0becd8b8be7b9265c276bd9fe0c6a79a1613ee5325c6438649a4b2cb340ff60",
+    "sbsi/particle_diagnostics.py": "bbd2756da751d025db8ae41ddc18a3dd0e6ec5a8d2967852b6e849762d205f6a",
+    "tests/test_particle_report.py": "fe34a0fe95d636cf78c48f86b34bddc9e985456b390544fe269a4a08b81c24e2"
+  }
+}

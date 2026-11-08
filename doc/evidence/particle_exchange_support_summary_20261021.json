@@ -1,0 +1,434 @@
+{
+  "job_id": 17419184,
+  "scope": "Final beta1 saved states only. Conditional-type support and native correction; no likelihood evaluations or full acceptance estimate.",
+  "findings": "Numerical environment support exclusion is absent in these saved states. Fixed-swap native corrections are small. Relocation incurs a substantial finite reverse/forward proposal-density penalty.",
+  "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_support_diagnostic/results/result.json",
+  "source_sha256": "2dab626d1eebf11c386abba4e2544386138a8085634b7a5a2eb96136114ca3a6",
+  "protocol_sha256": "3cfed6ecb3edbeebd4fdddd4060007cb58e18c9a9ebd74b4e1fcda798a346ba9",
+  "elapsed_seconds": 33.27897956920788,
+  "validated_runs": 8,
+  "coordinate_replay_max": 2.842170943040401e-14,
+  "analytic_prior_replay_max": 3.1867841698840493e-12,
+  "table_support": {
+    "red": {
+      "y_min": -40.0,
+      "y_max": 7.118999999890185,
+      "redshift_max": 5.981069367952661,
+      "zero_redshift_cdf_intervals": 0
+    },
+    "blue": {
+      "y_min": -40.0,
+      "y_max": 7.112999999890199,
+      "redshift_max": 5.981069367952661,
+      "zero_redshift_cdf_intervals": 0
+    }
+  },
+  "observations": [
+    {
+      "observation": 58165,
+      "saved_particles": 2048,
+      "target_zero_conditional_numerical_support_mass": 0,
+      "min_mean_conditional_numerical_support_mass": 0.9999999999999999,
+      "neighbours": 43952,
+      "neighbour_analytic_support": 43952,
+      "neighbour_numerical_and_analytic_support": 43952,
+      "proposal_replays": {
+        "fixed": {
+          "attempts": 8192,
+          "finite_native_correction": 8192,
+          "incoming_analytic_support": 8192,
+          "log_correction_range": [
+            -0.04145635582239393,
+            0.037969801951204474
+          ],
+          "per_replay_median_log_correction_range": [
+            -0.0012916766740911356,
+            0.0008530945432099202
+          ]
+        },
+        "relocated": {
+          "attempts": 8192,
+          "finite_native_correction": 8192,
+          "incoming_analytic_support": 8192,
+          "log_correction_range": [
+            -48.16986910216826,
+            5.512469646570681
+          ],
+          "per_replay_median_log_correction_range": [
+            -9.72108058585229,
+            -9.446201959471274
+          ]
+        }
+      }
+    },
+    {
+      "observation": 0,
+      "saved_particles": 2048,
+      "target_zero_conditional_numerical_support_mass": 0,
+      "min_mean_conditional_numerical_support_mass": 1.0,
+      "neighbours": 44743,
+      "neighbour_analytic_support": 44743,
+      "neighbour_numerical_and_analytic_support": 44743,
+      "proposal_replays": {
+        "fixed": {
+          "attempts": 8192,
+          "finite_native_correction": 8192,
+          "incoming_analytic_support": 8192,
+          "log_correction_range": [
+            -0.00786990413809896,
+            0.005919966143190791
+          ],
+          "per_replay_median_log_correction_range": [
+            -5.895162545499488e-05,
+            5.434449505514749e-05
+          ]
+        },
+        "relocated": {
+          "attempts": 8192,
+          "finite_native_correction": 8192,
+          "incoming_analytic_support": 8192,
+          "log_correction_range": [
+            -48.16190958227315,
+            9.2207104331543
+          ],
+          "per_replay_median_log_correction_range": [
+            -9.774709104258148,
+            -9.361895817878013
+          ]
+        }
+      }
+    },
+    {
+      "observation": 1,
+      "saved_particles": 2048,
+      "target_zero_conditional_numerical_support_mass": 0,
+      "min_mean_conditional_numerical_support_mass": 0.9999999999999999,
+      "neighbours": 44561,
+      "neighbour_analytic_support": 44561,
+      "neighbour_numerical_and_analytic_support": 44561,
+      "proposal_replays": {
+        "fixed": {
+          "attempts": 8192,
+          "finite_native_correction": 8192,
+          "incoming_analytic_support": 8192,
+          "log_correction_range": [
+            -0.004877993538876524,
+            0.0036490801515576266
+          ],
+          "per_replay_median_log_correction_range": [
+            -4.017671741607387e-05,
+            2.193817629247974e-05
+          ]
+        },
+        "relocated": {
+          "attempts": 8192,
+          "finite_native_correction": 8192,
+          "incoming_analytic_support": 8192,
+          "log_correction_range": [
+            -48.55557367108022,
+            4.433801162969533
+          ],
+          "per_replay_median_log_correction_range": [
+            -9.913661804234788,
+            -9.47107167477134
+          ]
+        }
+      }
+    },
+    {
+      "observation": 8,
+      "saved_particles": 2048,
+      "target_zero_conditional_numerical_support_mass": 0,
+      "min_mean_conditional_numerical_support_mass": 1.0,
+      "neighbours": 42930,
+      "neighbour_analytic_support": 42930,
+      "neighbour_numerical_and_analytic_support": 42930,
+      "proposal_replays": {
+        "fixed": {
+          "attempts": 8192,
+          "finite_native_correction": 8192,
+          "incoming_analytic_support": 8192,
+          "log_correction_range": [
+            -0.003161668531067363,
+            0.00761386984407153
+          ],
+          "per_replay_median_log_correction_range": [
+            -3.8824815032256765e-05,
+            2.0610274532373296e-05
+          ]
+        },
+        "relocated": {
+          "attempts": 8192,
+          "finite_native_correction": 8192,
+          "incoming_analytic_support": 8192,
+          "log_correction_range": [
+            -48.33852904805859,
+            10.521165700156669
+          ],
+          "per_replay_median_log_correction_range": [
+            -9.805721719437999,
+            -9.46589537140003
+          ]
+        }
+      }
+    }
+  ],
+  "bright_native_by_run": [
+    {
+      "run": "dev_v1_0",
+      "native_medians": {
+        "z": 0.04885181721714687,
+        "M_B": -19.179806588653296,
+        "m_r": 17.0964039569485
+      },
+      "conditional_type_weighted_log_q_over_p": {
+        "total_count": 512,
+        "finite_positive_weight_count": 511,
+        "finite_weight": 256.0,
+        "mean": -0.0005416265891196653,
+        "quantile_levels": [
+          0,
+          0.01,
+          0.1,
+          0.5,
+          0.9,
+          0.99,
+          1
+        ],
+        "quantiles": [
+          -0.021204825629945745,
+          -0.01607020679668203,
+          -0.00948711918543843,
+          -0.0012513647173939546,
+          0.00893087486409172,
+          0.01783713816079313,
+          0.02651819317389048
+        ]
+      }
+    },
+    {
+      "run": "dev_v1_1",
+      "native_medians": {
+        "z": 0.04783344914963143,
+        "M_B": -19.101524929019234,
+        "m_r": 17.11754350419502
+      },
+      "conditional_type_weighted_log_q_over_p": {
+        "total_count": 512,
+        "finite_positive_weight_count": 512,
+        "finite_weight": 256.0,
+        "mean": -0.0005971871980557132,
+        "quantile_levels": [
+          0,
+          0.01,
+          0.1,
+          0.5,
+          0.9,
+          0.99,
+          1
+        ],
+        "quantiles": [
+          -0.020801734353872448,
+          -0.016214527148301627,
+          -0.010763337314594779,
+          -0.0004971843651606633,
+          0.007896628867316124,
+          0.015016148067250157,
+          0.018387281521727417
+        ]
+      }
+    },
+    {
+      "run": "dev_v1_2",
+      "native_medians": {
+        "z": 0.05145197803835727,
+        "M_B": -19.30049027045481,
+        "m_r": 17.07945268223711
+      },
+      "conditional_type_weighted_log_q_over_p": {
+        "total_count": 512,
+        "finite_positive_weight_count": 512,
+        "finite_weight": 256.0,
+        "mean": 0.0001378816832919238,
+        "quantile_levels": [
+          0,
+          0.01,
+          0.1,
+          0.5,
+          0.9,
+          0.99,
+          1
+        ],
+        "quantiles": [
+          -0.026998346002047313,
+          -0.018858187094128454,
+          -0.007984825761578662,
+          -0.0005414469089544127,
+          0.008951290045521532,
+          0.019497439008008044,
+          0.037899056688173616
+        ]
+      }
+    },
+    {
+      "run": "dev_v1_3",
+      "native_medians": {
+        "z": 0.06778515522757371,
+        "M_B": -19.911060115485213,
+        "m_r": 17.034143868396065
+      },
+      "conditional_type_weighted_log_q_over_p": {
+        "total_count": 512,
+        "finite_positive_weight_count": 511,
+        "finite_weight": 256.0,
+        "mean": 0.0004704127082153691,
+        "quantile_levels": [
+          0,
+          0.01,
+          0.1,
+          0.5,
+          0.9,
+          0.99,
+          1
+        ],
+        "quantiles": [
+          -0.029570547562567384,
+          -0.01729433785716772,
+          -0.007466021686433066,
+          9.200065654724199e-05,
+          0.01004432252451437,
+          0.018342351264937662,
+          0.029005417045215864
+        ]
+      }
+    },
+    {
+      "run": "dev_v4_0",
+      "native_medians": {
+        "z": 0.053270813583475726,
+        "M_B": -19.442366914790153,
+        "m_r": 17.093985983494868
+      },
+      "conditional_type_weighted_log_q_over_p": {
+        "total_count": 512,
+        "finite_positive_weight_count": 511,
+        "finite_weight": 256.0,
+        "mean": 0.0006721298596139748,
+        "quantile_levels": [
+          0,
+          0.01,
+          0.1,
+          0.5,
+          0.9,
+          0.99,
+          1
+        ],
+        "quantiles": [
+          -0.029281084036814065,
+          -0.016428593375286127,
+          -0.008881905513304034,
+          0.0007264881527220268,
+          0.009584361251718576,
+          0.01798076570578999,
+          0.025844974099355156
+        ]
+      }
+    },
+    {
+      "run": "dev_v4_1",
+      "native_medians": {
+        "z": 0.0500435324147571,
+        "M_B": -19.30801174404694,
+        "m_r": 17.08624700220569
+      },
+      "conditional_type_weighted_log_q_over_p": {
+        "total_count": 512,
+        "finite_positive_weight_count": 511,
+        "finite_weight": 256.0,
+        "mean": 0.0008182478278475585,
+        "quantile_levels": [
+          0,
+          0.01,
+          0.1,
+          0.5,
+          0.9,
+          0.99,
+          1
+        ],
+        "quantiles": [
+          -0.02114473485038637,
+          -0.014322043558966158,
+          -0.008495291038984831,
+          0.0003928275986329055,
+          0.01023315540087566,
+          0.01585739578479206,
+          0.018612631610686492
+        ]
+      }
+    },
+    {
+      "run": "dev_v4_2",
+      "native_medians": {
+        "z": 0.04896778810302049,
+        "M_B": -19.23460300677153,
+        "m_r": 17.100630620849678
+      },
+      "conditional_type_weighted_log_q_over_p": {
+        "total_count": 512,
+        "finite_positive_weight_count": 511,
+        "finite_weight": 256.0,
+        "mean": 4.312436812669608e-05,
+        "quantile_levels": [
+          0,
+          0.01,
+          0.1,
+          0.5,
+          0.9,
+          0.99,
+          1
+        ],
+        "quantiles": [
+          -0.027005304263855834,
+          -0.018312192702728325,
+          -0.009422705405036425,
+          -4.102702845010242e-05,
+          0.00865169544066724,
+          0.015031112126150603,
+          0.018548238131865347
+        ]
+      }
+    },
+    {
+      "run": "dev_v4_3",
+      "native_medians": {
+        "z": 0.07154133455033551,
+        "M_B": -20.0013013913358,
+        "m_r": 17.045351942290715
+      },
+      "conditional_type_weighted_log_q_over_p": {
+        "total_count": 512,
+        "finite_positive_weight_count": 512,
+        "finite_weight": 256.0,
+        "mean": -9.599614971264863e-05,
+        "quantile_levels": [
+          0,
+          0.01,
+          0.1,
+          0.5,
+          0.9,
+          0.99,
+          1
+        ],
+        "quantiles": [
+          -0.041600195776730686,
+          -0.01791825565863725,
+          -0.008114528136049515,
+          -0.00016992253216230324,
+          0.00858312882914447,
+          0.016772680551792263,
+          0.022341708038778663
+        ]
+      }
+    }
+  ]
+}

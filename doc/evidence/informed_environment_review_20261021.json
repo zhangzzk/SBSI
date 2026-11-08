@@ -1,0 +1,73 @@
+{
+  "status": "passed",
+  "source": "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/informed-environment-20261021",
+  "source_sha256": {
+    "sbsi/informed_environment.py": "fe8dbde051bffe6c4f284adad8edbb794ad31c913f7d643ce60afc8bee6920e2",
+    "sbsi/galsbi_particle_target.py": "443be49e9e8ffb95a199ea66ffeb412c0cbe313bff98b9ef7bdcb402a913c59e",
+    "sbsi/particle_populations.py": "5e142612b28847ee2c37a488b4289819a26e8be7c5efde085fd9b774db6f62af",
+    "sbsi/numerical_native_intensity.py": "af1360912a68b35be138596da4cc095895b485a14443c002a17dcddefcd2e4b5",
+    "sbsi/scene_exchange.py": "c47763c55228257721135811b68f800945f64513c052945331974bb976b67c37",
+    "sbsi/poisson_augmentation.py": "0ce98f78c5cebf0934cf2afba0ef93d949a5e9fc9f740be93a67399f734974c4",
+    "sbsi/galsbi_particle_proposal.py": "8f819102b17a111eada267731ed30a8dfeafa7e377010e6354f8e6a6e5b64fab",
+    "tests/test_galsbi_particle_target.py": "48be767c56d6fa62d223907d4b2cda18e3bae59d4cee6ff1de1b80d25143540e",
+    "tests/test_galsbi_prior.py": "6d80146ffdbb361f1030f683cddeec0b41aaf01921b1fc0c6f960f0caad71891"
+  },
+  "script_sha256": "760b67f72dcaada38b8a29e9d269bd5a2c4dbe43ac13bf8732b1f2db11f8a84b",
+  "native_full_mixture_max_error": 7.105427357601002e-15,
+  "mutation_ratio_checks": [
+    {
+      "beta": 0.001,
+      "block": "positions",
+      "max_error": 1.0658141036401503e-14
+    },
+    {
+      "beta": 0.001,
+      "block": "environment",
+      "max_error": 1.0658141036401503e-14
+    },
+    {
+      "beta": 0.001,
+      "block": "native_exchange",
+      "max_error": 1.5987211554602254e-14
+    },
+    {
+      "beta": 0.4,
+      "block": "positions",
+      "max_error": 7.993605777301127e-15
+    },
+    {
+      "beta": 0.4,
+      "block": "environment",
+      "max_error": 7.993605777301127e-15
+    },
+    {
+      "beta": 0.4,
+      "block": "native_exchange",
+      "max_error": 8.881784197001252e-15
+    },
+    {
+      "beta": 1.0,
+      "block": "positions",
+      "max_error": 0.0
+    },
+    {
+      "beta": 1.0,
+      "block": "environment",
+      "max_error": 0.0
+    },
+    {
+      "beta": 1.0,
+      "block": "native_exchange",
+      "max_error": 7.105427357601002e-15
+    }
+  ],
+  "zero_weight_denominator": true,
+  "invalid_likelihood_skip": true,
+  "invalid_mutation_guard": true,
+  "payload_scatter_all_fields": true,
+  "phase_override_checked": true,
+  "limitations": [
+    "Native fixture only; no learned model or GPU.",
+    "Independent mathematical implementation audit, not production convergence or speed evidence."
+  ]
+}

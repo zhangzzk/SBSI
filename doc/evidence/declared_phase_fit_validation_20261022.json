@@ -1,0 +1,52 @@
+{
+  "schema": "sbsi-declared-phase-fit-preparation-v1",
+  "results": [
+    {
+      "job": 17423221,
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "passed": 878,
+      "skipped": 1,
+      "warnings": 1,
+      "test_seconds": 102.93,
+      "allocation_wall_seconds": 127,
+      "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_declared_phase_fit_20261022",
+      "manifest_sha256": "dd9f33f159e23f0ab0b72e78e08050e4eebe95cd150799d20a043e48994ec817",
+      "source_files": 313,
+      "log": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/declared-phase-fit-tests-17423221.out",
+      "log_sha256": "ee23ba7d58adf9ffe058954353fedef7d0bdfff73fb32dc277ba39392f36aeb9",
+      "launcher": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_declared_phase_fit_tests_20261022.sh",
+      "launcher_sha256": "3416c40f518eb68c1cece4434ef49a2b49512e5ae17ce5da641cc655316221f6",
+      "validation": "full pytest tests -q -rs -p no:cacheprovider; source manifest checked before and after",
+      "limitations": "Initial tests did not cover three independently identified provenance/full-proposal gaps; superseded by v2."
+    },
+    {
+      "job": 17423307,
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "passed": 885,
+      "skipped": 1,
+      "warnings": 1,
+      "test_seconds": 90.37,
+      "allocation_wall_seconds": 98,
+      "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_declared_phase_fit_v2_20261022",
+      "manifest_sha256": "33b9e92c5967818039afb3fbf0b946dece535b52ab21aa67e41c887ce4e8b989",
+      "source_files": 313,
+      "log": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/declared-phase-fit-v2-tests-17423307.out",
+      "log_sha256": "3932935a2cf8e54242f9b4afe0f1d99bcacb723c2a2ee14a960f95136dff260f",
+      "launcher": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_declared_phase_fit_v2_tests_20261022.sh",
+      "launcher_sha256": "f3e0df51bb6067aa5e027bd0a4132238143f3bfabf1690650f6b2fe16435b5e9",
+      "validation": "full pytest tests -q -rs -p no:cacheprovider; source manifest checked before and after",
+      "limitations": "One optional BlendEMU converter cross-check skipped; existing NumPy deprecation warning. Synthetic validation, no heldout scientific run."
+    }
+  ],
+  "reviewed_gaps_addressed": [
+    "exact declared pilot source artifact map",
+    "mandatory implementation sets and imported module identity",
+    "full declaration-owned pilot proposal law"
+  ],
+  "scientific_heldout_launched": false,
+  "heldout_numerical_outcomes_read": false,
+  "development_v10_outcomes_read": false,
+  "remaining": "Full heldout wrapper, measured-input proposal preflight, external dependency pinning, declaration and all-inclusive report; conditional on completed v10 checks."
+}

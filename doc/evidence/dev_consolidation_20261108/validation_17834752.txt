@@ -1,0 +1,21 @@
+........................................s.....s......................... [  9%]
+........................................................................ [ 18%]
+........................................................................ [ 28%]
+........................................................................ [ 37%]
+........................................................................ [ 47%]
+....................................................................s... [ 56%]
+..........................s............................................. [ 66%]
+........................................................................ [ 75%]
+........................................................................ [ 85%]
+........................................................................ [ 94%]
+..........................................                               [100%]
+=============================== warnings summary ===============================
+tests/test_scene_exchange.py::test_swap_marginal_type_and_coordinate_measure_detailed_balance
+  /home/z/Zekang.Zhang/SBSI/tests/test_scene_exchange.py:58: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+    assert abs(float(old_j-new_j)) > .1  # This test needs a nontrivial Jacobian.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+---------------------------- pytest-regtest report -----------------------------
+total number of failed regression tests: 0
+total number of failed snapshot tests  : 0
+758 passed, 4 skipped, 1 warning in 87.86s (0:01:27)

@@ -1,0 +1,88 @@
+{
+  "created_utc": "2026-10-21T23:04:52.967608+00:00",
+  "node": "n23",
+  "purpose": "Corrected-source three-way replication; isolate mutation effort at256 particles from particle count and initial proposal. No accepted sampler or heldout outcome used.",
+  "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_support_fix_20261022",
+  "source_manifest_sha256": "f22761b42d5816ba126baa82a966cb5d1a9620efc1811b42e41931620bff225a",
+  "integration_tests": {
+    "job": 17421864,
+    "passed": 822,
+    "skipped": 1
+  },
+  "observations": [
+    58165,
+    0,
+    1,
+    8
+  ],
+  "centre": [
+    0.0,
+    0.0
+  ],
+  "density_batch_size": 4096,
+  "stages": 64,
+  "moves": 64,
+  "replicas_per_arm": 8,
+  "arms": [
+    {
+      "name": "small",
+      "particles": 256,
+      "proposal": "fitted",
+      "seed_base": 2026102900
+    },
+    {
+      "name": "large",
+      "particles": 1024,
+      "proposal": "fitted",
+      "seed_base": 2026103000
+    },
+    {
+      "name": "broad",
+      "particles": 1024,
+      "proposal": "student_t",
+      "df": 5,
+      "seed_base": 2026103100
+    }
+  ],
+  "array_mapping": "replica=task_id//3; arm=task_id%3 in [small,large,broad]; seed=arm_base+replica",
+  "smoke": {
+    "seed": 2026102998,
+    "particles": 64,
+    "stages": 8,
+    "moves": 16
+  },
+  "initial_proposal": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/pilot_initial_proposal_n13_v2.json",
+    "sha256": "7f11db32019d4e0014a10acc61ea890c17d6fc61b67d0fd9ff36afe3763c46e4"
+  },
+  "physical_geometry": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/geometry_gradient_v1.json",
+    "sha256": "a2eb847b956a986a94257bf2fce808185813e447dafcc45981f499a7c9d9b2c0"
+  },
+  "phase_control": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/frozen_v1_coefficients.json",
+    "sha256": "a31062ffe9c970d8c3ae9214f5f9b7a67781829cd14d37f8ee2461fb155412c7",
+    "refit": false,
+    "stride": 1,
+    "measures": [
+      "raw_float32_sampled",
+      "precision_reweighted_float64"
+    ]
+  },
+  "comparison": "All original raw score/normalizer/region gates. Additionally each phase-corrected component must agree within3.5 combined whole-population MCSE across both proposal and effort comparisons. Report signed values, all populations, zero masses and preparation/diagnostic costs. Numerical phase identity is qualified for intended continuous F64 law; F32 is not asserted exact.",
+  "resource": {
+    "partition": "inter",
+    "node": "th-cl-nv02",
+    "gpu": "v100:1",
+    "array_throttle": 3,
+    "total_study_gpu_ceiling": 4
+  },
+  "decision_context": "Declared after completed v9 raw and frozen-phase comparisons, before inspecting completed v8 arm aggregate outcomes. Hypothesis is fixed; no adaptive seed/effort tuning.",
+  "limitations": [
+    "This is development only; heldout remains paused.",
+    "Support correction fixes missing lower continuous-uniform bound but not a complete mixed-measure finite-RNG law.",
+    "Independent pilots are proposal aids; their sampled means are never imposed on posterior estimates.",
+    "Initial geometry and proposal fits use only original four independent development pilots.",
+    "Future CPU optimization is excluded from this frozen comparison."
+  ]
+}

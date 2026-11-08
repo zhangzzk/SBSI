@@ -5,7 +5,7 @@ from scipy.integrate import quad
 from scipy.special import gammaln
 from scipy.stats import beta, betaprime, norm
 
-from sbsi.galsbi_prior import GalSBIContinuousPrior, upper_gamma
+from sbsi.galsbi_prior import ExactMemo, GalSBIContinuousPrior, upper_gamma
 
 
 def prior_fixture():
@@ -94,3 +94,25 @@ def test_continuous_sampling_and_normalization_contract():
     assert small['n_proposals'] == 1
     with pytest.raises(ValueError, match='positive integer'):
         prior.sample(0, 18)
+
+
+def test_exact_memo_returns_function_values_and_reuses_them():
+    calls = []
+    memo = ExactMemo(lambda z: calls.append(len(z)) or np.sqrt(z), limit=4)
+    z = np.array([[.5, 2.], [.5, 3.]])
+    assert np.array_equal(memo(z), np.sqrt(z))
+    assert np.array_equal(memo(z[::-1]), np.sqrt(z[::-1])) and calls == [3]
+    memo(np.array([4., 5.]))
+    memo(np.array([6.]))  # beyond the limit: memory restarts with this call
+    assert calls == [3, 2, 1] and np.array_equal(memo.keys, [6.])
+
+
+def test_window_rejected_proposals_do_not_shift_retained_draws():
+    """Skipping work for window-rejected rows leaves every retained row bit-identical."""
+    narrow, wide = prior_fixture(), prior_fixture()
+    wide.p.update(gals_mag_min=-np.inf, gals_mag_max=np.inf)
+    a, _ = narrow.sample(4000, 7)
+    b, meta = wide.sample(4000, 7)
+    assert meta['n_retained'] == 4000 > len(a['z']) > 0
+    for key, value in a.items():
+        assert np.array_equal(value, b[key][a['proposal_index']]), key

@@ -16,7 +16,7 @@ import numpy as np
 from scipy.integrate import quad
 from scipy.stats import beta, betaprime, chi2_contingency, kstest, ks_2samp, norm
 
-from sbsi.galsbi_prior import GalSBIContinuousPrior
+from sbsi.galsbi_prior import ExactMemo, GalSBIContinuousPrior
 
 
 def digest(path):
@@ -47,17 +47,21 @@ def build_prior(model_index=0, grid_size=8193):
     cosmo = PyCosmo.build()
     cosmo.set(h=p['h'], omega_m=p['omega_m'])
     mag = get_magnitude_calculator_table(['B', 'r', 'i'], par)
+    # Exact per-redshift memory: MH moves mostly keep z. Neighbour proposals
+    # add fresh z, so this memory restarts sooner to keep insertions cheap.
+    luminosity_distance = ExactMemo(lambda z: cosmo.background.dist_lum_a(a=1/(1+z)), limit=500_000)
 
     def photometry(z, M_B, c):
         zero = np.zeros(len(z))
         absolute = mag(redshifts=zero, excess_b_v=zero, coeffs=c, filter_names=['B', 'i'])
         coeff = c * 10 ** (.4*(absolute['B']-M_B))[:, None]
-        distance = cosmo.background.dist_lum_a(a=1/(1+z))
+        distance = luminosity_distance(z)
         coeff *= ((1e-5/distance)**2/(1+z))[:, None]
         apparent = mag(redshifts=z, excess_b_v=zero, coeffs=coeff, filter_names=['r', 'i'])
         return dict(m_r=apparent['r'], m_i=apparent['i'],
                     M_i=M_B+absolute['i']-absolute['B'])
 
+    @ExactMemo
     def volume(z):
         transverse = cosmo.background.dist_trans_a(a=1/(1+z))
         expansion = np.sqrt(cosmo.params.omega_m*(1+z)**3 + cosmo.params.omega_l)

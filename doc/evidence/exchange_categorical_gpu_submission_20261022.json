@@ -1,0 +1,13 @@
+{
+  "commit": "1c0e0c6aca59e23d360935f1ad768c4345a7e789",
+  "snapshot": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_categorical_source_20261022",
+  "files": 265,
+  "manifest_sha256": "acaa720e64a6017413d19cee8925f27abb0b38383b663c7c671677b5d598cf71",
+  "frozen_input_preflight_pass": true,
+  "gpu_submitted": true,
+  "prepared_sbatch": "sbatch --dependency=afterok:17422526 --partition=inter --nodelist=th-cl-nv02 --gres=gpu:v100:1 --cpus-per-task=2 --mem=16G --time=00:15:00 --job-name=exchange-cat-replay --output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange-categorical-gpu-%j.out /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_categorical_source_20261022/scripts/run_exchange_categorical_replay.sh /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_categorical_source_20261022 /project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/exchange_categorical_trained_20261022.json",
+  "job": 17422901,
+  "afterok": 17422526,
+  "status": "pending_dependency",
+  "core_runtime_integrated": false
+}

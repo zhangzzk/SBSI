@@ -1,0 +1,78 @@
+{
+  "schema": "legacy-trajectory-harness-validation-v1",
+  "date": "2026-10-22",
+  "worktree": "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/endpoint-compatibility-audit-20261022",
+  "branch": "codex/endpoint-compatibility-audit-20261022",
+  "base_commit": "dca103e86f235dd365eb9aceca001e849e564113",
+  "source_sha256": {
+    "sbsi/legacy_exchange_audit.py": "392221f3b73956c1752a769e5e0b3bc09d6ff38735a47a4cc3637300feef2434",
+    "scripts/audit_legacy_particle_trajectory.py": "ffa819358f2cfd5e74949f73f82a4027072c287d37b367549c39a058d09a9de6",
+    "tests/test_legacy_exchange_audit.py": "afbb96f82f7aed8128a57d87597be1fd9aab389131ea2bdd1553a0bb70a9b73c",
+    "doc/LEGACY_PARTICLE_TRAJECTORY_AUDIT.md": "1b0f1602474f90f55fadb2e9dfac0801eea191f5cac0b899b30b6c448a54b8f0"
+  },
+  "cpu_jobs": [
+    {
+      "slurm_job_id": "17422503",
+      "passed": 19,
+      "failed": 5,
+      "pytest_seconds": 21.64,
+      "artifacts": {
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/legacy_trajectory_harness_20261022/focused_first_failure_junit.xml": "3db8e722f610de296175d67a0e1550f0e4a8d073784096f06b3b8e90cef8d767",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/legacy_trajectory_harness_20261022/tests-17422503.out": "f713943c7b4bbb95fe70d7fbe4c97b4b99ace36e127763ffc17c43386716b6d5"
+      }
+    },
+    {
+      "slurm_job_id": "17422593",
+      "passed": 24,
+      "failed": 0,
+      "pytest_seconds": 14.13,
+      "artifacts": {
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/legacy_trajectory_harness_20261022/focused_v1_junit.xml": "7b00e9cfc2fea7e313783b8b6da61baadbf77ea5c1277869accbe9f0aeb28a63",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/legacy_trajectory_harness_20261022/tests-17422593.out": "b8f60902fc39a3553a8cb46dfd9b008639b38001809636c4a7d4cfaa5d9de098"
+      }
+    },
+    {
+      "slurm_job_id": "17422638",
+      "passed": 26,
+      "failed": 0,
+      "pytest_seconds": 13.52,
+      "artifacts": {
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/legacy_trajectory_harness_20261022/focused_v2_junit.xml": "6435bb81f5301466730e2f6eed607bb9e8bec05d47a56521139d472ab260ed0c",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/legacy_trajectory_harness_20261022/tests-17422638.out": "81fc6297653d411df73c5a2fc3461126350907006298bbfefd993f930c2f7654"
+      }
+    },
+    {
+      "slurm_job_id": "17422670",
+      "passed": 26,
+      "failed": 0,
+      "pytest_seconds": 13.37,
+      "artifacts": {
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/legacy_trajectory_harness_20261022/focused_junit.xml": "ba5a71308db1f7ff6855fe1739462abf45652eed071d201577ff628e2668b5dd",
+        "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/legacy_trajectory_harness_20261022/tests-17422670.out": "02ad1590efe8d5dcf11ec5985ac94de740e627ab5c5e6c746e7d3ddcad0b68c3"
+      }
+    }
+  ],
+  "launcher": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/legacy_trajectory_harness_20261022/run_tests.sh": "cb80ef8244f0e2404979f71c265682298c1ee5fb0c6fb96372fc10b0e5efc4d5"
+  },
+  "plan_only_artifacts": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/legacy_trajectory_harness_20261022/plan_v7_0.json": "43a6c2789f624401d7a17a9491b9063170805686e016b09f35adb8aaefd74227",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/legacy_trajectory_harness_20261022/plan_v8_baseline_0.json": "765139d2e62e2676e3b42824499453078ccb0a407564a087ca48697c25c34af2",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/legacy_trajectory_harness_20261022/plan_v8_informed_0.json": "57599a60d595b9885c0349f8d523ea04d0ca0c2f3ef64be48a37dd8424b803d7",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/legacy_trajectory_harness_20261022/plan_v9_0.json": "fd82638a7f66400afb67c4b85c6ad5aa5f1641e38691c5d2cafef76b73d3d346"
+  },
+  "first_failure": "Five synthetic real-source fixtures selected real summarize through MRO without observing conditions. Only fixture dispatch repaired; original frozen source untouched.",
+  "final_result": "26 passed; source implementation unchanged after final job. Documentation and this receipt completed afterward.",
+  "scope": [
+    "No historical full inference trajectory replay submitted or executed",
+    "No GPU job submitted",
+    "No heldout or v8/v9 scientific outcome read",
+    "Plan mode read startup protocols only",
+    "Synthetic frozen-module fixtures establish instrumentation state/decision/RNG preservation, not actual historical trajectory support"
+  ],
+  "limitations": [
+    "Each real replay costs one complete original inference run plus diagnostic CPU work; overhead unbenchmarked",
+    "Historical intermediate full states and final RNG absent: all saved outputs/history are compared, missing history is not invented",
+    "Counts trusted only after complete original/replay verification"
+  ]
+}

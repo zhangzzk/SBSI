@@ -1,0 +1,103 @@
+{
+  "created_utc": "2026-10-22T18:24:56.218328+00:00",
+  "job": "17447826",
+  "command": [
+    "sbatch",
+    "--parsable",
+    "--partition=inter",
+    "--gres=gpu:v100:1",
+    "--nodelist=th-cl-nv02",
+    "--cpus-per-task=8",
+    "--hint=nomultithread",
+    "--mem=64G",
+    "--time=01:00:00",
+    "--job-name=smc-four-worker-confirmation",
+    "--no-requeue",
+    "--dependency=afterok:17447788",
+    "--output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_launch_v1_20261022/benchmark-%j.out",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_launch_v1_20261022/run.sh"
+  ],
+  "launcher_sha256": "cbdad4b197aea43d813811d40bff4b73c7ac128811ddd33526e080b76eb0adcf",
+  "validation": {
+    "commit": "a556047b3c47fb5478865c58f728559b6dc323ba",
+    "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_test_source_v1_20261022",
+    "files": 483,
+    "manifest_sha256": "ef6ccd471fe913aa9123e9916084f115e0d36da761312a6124e9b4ae601cb055",
+    "output": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_validation_v1_20261022",
+    "job": "17447788",
+    "source_before_after_pass": true,
+    "pytest_exit_code": 0,
+    "preparation_exit_code": 0,
+    "preflight_pass": true,
+    "elapsed_seconds": 124.85358271095902,
+    "requested_physical_cpus": 4,
+    "gpus": 0,
+    "affinity": [
+      32,
+      96,
+      121,
+      49,
+      113,
+      54,
+      118,
+      57
+    ]
+  },
+  "junit": {
+    "tests": 1095,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 9
+  },
+  "scheduler_test": "17447788|COMPLETED|0:0|150|8",
+  "independently_checked_manifest_entries": 810,
+  "external_pins_checked": 657,
+  "declaration": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_prepared_v1_20261022/declaration.json",
+  "declaration_sha256": "9a26daf6a7bc1b756485a64f620f43549f8520c1a315051d60d8a1def25b3268",
+  "source_manifest_sha256": "fd96ec78e4b95886a3355082102a25d7a40ffa3dd1a5f4d52443a46458a64df1",
+  "status": "queued_after_test_success",
+  "limitations": [
+    "Fresh-seed confirmation results pending.",
+    "One V100/eight physical cores; fixed four-GPU node preserves combined study ceiling.",
+    "No unnecessary dependency on unrelated scientific or efficiency jobs."
+  ],
+  "test_submission": {
+    "commit": "a556047b3c47fb5478865c58f728559b6dc323ba",
+    "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_test_source_v1_20261022",
+    "files": 483,
+    "manifest_sha256": "ef6ccd471fe913aa9123e9916084f115e0d36da761312a6124e9b4ae601cb055",
+    "output": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_validation_v1_20261022",
+    "job": "17447788",
+    "command": [
+      "sbatch",
+      "--parsable",
+      "--output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_validation_v1_20261022/slurm-%j.out",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_validation_v1_20261022/validate.sh"
+    ],
+    "script_sha256": "e876ad17b7c501e188eff75022ea797f8101111d5e940f23ea51498550d32c6d",
+    "runner_sha256": "ea4dbddebfa76aca2eca6d2512a46bc29d2ba8884e7dbe4e379e468a63620700"
+  },
+  "scheduled_status": {
+    "created_utc": "2026-10-22T18:28:58.670268+00:00",
+    "job": "17447926",
+    "command": [
+      "sbatch",
+      "--parsable",
+      "--partition=cluster",
+      "--cpus-per-task=1",
+      "--mem=1G",
+      "--time=00:03:00",
+      "--begin=2026-10-22T20:55:17",
+      "--no-requeue",
+      "--job-name=smc-confirmation-status",
+      "--output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_launch_v1_20261022/status-%j.out",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_concurrency_confirmation_launch_v1_20261022/status_once.sh"
+    ],
+    "script_sha256": "e955d7d20dc5bdad92e13735193745a3881e89c447a5109ee7693cd721820fea",
+    "replaced_job": "17446128",
+    "cancel_returncode": 0,
+    "cancel_stdout": "",
+    "cancel_stderr": "",
+    "scope": "Keep previous20:55Berlin one-shot check time; include new confirmation. Read-only metadata/result-presence check; no chat notification or scientific outcome read."
+  }
+}

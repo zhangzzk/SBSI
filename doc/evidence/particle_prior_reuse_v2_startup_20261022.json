@@ -1,0 +1,13 @@
+{
+  "checked_utc": "2026-10-22T19:18:37.370585+00:00",
+  "job": "17448787",
+  "status": "optimized_sampling_started_and_progressing",
+  "progress_path": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_runs_v2_20261022/pair_0/optimized/progress.json",
+  "progress_sha256": "d48455ddb9c2c9341149e72795c5becaa328acb1f51ddc0eb82955c2bc7cff59",
+  "scheduler": "17448787|RUNNING|0:0|322\n17448787.batch|RUNNING|0:0|322\n17448787.extern|RUNNING|0:0|322\n17448787.0|RUNNING|0:0|322\n",
+  "limitations": [
+    "Mutable progress snapshot only; all four paired comparisons remain required.",
+    "No timing or scientific outcome decision from partial runs."
+  ],
+  "completed_stage_records": 37
+}

@@ -76,13 +76,15 @@ python -m sbsi validate-model like-1.0-galsbi
 classifier/disk-emulator loaders accept these companion paths.
 
 The flow checkpoint format is `sbsi_experimental_neighbour_factorized_v1`.
-Its retained loader is
-[`model.py`](evidence/neighbour_conditioned_flow_20261106/model.py), with the
-research dependencies used by its evaluation. The generic
-`load_measurement_model` does not support this format. Preserve the disabled
-score convention (the retained preprocessor still expects a finite score
-column, then replaces it by zero). Registering its paths does not promote
-that research loader to a standalone production inference adapter.
+It now loads through `sbsi.measurement_model.load_measurement_model`, backed
+by the permanent `sbsi/factorized_flow.py` implementation. The original
+checkpoint bytes and affine arithmetic are preserved; the disabled score
+column is supplied as zero without requiring a placeholder input column.
+Both this model and `galsbi-multistage` are vendored under `models/` with their
+shared classifier/emulator. External root overrides remain available.
+
+See [current inference integration](CURRENT_INFERENCE.md#models-and-compatibility)
+for the separate inference-reference and selection-normalization requirements.
 
 No likelihood, estimator, observing conditions, existing cache identity or
 historical checkpoint is changed by naming the fiducial. Its GalSBI observing

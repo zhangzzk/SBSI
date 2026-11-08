@@ -1,0 +1,32 @@
+{
+  "tested_tree": "5e4f601bb01b89941a680c0f70994cc9a41f08ff",
+  "job": 17834811,
+  "state": "COMPLETED",
+  "exit_code": "0:0",
+  "isolated_export": true,
+  "external_model_roots_unset": true,
+  "artifact_validators": [
+    "like-1.0-galsbi",
+    "galsbi-multistage"
+  ],
+  "isolated_targeted_tests": {
+    "passed": 10,
+    "skipped": 1
+  },
+  "full_suite": {
+    "passed": 758,
+    "skipped": 4,
+    "warnings": 1,
+    "seconds": 71.67
+  },
+  "cli_smokes": [
+    "python scripts/run_galsbi_inference.py --help",
+    "python -m scripts.run_galsbi_inference --help"
+  ],
+  "current_code_matches_tested_tree": true,
+  "matched_paths": 290,
+  "preservation_commit": "ccdb4de2dbab687afe33fce96b7cf11b00821b71",
+  "incoming_parent": "986a8217a0be45eeef371d8029ac842794436e3e",
+  "source_worktrees_preserved": true,
+  "scientific_runs_launched": false
+}

@@ -1,0 +1,105 @@
+{
+  "created_utc": "2026-10-22T16:54:39.360121+00:00",
+  "job": "17446115",
+  "command": [
+    "sbatch",
+    "--parsable",
+    "--partition=inter",
+    "--gres=gpu:v100:1",
+    "--nodelist=th-cl-nv02",
+    "--cpus-per-task=2",
+    "--hint=nomultithread",
+    "--mem=32G",
+    "--time=01:00:00",
+    "--job-name=prior-reuse-full-replay",
+    "--no-requeue",
+    "--dependency=afterok:17446023,afterany:17445452",
+    "--output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_launch_v1_20261022/benchmark-%j.out",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_launch_v1_20261022/run.sh"
+  ],
+  "launcher_sha256": "bfdae28b9c7337530d567dc7b0220d137c5b596a66617a641ffab77b39aaf7ce",
+  "validation": {
+    "commit": "4385cb8b246d87379c21795a33940232ef347916",
+    "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_prior_reuse_benchmark_test_source_v1_20261022",
+    "manifest_sha256": "27d9cf42578da6e7c92dba64c245536503694044d63d82fa30c263ee095e3235",
+    "files": 483,
+    "output": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_prior_reuse_benchmark_validation_v1_20261022",
+    "job": "17446023",
+    "source_before_after_pass": true,
+    "pytest_exit_code": 0,
+    "preparation_exit_code": 0,
+    "preflight_pass": true,
+    "elapsed_seconds": 102.49492201628163,
+    "requested_physical_cpus": 4,
+    "gpus": 0,
+    "affinity": [
+      9,
+      41,
+      12,
+      13,
+      44,
+      45,
+      19,
+      51
+    ]
+  },
+  "junit": {
+    "tests": 1132,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 9
+  },
+  "scheduler_test": "17446023|COMPLETED|0:0|123|8",
+  "independently_checked_manifest_entries": 1129,
+  "declaration": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_prepared_v1_20261022/declaration.json",
+  "declaration_sha256": "da9358a05bb3a46714ea92c40030dd04d0161327b9454ecf0fd714c6a08175ef",
+  "source_manifest_sha256": {
+    "baseline": "fd96ec78e4b95886a3355082102a25d7a40ffa3dd1a5f4d52443a46458a64df1",
+    "optimized": "f95d439d723e25375ca683a7134562f8a5262cd35d04c2b44a0e345bc52039c2"
+  },
+  "status": "queued_after_test_success_and_concurrency_benchmark",
+  "limitations": [
+    "No speedup or complete GPU replay result yet.",
+    "One V100/two physical cores; fixed four-GPU node preserves study ceiling.",
+    "Runs after current concurrency benchmark to separate performance interventions."
+  ],
+  "scheduled_status": {
+    "created_utc": "2026-10-22T16:55:17.647858+00:00",
+    "job": "17446128",
+    "command": [
+      "sbatch",
+      "--parsable",
+      "--partition=cluster",
+      "--cpus-per-task=1",
+      "--mem=1G",
+      "--time=00:03:00",
+      "--begin=now+2hours",
+      "--no-requeue",
+      "--job-name=smc-efficiency-followup",
+      "--output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_launch_v1_20261022/status-%j.out",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_launch_v1_20261022/status_once.sh"
+    ],
+    "script_sha256": "8951660e57826429b51ec32881b9d4040dda77929558cd87a9ce34dfb3e1b7f5",
+    "replaced_job": "17445739",
+    "cancel_returncode": 0,
+    "cancel_stdout": "",
+    "cancel_stderr": "",
+    "scope": "One bounded read-only scheduler/result-presence check; no chat notification or scientific outcome read."
+  },
+  "test_submission": {
+    "commit": "4385cb8b246d87379c21795a33940232ef347916",
+    "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_prior_reuse_benchmark_test_source_v1_20261022",
+    "manifest_sha256": "27d9cf42578da6e7c92dba64c245536503694044d63d82fa30c263ee095e3235",
+    "files": 483,
+    "output": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_prior_reuse_benchmark_validation_v1_20261022",
+    "job": "17446023",
+    "command": [
+      "sbatch",
+      "--parsable",
+      "--output=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_prior_reuse_benchmark_validation_v1_20261022/slurm-%j.out",
+      "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/smc_prior_reuse_benchmark_validation_v1_20261022/validate.sh"
+    ],
+    "validate_sha256": "e3624bf3a08107e5cbae979891193fe6f6448040d91c250a54367ab65f45aeac",
+    "runner_sha256": "6436285bd731d948cde9918838b6327cf51afe42513c2de699751f8dc7db3417"
+  }
+}

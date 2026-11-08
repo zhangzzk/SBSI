@@ -1,0 +1,19 @@
+{
+  "schema": "sampler-workflows-scheduled-status-v1",
+  "submitted_utc": "2026-10-22T14:00:20.427508+00:00",
+  "job_id": "17439000",
+  "command": [
+    "sbatch",
+    "--parsable",
+    "--begin=now+2hours",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_sampler_workflows_status_once_20261022.sh"
+  ],
+  "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/check_sampler_workflows_once_20261022.py",
+  "source_sha256": "7e2fbd3a553fe9fa4e0ed1650e94100077a237be072c9084a2c065d4101739ff",
+  "launcher": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_sampler_workflows_status_once_20261022.sh",
+  "launcher_sha256": "3ca593b31ee15d13548b485d57c384dd80c8cf81bf43166b49f6ee90f23c6b63",
+  "scheduler": "JobId=17439000 JobName=sampler-workflows-once\n   UserId=zekang.zhang(27188) GroupId=nobody(10000) MCS_label=N/A\n   Priority=470 Nice=0 Account=ls-gruen QOS=normal\n   JobState=PENDING Reason=BeginTime Dependency=(null)\n   Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0\n   RunTime=00:00:00 TimeLimit=00:03:00 TimeMin=N/A\n   SubmitTime=2026-10-22T16:00:20 EligibleTime=2026-10-22T18:00:20\n   AccrueTime=Unknown\n   StartTime=2026-10-22T18:00:20 EndTime=2026-10-22T18:03:20 Deadline=N/A\n   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-22T16:00:20 Scheduler=Main\n   Partition=cluster AllocNode:Sid=kng-sv-clhead02:3278954\n   ReqNodeList=(null) ExcNodeList=(null)\n   NodeList=\n   NumNodes=1 NumCPUs=1 NumTasks=1 CPUs/Task=1 ReqB:S:C:T=0:0:*:*\n   ReqTRES=cpu=1,mem=2G,node=1,billing=3\n   AllocTRES=(null)\n   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*\n   MinCPUsNode=1 MinMemoryNode=2G MinTmpDiskNode=0\n   Features=(null) DelayBoot=00:00:00\n   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)\n   Command=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_sampler_workflows_status_once_20261022.sh\n   WorkDir=/home/z/Zekang.Zhang/SBSI/.claude/worktrees/galsbi-tempering\n   StdErr=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/sampler-workflows-status-17439000.out\n   StdIn=/dev/null\n   StdOut=/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/sampler-workflows-status-17439000.out\n   Power=\n   \n\n",
+  "output": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/sampler-workflows-status-17439000.json",
+  "scope": "Read-only scheduler status and report-file existence; no scientific outcomes. It writes a receipt but does not wake or message the Codex thread.",
+  "existing_earlier_heldout_check_unchanged": 17436101
+}

@@ -27,7 +27,7 @@
     ],
     "context_contract": "Eight raw inputs, base preprocessing with missing indicators, appended constant-zero control column; use_score=false",
     "neighbour_score_enabled": false,
-    "loader_source": "doc/evidence/neighbour_conditioned_flow_20261106/model.py",
+    "loader_source": "sbsi/factorized_flow.py",
     "training": {
       "initial_nll_epochs": 140,
       "additional_nll_epochs": 40,
@@ -39,7 +39,8 @@
       "paired_seed_measurements_used_for_retraining": false
     },
     "training_completion_receipt": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/neighbour_conditioned_flow_20261106/control/nine_completed.json",
-    "training_completion_sha256": "7a24e426b69731a893275fb847b3925b340519a383767a95d0afcc2ef445aa7e"
+    "training_completion_sha256": "7a24e426b69731a893275fb847b3925b340519a383767a95d0afcc2ef445aa7e",
+    "public_loader": "sbsi.measurement_model.load_measurement_model"
   },
   "classifier": {
     "root": "SBSI_CACHE_DIR",
@@ -146,7 +147,6 @@
     "Four paired-seed development scenes only; no completed 40-scene paired-seed comparison for this checkpoint.",
     "No independent acceptance or demonstrated robust 0.3% calibration.",
     "Conditional photometry errors are not established as solved for this checkpoint.",
-    "Training retains initial NLL, further NLL, and response continuation; a one-run recipe is untested.",
-    "Named path preset only: the factorized checkpoint uses its retained research loader, not the generic load_measurement_model format; inference adapters/caches are not promoted by naming it."
+    "Training retains initial NLL, further NLL, and response continuation; a one-run recipe is untested."
   ]
 }

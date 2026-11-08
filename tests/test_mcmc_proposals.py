@@ -1,7 +1,7 @@
 """Correlated-Gaussian posterior closure and degenerate-warmup support."""
 import numpy as np
 
-from sbsi.mcmc_proposals import (complementary_stretch_proposal, empirical_block_cholesky,
+from sbsi.mcmc_proposals import (adjacent_swap_permutation, complementary_stretch_proposal, empirical_block_cholesky,
                                 gaussian_block_delta, pooled_block_cholesky)
 from sbsi.pseudo_marginal import metropolis_accept, retained
 
@@ -180,3 +180,41 @@ def test_wrapped_correlated_proposal_recovers_circular_gaussian_moments():
         (mean[0]*np.sin(mean[1])+covariance[0, 1]*np.cos(mean[1]))*np.exp(-covariance[1, 1]/2)])
     means = np.array(moments).mean(0)
     assert np.all(np.abs(means.mean(0)-expected) < 6*means.std(0, ddof=1)/np.sqrt(len(x)))
+
+
+def test_adjacent_swaps_follow_level_parity_and_exchange_states():
+    betas = np.array([1., .5, .25])
+    ll = np.array([0., 0., 5., 5., 9., 9.])  # level-major, two slots
+    u = np.full((2, 2), .5)
+    perm, accepted = adjacent_swap_permutation(ll, betas, 2, 0, u)
+    np.testing.assert_array_equal(accepted, [[True, True], [False, False]])
+    np.testing.assert_array_equal(perm, [2, 3, 0, 1, 4, 5])
+    perm, accepted = adjacent_swap_permutation(ll, betas, 2, 1, u)
+    np.testing.assert_array_equal(accepted, [[False, False], [True, True]])
+    np.testing.assert_array_equal(perm, [0, 1, 4, 5, 2, 3])
+
+
+def test_tempered_swaps_recover_unequal_mode_weights_from_wrong_mode_start():
+    # Prior N(0, 3^2) times a 0.7/0.3 mixture of narrow modes at +-4: the cold
+    # posterior gives the right mode exactly 0.7. Local steps alone never cross.
+    rng = np.random.default_rng(811)
+    betas, slots = np.geomspace(1., .01, 8), 400
+    beta = np.repeat(betas, slots)
+    step = np.minimum(.3/np.sqrt(beta), 3.)
+
+    def loglike(x):
+        return np.logaddexp(np.log(.7)-.5*((x-4)/.3)**2, np.log(.3)-.5*((x+4)/.3)**2)
+
+    x = np.full(len(beta), -4.)
+    logprior, ll = -.5*(x/3)**2, loglike(x)
+    right = []
+    for t in range(3000):
+        proposal = x+step*rng.normal(size=len(x))
+        newprior, newll = -.5*(proposal/3)**2, loglike(proposal)
+        ok = metropolis_accept(logprior+beta*ll, newprior+beta*newll, rng.uniform(1e-300, 1., len(x)))
+        x, logprior, ll = (retained(a, b, ok) for a, b in ((x, proposal), (logprior, newprior), (ll, newll)))
+        perm, _ = adjacent_swap_permutation(ll, betas, slots, t % 2, rng.uniform(1e-300, 1., (len(betas)-1, slots)))
+        x, logprior, ll = x[perm], logprior[perm], ll[perm]
+        if t >= 500:
+            right.append(x[:slots] > 0)
+    assert abs(np.mean(right)-.7) < .03

@@ -1,0 +1,55 @@
+{
+  "checked_utc": "2026-10-22T18:26:48.592162+00:00",
+  "kind": "read_only_acceptance_contract_audit",
+  "partial_scientific_outcomes_read": false,
+  "declaration_sha256": "ad718136d4ac00a37ffcaddf09dcfad92b15e68e4ebbf82ead597ed1b7c1f758",
+  "source_manifest_sha256": "fd96ec78e4b95886a3355082102a25d7a40ffa3dd1a5f4d52443a46458a64df1",
+  "source_files": {
+    "scripts/run_corrected_particle_heldout.py": "a949a7b92ff79ae2a1615c98b80986e2844cd3ef44714a90db40df77992f3d39",
+    "sbsi/particle_comparison_gates.py": "8c77ad0ff7f2fbf616ea1b2a250ca2119ec6822ba19dd1f063e9584d75e566df",
+    "sbsi/numerical_native_intensity.py": "af1360912a68b35be138596da4cc095895b485a14443c002a17dcddefcd2e4b5",
+    "sbsi/scene_exchange.py": "c5102579e3dfd1cd3c3e9ae5a267cf8ac0df9a6a82d60417fd2772e56aebd5ad",
+    "sbsi/galsbi_target_coordinates.py": "519c9cd4930a2a0a22d9989bad55b8dc436fe16760f8ed6d5dff3d8160047209",
+    "scripts/check_particle_phase_control.py": "43c9bc85a6da3fb229e9af51609efa1ace07236d66be583f861ac55b8eb7340e",
+    "tests/test_numerical_native_intensity.py": "b157db278886e60cd852f8872477e4b60a538d2d5593e6c37a31e9b031c06428"
+  },
+  "declared_endpoint": "analytic target prior p_A times numerical environment law q_E times K32",
+  "f64_likelihood_reweight": "exp(logK64-logK32); no numerical target prior q_N/p_A reweight",
+  "requirements": {
+    "pilots": 20,
+    "production_populations": 80,
+    "phase_evaluations": 100,
+    "groups": 5,
+    "observations": 20,
+    "independent_populations_per_arm_per_group": 8,
+    "candidate": "fitted N256/T64/M64",
+    "reference": "broad N1024/T64/M64",
+    "raw_score_effective_count_minimum": 400,
+    "normalizer_relative_mcse_strict_maximum": 0.1,
+    "run_weight_ess_minimum": 6.4,
+    "raw_score_combined_mcse_maximum": 3.5,
+    "raw_score_pooled_sd_maximum": 0.1,
+    "region_combined_mcse_maximum": 3.5,
+    "region_absolute_mass_maximum": 0.05,
+    "mean_normalizer_combined_se_maximum": 3.5,
+    "controlled_score_combined_mcse_maximum": 3.5,
+    "controlled_score_measures": [
+      "F32 sampled",
+      "F64 likelihood reweighted"
+    ],
+    "candidate_process_wall_must_be_strictly_lower": true
+  },
+  "diagnostic_not_gate": [
+    "controlled-score precision/absolute-SD bounds",
+    "T=0",
+    "all-five-moment contrasts",
+    "F64 normalizer precision/agreement",
+    "F32-F64 likelihood equivalence"
+  ],
+  "limitations": [
+    "Conditional on independently frozen shared fits; eight populations do not rule out shared missing modes.",
+    "Heldout increases particle count, not mutation depth.",
+    "No exact numerical mock-target prior closure or catalogue-wide shear-bias claim.",
+    "Current efficiency branches require separate replay/confirmation evidence."
+  ]
+}

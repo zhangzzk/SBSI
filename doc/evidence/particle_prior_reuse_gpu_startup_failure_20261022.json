@@ -1,0 +1,205 @@
+{
+  "schema": "sbsi-prior-reuse-startup-failure-v1",
+  "job": 17446115,
+  "slurm_state": "FAILED",
+  "exit_code": "1:0",
+  "allocated_elapsed_seconds": 249,
+  "sources": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_runs_v1_20261022/pair_0/receipt.json": "d18e6933b050bf66792746a726004f5e7669d76af3464626b94b221488c4e145",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_runs_v1_20261022/pair_0_process_cost.json": "7e7197644ae3733b8122b2b0ddb7d3f23e17583144c4bd877c629a972b2fac0d",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_runs_v1_20261022/pair_0/optimized_runtime/population_0.log": "0d6774b16183d675eb908353f54145fc8872065f2e4bd20bc6d5fb81388f1f73",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_launch_v1_20261022/benchmark-17446115.out": "56896f15fda4bc16c04bae24bac413d02d81433023e9591915ceee54acd10891"
+  },
+  "receipt": {
+    "status": "failed",
+    "replica": 0,
+    "seed": 2026103900,
+    "order": [
+      "baseline",
+      "optimized"
+    ],
+    "declaration_sha256": "da9358a05bb3a46714ea92c40030dd04d0161327b9454ecf0fd714c6a08175ef",
+    "resources": {
+      "slurm_job_id": "17446115",
+      "node": "th-cl-nv02.hpc.physik.uni-muenchen.de",
+      "slurm_node_list": "th-cl-nv02",
+      "affinity": [
+        28,
+        33,
+        76,
+        81
+      ],
+      "selected_cpus": [
+        28,
+        33
+      ],
+      "cpu_topology": {
+        "28": [
+          1,
+          4
+        ],
+        "33": [
+          1,
+          11
+        ],
+        "76": [
+          1,
+          4
+        ],
+        "81": [
+          1,
+          11
+        ]
+      },
+      "gpu": {
+        "cuda_visible_devices": "0",
+        "uuid": "GPU-704c26c9-8503-6ba3-650a-8dbc772b1477",
+        "name": "Tesla V100-SXM2-32GB",
+        "memory_total_mib": 32768,
+        "memory_used_mib": 0,
+        "utilization_percent": 0
+      },
+      "memory_info": "MemTotal:       1452304744 kB\nMemFree:        1361388764 kB\nMemAvailable:   1387043636 kB\nBuffers:           10444 kB\nCached:         38101448 kB\nSwapCached:            0 kB\nActive:         51677860 kB\nInactive:       26382152 kB\nActive(anon):   45460168 kB\nInactive(anon):   217524 kB\nActive(file):    6217692 kB\nInactive(file): 26164628 kB\nUnevictable:        8772 kB\nMlocked:            5700 kB\nSwapTotal:      20971516 kB\nSwapFree:       20971516 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:             14404 kB\nWriteback:             0 kB\nAnonPages:      38412148 kB\nMapped:          7372780 kB\nShmem:           5724356 kB\nKReclaimable:    2226280 kB\nSlab:            4502764 kB\nSReclaimable:    2226280 kB\nSUnreclaim:      2276484 kB\nKernelStack:       32800 kB\nPageTables:       152480 kB\nSecPageTables:      8224 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    747123888 kB\nCommitted_AS:   80173532 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:     3138348 kB\nVmallocChunk:          0 kB\nPercpu:           143616 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:  15187968 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:         0 kB\nFilePmdMapped:         0 kB\nCmaTotal:              0 kB\nCmaFree:               0 kB\nUnaccepted:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:    14324208 kB\nDirectMap2M:    693108736 kB\nDirectMap1G:    770703360 kB\n",
+      "thread_environment": {
+        "OMP_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      }
+    },
+    "arms": {
+      "baseline": {
+        "workers": {
+          "0": {
+            "replica": 0,
+            "cpus": [
+              28,
+              33
+            ],
+            "command": [
+              "/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python",
+              "-u",
+              "-c",
+              "import runpy,sys;from pathlib import Path;s=Path(sys.argv.pop(1)).resolve();sys.path[:0]=[str(s),str(s/\"scripts\")];import sbsi;assert Path(sbsi.__file__).resolve().parent==s/\"sbsi\";runpy.run_path(str(s/\"scripts/check_galsbi_particles.py\"),run_name=\"__main__\")",
+              "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_prepared_v1_20261022/baseline",
+              "--reference",
+              "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_pair1m_20261012/original/reference",
+              "--output",
+              "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_runs_v1_20261022/pair_0/baseline",
+              "--observation-indices",
+              "58165",
+              "0",
+              "1",
+              "8",
+              "--particles",
+              "256",
+              "--stages",
+              "64",
+              "--moves",
+              "64",
+              "--power",
+              "2",
+              "--scale",
+              "1",
+              "--seed",
+              "2026103900",
+              "--shear",
+              "0",
+              "0",
+              "--device",
+              "cuda",
+              "--density-batch-size",
+              "4096",
+              "--physical-geometry",
+              "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/geometry_gradient_v1.json",
+              "--initial-proposal",
+              "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/pilot_initial_proposal_n13_v2.json"
+            ],
+            "start_offset_seconds": 0.0011977340327575803,
+            "pid": 2372192,
+            "returncode": 0,
+            "process_seconds": 228.80857947398908,
+            "end_offset_seconds": 228.81106286402792
+          }
+        },
+        "wall_seconds": 228.81430301896762,
+        "output_sha256": {
+          "result.json": "7ddbd4083f05efb932b6731b0d2e8e79bb5ab94f6afea89186df6b74d596c65a",
+          "protocol.json": "2991b10b90c1ecd4743104c3e48447e386832c6505277671aabbd633e08079fe",
+          "progress.json": "7e20b403887fbaf535614977b71da820f6ad5f07d0bc7537375eb4a05171e09f",
+          "particles.npz": "56e6fb83eeaed05305718d7cca82cd9906ac8724f476ca639faf81a66db383f5",
+          "scenes.npz": "7b04b437dfbea77d8a11bbe47eb6dd8a4ba14e8ad1f86596f5267a029a5c08a5"
+        }
+      },
+      "optimized": {
+        "workers": {
+          "0": {
+            "replica": 0,
+            "cpus": [
+              28,
+              33
+            ],
+            "command": [
+              "/project/ls-gruen/users/zekang.zhang/envs/py31/bin/python",
+              "-u",
+              "-c",
+              "import runpy,sys;from pathlib import Path;s=Path(sys.argv.pop(1)).resolve();sys.path[:0]=[str(s),str(s/\"scripts\")];import sbsi;assert Path(sbsi.__file__).resolve().parent==s/\"sbsi\";runpy.run_path(str(s/\"scripts/check_galsbi_particles.py\"),run_name=\"__main__\")",
+              "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_prepared_v1_20261022/optimized",
+              "--reference",
+              "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_pair1m_20261012/original/reference",
+              "--output",
+              "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/prior_reuse_smc_runs_v1_20261022/pair_0/optimized",
+              "--observation-indices",
+              "58165",
+              "0",
+              "1",
+              "8",
+              "--particles",
+              "256",
+              "--stages",
+              "64",
+              "--moves",
+              "64",
+              "--power",
+              "2",
+              "--scale",
+              "1",
+              "--seed",
+              "2026103900",
+              "--shear",
+              "0",
+              "0",
+              "--device",
+              "cuda",
+              "--density-batch-size",
+              "4096",
+              "--physical-geometry",
+              "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/geometry_gradient_v1.json",
+              "--initial-proposal",
+              "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/pilot_initial_proposal_n13_v2.json"
+            ],
+            "start_offset_seconds": 0.0009887609630823135,
+            "pid": 2373399,
+            "returncode": 1,
+            "process_seconds": 7.023535621003248,
+            "end_offset_seconds": 7.026162192923948
+          }
+        }
+      }
+    },
+    "error": "RuntimeError('original population 0 failed (1)')",
+    "bitwise_saved_output_replay": false,
+    "pair_internal_wall_seconds": 247.77842182095628
+  },
+  "cost": {
+    "wall_seconds": 248.06,
+    "user_seconds": 224.64,
+    "system_seconds": 8.9,
+    "max_rss_kib": 1880364,
+    "exit_code": 1
+  },
+  "failure": "Frozen initial proposal rejects changed native_target_source_sha256 before optimized protocol saving or sampling.",
+  "baseline_completed": true,
+  "optimized_sampling_started": false,
+  "optimized_directory_exists": true,
+  "repair": "Separate v2 preparation will derive an explicitly bound implementation-provenance migration while preserving every numerical fitted-proposal field; validate using the actual production startup on CPU. Original v1 stays immutable. No speedup or numerical replay claimed."
+}

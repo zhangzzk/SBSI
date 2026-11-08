@@ -1,0 +1,13 @@
+{
+  "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/galsbi_constgold1m_signsym_20261028/recovery_v1/source_snapshot/scripts/check_galsbi_local_sampler.py",
+  "sha256": "5b133e2ff2637f608422c14a6a5c80c6dbae510dadd1acc6b4fca6dbcaeba5db",
+  "destination": "scripts/run_galsbi_inference.py",
+  "changes": [
+    "named model argument and artifact-identity gate",
+    "provenance includes permanent flow loader and manifests",
+    "file/module entry-point imports"
+  ],
+  "numerical_body": "cache-off production sampler, unchanged proposal/RNG/settings/likelihood calculations",
+  "sampling_and_reporting_body_exact": true,
+  "body_sha256": "6b2863b67bb31361bc9999756a8095bddf51b07eb004ef0bd8734ad6be0feb0f"
+}

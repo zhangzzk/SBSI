@@ -1,5 +1,6 @@
 """Bright-cut tests must preserve selection and refuse unbracketed recovery."""
 import importlib
+import json
 from pathlib import Path
 
 import numpy as np
@@ -64,3 +65,19 @@ def test_peak_uncertainty_retains_profile_covariance(monkeypatch):
         minus[i] -= 1e-5
         difference = (report.profile_fit(x, plus)['estimate']-report.profile_fit(x, minus)['estimate'])/2e-5
         assert difference == pytest.approx(derivative, rel=1e-6)
+
+
+def test_explicit_population_reference_needs_no_cohorts(monkeypatch, tmp_path):
+    monkeypatch.syspath_prepend(str(Path(__file__).resolve().parents[1]/'scripts'))
+    run = importlib.import_module('run_galsbi_bright')
+    reference = tmp_path/'population'
+    reference.mkdir()
+    (reference/'observations.parquet').write_bytes(b'rows')
+    receipt = dict(preparation_checks_pass=True, observations_sha256=run.digest(reference/'observations.parquet'))
+    (reference/'result.json').write_text(json.dumps(receipt))
+    assert run.selected_reference(tmp_path/'study', reference)[0] == reference
+    with pytest.raises(FileNotFoundError):
+        run.selected_reference(tmp_path)
+    (reference/'observations.parquet').write_bytes(b'changed')
+    with pytest.raises(ValueError):
+        run.selected_reference(tmp_path/'study', reference)

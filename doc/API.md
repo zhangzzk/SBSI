@@ -48,9 +48,9 @@ demonstrated 0.3% calibration and is not the default likelihood.
 
 `get_model("like-1.0-galsbi")` returns the current owner-selected GalSBI
 fiducial paths, pinned in `configs/models_like_1_0_galsbi.json`.
-`sbsi.models.CURRENT_FIDUCIAL` names the same set. The factorized flow requires
-its retained experimental loader; the generic measurement-model loader does
-not support this checkpoint format. Naming a model does not change the
+`sbsi.models.CURRENT_FIDUCIAL` names the same set. The factorized flow loads through
+`sbsi.measurement_model.load_measurement_model`. Both retained GalSBI checkpoints
+and their shared companion artifacts are included under `models/`. Naming a model does not change the
 configured likelihood or inference cache contract. See
 [identity and loading boundary](LIKE_1_0_GALSBI.md#loading-and-inference-boundary).
 

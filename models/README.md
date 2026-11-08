@@ -1,5 +1,21 @@
 # Model artifacts
 
+## Current GalSBI models
+
+The repository includes both exact flow checkpoints and their shared GalSBI
+C8 classifier and disk emulator (including metadata):
+
+- `like-1.0-galsbi`: current fiducial, control NLL plus weak nine-cut response.
+- `galsbi-multistage`: retained weighted multistage comparison, SHA43673e5d.
+
+Their manifests are `configs/models_like_1_0_galsbi.json` and
+`configs/models_galsbi_multistage.json`. With no external-root overrides,
+`python -m sbsi validate-model like-1.0-galsbi galsbi-multistage` checks the
+included bytes. Both use the standard `load_measurement_model` entry point.
+The multistage flow requires an explicit reference neighbour coefficient;
+missing values are rejected, never substituted by observed-photometry response.
+See [current model/inference boundary](../doc/CURRENT_INFERENCE.md#models-and-compatibility).
+
 ## V3.9-like
 
 The retained model is **F8 flow + primary C8 classifier + original disk emulator**.

@@ -151,3 +151,42 @@ def test_sed_jump_updates_native_luminosity_but_preserves_physical_features():
     prior.photometry = lambda z, M, c: dict(m_r=M+40+3*c[:, 0], m_i=M+100, M_i=M)
     logprior, _, _ = coords.log_mixture_prior(proposal)
     assert np.isneginf(logprior).all()
+
+
+def test_comoving_map_keeps_sheared_shape_and_circularized_radius_with_exact_jacobian():
+    prior = prior_fixture()
+    coords = GalSBITargetCoordinates(prior, lambda z: 1000*z/(1+z))
+    native, _ = prior.sample(40, 238)
+    x = coords.encode(native)
+    shear, node = (.019, .002), (.021, .002)
+    same, logj, valid = coords.comove(x, shear, shear)
+    np.testing.assert_allclose(same, x, atol=1e-10)
+    np.testing.assert_allclose(logj, 0, atol=1e-10)
+    moved, logj, valid = coords.comove(x, shear, node)
+    assert valid.all()
+    np.testing.assert_array_equal(moved[:, :8], x[:, :8])
+
+    def sheared(values, g):
+        d, _ = coords.decode(values, native['type'])
+        s = native_shapes(d, coords.angular_distance)
+        e = s['e1']+1j*s['e2']
+        return (e+complex(*g))/(1+np.conj(complex(*g))*e), s['circularized']
+
+    before, radius = sheared(x, shear)
+    after, moved_radius = sheared(moved, node)
+    np.testing.assert_allclose(after, before, atol=1e-12)
+    np.testing.assert_allclose(moved_radius, radius, rtol=1e-12)
+    back, back_logj, _ = coords.comove(moved, node, shear)
+    np.testing.assert_allclose(back[:, 8], x[:, 8], atol=1e-9)
+    np.testing.assert_allclose(np.angle(np.exp(1j*(back[:, 9]-x[:, 9]))), 0, atol=1e-9)
+    np.testing.assert_allclose(back_logj, -logj, atol=1e-9)
+    columns = []
+    for col in (8, 9):
+        h = np.zeros_like(x)
+        h[:, col] = 1e-6
+        up, down = coords.comove(x+h, shear, node)[0], coords.comove(x-h, shear, node)[0]
+        delta = up[:, [8, 9]]-down[:, [8, 9]]
+        delta[:, 1] = np.angle(np.exp(1j*delta[:, 1]))
+        columns.append(delta/2e-6)
+    numeric = np.log(np.abs(columns[0][:, 0]*columns[1][:, 1]-columns[0][:, 1]*columns[1][:, 0]))
+    np.testing.assert_allclose(logj, numeric, atol=1e-6)

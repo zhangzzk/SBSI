@@ -1,0 +1,30 @@
+{
+  "schema": "sbsi-heldout-report-development-audit-receipt-v1",
+  "job": 17435839,
+  "state": "COMPLETED",
+  "exit_code": "0:0",
+  "allocation_wall_seconds": 27,
+  "comparisons": 3,
+  "observations_per_comparison": 4,
+  "recursive_checks": 1908,
+  "complete_reports_validated": [
+    "small",
+    "large",
+    "broad"
+  ],
+  "incomplete_population_denominator_rejected": true,
+  "all_input_hashes_match_previously_audited_v10_sources": true,
+  "inputs_checked": 32,
+  "before_after_source_manifest_checks_pass": true,
+  "source_manifest_sha256": "fd96ec78e4b95886a3355082102a25d7a40ffa3dd1a5f4d52443a46458a64df1",
+  "files": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout_reporting_development_integration_20261022.json": "8ed25af254410bea563a24ee7697fac53dbe632c36fb1519d6c8da04f28cd534",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/audit_heldout_reporting_on_development_20261022.py": "b203e7231c37a5d3561d66557e5a53853a7e06c3ec719a0a916e181ca415bf5a",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/run_heldout_reporting_development_audit_20261022.sh": "bb8af4cd5e5e9688df4a409f54054d300813e4d635b37643b2141e5e84c826bf",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/heldout-report-development-audit-17435839.out": "62978254f1d29318e0f582ec11b1c5c4ee62e553a072fa9b15e5d95f607acf50"
+  },
+  "heldout_data_read": false,
+  "scientific_thresholds_changed": false,
+  "accepted_sampler": false,
+  "scope": "Report integration on previously completed development; not additional convergence or independent validation evidence."
+}

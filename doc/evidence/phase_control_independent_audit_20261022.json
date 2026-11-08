@@ -1,0 +1,667 @@
+{
+  "status": "passed",
+  "summary": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2_summary.json",
+  "summary_sha256": "ca5a07670fae46109614d788f9dc750b897916a2c6199a54a343578cd2b7159f",
+  "coefficient_sha256": "a31062ffe9c970d8c3ae9214f5f9b7a67781829cd14d37f8ee2461fb155412c7",
+  "coefficients": [
+    [
+      -2.1206878560707607,
+      2.2443658804498634
+    ],
+    [
+      3.035284934020041,
+      0.17882198122892906
+    ],
+    [
+      1.7926342743678982,
+      -1.0924103067139268
+    ],
+    [
+      -1.001569140704467,
+      -1.3878042616945996
+    ]
+  ],
+  "pilot_seeds": [
+    2026102130,
+    2026102131,
+    2026102132,
+    2026102133
+  ],
+  "populations": [
+    {
+      "group": "v5",
+      "runs": 8,
+      "original_particles": [
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256
+      ],
+      "all_particles_retained": true,
+      "seeds": [
+        2026102170,
+        2026102171,
+        2026102172,
+        2026102173,
+        2026102174,
+        2026102175,
+        2026102176,
+        2026102177
+      ]
+    },
+    {
+      "group": "v6v100",
+      "runs": 8,
+      "original_particles": [
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024
+      ],
+      "all_particles_retained": true,
+      "seeds": [
+        2026102180,
+        2026102181,
+        2026102182,
+        2026102183,
+        2026102184,
+        2026102185,
+        2026102186,
+        2026102187
+      ]
+    },
+    {
+      "group": "v7",
+      "runs": 8,
+      "original_particles": [
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256
+      ],
+      "all_particles_retained": true,
+      "seeds": [
+        2026102190,
+        2026102191,
+        2026102192,
+        2026102193,
+        2026102194,
+        2026102195,
+        2026102196,
+        2026102197
+      ]
+    }
+  ],
+  "groups": {
+    "v5": {
+      "58165": {
+        "raw_float32_sampled": {
+          "mean": [
+            4.220358888768417,
+            -3.777199143997928,
+            17.7154809824282,
+            5.172864699673541,
+            8.24345148922306
+          ],
+          "mcse": [
+            2.5363853918253483,
+            4.85112398449403,
+            7.277814082175556,
+            1.4819442130890494,
+            2.493172068637299
+          ],
+          "mean_error": 7.993605777301127e-15,
+          "covariance_error": 3.552713678800501e-14
+        },
+        "precision_reweighted_float64": {
+          "mean": [
+            4.220727121760761,
+            -3.7777019521408883,
+            17.71674538637211,
+            5.173142798765656,
+            8.243889443602903
+          ],
+          "mcse": [
+            2.5363093386941964,
+            4.850962690985228,
+            7.277587637201948,
+            1.481856279182586,
+            2.493056378282952
+          ],
+          "mean_error": 1.3322676295501878e-14,
+          "covariance_error": 1.1368683772161603e-13
+        }
+      },
+      "0": {
+        "raw_float32_sampled": {
+          "mean": [
+            -0.45751348907569434,
+            -0.909999623167118,
+            -6.176905378244955,
+            0.47868417733528024,
+            -6.095091909689482
+          ],
+          "mcse": [
+            0.4638672306384742,
+            1.4158453789687535,
+            0.67346633939216,
+            0.18701002461485924,
+            0.6469355198057936
+          ],
+          "mean_error": 2.6645352591003757e-15,
+          "covariance_error": 1.1102230246251565e-15
+        },
+        "precision_reweighted_float64": {
+          "mean": [
+            -0.45749561231957053,
+            -0.90999570078615,
+            -6.176476604762558,
+            0.4786338386677163,
+            -6.0946663329640325
+          ],
+          "mcse": [
+            0.46385532109057426,
+            1.4158062953532744,
+            0.6734679254199583,
+            0.18701386096489817,
+            0.6469356661679216
+          ],
+          "mean_error": 2.6645352591003757e-15,
+          "covariance_error": 2.886579864025407e-15
+        }
+      },
+      "1": {
+        "raw_float32_sampled": {
+          "mean": [
+            -0.1128320377234387,
+            -3.188689689152026,
+            -3.6476682701950414,
+            -2.9864231110822193,
+            -3.77092715113166
+          ],
+          "mcse": [
+            0.16580887077337755,
+            0.37969093342142757,
+            0.39560345930347796,
+            0.2504098100479944,
+            0.34593531251930104
+          ],
+          "mean_error": 8.881784197001252e-16,
+          "covariance_error": 3.608224830031759e-16
+        },
+        "precision_reweighted_float64": {
+          "mean": [
+            -0.11282891438816639,
+            -3.1886713226480414,
+            -3.6476635984449763,
+            -2.986410343576093,
+            -3.770919067417954
+          ],
+          "mcse": [
+            0.16580630767575275,
+            0.37969062773401885,
+            0.39559924129805607,
+            0.2504119481737451,
+            0.3459348706759872
+          ],
+          "mean_error": 1.3322676295501878e-15,
+          "covariance_error": 1.8041124150158794e-16
+        }
+      },
+      "8": {
+        "raw_float32_sampled": {
+          "mean": [
+            0.028270884250761817,
+            -1.839443074927955,
+            1.0909167940393698,
+            -1.8111278296819637,
+            1.130151247684452
+          ],
+          "mcse": [
+            0.01046185784758332,
+            0.09512321768512028,
+            0.04008455909636968,
+            0.09260661823641005,
+            0.037664435868603886
+          ],
+          "mean_error": 4.440892098500626e-16,
+          "covariance_error": 6.245004513516506e-17
+        },
+        "precision_reweighted_float64": {
+          "mean": [
+            0.028270860657966777,
+            -1.8394428753045842,
+            1.0909164999253866,
+            -1.811127653688408,
+            1.130150920828287
+          ],
+          "mcse": [
+            0.010461960920724635,
+            0.09512322625286458,
+            0.04008469582511841,
+            0.09260667251355503,
+            0.03766440843672366
+          ],
+          "mean_error": 1.1102230246251565e-15,
+          "covariance_error": 2.7755575615628914e-17
+        }
+      }
+    },
+    "v6v100": {
+      "58165": {
+        "raw_float32_sampled": {
+          "mean": [
+            0.013844767337936692,
+            7.254081020923331,
+            11.703145449076136,
+            7.283441450887019,
+            11.6720727256401
+          ],
+          "mcse": [
+            0.7104940177911507,
+            1.4845566647787114,
+            2.802678081304094,
+            1.1212289265229107,
+            1.79516751598283
+          ],
+          "mean_error": 5.329070518200751e-15,
+          "covariance_error": 6.217248937900877e-15
+        },
+        "precision_reweighted_float64": {
+          "mean": [
+            0.013882528303912194,
+            7.254008999714045,
+            11.70322576817241,
+            7.283449508899711,
+            11.672068295312732
+          ],
+          "mcse": [
+            0.7104989673719617,
+            1.4845665746319014,
+            2.802624580606397,
+            1.1211883295130374,
+            1.7951143249519221
+          ],
+          "mean_error": 5.329070518200751e-15,
+          "covariance_error": 1.1879386363489175e-14
+        }
+      },
+      "0": {
+        "raw_float32_sampled": {
+          "mean": [
+            0.025949975055315044,
+            0.48345334881581736,
+            -5.330296683333292,
+            0.40468778049222387,
+            -5.334937109285527
+          ],
+          "mcse": [
+            0.18271945766340927,
+            0.5665522097490673,
+            0.41243672559676164,
+            0.09526291706681869,
+            0.416842392924662
+          ],
+          "mean_error": 2.6645352591003757e-15,
+          "covariance_error": 9.159339953157541e-16
+        },
+        "precision_reweighted_float64": {
+          "mean": [
+            0.025987951849522326,
+            0.4835462033667893,
+            -5.32997097945244,
+            0.4046653646518963,
+            -5.334618196490252
+          ],
+          "mcse": [
+            0.18271809665833205,
+            0.5665507329497995,
+            0.41241570347035555,
+            0.0952626552665867,
+            0.41682374048780046
+          ],
+          "mean_error": 3.552713678800501e-15,
+          "covariance_error": 6.661338147750939e-16
+        }
+      },
+      "1": {
+        "raw_float32_sampled": {
+          "mean": [
+            -0.026121154596278916,
+            -2.968627665933387,
+            -3.6517508171934834,
+            -2.921801988918034,
+            -3.680285835697724
+          ],
+          "mcse": [
+            0.053519906407659044,
+            0.10820948779753319,
+            0.1427212717235373,
+            0.10453150532661401,
+            0.1282043886971258
+          ],
+          "mean_error": 3.1086244689504383e-15,
+          "covariance_error": 1.4051260155412137e-16
+        },
+        "precision_reweighted_float64": {
+          "mean": [
+            -0.026120648730105778,
+            -2.968627476164372,
+            -3.6517472547743264,
+            -2.92180270598206,
+            -3.680281720665149
+          ],
+          "mcse": [
+            0.05351973375371907,
+            0.10821050213373133,
+            0.14272099403394659,
+            0.10453167761376621,
+            0.1282057821807648
+          ],
+          "mean_error": 1.7763568394002505e-15,
+          "covariance_error": 1.0061396160665481e-16
+        }
+      },
+      "8": {
+        "raw_float32_sampled": {
+          "mean": [
+            0.017356344171902377,
+            -1.9807112200736958,
+            1.2261410162672481,
+            -1.9633276413556726,
+            1.250228224676452
+          ],
+          "mcse": [
+            0.00966743464221803,
+            0.035423730444321844,
+            0.026269359416547622,
+            0.036405858442988506,
+            0.02314158409968667
+          ],
+          "mean_error": 6.661338147750939e-16,
+          "covariance_error": 2.667137344314341e-17
+        },
+        "precision_reweighted_float64": {
+          "mean": [
+            0.017356365369543002,
+            -1.9807111807615052,
+            1.2261410965814195,
+            -1.963327580812579,
+            1.2502283344087994
+          ],
+          "mcse": [
+            0.009667417308030432,
+            0.035423774137206335,
+            0.026269354328476185,
+            0.03640587631547969,
+            0.02314157537287128
+          ],
+          "mean_error": 4.440892098500626e-16,
+          "covariance_error": 1.723881454251952e-17
+        }
+      }
+    },
+    "v7": {
+      "58165": {
+        "raw_float32_sampled": {
+          "mean": [
+            0.2674673487210628,
+            1.7363431900555757,
+            4.954659947275281,
+            2.303557948383781,
+            4.354365355671339
+          ],
+          "mcse": [
+            1.3598808716296116,
+            4.611608998608171,
+            4.946114375992437,
+            2.9044591200559875,
+            4.762480983785376
+          ],
+          "mean_error": 7.105427357601002e-15,
+          "covariance_error": 1.1546319456101628e-14
+        },
+        "precision_reweighted_float64": {
+          "mean": [
+            0.26774313060348964,
+            1.7358800182433414,
+            4.955493159372983,
+            2.3036796238605284,
+            4.354579612321687
+          ],
+          "mcse": [
+            1.3599084536429626,
+            4.611498537586134,
+            4.946636527645096,
+            2.9045685308986586,
+            4.7626502906291375
+          ],
+          "mean_error": 6.217248937900877e-15,
+          "covariance_error": 2.842170943040401e-14
+        }
+      },
+      "0": {
+        "raw_float32_sampled": {
+          "mean": [
+            -0.6808595404295515,
+            -0.9966270455295787,
+            -8.172525145359524,
+            1.0699756597200476,
+            -8.050772493401295
+          ],
+          "mcse": [
+            0.41398492936589937,
+            1.1675474147459495,
+            1.21847353574928,
+            0.11116860741040224,
+            1.177207178348155
+          ],
+          "mean_error": 1.7763568394002505e-15,
+          "covariance_error": 2.886579864025407e-15
+        },
+        "precision_reweighted_float64": {
+          "mean": [
+            -0.6808568590770139,
+            -0.9966308867469221,
+            -8.172254483987356,
+            1.0699636798337442,
+            -8.050502311513899
+          ],
+          "mcse": [
+            0.41400891428086206,
+            1.1676308372360529,
+            1.2184772190043618,
+            0.11115820676253126,
+            1.1772112962932906
+          ],
+          "mean_error": 3.552713678800501e-15,
+          "covariance_error": 3.9968028886505635e-15
+        }
+      },
+      "1": {
+        "raw_float32_sampled": {
+          "mean": [
+            0.2263119503539364,
+            -2.447740186360591,
+            -4.326681121191065,
+            -2.8534347452641033,
+            -4.079455614091894
+          ],
+          "mcse": [
+            0.20643868266647408,
+            0.24183552843244313,
+            0.5472805142414514,
+            0.19046169235781563,
+            0.35259895741034036
+          ],
+          "mean_error": 4.440892098500626e-16,
+          "covariance_error": 5.551115123125783e-16
+        },
+        "precision_reweighted_float64": {
+          "mean": [
+            0.2263108235028225,
+            -2.447742126068731,
+            -4.326670417152269,
+            -2.853434664940314,
+            -4.079446141036869
+          ],
+          "mcse": [
+            0.20643746371503632,
+            0.24183123908592163,
+            0.547277068258926,
+            0.1904622467872963,
+            0.3525965740786228
+          ],
+          "mean_error": 1.7763568394002505e-15,
+          "covariance_error": 3.885780586188048e-16
+        }
+      },
+      "8": {
+        "raw_float32_sampled": {
+          "mean": [
+            0.018147116861469165,
+            -1.854642930499053,
+            1.2323660920447277,
+            -1.8364673382578476,
+            1.2575507381625446
+          ],
+          "mcse": [
+            0.014423866207962103,
+            0.0688931177286844,
+            0.03667048366146841,
+            0.06671480786701858,
+            0.03777528563821495
+          ],
+          "mean_error": 4.440892098500626e-16,
+          "covariance_error": 3.8163916471489756e-17
+        },
+        "precision_reweighted_float64": {
+          "mean": [
+            0.018147362001649427,
+            -1.8546429379393377,
+            1.232365950103386,
+            -1.8364671001732926,
+            1.2575509364277893
+          ],
+          "mcse": [
+            0.014423840205375857,
+            0.06889290144515273,
+            0.03667053186655017,
+            0.06671467852808337,
+            0.037775123017012774
+          ],
+          "mean_error": 6.661338147750939e-16,
+          "covariance_error": 3.2959746043559335e-17
+        }
+      }
+    }
+  },
+  "observation0_gap": {
+    "raw_float32_sampled": {
+      "corrected_g1_difference": 0.6652878792278237,
+      "combined_reported_mcse": 0.14640178496742354,
+      "descriptive_mcse_ratio": 4.544260709497904
+    },
+    "precision_reweighted_float64": {
+      "corrected_g1_difference": 0.6652983151818479,
+      "combined_reported_mcse": 0.1463937171435379,
+      "descriptive_mcse_ratio": 4.544582432656779
+    }
+  },
+  "common_recorded_target_source_hashes": {
+    "galsbi_particle_target.py": "9d2b091267335579bd8155180698e9dc7311fb3937cbcc87e281bb219dfa7387",
+    "galsbi_target_coordinates.py": "519c9cd4930a2a0a22d9989bad55b8dc436fe16760f8ed6d5dff3d8160047209",
+    "galsbi_summary.py": "45cf85f62b3d7742f21b020da78085ec8f59bac8e776aaa3978ee2c7487b75b8",
+    "summary_gradients.py": "111edaf8a0525d2b6830f615dfbadf8aed7c99cc0d017fc415cbd23ab17fd0af"
+  },
+  "common_snapshot_prior_source_hashes": {
+    "galsbi_prior.py": "f6612ec614f966993946e3beb94221e6e6ad3adcf1782393f18cb8facc782652",
+    "galsbi_scene_prior.py": "575e4057c94db07f0b14b792628f02e6a21f28443121198e16c669e72f7515ae"
+  },
+  "model_phase_smoothness": {
+    "flow": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_f8_20260924_v1/joint/joint_probability_refinement_full/selected.pt",
+      "sha256": "bd51dbbbeeb72763f6982a958cb8f3a0b2d3906d4f78935d9d959fa85a17797e",
+      "activation": "silu",
+      "log_features": [],
+      "feature_names": [
+        "e1_input_p",
+        "e2_input_p",
+        "sersic_n_input_p",
+        "r_input_p",
+        "circularized_Re_input_p",
+        "nbr_close_050",
+        "nbr_close_100",
+        "nbr_close_200"
+      ],
+      "add_missing_indicators": true,
+      "flow_type": "physical_disk_affine",
+      "dropout": 0.0
+    },
+    "classifier": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_classifier_f8_inputs_20260925_v1/C8_20260913/selected.pt",
+      "sha256": "231bbbdf1f885ab22ccfca2525ae46b6bdfd068474c42ebac24973feb861cb6a",
+      "activation": "silu",
+      "log_features": [],
+      "feature_names": [
+        "e1_input_p",
+        "e2_input_p",
+        "sersic_n_input_p",
+        "r_input_p",
+        "circularized_Re_input_p",
+        "nbr_close_050",
+        "nbr_close_100",
+        "nbr_close_200"
+      ],
+      "add_missing_indicators": false,
+      "flow_type": null,
+      "dropout": 0.0
+    }
+  },
+  "diagnostic_json_sha256": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v5_0.json": "0dc764186c35d16a9c220ae52f4d4dc9057b7378581a841ce12ee7b5d5643f2b",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v5_1.json": "14eb80780ed64cee4a5f9665824ae8b466e09dc17cc8ccaee97fb25c86ea5427",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v5_2.json": "b8ecae6eeb1fe007aace10c7f46cbf468dfd8354a15847794c6a90baa39cbd2c",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v5_3.json": "d7424ffc211e58fcbf4be1132980b1b020ec903ce8a5a430ce3218e8944b3d82",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v5_4.json": "7ac77d28f836da489b6a50f6780ec4434e730ba986a673077772a4d5cf5e17d0",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v5_5.json": "c17dd65b69864c3551f01455086ef4c7477e46b31239e762c8598b4893b0bb88",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v5_6.json": "b9d6491592b17bf8e0f34dd89ab9f720aaa9fa854d89a96a59b648cd484da2e8",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v5_7.json": "ac679634a59b65bfd3c39a394241c55c9a4310f9a3d319f21412ef5134f2f8c5",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v6v100_0.json": "5925893be20c25c8c6fad5c0777f694391d79d0cc096f7f7d2670e3b8a1e53f6",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v6v100_1.json": "15da7e3aef06ffa6c5cba322e60376a2cb2ae1d6deee4c80bc1f843c650a913d",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v6v100_2.json": "5e6bc7529c57aada3523742e7ef6fb1876767cc21e5a3fc6b80a887e182b391e",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v6v100_3.json": "cd2c8a6c9e2d0bcfd0d1634d13e97a0599e4b544aa78b9177e8a37f87c80bca1",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v6v100_4.json": "b6b70056060ae626e8731bffc3797ce7dbd291d14b25b68ae34aa9ee03303a79",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v6v100_5.json": "69e1cae43e4ab594859118dbc1fbbf64c840cd00d4a8613aaa3f426f4b729878",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v6v100_6.json": "ff39156cb9e484ba5a23496cce10ade3e04be8b6640fb4e70d6eef1d9ed7dcf0",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v6v100_7.json": "e2934c9d174383d8d1a7aef6cc5d1ba8eb50d86c14e562237a91cd497d88c894",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v7_0.json": "5b410ed37b2dabd0ac11e74beb0bb0aee4d57f5b129339eedc1c4a2647b763fe",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v7_1.json": "6821fe4f34ae4f2b1e7673bb93f886362bc7904d9ba1c422981641579b0bc0c4",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v7_2.json": "bd6859d9939315fed3bf0b1eb261d90ae395b69ca11a7d2cfbebf7aab2502988",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v7_3.json": "5f2151e829c2e9badd167405fbb6a69e651ad6ba29c495332f4cfda85323cc51",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v7_4.json": "2448705ffec2d123151203a36cbee1e9b79abd1f254db65dc351bfc85493b3c7",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v7_5.json": "f7ff4a94e96211470ff6366651b186566568f6706aaebb6c6d7cb0288497eaf7",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v7_6.json": "fd3b33fdf069cfe9b3cc72ceb220890aabcb25957361771a390614e3e7352301",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/phase_n15_20261022_v2/dev_v7_7.json": "d00ea57c8c73bb2b7336b51ba4352b82c584f837476cf3f2c26665e5a0410498"
+  },
+  "audit_script_sha256": "199d81dd3d2abad5de9cffd946a866ccdeca8d142768811fe2a3d35e05534711",
+  "limitations": [
+    "No fit, GPU, new inference, or heldout outcomes.",
+    "Checkpoint metadata inspection only; no new model forwards.",
+    "Derivative/replay evidence remains the preserved v2 experiment.",
+    "Snapshot prior hashes are independently inspected, not retroactively declared by old protocols.",
+    "MCSE ratio is descriptive with eight populations per group, not a calibrated Gaussian significance."
+  ]
+}

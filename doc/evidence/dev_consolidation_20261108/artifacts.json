@@ -1,0 +1,50 @@
+[
+  {
+    "model": "like-1.0-galsbi",
+    "path": "models/neighbour_conditioned_flow_20261106/control/nine.pt",
+    "sha256": "9bc10a6548e792cdcbb29b226e20e4e53dff74d88c1a29a972e246cb07227417",
+    "source": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/neighbour_conditioned_flow_20261106/control/nine.pt"
+  },
+  {
+    "model": "like-1.0-galsbi",
+    "path": "models/galsbi_f8c8_20261102/c8/C8_20260913/selected.pt",
+    "sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+    "source": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/c8/C8_20260913/selected.pt"
+  },
+  {
+    "model": "like-1.0-galsbi",
+    "path": "models/disk_response_moment_galsbi_20261103/model/model.json",
+    "sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+    "source": "/project/ls-gruen/users/zekang.zhang/blendemu_runs/disk_response_moment_galsbi_20261103/model/model.json"
+  },
+  {
+    "model": "like-1.0-galsbi",
+    "path": "models/disk_response_moment_galsbi_20261103/model/metadata.json",
+    "sha256": "fda7277ecd54e2d3cfc7f196d7408c347e72c38e09945fad217447824cd0bf93",
+    "source": "/project/ls-gruen/users/zekang.zhang/blendemu_runs/disk_response_moment_galsbi_20261103/model/metadata.json"
+  },
+  {
+    "model": "galsbi-multistage",
+    "path": "models/conditional_cut_probability_20261107/weighted/final.pt",
+    "sha256": "43673e5db42e90d976d45dc7de1e54682adb0fd18bea74c6602e8dd4630c8cbd",
+    "source": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_probability_20261107/weighted/final.pt"
+  },
+  {
+    "model": "galsbi-multistage",
+    "path": "models/galsbi_f8c8_20261102/c8/C8_20260913/selected.pt",
+    "sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+    "source": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/c8/C8_20260913/selected.pt"
+  },
+  {
+    "model": "galsbi-multistage",
+    "path": "models/disk_response_moment_galsbi_20261103/model/model.json",
+    "sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+    "source": "/project/ls-gruen/users/zekang.zhang/blendemu_runs/disk_response_moment_galsbi_20261103/model/model.json"
+  },
+  {
+    "model": "galsbi-multistage",
+    "path": "models/disk_response_moment_galsbi_20261103/model/metadata.json",
+    "sha256": "fda7277ecd54e2d3cfc7f196d7408c347e72c38e09945fad217447824cd0bf93",
+    "source": "/project/ls-gruen/users/zekang.zhang/blendemu_runs/disk_response_moment_galsbi_20261103/model/metadata.json"
+  }
+]

@@ -19,6 +19,15 @@ for commands.
 The reusable V3.6 disk driver remains explicitly V3.6-specific; naming V3.9
 does not change its feature or prepared-cache contracts.
 
+## November 8 consolidation
+
+Both GalSBI models and the latest continuous-scene inference code now live
+in `dev`. See [current pipeline](CURRENT_INFERENCE.md#location-and-provenance).
+Original model/sampler branch identities and production-source hashes are
+recorded in `doc/evidence/dev_consolidation_20261108/`. The prior uncommitted
+dev state has its own preservation commit and recovery ref. Source worktrees
+remain untouched for subsequent cleanup.
+
 ## September 25 cleanup
 
 The owner closed development and named F8+C8+disk V3.9-like on 2026-09-25.

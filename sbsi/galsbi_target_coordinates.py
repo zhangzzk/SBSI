@@ -81,6 +81,39 @@ class GalSBITargetCoordinates:
         data['type'] = np.zeros(len(coordinates), dtype=int)
         return total+logj, data, probabilities
 
+    def comove(self, coordinates, shear, node):
+        """Map intrinsic shapes so the sheared shape at node equals that at shear.
+
+        eps' = M_node^-1(M_shear(eps)) with M_g(e) = (e+g)/(1+conj(g)e); only
+        distortion_logit and phase change, so the circularized radius is kept
+        and R_kpc (hence the semimajor axis) follows on decoding. Returns x',
+        log|dx'/dx| and validity (a' < emax). Used as an exact change of
+        variables in the latent integral: L(node)/L(shear) = E_post[p(x')
+        K(x'; node) |dx'/dx| / (p(x) K(x; shear))].
+        """
+        x = np.asarray(coordinates, float)
+        emax = self.prior.p['ell_beta_emax']
+        a = emax*expit(x[:, 8])
+        rho = a/(1+np.sqrt(1-a*a))
+        eps = rho*np.exp(1j*x[:, 9])
+        g, h = complex(*shear), complex(*node)
+        sheared = (eps+g)/(1+np.conj(g)*eps)
+        new = (sheared-h)/(1-np.conj(h)*sheared)
+        # |d eps'/d eps|^2 for the two disk automorphisms
+        logdf = (np.log(1-abs(g)**2)-2*np.log(np.abs(1+np.conj(g)*eps))
+                 + np.log(1-abs(h)**2)-2*np.log(np.abs(1-np.conj(h)*sheared)))
+        rho2 = np.abs(new)
+        a2 = 2*rho2/(1+rho2*rho2)
+        valid = a2 < emax
+        a2 = np.where(valid, a2, emax/2)
+        moved = x.copy()
+        moved[:, 8] = np.log(a2)-np.log1p(-a2/emax)-np.log(emax)
+        moved[:, 9] = np.mod(np.angle(new), 2*np.pi)
+        # (x8, x9) -> eps area element: rho * drho/da * da/dx8
+        area = lambda a_, r_: 2*np.log(r_)-.5*np.log1p(-a_*a_)+np.log1p(-a_/emax)
+        logj = 2*logdf+area(a, rho)-area(a2, np.where(valid, rho2, rho))
+        return moved, logj, valid
+
     def sed_log_proposal(self, coordinates):
         """Equal red/blue Dirichlet proposal density in four ALR coordinates.
 

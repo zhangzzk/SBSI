@@ -1,0 +1,31 @@
+{
+  "created_utc": "2026-10-21T23:13:55.983898+00:00",
+  "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_reporting_audit_integration_20261022",
+  "manifest_sha256": "17bc35929a9df6817b851eb1e38b69140a90424ab920b2ae9aa6da9224b0f918",
+  "files": 311,
+  "purpose": "Full integration tests after v8/v9 reports and prepared legacy replay harness; running v10 source unchanged.",
+  "validation": [
+    {
+      "job": 17422839,
+      "passed": 854,
+      "skipped": 8,
+      "seconds_pytest": 97.55,
+      "state": "COMPLETED0:0",
+      "meaning": "Full suite; seven frozen legacy checks require explicit source environment. One other optional skip.",
+      "log": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/report_audit_tests_17422839.out",
+      "log_sha256": "200c1f33f17f3b40eaf891c132e4324f87946c5ba4e47d7d5b737181e6c1f711"
+    },
+    {
+      "job": 17422922,
+      "passed": 26,
+      "skipped": 0,
+      "seconds_pytest": 13.0,
+      "state": "COMPLETED0:0",
+      "meaning": "All legacy harness checks with SBSI_LEGACY_AUDIT_SOURCE=source_v7, including the seven optional frozen-code checks.",
+      "log": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/legacy_frozen_check_17422922.out",
+      "log_sha256": "09ca27036abaef98ea1f5b0ff7477713d032c175edc3a7358dd9e8503173f424"
+    }
+  ],
+  "before_after_source_hashes_pass": true,
+  "frozen_scientific_runs_unchanged": true
+}

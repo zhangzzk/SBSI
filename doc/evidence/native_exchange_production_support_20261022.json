@@ -1,0 +1,92 @@
+{
+  "source": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/sampler_search_20261021/source_v8",
+  "intrinsic_i_cut": [
+    14,
+    28
+  ],
+  "log_tiny": -708.3964185322641,
+  "type_scan": [
+    {
+      "type": "red",
+      "z_max": 5.981069367952661,
+      "grid_points": 96,
+      "table_tail_points": 93,
+      "passing_intrinsic_cut": 82,
+      "finite_old_ratio": 82
+    },
+    {
+      "type": "blue",
+      "z_max": 5.981069367952661,
+      "grid_points": 96,
+      "table_tail_points": 96,
+      "passing_intrinsic_cut": 88,
+      "finite_old_ratio": 88
+    }
+  ],
+  "examples": [
+    {
+      "type": "red",
+      "native": {
+        "type": 0,
+        "z": 0.7006944345729662,
+        "M_B": -28.3120124503033,
+        "c": [
+          0.15545918399369021,
+          0.0020267682552447593,
+          0.08228535350927836,
+          0.7006105750409533,
+          0.05961811920083344
+        ],
+        "R_kpc": 16.997600435551863,
+        "n": 2.0,
+        "a": 0.3,
+        "psi": 1.0
+      },
+      "m_r": 15.469611048314938,
+      "m_i": 14.242764845591559,
+      "log_analytic_intensity": -675.0037801359398,
+      "old_log_q_over_p": -0.00022448043353051617,
+      "log_u": -708.6385187908962,
+      "log_u_table_min": -708.8806190495284,
+      "continuous_density_zero": true
+    },
+    {
+      "type": "blue",
+      "native": {
+        "type": 1,
+        "z": 0.5123232251439754,
+        "M_B": -27.7206077002409,
+        "c": [
+          0.10930828153252474,
+          0.10174421087145673,
+          0.1144155852511432,
+          0.27090033012241604,
+          0.4036315922224593
+        ],
+        "R_kpc": 18.744849252470523,
+        "n": 2.0,
+        "a": 0.3,
+        "psi": 1.0
+      },
+      "m_r": 14.41941602977598,
+      "m_i": 14.027203701009846,
+      "log_analytic_intensity": -682.0992118881339,
+      "old_log_q_over_p": -0.00025304659163793985,
+      "log_u": -709.3551234047261,
+      "log_u_table_min": -710.313828277188,
+      "continuous_density_zero": true
+    }
+  ],
+  "limitation": "Existence check, not a bound on occurrence or posterior impact.",
+  "production_support_leak_exists": true,
+  "source_sha256": {
+    "sbsi/galsbi_prior.py": "f6612ec614f966993946e3beb94221e6e6ad3adcf1782393f18cb8facc782652",
+    "sbsi/scene_exchange.py": "c47763c55228257721135811b68f800945f64513c052945331974bb976b67c37",
+    "sbsi/numerical_native_intensity.py": "af1360912a68b35be138596da4cc095895b485a14443c002a17dcddefcd2e4b5",
+    "scripts/check_galsbi_continuous_prior.py": "3d310798e4aabedf297b94c2c6e16964d41e0a971513b59eb3358e66c7ee877b"
+  },
+  "external_config": {
+    "path": "/project/ls-gruen/users/zekang.zhang/envs/py31/lib/python3.10/site-packages/galsbi/configs/config_Fischbacher+24_intrinsic.py",
+    "sha256": "e74c5deddcf185ce9a586172a7ae5a967cdc8a6f8423c77154a921ab3a8d62d4"
+  }
+}
