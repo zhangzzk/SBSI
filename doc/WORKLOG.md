@@ -1,5 +1,60 @@
 # Work log
 
+## 2026-11-09 — GalSBI image pilot rerun with the model-band coordinate
+
+Run: `$DATA_DIR/sbsi/catalogue_prior/galsbi_image_magcoord_20261108`
+(`rule.md`, `paired_estimate.json`; source snapshot 75cc2e5 = code of
+aaa48bc). It reuses the pilot's galaxies, cuts, unit list and selection
+normalization through links, with fresh sampler seeds. `study.py` refuses
+chains run with another magnitude coordinate. Five c1 GPU workers ran from
+21:51 to 00:44 (2 h 53 min). The sixth worker was cancelled while still
+queued because it had no units left to claim. All 219 c1 and 42 c2 units
+completed with no failures, retries or tracebacks. Matched rows are the same
+as in the pilot: 9422 on both legs, 181 plus-only, 216 minus-only.
+
+| | pilot (m_r coordinate) | rerun (m_model coordinate) |
+|---|---|---|
+| plus g1 (truth +0.02) | +0.02296 ±0.00356 | +0.02289 ±0.00353 |
+| plus g2 | +0.00133 ±0.00357 | +0.00014 ±0.00360 |
+| minus g1 (truth -0.02) | -0.01576 ±0.00354 | -0.01569 ±0.00355 |
+| minus g2 | +0.00204 ±0.00361 | +0.00217 ±0.00363 |
+| m1 | -3.20% ±5.19% (-0.6σ) | -3.54% ±5.09% (-0.7σ) |
+| c1 | +0.00360 ±0.00336 (+1.1σ) | +0.00360 ±0.00336 (+1.1σ) |
+| c2 | +0.00168 ±0.00347 (+0.5σ) | +0.00116 ±0.00347 (+0.3σ) |
+| g1-to-g2 response | -0.018 ±0.052 | -0.051 ±0.051 (-1.0σ) |
+| chain floor on m1 | ±1.76% | ±1.52% |
+| log z R-hat >= 1.1 (c1) | 68.5% ±0.3% | 7.9% ±0.2% |
+
+The two runs share the galaxies and the noise, so most of the ± cancels in
+their difference. The difference is set mainly by the chains: m1 moved
+-0.34% ±2.3% and c2 -0.00053 ±0.00070, where the ± combines the two chain
+floors in quadrature. Nothing moved beyond chain noise.
+
+Stuck fraction by magnitude, log z R-hat >= 1.1 (c1, pilot to rerun):
+
+| Magnitude | Galaxies | Pilot | Rerun |
+|---|---|---|---|
+| < 21 | 820 | 91% | 42% |
+| 21–23 | 3603 | 60% | 5% |
+| 23–24 | 5245 | 92% | 10% |
+| 24–25 | 9573 | 57% | 5% |
+
+Median log-z ESS rose from 10–30 to 62–502. The shear-ratio g1 flags fell from
+22% to 13% (< 21) and from 11% to 4% (23–24). Bright (< 21) mixing in shape,
+size and crowding is unchanged, with e1/Re/crowding flags of 69%/77%/63% in
+both runs. Step 2 (mag < 21) still has 46% of chains stuck in log z.
+
+Limitations:
+- The pilot is too small for this test: the m1 ± (5%) is shape noise at
+  10k galaxies per leg.
+- This is development data with known shear, not an acceptance test.
+- The c1 offset of +1.1σ is the same in both runs, so it comes from the
+  shared galaxies and noise, not from the sampler.
+
+Next: scale up (for example 100k per leg) to bring the m1 ± near 1.5%.
+Bright-galaxy shape and size mixing is still the weakest part of the
+sampler.
+
 ## 2026-11-08 — Model band as the sampler magnitude coordinate (owner-approved)
 
 Change (aaa48bc, doc 978ce77): `GalSBITargetCoordinates` uses `m_model` as its
