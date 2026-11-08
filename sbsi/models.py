@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from hashlib import sha256
 from pathlib import Path
 from typing import Optional, Tuple
@@ -45,6 +45,9 @@ class ModelPaths:
     emulator_metadata_sha256: Optional[str] = None
     detection_classifier_sha256s: Tuple[str, ...] = ()
     response_backend: str = "blendemu"
+    # Training-domain contracts from the manifest; None keeps the historical FS2 behaviour.
+    observing_conditions: Optional[dict] = field(default=None, compare=False)
+    scene_inputs: Optional[dict] = field(default=None, compare=False)
 
     def __post_init__(self):
         object.__setattr__(
@@ -156,6 +159,8 @@ def _disk_model_preset(filename: str) -> ModelPaths:
         detection_classifiers=(_CACHE_ROOT / spec["classifier"]["path"],),
         detection_classifier_sha256s=(spec["classifier"]["sha256"],),
         response_backend="disk_response_moment",
+        observing_conditions=spec.get("observing_conditions"),
+        scene_inputs=spec.get("scene_inputs"),
     )
 
 

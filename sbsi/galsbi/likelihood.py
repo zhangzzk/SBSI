@@ -50,28 +50,36 @@ def _check_response_contract(prior, response_radius_arcsec, response_neighbours)
 
 
 def scene_model_inputs(scenes, prior, angular_diameter_distance, conditions, *,
-                       response_radius_arcsec, response_neighbours, response=True):
+                       response_radius_arcsec, response_neighbours, response=True, marks=None):
     """Map native scenes to F8/C8 features and the retained response pair CSR.
 
     All neighbours within 10 arcsec enter crowding. Only the response uses
     its explicitly supplied nearest-k/aperture contract. No truth cuts are
     applied. Input photometry must belong to the current native marks.
     response=False returns (features, None, None) without building pairs.
+    marks (sbsi.galsbi.model_inputs.SceneMarks) maps native marks to the
+    model's training magnitude/Sersic n; None keeps native m_r and n.
     """
     _check_response_contract(prior, response_radius_arcsec, response_neighbours)
     target = native_shapes(scenes.targets, angular_diameter_distance)
-    zero = pd.DataFrame(np.column_stack((target['e1'], target['e2'], scenes.targets['n'],
-        scenes.targets['m_r'], target['circularized'], prior.v39_crowding(scenes))), columns=FEATURES)
+    if marks is None:
+        magnitudes, sersic = (scenes.targets['m_r'], scenes.neighbours['m_r']), scenes.targets['n']
+    else:
+        magnitudes = (marks.magnitude(scenes.targets), marks.magnitude(scenes.neighbours))
+        sersic = marks.sersic_n(scenes.targets)
+    zero = pd.DataFrame(np.column_stack((target['e1'], target['e2'], sersic,
+        magnitudes[0], target['circularized'], prior.v39_crowding(scenes, magnitudes))), columns=FEATURES)
     if not np.isfinite(zero.to_numpy()).all():
         raise ValueError('nonfinite mapped model inputs')
     if not response:
         return zero, None, None
     return (zero, *response_pairs(scenes, prior, angular_diameter_distance, conditions,
-        response_radius_arcsec=response_radius_arcsec, response_neighbours=response_neighbours, target=target))
+        response_radius_arcsec=response_radius_arcsec, response_neighbours=response_neighbours, target=target,
+        marks=marks, magnitudes=magnitudes))
 
 
 def response_pairs(scenes, prior, angular_diameter_distance, conditions, *,
-                   response_radius_arcsec, response_neighbours, target=None):
+                   response_radius_arcsec, response_neighbours, target=None, marks=None, magnitudes=None):
     """The response pair CSR (indptr, features) of scene_model_inputs alone."""
     _check_response_contract(prior, response_radius_arcsec, response_neighbours)
     if target is None:
@@ -84,10 +92,17 @@ def response_pairs(scenes, prior, angular_diameter_distance, conditions, *,
     ranks = np.arange(len(rows))-np.repeat(starts, counts)
     rows = rows[ranks < response_neighbours]
     primary = owner[rows]
+    if marks is None:
+        magnitude_p, magnitude_s = scenes.targets['m_r'], scenes.neighbours['m_r']
+        sersic_p, sersic_s = scenes.targets['n'], scenes.neighbours['n']
+    else:
+        magnitude_p, magnitude_s = magnitudes if magnitudes is not None else (
+            marks.magnitude(scenes.targets), marks.magnitude(scenes.neighbours))
+        sersic_p, sersic_s = marks.sersic_n(scenes.targets), marks.sersic_n(scenes.neighbours)
     pairs = pd.DataFrame(dict(Re_input_p=target['semimajor'][primary],
-        Re_input_s=neighbour['semimajor'][rows], r_input_p=scenes.targets['m_r'][primary],
-        r_input_s=scenes.neighbours['m_r'][rows], sersic_n_input_p=scenes.targets['n'][primary],
-        sersic_n_input_s=scenes.neighbours['n'][rows], distance=distance[rows]))
+        Re_input_s=neighbour['semimajor'][rows], r_input_p=magnitude_p[primary],
+        r_input_s=magnitude_s[rows], sersic_n_input_p=sersic_p[primary],
+        sersic_n_input_s=sersic_s[rows], distance=distance[rows]))
     features = rescale_emulator_pairs(pairs, conditions).loc[:, TRUTH_FEATURES].to_numpy(float)
     indptr = np.r_[0, np.cumsum(np.bincount(primary, minlength=len(scenes.counts)))]
     if not np.isfinite(features).all():

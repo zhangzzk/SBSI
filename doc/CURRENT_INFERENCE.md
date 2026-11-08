@@ -56,7 +56,7 @@ and source provenance changed. See [the package map](REPOSITORY.md#package-layou
 | Component | Entry point |
 |---|---|
 | Current continuous-scene sampler | `scripts/run_galsbi_inference.py` |
-| Population/reference preparation | `scripts/prepare_galsbi_population.py`, `scripts/prepare_constgold_inference_input.py` |
+| Population/reference preparation | `scripts/prepare_galsbi_population.py`, `scripts/prepare_constgold_inference_input.py`, `scripts/prepare_galsbi_image_reference.py` (GalSBI image legs) |
 | Selection normalization and bright follow-up | `scripts/run_galsbi_bright.py`, `scripts/report_galsbi_bright.py` |
 | Core likelihood/prior/proposal implementation | `sbsi/galsbi/likelihood.py`, `sbsi/galsbi/scenes.py`, `sbsi/galsbi/coordinates.py`, `sbsi/galsbi/proposals.py` |
 
@@ -101,6 +101,30 @@ The fiducial's extra control column is exactly zero. Its eight informative
 raw inputs fit the existing nine-summary likelihood contract. End-to-end
 inference/normalization still requires fresh, matching preparation and numerical
 validation; naming and loader replay do not establish inference calibration.
+
+### Scene inputs and observing conditions of the GalSBI models
+
+Both GalSBI models were trained on images rendered with the **LSST-i**
+magnitude, computed from the prior's SED coefficients, and with the Sersic index
+clipped to (0.3, 6.2) and rounded to a 122-point log grid. They were not trained
+on the prior's native HSC-r `m_r` and raw `n`. Their manifests declare this as
+`scene_inputs`. When a model declares `scene_inputs`, the sampler and selection
+normalization build `sbsi.galsbi.model_inputs.SceneMarks`. It hooks the model
+band into the prior's photometry, so every drawn or decoded galaxy carries
+`m_model`. Flow, classifier, crowding and emulator pairs then all use the
+rendered values. Replay on scenes 1000 and 1077 of `constant_g002` reproduces the
+written magnitude to 1.4e-14 mag and the Sersic index to one rounding step.
+LSST-i is on average 0.33 mag brighter than HSC-r, with 0.25 mag scatter between
+galaxies (`scripts/check_galsbi_scene_marks.py`). The manifests also pin
+`observing_conditions`. Inference and normalization refuse a reference whose
+conditions differ, for example FS2 0.73/2.224/0.312. The V3.x presets declare
+neither and keep the native behaviour.
+
+Measured image catalogues become paired inference references with
+`scripts/prepare_galsbi_image_reference.py`. It draws one shared random subset
+of input identities for both legs, independently of measurement. Each leg then
+applies the normalization's measured cuts on its own, and unmatched rows are
+counted and dropped.
 
 The multistage model additionally needs `neighbour_reference_coefficient`,
 the pinned emulator's summed coefficient at radius3.5pixels/magnitude24.5.

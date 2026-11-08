@@ -1,5 +1,45 @@
 # Work log
 
+## 2026-11-08 — GalSBI model scene inputs and image-reference builder for the pilot
+
+Owner request: test infer-1.0-galsbi with like-1.0-galsbi on measured GalSBI
+constant-shear image catalogues, starting with small subsets (up to 6 GPUs and
+500 CPUs).
+
+Found before any run: the GalSBI models were trained on LSST-i magnitudes and on
+the rendered Sersic index (clipped to 0.3-6.2, 122-point log grid). The sampler
+gave them the prior's HSC-r `m_r` and raw `n`. On scene files LSST-i is
+0.33 ±0.25 mag brighter. This affected flow/C8 features, crowding and emulator
+pairs. Fixes:
+- The manifests of `like-1.0-galsbi` and `galsbi-multistage` declare
+  `scene_inputs`. `ModelPaths` carries `scene_inputs` and `observing_conditions`.
+- `sbsi/galsbi/model_inputs.py`: `SceneMarks` hooks the model band into
+  `build_prior`'s photometry. Drawn and decoded galaxies then carry `m_model`,
+  computed once from the photometry's own coefficients. `scene_model_inputs` and
+  `response_pairs` take `marks=`. The default `None` is unchanged for V3.x.
+- `prior.sample` keeps any extra photometry output.
+- `run_galsbi_inference.py` and the `run_galsbi_bright.py` selection use the
+  named model's marks. Both refuse a reference whose conditions differ from the
+  model's pinned training conditions. Selection takes `--reference` and records
+  the model and scene inputs.
+- New `scripts/prepare_galsbi_image_reference.py` builds paired plus/minus
+  `galsbi_population_v1` references. One shared identity draw serves both legs,
+  each leg applies its own normalization cuts, unmatched rows are counted, and
+  the unsheared inputs and declared shear are checked.
+- New `scripts/check_galsbi_scene_marks.py` replays the scene inputs on written
+  scene files.
+
+Validation: Slurm job 17835256 replays scenes 1000 and 1077. Magnitude max
+difference is 1.4e-14 and is batch-independent; other photometry is unchanged;
+Sersic differs by at most 8.9e-16 (one rounding step) and radii are exact. 256
+drawn targets and 5620 neighbours carry the exact hooked magnitude. Full suite:
+387 passed, 1 skipped. A one-case real build gives 76/75 galaxies at fraction
+5e-4. About 1560 detections per leg have no crossmatch; they are dropped and
+counted.
+
+Limitations: no inference has been calibrated by this. Pilot launched in
+`galsbi_image_pilot_20261108` (rule.md); results to follow.
+
 ## 2026-11-08 — Review and reorganize the Python package
 
 Trace the dependency closure from all retained entry points and public exports.

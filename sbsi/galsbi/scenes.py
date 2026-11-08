@@ -231,18 +231,20 @@ estimated post-cut surface density never enters the sampling algorithm.
             raise ValueError('positive finite surface density required')
         return self.log_kernel(scenes)-surface_density*self.area_sr-np.log(surface_density)
 
-    def v39_crowding(self, scenes):
+    def v39_crowding(self, scenes, magnitudes=None):
         """Three F8/C8 physical crowding values from all neighbours within 10 arcsec.
 
         m_r must contain photometry for the current native marks. Recompute it
         after modifying redshift, luminosity or SED. No size mapping is needed.
+        magnitudes=(target, neighbour) supplies a model's training band instead of m_r.
         """
         if self.aperture_arcsec < 10:
             raise ValueError('V3.9 crowding requires an aperture of at least 10 arcsec')
         owner = scenes.owner
         d2 = np.square(scenes.offset_arcsec).sum(axis=1)
         use = d2 <= 100
-        ratio = 10**(-.4*(scenes.neighbours['m_r']-scenes.targets['m_r'][owner]))
+        target, neighbour = magnitudes if magnitudes is not None else (scenes.targets['m_r'], scenes.neighbours['m_r'])
+        ratio = 10**(-.4*(neighbour-target[owner]))
         if not np.isfinite(ratio).all() or not np.isfinite(d2).all():
             raise ValueError('finite magnitudes, flux ratios and offsets required')
         return np.column_stack([np.log1p(np.bincount(owner[use],

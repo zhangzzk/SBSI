@@ -58,8 +58,12 @@ def build_prior(model_index=0, grid_size=8193):
         distance = luminosity_distance(z)
         coeff *= ((1e-5/distance)**2/(1+z))[:, None]
         apparent = mag(redshifts=z, excess_b_v=zero, coeffs=coeff, filter_names=['r', 'i'])
-        return dict(m_r=apparent['r'], m_i=apparent['i'],
-                    M_i=M_B+absolute['i']-absolute['B'])
+        out = dict(m_r=apparent['r'], m_i=apparent['i'], M_i=M_B+absolute['i']-absolute['B'])
+        if prior.model_band is not None:
+            # The magnitude a model was trained on (sbsi.galsbi.model_inputs.SceneMarks), from the same
+            # apparent coefficients; drawn and decoded galaxies then carry it like m_r.
+            out['m_model'] = prior.model_band(z, coeff)
+        return out
 
     @ExactMemo
     def volume(z):
@@ -75,6 +79,7 @@ def build_prior(model_index=0, grid_size=8193):
             p[f'lum_fct_z_const_{t}'], p[f'lum_fct_alpha_{t}'],
             (p[f'lum_fct_m_star_{t}_slope'], p[f'lum_fct_m_star_{t}_intcpt']), p['seed_ngal'])
     prior = GalSBIContinuousPrior(p, photometry, volume, cap, zmax, grid_size=grid_size)
+    prior.model_band = None
     return prior, cosmo, config
 
 

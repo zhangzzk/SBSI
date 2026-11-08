@@ -144,6 +144,10 @@ Only README.md, AGENTS.md and CLAUDE.md are root-level documentation.
   limits allocations in that partition to three per user. The owner also
   explicitly authorized `inter`; F8 may use both partitions within its six-worker
   ceiling and the scheduler limits.
+- On 2026-11-08 the owner requested a small-subset test of infer-1.0-galsbi
+  with like-1.0-galsbi on measured GalSBI constant-shear image catalogues.
+  This test may use up to **six GPUs and 500 CPUs** in total. Run directory:
+  `$DATA_DIR/sbsi/catalogue_prior/galsbi_image_pilot_20261108` (`rule.md`).
 - Monitor newly submitted jobs through startup and their first meaningful
   progress so early failures are caught and repaired before yielding. Brief
   status/log checks roughly every 30--60 seconds are allowed during startup;

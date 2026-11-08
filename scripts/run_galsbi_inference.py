@@ -32,6 +32,7 @@ from sbsi.galsbi.scenes import GalSBISceneBatch, GalSBIScenePrior
 from sbsi.galsbi.likelihood import (SummaryBatch, SummaryLikelihood, compress_scenes, response_pairs,
                                  scene_model_inputs)
 from sbsi.galsbi.coordinates import GalSBITargetCoordinates
+from sbsi.galsbi.model_inputs import SceneMarks
 from sbsi.measurement_model import load_measurement_model
 from sbsi.galsbi.proposals import adjacent_swap_permutation, empirical_block_cholesky, gaussian_block_delta
 from sbsi.models import load_detection_classifier, load_disk_response
@@ -78,6 +79,16 @@ def validate_reference_identity(previous, identity):
     keys = ('flow_sha256s', 'detection_classifier_sha256s', 'emulator_sha256', 'emulator_metadata_sha256')
     if not isinstance(expected, dict) or any(expected.get(k) != identity.get(k) for k in keys):
         raise ValueError('reference must declare the selected model artifact hashes; rebuild model-dependent caches')
+
+
+CONDITION_KEYS = ('pixel_size', 'zero_point', 'psf_fwhm', 'moffat_beta', 'pixel_rms')
+
+
+def validate_conditions(conditions, model):
+    """A model that pins its training observing conditions must run with exactly those (emulator scaling)."""
+    pinned = model.observing_conditions
+    if pinned is not None and any(conditions.get(k) != pinned[k] for k in CONDITION_KEYS):
+        raise ValueError(f'reference conditions {conditions} differ from the model training conditions {pinned}')
 
 
 def main():
@@ -134,6 +145,7 @@ def main():
     observed = observations.iloc[np.tile(np.repeat(np.arange(nobs), nchains), levels)].reset_index(drop=True)
     aux = observed.iloc[:, 2:4].to_numpy()
     conditions = previous['conditions']
+    validate_conditions(conditions, CANDIDATE)
     g0 = list(args.shear)
     # b enters the kernel only as the transport velocity b*g, so at zero
     # sampling shear the MH target does not depend on b. Then b is computed
@@ -168,6 +180,7 @@ def main():
         replay_tolerances=dict(summary_absolute=1e-10, log_kernel_absolute=1e-6),
         exactness='analytic native target density times implemented numerical environment distribution',
         exploration_gates=dict(max_rank_rhat=1.01, min_bulk_ess=400),
+        scene_inputs=CANDIDATE.scene_inputs or 'native HSC-r m_r and native Sersic n',
         no_population_selection_or_shear_estimate=True,
         implementation_sha256={str(p.resolve()): digest(p) for p in sources})
     if levels > 1:
@@ -193,6 +206,7 @@ def main():
     likelihood = SummaryLikelihood(flow, detector)
     galaxy, cosmo, _ = build_prior()
     prior = GalSBIScenePrior(galaxy)
+    marks = SceneMarks(CANDIDATE.scene_inputs, galaxy) if CANDIDATE.scene_inputs else None
 
     # PyCosmo distances are elementwise (checked batch-independent), so
     # remembered values are exact; unchanged neighbours dominate the calls.
@@ -203,7 +217,7 @@ def main():
     def summarize(scene, auxiliary, with_b=True):
         """Nine summaries per scene; without b, column 8 is 0 (exact only for the kernel at zero shear)."""
         zero, ptr, features = scene_model_inputs(scene, prior, angular_distance, conditions,
-            response_radius_arcsec=10., response_neighbours=20, response=with_b)
+            response_radius_arcsec=10., response_neighbours=20, response=with_b, marks=marks)
         if with_b:
             return compress_scenes(zero, CatalogueDiskResponse(ptr, features, model), auxiliary)
         auxiliary = np.broadcast_to(np.asarray(auxiliary, float), (len(zero), 2))
@@ -216,7 +230,7 @@ def main():
     bank, _ = prior.sample(nchains*draws, args.initial_bank_seed)
     draw_rng = np.random.default_rng([args.initial_bank_seed, 992])
     zero, ptr, features = scene_model_inputs(bank, prior, angular_distance, conditions,
-        response_radius_arcsec=10., response_neighbours=20)
+        response_radius_arcsec=10., response_neighbours=20, marks=marks)
     initial_response = CatalogueDiskResponse(ptr, features, model)
     starts, reference_kernels, effective = [], [], []
     for position in range(nobs):
@@ -260,7 +274,7 @@ def main():
         missing = np.flatnonzero(np.isnan(summaries[cold, 8]))
         if len(missing):
             ptr, features = response_pairs(scene.take(missing), prior, angular_distance, conditions,
-                                           response_radius_arcsec=10., response_neighbours=20)
+                                           response_radius_arcsec=10., response_neighbours=20, marks=marks)
             summaries[missing, 8] = CatalogueDiskResponse(ptr, features, model).predict(
                 np.arange(len(missing)), aux[missing, 0], aux[missing, 1])[0]
 
@@ -288,7 +302,7 @@ def main():
                 selected = GalSBISceneBatch(newdata, scene.neighbours, scene.indptr,
                                             scene.offset_arcsec).take(np.flatnonzero(valid))
                 zero, ptr, features = scene_model_inputs(selected, prior, angular_distance, conditions,
-                    response_radius_arcsec=10., response_neighbours=20)
+                    response_radius_arcsec=10., response_neighbours=20, marks=marks)
                 summary = compress_scenes(zero, CatalogueDiskResponse(ptr, features, model), aux[:n][valid])
                 ratios[valid, k] = (newprior[valid]+logj[valid]-logprior[valid]-kernel[valid]
                                     + likelihood.log_kernel(summary, observed.iloc[:n].loc[valid], *node))

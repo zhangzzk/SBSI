@@ -75,6 +75,16 @@
     "pixel_rms": 0.6159,
     "note": "emulator truth-pair features were scaled with these LSST-i values (configs/galsbi_resim_training.yaml); likelihood runs with this preset must pass them, not the FS2 0.73 / 2.224 / 0.312"
   },
+  "scene_inputs": {
+    "magnitude": "LSST_i",
+    "magnitude_table": "/project/ls-gruen/users/zekang.zhang/lsst_filters/LSST_template_integrals_ebv0.h5",
+    "magnitude_table_sha256": "3958188bc547ad3e048480a19b22a8af787da055f5c0ce7b904a3b9925979fd0",
+    "sersic_n": "rendered_log_grid",
+    "sersic_n_clip": [0.3, 6.2],
+    "sersic_n_grid_size": 122,
+    "source": "SBSI 1c16564 scripts/write_galsbi_scenes.py (the GalSBI re-simulation renderer inputs)",
+    "note": "Training and images used LSST-i magnitudes and the clipped, log-grid-rounded rendered Sersic n; the sampler maps native prior marks (HSC-r m_r, native n) to these before calling flow, classifier, crowding and emulator"
+  },
   "evaluation": {
     "population": "40 reused development scenes, new paired-seed measurements",
     "cases": [

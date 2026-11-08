@@ -231,7 +231,7 @@ class GalSBIContinuousPrior:
         kinds = rng.choice(len(self.types), n_proposals, p=weights)
         d = {key: np.zeros(n_proposals) for key in ('z', 'M_B', 'R_kpc', 'n', 'a', 'psi')}
         d['type'], d['c'] = kinds, np.zeros((n_proposals, 5))
-        photo_all = {key: np.zeros(n_proposals) for key in ('m_r', 'm_i', 'M_i')}
+        photo_all = {}
         cdf_errors = []
         for index, t in enumerate(self.types):
             use = np.flatnonzero(kinds == index)
@@ -265,8 +265,9 @@ class GalSBIContinuousPrior:
             d['a'][use] = rng.beta(a, b, n)*p['ell_beta_emax']
             d['psi'][use] = rng.uniform(0, 2*np.pi, n)
             d['z'][use], d['M_B'][use], d['c'][use] = z, M, c
-            for key in photo_all:
-                photo_all[key][use] = photo[key]
+            # m_r, m_i, M_i and any model magnitude the photometry also returns (model_inputs.SceneMarks)
+            for key, value in photo.items():
+                photo_all.setdefault(key, np.zeros(n_proposals))[use] = value
         selected = (photo_all['m_i'] >= p['gals_mag_min']) & (photo_all['m_i'] <= p['gals_mag_max'])
         fraction = float(selected.mean())
         metadata = dict(n_proposals=n_proposals, n_retained=int(selected.sum()),
