@@ -129,8 +129,23 @@ class FactorizedCondition:
             extra = np.zeros(len(old))
         return np.column_stack([old, extra]).astype(np.float32)
 
-    def raw_tensor_from_frame(self, frame, **kwargs):
-        raw = self.base.raw_tensor_from_frame(frame, **kwargs)
+    # The catalogue likelihood (sbsi.finite.likelihood.CatalogueLikelihood) shears e1/e2 directly in the
+    # standardized context, with the TabularPreprocessor interface. Those columns belong to the base, so its
+    # statistics are the right ones; the optional score column is appended after all base columns.
+    @property
+    def means(self):
+        return self.base.means
+
+    @property
+    def scales(self):
+        return self.base.scales
+
+    @property
+    def log_features(self):
+        return self.base.log_features
+
+    def raw_tensor_from_frame(self, frame, device=None, **kwargs):
+        raw = self.base.raw_tensor_from_frame(frame, device, **kwargs)
         if not self.use_score:
             return raw
         score = torch.as_tensor(frame[self.score_feature].to_numpy(float), device=raw.device, dtype=raw.dtype)
