@@ -2,7 +2,8 @@
 
 ## Current GalSBI pipeline
 
-The latest continuous-scene inference code is now integrated into `dev`.
+The core continuous-scene pipeline is named `infer-1.0-galsbi`, independently
+of the model identity. Its latest implementation is integrated into `dev`.
 See [current entry points](CURRENT_INFERENCE.md#entry-points) and
 [models and compatibility](CURRENT_INFERENCE.md#models-and-compatibility).
 The historical finite-catalogue numerical releases below remain distinct;

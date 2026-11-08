@@ -1,5 +1,12 @@
 # Agent instructions for SBSI
 
+The core GalSBI-prior inference pipeline is `infer-1.0-galsbi` (owner naming,
+2026-11-08), recorded in `configs/infer_1_0_galsbi.json` and
+`doc/CURRENT_INFERENCE.md`. Keep inference and model identities separate.
+Its historical model-generated mock gave fractional g1 error -0.488 ±0.741%
+and g2=0.0003319 ±0.0001643 with retained V3.9 and mixed sampler settings.
+Do not transfer that result to the later uniform sampler or new GalSBI models.
+
 The current GalSBI fiducial is `like-1.0-galsbi`, selected by the owner on
 2026-11-08. Pin `neighbour_conditioned_flow_20261106/control/nine.pt`
 (SHA256 `9bc10a6548e792cdcbb29b226e20e4e53dff74d88c1a29a972e246cb07227417`),

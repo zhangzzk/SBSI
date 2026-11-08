@@ -1,4 +1,28 @@
-# Current GalSBI inference and model consolidation
+# infer-1.0-galsbi: core inference pipeline
+
+## Name and reference mock
+
+The owner named the core GalSBI-prior inference pipeline **infer-1.0-galsbi**
+on2026-11-08. The identity is recorded in
+[`configs/infer_1_0_galsbi.json`](../configs/infer_1_0_galsbi.json).
+This names the continuous-scene prior, posterior integration, selection
+normalization and score/information estimator. Model names remain separate:
+`like-1.0-galsbi` is the current fiducial model set.
+
+The historical model-generated mock is the reference evidence:1,990,072
+selected observations, original/rotated pairing, injected shear(0.02,0),
+and recovered shear(0.01990248 ±0.00014818,0.00033189 ±0.00016430).
+Its fractional g1 error is-0.48759 ±0.74091%; the g2 offset is2.02sigma.
+The first component agrees with truth within uncertainty, while the declared
+joint2sigma gate narrowly fails. This is not independent calibration acceptance.
+See the [audited mock comparison](MOCK_MEASUREMENT_REVIEW.md#outcomes-and-pairing).
+
+That endpoint used the retained V3.9 model and a mixture of magnitude-dependent
+chain settings and shear-score evaluations. It is not an end-to-end validation
+of the later uniform, full-proposal-likelihood sampler below or of the new
+fiducial model. Exact model hashes, sampler settings, source and seeds remain
+part of each run's identity. The naming manifest is descriptive, not a runnable
+replacement for the old finite-catalogue inference configuration.
 
 ## Location and provenance
 

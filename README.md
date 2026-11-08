@@ -17,6 +17,7 @@ response-emulator training.
 
 | Role | Identity | Status |
 | --- | --- | --- |
+| Core GalSBI inference | `infer-1.0-galsbi` | Continuous-scene posterior integration, selection normalization and score/information inference |
 | Current GalSBI fiducial | `like-1.0-galsbi` | Factorized flow with weak nine-cut response regularization; four-scene paired-seed development evidence |
 | Retained multistage comparison | `galsbi-multistage` | Latest weighted photometry continuation; 40-scene paired-seed evidence |
 | Retained development model | `V3.9-like` | F8 flow, C8 classifier, physical-moment disk emulator |
@@ -66,7 +67,7 @@ Both GalSBI flows load through `load_measurement_model`; checkpoint and
 companion bytes are included under `models/`. Old inference caches still require
 matching artifact identities. See [loading boundary](doc/LIKE_1_0_GALSBI.md#loading-and-inference-boundary).
 
-## Current GalSBI inference
+## Current GalSBI inference: infer-1.0-galsbi
 
 The continuous GalSBI sampler and paired-measurement orchestration have been
 consolidated from `sampler-recipe` / `codex/model-symmetry` into `dev`.

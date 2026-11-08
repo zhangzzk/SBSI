@@ -1,5 +1,21 @@
 # Work log
 
+## 2026-11-08 — Name the core mock-tested pipeline infer-1.0-galsbi
+
+Owner requests naming the GalSBI-prior mock inference core `infer-1.0-galsbi`.
+Add descriptive `configs/infer_1_0_galsbi.json`; update the
+[current pipeline guide](CURRENT_INFERENCE.md#name-and-reference-mock), README,
+INFERENCE and AGENTS. Preserve separate model, numerical recipe and source
+identities. Copy the exact historical mock endpoint into local evidence after
+verifying its SHA256 against the existing October29 audit. Record1,990,072
+selected mocks, fractional g1 error-0.48759 ±0.74091% and g2 offset2.02sigma.
+The reference uses V3.9 and mixed magnitude-dependent sampler settings; no
+completed full uniform-recipe or new-model mock acceptance is implied.
+
+Validation: JSON parse, endpoint hash and numerical replay, local guide links.
+Documentation/identity only: no runtime, likelihood/config defaults, weights,
+seeds or scheduler state changed; no new tests or scientific runs needed.
+
 ## 2026-11-08 — Consolidate both GalSBI models and latest continuous inference on dev
 
 Owner requests consolidation before worktree cleanup. Preserve the previous
